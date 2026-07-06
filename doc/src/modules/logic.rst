@@ -201,4 +201,4 @@ The `sympy.logic.modal` module provides an extension to SymPy for working with m
 .. toctree::
    :maxdepth: 2
 
-   modal.rst
+   modal

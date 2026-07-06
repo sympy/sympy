@@ -73,14 +73,16 @@ from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         true, false, satisfiable)
 
 # Import second-order modal logic extension into main SymPy namespace
-# Import second-order modal logic extension into main SymPy namespace
 from .logic.modal import (
     Type, Universe, BoolType, FunctionType, TypedSymbol,
     PredicateVariable, ModalPredicate, GuardedFixedPoint,
     Box, Diamond, ProvabilityBox, AlethicBox, EpistemicBox,
     DeonticBox, TemporalBox, ForAllPredicates, ExistsPredicates,
+    AgentBox, CommonKnowledge, Next, Until,
     KripkeFrame, Axiom, ProofTerm, TrustedKernel, ModusPonens,
     ProofContext, Strategy, FormalisationInterface,
+    ModalSignature, ScopeResolution, QuantifierOrder, LLMPromptBuilder,
+    KripkeModel, SemanticEvaluator,
     SymPyModalError, FrameViolationError, NecessitationError,
     InvalidInferenceError, FormalisationError, NotAnAxiomError,
     AmbiguousModalityError, ProofFailure
@@ -310,8 +312,11 @@ __all__ = [
     'PredicateVariable', 'ModalPredicate', 'GuardedFixedPoint',
     'Box', 'Diamond', 'ProvabilityBox', 'AlethicBox', 'EpistemicBox',
     'DeonticBox', 'TemporalBox', 'ForAllPredicates', 'ExistsPredicates',
+    'AgentBox', 'CommonKnowledge', 'Next', 'Until',
     'KripkeFrame', 'Axiom', 'ProofTerm', 'TrustedKernel', 'ModusPonens',
     'ProofContext', 'Strategy', 'FormalisationInterface',
+    'ModalSignature', 'ScopeResolution', 'QuantifierOrder', 'LLMPromptBuilder',
+    'KripkeModel', 'SemanticEvaluator',
     'SymPyModalError', 'FrameViolationError', 'NecessitationError',
     'InvalidInferenceError', 'FormalisationError', 'NotAnAxiomError',
     'AmbiguousModalityError', 'ProofFailure',

@@ -56,7 +56,7 @@ The ``TrustedKernel`` is the TCB (Trusted Computing Base) for inferences.
 Formalisation Bridge
 ^^^^^^^^^^^^^^^^^^^^
 
-Translates plain text and natural deductive ideas into rigorous ``sympy_modal`` expressions, often leveraging LLM APIs for translation.
+Translates plain text and natural deductive ideas into rigorous ``sympy.logic.modal`` expressions, often leveraging LLM APIs for translation.
 
 * ``FormalisationInterface``: Main entrypoint for string/text parsing.
 * ``LLMPromptBuilder``: Constructs standardized prompts for LLM conversion tasks.
@@ -72,18 +72,19 @@ An S4 frame requires reflexivity and transitivity.
 
 .. code-block:: python
 
-    from sympy.logic.modal import KripkeFrame, Axiom, Box
-    from sympy.abc import p
+    from sympy import Symbol, Implies
+    from sympy.logic.modal import KripkeFrame, Box
 
-    # Define the frame
-    s4_frame = KripkeFrame([Axiom.REFLEXIVITY, Axiom.TRANSITIVITY])
+    # Define the S4 frame
+    s4 = KripkeFrame.S4()
+    p = Symbol('p')
 
     # In S4, Box(p) -> p is valid (Reflexivity)
-    print("S4 Reflexivity validation:", s4_frame.validate_inference(Box(p), p))
+    print("S4 Reflexivity validation:", s4.validates(Implies(Box(p), p)))
     # Output: True
 
     # In S4, Box(p) -> Box(Box(p)) is valid (Transitivity)
-    print("S4 Transitivity validation:", s4_frame.validate_inference(Box(p), Box(Box(p))))
+    print("S4 Transitivity validation:", s4.validates(Implies(Box(p), Box(Box(p)))))
     # Output: True
 
 Example 2: Using the TrustedKernel
@@ -93,19 +94,20 @@ All verified theorems pass through the ``TrustedKernel``.
 
 .. code-block:: python
 
+    from sympy import Symbol, Implies
     from sympy.logic.modal import KripkeFrame, TrustedKernel, ProofTerm, ModusPonens
-    from sympy import Implies
-    from sympy.abc import p, q
 
-    kernel = TrustedKernel(KripkeFrame([]))
+    kernel = TrustedKernel(frame=KripkeFrame.GL())
+    p = Symbol('p')
+    q = Symbol('q')
 
     # Assume we have proven p and p -> q
-    proof_p = ProofTerm(p, kernel_ref=kernel, source="hypothesis")
-    proof_p_implies_q = ProofTerm(Implies(p, q), kernel_ref=kernel, source="hypothesis")
+    pt_ab = ProofTerm(Implies(p, q, evaluate=False), source="axiom")
+    pt_a = ProofTerm(p)
 
-    # Apply Modus Ponens
-    proof_q = ModusPonens(proof_p_implies_q, proof_p).apply(kernel)
-    print("Derived formula via Modus Ponens:", proof_q.formula)
+    # Apply Modus Ponens verification
+    pt_b = kernel.verify_rule(ModusPonens, [pt_ab, pt_a])
+    print("Derived formula via Modus Ponens:", pt_b.formula)
     # Output: q
 
 
@@ -116,22 +118,23 @@ The ``ProofContext`` maintains the active proof state and handles assumptions.
 
 .. code-block:: python
 
+    from sympy import Symbol, Implies
     from sympy.logic.modal import ProofContext, KripkeFrame, ProofTerm
-    from sympy.abc import p, q
 
-    kernel = KripkeFrame([]).get_kernel()
-    ctx = ProofContext(kernel)
+    ctx = ProofContext(KripkeFrame.K())
+    p = Symbol('p')
+    q = Symbol('q')
 
     # Introduce an assumption
-    ctx.assume(p)
+    hyp = ctx.assume(p)
+    print("Hypothesis source:", hyp.source)
 
-    # Prove q from p (trivially in this example via direct assumption injection)
-    proof_q_from_p = ProofTerm(q, kernel_ref=kernel, source="hypothesis")
-    ctx.add_proof(proof_q_from_p)
+    # Create a fake derivation from the hypothesis for demonstration
+    pt_q = ProofTerm(q, hypotheses=[p])
 
-    # Discharge the assumption p
-    discharged_proof = ctx.discharge(p)
-    print("Discharged implication:", discharged_proof.formula)
+    # Discharging the hypothesis yields P -> Q
+    impl = ctx.discharge(hyp, pt_q)
+    print("Discharged implication:", impl.formula)
     # Output: Implies(p, q)
 
 
@@ -142,19 +145,23 @@ Provability Logic features Löb's theorem which constructs well-founded fixed po
 
 .. code-block:: python
 
+    from sympy import symbols, Implies
     from sympy.logic.modal import (
-        KripkeFrame, Axiom, ProvabilityBox,
-        GuardedFixedPoint, FormalisationInterface
+        ProofContext, KripkeFrame, PredicateVariable,
+        ForAllPredicates, Box, Universe, FunctionType, BoolType
     )
-    from sympy.abc import p
 
-    # GL requires Transitivity and Converse Well-Foundedness
-    gl_frame = KripkeFrame([Axiom.TRANSITIVITY, Axiom.CONVERSE_WELL_FOUNDED])
-    interface = FormalisationInterface(frame=gl_frame)
+    x = symbols('x')
+    ctx = ProofContext(frame=KripkeFrame.GL())
+    P = PredicateVariable('P', type=FunctionType(Universe(0), BoolType()))
 
-    # Box(Box(p) -> p) -> Box(p)
-    loeb_formula = interface.parse("Box(Implies(Box(p), p)) >> Box(p)")
-    print("Löb's theorem proved in GL:", gl_frame.validate_inference(None, loeb_formula))
+    lob = ForAllPredicates(P,
+        Implies(Box(Implies(Box(P(x)), P(x))), Box(P(x)))
+    )
+
+    # Certificate proves the theorem is valid under GL frame
+    proof = ctx.prove(lob)
+    print("Löb's theorem proved in GL:", proof.is_valid)
     # Output: True
 
 
@@ -166,15 +173,19 @@ The interface parses human-readable strings into typed SymPy objects.
 .. code-block:: python
 
     from sympy.logic.modal import FormalisationInterface, AlethicBox
-    from sympy.abc import p
 
-    interface = FormalisationInterface()
+    fi = FormalisationInterface()
 
     # "It is necessary that p"
-    parsed_formula = interface.parse("AlethicBox(p)")
+    expr_str = "AlethicBox(Symbol('p'))"
+    formula = fi.formalise(expr_str)
 
-    print("Parsed formula type:", type(parsed_formula).__name__)
+    print("Parsed formula type:", type(formula).__name__)
     # Output: AlethicBox
+
+    # The interface can infer the correct frame automatically
+    sig = fi.resolve_modality(expr_str)
+    print("Inferred modality signatures:", sig.operators)
 
 
 Example 6: Classical Injection & SMT Solvers
@@ -184,18 +195,30 @@ By default, the calculus is intuitionistic. You can optionally allow classical r
 
 .. code-block:: python
 
+    from sympy import Symbol, Or, Not, Implies
     from sympy.logic.modal import ProofContext, KripkeFrame
-    from sympy.abc import p
 
-    kernel = KripkeFrame([]).get_kernel()
+    # Standard context rejects LEM without the flag
+    ctx_intuitionistic = ProofContext(KripkeFrame.K())
+    p = Symbol('p')
+    lem = Or(p, Not(p))
+    proof_fail = ctx_intuitionistic.prove(lem)
+    print("Intuitionistic proof valid:", isinstance(proof_fail, type(ctx_intuitionistic.assume(p))))
+    # Output: False
 
-    # Enable classical logic
-    ctx = ProofContext(kernel, allow_classical=True)
+    # With classical logic enabled
+    ctx_classical = ProofContext(KripkeFrame.K(), allow_classical=True)
+    proof_success = ctx_classical.prove(lem)
+    print("Classical proof valid (LEM):", proof_success.is_valid)
+    print("Classical derivation source:", proof_success.derivation)
+    # Output: True, ('SMT_Solver', p | ~p)
 
-    # Law of Excluded Middle
-    lem_proof = ctx.derive_classical_axiom(p | ~p)
-    print("Classical proof valid (LEM):", lem_proof is not None)
-    # Output: True
+    # SMT solver solving a complex propositional tautology instantly
+    q = Symbol('q')
+    complex_tautology = Or(Implies(p, q), Implies(q, p))
+    smt_proof = ctx_classical.prove(complex_tautology)
+    print("SMT proof valid:", smt_proof.is_valid)
+
 
 Example 7: Semantic Evaluation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -204,30 +227,29 @@ KripkeModels provide tools for semantic evaluation and model checking across wor
 
 .. code-block:: python
 
+    from sympy import Symbol
     from sympy.logic.modal import KripkeModel, SemanticEvaluator, Box, Diamond, AgentBox, CommonKnowledge
-    from sympy.abc import p
 
-    # Define worlds and relations
-    worlds = ['w1', 'w2', 'w3']
-    relations = {'alethic': [('w1', 'w2'), ('w2', 'w3')]}
-    valuation = {'p': ['w2']}
-
-    model = KripkeModel(worlds, relations, valuation)
+    # Kripke Model setup
+    W = {'w1', 'w2', 'w3'}
+    R = {'w1': {'w2', 'w3'}}
+    p = Symbol('p')
+    V = {
+        ('w2', p): True,
+        ('w3', p): False
+    }
+    model = KripkeModel(W, R, V)
     evaluator = SemanticEvaluator(model)
 
-    # p is true at w2, and w1 sees w2, so Diamond(p) is true at w1
-    print("Is Diamond(p) true at w1?", evaluator.is_true_at(Diamond(p), 'w1'))
+    # Evaluation
+    print("Is Diamond(p) true at w1?", evaluator.evaluate(Diamond(p), 'w1'))
     # Output: True
 
-    # But Box(p) is false at w1 because w1 could potentially see a world where p is false (if we added one)
-    # Actually, in this specific model, w1 only sees w2, and p is true at w2.
-    # Wait, if w1 only sees w2, and p is true at w2, Box(p) SHOULD be true at w1.
-    # Let's check the evaluator output for exact logic.
-    print("Is Box(p) true at w1?", evaluator.is_true_at(Box(p), 'w1'))
+    print("Is Box(p) true at w1?", evaluator.evaluate(Box(p), 'w1'))
+    # Output: False
 
-    # Multi-agent epistemic logic is supported via string identifiers
-    epistemic_box = AgentBox(p, "Alice")
-    print("AgentBox modality:", epistemic_box.agent_modality())
-
-    common_knowledge = CommonKnowledge(p, "GroupA")
-    print("CommonKnowledge modality:", common_knowledge.group_modality())
+    # Expressive Multi-Agent Operators
+    agent_box = AgentBox('Alice', p)
+    common_knowledge = CommonKnowledge('GroupA', p)
+    print("AgentBox modality:", agent_box.modality)
+    print("CommonKnowledge modality:", common_knowledge.modality)
