@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import Symbol, Or, Not, Implies
 from sympy.logic.modal import ProofContext, KripkeFrame
 

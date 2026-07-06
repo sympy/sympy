@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import Symbol, Implies
 from sympy.logic.modal import KripkeFrame, TrustedKernel, ProofTerm, ModusPonens
 

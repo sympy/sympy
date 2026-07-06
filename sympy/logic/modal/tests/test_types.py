@@ -1,5 +1,6 @@
+from __future__ import annotations
 import pytest
-from sympy.logic.modal.types import Universe, BoolType, FunctionType, PredicateVariable, ModalPredicate, GuardedFixedPoint
+from sympy.logic.modal.types import Universe, BoolType, FunctionType, PredicateVariable, ModalPredicate
 from sympy.core.symbol import Symbol
 
 def test_universe():

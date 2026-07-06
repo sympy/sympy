@@ -1,4 +1,4 @@
-import pytest
+from __future__ import annotations
 from sympy.core.symbol import Symbol
 from sympy.logic.modal.types import PredicateVariable, FunctionType, Universe, BoolType
 from sympy.logic.modal.operators import (
