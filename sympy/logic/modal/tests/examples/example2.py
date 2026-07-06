@@ -1,5 +1,5 @@
 from sympy import Symbol, Implies
-from sympy_modal import KripkeFrame, TrustedKernel, ProofTerm, ModusPonens
+from sympy.logic.modal import KripkeFrame, TrustedKernel, ProofTerm, ModusPonens
 
 kernel = TrustedKernel(frame=KripkeFrame.GL())
 p = Symbol('p')

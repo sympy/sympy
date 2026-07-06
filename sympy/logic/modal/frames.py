@@ -6,8 +6,8 @@ from typing import Dict, Set, List, Any
 from enum import Enum
 
 from sympy.logic.boolalg import Boolean, Implies, And, Or, Not
-from sympy_modal.operators import Box, Diamond
-from sympy_modal.errors import FrameViolationError
+from sympy.logic.modal.operators import Box, Diamond
+from sympy.logic.modal.errors import FrameViolationError
 
 class Axiom(Enum):
     K = "K"         # □(A → B) → (□A → □B)
@@ -177,7 +177,7 @@ class KripkeFrame:
                     if left.args[0].args[0].args[0] == right.args[0] and left.args[0].args[1] == right.args[0]:
                         return True
 
-        from sympy_modal.operators import ForAllPredicates
+        from sympy.logic.modal.operators import ForAllPredicates
         if isinstance(formula, ForAllPredicates):
             # Verify the inner formula
             return self._is_axiom_instance(formula.formula)

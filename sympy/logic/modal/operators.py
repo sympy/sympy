@@ -5,7 +5,7 @@ Subclasses SymPy objects.
 
 from typing import Any
 from sympy.logic.boolalg import Boolean, BooleanFunction
-from sympy_modal.types import PredicateVariable, FunctionType
+from sympy.logic.modal.types import PredicateVariable, FunctionType
 
 class ModalOperator(BooleanFunction):
     """Base class for modal operators (Box, Diamond)."""

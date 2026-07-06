@@ -1,5 +1,5 @@
 from sympy import Symbol, Or, Not, Implies
-from sympy_modal import ProofContext, KripkeFrame
+from sympy.logic.modal import ProofContext, KripkeFrame
 
 print("Example 6: Classical Logic Injection and SMT Integration")
 

@@ -4,9 +4,9 @@ Layer 3 (Kernel): Trusted Proof Kernel.
 
 from typing import List, Any, Optional
 from sympy.logic.boolalg import Boolean, Implies
-from sympy_modal.frames import KripkeFrame, Axiom
-from sympy_modal.operators import Box
-from sympy_modal.errors import NotAnAxiomError, InvalidInferenceError, NecessitationError
+from sympy.logic.modal.frames import KripkeFrame, Axiom
+from sympy.logic.modal.operators import Box
+from sympy.logic.modal.errors import NotAnAxiomError, InvalidInferenceError, NecessitationError
 
 class ProofTerm:
     """
@@ -28,7 +28,7 @@ class ProofTerm:
         """Helper to recursively convert SymPy AST to Lean syntax robustly."""
         from sympy.logic.boolalg import Implies, And, Or, Not
         from sympy.core.symbol import Symbol
-        from sympy_modal.operators import ModalOperator
+        from sympy.logic.modal.operators import ModalOperator
 
         if isinstance(expr, Symbol):
             return str(expr)
@@ -57,7 +57,7 @@ class ProofTerm:
         """Helper to recursively convert SymPy AST to Coq syntax robustly."""
         from sympy.logic.boolalg import Implies, And, Or, Not
         from sympy.core.symbol import Symbol
-        from sympy_modal.operators import ModalOperator
+        from sympy.logic.modal.operators import ModalOperator
 
         if isinstance(expr, Symbol):
             return str(expr)
@@ -110,7 +110,7 @@ class TrustedKernel:
         Verifies if formula entails from premises using SymPy's SMT solver.
         """
         from sympy.logic.inference import entails
-        from sympy_modal.operators import Box, Diamond
+        from sympy.logic.modal.operators import Box, Diamond
 
         if formula.has(Box, Diamond):
             raise InvalidInferenceError("SMT solver cannot handle modal operators directly.")

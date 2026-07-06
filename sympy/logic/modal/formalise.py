@@ -10,13 +10,13 @@ from dataclasses import dataclass
 from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import Boolean
 
-from sympy_modal.types import PredicateVariable, ModalPredicate, Universe, BoolType, FunctionType
-from sympy_modal.operators import (
+from sympy.logic.modal.types import PredicateVariable, ModalPredicate, Universe, BoolType, FunctionType
+from sympy.logic.modal.operators import (
     Box, Diamond, ProvabilityBox, AlethicBox, EpistemicBox,
     DeonticBox, TemporalBox, ForAllPredicates, ExistsPredicates
 )
-from sympy_modal.frames import KripkeFrame, Axiom
-from sympy_modal.errors import FormalisationError, AmbiguousModalityError
+from sympy.logic.modal.frames import KripkeFrame, Axiom
+from sympy.logic.modal.errors import FormalisationError, AmbiguousModalityError
 
 @dataclass
 class ModalSignature:
@@ -181,7 +181,7 @@ except ImportError:
 
 class LLMPromptBuilder:
     """
-    Utility to bridge natural language and sympy_modal using Gemini 2.5 Flash via OpenRouter.
+    Utility to bridge natural language and sympy.logic.modal using Gemini 2.5 Flash via OpenRouter.
     This generates prompts and interprets results.
 
     Future Expansion Note:
@@ -194,7 +194,7 @@ class LLMPromptBuilder:
 
     def formalise_prompt(self, natural_language: str) -> str:
         return f"""
-        Convert the following natural language specification into a strictly valid sympy_modal Python code string.
+        Convert the following natural language specification into a strictly valid sympy.logic.modal Python code string.
         Use operators like Box, Diamond, Implies, And, Or.
         Do not include markdown blocks, just the raw code.
 

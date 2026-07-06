@@ -9,10 +9,10 @@ import warnings
 
 from sympy.logic.boolalg import Boolean, Implies, Or, Not
 from sympy.logic.inference import valid, entails
-from sympy_modal.frames import KripkeFrame, Axiom
-from sympy_modal.kernel import TrustedKernel, ProofTerm, ModusPonens
-from sympy_modal.operators import Box
-from sympy_modal.errors import ProofFailure
+from sympy.logic.modal.frames import KripkeFrame, Axiom
+from sympy.logic.modal.kernel import TrustedKernel, ProofTerm, ModusPonens
+from sympy.logic.modal.operators import Box
+from sympy.logic.modal.errors import ProofFailure
 
 class Strategy(Enum):
     Backward = "Backward"
@@ -35,7 +35,7 @@ class ProofContext:
 
         # We attach standard SymPy boolean operators as attributes for convenience if needed,
         # and operators from our modal logic
-        from sympy_modal.operators import Box, Diamond
+        from sympy.logic.modal.operators import Box, Diamond
         self.Box = Box
         self.Diamond = Diamond
 

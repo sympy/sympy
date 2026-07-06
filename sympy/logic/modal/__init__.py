@@ -1,4 +1,4 @@
-from sympy_modal.types import (
+from sympy.logic.modal.types import (
     Type,
     Universe,
     BoolType,
@@ -9,7 +9,7 @@ from sympy_modal.types import (
     GuardedFixedPoint
 )
 
-from sympy_modal.errors import (
+from sympy.logic.modal.errors import (
     SymPyModalError,
     FrameViolationError,
     NecessitationError,
@@ -38,7 +38,7 @@ __all__ = [
     "ModalPredicate",
     "GuardedFixedPoint"
 ]
-from sympy_modal.operators import (
+from sympy.logic.modal.operators import (
     Box, Diamond, ProvabilityBox, AlethicBox, EpistemicBox,
     DeonticBox, TemporalBox, ForAllPredicates, ExistsPredicates,
     AgentBox, CommonKnowledge, Next, Until
@@ -49,22 +49,22 @@ __all__.extend([
     "DeonticBox", "TemporalBox", "ForAllPredicates", "ExistsPredicates",
     "AgentBox", "CommonKnowledge", "Next", "Until"
 ])
-from sympy_modal.frames import KripkeFrame, Axiom
+from sympy.logic.modal.frames import KripkeFrame, Axiom
 
 __all__.extend([
     "KripkeFrame", "Axiom"
 ])
-from sympy_modal.kernel import ProofTerm, TrustedKernel, ModusPonens
+from sympy.logic.modal.kernel import ProofTerm, TrustedKernel, ModusPonens
 
 __all__.extend([
     "ProofTerm", "TrustedKernel", "ModusPonens"
 ])
-from sympy_modal.context import ProofContext, Strategy
+from sympy.logic.modal.context import ProofContext, Strategy
 
 __all__.extend([
     "ProofContext", "Strategy"
 ])
-from sympy_modal.formalise import (
+from sympy.logic.modal.formalise import (
     FormalisationInterface,
     ModalSignature,
     ScopeResolution,
@@ -76,7 +76,7 @@ __all__.extend([
     "FormalisationInterface", "ModalSignature", "ScopeResolution", "QuantifierOrder", "LLMPromptBuilder"
 ])
 
-from sympy_modal.semantics import KripkeModel, SemanticEvaluator
+from sympy.logic.modal.semantics import KripkeModel, SemanticEvaluator
 
 __all__.extend([
     "KripkeModel", "SemanticEvaluator"

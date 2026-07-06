@@ -1,10 +1,10 @@
 import pytest
 from sympy import Symbol, Implies, And, Or, Not
-from sympy_modal.frames import KripkeFrame
-from sympy_modal.kernel import TrustedKernel, ProofTerm, ModusPonens
-from sympy_modal.operators import Box
-from sympy_modal.context import ProofContext, Strategy
-from sympy_modal.errors import ProofFailure
+from sympy.logic.modal.frames import KripkeFrame
+from sympy.logic.modal.kernel import TrustedKernel, ProofTerm, ModusPonens
+from sympy.logic.modal.operators import Box
+from sympy.logic.modal.context import ProofContext, Strategy
+from sympy.logic.modal.errors import ProofFailure
 
 def test_prover_modus_ponens_chain():
     ctx = ProofContext(KripkeFrame.K())

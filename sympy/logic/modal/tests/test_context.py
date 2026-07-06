@@ -2,10 +2,10 @@ import pytest
 import warnings
 from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import Implies, Or, Not
-from sympy_modal.frames import KripkeFrame, Axiom
-from sympy_modal.context import ProofContext, Strategy
-from sympy_modal.errors import ProofFailure
-from sympy_modal.kernel import ProofTerm
+from sympy.logic.modal.frames import KripkeFrame, Axiom
+from sympy.logic.modal.context import ProofContext, Strategy
+from sympy.logic.modal.errors import ProofFailure
+from sympy.logic.modal.kernel import ProofTerm
 
 def test_context_assume_and_discharge():
     ctx = ProofContext(KripkeFrame.K())
@@ -69,8 +69,8 @@ def test_context_prove_lob():
     assert Axiom.Lob in failure.missing_axioms
 def test_classical_logic_opt_in():
     from sympy.logic.boolalg import Or, Not
-    from sympy_modal.context import ProofContext
-    from sympy_modal.frames import KripkeFrame
+    from sympy.logic.modal.context import ProofContext
+    from sympy.logic.modal.frames import KripkeFrame
     from sympy.core.symbol import Symbol
 
     p = Symbol('p')
@@ -93,11 +93,11 @@ def test_classical_logic_opt_in():
         # Assuming no other warnings happen
         assert not any("Law of Excluded Middle" in str(warn.message) for warn in w)
 def test_tactic_rewrite():
-    from sympy_modal.context import ProofContext
-    from sympy_modal.frames import KripkeFrame
+    from sympy.logic.modal.context import ProofContext
+    from sympy.logic.modal.frames import KripkeFrame
     from sympy.core.symbol import Symbol
     from sympy.logic.boolalg import Implies, Equivalent
-    from sympy_modal.kernel import ProofTerm
+    from sympy.logic.modal.kernel import ProofTerm
     import pytest
 
     ctx = ProofContext(frame=KripkeFrame.K())
@@ -117,8 +117,8 @@ def test_tactic_rewrite():
     assert pt_rewritten.formula == Implies(q, q)
 
 def test_smt_integration():
-    from sympy_modal.context import ProofContext
-    from sympy_modal.frames import KripkeFrame
+    from sympy.logic.modal.context import ProofContext
+    from sympy.logic.modal.frames import KripkeFrame
     from sympy.core.symbol import Symbol
     from sympy.logic.boolalg import Implies, And, Or, Not
 
@@ -132,14 +132,14 @@ def test_smt_integration():
     tautology = Or(Implies(p, q), Implies(q, p))
     proof = ctx.prove(tautology)
 
-    from sympy_modal.kernel import ProofTerm
+    from sympy.logic.modal.kernel import ProofTerm
     assert isinstance(proof, ProofTerm)
     assert proof.derivation[0] == "SMT_Solver"
     assert proof.formula == tautology
 
 def test_classical_injection():
-    from sympy_modal.context import ProofContext
-    from sympy_modal.frames import KripkeFrame
+    from sympy.logic.modal.context import ProofContext
+    from sympy.logic.modal.frames import KripkeFrame
     from sympy.core.symbol import Symbol
     from sympy.logic.boolalg import Implies, And, Or, Not
 
@@ -150,7 +150,7 @@ def test_classical_injection():
     lem = Or(p, Not(p))
     proof = ctx.prove(lem)
 
-    from sympy_modal.kernel import ProofTerm
+    from sympy.logic.modal.kernel import ProofTerm
     assert isinstance(proof, ProofTerm)
     # The SMT solver might pick this up first depending on the implementation details,
     # but the point is we can prove classical axioms directly if allow_classical=True.

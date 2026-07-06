@@ -1,4 +1,4 @@
-from sympy_modal import FormalisationInterface, AlethicBox
+from sympy.logic.modal import FormalisationInterface, AlethicBox
 
 fi = FormalisationInterface()
 expr_str = "AlethicBox(Symbol('p'))"

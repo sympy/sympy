@@ -1,8 +1,8 @@
 import pytest
-from sympy_modal.formalise import FormalisationInterface
-from sympy_modal.errors import AmbiguousModalityError, FormalisationError
-from sympy_modal.operators import AlethicBox, Box, EpistemicBox
-from sympy_modal.frames import KripkeFrame, Axiom
+from sympy.logic.modal.formalise import FormalisationInterface
+from sympy.logic.modal.errors import AmbiguousModalityError, FormalisationError
+from sympy.logic.modal.operators import AlethicBox, Box, EpistemicBox
+from sympy.logic.modal.frames import KripkeFrame, Axiom
 from sympy.logic.boolalg import Implies
 
 def test_formalise_parse():
