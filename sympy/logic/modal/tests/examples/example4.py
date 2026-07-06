@@ -1,5 +1,5 @@
 from sympy import symbols, Implies
-from sympy_modal import (
+from sympy.logic.modal import (
     ProofContext, KripkeFrame, PredicateVariable,
     ForAllPredicates, Box, Universe, FunctionType, BoolType
 )

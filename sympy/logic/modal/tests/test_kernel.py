@@ -1,10 +1,10 @@
 import pytest
 from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import Implies
-from sympy_modal.frames import KripkeFrame
-from sympy_modal.kernel import TrustedKernel, ProofTerm, ModusPonens
-from sympy_modal.operators import Box
-from sympy_modal.errors import NotAnAxiomError, InvalidInferenceError, NecessitationError
+from sympy.logic.modal.frames import KripkeFrame
+from sympy.logic.modal.kernel import TrustedKernel, ProofTerm, ModusPonens
+from sympy.logic.modal.operators import Box
+from sympy.logic.modal.errors import NotAnAxiomError, InvalidInferenceError, NecessitationError
 
 def test_kernel_check_axiom():
     kernel = TrustedKernel(frame=KripkeFrame.GL())
@@ -61,7 +61,7 @@ def test_kernel_check_term():
 def test_export_lean_coq():
     from sympy.core.symbol import Symbol
     from sympy.logic.boolalg import Implies
-    from sympy_modal.kernel import ProofTerm
+    from sympy.logic.modal.kernel import ProofTerm
 
     p = Symbol('p')
     q = Symbol('q')
@@ -80,7 +80,7 @@ def test_export_lean_coq():
 def test_robust_export():
     from sympy.core.symbol import Symbol
     from sympy.logic.boolalg import Implies, Not
-    from sympy_modal.kernel import ProofTerm
+    from sympy.logic.modal.kernel import ProofTerm
 
     # Create a symbol with "Not" in the name to test collision
     NotASymbol = Symbol('NotASymbol')

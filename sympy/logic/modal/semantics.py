@@ -1,7 +1,7 @@
 from typing import Dict, Set, Any, Tuple
 from sympy.logic.boolalg import Boolean, And, Or, Not, Implies
 from sympy.core.symbol import Symbol
-from sympy_modal.operators import Box, Diamond, ModalOperator
+from sympy.logic.modal.operators import Box, Diamond, ModalOperator
 
 class KripkeModel:
     """
@@ -51,7 +51,7 @@ class SemanticEvaluator:
             accessible = self.model.R.get(world, set())
             return any(self.evaluate(formula.args[0], w) for w in accessible)
 
-        from sympy_modal.operators import Next, Until
+        from sympy.logic.modal.operators import Next, Until
 
         if isinstance(formula, Next):
             # Next (X p): True if p holds in ALL immediately accessible worlds

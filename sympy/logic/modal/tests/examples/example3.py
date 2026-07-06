@@ -1,5 +1,5 @@
 from sympy import Symbol, Implies
-from sympy_modal import ProofContext, KripkeFrame, ProofTerm
+from sympy.logic.modal import ProofContext, KripkeFrame, ProofTerm
 
 ctx = ProofContext(KripkeFrame.K())
 p = Symbol('p')

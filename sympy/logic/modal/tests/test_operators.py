@@ -1,7 +1,7 @@
 import pytest
 from sympy.core.symbol import Symbol
-from sympy_modal.types import PredicateVariable, FunctionType, Universe, BoolType
-from sympy_modal.operators import (
+from sympy.logic.modal.types import PredicateVariable, FunctionType, Universe, BoolType
+from sympy.logic.modal.operators import (
     Box, Diamond, ProvabilityBox, ForAllPredicates, ExistsPredicates,
     AgentBox, CommonKnowledge, Next, Until
 )
@@ -58,7 +58,7 @@ def test_expressiveness_operators():
     assert ut.is_well_typed()
 def test_agent_box_subs():
     from sympy.core.symbol import Symbol
-    from sympy_modal.operators import AgentBox
+    from sympy.logic.modal.operators import AgentBox
     p = Symbol('p')
     q = Symbol('q')
     ab = AgentBox('Alice', p)

@@ -1,8 +1,8 @@
 import pytest
-from sympy_modal import ProofContext, KripkeFrame, PredicateVariable
-from sympy_modal import ForAllPredicates, Box, Universe, FunctionType, BoolType
-from sympy_modal.errors import ProofFailure
-from sympy_modal.frames import Axiom
+from sympy.logic.modal import ProofContext, KripkeFrame, PredicateVariable
+from sympy.logic.modal import ForAllPredicates, Box, Universe, FunctionType, BoolType
+from sympy.logic.modal.errors import ProofFailure
+from sympy.logic.modal.frames import Axiom
 from sympy import symbols, Implies
 
 def test_lob_integration():

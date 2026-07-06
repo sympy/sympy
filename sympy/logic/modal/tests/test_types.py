@@ -1,5 +1,5 @@
 import pytest
-from sympy_modal.types import Universe, BoolType, FunctionType, PredicateVariable, ModalPredicate, GuardedFixedPoint
+from sympy.logic.modal.types import Universe, BoolType, FunctionType, PredicateVariable, ModalPredicate, GuardedFixedPoint
 from sympy.core.symbol import Symbol
 
 def test_universe():

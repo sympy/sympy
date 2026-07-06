@@ -1,8 +1,8 @@
 import pytest
 from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import Implies
-from sympy_modal.frames import KripkeFrame, Axiom
-from sympy_modal.operators import Box
+from sympy.logic.modal.frames import KripkeFrame, Axiom
+from sympy.logic.modal.operators import Box
 
 def test_kripke_frame_s4():
     s4 = KripkeFrame.S4()

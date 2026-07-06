@@ -1,5 +1,5 @@
 from sympy import Symbol, Implies
-from sympy_modal import KripkeFrame, Box
+from sympy.logic.modal import KripkeFrame, Box
 
 s4 = KripkeFrame.S4()
 p = Symbol('p')

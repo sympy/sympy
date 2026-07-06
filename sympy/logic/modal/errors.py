@@ -5,7 +5,7 @@ Exceptions for the second-order modal logic extension.
 from typing import Any, List
 
 class SymPyModalError(Exception):
-    """Base class for all sympy_modal exceptions."""
+    """Base class for all sympy.logic.modal exceptions."""
     pass
 
 

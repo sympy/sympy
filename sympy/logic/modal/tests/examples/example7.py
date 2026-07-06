@@ -1,5 +1,5 @@
 from sympy import Symbol, Implies
-from sympy_modal import KripkeModel, SemanticEvaluator, Box, Diamond, AgentBox, CommonKnowledge
+from sympy.logic.modal import KripkeModel, SemanticEvaluator, Box, Diamond, AgentBox, CommonKnowledge
 
 print("Example 7: Semantic Evaluation and Expressive Operators")
 

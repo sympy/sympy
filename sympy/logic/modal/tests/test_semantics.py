@@ -1,8 +1,8 @@
 import pytest
 from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import Implies
-from sympy_modal.operators import Box, Diamond
-from sympy_modal.semantics import KripkeModel, SemanticEvaluator
+from sympy.logic.modal.operators import Box, Diamond
+from sympy.logic.modal.semantics import KripkeModel, SemanticEvaluator
 
 def test_semantic_evaluator():
     p = Symbol('p')
@@ -31,7 +31,7 @@ def test_semantic_evaluator():
 
 
 def test_semantic_next_until():
-    from sympy_modal.operators import Next, Until
+    from sympy.logic.modal.operators import Next, Until
     p = Symbol('p')
     q = Symbol('q')
 
