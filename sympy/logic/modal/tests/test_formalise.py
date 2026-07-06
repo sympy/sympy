@@ -1,9 +1,9 @@
+from __future__ import annotations
 import pytest
 from sympy.logic.modal.formalise import FormalisationInterface
 from sympy.logic.modal.errors import AmbiguousModalityError, FormalisationError
-from sympy.logic.modal.operators import AlethicBox, Box, EpistemicBox
-from sympy.logic.modal.frames import KripkeFrame, Axiom
-from sympy.logic.boolalg import Implies
+from sympy.logic.modal.operators import AlethicBox, Box
+from sympy.logic.modal.frames import Axiom
 
 def test_formalise_parse():
     fi = FormalisationInterface()

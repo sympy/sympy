@@ -1,4 +1,5 @@
-from sympy import Symbol, Implies
+from __future__ import annotations
+from sympy import Symbol
 from sympy.logic.modal import ProofContext, KripkeFrame, ProofTerm
 
 ctx = ProofContext(KripkeFrame.K())

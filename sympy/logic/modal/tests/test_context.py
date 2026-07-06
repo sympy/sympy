@@ -1,9 +1,10 @@
+from __future__ import annotations
 import pytest
 import warnings
 from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import Implies, Or, Not
 from sympy.logic.modal.frames import KripkeFrame, Axiom
-from sympy.logic.modal.context import ProofContext, Strategy
+from sympy.logic.modal.context import ProofContext
 from sympy.logic.modal.errors import ProofFailure
 from sympy.logic.modal.kernel import ProofTerm
 
@@ -78,7 +79,6 @@ def test_classical_logic_opt_in():
 
     # Normally it should warn
     ctx = ProofContext(frame=KripkeFrame.K())
-    import warnings
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
         ctx.assume(lem)
@@ -120,7 +120,7 @@ def test_smt_integration():
     from sympy.logic.modal.context import ProofContext
     from sympy.logic.modal.frames import KripkeFrame
     from sympy.core.symbol import Symbol
-    from sympy.logic.boolalg import Implies, And, Or, Not
+    from sympy.logic.boolalg import Implies, Or
 
     # Needs classical logic for SMT integration to trigger on propositional formulas
     ctx = ProofContext(frame=KripkeFrame.K(), allow_classical=True)
@@ -141,7 +141,7 @@ def test_classical_injection():
     from sympy.logic.modal.context import ProofContext
     from sympy.logic.modal.frames import KripkeFrame
     from sympy.core.symbol import Symbol
-    from sympy.logic.boolalg import Implies, And, Or, Not
+    from sympy.logic.boolalg import Or, Not
 
     ctx = ProofContext(frame=KripkeFrame.K(), allow_classical=True)
     p = Symbol('p')

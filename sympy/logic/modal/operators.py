@@ -2,10 +2,11 @@
 Layer 3 (Operators): Modal and higher-order logical operators.
 Subclasses SymPy objects.
 """
+from __future__ import annotations
 
 from typing import Any
 from sympy.logic.boolalg import Boolean, BooleanFunction
-from sympy.logic.modal.types import PredicateVariable, FunctionType
+from sympy.logic.modal.types import PredicateVariable
 
 class ModalOperator(BooleanFunction):
     """Base class for modal operators (Box, Diamond)."""

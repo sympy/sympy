@@ -1,12 +1,10 @@
-import pytest
+from __future__ import annotations
 from sympy.core.symbol import Symbol
-from sympy.logic.boolalg import Implies
 from sympy.logic.modal.operators import Box, Diamond
 from sympy.logic.modal.semantics import KripkeModel, SemanticEvaluator
 
 def test_semantic_evaluator():
     p = Symbol('p')
-    q = Symbol('q')
 
     # Model:
     # w1 -> w2

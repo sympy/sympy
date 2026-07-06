@@ -2,8 +2,9 @@
 Layer 1: Modal Type System.
 Replaces untyped predicate logic with a stratified type universe supporting second-order quantification.
 """
+from __future__ import annotations
 
-from typing import Any, Optional, Tuple, Union
+from typing import Any
 from sympy.core.basic import Basic
 from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import Boolean
@@ -100,7 +101,7 @@ class ModalPredicate(Boolean):
     A typed predicate whose validity is relative to a Kripke frame.
     Created by applying a PredicateVariable to arguments.
     """
-    def __new__(cls, name: str, type: Type, args_tuple: Tuple[Any, ...]) -> 'ModalPredicate':
+    def __new__(cls, name: str, type: Type, args_tuple: tuple[Any, ...]) -> 'ModalPredicate':
         obj = super().__new__(cls, *args_tuple)
         obj._name = name
         obj._type = type

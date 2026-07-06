@@ -1,8 +1,9 @@
 """
 Exceptions for the second-order modal logic extension.
 """
+from __future__ import annotations
 
-from typing import Any, List
+from typing import Any
 
 class SymPyModalError(Exception):
     """Base class for all sympy.logic.modal exceptions."""
@@ -55,7 +56,7 @@ class AmbiguousModalityError(FormalisationError):
     """
     Raised when the formalisation interface cannot uniquely determine the modality.
     """
-    def __init__(self, message: str, candidates: List[str]) -> None:
+    def __init__(self, message: str, candidates: list[str]) -> None:
         super().__init__(message)
         self.candidates = candidates
 
@@ -65,7 +66,7 @@ class ProofFailure:
     A precise account of why proof search failed, returned by ProofContext.prove.
     Not an exception, but used to indicate a failure to find a proof.
     """
-    def __init__(self, formula: Any, obstacle: str, missing_axioms: List[Any]) -> None:
+    def __init__(self, formula: Any, obstacle: str, missing_axioms: list[Any]) -> None:
         self.formula = formula
         self.obstacle = obstacle
         self.missing_axioms = missing_axioms

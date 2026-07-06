@@ -56,10 +56,11 @@ The ``TrustedKernel`` is the TCB (Trusted Computing Base) for inferences.
 Formalisation Bridge
 ^^^^^^^^^^^^^^^^^^^^
 
-Translates plain text and natural deductive ideas into rigorous ``sympy.logic.modal`` expressions, often leveraging LLM APIs for translation.
+Translates plain text and natural deductive ideas into rigorous ``sympy.logic.modal`` expressions.
+.. , often leveraging LLM APIs for translation.
 
 * ``FormalisationInterface``: Main entrypoint for string/text parsing.
-* ``LLMPromptBuilder``: Constructs standardized prompts for LLM conversion tasks.
+.. * ``LLMPromptBuilder``: Constructs standardized prompts for LLM conversion tasks.
 
 
 Examples

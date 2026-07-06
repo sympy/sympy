@@ -1,7 +1,8 @@
-from typing import Dict, Set, Any, Tuple
+from __future__ import annotations
+from typing import Any
 from sympy.logic.boolalg import Boolean, And, Or, Not, Implies
 from sympy.core.symbol import Symbol
-from sympy.logic.modal.operators import Box, Diamond, ModalOperator
+from sympy.logic.modal.operators import Box, Diamond
 
 class KripkeModel:
     """
@@ -10,7 +11,7 @@ class KripkeModel:
     R: Accessibility relation (dict mapping world to set of accessible worlds)
     V: Valuation function (dict mapping (world, proposition) to bool)
     """
-    def __init__(self, W: Set[str], R: Dict[str, Set[str]], V: Dict[Tuple[str, Any], bool]):
+    def __init__(self, W: set[str], R: dict[str, set[str]], V: dict[tuple[str, Any], bool]):
         self.W = W
         self.R = R
         self.V = V
@@ -83,7 +84,7 @@ class SemanticEvaluator:
                     pass # We will use a recursive helper for A[p U q]
 
             # Using a recursive helper for A[p U q] with cycle detection
-            def eval_until(current_world: str, current_visited: Set[str]) -> bool:
+            def eval_until(current_world: str, current_visited: set[str]) -> bool:
                 if self.evaluate(q, current_world):
                     return True
                 if not self.evaluate(p, current_world):

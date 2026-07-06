@@ -1,18 +1,21 @@
 """
 Layer 3 (Kernel): Trusted Proof Kernel.
 """
+from __future__ import annotations
 
-from typing import List, Any, Optional
+from typing import Any, TYPE_CHECKING
 from sympy.logic.boolalg import Boolean, Implies
-from sympy.logic.modal.frames import KripkeFrame, Axiom
 from sympy.logic.modal.operators import Box
 from sympy.logic.modal.errors import NotAnAxiomError, InvalidInferenceError, NecessitationError
+
+if TYPE_CHECKING:
+    from sympy.logic.modal.frames import KripkeFrame
 
 class ProofTerm:
     """
     A term whose well-typedness is the certificate of validity.
     """
-    def __init__(self, formula: Boolean, derivation: Any = None, source: str = "axiom", hypotheses: Optional[List[Boolean]] = None):
+    def __init__(self, formula: Boolean, derivation: Any = None, source: str = "axiom", hypotheses: list[Boolean] | None = None):
         self.formula = formula
         self.derivation = derivation
         self.source = source
@@ -105,7 +108,7 @@ class TrustedKernel:
             return ProofTerm(formula, derivation="axiom", source="axiom")
         raise NotAnAxiomError(f"Formula {formula} is not an axiom in the current frame.")
 
-    def check_smt(self, formula: Boolean, premises: List[ProofTerm]) -> ProofTerm:
+    def check_smt(self, formula: Boolean, premises: list[ProofTerm]) -> ProofTerm:
         """
         Verifies if formula entails from premises using SymPy's SMT solver.
         """
@@ -127,7 +130,7 @@ class TrustedKernel:
 
         raise InvalidInferenceError(f"Formula {formula} does not entail from premises.")
 
-    def verify_rule(self, rule: Any, premises: List[ProofTerm]) -> ProofTerm:
+    def verify_rule(self, rule: Any, premises: list[ProofTerm]) -> ProofTerm:
         """
         Verifies a natural deduction rule application.
         """
@@ -138,10 +141,8 @@ class TrustedKernel:
             # We expect p1 to be Implies(A, B) and p2 to be A, or vice versa
             if isinstance(p1.formula, Implies) and p1.formula.args[0] == p2.formula:
                 impl = p1
-                ant = p2
             elif isinstance(p2.formula, Implies) and p2.formula.args[0] == p1.formula:
                 impl = p2
-                ant = p1
             else:
                 raise InvalidInferenceError(f"Premises {p1.formula} and {p2.formula} cannot be resolved via Modus Ponens.")
 

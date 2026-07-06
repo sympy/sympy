@@ -1,13 +1,13 @@
 """
 Layer 2 (Frames): Kripke Frame Semantics.
 """
+from __future__ import annotations
 
-from typing import Dict, Set, List, Any
+from typing import Any
 from enum import Enum
 
 from sympy.logic.boolalg import Boolean, Implies, And, Or, Not
 from sympy.logic.modal.operators import Box, Diamond
-from sympy.logic.modal.errors import FrameViolationError
 
 class Axiom(Enum):
     K = "K"         # □(A → B) → (□A → □B)
@@ -22,7 +22,7 @@ class KripkeFrame:
     """
     A Kripke frame governing inference.
     """
-    def __init__(self, worlds: Set[str], accessibility: Dict[str, Set[str]], axioms: List[Axiom]):
+    def __init__(self, worlds: set[str], accessibility: dict[str, set[str]], axioms: list[Axiom]):
         self.worlds = worlds
         self.accessibility = accessibility
         self.axioms = axioms
@@ -65,7 +65,7 @@ class KripkeFrame:
         """Epistemic: transitive and euclidean"""
         return cls({"w"}, {"w": {"w"}}, [Axiom.K, Axiom.Four, Axiom.Five])
 
-    def _evaluate(self, formula: Boolean, world: str, valuation: Dict[Any, Set[str]]) -> bool:
+    def _evaluate(self, formula: Boolean, world: str, valuation: dict[Any, set[str]]) -> bool:
         """
         Evaluate a formula at a given world in a given valuation.
         valuation maps atomic propositions to the set of worlds where they are true.
@@ -184,7 +184,7 @@ class KripkeFrame:
 
         return False
 
-    def is_valid_inference(self, premises: List[Boolean], conclusion: Boolean) -> bool:
+    def is_valid_inference(self, premises: list[Boolean], conclusion: Boolean) -> bool:
         """
         Checks whether the inference is sound in this frame.
         """

@@ -3,29 +3,32 @@ Layer 5: Formalisation Interface.
 Parses strings representing code, leverages named modal operators to explicitly identify
 the modality, and falls back to inferring modality by analyzing axioms.
 """
+from __future__ import annotations
 
-from typing import Optional, Dict, Any, List, Union
+from typing import Any, TYPE_CHECKING
 from dataclasses import dataclass
 
 from sympy.core.symbol import Symbol
-from sympy.logic.boolalg import Boolean
 
-from sympy.logic.modal.types import PredicateVariable, ModalPredicate, Universe, BoolType, FunctionType
+from sympy.logic.modal.types import PredicateVariable, Universe, BoolType, FunctionType
 from sympy.logic.modal.operators import (
     Box, Diamond, ProvabilityBox, AlethicBox, EpistemicBox,
     DeonticBox, TemporalBox, ForAllPredicates, ExistsPredicates
 )
-from sympy.logic.modal.frames import KripkeFrame, Axiom
+from sympy.logic.modal.frames import KripkeFrame
 from sympy.logic.modal.errors import FormalisationError, AmbiguousModalityError
+
+if TYPE_CHECKING:
+    from sympy.logic.boolalg import Boolean
 
 @dataclass
 class ModalSignature:
-    operators: List[str]
+    operators: list[str]
     frame: KripkeFrame
 
 @dataclass
 class ScopeResolution:
-    readings: List[Boolean]
+    readings: list[Boolean]
     is_ambiguous: bool
 
 @dataclass
@@ -44,7 +47,7 @@ class FormalisationInterface:
             TemporalBox: ("temporal", KripkeFrame.S4()),
         }
 
-    def _get_local_dict(self) -> Dict[str, Any]:
+    def _get_local_dict(self) -> dict[str, Any]:
         """Returns the local dictionary for sympy's parse_expr."""
         d = {
             "Box": Box,
@@ -72,7 +75,7 @@ class FormalisationInterface:
             global_dict = {'Integer': Integer, 'Implies': Implies}
             expr = parse_expr(code_str, local_dict=self._get_local_dict(), global_dict=global_dict)
             return expr
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise FormalisationError(f"Failed to parse formula: {e}")
 
     def resolve_modality(self, code_str: str) -> ModalSignature:
@@ -154,7 +157,7 @@ class FormalisationInterface:
         """
         return modal_signature.frame
 
-    def formalise(self, code_str: str, frame: Optional[KripkeFrame] = None) -> Union[Boolean, FormalisationError]:
+    def formalise(self, code_str: str, frame: KripkeFrame | None = None) -> Boolean | FormalisationError:
         """
         Composes the above into a complete formalisation.
         """
@@ -167,60 +170,60 @@ class FormalisationInterface:
             # Additional checks could be added here to ensure the formula is well-typed
             # with respect to the modal extension.
             return formula
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             if isinstance(e, FormalisationError):
                 return e
             return FormalisationError(f"Formalisation failed: {e}")
 
-import json
-try:
-    import requests
-    HAS_REQUESTS = True
-except ImportError:
-    HAS_REQUESTS = False
-
-class LLMPromptBuilder:
-    """
-    Utility to bridge natural language and sympy.logic.modal using Gemini 2.5 Flash via OpenRouter.
-    This generates prompts and interprets results.
-
-    Future Expansion Note:
-    Currently configured for Gemini 2.5 Flash. This class can easily be expanded to support
-    OpenAI (gpt-4) or Anthropic (claude-3) by changing the 'model' parameter when larger
-    budgets are available for more rigorous formalisation tasks.
-    """
-    def __init__(self, api_key: str = ""):
-        self.api_key = api_key
-
-    def formalise_prompt(self, natural_language: str) -> str:
-        return f"""
-        Convert the following natural language specification into a strictly valid sympy.logic.modal Python code string.
-        Use operators like Box, Diamond, Implies, And, Or.
-        Do not include markdown blocks, just the raw code.
-
-        Specification: "{natural_language}"
-        """
-
-    def call_gemini(self, prompt: str) -> str:
-        """
-        Calls Gemini 2.5 Flash via OpenRouter API if requests is available, otherwise returns a stub.
-        """
-        if not HAS_REQUESTS or not self.api_key:
-            return "# LLM API not configured or requests not installed."
-
-        response = requests.post(
-            url="https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            },
-            data=json.dumps({
-                "model": "google/gemini-2.5-flash",
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
-            })
-        )
-        if response.status_code == 200:
-            return response.json()['choices'][0]['message']['content'].strip()
-        return f"# API Request failed with status code {response.status_code}"
+# import json
+# try:
+#     import requests
+#     HAS_REQUESTS = True
+# except ImportError:
+#     HAS_REQUESTS = False
+#
+# class LLMPromptBuilder:
+#     """
+#     Utility to bridge natural language and sympy.logic.modal using Gemini 2.5 Flash via OpenRouter.
+#     This generates prompts and interprets results.
+#
+#     Future Expansion Note:
+#     Currently configured for Gemini 2.5 Flash. This class can easily be expanded to support
+#     OpenAI (gpt-4) or Anthropic (claude-3) by changing the 'model' parameter when larger
+#     budgets are available for more rigorous formalisation tasks.
+#     """
+#     def __init__(self, api_key: str = ""):
+#         self.api_key = api_key
+#
+#     def formalise_prompt(self, natural_language: str) -> str:
+#         return f"""
+#         Convert the following natural language specification into a strictly valid sympy.logic.modal Python code string.
+#         Use operators like Box, Diamond, Implies, And, Or.
+#         Do not include markdown blocks, just the raw code.
+#
+#         Specification: "{natural_language}"
+#         """
+#
+#     def call_gemini(self, prompt: str) -> str:
+#         """
+#         Calls Gemini 2.5 Flash via OpenRouter API if requests is available, otherwise returns a stub.
+#         """
+#         if not HAS_REQUESTS or not self.api_key:
+#             return "# LLM API not configured or requests not installed."
+#
+#         response = requests.post(
+#             url="https://openrouter.ai/api/v1/chat/completions",
+#             headers={
+#                 "Authorization": f"Bearer {self.api_key}",
+#                 "Content-Type": "application/json",
+#             },
+#             data=json.dumps({
+#                 "model": "google/gemini-2.5-flash",
+#                 "messages": [
+#                     {"role": "user", "content": prompt}
+#                 ]
+#             })
+#         )
+#         if response.status_code == 200:
+#             return response.json()['choices'][0]['message']['content'].strip()
+#         return f"# API Request failed with status code {response.status_code}"
