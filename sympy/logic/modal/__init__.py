@@ -83,7 +83,7 @@ from sympy.logic.modal.formalise import (
     ModalSignature,
     ScopeResolution,
     QuantifierOrder,
-    LLMPromptBuilder
+    # LLMPromptBuilder,
 )
 
 
