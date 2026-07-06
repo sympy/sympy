@@ -93,12 +93,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
         facets = poly[1:]
         hp_params = hyperplane_parameters(facets, vertices)
 
-        # main_integrate3d requires the facets' vertices to be wound so
-        # that their normals point outward. If they are all wound the
-        # other way instead, the computed volume comes out negated. Detect
-        # this via the sign of the volume and, if needed, reverse every
-        # facet so the orientation is consistent with the outward
-        # convention assumed elsewhere.
+        
         if main_integrate3d(1, facets, vertices, hp_params).is_negative:
             facets = [facet[::-1] for facet in facets]
             hp_params = hyperplane_parameters(facets, vertices)
