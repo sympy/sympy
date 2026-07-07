@@ -1822,18 +1822,18 @@ class Basic(Printable):
         >>> from sympy import sin, cos, Wild
         >>> from sympy.abc import x, y
 
-        >>> expr = sin(x) + sin(x)*cos(x) + y
+        >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
         >>> expr.find(sin)
-        {sin(x)}
+        {sin(y), sin(x)}
         >>> expr.find(sin, group=True)
-        {sin(x): 2}
+        {sin(y): 1, sin(x): 2}
 
         >>> w = Wild('w')
         >>> expr.find(sin(w))
-        {sin(x)}
+        {sin(y), sin(x)}
 
         >>> expr.find(lambda e: e.is_Symbol)
-        {x, y}
+        {y, x}
 
         See Also
         ========
