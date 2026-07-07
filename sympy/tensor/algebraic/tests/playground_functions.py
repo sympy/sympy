@@ -586,5 +586,7 @@ simbolovi08 = simbolovi0 + simbolovi1 + simbolovi2 + simbolovi3 + simbolovi4 + s
 da1 = Dirac*a1 - a1*Dirac
 da1 = da1.expand()
 da1 = da1.simplify()
-print(da1.args[0]  )
-print(len(da1.args))
+for i in range (len(da1.args)):
+    print(da1.args[i])
+    print("")
+    print("")

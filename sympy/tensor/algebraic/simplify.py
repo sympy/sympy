@@ -550,11 +550,11 @@ def _normalize_factor_sign(f):
     """Normalize the sign of a polynomial factor so -(w-z) and (w-z) match.
 
     Makes polynomial factors monic in sign by flipping the overall sign when
-    the coefficient of the first symbol (in preorder traversal) is negative.
+    the coefficient of the first symbol (sorted by name for determinism) is
+    negative.
     """
     from sympy.core.add import Add as _Add
     from sympy.core.mul import Mul as _Mul
-    from sympy.core.numbers import Rational
 
     if isinstance(f, _Mul):
         if f.args[0].is_number and f.args[0].is_negative:
@@ -562,13 +562,17 @@ def _normalize_factor_sign(f):
             if nf != f:
                 return nf
     elif isinstance(f, _Add):
-        first_sym = None
-        for atom in f.atoms():
-            if getattr(atom, 'is_Symbol', False) and not getattr(atom, 'is_number', True):
-                first_sym = atom
-                break
-        if first_sym is not None:
-            lc = f.coeff(first_sym)
+        # Sort symbols by string representation for deterministic ordering.
+        # Using f.atoms() directly is non-deterministic because atoms()
+        # returns a set whose iteration order depends on the Python hash seed.
+        syms = sorted(
+            (a for a in f.atoms()
+             if getattr(a, 'is_Symbol', False)
+             and not getattr(a, 'is_number', True)),
+            key=lambda s: str(s),
+        )
+        if syms:
+            lc = f.coeff(syms[0])
             if hasattr(lc, 'is_negative') and lc.is_negative:
                 nf = -f
                 if nf != f:
@@ -603,6 +607,41 @@ def _is_exactly_divisible(entry, candidate):
     if denom != S.One and denom.has(candidate):
         return False
     return True
+
+
+def _deduplicate_proportional(factors):
+    """Remove factors that are constant multiples of an already-kept factor.
+
+    Given a list of irreducible commutative factors, returns a filtered list
+    that contains at most one representative per proportionality class
+    (i.e., factors that differ only by a constant scalar such as -1).
+
+    This is needed because _normalize_factor_sign may not catch every sign
+    convention, and both ``a`` and ``-a`` could otherwise end up as
+    separate survivors, producing ``-a**2`` as the divisor.
+    """
+    if not factors:
+        return []
+    kept = []
+    for f in factors:
+        proportional = False
+        for g in kept:
+            # Check if f / g is a nonzero constant
+            if g == S.Zero:
+                continue
+            q = _get_sympy_simplify()(f / g)
+            if (hasattr(q, 'is_number') and q.is_number and q != S.Zero):
+                proportional = True
+                break
+            # Also check g / f (in case f == 0)
+            if f != S.Zero:
+                q2 = _get_sympy_simplify()(g / f)
+                if (hasattr(q2, 'is_number') and q2.is_number and q2 != S.Zero):
+                    proportional = True
+                    break
+        if not proportional:
+            kept.append(f)
+    return kept
 
 
 def _extract_commutative_from_factor(factor):
@@ -701,6 +740,17 @@ def _extract_commutative_from_factor(factor):
                 gcd_val = igcd(gcd_val, e)
             if gcd_val != 1 and gcd_val != -1:
                 surviving.append(abs(int(gcd_val)))
+
+        if not surviving:
+            return (S.One, factor)
+
+        # Remove proportional (constant-scaled) duplicates.  Because
+        # _normalize_factor_sign relies on a sign convention that may not
+        # catch every case, both ``a`` and ``-a`` could end up in
+        # ``surviving``.  Their product ``-a**2`` does not divide the
+        # entries, so we must keep at most one representative per
+        # proportionality class.
+        surviving = _deduplicate_proportional(surviving)
 
         if not surviving:
             return (S.One, factor)
