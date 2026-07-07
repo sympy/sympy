@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.matrices.expressions import MatrixExpr
+from sympy.assumptions.assume import Predicate
 from sympy.assumptions.ask import Q
 
 class Factorization(MatrixExpr):
@@ -8,11 +9,11 @@ class Factorization(MatrixExpr):
 
 class LofLU(Factorization):
     @property
-    def predicates(self):
+    def predicates(self) -> tuple[Predicate, ...]:
         return (Q.lower_triangular,)
 class UofLU(Factorization):
     @property
-    def predicates(self):
+    def predicates(self) -> tuple[Predicate, ...]:
         return (Q.upper_triangular,)
 
 class LofCholesky(LofLU): pass
@@ -20,44 +21,44 @@ class UofCholesky(UofLU): pass
 
 class QofQR(Factorization):
     @property
-    def predicates(self):
+    def predicates(self) -> tuple[Predicate, ...]:
         return (Q.orthogonal,)
 class RofQR(Factorization):
     @property
-    def predicates(self):
+    def predicates(self) -> tuple[Predicate, ...]:
         return (Q.upper_triangular,)
 
 class EigenVectors(Factorization):
     @property
-    def predicates(self):
+    def predicates(self) -> tuple[Predicate, ...]:
         return (Q.orthogonal,)
 class EigenValues(Factorization):
     @property
-    def predicates(self):
+    def predicates(self) -> tuple[Predicate, ...]:
         return (Q.diagonal,)
 
 class UofSVD(Factorization):
     @property
-    def predicates(self):
+    def predicates(self) -> tuple[Predicate, ...]:
         return (Q.orthogonal,)
 class SofSVD(Factorization):
     @property
-    def predicates(self):
+    def predicates(self) -> tuple[Predicate, ...]:
         return (Q.diagonal,)
 class VofSVD(Factorization):
     @property
-    def predicates(self):
+    def predicates(self) -> tuple[Predicate, ...]:
         return (Q.orthogonal,)
 
 
-def lu(expr):
+def lu(expr: MatrixExpr) -> tuple[LofLU, UofLU]:
     return LofLU(expr), UofLU(expr)
 
-def qr(expr):
+def qr(expr: MatrixExpr) -> tuple[QofQR, RofQR]:
     return QofQR(expr), RofQR(expr)
 
-def eig(expr):
+def eig(expr: MatrixExpr) -> tuple[EigenValues, EigenVectors]:
     return EigenValues(expr), EigenVectors(expr)
 
-def svd(expr):
+def svd(expr: MatrixExpr) -> tuple[UofSVD, SofSVD, VofSVD]:
     return UofSVD(expr), SofSVD(expr), VofSVD(expr)
