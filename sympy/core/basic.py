@@ -1808,7 +1808,8 @@ class Basic(Printable):
         query : type, Basic, or callable
             The pattern used to test each node of the expression tree.
             A type matches subexpressions of that type, a ``Basic``
-            expression matches patterns (including ``Wild`` symbols),
+            expression is treated as a pattern that subexpressions are
+            matched against (with ``Wild`` symbols acting as wildcards),
             and a callable matches when it returns ``True``.
 
         group : bool, optional
@@ -1844,7 +1845,7 @@ class Basic(Printable):
         Notes
         =====
 
-        The search visits every node of the tree, including the
+        The search visits every node of the expression tree, including the
         expression itself, so ``expr.find(type(expr))`` will include
         ``expr`` in the result.
         """
