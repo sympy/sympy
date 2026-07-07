@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from sympy.core.basic import Atom
+from sympy.core.expr import AtomicExpr
+from sympy.core.numbers import Number
+from sympy.core.sympify import sympify
 
 
-class AlgebraicZeroTensor(Atom):
+class AlgebraicZeroTensor(AtomicExpr):
     """Zero tensor carrying a specific tensor shape.
 
     An AlgebraicZeroTensor of shape ``((m0, n0), (m1, n1), ...)`` acts as the additive
@@ -15,16 +17,17 @@ class AlgebraicZeroTensor(Atom):
     For a single-matrix tensor of shape ``(m, n)`` the canonical form is
     ``((m, n),)`` (a one-element tuple).
 
-    Extends ``Atom`` (a leaf ``Basic`` subclass) to integrate with SymPy's
+    Extends ``AtomicExpr`` (``Atom`` + ``Expr``) to integrate with SymPy's
     expression system: ``sympify()``, tree traversal (``atoms()``, ``has()``,
-    ``replace()``), the assumptions system (``is_zero``, ``is_commutative``),
-    and generic operations (``subs()``, ``xreplace()``, ``doit()``).
+    ``replace()``), the assumptions system (``is_commutative``),
+    generic operations (``subs()``, ``xreplace()``, ``doit()``), and the
+    ``Expr`` machinery (``as_base_exp()``, ``as_coeff_Mul()``, ``as_coeff_Add()``).
     """
 
     __slots__ = ('_shape',)
 
     is_AlgebraicZeroTensor = True
-    is_zero = True
+    is_zero = None
     is_commutative = True
 
     def __new__(cls, shape):
@@ -35,7 +38,7 @@ class AlgebraicZeroTensor(Atom):
             # Bare (m, n) or [m, n] -> wrap as ((m, n),)
             shape = (shape,)
         shape = tuple(tuple(s) for s in shape)
-        obj = Atom.__new__(cls)
+        obj = AtomicExpr.__new__(cls)
         obj._shape = shape
         return obj
 
@@ -88,12 +91,30 @@ class AlgebraicZeroTensor(Atom):
         return AlgebraicTensor(other, -self)
 
     def __mul__(self, other):
-        """Composition of a zero tensor returns a zero tensor of the same shape."""
-        return self
+        """Scaling by a commutative scalar returns self.
+
+        For non-commutative operands, delegates to composition.
+        """
+        other = sympify(other)
+        if isinstance(other, Number) or (
+            hasattr(other, 'is_commutative') and other.is_commutative
+        ):
+            return self
+        from sympy.tensor.algebraic.algebraic_tensor import compose_algebraic_tensors
+        return compose_algebraic_tensors(self, other)
 
     def __rmul__(self, other):
-        """Composition of a zero tensor from the left returns the zero tensor."""
-        return self
+        """Scaling by a commutative scalar returns self.
+
+        For non-commutative operands, delegates to composition.
+        """
+        other = sympify(other)
+        if isinstance(other, Number) or (
+            hasattr(other, 'is_commutative') and other.is_commutative
+        ):
+            return self
+        from sympy.tensor.algebraic.algebraic_tensor import compose_algebraic_tensors
+        return compose_algebraic_tensors(other, self)
 
     def __repr__(self):
         return f"AlgebraicZeroTensor{self._shape}"

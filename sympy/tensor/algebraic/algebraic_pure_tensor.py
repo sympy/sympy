@@ -214,6 +214,8 @@ class AlgebraicPureTensor(Mul):
                 return self
             if other is S.Zero:
                 return AlgebraicZeroTensor(self.tensor_shape)
+        if isinstance(other, AlgebraicZeroTensor):
+            return other
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
                 other.is_commutative and not isinstance(other, AlgebraicPureTensor)):
             coeff, factors = self._get_coeff(), self.factors
@@ -273,6 +275,8 @@ class AlgebraicPureTensor(Mul):
                 return self
             if other is S.Zero:
                 return AlgebraicZeroTensor(self.tensor_shape)
+        if isinstance(other, AlgebraicZeroTensor):
+            return other
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
                 other.is_commutative and not isinstance(other, AlgebraicPureTensor)):
             coeff = self._get_coeff()
@@ -436,6 +440,12 @@ def compose_algebraic_pure_tensors(left, right):
         corresponding factor pair has incompatible inner dimensions for
         matrix multiplication.
     """
+    # --- AlgebraicZeroTensor shortcuts ---
+    if isinstance(left, AlgebraicZeroTensor):
+        return AlgebraicZeroTensor(left.shape)
+    if isinstance(right, AlgebraicZeroTensor):
+        return AlgebraicZeroTensor(right.shape)
+
     # Handle unwrapped single-factor tensors
     if isinstance(left, AlgebraicPureTensor):
         left_factors = left.factors

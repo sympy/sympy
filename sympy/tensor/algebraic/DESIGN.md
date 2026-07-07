@@ -227,16 +227,21 @@ The additive identity for tensors of a specific shape. Unlike SymPy's `S.Zero`,
 an `AlgebraicZeroTensor` carries shape information, so `0_((3,4),)` and
 `0_((2,2),)` are different objects.
 
-### Inheritance: extends `Atom`
+### Inheritance: extends `AtomicExpr`
 
-`AlgebraicZeroTensor` extends `sympy.core.basic.Atom` (a leaf `Basic` subclass)
-to integrate with SymPy's expression system. This provides:
+`AlgebraicZeroTensor` extends `sympy.core.expr.AtomicExpr` (which is both
+`Atom` and `Expr`) to integrate with SymPy's expression system. This provides:
 
 - **`sympify()` support** — `sympify(z)` returns `z` unchanged.
 - **Tree traversal** — `atoms()`, `has()`, `replace()` work correctly.
-- **Assumptions system** — `is_zero = True`, `is_commutative = True` are
-  recognized by the SymPy assumptions machinery.
+- **Assumptions system** — `is_commutative = True` is recognized by the
+  SymPy assumptions machinery. `is_zero = None` (not `True`) to prevent
+  `Mul.__new__` from collapsing `x * zt` to `S.Zero` (which would lose
+  shape information).
 - **Generic operations** — `subs()`, `xreplace()`, `doit()` are inherited.
+- **Expr machinery** — `as_base_exp()`, `as_coeff_Mul()`, `as_coeff_Add()`
+  are inherited from `Expr`, preventing `AttributeError` when `MatMul` or
+  `Mul` internals process `AlgebraicZeroTensor` as a factor.
 
 The shape is stored in a dedicated `_shape` slot (not in `_args`). This is
 required because `Basic` expects `_args` to contain only `Basic` objects —
@@ -267,12 +272,18 @@ AlgebraicZeroTensor(((3, 4), (4, 5))).commutativity_shape → (1, 1)
 | `__neg__` | Returns self (zero is its own negation) |
 | `__add__` / `__radd__` | Returns `other` (identity) |
 | `__sub__` / `__rsub__` | Delegates to `AlgebraicTensor` constructor |
-| `__mul__` / `__rmul__` | Returns self (composition of zero is zero of same shape) |
+| `__mul__` | Commutative operand → returns self. Non-commutative → delegates to `compose_algebraic_tensors` |
+| `__rmul__` | Commutative operand → returns self. Non-commutative → delegates to `compose_algebraic_tensors` |
 | `__bool__` | Returns `False` |
 
 **Agent rule:** When `AlgebraicPureTensor` or `AlgebraicTensor` operations produce
 a zero result, they return `AlgebraicZeroTensor(shape)`, not `S.Zero`. The shape
 information is critical for type safety.
+
+**Known limitation:** `x * zt` (where `x` is a `Symbol` and `zt` is an
+`AlgebraicZeroTensor`) creates a `Mul(x, zt)` because `Expr.__mul__` calls
+`Mul(x, zt)` directly without dispatching to `zt.__rmul__(x)`. Use `zt * x`
+instead, which correctly returns `zt`.
 
 ---
 
