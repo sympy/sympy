@@ -1,7 +1,10 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from sympy.matrices.expressions import MatrixExpr
-from sympy.assumptions.assume import Predicate
 from sympy.assumptions.ask import Q
+
+if TYPE_CHECKING:
+    from sympy.assumptions.assume import Predicate
 
 class Factorization(MatrixExpr):
     arg = property(lambda self: self.args[0])
