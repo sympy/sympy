@@ -37,7 +37,7 @@ if TYPE_CHECKING:
             ...
 
 
-def as_Basic(expr):
+def as_Basic(expr) -> 'Basic':
     """Return expr as a Basic instance using strict sympify
     or raise a TypeError; this is just a wrapper to _sympify,
     raising a TypeError instead of a SympifyError."""
