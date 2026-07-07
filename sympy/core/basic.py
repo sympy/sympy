@@ -1824,16 +1824,16 @@ class Basic(Printable):
 
         >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
         >>> expr.find(sin)
-        {sin(y), sin(x)}
+        {sin(x), sin(y)}
         >>> expr.find(sin, group=True)
-        {sin(y): 1, sin(x): 2}
+        {sin(x): 2, sin(y): 1}
 
         >>> w = Wild('w')
         >>> expr.find(sin(w))
-        {sin(y), sin(x)}
+        {sin(x), sin(y)}
 
         >>> expr.find(lambda e: e.is_Symbol)
-        {y, x}
+        {x, y}
 
         See Also
         ========
