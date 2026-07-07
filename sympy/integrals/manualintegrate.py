@@ -2787,4 +2787,8 @@ def manualintegrate(f, var):
         return False
     if _has_erf_trig_mul(f) and _has_erf_trig_mul(result):
         result = factor_terms(result)
+    def _remove_additive_constants(expr, var):
+        _, dependent = expr.as_independent(var, as_Add=True)
+        return dependent
+    result = _remove_additive_constants(result, var)
     return result
