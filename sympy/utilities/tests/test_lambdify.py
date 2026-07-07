@@ -1430,6 +1430,25 @@ def test_numpy_array_arg():
     assert f(numpy.array([2.0, 1.0])) == 5
 
 
+def test_issue_5642():
+    if not numpy:
+        skip("numpy not installed")
+    u = numpy.linspace(-2, 2, 10)
+    g = lambdify(x, diff(x**2, x, 2), "numpy")
+    r = g(u)
+    assert isinstance(r, numpy.ndarray) and r.shape == (10,)
+    assert numpy.all(r == 2)
+    h = lambdify([x, y], S(5), "numpy")
+    assert h(u, u).shape == (10,)
+    p = lambdify([x, y], y - 4, "numpy")
+    assert p(numpy.zeros((4,)), numpy.ones((1,))).shape == (4,)
+    assert lambdify(x, x**2, "numpy")(u).shape == (10,)
+    assert numpy.ndim(lambdify(x, x**2, "numpy")(3.0)) == 0
+    assert numpy.ndim(lambdify(x, S(2), "numpy")(3.0)) == 0
+    assert lambdify(x, Matrix([1, 2]), "numpy")(u).shape == (2, 1)
+    assert numpy.ndim(lambdify(x, S(2), [])(u)) == 0
+
+
 def test_scipy_fns():
     if not scipy:
         skip("scipy not installed")

@@ -930,6 +930,9 @@ or tuple for the function arguments.
     funcname = '_lambdifygenerated'
     if _module_present('tensorflow', namespaces):
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
+    elif (_module_present('numpy', namespaces)
+          or _module_present('scipy', namespaces)):
+        funcprinter = _NumPyEvaluatorPrinter(printer, dummify)
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
@@ -959,7 +962,8 @@ or tuple for the function arguments.
                 imp_mod_lines.append(ln)
 
     # Provide lambda expression with builtins, and compatible implementation of range
-    namespace.update({'builtins':builtins, 'range':range})
+    namespace.update({'builtins':builtins, 'range':range,
+                      '_numpy_broadcast_result': _numpy_broadcast_result})
 
     funclocals = {}
     global _lambdify_generated_counter
@@ -1224,6 +1228,18 @@ class _EvaluatorPrinter:
             else:
                 funcargs.append(argstr)
 
+        from sympy.core.symbol import Symbol
+        from sympy.core.expr import Expr as _Expr
+        broadcast_argstrs = []
+        if isinstance(expr, _Expr):
+            symbol_argstrs = [astr for a, astr in zip(args, argstrs)
+                              if isinstance(a, Symbol) and not iterable(astr)]
+            free = expr.free_symbols
+            missing = any(a not in free for a, astr in zip(args, argstrs)
+                          if isinstance(a, Symbol) and not iterable(astr))
+            if missing and symbol_argstrs:
+                broadcast_argstrs = symbol_argstrs
+
         funcsig = 'def {}({}):'.format(funcname, ', '.join(funcargs))
 
         # Wrap input arguments before unpacking
@@ -1247,7 +1263,7 @@ class _EvaluatorPrinter:
 
         if '\n' in str_expr:
             str_expr = '({})'.format(str_expr)
-        funcbody.append('return {}'.format(str_expr))
+        funcbody.append(self._print_return(broadcast_argstrs, expr, str_expr))
 
         funclines = [funcsig]
         funclines.extend(['    ' + line for line in funcbody])
@@ -1344,6 +1360,9 @@ class _EvaluatorPrinter:
         """
         return []
 
+    def _print_return(self, funcargs, expr, str_expr):
+        return 'return {}'.format(str_expr)
+
     def _print_unpacking(self, unpackto, arg):
         """Generate argument unpacking code.
 
@@ -1398,6 +1417,28 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
                                 for ind in flat_indexes(lvalues))
 
         return ['[{}] = [{}]'.format(', '.join(flatten(lvalues)), indexed)]
+
+
+class _NumPyEvaluatorPrinter(_EvaluatorPrinter):
+
+    def _print_return(self, funcargs, expr, str_expr):
+        if not funcargs:
+            return 'return {}'.format(str_expr)
+        arg_shapes = ', '.join('numpy.shape({})'.format(a) for a in funcargs)
+        return 'return _numpy_broadcast_result(({}), ({},))'.format(
+            str_expr, arg_shapes)
+
+
+def _numpy_broadcast_result(result, arg_shapes):
+    import numpy
+    try:
+        shape = numpy.broadcast_shapes(numpy.shape(result), *arg_shapes)
+    except (ValueError, TypeError):
+        return result
+    if shape and numpy.shape(result) != shape:
+        return numpy.broadcast_to(result, shape).copy()
+    return result
+
 
 def _imp_namespace(expr, namespace=None):
     """ Return namespace dict with function implementations
