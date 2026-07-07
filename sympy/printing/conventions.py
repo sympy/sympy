@@ -7,11 +7,15 @@ import re
 
 from collections.abc import Iterable
 from sympy.core.function import Derivative
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
 
 _name_with_digits_p = re.compile(r'^([^\W\d_]+)(\d+)$', re.UNICODE)
 
 
-def split_super_sub(text):
+def split_super_sub(text: str) -> tuple[str, list[str], list[str]]:
     """Split a symbol name into a name, superscripts and subscripts
 
     The first part of the symbol name is considered to be its actual
@@ -34,9 +38,10 @@ def split_super_sub(text):
         return text, [], []
 
     pos = 0
-    name = None
-    supers = []
-    subs = []
+    name = ""
+    name_set = False
+    supers: list[str] = []
+    subs: list[str] = []
     while pos < len(text):
         start = pos + 1
         if text[pos:pos + 2] == "__":
@@ -50,8 +55,9 @@ def split_super_sub(text):
         pos_next = min(pos_hat, pos_usc)
         part = text[pos:pos_next]
         pos = pos_next
-        if name is None:
+        if not name_set:
             name = part
+            name_set = True
         elif part.startswith("^"):
             supers.append(part[1:])
         elif part.startswith("__"):
@@ -71,7 +77,7 @@ def split_super_sub(text):
     return name, supers, subs
 
 
-def requires_partial(expr):
+def requires_partial(expr: Basic) -> bool:
     """Return whether a partial derivative symbol is required for printing
 
     This requires checking how many free variables there are,

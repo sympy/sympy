@@ -1670,6 +1670,8 @@ class LatexPrinter(Printer):
     _print_RandomSymbol = _print_Symbol
 
     def _split_super_sub(self, name: str) -> tuple[str, list[str], list[str]]:
+        supers: list[str]
+        subs: list[str]
         if name is None or '{' in name:
             return (name, [], [])
         elif self._settings["disable_split_super_sub"]:
