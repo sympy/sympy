@@ -72,7 +72,8 @@ class EUFCongruenceClosure:
         pending_unions:   deque, list of pairs of constants yet to be merged (PENDING).
         representative_table: dict, mapping: constant -> its class representative (REPRESENTATIVE).
         classlist: defaultdict(set), rep -> set of all elements in class (CLASSLIST).
-        lookup_table: dict, maps (function, tuple of args) to a constant (LOOKUP).
+        lookup_table: dict, maps (function, tuple of args) to the equation
+            recording that application, as a (func, args, result) triple (LOOKUP).
         use_list: defaultdict(list), rep -> list of (func, args, result) triples (USELIST).
     """
 
@@ -100,7 +101,7 @@ class EUFCongruenceClosure:
                 raise EUFUnhandledInput
             left_id = self._flatten(eq.lhs)
             right_id = self._flatten(eq.rhs)
-            self.pending_unions.append((left_id, right_id))
+            self.pending_unions.append((left_id, right_id, eq))
         self._process_pending_unions()
 
     def _register(self, const):
@@ -155,12 +156,18 @@ class EUFCongruenceClosure:
     def _record_func_eq(self, func, arg_ids):
         """Record the equation func(arg_ids) = d and return d."""
         key = (func, arg_ids)
-        if key in self.lookup_table:
-            return self.lookup_table[key]
         d = self._new_dummy()
-        self.lookup_table[key] = d
-        for arg_id in set(arg_ids):
-            self.use_list[arg_id].append((func, arg_ids, d))
+        eq = (func, arg_ids, d)
+        if key in self.lookup_table:
+            other = self.lookup_table[key]
+            # this is mainly because so we do not lose any information
+            # on explanation()
+            self.pending_unions.append((d, other[2], (eq, other)))
+            self._process_pending_unions()
+        else:
+            self.lookup_table[key] = eq
+            for arg_id in set(arg_ids):
+                self.use_list[arg_id].append(eq)
         return d
 
     def _find_repr(self, const):
@@ -169,30 +176,32 @@ class EUFCongruenceClosure:
         """
         return self.representative_table[const]
 
-    def _union(self, a, b):
+    def _union(self, a, b, label=None):
         rep_a, rep_b = self._find_repr(a), self._find_repr(b)
         if rep_a == rep_b:
             return
         # Ensure |ClassList(a)| <= |ClassList(b)|
         if len(self.classlist[rep_a]) > len(self.classlist[rep_b]):
             rep_a, rep_b = rep_b, rep_a
+            a, b = b, a
+        self._insert_edge(a, b, label)
         # Move all members of ClassList(rep_a) into ClassList(rep_b)
         for c in self.classlist[rep_a]:
             self.representative_table[c] = rep_b
             self.classlist[rep_b].add(c)
         del self.classlist[rep_a]
         # For each application (func, args, term) in UseList(rep_a)
-        for func, arg_ids, term in self.use_list.pop(rep_a, []):
+        for eq in self.use_list.pop(rep_a, []):
+            func, arg_ids, term = eq
             rep_args = tuple(self._find_repr(arg) for arg in arg_ids)
-            rep_term = self._find_repr(term)
             key = (func, rep_args)
             if key in self.lookup_table:
-                other = self._find_repr(self.lookup_table[key])
-                if other != rep_term:
-                    self.pending_unions.append((rep_term, other))
+                other = self.lookup_table[key]
+                if self._find_repr(other[2]) != self._find_repr(term):
+                    self.pending_unions.append((term, other[2], (eq, other)))
             else:
-                self.lookup_table[key] = rep_term
-                self.use_list[rep_b].append((func, arg_ids, term))
+                self.lookup_table[key] = eq
+                self.use_list[rep_b].append(eq)
 
     def _process_pending_unions(self):
         """
@@ -217,7 +226,7 @@ class EUFCongruenceClosure:
         >>> cc.are_congruent(x, y)
         True
         """
-        self.pending_unions.append((self._flatten(lhs), self._flatten(rhs)))
+        self.pending_unions.append((self._flatten(lhs), self._flatten(rhs), Q.eq(lhs, rhs)))
         self._process_pending_unions()
 
     def are_congruent(self, lhs, rhs):
