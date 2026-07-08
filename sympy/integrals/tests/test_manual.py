@@ -720,6 +720,12 @@ def test_issue_25093():
         + cos(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)))
 
 
+def test_issue_29999():
+    f = exp(x) / (3 * x + 2)
+    F = exp(-Rational(2, 3)) * Ei(x + Rational(2, 3)) * S.One / 3
+    assert_is_integral_of(f, F)
+
+
 def test_nested_pow():
     assert_is_integral_of(sqrt(x**2), x*sqrt(x**2)/2)
     assert_is_integral_of(sqrt(x**(S(5)/3)), 6*x*sqrt(x**(S(5)/3))/11)
