@@ -13,7 +13,7 @@ from sympy.tensor.algebraic.algebraic_zero_tensor import (
     algebraic_zero_tensor,
 )
 from sympy.tensor.algebraic.scalar_mul import ScalarMul
-from sympy.tensor.algebraic.simplify import tensorsimplify, proportionality_factoring
+from sympy.tensor.algebraic.simplify import tensorsimplify
 
 __all__ = [
     "AlgebraicTensor",
@@ -26,5 +26,4 @@ __all__ = [
     "compose_algebraic_pure_tensors",
     "compose_algebraic_tensors",
     "tensorsimplify",
-    "proportionality_factoring",
 ]

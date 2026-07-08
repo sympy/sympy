@@ -153,7 +153,7 @@ def _build_pt(coeff, factors):
     return AlgebraicPureTensor(coeff, *factors)
  
 
-def proportionality_factoring(at):
+def _proportionality_factoring(at):
     """Simplify an AlgebraicTensor by merging proportional AlgebraicPureTensor terms.
 
     Algorithm
@@ -814,7 +814,7 @@ def _commutativity_simplify(at, **kwargs):
     """Simplify an AlgebraicTensor using commutativity-aware decomposition.
 
     Decomposes each term into commutative and non-commutative subtensors,
-    groups by commutative pattern, applies proportionality_factoring to
+    groups by commutative pattern, applies ``_proportionality_factoring`` to
     non-commutative components, and reconstructs the full expression.
 
     Parameters
@@ -925,7 +925,7 @@ def _commutativity_simplify(at, **kwargs):
     for key in comm_dict:
         value = comm_dict[key]
         if isinstance(value, AlgebraicTensor):
-            comm_dict[key] = proportionality_factoring(value)
+            comm_dict[key] = _proportionality_factoring(value)
     all_reconstructed = []
 
     for key, value in comm_dict.items():
@@ -991,7 +991,7 @@ def _commutativity_simplify(at, **kwargs):
         final_result = AlgebraicTensor(*real_terms, _sympify=False)
 
     if isinstance(final_result, AlgebraicTensor):
-        final_result = proportionality_factoring(final_result)
+        final_result = _proportionality_factoring(final_result)
 
     if isinstance(final_result, AlgebraicTensor):
         new_args = []
@@ -1099,7 +1099,7 @@ def _simplify_algebraic_tensor(at, **kwargs):
 
     **Commutativity-based simplification** -- decomposes terms by their
     commutativity shape, groups by commutative patterns, applies
-    proportionality_factoring to non-commutative components, and
+    ``_proportionality_factoring`` to non-commutative components, and
     reconstructs the full expression with simplified factors.
 
     AlgebraicZeroTensor anchors and S.Zero terms are handled naturally.
@@ -1109,9 +1109,9 @@ def _simplify_algebraic_tensor(at, **kwargs):
     from sympy.tensor.algebraic.scalar_mul import ScalarMul
 
     # Phase 0: proportionality factoring
-    result = proportionality_factoring(at)
+    result = _proportionality_factoring(at)
 
-    # If proportionality_factoring returned a non-AlgebraicTensor, simplify it
+    # If _proportionality_factoring returned a non-AlgebraicTensor, simplify it
     if not isinstance(result, AlgebraicTensor):
         if isinstance(result, (AlgebraicPureTensor, ScalarMul)):
             return tensorsimplify(result, **kwargs)
