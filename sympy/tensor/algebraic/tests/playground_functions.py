@@ -30,6 +30,7 @@ from sympy.tensor.algebraic import (
 )
 
 from sympy.printing.latex import latex
+from sympy.printing.repr import srepr
 
 # ---------------------------------------------------------------------------
 # Commutative symbols
@@ -590,3 +591,5 @@ for i in range (len(da1.args)):
     print(da1.args[i])
     print("")
     print("")
+print("")
+print(srepr(da1))

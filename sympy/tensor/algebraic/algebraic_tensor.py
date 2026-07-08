@@ -10,7 +10,7 @@ from sympy.core.sympify import sympify
 from sympy.tensor.algebraic.algebraic_pure_tensor import (
     AlgebraicPureTensor, _factor_shapes, _factor_has_noncommutative
 )
-from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor, algebraic_zero_tensor
+from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 from sympy.tensor.algebraic.scalar_mul import ScalarMul
 
 

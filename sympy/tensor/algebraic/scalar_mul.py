@@ -195,24 +195,84 @@ class ScalarMul(Basic):
         return AlgebraicTensor(other, -self)
 
     def expand(self, deep=True, **hints):
-        """Expand the inner tensor, carrying the scalar through."""
+        """Expand ScalarMul by distributing over Add in scalar and tensor factors.
+
+        1. Expand the symbolic prefactor as a SymPy Expr.
+        2. Expand every tensor factor.
+        3. If the scalar prefactor is an Add, split into an Add of ScalarMuls.
+        4. For each ScalarMul, if any tensor factor is an Add, distribute the
+           tensor product linearly into multiple AlgebraicPureTensors/ScalarMuls.
+        """
+        from sympy.core.add import Add
         from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
+        from itertools import product
 
-        if hasattr(self.tensor, 'expand'):
-            expanded = self.tensor.expand(deep=deep, **hints)
-        else:
-            expanded = self.tensor
+        # Step 1: Expand the scalar prefactor
+        scalar = self.scalar
+        if hasattr(scalar, 'expand'):
+            scalar = scalar.expand(deep=deep, **hints)
 
-        if expanded is self.tensor:
-            return self
+        # Step 2: Expand every tensor factor
+        factors = list(self.factors)
+        expanded_factors = []
+        for f in factors:
+            if hasattr(f, 'expand'):
+                expanded_factors.append(f.expand(deep=deep, **hints))
+            else:
+                expanded_factors.append(f)
 
-        # If expansion produced an AlgebraicTensor, distribute the scalar
-        if isinstance(expanded, AlgebraicTensor):
-            return AlgebraicTensor(*(self.scalar * a for a in expanded.args))
+        # Check if anything actually changed and there's nothing to distribute
+        if scalar is self.scalar and expanded_factors == factors:
+            if not isinstance(scalar, Add) and not any(
+                isinstance(f, Add) for f in expanded_factors
+            ):
+                return self
 
-        # Single expanded tensor
-        return ScalarMul(self.scalar, expanded)
+        # Step 3: If scalar is an Add, split into multiple ScalarMuls
+        if isinstance(scalar, Add):
+            terms = []
+            for s in scalar.args:
+                sm = ScalarMul(s, AlgebraicPureTensor(*expanded_factors))
+                # Recursively expand each resulting ScalarMul in case tensor
+                # factors also contain Adds
+                if hasattr(sm, 'expand'):
+                    sm = sm.expand(deep=deep, **hints)
+                terms.append(sm)
+            if len(terms) == 1:
+                return terms[0]
+            return AlgebraicTensor(*terms)
+
+        # Step 4: Distribute tensor product over Add in factors
+        add_slots = [i for i, f in enumerate(expanded_factors)
+                     if isinstance(f, Add)]
+
+        if not add_slots:
+            # No Add in factors; build single term
+            inner = AlgebraicPureTensor(*expanded_factors)
+            if scalar is S.One:
+                return inner
+            return ScalarMul(scalar, inner)
+
+        # Build cartesian product of all factor choices
+        choices = []
+        for f in expanded_factors:
+            if isinstance(f, Add):
+                choices.append(f.args)
+            else:
+                choices.append((f,))
+
+        terms = []
+        for combination in product(*choices):
+            inner = AlgebraicPureTensor(*combination)
+            if scalar is S.One:
+                terms.append(inner)
+            else:
+                terms.append(ScalarMul(scalar, inner))
+
+        if len(terms) == 1:
+            return terms[0]
+        return AlgebraicTensor(*terms)
 
     def simplify(self):
         """Simplify this ScalarMul."""
