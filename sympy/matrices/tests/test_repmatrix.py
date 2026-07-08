@@ -4,6 +4,7 @@ from sympy.matrices.exceptions import NonSquareMatrixError, NonInvertibleMatrixE
 
 from sympy import Matrix, Rational
 
+
 def test_lll():
     A = Matrix([[1, 0, 0, 0, -20160],
                 [0, 1, 0, 0, 33768],

@@ -563,7 +563,7 @@ class AlgebraicField(
     def is_ConjugateDomain(self):
         try:
             _ = self.conjugate
-        except CoercionFailed:
+        except DomainError:
             return False
         return True
 
@@ -575,7 +575,7 @@ class AlgebraicField(
             z = self.ext.func((self.ext.minpoly, self.ext.conjugate()))
             conj = self.from_sympy(z)
         except CoercionFailed:
-            raise CoercionFailed("the algebraic field is not closed under conjugation")
+            raise DomainError("the algebraic field is not closed under conjugation")
 
         if conj.rep == [1, 0]:
             # conj == ext implies ext is real

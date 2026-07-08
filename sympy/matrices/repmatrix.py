@@ -407,12 +407,7 @@ class RepMatrix(MatrixBase):
         return self._fromrep(rep.convert_to(EXRAW).conjugate())
 
     def _eval_adjoint(self):
-        rep = self._rep
-        try:
-            return self._fromrep(rep.adjoint())
-        except DMDomainError:
-            pass
-        return self._fromrep(rep.convert_to(EXRAW).adjoint())
+        return self._fromrep(self._rep.adjoint())
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
