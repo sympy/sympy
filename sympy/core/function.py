@@ -2109,7 +2109,8 @@ class Lambda(Expr):
     def curry(self):
         """
         Return a curried Lambda: any multi-variable Lambda becomes a
-        nest of single-argument Lambdas.
+        nest of single-argument Lambdas, e.g ``f(x,y)`` is rewritten as ``f(x)(y)``.
+
 
         Examples
         ========
