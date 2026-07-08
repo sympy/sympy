@@ -185,7 +185,10 @@ class SMTLibPrinter(Printer):
 
     def _print_AppliedBinaryRelation(self, e: AppliedPredicate):
         if e.function == Q.ne:
-            return self._print_Unequality(Unequality(*e.arguments))
+            # Q.ne always maps to an Unequality, but Unequality.__new__ is
+            # typed to return Unequality | BooleanTrue | BooleanFalse.
+            rel = typing.cast(Unequality, Unequality(*e.arguments))
+            return self._print_Unequality(rel)
         else:
             return self._print_Function(e)
 

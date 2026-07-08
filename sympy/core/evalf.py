@@ -3,7 +3,7 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING, Any, overload
+from typing import Callable, TYPE_CHECKING, Any, cast, overload
 
 import math
 
@@ -993,7 +993,9 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
     if prec - size > workprec:
         from .add import Add
         # We actually need to compute x-1 accurately, not x
-        add = Add(S.NegativeOne, arg, evaluate=False)
+        # (evaluate=False guarantees an Add, but Add.__new__ is typed to
+        # return Expr, so narrow it back for evalf_add)
+        add = cast(Add, Add(S.NegativeOne, arg, evaluate=False))
         xre, xim, xre_acc, _ = evalf_add(add, prec, options)
         if xre != fzero and (xre_acc is None or xre_acc > 1):
             prec2 = workprec - fastlog(xre)
