@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from functools import cached_property
 from sympy.core.numbers import AlgebraicNumber
 from sympy.external.gmpy import lcm
@@ -10,9 +9,6 @@ from sympy.polys.densetools import dup_eval
 from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.rationalfield import QQ
 from sympy.utilities import public
-
-if TYPE_CHECKING:
-    from sympy.core.expr import Expr
 
 
 @public

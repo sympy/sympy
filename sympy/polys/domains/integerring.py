@@ -22,7 +22,6 @@ from sympy.utilities import public
 import math
 
 if TYPE_CHECKING:
-    from sympy.core.expr import Expr
     from sympy.polys.domains.cyclotomicfield import CyclotomicField
 
 @public

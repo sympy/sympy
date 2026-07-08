@@ -15,7 +15,6 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 if TYPE_CHECKING:
-    from sympy.core.expr import Expr
     from sympy.polys.domains.cyclotomicfield import CyclotomicField
 
 @public

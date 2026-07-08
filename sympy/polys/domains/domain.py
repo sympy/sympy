@@ -1181,7 +1181,7 @@ class Domain(Generic[Er]):
         from sympy.polys.specialpolys import cyclotomic_poly
         if ss:
             alias += str(n)
-        return self.alg_field_from_poly(cyclotomic_poly(n, gen), alias=alias,
+        return self.alg_field_from_poly(cyclotomic_poly(n), alias=alias,
                                         root_index=root_index)
 
     def inject(self, *symbols) -> PolynomialRing:
