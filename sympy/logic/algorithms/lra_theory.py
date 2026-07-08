@@ -731,21 +731,19 @@ def _sep_const_terms(expr):
 
 def _reduce_matrix(A, basic, nonbasic, nonatom_vars):
     """
-    Remove every non-atom variable (or, every ) from the tableu A. This is discussed in
+    Remove every non-atom variable from the tableu A. This is discussed in
     Preprocessing part of the paper [1]_ as the "Gaussian Eliminaton".
 
-    The tableu A stores information about the linear dependence between basic and nonbasic
-    variables. The idea is that, all non-atom variables are dependent of atom variables,
-    which consistent-wise means if atom variables satisfy the formula, we are done i.e
-    non-atom variables do not store information.
+    The idea is that, all non-atom variables are dependent of atom variables,
+    which consistent-wise means that solving for atom variables should directly
+    give solutions for non-atom variables
 
-    E.g,
+    E.g in,
 
-        x >= 0 & x+y >= 1
+        x >= 0 & x+y >= 1 -> Phi' := (x >= 0 & s1 >= 1), Phi_A := x + y = s1
 
-    Method
-    ======
-
+    Since y is dependent, solving Phi' alone is enough, and _reduce_matrix should reduce Phi_A
+    into collapsed matrix since it stores no useful information.
 
     Example
     =======
@@ -783,7 +781,6 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars):
          (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
 
     only x is the atom variable so only y and z is removed, s1 = x+y and s2 = x+2*y-z.
-    >>> nonbasic, basic = [x, y, z], [s1, s2]
     >>> A, _ = linear_eq_to_matrix([x + y - s1, x + 2 * y - z - s2], nonbasic + basic)
     >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y, z})
     >>> basic, nonbasic
@@ -793,20 +790,20 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars):
     >>> A.shape
     (0,3)
     """
-    if not elim:
+    if not nonatom_vars:
         return A, basic, nonbasic
 
-    kept_nonbasic = [v for v in nonbasic if v not in elim]
+    kept_nonbasic = [v for v in nonbasic if v not in nonatom_vars]
     # order starts with the variables we want to eliminate
     # in rref, these variables will become pivots
-    order = list(elim) + basic + kept_nonbasic
+    order = list(nonatom_vars) + basic + kept_nonbasic
     col_of = {v: i for i, v in enumerate(nonbasic + basic)}
     # reorder the matrix for the rref
     A = A[:, [col_of[v] for v in order]]
 
     B, pivots = A.rref()
 
-    keep_rows = [r for r, pc in enumerate(pivots) if pc >= len(elim)]
+    keep_rows = [r for r, pc in enumerate(pivots) if pc >= len(nonatom_vars)]
     new_basic = [order[pivots[r]] for r in keep_rows]
     basic_set = set(new_basic)
     new_nonbasic = [v for v in kept_nonbasic + basic if v not in basic_set]
