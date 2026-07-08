@@ -736,7 +736,10 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars):
 
     The idea is that, all non-atom variables are dependent of atom variables,
     which consistent-wise means that solving for atom variables should directly
-    give solutions for non-atom variables
+    give solutions for non-atom variables.
+
+    Therefore, any information about dependent, or to be more precise, non atom variables
+    in the matrix A is not necessary and can be safely discarded without any correctness worries.
 
     E.g in,
 
@@ -781,7 +784,12 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars):
          (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
 
     only x is the atom variable so only y and z is removed, s1 = x+y and s2 = x+2*y-z.
+    >>> nonbasic, basic = [x, y, z], [s1, s2]
     >>> A, _ = linear_eq_to_matrix([x + y - s1, x + 2 * y - z - s2], nonbasic + basic)
+    >>> A
+    Matrix([
+    [1, 1,  0, -1,  0],
+    [1, 2, -1,  0, -1]])
     >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y, z})
     >>> basic, nonbasic
     ([], [x, s1, s2])
