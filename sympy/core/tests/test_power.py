@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sympy import diff, Sum, IndexedBase
 from sympy.core import (
     Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
     Expr, I, nan, pi, symbols, oo, zoo, N)
@@ -275,6 +276,16 @@ def test_zero():
     assert 0 ** -oo is zoo
     assert power(0, -oo) is zoo
     assert Float(0)**-oo is zoo
+
+
+def test_pow_derivative_symbolic_exponent_sum():
+    n = Symbol('n', integer=True, positive=True)
+    i = symbols('i', integer=True, nonnegative=True)
+    t = Symbol('t', real=True)
+    b = IndexedBase('b', n + 1, real=True)
+
+    assert diff(t**i, t) == i*t**(i - 1)
+    assert diff(Sum(b[i] * t**i, (i, 0, n)), t) == Sum(i*b[i]*t**(i - 1), (i, 0, n))
 
 def test_pow_as_base_exp():
     assert (S.Infinity**(2 - x)).as_base_exp() == (S.Infinity, 2 - x)

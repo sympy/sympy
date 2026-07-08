@@ -1222,7 +1222,7 @@ class Pow(Expr):
         dbase = self.base.diff(s)
         dexp = self.exp.diff(s)
 
-        return self * (dexp * log(self.base) + dbase * self.exp/self.base)
+        return self.exp * dbase * self.base**(self.exp - 1) + self * dexp * log(self.base)
 
     def _eval_evalf(self, prec):
         base, exp = self.as_base_exp()
