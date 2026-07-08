@@ -280,10 +280,11 @@ AlgebraicZeroTensor(((3, 4), (4, 5))).commutativity_shape → (1, 1)
 a zero result, they return `AlgebraicZeroTensor(shape)`, not `S.Zero`. The shape
 information is critical for type safety.
 
-**Known limitation:** `x * zt` (where `x` is a `Symbol` and `zt` is an
-`AlgebraicZeroTensor`) creates a `Mul(x, zt)` because `Expr.__mul__` calls
-`Mul(x, zt)` directly without dispatching to `zt.__rmul__(x)`. Use `zt * x`
-instead, which correctly returns `zt`.
+`AlgebraicZeroTensor` sets `_op_priority = 11` (higher than `Expr`'s default of
+10) so that `x * zt` dispatches to `zt.__rmul__(x)` via the
+`call_highest_priority` decorator on `Expr.__mul__`. Both `x * zt` and `zt * x`
+correctly return `zt`. `ScalarMul.__new__` also checks for `AlgebraicZeroTensor`
+and returns it directly (any scalar times a zero tensor is the zero tensor).
 
 ---
 

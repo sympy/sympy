@@ -30,6 +30,8 @@ class AlgebraicZeroTensor(AtomicExpr):
     is_zero = None
     is_commutative = True
 
+    _op_priority = 11  # Higher than Expr (10) so x * zt dispatches to zt.__rmul__(x)
+
     def __new__(cls, shape):
         # Normalise to a tuple of (rows, cols) tuples.
         # Accept: ((3,4), (4,5)), [(3,4)], plain (3,4), [3,4], etc.

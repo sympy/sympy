@@ -38,6 +38,9 @@ class ScalarMul(Basic):
         if scalar is S.Zero:
             return AlgebraicZeroTensor(tensor.tensor_shape)
 
+        if isinstance(tensor, AlgebraicZeroTensor):
+            return tensor
+
         if scalar is S.One:
             return tensor
 

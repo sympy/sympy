@@ -303,10 +303,16 @@ class AlgebraicPureTensor(Mul):
 
     def __add__(self, other):
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
+        if isinstance(other, AlgebraicZeroTensor):
+            if other.tensor_shape == self.tensor_shape:
+                return self
         return AlgebraicTensor(self, other)
 
     def __radd__(self, other):
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
+        if isinstance(other, AlgebraicZeroTensor):
+            if other.tensor_shape == self.tensor_shape:
+                return self
         return AlgebraicTensor(other, self)
 
     def __sub__(self, other):
@@ -316,6 +322,10 @@ class AlgebraicPureTensor(Mul):
     def __rsub__(self, other):
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         return AlgebraicTensor(other, -self)
+
+    def has_zero_term(self):
+        """Return False for a nonzero AlgebraicPureTensor."""
+        return False
 
     def simplify(self):
         from sympy.tensor.algebraic.simplify import _simplify_algebraic_pure_tensor
