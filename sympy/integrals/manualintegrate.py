@@ -1455,7 +1455,7 @@ _symbol = Dummy('x')
 
 def special_function_rule(integral):
     integrand, symbol = integral
-    
+
     if not _special_function_patterns:
         a = Wild('a', exclude=[_symbol], properties=[lambda x: not x.is_zero])
         b = Wild('b', exclude=[_symbol])
