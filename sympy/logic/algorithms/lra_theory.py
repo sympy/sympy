@@ -752,14 +752,17 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
 
     A : Matrix
         The reduced tableau with every variable in nonatom_vars removed.
-        Has one row per new basic variable and one column per new basic + nonbasic
-        variables. In case of empty basic, the matrix collapses.
+        Has one row per basic and one column per (basic + nonbasic).
+        In case of empty basic, the matrix collapses.
 
     basic : list
-        The new list of basic variables.
+        The new list of basic variables. The elements (pivots) are basic if and only if
+        the pivots survived elimination. These pivots are new basic becuase they are
+        definitions at this point.
 
     nonbasic : list
-        The new list of nonbasic variables.
+        The new list of nonbasic variables. Old basic variables can become nonbasic,
+        however nonbasic elements cannot become basic.
 
     Example
     =======
@@ -819,21 +822,21 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
         nonatom_vars = sorted(nonatom_vars, key=str)
 
     kept_nonbasic = [v for v in nonbasic if v not in nonatom_vars]
-    # order starts with the variables we want to eliminate
-    # in rref, these variables will become pivots
-    order = list(nonatom_vars) + basic + kept_nonbasic
+    # the order starts with the variables we want to eliminate,
+    # continues with all the basic variables
+    sorted_col_order = list(nonatom_vars) + basic + kept_nonbasic
     col_of = {v: i for i, v in enumerate(nonbasic + basic)}
-    # reorder the matrix for the rref
-    A = A[:, [col_of[v] for v in order]]
+    # reorder the columns of A by the list order
+    A = A[:, [col_of[v] for v in sorted_col_order]]
 
     B, pivots = A.rref()
 
     keep_rows = [r for r, pc in enumerate(pivots) if pc >= len(nonatom_vars)]
-    new_basic = [order[pivots[r]] for r in keep_rows]
+    new_basic = [sorted_col_order[pivots[r]] for r in keep_rows]
     basic_set = set(new_basic)
     new_nonbasic = [v for v in kept_nonbasic + basic if v not in basic_set]
 
-    order_pos = {v: i for i, v in enumerate(order)}
+    order_pos = {v: i for i, v in enumerate(sorted_col_order)}
     A = -B[keep_rows, [order_pos[v] for v in new_nonbasic + new_basic]]
     return A, new_basic, new_nonbasic
 
