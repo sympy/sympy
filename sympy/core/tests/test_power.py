@@ -289,17 +289,36 @@ def test_pow_derivative_symbolic_exponent_sum():
     assert diff(Sum(b[i] * t**i, (i, 0, n)), t) == Sum(i*b[i]*t**(i - 1), (i, 0, n))
 
 def test_pow_as_base_exp():
-    assert (S.Infinity**(2 - x)).as_base_exp() == (S.Infinity, 2 - x)
-    assert (S.Infinity**(x - 2)).as_base_exp() == (S.Infinity, x - 2)
+    base, exp = (S.Infinity**(2 - x)).as_base_exp()
+    assert base.equals(S.Infinity)
+    assert exp.equals(2 - x)
+
+    base, exp = (S.Infinity**(x - 2)).as_base_exp()
+    assert base.equals(S.Infinity)
+    assert exp.equals(x - 2)
+
     p = S.Half**x
-    assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
+    base, exp = p.as_base_exp()
+    assert base.equals(S(2))
+    assert exp.equals(-x)
+    assert (base**exp).equals(p)
+
     p = (S(3)/2)**x
-    assert p.base, p.exp == p.as_base_exp() == (3*S.Half, x)
+    base, exp = p.as_base_exp()
+    assert base.equals(3*S.Half)
+    assert exp.equals(x)
+    assert (base**exp).equals(p)
+
     p = (S(2)/3)**x
-    assert p.as_base_exp() == (S(2)/3, x)
-    assert p.base, p.exp == (S(2)/3, x)
+    base, exp = p.as_base_exp()
+    assert base.equals(S(2)/3)
+    assert exp.equals(x)
+    assert (base**exp).equals(p)
+
     # issue 8344:
-    assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
+    base, exp = Pow(1, 2, evaluate=False).as_base_exp()
+    assert base.equals(S.One)
+    assert exp.equals(S(2))
 
 
 def test_nseries():
