@@ -132,11 +132,16 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
         """
         return self.get_field().algebraic_field(*extension, alias=alias)
 
-    def cyclotomic_field(self, n: int, ss: bool = False, alias: str = "zeta",
-                         gen: Expr | None = None, root_index: int = -1
-                         ) -> CyclotomicField:
+    def cyclotomic_field(
+        self,
+        n: int,
+        ss: bool = True,
+        alias: str = "zeta",
+        gen: Expr | None = None,
+        root_index: int = -1,
+    ) -> CyclotomicField:
         from sympy.polys.domains.cyclotomicfield import CyclotomicField
-        return CyclotomicField(n, ss, alias, gen, root_index)
+        return CyclotomicField(n, ss=ss, alias=alias, root_index=root_index)
 
     def from_AlgebraicField(K1, a, K0):
         """Convert a :py:class:`~.ANP` object to :ref:`ZZ`.

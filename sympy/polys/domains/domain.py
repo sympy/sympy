@@ -1144,9 +1144,14 @@ class Domain(Generic[Er]):
         alpha = AlgebraicNumber(root, alias=alias)
         return self.algebraic_field(alpha, alias=alias)
 
-    def cyclotomic_field(self, n: int, ss: bool = False, alias: str = "zeta",
-                         gen: Expr | None = None, root_index: int = -1
-                         ) -> AlgebraicField:
+    def cyclotomic_field(
+        self,
+        n: int,
+        ss: bool = True,
+        alias: str = "zeta",
+        gen: Expr | None = None,
+        root_index: int = -1,
+    ) -> AlgebraicField:
         r"""
         Convenience method to construct a cyclotomic field.
 
@@ -1155,7 +1160,7 @@ class Domain(Generic[Er]):
 
         n : int
             Construct the nth cyclotomic field.
-        ss : boolean, optional (default=False)
+        ss : boolean, optional (default=True)
             If True, append *n* as a subscript on the alias string.
         alias : str, optional (default="zeta")
             Symbol name for the generator.
@@ -1170,17 +1175,12 @@ class Domain(Generic[Er]):
         Examples
         ========
 
-        >>> from sympy import QQ, latex
+        >>> from sympy import QQ
         >>> K = QQ.cyclotomic_field(5)
         >>> K.to_sympy(K([-1, 1]))
-        1 - zeta
-        >>> L = QQ.cyclotomic_field(7, True)
-        >>> a = L.to_sympy(L([-1, 1]))
-        >>> print(a)
-        1 - zeta7
-        >>> print(latex(a))
-        1 - \zeta_{7}
-
+        1 - zeta5
+        >>> K.zeta_order
+        5
         """
         from sympy.polys.specialpolys import cyclotomic_poly
         if ss:
