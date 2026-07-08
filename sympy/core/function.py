@@ -2136,7 +2136,7 @@ class Lambda(Expr):
         .. [1] https://en.wikipedia.org/wiki/Currying
         """
         variables = self.variables
-        if not variables:
+        if len(variables) <= 1 and self.signature == variables:
             return self
         expr = self.expr
         for v in reversed(variables):
