@@ -354,7 +354,7 @@ class LRASolver():
         # by removing the non-basic (e.g original) non-atom variables from it
         # these removed variables will be replaced by linear equation of existing variables.
         nonatom_vars = {i for i in nonbasic if i not in atom_vars}
-        A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars)
+        A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
         basic = [var_to_lra_var[b] for b in basic]
         for idx, var in enumerate(nonbasic + basic):
@@ -729,7 +729,7 @@ def _sep_const_terms(expr):
     return Add(*var), Add(*const)
 
 
-def _reduce_matrix(A, basic, nonbasic, nonatom_vars):
+def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
     """
     Remove every non-atom variable from the tableu A. This is discussed in
     Preprocessing part of the paper [1]_ as the "Gaussian Eliminaton".
@@ -767,7 +767,8 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars):
     Matrix([
     [1, 1, 0, -1,  0],
     [0, 1, 1,  0, -1]])
-    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y})
+    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y},
+    ...                                     testing_mode=True)
     >>> basic, nonbasic
     ([s1], [x, z, s2])
 
@@ -790,16 +791,19 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars):
     Matrix([
     [1, 1,  0, -1,  0],
     [1, 2, -1,  0, -1]])
-    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y, z})
+    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y, z},
+    ...                                     testing_mode=True)
     >>> basic, nonbasic
     ([], [x, s1, s2])
 
     Basic is empty, which in result should mean A has collapsed.
     >>> A.shape
-    (0,3)
+    (0, 3)
     """
     if not nonatom_vars:
         return A, basic, nonbasic
+    if testing_mode:
+        nonatom_vars = sorted(nonatom_vars, key=str)
 
     kept_nonbasic = [v for v in nonbasic if v not in nonatom_vars]
     # order starts with the variables we want to eliminate
