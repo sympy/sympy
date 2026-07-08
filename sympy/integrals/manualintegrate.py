@@ -1231,7 +1231,9 @@ def find_substitutions(integrand, symbol, u_var):
             a = u.coeff(symbol)
             b = u.subs(symbol, 0)
             symbol_of_u = (u_var - b)/a
-            if b != 0:
+            # avoid infinite recursion when b = 0, and avoid division by zero
+            # when a = 0
+            if b != 0 and a != 0:
                 substituted = manual_subs(substituted, symbol, symbol_of_u).cancel()
 
         if substituted.has_free(symbol):
