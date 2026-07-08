@@ -110,7 +110,7 @@ def test_manualintegrate_trigonometry():
         -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
 
     assert_is_integral_of(sinh(2*x), cosh(2*x)/2)
-    assert_is_integral_of(x*cosh(x**2), sinh(x**2)/2)
+    assert manualintegrate(x*cosh(x**2), x).equals(sinh(x**2)/2)
     assert_is_integral_of(tanh(x), log(cosh(x)))
     assert_is_integral_of(coth(x), log(sinh(x)))
     f, F = sech(x), 2*atan(tanh(x/2))

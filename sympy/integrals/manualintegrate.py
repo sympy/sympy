@@ -2766,6 +2766,8 @@ def integral_steps(integrand, symbol, **options):
             null_safe(hyperbolic_rule),
             null_safe(alternatives(
                 rewrites_rule,
+                fallback_trig_cmplx_exp_rule,
+                exp_quadratic_rule,
                 substitution_rule,
                 condition(
                     integral_is_subclass(Mul, Pow),
@@ -2776,8 +2778,6 @@ def integral_steps(integrand, symbol, **options):
                 condition(
                     integral_is_subclass(Mul),
                     combine_power_rule),
-                fallback_trig_cmplx_exp_rule,
-                exp_quadratic_rule,
                 condition(
                     integral_is_subclass(Mul, log,
                     *inverse_trig_functions),
