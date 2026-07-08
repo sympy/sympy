@@ -2106,6 +2106,43 @@ class Lambda(Expr):
         """Return ``True`` if this ``Lambda`` is an identity function. """
         return self.signature == self.expr
 
+    def curry(self):
+        """
+        Return a curried Lambda: any multi-variable Lambda becomes a
+        nest of single-argument Lambdas, e.g ``f(x,y)`` is rewritten as ``f(x)(y)``.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x, y, z
+        >>> Lambda((x, y), x + y).curry()
+        Lambda(x, Lambda(y, x + y))
+        >>> Lambda((x, y, z), x*y + z).curry()
+        Lambda(x, Lambda(y, Lambda(z, x*y + z)))
+        >>> Lambda(x, x**2).curry()
+        Lambda(x, x**2)
+
+        Nested tuples in the signature are flattened into their component
+        variables:
+
+        >>> Lambda(((x, y), z), x + y + z).curry()
+        Lambda(x, Lambda(y, Lambda(z, x + y + z)))
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Currying
+        """
+        variables = self.variables
+        if len(variables) <= 1 and self.signature == variables:
+            return self
+        expr = self.expr
+        for v in reversed(variables):
+            expr = Lambda(v, expr)
+        return expr
+
     def _eval_evalf(self, prec):
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
 
