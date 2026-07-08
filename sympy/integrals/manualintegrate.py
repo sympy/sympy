@@ -1844,6 +1844,7 @@ def exp_quadratic_rule(integral: IntegralInfo):
     """
     Strategy for integrating polynomials multiplied by a Gaussian-like exponential
     e.g. x**n * exp(a*x**2 + b*x + c).
+    Also handles x**n * exp(b*x) * exp(a*x**2) form produced by trig rewrites.
     Reduces the polynomial degree recursively using integration by parts.
     """
     integrand, symbol = integral
@@ -1858,21 +1859,37 @@ def exp_quadratic_rule(integral: IntegralInfo):
 
     a_val, b_val, c_val, f_val = match[a], match[b], match[c], match[f]
 
-    f_poly = f_val.as_poly(symbol)
+    # f_val may be of the form poly(x) * exp(linear(x)) when coming from
+    # fallback_trig_cmplx_exp_rule rewrites. Detect and fold into b.
+    poly_part = f_val
+    extra_b = S.Zero
+    if f_val.has(exp):
+        b2 = Wild('b2', exclude=[symbol])
+        exp_match = f_val.match(Wild('p') * exp(b2 * symbol))
+        if exp_match is not None:
+            b2_val = exp_match[b2]
+            p_val = exp_match[Wild('p')]
+            if not p_val.has(exp):
+                poly_part = p_val
+                extra_b = b2_val
+
+    f_poly = poly_part.as_poly(symbol)
     if f_poly is None or f_poly.degree() == 0:
         return
 
+    b_total = b_val + extra_b
     deg = f_poly.degree()
     C = f_poly.LC()
 
     g_expr = C / (2*a_val) * symbol**(deg-1)
-    derive_expr = Derivative(g_expr * exp(a_val*symbol**2 + b_val*symbol + c_val), symbol)
+    exp_factor = exp(a_val*symbol**2 + b_total*symbol + c_val)
+    derive_expr = Derivative(g_expr * exp_factor, symbol)
 
-    remainder_poly = f_poly - g_expr.diff(symbol) - g_expr * (2*a_val*symbol + b_val)
+    remainder_poly = f_poly - g_expr.diff(symbol) - g_expr * (2*a_val*symbol + b_total)
 
     rewrite_expr = derive_expr
     if remainder_poly:
-        rewrite_expr += remainder_poly.as_expr() * exp(a_val*symbol**2 + b_val*symbol + c_val)
+        rewrite_expr += remainder_poly.as_expr() * exp_factor
 
     derive_step = integral_steps(derive_expr, symbol)
 
@@ -1881,8 +1898,14 @@ def exp_quadratic_rule(integral: IntegralInfo):
     else:
         substeps = [derive_step]
         for (d,), coeff in remainder_poly.terms():
-            term_expr = coeff * symbol**d * exp(a_val*symbol**2 + b_val*symbol + c_val)
-            step = integral_steps(term_expr, symbol)
+            term_expr = coeff * symbol**d * exp_factor
+            # Try exp_quadratic_rule first to avoid triggering substitution_rule
+            # on complex Gaussian sub-integrals (which hangs in powsimp/ordered).
+            step = exp_quadratic_rule((term_expr, symbol))
+            if step is None:
+                # Degree 0 case: exp(quadratic) alone -- use integral_steps
+                # only if degree is exactly 0, otherwise fall back safely.
+                step = integral_steps(term_expr, symbol)
             if not step or isinstance(step, DontKnowRule):
                 step = DontKnowRule(term_expr, symbol)
             substeps.append(step)
@@ -1936,8 +1959,13 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
 
 def fallback_trig_cmplx_exp_rule(integral: IntegralInfo):
     """
-    Fallback strategy that rewrites trig functions with quadratic arguments.
-    Called only when simpler substitutions fail.
+    Fallback strategy that rewrites trig functions with quadratic arguments
+    using complex exponentials, then integrates term-by-term using
+    exp_quadratic_rule directly.
+
+    Importantly, this does NOT call integral_steps on the rewritten form to
+    avoid triggering substitution_rule on complex Gaussian terms, which causes
+    an infinite loop in powsimp/ordered and results in a timeout.
     """
     integrand, symbol = integral
 
@@ -1961,9 +1989,32 @@ def fallback_trig_cmplx_exp_rule(integral: IntegralInfo):
 
     rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp).expand()
 
-    if rewritten != integrand:
-        steps = integral_steps(rewritten, symbol)
-        return RewriteRule(integrand, symbol, rewritten, steps)
+    if rewritten == integrand:
+        return
+
+    # Apply exp_quadratic_rule directly to each expanded term.
+    # Do NOT call integral_steps here: the expanded complex Gaussian terms
+    # (e.g. exp(I*x**2 + I*x)) will cause substitution_rule to hang inside
+    # powsimp/ordered when attempting symbolic simplification.
+    terms = Add.make_args(rewritten)
+    substeps = []
+    for term in terms:
+        step = exp_quadratic_rule((term, symbol))
+        if step is None:
+            # A term we cannot reduce (e.g. bare exp(quadratic), degree 0).
+            # Wrap in DontKnowRule rather than falling back to integral_steps.
+            step = DontKnowRule(term, symbol)
+        substeps.append(step)
+
+    if not substeps:
+        return
+
+    if len(substeps) == 1:
+        inner_step = substeps[0]
+    else:
+        inner_step = AddRule(rewritten, symbol, substeps)
+
+    return RewriteRule(integrand, symbol, rewritten, inner_step)
 
 
 def quadratic_denom_rule(integral):
