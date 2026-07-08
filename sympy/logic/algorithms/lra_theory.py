@@ -740,13 +740,26 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
 
     Therefore, any information about dependent, or to be more precise, non atom variables
     in the matrix A is not necessary and can be safely discarded without any correctness worries.
-
     E.g in,
-
         x >= 0 & x+y >= 1 -> Phi' := (x >= 0 & s1 >= 1), Phi_A := x + y = s1
-
     Since y is dependent, solving Phi' alone is enough, and _reduce_matrix should reduce Phi_A
     into collapsed matrix since it stores no useful information.
+
+    Returns
+    =======
+
+    (A, basic, nonbasic)
+
+    A : Matrix
+        The reduced tableau with every variable in nonatom_vars removed.
+        Has one row per new basic variable and one column per new basic + nonbasic
+        variables. In case of empty basic, the matrix collapses.
+
+    basic : list
+        The new list of basic variables.
+
+    nonbasic : list
+        The new list of nonbasic variables.
 
     Example
     =======
