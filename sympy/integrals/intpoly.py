@@ -113,7 +113,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
                 elif Poly(e).total_degree() <= max_degree:
                     f_expr.append(e)
             expr = f_expr
-        
+
         if not isinstance(expr, list) and expr is not None:
             raise TypeError('Input polynomials must be list of expressions')
 
