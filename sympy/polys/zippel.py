@@ -1,8 +1,15 @@
 from __future__ import annotations
-from sympy.polys.galoistools import gf_gcd, gf_quo, gf_from_dict
+from typing import TYPE_CHECKING
+from collections import defaultdict
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.galoistools import gf_add, gf_gcd, gf_mul, gf_quo, gf_from_dict
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import PolynomialRing
 
+if TYPE_CHECKING:
+    from sympy.external.gmpy import MPZ
+
+Monom = tuple[int, ...]
 
 def _gf_gcd(fp, gp, p):
     r"""
@@ -382,3 +389,130 @@ def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
         hpq[monom] = crt_(zero, hq[monom], p, q)
 
     return hpq
+
+
+def incremental_newton_interp(x: list[MPZ], v: list[MPZ], xk: MPZ, uk: MPZ, p: MPZ
+    ) -> MPZ:
+    """
+    Computes the next Newton interpolation coefficient v_k over Z_p.
+
+    Given a list of k evaluation points x = [x_0, ..., x_{k-1}] and the
+    corresponding coefficients v = [v_0, ..., v_{k-1}] of the Newton
+    interpolation polynomial P_{k-1}(x), this function calculates the new
+    coefficient v_k required to interpolate a new point (x_k, u_k).
+
+    References
+    ==========
+
+    1. [Geddes92] p. 186.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.zippel import incremental_newton_interp
+    >>> x = [0, 1]
+    >>> v = [67, 47]
+    >>> xk = 2
+    >>> uk = 66
+    >>> p = 97
+    >>> v2 = incremental_newton_interp(x, v, xk, uk, p)
+    >>> v2
+    1
+
+    """
+    s = v[0]
+    c = ZZ.one
+    for i, el in enumerate(v[1:]):
+        c = (c * (xk - x[i])) % p
+        s = (s + el * c) % p
+    inv = ZZ.invert(c * (xk - x[len(v) - 1]), p)
+    return ((uk - s) * inv) % p
+
+
+def from_newt_to_poly(x: list[MPZ], v: list[MPZ], p: MPZ
+    ) -> list[MPZ]:
+    """
+    Given k evaluation points x = [x_0, ..., x_{k-1}] and the
+    corresponding coefficients v = [v_0, ..., v_{k-1}] of the Newton
+    interpolation polynomial P_{k-1}(x), this function calculates explicitly
+    and returns the interpolation polynomial P_{k-1}(x) over Z_p.
+
+    References
+    ==========
+
+    1. [Geddes92] p. 186.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.zippel import from_newt_to_poly
+    >>> x = [0, 1, 2]
+    >>> v = [67, 47, 1]
+    >>> p = 97
+    >>> from_newt_to_poly(x, v, p)
+    [67, 46, 1]
+
+    """
+    pol = [v[-1]]
+    for i in range(len(v) - 2, -1, -1):
+        binomial = [ZZ.one, -x[i]]
+        pol = gf_mul(pol, binomial, p, ZZ)
+        pol = gf_add(pol, [v[i]], p, ZZ)
+
+    return pol[::-1]
+
+
+def skeleton_sorter(G: dict[Monom, MPZ]
+) -> tuple[dict[int, list[list[Monom]]], list[list[MPZ]], bool, bool]:
+    """
+    Reorganizes the skeleton of a sparse polynomial for multivariate interpolation.
+
+    This function extracts the monomials of a sparse polynomial.
+    It groups the monomials by the degree of the first variable,
+    sorts these groups by the number of monomials they contain
+    (in ascending order), and builds a compact representation of the non-zero
+    degrees for the remaining variables, useful to evaluate quickly the monomials.
+
+    It also saves the coefficients of each monomial in a list of lists, and
+    2 booleans needed by the function zippel_interp() to choose the right routine.
+
+    Examples
+    ========
+
+    If we take the sparse polynomial G = 5*x**2*y**2 + 7*x*y**5*z**3 + 8*x*z**4
+    in ZZ[x, y, z], skeleton_sorter(G) returns the following outputs:
+
+    S = {
+        2: [[(2, 2, 0), (0, 2)]],
+        1: [[(1, 5, 3), (0, 5), (1, 3)], [(1, 0, 4), (1, 4)]]
+    }
+
+    h = [[5], [7], [8]]
+
+    monic = True
+    pseudomonic = True
+
+    """
+    S_ = defaultdict(list)
+    for mon, _ in G.items():
+        S_[mon[0]].append([mon])
+    S = {deg: S_[deg] for deg in sorted(S_.keys(), key = lambda x: len(S_[x]))}
+    h = []
+    lc = S[max(S.keys())]
+
+    monic = False
+    pseudomonic = False
+    if len(lc) == 1:
+        monic = True
+        for el in lc[0][0][1:]:
+            if el != 0:
+                pseudomonic = True
+
+    for _, mons in S.items():
+        for mon_list in mons:
+            h.append([G[mon_list[0]]])
+            for i, el in enumerate(mon_list[0][1:]):
+                if el != 0:
+                    mon_list.append((i, el))
+
+    return S, h, monic, pseudomonic
