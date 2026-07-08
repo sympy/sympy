@@ -560,6 +560,14 @@ class AlgebraicField(
         return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
 
     @cached_property
+    def is_ConjugateDomain(self):
+        try:
+            _ = self.conjugate
+        except CoercionFailed:
+            return False
+        return True
+
+    @cached_property
     def conjugate(self):
         """Returns the complex conjugate of ``a``. """
         try:

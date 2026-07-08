@@ -9,7 +9,6 @@ from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
 from sympy.external.gmpy import GROUND_TYPES
-from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import _strongly_connected_components
 
@@ -766,10 +765,7 @@ class SDM(dict):
             if dom.is_ZZ or dom.is_QQ or dom.is_RR:
                 return M.copy()
 
-            try:
-                return M.applyfunc(dom.conjugate, dom)
-            except CoercionFailed:
-                pass
+            return M.applyfunc(dom.conjugate, dom)
         raise DMDomainError("%s does not support conjugation" % dom)
 
     def adjoint(M):
