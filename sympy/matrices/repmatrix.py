@@ -15,7 +15,7 @@ from sympy.core.sympify import _sympify, SympifyError
 from sympy.core.singleton import S
 from sympy.polys.domains import ZZ, QQ, GF, EXRAW
 from sympy.polys.matrices import DomainMatrix
-from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError, DMDomainError
+from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
 from sympy.polys.polyerrors import CoercionFailed, NotInvertible
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
@@ -399,12 +399,7 @@ class RepMatrix(MatrixBase):
         return self._fromrep(self._rep.applyfunc(abs))
 
     def _eval_conjugate(self):
-        rep = self._rep
-        try:
-            return self._fromrep(rep.conjugate())
-        except DMDomainError:
-            pass
-        return self._fromrep(rep.convert_to(EXRAW).conjugate())
+        return self._fromrep(self._rep.conjugate())
 
     def _eval_adjoint(self):
         return self._fromrep(self._rep.adjoint())
