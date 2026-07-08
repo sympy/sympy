@@ -1,5 +1,6 @@
 from __future__ import annotations
-from sympy import diff, Sum, IndexedBase
+from sympy.concrete.summations import Sum
+from sympy.tensor.indexed import IndexedBase
 from sympy.core import (
     Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
     Expr, I, nan, pi, symbols, oo, zoo, N)
