@@ -1224,6 +1224,8 @@ def find_substitutions(integrand, symbol, u_var):
         # where u = x + 1 and u_var = u
         if (
             substituted.has_free(symbol) and
+            # avoid redundant rational function shift
+            not integrand.is_rational_function(symbol) and
             u.is_polynomial(symbol) and degree(u, symbol) == 1
         ):
             a = u.coeff(symbol)
