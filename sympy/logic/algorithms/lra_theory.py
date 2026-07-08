@@ -103,7 +103,7 @@ but these are not currently implemented.
 TODO:
  - Handle non-rational real numbers
  - Handle positive and negative infinity
- - Implement backtracking and theory proposition
+ - Implement backtracking and theory propagation
 
 References
 ==========
@@ -351,11 +351,10 @@ class LRASolver():
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
         # matrix A is guaranteed to able to be simplified
-        # by removing the original non-atom variables from it
-        # these removed variables will be replaced by linear
-        # equation of existing variables.
-        elim = {i for i in nonbasic if i not in atom_vars}
-        A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, elim)
+        # by removing the non-basic (e.g original) non-atom variables from it
+        # these removed variables will be replaced by linear equation of existing variables.
+        nonatom_vars = {i for i in nonbasic if i not in atom_vars}
+        A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
         basic = [var_to_lra_var[b] for b in basic]
         for idx, var in enumerate(nonbasic + basic):
@@ -730,19 +729,32 @@ def _sep_const_terms(expr):
     return Add(*var), Add(*const)
 
 
-def _reduce_matrix(A, basic, nonbasic, elim):
+def _reduce_matrix(A, basic, nonbasic, nonatom_vars):
     """
-    Remove every non-atom variable from the matrix A. This is discussed in
+    Remove every non-atom variable (or, every ) from the tableu A. This is discussed in
     Preprocessing part of the paper [1]_ as the "Gaussian Eliminaton".
+
+    The tableu A stores information about the linear dependence between basic and nonbasic
+    variables. The idea is that, all non-atom variables are dependent of atom variables,
+    which consistent-wise means if atom variables satisfy the formula, we are done i.e
+    non-atom variables do not store information.
+
+    E.g,
+
+        x >= 0 & x+y >= 1
+
+    Method
+    ======
+
 
     Example
     =======
 
     Consider the formula:
 
-        x >= 0 and z <= 1 and (x + y <= 5 or z + y >= 2)
+        x >= 0 & z <= 1 & (x + y <= 5 | z + y >= 2)
 
-    Here y is the only non-atom variable, so only y is removed.
+    Here y is the only non-atom variable, so only y is removed, s1 = x+y, s2 = z+y.
     >>> from sympy.abc import x, y, z
     >>> from sympy import symbols
     >>> from sympy.solvers.solveset import linear_eq_to_matrix
@@ -750,6 +762,10 @@ def _reduce_matrix(A, basic, nonbasic, elim):
     >>> s1, s2 = symbols('s1 s2')
     >>> nonbasic, basic = [x, y, z], [s1, s2]
     >>> A, _ = linear_eq_to_matrix([x + y - s1, z + y - s2], nonbasic + basic)
+    >>> A
+    Matrix([
+    [1, 1, 0, -1,  0],
+    [0, 1, 1,  0, -1]])
     >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y})
     >>> basic, nonbasic
     ([s1], [x, z, s2])
@@ -759,7 +775,23 @@ def _reduce_matrix(A, basic, nonbasic, elim):
     >>> A
     Matrix([[1, -1, 1, -1]])
 
-    It is possible for the matrix A to collapse entirely.
+    It is possible for the matrix A to collapse entirely, which happens when
+    all the remaining terms are linearly independent. Or in other terms, The matrix A
+    is no longer "stores" information about variables as there are no information to store.
+    E.g,
+
+         (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+
+    only x is the atom variable so only y and z is removed, s1 = x+y and s2 = x+2*y-z.
+    >>> nonbasic, basic = [x, y, z], [s1, s2]
+    >>> A, _ = linear_eq_to_matrix([x + y - s1, x + 2 * y - z - s2], nonbasic + basic)
+    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y, z})
+    >>> basic, nonbasic
+    ([], [x, s1, s2])
+
+    Basic is empty, which in result should mean A has collapsed.
+    >>> A.shape
+    (0,3)
     """
     if not elim:
         return A, basic, nonbasic
