@@ -1807,7 +1807,7 @@ def test_issue_5547():
 
     w = 2*pi*z/L
 
-    sol = sqrt(2)*sqrt(L)*r0**2*fresnelc(sqrt(2)*sqrt(L))*gamma(S.One/4)/(16*gamma(S(5)/4)) + L*r0**2/2
+    sol = -r0**2*(-L/4 + erfi(I*sqrt(pi)/sqrt(-I/L))/(16*sqrt(-I/L)) - erfi(I*sqrt(pi)/sqrt(I/L))/(16*sqrt(I/L))) + r0**2*(L/4 - erfi(I*sqrt(pi)/sqrt(-I/L))/(16*sqrt(-I/L)) + erfi(I*sqrt(pi)/sqrt(I/L))/(16*sqrt(I/L)))
 
     assert integrate(r0**2*cos(w*z)**2, (z, -L/2, L/2)) == sol
 
@@ -2241,5 +2241,5 @@ def test_issue_29909():
     f = x*exp(x)*erf(x)
     F = x*exp(x)*erf(x) - exp(x)*erf(x) + exp(x)*exp(-x**2)/sqrt(pi) + exp(Rational(1, 4))*erf(x - Rational(1, 2))/2
 
-    assert integrate(f, x) == F
+    assert integrate(f, x).equals(F)
     assert F.diff(x).equals(f)

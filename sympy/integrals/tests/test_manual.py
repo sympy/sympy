@@ -302,7 +302,7 @@ def test_manualintegrate_special():
     f, F = sqrt(4 + 9*sin(x)**2), 2*elliptic_e(x, Rational(-9, 4))
     assert_is_integral_of(f, F)
     f = x*exp(x)*erf(x)
-    F = (x*exp(x) - exp(x))*erf(x) - Mul(2, -sqrt(pi)*exp(Rational(1,4))*erf(x - Rational(1,2))*Rational(1,2) + Integral(x*exp(-x**2 + x), x), evaluate=False)/sqrt(pi)
+    F = (x*exp(x) - exp(x))*erf(x) - Mul(2, -exp(-x**2 + x)/2 - sqrt(pi)*exp(Rational(1,4))*erf(x - Rational(1,2))/4, evaluate=False)/sqrt(pi)
     assert_is_integral_of(f, F)
     f = log(x)*exp(-x**2)
     F = sqrt(pi)*log(x)*erf(x)/2 - sqrt(pi)*Integral(erf(x)/x, x)/2
@@ -879,3 +879,11 @@ def test_mul_pow_derivative():
     assert_is_integral_of(x**3*Derivative(f(x), (x, 4)),
                           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) +
                           6*x*Derivative(f(x), x) - 6*f(x))
+
+def test_exp_quadratic():
+    intg1 = manualintegrate(x**2 * exp(x**2), x)
+    assert intg1 == x*exp(x**2)/2 - sqrt(pi)*erfi(x)/4
+
+    intg2 = manualintegrate(x**2 * sin(x**2) * cos(x), x)
+    assert not intg2.has(Integral)
+    assert intg2.has(erfi)

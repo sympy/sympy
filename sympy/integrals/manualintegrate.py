@@ -1840,6 +1840,62 @@ def trig_product_rule(integral: IntegralInfo):
         return CscCotRule(integrand, symbol)
 
 
+def exp_quadratic_rule(integral: IntegralInfo):
+    """
+    Strategy for integrating polynomials multiplied by a Gaussian-like exponential
+    e.g. x**n * exp(a*x**2 + b*x + c).
+    Reduces the polynomial degree recursively using integration by parts.
+    """
+    integrand, symbol = integral
+    a = Wild('a', exclude=[symbol, 0])
+    b = Wild('b', exclude=[symbol])
+    c = Wild('c', exclude=[symbol])
+    f = Wild('f')
+
+    match = integrand.match(f * exp(a*symbol**2 + b*symbol + c))
+    if not match:
+        return
+
+    a_val, b_val, c_val, f_val = match[a], match[b], match[c], match[f]
+
+    f_poly = f_val.as_poly(symbol)
+    if f_poly is None or f_poly.degree() == 0:
+        return
+
+    deg = f_poly.degree()
+    C = f_poly.LC()
+
+    g_expr = C / (2*a_val) * symbol**(deg-1)
+    derive_expr = Derivative(g_expr * exp(a_val*symbol**2 + b_val*symbol + c_val), symbol)
+
+    remainder_poly = f_poly - g_expr.diff(symbol) - g_expr * (2*a_val*symbol + b_val)
+
+    rewrite_expr = derive_expr
+    if remainder_poly:
+        rewrite_expr += remainder_poly.as_expr() * exp(a_val*symbol**2 + b_val*symbol + c_val)
+
+    derive_step = integral_steps(derive_expr, symbol)
+
+    if not remainder_poly:
+        substep = derive_step
+    else:
+        substeps = [derive_step]
+        for (d,), coeff in remainder_poly.terms():
+            term_expr = coeff * symbol**d * exp(a_val*symbol**2 + b_val*symbol + c_val)
+            step = integral_steps(term_expr, symbol)
+            if not step or isinstance(step, DontKnowRule):
+                step = DontKnowRule(term_expr, symbol)
+            substeps.append(step)
+
+        substep = AddRule(
+            rewrite_expr,
+            symbol,
+            substeps
+        )
+
+    return RewriteRule(integrand, symbol, rewrite_expr, substep)
+
+
 def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
@@ -1872,6 +1928,38 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
 
     # Replace trig and hyperbolic functions with their exponential forms
     rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
+
+    if rewritten != integrand:
+        steps = integral_steps(rewritten, symbol)
+        return RewriteRule(integrand, symbol, rewritten, steps)
+
+
+def fallback_trig_cmplx_exp_rule(integral: IntegralInfo):
+    """
+    Fallback strategy that rewrites trig functions with quadratic arguments.
+    Called only when simpler substitutions fail.
+    """
+    integrand, symbol = integral
+
+    if not integrand.has(sin, cos, sinh, cosh):
+        return
+
+    has_quadratic_trig = False
+    for func in (sin, cos, sinh, cosh):
+        for term in integrand.atoms(func):
+            arg = term.args[0]
+            if arg.is_polynomial(symbol):
+                poly = arg.as_poly(symbol)
+                if poly and poly.degree() == 2:
+                    has_quadratic_trig = True
+                    break
+        if has_quadratic_trig:
+            break
+
+    if not has_quadratic_trig:
+        return
+
+    rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp).expand()
 
     if rewritten != integrand:
         steps = integral_steps(rewritten, symbol)
@@ -2688,6 +2776,8 @@ def integral_steps(integrand, symbol, **options):
                 condition(
                     integral_is_subclass(Mul),
                     combine_power_rule),
+                fallback_trig_cmplx_exp_rule,
+                exp_quadratic_rule,
                 condition(
                     integral_is_subclass(Mul, log,
                     *inverse_trig_functions),
