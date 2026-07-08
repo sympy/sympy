@@ -117,7 +117,6 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomai
         n: int,
         ss: bool = True,
         alias: str = "zeta",
-        gen: Expr | None = None,
         root_index: int = -1,
     ) -> CyclotomicField:
         from sympy.polys.domains.cyclotomicfield import CyclotomicField

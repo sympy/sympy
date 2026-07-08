@@ -98,7 +98,6 @@ class CyclotomicField(AlgebraicField):
         n: int,
         ss: bool = True,
         alias: str = "zeta",
-        gen: Expr | None = None,
         root_index: int = -1,
     ) -> CyclotomicField:
         return CyclotomicField(

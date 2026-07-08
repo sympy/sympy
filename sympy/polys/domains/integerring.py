@@ -137,7 +137,6 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
         n: int,
         ss: bool = True,
         alias: str = "zeta",
-        gen: Expr | None = None,
         root_index: int = -1,
     ) -> CyclotomicField:
         from sympy.polys.domains.cyclotomicfield import CyclotomicField

@@ -1149,7 +1149,6 @@ class Domain(Generic[Er]):
         n: int,
         ss: bool = True,
         alias: str = "zeta",
-        gen: Expr | None = None,
         root_index: int = -1,
     ) -> AlgebraicField:
         r"""
@@ -1164,9 +1163,6 @@ class Domain(Generic[Er]):
             If True, append *n* as a subscript on the alias string.
         alias : str, optional (default="zeta")
             Symbol name for the generator.
-        gen : :py:class:`~.Symbol`, optional (default=None)
-            Desired variable for the cyclotomic polynomial that defines the
-            field. If ``None``, a dummy variable will be used.
         root_index : int, optional (default=-1)
             Specifies which root of the polynomial is desired. The ordering is
             as defined by the :py:class:`~.ComplexRootOf` class. The default of
