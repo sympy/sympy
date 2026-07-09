@@ -2339,6 +2339,7 @@ def heaviside_pattern(symbol):
 
 def uncurry(func):
     def uncurry_rl(args):
+        debug("Uncurry: {} with args: {}".format(func, args))
         return func(*args)
     return uncurry_rl
 
