@@ -832,9 +832,9 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
     # Basic vars are also in the form of block matrix -I_m and the rank of that identity
     # matrix makes so that we never touch kept_nonbasic block matrix
     sorted_col_order = list(nonatom_vars) + basic + kept_nonbasic
-    col_of_nonsorted = {v: i for i, v in enumerate(nonbasic + basic)}
+    var_to_col_orig = {v: i for i, v in enumerate(nonbasic + basic)}
     # reorder the columns of A by the list sorted_col_order
-    A = A[:, [col_of_nonsorted[v] for v in sorted_col_order]]
+    A = A[:, [var_to_col_orig[v] for v in sorted_col_order]]
 
     B, pivots = A.rref()
 
@@ -843,10 +843,10 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
     basic_set = set(new_basic)
     new_nonbasic = [v for v in kept_nonbasic + basic if v not in basic_set]
 
-    col_of_sorted = {v: i for i, v in enumerate(sorted_col_order)}
+    var_to_col_sorted = {v: i for i, v in enumerate(sorted_col_order)}
     # every basic should have -1 coefficent by convention, and rref gives 1 coeff.
     # to all the basic variables. So we have to negative B.
-    A = -B[keep_rows, [col_of_sorted[v] for v in new_nonbasic + new_basic]]
+    A = -B[keep_rows, [var_to_col_sorted[v] for v in new_nonbasic + new_basic]]
     if testing_mode:
         # all the nonaotm_vars should be removed
         assert set(nonatom_vars).isdisjoint(new_basic + new_nonbasic)
