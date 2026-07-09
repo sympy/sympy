@@ -1745,7 +1745,8 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
             # make sure dv is amenable to integration
             accept = False
-            if index < 5:  # log and inverse trig are usually worth trying
+            cutoff = liate_rules.index(pull_out_algebraic)  # log and inverse trig are usually worth trying
+            if index < cutoff:
                 accept = True
             elif (rule == pull_out_algebraic and dv.args and
                 all(isinstance(a, (sin, cos, exp))
