@@ -841,7 +841,7 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
 
     order_pos = {v: i for i, v in enumerate(sorted_col_order)}
     # every basic should have -1 coefficent by convention, and rref gives 1 coeff.
-    # to all the basic variables.
+    # to all the basic variables. So we have to negative B.
     A = -B[keep_rows, [order_pos[v] for v in new_nonbasic + new_basic]]
     if testing_mode:
         # all the nonaotm_vars should be removed
