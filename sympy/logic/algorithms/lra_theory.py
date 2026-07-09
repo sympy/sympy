@@ -820,6 +820,10 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
         return A, basic, nonbasic
     if testing_mode:
         nonatom_vars = sorted(nonatom_vars, key=str)
+        # precondition for all tableu matrices A
+        m = len(basic)
+        n = len(nonbasic+basic)
+        assert A[:, n-m:] == -eye(m)
 
     kept_nonbasic = [v for v in nonbasic if v not in nonatom_vars]
     # The order is important because:
@@ -850,6 +854,10 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
         assert set(new_basic) <= set(basic)
         # new nonbasic variables should be a subset of union of old basic and non-atom nonbasics
         assert set(new_nonbasic) <= set(kept_nonbasic) | set(basic)
+        # precondition for all tableu matrices A
+        m = len(new_basic)
+        n = len(new_nonbasic+new_basic)
+        assert A[:, n-m:] == -eye(m)
     return A, new_basic, new_nonbasic
 
 
