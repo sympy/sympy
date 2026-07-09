@@ -1,3 +1,62 @@
+"""Algebraic tensor expressions built from matrix factors.
+
+This module provides classes for representing tensor products of matrix-like
+objects and linear combinations thereof.  Tensors are built from factors
+combined via the tensor product (``⊗``) and addition (``+``).  A third
+operation, composition (``*``), performs factor-wise matrix multiplication
+and serves as the tensor analogue of contraction.
+
+The module provides four core types:
+
+    - :class:`~sympy.tensor.algebraic.algebraic_pure_tensor.AlgebraicPureTensor`
+      A single tensor-product term.
+
+    - :class:`~sympy.tensor.algebraic.algebraic_tensor.AlgebraicTensor`
+      A linear combination of same-shape pure tensors.
+
+    - :class:`~sympy.tensor.algebraic.algebraic_zero_tensor.AlgebraicZeroTensor`
+      The additive identity (zero tensor) for a given tensor shape.
+
+    - :class:`~sympy.tensor.algebraic.scalar_mul.ScalarMul`
+      Scalar multiplication of a pure tensor by a symbolic commutative factor.
+
+Examples
+========
+
+Create a pure tensor from two matrix symbols:
+
+>>> from sympy.matrices.expressions import MatrixSymbol
+>>> from sympy.tensor.algebraic import AlgebraicPureTensor
+>>> A = MatrixSymbol("A", 3, 4)
+>>> B = MatrixSymbol("B", 4, 5)
+>>> T = AlgebraicPureTensor(A, B)
+>>> T.tensor_shape
+((3, 4), (4, 5))
+
+Form a sum of two pure tensors with the same shape:
+
+>>> C = MatrixSymbol("C", 3, 4)
+>>> D = MatrixSymbol("D", 4, 5)
+>>> from sympy.tensor.algebraic import AlgebraicTensor
+>>> S = AlgebraicTensor(AlgebraicPureTensor(A, B), AlgebraicPureTensor(C, D))
+>>> S.tensor_shape
+((3, 4), (4, 5))
+
+Scale a pure tensor by a numeric coefficient:
+
+>>> from sympy.tensor.algebraic import AlgebraicPureTensor
+>>> T2 = AlgebraicPureTensor(2, A, B)
+>>> T2
+AlgebraicPureTensor(2, A, B)
+
+Create a zero tensor for a given shape:
+
+>>> from sympy.tensor.algebraic import algebraic_zero_tensor
+>>> Z = algebraic_zero_tensor(((3, 4), (4, 5)))
+>>> Z
+0_((3, 4), (4, 5))
+"""
+
 from sympy.tensor.algebraic.algebraic_tensor import (
     AlgebraicTensor,
     ShapeMismatchError,

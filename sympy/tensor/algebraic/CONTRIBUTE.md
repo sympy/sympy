@@ -38,88 +38,88 @@ No Sphinx documentation exists for the algebraic module. Follow the official Sym
 
 ---
 
-## 3. Module-level Docstrings (Missing)
+## 3. Module-level Docstrings (Done)
 
 Follow the official Sympy guide at https://docs.sympy.org/latest/contributing/docstring.html
 
-- [ ] Add module-level docstring to `tensor/algebraic/__init__.py` (summary + examples)
-- [ ] Add module-level docstring to `tensor/algebraic/algebraic_zero_tensor.py` (summary + examples)
-- [ ] Add module-level docstring to `tensor/algebraic/algebraic_pure_tensor.py` (summary + examples)
-- [ ] Add module-level docstring to `tensor/algebraic/algebraic_tensor.py` (summary + examples)
-- [ ] Add module-level docstring to `tensor/algebraic/simplify.py` (summary + examples)
-- [ ] Add module-level docstring to `tensor/algebraic/scalar_mul.py` (summary + examples)
+- [x] Add module-level docstring to `tensor/algebraic/__init__.py` (summary + examples)
+- [x] Add module-level docstring to `tensor/algebraic/algebraic_zero_tensor.py` (summary + examples)
+- [x] Add module-level docstring to `tensor/algebraic/algebraic_pure_tensor.py` (summary + examples)
+- [x] Add module-level docstring to `tensor/algebraic/algebraic_tensor.py` (summary + examples)
+- [x] Add module-level docstring to `tensor/algebraic/simplify.py` (summary + examples)
+- [x] Add module-level docstring to `tensor/algebraic/scalar_mul.py` (summary + examples)
 
 Per SymPy's Docstring Style Guide: every public function/class/method needs a
 **Single-Sentence Summary** and an **Examples** section with doctests.
 
 ### `algebraic_pure_tensor.py`
-- [ ] `AlgebraicPureTensor` class docstring — add `Examples` section with doctests
-- [ ] `AlgebraicPureTensor.factors` property — add `Examples`
-- [ ] `AlgebraicPureTensor.tensor_shape` property — add `Examples`
-- [ ] `AlgebraicPureTensor.commutativity_shape` property — add `Examples`
-- [ ] `AlgebraicPureTensor.__new__` — add docstring with `Examples`
-- [ ] `AlgebraicPureTensor.__neg__` — add `Examples`
-- [ ] `AlgebraicPureTensor.__mul__` — add `Examples`
-- [ ] `AlgebraicPureTensor.__rmul__` — add `Examples`
-- [ ] `AlgebraicPureTensor.__add__` / `__radd__` — add `Examples`
-- [ ] `AlgebraicPureTensor.__sub__` / `__rsub__` — add `Examples`
-- [ ] `AlgebraicPureTensor._eval_expand_mul` — add docstring with `Examples`
-- [ ] `algebraic_tensor_product` — add `Examples`
-- [ ] `compose_algebraic_pure_tensors` — add `Examples`
+- [x] `AlgebraicPureTensor` class docstring — add `Examples` section with doctests
+- [x] `AlgebraicPureTensor.factors` property — add `Examples`
+- [x] `AlgebraicPureTensor.tensor_shape` property — add `Examples`
+- [x] `AlgebraicPureTensor.commutativity_shape` property — add `Examples`
+- [x] `AlgebraicPureTensor.__new__` — add docstring with `Examples`
+- [x] `AlgebraicPureTensor.__neg__` — add `Examples`
+- [x] `AlgebraicPureTensor.__mul__` — add `Examples`
+- [x] `AlgebraicPureTensor.__rmul__` — add `Examples`
+- [x] `AlgebraicPureTensor.__add__` / `__radd__` — add `Examples`
+- [x] `AlgebraicPureTensor.__sub__` / `__rsub__` — add `Examples`
+- [x] `AlgebraicPureTensor._eval_expand_mul` — add docstring with `Examples`
+- [x] `algebraic_tensor_product` — add `Examples`
+- [x] `compose_algebraic_pure_tensors` — add `Examples`
 
 ### `algebraic_tensor.py`
-- [ ] `AlgebraicTensor` class docstring — add `Examples` section with doctests
-- [ ] `AlgebraicTensor.tensor_shape` property — add `Examples`
-- [ ] `AlgebraicTensor.commutativity_shape` property — add `Examples`
-- [ ] `AlgebraicTensor.terms` property — add `Examples`
-- [ ] `AlgebraicTensor.__neg__` — add `Examples`
-- [ ] `AlgebraicTensor.__add__` / `__radd__` — add `Examples`
-- [ ] `AlgebraicTensor.__sub__` / `__rsub__` — add `Examples`
-- [ ] `AlgebraicTensor.__mul__` — add `Examples`
-- [ ] `AlgebraicTensor.__rmul__` — add `Examples`
-- [ ] `AlgebraicTensor.expand` — add `Examples`
-- [ ] `ShapeMismatchError` — add docstring with `Examples`
-- [ ] `compose_algebraic_tensors` — add `Examples`
+- [x] `AlgebraicTensor` class docstring — add `Examples` section with doctests
+- [x] `AlgebraicTensor.tensor_shape` property — add `Examples`
+- [x] `AlgebraicTensor.commutativity_shape` property — add `Examples`
+- [x] `AlgebraicTensor.terms` property — add `Examples`
+- [x] `AlgebraicTensor.__neg__` — add `Examples`
+- [x] `AlgebraicTensor.__add__` / `__radd__` — add `Examples`
+- [x] `AlgebraicTensor.__sub__` / `__rsub__` — add `Examples`
+- [x] `AlgebraicTensor.__mul__` — add `Examples`
+- [x] `AlgebraicTensor.__rmul__` — add `Examples`
+- [x] `AlgebraicTensor.expand` — add `Examples`
+- [x] `ShapeMismatchError` — add docstring with `Examples`
+- [x] `compose_algebraic_tensors` — add `Examples`
 
 ### `algebraic_zero_tensor.py`
-- [ ] `AlgebraicZeroTensor` class docstring — add `Examples` section with doctests
-- [ ] `AlgebraicZeroTensor.shape` property — add `Examples`
-- [ ] `AlgebraicZeroTensor.tensor_shape` property — add `Examples`
-- [ ] `AlgebraicZeroTensor.commutativity_shape` property — add `Examples`
-- [ ] `AlgebraicZeroTensor.__neg__` — add `Examples`
-- [ ] `AlgebraicZeroTensor.__add__` / `__radd__` — add `Examples`
-- [ ] `AlgebraicZeroTensor.__sub__` / `__rsub__` — add `Examples`
-- [ ] `AlgebraicZeroTensor.__mul__` / `__rmul__` — add `Examples`
-- [ ] `algebraic_zero_tensor` — add `Examples`
+- [x] `AlgebraicZeroTensor` class docstring — add `Examples` section with doctests
+- [x] `AlgebraicZeroTensor.shape` property — add `Examples`
+- [x] `AlgebraicZeroTensor.tensor_shape` property — add `Examples`
+- [x] `AlgebraicZeroTensor.commutativity_shape` property — add `Examples`
+- [x] `AlgebraicZeroTensor.__neg__` — add `Examples`
+- [x] `AlgebraicZeroTensor.__add__` / `__radd__` — add `Examples`
+- [x] `AlgebraicZeroTensor.__sub__` / `__rsub__` — add `Examples`
+- [x] `AlgebraicZeroTensor.__mul__` / `__rmul__` — add `Examples`
+- [x] `algebraic_zero_tensor` — add `Examples`
 
 ### `scalar_mul.py`
-- [ ] `ScalarMul` class docstring — add `Examples` section with doctests
-- [ ] `ScalarMul.scalar` property — add `Examples`
-- [ ] `ScalarMul.tensor` property — add `Examples`
-- [ ] `ScalarMul.factors` property — add `Examples`
-- [ ] `ScalarMul.tensor_shape` property — add `Examples`
-- [ ] `ScalarMul.commutativity_shape` property — add `Examples`
-- [ ] `ScalarMul.__neg__` — add `Examples`
-- [ ] `ScalarMul.__mul__` — add `Examples`
-- [ ] `ScalarMul.__rmul__` — add `Examples`
-- [ ] `ScalarMul.__add__` / `__radd__` — add `Examples`
-- [ ] `ScalarMul.__sub__` / `__rsub__` — add `Examples`
-- [ ] `ScalarMul.expand` — add `Examples`
+- [x] `ScalarMul` class docstring — add `Examples` section with doctests
+- [x] `ScalarMul.scalar` property — add `Examples`
+- [x] `ScalarMul.tensor` property — add `Examples`
+- [x] `ScalarMul.factors` property — add `Examples`
+- [x] `ScalarMul.tensor_shape` property — add `Examples`
+- [x] `ScalarMul.commutativity_shape` property — add `Examples`
+- [x] `ScalarMul.__neg__` — add `Examples`
+- [x] `ScalarMul.__mul__` — add `Examples`
+- [x] `ScalarMul.__rmul__` — add `Examples`
+- [x] `ScalarMul.__add__` / `__radd__` — add `Examples`
+- [x] `ScalarMul.__sub__` / `__rsub__` — add `Examples`
+- [x] `ScalarMul.expand` — add `Examples`
 
 ### `simplify.py`
-- [ ] `tensorsimplify` — add `Examples`
-- [ ] `proportionality_factoring` — add `Examples`
-- [ ] `_extract_pt_and_coeff` — add docstring with `Examples`
-- [ ] `_proportionality_ratio` — add `Examples`
-- [ ] `_build_pt` — add `Examples`
-- [ ] `_matrix_proportionality_ratio` — add docstring with `Examples`
-- [ ] `_decompose_commutative_factors` — add `Examples`
-- [ ] `_reconstruct_term` — add `Examples`
-- [ ] `_extract_commutative_from_factor` — add `Examples`
-- [ ] `_extract_commutative_prefactors` — add `Examples`
-- [ ] `_normalize_factor_sign` — add docstring with `Examples`
-- [ ] `_is_exactly_divisible` — add docstring with `Examples`
-- [ ] `_deduplicate_proportional` — add docstring with `Examples`
+- [x] `tensorsimplify` — add `Examples`
+- [x] `proportionality_factoring` — add `Examples`
+- [x] `_extract_pt_and_coeff` — add docstring with `Examples`
+- [x] `_proportionality_ratio` — add `Examples`
+- [x] `_build_pt` — add `Examples`
+- [x] `_matrix_proportionality_ratio` — add docstring with `Examples`
+- [x] `_decompose_commutative_factors` — add `Examples`
+- [x] `_reconstruct_term` — add `Examples`
+- [x] `_extract_commutative_from_factor` — add `Examples`
+- [x] `_extract_commutative_prefactors` — add `Examples`
+- [x] `_normalize_factor_sign` — add docstring with `Examples`
+- [x] `_is_exactly_divisible` — add docstring with `Examples`
+- [x] `_deduplicate_proportional` — add docstring with `Examples`
 
 ---
 

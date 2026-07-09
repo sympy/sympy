@@ -6,6 +6,40 @@ from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 
 
+"""Simplification routines for algebraic tensor expressions.
+
+This module provides :func:`tensorsimplify`, the public entry point for
+simplifying algebraic tensor expressions.  The simplification pipeline
+consists of two phases:
+
+    1. **Proportionality factoring** -- merges proportional
+       :class:`~sympy.tensor.algebraic.algebraic_pure_tensor.AlgebraicPureTensor`
+       terms within a sum by combining coefficients or creating linear
+       combinations at non-proportional factor slots.
+
+    2. **Commutativity-based simplification** -- decomposes terms by their
+       commutativity shape, groups by commutative patterns, applies
+       proportionality factoring to non-commutative components, and
+       reconstructs the full expression.
+
+Examples
+========
+
+Simplify a sum of proportional pure tensors:
+
+>>> from sympy.matrices.expressions import MatrixSymbol
+>>> from sympy.tensor.algebraic import AlgebraicPureTensor, tensorsimplify
+>>> A = MatrixSymbol("A", 3, 4)
+>>> B = MatrixSymbol("B", 4, 5)
+>>> C = MatrixSymbol("C", 3, 4)
+>>> D = MatrixSymbol("D", 4, 5)
+>>> T1 = AlgebraicPureTensor(A, B)
+>>> T2 = AlgebraicPureTensor(2, A, B)
+>>> tensorsimplify(T1 + T2)
+3*A ⊗ B
+"""
+
+
 def _get_sympy_simplify():
     """Lazy import of SymPy's top-level simplify to avoid circular imports."""
     from sympy.simplify.simplify import simplify as _s
@@ -20,6 +54,15 @@ def _matrix_proportionality_ratio(m1, m2):
     """Check element-wise proportionality for true matrices (shape != (1,1)).
 
     Returns the commutative ratio k such that m1 = k * m2, or None.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import ImmutableDenseMatrix
+    >>> M1 = ImmutableDenseMatrix([[1, 2], [3, 4]])
+    >>> M2 = ImmutableDenseMatrix([[2, 4], [6, 8]])
+    >>> _matrix_proportionality_ratio(M1, M2)
+    1/2
     """
     if m1.shape != m2.shape:
         return None
@@ -66,6 +109,17 @@ def _proportionality_ratio(factor1, factor2):
       the same ratio. Avoids division by zero.
     - For 1x1 matrices: checks if there is a commutative proportionality
       constant between the wrapped noncommutative symbols.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import ImmutableDenseMatrix
+    >>> M1 = ImmutableDenseMatrix([[1, 2], [3, 4]])
+    >>> M2 = ImmutableDenseMatrix([[2, 4], [6, 8]])
+    >>> _proportionality_ratio(M1, M2)
+    1/2
+    >>> _proportionality_ratio(M2, M1)
+    2
     """
     if factor1 == factor2:
         return S.One
@@ -89,6 +143,18 @@ def _extract_pt_and_coeff(term):
     - Mul(coeff, AlgebraicPureTensor)
     - MatMul(coeff, *matrix_factors) with direct matrix factors
     - Anything else -> (term, S.One)
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> A = MatrixSymbol("A", 3, 4)
+    >>> B = MatrixSymbol("B", 4, 5)
+    >>> T = AlgebraicPureTensor(2, A, B)
+    >>> pt, coeff = _extract_pt_and_coeff(T)
+    >>> coeff
+    2
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.scalar_mul import ScalarMul
@@ -133,6 +199,19 @@ def _build_pt(coeff, factors):
 
     Handles special cases: coeff=1 drops coefficient, single factor with
     coeff=1 unwraps to bare factor, coeff=0 produces AlgebraicZeroTensor.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> A = MatrixSymbol("A", 3, 4)
+    >>> B = MatrixSymbol("B", 4, 5)
+    >>> _build_pt(2, [A, B])
+    2*A ⊗ B
+    >>> _build_pt(1, [A])
+    A
+    >>> _build_pt(0, [A, B])
+    0_((3, 4), (4, 5))
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
@@ -185,6 +264,20 @@ def _proportionality_factoring(at):
     -------
     AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or other
         The simplified expression.
+
+    Examples
+    ========
+
+    Merge proportional terms:
+
+    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> A = MatrixSymbol("A", 3, 4)
+    >>> B = MatrixSymbol("B", 4, 5)
+    >>> T1 = AlgebraicPureTensor(A, B)
+    >>> T2 = AlgebraicPureTensor(2, A, B)
+    >>> _proportionality_factoring(T1 + T2)
+    3*A ⊗ B
     """
     from sympy.core.add import Add as _Add
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
@@ -416,6 +509,32 @@ def tensorsimplify(expr, **kwargs):
     Returns
     -------
     simplified expression (same type as *expr* when possible)
+
+    Examples
+    ========
+
+    Simplify a sum of proportional pure tensors:
+
+    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> A = MatrixSymbol("A", 3, 4)
+    >>> B = MatrixSymbol("B", 4, 5)
+    >>> T1 = AlgebraicPureTensor(A, B)
+    >>> T2 = AlgebraicPureTensor(2, A, B)
+    >>> tensorsimplify(T1 + T2)
+    3*A ⊗ B
+
+    Simplify a pure tensor:
+
+    >>> tensorsimplify(AlgebraicPureTensor(2, A, B))
+    2*A ⊗ B
+
+    Zero tensor passes through unchanged:
+
+    >>> from sympy.tensor.algebraic import AlgebraicZeroTensor
+    >>> Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    >>> tensorsimplify(Z)
+    0_((3, 4), (4, 5))
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
@@ -456,6 +575,15 @@ def _decompose_commutative_factors(commutative_factors, term_coeff):
     list of (prefactor, basis_factor_list) tuples
         Each tuple contains a commutative prefactor and a list of basis
         matrices (0/1 entries only), one per commutative slot.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import ImmutableDenseMatrix
+    >>> M = ImmutableDenseMatrix([[1, 2], [3, 4]])
+    >>> result = _decompose_commutative_factors([M], 1)
+    >>> len(result)
+    4
     """
     from sympy.matrices import zeros as _zeros
     from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -516,6 +644,14 @@ def _reconstruct_term(key, non_commutative_pt, coeff, comm_cs,
     -------
     AlgebraicPureTensor, bare matrix, or AlgebraicZeroTensor
         The reconstructed tensor term.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import ImmutableDenseMatrix
+    >>> E00 = ImmutableDenseMatrix([[1, 0], [0, 0]])
+    >>> _reconstruct_term((E00,), None, 1, (1,), [0], [])
+    E00
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
@@ -552,6 +688,15 @@ def _normalize_factor_sign(f):
     Makes polynomial factors monic in sign by flipping the overall sign when
     the coefficient of the first symbol (sorted by name for determinism) is
     negative.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y
+    >>> _normalize_factor_sign(x - y)
+    x - y
+    >>> _normalize_factor_sign(-x + y)
+    x - y
     """
     from sympy.core.add import Add as _Add
     from sympy.core.mul import Mul as _Mul
@@ -586,6 +731,16 @@ def _is_exactly_divisible(entry, candidate):
     A zero entry is considered trivially divisible.  For nonzero entries we
     verify that ``candidate`` does not appear in the denominator of the
     simplified quotient ``entry / candidate``.
+
+    Examples
+    ========
+
+    >>> _is_exactly_divisible(6, 2)
+    True
+    >>> _is_exactly_divisible(5, 2)
+    False
+    >>> _is_exactly_divisible(0, 3)
+    True
     """
     from sympy import cancel as _cancel
     from sympy.core.sympify import sympify
@@ -619,6 +774,13 @@ def _deduplicate_proportional(factors):
     This is needed because _normalize_factor_sign may not catch every sign
     convention, and both ``a`` and ``-a`` could otherwise end up as
     separate survivors, producing ``-a**2`` as the divisor.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x
+    >>> _deduplicate_proportional([x, -x, x + 1])
+    [x, x + 1]
     """
     if not factors:
         return []
@@ -656,6 +818,16 @@ def _extract_commutative_from_factor(factor):
     -------
     (commutative_coeff, new_factor)
         *commutative_coeff* is S.One when nothing was extracted.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import ImmutableDenseMatrix
+    >>> from sympy.abc import x
+    >>> M = ImmutableDenseMatrix([[x, 2*x], [3*x, 4*x]])
+    >>> coeff, new_M = _extract_commutative_from_factor(M)
+    >>> coeff
+    x
     """
     from sympy.core.mul import Mul
     from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -786,6 +958,18 @@ def _extract_commutative_prefactors(pt):
     Returns
     -------
     (extracted_coeff, new_factors_list)
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> A = MatrixSymbol("A", 3, 4)
+    >>> B = MatrixSymbol("B", 4, 5)
+    >>> T = AlgebraicPureTensor(A, B)
+    >>> coeff, factors = _extract_commutative_prefactors(T)
+    >>> coeff
+    1
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 

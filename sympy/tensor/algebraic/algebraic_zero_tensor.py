@@ -5,6 +5,44 @@ from sympy.core.numbers import Number
 from sympy.core.sympify import sympify
 
 
+"""Zero tensor carrying a specific tensor shape.
+
+This module defines :class:`AlgebraicZeroTensor`, the additive identity for
+tensors of a given shape.  Unlike SymPy's ``S.Zero``, an
+:class:`AlgebraicZeroTensor` carries shape information, so zero tensors of
+different shapes are distinct objects.
+
+Examples
+========
+
+Create a zero tensor for a single-factor shape:
+
+>>> from sympy.tensor.algebraic import AlgebraicZeroTensor
+>>> Z = AlgebraicZeroTensor((3, 4))
+>>> Z
+0_((3, 4),)
+>>> Z.shape
+((3, 4),)
+
+Create a zero tensor for a multi-factor shape:
+
+>>> Z2 = AlgebraicZeroTensor(((3, 4), (4, 5)))
+>>> Z2
+0_((3, 4), (4, 5))
+
+Zero tensor acts as additive identity:
+
+>>> from sympy.matrices.expressions import MatrixSymbol
+>>> from sympy.tensor.algebraic import AlgebraicPureTensor
+>>> A = MatrixSymbol("A", 3, 4)
+>>> B = MatrixSymbol("B", 4, 5)
+>>> T = AlgebraicPureTensor(A, B)
+>>> Z3 = AlgebraicZeroTensor(((3, 4), (4, 5)))
+>>> T + Z3
+A ⊗ B
+"""
+
+
 class AlgebraicZeroTensor(AtomicExpr):
     """Zero tensor carrying a specific tensor shape.
 
@@ -22,6 +60,39 @@ class AlgebraicZeroTensor(AtomicExpr):
     ``replace()``), the assumptions system (``is_commutative``),
     generic operations (``subs()``, ``xreplace()``, ``doit()``), and the
     ``Expr`` machinery (``as_base_exp()``, ``as_coeff_Mul()``, ``as_coeff_Add()``).
+
+    Examples
+    ========
+
+    Create a zero tensor for a single-factor shape:
+
+    >>> Z = AlgebraicZeroTensor((3, 4))
+    >>> Z
+    0_((3, 4),)
+    >>> Z.shape
+    ((3, 4),)
+
+    Create a zero tensor for a multi-factor shape:
+
+    >>> Z2 = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    >>> Z2
+    0_((3, 4), (4, 5))
+
+    Zero tensor is its own negation:
+
+    >>> -Z
+    0_((3, 4),)
+
+    Zero tensor is the additive identity:
+
+    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> A = MatrixSymbol("A", 3, 4)
+    >>> B = MatrixSymbol("B", 4, 5)
+    >>> T = AlgebraicPureTensor(A, B)
+    >>> Z3 = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    >>> T + Z3
+    A ⊗ B
     """
 
     __slots__ = ('_shape',)
@@ -59,36 +130,125 @@ class AlgebraicZeroTensor(AtomicExpr):
 
     @property
     def shape(self):
-        """The tensor shape stored in _shape."""
+        """The tensor shape stored in _shape.
+
+        Examples
+        ========
+
+        >>> Z = AlgebraicZeroTensor((3, 4))
+        >>> Z.shape
+        ((3, 4),)
+        >>> AlgebraicZeroTensor(((3, 4), (4, 5))).shape
+        ((3, 4), (4, 5))
+        """
         return self._shape
 
     @property
     def tensor_shape(self):
-        """Alias for ``shape`` -- the full tensor shape tuple."""
+        """Alias for ``shape`` -- the full tensor shape tuple.
+
+        Examples
+        ========
+
+        >>> Z = AlgebraicZeroTensor((3, 4))
+        >>> Z.tensor_shape
+        ((3, 4),)
+        """
         return self._shape
 
     @property
     def commutativity_shape(self):
-        """All-1s tuple -- a zero tensor is commutative in every slot."""
+        """All-1s tuple -- a zero tensor is commutative in every slot.
+
+        Examples
+        ========
+
+        >>> AlgebraicZeroTensor((3, 4)).commutativity_shape
+        (1,)
+        >>> AlgebraicZeroTensor(((3, 4), (4, 5))).commutativity_shape
+        (1, 1)
+        """
         return tuple(1 for _ in self._shape)
 
     def __neg__(self):
-        """Negation of zero is zero."""
+        """Negation of zero is zero.
+
+        Examples
+        ========
+
+        >>> Z = AlgebraicZeroTensor((3, 4))
+        >>> -Z
+        0_((3, 4),)
+        """
         return self
 
     def __add__(self, other):
-        """Additive identity -- return the other operand unchanged."""
+        """Additive identity -- return the other operand unchanged.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(A, B)
+        >>> Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+        >>> Z + T
+        A ⊗ B
+        """
         return other
 
     def __radd__(self, other):
-        """Additive identity -- return the other operand unchanged."""
+        """Additive identity -- return the other operand unchanged.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(A, B)
+        >>> Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+        >>> T + Z
+        A ⊗ B
+        """
         return other
 
     def __sub__(self, other):
+        """Subtract *other* from the zero tensor.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(A, B)
+        >>> Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+        >>> Z - T
+        -A ⊗ B
+        """
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         return AlgebraicTensor(self, -other)
 
     def __rsub__(self, other):
+        """Right-subtract: ``other - self`` (returns *other* unchanged).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(A, B)
+        >>> Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+        >>> T - Z
+        A ⊗ B
+        """
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         return AlgebraicTensor(other, -self)
 
@@ -96,6 +256,15 @@ class AlgebraicZeroTensor(AtomicExpr):
         """Scaling by a commutative scalar returns self.
 
         For non-commutative operands, delegates to composition.
+
+        Examples
+        ========
+
+        >>> Z = AlgebraicZeroTensor((3, 4))
+        >>> 5 * Z
+        0_((3, 4),)
+        >>> Z * 5
+        0_((3, 4),)
         """
         other = sympify(other)
         if isinstance(other, Number) or (
@@ -109,6 +278,13 @@ class AlgebraicZeroTensor(AtomicExpr):
         """Scaling by a commutative scalar returns self.
 
         For non-commutative operands, delegates to composition.
+
+        Examples
+        ========
+
+        >>> Z = AlgebraicZeroTensor((3, 4))
+        >>> 5 * Z
+        0_((3, 4),)
         """
         other = sympify(other)
         if isinstance(other, Number) or (
@@ -169,5 +345,14 @@ def algebraic_zero_tensor(shape):
     Returns
     -------
     AlgebraicZeroTensor
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.algebraic import algebraic_zero_tensor
+    >>> algebraic_zero_tensor((3, 4))
+    0_((3, 4),)
+    >>> algebraic_zero_tensor(((3, 4), (4, 5)))
+    0_((3, 4), (4, 5))
     """
     return AlgebraicZeroTensor(shape)

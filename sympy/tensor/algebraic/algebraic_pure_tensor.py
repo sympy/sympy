@@ -8,6 +8,44 @@ from sympy.core.sympify import sympify
 from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
 
+"""Pure tensor as a non-commutative tensor product of matrix factors.
+
+This module defines :class:`AlgebraicPureTensor`, the building block for
+algebraic tensor expressions.  A pure tensor represents a single term in
+a tensor expression -- the non-commutative tensor product of matrix-like
+factors, optionally scaled by a commutative coefficient.
+
+Each factor must carry ``.shape`` (e.g., any
+:class:`~sympy.matrices.expressions.MatrixSymbol`).  The tensor shape is
+the full sequence of per-factor shapes.
+
+Examples
+========
+
+Create a pure tensor from two matrix symbols:
+
+>>> from sympy.matrices.expressions import MatrixSymbol
+>>> from sympy.tensor.algebraic import AlgebraicPureTensor
+>>> A = MatrixSymbol("A", 3, 4)
+>>> B = MatrixSymbol("B", 4, 5)
+>>> T = AlgebraicPureTensor(A, B)
+>>> T.tensor_shape
+((3, 4), (4, 5))
+
+With a numeric coefficient:
+
+>>> T2 = AlgebraicPureTensor(2, A, B)
+>>> T2
+2*A ⊗ B
+
+A symbolic coefficient wraps the tensor in a ScalarMul:
+
+>>> from sympy.abc import x
+>>> AlgebraicPureTensor(x, A, B)
+x*A ⊗ B
+"""
+
+
 def _factor_shapes(factors):
     """Return the full tensor shape as a tuple of per-factor shapes.
 
@@ -43,6 +81,41 @@ class AlgebraicPureTensor(Mul):
     The tensor shape is the full sequence of per-factor shapes, e.g.
     ``((3, 4), (4, 5))`` for ``AlgebraicPureTensor(A_3x4, C_4x5)``.  No
     contraction is performed.
+
+    Examples
+    ========
+
+    Create a pure tensor from two matrix symbols:
+
+    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> A = MatrixSymbol("A", 3, 4)
+    >>> B = MatrixSymbol("B", 4, 5)
+    >>> T = AlgebraicPureTensor(A, B)
+    >>> T
+    A ⊗ B
+    >>> T.tensor_shape
+    ((3, 4), (4, 5))
+
+    With a numeric coefficient:
+
+    >>> AlgebraicPureTensor(2, A, B)
+    2*A ⊗ B
+
+    A symbolic coefficient wraps the result in a ScalarMul:
+
+    >>> from sympy.abc import x
+    >>> AlgebraicPureTensor(x, A, B)
+    x*A ⊗ B
+
+    Zero coefficient produces a zero tensor:
+
+    >>> AlgebraicPureTensor(0, A, B)
+    0_((3, 4), (4, 5))
+
+    Single factor with coefficient 1 unwraps to the bare factor:
+
+    >>> AlgebraicPureTensor(A)
+    A
     """
 
     __slots__ = ()
@@ -60,6 +133,18 @@ class AlgebraicPureTensor(Mul):
 
         Excludes a leading coefficient (Number) if one is stored as
         the first arg.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(2, A, B)
+        >>> T.factors
+        (A, B)
+        >>> AlgebraicPureTensor(A, B).factors
+        (A, B)
         """
         if self.args and self.args[0].is_Number:
             return self.args[1:]
@@ -74,6 +159,17 @@ class AlgebraicPureTensor(Mul):
         """Full tensor shape as a tuple of per-factor (rows, cols) pairs.
 
         E.g. ``AlgebraicPureTensor(A_3x4, C_4x5).tensor_shape == ((3, 4), (4, 5))``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> AlgebraicPureTensor(A, B).tensor_shape
+        ((3, 4), (4, 5))
+        >>> AlgebraicPureTensor(2, A, B).tensor_shape
+        ((3, 4), (4, 5))
         """
         return _factor_shapes(self.factors)
 
@@ -83,6 +179,24 @@ class AlgebraicPureTensor(Mul):
 
         Entry i is 1 if the i-th tensor factor contains no noncommutative symbols,
         0 otherwise.  Same length as ``tensor_shape``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> AlgebraicPureTensor(A, B).commutativity_shape
+        (0, 0)
+
+        A numeric matrix factor is commutative in its slot:
+
+        >>> from sympy.matrices import ImmutableDenseMatrix
+        >>> M = ImmutableDenseMatrix([[1, 2, 3, 4],
+        ...                           [5, 6, 7, 8],
+        ...                           [9, 10, 11, 12]])
+        >>> AlgebraicPureTensor(M, B).commutativity_shape
+        (1, 0)
         """
         return tuple(
             0 if _factor_has_noncommutative(f) else 1
@@ -105,6 +219,43 @@ class AlgebraicPureTensor(Mul):
         return f"AlgebraicPureTensor({repr(coeff)}, {', '.join(repr(f) for f in self.factors)})"
 
     def __new__(cls, *args, evaluate=False):
+        """Construct an AlgebraicPureTensor from factors.
+
+        The first argument may be a Number coefficient.  Symbolic
+        (non-Number) coefficients are automatically wrapped in a
+        :class:`~sympy.tensor.algebraic.scalar_mul.ScalarMul`.
+
+        Parameters
+        ----------
+        *args : Number (optional), then matrix-like factors
+            Optional leading Number coefficient followed by one or more
+            matrix-like factors, each carrying a ``.shape`` attribute.
+        evaluate : bool, default False
+            Not used; retained for compatibility.
+
+        Returns
+        -------
+        AlgebraicPureTensor, ScalarMul, AlgebraicZeroTensor, or bare factor
+            The result depends on the arguments.  A single factor with
+            coefficient 1 unwraps to the bare factor.  Zero coefficient
+            produces an AlgebraicZeroTensor.  Symbolic coefficients
+            produce a ScalarMul.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> AlgebraicPureTensor(A, B)
+        A ⊗ B
+        >>> AlgebraicPureTensor(2, A, B)
+        2*A ⊗ B
+        >>> AlgebraicPureTensor(0, A, B)
+        0_((3, 4), (4, 5))
+        >>> AlgebraicPureTensor(A)
+        A
+        """
         if not args:
             raise ValueError("AlgebraicPureTensor requires at least one factor")
 
@@ -168,7 +319,20 @@ class AlgebraicPureTensor(Mul):
         return obj
 
     def __neg__(self):
-        """Return an AlgebraicPureTensor with negated coefficient."""
+        """Return an AlgebraicPureTensor with negated coefficient.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(2, A, B)
+        >>> -T
+        -2*A ⊗ B
+        >>> -AlgebraicPureTensor(A, B)
+        -A ⊗ B
+        """
         coeff = self._get_coeff()
         factors = self.factors
         new_coeff = coeff * S.NegativeOne
@@ -205,6 +369,28 @@ class AlgebraicPureTensor(Mul):
         -------
         AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor, or ScalarMul
             The scaled/composed result.
+
+        Examples
+        ========
+
+        Scalar multiplication:
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(A, B)
+        >>> T * 3
+        3*A ⊗ B
+        >>> T * 0
+        0_((3, 4), (4, 5))
+
+        Composition with another tensor:
+
+        >>> C = MatrixSymbol("C", 3, 4)
+        >>> D = MatrixSymbol("D", 4, 5)
+        >>> T2 = AlgebraicPureTensor(C, D)
+        >>> T * T2  # doctest: +NORMALIZE_WHITESPACE
+        (A*C) ⊗ (B*D)
         """
         from sympy.core.singleton import S
         from sympy.tensor.algebraic.scalar_mul import ScalarMul
@@ -262,6 +448,18 @@ class AlgebraicPureTensor(Mul):
         -------
         AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor, or ScalarMul
             The scaled/composed result.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(A, B)
+        >>> 3 * T
+        3*A ⊗ B
+        >>> 0 * T
+        0_((3, 4), (4, 5))
         """
         from sympy.core.singleton import S
         from sympy.tensor.algebraic.scalar_mul import ScalarMul
@@ -302,6 +500,24 @@ class AlgebraicPureTensor(Mul):
         return compose_algebraic_tensors(other, self)
 
     def __add__(self, other):
+        """Add another tensor or scalar to this pure tensor.
+
+        Returns an :class:`~sympy.tensor.algebraic.algebraic_tensor.AlgebraicTensor`
+        containing both terms.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> C = MatrixSymbol("C", 3, 4)
+        >>> D = MatrixSymbol("D", 4, 5)
+        >>> T1 = AlgebraicPureTensor(A, B)
+        >>> T2 = AlgebraicPureTensor(C, D)
+        >>> T1 + T2
+        A ⊗ B + C ⊗ D
+        """
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         if isinstance(other, AlgebraicZeroTensor):
             if other.tensor_shape == self.tensor_shape:
@@ -309,6 +525,21 @@ class AlgebraicPureTensor(Mul):
         return AlgebraicTensor(self, other)
 
     def __radd__(self, other):
+        """Right-add: ``other + self``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> C = MatrixSymbol("C", 3, 4)
+        >>> D = MatrixSymbol("D", 4, 5)
+        >>> T1 = AlgebraicPureTensor(A, B)
+        >>> T2 = AlgebraicPureTensor(C, D)
+        >>> T2 + T1
+        C ⊗ D + A ⊗ B
+        """
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         if isinstance(other, AlgebraicZeroTensor):
             if other.tensor_shape == self.tensor_shape:
@@ -316,10 +547,40 @@ class AlgebraicPureTensor(Mul):
         return AlgebraicTensor(other, self)
 
     def __sub__(self, other):
+        """Subtract another tensor or scalar from this pure tensor.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> C = MatrixSymbol("C", 3, 4)
+        >>> D = MatrixSymbol("D", 4, 5)
+        >>> T1 = AlgebraicPureTensor(A, B)
+        >>> T2 = AlgebraicPureTensor(C, D)
+        >>> T1 - T2
+        A ⊗ B - C ⊗ D
+        """
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         return AlgebraicTensor(self, -other)
 
     def __rsub__(self, other):
+        """Right-subtract: ``other - self``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> C = MatrixSymbol("C", 3, 4)
+        >>> D = MatrixSymbol("D", 4, 5)
+        >>> T1 = AlgebraicPureTensor(A, B)
+        >>> T2 = AlgebraicPureTensor(C, D)
+        >>> T2 - T1
+        C ⊗ D - A ⊗ B
+        """
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         return AlgebraicTensor(other, -self)
 
@@ -352,6 +613,23 @@ class AlgebraicPureTensor(Mul):
                 print(self)
 
     def _eval_expand_mul(self, **hints):
+        """Expand this pure tensor by distributing over ``Add`` in factors.
+
+        Expands each factor individually, then distributes the tensor
+        product linearly across all addend combinations when any factor
+        is a SymPy ``Add``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol, MatAdd
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> C = MatrixSymbol("C", 4, 5)
+        >>> T = AlgebraicPureTensor(A, MatAdd(B, C))
+        >>> T.expand()
+        A ⊗ B + A ⊗ C
+        """
         from sympy.core.add import Add
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         from itertools import product
@@ -406,12 +684,17 @@ class AlgebraicPureTensor(Mul):
 def algebraic_tensor_product(*args):
     """Convenience constructor for AlgebraicPureTensor.
 
-    >>> from sympy.tensor.algebraic.algebraic_pure_tensor import algebraic_tensor_product
+    Examples
+    ========
+
+    >>> from sympy.tensor.algebraic import algebraic_tensor_product
     >>> from sympy.matrices.expressions import MatrixSymbol
     >>> A = MatrixSymbol("A", 2, 3)
     >>> v = MatrixSymbol("v", 3, 1)
     >>> algebraic_tensor_product(A, v)
     A ⊗ v
+    >>> algebraic_tensor_product(2, A, v)
+    2*A ⊗ v
     """
     return AlgebraicPureTensor(*args)
 
@@ -449,6 +732,21 @@ def compose_algebraic_pure_tensors(left, right):
         If the two tensors have a different number of factors, or if any
         corresponding factor pair has incompatible inner dimensions for
         matrix multiplication.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy.tensor.algebraic import (
+    ...     AlgebraicPureTensor, compose_algebraic_pure_tensors)
+    >>> A = MatrixSymbol("A", 3, 4)
+    >>> B = MatrixSymbol("B", 4, 5)
+    >>> C = MatrixSymbol("C", 3, 4)
+    >>> D = MatrixSymbol("D", 4, 5)
+    >>> T1 = AlgebraicPureTensor(A, B)
+    >>> T2 = AlgebraicPureTensor(C, D)
+    >>> compose_algebraic_pure_tensors(T1, T2)  # doctest: +NORMALIZE_WHITESPACE
+    (A*C) ⊗ (B*D)
     """
     # --- AlgebraicZeroTensor shortcuts ---
     if isinstance(left, AlgebraicZeroTensor):
