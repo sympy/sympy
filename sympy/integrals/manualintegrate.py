@@ -2466,7 +2466,10 @@ def trig_sindouble_rule(integral):
     match = integrand.match(sin(2*symbol)*a)
     if match:
         sin_double = 2*sin(symbol)*cos(symbol)/sin(2*symbol)
-        return integral_steps(integrand * sin_double, symbol)
+        rewritten = integrand * sin_double
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, integrand * sin_double, symbol))
+        substeps = integral_steps(rewritten, symbol)
+        return RewriteRule(integrand, symbol, rewritten, substeps)
 
 def trig_powers_products_rule(integral):
     return do_one(null_safe(trig_sincos_rule),
