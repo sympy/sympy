@@ -82,6 +82,12 @@ def find_rational_assignment(constr, assignment, iter=20):
     return None
 
 def substitute_slack(cons, s_subs):
+    """
+    helps to rewrite Phi in terms of basic/slack variables (Phi' in the paper)
+    since _reduce_matrix can remove non-atom vars from Phi, which causes some
+    problems on the tests where it tries to substitute values to original Phi. E.g
+    Phi = x >= 0 & x+y >= 1 -> Phi' := (x >= 0 & s1 >= 1)
+    """
     expr = cons.lhs - cons.rhs
     var, const = _sep_const_terms(expr)
     var, coeff = _sep_const_coeff(var)
