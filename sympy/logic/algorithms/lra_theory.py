@@ -822,8 +822,11 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
         nonatom_vars = sorted(nonatom_vars, key=str)
 
     kept_nonbasic = [v for v in nonbasic if v not in nonatom_vars]
-    # the order starts with the variables we want to eliminate,
-    # continues with all the basic variables
+    # The order is important because:
+    # 1) rref starts pivoting from left to right, so nonatom_vars should come first
+    # 2) basic var should come after them and possibly reduce them too
+    # Basic vars are also in the form of block matrix -I_m and the rank of that identity
+    # matrix makes so that we never touch kept_nonbasic block matrix
     sorted_col_order = list(nonatom_vars) + basic + kept_nonbasic
     col_of = {v: i for i, v in enumerate(nonbasic + basic)}
     # reorder the columns of A by the list order
@@ -837,7 +840,16 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
     new_nonbasic = [v for v in kept_nonbasic + basic if v not in basic_set]
 
     order_pos = {v: i for i, v in enumerate(sorted_col_order)}
+    # every basic should have -1 coefficent by convention, and rref gives 1 coeff.
+    # to all the basic variables.
     A = -B[keep_rows, [order_pos[v] for v in new_nonbasic + new_basic]]
+    if testing_mode:
+        # all the nonaotm_vars should be removed
+        assert set(nonatom_vars).isdisjoint(new_basic + new_nonbasic)
+        # new basic variables should be a subset of old basic variables
+        assert set(new_basic) <= set(basic)
+        # new nonbasic variables should be a subset of union of old basic and non-atom nonbasics
+        assert set(new_nonbasic) <= set(kept_nonbasic) | set(basic)
     return A, new_basic, new_nonbasic
 
 
