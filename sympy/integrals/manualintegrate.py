@@ -26,6 +26,8 @@ from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
+from functools import wraps
+from inspect import signature
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -142,6 +144,24 @@ class AtomicRule(Rule, ABC):
     """A simple rule that does not depend on other rules"""
 
     __slots__ = ()
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if "eval" not in cls.__dict__:
+            return
+        original_eval = cls.eval
+
+        @wraps(original_eval)
+        def wrapped_eval(self, *args, **kwargs):
+            sig = signature(type(self).__init__)
+            params = ', '.join(
+                f"{name}={getattr(self, name)!r}"
+                for name in sig.parameters
+                if name != 'self' and hasattr(self, name)
+            )
+            debug(f"Rule calling {type(self).__name__}({params})")
+            return original_eval(self, *args, **kwargs)
+        cls.eval = wrapped_eval
 
     def contains_dont_know(self) -> bool:
         return False
