@@ -2702,6 +2702,7 @@ def integral_steps(integrand, symbol, **options):
         to obtain a result.
 
     """
+    branch = options.get("branch", False)
     cachekey = integrand.xreplace({symbol: _cache_dummy})
     if cachekey in _integral_cache:
         if _integral_cache[cachekey] is None:
@@ -2778,7 +2779,8 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(Mul, Pow),
                     distribute_expand_rule),
                 trig_powers_products_rule,
-                trig_expand_rule
+                trig_expand_rule,
+                branch=branch
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(trig_substitution_rule)
