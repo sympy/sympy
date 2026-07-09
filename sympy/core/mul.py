@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar, overload, Literal
 
 from collections import defaultdict
@@ -1511,7 +1511,7 @@ class Mul(Expr, AssocOp):
                 continue
             if isinstance(factor, conj_cls):
                 inner = factor.args[0]
-                # Skip non-commutative symbols â€” order matters for them
+                # Skip non-commutative symbols --- order matters for them
                 if inner.is_commutative is False:
                     continue
                 for j in range(len(remaining)):
@@ -1624,7 +1624,7 @@ class Mul(Expr, AssocOp):
                 continue
             if isinstance(factor, conj_cls):
                 inner = factor.args[0]
-                # Skip non-commutative symbols â€” order matters for them
+                # Skip non-commutative symbols --- order matters for them
                 if inner.is_commutative is False:
                     continue
                 for j in range(len(remaining)):
