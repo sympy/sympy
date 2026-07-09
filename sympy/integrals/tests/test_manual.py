@@ -305,6 +305,28 @@ def test_manualintegrate_special():
     F = sqrt(pi)*log(x)*erf(x)/2 - sqrt(pi)*Integral(erf(x)/x, x)/2
     assert_is_integral_of(f, F)
 
+    f, F = erf(x), x*erf(x) + exp(-x**2)/sqrt(pi)
+    assert_is_integral_of(f, F)
+    f, F = erfc(x), x*erfc(x) - exp(-x**2)/sqrt(pi)
+    assert_is_integral_of(f, F)
+    f, F = erfi(x), x*erfi(x) - exp(x**2)/sqrt(pi)
+    assert_is_integral_of(f, F)
+    f, F = fresnelc(x), x*fresnelc(x) - sin(pi*x**2/2)/pi
+    assert_is_integral_of(f, F)
+    f, F = fresnels(x), x*fresnels(x) + cos(pi*x**2/2)/pi
+    assert_is_integral_of(f, F)
+    f, F = Ci(x), x*Ci(x) - sin(x)
+    assert_is_integral_of(f, F)
+    f, F = Chi(x), x*Chi(x) - sinh(x)
+    assert_is_integral_of(f, F)
+    f, F = Si(x), x*Si(x) + cos(x)
+    assert_is_integral_of(f, F)
+    f, F = Shi(x), x*Shi(x) - cosh(x)
+    assert_is_integral_of(f, F)
+    f, F = Ei(x), x*Ei(x) - exp(x)
+    assert_is_integral_of(f, F)
+    f, F = li(x), x*li(x) - Ei(2*log(x))
+    assert_is_integral_of(f, F)
 
 @slow
 def test_manualintegrate_special_slow():
