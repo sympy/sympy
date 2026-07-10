@@ -100,6 +100,8 @@ class EUFCongruenceClosure:
         """
         self.pf_parent = {}                      # proof forest: const -> parent const
         self.pf_label = {}                       # const -> label of edge to parent
+        # additional Union-Find data structure for explain
+        self._aux_parent = {}
 
         # Transform every term of the input equations first, then merge.
         for eq in equations:
@@ -270,14 +272,22 @@ class EUFCongruenceClosure:
             self.pf_label[parent] = path_label
         # add edge a -> b
         self.pf_parent[a] = b
+        # label (justification) is symmetric so reversing path
+        # does not affect it. (label is in the form of Q.eq)
         self.pf_label[a] = label
 
     def _highest_node(self, x):
+        """
+        Return the highest node among all the nodes of the proof tree in the class of x.
+        I.e return the node that is closes to root.
+        """
         parent = self._aux_parent
         root = x
-        while parent.get(root, root) != root:
+        # find the root
+        while root in parent:
             root = parent[root]
-        while parent.get(x, x) != x:
+        # path compression
+        while x in parent:
             parent[x], x = root, parent[x]
         return root
 
