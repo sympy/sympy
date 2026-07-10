@@ -9,7 +9,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (sech, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, cos, sin, tan)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import (Integral, integrate)
@@ -18,7 +18,7 @@ from sympy.simplify.fu import fu
 
 from sympy.testing.pytest import XFAIL, slow, tooslow
 
-from sympy.abc import x, k, c, y, b, h, a, m, z, n, t
+from sympy.abc import x, k, c, y, b, a, m, z, n, t
 
 
 @tooslow
