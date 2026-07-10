@@ -2226,6 +2226,12 @@ def test_integration_of_piecewise_with_simbolic_boundaries():
         Piecewise((2*t1, t1 < 0), (2*Min(1, t1), t1 <= Min(1, t1)), (nan, True))
 
 
+def test_issue_14709a():
+    x, h = symbols('x h', positive=True)
+    i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
+    assert i == 5*h**2*pi/16
+
+
 def test_issue_15566():
     a, m, s = symbols('a m s', real=True)
     t = symbols('t')

@@ -167,13 +167,6 @@ def test_issue_14716():
 
 
 @XFAIL
-def test_issue_14709a():
-    i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
-    assert not i.has(Integral)
-    # assert i == 5*h**2*pi/16
-
-
-@XFAIL
 def test_issue_14074():
     i = integrate(log(sin(x)), (x, 0, pi/2))
     assert not i.has(Integral)
