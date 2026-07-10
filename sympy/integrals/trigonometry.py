@@ -1,7 +1,8 @@
 from __future__ import annotations
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise, Abs
-from .integrals import integrate
+from .integrals import integrate, Integral
+
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
@@ -67,7 +68,7 @@ def trigintegrate(f, x, conds='piecewise'):
     M = f.match(pat)
 
     if M is None:
-        return
+        return _trigintegrate_expand(f, x)
 
     n, m = M[n], M[m]
     if n.is_zero and m.is_zero:
@@ -248,6 +249,82 @@ def trigintegrate(f, x, conds='piecewise'):
         return Piecewise((res.subs(x, a*x) / a, Ne(a, 0)), (zz, True))
     return res.subs(x, a*x) / a
 
+def _get_linear_arg(term, x):
+    """Return (a, b) such that term == a*x + b, else None."""
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    m = term.match(a*x + b)
+    if m is None:
+        return None
+    return m[a], m[b]
+
+def _decompose_trig_product(expr, x):
+    factors = expr.as_ordered_factors()
+    result = []
+    for f in factors:
+        base, exp = f.as_base_exp()
+        if not exp.is_Integer:
+            return None
+        if base.func not in (sin, cos):
+            if f.is_number:
+                continue
+            return None
+        arg = _get_linear_arg(base.args[0], x)
+        if arg is None:
+            return None
+        a, b = arg
+        if not a.is_number or a == 0:   # <-- NEW: require concrete, nonzero coefficient
+            return None
+        result.append((base.func, a, b, exp))
+    return result
+
+def _integrate_single_trig_term(term, x):
+    """
+    Directly integrate coeff*sin(a*x+b), coeff*cos(a*x+b), or a
+    constant (no x), without going back through the general
+    integrate() dispatcher (avoids recursion back into trigintegrate).
+    Returns None if term isn't one of these simple shapes.
+    """
+    if not term.has(x):
+        return term * x
+
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    c = Wild('c', exclude=[x])
+
+    m = term.match(c * sin(a*x + b))
+    if m is not None and m[a] != 0:
+        return -m[c] * cos(m[a]*x + m[b]) / m[a]
+
+    m = term.match(c * cos(a*x + b))
+    if m is not None and m[a] != 0:
+        return m[c] * sin(m[a]*x + m[b]) / m[a]
+
+    return None
+
+def _trigintegrate_expand(expr, x):
+    from sympy.simplify.fu import TR8
+
+    decomposition = _decompose_trig_product(expr, x)
+    if decomposition is None:
+        return None
+    if any(exp < 0 for (_, _, _, exp) in decomposition):
+        return None
+
+    total_degree = sum(abs(exp) for (_, _, _, exp) in decomposition)
+    if total_degree > 12:
+        return None
+
+    expanded = TR8(expr)
+    terms = expanded.as_ordered_terms()
+
+    result = S.Zero
+    for term in terms:
+        integrated = _integrate_single_trig_term(term, x)
+        if integrated is None:
+            return None
+        result += integrated
+    return result
 
 def _sin_pow_integrate(n, x):
     if n > 0:
