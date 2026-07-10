@@ -323,7 +323,6 @@ def test_Poly_rootof_extension_primitive_element():
     assert Poly(r1*y + r2, y, extension=True) == Poly(r1*y + r2, y, domain=K12)
 
 
-@XFAIL
 def test_Poly_rootof_same_symbol_issue_26808():
     # XXX: This fails because r1 contains x.
     r1 = rootof(x**3 + x + 3, 0)
