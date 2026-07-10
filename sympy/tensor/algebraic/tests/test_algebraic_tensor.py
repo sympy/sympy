@@ -8,7 +8,6 @@ from sympy.tensor.algebraic import (
     AlgebraicPureTensor,
     AlgebraicTensor,
     AlgebraicZeroTensor,
-    ScalarMul,
     ShapeMismatchError,
     compose_algebraic_tensors,
 )
@@ -120,22 +119,8 @@ def test_constructor_cancellation_returns_zero_tensor():
     pt = AlgebraicPureTensor(A, C)
     neg_pt = AlgebraicPureTensor(S.NegativeOne, A, C)
     result = AlgebraicTensor(pt, neg_pt)
-    # The constructor does not simplify; it stores both terms.
-    # Cancellation happens via tensorsimplify / proportionality_factoring.
     assert isinstance(result, AlgebraicTensor)
     assert len(result.args) == 2
-
-
-def test_constructor_with_scalar_mul():
-    """AlgebraicTensor accepts ScalarMul terms."""
-    mats = _make_matrices()
-    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
-    x = Symbol("x")
-
-    pt1 = AlgebraicPureTensor(A, C)
-    sm = ScalarMul(x, AlgebraicPureTensor(B, D))
-    at = AlgebraicTensor(pt1, sm)
-    assert isinstance(at, AlgebraicTensor)
 
 
 def test_constructor_with_zero_tensor_anchor():
@@ -342,8 +327,6 @@ def test_compose_pt_with_at():
     pt1 = AlgebraicPureTensor(A, C)
     pt2 = AlgebraicPureTensor(B, D)
     at = AlgebraicTensor(pt1, pt2)
-    # I3 is 3x3, I4 is 4x4 - compatible with A(3x4) and C(4x5) composition
-    # For left composition: I3(3x3) * A(3x4) works (inner dim 3==3)
     pt_id = AlgebraicPureTensor(I3, I4)
 
     result = compose_algebraic_tensors(pt_id, at)
@@ -376,42 +359,6 @@ def test_compose_zero_tensor_with_at():
 
     result = compose_algebraic_tensors(zt, at)
     assert isinstance(result, AlgebraicZeroTensor)
-
-
-def test_compose_sm_with_pt():
-    """Composition of ScalarMul with PureTensor."""
-    mats = _make_matrices()
-    A, C, I4, I5 = mats["A"], mats["C"], mats["I4"], mats["I5"]
-    x = Symbol("x")
-
-    sm = ScalarMul(x, AlgebraicPureTensor(A, C))
-    pt = AlgebraicPureTensor(I4, I5)
-    result = compose_algebraic_tensors(sm, pt)
-    assert result is not None
-
-
-def test_compose_pt_with_sm():
-    """Composition of PureTensor with ScalarMul."""
-    mats = _make_matrices()
-    A, C, I4, I5 = mats["A"], mats["C"], mats["I4"], mats["I5"]
-    x = Symbol("x")
-
-    sm = ScalarMul(x, AlgebraicPureTensor(I4, I5))
-    pt = AlgebraicPureTensor(A, C)
-    result = compose_algebraic_tensors(pt, sm)
-    assert result is not None
-
-
-def test_compose_sm_with_sm():
-    """Composition of two ScalarMuls multiplies scalars."""
-    mats = _make_matrices()
-    A, C, I4, I5 = mats["A"], mats["C"], mats["I4"], mats["I5"]
-    x, y = Symbol("x"), Symbol("y")
-
-    sm1 = ScalarMul(x, AlgebraicPureTensor(A, C))
-    sm2 = ScalarMul(y, AlgebraicPureTensor(I4, I5))
-    result = compose_algebraic_tensors(sm1, sm2)
-    assert result is not None
 
 
 # ---------------------------------------------------------------------------

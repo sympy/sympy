@@ -10,7 +10,6 @@ from sympy.tensor.algebraic import (
     AlgebraicPureTensor,
     AlgebraicTensor,
     AlgebraicZeroTensor,
-    ScalarMul,
     algebraic_tensor_product,
     compose_algebraic_pure_tensors,
 )
@@ -53,39 +52,37 @@ def test_constructor_basic():
 
 
 def test_constructor_with_number_coefficient():
-    """Construction with a Number coefficient stores it as first arg."""
+    """Construction with a Number coefficient stores coefficient internally."""
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
 
     pt = AlgebraicPureTensor(2, A, C)
     assert isinstance(pt, AlgebraicPureTensor)
-    assert pt._get_coeff() == 2
+    assert pt.coeff == 2
     assert pt.factors == (A, C)
-    assert pt.args[0] == 2
 
 
 def test_constructor_with_negative_coefficient():
-    """Construction with a negative Number coefficient."""
+    """Construction with a negative Number coefficient stores coefficient internally."""
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
 
     pt = AlgebraicPureTensor(S.NegativeOne, A, C)
     assert isinstance(pt, AlgebraicPureTensor)
-    assert pt._get_coeff() == S.NegativeOne
+    assert pt.coeff == S.NegativeOne
     assert pt.factors == (A, C)
 
 
-def test_constructor_symbolic_coefficient_wraps_scalar_mul():
-    """Symbolic (non-Number) coefficient wraps in ScalarMul."""
+def test_constructor_symbolic_coefficient():
+    """Symbolic (non-Number) coefficient stores coefficient internally."""
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
     x = Symbol("x")
 
     result = AlgebraicPureTensor(x, A, C)
-    assert isinstance(result, ScalarMul)
-    assert result.scalar == x
-    assert isinstance(result.tensor, AlgebraicPureTensor)
-    assert result.tensor.factors == (A, C)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == x
+    assert result.factors == (A, C)
 
 
 def test_constructor_single_factor_unwraps():
@@ -99,13 +96,13 @@ def test_constructor_single_factor_unwraps():
 
 
 def test_constructor_single_factor_with_coeff():
-    """Single factor with Number coefficient stays wrapped."""
+    """Single factor with Number coefficient stores coefficient internally."""
     mats = _make_matrices()
     A = mats["A"]
 
     pt = AlgebraicPureTensor(2, A)
     assert isinstance(pt, AlgebraicPureTensor)
-    assert pt._get_coeff() == 2
+    assert pt.coeff == 2
     assert pt.factors == (A,)
 
 
@@ -133,8 +130,6 @@ def test_constructor_number_as_factor_raises():
     """A Number used as a tensor factor (not coefficient) raises TypeError."""
     mats = _make_matrices()
     A = mats["A"]
-    # After the coefficient is stripped, a bare Number can't be a factor
-    # This tests the case where a Number appears in the factor position
     raises(TypeError, lambda: AlgebraicPureTensor(A, S.One))
 
 
@@ -149,15 +144,31 @@ def test_constructor_no_shape_raises():
 # ---------------------------------------------------------------------------
 
 def test_factors_property():
-    """factors property excludes the leading coefficient."""
+    """factors property returns tensor factors (excludes coefficient)."""
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
 
     pt = AlgebraicPureTensor(2, A, C)
+    assert isinstance(pt, AlgebraicPureTensor)
     assert pt.factors == (A, C)
 
     pt2 = AlgebraicPureTensor(A, C)
     assert pt2.factors == (A, C)
+
+
+def test_coeff_property():
+    """coeff property returns the coefficient (S.One if none)."""
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+
+    pt_no_coeff = AlgebraicPureTensor(A, C)
+    assert pt_no_coeff.coeff == S.One
+
+    pt_with_coeff = AlgebraicPureTensor(2, A, C)
+    assert pt_with_coeff.coeff == 2
+
+    pt_symbolic = AlgebraicPureTensor(Symbol("x"), A, C)
+    assert pt_symbolic.coeff == Symbol("x")
 
 
 def test_tensor_shape():
@@ -226,18 +237,18 @@ def test_negation_basic():
     pt = AlgebraicPureTensor(2, A, C)
     neg = -pt
     assert isinstance(neg, AlgebraicPureTensor)
-    assert neg._get_coeff() == S.NegativeOne * 2
+    assert neg.coeff == S.NegativeOne * 2
 
 
 def test_negation_no_coeff():
-    """Negation of unit-coefficient tensor adds -1 coefficient."""
+    """Negation of unit-coefficient tensor returns coefficient -1."""
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
 
     pt = AlgebraicPureTensor(A, C)
     neg = -pt
     assert isinstance(neg, AlgebraicPureTensor)
-    assert neg._get_coeff() == S.NegativeOne
+    assert neg.coeff == S.NegativeOne
 
 
 def test_negation_double():
@@ -246,7 +257,9 @@ def test_negation_double():
     A, C = mats["A"], mats["C"]
 
     pt = AlgebraicPureTensor(2, A, C)
-    assert -(-pt) == pt
+    result = -(-pt)
+    assert result.coeff == pt.coeff
+    assert result.factors == pt.factors
 
 
 def test_mul_commulative_number():
@@ -257,7 +270,7 @@ def test_mul_commulative_number():
     pt = AlgebraicPureTensor(3, A, C)
     result = pt * 2
     assert isinstance(result, AlgebraicPureTensor)
-    assert result._get_coeff() == 6
+    assert result.coeff == 6
 
 
 def test_mul_commulative_one():
@@ -280,16 +293,16 @@ def test_mul_commulative_zero():
     assert result.shape == ((3, 4), (4, 5))
 
 
-def test_mul_symbolic_returns_scalar_mul():
-    """Multiplication by a symbolic returns ScalarMul."""
+def test_mul_symbolic_returns_scaled():
+    """Multiplication by a symbolic scales the coefficient."""
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
     x = Symbol("x")
 
     pt = AlgebraicPureTensor(A, C)
     result = pt * x
-    assert isinstance(result, ScalarMul)
-    assert result.scalar == x
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == x
 
 
 def test_rmul_commulative_number():
@@ -300,19 +313,19 @@ def test_rmul_commulative_number():
     pt = AlgebraicPureTensor(3, A, C)
     result = 2 * pt
     assert isinstance(result, AlgebraicPureTensor)
-    assert result._get_coeff() == 6
+    assert result.coeff == 6
 
 
-def test_rmul_symbolic_returns_scalar_mul():
-    """Right-multiplication by a symbolic returns ScalarMul."""
+def test_rmul_symbolic_returns_scaled():
+    """Right-multiplication by a symbolic scales the coefficient."""
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
     x = Symbol("x")
 
     pt = AlgebraicPureTensor(A, C)
     result = x * pt
-    assert isinstance(result, ScalarMul)
-    assert result.scalar == x
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == x
 
 
 def test_add_returns_algebraic_tensor():
@@ -394,7 +407,6 @@ def test_compose_with_identity():
     pt = AlgebraicPureTensor(A, C)
     pt_id = AlgebraicPureTensor(I4, I5)
     result = compose_algebraic_pure_tensors(pt, pt_id)
-    # Result should have MatMul(A, I4) and MatMul(C, I5) as factors
     assert isinstance(result, AlgebraicPureTensor)
 
 
@@ -407,7 +419,7 @@ def test_compose_coefficients_combine():
     pt2 = AlgebraicPureTensor(3, I4, I5)
     result = compose_algebraic_pure_tensors(pt1, pt2)
     assert isinstance(result, AlgebraicPureTensor)
-    assert result._get_coeff() == 6
+    assert result.coeff == 6
 
 
 def test_compose_factor_count_mismatch_raises():
@@ -471,7 +483,8 @@ def test_mul_dispatch_commulative():
 
     pt = AlgebraicPureTensor(A, C)
     result = pt * x
-    assert isinstance(result, ScalarMul)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == x
 
 
 def test_mul_dispatch_noncommutative():
@@ -482,7 +495,7 @@ def test_mul_dispatch_noncommutative():
     pt1 = AlgebraicPureTensor(A, C)
     pt2 = AlgebraicPureTensor(I4, I5)
     result = pt1 * pt2
-    assert not isinstance(result, ScalarMul)
+    assert isinstance(result, AlgebraicPureTensor)
 
 
 # ---------------------------------------------------------------------------
@@ -519,6 +532,9 @@ def test_expand_coefficient_preserved():
     pt = AlgebraicPureTensor(2, matadd, C)
     result = pt.expand()
     assert isinstance(result, AlgebraicTensor)
+    for term in result.args:
+        if isinstance(term, AlgebraicPureTensor):
+            assert term.coeff == 2
 
 
 # ---------------------------------------------------------------------------

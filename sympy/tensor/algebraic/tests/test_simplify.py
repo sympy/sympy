@@ -9,7 +9,6 @@ from sympy.tensor.algebraic import (
     AlgebraicPureTensor,
     AlgebraicTensor,
     AlgebraicZeroTensor,
-    ScalarMul,
     tensorsimplify,
 )
 from sympy.tensor.algebraic.simplify import (
@@ -184,8 +183,6 @@ def test_proportionality_factoring_single_term():
 
     pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(pt)
-    # Single term unwraps, so this tests the factoring on a multi-term AT
-    # that happens to have only one unique term
     result = _proportionality_factoring(at)
     assert result is not None
 
@@ -204,16 +201,16 @@ def test_extract_pt_and_coeff_pure_tensor():
     assert coeff == 3
 
 
-def test_extract_pt_and_coeff_scalar_mul():
-    """Extract from ScalarMul."""
+def test_extract_pt_and_coeff_with_coefficient():
+    """Extract coefficient from AlgebraicPureTensor."""
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
     x = Symbol("x")
 
-    pt = AlgebraicPureTensor(2, A, C)
-    sm = ScalarMul(x, pt)
-    tensor_part, coeff = _extract_pt_and_coeff(sm)
-    assert coeff == 2 * x
+    pt = AlgebraicPureTensor(x, A, C)
+    unit_pt, coeff = _extract_pt_and_coeff(pt)
+    assert coeff == x
+    assert isinstance(unit_pt, AlgebraicPureTensor)
 
 
 def test_extract_pt_and_coeff_unknown():
@@ -268,7 +265,7 @@ def test_build_pt_with_coeff():
 
     result = _build_pt(3, [A, C])
     assert isinstance(result, AlgebraicPureTensor)
-    assert result._get_coeff() == 3
+    assert result.coeff == 3
 
 
 # ---------------------------------------------------------------------------

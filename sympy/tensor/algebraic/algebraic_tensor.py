@@ -11,7 +11,6 @@ from sympy.tensor.algebraic.algebraic_pure_tensor import (
     AlgebraicPureTensor, _factor_shapes, _factor_has_noncommutative
 )
 from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-from sympy.tensor.algebraic.scalar_mul import ScalarMul
 
 
 """Linear combinations of same-shape algebraic pure tensors.
@@ -55,7 +54,7 @@ A ⊗ B + C ⊗ D
 def _tensor_shape_of(expr):
     """Return the full tensor shape of *expr* as a tuple of factor shapes.
 
-    Handles AlgebraicPureTensor, AlgebraicZeroTensor, ScalarMul,
+    Handles AlgebraicPureTensor, AlgebraicZeroTensor,
     Mul(coeff, AlgebraicPureTensor), and bare matrix-like objects
     (whose single-factor shape is wrapped).
     """
@@ -63,8 +62,6 @@ def _tensor_shape_of(expr):
         return expr.tensor_shape
     if isinstance(expr, AlgebraicZeroTensor):
         return expr.shape
-    if isinstance(expr, ScalarMul):
-        return expr.tensor_shape
     if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
         for f in expr.args:
             if isinstance(f, AlgebraicPureTensor):
@@ -79,16 +76,14 @@ def _tensor_shape_of(expr):
 def _commutativity_shape_of(expr):
     """Return the commutativity_shape of *expr*, or None if not determinable.
 
-    Handles AlgebraicPureTensor, AlgebraicZeroTensor, AlgebraicTensor,
-    ScalarMul, Mul(coeff, AlgebraicPureTensor), and bare matrix-like objects.
+    Handles AlgebraicPureTensor, AlgebraicZeroTensor,
+    AlgebraicTensor, Mul(coeff, AlgebraicPureTensor), and bare matrix-like objects.
     """
     if isinstance(expr, AlgebraicPureTensor):
         return expr.commutativity_shape
     if isinstance(expr, AlgebraicZeroTensor):
         return tuple(1 for _ in expr.shape)
     if isinstance(expr, AlgebraicTensor):
-        return expr.commutativity_shape
-    if isinstance(expr, ScalarMul):
         return expr.commutativity_shape
     if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
         for f in expr.args:
@@ -161,7 +156,7 @@ def compose_algebraic_tensors(left, right):
     """Compose two algebraic-tensor expressions by linearity.
 
     Composes *left* and *right* by factor-wise matrix multiplication,
-    extending ``compose_algebraic_pure_tensors`` by linearity to sums.
+    extending ``compose_algebraic_pure_tensors`` by linearity to sums of tensors.
 
     Parameters
     ----------
@@ -213,25 +208,12 @@ def compose_algebraic_tensors(left, right):
     from sympy.tensor.algebraic.algebraic_zero_tensor import (
         AlgebraicZeroTensor as _ZT,
     )
-    from sympy.tensor.algebraic.scalar_mul import ScalarMul as _SM
 
     # --- AlgebraicZeroTensor shortcuts ---
     if isinstance(left, _ZT):
         return _ZT(left.shape)
     if isinstance(right, _ZT):
         return _ZT(right.shape)
-
-    # --- ScalarMul shortcuts: compose inner tensor, preserve scalar ---
-    if isinstance(left, _SM):
-        comp = compose_algebraic_tensors(left.tensor, right)
-        if isinstance(comp, _ZT):
-            return comp
-        return _SM(left.scalar, comp)
-    if isinstance(right, _SM):
-        comp = compose_algebraic_tensors(left, right.tensor)
-        if isinstance(comp, _ZT):
-            return comp
-        return _SM(right.scalar, comp)
 
     # --- AlgebraicTensor × AlgebraicTensor (check first before single-side) ---
     if isinstance(left, AlgebraicTensor) and isinstance(right, AlgebraicTensor):
@@ -250,7 +232,7 @@ def compose_algebraic_tensors(left, right):
 
     # --- PureTensor / bare matrix × AlgebraicTensor ---
     if isinstance(right, AlgebraicTensor):
-        if isinstance(left, (_PT, _SM)) or hasattr(left, "shape"):
+        if isinstance(left, _PT) or hasattr(left, "shape"):
             results = []
             for a in right.args:
                 if isinstance(a, _ZT):
@@ -267,23 +249,16 @@ def compose_algebraic_tensors(left, right):
 
     # --- AlgebraicTensor × PureTensor / bare matrix ---
     if isinstance(left, AlgebraicTensor):
-        if isinstance(right, (_PT, _SM)) or hasattr(right, "shape"):
+        if isinstance(right, _PT) or hasattr(right, "shape"):
             return left._compose_with_term(right)
         raise TypeError(
             f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
             f"the right, got {type(right).__name__}"
         )
 
-    # --- PureTensor / ScalarMul / bare matrix × PureTensor / ScalarMul / bare matrix ---
+    # --- PureTensor / bare matrix × PureTensor / bare matrix ---
     if isinstance(left, _PT) and isinstance(right, _PT):
         return compose_algebraic_pure_tensors(left, right)
-    if isinstance(left, _PT) and isinstance(right, _SM):
-        return _SM(right.scalar, compose_algebraic_pure_tensors(left, right.tensor))
-    if isinstance(left, _SM) and isinstance(right, _PT):
-        return _SM(left.scalar, compose_algebraic_pure_tensors(left.tensor, right))
-    if isinstance(left, _SM) and isinstance(right, _SM):
-        c = compose_algebraic_pure_tensors(left.tensor, right.tensor)
-        return _SM(left.scalar * right.scalar, c)
     if isinstance(left, _PT) and hasattr(right, "shape"):
         return compose_algebraic_pure_tensors(left, right)
     if hasattr(left, "shape") and isinstance(right, _PT):
@@ -301,7 +276,7 @@ class AlgebraicTensor(Basic):
 
     Built on top of ``Basic`` (not ``Add``) to avoid the is_commutative
     descriptor conflict in ``AssocOp._from_args``, while still exposing
-    ``is_Add = True`` so that the wider SymPy ecosystem recognises this
+    ``is_Add = True`` so that the wider SymPyecosystem recognises this
     as an additive expression.
 
     Shape enforcement and AlgebraicZeroTensor handling are done in ``__new__``.
@@ -439,21 +414,6 @@ class AlgebraicTensor(Basic):
                 continue
 
             if isinstance(o, AlgebraicPureTensor):
-                candidate = o.tensor_shape
-                if shape is None:
-                    shape = candidate
-                    comm_cs = tuple(1 for _ in shape)
-                elif candidate != shape:
-                    raise ShapeMismatchError(
-                        f"Cannot add tensors of different shapes: "
-                        f"{shape} vs {candidate}"
-                    )
-                if comm_cs is not None:
-                    comm_cs = tuple(r & c for r, c in zip(comm_cs, o.commutativity_shape))
-                terms.append(o)
-                continue
-
-            if isinstance(o, ScalarMul):
                 candidate = o.tensor_shape
                 if shape is None:
                     shape = candidate
@@ -614,14 +574,14 @@ class AlgebraicTensor(Basic):
         return AlgebraicTensor(*(-a for a in self.args))
 
     def _compose_with_term(self, other):
-        """Compose this AlgebraicTensor with a single term (AlgebraicPureTensor, ScalarMul or bare matrix).
+        """Compose this AlgebraicTensor with a single term (AlgebraicPureTensor or bare matrix).
 
         Composes each term of self with *other* by factor-wise matrix
         multiplication.
 
         Parameters
         ----------
-        other : AlgebraicPureTensor, ScalarMul or bare matrix-like object
+        other : AlgebraicPureTensor or bare matrix-like object
             The right operand.
 
         Returns
@@ -637,12 +597,6 @@ class AlgebraicTensor(Basic):
         from sympy.tensor.algebraic.algebraic_zero_tensor import (
             AlgebraicZeroTensor as _ZT,
         )
-        from sympy.tensor.algebraic.scalar_mul import ScalarMul as _SM
-
-        # If other is ScalarMul, compose with inner tensor, then apply scalar
-        if isinstance(other, _SM):
-            comp = self._compose_with_term(other.tensor)
-            return other.scalar * comp
 
         results = []
         for a in self.args:
@@ -659,14 +613,14 @@ class AlgebraicTensor(Basic):
                     if isinstance(f, _PT):
                         coeff = Mul(*[x for x in a.args if x is not f])
                         comp = compose_algebraic_pure_tensors(f, other)
-                        results.append(ScalarMul(coeff, comp))
+                        # Re-wrap with coefficient
+                        if coeff is S.One:
+                            results.append(comp)
+                        else:
+                            results.append(AlgebraicPureTensor(coeff, *comp.factors if isinstance(comp, _PT) else (comp,)))
                         break
                 else:
                     results.append(a)
-            elif isinstance(a, ScalarMul):
-                # ScalarMul(scalar, AlgebraicPureTensor) — compose the tensor part
-                comp = compose_algebraic_pure_tensors(a.tensor, other)
-                results.append(ScalarMul(a.scalar, comp))
             elif hasattr(a, "shape"):
                 comp = compose_algebraic_pure_tensors(a, other)
                 results.append(comp)
@@ -900,12 +854,18 @@ class AlgebraicTensor(Basic):
         >>> S.expand()
         A ⊗ B + A ⊗ C
         """
+        from sympy.core.add import Add
+
         expanded_args = []
         for a in self.args:
             if isinstance(a, AlgebraicZeroTensor):
                 expanded_args.append(a)
             elif hasattr(a, 'expand'):
-                expanded_args.append(a.expand(deep=deep, **hints))
+                expanded_term = a.expand(deep=deep, **hints)
+                if isinstance(expanded_term, Add):
+                    expanded_args.extend(expanded_term.args)
+                else:
+                    expanded_args.append(expanded_term)
             else:
                 expanded_args.append(a)
 
@@ -920,10 +880,4 @@ class AlgebraicTensor(Basic):
 # are routed through AlgebraicTensor.__new__ instead of Add.__new__.
 add.register_handlerclass(
     (AlgebraicPureTensor, AlgebraicTensor), AlgebraicTensor
-)
-add.register_handlerclass(
-    (AlgebraicPureTensor, ScalarMul), AlgebraicTensor
-)
-add.register_handlerclass(
-    (AlgebraicTensor, ScalarMul), AlgebraicTensor
 )

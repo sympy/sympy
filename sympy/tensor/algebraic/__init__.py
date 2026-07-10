@@ -6,19 +6,16 @@ combined via the tensor product (``⊗``) and addition (``+``).  A third
 operation, composition (``*``), performs factor-wise matrix multiplication
 and serves as the tensor analogue of contraction.
 
-The module provides four core types:
+The module provides three core types:
 
     - :class:`~sympy.tensor.algebraic.algebraic_pure_tensor.AlgebraicPureTensor`
-      A single tensor-product term.
+      A single tensor-product term with internal coefficient storage.
 
     - :class:`~sympy.tensor.algebraic.algebraic_tensor.AlgebraicTensor`
       A linear combination of same-shape pure tensors.
 
     - :class:`~sympy.tensor.algebraic.algebraic_zero_tensor.AlgebraicZeroTensor`
       The additive identity (zero tensor) for a given tensor shape.
-
-    - :class:`~sympy.tensor.algebraic.scalar_mul.ScalarMul`
-      Scalar multiplication of a pure tensor by a symbolic commutative factor.
 
 Examples
 ========
@@ -42,12 +39,15 @@ Form a sum of two pure tensors with the same shape:
 >>> S.tensor_shape
 ((3, 4), (4, 5))
 
-Scale a pure tensor by a numeric coefficient:
+Scale a pure tensor by a numeric or symbolic coefficient:
 
 >>> from sympy.tensor.algebraic import AlgebraicPureTensor
 >>> T2 = AlgebraicPureTensor(2, A, B)
 >>> T2
-AlgebraicPureTensor(2, A, B)
+2*A ⊗ B
+>>> from sympy.abc import x
+>>> AlgebraicPureTensor(x, A, B)
+x*A ⊗ B
 
 Create a zero tensor for a given shape:
 
@@ -71,14 +71,12 @@ from sympy.tensor.algebraic.algebraic_zero_tensor import (
     AlgebraicZeroTensor,
     algebraic_zero_tensor,
 )
-from sympy.tensor.algebraic.scalar_mul import ScalarMul
 from sympy.tensor.algebraic.simplify import tensorsimplify
 
 __all__ = [
     "AlgebraicTensor",
     "AlgebraicPureTensor",
     "AlgebraicZeroTensor",
-    "ScalarMul",
     "ShapeMismatchError",
     "algebraic_tensor_product",
     "algebraic_zero_tensor",

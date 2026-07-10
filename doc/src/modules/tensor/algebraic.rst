@@ -14,9 +14,6 @@ Classes
 .. autoclass:: sympy.tensor.algebraic.AlgebraicTensor
    :members:
 
-.. autoclass:: sympy.tensor.algebraic.ScalarMul
-   :members:
-
 .. autoclass:: sympy.tensor.algebraic.AlgebraicZeroTensor
    :members:
 

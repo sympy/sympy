@@ -138,10 +138,9 @@ def _extract_pt_and_coeff(term):
     coeff is the extracted commutative coefficient (S.One if none).
 
     Handles:
-    - AlgebraicPureTensor directly
-    - ScalarMul(scalar, AlgebraicPureTensor)
+    - AlgebraicPureTensor directly (coeff extracted from term.coeff)
     - Mul(coeff, AlgebraicPureTensor)
-    - MatMul(coeff, *matrix_factors) with direct matrix factors
+    - MatMul with direct matrix factors
     - Anything else -> (term, S.One)
 
     Examples
@@ -157,21 +156,17 @@ def _extract_pt_and_coeff(term):
     2
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-    from sympy.tensor.algebraic.scalar_mul import ScalarMul
 
     if isinstance(term, AlgebraicPureTensor):
-        return (term, term._get_coeff())
-
-    if isinstance(term, ScalarMul):
-        inner_coeff = term.tensor._get_coeff() if isinstance(term.tensor, AlgebraicPureTensor) else S.One
-        return (term.tensor, term.scalar * inner_coeff)
+        # Plain AlgebraicPureTensor - extract coefficient
+        return (term, term.coeff)
 
     if isinstance(term, Mul) and not isinstance(term, AlgebraicPureTensor):
         # Check for AlgebraicPureTensor in args
         for f in term.args:
             if isinstance(f, AlgebraicPureTensor):
                 outer_coeff = Mul(*[a for a in term.args if a is not f])
-                inner_coeff = f._get_coeff()
+                inner_coeff = f.coeff
                 return (f, outer_coeff * inner_coeff)
 
         # Handle MatMul with direct matrix factors: extract commutative coeff
@@ -231,7 +226,6 @@ def _build_pt(coeff, factors):
 
     return AlgebraicPureTensor(coeff, *factors)
  
-
 def _proportionality_factoring(at):
     """Simplify an AlgebraicTensor by merging proportional AlgebraicPureTensor terms.
 
@@ -283,13 +277,12 @@ def _proportionality_factoring(at):
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-    from sympy.tensor.algebraic.scalar_mul import ScalarMul
 
     _s = _get_sympy_simplify()
 
     args = list(at.args)
 
-    # Separate AlgebraicPureTensor (and Mul/ScalarMul containing one) from other terms
+    # Separate AlgebraicPureTensor (and Mul containing one) from other terms
     tensor_terms = []
     non_tensor = []
     has_zero = False
@@ -299,8 +292,6 @@ def _proportionality_factoring(at):
             has_zero = True
             non_tensor.append(a)
         elif isinstance(a, AlgebraicPureTensor):
-            tensor_terms.append(a)
-        elif isinstance(a, ScalarMul):
             tensor_terms.append(a)
         elif isinstance(a, Mul) and not isinstance(a, AlgebraicPureTensor):
             has_pt = any(isinstance(f, AlgebraicPureTensor) for f in a.args)
@@ -1016,7 +1007,6 @@ def _commutativity_simplify(at, **kwargs):
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
     from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-    from sympy.tensor.algebraic.scalar_mul import ScalarMul
 
     comm_cs = at.commutativity_shape
     commutative_indices = [i for i, v in enumerate(comm_cs) if v == 1]
@@ -1088,7 +1078,7 @@ def _commutativity_simplify(at, **kwargs):
                     elif isinstance(arg, AlgebraicPureTensor):
                         extr_coeff, new_factors = _extract_commutative_prefactors(arg)
                         if extr_coeff is not S.One:
-                            old_coeff = arg._get_coeff()
+                            old_coeff = arg.coeff
                             new_coeff = old_coeff * extr_coeff
                             rebuilt = _build_pt(new_coeff, new_factors)
                             new_args.append(rebuilt)
@@ -1101,7 +1091,7 @@ def _commutativity_simplify(at, **kwargs):
             elif isinstance(value, AlgebraicPureTensor):
                 extr_coeff, new_factors = _extract_commutative_prefactors(value)
                 if extr_coeff is not S.One:
-                    old_coeff = value._get_coeff()
+                    old_coeff = value.coeff
                     new_coeff = old_coeff * extr_coeff
                     comm_dict[key] = _build_pt(new_coeff, new_factors)
     
@@ -1118,8 +1108,6 @@ def _commutativity_simplify(at, **kwargs):
                 bodies = list(value.args)
             elif isinstance(value, (AlgebraicPureTensor, AlgebraicZeroTensor)):
                 bodies = [value]
-            elif isinstance(value, ScalarMul):
-                bodies = [value]
             elif isinstance(value, Mul) and not isinstance(value, AlgebraicPureTensor):
                 bodies = [value]
             else:
@@ -1131,11 +1119,8 @@ def _commutativity_simplify(at, **kwargs):
                     continue
 
                 if isinstance(body, AlgebraicPureTensor):
-                    coeff = body._get_coeff()
+                    coeff = body.coeff
                     pt = body
-                elif isinstance(body, ScalarMul):
-                    coeff = body._get_coeff()
-                    pt = body.tensor
                 elif isinstance(body, Mul) and not isinstance(body, AlgebraicPureTensor):
                     outer_coeff = S.One
                     inner_pt = None
@@ -1145,7 +1130,7 @@ def _commutativity_simplify(at, **kwargs):
                             break
                     if inner_pt is not None:
                         outer_coeff = Mul(*[x for x in body.args if x is not inner_pt])
-                        coeff = outer_coeff * inner_pt._get_coeff()
+                        coeff = outer_coeff * inner_pt.coeff
                         pt = inner_pt
                     else:
                         coeff, pt = body, None
@@ -1182,11 +1167,6 @@ def _commutativity_simplify(at, **kwargs):
         for arg in final_result.args:
             new_args.append(tensorsimplify(arg, **kwargs))
         final_result = AlgebraicTensor(*new_args, _sympify=False)
-    elif isinstance(final_result, ScalarMul):
-        simplified_tensor = tensorsimplify(final_result.tensor, **kwargs)
-        s = _get_sympy_simplify()
-        simplified_scalar = s(final_result.scalar, **kwargs)
-        final_result = ScalarMul(simplified_scalar, simplified_tensor)
     elif isinstance(final_result, AlgebraicPureTensor):
         final_result = _simplify_algebraic_pure_tensor(final_result, **kwargs)
 
@@ -1214,7 +1194,7 @@ def _simplify_algebraic_pure_tensor(pt, **kwargs):
 
     _s = _get_sympy_simplify()
 
-    coeff = pt._get_coeff()
+    coeff = pt.coeff
     factors = pt.factors
 
     # Simplify coefficient
@@ -1263,8 +1243,6 @@ def _simplify_algebraic_pure_tensor(pt, **kwargs):
         if len(new_factors) == 1:
             return new_factors[0]
         return AlgebraicPureTensor(*new_factors)
-    if len(new_factors) == 1:
-        return AlgebraicPureTensor(new_coeff, new_factors[0])
     return AlgebraicPureTensor(new_coeff, *new_factors)
 
 
@@ -1290,16 +1268,12 @@ def _simplify_algebraic_tensor(at, **kwargs):
     """
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-    from sympy.tensor.algebraic.scalar_mul import ScalarMul
 
     # Phase 0: proportionality factoring
     result = _proportionality_factoring(at)
 
     # If _proportionality_factoring returned a non-AlgebraicTensor, simplify it
     if not isinstance(result, AlgebraicTensor):
-        if isinstance(result, (AlgebraicPureTensor, ScalarMul)):
-            return tensorsimplify(result, **kwargs)
-        return result
         if isinstance(result, AlgebraicPureTensor):
             return _simplify_algebraic_pure_tensor(result, **kwargs)
         return result
@@ -1308,7 +1282,3 @@ def _simplify_algebraic_tensor(at, **kwargs):
     result = _commutativity_simplify(result, **kwargs)
 
     return result
-
-
-
-
