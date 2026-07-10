@@ -1729,6 +1729,17 @@ def test_issue_17473():
     assert integrate(sin(_x**n), _x) == ans.xreplace(reps).expand()
 
 
+
+def test_issue_29900():
+    # integrate(f(x**n), x) used to return a sign-wrong antiderivative
+    # when x carried a negative=True assumption, because hyperexpand()
+    # resolved sqrt(x**6)-type radicals using x's sign at one internal
+    # step while the rest of the derivation did not account for it.
+    x = Symbol('x', negative=True)
+    F = integrate(sin(x**3), x)
+    for xv in (-0.5, -1.0, -1.7, -2.0):
+        assert abs((diff(F, x) - sin(x**3)).subs(x, xv).evalf()) < 1e-9
+
 def test_issue_17671():
     assert integrate(log(log(x)) / x**2, [x, 1, oo]) == -EulerGamma
     assert integrate(log(log(x)) / x**3, [x, 1, oo]) == -log(2)/2 - EulerGamma/2
