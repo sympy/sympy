@@ -219,11 +219,6 @@ def test_issue_9101():
 
 
 @XFAIL
-def test_issue_7147():
-    assert not integrate(x/sqrt(a*x**2 + b*x + c)**3, x).has(Integral)
-
-
-@XFAIL
 def test_issue_7109():
     assert not integrate(sqrt(a**2/(a**2 - x**2)), x).has(Integral)
 
