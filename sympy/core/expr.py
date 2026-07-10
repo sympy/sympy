@@ -43,6 +43,98 @@ def _corem(eq, c):  # helper for extract_additively
     return Add(*co), Add(*non)
 
 
+def _satisfies_assumptions(val, symbol):
+    """Check if a numerical value val satisfies the assumptions of symbol."""
+    try:
+        try:
+            rval = float(val)
+            is_complex = False
+        except (TypeError, ValueError):
+            try:
+                rval = complex(val)
+                is_complex = True
+            except (TypeError, ValueError):
+                return False
+
+        if symbol.is_zero and rval != 0:
+            return False
+        if symbol.is_positive:
+            if is_complex and rval.imag != 0:
+                return False
+            if (rval.real if is_complex else rval) <= 0:
+                return False
+        if symbol.is_negative:
+            if is_complex and rval.imag != 0:
+                return False
+            if (rval.real if is_complex else rval) >= 0:
+                return False
+        if symbol.is_nonnegative:
+            if is_complex and rval.imag != 0:
+                return False
+            if (rval.real if is_complex else rval) < 0:
+                return False
+        if symbol.is_nonpositive:
+            if is_complex and rval.imag != 0:
+                return False
+            if (rval.real if is_complex else rval) > 0:
+                return False
+        if symbol.is_real:
+            if is_complex and rval.imag != 0:
+                return False
+        if symbol.is_imaginary:
+            if is_complex:
+                if rval.real != 0:
+                    return False
+            else:
+                if rval != 0:
+                    return False
+        if symbol.is_integer:
+            if is_complex:
+                return False
+            if isinstance(rval, float) and not rval.is_integer():
+                return False
+        return True
+    except (TypeError, ValueError, AttributeError):
+        return False
+
+
+def _get_val_satisfying_assumptions(symbol, seed):
+    """Return a candidate test value for symbol satisfying its assumptions."""
+    if symbol.is_zero:
+        return S.Zero
+
+    if symbol.is_even:
+        return S(2 if seed == 0 else 4)
+    if symbol.is_odd:
+        return S(1 if seed == 0 else 3)
+
+    if symbol.is_integer:
+        if symbol.is_positive:
+            return S(1 if seed == 0 else 2)
+        if symbol.is_negative:
+            return S(-1 if seed == 0 else -2)
+        if symbol.is_nonnegative:
+            return S(0 if seed == 0 else 1)
+        if symbol.is_nonpositive:
+            return S(0 if seed == 0 else -1)
+        return S(0 if seed == 0 else 1)
+
+    if symbol.is_imaginary:
+        from sympy.core.numbers import I
+        return S(I if seed == 0 else 2*I)
+
+    if symbol.is_positive:
+        return S(1 if seed == 0 else 2)
+    if symbol.is_negative:
+        return S(-1 if seed == 0 else -2)
+    if symbol.is_nonnegative:
+        return S(0 if seed == 0 else 1)
+    if symbol.is_nonpositive:
+        return S(0 if seed == 0 else -1)
+
+    return S(0 if seed == 0 else 1)
+
+
 @sympify_method_args
 class Expr(Basic, EvalfMixin):
     """
@@ -571,10 +663,50 @@ class Expr(Basic, EvalfMixin):
         free = self.free_symbols
         prec = 1
         if free:
-            from sympy.core.random import random_complex_number
-            a, c, b, d = re_min, re_max, im_min, im_max
-            reps = dict(list(zip(free, [random_complex_number(a, b, c, d, rational=True)
-                           for zi in free])))
+            from sympy.core.random import random_complex_number, randint
+            reps = {}
+            for zi in free:
+                if zi.is_zero:
+                    reps[zi] = S.Zero
+                elif zi.is_integer:
+                    # Choose a random integer satisfying assumptions
+                    if zi.is_positive:
+                        val = randint(max(1, int(re_min)), max(5, int(re_max)))
+                    elif zi.is_negative:
+                        val = randint(min(-5, int(re_min)), min(-1, int(re_max)))
+                    elif zi.is_nonnegative:
+                        val = randint(max(0, int(re_min)), max(5, int(re_max)))
+                    elif zi.is_nonpositive:
+                        val = randint(min(-5, int(re_min)), min(0, int(re_max)))
+                    else:
+                        val = randint(min(-5, int(re_min)), max(5, int(re_max)))
+                    reps[zi] = S(val)
+                else:
+                    # Choose a random real/complex number satisfying assumptions
+                    a, c, b, d = re_min, re_max, im_min, im_max
+                    if zi.is_real or zi.is_positive or zi.is_negative or zi.is_nonnegative or zi.is_nonpositive:
+                        b = 0
+                        d = 0
+                        if zi.is_positive:
+                            a = max(a, 0)
+                            if a == 0:
+                                a = 0.1
+                            c = max(c, a + 1)
+                        elif zi.is_negative:
+                            c = min(c, 0)
+                            if c == 0:
+                                c = -0.1
+                            a = min(a, c - 1)
+                        elif zi.is_nonnegative:
+                            a = max(a, 0)
+                            c = max(c, a + 1)
+                        elif zi.is_nonpositive:
+                            c = min(c, 0)
+                            a = min(a, c - 1)
+                    elif zi.is_imaginary:
+                        a = 0
+                        c = 0
+                    reps[zi] = random_complex_number(a, b, c, d, rational=True)
             try:
                 nmag = abs(self.evalf(2, subs=reps))
             except (ValueError, TypeError):
@@ -717,24 +849,41 @@ class Expr(Basic, EvalfMixin):
         # try numerical evaluation to see if we get two different values
         failing_number = None
         if wrt_number == free:
-            # try 0 (for a) and 1 (for b)
+            a = None
             try:
-                a = expr.subs(list(zip(free, [0]*len(free))),
-                    simultaneous=True)
+                subs_a = {}
+                for sym in free:
+                    val = _get_val_satisfying_assumptions(sym, 0)
+                    if not _satisfies_assumptions(val, sym):
+                        raise ValueError
+                    subs_a[sym] = val
+                a = expr.subs(subs_a, simultaneous=True)
                 if a is S.NaN:
-                    # evaluation may succeed when substitution fails
-                    a = expr._random(None, 0, 0, 0, 0)
-            except ZeroDivisionError:
-                a = None
+                    if all(sym.is_zero or (not sym.is_positive and not sym.is_negative) for sym in free):
+                        a = expr._random(None, 0, 0, 0, 0)
+                    else:
+                        a = expr._random()
+            except (ValueError, TypeError, ZeroDivisionError):
+                a = expr._random()
+
             if a is not None and a is not S.NaN:
+                b = None
                 try:
-                    b = expr.subs(list(zip(free, [1]*len(free))),
-                        simultaneous=True)
+                    subs_b = {}
+                    for sym in free:
+                        val = _get_val_satisfying_assumptions(sym, 1)
+                        if not _satisfies_assumptions(val, sym):
+                            raise ValueError
+                        subs_b[sym] = val
+                    b = expr.subs(subs_b, simultaneous=True)
                     if b is S.NaN:
-                        # evaluation may succeed when substitution fails
-                        b = expr._random(None, 1, 0, 1, 0)
-                except ZeroDivisionError:
-                    b = None
+                        if all(not sym.is_zero and not sym.is_negative for sym in free):
+                            b = expr._random(None, 1, 0, 1, 0)
+                        else:
+                            b = expr._random()
+                except (ValueError, TypeError, ZeroDivisionError):
+                    b = expr._random()
+
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False
                 # try random real
