@@ -320,8 +320,10 @@ class EUFCongruenceClosure:
         while a != c:
             b = self.pf_parent[a]
             label = self.pf_label[a]
+            # If label is Q.eq(a,b)
             if isinstance(label, AppliedPredicate):
                 output.add(label)
+            # if label is Q.eq(f(args),a) and Q.eq(g(args),b)
             elif label is not None:
                 (_, args1, _), (_, args2, _) = label
                 for x, y in zip(args1, args2):
