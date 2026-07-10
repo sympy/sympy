@@ -1985,6 +1985,21 @@ def test_equals():
     S(13)/6)/2 - S.One/4)**2 - Rational(1, 3))
     assert z.equals(0)
 
+    # Test equals/is_constant respecting assumptions
+    xp = Symbol('xp', real=True, positive=True)
+    from sympy import Abs
+    assert sqrt((xp - 1)**2).equals(Abs(xp - 1)) is True
+    # Test random integer respect in _random
+    ni = Symbol('ni', integer=True, positive=True)
+    assert ((-1)**ni).is_constant() is False  # can be 1 or -1
+
+    # Test prime, composite, even, and odd assumptions in equals/is_constant
+    e_sym = Symbol('e_sym', even=True)
+    o_sym = Symbol('o_sym', odd=True)
+    assert ((-1)**e_sym).equals(1) is True
+    assert ((-1)**o_sym).equals(-1) is True
+
+
 
 def test_random():
     from sympy.functions.combinatorial.numbers import lucas
@@ -1995,8 +2010,67 @@ def test_random():
     # issue 8662
     assert Piecewise((Max(x, y), z))._random() is None
 
+    # Test _random respecting assumptions
+    xp = Symbol('xp', real=True, positive=True)
+    for _ in range(10):
+        val = xp._random()
+        assert val is not None and val.is_real and val > 0
+    ni = Symbol('ni', integer=True, positive=True)
+    for _ in range(10):
+        val = ni._random()
+        assert val is not None and float(val).is_integer() and val >= 1
+
+    # Test _random respecting prime, composite, even, and odd assumptions
+    from sympy.ntheory.primetest import isprime
+    p_sym = Symbol('p_sym', prime=True)
+    for _ in range(10):
+        val = p_sym._random()
+        assert val is not None and float(val).is_integer() and isprime(int(val))
+    c_sym = Symbol('c_sym', composite=True)
+    for _ in range(10):
+        val = c_sym._random()
+        val_int = int(float(val))
+        assert val is not None and float(val).is_integer() and val_int > 1 and not isprime(val_int)
+    e_sym = Symbol('e_sym', even=True)
+    for _ in range(10):
+        val = e_sym._random()
+        assert val is not None and float(val).is_integer() and int(float(val)) % 2 == 0
+    o_sym = Symbol('o_sym', odd=True)
+    for _ in range(10):
+        val = o_sym._random()
+        assert val is not None and float(val).is_integer() and int(float(val)) % 2 != 0
+
+
+def test_symbol_assumptions():
+    assumptions = {
+        'algebraic', 'complex', 'extended_negative',
+        'extended_nonnegative', 'extended_nonpositive', 'extended_nonzero',
+        'extended_positive', 'extended_real', 'finite', 'hermitian',
+        'imaginary', 'infinite', 'integer', 'irrational', 'negative',
+        'noninteger', 'nonnegative', 'nonpositive', 'nonzero', 'positive',
+        'rational', 'real', 'transcendental', 'zero'
+    }
+
+    for asm in assumptions:
+        p1 = Symbol(f"{asm}_true", **{asm: True})
+        v1s0 = p1._get_val_satisfying_assumptions(0)
+        v1s1 = p1._get_val_satisfying_assumptions(1)
+
+        assert p1._satisfies_assumptions(v1s0)
+        assert p1._satisfies_assumptions(v1s1)
+
+        try:
+            p2 = Symbol(f"{asm}_false", **{asm: False})
+            v2s0 = p2._get_val_satisfying_assumptions(0)
+            v2s1 = p2._get_val_satisfying_assumptions(1)
+            assert p2._satisfies_assumptions(v2s0)
+            assert p2._satisfies_assumptions(v2s1)
+        except (ValueError, AttributeError):
+            pass
+
 
 @slow
+
 def test_round():
     assert str(Float('0.1249999').round(2)) == '0.12'
     d20 = 12345678901234567890
