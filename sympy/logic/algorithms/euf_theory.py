@@ -95,8 +95,10 @@ class EUFCongruenceClosure:
         self._term_to_const = {}                 # _term_to_const[expr] -> const
         self._lambda_cache = {}
 
+        """
+        Proof forest data structures. This i
+        """
         self.pf_parent = {}                      # proof forest: const -> parent const
-        # Some literatures also call this justification instead of label
         self.pf_label = {}                       # const -> label of edge to parent
 
         # Transform every term of the input equations first, then merge.
@@ -249,16 +251,26 @@ class EUFCongruenceClosure:
         return self._find_repr(lhs_id) == self._find_repr(rhs_id)
 
     def _insert_edge(self, a, b, label):
+        """
+        Reverses the edges on the paath between a and the root of its tree
+        Adds an directional edge a -> b with a label (i.e justification).
+
+        This method is parallel to the addition to the Union in the paper.
+        """
         path = []
         cursor = a
+        # all roots have property of having no keys, so cursor will stop at root.
         while cursor in self.pf_parent:
             path.append((cursor, self.pf_parent[cursor], self.pf_label[cursor]))
             cursor = self.pf_parent[cursor]
+
+        # reverse the path, self explanators
+        for child, parent, path_label in path:
+            self.pf_parent[parent] = child
+            self.pf_label[parent] = path_label
+        # add edge a -> b
         self.pf_parent[a] = b
         self.pf_label[a] = label
-        for child, parent, lab in path:
-            self.pf_parent[parent] = child
-            self.pf_label[parent] = lab
 
     def _highest_node(self, x):
         parent = self._aux_parent
