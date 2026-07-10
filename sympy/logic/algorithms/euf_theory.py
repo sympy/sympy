@@ -292,19 +292,27 @@ class EUFCongruenceClosure:
         return root
 
     def _nearest_common_ancestor(self, a, b):
+        """
+        Compute the nearest common ancestor of the nodes a and b.
+        """
         seen = set()
         x = a
+        # walk to the root and store it in seen
         while True:
             x = self._highest_node(x)
             seen.add(x)
+            # if it is the root
             if x not in self.pf_parent:
                 break
+            # move one edge
             x = self.pf_parent[x]
         y = b
+        # when we wind y in seen, stop
         while True:
             y = self._highest_node(y)
             if y in seen:
                 return y
+            # move one edge
             y = self.pf_parent[y]
 
     def _explain_along_path(self, a, c, output, pending_proofs):
