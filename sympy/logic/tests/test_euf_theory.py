@@ -117,13 +117,13 @@ def test_process_pending_chain_merges():
     cc.use_list[x1].append((f1, (x1,), fx))
     cc.use_list[y1].append((f1, (y1,), fy))
     cc.use_list[z1].append((f1, (z1,), fz))
-    cc.lookup_table[(f1, (x1,))] = fx
-    cc.lookup_table[(f1, (y1,))] = fy
-    cc.lookup_table[(f1, (z1,))] = fz
-    cc.pending_unions.append((x1, y1))
-    cc.pending_unions.append((y1, z1))
-    cc.pending_unions.append((fx, fy))
-    cc.pending_unions.append((fy, fz))
+    cc.lookup_table[(f1, (x1,))] = (f1, (x1,), fx)
+    cc.lookup_table[(f1, (y1,))] = (f1, (y1,), fy)
+    cc.lookup_table[(f1, (z1,))] = (f1, (z1,), fz)
+    cc.pending.append((x1, y1))
+    cc.pending.append((y1, z1))
+    cc.pending.append((fx, fy))
+    cc.pending.append((fy, fz))
     cc._process_pending_unions()
     assert cc._find_repr(x1) == cc._find_repr(y1) == cc._find_repr(z1)
     assert cc._find_repr(fx) == cc._find_repr(fy) == cc._find_repr(fz)
@@ -319,3 +319,66 @@ def test_compound_in_function_application():
         cc._flatten(t)
     cc.merge(x, y)
     assert cc.are_congruent(f(x*w + z), f(y*w + z))
+
+
+# ---------------------------------------------------------------------------
+# explain() -- classical proof-forest explanations (RTA'05 / Inf.Comput.'07).
+# Explanations must be a subset of the input equations that alone re-proves
+# the queried equality.  They are NOT required to be minimal.
+# ---------------------------------------------------------------------------
+
+def _check_explanation(cc, inputs, lhs, rhs):
+    """Assert explain(lhs, rhs) is a sound subset-of-inputs explanation."""
+    expl = cc.explain(lhs, rhs)
+    assert expl is not None
+    assert expl <= set(inputs)
+    assert EUFCongruenceClosure(list(expl)).are_congruent(lhs, rhs)
+    return expl
+
+
+def test_explain_congruence_edge():
+    # x = f(a) = f(b) = y needs the congruence edge f(a)-f(b), which must
+    # recurse into the argument proof a = b.
+    eqs = [Q.eq(a, b), Q.eq(f(a), x), Q.eq(f(b), y)]
+    cc = EUFCongruenceClosure(eqs)
+    expl = _check_explanation(cc, eqs, x, y)
+    assert expl == set(eqs)
+
+
+def test_explain_nested_congruence():
+    # Two levels of congruence: a = b -> f(a) = f(b) -> g(f(a)) = g(f(b)).
+    eqs = [Q.eq(a, b), Q.eq(g(f(a)), x), Q.eq(g(f(b)), y)]
+    cc = EUFCongruenceClosure(eqs)
+    expl = _check_explanation(cc, eqs, x, y)
+    assert Q.eq(a, b) in expl
+
+
+def test_explain_ignores_irrelevant_inputs():
+    # The z = w component is disjoint and must never leak into explanations.
+    eqs = [Q.eq(a, b), Q.eq(b, c), Q.eq(z, w)]
+    cc = EUFCongruenceClosure(eqs)
+    expl = _check_explanation(cc, eqs, a, c)
+    assert expl == {Q.eq(a, b), Q.eq(b, c)}
+
+
+def test_explain_incremental_merges():
+    # explain() interleaved with merges: answers must track the growing state.
+    cc = EUFCongruenceClosure([])
+    cc.merge(a, b)
+    assert cc.explain(a, c) is None
+    cc.merge(b, c)
+    expl = _check_explanation(cc, [Q.eq(a, b), Q.eq(b, c)], a, c)
+    assert expl == {Q.eq(a, b), Q.eq(b, c)}
+    # A later query must not be affected by the earlier explain() call
+    # (the auxiliary union-find is per-call state).
+    assert cc.explain(a, b) == {Q.eq(a, b)}
+
+
+def test_explain_may_be_redundant_but_sound():
+    # Example 10 of Nieuwenhuis & Oliveras (RTA'05): the proof forest can
+    # yield a redundant explanation; it must still be sound and within inputs.
+    a1, b1, c1 = symbols('a1 b1 c1')
+    eqs = [Q.eq(a1, b1), Q.eq(a1, c1),
+           Q.eq(f(a1), a), Q.eq(f(b1), b), Q.eq(f(c1), c)]
+    cc = EUFCongruenceClosure(eqs)
+    _check_explanation(cc, eqs, a, c)

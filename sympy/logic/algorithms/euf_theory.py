@@ -69,8 +69,8 @@ class EUFCongruenceClosure:
         https://link.springer.com/chapter/10.1007/978-3-540-39813-4_5
 
     Major data structures (using algorithm's variable names):
-        pending_unions:   deque, list of pairs of constants yet to be merged (PENDING).
-        representative_table: dict, mapping: constant -> its class representative (REPRESENTATIVE).
+        pending:   deque, list of pairs of constants yet to be merged (PENDING).
+        representative: dict, mapping: constant -> its class representative (REPRESENTATIVE).
         classlist: defaultdict(set), rep -> set of all elements in class (CLASSLIST).
         lookup_table: dict, maps (function, tuple of args) to the equation
             recording that application, as a (func, args, result) triple (LOOKUP).
@@ -84,8 +84,8 @@ class EUFCongruenceClosure:
         equations : list of Q.eq or SymPy expressions
             The ground equalities to be saturated.
         """
-        self.pending_unions = deque()
-        self.representative_table = {}           # Representative[c]
+        self.pending = deque()
+        self.representative = {}                 # Representative[c]
         self.classlist = defaultdict(set)        # ClassList[rep]
         self.lookup_table = {}                   # Lookup_table[function, args]
         self.use_list = defaultdict(list)        # UseList[rep]
@@ -95,21 +95,22 @@ class EUFCongruenceClosure:
         self._term_to_const = {}                 # _term_to_const[expr] -> const
         self._lambda_cache = {}
 
+        self.pf_parent = {}                      # proof forest: const -> parent const
+        # Some literatures also call this justification instead of label
+        self.pf_label = {}                       # const -> label of edge to parent
+
         # Transform every term of the input equations first, then merge.
         for eq in equations:
             if not (isinstance(eq, AppliedPredicate) and eq.function == Q.eq):
                 raise EUFUnhandledInput
             left_id = self._flatten(eq.lhs)
             right_id = self._flatten(eq.rhs)
-            self.pending_unions.append((left_id, right_id, eq))
+            self.pending.append((left_id, right_id, eq))
         self._process_pending_unions()
 
     def _register(self, const):
-        """
-        Initialize the constant as its own representative in one element class.
-        """
-        if const not in self.representative_table:
-            self.representative_table[const] = const
+        if const not in self.representative:
+            self.representative[const] = const
             self.classlist[const].add(const)
 
     def _new_dummy(self):
@@ -119,7 +120,7 @@ class EUFCongruenceClosure:
 
     def _flatten(self, expr):
         """
-        Curryfy, and flatten the expression.
+        Curryfy, and flatten the expression. This method, in parallel, registers.
         This method should be called before any merging.
 
         Returns
@@ -135,7 +136,7 @@ class EUFCongruenceClosure:
         elif isinstance(expr, Number) or getattr(expr, "is_Atom", False):
             const = self._new_dummy()
         elif isinstance(expr, AppliedPredicate):
-            arg_ids = tuple(self._find_repr(self._flatten(arg)) for arg in expr.arguments)
+            arg_ids = tuple(self._flatten(arg) for arg in expr.arguments)
             const = self._record_func_eq(expr.function, arg_ids)
         elif isinstance(expr, Lambda):
             lam = expr if len(expr.variables) == 1 else expr.curry()
@@ -147,34 +148,29 @@ class EUFCongruenceClosure:
         else:
             func = expr.func
             func_id = self._find_repr(self._flatten(func)) if isinstance(func, Basic) else func
-            arg_ids = tuple(self._find_repr(self._flatten(arg)) for arg in expr.args)
+            arg_ids = tuple(self._flatten(arg) for arg in expr.args)
             const = self._record_func_eq(func_id, arg_ids)
 
         self._term_to_const[expr] = const
         return const
 
     def _record_func_eq(self, func, arg_ids):
-        """Record the equation func(arg_ids) = d and return d."""
-        key = (func, arg_ids)
+        rep_args = tuple(self._find_repr(arg) for arg in arg_ids)
+        key = (func, rep_args)
         d = self._new_dummy()
         eq = (func, arg_ids, d)
         if key in self.lookup_table:
             other = self.lookup_table[key]
-            # this is mainly because so we do not lose any information
-            # on explanation()
-            self.pending_unions.append((d, other[2], (eq, other)))
+            self.pending.append((d, other[2], (eq, other)))
             self._process_pending_unions()
         else:
             self.lookup_table[key] = eq
-            for arg_id in set(arg_ids):
+            for arg_id in set(rep_args):
                 self.use_list[arg_id].append(eq)
         return d
 
     def _find_repr(self, const):
-        """
-        Return the unique class representative for const.
-        """
-        return self.representative_table[const]
+        return self.representative[const]
 
     def _union(self, a, b, label=None):
         rep_a, rep_b = self._find_repr(a), self._find_repr(b)
@@ -187,7 +183,7 @@ class EUFCongruenceClosure:
         self._insert_edge(a, b, label)
         # Move all members of ClassList(rep_a) into ClassList(rep_b)
         for c in self.classlist[rep_a]:
-            self.representative_table[c] = rep_b
+            self.representative[c] = rep_b
             self.classlist[rep_b].add(c)
         del self.classlist[rep_a]
         # For each application (func, args, term) in UseList(rep_a)
@@ -198,7 +194,7 @@ class EUFCongruenceClosure:
             if key in self.lookup_table:
                 other = self.lookup_table[key]
                 if self._find_repr(other[2]) != self._find_repr(term):
-                    self.pending_unions.append((term, other[2], (eq, other)))
+                    self.pending.append((term, other[2], (eq, other)))
             else:
                 self.lookup_table[key] = eq
                 self.use_list[rep_b].append(eq)
@@ -207,8 +203,8 @@ class EUFCongruenceClosure:
         """
         Saturates pending_unions queue (Main loop, Paper Section 4).
         """
-        while self.pending_unions:
-            self._union(*self.pending_unions.popleft())
+        while self.pending:
+            self._union(*self.pending.popleft())
 
     def merge(self, lhs, rhs):
         """
@@ -226,7 +222,7 @@ class EUFCongruenceClosure:
         >>> cc.are_congruent(x, y)
         True
         """
-        self.pending_unions.append((self._flatten(lhs), self._flatten(rhs), Q.eq(lhs, rhs)))
+        self.pending.append((self._flatten(lhs), self._flatten(rhs), Q.eq(lhs, rhs)))
         self._process_pending_unions()
 
     def are_congruent(self, lhs, rhs):
@@ -251,3 +247,71 @@ class EUFCongruenceClosure:
         lhs_id = self._flatten(lhs)
         rhs_id = self._flatten(rhs)
         return self._find_repr(lhs_id) == self._find_repr(rhs_id)
+
+    def _insert_edge(self, a, b, label):
+        path = []
+        cursor = a
+        while cursor in self.pf_parent:
+            path.append((cursor, self.pf_parent[cursor], self.pf_label[cursor]))
+            cursor = self.pf_parent[cursor]
+        self.pf_parent[a] = b
+        self.pf_label[a] = label
+        for child, parent, lab in path:
+            self.pf_parent[parent] = child
+            self.pf_label[parent] = lab
+
+    def _highest_node(self, x):
+        parent = self._aux_parent
+        root = x
+        while parent.get(root, root) != root:
+            root = parent[root]
+        while parent.get(x, x) != x:
+            parent[x], x = root, parent[x]
+        return root
+
+    def _nearest_common_ancestor(self, a, b):
+        seen = set()
+        x = a
+        while True:
+            x = self._highest_node(x)
+            seen.add(x)
+            if x not in self.pf_parent:
+                break
+            x = self.pf_parent[x]
+        y = b
+        while True:
+            y = self._highest_node(y)
+            if y in seen:
+                return y
+            y = self.pf_parent[y]
+
+    def _explain_along_path(self, a, c, output, pending_proofs):
+        a = self._highest_node(a)
+        while a != c:
+            b = self.pf_parent[a]
+            label = self.pf_label[a]
+            if isinstance(label, AppliedPredicate):
+                output.add(label)
+            elif label is not None:
+                (_, args1, _), (_, args2, _) = label
+                for x, y in zip(args1, args2):
+                    if x != y:
+                        pending_proofs.append((x, y))
+            self._aux_parent[a] = self._highest_node(b)
+            a = self._highest_node(a)
+
+    def explain(self, lhs, rhs):
+        a = self._flatten(lhs)
+        b = self._flatten(rhs)
+        self._process_pending_unions()
+        if self._find_repr(a) != self._find_repr(b):
+            return None
+        self._aux_parent = {}
+        output = set()
+        pending_proofs = [(a, b)]
+        while pending_proofs:
+            x, y = pending_proofs.pop()
+            c = self._nearest_common_ancestor(x, y)
+            self._explain_along_path(x, c, output, pending_proofs)
+            self._explain_along_path(y, c, output, pending_proofs)
+        return output
