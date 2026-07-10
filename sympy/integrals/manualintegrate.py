@@ -1919,11 +1919,11 @@ def quadratic_denom_rule(integral):
         pieces = []
         # skips degenerate case if a != 0 or if a = 0 would cause null denominator
         if degenerate and not _if_zero_implies_zero(a, c):
-            substituted = B / c
+            substituted = integrand.subs(a, 0)
             substep = integral_steps(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
         if degenerate and not _if_zero_implies_zero(c, a):
-            substituted = B / (a*symbol**2)
+            substituted = integrand.subs(c, 0)
             substep = integral_steps(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(c, 0)))
         if a.is_extended_real and c.is_extended_real:
@@ -1961,7 +1961,7 @@ def quadratic_denom_rule(integral):
         integrand = B / denominator**n
         # degenerate flags avoid to recalculate Piecewise branches recursively
         if degenerate_a and not _if_zero_implies_zero(a, denominator):
-            substituted = B / (b*symbol + c)**n
+            substituted = integrand.subs(a, 0)
             substep = integral_steps(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
         if degenerate_discriminant and not _if_zero_implies_zero(discriminant, denominator):
@@ -2010,7 +2010,7 @@ def quadratic_denom_rule(integral):
         denominator = (a*symbol**2 + b*symbol + c)
         integrand = (A*symbol + B) / denominator**n
         if not _if_zero_implies_zero(a, denominator):
-            substituted = (A*symbol + B) / (b*symbol + c)**n
+            substituted = integrand.subs(a, 0)
             substep = integral_steps(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
         # we divide by a, Piecewise condition above
@@ -2042,13 +2042,22 @@ def quadratic_denom_rule(integral):
     b = den_poly.nth(1)
     c = den_poly.nth(0)
 
-    if b == 0 and deg_num == 0 and n == 1:
-        return _arctan_match(B, a, c, symbol)
-    if deg_num == 1:
-        A = num_poly.nth(1)
-        return _split_sum(A, B, a, b, c, n, symbol)
+    normalized_num = num_poly.as_expr()
+    normalized_den = den_poly.as_expr()
+    normalized_integrand = normalized_num / normalized_den**n
 
-    return _complete_square(B, a, b, c, n, symbol)
+    if b == 0 and deg_num == 0 and n == 1:
+        step = _arctan_match(B, a, c, symbol)
+    elif deg_num == 1:
+        A = num_poly.nth(1)
+        step = _split_sum(A, B, a, b, c, n, symbol)
+    else:
+        step = _complete_square(B, a, b, c, n, symbol)
+
+    if normalized_integrand != integrand:
+        step = RewriteRule(integrand, symbol, normalized_integrand, step)
+
+    return step
 
 
 def sqrt_fractional_linear_rule(integral : IntegralInfo):

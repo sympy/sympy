@@ -711,6 +711,31 @@ def test_quadratic_denom():
     assert manualintegrate(f, x) == 5*log(3*x**2 - 2*x + 8)/6 + 11*sqrt(23)*atan(3*sqrt(23)*(x - Rational(1, 3))/23)/69
     g = 3/(2*x**2 + 3*x + 1)
     assert manualintegrate(g, x) == 3*log(x + S.Half) - 3*log(x + 1)
+    f = 1/(x**2 + 4*x + 2)**3
+    F = manualintegrate(f, x)
+    assert (f - F.diff(x)).cancel() == 0
+    # perfect square
+    f = 1/(x**2 + 2*x + 1)**3
+    F = manualintegrate(f, x)
+    assert (f - F.diff(x)).cancel() == 0
+    f = (3*x + 2)/(x**2 + 4*x + 2)**3
+    F = manualintegrate(f, x)
+    assert (f - F.diff(x)).cancel() == 0
+    # Polys simplification
+    f = 1/(3*((x - 1)*(x + 1)))
+    F = manualintegrate(f, x)
+    assert (f - F.diff(x)).cancel() == 0
+    A = symbols('A')
+    B = symbols('B')
+    f = (3*A*x + 2*B)/(2*a*x**2 + 2*x + c)**3
+    F = (piecewise_fold(manualintegrate(f, x))).args
+    # when Eq(a, 0)
+    assert (f.subs(a, 0) - F[2][0].diff(x)).cancel() == 0
+    # when Ne(a, 0) & Eq(a*c, 1/2)
+    assert (f.subs(c, 1/(2*a)) - (F[0][0].subs(c, 1/(2*a)).diff(x))).cancel() == 0
+    # a != 0
+    assert (f - F[1][0].diff(x)).cancel() == 0
+
 
 def test_issue_22757():
     assert manualintegrate(sin(x), y) == y * sin(x)
