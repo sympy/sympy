@@ -200,16 +200,16 @@ class EUFCongruenceClosure:
         """
         rep_a, rep_b = self._find_repr(a), self._find_repr(b)
         if rep_a == rep_b:
-            if self._add_cgraph_edge(a, b, label) is not None:
+            if self._insert_cgraph_edge(a, b, label) is not None:
                 self._n_recorded += 1
             return
         # Ensure |ClassList(a)| <= |ClassList(b)|
         if len(self.classlist[rep_a]) > len(self.classlist[rep_b]):
             rep_a, rep_b = rep_b, rep_a
             a, b = b, a
-        self._insert_edge(a, b, label)
+        self._insert_pf_edge(a, b, label)
         self._n_recorded += 1
-        level = self._add_cgraph_edge(a, b, label)
+        level = self._insert_cgraph_edge(a, b, label)
         self._level[frozenset((a, b))] = level
         # Move all members of ClassList(rep_a) into ClassList(rep_b)
         for c in self.classlist[rep_a]:
@@ -280,12 +280,12 @@ class EUFCongruenceClosure:
 
     # ------ classical explain()
 
-    def _insert_edge(self, a, b, label):
+    def _insert_pf_edge(self, a, b, label):
         """
         Reverses the edges on the paath between a and the root of its tree
         Adds an directional edge a -> b with a label (i.e justification).
 
-        This method is parallel to the addition to the Union in the paper.
+        This method was discussed in section 5. of [1]
         """
         path = []
         cursor = a
@@ -375,7 +375,7 @@ class EUFCongruenceClosure:
 
     # ----------- greedy algorithm
 
-    def _add_cgraph_edge(self, a, b, label, sub_level=None):
+    def _insert_cgraph_edge(self, a, b, label, sub_level=None):
         if a == b:
             return None
         level = self._level_counter
@@ -424,7 +424,7 @@ class EUFCongruenceClosure:
     def _get_canonical_form(self, term):
         """
         Algorithm (including pseucode) discussed in [2]
-        term replaced f(a,b) -> return f(a', b')
+        if term = f(a,b) ->  return f(a', b')
         Get the application that term did replace with in _flatten, and rewrite it to
         its canonical form. An application is in canonical form if its arguments
         are representatives. I.e this method replaces args with their representatives.
@@ -463,7 +463,7 @@ class EUFCongruenceClosure:
                             level = max(level, self._tree_path_size(x, y, memo)[1])
                     label = ((func_u, args_u, u), (func_v, args_v, v))
                     self._n_extra += 1
-                    self._add_cgraph_edge(u, v, label, sub_level=level + 1)
+                    self._insert_cgraph_edge(u, v, label, sub_level=level + 1)
 
     def _shortest_path(self, a, b, memo, max_level):
         """
