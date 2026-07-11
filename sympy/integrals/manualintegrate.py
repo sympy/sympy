@@ -26,6 +26,7 @@ from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
+from contextvars import ContextVar
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -2656,6 +2657,7 @@ def fallback_rule(integral):
 _integral_cache: dict[Expr, Expr | None] = {}
 _parts_u_cache: dict[Expr, int] = defaultdict(int)
 _cache_dummy = Dummy("z")
+_branch_context = ContextVar('branch', default=False)
 
 def integral_steps(integrand, symbol, **options):
     """Returns the steps needed to compute an integral.
@@ -2702,92 +2704,102 @@ def integral_steps(integrand, symbol, **options):
         to obtain a result.
 
     """
-    branch = options.get("branch", False)
-    cachekey = integrand.xreplace({symbol: _cache_dummy})
-    if cachekey in _integral_cache:
-        if _integral_cache[cachekey] is None:
-            # Stop this attempt, because it leads around in a loop
-            return DontKnowRule(integrand, symbol)
-        else:
-            # TODO: This is for future development, as currently
-            # _integral_cache gets no values other than None
-            return (_integral_cache[cachekey].xreplace(_cache_dummy, symbol),
-                symbol)
+    if "branch" in options:
+        branch = options["branch"]
+        token = _branch_context.set(branch)
     else:
-        _integral_cache[cachekey] = None
+        branch = _branch_context.get()
+        token = None
 
-    integral = IntegralInfo(integrand, symbol)
+    try:
+        cachekey = integrand.xreplace({symbol: _cache_dummy})
+        if cachekey in _integral_cache:
+            if _integral_cache[cachekey] is None:
+                # Stop this attempt, because it leads around in a loop
+                return DontKnowRule(integrand, symbol)
+            else:
+                # TODO: This is for future development, as currently
+                # _integral_cache gets no values other than None
+                return (_integral_cache[cachekey].xreplace(_cache_dummy, symbol),
+                    symbol)
+        else:
+            _integral_cache[cachekey] = None
 
-    def key(integral):
-        integrand = integral.integrand
+        integral = IntegralInfo(integrand, symbol)
 
-        if symbol not in integrand.free_symbols:
-            return Number
-        for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
-            if isinstance(integrand, cls):
-                return cls
-        return type(integrand)
+        def key(integral):
+            integrand = integral.integrand
 
-    def integral_is_subclass(*klasses):
-        def _integral_is_subclass(integral):
-            k = key(integral)
-            return k and issubclass(k, klasses)
-        return _integral_is_subclass
+            if symbol not in integrand.free_symbols:
+                return Number
+            for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
+                if isinstance(integrand, cls):
+                    return cls
+            return type(integrand)
 
-    result = do_one(
-        null_safe(special_function_rule),
-        null_safe(switch(key, {
-            Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
-                        null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule)),
-            Symbol: power_rule,
-            exp: exp_rule,
-            Add: add_rule,
-            Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
-                        null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule),
-                        null_safe(trig_cmplx_exp_rule)),
-            Derivative: derivative_rule,
-            TrigonometricFunction: trig_rule,
-            Heaviside: heaviside_rule,
-            DiracDelta: dirac_delta_rule,
-            OrthogonalPolynomial: orthogonal_poly_rule,
-            Number: constant_rule
-        })),
-        do_one(
-            null_safe(trig_rule),
-            null_safe(hyperbolic_rule),
-            null_safe(alternatives(
-                rewrites_rule,
-                substitution_rule,
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    partial_fractions_rule),
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    cancel_rule),
-                condition(
-                    integral_is_subclass(Mul),
-                    combine_power_rule),
-                condition(
-                    integral_is_subclass(Mul, log,
-                    *inverse_trig_functions),
-                    parts_rule),
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    distribute_expand_rule),
-                trig_powers_products_rule,
-                trig_expand_rule,
-                branch=branch
-            )),
-            null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
-            null_safe(trig_substitution_rule)
-        ),
-        fallback_rule)(integral)
-    del _integral_cache[cachekey]
-    return result
+        def integral_is_subclass(*klasses):
+            def _integral_is_subclass(integral):
+                k = key(integral)
+                return k and issubclass(k, klasses)
+            return _integral_is_subclass
+
+        result = do_one(
+            null_safe(special_function_rule),
+            null_safe(switch(key, {
+                Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
+                            null_safe(quadratic_denom_rule),
+                            null_safe(sqrt_quadratic_rule),
+                            null_safe(sqrt_fractional_linear_rule)),
+                Symbol: power_rule,
+                exp: exp_rule,
+                Add: add_rule,
+                Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
+                            null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
+                            null_safe(sqrt_quadratic_rule),
+                            null_safe(sqrt_fractional_linear_rule),
+                            null_safe(trig_cmplx_exp_rule)),
+                Derivative: derivative_rule,
+                TrigonometricFunction: trig_rule,
+                Heaviside: heaviside_rule,
+                DiracDelta: dirac_delta_rule,
+                OrthogonalPolynomial: orthogonal_poly_rule,
+                Number: constant_rule
+            })),
+            do_one(
+                null_safe(trig_rule),
+                null_safe(hyperbolic_rule),
+                null_safe(alternatives(
+                    rewrites_rule,
+                    substitution_rule,
+                    condition(
+                        integral_is_subclass(Mul, Pow),
+                        partial_fractions_rule),
+                    condition(
+                        integral_is_subclass(Mul, Pow),
+                        cancel_rule),
+                    condition(
+                        integral_is_subclass(Mul),
+                        combine_power_rule),
+                    condition(
+                        integral_is_subclass(Mul, log,
+                        *inverse_trig_functions),
+                        parts_rule),
+                    condition(
+                        integral_is_subclass(Mul, Pow),
+                        distribute_expand_rule),
+                    trig_powers_products_rule,
+                    trig_expand_rule,
+                    branch=branch
+                )),
+                null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
+                null_safe(trig_substitution_rule)
+            ),
+            fallback_rule)(integral)
+        del _integral_cache[cachekey]
+        return result
+    finally:
+        if token is not None:
+            _branch_context.reset(token)
 
 
 def manualintegrate(f, var):
