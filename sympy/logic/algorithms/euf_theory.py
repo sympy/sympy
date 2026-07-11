@@ -108,7 +108,7 @@ class EUFCongruenceClosure:
         Greedy algorithm and C-graph data structures
                 TODO: add docs
         """
-        self.adjacency = defaultdict(list)       # const -> list of [(neighbor, label, level, sub_level)]
+        self.adjacency = defaultdict(list)       # const -> list of [(neighbor, label, level)]
         self._level = {}
         self._level_counter = 0
         self._n_recorded = 0
@@ -376,15 +376,14 @@ class EUFCongruenceClosure:
 
     # ----------- greedy algorithm
 
-    def _insert_cgraph_edge(self, a, b, label, sub_level=None):
+    def _insert_cgraph_edge(self, a, b, label, level=None):
         if a == b:
             return None
-        level = self._level_counter
-        self._level_counter += 1
-        if sub_level is None:
-            sub_level = level
-        self.adjacency[a].append((b, label, level, sub_level))
-        self.adjacency[b].append((a, label, level, sub_level))
+        if level is None:
+            level = self._level_counter
+            self._level_counter += 1
+        self.adjacency[a].append((b, label, level))
+        self.adjacency[b].append((a, label, level))
         return level
 
     def _estimate_size(self, label, memo):
@@ -458,13 +457,13 @@ class EUFCongruenceClosure:
                     self._extra_seen.add(key)
                     func_u, args_u = self._const_to_app[u]
                     func_v, args_v = self._const_to_app[v]
-                    level = 0
+                    level = -1
                     for x, y in zip(args_u, args_v):
                         if x != y:
                             level = max(level, self._tree_path_size(x, y, memo)[1])
                     label = ((func_u, args_u, u), (func_v, args_v, v))
                     self._n_extra += 1
-                    self._insert_cgraph_edge(u, v, label, sub_level=level + 1)
+                    self._insert_cgraph_edge(u, v, label, level=level + 1)
 
     def _shortest_path(self, a, b, memo, max_level):
         """
@@ -483,13 +482,13 @@ class EUFCongruenceClosure:
             if u in done:
                 continue
             done.add(u)
-            for v, label, level, sub_level in self.adjacency[u]:
-                if level >= max_level or v in done:
+            for v, label, level in self.adjacency[u]:
+                if level > max_level or v in done:
                     continue
                 nd = d + self._estimate_size(label, memo)
                 if v not in dist or nd < dist[v]:
                     dist[v] = nd
-                    prev[v] = (u, label, sub_level)
+                    prev[v] = (u, label)
                     heappush(heap, (nd, tie, v))
                     tie += 1
         if a == b:
@@ -499,8 +498,8 @@ class EUFCongruenceClosure:
         path = []
         cursor = b
         while cursor != a:
-            u, label, sub_level = prev[cursor]
-            path.append((label, sub_level))
+            u, label = prev[cursor]
+            path.append(label)
             cursor = u
         return path
 
@@ -518,15 +517,14 @@ class EUFCongruenceClosure:
         memo = {}
         output = set()
         fuel = self.greedy_fuel
-        #
-        todo = deque([(a, b, float('inf'))])
+        todo = deque([(a, b)])
         seen_pairs = set()
         extra_done = set()
         while todo:
-            x, y, max_level = todo.popleft()
+            x, y = todo.popleft()
             if x == y:
                 continue
-            key = (frozenset((x, y)), max_level)
+            key = frozenset((x, y))
             if key in seen_pairs:
                 continue
             seen_pairs.add(key)
@@ -534,11 +532,12 @@ class EUFCongruenceClosure:
             if rep not in extra_done:
                 extra_done.add(rep)
                 self._compute_extra_edges(rep, memo)
+            max_level = self._tree_path_size(x, y, memo)[1]
             path = self._shortest_path(x, y, memo, max_level)
             if path is None:
                 self._explain_classical(x, y, output)
                 continue
-            for label, sub_level in path:
+            for label in path:
                 if isinstance(label, AppliedPredicate):
                     output.add(label)
                 elif label is not None:
@@ -547,7 +546,7 @@ class EUFCongruenceClosure:
                         fuel -= 1
                         for p, q in zip(args1, args2):
                             if p != q:
-                                todo.append((p, q, sub_level))
+                                todo.append((p, q))
                     else:
                         for p, q in zip(args1, args2):
                             if p != q:
