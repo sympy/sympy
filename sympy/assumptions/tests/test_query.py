@@ -4,6 +4,7 @@ from sympy.assumptions import (ask, AssumptionsContext, Q)
 from sympy.assumptions.assume import (assuming, global_assumptions, Predicate)
 from sympy.assumptions.ask import _ask_recursive
 from sympy.assumptions.cnf import CNF, Literal
+from sympy.assumptions.tests.common import check_ask
 from sympy.assumptions.facts import (single_fact_lookup,
     get_known_facts, generate_known_facts_dict, get_known_facts_keys)
 from sympy.assumptions.ask_generated import (get_all_known_facts,
@@ -28,153 +29,153 @@ import math
 
 def test_int_1():
     z = 1
-    assert ask(Q.commutative(z)) is True
-    assert ask(Q.integer(z)) is True
-    assert ask(Q.rational(z)) is True
-    assert ask(Q.real(z)) is True
-    assert ask(Q.complex(z)) is True
-    assert ask(Q.irrational(z)) is False
-    assert ask(Q.imaginary(z)) is False
-    assert ask(Q.positive(z)) is True
-    assert ask(Q.negative(z)) is False
-    assert ask(Q.even(z)) is False
-    assert ask(Q.odd(z)) is True
-    assert ask(Q.finite(z)) is True
-    assert ask(Q.prime(z)) is False
-    assert ask(Q.composite(z)) is False
-    assert ask(Q.hermitian(z)) is True
-    assert ask(Q.antihermitian(z)) is False
-    assert ask(Q.transcendental(z)) is False
+    check_ask(Q.commutative(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.integer(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.rational(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.real(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.complex(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.irrational(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.imaginary(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.positive(z), True, True, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.negative(z), True, False, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.even(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.odd(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.finite(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.prime(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.composite(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.hermitian(z), True, True, ['recursive', 'satask'])
+    check_ask(Q.antihermitian(z), True, False, ['recursive'])
+    check_ask(Q.transcendental(z), True, False, ['recursive', 'satask', 'old'])
 
 
 def test_int_11():
     z = 11
-    assert ask(Q.commutative(z)) is True
-    assert ask(Q.integer(z)) is True
-    assert ask(Q.rational(z)) is True
-    assert ask(Q.real(z)) is True
-    assert ask(Q.complex(z)) is True
-    assert ask(Q.irrational(z)) is False
-    assert ask(Q.imaginary(z)) is False
-    assert ask(Q.positive(z)) is True
-    assert ask(Q.negative(z)) is False
-    assert ask(Q.even(z)) is False
-    assert ask(Q.odd(z)) is True
-    assert ask(Q.finite(z)) is True
-    assert ask(Q.prime(z)) is True
-    assert ask(Q.composite(z)) is False
-    assert ask(Q.hermitian(z)) is True
-    assert ask(Q.antihermitian(z)) is False
-    assert ask(Q.transcendental(z)) is False
+    check_ask(Q.commutative(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.integer(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.rational(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.real(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.complex(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.irrational(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.imaginary(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.positive(z), True, True, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.negative(z), True, False, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.even(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.odd(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.finite(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.prime(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.composite(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.hermitian(z), True, True, ['recursive', 'satask'])
+    check_ask(Q.antihermitian(z), True, False, ['recursive'])
+    check_ask(Q.transcendental(z), True, False, ['recursive', 'satask', 'old'])
 
 
 def test_int_12():
     z = 12
-    assert ask(Q.commutative(z)) is True
-    assert ask(Q.integer(z)) is True
-    assert ask(Q.rational(z)) is True
-    assert ask(Q.real(z)) is True
-    assert ask(Q.complex(z)) is True
-    assert ask(Q.irrational(z)) is False
-    assert ask(Q.imaginary(z)) is False
-    assert ask(Q.positive(z)) is True
-    assert ask(Q.negative(z)) is False
-    assert ask(Q.even(z)) is True
-    assert ask(Q.odd(z)) is False
-    assert ask(Q.finite(z)) is True
-    assert ask(Q.prime(z)) is False
-    assert ask(Q.composite(z)) is True
-    assert ask(Q.hermitian(z)) is True
-    assert ask(Q.antihermitian(z)) is False
-    assert ask(Q.transcendental(z)) is False
+    check_ask(Q.commutative(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.integer(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.rational(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.real(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.complex(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.irrational(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.imaginary(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.positive(z), True, True, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.negative(z), True, False, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.even(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.odd(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.finite(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.prime(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.composite(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.hermitian(z), True, True, ['recursive', 'satask'])
+    check_ask(Q.antihermitian(z), True, False, ['recursive'])
+    check_ask(Q.transcendental(z), True, False, ['recursive', 'satask', 'old'])
 
 
 def test_float_1():
     z = 1.0
-    assert ask(Q.commutative(z)) is True
-    assert ask(Q.integer(z)) is None
-    assert ask(Q.rational(z)) is None
-    assert ask(Q.real(z)) is True
-    assert ask(Q.complex(z)) is True
-    assert ask(Q.irrational(z)) is None
-    assert ask(Q.imaginary(z)) is False
-    assert ask(Q.positive(z)) is True
-    assert ask(Q.negative(z)) is False
-    assert ask(Q.even(z)) is None
-    assert ask(Q.odd(z)) is None
-    assert ask(Q.finite(z)) is True
-    assert ask(Q.prime(z)) is None
-    assert ask(Q.composite(z)) is None
-    assert ask(Q.hermitian(z)) is True
-    assert ask(Q.antihermitian(z)) is False
-    assert ask(Q.transcendental(z)) is None
+    check_ask(Q.commutative(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.integer(z), True, None, [])
+    check_ask(Q.rational(z), True, None, [])
+    check_ask(Q.real(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.complex(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.irrational(z), True, None, [])
+    check_ask(Q.imaginary(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.positive(z), True, True, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.negative(z), True, False, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.even(z), True, None, [])
+    check_ask(Q.odd(z), True, None, [])
+    check_ask(Q.finite(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.prime(z), True, None, [])
+    check_ask(Q.composite(z), True, None, [])
+    check_ask(Q.hermitian(z), True, True, ['recursive', 'satask'])
+    check_ask(Q.antihermitian(z), True, False, ['recursive'])
+    check_ask(Q.transcendental(z), True, None, [])
 
     z = 7.2123
-    assert ask(Q.commutative(z)) is True
-    assert ask(Q.integer(z)) is False
-    assert ask(Q.rational(z)) is None
-    assert ask(Q.real(z)) is True
-    assert ask(Q.complex(z)) is True
-    assert ask(Q.irrational(z)) is None
-    assert ask(Q.imaginary(z)) is False
-    assert ask(Q.positive(z)) is True
-    assert ask(Q.negative(z)) is False
-    assert ask(Q.even(z)) is False
-    assert ask(Q.odd(z)) is False
-    assert ask(Q.finite(z)) is True
-    assert ask(Q.prime(z)) is False
-    assert ask(Q.composite(z)) is False
-    assert ask(Q.hermitian(z)) is True
-    assert ask(Q.antihermitian(z)) is False
-    assert ask(Q.transcendental(z)) is None
+    check_ask(Q.commutative(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.integer(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.rational(z), True, None, [])
+    check_ask(Q.real(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.complex(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.irrational(z), True, None, [])
+    check_ask(Q.imaginary(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.positive(z), True, True, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.negative(z), True, False, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.even(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.odd(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.finite(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.prime(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.composite(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.hermitian(z), True, True, ['recursive', 'satask'])
+    check_ask(Q.antihermitian(z), True, False, ['recursive'])
+    check_ask(Q.transcendental(z), True, None, [])
 
     # test for issue #12168
-    assert ask(Q.rational(math.pi)) is None
+    check_ask(Q.rational(math.pi), True, None, [])
 
 
 def test_zero_0():
     z = Integer(0)
-    assert ask(Q.nonzero(z)) is False
-    assert ask(Q.zero(z)) is True
-    assert ask(Q.commutative(z)) is True
-    assert ask(Q.integer(z)) is True
-    assert ask(Q.rational(z)) is True
-    assert ask(Q.real(z)) is True
-    assert ask(Q.complex(z)) is True
-    assert ask(Q.imaginary(z)) is False
-    assert ask(Q.positive(z)) is False
-    assert ask(Q.negative(z)) is False
-    assert ask(Q.even(z)) is True
-    assert ask(Q.odd(z)) is False
-    assert ask(Q.finite(z)) is True
-    assert ask(Q.prime(z)) is False
-    assert ask(Q.composite(z)) is False
-    assert ask(Q.hermitian(z)) is True
-    assert ask(Q.antihermitian(z)) is True
-    assert ask(Q.transcendental(z)) is False
+    check_ask(Q.nonzero(z), True, False, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.zero(z), True, True, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.commutative(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.integer(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.rational(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.real(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.complex(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.imaginary(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.positive(z), True, False, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.negative(z), True, False, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.even(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.odd(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.finite(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.prime(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.composite(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.hermitian(z), True, True, ['recursive', 'satask'])
+    check_ask(Q.antihermitian(z), True, True, ['recursive'])
+    check_ask(Q.transcendental(z), True, False, ['recursive', 'satask', 'old'])
 
 
 def test_negativeone():
     z = Integer(-1)
-    assert ask(Q.nonzero(z)) is True
-    assert ask(Q.zero(z)) is False
-    assert ask(Q.commutative(z)) is True
-    assert ask(Q.integer(z)) is True
-    assert ask(Q.rational(z)) is True
-    assert ask(Q.real(z)) is True
-    assert ask(Q.complex(z)) is True
-    assert ask(Q.irrational(z)) is False
-    assert ask(Q.imaginary(z)) is False
-    assert ask(Q.positive(z)) is False
-    assert ask(Q.negative(z)) is True
-    assert ask(Q.even(z)) is False
-    assert ask(Q.odd(z)) is True
-    assert ask(Q.finite(z)) is True
-    assert ask(Q.prime(z)) is False
-    assert ask(Q.composite(z)) is False
-    assert ask(Q.hermitian(z)) is True
-    assert ask(Q.antihermitian(z)) is False
-    assert ask(Q.transcendental(z)) is False
+    check_ask(Q.nonzero(z), True, True, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.zero(z), True, False, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.commutative(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.integer(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.rational(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.real(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.complex(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.irrational(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.imaginary(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.positive(z), True, False, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.negative(z), True, True, ['recursive', 'satask', 'lra_satask', 'old'])
+    check_ask(Q.even(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.odd(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.finite(z), True, True, ['recursive', 'satask', 'old'])
+    check_ask(Q.prime(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.composite(z), True, False, ['recursive', 'satask', 'old'])
+    check_ask(Q.hermitian(z), True, True, ['recursive', 'satask'])
+    check_ask(Q.antihermitian(z), True, False, ['recursive'])
+    check_ask(Q.transcendental(z), True, False, ['recursive', 'satask', 'old'])
 
 
 def test_infinity():
@@ -2587,3 +2588,26 @@ def test_issue_28127():
     assert ask(Q.gt(y,x), Q.lt(x,y)) is True
     assert ask(Q.lt(y,x), Q.gt(x,y)) is True
     assert ask(Q.le(y,x), Q.ge(x,y)) is True
+
+
+@XFAIL
+def test_issue_28191_lra_satask_infinity():
+    # lra_satask claims to support Q.positive_infinite, Q.negative_infinite
+    # and Q.negative (they're in its WHITE_LIST) but mishandles oo/-oo,
+    # returning a wrong True/False instead of failing or returning None.
+    # ask() itself is unaffected because the recursive backend resolves
+    # these queries before lra_satask is ever tried.
+    # Found by cross-checking every backend against each other; see
+    # https://github.com/sympy/sympy/issues/28191
+    check_ask(Q.positive_infinite(oo), True, True, ['recursive'])
+    check_ask(Q.negative_infinite(-oo), True, True, ['recursive'])
+    check_ask(Q.negative(-oo), True, False, ['recursive', 'satask', 'old'])
+
+
+@XFAIL
+def test_issue_28191_old_assumptions_imaginary_power():
+    # The old assumptions system's Pow.is_imaginary incorrectly returns
+    # False (not None) for I**(3 + I), which is actually purely imaginary
+    # (its value is approximately -0.208*I). Found by cross-checking every
+    # backend against each other; see https://github.com/sympy/sympy/issues/28191
+    check_ask(Q.imaginary(I**(3 + I)), True, True, ['recursive'])
