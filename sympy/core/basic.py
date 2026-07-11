@@ -2415,4 +2415,4 @@ preorder_traversal = deprecated(
     """,
     deprecated_since_version="1.10",
     active_deprecations_target="deprecated-traversal-functions-moved",
-)(_preorder_traversal)
+    )(_preorder_traversal)
