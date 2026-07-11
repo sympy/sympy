@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, overload
 
 from .basic import Atom, Basic
 from .coreerrors import LazyExceptionMessage
@@ -794,6 +794,14 @@ class Unequality(Relational):
     rel_op = '!='
 
     __slots__ = ()
+
+    @overload
+    def __new__(cls, lhs, rhs, *, evaluate: Literal[False], **options) -> Unequality:
+        ...
+
+    @overload
+    def __new__(cls, lhs, rhs, **options) -> Unequality | BooleanFalse | BooleanTrue: # type: ignore
+        ...
 
     def __new__(cls, lhs, rhs, **options) -> Unequality | BooleanFalse | BooleanTrue: # type: ignore
         lhs = _sympify(lhs)

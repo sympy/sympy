@@ -103,8 +103,7 @@ but these are not currently implemented.
 TODO:
  - Handle non-rational real numbers
  - Handle positive and negative infinity
- - Implement backtracking and theory proposition
- - Simplify matrix by removing unused variables using Gaussian elimination
+ - Implement backtracking and theory propagation
 
 References
 ==========
@@ -253,6 +252,7 @@ class LRASolver():
         s_count = 0
         s_subs = {}
         nonbasic = []
+        atom_vars = set()
 
         if testing_mode:
             # sort to reduce nondeterminism
@@ -328,6 +328,8 @@ class LRASolver():
             else:
                 var = terms[0]
 
+            atom_vars.add(var)
+
             assert var_coeff != 0
 
             equality = prop.function == Q.eq
@@ -348,6 +350,11 @@ class LRASolver():
             raise UnhandledInput("Nonlinearity is not handled")
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
+        # matrix A is guaranteed to able to be simplified
+        # by removing the non-basic (e.g original) non-atom variables from it
+        # these removed variables will be replaced by linear equation of existing variables.
+        nonatom_vars = {i for i in nonbasic if i not in atom_vars}
+        A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
         basic = [var_to_lra_var[b] for b in basic]
         for idx, var in enumerate(nonbasic + basic):
@@ -720,6 +727,138 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
+
+
+def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
+    """
+    Remove every non-atom variable from the tableu A. This is discussed in
+    Preprocessing part of the paper [1]_ as the "Gaussian Eliminaton".
+
+    The idea is that, all non-atom variables are dependent of atom variables,
+    which consistent-wise means that solving for atom variables should directly
+    give solutions for non-atom variables.
+
+    Therefore, any information about dependent, or to be more precise, non atom variables
+    in the matrix A is not necessary and can be safely discarded without any correctness worries.
+    E.g in,
+        x >= 0 & x+y >= 1 -> Phi' := (x >= 0 & s1 >= 1), Phi_A := x + y = s1
+    Since y is dependent, solving Phi' alone is enough, and _reduce_matrix should reduce Phi_A
+    into collapsed matrix since it stores no useful information.
+
+    Returns
+    =======
+
+    (A, basic, nonbasic)
+
+    A : Matrix
+        The reduced tableau with every variable in nonatom_vars removed.
+        Has one row per basic and one column per (basic + nonbasic).
+        In case of empty basic, the matrix collapses.
+
+    basic : list
+        The new list of basic variables. The elements (pivots) are basic if and only if
+        the pivots survived elimination. These pivots are new basic becuase they are
+        definitions at this point.
+
+    nonbasic : list
+        The new list of nonbasic variables. Old basic variables can become nonbasic,
+        however nonbasic elements cannot become basic.
+
+    Example
+    =======
+
+    Consider the formula:
+
+        x >= 0 & z <= 1 & (x + y <= 5 | z + y >= 2)
+
+    Here y is the only non-atom variable, so only y is removed, s1 = x+y, s2 = z+y.
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import symbols
+    >>> from sympy.solvers.solveset import linear_eq_to_matrix
+    >>> from sympy.logic.algorithms.lra_theory import _reduce_matrix
+    >>> s1, s2 = symbols('s1 s2')
+    >>> nonbasic, basic = [x, y, z], [s1, s2]
+    >>> A, _ = linear_eq_to_matrix([x + y - s1, z + y - s2], nonbasic + basic)
+    >>> A
+    Matrix([
+    [1, 1, 0, -1,  0],
+    [0, 1, 1,  0, -1]])
+    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y},
+    ...                                     testing_mode=True)
+    >>> basic, nonbasic
+    ([s1], [x, z, s2])
+
+    Notice that s2 became nonbasic.
+
+    >>> A
+    Matrix([[1, -1, 1, -1]])
+
+    It is possible for the matrix A to collapse entirely, which happens when
+    all the remaining terms are linearly independent. Or in other terms, The matrix A
+    is no longer "stores" information about variables as there are no information to store.
+    E.g,
+
+         (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+
+    only x is the atom variable so only y and z is removed, s1 = x+y and s2 = x+2*y-z.
+    >>> nonbasic, basic = [x, y, z], [s1, s2]
+    >>> A, _ = linear_eq_to_matrix([x + y - s1, x + 2 * y - z - s2], nonbasic + basic)
+    >>> A
+    Matrix([
+    [1, 1,  0, -1,  0],
+    [1, 2, -1,  0, -1]])
+    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y, z},
+    ...                                     testing_mode=True)
+    >>> basic, nonbasic
+    ([], [x, s1, s2])
+
+    Basic is empty, which in result should mean A has collapsed.
+    >>> A.shape
+    (0, 3)
+    """
+    if not nonatom_vars:
+        return A, basic, nonbasic
+    if testing_mode:
+        nonatom_vars = sorted(nonatom_vars, key=str)
+        # precondition for all tableu matrices A
+        m = len(basic)
+        n = len(nonbasic+basic)
+        assert A[:, n-m:] == -eye(m)
+
+    kept_nonbasic = [v for v in nonbasic if v not in nonatom_vars]
+    # The order is important because:
+    # 1) rref starts pivoting from left to right, so nonatom_vars should come first
+    # 2) basic var should come after them and possibly reduce them too
+    # Basic vars are also in the form of block matrix -I_m and the rank of that identity
+    # matrix makes so that we never touch kept_nonbasic block matrix
+    sorted_col_order = list(nonatom_vars) + basic + kept_nonbasic
+    var_to_col_orig = {v: i for i, v in enumerate(nonbasic + basic)}
+    # reorder the columns of A by the list sorted_col_order
+    A = A[:, [var_to_col_orig[v] for v in sorted_col_order]]
+
+    B, pivots = A.rref()
+
+    keep_rows = [r for r, pc in enumerate(pivots) if pc >= len(nonatom_vars)]
+    new_basic = [sorted_col_order[pivots[r]] for r in keep_rows]
+    basic_set = set(new_basic)
+    new_nonbasic = [v for v in kept_nonbasic + basic if v not in basic_set]
+
+    var_to_col_sorted = {v: i for i, v in enumerate(sorted_col_order)}
+    # every basic should have -1 coefficent by convention, and rref gives 1 coeff.
+    # to all the basic variables. So we have to negative B.
+    A = -B[keep_rows, [var_to_col_sorted[v] for v in new_nonbasic + new_basic]]
+    if testing_mode:
+        # all the nonaotm_vars should be removed
+        assert set(nonatom_vars).isdisjoint(new_basic + new_nonbasic)
+        # new basic variables should be a subset of old basic variables
+        assert set(new_basic) <= set(basic)
+        # new nonbasic variables should be a subset of union of old basic and non-atom nonbasics
+        assert set(new_nonbasic) <= set(kept_nonbasic) | set(basic)
+        # precondition for all tableu matrices A
+        m = len(new_basic)
+        n = len(new_nonbasic+new_basic)
+        assert A[:, n-m:] == -eye(m)
+    return A, new_basic, new_nonbasic
 
 
 class Boundary:
