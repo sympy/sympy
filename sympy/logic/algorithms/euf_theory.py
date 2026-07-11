@@ -71,7 +71,13 @@ class EUFCongruenceClosure:
 
         """
         Part 1) of the engine
-        TODO: add docs
+
+        pending:  list of pairs of constants yet to be merged.
+        representative:  returns the class representative of the constant
+        classlist: set of all the constants in the class.
+        lookup_table: maps an app to a constant.
+        use_list: all the apps that use the input rep as an argument.
+
         """
         self.pending = deque()
         self.representative = {}                 # Representative[c]
@@ -79,9 +85,7 @@ class EUFCongruenceClosure:
         self.lookup_table = {}                   # Lookup_table[function, args]
         self.use_list = defaultdict(list)        # UseList[rep]
 
-        """
-        Flatten caches/stuff
-        """
+        # _flatten caches/stuff
         self._dummies = numbered_symbols('c', Dummy)
         self._term_to_const = {}                 # _term_to_const[expr] -> const. USED for not doing _flatten twice
         self._const_to_app = {}                  # const -> (func, arg consts). USED for Greedy algorithm
