@@ -1802,7 +1802,53 @@ class Basic(Printable):
         return (rv, mapping) if map else rv # type: ignore
 
     def find(self, query, group=False):
-        """Find all subexpressions matching a query."""
+        """
+        Find all unique subexpressions matching a query.
+
+        query : type, Basic, or callable
+            The pattern used to test each node of the expression tree.
+            A type matches subexpressions of that type, a ``Basic``
+            expression is treated as a pattern that subexpressions are
+            matched against (with ``Wild`` symbols acting as wildcards),
+            and a callable matches when it returns ``True``.
+
+        group : bool, optional
+            If ``True``, return a dict mapping each match to the number
+            of times it appears instead of a set of unique matches.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Wild
+        >>> from sympy.abc import x, y
+
+        >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
+        >>> expr.find(sin)
+        {sin(x), sin(y)}
+        >>> expr.find(sin, group=True)
+        {sin(x): 2, sin(y): 1}
+
+        >>> w = Wild('w')
+        >>> expr.find(sin(w))
+        {sin(x), sin(y)}
+
+        >>> expr.find(lambda e: e.is_Symbol)
+        {x, y}
+
+        See Also
+        ========
+
+        count : count the number of matching subexpressions
+        has : test whether any matching subexpression exists
+        match : pattern-match the whole expression
+
+        Notes
+        =====
+
+        The search visits every node of the expression tree, including the
+        expression itself, so ``expr.find(type(expr))`` will include
+        ``expr`` in the result.
+        """
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 

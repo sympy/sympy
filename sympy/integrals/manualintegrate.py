@@ -1678,8 +1678,9 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
 
     dummy = Dummy("temporary")
-    # we can integrate log(x) and atan(x) by setting dv = 1
-    if isinstance(integrand, (log, *inverse_trig_functions)):
+    # we can integrate log(x), atan(x), and erf by setting dv = 1
+    if isinstance(integrand, (log, *inverse_trig_functions,
+                              *special_error_functions)):
         integrand = dummy * integrand
 
     for index, rule in enumerate(liate_rules):
@@ -1765,6 +1766,8 @@ def parts_rule(integral):
 
         # Try cyclic integration by parts a few times
         for _ in range(4):
+            if dv == 1:
+                break
             debug("Cyclic integration {} with v: {}, du: {}, integrand: {}".format(_, v, du, integrand))
             coefficient = ((v * du) / integrand).cancel()
             if coefficient == 1:
@@ -1798,7 +1801,8 @@ def parts_rule(integral):
 
     if steps:
         u, dv, v, du, v_step = steps[0]
-        rule = PartsRule(integrand, symbol, u, dv, v_step, make_second_step(steps[1:], v * du))
+        second_step = make_second_step(steps[1:], v * du)
+        rule = PartsRule(integrand, symbol, u, dv, v_step, second_step)
         if (constant != 1) and rule:
             rule = ConstantTimesRule(constant * integrand, symbol, constant, integrand, rule)
         return rule
@@ -2086,7 +2090,12 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     elif b.is_zero:
         degenerate_step = integral_steps(f*sqrt(a)**n, x)
     else:
-        degenerate_step = sqrt_fractional_linear_rule(IntegralInfo(f*sqrt(a+b*x)**n, x))
+        degenerate_integrand = f*sqrt(a + b*x)**n
+        degenerate_step = sqrt_fractional_linear_rule(IntegralInfo(degenerate_integrand, x))
+        if degenerate_step is None:
+            # since  sqrt_fractional_linear_rule does not guarantee a solution
+            # we create a DontKnowRule so that _add_degenerate_step adds the degenerate condition
+            degenerate_step = DontKnowRule(degenerate_integrand, x)
 
     def sqrt_quadratic_denom_rule(numer_poly: Poly, integrand: Expr):
         denom = sqrt(a+b*x+c*x**2)
@@ -2120,16 +2129,27 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
             step = SqrtQuadraticDenomRule(integrand, x, a, b, c, coeffs)
         return step
 
-    def sqrt_quadratic_reduction_rule(integrand: Expr, n: int):
+    def sqrt_quadratic_reduction_rule(integrand: Expr, n: int, const: Expr):
         # Implementation of Gradshteyn & Ryzhik 2.263.3
         k = (-n - 1) // 2
         delta = 4*a*c - b**2
         R = c*x**2 + b*x + a
 
+        def double_root_step():
+            square_base = sqrt(c)*x + b/(2*sqrt(c))
+            nested = Pow(Pow(square_base, 2, evaluate=False), S(n)/2, evaluate=False)
+            rewritten = const*nested
+            substep = nested_pow_rule(IntegralInfo(rewritten, x))
+            return RewriteRule(integrand, x, rewritten, substep)
+
+        if delta.is_zero is True:
+            return double_root_step()
+
+        # we divide by delta, then delta  has to be != 0
         term_denom = (2*k - 1) * delta * (R**(S(2*k - 1)/2))
-        constant_term = f*2*(2*c*x+b) / term_denom
+        constant_term = const*2*(2*c*x+b) / term_denom
         coeff = (8*c*(k-1))/((2*k-1) * delta)
-        expr = f * R**(S(1)/2 - k)
+        expr = const * R**(S(1)/2 - k)
 
         rewrite_expr = Derivative(constant_term, x) + coeff * expr
         derive_expr = Derivative(constant_term, x)
@@ -2157,7 +2177,58 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
                 ]
             )
 
-        return RewriteRule(integrand, x, rewrite_expr, substep)
+        nondegenerate_step = RewriteRule(integrand, x, rewrite_expr, substep)
+        if delta.is_zero is None:
+            return _add_degenerate_step(
+                Ne(delta, 0),
+                nondegenerate_step,
+                double_root_step(),
+            )
+        return nondegenerate_step
+
+    def sqrt_quadratic_polynomial_reduction_rule():
+        # reduce non-constant polynomial numerators by writing f = q*R + r,
+        # then split the linear remainder into a multiple of R' and a constant.
+        terms = []
+        steps = []
+        root_base = c*x**2 + b*x + a
+        root_poly = Poly(root_base, x)
+        quotient, rest = f_poly.div(root_poly)
+        if not quotient.is_zero:
+            # n is increasing by 2 at each step, we will fall in one of the cases above
+            quotient_integrand = quotient.as_expr() * sqrt(root_base)**(n + 2)
+            quotient_step = sqrt_quadratic_rule(IntegralInfo(quotient_integrand, x), degenerate=False)
+            terms.append(quotient_integrand)
+            steps.append(quotient_step)
+        if not rest.is_zero:
+            # split the linear remainder as A*R' + B, where R' = 2*c*x + b.
+            e = rest.nth(1)
+            d = rest.nth(0)
+            A = e/(2*c)
+            B = d - A*b
+            if A != 0:
+                u = Dummy("u")
+                # solved by substitution
+                base = (2*c*x + b) * sqrt(root_base)**n
+                term = A * base
+                pow_rule = PowerRule(u**(S(n)/2), u, u, S(n)/2)
+                u_step = URule(base, x, u, root_base, pow_rule)
+                if A != 1:
+                    u_step = ConstantTimesRule(term, x, A, base, u_step)
+                terms.append(term)
+                steps.append(u_step)
+            if B != 0:
+                term = B * sqrt(root_base)**n
+                # constant case already managed
+                const_step = sqrt_quadratic_reduction_rule(term, n, B)
+                terms.append(term)
+                steps.append(const_step)
+        rewritten = Add(*terms, evaluate=False)
+        if len(steps) == 1:
+            substep = steps[0]
+        else:
+            substep = AddRule(rewritten, x, steps)
+        return RewriteRule(integrand, x, rewritten, substep)
 
     if n > 0:  # rewrite poly * sqrt(s)**(2*k-1) to poly*s**k / sqrt(s)
         numer_poly = f_poly * (a+b*x+c*x**2)**((n+1)/2)
@@ -2168,11 +2239,9 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         generic_step = sqrt_quadratic_denom_rule(f_poly, integrand)
     elif f_poly.degree() == 0:
         # The numerator must be a const, the formula assumes this
-        generic_step = sqrt_quadratic_reduction_rule(integrand, n)
+        generic_step = sqrt_quadratic_reduction_rule(integrand, n, f)
     else:
-        # Handle non-constant numerators (eg. x / R**(-3/2))
-        # This requires splitting the integral as A*(2ax+b) + B form
-        return None
+        generic_step = sqrt_quadratic_polynomial_reduction_rule()
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
@@ -2690,7 +2759,8 @@ def integral_steps(integrand, symbol, **options):
                     combine_power_rule),
                 condition(
                     integral_is_subclass(Mul, log,
-                    *inverse_trig_functions),
+                                         *inverse_trig_functions,
+                                         *special_error_functions),
                     parts_rule),
                 condition(
                     integral_is_subclass(Mul, Pow),
