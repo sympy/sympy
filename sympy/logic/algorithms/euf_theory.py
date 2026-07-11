@@ -200,8 +200,9 @@ class EUFCongruenceClosure:
         """
         rep_a, rep_b = self._find_repr(a), self._find_repr(b)
         if rep_a == rep_b:
-            if self._insert_cgraph_edge(a, b, label) is not None:
-                self._n_recorded += 1
+            if isinstance(label, AppliedPredicate):
+                if self._insert_cgraph_edge(a, b, label) is not None:
+                    self._n_recorded += 1
             return
         # Ensure |ClassList(a)| <= |ClassList(b)|
         if len(self.classlist[rep_a]) > len(self.classlist[rep_b]):
