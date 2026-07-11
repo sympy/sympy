@@ -1974,7 +1974,7 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     c = Wild('c', exclude=[x])
     d = Wild('d', exclude=[x])
     base0 = None
-    bases, qs, ratios = [], [], []
+    powers, exps, ratios = [], [], []
     constant_bases_subs = {}
     # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x), then cbrt(2x), x chosen)
     for pow_ in ordered(integrand.find((Pow))): # collect all ((a*x + b)/(c*x + d))**(p/q)
@@ -2000,35 +2000,33 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
         if base0 is None:
             base0 = base
             a0, b0, c0, d0 = aa, bb, cc, dd
-            bases.append(base)
+            powers.append(pow_)
+            exps.append(exp_)
             ratios.append(S.One)
-            qs.append(exp_.q)
         else:
-            K = (base / base0).cancel()
-            if K.has(x): # cannot substitute both sqrt(x) and sqrt(x + 1)
+            power_ratio = powsimp(pow_ / Pow(base0, exp_), force=False).cancel()
+            if power_ratio.has(x):
                 return None
-            bases.append(base)
-            ratios.append(K)
-            qs.append(exp_.q)
+            powers.append(pow_)
+            exps.append(exp_)
+            ratios.append(power_ratio)
     if base0 is None and not constant_bases_subs:
         return None
     if constant_bases_subs:
-        integrand = integrand.subs(constant_bases_subs)
+        integrand = integrand.xreplace(constant_bases_subs)
     if base0 is None:
         substep = integral_steps(integrand, x)
         if not substep.contains_dont_know():
             return RewriteRule(integral.integrand, x, integrand, substep)
         return None
-    q0: Integer = lcm_list(qs)
+    q0: Integer = lcm_list([exp_i.q for exp_i in exps])
     u = Dummy("u")
     u_x = base0**(S.One/q0)
     u_pow = u**q0
     x_u = (b0 - d0*u_pow)/(c0*u_pow - a0)
     dx_u = (q0*(a0*d0 - b0*c0)*u**(q0 - 1))/(c0*u_pow - a0)**2
-    subs_dict = {}
-    for base_i, ratio_i, q_i in zip(bases, ratios, qs):
-        subs_dict[base_i**(S.One/q_i)] = (ratio_i)**(S.One/q_i) * u**(q0/q_i)
-    substituted = integrand.subs(subs_dict).subs(x, x_u) * dx_u
+    subs_dict = {pow_i: ratio_i * u**(q0*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+    substituted = integrand.xreplace(subs_dict).xreplace({x: x_u}) * dx_u
     substep = integral_steps(substituted, u)
     if not substep.contains_dont_know():
         pieces: list[tuple[Rule, Boolean]] = []
@@ -2043,14 +2041,14 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
             # takes a/c if they both imply each other (eg. (a*x + b)/3*x + 4)) (taking b/d would be the same)
             if not d0_implies_c0 or (c0_implies_d0 and d0_implies_c0):
                 const_val = a0 / c0
-                subs_a = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
-                simplified_a = integrand.subs(subs_a)
+                subs_a = {pow_i: ratio_i * Pow(const_val, exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+                simplified_a = integrand.xreplace(subs_a)
                 degenerate_step_a = integral_steps(simplified_a, x)
                 pieces.append((degenerate_step_a, (And(Eq(det, 0), Ne(c0, 0)))))
             if not c0_implies_d0:
                 const_val = b0 / d0
-                subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
-                simplified_b = integrand.subs(subs_b)
+                subs_b = {pow_i: ratio_i * Pow(const_val, exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+                simplified_b = integrand.xreplace(subs_b)
                 simplified_b = simplified_b.subs({a0: 0, c0: 0}) # if det = 0, c = 0 and d != 0, a must be 0
                 degenerate_step_b = integral_steps(simplified_b, x)
                 pieces.append((degenerate_step_b, (And(Eq(det, 0), Eq(c0, 0)))))
@@ -2093,12 +2091,12 @@ def euler_substitution_rule(integral : IntegralInfo):
             exps.append(exp_)
             ratios.append(S.One)
         else:
-            ratio = (R/base0).cancel()
-            if ratio.has(x):
+            power_ratio = (powsimp(Pow(R, exp_) / Pow(base0, exp_), force=False)).cancel()
+            if power_ratio.has(x):
                 return None
             powers.append(pow_)
             exps.append(exp_)
-            ratios.append(ratio)
+            ratios.append(power_ratio)
     if base0 is None:
         return None
 
@@ -2111,8 +2109,8 @@ def euler_substitution_rule(integral : IntegralInfo):
     def _delta_zero_step():
         shift = x + b0/(2*c0)
         rewritten_base = c0*shift**2
-        subs_dict = {pow_i: (ratio_i*rewritten_base)**exp_i for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
-        rewritten = integrand.subs(subs_dict)
+        subs_dict = {pow_i: ratio_i*(rewritten_base)**exp_i for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+        rewritten = integrand.xreplace(subs_dict)
         step = integral_steps(rewritten, x)
         return RewriteRule(integrand, x, rewritten, step)
 
@@ -2121,7 +2119,7 @@ def euler_substitution_rule(integral : IntegralInfo):
         if b0.is_zero:
             step = integral_steps(degenerate_integrand, x)
         else:
-            step = sqrt_fractional_linear_rule(degenerate_integrand, x)
+            step = sqrt_fractional_linear_rule(IntegralInfo(degenerate_integrand, x))
             if step is None:
                 # since calling directly sqrt_fractional_linear_rule could return None we create a DontKnowRule
                 step = DontKnowRule(degenerate_integrand, x)
@@ -2129,8 +2127,8 @@ def euler_substitution_rule(integral : IntegralInfo):
 
     def _general_euler_step():
         s = Dummy("s")
-        subs_dict = { pow_i: ratio_i**exp_i * s**(2*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
-        rewritten = integrand.subs(subs_dict)
+        subs_dict = { pow_i: ratio_i * s**(2*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+        rewritten = integrand.xreplace(subs_dict)
         numer, denom = rewritten.as_numer_denom()
         if numer.as_poly(x, s) is None or denom.as_poly(x, s) is None:
             return None
@@ -2140,7 +2138,7 @@ def euler_substitution_rule(integral : IntegralInfo):
         x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
         s_u = u - sqrt_c0*x_u
         dx_u = 2*(b0*u + sqrt_c0*(u**2 + a0))/(b0 + 2*sqrt_c0*u)**2
-        substituted = rewritten.subs({x: x_u, s: s_u}) * dx_u
+        substituted = rewritten.xreplace({x: x_u, s: s_u}) * dx_u
         substep = integral_steps(substituted, u)
         u_func = sqrt(base0) + sqrt_c0*x
         return URule(integrand, x, u, u_func, substep)
