@@ -1,4 +1,4 @@
-y"""Base class for all the objects in SymPy"""
+"""Base class for all the objects in SymPy"""
 from __future__ import annotations
 
 from collections import Counter
