@@ -1,4 +1,4 @@
-y"""Base class for all the objects in SymPy"""
+"""Base class for all the objects in SymPy"""
 from __future__ import annotations
 
 from collections import Counter
@@ -1857,35 +1857,7 @@ class Basic(Printable):
         return dict(Counter(results))
 
     def count(self, query):
-        """
-        Count the number of matching subexpressions.
-
-        query : type, Basic, or callable
-            Same semantics as in ``find()``.
-
-        Examples
-        ========
-
-        >>> from sympy import sin, cos, Wild
-        >>> from sympy.abc import x, y
-
-        >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
-        >>> expr.count(sin)
-        3
-
-        >>> w = Wild('w')
-        >>> expr.count(sin(w))
-        3
-
-        >>> expr.count(lambda e: e.is_Symbol)
-        5
-
-        See Also
-        ========
-
-        find : return matching subexpressions instead of a count
-        has : test whether any match exists
-        """
+        """Count the number of matching subexpressions."""
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
@@ -2403,7 +2375,20 @@ def _atomic(e, recursive=False):
 
 
 def _make_find_query(query):
-    """Convert the argument of Basic.find() into a callable"""
+    """
+    Convert the argument of ``Basic.find()`` into a callable.
+
+    A type matches by ``isinstance``, a ``Basic`` expression is treated
+    as a pattern matched using ``.match()`` (with ``Wild`` symbols
+    acting as wildcards), and any other object is assumed to already be
+    callable.
+
+    See Also
+    ========
+
+    Basic.find
+    Basic.count
+    """
     try:
         query = _sympify(query)
     except SympifyError:
