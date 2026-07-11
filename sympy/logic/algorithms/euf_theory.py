@@ -126,6 +126,7 @@ class EUFCongruenceClosure:
         self._process_pending_unions()
 
     def _register(self, const):
+        """Initialize a constant as its own representative and an unique class for it."""
         if const not in self.representative:
             self.representative[const] = const
             self.classlist[const].add(const)
