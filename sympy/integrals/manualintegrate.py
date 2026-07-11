@@ -2673,6 +2673,12 @@ def integral_steps(integrand, symbol, **options):
     found at
     https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py.
 
+    By default, only the first rule that successfully applies at each step is
+    kept, even if multiple rules are applicable. Passing ``branch=True``
+    causes all applicable rules to be retained and combined into an
+    ``AlternativeRule``, so that alternative solution paths are preserved
+    rather than discarded.
+
     Examples
     ========
 
@@ -2694,6 +2700,18 @@ def integral_steps(integrand, symbol, **options):
     ConstantTimesRule(integrand=6*x**2, variable=x, constant=6, other=x**2,
     substep=PowerRule(integrand=x**2, variable=x, base=x, exp=2)),
     ConstantRule(integrand=9, variable=x)]))
+
+    Parameters
+    ==========
+
+    integrand : Expr
+        The expression to integrate.
+    symbol : Symbol
+        The variable of integration.
+    branch : bool, optional
+        If True, collect all applicable rules at the top level into an
+        ``AlternativeRule`` instead of returning only the first workable
+        one. Defaults to False.
 
     Returns
     =======
