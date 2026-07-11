@@ -80,10 +80,12 @@ def _if_zero_implies_zero(P, Q):
     Returns True if P is not zero or if substituting every irreducible
     factor of the numerator of P in the numerator of Q makes Q = 0.
     """
+    if P.is_zero is False:
+        return True
+    if P.is_zero is True:
+        return Q.is_zero
     num_p, _ = P.as_numer_denom()
     num_q, _ = Q.as_numer_denom()
-    if P.is_zero:
-        return Q.is_zero
     factors_P = {f for f, p in factor_list(num_p)[1]}
     # use factor() to help find substitutions (eg. (a**2 - 1) is zero if (a + 1) = 0)
     factored_num_q = num_q.factor()
@@ -1972,6 +1974,11 @@ def quadratic_denom_rule(integral):
             subexpr = (B/a**n) * u**(-2*n)
             substep = integral_steps(subexpr, u)
             rule = RewriteRule(integrand, symbol, rewritten, URule(rewritten, symbol, u, u_func, substep))
+            if discriminant.is_zero:
+                if pieces:
+                    pieces.append((rule, S.true))
+                    return PiecewiseRule(integrand, symbol, pieces)
+                return rule
             pieces.append((rule, Eq(discriminant, 0)))
         if n == 1:
             # base case, B / (a*x**2 + b*x + c), solve by substitution with _arctan_match
