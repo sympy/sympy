@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise, Abs
-from .integrals import integrate, Integral
+from .integrals import integrate
 
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
