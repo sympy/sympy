@@ -1,41 +1,36 @@
 """
 Congruence Closure Engine for EUF
 
-Implements:
-    Nieuwenhuis & Oliveras, "Congruence Closure with Integer Offsets"
-    https://link.springer.com/chapter/10.1007/978-3-540-39813-4_5
+The engine has 3 major parts:
+    1) Union-find data structue for the congruence closure engine. Ref: [1], Section 2
+    2) explain_classical() method to produce explanations for the engine's outputs. Ref: [1], Section 2-3
+    3) Greedy algorithm with its expain() method to produce shorter explanations from explan_classical(). Ref: [2] Section 2.3, 2.4, 3 ,4
 
-Open source version of the paper (with more context):
-    Nieuwenhuis & Oliveras, "Congruence Closure with Integer Offsets"
-    https://www.cs.upc.edu/~oliveras/IC.pdf
+    Note that everything on explanation() method side, (2) and (3) use lazy versions of the algorithms.
 
-This algorithm efficiently computes the equivalence closure of a set of
-ground equalities over uninterpreted functions, using union-find,
-curryfication/flattening, and congruence propagation.
 
-Terminology, variable names, and algorithm steps are consistent with those
-shown in the paper, especially Section 4.
+Each consequent part builds from previous one. For example, 2) extends _union from 1) with extra data structures, and
+3) extends from 2) by adding c-graphs and levels to edges.
 
-Short introduction to terms:
+References:
+    [1] Fast congruence closure and extensions,
+        https://www.cs.upc.edu/~oliveras/IC.pdf
+    [2] Producing Shorter Congruence Closure Proofs in a State-of-the-Art SMT Solver
+        https://link.springer.com/chapter/10.1007/978-3-032-15700-3_1
+
+[2] Has a good introduction and background section, so it is recommended to read it in general.
+It may be also helpful to read the important papers mentioned in [2] and/or [1]
+
+Short introduction to terminologies:
     Constants: non-function terms. in e.g f(a,b) = d, d is a constant.
     Classes: Congruence classes. All the terms in the same class have
         relational and congruence properties. Shortly everything is
         knwon to be equal.
     Representative (repr): A constant term that represents the entire class.
         terms that have the same representative are in the same class.
-
-Example usage (doctest):
-
->>> from sympy import symbols, Function
->>> from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
->>> from sympy.assumptions.ask import Q
->>> f = Function('f')
->>> a, b, x, y = symbols('a b x y')
->>> cc = EUFCongruenceClosure([Q.eq(a, b), Q.eq(f(a), x), Q.eq(f(b), y)])
->>> cc.are_congruent(x, y)
-True
->>> cc.are_congruent(a, x)
-False
+        A representative of a constant a is usually written as a'.
+    Application (app): A function with it args. I.e f(a) is an app, f is a function,
+        and a is an argument.
 
 Classes
 -------
@@ -44,6 +39,7 @@ Classes
 from __future__ import annotations
 
 from collections import defaultdict, deque
+from heapq import heappush, heappop
 from sympy.core.symbol import Symbol
 from sympy.core.function import Lambda
 from sympy.core.symbol import Dummy
@@ -63,18 +59,6 @@ class EUFUnhandledInput(Exception):
 class EUFCongruenceClosure:
     """
     Congruence closure algorithm for ground Equality with Uninterpreted Functions (EUF).
-
-    See:
-        Nieuwenhuis & Oliveras, "Congruence Closure with Integer Offsets"
-        https://link.springer.com/chapter/10.1007/978-3-540-39813-4_5
-
-    Major data structures (using algorithm's variable names):
-        pending:   deque, list of pairs of constants yet to be merged (PENDING).
-        representative: dict, mapping: constant -> its class representative (REPRESENTATIVE).
-        classlist: defaultdict(set), rep -> set of all elements in class (CLASSLIST).
-        lookup_table: dict, maps (function, tuple of args) to the equation
-            recording that application, as a (func, args, result) triple (LOOKUP).
-        use_list: defaultdict(list), rep -> list of (func, args, result) triples (USELIST).
     """
 
     def __init__(self, equations):
@@ -84,24 +68,47 @@ class EUFCongruenceClosure:
         equations : list of Q.eq or SymPy expressions
             The ground equalities to be saturated.
         """
+
+        """
+        Part 1) of the engine
+        TODO: add docs
+        """
         self.pending = deque()
         self.representative = {}                 # Representative[c]
         self.classlist = defaultdict(set)        # ClassList[rep]
         self.lookup_table = {}                   # Lookup_table[function, args]
         self.use_list = defaultdict(list)        # UseList[rep]
 
+        """
+        Flatten caches/stuff
+        """
         self._dummies = numbered_symbols('c', Dummy)
-        # the terms that flattened to a constant
-        self._term_to_const = {}                 # _term_to_const[expr] -> const
-        self._lambda_cache = {}
+        self._term_to_const = {}                 # _term_to_const[expr] -> const. USED for not doing _flatten twice
+        self._const_to_app = {}                  # const -> (func, arg consts). USED for Greedy algorithm
+        self._lambda_cache = {}                  # Lambda -> const. USED for mapping equivalent lambdas to the same const
 
         """
-        Proof forest data structures. This i
+        Part 2) of the engine
+        Proof forest data structures.
+                TODO: add docs
         """
         self.pf_parent = {}                      # proof forest: const -> parent const
         self.pf_label = {}                       # const -> label of edge to parent
         # additional Union-Find data structure for explain
         self._aux_parent = {}
+
+        """
+        Part 3) of the engine
+        Greedy algorithm and C-graph data structures
+                TODO: add docs
+        """
+        self.adjacency = defaultdict(list)       # const -> list of [(neighbor, label, level, sub_level)]
+        self._level = {}
+        self._level_counter = 0
+        self._n_recorded = 0
+        self._n_extra = 0
+        self._extra_seen = set()
+        self.greedy_fuel = 10
 
         # Transform every term of the input equations first, then merge.
         for eq in equations:
@@ -159,10 +166,14 @@ class EUFCongruenceClosure:
         return const
 
     def _record_func_eq(self, func, arg_ids):
+        """
+        TODO: add docs, also a better name for this?
+        """
         rep_args = tuple(self._find_repr(arg) for arg in arg_ids)
         key = (func, rep_args)
         d = self._new_dummy()
         eq = (func, arg_ids, d)
+        self._const_to_app[d] = (func, arg_ids)
         if key in self.lookup_table:
             other = self.lookup_table[key]
             self.pending.append((d, other[2], (eq, other)))
@@ -177,14 +188,22 @@ class EUFCongruenceClosure:
         return self.representative[const]
 
     def _union(self, a, b, label=None):
+        """
+        TODO: add docs. arguably the most important method in this file.
+        """
         rep_a, rep_b = self._find_repr(a), self._find_repr(b)
         if rep_a == rep_b:
+            if self._add_cgraph_edge(a, b, label) is not None:
+                self._n_recorded += 1
             return
         # Ensure |ClassList(a)| <= |ClassList(b)|
         if len(self.classlist[rep_a]) > len(self.classlist[rep_b]):
             rep_a, rep_b = rep_b, rep_a
             a, b = b, a
         self._insert_edge(a, b, label)
+        self._n_recorded += 1
+        level = self._add_cgraph_edge(a, b, label)
+        self._level[frozenset((a, b))] = level
         # Move all members of ClassList(rep_a) into ClassList(rep_b)
         for c in self.classlist[rep_a]:
             self.representative[c] = rep_b
@@ -251,6 +270,8 @@ class EUFCongruenceClosure:
         lhs_id = self._flatten(lhs)
         rhs_id = self._flatten(rhs)
         return self._find_repr(lhs_id) == self._find_repr(rhs_id)
+
+    # ------ classical explain()
 
     def _insert_edge(self, a, b, label):
         """
@@ -332,18 +353,195 @@ class EUFCongruenceClosure:
             self._aux_parent[a] = self._highest_node(b)
             a = self._highest_node(a)
 
-    def explain(self, lhs, rhs):
-        a = self._flatten(lhs)
-        b = self._flatten(rhs)
-        self._process_pending_unions()
-        if self._find_repr(a) != self._find_repr(b):
-            return None
+    def _explain_classical(self, c1, c2, output):
+        """
+        explain without greedy algorithm.
+        TODO: add more docs
+        """
         self._aux_parent = {}
-        output = set()
-        pending_proofs = [(a, b)]
+        pending_proofs = [(c1, c2)]
         while pending_proofs:
             x, y = pending_proofs.pop()
             c = self._nearest_common_ancestor(x, y)
             self._explain_along_path(x, c, output, pending_proofs)
             self._explain_along_path(y, c, output, pending_proofs)
+
+    # ----------- greedy algorithm
+
+    def _add_cgraph_edge(self, a, b, label, sub_level=None):
+        if a == b:
+            return None
+        level = self._level_counter
+        self._level_counter += 1
+        if sub_level is None:
+            sub_level = level
+        self.adjacency[a].append((b, label, level, sub_level))
+        self.adjacency[b].append((a, label, level, sub_level))
+        return level
+
+    def _estimate_size(self, label, memo):
+        if label is None or isinstance(label, AppliedPredicate):
+            return 1
+        if label in memo:
+            return memo[label]
+        (_, args1, _), (_, args2, _) = label
+        weight = 0
+        for x, y in zip(args1, args2):
+            if x != y:
+                weight += self._tree_path_size(x, y, memo)[0]
+        memo[label] = weight
+        return weight
+
+    def _tree_path_size(self, x, y, memo):
+        ancestors = set()
+        cursor = x
+        while True:
+            ancestors.add(cursor)
+            if cursor not in self.pf_parent:
+                break
+            cursor = self.pf_parent[cursor]
+        nca = y
+        while nca not in ancestors:
+            nca = self.pf_parent[nca]
+        size = 0
+        level = -1
+        for start in (x, y):
+            cursor = start
+            while cursor != nca:
+                parent = self.pf_parent[cursor]
+                size += self._estimate_size(self.pf_label[cursor], memo)
+                level = max(level, self._level[frozenset((cursor, parent))])
+                cursor = parent
+        return size, level
+
+    def _get_canonical_form(self, term):
+        """
+        Algorithm (including pseucode) discussed in [2]
+        term replaced f(a,b) -> return f(a', b')
+        Get the application that term did replace with in _flatten, and rewrite it to
+        its canonical form. An application is in canonical form if its arguments
+        are representatives. I.e this method replaces args with their representatives.
+        """
+        app = self._const_to_app.get(term)
+        if app is None:
+            return term
+        func, arg_ids = app
+        return (func, tuple(self._find_repr(v) for v in arg_ids))
+
+    def _compute_extra_edges(self, rep, memo):
+        """
+        Algortihm (including pseucode) discussed in [2]
+        TODo: add more docs
+        """
+        groups = defaultdict(list)
+        for member in self.classlist[rep]:
+            if member not in self._const_to_app:
+                continue
+            groups[self._get_canonical_form(member)].append(member)
+        for members in groups.values():
+            for i in range(len(members)):
+                for j in range(i + 1, len(members)):
+                    if self._n_extra >= 2 * self._n_recorded:
+                        return
+                    u, v = members[i], members[j]
+                    key = frozenset((u, v))
+                    if key in self._extra_seen:
+                        continue
+                    self._extra_seen.add(key)
+                    func_u, args_u = self._const_to_app[u]
+                    func_v, args_v = self._const_to_app[v]
+                    level = 0
+                    for x, y in zip(args_u, args_v):
+                        if x != y:
+                            level = max(level, self._tree_path_size(x, y, memo)[1])
+                    label = ((func_u, args_u, u), (func_v, args_v, v))
+                    self._n_extra += 1
+                    self._add_cgraph_edge(u, v, label, sub_level=level + 1)
+
+    def _shortest_path(self, a, b, memo, max_level):
+        """
+        Method discussed in [2]
+        TODO: add more docs
+        """
+        dist = {a: 0}
+        prev = {}
+        heap = [(0, 0, a)]
+        tie = 1
+        done = set()
+        while heap:
+            d, _, u = heappop(heap)
+            if u == b:
+                break
+            if u in done:
+                continue
+            done.add(u)
+            for v, label, level, sub_level in self.adjacency[u]:
+                if level >= max_level or v in done:
+                    continue
+                nd = d + self._estimate_size(label, memo)
+                if v not in dist or nd < dist[v]:
+                    dist[v] = nd
+                    prev[v] = (u, label, sub_level)
+                    heappush(heap, (nd, tie, v))
+                    tie += 1
+        if a == b:
+            return []
+        if b not in prev:
+            return None
+        path = []
+        cursor = b
+        while cursor != a:
+            u, label, sub_level = prev[cursor]
+            path.append((label, sub_level))
+            cursor = u
+        return path
+
+    def explain(self, lhs, rhs):
+        """
+        Arguably second most important method in this file, so
+        TODO: add more docs
+        """
+        a = self._flatten(lhs)
+        b = self._flatten(rhs)
+        self._process_pending_unions()
+        if self._find_repr(a) != self._find_repr(b):
+            return None
+
+        memo = {}
+        output = set()
+        fuel = self.greedy_fuel
+        #
+        todo = deque([(a, b, float('inf'))])
+        seen_pairs = set()
+        extra_done = set()
+        while todo:
+            x, y, max_level = todo.popleft()
+            if x == y:
+                continue
+            key = (frozenset((x, y)), max_level)
+            if key in seen_pairs:
+                continue
+            seen_pairs.add(key)
+            rep = self._find_repr(x)
+            if rep not in extra_done:
+                extra_done.add(rep)
+                self._compute_extra_edges(rep, memo)
+            path = self._shortest_path(x, y, memo, max_level)
+            if path is None:
+                self._explain_classical(x, y, output)
+                continue
+            for label, sub_level in path:
+                if isinstance(label, AppliedPredicate):
+                    output.add(label)
+                elif label is not None:
+                    (_, args1, _), (_, args2, _) = label
+                    if fuel > 0:
+                        fuel -= 1
+                        for p, q in zip(args1, args2):
+                            if p != q:
+                                todo.append((p, q, sub_level))
+                    else:
+                        for p, q in zip(args1, args2):
+                            if p != q:
+                                self._explain_classical(p, q, output)
         return output
