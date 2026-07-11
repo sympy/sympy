@@ -304,19 +304,19 @@ class EUFCongruenceClosure:
         # does not affect it. (label is in the form of Q.eq)
         self.pf_label[a] = label
 
-    def _highest_node(self, x):
+    def _highest_node(self, a):
         """
-        Return the highest node among all the nodes of the proof tree in the class of x.
+        Return the highest node among all the nodes of the proof tree in the class of a.
         I.e return the node that is closes to root.
         """
         parent = self._aux_parent
-        root = x
+        root = a
         # find the root
         while root in parent:
             root = parent[root]
         # path compression
-        while x in parent:
-            parent[x], x = root, parent[x]
+        while a in parent:
+            parent[a], a = root, parent[a]
         return root
 
     def _nearest_common_ancestor(self, a, b):
@@ -324,24 +324,24 @@ class EUFCongruenceClosure:
         Compute the nearest common ancestor of the nodes a and b.
         """
         seen = set()
-        x = a
+        cursor = a
         # walk to the root and store it in seen
         while True:
-            x = self._highest_node(x)
-            seen.add(x)
+            cursor = self._highest_node(cursor)
+            seen.add(cursor)
             # if it is the root
-            if x not in self.pf_parent:
+            if cursor not in self.pf_parent:
                 break
             # move one edge
-            x = self.pf_parent[x]
-        y = b
-        # when we wind y in seen, stop
+            cursor = self.pf_parent[cursor]
+        cursor = b
+        # when we find cursor in seen, stop
         while True:
-            y = self._highest_node(y)
-            if y in seen:
-                return y
+            cursor = self._highest_node(cursor)
+            if cursor in seen:
+                return cursor
             # move one edge
-            y = self.pf_parent[y]
+            cursor = self.pf_parent[cursor]
 
     def _explain_along_path(self, a, c, output, pending_proofs):
         a = self._highest_node(a)
@@ -399,20 +399,20 @@ class EUFCongruenceClosure:
         memo[label] = weight
         return weight
 
-    def _tree_path_size(self, x, y, memo):
+    def _tree_path_size(self, a, b, memo):
         ancestors = set()
-        cursor = x
+        cursor = a
         while True:
             ancestors.add(cursor)
             if cursor not in self.pf_parent:
                 break
             cursor = self.pf_parent[cursor]
-        nca = y
+        nca = b
         while nca not in ancestors:
             nca = self.pf_parent[nca]
         size = 0
         level = -1
-        for start in (x, y):
+        for start in (a, b):
             cursor = start
             while cursor != nca:
                 parent = self.pf_parent[cursor]
