@@ -93,13 +93,15 @@ class EUFCongruenceClosure:
 
         """
         Part 2) of the engine
-        Proof forest data structures.
-                TODO: add docs
+        These are proof forest data structures
+        pf_parent: Since every edge is directional in pf, inputs a child and outputs the parent.
+        pf_label (some papers call it justification): the label of the edge, why the edge was constructed.
+        _aux_parent: secondary union-find data structure talked in the papers, used to not rewalk already walked
+            paths in explain_classical().
         """
         self.pf_parent = {}                      # proof forest: const -> parent const
         self.pf_label = {}                       # const -> label of edge to parent
-        # additional Union-Find data structure for explain
-        self._aux_parent = {}
+        self._aux_parent = {}                    # const ->  const
 
         """
         Part 3) of the engine
