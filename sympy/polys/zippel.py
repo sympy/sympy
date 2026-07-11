@@ -1,8 +1,14 @@
 from __future__ import annotations
-from sympy.polys.galoistools import gf_gcd, gf_quo, gf_from_dict
+from sympy.polys.galoistools import gf_div, gf_eval, gf_gcd, gf_mul, gf_quo, gf_from_dict
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import PolynomialRing
 
+from typing import TYPE_CHECKING
+
+from sympy.polys.domains.integerring import ZZ
+
+if TYPE_CHECKING:
+    from sympy.external.gmpy import MPZ
 
 def _gf_gcd(fp, gp, p):
     r"""
@@ -382,3 +388,80 @@ def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
         hpq[monom] = crt_(zero, hq[monom], p, q)
 
     return hpq
+
+
+def lag_basis(evalpoints: list[MPZ], p: MPZ) -> list[list[MPZ]]:
+    """
+    Computes the Lagrange basis associated to the given
+    list of evaluation points over Z_p.
+
+    Example
+    =======
+
+    >>> from sympy.polys.zippel import lag_basis
+    >>> evalpoints = [1, 2, 5]
+    >>> p = 11
+    >>> lag_basis(evalpoints, p)
+    [[3, 1, 8], [7, 2, 2], [1, 8, 2]]
+
+    """
+    master_pol = [ZZ.one]
+    for k in evalpoints:
+        master_pol = gf_mul(master_pol, [ZZ.one, -k], p, ZZ)
+
+    v = [gf_div(master_pol, [ZZ.one, -k], p, ZZ)[0] for k in evalpoints]
+    for i, poly in enumerate(v):
+        c = gf_eval(poly, evalpoints[i], p, ZZ)
+        c = ZZ.invert(c, p)
+        v[i] = [(c*el) % p for el in v[i]]
+    return v
+
+
+def vandermonde_interp(basis: list[list[MPZ]], values: list[MPZ],
+    p: MPZ, trans: bool = True) -> list[MPZ]:
+    """
+    Solves for x the linear system A^T * x = values in Z_p,
+    where A is the Vandermonde matrix such that a_{i,j} = k[i]^j.
+    If trans = False, it solves the linear system A*x = values.
+    Both systems are solved in O(n^2) time.
+
+    The parameter basis can be computed using lag_basis(k, p).
+
+    Note that solving a linear system with associated Vandermonde matrix is
+    equivalent to interpolating an univariate polynomial.
+    Note also that the interpolation of a multivariate polynomial in
+    Z_p[x1,...,xn], can be made equivalent to the resolution of a linear system
+    with the transposed of a Vandermonde matrix as the associated matrix.
+    It is sufficient to choose a random tuple (t1,...,tn),
+    and to use (t1^j,...,tn^j) for j in {0,1,...} as evaluation points.
+
+    Example
+    =======
+
+    >>> from sympy.polys.zippel import vandermonde_interp, lag_basis
+    >>> from sympy import Matrix
+
+    >>> k = [1, 2, 5]
+    >>> p = 9973
+    >>> values = [4, 9, 36]
+    >>> A = Matrix([[1, 1, 1], [1, 2, 4], [1, 5, 25]])
+
+    >>> bas = lag_basis(k, p)
+
+    >>> x = vandermonde_interp(bas, values, p, trans = False)
+
+    >>> A * Matrix(x) == Matrix(values)
+    True
+
+    """
+    deg = len(values)-1
+    if trans:
+        sol = []
+        for poly in basis:
+            sol.append(sum(val * poly[deg-i] for i, val in enumerate(values)) % p)
+    else:
+        sol = []
+        for i in range(len(values)):
+            sol.append(sum(values[j] * basis[j][deg-i] for j in range(len(values))) % p)
+
+    return sol

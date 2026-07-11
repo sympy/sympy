@@ -2,7 +2,8 @@ from __future__ import annotations
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ
 from sympy.polys.zippel import (_LC, _chinese_remainder_reconstruction_multivariate, _deg,
-    _gf_gcd, _trivial_gcd, _primitive)
+    _gf_gcd, _trivial_gcd, _primitive, lag_basis, vandermonde_interp)
+from sympy.matrices import Matrix
 
 
 def test_gf_gcd():
@@ -103,3 +104,19 @@ def test_chinese_remainder_reconstruction_multivariate():
 
     assert hpq.trunc_ground(p) == hp
     assert hpq.trunc_ground(q) == hq
+
+
+def test_vandermonde_interpolate():
+    p = ZZ(100003)
+    k = ZZ.map([3, 6, 12, 33])
+    A = Matrix([[el**j for j in range(len(k))] for el in k])
+    x_list = [12, 2, 1, 27]
+    x = Matrix(x_list)
+    v = [ZZ(int(el)) for el in A * x]
+    v_t = [ZZ(int(el)) for el in A.T * x]
+
+    bas = lag_basis(k, p)
+    sol_t = vandermonde_interp(bas, v_t, p)
+    sol = vandermonde_interp(bas, v, p, trans = False)
+
+    assert sol == sol_t == x_list
