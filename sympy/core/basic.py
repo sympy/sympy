@@ -293,13 +293,32 @@ class Basic(Printable):
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
-        obj._assumptions = cls.default_assumptions
+        obj._assumptions = cls.default_assumptionsf
         obj._mhash = None  # will be set by __hash__ method.
 
         obj._args = args  # all items in args must be Basic objects
         return obj
 
     def copy(self):
+        """
+        Return a shallow copy of the expression.
+
+        Examples
+        ========
+
+        >>> from sympy import sin
+        >>> from sympy.abc import x
+        >>> expr = sin(x) + 1
+        >>> expr.copy() == expr
+        True
+        >>> expr.copy() is expr
+        False
+
+        See Also
+        ========
+
+        Basic.func
+        """
         return self.func(*self.args)
 
     def __getnewargs__(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
@@ -2375,20 +2394,7 @@ def _atomic(e, recursive=False):
 
 
 def _make_find_query(query):
-    """
-    Convert the argument of ``Basic.find()`` into a callable.
-
-    A type matches by ``isinstance``, a ``Basic`` expression is treated
-    as a pattern matched using ``.match()`` (with ``Wild`` symbols
-    acting as wildcards), and any other object is assumed to already be
-    callable.
-
-    See Also
-    ========
-
-    Basic.find
-    Basic.count
-    """
+    """Convert the argument of Basic.find() into a callable"""
     try:
         query = _sympify(query)
     except SympifyError:
