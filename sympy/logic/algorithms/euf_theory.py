@@ -412,25 +412,39 @@ class EUFCongruenceClosure:
         return level
 
     def _estimate_size(self, label, memo):
+        """
+        Compute the size of the proof of the label
+        memo is an optimization, stands for memoization.
+        """
+        # If label is not congruence, size is 1
         if label is None or isinstance(label, AppliedPredicate):
             return 1
         if label in memo:
             return memo[label]
+        # if label is congruence i.e f(a,b) = f(c,d)
+        # this should require sub-proof, so we walk through each pair of args
         (_, args1, _), (_, args2, _) = label
-        weight = 0
+        size = 0
         for x, y in zip(args1, args2):
             if x != y:
-                weight += self._tree_path_size(x, y, memo)[0]
-        memo[label] = weight
-        return weight
+                size += self._tree_path_size(x, y, memo)[0]
+        memo[label] = size
+        return size
 
     def _tree_path_size(self, a, b, memo):
         """
+        TODO: perhaps we should divide this into multiple methods?
+        memo is an optimization, stands for memoization.
         Returns
         =======
-        merge_level: the level that the nodes a and be became equivalent.
         size: proof tree size. compared to DAG size, this also counts duplications as paper requests.
             i.e size is the esimate of the classical explanation.
+        merge_level: the level that the nodes a and b became equivalent.
+
+
+        Reference
+        =========
+        [2] Section 3.1, 3.2
         """
 
         # First, find the nearest common ancestor.
