@@ -425,6 +425,17 @@ class EUFCongruenceClosure:
         return weight
 
     def _tree_path_size(self, a, b, memo):
+        """
+        Returns
+        =======
+        merge_level: the level that the nodes a and be became equivalent.
+        size: proof tree size. compared to DAG size, this also counts duplications as paper requests.
+            i.e size is the esimate of the classical explanation.
+        """
+
+        # First, find the nearest common ancestor.
+        # this is very similar to _nearest_common_ancestor, although the prior
+        # uses the secondary find-union, which we cannot do it here
         ancestors = set()
         cursor = a
         while True:
@@ -432,19 +443,20 @@ class EUFCongruenceClosure:
             if cursor not in self.pf_parent:
                 break
             cursor = self.pf_parent[cursor]
-        nca = b
-        while nca not in ancestors:
-            nca = self.pf_parent[nca]
+        nearest_common_ancestor = b
+        while nearest_common_ancestor not in ancestors:
+            nearest_common_ancestor = self.pf_parent[nearest_common_ancestor]
+
         size = 0
-        level = -1
-        for start in (a, b):
-            cursor = start
-            while cursor != nca:
+        merge_level = -1
+
+        for cursor in (a, b):
+            while cursor != nearest_common_ancestor:
                 parent = self.pf_parent[cursor]
                 size += self._estimate_size(self.pf_label[cursor], memo)
-                level = max(level, self._level[frozenset((cursor, parent))])
+                merge_level = max(merge_level, self._level[frozenset((cursor, parent))])
                 cursor = parent
-        return size, level
+        return size, merge_level
 
     def _get_canonical_form(self, d):
         """
