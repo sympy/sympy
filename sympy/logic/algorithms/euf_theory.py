@@ -224,14 +224,14 @@ class EUFCongruenceClosure:
         if rep_a == rep_b:
             if isinstance(label, AppliedPredicate):
                 if self._insert_cgraph_edge(a, b, label) is not None:
-                    self._n_recorded_during_union += 1
+                    self._n_edges_during_union += 1
             return
         # Ensure |ClassList(a)| <= |ClassList(b)|
         if len(self.classlist[rep_a]) > len(self.classlist[rep_b]):
             rep_a, rep_b = rep_b, rep_a
             a, b = b, a
         self._insert_pf_edge(a, b, label)
-        self._n_recorded_during_union += 1
+        self._n_edges_during_union += 1
         level = self._insert_cgraph_edge(a, b, label)
         self._level[frozenset((a, b))] = level
         # Move all members of ClassList(rep_a) into ClassList(rep_b)
@@ -511,7 +511,7 @@ class EUFCongruenceClosure:
                 for j in range(i + 1, len(members)):
                     # Inequality to limit the number of operations to not make this method O(n^2)
                     # See [2] Section 4.2
-                    if self._n_edges_extra >= 2 * self._n_recorded_during_union:
+                    if self._n_edges_extra >= 2 * self._n_edges_during_union:
                         return
                     u, v = members[i], members[j]
                     key = frozenset((u, v))
@@ -532,40 +532,41 @@ class EUFCongruenceClosure:
 
     def _shortest_path(self, a, b, memo, max_level):
         """
-        Method discussed in [2]
+        Method discussed in [2] no paper clearly discusses this though.
+        Compute the shortest weighted path from a to b in the c-graph.
         TODO: add more docs
         """
-        dist = {a: 0}
-        prev = {}
+        distance = {a: 0}
+        predecessor = {}
+        # (distance, tiebreak, node)
         heap = [(0, 0, a)]
-        tie = 1
-        done = set()
+        tiebreak = 1
+        settled = set()
         while heap:
-            d, _, u = heappop(heap)
-            if u == b:
+            node_distance, _, node = heappop(heap)
+            if node == b:
                 break
-            if u in done:
+            if node in settled:
                 continue
-            done.add(u)
-            for v, label, level in self.adjacency[u]:
-                if level > max_level or v in done:
+            settled.add(node)
+            for neighbor, label, level in self.adjacency[node]:
+                if level > max_level or neighbor in settled:
                     continue
-                nd = d + self._estimate_size(label, memo)
-                if v not in dist or nd < dist[v]:
-                    dist[v] = nd
-                    prev[v] = (u, label)
-                    heappush(heap, (nd, tie, v))
-                    tie += 1
+                neighbor_distance = node_distance + self._estimate_size(label, memo)
+                if neighbor not in distance or neighbor_distance < distance[neighbor]:
+                    distance[neighbor] = neighbor_distance
+                    predecessor[neighbor] = (node, label)
+                    heappush(heap, (neighbor_distance, tiebreak, neighbor))
+                    tiebreak += 1
         if a == b:
             return []
-        if b not in prev:
+        if b not in predecessor:
             return None
         path = []
-        cursor = b
-        while cursor != a:
-            u, label = prev[cursor]
+        node = b
+        while node != a:
+            node, label = predecessor[node]
             path.append(label)
-            cursor = u
         return path
 
     def explain(self, lhs, rhs):
