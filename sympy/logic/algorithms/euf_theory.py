@@ -106,7 +106,23 @@ class EUFCongruenceClosure:
         """
         Part 3) of the engine
         Greedy algorithm and C-graph data structures
-                TODO: add docs
+        c-graph is more extended version of the proof tree. It is an undirected graph s.t:
+            1) it mirrors all the edges on the proof tree in union time with _insert_cgraph_edge
+            2) it does not ignore redundant edges during union time with _insert_cgraph_edge
+                E.g, take a->b, b->c, a->c. Proof tree would ingore a->c as we already have
+                a path from a to c, in c-graph we also add a-c edge.
+            3) it also contains lazily created extra possible edges with _compute_extra_edges
+
+
+        adjacency: cgraph data structure
+        _level: level of the edge is an integer that describes the date of the edge during _union,
+            e.g lower level edge was created before high level edge. If an edge was created without
+            _union (e.g _compute_extra_edges during explain()), the level is max level of its arguments
+            plus 1, i.e the possible level it could have if it was created in _union.
+        _level_counter: global counter that counts per edge.
+
+
+
         """
         self.adjacency = defaultdict(list)       # const -> list of [(neighbor, label, level)]
         self._level = {}
@@ -377,6 +393,9 @@ class EUFCongruenceClosure:
     # ----------- greedy algorithm
 
     def _insert_cgraph_edge(self, a, b, label, level=None):
+        """
+        Insert a-b edge to the c-graph.
+        """
         if a == b:
             return None
         if level is None:
