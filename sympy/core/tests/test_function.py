@@ -340,6 +340,8 @@ def test_Lambda_curry():
     assert Lambda((x, y, z), x*y + z).curry() == \
         Lambda(x, Lambda(y, Lambda(z, x*y + z)))
     assert Lambda(x, x**2).curry() == Lambda(x, x**2)
+    assert Lambda(((x,),), x**2).curry() == Lambda(x, x**2)
+    assert Lambda((x,), x**2).curry() == Lambda(x, x**2)
     assert Lambda(x, Lambda(y, x + y)).curry() == Lambda(x, Lambda(y, x + y))
     assert Lambda((x, (y, z)), x*y*z).curry() == \
         Lambda(x, Lambda(y, Lambda(z, x*y*z)))

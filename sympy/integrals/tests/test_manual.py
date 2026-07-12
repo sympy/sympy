@@ -4,6 +4,7 @@ from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.mul import Mul
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -17,7 +18,6 @@ from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, che
 from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
-from sympy import factor
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, manual_subs)
 from sympy.testing.pytest import raises, slow
@@ -249,9 +249,7 @@ def test_manualintegrate_trig_substitution():
         Piecewise((-sqrt(-x**2/25 + 1)/(125*x) -
                    (-x**2/25 + 1)**(3*S.Half)/(15*x**3), And(x < 5, x > -5)))
     assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
-        ((49*x**2 + 1)**(5*S.Half)/28824005 -
-         (49*x**2 + 1)**(3*S.Half)/5764801 +
-         3*sqrt(49*x**2 + 1)/5764801 + 1/(5764801*sqrt(49*x**2 + 1)))
+        sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
 
 def test_manualintegrate_trivial_substitution():
     assert manualintegrate((exp(x) - exp(-x))/x, x) == -Ei(-x) + Ei(x)
@@ -300,11 +298,35 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f, F = sqrt(4 + 9*sin(x)**2), 2*elliptic_e(x, Rational(-9, 4))
     assert_is_integral_of(f, F)
+    f = x*exp(x)*erf(x)
+    F = (x*exp(x) - exp(x))*erf(x) - Mul(2, -sqrt(pi)*exp(Rational(1,4))*erf(x - Rational(1,2))*Rational(1,2) + Integral(x*exp(-x**2 + x), x), evaluate=False)/sqrt(pi)
+    assert_is_integral_of(f, F)
     f = log(x)*exp(-x**2)
     F = sqrt(pi)*log(x)*erf(x)/2 - sqrt(pi)*Integral(erf(x)/x, x)/2
     assert_is_integral_of(f, F)
 
-
+    f, F = erf(x), x*erf(x) + exp(-x**2)/sqrt(pi)
+    assert_is_integral_of(f, F)
+    f, F = erfc(x), x*erfc(x) - exp(-x**2)/sqrt(pi)
+    assert_is_integral_of(f, F)
+    f, F = erfi(x), x*erfi(x) - exp(x**2)/sqrt(pi)
+    assert_is_integral_of(f, F)
+    f, F = fresnelc(x), x*fresnelc(x) - sin(pi*x**2/2)/pi
+    assert_is_integral_of(f, F)
+    f, F = fresnels(x), x*fresnels(x) + cos(pi*x**2/2)/pi
+    assert_is_integral_of(f, F)
+    f, F = Ci(x), x*Ci(x) - sin(x)
+    assert_is_integral_of(f, F)
+    f, F = Chi(x), x*Chi(x) - sinh(x)
+    assert_is_integral_of(f, F)
+    f, F = Si(x), x*Si(x) + cos(x)
+    assert_is_integral_of(f, F)
+    f, F = Shi(x), x*Shi(x) - cosh(x)
+    assert_is_integral_of(f, F)
+    f, F = Ei(x), x*Ei(x) - exp(x)
+    assert_is_integral_of(f, F)
+    f, F = li(x), x*li(x) - Ei(2*log(x))
+    assert_is_integral_of(f, F)
 
 @slow
 def test_manualintegrate_special_slow():
@@ -867,8 +889,17 @@ def test_manualintegrate_sqrt_quadratic_reduction():
 
     # Symbolic Verification (General Case)
     term_n5 = f/(a*x**2 + b*x + c)**(S(5)/2)
-    intg_result = manualintegrate(term_n5, x)
-    assert factor(intg_result.diff(x) - term_n5) == 0
+    intg_result = piecewise_fold(manualintegrate(term_n5, x))
+    assert (intg_result.args[0][0].diff(x) - term_n5).cancel() == 0
+    # case delta = 0
+    assert (intg_result.args[1][0].subs(c, b**2/(4*a)).diff(x) - term_n5.subs(c, b**2/(4*a))).cancel() == 0
+
+def test_manualintegrate_sqrt_quadratic_polynomial_reduction_rule():
+    f = (d*x**3 + x)/(3*x**2 + b*x + c)**(S(5)/2)
+    result = piecewise_fold(manualintegrate(f, x))
+    assert (result.args[0][0].diff(x) - f).cancel() == 0
+    # case delta = 0
+    assert (result.args[1][0].subs(c, b**2/12).diff(x) - f.subs(c, b**2/12)).cancel() == 0
 
 def test_mul_pow_derivative():
     assert_is_integral_of(x*sec(x)*tan(x), x*sec(x) - log(tan(x) + sec(x)))

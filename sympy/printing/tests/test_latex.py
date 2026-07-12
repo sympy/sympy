@@ -1139,6 +1139,17 @@ def test_latex_intervals():
     assert latex(Interval(0, a, False, True)) == r"\left[0, a\right)"
     assert latex(Interval(0, a, True, True)) == r"\left(0, a\right)"
 
+    # default interval delimiters
+    assert latex(Interval(0, a)) == r"\left[0, a\right]"
+    assert latex(Interval.Ropen(0, a)) == r"\left[0, a\right)"
+    assert latex(Interval.Lopen(0, a)) == r"\left(0, a\right]"
+    assert latex(Interval.open(0, a)) == r"\left(0, a\right)"
+
+    # french interval delimiters
+    assert latex(Interval.Ropen(0, a), open_delim=("]","[")) == r"\left[0, a\right["
+    assert latex(Interval.Lopen(0, a), open_delim=("]","[")) == r"\left]0, a\right]"
+    assert latex(Interval.open(0, a), open_delim=("]","[")) == r"\left]0, a\right["
+
 
 def test_latex_AccumuBounds():
     a = Symbol('a', real=True)

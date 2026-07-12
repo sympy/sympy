@@ -11,6 +11,7 @@ from sympy.polys.domains.complexfield import ComplexField
 from sympy.core import (Catalan, GoldenRatio)
 from sympy.core.numbers import (E, Float, I, Rational, pi)
 from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
@@ -235,3 +236,19 @@ def test_issue_11538():
         assert construct_domain(x + n)[0] == ZZ[x, n]
     assert construct_domain(GoldenRatio)[0] == EX
     assert construct_domain(x + GoldenRatio)[0] == EX
+
+
+def test_issue_25337():
+    assert construct_domain([S.ComplexInfinity]) == (EX, [EX(S.ComplexInfinity)])
+    assert construct_domain([S.Infinity]) == (EX, [EX(S.Infinity)])
+    assert construct_domain([S.NegativeInfinity]) == (EX, [EX(S.NegativeInfinity)])
+    assert construct_domain([S.NaN]) == (EX, [EX(S.NaN)])
+
+    assert construct_domain([x + S.ComplexInfinity]) == (EX, [EX(x + S.ComplexInfinity)])
+    assert construct_domain([x + S.Infinity]) == (EX, [EX(x + S.Infinity)])
+
+    assert construct_domain(S.ComplexInfinity) == (EX, EX(S.ComplexInfinity))
+    assert construct_domain(S.NaN) == (EX, EX(S.NaN))
+
+    x_algebraic = Symbol('x', algebraic=True)
+    assert construct_domain(x_algebraic)[0] == ZZ[x_algebraic]

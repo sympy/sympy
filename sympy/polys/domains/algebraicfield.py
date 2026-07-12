@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -10,6 +11,7 @@ from sympy.external.gmpy import MPQ
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
 from sympy.polys.domains.ringextension import RingExtension
 from sympy.polys.polyclasses import ANP, DMP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
@@ -25,7 +27,13 @@ Alg = ANP[MPQ]
 
 
 @public
-class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExtension[Alg, MPQ]):
+class AlgebraicField(
+    Field[Alg],
+    CharacteristicZero,
+    SimpleDomain[Alg],
+    ConjugateDomain[Alg],
+    RingExtension[Alg, MPQ]
+):
     r"""Algebraic number field :ref:`QQ(a)`
 
     A :ref:`QQ(a)` domain represents an `algebraic number field`_
@@ -550,6 +558,28 @@ class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExte
         dK = self.discriminant()
         rad = self._nilradicals_mod_p.get(p)
         return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
+
+    @cached_property
+    def conjugate(self):
+        """Returns the complex conjugate of ``a``. """
+        try:
+            # the conjugate of ext has the same minpoly as ext
+            z = self.ext.func((self.ext.minpoly, self.ext.conjugate()))
+            conj = self.from_sympy(z)
+        except CoercionFailed:
+            raise CoercionFailed("the algebraic field is not closed under conjugation")
+
+        if conj.rep == [1, 0]:
+            # conj == ext implies ext is real
+            return lambda a: a
+
+        def conjugate(a):
+            v = self.zero
+            for c in a.rep:
+                v = v * conj + c
+            return v
+
+        return conjugate
 
     def galois_group(self, by_name=False, max_tries=30, randomize=False):
         """
