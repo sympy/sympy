@@ -120,6 +120,12 @@ class EUFCongruenceClosure:
             _union (e.g _compute_extra_edges during explain()), the level is max level of its arguments
             plus 1, i.e the possible level it could have if it was created in _union.
         _level_counter: global counter that counts per edge.
+        _n_edges_during_union: number of edges added to c-graph during the union
+        _n_edges_extra: number of edges added to c-graph with _compute_extra_edges.
+            From the paper's words, _compute_extra_edges could produce O(n^2) algorithm. We instead use _n_edges_extra
+            and _n_edges_during_union to limit the number of operations. See section 4.2 of [2]
+        _extra_edges_seen: the set of pairs _compute_extra_edges already checked. Used to not make duplicate edges
+        greedy_fuel: huerustic discussed in the paper, paper default is 10
 
 
 
@@ -127,9 +133,9 @@ class EUFCongruenceClosure:
         self.adjacency = defaultdict(list)       # const -> list of [(neighbor, label, level)]
         self._level = {}
         self._level_counter = 0
-        self._n_recorded = 0
-        self._n_extra = 0
-        self._extra_seen = set()
+        self._n_edges_during_union = 0
+        self._n_edges_extra = 0
+        self._extra_edges_seen = set()
         self.greedy_fuel = 10
 
         # Transform every term of the input equations first, then merge.
@@ -218,14 +224,14 @@ class EUFCongruenceClosure:
         if rep_a == rep_b:
             if isinstance(label, AppliedPredicate):
                 if self._insert_cgraph_edge(a, b, label) is not None:
-                    self._n_recorded += 1
+                    self._n_recorded_during_union += 1
             return
         # Ensure |ClassList(a)| <= |ClassList(b)|
         if len(self.classlist[rep_a]) > len(self.classlist[rep_b]):
             rep_a, rep_b = rep_b, rep_a
             a, b = b, a
         self._insert_pf_edge(a, b, label)
-        self._n_recorded += 1
+        self._n_recorded_during_union += 1
         level = self._insert_cgraph_edge(a, b, label)
         self._level[frozenset((a, b))] = level
         # Move all members of ClassList(rep_a) into ClassList(rep_b)
@@ -440,48 +446,62 @@ class EUFCongruenceClosure:
                 cursor = parent
         return size, level
 
-    def _get_canonical_form(self, term):
+    def _get_canonical_form(self, d):
         """
-        Algorithm (including pseucode) discussed in [2]
-        if term = f(a,b) ->  return f(a', b')
-        Get the application that term did replace with in _flatten, and rewrite it to
+        if f(a,b) = d, return f(a', b'). The name is a little bit misleading
+        because it does not accept the application itself (maybe should change it?)
+        Get the application that d did replace with in _flatten, and rewrite it to
         its canonical form. An application is in canonical form if its arguments
         are representatives. I.e this method replaces args with their representatives.
+
+        Reference
+        =========
+        Algorithm  discussed in [2], section 2.4
+
         """
-        app = self._const_to_app.get(term)
+        app = self._const_to_app.get(d)
         if app is None:
-            return term
+            return d
         func, arg_ids = app
         return (func, tuple(self._find_repr(v) for v in arg_ids))
 
     def _compute_extra_edges(self, rep, memo):
         """
-        Algortihm (including pseucode) discussed in [2]
-        TODo: add more docs
+
+        Reference
+        =========
+        Algortihm  discussed in [2], section 2.4, 4.2
+        Compared to the eager algorithm in the paper, this is a lazy version,
+        i.e the extra edges are computed when explain() is called.
         """
-        groups = defaultdict(list)
+        canonical_map = defaultdict(list) # canonical version -> original version
+        # if a member has app equivalent, add it into the map
         for member in self.classlist[rep]:
             if member not in self._const_to_app:
                 continue
-            groups[self._get_canonical_form(member)].append(member)
-        for members in groups.values():
+            canonical_map[self._get_canonical_form(member)].append(member)
+        for members in canonical_map.values():
             for i in range(len(members)):
                 for j in range(i + 1, len(members)):
-                    if self._n_extra >= 2 * self._n_recorded:
+                    # Inequality to limit the number of operations to not make this method O(n^2)
+                    # See [2] Section 4.2
+                    if self._n_edges_extra >= 2 * self._n_recorded_during_union:
                         return
                     u, v = members[i], members[j]
                     key = frozenset((u, v))
-                    if key in self._extra_seen:
+                    # if we have already done this edge, skip to avoid duplicate
+                    if key in self._extra_edges_seen:
                         continue
-                    self._extra_seen.add(key)
+                    self._extra_edges_seen.add(key)
                     func_u, args_u = self._const_to_app[u]
                     func_v, args_v = self._const_to_app[v]
+                    # do not get confused with this, any value smaller than 0 would work.
                     level = -1
                     for x, y in zip(args_u, args_v):
                         if x != y:
                             level = max(level, self._tree_path_size(x, y, memo)[1])
                     label = ((func_u, args_u, u), (func_v, args_v, v))
-                    self._n_extra += 1
+                    self._n_edges_extra += 1
                     self._insert_cgraph_edge(u, v, label, level=level + 1)
 
     def _shortest_path(self, a, b, memo, max_level):
