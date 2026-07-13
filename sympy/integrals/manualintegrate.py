@@ -2780,6 +2780,7 @@ def manualintegrate(f, var):
             result = result.func(
                 (result.args[1][0], Ne(*cond.args)),
                 (result.args[0][0], True))
+
     # Factor terms like erf(x)*sin(x) that may have been expanded
     def _has_erf_trig_mul(expr):
         for sub in expr.find(Mul):
@@ -2788,8 +2789,21 @@ def manualintegrate(f, var):
         return False
     if _has_erf_trig_mul(f) and _has_erf_trig_mul(result):
         result = factor_terms(result)
+
     def _remove_additive_constants(expr, var):
-        _, dependent = expr.as_independent(var, as_Add=True)
-        return dependent
-    result = _remove_additive_constants(result, var)
+        if not expr.has(var):
+            return S.Zero
+        if expr.is_Add:
+            args = [_remove_additive_constants(arg, var) for arg in expr.args]
+            return Add(*args)
+        if expr.is_Mul:
+            indep, dep = expr.as_independent(var)
+            if dep.is_Add:
+                return indep * _remove_additive_constants(dep, var)
+            return expr
+        return expr
+    # Avoid removing additive constants if the integrand contains a derivative
+    if not f.has(Derivative):
+        result = _remove_additive_constants(result, var)
+
     return result
