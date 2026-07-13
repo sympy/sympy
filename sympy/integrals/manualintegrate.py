@@ -2722,9 +2722,8 @@ def integral_steps(integrand, symbol, **options):
     symbol : Symbol
         The variable of integration.
     branch : bool, optional
-        If True, collect all applicable rules at the top level into an
-        ``AlternativeRule`` instead of returning only the first workable
-        one. Defaults to False.
+        If True, collect all applicable rules into an ``AlternativeRule``
+        instead of returning only the first workable one. Defaults to False.
 
     Returns
     =======
