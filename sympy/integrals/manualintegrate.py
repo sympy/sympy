@@ -40,8 +40,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import WildFunction
-from sympy.core.function import count_ops
+from sympy.core.function import WildFunction, count_ops
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -1311,6 +1310,7 @@ def find_substitutions(integrand, symbol, u_var):
             if substitution not in results:
                 results.append(substitution)
 
+    results.sort(key=lambda sub: count_ops(sub[2]))
     return results
 
 def rewriter(condition, rewrite):
@@ -2531,10 +2531,7 @@ def substitution_rule(integral):
                         pieces.append((subrule, True))
                         subrule = PiecewiseRule(substituted, symbol, pieces)
 
-            ways.append((substituted, URule(integrand, symbol, u_var, u_func, subrule)))
-
-        ways.sort(key=lambda w: count_ops(w[0]))
-        ways = [w[1] for w in ways]
+            ways.append(URule(integrand, symbol, u_var, u_func, subrule))
 
         if len(ways) > 1:
             return AlternativeRule(integrand, symbol, ways)
