@@ -15,6 +15,7 @@ from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.tensor.array.ndim_array import NDimArray
 from sympy.testing.pytest import raises, slow
 from sympy.abc import a, b, c, x, y, z
+from sympy.tensor.indexed import Idx
 
 def test_diff():
     assert Rational(1, 3).diff(x) is S.Zero
@@ -84,6 +85,16 @@ def test_diff3():
     e = (Rational(2)**a/log(Rational(2)))
     assert e == 2**a*log(Rational(2))**(-1)
     assert e.diff(a) == 2**a
+
+
+def test_diff_pow_exponent_dependency():
+    f = Function("f")
+    n = Symbol("n")
+    i = Idx("i")
+
+    assert (x**n).diff(x) == n*x**(n - 1)
+    assert (x**i).diff(x) == i*x**(i - 1)
+    assert (x**f(x)).diff(x) == x**f(x)*(log(x)*f(x).diff(x) + f(x)/x)
 
 
 def test_diff_no_eval_derivative():
