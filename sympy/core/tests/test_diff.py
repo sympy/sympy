@@ -92,8 +92,8 @@ def test_diff_pow_exponent_dependency():
     n = Symbol("n")
     i = Idx("i")
 
-    assert (x**n).diff(x) == n*x**(n - 1)
-    assert (x**i).diff(x) == i*x**(i - 1)
+    assert (x**n).diff(x) == n*x**n/x
+    assert (x**i).diff(x) == i*x**i/x
     assert (x**f(x)).diff(x) == x**f(x)*(log(x)*f(x).diff(x) + f(x)/x)
 
 

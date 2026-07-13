@@ -1223,7 +1223,7 @@ class Pow(Expr):
         dexp = self.exp.diff(s)
 
         if dexp == 0:
-            return dbase * self.exp * self.base**(self.exp - 1)
+            return self * dbase * self.exp / self.base
 
         return self * (dexp * log(self.base) + dbase * self.exp/self.base)
 
