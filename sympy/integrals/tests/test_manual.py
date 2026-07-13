@@ -462,7 +462,7 @@ def test_issue_6799():
     integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
     assert manualintegrate(integrand, x) == \
-        ((-n*phi/2 + n*x/2 - sin(2*n*phi - 2*n*x)/4)*cos(n*phi) + sin(n*phi)*cos(n*phi - n*x)**2/2)/n
+        ((n*x/2 - sin(2*n*phi - 2*n*x)/4)*cos(n*phi) + sin(n*phi)*cos(n*phi - n*x)**2/2)/n
     assert r * integrate(integrand, limits).trigsimp() / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
 
