@@ -177,7 +177,7 @@ class EUFCongruenceClosure:
             const = self._new_dummy()
         elif isinstance(expr, AppliedPredicate):
             arg_ids = tuple(self._flatten(arg) for arg in expr.arguments)
-            const = self._record_func_eq(expr.function, arg_ids)
+            const = self._record_app(expr.function, arg_ids)
         elif isinstance(expr, Lambda):
             lam = expr if len(expr.variables) == 1 else expr.curry()
             body_id = self._find_repr(self._flatten(lam.expr))
@@ -189,14 +189,15 @@ class EUFCongruenceClosure:
             func = expr.func
             func_id = self._find_repr(self._flatten(func)) if isinstance(func, Basic) else func
             arg_ids = tuple(self._flatten(arg) for arg in expr.args)
-            const = self._record_func_eq(func_id, arg_ids)
+            const = self._record_app(func_id, arg_ids)
 
         self._term_to_const[expr] = const
         return const
 
-    def _record_func_eq(self, func, arg_ids):
+    def _record_app(self, func, arg_ids):
         """
-        TODO: add docs, also a better name for this?
+        Record the application f(a) in the related data structures, and
+        return a new dummy d that replaced it in _flatten i.e f(a) = d
         """
         rep_args = tuple(self._find_repr(arg) for arg in arg_ids)
         key = (func, rep_args)
