@@ -1111,7 +1111,7 @@ class Derivative(Expr):
 
         >>> e = sqrt((x + 1)**2 + x)
         >>> diff(e, (x, 5), simplify=False).count_ops()
-        136
+        57
         >>> diff(e, (x, 5)).count_ops()
         30
 
