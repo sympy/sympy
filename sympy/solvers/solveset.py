@@ -3731,10 +3731,27 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             result_all_variables, intersections, complements)
 
     # convert to ordered tuple
+    # convert to ordered tuple, removing mathematically duplicate solutions
     result = S.EmptySet
+    seen = []
     for r in result_all_variables:
         temp = [r[symb] for symb in all_symbols]
-        result += FiniteSet(tuple(temp))
+        tup = tuple(temp)
+        is_dup = False
+        has_set = any(isinstance(x, Set) for x in tup)
+        if not has_set:
+            for seen_tup in seen:
+                try:
+                    if all(simplify(a - b) == 0
+                           for a, b in zip(tup, seen_tup)
+                           if isinstance(a, Expr) and isinstance(b, Expr)):
+                        is_dup = True
+                        break
+                except (TypeError, AttributeError):
+                    pass
+        if not is_dup:
+            seen.append(tup)
+            result += FiniteSet(tup)
     return result
 
 
