@@ -1482,7 +1482,8 @@ def test_Domain_conjugate():
 
     a = Poly(x**3 - x + 1, x, domain=ZZ).all_roots()[-1]
     K = QQ.algebraic_field(a)
-    raises(CoercionFailed, lambda: K.conjugate(K.from_sympy(a)))
+    assert not K.is_ConjugateDomain
+    raises(DomainError, lambda: K.conjugate(K.from_sympy(a)))
 
     # cyclotomic fields
     K = QQ.cyclotomic_field(7)
