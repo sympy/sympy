@@ -159,6 +159,10 @@ def test_equality():
     # test transitivity
     assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z)) is True
 
+    # issue 29861
+    a = Symbol('a')
+    assert ask(Q.eq(a, a + 1)) is None
+
 
 @XFAIL
 def test_equality_failing():

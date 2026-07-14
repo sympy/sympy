@@ -1631,7 +1631,7 @@ def test_linear_eq_to_matrix():
     # 4) Eq being used to represent equations autoevaluates
     # (use unevaluated Eq instead)
     raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x), x))
-    raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x + 1), x))
+    assert linear_eq_to_matrix(Eq(x, x + 1), x) == (Matrix([[0]]), Matrix([[1]]))
 
 
     # if non-symbols are passed, the user is responsible for interpreting
