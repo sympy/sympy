@@ -2272,6 +2272,73 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
+def trig_poly_mul_rule(integral: IntegralInfo):
+    """
+    Integrate poly(x) * sin(a*x**2+b*x+c) or poly(x) * cos(a*x**2+b*x+c).
+
+    * If the quadratic has a nonzero linear or constant term, complete the
+      square and shift to u = x + b/(2a), expand the trig function of
+      (a*u**2 + k) with the angle-sum identities, and recurse: the result
+      is a sum of terms poly(u) * sin(a*u**2) and poly(u) * cos(a*u**2).
+    """
+    integrand, symbol = integral
+    if not integrand.is_Mul:
+        return None
+
+    a_ = Wild('a', exclude=[symbol, 0])
+    b_ = Wild('b', exclude=[symbol, 0])
+    c_ = Wild('c', exclude=[symbol])
+    quadratic_pattern = a_*symbol**2 + b_*symbol + c_
+
+    is_sin = None
+    match = None
+    rest = []
+    for factor in integrand.args:
+        if not match and isinstance(factor, (sin, cos)):
+            match = factor.args[0].match(quadratic_pattern)
+            if match and match[a_] != 0:
+                is_sin = isinstance(factor, sin)
+                continue
+            else:
+                match = None
+        rest.append(factor)
+
+    if not match:
+        return
+
+    poly = Mul(*rest)
+    if (symbol not in poly.free_symbols
+            or not poly.is_polynomial(symbol)):
+        return
+
+    a = match[a_]
+    b = match[b_]
+    c = match[c_]
+
+    # Complete the square and shift.
+    h = -b / (2*a)
+    k = c - b**2 / (4*a)
+
+    u = Dummy('u')
+    u_func = symbol - h  # u = x - h => x = u + h
+
+    poly_u = poly.subs(symbol, u + h).expand()
+
+    if is_sin:
+        expanded_trig = sin(a*u**2)*cos(k) + cos(a*u**2)*sin(k)
+    else:
+        expanded_trig = cos(a*u**2)*cos(k) - sin(a*u**2)*sin(k)
+
+    new_integrand = expand(poly_u * expanded_trig)
+    rewritten = new_integrand.subs(u, u_func)
+
+    substep = integral_steps(new_integrand, u)
+    if substep is None or substep.contains_dont_know():
+        return
+    substep = URule(rewritten, symbol, u, u_func, substep)
+    return CompleteSquareRule(integrand, symbol, rewritten, substep)
+
+
 def trig_product_to_sum_rule(integral: IntegralInfo):
     """
     Rewrite a product of two sin/cos factors with different arguments using the
@@ -2811,7 +2878,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(trig_cmplx_exp_rule)),
+                        null_safe(trig_cmplx_exp_rule),
+                        null_safe(trig_poly_mul_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
