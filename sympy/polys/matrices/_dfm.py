@@ -472,12 +472,13 @@ class DFM:
     def conjugate(self):
         """Return the conjugate of a DFM matrix."""
         dom = self.domain
-        if dom.is_ConjugateDomain:
-            if dom.is_ZZ or dom.is_QQ or dom.is_RR:
-                return self.copy()
+        if not dom.is_ConjugateDomain:
+            raise DMDomainError("%s does not support conjugation" % dom)
 
+        if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+            return self.copy()
+        else:
             return self.applyfunc(dom.conjugate, dom)
-        raise DMDomainError("%s does not support conjugation" % dom)
 
     def adjoint(self):
         """Return the adjoint of a DFM matrix."""

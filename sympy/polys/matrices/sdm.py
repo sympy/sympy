@@ -761,12 +761,13 @@ class SDM(dict):
         {0: {1: (2 + 3*I)}, 1: {}}
         """
         dom = M.domain
-        if dom.is_ConjugateDomain:
-            if dom.is_ZZ or dom.is_QQ or dom.is_RR:
-                return M.copy()
+        if not dom.is_ConjugateDomain:
+            raise DMDomainError("%s does not support conjugation" % dom)
 
+        if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+            return M.copy()
+        else:
             return M.applyfunc(dom.conjugate, dom)
-        raise DMDomainError("%s does not support conjugation" % dom)
 
     def adjoint(M):
         """
@@ -787,8 +788,8 @@ class SDM(dict):
         elif dom.is_EXRAW:
             # handle noncommutative elements
             return M.applyfunc(lambda x: x.adjoint(), dom).transpose()
-
-        return M.applyfunc(lambda x: dom.dtype(x.ex.adjoint()), dom).transpose()
+        else:
+            return M.applyfunc(lambda x: dom.dtype(x.ex.adjoint()), dom).transpose()
 
     def __add__(A, B):
         if not isinstance(B, SDM):

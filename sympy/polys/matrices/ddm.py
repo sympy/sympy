@@ -627,12 +627,13 @@ class DDM(list):
 
     def conjugate(self):
         dom = self.domain
-        if dom.is_ConjugateDomain:
-            if dom.is_ZZ or dom.is_QQ or dom.is_RR:
-                return self.copy()
+        if not dom.is_ConjugateDomain:
+            raise DMDomainError("%s does not support conjugation" % dom)
 
+        if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+            return self.copy()
+        else:
             return self.applyfunc(dom.conjugate, dom)
-        raise DMDomainError("%s does not support conjugation" % dom)
 
     def adjoint(self):
         dom = self.domain
@@ -641,8 +642,8 @@ class DDM(list):
         elif dom.is_EXRAW:
             # handle noncommutative elements
             return self.applyfunc(lambda x: x.adjoint(), dom).transpose()
-
-        return self.applyfunc(lambda x: dom.dtype(x.ex.adjoint()), dom).transpose()
+        else:
+            return self.applyfunc(lambda x: dom.dtype(x.ex.adjoint()), dom).transpose()
 
     def __add__(a, b):
         if not isinstance(b, DDM):
