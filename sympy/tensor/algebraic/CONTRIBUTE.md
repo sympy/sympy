@@ -13,7 +13,6 @@ SymPy test guide: https://docs.sympy.org/latest/contributing/new-contributors-gu
 - [x] `tensor/algebraic/tests/test_algebraic_pure_tensor.py` — 51 tests covering AlgebraicPureTensor constructor, properties, arithmetic, expand, and composition
 - [x] `tensor/algebraic/tests/test_algebraic_tensor.py` — 35 tests covering AlgebraicTensor constructor, terms, arithmetic, shape mismatch, and composition dispatch
 - [x] `tensor/algebraic/tests/test_algebraic_zero_tensor.py` — 33 tests covering AlgebraicZeroTensor singleton, shape, arithmetic identity, and preservation
-- [x] `tensor/algebraic/tests/test_scalar_mul.py` — 32 tests covering ScalarMul constructor, scalar/tensor properties, multiplication fusion, and arithmetic
 - [x] `tensor/algebraic/tests/test_simplify.py` — 26 tests covering tensorsimplify, proportionality_factoring, and edge cases
 
 Each test file covers (per DESIGN.md §9.10):
@@ -91,20 +90,6 @@ Per SymPy's Docstring Style Guide: every public function/class/method needs a
 - [x] `AlgebraicZeroTensor.__mul__` / `__rmul__` — add `Examples`
 - [x] `algebraic_zero_tensor` — add `Examples`
 
-### `scalar_mul.py`
-- [x] `ScalarMul` class docstring — add `Examples` section with doctests
-- [x] `ScalarMul.scalar` property — add `Examples`
-- [x] `ScalarMul.tensor` property — add `Examples`
-- [x] `ScalarMul.factors` property — add `Examples`
-- [x] `ScalarMul.shape` property — add `Examples`
-- [x] `ScalarMul.commutativity_pattern` property — add `Examples`
-- [x] `ScalarMul.__neg__` — add `Examples`
-- [x] `ScalarMul.__mul__` — add `Examples`
-- [x] `ScalarMul.__rmul__` — add `Examples`
-- [x] `ScalarMul.__add__` / `__radd__` — add `Examples`
-- [x] `ScalarMul.__sub__` / `__rsub__` — add `Examples`
-- [x] `ScalarMul.expand` — add `Examples`
-
 ### `simplify.py`
 - [x] `tensorsimplify` — add `Examples`
 - [x] `proportionality_factoring` — add `Examples`
@@ -142,14 +127,14 @@ on IPython's rich display protocol), but are kept as user-facing helpers.
 
 ---
 
-## 5. Pretty Printing (Missing)
+## 5. Pretty Printing (Done)
 
-`printing/pretty.py` has no handlers for the algebraic types.
+`printing/pretty.py` handlers added for all three algebraic types.
+40 tests in `tensor/algebraic/tests/test_pretty_printing.py`.
 
-- [ ] Add `_print_AlgebraicPureTensor` to `sympy/printing/pretty/pretty.py`
-- [ ] Add `_print_AlgebraicTensor` to `sympy/printing/pretty/pretty.py`
-- [ ] Add `_print_ScalarMul` to `sympy/printing/pretty/pretty.py`
-- [ ] Add `_print_AlgebraicZeroTensor` to `sympy/printing/pretty/pretty.py`
+- [x] Add `_print_AlgebraicPureTensor` to `sympy/printing/pretty/pretty.py`
+- [x] Add `_print_AlgebraicTensor` to `sympy/printing/pretty/pretty.py`
+- [x] Add `_print_AlgebraicZeroTensor` to `sympy/printing/pretty/pretty.py`
 
 ---
 
