@@ -262,6 +262,16 @@ def test_manualintegrate_trig_product_to_sum():
     assert_is_integral_of(f, F)
 
 
+def test_manualintegrate_trig_poly_product():
+    f = x*cos(x**2+x)
+    F = sin((x + S.One/2)**2)*cos(S.One/4)/2 - sin(S.One/4)*cos((x + S.One/2)**2)/2 - sqrt(2)*sqrt(pi)*cos(S.One/4)*fresnelc(sqrt(2)*(x + S.One/2)/sqrt(pi))/4 - sqrt(2)*sqrt(pi)*sin(S.One/4)*fresnels(sqrt(2)*( x + S.One/2)/sqrt(pi))/4
+    assert_is_integral_of(f, F)
+
+    f = x*sin(x**2+x)
+    F = -sin(S.One/4)*sin((x + S.One/2)**2)/2 - cos(S.One/4)*cos((x + S.One/2)**2)/2 + sqrt(2)*sqrt(pi)*sin(S.One/4)*fresnelc(sqrt(2)*(x + S.One/2)/sqrt(pi))/4 - sqrt(2)*sqrt(pi)*cos(S.One/4)*fresnels(sqrt(2)*(x + S.One/2)/sqrt(pi))/4
+    assert_is_integral_of(f, F)
+
+
 def test_manualintegrate_trivial_substitution():
     assert manualintegrate((exp(x) - exp(-x))/x, x) == -Ei(-x) + Ei(x)
     f = Function('f')
