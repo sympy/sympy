@@ -40,7 +40,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import WildFunction
+from sympy.core.function import WildFunction, expand
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -2272,6 +2272,56 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
+def trig_product_to_sum_rule(integral: IntegralInfo):
+    """
+    Rewrite a product of two sin/cos factors with different arguments using the
+    product-to-sum identities, e.g.
+
+        sin(x**2)*cos(x) -> (sin(x**2+x) + sin(x**2-x)) / 2
+
+    This is useful when at least one of the arguments is not linear in the
+    integration variable.
+    """
+    integrand, symbol = integral
+    if not integrand.is_Mul:
+        return
+
+    trig_factors = []
+    rest = []
+    for f in integrand.args:
+        if isinstance(f, (sin, cos)):
+            trig_factors.append(f)
+        else:
+            rest.append(f)
+
+    if len(trig_factors) != 2:
+        return
+
+    f1, f2 = trig_factors[0], trig_factors[1]
+    A, B = f1.args[0], f2.args[0]
+    if A == B or A == -B:
+        return
+    if not (A.has(symbol) and B.has(symbol)):
+        return
+
+    if isinstance(f1, sin) and isinstance(f2, sin):
+        replacement = (cos(A - B) - cos(A + B)) / 2
+    elif isinstance(f1, cos) and isinstance(f2, cos):
+        replacement = (cos(A - B) + cos(A + B)) / 2
+    elif isinstance(f1, sin) and isinstance(f2, cos):
+        replacement = (sin(A + B) + sin(A - B)) / 2
+    else:
+        replacement = (sin(A + B) - sin(A - B)) / 2
+
+    rewritten = expand(Mul(*rest) * replacement)
+
+    substep = integral_steps(rewritten, symbol)
+    if substep.contains_dont_know():
+        return
+
+    return RewriteRule(integrand, symbol, rewritten, substep)
+
+
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
     integrand, symbol = integral
     if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
@@ -2793,7 +2843,11 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(Mul, Pow),
                     distribute_expand_rule),
                 trig_powers_products_rule,
-                trig_expand_rule
+                trig_expand_rule,
+                condition(
+                    integral_is_subclass(Mul),
+                    trig_product_to_sum_rule
+                ),
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(trig_substitution_rule)
