@@ -57,6 +57,7 @@ from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
+from sympy import postorder_traversal
 
 # Required to avoid errors
 import sympy.polys
@@ -4913,6 +4914,142 @@ def _update_args(args, key, value):
     return args
 
 
+def _degree_it(f, gen):
+    def _mul_profiles(profile_1, profile_2):
+        result = {}
+
+        for deg_1, coeff_1 in profile_1.items():
+            for deg_2, coeff_2 in profile_2.items():
+                result[deg_1 + deg_2] = (
+                    result.get(deg_1 + deg_2, S.Zero) + coeff_1 * coeff_2
+                )
+
+                if result[deg_1 + deg_2] == 0:
+                    del result[deg_1 + deg_2]
+
+        return result
+
+    def _add_profiles(profile_1, profile_2):
+        result = dict(profile_1)
+        cancellation_flag = False
+
+        for deg, coeff in profile_2.items():
+            result[deg] = result.get(deg, S.Zero) + coeff
+
+            if result[deg] == 0:
+                cancellation_flag = True
+                del result[deg]
+
+        return result, cancellation_flag
+
+    def _pow_profile(profile, exponent, cutoff=550):
+        if exponent == 0:
+            return {0: S.One}
+        elif exponent == 1:
+            return profile
+
+        if exponent > cutoff:
+            result = {}
+
+            for deg, coeff in profile.items():
+                new_deg, new_coeff = deg * exponent, coeff**exponent
+                result[new_deg] = result.get(new_deg, S.Zero) + new_coeff
+
+            return result
+
+        result = {0: S.One}
+        for _ in range(int(exponent)):
+            result = _mul_profiles(result, profile)
+
+        return result
+
+    f = sympify(f)
+    gen = sympify(gen)
+
+    if isinstance(f, Poly):
+        f = f.as_expr()
+
+    profiles_stack = []
+
+    for expr in postorder_traversal(f):
+        if isinstance(expr, Tuple):
+            return None
+
+        if not isinstance(expr, Expr):
+            return None
+
+        if expr == 0:
+            profiles_stack.append({})
+
+        elif not expr.has(gen):
+            profile = {0: expr}
+            profiles_stack.append(profile)
+
+        elif expr == gen:
+            profile = {1: S.One}
+            profiles_stack.append(profile)
+
+        elif expr.is_Mul:
+            num_factors = len(expr.args)
+            parts = profiles_stack[-num_factors:]
+
+            total = {0: S.One}
+            for p in parts:
+                total = _mul_profiles(total, p)
+
+            del profiles_stack[-num_factors:]
+            del parts
+            profiles_stack.append(total)
+
+        elif expr.is_Add:
+            num_terms = len(expr.args)
+            part = profiles_stack[-num_terms:]
+
+            for i in range(0, len(part)):
+                if i + 1 == len(part):
+                    break
+
+                part[i + 1], cancellation_flag = (
+                    _add_profiles(part[i], part[i + 1])
+                )
+
+                if cancellation_flag:
+                    return None
+
+            final = part[-1]
+
+            del profiles_stack[-num_terms:]
+            del part
+            profiles_stack.append(final)
+
+        elif expr.is_Pow:
+            exponent_profile = profiles_stack.pop()
+            base_profile = profiles_stack.pop()
+
+            if len(exponent_profile) != 1 or 0 not in exponent_profile:
+                return None
+
+            exponent = exponent_profile[0]
+
+            if not exponent.is_Integer or not exponent.is_nonnegative:
+                return None
+
+            profiles_stack.append(_pow_profile(base_profile, int(exponent)))
+
+        else:
+            return None
+
+    if len(profiles_stack) != 1:
+        return None
+
+    final_profile = profiles_stack[0]
+
+    if not final_profile:
+        return S.NegativeInfinity
+
+    return max(final_profile)
+
+
 @public
 def degree(f, gen=0):
     """
@@ -4989,7 +5126,13 @@ def degree(f, gen=0):
 
     gen = sympify(gen, strict=True)
     if not isinstance(f, Poly) or gen not in f.gens:
-        f = poly_from_expr(f, gen)[0]
+        d = _degree_it(f, gen)
+        if d is None:
+            f = poly_from_expr(f, gen)[0]
+            return _degree(f.degree(gen))
+        else:
+            return _degree(d)
+
     return _degree(f.degree(gen))
 
 
