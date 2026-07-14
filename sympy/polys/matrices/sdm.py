@@ -782,10 +782,13 @@ class SDM(dict):
         {1: {0: (2 + 3*I)}}
         """
         dom = M.domain
-        if not dom.is_EXRAW:
+        if not (dom.is_EXRAW or dom.is_EX):
             return M.conjugate().transpose()
+        elif dom.is_EXRAW:
+            # handle noncommutative elements
+            return M.applyfunc(lambda x: x.adjoint(), dom).transpose()
 
-        return M.applyfunc(lambda x: x.adjoint(), dom).transpose()
+        return M.applyfunc(lambda x: dom.dtype(x.ex.adjoint()), dom).transpose()
 
     def __add__(A, B):
         if not isinstance(B, SDM):

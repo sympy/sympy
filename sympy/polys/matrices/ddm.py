@@ -636,11 +636,13 @@ class DDM(list):
 
     def adjoint(self):
         dom = self.domain
-        if not dom.is_EXRAW:
+        if not (dom.is_EXRAW or dom.is_EX):
             return self.conjugate().transpose()
+        elif dom.is_EXRAW:
+            # handle noncommutative elements
+            return self.applyfunc(lambda x: x.adjoint(), dom).transpose()
 
-        # handle noncommutative elements
-        return self.applyfunc(lambda x: x.adjoint(), dom).transpose()
+        return self.applyfunc(lambda x: dom.dtype(x.ex.adjoint()), dom).transpose()
 
     def __add__(a, b):
         if not isinstance(b, DDM):
