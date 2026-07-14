@@ -800,10 +800,14 @@ def _deduplicate_proportional(factors):
 def _extract_commutative_from_factor(factor):
     """Extract commutative prefactor from a single tensor factor.
 
-    Handles two cases:
-    1. **Mul** -- separates commutative and non-commutative args.
-    2. **Matrix** -- finds common commutative divisors across all nonzero
-       entries, divides the matrix, and returns the divisor as prefactor.
+    Handles three cases:
+    1. **Add** -- factors the expression with ``factor()`` to pull out a
+       common commutative divisor (e.g., ``(x+2)*P + (x+2)*Q -> (x+2)*(P+Q)``),
+       then delegates to the Mul handler.
+    2. **Mul** -- separates commutative and non-commutative args.
+    3. **Matrix** -- factors each entry, finds common commutative divisors
+       across all nonzero entries, divides the matrix, and returns the
+       divisor as prefactor.
 
     Returns
     -------
@@ -820,9 +824,130 @@ def _extract_commutative_from_factor(factor):
     >>> coeff
     x
     """
+    from sympy.core.add import Add as _Add
     from sympy.core.mul import Mul
     from sympy.matrices.immutable import ImmutableDenseMatrix
     from sympy import cancel
+    from sympy import factor as _factor
+
+    # --- Add: factor to pull out common commutative divisor ---
+    if isinstance(factor, _Add):
+        # Only attempt factor() if the Add contains non-commutative parts
+        # that could share a commutative prefactor.  factor() crashes on
+        # expressions mixing MatrixExpr and scalars, so we guard with try/except.
+        try:
+            factored = _factor(factor)
+        except (TypeError, NotImplementedError):
+            factored = factor
+        if isinstance(factored, Mul) and factored != factor:
+            comm_parts = []
+            noncomm_parts = []
+            for a in factored.args:
+                if hasattr(a, 'is_commutative') and a.is_commutative:
+                    comm_parts.append(a)
+                else:
+                    noncomm_parts.append(a)
+
+            if comm_parts and noncomm_parts:
+                comm_coeff = Mul(*comm_parts, evaluate=True)
+                if len(noncomm_parts) == 1:
+                    new_factor = noncomm_parts[0]
+                else:
+                    new_factor = Mul(*noncomm_parts, evaluate=False)
+                return (comm_coeff, new_factor)
+
+    # --- MatAdd / MatrixExpr sum: factor to pull out common commutative divisor ---
+    # MatAdd (and other additive MatrixExpr) are NOT instances of sympy Add,
+    # so we handle them separately.  SymPy's factor() crashes on MatAdd with
+    # non-commutative matrix symbols, so we manually walk the args and find
+    # the common commutative divisor.
+    from sympy.matrices.expressions.matexpr import MatrixExpr as _MatrixExpr
+    from sympy.matrices.expressions.matmul import MatMul as _MatMul
+    from sympy.matrices.expressions.matadd import MatAdd as _MatAdd
+
+    if isinstance(factor, _MatrixExpr) and hasattr(factor, 'is_Add') and factor.is_Add:
+        # Try SymPy's factor() first (works for some cases)
+        try:
+            factored = _factor(factor)
+            if isinstance(factored, _MatMul) and factored != factor:
+                c, rest = factored.as_coeff_Mul()
+                if c != S.One and rest != factor:
+                    return (c, rest)
+        except (TypeError, NotImplementedError):
+            pass
+
+        # Manual extraction: walk each term, extract commutative coeff from
+        # MatMul.args (not as_coeff_Mul which only extracts numeric coeffs),
+        # find the common divisor across all terms.
+        terms = list(factor.args)
+        coeffs = []
+        rests = []
+        all_ok = True
+        for term in terms:
+            if isinstance(term, _MatMul):
+                # Separate commutative and non-commutative args from MatMul
+                comm_args = []
+                noncomm_args = []
+                for a in term.args:
+                    if hasattr(a, 'is_commutative') and a.is_commutative:
+                        comm_args.append(a)
+                    else:
+                        noncomm_args.append(a)
+                if comm_args:
+                    cf = Mul(*comm_args, evaluate=True)
+                    if len(noncomm_args) == 1:
+                        rf = noncomm_args[0]
+                    elif len(noncomm_args) > 1:
+                        rf = _MatMul(*noncomm_args, evaluate=False)
+                    else:
+                        rf = S.One
+                    coeffs.append(cf)
+                    rests.append(rf)
+                else:
+                    all_ok = False
+                    break
+            else:
+                # Bare matrix symbol or other non-MatMul term
+                coeffs.append(S.One)
+                rests.append(term)
+        if all_ok and len(coeffs) > 1:
+            # Find common divisor of all coefficients
+            common = coeffs[0]
+            for cf in coeffs[1:]:
+                if _is_exactly_divisible(cf, common):
+                    pass  # common still divides all
+                elif _is_exactly_divisible(common, cf):
+                    common = cf
+                else:
+                    # Try to find partial GCD by factoring both
+                    from sympy import factor as _fc
+                    fa = _fc(common).as_ordered_factors() if isinstance(_fc(common), Mul) else [_fc(common)]
+                    fb = _fc(cf).as_ordered_factors() if isinstance(_fc(cf), Mul) else [_fc(cf)]
+                    new_common = S.One
+                    for a in fa:
+                        for b in fb:
+                            if cancel(a / b) == S.One:
+                                new_common *= a
+                                break
+                    if new_common != S.One:
+                        common = new_common
+                    else:
+                        common = S.One
+                        break
+            if common != S.One:
+                # Reconstruct: sum of (coeff_i/common)*rest_i
+                new_terms = []
+                for cf, rf in zip(coeffs, rests):
+                    new_cf = cancel(cf / common)
+                    if new_cf == S.One:
+                        new_terms.append(rf)
+                    else:
+                        new_terms.append(_MatMul(new_cf, rf))
+                if len(new_terms) == 1:
+                    new_factor = new_terms[0]
+                else:
+                    new_factor = _MatAdd(*new_terms)
+                return (common, new_factor)
 
     # --- Mul: separate commutative / non-commutative args ---
     if isinstance(factor, Mul):
@@ -843,7 +968,12 @@ def _extract_commutative_from_factor(factor):
             return (comm_coeff, new_factor)
 
     # --- Matrix: common commutative divisor across nonzero entries ---
-    if hasattr(factor, 'shape') and hasattr(factor, '__getitem__'):
+    # Only process concrete MatrixBase instances (ImmutableDenseMatrix, etc.),
+    # NOT symbolic MatrixExpr (MatrixSymbol, MatAdd, MatMul).  MatrixBase
+    # already excludes symbolic expressions, so no extra check is needed.
+    from sympy.matrices.matrixbase import MatrixBase as _MatrixBase
+
+    if isinstance(factor, _MatrixBase):
         rows, cols = factor.shape[0], factor.shape[1]
 
         nonzero_entries = []

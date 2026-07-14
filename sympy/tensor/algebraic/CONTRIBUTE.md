@@ -160,7 +160,6 @@ have been removed in favor of the printer system.
 - [ ] Check for lines >80 chars in docstrings
 - [ ] Check for trailing whitespace in all files
 - [ ] Verify `__slots__` usage is consistent across all classes
-- [ ] Remove `DESIGN.md` or move it to `doc/src/` (not a standard SymPy file location)
 - [ ] Remove `.DS_Store` from `tensor/algebraic/`
 - [ ] Remove `__pycache__/` from `tensor/algebraic/`
 

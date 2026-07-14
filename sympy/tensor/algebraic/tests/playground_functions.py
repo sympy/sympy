@@ -566,11 +566,38 @@ simbolovi08 = simbolovi0 + simbolovi1 + simbolovi2 + simbolovi3 + simbolovi4 + s
 da1 = Dirac*a1 - a1*Dirac
 da1 = da1.expand()
 da1 = da1.simplify()
-for i in range (len(da1.args)):
-    print(da1.args[i])
-    print("")
-    print("")
+print(da1.args[0])
+print(len(da1.args))
+
+da1 = x*da1
+# ---------------------------------------------------------------------------
+# LaTeX display
+# ---------------------------------------------------------------------------
+print("=" * 60)
+print("LATEX DISPLAY")
+print("=" * 60)
+
+print("\n--- da1 str ---")
+print(da1)
+
+print("\n--- da1 latex ---")
+print(latex(da1))
+
+print("\n--- da1 _repr_latex_ ---")
+print(da1._repr_latex_())
+
+da1.display()
+print("da1 args = ")
+print(len(da1.args))
+
 print("")
 print(srepr(da1))
 
-da1.display()
+
+testoni_100 = AlgebraicPureTensor(2+x,P+Q,Q)
+testoni_200 = x* AlgebraicPureTensor(Q,P)
+testoni_300 = testoni_100*testoni_200
+testoni_300.display()
+print(srepr(testoni_100))
+print(srepr(testoni_200))
+print(testoni_100.expand().simplify())
