@@ -182,10 +182,7 @@ class LRASolver():
 
         self.slack_set = set(slack_variables)
 
-        self.is_sat = True  # While True, all constraints asserted so far are satisfiable
-        self.result = None  # always one of: (True, assignment), (False, conflict clause), None
-
-        self.bound_history = []
+        self.bound_history = [[]]
         self.last_assign_snapshot = {var: var.assign for var in self.all_var}
 
     @staticmethod
@@ -418,11 +415,6 @@ class LRASolver():
             if res and res[0] is False:
                 break
 
-        if self.is_sat and all(b.var not in self.slack_set for b in boundaries):
-            self.is_sat = res is None
-        else:
-            self.is_sat = False
-
         return res
 
     def _assert_bound(self, boundary, literal):
@@ -434,10 +426,6 @@ class LRASolver():
         Also calls `self._update` to update the assignment for slack variables
         to keep all equalities satisfied.
         """
-        if self.result:
-            assert self.result[0] != False
-        self.result = None
-
         xi = boundary.var
         ci, upper = boundary.to_rational(is_negated=literal < 0)
 
@@ -461,10 +449,9 @@ class LRASolver():
             assert (opposing_bound.d * s >= 0) is True
             assert (ci.d * s <= 0) is True
 
-            self.result = False, [-conflicting_lit, -literal]
-            return self.result
+            return False, [-conflicting_lit, -literal]
 
-        self.bound_history.append((xi, target_bound, upper))
+        self.bound_history[-1].append((xi, target_bound, upper))
 
         xi.set_bound(boundary, literal)
 
@@ -509,16 +496,14 @@ class LRASolver():
 
         explanation : set of ints
         """
-        if self.is_sat:
-            self.last_assign_snapshot = {var: var.assign for var in self.all_var}
-            return True, self.last_assign_snapshot
-        if self.result:
-            return self.result
-
         from sympy.matrices.dense import Matrix
         M = self.A.copy()
         basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
         nonbasic = set(self.nonslack)
+
+        # Save snapshot before simplex changes assignments
+        self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+
         while True:
             if self.run_checks:
                 # nonbasic variables must always be within bounds
@@ -542,8 +527,7 @@ class LRASolver():
             cand = [b for b in basic if b.assign < b.lower or b.assign > b.upper]
 
             if len(cand) == 0:
-                self.last_assign_snapshot = {var: var.assign for var in self.all_var}
-                return True, self.last_assign_snapshot
+                return True, {v: v.assign for v in self.all_var}
 
             xi = min(cand, key=lambda v: v.col_idx) # Bland's rule
             i = basic[xi]
@@ -561,6 +545,9 @@ class LRASolver():
                     conflict += [nb.lower_literal for nb in N_minus]
                     conflict.append(xi.lower_literal)
                     conflict = [-conflicting_lit for conflicting_lit in conflict]
+                    # Restore assignments before returning failure
+                    for var in self.all_var:
+                        var.assign = self.last_assign_snapshot[var]
                     return False, conflict
                 xj = min(cand, key=str)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
@@ -580,6 +567,9 @@ class LRASolver():
                     conflict_bounds.append(xi.upper_literal)
 
                     conflict = [-conflicting_lit for conflicting_lit in conflict_bounds]
+                    # Restore assignments before returning failure
+                    for var in self.all_var:
+                        var.assign = self.last_assign_snapshot[var]
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
@@ -677,21 +667,24 @@ class LRASolver():
             If called when the ``bound_history`` stack is empty, indicating
             the solver's internal state is out of sync.
         """
-        if not self.bound_history:
+        if not self.bound_history[-1]:
             raise ValueError("Cannot backtrack, bound_history stack is empty")
 
-        xi, old_bound, upper = self.bound_history.pop()
+        xi, old_bound, upper = self.bound_history[-1].pop()
 
         if upper:
             xi.upper = old_bound
         else:
             xi.lower = old_bound
 
-        for var in self.all_var:
-            var.assign = self.last_assign_snapshot[var]
-
-        self.is_sat = True
-        self.result = None
+    def pop_level(self):
+        """
+        Restore the LRA solver to its state at the most recent push_level().
+        Called when the SAT solver backtracks a decision level.
+        """
+        while self.bound_history[-1]:
+            self.backtrack()
+        self.bound_history.pop()
 
 def _sep_const_coeff(expr):
     """

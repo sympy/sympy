@@ -213,11 +213,12 @@ def test_random_problems():
         bounds = sorted(bounds, key=lambda x: (str(x[0][0].var), x[0][0].bound, str(x[0][0].upper))) # to remove nondeterminism
 
         for b, l in bounds:
-            if lra.result and lra.result[0] == False:
+            res = lra.assert_lit(l)
+            if res and res[0] == False:
+                feasible = res
                 break
-            lra.assert_lit(l)
-
-        feasible = lra.check()
+        else:
+            feasible = lra.check()
 
         if feasible[0] == True:
             feasible_count += 1
@@ -342,50 +343,69 @@ def test_negation():
     bf = Q.gt(x, 1) & ~Q.gt(x, 0)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    conflict = None
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            res = lra.assert_lit(lit)
+            if res is not None:
+                conflict = res[1]
     assert len(lra.atom_id_to_boundaries) == 2
-    assert lra.check()[0] == False
-    assert sorted(lra.check()[1]) in [[-1, 2], [-2, 1]]
+    assert conflict is not None
+    assert sorted(conflict) in [[-1, 2], [-2, 1]]
 
     bf = ~Q.gt(x, 1) & ~Q.lt(x, 0)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            if lra.assert_lit(lit) is not None:
+                conflict_found = True
+                break
     assert len(lra.atom_id_to_boundaries) == 2
-    assert lra.check()[0] == True
+    assert conflict_found is False
+    assert lra.check()[0] is True
 
     bf = ~Q.gt(x, 0) & ~Q.lt(x, 1)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            if lra.assert_lit(lit) is not None:
+                conflict_found = True
+                break
     assert len(lra.atom_id_to_boundaries) == 2
-    assert lra.check()[0] == False
+    assert conflict_found is True
 
     bf = ~Q.gt(x, 0) & ~Q.le(x, 0)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            if lra.assert_lit(lit) is not None:
+                conflict_found = True
+                break
+
     assert len(lra.atom_id_to_boundaries) == 2
-    assert lra.check()[0] == False
+    assert conflict_found is True
 
     bf = ~Q.le(x+y, 2) & ~Q.ge(x-y, 2) & ~Q.ge(y, 0)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            if lra.assert_lit(lit) is not None:
+                conflict_found = True
+                break
+    assert conflict_found is False
     assert len(lra.atom_id_to_boundaries) == 3
-    assert lra.check()[0] == False
-    assert len(lra.check()[1]) == 3
-    assert all(i > 0 for i in lra.check()[1])
+    is_sat, conflict = lra.check()
+    assert is_sat is False
+    assert len(conflict) == 3
+    assert all(i > 0 for i in conflict)
 
 
 def test_unhandled_input():
@@ -454,13 +474,16 @@ def test_reset_bounds():
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            if lra.assert_lit(lit) is not None:
+                conflict_found = True
+                break
 
-    assert lra.check()[0] == False
+    assert conflict_found is True
     lra.reset_bounds()
-    assert lra.check()[0] == True
+    assert lra.check()[0] is True
 
     # Test individual state variable resets
     bf = Q.ge(x, 0) & Q.le(x, 1)
