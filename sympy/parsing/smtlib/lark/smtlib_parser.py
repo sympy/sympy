@@ -4,9 +4,14 @@ import logging
 from pathlib import Path
 
 from sympy.external import import_module
+from sympy.utilities.decorator import doctest_depends_on
 
 _lark = import_module("lark")
 
+# __doctest_requires__ is understood by pytest-doctestplus, while the
+# doctest_depends_on decorator is understood by SymPy's own doctest runner
+# (bin/doctest); both are needed to skip the doctests when lark is not
+# installed
 __doctest_requires__ = {('parse_smtlib',): ['lark']}
 
 
@@ -88,6 +93,7 @@ class LarkSMTLibParser:
 _lark_smtlib_parser = None
 
 
+@doctest_depends_on(modules=('lark',))
 def parse_smtlib(s):
     """
     Parses a string in the SMT-LIB format and returns the declared symbols
