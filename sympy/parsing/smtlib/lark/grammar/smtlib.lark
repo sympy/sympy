@@ -7,13 +7,17 @@ script: command*
 
 command: "(" "assert" term ")"                 -> cmd_assert
        | "(" "check-sat" ")"                   -> cmd_check_sat
+       | "(" "check-sat-assuming" "(" prop_literal* ")" ")" -> cmd_check_sat_assuming
        | "(" "declare-const" symbol sort ")"   -> cmd_declare_const
        | "(" "declare-fun" symbol "(" sort* ")" sort ")" -> cmd_declare_fun
        | "(" "declare-sort" symbol numeral ")" -> cmd_declare_sort
+       | "(" "define-const" symbol sort term ")" -> cmd_define_const
        | "(" "define-fun" symbol "(" sorted_var* ")" sort term ")" -> cmd_define_fun
        | "(" "define-fun-rec" symbol "(" sorted_var* ")" sort term ")" -> cmd_define_fun_rec
+       | "(" "define-sort" symbol "(" symbol* ")" sort ")" -> cmd_define_sort
        | "(" "declare-datatype" symbol datatype_dec ")" -> cmd_declare_datatype
        | "(" "declare-datatypes" "(" sort_dec* ")" "(" datatype_dec* ")" ")" -> cmd_declare_datatypes
+       | "(" "echo" string ")"                 -> cmd_echo
        | "(" "exit" ")"                        -> cmd_exit
        | "(" "get-assertions" ")"              -> cmd_get_assertions
        | "(" "get-assignment" ")"              -> cmd_get_assignment
@@ -55,6 +59,7 @@ sort: symbol -> sort_simple
 
 sorted_var: "(" symbol sort ")"
 var_binding: "(" symbol term ")"
+prop_literal: symbol | "(" "not" symbol ")"
 
 qual_identifier: symbol -> qual_id_simple
                | "(" "_" symbol numeral+ ")" -> qual_id_indexed
@@ -91,7 +96,9 @@ NUMERAL: /0|[1-9][0-9]*/
 DECIMAL: /(0|[1-9][0-9]*)\.[0-9]+/
 HEXADECIMAL: /#x[0-9a-fA-F]+/
 BINARY: /#b[01]+/
-STRING: /"[^"\\]*"/
+// A " inside a string is escaped by doubling it; backslash is an ordinary
+// character in SMT-LIB 2.6 strings
+STRING: /"([^"]|"")*"/
 
 COMMENT: /;[^\n]*/
 %ignore COMMENT
