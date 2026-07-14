@@ -655,7 +655,7 @@ class Quaternion(Expr):
         return cls(a, b, c, d)
 
     @classmethod
-    def from_rotation_matrix(cls, M):
+    def from_rotation_matrix(cls, M: Matrix) -> Quaternion:
         """Returns the equivalent quaternion of a matrix. The quaternion will be normalized
         only if the matrix is special orthogonal (orthogonal and det(M) = 1).
 
@@ -728,7 +728,7 @@ class Quaternion(Expr):
     def _eval_Integral(self, *args) -> Quaternion:
         return self.integrate(*args)
 
-    def diff(self, *symbols, **kwargs):
+    def diff(self, *symbols, **kwargs) -> Quaternion:
         kwargs.setdefault('evaluate', True)
         a, b, c, d = [arg.diff(*symbols, **kwargs) for arg in self.args]
         return self.func(a, b, c, d)
@@ -1018,7 +1018,7 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
-    def log(self):
+    def log(self) -> Quaternion:
         r"""Returns the logarithm of the quaternion, given by $\log q$.
 
         Examples
