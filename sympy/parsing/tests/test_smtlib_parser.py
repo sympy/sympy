@@ -610,3 +610,101 @@ def test_parse_datatypes_not_supported():
         parse_smtlib('''
         (declare-datatypes ((Color 0)) (((red) (green) (blue))))
         ''')
+
+
+def test_parse_negative_literals():
+    # Standard SMT-LIB has no negative literals, but solvers such as Z3
+    # accept them and SymPy's own SMT-LIB printer emits them
+    parsed_symbols, assertions = parse_smtlib('''
+    (declare-const x Real)
+    (assert (= x -1))
+    (assert (< x -2.5))
+    (assert (= (- 1) -1))
+    ''')
+    x = parsed_symbols['x']
+    assert assertions[1] == Eq(x, -1)
+    assert assertions[2] == StrictLessThan(x, -2.5)
+    assert assertions[3] is S.true
+
+    # Symbols merely containing a - are unaffected
+    parsed_symbols, _ = parse_smtlib('(declare-const a-1 Int)')
+    assert 'a-1' in parsed_symbols
+
+
+def test_parse_pow():
+    # Exponentiation is not standard SMT-LIB, but ^ is supported by solvers
+    # such as Z3 and pow is what SymPy's SMT-LIB printer emits
+    parsed_symbols, assertions = parse_smtlib('''
+    (declare-const x Real)
+    (assert (= (pow x 2) 4))
+    (assert (= (^ x 3) 8))
+    ''')
+    x = parsed_symbols['x']
+    assert assertions[1] == Eq(x**2, 4)
+    assert assertions[2] == Eq(x**3, 8)
+
+
+# Round-trip tests between the SMT-LIB printer (sympy.printing.smtlib) and
+# the parser, for the subset of SymPy that both support.
+
+def _check_roundtrip(exprs, **printer_kwargs):
+    """Print ``exprs`` with smtlib_code, parse the result back, and check
+    that both the expressions and a second printing are unchanged."""
+    from sympy.assumptions.assume import AppliedPredicate
+    from sympy.printing.smtlib import smtlib_code
+
+    code = smtlib_code(exprs, log_warn=lambda _: None, **printer_kwargs)
+    _, assertions = parse_smtlib(code)
+
+    # declare-const of an Int/Real constant produces a Q.integer/Q.real
+    # entry; use it to restore the assumptions that smtlib_code needs on
+    # the symbols, then drop it
+    replacements = {}
+    parsed = []
+    for a in assertions:
+        if isinstance(a, AppliedPredicate):
+            sym = a.arguments[0]
+            if a.function == Q.real:
+                replacements[sym] = Symbol(sym.name, real=True)
+            elif a.function == Q.integer:
+                replacements[sym] = Symbol(sym.name, integer=True)
+        else:
+            parsed.append(a)
+    parsed = [a.xreplace(replacements) for a in parsed]
+
+    assert parsed == exprs
+    assert smtlib_code(parsed, log_warn=lambda _: None, **printer_kwargs) == code
+
+
+def test_roundtrip_arithmetic():
+    from sympy import Rational, Float, symbols
+    x, y = symbols('x y', real=True)
+    n = Symbol('n', integer=True)
+    _check_roundtrip([Eq(x + 2*y, 2)])
+    _check_roundtrip([x/y < 5])
+    _check_roundtrip([Eq(x**2, 4)])
+    _check_roundtrip([n >= 5, Eq(x, Rational(1, 3)), x <= Float(2.5)])
+    _check_roundtrip([x >= -5, Eq(x, Float(-2.5))])
+
+
+def test_roundtrip_boolean():
+    from sympy import symbols
+    x = Symbol('x', real=True)
+    b1, b2 = symbols('b1 b2')
+    _check_roundtrip([Implies(Eq(x, 1), Xor(b1, b2))])
+    _check_roundtrip([Not(And(b1, Or(b2, x > 0)))])
+    _check_roundtrip([Ne(x, Symbol('y', real=True))])
+
+
+def test_roundtrip_piecewise_abs():
+    x = Symbol('x', real=True)
+    _check_roundtrip([StrictLessThan(Piecewise((x, x > 0), (-x, True)), 2)])
+    _check_roundtrip([Eq(Abs(x), 1)])
+
+
+def test_roundtrip_uninterpreted_function():
+    import typing
+    n = Symbol('n', integer=True)
+    f = Function('f')
+    _check_roundtrip([Eq(f(n), 0)],
+                     symbol_table={f: typing.Callable[[int], int]})

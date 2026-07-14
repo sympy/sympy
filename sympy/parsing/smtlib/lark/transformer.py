@@ -268,6 +268,11 @@ class SMTLibTransformer(Transformer):
             if len(params) == 2:
                 return params[0] / params[1]
             return params[0] / Mul(*params[1:])
+        elif op in ('pow', '^'):
+            # Exponentiation is not part of standard SMT-LIB, but ^ is
+            # supported by solvers such as Z3 and pow is what SymPy's own
+            # SMT-LIB printer (sympy.printing.smtlib) emits
+            return params[0] ** params[1]
         elif op == 'div':
             # SMT-LIB integer division is Euclidean: the remainder is always
             # nonnegative, which matches floor division only for positive
