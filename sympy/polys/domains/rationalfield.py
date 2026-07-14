@@ -1,6 +1,7 @@
 """Implementation of :class:`RationalField` class. """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
 from sympy.external.gmpy import MPQ
 
@@ -12,6 +13,9 @@ from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.conjugatedomain import ConjugateDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.cyclotomicfield import CyclotomicField
 
 @public
 class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomain):
@@ -106,6 +110,16 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomai
         """
         from sympy.polys.domains import AlgebraicField
         return AlgebraicField(self, *extension, alias=alias)
+
+    def cyclotomic_field(
+        self,
+        n: int,
+        ss: bool = True,
+        alias: str = "zeta",
+        root_index: int = -1,
+    ) -> CyclotomicField:
+        from sympy.polys.domains.cyclotomicfield import CyclotomicField
+        return CyclotomicField(n, ss=ss, alias=alias, root_index=root_index)
 
     def from_AlgebraicField(K1, a, K0):
         """Convert a :py:class:`~.ANP` object to :ref:`QQ`.

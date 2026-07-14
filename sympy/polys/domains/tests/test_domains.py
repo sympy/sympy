@@ -869,16 +869,21 @@ def test_Domain_alg_field_from_poly():
 
 def test_Domain_cyclotomic_field():
     K = ZZ.cyclotomic_field(12)
+    assert K.is_Cyclotomic and K.is_CyclotomicField
     assert K.ext.minpoly == Poly(cyclotomic_poly(12))
     assert K.dom == QQ
+    assert K.zeta_order == 12
 
     F = QQ.cyclotomic_field(3)
     assert F.ext.minpoly == Poly(cyclotomic_poly(3))
     assert F.dom == QQ
+    assert F.zeta_order == 3
 
     E = F.cyclotomic_field(4)
+    assert E.is_Cyclotomic and E.is_CyclotomicField
     assert field_isomorphism(E.ext, K.ext) is not None
     assert E.dom == QQ
+    assert E.zeta_order == 12
 
 
 def test_PolynomialRing_from_FractionField():
@@ -1475,11 +1480,17 @@ def test_Domain_conjugate():
     b = K.from_sympy((-7 - 3*sqrt(5)*I)/2)
     assert K.conjugate(a) == b
 
+    a = Poly(x**3 - x + 1, x, domain=ZZ).all_roots()[-1]
+    K = QQ.algebraic_field(a)
+    raises(CoercionFailed, lambda: K.conjugate(K.from_sympy(a)))
+
+    # cyclotomic fields
     K = QQ.cyclotomic_field(7)
     a = K.dtype([0, 1, 2, 3, 4, 5, 6], K.mod.to_list(), QQ)
     b = K.dtype([5, 4, 3, 2, 1, 0, 6], K.mod.to_list(), QQ)
     assert K.conjugate(a) == b
 
-    a = Poly(x**3 - x + 1, x, domain=ZZ).all_roots()[-1]
-    K = QQ.algebraic_field(a)
-    raises(CoercionFailed, lambda: K.conjugate(K.from_sympy(a)))
+    K = QQ.cyclotomic_field(12)
+    a = K.convert(2*exp(2*pi*I/12) + 3*exp(10*pi*I/12) - 4*exp(14*pi*I/12))
+    b = K.convert(2*exp(-2*pi*I/12) + 3*exp(-10*pi*I/12) - 4*exp(-14*pi*I/12))
+    assert K.conjugate(a) == b
