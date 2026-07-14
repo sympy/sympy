@@ -35,7 +35,7 @@ Simplify a sum of proportional pure tensors:
 >>> D = MatrixSymbol("D", 4, 5)
 >>> T1 = AlgebraicPureTensor(A, B)
 >>> T2 = AlgebraicPureTensor(2, A, B)
->>> tensorsimplify(T1 + T2)
+>>> print(tensorsimplify(T1 + T2))
 3*A ⊗ B
 """
 
@@ -201,11 +201,11 @@ def _build_pt(coeff, factors):
     >>> from sympy.matrices.expressions import MatrixSymbol
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
-    >>> _build_pt(2, [A, B])
+    >>> print(_build_pt(2, [A, B]))
     2*A ⊗ B
-    >>> _build_pt(1, [A])
+    >>> print(_build_pt(1, [A]))
     A
-    >>> _build_pt(0, [A, B])
+    >>> print(_build_pt(0, [A, B]))
     0_((3, 4), (4, 5))
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
@@ -270,7 +270,7 @@ def _proportionality_factoring(at):
     >>> B = MatrixSymbol("B", 4, 5)
     >>> T1 = AlgebraicPureTensor(A, B)
     >>> T2 = AlgebraicPureTensor(2, A, B)
-    >>> _proportionality_factoring(T1 + T2)
+    >>> print(_proportionality_factoring(T1 + T2))
     3*A ⊗ B
     """
     from sympy.core.add import Add as _Add
@@ -470,7 +470,7 @@ def _proportionality_factoring(at):
 
     if not all_terms:
         from sympy.tensor.algebraic.algebraic_zero_tensor import algebraic_zero_tensor
-        return algebraic_zero_tensor(at.tensor_shape)
+        return algebraic_zero_tensor(at.shape)
 
     if len(all_terms) == 1:
         return all_terms[0]
@@ -512,19 +512,19 @@ def tensorsimplify(expr, **kwargs):
     >>> B = MatrixSymbol("B", 4, 5)
     >>> T1 = AlgebraicPureTensor(A, B)
     >>> T2 = AlgebraicPureTensor(2, A, B)
-    >>> tensorsimplify(T1 + T2)
+    >>> print(tensorsimplify(T1 + T2))
     3*A ⊗ B
 
     Simplify a pure tensor:
 
-    >>> tensorsimplify(AlgebraicPureTensor(2, A, B))
+    >>> print(tensorsimplify(AlgebraicPureTensor(2, A, B)))
     2*A ⊗ B
 
     Zero tensor passes through unchanged:
 
     >>> from sympy.tensor.algebraic import AlgebraicZeroTensor
     >>> Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    >>> tensorsimplify(Z)
+    >>> print(tensorsimplify(Z))
     0_((3, 4), (4, 5))
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
@@ -625,7 +625,7 @@ def _reconstruct_term(key, non_commutative_pt, coeff, comm_cs,
     coeff : SymPy expression
         Combined commutative coefficient.
     comm_cs : tuple of 0/1
-        The commutativity_shape of the original tensor.
+        The commutativity_pattern of the original tensor.
     commutative_indices : list of int
         Indices of commutative factor slots.
     non_commutative_indices : list of int
@@ -641,8 +641,8 @@ def _reconstruct_term(key, non_commutative_pt, coeff, comm_cs,
 
     >>> from sympy.matrices import ImmutableDenseMatrix
     >>> E00 = ImmutableDenseMatrix([[1, 0], [0, 0]])
-    >>> _reconstruct_term((E00,), None, 1, (1,), [0], [])
-    E00
+    >>> print(_reconstruct_term((E00,), None, 1, (1,), [0], []))
+    Matrix([[1, 0], [0, 0]])
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
@@ -1008,7 +1008,7 @@ def _commutativity_simplify(at, **kwargs):
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
     from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
-    comm_cs = at.commutativity_shape
+    comm_cs = at.commutativity_pattern
     commutative_indices = [i for i, v in enumerate(comm_cs) if v == 1]
     non_commutative_indices = [i for i, v in enumerate(comm_cs) if v == 0]
 
@@ -1115,7 +1115,7 @@ def _commutativity_simplify(at, **kwargs):
 
             for body in bodies:
                 if isinstance(body, AlgebraicZeroTensor):
-                    all_reconstructed.append(AlgebraicZeroTensor(at.tensor_shape))
+                    all_reconstructed.append(AlgebraicZeroTensor(at.shape))
                     continue
 
                 if isinstance(body, AlgebraicPureTensor):
@@ -1143,7 +1143,7 @@ def _commutativity_simplify(at, **kwargs):
                     all_reconstructed.append(reconstructed)
         else:
             if value is S.Zero:
-                all_reconstructed.append(AlgebraicZeroTensor(at.tensor_shape))
+                all_reconstructed.append(AlgebraicZeroTensor(at.shape))
                 continue
             reconstructed = _reconstruct_term(key, None, value,
                 comm_cs, commutative_indices, non_commutative_indices)
@@ -1153,7 +1153,7 @@ def _commutativity_simplify(at, **kwargs):
     real_terms = [t for t in all_reconstructed if t is not S.Zero]
 
     if not real_terms:
-        final_result = AlgebraicZeroTensor(at.tensor_shape)
+        final_result = AlgebraicZeroTensor(at.shape)
     elif len(real_terms) == 1:
         final_result = real_terms[0]
     else:
@@ -1200,7 +1200,7 @@ def _simplify_algebraic_pure_tensor(pt, **kwargs):
     # Simplify coefficient
     new_coeff = _s(coeff, **kwargs)
     if new_coeff is S.Zero:
-        return AlgebraicZeroTensor(pt.tensor_shape)
+        return AlgebraicZeroTensor(pt.shape)
 
       # Simplify individual factors and extract commutative prefactors
     from sympy import factor as _factor
@@ -1234,7 +1234,7 @@ def _simplify_algebraic_pure_tensor(pt, **kwargs):
         return pt
 
     if new_coeff is S.Zero:
-        return AlgebraicZeroTensor(pt.tensor_shape)
+        return AlgebraicZeroTensor(pt.shape)
 
     if len(new_factors) == 0:
         return new_coeff

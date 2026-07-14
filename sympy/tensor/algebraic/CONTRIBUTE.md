@@ -55,8 +55,8 @@ Per SymPy's Docstring Style Guide: every public function/class/method needs a
 ### `algebraic_pure_tensor.py`
 - [x] `AlgebraicPureTensor` class docstring — add `Examples` section with doctests
 - [x] `AlgebraicPureTensor.factors` property — add `Examples`
-- [x] `AlgebraicPureTensor.tensor_shape` property — add `Examples`
-- [x] `AlgebraicPureTensor.commutativity_shape` property — add `Examples`
+- [x] `AlgebraicPureTensor.shape` property — add `Examples`
+- [x] `AlgebraicPureTensor.commutativity_pattern` property — add `Examples`
 - [x] `AlgebraicPureTensor.__new__` — add docstring with `Examples`
 - [x] `AlgebraicPureTensor.__neg__` — add `Examples`
 - [x] `AlgebraicPureTensor.__mul__` — add `Examples`
@@ -69,8 +69,8 @@ Per SymPy's Docstring Style Guide: every public function/class/method needs a
 
 ### `algebraic_tensor.py`
 - [x] `AlgebraicTensor` class docstring — add `Examples` section with doctests
-- [x] `AlgebraicTensor.tensor_shape` property — add `Examples`
-- [x] `AlgebraicTensor.commutativity_shape` property — add `Examples`
+- [x] `AlgebraicTensor.shape` property — add `Examples`
+- [x] `AlgebraicTensor.commutativity_pattern` property — add `Examples`
 - [x] `AlgebraicTensor.terms` property — add `Examples`
 - [x] `AlgebraicTensor.__neg__` — add `Examples`
 - [x] `AlgebraicTensor.__add__` / `__radd__` — add `Examples`
@@ -84,8 +84,7 @@ Per SymPy's Docstring Style Guide: every public function/class/method needs a
 ### `algebraic_zero_tensor.py`
 - [x] `AlgebraicZeroTensor` class docstring — add `Examples` section with doctests
 - [x] `AlgebraicZeroTensor.shape` property — add `Examples`
-- [x] `AlgebraicZeroTensor.tensor_shape` property — add `Examples`
-- [x] `AlgebraicZeroTensor.commutativity_shape` property — add `Examples`
+- [x] `AlgebraicZeroTensor.commutativity_pattern` property — add `Examples`
 - [x] `AlgebraicZeroTensor.__neg__` — add `Examples`
 - [x] `AlgebraicZeroTensor.__add__` / `__radd__` — add `Examples`
 - [x] `AlgebraicZeroTensor.__sub__` / `__rsub__` — add `Examples`
@@ -97,8 +96,8 @@ Per SymPy's Docstring Style Guide: every public function/class/method needs a
 - [x] `ScalarMul.scalar` property — add `Examples`
 - [x] `ScalarMul.tensor` property — add `Examples`
 - [x] `ScalarMul.factors` property — add `Examples`
-- [x] `ScalarMul.tensor_shape` property — add `Examples`
-- [x] `ScalarMul.commutativity_shape` property — add `Examples`
+- [x] `ScalarMul.shape` property — add `Examples`
+- [x] `ScalarMul.commutativity_pattern` property — add `Examples`
 - [x] `ScalarMul.__neg__` — add `Examples`
 - [x] `ScalarMul.__mul__` — add `Examples`
 - [x] `ScalarMul.__rmul__` — add `Examples`

@@ -27,7 +27,7 @@ Create a pure tensor from two matrix symbols:
 >>> A = MatrixSymbol("A", 3, 4)
 >>> B = MatrixSymbol("B", 4, 5)
 >>> T = AlgebraicPureTensor(A, B)
->>> T.tensor_shape
+>>> T.shape
 ((3, 4), (4, 5))
 
 Form a sum of two pure tensors with the same shape:
@@ -36,7 +36,7 @@ Form a sum of two pure tensors with the same shape:
 >>> D = MatrixSymbol("D", 4, 5)
 >>> from sympy.tensor.algebraic import AlgebraicTensor
 >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B), AlgebraicPureTensor(C, D))
->>> S.tensor_shape
+>>> S.shape
 ((3, 4), (4, 5))
 
 Scale a pure tensor by a numeric or symbolic coefficient:

@@ -48,7 +48,7 @@ def test_constructor_basic():
     pt = AlgebraicPureTensor(A, C)
     assert isinstance(pt, AlgebraicPureTensor)
     assert pt.factors == (A, C)
-    assert pt.tensor_shape == ((3, 4), (4, 5))
+    assert pt.shape == ((3, 4), (4, 5))
 
 
 def test_constructor_with_number_coefficient():
@@ -171,40 +171,40 @@ def test_coeff_property():
     assert pt_symbolic.coeff == Symbol("x")
 
 
-def test_tensor_shape():
-    """tensor_shape returns tuple of per-factor shapes."""
+def test_shape():
+    """shape returns tuple of per-factor shapes."""
     mats = _make_matrices()
     A, C, E = mats["A"], mats["C"], mats["E"]
 
     pt = AlgebraicPureTensor(A, C, E)
-    assert pt.tensor_shape == ((3, 4), (4, 5), (5, 3))
+    assert pt.shape == ((3, 4), (4, 5), (5, 3))
 
 
-def test_commutativity_shape_symbolic():
-    """commutativity_shape is 0 for symbolic matrix factors."""
+def test_commutativity_pattern_symbolic():
+    """commutativity_pattern is 0 for symbolic matrix factors."""
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
 
     pt = AlgebraicPureTensor(A, C)
-    assert pt.commutativity_shape == (0, 0)
+    assert pt.commutativity_pattern == (0, 0)
 
 
-def test_commutativity_shape_numeric():
-    """commutativity_shape is 1 for numeric matrix factors."""
+def test_commutativity_pattern_numeric():
+    """commutativity_pattern is 1 for numeric matrix factors."""
     numeric = ImmutableDenseMatrix([[1, 2], [3, 4]])
     A = MatrixSymbol("A", 2, 3)
 
     pt = AlgebraicPureTensor(numeric, A)
-    assert pt.commutativity_shape == (1, 0)
+    assert pt.commutativity_pattern == (1, 0)
 
 
-def test_commutativity_shape_all_numeric():
-    """commutativity_shape is all-1s when all factors are numeric."""
+def test_commutativity_pattern_all_numeric():
+    """commutativity_pattern is all-1s when all factors are numeric."""
     M1 = ImmutableDenseMatrix([[1, 2], [3, 4]])
     M2 = ImmutableDenseMatrix([[1, 0], [0, 1], [1, 1]])
 
     pt = AlgebraicPureTensor(M1, M2)
-    assert pt.commutativity_shape == (1, 1)
+    assert pt.commutativity_pattern == (1, 1)
 
 
 def test_is_commutative_false():
@@ -452,14 +452,33 @@ def test_compose_bare_matrix():
 
 
 def test_compose_with_zero_tensor():
-    """Composition with AlgebraicZeroTensor returns zero tensor."""
+    """Composition with AlgebraicZeroTensor returns zero tensor with composed shape."""
     mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
+    A, C, I4, I5 = mats["A"], mats["C"], mats["I4"], mats["I5"]
 
-    pt = AlgebraicPureTensor(A, C)
-    zt = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    pt = AlgebraicPureTensor(A, C)  # shape ((3,4), (4,5))
+    zt = AlgebraicZeroTensor(((4, 5), (5, 3)))
+    # Composed shape: (3,3) from A(3,4)*zt_slot0(4,5)->(3,5) wait no...
+    # pt factors: A(3,4), C(4,5); zt shape: ((4,5), (5,3))
+    # Composed: (A_rows=3, zt_col0=5) and (C_rows=4, zt_col1=3) -> ((3,5), (4,3))
     result = compose_algebraic_pure_tensors(pt, zt)
     assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 5), (4, 3))
+
+    # Zero on the left
+    zt2 = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    pt2 = AlgebraicPureTensor(I4, I5)  # shape ((4,4), (5,5))
+    # Composed: (zt_row0=3, I4_cols=4) and (zt_row1=4, I5_cols=5) -> ((3,4), (4,5))
+    result2 = compose_algebraic_pure_tensors(zt2, pt2)
+    assert isinstance(result2, AlgebraicZeroTensor)
+    assert result2.shape == ((3, 4), (4, 5))
+
+    # Both zero tensors
+    zt3 = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    zt4 = AlgebraicZeroTensor(((4, 5), (5, 3)))
+    result3 = compose_algebraic_pure_tensors(zt3, zt4)
+    assert isinstance(result3, AlgebraicZeroTensor)
+    assert result3.shape == ((3, 5), (4, 3))
 
 
 def test_compose_invalid_type_raises():

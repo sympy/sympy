@@ -89,22 +89,16 @@ def test_shape_property():
     assert zt.shape == ((3, 4), (4, 5))
 
 
-def test_tensor_shape_alias():
-    """tensor_shape is an alias for shape."""
+def test_commutativity_pattern():
+    """commutativity_pattern is all-1s for zero tensor."""
     zt = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    assert zt.tensor_shape == zt.shape
+    assert zt.commutativity_pattern == (1, 1)
 
 
-def test_commutativity_shape():
-    """commutativity_shape is all-1s for zero tensor."""
-    zt = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    assert zt.commutativity_shape == (1, 1)
-
-
-def test_commutativity_shape_single():
-    """commutativity_shape for single-factor zero tensor."""
+def test_commutativity_pattern_single():
+    """commutativity_pattern for single-factor zero tensor."""
     zt = AlgebraicZeroTensor(((3, 4),))
-    assert zt.commutativity_shape == (1,)
+    assert zt.commutativity_pattern == (1,)
 
 
 def test_is_commutative_true():

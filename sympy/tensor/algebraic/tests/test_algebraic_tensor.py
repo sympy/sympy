@@ -139,26 +139,26 @@ def test_constructor_with_zero_tensor_anchor():
 # Properties tests
 # ---------------------------------------------------------------------------
 
-def test_tensor_shape():
-    """tensor_shape returns the shared shape."""
+def test_shape():
+    """shape returns the shared shape."""
     mats = _make_matrices()
     A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
 
     pt1 = AlgebraicPureTensor(A, C)
     pt2 = AlgebraicPureTensor(B, D)
     at = AlgebraicTensor(pt1, pt2)
-    assert at.tensor_shape == ((3, 4), (4, 5))
+    assert at.shape == ((3, 4), (4, 5))
 
 
-def test_commutativity_shape():
-    """commutativity_shape is component-wise AND of all terms."""
+def test_commutativity_pattern():
+    """commutativity_pattern is component-wise AND of all terms."""
     mats = _make_matrices()
     A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
 
     pt1 = AlgebraicPureTensor(A, C)
     pt2 = AlgebraicPureTensor(B, D)
     at = AlgebraicTensor(pt1, pt2)
-    assert at.commutativity_shape == (0, 0)
+    assert at.commutativity_pattern == (0, 0)
 
 
 def test_terms_property():

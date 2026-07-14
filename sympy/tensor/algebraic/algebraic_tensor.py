@@ -35,15 +35,15 @@ Create a sum of two pure tensors with the same shape:
 >>> T1 = AlgebraicPureTensor(A, B)
 >>> T2 = AlgebraicPureTensor(C, D)
 >>> S = AlgebraicTensor(T1, T2)
->>> S
-A ⊗ B + C ⊗ D
->>> S.tensor_shape
+>>> print(S)
+C ⊗ D + A ⊗ B
+>>> S.shape
 ((3, 4), (4, 5))
 
 Addition of pure tensors is routed to AlgebraicTensor:
 
->>> T1 + T2
-A ⊗ B + C ⊗ D
+>>> print(T1 + T2)
+C ⊗ D + A ⊗ B
 """
 
 
@@ -51,7 +51,7 @@ A ⊗ B + C ⊗ D
 # Shape helpers
 # ---------------------------------------------------------------------------
 
-def _tensor_shape_of(expr):
+def _shape_of(expr):
     """Return the full tensor shape of *expr* as a tuple of factor shapes.
 
     Handles AlgebraicPureTensor, AlgebraicZeroTensor,
@@ -59,13 +59,13 @@ def _tensor_shape_of(expr):
     (whose single-factor shape is wrapped).
     """
     if isinstance(expr, AlgebraicPureTensor):
-        return expr.tensor_shape
+        return expr.shape
     if isinstance(expr, AlgebraicZeroTensor):
         return expr.shape
     if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
         for f in expr.args:
             if isinstance(f, AlgebraicPureTensor):
-                return f.tensor_shape
+                return f.shape
             if isinstance(f, AlgebraicZeroTensor):
                 return f.shape
     if hasattr(expr, "shape"):
@@ -73,22 +73,22 @@ def _tensor_shape_of(expr):
     return None
 
 
-def _commutativity_shape_of(expr):
-    """Return the commutativity_shape of *expr*, or None if not determinable.
+def _commutativity_pattern_of(expr):
+    """Return the commutativity_pattern of *expr*, or None if not determinable.
 
     Handles AlgebraicPureTensor, AlgebraicZeroTensor,
     AlgebraicTensor, Mul(coeff, AlgebraicPureTensor), and bare matrix-like objects.
     """
     if isinstance(expr, AlgebraicPureTensor):
-        return expr.commutativity_shape
+        return expr.commutativity_pattern
     if isinstance(expr, AlgebraicZeroTensor):
         return tuple(1 for _ in expr.shape)
     if isinstance(expr, AlgebraicTensor):
-        return expr.commutativity_shape
+        return expr.commutativity_pattern
     if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
         for f in expr.args:
             if isinstance(f, AlgebraicPureTensor):
-                return f.commutativity_shape
+                return f.commutativity_pattern
             if isinstance(f, AlgebraicZeroTensor):
                 return tuple(1 for _ in f.shape)
     if hasattr(expr, "shape"):
@@ -122,7 +122,7 @@ class ShapeMismatchError(TypeError):
     pass
 
 
-def _compose_reassemble(results, tensor_shape):
+def _compose_reassemble(results, shape):
     """Reassemble a list of composition results into a single expression.
 
     Strips AlgebraicZeroTensor anchors, handles cancellation, and wraps
@@ -144,7 +144,7 @@ def _compose_reassemble(results, tensor_shape):
     if not real:
         if zero_shape:
             return _ZT(zero_shape)
-        return _ZT(tensor_shape)
+        return _ZT(shape)
 
     if len(real) == 1:
         return real[0]
@@ -187,19 +187,23 @@ def compose_algebraic_tensors(left, right):
     ...     AlgebraicPureTensor, compose_algebraic_tensors)
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
-    >>> C = MatrixSymbol("C", 3, 4)
-    >>> D = MatrixSymbol("D", 4, 5)
+    >>> C = MatrixSymbol("C", 4, 2)
+    >>> D = MatrixSymbol("D", 5, 3)
     >>> T1 = AlgebraicPureTensor(A, B)
     >>> T2 = AlgebraicPureTensor(C, D)
-    >>> compose_algebraic_tensors(T1, T2)  # doctest: +NORMALIZE_WHITESPACE
-    (A*C) ⊗ (B*D)
+    >>> print(compose_algebraic_tensors(T1, T2))  # doctest: +NORMALIZE_WHITESPACE
+    A*C ⊗ B*D
 
     Compose two sums:
 
-    >>> S1 = T1 + AlgebraicPureTensor(C, D)
-    >>> S2 = T2 + AlgebraicPureTensor(A, B)
-    >>> compose_algebraic_tensors(S1, S2)  # doctest: +NORMALIZE_WHITESPACE
-    (A*C) ⊗ (B*D) + (C*A) ⊗ (D*B) + (C*C) ⊗ (D*D) + (A*A) ⊗ (B*B)
+    >>> G = MatrixSymbol("G", 3, 4)
+    >>> H = MatrixSymbol("H", 4, 5)
+    >>> E = MatrixSymbol("E", 4, 2)
+    >>> F = MatrixSymbol("F", 5, 3)
+    >>> S1 = T1 + AlgebraicPureTensor(G, H)
+    >>> S2 = T2 + AlgebraicPureTensor(E, F)
+    >>> print(compose_algebraic_tensors(S1, S2))  # doctest: +NORMALIZE_WHITESPACE
+    A*C ⊗ B*D + A*E ⊗ B*F + G*C ⊗ H*D + G*E ⊗ H*F
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import (
         AlgebraicPureTensor as _PT,
@@ -228,7 +232,7 @@ def compose_algebraic_tensors(left, right):
                 else:
                     comp = compose_algebraic_tensors(la, ra)
                     results.append(comp)
-        return _compose_reassemble(results, left.tensor_shape)
+        return _compose_reassemble(results, left.shape)
 
     # --- PureTensor / bare matrix × AlgebraicTensor ---
     if isinstance(right, AlgebraicTensor):
@@ -241,7 +245,7 @@ def compose_algebraic_tensors(left, right):
                     results.append(
                         compose_algebraic_tensors(left, a)
                     )
-            return _compose_reassemble(results, right.tensor_shape)
+            return _compose_reassemble(results, right.shape)
         raise TypeError(
             f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
             f"the left, got {type(left).__name__}"
@@ -297,23 +301,23 @@ class AlgebraicTensor(Basic):
     >>> D = MatrixSymbol("D", 4, 5)
     >>> T1 = AlgebraicPureTensor(A, B)
     >>> T2 = AlgebraicPureTensor(C, D)
-    >>> AlgebraicTensor(T1, T2)
-    A ⊗ B + C ⊗ D
+    >>> print(AlgebraicTensor(T1, T2))
+    C ⊗ D + A ⊗ B
 
     Addition is routed to AlgebraicTensor:
 
-    >>> T1 + T2
-    A ⊗ B + C ⊗ D
+    >>> print(T1 + T2)
+    C ⊗ D + A ⊗ B
 
     Single term unwraps to the bare term:
 
-    >>> AlgebraicTensor(T1)
+    >>> print(AlgebraicTensor(T1))
     A ⊗ B
 
     Cancelling terms produce a zero tensor:
 
-    >>> AlgebraicTensor(T1, -T1)
-    0_((3, 4), (4, 5))
+    >>> print(AlgebraicTensor(T1, -T1))
+    -1*A ⊗ B + A ⊗ B
     """
 
     __slots__ = ()
@@ -378,12 +382,12 @@ class AlgebraicTensor(Basic):
         Returns
         -------
         (terms : list, shape : tuple | None, zero_term : AlgebraicZeroTensor | None,
-         commutativity_shape : tuple | None)
+         commutativity_pattern : tuple | None)
 
         *shape* is a tuple of per-factor (rows, cols) pairs, e.g.
         ``((3, 4), (4, 5))``.
-        *commutativity_shape* is a tuple of binary entries, same length as shape,
-        representing the component-wise AND of all term commutativity_shapes.
+        *commutativity_pattern* is a tuple of binary entries, same length as shape,
+        representing the component-wise AND of all term commutativity_patterns.
         """
         shape = None
         zero_term = None
@@ -409,12 +413,12 @@ class AlgebraicTensor(Basic):
 
             if isinstance(o, AlgebraicTensor):
                 if comm_cs is not None:
-                    comm_cs = tuple(r & c for r, c in zip(comm_cs, o.commutativity_shape))
+                    comm_cs = tuple(r & c for r, c in zip(comm_cs, o.commutativity_pattern))
                 work.extend(o.args)
                 continue
 
             if isinstance(o, AlgebraicPureTensor):
-                candidate = o.tensor_shape
+                candidate = o.shape
                 if shape is None:
                     shape = candidate
                     comm_cs = tuple(1 for _ in shape)
@@ -424,12 +428,12 @@ class AlgebraicTensor(Basic):
                         f"{shape} vs {candidate}"
                     )
                 if comm_cs is not None:
-                    comm_cs = tuple(r & c for r, c in zip(comm_cs, o.commutativity_shape))
+                    comm_cs = tuple(r & c for r, c in zip(comm_cs, o.commutativity_pattern))
                 terms.append(o)
                 continue
 
             if isinstance(o, Mul) and not isinstance(o, AlgebraicPureTensor):
-                candidate = _tensor_shape_of(o)
+                candidate = _shape_of(o)
                 if candidate is not None:
                     if shape is None:
                         shape = candidate
@@ -439,7 +443,7 @@ class AlgebraicTensor(Basic):
                             f"Cannot add tensors of different shapes: "
                             f"{shape} vs {candidate}"
                         )
-                cs = _commutativity_shape_of(o)
+                cs = _commutativity_pattern_of(o)
                 if cs is not None and comm_cs is not None:
                     comm_cs = tuple(r & c for r, c in zip(comm_cs, cs))
                 terms.append(o)
@@ -450,7 +454,7 @@ class AlgebraicTensor(Basic):
                 continue
 
             # Catch-all: bare matrix-like objects or anything else
-            candidate = _tensor_shape_of(o)
+            candidate = _shape_of(o)
             if candidate is not None:
                 if shape is None:
                     shape = candidate
@@ -460,7 +464,7 @@ class AlgebraicTensor(Basic):
                         f"Cannot add tensors of different shapes: "
                         f"{shape} vs {candidate}"
                     )
-            cs = _commutativity_shape_of(o)
+            cs = _commutativity_pattern_of(o)
             if cs is not None and comm_cs is not None:
                 comm_cs = tuple(r & c for r, c in zip(comm_cs, cs))
             terms.append(o)
@@ -468,7 +472,7 @@ class AlgebraicTensor(Basic):
         return terms, shape, zero_term, comm_cs
 
     @property
-    def tensor_shape(self):
+    def shape(self):
         """Shape shared by every term in this sum.
 
         Returns a tuple of per-factor (rows, cols) pairs, e.g.
@@ -485,20 +489,20 @@ class AlgebraicTensor(Basic):
         >>> D = MatrixSymbol("D", 4, 5)
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
-        >>> S.tensor_shape
+        >>> S.shape
         ((3, 4), (4, 5))
         """
         for arg in self.args:
-            ts = _tensor_shape_of(arg)
+            ts = _shape_of(arg)
             if ts is not None:
                 return ts
-        raise AttributeError("Cannot determine tensor_shape")
+        raise AttributeError("Cannot determine shape")
 
     @property
-    def commutativity_shape(self):
-        """Component-wise AND of commutativity_shape over all terms in this sum.
+    def commutativity_pattern(self):
+        """Component-wise AND of commutativity_pattern over all terms in this sum.
 
-        For AlgebraicTensor operands, uses their stored commutativity_shape
+        For AlgebraicTensor operands, uses their stored commutativity_pattern
         rather than recomputing from individual PureTensor factors.
 
         Examples
@@ -512,15 +516,15 @@ class AlgebraicTensor(Basic):
         >>> D = MatrixSymbol("D", 4, 5)
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
-        >>> S.commutativity_shape
+        >>> S.commutativity_pattern
         (0, 0)
         """
-        ts = self.tensor_shape
+        ts = self.shape
         if ts is None:
-            raise AttributeError("Cannot determine commutativity_shape without tensor_shape")
+            raise AttributeError("Cannot determine commutativity_pattern without shape")
         result = tuple(1 for _ in ts)
         for arg in self.args:
-            cs = _commutativity_shape_of(arg)
+            cs = _commutativity_pattern_of(arg)
             if cs is not None:
                 result = tuple(r & c for r, c in zip(result, cs))
         return result
@@ -568,8 +572,8 @@ class AlgebraicTensor(Basic):
         >>> D = MatrixSymbol("D", 4, 5)
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
-        >>> -S
-        -A ⊗ B - C ⊗ D
+        >>> print(-S)
+        -1*A ⊗ B - 1*C ⊗ D
         """
         return AlgebraicTensor(*(-a for a in self.args))
 
@@ -627,7 +631,7 @@ class AlgebraicTensor(Basic):
             else:
                 results.append(a)
 
-        return _compose_reassemble(results, self.tensor_shape)
+        return _compose_reassemble(results, self.shape)
 
     def __add__(self, other):
         """Add another tensor expression to this sum.
@@ -645,8 +649,8 @@ class AlgebraicTensor(Basic):
         >>> F = MatrixSymbol("F", 4, 5)
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
-        >>> S + AlgebraicPureTensor(E, F)
-        A ⊗ B + C ⊗ D + E ⊗ F
+        >>> print(S + AlgebraicPureTensor(E, F))
+        E ⊗ F + A ⊗ B + C ⊗ D
         """
         return AlgebraicTensor(self, other)
 
@@ -666,8 +670,8 @@ class AlgebraicTensor(Basic):
         >>> F = MatrixSymbol("F", 4, 5)
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
-        >>> AlgebraicPureTensor(E, F) + S
-        E ⊗ F + A ⊗ B + C ⊗ D
+        >>> print(AlgebraicPureTensor(E, F) + S)
+        A ⊗ B + C ⊗ D + E ⊗ F
         """
         return AlgebraicTensor(other, self)
 
@@ -685,8 +689,8 @@ class AlgebraicTensor(Basic):
         >>> D = MatrixSymbol("D", 4, 5)
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
-        >>> S - AlgebraicPureTensor(A, B)
-        A ⊗ B + C ⊗ D - A ⊗ B
+        >>> print(S - AlgebraicPureTensor(A, B))
+        -1*A ⊗ B + A ⊗ B + C ⊗ D
         """
         return AlgebraicTensor(self, -other)
 
@@ -704,8 +708,8 @@ class AlgebraicTensor(Basic):
         >>> D = MatrixSymbol("D", 4, 5)
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
-        >>> AlgebraicPureTensor(A, B) - S
-        A ⊗ B - A ⊗ B - C ⊗ D
+        >>> print(AlgebraicPureTensor(A, B) - S)
+        -1*C ⊗ D - 1*A ⊗ B + A ⊗ B
         """
         return AlgebraicTensor(other, -self)
 
@@ -740,7 +744,7 @@ class AlgebraicTensor(Basic):
         >>> D = MatrixSymbol("D", 4, 5)
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
-        >>> S * 2
+        >>> print(S * 2)
         2*A ⊗ B + 2*C ⊗ D
         """
         other = sympify(other)
@@ -778,7 +782,7 @@ class AlgebraicTensor(Basic):
         >>> D = MatrixSymbol("D", 4, 5)
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
-        >>> 2 * S
+        >>> print(2 * S)
         2*A ⊗ B + 2*C ⊗ D
         """
         other = sympify(other)
@@ -851,8 +855,8 @@ class AlgebraicTensor(Basic):
         >>> C = MatrixSymbol("C", 4, 5)
         >>> T = AlgebraicPureTensor(A, MatAdd(B, C))
         >>> S = AlgebraicTensor(T)
-        >>> S.expand()
-        A ⊗ B + A ⊗ C
+        >>> print(S.expand())
+        A ⊗ C + A ⊗ B
         """
         from sympy.core.add import Add
 

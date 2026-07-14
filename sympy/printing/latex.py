@@ -2185,7 +2185,7 @@ class LatexPrinter(Printer):
                     parts.append(s)
         if not parts:
             return self._print_AlgebraicZeroTensor(
-                AlgebraicZeroTensor(expr.tensor_shape)
+                AlgebraicZeroTensor(expr.shape)
             )
         return r" ".join(parts)
 

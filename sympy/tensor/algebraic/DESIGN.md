@@ -20,18 +20,18 @@ The module provides three core types plus a simplification pipeline:
 
 ## 1. Tensor Shape Model
 
-**Shape is the fundamental invariant.** Every tensor object carries a `tensor_shape`
+**Shape is the fundamental invariant.** Every tensor object carries a `shape`
 that is a tuple of per-factor `(rows, cols)` pairs.
 
 ```
-A ⊗ B    →  tensor_shape = ((m, n), (n, p))    # A is m×n, B is n×p
-C        →  tensor_shape = ((m, n),)            # single factor C is m×n
+A ⊗ B    →  shape = ((m, n), (n, p))    # A is m×n, B is n×p
+C        →  shape = ((m, n),)            # single factor C is m×n
 ```
 
 - A bare matrix `M` with `M.shape == (m, n)` is treated as a single-factor tensor
-  with `tensor_shape = ((m, n),)`.
+  with `shape = ((m, n),)`.
 - `AlgebraicZeroTensor` stores its shape explicitly in `_shape`.
-- Two tensors can be **added** only if their `tensor_shape` tuples are identical.
+- Two tensors can be **added** only if their `shape` tuples are identical.
 - Two tensors can be **composed** only if they have the same number of factors and
   each corresponding factor pair has matching inner dimensions.
 
@@ -42,7 +42,7 @@ C        →  tensor_shape = ((m, n),)            # single factor C is m×n
 - `[(3, 4)]` → `((3, 4),)` (list converted to tuple of tuples)
 - `((3, 4), (4, 5))` → unchanged
 
-**Agent rule:** Always compare full `tensor_shape` tuples for equality. Never
+**Agent rule:** Always compare full `shape` tuples for equality. Never
 compare only the outer `shape` of individual factors.
 
 ---
@@ -99,16 +99,16 @@ AlgebraicPureTensor(2, A, B).factors →  (A, B)
 **Agent rule:** When iterating factors, always use `.factors`. When checking
 for a coefficient, use `.coeff`.
 
-### `commutativity_shape`
+### `commutativity_pattern`
 
-The `commutativity_shape` property returns a tuple of binary entries, one per
+The `commutativity_pattern` property returns a tuple of binary entries, one per
 tensor factor. Entry `i` is `1` if the `i`-th factor contains no non-commutative
 symbols (e.g., a concrete numeric matrix), and `0` otherwise (e.g., a
-`MatrixSymbol`). Same length as `tensor_shape`.
+`MatrixSymbol`). Same length as `shape`.
 
 ```
-AlgebraicPureTensor(A_3x4, C_4x5).commutativity_shape → (0, 0)   # both symbolic
-AlgebraicPureTensor(numeric_3x4, C_4x5).commutativity_shape → (1, 0)
+AlgebraicPureTensor(A_3x4, C_4x5).commutativity_pattern → (0, 0)   # both symbolic
+AlgebraicPureTensor(numeric_3x4, C_4x5).commutativity_pattern → (1, 0)
 ```
 
 This property is used by `AlgebraicTensor._flatten_args` to compute the
@@ -183,13 +183,13 @@ Key implementation details:
 - `free_symbols` returns `set()` (a zero tensor has no free symbols).
 - `copy()` returns `self` (immutable atom).
 
-### `commutativity_shape`
+### `commutativity_pattern`
 
-A zero tensor is commutative in every slot. The `commutativity_shape` property
+A zero tensor is commutative in every slot. The `commutativity_pattern` property
 returns an all-1s tuple matching the length of the tensor shape:
 
 ```
-AlgebraicZeroTensor(((3, 4), (4, 5))).commutativity_shape → (1, 1)
+AlgebraicZeroTensor(((3, 4), (4, 5))).commutativity_pattern → (1, 1)
 ```
 
 ### Arithmetic operators
@@ -219,7 +219,7 @@ correctly return `zt`.
 ### Idea
 
 An `AlgebraicTensor` represents a **linear combination** of `AlgebraicPureTensor`
-terms that all share the same `tensor_shape`. Conceptually, it is a sum:
+terms that all share the same `shape`. Conceptually, it is a sum:
 
 ```
 A ⊗ B + 2*(C ⊗ D)    →  AlgebraicTensor(AlgebraicPureTensor(A, B),
@@ -253,7 +253,7 @@ non-commutative sums.
 
 The constructor uses `_flatten_args` to:
 1. **Flatten** nested `AlgebraicTensor` instances (collect all leaf terms)
-2. **Validate** that all terms share the same `tensor_shape`
+2. **Validate** that all terms share the same `shape`
 3. **Collect** `AlgebraicZeroTensor` as a separate anchor term
 4. **Filter** out `S.Zero` identity numbers
 
@@ -270,26 +270,26 @@ Always check the return type.
 ### Shape enforcement
 
 `_flatten_args` raises `ShapeMismatchError` if any two terms have different
-`tensor_shape`. The `_tensor_shape_of` helper extracts the shape from various
+`shape`. The `_shape_of` helper extracts the shape from various
 expression types:
-- `AlgebraicPureTensor` → `.tensor_shape`
+- `AlgebraicPureTensor` → `.shape`
 - `AlgebraicZeroTensor` → `.shape`
 - Bare matrix with `.shape` → wrapped as `((m, n),)`
 - Anything else → `None`
 
-### `commutativity_shape`
+### `commutativity_pattern`
 
-The `commutativity_shape` property returns the component-wise AND of the
-`commutativity_shape` of every term in the sum. The result is a tuple of
-binary entries, same length as `tensor_shape`.
+The `commutativity_pattern` property returns the component-wise AND of the
+`commutativity_pattern` of every term in the sum. The result is a tuple of
+binary entries, same length as `shape`.
 
 `_flatten_args` computes this incrementally as it walks the arguments, using
-the `_commutativity_shape_of` helper which handles `AlgebraicPureTensor`,
+the `_commutativity_pattern_of` helper which handles `AlgebraicPureTensor`,
 `AlgebraicZeroTensor`, `AlgebraicTensor`, and bare matrix-like objects.
 
 ```
 t = AlgebraicTensor(AlgebraicPureTensor(A, C), AlgebraicPureTensor(B, C))
-t.commutativity_shape  →  (0, 0)   # A, B, C are all symbolic
+t.commutativity_pattern  →  (0, 0)   # A, B, C are all symbolic
 ```
 
 ### The `_sympify` parameter
@@ -551,19 +551,19 @@ than the class you called. Write code that handles all possible return types.
 
 ### 8.6 Shape comparison
 
-Always compare full `tensor_shape` tuples. Never compare individual factor shapes
+Always compare full `shape` tuples. Never compare individual factor shapes
 unless you are iterating factor-by-factor (as in composition).
 
-### 8.6.1 `commutativity_shape` convention
+### 8.6.1 `commutativity_pattern` convention
 
-All tensor-related types expose `commutativity_shape`:
+All tensor-related types expose `commutativity_pattern`:
 
 - **`AlgebraicPureTensor`** — per-factor check: `0` if the factor contains any
   non-commutative symbol, `1` otherwise.
 - **`AlgebraicZeroTensor`** — all-1s tuple (zero is commutative in every slot).
 - **`AlgebraicTensor`** — component-wise AND of all term commutativity shapes.
 
-The `_commutativity_shape_of` helper in `algebraic_tensor.py` extracts the
+The `_commutativity_pattern_of` helper in `algebraic_tensor.py` extracts the
 commutativity shape from any recognized expression type (including bare matrices).
 Use this helper when you need to query commutativity from an arbitrary tensor
 expression rather than a known instance.
