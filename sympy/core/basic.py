@@ -291,7 +291,9 @@ class Basic(Printable):
 
     kind: Kind = UndefinedKind
 
-    def __new__(cls, *args):
+    _assumptions: StdFactKB
+
+    def __new__(cls: type[Tbasic], *args: Basic) -> Tbasic:
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.
@@ -500,7 +502,7 @@ class Basic(Printable):
             return self == other._sympy_()
         return NotImplemented
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Return a boolean indicating whether a == b on the basis of
         their symbolic trees.
 
@@ -535,14 +537,14 @@ class Basic(Printable):
         if a != b:
             return False
         # check number *in* an expression
-        for a, b in zip(a, b):
-            if not isinstance(a, Basic):
+        for ai, bi in zip(a, b):
+            if not isinstance(ai, Basic):
                 continue
-            if a.is_Number and type(a) != type(b):
+            if ai.is_Number and type(ai) != type(bi):
                 return False
         return True
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         """``a != b``  -> Compare two symbolic trees and see whether they are different
 
         this is the same as:

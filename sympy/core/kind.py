@@ -26,8 +26,15 @@ This module defines basic kinds for core objects. Other kinds such as
 """
 from __future__ import annotations
 
-from collections import defaultdict
+from typing import ClassVar, TYPE_CHECKING
 
+if TYPE_CHECKING:
+    try:
+        from typing import Self
+    except ImportError:
+        from typing_extensions import Self
+
+from collections import defaultdict
 from .cache import cacheit
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_warn, ambiguity_register_error_ignore_dup,
@@ -73,7 +80,9 @@ class Kind(object, metaclass=KindMeta):
     return the same object.
 
     """
-    def __new__(cls, *args):
+    _inst: ClassVar[dict[tuple[Kind, ...], Self]]
+
+    def __new__(cls, *args: Kind) -> Self:
         if args in cls._inst:
             inst = cls._inst[args]
         else:

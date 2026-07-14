@@ -184,7 +184,7 @@ class Pow(Expr):
             elif exp.__class__.__name__ == "AccumulationBounds":
                 if base == S.Exp1:
                     from sympy.calculus.accumulationbounds import AccumBounds
-                    return AccumBounds(Pow(base, exp.min), Pow(base, exp.max))
+                    return AccumBounds(Pow(base, exp.min), Pow(base, exp.max)) # type: ignore[attr-defined]
             # autosimplification if base is a number and exp odd/even
             # if base is Number then the base will end up positive; we
             # do not do this with arbitrary expressions since symbolic
