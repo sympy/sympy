@@ -39,6 +39,9 @@ def _construct_simple(coeffs, opt):
             if is_complex:
                 complexes = True
                 x, y = is_complex
+                if not (x.is_finite and y.is_finite):
+                    # e.g. oo*I
+                    return None
                 if x.is_Rational and y.is_Rational:
                     if not (x.is_Integer and y.is_Integer):
                         rationals = True
@@ -146,7 +149,9 @@ def _construct_composite(coeffs, opt):
     if opt.composite is None:
         if any(_not_a_coeff(gen) or gen.is_number and gen.is_algebraic for gen in gens):
             return None # generators are number-like so lets better use EX
-
+        if any(gen.is_finite is False for gen in gens):
+            return None # e.g. oo appearing as a generator from oo*I; use EX
+            
         all_symbols = set()
 
         for gen in gens:
