@@ -1671,7 +1671,33 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
         return pull_out_u_rl
 
-    liate_rules = [pull_out_u(*special_error_functions), pull_out_u(log),
+    def pull_out_dv(*functions) -> Callable[[Expr], tuple[Expr, Expr] | None]:
+        # Prefer forms that are easier to integrate using special functions
+        # x*exp(-x**2) instead of exp(-x**2) -> erf
+        # x*sin(x**2) instead of sin(x**2) -> Fresnel
+        def pull_out_dv_rl(integrand: Expr) -> tuple[Expr, Expr] | None:
+            power = integrand.as_powers_dict().get(symbol)
+            if (
+                isinstance(power, Integer) and power >= 2 and
+                integrand.has(*functions)
+            ):
+                for target in integrand.args:
+                    if not any(isinstance(target, cls) for cls in functions):
+                        continue
+                    inner = target.args[0]
+                    if (
+                        inner.is_polynomial(symbol) and  # type: ignore
+                        degree(inner, symbol) == 2
+                    ):
+                        dv = target * symbol
+                        u = integrand / dv
+                        return u, dv
+            return None
+
+        return pull_out_dv_rl
+
+    liate_rules = [pull_out_dv(exp), pull_out_dv(sin, cos),
+                   pull_out_u(*special_error_functions), pull_out_u(log),
                    pull_out_u(*inverse_trig_functions), pull_out_algebraic,
                    pull_out_u(sin, cos), pull_out_u(sinh, cosh),
                    pull_out_u(exp)]
@@ -1720,7 +1746,8 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
             # make sure dv is amenable to integration
             accept = False
-            if index < 2:  # log and inverse trig are usually worth trying
+            cutoff = liate_rules.index(pull_out_algebraic)  # log and inverse trig are usually worth trying
+            if index < cutoff:
                 accept = True
             elif (rule == pull_out_algebraic and dv.args and
                 all(isinstance(a, (sin, cos, exp))
