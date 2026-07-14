@@ -24,6 +24,7 @@ from sympy.sets.sets import Interval, FiniteSet
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
+from sympy import nsimplify
 import warnings
 
 
@@ -278,7 +279,7 @@ class Beam:
 
     @length.setter
     def length(self, l):
-        self._length = sympify(l)
+        self._length = nsimplify(l)
 
     @property
     def area(self):
@@ -287,7 +288,7 @@ class Beam:
 
     @area.setter
     def area(self, a):
-        self._area = sympify(a)
+        self._area = nsimplify(a)
 
     @property
     def variable(self):
@@ -330,7 +331,7 @@ class Beam:
 
     @elastic_modulus.setter
     def elastic_modulus(self, e):
-        self._elastic_modulus = sympify(e)
+        self._elastic_modulus = nsimplify(e)
 
     @property
     def second_moment(self):
@@ -343,7 +344,7 @@ class Beam:
         if isinstance(i, GeometryEntity):
             raise ValueError("To update cross-section geometry use `cross_section` attribute")
         else:
-            self._second_moment = sympify(i)
+            self._second_moment = nsimplify(i)
 
     @property
     def cross_section(self):
@@ -385,13 +386,24 @@ class Beam:
         """
         return self._boundary_conditions
 
+    def bc_setter(self, bc):
+        """
+        This converts all the boundary conditions points into rationals.
+        """
+        if isinstance(bc, tuple):
+            return tuple(self.bc_setter(e) for e in bc)
+        elif isinstance(bc, list):
+            return [self.bc_setter(e) for e in bc]
+        else:
+            return nsimplify(bc)
+
     @property
     def bc_shear_force(self):
         return self._boundary_conditions['shear_force']
 
     @bc_shear_force.setter
     def bc_shear_force(self, sf_bcs):
-        self._boundary_conditions['shear_force'] = sf_bcs
+        self._boundary_conditions['shear_force'].extend(self.bc_setter(sf_bcs))
 
     @property
     def bc_bending_moment(self):
@@ -399,7 +411,7 @@ class Beam:
 
     @bc_bending_moment.setter
     def bc_bending_moment(self, bm_bcs):
-        self._boundary_conditions['bending_moment'] = bm_bcs
+        self._boundary_conditions['bending_moment'].extend(self.bc_setter(bm_bcs))
 
     @property
     def bc_slope(self):
@@ -407,7 +419,7 @@ class Beam:
 
     @bc_slope.setter
     def bc_slope(self, s_bcs):
-        self._boundary_conditions['slope'] = s_bcs
+        self._boundary_conditions['slope'].extend(self.bc_setter(s_bcs))
 
     @property
     def bc_deflection(self):
@@ -415,7 +427,7 @@ class Beam:
 
     @bc_deflection.setter
     def bc_deflection(self, d_bcs):
-        self._boundary_conditions['deflection'] = d_bcs
+        self._boundary_conditions['deflection'].extend(self.bc_setter(d_bcs))
 
     def join(self, beam, via="fixed"):
         """
@@ -456,9 +468,12 @@ class Beam:
         >>> b.load
         80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
         >>> b.slope()
-        (-((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
-        - 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
-        + 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
+        (-((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2)
+        - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E + 80/(E*I))*SingularityFunction(x, 2, 0)
+        - 2*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2)
+        - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(3*E*I)
+        + 2*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2)
+        - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(3*E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -541,7 +556,7 @@ class Beam:
         - 8*SingularityFunction(x, 10, -1) + 100*SingularityFunction(x, 20, -2)
         + 10*SingularityFunction(x, 20, -1)
         """
-        loc = sympify(loc)
+        loc = nsimplify(loc)
 
         if type == "fixed" or type=="roller" or type=="pin":
             pass
@@ -757,8 +772,8 @@ class Beam:
 
         """
         x = self.variable
-        value = sympify(value)
-        start = sympify(start)
+        value = nsimplify(value)
+        start = nsimplify(start)
 
         self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(x, start, order)
@@ -1452,6 +1467,7 @@ class Beam:
         x = self.variable
         E = self.elastic_modulus
         I = self.second_moment
+
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
             if isinstance(I, Piecewise) and self._joined_beam:
                 args = I.args
@@ -1794,9 +1810,10 @@ class Beam:
             >>> b.solve_for_reaction_loads(R1, R2)
             >>> b.plot_slope()
             Plot object containing:
-            [0]: cartesian line: -8.59375e-5*SingularityFunction(x, 0, 2) + 3.125e-5*SingularityFunction(x, 2, 2)
-            + 2.08333333333333e-5*SingularityFunction(x, 4, 3) - 0.0001953125*SingularityFunction(x, 8, 2)
-            - 2.08333333333333e-5*SingularityFunction(x, 8, 3) + 0.00138541666666667 for x over (0.0, 8.0)
+            [0]: cartesian line: -11*SingularityFunction(x, 0, 2)/128000
+            + SingularityFunction(x, 2, 2)/32000 + SingularityFunction(x, 4, 3)/48000
+            - SingularityFunction(x, 8, 2)/5120 - SingularityFunction(x, 8, 3)/48000 + 133/96000
+            for x over (0.0, 8.0)
         """
         slope = self.slope()
         if subs is None:
@@ -1852,9 +1869,9 @@ class Beam:
             >>> b.solve_for_reaction_loads(R1, R2)
             >>> b.plot_deflection()
             Plot object containing:
-            [0]: cartesian line: 0.00138541666666667*x - 2.86458333333333e-5*SingularityFunction(x, 0, 3)
-            + 1.04166666666667e-5*SingularityFunction(x, 2, 3) + 5.20833333333333e-6*SingularityFunction(x, 4, 4)
-            - 6.51041666666667e-5*SingularityFunction(x, 8, 3) - 5.20833333333333e-6*SingularityFunction(x, 8, 4)
+            [0]: cartesian line: 133*x/96000 - 11*SingularityFunction(x, 0, 3)/384000
+            + SingularityFunction(x, 2, 3)/96000 + SingularityFunction(x, 4, 4)/192000
+            - SingularityFunction(x, 8, 3)/15360 - SingularityFunction(x, 8, 4)/192000
             for x over (0.0, 8.0)
         """
         deflection = self.deflection()
@@ -2887,10 +2904,10 @@ class Beam3D(Beam):
         >>> from sympy import symbols
         >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
         >>> b = Beam3D(30, E, G, I, A, x)
-        >>> b.bc_slope = [(0, (4, 0, 0))]
+        >>> b.bc_slope = [(0, [4, 0, 0])]
         >>> b.bc_deflection = [(4, [0, 0, 0])]
         >>> b.boundary_conditions
-        {'bending_moment': [], 'deflection': [(4, [0, 0, 0])], 'shear_force': [], 'slope': [(0, (4, 0, 0))]}
+        {'bending_moment': [], 'deflection': [(4, [0, 0, 0])], 'shear_force': [], 'slope': [(0, [4, 0, 0])]}
 
         Here the deflection of the beam should be ``0`` along all the three axes at ``4``.
         Similarly, the slope of the beam should be ``4`` along x-axis and ``0``
