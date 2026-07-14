@@ -112,15 +112,15 @@ def test_constructor_flattens_nested():
 
 
 def test_constructor_cancellation_returns_zero_tensor():
-    """Adding t and -t keeps both terms (cancellation is a simplification step)."""
+    """Adding t and -t simplifies to AlgebraicZeroTensor."""
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
 
     pt = AlgebraicPureTensor(A, C)
     neg_pt = AlgebraicPureTensor(S.NegativeOne, A, C)
     result = AlgebraicTensor(pt, neg_pt)
-    assert isinstance(result, AlgebraicTensor)
-    assert len(result.args) == 2
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 4), (4, 5))
 
 
 def test_constructor_with_zero_tensor_anchor():
@@ -133,6 +133,69 @@ def test_constructor_with_zero_tensor_anchor():
     at = AlgebraicTensor(pt, zt)
     assert isinstance(at, AlgebraicTensor)
     assert at.has_zero_term()
+
+
+# ---------------------------------------------------------------------------
+# Coefficient collecting tests (add dispatcher)
+# ---------------------------------------------------------------------------
+
+def test_coefficient_collecting_same_factors_numeric():
+    """2*(A⊗C) + 3*(A⊗C) combines to 5*(A⊗C)."""
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+
+    pt1 = AlgebraicPureTensor(2, A, C)
+    pt2 = AlgebraicPureTensor(3, A, C)
+    result = pt1 + pt2
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 5
+    assert result.factors == (A, C)
+
+
+def test_coefficient_collecting_cancellation_via_add():
+    """2*(A⊗C) + (-2)*(A⊗C) cancels to AlgebraicZeroTensor via +."""
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+
+    pt1 = AlgebraicPureTensor(2, A, C)
+    pt2 = AlgebraicPureTensor(S.NegativeOne * 2, A, C)
+    result = pt1 + pt2
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 4), (4, 5))
+
+
+def test_coefficient_collecting_mixed_sum():
+    """2*(A⊗C) + 3*(B⊗D) + 3*(A⊗C) combines matching terms to 5*(A⊗C) + 3*(B⊗D)."""
+    mats = _make_matrices()
+    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
+
+    pt1 = AlgebraicPureTensor(2, A, C)
+    pt2 = AlgebraicPureTensor(3, B, D)
+    pt3 = AlgebraicPureTensor(3, A, C)
+    result = pt1 + pt2 + pt3
+    assert isinstance(result, AlgebraicTensor)
+    assert len(result.args) == 2
+    coeffs = []
+    for arg in result.args:
+        if isinstance(arg, AlgebraicPureTensor):
+            coeffs.append((arg.coeff, arg.factors))
+    coeffs.sort(key=lambda c: str(c[1]))
+    assert (5, (A, C)) in coeffs
+    assert (3, (B, D)) in coeffs
+
+
+def test_coefficient_collecting_symbolic():
+    """x*(A⊗C) + 2*(A⊗C) combines to (x+2)*(A⊗C)."""
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    x = Symbol("x")
+
+    pt1 = AlgebraicPureTensor(x, A, C)
+    pt2 = AlgebraicPureTensor(2, A, C)
+    result = pt1 + pt2
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == x + 2
+    assert result.factors == (A, C)
 
 
 # ---------------------------------------------------------------------------
@@ -235,7 +298,7 @@ def test_add():
 
 
 def test_sub():
-    """Subtraction of two AlgebraicTensors."""
+    """Subtraction of two AlgebraicTensors with identical terms cancels to zero."""
     mats = _make_matrices()
     A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
 
@@ -244,7 +307,8 @@ def test_sub():
     at1 = AlgebraicTensor(pt1, pt2)
     at2 = AlgebraicTensor(pt2, pt1)
     result = at1 - at2
-    assert isinstance(result, AlgebraicTensor)
+    # at1 - at2 = pt1 + pt2 - pt2 - pt1 = 0 (all terms cancel)
+    assert isinstance(result, AlgebraicZeroTensor)
 
 
 def test_mul_by_number():

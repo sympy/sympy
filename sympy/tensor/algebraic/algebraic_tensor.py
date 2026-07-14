@@ -317,7 +317,7 @@ class AlgebraicTensor(Basic):
     Cancelling terms produce a zero tensor:
 
     >>> print(AlgebraicTensor(T1, -T1))
-    -1*A ⊗ B + A ⊗ B
+    0_{(3x4), (4x5)}
     """
 
     __slots__ = ()
@@ -349,6 +349,13 @@ class AlgebraicTensor(Basic):
         # Flatten nested AlgebraicTensors and collect all leaf terms
         flat, shape, zero_term, comm_cs = cls._flatten_args(args)
 
+        # Remember whether zero_term was user-provided (from _flatten_args)
+        # vs. created later by coefficient cancellation.
+        zero_term_was_user_provided = zero_term is not None
+
+        # Collect coefficients of PureTensor terms with identical factors
+        flat, zero_term = cls._collect_coefficients(flat, shape, zero_term)
+
         if not flat:
             if zero_term is not None:
                 return zero_term
@@ -362,18 +369,95 @@ class AlgebraicTensor(Basic):
                 return zero_term
             raise ValueError("AlgebraicTensor resulted in zero terms")
 
-        # If an AlgebraicZeroTensor was provided, always keep it as an anchor.
-        # Only unwrap to a single term when there is exactly one non-zero
-        # term AND no AlgebraicZeroTensor was explicitly given.
-        if len(flat) == 1 and zero_term is None and not isinstance(flat[0], AlgebraicZeroTensor):
+        # If an AlgebraicZeroTensor was explicitly provided by the user,
+        # always keep it as an anchor.  Only unwrap to a single term when
+        # there is exactly one non-zero term AND no AlgebraicZeroTensor was
+        # explicitly given.
+        if len(flat) == 1 and not zero_term_was_user_provided and not isinstance(flat[0], AlgebraicZeroTensor):
             return flat[0]
 
-        # Append AlgebraicZeroTensor if present (for shape anchoring)
-        if zero_term is not None:
+        # Append user-provided AlgebraicZeroTensor (for shape anchoring).
+        # Cancellation-created zero_term is NOT appended when there are
+        # surviving non-zero terms -- it was only needed for the all-cancelled
+        # case handled above.
+        if zero_term_was_user_provided:
             flat.append(zero_term)
 
         obj = Basic.__new__(cls, *flat)
         return obj
+
+    @classmethod
+    def _collect_coefficients(cls, terms, shape, zero_term):
+        """Combine coefficients of AlgebraicPureTensor terms with identical factors.
+
+        Walks the terms list with a pivot index.  For each pivot that is an
+        AlgebraicPureTensor, scans every subsequent term for matching factors
+        and accumulates the coefficient.  When a pivot's accumulated coefficient
+        becomes zero the term is removed (the shape is remembered so that a
+        zero-tensor anchor can be created later).  AlgebraicZeroTensor entries
+        that somehow ended up in the terms list are also removed.
+
+        Parameters
+        ----------
+        terms : list
+            Flattened term list from ``_flatten_args``.
+        shape : tuple | None
+            The common tensor shape.
+        zero_term : AlgebraicZeroTensor | None
+            Existing zero-tensor anchor (if any).
+
+        Returns
+        -------
+        (new_terms : list, new_zero_term : AlgebraicZeroTensor | None)
+        """
+        result = []
+        skip = set()
+        n = len(terms)
+
+        # Remove any AlgebraicZeroTensor that leaked into terms
+        for i, t in enumerate(terms):
+            if isinstance(t, AlgebraicZeroTensor):
+                if zero_term is None:
+                    zero_term = t
+                skip.add(i)
+
+        for pivot in range(n):
+            if pivot in skip:
+                continue
+            pt = terms[pivot]
+
+            if not isinstance(pt, AlgebraicPureTensor):
+                result.append(pt)
+                continue
+
+            combined_coeff = pt.coeff
+            pivot_factors = pt.factors
+
+            # Scan remaining terms for matching factors
+            for j in range(pivot + 1, n):
+                if j in skip:
+                    continue
+                other = terms[j]
+                if isinstance(other, AlgebraicPureTensor) and other.factors == pivot_factors:
+                    combined_coeff = combined_coeff + other.coeff
+                    skip.add(j)
+
+            # Rebuild or discard the pivot term
+            if combined_coeff == 0:
+                skip.add(pivot)
+                if zero_term is None and shape is not None:
+                    zero_term = AlgebraicZeroTensor(shape)
+            else:
+                if combined_coeff is S.One:
+                    # Rebuild without coefficient
+                    if len(pivot_factors) == 1:
+                        result.append(pivot_factors[0])
+                    else:
+                        result.append(AlgebraicPureTensor(*pivot_factors))
+                else:
+                    result.append(AlgebraicPureTensor(combined_coeff, *pivot_factors))
+
+        return result, zero_term
 
     @classmethod
     def _flatten_args(cls, args):
@@ -690,7 +774,7 @@ class AlgebraicTensor(Basic):
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
         >>> print(S - AlgebraicPureTensor(A, B))
-        -1*A ⊗ B + A ⊗ B + C ⊗ D
+        C ⊗ D
         """
         return AlgebraicTensor(self, -other)
 
@@ -709,7 +793,7 @@ class AlgebraicTensor(Basic):
         >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
         ...                     AlgebraicPureTensor(C, D))
         >>> print(AlgebraicPureTensor(A, B) - S)
-        -1*C ⊗ D - 1*A ⊗ B + A ⊗ B
+        -1*C ⊗ D
         """
         return AlgebraicTensor(other, -self)
 
