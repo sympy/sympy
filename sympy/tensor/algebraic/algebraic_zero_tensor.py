@@ -281,12 +281,6 @@ class AlgebraicZeroTensor(AtomicExpr):
         from sympy.tensor.algebraic.algebraic_tensor import compose_algebraic_tensors
         return compose_algebraic_tensors(other, self)
 
-    def __repr__(self):
-        return f"AlgebraicZeroTensor{self._shape}"
-
-    def __str__(self):
-        return f"0_{self._shape}"
-
     def __bool__(self):
         return False
 

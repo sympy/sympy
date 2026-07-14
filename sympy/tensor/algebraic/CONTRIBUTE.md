@@ -122,15 +122,23 @@ Per SymPy's Docstring Style Guide: every public function/class/method needs a
 
 ---
 
-## 4. Fix `_repr_latex_` / `display()` Methods (Missing)
+## 4. `_repr_latex_` / `display()` Methods (Done)
 
-The four `display()` methods call `self._repr_latex_()` which is never defined
-on these classes. This will raise `AttributeError`.
+`_repr_latex_()` is inherited from the `Printable` mixin (base of `Basic`),
+which calls `latex(self, mode='plain')` and wraps the result in
+`$\displaystyle ...$`.  The `LatexPrinter` dispatches to the
+`_print_AlgebraicPureTensor`, `_print_AlgebraicTensor`, and
+`_print_AlgebraicZeroTensor` handlers in `sympy/printing/latex.py`.
 
-- [ ] Implement `_repr_latex_()` on `AlgebraicPureTensor` (use the printer dispatch system: `latex(self)`)
-- [ ] Implement `_repr_latex_()` on `AlgebraicTensor`
-- [ ] Implement `_repr_latex_()` on `ScalarMul`
-- [ ] Implement `_repr_latex_()` on `AlgebraicZeroTensor`
+The `display()` convenience methods on each class work correctly through this
+inherited mechanism.  They are not part of the standard SymPy API (SymPy relies
+on IPython's rich display protocol), but are kept as user-facing helpers.
+
+- [x] `_repr_latex_()` inherited from `Printable` — no override needed
+- [x] `_print_AlgebraicPureTensor` in `latex.py` — renders `⊗` with coefficient
+- [x] `_print_AlgebraicTensor` in `latex.py` — renders sum with `+`/`-`
+- [x] `_print_AlgebraicZeroTensor` in `latex.py` — renders `0_{shape}`
+- [x] `display()` methods on all three classes — use `self._repr_latex_()`
 
 ---
 
@@ -145,15 +153,18 @@ on these classes. This will raise `AttributeError`.
 
 ---
 
-## 6. Str Printing (Missing)
+## 6. Str Printing (Done)
 
-`printing/str.py` has no handlers for the algebraic types. The `__str__` methods
-exist on the classes but should integrate with the printer system.
+`printing/str.py` handlers dispatch via `Printable.__str__` → `sstr()` →
+`StrPrinter._print_*`.  The `__str__` / `__repr__` overrides on the classes
+have been removed in favor of the printer system.
 
-- [ ] Add `_print_AlgebraicPureTensor` to `sympy/printing/str.py`
-- [ ] Add `_print_AlgebraicTensor` to `sympy/printing/str.py`
-- [ ] Add `_print_ScalarMul` to `sympy/printing/str.py`
-- [ ] Add `_print_AlgebraicZeroTensor` to `sympy/printing/str.py`
+- [x] `_print_AlgebraicPureTensor` in `sympy/printing/str.py` — renders `⊗` with coefficient
+- [x] `_print_AlgebraicTensor` in `sympy/printing/str.py` — renders sum with `+`/`-`
+- [x] `_print_AlgebraicZeroTensor` in `sympy/printing/str.py` — renders `0_{shape}`
+- [x] `_print_AlgebraicPureTensor` in `sympy/printing/repr.py` — renders constructor form
+- [x] `_print_AlgebraicTensor` in `sympy/printing/repr.py` — renders constructor form
+- [x] `_print_AlgebraicZeroTensor` in `sympy/printing/repr.py` — renders constructor form
 
 ---
 

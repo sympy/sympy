@@ -791,25 +791,6 @@ class AlgebraicTensor(Basic):
             return AlgebraicTensor(*(other * a for a in self.args))
         return compose_algebraic_tensors(other, self)
 
-    def __str__(self):
-        if not self.args:
-            return ""
-        parts = []
-        first = True
-        for a in self.args:
-            s = str(a)
-            if first:
-                parts.append(s)
-                first = False
-            elif s.startswith("-"):
-                parts.append(f"- {s[1:]}")
-            else:
-                parts.append(f"+ {s}")
-        return " ".join(parts)
-
-    def __repr__(self):
-        return f"AlgebraicTensor({', '.join(repr(a) for a in self.args)})"
-
     def simplify(self):
         """Simplify this AlgebraicTensor using the tensor simplification pipeline.
 

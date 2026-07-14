@@ -20,12 +20,8 @@ from sympy.tensor.algebraic import (
     AlgebraicPureTensor,
     AlgebraicTensor,
     AlgebraicZeroTensor,
-    algebraic_tensor_product,
-    algebraic_zero_tensor,
-    compose_algebraic_pure_tensors,
     compose_algebraic_tensors,
     tensorsimplify,
-    proportionality_factoring,
     ShapeMismatchError,
 )
 
@@ -372,23 +368,6 @@ ts2 = tensorsimplify(AlgebraicTensor(
 ))
 print(f"\nts2 = simplify(2*A⊗B + 3*A⊗B) : {ts2}")
 
-# --- proportionality_factoring ---
-print("\n--- proportionality_factoring() ---")
-
-pf1 = proportionality_factoring(AlgebraicTensor(
-    AlgebraicPureTensor(2, A, B),
-    AlgebraicPureTensor(3, A, B),
-))
-print(f"pf1 = factor(2*A⊗B + 3*A⊗B)  : {pf1}")
-print(f"  type   : {type(pf1).__name__}")
-
-pf2 = proportionality_factoring(AlgebraicTensor(
-    AlgebraicPureTensor(A, B),
-    AlgebraicPureTensor(A2, B),
-))
-print(f"\npf2 = factor(A⊗B + A2⊗B)    : {pf2}")
-print(f"  type   : {type(pf2).__name__}")
-
 # ---------------------------------------------------------------------------
 # 4. EDGE CASES
 # ---------------------------------------------------------------------------
@@ -593,3 +572,5 @@ for i in range (len(da1.args)):
     print("")
 print("")
 print(srepr(da1))
+
+da1.display()

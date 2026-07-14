@@ -11,6 +11,7 @@ from typing import Any
 from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
 from sympy.core.add import Add
+from sympy.core.singleton import S
 from sympy.external.mpmath import repr_dps, to_str as mlib_to_str
 
 from .printer import Printer, print_function
@@ -331,6 +332,26 @@ class ReprPrinter(Printer):
         rep = self._print(f.rep)
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
+
+    def _print_AlgebraicPureTensor(self, expr):
+        coeff = expr.coeff
+        factors = expr.factors
+        if coeff is S.One:
+            return "AlgebraicPureTensor(%s)" % ", ".join(
+                [repr(f) for f in factors]
+            )
+        return "AlgebraicPureTensor(%s, %s)" % (
+            self._print(coeff),
+            ", ".join([repr(f) for f in factors])
+        )
+
+    def _print_AlgebraicTensor(self, expr):
+        return "AlgebraicTensor(%s)" % ", ".join(
+            [self._print(a) for a in expr.args]
+        )
+
+    def _print_AlgebraicZeroTensor(self, expr):
+        return "AlgebraicZeroTensor%s" % (expr.shape,)
 
 @print_function(ReprPrinter)
 def srepr(expr, **settings):

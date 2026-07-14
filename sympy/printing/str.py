@@ -985,6 +985,37 @@ class StrPrinter(Printer):
                                self._print(expr.lhs),
                                self._print(expr.rhs))
 
+    def _print_AlgebraicPureTensor(self, expr):
+        from sympy.core.singleton import S
+        coeff = expr.coeff
+        factors = expr.factors
+        factor_strs = [self._print(f) for f in factors]
+        result = " \u2297 ".join(factor_strs)
+        if coeff is S.One:
+            return result
+        return "%s*%s" % (self._print(coeff), result)
+
+    def _print_AlgebraicTensor(self, expr):
+        if not expr.args:
+            return ""
+        parts = []
+        for i, a in enumerate(expr.args):
+            s = self._print(a)
+            if i == 0:
+                parts.append(s)
+            elif s.startswith("-"):
+                parts.append("- %s" % s[1:])
+            else:
+                parts.append("+ %s" % s)
+        return " ".join(parts)
+
+    def _print_AlgebraicZeroTensor(self, expr):
+        shape_parts = [
+            "(%sx%s)" % (self._print(rows), self._print(cols))
+            for rows, cols in expr.shape
+        ]
+        return "0_{%s}" % ", ".join(shape_parts)
+
 
 @print_function(StrPrinter)
 def sstr(expr, **settings):

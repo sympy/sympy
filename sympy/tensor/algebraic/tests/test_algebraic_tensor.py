@@ -396,14 +396,15 @@ def test_str():
 
 
 def test_repr():
-    """Repr contains class name."""
+    """srepr contains class name (repr == str per SymPy convention)."""
+    from sympy.printing.repr import srepr
     mats = _make_matrices()
     A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
 
     pt1 = AlgebraicPureTensor(A, C)
     pt2 = AlgebraicPureTensor(B, D)
     at = AlgebraicTensor(pt1, pt2)
-    r = repr(at)
+    r = srepr(at)
     assert "AlgebraicTensor" in r
 
 

@@ -591,12 +591,13 @@ def test_str_negative_coeff():
 
 
 def test_repr():
-    """Repr contains class name."""
+    """srepr contains class name (repr == str per SymPy convention)."""
+    from sympy.printing.repr import srepr
     mats = _make_matrices()
     A, C = mats["A"], mats["C"]
 
     pt = AlgebraicPureTensor(A, C)
-    r = repr(pt)
+    r = srepr(pt)
     assert "AlgebraicPureTensor" in r
 
 

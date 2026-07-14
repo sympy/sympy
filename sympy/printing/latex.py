@@ -2102,14 +2102,6 @@ class LatexPrinter(Printer):
         subscript = r" \otimes ".join(shape_parts)
         return r"0_{%s}" % subscript
 
-    def _print_ScalarMul(self, expr):
-        from sympy.core.add import Add
-        scalar_str = self._print(expr.scalar)
-        if isinstance(expr.scalar, Add):
-            scalar_str = r"\left(%s\right)" % scalar_str
-        tensor_str = self._print(expr.tensor)
-        return r"%s %s" % (scalar_str, tensor_str)
-
     def _print_AlgebraicPureTensor(self, expr):
         from sympy.core.singleton import S
         from sympy.core.add import Add

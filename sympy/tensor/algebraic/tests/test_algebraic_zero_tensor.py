@@ -255,9 +255,10 @@ def test_str():
 
 
 def test_repr():
-    """Repr contains class name."""
+    """srepr contains class name (repr == str per SymPy convention)."""
+    from sympy.printing.repr import srepr
     zt = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    r = repr(zt)
+    r = srepr(zt)
     assert "AlgebraicZeroTensor" in r
 
 

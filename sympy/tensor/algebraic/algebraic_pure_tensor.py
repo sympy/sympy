@@ -229,17 +229,6 @@ class AlgebraicPureTensor(Mul):
             for f in self.factors
         )
 
-    def __str__(self):
-        if self.coeff is S.One:
-            return " \u2297 ".join(str(f) for f in self.factors)
-        factor_str = " \u2297 ".join(str(f) for f in self.factors)
-        return f"{self.coeff}*{factor_str}"
-
-    def __repr__(self):
-        if self.coeff is S.One:
-            return f"AlgebraicPureTensor({', '.join(repr(f) for f in self.factors)})"
-        return f"AlgebraicPureTensor({self.coeff}, {', '.join(repr(f) for f in self.factors)})"
-
     def __new__(cls, *args, evaluate=False):
         """Construct an AlgebraicPureTensor from factors.
 
