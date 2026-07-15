@@ -986,14 +986,23 @@ class StrPrinter(Printer):
                                self._print(expr.rhs))
 
     def _print_AlgebraicPureTensor(self, expr):
+        from sympy.core.add import Add
         from sympy.core.singleton import S
         coeff = expr.coeff
         factors = expr.factors
-        factor_strs = [self._print(f) for f in factors]
-        result = " \u2297 ".join(factor_strs)
+        factor_strs = []
+        for f in factors:
+            s = self._print(f)
+            if isinstance(f, Add):
+                s = "(%s)" % s
+            factor_strs.append(s)
+        result = " ⊗ ".join(factor_strs)
         if coeff is S.One:
             return result
-        return "%s*%s" % (self._print(coeff), result)
+        coeff_str = self._print(coeff)
+        if isinstance(coeff, Add):
+            coeff_str = "(%s)" % coeff_str
+        return "%s*%s" % (coeff_str, result)
 
     def _print_AlgebraicTensor(self, expr):
         if not expr.args:

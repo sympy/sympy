@@ -472,6 +472,33 @@ def test_repr():
     assert "AlgebraicTensor" in r
 
 
+def test_str_add_factor_in_sum():
+    """Add factor in PureTensor within AlgebraicTensor is wrapped in str."""
+    mats = _make_matrices()
+    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
+    at = AlgebraicTensor(
+        AlgebraicPureTensor(A + B, C),
+        AlgebraicPureTensor(B, D)
+    )
+    s = str(at)
+    assert "(" in s and ")" in s
+    assert "A" in s and "B" in s and "C" in s and "D" in s
+
+
+def test_latex_add_factor_in_sum():
+    """Add factor in PureTensor within AlgebraicTensor is wrapped in LaTeX."""
+    from sympy.printing.latex import latex
+    mats = _make_matrices()
+    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
+    at = AlgebraicTensor(
+        AlgebraicPureTensor(A + B, C),
+        AlgebraicPureTensor(B, D)
+    )
+    l = latex(at)
+    assert r"\left(" in l and r"\right)" in l
+    assert "A" in l and "B" in l and "C" in l and "D" in l
+
+
 # ---------------------------------------------------------------------------
 # ShapeMismatchError tests
 # ---------------------------------------------------------------------------

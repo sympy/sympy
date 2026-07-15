@@ -13,7 +13,7 @@ simplifying algebraic tensor expressions.  The simplification pipeline
 consists of two phases:
 
     1. **Proportionality factoring** -- merges proportional
-       :class:`~sympy.tensor.algebraic.algebraic_pure_tensor.AlgebraicPureTensor`
+       :class:`~sympy.tensor.algebraic.AlgebraicPureTensor`
        terms within a sum by combining coefficients or creating linear
        combinations at non-proportional factor slots.
 
@@ -229,9 +229,10 @@ def _build_pt(coeff, factors):
         return AlgebraicPureTensor(*factors)
 
     return AlgebraicPureTensor(coeff, *factors)
- 
+
 def _proportionality_factoring(at):
-    """Simplify an AlgebraicTensor by merging proportional AlgebraicPureTensor terms.
+    """Simplify an AlgebraicTensor by merging proportional
+    AlgebraicPureTensor terms.
 
     Algorithm
     ---------
@@ -617,7 +618,8 @@ def _decompose_commutative_factors(commutative_factors, term_coeff):
 
 def _reconstruct_term(key, non_commutative_pt, coeff, comm_cs,
                       commutative_indices, non_commutative_indices):
-    """Reconstruct a full tensor from commutative and non-commutative subtensors.
+    """Reconstruct a full tensor from commutative and
+    non-commutative subtensors.
 
     Interleaves commutative basis matrices (from *key*) and non-commutative
     factors (from *non_commutative_pt*) back into the original factor order
@@ -1237,8 +1239,8 @@ def _commutativity_simplify(at, **kwargs):
                     old_coeff = value.coeff
                     new_coeff = old_coeff * extr_coeff
                     comm_dict[key] = _build_pt(new_coeff, new_factors)
-    
-    
+
+
     for key in comm_dict:
         value = comm_dict[key]
         if isinstance(value, AlgebraicTensor):

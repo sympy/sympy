@@ -458,9 +458,7 @@ def test_compose_with_zero_tensor():
 
     pt = AlgebraicPureTensor(A, C)  # shape ((3,4), (4,5))
     zt = AlgebraicZeroTensor(((4, 5), (5, 3)))
-    # Composed shape: (3,3) from A(3,4)*zt_slot0(4,5)->(3,5) wait no...
-    # pt factors: A(3,4), C(4,5); zt shape: ((4,5), (5,3))
-    # Composed: (A_rows=3, zt_col0=5) and (C_rows=4, zt_col1=3) -> ((3,5), (4,3))
+
     result = compose_algebraic_pure_tensors(pt, zt)
     assert isinstance(result, AlgebraicZeroTensor)
     assert result.shape == ((3, 5), (4, 3))
@@ -468,7 +466,7 @@ def test_compose_with_zero_tensor():
     # Zero on the left
     zt2 = AlgebraicZeroTensor(((3, 4), (4, 5)))
     pt2 = AlgebraicPureTensor(I4, I5)  # shape ((4,4), (5,5))
-    # Composed: (zt_row0=3, I4_cols=4) and (zt_row1=4, I5_cols=5) -> ((3,4), (4,5))
+
     result2 = compose_algebraic_pure_tensors(zt2, pt2)
     assert isinstance(result2, AlgebraicZeroTensor)
     assert result2.shape == ((3, 4), (4, 5))
@@ -599,6 +597,137 @@ def test_repr():
     pt = AlgebraicPureTensor(A, C)
     r = srepr(pt)
     assert "AlgebraicPureTensor" in r
+
+
+def test_str_add_factor_wrapped():
+    """Add factor in PureTensor is wrapped in parentheses in str output."""
+    mats = _make_matrices()
+    A, B, C = mats["A"], mats["B"], mats["C"]
+    pt = AlgebraicPureTensor(A + B, C)
+    s = str(pt)
+    assert "(" in s and ")" in s
+    assert "A" in s and "B" in s and "C" in s
+
+
+def test_str_add_factor_second_slot():
+    """Add factor in second slot is wrapped in parentheses."""
+    mats = _make_matrices()
+    A, C, D = mats["A"], mats["C"], mats["D"]
+    pt = AlgebraicPureTensor(A, C + D)
+    s = str(pt)
+    assert "(" in s and ")" in s
+    assert "A" in s and "C" in s and "D" in s
+
+
+def test_str_no_add_factor_no_parens():
+    """Non-Add factor does not get parentheses."""
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    pt = AlgebraicPureTensor(A, C)
+    s = str(pt)
+    assert "(" not in s and ")" not in s
+
+
+def test_repr_add_factor_wrapped():
+    """Add factor in PureTensor is wrapped in parentheses in repr output."""
+    from sympy.printing.repr import srepr
+    mats = _make_matrices()
+    A, B, C = mats["A"], mats["B"], mats["C"]
+    pt = AlgebraicPureTensor(A + B, C)
+    r = srepr(pt)
+    assert "(" in r and ")" in r
+
+
+def test_repr_no_add_factor_no_parens():
+    """Non-Add factor does not get extra parentheses in repr."""
+    from sympy.printing.repr import srepr
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    pt = AlgebraicPureTensor(A, C)
+    r = srepr(pt)
+    # Should be clean AlgebraicPureTensor(A, C) without extra parens around factors
+    assert r == "AlgebraicPureTensor(A, C)"
+
+
+def test_latex_add_factor_wrapped():
+    """Add factor in PureTensor is wrapped in \\left(\\right) in LaTeX."""
+    from sympy.printing.latex import latex
+    mats = _make_matrices()
+    A, B, C = mats["A"], mats["B"], mats["C"]
+    pt = AlgebraicPureTensor(A + B, C)
+    l = latex(pt)
+    assert r"\left(" in l and r"\right)" in l
+    assert "A" in l and "B" in l and "C" in l
+
+
+def test_latex_add_factor_second_slot():
+    """Add factor in second slot is wrapped in LaTeX."""
+    from sympy.printing.latex import latex
+    mats = _make_matrices()
+    A, C, D = mats["A"], mats["C"], mats["D"]
+    pt = AlgebraicPureTensor(A, C + D)
+    l = latex(pt)
+    assert r"\left(" in l and r"\right)" in l
+    assert "A" in l and "C" in l and "D" in l
+
+
+def test_latex_no_add_factor_no_parens():
+    """Non-Add factor does not get parentheses in LaTeX."""
+    from sympy.printing.latex import latex
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    pt = AlgebraicPureTensor(A, C)
+    l = latex(pt)
+    assert r"\left(" not in l and r"\right)" not in l
+
+
+def test_str_add_coefficient_wrapped():
+    """Add coefficient in PureTensor is wrapped in parentheses in str output."""
+    from sympy.core import Symbol
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    x = Symbol("x")
+    pt = AlgebraicPureTensor(2 + x, A, C)
+    s = str(pt)
+    assert "(" in s and ")" in s
+    assert "*" in s
+    assert "x" in s
+
+
+def test_str_add_coefficient_and_add_factor():
+    """Both Add coefficient and Add factor are wrapped."""
+    from sympy.core import Symbol
+    mats = _make_matrices()
+    A, B, C = mats["A"], mats["B"], mats["C"]
+    x = Symbol("x")
+    pt = AlgebraicPureTensor(2 + x, A + B, C)
+    s = str(pt)
+    # Should have parens around coefficient and around factor
+    assert s.count("(") >= 2 and s.count(")") >= 2
+
+
+def test_repr_add_coefficient_wrapped():
+    """Add coefficient in PureTensor is wrapped in parentheses in repr."""
+    from sympy.core import Symbol
+    from sympy.printing.repr import srepr
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    x = Symbol("x")
+    pt = AlgebraicPureTensor(2 + x, A, C)
+    r = srepr(pt)
+    assert "(" in r and ")" in r
+
+
+def test_latex_add_coefficient_wrapped():
+    """Add coefficient in PureTensor is wrapped in LaTeX."""
+    from sympy.core import Symbol
+    from sympy.printing.latex import latex
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    x = Symbol("x")
+    pt = AlgebraicPureTensor(2 + x, A, C)
+    l = latex(pt)
+    assert r"\left(" in l and r"\right)" in l
 
 
 # ---------------------------------------------------------------------------

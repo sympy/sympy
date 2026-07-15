@@ -46,9 +46,10 @@ A ⊗ B
 class AlgebraicZeroTensor(AtomicExpr):
     """Zero tensor carrying a specific tensor shape.
 
-    An AlgebraicZeroTensor of shape ``((m0, n0), (m1, n1), ...)`` acts as the additive
-    identity for all AlgebraicTensors and AlgebraicPureTensors with the same sequence
-    of factor shapes.  AlgebraicZeroTensors with different shape sequences belong to
+    An AlgebraicZeroTensor of shape ``((m0, n0), (m1, n1), ...)``
+    acts as the additive identity for all AlgebraicTensors and
+    AlgebraicPureTensors with the same sequence of factor shapes.
+    AlgebraicZeroTensors with different shape sequences belong to
     different tensor spaces and are not summable.
 
     The shape is a tuple of (rows, cols) pairs, one per tensor-product factor.
@@ -59,7 +60,8 @@ class AlgebraicZeroTensor(AtomicExpr):
     expression system: ``sympify()``, tree traversal (``atoms()``, ``has()``,
     ``replace()``), the assumptions system (``is_commutative``),
     generic operations (``subs()``, ``xreplace()``, ``doit()``), and the
-    ``Expr`` machinery (``as_base_exp()``, ``as_coeff_Mul()``, ``as_coeff_Add()``).
+    ``Expr`` machinery (``as_base_exp()``, ``as_coeff_Mul()``,
+    ``as_coeff_Add()``).
 
     Examples
     ========

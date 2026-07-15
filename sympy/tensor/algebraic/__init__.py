@@ -70,6 +70,7 @@ from sympy.tensor.algebraic.algebraic_pure_tensor import (
 )
 from sympy.tensor.algebraic.algebraic_zero_tensor import (
     AlgebraicZeroTensor,
+    algebraic_zero_tensor,
 )
 from sympy.tensor.algebraic.simplify import tensorsimplify
 
@@ -79,6 +80,7 @@ __all__ = [
     "AlgebraicZeroTensor",
     "ShapeMismatchError",
     "algebraic_tensor_product",
+    "algebraic_zero_tensor",
     "compose_algebraic_pure_tensors",
     "compose_algebraic_tensors",
     "tensorsimplify",

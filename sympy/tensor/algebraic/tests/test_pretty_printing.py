@@ -537,3 +537,203 @@ def test_pretty_negation_unicode():
     assert "-" in res
     assert "A" in res
     assert "C" in res
+
+
+# ---------------------------------------------------------------------------
+# Add factor wrapping in pretty printing
+# ---------------------------------------------------------------------------
+
+def test_pretty_add_factor_wrapped_ascii():
+    """Add factor in PureTensor is wrapped in parentheses."""
+    mats = _make_matrices()
+    A, B, C = mats["A"], mats["B"], mats["C"]
+    pt = AlgebraicPureTensor(A + B, C)
+    res = pretty(pt)
+    assert "(" in res and ")" in res
+    assert "A" in res
+    assert "B" in res
+    assert "C" in res
+
+
+def test_pretty_add_factor_wrapped_unicode():
+    """Add factor in PureTensor is wrapped in parentheses."""
+    mats = _make_matrices()
+    A, B, C = mats["A"], mats["B"], mats["C"]
+    pt = AlgebraicPureTensor(A + B, C)
+    res = upretty(pt)
+    assert "(" in res and ")" in res
+    assert "A" in res
+    assert "B" in res
+    assert "C" in res
+
+
+def test_pretty_add_factor_second_slot_ascii():
+    """Add factor in second slot is wrapped in parentheses."""
+    mats = _make_matrices()
+    A, C, D = mats["A"], mats["C"], mats["D"]
+    pt = AlgebraicPureTensor(A, C + D)
+    res = pretty(pt)
+    assert "(" in res and ")" in res
+    assert "A" in res
+    assert "C" in res
+    assert "D" in res
+
+
+def test_pretty_add_factor_second_slot_unicode():
+    """Add factor in second slot is wrapped in parentheses."""
+    mats = _make_matrices()
+    A, C, D = mats["A"], mats["C"], mats["D"]
+    pt = AlgebraicPureTensor(A, C + D)
+    res = upretty(pt)
+    assert "(" in res and ")" in res
+    assert "A" in res
+    assert "C" in res
+    assert "D" in res
+
+
+def test_pretty_add_factor_both_slots_ascii():
+    """Add factors in both slots are wrapped in parentheses."""
+    mats = _make_matrices()
+    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
+    pt = AlgebraicPureTensor(A + B, C + D)
+    res = pretty(pt)
+    assert res.count("(") >= 2 and res.count(")") >= 2
+    assert "A" in res
+    assert "B" in res
+    assert "C" in res
+    assert "D" in res
+
+
+def test_pretty_add_factor_both_slots_unicode():
+    """Add factors in both slots are wrapped in parentheses."""
+    mats = _make_matrices()
+    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
+    pt = AlgebraicPureTensor(A + B, C + D)
+    res = upretty(pt)
+    assert res.count("(") >= 2 and res.count(")") >= 2
+    assert "A" in res
+    assert "B" in res
+    assert "C" in res
+    assert "D" in res
+
+
+def test_pretty_add_factor_in_tensor_sum_ascii():
+    """Add factor in PureTensor within AlgebraicTensor is wrapped."""
+    mats = _make_matrices()
+    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
+    at = AlgebraicTensor(
+        AlgebraicPureTensor(A + B, C),
+        AlgebraicPureTensor(B, D)
+    )
+    res = pretty(at)
+    assert "(" in res and ")" in res
+    assert "A" in res
+    assert "B" in res
+    assert "C" in res
+    assert "D" in res
+
+
+def test_pretty_add_factor_in_tensor_sum_unicode():
+    """Add factor in PureTensor within AlgebraicTensor is wrapped."""
+    mats = _make_matrices()
+    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
+    at = AlgebraicTensor(
+        AlgebraicPureTensor(A + B, C),
+        AlgebraicPureTensor(B, D)
+    )
+    res = upretty(at)
+    assert "(" in res and ")" in res
+    assert "A" in res
+    assert "B" in res
+    assert "C" in res
+    assert "D" in res
+
+
+def test_pretty_no_add_factor_no_parens_ascii():
+    """Non-Add factor does not get parentheses."""
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    pt = AlgebraicPureTensor(A, C)
+    res = pretty(pt)
+    assert "(" not in res and ")" not in res
+
+
+def test_pretty_no_add_factor_no_parens_unicode():
+    """Non-Add factor does not get parentheses."""
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    pt = AlgebraicPureTensor(A, C)
+    res = upretty(pt)
+    assert "(" not in res and ")" not in res
+
+
+def test_pretty_add_factor_with_coeff_ascii():
+    """Add factor with coefficient is wrapped correctly."""
+    mats = _make_matrices()
+    A, B, C = mats["A"], mats["B"], mats["C"]
+    pt = AlgebraicPureTensor(2, A + B, C)
+    res = pretty(pt)
+    assert "(" in res and ")" in res
+    assert "2" in res
+    assert "A" in res
+    assert "B" in res
+    assert "C" in res
+
+
+def test_pretty_add_factor_with_coeff_unicode():
+    """Add factor with coefficient is wrapped correctly."""
+    mats = _make_matrices()
+    A, B, C = mats["A"], mats["B"], mats["C"]
+    pt = AlgebraicPureTensor(2, A + B, C)
+    res = upretty(pt)
+    assert "(" in res and ")" in res
+    assert "2" in res
+    assert "A" in res
+    assert "B" in res
+    assert "C" in res
+
+
+def test_pretty_add_coefficient_wrapped_ascii():
+    """Add coefficient is wrapped in parentheses."""
+    x = Symbol("x")
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    pt = AlgebraicPureTensor(2 + x, A, C)
+    res = pretty(pt)
+    assert "(" in res and ")" in res
+    assert "x" in res
+    assert "A" in res
+    assert "C" in res
+
+
+def test_pretty_add_coefficient_wrapped_unicode():
+    """Add coefficient is wrapped in parentheses."""
+    x = Symbol("x")
+    mats = _make_matrices()
+    A, C = mats["A"], mats["C"]
+    pt = AlgebraicPureTensor(2 + x, A, C)
+    res = upretty(pt)
+    assert "(" in res and ")" in res
+    assert "x" in res
+    assert "A" in res
+    assert "C" in res
+
+
+def test_pretty_add_coeff_and_add_factor_ascii():
+    """Both Add coefficient and Add factor are wrapped."""
+    x = Symbol("x")
+    mats = _make_matrices()
+    A, B, C = mats["A"], mats["B"], mats["C"]
+    pt = AlgebraicPureTensor(2 + x, A + B, C)
+    res = pretty(pt)
+    assert res.count("(") >= 2 and res.count(")") >= 2
+
+
+def test_pretty_add_coeff_and_add_factor_unicode():
+    """Both Add coefficient and Add factor are wrapped."""
+    x = Symbol("x")
+    mats = _make_matrices()
+    A, B, C = mats["A"], mats["B"], mats["C"]
+    pt = AlgebraicPureTensor(2 + x, A + B, C)
+    res = upretty(pt)
+    assert res.count("(") >= 2 and res.count(")") >= 2

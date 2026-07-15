@@ -2107,7 +2107,12 @@ class LatexPrinter(Printer):
         from sympy.core.add import Add
         coeff = expr._get_coeff()
         factors = expr.factors
-        factor_strs = [self._print(f) for f in factors]
+        factor_strs = []
+        for f in factors:
+            s = self._print(f)
+            if isinstance(f, Add):
+                s = r"\left(%s\right)" % s
+            factor_strs.append(s)
         result = r" \otimes ".join(factor_strs)
         if coeff is S.One:
             return result
@@ -2131,6 +2136,12 @@ class LatexPrinter(Printer):
                 s = r"\left(%s\right)" % s
             return s
 
+        def _factor_str(f):
+            s = self._print(f)
+            if isinstance(f, Add):
+                s = r"\left(%s\right)" % s
+            return s
+
         parts = []
         for arg in expr.args:
             if isinstance(arg, Number):
@@ -2139,7 +2150,7 @@ class LatexPrinter(Printer):
                 continue
             if isinstance(arg, AlgebraicPureTensor):
                 coeff = arg._get_coeff()
-                factor_strs = [self._print(f) for f in arg.factors]
+                factor_strs = [_factor_str(f) for f in arg.factors]
                 body = r" \otimes ".join(factor_strs)
                 neg = coeff.is_negative
                 if neg:

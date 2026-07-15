@@ -334,15 +334,23 @@ class ReprPrinter(Printer):
         return "ExtElem(%s, %s)" % (rep, ext)
 
     def _print_AlgebraicPureTensor(self, expr):
+        from sympy.core.add import Add
         coeff = expr.coeff
         factors = expr.factors
+        factor_reprs = []
+        for f in factors:
+            r = repr(f)
+            if isinstance(f, Add):
+                r = "(%s)" % r
+            factor_reprs.append(r)
         if coeff is S.One:
-            return "AlgebraicPureTensor(%s)" % ", ".join(
-                [repr(f) for f in factors]
-            )
+            return "AlgebraicPureTensor(%s)" % ", ".join(factor_reprs)
+        coeff_str = self._print(coeff)
+        if isinstance(coeff, Add):
+            coeff_str = "(%s)" % coeff_str
         return "AlgebraicPureTensor(%s, %s)" % (
-            self._print(coeff),
-            ", ".join([repr(f) for f in factors])
+            coeff_str,
+            ", ".join(factor_reprs)
         )
 
     def _print_AlgebraicTensor(self, expr):

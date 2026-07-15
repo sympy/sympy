@@ -408,11 +408,11 @@ def direct_sum0(matrix1, matrix2):
     for i in range (sqrt(len(matrix1))):
         for j in range (sqrt(len(matrix1))):
             result[i,j] = matrix1[i,j]
-            
+
     for i in range (sqrt(len(matrix2))):
         for j in range (sqrt(len(matrix2))):
             result[i + sqrt(len(matrix1)),j + sqrt(len(matrix1))] = matrix2[i,j]
-    
+
     return result
 
 
@@ -457,7 +457,7 @@ def rep(z, w, alpha, beta, gamma, delta, m):
     pi2 = AlgebraicPureTensor(Matrix([[alpha, beta],[gamma,delta]]), eye(4),\
            direct_sum([Matrix(zeros(3,3)),Matrix([1])]))
     pi3 = AlgebraicPureTensor(eye(2), direct_sum([Matrix([z]), m]), Matrix(diag(0,1,1,0)))
-    
+
     return pi1 + pi2 + pi3
 
 

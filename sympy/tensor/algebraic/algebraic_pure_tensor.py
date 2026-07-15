@@ -53,8 +53,9 @@ def _factor_shapes(factors):
 def _factor_has_noncommutative(factor):
     """Return True if *factor* contains any noncommutative symbol.
 
-    Checks ``factor.free_symbols`` for any symbol with ``is_commutative is False``
-    (e.g., MatrixSymbol or Symbol with commutative=False).  Concrete numeric
+    Checks ``factor.free_symbols`` for any symbol with
+    ``is_commutative is False`` (e.g., MatrixSymbol or Symbol
+    with commutative=False).  Concrete numeric
     matrices have empty free_symbols and are considered commutative.
     """
     for sym in getattr(factor, 'free_symbols', set()):
@@ -64,7 +65,8 @@ def _factor_has_noncommutative(factor):
 
 
 class AlgebraicPureTensor(Mul):
-    """Pure tensor as an unevaluated (non-commutative) tensor product of factors.
+    """Pure tensor as an unevaluated (non-commutative)
+    tensor product of factors.
 
     Extends SymPy's non-commutative Mul so that all existing simplification,
     differentiation, and pattern-matching machinery is available out of the
@@ -126,12 +128,12 @@ class AlgebraicPureTensor(Mul):
     @property
     def coeff(self):
         """The commutative coefficient of this tensor.
-        
+
         Returns S.One if there is no explicit coefficient.
-        
+
         Examples
         ========
-        
+
         >>> from sympy.matrices.expressions import MatrixSymbol
         >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
@@ -155,12 +157,12 @@ class AlgebraicPureTensor(Mul):
     @property
     def factors(self):
         """Individual tensor-product factors in left-to-right order.
-        
+
         The coefficient (if present) is not included in the factors.
-        
+
         Examples
         ========
-        
+
         >>> from sympy.matrices.expressions import MatrixSymbol
         >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
@@ -206,8 +208,8 @@ class AlgebraicPureTensor(Mul):
     def commutativity_pattern(self):
         """Tuple of binary entries indicating per-factor commutativity.
 
-        Entry i is 1 if the i-th tensor factor contains no noncommutative symbols,
-        0 otherwise.  Same length as ``shape``.
+        Entry i is 1 if the i-th tensor factor contains no
+        noncommutative symbols, 0 otherwise.  Same length as ``shape``.
 
         Examples
         ========
@@ -236,8 +238,9 @@ class AlgebraicPureTensor(Mul):
     def __new__(cls, *args, evaluate=False):
         """Construct an AlgebraicPureTensor from factors.
 
-        The first argument may be a commutative coefficient (Number or symbolic).
-        
+        The first argument may be a commutative coefficient
+        (Number or symbolic).
+
         Parameters
         ----------
         *args : commutative coefficient (optional), then matrix-like factors
@@ -328,17 +331,17 @@ class AlgebraicPureTensor(Mul):
 
     def _get_coeff(self):
         """Extract the coefficient: same as coeff property.
-        
+
         Provided for compatibility with code that uses _get_coeff().
         """
         return self.coeff
 
     def __neg__(self):
         """Return a negated tensor.
-        
+
         Examples
         ========
-        
+
         >>> from sympy.matrices.expressions import MatrixSymbol
         >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
@@ -354,8 +357,8 @@ class AlgebraicPureTensor(Mul):
         """Compose or scale this AlgebraicPureTensor.
 
         For commutative scalars/symbols the scalar is absorbed into the
-        coefficient.  For AlgebraicPureTensor, AlgebraicTensor, or bare 
-        matrices the result is the tensor composition (factor-wise matrix 
+        coefficient.  For AlgebraicPureTensor, AlgebraicTensor, or bare
+        matrices the result is the tensor composition (factor-wise matrix
         multiplication).
 
         Parameters
@@ -412,8 +415,8 @@ class AlgebraicPureTensor(Mul):
         """Compose or scale this AlgebraicPureTensor from the left.
 
         For commutative scalars/symbols the scalar is absorbed into the
-        coefficient.  For AlgebraicPureTensor, AlgebraicTensor, or bare 
-        matrices the result is the tensor composition (factor-wise matrix 
+        coefficient.  For AlgebraicPureTensor, AlgebraicTensor, or bare
+        matrices the result is the tensor composition (factor-wise matrix
         multiplication).
 
         Parameters
@@ -463,7 +466,7 @@ class AlgebraicPureTensor(Mul):
     def __add__(self, other):
         """Add another tensor or scalar to this pure tensor.
 
-        Returns an :class:`~sympy.tensor.algebraic.algebraic_tensor.AlgebraicTensor`
+        Returns an :class:`~sympy.tensor.algebraic.AlgebraicTensor`
         containing both terms.
 
         Examples
@@ -578,7 +581,8 @@ class AlgebraicPureTensor(Mul):
                 print(self)
 
     def _eval_expand_mul(self, **hints):
-        """Expand this pure tensor by distributing over ``Add`` in factors and coefficient.
+        """Expand this pure tensor by distributing over ``Add``
+        in factors and coefficient.
 
         Expands the coefficient and each factor individually, then distributes
         the tensor product linearly across all addend combinations when either
@@ -681,7 +685,8 @@ def algebraic_tensor_product(*args):
 
 
 def compose_algebraic_pure_tensors(left, right):
-    """Compose two AlgebraicPureTensors by matrix-multiplying corresponding factors.
+    """Compose two AlgebraicPureTensors by matrix-multiplying
+    corresponding factors.
 
     Given ``left = F1 ⊗ F2 ⊗ … ⊗ Fn`` and ``right = G1 ⊗ G2 ⊗ … ⊗ Gn``,
     returns ``H1 ⊗ H2 ⊗ … ⊗ Hn`` where each ``Hj = Fj * Gj`` (matrix product).

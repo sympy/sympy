@@ -77,7 +77,8 @@ def _commutativity_pattern_of(expr):
     """Return the commutativity_pattern of *expr*, or None if not determinable.
 
     Handles AlgebraicPureTensor, AlgebraicZeroTensor,
-    AlgebraicTensor, Mul(coeff, AlgebraicPureTensor), and bare matrix-like objects.
+    AlgebraicTensor, Mul(coeff, AlgebraicPureTensor),
+    and bare matrix-like objects.
     """
     if isinstance(expr, AlgebraicPureTensor):
         return expr.commutativity_pattern
@@ -157,7 +158,8 @@ def compose_algebraic_tensors(left, right):
     """Compose two algebraic-tensor expressions by linearity.
 
     Composes *left* and *right* by factor-wise matrix multiplication,
-    extending ``compose_algebraic_pure_tensors`` by linearity to sums of tensors.
+    extending ``compose_algebraic_pure_tensors`` by linearity
+    to sums of tensors.
 
     Parameters
     ----------
@@ -277,7 +279,8 @@ def compose_algebraic_tensors(left, right):
 
 
 class AlgebraicTensor(Basic):
-    """Sum of AlgebraicPureTensors (and/or AlgebraicZeroTensors) sharing the same tensor shape.
+    """Sum of AlgebraicPureTensors (and/or AlgebraicZeroTensors)
+    sharing the same tensor shape.
 
     Built on top of ``Basic`` (not ``Add``) to avoid the is_commutative
     descriptor conflict in ``AssocOp._from_args``, while still exposing
@@ -389,7 +392,8 @@ class AlgebraicTensor(Basic):
 
     @classmethod
     def _collect_coefficients(cls, terms, shape, zero_term):
-        """Combine coefficients of AlgebraicPureTensor terms with identical factors.
+        """Combine coefficients of AlgebraicPureTensor terms
+        with identical factors.
 
         Uses a dictionary keyed by the factor-only AlgebraicPureTensor to
         accumulate coefficients in O(N) time.  AlgebraicZeroTensor entries
@@ -450,17 +454,20 @@ class AlgebraicTensor(Basic):
 
     @classmethod
     def _flatten_args(cls, args):
-        """Flatten nested AlgebraicTensors, validate shapes, collect AlgebraicZeroTensors.
+        """Flatten nested AlgebraicTensors, validate shapes,
+        collect AlgebraicZeroTensors.
 
         Returns
         -------
-        (terms : list, shape : tuple | None, zero_term : AlgebraicZeroTensor | None,
+        (terms : list, shape : tuple | None,
+         zero_term : AlgebraicZeroTensor | None,
          commutativity_pattern : tuple | None)
 
         *shape* is a tuple of per-factor (rows, cols) pairs, e.g.
         ``((3, 4), (4, 5))``.
-        *commutativity_pattern* is a tuple of binary entries, same length as shape,
-        representing the component-wise AND of all term commutativity_patterns.
+        *commutativity_pattern* is a tuple of binary entries,
+        same length as shape, representing the component-wise AND
+        of all term commutativity_patterns.
         """
         shape = None
         zero_term = None
@@ -573,7 +580,8 @@ class AlgebraicTensor(Basic):
 
     @property
     def commutativity_pattern(self):
-        """Component-wise AND of commutativity_pattern over all terms in this sum.
+        """Component-wise AND of commutativity_pattern
+        over all terms in this sum.
 
         For AlgebraicTensor operands, uses their stored commutativity_pattern
         rather than recomputing from individual PureTensor factors.
@@ -651,7 +659,8 @@ class AlgebraicTensor(Basic):
         return AlgebraicTensor(*(-a for a in self.args))
 
     def _compose_with_term(self, other):
-        """Compose this AlgebraicTensor with a single term (AlgebraicPureTensor or bare matrix).
+        """Compose this AlgebraicTensor with a single term
+        (AlgebraicPureTensor or bare matrix).
 
         Composes each term of self with *other* by factor-wise matrix
         multiplication.
@@ -865,7 +874,8 @@ class AlgebraicTensor(Basic):
         return compose_algebraic_tensors(other, self)
 
     def simplify(self):
-        """Simplify this AlgebraicTensor using the tensor simplification pipeline.
+        """Simplify this AlgebraicTensor using the tensor
+        simplification pipeline.
 
         Applies proportionality factoring and per-term simplification.
         """

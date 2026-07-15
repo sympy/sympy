@@ -1392,7 +1392,12 @@ class PrettyPrinter(Printer):
             delim = pretty_atom('TensorProduct')
         else:
             delim = "x"
-        factor_pforms = [self._print(f) for f in factors]
+        factor_pforms = []
+        for f in factors:
+            fp = self._print(f)
+            if isinstance(f, Add):
+                fp = prettyForm(*fp.parens())
+            factor_pforms.append(fp)
         if len(factor_pforms) > 1:
             parts = []
             for i, fp in enumerate(factor_pforms):
@@ -1427,7 +1432,12 @@ class PrettyPrinter(Printer):
             tp_delim = "x"
 
         def _pure_tensor_body(pt):
-            fpforms = [self._print(f) for f in pt.factors]
+            fpforms = []
+            for f in pt.factors:
+                fp = self._print(f)
+                if isinstance(f, Add):
+                    fp = prettyForm(*fp.parens())
+                fpforms.append(fp)
             if len(fpforms) > 1:
                 parts = []
                 for i, fp in enumerate(fpforms):
