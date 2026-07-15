@@ -2296,6 +2296,13 @@ def test_sparse_diagonal_inv():
     assert result[1000, 1000] == 1/(x + 1001)
 
 
+def test_sparse_diagonal_inv_DMNC():
+    M = SparseMatrix.diag(x**2 + x, x)
+    den = x**3 + x**2
+    assert M.inv(method="DMNC") == SparseMatrix.diag(
+        x/den, (x**2 + x)/den)
+
+
 def test_creation_args():
     """
     Check that matrix dimensions can be specified using any reasonable type

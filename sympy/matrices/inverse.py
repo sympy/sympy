@@ -536,7 +536,7 @@ def _inv(M: Tmat,
             method = 'GE'
 
     if dM is not None:
-        rv = _inv_DM(dM)
+        rv = _inv_DM(dM, cancel=method != "DMNC")
     elif method == "DMNC":
         rv = _inv_DM(dM, cancel=False)
     elif method == "GE":
