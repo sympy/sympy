@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from sympy.core.mul import Mul
-from sympy.core.numbers import Number
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 
@@ -291,11 +290,9 @@ def _proportionality_factoring(at):
     # Separate AlgebraicPureTensor (and Mul containing one) from other terms
     tensor_terms = []
     non_tensor = []
-    has_zero = False
 
     for a in args:
         if isinstance(a, AlgebraicZeroTensor):
-            has_zero = True
             non_tensor.append(a)
         elif isinstance(a, AlgebraicPureTensor):
             tensor_terms.append(a)
@@ -584,7 +581,6 @@ def _decompose_commutative_factors(commutative_factors, term_coeff):
     >>> len(result)
     4
     """
-    from sympy.matrices import zeros as _zeros
     from sympy.matrices.immutable import ImmutableDenseMatrix
 
     if not commutative_factors:
@@ -1148,7 +1144,6 @@ def _commutativity_simplify(at, **kwargs):
     -------
     Simplified tensor expression.
     """
-    from sympy.core.add import Add as _Add
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
     from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor

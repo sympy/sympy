@@ -40,6 +40,7 @@ Zero tensor acts as additive identity:
 >>> Z3 = AlgebraicZeroTensor(((3, 4), (4, 5)))
 >>> print(T + Z3)
 A ⊗ B
+
 """
 
 
@@ -96,6 +97,7 @@ class AlgebraicZeroTensor(AtomicExpr):
     >>> Z3 = AlgebraicZeroTensor(((3, 4), (4, 5)))
     >>> print(T + Z3)
     A ⊗ B
+
     """
 
     __slots__ = ('_shape',)
@@ -291,6 +293,28 @@ class AlgebraicZeroTensor(AtomicExpr):
 
     def __bool__(self):
         return False
+
+    @property
+    def T(self):
+        """Transpose of this zero tensor.
+
+        Returns a new AlgebraicZeroTensor with every factor shape
+        ``(rows, cols)`` reversed to ``(cols, rows)``.  The
+        commutativity_pattern is unchanged (all 1s).
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.algebraic import AlgebraicZeroTensor
+        >>> Z = AlgebraicZeroTensor(((1, 2), (3, 4)))
+        >>> ZT = Z.T
+        >>> ZT.shape
+        ((2, 1), (4, 3))
+        >>> ZT.commutativity_pattern
+        (1, 1)
+        """
+        transposed_shape = tuple((c, r) for r, c in self._shape)
+        return AlgebraicZeroTensor(transposed_shape)
 
     def copy(self):
         return self

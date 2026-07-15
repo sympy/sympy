@@ -556,6 +556,44 @@ class AlgebraicPureTensor(Mul):
         """Return False for a nonzero AlgebraicPureTensor."""
         return False
 
+    @property
+    def T(self):
+        """Transpose of this pure tensor.
+
+        Applies ``.T`` to every tensor factor, keeping the coefficient
+        unchanged.  The tensor shape is updated so each ``(rows, cols)``
+        becomes ``(cols, rows)``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(A, B)
+        >>> T.shape
+        ((3, 4), (4, 5))
+        >>> TT = T.T
+        >>> TT.shape
+        ((4, 3), (5, 4))
+        >>> TT.coeff
+        1
+
+        Coefficient is preserved through transpose:
+
+        >>> T2 = AlgebraicPureTensor(2, A, B)
+        >>> T2T = T2.T
+        >>> T2T.coeff
+        2
+        >>> T2T.shape
+        ((4, 3), (5, 4))
+        """
+        transposed_factors = tuple(getattr(f, 'T', f) for f in self.factors)
+        if self.coeff is S.One:
+            return AlgebraicPureTensor(*transposed_factors)
+        return AlgebraicPureTensor(self.coeff, *transposed_factors)
+
     def simplify(self):
         from sympy.tensor.algebraic.simplify import _simplify_algebraic_pure_tensor
         return _simplify_algebraic_pure_tensor(self)

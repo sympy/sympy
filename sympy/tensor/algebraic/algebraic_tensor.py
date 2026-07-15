@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sympy.core.add import Add, add
+from sympy.core.add import add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.numbers import Number
@@ -8,7 +8,7 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 
 from sympy.tensor.algebraic.algebraic_pure_tensor import (
-    AlgebraicPureTensor, _factor_shapes, _factor_has_noncommutative
+    AlgebraicPureTensor, _factor_has_noncommutative
 )
 from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
@@ -108,7 +108,7 @@ class ShapeMismatchError(TypeError):
     ========
 
     >>> from sympy.matrices.expressions import MatrixSymbol
-    >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor, AlgebraicTensor
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
     >>> from sympy.tensor.algebraic.algebraic_tensor import ShapeMismatchError
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
@@ -298,7 +298,7 @@ class AlgebraicTensor(Basic):
     Create a sum of two pure tensors with the same shape:
 
     >>> from sympy.matrices.expressions import MatrixSymbol
-    >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor, AlgebraicTensor
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> C = MatrixSymbol("C", 3, 4)
@@ -636,6 +636,41 @@ class AlgebraicTensor(Basic):
     def has_zero_term(self):
         """Return True if an AlgebraicZeroTensor anchors this sum."""
         return any(isinstance(a, AlgebraicZeroTensor) for a in self.args)
+
+    @property
+    def T(self):
+        """Transpose of this algebraic tensor.
+
+        Transposes every term in the sum.  For each ``AlgebraicPureTensor``
+        term, ``.T`` is applied factor-wise.  ``AlgebraicZeroTensor``
+        anchors are transposed by reversing each factor shape.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> C = MatrixSymbol("C", 3, 4)
+        >>> D = MatrixSymbol("D", 4, 5)
+        >>> S = AlgebraicTensor(AlgebraicPureTensor(A, B),
+        ...                     AlgebraicPureTensor(C, D))
+        >>> S.shape
+        ((3, 4), (4, 5))
+        >>> ST = S.T
+        >>> ST.shape
+        ((4, 3), (5, 4))
+        """
+        transposed_args = []
+        for a in self.args:
+            if isinstance(a, AlgebraicZeroTensor):
+                transposed_args.append(a.T)
+            elif hasattr(a, 'T'):
+                transposed_args.append(a.T)
+            else:
+                transposed_args.append(a)
+        return AlgebraicTensor(*transposed_args)
 
     # ---- Arithmetic delegation ----
 

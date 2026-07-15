@@ -155,12 +155,13 @@ have been removed in favor of the printer system.
 ## 7. Code Quality and Validation (Done)
 
 - [x] Run `./bin/doctest` to verify all docstring examples pass — 55 doctests, all passing
-- [x] Run `./bin/test sympy/tensor/algebraic` to verify all tests pass — 184 tests, all passing
+- [x] Run `./bin/test sympy/tensor/algebraic` to verify all tests pass — 214 tests, all passing
 - [x] Check for lines >80 chars in docstrings — fixed all docstring lines >80 chars
 - [x] Check for trailing whitespace in all files — removed trailing whitespace from 3 files
-- [x] Verify `__slots__` usage is consistent across all classes — consistent
+- [x] Verify `__slots__` usage is consistent across all classes — consistent (`__slots__ = ('_shape',)` on ZeroTensor, `__slots__ = ()` on PureTensor and Tensor)
 - [x] Remove `.DS_Store` from `tensor/algebraic/` — removed 2 files
 - [x] Remove `__pycache__/` from `tensor/algebraic/` — removed 2 directories
+- [x] Run `flake8` on source files — fixed unused imports, unused variable, and duplicate doctest imports
 
 ---
 
