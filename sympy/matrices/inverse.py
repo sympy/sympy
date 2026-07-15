@@ -336,6 +336,23 @@ def _inv_DM(dM, cancel=True):
     else:
         dom_exact = None
 
+    if cancel and len(dM.scc()) > 1:
+        try:
+            dMi = dM.to_field().inv()
+        except DMNonInvertibleMatrixError:
+            raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
+        if dom_exact is not None:
+            dom_field = dom if dom.is_Field else dom.get_field()
+            dMi = dMi.convert_to(dom_field)
+        Mi = dMi.to_Matrix()
+        dMi_ground = dMi.domain.domain if dMi.domain.is_FractionField else dMi.domain
+        if (dom_exact is not None
+                or dMi_ground.is_AlgebraicField
+                or dMi_ground.is_GaussianField):
+            from sympy.polys.polytools import cancel as cancel_expr
+            Mi = Mi.applyfunc(cancel_expr)
+        return Mi
+
     try:
         dMi, den = dM.inv_den()
     except DMNonInvertibleMatrixError:
