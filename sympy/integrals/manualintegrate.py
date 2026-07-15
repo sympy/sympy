@@ -2306,7 +2306,7 @@ def trig_poly_mul_rule(integral: IntegralInfo):
     if not match:
         return
 
-    poly = Mul(*rest)
+    poly = Mul(*rest)  # type: ignore
     if (symbol not in poly.free_symbols
             or not poly.is_polynomial(symbol)):
         return
@@ -2380,7 +2380,7 @@ def trig_product_to_sum_rule(integral: IntegralInfo):
     else:
         replacement = (sin(A + B) - sin(A - B)) / 2
 
-    rewritten = expand(Mul(*rest) * replacement)
+    rewritten = expand(Mul(*rest) * replacement)  # type: ignore
 
     substep = integral_steps(rewritten, symbol)
     if substep.contains_dont_know():
