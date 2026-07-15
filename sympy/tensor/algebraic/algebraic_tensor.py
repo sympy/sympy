@@ -27,7 +27,7 @@ Examples
 Create a sum of two pure tensors with the same shape:
 
 >>> from sympy.matrices.expressions import MatrixSymbol
->>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
+>>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor, AlgebraicTensor
 >>> A = MatrixSymbol("A", 3, 4)
 >>> B = MatrixSymbol("B", 4, 5)
 >>> C = MatrixSymbol("C", 3, 4)
@@ -107,7 +107,8 @@ class ShapeMismatchError(TypeError):
     ========
 
     >>> from sympy.matrices.expressions import MatrixSymbol
-    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor, AlgebraicTensor
+    >>> from sympy.tensor.algebraic.algebraic_tensor import ShapeMismatchError
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> C = MatrixSymbol("C", 2, 3)
@@ -294,7 +295,7 @@ class AlgebraicTensor(Basic):
     Create a sum of two pure tensors with the same shape:
 
     >>> from sympy.matrices.expressions import MatrixSymbol
-    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor, AlgebraicTensor
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> C = MatrixSymbol("C", 3, 4)
@@ -566,7 +567,7 @@ class AlgebraicTensor(Basic):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -593,7 +594,7 @@ class AlgebraicTensor(Basic):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -621,7 +622,7 @@ class AlgebraicTensor(Basic):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -649,7 +650,7 @@ class AlgebraicTensor(Basic):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -724,7 +725,7 @@ class AlgebraicTensor(Basic):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -745,7 +746,7 @@ class AlgebraicTensor(Basic):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -766,7 +767,7 @@ class AlgebraicTensor(Basic):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -785,7 +786,7 @@ class AlgebraicTensor(Basic):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -821,7 +822,7 @@ class AlgebraicTensor(Basic):
         Scalar multiplication:
 
         >>> from sympy.matrices.expressions import MatrixSymbol
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -859,7 +860,7 @@ class AlgebraicTensor(Basic):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -914,7 +915,7 @@ class AlgebraicTensor(Basic):
 
         >>> from sympy.matrices.expressions import (
         ...     MatrixSymbol, MatAdd)
-        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 4, 5)

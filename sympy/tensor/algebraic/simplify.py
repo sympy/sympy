@@ -59,6 +59,7 @@ def _matrix_proportionality_ratio(m1, m2):
     ========
 
     >>> from sympy.matrices import ImmutableDenseMatrix
+    >>> from sympy.tensor.algebraic.simplify import _matrix_proportionality_ratio
     >>> M1 = ImmutableDenseMatrix([[1, 2], [3, 4]])
     >>> M2 = ImmutableDenseMatrix([[2, 4], [6, 8]])
     >>> _matrix_proportionality_ratio(M1, M2)
@@ -114,6 +115,7 @@ def _proportionality_ratio(factor1, factor2):
     ========
 
     >>> from sympy.matrices import ImmutableDenseMatrix
+    >>> from sympy.tensor.algebraic.simplify import _proportionality_ratio
     >>> M1 = ImmutableDenseMatrix([[1, 2], [3, 4]])
     >>> M2 = ImmutableDenseMatrix([[2, 4], [6, 8]])
     >>> _proportionality_ratio(M1, M2)
@@ -148,6 +150,7 @@ def _extract_pt_and_coeff(term):
 
     >>> from sympy.matrices.expressions import MatrixSymbol
     >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> from sympy.tensor.algebraic.simplify import _extract_pt_and_coeff
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> T = AlgebraicPureTensor(2, A, B)
@@ -199,6 +202,7 @@ def _build_pt(coeff, factors):
     ========
 
     >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy.tensor.algebraic.simplify import _build_pt
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> print(_build_pt(2, [A, B]))
@@ -206,7 +210,7 @@ def _build_pt(coeff, factors):
     >>> print(_build_pt(1, [A]))
     A
     >>> print(_build_pt(0, [A, B]))
-    0_((3, 4), (4, 5))
+    0_{(3x4), (4x5)}
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
@@ -266,6 +270,7 @@ def _proportionality_factoring(at):
 
     >>> from sympy.matrices.expressions import MatrixSymbol
     >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> from sympy.tensor.algebraic.simplify import _proportionality_factoring
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> T1 = AlgebraicPureTensor(A, B)
@@ -508,6 +513,7 @@ def tensorsimplify(expr, **kwargs):
 
     >>> from sympy.matrices.expressions import MatrixSymbol
     >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> from sympy.tensor.algebraic.simplify import tensorsimplify
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> T1 = AlgebraicPureTensor(A, B)
@@ -525,7 +531,7 @@ def tensorsimplify(expr, **kwargs):
     >>> from sympy.tensor.algebraic import AlgebraicZeroTensor
     >>> Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     >>> print(tensorsimplify(Z))
-    0_((3, 4), (4, 5))
+    0_{(3x4), (4x5)}
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
@@ -571,6 +577,7 @@ def _decompose_commutative_factors(commutative_factors, term_coeff):
     ========
 
     >>> from sympy.matrices import ImmutableDenseMatrix
+    >>> from sympy.tensor.algebraic.simplify import _decompose_commutative_factors
     >>> M = ImmutableDenseMatrix([[1, 2], [3, 4]])
     >>> result = _decompose_commutative_factors([M], 1)
     >>> len(result)
@@ -640,6 +647,7 @@ def _reconstruct_term(key, non_commutative_pt, coeff, comm_cs,
     ========
 
     >>> from sympy.matrices import ImmutableDenseMatrix
+    >>> from sympy.tensor.algebraic.simplify import _reconstruct_term
     >>> E00 = ImmutableDenseMatrix([[1, 0], [0, 0]])
     >>> print(_reconstruct_term((E00,), None, 1, (1,), [0], []))
     Matrix([[1, 0], [0, 0]])
@@ -684,6 +692,7 @@ def _normalize_factor_sign(f):
     ========
 
     >>> from sympy.abc import x, y
+    >>> from sympy.tensor.algebraic.simplify import _normalize_factor_sign
     >>> _normalize_factor_sign(x - y)
     x - y
     >>> _normalize_factor_sign(-x + y)
@@ -726,6 +735,7 @@ def _is_exactly_divisible(entry, candidate):
     Examples
     ========
 
+    >>> from sympy.tensor.algebraic.simplify import _is_exactly_divisible
     >>> _is_exactly_divisible(6, 2)
     True
     >>> _is_exactly_divisible(5, 2)
@@ -770,6 +780,7 @@ def _deduplicate_proportional(factors):
     ========
 
     >>> from sympy.abc import x
+    >>> from sympy.tensor.algebraic.simplify import _deduplicate_proportional
     >>> _deduplicate_proportional([x, -x, x + 1])
     [x, x + 1]
     """
@@ -819,6 +830,7 @@ def _extract_commutative_from_factor(factor):
 
     >>> from sympy.matrices import ImmutableDenseMatrix
     >>> from sympy.abc import x
+    >>> from sympy.tensor.algebraic.simplify import _extract_commutative_from_factor
     >>> M = ImmutableDenseMatrix([[x, 2*x], [3*x, 4*x]])
     >>> coeff, new_M = _extract_commutative_from_factor(M)
     >>> coeff
@@ -1085,6 +1097,7 @@ def _extract_commutative_prefactors(pt):
 
     >>> from sympy.matrices.expressions import MatrixSymbol
     >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> from sympy.tensor.algebraic.simplify import _extract_commutative_prefactors
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> T = AlgebraicPureTensor(A, B)

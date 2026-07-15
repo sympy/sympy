@@ -86,6 +86,7 @@ class AlgebraicPureTensor(Mul):
     Create a pure tensor from two matrix symbols:
 
     >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> T = AlgebraicPureTensor(A, B)
@@ -105,7 +106,7 @@ class AlgebraicPureTensor(Mul):
     Zero coefficient produces a zero tensor:
 
     >>> print(AlgebraicPureTensor(0, A, B))
-    0_((3, 4), (4, 5))
+    0_{(3x4), (4x5)}
 
     Single factor with coefficient 1 unwraps to the bare factor:
 
@@ -161,6 +162,7 @@ class AlgebraicPureTensor(Mul):
         ========
         
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> AlgebraicPureTensor(A, B).factors
@@ -190,6 +192,7 @@ class AlgebraicPureTensor(Mul):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> AlgebraicPureTensor(A, B).shape
@@ -210,6 +213,7 @@ class AlgebraicPureTensor(Mul):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> AlgebraicPureTensor(A, B).commutativity_pattern
@@ -253,6 +257,7 @@ class AlgebraicPureTensor(Mul):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> print(AlgebraicPureTensor(A, B))
@@ -260,7 +265,7 @@ class AlgebraicPureTensor(Mul):
         >>> print(AlgebraicPureTensor(2, A, B))
         2*A ⊗ B
         >>> print(AlgebraicPureTensor(0, A, B))
-        0_((3, 4), (4, 5))
+        0_{(3x4), (4x5)}
         >>> print(AlgebraicPureTensor(A))
         A
         """
@@ -335,6 +340,7 @@ class AlgebraicPureTensor(Mul):
         ========
         
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> print(-AlgebraicPureTensor(A, B))
@@ -368,13 +374,14 @@ class AlgebraicPureTensor(Mul):
         Scalar multiplication:
 
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> T = AlgebraicPureTensor(A, B)
         >>> print(T * 3)
         3*A ⊗ B
         >>> print(T * 0)
-        0_((3, 4), (4, 5))
+        0_{(3x4), (4x5)}
 
         Composition with another tensor:
 
@@ -423,13 +430,14 @@ class AlgebraicPureTensor(Mul):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> T = AlgebraicPureTensor(A, B)
         >>> print(3 * T)
         3*A ⊗ B
         >>> print(0 * T)
-        0_((3, 4), (4, 5))
+        0_{(3x4), (4x5)}
         """
         if other == 0:
             return AlgebraicZeroTensor(self.shape)
@@ -462,6 +470,7 @@ class AlgebraicPureTensor(Mul):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -484,6 +493,7 @@ class AlgebraicPureTensor(Mul):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -506,6 +516,7 @@ class AlgebraicPureTensor(Mul):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -525,6 +536,7 @@ class AlgebraicPureTensor(Mul):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 3, 4)
@@ -576,6 +588,7 @@ class AlgebraicPureTensor(Mul):
         ========
 
         >>> from sympy.matrices.expressions import MatrixSymbol, MatAdd
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> C = MatrixSymbol("C", 4, 5)

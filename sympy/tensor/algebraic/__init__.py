@@ -54,7 +54,7 @@ Create a zero tensor for a given shape:
 >>> from sympy.tensor.algebraic import algebraic_zero_tensor
 >>> Z = algebraic_zero_tensor(((3, 4), (4, 5)))
 >>> Z
-0_((3, 4), (4, 5))
+0_{(3x4), (4x5)}
 """
 
 from sympy.tensor.algebraic.algebraic_tensor import (
