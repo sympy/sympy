@@ -4,7 +4,8 @@ This module provides classes for representing tensor products of matrix-like
 objects and linear combinations thereof.  Tensors are built from factors
 combined via the tensor product (``⊗``) and addition (``+``).  A third
 operation, composition (``*``), performs factor-wise matrix multiplication
-and serves as the tensor analogue of contraction.
+and serves as the tensor analogue of matrix multiplication. The multiplication
+(``*``) can also be used to multiply tensors with scalars (commutative Symbols).
 
 The module provides three core types:
 
@@ -69,7 +70,6 @@ from sympy.tensor.algebraic.algebraic_pure_tensor import (
 )
 from sympy.tensor.algebraic.algebraic_zero_tensor import (
     AlgebraicZeroTensor,
-    algebraic_zero_tensor,
 )
 from sympy.tensor.algebraic.simplify import tensorsimplify
 
@@ -79,7 +79,6 @@ __all__ = [
     "AlgebraicZeroTensor",
     "ShapeMismatchError",
     "algebraic_tensor_product",
-    "algebraic_zero_tensor",
     "compose_algebraic_pure_tensors",
     "compose_algebraic_tensors",
     "tensorsimplify",

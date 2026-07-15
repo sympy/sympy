@@ -10,7 +10,6 @@ from sympy.tensor.algebraic import (
     AlgebraicTensor,
     AlgebraicZeroTensor,
     algebraic_tensor_product,
-    algebraic_zero_tensor,
     tensorsimplify,
 )
 
@@ -206,7 +205,7 @@ def test_pretty_pure_tensor_coeff_one_no_prefix_unicode():
 
 def test_pretty_zero_tensor_simple_ascii():
     """Zero tensor renders 0 with subscript showing shape."""
-    zt = algebraic_zero_tensor(((3, 4),))
+    zt = AlgebraicZeroTensor(((3, 4),))
     res = pretty(zt)
     assert "0" in res
     assert "3" in res
@@ -215,7 +214,7 @@ def test_pretty_zero_tensor_simple_ascii():
 
 def test_pretty_zero_tensor_simple_unicode():
     """Zero tensor renders 0 with subscript showing shape."""
-    zt = algebraic_zero_tensor(((3, 4),))
+    zt = AlgebraicZeroTensor(((3, 4),))
     res = upretty(zt)
     assert "0" in res
     assert "3" in res
@@ -225,7 +224,7 @@ def test_pretty_zero_tensor_simple_unicode():
 
 def test_pretty_zero_tensor_two_factors_ascii():
     """Zero tensor with two factors shows both shapes."""
-    zt = algebraic_zero_tensor(((3, 4), (4, 5)))
+    zt = AlgebraicZeroTensor(((3, 4), (4, 5)))
     res = pretty(zt)
     assert "0" in res
     assert "3" in res
@@ -235,7 +234,7 @@ def test_pretty_zero_tensor_two_factors_ascii():
 
 def test_pretty_zero_tensor_two_factors_unicode():
     """Zero tensor with two factors shows both shapes."""
-    zt = algebraic_zero_tensor(((3, 4), (4, 5)))
+    zt = AlgebraicZeroTensor(((3, 4), (4, 5)))
     res = upretty(zt)
     assert "0" in res
     assert "3" in res

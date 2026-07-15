@@ -391,11 +391,8 @@ class AlgebraicTensor(Basic):
     def _collect_coefficients(cls, terms, shape, zero_term):
         """Combine coefficients of AlgebraicPureTensor terms with identical factors.
 
-        Walks the terms list with a pivot index.  For each pivot that is an
-        AlgebraicPureTensor, scans every subsequent term for matching factors
-        and accumulates the coefficient.  When a pivot's accumulated coefficient
-        becomes zero the term is removed (the shape is remembered so that a
-        zero-tensor anchor can be created later).  AlgebraicZeroTensor entries
+        Uses a dictionary keyed by the factor-only AlgebraicPureTensor to
+        accumulate coefficients in O(N) time.  AlgebraicZeroTensor entries
         that somehow ended up in the terms list are also removed.
 
         Parameters
@@ -412,51 +409,42 @@ class AlgebraicTensor(Basic):
         (new_terms : list, new_zero_term : AlgebraicZeroTensor | None)
         """
         result = []
-        skip = set()
-        n = len(terms)
+        coeff_map = {}
 
-        # Remove any AlgebraicZeroTensor that leaked into terms
-        for i, t in enumerate(terms):
+        # Separate AlgebraicPureTensor terms from others
+        for t in terms:
             if isinstance(t, AlgebraicZeroTensor):
                 if zero_term is None:
                     zero_term = t
-                skip.add(i)
-
-        for pivot in range(n):
-            if pivot in skip:
-                continue
-            pt = terms[pivot]
-
-            if not isinstance(pt, AlgebraicPureTensor):
-                result.append(pt)
                 continue
 
-            combined_coeff = pt.coeff
-            pivot_factors = pt.factors
+            if not isinstance(t, AlgebraicPureTensor):
+                result.append(t)
+                continue
 
-            # Scan remaining terms for matching factors
-            for j in range(pivot + 1, n):
-                if j in skip:
-                    continue
-                other = terms[j]
-                if isinstance(other, AlgebraicPureTensor) and other.factors == pivot_factors:
-                    combined_coeff = combined_coeff + other.coeff
-                    skip.add(j)
+            # Build key_pure_tensor from factors (without coefficient)
+            factors = t.factors
+            if len(factors) == 1:
+                key_pure_tensor = factors[0]
+            else:
+                key_pure_tensor = AlgebraicPureTensor(*factors)
 
-            # Rebuild or discard the pivot term
+            c = t.coeff
+
+            if key_pure_tensor in coeff_map:
+                coeff_map[key_pure_tensor] = coeff_map[key_pure_tensor] + c
+            else:
+                coeff_map[key_pure_tensor] = c
+
+        # Rebuild terms from the dictionary
+        for key_pure_tensor, combined_coeff in coeff_map.items():
             if combined_coeff == 0:
-                skip.add(pivot)
                 if zero_term is None and shape is not None:
                     zero_term = AlgebraicZeroTensor(shape)
+            elif combined_coeff is S.One:
+                result.append(key_pure_tensor)
             else:
-                if combined_coeff is S.One:
-                    # Rebuild without coefficient
-                    if len(pivot_factors) == 1:
-                        result.append(pivot_factors[0])
-                    else:
-                        result.append(AlgebraicPureTensor(*pivot_factors))
-                else:
-                    result.append(AlgebraicPureTensor(combined_coeff, *pivot_factors))
+                result.append(AlgebraicPureTensor(combined_coeff, *key_pure_tensor.factors))
 
         return result, zero_term
 

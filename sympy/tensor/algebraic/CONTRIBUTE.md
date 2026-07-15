@@ -46,7 +46,6 @@ Follow the official Sympy guide at https://docs.sympy.org/latest/contributing/do
 - [x] Add module-level docstring to `tensor/algebraic/algebraic_pure_tensor.py` (summary + examples)
 - [x] Add module-level docstring to `tensor/algebraic/algebraic_tensor.py` (summary + examples)
 - [x] Add module-level docstring to `tensor/algebraic/simplify.py` (summary + examples)
-- [x] Add module-level docstring to `tensor/algebraic/scalar_mul.py` (summary + examples)
 
 Per SymPy's Docstring Style Guide: every public function/class/method needs a
 **Single-Sentence Summary** and an **Examples** section with doctests.

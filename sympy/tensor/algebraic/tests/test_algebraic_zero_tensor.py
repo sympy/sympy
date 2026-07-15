@@ -9,7 +9,6 @@ from sympy.tensor.algebraic import (
     AlgebraicPureTensor,
     AlgebraicTensor,
     AlgebraicZeroTensor,
-    algebraic_zero_tensor,
 )
 
 
@@ -260,17 +259,6 @@ def test_repr():
     zt = AlgebraicZeroTensor(((3, 4), (4, 5)))
     r = srepr(zt)
     assert "AlgebraicZeroTensor" in r
-
-
-# ---------------------------------------------------------------------------
-# Convenience function tests
-# ---------------------------------------------------------------------------
-
-def test_algebraic_zero_tensor():
-    """algebraic_zero_tensor is a convenience constructor."""
-    zt = algebraic_zero_tensor(((3, 4), (4, 5)))
-    assert isinstance(zt, AlgebraicZeroTensor)
-    assert zt.shape == ((3, 4), (4, 5))
 
 
 # ---------------------------------------------------------------------------
