@@ -1844,6 +1844,9 @@ def trig_product_rule(integral: IntegralInfo):
         return CscCotRule(integrand, symbol)
 
 
+primary_trighyper_functions = (sin, cos, sinh, cosh)
+
+
 def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
@@ -1858,24 +1861,34 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     integrand, symbol = integral
 
-    if not integrand.has(exp) and not integrand.has(sin, cos, sinh, cosh):
+    if not (integrand.is_Mul and integrand.has(exp) and
+            integrand.has(*primary_trighyper_functions)):
         return
 
     a = Wild('a', exclude=[symbol, 0])
     b = Wild('b', exclude=[symbol])
     c = Wild('c', exclude=[symbol])
-    # n = Wild('n', exclude=[symbol], properties=[lambda n: n > 0])
     f = WildFunction('f')
-    guassian_pattern = exp(a * symbol**2 + b * symbol + c)
-    trigexp_over_x_pattern = f*exp(a * symbol)/symbol
+
+    quadratic_pattern = a * symbol**2 + b * symbol + c
+    linear_pattern = a * symbol + b
+
+    quadratic_phase = any(
+        term.args[0].match(quadratic_pattern)
+        for term in integrand.atoms(*primary_trighyper_functions)
+    )
+    guassian_pattern = exp(quadratic_pattern)
+    trigexp_over_x_pattern = f*exp(linear_pattern)/symbol
     trigexp_over_x_match = integrand.match(trigexp_over_x_pattern)
-    if not (any(term.match(guassian_pattern) for term in integrand.atoms(exp))
-            or (trigexp_over_x_match and
-                trigexp_over_x_match[f].has(sin, cos, sinh, cosh))):
+    if not (
+        any(term.match(guassian_pattern) for term in integrand.atoms(exp))
+        or trigexp_over_x_match
+        or quadratic_phase
+    ):
         return
 
     # Replace trig and hyperbolic functions with their exponential forms
-    rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
+    rewritten = integrand.rewrite(primary_trighyper_functions, exp)
 
     if rewritten != integrand:
         steps = integral_steps(rewritten, symbol)
