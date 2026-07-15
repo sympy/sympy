@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.assumptions.ask import Q
-from sympy.assumptions.refine import refine, refine_sin_cos
+from sympy.assumptions.refine import refine, refine_sin_cos, refine_tan
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
@@ -9,7 +9,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, cot, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -359,8 +359,23 @@ def test_Heaviside():
 
 def test_tan():
     n = Symbol('n')
+    m = Symbol('m')
+    # Integer multiples of pi drop out (tan has period pi).
     assert refine(tan(n*pi), Q.integer(n)) == 0
     assert refine(tan(x + n*pi), Q.integer(n)) == tan(x)
     assert refine(tan(x + 2*n*pi), Q.integer(n)) == tan(x)
+    assert refine(tan(x + n*pi + m*pi), Q.integer(n) & Q.integer(m)) == tan(x)
+    # Even/odd multiples of pi/2: even -> tan, odd -> -cot.
+    assert refine(tan(n*pi/2), Q.even(n)) == 0
+    assert refine(tan(x + n*pi/2), Q.even(n)) == tan(x)
+    assert refine(tan(x + n*pi/2), Q.odd(n)) == -cot(x)
+    assert refine(tan(x + 3*n*pi/2), Q.odd(n)) == -cot(x)
+    # Zero argument.
+    assert refine(tan(n), Q.zero(n)) == 0
+    # Parity of the pi/2 coefficient unknown -> left unrefined.
+    assert refine(tan(x + n*pi/2), Q.integer(n)) == tan(x + n*pi/2)
+    # Nothing to do.
     assert refine(tan(x), Q.integer(n)) == tan(x)
     assert refine(tan(x), True) == tan(x)
+    # Wrong function type is rejected.
+    raises(TypeError, lambda: refine_tan(sin(x), Q.real(x)))

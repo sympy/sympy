@@ -538,6 +538,11 @@ def refine_tan(expr, assumptions):
     """
     Handler for the tan function.
 
+    ``tan`` has period ``pi``, so integer multiples of ``pi`` in the argument
+    drop out.  An *odd* multiple of ``pi/2`` additionally turns ``tan`` into
+    ``-cot`` (``tan(x + pi/2) == -cot(x)``), while an *even* multiple leaves a
+    plain ``tan``.
+
     Examples
     ========
 
@@ -549,28 +554,62 @@ def refine_tan(expr, assumptions):
     0
     >>> refine_tan(tan(x + n*pi), Q.integer(n))
     tan(x)
+    >>> refine_tan(tan(x + n*pi/2), Q.even(n))
+    tan(x)
+    >>> refine_tan(tan(x + n*pi/2), Q.odd(n))
+    -cot(x)
 
     """
-    from sympy.functions.elementary.trigonometric import tan
+    from sympy.functions.elementary.trigonometric import tan, cot
+
+    if not isinstance(expr, tan):
+        raise TypeError("refine_tan expects a tan function.")
 
     arg = expr.args[0]
 
-    integer_pi_terms = []
+    if ask(Q.zero(arg), assumptions):
+        return S.Zero
+
+    # Collect the terms that are an integer multiple of pi/2 (recorded as that
+    # integer coefficient); everything else is left untouched in the argument.
+    integer_coeffs_of_pi_half = []
     remaining_terms = []
 
     terms = arg.args if arg.is_Add else (arg,)
     for term in terms:
         coeff_of_pi = term.coeff(S.Pi)
-        if coeff_of_pi and ask(Q.integer(coeff_of_pi), assumptions):
-            integer_pi_terms.append(term)
+        if coeff_of_pi and ask(Q.integer(2 * coeff_of_pi), assumptions):
+            integer_coeffs_of_pi_half.append(2 * coeff_of_pi)
         else:
             remaining_terms.append(term)
 
-    if not integer_pi_terms:
+    if not integer_coeffs_of_pi_half:
         return expr
 
-    rem = Add(*remaining_terms) if remaining_terms else S.Zero
-    return tan(rem) if rem != S.Zero else S.Zero
+    # Only the *parity* of the total pi/2 coefficient matters. Sum the
+    # coefficients whose parity is known (tracking the running parity), and
+    # leave any parity-unknown coefficients inside the refined argument.
+    sum_of_parity_known_coeffs = 0
+    sum_of_parity_unknown_coeffs = 0
+    sum_of_parity_known_coeffs_is_even = True
+    for coeff in integer_coeffs_of_pi_half:
+        coeff_is_even = ask(Q.even(coeff), assumptions)
+        if coeff_is_even is None:
+            sum_of_parity_unknown_coeffs += coeff
+        else:
+            sum_of_parity_known_coeffs += coeff
+            sum_of_parity_known_coeffs_is_even = (
+                sum_of_parity_known_coeffs_is_even == coeff_is_even
+            )
+
+    if sum_of_parity_known_coeffs == 0:
+        return expr
+
+    rem = Add(*remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
+    # even multiple of pi/2 -> tan(rem); odd multiple -> -cot(rem)
+    if sum_of_parity_known_coeffs_is_even:
+        return tan(rem)
+    return -cot(rem)
 
 
 def refine_Heaviside(expr, assumptions):
