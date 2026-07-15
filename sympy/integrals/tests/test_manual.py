@@ -411,6 +411,9 @@ def test_manualintegrate_parts_special():
     f = Ei(x)*Shi(x)
     F = x*Ei(x)*Shi(x) - exp(x)*Shi(x) - cosh(x)*Ei(x) + Ei(2*x)
     assert_is_integral_of(f, F)
+    f = exp(x)*sin(x**2+x)*cos(x)
+    F = -I*(I**(3/2)*sqrt(pi)*exp(I/4)*erfi(I**(3/2)*(2*I*x + 1)/2)/4 + I**(3/2)*sqrt(pi)*exp(I*(1 + 2*I)**2/4)*erfi(I**(3/2)*(2*I*x + 1 + 2*I)/2)/4 - sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(4*sqrt(-I)) - sqrt(pi)*exp(-I*(1 - 2*I)**2/4)*erfi((-2*I*x + 1 - 2*I)/(2*sqrt(-I)))/(4*sqrt(-I)))/2
+    assert_is_integral_of(f, F)
 
 
 def test_manualintegrate_derivative():
