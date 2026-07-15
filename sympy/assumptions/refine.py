@@ -534,6 +534,45 @@ def refine_sin_cos(expr, assumptions):
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
 
 
+def refine_tan(expr, assumptions):
+    """
+    Handler for the tan function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_tan
+    >>> from sympy import Symbol, Q, tan, pi
+    >>> from sympy.abc import x
+    >>> n = Symbol('n')
+    >>> refine_tan(tan(n*pi), Q.integer(n))
+    0
+    >>> refine_tan(tan(x + n*pi), Q.integer(n))
+    tan(x)
+
+    """
+    from sympy.functions.elementary.trigonometric import tan
+
+    arg = expr.args[0]
+
+    integer_pi_terms = []
+    remaining_terms = []
+
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        coeff_of_pi = term.coeff(S.Pi)
+        if coeff_of_pi and ask(Q.integer(coeff_of_pi), assumptions):
+            integer_pi_terms.append(term)
+        else:
+            remaining_terms.append(term)
+
+    if not integer_pi_terms:
+        return expr
+
+    rem = Add(*remaining_terms) if remaining_terms else S.Zero
+    return tan(rem) if rem != S.Zero else S.Zero
+
+
 def refine_Heaviside(expr, assumptions):
     """
     Handler for the Heaviside step function.
@@ -613,6 +652,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'tan': refine_tan,
     'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
