@@ -2223,6 +2223,9 @@ class TensExpr(Expr, ABC):
 
     @staticmethod
     def _match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict):
+        """
+        Given an array whose axes correspond to the indices given in free_ind2, change the order of the axes to correspond to the indices in free_ind1 (raising/lowering indices if required)
+        """
         from .array import permutedims
 
         index_types1 = [i.tensor_index_type for i in free_ind1]
