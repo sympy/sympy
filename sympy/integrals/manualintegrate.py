@@ -26,6 +26,7 @@ from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
+from contextvars import ContextVar
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -1329,20 +1330,37 @@ def multiplexer(conditions):
                 return rule(expr)
     return multiplexer_rl
 
-def alternatives(*rules):
+def alternatives(*rules, branch=False):
     """Strategy that makes an AlternativeRule out of multiple possible results."""
     def _alternatives(integral):
         alts = []
+        first_partial = None
         count = 0
-        debug("List of Alternative Rules")
+        if branch:
+            debug("List of Alternative Rules")
         for rule in rules:
-            count = count + 1
-            debug("Rule {}: {}".format(count, rule))
+            count += 1
+            if branch:
+                debug("Rule {}: {}".format(count, rule))
 
             result = rule(integral)
-            if (result and not isinstance(result, DontKnowRule) and
-                result != integral and result not in alts):
+            if (not result or isinstance(result, DontKnowRule) or
+                    result == integral):
+                continue
+
+            if not branch:
+                if not result.contains_dont_know():
+                    return result
+                if first_partial is None:
+                    first_partial = result
+                continue
+
+            if result not in alts:
                 alts.append(result)
+
+        if not branch:
+            return first_partial
+
         if len(alts) == 1:
             return alts[0]
         elif alts:
@@ -2540,55 +2558,64 @@ def dirac_delta_rule(integral: IntegralInfo):
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
-def substitution_rule(integral):
-    integrand, symbol = integral
+def substitution_rule(branch: bool = False
+                      ) -> Callable[[IntegralInfo], Rule | None]:
+    def substitution_rule_rl(integral):
+        integrand, symbol = integral
 
-    u_var = Dummy("u")
-    substitutions = find_substitutions(integrand, symbol, u_var)
-    count = 0
-    if substitutions:
-        debug("List of Substitution Rules")
-        ways = []
-        factored_integrand = integrand.factor()
-        _, denom_integrand = factored_integrand.as_numer_denom()
-        for u_func, c, substituted in substitutions:
-            subrule = integral_steps(substituted, u_var)
-            count = count + 1
-            debug("Rule {}: {}".format(count, subrule))
+        u_var = Dummy("u")
+        substitutions = find_substitutions(integrand, symbol, u_var)
+        count = 0
+        if substitutions:
+            if branch:
+                debug("List of Substitution Rules")
+            ways = []
+            factored_integrand = integrand.factor()
+            _, denom_integrand = factored_integrand.as_numer_denom()
+            for u_func, c, substituted in substitutions:
+                subrule = integral_steps(substituted, u_var)
+                if branch:
+                    count = count + 1
+                    debug("Rule {}: {}".format(count, subrule))
 
-            if subrule.contains_dont_know():
-                continue
+                if subrule.contains_dont_know():
+                    continue
 
-            if simplify(c - 1) != 0:
-                _, denom_c = c.as_numer_denom()
-                if subrule:
-                    subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
+                if simplify(c - 1) != 0:
+                    _, denom_c = c.as_numer_denom()
+                    if subrule:
+                        subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
 
-                if denom_c.free_symbols:
-                    pieces = []
-                    factors_denom_c = factor_list(denom_c)[1]
-                    for pole, _ in factors_denom_c:
-                        # only substitute poles introduced by the constant c if they were not already poles of the original integrand
-                        if not _if_zero_implies_zero(pole, denom_integrand):
-                            rewritten_integral = manual_subs(factored_integrand, pole, 0)
-                            substep = integral_steps(rewritten_integral, symbol)
+                    if denom_c.free_symbols:
+                        pieces = []
+                        factors_denom_c = factor_list(denom_c)[1]
+                        for pole, _ in factors_denom_c:
+                            # only substitute poles introduced by the constant c if they were not already poles of the original integrand
+                            if not _if_zero_implies_zero(pole, denom_integrand):
+                                rewritten_integral = manual_subs(factored_integrand, pole, 0)
+                                substep = integral_steps(rewritten_integral, symbol)
 
-                            if substep:
-                                substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
-                                pieces.append((
-                                    substep,
-                                    Eq(pole, 0)
-                                ))
-                    if pieces:
-                        pieces.append((subrule, True))
-                        subrule = PiecewiseRule(substituted, symbol, pieces)
+                                if substep:
+                                    substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
+                                    pieces.append((
+                                        substep,
+                                        Eq(pole, 0)
+                                    ))
+                        if pieces:
+                            pieces.append((subrule, True))
+                            subrule = PiecewiseRule(substituted, symbol, pieces)
 
-            ways.append(URule(integrand, symbol, u_var, u_func, subrule))
+                rule = URule(integrand, symbol, u_var, u_func, subrule)
+                if branch:
+                    ways.append(rule)
+                else:
+                    return rule
 
-        if len(ways) > 1:
-            return AlternativeRule(integrand, symbol, ways)
-        elif ways:
-            return ways[0]
+            if len(ways) > 1:
+                return AlternativeRule(integrand, symbol, ways)
+            elif ways:
+                return ways[0]
+    return substitution_rule_rl
 
 
 partial_fractions_rule = rewriter(
@@ -2643,6 +2670,7 @@ def fallback_rule(integral):
 _integral_cache: dict[Expr, Expr | None] = {}
 _parts_u_cache: dict[Expr, int] = defaultdict(int)
 _cache_dummy = Dummy("z")
+_branch_context = ContextVar('branch', default=False)
 
 def integral_steps(integrand, symbol, **options):
     """Returns the steps needed to compute an integral.
@@ -2657,6 +2685,12 @@ def integral_steps(integrand, symbol, **options):
     integral. The code it uses to format the results of this function can be
     found at
     https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py.
+
+    By default, only the first rule that successfully applies at each step is
+    kept, even if multiple rules are applicable. Passing ``branch=True``
+    causes all applicable rules to be retained and combined into an
+    ``AlternativeRule``, so that alternative solution paths are preserved
+    rather than discarded.
 
     Examples
     ========
@@ -2680,6 +2714,17 @@ def integral_steps(integrand, symbol, **options):
     substep=PowerRule(integrand=x**2, variable=x, base=x, exp=2)),
     ConstantRule(integrand=9, variable=x)]))
 
+    Parameters
+    ==========
+
+    integrand : Expr
+        The expression to integrate.
+    symbol : Symbol
+        The variable of integration.
+    branch : bool, optional
+        If True, collect all applicable rules into an ``AlternativeRule``
+        instead of returning only the first workable one. Defaults to False.
+
     Returns
     =======
 
@@ -2689,91 +2734,103 @@ def integral_steps(integrand, symbol, **options):
         to obtain a result.
 
     """
-    cachekey = integrand.xreplace({symbol: _cache_dummy})
-    if cachekey in _integral_cache:
-        if _integral_cache[cachekey] is None:
-            # Stop this attempt, because it leads around in a loop
-            return DontKnowRule(integrand, symbol)
-        else:
-            # TODO: This is for future development, as currently
-            # _integral_cache gets no values other than None
-            return (_integral_cache[cachekey].xreplace(_cache_dummy, symbol),
-                symbol)
+    if "branch" in options:
+        branch = options["branch"]
+        token = _branch_context.set(branch)
     else:
-        _integral_cache[cachekey] = None
+        branch = _branch_context.get()
+        token = None
 
-    integral = IntegralInfo(integrand, symbol)
+    try:
+        cachekey = integrand.xreplace({symbol: _cache_dummy})
+        if cachekey in _integral_cache:
+            if _integral_cache[cachekey] is None:
+                # Stop this attempt, because it leads around in a loop
+                return DontKnowRule(integrand, symbol)
+            else:
+                # TODO: This is for future development, as currently
+                # _integral_cache gets no values other than None
+                return (_integral_cache[cachekey].xreplace(_cache_dummy, symbol),
+                    symbol)
+        else:
+            _integral_cache[cachekey] = None
 
-    def key(integral):
-        integrand = integral.integrand
+        integral = IntegralInfo(integrand, symbol)
 
-        if symbol not in integrand.free_symbols:
-            return Number
-        for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
-            if isinstance(integrand, cls):
-                return cls
-        return type(integrand)
+        def key(integral):
+            integrand = integral.integrand
 
-    def integral_is_subclass(*klasses):
-        def _integral_is_subclass(integral):
-            k = key(integral)
-            return k and issubclass(k, klasses)
-        return _integral_is_subclass
+            if symbol not in integrand.free_symbols:
+                return Number
+            for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
+                if isinstance(integrand, cls):
+                    return cls
+            return type(integrand)
 
-    result = do_one(
-        null_safe(special_function_rule),
-        null_safe(switch(key, {
-            Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
-                        null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule)),
-            Symbol: power_rule,
-            exp: exp_rule,
-            Add: add_rule,
-            Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
-                        null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule),
-                        null_safe(trig_cmplx_exp_rule)),
-            Derivative: derivative_rule,
-            TrigonometricFunction: trig_rule,
-            Heaviside: heaviside_rule,
-            DiracDelta: dirac_delta_rule,
-            OrthogonalPolynomial: orthogonal_poly_rule,
-            Number: constant_rule
-        })),
-        do_one(
-            null_safe(trig_rule),
-            null_safe(hyperbolic_rule),
-            null_safe(alternatives(
-                rewrites_rule,
-                substitution_rule,
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    partial_fractions_rule),
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    cancel_rule),
-                condition(
-                    integral_is_subclass(Mul),
-                    combine_power_rule),
-                condition(
-                    integral_is_subclass(Mul, log,
-                                         *inverse_trig_functions,
-                                         *special_error_functions),
-                    parts_rule),
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    distribute_expand_rule),
-                trig_powers_products_rule,
-                trig_expand_rule
-            )),
-            null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
-            null_safe(trig_substitution_rule)
-        ),
-        fallback_rule)(integral)
-    del _integral_cache[cachekey]
-    return result
+        def integral_is_subclass(*klasses):
+            def _integral_is_subclass(integral):
+                k = key(integral)
+                return k and issubclass(k, klasses)
+            return _integral_is_subclass
+
+        result = do_one(
+            null_safe(special_function_rule),
+            null_safe(switch(key, {
+                Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
+                            null_safe(quadratic_denom_rule),
+                            null_safe(sqrt_quadratic_rule),
+                            null_safe(sqrt_fractional_linear_rule)),
+                Symbol: power_rule,
+                exp: exp_rule,
+                Add: add_rule,
+                Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
+                            null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
+                            null_safe(sqrt_quadratic_rule),
+                            null_safe(sqrt_fractional_linear_rule),
+                            null_safe(trig_cmplx_exp_rule)),
+                Derivative: derivative_rule,
+                TrigonometricFunction: trig_rule,
+                Heaviside: heaviside_rule,
+                DiracDelta: dirac_delta_rule,
+                OrthogonalPolynomial: orthogonal_poly_rule,
+                Number: constant_rule
+            })),
+            do_one(
+                null_safe(trig_rule),
+                null_safe(hyperbolic_rule),
+                null_safe(alternatives(
+                    rewrites_rule,
+                    substitution_rule(branch=branch),
+                    condition(
+                        integral_is_subclass(Mul, Pow),
+                        partial_fractions_rule),
+                    condition(
+                        integral_is_subclass(Mul, Pow),
+                        cancel_rule),
+                    condition(
+                        integral_is_subclass(Mul),
+                        combine_power_rule),
+                    condition(
+                        integral_is_subclass(Mul, log,
+                                             *inverse_trig_functions,
+                                             *special_error_functions),
+                        parts_rule),
+                    condition(
+                        integral_is_subclass(Mul, Pow),
+                        distribute_expand_rule),
+                    trig_powers_products_rule,
+                    trig_expand_rule,
+                    branch=branch
+                )),
+                null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
+                null_safe(trig_substitution_rule)
+            ),
+            fallback_rule)(integral)
+        del _integral_cache[cachekey]
+        return result
+    finally:
+        if token is not None:
+            _branch_context.reset(token)
 
 
 def manualintegrate(f, var):
