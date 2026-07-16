@@ -328,6 +328,18 @@ def test_manualintegrate_special():
     f, F = li(x), x*li(x) - Ei(2*log(x))
     assert_is_integral_of(f, F)
 
+def test_issue_29910():
+    f = x**2*exp(-x**2)
+    F = -x*exp(-x**2)/2 + sqrt(pi)*erf(x)/4
+    assert_is_integral_of(f, F)
+    f = x**2*sin(x**2)
+    F = -x*cos(x**2)/2 + sqrt(2)*sqrt(pi)*fresnelc(sqrt(2)*x/sqrt(pi))/4
+    assert_is_integral_of(f, F)
+    f = x**2*cos(x**2)
+    F = x*sin(x**2)/2 - sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/4
+    assert_is_integral_of(f, F)
+
+
 @slow
 def test_manualintegrate_special_slow():
     f, F = exp(-x**2)*exp(x), Rational(1,2)*exp(Rational(1,4))*sqrt(pi)*erf(x - Rational(1,2))

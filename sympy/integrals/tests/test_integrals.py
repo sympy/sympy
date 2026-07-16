@@ -2237,6 +2237,18 @@ def test_issue_15566():
 
     assert result.has(erf)
 
+
+@slow
+def test_issue_29910():
+    # integrate(x**2*exp(-x**2)*ln(x), x)
+    f = x**2*exp(-x**2)*log(x)
+    F = -x*hyper((Rational(1, 2), Rational(1, 2)), (Rational(3, 2), Rational(3, 2)), -x**2) \
+        * S.One/2 - x*exp(-x**2)*log(x) * S.One/2 + sqrt(pi)*log(x)*erf(x) * S.One/4 \
+        + sqrt(pi)*erf(x) * S.One/4
+
+    assert integrate(f, x) == F
+
+
 def test_issue_29909():
     f = x*exp(x)*erf(x)
     F = x*exp(x)*erf(x) - exp(x)*erf(x) + exp(x)*exp(-x**2)/sqrt(pi) + exp(Rational(1, 4))*erf(x - Rational(1, 2))/2
