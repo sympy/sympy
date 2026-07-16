@@ -484,7 +484,7 @@ def test_issue_6799():
     integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
     assert manualintegrate(integrand, x) == \
-        ((n*x/2 + sin(2*n*x)/4)*cos(n*phi) - sin(n*phi)*cos(n*x)**2/2)/n
+        ((n*x/2 - sin(2*n*phi - 2*n*x)/4)*cos(n*phi) + sin(n*phi)*cos(n*phi - n*x)**2/2)/n
     assert r * integrate(integrand, limits).trigsimp() / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
 
@@ -740,6 +740,12 @@ def test_issue_25093():
     assert manualintegrate(cos(a*x**2 + b), x) == (
         sqrt(2)*sqrt(pi)*(-sin(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi))
         + cos(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)))
+
+
+def test_issue_29999():
+    f = exp(x) / (3 * x + 2)
+    F = exp(-Rational(2, 3)) * Ei(x + Rational(2, 3)) * S.One / 3
+    assert_is_integral_of(f, F)
 
 
 def test_nested_pow():

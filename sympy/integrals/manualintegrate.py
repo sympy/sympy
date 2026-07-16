@@ -40,7 +40,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import WildFunction
+from sympy.core.function import WildFunction, count_ops
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -1218,6 +1218,23 @@ def find_substitutions(integrand, symbol, u_var):
         debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
+        # if the term is linear, then we can solve for u in terms of the symbol
+        # and substitute that in this is useful for cases like exp(x)/(x+1)
+        # where u = x + 1 and u_var = u
+        if (
+            substituted.has_free(symbol) and
+            # avoid redundant rational function shift
+            not integrand.is_rational_function(symbol) and
+            u.is_polynomial(symbol) and degree(u, symbol) == 1
+        ):
+            a = u.coeff(symbol)
+            b = u.subs(symbol, 0)
+            symbol_of_u = (u_var - b)/a
+            # avoid infinite recursion when b = 0, and avoid division by zero
+            # when a = 0
+            if b != 0 and a != 0:
+                substituted = manual_subs(substituted, symbol, symbol_of_u).cancel()
+
         if substituted.has_free(symbol):
             return False
         # avoid increasing the degree of a rational function
@@ -1293,6 +1310,7 @@ def find_substitutions(integrand, symbol, u_var):
             if substitution not in results:
                 results.append(substitution)
 
+    results.sort(key=lambda sub: count_ops(sub[2]))
     return results
 
 def rewriter(condition, rewrite):
@@ -2835,6 +2853,7 @@ def manualintegrate(f, var):
             result = result.func(
                 (result.args[1][0], Ne(*cond.args)),
                 (result.args[0][0], True))
+
     # Factor terms like erf(x)*sin(x) that may have been expanded
     def _has_erf_trig_mul(expr):
         for sub in expr.find(Mul):
@@ -2843,4 +2862,21 @@ def manualintegrate(f, var):
         return False
     if _has_erf_trig_mul(f) and _has_erf_trig_mul(result):
         result = factor_terms(result)
+
+    def _remove_additive_constants(expr, var):
+        if not expr.has(var):
+            return S.Zero
+        if expr.is_Add:
+            args = [_remove_additive_constants(arg, var) for arg in expr.args]
+            return Add(*args)
+        if expr.is_Mul:
+            indep, dep = expr.as_independent(var)
+            if dep.is_Add:
+                return indep * _remove_additive_constants(dep, var)
+            return expr
+        return expr
+    # Avoid removing additive constants if the integrand contains a derivative
+    if not f.has(Derivative):
+        result = _remove_additive_constants(result, var)
+
     return result
