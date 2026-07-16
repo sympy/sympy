@@ -5,9 +5,12 @@ from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
+from sympy.core.symbol import Symbol
+from typing import Generator
 
 
-def literal_symbol(literal):
+
+def literal_symbol(literal) -> bool | Symbol:
     """
     The symbol in this literal (without the negation).
 
@@ -31,7 +34,7 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False):
+def satisfiable(expr, algorithm: str |None=None, all_models: bool=False, minimal: bool=False, use_lra_theory: bool=False)->dict | bool |Generator:
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -59,7 +62,7 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
     {A: False, B: True}
     >>> next(models)
     {A: True, B: True}
-    >>> def use_models(models):
+    >>> def use_models(models)->None:
     ...     for model in models:
     ...         if model:
     ...             # Do something with the model.
@@ -118,7 +121,7 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
     raise NotImplementedError
 
 
-def valid(expr):
+def valid(expr)->bool:
     """
     Check validity of a propositional sentence.
     A valid propositional sentence is True under every assignment.
@@ -142,7 +145,7 @@ def valid(expr):
     return not satisfiable(Not(expr))
 
 
-def pl_true(expr, model=None, deep=False):
+def pl_true(expr, model: dict |None =None, deep: bool=False)->bool|None:
     """
     Returns whether the given assignment is a model or not.
 
@@ -182,7 +185,6 @@ def pl_true(expr, model=None, deep=False):
 
     """
 
-    from sympy.core.symbol import Symbol
 
     boolean = (True, False)
 
@@ -215,7 +217,7 @@ def pl_true(expr, model=None, deep=False):
     return None
 
 
-def entails(expr, formula_set=None):
+def entails(expr, formula_set=None)->bool:
     """
     Check whether the given expr_set entail an expr.
     If formula_set is empty then it returns the validity of expr.
