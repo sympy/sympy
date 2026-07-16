@@ -111,8 +111,10 @@ def check(a, exclude=[], check_attr=True, deprecated=(), check_eq=False):
 
 
 def test_core_basic():
-    for c in (Atom, Atom(), Basic, Basic(), SingletonRegistry, S):
+    for c in (Atom, Atom(), Basic, Basic(), SingletonRegistry):
         check(c)
+
+    check(S, check_eq=False)
 
 def test_core_Str():
     check(Str('x'))
@@ -191,8 +193,8 @@ def test_core_interval():
 
 
 def test_core_multidimensional():
-    for c in (vectorize, vectorize(0)):
-        check(c)
+    check(vectorize)
+    check(vectorize(0), check_eq=False)
 
 
 def test_Singletons():
@@ -311,8 +313,8 @@ from sympy.ntheory.generate import Sieve
 
 
 def test_ntheory():
-    for c in (Sieve, Sieve()):
-        check(c)
+    check(Sieve)
+    check(Sieve(), check_eq=False)
 
 #================== physics =====================
 from sympy.physics.paulialgebra import Pauli
@@ -579,70 +581,71 @@ def test_pickling_polys_errors():
     # for c in (OperationNotSupported, OperationNotSupported(Poly(x), Poly.gcd)):
     #    check(c)
 
-    for c in (HeuristicGCDFailed, HeuristicGCDFailed()):
-        check(c)
+    check(HeuristicGCDFailed)
+    check(HeuristicGCDFailed, check_eq=False)
 
-    for c in (HomomorphismFailed, HomomorphismFailed()):
-        check(c)
+    check(HomomorphismFailed)
+    check(HomomorphismFailed(), check_eq=False)
 
-    for c in (IsomorphismFailed, IsomorphismFailed()):
-        check(c)
+    check(IsomorphismFailed)
+    check(IsomorphismFailed(), check_eq=False)
 
-    for c in (ExtraneousFactors, ExtraneousFactors()):
-        check(c)
+    check(ExtraneousFactors)
+    check(ExtraneousFactors(), check_eq=False)
 
-    for c in (EvaluationFailed, EvaluationFailed()):
-        check(c)
+    check(EvaluationFailed)
+    check(EvaluationFailed(), check_eq=False)
 
-    for c in (RefinementFailed, RefinementFailed()):
-        check(c)
+    check(RefinementFailed)
+    check(RefinementFailed(), check_eq=False)
 
-    for c in (CoercionFailed, CoercionFailed()):
-        check(c)
+    check(CoercionFailed)
+    check(CoercionFailed(), check_eq=False)
 
-    for c in (NotInvertible, NotInvertible()):
-        check(c)
+    check(NotInvertible)
+    check(NotInvertible(), check_eq=False)
 
-    for c in (NotReversible, NotReversible()):
-        check(c)
+    check(NotReversible)
+    check(NotReversible(), check_eq=False)
 
-    for c in (NotAlgebraic, NotAlgebraic()):
-        check(c)
+    check(NotAlgebraic)
+    check(NotAlgebraic(), check_eq=False)
 
-    for c in (DomainError, DomainError()):
-        check(c)
+    check(DomainError)
+    check(DomainError(), check_eq=False)
 
-    for c in (PolynomialError, PolynomialError()):
-        check(c)
+    check(PolynomialError)
+    check(PolynomialError(), check_eq=False)
 
-    for c in (UnificationFailed, UnificationFailed()):
-        check(c)
+    check(UnificationFailed)
+    check(UnificationFailed(), check_eq=False)
 
-    for c in (GeneratorsError, GeneratorsError()):
-        check(c)
+    check(GeneratorsError)
+    check(GeneratorsError(), check_eq=False)
 
-    for c in (GeneratorsNeeded, GeneratorsNeeded()):
-        check(c)
+    check(GeneratorsNeeded)
+    check(GeneratorsNeeded(), check_eq=False)
 
     # TODO: PicklingError: Can't pickle <function <lambda> at 0x38578c0>: it's not found as __main__.<lambda>
     # for c in (ComputationFailed, ComputationFailed(lambda t: t, 3, None)):
     #    check(c)
 
-    for c in (UnivariatePolynomialError, UnivariatePolynomialError()):
-        check(c)
+    check(UnivariatePolynomialError)
+    check(UnivariatePolynomialError(), check_eq=False)
 
-    for c in (MultivariatePolynomialError, MultivariatePolynomialError()):
-        check(c)
+    check(MultivariatePolynomialError)
+    check(MultivariatePolynomialError(), check_eq=False)
 
     # TODO: TypeError: __init__() takes at least 3 arguments (1 given)
     # for c in (PolificationFailed, PolificationFailed({}, x, x, False)):
     #    check(c)
 
-    for c in (OptionError, OptionError()):
-        check(c)
+    check(OptionError)
+    check(OptionError(), check_eq=False)
 
-    for c in (FlagError, FlagError()):
-        check(c)
+
+    check(FlagError)
+    check(FlagError(), check_eq=False)
 
 #def test_pickling_polys_options():
     #from sympy.polys.polyoptions import Options
@@ -677,11 +680,13 @@ from sympy.printing.python import PythonPrinter
 
 
 def test_printing():
-    for c in (LatexPrinter, LatexPrinter(), MathMLContentPrinter,
+    for c in (LatexPrinter, MathMLContentPrinter,
               MathMLPresentationPrinter, PrettyPrinter, prettyForm, stringPict,
-              stringPict("a"), Printer, Printer(), PythonPrinter,
-              PythonPrinter()):
+              stringPict("a"), Printer, PythonPrinter):
         check(c)
+
+    for c in (LatexPrinter(), Printer(), PythonPrinter()):
+        check(c, check_eq=False)
 
 
 @XFAIL
@@ -695,7 +700,7 @@ def test_printing2():
 
 
 def test_printing3():
-    check(PrettyPrinter())
+    check(PrettyPrinter(), check_eq=False)
 
 #================== series ======================
 from sympy.series.limits import Limit
