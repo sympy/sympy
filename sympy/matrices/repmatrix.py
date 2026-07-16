@@ -399,12 +399,10 @@ class RepMatrix(MatrixBase):
         return self._fromrep(self._rep.applyfunc(abs))
 
     def _eval_conjugate(self):
-        rep = self._rep
-        domain = rep.domain
-        if domain in (ZZ, QQ):
-            return self.copy()
-        else:
-            return self._fromrep(rep.applyfunc(lambda e: e.conjugate()))
+        return self._fromrep(self._rep.conjugate())
+
+    def _eval_adjoint(self):
+        return self._fromrep(self._rep.adjoint())
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,

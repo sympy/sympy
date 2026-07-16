@@ -1180,6 +1180,14 @@ class DomainMatrix:
         """Matrix transpose of ``self``"""
         return self.from_rep(self.rep.transpose())
 
+    def conjugate(self):
+        """Entrywise conjugate of ``self``"""
+        return self.from_rep(self.rep.conjugate())
+
+    def adjoint(self):
+        """Matrix adjoint of ``self``"""
+        return self.from_rep(self.rep.adjoint())
+
     def flat(self):
         rows, cols = self.shape
         return [self[i,j].element for i in range(rows) for j in range(cols)]
