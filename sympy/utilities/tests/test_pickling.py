@@ -48,7 +48,7 @@ dont_check_attrs = {
 }
 
 
-def check(a, exclude=[], check_attr=True, deprecated=(), check_eq=False):
+def check(a, exclude=[], check_attr=True, deprecated=(), check_eq=True):
     """ Check that pickling and copying round-trips.
     """
     # Pickling with protocols 0 and 1 is disabled for Basic instances:
