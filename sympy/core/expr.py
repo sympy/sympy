@@ -477,10 +477,8 @@ class Expr(Basic, EvalfMixin):
         >>> pi.is_number, pi.is_Number
         (True, False)
 
-        >>> from sympy import AlgebraicNumber, sqrt
-        >>> a = AlgebraicNumber(sqrt(2))
-        >>> a.is_number, a.is_Number
-        (True, False)
+        See :ref:`assumptions-guide-other-is-properties` for more on
+        this distinction.
 
         If something is a number it should evaluate to a number with
         real and imaginary parts that are Numbers; the result may not

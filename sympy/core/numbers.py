@@ -334,10 +334,8 @@ class Number(AtomicExpr):
     they are not atomic.
 
     Being an instance of this class is unrelated to the ``is_number``
-    property, which is True for any expression that can be evaluated to
-    a floating point complex number, whether or not it is a ``Number``
-    instance (e.g. ``pi.is_number`` is True but ``pi.is_Number`` is
-    False).
+    property; see :ref:`assumptions-guide-other-is-properties` for the
+    distinction.
 
     See Also
     ========
