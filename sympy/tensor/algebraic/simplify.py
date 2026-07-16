@@ -273,10 +273,11 @@ def _proportionality_factoring(at):
     >>> from sympy.tensor.algebraic.simplify import _proportionality_factoring
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
+    >>> C = MatrixSymbol("C", 4, 5)
     >>> T1 = AlgebraicPureTensor(A, B)
-    >>> T2 = AlgebraicPureTensor(2, A, B)
+    >>> T2 = AlgebraicPureTensor(2, A, C)
     >>> print(_proportionality_factoring(T1 + T2))
-    3*A ⊗ B
+    A ⊗ (B + 2*C)
     """
     from sympy.core.add import Add as _Add
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor

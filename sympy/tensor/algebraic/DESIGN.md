@@ -14,6 +14,7 @@ The module provides three core types plus a simplification pipeline:
 | `AlgebraicPureTensor` | A single tensor-product term (non-commutative Mul with internal coefficient storage) |
 | `AlgebraicZeroTensor` | The additive identity (zero tensor) for a given tensor shape |
 | `AlgebraicTensor` | A linear combination (sum) of same-shape `AlgebraicPureTensor` terms |
+| `algebraic_tensor_product` | Generalized tensor-product constructor (defined in `algebraic_tensor.py`) which produces AlgebraicZeroTensor, AlgebraicPureTensor or AlgebraicTensor depending on the arguments |
 | `simplify.py` | Proportionality factoring and per-term simplification |
 
 ---
@@ -117,17 +118,21 @@ component-wise AND of all term commutativity shapes.
 ### Constructor behavior (`__new__`)
 
 1. **Empty args** → `ValueError`
-2. **All factors are scalar/zero** → returns `AlgebraicZeroTensor`
-3. **Single factor with coefficient S.One** → returns the bare factor directly
-   (unwraps)
-4. **Coefficient is S.Zero** → returns `AlgebraicZeroTensor(factor_shapes)`
-5. **Any commutative coefficient (Number or symbolic)** → stores coefficient
-   internally as first argument
-6. **No coefficient** → constructs `AlgebraicPureTensor` with `evaluate=False`
+2. **Single argument** → returns the argument directly (no wrapping)
+3. **Two arguments, first is commutative** → returns `first * second` (a plain
+    SymPy `Mul`, not an `AlgebraicPureTensor`)
+4. **All factors are scalar/zero** → returns `AlgebraicZeroTensor`
+5. **Single factor with coefficient S.One** → returns the bare factor directly
+    (unwraps)
+6. **Coefficient is S.Zero** → returns `AlgebraicZeroTensor(factor_shapes)`
+7. **Any commutative coefficient (Number or symbolic)** → stores coefficient
+    internally as first argument
+8. **No coefficient** → constructs `AlgebraicPureTensor` with `evaluate=False`
 
 **Agent rule:** Never assume the result of `AlgebraicPureTensor(...)` is an
 `AlgebraicPureTensor` instance. It may return a bare matrix, an
-`AlgebraicZeroTensor`, or a raw factor. Always check the return type.
+`AlgebraicZeroTensor`, a raw factor, or a plain `Mul` (for the two-argument
+commutative case). Always check the return type.
 
 ### Arithmetic operators
 
@@ -541,6 +546,8 @@ single-term results. This means:
 AlgebraicPureTensor(A, B)          # returns A⊗B PureTensor
 AlgebraicPureTensor(2, A, B)       # returns AlgebraicPureTensor with coeff=2
 AlgebraicPureTensor(A)             # returns A (bare factor)
+AlgebraicPureTensor(2, A)          # returns 2*A (plain Mul, not PureTensor)
+AlgebraicPureTensor(x, A)          # returns x*A (plain Mul, not PureTensor)
 AlgebraicTensor(A⊗B)               # returns A⊗B directly (bare PureTensor)
 AlgebraicTensor(A⊗B, C⊗D)         # returns AlgebraicTensor
 AlgebraicTensor(A⊗B, -A⊗B)        # returns AlgebraicZeroTensor
@@ -608,10 +615,9 @@ When writing tests, cover:
 3. Composition with different operand type combinations (the full dispatch table)
 4. Scalar multiplication vs composition dispatch (commutative vs non-commutative)
 5. Negation behavior
-6. `proportionality_factoring` with all/one/more-than-one non-proportional slots
-7. `AlgebraicZeroTensor` preservation through operations
-8. `tensorsimplify` on each type
-9. Coefficient handling (storage, extraction, multiplication)
+6. `AlgebraicZeroTensor` preservation through operations
+7. `tensorsimplify` on each type
+8. Coefficient handling (storage, extraction, multiplication)
 
 </content>
 <parameter=filePath>

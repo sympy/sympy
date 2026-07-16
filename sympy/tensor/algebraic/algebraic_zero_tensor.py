@@ -112,7 +112,7 @@ class AlgebraicZeroTensor(AtomicExpr):
         # Normalise to a tuple of (rows, cols) tuples.
         # Accept: ((3,4), (4,5)), [(3,4)], plain (3,4), [3,4], etc.
         shape = tuple(shape)
-        if len(shape) == 2 and not isinstance(shape[0], tuple):
+        if len(shape) == 2 and not isinstance(shape[0], (tuple, list)):
             # Bare (m, n) or [m, n] -> wrap as ((m, n),)
             shape = (shape,)
         shape = tuple(tuple(s) for s in shape)

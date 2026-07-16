@@ -54,13 +54,15 @@ C ⊗ D + A ⊗ B
 def _shape_of(expr):
     """Return the full tensor shape of *expr* as a tuple of factor shapes.
 
-    Handles AlgebraicPureTensor, AlgebraicZeroTensor,
+    Handles AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor,
     Mul(coeff, AlgebraicPureTensor), and bare matrix-like objects
     (whose single-factor shape is wrapped).
     """
     if isinstance(expr, AlgebraicPureTensor):
         return expr.shape
     if isinstance(expr, AlgebraicZeroTensor):
+        return expr.shape
+    if isinstance(expr, AlgebraicTensor):
         return expr.shape
     if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
         for f in expr.args:
@@ -448,7 +450,10 @@ class AlgebraicTensor(Basic):
             elif combined_coeff is S.One:
                 result.append(key_pure_tensor)
             else:
-                result.append(AlgebraicPureTensor(combined_coeff, *key_pure_tensor.factors))
+                if isinstance(key_pure_tensor, AlgebraicPureTensor):
+                    result.append(AlgebraicPureTensor(combined_coeff, *key_pure_tensor.factors))
+                else:
+                    result.append(AlgebraicPureTensor(combined_coeff, key_pure_tensor))
 
         return result, zero_term
 
@@ -976,6 +981,215 @@ class AlgebraicTensor(Basic):
             return self
 
         return AlgebraicTensor(*expanded_args)
+
+
+def algebraic_tensor_product(*args):
+    """Tensor product of matrix factors, pure tensors, and tensor sums.
+
+    Generalizes the tensor-product constructor to accept
+    ``AlgebraicPureTensor`` and ``AlgebraicTensor`` arguments.
+
+    For each argument the function extracts (coefficient, factors)::
+
+        scalar / Number          -> (value, ())
+        AlgebraicPureTensor      -> (coeff, factors)
+        AlgebraicTensor          -> list of (coeff, factors) per term
+        AlgebraicZeroTensor      -> zero result with combined shape
+        bare matrix with .shape  -> (1, (matrix,))
+
+    The result is the sum of all tensor-product combinations, with
+    coefficients multiplied together.
+
+    Parameters
+    ----------
+    *args
+        Any combination of scalars, matrix-like objects,
+        ``AlgebraicPureTensor``, ``AlgebraicTensor``, or
+        ``AlgebraicZeroTensor``.
+
+    Returns
+    -------
+    AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor, or matrix
+        The tensor product.  A single-factor result with coefficient 1
+        unwraps to the bare factor.  If any argument is a zero tensor,
+        the result is a zero tensor of the combined shape.
+
+    Raises
+    ------
+    TypeError
+        If an argument is not a recognised type.
+
+    Examples
+    ========
+
+    Basic tensor product of matrix factors:
+
+    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy.tensor.algebraic import algebraic_tensor_product
+    >>> A = MatrixSymbol("A", 3, 4)
+    >>> B = MatrixSymbol("B", 4, 5)
+    >>> print(algebraic_tensor_product(A, B))
+    A ⊗ B
+
+    With a scalar coefficient:
+
+    >>> print(algebraic_tensor_product(2, A, B))
+    2*A ⊗ B
+
+    PureTensor argument -- coefficient is extracted and factors are
+    flattened into the product:
+
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> from sympy.abc import x, y
+    >>> pt = AlgebraicPureTensor(y, B, A.T)
+    >>> print(algebraic_tensor_product(x, A, pt))
+    x*y*A ⊗ B ⊗ A.T
+
+    AlgebraicTensor argument -- the product distributes over the sum:
+
+    >>> from sympy.tensor.algebraic import AlgebraicTensor
+    >>> C = MatrixSymbol("C", 3, 4)
+    >>> D = MatrixSymbol("D", 4, 5)
+    >>> at = AlgebraicTensor(AlgebraicPureTensor(A, B),
+    ...                      AlgebraicPureTensor(C, D))
+    >>> E = MatrixSymbol("E", 5, 3)
+    >>> print(algebraic_tensor_product(at, E))
+    A ⊗ B ⊗ E + C ⊗ D ⊗ E
+
+    Zero tensor argument produces a zero tensor of the combined shape:
+
+    >>> from sympy.tensor.algebraic import AlgebraicZeroTensor
+    >>> zt = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    >>> result = algebraic_tensor_product(A, zt)
+    >>> result
+    0_{(3x4), (3x4), (4x5)}
+    """
+    from itertools import product as iterproduct
+
+    # ---- helpers ----
+
+    def _terms_of_arg(arg):
+        """Return list of (coeff, factors_tuple) for *arg*.
+
+        Returns [S.Zero] as a sentinel when the argument is an
+        AlgebraicZeroTensor or an AlgebraicTensor with no real terms.
+        """
+        if isinstance(arg, AlgebraicPureTensor):
+            return [(arg.coeff, arg.factors)]
+
+        if isinstance(arg, AlgebraicTensor):
+            terms = []
+            for t in arg.args:
+                if isinstance(t, AlgebraicZeroTensor):
+                    continue
+                if isinstance(t, AlgebraicPureTensor):
+                    terms.append((t.coeff, t.factors))
+                else:
+                    terms.append((S.One, (t,)))
+            if not terms:
+                return [S.Zero]
+            return terms
+
+        if isinstance(arg, AlgebraicZeroTensor):
+            return [S.Zero]
+
+        if isinstance(arg, Number):
+            return [(arg, ())]
+
+        arg_s = sympify(arg)
+        if isinstance(arg_s, Number):
+            return [(arg_s, ())]
+
+        # Commutative symbols and expressions are treated as coefficients
+        if (hasattr(arg_s, 'is_commutative') and arg_s.is_commutative
+                and not isinstance(arg_s, AlgebraicPureTensor)):
+            return [(arg_s, ())]
+
+        if hasattr(arg_s, "shape"):
+            return [(S.One, (arg_s,))]
+
+        raise TypeError(
+            f"algebraic_tensor_product does not accept {type(arg).__name__}"
+        )
+
+    def _combined_shape(args):
+        """Concatenate the shape tuples of all arguments."""
+        parts = []
+        for a in args:
+            s = _shape_of(a)
+            if s is None:
+                continue
+            parts.append(s)
+        return tuple(__i for __p in parts for __i in __p)
+
+    # ---- main logic ----
+
+    if not args:
+        raise ValueError(
+            "algebraic_tensor_product requires at least one argument"
+        )
+
+    if len(args) == 1:
+        return args[0]
+
+    if len(args) == 2:
+        first = args[0]
+        if isinstance(first, Number):
+            return first * sympify(args[1])
+        first_s = sympify(first)
+        if isinstance(first_s, Number) or (
+            hasattr(first_s, 'is_commutative') and first_s.is_commutative
+        ):
+            return first_s * sympify(args[1])
+
+    arg_lists = [_terms_of_arg(a) for a in args]
+
+    # Check for zero-tensor sentinel
+    for al in arg_lists:
+        if len(al) == 1 and al[0] is S.Zero:
+            return AlgebraicZeroTensor(_combined_shape(args))
+
+    combined_shape = _combined_shape(args)
+
+    # Build all combinations
+    result_terms = []
+    for combination in iterproduct(*arg_lists):
+        coeff = S.One
+        all_factors = ()
+        for c, fs in combination:
+            coeff = coeff * c
+            all_factors = all_factors + fs
+        result_terms.append((coeff, all_factors))
+
+    if not result_terms:
+        return AlgebraicZeroTensor(combined_shape)
+
+    # Build individual AlgebraicPureTensor terms
+    pt_terms = []
+    for coeff, factors in result_terms:
+        if coeff is S.Zero:
+            pt_terms.append(AlgebraicZeroTensor(combined_shape))
+        elif len(factors) == 0:
+            continue
+        elif len(factors) == 1 and coeff is S.One:
+            pt_terms.append(factors[0])
+        else:
+            pt_terms.append(
+                AlgebraicPureTensor(coeff, *factors)
+            )
+
+    if not pt_terms:
+        if combined_shape:
+            return AlgebraicZeroTensor(combined_shape)
+        raise ValueError(
+            "algebraic_tensor_product requires at least one "
+            "tensor factor (matrix-like object)"
+        )
+
+    if len(pt_terms) == 1:
+        return pt_terms[0]
+
+    return AlgebraicTensor(*pt_terms)
 
 
 # Register AlgebraicTensor with the SymPy add dispatcher so that

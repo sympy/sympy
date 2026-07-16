@@ -23,6 +23,7 @@ from sympy.tensor.algebraic import (
     compose_algebraic_tensors,
     tensorsimplify,
     ShapeMismatchError,
+    algebraic_tensor_product
 )
 
 from sympy.printing.latex import latex
@@ -601,3 +602,7 @@ testoni_300.display()
 print(srepr(testoni_100))
 print(srepr(testoni_200))
 print(testoni_100.expand().simplify())
+
+algebraic_da1 = algebraic_tensor_product(da1, da1)
+print(len(algebraic_da1.args))
+print(algebraic_da1.args[0])

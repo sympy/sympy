@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from sympy.core import S, Symbol, symbols
-from sympy.core.numbers import Number
+import pickle
+
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.matrices.expressions import MatrixSymbol, MatAdd, MatMul
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.testing.pytest import raises
@@ -10,747 +12,951 @@ from sympy.tensor.algebraic import (
     AlgebraicPureTensor,
     AlgebraicTensor,
     AlgebraicZeroTensor,
-    algebraic_tensor_product,
     compose_algebraic_pure_tensors,
 )
 
 
 # ---------------------------------------------------------------------------
-# Shared test fixtures
+# Fixtures
 # ---------------------------------------------------------------------------
 
-def _make_matrices():
-    """Create a standard set of matrix symbols for testing."""
-    A = MatrixSymbol("A", 3, 4)
-    B = MatrixSymbol("B", 3, 4)
-    C = MatrixSymbol("C", 4, 5)
-    D = MatrixSymbol("D", 4, 5)
-    E = MatrixSymbol("E", 5, 3)
-    F = MatrixSymbol("F", 5, 3)
-    I3 = MatrixSymbol("I3", 3, 3)
-    I4 = MatrixSymbol("I4", 4, 4)
-    I5 = MatrixSymbol("I5", 5, 5)
-    return {
-        "A": A, "B": B, "C": C, "D": D, "E": E, "F": F,
-        "I3": I3, "I4": I4, "I5": I5,
-    }
+A = MatrixSymbol("A", 3, 4)
+B = MatrixSymbol("B", 4, 5)
+C = MatrixSymbol("C", 3, 4)
+D = MatrixSymbol("D", 4, 5)
+E = MatrixSymbol("E", 4, 2)
+F = MatrixSymbol("F", 5, 3)
+G = MatrixSymbol("G", 5, 3)
+H = MatrixSymbol("H", 3, 3)
+
+x = Symbol("x")
+y = Symbol("y")
 
 
 # ---------------------------------------------------------------------------
-# Constructor tests
+# Type flags and attributes
 # ---------------------------------------------------------------------------
 
-def test_constructor_basic():
-    """Basic construction of AlgebraicPureTensor."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(A, C)
-    assert isinstance(pt, AlgebraicPureTensor)
-    assert pt.factors == (A, C)
-    assert pt.shape == ((3, 4), (4, 5))
+def test_type_flag_is_AlgebraicPureTensor():
+    T = AlgebraicPureTensor(A, B)
+    assert T.is_AlgebraicPureTensor is True
 
 
-def test_constructor_with_number_coefficient():
-    """Construction with a Number coefficient stores coefficient internally."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(2, A, C)
-    assert isinstance(pt, AlgebraicPureTensor)
-    assert pt.coeff == 2
-    assert pt.factors == (A, C)
+def test_type_flag_is_Mul():
+    T = AlgebraicPureTensor(A, B)
+    assert T.is_Mul is False
 
 
-def test_constructor_with_negative_coefficient():
-    """Construction with a negative Number coefficient stores coefficient internally."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(S.NegativeOne, A, C)
-    assert isinstance(pt, AlgebraicPureTensor)
-    assert pt.coeff == S.NegativeOne
-    assert pt.factors == (A, C)
+def test_type_flag_is_commutative():
+    T = AlgebraicPureTensor(A, B)
+    assert T.is_commutative is False
 
 
-def test_constructor_symbolic_coefficient():
-    """Symbolic (non-Number) coefficient stores coefficient internally."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-    x = Symbol("x")
-
-    result = AlgebraicPureTensor(x, A, C)
-    assert isinstance(result, AlgebraicPureTensor)
-    assert result.coeff == x
-    assert result.factors == (A, C)
+def test_op_priority():
+    T = AlgebraicPureTensor(A, B)
+    assert T._op_priority == 11
 
 
-def test_constructor_single_factor_unwraps():
-    """Single factor with coefficient S.One unwraps to bare factor."""
-    mats = _make_matrices()
-    A = mats["A"]
+# ---------------------------------------------------------------------------
+# Constructor: basic
+# ---------------------------------------------------------------------------
 
+def test_constructor_two_factors():
+    T = AlgebraicPureTensor(A, B)
+    assert isinstance(T, AlgebraicPureTensor)
+    assert T.shape == ((3, 4), (4, 5))
+
+
+def test_constructor_three_factors():
+    T = AlgebraicPureTensor(A, B, G)
+    assert isinstance(T, AlgebraicPureTensor)
+    assert T.shape == ((3, 4), (4, 5), (5, 3))
+
+
+def test_constructor_numeric_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    assert isinstance(T, AlgebraicPureTensor)
+    assert T.coeff == 2
+    assert T.factors == (A, B)
+
+
+def test_constructor_symbolic_coeff():
+    T = AlgebraicPureTensor(x, A, B)
+    assert isinstance(T, AlgebraicPureTensor)
+    assert T.coeff == x
+    assert T.factors == (A, B)
+
+
+def test_constructor_negative_coeff():
+    T = AlgebraicPureTensor(-1, A, B)
+    assert isinstance(T, AlgebraicPureTensor)
+    assert T.coeff == -1
+    assert T.factors == (A, B)
+
+
+def test_constructor_zero_coeff():
+    T = AlgebraicPureTensor(0, A, B)
+    assert isinstance(T, AlgebraicZeroTensor)
+    assert T.shape == ((3, 4), (4, 5))
+
+
+def test_constructor_zero_coeff_symbolic():
+    T = AlgebraicPureTensor(S.Zero, A, B)
+    assert isinstance(T, AlgebraicZeroTensor)
+    assert T.shape == ((3, 4), (4, 5))
+
+
+def test_constructor_single_factor_unwrap():
     result = AlgebraicPureTensor(A)
     assert result is A
-    assert not isinstance(result, AlgebraicPureTensor)
 
 
 def test_constructor_single_factor_with_coeff():
-    """Single factor with Number coefficient stores coefficient internally."""
-    mats = _make_matrices()
-    A = mats["A"]
-
-    pt = AlgebraicPureTensor(2, A)
-    assert isinstance(pt, AlgebraicPureTensor)
-    assert pt.coeff == 2
-    assert pt.factors == (A,)
+    """Two args with commutative first arg returns coeff * factor (MatMul)."""
+    from sympy.matrices.expressions.matexpr import MatMul
+    T = AlgebraicPureTensor(2, A)
+    assert isinstance(T, MatMul)
+    assert T == 2 * A
 
 
-def test_constructor_zero_coefficient_returns_zero_tensor():
-    """Zero coefficient returns AlgebraicZeroTensor."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    result = AlgebraicPureTensor(S.Zero, A, C)
-    assert isinstance(result, AlgebraicZeroTensor)
-    assert result.shape == ((3, 4), (4, 5))
+def test_constructor_single_factor_coeff_one():
+    result = AlgebraicPureTensor(1, A)
+    assert result is A
 
 
-def test_constructor_empty_raises():
-    """Empty constructor raises ValueError."""
+def test_constructor_coeff_S_One():
+    result = AlgebraicPureTensor(S.One, A)
+    assert result is A
+
+
+def test_constructor_coeff_S_One_multi():
+    T = AlgebraicPureTensor(S.One, A, B)
+    assert isinstance(T, AlgebraicPureTensor)
+    assert T.coeff == S.One
+    assert T.factors == (A, B)
+
+
+# ---------------------------------------------------------------------------
+# Constructor: errors
+# ---------------------------------------------------------------------------
+
+def test_constructor_no_args():
     raises(ValueError, lambda: AlgebraicPureTensor())
 
 
-def test_constructor_scalar_only_raises():
-    """Only a scalar (no tensor factors) raises ValueError."""
-    raises(ValueError, lambda: AlgebraicPureTensor(S.One))
+def test_constructor_only_coeff():
+    """Single arg returns the arg directly."""
+    assert AlgebraicPureTensor(2) == 2
 
 
-def test_constructor_number_as_factor_raises():
-    """A Number used as a tensor factor (not coefficient) raises TypeError."""
-    mats = _make_matrices()
-    A = mats["A"]
-    raises(TypeError, lambda: AlgebraicPureTensor(A, S.One))
+def test_constructor_only_zero_coeff():
+    """Single arg 0 returns 0 directly."""
+    assert AlgebraicPureTensor(0) == 0
 
 
-def test_constructor_no_shape_raises():
-    """A factor without .shape raises TypeError."""
-    x = Symbol("x")
-    raises(TypeError, lambda: AlgebraicPureTensor(x))
+def test_constructor_scalar_as_factor():
+    raises(TypeError, lambda: AlgebraicPureTensor(A, 3))
+
+
+def test_constructor_no_shape():
+    """Single arg without shape returns the arg directly."""
+    z = Symbol("z")
+    assert AlgebraicPureTensor(z) is z
 
 
 # ---------------------------------------------------------------------------
-# Properties tests
+# coeff property
 # ---------------------------------------------------------------------------
 
-def test_factors_property():
-    """factors property returns tensor factors (excludes coefficient)."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(2, A, C)
-    assert isinstance(pt, AlgebraicPureTensor)
-    assert pt.factors == (A, C)
-
-    pt2 = AlgebraicPureTensor(A, C)
-    assert pt2.factors == (A, C)
+def test_coeff_no_coeff():
+    T = AlgebraicPureTensor(A, B)
+    assert T.coeff == S.One
 
 
-def test_coeff_property():
-    """coeff property returns the coefficient (S.One if none)."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt_no_coeff = AlgebraicPureTensor(A, C)
-    assert pt_no_coeff.coeff == S.One
-
-    pt_with_coeff = AlgebraicPureTensor(2, A, C)
-    assert pt_with_coeff.coeff == 2
-
-    pt_symbolic = AlgebraicPureTensor(Symbol("x"), A, C)
-    assert pt_symbolic.coeff == Symbol("x")
+def test_coeff_numeric():
+    T = AlgebraicPureTensor(2, A, B)
+    assert T.coeff == 2
 
 
-def test_shape():
-    """shape returns tuple of per-factor shapes."""
-    mats = _make_matrices()
-    A, C, E = mats["A"], mats["C"], mats["E"]
-
-    pt = AlgebraicPureTensor(A, C, E)
-    assert pt.shape == ((3, 4), (4, 5), (5, 3))
+def test_coeff_symbolic():
+    T = AlgebraicPureTensor(x, A, B)
+    assert T.coeff == x
 
 
-def test_commutativity_pattern_symbolic():
-    """commutativity_pattern is 0 for symbolic matrix factors."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(A, C)
-    assert pt.commutativity_pattern == (0, 0)
+def test_coeff_negative():
+    T = AlgebraicPureTensor(-3, A, B)
+    assert T.coeff == -3
 
 
-def test_commutativity_pattern_numeric():
-    """commutativity_pattern is 1 for numeric matrix factors."""
-    numeric = ImmutableDenseMatrix([[1, 2], [3, 4]])
-    A = MatrixSymbol("A", 2, 3)
+# ---------------------------------------------------------------------------
+# factors property
+# ---------------------------------------------------------------------------
 
-    pt = AlgebraicPureTensor(numeric, A)
-    assert pt.commutativity_pattern == (1, 0)
+def test_factors_no_coeff():
+    T = AlgebraicPureTensor(A, B)
+    assert T.factors == (A, B)
+
+
+def test_factors_with_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    assert T.factors == (A, B)
+
+
+def test_factors_symbolic_coeff():
+    T = AlgebraicPureTensor(x, A, B)
+    assert T.factors == (A, B)
+
+
+def test_factors_single():
+    """Two args with commutative first returns MatMul, not PureTensor."""
+    from sympy.matrices.expressions.matexpr import MatMul
+    T = AlgebraicPureTensor(2, A)
+    assert isinstance(T, MatMul)
+
+
+def test_factors_three():
+    T = AlgebraicPureTensor(x, A, B, G)
+    assert T.factors == (A, B, G)
+
+
+# ---------------------------------------------------------------------------
+# num_factors property
+# ---------------------------------------------------------------------------
+
+def test_num_factors_two():
+    T = AlgebraicPureTensor(A, B)
+    assert T.num_factors == 2
+
+
+def test_num_factors_one():
+    """Two args with commutative first returns MatMul, not PureTensor."""
+    from sympy.matrices.expressions.matexpr import MatMul
+    T = AlgebraicPureTensor(2, A)
+    assert isinstance(T, MatMul)
+
+
+def test_num_factors_three():
+    T = AlgebraicPureTensor(A, B, G)
+    assert T.num_factors == 3
+
+
+# ---------------------------------------------------------------------------
+# shape property
+# ---------------------------------------------------------------------------
+
+def test_shape_two_factors():
+    T = AlgebraicPureTensor(A, B)
+    assert T.shape == ((3, 4), (4, 5))
+
+
+def test_shape_with_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    assert T.shape == ((3, 4), (4, 5))
+
+
+def test_shape_single_factor():
+    T = AlgebraicPureTensor(2, A)
+    # Two args with commutative first returns MatMul, shape is bare (m, n)
+    assert T.shape == (3, 4)
+
+
+def test_shape_three_factors():
+    T = AlgebraicPureTensor(A, B, G)
+    assert T.shape == ((3, 4), (4, 5), (5, 3))
+
+
+# ---------------------------------------------------------------------------
+# commutativity_pattern
+# ---------------------------------------------------------------------------
+
+def test_commutativity_pattern_all_symbolic():
+    T = AlgebraicPureTensor(A, B)
+    assert T.commutativity_pattern == (0, 0)
+
+
+def test_commutativity_pattern_numeric_matrix():
+    M = ImmutableDenseMatrix([[1, 2, 3, 4],
+                               [5, 6, 7, 8],
+                               [9, 10, 11, 12]])
+    T = AlgebraicPureTensor(M, B)
+    assert T.commutativity_pattern == (1, 0)
 
 
 def test_commutativity_pattern_all_numeric():
-    """commutativity_pattern is all-1s when all factors are numeric."""
     M1 = ImmutableDenseMatrix([[1, 2], [3, 4]])
-    M2 = ImmutableDenseMatrix([[1, 0], [0, 1], [1, 1]])
-
-    pt = AlgebraicPureTensor(M1, M2)
-    assert pt.commutativity_pattern == (1, 1)
-
-
-def test_is_commutative_false():
-    """AlgebraicPureTensor is non-commutative."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(A, C)
-    assert pt.is_commutative is False
+    M2 = ImmutableDenseMatrix([[5, 6], [7, 8]])
+    T = AlgebraicPureTensor(M1, M2)
+    assert T.commutativity_pattern == (1, 1)
 
 
-def test_is_mul_false():
-    """AlgebraicPureTensor has is_Mul = False."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
+def test_commutativity_pattern_single():
+    """Two args with commutative first returns MatMul, not PureTensor."""
+    from sympy.matrices.expressions.matexpr import MatMul
+    T = AlgebraicPureTensor(2, A)
+    assert isinstance(T, MatMul)
 
-    pt = AlgebraicPureTensor(A, C)
-    assert pt.is_Mul is False
+
+def test_commutativity_pattern_three_factors():
+    M = ImmutableDenseMatrix([[1, 2, 3, 4],
+                               [5, 6, 7, 8],
+                               [9, 10, 11, 12]])
+    T = AlgebraicPureTensor(M, B, G)
+    assert T.commutativity_pattern == (1, 0, 0)
 
 
 # ---------------------------------------------------------------------------
-# Arithmetic operator tests
+# _get_coeff
 # ---------------------------------------------------------------------------
 
-def test_negation_basic():
-    """Negation negates the coefficient."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(2, A, C)
-    neg = -pt
-    assert isinstance(neg, AlgebraicPureTensor)
-    assert neg.coeff == S.NegativeOne * 2
+def test_get_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    assert T._get_coeff() == 2
 
 
-def test_negation_no_coeff():
-    """Negation of unit-coefficient tensor returns coefficient -1."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(A, C)
-    neg = -pt
-    assert isinstance(neg, AlgebraicPureTensor)
-    assert neg.coeff == S.NegativeOne
+def test_get_coeff_default():
+    T = AlgebraicPureTensor(A, B)
+    assert T._get_coeff() == S.One
 
 
-def test_negation_double():
-    """Double negation returns original."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
+# ---------------------------------------------------------------------------
+# Negation
+# ---------------------------------------------------------------------------
 
-    pt = AlgebraicPureTensor(2, A, C)
-    result = -(-pt)
-    assert result.coeff == pt.coeff
-    assert result.factors == pt.factors
+def test_neg_no_coeff():
+    T = AlgebraicPureTensor(A, B)
+    nT = -T
+    assert isinstance(nT, AlgebraicPureTensor)
+    assert nT.coeff == S.NegativeOne
+    assert nT.factors == (A, B)
 
 
-def test_mul_commulative_number():
-    """Multiplication by a Number scales the coefficient."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
+def test_neg_with_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    nT = -T
+    assert isinstance(nT, AlgebraicPureTensor)
+    assert nT.coeff == -2
+    assert nT.factors == (A, B)
 
-    pt = AlgebraicPureTensor(3, A, C)
-    result = pt * 2
+
+def test_neg_negative_coeff():
+    T = AlgebraicPureTensor(-3, A, B)
+    nT = -T
+    assert isinstance(nT, AlgebraicPureTensor)
+    assert nT.coeff == 3
+    assert nT.factors == (A, B)
+
+
+def test_double_neg():
+    T = AlgebraicPureTensor(2, A, B)
+    assert -(-T) == T
+
+
+# ---------------------------------------------------------------------------
+# Scalar multiplication (__mul__)
+# ---------------------------------------------------------------------------
+
+def test_mul_numeric():
+    T = AlgebraicPureTensor(A, B)
+    result = T * 3
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 3
+    assert result.factors == (A, B)
+
+
+def test_mul_with_existing_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    result = T * 3
     assert isinstance(result, AlgebraicPureTensor)
     assert result.coeff == 6
+    assert result.factors == (A, B)
 
 
-def test_mul_commulative_one():
-    """Multiplication by 1 returns self."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(A, C)
-    assert pt * 1 is pt
+def test_mul_one():
+    T = AlgebraicPureTensor(A, B)
+    result = T * 1
+    assert result is T
 
 
-def test_mul_commulative_zero():
-    """Multiplication by 0 returns AlgebraicZeroTensor."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
+def test_mul_S_One():
+    T = AlgebraicPureTensor(A, B)
+    result = T * S.One
+    assert result is T
 
-    pt = AlgebraicPureTensor(A, C)
-    result = pt * 0
+
+def test_mul_zero():
+    T = AlgebraicPureTensor(A, B)
+    result = T * 0
     assert isinstance(result, AlgebraicZeroTensor)
     assert result.shape == ((3, 4), (4, 5))
 
 
-def test_mul_symbolic_returns_scaled():
-    """Multiplication by a symbolic scales the coefficient."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-    x = Symbol("x")
-
-    pt = AlgebraicPureTensor(A, C)
-    result = pt * x
-    assert isinstance(result, AlgebraicPureTensor)
-    assert result.coeff == x
-
-
-def test_rmul_commulative_number():
-    """Right-multiplication by a Number scales the coefficient."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(3, A, C)
-    result = 2 * pt
-    assert isinstance(result, AlgebraicPureTensor)
-    assert result.coeff == 6
-
-
-def test_rmul_symbolic_returns_scaled():
-    """Right-multiplication by a symbolic scales the coefficient."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-    x = Symbol("x")
-
-    pt = AlgebraicPureTensor(A, C)
-    result = x * pt
-    assert isinstance(result, AlgebraicPureTensor)
-    assert result.coeff == x
-
-
-def test_add_returns_algebraic_tensor():
-    """Addition of two PureTensors returns AlgebraicTensor."""
-    mats = _make_matrices()
-    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
-
-    pt1 = AlgebraicPureTensor(A, C)
-    pt2 = AlgebraicPureTensor(B, D)
-    result = pt1 + pt2
-    assert isinstance(result, AlgebraicTensor)
-
-
-def test_add_with_zero_tensor():
-    """Addition with same-shape AlgebraicZeroTensor returns self."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(A, C)
-    zt = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    result = pt + zt
-    assert result is pt
-
-
-def test_sub_returns_algebraic_tensor():
-    """Subtraction returns AlgebraicTensor."""
-    mats = _make_matrices()
-    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
-
-    pt1 = AlgebraicPureTensor(A, C)
-    pt2 = AlgebraicPureTensor(B, D)
-    result = pt1 - pt2
-    assert isinstance(result, AlgebraicTensor)
-
-
-def test_radd_returns_algebraic_tensor():
-    """Right-addition returns AlgebraicTensor."""
-    mats = _make_matrices()
-    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
-
-    pt1 = AlgebraicPureTensor(A, C)
-    pt2 = AlgebraicPureTensor(B, D)
-    result = pt2.__radd__(pt1)
-    assert isinstance(result, AlgebraicTensor)
-
-
-def test_rsub_returns_algebraic_tensor():
-    """Right-subtraction returns AlgebraicTensor."""
-    mats = _make_matrices()
-    A, B, C, D = mats["A"], mats["B"], mats["C"], mats["D"]
-
-    pt1 = AlgebraicPureTensor(A, C)
-    pt2 = AlgebraicPureTensor(B, D)
-    result = pt2.__rsub__(pt1)
-    assert isinstance(result, AlgebraicTensor)
-
-
-# ---------------------------------------------------------------------------
-# Composition tests
-# ---------------------------------------------------------------------------
-
-def test_compose_pure_tensors_basic():
-    """Basic composition of two AlgebraicPureTensors."""
-    mats = _make_matrices()
-    A, C, I4, I5 = mats["A"], mats["C"], mats["I4"], mats["I5"]
-
-    pt1 = AlgebraicPureTensor(A, C)
-    pt2 = AlgebraicPureTensor(I4, I5)
-    result = compose_algebraic_pure_tensors(pt1, pt2)
-    assert isinstance(result, AlgebraicPureTensor)
-    assert len(result.factors) == 2
-
-
-def test_compose_with_identity():
-    """Composition with identity matrices returns equivalent tensor."""
-    mats = _make_matrices()
-    A, C, I4, I5 = mats["A"], mats["C"], mats["I4"], mats["I5"]
-
-    pt = AlgebraicPureTensor(A, C)
-    pt_id = AlgebraicPureTensor(I4, I5)
-    result = compose_algebraic_pure_tensors(pt, pt_id)
-    assert isinstance(result, AlgebraicPureTensor)
-
-
-def test_compose_coefficients_combine():
-    """Composition combines coefficients from both sides."""
-    mats = _make_matrices()
-    A, C, I4, I5 = mats["A"], mats["C"], mats["I4"], mats["I5"]
-
-    pt1 = AlgebraicPureTensor(2, A, C)
-    pt2 = AlgebraicPureTensor(3, I4, I5)
-    result = compose_algebraic_pure_tensors(pt1, pt2)
-    assert isinstance(result, AlgebraicPureTensor)
-    assert result.coeff == 6
-
-
-def test_compose_factor_count_mismatch_raises():
-    """Composition with different factor counts raises ValueError."""
-    mats = _make_matrices()
-    A, C, E = mats["A"], mats["C"], mats["E"]
-
-    pt1 = AlgebraicPureTensor(A, C)
-    pt2 = AlgebraicPureTensor(A, C, E)
-    raises(ValueError, lambda: compose_algebraic_pure_tensors(pt1, pt2))
-
-
-def test_compose_inner_dim_mismatch_raises():
-    """Composition with incompatible inner dimensions raises ValueError."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt1 = AlgebraicPureTensor(A, C)
-    pt2 = AlgebraicPureTensor(C, A)
-    raises(ValueError, lambda: compose_algebraic_pure_tensors(pt1, pt2))
-
-
-def test_compose_bare_matrix():
-    """Composition accepts bare matrix objects as single-factor tensors."""
-    mats = _make_matrices()
-    A, I4 = mats["A"], mats["I4"]
-
-    result = compose_algebraic_pure_tensors(A, I4)
-    assert result is not None
-
-
-def test_compose_with_zero_tensor():
-    """Composition with AlgebraicZeroTensor returns zero tensor with composed shape."""
-    mats = _make_matrices()
-    A, C, I4, I5 = mats["A"], mats["C"], mats["I4"], mats["I5"]
-
-    pt = AlgebraicPureTensor(A, C)  # shape ((3,4), (4,5))
-    zt = AlgebraicZeroTensor(((4, 5), (5, 3)))
-
-    result = compose_algebraic_pure_tensors(pt, zt)
+def test_mul_S_Zero():
+    T = AlgebraicPureTensor(A, B)
+    result = T * S.Zero
     assert isinstance(result, AlgebraicZeroTensor)
-    assert result.shape == ((3, 5), (4, 3))
-
-    # Zero on the left
-    zt2 = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    pt2 = AlgebraicPureTensor(I4, I5)  # shape ((4,4), (5,5))
-
-    result2 = compose_algebraic_pure_tensors(zt2, pt2)
-    assert isinstance(result2, AlgebraicZeroTensor)
-    assert result2.shape == ((3, 4), (4, 5))
-
-    # Both zero tensors
-    zt3 = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    zt4 = AlgebraicZeroTensor(((4, 5), (5, 3)))
-    result3 = compose_algebraic_pure_tensors(zt3, zt4)
-    assert isinstance(result3, AlgebraicZeroTensor)
-    assert result3.shape == ((3, 5), (4, 3))
+    assert result.shape == ((3, 4), (4, 5))
 
 
-def test_compose_invalid_type_raises():
-    """Composition with invalid type raises TypeError."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(A, C)
-    raises(TypeError, lambda: compose_algebraic_pure_tensors(pt, Symbol("x")))
-
-
-# ---------------------------------------------------------------------------
-# Scalar multiplication vs composition dispatch
-# ---------------------------------------------------------------------------
-
-def test_mul_dispatch_commulative():
-    """Commutative operand goes to scalar multiplication path."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-    x = Symbol("x")
-
-    pt = AlgebraicPureTensor(A, C)
-    result = pt * x
+def test_mul_symbol():
+    T = AlgebraicPureTensor(A, B)
+    result = T * x
     assert isinstance(result, AlgebraicPureTensor)
     assert result.coeff == x
+    assert result.factors == (A, B)
 
 
-def test_mul_dispatch_noncommutative():
-    """Non-commutative operand goes to composition path."""
-    mats = _make_matrices()
-    A, C, I4, I5 = mats["A"], mats["C"], mats["I4"], mats["I5"]
-
-    pt1 = AlgebraicPureTensor(A, C)
-    pt2 = AlgebraicPureTensor(I4, I5)
-    result = pt1 * pt2
+def test_mul_symbol_with_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    result = T * x
     assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 2 * x
+    assert result.factors == (A, B)
 
 
 # ---------------------------------------------------------------------------
-# Expand tests
+# Scalar right-multiplication (__rmul__)
 # ---------------------------------------------------------------------------
 
-def test_expand_no_add():
-    """Expand with no Add factors returns equivalent tensor."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(A, C)
-    result = pt.expand()
+def test_rmul_numeric():
+    T = AlgebraicPureTensor(A, B)
+    result = 3 * T
     assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 3
+    assert result.factors == (A, B)
 
 
-def test_expand_with_matadd():
-    """Expand distributes over MatAdd in factors."""
-    mats = _make_matrices()
-    A, B, C = mats["A"], mats["B"], mats["C"]
+def test_rmul_with_existing_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    result = 3 * T
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 6
+    assert result.factors == (A, B)
 
-    matadd = MatAdd(A, B)
-    pt = AlgebraicPureTensor(matadd, C)
-    result = pt.expand()
+
+def test_rmul_one():
+    T = AlgebraicPureTensor(A, B)
+    result = 1 * T
+    assert result is T
+
+
+def test_rmul_S_One():
+    T = AlgebraicPureTensor(A, B)
+    result = S.One * T
+    assert result is T
+
+
+def test_rmul_zero():
+    T = AlgebraicPureTensor(A, B)
+    result = 0 * T
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 4), (4, 5))
+
+
+def test_rmul_S_Zero():
+    T = AlgebraicPureTensor(A, B)
+    result = S.Zero * T
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 4), (4, 5))
+
+
+def test_rmul_symbol():
+    T = AlgebraicPureTensor(A, B)
+    result = x * T
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == x
+    assert result.factors == (A, B)
+
+
+def test_rmul_symbol_with_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    result = x * T
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 2 * x
+    assert result.factors == (A, B)
+
+
+# ---------------------------------------------------------------------------
+# Composition via __mul__ (non-commutative)
+# ---------------------------------------------------------------------------
+
+def test_mul_pure_tensor_compose():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(E, F)
+    result = T1 * T2
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.num_factors == 2
+
+
+def test_mul_compose_with_coeff():
+    T1 = AlgebraicPureTensor(2, A, B)
+    T2 = AlgebraicPureTensor(3, E, F)
+    result = T1 * T2
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 6
+
+
+def test_mul_compose_result_shapes():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(E, F)
+    result = T1 * T2
+    assert result.shape == ((3, 2), (4, 3))
+
+
+def test_mul_bare_matrix_compose():
+    T = AlgebraicPureTensor(A, B)
+    # T has 2 factors, E is a bare matrix (1 factor) -> factor count mismatch
+    raises(ValueError, lambda: T * E)
+
+
+def test_rmul_pure_tensor_compose():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(E, F)
+    # T2*T1: E(4,2)*A(3,4) has incompatible inner dims (2 vs 3)
+    raises(ValueError, lambda: T2 * T1)
+
+
+def test_rmul_bare_matrix_compose():
+    T = AlgebraicPureTensor(A, B)
+    # A * T: MatrixSymbol.__mul__ creates MatMul, which rejects noncommutative AlgebraicPureTensor
+    raises(NotImplementedError, lambda: A * T)
+
+
+# ---------------------------------------------------------------------------
+# Composition with AlgebraicZeroTensor
+# ---------------------------------------------------------------------------
+
+def test_mul_zero_tensor():
+    T = AlgebraicPureTensor(A, B)
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    result = T * Z
+    assert isinstance(result, AlgebraicZeroTensor)
+
+
+def test_rmul_zero_tensor():
+    T = AlgebraicPureTensor(A, B)
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    result = Z * T
+    assert isinstance(result, AlgebraicZeroTensor)
+
+
+# ---------------------------------------------------------------------------
+# Addition
+# ---------------------------------------------------------------------------
+
+def test_add_pure_tensor():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    result = T1 + T2
     assert isinstance(result, AlgebraicTensor)
 
 
-def test_expand_coefficient_preserved():
-    """Expand preserves the coefficient through distribution."""
-    mats = _make_matrices()
-    A, B, C = mats["A"], mats["B"], mats["C"]
-
-    matadd = MatAdd(A, B)
-    pt = AlgebraicPureTensor(2, matadd, C)
-    result = pt.expand()
+def test_add_with_coeff():
+    T1 = AlgebraicPureTensor(2, A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    result = T1 + T2
     assert isinstance(result, AlgebraicTensor)
-    for term in result.args:
-        if isinstance(term, AlgebraicPureTensor):
-            assert term.coeff == 2
+
+
+def test_add_zero_tensor_same_shape():
+    T = AlgebraicPureTensor(A, B)
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    result = T + Z
+    assert result is T
+
+
+def test_radd_pure_tensor():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    result = T2 + T1
+    assert isinstance(result, AlgebraicTensor)
+
+
+def test_radd_zero_tensor_same_shape():
+    T = AlgebraicPureTensor(A, B)
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    result = Z + T
+    assert result is T
 
 
 # ---------------------------------------------------------------------------
-# String representation tests
+# Subtraction
 # ---------------------------------------------------------------------------
 
-def test_str_no_coeff():
-    """String representation without coefficient."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(A, C)
-    s = str(pt)
-    assert "A" in s and "C" in s
+def test_sub_pure_tensor():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    result = T1 - T2
+    assert isinstance(result, AlgebraicTensor)
 
 
-def test_str_with_coeff():
-    """String representation with coefficient."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(2, A, C)
-    s = str(pt)
-    assert "2" in s
+def test_sub_self():
+    T = AlgebraicPureTensor(A, B)
+    result = T - T
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 4), (4, 5))
 
 
-def test_str_negative_coeff():
-    """String representation with negative coefficient."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(S.NegativeOne, A, C)
-    s = str(pt)
-    assert s.startswith("-")
+def test_rsub_pure_tensor():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    result = T2 - T1
+    assert isinstance(result, AlgebraicTensor)
 
 
-def test_repr():
-    """srepr contains class name (repr == str per SymPy convention)."""
-    from sympy.printing.repr import srepr
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    pt = AlgebraicPureTensor(A, C)
-    r = srepr(pt)
-    assert "AlgebraicPureTensor" in r
-
-
-def test_str_add_factor_wrapped():
-    """Add factor in PureTensor is wrapped in parentheses in str output."""
-    mats = _make_matrices()
-    A, B, C = mats["A"], mats["B"], mats["C"]
-    pt = AlgebraicPureTensor(A + B, C)
-    s = str(pt)
-    assert "(" in s and ")" in s
-    assert "A" in s and "B" in s and "C" in s
-
-
-def test_str_add_factor_second_slot():
-    """Add factor in second slot is wrapped in parentheses."""
-    mats = _make_matrices()
-    A, C, D = mats["A"], mats["C"], mats["D"]
-    pt = AlgebraicPureTensor(A, C + D)
-    s = str(pt)
-    assert "(" in s and ")" in s
-    assert "A" in s and "C" in s and "D" in s
-
-
-def test_str_no_add_factor_no_parens():
-    """Non-Add factor does not get parentheses."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-    pt = AlgebraicPureTensor(A, C)
-    s = str(pt)
-    assert "(" not in s and ")" not in s
-
-
-def test_repr_add_factor_wrapped():
-    """Add factor in PureTensor is wrapped in parentheses in repr output."""
-    from sympy.printing.repr import srepr
-    mats = _make_matrices()
-    A, B, C = mats["A"], mats["B"], mats["C"]
-    pt = AlgebraicPureTensor(A + B, C)
-    r = srepr(pt)
-    assert "(" in r and ")" in r
-
-
-def test_repr_no_add_factor_no_parens():
-    """Non-Add factor does not get extra parentheses in repr."""
-    from sympy.printing.repr import srepr
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-    pt = AlgebraicPureTensor(A, C)
-    r = srepr(pt)
-    # Should be clean AlgebraicPureTensor(A, C) without extra parens around factors
-    assert r == "AlgebraicPureTensor(A, C)"
-
-
-def test_latex_add_factor_wrapped():
-    """Add factor in PureTensor is wrapped in \\left(\\right) in LaTeX."""
-    from sympy.printing.latex import latex
-    mats = _make_matrices()
-    A, B, C = mats["A"], mats["B"], mats["C"]
-    pt = AlgebraicPureTensor(A + B, C)
-    l = latex(pt)
-    assert r"\left(" in l and r"\right)" in l
-    assert "A" in l and "B" in l and "C" in l
-
-
-def test_latex_add_factor_second_slot():
-    """Add factor in second slot is wrapped in LaTeX."""
-    from sympy.printing.latex import latex
-    mats = _make_matrices()
-    A, C, D = mats["A"], mats["C"], mats["D"]
-    pt = AlgebraicPureTensor(A, C + D)
-    l = latex(pt)
-    assert r"\left(" in l and r"\right)" in l
-    assert "A" in l and "C" in l and "D" in l
-
-
-def test_latex_no_add_factor_no_parens():
-    """Non-Add factor does not get parentheses in LaTeX."""
-    from sympy.printing.latex import latex
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-    pt = AlgebraicPureTensor(A, C)
-    l = latex(pt)
-    assert r"\left(" not in l and r"\right)" not in l
-
-
-def test_str_add_coefficient_wrapped():
-    """Add coefficient in PureTensor is wrapped in parentheses in str output."""
-    from sympy.core import Symbol
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-    x = Symbol("x")
-    pt = AlgebraicPureTensor(2 + x, A, C)
-    s = str(pt)
-    assert "(" in s and ")" in s
-    assert "*" in s
-    assert "x" in s
-
-
-def test_str_add_coefficient_and_add_factor():
-    """Both Add coefficient and Add factor are wrapped."""
-    from sympy.core import Symbol
-    mats = _make_matrices()
-    A, B, C = mats["A"], mats["B"], mats["C"]
-    x = Symbol("x")
-    pt = AlgebraicPureTensor(2 + x, A + B, C)
-    s = str(pt)
-    # Should have parens around coefficient and around factor
-    assert s.count("(") >= 2 and s.count(")") >= 2
-
-
-def test_repr_add_coefficient_wrapped():
-    """Add coefficient in PureTensor is wrapped in parentheses in repr."""
-    from sympy.core import Symbol
-    from sympy.printing.repr import srepr
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-    x = Symbol("x")
-    pt = AlgebraicPureTensor(2 + x, A, C)
-    r = srepr(pt)
-    assert "(" in r and ")" in r
-
-
-def test_latex_add_coefficient_wrapped():
-    """Add coefficient in PureTensor is wrapped in LaTeX."""
-    from sympy.core import Symbol
-    from sympy.printing.latex import latex
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-    x = Symbol("x")
-    pt = AlgebraicPureTensor(2 + x, A, C)
-    l = latex(pt)
-    assert r"\left(" in l and r"\right)" in l
+def test_rsub_self():
+    T = AlgebraicPureTensor(A, B)
+    result = T - T
+    assert isinstance(result, AlgebraicZeroTensor)
 
 
 # ---------------------------------------------------------------------------
-# Convenience function tests
-# ---------------------------------------------------------------------------
-
-def test_algebraic_tensor_product():
-    """algebraic_tensor_product is a convenience constructor."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
-
-    result = algebraic_tensor_product(A, C)
-    assert isinstance(result, AlgebraicPureTensor)
-
-
-# ---------------------------------------------------------------------------
-# has_zero_term test
+# has_zero_term
 # ---------------------------------------------------------------------------
 
 def test_has_zero_term_false():
-    """has_zero_term returns False for nonzero AlgebraicPureTensor."""
-    mats = _make_matrices()
-    A, C = mats["A"], mats["C"]
+    T = AlgebraicPureTensor(A, B)
+    assert T.has_zero_term() is False
 
-    pt = AlgebraicPureTensor(A, C)
-    assert pt.has_zero_term() is False
+
+def test_has_zero_term_with_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    assert T.has_zero_term() is False
+
+
+# ---------------------------------------------------------------------------
+# Transpose
+# ---------------------------------------------------------------------------
+
+def test_transpose_basic():
+    T = AlgebraicPureTensor(A, B)
+    TT = T.T
+    assert isinstance(TT, AlgebraicPureTensor)
+    assert TT.shape == ((4, 3), (5, 4))
+    assert TT.coeff == S.One
+
+
+def test_transpose_with_coeff():
+    T = AlgebraicPureTensor(2, A, B)
+    TT = T.T
+    assert isinstance(TT, AlgebraicPureTensor)
+    assert TT.shape == ((4, 3), (5, 4))
+    assert TT.coeff == 2
+
+
+def test_transpose_single_factor():
+    """Two args with commutative first returns MatMul, .T gives 3*A.T."""
+    T = AlgebraicPureTensor(3, A)
+    TT = T.T
+    assert TT == 3 * A.T
+
+
+def test_transpose_double():
+    T = AlgebraicPureTensor(A, B)
+    assert T.T.T.shape == T.shape
+
+
+def test_transpose_preserves_factors():
+    T = AlgebraicPureTensor(A, B)
+    TT = T.T
+    assert TT.factors[0] == A.T
+    assert TT.factors[1] == B.T
+
+
+# ---------------------------------------------------------------------------
+# Expand: _eval_expand_mul
+# ---------------------------------------------------------------------------
+
+def test_expand_no_add():
+    T = AlgebraicPureTensor(A, B)
+    result = T.expand()
+    assert result is T
+
+
+def test_expand_factor_with_matadd():
+    T = AlgebraicPureTensor(A, MatAdd(B, D))
+    result = T.expand()
+    assert isinstance(result, AlgebraicTensor)
+
+
+def test_expand_coeff_with_add():
+    T = AlgebraicPureTensor(x + y, A, B)
+    result = T.expand()
+    # Terms share the same factors, so they're combined back into AlgebraicPureTensor
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == x + y
+
+
+def test_expand_multiple_add_factors():
+    T = AlgebraicPureTensor(MatAdd(A, C), MatAdd(B, D))
+    result = T.expand()
+    assert isinstance(result, AlgebraicTensor)
+
+
+def test_expand_preserves_coeff():
+    T = AlgebraicPureTensor(2, A, MatAdd(B, D))
+    result = T.expand()
+    assert isinstance(result, AlgebraicTensor)
+
+
+def test_expand_single_factor_add():
+    """Two args with commutative first returns MatMul, expand distributes."""
+    T = AlgebraicPureTensor(2, MatAdd(A, C))
+    result = T.expand()
+    assert result == 2 * A + 2 * C
+
+
+def test_expand_no_change_returns_self():
+    T = AlgebraicPureTensor(2, A, B)
+    result = T.expand()
+    assert result is T
+
+
+def test_expand_deep_hint():
+    T = AlgebraicPureTensor(A, MatAdd(B, D))
+    result = T.expand(deep=True)
+    assert isinstance(result, AlgebraicTensor)
+
+
+# ---------------------------------------------------------------------------
+# compose_algebraic_pure_tensors
+# ---------------------------------------------------------------------------
+
+def test_compose_basic():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(E, F)
+    result = compose_algebraic_pure_tensors(T1, T2)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.num_factors == 2
+    assert result.shape == ((3, 2), (4, 3))
+
+
+def test_compose_with_coefficients():
+    T1 = AlgebraicPureTensor(2, A, B)
+    T2 = AlgebraicPureTensor(3, E, F)
+    result = compose_algebraic_pure_tensors(T1, T2)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 6
+
+
+def test_compose_coeff_from_one_side():
+    T1 = AlgebraicPureTensor(2, A, B)
+    T2 = AlgebraicPureTensor(E, F)
+    result = compose_algebraic_pure_tensors(T1, T2)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 2
+
+
+def test_compose_bare_matrices():
+    result = compose_algebraic_pure_tensors(A, E)
+    assert isinstance(result, MatMul)
+    assert result.shape == (3, 2)
+
+
+def test_compose_pure_with_bare():
+    T = AlgebraicPureTensor(A, B)
+    # E is 4x2 (1 factor), T is 2 factors -> mismatch
+    raises(ValueError, lambda: compose_algebraic_pure_tensors(T, E))
+
+
+def test_compose_single_factor_unwrap():
+    """Two args with commutative first returns MatMul; compose still works."""
+    T1 = AlgebraicPureTensor(2, A)
+    T2 = AlgebraicPureTensor(E)
+    result = compose_algebraic_pure_tensors(T1, T2)
+    # T1 is MatMul(2, A), T2 is E (bare matrix)
+    # compose gives MatMul(MatMul(2, A), E)
+    assert result == MatMul(T1, E, evaluate=False)
+
+
+def test_compose_single_factor_coeff_one_unwrap():
+    T1 = AlgebraicPureTensor(A)
+    T2 = AlgebraicPureTensor(E)
+    result = compose_algebraic_pure_tensors(T1, T2)
+    # Single factor, coeff 1 -> unwraps to bare MatMul
+    assert isinstance(result, MatMul)
+
+
+def test_compose_factor_count_mismatch():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(A)
+    raises(ValueError, lambda: compose_algebraic_pure_tensors(T1, T2))
+
+
+def test_compose_inner_dim_mismatch():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(A, B)
+    # A is 3x4, A is 3x4 -> inner dims 4 vs 3 don't match for slot 0
+    raises(ValueError, lambda: compose_algebraic_pure_tensors(T1, T2))
+
+
+def test_compose_invalid_left_type():
+    raises(TypeError, lambda: compose_algebraic_pure_tensors(x, A))
+
+
+def test_compose_invalid_right_type():
+    T = AlgebraicPureTensor(A, B)
+    raises(TypeError, lambda: compose_algebraic_pure_tensors(T, x))
+
+
+# ---------------------------------------------------------------------------
+# compose_algebraic_pure_tensors with AlgebraicZeroTensor
+# ---------------------------------------------------------------------------
+
+def test_compose_both_zero():
+    Z1 = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    Z2 = AlgebraicZeroTensor(((4, 2), (5, 3)))
+    result = compose_algebraic_pure_tensors(Z1, Z2)
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 2), (4, 3))
+
+
+def test_compose_left_zero():
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    T = AlgebraicPureTensor(E, F)
+    result = compose_algebraic_pure_tensors(Z, T)
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 2), (4, 3))
+
+
+def test_compose_right_zero():
+    T = AlgebraicPureTensor(A, B)
+    Z = AlgebraicZeroTensor(((4, 2), (5, 3)))
+    result = compose_algebraic_pure_tensors(T, Z)
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 2), (4, 3))
+
+
+def test_compose_zero_with_bare_matrix():
+    Z = AlgebraicZeroTensor(((3, 4),))
+    result = compose_algebraic_pure_tensors(Z, E)
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 2),)
+
+
+def test_compose_bare_matrix_with_zero():
+    Z = AlgebraicZeroTensor(((4, 2),))
+    result = compose_algebraic_pure_tensors(A, Z)
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 2),)
+
+
+def test_compose_both_zero_factor_mismatch():
+    Z1 = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    Z2 = AlgebraicZeroTensor(((3, 4),))
+    raises(ValueError, lambda: compose_algebraic_pure_tensors(Z1, Z2))
+
+
+# ---------------------------------------------------------------------------
+# Edge cases
+# ---------------------------------------------------------------------------
+
+def test_constructor_sympified_coeff():
+    T = AlgebraicPureTensor("2", A, B)
+    assert isinstance(T, AlgebraicPureTensor)
+    assert T.coeff == 2
+
+
+def test_mul_commutative_dispatch():
+    """Ensure commutative * PureTensor goes through __rmul__, not composition."""
+    T = AlgebraicPureTensor(A, B)
+    result = x * T
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == x
+
+
+def test_mul_noncommutative_dispatch():
+    """Ensure PureTensor * PureTensor goes through composition."""
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(E, F)
+    result = T1 * T2
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.num_factors == 2
+
+
+def test_identity_preserved_through_neg():
+    T = AlgebraicPureTensor(2, A, B)
+    nT = -T
+    assert isinstance(nT, AlgebraicPureTensor)
+
+
+def test_identity_preserved_through_mul():
+    T = AlgebraicPureTensor(A, B)
+    result = T * 3
+    assert isinstance(result, AlgebraicPureTensor)
+
+
+def test_identity_preserved_through_transpose():
+    T = AlgebraicPureTensor(A, B)
+    result = T.T
+    assert isinstance(result, AlgebraicPureTensor)
+
+
+def test_pickle():
+    T = AlgebraicPureTensor(2, A, B)
+    data = pickle.dumps(T)
+    T2 = pickle.loads(data)
+    assert T2 == T
+    assert T2.coeff == 2
+    assert T2.factors == (A, B)
+
+
+def test_hash_consistency():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(A, B)
+    assert hash(T1) == hash(T2)
+    assert T1 == T2
+
+
+def test_set_membership():
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(A, B)
+    T3 = AlgebraicPureTensor(C, D)
+    s = {T1, T2, T3}
+    assert len(s) == 2
+
+
+def test_args_structure():
+    T = AlgebraicPureTensor(2, A, B)
+    assert len(T.args) == 3
+    assert T.args[0] == 2
+    assert T.args[1] == A
+    assert T.args[2] == B
+
+
+def test_args_no_coeff():
+    T = AlgebraicPureTensor(A, B)
+    assert len(T.args) == 2
+    assert T.args[0] == A
+    assert T.args[1] == B
+
+
+# ---------------------------------------------------------------------------
+# simplify
+# ---------------------------------------------------------------------------
+
+def test_simplify_basic():
+    T = AlgebraicPureTensor(2, A, B)
+    result = T.simplify()
+    assert isinstance(result, AlgebraicPureTensor)
+
+
+def test_simplify_symbolic_coeff():
+    T = AlgebraicPureTensor(x + x, A, B)
+    result = T.simplify()
+    assert isinstance(result, AlgebraicPureTensor)
+
+
+# ---------------------------------------------------------------------------
+# display (smoke test)
+# ---------------------------------------------------------------------------
+
+def test_display_text_mode():
+    T = AlgebraicPureTensor(A, B)
+    # Should not raise
+    T.display(mode="text")
+
+
+def test_display_latex_mode():
+    T = AlgebraicPureTensor(A, B)
+    # Should not raise
+    T.display(mode="latex")

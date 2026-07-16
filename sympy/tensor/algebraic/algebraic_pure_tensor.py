@@ -275,6 +275,9 @@ class AlgebraicPureTensor(Mul):
         if not args:
             raise ValueError("AlgebraicPureTensor requires at least one factor")
 
+        if len(args) == 1:
+            return args[0]
+
         # Separate leading commutative coefficient from tensor factors
         args_list = list(args)
         coeff = S.One
@@ -284,7 +287,7 @@ class AlgebraicPureTensor(Mul):
             if isinstance(first, Number):
                 coeff = first
                 args_list = args_list[1:]
-            elif len(args_list) > 1:
+            else:
                 first_s = sympify(first)
                 if isinstance(first_s, Number):
                     coeff = first_s
@@ -318,6 +321,10 @@ class AlgebraicPureTensor(Mul):
 
         if coeff is S.Zero:
             return AlgebraicZeroTensor(_factor_shapes(processed))
+
+        # Two args with commutative first arg: return coeff * factor (plain Mul/MatMul)
+        if len(args) == 2 and len(processed) == 1 and coeff is not S.One:
+            return coeff * processed[0]
 
         if len(processed) == 1 and coeff is S.One:
             return processed[0]
@@ -706,7 +713,7 @@ class AlgebraicPureTensor(Mul):
 
 def algebraic_tensor_product(*args):
     """Convenience constructor for AlgebraicPureTensor.
-
+    
     Examples
     ========
 
@@ -719,7 +726,10 @@ def algebraic_tensor_product(*args):
     >>> print(algebraic_tensor_product(2, A, v))
     2*A ⊗ v
     """
-    return AlgebraicPureTensor(*args)
+    from sympy.tensor.algebraic.algebraic_tensor import (
+        algebraic_tensor_product as _atp,
+    )
+    return _atp(*args)
 
 
 def compose_algebraic_pure_tensors(left, right):

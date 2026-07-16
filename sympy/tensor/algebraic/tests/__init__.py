@@ -1,1 +1,1 @@
-# tests package for sympy.tensor.algebraic
+"""Tests for the sympy.tensor.algebraic package."""
