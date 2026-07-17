@@ -179,8 +179,7 @@ class LRASolver():
         # initially slack/basic and nonslack/nonbasic mean the same thing.
         # however, basic/nonbasic can be modified in process meanwhile slack/nonslack stays constant.
         self.basic = slack_variables
-        self.nonbasic = nonslack_variables
-        self.basic_set = set(slack_variables)
+        self.nonbasic = set(nonslack_variables)
 
         self.all_var = nonslack_variables + slack_variables
 
@@ -420,7 +419,7 @@ class LRASolver():
             if res and res[0] is False:
                 break
 
-        if self.is_sat and all(b.var not in self.basic_set for b in boundaries):
+        if self.is_sat and all(b.var in self.nonbasic for b in boundaries):
             self.is_sat = res is None
         else:
             self.is_sat = False
