@@ -127,6 +127,7 @@ from sympy.core.singleton import S
 from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
 from sympy.utilities.iterables import sift
+from sympy.logic.algorithms.theory_solver import TheorySolver
 import math
 
 
@@ -142,7 +143,7 @@ ALLOWED_PRED = {Q.eq: Eq, Q.gt: Gt, Q.lt: Lt, Q.le: Le, Q.ge: Ge}
 # if true ~Q.gt(x, y) implies Q.le(x, y)
 HANDLE_NEGATION = True
 
-class LRASolver():
+class LRASolver(TheorySolver):
     """
     Linear Arithmetic Solver for DPLL(T) implemented with an algorithm based on
     the Dual Simplex method. Uses Bland's pivoting rule to avoid cycling.
@@ -188,8 +189,8 @@ class LRASolver():
         self.bound_history = []
         self.last_assign_snapshot = {var: var.assign for var in self.all_var}
 
-    @staticmethod
-    def from_encoded_cnf(encoded_cnf, testing_mode=False):
+    @classmethod
+    def from_encoded_cnf(cls, encoded_cnf, testing_mode=False):
         """
         Creates an LRASolver from an EncodedCNF object
         and a list of conflict clauses for propositions
@@ -360,8 +361,8 @@ class LRASolver():
         for idx, var in enumerate(nonbasic + basic):
             var.col_idx = idx
 
-        solver = LRASolver(A, basic, nonbasic, atom_id_to_boundaries,
-                           s_subs, testing_mode)
+        solver = cls(A, basic, nonbasic, atom_id_to_boundaries,
+                     s_subs, testing_mode)
         return solver, conflicts
 
     def reset_bounds(self):
