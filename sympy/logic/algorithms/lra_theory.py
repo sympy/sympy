@@ -489,9 +489,10 @@ class LRASolver():
         """
         i = xi.col_idx
         assert i is not None
+        dv = v - xi.assign
         for j, b in enumerate(self.basic):
-            aji = self.A[j, i]
-            b.assign = b.assign + (v - xi.assign)*aji
+            a_ji = self.A[j, i]
+            b.assign = b.assign + dv*a_ji
         xi.assign = v
 
     def check(self):
