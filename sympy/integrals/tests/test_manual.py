@@ -440,9 +440,54 @@ def test_manualintegrate_parts_ei_li():
 def test_manualintegrate_exp_trig():
     f = exp(x)*cos(x**2)
     F = I**(Rational(3, 2))*sqrt(pi)*exp(I/4)*erfi(I**(Rational(3, 2))*(2*I*x + 1)/2)/4 + sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(4*sqrt(-I))
-    # Didn't use assert_is_integral_of because the derivative of F is too
-    # complicated to simplify
+    # Didn't use assert_is_integral_of because the derivative of F.diff(x) is
+    # too complicated to simplify to f.
     assert manualintegrate(f, x) == F
+
+    f = exp(x)*sin(x**2)
+    F = -I*(I**(Rational(3, 2))*sqrt(pi)*exp(I/4)*erfi(I**(Rational(3, 2))*(2*I*x + 1)/2)/2 - sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(2*sqrt(-I)))/2
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*cosh(x**2)
+    F = sqrt(pi)*exp(S.One/4)*erf(x - S.One/2)/4 + sqrt(pi)*exp(-S.One/4)*erfi(x + S.One/2)/4
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*sinh(x**2)
+    F = -sqrt(pi)*exp(S.One/4)*erf(x - S.One/2)/4 + sqrt(pi)*exp(-S.One/4)*erfi(x + S.One/2)/4
+    assert manualintegrate(f, x) == F
+
+
+@slow
+def test_manualintegrate_exp_trig_pow():
+    f = exp(x)*cos(x**2)**2
+    F = exp(x)/2 + sqrt(pi)*(1 - I)*exp(I/8)*erfi((2 - 2*I)*(4*I*x + 1)/8)/16 + sqrt(pi)*(1 + I)*exp(-I/8)*erfi((2 + 2*I)*(-4*I*x + 1)/8)/16
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*sin(x**2)**3
+    F = I*(-3*I**(Rational(3, 2))*sqrt(pi)*exp(I/4)*erfi(I**(Rational(3, 2))*(2*I*x + 1)/2)/2 + 3*sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(2*sqrt(-I)) + sqrt(3)*I**(Rational(3, 2))*sqrt(pi)*exp(I/12)*erfi(sqrt(3)*I**(Rational(3, 2))*(6*I*x + 1)/6)/6 - sqrt(3)*sqrt(pi)*exp(-I/12)*erfi(sqrt(3)*(-6*I*x + 1)/(6*sqrt(-I)))/(6*sqrt(-I)))/8
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*cosh(x**2)**4
+    F = 3*exp(x)/8 + sqrt(2)*sqrt(pi)*exp(Rational(1, 8))*erf(sqrt(2)*(4*x - 1)/4)/16 + sqrt(pi)*exp(Rational(1, 16))*erf(2*x - Rational(1, 4))/64 + sqrt(2)*sqrt(pi)*exp(-Rational(1, 8))*erfi(sqrt(2)*(4*x + 1)/4)/16 + sqrt(pi)*exp(-Rational(1, 16))*erfi(2*x + Rational(1, 4))/64
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*sinh(x**2)**5
+    F = 5*sqrt(3)*sqrt(pi)*exp(Rational(1, 12))*erf(sqrt(3)*(6*x - 1)/6)/192 - sqrt(5)*sqrt(pi)*exp(Rational(1, 20))*erf(sqrt(5)*(10*x - 1)/10)/320 - 5*sqrt(pi)*exp(Rational(1, 4))*erf(x - Rational(1, 2))/32 - 5*sqrt(3)*sqrt(pi)*exp(-Rational(1, 12))*erfi(sqrt(3)*(6*x + 1)/6)/192 + sqrt(5)*sqrt(pi)*exp(-Rational(1, 20))*erfi(sqrt(5)*(10*x + 1)/10)/320 + 5*sqrt(pi)*exp(-Rational(1, 4))*erfi(x + Rational(1, 2))/32
+    assert manualintegrate(f, x) == F
+
+
+def test_manualintegrate_exp_trig_nested():
+    f, F = exp(cos(x**2))*sin(x**2)*x, -exp(cos(x**2))/2
+    assert_is_integral_of(f, F)
+
+    f, F = exp(sin(x**2))*cos(x**2)*x, exp(sin(x**2))/2
+    assert_is_integral_of(f, F)
+
+    f, F = exp(cosh(x**2))*sinh(x**2)*x, exp(cosh(x**2))/2
+    assert_is_integral_of(f, F)
+
+    f, F = exp(sinh(x**2))*cosh(x**2)*x, exp(sinh(x**2))/2
+    assert_is_integral_of(f, F)
 
 
 def test_manualintegrate_derivative():

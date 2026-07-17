@@ -1897,6 +1897,7 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
             gaussian_match = True
             if trig_match:
                 break
+        # exp(a*x + b)
         elif isinstance(term, exp) and term.args[0].match(linear_pattern):
             exp_match = True
             if trig_match:
