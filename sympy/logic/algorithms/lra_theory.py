@@ -176,6 +176,7 @@ class LRASolver():
 
         self.atom_id_to_boundaries = atom_id_to_boundaries
         self.A = A
+        self._A0 = A.copy() if self.run_checks else None
         # initially slack/basic and nonslack/nonbasic mean the same thing.
         # however, basic/nonbasic can be modified in process meanwhile slack/nonslack stays constant.
         self.basic = slack_variables
@@ -476,9 +477,8 @@ class LRASolver():
 
         if self.run_checks and all(not math.isinf(v.assign.q)
                                    for v in self.all_var):
-            M = self.A
             X = Matrix([v.assign.q for v in self.all_var])
-            assert all(abs(val) < 10 ** (-10) for val in M * X)
+            assert all(abs(val) < 10 ** (-10) for val in self._A0 * X)
 
         return None
 
