@@ -179,7 +179,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pytest -n auto --timeout 10 --durations=50 --durations-min=5
+      - run: pytest -n auto --timeout 10 --faulthandler-timeout 30 --durations=50 --durations-min=5
 
   # -------------------- Optional dependency tests ----------------- #
 
