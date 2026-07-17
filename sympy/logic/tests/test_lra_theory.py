@@ -113,8 +113,8 @@ def test_from_encoded_cnf():
     enc = boolean_formula_to_encoded_cnf(phi)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert lra.A.shape == (0, 3)
-    assert str(lra.slack) == '[]'
-    assert str(lra.nonslack) == '[x, _s1, _s2]'
+    assert str(lra.basic) == '[]'
+    assert str(lra.nonbasic) == '[x, _s1, _s2]'
     assert lra.A == Matrix(0,3, [])
     actual = {tuple(sorted((str(b.var), b.bound, b.upper, b.strict) for b in bs)) for bs in lra.atom_id_to_boundaries.values()}
     expected = {

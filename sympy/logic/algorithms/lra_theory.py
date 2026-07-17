@@ -176,11 +176,11 @@ class LRASolver():
 
         self.atom_id_to_boundaries = atom_id_to_boundaries
         self.A = A
-        self.slack = slack_variables
-        self.nonslack = nonslack_variables
-        self.all_var = nonslack_variables + slack_variables
+        self.basic = slack_variables
+        self.nonbasic = nonslack_variables
+        self.basic_set = set(slack_variables)
 
-        self.slack_set = set(slack_variables)
+        self.all_var = nonslack_variables + slack_variables
 
         self.is_sat = True  # While True, all constraints asserted so far are satisfiable
         self.result = None  # always one of: (True, assignment), (False, conflict clause), None
@@ -418,7 +418,7 @@ class LRASolver():
             if res and res[0] is False:
                 break
 
-        if self.is_sat and all(b.var not in self.slack_set for b in boundaries):
+        if self.is_sat and all(b.var not in self.basic_set for b in boundaries):
             self.is_sat = res is None
         else:
             self.is_sat = False
@@ -468,7 +468,7 @@ class LRASolver():
 
         xi.set_bound(boundary, literal)
 
-        if xi in self.nonslack and xi.assign * s > c_norm:
+        if xi in self.nonbasic and xi.assign * s > c_norm:
             self._update(xi, ci)
 
         if self.run_checks and all(not math.isinf(v.assign.q)
@@ -486,7 +486,7 @@ class LRASolver():
         """
         i = xi.col_idx
         assert i is not None
-        for j, b in enumerate(self.slack):
+        for j, b in enumerate(self.basic):
             aji = self.A[j, i]
             b.assign = b.assign + (v - xi.assign)*aji
         xi.assign = v
@@ -517,8 +517,8 @@ class LRASolver():
 
         from sympy.matrices.dense import Matrix
         M = self.A.copy()
-        basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
-        nonbasic = set(self.nonslack)
+        basic = {s: i for i, s in enumerate(self.basic)}  # contains the row index associated with each basic variable
+        nonbasic = set(self.nonbasic)
         while True:
             if self.run_checks:
                 # nonbasic variables must always be within bounds
