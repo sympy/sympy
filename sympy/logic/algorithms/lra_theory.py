@@ -176,6 +176,8 @@ class LRASolver():
 
         self.atom_id_to_boundaries = atom_id_to_boundaries
         self.A = A
+        # initially slack/basic and nonslack/nonbasic mean the same thing.
+        # however, basic/nonbasic can be modified in process meanwhile slack/nonslack stays constant.
         self.basic = slack_variables
         self.nonbasic = nonslack_variables
         self.basic_set = set(slack_variables)
@@ -351,7 +353,7 @@ class LRASolver():
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
         # matrix A is guaranteed to able to be simplified
-        # by removing the non-basic (e.g original) non-atom variables from it
+        # by removing the non-basic (e.g original or nonslack) non-atom variables from it
         # these removed variables will be replaced by linear equation of existing variables.
         nonatom_vars = {i for i in nonbasic if i not in atom_vars}
         A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode)
@@ -431,8 +433,10 @@ class LRASolver():
         more limiting. The assignment of variable xi is adjusted to be
         within the new bound if needed.
 
-        Also calls `self._update` to update the assignment for slack variables
+        Also calls `self._update` to update the assignment for basic variables
         to keep all equalities satisfied.
+
+        This method is the combination of AssertUpper and AssertLower in [1]
         """
         if self.result:
             assert self.result[0] != False
@@ -481,8 +485,8 @@ class LRASolver():
 
     def _update(self, xi, v):
         """
-        Updates all slack variables that have equations that contain
-        variable xi so that they stay satisfied given xi is equal to v.
+        Updates all basic variables that have equations that contain
+        nonbasic variable xi so that they stay satisfied given xi is equal to v.
         """
         i = xi.col_idx
         assert i is not None

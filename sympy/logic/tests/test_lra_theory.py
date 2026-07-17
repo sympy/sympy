@@ -514,8 +514,8 @@ def test_example_from_paper():
     # Extracts the variables stored in the solver
     var_x = next(v for v in lra.all_var if str(v.var) == 'x')
     # var_y has been removed from A after the simplification
-    # var_s1 is a slack variable which corresponds for -x + y <= 1
-    # var_s2 is a slack variable which corresponds for -x - y <= 3
+    # var_s1 is a basic variable which corresponds for -x + y <= 1
+    # var_s2 is a basic variable which corresponds for -x - y <= 3
     _s1 = lra.s_subs[-x + y]
     _s2 = lra.s_subs[-x - y]
     var_s1 = next(v for v in lra.all_var if v.var == _s1)
