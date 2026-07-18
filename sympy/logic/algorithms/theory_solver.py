@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Optional, Protocol, Union, TYPE_CHECKING, runtime_checkable
+from typing import Any, Literal, Protocol, TYPE_CHECKING, runtime_checkable
 
 if TYPE_CHECKING:
     from sympy.assumptions.cnf import EncodedCNF
@@ -24,8 +24,8 @@ class TheorySolver(Protocol):
 
     def assert_lit(
         self, literal: int
-    ) -> Optional[tuple[Literal[False], ConflictClause]]:
+    ) -> tuple[Literal[False], ConflictClause] | None:
         ...
 
-    def check(self) -> Union[tuple[Literal[True], Model], tuple[Literal[False], ConflictClause]]:
+    def check(self) -> tuple[Literal[True], Model] | tuple[Literal[False], ConflictClause]:
         ...
