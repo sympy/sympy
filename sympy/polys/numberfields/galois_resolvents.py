@@ -23,8 +23,9 @@ from __future__ import annotations
 from sympy.core.evalf import (
     evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath,
 )
+from sympy.core.numbers import Float, I
 from sympy.core.symbol import symbols, Dummy
-from sympy.external.mpmath import prec_to_dps, local_workprec
+from sympy.external.mpmath import local_workprec, prec_to_dps
 from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import ZZ
 from sympy.polys.orderings import lex
@@ -296,43 +297,62 @@ class Resolvent:
 
         """
         with local_workprec(53) as mp:
-            # Because sympy.polys.polyroots._integer_basis() is called when a
-            # CRootOf is formed, we proactively extract the integer basis now.
-            # This means that when we call T.all_roots(), every root will be a
-            # CRootOf, not a Mul of Integer*CRootOf.
-            coeff, T = preprocess_roots(T)
-            coeff = mp.mpf(str(coeff))
+            return self._approximate_roots_of_poly(T, target, mp)
 
-            scaled_roots = T.all_roots(radicals=False)
+    def _approximate_roots_of_poly(self, T, target, mp):
+        """Internal implementation using the supplied mpmath context."""
 
-            # Since we're going to be approximating the roots of T anyway, we
-            # can get a good upper bound on the magnitude of the roots by
-            # starting with a very low precision approx.
-            approx0 = [coeff * quad_to_mpmath(_evalf_with_bounded_error(r, m=0), mp) for r in scaled_roots]
-            # Here we add 1 to account for the possible error in our initial
-            # approximation.
-            M = mp.fadd(max(mp.fabs(b) for b in approx0), 1)
-            m = self.get_prec(M, target=target)
-            n = fastlog(M._mpf_) + 1
-            p = m + n + 1
-            mp.prec = p
-            d = prec_to_dps(p)
+        # Because sympy.polys.polyroots._integer_basis() is called when a
+        # CRootOf is formed, we proactively extract the integer basis now.
+        # This means that when we call T.all_roots(), every root will be a
+        # CRootOf, not a Mul of Integer*CRootOf.
+        coeff, T = preprocess_roots(T)
+        coeff = mp.mpf(str(coeff))
 
-            approx1 = [r.eval_approx(d, return_mpmath=True) for r in scaled_roots]
-            approx1 = [mp.fmul(coeff, mp.mpc(r)) for r in approx1]
+        scaled_roots = T.all_roots(radicals=False)
 
-            return approx1
+        # Since we're going to be approximating the roots of T anyway, we
+        # can get a good upper bound on the magnitude of the roots by
+        # starting with a very low precision approx.
+        approx0 = [coeff * quad_to_mpmath(_evalf_with_bounded_error(r, m=0), mp) for r in scaled_roots]
+        # Here we add 1 to account for the possible error in our initial
+        # approximation.
+        M = mp.fadd(max(mp.fabs(b) for b in approx0), 1)
+        m = self.get_prec(M, target=target)
+        n = fastlog(M._mpf_) + 1
+        p = m + n + 1
+        mp.prec = p
+        d = prec_to_dps(p)
+
+        approx1 = [
+            r.eval_approx(d, return_mpmath=True, context=mp)
+            for r in scaled_roots
+        ]
+        approx1 = [mp.fmul(coeff, mp.mpc(r)) for r in approx1]
+
+        return [
+            Float._new(root.real._mpf_, p) + I*Float._new(root.imag._mpf_, p)
+            for root in approx1
+        ]
 
     @staticmethod
     def round_mpf(a):
         if isinstance(a, int):
             return a
+        if not hasattr(a, 'context'):
+            return ZZ(a.round())
         # If we use python's built-in `round()`, we lose precision.
         # If we use `ZZ` directly, we may add or subtract 1.
         #
         # XXX: We have to convert to int before converting to ZZ because
         # flint.fmpz cannot convert a mpmath mpf.
         return ZZ(int(a.context.nint(a)))
+
+    @staticmethod
+    def real_imag(a):
+        if isinstance(a, int):
+            return a, 0
+        return a.evalf().as_real_imag()
 
     def round_roots_to_integers_for_poly(self, T):
         """
@@ -369,9 +389,10 @@ class Resolvent:
         approx_roots_of_T = self.approximate_roots_of_poly(T, target='roots')
         approx_roots_of_self = [r(*approx_roots_of_T) for r in self.root_lambdas]
         return {
-            i: self.round_mpf(r.real)
+            i: self.round_mpf(re)
             for i, r in enumerate(approx_roots_of_self)
-            if self.round_mpf(r.imag) == 0
+            for re, im in [self.real_imag(r)]
+            if self.round_mpf(im) == 0
         }
 
     def eval_for_poly(self, T, find_integer_root=False):
@@ -409,18 +430,21 @@ class Resolvent:
 
         R = []
         for c in approx_coeffs_of_self:
-            if self.round_mpf(c.imag) != 0:
+            re, im = self.real_imag(c)
+            if self.round_mpf(im) != 0:
                 # If precision was enough, this should never happen.
-                raise ResolventException(f"Got non-integer coeff for resolvent: {c}")
-            R.append(self.round_mpf(c.real))
+                raise ResolventException(
+                    f"Got non-integer coeff for resolvent: {c}")
+            R.append(self.round_mpf(re))
 
         a0, i0 = None, None
 
         if find_integer_root:
             for i, r in enumerate(approx_roots_of_self):
-                if self.round_mpf(r.imag) != 0:
+                re, im = self.real_imag(r)
+                if self.round_mpf(im) != 0:
                     continue
-                if not dup_eval(R, (a := self.round_mpf(r.real)), ZZ):
+                if not dup_eval(R, (a := self.round_mpf(re)), ZZ):
                     a0, i0 = a, i
                     break
 

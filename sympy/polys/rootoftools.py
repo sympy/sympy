@@ -1,7 +1,7 @@
 """Implementation of RootOf class and related tools. """
 from __future__ import annotations
 
-
+from contextlib import nullcontext
 
 from sympy.core.basic import Basic
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
@@ -914,16 +914,22 @@ class ComplexRootOf(RootOf):
         expr, i = self.args
         return self.func(expr, i + (1 if self._get_interval().conj else -1))
 
-    def eval_approx(self, n, return_mpmath=False):
+    def eval_approx(self, n, return_mpmath=False, context=None):
         """Evaluate this complex root to the given precision.
 
         This uses secant method and root bounds are used to both
         generate an initial guess and to check that the root
         returned is valid. If ever the method converges outside the
         root bounds, the bounds will be made smaller and updated.
+
+        If ``context`` is provided, it is used for the calculation instead
+        of borrowing a local mpmath context. This is required when returning
+        an mpmath value so that the caller owns the value's context for as
+        long as it is used.
         """
         prec = dps_to_prec(n)
-        with local_workprec(prec) as mp:
+        workprec = local_workprec(prec) if context is None else nullcontext(context)
+        with workprec as mp:
             g = self.poly.gen
             if not g.is_Symbol:
                 d = Dummy('x')
