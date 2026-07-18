@@ -588,32 +588,29 @@ class LRASolver():
                 xj = min(cand, key=lambda v: v.col_idx)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
 
-    def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
+    def _pivot_and_update(self, i, xi, xj, v):
         """
         Pivots basic variable xi with nonbasic variable xj,
         and sets value of xi to v and adjusts the values of all basic variables
         to keep equations satisfied.
+
+        i is precomputed in check(), it is solely a parameter just for the small optimization, otherwise the method is exactly like [1] paper.
         """
-        i, j = basic[xi], xj.col_idx
+        j = xj.col_idx
         assert j is not None
-        assert M[i, j] != 0
-        theta = (v - xi.assign)*(1/M[i, j])
+        assert self.A[i, j] != 0
+        theta = (v - xi.assign)*(1/self.A[i, j])
         xi.assign = v
         xj.assign = xj.assign + theta
-        for xk in basic:
-            if xk != xi:
-                k = basic[xk]
-                akj = M[k, j]
-                xk.assign = xk.assign + theta*akj
-        # pivot
-        basic[xj] = basic[xi]
-        del basic[xi]
-        nonbasic.add(xi)
-        nonbasic.remove(xj)
-        return self._pivot(M, i, j)
+        for k in range(len(self.basic)):
+            if k != i:
+                self.basic[k].assign = self.basic[k].assign + theta*self.A[k, j]
+        self._pivot(i, j)
+        self.basic[i] = xj
+        self.nonbasic.discard(xj)
+        self.nonbasic.add(xi)
 
-    @staticmethod
-    def _pivot(M, i, j):
+    def _pivot(self, i, j):
         """
         Performs a pivot operation about entry i, j of A by performing
         a series of row operations on A.
