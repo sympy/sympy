@@ -615,11 +615,10 @@ class LRASolver():
     @staticmethod
     def _pivot(M, i, j):
         """
-        Performs a pivot operation about entry i, j of M by performing
-        a series of row operations on a copy of M and returning the result.
-        The original M is left unmodified.
+        Performs a pivot operation about entry i, j of A by performing
+        a series of row operations on A.
 
-        Conceptually, M represents a system of equations and pivoting
+        Conceptually, A represents a system of equations and pivoting
         can be thought of as rearranging equation i to be in terms of
         variable j and then substituting in the rest of the equations
         to get rid of other occurrences of variable j.
@@ -630,7 +629,9 @@ class LRASolver():
         >>> from sympy.matrices.dense import Matrix
         >>> from sympy.logic.algorithms.lra_theory import LRASolver
         >>> from sympy import var
-        >>> Matrix(3, 3, var('a:i'))
+        >>> lra = LRASolver.__new__(LRASolver)
+        >>> lra.A = Matrix(3, 3, var('a:i'))
+        >>> lra.A
         Matrix([
         [a, b, c],
         [d, e, f],
@@ -641,7 +642,8 @@ class LRASolver():
         0 = d*x + e*y + f*z
         0 = g*x + h*y + i*z
 
-        >>> LRASolver._pivot(_, 1, 0)
+        >>> lra._pivot(1, 0)
+        >>> lra.A
         Matrix([
         [ 0, -a*e/d + b, -a*f/d + c],
         [-1,       -e/d,       -f/d],
@@ -654,16 +656,13 @@ class LRASolver():
         0 = -x + (-e/d)*y + (-f/d)*z
         0 = 0 + (h - e*g/d)*y + (i - f*g/d)*z
         """
-        Mij = M[i, j]
-        if Mij == 0:
+        Aij = self.A[i, j]
+        if Aij == 0:
             raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
-        A = M.copy()
-        A[i, :] = -A[i, :]/Mij
-        for row in range(M.shape[0]):
+        self.A[i, :] = -self.A[i, :]/Aij
+        for row in range(self.A.shape[0]):
             if row != i:
-                A[row, :] = A[row, :] + A[row, j] * A[i, :]
-
-        return A
+                self.A[row, :] = self.A[row, :] + self.A[row, j] * self.A[i, :]
 
     def backtrack(self):
         """
