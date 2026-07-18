@@ -534,22 +534,21 @@ class Function(Application, Expr):
 
     def _eval_evalf(self, prec):
 
-        def _get_mpmath_func(fname, ctx):
+        def _get_mpmath_func(fname):
             """Lookup mpmath function based on name"""
             if isinstance(self, AppliedUndef):
                 # Shouldn't lookup in mpmath but might have ._imp_
                 return None
 
-            if not hasattr(ctx, fname):
+            if not hasattr(mpmath, fname):
                 fname = MPMATH_TRANSLATIONS.get(fname, None)
                 if fname is None:
                     return None
-            return getattr(ctx, fname)
+            return getattr(mpmath, fname)
 
         _eval_mpmath = getattr(self, '_eval_mpmath', None)
         if _eval_mpmath is None:
-            func_name = self.func.__name__
-            func = _get_mpmath_func(func_name, mpmath)
+            func = _get_mpmath_func(self.func.__name__)
             args = self.args
         else:
             func, args = _eval_mpmath()
@@ -593,15 +592,8 @@ class Function(Application, Expr):
         except ValueError:
             return
 
-        if _eval_mpmath is None:
-            with local_workprec(prec) as ctx:
-                func = _get_mpmath_func(func_name, ctx)
-                v = func(*args)
-        else:
-            # The _eval_mpmath extension hook can return an arbitrary callable
-            # that expects mpmath's global context.
-            with workprec(prec):
-                v = func(*args)
+        with workprec(prec):
+            v = func(*args)
 
         return Expr._from_mpmath(v, prec)
 
@@ -1663,9 +1655,19 @@ class Derivative(Expr):
 
         prec = mp.prec
         with local_workprec(prec) as ctx:
-            from sympy.utilities.lambdify import lambdify
-            func = lambdify(z, self.expr, modules=ctx)
-            fp = ctx.diff(func, ctx.mpmathify(z0))
+            def to_context(value):
+                if isinstance(value, mpf):
+                    return ctx.make_mpf(value._mpf_)
+                if isinstance(value, mpc):
+                    return ctx.make_mpc(value._mpc_)
+                return value
+
+            def eval(x):
+                f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=ctx.prec))
+                f0 = f0.evalf(prec_to_dps(ctx.prec))
+                return to_context(f0._to_mpmath(ctx.prec))
+
+            fp = ctx.diff(eval, to_context(z0._to_mpmath(ctx.prec)))
             return Expr._from_mpmath(fp, ctx.prec)
 
     @property
