@@ -38,7 +38,7 @@ from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
 from mpmath import inf, ninf, make_mpc
 from sympy.external.mpmath import from_float, fzero, finf
 from sympy.core.expr import unchanged
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, skip_under_pyodide
 from sympy.abc import n, x, y
 
 
@@ -639,6 +639,7 @@ def test_issue_17421():
     assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
 
 
+@skip_under_pyodide("Cannot create threads under pyodide.")
 def test_issue_17421_concurrent_precisions():
     expr = acos(-I + acosh(cosh(cosh(1) + I)))
     precisions = (10, 20, 30, 40, 50, 60, 70, 80)
