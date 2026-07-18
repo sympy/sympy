@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import clear_cache
@@ -569,6 +572,9 @@ def test_function_complex():
     assert log(xzf).is_complex is True
 
 
+# XXX: Concurrent execution has a severe CPU-scaling issue that needs to be
+# investigated.
+@pytest.mark.thread_unsafe(reason="has severe CPU scaling under concurrent execution")
 def test_function__eval_nseries():
     n = Symbol('n')
 
