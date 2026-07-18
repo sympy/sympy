@@ -519,20 +519,16 @@ class LRASolver():
         if self.result:
             return self.result
 
-        from sympy.matrices.dense import Matrix
-        M = self.A.copy()
-        basic = {s: i for i, s in enumerate(self.basic)}  # contains the row index associated with each basic variable
-        nonbasic = set(self.nonbasic)
         while True:
             if self.run_checks:
                 # nonbasic variables must always be within bounds
-                assert all(((nb.assign >= nb.lower) == True) and ((nb.assign <= nb.upper) == True) for nb in nonbasic)
+                assert all(((nb.assign >= nb.lower) == True) and ((nb.assign <= nb.upper) == True) for nb in self.nonbasic)
 
                 # assignments for x must always satisfy Ax = 0
                 # probably have to turn this off when dealing with strict ineq
                 if all(not math.isinf(v.assign.q) for v in self.all_var):
                     X = Matrix([v.assign.q for v in self.all_var])
-                    assert all(abs(val) < 10**(-10) for val in M*X)
+                    assert all(abs(val) < 10**(-10) for val in self._A0*X)
 
                 # check upper and lower match this format:
                 # x <= rat + delta iff x < rat
@@ -543,22 +539,24 @@ class LRASolver():
                 assert all(x.upper.d <= 0 for x in self.all_var)
                 assert all(x.lower.d >= 0 for x in self.all_var)
 
-            cand = [b for b in basic if b.assign < b.lower or b.assign > b.upper]
+            xi = i = None
+            for r in range(len(self.basic)):
+                b = self.basic[r]
+                if b.assign < b.lower or b.assign > b.upper:
+                    if xi is None or b.col_idx < xi.col_idx:  # Bland's rule
+                        xi, i = b, r
 
-            if len(cand) == 0:
+            if xi is None:
                 self.last_assign_snapshot = {var: var.assign for var in self.all_var}
                 return True, self.last_assign_snapshot
 
-            xi = min(cand, key=lambda v: v.col_idx) # Bland's rule
-            i = basic[xi]
-
             if xi.assign < xi.lower:
-                cand = [nb for nb in nonbasic
-                        if (M[i, nb.col_idx] > 0 and nb.assign < nb.upper)
-                        or (M[i, nb.col_idx] < 0 and nb.assign > nb.lower)]
+                cand = [nb for nb in self.nonbasic
+                        if (self.A[i, nb.col_idx] > 0 and nb.assign < nb.upper)
+                        or (self.A[i, nb.col_idx] < 0 and nb.assign > nb.lower)]
                 if len(cand) == 0:
-                    N_plus = [nb for nb in nonbasic if M[i, nb.col_idx] > 0]
-                    N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
+                    N_plus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] > 0]
+                    N_minus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] < 0]
 
                     conflict = []
                     conflict += [nb.upper_literal for nb in N_plus]
@@ -567,16 +565,16 @@ class LRASolver():
                     conflict = [-conflicting_lit for conflicting_lit in conflict]
                     return False, conflict
                 xj = min(cand, key=str)
-                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
+                self._pivot_and_update(i, xi, xj, xi.lower)
 
             if xi.assign > xi.upper:
-                cand = [nb for nb in nonbasic
-                        if (M[i, nb.col_idx] < 0 and nb.assign < nb.upper)
-                        or (M[i, nb.col_idx] > 0 and nb.assign > nb.lower)]
+                cand = [nb for nb in self.nonbasic
+                        if (self.A[i, nb.col_idx] < 0 and nb.assign < nb.upper)
+                        or (self.A[i, nb.col_idx] > 0 and nb.assign > nb.lower)]
 
                 if len(cand) == 0:
-                    N_plus = [nb for nb in nonbasic if M[i, nb.col_idx] > 0]
-                    N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
+                    N_plus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] > 0]
+                    N_minus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] < 0]
 
                     conflict_bounds = []
                     conflict_bounds += [nb.upper_literal for nb in N_minus]
@@ -586,7 +584,7 @@ class LRASolver():
                     conflict = [-conflicting_lit for conflicting_lit in conflict_bounds]
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
-                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
+                self._pivot_and_update(i, xi, xj, xi.upper)
 
     def _pivot_and_update(self, i, xi, xj, v):
         """
