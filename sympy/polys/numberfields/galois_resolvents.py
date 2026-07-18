@@ -340,7 +340,7 @@ class Resolvent:
         if isinstance(a, int):
             return a
         if not hasattr(a, 'context'):
-            return ZZ(a.round())
+            return ZZ(int(a.round()))
         # If we use python's built-in `round()`, we lose precision.
         # If we use `ZZ` directly, we may add or subtract 1.
         #
