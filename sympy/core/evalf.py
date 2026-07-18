@@ -15,7 +15,7 @@ from sympy.external.mpmath import (
     mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt, normalize,
     round_nearest, to_int, to_str, mpf_tan, mpc_abs, mpc_pow, mpc_pow_mpf,
     mpc_pow_int, mpc_sqrt, mpc_exp, dps_to_prec, prec_to_dps,
-    local_workprec,
+    local_workprec, mp,
 )
 
 from .sympify import sympify
@@ -1702,41 +1702,13 @@ class EvalfMixin:
         return None
 
     def _to_mpmath(self, prec, allow_ints=True):
-        # mpmath functions accept ints as input
-        errmsg = "cannot convert to mpmath number"
-        if allow_ints and self.is_Integer:
-            return self.p
-        if hasattr(self, '_as_mpf_val'):
-            return make_mpf(self._as_mpf_val(prec))
-        try:
-            result = evalf(self, prec, {})
-            return quad_to_mpmath(result)
-        except NotImplementedError:
-            v = self._eval_evalf(prec)
-            if v is None:
-                raise ValueError(errmsg)
-            if v.is_Float:
-                return make_mpf(v._mpf_)
-            # Number + Number*I is also fine
-            re, im = v.as_real_imag()
-            if allow_ints and re.is_Integer:
-                re = from_int(re.p)
-            elif re.is_Float:
-                re = re._mpf_
-            else:
-                raise ValueError(errmsg)
-            if allow_ints and im.is_Integer:
-                im = from_int(im.p)
-            elif im.is_Float:
-                im = im._mpf_
-            else:
-                raise ValueError(errmsg)
-            return make_mpc((re, im))
+        return self._to_mpmath_ctx(mp, allow_ints=allow_ints, prec=prec)
 
-    def _to_mpmath_ctx(self, ctx, allow_ints=True):
+    def _to_mpmath_ctx(self, ctx, allow_ints=True, *, prec=None):
         # mpmath functions accept ints as input
         errmsg = "cannot convert to mpmath number"
-        prec = ctx.prec
+        if prec is None:
+            prec = ctx.prec
         if allow_ints and self.is_Integer:
             return self.p
         if hasattr(self, '_as_mpf_val'):
