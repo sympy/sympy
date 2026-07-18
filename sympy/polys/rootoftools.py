@@ -437,9 +437,9 @@ class ComplexRootOf(RootOf):
         if use_cache and currentfactor in _reals_cache:
             real_part = _reals_cache[currentfactor]
         else:
-            _reals_cache[currentfactor] = real_part = \
-                dup_isolate_real_roots_sqf(
-                    currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
+            real_part = dup_isolate_real_roots_sqf(
+                currentfactor.rep.to_list(), currentfactor.rep.dom,
+                blackbox=True)
 
         return real_part
 
@@ -449,8 +449,7 @@ class ComplexRootOf(RootOf):
         if use_cache and currentfactor in _complexes_cache:
             complex_part = _complexes_cache[currentfactor]
         else:
-            _complexes_cache[currentfactor] = complex_part = \
-                dup_isolate_complex_roots_sqf(
+            complex_part = dup_isolate_complex_roots_sqf(
                 currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
         return complex_part
 
@@ -471,6 +470,12 @@ class ComplexRootOf(RootOf):
                 reals.extend(new)
 
         reals = cls._reals_sorted(reals)
+
+        real_factors = {factor for _, factor, _ in reals}
+        for currentfactor, _ in factors:
+            if currentfactor not in real_factors:
+                _reals_cache[currentfactor] = []
+
         return reals
 
     @classmethod
@@ -490,6 +495,12 @@ class ComplexRootOf(RootOf):
                 complexes.extend(new)
 
         complexes = cls._complexes_sorted(complexes)
+
+        complex_factors = {factor for _, factor, _ in complexes}
+        for currentfactor, _ in factors:
+            if currentfactor not in complex_factors:
+                _complexes_cache[currentfactor] = []
+
         return complexes
 
     @classmethod
