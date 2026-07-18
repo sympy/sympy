@@ -84,13 +84,13 @@ print(f"  shape  : {pt1.shape}")
 # With integer coefficient
 pt2 = AlgebraicPureTensor(2, A, B)
 print(f"\npt2 = 2*(A ⊗ B)         : {pt2}")
-print(f"  coeff  : {pt2._get_coeff()}")
+#print(f"  coeff  : {pt2._get_coeff()}")
 print(f"  factors: {[str(f) for f in pt2.factors]}")
 
 # With symbolic coefficient
 pt3 = AlgebraicPureTensor(x, A, B)
 print(f"\npt3 = x*(A ⊗ B)         : {pt3}")
-print(f"  coeff  : {pt3._get_coeff()}")
+#print(f"  coeff  : {pt3._get_coeff()}")
 
 # Three-factor tensor product
 pt4 = AlgebraicPureTensor(A, B, C)
@@ -101,22 +101,22 @@ print(f"  shape  : {pt4.shape}")
 pt5 = 3 * AlgebraicPureTensor(A, B)
 print(f"\npt5 = 3 * (A ⊗ B)       : {pt5}")
 print(f"  type   : {type(pt5).__name__}")
-print(f"  coeff  : {pt5._get_coeff()}")
+#print(f"  coeff  : {pt5._get_coeff()}")
 
 # Scalar multiplication from right
 pt6 = AlgebraicPureTensor(A, B) * 3
 print(f"\npt6 = (A ⊗ B) * 3       : {pt6}")
-print(f"  coeff  : {pt6._get_coeff()}")
+#print(f"  coeff  : {pt6._get_coeff()}")
 
 # Symbolic scalar from left
 pt7 = x * AlgebraicPureTensor(A, B)
 print(f"\npt7 = x * (A ⊗ B)       : {pt7}")
-print(f"  coeff  : {pt7._get_coeff()}")
+#print(f"  coeff  : {pt7._get_coeff()}")
 
 # Negation
 pt8 = -AlgebraicPureTensor(A, B)
 print(f"\npt8 = -(A ⊗ B)          : {pt8}")
-print(f"  coeff  : {pt8._get_coeff()}")
+#print(f"  coeff  : {pt8._get_coeff()}")
 
 # --- Addition (creates AlgebraicTensor) ---
 print("\n--- Addition ---")
@@ -212,11 +212,11 @@ print("\n--- Coefficient handling in composition ---")
 
 comp3 = AlgebraicPureTensor(2, M, N) * AlgebraicPureTensor(3, N, M)
 print(f"comp3 = (2*M⊗N) * (3*N⊗M) : {comp3}")
-print(f"  coeff  : {comp3._get_coeff()}")
+#print(f"  coeff  : {comp3._get_coeff()}")
 
 comp4 = AlgebraicPureTensor(x, M) * AlgebraicPureTensor(y, N)
 print(f"\ncomp4 = (x*M) * (y*N)     : {comp4}")
-print(f"  coeff  : {comp4._get_coeff()}")
+#print(f"  coeff  : {comp4._get_coeff()}")
 
 # --- AlgebraicTensor * AlgebraicTensor ---
 print("\n--- AlgebraicTensor * AlgebraicTensor ---")
@@ -270,7 +270,7 @@ print(f"  type   : {type(comp10).__name__}")
 # Composition with coefficient
 comp11 = AlgebraicPureTensor(2, M, N) * AlgebraicPureTensor(3, N, M)
 print(f"\ncomp11 = (2*M⊗N)*(3*N⊗M)     : {comp11}")
-print(f"  coeff  : {comp11._get_coeff()}")
+#print(f"  coeff  : {comp11._get_coeff()}")
 
 # ---------------------------------------------------------------------------
 # 3. SIMPLIFICATION AND EXPANSION
@@ -286,13 +286,13 @@ pt_simp1 = AlgebraicPureTensor(2 + 2, A, B)
 print(f"pt_simp1 = (2+2)*(A⊗B)     : {pt_simp1}")
 simp1 = pt_simp1.simplify()
 print(f"  simplified              : {simp1}")
-print(f"  coeff  : {simp1._get_coeff()}")
+#print(f"  coeff  : {simp1._get_coeff()}")
 
 pt_simp2 = AlgebraicPureTensor(x + x, M, N)
 print(f"\npt_simp2 = (x+x)*(M⊗N)    : {pt_simp2}")
 simp2 = pt_simp2.simplify()
 print(f"  simplified              : {simp2}")
-print(f"  coeff  : {simp2._get_coeff()}")
+#print(f"  coeff  : {simp2._get_coeff()}")
 
 # --- PureTensor .expand() ---
 print("\n--- PureTensor .expand() ---")
@@ -581,12 +581,6 @@ print("=" * 60)
 print("\n--- da1 str ---")
 print(da1)
 
-print("\n--- da1 latex ---")
-print(latex(da1))
-
-print("\n--- da1 _repr_latex_ ---")
-print(da1._repr_latex_())
-
 da1.display()
 print("da1 args = ")
 print(len(da1.args))
@@ -594,15 +588,9 @@ print(len(da1.args))
 print("")
 print(srepr(da1))
 
-
-testoni_100 = AlgebraicPureTensor(2+x,P+Q,Q)
-testoni_200 = x* AlgebraicPureTensor(Q,P)
-testoni_300 = testoni_100*testoni_200
-testoni_300.display()
-print(srepr(testoni_100))
-print(srepr(testoni_200))
-print(testoni_100.expand().simplify())
-
-algebraic_da1 = algebraic_tensor_product(da1, da1)
-print(len(algebraic_da1.args))
-print(algebraic_da1.args[0])
+print("Unexpected behaviour:")
+da1_unexpanded_simp = Dirac*a1 - a1*Dirac
+da1_unexpanded_simp = da1_unexpanded_simp.simplify()
+print(len(da1_unexpanded_simp.args))
+print("First expanding and then simplifying yields 8, not 9 tensors. The difference is the last AlgebraicPureTensor given as:")
+print(da1_unexpanded_simp.args[-1])

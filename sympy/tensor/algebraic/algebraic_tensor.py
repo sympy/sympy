@@ -8,7 +8,7 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 
 from sympy.tensor.algebraic.algebraic_pure_tensor import (
-    AlgebraicPureTensor, _factor_has_noncommutative
+    AlgebraicPureTensor, _factor_has_noncommutative, _is_zero_like
 )
 from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
@@ -326,7 +326,7 @@ class AlgebraicTensor(Basic):
     0_{(3x4), (4x5)}
     """
 
-    __slots__ = ()
+    __slots__ = ('_coeff_map',)
 
     is_AlgebraicTensor = True
     is_Add = True
@@ -360,7 +360,7 @@ class AlgebraicTensor(Basic):
         zero_term_was_user_provided = zero_term is not None
 
         # Collect coefficients of PureTensor terms with identical factors
-        flat, zero_term = cls._collect_coefficients(flat, shape, zero_term)
+        flat, zero_term, coeff_map = cls._collect_coefficients(flat, shape, zero_term)
 
         if not flat:
             if zero_term is not None:
@@ -375,21 +375,15 @@ class AlgebraicTensor(Basic):
                 return zero_term
             raise ValueError("AlgebraicTensor resulted in zero terms")
 
-        # If an AlgebraicZeroTensor was explicitly provided by the user,
-        # always keep it as an anchor.  Only unwrap to a single term when
-        # there is exactly one non-zero term AND no AlgebraicZeroTensor was
-        # explicitly given.
-        if len(flat) == 1 and not zero_term_was_user_provided and not isinstance(flat[0], AlgebraicZeroTensor):
+        # Unwrap single term (AlgebraicZeroTensor already handled above).
+        if len(flat) == 1 and not isinstance(flat[0], AlgebraicZeroTensor):
             return flat[0]
 
-        # Append user-provided AlgebraicZeroTensor (for shape anchoring).
-        # Cancellation-created zero_term is NOT appended when there are
-        # surviving non-zero terms -- it was only needed for the all-cancelled
-        # case handled above.
-        if zero_term_was_user_provided:
-            flat.append(zero_term)
+        # Drop AlgebraicZeroTensor anchor when non-zero terms survive;
+        # it is only returned when flat is empty (handled above).
 
         obj = Basic.__new__(cls, *flat)
+        obj._coeff_map = coeff_map
         return obj
 
     @classmethod
@@ -412,7 +406,11 @@ class AlgebraicTensor(Basic):
 
         Returns
         -------
-        (new_terms : list, new_zero_term : AlgebraicZeroTensor | None)
+        (new_terms : list, new_zero_term : AlgebraicZeroTensor | None,
+         coeff_map : dict)
+            The coeff_map keys are always AlgebraicPureTensor (unit coefficient)
+            representing the factor structure, and values are the combined
+            commutative coefficients.
         """
         result = []
         coeff_map = {}
@@ -428,12 +426,10 @@ class AlgebraicTensor(Basic):
                 result.append(t)
                 continue
 
-            # Build key_pure_tensor from factors (without coefficient)
+            # Build key_pure_tensor from factors (without coefficient).
+            # Always wrap in AlgebraicPureTensor for consistent keys.
             factors = t.factors
-            if len(factors) == 1:
-                key_pure_tensor = factors[0]
-            else:
-                key_pure_tensor = AlgebraicPureTensor(*factors)
+            key_pure_tensor = AlgebraicPureTensor(*factors)
 
             c = t.coeff
 
@@ -450,12 +446,9 @@ class AlgebraicTensor(Basic):
             elif combined_coeff is S.One:
                 result.append(key_pure_tensor)
             else:
-                if isinstance(key_pure_tensor, AlgebraicPureTensor):
-                    result.append(AlgebraicPureTensor(combined_coeff, *key_pure_tensor.factors))
-                else:
-                    result.append(AlgebraicPureTensor(combined_coeff, key_pure_tensor))
+                result.append(AlgebraicPureTensor(combined_coeff, *key_pure_tensor.factors))
 
-        return result, zero_term
+        return result, zero_term, coeff_map
 
     @classmethod
     def _flatten_args(cls, args):
@@ -642,6 +635,143 @@ class AlgebraicTensor(Basic):
         """Return True if an AlgebraicZeroTensor anchors this sum."""
         return any(isinstance(a, AlgebraicZeroTensor) for a in self.args)
 
+    def __getstate__(self):
+        """Exclude _coeff_map from pickled state (recomputable from args)."""
+        state = super().__getstate__()
+        if state is not None and '_coeff_map' in state:
+            del state['_coeff_map']
+        return state
+
+    def _has_simple_terms(self):
+        """Check if all args are AlgebraicPureTensor or AlgebraicZeroTensor."""
+        return all(
+            isinstance(a, (AlgebraicPureTensor, AlgebraicZeroTensor))
+            for a in self.args
+        )
+
+    @classmethod
+    def _merge(cls, left, right):
+        """Merge two AlgebraicTensors by combining their coefficient maps.
+
+        Both operands must have only AlgebraicPureTensor and AlgebraicZeroTensor
+        terms (checked by _has_simple_terms before calling).
+
+        Returns
+        -------
+        AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or matrix
+            The merged result, with the same unwrapping semantics as __new__.
+        """
+        combined = left._coeff_map.copy()
+        zero_term = None
+        zero_term_was_user_provided = left.has_zero_term()
+
+        for a in right.args:
+            if isinstance(a, AlgebraicTensor):
+                nested = a._coeff_map
+                for key, c in nested.items():
+                    if key in combined:
+                        combined[key] = combined[key] + c
+                    else:
+                        combined[key] = c
+                if a.has_zero_term():
+                    zero_term_was_user_provided = True
+            elif isinstance(a, AlgebraicPureTensor):
+                factors = a.factors
+                key = AlgebraicPureTensor(*factors)
+                c = a.coeff
+                if key in combined:
+                    combined[key] = combined[key] + c
+                else:
+                    combined[key] = c
+            elif isinstance(a, AlgebraicZeroTensor):
+                zero_term = a
+                zero_term_was_user_provided = True
+
+        # Filter out zero coefficients
+        real = []
+        for key, c in combined.items():
+            if c == 0:
+                if zero_term is None:
+                    zero_term = AlgebraicZeroTensor(left.shape)
+            elif c is S.One:
+                real.append(key)
+            else:
+                real.append(AlgebraicPureTensor(c, *key.factors))
+
+        if not real:
+            if zero_term is not None:
+                return zero_term
+            return AlgebraicZeroTensor(left.shape)
+
+        if len(real) == 1 and not zero_term_was_user_provided and not isinstance(real[0], AlgebraicZeroTensor):
+            return real[0]
+
+        if zero_term_was_user_provided:
+            real.append(zero_term)
+
+        obj = Basic.__new__(cls, *real)
+        obj._coeff_map = combined
+        return obj
+
+    @classmethod
+    def _subtract(cls, left, right):
+        """Subtract right from left by merging with negated coefficients.
+
+        Both operands must have only AlgebraicPureTensor and AlgebraicZeroTensor
+        terms (checked by _has_simple_terms before calling).
+        """
+        combined = left._coeff_map.copy()
+        zero_term = None
+        zero_term_was_user_provided = left.has_zero_term()
+
+        for a in right.args:
+            if isinstance(a, AlgebraicTensor):
+                nested = a._coeff_map
+                for key, c in nested.items():
+                    neg_c = -c
+                    if key in combined:
+                        combined[key] = combined[key] + neg_c
+                    else:
+                        combined[key] = neg_c
+                if a.has_zero_term():
+                    zero_term_was_user_provided = True
+            elif isinstance(a, AlgebraicPureTensor):
+                factors = a.factors
+                key = AlgebraicPureTensor(*factors)
+                neg_c = -a.coeff
+                if key in combined:
+                    combined[key] = combined[key] + neg_c
+                else:
+                    combined[key] = neg_c
+            elif isinstance(a, AlgebraicZeroTensor):
+                zero_term = a
+                zero_term_was_user_provided = True
+
+        real = []
+        for key, c in combined.items():
+            if c == 0:
+                if zero_term is None:
+                    zero_term = AlgebraicZeroTensor(left.shape)
+            elif c is S.One:
+                real.append(key)
+            else:
+                real.append(AlgebraicPureTensor(c, *key.factors))
+
+        if not real:
+            if zero_term is not None:
+                return zero_term
+            return AlgebraicZeroTensor(left.shape)
+
+        if len(real) == 1 and not zero_term_was_user_provided and not isinstance(real[0], AlgebraicZeroTensor):
+            return real[0]
+
+        if zero_term_was_user_provided:
+            real.append(zero_term)
+
+        obj = Basic.__new__(cls, *real)
+        obj._coeff_map = combined
+        return obj
+
     @property
     def T(self):
         """Transpose of this algebraic tensor.
@@ -774,6 +904,9 @@ class AlgebraicTensor(Basic):
         >>> print(S + AlgebraicPureTensor(E, F))
         E ⊗ F + A ⊗ B + C ⊗ D
         """
+        if isinstance(other, AlgebraicTensor):
+            if self._has_simple_terms() and other._has_simple_terms():
+                return self._merge(self, other)
         return AlgebraicTensor(self, other)
 
     def __radd__(self, other):
@@ -795,6 +928,9 @@ class AlgebraicTensor(Basic):
         >>> print(AlgebraicPureTensor(E, F) + S)
         A ⊗ B + C ⊗ D + E ⊗ F
         """
+        if isinstance(other, AlgebraicTensor):
+            if self._has_simple_terms() and other._has_simple_terms():
+                return self._merge(other, self)
         return AlgebraicTensor(other, self)
 
     def __sub__(self, other):
@@ -814,6 +950,9 @@ class AlgebraicTensor(Basic):
         >>> print(S - AlgebraicPureTensor(A, B))
         C ⊗ D
         """
+        if isinstance(other, AlgebraicTensor):
+            if self._has_simple_terms() and other._has_simple_terms():
+                return self._subtract(self, other)
         return AlgebraicTensor(self, -other)
 
     def __rsub__(self, other):
@@ -833,6 +972,9 @@ class AlgebraicTensor(Basic):
         >>> print(AlgebraicPureTensor(A, B) - S)
         -1*C ⊗ D
         """
+        if isinstance(other, AlgebraicTensor):
+            if self._has_simple_terms() and other._has_simple_terms():
+                return self._subtract(other, self)
         return AlgebraicTensor(other, -self)
 
     def __mul__(self, other):
@@ -1143,6 +1285,11 @@ def algebraic_tensor_product(*args):
             return first_s * sympify(args[1])
 
     arg_lists = [_terms_of_arg(a) for a in args]
+
+    # If any argument is zero-like (0 * a == a), the whole product is zero.
+    for a in args:
+        if _is_zero_like(a):
+            return AlgebraicZeroTensor(_combined_shape(args))
 
     # Check for zero-tensor sentinel
     for al in arg_lists:

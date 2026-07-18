@@ -64,6 +64,15 @@ def _factor_has_noncommutative(factor):
     return False
 
 
+def _is_zero_like(expr):
+    """Return True if *expr* is effectively zero.
+
+    Uses the cheap test ``expr == 0 * expr`` which works for
+    ``ZeroMatrix``, zero ``Matrix`` instances, and the scalar ``S.Zero``.
+    """
+    return expr == S.Zero * expr
+
+
 class AlgebraicPureTensor(Mul):
     """Pure tensor as an unevaluated (non-commutative)
     tensor product of factors.
@@ -319,7 +328,7 @@ class AlgebraicPureTensor(Mul):
                 return AlgebraicZeroTensor(())
             raise ValueError("AlgebraicPureTensor requires at least one tensor factor")
 
-        if coeff is S.Zero:
+        if _is_zero_like(coeff) or any(_is_zero_like(f) for f in processed):
             return AlgebraicZeroTensor(_factor_shapes(processed))
 
         # Two args with commutative first arg: return coeff * factor (plain Mul/MatMul)
