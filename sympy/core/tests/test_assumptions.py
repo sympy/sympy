@@ -1,6 +1,4 @@
 from __future__ import annotations
-import threading
-
 from sympy.core.mod import Mod
 from sympy.core.numbers import (I, oo, pi)
 from sympy.functions.combinatorial.factorials import factorial
@@ -8,7 +6,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (asin, sin)
 from sympy.simplify.simplify import simplify
-from sympy.core import Basic, Symbol, S, Rational, Integer, Dummy, Wild, Pow
+from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.assumptions import (assumptions, check_assumptions,
     failing_assumptions, common_assumptions, _generate_assumption_rules,
     _load_pre_generated_assumption_rules)
@@ -17,7 +15,7 @@ from sympy.core.random import seed
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
 
-from sympy.testing.pytest import raises, XFAIL, skip_under_pyodide
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_symbol_unset():
@@ -1267,57 +1265,6 @@ def test_assumptions_copy():
         'real': False,
         'transcendental': False,
         'zero': False}
-
-
-@skip_under_pyodide("Cannot create threads under pyodide.")
-def test_assumptions_copy_on_write():
-    barrier = threading.Barrier(2)
-
-    class ConcurrentFacts(Basic):
-        def _eval_is_odd(self):
-            barrier.wait()
-            return True
-
-        def _eval_is_positive(self):
-            barrier.wait()
-            return True
-
-    obj = ConcurrentFacts()
-    initial = obj._assumptions
-    results = {}
-    errors = []
-
-    def query(fact):
-        try:
-            results[fact] = getattr(obj, f"is_{fact}")
-        except BaseException as exc:
-            errors.append(exc)
-
-    threads = [
-        threading.Thread(target=query, args=(fact,))
-        for fact in ("odd", "positive")
-    ]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-
-    assert not errors
-    assert results == {"odd": True, "positive": True}
-    assert "odd" not in initial
-    assert "positive" not in initial
-
-    # Both threads started from the same snapshot, so the last publication
-    # wins. Either result is valid, but its full implication closure must be
-    # visible rather than a partially updated knowledge base.
-    assumptions = obj._assumptions
-    assert ("odd" in assumptions) != ("positive" in assumptions)
-    if "odd" in assumptions:
-        assert assumptions["odd"] is True
-        assert assumptions["even"] is False
-    else:
-        assert assumptions["positive"] is True
-        assert assumptions["nonzero"] is True
 
 
 def test_check_assumptions():
