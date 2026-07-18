@@ -1,6 +1,8 @@
 """Tests for computing Galois groups. """
 from __future__ import annotations
 
+import pytest
+
 from sympy.abc import x
 from sympy.combinatorics.galois import (
     S1TransitiveSubgroups, S2TransitiveSubgroups, S3TransitiveSubgroups,
@@ -18,6 +20,7 @@ from sympy.polys.polytools import Poly
 from sympy.testing.pytest import raises
 
 
+@pytest.mark.thread_unsafe(reason="has pathological scaling with concurrent root analysis")
 def test_tschirnhausen_transformation():
     for T in [
         Poly(x**2 - 2),
@@ -129,6 +132,7 @@ def test__galois_group_degree_4_root_approx():
         assert _galois_group_degree_4_root_approx(Poly(T)) == (G, alt)
 
 
+@pytest.mark.thread_unsafe(reason="has pathological scaling with concurrent root analysis")
 def test__galois_group_degree_5_hybrid():
     for T, G, alt in test_polys_by_deg[5]:
         assert _galois_group_degree_5_hybrid(Poly(T)) == (G, alt)

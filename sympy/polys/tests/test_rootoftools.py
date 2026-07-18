@@ -1,6 +1,8 @@
 """Tests for the implementation of RootOf class and related tools. """
 from __future__ import annotations
 
+import pytest
+
 from sympy.polys.polytools import Poly
 import sympy.polys.rootoftools as rootoftools
 from sympy.polys.rootoftools import (rootof, RootOf, CRootOf, RootSum,
@@ -391,6 +393,7 @@ def test_CRootOf_eval_rational():
              ]
 
 
+@pytest.mark.thread_unsafe(reason="clears and inspects process-global CRootOf caches")
 def test_CRootOf_lazy():
     # irreducible poly with both real and complex roots:
     f = Poly(x**3 + 2*x + 2)

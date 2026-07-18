@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import pytest
 from hypothesis import given
 from hypothesis import settings, strategies as st
 from hypothesis.strategies import composite
@@ -191,6 +193,7 @@ def test_dup_series_mul_rational_karatsuba_boundary():
     pow=st.integers(min_value=0, max_value=10),
     n=st.integers(min_value=3, max_value=200),
 )
+@pytest.mark.thread_unsafe(reason="has pathological scaling under concurrent series expansion")
 def test_dup_series_pow_rational(f, pow, n):
     Dup_pow = dup_truncate(dup_pow(f, pow, QQ), n, QQ)
     series_pow = dup_series_pow(f, pow, n, QQ)
