@@ -1,6 +1,9 @@
 from __future__ import annotations
 import numbers as nums
 import decimal
+
+import pytest
+
 from sympy.concrete.summations import Sum
 from sympy.core import (EulerGamma, Catalan, TribonacciConstant,
     GoldenRatio)
@@ -1659,8 +1662,10 @@ def test_issue_4611():
     assert (TribonacciConstant + x).evalf() == TribonacciConstant.evalf() + x
 
 
+@pytest.mark.thread_unsafe(reason="mutates mpmath's process-global precision")
 @conserve_mpmath_dps
 def test_conversion_to_mpmath():
+    mpmath.mp.dps = 15
     assert mpmath.mpmathify(Integer(1)) == mpmath.mpf(1)
     assert mpmath.mpmathify(S.Half) == mpmath.mpf(0.5)
     assert mpmath.mpmathify(Float('1.23', 15)) == mpmath.mpf('1.23')

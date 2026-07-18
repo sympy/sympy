@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import clear_cache
@@ -642,6 +645,9 @@ def test_issue_5399():
                 raises(ValueError, lambda: eq.diff(*v))
 
 
+# XXX: doit_numerically uses mpmath's process-global precision and needs to be
+# changed to use an isolated context.
+@pytest.mark.thread_unsafe(reason="uses mpmath's process-global precision")
 def test_derivative_numerically():
     z0 = x._random()
     assert abs(Derivative(sin(x), x).doit_numerically(z0) - cos(z0)) < 1e-15
