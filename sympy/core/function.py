@@ -1655,19 +1655,12 @@ class Derivative(Expr):
 
         prec = mp.prec
         with local_workprec(prec) as ctx:
-            def to_context(value):
-                if isinstance(value, mpf):
-                    return ctx.make_mpf(value._mpf_)
-                if isinstance(value, mpc):
-                    return ctx.make_mpc(value._mpc_)
-                return value
-
             def eval(x):
                 f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=ctx.prec))
                 f0 = f0.evalf(prec_to_dps(ctx.prec))
-                return to_context(f0._to_mpmath(ctx.prec))
+                return f0._to_mpmath_ctx(ctx)
 
-            fp = ctx.diff(eval, to_context(z0._to_mpmath(ctx.prec)))
+            fp = ctx.diff(eval, z0._to_mpmath_ctx(ctx))
             return Expr._from_mpmath(fp, ctx.prec)
 
     @property

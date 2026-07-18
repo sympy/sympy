@@ -1701,22 +1701,24 @@ class EvalfMixin:
     def _eval_evalf(self, prec: int) -> Expr | None:
         return None
 
-    def _to_mpmath(self, prec, allow_ints=True):
+    def _to_mpmath(self, prec, allow_ints=True, ctx=None):
         # mpmath functions accept ints as input
         errmsg = "cannot convert to mpmath number"
+        make_mpf_ctx = make_mpf if ctx is None else ctx.make_mpf
+        make_mpc_ctx = make_mpc if ctx is None else ctx.make_mpc
         if allow_ints and self.is_Integer:
             return self.p
         if hasattr(self, '_as_mpf_val'):
-            return make_mpf(self._as_mpf_val(prec))
+            return make_mpf_ctx(self._as_mpf_val(prec))
         try:
             result = evalf(self, prec, {})
-            return quad_to_mpmath(result)
+            return quad_to_mpmath(result, ctx)
         except NotImplementedError:
             v = self._eval_evalf(prec)
             if v is None:
                 raise ValueError(errmsg)
             if v.is_Float:
-                return make_mpf(v._mpf_)
+                return make_mpf_ctx(v._mpf_)
             # Number + Number*I is also fine
             re, im = v.as_real_imag()
             if allow_ints and re.is_Integer:
@@ -1731,7 +1733,10 @@ class EvalfMixin:
                 im = im._mpf_
             else:
                 raise ValueError(errmsg)
-            return make_mpc((re, im))
+            return make_mpc_ctx((re, im))
+
+    def _to_mpmath_ctx(self, ctx, allow_ints=True):
+        return self._to_mpmath(ctx.prec, allow_ints=allow_ints, ctx=ctx)
 
 
 def N(x, n=15, **options):

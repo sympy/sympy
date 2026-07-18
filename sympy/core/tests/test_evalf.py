@@ -505,6 +505,12 @@ def test_to_mpmath():
     assert sqrt(3)._to_mpmath(20)._mpf_ == (0, int(908093), -19, 20)
     assert S(3.2)._to_mpmath(20)._mpf_ == (0, int(838861), -18, 20)
 
+    from sympy.external.mpmath import local_workprec
+    with local_workprec(20) as ctx:
+        assert sqrt(3)._to_mpmath_ctx(ctx).context is ctx
+        assert I._to_mpmath_ctx(ctx).context is ctx
+        assert S(3)._to_mpmath_ctx(ctx) == 3
+
 
 def test_issue_6632_evalf():
     add = (-100000*sqrt(2500000001) + 5000000001)
