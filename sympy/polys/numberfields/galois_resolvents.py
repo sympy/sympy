@@ -297,43 +297,38 @@ class Resolvent:
 
         """
         with local_workprec(53) as mp:
-            return self._approximate_roots_of_poly(T, target, mp)
+            # Because sympy.polys.polyroots._integer_basis() is called when a
+            # CRootOf is formed, we proactively extract the integer basis now.
+            # This means that when we call T.all_roots(), every root will be a
+            # CRootOf, not a Mul of Integer*CRootOf.
+            coeff, T = preprocess_roots(T)
+            coeff = mp.mpf(str(coeff))
 
-    def _approximate_roots_of_poly(self, T, target, mp):
-        """Internal implementation using the supplied mpmath context."""
+            scaled_roots = T.all_roots(radicals=False)
 
-        # Because sympy.polys.polyroots._integer_basis() is called when a
-        # CRootOf is formed, we proactively extract the integer basis now.
-        # This means that when we call T.all_roots(), every root will be a
-        # CRootOf, not a Mul of Integer*CRootOf.
-        coeff, T = preprocess_roots(T)
-        coeff = mp.mpf(str(coeff))
+            # Since we're going to be approximating the roots of T anyway, we
+            # can get a good upper bound on the magnitude of the roots by
+            # starting with a very low precision approx.
+            approx0 = [coeff * quad_to_mpmath(_evalf_with_bounded_error(r, m=0), mp) for r in scaled_roots]
+            # Here we add 1 to account for the possible error in our initial
+            # approximation.
+            M = mp.fadd(max(mp.fabs(b) for b in approx0), 1)
+            m = self.get_prec(M, target=target)
+            n = fastlog(M._mpf_) + 1
+            p = m + n + 1
+            mp.prec = p
+            d = prec_to_dps(p)
 
-        scaled_roots = T.all_roots(radicals=False)
+            approx1 = [
+                r.eval_approx(d, return_mpmath=True, context=mp)
+                for r in scaled_roots
+            ]
+            approx1 = [mp.fmul(coeff, mp.mpc(r)) for r in approx1]
 
-        # Since we're going to be approximating the roots of T anyway, we
-        # can get a good upper bound on the magnitude of the roots by
-        # starting with a very low precision approx.
-        approx0 = [coeff * quad_to_mpmath(_evalf_with_bounded_error(r, m=0), mp) for r in scaled_roots]
-        # Here we add 1 to account for the possible error in our initial
-        # approximation.
-        M = mp.fadd(max(mp.fabs(b) for b in approx0), 1)
-        m = self.get_prec(M, target=target)
-        n = fastlog(M._mpf_) + 1
-        p = m + n + 1
-        mp.prec = p
-        d = prec_to_dps(p)
-
-        approx1 = [
-            r.eval_approx(d, return_mpmath=True, context=mp)
-            for r in scaled_roots
-        ]
-        approx1 = [mp.fmul(coeff, mp.mpc(r)) for r in approx1]
-
-        return [
-            Float._new(root.real._mpf_, p) + I*Float._new(root.imag._mpf_, p)
-            for root in approx1
-        ]
+            return [
+                Float._new(root.real._mpf_, p) + I*Float._new(root.imag._mpf_, p)
+                for root in approx1
+            ]
 
     @staticmethod
     def round_mpf(a):
