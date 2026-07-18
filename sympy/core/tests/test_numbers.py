@@ -1,9 +1,6 @@
 from __future__ import annotations
 import numbers as nums
 import decimal
-
-import pytest
-
 from sympy.concrete.summations import Sum
 from sympy.core import (EulerGamma, Catalan, TribonacciConstant,
     GoldenRatio)
@@ -39,8 +36,8 @@ from sympy.testing.pytest import (raises, _both_exp_pow,
 from sympy import Add
 
 from mpmath import mpf
-import mpmath
-from sympy.external.mpmath import finf, fninf, conserve_mpmath_dps
+from sympy.external.mpmath import (
+    conserve_mpmath_dps, finf, fninf, local_workdps)
 from sympy.core import numbers
 t = Symbol('t', real=False)
 
@@ -1662,29 +1659,27 @@ def test_issue_4611():
     assert (TribonacciConstant + x).evalf() == TribonacciConstant.evalf() + x
 
 
-@pytest.mark.thread_unsafe(reason="mutates mpmath's process-global precision")
-@conserve_mpmath_dps
 def test_conversion_to_mpmath():
-    mpmath.mp.dps = 15
-    assert mpmath.mpmathify(Integer(1)) == mpmath.mpf(1)
-    assert mpmath.mpmathify(S.Half) == mpmath.mpf(0.5)
-    assert mpmath.mpmathify(Float('1.23', 15)) == mpmath.mpf('1.23')
+    with local_workdps(15) as ctx:
+        assert ctx.mpmathify(Integer(1)) == ctx.mpf(1)
+        assert ctx.mpmathify(S.Half) == ctx.mpf(0.5)
+        assert ctx.mpmathify(Float('1.23', 15)) == ctx.mpf('1.23')
 
-    assert mpmath.mpmathify(I) == mpmath.mpc(1j)
+        assert ctx.mpmathify(I) == ctx.mpc(1j)
 
-    assert mpmath.mpmathify(1 + 2*I) == mpmath.mpc(1 + 2j)
-    assert mpmath.mpmathify(1.0 + 2*I) == mpmath.mpc(1 + 2j)
-    assert mpmath.mpmathify(1 + 2.0*I) == mpmath.mpc(1 + 2j)
-    assert mpmath.mpmathify(1.0 + 2.0*I) == mpmath.mpc(1 + 2j)
-    assert mpmath.mpmathify(S.Half + S.Half*I) == mpmath.mpc(0.5 + 0.5j)
+        assert ctx.mpmathify(1 + 2*I) == ctx.mpc(1 + 2j)
+        assert ctx.mpmathify(1.0 + 2*I) == ctx.mpc(1 + 2j)
+        assert ctx.mpmathify(1 + 2.0*I) == ctx.mpc(1 + 2j)
+        assert ctx.mpmathify(1.0 + 2.0*I) == ctx.mpc(1 + 2j)
+        assert ctx.mpmathify(S.Half + S.Half*I) == ctx.mpc(0.5 + 0.5j)
 
-    assert mpmath.mpmathify(2*I) == mpmath.mpc(2j)
-    assert mpmath.mpmathify(2.0*I) == mpmath.mpc(2j)
-    assert mpmath.mpmathify(S.Half*I) == mpmath.mpc(0.5j)
+        assert ctx.mpmathify(2*I) == ctx.mpc(2j)
+        assert ctx.mpmathify(2.0*I) == ctx.mpc(2j)
+        assert ctx.mpmathify(S.Half*I) == ctx.mpc(0.5j)
 
-    mpmath.mp.dps = 100
-    assert mpmath.mpmathify(pi.evalf(100) + pi.evalf(100)*I) == mpmath.pi + mpmath.pi*mpmath.j
-    assert mpmath.mpmathify(pi.evalf(100)*I) == mpmath.pi*mpmath.j
+    with local_workdps(100) as ctx:
+        assert ctx.mpmathify(pi.evalf(100) + pi.evalf(100)*I) == ctx.pi + ctx.pi*ctx.j
+        assert ctx.mpmathify(pi.evalf(100)*I) == ctx.pi*ctx.j
 
 
 def test_relational():

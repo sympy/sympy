@@ -1,8 +1,6 @@
 from __future__ import annotations
 import math
 
-import pytest
-
 from sympy.concrete.products import (Product, product)
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -629,9 +627,6 @@ def test_issue_13425():
     assert abs((N('pi*.1', 22)*10 - pi).n()) < 1e-22
 
 
-# XXX: Function evalf changes mpmath's process-global precision. It should use
-# an isolated context so that concurrent evaluations cannot interfere.
-@pytest.mark.thread_unsafe(reason="uses mpmath's process-global precision")
 def test_issue_17421():
     assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
 
