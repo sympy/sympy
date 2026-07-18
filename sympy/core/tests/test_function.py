@@ -1185,6 +1185,11 @@ def test_Derivative_as_finite_difference():
     assert (d2fdxdy.as_finite_difference() - ref2).simplify() == 0
 
 
+# XXX: The expression cache is shared between threads but does not include the
+# thread-local exp_is_pow setting in its cache keys.
+@pytest.mark.thread_unsafe(
+    reason="changes exp_is_pow while using the shared expression cache"
+)
 def test_issue_11159():
     # Tests Application._eval_subs
     with _exp_is_pow(False):
