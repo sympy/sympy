@@ -313,6 +313,8 @@ class Basic(Printable):
         True
         >>> expr.copy() is expr
         False
+        >>> expr.copy().args[0] is expr.args[0]
+        True
 
         See Also
         ========
