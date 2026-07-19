@@ -158,6 +158,22 @@ def test_fcode_functions_with_integers():
     assert fcode(x * log(log(S(10)))) == "      x*%s" % loglog10_17
 
 
+def test_fcode_functions_with_integer_symbol_args():
+    # https://github.com/sympy/sympy/issues/20435
+    # Integer-valued arguments must not be promoted to reals inside a
+    # function call, otherwise integer-argument intrinsics get invalid input.
+    from sympy.functions.special.bessel import besselj
+    x = symbols('x')
+    n = symbols('n', integer=True)
+    assert fcode(besselj(n + 1, x**2), user_functions={'besselj': 'BESJN'},
+                 strict=False) == "      BESJN(n + 1, x**2)"
+    assert fcode(besselj(2*n, x), user_functions={'besselj': 'BESJN'},
+                 strict=False) == "      BESJN(2*n, x)"
+    # Purely numeric arguments are still evaluated as floats.
+    assert fcode(besselj(1, x), user_functions={'besselj': 'BESJN'},
+                 strict=False) == "      BESJN(1.0d0, x)"
+
+
 def test_fcode_NumberSymbol():
     prec = 17
     p = FCodePrinter()
