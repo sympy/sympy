@@ -200,7 +200,15 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(Abs)
 def _(expr, assumptions):
-    return _ask_recursive(Q.nonzero(expr.args[0]), assumptions)
+    # |x| is nonzero iff x is nonzero, but unlike x itself |x| is always
+    # real, so this cannot simply delegate to Q.nonzero(x) (which is False
+    # for a nonzero imaginary x, since that predicate implies realness).
+    # |x| is also only "nonzero" (as opposed to "extended nonzero") when it
+    # is finite, i.e. when x itself is finite.
+    arg = expr.args[0]
+    return fuzzy_and([
+        fuzzy_not(_ask_recursive(Q.zero(arg), assumptions)),
+        _ask_recursive(Q.finite(arg), assumptions)])
 
 @NonZeroPredicate.register(NaN)
 def _(expr, assumptions):
@@ -220,6 +228,11 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return fuzzy_and([fuzzy_not(_ask_recursive(Q.nonzero(expr), assumptions)),
         _ask_recursive(Q.real(expr), assumptions)])
+
+@ZeroPredicate.register(Abs)
+def _(expr, assumptions):
+    # |x| = 0 iff x = 0, for any x (real, imaginary or infinite).
+    return _ask_recursive(Q.zero(expr.args[0]), assumptions)
 
 @ZeroPredicate.register(Mul)
 def _(expr, assumptions):
@@ -423,6 +436,12 @@ def _(expr, assumptions):
 @ExtendedPositivePredicate.register(object)
 def _(expr, assumptions):
     return _ask_recursive(Q.positive(expr) | Q.positive_infinite(expr), assumptions)
+
+@ExtendedPositivePredicate.register(Abs)
+def _(expr, assumptions):
+    # |x| is extended positive (finite and positive, or +oo) iff x != 0,
+    # regardless of whether x itself is finite.
+    return fuzzy_not(_ask_recursive(Q.zero(expr.args[0]), assumptions))
 
 
 # ExtendedNonZeroPredicate

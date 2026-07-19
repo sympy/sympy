@@ -1793,6 +1793,9 @@ def test_nonzero():
 
     assert ask(Q.nonzero(Abs(x))) is None
     assert ask(Q.nonzero(Abs(x)), Q.nonzero(x)) is True
+    # https://github.com/sympy/sympy/issues/30057
+    assert ask(Q.nonzero(Abs(x)), Q.imaginary(x)) is True
+    assert ask(Q.nonzero(Abs(x)), Q.infinite(x)) is False
 
     assert ask(Q.nonzero(log(exp(2*I)))) is False
     # although this could be False, it is representative of expressions
@@ -1821,6 +1824,9 @@ def test_zero():
 
     assert ask(Q.zero(Abs(x))) is None
     assert ask(Q.zero(Abs(x)), Q.zero(x)) is True
+    # https://github.com/sympy/sympy/issues/30057
+    assert ask(Q.zero(Abs(x)), Q.imaginary(x)) is False
+    assert ask(Q.zero(Abs(x)), Q.infinite(x)) is False
 
     assert ask(Q.integer(x), Q.zero(x)) is True
     assert ask(Q.even(x), Q.zero(x)) is True
@@ -2014,6 +2020,10 @@ def test_positive():
     #absolute value
     assert ask(Q.positive(Abs(x))) is None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
+    # https://github.com/sympy/sympy/issues/30057
+    assert ask(Q.positive(Abs(x)), Q.imaginary(x)) is True
+    assert ask(Q.positive(Abs(x)), Q.infinite(x)) is False
+    assert ask(Q.extended_positive(Abs(x)), Q.infinite(x)) is True
 
 
 def test_nonpositive():
