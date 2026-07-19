@@ -1861,7 +1861,7 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     integrand, symbol = integral
 
-    if not (integrand.has(exp) and
+    if not (integrand.is_Mul and integrand.has(exp) and
             integrand.has(*primary_trighyper_functions)):
         return
 
@@ -1872,42 +1872,20 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
 
     quadratic_pattern = a * symbol**2 + b * symbol + c
     linear_pattern = a * symbol + b
-    ei_pattern = f * exp(linear_pattern)/symbol
-    factors = integrand.args
 
-    trig_match = False
-    gaussian_match = False
-    exp_match = False
-    for term in factors:
-        # trig/hyper(a*x**2 + b*x + c)
-        if (isinstance(term, primary_trighyper_functions)
-                and term.args[0].match(quadratic_pattern)):
-            trig_match = True
-            if gaussian_match or exp_match:
-                break
-        # trig/hyper(a*x**2 + b*x + c)**n
-        elif (isinstance(term, Pow)
-              and isinstance(term.args[0], primary_trighyper_functions)
-              and term.args[0].args[0].match(quadratic_pattern)):
-            trig_match = True
-            if gaussian_match or exp_match:
-                break
-        # exp(a*x**2 + b*x + c)
-        elif isinstance(term, exp) and term.args[0].match(quadratic_pattern):
-            gaussian_match = True
-            if trig_match:
-                break
-        # exp(a*x + b)
-        elif isinstance(term, exp) and term.args[0].match(linear_pattern):
-            exp_match = True
-            if trig_match:
-                break
-
-    match = ((trig_match and exp_match) or gaussian_match)
-    if not match:
-        match = integrand.match(ei_pattern)
-        if not match:
-            return
+    quadratic_phase = any(
+        term.args[0].match(quadratic_pattern)
+        for term in integrand.atoms(*primary_trighyper_functions)
+    )
+    guassian_pattern = exp(quadratic_pattern)
+    trigexp_over_x_pattern = f*exp(linear_pattern)/symbol
+    trigexp_over_x_match = integrand.match(trigexp_over_x_pattern)
+    if not (
+        any(term.match(guassian_pattern) for term in integrand.atoms(exp))
+        or trigexp_over_x_match
+        or quadratic_phase
+    ):
+        return
 
     # Replace trig and hyperbolic functions with their exponential forms
     rewritten = integrand.rewrite(primary_trighyper_functions, exp)
