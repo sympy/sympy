@@ -110,6 +110,12 @@ def test_dixon_character_table():
     ]
     assert tbl._conjugacy_class_reps[1] == Permutation(2)
 
+    g = Permutation(0, 1, 2, 3)
+    cc = [{g**2}, {g**3}, {g**4}, {g}]
+    tbl = dixon_character_table(cc)
+    assert list(tbl[:, 2]) == [1, 1, 1, 1]
+    assert tbl._conjugacy_class_reps == [g**2, g**3, g**4, g]
+
 
 GROUPS = [
     member

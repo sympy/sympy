@@ -35,8 +35,7 @@ class CharacterTable(MutableDenseMatrix):
     and columns corresponding to conjugacy classes. Each entry is the value of the
     character on the conjugacy class, which is the trace of the representation matrix.
 
-    The trivial character is always the first row, and the identity class is
-    the first column if the order of the conjugacy classes is not specified.
+    The trivial character is always the first row of the character table.
 
     Examples
     ========
@@ -86,7 +85,7 @@ class CharacterTable(MutableDenseMatrix):
     _conjugacy_class_reps: list[Permutation]
 
     def conjugacy_class_reps(self) -> list[Permutation]:
-        return self._conjugacy_class_reps
+        return self._conjugacy_class_reps[:]
 
     def copy(self):
         cp = self._fromrep(self._rep.copy())
@@ -95,12 +94,55 @@ class CharacterTable(MutableDenseMatrix):
 
     @property
     def zeta_order(self) -> int:
+        """
+        Returns the order of the primitive root of unity of the underlying
+        cyclotomic field.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import CharacterTable, AlternatingGroup
+        >>> CharacterTable.from_perm_group(AlternatingGroup(3)).zeta_order
+        3
+        >>> CharacterTable.from_perm_group(AlternatingGroup(5)).zeta_order
+        5
+
+        It returns 1 if the character table is over ZZ.
+
+        >>> from sympy.combinatorics import SymmetricGroup
+        >>> CharacterTable.from_perm_group(SymmetricGroup(4)).zeta_order
+        1
+        """
         if self._rep.domain.is_CyclotomicField:
             return self._rep.domain.zeta_order # type: ignore
         return 1
 
     @classmethod
     def from_perm_group(cls, G: PermutationGroup) -> CharacterTable:
+        """
+        Create a character table from a permutation group.
+
+        Parameters
+        ==========
+        G : PermutationGroup
+            The permutation group for which to create the character table.
+
+        Returns
+        ========
+        CharacterTable
+            The character table of the permutation group.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import CharacterTable, AlternatingGroup
+        >>> CharacterTable.from_perm_group(AlternatingGroup(4)) # doctest: +SKIP
+        Matrix([
+         [1,          1,          1,  1],
+         [1, -1 - zeta3,      zeta3,  1],
+         [1,      zeta3, -1 - zeta3,  1],
+         [3,          0,          0, -1]])
+        """
         return dixon_character_table(G.conjugacy_classes())
 
 
@@ -372,7 +414,7 @@ def _sort_characters(rows: list[list], dom: Domain):
 
 def dixon_character_table(conjugacy_classes: Sequence[CC]) -> CharacterTable:
     """
-    Compute the character table of a finite group from its conjugacy classes
+    Compute the character table of a permutation group from its conjugacy classes
     using Dixon's algorithm.
 
     Parameters
@@ -380,13 +422,26 @@ def dixon_character_table(conjugacy_classes: Sequence[CC]) -> CharacterTable:
     conjugacy_classes : Sequence[CC]
         The conjugacy classes of the group.
 
+    Examples
+    ==========
+
+    >>> from sympy.combinatorics.character_table import dixon_character_table
+    >>> from sympy.combinatorics import AlternatingGroup
+    >>> G = AlternatingGroup(4)
+    >>> dixon_character_table(G.conjugacy_classes()) # doctest: +SKIP
+    Matrix([
+     [1,          1,          1,  1],
+     [1, -1 - zeta3,      zeta3,  1],
+     [1,      zeta3, -1 - zeta3,  1],
+     [3,          0,          0, -1]])
+
     References
     ==========
     .. [1] Dixon, J.
              "High Speed Computation of Group Characters"
 
     .. [2] Schneider, J.
-             "Dixon's character table algorithm revisited""
+             "Dixon's character table algorithm revisited"
 
     .. [3] Holt, D., Eick, B., O'Brien, E.
              "Handbook of Computational Group Theory"
@@ -394,15 +449,22 @@ def dixon_character_table(conjugacy_classes: Sequence[CC]) -> CharacterTable:
     cc = conjugacy_classes
     size = [len(c) for c in cc]
     order = sum(size)
-    identity = size.index(1)
     exponent = lcm(*(int(next(iter(c)).order()) for c in cc))
     p = dixon_prime(order, exponent)
     Fp = FiniteField(p)
 
     # move the identity class to the front
+    for i, c in enumerate(cc):
+        if next(iter(c)).is_identity:
+            identity = i
+            break
+    else:
+        raise ValueError("No identity class found")
+
     if identity != 0:
         cc = list(cc)
         cc[identity], cc[0] = cc[0], cc[identity]
+
 
     mats = _compute_cmmatrices(cc, Fp)
     X = _simultaneous_diagonalize(mats)
