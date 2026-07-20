@@ -180,6 +180,8 @@ class AlgebraicZeroTensor(AtomicExpr):
     def __add__(self, other):
         """Additive identity -- return the other operand unchanged.
 
+        Raises ``ShapeMismatchError`` if *other* has a different shape.
+
         Examples
         ========
 
@@ -192,10 +194,25 @@ class AlgebraicZeroTensor(AtomicExpr):
         >>> print(Z + T)
         A ⊗ B
         """
+        from sympy.tensor.algebraic.algebraic_tensor import _shape_of, ShapeMismatchError
+        other_shape = _shape_of(other)
+        if other_shape is not None and other_shape != self._shape:
+            raise ShapeMismatchError(
+                f"Cannot add tensors of different shapes: "
+                f"{self._shape} vs {other_shape}"
+            )
+        if isinstance(other, AlgebraicZeroTensor):
+            if other._shape != self._shape:
+                raise ShapeMismatchError(
+                    f"Cannot add tensors of different shapes: "
+                    f"{self._shape} vs {other._shape}"
+                )
         return other
 
     def __radd__(self, other):
         """Additive identity -- return the other operand unchanged.
+
+        Raises ``ShapeMismatchError`` if *other* has a different shape.
 
         Examples
         ========
@@ -209,6 +226,19 @@ class AlgebraicZeroTensor(AtomicExpr):
         >>> print(T + Z)
         A ⊗ B
         """
+        from sympy.tensor.algebraic.algebraic_tensor import _shape_of, ShapeMismatchError
+        other_shape = _shape_of(other)
+        if other_shape is not None and other_shape != self._shape:
+            raise ShapeMismatchError(
+                f"Cannot add tensors of different shapes: "
+                f"{self._shape} vs {other_shape}"
+            )
+        if isinstance(other, AlgebraicZeroTensor):
+            if other._shape != self._shape:
+                raise ShapeMismatchError(
+                    f"Cannot add tensors of different shapes: "
+                    f"{self._shape} vs {other._shape}"
+                )
         return other
 
     def __sub__(self, other):
@@ -224,7 +254,7 @@ class AlgebraicZeroTensor(AtomicExpr):
         >>> T = AlgebraicPureTensor(A, B)
         >>> Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
         >>> print(Z - T)
-        -1*A ⊗ B + 0_{(3x4), (4x5)}
+        -1*A ⊗ B
         """
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         return AlgebraicTensor(self, -other)
@@ -242,7 +272,7 @@ class AlgebraicZeroTensor(AtomicExpr):
         >>> T = AlgebraicPureTensor(A, B)
         >>> Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
         >>> print(T - Z)
-        A ⊗ B + 0_{(3x4), (4x5)}
+        A ⊗ B
         """
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         return AlgebraicTensor(other, -self)
@@ -319,8 +349,65 @@ class AlgebraicZeroTensor(AtomicExpr):
     def copy(self):
         return self
 
+    def _eval_conjugate(self):
+        """Return self. The conjugate of a zero tensor is itself.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.algebraic import AlgebraicZeroTensor
+        >>> Z = AlgebraicZeroTensor((3, 4))
+        >>> Z.conjugate() is Z
+        True
+        """
+        return self
+
     def expand(self, **kwargs):
         """Return self unchanged. A zero tensor is already in expanded form."""
+        return self
+
+    def doit(self, **hints):
+        """Return self unchanged. A zero tensor has no sub-expressions to evaluate.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.algebraic import AlgebraicZeroTensor
+        >>> Z = AlgebraicZeroTensor((3, 4))
+        >>> Z.doit() is Z
+        True
+        """
+        return self
+
+    def diff(self, *symbols, **assumptions):
+        """Differentiate this zero tensor with respect to *symbols*.
+
+        The derivative of a zero tensor is always a zero tensor of the
+        same shape, since zero has no symbolic content to differentiate.
+
+        Parameters
+        ----------
+        *symbols : Symbol or str
+            Symbol(s) to differentiate with respect to.
+        **assumptions : dict
+            Passed through (ignored).
+
+        Returns
+        -------
+        AlgebraicZeroTensor
+            Returns self unchanged.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.algebraic import AlgebraicZeroTensor
+        >>> from sympy.abc import x
+        >>> Z = AlgebraicZeroTensor((3, 4))
+        >>> Z.diff(x) is Z
+        True
+        >>> Z.diff(x, x) is Z
+        True
+        """
         return self
 
     def display(self, mode="latex"):

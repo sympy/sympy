@@ -610,9 +610,219 @@ class AlgebraicPureTensor(Mul):
             return AlgebraicPureTensor(*transposed_factors)
         return AlgebraicPureTensor(self.coeff, *transposed_factors)
 
+    def _eval_conjugate(self):
+        """Return the complex conjugate of this pure tensor.
+
+        Applies ``.conjugate()`` to the commutative coefficient and to
+        every tensor-product factor, then reassembles the result.
+
+        Returns
+        -------
+        AlgebraicPureTensor, AlgebraicZeroTensor, or matrix
+            The conjugated tensor.
+
+        Examples
+        ========
+
+        Conjugate a tensor with a complex coefficient:
+
+        >>> from sympy import I
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(1 + I, A, B)
+        >>> TC = T.conjugate()
+        >>> TC.coeff
+        1 - I
+
+        MatrixSymbol factors are conjugated via their .conjugate() method
+        (which returns Adjoint(Transpose(self)) for symbolic matrices):
+
+        >>> TC.factors[0] == A.conjugate()
+        True
+        >>> TC.factors[1] == B.conjugate()
+        True
+
+        Conjugate a tensor with a numeric matrix factor:
+
+        >>> from sympy.matrices import ImmutableDenseMatrix
+        >>> M = ImmutableDenseMatrix([[1 + I, 2], [3, 4 - I]])
+        >>> N = MatrixSymbol("N", 2, 3)
+        >>> T2 = AlgebraicPureTensor(M, N)
+        >>> T2C = T2.conjugate()
+        >>> T2C.factors[0][0, 0]
+        1 - I
+        """
+        coeff = self.coeff
+        if hasattr(coeff, 'conjugate'):
+            coeff = coeff.conjugate()
+
+        conjugated_factors = []
+        for f in self.factors:
+            if hasattr(f, 'conjugate'):
+                conjugated_factors.append(f.conjugate())
+            else:
+                conjugated_factors.append(f)
+
+        if coeff is S.One:
+            return AlgebraicPureTensor(*conjugated_factors)
+        return AlgebraicPureTensor(coeff, *conjugated_factors)
+
     def simplify(self):
         from sympy.tensor.algebraic.simplify import _simplify_algebraic_pure_tensor
         return _simplify_algebraic_pure_tensor(self)
+
+    def doit(self, **hints):
+        """Evaluate the coefficient and each tensor factor.
+
+        Applies ``.doit()`` to the commutative coefficient and to every
+        tensor-product factor, then reassembles the result.  If any
+        factor evaluates to zero, the result is an ``AlgebraicZeroTensor``.
+
+        Parameters
+        ----------
+        **hints : dict
+            Passed through to the ``doit()`` calls on factors.
+
+        Returns
+        -------
+        AlgebraicPureTensor, AlgebraicZeroTensor, or bare factor
+            The reassembled tensor with evaluated components.
+
+        Examples
+        ========
+
+        A tensor with no unevaluated sub-expressions returns itself:
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(A, B)
+        >>> T.doit() is T
+        True
+
+        With a symbolic coefficient:
+
+        >>> from sympy.abc import x, y
+        >>> T2 = AlgebraicPureTensor(x + y, A, B)
+        >>> T2.doit().coeff
+        x + y
+
+        With deep=False, sub-expressions are not evaluated:
+
+        >>> from sympy.matrices.expressions import MatAdd
+        >>> C = MatrixSymbol("C", 4, 5)
+        >>> T3 = AlgebraicPureTensor(A, MatAdd(B, C))
+        >>> T3.doit(deep=False) is T3
+        True
+        """
+        deep = hints.get('deep', True)
+        coeff = self.coeff
+        if hasattr(coeff, 'doit') and deep:
+            coeff = coeff.doit(**hints)
+
+        factors = []
+        for f in self.factors:
+            if hasattr(f, 'doit') and deep:
+                factors.append(f.doit(**hints))
+            else:
+                factors.append(f)
+
+        if coeff is S.One:
+            return AlgebraicPureTensor(*factors)
+        return AlgebraicPureTensor(coeff, *factors)
+
+    def diff(self, *symbols, **assumptions):
+        """Differentiate this pure tensor with respect to *symbols*.
+
+        Applies the Leibniz rule: the derivative acts on the coefficient
+        and each tensor factor individually, summing the results.  For
+        ``T = c * f1 ⊗ f2 ⊗ … ⊗ fn``:
+
+            dT/dx = (dc/dx)*f1⊗…⊗fn
+                   + c*(df1/dx)⊗f2⊗…⊗fn
+                   + …
+                   + c*f1⊗…⊗(dfn/dx)
+
+        Parameters
+        ----------
+        *symbols : Symbol or str
+            Symbol(s) to differentiate with respect to.
+        **assumptions : dict
+            Passed through to the underlying ``.diff()`` calls.
+
+        Returns
+        -------
+        AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor, or matrix
+            The differentiated tensor.  If only one nonzero term survives
+            the Leibniz expansion, a single term is returned.
+
+        Examples
+        ========
+
+        Differentiate a tensor with symbolic coefficient:
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> from sympy.abc import x
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(x**2, A, B)
+        >>> print(T.diff(x))
+        2*x*A ⊗ B
+
+        Differentiate a tensor factor that depends on the symbol:
+
+        >>> from sympy.matrices import ImmutableDenseMatrix
+        >>> M = ImmutableDenseMatrix([[x, x**2], [1, x]])
+        >>> N = MatrixSymbol("N", 2, 3)
+        >>> T2 = AlgebraicPureTensor(M, N)
+        >>> T2.diff(x)  # doctest: +SKIP
+
+        Leibniz rule -- symbol appears in both coefficient and a factor:
+
+        >>> M2 = ImmutableDenseMatrix([[x, 1], [0, x]])
+        >>> T3 = AlgebraicPureTensor(x, M2, N)
+        >>> T3_diff = T3.diff(x)
+        >>> len(T3_diff.args)
+        2
+        """
+        from sympy.core.singleton import S
+        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
+
+        coeff = self.coeff
+        factors = self.factors
+
+        terms = []
+
+        # Differentiate the coefficient
+        dc = coeff.diff(*symbols, **assumptions)
+        if dc is not S.Zero:
+            if dc is S.One:
+                terms.append(AlgebraicPureTensor(*factors))
+            else:
+                terms.append(AlgebraicPureTensor(dc, *factors))
+
+        # Differentiate each factor
+        for i, f in enumerate(factors):
+            df = f.diff(*symbols, **assumptions)
+            if df is not S.Zero and not _is_zero_like(df):
+                new_factors = list(factors)
+                new_factors[i] = df
+                if coeff is S.One:
+                    terms.append(AlgebraicPureTensor(*new_factors))
+                else:
+                    terms.append(AlgebraicPureTensor(coeff, *new_factors))
+
+        if not terms:
+            return AlgebraicZeroTensor(self.shape)
+
+        if len(terms) == 1:
+            return terms[0]
+
+        return AlgebraicTensor(*terms)
 
     def display(self, mode="latex"):
         """Display this tensor using IPython display or fallback to print.

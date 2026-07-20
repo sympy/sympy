@@ -345,8 +345,7 @@ def test_matrix_with_zero_tensor():
     zt = AlgebraicZeroTensor(((3, 4), (4, 5)))
     result = algebraic_tensor_product(zt, E)
     assert isinstance(result, AlgebraicZeroTensor)
-    # Zero tensor sentinel triggers early, preserves zero tensor shape
-    assert result.shape == ((3, 4), (4, 5))
+    assert result.shape == ((3, 4), (4, 5), (5, 3))
 
 
 def test_zero_tensor_with_pure_tensor():
@@ -364,12 +363,11 @@ def test_zero_tensor_with_algebraic_tensor():
 
 
 def test_two_zero_tensors():
-    zt1 = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    zt2 = AlgebraicZeroTensor(((5, 3),))
-    result = algebraic_tensor_product(zt1, zt2)
-    assert isinstance(result, AlgebraicZeroTensor)
-    # Zero tensor sentinel triggers on first arg, uses its shape
-    assert result.shape == ((3, 4), (4, 5))
+        zt1 = AlgebraicZeroTensor(((3, 4), (4, 5)))
+        zt2 = AlgebraicZeroTensor(((5, 3),))
+        result = algebraic_tensor_product(zt1, zt2)
+        assert isinstance(result, AlgebraicZeroTensor)
+        assert result.shape == ((3, 4), (4, 5), (5, 3))
 
 
 def test_zero_tensor_with_scalar():

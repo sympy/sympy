@@ -4,12 +4,12 @@ import pickle
 
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
+from sympy.abc import x, y
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.testing.pytest import raises
 
 from sympy.tensor.algebraic import (
     AlgebraicPureTensor,
-    AlgebraicTensor,
     AlgebraicZeroTensor,
     algebraic_zero_tensor,
 )
@@ -258,19 +258,21 @@ def test_radd_bare_matrix():
 # ---------------------------------------------------------------------------
 
 def test_sub_pure_tensor():
-    """Zero - PureTensor returns AlgebraicTensor with negated term."""
+    """Zero - PureTensor returns negated PureTensor (zero dropped)."""
     T = AlgebraicPureTensor(A, B)
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     result = Z - T
-    assert isinstance(result, AlgebraicTensor)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result == -T
 
 
 def test_rsub_pure_tensor():
-    """PureTensor - Zero returns AlgebraicTensor."""
+    """PureTensor - Zero returns PureTensor (zero dropped)."""
     T = AlgebraicPureTensor(A, B)
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     result = T - Z
-    assert isinstance(result, AlgebraicTensor)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result == T
 
 
 def test_sub_zero_with_zero():
@@ -444,9 +446,22 @@ def test_expand_with_kwargs():
 # ---------------------------------------------------------------------------
 
 def test_doit():
-    """doit() returns self (inherited from AtomicExpr)."""
+    """doit() returns self (zero tensor has nothing to evaluate)."""
     Z = AlgebraicZeroTensor((3, 4))
     assert Z.doit() is Z
+
+
+def test_doit_multi_factor():
+    """doit() on multi-factor zero tensor returns self."""
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    assert Z.doit() is Z
+
+
+def test_doit_with_hints():
+    """doit() with hints returns self."""
+    Z = AlgebraicZeroTensor((3, 4))
+    assert Z.doit(deep=True) is Z
+    assert Z.doit(deep=False) is Z
 
 
 def test_subs():
@@ -557,3 +572,59 @@ def test_hash_different_shapes():
     Z1 = AlgebraicZeroTensor((3, 4))
     Z2 = AlgebraicZeroTensor((2, 3))
     assert hash(Z1) != hash(Z2)
+
+
+# ---------------------------------------------------------------------------
+# Diff
+# ---------------------------------------------------------------------------
+
+def test_diff_returns_self():
+    """diff() returns self for any symbol."""
+    Z = AlgebraicZeroTensor((3, 4))
+    assert Z.diff(x) is Z
+
+
+def test_diff_multi_symbol():
+    """diff() with multiple symbols returns self."""
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    assert Z.diff(x, y) is Z
+
+
+def test_diff_second_order():
+    """Second-order diff() returns self."""
+    Z = AlgebraicZeroTensor((3, 4))
+    assert Z.diff(x, x) is Z
+
+
+def test_diff_with_assumptions():
+    """diff() with assumptions kwargs returns self."""
+    Z = AlgebraicZeroTensor((3, 4))
+    assert Z.diff(x, evaluate=True) is Z
+
+
+# ---------------------------------------------------------------------------
+# Conjugate
+# ---------------------------------------------------------------------------
+
+def test_conjugate_returns_self():
+    """conjugate() returns self for a single-factor zero tensor."""
+    Z = AlgebraicZeroTensor((3, 4))
+    assert Z.conjugate() is Z
+
+
+def test_conjugate_multi_factor():
+    """conjugate() returns self for a multi-factor zero tensor."""
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    assert Z.conjugate() is Z
+
+
+def test_conjugate_preserves_shape():
+    """conjugate() preserves the zero tensor shape."""
+    Z = AlgebraicZeroTensor(((2, 3), (3, 4), (4, 5)))
+    assert Z.conjugate().shape == Z.shape
+
+
+def test_conjugate_preserves_type():
+    """conjugate() preserves the AlgebraicZeroTensor type."""
+    Z = AlgebraicZeroTensor((3, 4))
+    assert isinstance(Z.conjugate(), AlgebraicZeroTensor)

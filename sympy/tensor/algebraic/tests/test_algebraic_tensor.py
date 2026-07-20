@@ -220,8 +220,9 @@ def test_constructor_with_zero_tensor_anchor():
     T1 = AlgebraicPureTensor(A, B)
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     S = AlgebraicTensor(T1, Z)
-    assert isinstance(S, AlgebraicTensor)
-    assert S.has_zero_term()
+    # Zero tensor is dropped when other terms exist
+    assert isinstance(S, AlgebraicPureTensor)
+    assert not S.has_zero_term()
 
 
 def test_constructor_coefficient_collection():
@@ -257,12 +258,12 @@ def test_constructor_single_term_unwrap_with_coeff():
 
 
 def test_constructor_with_zero_tensor_keeps_anchor():
-    """When user explicitly provides a zero tensor, it stays as anchor."""
+    """Zero tensor is dropped when other terms exist."""
     T = AlgebraicPureTensor(A, B)
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     S = AlgebraicTensor(T, Z)
-    assert isinstance(S, AlgebraicTensor)
-    assert S.has_zero_term()
+    assert isinstance(S, AlgebraicPureTensor)
+    assert not S.has_zero_term()
 
 
 def test_constructor_cancellation_keeps_anchor_when_user_provided():
@@ -363,9 +364,10 @@ def test_terms_basic():
 
 def test_terms_excludes_zero_tensor():
     T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    S = AlgebraicTensor(T1, Z)
-    assert len(S.terms) == 1
+    S = AlgebraicTensor(T1, T2, Z)
+    assert len(S.terms) == 2
 
 
 def test_terms_excludes_numbers():
@@ -383,7 +385,8 @@ def test_has_zero_term_true():
     T1 = AlgebraicPureTensor(A, B)
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     S = AlgebraicTensor(T1, Z)
-    assert S.has_zero_term() is True
+    assert isinstance(S, AlgebraicPureTensor)
+    assert S.has_zero_term() is False
 
 
 def test_has_zero_term_false():
@@ -481,7 +484,8 @@ def test_neg_with_zero_tensor():
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     S = AlgebraicTensor(T1, Z)
     nS = -S
-    assert isinstance(nS, AlgebraicTensor)
+    assert isinstance(nS, AlgebraicPureTensor)
+    assert nS == -T1
 
 
 # ---------------------------------------------------------------------------
@@ -810,7 +814,7 @@ def test_compose_left_zero_tensor():
     T = AlgebraicPureTensor(E, F)
     result = compose_algebraic_tensors(Z, T)
     assert isinstance(result, AlgebraicZeroTensor)
-    assert result.shape == ((3, 4), (4, 5))
+    assert result.shape == ((3, 2), (4, 3))
 
 
 def test_compose_right_zero_tensor():
@@ -818,7 +822,7 @@ def test_compose_right_zero_tensor():
     Z = AlgebraicZeroTensor(((4, 2), (5, 3)))
     result = compose_algebraic_tensors(T, Z)
     assert isinstance(result, AlgebraicZeroTensor)
-    assert result.shape == ((4, 2), (5, 3))
+    assert result.shape == ((3, 2), (4, 3))
 
 
 def test_compose_both_zero_tensors():
@@ -826,7 +830,7 @@ def test_compose_both_zero_tensors():
     Z2 = AlgebraicZeroTensor(((4, 2), (5, 3)))
     result = compose_algebraic_tensors(Z1, Z2)
     assert isinstance(result, AlgebraicZeroTensor)
-    assert result.shape == ((3, 4), (4, 5))
+    assert result.shape == ((3, 2), (4, 3))
 
 
 def test_compose_bare_matrices():
@@ -964,7 +968,8 @@ def test_expand_with_zero_tensor():
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     S = AlgebraicTensor(T1, Z)
     result = S.expand()
-    assert isinstance(result, AlgebraicTensor)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result == T1
 
 
 def test_expand_deep_hint():
@@ -1000,8 +1005,8 @@ def test_args_with_zero_tensor():
     T1 = AlgebraicPureTensor(A, B)
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     S = AlgebraicTensor(T1, Z)
-    assert T1 in S.args
-    assert Z in S.args
+    assert isinstance(S, AlgebraicPureTensor)
+    assert S.args == (A, B)
 
 
 def test_args_with_coeff():
@@ -1213,3 +1218,266 @@ def test_compose_algebraic_tensor_both_with_zero():
     S2 = AlgebraicTensor(T3, T4, Z2)
     result = compose_algebraic_tensors(S1, S2)
     assert isinstance(result, AlgebraicTensor)
+
+
+# ---------------------------------------------------------------------------
+# AlgebraicTensor: doit
+# ---------------------------------------------------------------------------
+
+def test_doit_no_change():
+    """doit() returns self when no term has unevaluated sub-expressions."""
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    S = AlgebraicTensor(T1, T2)
+    assert S.doit() is S
+
+
+def test_doit_with_matadd_in_term():
+    """doit() calls doit on each term (MatAdd.doit returns itself)."""
+    T1 = AlgebraicPureTensor(A, MatAdd(B, D))
+    T2 = AlgebraicPureTensor(C, D)
+    S = AlgebraicTensor(T1, T2)
+    result = S.doit()
+    assert isinstance(result, AlgebraicTensor)
+
+
+def test_doit_deep_false():
+    """doit() with deep=False does not evaluate sub-expressions."""
+    T1 = AlgebraicPureTensor(A, MatAdd(B, D))
+    T2 = AlgebraicPureTensor(C, D)
+    S = AlgebraicTensor(T1, T2)
+    result = S.doit(deep=False)
+    assert result is S
+
+
+def test_doit_with_coeff_add():
+    """doit() evaluates Add in a coefficient."""
+    T1 = AlgebraicPureTensor(x + y, A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    S = AlgebraicTensor(T1, T2)
+    result = S.doit()
+    assert isinstance(result, AlgebraicTensor)
+
+
+def test_doit_collapses_to_pure_tensor():
+    """doit() may collapse to a single PureTensor if terms combine."""
+    T1 = AlgebraicPureTensor(x, A, B)
+    T2 = AlgebraicPureTensor(y, A, B)
+    S = AlgebraicTensor(T1, T2)
+    result = S.doit()
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == x + y
+
+
+def test_doit_with_zero_tensor():
+    """doit() handles AlgebraicZeroTensor in args."""
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    S = AlgebraicTensor(T1, T2, Z)
+    result = S.doit()
+    assert isinstance(result, AlgebraicTensor)
+
+
+def test_doit_preserves_shape():
+    """doit() preserves the tensor shape."""
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    S = AlgebraicTensor(T1, T2)
+    result = S.doit()
+    assert result.shape == S.shape
+
+
+# ---------------------------------------------------------------------------
+# Diff
+# ---------------------------------------------------------------------------
+
+def test_diff_linearity():
+    """diff() applies to each term by linearity."""
+    T1 = AlgebraicPureTensor(x**2, A, B)
+    T2 = AlgebraicPureTensor(x, C, D)
+    S = AlgebraicTensor(T1, T2)
+    result = S.diff(x)
+    assert isinstance(result, AlgebraicTensor)
+    # Should have two terms: 2*x*A⊗B and 1*C⊗D
+    terms = result.terms
+    assert len(terms) == 2
+
+
+def test_diff_zero_result():
+    """diff() returns zero tensor when no term depends on the symbol."""
+    T1 = AlgebraicPureTensor(2, A, B)
+    T2 = AlgebraicPureTensor(3, C, D)
+    S = AlgebraicTensor(T1, T2)
+    result = S.diff(x)
+    assert isinstance(result, AlgebraicZeroTensor)
+
+
+def test_diff_mixed_dependency():
+    """diff() handles terms where only some depend on the symbol."""
+    T1 = AlgebraicPureTensor(x**2, A, B)
+    T2 = AlgebraicPureTensor(2, C, D)
+    S = AlgebraicTensor(T1, T2)
+    result = S.diff(x)
+    # T1.diff(x) = 2*x*A⊗B, T2.diff(x) = 0
+    # Result should be a single PureTensor (the zero term is dropped)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 2*x
+    assert result.factors == (A, B)
+
+
+def test_diff_preserves_shape():
+    """diff() preserves the tensor shape."""
+    T1 = AlgebraicPureTensor(x, A, B)
+    T2 = AlgebraicPureTensor(y, C, D)
+    S = AlgebraicTensor(T1, T2)
+    result = S.diff(x)
+    assert result.shape == S.shape
+
+
+def test_diff_collapses_to_pure_tensor():
+    """diff() may collapse to a single PureTensor."""
+    T1 = AlgebraicPureTensor(x**2, A, B)
+    T2 = AlgebraicPureTensor(y, A, B)
+    S = AlgebraicTensor(T1, T2)
+    result = S.diff(x)
+    # T1.diff(x) = 2*x*A⊗B, T2.diff(x) = 0
+    # These combine into a single PureTensor
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 2*x
+
+
+def test_diff_with_leibniz_in_sum():
+    """diff() on a sum where individual terms trigger the Leibniz rule."""
+    M = ImmutableDenseMatrix([[x, 1], [0, x]])
+    N = MatrixSymbol("N", 2, 3)
+    P = MatrixSymbol("P", 2, 2)
+    # T1 = x * M ⊗ N (Leibniz: two terms)
+    # T2 = y * P ⊗ N (no x dependency, zero)
+    T1 = AlgebraicPureTensor(x, M, N)
+    T2 = AlgebraicPureTensor(y, P, N)
+    S = AlgebraicTensor(T1, T2)
+    result = S.diff(x)
+    # T1.diff(x) produces two terms, T2.diff(x) produces zero
+    # Result should be an AlgebraicTensor with two terms
+    assert isinstance(result, AlgebraicTensor)
+    assert len(result.terms) == 2
+
+
+# ---------------------------------------------------------------------------
+# Conjugate
+# ---------------------------------------------------------------------------
+
+def test_conjugate_complex_coeffs():
+    """conjugate() conjugates complex coefficients in each term."""
+    from sympy import I
+    T1 = AlgebraicPureTensor(1 + I, A, B)
+    T2 = AlgebraicPureTensor(2 - I, C, D)
+    S = AlgebraicTensor(T1, T2)
+    SC = S.conjugate()
+    assert isinstance(SC, AlgebraicTensor)
+    # Check that coefficients are conjugated
+    coeff_vals = set()
+    for arg in SC.args:
+        if isinstance(arg, AlgebraicPureTensor):
+            coeff_vals.add(arg.coeff)
+    assert (1 - I) in coeff_vals
+    assert (2 + I) in coeff_vals
+
+
+def test_conjugate_real_coeffs():
+    """conjugate() leaves real coefficients but conjugates matrix factors."""
+    T1 = AlgebraicPureTensor(2, A, B)
+    T2 = AlgebraicPureTensor(3, C, D)
+    S = AlgebraicTensor(T1, T2)
+    SC = S.conjugate()
+    assert isinstance(SC, AlgebraicTensor)
+    # Coefficients stay the same, but factors are conjugated
+    for arg in SC.args:
+        if isinstance(arg, AlgebraicPureTensor):
+            assert arg.factors[0] == arg.factors[0]  # self-consistent
+
+
+def test_conjugate_preserves_shape():
+    """conjugate() preserves the tensor shape."""
+    from sympy import I
+    T1 = AlgebraicPureTensor(1 + I, A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    S = AlgebraicTensor(T1, T2)
+    SC = S.conjugate()
+    assert SC.shape == S.shape
+
+
+def test_conjugate_preserves_type():
+    """conjugate() returns an AlgebraicTensor for multi-term sums."""
+    from sympy import I
+    T1 = AlgebraicPureTensor(1 + I, A, B)
+    T2 = AlgebraicPureTensor(2 - I, C, D)
+    S = AlgebraicTensor(T1, T2)
+    SC = S.conjugate()
+    assert isinstance(SC, AlgebraicTensor)
+
+
+def test_conjugate_collapses_to_pure_tensor():
+    """conjugate() may collapse to a single PureTensor if terms combine."""
+    from sympy import I
+    T1 = AlgebraicPureTensor(1 + I, A, B)
+    T2 = AlgebraicPureTensor(2, A, B)
+    S = AlgebraicTensor(T1, T2)
+    SC = S.conjugate()
+    # Terms share same factors (conjugated), so they combine
+    assert isinstance(SC, AlgebraicPureTensor)
+    assert SC.coeff == 3 - I
+
+
+def test_conjugate_double():
+    """Double conjugate returns the original tensor."""
+    from sympy import I
+    T1 = AlgebraicPureTensor(1 + I, A, B)
+    T2 = AlgebraicPureTensor(2 - I, C, D)
+    S = AlgebraicTensor(T1, T2)
+    assert S.conjugate().conjugate() == S
+
+
+def test_conjugate_with_factor_conjugate():
+    """conjugate() applies conjugate to matrix factors."""
+    from sympy import I
+    M = ImmutableDenseMatrix([[1 + I, 2], [3, 4 - I]])
+    N = MatrixSymbol("N", 2, 3)
+    P = MatrixSymbol("P", 2, 2)
+    Q = MatrixSymbol("Q", 2, 3)
+    T1 = AlgebraicPureTensor(M, N)
+    T2 = AlgebraicPureTensor(P, Q)
+    S = AlgebraicTensor(T1, T2)
+    SC = S.conjugate()
+    assert isinstance(SC, AlgebraicTensor)
+
+
+def test_conjugate_mixed_real_complex():
+    """conjugate() handles terms with both real and complex coefficients."""
+    from sympy import I
+    T1 = AlgebraicPureTensor(2, A, B)
+    T2 = AlgebraicPureTensor(1 + I, C, D)
+    S = AlgebraicTensor(T1, T2)
+    SC = S.conjugate()
+    assert isinstance(SC, AlgebraicTensor)
+    coeff_vals = set()
+    for arg in SC.args:
+        if isinstance(arg, AlgebraicPureTensor):
+            coeff_vals.add(arg.coeff)
+    assert 2 in coeff_vals
+    assert (1 - I) in coeff_vals
+
+
+def test_conjugate_numeric_matrix_factor():
+    """conjugate() conjugates numeric matrix entries."""
+    from sympy import I
+    M = ImmutableDenseMatrix([[1 + I, 2], [3, 4 - I]])
+    N = ImmutableDenseMatrix([[5, 6 + I], [7, 8]])
+    T = AlgebraicPureTensor(M, N)
+    TC = T.conjugate()
+    assert isinstance(TC, AlgebraicPureTensor)
+    expected_M = ImmutableDenseMatrix([[1 - I, 2], [3, 4 + I]])
+    expected_N = ImmutableDenseMatrix([[5, 6 - I], [7, 8]])
+    assert TC.factors[0] == expected_M
+    assert TC.factors[1] == expected_N

@@ -11,15 +11,15 @@ This module provides :func:`tensorsimplify`, the public entry point for
 simplifying algebraic tensor expressions.  The simplification pipeline
 consists of two phases:
 
-    1. **Proportionality factoring** -- merges proportional
+    1. **Commutativity-based simplification** -- decomposes terms by their
+       commutativity shape, groups by commutative patterns, applies
+       equality factoring to non-commutative components, and
+       reconstructs the full expression.
+
+    2. **Equality factoring** -- merges equal or negated
        :class:`~sympy.tensor.algebraic.AlgebraicPureTensor`
        terms within a sum by combining coefficients or creating linear
        combinations at non-proportional factor slots.
-
-    2. **Commutativity-based simplification** -- decomposes terms by their
-       commutativity shape, groups by commutative patterns, applies
-       proportionality factoring to non-commutative components, and
-       reconstructs the full expression.
 
 Examples
 ========
@@ -157,16 +157,16 @@ def _proportionality_ratio(factor1, factor2):
 # ---------------------------------------------------------------------------
 
 def _extract_pt_and_coeff(term):
-    """Extract (unit_pt, coefficient) from a term.
+    """Extract (coefficient, factors) from a term.
 
-    Returns (unit_pt, coeff) where unit_pt is either a bare matrix-like object,
-    an AlgebraicPureTensor, or the term itself (when no extraction is possible).
-    coeff is the extracted commutative coefficient (S.One if none).
+    Returns (coeff, factors) where coeff is the commutative coefficient
+    (S.One if none) and factors is a list of tensor-product factors.
 
     Handles:
-    - AlgebraicPureTensor directly (coeff extracted from term.coeff)
-    - Mul with direct matrix factors
-    - Anything else -> (term, S.One)
+    - AlgebraicPureTensor (coeff from term.coeff, factors from term.factors)
+    - Mul with direct matrix factors (extracts commutative coeff and matrices)
+    - Bare matrix-like objects -> (S.One, [term])
+    - Anything else -> (S.One, [term])
 
     Examples
     ========
@@ -177,24 +177,23 @@ def _extract_pt_and_coeff(term):
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> T = AlgebraicPureTensor(2, A, B)
-    >>> pt, coeff = _extract_pt_and_coeff(T)
+    >>> coeff, factors = _extract_pt_and_coeff(T)
     >>> coeff
     2
+    >>> factors
+    [A, B]
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
     if isinstance(term, AlgebraicPureTensor):
-        # Plain AlgebraicPureTensor - extract coefficient
-        return (term, term.coeff)
+        return (term.coeff, list(term.factors))
 
     if isinstance(term, Mul):
-        # Handle MatMul with direct matrix factors: extract commutative coeff
-        # and matrix-like factors (objects with .shape attribute)
         matrix_factors = []
         commutative_parts = []
         for a in term.args:
             if isinstance(a, AlgebraicPureTensor):
-                continue  # Already handled above
+                continue
             if hasattr(a, 'shape') and a.shape is not None:
                 matrix_factors.append(a)
             elif hasattr(a, 'is_commutative') and a.is_commutative:
@@ -203,9 +202,9 @@ def _extract_pt_and_coeff(term):
         if matrix_factors:
             coeff = Mul(*commutative_parts, evaluate=True) if commutative_parts else S.One
             coeff = _get_sympy_simplify()(coeff)
-            return (None, coeff, matrix_factors)
+            return (coeff, matrix_factors)
 
-    return (term, S.One)
+    return (S.One, [term])
 
 
 def _build_pt(coeff, factors):
@@ -245,221 +244,6 @@ def _build_pt(coeff, factors):
         return AlgebraicPureTensor(*factors)
 
     return AlgebraicPureTensor(coeff, *factors)
-
-def _try_merge_for_slot(entries, allowed_diff_slot, _s, equality_only=False):
-    """Try to merge entries allowing only *allowed_diff_slot* as the
-    non-proportional slot (or fully proportional, diff_slot is None).
-
-    Parameters
-    ----------
-    entries : list of dict
-        Mutable list of entry dicts with 'coeff' and 'factors'.
-    allowed_diff_slot : int
-        The single slot index allowed to be non-proportional.
-    _s : callable
-        SymPy simplify function.
-    equality_only : bool
-        If True, only merge when combined_ratio is +1 or -1 and use
-        direct add/subtract at the diff slot instead of coefficient-weighted
-        linear combination.
-
-    Returns
-    -------
-    bool
-        True if any merge was performed.
-    """
-    from sympy.core.add import Add as _Add
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-
-    if len(entries) < 2:
-        return False
-
-    changed = True
-    while changed and len(entries) >= 2:
-        changed = False
-        pivot_idx = 0
-
-        while pivot_idx < len(entries):
-            merged = False
-            pivot = entries[pivot_idx]
-
-            for sel_idx in range(pivot_idx + 1, len(entries)):
-                selected = entries[sel_idx]
-
-                if len(pivot['factors']) != len(selected['factors']):
-                    continue
-
-                ratios = []
-                diff_slot = None
-
-                for slot in range(len(pivot['factors'])):
-                    r = _proportionality_ratio(
-                        selected['factors'][slot],
-                        pivot['factors'][slot]
-                    )
-                    if r is not None:
-                        ratios.append(r)
-                    else:
-                        if diff_slot is not None:
-                            ratios = None
-                            break
-                        diff_slot = slot
-                        ratios.append(None)
-
-                if ratios is None:
-                    continue
-
-                if diff_slot is not None and diff_slot != allowed_diff_slot:
-                    continue
-
-                combined_ratio = S.One
-                for r in ratios:
-                    if r is not None:
-                        combined_ratio = combined_ratio * r
-
-                if equality_only:
-                    total_ratio = _s(combined_ratio * selected['coeff'] / pivot['coeff'])
-                    if total_ratio not in (S.One, S.NegativeOne):
-                        continue
-
-                if equality_only and diff_slot is not None:
-                    pivot_factor = pivot['factors'][diff_slot]
-                    sel_factor = selected['factors'][diff_slot]
-
-                    if total_ratio is S.One:
-                        combined_factor = _s(
-                            _Add(pivot_factor, sel_factor)
-                        )
-                    else:
-                        combined_factor = _s(
-                            _Add(pivot_factor, -sel_factor)
-                        )
-
-                    if combined_factor is S.Zero:
-                        entries.pop(sel_idx)
-                        entries.pop(pivot_idx)
-                        pivot_idx = 0
-                        changed = True
-                        merged = True
-                        break
-
-                    new_factors = list(pivot['factors'])
-                    new_factors[diff_slot] = combined_factor
-
-                    result = _build_pt(pivot['coeff'], new_factors)
-
-                    if isinstance(result, AlgebraicZeroTensor):
-                        entries.pop(sel_idx)
-                        entries.pop(pivot_idx)
-                        pivot_idx = 0
-                        changed = True
-                        merged = True
-                        break
-
-                    new_extracted = _extract_pt_and_coeff(result)
-                    if len(new_extracted) == 3:
-                        _, new_c, new_factors_list = new_extracted
-                    else:
-                        new_pt, new_c = new_extracted
-                        if isinstance(new_pt, AlgebraicPureTensor):
-                            new_factors_list = list(new_pt.factors)
-                        elif hasattr(new_pt, 'shape'):
-                            new_factors_list = [new_pt]
-                        else:
-                            new_factors_list = [new_pt]
-
-                    entries[pivot_idx] = {
-                        'coeff': new_c,
-                        'factors': new_factors_list,
-                    }
-
-                    entries.pop(sel_idx)
-                    pivot_idx = 0
-                    changed = True
-                    merged = True
-                    break
-
-                add_coeff = _s(combined_ratio * selected['coeff'])
-
-                if diff_slot is None:
-                    new_coeff = _s(pivot['coeff'] + add_coeff)
-
-                    if new_coeff is S.Zero:
-                        entries.pop(sel_idx)
-                        entries.pop(pivot_idx)
-                        pivot_idx = 0
-                        changed = True
-                        merged = True
-                        break
-
-                    pivot['coeff'] = new_coeff
-                    entries.pop(sel_idx)
-                    pivot_idx = 0
-                    changed = True
-                    merged = True
-                    break
-
-                else:
-                    new_coeff_pivot = _s(pivot['coeff'])
-                    new_coeff_sel = add_coeff
-
-                    pivot_factor = pivot['factors'][diff_slot]
-                    sel_factor = selected['factors'][diff_slot]
-
-                    combined_factor = _s(
-                        _Add(new_coeff_pivot * pivot_factor,
-                             new_coeff_sel * sel_factor)
-                    )
-
-                    if combined_factor is S.Zero:
-                        entries.pop(sel_idx)
-                        entries.pop(pivot_idx)
-                        pivot_idx = 0
-                        changed = True
-                        merged = True
-                        break
-
-                    new_factors = list(pivot['factors'])
-                    new_factors[diff_slot] = combined_factor
-
-                    result = _build_pt(S.One, new_factors)
-
-                    if isinstance(result, AlgebraicZeroTensor):
-                        entries.pop(sel_idx)
-                        entries.pop(pivot_idx)
-                        pivot_idx = 0
-                        changed = True
-                        merged = True
-                        break
-
-                    new_extracted = _extract_pt_and_coeff(result)
-                    if len(new_extracted) == 3:
-                        _, new_c, new_factors_list = new_extracted
-                    else:
-                        new_pt, new_c = new_extracted
-                        if isinstance(new_pt, AlgebraicPureTensor):
-                            new_factors_list = list(new_pt.factors)
-                        elif hasattr(new_pt, 'shape'):
-                            new_factors_list = [new_pt]
-                        else:
-                            new_factors_list = [new_pt]
-
-                    entries[pivot_idx] = {
-                        'coeff': new_c,
-                        'factors': new_factors_list,
-                    }
-
-                    entries.pop(sel_idx)
-                    pivot_idx = 0
-                    changed = True
-                    merged = True
-                    break
-
-            if not merged:
-                pivot_idx += 1
-
-    return changed
 
 
 def _equality_merge_dict(entries, allowed_slot, _s, _factor):
@@ -658,30 +442,11 @@ def _equality_factoring(at):
 
     entries = []
     for t in tensor_terms:
-        extracted = _extract_pt_and_coeff(t)
-        if len(extracted) == 3:
-            _, coeff, factors = extracted
-            entries.append({
-                'coeff': coeff,
-                'factors': factors,
-            })
-        else:
-            pt, coeff = extracted
-            if isinstance(pt, AlgebraicPureTensor):
-                entries.append({
-                    'coeff': coeff,
-                    'factors': list(pt.factors),
-                })
-            elif hasattr(pt, 'shape'):
-                entries.append({
-                    'coeff': coeff,
-                    'factors': [pt],
-                })
-            else:
-                entries.append({
-                    'coeff': coeff,
-                    'factors': [pt],
-                })
+        coeff, factors = _extract_pt_and_coeff(t)
+        entries.append({
+            'coeff': coeff,
+            'factors': factors,
+        })
 
     comm_cs = at.commutativity_pattern
     commutative_indices = [i for i, v in enumerate(comm_cs) if v == 1]
@@ -699,156 +464,6 @@ def _equality_factoring(at):
         term = _build_pt(coeff, factors)
         rebuilt_terms.append(term)
 
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor as _APT
-
-    for idx, term in enumerate(rebuilt_terms):
-        if isinstance(term, _APT):
-            new_factors = list(term.factors)
-            extra_coeff = S.One
-            for fi in range(len(new_factors)):
-                ec, ef = _extract_commutative_from_factor(new_factors[fi])
-                if ec is not S.One:
-                    extra_coeff *= ec
-                new_factors[fi] = ef
-            if extra_coeff is not S.One:
-                new_coeff = _s(extra_coeff * term.coeff)
-                rebuilt_terms[idx] = _build_pt(new_coeff, new_factors)
-
-    all_terms = rebuilt_terms + non_tensor
-
-    if not all_terms:
-        from sympy.tensor.algebraic.algebraic_zero_tensor import algebraic_zero_tensor
-        return algebraic_zero_tensor(at.shape)
-
-    if len(all_terms) == 1:
-        return all_terms[0]
-
-    return AlgebraicTensor(*all_terms, _sympify=False)
-
-
-def _proportionality_factoring(at):
-    """Simplify an AlgebraicTensor by merging proportional
-    AlgebraicPureTensor terms.
-
-    Algorithm
-    ---------
-    1. Determine the commutativity_pattern of the tensor.
-    2. Build an ordered list of allowed diff slots: commutative indices
-       (pattern == 1) first, then non-commutative indices (pattern == 0).
-    3. For each allowed diff slot in order, run the pivot-based merging:
-
-       a. Pick a pivot entry from the list.
-       b. Compare the pivot with every other entry.
-       c. Two entries merge if they are fully proportional (all slots
-          proportional) or if their single non-proportimal slot matches
-          the current *allowed_diff_slot*.
-       d. Merging is either coefficient addition (fully proportional) or
-          linear combination at the diff slot.
-       e. After a merge, reset the pivot to the beginning.
-
-    4. Process commutative slots first, then non-commutative slots.
-       This prioritizes factoring in commutative slots before
-       non-commutative ones.
-
-    Parameters
-    ----------
-    at : AlgebraicTensor
-        The tensor sum to simplify.
-
-    Returns
-    -------
-    AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or other
-        The simplified expression.
-
-    Examples
-    ========
-
-    Merge proportional terms:
-
-    >>> from sympy.matrices.expressions import MatrixSymbol
-    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
-    >>> from sympy.tensor.algebraic.simplify import _proportionality_factoring
-    >>> A = MatrixSymbol("A", 3, 4)
-    >>> B = MatrixSymbol("B", 4, 5)
-    >>> C = MatrixSymbol("C", 4, 5)
-    >>> T1 = AlgebraicPureTensor(A, B)
-    >>> T2 = AlgebraicPureTensor(2, A, C)
-    >>> print(_proportionality_factoring(T1 + T2))
-    A ⊗ (B + 2*C)
-    """
-    from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-
-    _s = _get_sympy_simplify()
-
-    args = list(at.args)
-
-    tensor_terms = []
-    non_tensor = []
-
-    for a in args:
-        if isinstance(a, AlgebraicZeroTensor):
-            non_tensor.append(a)
-        elif isinstance(a, AlgebraicPureTensor):
-            tensor_terms.append(a)
-        elif isinstance(a, Mul):
-            has_matrix = any(hasattr(f, 'shape') for f in a.args)
-            if has_matrix:
-                tensor_terms.append(a)
-            else:
-                non_tensor.append(a)
-        elif a is not S.Zero:
-            non_tensor.append(a)
-
-    if len(tensor_terms) < 2:
-        return at
-
-    entries = []
-    for t in tensor_terms:
-        extracted = _extract_pt_and_coeff(t)
-        if len(extracted) == 3:
-            _, coeff, factors = extracted
-            entries.append({
-                'coeff': coeff,
-                'factors': factors,
-            })
-        else:
-            pt, coeff = extracted
-            if isinstance(pt, AlgebraicPureTensor):
-                entries.append({
-                    'coeff': coeff,
-                    'factors': list(pt.factors),
-                })
-            elif hasattr(pt, 'shape'):
-                entries.append({
-                    'coeff': coeff,
-                    'factors': [pt],
-                })
-            else:
-                entries.append({
-                    'coeff': coeff,
-                    'factors': [pt],
-                })
-
-    comm_cs = at.commutativity_pattern
-    commutative_indices = [i for i, v in enumerate(comm_cs) if v == 1]
-    non_commutative_indices = [i for i, v in enumerate(comm_cs) if v == 0]
-    allowed_diff_slots = commutative_indices + non_commutative_indices
-
-    for allowed_slot in allowed_diff_slots:
-        _try_merge_for_slot(entries, allowed_slot, _s)
-
-    rebuilt_terms = []
-    for entry in entries:
-        coeff = entry['coeff']
-        factors = entry['factors']
-        term = _build_pt(coeff, factors)
-        rebuilt_terms.append(term)
-
-    # Post-processing: extract commutative prefactors from every tensor factor
-    # of every AlgebraicPureTensor so that commutative scalars appear as
-    # the coefficient rather than embedded inside factors.
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor as _APT
 
     for idx, term in enumerate(rebuilt_terms):
@@ -1246,14 +861,8 @@ def _deduplicate_proportional(factors):
 def _extract_commutative_from_factor(factor):
     """Extract commutative prefactor from a single tensor factor.
 
-    Handles three cases:
-    1. **Add** -- factors the expression with ``factor()`` to pull out a
-       common commutative divisor (e.g., ``(x+2)*P + (x+2)*Q -> (x+2)*(P+Q)``),
-       then delegates to the Mul handler.
-    2. **Mul** -- separates commutative and non-commutative args.
-    3. **Matrix** -- factors each entry, finds common commutative divisors
-       across all nonzero entries, divides the matrix, and returns the
-       divisor as prefactor.
+    Dispatches to specialized handlers based on the type of *factor*:
+    Add, MatAdd/MatrixExpr sum, Mul, or concrete Matrix.
 
     Returns
     -------
@@ -1273,143 +882,44 @@ def _extract_commutative_from_factor(factor):
     """
     from sympy.core.add import Add as _Add
     from sympy.core.mul import Mul
-    from sympy.matrices.immutable import ImmutableDenseMatrix
-    from sympy import cancel
+    from sympy.matrices.expressions.matexpr import MatrixExpr as _MatrixExpr
+    from sympy.matrices.matrixbase import MatrixBase as _MatrixBase
+
+    # Check MatrixExpr with is_Add before plain Add, because MatAdd is
+    # a subclass of both Add and MatrixExpr but requires special handling.
+    if isinstance(factor, _MatrixExpr) and hasattr(factor, 'is_Add') and factor.is_Add:
+        return _extract_from_matadd(factor)
+    if isinstance(factor, _Add):
+        return _extract_from_add(factor)
+    if isinstance(factor, Mul):
+        return _extract_from_mul(factor)
+    if isinstance(factor, _MatrixBase):
+        return _extract_from_matrix(factor)
+    return (S.One, factor)
+
+
+def _extract_from_add(factor):
+    """Extract commutative prefactor from a SymPy Add expression.
+
+    Attempts to factor the Add to pull out a common commutative divisor,
+    then separates commutative and non-commutative parts.
+
+    Returns
+    -------
+    (commutative_coeff, new_factor) or (S.One, factor)
+    """
+    from sympy.core.mul import Mul
     from sympy import factor as _factor
 
-    # --- Add: factor to pull out common commutative divisor ---
-    if isinstance(factor, _Add):
-        # Only attempt factor() if the Add contains non-commutative parts
-        # that could share a commutative prefactor.  factor() crashes on
-        # expressions mixing MatrixExpr and scalars, so we guard with try/except.
-        try:
-            factored = _factor(factor)
-        except (TypeError, NotImplementedError):
-            factored = factor
-        if isinstance(factored, Mul) and factored != factor:
-            comm_parts = []
-            noncomm_parts = []
-            for a in factored.args:
-                if hasattr(a, 'is_commutative') and a.is_commutative:
-                    comm_parts.append(a)
-                else:
-                    noncomm_parts.append(a)
+    try:
+        factored = _factor(factor)
+    except (TypeError, NotImplementedError):
+        factored = factor
 
-            if comm_parts and noncomm_parts:
-                comm_coeff = Mul(*comm_parts, evaluate=True)
-                if _has_negative_power_or_fraction(comm_coeff):
-                    pass
-                else:
-                    if len(noncomm_parts) == 1:
-                        new_factor = noncomm_parts[0]
-                    else:
-                        new_factor = Mul(*noncomm_parts, evaluate=False)
-                    return (comm_coeff, new_factor)
-
-    # --- MatAdd / MatrixExpr sum: factor to pull out common commutative divisor ---
-    # MatAdd (and other additive MatrixExpr) are NOT instances of sympy Add,
-    # so we handle them separately.  SymPy's factor() crashes on MatAdd with
-    # non-commutative matrix symbols, so we manually walk the args and find
-    # the common commutative divisor.
-    from sympy.matrices.expressions.matexpr import MatrixExpr as _MatrixExpr
-    from sympy.matrices.expressions.matmul import MatMul as _MatMul
-    from sympy.matrices.expressions.matadd import MatAdd as _MatAdd
-
-    if isinstance(factor, _MatrixExpr) and hasattr(factor, 'is_Add') and factor.is_Add:
-        # Try SymPy's factor() first (works for some cases)
-        try:
-            factored = _factor(factor)
-            if isinstance(factored, _MatMul) and factored != factor:
-                c, rest = factored.as_coeff_Mul()
-                if c != S.One and rest != factor:
-                    if _has_negative_power_or_fraction(c):
-                        pass
-                    else:
-                        return (c, rest)
-        except (TypeError, NotImplementedError):
-            pass
-
-        # Manual extraction: walk each term, extract commutative coeff from
-        # MatMul.args (not as_coeff_Mul which only extracts numeric coeffs),
-        # find the common divisor across all terms.
-        terms = list(factor.args)
-        coeffs = []
-        rests = []
-        all_ok = True
-        for term in terms:
-            if isinstance(term, _MatMul):
-                # Separate commutative and non-commutative args from MatMul
-                comm_args = []
-                noncomm_args = []
-                for a in term.args:
-                    if hasattr(a, 'is_commutative') and a.is_commutative:
-                        comm_args.append(a)
-                    else:
-                        noncomm_args.append(a)
-                if comm_args:
-                    cf = Mul(*comm_args, evaluate=True)
-                    if len(noncomm_args) == 1:
-                        rf = noncomm_args[0]
-                    elif len(noncomm_args) > 1:
-                        rf = _MatMul(*noncomm_args, evaluate=False)
-                    else:
-                        rf = S.One
-                    coeffs.append(cf)
-                    rests.append(rf)
-                else:
-                    all_ok = False
-                    break
-            else:
-                # Bare matrix symbol or other non-MatMul term
-                coeffs.append(S.One)
-                rests.append(term)
-        if all_ok and len(coeffs) > 1:
-            # Find common divisor of all coefficients
-            common = coeffs[0]
-            for cf in coeffs[1:]:
-                if _is_exactly_divisible(cf, common):
-                    pass  # common still divides all
-                elif _is_exactly_divisible(common, cf):
-                    common = cf
-                else:
-                    # Try to find partial GCD by factoring both
-                    from sympy import factor as _fc
-                    fa = _fc(common).as_ordered_factors() if isinstance(_fc(common), Mul) else [_fc(common)]
-                    fb = _fc(cf).as_ordered_factors() if isinstance(_fc(cf), Mul) else [_fc(cf)]
-                    new_common = S.One
-                    for a in fa:
-                        for b in fb:
-                            if cancel(a / b) == S.One:
-                                new_common *= a
-                                break
-                    if new_common != S.One:
-                        common = new_common
-                    else:
-                        common = S.One
-                        break
-            if common != S.One:
-                # Reconstruct: sum of (coeff_i/common)*rest_i
-                new_terms = []
-                for cf, rf in zip(coeffs, rests):
-                    new_cf = cancel(cf / common)
-                    if new_cf == S.One:
-                        new_terms.append(rf)
-                    else:
-                        new_terms.append(_MatMul(new_cf, rf))
-                if len(new_terms) == 1:
-                    new_factor = new_terms[0]
-                else:
-                    new_factor = _MatAdd(*new_terms)
-                if _has_negative_power_or_fraction(common):
-                    pass
-                else:
-                    return (common, new_factor)
-
-    # --- Mul: separate commutative / non-commutative args ---
-    if isinstance(factor, Mul):
+    if isinstance(factored, Mul) and factored != factor:
         comm_parts = []
         noncomm_parts = []
-        for a in factor.args:
+        for a in factored.args:
             if hasattr(a, 'is_commutative') and a.is_commutative:
                 comm_parts.append(a)
             else:
@@ -1417,146 +927,320 @@ def _extract_commutative_from_factor(factor):
 
         if comm_parts and noncomm_parts:
             comm_coeff = Mul(*comm_parts, evaluate=True)
-            if _has_negative_power_or_fraction(comm_coeff):
-                pass
-            else:
+            if not _has_negative_power_or_fraction(comm_coeff):
                 if len(noncomm_parts) == 1:
                     new_factor = noncomm_parts[0]
                 else:
                     new_factor = Mul(*noncomm_parts, evaluate=False)
                 return (comm_coeff, new_factor)
 
-    # --- Matrix: common commutative divisor across nonzero entries ---
-    # Only process concrete MatrixBase instances (ImmutableDenseMatrix, etc.),
-    # NOT symbolic MatrixExpr (MatrixSymbol, MatAdd, MatMul).  MatrixBase
-    # already excludes symbolic expressions, so no extra check is needed.
-    from sympy.matrices.matrixbase import MatrixBase as _MatrixBase
-
-    if isinstance(factor, _MatrixBase):
-        rows, cols = factor.shape[0], factor.shape[1]
-
-        nonzero_entries = []
-        nonzero_positions = []
-        for r in range(rows):
-            for c in range(cols):
-                entry = factor[r, c]
-                if entry != S.Zero and (
-                    not hasattr(entry, 'is_zero') or entry.is_zero is not True
-                ):
-                    nonzero_entries.append(entry)
-                    nonzero_positions.append((r, c))
-
-        if not nonzero_entries:
-            return (S.One, factor)
-
-        # Collect candidate commutative factors from every nonzero entry.
-        # Use factor() to decompose into irreducible factors, then normalize
-        # the sign so that -(w-z) and (w-z) are recognized as the same factor.
-        from sympy import factor as _factor
-        candidates = set()
-        for entry in nonzero_entries:
-            factored = _factor(entry)
-            if isinstance(factored, Mul):
-                fac_args = factored.args
-            else:
-                fac_args = (factored,)
-            for a in fac_args:
-                if hasattr(a, 'is_number') and a.is_number:
-                    continue
-                if (hasattr(a, 'is_commutative') and a.is_commutative
-                        and a != S.One):
-                    candidates.add(_normalize_factor_sign(a))
-
-        # Keep only candidates that divide ALL nonzero entries
-        surviving = []
-        for cand in candidates:
-            ok = True
-            for entry in nonzero_entries:
-                if not _is_exactly_divisible(entry, cand):
-                    ok = False
-                    break
-            if ok:
-                surviving.append(cand)
-
-        # For purely numeric entries, compute the GCD as a candidate
-        from sympy.core.numbers import Integer
-        from sympy.core.intfunc import igcd
-        all_numeric = all(
-            isinstance(e, (int, Integer)) or
-            (hasattr(e, 'is_integer') and e.is_integer is True)
-            for e in nonzero_entries
-        )
-        if all_numeric and len(nonzero_entries) > 0:
-            gcd_val = nonzero_entries[0]
-            for e in nonzero_entries[1:]:
-                gcd_val = igcd(gcd_val, e)
-            if gcd_val != 1 and gcd_val != -1:
-                surviving.append(abs(int(gcd_val)))
-
-        if not surviving:
-            return (S.One, factor)
-
-        # Remove proportional (constant-scaled) duplicates.  Because
-        # _normalize_factor_sign relies on a sign convention that may not
-        # catch every case, both ``a`` and ``-a`` could end up in
-        # ``surviving``.  Their product ``-a**2`` does not divide the
-        # entries, so we must keep at most one representative per
-        # proportionality class.
-        surviving = _deduplicate_proportional(surviving)
-
-        if not surviving:
-            return (S.One, factor)
-
-        # Divide every nonzero entry by the product of survivors
-        divisor = Mul(*surviving, evaluate=True)
-
-        # Verify that dividing by the divisor does not introduce any
-        # denominators in the matrix entries.  If even one entry would
-        # contain a denominator involving the divisor (or any of its
-        # factors), bail out and return the original factor unchanged.
-        from sympy.core.mul import Mul as _MulCheck
-        divisor_factors = set()
-        if isinstance(divisor, _MulCheck):
-            for df in divisor.args:
-                if not (hasattr(df, 'is_number') and df.is_number):
-                    divisor_factors.add(df)
-        else:
-            if not (hasattr(divisor, 'is_number') and divisor.is_number):
-                divisor_factors.add(divisor)
-
-        if divisor_factors:
-            for r in range(rows):
-                for c in range(cols):
-                    entry = factor[r, c]
-                    if entry == S.Zero or (
-                        hasattr(entry, 'is_zero') and entry.is_zero is True
-                    ):
-                        continue
-                    quotient = cancel(entry / divisor)
-                    q_denom = quotient.as_numer_denom()[1]
-                    if q_denom != S.One:
-                        for df in divisor_factors:
-                            if q_denom.has(df):
-                                return (S.One, factor)
-
-        new_data = []
-        for r in range(rows):
-            row = []
-            for c in range(cols):
-                entry = factor[r, c]
-                if entry == S.Zero or (
-                    hasattr(entry, 'is_zero') and entry.is_zero is True
-                ):
-                    row.append(S.Zero)
-                else:
-                    row.append(cancel(entry / divisor))
-            new_data.append(row)
-
-        new_factor = ImmutableDenseMatrix(new_data)
-        return (divisor, new_factor)
-
-    # Pass through
     return (S.One, factor)
+
+
+def _extract_from_matadd(factor):
+    """Extract commutative prefactor from a MatAdd/MatrixExpr sum.
+
+    Tries SymPy's factor() first, then manually walks each term to find
+    the common commutative divisor across all terms.
+
+    Returns
+    -------
+    (commutative_coeff, new_factor) or (S.One, factor)
+    """
+    from sympy.core.mul import Mul
+    from sympy import cancel
+    from sympy import factor as _factor
+    from sympy.matrices.expressions.matmul import MatMul as _MatMul
+    from sympy.matrices.expressions.matadd import MatAdd as _MatAdd
+
+    try:
+        factored = _factor(factor)
+        if isinstance(factored, _MatMul) and factored != factor:
+            c, rest = factored.as_coeff_Mul()
+            if c != S.One and rest != factor:
+                if not _has_negative_power_or_fraction(c):
+                    return (c, rest)
+    except (TypeError, NotImplementedError):
+        pass
+
+    terms = list(factor.args)
+    coeffs = []
+    rests = []
+    all_ok = True
+    for term in terms:
+        if isinstance(term, _MatMul):
+            comm_args = []
+            noncomm_args = []
+            for a in term.args:
+                if hasattr(a, 'is_commutative') and a.is_commutative:
+                    comm_args.append(a)
+                else:
+                    noncomm_args.append(a)
+            if comm_args:
+                cf = Mul(*comm_args, evaluate=True)
+                if len(noncomm_args) == 1:
+                    rf = noncomm_args[0]
+                elif len(noncomm_args) > 1:
+                    rf = _MatMul(*noncomm_args, evaluate=False)
+                else:
+                    rf = S.One
+                coeffs.append(cf)
+                rests.append(rf)
+            else:
+                all_ok = False
+                break
+        else:
+            coeffs.append(S.One)
+            rests.append(term)
+
+    if not all_ok or len(coeffs) < 2:
+        return (S.One, factor)
+
+    common = _find_common_divisor(coeffs)
+    if common == S.One:
+        return (S.One, factor)
+
+    new_terms = []
+    for cf, rf in zip(coeffs, rests):
+        new_cf = cancel(cf / common)
+        if new_cf == S.One:
+            new_terms.append(rf)
+        else:
+            new_terms.append(_MatMul(new_cf, rf))
+
+    if len(new_terms) == 1:
+        new_factor = new_terms[0]
+    else:
+        new_factor = _MatAdd(*new_terms)
+
+    if not _has_negative_power_or_fraction(common):
+        return (common, new_factor)
+
+    return (S.One, factor)
+
+
+def _find_common_divisor(coeffs):
+    """Find the common commutative divisor of a list of coefficients.
+
+    Uses exact divisibility checks and factor-based GCD to find the
+    largest common divisor that divides all coefficients.
+
+    Returns
+    -------
+    The common divisor, or S.One if none found.
+    """
+    from sympy.core.mul import Mul
+    from sympy import cancel
+    from sympy import factor as _fc
+
+    common = coeffs[0]
+    for cf in coeffs[1:]:
+        if _is_exactly_divisible(cf, common):
+            pass
+        elif _is_exactly_divisible(common, cf):
+            common = cf
+        else:
+            fa = _fc(common).as_ordered_factors() if isinstance(_fc(common), Mul) else [_fc(common)]
+            fb = _fc(cf).as_ordered_factors() if isinstance(_fc(cf), Mul) else [_fc(cf)]
+            new_common = S.One
+            for a in fa:
+                for b in fb:
+                    if cancel(a / b) == S.One:
+                        new_common *= a
+                        break
+            if new_common != S.One:
+                common = new_common
+            else:
+                return S.One
+    return common
+
+
+def _extract_from_mul(factor):
+    """Extract commutative prefactor from a Mul expression.
+
+    Separates commutative and non-commutative args, returning the
+    commutative parts as the coefficient.
+
+    Returns
+    -------
+    (commutative_coeff, new_factor) or (S.One, factor)
+    """
+    from sympy.core.mul import Mul
+
+    comm_parts = []
+    noncomm_parts = []
+    for a in factor.args:
+        if hasattr(a, 'is_commutative') and a.is_commutative:
+            comm_parts.append(a)
+        else:
+            noncomm_parts.append(a)
+
+    if comm_parts and noncomm_parts:
+        comm_coeff = Mul(*comm_parts, evaluate=True)
+        if not _has_negative_power_or_fraction(comm_coeff):
+            if len(noncomm_parts) == 1:
+                new_factor = noncomm_parts[0]
+            else:
+                new_factor = Mul(*noncomm_parts, evaluate=False)
+            return (comm_coeff, new_factor)
+
+    return (S.One, factor)
+
+
+def _extract_from_matrix(factor):
+    """Extract commutative prefactor from a concrete Matrix.
+
+    Factors each entry, finds common commutative divisors across all
+    nonzero entries, divides the matrix, and returns the divisor as
+    prefactor.
+
+    Returns
+    -------
+    (commutative_coeff, new_factor) or (S.One, factor)
+    """
+    from sympy.core.mul import Mul
+    from sympy.matrices.immutable import ImmutableDenseMatrix
+    from sympy import cancel
+
+    rows, cols = factor.shape[0], factor.shape[1]
+
+    nonzero_entries = []
+    for r in range(rows):
+        for c in range(cols):
+            entry = factor[r, c]
+            if entry != S.Zero and (
+                not hasattr(entry, 'is_zero') or entry.is_zero is not True
+            ):
+                nonzero_entries.append(entry)
+
+    if not nonzero_entries:
+        return (S.One, factor)
+
+    candidates = _collect_matrix_factor_candidates(nonzero_entries)
+
+    surviving = [cand for cand in candidates
+                 if all(_is_exactly_divisible(e, cand) for e in nonzero_entries)]
+
+    numeric_gcd = _compute_numeric_gcd(nonzero_entries)
+    if numeric_gcd is not None:
+        surviving.append(numeric_gcd)
+
+    if not surviving:
+        return (S.One, factor)
+
+    surviving = _deduplicate_proportional(surviving)
+    if not surviving:
+        return (S.One, factor)
+
+    divisor = Mul(*surviving, evaluate=True)
+
+    if not _verify_safe_division(factor, divisor):
+        return (S.One, factor)
+
+    new_data = []
+    for r in range(rows):
+        row = []
+        for c in range(cols):
+            entry = factor[r, c]
+            if entry == S.Zero or (
+                hasattr(entry, 'is_zero') and entry.is_zero is True
+            ):
+                row.append(S.Zero)
+            else:
+                row.append(cancel(entry / divisor))
+        new_data.append(row)
+
+    new_factor = ImmutableDenseMatrix(new_data)
+    return (divisor, new_factor)
+
+
+def _collect_matrix_factor_candidates(nonzero_entries):
+    """Collect candidate commutative factors from matrix entries.
+
+    Factors each entry into irreducible parts, normalizes signs, and
+    returns the set of unique non-numeric commutative factors.
+    """
+    from sympy.core.mul import Mul
+    from sympy import factor as _factor
+
+    candidates = set()
+    for entry in nonzero_entries:
+        factored = _factor(entry)
+        fac_args = factored.args if isinstance(factored, Mul) else (factored,)
+        for a in fac_args:
+            if hasattr(a, 'is_number') and a.is_number:
+                continue
+            if (hasattr(a, 'is_commutative') and a.is_commutative
+                    and a != S.One):
+                candidates.add(_normalize_factor_sign(a))
+    return candidates
+
+
+def _compute_numeric_gcd(nonzero_entries):
+    """Compute GCD of numeric coefficients across matrix entries.
+
+    Returns the GCD value if it differs from +/-1, otherwise None.
+    """
+    from sympy.core.intfunc import igcd
+
+    numeric_coeffs = []
+    for e in nonzero_entries:
+        c, _ = e.as_coeff_Mul()
+        if c != S.One:
+            numeric_coeffs.append(c)
+
+    if not numeric_coeffs:
+        return None
+
+    gcd_val = numeric_coeffs[0]
+    for c in numeric_coeffs[1:]:
+        gcd_val = igcd(gcd_val, c)
+
+    if gcd_val != 1 and gcd_val != -1:
+        return abs(int(gcd_val))
+    return None
+
+
+def _verify_safe_division(factor, divisor):
+    """Verify that dividing matrix entries by *divisor* is safe.
+
+    Checks that no nonzero entry would acquire a denominator involving
+    any non-numeric factor of the divisor.
+
+    Returns
+    -------
+    True if division is safe, False otherwise.
+    """
+    from sympy.core.mul import Mul
+    from sympy import cancel
+
+    divisor_factors = set()
+    if isinstance(divisor, Mul):
+        for df in divisor.args:
+            if not (hasattr(df, 'is_number') and df.is_number):
+                divisor_factors.add(df)
+    else:
+        if not (hasattr(divisor, 'is_number') and divisor.is_number):
+            divisor_factors.add(divisor)
+
+    if not divisor_factors:
+        return True
+
+    rows, cols = factor.shape[0], factor.shape[1]
+    for r in range(rows):
+        for c in range(cols):
+            entry = factor[r, c]
+            if entry == S.Zero or (
+                hasattr(entry, 'is_zero') and entry.is_zero is True
+            ):
+                continue
+            quotient = cancel(entry / divisor)
+            q_denom = quotient.as_numer_denom()[1]
+            if q_denom != S.One:
+                for df in divisor_factors:
+                    if q_denom.has(df):
+                        return False
+    return True
 
 
 def _extract_commutative_prefactors(pt):
@@ -1609,7 +1293,7 @@ def _commutativity_simplify(at, **kwargs):
     """Simplify an AlgebraicTensor using commutativity-aware decomposition.
 
     Decomposes each term into commutative and non-commutative subtensors,
-    groups by commutative pattern, applies ``_proportionality_factoring`` to
+    groups by commutative pattern, applies ``_equality_factoring`` to
     non-commutative components, and reconstructs the full expression.
 
     Parameters
@@ -1638,17 +1322,7 @@ def _commutativity_simplify(at, **kwargs):
         if isinstance(term, AlgebraicZeroTensor):
             continue
 
-        extracted = _extract_pt_and_coeff(term)
-
-        if len(extracted) == 3:
-            _, term_coeff, factors = extracted
-        else:
-            pt, term_coeff = extracted
-            if isinstance(pt, AlgebraicPureTensor):
-                factors = list(pt.factors)
-            else:
-                factors = [pt]
-                term_coeff = S.One
+        term_coeff, factors = _extract_pt_and_coeff(term)
 
         if term_coeff is S.Zero:
             continue
@@ -1897,10 +1571,10 @@ def _simplify_algebraic_tensor(at, **kwargs):
 
     **Commutativity-based simplification** -- decomposes terms by their
     commutativity shape, groups by commutative patterns, applies
-    ``_proportionality_factoring`` to non-commutative components, and
+    ``_equality_factoring`` to non-commutative components, and
     reconstructs the full expression with simplified factors.
 
-    **Proportionality factoring** -- merges proportional AlgebraicPureTensor
+    **Equality factoring** -- merges equal or negated AlgebraicPureTensor
     terms by combining coefficients or creating linear combinations at
     non-proportional factor slots.
 

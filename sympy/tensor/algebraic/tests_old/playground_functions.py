@@ -570,7 +570,7 @@ da1 = da1.simplify()
 print(da1.args[0])
 print(len(da1.args))
 
-da1 = x*da1
+da1 = da1
 # ---------------------------------------------------------------------------
 # LaTeX display
 # ---------------------------------------------------------------------------
@@ -578,19 +578,14 @@ print("=" * 60)
 print("LATEX DISPLAY")
 print("=" * 60)
 
-print("\n--- da1 str ---")
-print(da1)
+print("Testing .diff")
+print(da1.args[0])
+print(da1.args[0].diff(alpha1))
 
-da1.display()
-print("da1 args = ")
-print(len(da1.args))
+da1 = Dirac*a1 - a1*Dirac
+dada = algebraic_tensor_product(da1.expand(), da1.expand()).expand()
 
-print("")
-print(srepr(da1))
-
-print("Unexpected behaviour:")
-da1_unexpanded_simp = Dirac*a1 - a1*Dirac
-da1_unexpanded_simp = da1_unexpanded_simp.simplify()
-print(len(da1_unexpanded_simp.args))
-print("First expanding and then simplifying yields 8, not 9 tensors. The difference is the last AlgebraicPureTensor given as:")
-print(da1_unexpanded_simp.args[-1])
+simped = dada.simplify()
+print(len(dada.args))
+print("Expect 64, get:")
+print(len(simped.args))

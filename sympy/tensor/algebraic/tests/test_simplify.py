@@ -21,7 +21,6 @@ from sympy.tensor.algebraic.simplify import (
     _is_exactly_divisible,
     _matrix_proportionality_ratio,
     _normalize_factor_sign,
-    _proportionality_factoring,
     _proportionality_ratio,
     _reconstruct_term,
 )
@@ -134,23 +133,23 @@ def test_proportionality_ratio_not_proportional():
 
 def test_extract_pt_and_coeff_pure_tensor_no_coeff():
     T = AlgebraicPureTensor(A, B)
-    pt, coeff = _extract_pt_and_coeff(T)
-    assert pt is T
+    coeff, factors = _extract_pt_and_coeff(T)
     assert coeff == S.One
+    assert factors == [A, B]
 
 
 def test_extract_pt_and_coeff_pure_tensor_with_coeff():
     T = AlgebraicPureTensor(2, A, B)
-    pt, coeff = _extract_pt_and_coeff(T)
-    assert pt is T
+    coeff, factors = _extract_pt_and_coeff(T)
     assert coeff == 2
+    assert factors == [A, B]
 
 
 def test_extract_pt_and_coeff_pure_tensor_symbolic_coeff():
     T = AlgebraicPureTensor(x, A, B)
-    pt, coeff = _extract_pt_and_coeff(T)
-    assert pt is T
+    coeff, factors = _extract_pt_and_coeff(T)
     assert coeff == x
+    assert factors == [A, B]
 
 
 def test_extract_pt_and_coeff_mul_with_pure_tensor():
@@ -158,16 +157,16 @@ def test_extract_pt_and_coeff_mul_with_pure_tensor():
     mul_expr = x * T
     # x * AlgebraicPureTensor(2, A, B) -> AlgebraicPureTensor(2*x, A, B)
     assert isinstance(mul_expr, AlgebraicPureTensor)
-    pt, coeff = _extract_pt_and_coeff(mul_expr)
-    assert pt is mul_expr
+    coeff, factors = _extract_pt_and_coeff(mul_expr)
     assert coeff == 2 * x
+    assert factors == [A, B]
 
 
 def test_extract_pt_and_coeff_bare_matrix():
     M = ImmutableDenseMatrix([[1, 2], [3, 4]])
-    result = _extract_pt_and_coeff(M)
-    assert result[0] is M
-    assert result[1] == S.One
+    coeff, factors = _extract_pt_and_coeff(M)
+    assert coeff == S.One
+    assert factors == [M]
 
 
 def test_extract_pt_and_coeff_mul_with_matrices():
@@ -175,15 +174,15 @@ def test_extract_pt_and_coeff_mul_with_matrices():
     mul_expr = x * M
     # x * ImmutableDenseMatrix -> new ImmutableDenseMatrix with scaled entries
     assert isinstance(mul_expr, ImmutableDenseMatrix)
-    result = _extract_pt_and_coeff(mul_expr)
-    assert result[0] is mul_expr
-    assert result[1] == S.One
+    coeff, factors = _extract_pt_and_coeff(mul_expr)
+    assert coeff == S.One
+    assert factors == [mul_expr]
 
 
 def test_extract_pt_and_coeff_unknown():
-    result = _extract_pt_and_coeff(x)
-    assert result[0] is x
-    assert result[1] == S.One
+    coeff, factors = _extract_pt_and_coeff(x)
+    assert coeff == S.One
+    assert factors == [x]
 
 
 # ---------------------------------------------------------------------------
@@ -236,107 +235,6 @@ def test_build_pt_negative_coeff():
     assert isinstance(result, AlgebraicPureTensor)
     assert result.coeff == -3
     assert result.factors == (A, B)
-
-
-# ---------------------------------------------------------------------------
-# _proportionality_factoring
-# ---------------------------------------------------------------------------
-
-def test_proportionality_factoring_identical_terms():
-    T1 = AlgebraicPureTensor(A, B)
-    T2 = AlgebraicPureTensor(2, A, B)
-    at = AlgebraicTensor(T1, T2)
-    result = _proportionality_factoring(at)
-    assert isinstance(result, AlgebraicPureTensor)
-    assert result.coeff == 3
-    assert result.factors == (A, B)
-
-
-def test_proportionality_factoring_negative_cancel():
-    T1 = AlgebraicPureTensor(2, A, B)
-    T2 = AlgebraicPureTensor(-2, A, B)
-    at = AlgebraicTensor(T1, T2)
-    result = _proportionality_factoring(at)
-    assert isinstance(result, AlgebraicZeroTensor)
-
-
-def test_proportionality_factoring_no_merge_different_factors():
-    T1 = AlgebraicPureTensor(A, B)
-    T2 = AlgebraicPureTensor(C, D)
-    at = AlgebraicTensor(T1, T2)
-    result = _proportionality_factoring(at)
-    assert isinstance(result, AlgebraicTensor)
-
-
-def test_proportionality_factoring_one_non_proportional_slot():
-    T1 = AlgebraicPureTensor(A, B)
-    T2 = AlgebraicPureTensor(C, B)
-    at = AlgebraicTensor(T1, T2)
-    result = _proportionality_factoring(at)
-    # Slot 0 is non-proportional (A vs C), slot 1 is proportional (B vs B)
-    # Result should have (A + C) in slot 0, B in slot 1
-    assert result is not None
-
-
-def test_proportionality_factoring_proportional_matrix_factors():
-    M1 = ImmutableDenseMatrix([[1, 2], [3, 4]])
-    M2 = ImmutableDenseMatrix([[2, 4], [6, 8]])
-    T1 = AlgebraicPureTensor(M1, B)
-    T2 = AlgebraicPureTensor(M2, B)
-    at = AlgebraicTensor(T1, T2)
-    result = _proportionality_factoring(at)
-    assert result is not None
-
-
-def test_proportionality_factoring_single_term_no_change():
-    T1 = AlgebraicPureTensor(A, B)
-    at = AlgebraicTensor(T1)
-    result = _proportionality_factoring(at)
-    assert result is T1
-
-
-def test_proportionality_factoring_symbolic_coeff_merge():
-    T1 = AlgebraicPureTensor(x, A, B)
-    T2 = AlgebraicPureTensor(y, A, B)
-    at = AlgebraicTensor(T1, T2)
-    result = _proportionality_factoring(at)
-    assert isinstance(result, AlgebraicPureTensor)
-    assert result.coeff == x + y
-
-
-def test_proportionality_factoring_three_terms_merge():
-    T1 = AlgebraicPureTensor(A, B)
-    T2 = AlgebraicPureTensor(2, A, B)
-    T3 = AlgebraicPureTensor(3, A, B)
-    at = AlgebraicTensor(T1, T2, T3)
-    result = _proportionality_factoring(at)
-    assert isinstance(result, AlgebraicPureTensor)
-    assert result.coeff == 6
-
-
-def test_proportionality_factoring_partial_merge():
-    T1 = AlgebraicPureTensor(A, B)
-    T2 = AlgebraicPureTensor(2, A, B)
-    T3 = AlgebraicPureTensor(C, D)
-    at = AlgebraicTensor(T1, T2, T3)
-    result = _proportionality_factoring(at)
-    assert isinstance(result, AlgebraicTensor)
-
-
-def test_proportionality_factoring_with_zero_tensor():
-    T1 = AlgebraicPureTensor(A, B)
-    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    at = AlgebraicTensor(T1, Z)
-    result = _proportionality_factoring(at)
-    assert result is not None
-
-
-def test_proportionality_factoring_all_cancel():
-    T1 = AlgebraicPureTensor(A, B)
-    T2 = AlgebraicPureTensor(-1, A, B)
-    at = AlgebraicTensor(T1, T2)
-    result = _proportionality_factoring(at)
-    assert isinstance(result, AlgebraicZeroTensor)
 
 
 # ---------------------------------------------------------------------------

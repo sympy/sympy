@@ -960,3 +960,292 @@ def test_display_latex_mode():
     T = AlgebraicPureTensor(A, B)
     # Should not raise
     T.display(mode="latex")
+
+
+# ---------------------------------------------------------------------------
+# doit
+# ---------------------------------------------------------------------------
+
+def test_doit_no_change():
+    """doit() returns self when there are no unevaluated sub-expressions."""
+    T = AlgebraicPureTensor(A, B)
+    assert T.doit() is T
+
+
+def test_doit_with_matadd_factor():
+    """doit() calls doit on MatAdd factor (MatAdd.doit returns itself)."""
+    T = AlgebraicPureTensor(A, MatAdd(B, D))
+    result = T.doit()
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.factors[1] == MatAdd(B, D)
+
+
+def test_doit_with_coeff_add():
+    """doit() evaluates an Add coefficient."""
+    T = AlgebraicPureTensor(x + y, A, B)
+    result = T.doit()
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == x + y
+
+
+def test_doit_preserves_coeff():
+    """doit() preserves the coefficient after evaluation."""
+    T = AlgebraicPureTensor(2, A, B)
+    result = T.doit()
+    assert result is T
+
+
+def test_doit_deep_false():
+    """doit() with deep=False does not evaluate sub-expressions."""
+    T = AlgebraicPureTensor(A, MatAdd(B, D))
+    result = T.doit(deep=False)
+    assert result is T
+
+
+def test_doit_three_factors():
+    """doit() works with three factors."""
+    T = AlgebraicPureTensor(A, B, G)
+    result = T.doit()
+    assert result is T
+
+
+def test_doit_coeff_evaluates():
+    """doit() evaluates the coefficient expression."""
+    from sympy.matrices.expressions import MatMul
+    # A is 3x4, E is 4x2 -> MatMul(A, E) is 3x2
+    coeff = MatMul(A, E, evaluate=False)
+    T = AlgebraicPureTensor(coeff, B)
+    result = T.doit()
+    assert isinstance(result, AlgebraicPureTensor)
+
+
+def test_doit_evaluates_matmul_factor():
+    """doit() evaluates an unevaluated MatMul factor."""
+    # A is 3x4, E is 4x2 -> MatMul(A, E) is 3x2
+    uneval = MatMul(A, E, evaluate=False)
+    T = AlgebraicPureTensor(uneval, F)
+    result = T.doit()
+    assert isinstance(result, AlgebraicPureTensor)
+
+
+def test_doit_with_numeric_coeff():
+    """doit() with numeric coefficient returns self."""
+    T = AlgebraicPureTensor(2, A, B)
+    result = T.doit()
+    assert result is T
+
+
+# ---------------------------------------------------------------------------
+# Diff
+# ---------------------------------------------------------------------------
+
+def test_diff_coefficient_only():
+    """diff() differentiates only the coefficient when factors are constant."""
+    T = AlgebraicPureTensor(x**2, A, B)
+    result = T.diff(x)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 2*x
+    assert result.factors == (A, B)
+
+
+def test_diff_coefficient_constant():
+    """diff() returns zero tensor when coefficient and factors are constant."""
+    T = AlgebraicPureTensor(2, A, B)
+    result = T.diff(x)
+    assert isinstance(result, AlgebraicZeroTensor)
+
+
+def test_diff_factor_dependent_on_symbol():
+    """diff() differentiates a matrix factor that depends on the symbol."""
+    M = ImmutableDenseMatrix([[x, x**2], [1, x]])
+    N = MatrixSymbol("N", 2, 3)
+    T = AlgebraicPureTensor(M, N)
+    result = T.diff(x)
+    assert isinstance(result, AlgebraicPureTensor)
+    expected_dM = ImmutableDenseMatrix([[1, 2*x], [0, 1]])
+    assert result.factors[0] == expected_dM
+    assert result.factors[1] == N
+
+
+def test_diff_leibniz_rule_coeff_and_factor():
+    """Leibniz rule: symbol appears in both coefficient and a factor."""
+    M = ImmutableDenseMatrix([[x, 1], [0, x]])
+    N = MatrixSymbol("N", 2, 3)
+    T = AlgebraicPureTensor(x, M, N)
+    result = T.diff(x)
+    assert isinstance(result, AlgebraicTensor)
+    # Result should have two terms:
+    # 1. (dx/dx)*M⊗N = 1*M⊗N
+    # 2. x*(dM/dx)⊗N
+    terms = result.args
+    assert len(terms) == 2
+
+
+def test_diff_leibniz_rule_two_factors():
+    """Leibniz rule: symbol appears in two different factors."""
+    M1 = ImmutableDenseMatrix([[x, 1], [0, 1]])
+    M2 = ImmutableDenseMatrix([[1, x], [1, 0]])
+    # M1 is 2x2, M2 is 2x2
+    T = AlgebraicPureTensor(M1, M2)
+    result = T.diff(x)
+    assert isinstance(result, AlgebraicTensor)
+    # Result should have two terms:
+    # 1. (dM1/dx)⊗M2
+    # 2. M1⊗(dM2/dx)
+    terms = result.args
+    assert len(terms) == 2
+
+
+def test_diff_leibniz_rule_coeff_and_two_factors():
+    """Leibniz rule: symbol in coefficient and two factors gives three terms."""
+    M1 = ImmutableDenseMatrix([[x, 1], [0, 1]])
+    M2 = ImmutableDenseMatrix([[1, x], [1, 0]])
+    T = AlgebraicPureTensor(x, M1, M2)
+    result = T.diff(x)
+    assert isinstance(result, AlgebraicTensor)
+    # Result should have three terms:
+    # 1. (dx/dx)*M1⊗M2 = M1⊗M2
+    # 2. x*(dM1/dx)⊗M2
+    # 3. x*M1⊗(dM2/dx)
+    terms = result.args
+    assert len(terms) == 3
+
+
+def test_diff_preserves_shape():
+    """diff() preserves the tensor shape."""
+    M = ImmutableDenseMatrix([[x, 1], [0, x]])
+    N = MatrixSymbol("N", 2, 3)
+    T = AlgebraicPureTensor(M, N)
+    result = T.diff(x)
+    assert result.shape == T.shape
+
+
+def test_diff_single_factor():
+    """diff() on a single-factor tensor with symbolic coefficient."""
+    M = MatrixSymbol("M", 3, 3)
+    N = MatrixSymbol("N", 3, 3)
+    T = AlgebraicPureTensor(x**3, M, N)
+    result = T.diff(x)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 3*x**2
+    assert result.factors == (M, N)
+
+
+def test_diff_symbol_not_present():
+    """diff() returns zero tensor when symbol is not present anywhere."""
+    T = AlgebraicPureTensor(2, A, B)
+    result = T.diff(y)
+    assert isinstance(result, AlgebraicZeroTensor)
+
+
+def test_diff_numeric_coeff_factor_depends():
+    """diff() with numeric coeff and factor depending on symbol."""
+    M = ImmutableDenseMatrix([[x**2, 0], [0, x]])
+    N = MatrixSymbol("N", 2, 3)
+    T = AlgebraicPureTensor(3, M, N)
+    result = T.diff(x)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 3
+    expected_dM = ImmutableDenseMatrix([[2*x, 0], [0, 1]])
+    assert result.factors[0] == expected_dM
+    assert result.factors[1] == N
+
+
+# ---------------------------------------------------------------------------
+# Conjugate
+# ---------------------------------------------------------------------------
+
+def test_conjugate_complex_coeff():
+    """conjugate() conjugates a complex coefficient."""
+    from sympy import I
+    T = AlgebraicPureTensor(1 + I, A, B)
+    TC = T.conjugate()
+    assert isinstance(TC, AlgebraicPureTensor)
+    assert TC.coeff == 1 - I
+    # MatrixSymbol.conjugate() returns Adjoint(Transpose(self))
+    assert TC.factors[0] == A.conjugate()
+    assert TC.factors[1] == B.conjugate()
+
+
+def test_conjugate_real_coeff():
+    """conjugate() leaves a real coefficient unchanged."""
+    T = AlgebraicPureTensor(2, A, B)
+    TC = T.conjugate()
+    assert isinstance(TC, AlgebraicPureTensor)
+    assert TC.coeff == 2
+    assert TC.factors[0] == A.conjugate()
+    assert TC.factors[1] == B.conjugate()
+
+
+def test_conjugate_no_coeff():
+    """conjugate() on a tensor without explicit coefficient."""
+    T = AlgebraicPureTensor(A, B)
+    TC = T.conjugate()
+    assert isinstance(TC, AlgebraicPureTensor)
+    assert TC.coeff == S.One
+    assert TC.factors[0] == A.conjugate()
+    assert TC.factors[1] == B.conjugate()
+
+
+def test_conjugate_symbolic_coeff():
+    """conjugate() conjugates a symbolic coefficient."""
+    from sympy import I
+    from sympy.functions.elementary.complexes import conjugate
+    T = AlgebraicPureTensor(x + I*y, A, B)
+    TC = T.conjugate()
+    assert isinstance(TC, AlgebraicPureTensor)
+    # x.conjugate() returns conjugate(x) (unevaluated for generic symbol)
+    assert TC.coeff == conjugate(x) - I*conjugate(y)
+    assert TC.factors[0] == A.conjugate()
+    assert TC.factors[1] == B.conjugate()
+
+
+def test_conjugate_factor_conjugate():
+    """conjugate() applies conjugate to each matrix factor."""
+    from sympy import I
+    M = ImmutableDenseMatrix([[1 + I, 2], [3, 4 - I]])
+    N = MatrixSymbol("N", 2, 3)
+    T = AlgebraicPureTensor(M, N)
+    TC = T.conjugate()
+    assert isinstance(TC, AlgebraicPureTensor)
+    expected_M = ImmutableDenseMatrix([[1 - I, 2], [3, 4 + I]])
+    assert TC.factors[0] == expected_M
+    assert TC.factors[1] == N.conjugate()
+
+
+def test_conjugate_preserves_shape():
+    """conjugate() preserves the tensor shape."""
+    from sympy import I
+    T = AlgebraicPureTensor(1 + I, A, B)
+    TC = T.conjugate()
+    assert TC.shape == T.shape
+
+
+def test_conjugate_three_factors():
+    """conjugate() works with three tensor factors."""
+    from sympy import I
+    T = AlgebraicPureTensor(1 + I, A, B, G)
+    TC = T.conjugate()
+    assert isinstance(TC, AlgebraicPureTensor)
+    assert TC.coeff == 1 - I
+    assert TC.factors[0] == A.conjugate()
+    assert TC.factors[1] == B.conjugate()
+    assert TC.factors[2] == G.conjugate()
+
+
+def test_conjugate_double():
+    """Double conjugate returns the original tensor."""
+    from sympy import I
+    T = AlgebraicPureTensor(1 + I, A, B)
+    assert T.conjugate().conjugate() == T
+
+
+def test_conjugate_negative_imag_coeff():
+    """conjugate() handles negative imaginary coefficient."""
+    from sympy import I
+    T = AlgebraicPureTensor(-2*I, A, B)
+    TC = T.conjugate()
+    assert isinstance(TC, AlgebraicPureTensor)
+    assert TC.coeff == 2*I
+    assert TC.factors[0] == A.conjugate()
+    assert TC.factors[1] == B.conjugate()

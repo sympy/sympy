@@ -6,8 +6,6 @@
       "baseUrl": "http://100.72.233.123:1234/v1",
       "apiKey": "notneeded"
     },
-    "enabled": false,
-    "model": "qwen3-embedding-8b",
-    "dimension": 4096
+    "enabled": false
   }
 }

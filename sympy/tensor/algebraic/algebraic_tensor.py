@@ -219,10 +219,62 @@ def compose_algebraic_tensors(left, right):
     )
 
     # --- AlgebraicZeroTensor shortcuts ---
+    if isinstance(left, _ZT) and isinstance(right, _ZT):
+        if len(left.shape) != len(right.shape):
+            raise ValueError(
+                f"Cannot compose tensors with different numbers of "
+                f"factors: {len(left.shape)} vs {len(right.shape)}"
+            )
+        composed_shape = tuple(
+            (l[0], r[1]) for l, r in zip(left.shape, right.shape)
+        )
+        return _ZT(composed_shape)
+
     if isinstance(left, _ZT):
-        return _ZT(left.shape)
+        # Extract shape from right operand
+        if isinstance(right, AlgebraicTensor):
+            right_shape = right.shape
+        elif isinstance(right, _PT):
+            right_shape = right.shape
+        elif hasattr(right, "shape"):
+            right_shape = (right.shape,)
+        else:
+            raise TypeError(
+                f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
+                f"the right, got {type(right).__name__}"
+            )
+        if len(left.shape) != len(right_shape):
+            raise ValueError(
+                f"Cannot compose tensors with different numbers of "
+                f"factors: {len(left.shape)} vs {len(right_shape)}"
+            )
+        composed_shape = tuple(
+            (l[0], r[1]) for l, r in zip(left.shape, right_shape)
+        )
+        return _ZT(composed_shape)
+
     if isinstance(right, _ZT):
-        return _ZT(right.shape)
+        # Extract shape from left operand
+        if isinstance(left, AlgebraicTensor):
+            left_shape = left.shape
+        elif isinstance(left, _PT):
+            left_shape = left.shape
+        elif hasattr(left, "shape"):
+            left_shape = (left.shape,)
+        else:
+            raise TypeError(
+                f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
+                f"the left, got {type(left).__name__}"
+            )
+        if len(left_shape) != len(right.shape):
+            raise ValueError(
+                f"Cannot compose tensors with different numbers of "
+                f"factors: {len(left_shape)} vs {len(right.shape)}"
+            )
+        composed_shape = tuple(
+            (l[0], r[1]) for l, r in zip(left_shape, right.shape)
+        )
+        return _ZT(composed_shape)
 
     # --- AlgebraicTensor × AlgebraicTensor (check first before single-side) ---
     if isinstance(left, AlgebraicTensor) and isinstance(right, AlgebraicTensor):
@@ -355,9 +407,7 @@ class AlgebraicTensor(Basic):
         # Flatten nested AlgebraicTensors and collect all leaf terms
         flat, shape, zero_term, comm_cs = cls._flatten_args(args)
 
-        # Remember whether zero_term was user-provided (from _flatten_args)
-        # vs. created later by coefficient cancellation.
-        zero_term_was_user_provided = zero_term is not None
+ 
 
         # Collect coefficients of PureTensor terms with identical factors
         flat, zero_term, coeff_map = cls._collect_coefficients(flat, shape, zero_term)
@@ -650,16 +700,30 @@ class AlgebraicTensor(Basic):
         )
 
     @classmethod
-    def _merge(cls, left, right):
-        """Merge two AlgebraicTensors by combining their coefficient maps.
+    def _combine_coeff_maps(cls, left, right, negate_right=False):
+        """Combine coefficient maps of two AlgebraicTensors.
+
+        Shared helper for _merge and _subtract. Merges the coefficient
+        maps by iterating over right's args and adding (or subtracting,
+        when negate_right is True) their coefficients into left's map.
 
         Both operands must have only AlgebraicPureTensor and AlgebraicZeroTensor
         terms (checked by _has_simple_terms before calling).
 
+        Parameters
+        ----------
+        left : AlgebraicTensor
+            The base tensor whose coeff_map is copied and accumulated into.
+        right : AlgebraicTensor
+            The tensor whose terms are merged into left's map.
+        negate_right : bool, default False
+            If True, negate each coefficient from right before merging
+            (used for subtraction).
+
         Returns
         -------
         AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or matrix
-            The merged result, with the same unwrapping semantics as __new__.
+            The combined result, with the same unwrapping semantics as __new__.
         """
         combined = left._coeff_map.copy()
         zero_term = None
@@ -669,6 +733,8 @@ class AlgebraicTensor(Basic):
             if isinstance(a, AlgebraicTensor):
                 nested = a._coeff_map
                 for key, c in nested.items():
+                    if negate_right:
+                        c = -c
                     if key in combined:
                         combined[key] = combined[key] + c
                     else:
@@ -679,6 +745,8 @@ class AlgebraicTensor(Basic):
                 factors = a.factors
                 key = AlgebraicPureTensor(*factors)
                 c = a.coeff
+                if negate_right:
+                    c = -c
                 if key in combined:
                     combined[key] = combined[key] + c
                 else:
@@ -687,7 +755,6 @@ class AlgebraicTensor(Basic):
                 zero_term = a
                 zero_term_was_user_provided = True
 
-        # Filter out zero coefficients
         real = []
         for key, c in combined.items():
             if c == 0:
@@ -714,63 +781,22 @@ class AlgebraicTensor(Basic):
         return obj
 
     @classmethod
+    def _merge(cls, left, right):
+        """Merge two AlgebraicTensors by combining their coefficient maps.
+
+        Both operands must have only AlgebraicPureTensor and AlgebraicZeroTensor
+        terms (checked by _has_simple_terms before calling).
+        """
+        return cls._combine_coeff_maps(left, right, negate_right=False)
+
+    @classmethod
     def _subtract(cls, left, right):
         """Subtract right from left by merging with negated coefficients.
 
         Both operands must have only AlgebraicPureTensor and AlgebraicZeroTensor
         terms (checked by _has_simple_terms before calling).
         """
-        combined = left._coeff_map.copy()
-        zero_term = None
-        zero_term_was_user_provided = left.has_zero_term()
-
-        for a in right.args:
-            if isinstance(a, AlgebraicTensor):
-                nested = a._coeff_map
-                for key, c in nested.items():
-                    neg_c = -c
-                    if key in combined:
-                        combined[key] = combined[key] + neg_c
-                    else:
-                        combined[key] = neg_c
-                if a.has_zero_term():
-                    zero_term_was_user_provided = True
-            elif isinstance(a, AlgebraicPureTensor):
-                factors = a.factors
-                key = AlgebraicPureTensor(*factors)
-                neg_c = -a.coeff
-                if key in combined:
-                    combined[key] = combined[key] + neg_c
-                else:
-                    combined[key] = neg_c
-            elif isinstance(a, AlgebraicZeroTensor):
-                zero_term = a
-                zero_term_was_user_provided = True
-
-        real = []
-        for key, c in combined.items():
-            if c == 0:
-                if zero_term is None:
-                    zero_term = AlgebraicZeroTensor(left.shape)
-            elif c is S.One:
-                real.append(key)
-            else:
-                real.append(AlgebraicPureTensor(c, *key.factors))
-
-        if not real:
-            if zero_term is not None:
-                return zero_term
-            return AlgebraicZeroTensor(left.shape)
-
-        if len(real) == 1 and not zero_term_was_user_provided and not isinstance(real[0], AlgebraicZeroTensor):
-            return real[0]
-
-        if zero_term_was_user_provided:
-            real.append(zero_term)
-
-        obj = Basic.__new__(cls, *real)
-        obj._coeff_map = combined
-        return obj
+        return cls._combine_coeff_maps(left, right, negate_right=True)
 
     @property
     def T(self):
@@ -806,6 +832,78 @@ class AlgebraicTensor(Basic):
             else:
                 transposed_args.append(a)
         return AlgebraicTensor(*transposed_args)
+
+    def conjugate(self):
+        """Return the complex conjugate of this algebraic tensor.
+
+        Applies ``.conjugate()`` to each term in the sum by linearity.
+
+        Returns
+        -------
+        AlgebraicTensor, AlgebraicPureTensor, or AlgebraicZeroTensor
+            The conjugated tensor.  If the result collapses to a single
+            term, that term is returned directly.
+
+        Examples
+        ========
+
+        Conjugate a sum of two pure tensors:
+
+        >>> from sympy import I
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> C = MatrixSymbol("C", 3, 4)
+        >>> D = MatrixSymbol("D", 4, 5)
+        >>> T1 = AlgebraicPureTensor(1 + I, A, B)
+        >>> T2 = AlgebraicPureTensor(2 - I, C, D)
+        >>> S = AlgebraicTensor(T1, T2)
+        >>> SC = S.conjugate()
+        >>> isinstance(SC, AlgebraicTensor)
+        True
+
+        Coefficients are conjugated in each term:
+
+        >>> coeff_vals = set()
+        >>> for arg in SC.args:
+        ...     if isinstance(arg, AlgebraicPureTensor):
+        ...         coeff_vals.add(arg.coeff)
+        >>> (1 - I) in coeff_vals
+        True
+        >>> (2 + I) in coeff_vals
+        True
+
+        Double conjugate returns the original tensor:
+
+        >>> S.conjugate().conjugate() == S
+        True
+        """
+        result = self._eval_conjugate()
+        if result is not None:
+            return result
+        from sympy.functions.elementary.complexes import conjugate as c
+        return c(self)
+
+    def _eval_conjugate(self):
+        """Apply conjugate to each term in the sum by linearity.
+
+        Returns
+        -------
+        AlgebraicTensor, AlgebraicPureTensor, or AlgebraicZeroTensor
+            The conjugated tensor.
+        """
+        conjugated_args = []
+        for a in self.args:
+            if hasattr(a, 'conjugate'):
+                conjugated_args.append(a.conjugate())
+            else:
+                conjugated_args.append(a)
+
+        if conjugated_args == list(self.args):
+            return self
+
+        return AlgebraicTensor(*conjugated_args)
 
     # ---- Arithmetic delegation ----
 
@@ -1064,6 +1162,123 @@ class AlgebraicTensor(Basic):
         from sympy.tensor.algebraic.simplify import _simplify_algebraic_tensor
         return _simplify_algebraic_tensor(self)
 
+    def doit(self, **hints):
+        """Evaluate each term in the sum by linearity.
+
+        Applies ``.doit()`` to every term (``AlgebraicPureTensor`` or
+        ``AlgebraicZeroTensor``) in the sum, then reassembles the
+        results into a single ``AlgebraicTensor``.
+
+        Parameters
+        ----------
+        **hints : dict
+            Passed through to the ``doit()`` calls on individual terms.
+
+        Returns
+        -------
+        AlgebraicTensor, AlgebraicPureTensor, or AlgebraicZeroTensor
+            The reassembled tensor with evaluated terms.  If the result
+            collapses to a single term, that term is returned directly.
+
+        Examples
+        ========
+
+        A sum with no unevaluated sub-expressions returns itself:
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> C = MatrixSymbol("C", 3, 4)
+        >>> D = MatrixSymbol("D", 4, 5)
+        >>> T1 = AlgebraicPureTensor(A, B)
+        >>> T2 = AlgebraicPureTensor(C, D)
+        >>> S = AlgebraicTensor(T1, T2)
+        >>> S.doit() is S
+        True
+
+        With symbolic coefficients, doit evaluates the coefficients:
+
+        >>> from sympy.abc import x, y
+        >>> T3 = AlgebraicPureTensor(x, A, B)
+        >>> T4 = AlgebraicPureTensor(y, A, B)
+        >>> S2 = AlgebraicTensor(T3, T4)
+        >>> S2.doit().coeff
+        x + y
+
+        With deep=False, sub-expressions are not evaluated:
+
+        >>> S.doit(deep=False) is S
+        True
+        """
+        deep = hints.get('deep', True)
+        evaluated_args = []
+        for a in self.args:
+            if hasattr(a, 'doit') and deep:
+                evaluated_args.append(a.doit(**hints))
+            else:
+                evaluated_args.append(a)
+
+        if evaluated_args == list(self.args):
+            return self
+
+        return AlgebraicTensor(*evaluated_args)
+
+    def diff(self, *symbols, **assumptions):
+        """Differentiate this tensor sum with respect to *symbols*.
+
+        Applies ``.diff()`` to each term in the sum by linearity and
+        reassembles the results into a single ``AlgebraicTensor``.
+
+        Parameters
+        ----------
+        *symbols : Symbol or str
+            Symbol(s) to differentiate with respect to.
+        **assumptions : dict
+            Passed through to the underlying ``.diff()`` calls.
+
+        Returns
+        -------
+        AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or matrix
+            The differentiated tensor sum.  If the result collapses to
+            a single term, that term is returned directly.
+
+        Examples
+        ========
+
+        Differentiate a sum of two pure tensors:
+
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
+        >>> from sympy.abc import x
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> C = MatrixSymbol("C", 3, 4)
+        >>> D = MatrixSymbol("D", 4, 5)
+        >>> T1 = AlgebraicPureTensor(x**2, A, B)
+        >>> T2 = AlgebraicPureTensor(x, C, D)
+        >>> S = AlgebraicTensor(T1, T2)
+        >>> S_diff = S.diff(x)
+        >>> len(S_diff.args)
+        2
+
+        Differentiating a sum with respect to a symbol not present:
+
+        >>> from sympy.abc import y
+        >>> S.diff(y)
+        0_{(3x4), (4x5)}
+        """
+        from sympy.core.singleton import S
+
+        differentiated = []
+        for a in self.args:
+            if hasattr(a, 'diff'):
+                differentiated.append(a.diff(*symbols, **assumptions))
+            else:
+                differentiated.append(S.Zero)
+
+        return AlgebraicTensor(*differentiated)
+
     def display(self, mode="latex"):
         """Display this tensor using IPython display or fallback to print.
 
@@ -1281,6 +1496,7 @@ def algebraic_tensor_product(*args):
         first_s = sympify(first)
         if isinstance(first_s, Number) or (
             hasattr(first_s, 'is_commutative') and first_s.is_commutative
+            and not isinstance(first_s, AlgebraicZeroTensor)
         ):
             return first_s * sympify(args[1])
 
