@@ -151,7 +151,7 @@ def _construct_composite(coeffs, opt):
             return None # generators are number-like so lets better use EX
         if any(gen.is_finite is False for gen in gens):
             return None # e.g. oo appearing as a generator from oo*I; use EX
-            
+       
         all_symbols = set()
 
         for gen in gens:
