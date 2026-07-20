@@ -25,7 +25,7 @@ from __future__ import annotations
 from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import wraps
 from inspect import signature
@@ -1301,6 +1301,79 @@ class IntegrationSolver:
         step.outcome = 'fallback' if isinstance(result, DontKnowRule) else 'matched'
         return result
 
+    def try_solve(self, integrand: Expr, symbol: Symbol) -> Rule | None:
+        """Integrate ``integrand``, returning ``None`` if it cannot be solved.
+
+        Unlike :meth:`subsolve` (which always returns a :class:`Rule`, using
+        :class:`DontKnowRule` as a placeholder), this returns ``None`` when the
+        result contains any unsolved piece.  It is the single place where
+        "is this sub-integral solvable?" is judged, so the individual rules no
+        longer have to inspect their own sub-results to prune dead branches.
+        """
+        rule = self.subsolve(integrand, symbol)
+        return None if rule.contains_dont_know() else rule
+
+    def run_candidate(self, candidate: Callable[[], object]) -> Rule | None:
+        """Drive one *candidate* continuation and return its assembled rule.
+
+        A candidate is a zero-argument generator function -- a stateless
+        description of a move.  It ``yield``\\s the sub-integrals it needs and
+        receives the solved :class:`Rule` back; the solver, not the candidate,
+        performs the recursion and the loop detection.  A *required* sub-goal
+        (a bare :class:`IntegralInfo`) that turns out to be unsolvable prunes
+        the whole candidate -- the candidate never has to check.  An *optional*
+        sub-goal (wrapped in :class:`Subgoal` with ``required=False``) is always
+        sent back, solved or not, so the candidate can choose to use it.  The
+        candidate ``return``\\s the finished :class:`Rule`, or ``None`` to
+        withdraw.
+        """
+        gen = candidate()
+        try:
+            goal = next(gen)
+            while True:
+                if isinstance(goal, Subgoal):
+                    info, required = goal.info, goal.required
+                else:
+                    info, required = goal, True
+                rule = self.subsolve(info.integrand, info.symbol)
+                if required and rule.contains_dont_know():
+                    gen.close()
+                    return None
+                goal = gen.send(rule)
+        except StopIteration as stop:
+            return stop.value
+
+    def collect_candidates(
+        self, candidates: Iterable[Callable[[], object]]
+    ) -> list[Rule]:
+        """Drive every candidate, keeping those not withdrawn.
+
+        A candidate is withdrawn (``run_candidate`` returns ``None``) only when
+        one of its *required* sub-goals is unsolvable, so that is the real
+        solvability gate.  A kept rule may still carry an unsolved *optional*
+        piece; that is intentional and matches how the caller assembles
+        piecewise fall-backs.
+        """
+        solved = []
+        for candidate in candidates:
+            rule = self.run_candidate(candidate)
+            if rule is not None:
+                solved.append(rule)
+        return solved
+
+
+class Subgoal(NamedTuple):
+    """A sub-integral a candidate yields to the solver.
+
+    ``required=True`` (the default when a bare :class:`IntegralInfo` is
+    yielded) means the candidate is abandoned if this sub-integral cannot be
+    solved.  ``required=False`` marks an optional sub-integral: the solver
+    always sends the result back and the candidate decides what to do with it.
+    """
+
+    info: IntegralInfo
+    required: bool = True
+
 
 def manual_diff(f, symbol):
     """Derivative of f in form expected by find_substitutions
@@ -1933,8 +2006,8 @@ def _parts_rule(integrand, symbol, solver=None) -> tuple[Expr, Expr, Expr, Expr,
             if rule == pull_out_algebraic:
                 if dv.is_Derivative or dv.has(TrigonometricFunction, HyperbolicFunction) or \
                         isinstance(dv, OrthogonalPolynomial):
-                    v_step = solver.subsolve(dv, symbol)
-                    if v_step.contains_dont_know():
+                    v_step = solver.try_solve(dv, symbol)
+                    if v_step is None:
                         return None
                     else:
                         du = u.diff(symbol)
@@ -1959,8 +2032,8 @@ def _parts_rule(integrand, symbol, solver=None) -> tuple[Expr, Expr, Expr, Expr,
 
             if accept:
                 du = u.diff(symbol)
-                v_step = solver.subsolve(simplify(dv), symbol)
-                if not v_step.contains_dont_know():
+                v_step = solver.try_solve(simplify(dv), symbol)
+                if v_step is not None:
                     v = v_step.eval()
                     return u, dv, v, du, v_step
     return None
@@ -2246,8 +2319,8 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo, solver=None):
     if constant_bases_subs:
         integrand = integrand.subs(constant_bases_subs)
     if base0 is None:
-        substep = solver.subsolve(integrand, x)
-        if not substep.contains_dont_know():
+        substep = solver.try_solve(integrand, x)
+        if substep is not None:
             debug("Integral: {} is rewritten with {} on symbol: {}".format(integral.integrand, integrand, x))
             return RewriteRule(integral.integrand, x, integrand, substep)
         return None
@@ -2261,8 +2334,8 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo, solver=None):
     for base_i, ratio_i, q_i in zip(bases, ratios, qs):
         subs_dict[base_i**(S.One/q_i)] = (ratio_i)**(S.One/q_i) * u**(q0/q_i)
     substituted = integrand.subs(subs_dict).subs(x, x_u) * dx_u
-    substep = solver.subsolve(substituted, u)
-    if not substep.contains_dont_know():
+    substep = solver.try_solve(substituted, u)
+    if substep is not None:
         pieces: list[tuple[Rule, Boolean]] = []
         det = a0*d0 - b0*c0
         _, base0_denom = base0.as_numer_denom()
@@ -2743,8 +2816,8 @@ def trig_substitution_rule(integral, solver):
                         1/cos(theta): sec(theta)
                     })
 
-                substep = solver.subsolve(replaced, theta)
-                if not substep.contains_dont_know():
+                substep = solver.try_solve(replaced, theta)
+                if substep is not None:
                     return TrigSubstitutionRule(integrand, symbol,
                         theta, x_func, replaced, substep, restriction)
 
@@ -2782,55 +2855,63 @@ def dirac_delta_rule(integral: IntegralInfo, solver):
 
 
 def substitution_rule(integral, solver):
+    # A proposer: it enumerates the possible u-substitutions and hands each one
+    # to the solver as a self-contained *candidate*.  The candidate describes
+    # the move -- integrate the substituted integrand, then wrap the result in
+    # the URule (and, when the substitution introduces a constant with poles, a
+    # Piecewise fall-back) -- but it does not integrate anything itself and
+    # never checks whether a sub-integral was solvable.  The solver drives the
+    # candidates, prunes the ones whose (required) substituted integral cannot
+    # be solved, and returns the survivors.
     integrand, symbol = integral
 
     u_var = Dummy("u")
     substitutions = find_substitutions(integrand, symbol, u_var)
-    count = 0
-    if substitutions:
-        debug("List of Substitution Rules")
-        ways = []
-        factored_integrand = integrand.factor()
-        _, denom_integrand = factored_integrand.as_numer_denom()
-        for u_func, c, substituted in substitutions:
-            subrule = solver.subsolve(substituted, u_var)
-            count = count + 1
-            debug("Rule {}: {}".format(count, subrule))
+    if not substitutions:
+        return
+    debug("List of Substitution Rules")
+    factored_integrand = integrand.factor()
+    _, denom_integrand = factored_integrand.as_numer_denom()
 
-            if subrule.contains_dont_know():
-                continue
+    def make_candidate(u_func, c, substituted):
+        def candidate():
+            # Required sub-goal: if this cannot be solved the solver drops the
+            # whole candidate, so no solvability check is needed here.
+            subrule = yield IntegralInfo(substituted, u_var)
 
             if simplify(c - 1) != 0:
                 _, denom_c = c.as_numer_denom()
-                if subrule:
-                    subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
+                subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
 
                 if denom_c.free_symbols:
                     pieces = []
-                    factors_denom_c = factor_list(denom_c)[1]
-                    for pole, _ in factors_denom_c:
-                        # only substitute poles introduced by the constant c if they were not already poles of the original integrand
+                    for pole, _ in factor_list(denom_c)[1]:
+                        # only handle poles introduced by the constant c that
+                        # were not already poles of the original integrand
                         if not _if_zero_implies_zero(pole, denom_integrand):
                             rewritten_integral = manual_subs(factored_integrand, pole, 0)
                             debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten_integral, symbol))
-                            substep = solver.subsolve(rewritten_integral, symbol)
-
-                            if substep:
-                                substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
-                                pieces.append((
-                                    substep,
-                                    Eq(pole, 0)
-                                ))
+                            # Optional sub-goal: the fall-back branch is kept
+                            # whether or not it can be fully integrated.
+                            substep = yield Subgoal(
+                                IntegralInfo(rewritten_integral, symbol), required=False)
+                            substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
+                            pieces.append((substep, Eq(pole, 0)))
                     if pieces:
                         pieces.append((subrule, True))
                         subrule = PiecewiseRule(substituted, symbol, pieces)
 
-            ways.append(URule(integrand, symbol, u_var, u_func, subrule))
+            return URule(integrand, symbol, u_var, u_func, subrule)
+        return candidate
 
-        if len(ways) > 1:
-            return AlternativeRule(integrand, symbol, ways)
-        elif ways:
-            return ways[0]
+    ways = solver.collect_candidates(
+        make_candidate(u_func, c, substituted)
+        for u_func, c, substituted in substitutions)
+
+    if len(ways) > 1:
+        return AlternativeRule(integrand, symbol, ways)
+    elif ways:
+        return ways[0]
 
 
 partial_fractions_rule = rewriter(
