@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy import sin, Function, symbols, Dummy, Lambda, cos, Symbol, factorial, S
-from sympy.parsing.mathematica import parse_mathematica, MathematicaParser
+from sympy.parsing.mathematica import (
+    parse_mathematica, parse_mathematica_to_fullformlist, MathematicaParser)
 from sympy.core.sympify import sympify
 from sympy.abc import n, w, x, y, z
 from sympy.testing.pytest import raises
@@ -108,9 +109,10 @@ def test_mathematica():
 
 
 def test_parser_mathematica_tokenizer():
-    parser = MathematicaParser()
-
-    chain = lambda expr: parser._from_tokens_to_fullformlist(parser._from_mathematica_to_tokens(expr))
+    # ``parse_mathematica_to_fullformlist`` is the public entry point for the
+    # intermediate FullForm (as nested Python lists), i.e. the parse pipeline up
+    # to (but excluding) the conversion into SymPy objects.
+    chain = parse_mathematica_to_fullformlist
 
     # Basic patterns
     assert chain("x") == "x"
@@ -378,3 +380,108 @@ def test_mathematica_not_operator():
     # Factorial with implicit multiplication
     assert parse_mathematica("x!y") == y*factorial(x)
     assert parse_mathematica("x!y!") == factorial(x)*factorial(y)
+
+
+def test_mathematica_star_operator():
+    # \[Star], the literal ⋆ (U+22C6) and "Star[...]" are the same operator,
+    # which is distinct from Times.  Assertions are made on the FullForm list so
+    # they are not affected by any SymPy-level reordering.
+    fullform = parse_mathematica_to_fullformlist
+    assert fullform(r"a \[Star] b") == ["Star", "a", "b"]
+    assert fullform("a \N{STAR OPERATOR} b") == ["Star", "a", "b"]
+    assert fullform("Star[a, b]") == ["Star", "a", "b"]
+
+    # Star is flat: a ⋆ b ⋆ c -> Star[a, b, c]
+    assert fullform("a \N{STAR OPERATOR} b \N{STAR OPERATOR} c") == ["Star", "a", "b", "c"]
+
+    # Precedence: Star binds looser than Times but tighter than Plus.
+    assert fullform("a + b \N{STAR OPERATOR} c") == ["Plus", "a", ["Star", "b", "c"]]
+    assert fullform("a*b \N{STAR OPERATOR} c*d") == \
+        ["Star", ["Times", "a", "b"], ["Times", "c", "d"]]
+
+    # Times is unaffected.
+    assert fullform("a * b") == ["Times", "a", "b"]
+
+    # End-to-end: with no built-in meaning Star becomes an undefined Function.
+    a, b = symbols("a b")
+    assert parse_mathematica(r"a \[Star] b") == Function("Star")(a, b)
+
+
+def test_mathematica_operators_without_builtin_meaning():
+    # Operators listed under "Operators without built-in meanings" in
+    # https://reference.wolfram.com/language/tutorial/TextualInputAndOutput.html
+    # Each must produce its own head instead of being dropped/parsed as Times.
+    # Assertions are on the FullForm list (see parse_mathematica_to_fullformlist).
+    fullform = parse_mathematica_to_fullformlist
+
+    # Infix operators, both named-character and literal forms. CirclePlus,
+    # CircleTimes, TildeTilde and LeftRightArrow are flat (x op y op z ->
+    # op[x, y, z]).
+    assert fullform(r"x \[CirclePlus] y") == ["CirclePlus", "x", "y"]
+    assert fullform("x \N{CIRCLED PLUS} y \N{CIRCLED PLUS} z") == \
+        ["CirclePlus", "x", "y", "z"]
+    assert fullform(r"x \[CircleTimes] y") == ["CircleTimes", "x", "y"]
+    assert fullform("x \N{CIRCLED TIMES} y \N{CIRCLED TIMES} z") == \
+        ["CircleTimes", "x", "y", "z"]
+    assert fullform(r"x \[TildeTilde] y") == ["TildeTilde", "x", "y"]
+    assert fullform("x \N{ALMOST EQUAL TO} y \N{ALMOST EQUAL TO} z") == \
+        ["TildeTilde", "x", "y", "z"]
+    assert fullform(r"x \[LeftRightArrow] y") == ["LeftRightArrow", "x", "y"]
+    assert fullform("x \N{LEFT RIGHT ARROW} y \N{LEFT RIGHT ARROW} z") == \
+        ["LeftRightArrow", "x", "y", "z"]
+
+    # Therefore is right-associative: x ∴ y ∴ z groups as x ∴ (y ∴ z).
+    # https://reference.wolfram.com/language/ref/Therefore.html
+    assert fullform(r"x \[Therefore] y") == ["Therefore", "x", "y"]
+    assert fullform("x \N{THEREFORE} y \N{THEREFORE} z") == \
+        ["Therefore", "x", ["Therefore", "y", "z"]]
+
+    # Prefix operators.
+    assert fullform(r"\[Del] x") == ["Del", "x"]
+    assert fullform("\N{NABLA}x") == ["Del", "x"]
+    assert fullform("\N{NABLA}(x + y)") == ["Del", ["Plus", "x", "y"]]
+    assert fullform(r"\[Square] x") == ["Square", "x"]
+    assert fullform("\N{WHITE SQUARE}x") == ["Square", "x"]
+
+    # Matchfix AngleBracket, with one or more comma-separated arguments.
+    assert fullform(r"\[LeftAngleBracket] x \[RightAngleBracket]") == \
+        ["AngleBracket", "x"]
+    assert fullform(r"\[LeftAngleBracket] a, b, c \[RightAngleBracket]") == \
+        ["AngleBracket", "a", "b", "c"]
+
+    # Precedence matches Wolfram: CirclePlus binds looser than Times but
+    # tighter than Plus; CircleTimes binds tighter than Times; Del (prefix)
+    # binds looser than Power.
+    assert fullform("a + b \N{CIRCLED PLUS} c") == ["Plus", "a", ["CirclePlus", "b", "c"]]
+    assert fullform("a \N{CIRCLED PLUS} b*c") == ["CirclePlus", "a", ["Times", "b", "c"]]
+    assert fullform("a*b \N{CIRCLED TIMES} c*d") == \
+        ["Times", "a", ["CircleTimes", "b", "c"], "d"]
+    assert fullform("\N{NABLA}x^2") == ["Del", ["Power", "x", "2"]]
+
+    # End-to-end: with no built-in meaning each head becomes an undefined
+    # Function once converted to SymPy.
+    x, y = symbols("x y")
+    assert parse_mathematica(r"x \[CirclePlus] y") == Function("CirclePlus")(x, y)
+    assert parse_mathematica(r"\[Del] x") == Function("Del")(x)
+    assert parse_mathematica(r"\[LeftAngleBracket] x, y \[RightAngleBracket]") == \
+        Function("AngleBracket")(x, y)
+
+
+def test_parse_mathematica_to_fullformlist():
+    # The function returns the intermediate FullForm as nested Python lists,
+    # with heads and atoms represented as strings.
+    assert parse_mathematica_to_fullformlist("Sin[x]^2 Tan[y]") == \
+        ['Times', ['Power', ['Sin', 'x'], '2'], ['Tan', 'y']]
+    assert parse_mathematica_to_fullformlist("x*(a + b)") == \
+        ['Times', 'x', ['Plus', 'a', 'b']]
+    assert parse_mathematica_to_fullformlist("F[7, 5, 3]") == ['F', '7', '5', '3']
+
+    # Named characters are resolved before tokenizing, unlike the raw tokenizer
+    # stages, so both the \[Name] form and the literal character are accepted.
+    assert parse_mathematica_to_fullformlist(r"a \[CirclePlus] b") == \
+        ['CirclePlus', 'a', 'b']
+    assert parse_mathematica_to_fullformlist("a \N{STAR OPERATOR} b \N{STAR OPERATOR} c") == \
+        ['Star', 'a', 'b', 'c']
+
+    # The method form on the parser class is equivalent.
+    assert MathematicaParser().parse_fullformlist("a + b") == ['Plus', 'a', 'b']

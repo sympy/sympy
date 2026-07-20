@@ -83,6 +83,33 @@ def parse_mathematica(s):
     return parser.parse(s)
 
 
+def parse_mathematica_to_fullformlist(s):
+    """
+    Translate a string containing a Wolfram Mathematica expression to its
+    ``FullForm`` represented as nested Python lists.
+
+    This is the intermediate representation produced by
+    :func:`parse_mathematica` before it is turned into a SymPy expression:
+    each node is a list whose first element is the head (as a string) followed
+    by its arguments, and atoms are left as strings. It is useful when the SymPy
+    conversion is undesired, for example to inspect the parsed syntax tree or to
+    perform a custom conversion.
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.mathematica import parse_mathematica_to_fullformlist
+    >>> parse_mathematica_to_fullformlist("Sin[x]^2 Tan[y]")
+    ['Times', ['Power', ['Sin', 'x'], '2'], ['Tan', 'y']]
+    >>> parse_mathematica_to_fullformlist("x*(a + b)")
+    ['Times', 'x', ['Plus', 'a', 'b']]
+    >>> parse_mathematica_to_fullformlist("F[7, 5, 3]")
+    ['F', '7', '5', '3']
+    """
+    parser = MathematicaParser()
+    return parser.parse_fullformlist(s)
+
+
 def _parse_Function(*args):
     if len(args) == 1:
         arg = args[0]
@@ -593,11 +620,15 @@ class MathematicaParser:
         return s
 
     def parse(self, s):
+        s4 = self.parse_fullformlist(s)
+        s5 = self._from_fullformlist_to_sympy(s4)
+        return s5
+
+    def parse_fullformlist(self, s):
         s2 = named_characters_to_unicode(s)
         s3 = self._from_mathematica_to_tokens(s2)
         s4 = self._from_tokens_to_fullformlist(s3)
-        s5 = self._from_fullformlist_to_sympy(s4)
-        return s5
+        return s4
 
     INFIX = "Infix"
     PREFIX = "Prefix"
@@ -610,10 +641,12 @@ class MathematicaParser:
         (POSTFIX, None, {";": lambda x: x + ["Null"] if isinstance(x, list) and x and x[0] == "CompoundExpression" else ["CompoundExpression", x, "Null"]}),
         (INFIX, FLAT, {";": "CompoundExpression"}),
         (INFIX, RIGHT, {"=": "Set", ":=": "SetDelayed", "+=": "AddTo", "-=": "SubtractFrom", "*=": "TimesBy", "/=": "DivideBy"}),
+        (INFIX, RIGHT, {"\N{THEREFORE}": "Therefore"}),
         (INFIX, LEFT, {"//": lambda x, y: [x, y]}),
         (POSTFIX, None, {"&": "Function"}),
         (INFIX, LEFT, {"/.": "ReplaceAll"}),
         (INFIX, RIGHT, {"->": "Rule", ":>": "RuleDelayed"}),
+        (INFIX, FLAT, {"\N{LEFT RIGHT ARROW}": "LeftRightArrow"}),
         (INFIX, LEFT, {"/;": "Condition"}),
         (INFIX, FLAT, {"|": "Alternatives"}),
         (POSTFIX, None, {"..": "Repeated", "...": "RepeatedNull"}),
@@ -622,17 +655,23 @@ class MathematicaParser:
         (PREFIX, None, {"!": "Not"}),
         (INFIX, FLAT, {"===": "SameQ", "=!=": "UnsameQ"}),
         (INFIX, FLAT, {"==": "Equal", "!=": "Unequal", "<=": "LessEqual", "<": "Less", ">=": "GreaterEqual", ">": "Greater"}),
+        (INFIX, FLAT, {"\N{ALMOST EQUAL TO}": "TildeTilde"}),
         (INFIX, None, {";;": "Span"}),
         (INFIX, FLAT, {"+": "Plus", "-": "Plus"}),
+        (INFIX, FLAT, {"\N{CIRCLED PLUS}": "CirclePlus"}),
+        (INFIX, FLAT, {"\N{STAR OPERATOR}": "Star"}),
         (INFIX, FLAT, {"*": "Times", "/": "Times"}),
+        (INFIX, FLAT, {"\N{CIRCLED TIMES}": "CircleTimes"}),
         (INFIX, FLAT, {".": "Dot"}),
         (PREFIX, None, {"-": lambda x: MathematicaParser._get_neg(x),
                         "+": lambda x: x}),
+        (PREFIX, None, {"\N{NABLA}": "Del", "\N{WHITE SQUARE}": "Square"}),
         (INFIX, RIGHT, {"^": "Power"}),
         (INFIX, RIGHT, {"@@": "Apply", "/@": "Map", "//@": "MapAll", "@@@": lambda x, y: ["Apply", x, y, ["List", "1"]]}),
         (POSTFIX, None, {"'": "Derivative", "!": "Factorial", "!!": "Factorial2", "--": "Decrement"}),
         (INFIX, None, {"[": lambda x, y: [x, *y], "[[": lambda x, y: ["Part", x, *y]}),
-        (PREFIX, None, {"{": lambda x: ["List", *x], "(": lambda x: x[0]}),
+        (PREFIX, None, {"{": lambda x: ["List", *x], "(": lambda x: x[0],
+                        "\N{LEFT-POINTING ANGLE BRACKET}": lambda x: ["AngleBracket", *x]}),
         (INFIX, None, {"?": "PatternTest"}),
         (POSTFIX, None, {
             "_": lambda x: ["Pattern", x, ["Blank"]],
@@ -666,8 +705,8 @@ class MathematicaParser:
 
     _number = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
 
-    _enclosure_open = ["(", "[", "[[", "{"]
-    _enclosure_close = [")", "]", "]]", "}"]
+    _enclosure_open = ["(", "[", "[[", "{", "\N{LEFT-POINTING ANGLE BRACKET}"]
+    _enclosure_close = [")", "]", "]]", "}", "\N{RIGHT-POINTING ANGLE BRACKET}"]
 
     @classmethod
     def _get_neg(cls, x):
