@@ -641,7 +641,7 @@ class MathematicaParser:
         (POSTFIX, None, {";": lambda x: x + ["Null"] if isinstance(x, list) and x and x[0] == "CompoundExpression" else ["CompoundExpression", x, "Null"]}),
         (INFIX, FLAT, {";": "CompoundExpression"}),
         (INFIX, RIGHT, {"=": "Set", ":=": "SetDelayed", "+=": "AddTo", "-=": "SubtractFrom", "*=": "TimesBy", "/=": "DivideBy"}),
-        (INFIX, FLAT, {"\N{THEREFORE}": "Therefore"}),
+        (INFIX, RIGHT, {"\N{THEREFORE}": "Therefore"}),
         (INFIX, LEFT, {"//": lambda x, y: [x, y]}),
         (POSTFIX, None, {"&": "Function"}),
         (INFIX, LEFT, {"/.": "ReplaceAll"}),

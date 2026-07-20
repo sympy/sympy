@@ -414,7 +414,9 @@ def test_mathematica_operators_without_builtin_meaning():
     # Assertions are on the FullForm list (see parse_mathematica_to_fullformlist).
     fullform = parse_mathematica_to_fullformlist
 
-    # Infix operators, both named-character and literal forms; all are flat.
+    # Infix operators, both named-character and literal forms. CirclePlus,
+    # CircleTimes, TildeTilde and LeftRightArrow are flat (x op y op z ->
+    # op[x, y, z]).
     assert fullform(r"x \[CirclePlus] y") == ["CirclePlus", "x", "y"]
     assert fullform("x \N{CIRCLED PLUS} y \N{CIRCLED PLUS} z") == \
         ["CirclePlus", "x", "y", "z"]
@@ -424,10 +426,15 @@ def test_mathematica_operators_without_builtin_meaning():
     assert fullform(r"x \[TildeTilde] y") == ["TildeTilde", "x", "y"]
     assert fullform("x \N{ALMOST EQUAL TO} y \N{ALMOST EQUAL TO} z") == \
         ["TildeTilde", "x", "y", "z"]
-    assert fullform(r"x \[Therefore] y") == ["Therefore", "x", "y"]
     assert fullform(r"x \[LeftRightArrow] y") == ["LeftRightArrow", "x", "y"]
     assert fullform("x \N{LEFT RIGHT ARROW} y \N{LEFT RIGHT ARROW} z") == \
         ["LeftRightArrow", "x", "y", "z"]
+
+    # Therefore is right-associative: x ∴ y ∴ z groups as x ∴ (y ∴ z).
+    # https://reference.wolfram.com/language/ref/Therefore.html
+    assert fullform(r"x \[Therefore] y") == ["Therefore", "x", "y"]
+    assert fullform("x \N{THEREFORE} y \N{THEREFORE} z") == \
+        ["Therefore", "x", ["Therefore", "y", "z"]]
 
     # Prefix operators.
     assert fullform(r"\[Del] x") == ["Del", "x"]
