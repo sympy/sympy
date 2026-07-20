@@ -261,6 +261,14 @@ def test_manualintegrate_trig_product_to_sum():
     F = -sqrt(2)*sqrt(pi)*(-sin(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + cos(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 + sqrt(2)*sqrt(pi)*(-sin(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + cos(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
     assert_is_integral_of(f, F)
 
+    f = sin(x**2)*sin(x)
+    F = sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 - sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
+    assert_is_integral_of(f, F)
+
+    f = cos(x**2)*cos(x)
+    F = sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 + sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
+    assert_is_integral_of(f, F)
+
 
 def test_manualintegrate_trig_poly_product():
     f = x*cos(x**2+x)
