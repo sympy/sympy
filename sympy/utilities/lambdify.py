@@ -157,6 +157,7 @@ def _import(module, reload=False):
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
+    modname = module
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
@@ -193,6 +194,12 @@ def _import(module, reload=False):
     # Add translated names to namespace
     for sympyname, translation in translations.items():
         namespace[sympyname] = namespace[translation]
+
+    if modname == "torch":
+        # Torch accepts tensors for minimum/maximum; these wrappers convert
+        # scalar constants when mixed with tensors in lambdified expressions.
+        namespace["maximum"] = _torch_maximum
+        namespace["minimum"] = _torch_minimum
 
     # For computing the modulus of a SymPy expression we use the builtin abs
     # function, instead of the previously used fabs function for all
@@ -360,6 +367,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
           (e.g., to use the NumPy module but override the ``sin`` function
           with a custom version, you can use
           ``[{'sin': custom_sin}, 'numpy']``).
+
+        To build a ``torch.nn.Module`` object instead of a plain function, use
+        ``sympy.printing.pytorch.torch_nn_module``.
 
     dummify : bool, optional
         Whether or not the variables in the provided expression that are not
@@ -1377,6 +1387,40 @@ class _EvaluatorPrinter:
         elif iterable(expr):
             expr = type(expr)([self._handle_Subs(e, out) for e in expr])
         return expr
+
+
+def _tensorize_for_torch_binary_op(value, other, torch):
+    """Return ``value`` as a tensor when mixed with torch tensors."""
+    if isinstance(value, torch.Tensor):
+        return value
+    if isinstance(other, torch.Tensor):
+        return torch.tensor(value, dtype=other.dtype, device=other.device)
+    return torch.tensor(value)
+
+
+def _torch_maximum(*args):
+    """Torch maximum that accepts scalar constants mixed with tensors."""
+    torch = import_module("torch")
+    op = getattr(torch, "maximum", torch.max)
+    out = args[0]
+    for nxt in args[1:]:
+        out = _tensorize_for_torch_binary_op(out, nxt, torch)
+        nxt = _tensorize_for_torch_binary_op(nxt, out, torch)
+        out = op(out, nxt)
+    return out
+
+
+def _torch_minimum(*args):
+    """Torch minimum that accepts scalar constants mixed with tensors."""
+    torch = import_module("torch")
+    op = getattr(torch, "minimum", torch.min)
+    out = args[0]
+    for nxt in args[1:]:
+        out = _tensorize_for_torch_binary_op(out, nxt, torch)
+        nxt = _tensorize_for_torch_binary_op(nxt, out, torch)
+        out = op(out, nxt)
+    return out
+
 
 class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
     def _print_unpacking(self, lvalues, rvalue):

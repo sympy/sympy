@@ -210,6 +210,10 @@ those libraries.
   machine learning library. `lambdify` can produce TensorFlow compatible
   functions using `lambdify(modules='tensorflow')`.
 
+- **PyTorch**: [PyTorch](https://pytorch.org/) is a popular machine learning
+  library. `lambdify` can produce PyTorch-compatible functions using
+  `lambdify(modules='torch')`.
+
 - **NumExpr**: [NumExpr](https://github.com/pydata/numexpr) is a fast
   numerical expression evaluator for NumPy. `lambdify` can produce NumExpr
   compatible functions using `lambdify(modules='numexpr')`.
@@ -273,6 +277,10 @@ printers generate Python functions instead of strings:
   if available in order to automatically detect the TensorFlow version. If it
   is not installed, the `tensorflow_code()` function assumes the latest
   supported version of TensorFlow.
+
+- **PyTorch**: The `sympy.printing.pytorch` module supports generating PyTorch
+  code strings with `torch_code()`, and can also construct
+  `torch.nn.Module` objects with `torch_nn_module()`.
 
 #### Testing-Only Dependencies
 
