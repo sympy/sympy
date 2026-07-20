@@ -89,7 +89,7 @@ class CharacterTable(MutableDenseMatrix):
 
     def copy(self):
         cp = self._fromrep(self._rep.copy())
-        cp._conjugacy_class_reps = self._conjugacy_class_reps.copy()
+        cp._conjugacy_class_reps = self.conjugacy_class_reps()
         return cp
 
     @property
@@ -173,9 +173,10 @@ def _compute_cmmatrices(
 
 def dixon_prime(order: int | MPZ, exponent: int | MPZ) -> int | MPZ:
     """Find a prime p so that `p > 2*sqrt(order)` and `p%exponent == 1`."""
-    if order == 1:
-        # trivial group => exponent == 1
+    if exponent == 1:
+        # trivial group <=> exponent == 1
         return 3
+
     p = int(2 * isqrt(order))
     while True:
         p = nextprime(p + 1)
@@ -447,11 +448,6 @@ def dixon_character_table(conjugacy_classes: Sequence[CC]) -> CharacterTable:
              "Handbook of Computational Group Theory"
     """
     cc = conjugacy_classes
-    size = [len(c) for c in cc]
-    order = sum(size)
-    exponent = lcm(*(int(next(iter(c)).order()) for c in cc))
-    p = dixon_prime(order, exponent)
-    Fp = FiniteField(p)
 
     # move the identity class to the front
     for i, c in enumerate(cc):
@@ -465,6 +461,11 @@ def dixon_character_table(conjugacy_classes: Sequence[CC]) -> CharacterTable:
         cc = list(cc)
         cc[identity], cc[0] = cc[0], cc[identity]
 
+    size = [len(c) for c in cc]
+    order = sum(size)
+    exponent = lcm(*(int(next(iter(c)).order()) for c in cc))
+    p = dixon_prime(order, exponent)
+    Fp = FiniteField(p)
 
     mats = _compute_cmmatrices(cc, Fp)
     X = _simultaneous_diagonalize(mats)
