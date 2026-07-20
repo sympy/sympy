@@ -220,13 +220,13 @@ def test_latex_basic():
 
     k = ZZ.cyclotomic_field(5)
     assert latex(k.ext.field_element([1, 2, 3, 4])) == \
-        r"\zeta^{3} + 2 \zeta^{2} + 3 \zeta + 4"
+        r"\zeta_{5}^{3} + 2 \zeta_{5}^{2} + 3 \zeta_{5} + 4"
     assert latex(k.ext.field_element([1, 2, 3, 4]), order='old') == \
-        r"4 + 3 \zeta + 2 \zeta^{2} + \zeta^{3}"
+        r"4 + 3 \zeta_{5} + 2 \zeta_{5}^{2} + \zeta_{5}^{3}"
     assert latex(k.primes_above(19)[0]) == \
-        r"\left(19, \zeta^{2} + 5 \zeta + 1\right)"
+        r"\left(19, \zeta_{5}^{2} + 5 \zeta_{5} + 1\right)"
     assert latex(k.primes_above(19)[0], order='old') == \
-           r"\left(19, 1 + 5 \zeta + \zeta^{2}\right)"
+           r"\left(19, 1 + 5 \zeta_{5} + \zeta_{5}^{2}\right)"
     assert latex(k.primes_above(7)[0]) == r"\left(7\right)"
 
     assert latex(1.5e20*x) == r"1.5 \cdot 10^{20} x"

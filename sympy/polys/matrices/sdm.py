@@ -747,6 +747,50 @@ class SDM(dict):
         MT = sdm_transpose(M)
         return M.new(MT, M.shape[::-1], M.domain)
 
+    def conjugate(M):
+        """
+        Returns the conjugate of a :py:class:`~.SDM` matrix
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ_I
+        >>> A = SDM({0:{1:QQ_I(2, -3)}, 1:{}}, (2, 2), QQ_I)
+        >>> A.conjugate()
+        {0: {1: (2 + 3*I)}, 1: {}}
+        """
+        dom = M.domain
+        if not dom.is_ConjugateDomain:
+            raise DMDomainError("%s does not support conjugation" % dom)
+
+        if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+            return M.copy()
+        else:
+            return M.applyfunc(dom.conjugate, dom)
+
+    def adjoint(M):
+        """
+        Returns the adjoint of a :py:class:`~.SDM` matrix
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ_I
+        >>> A = SDM({0:{1:QQ_I(2, -3)}, 1:{}}, (2, 2), QQ_I)
+        >>> A.adjoint()
+        {1: {0: (2 + 3*I)}}
+        """
+        dom = M.domain
+        if not (dom.is_EXRAW or dom.is_EX):
+            return M.conjugate().transpose()
+        elif dom.is_EXRAW:
+            # handle noncommutative elements
+            return M.applyfunc(lambda x: x.adjoint(), dom).transpose()
+        else:
+            return M.applyfunc(lambda x: dom.dtype(x.ex.adjoint()), dom).transpose()
+
     def __add__(A, B):
         if not isinstance(B, SDM):
             return NotImplemented

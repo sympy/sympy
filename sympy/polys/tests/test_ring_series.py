@@ -367,6 +367,9 @@ def test_sin():
         EX(cos(a)/6)*x**3 + EX(cos(a))*x**2*y - EX(sin(a)/2)*x**2 + \
         EX(cos(a))*x + EX(sin(a))
 
+    R, x = ring('x', EX)
+    assert rs_sin(R(a), x, 5) == R(EX(sin(a)))
+
 
 def test_cos():
     R, x, y = ring('x, y', QQ)
@@ -393,9 +396,15 @@ def test_cos():
         EX(sin(a)/6)*x**3 - EX(sin(a))*x**2*y - EX(cos(a)/2)*x**2 - \
         EX(sin(a))*x + EX(cos(a))
 
+    R, x = ring('x', EX)
+    assert rs_cos(R(a), x, 5) == R(EX(cos(a)))
+
 
 def test_cos_sin():
     R, x, y = ring('x, y', QQ)
+    c, s = rs_cos_sin(R(0), x, 5)
+    assert c == R(1)
+    assert s == R(0)
     c, s = rs_cos_sin(x, x, 9)
     assert c == rs_cos(x, x, 9)
     assert s == rs_sin(x, x, 9)

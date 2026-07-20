@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.core.mod import Mod
 from sympy.core.numbers import (I, oo, pi)
 from sympy.functions.combinatorial.factorials import factorial
@@ -1320,6 +1323,9 @@ def test_pre_generated_assumption_rules_are_valid():
     assert pre_generated_assumptions._to_python() == generated_assumptions._to_python(), "pre-generated assumptions are invalid, see sympy.core.assumptions._generate_assumption_rules"
 
 
+@pytest.mark.thread_unsafe(
+    reason="resets and consumes process-global RNG state"
+)
 def test_ask_shuffle():
     grp = PermutationGroup(Permutation(1, 0, 2), Permutation(2, 1, 3))
 

@@ -560,6 +560,14 @@ class AlgebraicField(
         return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
 
     @cached_property
+    def is_ConjugateDomain(self):
+        try:
+            _ = self.conjugate
+        except DomainError:
+            return False
+        return True
+
+    @cached_property
     def conjugate(self):
         """Returns the complex conjugate of ``a``. """
         try:
@@ -567,7 +575,7 @@ class AlgebraicField(
             z = self.ext.func((self.ext.minpoly, self.ext.conjugate()))
             conj = self.from_sympy(z)
         except CoercionFailed:
-            raise CoercionFailed("the algebraic field is not closed under conjugation")
+            raise DomainError("the algebraic field is not closed under conjugation")
 
         if conj.rep == [1, 0]:
             # conj == ext implies ext is real
