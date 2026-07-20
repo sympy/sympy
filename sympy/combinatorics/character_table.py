@@ -35,7 +35,8 @@ class CharacterTable(MutableDenseMatrix):
     and columns corresponding to conjugacy classes. Each entry is the value of the
     character on the conjugacy class, which is the trace of the representation matrix.
 
-    The trivial character is always the first row, and the identity class is the first column.
+    The trivial character is always the first row, and the identity class is
+    the first column if the order of the conjugacy classes is not specified.
 
     Examples
     ========
@@ -87,10 +88,15 @@ class CharacterTable(MutableDenseMatrix):
     def conjugacy_class_reps(self) -> list[Permutation]:
         return self._conjugacy_class_reps
 
+    def copy(self):
+        cp = self._fromrep(self._rep.copy())
+        cp._conjugacy_class_reps = self._conjugacy_class_reps.copy()
+        return cp
+
     @property
     def zeta_order(self) -> int:
         if self._rep.domain.is_CyclotomicField:
-            return self._rep.domain.zeta_order
+            return self._rep.domain.zeta_order # type: ignore
         return 1
 
     @classmethod
@@ -101,6 +107,9 @@ class CharacterTable(MutableDenseMatrix):
 def _compute_cmmatrices(
     cc: Sequence[CC], dom: Domain
 ) -> Generator[DomainMatrix, None, None]:
+    """
+    Compute the class multiplication matrices.
+    """
     n = len(cc)
     rmul = Permutation.rmul_with_af
     for ind in range(n):
@@ -125,7 +134,7 @@ def dixon_prime(order: int | MPZ, exponent: int | MPZ) -> int | MPZ:
     if order == 1:
         # trivial group => exponent == 1
         return 3
-    p = 2 * isqrt(order)
+    p = int(2 * isqrt(order))
     while True:
         p = nextprime(p + 1)
         if p % exponent == 1:
@@ -155,8 +164,8 @@ def _simultaneous_diagonalize(
                 new_spaces.append(S)
                 continue
             _, pivots = S.rref()
-            N0 = N.extract(range(S.shape[1]), pivots)
-            for _, __, sub_S in (S * N0).transpose().ground_eigenvects():
+            N1 = N.extract(range(S.shape[1]), pivots)
+            for _, __, sub_S in (S * N1).transpose().ground_eigenvects():
                 # sub_S: (sub_dim x dim), S: (dim x n) -> (sub_dim x n)
                 sub_S = sub_S.transpose().rref()[0]
                 new_spaces.append(sub_S * S)
@@ -204,26 +213,26 @@ def _get_powermap(cc: Sequence[CC], exponent: int | MPZ) -> list[list[int]]:
     return pm
 
 
-def _normalize_fp(cc: Sequence[CC], esd: DomainMatrix) -> list[list]:
-    Fp = esd.domain
+def _normalize_fp(cc: Sequence[CC], X: DomainMatrix) -> list[list]:
+    Fp = X.domain
     p = Fp.mod  # type: ignore
     n = len(cc)
-    rows = esd.to_list()
+    rows = X.to_list()
     cc_sizes = [Fp(len(c)) for c in cc]
-    G_order = sum(len(cc[t]) for t in range(len(cc)))
+    order = Fp(sum(len(cc[t]) for t in range(len(cc))))
 
     inv_map = _get_invmap(cc)
     normalized_rows = []
     for row in rows:
         # 1. normalize so the first class is 1
-        scale = 1 / Fp(row[0])
+        scale = 1 / row[0]
         row = [x * scale for x in row]
 
         # 2. chi(1)^2 * sum |Ci| * row[i] * row[inv_i] = |G|
         dot = sum(cc_sizes[k] * row[k] * row[inv_map[k]] for k in range(n))
 
         # chi1_sq = |G| / dot
-        chi1_sq = Fp(G_order) / dot
+        chi1_sq = order / dot
 
         root = sqrt_mod(int(chi1_sq), p)
         if root is None:
@@ -245,7 +254,7 @@ def _get_global_conductor(
     """
     n = len(rows)
     gal_m = [a for a in range(m) if gcd(a, m) == 1]
-    p_factors = primefactors(m)[::-1]
+    p_factors = primefactors(int(m))[::-1]
 
     for p in p_factors:
         while m % p == 0:
@@ -274,8 +283,14 @@ def _get_global_conductor(
     return m
 
 
-def _lift_to_minimal_field(normalized_rows, pm, k, e, Fp):
-    n = len(normalized_rows)
+def _lift_to_minimal_field(
+    rows: list[list], pm: list[list[int]], k, e, Fp
+) -> DomainMatrix:
+    """
+    Lift the normalized character table from Fp to the
+    k-th cyclotomic field.
+    """
+    n = len(rows)
     p = Fp.mod
     half_p = p // 2
 
@@ -284,7 +299,7 @@ def _lift_to_minimal_field(normalized_rows, pm, k, e, Fp):
         int_rows = []
         for i in range(n):
             # abs(every entry) <= sqrt(|G|) <= p//2
-            row = [ZZ(int(v)) for v in normalized_rows[i]]
+            row = [ZZ(int(v)) for v in rows[i]]
             row = [v if v <= half_p else v - p for v in row]
             int_rows.append(row)
         _sort_characters(int_rows, ZZ)
@@ -317,25 +332,24 @@ def _lift_to_minimal_field(normalized_rows, pm, k, e, Fp):
 
     dM = []
     for i in range(n):
-        char_row_fp = normalized_rows[i]
-        row_anps = []
+        row = rows[i]
+        row_anps: list[ANP] = []
 
         for j in range(n):
             # [chi(g^A1), chi(g^A2), ...] mod p
-            b_vec_data = []
+            b_data = []
             for A in gal_lifted:
-                class_of_gA = pm[j][A % e]
-                b_vec_data.append([char_row_fp[class_of_gA]])
+                b_data.append([row[pm[j][A % e]]])
 
-            b_vec = DomainMatrix(b_vec_data, (phi, 1), Fp)
+            b = DomainMatrix(b_data, (phi, 1), Fp)
 
             # c = V^-1 * b
-            c_vec = (V_inv * b_vec).to_list_flat()
+            c = (V_inv * b).to_list_flat()
 
-            c_ints = [int(v) for v in c_vec]
-            c_ints = [v if v <= half_p else v - p for v in c_ints]
+            c = [int(v) for v in c]
+            c = [v if v <= half_p else v - p for v in c]
 
-            row_anps.append(ANP(c_ints[::-1], dom.mod, QQ))
+            row_anps.append(ANP(c[::-1], dom.mod, QQ))
 
         dM.append(row_anps)
 
@@ -378,20 +392,34 @@ def dixon_character_table(conjugacy_classes: Sequence[CC]) -> CharacterTable:
              "Handbook of Computational Group Theory"
     """
     cc = conjugacy_classes
-    order = sum(len(cc[t]) for t in range(len(cc)))
+    size = [len(c) for c in cc]
+    order = sum(size)
+    identity = size.index(1)
     exponent = lcm(*(int(next(iter(c)).order()) for c in cc))
     p = dixon_prime(order, exponent)
     Fp = FiniteField(p)
 
-    mats = _compute_cmmatrices(cc, Fp)
-    esd = _simultaneous_diagonalize(mats)
+    # move the identity class to the front
+    if identity != 0:
+        cc = list(cc)
+        cc[identity], cc[0] = cc[0], cc[identity]
 
-    normalized = _normalize_fp(cc, esd)
+    mats = _compute_cmmatrices(cc, Fp)
+    X = _simultaneous_diagonalize(mats)
+
+    rows = _normalize_fp(cc, X)
     pm = _get_powermap(cc, exponent)
 
-    conductor = _get_global_conductor(normalized, pm, exponent)
-    dm = _lift_to_minimal_field(normalized, pm, conductor, exponent, Fp)
+    conductor = _get_global_conductor(rows, pm, exponent)
+    dm = _lift_to_minimal_field(rows, pm, conductor, exponent, Fp)
+
+    # restore the place of the identity class
+    if identity != 0:
+        _rows = list(range(dm.shape[0]))
+        _cols = _rows[:]
+        _cols[0], _cols[identity] = _cols[identity], _cols[0]
+        dm = dm.extract(_rows, _cols)
 
     tbl = CharacterTable._fromrep(dm)
-    tbl._conjugacy_class_reps = [next(iter(c)) for c in cc]
+    tbl._conjugacy_class_reps = [next(iter(c)) for c in conjugacy_classes]
     return tbl

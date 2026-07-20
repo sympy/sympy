@@ -97,6 +97,19 @@ def test_dixon_character_table():
     ]
     assert _cmp_tbl(tbl, expected)
 
+    cc = [
+        {Permutation(0, 1, 2), Permutation(0, 2, 1)},
+        {Permutation(2)},
+        {Permutation(0, 2), Permutation(1, 2), Permutation(2)(0, 1)},
+    ]
+    tbl = dixon_character_table(cc)
+    assert tbl.tolist() == [
+        [1, 1, 1],
+        [1, 1, -1],
+        [-1, 2, 0],
+    ]
+    assert tbl._conjugacy_class_reps[1] == Permutation(2)
+
 
 GROUPS = [
     member
