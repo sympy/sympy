@@ -1005,7 +1005,30 @@ class MathematicaParser:
                     elif op_type == self.PREFIX:
                         if grouping_strat is not None:
                             raise TypeError("'Prefix' op_type should not have a grouping strat")
-                        if pointer == size - 1 or self._is_op(tokens[pointer + 1]):
+                        if token in ("#", "##"):
+                            # Slot (``#``) and SlotSequence (``##``) have special
+                            # argument rules that mirror the Wolfram Language:
+                            #   #        -> Slot[1]
+                            #   #3       -> Slot[3]           (positional: integer)
+                            #   #name    -> Slot["name"]      (named: a string, i.e.
+                            #                                  ["_Str", "name"] here)
+                            #   ##       -> SlotSequence[1]
+                            #   ##3      -> SlotSequence[3]
+                            #   ##name   -> SlotSequence[1]*name  (SlotSequence only
+                            #                                      takes integer indices,
+                            #                                      so ``name`` is a
+                            #                                      separate factor)
+                            nxt = tokens[pointer + 1] if pointer + 1 < size else None
+                            is_number = isinstance(nxt, str) and re.fullmatch(self._number, nxt) is not None
+                            if nxt is None or self._is_op(nxt) or (token == "##" and not is_number):
+                                tokens[pointer] = self._missing_arguments_default[token]()
+                            elif is_number:
+                                node.append(tokens.pop(pointer + 1))
+                                size -= 1
+                            else:  # ``#`` followed by a named slot
+                                node.append(["_Str", tokens.pop(pointer + 1)])
+                                size -= 1
+                        elif pointer == size - 1 or self._is_op(tokens[pointer + 1]):
                             tokens[pointer] = self._missing_arguments_default[token]()
                         else:
                             node.append(tokens.pop(pointer+1))

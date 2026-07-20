@@ -282,13 +282,19 @@ def test_parser_mathematica_tokenizer():
         [["Pattern", "y", ["Blank"]], ["Pattern", "z", ["Blank"]]],
     ]
 
-    # Slots for lambda functions
+    # Slots for lambda functions.  A positional slot (``#3``) carries an
+    # integer index; a named slot (``#name``) carries a string, which in the
+    # FullForm list is ``["_Str", "name"]`` (matching Mathematica's Slot["name"]).
     assert chain("#") == ["Slot", "1"]
     assert chain("#3") == ["Slot", "3"]
-    assert chain("#n") == ["Slot", "n"]
-    assert chain("#name") == ["Slot", "name"]
+    assert chain("#n") == ["Slot", ["_Str", "n"]]
+    assert chain("#name") == ["Slot", ["_Str", "name"]]
     assert chain("##") == ["SlotSequence", "1"]
-    assert chain("##a") == ["SlotSequence", "a"]
+    assert chain("##3") == ["SlotSequence", "3"]
+    # ``SlotSequence`` only takes an integer index, so ``##name`` is
+    # ``SlotSequence[1] * name`` (implicit multiplication), not a named slot.
+    assert chain("##a") == ["Times", ["SlotSequence", "1"], "a"]
+    assert chain("##name") == ["Times", ["SlotSequence", "1"], "name"]
 
     # Lambda functions
     assert chain("x&") == ["Function", "x"]
