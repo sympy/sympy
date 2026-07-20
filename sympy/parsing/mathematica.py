@@ -642,7 +642,9 @@ class MathematicaParser:
         (INFIX, FLAT, {";": "CompoundExpression"}),
         (INFIX, RIGHT, {"=": "Set", ":=": "SetDelayed", "+=": "AddTo", "-=": "SubtractFrom", "*=": "TimesBy", "/=": "DivideBy"}),
         (INFIX, RIGHT, {"\N{THEREFORE}": "Therefore"}),
-        (INFIX, LEFT, {"//": lambda x, y: [x, y]}),
+        # ``x // y`` is postfix function application, equivalent to ``y[x]``
+        # (e.g. ``expr // Simplify`` means ``Simplify[expr]``).
+        (INFIX, LEFT, {"//": lambda x, y: [y, x]}),
         (POSTFIX, None, {"&": "Function"}),
         (INFIX, LEFT, {"/.": "ReplaceAll"}),
         (INFIX, RIGHT, {"->": "Rule", ":>": "RuleDelayed"}),

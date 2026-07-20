@@ -227,9 +227,10 @@ def test_parser_mathematica_tokenizer():
     assert chain("a/.b") == ["ReplaceAll", "a", "b"]
     assert chain("a/.b/.c/.d") == ["ReplaceAll", ["ReplaceAll", ["ReplaceAll", "a", "b"], "c"], "d"]
 
-    assert chain("a//b") == ["a", "b"]
-    assert chain("a//b//c") == [["a", "b"], "c"]
-    assert chain("a//b//c//d") == [[["a", "b"], "c"], "d"]
+    # ``//`` is postfix application: ``x // f`` is ``f[x]`` (left associative).
+    assert chain("a//b") == ["b", "a"]
+    assert chain("a//b//c") == ["c", ["b", "a"]]
+    assert chain("a//b//c//d") == ["d", ["c", ["b", "a"]]]
 
     # Not operator
     assert chain("!x") == ["Not", "x"]
@@ -273,6 +274,13 @@ def test_parser_mathematica_tokenizer():
     assert chain("y___") == ["Pattern", "y", ["BlankNullSequence"]]
     assert chain("a[b_.,c_]") == ["a", ["Optional", ["Pattern", "b", ["Blank"]]], ["Pattern", "c", ["Blank"]]]
     assert chain("b_. c") == ["Times", ["Optional", ["Pattern", "b", ["Blank"]]], "c"]
+    # Patterns in head position, i.e. ``Pattern[F, Blank[]][Pattern[x, Blank[]]]``
+    assert chain("F_[x_]") == [["Pattern", "F", ["Blank"]], ["Pattern", "x", ["Blank"]]]
+    assert chain("F_[x_, y_[z_]]") == [
+        ["Pattern", "F", ["Blank"]],
+        ["Pattern", "x", ["Blank"]],
+        [["Pattern", "y", ["Blank"]], ["Pattern", "z", ["Blank"]]],
+    ]
 
     # Slots for lambda functions
     assert chain("#") == ["Slot", "1"]
