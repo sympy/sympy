@@ -78,6 +78,11 @@ def check(a, exclude=[], check_attr=True, deprecated=()):
         d2 = dir(b)
         assert set(d1) == set(d2)
 
+        # Everything should compare equal to itself after a round-trip.
+        # Classes are pickled as themselves, so identity already holds.
+        if not isinstance(a, type):
+            assert a == b, "%r != %r, protocol: %s" % (a, b, protocol)
+
         if not check_attr:
             continue
 
