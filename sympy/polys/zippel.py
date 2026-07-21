@@ -9,6 +9,7 @@ from sympy.polys.domains.integerring import ZZ
 
 if TYPE_CHECKING:
     from sympy.external.gmpy import MPZ
+    from sympy.polys.densebasic import dup
 
 def _gf_gcd(fp, gp, p):
     r"""
@@ -390,10 +391,10 @@ def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
     return hpq
 
 
-def lag_basis(evalpoints: list[MPZ], p: MPZ) -> list[list[MPZ]]:
-    """
+def lag_basis(evalpoints: list[MPZ], p: MPZ) -> list[dup[MPZ]]:
+    r"""
     Computes the Lagrange basis associated to the given
-    list of evaluation points over Z_p.
+    list of evaluation points over `\mathbb{Z}_p`.
 
     Example
     =======
@@ -404,6 +405,11 @@ def lag_basis(evalpoints: list[MPZ], p: MPZ) -> list[list[MPZ]]:
     >>> lag_basis(evalpoints, p)
     [[3, 1, 8], [7, 2, 2], [1, 8, 2]]
 
+    References
+    ==========
+
+    .. [1] [Yang09]_
+
     """
     master_pol = [ZZ.one]
     for k in evalpoints:
@@ -413,27 +419,33 @@ def lag_basis(evalpoints: list[MPZ], p: MPZ) -> list[list[MPZ]]:
     for i, poly in enumerate(v):
         c = gf_eval(poly, evalpoints[i], p, ZZ)
         c = ZZ.invert(c, p)
-        v[i] = [(c*el) % p for el in v[i]]
+        v[i] = [(c * el) % p for el in v[i]]
     return v
 
 
-def vandermonde_interp(basis: list[list[MPZ]], values: list[MPZ],
-    p: MPZ, trans: bool = True) -> list[MPZ]:
-    """
-    Solves for x the linear system A^T * x = values in Z_p,
-    where A is the Vandermonde matrix such that a_{i,j} = k[i]^j.
-    If trans = False, it solves the linear system A*x = values.
-    Both systems are solved in O(n^2) time.
+def vandermonde_interp(
+    basis: list[dup[MPZ]], values: list[MPZ], p: MPZ, trans: bool = True
+) -> list[MPZ]:
+    r"""
+    Solves for `x` the linear system `A^T x = \mathrm{values}` in
+    `\mathbb{Z}_p`, where `A` is the Vandermonde matrix such that
+    `a_{i,j} = k_i^j`.
+    If `\mathrm{trans} = \mathrm{False}`, it solves the linear system
+    `A x = \mathrm{values}`.
+    Both systems are solved in `O(n^2)` time.
 
-    The parameter basis can be computed using lag_basis(k, p).
+    The parameter basis can be computed using
+    `\operatorname{lag\_basis}(k, p)`.
 
     Note that solving a linear system with associated Vandermonde matrix is
     equivalent to interpolating an univariate polynomial.
     Note also that the interpolation of a multivariate polynomial in
-    Z_p[x1,...,xn], can be made equivalent to the resolution of a linear system
-    with the transposed of a Vandermonde matrix as the associated matrix.
-    It is sufficient to choose a random tuple (t1,...,tn),
-    and to use (t1^j,...,tn^j) for j in {0,1,...} as evaluation points.
+    `\mathbb{Z}_p[x_1, \ldots, x_n]`, can be made equivalent to the resolution
+    of a linear system with the transposed of a Vandermonde matrix as the
+    associated matrix.
+    It is sufficient to choose a random tuple `(t_1, \ldots, t_n)`,
+    and to use `(t_1^j, \ldots, t_n^j)` for
+    `j \in \{0, 1, \ldots\}` as evaluation points.
 
     Example
     =======
@@ -453,15 +465,22 @@ def vandermonde_interp(basis: list[list[MPZ]], values: list[MPZ],
     >>> A * Matrix(x) == Matrix(values)
     True
 
+    References
+    ==========
+
+    .. [1] [Yang09]_
+
     """
-    deg = len(values)-1
+    deg = len(values) - 1
     if trans:
         sol = []
         for poly in basis:
-            sol.append(sum(val * poly[deg-i] for i, val in enumerate(values)) % p)
+            sol.append(sum(val * poly[deg - i] for i, val in enumerate(values)) % p)
     else:
         sol = []
         for i in range(len(values)):
-            sol.append(sum(values[j] * basis[j][deg-i] for j in range(len(values))) % p)
+            sol.append(
+                sum(values[j] * basis[j][deg - i] for j in range(len(values))) % p
+            )
 
     return sol

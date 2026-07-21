@@ -117,6 +117,6 @@ def test_vandermonde_interpolate():
 
     bas = lag_basis(k, p)
     sol_t = vandermonde_interp(bas, v_t, p)
-    sol = vandermonde_interp(bas, v, p, trans = False)
+    sol = vandermonde_interp(bas, v, p, trans=False)
 
     assert sol == sol_t == x_list

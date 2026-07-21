@@ -751,6 +751,14 @@ Modular GCD
 .. autofunction:: _modgcd_multivariate_p
 .. autofunction:: func_field_modgcd
 
+Zippel algorithm
+****************
+
+.. currentmodule:: sympy.polys.zippel
+
+.. autofunction:: lag_basis
+.. autofunction:: vandermonde_interp
+
 Undocumented
 ============
 
