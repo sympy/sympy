@@ -1503,6 +1503,30 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_extended_real(self):
+        from sympy.functions.elementary.complexes import conjugate as conj_cls
+        remaining = list(self.args)
+        used = set()
+        for i, factor in enumerate(remaining):
+            if i in used:
+                continue
+            if isinstance(factor, conj_cls):
+                inner = factor.args[0]
+                # Skip non-commutative symbols --- order matters for them
+                if inner.is_commutative is False:
+                    continue
+                for j in range(len(remaining)):
+                    if j != i and j not in used and remaining[j] == inner:
+                        used.add(i)
+                        used.add(j)
+                        break
+        if used:
+            leftover = [f for k, f in enumerate(remaining) if k not in used]
+            if not leftover:
+                return True
+            from sympy.core.mul import Mul
+            leftover_expr = Mul(*leftover) if len(leftover) > 1 else leftover[0]
+            if leftover_expr.is_extended_real:
+                return True
         return self._eval_real_imag(True)
 
     def _eval_real_imag(self, real):
@@ -1590,6 +1614,32 @@ class Mul(Expr, AssocOp):
                 return
         if all(x.is_real for x in self.args):
             return False
+
+    def _eval_is_extended_nonnegative(self):
+        from sympy.functions.elementary.complexes import conjugate as conj_cls
+        remaining = list(self.args)
+        used = set()
+        for i, factor in enumerate(remaining):
+            if i in used:
+                continue
+            if isinstance(factor, conj_cls):
+                inner = factor.args[0]
+                # Skip non-commutative symbols --- order matters for them
+                if inner.is_commutative is False:
+                    continue
+                for j in range(len(remaining)):
+                    if j != i and j not in used and remaining[j] == inner:
+                        used.add(i)
+                        used.add(j)
+                        break
+        if used:
+            leftover = [f for k, f in enumerate(remaining) if k not in used]
+            if not leftover:
+                return True
+            from sympy.core.mul import Mul
+            leftover_expr = Mul(*leftover) if len(leftover) > 1 else leftover[0]
+            if leftover_expr.is_extended_nonnegative:
+                return True
 
     def _eval_is_extended_positive(self):
         """Return True if self is positive, False if not, and None if it
