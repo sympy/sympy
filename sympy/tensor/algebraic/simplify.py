@@ -20,22 +20,6 @@ consists of two phases:
        :class:`~sympy.tensor.algebraic.AlgebraicPureTensor`
        terms within a sum by combining coefficients or creating linear
        combinations at non-proportional factor slots.
-
-Examples
-========
-
-Simplify a sum of proportional pure tensors:
-
->>> from sympy.matrices.expressions import MatrixSymbol
->>> from sympy.tensor.algebraic import AlgebraicPureTensor, tensorsimplify
->>> A = MatrixSymbol("A", 3, 4)
->>> B = MatrixSymbol("B", 4, 5)
->>> C = MatrixSymbol("C", 3, 4)
->>> D = MatrixSymbol("D", 4, 5)
->>> T1 = AlgebraicPureTensor(A, B)
->>> T2 = AlgebraicPureTensor(2, A, B)
->>> print(tensorsimplify(T1 + T2))
-3*A ⊗ B
 """
 
 

@@ -4,9 +4,9 @@
 
 - [x] **1. `AlgebraicZeroTensor.__add__` / `__radd__` — no shape check**
 
-  **File:** `algebraic_zero_tensor.py:180-238`
+  **File:** `algebraic_zero_tensor.py:150-212`
 
-  Both methods unconditionally return `other`. A zero tensor of shape `((3,4),)` can be "added" to any object of any shape, silently accepted. Compare with `AlgebraicPureTensor.__add__` (`algebraic_pure_tensor.py:502-506`), which checks `other.shape == self.shape`.
+  Both methods unconditionally return `other`. A zero tensor of shape `((3,4),)` can be "added" to any object of any shape, silently accepted. Compare with `AlgebraicPureTensor.__add__` (`algebraic_pure_tensor.py:471-484`), which checks `other.shape == self.shape`.
 
   ```python
   def __add__(self, other):
@@ -23,7 +23,7 @@
 
 - [x] **2. `compose_algebraic_tensors` — wrong shape for zero-tensor shortcuts**
 
-  **File:** `algebraic_tensor.py:221-268`
+  **File:** `algebraic_tensor.py:198-255`
 
   ```python
   if isinstance(left, _ZT):
@@ -32,9 +32,9 @@
       return _ZT(right.shape)
   ```
 
-  Composition (`*`) is factor-wise matrix multiplication. The result shape should be `(left_rows, right_cols)` per factor slot, not the input shape. The `compose_algebraic_pure_tensors` function handles this correctly (lines 1006-1058), computing the composed shape. But `compose_algebraic_tensors` preserves the wrong shape, so `Z_((3,4)) * M_((4,5))` returns `Z_((3,4))` instead of `Z_((3,5))`.
+  Composition (`*`) is factor-wise matrix multiplication. The result shape should be `(left_rows, right_cols)` per factor slot, not the input shape. The `compose_algebraic_pure_tensors` function handles this correctly (lines 993-1046), computing the composed shape. But `compose_algebraic_tensors` preserves the wrong shape, so `Z_((3,4)) * M_((4,5))` returns `Z_((3,4))` instead of `Z_((3,5))`.
 
-  **Fix:** Compute the composed shape from both operands, following the same logic used in `compose_algebraic_pure_tensors` (lines 1006-1058): `composed_shape = tuple((l[0], r[1]) for l, r in zip(left.shape, right.shape))`.
+  **Fix:** Compute the composed shape from both operands, following the same logic used in `compose_algebraic_pure_tensors` (lines 993-1046): `composed_shape = tuple((l[0], r[1]) for l, r in zip(left.shape, right.shape))`.
 
   **[FIXED]**
 
@@ -42,7 +42,7 @@
 
 - [x] **3. `_extract_pt_and_coeff` — inconsistent return type**
 
-  **File:** `simplify.py:159-200`
+  **File:** `simplify.py:143-191`
 
   Returns `(term, term.coeff)` (2-tuple) for `AlgebraicPureTensor`, `(term, S.One)` (2-tuple) for pass-through, but `(None, coeff, matrix_factors)` (3-tuple) for `Mul` with matrix factors. Every caller must do:
 
@@ -55,7 +55,7 @@
       factors = list(pt.factors)  # or [pt]
   ```
 
-  This pattern appears in `_equality_factoring` (lines 365-491), `_commutativity_simplify` (lines 1292-1410), and elsewhere.
+  This pattern appears in `_equality_factoring` (lines 349-475), `_commutativity_simplify` (lines 1276-1471), and elsewhere.
 
   **Fix:** Return a consistent 2-tuple `(coeff, factors)` in all cases. For `AlgebraicPureTensor`, return `(term.coeff, list(term.factors))`. For `Mul`, return `(coeff, matrix_factors)`. For pass-through, return `(S.One, [term])`.
 
@@ -69,7 +69,7 @@
 
   **File:** `simplify.py:690-837` (removed)
 
-  The function is documented but never called. `_simplify_algebraic_tensor` (line 1827) describes a pipeline of "Commutativity-based simplification" and "Proportionality factoring," but Phase 1 calls only `_equality_factoring` (line 1856). The proportionality factoring step is entirely missing from the actual pipeline.
+  The function is documented but never called. `_simplify_algebraic_tensor` (line 1551) describes a pipeline of "Commutativity-based simplification" and "Proportionality factoring," but Phase 1 calls only `_equality_factoring` (line 1580). The proportionality factoring step is entirely missing from the actual pipeline.
 
   **Fix:** Remove the function and update the docstring.
 
@@ -79,7 +79,7 @@
 
 - [x] **5. `AlgebraicTensor._merge` / `_subtract` — near-duplicate methods**
 
-  **File:** `algebraic_tensor.py:703-824`
+  **File:** `algebraic_tensor.py:671-778`
 
   These two methods are ~120 lines each and differ only in the sign of `c` being merged. A single helper would eliminate ~110 lines of duplicated logic.
 
@@ -91,7 +91,7 @@
 
 - [x] **6. `_equality_factoring` / `_proportionality_factoring` — duplicated structure**
 
-  **File:** `simplify.py:561-709` and `simplify.py:690-837`
+  **File:** `simplify.py:349-475` and `simplify.py:690-837` (removed)
 
   Both functions share identical entry extraction, commutativity pattern analysis, and term rebuilding logic. Only the inner merge call differs. This is ~150 lines of duplicated boilerplate.
 
@@ -103,7 +103,7 @@
 
 - [x] **7. `_extract_commutative_from_factor` — 280+ lines, deep nesting**
 
-  **File:** `simplify.py:861-1176` (refactored)
+  **File:** `simplify.py:845-882` (refactored)
 
   This single function handles Add, MatAdd, Mul, and Matrix cases with 5-6 levels of nesting.
 
@@ -113,9 +113,9 @@
 
 ---
 
-- [] **8. `AlgebraicTensor._compose_with_term` — unsafe `.factors` access**
+- [x] **8. `AlgebraicTensor._compose_with_term` — unsafe `.factors` access**
 
-  **File:** `algebraic_tensor.py:974`
+  **File:** `algebraic_tensor.py:901`
 
   ```python
   results.append(AlgebraicPureTensor(coeff, *comp.factors if isinstance(comp, _PT) else (comp,)))
@@ -125,33 +125,39 @@
 
   **Fix:** Split into an explicit `if isinstance(comp, _PT)` / `else` block with clear variable names.
 
+  **[FIXED]** Split into explicit if/elif/else block.
+
 ---
 
 ## MODERATE ISSUES
 
-- [] **9. `AlgebraicZeroTensor.is_zero = None`**
+- [x] **9. `AlgebraicZeroTensor.is_zero = None`**
 
-  **File:** `algebraic_zero_tensor.py:106`
+  **File:** `algebraic_zero_tensor.py:76`
 
   A zero tensor *is* zero. Setting `is_zero = None` tells SymPy's assumption system the answer is unknown. This affects `simplify`, `expand`, and boolean context checks downstream.
 
   **Fix:** Change to `is_zero = True`.
 
+  **[FIXED]**
+
 ---
 
-- [] **10. `AlgebraicPureTensor` extends `Mul` — fragile inheritance**
+- [ ] **10. `AlgebraicPureTensor` extends `Mul` — fragile inheritance**
 
-  **File:** `algebraic_pure_tensor.py:76`
+  **File:** `algebraic_pure_tensor.py:64`
 
   `Mul` has deeply internal logic (`flatten`, `_from_args`, `dual`, etc.). Setting `is_Mul = False` suppresses `Mul.flatten` unpacking, but other `Mul` internals may assume `is_Mul is True`. This works now but is a maintenance risk.
 
   **Fix:** Evaluate whether `AlgebraicPureTensor` should extend `Basic` or `Expr` directly (as `AlgebraicTensor` does), storing `(_coeff, factors...)` as `args`. This is a larger refactor; mark as "investigate" rather than "fix now."
 
+  **[INVESTIGATED]** This is an architectural decision that requires a larger refactor. Leaving as-is for now; revisit when the module matures.
+
 ---
 
-- [] **11. Duplicate import in module docstring**
+- [x] **11. Duplicate import in module docstring**
 
-  **File:** `algebraic_tensor.py:30`
+  **File:** `algebraic_tensor.py:30` (was)
 
   ```python
   >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor, AlgebraicTensor
@@ -161,31 +167,37 @@
 
   **Fix:** Remove the duplicate.
 
+  **[FIXED]**
+
 ---
 
-- [] **12. `AlgebraicTensor.__new__` unused variable `comm_cs`**
+- [x] **12. `AlgebraicTensor.__new__` unused variable `comm_cs`**
 
-  **File:** `algebraic_tensor.py:408`
+  **File:** `algebraic_tensor.py:384`
 
   `comm_cs` is returned by `_flatten_args` but never used in `__new__`.
 
   **Fix:** Assign to `_` or remove from the return tuple if it's not needed elsewhere in `__new__`.
 
+  **[FIXED]** Assigned to `_`.
+
 ---
 
-- [] **13. `AlgebraicTensor.__new__` redundant S.Zero filtering**
+- [x] **13. `AlgebraicTensor.__new__` redundant S.Zero filtering**
 
-  **File:** `algebraic_tensor.py:415-426`
+  **File:** `algebraic_tensor.py:390`
 
-  `S.Zero` is filtered from `flat` twice with identical logic and the same fallback to `zero_term`. The second block can never execute differently from the first.
+  `S.Zero` was filtered from `flat` twice with identical logic and the same fallback to `zero_term`. The first block (before filtering) was redundant since the second block (after filtering) handles the case where `flat` becomes empty after removing `S.Zero` entries.
 
   **Fix:** Remove the duplicate block.
 
+  **[FIXED]** Removed the first redundant check before the filter.
+
 ---
 
-- [] **14. `_commutativity_simplify` — `S.One` prefactor edge case**
+- [x] **14. `_commutativity_simplify` — `S.One` prefactor edge case**
 
-  **File:** `simplify.py:1367`
+  **File:** `simplify.py:1351`
 
   ```python
   scaled = prefactor * non_commutative_pt
@@ -197,21 +209,25 @@
 
   **Fix:** Once bug #1 is fixed, this will be caught. As a belt-and-suspenders measure, add an explicit shape assertion here.
 
+  **[RESOLVED BY #1]** With `AlgebraicZeroTensor.__add__` now validating shapes, any shape mismatch at this point will raise `ShapeMismatchError`. Additionally, all terms in `_commutativity_simplify` derive from the same parent `AlgebraicTensor` with a single shape, so shapes are guaranteed to match by construction.
+
 ---
 
-- [] **15. `AlgebraicZeroTensor.__sub__` / `__rsub__` — unnecessary wrapping**
+- [x] **15. `AlgebraicZeroTensor.__sub__` / `__rsub__` — unnecessary wrapping**
 
-  **File:** `algebraic_zero_tensor.py:244-280`
+  **File:** `algebraic_zero_tensor.py:214-246`
 
   `Z - T` returns `AlgebraicTensor(Z, -T)` which immediately simplifies to `-T`. These should directly return `-other` and `other` respectively.
 
   **Fix:** `__sub__` should return `-other`. `__rsub__` should return `other` (or equivalently `AlgebraicTensor(other)` which unwraps to `other`).
 
+  **[FIXED]** `__sub__` now returns `-other`, `__rsub__` returns `other`.
+
 ---
 
-- [] **16. `_is_zero_like` — fragile test**
+- [x] **16. `_is_zero_like` — fragile test**
 
-  **File:** `algebraic_pure_tensor.py:67-73`
+  **File:** `algebraic_pure_tensor.py:46-52`
 
   ```python
   def _is_zero_like(expr):
@@ -222,11 +238,13 @@
 
   **Fix:** Add an explicit check for `expr is S.Zero` or `hasattr(expr, 'is_zero') and expr.is_zero is True` before the multiplication test.
 
+  **[FIXED]** Added explicit checks for `S.Zero` and cached `is_zero` assumption (via `_assumptions` dict to avoid triggering SymPy's `_ask()` inference) before the multiplication test.
+
 ---
 
-- [] **17. `AlgebraicPureTensor.__new__` — zero coeff with no factors**
+- [x] **17. `AlgebraicPureTensor.__new__` — zero coeff with no factors**
 
-  **File:** `algebraic_pure_tensor.py:327-329`
+  **File:** `algebraic_pure_tensor.py:315`
 
   ```python
   if not processed:
@@ -238,23 +256,29 @@
 
   **Fix:** Raise `ValueError` since a zero coefficient with no tensor factors is not a valid zero tensor (there is no shape to anchor it to).
 
+  **[FIXED]** Now raises `ValueError` for zero coefficient with no factors.
+
 ---
 
 ## MINOR / STYLE ISSUES
 
-- [] **18. Excessive doctest duplication**
+- [x] **18. Excessive doctest duplication**
 
-  Module-level docstrings, class docstrings, and method docstrings all repeat identical examples. `AlgebraicZeroTensor` class docstring (lines 68-99) is nearly identical to the module docstring (lines 18-43).
+  Module-level docstrings, class docstrings, and method docstrings all repeat identical examples. `AlgebraicZeroTensor` class docstring (lines 38-69) is nearly identical to the module docstring (lines 8-43).
 
   **Fix:** Keep examples at the class level only. Remove duplicate examples from module-level docstrings, or vice versa.
 
+  **[FIXED]** Removed duplicate examples from all four module-level docstrings (`algebraic_zero_tensor.py`, `algebraic_pure_tensor.py`, `algebraic_tensor.py`, `simplify.py`). Examples remain in class-level and method-level docstrings.
+
 ---
 
-- [] **19. Over-documented trivial methods**
+- [x] **19. Over-documented trivial methods**
 
-  `copy()` (`algebraic_zero_tensor.py:349-350`), `__bool__` (line 324-325), `has_zero_term` on `AlgebraicPureTensor` (`algebraic_pure_tensor.py:571-573`) are one-liners with full docstrings.
+  `copy()` (`algebraic_zero_tensor.py:317`), `__bool__` (`algebraic_zero_tensor.py:292`), `has_zero_term` on `AlgebraicPureTensor` (`algebraic_pure_tensor.py:560`) are one-liners with full docstrings.
 
   **Fix:** Study some other modules in Sympy and see how such simple methods are documented. If they have docstrings, keep them also here. If it is not standard practice to include docstrings for trivial methods, remove them from the methods.
+
+  **[FIXED]** SymPy convention: trivial one-liners (`copy`, `__bool__`, `has_zero_term`) do not receive docstrings in core modules (e.g., `sympy/core/basic.py`, `sympy/core/numbers.py`). Removed docstrings from `has_zero_term` on both `AlgebraicPureTensor` and `AlgebraicTensor`. `copy()` and `__bool__` on `AlgebraicZeroTensor` already had no docstrings.
 
 ---
 
@@ -262,7 +286,7 @@
 
   **File:** `simplify.py:248-450` (removed)
 
-  The while-with-pivot loop is O(N²) per slot. `_equality_merge_dict` (line 453) was written as an O(N) replacement for the equality case, but `_proportionality_factoring` still uses the O(N²) version. For tensors with dozens of terms, this is a performance concern.
+  The while-with-pivot loop is O(N²) per slot. `_equality_merge_dict` (line 233) was written as an O(N) replacement for the equality case, but `_proportionality_factoring` still uses the O(N²) version. For tensors with dozens of terms, this is a performance concern.
 
   **Fix:** Remove any reliance on this function. Remove _proportionality_factoring if it is still present in the codebase.
 
@@ -270,18 +294,22 @@
 
 ---
 
-- [] **21. Inconsistent use of `_sympify` parameter**
+- [x] **21. Inconsistent use of `_sympify` parameter**
 
-  `AlgebraicTensor.__new__` accepts `_sympify=True` (line 388), but it's only checked at the top level. When `_merge` or `_subtract` construct new `AlgebraicTensor` via `Basic.__new__`, they bypass sympification entirely.
+  `AlgebraicTensor.__new__` accepts `_sympify=True` (line 364), but it's only checked at the top level. When `_merge` or `_subtract` construct new `AlgebraicTensor` via `Basic.__new__`, they bypass sympification entirely.
 
   **Fix:** Add a comment documenting the intentional bypass, or refactor `_merge`/`_subtract` to call `AlgebraicTensor.__new__` with `_sympify=False`.
 
+  **[FIXED]** Added a comment at `algebraic_tensor.py:747` documenting the intentional bypass in `_combine_coeff_maps`. All terms are already properly constructed `AlgebraicPureTensor`/`AlgebraicZeroTensor` objects, so sympification would be redundant.
+
 ---
 
-- [] **22. `algebraic_tensor_product` — redundant zero check**
+- [x] **22. `algebraic_tensor_product` — redundant zero check**
 
-  **File:** `algebraic_tensor.py:1507-1513`
+  **File:** `algebraic_tensor.py:1478-1487`
 
-  Zero-like check (line 1507) and zero-tensor sentinel check (line 1511) are nearly identical. Both produce `AlgebraicZeroTensor(_combined_shape(args))`.
+  Zero-like check (line 1480) and zero-tensor sentinel check (line 1484) are nearly identical. Both produce `AlgebraicZeroTensor(_combined_shape(args))`.
 
   **Fix:** Merge into a single check or extract a shared helper.
+
+  **[FIXED]** Merged into a single loop that checks both conditions per argument.

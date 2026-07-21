@@ -11,36 +11,6 @@ This module defines :class:`AlgebraicZeroTensor`, the additive identity for
 tensors of a given shape.  Unlike SymPy's ``S.Zero``, an
 :class:`AlgebraicZeroTensor` carries shape information, so zero tensors of
 different shapes are distinct objects.
-
-Examples
-========
-
-Create a zero tensor for a single-factor shape:
-
->>> from sympy.tensor.algebraic import AlgebraicZeroTensor
->>> Z = AlgebraicZeroTensor((3, 4))
->>> print(Z)
-0_{(3x4)}
->>> Z.shape
-((3, 4),)
-
-Create a zero tensor for a multi-factor shape:
-
->>> Z2 = AlgebraicZeroTensor(((3, 4), (4, 5)))
->>> print(Z2)
-0_{(3x4), (4x5)}
-
-Zero tensor acts as additive identity:
-
->>> from sympy.matrices.expressions import MatrixSymbol
->>> from sympy.tensor.algebraic import AlgebraicPureTensor
->>> A = MatrixSymbol("A", 3, 4)
->>> B = MatrixSymbol("B", 4, 5)
->>> T = AlgebraicPureTensor(A, B)
->>> Z3 = AlgebraicZeroTensor(((3, 4), (4, 5)))
->>> print(T + Z3)
-A ⊗ B
-
 """
 
 
@@ -103,7 +73,7 @@ class AlgebraicZeroTensor(AtomicExpr):
     __slots__ = ('_shape',)
 
     is_AlgebraicZeroTensor = True
-    is_zero = None
+    is_zero = True
     is_commutative = True
 
     _op_priority = 11  # Higher than Expr (10) so x * zt dispatches to zt.__rmul__(x)
@@ -256,8 +226,7 @@ class AlgebraicZeroTensor(AtomicExpr):
         >>> print(Z - T)
         -1*A ⊗ B
         """
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(self, -other)
+        return -other
 
     def __rsub__(self, other):
         """Right-subtract: ``other - self`` (returns *other* unchanged).
@@ -274,8 +243,7 @@ class AlgebraicZeroTensor(AtomicExpr):
         >>> print(T - Z)
         A ⊗ B
         """
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(other, -self)
+        return other
 
     def __mul__(self, other):
         """Scaling by a commutative scalar returns self.

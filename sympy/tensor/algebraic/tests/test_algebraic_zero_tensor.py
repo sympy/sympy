@@ -87,7 +87,7 @@ def test_type_flags():
     Z = AlgebraicZeroTensor((3, 4))
     assert Z.is_AlgebraicZeroTensor is True
     assert Z.is_commutative is True
-    assert Z.is_zero is None
+    assert Z.is_zero is True
 
 
 def test_op_priority():

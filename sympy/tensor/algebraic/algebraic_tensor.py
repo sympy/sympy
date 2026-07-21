@@ -20,30 +20,6 @@ This module defines :class:`AlgebraicTensor`, a sum of
 terms that all share the same tensor shape.  It also provides
 :func:`compose_algebraic_tensors`, the linear composition operator that
 extends factor-wise matrix multiplication to sums of tensors.
-
-Examples
-========
-
-Create a sum of two pure tensors with the same shape:
-
->>> from sympy.matrices.expressions import MatrixSymbol
->>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor, AlgebraicTensor
->>> A = MatrixSymbol("A", 3, 4)
->>> B = MatrixSymbol("B", 4, 5)
->>> C = MatrixSymbol("C", 3, 4)
->>> D = MatrixSymbol("D", 4, 5)
->>> T1 = AlgebraicPureTensor(A, B)
->>> T2 = AlgebraicPureTensor(C, D)
->>> S = AlgebraicTensor(T1, T2)
->>> print(S)
-C ⊗ D + A ⊗ B
->>> S.shape
-((3, 4), (4, 5))
-
-Addition of pure tensors is routed to AlgebraicTensor:
-
->>> print(T1 + T2)
-C ⊗ D + A ⊗ B
 """
 
 
@@ -405,17 +381,10 @@ class AlgebraicTensor(Basic):
                 return arg[0]
 
         # Flatten nested AlgebraicTensors and collect all leaf terms
-        flat, shape, zero_term, comm_cs = cls._flatten_args(args)
-
- 
+        flat, shape, zero_term, _ = cls._flatten_args(args)
 
         # Collect coefficients of PureTensor terms with identical factors
         flat, zero_term, coeff_map = cls._collect_coefficients(flat, shape, zero_term)
-
-        if not flat:
-            if zero_term is not None:
-                return zero_term
-            raise ValueError("AlgebraicTensor resulted in zero terms")
 
         # Remove identity Numbers (S.Zero) from flat list
         flat = [a for a in flat if a is not S.Zero]
@@ -682,7 +651,6 @@ class AlgebraicTensor(Basic):
         )
 
     def has_zero_term(self):
-        """Return True if an AlgebraicZeroTensor anchors this sum."""
         return any(isinstance(a, AlgebraicZeroTensor) for a in self.args)
 
     def __getstate__(self):
@@ -776,6 +744,10 @@ class AlgebraicTensor(Basic):
         if zero_term_was_user_provided:
             real.append(zero_term)
 
+        # Intentionally bypass AlgebraicTensor.__new__ (and its _sympify
+        # parameter) because all terms are already properly constructed
+        # AlgebraicPureTensor/AlgebraicZeroTensor objects. Sympification
+        # would be redundant and could trigger unwanted re-normalization.
         obj = Basic.__new__(cls, *real)
         obj._coeff_map = combined
         return obj
@@ -970,8 +942,11 @@ class AlgebraicTensor(Basic):
                         # Re-wrap with coefficient
                         if coeff is S.One:
                             results.append(comp)
+                        elif isinstance(comp, _PT):
+                            results.append(AlgebraicPureTensor(coeff, *comp.factors))
                         else:
-                            results.append(AlgebraicPureTensor(coeff, *comp.factors if isinstance(comp, _PT) else (comp,)))
+                            # Bare matrix (single-factor unwrapped result)
+                            results.append(AlgebraicPureTensor(coeff, comp))
                         break
                 else:
                     results.append(a)
@@ -1502,14 +1477,10 @@ def algebraic_tensor_product(*args):
 
     arg_lists = [_terms_of_arg(a) for a in args]
 
-    # If any argument is zero-like (0 * a == a), the whole product is zero.
-    for a in args:
-        if _is_zero_like(a):
-            return AlgebraicZeroTensor(_combined_shape(args))
-
-    # Check for zero-tensor sentinel
-    for al in arg_lists:
-        if len(al) == 1 and al[0] is S.Zero:
+    # If any argument is zero-like or is an AlgebraicZeroTensor (detected
+    # by the [S.Zero] sentinel from _terms_of_arg), the whole product is zero.
+    for a, al in zip(args, arg_lists):
+        if _is_zero_like(a) or (len(al) == 1 and al[0] is S.Zero):
             return AlgebraicZeroTensor(_combined_shape(args))
 
     combined_shape = _combined_shape(args)

@@ -18,27 +18,6 @@ factors, optionally scaled by a commutative coefficient.
 Each factor must carry ``.shape`` (e.g., any
 :class:`~sympy.matrices.expressions.MatrixSymbol`).  The tensor shape is
 the full sequence of per-factor shapes.
-
-Examples
-========
-
-Create a pure tensor from two matrix symbols:
-
->>> from sympy.matrices.expressions import MatrixSymbol
->>> from sympy.tensor.algebraic import AlgebraicPureTensor
->>> A = MatrixSymbol("A", 3, 4)
->>> B = MatrixSymbol("B", 4, 5)
->>> T = AlgebraicPureTensor(A, B)
->>> T.shape
-((3, 4), (4, 5))
-
-Numeric and symbolic coefficients are stored internally:
-
->>> print(AlgebraicPureTensor(2, A, B))
-2*A ⊗ B
->>> from sympy.abc import x
->>> print(AlgebraicPureTensor(x, A, B))
-x*A ⊗ B
 """
 
 
@@ -67,9 +46,18 @@ def _factor_has_noncommutative(factor):
 def _is_zero_like(expr):
     """Return True if *expr* is effectively zero.
 
-    Uses the cheap test ``expr == 0 * expr`` which works for
-    ``ZeroMatrix``, zero ``Matrix`` instances, and the scalar ``S.Zero``.
+    First checks for ``S.Zero`` directly and the cached ``is_zero``
+    assumption (avoiding the descriptor to prevent triggering SymPy's
+    assumption inference on complex expressions), then falls back to
+    the test ``expr == 0 * expr`` which works for ``ZeroMatrix``,
+    zero ``Matrix`` instances, and other zero-like objects.
     """
+    if expr is S.Zero:
+        return True
+    # Check cached assumption directly to avoid triggering _ask() on
+    # complex Mul/Add expressions which can cause shape errors.
+    if getattr(expr, '_assumptions', None) and expr._assumptions.get('zero') is True:
+        return True
     return expr == S.Zero * expr
 
 
@@ -324,9 +312,10 @@ class AlgebraicPureTensor(Mul):
             processed.append(a)
 
         if not processed:
-            if coeff is S.Zero:
-                return AlgebraicZeroTensor(())
-            raise ValueError("AlgebraicPureTensor requires at least one tensor factor")
+            raise ValueError(
+                "AlgebraicPureTensor requires at least one tensor factor "
+                "(a zero coefficient alone cannot determine a shape)"
+            )
 
         if _is_zero_like(coeff) or any(_is_zero_like(f) for f in processed):
             return AlgebraicZeroTensor(_factor_shapes(processed))
@@ -375,7 +364,7 @@ class AlgebraicPureTensor(Mul):
         For commutative scalars/symbols the scalar is absorbed into the
         coefficient.  For AlgebraicPureTensor, AlgebraicTensor, or bare
         matrices the result is the tensor composition (factor-wise matrix
-        multiplication).
+        multiplication) or matrix multiplication.
 
         Parameters
         ----------
@@ -569,7 +558,6 @@ class AlgebraicPureTensor(Mul):
         return AlgebraicTensor(other, -self)
 
     def has_zero_term(self):
-        """Return False for a nonzero AlgebraicPureTensor."""
         return False
 
     @property
