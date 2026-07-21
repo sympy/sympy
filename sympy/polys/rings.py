@@ -49,65 +49,65 @@ from sympy.polys.polyutils import (
     _parallel_dict_from_expr,
 )
 from sympy.printing.defaults import DefaultPrinting
-from sympy.polys.sparse_tools import (
-    dict_add,
-    dict_add_ground,
-    dict_clear_denoms,
-    dict_coeff,
-    dict_compose,
-    dict_content,
-    dict_const,
-    dict_coeff_wrt,
-    dict_deflate,
-    dict_deflate_by,
-    dict_degree,
-    dict_degrees,
-    dict_diff,
-    dict_div_list,
-    dict_evaluate,
-    dict_get_coeff,
-    dict_iadd_monom,
-    dict_iadd_poly_monom,
-    dict_imul_num,
-    dict_inflate,
-    dict_is_ground,
-    dict_is_linear,
-    dict_is_monomial,
-    dict_is_monic,
-    dict_is_negative,
-    dict_is_nonnegative,
-    dict_is_nonpositive,
-    dict_is_one,
-    dict_is_positive,
-    dict_is_primitive,
-    dict_is_quadratic,
-    dict_is_term,
-    dict_is_zero,
-    dict_LC,
-    dict_leading_expv,
-    dict_leading_monom,
-    dict_leading_term,
-    dict_LM,
-    dict_LT,
-    dict_mul,
-    dict_mul_ground,
-    dict_pow_generic,
-    dict_pow_multinomial,
-    dict_primitive,
-    dict_quo_term,
-    dict_quo_ground,
-    dict_rem_list,
-    dict_rsub_ground,
-    dict_square,
-    dict_sub,
-    dict_sub_ground,
-    dict_subs,
-    dict_subs_drop,
-    dict_symmetrize,
-    dict_tail_degree,
-    dict_tail_degrees,
-    dict_term_div,
-    dict_trunc_ground,
+from sympy.polys.sparsetools import (
+    smp_add,
+    smp_add_ground,
+    smp_clear_denoms,
+    smp_coeff,
+    smp_compose,
+    smp_content,
+    smp_const,
+    smp_coeff_wrt,
+    smp_deflate,
+    smp_deflate_by,
+    smp_degree,
+    smp_degrees,
+    smp_diff,
+    smp_div_list,
+    smp_evaluate,
+    smp_get_coeff,
+    smp_iadd_monom,
+    smp_iadd_poly_monom,
+    smp_imul_num,
+    smp_inflate,
+    smp_is_ground,
+    smp_is_linear,
+    smp_is_monomial,
+    smp_is_monic,
+    smp_is_negative,
+    smp_is_nonnegative,
+    smp_is_nonpositive,
+    smp_is_one,
+    smp_is_positive,
+    smp_is_primitive,
+    smp_is_quadratic,
+    smp_is_term,
+    smp_is_zero,
+    smp_LC,
+    smp_leading_expv,
+    smp_leading_monom,
+    smp_leading_term,
+    smp_LM,
+    smp_LT,
+    smp_mul,
+    smp_mul_ground,
+    smp_pow_generic,
+    smp_pow_multinomial,
+    smp_primitive,
+    smp_quo_term,
+    smp_quo_ground,
+    smp_rem_list,
+    smp_rsub_ground,
+    smp_square,
+    smp_sub,
+    smp_sub_ground,
+    smp_subs,
+    smp_subs_drop,
+    smp_symmetrize,
+    smp_tail_degree,
+    smp_tail_degrees,
+    smp_term_div,
+    smp_trunc_ground,
 )
 from sympy.utilities import public, subsets
 from sympy.utilities.iterables import is_sequence
@@ -126,6 +126,8 @@ if TYPE_CHECKING:
 
     _str = str
 
+
+ninf = float("-inf")
 
 Mon = tuple[int, ...]
 
@@ -1289,58 +1291,58 @@ class PolyElement(
     @property
     def is_monomial(self) -> bool:
         ring = self.ring
-        return dict_is_monomial(
+        return smp_is_monomial(
             self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_term(self) -> bool:
         ring = self.ring
-        return dict_is_term(self, ring.ngens, ring.domain)
+        return smp_is_term(self, ring.ngens, ring.domain)
 
     @property
     def is_negative(self) -> bool:
         ring = self.ring
-        return dict_is_negative(
+        return smp_is_negative(
             self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_positive(self) -> bool:
         ring = self.ring
-        return dict_is_positive(
+        return smp_is_positive(
             self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_nonnegative(self) -> bool:
         ring = self.ring
-        return dict_is_nonnegative(
+        return smp_is_nonnegative(
             self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_nonpositive(self) -> bool:
         ring = self.ring
-        return dict_is_nonpositive(
+        return smp_is_nonpositive(
             self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_monic(self) -> bool:
         ring = self.ring
-        return dict_is_monic(
+        return smp_is_monic(
             self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_primitive(self) -> bool:
         ring = self.ring
-        return dict_is_primitive(self, ring.ngens, ring.domain)
+        return smp_is_primitive(self, ring.ngens, ring.domain)
 
     @property
     def is_linear(self) -> bool:
         ring = self.ring
-        return dict_is_linear(self, ring.ngens, ring.domain)
+        return smp_is_linear(self, ring.ngens, ring.domain)
 
     @property
     def is_quadratic(self) -> bool:
         ring = self.ring
-        return dict_is_quadratic(self, ring.ngens, ring.domain)
+        return smp_is_quadratic(self, ring.ngens, ring.domain)
 
     def _check(self) -> None:
         """Validate polynomial structure."""
@@ -1498,22 +1500,6 @@ class PolyElement(
 
         return poly
 
-    def square(self) -> PolyElement[Er]:
-        """square of a polynomial
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y = ring('x, y', ZZ)
-        >>> p = x + y**2
-        >>> p.square()
-        x**2 + 2*x*y**2 + y**4
-
-        """
-        return self._square()
 
     def degree(self, x: PolyElement[Er] | int | str | None = None) -> float:
         """
@@ -1524,7 +1510,8 @@ class PolyElement(
         """
         ring = self.ring
         i = ring.index(x)
-        return dict_degree(self, i, ring.ngens, ring.domain)
+        deg = smp_degree(self, i, ring.ngens, ring.domain)
+        return ninf if deg < 0 else deg
 
     def degrees(self) -> tuple[float, ...]:
         """
@@ -1534,7 +1521,8 @@ class PolyElement(
 
         """
         ring = self.ring
-        return dict_degrees(self, ring.ngens, ring.domain)
+        degs = smp_degrees(self, ring.ngens, ring.domain)
+        return tuple(ninf if deg < 0 else deg for deg in degs)
 
     def tail_degree(self, x: PolyElement[Er] | int | str | None = None) -> float:
         """
@@ -1545,7 +1533,8 @@ class PolyElement(
         """
         ring = self.ring
         i = ring.index(x)
-        return dict_tail_degree(self, i, ring.ngens, ring.domain)
+        deg = smp_tail_degree(self, i, ring.ngens, ring.domain)
+        return ninf if deg < 0 else deg
 
     def tail_degrees(self) -> tuple[float, ...]:
         """
@@ -1555,7 +1544,8 @@ class PolyElement(
 
         """
         ring = self.ring
-        return dict_tail_degrees(self, ring.ngens, ring.domain)
+        degs = smp_tail_degrees(self, ring.ngens, ring.domain)
+        return tuple(ninf if deg < 0 else deg for deg in degs)
 
     def monic(self) -> PolyElement[Er]:
         """Divides all coefficients by the leading coefficient."""
@@ -1677,7 +1667,7 @@ class PolyElement(
     ) -> tuple[tuple[int, ...], list[PolyElement[Er]]]:
         ring = self.ring
         polys = [self] + list(G)
-        J, deflated = dict_deflate(
+        J, deflated = smp_deflate(
             polys, ring.ngens, ring.domain)  # type: ignore[arg-type]
 
         if all(b == 1 for b in J):
@@ -1710,7 +1700,7 @@ class PolyElement(
 
     def trunc_ground(self, p: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_trunc_ground(
+        return self.new(smp_trunc_ground(
             self, p, ring.ngens, ring.domain))
 
     rem_ground = trunc_ground
@@ -1773,7 +1763,7 @@ class PolyElement(
         """
         ring = self.ring
         i = ring.index(x)
-        return self.new(dict_coeff_wrt(
+        return self.new(smp_coeff_wrt(
             self, i, deg, ring.ngens, ring.domain))
 
     def compose(self, x, a=None):
@@ -1837,7 +1827,7 @@ class PolyElement(
         elif len(eval_dict) == ring.ngens:
             return self._evaluate(eval_dict)
         else:
-            result = dict_subs_drop(
+            result = smp_subs_drop(
                 self, eval_dict, ring.ngens, ring.domain)
             new_ring = ring.drop(*[ring.gens[i] for i in eval_dict.keys()])
             return new_ring.from_dict(result)  # type: ignore
@@ -2210,34 +2200,34 @@ class PolyElement(
 
     def _add(self, p2: PolyElement[Er]) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_add(self, p2, ring.domain, ring.ngens))
+        return self.new(smp_add(self, p2, ring.domain, ring.ngens))
 
     def _add_ground(self, cp2: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_add_ground(
+        return self.new(smp_add_ground(
             self, cp2, ring.ngens, ring.domain))
 
     def _sub(self, p2: PolyElement[Er]) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_sub(self, p2, ring.domain, ring.ngens))
+        return self.new(smp_sub(self, p2, ring.domain, ring.ngens))
 
     def _sub_ground(self, cp2: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_sub_ground(
+        return self.new(smp_sub_ground(
             self, cp2, ring.ngens, ring.domain))
 
     def _rsub_ground(self, cp2: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_rsub_ground(
+        return self.new(smp_rsub_ground(
             self, cp2, ring.ngens, ring.domain))
 
     def _mul(self, other: PolyElement[Er]) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_mul(self, other, ring.domain, ring.ngens))
+        return self.new(smp_mul(self, other, ring.domain, ring.ngens))
 
     def mul_ground(self, x: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_mul_ground(
+        return self.new(smp_mul_ground(
             self, x, ring.ngens, ring.domain))
 
     def _pow_int(self, n: int) -> PolyElement[Er]:
@@ -2254,16 +2244,30 @@ class PolyElement(
 
     def _pow_generic(self, n: int) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_pow_generic(self, n, ring.domain, ring.ngens))
+        return self.new(smp_pow_generic(self, n, ring.domain, ring.ngens))
 
     def _pow_multinomial(self, n: int) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_pow_multinomial(
+        return self.new(smp_pow_multinomial(
             self, n, ring.domain, ring.ngens))
 
-    def _square(self) -> PolyElement[Er]:
+    def square(self) -> PolyElement[Er]:
+        """square of a polynomial
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y = ring('x, y', ZZ)
+        >>> p = x + y**2
+        >>> p.square()
+        x**2 + 2*x*y**2 + y**4
+
+        """
         ring = self.ring
-        return self.new(dict_square(self, ring.domain, ring.ngens))
+        return self.new(smp_square(self, ring.domain, ring.ngens))
 
     def _divmod(
         self, other: PolyElement[Er]
@@ -2295,7 +2299,7 @@ class PolyElement(
         ring = self.ring
 
         def term_div(term1, term2):
-            return dict_term_div(
+            return smp_term_div(
                 term1, term2, ring.ngens, ring.domain)
 
         return term_div
@@ -2372,10 +2376,10 @@ class PolyElement(
         """
         ring = self.ring
         if self in ring._gens_set:
-            return self.new(dict_iadd_monom(
+            return self.new(smp_iadd_monom(
                 self.copy(), mc, ring.ngens, ring.domain))
 
-        dict_iadd_monom(self, mc, ring.ngens, ring.domain)
+        smp_iadd_monom(self, mc, ring.ngens, ring.domain)
         return self
 
     def _iadd_poly_monom(
@@ -2403,10 +2407,10 @@ class PolyElement(
         """
         ring = self.ring
         if self in ring._gens_set:
-            return self.new(dict_iadd_poly_monom(
+            return self.new(smp_iadd_poly_monom(
                 self.copy(), p2, mc, ring.ngens, ring.domain))
 
-        dict_iadd_poly_monom(self, p2, mc, ring.ngens, ring.domain)
+        smp_iadd_poly_monom(self, p2, mc, ring.ngens, ring.domain)
         return self
 
     def imul_num(self, c: Er | int) -> PolyElement[Er]:
@@ -2438,10 +2442,10 @@ class PolyElement(
         ring = self.ring
         c = ring.domain_new(c)
         if self in ring._gens_set:
-            return self.new(dict_imul_num(
+            return self.new(smp_imul_num(
                 self.copy(), c, ring.ngens, ring.domain))
 
-        dict_imul_num(self, c, ring.ngens, ring.domain)
+        smp_imul_num(self, c, ring.ngens, ring.domain)
         return self
 
     def _rem(self, g: PolyElement[Er]) -> PolyElement[Er]:
@@ -2450,7 +2454,7 @@ class PolyElement(
 
     def _rem_list(self, G: list[PolyElement[Er]]) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_rem_list(
+        return self.new(smp_rem_list(
             self, G, ring.ngens, ring.domain, ring.order))  # type: ignore[arg-type]
 
     def _mod(self, other: PolyElement[Er]) -> PolyElement[Er]:
@@ -2463,19 +2467,19 @@ class PolyElement(
     def is_ground(self) -> bool:
         # Return self.flint_poly.is_constant() in case of python-flint
         ring = self.ring
-        return dict_is_ground(self, ring.ngens, ring.domain)
+        return smp_is_ground(self, ring.ngens, ring.domain)
 
     @property
     def is_zero(self) -> bool:
         # Return self.flint_poly.is_zero() in case of python-flint
         ring = self.ring
-        return dict_is_zero(self, ring.ngens, ring.domain)
+        return smp_is_zero(self, ring.ngens, ring.domain)
 
     @property
     def is_one(self) -> bool:
         # Return self.flint_poly.is_one() in case of python-flint
         ring = self.ring
-        return dict_is_one(self, ring.ngens, ring.domain)
+        return smp_is_one(self, ring.ngens, ring.domain)
 
     @property
     def is_squarefree(self) -> bool:
@@ -2500,19 +2504,19 @@ class PolyElement(
     def LC(self) -> Er:
         # Just use leading_coefficient() in case of python-flint
         ring = self.ring
-        return dict_LC(self, ring.ngens, ring.domain, ring.order)
+        return smp_LC(self, ring.ngens, ring.domain, ring.order)
 
     @property
     def LM(self) -> Mon:
         # Use monomial(0) in case of python-flint
         ring = self.ring
-        return dict_LM(self, ring.ngens, ring.domain, ring.order)
+        return smp_LM(self, ring.ngens, ring.domain, ring.order)
 
     @property
     def LT(self) -> tuple[Mon, Er]:
         # Use monomial(0) and leading_coefficient() in case of python-flint
         ring = self.ring
-        return dict_LT(self, ring.ngens, ring.domain, ring.order)
+        return smp_LT(self, ring.ngens, ring.domain, ring.order)
 
     def clear_denoms(self) -> tuple[Er, PolyElement[Er]]:
         """Clear denominators from polynomial coefficients."""
@@ -2522,7 +2526,7 @@ class PolyElement(
         if not domain.is_Field or not domain.has_assoc_Ring:
             return domain.one, self
 
-        common, poly = dict_clear_denoms(
+        common, poly = smp_clear_denoms(
             self, ring.ngens, domain)
         return common, self.new(poly)
 
@@ -2648,12 +2652,12 @@ class PolyElement(
         """
         # Use fmpz_mpoly.monomial(1) or fmpq_mpoly.monomial(1) in case of python-flint
         ring = self.ring
-        return dict_leading_expv(
+        return smp_leading_expv(
             self, ring.ngens, ring.domain, ring.order)
 
     def _leading_expv(self) -> Mon:
         ring = self.ring
-        expv = dict_leading_expv(
+        expv = smp_leading_expv(
             self, ring.ngens, ring.domain, ring.order)
         if expv is None:
             raise KeyError
@@ -2661,14 +2665,14 @@ class PolyElement(
 
     def _get_coeff(self, expv: Mon | None) -> Er:
         ring = self.ring
-        return dict_get_coeff(
+        return smp_get_coeff(
             self, expv, ring.ngens, ring.domain)
 
     def const(self) -> Er:
         # Use
         """Returns the constant coefficient."""
         ring = self.ring
-        return dict_const(self, ring.ngens, ring.domain)
+        return smp_const(self, ring.ngens, ring.domain)
 
     def coeff(self, element: PolyElement[Er] | int) -> Er:
         """
@@ -2698,10 +2702,10 @@ class PolyElement(
         """
         ring = self.ring
         if element == 1:
-            return dict_const(self, ring.ngens, ring.domain)
+            return smp_const(self, ring.ngens, ring.domain)
         elif self.ring.is_element(element):
             try:
-                return dict_coeff(
+                return smp_coeff(
                     self, cast("PolyElement[Er]", element),
                     ring.ngens, ring.domain)
             except ValueError:
@@ -2725,7 +2729,7 @@ class PolyElement(
 
         """
         ring = self.ring
-        return self.new(dict_leading_monom(
+        return self.new(smp_leading_monom(
             self, ring.ngens, ring.domain, ring.order))
 
     def leading_term(self) -> PolyElement[Er]:
@@ -2743,7 +2747,7 @@ class PolyElement(
 
         """
         ring = self.ring
-        return self.new(dict_leading_term(
+        return self.new(smp_leading_term(
             self, ring.ngens, ring.domain, ring.order))
 
     def coeffs(self, order: _str | None = None) -> list[Er]:
@@ -2867,12 +2871,12 @@ class PolyElement(
         # this to use the native content() method for ZZ
         # and use the pure python technique for other domains
         ring = self.ring
-        return dict_content(self, ring.ngens, ring.domain)
+        return smp_content(self, ring.ngens, ring.domain)
 
     def primitive(self) -> tuple[Er, PolyElement[Er]]:
         """Returns content and a primitive polynomial."""
         ring = self.ring
-        cont, primitive = dict_primitive(
+        cont, primitive = smp_primitive(
             self, ring.ngens, ring.domain)
         if cont == ring.domain.zero:
             return cont, self
@@ -2902,12 +2906,12 @@ class PolyElement(
 
     def _quo_ground(self, x: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_quo_ground(
+        return self.new(smp_quo_ground(
             self, x, ring.ngens, ring.domain))
 
     def _quo_term(self, term: tuple[Mon, Er]) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_quo_term(
+        return self.new(smp_quo_term(
             self, term, ring.ngens, ring.domain))
 
     def _deflate(
@@ -2916,13 +2920,13 @@ class PolyElement(
         ring = self.ring
         return [
             self.new(poly)
-            for poly in dict_deflate_by(
+            for poly in smp_deflate_by(
                 polys, J, ring.ngens, ring.domain)  # type: ignore[arg-type]
         ]
 
     def inflate(self, J: Sequence[int]) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_inflate(self, J, ring.ngens, ring.domain))
+        return self.new(smp_inflate(self, J, ring.ngens, ring.domain))
 
     def gcd(self, other: PolyElement[Er]) -> PolyElement[Er]:
         return self.cofactors(other)[0]
@@ -2930,7 +2934,7 @@ class PolyElement(
     def _diff(self, i: int) -> PolyElement[Er]:
         # Use the native derivative() method in case of python-flint
         ring = self.ring
-        return self.new(dict_diff(self, i, ring.ngens, ring.domain))
+        return self.new(smp_diff(self, i, ring.ngens, ring.domain))
 
     def cofactors(
         self: PolyElement[Er], other: PolyElement[Er]
@@ -3086,7 +3090,7 @@ class PolyElement(
 
     def _compose(self, replacements, initial_poly):
         ring = self.ring
-        return self.new(dict_compose(
+        return self.new(smp_compose(
             self, replacements, initial_poly,
             ring.ngens, ring.domain))
 
@@ -3100,9 +3104,9 @@ class PolyElement(
         self, fv: list[PolyElement[Er]]
     ) -> tuple[list[PolyElement[Er]], PolyElement[Er]]:
         ring = self.ring
-        quotient_dicts, remainder = dict_div_list(
+        smp_quotients, remainder = smp_div_list(
             self, fv, ring.ngens, ring.domain, ring.order)  # type: ignore[arg-type]
-        quotients = [self.new(quotient) for quotient in quotient_dicts]
+        quotients = [self.new(quotient) for quotient in smp_quotients]
         return quotients, self.new(remainder)
 
     # The following _p* and _subresultants methods can just be converted to pure python
@@ -3264,12 +3268,12 @@ class PolyElement(
 
     def _subs(self, subs_dict: Mapping[int, Er]) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(dict_subs(
+        return self.new(smp_subs(
             self, subs_dict, ring.ngens, ring.domain))
 
     def _evaluate(self, eval_dict: Mapping[int, Er]) -> Er:
         ring = self.ring
-        return dict_evaluate(
+        return smp_evaluate(
             self, eval_dict, ring.ngens, ring.domain)
 
     def _symmetrize(
@@ -3281,11 +3285,11 @@ class PolyElement(
         # the pure python version until python-flint provides some
         # equivalent functionality.
         ring = self.ring
-        symmetric_dict, remainder_dict, poly_dicts = dict_symmetrize(
+        symmetric_smp, remainder_smp, smp_polys = smp_symmetrize(
             self, ring.ngens, ring.domain, ring.order)
-        symmetric = self.new(symmetric_dict)
-        f = self.new(remainder_dict)
-        polys = [self.new(poly) for poly in poly_dicts]
+        symmetric = self.new(symmetric_smp)
+        f = self.new(remainder_smp)
+        polys = [self.new(poly) for poly in smp_polys]
         mapping = list(zip(ring.gens, polys))
 
         return symmetric, f, mapping

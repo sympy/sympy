@@ -8,21 +8,21 @@ from sympy.polys.domains import PolynomialRing
 from sympy.polys.galoistools import (gf_gcdex, gf_div, gf_lcm)
 from sympy.polys.polyerrors import ModularGCDFailed
 from sympy.polys.zippel import (
-    dict_LC_wrt_last, dict_deg_wrt_last, dict_gf_gcd,
-    dict_primitive_wrt_last, dict_trivial_gcd)
+    smp_LC_wrt_last, smp_deg_wrt_last, smp_gf_gcd,
+    smp_primitive_wrt_last, smp_trivial_gcd)
 
 import random
 
 
 def _gf_gcd(fp, gp, p):
     ring = fp.ring
-    gcd = dict_gf_gcd(dict(fp), dict(gp), p, ring.domain)
+    gcd = smp_gf_gcd(dict(fp), dict(gp), p, ring.domain)
     return fp.new(gcd)
 
 
 def _trivial_gcd(f, g):
     ring = f.ring
-    result = dict_trivial_gcd(dict(f), dict(g), ring.ngens, ring.domain)
+    result = smp_trivial_gcd(dict(f), dict(g), ring.ngens, ring.domain)
 
     if result is None:
         return None
@@ -36,7 +36,7 @@ def _primitive(f, p):
     dom = ring.domain
     k = ring.ngens
 
-    cont, prim = dict_primitive_wrt_last(dict(f), k, dom, p)
+    cont, prim = smp_primitive_wrt_last(dict(f), k, dom, p)
 
     yring = ring.clone(symbols=[ring.symbols[k-1]])
     contf = yring.zero.new(dup_to_dict(cont, dom)).trunc_ground(p)
@@ -48,13 +48,13 @@ def _LC(f):
     ring = f.ring
     k = ring.ngens
     yring = ring.clone(symbols=ring.symbols[k-1])
-    lcf = dict_LC_wrt_last(dict(f), k, ring.domain)
+    lcf = smp_LC_wrt_last(dict(f), k, ring.domain)
     return yring.zero.new(lcf)
 
 
 def _deg(f):
     k = f.ring.ngens
-    return dict_deg_wrt_last(f, k)
+    return smp_deg_wrt_last(f, k)
 
 
 def _degree_bound_univariate(f, g):
