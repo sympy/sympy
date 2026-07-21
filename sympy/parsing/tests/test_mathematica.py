@@ -454,7 +454,16 @@ def test_Mathematica_literal_regex():
     from sympy.parsing.mathematica import MathematicaParser
     literal_regex = re.compile(MathematicaParser._literal)
 
+    # Mathematica allows ``$`` anywhere in a symbol and ``` ` ``` as the context
+    # separator, neither of which is a Python identifier character.
+    assert literal_regex.fullmatch("$Version")
+    assert literal_regex.fullmatch("x$1")
+    assert literal_regex.fullmatch("Global`sym")
+    assert not literal_regex.match("`")
+
     for c in map(chr, range(sys.maxunicode+1)):
+        if c in "$`":
+            continue
         if c == "_" or (not c.isidentifier() and not f"x{c}".isidentifier()):
             assert not literal_regex.match(c)
             assert not literal_regex.fullmatch(f"x{c}")
@@ -695,3 +704,102 @@ def test_parse_mathematica_derivative():
     e = parse_mathematica("f'")
     assert isinstance(e, Lambda)
     assert e(x) == f(x).diff(x)
+
+
+def test_mathematica_blanks_and_patterns():
+    # Anonymous blanks: with no symbol on the left there is nothing to name, so
+    # the blank stands on its own -- ``f[_]``, ``f[_Integer]``, ``__Integer``.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("_") == ["Blank"]
+    assert chain("__") == ["BlankSequence"]
+    assert chain("___") == ["BlankNullSequence"]
+    assert chain("_.") == ["Optional", ["Blank"]]
+    assert chain("f[_]") == ["f", ["Blank"]]
+    assert chain("f[__]") == ["f", ["BlankSequence"]]
+    assert chain("f[___]") == ["f", ["BlankNullSequence"]]
+    assert chain("FalseQ[_]") == ["FalseQ", ["Blank"]]
+    # ... and the head-restricted forms, named or not
+    assert chain("_Integer") == ["Blank", "Integer"]
+    assert chain("__Integer") == ["BlankSequence", "Integer"]
+    assert chain("___Integer") == ["BlankNullSequence", "Integer"]
+    assert chain("IntegersQ[__Integer]") == ["IntegersQ", ["BlankSequence", "Integer"]]
+    assert chain("x_Integer") == ["Pattern", "x", ["Blank", "Integer"]]
+    assert chain("x__Integer") == ["Pattern", "x", ["BlankSequence", "Integer"]]
+    assert chain("x___Integer") == ["Pattern", "x", ["BlankNullSequence", "Integer"]]
+    assert chain("_?NumberQ") == ["PatternTest", ["Blank"], "NumberQ"]
+    assert chain("_Integer?Positive") == \
+        ["PatternTest", ["Blank", "Integer"], "Positive"]
+
+    # ``p : v`` names a pattern after a symbol and supplies a default otherwise.
+    assert chain("a:b") == ["Pattern", "a", "b"]
+    assert chain("s:{__}") == ["Pattern", "s", ["List", ["BlankSequence"]]]
+    assert chain("x_:1") == ["Optional", ["Pattern", "x", ["Blank"]], "1"]
+    assert chain("_:1") == ["Optional", ["Blank"], "1"]
+    assert chain("__:b") == ["Optional", ["BlankSequence"], "b"]
+    assert chain("a:b:c") == ["Optional", ["Pattern", "a", "b"], "c"]     # left assoc
+    assert chain("a:b+c") == ["Pattern", "a", ["Plus", "b", "c"]]
+    assert chain("a:b->c") == ["Rule", ["Pattern", "a", "b"], "c"]
+    assert chain("f[s:{__}]") == ["f", ["Pattern", "s", ["List", ["BlankSequence"]]]]
+    assert chain("s:{__}:>s") == \
+        ["RuleDelayed", ["Pattern", "s", ["List", ["BlankSequence"]]], "s"]
+
+    # A bracketing prefix must be completed before a tighter operator consumes it
+    assert chain("(a+b)?c") == ["PatternTest", ["Plus", "a", "b"], "c"]
+    assert chain("{a,b}?c") == ["PatternTest", ["List", "a", "b"], "c"]
+
+
+def test_mathematica_message_name():
+    chain = parse_mathematica_to_fullformlist
+    assert chain("Foo::usage") == ["MessageName", "Foo", ["_Str", "usage"]]
+    assert chain("Foo::usage::extra") == \
+        ["MessageName", "Foo", ["_Str", "usage"], ["_Str", "extra"]]
+    # binds tighter than everything else
+    assert chain("a::b+c") == ["Plus", ["MessageName", "a", ["_Str", "b"]], "c"]
+    assert chain("a::b[c]") == [["MessageName", "a", ["_Str", "b"]], "c"]
+    assert chain('a::usage = "text"') == \
+        ["Set", ["MessageName", "a", ["_Str", "usage"]], ["_Str", "text"]]
+
+
+def test_mathematica_whitespace_sensitive_tokens():
+    # Blanks and slots bind to a neighbour only without a space between them.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("a_b") == ["Pattern", "a", ["Blank", "b"]]
+    assert chain("a _ b") == ["Times", "a", ["Blank"], "b"]
+    assert chain("a__b") == ["Pattern", "a", ["BlankSequence", "b"]]
+    assert chain("a __ b") == ["Times", "a", ["BlankSequence"], "b"]
+    assert chain("a! _ b") == ["Times", ["Factorial", "a"], ["Blank"], "b"]
+    assert chain("a + _") == ["Plus", "a", ["Blank"]]
+    assert chain("#a") == ["Slot", ["_Str", "a"]]
+    assert chain("# a") == ["Times", ["Slot", "1"], "a"]
+    assert chain("#1") == ["Slot", "1"]
+    assert chain("# f[x]") == ["Times", ["Slot", "1"], ["f", "x"]]
+
+
+def test_mathematica_symbol_names():
+    # ``$`` is a symbol character and ``` ` ``` separates the context, which
+    # Mathematica resolves away.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("$SomeVariable") == "$SomeVariable"
+    assert chain("x$1") == "x$1"
+    assert chain("Block[{$Var = 2}, $Var]") == \
+        ["Block", ["List", ["Set", "$Var", "2"]], "$Var"]
+    assert chain("Global`sym") == "sym"
+    assert chain("System`Plus") == "Plus"
+    assert chain("Foo`Private`x") == "x"
+    # \[Rule] and \[RuleDelayed] are operators, like \[Equal] already was
+    assert chain(r"a \[Rule] b") == ["Rule", "a", "b"]
+    assert chain(r"{a \[Rule] 1, b \[RuleDelayed] 2}") == \
+        ["List", ["Rule", "a", "1"], ["RuleDelayed", "b", "2"]]
+
+
+def test_mathematica_assignment_and_right_associativity():
+    # Right-associative levels chain across different operators of the level,
+    # and ``=``/``:=`` bind looser than the compound assignments.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("a = b := c") == ["Set", "a", ["SetDelayed", "b", "c"]]
+    assert chain("a -> b :> c") == ["Rule", "a", ["RuleDelayed", "b", "c"]]
+    assert chain("a /@ b @@ c") == ["Map", "a", ["Apply", "b", "c"]]
+    assert chain("a = b += c") == ["Set", "a", ["AddTo", "b", "c"]]
+    assert chain("a += b = c") == ["Set", ["AddTo", "a", "b"], "c"]
+    assert chain("a += b *= c") == ["AddTo", "a", ["TimesBy", "b", "c"]]
+    assert chain("a *= b := c") == ["SetDelayed", ["TimesBy", "a", "b"], "c"]
