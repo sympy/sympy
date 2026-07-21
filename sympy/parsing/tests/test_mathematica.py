@@ -340,6 +340,12 @@ def test_parser_mathematica_tokenizer():
     assert chain("f'") == [["Derivative", "1"], "f"]
     assert chain("f''") == [["Derivative", "2"], "f"]
     assert chain("x'[t]") == [[["Derivative", "1"], "x"], "t"]
+    # The prime binds to the whole pattern, not to the symbol inside it:
+    # ``f_'[x_]`` is ``Derivative[1][Pattern[f, Blank[]]][Pattern[x, Blank[]]]``.
+    assert chain("f_'[x_]") == [[["Derivative", "1"], ["Pattern", "f", ["Blank"]]],
+                                ["Pattern", "x", ["Blank"]]]
+    assert chain("f_''[x_]") == [[["Derivative", "2"], ["Pattern", "f", ["Blank"]]],
+                                 ["Pattern", "x", ["Blank"]]]
 
     # Postfix operators and Alternatives / PatternTest / Repeated
     assert chain("a--") == ["Decrement", "a"]
