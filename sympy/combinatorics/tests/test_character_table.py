@@ -72,7 +72,7 @@ def test_dixon_character_table():
     ]
     assert _cmp_tbl(tbl, expected)
 
-    # C₅ ⋊ C₄
+    # F5
     G = PermutationGroup(
         Permutation([[0,1,3,4,2]]),
         Permutation([[1,4,2,3]])

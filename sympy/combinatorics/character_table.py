@@ -413,14 +413,14 @@ def _sort_characters(rows: list[list], dom: Domain):
             break
 
 
-def dixon_character_table(conjugacy_classes: Sequence[CC]) -> CharacterTable:
+def dixon_character_table(conjugacy_classes: Sequence[set[Permutation]]) -> CharacterTable:
     """
     Compute the character table of a permutation group from its conjugacy classes
     using Dixon's algorithm.
 
     Parameters
     ==========
-    conjugacy_classes : Sequence[CC]
+    conjugacy_classes : Sequence[set[Permutation]]
         The conjugacy classes of the group.
 
     Examples
