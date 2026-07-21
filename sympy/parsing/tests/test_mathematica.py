@@ -319,6 +319,16 @@ def test_parser_mathematica_tokenizer():
     assert chain("a->b") == ["Rule", "a", "b"]
     assert chain("a:>b") == ["RuleDelayed", "a", "b"]
     assert chain("a/;b") == ["Condition", "a", "b"]
+    # both are right associative
+    assert chain("a->b->c") == ["Rule", "a", ["Rule", "b", "c"]]
+    assert chain("a:>b:>c") == ["RuleDelayed", "a", ["RuleDelayed", "b", "c"]]
+    # ... and the way rules are actually used: applied with ReplaceAll
+    assert chain("x /. a->b") == ["ReplaceAll", "x", ["Rule", "a", "b"]]
+    assert chain("f[x] /. x->1") == ["ReplaceAll", ["f", "x"], ["Rule", "x", "1"]]
+    assert chain("{a->1, b:>2}") == \
+        ["List", ["Rule", "a", "1"], ["RuleDelayed", "b", "2"]]
+    assert chain("x /. {a->b, c:>d}") == \
+        ["ReplaceAll", "x", ["List", ["Rule", "a", "b"], ["RuleDelayed", "c", "d"]]]
 
     # Comparison operators
     assert chain("a>b") == ["Greater", "a", "b"]
