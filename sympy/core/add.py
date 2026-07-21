@@ -1039,6 +1039,15 @@ class Add(Expr, AssocOp):
                 "factor": False}
             old = old.expand(**logflags)
         expr = expand_mul(old)
+        # Try to combine/simplify rational/algebraic terms so that
+        # leading-term detection works correctly for expressions
+        # involving algebraic numbers (e.g. sqrt(5)). This helps when
+        # cancellation between terms changes the apparent leading term.
+        try:
+            expr = expr.cancel()
+        except Exception:
+            # cancel may fail for some expression types; if so, keep expr
+            pass
 
         if not expr.is_Add:
             return expr.as_leading_term(x, logx=logx, cdir=cdir)
