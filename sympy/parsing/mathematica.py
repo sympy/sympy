@@ -965,6 +965,27 @@ class MathematicaParser:
                         pointer += 1
                         continue
                     if op_type == self.INFIX:
+                        # ``'`` (Derivative) binds tighter than ``[``: in
+                        # ``f'[x]`` the prime applies to ``f`` and the bracket to
+                        # the result, giving ``Derivative[1][f][x]`` rather than
+                        # ``Derivative[1][f[x]]``.  ``'`` cannot simply be given a
+                        # tighter precedence level, because in ``f[x]'`` its
+                        # operand *is* the whole bracketed expression, which does
+                        # not exist yet at that point.  So it stays at its looser
+                        # level and the bracket absorbs any run of primes sitting
+                        # between itself and its head first.
+                        if token in ("[", "[[") and pointer > 0 and tokens[pointer - 1] == "'":
+                            start = pointer - 1
+                            while start > 0 and tokens[start - 1] == "'":
+                                start -= 1
+                            if start > 0 and not self._is_op(tokens[start - 1]):
+                                head = tokens[start - 1]
+                                for _ in range(pointer - start):
+                                    head = self._get_derivative(head)
+                                tokens[start - 1:pointer] = [head]
+                                size -= pointer - start
+                                pointer = start
+                                changed = True
                         if pointer == 0 or pointer == size - 1 or self._is_op(tokens[pointer - 1]) or self._is_op(tokens[pointer + 1]):
                             pointer += 1
                             continue

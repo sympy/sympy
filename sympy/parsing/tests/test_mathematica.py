@@ -346,6 +346,39 @@ def test_parser_mathematica_tokenizer():
                                 ["Pattern", "x", ["Blank"]]]
     assert chain("f_''[x_]") == [[["Derivative", "2"], ["Pattern", "f", ["Blank"]]],
                                  ["Pattern", "x", ["Blank"]]]
+    # The prime binds tighter than ``[``, so ``f'[x]`` is ``Derivative[1][f][x]``
+    # and not ``Derivative[1][f[x]]``.  This has to keep holding when ``f'[x]``
+    # is a subexpression rather than the whole input:
+    d1fx = [[["Derivative", "1"], "f"], "x"]
+    assert chain("f'[x]") == d1fx
+    assert chain("f'[x]*g[x]") == ["Times", d1fx, ["g", "x"]]
+    assert chain("f'[x]g[x]") == ["Times", d1fx, ["g", "x"]]
+    assert chain("2 f'[x]") == ["Times", "2", d1fx]
+    assert chain("f'[x]^2") == ["Power", d1fx, "2"]
+    assert chain("f'[x][y]") == [d1fx, "y"]
+    assert chain("f'[g'[x]]") == [[["Derivative", "1"], "f"],
+                                  [[["Derivative", "1"], "g"], "x"]]
+    # ... and equally for a run of several primes:
+    d2fx = [[["Derivative", "2"], "f"], "x"]
+    d3fx = [[["Derivative", "3"], "f"], "x"]
+    assert chain("f''[x]") == d2fx
+    assert chain("f'''[x]") == d3fx
+    assert chain("f''[x]*g[x]") == ["Times", d2fx, ["g", "x"]]
+    assert chain("2 f''[x]") == ["Times", "2", d2fx]
+    assert chain("f''[x]^2") == ["Power", d2fx, "2"]
+    assert chain("f''[x][y]") == [d2fx, "y"]
+    assert chain("f'[x]+f''[x]+f'''[x]") == ["Plus", d1fx, d2fx, d3fx]
+    assert chain("f''[x]/g'''[y]") == [
+        "Times", d2fx, ["Power", [[["Derivative", "3"], "g"], "y"], "-1"]]
+    # Conversely, a prime *after* a closed bracket takes the whole bracketed
+    # expression as its operand: ``f[x]'`` is ``Derivative[1][f[x]]``.
+    assert chain("f[x]'") == [["Derivative", "1"], ["f", "x"]]
+    assert chain("f[x]'[y]") == [[["Derivative", "1"], ["f", "x"]], "y"]
+    assert chain("f'[[1]]") == ["Part", [["Derivative", "1"], "f"], "1"]
+    assert chain("(f+g)'[x]") == [[["Derivative", "1"], ["Plus", "f", "g"]], "x"]
+    # Same deferral when the prime follows another still unapplied postfix op.
+    assert chain("f!'") == [["Derivative", "1"], ["Factorial", "f"]]
+    assert chain("f'!") == ["Factorial", [["Derivative", "1"], "f"]]
 
     # Postfix operators and Alternatives / PatternTest / Repeated
     assert chain("a--") == ["Decrement", "a"]
