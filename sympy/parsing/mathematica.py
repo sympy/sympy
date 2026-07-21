@@ -809,10 +809,10 @@ class MathematicaParser:
             return [["Derivative", str(int(x[0][1]) + 1)], x[1]]
         return [["Derivative", "1"], x]
 
-    _infix_tighter_than_derivative: tuple | None = None
+    _infix_tighter_than_derivative: tuple[str, ...] | None = None
 
     @classmethod
-    def _tighter_than_derivative(cls) -> tuple:
+    def _tighter_than_derivative(cls) -> tuple[str, ...]:
         """Infix operators that bind tighter than ``'``, brackets excluded.
 
         A prime takes as its operand everything to its left up to the first
@@ -823,7 +823,7 @@ class MathematicaParser:
         if cls._infix_tighter_than_derivative is None:
             levels = cls._mathematica_op_precedence
             after = False
-            found = []
+            found: list[str] = []
             for op_type, _strat, op_dict in levels:
                 if after and op_type == cls.INFIX:
                     found.extend(t for t in op_dict if t not in ("[", "[["))
@@ -958,7 +958,7 @@ class MathematicaParser:
             code_splits[i] = code_split
 
         # Tokenize the input strings with a regular expression:
-        def token_split(code):
+        def token_split(code: str | list) -> list:
             if isinstance(code, str):
                 matches = list(tokenizer.finditer(code))
                 if matches or code.isascii():
