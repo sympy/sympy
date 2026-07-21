@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sympy.core.mul import Mul
+from sympy.core.basic import Basic
 from sympy.core.numbers import Number
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
@@ -15,7 +15,7 @@ algebraic tensor expressions.  A pure tensor represents a single term in
 a tensor expression -- the non-commutative tensor product of matrix-like
 factors, optionally scaled by a commutative coefficient.
 
-Each factor must carry ``.shape`` (e.g., any
+Each factor must carry ``.shape`` (e.g. any
 :class:`~sympy.matrices.expressions.MatrixSymbol`).  The tensor shape is
 the full sequence of per-factor shapes.
 """
@@ -61,14 +61,13 @@ def _is_zero_like(expr):
     return expr == S.Zero * expr
 
 
-class AlgebraicPureTensor(Mul):
+class AlgebraicPureTensor(Basic):
     """Pure tensor as an unevaluated (non-commutative)
     tensor product of factors.
 
-    Extends SymPy's non-commutative Mul so that all existing simplification,
-    differentiation, and pattern-matching machinery is available out of the
-    box.  The tensor-product operator is non-commutative: order of factors
-    is always preserved.
+    Extends ``Basic`` to provide a clean tensor-specific implementation
+    without inheriting Mul's flatten() transformations.  The tensor-product
+    operator is non-commutative: order of factors is always preserved.
 
     Each factor must carry ``.shape`` (e.g. any ``MatrixExpr`` or a 1-x1
     wrapper around a non-commutative Symbol).
@@ -116,7 +115,6 @@ class AlgebraicPureTensor(Mul):
     __slots__ = ()
 
     is_AlgebraicPureTensor = True
-    is_Mul = False  # Prevent Mul.flatten from unpacking AlgebraicPureTensor
 
     _op_priority = 11  # Higher than Symbol/Expr so x * pt delegates to pt.__rmul__(x)
 
@@ -329,9 +327,9 @@ class AlgebraicPureTensor(Mul):
 
         # Build the AlgebraicPureTensor with coefficient as first arg
         if coeff is not S.One:
-            obj = Mul.__new__(cls, coeff, *processed, evaluate=False)
+            obj = Basic.__new__(cls, coeff, *processed)
         else:
-            obj = Mul.__new__(cls, *processed, evaluate=False)
+            obj = Basic.__new__(cls, *processed)
         return obj
 
     def _get_coeff(self):
@@ -598,6 +596,56 @@ class AlgebraicPureTensor(Mul):
             return AlgebraicPureTensor(*transposed_factors)
         return AlgebraicPureTensor(self.coeff, *transposed_factors)
 
+    def conjugate(self):
+        """Return the complex conjugate of this pure tensor.
+
+        Applies ``.conjugate()`` to the commutative coefficient and to
+        every tensor-product factor, then reassembles the result.
+
+        Returns
+        -------
+        AlgebraicPureTensor, AlgebraicZeroTensor, or matrix
+            The conjugated tensor.
+
+        Examples
+        ========
+
+        Conjugate a tensor with a complex coefficient:
+
+        >>> from sympy import I
+        >>> from sympy.matrices.expressions import MatrixSymbol
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> T = AlgebraicPureTensor(1 + I, A, B)
+        >>> TC = T.conjugate()
+        >>> TC.coeff
+        1 - I
+
+        MatrixSymbol factors are conjugated via their .conjugate() method
+        (which returns Adjoint(Transpose(self)) for symbolic matrices):
+
+        >>> TC.factors[0] == A.conjugate()
+        True
+        >>> TC.factors[1] == B.conjugate()
+        True
+
+        Conjugate a tensor with a numeric matrix factor:
+
+        >>> from sympy.matrices import ImmutableDenseMatrix
+        >>> M = ImmutableDenseMatrix([[1 + I, 2], [3, 4 - I]])
+        >>> N = MatrixSymbol("N", 2, 3)
+        >>> T2 = AlgebraicPureTensor(M, N)
+        >>> T2C = T2.conjugate()
+        >>> T2C.factors[0][0, 0]
+        1 - I
+        """
+        result = self._eval_conjugate()
+        if result is not None:
+            return result
+        from sympy.functions.elementary.complexes import conjugate as c
+        return c(self)
+
     def _eval_conjugate(self):
         """Return the complex conjugate of this pure tensor.
 
@@ -681,14 +729,14 @@ class AlgebraicPureTensor(Mul):
         Examples
         ========
 
-        A tensor with no unevaluated sub-expressions returns itself:
+        A tensor with no unevaluated sub-expressions returns an equal result:
 
         >>> from sympy.matrices.expressions import MatrixSymbol
         >>> from sympy.tensor.algebraic import AlgebraicPureTensor
         >>> A = MatrixSymbol("A", 3, 4)
         >>> B = MatrixSymbol("B", 4, 5)
         >>> T = AlgebraicPureTensor(A, B)
-        >>> T.doit() is T
+        >>> T.doit() == T
         True
 
         With a symbolic coefficient:
@@ -707,20 +755,34 @@ class AlgebraicPureTensor(Mul):
         True
         """
         deep = hints.get('deep', True)
-        coeff = self.coeff
-        if hasattr(coeff, 'doit') and deep:
-            coeff = coeff.doit(**hints)
-
-        factors = []
-        for f in self.factors:
-            if hasattr(f, 'doit') and deep:
-                factors.append(f.doit(**hints))
+        
+        # Check if any arg needs doit evaluation
+        changed = False
+        new_args = []
+        for arg in self.args:
+            if hasattr(arg, 'doit') and deep:
+                da = arg.doit(**hints)
+                new_args.append(da)
+                if da is not arg:
+                    changed = True
             else:
-                factors.append(f)
+                new_args.append(arg)
 
-        if coeff is S.One:
-            return AlgebraicPureTensor(*factors)
-        return AlgebraicPureTensor(coeff, *factors)
+        if not changed:
+            return self
+
+        # Rebuild from new args
+        if len(new_args) == 0:
+            return self
+        if len(new_args) == 1:
+            return new_args[0]
+        # Check if first arg is a coefficient
+        first = new_args[0]
+        if isinstance(first, Number) or (hasattr(first, 'is_commutative') and first.is_commutative):
+            if first is S.One:
+                return AlgebraicPureTensor(*new_args[1:])
+            return AlgebraicPureTensor(first, *new_args[1:])
+        return AlgebraicPureTensor(*new_args)
 
     def diff(self, *symbols, **assumptions):
         """Differentiate this pure tensor with respect to *symbols*.
@@ -831,6 +893,36 @@ class AlgebraicPureTensor(Mul):
                 print(self._repr_latex_())
             else:
                 print(self)
+
+    def expand(self, deep=True, **hints):
+        """Expand this pure tensor by distributing over ``Add``
+        in factors and coefficient.
+
+        Parameters
+        ----------
+        deep : bool, default True
+            Whether to expand subexpressions.
+        **hints : dict
+            Additional expansion hints.
+
+        Returns
+        -------
+        AlgebraicPureTensor, AlgebraicTensor, or bare factor
+            The expanded expression.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices.expressions import MatrixSymbol, MatAdd
+        >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+        >>> A = MatrixSymbol("A", 3, 4)
+        >>> B = MatrixSymbol("B", 4, 5)
+        >>> C = MatrixSymbol("C", 4, 5)
+        >>> T = AlgebraicPureTensor(A, MatAdd(B, C))
+        >>> print(T.expand())
+        A ⊗ C + A ⊗ B
+        """
+        return self._eval_expand_mul(deep=deep, **hints)
 
     def _eval_expand_mul(self, **hints):
         """Expand this pure tensor by distributing over ``Add``

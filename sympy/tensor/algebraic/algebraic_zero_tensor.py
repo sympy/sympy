@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sympy.core.expr import AtomicExpr
+from sympy.core.basic import Basic
 from sympy.core.numbers import Number
 from sympy.core.sympify import sympify
 
@@ -14,7 +14,7 @@ different shapes are distinct objects.
 """
 
 
-class AlgebraicZeroTensor(AtomicExpr):
+class AlgebraicZeroTensor(Basic):
     """Zero tensor carrying a specific tensor shape.
 
     An AlgebraicZeroTensor of shape ``((m0, n0), (m1, n1), ...)``
@@ -27,12 +27,10 @@ class AlgebraicZeroTensor(AtomicExpr):
     For a single-matrix tensor of shape ``(m, n)`` the canonical form is
     ``((m, n),)`` (a one-element tuple).
 
-    Extends ``AtomicExpr`` (``Atom`` + ``Expr``) to integrate with SymPy's
-    expression system: ``sympify()``, tree traversal (``atoms()``, ``has()``,
-    ``replace()``), the assumptions system (``is_commutative``),
-    generic operations (``subs()``, ``xreplace()``, ``doit()``), and the
-    ``Expr`` machinery (``as_base_exp()``, ``as_coeff_Mul()``,
-    ``as_coeff_Add()``).
+    Extends ``Basic`` to integrate with SymPy's expression system:
+    ``sympify()``, tree traversal (``atoms()``, ``has()``, ``replace()``),
+    the assumptions system (``is_commutative``), generic operations
+    (``subs()``, ``xreplace()``, ``doit()``).
 
     Examples
     ========
@@ -60,7 +58,7 @@ class AlgebraicZeroTensor(AtomicExpr):
     Zero tensor is the additive identity:
 
     >>> from sympy.matrices.expressions import MatrixSymbol
-    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicZeroTensor
     >>> A = MatrixSymbol("A", 3, 4)
     >>> B = MatrixSymbol("B", 4, 5)
     >>> T = AlgebraicPureTensor(A, B)
@@ -86,9 +84,18 @@ class AlgebraicZeroTensor(AtomicExpr):
             # Bare (m, n) or [m, n] -> wrap as ((m, n),)
             shape = (shape,)
         shape = tuple(tuple(s) for s in shape)
-        obj = AtomicExpr.__new__(cls)
+        obj = Basic.__new__(cls)
         obj._shape = shape
         return obj
+
+    @property
+    def args(self):
+        """Return empty tuple for atomic behavior.
+        
+        AlgebraicZeroTensor is treated as an atomic object with no
+        subexpressions to traverse, consistent with its zero nature.
+        """
+        return ()
 
     def _hashable_content(self):
         """Return content for hashing and equality comparison."""
@@ -97,6 +104,21 @@ class AlgebraicZeroTensor(AtomicExpr):
     def __getnewargs__(self):
         """Return args for pickle reconstruction."""
         return (self._shape,)
+
+    def conjugate(self):
+        """Return the complex conjugate of this zero tensor.
+        
+        The conjugate of a zero tensor is itself.
+        
+        Examples
+        ========
+        
+        >>> from sympy.tensor.algebraic import AlgebraicZeroTensor
+        >>> Z = AlgebraicZeroTensor((3, 4))
+        >>> Z.conjugate() is Z
+        True
+        """
+        return self
 
     @property
     def free_symbols(self):
