@@ -159,9 +159,8 @@ def test_fcode_functions_with_integers():
 
 
 def test_fcode_functions_with_integer_symbol_args():
-    # https://github.com/sympy/sympy/issues/20435
-    # Integer-valued arguments must not be promoted to reals inside a
-    # function call, otherwise integer-argument intrinsics get invalid input.
+    # Integer-valued arguments must not be promoted to reals inside a function
+    # call, otherwise integer-argument intrinsics get invalid input.
     from sympy.functions.special.bessel import besselj
     x = symbols('x')
     n = symbols('n', integer=True)
@@ -169,7 +168,7 @@ def test_fcode_functions_with_integer_symbol_args():
                  strict=False) == "      BESJN(n + 1, x**2)"
     assert fcode(besselj(2*n, x), user_functions={'besselj': 'BESJN'},
                  strict=False) == "      BESJN(2*n, x)"
-    # Purely numeric arguments are still evaluated as floats.
+    # Constant (purely numeric) arguments are still evaluated as floats.
     assert fcode(besselj(1, x), user_functions={'besselj': 'BESJN'},
                  strict=False) == "      BESJN(1.0d0, x)"
 

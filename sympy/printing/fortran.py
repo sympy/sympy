@@ -297,11 +297,8 @@ class FCodePrinter(CodePrinter):
             return CodePrinter._print_Add(self, expr)
 
     def _print_Function(self, expr):
-        # Function args are evaluated as floats so that e.g. constants and
-        # real-valued expressions are passed as reals. Integer-valued symbolic
-        # expressions (e.g. ``n + 1`` for an integer symbol ``n``) are left
-        # untouched, since promoting them to reals produces invalid input for
-        # integer-argument intrinsics (see issue #20435).
+        # Args are folded to floats unless they are integer-valued symbolic
+        # expressions, which stay integers for integer-argument intrinsics.
         prec =  self._settings['precision']
         args = [a if (a.is_integer and not a.is_number) else N(a, prec)
                 for a in expr.args]
