@@ -9,7 +9,8 @@ from sympy import Mul, Add, Pow, Rational, log, exp, sqrt, cos, sin, tan, asin, 
     acosh, atanh, acoth, asech, acsch, expand, im, flatten, polylog, cancel, expand_trig, sign, simplify, \
     UnevaluatedExpr, S, atan, atan2, Mod, Max, Min, rf, Ei, Si, Ci, airyai, airyaiprime, airybi, primepi, prime, \
     isprime, cot, sec, csc, csch, sech, coth, Function, E, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
-    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols, Not, factorial
+    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols, Not, factorial, \
+    Derivative, Subs, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.special.bessel import airybiprime
 from sympy.functions.special.error_functions import li
@@ -57,6 +58,13 @@ def parse_mathematica(s):
     x*(a + b)
     >>> parse_mathematica("Times[x, Plus[a, b]]")
     x*(a + b)
+
+    Derivatives written with a prime are translated as such:
+
+    >>> parse_mathematica("f'[x] + f''[x]")
+    Derivative(f(x), x) + Derivative(f(x), (x, 2))
+    >>> parse_mathematica("Sin'[x]")
+    cos(x)
 
     To get a matrix from Wolfram's code:
 
@@ -666,17 +674,21 @@ class MathematicaParser:
         (INFIX, FLAT, {"\N{CIRCLED TIMES}": "CircleTimes"}),
         (INFIX, FLAT, {".": "Dot"}),
         (PREFIX, None, {"-": lambda x: MathematicaParser._get_neg(x),
-                        "+": lambda x: x}),
+                        # Unary ``+`` is not a no-op: ``+x`` is ``Plus[x]``.
+                        "+": lambda x: ["Plus", x]}),
         (PREFIX, None, {"\N{NABLA}": "Del", "\N{WHITE SQUARE}": "Square"}),
         (INFIX, RIGHT, {"^": "Power"}),
-        (INFIX, RIGHT, {"@@": "Apply", "/@": "Map", "//@": "MapAll", "@@@": lambda x, y: ["Apply", x, y, ["List", "1"]]}),
-        # ``f @ x`` is prefix function application, equivalent to ``f[x]``.  It
-        # binds tighter than ``^`` and ``@@`` but looser than ``'`` and ``[``.
-        (INFIX, RIGHT, {"@": lambda x, y: [x, y]}),
         # ``f'`` is ``Derivative[1][f]``; each extra prime raises the order, so
         # ``f''`` is ``Derivative[2][f]`` (not ``Derivative[Derivative[f]]``).
-        (POSTFIX, None, {"'": lambda x: MathematicaParser._get_derivative(x),
-                         "!": "Factorial", "!!": "Factorial2", "--": "Decrement"}),
+        # The prime binds tighter than ``^`` but looser than the ``@`` family and
+        # than ``[``: ``a^b'`` is ``Power[a, Derivative[1][b]]`` while ``a@b'`` is
+        # ``Derivative[1][a[b]]``.
+        (POSTFIX, None, {"'": lambda x: MathematicaParser._get_derivative(x)}),
+        (INFIX, RIGHT, {"@@": "Apply", "/@": "Map", "//@": "MapAll", "@@@": lambda x, y: ["Apply", x, y, ["List", "1"]]}),
+        # ``f @ x`` is prefix function application, equivalent to ``f[x]``.  It
+        # binds tighter than ``^``, ``'`` and ``@@`` but looser than ``[``.
+        (INFIX, RIGHT, {"@": lambda x, y: [x, y]}),
+        (POSTFIX, None, {"!": "Factorial", "!!": "Factorial2", "--": "Decrement"}),
         (INFIX, None, {"[": lambda x, y: [x, *y], "[[": lambda x, y: ["Part", x, *y]}),
         (PREFIX, None, {"{": lambda x: ["List", *x], "(": lambda x: x[0],
                         "\N{LEFT-POINTING ANGLE BRACKET}": lambda x: ["AngleBracket", *x]}),
@@ -694,7 +706,16 @@ class MathematicaParser:
     _missing_arguments_default = {
         "#": lambda: ["Slot", "1"],
         "##": lambda: ["SlotSequence", "1"],
+        # A ``_`` construct only builds a Pattern when it follows a symbol.
+        # Everywhere else it stands on its own as a bare blank -- see
+        # ``_is_symbol``.
+        "_": lambda: ["Blank"],
+        "_.": lambda: ["Optional", ["Blank"]],
+        "__": lambda: ["BlankSequence"],
+        "___": lambda: ["BlankNullSequence"],
     }
+
+    _blanks = ("_", "_.", "__", "___")
 
     # This regex matches any valid python identifier -- excluding
     # underscores, which Mathematica uses to denote patterns, and
@@ -732,6 +753,91 @@ class MathematicaParser:
                 and len(x[0]) == 2 and x[0][0] == "Derivative"):
             return [["Derivative", str(int(x[0][1]) + 1)], x[1]]
         return [["Derivative", "1"], x]
+
+    _infix_tighter_than_derivative: tuple | None = None
+
+    @classmethod
+    def _tighter_than_derivative(cls) -> tuple:
+        """Infix operators that bind tighter than ``'``, brackets excluded.
+
+        A prime takes as its operand everything to its left up to the first
+        operator looser than itself, so in ``c @ f'[x]`` it captures the whole
+        ``c @ f`` and the result is ``Derivative[1][c[f]][x]``.  Brackets are left
+        out because those are completed rather than waited for.
+        """
+        if cls._infix_tighter_than_derivative is None:
+            levels = cls._mathematica_op_precedence
+            after = False
+            found = []
+            for op_type, _strat, op_dict in levels:
+                if after and op_type == cls.INFIX:
+                    found.extend(t for t in op_dict if t not in ("[", "[["))
+                if "'" in op_dict:
+                    after = True
+            cls._infix_tighter_than_derivative = tuple(found)
+        return cls._infix_tighter_than_derivative
+
+    def _complete_left_operand(self, tokens: list, pointer: int) -> int:
+        """Finish building the operand sitting just left of ``tokens[pointer]``.
+
+        ``_parse_after_braces`` visits the precedence levels from the tightest to
+        the loosest, but function application (``f[x]``, ``f[[i]]``) and ``'``
+        (Derivative) are *positional*: they attach to whatever happens to precede
+        them.  An operator that binds tighter than they do can therefore be
+        reached while the operand on its left is only half assembled -- in
+        ``f'[x]?c`` the ``?`` binds tighter than both, yet its left operand is the
+        whole ``Derivative[1][f][x]``, which at that point is still the three
+        loose tokens ``f``, ``'``, ``[``.
+
+        Collapse those pending pieces, innermost first, and return how many tokens
+        were removed so the caller can fix up its cursor.  Levels looser than
+        ``'`` and ``[`` never see anything left to do here, so this is a no-op for
+        them.
+        """
+        removed = 0
+        while pointer > 0:
+            if tokens[pointer - 1] == "'":
+                start = pointer - 1
+                while start > 0 and tokens[start - 1] == "'":
+                    start -= 1
+                # the primed expression may itself be a pending application
+                inner = self._complete_left_operand(tokens, start)
+                if inner:
+                    removed += inner
+                    pointer -= inner
+                    continue
+                if start == 0 or self._is_op(tokens[start - 1]):
+                    return removed
+                if start > 1 and tokens[start - 2] in self._tighter_than_derivative():
+                    # The prime reaches further left than this single token; let
+                    # that tighter operator be applied first.
+                    return removed
+                head = tokens[start - 1]
+                for _ in range(pointer - start):
+                    head = self._get_derivative(head)
+                tokens[start - 1:pointer] = [head]
+                removed += pointer - start
+                pointer = start
+            elif pointer > 1 and tokens[pointer - 2] in ("[", "[["):
+                # the head of the application may need completing first
+                inner = self._complete_left_operand(tokens, pointer - 2)
+                if inner:
+                    removed += inner
+                    pointer -= inner
+                    continue
+                if pointer < 3 or self._is_op(tokens[pointer - 3]):
+                    return removed
+                head, args = tokens[pointer - 3], tokens[pointer - 1]
+                if tokens[pointer - 2] == "[":
+                    node = [head, *args]
+                else:
+                    node = ["Part", head, *args]
+                tokens[pointer - 3:pointer] = [node]
+                removed += 2
+                pointer -= 2
+            else:
+                return removed
+        return removed
 
     _regex_tokenizer = None
 
@@ -813,6 +919,12 @@ class MathematicaParser:
         if re.match("-?" + self._number, token):
             return False
         return True
+
+    def _is_symbol(self, token: str | list) -> bool:
+        # ``x_``, ``x__`` and ``x_h`` name the pattern they build only when ``x``
+        # is a symbol.  Mathematica reads ``f[x]_`` as ``Times[f[x], Blank[]]``
+        # and ``f[x]_c`` as ``Times[f[x], Blank[c]]``, not as patterns.
+        return isinstance(token, str) and re.fullmatch(self._literal, token) is not None
 
     def _is_valid_star1(self, token: str | list) -> bool:
         if token in (")", "}"):
@@ -964,28 +1076,30 @@ class MathematicaParser:
                         # the INFIX + - are supposed to match that expression:
                         pointer += 1
                         continue
+                    if token == "+" and op_type == self.PREFIX:
+                        # A lone unary plus is kept (``+x`` is ``Plus[x]``), but one
+                        # heading a term of a ``+`` chain is absorbed: both
+                        # ``a + +b`` and ``+a + b`` are plain ``Plus[a, b]``.  After
+                        # an infix ``-`` it is kept, the term being negated:
+                        # ``a - +b`` is ``Plus[a, Times[-1, Plus[b]]]``.
+                        after_infix_plus = (pointer > 1 and tokens[pointer - 1] == "+"
+                                            and not self._is_op(tokens[pointer - 2]))
+                        heads_chain = (pointer == 0 and pointer + 2 < size
+                                       and tokens[pointer + 2] in ("+", "-"))
+                        if after_infix_plus or heads_chain:
+                            tokens.pop(pointer)
+                            size -= 1
+                            changed = True
+                            continue
+                    if op_type in (self.INFIX, self.POSTFIX):
+                        # Both take an operand on their left, which may still be
+                        # a pending application or a run of ``'``.
+                        absorbed = self._complete_left_operand(tokens, pointer)
+                        if absorbed:
+                            pointer -= absorbed
+                            size -= absorbed
+                            changed = True
                     if op_type == self.INFIX:
-                        # ``'`` (Derivative) binds tighter than ``[``: in
-                        # ``f'[x]`` the prime applies to ``f`` and the bracket to
-                        # the result, giving ``Derivative[1][f][x]`` rather than
-                        # ``Derivative[1][f[x]]``.  ``'`` cannot simply be given a
-                        # tighter precedence level, because in ``f[x]'`` its
-                        # operand *is* the whole bracketed expression, which does
-                        # not exist yet at that point.  So it stays at its looser
-                        # level and the bracket absorbs any run of primes sitting
-                        # between itself and its head first.
-                        if token in ("[", "[[") and pointer > 0 and tokens[pointer - 1] == "'":
-                            start = pointer - 1
-                            while start > 0 and tokens[start - 1] == "'":
-                                start -= 1
-                            if start > 0 and not self._is_op(tokens[start - 1]):
-                                head = tokens[start - 1]
-                                for _ in range(pointer - start):
-                                    head = self._get_derivative(head)
-                                tokens[start - 1:pointer] = [head]
-                                size -= pointer - start
-                                pointer = start
-                                changed = True
                         if pointer == 0 or pointer == size - 1 or self._is_op(tokens[pointer - 1]) or self._is_op(tokens[pointer + 1]):
                             pointer += 1
                             continue
@@ -994,6 +1108,27 @@ class MathematicaParser:
                         if pointer == 0 or self._is_op(tokens[pointer - 1]):
                             pointer += 1
                             continue
+                    # An operator whose operand is still an unapplied operator --
+                    # the ``'`` in ``a&'``, the outer ``-`` in ``- -a`` -- has to
+                    # wait for that one to be built.  Unless a default operand is
+                    # defined for it (``#`` alone is ``Slot[1]``), leave it to the
+                    # re-parsing loop at the end of this method.
+                    if token not in self._missing_arguments_default:
+                        if op_type == self.POSTFIX and (pointer == 0 or self._is_op(tokens[pointer - 1])):
+                            pointer += 1
+                            continue
+                        if op_type == self.PREFIX and (pointer == size - 1 or self._is_op(tokens[pointer + 1])):
+                            pointer += 1
+                            continue
+                    # ``x_h`` names a pattern only when ``x`` is a symbol; after
+                    # anything else the blank stands alone and merely multiplies,
+                    # so ``f[x]_c`` is ``Times[f[x], Blank[c]]``.
+                    if token == "_" and op_type == self.INFIX and not self._is_symbol(tokens[pointer - 1]):
+                        tokens[pointer:pointer + 2] = [["Blank", tokens[pointer + 1]]]
+                        size -= 1
+                        changed = True
+                        pointer += 1
+                        continue
                     changed = True
                     tokens[pointer] = node
                     if op_type == self.INFIX:
@@ -1085,8 +1220,14 @@ class MathematicaParser:
                     elif op_type == self.POSTFIX:
                         if grouping_strat is not None:
                             raise TypeError("'Prefix' op_type should not have a grouping strat")
-                        if pointer == 0 or self._is_op(tokens[pointer - 1]):
+                        if (pointer == 0 or self._is_op(tokens[pointer - 1])
+                                or (token in self._blanks
+                                    and not self._is_symbol(tokens[pointer - 1]))):
+                            # Stands on its own -- no operand is consumed, so the
+                            # ``op_name`` call below must be skipped too.
                             tokens[pointer] = self._missing_arguments_default[token]()
+                            pointer += 1
+                            continue
                         else:
                             node.append(tokens.pop(pointer-1))
                             pointer -= 1
@@ -1266,10 +1407,55 @@ class MathematicaParser:
         "ImaginaryJ": I,
     }
 
+    def _derivative_to_sympy(self, expr: list, recurse: Callable):
+        """Translate Mathematica's ``Derivative[n][f]`` idiom, or return ``None``.
+
+        Mathematica curries the head of a derivative -- ``f'[x]`` is
+        ``Derivative[1][f][x]``, the operator ``Derivative[1]`` applied to ``f``
+        and the result applied to ``x``.  SymPy has no curried heads (an applied
+        function is not callable again), so the whole idiom has to be recognised
+        in one go rather than node by node.
+        """
+        applied = (isinstance(expr[0], list) and len(expr[0]) == 2
+                   and isinstance(expr[0][0], list) and expr[0][0][0] == "Derivative")
+        bare = isinstance(expr[0], list) and expr[0][0] == "Derivative" and len(expr) == 2
+        if not (applied or bare):
+            return None
+        spec, fname = expr[0] if applied else (expr[0], expr[1])
+        orders = spec[1:] if bare else expr[0][0][1:]
+        if not all(isinstance(o, str) and o.isdigit() for o in orders):
+            return None
+        orders = [int(o) for o in orders]
+        func = (self._node_conversions.get(fname, Function(fname))
+                if isinstance(fname, str) else recurse(fname))
+        if bare:
+            # Nothing is applied to it, so the derivative operator itself is the
+            # value: ``f'`` becomes ``Lambda(_x, Derivative(f(_x), _x))``.
+            slots = [Dummy() for _ in orders]
+            return Lambda(tuple(slots),
+                          Derivative(func(*slots), *zip(slots, orders)).doit(deep=False))
+        args = [recurse(a) for a in expr[1:]]
+        if len(orders) != len(args):
+            return None
+        if len(set(args)) == len(args) and all(isinstance(a, Symbol) for a in args):
+            # ``doit`` so that a known function is actually differentiated, as in
+            # Mathematica: ``Sin'[x]`` is ``Cos[x]``.  It is a no-op on an
+            # undefined function, and ``deep=False`` keeps the arguments intact.
+            return Derivative(func(*args), *zip(args, orders)).doit(deep=False)
+        # ``f'`` differentiates with respect to the argument *slot*, so anything
+        # that is not a plain symbol has to be substituted in afterwards:
+        # ``f'[2 x]`` is ``Subs(Derivative(f(_u), _u), _u, 2*x)``.
+        slots = [Dummy() for _ in args]
+        return Subs(Derivative(func(*slots), *zip(slots, orders)),
+                    slots, args).doit(deep=False)
+
     def _from_fullformlist_to_sympy(self, full_form_list):
 
         def recurse(expr):
             if isinstance(expr, list):
+                derivative = self._derivative_to_sympy(expr, recurse)
+                if derivative is not None:
+                    return derivative
                 if isinstance(expr[0], list):
                     head = recurse(expr[0])
                 else:

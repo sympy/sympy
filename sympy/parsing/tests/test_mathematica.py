@@ -118,7 +118,8 @@ def test_parser_mathematica_tokenizer():
     assert chain("x") == "x"
     assert chain("42") == "42"
     assert chain(".2") == ".2"
-    assert chain("+x") == "x"
+    # Unary plus is kept: Mathematica reads ``+x`` as ``Plus[x]``.
+    assert chain("+x") == ["Plus", "x"]
     assert chain("-1") == "-1"
     assert chain("- 3") == "-3"
     assert chain("α") == "α"
@@ -131,7 +132,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("α + βγ") == ["Plus", "α", "βγ"]
     assert chain("α + β γ") == ["Plus", "α", ["Times", "β", "γ"]]
     assert chain("α̇ + 𝔟⃗ 𝒞̂") == ["Plus", "α̇", ["Times", "𝔟⃗", "𝒞̂"]]
-    assert chain("+Sin[x]") == ["Sin", "x"]
+    assert chain("+Sin[x]") == ["Plus", ["Sin", "x"]]
     assert chain("-Sin[x]") == ["Times", "-1", ["Sin", "x"]]
     assert chain("Cos(1/2 * π)") == ["Times", "Cos", ["Times", "1", ["Power", "2", "-1"], "π"]]
     assert chain("Cos[1/2 * π]") == ["Cos", ["Times", "1", ["Power", "2", "-1"], "π"]]
@@ -139,7 +140,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("Cos[x]!=Sin[y]") == ["Unequal", ["Cos", "x"], ["Sin", "y"]]
     assert chain("x(a+1)") == ["Times", "x", ["Plus", "a", "1"]]
     assert chain("(x)") == "x"
-    assert chain("(+x)") == "x"
+    assert chain("(+x)") == ["Plus", "x"]
     assert chain("-a") == ["Times", "-1", "a"]
     assert chain("(-x)") == ["Times", "-1", "x"]
     assert chain("(x + y)") == ["Plus", "x", "y"]
@@ -589,3 +590,108 @@ def test_parse_mathematica_to_fullformlist():
 
     # The method form on the parser class is equivalent.
     assert MathematicaParser().parse_fullformlist("a + b") == ['Plus', 'a', 'b']
+
+
+def test_mathematica_derivative_precedence():
+    # ``'`` is positional: it takes as operand whatever precedes it, bounded by
+    # operators binding tighter than itself.  All of these were checked against
+    # Wolfram Mathematica's FullForm.
+    chain = parse_mathematica_to_fullformlist
+    d1f = [["Derivative", "1"], "f"]
+    d2f = [["Derivative", "2"], "f"]
+
+    # tighter than ``^``, ``*``, ``+``, ``.`` and ``;;`` -- the prime takes only
+    # the token on its left
+    assert chain("a^b'") == ["Power", "a", [["Derivative", "1"], "b"]]
+    assert chain("a*b'") == ["Times", "a", [["Derivative", "1"], "b"]]
+    assert chain("a+b'") == ["Plus", "a", [["Derivative", "1"], "b"]]
+    assert chain("a.b'") == ["Dot", "a", [["Derivative", "1"], "b"]]
+    # ... but looser than the ``@`` family, so there it takes the whole left side
+    assert chain("a@b'") == [["Derivative", "1"], ["a", "b"]]
+    assert chain("a@@b'") == [["Derivative", "1"], ["Apply", "a", "b"]]
+    assert chain("a/@b'") == [["Derivative", "1"], ["Map", "a", "b"]]
+    assert chain("a@b@c'") == [["Derivative", "1"], ["a", ["b", "c"]]]
+    assert chain("c@f'[x]") == [[["Derivative", "1"], ["c", "f"]], "x"]
+    # a prime *before* the application still binds to the head alone
+    assert chain("f'@x") == [d1f, "x"]
+    assert chain("f'^2") == ["Power", d1f, "2"]
+
+    # ``!`` and ``[`` bind tighter than ``'`` and are applied first
+    assert chain("f'!") == ["Factorial", d1f]
+    assert chain("f!'") == [["Derivative", "1"], ["Factorial", "f"]]
+    assert chain("f'[x]!") == ["Factorial", [d1f, "x"]]
+
+    # ``?`` (PatternTest) binds tighter than ``'`` and than ``[``, but its left
+    # operand is still the completed expression
+    assert chain("f[x]?c") == ["PatternTest", ["f", "x"], "c"]
+    assert chain("f'[x]?c") == ["PatternTest", [d1f, "x"], "c"]
+    assert chain("f'[x][y]?c") == ["PatternTest", [[d1f, "x"], "y"], "c"]
+    assert chain("a?b[c]") == [["PatternTest", "a", "b"], "c"]
+
+    # stacked prefix/postfix operators need more than one pass
+    assert chain("- -a") == ["Times", "-1", ["Times", "-1", "a"]]
+    assert chain(r"\[Del]\[Del]a") == ["Del", ["Del", "a"]]
+    assert chain("a&'") == [["Derivative", "1"], ["Function", "a"]]
+
+    assert chain("f''[x]?c") == ["PatternTest", [d2f, "x"], "c"]
+
+
+def test_mathematica_unary_plus():
+    # ``+x`` is ``Plus[x]``, but a unary plus heading a term of a ``+`` chain is
+    # absorbed: ``a + +b`` and ``+a + b`` are both plain ``Plus[a, b]``.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("+a") == ["Plus", "a"]
+    assert chain("+f[x]") == ["Plus", ["f", "x"]]
+    assert chain("a*+b") == ["Times", "a", ["Plus", "b"]]
+    assert chain("a + +b") == ["Plus", "a", "b"]
+    assert chain("+a + b") == ["Plus", "a", "b"]
+    assert chain("+a - b") == ["Plus", "a", ["Times", "-1", "b"]]
+    # after an infix ``-`` the term is negated, so the unary plus is kept
+    assert chain("a-+b") == ["Plus", "a", ["Times", "-1", ["Plus", "b"]]]
+    assert chain("-+a") == ["Times", "-1", ["Plus", "a"]]
+
+
+def test_mathematica_blank_needs_a_symbol():
+    # ``x_``/``x_h`` build a Pattern only after a symbol.  After anything else
+    # the blank stands on its own and merely multiplies: Mathematica reads
+    # ``f[b]_c`` as ``Times[f[b], Blank[c]]``.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("a_b") == ["Pattern", "a", ["Blank", "b"]]
+    assert chain("x_Integer") == ["Pattern", "x", ["Blank", "Integer"]]
+    assert chain("a_") == ["Pattern", "a", ["Blank"]]
+    assert chain("f[b]_c") == ["Times", ["f", "b"], ["Blank", "c"]]
+    assert chain("f[b]_") == ["Times", ["f", "b"], ["Blank"]]
+    assert chain("f[b]__") == ["Times", ["f", "b"], ["BlankSequence"]]
+    assert chain("f[b]___") == ["Times", ["f", "b"], ["BlankNullSequence"]]
+    assert chain("f[b]_.") == ["Times", ["f", "b"], ["Optional", ["Blank"]]]
+    assert chain("a'_") == ["Times", [["Derivative", "1"], "a"], ["Blank"]]
+    assert chain("a____") == \
+        ["Times", ["Pattern", "a", ["BlankNullSequence"]], ["Blank"]]
+    assert chain("_?NumberQ") == ["PatternTest", ["Blank"], "NumberQ"]
+    assert chain("f[x_?NumberQ]") == \
+        ["f", ["PatternTest", ["Pattern", "x", ["Blank"]], "NumberQ"]]
+
+
+def test_parse_mathematica_derivative():
+    # Mathematica curries derivative heads (``f'[x]`` is ``Derivative[1][f][x]``);
+    # SymPy has no curried heads, so the idiom is translated as a whole.
+    f, g = Function("f"), Function("g")
+    assert parse_mathematica("f'[x]") == f(x).diff(x)
+    assert parse_mathematica("f''[x]") == f(x).diff(x, 2)
+    assert parse_mathematica("f'[x]*g[x]") == f(x).diff(x)*g(x)
+    assert parse_mathematica("2 f''[x] + g'[y]") == 2*f(x).diff(x, 2) + g(y).diff(y)
+    assert parse_mathematica("Derivative[1][f][x]") == f(x).diff(x)
+    assert parse_mathematica("Derivative[1,1][f][x,y]") == f(x, y).diff(x, y)
+    assert parse_mathematica("Derivative[2,1][f][x,y]") == f(x, y).diff(x, x, y)
+    assert parse_mathematica("Sin'[x]") == sin(x).diff(x)
+
+    # a derivative taken at something that is not a plain symbol needs a Subs,
+    # since the differentiation is with respect to the argument slot
+    e = parse_mathematica("f'[2 x]")
+    assert e.func.__name__ == "Subs"
+    assert e.doit() == f(2*x).diff(x)/2
+
+    # applied to nothing, the derivative operator itself is the value
+    e = parse_mathematica("f'")
+    assert isinstance(e, Lambda)
+    assert e(x) == f(x).diff(x)
