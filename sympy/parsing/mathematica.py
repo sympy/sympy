@@ -667,7 +667,11 @@ class MathematicaParser:
         (INFIX, LEFT, {"//": lambda x, y: [y, x]}),
         (POSTFIX, None, {"&": "Function"}),
         (INFIX, LEFT, {"/.": "ReplaceAll"}),
-        (INFIX, RIGHT, {"->": "Rule", ":>": "RuleDelayed"}),
+        # ``\[Rule]`` (U+F522) and ``\[RuleDelayed]`` (U+F51F) are the character
+        # forms of ``->`` and ``:>``; accepting them here means both the
+        # ``\[Rule]`` spelling and the character itself parse.
+        (INFIX, RIGHT, {"->": "Rule", ":>": "RuleDelayed",
+                        "\uf522": "Rule", "\uf51f": "RuleDelayed"}),
         (INFIX, FLAT, {"\N{LEFT RIGHT ARROW}": "LeftRightArrow"}),
         (INFIX, LEFT, {"/;": "Condition"}),
         # ``p : v`` names a pattern when ``p`` is a symbol (``s:{__}`` is
@@ -734,6 +738,10 @@ class MathematicaParser:
                                          *[["_Str", n] if isinstance(n, str) else n
                                            for n in a[1:]]]}),
     ]
+
+    # Contexts Mathematica has on ``$ContextPath`` in a default session, and so
+    # strips from a symbol name.  Any other context is part of the name.
+    _default_contexts = ("System`", "Global`")
 
     # Tokens that bind to a neighbour only when written without a space between
     # them; see ``token_split`` in ``_from_mathematica_to_tokens``.
@@ -981,11 +989,14 @@ class MathematicaParser:
         while tokens and tokens[-1] == "\n":
             tokens.pop(-1)
 
-        # Resolve context-qualified symbols the way Mathematica does, dropping
-        # the context: ``Global`sym`` is ``sym`` and ``System`Plus`` is ``Plus``.
+        # Resolve context-qualified symbols the way Mathematica does.  Only the
+        # contexts on ``$ContextPath`` are dropped, which by default means
+        # ``System``` and ``Global```: ``System`Plus`` is ``Plus``, but
+        # ``Foo`Private`x`` keeps its context and stays ``Foo`Private`x``.
         for i, token in enumerate(tokens):
-            if isinstance(token, str) and "`" in token and self._is_symbol(token):
-                name = token.rsplit("`", 1)[-1]
+            if (isinstance(token, str) and token.startswith(self._default_contexts)
+                    and self._is_symbol(token)):
+                name = token.split("`", 1)[1]
                 if name:
                     tokens[i] = name
 

@@ -783,11 +783,18 @@ def test_mathematica_symbol_names():
     assert chain("x$1") == "x$1"
     assert chain("Block[{$Var = 2}, $Var]") == \
         ["Block", ["List", ["Set", "$Var", "2"]], "$Var"]
+    # Only the contexts on $ContextPath are stripped; any other stays part of
+    # the name, exactly as Mathematica resolves them in a default session.
     assert chain("Global`sym") == "sym"
     assert chain("System`Plus") == "Plus"
-    assert chain("Foo`Private`x") == "x"
-    # \[Rule] and \[RuleDelayed] are operators, like \[Equal] already was
+    assert chain("System`Sin[x]") == ["Sin", "x"]
+    assert chain("Foo`Private`x") == "Foo`Private`x"
+    assert chain("MyPkg`fn") == "MyPkg`fn"
+    # \[Rule] and \[RuleDelayed] parse both spelled out and as the character
     assert chain(r"a \[Rule] b") == ["Rule", "a", "b"]
+    assert chain("a \uf522 b") == ["Rule", "a", "b"]
+    assert chain(r"a \[Rule] b \[RuleDelayed] c") == \
+        ["Rule", "a", ["RuleDelayed", "b", "c"]]
     assert chain(r"{a \[Rule] 1, b \[RuleDelayed] 2}") == \
         ["List", ["Rule", "a", "1"], ["RuleDelayed", "b", "2"]]
 
