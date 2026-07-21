@@ -227,9 +227,10 @@ def test_parser_mathematica_tokenizer():
     assert chain("a/.b") == ["ReplaceAll", "a", "b"]
     assert chain("a/.b/.c/.d") == ["ReplaceAll", ["ReplaceAll", ["ReplaceAll", "a", "b"], "c"], "d"]
 
-    assert chain("a//b") == ["a", "b"]
-    assert chain("a//b//c") == [["a", "b"], "c"]
-    assert chain("a//b//c//d") == [[["a", "b"], "c"], "d"]
+    # ``//`` is postfix application: ``x // f`` is ``f[x]`` (left associative).
+    assert chain("a//b") == ["b", "a"]
+    assert chain("a//b//c") == ["c", ["b", "a"]]
+    assert chain("a//b//c//d") == ["d", ["c", ["b", "a"]]]
 
     # Not operator
     assert chain("!x") == ["Not", "x"]
@@ -273,14 +274,27 @@ def test_parser_mathematica_tokenizer():
     assert chain("y___") == ["Pattern", "y", ["BlankNullSequence"]]
     assert chain("a[b_.,c_]") == ["a", ["Optional", ["Pattern", "b", ["Blank"]]], ["Pattern", "c", ["Blank"]]]
     assert chain("b_. c") == ["Times", ["Optional", ["Pattern", "b", ["Blank"]]], "c"]
+    # Patterns in head position, i.e. ``Pattern[F, Blank[]][Pattern[x, Blank[]]]``
+    assert chain("F_[x_]") == [["Pattern", "F", ["Blank"]], ["Pattern", "x", ["Blank"]]]
+    assert chain("F_[x_, y_[z_]]") == [
+        ["Pattern", "F", ["Blank"]],
+        ["Pattern", "x", ["Blank"]],
+        [["Pattern", "y", ["Blank"]], ["Pattern", "z", ["Blank"]]],
+    ]
 
-    # Slots for lambda functions
+    # Slots for lambda functions.  A positional slot (``#3``) carries an
+    # integer index; a named slot (``#name``) carries a string, which in the
+    # FullForm list is ``["_Str", "name"]`` (matching Mathematica's Slot["name"]).
     assert chain("#") == ["Slot", "1"]
     assert chain("#3") == ["Slot", "3"]
-    assert chain("#n") == ["Slot", "n"]
-    assert chain("#name") == ["Slot", "name"]
+    assert chain("#n") == ["Slot", ["_Str", "n"]]
+    assert chain("#name") == ["Slot", ["_Str", "name"]]
     assert chain("##") == ["SlotSequence", "1"]
-    assert chain("##a") == ["SlotSequence", "a"]
+    assert chain("##3") == ["SlotSequence", "3"]
+    # ``SlotSequence`` only takes an integer index, so ``##name`` is
+    # ``SlotSequence[1] * name`` (implicit multiplication), not a named slot.
+    assert chain("##a") == ["Times", ["SlotSequence", "1"], "a"]
+    assert chain("##name") == ["Times", ["SlotSequence", "1"], "name"]
 
     # Lambda functions
     assert chain("x&") == ["Function", "x"]
@@ -291,6 +305,57 @@ def test_parser_mathematica_tokenizer():
     assert chain("#&[x]") == [["Function", ["Slot", "1"]], "x"]
     assert chain("#1 + #2 & [x, y]") == [["Function", ["Plus", ["Slot", "1"], ["Slot", "2"]]], "x", "y"]
     assert chain("#1^2#2^3&") == ["Function", ["Times", ["Power", ["Slot", "1"], "2"], ["Power", ["Slot", "2"], "3"]]]
+
+    # Assignment operators
+    assert chain("a=b") == ["Set", "a", "b"]
+    assert chain("a:=b") == ["SetDelayed", "a", "b"]
+    assert chain("a+=b") == ["AddTo", "a", "b"]
+    assert chain("a-=b") == ["SubtractFrom", "a", "b"]
+    assert chain("a*=b") == ["TimesBy", "a", "b"]
+    assert chain("a/=b") == ["DivideBy", "a", "b"]
+
+    # Rules, replacement and conditions
+    assert chain("a->b") == ["Rule", "a", "b"]
+    assert chain("a:>b") == ["RuleDelayed", "a", "b"]
+    assert chain("a/;b") == ["Condition", "a", "b"]
+
+    # Comparison operators
+    assert chain("a>b") == ["Greater", "a", "b"]
+    assert chain("a>=b") == ["GreaterEqual", "a", "b"]
+    assert chain("a<b") == ["Less", "a", "b"]
+    assert chain("a<=b") == ["LessEqual", "a", "b"]
+    assert chain("a===b") == ["SameQ", "a", "b"]
+    assert chain("a=!=b") == ["UnsameQ", "a", "b"]
+
+    # Function application operators.  ``@`` is prefix application and ``//``
+    # is postfix; ``@@``/``@@@`` are Apply, ``/@``/``//@`` are Map/MapAll.
+    assert chain("f@x") == ["f", "x"]
+    assert chain("a@b@c") == ["a", ["b", "c"]]         # right associative
+    assert chain("f@@x") == ["Apply", "f", "x"]
+    assert chain("f@@@x") == ["Apply", "f", "x", ["List", "1"]]
+    assert chain("f/@x") == ["Map", "f", "x"]
+    assert chain("f//@x") == ["MapAll", "f", "x"]
+
+    # Derivative: ``f'`` is ``Derivative[1][f]``; primes accumulate the order.
+    assert chain("f'") == [["Derivative", "1"], "f"]
+    assert chain("f''") == [["Derivative", "2"], "f"]
+    assert chain("x'[t]") == [[["Derivative", "1"], "x"], "t"]
+
+    # Postfix operators and Alternatives / PatternTest / Repeated
+    assert chain("a--") == ["Decrement", "a"]
+    assert chain("a!!") == ["Factorial2", "a"]
+    assert chain("a|b|c") == ["Alternatives", "a", "b", "c"]
+    assert chain("a?b") == ["PatternTest", "a", "b"]
+    assert chain("a..") == ["Repeated", "a"]
+    assert chain("a...") == ["RepeatedNull", "a"]
+
+    # Span (``;;``) flattens into a single node with up to three arguments
+    assert chain("a;;b") == ["Span", "a", "b"]
+    assert chain("a;;b;;c") == ["Span", "a", "b", "c"]
+    assert chain("a[[b;;c]]") == ["Part", "a", ["Span", "b", "c"]]
+
+    # Typed blank via the infix ``_`` (e.g. ``x_Integer``)
+    assert chain("x_Integer") == ["Pattern", "x", ["Blank", "Integer"]]
 
     # Strings inside Mathematica expressions:
     assert chain('"abc"') == ["_Str", "abc"]
