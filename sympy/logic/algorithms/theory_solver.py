@@ -29,3 +29,6 @@ class TheorySolver(Protocol):
 
     def check(self) -> tuple[Literal[True], Model] | tuple[Literal[False], ConflictClause]:
         ...
+
+    def reset(self) -> None:
+        ...
