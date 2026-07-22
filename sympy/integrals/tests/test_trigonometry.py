@@ -1,7 +1,8 @@
 from __future__ import annotations
-from sympy.core import Ne, Rational, Symbol
+from sympy.core import Ne, Rational, Symbol, diff
 from sympy.functions import sin, cos, tan, csc, sec, cot, log, Piecewise
 from sympy.integrals.trigonometry import trigintegrate
+from sympy.simplify import simplify
 
 x = Symbol('x')
 
@@ -97,3 +98,10 @@ def test_trigintegrate_symbolic():
     assert trigintegrate(cos(x)**n, x) is None
     assert trigintegrate(sin(x)**n, x) is None
     assert trigintegrate(cot(x)**n, x) is None
+
+def test_trigintegrate_multi_arg():
+    # Motivating example from GitHub issue #29876
+    expr = sin(x)*sin(2*x)*sin(3*x)
+    result = trigintegrate(expr, x)
+    assert result is not None
+    assert simplify(diff(result, x) - expr) == 0
