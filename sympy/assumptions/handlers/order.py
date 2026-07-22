@@ -220,11 +220,8 @@ def _(expr, assumptions):
 @ZeroPredicate.register(Basic)
 def _(expr, assumptions):
     return fuzzy_and([fuzzy_not(_ask_recursive(Q.nonzero(expr), assumptions)),
-        _ask_recursive(Q.real(expr), assumptions)])
-
-@ZeroPredicate.register(Abs)
-def _(expr, assumptions):
-    return _ask_recursive(Q.zero(expr.args[0]), assumptions)
+        _ask_recursive(Q.real(expr), assumptions),
+        fuzzy_not(_ask_recursive(Q.infinite(expr), assumptions))])
 
 @ZeroPredicate.register(Mul)
 def _(expr, assumptions):
