@@ -442,7 +442,7 @@ def test_issue_27733():
     encoding[Q.lt(x, 0)] = 12
 
     cnf = EncodedCNF(clauses, encoding)
-    assert satisfiable(cnf, theory_solvers=[LRASolver]) is False
+    assert dpll2_satisfiable(cnf, theory_solvers=[LRASolver]) is False
 
 
 def test_issue_27733_second_fix():
@@ -451,4 +451,4 @@ def test_issue_27733_second_fix():
     clauses = [[1, 2], [-3, -4]]
     encoding = {Q.gt(x0, x1): 1, Q.lt(x1, x0): 2, Q.le(x1, x0): 3, Q.ge(x0, x1): 4}
     cnf = EncodedCNF(clauses, encoding)
-    assert satisfiable(cnf, theory_solvers=[LRASolver]) is False
+    assert dpll2_satisfiable(cnf, theory_solvers=[LRASolver]) is False

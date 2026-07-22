@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
-from sympy.logic.inference import satisfiable
+from sympy.logic.algorithms.dpll2 import dpll_satisfiable
 from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledInput, ALLOWED_PRED
 from sympy.matrices.kind import MatrixKind
 from sympy.core.kind import NumberKind
@@ -71,8 +71,8 @@ def check_satisfiability(prop, _prop, factbase):
     sat_true = _preprocess(sat_true)
     sat_false = _preprocess(sat_false)
 
-    can_be_true = satisfiable(sat_true, theory_solvers=[LRASolver]) is not False
-    can_be_false = satisfiable(sat_false, theory_solvers=[LRASolver]) is not False
+    can_be_true = dpll_satisfiable(sat_true, theory_solvers=[LRASolver]) is not False
+    can_be_false = dpll_satisfiable(sat_false, theory_solvers=[LRASolver]) is not False
 
     if can_be_true and can_be_false:
         return None
