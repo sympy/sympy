@@ -246,10 +246,15 @@ def _RealPredicate_number(expr, assumptions):
     # allow None to be returned if we couldn't show for sure
     # that i was 0
 
-@RealPredicate.register_many(Abs, Exp1, Float, GoldenRatio, im, Pi, Rational,
+@RealPredicate.register_many(Exp1, Float, GoldenRatio, im, Pi, Rational,
     re, TribonacciConstant)
 def _(expr, assumptions):
     return True
+
+@RealPredicate.register(Abs)
+def _(expr, assumptions):
+    return fuzzy_not(_ask_recursive(Q.infinite(expr.args[0]), assumptions))
+
 
 @RealPredicate.register_many(ImaginaryUnit, Infinity, NegativeInfinity)
 def _(expr, assumptions):
