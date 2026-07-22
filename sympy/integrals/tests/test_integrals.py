@@ -31,6 +31,7 @@ from sympy.printing.str import sstr
 from sympy.series.order import O
 from sympy.sets.sets import Interval
 from sympy.simplify.gammasimp import gammasimp
+from sympy.simplify.radsimp import radsimp
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.tensor.indexed import (Idx, IndexedBase)
@@ -2262,3 +2263,42 @@ def test_issue_29909():
 
     assert integrate(f, x) == F
     assert F.diff(x).equals(f)
+
+
+def test_weierstrass_jump():
+    # The antiderivative of 1/(a + cos(x)) is built with the Weierstrass
+    # substitution and jumps at the poles of tan(x/2). Those jumps sit inside
+    # the argument of a log, where neither the denominator of the
+    # antiderivative nor the zeros of its logarithms reveal them, so they used
+    # to go uncorrected and the integral of a positive function came out as 0.
+    # 1/(a + cos(x)) over a full period is 2*pi/sqrt(a**2 - 1).
+    def check(f, a, b, expected):
+        r = integrate(f, (x, a, b))
+        assert not r.has(Integral)
+        assert abs(r.n(20) - expected.n(20)) < 1e-15
+
+    # radsimp is needed: the result is an unsimplified nested radical
+    assert radsimp(integrate(1/(sqrt(2) + cos(x)), (x, 0, 2*pi))) == 2*pi
+    check(1/(sqrt(2) + cos(x)), 0, 2*pi, 2*pi)
+    check(1/(sqrt(5) + cos(x)), 0, 2*pi, 2*pi/sqrt(4))
+    check(1/(sqrt(2) + cos(x)), -pi, pi, 2*pi)
+    assert integrate(1/(2 + cos(x)), (x, 0, 2*pi)) == 2*sqrt(3)*pi/3
+    assert integrate(1/(2 + sin(x)), (x, 0, 2*pi)) == 2*sqrt(3)*pi/3
+
+    # an interval containing the pole without being symmetric about it, and
+    # the same interval reversed, which takes the other branch of the
+    # correction
+    check(1/(sqrt(2) + cos(x)), 1, 5, Integral(1/(sqrt(2) + cos(x)), (x, 1, 5)))
+    check(1/(sqrt(2) + cos(x)), 5, 1, -Integral(1/(sqrt(2) + cos(x)), (x, 1, 5)))
+    # an interval free of poles must be left alone
+    check(1/(sqrt(2) + cos(x)), 0, 1, Integral(1/(sqrt(2) + cos(x)), (x, 0, 1)))
+    # several poles inside the interval
+    check(1/(2 + cos(x)), 0, 6*pi, 3*2*sqrt(3)*pi/3)
+
+    # the candidate singularities here include an ImageSet over the integers;
+    # enumerating it does not terminate, so only the finite parts may be used
+    assert integrate(1/(2 + cos(x))**2, (x, 0, 2*pi)) == 4*sqrt(3)*pi/9
+
+    # a genuine pole of the integrand must still not yield a finite value
+    assert integrate(1/(1 - cos(x)), (x, 0, 2*pi)) is S.Infinity
+    assert integrate(1/x, (x, -1, 1)) is S.NaN

@@ -968,9 +968,10 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.calculus.accumulationbounds import AccumBounds
+        from sympy.calculus.singularities import singularities as _singularities
         from sympy.functions.elementary.exponential import log
         from sympy.series.limits import limit, Limit
-        from sympy.sets.sets import Interval
+        from sympy.sets.sets import Interval, Union
         from sympy.solvers.solveset import solveset
 
         if (a is None and b is None):
@@ -1012,26 +1013,56 @@ class Expr(Basic, EvalfMixin):
                 domain = Interval(a, b)
             else:
                 domain = Interval(b, a)
-            # check the singularities of self within the interval
-            # if singularities is a ConditionSet (not iterable), catch the exception and pass
-            singularities = solveset(self.cancel().as_numer_denom()[1], x,
-                domain=domain)
-            for logterm in self.atoms(log):
-                singularities = singularities | solveset(logterm.args[0], x,
-                    domain=domain)
+            # Where self may jump: the zeros of its denominator and of the
+            # arguments of its logarithms, plus whatever _singularities finds.
+            # The last is what catches a pole buried in the argument of
+            # another function, e.g. the pole of tan(x/2) in log(tan(x/2) + I)
+            # left by the Weierstrass substitution, since it rewrites tan,
+            # cot, sec and csc (and the hyperbolic ones) over cos/cosh first.
+            # Only that call may fail quietly; the other two still raise
+            # NotImplementedError, so an antiderivative that cannot be
+            # analysed leaves the integral unevaluated instead of silently
+            # picking up a wrong value.
+            candidates = [solveset(self.cancel().as_numer_denom()[1], x,
+                domain=domain)]
+            candidates += [solveset(t.args[0], x, domain=domain)
+                for t in self.atoms(log)]
             try:
-                for s in singularities:
-                    if value is S.NaN:
-                        # no need to keep adding, it will stay NaN
-                        break
-                    if not s.is_comparable:
-                        continue
-                    if (a < s) == (s < b) == True:
-                        value += -limit(self, x, s, "+") + limit(self, x, s, "-")
-                    elif (b < s) == (s < a) == True:
-                        value += limit(self, x, s, "+") - limit(self, x, s, "-")
-            except TypeError:
+                candidates.append(_singularities(self, x, domain))
+            except NotImplementedError:
                 pass
+
+            # Take only the pieces known to be finite, and take them piece by
+            # piece: an infinite or unsized one (an ImageSet over the integers,
+            # a ConditionSet) would either never finish being listed or hide
+            # the points found by the others. Dropping such a piece only means
+            # the jumps it covers stay uncorrected, as they were before any of
+            # this looked for them.
+            points = set()
+            for candidate in candidates:
+                pieces = candidate.args if isinstance(candidate, Union) \
+                    else (candidate,)
+                for piece in pieces:
+                    # is_finite_set does not guarantee the elements can be
+                    # listed: Intersection({1, x}, Interval(0, 3)) is finite
+                    # but raises TypeError when iterated over
+                    if piece.is_finite_set:
+                        try:
+                            points.update(piece)
+                        except TypeError:
+                            continue
+
+            # sorted, so that the result does not depend on set iteration order
+            for s in sorted(points, key=default_sort_key):
+                if value is S.NaN:
+                    # no need to keep adding, it will stay NaN
+                    break
+                if not s.is_comparable:
+                    continue
+                if (a < s) == (s < b) == True:
+                    value += -limit(self, x, s, "+") + limit(self, x, s, "-")
+                elif (b < s) == (s < a) == True:
+                    value += limit(self, x, s, "+") - limit(self, x, s, "-")
 
         return value
 
