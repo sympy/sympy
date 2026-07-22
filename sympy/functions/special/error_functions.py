@@ -19,7 +19,7 @@ from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh
-from sympy.functions.elementary.trigonometric import cos, sin, sinc
+from sympy.functions.elementary.trigonometric import cos, sin, sinc, atan
 from sympy.functions.special.hyper import hyper, meijerg
 
 # TODO series expansions
@@ -2704,6 +2704,180 @@ class fresnelc(FresnelIntegral):
 
         # All other points are not handled
         return super()._eval_aseries(n, args0, x, logx)
+
+
+class OwenT(DefinedFunction):
+    r"""
+    The Owen T-function.
+
+    Explanation
+    ===========
+
+    This function is defined as:
+
+    .. math ::
+        T(h, a) = \frac{1}{2\pi} \int_0^a
+            \frac{e^{-h^2(1+t^2)/2}}{1+t^2}\, \mathrm{d}t, \qquad |\arg a| < \pi
+
+    Examples
+    ========
+
+    >>> from sympy.functions.special.error_functions import OwenT
+    >>> from sympy.abc import h, a
+    >>> OwenT(0, a)
+    atan(a)/(2*pi)
+    >>> OwenT(h, 0)
+    0
+    >>> OwenT(-h, a)
+    OwenT(h, a)
+    >>> OwenT(h, -a)
+    -OwenT(h, a)
+
+    Differentiation with respect to $h$ and $a$ is supported:
+
+    >>> from sympy import diff
+    >>> diff(OwenT(h, a), h)
+    -sqrt(2)*exp(-h**2/2)*erf(sqrt(2)*a*h/2)/(4*sqrt(pi))
+    >>> diff(OwenT(h, a), a)
+    exp(-h**2*(a**2 + 1)/2)/(2*pi*(a**2 + 1))
+
+    See Also
+    ========
+
+    erf, erfc
+
+    References
+    ==========
+
+    .. [1] Owen, D. B. (1956). "Tables for computing bivariate normal
+           probabilities." Ann. Math. Statist. 27(4), 1075-1090.
+    .. [2] Brychkov, Yu. A., Savischenko, N. V. (2015). "Some properties
+           of the Owen T-function." Integral Transforms Spec. Funct.
+    """
+
+    nargs = 2
+
+    def fdiff(self, argindex=1):
+        h, a = self.args
+        if argindex == 1:
+            # d/dh T(h,a) = -exp(-h**2/2)/(2*sqrt(2*pi)) * erf(a*h/sqrt(2))
+            return -exp(-h**2 / 2) * erf(a * h / sqrt(2)) / (2 * sqrt(2 * pi))
+        elif argindex == 2:
+            # d/da T(h,a) = exp(-h**2*(1+a**2)/2) / (2*pi*(1+a**2))
+            return exp(-h**2 * (1 + a**2) / 2) / (2 * pi * (1 + a**2))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, h, a):
+        h = sympify(h)
+        a = sympify(a)
+
+        if h is S.NaN or a is S.NaN:
+            return S.NaN
+
+        # T(h, 0) = 0
+        if a.is_zero:
+            return S.Zero
+
+        # T(0, a) = arctan(a) / (2*pi)
+        if h.is_zero:
+            return atan(a) / (2 * pi)
+
+        # T(h, oo) = erfc(sqrt(h**2)/sqrt(2)) / 4   (Re h**2 > 0)
+        if a is S.Infinity:
+            return erfc(sqrt(h**2) / sqrt(2)) / 4
+        if a is S.NegativeInfinity:
+            return -erfc(sqrt(h**2) / sqrt(2)) / 4
+
+        # T(h, 1) = erfc(-h/sqrt2) * erfc(h/sqrt2) / 8
+        if a is S.One:
+            return erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
+        if a is S.NegativeOne:
+            return -erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
+
+        # T(h, a) is even in h: T(-h, a) = T(h, a)
+        if h.could_extract_minus_sign():
+            return cls(-h, a)
+
+        # T(h, a) is odd in a: T(h, -a) = -T(h, a)
+        if a.could_extract_minus_sign():
+            return -cls(h, -a)
+
+    def _eval_is_extended_real(self):
+        h, a = self.args
+        return h.is_extended_real and a.is_extended_real
+
+    def _eval_is_zero(self):
+        h, a = self.args
+        if a.is_zero or h is S.Infinity or h is S.NegativeInfinity:
+            return True
+        if h.is_zero and a.is_zero:
+            return True
+
+    def _eval_conjugate(self):
+        h, a = self.args
+        return self.func(h.conjugate(), a.conjugate())
+
+    def _eval_rewrite_as_erf(self, h, a, **kwargs):
+        # Only closed forms are the a=1 and a->oo special cases; for
+        # general a there is no elementary erf-only rewrite, so we
+        # only fire when the special value machinery in eval() would
+        # already have simplified it (kept here for completeness/API
+        # symmetry with erf's rewrite methods).
+        if a == 1:
+            return erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
+        return self
+
+    def _eval_rewrite_as_erfc(self, h, a, **kwargs):
+        if a == 1:
+            return erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
+        return self
+
+    def _pretty(self, printer, **kwargs):
+        h, a = self.args
+        # Build "T(h, a)" using the printer's own pretty-forms for h, a
+        # so nested expressions (fractions, sqrt, etc.) still render nicely.
+        from sympy.printing.pretty.stringpict import prettyForm
+        args_pform = printer._print_seq((h, a), '(', ')',
+                                        delimiter=', ')
+        return prettyForm(*args_pform.left('T'))
+
+    def _latex(self, printer, **kwargs):
+        h, a = self.args
+        return r"T\left(%s, %s\right)" % (printer._print(h), printer._print(a))
+
+    def _eval_evalf(self, prec):
+        from sympy.external.mpmath import local_workprec
+        h, a = self.args
+        h_val = complex(h.evalf(prec + 5))
+        a_val = complex(a.evalf(prec + 5))
+        # Use pure-real path when possible for speed/accuracy.
+        if abs(h_val.imag) < 1e-30:
+            h_val = h_val.real
+        if abs(a_val.imag) < 1e-30:
+            a_val = a_val.real
+
+        with local_workprec(prec + 15) as ctx:
+            h_mp = ctx.mpc(h_val) if isinstance(
+                h_val, complex) else ctx.mpf(h_val)
+            a_mp = ctx.mpc(a_val) if isinstance(
+                a_val, complex) else ctx.mpf(a_val)
+
+            if a_mp == 0:
+                result = ctx.mpf(0)
+            elif ctx.isinf(a_mp):
+                # T(h, +/-oo) = +/- erfc(sqrt(h**2)/sqrt(2)) / 4, since
+                # the defining integral is over an unbounded domain there.
+                sign = 1 if a_mp > 0 else -1
+                result = sign * ctx.erfc(ctx.sqrt(h_mp**2) / ctx.sqrt(2)) / 4
+            else:
+                def integrand(t):
+                    return ctx.exp(-h_mp**2 * (1 + t**2) / 2) / (1 + t**2)
+
+                result = ctx.quad(integrand, [0, a_mp]) / (2 * ctx.pi)
+
+        return sympify(complex(result)).evalf(prec)
 
 
 ###############################################################################
