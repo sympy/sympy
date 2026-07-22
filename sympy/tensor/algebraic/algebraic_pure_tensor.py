@@ -21,6 +21,15 @@ the full sequence of per-factor shapes.
 """
 
 
+class ShapeMismatchError(TypeError):
+    """Raised when tensor operations encounter incompatible shapes.
+
+    Used for both addition (shape mismatch between terms) and composition
+    (inner dimension mismatch between factor pairs).
+    """
+    pass
+
+
 def _factor_shapes(factors):
     """Return the full tensor shape as a tuple of per-factor shapes.
 
@@ -69,8 +78,8 @@ class AlgebraicPureTensor(Basic):
     without inheriting Mul's flatten() transformations.  The tensor-product
     operator is non-commutative: order of factors is always preserved.
 
-    Each factor must carry ``.shape`` (e.g. any ``MatrixExpr`` or a 1-x1
-    wrapper around a non-commutative Symbol).
+    Each factor must carry ``.shape`` (e.g. any ``MatrixExpr`` or a
+    1x1 Matrix wrapper around a non-commutative Symbol).
 
     The tensor shape is the full sequence of per-factor shapes, e.g.
     ``((3, 4), (4, 5))`` for ``AlgebraicPureTensor(A_3x4, C_4x5)``.  No
@@ -1085,10 +1094,17 @@ def compose_algebraic_pure_tensors(left, right):
     if isinstance(left, AlgebraicZeroTensor) and isinstance(right, AlgebraicZeroTensor):
         # Both zero: compute composed shape from both
         if len(left.shape) != len(right.shape):
-            raise ValueError(
-                f"Cannot compose AlgebraicPureTensors with different numbers of "
+            raise ShapeMismatchError(
+                f"Cannot compose tensors with different numbers of "
                 f"factors: {len(left.shape)} vs {len(right.shape)}"
             )
+        for i, (l, r) in enumerate(zip(left.shape, right.shape)):
+            if l[1] != r[0]:
+                raise ShapeMismatchError(
+                    f"Cannot compose factor {i}: left shape {l} "
+                    f"but right shape {r}; inner dimensions "
+                    f"{l[1]} and {r[0]} do not match"
+                )
         composed_shape = tuple(
             (l[0], r[1]) for l, r in zip(left.shape, right.shape)
         )
@@ -1106,10 +1122,17 @@ def compose_algebraic_pure_tensors(left, right):
                 f"got {type(right).__name__}"
             )
         if len(left.shape) != len(right_factors):
-            raise ValueError(
-                f"Cannot compose AlgebraicPureTensors with different numbers of "
+            raise ShapeMismatchError(
+                f"Cannot compose tensors with different numbers of "
                 f"factors: {len(left.shape)} vs {len(right_factors)}"
             )
+        for i, (l, rf) in enumerate(zip(left.shape, right_factors)):
+            if l[1] != rf.shape[0]:
+                raise ShapeMismatchError(
+                    f"Cannot compose factor {i}: left shape {l} "
+                    f"but right factor shape {rf.shape}; inner dimensions "
+                    f"{l[1]} and {rf.shape[0]} do not match"
+                )
         composed_shape = tuple(
             (l[0], rf.shape[1]) for l, rf in zip(left.shape, right_factors)
         )
@@ -1127,10 +1150,17 @@ def compose_algebraic_pure_tensors(left, right):
                 f"got {type(left).__name__}"
             )
         if len(left_factors) != len(right.shape):
-            raise ValueError(
-                f"Cannot compose AlgebraicPureTensors with different numbers of "
+            raise ShapeMismatchError(
+                f"Cannot compose tensors with different numbers of "
                 f"factors: {len(left_factors)} vs {len(right.shape)}"
             )
+        for i, (lf, r) in enumerate(zip(left_factors, right.shape)):
+            if lf.shape[1] != r[0]:
+                raise ShapeMismatchError(
+                    f"Cannot compose factor {i}: left factor shape {lf.shape} "
+                    f"but right shape {r}; inner dimensions "
+                    f"{lf.shape[1]} and {r[0]} do not match"
+                )
         composed_shape = tuple(
             (lf.shape[0], r[1]) for lf, r in zip(left_factors, right.shape)
         )
@@ -1162,8 +1192,8 @@ def compose_algebraic_pure_tensors(left, right):
         )
 
     if len(left_factors) != len(right_factors):
-        raise ValueError(
-            f"Cannot compose AlgebraicPureTensors with different numbers of "
+        raise ShapeMismatchError(
+            f"Cannot compose tensors with different numbers of "
             f"factors: {len(left_factors)} vs {len(right_factors)}"
         )
 
@@ -1175,7 +1205,7 @@ def compose_algebraic_pure_tensors(left, right):
         lshape = lf.shape
         rshape = rf.shape
         if lshape[1] != rshape[0]:
-            raise ValueError(
+            raise ShapeMismatchError(
                 f"Cannot compose factor {j}: left factor has shape {lshape} "
                 f"but right factor has shape {rshape}; inner dimensions "
                 f"{lshape[1]} and {rshape[0]} do not match"

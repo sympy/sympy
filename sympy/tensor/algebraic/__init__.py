@@ -60,12 +60,12 @@ Create a zero tensor for a given shape:
 
 from sympy.tensor.algebraic.algebraic_tensor import (
     AlgebraicTensor,
-    ShapeMismatchError,
     algebraic_tensor_product,
     compose_algebraic_tensors,
 )
 from sympy.tensor.algebraic.algebraic_pure_tensor import (
     AlgebraicPureTensor,
+    ShapeMismatchError,
     compose_algebraic_pure_tensors,
 )
 from sympy.tensor.algebraic.algebraic_zero_tensor import (

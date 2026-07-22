@@ -270,7 +270,7 @@ class AlgebraicZeroTensor(Basic):
     def __mul__(self, other):
         """Scaling by a commutative scalar returns self.
 
-        For non-commutative operands, delegates to composition.
+        For tensorial operands, delegates to composition.
 
         Examples
         ========
@@ -284,7 +284,8 @@ class AlgebraicZeroTensor(Basic):
         """
         other = sympify(other)
         if isinstance(other, Number) or (
-            hasattr(other, 'is_commutative') and other.is_commutative
+            hasattr(other, 'is_commutative') and not (hasattr(other, 'is_AlgebraicZeroTensor') or \
+            hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))
         ):
             return self
         from sympy.tensor.algebraic.algebraic_tensor import compose_algebraic_tensors
@@ -305,7 +306,8 @@ class AlgebraicZeroTensor(Basic):
         """
         other = sympify(other)
         if isinstance(other, Number) or (
-            hasattr(other, 'is_commutative') and other.is_commutative
+            hasattr(other, 'is_commutative') and not (hasattr(other, 'is_AlgebraicZeroTensor') or \
+            hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))
         ):
             return self
         from sympy.tensor.algebraic.algebraic_tensor import compose_algebraic_tensors
@@ -335,9 +337,6 @@ class AlgebraicZeroTensor(Basic):
         """
         transposed_shape = tuple((c, r) for r, c in self._shape)
         return AlgebraicZeroTensor(transposed_shape)
-
-    def copy(self):
-        return self
 
     def _eval_conjugate(self):
         """Return self. The conjugate of a zero tensor is itself.

@@ -195,13 +195,6 @@ def test_algebraic_zero_tensor_expand():
     assert Z.expand() is Z
 
 
-def test_algebraic_zero_tensor_copy():
-    """Test copy of AlgebraicZeroTensor."""
-    Z = AlgebraicZeroTensor((3, 4))
-    Z_copy = Z.copy()
-    assert Z_copy is Z
-
-
 def test_algebraic_zero_tensor_bool():
     """Test boolean conversion of AlgebraicZeroTensor."""
     Z = AlgebraicZeroTensor((3, 4))

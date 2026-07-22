@@ -362,6 +362,49 @@ def test_shape_mismatch_error():
     raises(ShapeMismatchError, lambda: AlgebraicTensor(T1, T2))
 
 
+def test_compose_shape_mismatch():
+    """Test ShapeMismatchError on composition with incompatible inner dimensions."""
+    from sympy.tensor.algebraic import compose_algebraic_pure_tensors
+    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+
+    # T1 has shape ((3, 4), (4, 5)), T2 has shape ((5, 2), (3, 3))
+    # Factor 0: cols1=4 != rows2=5 -> mismatch
+    # Factor 1: cols1=5 != rows2=3 -> mismatch
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 5, 2)
+    D = MatrixSymbol('D', 3, 3)
+
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+
+    # Direct composition via function
+    raises(ShapeMismatchError, lambda: compose_algebraic_pure_tensors(T1, T2))
+
+    # Via __mul__
+    raises(ShapeMismatchError, lambda: T1 * T2)
+
+    # Via compose_algebraic_tensors
+    raises(ShapeMismatchError, lambda: compose_algebraic_tensors(T1, T2))
+
+    # With zero tensors: left zero, incompatible inner dims
+    Z1 = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    Z2 = AlgebraicZeroTensor(((5, 2), (3, 3)))
+    raises(ShapeMismatchError, lambda: compose_algebraic_tensors(Z1, Z2))
+    raises(ShapeMismatchError, lambda: compose_algebraic_pure_tensors(Z1, Z2))
+
+    # Zero left, non-zero right with incompatible inner dims
+    raises(ShapeMismatchError, lambda: compose_algebraic_pure_tensors(Z1, T2))
+
+    # Non-zero left, zero right with incompatible inner dims
+    raises(ShapeMismatchError, lambda: compose_algebraic_pure_tensors(T1, Z2))
+
+    # Different number of factors
+    E = MatrixSymbol('E', 4, 2)
+    T3 = AlgebraicPureTensor(A, E)  # shape ((3, 4), (4, 2))
+    raises(ShapeMismatchError, lambda: compose_algebraic_pure_tensors(T1, T3))
+
+
 def test_algebraic_tensor_coefficient_collection():
     """Test coefficient collection in AlgebraicTensor."""
     A = MatrixSymbol('A', 3, 4)

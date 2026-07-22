@@ -589,3 +589,7 @@ simped = dada.simplify()
 print(len(dada.args))
 print("Expect 64, get:")
 print(len(simped.args))
+
+ZT1 = AlgebraicZeroTensor(((3,4), (4,5)))
+ZT2 = AlgebraicZeroTensor(((4,5), (5,6)))
+print(ZT1*ZT2)
