@@ -16,10 +16,11 @@ from heapq import heappush, heappop
 from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
-from sympy.logic.algorithms.lra_theory import LRASolver
+from sympy.logic.algorithms.theory_solver import TheorySolver
 
 
-def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
+def dpll_satisfiable(expr, all_models=False,
+                      theory_solvers: list[type[TheorySolver]] | None = None):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds.
@@ -47,12 +48,14 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
             return (f for f in [False])
         return False
 
-    if use_lra_theory:
-        lra, immediate_conflicts = LRASolver.from_encoded_cnf(expr)
-    else:
-        lra = None
-        immediate_conflicts = []
-    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra)
+    theories = []
+    immediate_conflicts = []
+    for theory_solver in theory_solvers or []:
+        theory, conflicts = theory_solver.from_encoded_cnf(expr)
+        theories.append(theory)
+        immediate_conflicts += conflicts
+
+    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, theories=theories)
     models = solver._find_model()
 
     if all_models:
@@ -89,7 +92,7 @@ class SATSolver:
 
     def __init__(self, clauses, variables, var_settings, symbols=None,
                 heuristic='vsids', clause_learning='none', INTERVAL=500,
-                 lra_theory = None):
+                 theories: list[TheorySolver] | None = None):
 
         self.var_settings = var_settings
         self.heuristic = heuristic
@@ -138,7 +141,7 @@ class SATSolver:
         self.num_learned_clauses = 0
         self.original_num_clauses = len(self.clauses)
 
-        self.lra = lra_theory
+        self.theories: list[TheorySolver] = theories or []
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -224,16 +227,17 @@ class SATSolver:
                 # Stopping condition for a satisfying theory
                 if 0 == lit:
 
-                    # check if assignment satisfies lra theory
-                    if self.lra:
+                    # check if assignment satisfies every theory
+                    res = None
+                    for theory in self.theories:
                         for enc_var in self.var_settings:
-                            res = self.lra.assert_lit(enc_var)
+                            res = theory.assert_lit(enc_var)
                             if res is not None:
                                 break
-                        res = self.lra.check()
-                        self.lra.reset()
-                    else:
-                        res = None
+                        res = theory.check()
+                        theory.reset()
+                        if res is not None and not res[0]:
+                            break
                     if res is None or res[0]:
                         yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}

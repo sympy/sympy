@@ -31,7 +31,7 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False):
+def satisfiable(expr, algorithm=None, all_models=False, minimal=False, theory_solvers=None):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -73,9 +73,9 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
     UNSAT
 
     """
-    if use_lra_theory:
+    if theory_solvers:
         if algorithm is not None and algorithm != "dpll2":
-            raise ValueError(f"Currently only dpll2 can handle using lra theory. {algorithm} is not handled.")
+            raise ValueError(f"Currently only dpll2 can handle theory solvers. {algorithm} is not handled.")
         algorithm = "dpll2"
 
     if algorithm is None or algorithm == "pycosat":
@@ -104,7 +104,7 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
         return dpll_satisfiable(expr)
     elif algorithm == "dpll2":
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-        return dpll_satisfiable(expr, all_models, use_lra_theory=use_lra_theory)
+        return dpll_satisfiable(expr, all_models, theory_solvers=theory_solvers)
     elif algorithm == "pycosat":
         from sympy.logic.algorithms.pycosat_wrapper import pycosat_satisfiable
         return pycosat_satisfiable(expr, all_models)
