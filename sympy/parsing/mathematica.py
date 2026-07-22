@@ -723,13 +723,11 @@ class MathematicaParser:
             "___": lambda x: ["Pattern", x, ["BlankNullSequence"]],
         }),
         # ``_h``/``__h``/``___h`` restrict the blank to expressions with head
-        # ``h``.  These are handled directly in ``_parse_after_braces``, which
-        # also covers the anonymous forms the INFIX machinery cannot express
-        # (``_h`` has no left operand at all); the entries are kept here to
-        # declare the tokens and their precedence level.
-        (INFIX, None, {"_": lambda x, y: ["Pattern", x, ["Blank", y]],
-                       "__": lambda x, y: ["Pattern", x, ["BlankSequence", y]],
-                       "___": lambda x, y: ["Pattern", x, ["BlankNullSequence", y]]}),
+        # ``h``.  The value is that head; ``_parse_after_braces`` builds the node,
+        # since the INFIX machinery cannot express the anonymous forms (``_h`` has
+        # no left operand at all).
+        (INFIX, None, {"_": "Blank", "__": "BlankSequence",
+                       "___": "BlankNullSequence"}),
         (PREFIX, None, {"#": "Slot", "##": "SlotSequence"}),
         # ``s::name`` is ``MessageName[s, "name"]`` -- the name is a string, and
         # further ``::`` sections simply add more of them.  It binds tighter than
@@ -747,11 +745,8 @@ class MathematicaParser:
     # them; see ``token_split`` in ``_from_mathematica_to_tokens``.
     _whitespace_sensitive = ("_", "_.", "__", "___", "#", "##")
 
-    # Heads built by each blank token, used for ``_h``, ``x_h`` and friends.
-    _blank_heads = {"_": "Blank", "__": "BlankSequence", "___": "BlankNullSequence"}
-
-    # How each bracketing prefix turns its group into a node.  Mirrors the PREFIX
-    # entries above, for ``_complete_left_operand``.
+    # How each bracketing prefix builds a node, mirroring the PREFIX entries
+    # above; used by ``_complete_left_operand``.
     _enclosure_prefixes = {
         "(": lambda group: group[0],
         "{": lambda group: ["List", *group],
@@ -822,14 +817,11 @@ class MathematicaParser:
         """
         if cls._infix_tighter_than_derivative is None:
             levels = cls._mathematica_op_precedence
-            after = False
-            found: list[str] = []
-            for op_type, _strat, op_dict in levels:
-                if after and op_type == cls.INFIX:
-                    found.extend(t for t in op_dict if t not in ("[", "[["))
-                if "'" in op_dict:
-                    after = True
-            cls._infix_tighter_than_derivative = tuple(found)
+            prime = next(i for i, (_t, _s, d) in enumerate(levels) if "'" in d)
+            cls._infix_tighter_than_derivative = tuple(
+                tok for typ, _strat, op_dict in levels[prime + 1:]
+                if typ == cls.INFIX
+                for tok in op_dict if tok not in ("[", "[["))
         return cls._infix_tighter_than_derivative
 
     def _complete_left_operand(self, tokens: list, pointer: int) -> int:
@@ -1169,21 +1161,20 @@ class MathematicaParser:
                         # the INFIX + - are supposed to match that expression:
                         pointer += 1
                         continue
-                    if token == "+" and op_type == self.PREFIX:
-                        # A lone unary plus is kept (``+x`` is ``Plus[x]``), but one
-                        # heading a term of a ``+`` chain is absorbed: both
-                        # ``a + +b`` and ``+a + b`` are plain ``Plus[a, b]``.  After
-                        # an infix ``-`` it is kept, the term being negated:
-                        # ``a - +b`` is ``Plus[a, Times[-1, Plus[b]]]``.
-                        after_infix_plus = (pointer > 1 and tokens[pointer - 1] == "+"
-                                            and not self._is_op(tokens[pointer - 2]))
-                        heads_chain = (pointer == 0 and pointer + 2 < size
-                                       and tokens[pointer + 2] in ("+", "-"))
-                        if after_infix_plus or heads_chain:
-                            tokens.pop(pointer)
-                            size -= 1
-                            changed = True
-                            continue
+                    # A lone unary plus is kept (``+x`` is ``Plus[x]``), but one
+                    # heading a term of a ``+`` chain is absorbed: both ``a + +b``
+                    # and ``+a + b`` are plain ``Plus[a, b]``.  After an infix
+                    # ``-`` it is kept, the term being negated: ``a - +b`` is
+                    # ``Plus[a, Times[-1, Plus[b]]]``.
+                    if token == "+" and op_type == self.PREFIX and (
+                            (pointer > 1 and tokens[pointer - 1] == "+"
+                             and not self._is_op(tokens[pointer - 2]))
+                            or (pointer == 0 and size > 2
+                                and tokens[pointer + 2] in ("+", "-"))):
+                        tokens.pop(pointer)
+                        size -= 1
+                        changed = True
+                        continue
                     # ``_h`` restricts a blank to head ``h``.  A symbol on its left
                     # names the resulting pattern (``x_h`` is
                     # ``Pattern[x, Blank[h]]``); with anything else on the left --
@@ -1192,11 +1183,11 @@ class MathematicaParser:
                     # ``Blank[h]`` and ``f[x]_h`` is ``Times[f[x], Blank[h]]``.
                     # This is handled here rather than through the INFIX machinery
                     # because that always consumes an operand on the left.
-                    if op_type == self.INFIX and token in self._blank_heads:
+                    if op_type == self.INFIX and token in self._blanks:
                         if pointer == size - 1 or self._is_op(tokens[pointer + 1]):
                             pointer += 1
                             continue
-                        blank = [self._blank_heads[token], tokens[pointer + 1]]
+                        blank = [op_name, tokens[pointer + 1]]
                         if pointer > 0 and self._is_symbol(tokens[pointer - 1]):
                             tokens[pointer - 1:pointer + 2] = [
                                 ["Pattern", tokens[pointer - 1], blank]]
@@ -1219,16 +1210,12 @@ class MathematicaParser:
                         if pointer == 0 or pointer == size - 1 or self._is_op(tokens[pointer - 1]) or self._is_op(tokens[pointer + 1]):
                             pointer += 1
                             continue
-                    # Special case: "!" without preceding operand is PREFIX Not, not POSTFIX Factorial
-                    if token == "!" and op_type == self.POSTFIX:
-                        if pointer == 0 or self._is_op(tokens[pointer - 1]):
-                            pointer += 1
-                            continue
-                    # An operator whose operand is still an unapplied operator --
-                    # the ``'`` in ``a&'``, the outer ``-`` in ``- -a`` -- has to
-                    # wait for that one to be built.  Unless a default operand is
-                    # defined for it (``#`` alone is ``Slot[1]``), leave it to the
-                    # re-parsing loop at the end of this method.
+                    # An operator whose operand is not there yet has to wait for
+                    # it: a "!" with nothing on its left is the prefix Not rather
+                    # than a Factorial, and the ``'`` in ``a&'`` or the outer
+                    # ``-`` in ``- -a`` needs the inner operator built first.
+                    # Unless a default operand is defined for it (``#`` alone is
+                    # ``Slot[1]``), leave it to the re-parsing loop below.
                     if token not in self._missing_arguments_default:
                         if op_type == self.POSTFIX and (pointer == 0 or self._is_op(tokens[pointer - 1])):
                             pointer += 1
