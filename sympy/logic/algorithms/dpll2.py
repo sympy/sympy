@@ -16,7 +16,10 @@ from heapq import heappush, heappop
 from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
-from sympy.logic.algorithms.theory_solver import TheorySolver
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.logic.algorithms.theory_solver import TheorySolver
 
 
 def dpll_satisfiable(expr, all_models=False,
