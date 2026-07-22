@@ -65,19 +65,20 @@ def test_algebraic_zero_tensor_negation():
 
 def test_algebraic_zero_tensor_addition():
     """Test addition with AlgebraicZeroTensor."""
-    Z = AlgebraicZeroTensor((3, 4))
+    Z = AlgebraicZeroTensor(((3, 4), (4,5)))
     
-    # Addition with scalar (should return the other operand)
-    assert Z + 5 == 5
-    assert 5 + Z == 5
+    from sympy.tensor.algebraic.algebraic_tensor import ShapeMismatchError
+    
+    # Addition with scalar should raise ShapeMismatchError
+    raises(ShapeMismatchError, lambda: Z + 5)
+    raises(ShapeMismatchError, lambda: 5 + Z)
     
     # Addition with same-shape zero tensor
-    Z2 = AlgebraicZeroTensor((3, 4))
+    Z2 = AlgebraicZeroTensor(((3, 4), (4, 5)))
     assert (Z + Z2).shape == Z.shape
     
     # Shape mismatch should raise
     Z3 = AlgebraicZeroTensor((4, 5))
-    from sympy.tensor.algebraic.algebraic_tensor import ShapeMismatchError
     raises(ShapeMismatchError, lambda: Z + Z3)
     
     # Multi-factor shape mismatch
@@ -90,9 +91,11 @@ def test_algebraic_zero_tensor_subtraction():
     """Test subtraction with AlgebraicZeroTensor."""
     Z = AlgebraicZeroTensor((3, 4))
     
-    # Z - x = -x
-    assert (Z - 5) == -5
-    assert (5 - Z) == 5
+    from sympy.tensor.algebraic.algebraic_tensor import ShapeMismatchError
+    
+    # Subtraction with scalar should raise ShapeMismatchError
+    raises(ShapeMismatchError, lambda: Z - 5)
+    raises(ShapeMismatchError, lambda: 5 - Z)
     
     # Z - Z = zero tensor of same shape
     Z2 = AlgebraicZeroTensor((3, 4))

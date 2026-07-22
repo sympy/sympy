@@ -279,44 +279,26 @@ class AlgebraicPureTensor(Basic):
         if not args:
             raise ValueError("AlgebraicPureTensor requires at least one factor")
 
-        if len(args) == 1:
-            return args[0]
-
-        # Separate leading commutative coefficient from tensor factors
-        args_list = list(args)
+        # Collect commutative coefficients from ALL argument positions,
+        # and tensor factors (anything with .shape) separately.
         coeff = S.One
-
-        if args_list:
-            first = args_list[0]
-            if isinstance(first, Number):
-                coeff = first
-                args_list = args_list[1:]
-            else:
-                first_s = sympify(first)
-                if isinstance(first_s, Number):
-                    coeff = first_s
-                    args_list = args_list[1:]
-                elif (hasattr(first_s, 'is_commutative') and
-                        first_s.is_commutative and
-                        not isinstance(first_s, AlgebraicPureTensor)):
-                    # Commutative coefficient: extract it
-                    coeff = first_s
-                    args_list = args_list[1:]
-
         processed = []
-        for a in args_list:
+
+        for a in args:
             a = sympify(a)
             if isinstance(a, Number):
-                raise TypeError(
-                    f"Scalar numbers are not valid tensor factors "
-                    f"(use a 1x1 MatrixExpr wrapper): {a}"
-                )
-            if not hasattr(a, "shape"):
+                coeff = coeff * a
+            elif hasattr(a, "shape"):
+                processed.append(a)
+            elif (hasattr(a, 'is_commutative') and
+                    a.is_commutative and
+                    not isinstance(a, AlgebraicPureTensor)):
+                coeff = coeff * a
+            else:
                 raise TypeError(
                     f"Tensor factor must have a .shape attribute, "
                     f"got {type(a).__name__}"
                 )
-            processed.append(a)
 
         if not processed:
             raise ValueError(
@@ -327,12 +309,13 @@ class AlgebraicPureTensor(Basic):
         if _is_zero_like(coeff) or any(_is_zero_like(f) for f in processed):
             return AlgebraicZeroTensor(_factor_shapes(processed))
 
-        # Two args with commutative first arg: return coeff * factor (plain Mul/MatMul)
-        if len(args) == 2 and len(processed) == 1 and coeff is not S.One:
-            return coeff * processed[0]
-
+        # Single factor with coefficient 1: unwrap to bare factor
         if len(processed) == 1 and coeff is S.One:
             return processed[0]
+
+        # Single factor with non-trivial coefficient: return coeff * factor
+        if len(processed) == 1:
+            return coeff * processed[0]
 
         # Build the AlgebraicPureTensor with coefficient as first arg
         if coeff is not S.One:
@@ -407,10 +390,9 @@ class AlgebraicPureTensor(Basic):
         A*C ⊗ B*D
         """
         other = sympify(other)
-        if isinstance(other, AlgebraicZeroTensor):
-            return other
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not isinstance(other, AlgebraicPureTensor)):
+                other.is_commutative and not (hasattr(other, 'is_AlgebraicZeroTensor') or
+                hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))):
             if other is S.One:
                 return self
             if other is S.Zero:
@@ -459,10 +441,9 @@ class AlgebraicPureTensor(Basic):
         if other == 1:
             return self
         other = sympify(other)
-        if isinstance(other, AlgebraicZeroTensor):
-            return other
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not isinstance(other, AlgebraicPureTensor)):
+                other.is_commutative and not (hasattr(other, 'is_AlgebraicZeroTensor') or
+                hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))):
             if other is S.One:
                 return self
             if other is S.Zero:
@@ -476,10 +457,13 @@ class AlgebraicPureTensor(Basic):
         return compose_algebraic_tensors(other, self)
 
     def __add__(self, other):
-        """Add another tensor or scalar to this pure tensor.
+        """Add another tensor to this pure tensor.
 
         Returns an :class:`~sympy.tensor.algebraic.AlgebraicTensor`
         containing both terms.
+
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -495,14 +479,19 @@ class AlgebraicPureTensor(Basic):
         >>> print(T1 + T2)
         C ⊗ D + A ⊗ B
         """
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
+        from sympy.tensor.algebraic.algebraic_tensor import (
+            AlgebraicTensor, _validate_addition_shape,
+        )
+        _validate_addition_shape(self.shape, other)
         if isinstance(other, AlgebraicZeroTensor):
-            if other.shape == self.shape:
-                return self
+            return self
         return AlgebraicTensor(self, other)
 
     def __radd__(self, other):
         """Right-add: ``other + self``.
+
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -518,14 +507,19 @@ class AlgebraicPureTensor(Basic):
         >>> print(T2 + T1)
         A ⊗ B + C ⊗ D
         """
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
+        from sympy.tensor.algebraic.algebraic_tensor import (
+            AlgebraicTensor, _validate_addition_shape,
+        )
+        _validate_addition_shape(self.shape, other)
         if isinstance(other, AlgebraicZeroTensor):
-            if other.shape == self.shape:
-                return self
+            return self
         return AlgebraicTensor(other, self)
 
     def __sub__(self, other):
-        """Subtract another tensor or scalar from this pure tensor.
+        """Subtract another tensor from this pure tensor.
+
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -541,11 +535,17 @@ class AlgebraicPureTensor(Basic):
         >>> print(T1 - T2)
         -1*C ⊗ D + A ⊗ B
         """
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
+        from sympy.tensor.algebraic.algebraic_tensor import (
+            AlgebraicTensor, _validate_addition_shape,
+        )
+        _validate_addition_shape(self.shape, other)
         return AlgebraicTensor(self, -other)
 
     def __rsub__(self, other):
         """Right-subtract: ``other - self``.
+
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -561,7 +561,10 @@ class AlgebraicPureTensor(Basic):
         >>> print(T2 - T1)
         -1*A ⊗ B + C ⊗ D
         """
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
+        from sympy.tensor.algebraic.algebraic_tensor import (
+            AlgebraicTensor, _validate_addition_shape,
+        )
+        _validate_addition_shape(self.shape, other)
         return AlgebraicTensor(other, -self)
 
     def has_zero_term(self):

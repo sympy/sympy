@@ -78,6 +78,30 @@ def _commutativity_pattern_of(expr):
     return None
 
 
+def _validate_addition_shape(self_shape, other):
+    """Validate that *other* can be added to a tensor of *self_shape*.
+
+    Raises ``ShapeMismatchError`` if *other* lacks a ``.shape`` attribute,
+    or if both have shapes that differ.
+
+    Parameters
+    ----------
+    self_shape : tuple
+        The shape of the left operand (self).
+    other
+        The right operand to validate.
+    """
+    if not hasattr(other, 'shape'):
+        raise ShapeMismatchError(
+            "Addition of tensors and non-tensors is not defined"
+        )
+    if other.shape != self_shape:
+        raise ShapeMismatchError(
+            f"Cannot add tensors of different shapes: "
+            f"{self_shape} vs {other.shape}"
+        )
+
+
 # ---------------------------------------------------------------------------
 
 def _compose_reassemble(results, shape):
@@ -960,6 +984,9 @@ class AlgebraicTensor(Basic):
     def __add__(self, other):
         """Add another tensor expression to this sum.
 
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
+
         Examples
         ========
 
@@ -976,6 +1003,7 @@ class AlgebraicTensor(Basic):
         >>> print(S + AlgebraicPureTensor(E, F))
         E ⊗ F + A ⊗ B + C ⊗ D
         """
+        _validate_addition_shape(self.shape, other)
         if isinstance(other, AlgebraicTensor):
             if self._has_simple_terms() and other._has_simple_terms():
                 return self._merge(self, other)
@@ -983,6 +1011,9 @@ class AlgebraicTensor(Basic):
 
     def __radd__(self, other):
         """Right-add: ``other + self``.
+
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -1000,6 +1031,7 @@ class AlgebraicTensor(Basic):
         >>> print(AlgebraicPureTensor(E, F) + S)
         A ⊗ B + C ⊗ D + E ⊗ F
         """
+        _validate_addition_shape(self.shape, other)
         if isinstance(other, AlgebraicTensor):
             if self._has_simple_terms() and other._has_simple_terms():
                 return self._merge(other, self)
@@ -1007,6 +1039,9 @@ class AlgebraicTensor(Basic):
 
     def __sub__(self, other):
         """Subtract another tensor expression from this sum.
+
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -1022,6 +1057,7 @@ class AlgebraicTensor(Basic):
         >>> print(S - AlgebraicPureTensor(A, B))
         C ⊗ D
         """
+        _validate_addition_shape(self.shape, other)
         if isinstance(other, AlgebraicTensor):
             if self._has_simple_terms() and other._has_simple_terms():
                 return self._subtract(self, other)
@@ -1029,6 +1065,9 @@ class AlgebraicTensor(Basic):
 
     def __rsub__(self, other):
         """Right-subtract: ``other - self``.
+
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -1044,6 +1083,7 @@ class AlgebraicTensor(Basic):
         >>> print(AlgebraicPureTensor(A, B) - S)
         -1*C ⊗ D
         """
+        _validate_addition_shape(self.shape, other)
         if isinstance(other, AlgebraicTensor):
             if self._has_simple_terms() and other._has_simple_terms():
                 return self._subtract(other, self)
@@ -1085,7 +1125,7 @@ class AlgebraicTensor(Basic):
         """
         other = sympify(other)
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor))):
+                other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor))):
             return AlgebraicTensor(*(a * other for a in self.args))
         return compose_algebraic_tensors(self, other)
 
@@ -1123,7 +1163,7 @@ class AlgebraicTensor(Basic):
         """
         other = sympify(other)
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor))):
+                other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor))):
             return AlgebraicTensor(*(other * a for a in self.args))
         return compose_algebraic_tensors(other, self)
 

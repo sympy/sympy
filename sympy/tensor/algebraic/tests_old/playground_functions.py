@@ -13,7 +13,7 @@ if _SYMPY_ROOT not in sys.path:
 
 from sympy import Symbol, Rational, sqrt, pi, I, symbols
 from sympy.core.singleton import S
-from sympy.matrices.expressions import MatrixSymbol, MatAdd, MatMul
+from sympy.matrices.expressions import MatrixSymbol, MatAdd, MatMul, ZeroMatrix
 from sympy.matrices import Matrix, zeros, eye, diag
 
 from sympy.tensor.algebraic import (
@@ -593,3 +593,15 @@ print(len(simped.args))
 ZT1 = AlgebraicZeroTensor(((3,4), (4,5)))
 ZT2 = AlgebraicZeroTensor(((4,5), (5,6)))
 print(ZT1*ZT2)
+
+#print(ZT1 + x)
+
+T3 = algebraic_tensor_product(2,A,3,A2)
+print(srepr(T3))
+
+Z4 = AlgebraicZeroTensor(((3,4),))
+testek = Z4 + B
+print(testek)
+
+Zzz = ZeroMatrix(3,4)
+print(Zzz)

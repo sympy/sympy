@@ -84,6 +84,13 @@ class AlgebraicZeroTensor(Basic):
             # Bare (m, n) or [m, n] -> wrap as ((m, n),)
             shape = (shape,)
         shape = tuple(tuple(s) for s in shape)
+
+        # Single-factor zero: delegate to the canonical ZeroMatrix
+        if len(shape) == 1:
+            rows, cols = shape[0]
+            from sympy.matrices.expressions import ZeroMatrix
+            return ZeroMatrix(rows, cols)
+
         obj = Basic.__new__(cls)
         obj._shape = shape
         return obj
@@ -172,7 +179,8 @@ class AlgebraicZeroTensor(Basic):
     def __add__(self, other):
         """Additive identity -- return the other operand unchanged.
 
-        Raises ``ShapeMismatchError`` if *other* has a different shape.
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -186,25 +194,17 @@ class AlgebraicZeroTensor(Basic):
         >>> print(Z + T)
         A ⊗ B
         """
-        from sympy.tensor.algebraic.algebraic_tensor import _shape_of, ShapeMismatchError
-        other_shape = _shape_of(other)
-        if other_shape is not None and other_shape != self._shape:
-            raise ShapeMismatchError(
-                f"Cannot add tensors of different shapes: "
-                f"{self._shape} vs {other_shape}"
-            )
-        if isinstance(other, AlgebraicZeroTensor):
-            if other._shape != self._shape:
-                raise ShapeMismatchError(
-                    f"Cannot add tensors of different shapes: "
-                    f"{self._shape} vs {other._shape}"
-                )
+        from sympy.tensor.algebraic.algebraic_tensor import (
+            _validate_addition_shape,
+        )
+        _validate_addition_shape(self._shape, other)
         return other
 
     def __radd__(self, other):
         """Additive identity -- return the other operand unchanged.
 
-        Raises ``ShapeMismatchError`` if *other* has a different shape.
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -218,23 +218,17 @@ class AlgebraicZeroTensor(Basic):
         >>> print(T + Z)
         A ⊗ B
         """
-        from sympy.tensor.algebraic.algebraic_tensor import _shape_of, ShapeMismatchError
-        other_shape = _shape_of(other)
-        if other_shape is not None and other_shape != self._shape:
-            raise ShapeMismatchError(
-                f"Cannot add tensors of different shapes: "
-                f"{self._shape} vs {other_shape}"
-            )
-        if isinstance(other, AlgebraicZeroTensor):
-            if other._shape != self._shape:
-                raise ShapeMismatchError(
-                    f"Cannot add tensors of different shapes: "
-                    f"{self._shape} vs {other._shape}"
-                )
+        from sympy.tensor.algebraic.algebraic_tensor import (
+            _validate_addition_shape,
+        )
+        _validate_addition_shape(self._shape, other)
         return other
 
     def __sub__(self, other):
         """Subtract *other* from the zero tensor.
+
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -248,10 +242,17 @@ class AlgebraicZeroTensor(Basic):
         >>> print(Z - T)
         -1*A ⊗ B
         """
+        from sympy.tensor.algebraic.algebraic_tensor import (
+            _validate_addition_shape,
+        )
+        _validate_addition_shape(self._shape, other)
         return -other
 
     def __rsub__(self, other):
         """Right-subtract: ``other - self`` (returns *other* unchanged).
+
+        Raises ``ShapeMismatchError`` if *other* has a different shape
+        or lacks a ``.shape`` attribute.
 
         Examples
         ========
@@ -265,6 +266,10 @@ class AlgebraicZeroTensor(Basic):
         >>> print(T - Z)
         A ⊗ B
         """
+        from sympy.tensor.algebraic.algebraic_tensor import (
+            _validate_addition_shape,
+        )
+        _validate_addition_shape(self._shape, other)
         return other
 
     def __mul__(self, other):
