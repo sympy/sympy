@@ -1582,3 +1582,14 @@ def test_issue_16318():
 def test_compute_density():
     X = Normal('X', 0, Symbol("sigma")**2)
     raises(ValueError, lambda: density(X**5 + X))
+
+def test_issue_30094():
+    # density(Abs(X))(y) used to raise ValueError because solveset
+    # returns a ConditionSet (not a plain FiniteSet) when solving
+    # Abs(X) - y = 0, since the solutions {-y, y} only hold for y >= 0.
+    # compute_density should build a Piecewise from this instead of failing.
+    X = Normal("X", 0, 1)
+    y = Symbol("y", real=True)
+    result = density(Abs(X))(y)
+    expected = Piecewise((sqrt(2/pi)*exp(-(y**2)/2), y >= 0), (0, True))
+    assert result == expected

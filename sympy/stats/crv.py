@@ -28,6 +28,8 @@ from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polytools import poly
 from sympy.series.series import series
 from sympy.sets.sets import (FiniteSet, Intersection, Interval, Union)
+from sympy.sets.conditionset import ConditionSet
+from sympy.sets.contains import Contains
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
@@ -535,6 +537,20 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         if isinstance(gs, Intersection):
             if len(gs.args) == 2 and gs.args[0] is S.Reals:
                 gs = gs.args[1]
+
+        if isinstance(gs, ConditionSet) and gs.base_set.is_FiniteSet:
+            # e.g. solving Abs(X) - y for X gives {-y, y}, but only
+            # when y >= 0; represent this as a Piecewise density instead
+            # of failing outright.
+            condition = gs.condition
+            if isinstance(condition, Contains):
+                sym, condition_set = condition.args
+                condition = condition_set.as_relational(sym)
+            gs = gs.base_set
+            fx = self.compute_density(self.value)
+            fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
+            return Lambda(y, Piecewise((fy, condition), (S.Zero, True)))
+
         if not gs.is_FiniteSet:
             raise ValueError("Can not solve %s for %s" % (expr, self.value))
         fx = self.compute_density(self.value)
