@@ -400,6 +400,9 @@ class LRASolver():
             A conflict clause that "explains" why
             the literals asserted so far are unsatisfiable.
         """
+        batch = []
+        self.bound_history.append(batch)
+
         if abs(literal) not in self.atom_id_to_boundaries:
             return None
 
@@ -416,7 +419,7 @@ class LRASolver():
 
         res = None
         for boundary in boundaries:
-            res = self._assert_bound(boundary, literal)
+            res = self._assert_bound(boundary, literal, batch)
             if res and res[0] is False:
                 break
 
@@ -427,7 +430,7 @@ class LRASolver():
 
         return res
 
-    def _assert_bound(self, boundary, literal):
+    def _assert_bound(self, boundary, literal, batch):
         """
         Adjusts the upper or lower bound on variable xi if the new bound is
         more limiting. The assignment of variable xi is adjusted to be
@@ -468,7 +471,8 @@ class LRASolver():
             self.result = False, [-conflicting_lit, -literal]
             return self.result
 
-        self.bound_history.append((xi, target_bound, upper))
+        target_literal = xi.upper_literal if upper else xi.lower_literal
+        batch.append((xi, target_bound, target_literal, upper))
 
         xi.set_bound(boundary, literal)
 
@@ -678,12 +682,14 @@ class LRASolver():
         if not self.bound_history:
             raise ValueError("Cannot backtrack, bound_history stack is empty")
 
-        xi, old_bound, upper = self.bound_history.pop()
-
-        if upper:
-            xi.upper = old_bound
-        else:
-            xi.lower = old_bound
+        batch = self.bound_history.pop()
+        for xi, old_bound, old_literal, upper in batch:
+            if upper:
+                xi.upper = old_bound
+                xi.upper_literal = old_literal
+            else:
+                xi.lower = old_bound
+                xi.lower_literal = old_literal
 
         for var in self.all_var:
             var.assign = self.last_assign_snapshot[var]
