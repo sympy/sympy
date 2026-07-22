@@ -113,8 +113,8 @@ def test_from_encoded_cnf():
     enc = boolean_formula_to_encoded_cnf(phi)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert lra.A.shape == (0, 3)
-    assert str(lra.slack) == '[]'
-    assert str(lra.nonslack) == '[x, _s1, _s2]'
+    assert str(lra.basic) == '[]'
+    assert {str(v) for v in lra.nonbasic} == {'x', '_s1', '_s2'}
     assert lra.A == Matrix(0,3, [])
     actual = {tuple(sorted((str(b.var), b.bound, b.upper, b.strict) for b in bs)) for bs in lra.atom_id_to_boundaries.values()}
     expected = {
@@ -514,8 +514,8 @@ def test_example_from_paper():
     # Extracts the variables stored in the solver
     var_x = next(v for v in lra.all_var if str(v.var) == 'x')
     # var_y has been removed from A after the simplification
-    # var_s1 is a slack variable which corresponds for -x + y <= 1
-    # var_s2 is a slack variable which corresponds for -x - y <= 3
+    # var_s1 is a basic variable which corresponds for -x + y <= 1
+    # var_s2 is a basic variable which corresponds for -x - y <= 3
     _s1 = lra.s_subs[-x + y]
     _s2 = lra.s_subs[-x - y]
     var_s1 = next(v for v in lra.all_var if v.var == _s1)
