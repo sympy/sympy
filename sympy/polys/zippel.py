@@ -8,8 +8,9 @@ from sympy.polys.domains import PolynomialRing
 
 if TYPE_CHECKING:
     from sympy.external.gmpy import MPZ
+    from sympy.polys.densebasic import dup
+    from sympy.polys.monomials import monom
 
-Monom = tuple[int, ...]
 
 def _gf_gcd(fp, gp, p):
     r"""
@@ -391,20 +392,23 @@ def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
     return hpq
 
 
-def incremental_newton_interp(x: list[MPZ], v: list[MPZ], xk: MPZ, uk: MPZ, p: MPZ
-    ) -> MPZ:
-    """
-    Computes the next Newton interpolation coefficient v_k over Z_p.
+def incremental_newton_interp(
+    x: list[MPZ], v: list[MPZ], xk: MPZ, uk: MPZ, p: MPZ
+) -> MPZ:
+    r"""
+    Computes the next Newton interpolation coefficient `v_k` over
+    `\mathbb{Z}_p`.
 
-    Given a list of k evaluation points x = [x_0, ..., x_{k-1}] and the
-    corresponding coefficients v = [v_0, ..., v_{k-1}] of the Newton
-    interpolation polynomial P_{k-1}(x), this function calculates the new
-    coefficient v_k required to interpolate a new point (x_k, u_k).
+    Given a list of `k` evaluation points
+    `x = [x_0, \ldots, x_{k-1}]` and the corresponding coefficients
+    `v = [v_0, \ldots, v_{k-1}]` of the Newton interpolation polynomial
+    `P_{k-1}(x)`, this function calculates the new coefficient `v_k` required
+    to interpolate a new point `(x_k, u_k)`.
 
     References
     ==========
 
-    1. [Geddes92] p. 186.
+    .. [1] [Geddes92]_ p. 186.
 
     Examples
     ========
@@ -429,18 +433,18 @@ def incremental_newton_interp(x: list[MPZ], v: list[MPZ], xk: MPZ, uk: MPZ, p: M
     return ((uk - s) * inv) % p
 
 
-def from_newt_to_poly(x: list[MPZ], v: list[MPZ], p: MPZ
-    ) -> list[MPZ]:
-    """
-    Given k evaluation points x = [x_0, ..., x_{k-1}] and the
-    corresponding coefficients v = [v_0, ..., v_{k-1}] of the Newton
-    interpolation polynomial P_{k-1}(x), this function calculates explicitly
-    and returns the interpolation polynomial P_{k-1}(x) over Z_p.
+def from_newt_to_poly(x: list[MPZ], v: list[MPZ], p: MPZ) -> dup[MPZ]:
+    r"""
+    Given `k` evaluation points `x = [x_0, \ldots, x_{k-1}]` and the
+    corresponding coefficients `v = [v_0, \ldots, v_{k-1}]` of the Newton
+    interpolation polynomial `P_{k-1}(x)`, this function calculates explicitly
+    and returns the interpolation polynomial `P_{k-1}(x)` over
+    `\mathbb{Z}_p`.
 
     References
     ==========
 
-    1. [Geddes92] p. 186.
+    .. [1] [Geddes92]_ p. 186.
 
     Examples
     ========
@@ -450,7 +454,7 @@ def from_newt_to_poly(x: list[MPZ], v: list[MPZ], p: MPZ
     >>> v = [67, 47, 1]
     >>> p = 97
     >>> from_newt_to_poly(x, v, p)
-    [67, 46, 1]
+    [1, 46, 67]
 
     """
     pol = [v[-1]]
@@ -459,12 +463,13 @@ def from_newt_to_poly(x: list[MPZ], v: list[MPZ], p: MPZ
         pol = gf_mul(pol, binomial, p, ZZ)
         pol = gf_add(pol, [v[i]], p, ZZ)
 
-    return pol[::-1]
+    return pol
 
 
-def skeleton_sorter(G: dict[Monom, MPZ]
-) -> tuple[dict[int, list[list[Monom]]], list[list[MPZ]], bool, bool]:
-    """
+def skeleton_sorter(
+    G: dict[monom, MPZ],
+) -> tuple[dict[int, list[list[monom]]], list[list[MPZ]], bool, bool]:
+    r"""
     Reorganizes the skeleton of a sparse polynomial for multivariate interpolation.
 
     This function extracts the monomials of a sparse polynomial.
@@ -474,29 +479,32 @@ def skeleton_sorter(G: dict[Monom, MPZ]
     degrees for the remaining variables, useful to evaluate quickly the monomials.
 
     It also saves the coefficients of each monomial in a list of lists, and
-    2 booleans needed by the function zippel_interp() to choose the right routine.
+    2 booleans needed by the function ``zippel_interp()`` to choose the right routine.
 
     Examples
     ========
 
-    If we take the sparse polynomial G = 5*x**2*y**2 + 7*x*y**5*z**3 + 8*x*z**4
-    in ZZ[x, y, z], skeleton_sorter(G) returns the following outputs:
+    If we take the sparse polynomial
+    `G = 5x^2y^2 + 7xy^5z^3 + 8xz^4` in `\mathbb{Z}[x, y, z]`,
+    ``skeleton_sorter(G)`` returns the following outputs:
 
-    S = {
-        2: [[(2, 2, 0), (0, 2)]],
-        1: [[(1, 5, 3), (0, 5), (1, 3)], [(1, 0, 4), (1, 4)]]
-    }
+    .. code-block:: python
 
-    h = [[5], [7], [8]]
+        S = {
+            2: [[(2, 2, 0), (0, 2)]],
+            1: [[(1, 5, 3), (0, 5), (1, 3)], [(1, 0, 4), (1, 4)]]
+        }
 
-    monic = True
-    pseudomonic = True
+        h = [[5], [7], [8]]
+
+        monic = True
+        pseudomonic = True
 
     """
     S_ = defaultdict(list)
     for mon, _ in G.items():
         S_[mon[0]].append([mon])
-    S = {deg: S_[deg] for deg in sorted(S_.keys(), key = lambda x: len(S_[x]))}
+    S = {deg: S_[deg] for deg in sorted(S_.keys(), key=lambda x: len(S_[x]))}
     h = []
     lc = S[max(S.keys())]
 

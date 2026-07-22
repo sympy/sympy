@@ -122,31 +122,28 @@ def test_from_newt_to_poly():
     v = ZZ.map([96, 18, 7, 3])
     p = ZZ(101)
 
-    assert from_newt_to_poly(x, v, p) == [96, 17, 99, 3]
+    assert from_newt_to_poly(x, v, p) == [3, 99, 17, 96]
 
 
 def test_skeleton_sorter():
     R, x, y, z, w = ring("x, y, z, w", ZZ)
-    G = 4*x**3*y**2*w - 2*x**3*z**5*w**2 + 7*x*y*z*w
+    G = 4 * x**3 * y**2 * w - 2 * x**3 * z**5 * w**2 + 7 * x * y * z * w
     S, h, monic, pseudomonic = skeleton_sorter(dict(G))
 
     assert S == {
         1: [[(1, 1, 1, 1), (0, 1), (1, 1), (2, 1)]],
-        3: [
-            [(3, 2, 0, 1), (0, 2), (2, 1)],
-            [(3, 0, 5, 2), (1, 5), (2, 2)]
-        ]
+        3: [[(3, 2, 0, 1), (0, 2), (2, 1)], [(3, 0, 5, 2), (1, 5), (2, 2)]],
     }
     assert h == [[7], [4], [-2]]
     assert monic == pseudomonic == False
 
     R, x, y, z = ring("x, y, z", ZZ)
-    G = 5*x**2*y**2 + 7*x*y**5*z**3 + 8*x*z**4
+    G = 5 * x**2 * y**2 + 7 * x * y**5 * z**3 + 8 * x * z**4
     S, h, monic, pseudomonic = skeleton_sorter(G)
 
     assert S == {
         2: [[(2, 2, 0), (0, 2)]],
-        1: [[(1, 5, 3), (0, 5), (1, 3)], [(1, 0, 4), (1, 4)]]
+        1: [[(1, 5, 3), (0, 5), (1, 3)], [(1, 0, 4), (1, 4)]],
     }
     assert list(S.keys()) == [2, 1]
     assert h == [[5], [7], [8]]
