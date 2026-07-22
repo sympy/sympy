@@ -366,7 +366,7 @@ class LRASolver():
                            s_subs, testing_mode)
         return solver, conflicts
 
-    def reset_bounds(self):
+    def reset(self):
         """
         Resets the state of the LRASolver to before
         anything was asserted.
