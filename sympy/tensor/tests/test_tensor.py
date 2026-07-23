@@ -1986,10 +1986,11 @@ def test_tensor_alternative_construction():
 def test_tensor_replacement():
     L = TensorIndexType("L")
     L2 = TensorIndexType("L2", dim=2)
-    i, j, k, l = tensor_indices("i j k l", L)
+    i, j, k, l, m = tensor_indices("i j k l m", L)
     A, B, C, D = tensor_heads("A B C D", [L])
     H = TensorHead("H", [L, L])
     J = TensorHead("J", [L, L])
+    I = TensorHead("I", [L]*3)
     K = TensorHead("K", [L]*4)
 
     expr = H(i, j)
@@ -2028,14 +2029,34 @@ def test_tensor_replacement():
     repl = {H(i,j): [[1,2],[3,4]]}
     assert expr.replace_with_arrays(repl, [i,j]) == Array([[1,3],[2,4]])
 
+    expr = I(j, k, l)
+    arr = Array(range(2**3)).reshape(2,2,2)
+    repl = {I(l,j,k): arr, L: diag(1, -1)}
+    assert expr.replace_with_arrays(repl, [j,k,l]) == arr
+
+    expr = K(j, k, l, i)
+    arr = Array(range(2**4)).reshape(2,2,2,2)
+    repl = {K(i,j,k,l): arr, L: diag(1, -1)}
+    assert expr.replace_with_arrays(repl, [j,k,l,i]) == arr
+
     # Not the same indices:
     expr = H(i,k)
     repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
     assert expr._extract_data(repl) == ([i, k], Array([[1, 2], [3, 4]]))
 
+    expr = K(j, k, l, m)
+    arr = Array(range(2**4)).reshape(2,2,2,2)
+    repl = {K(j,k,l,i): arr, L: diag(1, -1)}
+    assert expr.replace_with_arrays(repl, [j,k,l,m]) == arr
+
     expr = H(j, k)
     repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
     assert expr.replace_with_arrays(repl, [j,k]) == Array([[1,2],[3,4]])
+
+    expr = K(j, k, l, m)
+    arr = Array(range(2**4)).reshape(2,2,2,2)
+    repl = {K(i,j,k,l): arr, L: diag(1, -1)}
+    assert expr.replace_with_arrays(repl, [j,k,l,m]) == arr
 
     expr = A(i)*A(-i)
     repl = {A(i): [1,2], L: diag(1, -1)}
