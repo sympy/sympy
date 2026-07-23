@@ -972,6 +972,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.functions.elementary.exponential import log
         from sympy.series.limits import limit, Limit
         from sympy.sets.sets import Interval, Union
+        from sympy.simplify.radsimp import radsimp
         from sympy.solvers.solveset import solveset
 
         if (a is None and b is None):
@@ -1052,17 +1053,33 @@ class Expr(Basic, EvalfMixin):
                         except TypeError:
                             continue
 
-            # sorted, so that the result does not depend on set iteration order
+            # The jumps are summed into a correction that is kept apart from
+            # the endpoint difference B - A, so that radsimp below only touches
+            # the correction and leaves B - A in whatever form it already had.
+            # sorted, so that the result does not depend on set iteration order.
+            correction = S.Zero
             for s in sorted(points, key=default_sort_key):
-                if value is S.NaN:
+                if correction is S.NaN:
                     # no need to keep adding, it will stay NaN
                     break
                 if not s.is_comparable:
                     continue
                 if (a < s) == (s < b) == True:
-                    value += -limit(self, x, s, "+") + limit(self, x, s, "-")
+                    correction += -limit(self, x, s, "+") + limit(self, x, s, "-")
                 elif (b < s) == (s < a) == True:
-                    value += limit(self, x, s, "+") - limit(self, x, s, "-")
+                    correction += limit(self, x, s, "+") - limit(self, x, s, "-")
+
+            if correction is not S.Zero:
+                # A correction comes over a common denominator built from the
+                # nested radicals the Weierstrass substitution leaves in the
+                # antiderivative, e.g. 2*pi/(sqrt(2)*sqrt(2*sqrt(2) + 3) -
+                # sqrt(2*sqrt(2) + 3)) for 1/(sqrt(2) + cos(x)) over a period;
+                # radsimp denests those and cancels the denominator to the
+                # 2*pi one expects. It is skipped for a non-finite correction
+                # so that the oo/nan of a genuine pole is passed through.
+                if correction.is_finite:
+                    correction = radsimp(correction)
+                value += correction
 
         return value
 
