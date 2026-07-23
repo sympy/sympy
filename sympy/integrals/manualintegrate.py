@@ -65,10 +65,8 @@ from .integrals import Integral
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
 from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
-from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.simplify.powsimp import powsimp
-from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
@@ -755,69 +753,44 @@ class DiracDeltaRule(AtomicRule):
 
 class TrigSubstitutionRule(Rule):
 
-    __slots__ = ("theta", "func", "rewritten", "substep", "restriction")
+    __slots__ = ("theta", "coeff", "rewritten", "substep")
 
     theta: Expr
-    func: Expr
+    coeff: Expr
     rewritten: Expr
     substep: Rule
-    restriction: bool | Boolean
 
     def __init__(
         self,
         integrand: Expr,
         variable: Symbol,
         theta: Expr,
-        func: Expr,
+        coeff: Expr,
         rewritten: Expr,
         substep: Rule,
-        restriction: bool | Boolean,
     ) -> None:
         super().__init__(integrand, variable)
         self.theta = theta
-        self.func = func
+        self.coeff = coeff
         self.rewritten = rewritten
         self.substep = substep
-        self.restriction = restriction
 
     def eval(self) -> Expr:
-        theta, func, x = self.theta, self.func, self.variable
-        func = func.subs(sec(theta), 1/cos(theta))
-        func = func.subs(csc(theta), 1/sin(theta))
-        func = func.subs(cot(theta), 1/tan(theta))
+        theta, c, x = self.theta, self.coeff, self.variable
 
-        trig_function = list(func.find(TrigonometricFunction))
-        assert len(trig_function) == 1
-        trig_function = trig_function[0]
-        relation = solve(x - func, trig_function)
-        assert len(relation) == 1
-        numer, denom = fraction(relation[0])
-
-        if isinstance(trig_function, sin):
-            opposite = numer
-            hypotenuse = denom
-            adjacent = sqrt(denom**2 - numer**2)
-            inverse = asin(relation[0])
-        elif isinstance(trig_function, cos):
-            adjacent = numer
-            hypotenuse = denom
-            opposite = sqrt(denom**2 - numer**2)
-            inverse = acos(relation[0])
-        else:  # tan
-            opposite = numer
-            adjacent = denom
-            hypotenuse = sqrt(denom**2 + numer**2)
-            inverse = atan(relation[0])
+        hypotenuse = sqrt(c**2 + x**2)
 
         substitution = [
-            (sin(theta), opposite/hypotenuse),
-            (cos(theta), adjacent/hypotenuse),
-            (tan(theta), opposite/adjacent),
-            (theta, inverse)
+            (sin(theta), x/hypotenuse),
+            (cos(theta), c/hypotenuse),
+            (tan(theta), x/c),
+            (sec(theta), hypotenuse/c),
+            (csc(theta), hypotenuse/x),
+            (cot(theta), c/x),
+            (theta, atan(x/c)),
         ]
-        return Piecewise(
-                (self.substep.eval().subs(substitution).trigsimp(), self.restriction) # type: ignore
-        )
+
+        return self.substep.eval().subs(substitution).trigsimp()
 
     def contains_dont_know(self) -> bool:
         return self.substep.contains_dont_know()
@@ -2611,61 +2584,98 @@ def trig_substitution_rule(integral):
     integrand, symbol = integral
     A = Wild('a', exclude=[0, symbol])
     B = Wild('b', exclude=[0, symbol])
-    theta = Dummy("theta")
     target_pattern = A + B*symbol**2
+    base0 = None
+    powers = []
 
-    matches = integrand.find(target_pattern)
-    for expr in matches:
-        match = expr.match(target_pattern)
-        a = match.get(A, S.Zero)
-        b = match.get(B, S.Zero)
+    def _try_tan_substitution(c, replaced):
+        if replaced.has(symbol):
+            return None
+        dx_dtheta = c*sec(theta)**2
+        replaced *= dx_dtheta
+        replaced = replaced.trigsimp()
+        secants = replaced.find(1/cos(theta))
+        if secants:
+            replaced = replaced.xreplace({
+                1/cos(theta): sec(theta)
+            })
+        substep = integral_steps(replaced, theta)
+        if not substep.contains_dont_know():
+            return TrigSubstitutionRule(
+                integrand, symbol, theta, c, replaced, substep
+            )
+        return None
 
+    # simplify sqrt(A + B*symbol**2)
+    for pow_ in ordered(integrand.find(Pow)):
+        base, exp_ = pow_.base, pow_.exp
+        # exclude sqrt(2) or x**2
+        if symbol not in base.free_symbols or exp_.is_Integer:
+            continue
+        # needed to simplify sqrt(sec**(theta)) with sec(theta) below
+        if symbol.is_real is not True:
+            return None
+        if not exp_.is_Rational or exp_.q != 2:
+            return None
+        match = base.match(target_pattern)
+        if not match:
+            return None
+        a = match[A]
+        b = match[B]
         a_positive = ((a.is_number and a > 0) or a.is_positive)
         b_positive = ((b.is_number and b > 0) or b.is_positive)
-        a_negative = ((a.is_number and a < 0) or a.is_negative)
-        b_negative = ((b.is_number and b < 0) or b.is_negative)
-        x_func = None
-        if a_positive and b_positive:
-            # a**2 + b*x**2. Assume sec(theta) > 0, -pi/2 < theta < pi/2
-            x_func = (sqrt(a)/sqrt(b)) * tan(theta)
-            # Do not restrict the domain: tan(theta) takes on any real
-            # value on the interval -pi/2 < theta < pi/2 so x takes on
-            # any value
-            restriction = True
-        elif a_positive and b_negative:
-            # a**2 - b*x**2. Assume cos(theta) > 0, -pi/2 < theta < pi/2
-            constant = sqrt(a)/sqrt(-b)
-            x_func = constant * sin(theta)
-            restriction = And(symbol > -constant, symbol < constant)
-        elif a_negative and b_positive:
-            # b*x**2 - a**2. Assume sin(theta) > 0, 0 < theta < pi
-            constant = sqrt(-a)/sqrt(b)
-            x_func = constant * sec(theta)
-            restriction = And(symbol > -constant, symbol < constant)
-        if x_func:
-            # Manually simplify sqrt(trig(theta)**2) to trig(theta)
-            # Valid due to assumed domain restriction
-            substitutions = {}
-            for f in [sin, cos, tan,
-                      sec, csc, cot]:
-                substitutions[sqrt(f(theta)**2)] = f(theta)
-                substitutions[sqrt(f(theta)**(-2))] = 1/f(theta)
+        if not (a_positive and b_positive):
+            return None
+        if base0 is None:
+            base0 = base
+            a0, b0 = a, b
+            ratio = S.One
+        else:
+            ratio = (base/base0).cancel()
+             # cannot substitute both sqrt(1 + x**2) and sqrt(2 + x**2)
+            if ratio.has(symbol):
+                return None
+        powers.append((pow_, ratio, exp_))
 
-            replaced = integrand.subs(symbol, x_func).trigsimp()
-            replaced = manual_subs(replaced, substitutions)
-            if not replaced.has(symbol):
-                replaced *= manual_diff(x_func, theta)
-                replaced = replaced.trigsimp()
-                secants = replaced.find(1/cos(theta))
-                if secants:
-                    replaced = replaced.xreplace({
-                        1/cos(theta): sec(theta)
-                    })
+    if powers:
+        theta = Dummy("theta", real=True)
+        c = sqrt(a0)/sqrt(b0)
+        x_func = c*tan(theta)
+        # after substitution, sqrt(a + b*x**2) becomes sqrt(a0*sec**2(theta))
+        # assuming -pi/2 < theta < pi/2, Sec(theta) > 0, we can take sec out of sqrt (if x and theta are real)
+        # assumption is valid since replacing theta with atan(x/c) will be in this interval
+        root_base0 = sqrt(a0)*sec(theta)
+        power_substitutions = {}
+        for pow_, ratio, exp_ in powers:
+            power_substitutions[pow_] = ratio**exp_ * root_base0**(2*exp_)
+        replaced = integrand.xreplace(power_substitutions)
+        replaced = replaced.subs(symbol, x_func).trigsimp()
 
-                substep = integral_steps(replaced, theta)
-                if not substep.contains_dont_know():
-                    return TrigSubstitutionRule(integrand, symbol,
-                        theta, x_func, replaced, substep, restriction)
+        return _try_tan_substitution(c, replaced)
+
+    # rational path, still used for cases like 1/(x**2 + 1)**2
+    for expr in ordered(integrand.find(target_pattern)):
+        theta = Dummy("theta")
+        match = expr.match(target_pattern)
+        if not match:
+            continue
+        a = match[A]
+        b = match[B]
+        a_positive = ((a.is_number and a > 0) or a.is_positive)
+        b_positive = ((b.is_number and b > 0) or b.is_positive)
+        if not (a_positive and b_positive):
+            continue
+        c = sqrt(a)/sqrt(b)
+        x_func = c*tan(theta)
+        replaced = integrand.subs(symbol, x_func).trigsimp()
+        step = _try_tan_substitution(c, replaced)
+        # different substitutions could lead to simpler integrands, given 1/(((x**2 + 1)**2)*(x**2 + 4))
+        # x=tan(theta) gives cos(theta)**2/(tan(theta)**2 + 4)
+        # x=2*tan(theta) gives 1/(2*(4*tan(theta)**2 + 1)**2)
+        if step is not None:
+            return step
+    return None
+
 
 def heaviside_rule(integral):
     integrand, symbol = integral

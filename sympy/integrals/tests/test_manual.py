@@ -242,12 +242,7 @@ def test_manualintegrate_inversetrig():
 
 
 def test_manualintegrate_trig_substitution():
-    assert manualintegrate(sqrt(16*x**2 - 9)/x, x) == \
-        Piecewise((sqrt(16*x**2 - 9) - 3*acos(3/(4*x)),
-                   And(x < Rational(3, 4), x > Rational(-3, 4))))
-    assert manualintegrate(1/(x**4 * sqrt(25-x**2)), x) == \
-        Piecewise((-sqrt(-x**2/25 + 1)/(125*x) -
-                   (-x**2/25 + 1)**(3*S.Half)/(15*x**3), And(x < 5, x > -5)))
+    x = Symbol("x", real=True)
     assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
         sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
 
@@ -589,6 +584,7 @@ def test_cyclic_parts():
 
 @slow
 def test_issue_10847_slow():
+    x = symbols("x", real=True)
     assert manualintegrate((4*x**4 + 4*x**3 + 16*x**2 + 12*x + 8)
                            / (x**6 + 2*x**5 + 3*x**4 + 4*x**3 + 3*x**2 + 2*x + 1), x) == \
                            8*x/(4*x**2 + 4) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
