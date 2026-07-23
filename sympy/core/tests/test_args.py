@@ -4329,6 +4329,11 @@ def test_sympy__physics__secondquant__InnerProduct():
     assert _test_args(InnerProduct(FockStateBra((0, 1)), FockStateKet((0, 1))))
 
 
+def test_sympy__physics__secondquant__KroneckerDelta():
+    from sympy.physics.secondquant import KroneckerDelta
+    assert _test_args(KroneckerDelta(x, y))
+
+
 def test_sympy__physics__secondquant__NO():
     from sympy.physics.secondquant import NO, F, Fd
     assert _test_args(NO(Fd(x)*F(y)))
