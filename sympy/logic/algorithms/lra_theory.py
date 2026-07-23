@@ -176,11 +176,12 @@ class LRASolver():
 
         self.atom_id_to_boundaries = atom_id_to_boundaries
         self.A = A
-        self.slack = slack_variables
-        self.nonslack = nonslack_variables
-        self.all_var = nonslack_variables + slack_variables
+        # initially slack/basic and nonslack/nonbasic mean the same thing.
+        # however, basic/nonbasic can be modified in process meanwhile slack/nonslack stays constant.
+        self.basic = slack_variables
+        self.nonbasic = set(nonslack_variables)
 
-        self.slack_set = set(slack_variables)
+        self.all_var = nonslack_variables + slack_variables
 
         self.is_sat = True  # While True, all constraints asserted so far are satisfiable
         self.result = None  # always one of: (True, assignment), (False, conflict clause), None
@@ -351,7 +352,7 @@ class LRASolver():
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
         # matrix A is guaranteed to able to be simplified
-        # by removing the non-basic (e.g original) non-atom variables from it
+        # by removing the non-basic (e.g original or nonslack) non-atom variables from it
         # these removed variables will be replaced by linear equation of existing variables.
         nonatom_vars = {i for i in nonbasic if i not in atom_vars}
         A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode)
@@ -418,7 +419,7 @@ class LRASolver():
             if res and res[0] is False:
                 break
 
-        if self.is_sat and all(b.var not in self.slack_set for b in boundaries):
+        if self.is_sat and all(b.var in self.nonbasic for b in boundaries):
             self.is_sat = res is None
         else:
             self.is_sat = False
@@ -431,8 +432,10 @@ class LRASolver():
         more limiting. The assignment of variable xi is adjusted to be
         within the new bound if needed.
 
-        Also calls `self._update` to update the assignment for slack variables
+        Also calls `self._update` to update the assignment for basic variables
         to keep all equalities satisfied.
+
+        This method is the combination of AssertUpper and AssertLower in [1]
         """
         if self.result:
             assert self.result[0] != False
@@ -468,7 +471,7 @@ class LRASolver():
 
         xi.set_bound(boundary, literal)
 
-        if xi in self.nonslack and xi.assign * s > c_norm:
+        if xi in self.nonbasic and xi.assign * s > c_norm:
             self._update(xi, ci)
 
         if self.run_checks and all(not math.isinf(v.assign.q)
@@ -481,12 +484,12 @@ class LRASolver():
 
     def _update(self, xi, v):
         """
-        Updates all slack variables that have equations that contain
-        variable xi so that they stay satisfied given xi is equal to v.
+        Updates all basic variables that have equations that contain
+        nonbasic variable xi so that they stay satisfied given xi is equal to v.
         """
         i = xi.col_idx
         assert i is not None
-        for j, b in enumerate(self.slack):
+        for j, b in enumerate(self.basic):
             aji = self.A[j, i]
             b.assign = b.assign + (v - xi.assign)*aji
         xi.assign = v
@@ -517,8 +520,8 @@ class LRASolver():
 
         from sympy.matrices.dense import Matrix
         M = self.A.copy()
-        basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
-        nonbasic = set(self.nonslack)
+        basic = {s: i for i, s in enumerate(self.basic)}  # contains the row index associated with each basic variable
+        nonbasic = set(self.nonbasic)
         while True:
             if self.run_checks:
                 # nonbasic variables must always be within bounds
