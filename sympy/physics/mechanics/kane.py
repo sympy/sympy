@@ -360,15 +360,23 @@ class KanesMethod(MethodBase):
 
         # Initialize velocity and acceleration constraints
         self._nonholonomic_constraints = none_handler(nonholonomic)
-        if self.nonholonomic_constraints:
+        vel = none_handler(vel)
+        if vel:  # use the user supplied velocity constraints
+            self._velocity_constraints = msubs(vel, self._qdot_u_map)
+        elif self.holonomic_constraints and self.nonholonomic_constraints:
             con_diff = msubs(
                 self.holonomic_constraints.diff(t),
                 self._qdot_u_map)
             self._velocity_constraints = con_diff.col_join(
                 self.nonholonomic_constraints)
+        elif not self.holonomic_constraints and self.nonholonomic_constraints:
+            self._velocity_constraints = self.nonholonomic_constraints
+        elif self.holonomic_constraints and not self.nonholonomic_constraints:
+            self._velocity_constraints = msubs(
+                self.holonomic_constraints.diff(t),
+                self._qdot_u_map)
         else:
-            self._velocity_constraints = msubs(none_handler(vel),
-                                               self._qdot_u_map)
+            self._velocity_constraints = Matrix([])
 
         acc = none_handler(acc)
         if len(self.velocity_constraints) != num_dep_speeds:
