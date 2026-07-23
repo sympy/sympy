@@ -191,8 +191,6 @@ def compose_algebraic_tensors(left, right):
             right_shape = right.shape
         elif isinstance(right, _PT):
             right_shape = right.shape
-        elif hasattr(right, "shape"):
-            right_shape = (right.shape,)
         else:
             raise TypeError(
                 f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
@@ -221,8 +219,6 @@ def compose_algebraic_tensors(left, right):
             left_shape = left.shape
         elif isinstance(left, _PT):
             left_shape = left.shape
-        elif hasattr(left, "shape"):
-            left_shape = (left.shape,)
         else:
             raise TypeError(
                 f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
@@ -260,9 +256,9 @@ def compose_algebraic_tensors(left, right):
                     results.append(comp)
         return _compose_reassemble(results, left.shape)
 
-    # --- PureTensor / bare matrix × AlgebraicTensor ---
+    # --- PureTensor × AlgebraicTensor ---
     if isinstance(right, AlgebraicTensor):
-        if isinstance(left, _PT) or hasattr(left, "shape"):
+        if isinstance(left, _PT):
             results = []
             for a in right.args:
                 if isinstance(a, _ZT):
@@ -277,23 +273,17 @@ def compose_algebraic_tensors(left, right):
             f"the left, got {type(left).__name__}"
         )
 
-    # --- AlgebraicTensor × PureTensor / bare matrix ---
+    # --- AlgebraicTensor × PureTensor ---
     if isinstance(left, AlgebraicTensor):
-        if isinstance(right, _PT) or hasattr(right, "shape"):
+        if isinstance(right, _PT):
             return left._compose_with_term(right)
         raise TypeError(
             f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
             f"the right, got {type(right).__name__}"
         )
 
-    # --- PureTensor / bare matrix × PureTensor / bare matrix ---
+    # --- PureTensor × PureTensor ---
     if isinstance(left, _PT) and isinstance(right, _PT):
-        return compose_algebraic_pure_tensors(left, right)
-    if isinstance(left, _PT) and hasattr(right, "shape"):
-        return compose_algebraic_pure_tensors(left, right)
-    if hasattr(left, "shape") and isinstance(right, _PT):
-        return compose_algebraic_pure_tensors(left, right)
-    if hasattr(left, "shape") and hasattr(right, "shape"):
         return compose_algebraic_pure_tensors(left, right)
 
     raise TypeError(
@@ -792,9 +782,6 @@ class AlgebraicTensor(Basic):
                         break
                 else:
                     results.append(a)
-            elif hasattr(a, "shape"):
-                comp = compose_algebraic_pure_tensors(a, other)
-                results.append(comp)
             else:
                 results.append(a)
 

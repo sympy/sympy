@@ -744,11 +744,9 @@ def compose_algebraic_pure_tensors(left, right):
         # Extract factors from right to compute composed shape
         if isinstance(right, AlgebraicPureTensor):
             right_factors = right.factors
-        elif hasattr(right, "shape"):
-            right_factors = (right,)
         else:
             raise TypeError(
-                f"Expected AlgebraicPureTensor or a matrix-like object on the right, "
+                f"Expected AlgebraicPureTensor object on the right, "
                 f"got {type(right).__name__}"
             )
         if len(left.shape) != len(right_factors):
@@ -772,11 +770,9 @@ def compose_algebraic_pure_tensors(left, right):
         # Extract factors from left to compute composed shape
         if isinstance(left, AlgebraicPureTensor):
             left_factors = left.factors
-        elif hasattr(left, "shape"):
-            left_factors = (left,)
         else:
             raise TypeError(
-                f"Expected AlgebraicPureTensor or a matrix-like object on the left, "
+                f"Expected AlgebraicPureTensor on the left, "
                 f"got {type(left).__name__}"
             )
         if len(left_factors) != len(right.shape):
@@ -800,24 +796,18 @@ def compose_algebraic_pure_tensors(left, right):
     if isinstance(left, AlgebraicPureTensor):
         left_factors = left.factors
         left_coeff = left.coeff
-    elif hasattr(left, "shape"):
-        left_factors = (left,)
-        left_coeff = S.One
     else:
         raise TypeError(
-            f"Expected AlgebraicPureTensor or a matrix-like object on the left, "
+            f"Expected AlgebraicPureTensor on the left, "
             f"got {type(left).__name__}"
         )
 
     if isinstance(right, AlgebraicPureTensor):
         right_factors = right.factors
         right_coeff = right.coeff
-    elif hasattr(right, "shape"):
-        right_factors = (right,)
-        right_coeff = S.One
     else:
         raise TypeError(
-            f"Expected AlgebraicPureTensor or a matrix-like object on the right, "
+            f"Expected AlgebraicPureTensor on the right, "
             f"got {type(right).__name__}"
         )
 
