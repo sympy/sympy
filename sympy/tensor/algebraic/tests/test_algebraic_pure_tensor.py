@@ -329,9 +329,7 @@ def test_pure_tensor_add_with_dispatched_zeromatrix():
 
 
 def test_pure_tensor_compose_with_dispatched_zeromatrix():
-    """PureTensor * ZeroMatrix routes through composition; ZeroMatrix * PureTensor through MatMul."""
-    from sympy.tensor.algebraic.algebraic_pure_tensor import ShapeMismatchError
-
+    """PureTensor * ZeroMatrix raises TypeError; ZeroMatrix * PureTensor through MatMul."""
     zm = AlgebraicZeroTensor((3, 4))  # dispatches to ZeroMatrix
     A = MatrixSymbol("A", 3, 2)
     B = MatrixSymbol("B", 4, 5)
@@ -341,6 +339,5 @@ def test_pure_tensor_compose_with_dispatched_zeromatrix():
     result = zm * pt
     assert result.shape == zm.shape
 
-    # Reverse: AlgebraicPureTensor.__rmul__ delegates to composition,
-    # which sees factor count mismatch (2 factors vs 1 bare matrix)
-    raises(ShapeMismatchError, lambda: pt * zm)
+    # Reverse: AlgebraicPureTensor.__mul__ rejects ZeroMatrix with TypeError
+    raises(TypeError, lambda: pt * zm)

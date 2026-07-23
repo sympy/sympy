@@ -50,12 +50,6 @@ Scale a pure tensor by a numeric or symbolic coefficient:
 >>> AlgebraicPureTensor(x, A, B)
 x*A ⊗ B
 
-Create a zero tensor for a given shape:
-
->>> from sympy.tensor.algebraic import algebraic_zero_tensor
->>> Z = algebraic_zero_tensor(((3, 4), (4, 5)))
->>> Z
-0_{(3x4), (4x5)}
 """
 
 from sympy.tensor.algebraic.algebraic_tensor import (
@@ -68,10 +62,7 @@ from sympy.tensor.algebraic.algebraic_pure_tensor import (
     ShapeMismatchError,
     compose_algebraic_pure_tensors,
 )
-from sympy.tensor.algebraic.algebraic_zero_tensor import (
-    AlgebraicZeroTensor,
-    algebraic_zero_tensor,
-)
+from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 from sympy.tensor.algebraic.simplify import tensorsimplify
 
 __all__ = [
@@ -80,7 +71,6 @@ __all__ = [
     "AlgebraicZeroTensor",
     "ShapeMismatchError",
     "algebraic_tensor_product",
-    "algebraic_zero_tensor",
     "compose_algebraic_pure_tensors",
     "compose_algebraic_tensors",
     "tensorsimplify",

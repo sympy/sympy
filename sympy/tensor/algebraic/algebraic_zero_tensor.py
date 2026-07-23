@@ -120,6 +120,13 @@ class AlgebraicZeroTensor(Basic):
 
     def __mul__(self, other):
         other = sympify(other)
+        from sympy.matrices import Matrix, ImmutableDenseMatrix
+        from sympy.matrices.expressions import MatrixSymbol
+        from sympy.matrices.expressions.special import ZeroMatrix
+        if isinstance(other, (Matrix, ImmutableDenseMatrix, MatrixSymbol, ZeroMatrix)):
+            raise TypeError(
+                f"Cannot multiply AlgebraicZeroTensor with {type(other).__name__}"
+            )
         if isinstance(other, Number) or (
             hasattr(other, 'is_commutative') and not (hasattr(other, 'is_AlgebraicZeroTensor') or \
             hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))
@@ -130,6 +137,13 @@ class AlgebraicZeroTensor(Basic):
 
     def __rmul__(self, other):
         other = sympify(other)
+        from sympy.matrices import Matrix, ImmutableDenseMatrix
+        from sympy.matrices.expressions import MatrixSymbol
+        from sympy.matrices.expressions.special import ZeroMatrix
+        if isinstance(other, (Matrix, ImmutableDenseMatrix, MatrixSymbol, ZeroMatrix)):
+            raise TypeError(
+                f"Cannot multiply {type(other).__name__} with AlgebraicZeroTensor"
+            )
         if isinstance(other, Number) or (
             hasattr(other, 'is_commutative') and not (hasattr(other, 'is_AlgebraicZeroTensor') or \
             hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))
@@ -170,28 +184,3 @@ class AlgebraicZeroTensor(Basic):
 
     def diff(self, *symbols, **assumptions):
         return self
-
-
-def algebraic_zero_tensor(shape):
-    """Convenience constructor for AlgebraicZeroTensor.
-
-    Parameters
-    ----------
-    shape : tuple of tuples, or a single (rows, cols) pair
-        The full tensor shape, e.g. ``((3, 4), (4, 5))`` for a product
-        of a 3x4 matrix and a 4x5 matrix, or ``((3, 4),)`` for a single
-        3x4 factor.  A bare pair ``(3, 4)`` is accepted and wrapped as
-        ``((3, 4),)``.
-
-    Returns
-    -------
-    AlgebraicZeroTensor
-
-    Examples
-    ========
-
-    >>> from sympy.tensor.algebraic import algebraic_zero_tensor
-    >>> print(algebraic_zero_tensor(((3, 4), (4, 5))))
-    0_{(3x4), (4x5)}
-    """
-    return AlgebraicZeroTensor(shape)

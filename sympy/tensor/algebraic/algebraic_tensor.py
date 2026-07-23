@@ -830,6 +830,13 @@ class AlgebraicTensor(Basic):
 
     def __mul__(self, other):
         other = sympify(other)
+        from sympy.matrices import Matrix, ImmutableDenseMatrix
+        from sympy.matrices.expressions import MatrixSymbol
+        from sympy.matrices.expressions.special import ZeroMatrix
+        if isinstance(other, (Matrix, ImmutableDenseMatrix, MatrixSymbol, ZeroMatrix)):
+            raise TypeError(
+                f"Cannot multiply AlgebraicTensor with {type(other).__name__}"
+            )
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
                 other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor))):
             return AlgebraicTensor(*(a * other for a in self.args))
@@ -837,6 +844,13 @@ class AlgebraicTensor(Basic):
 
     def __rmul__(self, other):
         other = sympify(other)
+        from sympy.matrices import Matrix, ImmutableDenseMatrix
+        from sympy.matrices.expressions import MatrixSymbol
+        from sympy.matrices.expressions.special import ZeroMatrix
+        if isinstance(other, (Matrix, ImmutableDenseMatrix, MatrixSymbol, ZeroMatrix)):
+            raise TypeError(
+                f"Cannot multiply {type(other).__name__} with AlgebraicTensor"
+            )
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
                 other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor))):
             return AlgebraicTensor(*(other * a for a in self.args))

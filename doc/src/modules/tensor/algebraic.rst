@@ -25,8 +25,6 @@ Functions
 
 .. autofunction:: sympy.tensor.algebraic.algebraic_tensor_product
 
-.. autofunction:: sympy.tensor.algebraic.algebraic_zero_tensor
-
 .. autofunction:: sympy.tensor.algebraic.compose_algebraic_pure_tensors
 
 .. autofunction:: sympy.tensor.algebraic.compose_algebraic_tensors

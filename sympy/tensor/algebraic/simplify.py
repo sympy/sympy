@@ -393,8 +393,8 @@ def _equality_factoring(at):
     all_terms = rebuilt_terms + non_tensor
 
     if not all_terms:
-        from sympy.tensor.algebraic.algebraic_zero_tensor import algebraic_zero_tensor
-        return algebraic_zero_tensor(at.shape)
+        from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+        return AlgebraicZeroTensor(at.shape)
 
     if len(all_terms) == 1:
         return all_terms[0]

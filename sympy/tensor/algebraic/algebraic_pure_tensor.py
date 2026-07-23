@@ -127,8 +127,6 @@ class AlgebraicPureTensor(Basic):
 
     _op_priority = 11  # Higher than Symbol/Expr so x * pt delegates to pt.__rmul__(x)
 
-    #_eval_is_commutative = lambda self: False
-
     @property
     def coeff(self):
         """The commutative coefficient of this tensor.
@@ -275,6 +273,13 @@ class AlgebraicPureTensor(Basic):
 
     def __mul__(self, other):
         other = sympify(other)
+        from sympy.matrices import Matrix, ImmutableDenseMatrix
+        from sympy.matrices.expressions import MatrixSymbol
+        from sympy.matrices.expressions.special import ZeroMatrix
+        if isinstance(other, (Matrix, ImmutableDenseMatrix, MatrixSymbol, ZeroMatrix)):
+            raise TypeError(
+                f"Cannot multiply AlgebraicPureTensor with {type(other).__name__}"
+            )
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
                 other.is_commutative and not (hasattr(other, 'is_AlgebraicZeroTensor') or
                 hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))):
@@ -296,6 +301,13 @@ class AlgebraicPureTensor(Basic):
         if other == 1:
             return self
         other = sympify(other)
+        from sympy.matrices import Matrix, ImmutableDenseMatrix
+        from sympy.matrices.expressions import MatrixSymbol
+        from sympy.matrices.expressions.special import ZeroMatrix
+        if isinstance(other, (Matrix, ImmutableDenseMatrix, MatrixSymbol, ZeroMatrix)):
+            raise TypeError(
+                f"Cannot multiply {type(other).__name__} with AlgebraicPureTensor"
+            )
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
                 other.is_commutative and not (hasattr(other, 'is_AlgebraicZeroTensor') or
                 hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))):

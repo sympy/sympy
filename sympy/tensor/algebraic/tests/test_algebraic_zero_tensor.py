@@ -2,7 +2,7 @@
 from sympy.core.symbol import Symbol
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
 from sympy.testing.pytest import raises
-from sympy.tensor.algebraic import AlgebraicZeroTensor, algebraic_zero_tensor
+from sympy.tensor.algebraic import AlgebraicZeroTensor
 
 
 # ---------------------------------------------------------------------------
@@ -15,8 +15,8 @@ def test_algebraic_zero_tensor_constructor():
     Z2 = AlgebraicZeroTensor(((3, 4), (4, 5)))
     assert Z2.shape == ((3, 4), (4, 5))
 
-    # Convenience function with multi-factor shape
-    Z6 = algebraic_zero_tensor(((2, 3), (3, 4)))
+    # Multi-factor shape via direct constructor
+    Z6 = AlgebraicZeroTensor(((2, 3), (3, 4)))
     assert Z6.shape == ((2, 3), (3, 4))
 
 
@@ -211,7 +211,7 @@ def test_single_factor_dispatch_to_zero_matrix():
     assert isinstance(Z3, ZeroMatrix)
     assert Z3.shape == (3, 4)
 
-    Z4 = algebraic_zero_tensor((2, 3))
+    Z4 = AlgebraicZeroTensor((2, 3))
     assert isinstance(Z4, ZeroMatrix)
     assert Z4.shape == (2, 3)
 
@@ -252,7 +252,7 @@ def test_zeromatrix_cannot_add_to_multifactor_zero_tensor():
 
 
 def test_zeromatrix_compose_with_zero_tensor():
-    """ZeroMatrix * AlgebraicZeroTensor routes through MatMul, not composition."""
+    """ZeroMatrix * AlgebraicZeroTensor routes through MatMul; reverse raises TypeError."""
     zm = AlgebraicZeroTensor((3, 4))  # dispatches to ZeroMatrix
     azt = AlgebraicZeroTensor(((3, 4), (4, 5)))
 
@@ -261,10 +261,7 @@ def test_zeromatrix_compose_with_zero_tensor():
     result = zm * azt
     assert result.shape == zm.shape  # MatMul simplifies zero * anything -> zero
 
-    # Reverse: AlgebraicZeroTensor.__rmul__ sees non-commutative operand,
-    # delegates to compose_algebraic_tensors which treats zm as bare matrix.
-    result2 = azt * zm
-    assert isinstance(result2, AlgebraicZeroTensor)
-    assert result2.shape == azt.shape
+    # Reverse: AlgebraicZeroTensor.__mul__ rejects ZeroMatrix with TypeError
+    raises(TypeError, lambda: azt * zm)
 
 
