@@ -1857,7 +1857,35 @@ class Basic(Printable):
         return dict(Counter(results))
 
     def count(self, query):
-        """Count the number of matching subexpressions."""
+        """
+        Count the number of matching subexpressions.
+
+        query : type, Basic, or callable
+            Same semantics as in ``find()``.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Wild
+        >>> from sympy.abc import x, y
+
+        >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
+        >>> expr.count(sin)
+        3
+
+        >>> w = Wild('w')
+        >>> expr.count(sin(w))
+        3
+
+        >>> expr.count(lambda e: e.is_Symbol)
+        5
+
+        See Also
+        ========
+
+        find : return matching subexpressions instead of a count
+        has : test whether any match exists
+        """
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 

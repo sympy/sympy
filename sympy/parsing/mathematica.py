@@ -83,6 +83,33 @@ def parse_mathematica(s):
     return parser.parse(s)
 
 
+def parse_mathematica_to_fullformlist(s):
+    """
+    Translate a string containing a Wolfram Mathematica expression to its
+    ``FullForm`` represented as nested Python lists.
+
+    This is the intermediate representation produced by
+    :func:`parse_mathematica` before it is turned into a SymPy expression:
+    each node is a list whose first element is the head (as a string) followed
+    by its arguments, and atoms are left as strings. It is useful when the SymPy
+    conversion is undesired, for example to inspect the parsed syntax tree or to
+    perform a custom conversion.
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.mathematica import parse_mathematica_to_fullformlist
+    >>> parse_mathematica_to_fullformlist("Sin[x]^2 Tan[y]")
+    ['Times', ['Power', ['Sin', 'x'], '2'], ['Tan', 'y']]
+    >>> parse_mathematica_to_fullformlist("x*(a + b)")
+    ['Times', 'x', ['Plus', 'a', 'b']]
+    >>> parse_mathematica_to_fullformlist("F[7, 5, 3]")
+    ['F', '7', '5', '3']
+    """
+    parser = MathematicaParser()
+    return parser.parse_fullformlist(s)
+
+
 def _parse_Function(*args):
     if len(args) == 1:
         arg = args[0]
@@ -593,11 +620,15 @@ class MathematicaParser:
         return s
 
     def parse(self, s):
+        s4 = self.parse_fullformlist(s)
+        s5 = self._from_fullformlist_to_sympy(s4)
+        return s5
+
+    def parse_fullformlist(self, s):
         s2 = named_characters_to_unicode(s)
         s3 = self._from_mathematica_to_tokens(s2)
         s4 = self._from_tokens_to_fullformlist(s3)
-        s5 = self._from_fullformlist_to_sympy(s4)
-        return s5
+        return s4
 
     INFIX = "Infix"
     PREFIX = "Prefix"
@@ -610,10 +641,14 @@ class MathematicaParser:
         (POSTFIX, None, {";": lambda x: x + ["Null"] if isinstance(x, list) and x and x[0] == "CompoundExpression" else ["CompoundExpression", x, "Null"]}),
         (INFIX, FLAT, {";": "CompoundExpression"}),
         (INFIX, RIGHT, {"=": "Set", ":=": "SetDelayed", "+=": "AddTo", "-=": "SubtractFrom", "*=": "TimesBy", "/=": "DivideBy"}),
-        (INFIX, LEFT, {"//": lambda x, y: [x, y]}),
+        (INFIX, RIGHT, {"\N{THEREFORE}": "Therefore"}),
+        # ``x // y`` is postfix function application, equivalent to ``y[x]``
+        # (e.g. ``expr // Simplify`` means ``Simplify[expr]``).
+        (INFIX, LEFT, {"//": lambda x, y: [y, x]}),
         (POSTFIX, None, {"&": "Function"}),
         (INFIX, LEFT, {"/.": "ReplaceAll"}),
         (INFIX, RIGHT, {"->": "Rule", ":>": "RuleDelayed"}),
+        (INFIX, FLAT, {"\N{LEFT RIGHT ARROW}": "LeftRightArrow"}),
         (INFIX, LEFT, {"/;": "Condition"}),
         (INFIX, FLAT, {"|": "Alternatives"}),
         (POSTFIX, None, {"..": "Repeated", "...": "RepeatedNull"}),
@@ -622,17 +657,29 @@ class MathematicaParser:
         (PREFIX, None, {"!": "Not"}),
         (INFIX, FLAT, {"===": "SameQ", "=!=": "UnsameQ"}),
         (INFIX, FLAT, {"==": "Equal", "!=": "Unequal", "<=": "LessEqual", "<": "Less", ">=": "GreaterEqual", ">": "Greater"}),
-        (INFIX, None, {";;": "Span"}),
+        (INFIX, FLAT, {"\N{ALMOST EQUAL TO}": "TildeTilde"}),
+        (INFIX, FLAT, {";;": "Span"}),
         (INFIX, FLAT, {"+": "Plus", "-": "Plus"}),
+        (INFIX, FLAT, {"\N{CIRCLED PLUS}": "CirclePlus"}),
+        (INFIX, FLAT, {"\N{STAR OPERATOR}": "Star"}),
         (INFIX, FLAT, {"*": "Times", "/": "Times"}),
+        (INFIX, FLAT, {"\N{CIRCLED TIMES}": "CircleTimes"}),
         (INFIX, FLAT, {".": "Dot"}),
         (PREFIX, None, {"-": lambda x: MathematicaParser._get_neg(x),
                         "+": lambda x: x}),
+        (PREFIX, None, {"\N{NABLA}": "Del", "\N{WHITE SQUARE}": "Square"}),
         (INFIX, RIGHT, {"^": "Power"}),
         (INFIX, RIGHT, {"@@": "Apply", "/@": "Map", "//@": "MapAll", "@@@": lambda x, y: ["Apply", x, y, ["List", "1"]]}),
-        (POSTFIX, None, {"'": "Derivative", "!": "Factorial", "!!": "Factorial2", "--": "Decrement"}),
+        # ``f @ x`` is prefix function application, equivalent to ``f[x]``.  It
+        # binds tighter than ``^`` and ``@@`` but looser than ``'`` and ``[``.
+        (INFIX, RIGHT, {"@": lambda x, y: [x, y]}),
+        # ``f'`` is ``Derivative[1][f]``; each extra prime raises the order, so
+        # ``f''`` is ``Derivative[2][f]`` (not ``Derivative[Derivative[f]]``).
+        (POSTFIX, None, {"'": lambda x: MathematicaParser._get_derivative(x),
+                         "!": "Factorial", "!!": "Factorial2", "--": "Decrement"}),
         (INFIX, None, {"[": lambda x, y: [x, *y], "[[": lambda x, y: ["Part", x, *y]}),
-        (PREFIX, None, {"{": lambda x: ["List", *x], "(": lambda x: x[0]}),
+        (PREFIX, None, {"{": lambda x: ["List", *x], "(": lambda x: x[0],
+                        "\N{LEFT-POINTING ANGLE BRACKET}": lambda x: ["AngleBracket", *x]}),
         (INFIX, None, {"?": "PatternTest"}),
         (POSTFIX, None, {
             "_": lambda x: ["Pattern", x, ["Blank"]],
@@ -666,8 +713,8 @@ class MathematicaParser:
 
     _number = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
 
-    _enclosure_open = ["(", "[", "[[", "{"]
-    _enclosure_close = [")", "]", "]]", "}"]
+    _enclosure_open = ["(", "[", "[[", "{", "\N{LEFT-POINTING ANGLE BRACKET}"]
+    _enclosure_close = [")", "]", "]]", "}", "\N{RIGHT-POINTING ANGLE BRACKET}"]
 
     @classmethod
     def _get_neg(cls, x):
@@ -676,6 +723,15 @@ class MathematicaParser:
     @classmethod
     def _get_inv(cls, x):
         return ["Power", x, "-1"]
+
+    @classmethod
+    def _get_derivative(cls, x):
+        # ``x'`` is ``Derivative[1][x]``.  Stacking primes raises the order:
+        # ``x''`` is ``Derivative[2][x]``, not ``Derivative[Derivative[x]]``.
+        if (isinstance(x, list) and len(x) == 2 and isinstance(x[0], list)
+                and len(x[0]) == 2 and x[0][0] == "Derivative"):
+            return [["Derivative", str(int(x[0][1]) + 1)], x[1]]
+        return [["Derivative", "1"], x]
 
     _regex_tokenizer = None
 
@@ -942,13 +998,26 @@ class MathematicaParser:
                                 size -= 2
                             node_p.append(arg2)
                         elif grouping_strat == self.RIGHT:
-                            while pointer + 2 < size and tokens[pointer+1] == token:
-                                node_p.append([op_name, arg2])
-                                node_p = node_p[-1]
-                                tokens.pop(pointer+1)
-                                arg2 = tokens.pop(pointer+1)
+                            # Collect the whole right-associative chain of
+                            # operands, then nest from the right.  The outermost
+                            # application is left for the ``op_name(*node)`` call
+                            # below (needed when ``op_name`` is a callable, e.g.
+                            # ``@`` or ``@@@``); for a string head the node is
+                            # built here directly.
+                            operands = [arg1, arg2]
+                            while pointer + 2 < size and tokens[pointer + 1] == token:
+                                tokens.pop(pointer + 1)
+                                operands.append(tokens.pop(pointer + 1))
                                 size -= 2
-                            node_p.append(arg2)
+                            rest = operands[-1]
+                            for left in reversed(operands[1:-1]):
+                                rest = ([op_name, left, rest] if isinstance(op_name, str)
+                                        else op_name(left, rest))
+                            node.clear()
+                            if isinstance(op_name, str):
+                                node.extend([op_name, operands[0], rest])
+                            else:
+                                node.extend([operands[0], rest])
                         elif grouping_strat == self.LEFT:
                             while pointer + 1 < size and tokens[pointer+1] == token:
                                 if isinstance(op_name, str):
@@ -964,7 +1033,30 @@ class MathematicaParser:
                     elif op_type == self.PREFIX:
                         if grouping_strat is not None:
                             raise TypeError("'Prefix' op_type should not have a grouping strat")
-                        if pointer == size - 1 or self._is_op(tokens[pointer + 1]):
+                        if token in ("#", "##"):
+                            # Slot (``#``) and SlotSequence (``##``) have special
+                            # argument rules that mirror the Wolfram Language:
+                            #   #        -> Slot[1]
+                            #   #3       -> Slot[3]           (positional: integer)
+                            #   #name    -> Slot["name"]      (named: a string, i.e.
+                            #                                  ["_Str", "name"] here)
+                            #   ##       -> SlotSequence[1]
+                            #   ##3      -> SlotSequence[3]
+                            #   ##name   -> SlotSequence[1]*name  (SlotSequence only
+                            #                                      takes integer indices,
+                            #                                      so ``name`` is a
+                            #                                      separate factor)
+                            nxt = tokens[pointer + 1] if pointer + 1 < size else None
+                            is_number = isinstance(nxt, str) and re.fullmatch(self._number, nxt) is not None
+                            if nxt is None or self._is_op(nxt) or (token == "##" and not is_number):
+                                tokens[pointer] = self._missing_arguments_default[token]()
+                            elif is_number:
+                                node.append(tokens.pop(pointer + 1))
+                                size -= 1
+                            else:  # ``#`` followed by a named slot
+                                node.append(["_Str", tokens.pop(pointer + 1)])
+                                size -= 1
+                        elif pointer == size - 1 or self._is_op(tokens[pointer + 1]):
                             tokens[pointer] = self._missing_arguments_default[token]()
                         else:
                             node.append(tokens.pop(pointer+1))
