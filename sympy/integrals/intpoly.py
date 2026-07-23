@@ -93,6 +93,10 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
         facets = poly[1:]
         hp_params = hyperplane_parameters(facets, vertices)
 
+        if main_integrate3d(1, facets, vertices, hp_params).is_negative:
+            facets = [facet[::-1] for facet in facets]
+            hp_params = hyperplane_parameters(facets, vertices)
+
         if max_degree is None:
             if expr is None:
                 raise TypeError('Input expression must be a valid SymPy expression')
