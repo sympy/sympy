@@ -1895,9 +1895,7 @@ def quadratic_denom_rule(integral):
     den_const, den_x = den.as_independent(symbol, as_Add=False)
     if den_const != 1:
         num = num / den_const
-        den = den_x
-    else:
-        den = den_x
+    den = den_x
     if den.is_Pow:
         q = den.base
         n = den.exp
@@ -1915,7 +1913,7 @@ def quadratic_denom_rule(integral):
     if deg_num >= deg_den:
         return None
 
-    def _arctan_match(B, a, c, symbol, degenerate = True):
+    def _arctan_match(B, a, c, symbol, degenerate=True):
         # integrates B / a*x**2 + c
         integrand = B / (a*symbol**2 + c)
         pieces = []
@@ -1955,13 +1953,13 @@ def quadratic_denom_rule(integral):
         return general_rule
 
 
-    def _complete_square(B, a, b, c, n, symbol, degenerate_a = True, degenerate_discriminant = True):
+    def _complete_square(B, a, b, c, n, symbol, degenerate_a=True, degenerate_discriminant=True):
         # integrates B / (a*x**2 + b*x + c)**n
         pieces = []
         discriminant = 4*a*c - b**2
         denominator = a*symbol**2 + b*symbol + c
         integrand = B / denominator**n
-        # degenerate flags avoid to recalculate Piecewise branches recursively
+        # degenerate flags avoid recalculating Piecewise branches recursively
         if degenerate_a and not _if_zero_implies_zero(a, denominator):
             substituted = integrand.subs(a, 0)
             substep = integral_steps(substituted, symbol)
@@ -1984,7 +1982,7 @@ def quadratic_denom_rule(integral):
             # base case, B / (a*x**2 + b*x + c), solve by substitution with _arctan_match
             u = Dummy("u")
             u_func = symbol + b/(2*a)
-            # we put degenrate = False since after substitution, the integrand becomes  B/(a*u**2 + discriminant/(4*a)),
+            # we put degenerate = False since after substitution, the integrand becomes B/(a*u**2 + discriminant/(4*a)),
             # then the _arctan_match conditions (a != 0 and discriminant !=0) are already computed
             substep = _arctan_match(B, a, discriminant/(4*a), u, degenerate=False)
             general_step = URule(integrand, symbol, u, u_func, substep)
@@ -2031,14 +2029,14 @@ def quadratic_denom_rule(integral):
         if const != 1:
             step1 = ConstantTimesRule(const*qprime_part, symbol, const, qprime_part, step1)
         if numer2.is_zero:
-            rewriten = const*qprime_part
-            general_step = RewriteRule(integrand, symbol, rewriten, step1)
+            rewritten = const*qprime_part
+            general_step = RewriteRule(integrand, symbol, rewritten, step1)
         else:
             # since degenerate a condition is already computed, degenerate_a = False
             step2 = _complete_square(numer2, a, b, c, n, symbol, degenerate_a=False)
-            rewriten = const*qprime_part + numer2/denominator**n
-            substeps = AddRule(rewriten, symbol, [step1, step2])
-            general_step = RewriteRule(integrand, symbol, rewriten, substeps)
+            rewritten = const*qprime_part + numer2/denominator**n
+            substeps = AddRule(rewritten, symbol, [step1, step2])
+            general_step = RewriteRule(integrand, symbol, rewritten, substeps)
         if pieces:
             pieces.append((general_step, S.true))
             return PiecewiseRule(integrand, symbol, pieces)

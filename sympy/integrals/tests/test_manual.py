@@ -735,6 +735,11 @@ def test_quadratic_denom():
     assert (f.subs(c, 1/(2*a)) - (F[0][0].subs(c, 1/(2*a)).diff(x))).cancel() == 0
     # a != 0
     assert (f - F[1][0].diff(x)).cancel() == 0
+    # issue 30031: the Eq(b, 0) branch used to divide by b
+    h = a/(b*x**2 + c*x + d)
+    H = manualintegrate(h, x)
+    assert (h.subs({b: 0, c: 3}) - H.subs({b: 0, c: 3}).diff(x)).cancel() == 0
+    assert (h.subs({b: 0, c: 0}) - H.subs({b: 0, c: 0}).diff(x)).cancel() == 0
 
 
 def test_issue_22757():
