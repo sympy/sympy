@@ -12,12 +12,21 @@ integration result.
 The ``manualintegrate`` function computes the integral by calling ``eval``
 on the rule returned by ``integral_steps``.
 
+The integrator is split into stateless *rules* and a stateful *solver*
+(``IntegrationSolver``). A rule is a function that accepts an
+``IntegralInfo`` object — an ``(integrand, symbol)`` pair that also
+carries the active solver — and returns either a ``Rule`` instance or
+``None``; it must not solve subproblems recursively itself, but delegate
+them to the solver through ``integral.subsolve``. The solver owns all
+state of an integration run: loop detection, recursion depth, the
+integration-by-parts ``u`` counter and a trace of attempted subproblems.
+
 The integrator can be extended with new heuristics and evaluation
 techniques. To do so, extend the ``Rule`` class, implement ``eval`` method,
-then write a function that accepts an ``IntegralInfo`` object and returns
-either a ``Rule`` instance or ``None``. If the new technique requires a new
-match, add the key and call to the antiderivative function to integral_steps.
-To enable simple substitutions, add the match to find_substitutions.
+then write a rule function as described above. If the new technique
+requires a new match, add the key and call to the antiderivative function
+to the ``_integration_strategy`` table. To enable simple substitutions,
+add the match to find_substitutions.
 
 """
 
@@ -1164,9 +1173,150 @@ class EllipticERule(AtomicRule):
         return elliptic_e(self.variable, self.d/self.a)*sqrt(self.a)
 
 
-class IntegralInfo(NamedTuple):
+class IntegralInfo(tuple):
+    """A subproblem handed to the integration rules.
+
+    Behaves exactly like the ``(integrand, symbol)`` named tuple it used
+    to be (unpacking, indexing, ``*`` expansion), but additionally
+    carries the :class:`IntegrationSolver` of the current integration
+    run, so that rules can delegate subproblems through
+    :meth:`subsolve` while keeping their plain ``(integral)`` signature
+    and without any global state. If no solver is given, a fresh one is
+    created, so a rule can also be called standalone on a bare
+    ``IntegralInfo(integrand, symbol)``.
+    """
+
+    def __new__(cls, integrand, symbol, solver=None):
+        self = tuple.__new__(cls, (integrand, symbol))
+        self.solver = IntegrationSolver() if solver is None else solver
+        return self
+
+    @property
+    def integrand(self) -> Expr:
+        return self[0]
+
+    @property
+    def symbol(self) -> Symbol:
+        return self[1]
+
+    def subsolve(self, integrand, symbol) -> Rule:
+        """Delegate a subproblem to the solver of this integration run."""
+        return self.solver.subsolve(integrand, symbol)
+
+    def __repr__(self):
+        return 'IntegralInfo(integrand=%r, symbol=%r)' % (self[0], self[1])
+
+
+class RuleAttempt(NamedTuple):
+    """A record of one subproblem routed through the solver.
+
+    ``rule`` is the step produced for the subproblem; it is a
+    ``DontKnowRule`` if the subproblem could not be solved. ``depth`` is
+    the recursion depth at which the subproblem was attempted (0 for the
+    top-level integral).
+    """
     integrand: Expr
     symbol: Symbol
+    rule: Rule
+    depth: int
+
+
+# The same dummy variable must be used in the keys of the solver state
+# (loop detection, parts-u counter) for subproblems in different
+# variables to match.
+_cache_dummy = Dummy("z")
+
+
+class IntegrationSolver:
+    """Stateful orchestrator driving the stateless integration rules.
+
+    The solver owns all state of an integration run, which used to be
+    spread over module-level caches and the recursive calls of the
+    individual rules:
+
+    * loop detection: the set of subproblems currently being attempted,
+      used to break cyclic rewrites;
+    * recursion depth tracking, with an optional ``max_depth`` limit;
+    * the number of times a given ``u`` has been chosen by integration by
+      parts (``parts_u_count``), to stop endless ladders of parts;
+    * a ``trace`` recording every subproblem that was attempted and the
+      rule that resolved it, in post-order (innermost subproblems first).
+
+    Rules receive the solver through the :class:`IntegralInfo` they are
+    passed and delegate every subproblem to :meth:`subsolve` (usually as
+    ``integral.subsolve``) instead of recursing into one another
+    directly, so this class is the single place where recursion is
+    managed and where new solver-level policies (branching preferences,
+    priorities, ...) can be added.
+
+    Examples
+    ========
+
+    >>> from sympy import tan
+    >>> from sympy.integrals.manualintegrate import IntegrationSolver
+    >>> from sympy.abc import x
+    >>> solver = IntegrationSolver()
+    >>> rule = solver.subsolve(tan(x), x)
+    >>> for attempt in solver.trace:
+    ...     print(attempt.depth, type(attempt.rule).__name__)
+    2 ReciprocalRule
+    1 URule
+    0 RewriteRule
+    """
+
+    def __init__(self, max_depth=None, **options):
+        self.max_depth = max_depth
+        # Reserved for solver-level preferences (e.g. preferred rewrites
+        # of the result, branching heuristics).
+        self.options = options
+        self.trace: list[RuleAttempt] = []
+        self.parts_u_count: dict[Expr, int] = defaultdict(int)
+        self._active: set[Expr] = set()
+        self._depth = 0
+
+    def subsolve(self, integrand, symbol) -> Rule:
+        """Compute the integration steps of a (sub)problem.
+
+        This is the single entry point through which rules request the
+        solution of subproblems. Returns a :class:`Rule`, which is a
+        ``DontKnowRule`` if the subproblem leads around in a loop,
+        exceeds ``max_depth``, or cannot be solved.
+        """
+        key = integrand.xreplace({symbol: _cache_dummy})
+        if key in self._active:
+            # Stop this attempt, because it leads around in a loop
+            return DontKnowRule(integrand, symbol)
+        depth = self._depth
+        if self.max_depth is not None and depth >= self.max_depth:
+            return DontKnowRule(integrand, symbol)
+        self._active.add(key)
+        self._depth = depth + 1
+        try:
+            rule = _integration_strategy(IntegralInfo(integrand, symbol, self))
+        finally:
+            self._depth = depth
+            self._active.discard(key)
+        self.trace.append(RuleAttempt(integrand, symbol, rule, depth))
+        return rule
+
+    def postprocess(self, integrand, result):
+        """Apply preferred rewrites to the final result of an integration."""
+        # If we got Piecewise with two parts, put generic first
+        if isinstance(result, Piecewise) and len(result.args) == 2:
+            cond = result.args[0][1]
+            if isinstance(cond, Eq) and result.args[1][1] == True:
+                result = result.func(
+                    (result.args[1][0], Ne(*cond.args)),
+                    (result.args[0][0], True))
+        # Factor terms like erf(x)*sin(x) that may have been expanded
+        def _has_erf_trig_mul(expr):
+            for sub in expr.find(Mul):
+                if sub.has(erf, erfc, erfi) and sub.has(sin, cos, sinh, cosh):
+                    return True
+            return False
+        if _has_erf_trig_mul(integrand) and _has_erf_trig_mul(result):
+            result = factor_terms(result)
+        return result
 
 
 def manual_diff(f, symbol):
@@ -1325,7 +1475,7 @@ def rewriter(condition, rewrite):
         if condition(*integral):
             rewritten = rewrite(*integral)
             if rewritten != integrand:
-                substep = integral_steps(rewritten, symbol)
+                substep = integral.subsolve(rewritten, symbol)
                 if not isinstance(substep, DontKnowRule) and substep:
                     return RewriteRule(integrand, symbol, rewritten, substep)
     return _rewriter
@@ -1340,7 +1490,7 @@ def proxy_rewriter(condition, rewrite):
         if condition(*args):
             rewritten = rewrite(*args)
             if rewritten != integrand:
-                return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
+                return RewriteRule(integrand, symbol, rewritten, integral.subsolve(rewritten, symbol))
     return _proxy_rewriter
 
 def multiplexer(conditions):
@@ -1425,7 +1575,7 @@ def combine_power_rule(integral):
     simplified = powsimp(integrand, combine='exp')
 
     if simplified != integrand:
-        steps = integral_steps(simplified, symbol)
+        steps = integral.subsolve(simplified, symbol)
         return RewriteRule(integrand, symbol, simplified, steps)
 
 
@@ -1611,7 +1761,8 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
     elif b.is_zero:
         degenerate_step = ConstantRule(a ** exp, symbol)
     else:
-        degenerate_step = sqrt_fractional_linear_rule(IntegralInfo((a + b * symbol) ** exp, symbol))
+        degenerate_step = sqrt_fractional_linear_rule(
+            IntegralInfo((a + b * symbol) ** exp, symbol, integral.solver))
 
     if simplify(2*exp + 1) == 0:
         h, k = -b/(2*c), a - b**2/(4*c)  # rewrite base to k + c*(symbol-h)**2
@@ -1648,7 +1799,7 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
 
 def add_rule(integral):
     integrand, symbol = integral
-    results = [integral_steps(g, symbol)
+    results = [integral.subsolve(g, symbol)
               for g in integrand.as_ordered_terms()]
     return None if None in results else AddRule(integrand, symbol, results)
 
@@ -1659,7 +1810,7 @@ def mul_rule(integral: IntegralInfo):
     # Constant times function case
     coeff, f = integrand.as_independent(symbol)
     if coeff != 1:
-        next_step = integral_steps(f, symbol)
+        next_step = integral.subsolve(f, symbol)
         if next_step is not None:
             return ConstantTimesRule(integrand, symbol, coeff, f, next_step)
 
@@ -1667,9 +1818,11 @@ def mul_rule(integral: IntegralInfo):
 special_error_functions = (erf, erfc, erfi, fresnelc, fresnels, Ci, Chi, Si, Shi, Ei, li)
 
 
-def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None:
+def _parts_rule(integrand, symbol, solver=None) -> tuple[Expr, Expr, Expr, Expr, Rule] | None:
     # LIATE rule:
     # log, inverse trig, algebraic, trigonometric, exponential
+    if solver is None:
+        solver = IntegrationSolver()
     def pull_out_algebraic(integrand):
         integrand = integrand.cancel().together()
         # iterating over Piecewise args would not work here
@@ -1758,7 +1911,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
             if rule == pull_out_algebraic:
                 if dv.is_Derivative or dv.has(TrigonometricFunction, HyperbolicFunction) or \
                         isinstance(dv, OrthogonalPolynomial):
-                    v_step = integral_steps(dv, symbol)
+                    v_step = solver.subsolve(dv, symbol)
                     if v_step.contains_dont_know():
                         return None
                     else:
@@ -1784,7 +1937,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
             if accept:
                 du = u.diff(symbol)
-                v_step = integral_steps(simplify(dv), symbol)
+                v_step = solver.subsolve(simplify(dv), symbol)
                 if not v_step.contains_dont_know():
                     v = v_step.eval()
                     return u, dv, v, du, v_step
@@ -1793,9 +1946,10 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
 def parts_rule(integral):
     integrand, symbol = integral
+    solver = integral.solver
     constant, integrand = integrand.as_coeff_Mul()
 
-    result = _parts_rule(integrand, symbol)
+    result = _parts_rule(integrand, symbol, solver)
 
     steps = []
     if result:
@@ -1809,9 +1963,9 @@ def parts_rule(integral):
         # Set a limit on the number of times u can be used
         if isinstance(u, (sin, cos, exp, sinh, cosh)):
             cachekey = u.xreplace({symbol: _cache_dummy})
-            if _parts_u_cache[cachekey] > 2:
+            if solver.parts_u_count[cachekey] > 2:
                 return
-            _parts_u_cache[cachekey] += 1
+            solver.parts_u_count[cachekey] += 1
 
         # Try cyclic integration by parts a few times
         for _ in range(4):
@@ -1832,7 +1986,7 @@ def parts_rule(integral):
 
             # _parts_rule is sensitive to constants, factor it out
             next_constant, next_integrand = (v * du).as_coeff_Mul()
-            result = _parts_rule(next_integrand, symbol)
+            result = _parts_rule(next_integrand, symbol, solver)
 
             if result:
                 u, dv, v, du, v_step = result
@@ -1846,7 +2000,7 @@ def parts_rule(integral):
         if steps:
             u, dv, v, du, v_step = steps[0]
             return PartsRule(integrand, symbol, u, dv, v_step, make_second_step(steps[1:], v * du))
-        return integral_steps(integrand, symbol)
+        return solver.subsolve(integrand, symbol)
 
     if steps:
         u, dv, v, du, v_step = steps[0]
@@ -1883,7 +2037,7 @@ def trig_rule(integral):
     else:
         return
 
-    return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
+    return RewriteRule(integrand, symbol, rewritten, integral.subsolve(rewritten, symbol))
 
 def trig_product_rule(integral: IntegralInfo):
     integrand, symbol = integral
@@ -1928,7 +2082,7 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
 
     if rewritten != integrand:
         debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
-        steps = integral_steps(rewritten, symbol)
+        steps = integral.subsolve(rewritten, symbol)
         return RewriteRule(integrand, symbol, rewritten, steps)
 
 
@@ -1946,11 +2100,11 @@ def quadratic_denom_rule(integral):
         # skips degenerate case if b != 0 or if b = 0 would cause null denominator
         if not _if_zero_implies_zero(b, c):
             substituted = integrand.subs(b, 0)
-            substep = integral_steps(substituted, symbol)
+            substep = integral.subsolve(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(b, 0)))
         if not _if_zero_implies_zero(c, b):
             substituted = integrand.subs(c, 0)
-            substep = integral_steps(substituted, symbol)
+            substep = integral.subsolve(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(c, 0)))
         if b.is_extended_real and c.is_extended_real:
             positive_cond = c/b > 0
@@ -1988,7 +2142,7 @@ def quadratic_denom_rule(integral):
         u = Dummy('u')
         u_func = symbol + c/(2*b)
         integrand2 = integrand.subs(symbol, u - c / (2*b))
-        next_step = integral_steps(integrand2, u)
+        next_step = integral.subsolve(integrand2, u)
         if next_step:
             return URule(integrand2, symbol, u, u_func, next_step)
         else:
@@ -2005,13 +2159,13 @@ def quadratic_denom_rule(integral):
         numer2 = - const*d + b
         u = Dummy('u')
         step1 = URule(integrand, symbol,
-                      u, denominator, integral_steps(u**(-1), u))
+                      u, denominator, integral.subsolve(u**(-1), u))
         if const != 1:
             step1 = ConstantTimesRule(const*numer1/denominator, symbol,
                                       const, numer1/denominator, step1)
         if numer2.is_zero:
             return step1
-        step2 = integral_steps(numer2/denominator, symbol)
+        step2 = integral.subsolve(numer2/denominator, symbol)
         substeps = AddRule(integrand, symbol, [step1, step2])
         rewriten = const*numer1/denominator+numer2/denominator
         return RewriteRule(integrand, symbol, rewriten, substeps)
@@ -2070,7 +2224,7 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     if constant_bases_subs:
         integrand = integrand.subs(constant_bases_subs)
     if base0 is None:
-        substep = integral_steps(integrand, x)
+        substep = integral.subsolve(integrand, x)
         if not substep.contains_dont_know():
             debug("Integral: {} is rewritten with {} on symbol: {}".format(integral.integrand, integrand, x))
             return RewriteRule(integral.integrand, x, integrand, substep)
@@ -2085,7 +2239,7 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     for base_i, ratio_i, q_i in zip(bases, ratios, qs):
         subs_dict[base_i**(S.One/q_i)] = (ratio_i)**(S.One/q_i) * u**(q0/q_i)
     substituted = integrand.subs(subs_dict).subs(x, x_u) * dx_u
-    substep = integral_steps(substituted, u)
+    substep = integral.subsolve(substituted, u)
     if not substep.contains_dont_know():
         pieces: list[tuple[Rule, Boolean]] = []
         det = a0*d0 - b0*c0
@@ -2101,14 +2255,14 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
                 const_val = a0 / c0
                 subs_a = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
                 simplified_a = integrand.subs(subs_a)
-                degenerate_step_a = integral_steps(simplified_a, x)
+                degenerate_step_a = integral.subsolve(simplified_a, x)
                 pieces.append((degenerate_step_a, (And(Eq(det, 0), Ne(c0, 0)))))
             if not c0_implies_d0:
                 const_val = b0 / d0
                 subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
                 simplified_b = integrand.subs(subs_b)
                 simplified_b = simplified_b.subs({a0: 0, c0: 0}) # if det = 0, c = 0 and d != 0, a must be 0
-                degenerate_step_b = integral_steps(simplified_b, x)
+                degenerate_step_b = integral.subsolve(simplified_b, x)
                 pieces.append((degenerate_step_b, (And(Eq(det, 0), Eq(c0, 0)))))
         step: Rule = URule(integrand, x, u, u_x, substep)
         if pieces:
@@ -2140,10 +2294,11 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     if not degenerate or generic_cond is S.true:
         degenerate_step = None
     elif b.is_zero:
-        degenerate_step = integral_steps(f*sqrt(a)**n, x)
+        degenerate_step = integral.subsolve(f*sqrt(a)**n, x)
     else:
         degenerate_integrand = f*sqrt(a + b*x)**n
-        degenerate_step = sqrt_fractional_linear_rule(IntegralInfo(degenerate_integrand, x))
+        degenerate_step = sqrt_fractional_linear_rule(
+            IntegralInfo(degenerate_integrand, x, integral.solver))
         if degenerate_step is None:
             # since  sqrt_fractional_linear_rule does not guarantee a solution
             # we create a DontKnowRule so that _add_degenerate_step adds the degenerate condition
@@ -2168,7 +2323,8 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
                 if A != 1:
                     linear_step = ConstantTimesRule(A*pre_substitute, x, A, pre_substitute, linear_step)
             if B != 0:
-                constant_step = inverse_trig_rule(IntegralInfo(1/denom, x), degenerate=False)
+                constant_step = inverse_trig_rule(
+                    IntegralInfo(1/denom, x, integral.solver), degenerate=False)
                 if B != 1:
                     constant_step = ConstantTimesRule(B/denom, x, B, 1/denom, constant_step)  # type: ignore
             if linear_step and constant_step:
@@ -2191,7 +2347,7 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
             square_base = sqrt(c)*x + b/(2*sqrt(c))
             nested = Pow(Pow(square_base, 2, evaluate=False), S(n)/2, evaluate=False)
             rewritten = const*nested
-            substep = nested_pow_rule(IntegralInfo(rewritten, x))
+            substep = nested_pow_rule(IntegralInfo(rewritten, x, integral.solver))
             return RewriteRule(integrand, x, rewritten, substep)
 
         if delta.is_zero is True:
@@ -2205,12 +2361,12 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
 
         rewrite_expr = Derivative(constant_term, x) + coeff * expr
         derive_expr = Derivative(constant_term, x)
-        derive_step = integral_steps(derive_expr, x)
+        derive_step = integral.subsolve(derive_expr, x)
 
         if coeff == 0:
             substep = derive_step
         else:
-            next_step = integral_steps(expr, x)
+            next_step = integral.subsolve(expr, x)
             if not next_step:
                 next_step = DontKnowRule(expr, x)
 
@@ -2250,7 +2406,8 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         if not quotient.is_zero:
             # n is increasing by 2 at each step, we will fall in one of the cases above
             quotient_integrand = quotient.as_expr() * sqrt(root_base)**(n + 2)
-            quotient_step = sqrt_quadratic_rule(IntegralInfo(quotient_integrand, x), degenerate=False)
+            quotient_step = sqrt_quadratic_rule(
+                IntegralInfo(quotient_integrand, x, integral.solver), degenerate=False)
             terms.append(quotient_integrand)
             steps.append(quotient_step)
         if not rest.is_zero:
@@ -2378,11 +2535,14 @@ def uncurry(func):
 
 def trig_rewriter(rewrite):
     def trig_rewriter_rl(args):
-        a, b, m, n, integrand, symbol = args
+        # the fifth element is an IntegralInfo carrying the (possibly
+        # normalized) integrand together with the active solver
+        a, b, m, n, integral, symbol = args
+        integrand = integral.integrand
         rewritten = rewrite(a, b, m, n, integrand, symbol)
         if rewritten != integrand:
             debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewrite, symbol))
-            return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
+            return RewriteRule(integrand, symbol, rewritten, integral.subsolve(rewritten, symbol))
     return trig_rewriter_rl
 
 sincos_botheven_condition = uncurry(
@@ -2450,7 +2610,7 @@ def trig_sincos_rule(integral):
             sincos_cosodd_condition: sincos_cosodd
         })(tuple(
             [match.get(i, S.Zero) for i in (a, b, m, n)] +
-            [integrand, symbol]))
+            [integral, symbol]))
 
 def trig_tansec_rule(integral):
     integrand, symbol = integral
@@ -2471,7 +2631,7 @@ def trig_tansec_rule(integral):
             tan_tansquared_condition: tan_tansquared
         })(tuple(
             [match.get(i, S.Zero) for i in (a, b, m, n)] +
-            [integrand, symbol]))
+            [IntegralInfo(integrand, symbol, integral.solver), symbol]))
 
 def trig_cotcsc_rule(integral):
     integrand, symbol = integral
@@ -2492,7 +2652,7 @@ def trig_cotcsc_rule(integral):
             cotcsc_csceven_condition: cotcsc_csceven
         })(tuple(
             [match.get(i, S.Zero) for i in (a, b, m, n)] +
-            [integrand, symbol]))
+            [IntegralInfo(integrand, symbol, integral.solver), symbol]))
 
 def trig_sindouble_rule(integral):
     integrand, symbol = integral
@@ -2502,14 +2662,13 @@ def trig_sindouble_rule(integral):
         sin_double = 2*sin(symbol)*cos(symbol)/sin(2*symbol)
         rewritten = integrand * sin_double
         debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, integrand * sin_double, symbol))
-        substeps = integral_steps(rewritten, symbol)
+        substeps = integral.subsolve(rewritten, symbol)
         return RewriteRule(integrand, symbol, rewritten, substeps)
 
-def trig_powers_products_rule(integral):
-    return do_one(null_safe(trig_sincos_rule),
-                  null_safe(trig_tansec_rule),
-                  null_safe(trig_cotcsc_rule),
-                  null_safe(trig_sindouble_rule))(integral)
+trig_powers_products_rule = do_one(null_safe(trig_sincos_rule),
+                                   null_safe(trig_tansec_rule),
+                                   null_safe(trig_cotcsc_rule),
+                                   null_safe(trig_sindouble_rule))
 
 def trig_substitution_rule(integral):
     integrand, symbol = integral
@@ -2566,7 +2725,7 @@ def trig_substitution_rule(integral):
                         1/cos(theta): sec(theta)
                     })
 
-                substep = integral_steps(replaced, theta)
+                substep = integral.subsolve(replaced, theta)
                 if not substep.contains_dont_know():
                     return TrigSubstitutionRule(integrand, symbol,
                         theta, x_func, replaced, substep, restriction)
@@ -2577,7 +2736,7 @@ def heaviside_rule(integral):
     match = integrand.match(pattern)
     if match and 0 != match[g]:
         # f = Heaviside(m*x + b)*g
-        substep = integral_steps(match[g], symbol)
+        substep = integral.subsolve(match[g], symbol)
         m, b = match[m], match[b]
         return HeavisideRule(integrand, symbol, m*symbol + b, -b/m, substep)
 
@@ -2616,7 +2775,7 @@ def substitution_rule(integral):
         factored_integrand = integrand.factor()
         _, denom_integrand = factored_integrand.as_numer_denom()
         for u_func, c, substituted in substitutions:
-            subrule = integral_steps(substituted, u_var)
+            subrule = integral.subsolve(substituted, u_var)
             count = count + 1
             debug("Rule {}: {}".format(count, subrule))
 
@@ -2636,7 +2795,7 @@ def substitution_rule(integral):
                         if not _if_zero_implies_zero(pole, denom_integrand):
                             rewritten_integral = manual_subs(factored_integrand, pole, 0)
                             debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten_integral, symbol))
-                            substep = integral_steps(rewritten_integral, symbol)
+                            substep = integral.subsolve(rewritten_integral, symbol)
 
                             if substep:
                                 substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
@@ -2697,18 +2856,85 @@ def rewrites_rule(integral):
     if integrand.match(1/cos(symbol)):
         rewritten = integrand.subs(1/cos(symbol), sec(symbol))
         debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
-        return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
+        return RewriteRule(integrand, symbol, rewritten, integral.subsolve(rewritten, symbol))
 
 def fallback_rule(integral):
     return DontKnowRule(*integral)
 
 
-# Cache is used to break cyclic integrals.
-# Need to use the same dummy variable in cached expressions for them to match.
-# Also record "u" of integration by parts, to avoid infinite repetition.
-_integral_cache: dict[Expr, Expr | None] = {}
-_parts_u_cache: dict[Expr, int] = defaultdict(int)
-_cache_dummy = Dummy("z")
+def _integrand_key(integral):
+    integrand, symbol = integral
+    if symbol not in integrand.free_symbols:
+        return Number
+    for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
+        if isinstance(integrand, cls):
+            return cls
+    return type(integrand)
+
+
+def _integral_is_subclass(*klasses):
+    def _check(integral):
+        k = _integrand_key(integral)
+        return k and issubclass(k, klasses)
+    return _check
+
+
+# The strategy table consulted by IntegrationSolver.subsolve for every
+# subproblem. Entries are stateless rules with signature
+# (integral) -> Rule | None; the IntegralInfo carries the active solver.
+_integration_strategy = do_one(
+    null_safe(special_function_rule),
+    null_safe(switch(_integrand_key, {
+        Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
+                    null_safe(quadratic_denom_rule),
+                    null_safe(sqrt_quadratic_rule),
+                    null_safe(sqrt_fractional_linear_rule)),
+        Symbol: power_rule,
+        exp: exp_rule,
+        Add: add_rule,
+        Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
+                    null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
+                    null_safe(sqrt_quadratic_rule),
+                    null_safe(sqrt_fractional_linear_rule),
+                    null_safe(trig_cmplx_exp_rule)),
+        Derivative: derivative_rule,
+        TrigonometricFunction: trig_rule,
+        Heaviside: heaviside_rule,
+        DiracDelta: dirac_delta_rule,
+        OrthogonalPolynomial: orthogonal_poly_rule,
+        Number: constant_rule
+    })),
+    do_one(
+        null_safe(trig_rule),
+        null_safe(hyperbolic_rule),
+        null_safe(alternatives(
+            rewrites_rule,
+            substitution_rule,
+            condition(
+                _integral_is_subclass(Mul, Pow),
+                partial_fractions_rule),
+            condition(
+                _integral_is_subclass(Mul, Pow),
+                cancel_rule),
+            condition(
+                _integral_is_subclass(Mul),
+                combine_power_rule),
+            condition(
+                _integral_is_subclass(Mul, log,
+                                      *inverse_trig_functions,
+                                      *special_error_functions),
+                parts_rule),
+            condition(
+                _integral_is_subclass(Mul, Pow),
+                distribute_expand_rule),
+            trig_powers_products_rule,
+            trig_expand_rule
+        )),
+        null_safe(condition(_integral_is_subclass(Mul, Pow), nested_pow_rule)),
+        null_safe(trig_substitution_rule)
+    ),
+    fallback_rule)
+
 
 def integral_steps(integrand, symbol, **options):
     """Returns the steps needed to compute an integral.
@@ -2755,91 +2981,32 @@ def integral_steps(integrand, symbol, **options):
         to obtain a result.
 
     """
-    cachekey = integrand.xreplace({symbol: _cache_dummy})
-    if cachekey in _integral_cache:
-        if _integral_cache[cachekey] is None:
-            # Stop this attempt, because it leads around in a loop
-            return DontKnowRule(integrand, symbol)
-        else:
-            # TODO: This is for future development, as currently
-            # _integral_cache gets no values other than None
-            return (_integral_cache[cachekey].xreplace(_cache_dummy, symbol),
-                symbol)
-    else:
-        _integral_cache[cachekey] = None
+    return IntegrationSolver(**options).subsolve(integrand, symbol)
 
-    integral = IntegralInfo(integrand, symbol)
 
-    def key(integral):
-        integrand = integral.integrand
+def integral_steps_with_trace(integrand, symbol, **options):
+    """Like :func:`integral_steps`, but also return the solver's trace.
 
-        if symbol not in integrand.free_symbols:
-            return Number
-        for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
-            if isinstance(integrand, cls):
-                return cls
-        return type(integrand)
+    Returns the tuple ``(rule, trace)``, where ``trace`` is the list of
+    :class:`RuleAttempt` records of every subproblem attempted by the
+    solver, in post-order (innermost subproblems first).
 
-    def integral_is_subclass(*klasses):
-        def _integral_is_subclass(integral):
-            k = key(integral)
-            return k and issubclass(k, klasses)
-        return _integral_is_subclass
+    Examples
+    ========
 
-    result = do_one(
-        null_safe(special_function_rule),
-        null_safe(switch(key, {
-            Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
-                        null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule)),
-            Symbol: power_rule,
-            exp: exp_rule,
-            Add: add_rule,
-            Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
-                        null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule),
-                        null_safe(trig_cmplx_exp_rule)),
-            Derivative: derivative_rule,
-            TrigonometricFunction: trig_rule,
-            Heaviside: heaviside_rule,
-            DiracDelta: dirac_delta_rule,
-            OrthogonalPolynomial: orthogonal_poly_rule,
-            Number: constant_rule
-        })),
-        do_one(
-            null_safe(trig_rule),
-            null_safe(hyperbolic_rule),
-            null_safe(alternatives(
-                rewrites_rule,
-                substitution_rule,
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    partial_fractions_rule),
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    cancel_rule),
-                condition(
-                    integral_is_subclass(Mul),
-                    combine_power_rule),
-                condition(
-                    integral_is_subclass(Mul, log,
-                                         *inverse_trig_functions,
-                                         *special_error_functions),
-                    parts_rule),
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    distribute_expand_rule),
-                trig_powers_products_rule,
-                trig_expand_rule
-            )),
-            null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
-            null_safe(trig_substitution_rule)
-        ),
-        fallback_rule)(integral)
-    del _integral_cache[cachekey]
-    return result
+    >>> from sympy import tan
+    >>> from sympy.integrals.manualintegrate import integral_steps_with_trace
+    >>> from sympy.abc import x
+    >>> rule, trace = integral_steps_with_trace(tan(x), x)
+    >>> for attempt in trace:
+    ...     print(attempt.depth, type(attempt.rule).__name__)
+    2 ReciprocalRule
+    1 URule
+    0 RewriteRule
+    """
+    solver = IntegrationSolver(**options)
+    rule = solver.subsolve(integrand, symbol)
+    return rule, solver.trace
 
 
 def manualintegrate(f, var):
@@ -2891,22 +3058,6 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
-    result = integral_steps(f, var).eval()
-    # Clear the cache of u-parts
-    _parts_u_cache.clear()
-    # If we got Piecewise with two parts, put generic first
-    if isinstance(result, Piecewise) and len(result.args) == 2:
-        cond = result.args[0][1]
-        if isinstance(cond, Eq) and result.args[1][1] == True:
-            result = result.func(
-                (result.args[1][0], Ne(*cond.args)),
-                (result.args[0][0], True))
-    # Factor terms like erf(x)*sin(x) that may have been expanded
-    def _has_erf_trig_mul(expr):
-        for sub in expr.find(Mul):
-            if sub.has(erf, erfc, erfi) and sub.has(sin, cos, sinh, cosh):
-                return True
-        return False
-    if _has_erf_trig_mul(f) and _has_erf_trig_mul(result):
-        result = factor_terms(result)
-    return result
+    solver = IntegrationSolver()
+    rule = solver.subsolve(f, var)
+    return solver.postprocess(f, rule.eval())
