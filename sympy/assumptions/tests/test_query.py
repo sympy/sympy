@@ -1311,7 +1311,8 @@ def test_complex():
     assert ask(Q.complex(exp(x))) is True
 
     # Q.complexes
-    assert ask(Q.complex(Abs(x))) is True
+    assert ask(Q.complex(Abs(x))) is None  # x could be infinite, making Abs(x) = oo which is not complex
+    assert ask(Q.complex(Abs(x)), Q.complex(x)) is True
     assert ask(Q.complex(re(x))) is True
     assert ask(Q.complex(im(x))) is True
 
@@ -2014,6 +2015,22 @@ def test_positive():
     #absolute value
     assert ask(Q.positive(Abs(x))) is None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
+
+
+def test_abs_imaginary_and_infinite():
+    # https://github.com/sympy/sympy/issues/30057
+    assert ask(Q.nonzero(Abs(x)), Q.imaginary(x)) is True
+    assert ask(Q.nonzero(Abs(x)), Q.infinite(x)) is False
+    assert ask(Q.zero(Abs(x)), Q.imaginary(x)) is False
+    assert ask(Q.zero(Abs(x)), Q.infinite(x)) is False
+    assert ask(Q.positive(Abs(x)), Q.imaginary(x)) is True
+    assert ask(Q.positive(Abs(x)), Q.infinite(x)) is False
+    assert ask(Q.extended_positive(Abs(x)), Q.infinite(x)) is True
+    assert ask(Q.extended_positive(Abs(x + y)), ~Q.zero(x + y)) is None
+    assert ask(Q.real(Abs(x)), Q.imaginary(x)) is True
+    assert ask(Q.real(Abs(x)), Q.infinite(x)) is False
+    assert ask(Q.complex(Abs(x)), Q.imaginary(x)) is True
+    assert ask(Q.complex(Abs(x)), Q.infinite(x)) is False
 
 
 def test_nonpositive():

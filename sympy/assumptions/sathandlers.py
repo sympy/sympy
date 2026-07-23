@@ -203,7 +203,8 @@ x = Symbol('x')
 @class_fact_registry.multiregister(Abs)
 def _(expr):
     arg = expr.args[0]
-    return [Q.nonnegative(expr),
+    return [Q.complex(arg) >> Q.nonnegative(expr),
+            Q.infinite(arg) >> Q.positive_infinite(expr),
             Equivalent(~Q.zero(arg), ~Q.zero(expr)),
             Q.even(arg) >> Q.even(expr),
             Q.odd(arg) >> Q.odd(expr),

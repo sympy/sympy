@@ -242,8 +242,10 @@ def test_integer():
 
 
 def test_abs():
-    assert satask(Q.nonnegative(abs(x))) is True
-    assert satask(Q.positive(abs(x)), ~Q.zero(x)) is True
+    assert satask(Q.nonnegative(abs(x))) is None  # x could be infinite, Abs(oo) = oo is not nonnegative
+    assert satask(Q.nonnegative(abs(x)), Q.complex(x)) is True
+    assert satask(Q.positive(abs(x)), ~Q.zero(x)) is None  # x could be nan or infinite
+    assert satask(Q.positive(abs(x)), ~Q.zero(x) & Q.complex(x)) is True
     assert satask(Q.zero(x), ~Q.zero(abs(x))) is False
     assert satask(Q.zero(x), Q.zero(abs(x))) is True
     assert satask(Q.nonzero(x), ~Q.zero(abs(x))) is None # x could be complex
@@ -371,7 +373,8 @@ def test_get_relevant_clsfacts():
     exprs, facts = get_relevant_clsfacts(exprs)
     assert exprs == {x*y}
     assert facts.clauses == \
-        {frozenset({Literal(Q.nonnegative(Abs(x*y)), False)}),
+        {frozenset({Literal(Q.complex(x*y), True), Literal(Q.nonnegative(Abs(x*y)), False)}),
+         frozenset({Literal(Q.infinite(x*y), True), Literal(Q.positive_infinite(Abs(x*y)), False)}),
          frozenset({Literal(Q.even(Abs(x*y)), False), Literal(Q.even(x*y), True)}),
          frozenset({Literal(Q.integer(Abs(x*y)), False), Literal(Q.integer(x*y), True)}),
          frozenset({Literal(Q.odd(Abs(x*y)), False), Literal(Q.odd(x*y), True)}),
