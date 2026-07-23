@@ -2588,6 +2588,11 @@ class DomainMatrix:
         m, n = self.shape
         if m != n:
             raise DMNonSquareMatrixError
+
+        components = self.scc()
+        if len(components) > 1:
+            return _dm_inv_scc(self, components)
+
         inv = self.rep.inv()
         return self.from_rep(inv)
 
@@ -4052,3 +4057,63 @@ def _collect_factors(factors_list):
     factors_list = [(list(f), e) for f, e in factors.items()]
 
     return _sort_factors(factors_list)
+
+
+def _dm_inv_scc(A, components):
+    """Invert a field matrix using its strongly connected components."""
+    indices = [index for component in components for index in component]
+    block_sizes = [len(component) for component in components]
+    A_scc = A.extract(indices, indices)
+    Ainv_scc = _dm_inv_scc_blocks(A_scc, block_sizes)
+
+    inverse_indices = sorted(range(len(indices)), key=indices.__getitem__)
+    return Ainv_scc.extract(inverse_indices, inverse_indices)
+
+
+def _dm_inv_scc_blocks(A, block_sizes):
+    """Invert a lower block triangular matrix over a field."""
+    if len(block_sizes) == 1:
+        return A.from_rep(A.rep.inv())
+
+    blocks = []
+    offset = 0
+    diagonal_nnz = 0
+    for size in block_sizes:
+        block = A[offset:offset + size, offset:offset + size]
+        blocks.append((offset, block))
+        diagonal_nnz += block.nnz()
+        offset += size
+
+    if diagonal_nnz == A.nnz():
+        entries = {}
+        for offset, block in blocks:
+            block_inv = block.from_rep(block.rep.inv())
+            for (i, j), value in block_inv.to_dok().items():
+                entries[offset + i, offset + j] = value
+        Ainv = A.from_dok(entries, A.shape, A.domain)
+        if A.rep.fmt == 'dense':
+            Ainv = Ainv.to_dense()
+        return Ainv
+
+    split = len(block_sizes) // 2
+    split_row = sum(block_sizes[:split])
+    A11 = A[:split_row, :split_row]
+    A21 = A[split_row:, :split_row]
+    A22 = A[split_row:, split_row:]
+
+    # Invert [[A11, 0], [A21, A22]] using its lower triangular
+    # two-by-two block structure.
+    A11inv = _dm_inv_scc_blocks(A11, block_sizes[:split])
+    A22inv = _dm_inv_scc_blocks(A22, block_sizes[split:])
+    A21inv = -A22inv * A21 * A11inv
+
+    entries = A11inv.to_dok()
+    for (i, j), value in A21inv.to_dok().items():
+        entries[split_row + i, j] = value
+    for (i, j), value in A22inv.to_dok().items():
+        entries[split_row + i, split_row + j] = value
+
+    Ainv = A.from_dok(entries, A.shape, A.domain)
+    if A.rep.fmt == 'dense':
+        Ainv = Ainv.to_dense()
+    return Ainv
