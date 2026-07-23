@@ -201,7 +201,7 @@ def _(expr, assumptions):
 @NonZeroPredicate.register(Abs)
 def _(expr, assumptions):
     arg = expr.args[0]
-    return _ask_recursive(Q.finite(arg) & ~Q.zero(arg), assumptions)
+    return _ask_recursive(Q.complex(arg) & ~Q.zero(arg), assumptions)
 
 @NonZeroPredicate.register(NaN)
 def _(expr, assumptions):
@@ -427,7 +427,8 @@ def _(expr, assumptions):
 
 @ExtendedPositivePredicate.register(Abs)
 def _(expr, assumptions):
-    return _ask_recursive(~Q.zero(expr.args[0]), assumptions)
+    arg = expr.args[0]
+    return _ask_recursive((Q.complex(arg) | Q.infinite(arg)) & ~Q.zero(arg), assumptions)
 
 
 # ExtendedNonZeroPredicate
