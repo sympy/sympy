@@ -1117,3 +1117,10 @@ def test_nc_recursion_coeff():
     X = symbols("X", commutative = False)
     assert (2 * cos(pi/3) * X).simplify() == X
     assert (2.0 * cos(pi/3) * X).simplify() == X
+
+
+def test_issue_14269():
+    x = symbols('x')
+    root = (sqrt(2) - 1)**Rational(1, 3) - (sqrt(2) + 1)**Rational(1, 3)
+    expr = (x**3 + 3*x + 2).subs(x, root)
+    assert simplify(expr) == 0
