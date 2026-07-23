@@ -36,12 +36,6 @@ def _get_sympy_simplify():
 def _matrix_proportionality_ratio(m1, m2):
     """Check element-wise proportionality for true matrices (shape != (1,1)).
 
-    Determines the candidate ratio from the first nonzero element pair using
-    ``solve`` (handles noncommutative elements where division is undefined),
-    then verifies ``simplify(e1 - r * e2) == 0`` against all remaining
-    elements.  Calling ``solve`` only once is significantly faster than
-    solving per-element.
-
     Returns the commutative ratio k such that m1 = k * m2, or None.
 
     Examples
@@ -113,23 +107,6 @@ def _proportionality_ratio(factor1, factor2):
 
     Returns the commutative ratio k such that factor1 = k * factor2,
     or None if they are not proportional.
-
-    - For true matrices (shape != (1,1)): checks all nonzero elements share
-      the same ratio. Avoids division by zero.
-    - For 1x1 matrices: checks if there is a commutative proportionality
-      constant between the wrapped noncommutative symbols.
-
-    Examples
-    ========
-
-    >>> from sympy.matrices import ImmutableDenseMatrix
-    >>> from sympy.tensor.algebraic.simplify import _proportionality_ratio
-    >>> M1 = ImmutableDenseMatrix([[1, 2], [3, 4]])
-    >>> M2 = ImmutableDenseMatrix([[2, 4], [6, 8]])
-    >>> _proportionality_ratio(M1, M2)
-    1/2
-    >>> _proportionality_ratio(M2, M1)
-    2
     """
     if factor1 == factor2:
         return S.One
@@ -145,12 +122,6 @@ def _extract_pt_and_coeff(term):
 
     Returns (coeff, factors) where coeff is the commutative coefficient
     (S.One if none) and factors is a list of tensor-product factors.
-
-    Handles:
-    - AlgebraicPureTensor (coeff from term.coeff, factors from term.factors)
-    - Mul with direct matrix factors (extracts commutative coeff and matrices)
-    - Bare matrix-like objects -> (S.One, [term])
-    - Anything else -> (S.One, [term])
 
     Examples
     ========
@@ -235,23 +206,6 @@ def _equality_merge_dict(entries, allowed_slot, _s, _factor):
 
     Groups entries by their canonical key (all factors except the allowed slot,
     with coefficient) and merges entries with matching keys or negated keys.
-    Replaces the O(N^2) pivot-based approach with O(N) dictionary lookups.
-
-    Parameters
-    ----------
-    entries : list of dict
-        Entry dicts with 'coeff' and 'factors'.
-    allowed_slot : int
-        The single slot index allowed to differ between merged entries.
-    _s : callable
-        SymPy simplify function.
-    _factor : callable
-        SymPy factor function.
-
-    Returns
-    -------
-    list of dict
-        New entries list with merged entries.
     """
     from sympy.core.mul import Mul
     from sympy.core.add import Add as _Add
@@ -348,37 +302,10 @@ def _equality_merge_dict(entries, allowed_slot, _s, _factor):
 
 def _equality_factoring(at):
     """Simplify an AlgebraicTensor by merging equal or negated
-    AlgebraicPureTensor terms (proportionality constant is +1 or -1 only).
+    AlgebraicPureTensor terms.
 
-    Algorithm
-    ---------
-    1. Determine the commutativity_pattern of the tensor.
-    2. Build an ordered list of allowed diff slots: commutative indices
-       (pattern == 1) first, then non-commutative indices (pattern == 0).
-    3. For each allowed diff slot in order, run the pivot-based merging:
-
-       a. Pick a pivot entry from the list.
-       b. Compare the pivot with every other entry.
-       c. Two entries merge only if the combined proportionality ratio
-          of all proportional slots is exactly +1 or -1.
-       d. For a fully proportional pair (all slots proportional), merge by
-          adding coefficients.
-       e. For a pair differing in exactly one slot (the allowed diff slot),
-          add or subtract the factors directly (no coefficient weighting),
-          keeping the pivot coefficient unchanged.
-       f. After a merge, reset the pivot to the beginning.
-
-    4. Process commutative slots first, then non-commutative slots.
-
-    Parameters
-    ----------
-    at : AlgebraicTensor
-        The tensor sum to simplify.
-
-    Returns
-    -------
-    AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or other
-        The simplified expression.
+    Groups terms by commutativity pattern and merges entries that
+    differ in only one factor slot.
 
     Examples
     ========
@@ -486,18 +413,6 @@ def tensorsimplify(expr, **kwargs):
     ``AlgebraicTensor``, ``AlgebraicZeroTensor``, or falls back to SymPy's
     general :func:`simplify` for everything else.
 
-    Parameters
-    ----------
-    expr : Any
-        The expression to simplify.
-    **kwargs
-        Extra keyword arguments forwarded to :func:`sympy.simplify.simplify`
-        when simplifying individual coefficients.
-
-    Returns
-    -------
-    simplified expression (same type as *expr* when possible)
-
     Examples
     ========
 
@@ -548,22 +463,8 @@ def tensorsimplify(expr, **kwargs):
 def _decompose_commutative_factors(commutative_factors, term_coeff):
     """Decompose commutative matrix factors into sums of basis matrices.
 
-    Iteratively processes each commutative slot, expanding matrix entries
-    into basis matrices (0/1 only) while accumulating symbolic coefficients
-    into prefactors.
-
-    Parameters
-    ----------
-    commutative_factors : list of matrix-like objects
-        The commutative matrix factors to decompose.
-    term_coeff : SymPy expression
-        The initial commutative coefficient for the term.
-
-    Returns
-    -------
-    list of (prefactor, basis_factor_list) tuples
-        Each tuple contains a commutative prefactor and a list of basis
-        matrices (0/1 entries only), one per commutative slot.
+    Expands matrix entries into basis matrices (0/1 only) while accumulating
+    symbolic coefficients into prefactors.
 
     Examples
     ========
@@ -608,32 +509,10 @@ def _decompose_commutative_factors(commutative_factors, term_coeff):
 
 def _reconstruct_term(key, non_commutative_pt, coeff, comm_cs,
                       commutative_indices, non_commutative_indices):
-    """Reconstruct a full tensor from commutative and
-    non-commutative subtensors.
+    """Reconstruct a full tensor from commutative and non-commutative subtensors.
 
-    Interleaves commutative basis matrices (from *key*) and non-commutative
-    factors (from *non_commutative_pt*) back into the original factor order
-    specified by *comm_cs*, then builds the result via ``_build_pt``.
-
-    Parameters
-    ----------
-    key : tuple of matrices or None
-        Commutative basis matrices. None when there are no commutative slots.
-    non_commutative_pt : AlgebraicPureTensor or None
-        Non-commutative subtensor. None when all slots are commutative.
-    coeff : SymPy expression
-        Combined commutative coefficient.
-    comm_cs : tuple of 0/1
-        The commutativity_pattern of the original tensor.
-    commutative_indices : list of int
-        Indices of commutative factor slots.
-    non_commutative_indices : list of int
-        Indices of non-commutative factor slots.
-
-    Returns
-    -------
-    AlgebraicPureTensor, bare matrix, or AlgebraicZeroTensor
-        The reconstructed tensor term.
+    Interleaves commutative basis matrices and non-commutative factors back
+    into the original factor order.
 
     Examples
     ========
@@ -683,27 +562,7 @@ def _reconstruct_term(key, non_commutative_pt, coeff, comm_cs,
 # ---------------------------------------------------------------------------
 
 def _has_negative_power_or_fraction(expr):
-    """Check if *expr* contains Pow with negative exponent or a fraction.
-
-    Returns True if any atom in *expr* is a Pow with a negative exponent,
-    or if *expr* as a rational expression has a nontrivial denominator.
-
-    Examples
-    ========
-
-    >>> from sympy.abc import x, y
-    >>> from sympy.tensor.algebraic.simplify import _has_negative_power_or_fraction
-    >>> _has_negative_power_or_fraction(x**2 * y)
-    False
-    >>> _has_negative_power_or_fraction(x**(-1))
-    True
-    >>> _has_negative_power_or_fraction(1 / x)
-    True
-    >>> _has_negative_power_or_fraction(x / y)
-    True
-    >>> _has_negative_power_or_fraction(2 * x)
-    False
-    """
+    """Check if *expr* contains Pow with negative exponent or a fraction."""
     from sympy.core.power import Pow
 
     for atom in expr.atoms(Pow):
@@ -716,22 +575,7 @@ def _has_negative_power_or_fraction(expr):
 
 
 def _normalize_factor_sign(f):
-    """Normalize the sign of a polynomial factor so -(w-z) and (w-z) match.
-
-    Makes polynomial factors monic in sign by flipping the overall sign when
-    the coefficient of the first symbol (sorted by name for determinism) is
-    negative.
-
-    Examples
-    ========
-
-    >>> from sympy.abc import x, y
-    >>> from sympy.tensor.algebraic.simplify import _normalize_factor_sign
-    >>> _normalize_factor_sign(x - y)
-    x - y
-    >>> _normalize_factor_sign(-x + y)
-    x - y
-    """
+    """Normalize the sign of a polynomial factor so -(w-z) and (w-z) match."""
     from sympy.core.add import Add as _Add
     from sympy.core.mul import Mul as _Mul
 
@@ -760,23 +604,7 @@ def _normalize_factor_sign(f):
 
 
 def _is_exactly_divisible(entry, candidate):
-    """Check if *entry* is exactly divisible by *candidate* with no remainder.
-
-    A zero entry is considered trivially divisible.  For nonzero entries we
-    verify that ``candidate`` does not appear in the denominator of the
-    simplified quotient ``entry / candidate``.
-
-    Examples
-    ========
-
-    >>> from sympy.tensor.algebraic.simplify import _is_exactly_divisible
-    >>> _is_exactly_divisible(6, 2)
-    True
-    >>> _is_exactly_divisible(5, 2)
-    False
-    >>> _is_exactly_divisible(0, 3)
-    True
-    """
+    """Check if *entry* is exactly divisible by *candidate* with no remainder."""
     from sympy import cancel as _cancel
     from sympy.core.sympify import sympify
 
@@ -800,24 +628,7 @@ def _is_exactly_divisible(entry, candidate):
 
 
 def _deduplicate_proportional(factors):
-    """Remove factors that are constant multiples of an already-kept factor.
-
-    Given a list of irreducible commutative factors, returns a filtered list
-    that contains at most one representative per proportionality class
-    (i.e., factors that differ only by a constant scalar such as -1).
-
-    This is needed because _normalize_factor_sign may not catch every sign
-    convention, and both ``a`` and ``-a`` could otherwise end up as
-    separate survivors, producing ``-a**2`` as the divisor.
-
-    Examples
-    ========
-
-    >>> from sympy.abc import x
-    >>> from sympy.tensor.algebraic.simplify import _deduplicate_proportional
-    >>> _deduplicate_proportional([x, -x, x + 1])
-    [x, x + 1]
-    """
+    """Remove factors that are constant multiples of an already-kept factor."""
     if not factors:
         return []
     kept = []
@@ -843,27 +654,7 @@ def _deduplicate_proportional(factors):
 
 
 def _extract_commutative_from_factor(factor):
-    """Extract commutative prefactor from a single tensor factor.
-
-    Dispatches to specialized handlers based on the type of *factor*:
-    Add, MatAdd/MatrixExpr sum, Mul, or concrete Matrix.
-
-    Returns
-    -------
-    (commutative_coeff, new_factor)
-        *commutative_coeff* is S.One when nothing was extracted.
-
-    Examples
-    ========
-
-    >>> from sympy.matrices import ImmutableDenseMatrix
-    >>> from sympy.abc import x
-    >>> from sympy.tensor.algebraic.simplify import _extract_commutative_from_factor
-    >>> M = ImmutableDenseMatrix([[x, 2*x], [3*x, 4*x]])
-    >>> coeff, new_M = _extract_commutative_from_factor(M)
-    >>> coeff
-    x
-    """
+    """Extract commutative prefactor from a single tensor factor."""
     from sympy.core.add import Add as _Add
     from sympy.core.mul import Mul
     from sympy.matrices.expressions.matexpr import MatrixExpr as _MatrixExpr
@@ -883,15 +674,7 @@ def _extract_commutative_from_factor(factor):
 
 
 def _extract_from_add(factor):
-    """Extract commutative prefactor from a SymPy Add expression.
-
-    Attempts to factor the Add to pull out a common commutative divisor,
-    then separates commutative and non-commutative parts.
-
-    Returns
-    -------
-    (commutative_coeff, new_factor) or (S.One, factor)
-    """
+    """Extract commutative prefactor from a SymPy Add expression."""
     from sympy.core.mul import Mul
     from sympy import factor as _factor
 
@@ -922,15 +705,7 @@ def _extract_from_add(factor):
 
 
 def _extract_from_matadd(factor):
-    """Extract commutative prefactor from a MatAdd/MatrixExpr sum.
-
-    Tries SymPy's factor() first, then manually walks each term to find
-    the common commutative divisor across all terms.
-
-    Returns
-    -------
-    (commutative_coeff, new_factor) or (S.One, factor)
-    """
+    """Extract commutative prefactor from a MatAdd/MatrixExpr sum."""
     from sympy.core.mul import Mul
     from sympy import cancel
     from sympy import factor as _factor
@@ -1004,15 +779,7 @@ def _extract_from_matadd(factor):
 
 
 def _find_common_divisor(coeffs):
-    """Find the common commutative divisor of a list of coefficients.
-
-    Uses exact divisibility checks and factor-based GCD to find the
-    largest common divisor that divides all coefficients.
-
-    Returns
-    -------
-    The common divisor, or S.One if none found.
-    """
+    """Find the common commutative divisor of a list of coefficients."""
     from sympy.core.mul import Mul
     from sympy import cancel
     from sympy import factor as _fc
@@ -1040,15 +807,7 @@ def _find_common_divisor(coeffs):
 
 
 def _extract_from_mul(factor):
-    """Extract commutative prefactor from a Mul expression.
-
-    Separates commutative and non-commutative args, returning the
-    commutative parts as the coefficient.
-
-    Returns
-    -------
-    (commutative_coeff, new_factor) or (S.One, factor)
-    """
+    """Extract commutative prefactor from a Mul expression."""
     from sympy.core.mul import Mul
 
     comm_parts = []
@@ -1072,16 +831,7 @@ def _extract_from_mul(factor):
 
 
 def _extract_from_matrix(factor):
-    """Extract commutative prefactor from a concrete Matrix.
-
-    Factors each entry, finds common commutative divisors across all
-    nonzero entries, divides the matrix, and returns the divisor as
-    prefactor.
-
-    Returns
-    -------
-    (commutative_coeff, new_factor) or (S.One, factor)
-    """
+    """Extract commutative prefactor from a concrete Matrix."""
     from sympy.core.mul import Mul
     from sympy.matrices.immutable import ImmutableDenseMatrix
     from sympy import cancel
@@ -1139,11 +889,7 @@ def _extract_from_matrix(factor):
 
 
 def _collect_matrix_factor_candidates(nonzero_entries):
-    """Collect candidate commutative factors from matrix entries.
-
-    Factors each entry into irreducible parts, normalizes signs, and
-    returns the set of unique non-numeric commutative factors.
-    """
+    """Collect candidate commutative factors from matrix entries."""
     from sympy.core.mul import Mul
     from sympy import factor as _factor
 
@@ -1161,10 +907,7 @@ def _collect_matrix_factor_candidates(nonzero_entries):
 
 
 def _compute_numeric_gcd(nonzero_entries):
-    """Compute GCD of numeric coefficients across matrix entries.
-
-    Returns the GCD value if it differs from +/-1, otherwise None.
-    """
+    """Compute GCD of numeric coefficients across matrix entries."""
     from sympy.core.intfunc import igcd
 
     numeric_coeffs = []
@@ -1186,15 +929,7 @@ def _compute_numeric_gcd(nonzero_entries):
 
 
 def _verify_safe_division(factor, divisor):
-    """Verify that dividing matrix entries by *divisor* is safe.
-
-    Checks that no nonzero entry would acquire a denominator involving
-    any non-numeric factor of the divisor.
-
-    Returns
-    -------
-    True if division is safe, False otherwise.
-    """
+    """Verify that dividing matrix entries by *divisor* is safe."""
     from sympy.core.mul import Mul
     from sympy import cancel
 
@@ -1228,28 +963,7 @@ def _verify_safe_division(factor, divisor):
 
 
 def _extract_commutative_prefactors(pt):
-    """Extract commutative prefactors from every factor of a PureTensor.
-
-    Walks each tensor factor, pulls out commutative multiplicative parts,
-    and accumulates them into a single prefactor.
-
-    Returns
-    -------
-    (extracted_coeff, new_factors_list)
-
-    Examples
-    ========
-
-    >>> from sympy.matrices.expressions import MatrixSymbol
-    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
-    >>> from sympy.tensor.algebraic.simplify import _extract_commutative_prefactors
-    >>> A = MatrixSymbol("A", 3, 4)
-    >>> B = MatrixSymbol("B", 4, 5)
-    >>> T = AlgebraicPureTensor(A, B)
-    >>> coeff, factors = _extract_commutative_prefactors(T)
-    >>> coeff
-    1
-    """
+    """Extract commutative prefactors from every factor of a PureTensor."""
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
     extracted = S.One
@@ -1277,19 +991,7 @@ def _commutativity_simplify(at, **kwargs):
     """Simplify an AlgebraicTensor using commutativity-aware decomposition.
 
     Decomposes each term into commutative and non-commutative subtensors,
-    groups by commutative pattern, applies ``_equality_factoring`` to
-    non-commutative components, and reconstructs the full expression.
-
-    Parameters
-    ----------
-    at : AlgebraicTensor
-        The tensor to simplify.
-    **kwargs
-        Extra keyword arguments forwarded to SymPy's simplify.
-
-    Returns
-    -------
-    Simplified tensor expression.
+    groups by commutative pattern, and reconstructs the full expression.
     """
     from sympy.matrices.expressions.special import ZeroMatrix as _ZeroMatrix
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
@@ -1478,14 +1180,8 @@ def _commutativity_simplify(at, **kwargs):
 def _simplify_algebraic_pure_tensor(pt, **kwargs):
     """Simplify a single AlgebraicPureTensor.
 
-    Strategy
-    --------
-    1. Simplify the leading coefficient with SymPy's ``simplify``.
-    2. Attempt to simplify each factor individually (useful when factors
-       are MatrixExpr containing simplifiable sub-expressions).
-    3. Extract commutative prefactors from each factor (common divisors
-       across matrix entries) and fold them into the coefficient.
-    4. Reconstruct the PureTensor with the (possibly changed) pieces.
+    Simplifies the coefficient and each factor, extracts commutative
+    prefactors, and reconstructs the result.
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor

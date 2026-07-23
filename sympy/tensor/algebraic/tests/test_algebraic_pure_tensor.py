@@ -304,7 +304,43 @@ def test_algebraic_pure_tensor_1x1_matrix():
     """Test AlgebraicPureTensor with 1x1 matrix."""
     M = ImmutableDenseMatrix([[5]])
     A = MatrixSymbol('A', 3, 4)
-    
+
     T = AlgebraicPureTensor(M, A)
     assert T.shape == ((1, 1), (3, 4))
     assert T.commutativity_pattern == (1, 0)
+
+
+def test_pure_tensor_add_with_dispatched_zeromatrix():
+    """PureTensor cannot be added to a ZeroMatrix (dispatched single-factor zero)."""
+    from sympy.tensor.algebraic.algebraic_tensor import ShapeMismatchError
+
+    zm = AlgebraicZeroTensor((3, 4))  # dispatches to ZeroMatrix
+    A = MatrixSymbol("A", 3, 4)
+    B = MatrixSymbol("B", 4, 5)
+    pt = AlgebraicPureTensor(A, B)
+
+    # ZeroMatrix.__add__ routes through MatAdd, rejects non-MatrixExpr
+    raises(TypeError, lambda: zm + pt)
+    raises(TypeError, lambda: zm - pt)
+
+    # Reverse: AlgebraicPureTensor.__radd__ validates shape mismatch
+    raises(ShapeMismatchError, lambda: pt + zm)
+    raises(ShapeMismatchError, lambda: pt - zm)
+
+
+def test_pure_tensor_compose_with_dispatched_zeromatrix():
+    """PureTensor * ZeroMatrix routes through composition; ZeroMatrix * PureTensor through MatMul."""
+    from sympy.tensor.algebraic.algebraic_pure_tensor import ShapeMismatchError
+
+    zm = AlgebraicZeroTensor((3, 4))  # dispatches to ZeroMatrix
+    A = MatrixSymbol("A", 3, 2)
+    B = MatrixSymbol("B", 4, 5)
+    pt = AlgebraicPureTensor(A, B)
+
+    # ZeroMatrix.__mul__ routes through MatMul, not compose_algebraic_tensors
+    result = zm * pt
+    assert result.shape == zm.shape
+
+    # Reverse: AlgebraicPureTensor.__rmul__ delegates to composition,
+    # which sees factor count mismatch (2 factors vs 1 bare matrix)
+    raises(ShapeMismatchError, lambda: pt * zm)
