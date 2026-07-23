@@ -1,5 +1,7 @@
 from __future__ import annotations
+from concurrent.futures import ThreadPoolExecutor
 import math
+from threading import Barrier
 
 from sympy.concrete.products import (Product, product)
 from sympy.concrete.summations import Sum
@@ -36,7 +38,7 @@ from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
 from mpmath import inf, ninf, make_mpc
 from sympy.external.mpmath import from_float, fzero, finf
 from sympy.core.expr import unchanged
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, skip_under_pyodide
 from sympy.abc import n, x, y
 
 
@@ -503,6 +505,12 @@ def test_to_mpmath():
     assert sqrt(3)._to_mpmath(20)._mpf_ == (0, int(908093), -19, 20)
     assert S(3.2)._to_mpmath(20)._mpf_ == (0, int(838861), -18, 20)
 
+    from sympy.external.mpmath import local_workprec
+    with local_workprec(20) as ctx:
+        assert sqrt(3)._to_mpmath_ctx(ctx).context is ctx
+        assert I._to_mpmath_ctx(ctx).context is ctx
+        assert S(3)._to_mpmath_ctx(ctx) == 3
+
 
 def test_issue_6632_evalf():
     add = (-100000*sqrt(2500000001) + 5000000001)
@@ -629,6 +637,26 @@ def test_issue_13425():
 
 def test_issue_17421():
     assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
+
+
+@skip_under_pyodide("Cannot create threads under pyodide.")
+def test_issue_17421_concurrent_precisions():
+    expr = acos(-I + acosh(cosh(cosh(1) + I)))
+    precisions = (10, 20, 30, 40, 50, 60, 70, 80)
+    expected = {prec: N(expr, prec) for prec in precisions}
+    barrier = Barrier(len(precisions))
+
+    def evaluate(prec):
+        failures = 0
+        for _ in range(50):
+            barrier.wait()
+            failures += N(expr, prec) != expected[prec]
+        return failures
+
+    with ThreadPoolExecutor(max_workers=len(precisions)) as pool:
+        failures = sum(pool.map(evaluate, precisions))
+
+    assert failures == 0
 
 
 def test_issue_20291():
