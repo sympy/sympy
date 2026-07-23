@@ -1,4 +1,5 @@
 [tool.pytest.ini_options]
+timeout_func_only = true
 # Don't run the tests marked as slow by default.
 addopts = "-m 'not slow and not tooslow'"
 filterwarnings = [
