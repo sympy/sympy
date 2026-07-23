@@ -5326,6 +5326,94 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         expand_mat = self._expr_mat.expand(**hints)
         return _to_TFM(expand_mat, self.var, self.sampling_time)
 
+    def _to_state_space(self, ss_cls, *sampling_time):
+        # Realize each entry as a SISO state-space system and stack the
+        # realizations block-diagonally.  The states of entry ``(i, j)`` form
+        # an independent block that is driven only by input ``j`` and seen
+        # only at output ``i``, so the resulting model has as many states as
+        # the sum of the orders of the individual transfer functions.
+        cells = [tf.doit().rewrite(ss_cls) for tf in self._flat()]
+        ni, no = self.num_inputs, self.num_outputs
+        n = sum(cell.num_states for cell in cells)
+        A, B, C, D = zeros(n, n), zeros(n, ni), zeros(no, n), zeros(no, ni)
+        r = 0
+        for k, cell in enumerate(cells):
+            i, j = divmod(k, ni)
+            m = cell.num_states
+            A[r:r + m, r:r + m] = cell.A
+            B[r:r + m, j:j + 1] = cell.B
+            C[i:i + 1, r:r + m] = cell.C
+            D[i, j] = cell.D[0, 0]
+            r += m
+        return ss_cls(A, B, C, D, *sampling_time)
+
+    def _eval_rewrite_as_StateSpace(self, *args):
+        """
+        Returns a MIMO ``StateSpace`` model equivalent to the transfer
+        function matrix.
+
+        Each entry is realized in controllable canonical form and the
+        realizations are combined block-diagonally, so the conversion is not
+        unique.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control import TransferFunction, TransferFunctionMatrix, StateSpace
+        >>> tf1 = TransferFunction(1, s + 1, s)
+        >>> tf2 = TransferFunction(1, 2*s + 1, s)
+        >>> tfm = TransferFunctionMatrix([[tf1], [tf2]])
+        >>> tfm.rewrite(StateSpace)
+        StateSpace(Matrix([
+        [-1,    0],
+        [ 0, -1/2]]), Matrix([
+        [1],
+        [1]]), Matrix([
+        [1,   0],
+        [0, 1/2]]), Matrix([
+        [0],
+        [0]]))
+
+        """
+        if not self._is_continuous:
+            raise TypeError("A discrete-time TransferFunctionMatrix cannot "
+                "be rewritten as a continuous StateSpace model.")
+        return self._to_state_space(StateSpace)
+
+    def _eval_rewrite_as_DiscreteStateSpace(self, *args):
+        """
+        Returns a MIMO ``DiscreteStateSpace`` model equivalent to the
+        discrete-time transfer function matrix.
+
+        See :meth:`_eval_rewrite_as_StateSpace` for details of the
+        construction.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import z
+        >>> from sympy.physics.control import DiscreteTransferFunction, TransferFunctionMatrix, DiscreteStateSpace
+        >>> dtf1 = DiscreteTransferFunction(1, z + 1, z, 0.1)
+        >>> dtf2 = DiscreteTransferFunction(1, 2*z + 1, z, 0.1)
+        >>> tfm = TransferFunctionMatrix([[dtf1], [dtf2]])
+        >>> tfm.rewrite(DiscreteStateSpace)
+        DiscreteStateSpace(Matrix([
+        [-1,    0],
+        [ 0, -1/2]]), Matrix([
+        [1],
+        [1]]), Matrix([
+        [1,   0],
+        [0, 1/2]]), Matrix([
+        [0],
+        [0]]), 0.1)
+
+        """
+        if self._is_continuous:
+            raise TypeError("A continuous-time TransferFunctionMatrix cannot "
+                "be rewritten as a DiscreteStateSpace model.")
+        return self._to_state_space(DiscreteStateSpace, self.sampling_time)
+
     @property
     def sampling_time(self):
         return self.args[0][0][0].sampling_time
