@@ -184,3 +184,23 @@ class AlgebraicZeroTensor(Basic):
 
     def diff(self, *symbols, **assumptions):
         return self
+
+    def display(self, mode="latex"):
+        """Display this tensor using IPython display or fallback to print.
+
+        Parameters
+        ----------
+        mode : str, default 'latex'
+            'latex' for LaTeX rendering, 'text' for plain text.
+        """
+        try:
+            from IPython.display import display, Latex
+            if mode == "latex":
+                display(Latex(self._repr_latex_()))
+            else:
+                display(self, plain=True)
+        except ImportError:
+            if mode == "latex":
+                print(self._repr_latex_())
+            else:
+                print(self)

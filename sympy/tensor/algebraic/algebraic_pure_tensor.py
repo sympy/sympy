@@ -12,8 +12,9 @@ from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
 This module defines :class:`AlgebraicPureTensor`, the building block for
 algebraic tensor expressions.  A pure tensor represents a single term in
-a tensor expression -- the non-commutative tensor product of matrix-like
-factors, optionally scaled by a commutative coefficient.
+a tensor expression -- the non-commutative tensor product of matrix-like 
+(which includes vectors) factors, optionally scaled by a commutative 
+coefficient.
 
 Each factor must carry ``.shape`` (e.g. any
 :class:`~sympy.matrices.expressions.MatrixSymbol`).  The tensor shape is
@@ -81,7 +82,7 @@ class AlgebraicPureTensor(Basic):
     Each factor must carry ``.shape`` (e.g. any ``MatrixExpr`` or a
     1x1 Matrix wrapper around a non-commutative Symbol).
 
-    The tensor shape is the full sequence of per-factor shapes, e.g.
+    The tensor shape is the full sequence tuple of per-factor shapes, e.g.
     ``((3, 4), (4, 5))`` for ``AlgebraicPureTensor(A_3x4, C_4x5)``.  No
     contraction is performed.
 
@@ -107,7 +108,7 @@ class AlgebraicPureTensor(Basic):
     >>> print(AlgebraicPureTensor(2, A, B))
     2*A ⊗ B
     >>> from sympy.abc import x
-    >>> print(AlgebraicPureTensor(x, A, B))
+    >>> print(AlgebraicPureTensor(A, x, B))
     x*A ⊗ B
 
     Zero coefficient produces a zero tensor:
@@ -115,10 +116,10 @@ class AlgebraicPureTensor(Basic):
     >>> print(AlgebraicPureTensor(0, A, B))
     0_{(3x4), (4x5)}
 
-    Single factor with coefficient 1 unwraps to the bare factor:
+    Single matrix-like factor unwraps to the bare factor:
 
-    >>> print(AlgebraicPureTensor(A))
-    A
+    >>> print(AlgebraicPureTensor(x, A))
+    x*A
     """
 
     __slots__ = ()
@@ -196,8 +197,9 @@ class AlgebraicPureTensor(Basic):
     def __new__(cls, *args, evaluate=False):
         """Construct an AlgebraicPureTensor from factors.
 
-        The first argument may be a commutative coefficient
-        (Number or symbolic).
+        Any argument may be a commutative coefficient (Number or symbolic)
+        or a tensor factor, the constructor automatically determines if an
+        argument is a scalar or a tensor factor.
 
         Examples
         ========
@@ -208,8 +210,8 @@ class AlgebraicPureTensor(Basic):
         >>> B = MatrixSymbol("B", 4, 5)
         >>> print(AlgebraicPureTensor(A, B))
         A ⊗ B
-        >>> print(AlgebraicPureTensor(2, A, B))
-        2*A ⊗ B
+        >>> print(AlgebraicPureTensor(2, A, 3, B))
+        6*A ⊗ B
         >>> print(AlgebraicPureTensor(0, A, B))
         0_{(3x4), (4x5)}
         >>> print(AlgebraicPureTensor(A))
@@ -606,7 +608,7 @@ class AlgebraicPureTensor(Basic):
 
     def expand(self, deep=True, **hints):
         """Expand this pure tensor by distributing over ``Add``
-        in factors and coefficient.
+        in factors.
 
         Examples
         ========
