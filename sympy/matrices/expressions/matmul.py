@@ -127,9 +127,6 @@ class MatMul(MatrixExpr, Mul):
         scalars = [x for x in self.args if not x.is_Matrix]
         matrices = [x for x in self.args if x.is_Matrix]
         coeff = Mul(*scalars)
-        if coeff.is_commutative is False:
-            raise NotImplementedError("noncommutative scalars in MatMul are not supported.")
-
         return coeff, matrices
 
     def as_coeff_mmul(self):
