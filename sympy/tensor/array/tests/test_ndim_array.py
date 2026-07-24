@@ -72,3 +72,18 @@ def test_issue_and_18715():
         A = array_type([0, 1, 2])
         A[0] += 5
         assert A[0] == 5
+
+
+def test_applyfunc_scalar_and_iterator_input():
+    # applyfunc on a 0-dim (scalar) array used to crash: it builds the new
+    # array from a ``map`` object, and the shape==() length check called
+    # ``len()`` on that one-shot iterator.  This also covers passing a bare
+    # iterator (map/generator) together with an explicit shape.
+    for array_type in array_types:
+        scalar = array_type(5)
+        assert scalar.shape == ()
+        assert array_type(5).applyfunc(lambda e: e + 1)[()] == 6
+        assert scalar.applyfunc(lambda e: e**2)[()] == 25
+        # a one-shot iterator with an explicit shape must be accepted:
+        assert array_type(map(lambda e: e, [7]), ()) [()] == 7
+        assert list(array_type((i for i in range(3)), (3,))) == [0, 1, 2]
