@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.singleton import S
@@ -71,6 +74,9 @@ def test_AssocOp_flatten():
     assert MyAssoc(a, v).args == (a, b, c, d)
 
 
+@pytest.mark.thread_unsafe(
+    reason="registers handlers in the process-global add dispatcher"
+)
 def test_add_dispatcher():
 
     class NewBase(Expr):
@@ -91,6 +97,9 @@ def test_add_dispatcher():
     assert add(a,b,a) == NewAdd(2*a, b)
 
 
+@pytest.mark.thread_unsafe(
+    reason="registers handlers in the process-global multiply dispatcher"
+)
 def test_mul_dispatcher():
 
     class NewBase(Expr):

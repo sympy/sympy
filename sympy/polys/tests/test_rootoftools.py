@@ -1,6 +1,11 @@
 """Tests for the implementation of RootOf class and related tools. """
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+
+import pytest
+
 from sympy.polys.polytools import Poly
 import sympy.polys.rootoftools as rootoftools
 from sympy.polys.rootoftools import (rootof, RootOf, CRootOf, RootSum,
@@ -24,7 +29,7 @@ from sympy.polys.orthopolys import legendre_poly
 from sympy.solvers.solvers import solve
 
 
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises, skip_under_pyodide, slow
 from sympy.core.expr import unchanged
 
 from sympy.abc import a, b, x, y, z, r
@@ -391,6 +396,7 @@ def test_CRootOf_eval_rational():
              ]
 
 
+@pytest.mark.thread_unsafe(reason="clears and inspects process-global CRootOf caches")
 def test_CRootOf_lazy():
     # irreducible poly with both real and complex roots:
     f = Poly(x**3 + 2*x + 2)
@@ -619,6 +625,27 @@ def test_is_disjoint():
     ii = rootof(eq, 1)._get_interval()
     assert ir.is_disjoint(ii)
     assert ii.is_disjoint(ir)
+
+
+@skip_under_pyodide("Cannot create threads under pyodide.")
+def test_CRootOf_concurrent_cache():
+    poly = Poly((x**3 + x + 3)*(x**3 + 5*x + 1), x)
+    expected = [str(root.evalf(12)) for root in poly.all_roots()]
+    barrier = Barrier(4)
+
+    def get_roots(_):
+        results = []
+        for _ in range(10):
+            barrier.wait()
+            roots = poly.all_roots()
+            results.append([str(root.evalf(12)) for root in roots])
+        return results
+
+    CRootOf.clear_cache()
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = pool.map(get_roots, range(4))
+
+    assert all(roots == expected for result in results for roots in result)
 
 
 def test_pure_key_dict():

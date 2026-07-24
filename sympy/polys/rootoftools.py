@@ -1,7 +1,7 @@
 """Implementation of RootOf class and related tools. """
 from __future__ import annotations
 
-
+from contextlib import nullcontext
 
 from sympy.core.basic import Basic
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
@@ -437,9 +437,9 @@ class ComplexRootOf(RootOf):
         if use_cache and currentfactor in _reals_cache:
             real_part = _reals_cache[currentfactor]
         else:
-            _reals_cache[currentfactor] = real_part = \
-                dup_isolate_real_roots_sqf(
-                    currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
+            real_part = dup_isolate_real_roots_sqf(
+                currentfactor.rep.to_list(), currentfactor.rep.dom,
+                blackbox=True)
 
         return real_part
 
@@ -449,8 +449,7 @@ class ComplexRootOf(RootOf):
         if use_cache and currentfactor in _complexes_cache:
             complex_part = _complexes_cache[currentfactor]
         else:
-            _complexes_cache[currentfactor] = complex_part = \
-                dup_isolate_complex_roots_sqf(
+            complex_part = dup_isolate_complex_roots_sqf(
                 currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
         return complex_part
 
@@ -471,6 +470,12 @@ class ComplexRootOf(RootOf):
                 reals.extend(new)
 
         reals = cls._reals_sorted(reals)
+
+        real_factors = {factor for _, factor, _ in reals}
+        for currentfactor, _ in factors:
+            if currentfactor not in real_factors:
+                _reals_cache[currentfactor] = []
+
         return reals
 
     @classmethod
@@ -490,6 +495,12 @@ class ComplexRootOf(RootOf):
                 complexes.extend(new)
 
         complexes = cls._complexes_sorted(complexes)
+
+        complex_factors = {factor for _, factor, _ in complexes}
+        for currentfactor, _ in factors:
+            if currentfactor not in complex_factors:
+                _complexes_cache[currentfactor] = []
+
         return complexes
 
     @classmethod
@@ -914,16 +925,22 @@ class ComplexRootOf(RootOf):
         expr, i = self.args
         return self.func(expr, i + (1 if self._get_interval().conj else -1))
 
-    def eval_approx(self, n, return_mpmath=False):
+    def eval_approx(self, n, return_mpmath=False, context=None):
         """Evaluate this complex root to the given precision.
 
         This uses secant method and root bounds are used to both
         generate an initial guess and to check that the root
         returned is valid. If ever the method converges outside the
         root bounds, the bounds will be made smaller and updated.
+
+        If ``context`` is provided, it is used for the calculation instead
+        of borrowing a local mpmath context. This is required when returning
+        an mpmath value so that the caller owns the value's context for as
+        long as it is used.
         """
         prec = dps_to_prec(n)
-        with local_workprec(prec) as mp:
+        workprec = local_workprec(prec) if context is None else nullcontext(context)
+        with workprec as mp:
             g = self.poly.gen
             if not g.is_Symbol:
                 d = Dummy('x')

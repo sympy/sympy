@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import pickle
 
+import pytest
+
 from sympy.polys.polytools import (
     Poly, PurePoly, poly,
     parallel_poly_from_expr,
@@ -304,6 +306,7 @@ def test_Poly_from_expr():
     assert Poly.from_expr(y + 5, x, y, domain=ZZ).rep == DMP([[ZZ(1), ZZ(5)]], ZZ)
 
 
+@pytest.mark.thread_unsafe(reason="has pathological scaling with concurrent root analysis")
 def test_Poly_rootof_extension():
     r1 = rootof(x**3 + x + 3, 0)
     r2 = rootof(x**3 + x + 3, 1)
@@ -332,6 +335,7 @@ def test_Poly_rootof_same_symbol_issue_26808():
     assert Poly(r1, x, extension=True) == Poly(r1, x, domain=K1)
 
 
+@pytest.mark.thread_unsafe(reason="has pathological scaling with concurrent root analysis")
 def test_Poly_rootof_extension_to_sympy():
     # Verify that when primitive elements and RootOf are used, the expression
     # is not exploded on the way back to sympy.
@@ -1208,6 +1212,7 @@ def test_Poly_lift():
     assert p.lift() == Poly(x**8 + x**2 - 34*x + 289, x, domain='QQ')
 
 
+@pytest.mark.thread_unsafe(reason="has pathological scaling under concurrent polynomial lifting")
 def test_Poly_lift_multiple():
 
     r1 = rootof(y**3 + y**2 - 1, 0)
@@ -2708,6 +2713,7 @@ def test_sqf():
     ])
 
 
+@pytest.mark.thread_unsafe(reason="has pathological scaling under concurrent factorization")
 def test_factor():
     f = x**5 - x**3 - x**2 + 1
 
@@ -4133,6 +4139,7 @@ def test_issue_28156():
     assert roots
 
 
+@pytest.mark.thread_unsafe(reason="has pathological scaling with concurrent root analysis")
 def test_hurwitz_conditions():
     raises(ValueError, lambda: Poly(0, x).hurwitz_conditions())
     raises(NotImplementedError, lambda: Poly(x**2 + (1+I)).hurwitz_conditions())

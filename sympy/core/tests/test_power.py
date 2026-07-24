@@ -624,6 +624,9 @@ def test_rational_powers_larger_than_one():
     assert Rational(3, 7)**Rational(7, 3) == 9*3**Rational(1, 3)*7**Rational(2, 3)/343
 
 
+@pytest.mark.thread_unsafe(
+    reason="registers handlers in the process-global power dispatcher"
+)
 def test_power_dispatcher():
 
     class NewBase(Expr):

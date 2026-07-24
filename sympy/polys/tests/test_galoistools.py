@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.polys.galoistools import (
     gf_crt, gf_crt1, gf_crt2, gf_int,
     gf_degree, gf_strip, gf_trunc, gf_normal,
@@ -444,6 +447,7 @@ def test_gf_irreducible():
     assert gf_irreducible_p(gf_irreducible(7, 11, ZZ), 11, ZZ) is True
 
 
+@pytest.mark.thread_unsafe(reason="changes process-global polynomial configuration")
 def test_gf_irreducible_p():
     assert gf_irred_p_ben_or(ZZ.map([7]), 11, ZZ) is True
     assert gf_irred_p_ben_or(ZZ.map([7, 3]), 11, ZZ) is True

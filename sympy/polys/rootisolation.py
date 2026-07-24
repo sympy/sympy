@@ -1786,11 +1786,17 @@ class RealInterval:
     @property
     def b(self):
         """Return the position of the right end. """
-        was = self.neg
-        self.neg = not was
-        rv = -self.a
-        self.neg = was
-        return rv
+        field = self.dom.get_field()
+        a, b, c, d = self.mobius
+
+        if not self.neg:
+            if a*d > b*c:
+                return field(a, c)
+            return field(b, d)
+        else:
+            if a*d < b*c:
+                return -field(a, c)
+            return -field(b, d)
 
     @property
     def dx(self):

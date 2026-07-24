@@ -28,11 +28,12 @@ from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.external.gmpy import gmpy as _gmpy, flint as _flint
-from sympy.external.mpmath import conserve_mpmath_dps
+from sympy.external.mpmath import conserve_mpmath_dps, local_workdps
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
 import mpmath
+import pytest
 from collections import defaultdict, OrderedDict
 
 
@@ -122,6 +123,7 @@ def test_sympify_flint():
         assert value == Rational(101, 127) and type(value) is Rational
 
 
+@pytest.mark.thread_unsafe(reason="uses mpmath's process-global context")
 @conserve_mpmath_dps
 def test_sympify_mpmath():
     value = sympify(mpmath.mpf(1.0))
@@ -141,6 +143,26 @@ def test_sympify_mpmath():
 
     mpmath.mp.dps = 15
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
+
+
+def test_sympify_mpmath_local():
+    with local_workdps(15) as ctx:
+        value = sympify(ctx.mpf(1.0))
+        assert value == Float(1.0) and type(value) is Float
+
+    with local_workdps(12) as ctx:
+        value = sympify(ctx.pi)
+        assert value.epsilon_eq(Float("3.14159265359"), Float("1e-12"))
+        assert not value.epsilon_eq(Float("3.14159265359"), Float("1e-13"))
+
+    with local_workdps(6) as ctx:
+        value = sympify(ctx.pi)
+        assert value.epsilon_eq(Float("3.14159"), Float("1e-5"))
+        assert not value.epsilon_eq(Float("3.14159"), Float("1e-6"))
+
+    with local_workdps(15) as ctx:
+        value = sympify(ctx.mpc(1.0 + 2.0j))
+        assert value == Float(1.0) + Float(2.0)*I
 
 
 def test_sympify2():
@@ -543,6 +565,9 @@ def test_issue_6540_6552():
     assert S('Matrix([2*(1)])') == Matrix([2])
 
 
+@pytest.mark.thread_unsafe(
+    reason="temporarily mutates process-global clash dictionaries"
+)
 def test_issue_6046():
     assert str(S("Q & C", locals=_clash1)) == 'C & Q'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
