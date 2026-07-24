@@ -335,12 +335,17 @@ class AlgebraicTensor(Basic):
 
     >>> print(AlgebraicTensor(T1, -T1))
     0_{(3x4), (4x5)}
+
+    Addition is commutative: two algebraic tensors are equal if and only if the sets
+    of pure tensors that define them (via addition) are equal. The ordering in which
+    summands appear is not relevant. E.g., ``A ⊗ B + C ⊗ D`` is equal to ``C ⊗ D + A ⊗ B``.
     """
 
     __slots__ = ('_coeff_map',)
 
     is_AlgebraicTensor = True
     is_Add = True
+    is_commutative = False
 
     identity = None  # no single identity; use AlgebraicZeroTensor(shape) instead
 
@@ -554,6 +559,15 @@ class AlgebraicTensor(Basic):
         return result
 
     @property
+    def free_symbols(self):
+        """Union of free symbols from all terms in this sum."""
+        syms = set()
+        for a in self.args:
+            if hasattr(a, 'free_symbols'):
+                syms |= a.free_symbols
+        return syms
+
+    @property
     def terms(self):
         """Non-zero, non-coefficient terms in this sum."""
         return tuple(
@@ -570,6 +584,15 @@ class AlgebraicTensor(Basic):
         if state is not None and '_coeff_map' in state:
             del state['_coeff_map']
         return state
+
+    def __eq__(self, other):
+        """Compare two AlgebraicTensors for equality.
+
+        Addition is commutative: two algebraic tensors are equal if and only
+        if the sets of their args are equal, regardless of ordering."""
+        if type(self) is type(other):
+            return set(self.args) == set(other.args)
+        return NotImplemented
 
     def _has_simple_terms(self):
         """Check if all args are AlgebraicPureTensor or AlgebraicZeroTensor."""
@@ -825,7 +848,7 @@ class AlgebraicTensor(Basic):
                 f"Cannot multiply AlgebraicTensor with {type(other).__name__}"
             )
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor))):
+                other.is_commutative and not isinstance(other, AlgebraicZeroTensor)):
             return AlgebraicTensor(*(a * other for a in self.args))
         return compose_algebraic_tensors(self, other)
 
@@ -839,17 +862,13 @@ class AlgebraicTensor(Basic):
                 f"Cannot multiply {type(other).__name__} with AlgebraicTensor"
             )
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor))):
+                other.is_commutative and not isinstance(other, AlgebraicZeroTensor)):
             return AlgebraicTensor(*(other * a for a in self.args))
         return compose_algebraic_tensors(other, self)
 
-    def simplify(self):
-        """Simplify this AlgebraicTensor.
-
-        Applies proportionality factoring and per-term simplification.
-        """
+    def _eval_simplify(self, **kwargs):
         from sympy.tensor.algebraic.simplify import _simplify_algebraic_tensor
-        return _simplify_algebraic_tensor(self)
+        return _simplify_algebraic_tensor(self, **kwargs)
 
     def doit(self, **hints):
         """Evaluate each term in the sum by linearity.
@@ -942,26 +961,6 @@ class AlgebraicTensor(Basic):
                 differentiated.append(S.Zero)
 
         return AlgebraicTensor(*differentiated)
-
-    def display(self, mode="latex"):
-        """Display this tensor using IPython display or fallback to print.
-
-        Parameters
-        ----------
-        mode : str, default 'latex'
-            'latex' for LaTeX rendering, 'text' for plain text.
-        """
-        try:
-            from IPython.display import display, Latex
-            if mode == "latex":
-                display(Latex(self._repr_latex_()))
-            else:
-                display(self, plain=True)
-        except ImportError:
-            if mode == "latex":
-                print(self._repr_latex_())
-            else:
-                print(self)
 
     def expand(self, deep=True, **hints):
         """Expand this AlgebraicTensor by expanding each term.
@@ -1094,8 +1093,7 @@ def algebraic_tensor_product(*args):
             return [(arg_s, ())]
 
         # Commutative symbols and expressions are treated as coefficients
-        if (hasattr(arg_s, 'is_commutative') and arg_s.is_commutative
-                and not isinstance(arg_s, AlgebraicPureTensor)):
+        if hasattr(arg_s, 'is_commutative') and arg_s.is_commutative:
             return [(arg_s, ())]
 
         if hasattr(arg_s, "shape"):

@@ -120,11 +120,21 @@ class AlgebraicPureTensor(Basic):
 
     >>> print(AlgebraicPureTensor(x, A))
     x*A
+
+    Equality is structural: two pure tensors are equal if and only if they
+    have the same coefficient and identical factors in the same order.
+    Because the tensor product is non-commutative, ``A ⊗ B`` and ``B ⊗ A``
+    are not equal (assuming ``A`` and ``B`` have different shapes).
+
+    Note that a single-factor tensor unwraps to the bare factor:
+    ``AlgebraicPureTensor(A)`` returns ``A`` (a ``MatrixSymbol``), not an
+    ``AlgebraicPureTensor`` instance.
     """
 
     __slots__ = ()
 
     is_AlgebraicPureTensor = True
+    is_commutative = False
 
     _op_priority = 11  # Higher than Symbol/Expr so x * pt delegates to pt.__rmul__(x)
 
@@ -194,6 +204,17 @@ class AlgebraicPureTensor(Basic):
             for f in self.factors
         )
 
+    @property
+    def free_symbols(self):
+        """Union of free symbols from the coefficient and all factors."""
+        syms = set()
+        if self.coeff.free_symbols:
+            syms |= self.coeff.free_symbols
+        for f in self.factors:
+            if hasattr(f, 'free_symbols'):
+                syms |= f.free_symbols
+        return syms
+
     def __new__(cls, *args, evaluate=False):
         """Construct an AlgebraicPureTensor from factors.
 
@@ -232,8 +253,7 @@ class AlgebraicPureTensor(Basic):
             elif hasattr(a, "shape"):
                 processed.append(a)
             elif (hasattr(a, 'is_commutative') and
-                    a.is_commutative and
-                    not isinstance(a, AlgebraicPureTensor)):
+                    a.is_commutative):
                 coeff = coeff * a
             else:
                 raise TypeError(
@@ -283,8 +303,7 @@ class AlgebraicPureTensor(Basic):
                 f"Cannot multiply AlgebraicPureTensor with {type(other).__name__}"
             )
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not (hasattr(other, 'is_AlgebraicZeroTensor') or
-                hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))):
+                other.is_commutative and not hasattr(other, 'is_AlgebraicZeroTensor')):
             if other is S.One:
                 return self
             if other is S.Zero:
@@ -311,8 +330,7 @@ class AlgebraicPureTensor(Basic):
                 f"Cannot multiply {type(other).__name__} with AlgebraicPureTensor"
             )
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not (hasattr(other, 'is_AlgebraicZeroTensor') or
-                hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))):
+                other.is_commutative and not hasattr(other, 'is_AlgebraicZeroTensor')):
             if other is S.One:
                 return self
             if other is S.Zero:
@@ -447,9 +465,9 @@ class AlgebraicPureTensor(Basic):
             return AlgebraicPureTensor(*conjugated_factors)
         return AlgebraicPureTensor(coeff, *conjugated_factors)
 
-    def simplify(self):
+    def _eval_simplify(self, **kwargs):
         from sympy.tensor.algebraic.simplify import _simplify_algebraic_pure_tensor
-        return _simplify_algebraic_pure_tensor(self)
+        return _simplify_algebraic_pure_tensor(self, **kwargs)
 
     def doit(self, **hints):
         """Evaluate the coefficient and each tensor factor.
@@ -585,26 +603,6 @@ class AlgebraicPureTensor(Basic):
             return terms[0]
 
         return AlgebraicTensor(*terms)
-
-    def display(self, mode="latex"):
-        """Display this tensor using IPython display or fallback to print.
-
-        Parameters
-        ----------
-        mode : str, default 'latex'
-            'latex' for LaTeX rendering, 'text' for plain text.
-        """
-        try:
-            from IPython.display import display, Latex
-            if mode == "latex":
-                display(Latex(self._repr_latex_()))
-            else:
-                display(self, plain=True)
-        except ImportError:
-            if mode == "latex":
-                print(self._repr_latex_())
-            else:
-                print(self)
 
     def expand(self, deep=True, **hints):
         """Expand this pure tensor by distributing over ``Add``

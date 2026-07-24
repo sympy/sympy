@@ -265,3 +265,44 @@ def test_zeromatrix_compose_with_zero_tensor():
     raises(TypeError, lambda: azt * zm)
 
 
+# ---------------------------------------------------------------------------
+# subs tests
+# ---------------------------------------------------------------------------
+
+def test_algebraic_zero_tensor_subs():
+    """Subs on AlgebraicZeroTensor returns self (no symbols to replace)."""
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    x = Symbol('x')
+    result = Z.subs(x, 5)
+    assert result == Z
+
+
+def test_algebraic_zero_tensor_subs_empty_free_symbols():
+    """AlgebraicZeroTensor has no free_symbols, so any subs is a no-op."""
+    Z = AlgebraicZeroTensor(((2, 3), (3, 4)))
+    x, y = Symbol('x'), Symbol('y')
+    result = Z.subs({x: 1, y: 2})
+    assert result == Z
+    assert Z.free_symbols == set()
+
+
+def test_algebraic_zero_tensor_free_symbols_empty():
+    """AlgebraicZeroTensor always has empty free_symbols."""
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    assert Z.free_symbols == set()
+
+
+def test_algebraic_zero_tensor_free_symbols_single_factor():
+    """Single-factor zero tensor (ZeroMatrix) also has empty free_symbols."""
+    Z = AlgebraicZeroTensor((3, 4))  # dispatches to ZeroMatrix
+    assert Z.free_symbols == set()
+
+
+def test_algebraic_zero_tensor_simplify():
+    """simplify on AlgebraicZeroTensor returns self."""
+    from sympy import simplify
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    assert simplify(Z) is Z
+    assert Z._eval_simplify() is Z
+
+

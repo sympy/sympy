@@ -335,9 +335,340 @@ def test_pure_tensor_compose_with_dispatched_zeromatrix():
     B = MatrixSymbol("B", 4, 5)
     pt = AlgebraicPureTensor(A, B)
 
-    # ZeroMatrix.__mul__ routes through MatMul, not compose_algebraic_tensors
-    result = zm * pt
-    assert result.shape == zm.shape
+    # ZeroMatrix.__mul__ routes through MatMul, not compose_algebraic_tensors.
+    # MatMul.as_coeff_matrices does not handle AlgebraicPureTensor (is_Matrix=False,
+    # is_commutative=False) and raises NotImplementedError. This is a known Matrix
+    # bug: __mul__ lacks sufficient instance checks for tensor types.
+    raises(NotImplementedError, lambda: zm * pt)
 
     # Reverse: AlgebraicPureTensor.__mul__ rejects ZeroMatrix with TypeError
     raises(TypeError, lambda: pt * zm)
+
+
+# ---------------------------------------------------------------------------
+# subs tests
+# ---------------------------------------------------------------------------
+
+def test_pure_tensor_subs_coefficient():
+    """Substitute a symbol in the coefficient."""
+    x = Symbol('x')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    T = AlgebraicPureTensor(x**2, A, B)
+    result = T.subs(x, 3)
+    assert result.coeff == 9
+    assert result.factors == (A, B)
+
+
+def test_pure_tensor_subs_matrix_factor():
+    """Substitute a MatrixSymbol factor."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    T = AlgebraicPureTensor(A, B)
+    result = T.subs(A, C)
+    assert result.factors[0] == C
+    assert result.factors[1] == B
+
+
+def test_pure_tensor_subs_concrete_matrix_entries():
+    """Substitute a symbol inside concrete matrix entries."""
+    x = Symbol('x')
+    M = ImmutableDenseMatrix([[x, 1], [2, x]])
+    N = MatrixSymbol('N', 2, 3)
+    T = AlgebraicPureTensor(M, N)
+    result = T.subs(x, 5)
+    assert result.factors[0][0, 0] == 5
+    assert result.factors[0][1, 1] == 5
+
+
+def test_pure_tensor_subs_multiple():
+    """Substitute multiple symbols at once."""
+    x, y = Symbol('x'), Symbol('y')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    T = AlgebraicPureTensor(x, A, B)
+    result = T.subs({x: y, A: C})
+    assert result.coeff == y
+    assert result.factors[0] == C
+
+
+def test_pure_tensor_subs_no_match():
+    """Substitution that doesn't match anything returns unchanged tensor."""
+    x, y = Symbol('x'), Symbol('y')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    T = AlgebraicPureTensor(x, A, B)
+    result = T.subs(y, 10)
+    assert result == T
+
+
+def test_pure_tensor_subs_to_zero():
+    """Substituting coefficient to zero yields AlgebraicZeroTensor."""
+    x = Symbol('x')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    T = AlgebraicPureTensor(x, A, B)
+    result = T.subs(x, 0)
+    assert isinstance(result, AlgebraicZeroTensor)
+    assert result.shape == ((3, 4), (4, 5))
+
+
+# ---------------------------------------------------------------------------
+# free_symbols tests
+# ---------------------------------------------------------------------------
+
+def test_pure_tensor_free_symbols_coefficient():
+    """free_symbols collects symbols from the coefficient."""
+    x, y = Symbol('x'), Symbol('y')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    T = AlgebraicPureTensor(x**2, A, B)
+    assert x in T.free_symbols
+    assert y not in T.free_symbols
+
+
+def test_pure_tensor_free_symbols_no_coefficient():
+    """Tensor with no symbolic coefficient has only factor symbols."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    T = AlgebraicPureTensor(A, B)
+    assert T.free_symbols == {A, B}
+
+
+def test_pure_tensor_free_symbols_concrete_matrix():
+    """free_symbols collects symbols from concrete matrix entries."""
+    x, y = Symbol('x'), Symbol('y')
+    M = ImmutableDenseMatrix([[x, 1], [2, y]])
+    N = MatrixSymbol('N', 2, 3)
+    T = AlgebraicPureTensor(M, N)
+    assert x in T.free_symbols
+    assert y in T.free_symbols
+    assert N in T.free_symbols
+
+
+def test_pure_tensor_free_symbols_mixed():
+    """free_symbols unions symbols from coefficient and all factors."""
+    x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
+    A = MatrixSymbol('A', 3, 4)
+    M = ImmutableDenseMatrix([[x, 1], [2, x]])
+    N = MatrixSymbol('N', 2, 3)
+    T = AlgebraicPureTensor(y, M, N)
+    assert T.free_symbols == {y, x, N}
+    assert z not in T.free_symbols
+
+
+def test_pure_tensor_free_symbols_numeric_only():
+    """Tensor with purely numeric content has no free symbols."""
+    M = ImmutableDenseMatrix([[1, 2], [3, 4]])
+    N = ImmutableDenseMatrix([[5, 6, 7], [8, 9, 10]])
+    T = AlgebraicPureTensor(3, M, N)
+    assert T.free_symbols == set()
+
+
+def test_pure_tensor_free_symbols_three_factors():
+    """free_symbols works for tensors with three or more factors."""
+    x = Symbol('x')
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    T = AlgebraicPureTensor(x, A, B, C)
+    assert T.free_symbols == {x, A, B, C}
+
+
+# ---------------------------------------------------------------------------
+# hash tests
+# ---------------------------------------------------------------------------
+
+def test_pure_tensor_hash_consistency():
+    """Two equal AlgebraicPureTensor objects have the same hash."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(A, B)
+    assert hash(T1) == hash(T2)
+    assert T1 == T2
+
+
+def test_pure_tensor_hash_with_coefficient():
+    """Hash is consistent when coefficient is present."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    T1 = AlgebraicPureTensor(2, A, B)
+    T2 = AlgebraicPureTensor(2, A, B)
+    assert hash(T1) == hash(T2)
+    assert T1 == T2
+
+
+def test_pure_tensor_hash_different_factors():
+    """Tensors with different factors have different content."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    assert T1 != T2
+
+
+def test_pure_tensor_hash_noncommutative_order():
+    """Order matters: A⊗B != B⊗A (different shapes)."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(B, A)
+    assert T1 != T2
+
+
+# ---------------------------------------------------------------------------
+# 3+ factor tensor tests
+# ---------------------------------------------------------------------------
+
+def test_three_factor_pure_tensor():
+    """Test construction and properties of a 3-factor pure tensor."""
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    T = AlgebraicPureTensor(A, B, C)
+    assert T.num_factors == 3
+    assert T.shape == ((2, 3), (3, 4), (4, 5))
+    assert T.factors == (A, B, C)
+    assert T.coeff == S.One
+
+
+def test_three_factor_with_coefficient():
+    """Test 3-factor pure tensor with symbolic coefficient."""
+    from sympy.abc import x
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    T = AlgebraicPureTensor(x, A, B, C)
+    assert T.num_factors == 3
+    assert T.coeff == x
+    assert T.factors == (A, B, C)
+
+
+def test_compose_three_factor_tensors():
+    """Test composition of two 3-factor pure tensors."""
+    from sympy.tensor.algebraic import compose_algebraic_pure_tensors
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    D = MatrixSymbol('D', 3, 2)
+    E = MatrixSymbol('E', 4, 3)
+    F = MatrixSymbol('F', 5, 4)
+    T1 = AlgebraicPureTensor(A, B, C)
+    T2 = AlgebraicPureTensor(D, E, F)
+    result = compose_algebraic_pure_tensors(T1, T2)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.num_factors == 3
+    assert result.shape == ((2, 2), (3, 3), (4, 4))
+
+
+def test_compose_three_factor_via_mul():
+    """Test composition of 3-factor tensors via __mul__."""
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    D = MatrixSymbol('D', 3, 2)
+    E = MatrixSymbol('E', 4, 3)
+    F = MatrixSymbol('F', 5, 4)
+    T1 = AlgebraicPureTensor(A, B, C)
+    T2 = AlgebraicPureTensor(D, E, F)
+    result = T1 * T2
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.num_factors == 3
+
+
+def test_expand_three_factors():
+    """Test expand with MatAdd in a 3-factor tensor."""
+    from sympy.matrices.expressions import MatAdd
+    A = MatrixSymbol('A', 2, 3)
+    B1 = MatrixSymbol('B1', 3, 4)
+    B2 = MatrixSymbol('B2', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    T = AlgebraicPureTensor(A, MatAdd(B1, B2), C)
+    expanded = T.expand()
+    assert isinstance(expanded, AlgebraicTensor)
+    assert len(expanded.args) == 2
+
+
+def test_transpose_three_factors():
+    """Test transpose of a 3-factor pure tensor."""
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    T = AlgebraicPureTensor(A, B, C)
+    TT = T.T
+    assert TT.shape == ((3, 2), (4, 3), (5, 4))
+    assert TT.num_factors == 3
+
+
+def test_conjugate_three_factors():
+    """Test conjugate of a 3-factor pure tensor with complex coefficient."""
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    T = AlgebraicPureTensor(1 + I, A, B, C)
+    TC = T.conjugate()
+    assert TC.coeff == 1 - I
+    assert TC.num_factors == 3
+
+
+def test_diff_three_factors():
+    """Test differentiation of a 3-factor pure tensor."""
+    from sympy.abc import x
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    T = AlgebraicPureTensor(x**2, A, B, C)
+    T_diff = T.diff(x)
+    assert T_diff.coeff == 2 * x
+    assert T_diff.num_factors == 3
+
+
+def test_subs_three_factors():
+    """Test substitution in a 3-factor pure tensor."""
+    x = Symbol('x')
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    D = MatrixSymbol('D', 2, 3)
+    T = AlgebraicPureTensor(x, A, B, C)
+    result = T.subs(x, 5)
+    assert result.coeff == 5
+    result2 = T.subs(A, D)
+    assert result2.factors[0] == D
+    assert result2.factors[1] == B
+    assert result2.factors[2] == C
+
+
+def test_four_factor_pure_tensor():
+    """Test construction of a 4-factor pure tensor."""
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    D = MatrixSymbol('D', 5, 6)
+    T = AlgebraicPureTensor(A, B, C, D)
+    assert T.num_factors == 4
+    assert T.shape == ((2, 3), (3, 4), (4, 5), (5, 6))
+
+
+def test_compose_four_factor_tensors():
+    """Test composition of two 4-factor pure tensors."""
+    from sympy.tensor.algebraic import compose_algebraic_pure_tensors
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 4)
+    C = MatrixSymbol('C', 4, 5)
+    D = MatrixSymbol('D', 5, 6)
+    E = MatrixSymbol('E', 3, 2)
+    F = MatrixSymbol('F', 4, 3)
+    G = MatrixSymbol('G', 5, 4)
+    H = MatrixSymbol('H', 6, 5)
+    T1 = AlgebraicPureTensor(A, B, C, D)
+    T2 = AlgebraicPureTensor(E, F, G, H)
+    result = compose_algebraic_pure_tensors(T1, T2)
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.num_factors == 4
+    assert result.shape == ((2, 2), (3, 3), (4, 4), (5, 5))

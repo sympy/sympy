@@ -1,5 +1,6 @@
 """Tests for algebraic_tensor.py"""
 from sympy.core.numbers import I
+from sympy.core.symbol import Symbol
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.matrices import ImmutableDenseMatrix
 from sympy.testing.pytest import raises
@@ -429,3 +430,297 @@ def test_algebraic_tensor_with_zero_tensor():
     # Adding zero tensor to pure tensor returns the pure tensor
     S = T1 + Z
     assert S == T1
+
+
+def test_algebraic_tensor_equality_commutative():
+    """Test that AlgebraicTensor equality is commutative: T1+T2 == T2+T1."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    
+    S1 = T1 + T2
+    S2 = T2 + T1
+    
+    assert S1 == S2
+    assert S2 == S1
+
+
+def test_algebraic_tensor_equality_with_coefficients():
+    """Test commutative equality with coefficients."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    
+    T1 = AlgebraicPureTensor(2, A, B)
+    T2 = AlgebraicPureTensor(3, C, D)
+    
+    S1 = T1 + T2
+    S2 = T2 + T1
+    
+    assert S1 == S2
+
+
+def test_algebraic_tensor_equality_different_terms():
+    """Different terms are not equal."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    E = MatrixSymbol('E', 3, 4)
+    F = MatrixSymbol('F', 4, 5)
+    
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    T3 = AlgebraicPureTensor(E, F)
+    
+    S1 = T1 + T2
+    S2 = T1 + T3
+    
+    assert S1 != S2
+
+
+# ---------------------------------------------------------------------------
+# subs tests
+# ---------------------------------------------------------------------------
+
+def test_algebraic_tensor_subs_coefficient():
+    """Substitute a symbol in coefficients of terms."""
+    x = Symbol('x')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    S = AlgebraicTensor(AlgebraicPureTensor(x, A, B), AlgebraicPureTensor(2*x, C, D))
+    result = S.subs(x, 3)
+    # Should produce 3*A⊗B + 6*C⊗D
+    assert any(t.coeff == 3 for t in result.args if hasattr(t, 'coeff'))
+    assert any(t.coeff == 6 for t in result.args if hasattr(t, 'coeff'))
+
+
+def test_algebraic_tensor_subs_factor():
+    """Substitute a MatrixSymbol factor across all terms."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    E = MatrixSymbol('E', 3, 4)
+    S = AlgebraicTensor(AlgebraicPureTensor(A, B), AlgebraicPureTensor(C, D))
+    result = S.subs(A, E)
+    assert AlgebraicPureTensor(E, B) in result.args
+    assert AlgebraicPureTensor(C, D) in result.args
+    assert A not in result.args
+
+
+def test_algebraic_tensor_subs_multiple():
+    """Substitute multiple symbols across terms."""
+    x, y = Symbol('x'), Symbol('y')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    S = AlgebraicTensor(AlgebraicPureTensor(x, A, B), AlgebraicPureTensor(y, C, D))
+    result = S.subs({x: 1, y: 2})
+    assert any(t.coeff == 1 for t in result.args if hasattr(t, 'coeff'))
+    assert any(t.coeff == 2 for t in result.args if hasattr(t, 'coeff'))
+
+
+def test_algebraic_tensor_subs_no_match():
+    """Substitution that doesn't match returns unchanged tensor."""
+    x, y = Symbol('x'), Symbol('y')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    S = AlgebraicTensor(AlgebraicPureTensor(x, A, B), AlgebraicPureTensor(x, C, D))
+    result = S.subs(y, 10)
+    assert result == S
+
+
+def test_algebraic_tensor_subs_concrete_matrix():
+    """Substitute symbol inside concrete matrix entries in a sum."""
+    x = Symbol('x')
+    M = ImmutableDenseMatrix([[x, 1], [2, x]])
+    N = MatrixSymbol('N', 2, 3)
+    P = MatrixSymbol('P', 2, 2)
+    Q = MatrixSymbol('Q', 2, 3)
+    S = AlgebraicTensor(AlgebraicPureTensor(M, N), AlgebraicPureTensor(P, Q))
+    result = S.subs(x, 7)
+    for t in result.args:
+        if hasattr(t, 'factors') and N in t.factors:
+            assert t.factors[0][0, 0] == 7
+            assert t.factors[0][1, 1] == 7
+
+
+# ---------------------------------------------------------------------------
+# free_symbols tests
+# ---------------------------------------------------------------------------
+
+def test_algebraic_tensor_free_symbols_basic():
+    """free_symbols unions symbols from all terms."""
+    x, y = Symbol('x'), Symbol('y')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    S = AlgebraicTensor(AlgebraicPureTensor(x, A, B), AlgebraicPureTensor(y, C, D))
+    assert x in S.free_symbols
+    assert y in S.free_symbols
+    assert A in S.free_symbols
+    assert D in S.free_symbols
+
+
+def test_algebraic_tensor_free_symbols_shared_symbol():
+    """free_symbols contains shared symbols only once."""
+    x = Symbol('x')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    S = AlgebraicTensor(AlgebraicPureTensor(x, A, B), AlgebraicPureTensor(x, C, D))
+    assert S.free_symbols == {x, A, B, C, D}
+
+
+def test_algebraic_tensor_free_symbols_concrete_matrix():
+    """free_symbols collects symbols from concrete matrices in terms."""
+    x, y = Symbol('x'), Symbol('y')
+    M = ImmutableDenseMatrix([[x, 1], [2, x]])
+    N = MatrixSymbol('N', 2, 3)
+    P = MatrixSymbol('P', 2, 2)
+    Q = ImmutableDenseMatrix([[y, 0, 1], [0, 3, 2]])
+    S = AlgebraicTensor(AlgebraicPureTensor(M, N), AlgebraicPureTensor(P, Q))
+    assert x in S.free_symbols
+    assert y in S.free_symbols
+
+
+def test_algebraic_tensor_free_symbols_no_symbols():
+    """Tensor with purely numeric content has no free symbols."""
+    M = ImmutableDenseMatrix([[1, 2], [3, 4]])
+    N = ImmutableDenseMatrix([[5, 6, 7], [8, 9, 10]])
+    P = ImmutableDenseMatrix([[2, 0], [0, 2]])
+    Q = ImmutableDenseMatrix([[1, 1, 1], [1, 1, 1]])
+    S = AlgebraicTensor(AlgebraicPureTensor(2, M, N), AlgebraicPureTensor(3, P, Q))
+    assert S.free_symbols == set()
+
+
+def test_algebraic_tensor_free_symbols_after_subs():
+    """free_symbols updates correctly after substitution."""
+    x, y = Symbol('x'), Symbol('y')
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    S = AlgebraicTensor(AlgebraicPureTensor(x, A, B), AlgebraicPureTensor(y, C, D))
+    result = S.subs(x, 1)
+    assert x not in result.free_symbols
+    assert y in result.free_symbols
+
+
+# ---------------------------------------------------------------------------
+# _compose_with_term tests
+# ---------------------------------------------------------------------------
+
+def test_compose_with_term_basic():
+    """Test _compose_with_term produces same result as compose_algebraic_tensors."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    E = MatrixSymbol('E', 4, 2)
+    F = MatrixSymbol('F', 5, 3)
+    S = AlgebraicTensor(AlgebraicPureTensor(A, B), AlgebraicPureTensor(C, D))
+    T = AlgebraicPureTensor(E, F)
+    result = S._compose_with_term(T)
+    expected = compose_algebraic_tensors(S, T)
+    assert result == expected
+
+
+def test_compose_with_term_coefficient_merge():
+    """Test _compose_with_term with terms that have same factors but different coefficients."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    E = MatrixSymbol('E', 4, 2)
+    F = MatrixSymbol('F', 5, 3)
+    T1 = AlgebraicPureTensor(2, A, B)
+    T2 = AlgebraicPureTensor(3, A, B)
+    T3 = AlgebraicPureTensor(C, D)
+    S = AlgebraicTensor(T1, T2, T3)
+    T = AlgebraicPureTensor(E, F)
+    result = S._compose_with_term(T)
+    expected = compose_algebraic_tensors(S, T)
+    assert result == expected
+
+
+def test_compose_with_term_with_coefficients():
+    """Test _compose_with_term with coefficients on terms."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    E = MatrixSymbol('E', 4, 2)
+    F = MatrixSymbol('F', 5, 3)
+    S = AlgebraicTensor(AlgebraicPureTensor(2, A, B), AlgebraicPureTensor(3, C, D))
+    T = AlgebraicPureTensor(E, F)
+    result = S._compose_with_term(T)
+    assert isinstance(result, AlgebraicTensor)
+
+
+def test_compose_with_term_with_zero_tensor():
+    """Test _compose_with_term handles zero tensor terms in the sum."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    E = MatrixSymbol('E', 4, 2)
+    F = MatrixSymbol('F', 5, 3)
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    S = AlgebraicTensor(AlgebraicPureTensor(A, B), AlgebraicPureTensor(C, D), Z)
+    T = AlgebraicPureTensor(E, F)
+    result = S._compose_with_term(T)
+    assert isinstance(result, (AlgebraicTensor, AlgebraicPureTensor))
+
+
+# ---------------------------------------------------------------------------
+# is_Add flag tests
+# ---------------------------------------------------------------------------
+
+def test_is_add_flag():
+    """Test that AlgebraicTensor has is_Add = True."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    S = AlgebraicTensor(AlgebraicPureTensor(A, B), AlgebraicPureTensor(C, D))
+    assert S.is_Add is True
+
+
+def test_is_add_flag_basic_inheritance():
+    """Test that AlgebraicTensor with is_Add works as Basic subclass."""
+    from sympy.core.basic import Basic
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+    S = AlgebraicTensor(AlgebraicPureTensor(A, B), AlgebraicPureTensor(C, D))
+    assert isinstance(S, Basic)
+    assert S.is_Add is True
+
+
+def test_is_not_add_for_pure_tensor():
+    """Test that AlgebraicPureTensor does not have is_Add = True."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    T = AlgebraicPureTensor(A, B)
+    assert getattr(T, 'is_Add', None) is not True
+
+
+def test_is_not_add_for_zero_tensor():
+    """Test that AlgebraicZeroTensor does not have is_Add = True."""
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    assert getattr(Z, 'is_Add', None) is not True

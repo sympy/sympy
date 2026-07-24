@@ -128,8 +128,8 @@ class AlgebraicZeroTensor(Basic):
                 f"Cannot multiply AlgebraicZeroTensor with {type(other).__name__}"
             )
         if isinstance(other, Number) or (
-            hasattr(other, 'is_commutative') and not (hasattr(other, 'is_AlgebraicZeroTensor') or \
-            hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))
+            hasattr(other, 'is_commutative') and other.is_commutative
+            and not hasattr(other, 'is_AlgebraicZeroTensor')
         ):
             return self
         from sympy.tensor.algebraic.algebraic_tensor import compose_algebraic_tensors
@@ -145,8 +145,8 @@ class AlgebraicZeroTensor(Basic):
                 f"Cannot multiply {type(other).__name__} with AlgebraicZeroTensor"
             )
         if isinstance(other, Number) or (
-            hasattr(other, 'is_commutative') and not (hasattr(other, 'is_AlgebraicZeroTensor') or \
-            hasattr(other, 'is_AlgebraicPureTensor') or hasattr(other, 'is_AlgebraicTensor'))
+            hasattr(other, 'is_commutative') and other.is_commutative
+            and not hasattr(other, 'is_AlgebraicZeroTensor')
         ):
             return self
         from sympy.tensor.algebraic.algebraic_tensor import compose_algebraic_tensors
@@ -185,22 +185,7 @@ class AlgebraicZeroTensor(Basic):
     def diff(self, *symbols, **assumptions):
         return self
 
-    def display(self, mode="latex"):
-        """Display this tensor using IPython display or fallback to print.
+    def _eval_simplify(self, **kwargs):
+        return self
 
-        Parameters
-        ----------
-        mode : str, default 'latex'
-            'latex' for LaTeX rendering, 'text' for plain text.
-        """
-        try:
-            from IPython.display import display, Latex
-            if mode == "latex":
-                display(Latex(self._repr_latex_()))
-            else:
-                display(self, plain=True)
-        except ImportError:
-            if mode == "latex":
-                print(self._repr_latex_())
-            else:
-                print(self)
+

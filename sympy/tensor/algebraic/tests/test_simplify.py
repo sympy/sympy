@@ -271,9 +271,194 @@ def test_simplify_complex_coefficient():
     """Test simplification with complex coefficients."""
     A = MatrixSymbol('A', 3, 4)
     B = MatrixSymbol('B', 4, 5)
-    
+
     T = AlgebraicPureTensor(1 + I, A, B)
     T_simp = tensorsimplify(T)
-    
+
     assert isinstance(T_simp, AlgebraicPureTensor)
     assert T_simp.coeff == 1 + I
+
+
+# ---------------------------------------------------------------------------
+# Top-level simplify() interaction tests
+# ---------------------------------------------------------------------------
+
+def test_sympy_simplify_pure_tensor():
+    """Test that top-level simplify() delegates to tensorsimplify for PureTensor."""
+    from sympy import simplify
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+
+    T = AlgebraicPureTensor(2, A, B)
+    result = simplify(T)
+
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 2
+    assert result.factors == (A, B)
+
+
+def test_sympy_simplify_algebraic_tensor():
+    """Test that top-level simplify() delegates to tensorsimplify for AlgebraicTensor."""
+    from sympy import simplify
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    S = AlgebraicTensor(T1, T2)
+    result = simplify(S)
+
+    assert isinstance(result, AlgebraicTensor)
+    assert result.shape == S.shape
+
+
+def test_sympy_simplify_combines_proportional():
+    """Test that top-level simplify() combines proportional terms."""
+    from sympy import simplify
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(2, A, B)
+    S = AlgebraicTensor(T1, T2)
+    result = simplify(S)
+
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 3
+
+
+def test_sympy_simplify_zero_tensor():
+    """Test that top-level simplify() handles AlgebraicZeroTensor."""
+    from sympy import simplify
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    result = simplify(Z)
+
+    assert result is Z
+
+
+def test_sympy_simplify_preserves_shape():
+    """Test that top-level simplify() preserves tensor shape."""
+    from sympy import simplify
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+    S = AlgebraicTensor(T1, T2)
+    result = simplify(S)
+
+    assert result.shape == S.shape
+
+
+def test_sympy_simplify_complex_coefficient():
+    """Test that top-level simplify() preserves complex coefficients."""
+    from sympy import simplify
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+
+    T = AlgebraicPureTensor(1 + I, A, B)
+    result = simplify(T)
+
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.coeff == 1 + I
+
+
+# ---------------------------------------------------------------------------
+# Strengthened simplify assertions
+# ---------------------------------------------------------------------------
+
+def test_tensorsimplify_pure_tensor_coefficient():
+    """Test tensorsimplify preserves coefficient of AlgebraicPureTensor."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+
+    T = AlgebraicPureTensor(2, A, B)
+    T_simp = tensorsimplify(T)
+
+    assert isinstance(T_simp, AlgebraicPureTensor)
+    assert T_simp.coeff == 2
+    assert T_simp.factors == (A, B)
+
+
+def test_tensorsimplify_tensor_sum_shape():
+    """Test tensorsimplify preserves shape of AlgebraicTensor sum."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+
+    S = AlgebraicTensor(T1, T2)
+    S_simp = tensorsimplify(S)
+
+    assert isinstance(S_simp, AlgebraicTensor)
+    assert S_simp.shape == S.shape
+
+
+def test_equality_factoring_result_type():
+    """Test equality factoring returns valid result."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 4, 5)
+
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(A, C)
+
+    S = AlgebraicTensor(T1, T2)
+    S_factored = _equality_factoring(S)
+
+    assert S_factored is not None
+    assert S_factored.shape == S.shape
+
+
+def test_simplify_algebraic_pure_tensor_identity():
+    """Test simplification of already-simple AlgebraicPureTensor."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+
+    T = AlgebraicPureTensor(2, A, B)
+    T_simp = _simplify_algebraic_pure_tensor(T)
+
+    assert isinstance(T_simp, AlgebraicPureTensor)
+    assert T_simp.coeff == 2
+    assert T_simp.factors == (A, B)
+
+
+def test_simplify_algebraic_tensor_identity():
+    """Test simplification of AlgebraicTensor with distinct terms."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+
+    S = AlgebraicTensor(T1, T2)
+    S_simp = _simplify_algebraic_tensor(S)
+
+    assert isinstance(S_simp, (AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor))
+    assert S_simp.shape == S.shape
+
+
+def test_commutativity_simplify_preserves_shape():
+    """Test commutativity simplification preserves tensor shape."""
+    A = MatrixSymbol('A', 3, 4)
+    B = MatrixSymbol('B', 4, 5)
+    C = MatrixSymbol('C', 3, 4)
+    D = MatrixSymbol('D', 4, 5)
+
+    T1 = AlgebraicPureTensor(A, B)
+    T2 = AlgebraicPureTensor(C, D)
+
+    S = AlgebraicTensor(T1, T2)
+    S_simp = _commutativity_simplify(S)
+
+    assert isinstance(S_simp, (AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor))
+    assert S_simp.shape == S.shape

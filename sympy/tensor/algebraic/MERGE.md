@@ -13,15 +13,14 @@ This document tracks every action item from the code review of the `sympy/tensor
 3. [Missing Core Properties and Methods](#3-missing-core-properties-and-methods)
 4. [Test Coverage Gaps](#4-test-coverage-gaps)
 5. [Documentation](#5-documentation)
-6. [Feature Completeness](#6-feature-completeness)
-7. [Code Quality Improvements](#7-code-quality-improvements)
-8. [Cleanup](#8-cleanup)
+6. [Code Quality Improvements](#6-code-quality-improvements)
+7. [Cleanup](#7-cleanup)
 
 ---
 
 ## 1. Critical Issues (Must Fix)
 
-### 1.1 [ ] (Missing) Add `is_commutative` class attribute to `AlgebraicPureTensor` and `AlgebraicTensor`
+### 1.1 [x] (Done) Add `is_commutative` class attribute to `AlgebraicPureTensor` and `AlgebraicTensor`
 
 **Location:**
 - `algebraic_pure_tensor.py:74` — class definition of `AlgebraicPureTensor`
@@ -58,7 +57,7 @@ The `hasattr` guard on `other` should remain (since `other` is an external objec
 
 ---
 
-### 1.2 [ ] (Missing) Add `free_symbols` property to `AlgebraicPureTensor` and `AlgebraicTensor`
+### 1.2 [x] (Done) Add `free_symbols` property to `AlgebraicPureTensor` and `AlgebraicTensor`
 
 **Location:**
 - `algebraic_pure_tensor.py` — class `AlgebraicPureTensor`
@@ -107,7 +106,7 @@ assert x in T2.free_symbols
 
 ---
 
-### 1.3 [ ] (Missing) Verify and test `subs()` behavior
+### 1.3 [x] (Done) Verify and test `subs()` behavior
 
 **Location:** Both `AlgebraicPureTensor` and `AlgebraicTensor` inherit `subs()` from `Basic`.
 
@@ -141,7 +140,7 @@ def _eval_subs(self, old, new):
 
 ## 2. Style and Convention Violations
 
-### 2.1 [ ] (Missing) Remove `display()` methods from all three classes
+### 2.1 [x] (Done) Remove `display()` methods from all three classes
 
 **Location:**
 - `algebraic_pure_tensor.py:589-607` — `AlgebraicPureTensor.display()`
@@ -160,28 +159,7 @@ def _eval_subs(self, old, new):
 
 ---
 
-### 2.2 [ ] (Missing) Remove `tests_old/` directory
-
-**Location:** `tensor/algebraic/tests_old/`
-
-**Current contents:**
-- `playground_functions.py` — 607-line interactive script with physics examples (Dirac matrices, representation theory)
-- `tempCodeRunnerFile.py` — VS Code temp file (development artifact)
-- `Untitled.ipynb` — Jupyter notebook with LaTeX display experiments
-- `.ipynb_checkpoints/` — Notebook checkpoint directory
-- `__pycache__/` — Python cache
-- `.DS_Store` — macOS metadata
-
-**Reasoning:** This directory contains development artifacts that should not be in the repository. A PR with `tests_old/` containing temp files and notebooks would be rejected by reviewers. The `playground_functions.py` contains valuable example code that should be extracted as proper doctests or documentation examples.
-
-**Implementation plan:**
-1. Review `playground_functions.py` for useful examples
-2. Convert useful examples to doctest examples in the relevant class docstrings or to proper test functions in the `tests/` directory
-3. Delete the entire `tests_old/` directory
-
----
-
-### 2.3 [ ] (Missing) Remove `.DS_Store` files
+### 2.2 [x] (Done) Remove `.DS_Store` files
 
 **Location:**
 - `tensor/algebraic/.DS_Store`
@@ -192,7 +170,7 @@ def _eval_subs(self, old, new):
 
 ---
 
-### 2.4 [ ] (Missing) Fix docstring parameter section format in `AlgebraicZeroTensor.display()`, `AlgebraicPureTensor.display()`, `AlgebraicTensor.display()`
+### 2.3 [x] (Done — superseded by 2.1) Fix docstring parameter section format in `AlgebraicZeroTensor.display()`, `AlgebraicPureTensor.display()`, `AlgebraicTensor.display()`
 
 **Location:** The `display()` method docstrings in all three classes.
 
@@ -204,7 +182,7 @@ def _eval_subs(self, old, new):
 
 ## 3. Missing Core Properties and Methods
 
-### 3.1 [ ] (Done — verified) `__hash__` correctness
+### 3.1 [x] (Done) `__hash__` correctness
 
 **Location:**
 - `algebraic_zero_tensor.py:67-68` — `_hashable_content()` defined
@@ -222,13 +200,13 @@ assert hash(T1) == hash(T2) and T1 == T2
 
 ---
 
-### 3.2 [ ] (Missing) Add `__eq__` / equality semantics documentation
+### 3.2 [x] (Done) Add `__eq__` / equality semantics documentation
 
-**Location:** `algebraic_pure_tensor.py` class definition.
+**Location:** `algebraic_pure_tensor.py` and `algebraic_tensor.py` class definitions.
 
-**Current state:** Equality is inherited from `Basic`, which compares `args` tuples. This means two `AlgebraicPureTensor` objects are equal if and only if they have identical args (same coefficient, same factors in same order).
+**Current state:** Equality is inherited from `Basic`, which compares `args` tuples. This means two `AlgebraicPureTensor` objects are equal if and only if they have identical args (same coefficient, same factors in same order). On the other hand, two `AlgebraicTensor` objects are equal if and only if they are given as additions of identical AlgebraicPureTensors. This also means that the sequence of additions should be the same. To reflect the commutativity of addition, two `AlgebraicTensor` objects should be equal if and only if the sets construced from their args are equal. 
 
-**Reasoning:** This is the correct behavior for a non-commutative tensor product. However, it should be documented in the class docstring that `A ⊗ B == B ⊗ A` is `False` (order matters), to prevent user confusion.
+**Reasoning:** This is the correct behavior for a non-commutative tensor product. However, it should be documented in the `AlgebraicPureTensor` class docstring that `A ⊗ B == B ⊗ A` is `False` (order matters), to prevent user confusion. Additionally, it should be documented that different orderings of `AlgebraicPureTensor` object sums are considered equal `AlgebraicTensor` objects
 
 **Implementation plan:** Add to the `AlgebraicPureTensor` class docstring:
 ```
@@ -238,153 +216,23 @@ Because the tensor product is non-commutative, ``A ⊗ B`` and ``B ⊗ A``
 are not equal (assuming ``A`` and ``B`` have different shapes).
 ```
 
----
-
-### 3.3 [ ] (Missing) Consider adding `evalf()` support
-
-**Location:** Neither class defines `evalf()` or `_eval_evalf()`.
-
-**Current state:** `Basic.evalf()` will attempt to call `evalf` on each `arg`. For `AlgebraicPureTensor`, this would call `evalf` on the coefficient and each factor. If a factor is a concrete `ImmutableDenseMatrix`, `evalf` will evaluate its entries. This should work by inheritance.
-
-**Reasoning:** Users may want to numerically evaluate tensors with symbolic coefficients and concrete matrix factors. The inherited behavior likely works, but it should be tested and documented.
-
-**Implementation plan:**
-1. Test inherited `evalf()`:
-```python
-T = AlgebraicPureTensor(pi, M, N)  # M is concrete matrix, N is MatrixSymbol
-result = T.evalf()
-# Expected: coefficient is Float, matrix entries are Float, N stays symbolic
+Add to the `AlgebraicTensor` class docstring:
 ```
-2. If it works, add a docstring note and a test. If not, implement `_eval_evalf`.
-
----
-
-### 3.4 [ ] (Missing) Add `as_coeff_mul` and `as_coeff_Add` support
-
-**Location:** `algebraic_pure_tensor.py`, `algebraic_tensor.py`.
-
-**Current state:** Not implemented.
-
-**Reasoning:** `as_coeff_mul()` is used by SymPy's rewriting system and simplification to separate commutative coefficients from non-commutative parts. For `AlgebraicPureTensor`, the natural implementation would be `(self.coeff, self.factors)`. For `AlgebraicTensor`, `as_coeff_Add()` doesn't apply (it's already the Add form), but `as_coeff_mul()` could return `(S.One, (self,))`.
-
-**Implementation plan:**
-```python
-# In AlgebraicPureTensor:
-def as_coeff_mul(self):
-    """Return (coeff, (factor1, factor2, ...))."""
-    return (self.coeff, self.factors)
-
-def as_coeff_Mul(self):
-    """Return (coeff, rest) where rest is the tensor product of factors."""
-    if len(self.factors) == 1:
-        return (self.coeff, self.factors[0])
-    if self.coeff is S.One:
-        return (S.One, self)
-    return (self.coeff, AlgebraicPureTensor(*self.factors))
+Addition is commutative: two algebraic tensors are equal if and only if the sets
+of pure tensors that define them (via addition) are equal. The ordering in which
+summands appear is not relevant. E.g., ``A ⊗ B + C ⊗ D`` is equal to ``C ⊗ D + A ⊗ B``
 ```
+
+**Verification needed** Ensure that two AlgebraicTensor objects are equal in case their args sets are equal:
+T1 = AlgebraicPureTensor(A, B)
+T2 = AlgebraicPureTensor(A2, B2)
+assert (T1 + T2) == (T2 + T1)
 
 ---
 
 ## 4. Test Coverage Gaps
 
-### 4.1 [ ] (Missing) Fix tautological assertion in `test_algebraic_tensor.py`
-
-**Location:** `tests/test_algebraic_tensor.py:278`
-
-**Current code:**
-```python
-assert S2_doit == AlgebraicTensor(T3, T4)
-```
-
-**Problem:** `S2_doit` IS `AlgebraicTensor(T3, T4)` (it was constructed that way just before). This asserts identity, not that `doit()` performed any transformation.
-
-**Implementation plan:** Replace with a test that verifies `doit()` actually evaluates sub-expressions. For example:
-```python
-from sympy import UnevaluatedExpr
-T3 = AlgebraicPureTensor(UnevaluatedExpr(2 + 3), A, B)
-T4 = AlgebraicPureTensor(UnevaluatedExpr(1 * 4), C, D)
-S2 = AlgebraicTensor(T3, T4)
-S2_doit = S2.doit()
-assert S2_doit.coeff == 5  # UnevaluatedExpr(2+3) was evaluated to 5
-```
-
-Or, if `doit()` on the coefficient works through the `AlgebraicTensor.__new__` coefficient merging:
-```python
-T3 = AlgebraicPureTensor(x + y, A, B)
-T4 = AlgebraicPureTensor(x, A, B)
-S2 = AlgebraicTensor(T3, T4)
-assert S2.doit().coeff == 2*x + y  # Coefficients should be merged
-```
-
----
-
-### 4.2 [ ] (Missing) Add tests for `free_symbols`
-
-**Location:** New tests in `tests/test_algebraic_pure_tensor.py` and `tests/test_algebraic_tensor.py`.
-
-**Implementation plan:**
-```python
-def test_free_symbols_pure_tensor():
-    A = MatrixSymbol("A", 3, 4)
-    B = MatrixSymbol("B", 4, 5)
-    x, y = symbols('x y')
-    T = AlgebraicPureTensor(x**2, A, B)
-    assert x in T.free_symbols
-    assert y not in T.free_symbols
-
-def test_free_symbols_with_matrix_entries():
-    x = symbols('x')
-    M = ImmutableDenseMatrix([[x, 1], [2, x**2]])
-    N = MatrixSymbol("N", 2, 3)
-    T = AlgebraicPureTensor(M, N)
-    assert x in T.free_symbols
-
-def test_free_symbols_tensor_sum():
-    A = MatrixSymbol("A", 3, 4)
-    B = MatrixSymbol("B", 4, 5)
-    C = MatrixSymbol("C", 3, 4)
-    D = MatrixSymbol("D", 4, 5)
-    x, y = symbols('x y')
-    S = AlgebraicTensor(AlgebraicPureTensor(x, A, B), AlgebraicPureTensor(y, C, D))
-    assert S.free_symbols == {x, y}
-
-def test_free_symbols_zero_tensor():
-    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    assert Z.free_symbols == set()
-```
-
----
-
-### 4.3 [ ] (Missing) Add tests for `subs()` behavior
-
-**Location:** New tests in `tests/test_algebraic_pure_tensor.py`.
-
-**Implementation plan:**
-```python
-def test_subs_coefficient():
-    x = symbols('x')
-    T = AlgebraicPureTensor(x**2, A, B)
-    result = T.subs(x, 3)
-    assert result.coeff == 9
-
-def test_subs_matrix_factor():
-    C = MatrixSymbol("C", 3, 4)
-    T = AlgebraicPureTensor(A, B)
-    result = T.subs(A, C)
-    assert result.factors[0] == C
-
-def test_subs_concrete_matrix_entries():
-    x = symbols('x')
-    M = ImmutableDenseMatrix([[x, 1], [2, x]])
-    N = MatrixSymbol("N", 2, 3)
-    T = AlgebraicPureTensor(M, N)
-    result = T.subs(x, 5)
-    assert result.factors[0][0, 0] == 5
-```
-
----
-
-### 4.4 [ ] (Missing) Add tests for 3+ factor tensors
+### 4.1 [x] (Done) Add tests for 3+ factor tensors
 
 **Location:** New tests in `tests/test_algebraic_pure_tensor.py`.
 
@@ -425,56 +273,7 @@ def test_expand_three_factors():
 
 ---
 
-### 4.5 [ ] (Missing) Add tests for `expand(deep=False)`
-
-**Location:** New tests in `tests/test_algebraic_pure_tensor.py`.
-
-**Implementation plan:**
-```python
-def test_expand_deep_false():
-    A = MatrixSymbol("A", 3, 4)
-    B = MatrixSymbol("B", 4, 5)
-    C = MatrixSymbol("C", 4, 5)
-    T = AlgebraicPureTensor(A, MatAdd(B, C))
-    # With deep=False, the MatAdd should NOT be distributed
-    result = T.expand(deep=False)
-    assert result is T  # Should return self unchanged
-```
-
----
-
-### 4.6 [ ] (Missing) Add test for `add.register_handlerclass` behavior
-
-**Location:** New test in `tests/test_algebraic_tensor.py`.
-
-**Current code:** `algebraic_tensor.py:1193-1195`:
-```python
-add.register_handlerclass(
-    (AlgebraicPureTensor, AlgebraicTensor), AlgebraicTensor
-)
-```
-
-**Reasoning:** This registration routes `Add` construction through `AlgebraicTensor.__new__` when any arg is an algebraic tensor type. Without a test, this could break silently if the registration is removed or if `Add`'s dispatcher changes.
-
-**Implementation plan:**
-```python
-def test_add_dispatcher():
-    A = MatrixSymbol("A", 3, 4)
-    B = MatrixSymbol("B", 4, 5)
-    C = MatrixSymbol("C", 3, 4)
-    D = MatrixSymbol("D", 4, 5)
-    T1 = AlgebraicPureTensor(A, B)
-    T2 = AlgebraicPureTensor(C, D)
-    # Using Add directly should route through AlgebraicTensor
-    from sympy.core.add import Add
-    result = Add(T1, T2)
-    assert isinstance(result, AlgebraicTensor)
-    assert not isinstance(result, Add)
-```
-
----
-
-### 4.7 [ ] (Missing) Add tests for top-level `simplify()` interaction
+### 4.2 [x] (Done) Add tests for top-level `simplify()` interaction
 
 **Location:** New test in `tests/test_simplify.py`.
 
@@ -494,11 +293,11 @@ def test_sympy_simplify_interaction():
     assert result.coeff == 3  # If simplify recurses into our types correctly
 ```
 
-If the above fails (which is likely), document in the module that users should use `tensorsimplify()` for algebraic tensor expressions, and consider registering a handler in `sympy.simplify.simplify`.
+If the above fails (which is likely), register a handler in `sympy.simplify.simplify` which invokes tensorsimplify and redo the tests.
 
 ---
 
-### 4.8 [ ] (Missing) Strengthen simplify test assertions
+### 4.3 [x] (Done) Strengthen simplify test assertions
 
 **Location:** Multiple tests in `tests/test_simplify.py`.
 
@@ -521,7 +320,7 @@ assert len(result.factors) == expected_factors  # Verify factor count
 
 ---
 
-### 4.9 [ ] (Missing) Add tests for `_compose_with_term` method
+### 4.4 [x] (Done) Add tests for `_compose_with_term` method
 
 **Location:** New test in `tests/test_algebraic_tensor.py`.
 
@@ -548,7 +347,7 @@ def test_compose_with_term():
 
 ---
 
-### 4.10 [ ] (Missing) Add test for `is_Add = True` behavior
+### 4.5 [x] (Done) Add test for `is_Add = True` behavior
 
 **Location:** New test in `tests/test_algebraic_tensor.py`.
 
@@ -573,7 +372,7 @@ def test_is_add_flag():
 
 ## 5. Documentation
 
-### 5.1 [ ] (Done — skeleton exists) Sphinx documentation file exists
+### 5.1 [x] (Done) Sphinx documentation file exists
 
 **Location:** `doc/src/modules/tensor/algebraic.rst` (32 lines).
 
@@ -581,19 +380,27 @@ def test_is_add_flag():
 
 ---
 
-### 5.2 [ ] (Missing) Expand Sphinx documentation with tutorial and examples
+### 5.2 [x] (Missing) Expand Sphinx documentation with overview and worked example
 
 **Location:** `doc/src/modules/tensor/algebraic.rst`.
 
-**Current state:** The file is a minimal skeleton (32 lines) with only `autoclass`/`autofunction` directives. It has no introduction, no mathematical background, no usage examples, and no "when to use this" guidance.
+**Current state:** The file is a minimal skeleton (32 lines) with only `autoclass`/`autofunction` directives. It has no introduction, no usage examples, and no guidance on when to use this module.
 
 **Reasoning:** A new module in SymPy should have documentation that helps users understand:
 - What problem algebraic tensors solve
 - How they differ from `Indexed`, `tensorproduct`, `Array`, and the `Tensor` class
-- A realistic worked example
-- The mathematical notation used
+- A realistic worked example demonstrating the simplification power
 
-**Implementation plan:** Restructure `algebraic.rst` to include:
+This module was used by its author to calculate all results of the
+mathematical physics paper `arXiv:2511.08159 <https://arxiv.org/abs/2511.08159>`_.
+The documentation should include a representative example from that work:
+the commutator of a Dirac operator with an algebra element in a finite
+geometry model. The commutator expands to many pure tensor terms but
+simplifies to only 8, demonstrating the module's simplification power.
+
+SymPy documentation does **not** use `jupyter-execute`. Examples are written as inline `>>>` doctest-style blocks directly in the RST, following the convention seen in `doc/src/modules/matrices/expressions.rst` and `doc/src/modules/diffgeom.rst`. Mathematical notation uses the `:math:` role.
+
+**Implementation plan:** Restructure `algebraic.rst` to follow the SymPy convention (matching `expressions.rst` and `diffgeom.rst`):
 
 ```rst
 .. _tensor-algebraic:
@@ -601,52 +408,200 @@ def test_is_add_flag():
 Algebraic Tensor Products
 =========================
 
-Overview
---------
-Explain what algebraic tensors are, how they model tensor products of
-matrix-like objects, and how they differ from other tensor representations
-in SymPy (Indexed, Array, Tensor).
+.. module:: sympy.tensor.algebraic
 
-Mathematical Background
------------------------
-Brief description of the tensor product notation, composition as
-factor-wise matrix multiplication, and the role of commutativity patterns.
+The algebraic tensor module provides support for tensor products of
+matrix-like objects and their linear combinations. Unlike
+:class:`~sympy.tensor.array.ndim_array.NDimArray` which operates on
+concrete indexed components, algebraic tensors work with symbolic
+matrix expressions and preserve the tensor product structure.
 
-Quick Example
--------------
-A worked example showing creation, arithmetic, composition, and simplification.
+This module was used to calculate all results of the mathematical
+physics paper `arXiv:2511.08159 <https://arxiv.org/abs/2511.08159>`_
+on finite noncommutative geometry.
 
-.. jupyter-execute::
+A pure tensor is a tensor product of matrix factors:
 
-   from sympy.matrices.expressions import MatrixSymbol
-   from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
-   from sympy.tensor.algebraic.simplify import tensorsimplify
+    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy.tensor.algebraic import AlgebraicPureTensor
+    >>> A = MatrixSymbol("A", 3, 4)
+    >>> B = MatrixSymbol("B", 4, 5)
+    >>> T = AlgebraicPureTensor(A, B)
+    >>> T
+    A ⊗ B
 
-   A = MatrixSymbol("A", 3, 4)
-   B = MatrixSymbol("B", 4, 5)
-   T = AlgebraicPureTensor(A, B)
-   print(T)
+Pure tensors support addition, forming algebraic tensors (linear
+combinations of pure tensors):
+
+    >>> C = MatrixSymbol("C", 3, 4)
+    >>> D = MatrixSymbol("D", 4, 5)
+    >>> S = AlgebraicPureTensor(C, D)
+    >>> S + T
+    C ⊗ D + A ⊗ B
+
+Composition of pure tensors performs factor-wise matrix multiplication:
+
+    >>> from sympy.tensor.algebraic import compose_algebraic_pure_tensors
+    >>> X = MatrixSymbol("X", 4, 3)
+    >>> Y = MatrixSymbol("Y", 5, 4)
+    >>> compose_algebraic_pure_tensors(T, AlgebraicPureTensor(X, Y))
+    A*X ⊗ B*Y
+
+The :func:`~sympy.tensor.algebraic.simplify.tensorsimplify` function
+can simplify algebraic tensor expressions by combining like terms and
+reducing zero factors.
+
+Worked Example: Dirac Commutator in Finite Geometry
+----------------------------------------------------
+
+The following example demonstrates the simplification power of this
+module. We define a Dirac operator :math:`D` and an algebra element
+:math:`a` as algebraic tensors in a finite noncommutative geometry
+model (from `arXiv:2511.08159 <https://arxiv.org/abs/2511.08159>`_).
+Their commutator :math:`[D, a] = D \cdot a - a \cdot D` expands
+to many pure tensor terms but simplifies to only 8.
+
+First, define the fermion mass symbols (noncommutative) and the
+complex scalar symbols for the algebra element:
+
+    >>> from sympy import symbols, Matrix, eye, zeros
+    >>> from sympy.tensor.algebraic import (
+    ...     AlgebraicPureTensor, AlgebraicTensor, tensorsimplify)
+
+    >>> (upsilon_R, upsilonc_nu, cupsilon_nu, upsilon_nu,
+    ...  upsilont_nu, upsilonc_R) = symbols(
+    ...     r"\Upsilon_R, \Upsilon^*_\nu, \overline{\Upsilon}_\nu, "
+    ...     r"\Upsilon_\nu, \Upsilon^t_\nu, \Upsilon^*_R",
+    ...     commutative=False)
+    >>> (upsilonc_u, cupsilon_u, upsilon_u, upsilont_u) = symbols(
+    ...     r"\Upsilon^*_u, \overline{\Upsilon}_u, \Upsilon_u, "
+    ...     r"\Upsilon^t_u", commutative=False)
+    >>> (upsilonc_e, cupsilon_e, upsilon_e, upsilont_e) = symbols(
+    ...     r"\Upsilon^*_e, \overline{\Upsilon}_e, \Upsilon_e, "
+    ...     r"\Upsilon^t_e", commutative=False)
+    >>> (upsilonc_d, cupsilon_d, upsilon_d, upsilont_d) = symbols(
+    ...     r"\Upsilon^*_d, \overline{\Upsilon}_d, \Upsilon_d, "
+    ...     r"\Upsilon^t_d", commutative=False)
+
+    >>> (z, w, alpha, beta, gamma, delta) = symbols(
+    ...     r"z, w, \alpha, \beta, \gamma, \delta",
+    ...     complex=True)
+    >>> (m11, m12, m13, m21, m22, m23,
+    ...  m31, m32, m33) = symbols(
+    ...     r"m_{11}, m_{12}, m_{13}, m_{21}, m_{22}, "
+    ...     r"m_{23}, m_{31}, m_{32}, m_{33}", complex=True)
+
+Define the Dirac operator as a sum of four pure tensors, each with
+three matrix factors (2x2, 4x4, 4x4):
+
+    >>> proj_L = Matrix([[1, 0], [0, 0]])
+    >>> proj_R = Matrix([[0, 0], [0, 1]])
+    >>> id4 = eye(4)
+    >>> pL_f = Matrix([[1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
+    >>> pR_f = Matrix([[0,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
+    >>> m_nu = Matrix([
+    ...     [0, 0, upsilon_R, upsilonc_nu],
+    ...     [0, 0, cupsilon_nu, 0],
+    ...     [upsilonc_R, upsilont_nu, 0, 0],
+    ...     [upsilon_nu, 0, 0, 0]])
+    >>> m_u = Matrix([
+    ...     [0, 0, 0, upsilonc_u],
+    ...     [0, 0, cupsilon_u, 0],
+    ...     [0, upsilont_u, 0, 0],
+    ...     [upsilon_u, 0, 0, 0]])
+    >>> m_e = Matrix([
+    ...     [0, 0, 0, upsilonc_e],
+    ...     [0, 0, cupsilon_e, 0],
+    ...     [0, upsilont_e, 0, 0],
+    ...     [upsilon_e, 0, 0, 0]])
+    >>> m_d = Matrix([
+    ...     [0, 0, 0, upsilonc_d],
+    ...     [0, 0, cupsilon_d, 0],
+    ...     [0, upsilont_d, 0, 0],
+    ...     [upsilon_d, 0, 0, 0]])
+
+    >>> D1 = AlgebraicPureTensor(proj_L, pL_f, m_nu)
+    >>> D2 = AlgebraicPureTensor(proj_L, pR_f, m_u)
+    >>> D3 = AlgebraicPureTensor(proj_R, pL_f, m_e)
+    >>> D4 = AlgebraicPureTensor(proj_R, pR_f, m_d)
+    >>> Dirac = D1 + D2 + D3 + D4
+
+Define the algebra element :math:`a` as a sum of three pure tensors
+(the representation :math:`\pi(a)`):
+
+    >>> a_f1 = Matrix([[z, 0], [0, w]])
+    >>> a_f2 = Matrix([[alpha, beta], [gamma, delta]])
+    >>> a_m  = Matrix([
+    ...     [z, 0, 0, 0],
+    ...     [0, m11, m12, m13],
+    ...     [0, m21, m22, m23],
+    ...     [0, m31, m32, m33]])
+    >>> a_f3 = Matrix([[0,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,0]])
+
+    >>> a_pi1 = AlgebraicPureTensor(a_f1, id4, pL_f)
+    >>> a_pi2 = AlgebraicPureTensor(a_f2, id4, pR_f)
+    >>> a_pi3 = AlgebraicPureTensor(eye(2), a_m, a_f3)
+    >>> a = a_pi1 + a_pi2 + a_pi3
+
+Compute the commutator, expand, and simplify:
+
+    >>> da = (Dirac * a1 - a1 * Dirac).expand()
+    >>> len(da.terms)
+    24
+    >>> da1_simp = tensorsimplify(da)
+    >>> len(da_simp.terms)
+    8
+
+The simplification reduces the expression from 24 pure tensor terms to
+just 8, by combining like terms and eliminating zero factors.
 
 Classes
 -------
-... (existing autoclass directives)
+
+.. autoclass:: AlgebraicPureTensor
+   :members:
+
+.. autoclass:: AlgebraicTensor
+   :members:
+
+.. autoclass:: AlgebraicZeroTensor
+   :members:
+
+.. autoclass:: ShapeMismatchError
+   :members:
 
 Functions
 ---------
-... (existing autofunction directives)
+
+.. autofunction:: algebraic_tensor_product
+
+.. autofunction:: compose_algebraic_pure_tensors
+
+.. autofunction:: compose_algebraic_tensors
+
+.. autofunction:: tensorsimplify
 ```
 
+Note the following SymPy conventions:
+- `.. module::` directive at the top (not `.. automodule::`), which sets the module context for cross-references
+- `>>>` doctest-style examples inline in the RST text (NOT `jupyter-execute`)
+- `:math:` role for mathematical notation (NOT raw LaTeX or `.. math::` blocks for inline math)
+- `:class:~` and `:func:~` cross-reference roles for internal links (the `~` hides the module prefix in the displayed text)
+- `autoclass` and `autofunction` directives reference objects without the full module prefix since `.. module::` sets the context
+- Brief prose sections with examples, not separate "Overview", "Mathematical Background", or "Quick Example" sections
+
+**Verification required before committing:** The agent must run the full example
+(interactive Python session or script) to verify the exact number of terms before
+and after simplification. The numbers 24 and 8 above are based on the playground
+file (`tests_old/playground_functions.py` lines 567-569) and may differ depending
+on how `.expand()` distributes terms. The agent should adjust the numbers in the
+RST to match the actual output. Also verify that the `len(da1.terms)` call works
+-- the attribute may be `.terms`, `.args`, or something else depending on the
+`AlgebraicTensor` API.
+
 ---
 
-### 5.3 [ ] (Missing) Add equality semantics to `AlgebraicPureTensor` docstring
-
-**Location:** `algebraic_pure_tensor.py:74` — class docstring.
-
-See item 3.2 above.
-
----
-
-### 5.4 [ ] (Missing) Verify all docstring examples pass doctest
+### 5.3 [x] (Missing) Verify all docstring examples pass doctest
 
 **Location:** All files with docstrings.
 
@@ -659,80 +614,9 @@ See item 3.2 above.
 
 ---
 
-## 6. Feature Completeness
+## 6. Code Quality Improvements
 
-### 6.1 [ ] (Missing) Register handler for top-level `simplify()`
-
-**Location:** `sympy/simplify/simplify.py`.
-
-**Current state:** Only `tensorsimplify()` works. Calling `simplify(tensor_expr)` will use SymPy's general simplification, which won't apply tensor-aware rules.
-
-**Reasoning:** Users expect `simplify()` to work on any SymPy expression. If `simplify()` doesn't delegate to `tensorsimplify()` for algebraic tensor types, users will get suboptimal results and may file bug reports.
-
-**Implementation plan:** Option A (preferred) — Add a handler in `sympy/simplify/simplify.py`:
-```python
-# In the _simplify_functions or similar dispatch mechanism:
-def _simplify_algebraic_tensor(expr):
-    from sympy.tensor.algebraic.simplify import tensorsimplify
-    return tensorsimplify(expr)
-```
-
-Option B — Document in the module docstring that `tensorsimplify()` should be used instead of `simplify()` for algebraic tensor expressions.
-
----
-
-### 6.2 [ ] (Missing) Document scope: tensor contraction is not supported
-
-**Location:** `algebraic/__init__.py` module docstring.
-
-**Reasoning:** A user familiar with tensors will expect contraction (summing over paired indices) as a basic operation. This module does not support contraction. This should be explicitly documented to set correct expectations.
-
-**Implementation plan:** Add a "Limitations" section to the module docstring:
-```
-Limitations
-===========
-
-This module supports tensor products, linear combinations, and
-factor-wise composition (matrix multiplication) of tensor factors.
-The following operations are not yet supported:
-
-- Tensor contraction (summing over paired indices)
-- Tensor transposition that reorders factors (only factor-wise .T)
-- Inner products between tensor spaces
-```
-
----
-
-### 6.3 [ ] (Missing) Consider adding `equals()` for numerical comparison
-
-**Location:** `algebraic_pure_tensor.py`, `algebraic_tensor.py`.
-
-**Current state:** Not implemented. Relies on `Basic.equals()`.
-
-**Reasoning:** `Basic.equals()` tries random numerical substitution to check equality. For tensors, this may not work well because tensor expressions can't always be substituted with random numbers (factors are matrices, not scalars). It's worth testing whether `Basic.equals()` works for these types, and if not, consider a custom implementation.
-
-**Implementation plan:** Test `Basic.equals()` on tensor expressions first. If it fails, document the limitation.
-
----
-
-## 7. Code Quality Improvements
-
-### 7.1 [ ] (Missing) Simplify `hasattr(other, 'is_commutative')` checks after adding `is_commutative`
-
-**Location:** 29 occurrences across all module files (see item 1.1 for the full list).
-
-**Current state:** Every multiplication check uses the pattern:
-```python
-hasattr(other, 'is_commutative') and other.is_commutative and not (...)
-```
-
-**Reasoning:** After adding `is_commutative = False` to our own classes (item 1.1), the `not (hasattr(other, 'is_AlgebraicPureTensor') or ...)` guards become less necessary since our classes will have `is_commutative = False` and won't pass the `other.is_commutative` check. However, the guards also exclude `AlgebraicZeroTensor` (which has `is_commutative = True`), so the `not` clause is still needed to prevent zero tensors from being treated as scalar multipliers.
-
-**Implementation plan:** After fixing item 1.1, simplify the checks where possible. The exclusion of `AlgebraicZeroTensor` must remain since it has `is_commutative = True`.
-
----
-
-### 7.2 [ ] (Missing) Reduce code duplication in `compose_algebraic_pure_tensors` zero-tensor handling
+### 6.1 [ ] (Missing) Reduce code duplication in `compose_algebraic_pure_tensors` zero-tensor handling
 
 **Location:** `algebraic_pure_tensor.py:723-793` and `algebraic_tensor.py:169-242`.
 
@@ -759,137 +643,15 @@ Then replace the duplicated shape computation in both functions with calls to th
 
 ---
 
-### 7.3 [ ] (Missing) Single-factor unwrap behavior — document or make configurable
+## 7. Cleanup
 
-**Location:** `algebraic_pure_tensor.py:254-259`.
-
-**Current code:**
-```python
-# Single factor with coefficient 1: unwrap to bare factor
-if len(processed) == 1 and coeff is S.One:
-    return processed[0]
-
-# Single factor with non-trivial coefficient: return coeff * factor
-if len(processed) == 1:
-    return coeff * processed[0]
-```
-
-**Reasoning:** When a user constructs `AlgebraicPureTensor(A)`, they get back `A` (a `MatrixSymbol`), not an `AlgebraicPureTensor`. This is a convenience that breaks type expectations:
-- `isinstance(AlgebraicPureTensor(A), AlgebraicPureTensor)` is `False`
-- The return type of `AlgebraicPureTensor.__new__` is not `AlgebraicPureTensor`
-
-This is consistent with how SymPy's `Mul` and `Add` unwrap single-argument expressions. But it should be clearly documented. Also, consider whether this is the right default behavior — a user constructing a pure tensor may explicitly want a tensor object, not the bare factor.
-
-**Implementation plan:** At minimum, add to the docstring:
-```
-Note that a single-factor tensor unwraps to the bare factor:
-``AlgebraicPureTensor(A)`` returns ``A`` (a ``MatrixSymbol``), not an
-``AlgebraicPureTensor`` instance. Use ``AlgebraicPureTensor(1, A)``
-to force tensor wrapping.
-```
-
----
-
-### 7.4 [ ] (Missing) `_is_zero_like` function robustness
-
-**Location:** `algebraic_pure_tensor.py:56-71`.
-
-**Current code:**
-```python
-def _is_zero_like(expr):
-    if expr is S.Zero:
-        return True
-    if getattr(expr, '_assumptions', None) and expr._assumptions.get('zero') is True:
-        return True
-    return expr == S.Zero * expr
-```
-
-**Reasoning:** The `expr == S.Zero * expr` fallback is clever but has subtle issues:
-- For a `MatrixSymbol`, `S.Zero * A` produces `ZeroMatrix` times `A`, which may not equal the original `A` comparison cleanly
-- For complex expressions, `S.Zero * expr` triggers `Mul.__new__` which may have side effects
-- The comment acknowledges this: "avoiding the descriptor to prevent triggering SymPy's assumption inference"
-
-The `_assumptions` direct access is a SymPy internal API and may break between versions.
-
-**Implementation plan:** This is acceptable as-is but should have a test for edge cases:
-```python
-def test_is_zero_like():
-    from sympy.tensor.algebraic.algebraic_pure_tensor import _is_zero_like
-    assert _is_zero_like(S.Zero) is True
-    assert _is_zero_like(0) is True
-    ZM = ZeroMatrix(3, 4)
-    assert _is_zero_like(ZM) is True
-    A = MatrixSymbol("A", 3, 4)
-    assert _is_zero_like(A) is False
-```
-
----
-
-### 7.5 [ ] (Missing) `conjugate()` fallback to `Conjugate(...)` wrapper
-
-**Location:** `algebraic_pure_tensor.py:428-432` and `algebraic_tensor.py:724-728`.
-
-**Current code:**
-```python
-def conjugate(self):
-    result = self._eval_conjugate()
-    if result is not None:
-        return result
-    from sympy.functions.elementary.complexes import conjugate as c
-    return c(self)
-```
-
-**Reasoning:** `_eval_conjugate()` is implemented and returns a valid result for all current tensor types. The fallback to `c(self)` would wrap the tensor in `Conjugate(AlgebraicPureTensor(...))`, creating an unevaluated wrapper. This fallback path is dead code if `_eval_conjugate()` always succeeds. If it can fail (return `None`), document when and why.
-
-Looking at `_eval_conjugate()` in both classes, it always returns a result (either a new tensor or `self`). The fallback is unreachable. Either remove it or document it.
-
-**Implementation plan:** Remove the fallback and simplify:
-```python
-def conjugate(self):
-    """Return the complex conjugate of this tensor."""
-    return self._eval_conjugate()
-```
-
----
-
-### 7.6 [ ] (Missing) `_coeff_map` in `AlgebraicTensor` — verify it stays in sync
-
-**Location:** `algebraic_tensor.py:340` — `__slots__ = ('_coeff_map',)`, set at `algebraic_tensor.py:388`.
-
-**Current state:** `_coeff_map` is computed in `_collect_coefficients()` and stored on the object. It's used by `_combine_coeff_maps()` for efficient merge/subtract operations. It's excluded from pickle via `__getstate__` (`algebraic_tensor.py:567-572`).
-
-**Reasoning:** The `_coeff_map` is a performance optimization for the `_merge` and `_subtract` fast paths (used when both operands have "simple terms"). If the map ever gets out of sync with `self.args`, the fast path produces incorrect results. The slow path (via `AlgebraicTensor.__new__`) is always correct since it recomputes from scratch.
-
-**Implementation plan:** Add an assertion or invariant check in test mode:
-```python
-def test_coeff_map_consistency():
-    A = MatrixSymbol("A", 3, 4)
-    B = MatrixSymbol("B", 4, 5)
-    C = MatrixSymbol("C", 3, 4)
-    D = MatrixSymbol("D", 4, 5)
-    S = AlgebraicTensor(
-        AlgebraicPureTensor(2, A, B),
-        AlgebraicPureTensor(3, A, B),
-        AlgebraicPureTensor(C, D)
-    )
-    # The coeff_map should reflect the merged coefficients
-    assert S._coeff_map is not None
-    # After merging, A⊗B should have coefficient 5
-    key = AlgebraicPureTensor(A, B)
-    assert S._coeff_map.get(key) == 5
-```
-
----
-
-## 8. Cleanup
-
-### 8.1 [ ] (Missing) Delete `tests_old/` directory
+### 7.1 [ ] (Missing) Delete `tests_old/` directory
 
 See item 2.2 above.
 
 ---
 
-### 8.2 [ ] (Missing) Add `tensor/algebraic/` to `.gitignore` for `.DS_Store` and `__pycache__`
+### 7.2 [ ] (Missing) Add `tensor/algebraic/` to `.gitignore` for `.DS_Store` and `__pycache__`
 
 **Location:** Root `.gitignore`.
 
@@ -905,7 +667,7 @@ These should already be in the SymPy `.gitignore`, but the files are currently p
 
 ---
 
-### 8.3 [ ] (Missing) Remove `.DS_Store` from all directories
+### 7.3 [ ] (Missing) Remove `.DS_Store` from all directories
 
 **Location:**
 - `tensor/algebraic/.DS_Store`
