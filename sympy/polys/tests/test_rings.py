@@ -6,7 +6,8 @@ from functools import reduce
 from operator import add, mul
 
 from sympy.polys.domains import ZZ_I
-from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement, vring, ninf
+from sympy.polys.rings import (
+    ninf, ring, xring, sring, PolyRing, PolyElement, vring)
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex

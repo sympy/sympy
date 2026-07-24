@@ -20,10 +20,8 @@ from types import GeneratorType
 
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.intfunc import igcd
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify, sympify
-from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.compatibility import IPolys
 from sympy.polys.constructor import construct_domain
 from sympy.polys.densebasic import dup, dmp, dmp_to_dict, dup_from_dict, dmp_from_dict
@@ -51,6 +49,66 @@ from sympy.polys.polyutils import (
     _parallel_dict_from_expr,
 )
 from sympy.printing.defaults import DefaultPrinting
+from sympy.polys.sparsetools import (
+    smp_add,
+    smp_add_ground,
+    smp_clear_denoms,
+    smp_coeff,
+    smp_compose,
+    smp_content,
+    smp_const,
+    smp_coeff_wrt,
+    smp_deflate,
+    smp_deflate_by,
+    smp_degree,
+    smp_degrees,
+    smp_diff,
+    smp_div_list,
+    smp_evaluate,
+    smp_get_coeff,
+    smp_iadd_monom,
+    smp_iadd_poly_monom,
+    smp_imul_num,
+    smp_inflate,
+    smp_is_ground,
+    smp_is_linear,
+    smp_is_monomial,
+    smp_is_monic,
+    smp_is_negative,
+    smp_is_nonnegative,
+    smp_is_nonpositive,
+    smp_is_one,
+    smp_is_positive,
+    smp_is_primitive,
+    smp_is_quadratic,
+    smp_is_term,
+    smp_is_zero,
+    smp_LC,
+    smp_leading_expv,
+    smp_leading_monom,
+    smp_leading_term,
+    smp_LM,
+    smp_LT,
+    smp_mul,
+    smp_mul_ground,
+    smp_pow_generic,
+    smp_pow_multinomial,
+    smp_primitive,
+    smp_quo_term,
+    smp_quo_ground,
+    smp_rem_list,
+    smp_rsub_ground,
+    smp_square,
+    smp_sub,
+    smp_sub_ground,
+    smp_subs,
+    smp_subs_drop,
+    smp_symmetrize,
+    smp_tail_degree,
+    smp_tail_degrees,
+    smp_term_div,
+    smp_trunc_ground,
+)
 from sympy.utilities import public, subsets
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
@@ -69,10 +127,9 @@ if TYPE_CHECKING:
     _str = str
 
 
-Mon = tuple[int, ...]
-
-
 ninf = float("-inf")
+
+Mon = tuple[int, ...]
 
 
 @public
@@ -1233,43 +1290,59 @@ class PolyElement(
 
     @property
     def is_monomial(self) -> bool:
-        return not self or (len(self) == 1 and self.LC == 1)
+        ring = self.ring
+        return smp_is_monomial(
+            self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_term(self) -> bool:
-        return len(self) <= 1
+        ring = self.ring
+        return smp_is_term(self, ring.ngens, ring.domain)
 
     @property
     def is_negative(self) -> bool:
-        return self.ring.domain.is_negative(self.LC)
+        ring = self.ring
+        return smp_is_negative(
+            self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_positive(self) -> bool:
-        return self.ring.domain.is_positive(self.LC)
+        ring = self.ring
+        return smp_is_positive(
+            self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_nonnegative(self) -> bool:
-        return self.ring.domain.is_nonnegative(self.LC)
+        ring = self.ring
+        return smp_is_nonnegative(
+            self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_nonpositive(self) -> bool:
-        return self.ring.domain.is_nonpositive(self.LC)
+        ring = self.ring
+        return smp_is_nonpositive(
+            self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_monic(self) -> bool:
-        return self.ring.domain.is_one(self.LC)
+        ring = self.ring
+        return smp_is_monic(
+            self, ring.ngens, ring.domain, ring.order)
 
     @property
     def is_primitive(self) -> bool:
-        return self.ring.domain.is_one(self.content())
+        ring = self.ring
+        return smp_is_primitive(self, ring.ngens, ring.domain)
 
     @property
     def is_linear(self) -> bool:
-        return all(sum(monom) <= 1 for monom in self.itermonoms())
+        ring = self.ring
+        return smp_is_linear(self, ring.ngens, ring.domain)
 
     @property
     def is_quadratic(self) -> bool:
-        return all(sum(monom) <= 2 for monom in self.itermonoms())
+        ring = self.ring
+        return smp_is_quadratic(self, ring.ngens, ring.domain)
 
     def _check(self) -> None:
         """Validate polynomial structure."""
@@ -1427,22 +1500,6 @@ class PolyElement(
 
         return poly
 
-    def square(self) -> PolyElement[Er]:
-        """square of a polynomial
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y = ring('x, y', ZZ)
-        >>> p = x + y**2
-        >>> p.square()
-        x**2 + 2*x*y**2 + y**4
-
-        """
-        return self._square()
 
     def degree(self, x: PolyElement[Er] | int | str | None = None) -> float:
         """
@@ -1451,14 +1508,10 @@ class PolyElement(
         Note that the degree of 0 is negative infinity (``float('-inf')``)
 
         """
-        i = self.ring.index(x)
-
-        if not self:
-            return ninf
-        elif i < 0:
-            return 0
-        else:
-            return self._degree(i)
+        ring = self.ring
+        i = ring.index(x)
+        deg = smp_degree(self, i, ring.ngens, ring.domain)
+        return ninf if deg < 0 else deg
 
     def degrees(self) -> tuple[float, ...]:
         """
@@ -1467,10 +1520,9 @@ class PolyElement(
         Note that the degree of 0 is negative infinity (``float('-inf')``)
 
         """
-        if not self:
-            return (ninf,) * self.ring.ngens
-        else:
-            return self._degrees()
+        ring = self.ring
+        degs = smp_degrees(self, ring.ngens, ring.domain)
+        return tuple(ninf if deg < 0 else deg for deg in degs)
 
     def tail_degree(self, x: PolyElement[Er] | int | str | None = None) -> float:
         """
@@ -1479,14 +1531,10 @@ class PolyElement(
         Note that the degree of 0 is negative infinity (``float('-inf')``)
 
         """
-        i = self.ring.index(x)
-
-        if not self:
-            return ninf
-        elif i < 0:
-            return 0
-        else:
-            return min(monom[i] for monom in self.itermonoms())
+        ring = self.ring
+        i = ring.index(x)
+        deg = smp_tail_degree(self, i, ring.ngens, ring.domain)
+        return ninf if deg < 0 else deg
 
     def tail_degrees(self) -> tuple[float, ...]:
         """
@@ -1495,10 +1543,9 @@ class PolyElement(
         Note that the degree of 0 is negative infinity (``float('-inf')``)
 
         """
-        if not self:
-            return (ninf,) * self.ring.ngens
-        else:
-            return tuple(map(min, list(zip(*self.itermonoms()))))
+        ring = self.ring
+        degs = smp_tail_degrees(self, ring.ngens, ring.domain)
+        return tuple(ninf if deg < 0 else deg for deg in degs)
 
     def monic(self) -> PolyElement[Er]:
         """Divides all coefficients by the leading coefficient."""
@@ -1620,23 +1667,13 @@ class PolyElement(
     ) -> tuple[tuple[int, ...], list[PolyElement[Er]]]:
         ring = self.ring
         polys = [self] + list(G)
+        J, deflated = smp_deflate(
+            polys, ring.ngens, ring.domain)  # type: ignore[arg-type]
 
-        J = [0] * ring.ngens
-        for p in polys:
-            for monom in p.itermonoms():
-                for i, m in enumerate(monom):
-                    J[i] = igcd(J[i], m)
+        if all(b == 1 for b in J):
+            return J, polys
 
-        for i, b in enumerate(J):
-            if not b:
-                J[i] = 1
-
-        J2 = tuple(J)
-
-        if all(b == 1 for b in J2):
-            return J2, polys
-
-        return J2, self._deflate(J2, polys)
+        return J, [self.new(poly) for poly in deflated]
 
     def canonical_unit(self):
         domain = self.ring.domain
@@ -1662,23 +1699,9 @@ class PolyElement(
         return self._diff(i)
 
     def trunc_ground(self, p: Er) -> PolyElement[Er]:
-        # XXX: This is not valid for all domains (e.g. GF(p))
-        if self.ring.domain.is_ZZ:
-            terms = []
-
-            for monom, coeff in self.iterterms():
-                coeff = coeff % p  # type: ignore
-
-                if coeff > p // 2:  # type: ignore
-                    coeff = coeff - p
-
-                terms.append((monom, coeff))
-        else:
-            terms = [(monom, coeff % p) for monom, coeff in self.iterterms()]  # type: ignore
-
-        poly = self.new(terms)
-        poly.strip_zero()
-        return poly
+        ring = self.ring
+        return self.new(smp_trunc_ground(
+            self, p, ring.ngens, ring.domain))
 
     rem_ground = trunc_ground
 
@@ -1738,16 +1761,10 @@ class PolyElement(
         coeff, coeffs
 
         """
-        p = self
-        i = p.ring.index(x)
-        terms = [(m, c) for m, c in p.iterterms() if m[i] == deg]
-
-        if not terms:
-            return p.ring.zero
-
-        monoms, coeffs = zip(*terms)
-        monoms_list = [m[:i] + (0,) + m[i + 1 :] for m in monoms]
-        return p.ring.from_dict(dict(zip(monoms_list, coeffs)))
+        ring = self.ring
+        i = ring.index(x)
+        return self.new(smp_coeff_wrt(
+            self, i, deg, ring.ngens, ring.domain))
 
     def compose(self, x, a=None):
         ring = self.ring
@@ -1810,9 +1827,10 @@ class PolyElement(
         elif len(eval_dict) == ring.ngens:
             return self._evaluate(eval_dict)
         else:
-            temp_result = self._subs(eval_dict)
+            result = smp_subs_drop(
+                self, eval_dict, ring.ngens, ring.domain)
             new_ring = ring.drop(*[ring.gens[i] for i in eval_dict.keys()])
-            return temp_result.set_ring(new_ring)  # type: ignore
+            return new_ring.from_dict(result)  # type: ignore
 
     @overload
     def subs(self, values: list[tuple[Expr, Er | int]]) -> PolyElement[Er]: ...
@@ -2181,75 +2199,36 @@ class PolyElement(
         return self.new([(monom, -coeff) for monom, coeff in self.iterterms()])
 
     def _add(self, p2: PolyElement[Er]) -> PolyElement[Er]:
-        p = self.copy()
-        get = p.get
-        zero = self.ring.domain.zero
-        for k, v in p2.items():
-            v = get(k, zero) + v
-            if v:
-                p[k] = v
-            else:
-                del p[k]
-        return p
+        ring = self.ring
+        return self.new(smp_add(self, p2, ring.domain, ring.ngens))
 
     def _add_ground(self, cp2: Er) -> PolyElement[Er]:
-        p = self.copy()
-        if not cp2:
-            return p
         ring = self.ring
-        zm = ring.zero_monom
-        v = self.get(zm, ring.domain.zero) + cp2
-        if v:
-            p[zm] = v
-        else:
-            del p[zm]
-        return p
+        return self.new(smp_add_ground(
+            self, cp2, ring.ngens, ring.domain))
 
     def _sub(self, p2: PolyElement[Er]) -> PolyElement[Er]:
-        p = self.copy()
-        get = p.get
-        zero = self.ring.domain.zero
-        for k, v in p2.items():
-            v = get(k, zero) - v
-            if v:
-                p[k] = v
-            else:
-                del p[k]
-        return p
+        ring = self.ring
+        return self.new(smp_sub(self, p2, ring.domain, ring.ngens))
 
     def _sub_ground(self, cp2: Er) -> PolyElement[Er]:
-        p = self.copy()
-        if not cp2:
-            return p
         ring = self.ring
-        zm = ring.zero_monom
-        v = self.get(zm, ring.domain.zero) - cp2
-        if v:
-            p[zm] = v
-        else:
-            del p[zm]
-        return p
+        return self.new(smp_sub_ground(
+            self, cp2, ring.ngens, ring.domain))
 
     def _rsub_ground(self, cp2: Er) -> PolyElement[Er]:
-        return self.__neg__()._add_ground(cp2)
+        ring = self.ring
+        return self.new(smp_rsub_ground(
+            self, cp2, ring.ngens, ring.domain))
 
     def _mul(self, other: PolyElement[Er]) -> PolyElement[Er]:
         ring = self.ring
-        p = ring.zero
-        for exp1, v1 in self.iterterms():
-            for exp2, v2 in other.iterterms():
-                exp = ring.monomial_mul(exp1, exp2)
-                v = v1 * v2
-                p[exp] = p.get(exp, ring.domain.zero) + v
-        p.strip_zero()
-        return p
+        return self.new(smp_mul(self, other, ring.domain, ring.ngens))
 
     def mul_ground(self, x: Er) -> PolyElement[Er]:
-        if not x:
-            return self.ring.zero
-
-        terms = [(monom, coeff * x) for monom, coeff in self.iterterms()]
-        return self.new(terms)
+        ring = self.ring
+        return self.new(smp_mul_ground(
+            self, x, ring.ngens, ring.domain))
 
     def _pow_int(self, n: int) -> PolyElement[Er]:
         if n == 1:
@@ -2264,70 +2243,31 @@ class PolyElement(
             return self._pow_generic(n)
 
     def _pow_generic(self, n: int) -> PolyElement[Er]:
-        p = self.ring.one
-        c = self
-
-        while True:
-            if n & 1:
-                p = p * c
-                n -= 1
-                if not n:
-                    break
-
-            c = c.square()
-            n = n // 2
-
-        return p
+        ring = self.ring
+        return self.new(smp_pow_generic(self, n, ring.domain, ring.ngens))
 
     def _pow_multinomial(self, n: int) -> PolyElement[Er]:
-        multinomials = multinomial_coefficients(len(self), n).items()
-        monomial_mulpow = self.ring.monomial_mulpow
-        zero_monom = self.ring.zero_monom
-        terms = self.items()
-        zero = self.ring.domain.zero
-        poly = self.ring.zero
-
-        for multinomial, multinomial_coeff in multinomials:
-            product_monom = zero_monom
-            product_coeff = self.ring.domain_new(multinomial_coeff)
-            for exp, (monom, coeff) in zip(multinomial, terms):
-                if exp:
-                    product_monom = monomial_mulpow(product_monom, monom, exp)
-                    product_coeff *= coeff**exp
-
-            monom = tuple(product_monom)
-            coeff = product_coeff
-
-            coeff = poly.get(monom, zero) + coeff
-
-            if coeff:
-                poly[monom] = coeff
-            elif monom in poly:
-                del poly[monom]
-        return poly
-
-    def _square(self) -> PolyElement[Er]:
         ring = self.ring
-        p = ring.zero
-        get = p.get
-        keys = list(self.keys())
-        zero = ring.domain.zero
-        monomial_mul = ring.monomial_mul
-        for i in range(len(keys)):
-            k1 = keys[i]
-            pk = self[k1]
-            for j in range(i):
-                k2 = keys[j]
-                exp = monomial_mul(k1, k2)
-                p[exp] = get(exp, zero) + pk * self[k2]
-        p = p.imul_num(2)
-        get = p.get
-        for k, v in self.items():
-            k2 = monomial_mul(k, k)
-            p[k2] = get(k2, zero) + v**2
-        p.strip_zero()
-        # p._check()
-        return p
+        return self.new(smp_pow_multinomial(
+            self, n, ring.domain, ring.ngens))
+
+    def square(self) -> PolyElement[Er]:
+        """square of a polynomial
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y = ring('x, y', ZZ)
+        >>> p = x + y**2
+        >>> p.square()
+        x**2 + 2*x*y**2 + y**4
+
+        """
+        ring = self.ring
+        return self.new(smp_square(self, ring.domain, ring.ngens))
 
     def _divmod(
         self, other: PolyElement[Er]
@@ -2356,37 +2296,11 @@ class PolyElement(
         return self.exquo(p2)
 
     def _term_div(self):
-        zm = self.ring.zero_monom
-        domain = self.ring.domain
-        domain_quo = domain.quo
-        monomial_div = self.ring.monomial_div
+        ring = self.ring
 
-        if domain.is_Field:
-
-            def term_div(a_lm_a_lc, b_lm_b_lc):
-                a_lm, a_lc = a_lm_a_lc
-                b_lm, b_lc = b_lm_b_lc
-                if b_lm == zm:  # apparently this is a very common case
-                    monom = a_lm
-                else:
-                    monom = monomial_div(a_lm, b_lm)
-                if monom is not None:
-                    return monom, domain_quo(a_lc, b_lc)
-                else:
-                    return None
-        else:
-
-            def term_div(a_lm_a_lc, b_lm_b_lc):
-                a_lm, a_lc = a_lm_a_lc
-                b_lm, b_lc = b_lm_b_lc
-                if b_lm == zm:  # apparently this is a very common case
-                    monom = a_lm
-                else:
-                    monom = monomial_div(a_lm, b_lm)
-                if not (monom is None or a_lc % b_lc):
-                    return monom, domain_quo(a_lc, b_lc)
-                else:
-                    return None
+        def term_div(term1, term2):
+            return smp_term_div(
+                term1, term2, ring.ngens, ring.domain)
 
         return term_div
 
@@ -2460,21 +2374,13 @@ class PolyElement(
         False
 
         """
-        if self in self.ring._gens_set:
-            cpself = self.copy()
-        else:
-            cpself = self
-        expv, coeff = mc
-        c = cpself.get(expv)
-        if c is None:
-            cpself[expv] = coeff
-        else:
-            c += coeff
-            if c:
-                cpself[expv] = c
-            else:
-                del cpself[expv]
-        return cpself
+        ring = self.ring
+        if self in ring._gens_set:
+            return self.new(smp_iadd_monom(
+                self.copy(), mc, ring.ngens, ring.domain))
+
+        smp_iadd_monom(self, mc, ring.ngens, ring.domain)
+        return self
 
     def _iadd_poly_monom(
         self, p2: PolyElement[Er], mc: tuple[Mon, Er]
@@ -2499,21 +2405,13 @@ class PolyElement(
         x**4 + 3*x*y**3*z**3 + 3*x*y**2*z**4 + 2*y
 
         """
-        p1 = self
-        if p1 in p1.ring._gens_set:
-            p1 = p1.copy()
-        (m, c) = mc
-        get = p1.get
-        zero = p1.ring.domain.zero
-        monomial_mul = p1.ring.monomial_mul
-        for k, v in p2.items():
-            ka = monomial_mul(k, m)
-            coeff = get(ka, zero) + v * c
-            if coeff:
-                p1[ka] = coeff
-            else:
-                del p1[ka]
-        return p1
+        ring = self.ring
+        if self in ring._gens_set:
+            return self.new(smp_iadd_poly_monom(
+                self.copy(), p2, mc, ring.ngens, ring.domain))
+
+        smp_iadd_poly_monom(self, p2, mc, ring.ngens, ring.domain)
+        return self
 
     def imul_num(self, c: Er | int) -> PolyElement[Er]:
         """multiply inplace the polynomial p by an element in the
@@ -2541,13 +2439,13 @@ class PolyElement(
         False
 
         """
-        if self in self.ring._gens_set:
-            return self * c
-        if not c:
-            self.clear()
-            return self
-        for exp in self:
-            self[exp] *= c
+        ring = self.ring
+        c = ring.domain_new(c)
+        if self in ring._gens_set:
+            return self.new(smp_imul_num(
+                self.copy(), c, ring.ngens, ring.domain))
+
+        smp_imul_num(self, c, ring.ngens, ring.domain)
         return self
 
     def _rem(self, g: PolyElement[Er]) -> PolyElement[Er]:
@@ -2556,43 +2454,8 @@ class PolyElement(
 
     def _rem_list(self, G: list[PolyElement[Er]]) -> PolyElement[Er]:
         ring = self.ring
-        domain = ring.domain
-        zero = domain.zero
-        monomial_mul = ring.monomial_mul
-        r = ring.zero
-        term_div = self._term_div()
-        ltf = self.LT
-        f = self.copy()
-        get = f.get
-
-        while f:
-            for g in G:
-                tq = term_div(ltf, g.LT)
-                if tq is not None:
-                    m, c = tq
-                    for mg, cg in g.iterterms():
-                        m1 = monomial_mul(mg, m)
-                        c1 = get(m1, zero) - c * cg
-                        if not c1:
-                            del f[m1]
-                        else:
-                            f[m1] = c1
-                    ltm = f.leading_expv()
-                    if ltm is not None:
-                        ltf = ltm, f[ltm]
-                    break
-            else:
-                ltm, ltc = ltf
-                if ltm in r:
-                    r[ltm] += ltc
-                else:
-                    r[ltm] = ltc
-                del f[ltm]
-                ltm = f.leading_expv()
-                if ltm is not None:
-                    ltf = ltm, f[ltm]
-
-        return r
+        return self.new(smp_rem_list(
+            self, G, ring.ngens, ring.domain, ring.order))  # type: ignore[arg-type]
 
     def _mod(self, other: PolyElement[Er]) -> PolyElement[Er]:
         return self.rem(other)
@@ -2603,17 +2466,20 @@ class PolyElement(
     @property
     def is_ground(self) -> bool:
         # Return self.flint_poly.is_constant() in case of python-flint
-        return not self or (len(self) == 1 and self.ring.zero_monom in self)
+        ring = self.ring
+        return smp_is_ground(self, ring.ngens, ring.domain)
 
     @property
     def is_zero(self) -> bool:
         # Return self.flint_poly.is_zero() in case of python-flint
-        return not self
+        ring = self.ring
+        return smp_is_zero(self, ring.ngens, ring.domain)
 
     @property
     def is_one(self) -> bool:
         # Return self.flint_poly.is_one() in case of python-flint
-        return self == self.ring.one
+        ring = self.ring
+        return smp_is_one(self, ring.ngens, ring.domain)
 
     @property
     def is_squarefree(self) -> bool:
@@ -2636,44 +2502,33 @@ class PolyElement(
 
     @property
     def LC(self) -> Er:
-        # Just use leafing_coefficient() in case of python-flint
-        return self._get_coeff(self.leading_expv())
+        # Just use leading_coefficient() in case of python-flint
+        ring = self.ring
+        return smp_LC(self, ring.ngens, ring.domain, ring.order)
 
     @property
     def LM(self) -> Mon:
         # Use monomial(0) in case of python-flint
-        expv = self.leading_expv()
-        if expv is None:
-            return self.ring.zero_monom
-        else:
-            return expv
+        ring = self.ring
+        return smp_LM(self, ring.ngens, ring.domain, ring.order)
 
     @property
     def LT(self) -> tuple[Mon, Er]:
-        # Use monomial(0) and leafing_coefficient() in case of python-flint
-        expv = self.leading_expv()
-        if expv is None:
-            return (self.ring.zero_monom, self.ring.domain.zero)
-        else:
-            return (expv, self._get_coeff(expv))
+        # Use monomial(0) and leading_coefficient() in case of python-flint
+        ring = self.ring
+        return smp_LT(self, ring.ngens, ring.domain, ring.order)
 
     def clear_denoms(self) -> tuple[Er, PolyElement[Er]]:
         """Clear denominators from polynomial coefficients."""
-        domain = self.ring.domain
+        ring = self.ring
+        domain = ring.domain
 
         if not domain.is_Field or not domain.has_assoc_Ring:
             return domain.one, self
 
-        ground_ring = domain.get_ring()
-        common = ground_ring.one
-        lcm = ground_ring.lcm
-        denom = domain.denom
-
-        for coeff in self.values():
-            common = lcm(common, denom(coeff))
-
-        poly = self.new([(monom, coeff * common) for monom, coeff in self.items()])
-        return common, poly
+        common, poly = smp_clear_denoms(
+            self, ring.ngens, domain)
+        return common, self.new(poly)
 
     def _change_ring(self, new_ring):
         # Use fmpz_mpoly.compose() or fmpz_mpoly.compose() in case of python-flint
@@ -2796,24 +2651,28 @@ class PolyElement(
 
         """
         # Use fmpz_mpoly.monomial(1) or fmpq_mpoly.monomial(1) in case of python-flint
-        try:
-            return self._leading_expv()
-        except KeyError:
-            return None
+        ring = self.ring
+        return smp_leading_expv(
+            self, ring.ngens, ring.domain, ring.order)
 
     def _leading_expv(self) -> Mon:
-        if not self:
+        ring = self.ring
+        expv = smp_leading_expv(
+            self, ring.ngens, ring.domain, ring.order)
+        if expv is None:
             raise KeyError
-        else:
-            return self.ring.leading_expv(self)
+        return expv
 
-    def _get_coeff(self, expv) -> Er:
-        return self.get(expv, self.ring.domain.zero)
+    def _get_coeff(self, expv: Mon | None) -> Er:
+        ring = self.ring
+        return smp_get_coeff(
+            self, expv, ring.ngens, ring.domain)
 
     def const(self) -> Er:
         # Use
         """Returns the constant coefficient."""
-        return self._get_coeff(self.ring.zero_monom)
+        ring = self.ring
+        return smp_const(self, ring.ngens, ring.domain)
 
     def coeff(self, element: PolyElement[Er] | int) -> Er:
         """
@@ -2841,14 +2700,16 @@ class PolyElement(
         23
 
         """
+        ring = self.ring
         if element == 1:
-            return self._get_coeff(self.ring.zero_monom)
+            return smp_const(self, ring.ngens, ring.domain)
         elif self.ring.is_element(element):
-            terms = list(cast("PolyElement[Er]", element).iterterms())
-            if len(terms) == 1:
-                monom, coeff = terms[0]
-                if coeff == self.ring.domain.one:
-                    return self._get_coeff(monom)
+            try:
+                return smp_coeff(
+                    self, cast("PolyElement[Er]", element),
+                    ring.ngens, ring.domain)
+            except ValueError:
+                pass
 
         raise ValueError("expected a monomial, got %s" % element)
 
@@ -2867,11 +2728,9 @@ class PolyElement(
         x*y
 
         """
-        p = self.ring.zero
-        expv = self.leading_expv()
-        if expv:
-            p[expv] = self.ring.domain.one
-        return p
+        ring = self.ring
+        return self.new(smp_leading_monom(
+            self, ring.ngens, ring.domain, ring.order))
 
     def leading_term(self) -> PolyElement[Er]:
         """Leading term as a polynomial element.
@@ -2887,11 +2746,9 @@ class PolyElement(
         3*x*y
 
         """
-        p = self.ring.zero
-        expv = self.leading_expv()
-        if expv is not None:
-            p[expv] = self[expv]
-        return p
+        ring = self.ring
+        return self.new(smp_leading_term(
+            self, ring.ngens, ring.domain, ring.order))
 
     def coeffs(self, order: _str | None = None) -> list[Er]:
         """Ordered list of polynomial coefficients.
@@ -3013,21 +2870,17 @@ class PolyElement(
         # In the flint version, we will have to override
         # this to use the native content() method for ZZ
         # and use the pure python technique for other domains
-        domain = self.ring.domain
-        cont = domain.zero
-        gcd = domain.gcd
-
-        for coeff in self.itercoeffs():
-            cont = gcd(cont, coeff)
-
-        return cont
+        ring = self.ring
+        return smp_content(self, ring.ngens, ring.domain)
 
     def primitive(self) -> tuple[Er, PolyElement[Er]]:
         """Returns content and a primitive polynomial."""
-        cont = self.content()
-        if cont == self.ring.domain.zero:
-            return (cont, self)
-        return cont, self.quo_ground(cont)
+        ring = self.ring
+        cont, primitive = smp_primitive(
+            self, ring.ngens, ring.domain)
+        if cont == ring.domain.zero:
+            return cont, self
+        return cont, self.new(primitive)
 
     def mul_monom(self, monom: Mon) -> PolyElement[Er]:
         monomial_mul = self.ring.monomial_mul
@@ -3052,45 +2905,28 @@ class PolyElement(
         return self.new(terms)
 
     def _quo_ground(self, x: Er) -> PolyElement[Er]:
-        domain = self.ring.domain
-        if domain.is_Field:
-            quo = domain.quo
-            terms = [(monom, quo(coeff, x)) for monom, coeff in self.iterterms()]
-        else:
-            # XXX: This is not valid for all domains (e.g. GF(p))
-            terms = [
-                (monom, coeff // x)  # type: ignore
-                for monom, coeff in self.iterterms()
-                if not (coeff % x)  # type: ignore
-            ]
-        return self.new(terms)
+        ring = self.ring
+        return self.new(smp_quo_ground(
+            self, x, ring.ngens, ring.domain))
 
     def _quo_term(self, term: tuple[Mon, Er]) -> PolyElement[Er]:
-        term_div = self._term_div()
-        terms = [term_div(t, term) for t in self.iterterms()]
-        return self.new([t for t in terms if t is not None])
+        ring = self.ring
+        return self.new(smp_quo_term(
+            self, term, ring.ngens, ring.domain))
 
     def _deflate(
         self, J: tuple[int, ...], polys: list[PolyElement[Er]]
     ) -> list[PolyElement[Er]]:
         ring = self.ring
-        H = []
-        for p in polys:
-            h = ring.zero
-            for I, coeff in p.iterterms():
-                N = [i // j for i, j in zip(I, J)]
-                h[tuple(N)] = coeff
-            H.append(h)
-        return H
+        return [
+            self.new(poly)
+            for poly in smp_deflate_by(
+                polys, J, ring.ngens, ring.domain)  # type: ignore[arg-type]
+        ]
 
     def inflate(self, J: Sequence[int]) -> PolyElement[Er]:
-        poly = self.ring.zero
-
-        for I, coeff in self.iterterms():
-            N = [i * j for i, j in zip(I, J)]
-            poly[tuple(N)] = coeff
-
-        return poly
+        ring = self.ring
+        return self.new(smp_inflate(self, J, ring.ngens, ring.domain))
 
     def gcd(self, other: PolyElement[Er]) -> PolyElement[Er]:
         return self.cofactors(other)[0]
@@ -3098,13 +2934,7 @@ class PolyElement(
     def _diff(self, i: int) -> PolyElement[Er]:
         # Use the native derivative() method in case of python-flint
         ring = self.ring
-        m = ring.monomial_basis(i)
-        g = ring.zero
-        for expv, coeff in self.iterterms():
-            if expv[i]:
-                e = ring.monomial_ldiv(expv, m)
-                g[e] = ring.domain_new(coeff * expv[i])
-        return g
+        return self.new(smp_diff(self, i, ring.ngens, ring.domain))
 
     def cofactors(
         self: PolyElement[Er], other: PolyElement[Er]
@@ -3260,21 +3090,9 @@ class PolyElement(
 
     def _compose(self, replacements, initial_poly):
         ring = self.ring
-        poly = initial_poly
-
-        for monom, coeff in self.iterterms():
-            monom = list(monom)
-            subpoly = ring.one
-
-            for i, g in replacements:
-                n, monom[i] = monom[i], 0
-                if n:
-                    subpoly *= g**n
-
-            subpoly = subpoly.mul_term((tuple(monom), coeff))
-            poly += subpoly
-
-        return poly
+        return self.new(smp_compose(
+            self, replacements, initial_poly,
+            ring.ngens, ring.domain))
 
     # XXX: implement the same algorithm for div from CLO
     # for python-flint
@@ -3286,35 +3104,10 @@ class PolyElement(
         self, fv: list[PolyElement[Er]]
     ) -> tuple[list[PolyElement[Er]], PolyElement[Er]]:
         ring = self.ring
-        s = len(fv)
-        qv = [ring.zero for i in range(s)]
-        p = self.copy()
-        r = ring.zero
-        term_div = self._term_div()
-        expvs = [fx._leading_expv() for fx in fv]
-
-        while p:
-            i = 0
-            divoccurred = 0
-            while i < s and divoccurred == 0:
-                expv = p._leading_expv()
-                term = term_div((expv, p[expv]), (expvs[i], fv[i][expvs[i]]))
-                if term is not None:
-                    expv1, c = term
-                    qv[i] = qv[i]._iadd_monom((expv1, c))
-                    p = p._iadd_poly_monom(fv[i], (expv1, -c))
-                    divoccurred = 1
-                else:
-                    i += 1
-            if not divoccurred:
-                expv = p._leading_expv()
-                r = r._iadd_monom((expv, p[expv]))
-                del p[expv]
-
-        if expv == ring.zero_monom:
-            r += p
-
-        return qv, r
+        smp_quotients, remainder = smp_div_list(
+            self, fv, ring.ngens, ring.domain, ring.order)  # type: ignore[arg-type]
+        quotients = [self.new(quotient) for quotient in smp_quotients]
+        return quotients, self.new(remainder)
 
     # The following _p* and _subresultants methods can just be converted to pure python
     # methods in case of python-flint since their speeds don't exactly matter wrt the
@@ -3475,41 +3268,13 @@ class PolyElement(
 
     def _subs(self, subs_dict: Mapping[int, Er]) -> PolyElement[Er]:
         ring = self.ring
-        result_poly = ring.zero
-
-        for monom, coeff in self.iterterms():
-            new_coeff = coeff
-            new_monom_list = list(monom)
-
-            for i, val in subs_dict.items():
-                exp = monom[i]
-                if exp > 0:
-                    new_coeff *= val**exp
-                new_monom_list[i] = 0
-
-            if new_coeff:
-                new_monom = tuple(new_monom_list)
-                if new_monom in result_poly:
-                    result_poly[new_monom] += new_coeff
-                    if not result_poly[new_monom]:
-                        del result_poly[new_monom]
-                else:
-                    result_poly[new_monom] = new_coeff
-
-        return result_poly
+        return self.new(smp_subs(
+            self, subs_dict, ring.ngens, ring.domain))
 
     def _evaluate(self, eval_dict: Mapping[int, Er]) -> Er:
-        result = self.ring.domain.zero
-
-        for monom, coeff in self.iterterms():
-            monom_value = self.ring.domain.one
-            for i, exp in enumerate(monom):
-                if exp > 0:
-                    monom_value *= eval_dict[i] ** exp
-
-            result += coeff * monom_value
-
-        return result
+        ring = self.ring
+        return smp_evaluate(
+            self, eval_dict, ring.ngens, ring.domain)
 
     def _symmetrize(
         self,
@@ -3519,53 +3284,12 @@ class PolyElement(
         # For the python-flint override this can just be converted back to
         # the pure python version until python-flint provides some
         # equivalent functionality.
-        f = self.copy()
-        ring = f.ring
-        n = ring.ngens
-
-        if not n:
-            return f, ring.zero, []
-
-        polys = [ring.symmetric_poly(i + 1) for i in range(n)]
-
-        poly_powers = {}
-
-        def get_poly_power(i, n):
-            if (i, n) not in poly_powers:
-                poly_powers[(i, n)] = polys[i] ** n
-            return poly_powers[(i, n)]
-
-        indices = list(range(n - 1))
-        weights = list(range(n, 0, -1))
-
-        symmetric = ring.zero
-
-        while f:
-            _height, _monom, _coeff = -1, None, None
-
-            for i, (monom, coeff) in enumerate(f.terms()):
-                if all(monom[i] >= monom[i + 1] for i in indices):
-                    height = max(n * m for n, m in zip(weights, monom))
-
-                    if height > _height:
-                        _height, _monom, _coeff = height, monom, coeff
-
-            if _height != -1:
-                monom, coeff = cast("Mon", _monom), cast("Er", _coeff)
-            else:
-                break
-
-            exponents = []
-            for m1, m2 in zip(monom, monom[1:] + (0,)):
-                exponents.append(m1 - m2)
-
-            symmetric += ring.term_new(tuple(exponents), coeff)
-
-            product = coeff
-            for i, n in enumerate(exponents):
-                product *= get_poly_power(i, n)
-            f -= product
-
+        ring = self.ring
+        symmetric_smp, remainder_smp, smp_polys = smp_symmetrize(
+            self, ring.ngens, ring.domain, ring.order)
+        symmetric = self.new(symmetric_smp)
+        f = self.new(remainder_smp)
+        polys = [self.new(poly) for poly in smp_polys]
         mapping = list(zip(ring.gens, polys))
 
         return symmetric, f, mapping
