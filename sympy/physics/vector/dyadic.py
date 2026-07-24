@@ -221,7 +221,7 @@ class Dyadic(Printable, EvalfMixin):
                     p_v2 = mpp._print(v[2])
                     p_dyad = prettyForm(*p_v1.right(bar, p_v2))
 
-                    c = v[0]
+                    c =sympify(v[0])
                     if i == 0:
                         sign = ""
                     else:
