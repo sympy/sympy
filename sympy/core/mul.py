@@ -1971,13 +1971,14 @@ class Mul(Expr, AssocOp):
         from .function import PoleError
         from sympy.functions.elementary.integers import ceiling
         from sympy.series.order import Order
+        from sympy import exp
 
         def coeff_exp(term, x):
             lt = term.as_coeff_exponent(x)
             if lt[0].has(x):
                 try:
                     lt = term.leadterm(x)
-                except ValueError:
+                except (ValueError, PoleError):
                     return term, S.Zero
             return lt
 
@@ -1985,9 +1986,9 @@ class Mul(Expr, AssocOp):
 
         try:
             for t in self.args:
-                coeff, exp = t.leadterm(x)
+                coeff, exponent = t.leadterm(x)
                 if not coeff.has(x):
-                    ords.append((t, exp))
+                    ords.append((t, exponent))
                 else:
                     raise ValueError
 
@@ -1996,6 +1997,8 @@ class Mul(Expr, AssocOp):
             for t, m in ords:
                 n1 = ceiling(n - n0 + (m if m.is_number else 0))
                 s = t.nseries(x, n=n1, logx=logx, cdir=cdir)
+                if s.has(exp):
+                    raise NotImplementedError
                 ns = s.getn()
                 if ns is not None:
                     if ns < n1:  # less than expected
@@ -2009,10 +2012,10 @@ class Mul(Expr, AssocOp):
             n0 = sympify(sum(t[1] for t in ords if t[1].is_number))
             if n0.is_nonnegative:
                 n0 = S.Zero
-            facs = [t.nseries(x, n=ceiling(n-n0), logx=logx, cdir=cdir) for t in self.args]
+            facs = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]
             from sympy.simplify.powsimp import powsimp
             res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
-            if res.has(Order):
+            if not res.has(Order):
                 res += Order(x**n, x)
             return res
 
