@@ -601,7 +601,7 @@ RST to match the actual output. Also verify that the `len(da1.terms)` call works
 
 ---
 
-### 5.3 [x] (Missing) Verify all docstring examples pass doctest
+### 5.3 [x] (Done) Verify all docstring examples pass doctest
 
 **Location:** All files with docstrings.
 
@@ -616,7 +616,7 @@ RST to match the actual output. Also verify that the `len(da1.terms)` call works
 
 ## 6. Code Quality Improvements
 
-### 6.1 [ ] (Missing) Reduce code duplication in `compose_algebraic_pure_tensors` zero-tensor handling
+### 6.1 [x] (Done) Reduce code duplication in `compose_algebraic_pure_tensors` zero-tensor handling
 
 **Location:** `algebraic_pure_tensor.py:723-793` and `algebraic_tensor.py:169-242`.
 
@@ -645,13 +645,13 @@ Then replace the duplicated shape computation in both functions with calls to th
 
 ## 7. Cleanup
 
-### 7.1 [ ] (Missing) Delete `tests_old/` directory
+### 7.1 [x] (Done) Delete `tests_old/` directory
 
 See item 2.2 above.
 
 ---
 
-### 7.2 [ ] (Missing) Add `tensor/algebraic/` to `.gitignore` for `.DS_Store` and `__pycache__`
+### 7.2 [x] (Done — already in .gitignore) Add `tensor/algebraic/` to `.gitignore` for `.DS_Store` and `__pycache__`
 
 **Location:** Root `.gitignore`.
 
@@ -667,7 +667,7 @@ These should already be in the SymPy `.gitignore`, but the files are currently p
 
 ---
 
-### 7.3 [ ] (Missing) Remove `.DS_Store` from all directories
+### 7.3 [x] (Done) Remove `.DS_Store` from all directories
 
 **Location:**
 - `tensor/algebraic/.DS_Store`

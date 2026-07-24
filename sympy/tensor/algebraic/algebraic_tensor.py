@@ -9,7 +9,7 @@ from sympy.core.sympify import sympify
 
 from sympy.tensor.algebraic.algebraic_pure_tensor import (
     AlgebraicPureTensor, ShapeMismatchError,
-    _factor_has_noncommutative, _is_zero_like
+    _compute_composed_shape, _factor_has_noncommutative, _is_zero_like
 )
 from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
@@ -168,25 +168,10 @@ def compose_algebraic_tensors(left, right):
 
     # --- AlgebraicZeroTensor shortcuts ---
     if isinstance(left, _ZT) and isinstance(right, _ZT):
-        if len(left.shape) != len(right.shape):
-            raise ShapeMismatchError(
-                f"Cannot compose tensors with different numbers of "
-                f"factors: {len(left.shape)} vs {len(right.shape)}"
-            )
-        for i, (l, r) in enumerate(zip(left.shape, right.shape)):
-            if l[1] != r[0]:
-                raise ShapeMismatchError(
-                    f"Cannot compose factor {i}: left shape {l} "
-                    f"but right shape {r}; inner dimensions "
-                    f"{l[1]} and {r[0]} do not match"
-                )
-        composed_shape = tuple(
-            (l[0], r[1]) for l, r in zip(left.shape, right.shape)
-        )
+        composed_shape = _compute_composed_shape(left.shape, right.shape)
         return _ZT(composed_shape)
 
     if isinstance(left, _ZT):
-        # Extract shape from right operand
         if isinstance(right, AlgebraicTensor):
             right_shape = right.shape
         elif isinstance(right, _PT):
@@ -196,25 +181,10 @@ def compose_algebraic_tensors(left, right):
                 f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
                 f"the right, got {type(right).__name__}"
             )
-        if len(left.shape) != len(right_shape):
-            raise ShapeMismatchError(
-                f"Cannot compose tensors with different numbers of "
-                f"factors: {len(left.shape)} vs {len(right_shape)}"
-            )
-        for i, (l, r) in enumerate(zip(left.shape, right_shape)):
-            if l[1] != r[0]:
-                raise ShapeMismatchError(
-                    f"Cannot compose factor {i}: left shape {l} "
-                    f"but right shape {r}; inner dimensions "
-                    f"{l[1]} and {r[0]} do not match"
-                )
-        composed_shape = tuple(
-            (l[0], r[1]) for l, r in zip(left.shape, right_shape)
-        )
+        composed_shape = _compute_composed_shape(left.shape, right_shape)
         return _ZT(composed_shape)
 
     if isinstance(right, _ZT):
-        # Extract shape from left operand
         if isinstance(left, AlgebraicTensor):
             left_shape = left.shape
         elif isinstance(left, _PT):
@@ -224,21 +194,7 @@ def compose_algebraic_tensors(left, right):
                 f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
                 f"the left, got {type(left).__name__}"
             )
-        if len(left_shape) != len(right.shape):
-            raise ShapeMismatchError(
-                f"Cannot compose tensors with different numbers of "
-                f"factors: {len(left_shape)} vs {len(right.shape)}"
-            )
-        for i, (l, r) in enumerate(zip(left_shape, right.shape)):
-            if l[1] != r[0]:
-                raise ShapeMismatchError(
-                    f"Cannot compose factor {i}: left shape {l} "
-                    f"but right shape {r}; inner dimensions "
-                    f"{l[1]} and {r[0]} do not match"
-                )
-        composed_shape = tuple(
-            (l[0], r[1]) for l, r in zip(left_shape, right.shape)
-        )
+        composed_shape = _compute_composed_shape(left_shape, right.shape)
         return _ZT(composed_shape)
 
     # --- AlgebraicTensor × AlgebraicTensor (check first before single-side) ---

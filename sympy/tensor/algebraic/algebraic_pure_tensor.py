@@ -71,6 +71,30 @@ def _is_zero_like(expr):
     return expr == S.Zero * expr
 
 
+def _compute_composed_shape(left_shape, right_shape):
+    """Compute the resulting shape from composing two tensor shapes.
+
+    Verifies that *left_shape* and *right_shape* are compatible for
+    factor-wise composition (same number of factors, matching inner
+    dimensions) and returns the composed shape tuple.
+
+    Raises ``ShapeMismatchError`` if shapes are incompatible.
+    """
+    if len(left_shape) != len(right_shape):
+        raise ShapeMismatchError(
+            f"Cannot compose tensors with different numbers of "
+            f"factors: {len(left_shape)} vs {len(right_shape)}"
+        )
+    for i, (l, r) in enumerate(zip(left_shape, right_shape)):
+        if l[1] != r[0]:
+            raise ShapeMismatchError(
+                f"Cannot compose factor {i}: left shape {l} "
+                f"but right shape {r}; inner dimensions "
+                f"{l[1]} and {r[0]} do not match"
+            )
+    return tuple((l[0], r[1]) for l, r in zip(left_shape, right_shape))
+
+
 class AlgebraicPureTensor(Basic):
     """Pure tensor as an unevaluated (non-commutative)
     tensor product of factors.
@@ -720,74 +744,29 @@ def compose_algebraic_pure_tensors(left, right):
     """
     # --- AlgebraicZeroTensor shortcuts ---
     if isinstance(left, AlgebraicZeroTensor) and isinstance(right, AlgebraicZeroTensor):
-        # Both zero: compute composed shape from both
-        if len(left.shape) != len(right.shape):
-            raise ShapeMismatchError(
-                f"Cannot compose tensors with different numbers of "
-                f"factors: {len(left.shape)} vs {len(right.shape)}"
-            )
-        for i, (l, r) in enumerate(zip(left.shape, right.shape)):
-            if l[1] != r[0]:
-                raise ShapeMismatchError(
-                    f"Cannot compose factor {i}: left shape {l} "
-                    f"but right shape {r}; inner dimensions "
-                    f"{l[1]} and {r[0]} do not match"
-                )
-        composed_shape = tuple(
-            (l[0], r[1]) for l, r in zip(left.shape, right.shape)
-        )
+        composed_shape = _compute_composed_shape(left.shape, right.shape)
         return AlgebraicZeroTensor(composed_shape)
 
     if isinstance(left, AlgebraicZeroTensor):
-        # Extract factors from right to compute composed shape
         if isinstance(right, AlgebraicPureTensor):
-            right_factors = right.factors
+            right_shape = right.shape
         else:
             raise TypeError(
                 f"Expected AlgebraicPureTensor object on the right, "
                 f"got {type(right).__name__}"
             )
-        if len(left.shape) != len(right_factors):
-            raise ShapeMismatchError(
-                f"Cannot compose tensors with different numbers of "
-                f"factors: {len(left.shape)} vs {len(right_factors)}"
-            )
-        for i, (l, rf) in enumerate(zip(left.shape, right_factors)):
-            if l[1] != rf.shape[0]:
-                raise ShapeMismatchError(
-                    f"Cannot compose factor {i}: left shape {l} "
-                    f"but right factor shape {rf.shape}; inner dimensions "
-                    f"{l[1]} and {rf.shape[0]} do not match"
-                )
-        composed_shape = tuple(
-            (l[0], rf.shape[1]) for l, rf in zip(left.shape, right_factors)
-        )
+        composed_shape = _compute_composed_shape(left.shape, right_shape)
         return AlgebraicZeroTensor(composed_shape)
 
     if isinstance(right, AlgebraicZeroTensor):
-        # Extract factors from left to compute composed shape
         if isinstance(left, AlgebraicPureTensor):
-            left_factors = left.factors
+            left_shape = left.shape
         else:
             raise TypeError(
                 f"Expected AlgebraicPureTensor on the left, "
                 f"got {type(left).__name__}"
             )
-        if len(left_factors) != len(right.shape):
-            raise ShapeMismatchError(
-                f"Cannot compose tensors with different numbers of "
-                f"factors: {len(left_factors)} vs {len(right.shape)}"
-            )
-        for i, (lf, r) in enumerate(zip(left_factors, right.shape)):
-            if lf.shape[1] != r[0]:
-                raise ShapeMismatchError(
-                    f"Cannot compose factor {i}: left factor shape {lf.shape} "
-                    f"but right shape {r}; inner dimensions "
-                    f"{lf.shape[1]} and {r[0]} do not match"
-                )
-        composed_shape = tuple(
-            (lf.shape[0], r[1]) for lf, r in zip(left_factors, right.shape)
-        )
+        composed_shape = _compute_composed_shape(left_shape, right.shape)
         return AlgebraicZeroTensor(composed_shape)
 
     # Handle unwrapped single-factor tensors
@@ -809,28 +788,16 @@ def compose_algebraic_pure_tensors(left, right):
             f"got {type(right).__name__}"
         )
 
-    if len(left_factors) != len(right_factors):
-        raise ShapeMismatchError(
-            f"Cannot compose tensors with different numbers of "
-            f"factors: {len(left_factors)} vs {len(right_factors)}"
-        )
+    _compute_composed_shape(left.shape, right.shape)
 
     # Combine coefficients from both sides
     combined_coeff = left_coeff * right_coeff
 
-    composed_factors = []
-    for j, (lf, rf) in enumerate(zip(left_factors, right_factors)):
-        lshape = lf.shape
-        rshape = rf.shape
-        if lshape[1] != rshape[0]:
-            raise ShapeMismatchError(
-                f"Cannot compose factor {j}: left factor has shape {lshape} "
-                f"but right factor has shape {rshape}; inner dimensions "
-                f"{lshape[1]} and {rshape[0]} do not match"
-            )
-        # Use MatMul for the matrix product of corresponding factors
-        from sympy.matrices.expressions.matexpr import MatMul
-        composed_factors.append(MatMul(lf, rf, evaluate=False))
+    from sympy.matrices.expressions.matexpr import MatMul
+    composed_factors = [
+        MatMul(lf, rf, evaluate=False)
+        for lf, rf in zip(left_factors, right_factors)
+    ]
 
     if combined_coeff is S.One:
         if len(composed_factors) == 1:
