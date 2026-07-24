@@ -22,7 +22,7 @@ from sympy.functions.elementary.hyperbolic import (tanh, acoth, atanh,
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import (csc, sec, tan,
-    atan, sin, asec, cot, cos, acot, acsc, asin, acos)
+    atan, atan2, sin, asec, cot, cos, acot, acsc, asin, acos)
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.elliptic_integrals import (elliptic_pi,
     elliptic_f, elliptic_k, elliptic_e)
@@ -62,6 +62,42 @@ from sympy.testing.pytest import raises, XFAIL
 x, y, z, a, b, c, d, e, n = symbols('x:z a:e n')
 mp = MathMLContentPrinter()
 mpp = MathMLPresentationPrinter()
+
+
+_inverse_trig_functions = (
+    asin, acos, atan,
+    acsc, asec, acot,
+    asinh, acosh, atanh,
+    acsch, asech, acoth,
+)
+
+_inverse_trig_default_names = {
+    asin: 'arcsin',
+    acos: 'arccos',
+    atan: 'arctan',
+    acsc: 'acsc',
+    asec: 'asec',
+    acot: 'arccot',
+    asinh: 'arcsinh',
+    acosh: 'arccosh',
+    atanh: 'arctanh',
+    acsch: 'acsch',
+    asech: 'asech',
+    acoth: 'acoth',
+}
+
+
+def _presentation_function(name, *args):
+    inner = '<mo>,</mo>'.join(args)
+    return f'<mrow><mi>{name}</mi><mrow><mo>(</mo>{inner}<mo>)</mo></mrow></mrow>'
+
+
+def _presentation_inverse_power_function(name, *args):
+    inner = '<mo>,</mo>'.join(args)
+    return (
+        f'<mrow><msup><mi>{name}</mi><mn>-1</mn></msup>'
+        f'<mrow><mo>(</mo>{inner}<mo>)</mo></mrow></mrow>'
+    )
 
 
 def test_mathml_printer():
@@ -924,15 +960,6 @@ def test_presentation_mathml_trig():
     mml = mpp._print(tan(x))
     assert mml.childNodes[0].childNodes[0].nodeValue == 'tan'
 
-    mml = mpp._print(asin(x))
-    assert mml.childNodes[0].childNodes[0].nodeValue == 'arcsin'
-
-    mml = mpp._print(acos(x))
-    assert mml.childNodes[0].childNodes[0].nodeValue == 'arccos'
-
-    mml = mpp._print(atan(x))
-    assert mml.childNodes[0].childNodes[0].nodeValue == 'arctan'
-
     mml = mpp._print(sinh(x))
     assert mml.childNodes[0].childNodes[0].nodeValue == 'sinh'
 
@@ -942,14 +969,76 @@ def test_presentation_mathml_trig():
     mml = mpp._print(tanh(x))
     assert mml.childNodes[0].childNodes[0].nodeValue == 'tanh'
 
-    mml = mpp._print(asinh(x))
-    assert mml.childNodes[0].childNodes[0].nodeValue == 'arcsinh'
+    for func in _inverse_trig_functions:
+        assert mathml(func(x), printer='presentation') == \
+            _presentation_function(_inverse_trig_default_names[func],
+                                   '<mi>x</mi>')
 
-    mml = mpp._print(atanh(x))
-    assert mml.childNodes[0].childNodes[0].nodeValue == 'arctanh'
 
-    mml = mpp._print(acosh(x))
-    assert mml.childNodes[0].childNodes[0].nodeValue == 'arccosh'
+def test_presentation_mathml_inv_trig_styles():
+    for func in _inverse_trig_functions:
+        assert mathml(func(x), printer='presentation',
+            inv_trig_style='abbreviated') == \
+                _presentation_function(func.__name__, '<mi>x</mi>')
+        assert mathml(func(x), printer='presentation',
+            inv_trig_style='full') == \
+                _presentation_function(f'arc{func.__name__[1:]}', '<mi>x</mi>')
+
+
+def test_presentation_mathml_inv_trig_power_style():
+    for func in _inverse_trig_functions:
+        assert mathml(func(x), printer='presentation',
+            inv_trig_style='power') == \
+                _presentation_inverse_power_function(
+                    func.__name__[1:], '<mi>x</mi>')
+
+    assert mathml(asin(x), printer='presentation', inv_trig_style='power') == \
+        '<mrow><msup><mi>sin</mi><mn>-1</mn></msup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
+    assert mathml(asinh(x), printer='presentation',
+        inv_trig_style='power') == \
+            '<mrow><msup><mi>sinh</mi><mn>-1</mn></msup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
+    assert mathml(asin(x)**2, printer='presentation',
+        inv_trig_style='power') == \
+            '<msup><mrow><msup><mi>sin</mi><mn>-1</mn></msup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow><mn>2</mn></msup>'
+
+
+def test_presentation_mathml_inv_trig_global_setting():
+    had_global_setting = 'inv_trig_style' in MathMLPresentationPrinter._global_settings
+    old_global_setting = MathMLPresentationPrinter._global_settings.get(
+        'inv_trig_style')
+    MathMLPresentationPrinter.set_global_settings(inv_trig_style='power')
+    try:
+        assert mathml(asin(x), printer='presentation') == \
+            _presentation_inverse_power_function('sin', '<mi>x</mi>')
+        assert mathml(asin(x), printer='presentation',
+            inv_trig_style='abbreviated') == \
+                _presentation_function('asin', '<mi>x</mi>')
+    finally:
+        if had_global_setting:
+            MathMLPresentationPrinter._global_settings[
+                'inv_trig_style'] = old_global_setting
+        else:
+            del MathMLPresentationPrinter._global_settings['inv_trig_style']
+
+
+def test_presentation_mathml_atan2_inv_trig_style_regression():
+    expected = _presentation_function('arctan', '<mi>x</mi>', '<mi>y</mi>')
+    assert mathml(atan2(x, y), printer='presentation') == expected
+    assert mathml(atan2(x, y), printer='presentation',
+        inv_trig_style='abbreviated') == expected
+    assert mathml(atan2(x, y), printer='presentation',
+        inv_trig_style='full') == expected
+    assert mathml(atan2(x, y), printer='presentation',
+        inv_trig_style='power') == expected
+
+
+def test_content_mathml_inv_trig_style_regression():
+    expected = '<apply><arcsin/><ci>x</ci></apply>'
+    assert mathml(asin(x), printer='content') == expected
+    assert mathml(asin(x), printer='content',
+        inv_trig_style='abbreviated') == expected
+    assert mathml(asin(x), printer='content', inv_trig_style='full') == expected
+    assert mathml(asin(x), printer='content', inv_trig_style='power') == expected
 
 
 def test_presentation_mathml_relational():

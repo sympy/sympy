@@ -1,5 +1,6 @@
 """
 A MathML printer.
+
 """
 
 from __future__ import annotations
@@ -15,6 +16,14 @@ from sympy.printing.precedence import \
     precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer, print_function
+
+
+_inverse_trigonometric_functions = (
+    "asin", "acos", "atan",
+    "acsc", "asec", "acot",
+    "asinh", "acosh", "atanh",
+    "acsch", "asech", "acoth",
+)
 
 
 class MathMLPrinterBase(Printer):
@@ -550,6 +559,13 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     """
     printmethod = "_mathml_presentation"
 
+    def __init__(self, settings=None):
+        super().__init__(settings)
+        self._inv_trig_style_default = (
+            (settings is None or "inv_trig_style" not in settings) and
+            "inv_trig_style" not in self._global_settings
+        )
+
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
         translate = {
@@ -626,6 +642,32 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             return mul_symbol_selection()
         n = e.__class__.__name__
         return n.lower()
+
+    def _print_inv_trig_function(self, e):
+        func_name = e.func.__name__
+        style = self._settings["inv_trig_style"]
+
+        if self._inv_trig_style_default:
+            text = self.mathml_tag(e)
+        elif style == "abbreviated":
+            text = func_name
+        elif style == "power":
+            msup = self.dom.createElement('msup')
+            mi = self.dom.createElement('mi')
+            mi.appendChild(self.dom.createTextNode(func_name[1:]))
+            mn = self.dom.createElement('mn')
+            mn.appendChild(self.dom.createTextNode('-1'))
+            msup.appendChild(mi)
+            msup.appendChild(mn)
+            return msup
+        elif style == "full":
+            text = "arc" + func_name[1:]
+        else:
+            text = func_name
+
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode(text))
+        return mi
 
     def _l_paren(self):
         mo = self.dom.createElement('mo')
@@ -1190,11 +1232,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_Function(self, e):
-        x = self.dom.createElement('mi')
-        if self.mathml_tag(e) == 'log' and self._settings["ln_notation"]:
-            x.appendChild(self.dom.createTextNode('ln'))
+        if e.func.__name__ in _inverse_trigonometric_functions:
+            x = self._print_inv_trig_function(e)
         else:
-            x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
+            x = self.dom.createElement('mi')
+            if self.mathml_tag(e) == 'log' and self._settings["ln_notation"]:
+                x.appendChild(self.dom.createTextNode('ln'))
+            else:
+                x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow = self.dom.createElement('mrow')
         mrow.appendChild(x)
         mrow.appendChild(self._paren_comma_separated(*e.args))
@@ -2110,6 +2155,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 def mathml(expr, printer='content', **settings):
     """Returns the MathML representation of expr. If printer is presentation
     then prints Presentation MathML else prints content MathML.
+
+    For Presentation MathML, omitting ``inv_trig_style`` preserves existing
+    inverse-trig function names. Pass ``inv_trig_style='full'``,
+    ``'abbreviated'``, or ``'power'`` explicitly to select a style for all
+    supported inverse trigonometric functions.
     """
     if printer == 'presentation':
         return MathMLPresentationPrinter(settings).doprint(expr)
@@ -2121,6 +2171,11 @@ def print_mathml(expr, printer='content', **settings):
     """
     Prints a pretty representation of the MathML code for expr. If printer is
     presentation then prints Presentation MathML else prints content MathML.
+
+    For Presentation MathML, omitting ``inv_trig_style`` preserves existing
+    inverse-trig function names. Pass ``inv_trig_style='full'``,
+    ``'abbreviated'``, or ``'power'`` explicitly to select a style for all
+    supported inverse trigonometric functions.
 
     Examples
     ========
