@@ -107,6 +107,10 @@ class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ign
     def __new__(cls, iterable=None, shape=None, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
+        # A non-dict ``flat_list`` may be a one-shot iterator; materialize it so
+        # the length checks below (and the reuse further down) work.
+        if not isinstance(flat_list, (dict, Dict)):
+            flat_list = list(flat_list)
         cls._check_special_bounds(flat_list, shape)
         loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
 
@@ -140,6 +144,11 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
 
     def __new__(cls, iterable=None, shape=None, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
+        # A non-dict ``flat_list`` may be a one-shot iterator (e.g. from
+        # ``applyfunc``); materialize it so the length below and the reuse
+        # further down both work.
+        if not isinstance(flat_list, (dict, Dict)):
+            flat_list = list(flat_list)
         self = object.__new__(cls)
         self._shape = shape
         self._ndim = len(shape)

@@ -777,6 +777,13 @@ def _a2m_transpose(arg):
 
 def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
 
+    # Only contraction/diagonal/tensor-product expressions can be loaded into
+    # the editor below; anything else (e.g. a PermuteDims produced while
+    # converting the inner expression) has no Hadamard product to identify, so
+    # leave it untouched instead of letting _EditArrayContraction raise.
+    if not isinstance(expr, (ArrayContraction, ArrayDiagonal, ArrayTensorProduct)):
+        return expr
+
     editor: _EditArrayContraction = _EditArrayContraction(expr)
 
     map_contr_to_args: dict[frozenset, list[_ArgE]] = defaultdict(list)
@@ -934,7 +941,10 @@ def remove_identity_matrices(expr: ArrayContraction):
             i.element = None
             removed.extend(range(free_map[i], free_map[i] + len([j for j in i.indices if j is None])))
         last_removed = removed.pop(-1)
-        update_pairs[last_removed, ind] = non_identity.indices[:]
+        # Store the non-identity argument itself: it differs per pair, so the
+        # ``free_map`` offset below must be looked up from it rather than from
+        # whatever ``non_identity`` happens to hold after the loop ends.
+        update_pairs[last_removed, ind] = non_identity, non_identity.indices[:]
         # Remove the indices from the non-identity matrix, as the contraction
         # no longer exists:
         non_identity.indices = [None if i == ind else i for i in non_identity.indices]
@@ -942,11 +952,26 @@ def remove_identity_matrices(expr: ArrayContraction):
     removed.sort()
 
     shifts = list(accumulate([1 if i in removed else 0 for i in range(get_ndim(expr))]))
-    for (last_removed, ind), non_identity_indices in update_pairs.items():
-        pos = [free_map[non_identity] + i for i, e in enumerate(non_identity_indices) if e == ind]
-        assert len(pos) == 1
-        for j in pos:
-            permutation_map[j] = last_removed
+    for (last_removed, ind), (non_identity, non_identity_indices) in update_pairs.items():
+        # Raw position, within the non-identity argument, of the axis that was
+        # contracted with the identity (and so has just been freed):
+        freed = [i for i, e in enumerate(non_identity_indices) if e == ind]
+        assert len(freed) == 1
+        freed = freed[0]
+        # Find that freed axis' position among the free axes of the *result* by
+        # walking the surviving arguments (removed identities have had their
+        # element set to None) and counting their free axes -- this is robust
+        # when several identities are removed, unlike an offset computed from
+        # the original layout.
+        j = 0
+        for arg in editor.args_with_ind:
+            if arg.element is None:
+                continue
+            if arg is non_identity:
+                j += sum(1 for e in arg.indices[:freed] if e is None)
+                break
+            j += sum(1 for e in arg.indices if e is None)
+        permutation_map[j] = last_removed
 
     editor.args_with_ind = [i for i in editor.args_with_ind if i.element is not None]
     ret_expr = editor.to_array_contraction()

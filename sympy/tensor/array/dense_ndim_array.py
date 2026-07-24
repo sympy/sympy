@@ -136,6 +136,10 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignor
     def _new(cls, iterable, shape, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
+        # ``flat_list`` may be a one-shot iterator (e.g. the ``map`` object that
+        # ``applyfunc`` builds); materialize it so ``_check_special_bounds`` can
+        # take its length and the ``flatten`` below still sees the elements.
+        flat_list = list(flat_list)
         cls._check_special_bounds(flat_list, shape)
         flat_list = flatten(flat_list)
         flat_list = Tuple(*flat_list)

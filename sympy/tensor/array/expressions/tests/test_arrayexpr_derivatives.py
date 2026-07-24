@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy import exp, Matrix, Array
+from sympy import exp, Matrix, Array, derive_by_array
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -87,3 +87,24 @@ def test_array_derive_with_common_matrices():
     I2 = Identity(2)
     expr = MatrixSymbol("M", 2, 2)
     assert array_derive(expr, expr) == PermuteDims(ArrayTensorProduct(I2, I2), [0, 2, 1, 3])
+
+
+def test_array_derive_permutedims_non_matrix():
+    # The PermuteDims derivative rule must not assume a rank-2 operand: it
+    # prepends rank(x) axes, so those must be fixed and the permutation shifted
+    # by rank(x).  Previously this was hardcoded for a matrix (rank 2) and
+    # crashed for any other rank.  See the ArrayContraction/ArrayDiagonal rules,
+    # which already handle this correctly.
+    A3 = ArraySymbol("A", (2, 2, 2))
+    expr = PermuteDims(A3, [1, 2, 0])
+    res = array_derive(expr, A3)
+    # the derivative of a rank-3 array w.r.t. itself has rank 6
+    assert res.as_explicit() == derive_by_array(expr.as_explicit(), A3.as_explicit())
+
+
+def test_array_derive_ndimarray_returns_result():
+    # The NDimArray rule used to be missing its ``return``, so array_derive
+    # silently gave ``None`` for any concrete Array.
+    x = symbols("x")
+    arr = Array([x, x**2, x**3])
+    assert array_derive(arr, x) == derive_by_array(arr, x) == Array([1, 2*x, 3*x**2])
