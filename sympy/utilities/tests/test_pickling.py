@@ -48,7 +48,7 @@ dont_check_attrs = {
 }
 
 
-def check(a, exclude=[], check_attr=True, deprecated=()):
+def check(a, exclude=[], check_attr=True, deprecated=(), check_eq=True):
     """ Check that pickling and copying round-trips.
     """
     # Pickling with protocols 0 and 1 is disabled for Basic instances:
@@ -77,6 +77,9 @@ def check(a, exclude=[], check_attr=True, deprecated=()):
         d1 = dir(a)
         d2 = dir(b)
         assert set(d1) == set(d2)
+
+        if check_eq:
+            assert a == b
 
         if not check_attr:
             continue
@@ -108,8 +111,10 @@ def check(a, exclude=[], check_attr=True, deprecated=()):
 
 
 def test_core_basic():
-    for c in (Atom, Atom(), Basic, Basic(), SingletonRegistry, S):
+    for c in (Atom, Atom(), Basic, Basic(), SingletonRegistry):
         check(c)
+
+    check(S, check_eq=False)
 
 def test_core_Str():
     check(Str('x'))
@@ -188,8 +193,8 @@ def test_core_interval():
 
 
 def test_core_multidimensional():
-    for c in (vectorize, vectorize(0)):
-        check(c)
+    check(vectorize)
+    check(vectorize(0), check_eq=False)
 
 
 def test_Singletons():
@@ -208,9 +213,20 @@ def test_Singletons():
 
 #================== combinatorics ===================
 from sympy.combinatorics.free_groups import FreeGroup
+from sympy.combinatorics.permutations import Permutation
 
 def test_free_group():
     check(FreeGroup("x, y, z"), check_attr=False)
+
+def test_Permutation():
+    #fails with check_attr=True because Permutation uses attributes to cache properties (e.g. _cyclic_form)
+    check(Permutation([0,3,2,1,4]), check_attr=False)
+
+    p = Permutation(S(2))(0,1)
+    check(p, check_attr=False)
+
+    p2 = Permutation(p.array_form + [S(4),S(3)])
+    check(p2, check_attr=False)
 
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh, chebyshevu,
@@ -297,8 +313,8 @@ from sympy.ntheory.generate import Sieve
 
 
 def test_ntheory():
-    for c in (Sieve, Sieve()):
-        check(c)
+    check(Sieve)
+    check(Sieve(), check_eq=False)
 
 #================== physics =====================
 from sympy.physics.paulialgebra import Pauli
@@ -565,70 +581,71 @@ def test_pickling_polys_errors():
     # for c in (OperationNotSupported, OperationNotSupported(Poly(x), Poly.gcd)):
     #    check(c)
 
-    for c in (HeuristicGCDFailed, HeuristicGCDFailed()):
-        check(c)
+    check(HeuristicGCDFailed)
+    check(HeuristicGCDFailed, check_eq=False)
 
-    for c in (HomomorphismFailed, HomomorphismFailed()):
-        check(c)
+    check(HomomorphismFailed)
+    check(HomomorphismFailed(), check_eq=False)
 
-    for c in (IsomorphismFailed, IsomorphismFailed()):
-        check(c)
+    check(IsomorphismFailed)
+    check(IsomorphismFailed(), check_eq=False)
 
-    for c in (ExtraneousFactors, ExtraneousFactors()):
-        check(c)
+    check(ExtraneousFactors)
+    check(ExtraneousFactors(), check_eq=False)
 
-    for c in (EvaluationFailed, EvaluationFailed()):
-        check(c)
+    check(EvaluationFailed)
+    check(EvaluationFailed(), check_eq=False)
 
-    for c in (RefinementFailed, RefinementFailed()):
-        check(c)
+    check(RefinementFailed)
+    check(RefinementFailed(), check_eq=False)
 
-    for c in (CoercionFailed, CoercionFailed()):
-        check(c)
+    check(CoercionFailed)
+    check(CoercionFailed(), check_eq=False)
 
-    for c in (NotInvertible, NotInvertible()):
-        check(c)
+    check(NotInvertible)
+    check(NotInvertible(), check_eq=False)
 
-    for c in (NotReversible, NotReversible()):
-        check(c)
+    check(NotReversible)
+    check(NotReversible(), check_eq=False)
 
-    for c in (NotAlgebraic, NotAlgebraic()):
-        check(c)
+    check(NotAlgebraic)
+    check(NotAlgebraic(), check_eq=False)
 
-    for c in (DomainError, DomainError()):
-        check(c)
+    check(DomainError)
+    check(DomainError(), check_eq=False)
 
-    for c in (PolynomialError, PolynomialError()):
-        check(c)
+    check(PolynomialError)
+    check(PolynomialError(), check_eq=False)
 
-    for c in (UnificationFailed, UnificationFailed()):
-        check(c)
+    check(UnificationFailed)
+    check(UnificationFailed(), check_eq=False)
 
-    for c in (GeneratorsError, GeneratorsError()):
-        check(c)
+    check(GeneratorsError)
+    check(GeneratorsError(), check_eq=False)
 
-    for c in (GeneratorsNeeded, GeneratorsNeeded()):
-        check(c)
+    check(GeneratorsNeeded)
+    check(GeneratorsNeeded(), check_eq=False)
 
     # TODO: PicklingError: Can't pickle <function <lambda> at 0x38578c0>: it's not found as __main__.<lambda>
     # for c in (ComputationFailed, ComputationFailed(lambda t: t, 3, None)):
     #    check(c)
 
-    for c in (UnivariatePolynomialError, UnivariatePolynomialError()):
-        check(c)
+    check(UnivariatePolynomialError)
+    check(UnivariatePolynomialError(), check_eq=False)
 
-    for c in (MultivariatePolynomialError, MultivariatePolynomialError()):
-        check(c)
+    check(MultivariatePolynomialError)
+    check(MultivariatePolynomialError(), check_eq=False)
 
     # TODO: TypeError: __init__() takes at least 3 arguments (1 given)
     # for c in (PolificationFailed, PolificationFailed({}, x, x, False)):
     #    check(c)
 
-    for c in (OptionError, OptionError()):
-        check(c)
+    check(OptionError)
+    check(OptionError(), check_eq=False)
 
-    for c in (FlagError, FlagError()):
-        check(c)
+
+    check(FlagError)
+    check(FlagError(), check_eq=False)
 
 #def test_pickling_polys_options():
     #from sympy.polys.polyoptions import Options
@@ -663,11 +680,13 @@ from sympy.printing.python import PythonPrinter
 
 
 def test_printing():
-    for c in (LatexPrinter, LatexPrinter(), MathMLContentPrinter,
+    for c in (LatexPrinter, MathMLContentPrinter,
               MathMLPresentationPrinter, PrettyPrinter, prettyForm, stringPict,
-              stringPict("a"), Printer, Printer(), PythonPrinter,
-              PythonPrinter()):
+              stringPict("a"), Printer, PythonPrinter):
         check(c)
+
+    for c in (LatexPrinter(), Printer(), PythonPrinter()):
+        check(c, check_eq=False)
 
 
 @XFAIL
@@ -681,7 +700,7 @@ def test_printing2():
 
 
 def test_printing3():
-    check(PrettyPrinter())
+    check(PrettyPrinter(), check_eq=False)
 
 #================== series ======================
 from sympy.series.limits import Limit
@@ -711,6 +730,33 @@ def test_deprecation_warning():
 def test_issue_18438():
     assert pickle.loads(pickle.dumps(S.Half)) == S.Half
 
+#================= tensor ======================
+import sympy.tensor.tensor as tens
+from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
+
+def test_get_symmetric_group_sgs():
+    base, sgs = get_symmetric_group_sgs(S(3), antisym=True)
+    check(base, check_attr=False)
+    check(sgs, check_attr=False)
+
+def test_TensorSymmetry():
+    t = tens.TensorSymmetry.fully_symmetric(-S(3))
+    check(t, check_attr=False)
+
+def test_TensorHead():
+    R3 = tens.TensorIndexType("R", dim=3)
+    check(R3.epsilon, check_attr=False)
+
+def test_TensorHead_2():
+    R3 = tens.TensorIndexType("R", dim=3)
+    K = tens.TensorHead("K", [R3,R3,R3])
+    check(K, check_attr=False)
+
+def test_epsilon():
+    R3 = tens.TensorIndexType("R", dim=3)
+    i, j, k = tens.tensor_indices("i j k", R3)
+
+    check(R3.epsilon(i,j,k), check_attr=False)
 
 #================= old pickles =================
 def test_unpickle_from_older_versions():
