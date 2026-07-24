@@ -74,7 +74,7 @@ ANTLR Backend
 ^^^^^^^^^^^^^
 
 The ANTLR-based `\mathrm{\LaTeX}` parser was ported from
-`latex2sympy <https://github.com/augustt198/latex2sympy>`_. While functional
+`latex2sympy <https://github.com/augustt198/latex2sympy>`_. While it is functional
 and its API should remain stable, the parsing behavior or backend may change in
 future releases.
 
@@ -83,8 +83,8 @@ future releases.
 ANTLR `\mathrm{\LaTeX}` Parser Caveats
 """"""""""""""""""""""""""""""""""""""
 
-In its current definition, the parser may fail to fully parse
-an expression, yet not throw a warning::
+Currently, the parser may fail to fully parse an expression, but not throw a
+warning::
 
     parse_latex(r'x -')
 
@@ -130,7 +130,7 @@ the parser's behavior. For example, the user can specify their own `\mathrm{\LaT
 grammar by passing the path to the grammar file to the ``LarkLaTeXParser`` while
 instantiating the parser.
 
-The user can also specify their own custom transformer class to the `LarkLaTeXParser`
+The user can also specify their own custom transformer class to the ``LarkLaTeXParser``
 class.
 
 The two examples mentioned above can be found in the
@@ -170,6 +170,11 @@ Here is a list of the things which are supported:
     * floor (e.g., `\lfloor x \rfloor`) and ceiling (e.g., `\lceil x \rceil`),
     * `\min` and `\max`.
 
+* Complex numbers via the use of `\backslash \mathrm{imaginaryunit}`. For example::
+
+    parse_latex(r"5 + 3\imaginaryunit", backend="lark")
+
+  gives us the output of ``5 + 3*I``.
 * All the trigonometric functions and their inverses trigonometric functions.
   Powers like ``\sin^4`` are also supported. The power `-1` is interpreted as the
   inverse function (i.e., ``\sin^{-1} x`` is interpreted as ``\arcsin x``).
@@ -199,13 +204,95 @@ Here is a list of the things which are supported:
 Here is a(n incomplete) list of things which are currently not supported, which
 may be added in the future:
 
-* Matrices. Stuff like ``\begin{env}...\end{env}``, where ``env`` is any of
-  ``matrix``, ``bmatrix``, ``pmatrix``, ``smallmatrix``, and ``array``.
-* Matrix operations like matrix-matrix addition, scalar-matrix multiplication,
-  matrix-matrix multiplication.
 * Higher order derivatives and partial derivatives.
 * Double and triple integrals.
 
+Matrices
+--------
+
+The Lark-based LaTeX parser also supports parsing matrices. However, there are
+certain assumptions built into the default parser, which we must keep in mind
+if we wish to extract the full value out of it.
+
+Matrix Parsing
+^^^^^^^^^^^^^^
+
+Matrices inside a ``bmatrix``, ``pmatrix``, ``matrix``, and ``array`` environments
+are fully supported, and work as expected.
+
+For example::
+
+  parse_latex(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}", backend="lark")
+
+gives us ::
+
+  Matrix([
+    [1, 3],
+    [2, 4]])
+
+The Lark-based parser also supports parsing multiline matrix definitions. For example, ::
+
+  s = r"""
+  \begin{bmatrix}
+  \cos \theta & -\sin \theta \\
+  \sin \theta & \cos \theta
+  \end{bmatrix}
+  """
+
+  parse_latex(s, backend="lark")
+
+gives us the output of ::
+
+  Matrix([
+  [cos(theta), -sin(theta)],
+  [sin(theta),  cos(theta)]])
+
+Matrix Operations
+^^^^^^^^^^^^^^^^^
+
+Basic matrix operations between matrices like matrix-matrix addition and subtraction,
+multiplying a matrix by a scalar, and matrix-matrix multiplication are supported.
+
+Other common matrix operations are also supported:
+
+* Transpose (usually denoted by raising a matrix to a superscript of `T`). The
+  default parser only supports the superscript of `T`. For example, ::
+
+    parse_latex(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}^T", backend="lark")
+
+  returns ::
+
+    Matrix([
+    [1, 3],
+    [2, 4]])
+
+  as expected.
+* Conjugate transpose (often denoted by raising a matrix to a superscript
+  of `H`). The default parser only supports the superscript of `H`. For example, ::
+
+    parse_latex(r"\begin{pmatrix} 1 & \imaginaryunit \\ 3 & 4 \end{pmatrix}^H", backend="lark")
+
+  returns ::
+
+    Matrix([
+    [ 1, 3],
+    [-I, 4]])
+
+  as expected.
+* Traces: The default parser requires the use of `\backslash \mathrm{trace}`
+  in the `\mathrm{\LaTeX}` code to parse it correctly.
+* Adjugates: The default parser requires the use of `\backslash \mathrm{adjugate}`
+  in the `\mathrm{\LaTeX}` code to parse it correctly.
+* Determinants: The parser supports parsing `\det` as well as `\begin{vmatrix} \dots \end{vmatrix}`
+  as a determinant. For example, both ::
+
+    parse_latex(r"\det(\begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix})", backend="lark")
+
+  and ::
+
+    parse_latex(r"\begin{vmatrix} 1 & 2 \\ 3 & 4 \end{vmatrix}", backend="lark")
+
+  give us an output of `-2`.
 
 Lark `\mathrm{\LaTeX}` Parser Functions
 """""""""""""""""""""""""""""""""""""""
