@@ -62,6 +62,8 @@ class BesselBase(DefinedFunction):
 
     @classmethod
     def eval(cls, nu, z):
+        if nu is S.NaN or z is S.NaN:
+            return S.NaN
         return
 
     def fdiff(self, argindex=2):
@@ -178,6 +180,8 @@ class besselj(BesselBase):
 
     @classmethod
     def eval(cls, nu, z):
+        if z is S.NaN or nu is S.NaN:
+                return S.NaN
         if z.is_zero:
             if nu.is_zero:
                 return S.One
@@ -326,6 +330,8 @@ class bessely(BesselBase):
 
     @classmethod
     def eval(cls, nu, z):
+        if z is S.NaN or nu is S.NaN:
+            return S.NaN
         if z.is_zero:
             if nu.is_zero:
                 return S.NegativeInfinity
@@ -481,6 +487,8 @@ class besseli(BesselBase):
 
     @classmethod
     def eval(cls, nu, z):
+        if z is S.NaN or nu is S.NaN:
+            return S.NaN
         if z.is_zero:
             if nu.is_zero:
                 return S.One
@@ -648,6 +656,8 @@ class besselk(BesselBase):
 
     @classmethod
     def eval(cls, nu, z):
+        if z is S.NaN or nu is S.NaN:
+            return S.NaN
         if z.is_zero:
             if nu.is_zero:
                 return S.Infinity
@@ -998,6 +1008,8 @@ class jn(SphericalBesselBase):
     """
     @classmethod
     def eval(cls, nu, z):
+        if z is S.NaN or nu is S.NaN:
+            return S.NaN
         if z.is_zero:
             if nu.is_zero:
                 return S.One
