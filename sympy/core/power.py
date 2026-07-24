@@ -1392,6 +1392,17 @@ class Pow(Expr):
             from sympy.functions.elementary.complexes import arg, Abs
             return exp((log(Abs(base)) + S.ImaginaryUnit*arg(base))*expo)
 
+    def _eval_rewrite_as_EML(self, base, expo, **kwargs):
+        from sympy.functions.elementary.exponential import EML, exp
+        # b**e = exp(e*log(b)); reuse the exp rewrite and continue to EML so
+        # that powers participate in the EML canonical form like exp and log.
+        rewritten = self._eval_rewrite_as_exp(base, expo, **kwargs)
+        if not isinstance(rewritten, exp):
+            # degenerate cases (zero base, base/expo already exponential) are
+            # left to the exp rewrite and do not yield an EML form here.
+            return None
+        return rewritten.rewrite(EML)
+
     def as_numer_denom(self):
         if not self.is_commutative:
             return self, S.One
