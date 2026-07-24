@@ -331,6 +331,15 @@ def test_parser_mathematica_tokenizer():
     assert chain("a*=b") == ["TimesBy", "a", "b"]
     assert chain("a/=b") == ["DivideBy", "a", "b"]
 
+    # ``x =.`` clears a value: it is ``Unset[x]``.  The trailing ``.`` must not
+    # be read as the start of a number, so ``x=.5`` stays ``Set[x, 0.5]``.
+    assert chain("x=.") == ["Unset", "x"]
+    assert chain("x =. ") == ["Unset", "x"]
+    assert chain("Hold[x=.]") == ["Hold", ["Unset", "x"]]
+    assert chain("f[x]=.") == ["Unset", ["f", "x"]]
+    assert chain("x=.5") == ["Set", "x", ".5"]
+    assert chain("a==.5") == ["Equal", "a", ".5"]
+
     # Rules, replacement and conditions
     assert chain("a->b") == ["Rule", "a", "b"]
     assert chain("a:>b") == ["RuleDelayed", "a", "b"]
