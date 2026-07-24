@@ -1,15 +1,18 @@
 from __future__ import annotations
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.singleton import S
+from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import atan
 from sympy.integrals.integrals import integrate
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
 
 from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
+from sympy.testing.pytest import raises
 
 from sympy.abc import a, b, x, t
 
@@ -208,3 +211,33 @@ def test_issue_28186():
     P = ratint(p, x)
     res = P.evalf(subs={x:1e100}) - P.evalf(subs={x:0})
     assert abs(res - 2.5) < 1e-10
+
+
+def test_ratint_piecewise():
+    # https://github.com/sympy/sympy/issues/30084
+    # A parametric partial fraction decomposition (e.g. after a Weierstrass
+    # substitution) hands ratint a Piecewise whose rational branches are
+    # selected by conditions on the parameters. ratint used to raise a
+    # PolynomialError on any Piecewise; now it integrates each branch.
+    pw = Piecewise((1/(x + 1), Eq(a, 1)), (1/(x - 1), True))
+    assert ratint(pw, x) == Piecewise(
+        (log(x + 1), Eq(a, 1)), (log(x - 1), True))
+
+    # a Piecewise multiplied by something is folded to the top first
+    assert ratint(x*pw, x) == Piecewise(
+        (x - log(x + 1), Eq(a, 1)), (x + log(x - 1), True))
+
+    # every branch of the result differentiates back to its integrand
+    r = ratint(Piecewise((1/(x**2 - a), Ne(a, 0)), (1/x**2, True)), x)
+    for e, c in r.args:
+        integrand = [ie for ie, ic in
+                     Piecewise((1/(x**2 - a), Ne(a, 0)),
+                               (1/x**2, True)).args if ic == c][0]
+        assert (e.diff(x) - integrand).cancel() == 0
+
+    # conditions that depend on the integration variable are not mapped over:
+    # the branches partition the x-axis rather than selecting an integrand, so
+    # this is left to the general Piecewise machinery (raises, as before)
+    from sympy.polys.polyerrors import PolynomialError
+    raises(PolynomialError,
+           lambda: ratint(Piecewise((1/(x + 1), x > 0), (1/(x - 1), True)), x))

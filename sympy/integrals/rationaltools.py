@@ -6,6 +6,7 @@ from sympy.core.numbers import I
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import atan
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import cancel
@@ -47,6 +48,23 @@ def ratint(f, x, **flags):
     sympy.integrals.rationaltools.ratint_ratpart
 
     """
+    if not isinstance(f, tuple) and f.has(Piecewise):
+        # A Weierstrass (or similar) substitution followed by a parametric
+        # partial fraction decomposition can hand ratint a Piecewise whose
+        # branches are rational functions selected by conditions on the
+        # parameters, e.g. Piecewise((r1, Eq(a, 1)), (r2, True)). When none of
+        # the conditions involves the integration variable the branches are
+        # just alternative integrands, so integrating each one and keeping the
+        # same conditions gives a valid antiderivative. (When a condition does
+        # depend on x the branches partition the x-axis instead, and mapping
+        # over them would drop the continuity corrections between pieces, so
+        # that case is left to the general Piecewise integration machinery.)
+        folded = piecewise_fold(f)
+        if isinstance(folded, Piecewise) and \
+                not any(c.has(x) for _, c in folded.args):
+            return Piecewise(*[(ratint(e, x, **flags), c)
+                               for e, c in folded.args])
+
     if isinstance(f, tuple):
         p, q = f
     else:
