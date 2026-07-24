@@ -194,6 +194,11 @@ class SingletonRegistry(Registry):
     def __repr__(self):
         return "S"
 
+    def __reduce__(self):
+        # S is a singleton: pickling and copying should return the same
+        # instance so that it compares equal to itself after a round-trip.
+        return "S"
+
 S = SingletonRegistry()
 
 
