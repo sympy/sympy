@@ -56,6 +56,36 @@ def test_block_plus_ident():
     assert bc_block_plus_ident(X + Identity(m + n) + Z) == \
             BlockDiagMatrix(Identity(n), Identity(m)) + X + Z
 
+def test_block_plus_scaled_ident():
+    # gh-issue #29837
+    a, b = symbols('a b')
+    A = MatrixSymbol('A', n, n)
+    B = MatrixSymbol('B', n, m)
+    C = MatrixSymbol('C', m, n)
+    D = MatrixSymbol('D', m, m)
+    X = BlockMatrix([[A, B], [C, D]])
+    block_id = BlockDiagMatrix(Identity(n), Identity(m))
+
+    # single scaled identity term
+    assert bc_block_plus_ident(X + a*Identity(m + n)) == \
+            block_id * a + X
+
+    # unscaled identity still works as before (regression)
+    assert bc_block_plus_ident(X + Identity(m + n)) == \
+            block_id + X
+
+    # multiple scaled identity terms combine their coefficients
+    assert bc_block_plus_ident(X + a*Identity(m + n) + b*Identity(m + n)) == \
+            block_id * (a + b) + X
+
+    # negative and rational coefficients
+    assert bc_block_plus_ident(X - Identity(m + n)) == \
+            block_id * -1 + X
+
+    # block_collapse actually distributes the scaled identity into blocks
+    result = block_collapse(a*Identity(m + n) + X)
+    assert result == BlockMatrix([[a*Identity(n) + A, B], [C, a*Identity(m) + D]])
+
 def test_BlockMatrix():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', n, k)
