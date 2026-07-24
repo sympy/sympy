@@ -2,7 +2,8 @@ from __future__ import annotations
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ
 from sympy.polys.zippel import (_LC, _chinese_remainder_reconstruction_multivariate, _deg,
-    _gf_gcd, _trivial_gcd, _primitive)
+    _gf_gcd, _trivial_gcd, _primitive, skeleton_sorter, from_newt_to_poly,
+    incremental_newton_interp)
 
 
 def test_gf_gcd():
@@ -103,3 +104,47 @@ def test_chinese_remainder_reconstruction_multivariate():
 
     assert hpq.trunc_ground(p) == hp
     assert hpq.trunc_ground(q) == hq
+
+
+def test_incremental_newton_interp():
+    # Polynomial to interpolate: P(x) = 3x^3 - 2x^2 + 17x - 5
+    x = ZZ.map([0, 1, 2])
+    v = ZZ.map([96, 18, 7])
+    xk = ZZ(3)
+    uk = ZZ(8)
+    p = ZZ(101)
+
+    assert incremental_newton_interp(x, v, xk, uk, p) == 3
+
+
+def test_from_newt_to_poly():
+    x = ZZ.map([0, 1, 2, 3])
+    v = ZZ.map([96, 18, 7, 3])
+    p = ZZ(101)
+
+    assert from_newt_to_poly(x, v, p) == [3, 99, 17, 96]
+
+
+def test_skeleton_sorter():
+    R, x, y, z, w = ring("x, y, z, w", ZZ)
+    G = 4 * x**3 * y**2 * w - 2 * x**3 * z**5 * w**2 + 7 * x * y * z * w
+    S, h, monic, pseudomonic = skeleton_sorter(dict(G))
+
+    assert S == {
+        1: [[(1, 1, 1, 1), (0, 1), (1, 1), (2, 1)]],
+        3: [[(3, 2, 0, 1), (0, 2), (2, 1)], [(3, 0, 5, 2), (1, 5), (2, 2)]],
+    }
+    assert h == [[7], [4], [-2]]
+    assert monic == pseudomonic == False
+
+    R, x, y, z = ring("x, y, z", ZZ)
+    G = 5 * x**2 * y**2 + 7 * x * y**5 * z**3 + 8 * x * z**4
+    S, h, monic, pseudomonic = skeleton_sorter(G)
+
+    assert S == {
+        2: [[(2, 2, 0), (0, 2)]],
+        1: [[(1, 5, 3), (0, 5), (1, 3)], [(1, 0, 4), (1, 4)]],
+    }
+    assert list(S.keys()) == [2, 1]
+    assert h == [[5], [7], [8]]
+    assert monic == pseudomonic == True
