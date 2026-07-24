@@ -1,0 +1,11 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "indexing": {
+    "provider": "openai-compatible",
+    "openai-compatible": {
+      "baseUrl": "http://100.72.233.123:1234/v1",
+      "apiKey": "notneeded"
+    },
+    "enabled": false
+  }
+}
