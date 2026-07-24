@@ -82,9 +82,11 @@ def convert_indexed_to_array(expr, first_indices=None):
 
     repl = {j: i for i in indices if isinstance(i, frozenset) for j in i}
     first_indices = [repl.get(i, i) for i in first_indices]
-    for i in first_indices:
-        if not _check_is_in(i, indices):
-            first_indices.remove(i)
+    # Drop any requested first-index that is not actually a free index of the
+    # expression.  This is done with a comprehension rather than removing from
+    # the list being iterated (which skips elements and lets invalid indices
+    # survive, later crashing _af_invert).
+    first_indices = [i for i in first_indices if _check_is_in(i, indices)]
     first_indices.extend([i for i in indices if not _check_is_in(i, first_indices)])
 
     def _get_pos(elem, indices):

@@ -68,10 +68,14 @@ def _get_argindex(subindices, ind):
 
 
 def _apply_recursively_over_nested_lists(func, arr):
-    if isinstance(arr, (tuple, list, Tuple)):
-        return tuple(_apply_recursively_over_nested_lists(func, i) for i in arr)
-    elif isinstance(arr, Tuple):
+    # Check ``Tuple`` first: it is a subtype of neither ``tuple`` nor ``list``,
+    # and a nested ``Tuple`` should stay a ``Tuple`` rather than being rebuilt
+    # as a plain ``tuple`` (which is what happened when this branch sat,
+    # unreachable, after ``(tuple, list, Tuple)``).
+    if isinstance(arr, Tuple):
         return Tuple.fromiter(_apply_recursively_over_nested_lists(func, i) for i in arr)
+    elif isinstance(arr, (tuple, list)):
+        return tuple(_apply_recursively_over_nested_lists(func, i) for i in arr)
     else:
         return func(arr)
 

@@ -204,3 +204,19 @@ def test_arrayexpr_convert_indexed_to_array_broadcast():
     assert convert_indexed_to_array(expr, [i, j, n]) == ArrayAdd(ArrayTensorProduct(-1, OneArray(5), X), PermuteDims(ArrayTensorProduct(X, OneArray(5)), [0, 2, 1]))
 
     raises(ValueError, lambda: convert_indexed_to_array(C[i, j] + D[i, j]))
+
+
+def test_convert_indexed_to_array_invalid_first_indices():
+    # first_indices entries that are not actually free indices of the
+    # expression (a summation index, or a symbol not present at all) must be
+    # ignored, giving the same result as if they were omitted.  Previously they
+    # were filtered by removing from a list while iterating over it, which
+    # skipped elements and let invalid indices survive, eventually crashing
+    # _af_invert with an IndexError.
+    Ash = IndexedBase("Ash", shape=(4, 4))
+    Bsh = IndexedBase("Bsh", shape=(4, 4))
+    expr = Sum(Ash[i, j]*Bsh[j, k], (j, 0, 3))
+    expected = convert_indexed_to_array(expr, first_indices=[k])
+    # l is not in the expression, j is the contracted index -- both dropped:
+    assert convert_indexed_to_array(expr, first_indices=[l, j, k]) == expected
+    assert convert_indexed_to_array(expr, first_indices=[k, l]) == expected

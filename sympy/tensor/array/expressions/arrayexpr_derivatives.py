@@ -234,7 +234,11 @@ def _(expr: ArrayAdd, x: Expr):
 @array_derive.register(PermuteDims)
 def _(expr: PermuteDims, x: Expr):
     de = array_derive(expr.expr, x)
-    perm = [0, 1] + [i + 2 for i in expr.permutation.array_form]
+    # Differentiating prepends the ``rank_x`` axes of ``x`` to the result, so
+    # those must be left in place and the original permutation shifted past
+    # them.  (This used to assume ``x`` was always a matrix, i.e. ``rank_x == 2``.)
+    rank_x = len(get_shape(x))
+    perm = list(range(rank_x)) + [i + rank_x for i in expr.permutation.array_form]
     return _permute_dims(de, perm)
 
 
@@ -257,7 +261,7 @@ def _(expr: MatrixBase, x):
 
 @array_derive.register(NDimArray)
 def _(expr: NDimArray, x):
-    derive_by_array(expr, x)
+    return derive_by_array(expr, x)
 
 
 def matrix_derive(expr, x):
