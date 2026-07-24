@@ -43,7 +43,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import WildFunction
+from sympy.core.function import WildFunction, expand
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -2396,6 +2396,123 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
+def trig_poly_mul_rule(integral: IntegralInfo):
+    """
+    Integrate poly(x) * sin(a*x**2+b*x+c) or poly(x) * cos(a*x**2+b*x+c).
+
+    * If the quadratic has a nonzero linear or constant term, complete the
+      square and shift to u = x + b/(2a), expand the trig function of
+      (a*u**2 + k) with the angle-sum identities, and recurse: the result
+      is a sum of terms poly(u) * sin(a*u**2) and poly(u) * cos(a*u**2).
+    """
+    integrand, symbol = integral
+    if not integrand.is_Mul:
+        return None
+
+    a_ = Wild('a', exclude=[symbol, 0])
+    b_ = Wild('b', exclude=[symbol, 0])
+    c_ = Wild('c', exclude=[symbol])
+    quadratic_pattern = a_*symbol**2 + b_*symbol + c_
+
+    is_sin = None
+    match = None
+    rest = []
+    for factor in integrand.args:
+        if not match and isinstance(factor, (sin, cos)):
+            match = factor.args[0].match(quadratic_pattern)
+            if match and match[a_] != 0:
+                is_sin = isinstance(factor, sin)
+                continue
+            else:
+                match = None
+        rest.append(factor)
+
+    if not match:
+        return
+
+    poly = Mul(*rest)  # type: ignore
+    if (symbol not in poly.free_symbols
+            or not poly.is_polynomial(symbol)):
+        return
+
+    a = match[a_]
+    b = match[b_]
+    c = match[c_]
+
+    # Complete the square and shift.
+    h = -b / (2*a)
+    k = c - b**2 / (4*a)
+
+    u = Dummy('u')
+    u_func = symbol - h  # u = x - h => x = u + h
+
+    poly_u = poly.subs(symbol, u + h).expand()
+
+    if is_sin:
+        expanded_trig = sin(a*u**2)*cos(k) + cos(a*u**2)*sin(k)
+    else:
+        expanded_trig = cos(a*u**2)*cos(k) - sin(a*u**2)*sin(k)
+
+    new_integrand = expand(poly_u * expanded_trig)
+    rewritten = new_integrand.subs(u, u_func)
+
+    substep = integral_steps(new_integrand, u)
+    if substep is None or substep.contains_dont_know():
+        return
+    substep = URule(rewritten, symbol, u, u_func, substep)
+    return CompleteSquareRule(integrand, symbol, rewritten, substep)
+
+
+def trig_product_to_sum_rule(integral: IntegralInfo):
+    """
+    Rewrite a product of two sin/cos factors with different arguments using the
+    product-to-sum identities, e.g.
+
+        sin(x**2)*cos(x) -> (sin(x**2+x) + sin(x**2-x)) / 2
+
+    This is useful when at least one of the arguments is not linear in the
+    integration variable.
+    """
+    integrand, symbol = integral
+    if not integrand.is_Mul:
+        return
+
+    trig_factors = []
+    rest = []
+    for f in integrand.args:
+        if isinstance(f, (sin, cos)):
+            trig_factors.append(f)
+        else:
+            rest.append(f)
+
+    if len(trig_factors) != 2:
+        return
+
+    f1, f2 = trig_factors[0], trig_factors[1]
+    A, B = f1.args[0], f2.args[0]
+    if A == B or A == -B:
+        return
+    if not (A.has(symbol) and B.has(symbol)):
+        return
+
+    if isinstance(f1, sin) and isinstance(f2, sin):
+        replacement = (cos(A - B) - cos(A + B)) / 2
+    elif isinstance(f1, cos) and isinstance(f2, cos):
+        replacement = (cos(A - B) + cos(A + B)) / 2
+    elif isinstance(f1, sin) and isinstance(f2, cos):
+        replacement = (sin(A + B) + sin(A - B)) / 2
+    else:
+        replacement = (sin(A + B) - sin(A - B)) / 2
+
+    rewritten = expand(Mul(*rest) * replacement)  # type: ignore
+
+    substep = integral_steps(rewritten, symbol)
+    if substep.contains_dont_know():
+        return
+
+    return RewriteRule(integrand, symbol, rewritten, substep)
+
+
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
     integrand, symbol = integral
     if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
@@ -2900,7 +3017,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(trig_cmplx_exp_rule)),
+                        null_safe(trig_cmplx_exp_rule),
+                        null_safe(trig_poly_mul_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
@@ -2932,7 +3050,11 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(Mul, Pow),
                     distribute_expand_rule),
                 trig_powers_products_rule,
-                trig_expand_rule
+                trig_expand_rule,
+                condition(
+                    integral_is_subclass(Mul),
+                    trig_product_to_sum_rule
+                ),
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(trig_substitution_rule)

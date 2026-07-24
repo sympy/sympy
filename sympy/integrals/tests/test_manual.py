@@ -251,6 +251,35 @@ def test_manualintegrate_trig_substitution():
     assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
         sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
 
+
+def test_manualintegrate_trig_product_to_sum():
+    f = sin(x**2)*cos(x)
+    F = sqrt(2)*sqrt(pi)*(-sin(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + cos(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 + sqrt(2)*sqrt(pi)*(-sin(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + cos(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
+    assert_is_integral_of(f, F)
+
+    f = cos(x**2)*sin(x)
+    F = -sqrt(2)*sqrt(pi)*(-sin(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + cos(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 + sqrt(2)*sqrt(pi)*(-sin(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + cos(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
+    assert_is_integral_of(f, F)
+
+    f = sin(x**2)*sin(x)
+    F = sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 - sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
+    assert_is_integral_of(f, F)
+
+    f = cos(x**2)*cos(x)
+    F = sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 + sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
+    assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_trig_poly_product():
+    f = x*cos(x**2+x)
+    F = sin((x + S.One/2)**2)*cos(S.One/4)/2 - sin(S.One/4)*cos((x + S.One/2)**2)/2 - sqrt(2)*sqrt(pi)*cos(S.One/4)*fresnelc(sqrt(2)*(x + S.One/2)/sqrt(pi))/4 - sqrt(2)*sqrt(pi)*sin(S.One/4)*fresnels(sqrt(2)*( x + S.One/2)/sqrt(pi))/4
+    assert_is_integral_of(f, F)
+
+    f = x*sin(x**2+x)
+    F = -sin(S.One/4)*sin((x + S.One/2)**2)/2 - cos(S.One/4)*cos((x + S.One/2)**2)/2 + sqrt(2)*sqrt(pi)*sin(S.One/4)*fresnelc(sqrt(2)*(x + S.One/2)/sqrt(pi))/4 - sqrt(2)*sqrt(pi)*cos(S.One/4)*fresnels(sqrt(2)*(x + S.One/2)/sqrt(pi))/4
+    assert_is_integral_of(f, F)
+
+
 def test_manualintegrate_trivial_substitution():
     assert manualintegrate((exp(x) - exp(-x))/x, x) == -Ei(-x) + Ei(x)
     f = Function('f')
