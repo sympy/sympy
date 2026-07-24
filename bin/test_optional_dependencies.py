@@ -28,6 +28,7 @@ test_list = [
 
     # scipy
     '*scipy*',
+    'sympy/solvers/tests/test_simplex.py',
 
     # matplotlib
     'sympy/plotting/',
