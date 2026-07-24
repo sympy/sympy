@@ -854,3 +854,31 @@ def test_array_sum():
 
     expr = ArrayContraction(ArraySum(T*sin(i), (i, 1, j)), (0, 1))
     assert expr.doit() == ArraySum(ArrayContraction(T*sin(i), (0, 1)), (i, 1, j))
+
+
+def test_array_diagonal_push_indices_up_nonstatic():
+    # _push_indices_up_nonstatic must agree with the static _push_indices_up.
+    # The diagonal groups stored in ``_positions`` are sympy ``Tuple``s, which
+    # are not Python ``tuple``s, so the isinstance check must accept both --
+    # otherwise indices landing in a diagonal group came back as ``None``.
+    from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
+    d = symbols("d")
+    M = ArraySymbol("M", (d, d, d))
+    diag = ArrayDiagonal(M, (0, 2))
+    indices = [0, 1]
+    assert diag._push_indices_up_nonstatic(indices) == \
+        ArrayDiagonal._push_indices_up([(0, 2)], indices, 3)
+    assert diag._push_indices_up_nonstatic([0, 1]) == (1, 0)
+
+
+def test_apply_recursively_over_nested_lists_preserves_tuple():
+    # A nested sympy ``Tuple`` must stay a ``Tuple`` (the branch handling it was
+    # unreachable, so it used to be rebuilt as a plain ``tuple``).
+    from sympy import Tuple
+    from sympy.tensor.array.expressions.utils import \
+        _apply_recursively_over_nested_lists as apply_nested
+    ident = lambda x: x
+    assert isinstance(apply_nested(ident, Tuple(1, Tuple(2, 3))), Tuple)
+    # plain lists/tuples are still returned as tuples
+    assert isinstance(apply_nested(ident, [1, 2]), tuple)
+    assert isinstance(apply_nested(ident, (1, 2)), tuple)

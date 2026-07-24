@@ -914,7 +914,10 @@ class ArrayDiagonal(_CodegenArrayAbstract):
 
         def transform(x):
             for i, e in enumerate(self._positions):
-                if (isinstance(e, int) and x == e) or (isinstance(e, tuple) and x in e):
+                # diagonal groups in ``_positions`` are sympy ``Tuple``s, which
+                # are not Python ``tuple``s, so both must be accepted here (as
+                # the static ``_push_indices_up`` already does)
+                if (isinstance(e, int) and x == e) or (isinstance(e, (tuple, Tuple)) and x in e):
                     return i
 
         return _apply_recursively_over_nested_lists(transform, indices)

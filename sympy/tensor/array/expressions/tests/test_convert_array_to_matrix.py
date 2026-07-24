@@ -9,7 +9,8 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 from sympy.tensor.array.expressions.from_array_to_matrix import _support_function_tp1_recognize, \
     _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix, \
-    _combine_removed, identify_removable_identity_matrices, _array_contraction_to_diagonal_multiple_identity
+    _combine_removed, identify_removable_identity_matrices, _array_contraction_to_diagonal_multiple_identity, \
+    remove_identity_matrices
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
@@ -747,3 +748,75 @@ def test_array_sum_conversion():
 
     expr = ArraySum(X, (i, 1, 10))
     assert convert_array_to_matrix(expr) == 10*X
+
+
+def test_remove_identity_matrices_contraction():
+    # Contracting an Identity with another matrix must reproduce that matrix
+    # (transposed/permuted as required), for the identity in any position.  The
+    # permutation that remove_identity_matrices rebuilds used to mix a
+    # free-axis offset with a raw index position, giving a permutation that was
+    # either out of range (IndexError) or valid-but-wrong (silently incorrect).
+    from sympy import Matrix
+    n = 3
+    M1 = MatrixSymbol("M1", n, n)
+    M2 = MatrixSymbol("M2", n, n)
+    In = Identity(n)
+    subs = {M1: Matrix([[1, 2, 0], [0, 1, 3], [2, 0, 1]]),
+            M2: Matrix([[1, 0, 1], [1, 1, 0], [0, 2, 1]])}
+
+    def numeric_equal(ae):
+        conv = convert_array_to_matrix(ae)
+        lhs = Array(ae.as_explicit()).applyfunc(lambda e: e.subs(subs).doit())
+        rhs = Array(conv.as_explicit()).applyfunc(lambda e: e.subs(subs).doit())
+        return lhs == rhs
+
+    # identity in every position of a plain contraction:
+    assert numeric_equal(_array_contraction(_array_tensor_product(In, M1, M2), (0, 3)))
+    assert numeric_equal(_array_contraction(_array_tensor_product(M1, In, M2), (3, 5)))
+    assert numeric_equal(_array_contraction(_array_tensor_product(M1, M2, In), (1, 4)))
+    assert numeric_equal(_array_contraction(_array_tensor_product(M1, In), (1, 2)))
+
+    # several identities removed in one contraction: two separate
+    # identity/matrix pairs.  This is where the per-pair bookkeeping matters --
+    # the freed-axis position of the second matrix depends on the first pair
+    # having already been removed, which a single global offset gets wrong.
+    assert numeric_equal(_array_contraction(
+        _array_tensor_product(In, M1, In, M2), (0, 3), (4, 7)))
+    assert numeric_equal(_array_contraction(
+        _array_tensor_product(M1, In, M2, In), (1, 2), (5, 6)))
+    assert numeric_equal(_array_contraction(
+        _array_tensor_product(In, In, M1, M2), (0, 4), (2, 6)))
+    assert numeric_equal(_array_contraction(
+        _array_tensor_product(M1, In, In, M2), (1, 2), (5, 6)))
+
+    # nested in ArrayDiagonal / PermuteDims: this exact expression previously
+    # converted to a numerically wrong matrix, and a sibling of it crashed with
+    # an IndexError inside remove_identity_matrices:
+    assert numeric_equal(PermuteDims(ArrayDiagonal(_array_contraction(
+        _array_tensor_product(In, M1, M2), (0, 3)), (1, 2)), Permutation([0, 2, 1])))
+    assert numeric_equal(PermuteDims(ArrayDiagonal(_array_contraction(
+        _array_tensor_product(M1, In, M2), (3, 5)), (2, 3)), Permutation([1, 0, 2])))
+
+    # a couple of clean symbolic forms, over symbolic dimension k:
+    assert convert_array_to_matrix(_array_contraction(
+        _array_tensor_product(I, M, N), (0, 3))) == _array_tensor_product(M.T, N)
+    assert convert_array_to_matrix(_array_contraction(
+        _array_tensor_product(M, I, N), (3, 5))) == _array_tensor_product(M, N.T)
+
+    # the returned permutation must be a genuine permutation (this used to
+    # raise IndexError in _af_invert):
+    _result, removed = remove_identity_matrices(
+        _array_contraction(_array_tensor_product(M, I, N), (3, 5)))
+    assert removed == []
+
+
+def test_convert_array_to_matrix_diagonal_of_contraction_with_identity():
+    # ArrayDiagonal whose inner ArrayContraction converts to a PermuteDims used
+    # to reach identify_hadamard_products, which raised NotImplementedError when
+    # building the editor.  It must convert without error now.
+    n = 3
+    M1 = MatrixSymbol("M1", n, n)
+    In = Identity(n)
+    conv = convert_array_to_matrix(ArrayDiagonal(_array_contraction(
+        _array_tensor_product(In, In, M1), (0, 4)), (0, 2)))
+    assert conv is not None
