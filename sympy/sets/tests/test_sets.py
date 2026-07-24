@@ -1806,3 +1806,23 @@ def test_issue_24726():
     expected_case_6 = Union(ImageSet(Lambda(n, 2*n*pi + 4*pi), Range(0, oo, 1)),
                             ImageSet(Lambda(n, 2*n*pi + 5*pi), Range(0, oo, 1)))
     assert sin_zeros.intersect(Interval(10, oo)).dummy_eq(expected_case_6)
+
+def test_issue_29730():
+    A1 = Interval(-5, 10)
+    B = Union(Interval(-9, 1), Interval(8, 10))
+    assert A1.is_subset(B) == False
+
+    A2 = Interval(-8, 0)
+    assert A2.is_subset(B) == True
+
+    A3 = Interval(8, 9)
+    assert A3.is_subset(B) == True
+
+    A4 = Interval(-2, 5)
+    assert A4.is_subset(B) == False
+
+    A5 = Interval(-9, 1)
+    assert A5.is_subset(B) == True
+
+    A6 = Interval(100, 200)
+    assert A6.is_subset(B) == False
