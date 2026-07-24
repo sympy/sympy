@@ -784,8 +784,27 @@ class MathematicaParser:
 
     _number = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
 
+    # Output references (``Out``):
+    #   %        -> Out[]        (the previous result)
+    #   %%..%    -> Out[-k]      (k of them: the k-th previous result)
+    #   %n       -> Out[n]       (the result on line n)
+    # ``%n`` is tried before a bare run so ``%5`` is Out[5], not Out[]*5.
+    _out = r"%[0-9]+|%+"
+
     _enclosure_open = ["(", "[", "[[", "{", "\N{LEFT-POINTING ANGLE BRACKET}"]
     _enclosure_close = [")", "]", "]]", "}", "\N{RIGHT-POINTING ANGLE BRACKET}"]
+
+    @classmethod
+    def _out_node(cls, token: str):
+        # ``%`` output references, mirroring the Wolfram Language:
+        #   %      -> Out[]      (bare Out, i.e. the previous result)
+        #   %%..%  -> Out[-k]    (k percents: the k-th previous result)
+        #   %n     -> Out[n]     (positional: the result on line n)
+        if token[1:].isdigit():
+            return ["Out", token[1:]]
+        if len(token) == 1:
+            return ["Out"]
+        return ["Out", str(-len(token))]
 
     @classmethod
     def _get_neg(cls, x):
@@ -902,7 +921,7 @@ class MathematicaParser:
         if self._regex_tokenizer is not None:
             # Check if the regular expression has already been compiled:
             return self._regex_tokenizer
-        tokens = [self._literal, self._number]
+        tokens = [self._literal, self._number, self._out]
         tokens_escape = self._enclosure_open[:] + self._enclosure_close[:]
         for typ, strat, symdict in self._mathematica_op_precedence:
             for k in symdict:
@@ -991,6 +1010,13 @@ class MathematicaParser:
                 name = token.split("`", 1)[1]
                 if name:
                     tokens[i] = name
+
+        # Turn ``%`` output references into ``Out`` nodes so they parse as the
+        # atoms they are (``%%%`` is Out[-3], not three separate tokens).
+        for i, token in enumerate(tokens):
+            if isinstance(token, str) and token.startswith("%") \
+                    and re.fullmatch(self._out, token):
+                tokens[i] = self._out_node(token)
 
         return tokens
 
