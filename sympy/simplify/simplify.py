@@ -40,7 +40,7 @@ from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.powsimp import powsimp
-from sympy.simplify.radsimp import radsimp, fraction, collect_abs
+from sympy.simplify.radsimp import radsimp, fraction, collect_abs, collect
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
@@ -1239,7 +1239,7 @@ def besselsimp(expr):
     half-integer order are rewritten using trigonometric functions and
     functions of integer order (> 1) are rewritten using functions
     of low order.  Finally, if the expression was changed, compute
-    factorization of the result with factor().
+    factorization of the result, collecting terms by Bessel function order.
 
     >>> from sympy import besselj, besseli, besselsimp, polar_lift, I, S
     >>> from sympy.abc import z, nu
@@ -1336,7 +1336,14 @@ def besselsimp(expr):
 
     expr = _bessel_simp_recursion(expr)
     if expr != orig_expr:
-        expr = expr.factor()
+        bessels = list(expr.find(
+            lambda x: isinstance(x, (besselj, bessely, besseli, besselk))))
+        factored = expr.factor()
+        if len(bessels) > 1:
+            collected = collect(expand(expr), bessels, func=factor)
+            expr = collected if collected != factored else factored
+        else:
+            expr = factored
 
     return expr
 
