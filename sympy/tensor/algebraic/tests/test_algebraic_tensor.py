@@ -158,7 +158,7 @@ def test_algebraic_tensor_subtraction():
     
     # Right subtraction
     result3 = T1 - S
-    assert isinstance(result3, (AlgebraicTensor, AlgebraicPureTensor))
+    assert isinstance(result3, AlgebraicTensor)
 
 
 def test_algebraic_tensor_multiplication():
