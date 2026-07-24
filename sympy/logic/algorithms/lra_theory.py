@@ -539,16 +539,12 @@ class LRASolver():
                 assert all(x.upper.d <= 0 for x in self.all_var)
                 assert all(x.lower.d >= 0 for x in self.all_var)
 
-            xi = i = None
-            for r in range(len(self.basic)):
-                b = self.basic[r]
-                if b.assign < b.lower or b.assign > b.upper:
-                    if xi is None or b.col_idx < xi.col_idx:  # Bland's rule
-                        xi, i = b, r
-
-            if xi is None:
+            cand = [(r, b) for r, b in enumerate(self.basic)
+                    if b.assign < b.lower or b.assign > b.upper]
+            if not cand:
                 self.last_assign_snapshot = {var: var.assign for var in self.all_var}
                 return True, self.last_assign_snapshot
+            i, xi = min(cand, key=lambda t: t[1].col_idx)  # Bland's rule
 
             if xi.assign < xi.lower:
                 cand = [nb for nb in self.nonbasic
