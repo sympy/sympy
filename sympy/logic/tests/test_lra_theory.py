@@ -442,12 +442,15 @@ def test_pivot():
         for _ in range(5):
             i, j = randint(0, 4), randint(0, 4)
             if m[i, j] != 0:
-                assert LRASolver._pivot(m, i, j).rref() == rref
+                lra = LRASolver.__new__(LRASolver)
+                lra.A = m.copy()
+                lra._pivot(i, j)
+                assert lra.A.rref() == rref
 
 
-def test_reset_bounds():
+def test_reset():
     """
-    Tests that reset_bounds properly resets all state variables to their default values.
+    Tests that reset properly resets all state variables to their default values.
     """
     # Test solver behavior after reset
     bf = Q.ge(x, 1) & Q.lt(x, 1)
@@ -459,7 +462,7 @@ def test_reset_bounds():
             lra.assert_lit(lit)
 
     assert lra.check()[0] == False
-    lra.reset_bounds()
+    lra.reset()
     assert lra.check()[0] == True
 
     # Test individual state variable resets
@@ -479,7 +482,7 @@ def test_reset_bounds():
         for var in lra.all_var:
             setattr(var, attr_name, test_value)
 
-        lra.reset_bounds()
+        lra.reset()
 
         for var in lra.all_var:
             actual_value = getattr(var, attr_name)

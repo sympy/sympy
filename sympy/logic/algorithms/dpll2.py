@@ -231,7 +231,7 @@ class SATSolver:
                             if res is not None:
                                 break
                         res = self.lra.check()
-                        self.lra.reset_bounds()
+                        self.lra.reset()
                     else:
                         res = None
                     if res is None or res[0]:
