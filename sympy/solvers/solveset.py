@@ -153,7 +153,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     >>> invert_complex(exp(x), y, x)
     (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
     >>> invert_real(exp(x), y, x)
-    (x, Intersection({log(y)}, Reals))
+    (x, ImageSet(Lambda(x, log(x)), Intersection({y}, Interval.open(0, oo))))
 
     When does exp(x) == 1?
 
@@ -224,9 +224,8 @@ def _invert_real(f, g_ys, symbol):
     n = Dummy('n', real=True)
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
-        return _invert_real(f.exp,
-                            imageset(Lambda(n, log(n)), g_ys),
-                            symbol)
+        g_ys = g_ys.intersect(Interval.open(0, oo))
+        return _invert_real(f.exp, imageset(Lambda(n, log(n)), g_ys), symbol)
 
     if hasattr(f, 'inverse') and f.inverse() is not None and not isinstance(f, (
             TrigonometricFunction,
