@@ -1264,6 +1264,14 @@ class Derivative(Expr):
 
     def __new__(cls, expr, *variables, **kwargs):
         expr = sympify(expr)
+        if cls is Derivative:
+            from sympy.matrices.matrixbase import MatrixBase
+            from sympy.matrices.expressions.matexpr import MatrixExpr
+            from sympy.tensor.array import NDimArray
+            array_types = (MatrixBase, MatrixExpr, NDimArray, list, tuple, Tuple)
+            if isinstance(expr, array_types) or any(isinstance(i[0], array_types) if isinstance(i, (tuple, list, Tuple)) else isinstance(i, array_types) for i in variables):
+                from sympy.tensor.array.array_derivatives import ArrayDerivative
+                return ArrayDerivative(expr, *variables, **kwargs)
         if not isinstance(expr, Basic):
             raise TypeError(f"Cannot represent derivative of {type(expr)}")
         symbols_or_none = getattr(expr, "free_symbols", None)
