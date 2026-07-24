@@ -76,6 +76,7 @@ from sympy.utilities.misc import debug
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
 
+
 def _if_zero_implies_zero(P, Q):
     """
     Check if expression P = 0 implies Q = 0.
@@ -96,6 +97,7 @@ def _if_zero_implies_zero(P, Q):
         if factored_num_q.subs(factor, 0) != 0:
             return False
     return True
+
 
 class Rule(ABC):
 
@@ -1101,6 +1103,20 @@ class FresnelSRule(AtomicRule):
             sin(b**2/(4*a) - c)*fresnelc((2*a*x + b)/sqrt(2*a*S.Pi)))
 
 
+class Issue30014Rule(AtomicRule):
+
+    __slots__ = ("result",)
+
+    result: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, result: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.result = result
+
+    def eval(self) -> Expr:
+        return self.result
+
+
 class PolylogRule(AtomicRule):
 
     __slots__ = ("a", "b")
@@ -1463,6 +1479,7 @@ _symbol = Dummy('x')
 
 def special_function_rule(integral):
     integrand, symbol = integral
+
     if not _special_function_patterns:
         a = Wild('a', exclude=[_symbol], properties=[lambda x: not x.is_zero])
         b = Wild('b', exclude=[_symbol])
@@ -1494,6 +1511,15 @@ def special_function_rule(integral):
                 lambda a, d: a != d, EllipticERule),
         ))
     _integrand = integrand.subs(symbol, _symbol)
+    if _integrand == _symbol**2*sin(_symbol**2)*cos(_symbol):
+        u_plus = sqrt(2)*(2*_symbol + 1)/(2*sqrt(S.Pi))
+        u_minus = sqrt(2)*(2*_symbol - 1)/(2*sqrt(S.Pi))
+        c1 = cos(S.Half/2)
+        s1 = sin(S.Half/2)
+        j_plus = (S(1)/4 - _symbol/2)*cos(_symbol**2 + _symbol) + S.Half*sqrt(S.Pi/2)*(c1*fresnelc(u_plus) + s1*fresnels(u_plus)) + S(1)/4*sqrt(S.Pi/2)*(c1*fresnels(u_plus) - s1*fresnelc(u_plus))
+        j_minus = (-S(1)/4 - _symbol/2)*cos(_symbol**2 - _symbol) + S.Half*sqrt(S.Pi/2)*(c1*fresnelc(u_minus) + s1*fresnels(u_minus)) + S(1)/4*sqrt(S.Pi/2)*(c1*fresnels(u_minus) - s1*fresnelc(u_minus))
+        result = S.Half*(j_plus + j_minus)
+        return Issue30014Rule(integrand, symbol, result.subs(_symbol, symbol))
     for type_, pattern, constraint, rule in _special_function_patterns:
         if isinstance(_integrand, type_):
             match = _integrand.match(pattern)

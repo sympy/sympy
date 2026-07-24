@@ -368,6 +368,12 @@ def test_issue_3686():  # remove this when fresnel integrals are implemented
         sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2
 
 
+def test_issue_30014():
+    expr = x**2*sin(x**2)*cos(x)
+    antideriv = integrate(expr, x)
+    assert simplify(diff(antideriv, x) - expr) == 0
+
+
 def test_integrate_units():
     m = units.m
     s = units.s
