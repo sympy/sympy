@@ -1985,6 +1985,14 @@ def test_equals():
     S(13)/6)/2 - S.One/4)**2 - Rational(1, 3))
     assert z.equals(0)
 
+    # Test equals/is_constant respecting assumptions
+    xp = Symbol('xp', real=True, positive=True)
+    from sympy import Abs
+    assert sqrt((xp - 1)**2).equals(Abs(xp - 1)) is True
+    # Test random integer respect in _random
+    ni = Symbol('ni', integer=True, positive=True)
+    assert ((-1)**ni).is_constant() is False  # can be 1 or -1
+
 
 def test_random():
     from sympy.functions.combinatorial.numbers import lucas
@@ -1994,6 +2002,16 @@ def test_random():
 
     # issue 8662
     assert Piecewise((Max(x, y), z))._random() is None
+
+    # Test _random respecting assumptions
+    xp = Symbol('xp', real=True, positive=True)
+    for _ in range(10):
+        val = xp._random()
+        assert val is not None and val.is_real and val > 0
+    ni = Symbol('ni', integer=True, positive=True)
+    for _ in range(10):
+        val = ni._random()
+        assert val is not None and float(val).is_integer() and val >= 1
 
 
 @slow
