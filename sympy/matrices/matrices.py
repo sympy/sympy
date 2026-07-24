@@ -146,6 +146,43 @@ class MatrixReductions(MatrixDeterminant):
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
             normalize_last=True):
+        """
+        Return the Reduced Row-Echelon Form (RREF) of the Matrix.
+
+        Parameters
+        ==========
+        iszerofunc : function, optional
+            Function to test if an entry is zero. Default is `_iszero`.
+        simplify : bool, optional
+            Whether to simplify entries during computation. Default is True.
+        pivots : bool, optional
+            If True, also return a tuple of pivot column indices. Default is False.
+
+        Returns
+        =======
+        Matrix
+            The reduced row-echelon form of the matrix.
+        tuple of int
+            (Optional) A tuple of pivot column indices, if `pivots=True`.
+
+        Examples
+        ========
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> M.rref()
+        Matrix([
+            [1, 0, -1],
+            [0, 1,  2]])
+        >>> M.rref(pivots=True)
+        (Matrix([
+            [1, 0, -1],
+            [0, 1,  2]]), (0, 1))
+
+        Notes
+        =====
+        This method performs Gaussian elimination with partial pivoting to
+        transform the matrix to reduced row-echelon form.
+        """
         return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
             pivots=pivots, normalize_last=normalize_last)
 
