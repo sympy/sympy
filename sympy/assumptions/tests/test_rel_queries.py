@@ -7,7 +7,7 @@ from sympy.core import symbols, Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.core.numbers import I
 
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, slow
 x, y, z = symbols("x y z", real=True)
 
 def test_lra_satask():
@@ -122,6 +122,21 @@ def test_number_line_properties():
     # If a <= b, then a + c <= b + c and a - c <= b - c.
     assert ask(a + c <= b + c, a <= b) is True
     assert ask(a - c <= b - c, a <= b) is True
+
+
+@slow
+def test_extended_real_infinite_cancellation():
+    a = Symbol('a')
+    assert ask(a + 1 > a, Q.extended_real(a)) is None
+    assert ask(a + 1 >= a, Q.extended_real(a)) is True
+    assert ask(a >= a + 1, Q.extended_real(a)) is None
+    assert ask(a + 1 <= a, Q.extended_real(a)) is None
+    assert ask(a < a + 1, Q.extended_real(a)) is None
+
+    b = Symbol('b')
+    assert ask(b + 1 > b, Q.real(b)) is True
+    assert ask(b + 1 >= b, Q.real(b)) is True
+    assert ask(b >= b + 1, Q.real(b)) is False
 
 
 @XFAIL
