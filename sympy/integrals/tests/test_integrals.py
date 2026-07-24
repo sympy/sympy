@@ -2262,3 +2262,48 @@ def test_issue_29909():
 
     assert integrate(f, x) == F
     assert F.diff(x).equals(f)
+
+
+def test_weierstrass_jump():
+    # The antiderivative of 1/(a + cos(x)) is built with the Weierstrass
+    # substitution and jumps at the poles of tan(x/2). Those jumps sit inside
+    # the argument of a log, where neither the denominator of the
+    # antiderivative nor the zeros of its logarithms reveal them, so they used
+    # to go uncorrected and the integral of a positive function came out as 0.
+    # These jumps only appear in the log-form antiderivative that an
+    # irrational coefficient produces, so the two discriminating cases below
+    # (which return 0 or a period-shifted value without the fix) must use one.
+    # A rational coefficient instead gives an atan/floor antiderivative that
+    # was already correct, so it does not exercise the fix. Only sqrt(2) is
+    # used, and only twice: integrating it is slow, and sqrt(5) in particular
+    # drives heurisch into a pathological retry.
+
+    # The fix lives in Expr._eval_interval, the routine integrate() uses to
+    # evaluate an antiderivative at the limits, so F._eval_interval(x, a, b)
+    # below is exactly what integrate(1/(sqrt(2) + cos(x)), (x, a, b)) returns.
+    # The sqrt(2) integrand is slow to integrate, so its antiderivative is
+    # formed once and both branches of the correction are driven through it.
+    F = integrate(1/(sqrt(2) + cos(x)), x)
+    # forward branch, full period: the reported bug (returned 0 without the
+    # fix). Its correction comes over a nested-radical denominator that radsimp
+    # denests to exactly 2*pi, as Mathematica gives; the raw result is compared
+    # so that clean-up is guarded too.
+    assert F._eval_interval(x, S(0), 2*pi) == 2*pi
+    # reversed limits take the other branch of the correction
+    assert F._eval_interval(x, 2*pi, S(0)) == -2*pi
+
+    # cheap exact-value sanity checks on the atan/floor path, over one period
+    # and several; 1/(a + cos(x)) over a full period is 2*pi/sqrt(a**2 - 1)
+    assert integrate(1/(2 + cos(x)), (x, 0, 2*pi)) == 2*sqrt(3)*pi/3
+    assert integrate(1/(2 + sin(x)), (x, 0, 2*pi)) == 2*sqrt(3)*pi/3
+    assert integrate(1/(2 + cos(x)), (x, 0, 6*pi)) == 2*sqrt(3)*pi
+
+    # regression guard for the fix itself: the candidate singularities of this
+    # antiderivative include an ImageSet over the integers, which must not be
+    # enumerated or _eval_interval would never terminate
+    assert integrate(1/(2 + cos(x))**2, (x, 0, 2*pi)) == 4*sqrt(3)*pi/9
+
+    # a genuine pole of the integrand must still not yield a finite value; the
+    # radsimp clean-up must not touch these oo/nan results
+    assert integrate(1/(1 - cos(x)), (x, 0, 2*pi)) is S.Infinity
+    assert integrate(1/x, (x, -1, 1)) is S.NaN
