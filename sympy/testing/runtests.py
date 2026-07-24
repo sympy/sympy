@@ -145,14 +145,19 @@ def convert_to_native_paths(lst):
 
 
 def get_sympy_dir():
-    """
-    Returns the root SymPy directory and set the global value
-    indicating whether the system is case sensitive or not.
-    """
     this_file = os.path.abspath(__file__)
-    sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
+    sympy_dir = os.path.join(os.path.dirname(this_file), '..', '..')
     sympy_dir = os.path.normpath(sympy_dir)
-    return os.path.normcase(sympy_dir)
+
+    # Raise a clear error instead of silently finding zero files
+    if not os.path.isdir(os.path.join(sympy_dir, 'doc')):
+        raise RuntimeError(
+            "Could not find the doc/ directory. "
+            "bin/doctest must be run from the root of the SymPy git repository, "
+            "not from an installed version."
+        )
+
+    return sympy_dir
 
 
 def setup_pprint(disable_line_wrap=True):
