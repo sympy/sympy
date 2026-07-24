@@ -2233,6 +2233,19 @@ def test_integration_of_piecewise_with_simbolic_boundaries():
         Piecewise((2*t1, t1 < 0), (2*Min(1, t1), t1 <= Min(1, t1)), (nan, True))
 
 
+def test_issue_14709a():
+    x, h = symbols('x h', positive=True)
+    i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
+    assert i == 5*h**2*pi/16
+
+
+def test_issue_7147():
+    x, a, b, c = symbols('x a b c', positive=True)
+    f = x/sqrt(a*x**2 + b*x + c)**3
+    F = Piecewise((-b*(2*a*x + b)/(a*(4*a*c - b**2)*sqrt(a*x**2 + b*x + c)), Ne(4*a*c - b**2, 0)), (b*(x + b/(2*a))/(4*a*(sqrt(a)*x + b/(2*sqrt(a)))**3), True)) - 1/(a*sqrt(a*x**2 + b*x + c))
+    assert integrate(f, x) == F
+
+
 def test_issue_15566():
     a, m, s = symbols('a m s', real=True)
     t = symbols('t')
