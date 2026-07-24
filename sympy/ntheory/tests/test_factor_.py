@@ -4,7 +4,8 @@ from sympy.core.containers import Dict
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.functions.combinatorial.factorials import factorial as fac
+from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import binomial, factorial as fac
 from sympy.core.numbers import Integer, Rational
 from sympy.external.gmpy import gcd
 
@@ -90,6 +91,29 @@ def test_multiplicity():
     assert multiplicity(Rational(1, 7), Rational(3, 49)) == 2
     assert multiplicity(Rational(2, 7), Rational(7, 2)) == -1
     assert multiplicity(3, Rational(1, 9)) == -2
+
+
+def test_multiplicity_in_binomial():
+    assert multiplicity(3, binomial(4, 2, evaluate=False)) == 1
+    assert multiplicity(12, binomial(4, 2, evaluate=False)) == 0
+    assert multiplicity(2, binomial(-10, 7, evaluate=False)) == 4
+    assert multiplicity(
+        30, binomial(10**100, 10**50, evaluate=False)) == 50
+    assert multiplicity(30, binomial(300, 0, evaluate=False)) == 0
+    assert multiplicity(30, binomial(300, 300, evaluate=False)) == 0
+
+    for args in ((4, 5), (4, -1), (-4, -1)):
+        with pytest.raises(ValueError, match="no such integer exists"):
+            multiplicity(2, binomial(*args, evaluate=False))
+    for base in (-1, 0, 1):
+        with pytest.raises(ValueError, match="factor must be > 1"):
+            multiplicity(base, binomial(4, 2, evaluate=False))
+
+    n = Symbol('n', integer=True)
+    with pytest.raises(ValueError, match="expecting ints or fractions"):
+        multiplicity(2, binomial(n, 2, evaluate=False))
+    with pytest.raises(ValueError, match="expecting ints or fractions"):
+        multiplicity(2, binomial(Rational(3, 2), 1, evaluate=False))
 
 
 def test_multiplicity_in_factorial():
