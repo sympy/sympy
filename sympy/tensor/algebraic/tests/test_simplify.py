@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Tests for simplify.py"""
 from sympy.core.singleton import S
 from sympy.core.numbers import I

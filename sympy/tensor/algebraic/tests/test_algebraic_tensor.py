@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Tests for algebraic_tensor.py"""
 from sympy.core.numbers import I
 from sympy.core.symbol import Symbol

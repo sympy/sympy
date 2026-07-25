@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Tests for algebraic_pure_tensor.py"""
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -451,7 +453,6 @@ def test_pure_tensor_free_symbols_concrete_matrix():
 def test_pure_tensor_free_symbols_mixed():
     """free_symbols unions symbols from coefficient and all factors."""
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
-    A = MatrixSymbol('A', 3, 4)
     M = ImmutableDenseMatrix([[x, 1], [2, x]])
     N = MatrixSymbol('N', 2, 3)
     T = AlgebraicPureTensor(y, M, N)

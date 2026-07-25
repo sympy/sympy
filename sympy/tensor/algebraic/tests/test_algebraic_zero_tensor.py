@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 """Tests for algebraic_zero_tensor.py"""
 from sympy.core.symbol import Symbol
-from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
+from sympy.matrices.expressions import ZeroMatrix
 from sympy.testing.pytest import raises
 from sympy.tensor.algebraic import AlgebraicZeroTensor
 

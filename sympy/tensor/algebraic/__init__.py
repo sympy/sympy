@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Algebraic tensor expressions built from matrix factors.
 
 This module provides classes for representing tensor products of matrix-like
