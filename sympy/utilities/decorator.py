@@ -17,7 +17,7 @@ T = TypeVar('T')
 """A generic type"""
 
 
-	def threaded_factory(func: Callable, use_add: bool) -> Callable:
+def threaded_factory(func: Callable, use_add: bool) -> Callable:
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify
     from sympy.matrices import MatrixBase
