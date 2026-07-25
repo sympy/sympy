@@ -354,3 +354,42 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+def test_refine_sinh():
+    from sympy import sinh, I, sin
+    x = Symbol('x')
+
+    # sinh(0) = 0
+    assert refine(sinh(x), Q.zero(x)) == 0
+
+    # sinh is defined for real x (no simplification, just stays)
+    assert refine(sinh(x), Q.positive(x)) == sinh(x)
+
+    # Imaginary argument: sinh(I*x) = I*sin(x)
+    assert refine(sinh(I*x), Q.real(x)) == I*sin(x)
+
+
+def test_refine_cosh():
+    from sympy import cosh, I, cos
+    x = Symbol('x')
+
+    # cosh(0) = 1
+    assert refine(cosh(x), Q.zero(x)) == 1
+
+    # cosh is always >= 1 for real x
+    assert refine(cosh(x), Q.real(x)) == cosh(x)
+
+    # Imaginary argument: cosh(I*x) = cos(x)
+    assert refine(cosh(I*x), Q.real(x)) == cos(x)
+
+
+def test_refine_tanh():
+    from sympy import tanh
+    x = Symbol('x')
+
+    # tanh(0) = 0
+    assert refine(tanh(x), Q.zero(x)) == 0
+
+    # No simplification for general positive x
+    assert refine(tanh(x), Q.positive(x)) == tanh(x)
+

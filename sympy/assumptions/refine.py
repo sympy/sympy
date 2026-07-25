@@ -533,6 +533,82 @@ def refine_sin_cos(expr, assumptions):
         refined_pow = refine_Pow(pow_expr, assumptions)
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
 
+def refine_sinh(expr, assumptions):
+    """
+    Handler for hyperbolic sine.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, sinh
+    >>> from sympy.assumptions.refine import refine_sinh
+    >>> from sympy.abc import x
+    >>> refine_sinh(sinh(x), Q.zero(x))
+    0
+    >>> refine_sinh(sinh(x), Q.positive(x))
+    sinh(x)
+
+    """
+    arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return S.Zero
+    if ask(Q.real(arg), assumptions):
+        if ask(Q.imaginary(arg), assumptions):
+            # sinh(I*y) = I*sin(y) for real y
+            from sympy import I, sin
+            coeff = arg / I
+            if ask(Q.real(coeff), assumptions):
+                return I * sin(coeff)
+    return expr
+
+
+def refine_cosh(expr, assumptions):
+    """
+    Handler for hyperbolic cosine.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, cosh
+    >>> from sympy.assumptions.refine import refine_cosh
+    >>> from sympy.abc import x
+    >>> refine_cosh(cosh(x), Q.zero(x))
+    1
+
+    """
+    arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return S.One
+    if ask(Q.real(arg), assumptions):
+        if ask(Q.imaginary(arg), assumptions):
+            # cosh(I*y) = cos(y) for real y
+            from sympy import I
+            from sympy.functions.elementary.trigonometric import cos
+            coeff = arg / I
+            if ask(Q.real(coeff), assumptions):
+                return cos(coeff)
+    return expr
+
+
+def refine_tanh(expr, assumptions):
+    """
+    Handler for hyperbolic tangent.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, tanh
+    >>> from sympy.assumptions.refine import refine_tanh
+    >>> from sympy.abc import x
+    >>> refine_tanh(tanh(x), Q.zero(x))
+    0
+
+    """
+    arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return S.Zero
+    return expr
+
 
 def refine_Heaviside(expr, assumptions):
     """
@@ -617,4 +693,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'sinh': refine_sinh,
+    'cosh': refine_cosh,
+    'tanh': refine_tanh,
 }
