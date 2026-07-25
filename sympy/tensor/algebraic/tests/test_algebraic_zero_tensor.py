@@ -131,7 +131,7 @@ def test_algebraic_zero_tensor_properties():
 
 def test_algebraic_zero_tensor_conjugate():
     """Test conjugation of AlgebraicZeroTensor."""
-    Z = AlgebraicZeroTensor((3, 4), (4, 5))
+    Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     assert Z.conjugate() is Z
     assert Z._eval_conjugate() is Z
 

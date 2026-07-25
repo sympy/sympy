@@ -152,7 +152,7 @@ def test_algebraic_tensor_subtraction():
     
     result = S - T1
     # Result may be unwrapped to AlgebraicPureTensor if single term
-    assert isinstance(result, (AlgebraicTensor, AlgebraicPureTensor))
+    assert isinstance(result, AlgebraicPureTensor)
     
     # Subtract same tensor
     result2 = S - S
@@ -160,7 +160,7 @@ def test_algebraic_tensor_subtraction():
     
     # Right subtraction
     result3 = T1 - S
-    assert isinstance(result3, AlgebraicTensor)
+    assert isinstance(result3, AlgebraicPureTensor)
 
 
 def test_algebraic_tensor_multiplication():
