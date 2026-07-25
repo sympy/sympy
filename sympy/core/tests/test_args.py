@@ -5189,6 +5189,28 @@ def test_sympy__tensor__array__expressions__array_expressions__ArraySum():
     assert _test_args(ArraySum(A*sin(a), (a, 1, b)))
 
 
+def test_sympy__tensor__algebraic__algebraic_pure_tensor__AlgebraicPureTensor():
+    from sympy.matrices.expressions import MatrixSymbol
+    from sympy.tensor.algebraic import AlgebraicPureTensor
+    A = MatrixSymbol("A", 2, 2)
+    B = MatrixSymbol("B", 2, 2)
+    assert _test_args(AlgebraicPureTensor(A, B))
+
+
+def test_sympy__tensor__algebraic__algebraic_tensor__AlgebraicTensor():
+    from sympy.matrices.expressions import MatrixSymbol
+    from sympy.tensor.algebraic import AlgebraicPureTensor, AlgebraicTensor
+    A = MatrixSymbol("A", 2, 2)
+    B = MatrixSymbol("B", 2, 2)
+    C = MatrixSymbol("C", 2, 2)
+    assert _test_args(AlgebraicTensor(AlgebraicPureTensor(A, B), AlgebraicPureTensor(C, B)))
+
+
+def test_sympy__tensor__algebraic__algebraic_zero_tensor__AlgebraicZeroTensor():
+    from sympy.tensor.algebraic import AlgebraicZeroTensor
+    assert _test_args(AlgebraicZeroTensor(((2, 2), (2, 2))))
+
+
 def test_sympy__codegen__ast__Assignment():
     from sympy.codegen.ast import Assignment
     assert _test_args(Assignment(x, y))

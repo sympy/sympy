@@ -42,7 +42,7 @@ Composition of pure tensors performs factor-wise matrix multiplication:
     >>> compose_algebraic_pure_tensors(T, AlgebraicPureTensor(X, Y))
     A*X ⊗ B*Y
 
-The :func:`~sympy.tensor.algebraic.simplify.tensorsimplify` function
+The :func:`~sympy.tensor.algebraic.tensorsimplify` function
 can simplify algebraic tensor expressions by combining like terms and
 reducing zero factors.
 

@@ -12,8 +12,8 @@ from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
 This module defines :class:`AlgebraicPureTensor`, the building block for
 algebraic tensor expressions.  A pure tensor represents a single term in
-a tensor expression -- the non-commutative tensor product of matrix-like 
-(which includes vectors) factors, optionally scaled by a commutative 
+a tensor expression -- the non-commutative tensor product of matrix-like
+(which includes vectors) factors, optionally scaled by a commutative
 coefficient.
 
 Each factor must carry ``.shape`` (e.g. any

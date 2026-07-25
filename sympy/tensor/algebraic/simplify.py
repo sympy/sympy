@@ -411,7 +411,7 @@ def tensorsimplify(expr, **kwargs):
 
     Dispatches to the appropriate handler for ``AlgebraicPureTensor``,
     ``AlgebraicTensor``, ``AlgebraicZeroTensor``, or falls back to SymPy's
-    general :func:`simplify` for everything else.
+    general :func:`~sympy.simplify.simplify` for everything else.
 
     Examples
     ========
