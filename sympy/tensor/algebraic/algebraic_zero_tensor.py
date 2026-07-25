@@ -187,5 +187,3 @@ class AlgebraicZeroTensor(Basic):
 
     def _eval_simplify(self, **kwargs):
         return self
-
-

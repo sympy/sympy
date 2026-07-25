@@ -306,5 +306,3 @@ def test_algebraic_zero_tensor_simplify():
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     assert simplify(Z) is Z
     assert Z._eval_simplify() is Z
-
-
