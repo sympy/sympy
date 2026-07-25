@@ -5327,11 +5327,16 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         return _to_TFM(expand_mat, self.var, self.sampling_time)
 
     def _to_state_space(self, ss_cls, *sampling_time):
-        # Realize each entry as a SISO state-space system and stack the
-        # realizations block-diagonally.  The states of entry ``(i, j)`` form
-        # an independent block that is driven only by input ``j`` and seen
-        # only at output ``i``, so the resulting model has as many states as
-        # the sum of the orders of the individual transfer functions.
+        """
+        Realizes each entry as a SISO state-space system and stacks the
+        realizations block-diagonally.
+
+        The states of entry ``(i, j)`` form an independent block that is
+        driven only by input ``j`` and seen only at output ``i``, so the
+        resulting model has as many states as the sum of the orders of the
+        individual transfer functions.
+
+        """
         cells = [tf.doit().rewrite(ss_cls) for tf in self._flat()]
         ni, no = self.num_inputs, self.num_outputs
         n = sum(cell.num_states for cell in cells)
