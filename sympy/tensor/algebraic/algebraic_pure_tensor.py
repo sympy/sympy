@@ -528,7 +528,7 @@ class AlgebraicPureTensor(Basic):
         True
         """
         deep = hints.get('deep', True)
-        
+
         # Check if any arg needs doit evaluation
         changed = False
         new_args = []

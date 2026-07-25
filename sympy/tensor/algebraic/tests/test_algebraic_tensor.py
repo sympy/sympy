@@ -16,27 +16,27 @@ def test_algebraic_tensor_constructor():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
-    
+
     # Two terms
     S = AlgebraicTensor(T1, T2)
     assert S.shape == ((3, 4), (4, 5))
     assert len(S.args) == 2
-    
+
     # Single term unwraps
     S2 = AlgebraicTensor(T1)
     assert S2 == T1
-    
+
     # From addition
     S3 = T1 + T2
     assert isinstance(S3, AlgebraicTensor)
-    
+
     # Cancellation produces zero tensor
     S4 = AlgebraicTensor(T1, -T1)
     assert isinstance(S4, AlgebraicZeroTensor)
-    
+
     # Empty args should raise
     raises(ValueError, lambda: AlgebraicTensor())
 
@@ -47,11 +47,11 @@ def test_algebraic_tensor_shape():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     assert S.shape == ((3, 4), (4, 5))
 
 
@@ -61,13 +61,13 @@ def test_algebraic_tensor_commutativity_pattern():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     assert S.commutativity_pattern == (0, 0)
-    
+
     # With numeric matrix
     M = ImmutableDenseMatrix([[1, 2, 3, 4],
                               [5, 6, 7, 8],
@@ -83,11 +83,11 @@ def test_algebraic_tensor_terms():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     assert len(S.terms) == 2
 
 
@@ -95,9 +95,9 @@ def test_algebraic_tensor_has_zero_term():
     """Test has_zero_term of AlgebraicTensor."""
     A = MatrixSymbol('A', 3, 4)
     B = MatrixSymbol('B', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
-    
+
     S2 = AlgebraicTensor(T1)
     assert S2.has_zero_term() is False
 
@@ -110,27 +110,27 @@ def test_algebraic_tensor_addition():
     D = MatrixSymbol('D', 4, 5)
     E = MatrixSymbol('E', 3, 4)
     F = MatrixSymbol('F', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     T3 = AlgebraicPureTensor(E, F)
-    
+
     S1 = AlgebraicTensor(T1, T2)
-    
+
     # Add pure tensor
     S2 = S1 + T3
     assert isinstance(S2, AlgebraicTensor)
     assert len(S2.args) == 3
-    
+
     # Add another AlgebraicTensor
     S3 = AlgebraicTensor(T3)
     S4 = S1 + S3
     assert isinstance(S4, AlgebraicTensor)
-    
+
     # Right addition
     S5 = T3 + S1
     assert isinstance(S5, AlgebraicTensor)
-    
+
     # Shape mismatch should raise
     G = MatrixSymbol('G', 2, 3)
     H = MatrixSymbol('H', 3, 4)
@@ -144,20 +144,20 @@ def test_algebraic_tensor_subtraction():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
-    
+
     S = AlgebraicTensor(T1, T2)
-    
+
     result = S - T1
     # Result may be unwrapped to AlgebraicPureTensor if single term
     assert isinstance(result, AlgebraicPureTensor)
-    
+
     # Subtract same tensor
     result2 = S - S
     assert isinstance(result2, AlgebraicZeroTensor)
-    
+
     # Right subtraction
     result3 = T1 - S
     assert isinstance(result3, AlgebraicPureTensor)
@@ -169,19 +169,19 @@ def test_algebraic_tensor_multiplication():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     # Scalar multiplication
     S_scaled = S * 2
     assert isinstance(S_scaled, AlgebraicTensor)
-    
+
     # Left scalar multiplication
     S_scaled2 = 2 * S
     assert isinstance(S_scaled2, AlgebraicTensor)
-    
+
     # Composition with pure tensor
     E = MatrixSymbol('E', 4, 2)
     F = MatrixSymbol('F', 5, 3)
@@ -196,11 +196,11 @@ def test_algebraic_tensor_negation():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     S_neg = -S
     assert isinstance(S_neg, AlgebraicTensor)
 
@@ -211,11 +211,11 @@ def test_algebraic_tensor_transpose():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     ST = S.T
     assert ST.shape == ((4, 3), (5, 4))
 
@@ -226,14 +226,14 @@ def test_algebraic_tensor_conjugate():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(1 + I, A, B)
     T2 = AlgebraicPureTensor(2 - I, C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     SC = S.conjugate()
     assert isinstance(SC, AlgebraicTensor)
-    
+
     # Double conjugate
     assert S.conjugate().conjugate() == S
 
@@ -245,14 +245,14 @@ def test_algebraic_tensor_diff():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(x**2, A, B)
     T2 = AlgebraicPureTensor(x, C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     S_diff = S.diff(x)
     assert isinstance(S_diff, AlgebraicTensor)
-    
+
     # Differentiate with symbol not present
     S_diff2 = S.diff(y)
     assert isinstance(S_diff2, AlgebraicZeroTensor)
@@ -264,13 +264,13 @@ def test_algebraic_tensor_doit():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     assert S.doit() == S
-    
+
     # With symbolic coefficients
     from sympy.abc import x, y
     T3 = AlgebraicPureTensor(x, A, B)
@@ -287,10 +287,10 @@ def test_algebraic_tensor_expand():
     A = MatrixSymbol('A', 3, 4)
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 4, 5)
-    
+
     T = AlgebraicPureTensor(A, MatAdd(B, C))
     S = AlgebraicTensor(T)
-    
+
     S_exp = S.expand()
     assert isinstance(S_exp, AlgebraicTensor)
 
@@ -301,11 +301,11 @@ def test_algebraic_tensor_simplify():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     S_simp = S.simplify()
     assert isinstance(S_simp, (AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor))
 
@@ -317,11 +317,11 @@ def test_algebraic_tensor_pickle():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     S = AlgebraicTensor(T1, T2)
-    
+
     S_pickled = pickle.loads(pickle.dumps(S))
     assert S_pickled.shape == S.shape
 
@@ -332,22 +332,22 @@ def test_compose_algebraic_tensors():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 4, 2)
     D = MatrixSymbol('D', 5, 3)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
-    
+
     result = compose_algebraic_tensors(T1, T2)
     assert isinstance(result, AlgebraicPureTensor)
-    
+
     # Compose two sums
     E = MatrixSymbol('E', 3, 4)
     F = MatrixSymbol('F', 4, 5)
     G = MatrixSymbol('G', 4, 2)
     H = MatrixSymbol('H', 5, 3)
-    
+
     S1 = AlgebraicTensor(T1, AlgebraicPureTensor(E, F))
     S2 = AlgebraicTensor(T2, AlgebraicPureTensor(G, H))
-    
+
     result2 = compose_algebraic_tensors(S1, S2)
     assert isinstance(result2, AlgebraicTensor)
 
@@ -358,10 +358,10 @@ def test_shape_mismatch_error():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 2, 3)
     D = MatrixSymbol('D', 3, 4)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
-    
+
     raises(ShapeMismatchError, lambda: AlgebraicTensor(T1, T2))
 
 
@@ -412,10 +412,10 @@ def test_algebraic_tensor_coefficient_collection():
     """Test coefficient collection in AlgebraicTensor."""
     A = MatrixSymbol('A', 3, 4)
     B = MatrixSymbol('B', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(2, A, B)
     T2 = AlgebraicPureTensor(3, A, B)
-    
+
     S = AlgebraicTensor(T1, T2)
     # Coefficients should be collected: 2 + 3 = 5
     assert S.coeff == 5
@@ -425,10 +425,10 @@ def test_algebraic_tensor_with_zero_tensor():
     """Test AlgebraicTensor with AlgebraicZeroTensor."""
     A = MatrixSymbol('A', 3, 4)
     B = MatrixSymbol('B', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     Z = AlgebraicZeroTensor(((3, 4), (4, 5)))
-    
+
     # Adding zero tensor to pure tensor returns the pure tensor
     S = T1 + Z
     assert S == T1
@@ -440,13 +440,13 @@ def test_algebraic_tensor_equality_commutative():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
-    
+
     S1 = T1 + T2
     S2 = T2 + T1
-    
+
     assert S1 == S2
     assert S2 == S1
 
@@ -457,13 +457,13 @@ def test_algebraic_tensor_equality_with_coefficients():
     B = MatrixSymbol('B', 4, 5)
     C = MatrixSymbol('C', 3, 4)
     D = MatrixSymbol('D', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(2, A, B)
     T2 = AlgebraicPureTensor(3, C, D)
-    
+
     S1 = T1 + T2
     S2 = T2 + T1
-    
+
     assert S1 == S2
 
 
@@ -475,14 +475,14 @@ def test_algebraic_tensor_equality_different_terms():
     D = MatrixSymbol('D', 4, 5)
     E = MatrixSymbol('E', 3, 4)
     F = MatrixSymbol('F', 4, 5)
-    
+
     T1 = AlgebraicPureTensor(A, B)
     T2 = AlgebraicPureTensor(C, D)
     T3 = AlgebraicPureTensor(E, F)
-    
+
     S1 = T1 + T2
     S2 = T1 + T3
-    
+
     assert S1 != S2
 
 
