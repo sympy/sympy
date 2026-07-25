@@ -3519,8 +3519,6 @@ def test_conversion():
                    Matrix([[k/tau]]))
     assert SS1.rewrite(TransferFunction)[0][0] == TF4
 
-    # A constant transfer function has no dynamics, so it is realized with
-    # zero states (empty A, B and C matrices) rather than a phantom state.
     SS2 = TF5.rewrite(StateSpace)
     assert SS2 == \
         StateSpace(Matrix(0, 0, []), Matrix(0, 1, []), Matrix(1, 0, []),

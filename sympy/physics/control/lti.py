@@ -1458,14 +1458,6 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         num_coeffs = num_poly.all_coeffs()
         den_coeffs = den_poly.all_coeffs()
 
-        # A constant (degree-0) transfer function has no dynamics, so its
-        # controllable canonical realization has zero states.  Returning a
-        # 1x1 zero state instead introduces an unobservable and
-        # uncontrollable phantom state ``x' = 0*x + 0*u`` that then propagates
-        # through interconnections such as ``Parallel`` (see issue #29179).
-        # Emitting empty ``A``, ``B`` and ``C`` matrices keeps the realization
-        # minimal and consistent with the "number of states equals the
-        # denominator degree" rule used for the non-constant case below.
         if n == 0:
             return (
                 Matrix(0, 0, []),
