@@ -68,6 +68,8 @@ unicode_whitelist = [
     r'*/sympy/tensor/algebraic/tests/test_algebraic_tensor.py',
     r'*/sympy/tensor/algebraic/tests/test_algebraic_zero_tensor.py',
     r'*/sympy/tensor/algebraic/tests/test_simplify.py',
+    #The printing functionality of algebraic tensors is in str.py
+    r'*/sympy/printing/str.py',
 ]
 
 unicode_strict_whitelist = [
