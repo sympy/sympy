@@ -46,7 +46,7 @@ def threaded_factory(func, use_add):
     return threaded_func
 
 
-def threaded(func):
+def threaded(func: callable) -> callable:
     """Apply ``func`` to sub--elements of an object, including :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
@@ -66,7 +66,7 @@ def threaded(func):
     return threaded_factory(func, True)
 
 
-def xthreaded(func):
+def xthreaded(func: callable) -> callable:
     """Apply ``func`` to sub--elements of an object, excluding :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
@@ -218,7 +218,7 @@ def public(obj: T) -> T:
     return obj
 
 
-def memoize_property(propfunc):
+def memoize_property(propfunc: callable) -> property:
     """Property decorator that caches the value of potentially expensive
     ``propfunc`` after the first evaluation. The cached value is stored in
     the corresponding property name with an attached underscore."""
