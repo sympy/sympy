@@ -57,6 +57,9 @@ unicode_whitelist = [
 
     # Explanation of symbols uses greek letters
     r'*/sympy/core/symbol.py',
+
+    # algebraic_pure_tensor uses unicode tensor product symbol in docstrings
+    r'*/sympy/tensor/algebraic/algebraic_pure_tensor.py',
 ]
 
 unicode_strict_whitelist = [
