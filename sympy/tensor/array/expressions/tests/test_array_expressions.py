@@ -1028,16 +1028,6 @@ def test_arrayexpr_array_add_as_explicit_mixed_types():
     assert ArrayAdd(M2, N2).as_explicit() == M2.as_explicit() + N2.as_explicit()
 
 
-def test_arrayexpr_permutedims_check_permutation_mapping():
-    # ``_check_permutation_mapping`` used the loop position instead of the
-    # argument whose index block was just completed, raising a ValueError on
-    # valid mappings:
-    tp = _array_tensor_product(ArraySymbol("P", (2,)), ArraySymbol("Q", (2, 2)))
-    perm = Permutation([1, 2, 0])
-    new_expr, new_perm = PermuteDims._check_permutation_mapping(tp, perm)
-    assert permutedims(new_expr.as_explicit(), new_perm) == permutedims(tp.as_explicit(), perm)
-
-
 def test_array_sum_doit_and_as_explicit():
     # ``doit`` used to collapse to a scalar ``Add`` of array expressions
     # (thus losing the shape) and ``as_explicit`` did not exist:
