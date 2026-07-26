@@ -233,7 +233,9 @@ class SATSolver:
                     res = None
                     if self.lra:
                         res = self.lra.check()
-
+                        self.lra.reset()
+                    else:
+                        res = None
                     if res is None or res[0]:
                         yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}

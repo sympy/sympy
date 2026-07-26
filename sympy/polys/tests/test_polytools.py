@@ -3936,6 +3936,10 @@ def test_poly():
     expr2 = y*(y+1) + S(1)/3
     assert poly(expr2).as_expr() == expr2.expand()
 
+    # https://github.com/sympy/sympy/issues/25341
+    num = 2*x**2 - x*(x + 1) - (x + 1)**2/4
+    assert poly(num, x).as_expr() == num.expand()
+
 
 def test_keep_coeff():
     u = Mul(2, x + 1, evaluate=False)
@@ -4309,3 +4313,11 @@ def test_schur_conditions():
 
     assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
     assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())
+
+
+def test_groebner_reduce_scalar():
+
+    # test for issue https://github.com/sympy/sympy/issues/29828
+    B = groebner([t**2], t, order="lex")
+    assert B.reduce(7) == ([0], 7)
+    assert B.reduce(Integer(7)) == ([0], Integer(7))

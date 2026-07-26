@@ -12,6 +12,7 @@ include sympy/utilities/mathml/data/*.xsl
 
 recursive-include sympy/parsing/latex *.g4 *.txt
 recursive-include sympy/parsing/autolev *.g4 *.al
+recursive-include sympy/parsing/smtlib *.lark
 
 include LICENSE
 include TODO

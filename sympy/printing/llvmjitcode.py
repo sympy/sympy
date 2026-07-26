@@ -285,8 +285,7 @@ class LLVMJitCode:
             pmb.populate(pass_manager)
             pass_manager.run(llmod)
         else:
-            pto = llvm.create_pipeline_tuning_options(speed_level=2,
-                                                      size_level=0)
+            pto = llvm.create_pipeline_tuning_options(speed_level=2)
             pto.loop_vectorization = True
             pass_builder = llvm.create_pass_builder(target_machine, pto)
             pass_manager = pass_builder.getModulePassManager()

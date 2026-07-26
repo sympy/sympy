@@ -9,7 +9,7 @@ from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, EX
 from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.polyoptions import build_options
-from sympy.polys.polyutils import parallel_dict_from_basic
+from sympy.polys.polyutils import parallel_dict_from_basic, _not_a_coeff
 from sympy.utilities import public
 
 
@@ -144,7 +144,7 @@ def _construct_composite(coeffs, opt):
         return None
 
     if opt.composite is None:
-        if any(gen.is_number and gen.is_algebraic for gen in gens):
+        if any(_not_a_coeff(gen) or gen.is_number and gen.is_algebraic for gen in gens):
             return None # generators are number-like so lets better use EX
 
         all_symbols = set()

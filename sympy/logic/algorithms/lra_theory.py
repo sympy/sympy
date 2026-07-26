@@ -103,8 +103,7 @@ but these are not currently implemented.
 TODO:
  - Handle non-rational real numbers
  - Handle positive and negative infinity
- - Implement backtracking and theory proposition
- - Simplify matrix by removing unused variables using Gaussian elimination
+ - Implement backtracking and theory propagation
 
 References
 ==========
@@ -177,11 +176,13 @@ class LRASolver():
 
         self.atom_id_to_boundaries = atom_id_to_boundaries
         self.A = A
-        self.slack = slack_variables
-        self.nonslack = nonslack_variables
-        self.all_var = nonslack_variables + slack_variables
+        self._A0 = A.copy() if self.run_checks else None
+        # initially slack/basic and nonslack/nonbasic mean the same thing.
+        # however, basic/nonbasic can be modified in process meanwhile slack/nonslack stays constant.
+        self.basic = slack_variables
+        self.nonbasic = set(nonslack_variables)
 
-        self.slack_set = set(slack_variables)
+        self.all_var = nonslack_variables + slack_variables
 
         self.bound_history = [[]]
         self.last_assign_snapshot = {var: var.assign for var in self.all_var}
@@ -250,6 +251,7 @@ class LRASolver():
         s_count = 0
         s_subs = {}
         nonbasic = []
+        atom_vars = set()
 
         if testing_mode:
             # sort to reduce nondeterminism
@@ -325,6 +327,8 @@ class LRASolver():
             else:
                 var = terms[0]
 
+            atom_vars.add(var)
+
             assert var_coeff != 0
 
             equality = prop.function == Q.eq
@@ -345,6 +349,11 @@ class LRASolver():
             raise UnhandledInput("Nonlinearity is not handled")
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
+        # matrix A is guaranteed to able to be simplified
+        # by removing the non-basic (e.g original or nonslack) non-atom variables from it
+        # these removed variables will be replaced by linear equation of existing variables.
+        nonatom_vars = {i for i in nonbasic if i not in atom_vars}
+        A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
         basic = [var_to_lra_var[b] for b in basic]
         for idx, var in enumerate(nonbasic + basic):
@@ -354,7 +363,7 @@ class LRASolver():
                            s_subs, testing_mode)
         return solver, conflicts
 
-    def reset_bounds(self):
+    def reset(self):
         """
         Resets the state of the LRASolver to before
         anything was asserted.
@@ -408,6 +417,11 @@ class LRASolver():
             if res and res[0] is False:
                 break
 
+        if self.is_sat and all(b.var in self.nonbasic for b in boundaries):
+            self.is_sat = res is None
+        else:
+            self.is_sat = False
+
         return res
 
     def _assert_bound(self, boundary, literal):
@@ -416,8 +430,10 @@ class LRASolver():
         more limiting. The assignment of variable xi is adjusted to be
         within the new bound if needed.
 
-        Also calls `self._update` to update the assignment for slack variables
+        Also calls `self._update` to update the assignment for basic variables
         to keep all equalities satisfied.
+
+        This method is the combination of AssertUpper and AssertLower in [1]
         """
         xi = boundary.var
         ci, upper = boundary.to_rational(is_negated=literal < 0)
@@ -448,27 +464,27 @@ class LRASolver():
 
         xi.set_bound(boundary, literal)
 
-        if xi in self.nonslack and xi.assign * s > c_norm:
+        if xi in self.nonbasic and xi.assign * s > c_norm:
             self._update(xi, ci)
 
         if self.run_checks and all(not math.isinf(v.assign.q)
                                    for v in self.all_var):
-            M = self.A
             X = Matrix([v.assign.q for v in self.all_var])
-            assert all(abs(val) < 10 ** (-10) for val in M * X)
+            assert all(abs(val) < 10 ** (-10) for val in self._A0 * X)
 
         return None
 
     def _update(self, xi, v):
         """
-        Updates all slack variables that have equations that contain
-        variable xi so that they stay satisfied given xi is equal to v.
+        Updates all basic variables that have equations that contain
+        nonbasic variable xi so that they stay satisfied given xi is equal to v.
         """
         i = xi.col_idx
         assert i is not None
-        for j, b in enumerate(self.slack):
-            aji = self.A[j, i]
-            b.assign = b.assign + (v - xi.assign)*aji
+        dv = v - xi.assign
+        for j, b in enumerate(self.basic):
+            a_ji = self.A[j, i]
+            b.assign = b.assign + dv*a_ji
         xi.assign = v
 
     def check(self):
@@ -489,24 +505,22 @@ class LRASolver():
 
         explanation : set of ints
         """
-        from sympy.matrices.dense import Matrix
-        M = self.A.copy()
-        basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
-        nonbasic = set(self.nonslack)
-
-        # Save snapshot before simplex changes assignments
-        self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+        if self.is_sat:
+            self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+            return True, self.last_assign_snapshot
+        if self.result:
+            return self.result
 
         while True:
             if self.run_checks:
                 # nonbasic variables must always be within bounds
-                assert all(((nb.assign >= nb.lower) == True) and ((nb.assign <= nb.upper) == True) for nb in nonbasic)
+                assert all(((nb.assign >= nb.lower) == True) and ((nb.assign <= nb.upper) == True) for nb in self.nonbasic)
 
                 # assignments for x must always satisfy Ax = 0
                 # probably have to turn this off when dealing with strict ineq
                 if all(not math.isinf(v.assign.q) for v in self.all_var):
                     X = Matrix([v.assign.q for v in self.all_var])
-                    assert all(abs(val) < 10**(-10) for val in M*X)
+                    assert all(abs(val) < 10**(-10) for val in self._A0*X)
 
                 # check upper and lower match this format:
                 # x <= rat + delta iff x < rat
@@ -517,21 +531,20 @@ class LRASolver():
                 assert all(x.upper.d <= 0 for x in self.all_var)
                 assert all(x.lower.d >= 0 for x in self.all_var)
 
-            cand = [b for b in basic if b.assign < b.lower or b.assign > b.upper]
-
-            if len(cand) == 0:
-                return True, {v: v.assign for v in self.all_var}
-
-            xi = min(cand, key=lambda v: v.col_idx) # Bland's rule
-            i = basic[xi]
+            cand = [(r, b) for r, b in enumerate(self.basic)
+                    if b.assign < b.lower or b.assign > b.upper]
+            if not cand:
+                self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+                return True, self.last_assign_snapshot
+            i, xi = min(cand, key=lambda t: t[1].col_idx)  # Bland's rule
 
             if xi.assign < xi.lower:
-                cand = [nb for nb in nonbasic
-                        if (M[i, nb.col_idx] > 0 and nb.assign < nb.upper)
-                        or (M[i, nb.col_idx] < 0 and nb.assign > nb.lower)]
+                cand = [nb for nb in self.nonbasic
+                        if (self.A[i, nb.col_idx] > 0 and nb.assign < nb.upper)
+                        or (self.A[i, nb.col_idx] < 0 and nb.assign > nb.lower)]
                 if len(cand) == 0:
-                    N_plus = [nb for nb in nonbasic if M[i, nb.col_idx] > 0]
-                    N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
+                    N_plus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] > 0]
+                    N_minus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] < 0]
 
                     conflict = []
                     conflict += [nb.upper_literal for nb in N_plus]
@@ -543,16 +556,16 @@ class LRASolver():
                         var.assign = self.last_assign_snapshot[var]
                     return False, conflict
                 xj = min(cand, key=str)
-                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
+                self._pivot_and_update(i, xi, xj, xi.lower)
 
             if xi.assign > xi.upper:
-                cand = [nb for nb in nonbasic
-                        if (M[i, nb.col_idx] < 0 and nb.assign < nb.upper)
-                        or (M[i, nb.col_idx] > 0 and nb.assign > nb.lower)]
+                cand = [nb for nb in self.nonbasic
+                        if (self.A[i, nb.col_idx] < 0 and nb.assign < nb.upper)
+                        or (self.A[i, nb.col_idx] > 0 and nb.assign > nb.lower)]
 
                 if len(cand) == 0:
-                    N_plus = [nb for nb in nonbasic if M[i, nb.col_idx] > 0]
-                    N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
+                    N_plus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] > 0]
+                    N_minus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] < 0]
 
                     conflict_bounds = []
                     conflict_bounds += [nb.upper_literal for nb in N_minus]
@@ -565,40 +578,36 @@ class LRASolver():
                         var.assign = self.last_assign_snapshot[var]
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
-                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
+                self._pivot_and_update(i, xi, xj, xi.upper)
 
-    def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
+    def _pivot_and_update(self, i, xi, xj, v):
         """
         Pivots basic variable xi with nonbasic variable xj,
         and sets value of xi to v and adjusts the values of all basic variables
         to keep equations satisfied.
+
+        i is precomputed in check(), it is solely a parameter just for the small optimization, otherwise the method is exactly like [1] paper.
         """
-        i, j = basic[xi], xj.col_idx
+        j = xj.col_idx
         assert j is not None
-        assert M[i, j] != 0
-        theta = (v - xi.assign)*(1/M[i, j])
+        assert self.A[i, j] != 0
+        theta = (v - xi.assign)*(1/self.A[i, j])
         xi.assign = v
         xj.assign = xj.assign + theta
-        for xk in basic:
-            if xk != xi:
-                k = basic[xk]
-                akj = M[k, j]
-                xk.assign = xk.assign + theta*akj
-        # pivot
-        basic[xj] = basic[xi]
-        del basic[xi]
-        nonbasic.add(xi)
-        nonbasic.remove(xj)
-        return self._pivot(M, i, j)
+        for k in range(len(self.basic)):
+            if k != i:
+                self.basic[k].assign = self.basic[k].assign + theta*self.A[k, j]
+        self._pivot(i, j)
+        self.basic[i] = xj
+        self.nonbasic.discard(xj)
+        self.nonbasic.add(xi)
 
-    @staticmethod
-    def _pivot(M, i, j):
+    def _pivot(self, i, j):
         """
-        Performs a pivot operation about entry i, j of M by performing
-        a series of row operations on a copy of M and returning the result.
-        The original M is left unmodified.
+        Performs a pivot operation about entry i, j of A by performing
+        a series of row operations on A.
 
-        Conceptually, M represents a system of equations and pivoting
+        Conceptually, A represents a system of equations and pivoting
         can be thought of as rearranging equation i to be in terms of
         variable j and then substituting in the rest of the equations
         to get rid of other occurrences of variable j.
@@ -609,7 +618,9 @@ class LRASolver():
         >>> from sympy.matrices.dense import Matrix
         >>> from sympy.logic.algorithms.lra_theory import LRASolver
         >>> from sympy import var
-        >>> Matrix(3, 3, var('a:i'))
+        >>> lra = LRASolver.__new__(LRASolver)
+        >>> lra.A = Matrix(3, 3, var('a:i'))
+        >>> lra.A
         Matrix([
         [a, b, c],
         [d, e, f],
@@ -620,7 +631,8 @@ class LRASolver():
         0 = d*x + e*y + f*z
         0 = g*x + h*y + i*z
 
-        >>> LRASolver._pivot(_, 1, 0)
+        >>> lra._pivot(1, 0)
+        >>> lra.A
         Matrix([
         [ 0, -a*e/d + b, -a*f/d + c],
         [-1,       -e/d,       -f/d],
@@ -633,16 +645,13 @@ class LRASolver():
         0 = -x + (-e/d)*y + (-f/d)*z
         0 = 0 + (h - e*g/d)*y + (i - f*g/d)*z
         """
-        Mij = M[i, j]
-        if Mij == 0:
+        Aij = self.A[i, j]
+        if Aij == 0:
             raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
-        A = M.copy()
-        A[i, :] = -A[i, :]/Mij
-        for row in range(M.shape[0]):
+        self.A[i, :] = -self.A[i, :]/Aij
+        for row in range(self.A.shape[0]):
             if row != i:
-                A[row, :] = A[row, :] + A[row, j] * A[i, :]
-
-        return A
+                self.A[row, :] = self.A[row, :] + self.A[row, j] * self.A[i, :]
 
     def backtrack(self):
         """
@@ -713,6 +722,138 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
+
+
+def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
+    """
+    Remove every non-atom variable from the tableu A. This is discussed in
+    Preprocessing part of the paper [1]_ as the "Gaussian Eliminaton".
+
+    The idea is that, all non-atom variables are dependent of atom variables,
+    which consistent-wise means that solving for atom variables should directly
+    give solutions for non-atom variables.
+
+    Therefore, any information about dependent, or to be more precise, non atom variables
+    in the matrix A is not necessary and can be safely discarded without any correctness worries.
+    E.g in,
+        x >= 0 & x+y >= 1 -> Phi' := (x >= 0 & s1 >= 1), Phi_A := x + y = s1
+    Since y is dependent, solving Phi' alone is enough, and _reduce_matrix should reduce Phi_A
+    into collapsed matrix since it stores no useful information.
+
+    Returns
+    =======
+
+    (A, basic, nonbasic)
+
+    A : Matrix
+        The reduced tableau with every variable in nonatom_vars removed.
+        Has one row per basic and one column per (basic + nonbasic).
+        In case of empty basic, the matrix collapses.
+
+    basic : list
+        The new list of basic variables. The elements (pivots) are basic if and only if
+        the pivots survived elimination. These pivots are new basic becuase they are
+        definitions at this point.
+
+    nonbasic : list
+        The new list of nonbasic variables. Old basic variables can become nonbasic,
+        however nonbasic elements cannot become basic.
+
+    Example
+    =======
+
+    Consider the formula:
+
+        x >= 0 & z <= 1 & (x + y <= 5 | z + y >= 2)
+
+    Here y is the only non-atom variable, so only y is removed, s1 = x+y, s2 = z+y.
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import symbols
+    >>> from sympy.solvers.solveset import linear_eq_to_matrix
+    >>> from sympy.logic.algorithms.lra_theory import _reduce_matrix
+    >>> s1, s2 = symbols('s1 s2')
+    >>> nonbasic, basic = [x, y, z], [s1, s2]
+    >>> A, _ = linear_eq_to_matrix([x + y - s1, z + y - s2], nonbasic + basic)
+    >>> A
+    Matrix([
+    [1, 1, 0, -1,  0],
+    [0, 1, 1,  0, -1]])
+    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y},
+    ...                                     testing_mode=True)
+    >>> basic, nonbasic
+    ([s1], [x, z, s2])
+
+    Notice that s2 became nonbasic.
+
+    >>> A
+    Matrix([[1, -1, 1, -1]])
+
+    It is possible for the matrix A to collapse entirely, which happens when
+    all the remaining terms are linearly independent. Or in other terms, The matrix A
+    is no longer "stores" information about variables as there are no information to store.
+    E.g,
+
+         (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+
+    only x is the atom variable so only y and z is removed, s1 = x+y and s2 = x+2*y-z.
+    >>> nonbasic, basic = [x, y, z], [s1, s2]
+    >>> A, _ = linear_eq_to_matrix([x + y - s1, x + 2 * y - z - s2], nonbasic + basic)
+    >>> A
+    Matrix([
+    [1, 1,  0, -1,  0],
+    [1, 2, -1,  0, -1]])
+    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y, z},
+    ...                                     testing_mode=True)
+    >>> basic, nonbasic
+    ([], [x, s1, s2])
+
+    Basic is empty, which in result should mean A has collapsed.
+    >>> A.shape
+    (0, 3)
+    """
+    if not nonatom_vars:
+        return A, basic, nonbasic
+    if testing_mode:
+        nonatom_vars = sorted(nonatom_vars, key=str)
+        # precondition for all tableu matrices A
+        m = len(basic)
+        n = len(nonbasic+basic)
+        assert A[:, n-m:] == -eye(m)
+
+    kept_nonbasic = [v for v in nonbasic if v not in nonatom_vars]
+    # The order is important because:
+    # 1) rref starts pivoting from left to right, so nonatom_vars should come first
+    # 2) basic var should come after them and possibly reduce them too
+    # Basic vars are also in the form of block matrix -I_m and the rank of that identity
+    # matrix makes so that we never touch kept_nonbasic block matrix
+    sorted_col_order = list(nonatom_vars) + basic + kept_nonbasic
+    var_to_col_orig = {v: i for i, v in enumerate(nonbasic + basic)}
+    # reorder the columns of A by the list sorted_col_order
+    A = A[:, [var_to_col_orig[v] for v in sorted_col_order]]
+
+    B, pivots = A.rref()
+
+    keep_rows = [r for r, pc in enumerate(pivots) if pc >= len(nonatom_vars)]
+    new_basic = [sorted_col_order[pivots[r]] for r in keep_rows]
+    basic_set = set(new_basic)
+    new_nonbasic = [v for v in kept_nonbasic + basic if v not in basic_set]
+
+    var_to_col_sorted = {v: i for i, v in enumerate(sorted_col_order)}
+    # every basic should have -1 coefficent by convention, and rref gives 1 coeff.
+    # to all the basic variables. So we have to negative B.
+    A = -B[keep_rows, [var_to_col_sorted[v] for v in new_nonbasic + new_basic]]
+    if testing_mode:
+        # all the nonaotm_vars should be removed
+        assert set(nonatom_vars).isdisjoint(new_basic + new_nonbasic)
+        # new basic variables should be a subset of old basic variables
+        assert set(new_basic) <= set(basic)
+        # new nonbasic variables should be a subset of union of old basic and non-atom nonbasics
+        assert set(new_nonbasic) <= set(kept_nonbasic) | set(basic)
+        # precondition for all tableu matrices A
+        m = len(new_basic)
+        n = len(new_nonbasic+new_basic)
+        assert A[:, n-m:] == -eye(m)
+    return A, new_basic, new_nonbasic
 
 
 class Boundary:
