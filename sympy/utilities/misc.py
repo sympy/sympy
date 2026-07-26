@@ -403,7 +403,7 @@ def replace(string: str, *reps: tuple[dict[str, str] | tuple[str, str], ...]) ->
             final_reps = kv
         else:
             assert isinstance(kv, tuple)
-            return string.replace(kv[0], kv[1])
+            return string.replace(kv[0], kv[1]) # type: ignore[arg-type]
     else:
         final_reps = dict(reps) # type: ignore
     return _replace(final_reps)(string)
