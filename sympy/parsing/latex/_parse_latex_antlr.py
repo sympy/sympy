@@ -88,7 +88,6 @@ def parse_latex(sympy, strict=False):
         raise LaTeXParsingError(
             "LaTeX expression is too deeply nested"
         ) from exc
-        
     if strict and (relation.start.start != 0 or relation.stop.stop != len(sympy) - 1):
         raise LaTeXParsingError("Invalid LaTeX")
     expr = convert_relation(relation)
