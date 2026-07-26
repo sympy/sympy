@@ -74,11 +74,11 @@ def strlines(s: str, c: int = 64, short: bool =  False) -> str:
     quote_char = '"' if repr(s).startswith('"') else "'"
     quote_tuple = (quote_char,)*2
     if '\\' in s:  # use r-string
-        m = '(\nr%s%%s%s\n)' % quote_char
+        m = '(\nr%s%%s%s\n)' % quote_tuple  # <-- Use quote_tuple
         j = '%s\nr%s' % quote_tuple
         c -= 3
     else:
-        m = '(\n%s%%s%s\n)' % quote_char
+        m = '(\n%s%%s%s\n)' % quote_tuple  # <-- Use quote_tuple
         j = '%s\n%s' % quote_tuple
         c -= 2
     out = []
