@@ -82,7 +82,13 @@ def parse_latex(sympy, strict=False):
     parser.removeErrorListeners()
     parser.addErrorListener(matherror)
 
-    relation = parser.math().relation()
+    try:
+        relation = parser.math().relation()
+    except RecursionError as exc:
+        raise LaTeXParsingError(
+            "LaTeX expression is too deeply nested"
+        ) from exc
+        
     if strict and (relation.start.start != 0 or relation.stop.stop != len(sympy) - 1):
         raise LaTeXParsingError("Invalid LaTeX")
     expr = convert_relation(relation)
