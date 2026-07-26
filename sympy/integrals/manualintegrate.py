@@ -33,10 +33,10 @@ from sympy import SYMPY_DEBUG
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, expand_trig
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Number, E
+from sympy.core.numbers import Integer, Number, E, Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
@@ -64,6 +64,7 @@ from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
+from sympy.simplify.fu import TR1, TR2
 from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
@@ -2018,6 +2019,102 @@ def quadratic_denom_rule(integral):
 
     return
 
+def weierstrass_substitution(integral):
+     # look for rational function in sin/cos
+    integrand, x = integral
+
+    TRIG = (sin, cos, tan, cot, sec, csc)
+
+    trig_atoms = tuple(ordered(integrand.atoms(*TRIG)))
+
+    if not trig_atoms:
+        return None
+    if integrand.is_rational_function(*trig_atoms) is not True:
+        return None
+    masked = integrand.xreplace({atom: Dummy() for atom in trig_atoms})
+    # esclude x*sin(x)
+    if masked.has(x):
+        return None
+
+    variable_atoms = []
+    for atom in trig_atoms:
+        argument = atom.args[0]
+        # exclude sin(cos(x))
+        if not argument.is_polynomial(x):
+            return None
+        argument = Poly(argument, x)
+        # exclude sin(2*x**2)
+        if argument.degree() > 1:
+            return None
+        # skip constants
+        if argument.degree() == 0:
+            continue
+        coeff = argument.nth(1)
+        phase = argument.nth(0)
+        variable_atoms.append((atom, coeff, phase))
+
+    if not variable_atoms:
+        return None
+
+    coeff0 = variable_atoms[0][1]
+    ratios = []
+    for _, coeff, _ in variable_atoms:
+        ratio = (coeff / coeff0).cancel()
+        # use this insted of is_rational to avoid taking 3/a
+        # if a is declared rational
+        if not isinstance(ratio, Rational):
+            return None
+        ratios.append(ratio)
+
+    denominator_lcm = lcm_list([ratio.q for ratio in ratios])
+    omega = (coeff0 / denominator_lcm).cancel()
+    u = Dummy("u")
+    replacements = {}
+    ODD_TRIG = (sin, tan, cot, csc)
+    for atom, coeff, phase in variable_atoms:
+        harmonic = (coeff / omega).cancel()
+        if harmonic.is_negative:
+            # take - outside to help expand_trig work at first attempt
+            # for example tan(-2*u + b) would not work with minus inside (would leave tan(2*u))
+            positive_argument = -harmonic*u - phase
+            replacement = atom.func(positive_argument)
+            if atom.func in ODD_TRIG:
+                replacement = -replacement
+        else:
+            replacement = atom.func(harmonic*u + phase)
+    replacements[atom] = replacement
+    expr_u = integrand.xreplace(replacements)
+    # rewrites sin, cos, tan to substitute, for example
+    # cos(2*u + 2) as (2*cos(u)**2 - 1)*cos(2) - 2*sin(2)*sin(u)*cos(u)
+    expr_u = expand_trig(expr_u)
+
+    t = Dummy("t")
+    transformed = expr_u.xreplace({
+        sin(u): 2*t/(1 + t**2),
+        cos(u): (1 - t**2)/(1 + t**2),
+        tan(u): 2*t/(1 - t**2),
+        cot(u): (1 - t**2)/(2*t),
+    })
+
+    # divide by omega, omega = 0 is a degenerate condition
+    transformed = transformed * 2/(omega*(1 + t**2))
+
+    generic_substep = integral_steps(transformed, t)
+    if generic_substep.contains_dont_know():
+        return None
+
+    generic_step = URule(integrand, x, t, tan(omega*x/2), generic_substep)
+
+    if omega.is_zero is False:
+        return generic_step
+
+    zero_replacements = {atom: atom.func(phase) for atom, _, phase in variable_atoms}
+    zero_integrand = integrand.xreplace(zero_replacements)
+    zero_substep = integral_steps(zero_integrand, x)
+    if zero_substep.contains_dont_know():
+        return None
+
+    return PiecewiseRule(integrand, x, [(zero_substep, Eq(omega, 0)), (generic_step, S.true)])
 
 def sqrt_fractional_linear_rule(integral : IntegralInfo):
     """
@@ -2792,7 +2889,8 @@ def integral_steps(integrand, symbol, **options):
             Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
                         null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule)),
+                        null_safe(sqrt_fractional_linear_rule),
+                        null_safe(weierstrass_substitution)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
@@ -2800,7 +2898,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(trig_cmplx_exp_rule)),
+                        null_safe(trig_cmplx_exp_rule),
+                        null_safe(weierstrass_substitution)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
