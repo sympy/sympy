@@ -71,15 +71,15 @@ def strlines(s: str, c: int = 64, short: bool =  False) -> str:
         raise ValueError('expecting string input')
     if '\n' in s:
         return rawlines(s)
-    q = '"' if repr(s).startswith('"') else "'"
-    q = (q,)*2
+    quote_char = '"' if repr(s).startswith('"') else "'"
+    quote_tuple = (quote_char,)*2
     if '\\' in s:  # use r-string
-        m = '(\nr%s%%s%s\n)' % q
-        j = '%s\nr%s' % q
+        m = '(\nr%s%%s%s\n)' % quote_char
+        j = '%s\nr%s' % quote_tuple
         c -= 3
     else:
-        m = '(\n%s%%s%s\n)' % q
-        j = '%s\n%s' % q
+        m = '(\n%s%%s%s\n)' % quote_char
+        j = '%s\n%s' % quote_tuple
         c -= 2
     out = []
     while s:
@@ -210,11 +210,11 @@ def debug_decorator(func: _CallableT) -> _CallableT:
                 return r
             if len(subtrees) == 0:
                 return ""
-            f = []
+            parts = []
             for a in subtrees[:-1]:
-                f.append(indent(a))
-            f.append(indent(subtrees[-1], 2))
-            return ''.join(f)
+                parts.append(indent(a))
+            parts.append(indent(subtrees[-1], 2))
+            return ''.join(parts)
 
         # If there is a bug and the algorithm enters an infinite loop, enable the
         # following lines. It will print the names and parameters of all major functions
@@ -400,12 +400,12 @@ def replace(string: str, *reps: tuple[dict[str, str] | tuple[str, str], ...]) ->
     if len(reps) == 1:
         kv = reps[0]
         if isinstance(kv, dict):
-            reps = kv
+            final_reps = kv
         else:
-            return string.replace(*kv)
+            return string.replace(kv[0], kv[1])
     else:
-        reps = dict(reps)
-    return _replace(reps)(string)
+        final_reps = dict(reps) # type: ignore
+    return _replace(final_reps)(string)
 
 
 def translate(s: str, a: dict[str, str] | str | None, b: str | None = None, c: str | None = None) -> str:
@@ -470,13 +470,14 @@ def translate(s: str, a: dict[str, str] | str | None, b: str | None = None, c: s
                 a, b = [''.join(i) for i in list(zip(*short.items()))]
             else:
                 a = b = ''
-        elif len(a) != len(b):
+        elif isinstance(a, str) and isinstance(b, str) and len(a) != len(b):
             raise ValueError('oldchars and newchars have different lengths')
 
     if c:
         val = str.maketrans('', '', c)
         s = s.translate(val)
     s = replace(s, mr)
+    assert isinstance(a, str) and isinstance(b, str)
     n = str.maketrans(a, b)
     return s.translate(n)
 
