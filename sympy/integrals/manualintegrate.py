@@ -54,7 +54,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
     cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.error_functions import (erf, erfc, erfi, fresnelc,
-    fresnels, Ci, Chi, Si, Shi, Ei, li)
+    fresnels, Ci, Chi, Si, Shi, Ei, li, OwenT)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.elliptic_integrals import elliptic_e, elliptic_f
 from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
@@ -1053,6 +1053,26 @@ class ErfRule(AtomicRule):
                 erfi((2*a*x + b)/(2*sqrt(a)))
 
 
+class OwenTRule(AtomicRule):
+
+    __slots__ = ("a", "b", "y")
+
+    a: Expr
+    b: Expr
+    y: Symbol
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, y: Symbol
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.y = y
+
+    def eval(self) -> Expr:
+        a, b, y, x = self.a, self.b, self.y, self.variable
+        return - 2*sqrt(S.Pi)/a * OwenT(sqrt(2)*(a*x+b), y)
+
 class FresnelCRule(AtomicRule):
 
     __slots__ = ("a", "b", "c")
@@ -1468,7 +1488,8 @@ def special_function_rule(integral):
         d = Wild('d', exclude=[_symbol], properties=[lambda x: not x.is_zero])
         e = Wild('e', exclude=[_symbol], properties=[
             lambda x: not (x.is_nonnegative and x.is_integer)])
-        _wilds.extend((a, b, c, d, e))
+        y = Wild('y', exclude=[_symbol], properties=[lambda x: x.is_symbol])
+        _wilds.extend((a, b, c, d, e, y))
         # patterns consist of a SymPy class, a wildcard expr, an optional
         # condition coded as a lambda (when Wild properties are not enough),
         # followed by an applicable rule
@@ -1482,6 +1503,7 @@ def special_function_rule(integral):
             (Mul, sinh(linear_pattern, evaluate=False)/_symbol, None, ShiRule),
             (Pow, 1/log(linear_pattern, evaluate=False), None, LiRule),
             (exp, exp(quadratic_pattern, evaluate=False), None, ErfRule),
+            (Mul, exp(-(linear_pattern)**2, evaluate=False) * erf(y*(linear_pattern)), None, OwenTRule),
             (sin, sin(quadratic_pattern, evaluate=False), None, FresnelSRule),
             (cos, cos(quadratic_pattern, evaluate=False), None, FresnelCRule),
             (Mul, _symbol**e*exp(a*_symbol, evaluate=False), None, UpperGammaRule),
