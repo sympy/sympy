@@ -3626,4 +3626,4 @@ def test_inverse_trig_range_check():
     assert solveset(Eq(acos(x), -1), x, domain=S.Reals) == S.EmptySet
 
     assert solveset(Eq(atan(x), 2), x, domain=S.Reals) == S.EmptySet
-    assert solveset(Eq(acosh(x), -1), x, domain=S.Reals) == S.EmptySet    
+    assert solveset(Eq(acosh(x), -1), x, domain=S.Reals) == S.EmptySet

@@ -275,7 +275,6 @@ def _invert_real(f, g_ys, symbol):
             imageset(Lambda(n, sech(n)), g_ys),
             symbol
         )
-    
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         return _invert_real(f.exp,
@@ -461,7 +460,7 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
                     return (f, g_ys)
             return _invert_real(f.args[0],
                 imageset(n, acsch(n), g_ys_dom), symbol)
-        
+
     elif isinstance(f, (asin, acos, atan, acot, asec, acsc,
                     acosh, asech)):
         n = Dummy('n', real=True)
@@ -514,7 +513,7 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
                 f.args[0],
                 imageset(n, sech(n), g_ys),
                 symbol
-            )    
+            )
 
     elif isinstance(f, TrigonometricFunction) and isinstance(g_ys, FiniteSet):
         def _get_trig_inverses(func):
