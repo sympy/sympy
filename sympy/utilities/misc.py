@@ -168,9 +168,9 @@ def rawlines(s: str) -> str:
     else:
         joined_lines = '\n    '.join(lines)
         if triple[0]:
-            return 'dedent("""\\\n    %s""")' % rv
+            return 'dedent("""\\\n    %s""")' % joined_lines
         else:
-            return "dedent('''\\\n    %s''')" % rv
+            return "dedent('''\\\n    %s''')" % joined_lines
 
 ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
