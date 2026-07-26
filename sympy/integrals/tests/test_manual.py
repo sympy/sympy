@@ -434,6 +434,10 @@ def test_manualintegrate_owent():
     F = -2*sqrt(pi)*OwenT(sqrt(2)*(3*x + 2), y)/3
     assert_is_integral_of(f, F)
 
+    f = OwenT(x, y)
+    F = x*OwenT(x, y) + sqrt(2)*(sqrt(2)*y*erfi(x*(-y**2 - 1)/(2*sqrt(-y**2/2 - S.One/2)))/(2*sqrt(-y**2/2 - S.One/2)) - exp(-x**2/2)*erf(sqrt(2)*x*y/2))/(4*sqrt(pi))
+    assert_is_integral_of(f, F)
+
 
 def test_manualintegrate_derivative():
     assert manualintegrate(pi * Derivative(x**2 + 2*x + 3), x) == \
