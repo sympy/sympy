@@ -254,14 +254,12 @@ def test_zeromatrix_cannot_add_to_multifactor_zero_tensor():
 
 
 def test_zeromatrix_compose_with_zero_tensor():
-    """ZeroMatrix * AlgebraicZeroTensor routes through MatMul; reverse raises TypeError."""
+    """ZeroMatrix * AlgebraicZeroTensor raises TypeError; reverse raises TypeError."""
     zm = AlgebraicZeroTensor((3, 4))  # dispatches to ZeroMatrix
     azt = AlgebraicZeroTensor(((3, 4), (4, 5)))
 
-    # ZeroMatrix.__mul__ routes through MatMul (not compose_algebraic_tensors),
-    # producing a MatMul result rather than raising an error.
-    result = zm * azt
-    assert result.shape == zm.shape  # MatMul simplifies zero * anything -> zero
+    # ZeroMatrix.__mul__ now rejects non-Expr operands with TypeError.
+    raises(TypeError, lambda: zm * azt)
 
     # Reverse: AlgebraicZeroTensor.__mul__ rejects ZeroMatrix with TypeError
     raises(TypeError, lambda: azt * zm)

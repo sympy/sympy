@@ -337,11 +337,8 @@ def test_pure_tensor_compose_with_dispatched_zeromatrix():
     B = MatrixSymbol("B", 4, 5)
     pt = AlgebraicPureTensor(A, B)
 
-    # ZeroMatrix.__mul__ routes through MatMul, not compose_algebraic_tensors.
-    # MatMul.as_coeff_matrices does not handle AlgebraicPureTensor (is_Matrix=False,
-    # is_commutative=False) and raises NotImplementedError. This is a known Matrix
-    # bug: __mul__ lacks sufficient instance checks for tensor types.
-    raises(NotImplementedError, lambda: zm * pt)
+    # ZeroMatrix.__mul__ now rejects non-Expr operands with TypeError.
+    raises(TypeError, lambda: zm * pt)
 
     # Reverse: AlgebraicPureTensor.__mul__ rejects ZeroMatrix with TypeError
     raises(TypeError, lambda: pt * zm)
