@@ -261,6 +261,10 @@ def test_manualintegrate_trivial_substitution():
 def test_manualintegrate_rational():
     assert manualintegrate(1/(4 - x**2), x) == -log(x - 2)/4 + log(x + 2)/4
     assert manualintegrate(1/(-1 + x**2), x) == log(x - 1)/2 - log(x + 1)/2
+    # apart splits this into 1/(x + 1) and the undecomposable 1/(x**4 + 1).
+    f = (x**4 + x + 2)/((x + 1)*(x**4 + 1))
+    F = manualintegrate(f, x)
+    assert (F.diff(x) - f).cancel() == 0
 
 
 def test_manualintegrate_special():

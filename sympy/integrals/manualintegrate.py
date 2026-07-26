@@ -62,6 +62,7 @@ from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
     OrthogonalPolynomial)
 from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
+from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
 from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
@@ -598,6 +599,15 @@ class SqrtQuadraticRule(AtomicRule):
     def eval(self) -> Expr:
         step = sqrt_quadratic_rule(IntegralInfo(self.integrand, self.variable), degenerate=False)
         return step.eval()
+
+
+class RatintRule(AtomicRule):
+    """Integrate a rational function using ``ratint`` as a fallback."""
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        return ratint(self.integrand, self.variable)
 
 
 class AlternativeRule(Rule):
@@ -2752,9 +2762,20 @@ def substitution_rule(integral):
             return ways[0]
 
 
-partial_fractions_rule = rewriter(
-    lambda integrand, symbol: integrand.is_rational_function(),
-    lambda integrand, symbol: integrand.apart(symbol))
+def partial_fractions_rule(integral):
+    integrand, symbol = integral
+    if not integrand.is_rational_function(symbol):
+        return
+
+    rewritten = integrand.apart(symbol)
+    if rewritten == integrand:
+        # If apart cannot decompose the rational function any further,
+        # use ratint as the final fallback for rational integration.
+        return RatintRule(integrand, symbol)
+
+    substep = integral_steps(rewritten, symbol)
+    if not isinstance(substep, DontKnowRule):
+        return RewriteRule(integrand, symbol, rewritten, substep)
 
 cancel_rule = rewriter(
     # lambda integrand, symbol: integrand.is_algebraic_expr(),
