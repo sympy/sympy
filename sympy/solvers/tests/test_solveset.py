@@ -3615,3 +3615,15 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+def test_inverse_trig_range_check():
+    x = symbols('x')
+
+    assert solveset(Eq(asin(x), 2), x, domain=S.Reals) == S.EmptySet
+    assert solveset(Eq(asin(x), -2), x, domain=S.Reals) == S.EmptySet
+
+    assert solveset(Eq(acos(x), 4), x, domain=S.Reals) == S.EmptySet
+    assert solveset(Eq(acos(x), -1), x, domain=S.Reals) == S.EmptySet
+
+    assert solveset(Eq(atan(x), 2), x, domain=S.Reals) == S.EmptySet
+    assert solveset(Eq(acosh(x), -1), x, domain=S.Reals) == S.EmptySet    
