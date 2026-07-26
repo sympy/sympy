@@ -61,12 +61,6 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import (numbered_symbols, has_dups,
                                        is_sequence, iterable)
 from sympy.calculus.util import periodicity, continuous_domain, function_range
-from sympy.functions.elementary.trigonometric import (
-    asin, acos, atan, acot, asec, acsc,
-)
-from sympy.functions.elementary.hyperbolic import (
-    acosh, asech,
-)
 
 
 from types import GeneratorType
