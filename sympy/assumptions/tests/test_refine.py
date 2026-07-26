@@ -341,7 +341,6 @@ def test_floor_ceiling():
     assert refine(floor(floor(x)+ floor(y))) == floor(x) + floor(y)
     assert refine(ceiling(ceiling(x) - ceiling(y))) == ceiling(x) - ceiling(y)
 
-
 def test_Heaviside():
     assert refine(Heaviside(x), Q.positive(x)) == 1
     assert refine(Heaviside(x), Q.negative(x)) == 0
@@ -368,7 +367,6 @@ def test_refine_sinh():
     # Imaginary argument: sinh(I*x) = I*sin(x)
     assert refine(sinh(I*x), Q.real(x)) == I*sin(x)
 
-
 def test_refine_cosh():
     from sympy import cosh, I, cos
     x = Symbol('x')
@@ -382,7 +380,6 @@ def test_refine_cosh():
     # Imaginary argument: cosh(I*x) = cos(x)
     assert refine(cosh(I*x), Q.real(x)) == cos(x)
 
-
 def test_refine_tanh():
     from sympy import tanh
     x = Symbol('x')
@@ -392,4 +389,3 @@ def test_refine_tanh():
 
     # No simplification for general positive x
     assert refine(tanh(x), Q.positive(x)) == tanh(x)
-
