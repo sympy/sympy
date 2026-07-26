@@ -190,9 +190,11 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     assert convert_array_to_matrix(cg) == DiagMatrix(x)
 
     cg = _array_diagonal(_array_tensor_product(I, x, A, B), (1, 2), (5, 6))
-    assert _array_diag2contr_diagmatrix(cg) == _array_diagonal(_array_contraction(_array_tensor_product(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (5, 6))
-    # TODO: this is returning a wrong result:
-    # convert_array_to_matrix(cg)
+    # The surviving diagonal indices have to be remapped to the new layout
+    # after "x" has been replaced by OneArray(1) (axes shift by one) and the
+    # contracted axes have been removed:
+    assert _array_diag2contr_diagmatrix(cg) == _array_diagonal(_array_contraction(_array_tensor_product(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (3, 4))
+    assert convert_array_to_matrix(cg) == _permute_dims(_array_diagonal(_array_tensor_product(DiagMatrix(x), A, B), (3, 4)), [0, 2, 3, 1, 4])
 
     cg = _array_diagonal(_array_tensor_product(I1, a, b), (1, 3, 5))
     assert convert_array_to_matrix(cg) == a*b.T
@@ -820,3 +822,139 @@ def test_convert_array_to_matrix_diagonal_of_contraction_with_identity():
     conv = convert_array_to_matrix(ArrayDiagonal(_array_contraction(
         _array_tensor_product(In, In, M1), (0, 4)), (0, 2)))
     assert conv is not None
+
+
+def _explicit_equal_squeezed(expr, conv, subs):
+    # Compare the explicit forms of ``expr`` and ``conv`` after substituting
+    # the matrix symbols numerically, ignoring size-1 axes (which
+    # convert_array_to_matrix is allowed to drop or add).
+    import itertools as _it
+    from sympy import ImmutableDenseNDimArray
+
+    def _squeezed(e):
+        e = e.xreplace(subs).doit()
+        e = e.as_explicit() if hasattr(e, "as_explicit") else e
+        if not hasattr(e, "shape") or e.shape == ():
+            return [S(e)], ()
+        e = ImmutableDenseNDimArray(e)
+        flat = [e[ix] for ix in _it.product(*[range(s) for s in e.shape])]
+        return flat, tuple(s for s in e.shape if s != 1)
+
+    return _squeezed(expr) == _squeezed(conv)
+
+
+def test_convert_array_to_matrix_diag2contraction_stale_indices():
+    # _array_diag2contr_diagmatrix replaces a vector argument by OneArray and
+    # appends a DiagMatrix at the end of the tensor product: the surviving
+    # diagonal indices used to keep the old axis numbering, giving numerically
+    # wrong results (or a ValueError):
+    from sympy import Matrix
+    n = 2
+    A1 = MatrixSymbol("A1", n, n)
+    B1 = MatrixSymbol("B1", n, n)
+    a1 = MatrixSymbol("a1", n, 1)
+    subs = {A1: Matrix([[2, 7], [11, 13]]), B1: Matrix([[17, 19], [23, 29]]),
+            a1: Matrix([[3], [5]])}
+
+    cg = _array_diagonal(_array_tensor_product(a1, A1, B1), (0, 2), (3, 4))
+    assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+    # This variant used to raise ValueError("diagonalizing indices of
+    # different dimensions"):
+    cg = _array_diagonal(_array_tensor_product(A1, a1, B1), (0, 2), (1, 4))
+    assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+
+def test_convert_array_to_matrix_remove_trivial_dims_pending():
+    # In the ArrayTensorProduct handler of _remove_trivial_dims, merging a
+    # (1, 1) matrix into the previous argument used to reset the
+    # pending/prev_i bookkeeping, so the following vector argument was
+    # multiplied with the wrong ordering/transposition and the "removed" list
+    # went out of sync with the returned expression:
+    from sympy import Matrix
+    from sympy.tensor.array.expressions.array_expressions import get_shape
+    n = 2
+    A1 = MatrixSymbol("A1", n, n)
+    a1 = MatrixSymbol("a1", n, 1)
+    b1 = MatrixSymbol("b1", n, 1)
+    r1 = MatrixSymbol("r1", 1, 3)
+    x1 = MatrixSymbol("x1", 1, 1)
+    subs = {A1: Matrix([[2, 7], [11, 13]]), a1: Matrix([[3], [5]]),
+            b1: Matrix([[31], [37]]), r1: Matrix([[41, 43, 47]]),
+            x1: Matrix([[53]])}
+
+    for cg in [
+        _array_tensor_product(r1, x1, b1),
+        _array_tensor_product(b1, x1, a1, A1),
+        _array_tensor_product(r1, x1, r1),
+        _array_tensor_product(x1, b1),
+    ]:
+        # Contract of _remove_trivial_dims: "removed" must list exactly the
+        # original axes that were dropped:
+        newexpr, removed = _remove_trivial_dims(cg)
+        kept = [i for i in range(len(cg.shape)) if i not in removed]
+        assert get_shape(newexpr) == tuple(cg.shape[i] for i in kept)
+        assert _explicit_equal_squeezed(cg, newexpr, subs)
+        assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+    # This wrapper expression used to raise ShapeError because of the broken
+    # "removed" bookkeeping:
+    cg = _array_diagonal(_array_tensor_product(b1, x1, a1, A1), (6, 7), (2, 3), (0, 4))
+    assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+
+def test_convert_array_to_matrix_identity_contractions():
+    # identify_removable_identity_matrices used to insert a raw OneArray into
+    # the editor instead of an _ArgE wrapper, raising AttributeError:
+    cg = _array_contraction(_array_tensor_product(I, I), (0, 1, 2))
+    assert convert_array_to_matrix(cg) == OneArray(k)
+
+    # remove_identity_matrices used to raise an AssertionError when the
+    # non-identity argument carries the contraction index on both of its axes
+    # (this expression is the diagonal of M, of shape (k,)):
+    from sympy import Matrix
+    cg = _array_contraction(_array_tensor_product(M, I), (0, 1, 2))
+    conv = convert_array_to_matrix(cg)
+    n = 2
+    M1 = MatrixSymbol("M1", n, n)
+    In = Identity(n)
+    cgn = _array_contraction(_array_tensor_product(M1, In), (0, 1, 2))
+    subs = {M1: Matrix([[2, 7], [11, 13]])}
+    assert _explicit_equal_squeezed(cgn, convert_array_to_matrix(cgn), subs)
+
+
+def test_convert_array_to_matrix_single_axis_sum():
+    # Single-axis contractions (row/column sums) of a generic matrix used to
+    # fail with an AssertionError, only vectors were special-cased:
+    Xm = MatrixSymbol("Xm", m, n)
+    assert convert_array_to_matrix(_array_contraction(Xm, (0,))) == OneMatrix(1, m) * Xm
+    assert convert_array_to_matrix(_array_contraction(Xm, (1,))) == Xm * OneMatrix(n, 1)
+    assert convert_array_to_matrix(_array_contraction(M, (0,))) == OneMatrix(1, k) * M
+
+    from sympy import Matrix
+    D1 = MatrixSymbol("D1", 3, 2)
+    subs = {D1: Matrix([[2, 7], [11, 13], [17, 19]])}
+    for cg in [_array_contraction(D1, (0,)), _array_contraction(D1, (1,))]:
+        assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+
+def test_convert_array_to_matrix_scalar_addends():
+    # _a2m_add used to build a MatAdd even when all the addends had been
+    # converted to scalars (traces), raising a TypeError:
+    cg = ArrayAdd(_array_contraction(_array_tensor_product(A, B), (0, 2), (1, 3)),
+                  _array_contraction(_array_tensor_product(A, B), (0, 3), (1, 2)))
+    assert convert_array_to_matrix(cg) == Trace(A * B) + Trace(A * B.T)
+
+
+def test_convert_array_to_matrix_scalar_times_array():
+    # _a2m_tensor_product used to multiply a scalar into an _ArrayExpr
+    # element (e.g. OneArray) in place, creating a shapeless Mul and crashing
+    # the conversion later on:
+    from sympy import Matrix
+    n = 2
+    A1 = MatrixSymbol("A1", n, n)
+    b1 = MatrixSymbol("b1", n, 1)
+    subs = {A1: Matrix([[2, 7], [11, 13]]), b1: Matrix([[3], [5]])}
+    cg = _array_contraction(_array_tensor_product(A1, b1), (0, 1, 2))
+    # Expected value: Sum(A1[i, i]*b1[i, 0]):
+    assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)

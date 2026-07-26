@@ -1,7 +1,9 @@
 from __future__ import annotations
-from sympy import tanh
+from sympy import tanh, expand
 from sympy.concrete.summations import Sum
-from sympy.core.symbol import symbols
+from sympy.core.function import Function, Lambda
+from sympy.core.power import Pow
+from sympy.core.symbol import symbols, Dummy
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
@@ -220,3 +222,64 @@ def test_convert_indexed_to_array_invalid_first_indices():
     # l is not in the expression, j is the contracted index -- both dropped:
     assert convert_indexed_to_array(expr, first_indices=[l, j, k]) == expected
     assert convert_indexed_to_array(expr, first_indices=[k, l]) == expected
+
+
+def test_convert_indexed_to_array_sum_over_subset_of_diagonals():
+    # Summing over only some of the diagonal groups of the summand used to
+    # mix inner and outer coordinates of the ArrayDiagonal, producing
+    # out-of-range or overlapping contraction indices (IndexError/ValueError).
+    expr = Sum(M[i, j]**2, (j, 0, k-1))
+    assert convert_indexed_to_array(expr) == ArrayDiagonal(
+        ArrayContraction(ArrayTensorProduct(M, M), (1, 3)), (0, 1))
+
+    expr = Sum(M[i, i]*N[j, j]*M[i, j], (i, 0, k-1))
+    assert convert_indexed_to_array(expr) == ArrayDiagonal(
+        ArrayContraction(ArrayTensorProduct(M, M, N), (0, 1, 2)), (0, 1, 2))
+
+    # Numeric verification on explicit 2x2 matrices:
+    M2 = MatrixSymbol("M2", 2, 2)
+    N2 = MatrixSymbol("N2", 2, 2)
+
+    res = convert_indexed_to_array(Sum(M2[i, j]**2, (j, 0, 1))).as_explicit()
+    assert res.shape == (2,)
+    for i_ in range(2):
+        assert expand(res[i_] - sum(M2[i_, j_]**2 for j_ in range(2))) == 0
+
+    res = convert_indexed_to_array(Sum(M2[i, i]*N2[j, j]*M2[i, j], (i, 0, 1))).as_explicit()
+    assert res.shape == (2,)
+    for j_ in range(2):
+        assert expand(res[j_] - sum(M2[i_, i_]*N2[j_, j_]*M2[i_, j_] for i_ in range(2))) == 0
+
+
+def test_convert_indexed_to_array_pow():
+    d = Dummy("d")
+
+    # Negative integer exponent used to silently return 1:
+    expr = M[i, j]**(-1)
+    assert convert_indexed_to_array(expr).dummy_eq(
+        ArrayElementwiseApplyFunc(Lambda(d, 1/d), M))
+
+    # Symbolic exponent used to fall through and drop the indices:
+    expr = M[i, j]**n
+    assert convert_indexed_to_array(expr).dummy_eq(
+        ArrayElementwiseApplyFunc(Lambda(d, d**n), M))
+
+    # Exponent one is the base itself:
+    assert _convert_indexed_to_array(Pow(M[i, j], 1, evaluate=False)) == (M, (i, j))
+
+    # Exponent depending on the array indices is not supported:
+    raises(NotImplementedError, lambda: convert_indexed_to_array(M[i, j]**i))
+
+    # Numeric verification on explicit 2x2 matrices:
+    M2 = MatrixSymbol("M2", 2, 2)
+    res = convert_indexed_to_array(M2[i, j]**(-1)).as_explicit()
+    assert res[1, 0] == 1/M2[1, 0]
+    res = convert_indexed_to_array(M2[i, j]**n).as_explicit()
+    assert res[0, 1] == M2[0, 1]**n
+
+
+def test_convert_indexed_to_array_multiarg_function():
+    # Functions of more than one argument used to silently drop all the
+    # arguments after the first one:
+    f = Function("f")
+    raises(NotImplementedError, lambda: convert_indexed_to_array(f(M[i, j], N[i, j])))

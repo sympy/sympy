@@ -5,9 +5,11 @@ from sympy import Function
 from sympy.combinatorics.permutations import _af_invert
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
+from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.power import Pow
+from sympy.core.symbol import Dummy
 from sympy.core.sorting import default_sort_key
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.tensor.array.expressions import ArrayElementwiseApplyFunc
@@ -136,19 +138,46 @@ def _convert_indexed_to_array(expr):
             diagonal_indices = list(subexpr.diagonal_indices)
             dindices = subindices[-len(diagonal_indices):]
             subindices = subindices[:-len(diagonal_indices)]
-            for index in summation_indices:
-                if index in dindices:
-                    position = dindices.index(index)
-                    contraction_indices.append(diagonal_indices[position])
-                    diagonal_indices[position] = None
-            diagonal_indices = [i for i in diagonal_indices if i is not None]
-            for i, ind in enumerate(subindices):
-                if ind in summation_indices:
-                    pass
-            if diagonal_indices:
-                subexpr = _array_diagonal(subexpr.expr, *diagonal_indices)
+            # The number of dimensions of the expression inside the diagonal:
+            inner_ndim = len(subindices) + sum(len(i) for i in diagonal_indices)
+            # Split the diagonal groups into the ones being summed over
+            # (they turn into contractions) and the ones to be kept:
+            removed_groups = []
+            remaining_groups = []
+            remaining_dindices = []
+            for group, dind in zip(diagonal_indices, dindices):
+                if dind in summation_indices:
+                    removed_groups.append(tuple(group))
+                else:
+                    remaining_groups.append(tuple(group))
+                    remaining_dindices.append(dind)
+            # Positions, in the inner expression, of the non-diagonalized
+            # axes of the original diagonal:
+            free_positions = ArrayDiagonal._push_indices_down(
+                subexpr.diagonal_indices, list(range(len(subindices))), inner_ndim)
+            if remaining_groups:
+                subexpr = _array_diagonal(subexpr.expr, *remaining_groups)
+                # Map the inner coordinates up through the new diagonal:
+                free_positions, removed_groups, remaining_positions = ArrayDiagonal._push_indices_up(
+                    remaining_groups,
+                    [list(free_positions), removed_groups, [g[0] for g in remaining_groups]],
+                    inner_ndim)
+                new_ndim = inner_ndim - sum(len(g) - 1 for g in remaining_groups)
             else:
                 subexpr = subexpr.expr
+                remaining_positions = []
+                new_ndim = inner_ndim
+            contraction_indices.extend(tuple(g) for g in removed_groups)
+            # Rebuild ``subindices`` in the coordinates of the new
+            # ``subexpr``. The axes belonging to the summed-out diagonal
+            # groups are left as ``None``: they have no free index and are
+            # contracted by the groups just added to ``contraction_indices``:
+            new_subindices = [None]*new_ndim
+            for pos, ind in zip(free_positions, subindices):
+                new_subindices[pos] = ind
+            for pos, ind in zip(remaining_positions, remaining_dindices):
+                new_subindices[pos] = ind
+            subindices = new_subindices
 
         axes_contraction = defaultdict(list)
         for i, ind in enumerate(subindices):
@@ -250,11 +279,33 @@ def _convert_indexed_to_array(expr):
         return _array_add(*args), tuple(index0)
     if isinstance(expr, Pow):
         subexpr, subindices = _convert_indexed_to_array(expr.base)
-        if isinstance(expr.exp, (int, Integer)):
-            diags = zip(*[(2*i, 2*i + 1) for i in range(expr.exp)])
-            arr = _array_diagonal(_array_tensor_product(*[subexpr for i in range(expr.exp)]), *diags)
+        if not subindices:
+            # Scalar base, no array axes involved:
+            return expr, ()
+        exp = expr.exp
+        if isinstance(exp, (int, Integer)) and exp >= 1:
+            if exp == 1:
+                return subexpr, subindices
+            diags = zip(*[(2*i, 2*i + 1) for i in range(exp)])
+            arr = _array_diagonal(_array_tensor_product(*[subexpr for i in range(exp)]), *diags)
             return arr, subindices
+        # Negative, rational or symbolic exponent: represent the power as an
+        # elementwise application of the power function, provided that the
+        # exponent does not depend on the array indices:
+        array_index_syms = set()
+        for ind in subindices:
+            elements = ind if isinstance(ind, frozenset) else [ind]
+            for j in elements:
+                array_index_syms.update(getattr(j, "free_symbols", set()))
+        if array_index_syms and exp.has(*array_index_syms):
+            raise NotImplementedError(
+                "cannot convert power with exponent depending on the array indices: %s" % expr)
+        d = Dummy("d")
+        return ArrayElementwiseApplyFunc(Lambda(d, d**exp), subexpr), subindices
     if isinstance(expr, Function):
+        if len(expr.args) != 1:
+            raise NotImplementedError(
+                "cannot convert multi-argument function to array expression: %s" % expr)
         subexpr, subindices = _convert_indexed_to_array(expr.args[0])
         return ArrayElementwiseApplyFunc(type(expr), subexpr), subindices
     return expr, ()

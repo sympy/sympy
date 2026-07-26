@@ -60,3 +60,21 @@ def test_convert_array_to_indexed_main():
     X = ArraySymbol("X", (2*3*5,))
     expr = Reshape(X, (2, 3, 5))
     assert convert_array_to_indexed(expr, [i, j, k]) == X[15*i + 5*j + k]
+
+
+def test_convert_array_to_indexed_diagonal_rectangular():
+    # ArrayDiagonal._push_indices_down used to be called with the number of
+    # dimensions of the diagonalized expression instead of the one of its
+    # inner expression, crashing on rectangular tensor products:
+    A = ArraySymbol("A", (2, 3))
+    B = ArraySymbol("B", (3, 2))
+    expr = ArrayDiagonal(ArrayTensorProduct(A, B), (1, 2))
+    conv = convert_array_to_indexed(expr, [i, j, k])
+    assert conv == A[i, k]*B[k, j]
+
+    # Numeric verification against the explicit form:
+    expl = expr.as_explicit()
+    for i_ in range(2):
+        for j_ in range(2):
+            for k_ in range(3):
+                assert conv.subs({i: i_, j: j_, k: k_}) == expl[i_, j_, k_]
