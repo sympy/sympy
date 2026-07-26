@@ -166,7 +166,7 @@ def rawlines(s: str) -> str:
                 rv.append(repr(li))
         return '(\n    %s\n)' % '\n    '.join(rv)
     else:
-        rv = '\n    '.join(lines)
+        joined_lines = '\n    '.join(lines)
         if triple[0]:
             return 'dedent("""\\\n    %s""")' % rv
         else:
@@ -402,6 +402,7 @@ def replace(string: str, *reps: tuple[dict[str, str] | tuple[str, str], ...]) ->
         if isinstance(kv, dict):
             final_reps = kv
         else:
+            assert isinstance(kv, tuple)
             return string.replace(kv[0], kv[1])
     else:
         final_reps = dict(reps) # type: ignore
@@ -476,7 +477,7 @@ def translate(s: str, a: dict[str, str] | str | None, b: str | None = None, c: s
     if c:
         val = str.maketrans('', '', c)
         s = s.translate(val)
-    s = replace(s, mr)
+    s = replace(s, mr) # type: ignore
     assert isinstance(a, str) and isinstance(b, str)
     n = str.maketrans(a, b)
     return s.translate(n)
