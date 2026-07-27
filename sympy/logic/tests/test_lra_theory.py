@@ -477,11 +477,9 @@ def test_reset():
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
-    conflict_found = False
     for clause in enc.data:
         for lit in clause:
             if lra.assert_lit(lit) is not None:
-                conflict_found = True
                 break
 
     assert lra.check()[0] == False
