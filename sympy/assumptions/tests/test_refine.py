@@ -402,3 +402,4 @@ def test_refine_coth():
 
     # No simplification for general positive x
     assert refine(coth(x), Q.positive(x)) == coth(x)
+    
