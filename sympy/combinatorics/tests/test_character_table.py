@@ -23,12 +23,27 @@ def _cmp_tbl(tbl1, tbl2):
     return {tuple(row) for row in tbl1} == {tuple(row) for row in tbl2}
 
 
+def test_character_table():
+    tbl = CharacterTable(SymmetricGroup(1))
+    assert (tbl.as_matrix() - Matrix([[1]])).is_zero_matrix
+
+    tbl = CharacterTable(SymmetricGroup(2))
+    assert tbl.tolist() == [[1, 1], [1, -1]]
+    assert (tbl.as_matrix() - Matrix([[1, 1], [1, -1]])).is_zero_matrix
+    assert tbl.shape == (2, 2)
+    assert tbl.zeta_order == 1
+
+    tbl = CharacterTable(AlternatingGroup(3))
+    assert tbl.as_matrix()._rep.domain.is_CyclotomicField
+    assert tbl.zeta_order == 3
+
+
 def test_dixon_character_table():
     # trivial group
     G = PermutationGroup(Permutation(size=2))
     tbl = dixon_character_table(G.conjugacy_classes())
     assert tbl._rep.domain.is_ZZ
-    assert _cmp_tbl(tbl, [[1]])
+    assert _cmp_tbl(tbl.as_matrix(), [[1]])
 
     # S4
     G = SymmetricGroup(4)
@@ -49,7 +64,7 @@ def test_dixon_character_table():
         [3, -1, -1, 0, 1],
     ]
     assert tbl._rep.domain.is_ZZ
-    assert _cmp_tbl(tbl, expected)
+    assert _cmp_tbl(tbl.as_matrix(), expected)
 
     # A4
     G = AlternatingGroup(4)
@@ -70,7 +85,7 @@ def test_dixon_character_table():
         [1, w**2, w, 1],
         [3, 0, 0, -1],
     ]
-    assert _cmp_tbl(tbl, expected)
+    assert _cmp_tbl(tbl.as_matrix(), expected)
 
     # F5
     G = PermutationGroup(
@@ -95,7 +110,7 @@ def test_dixon_character_table():
         [1, -1, I, -I, 1],
         [4, 0, 0, 0, -1],
     ]
-    assert _cmp_tbl(tbl, expected)
+    assert _cmp_tbl(tbl.as_matrix(), expected)
 
     cc = [
         {Permutation(0, 1, 2), Permutation(0, 2, 1)},
@@ -113,7 +128,7 @@ def test_dixon_character_table():
     g = Permutation(0, 1, 2, 3)
     cc = [{g**2}, {g**3}, {g**4}, {g}]
     tbl = dixon_character_table(cc)
-    assert list(tbl[:, 2]) == [1, 1, 1, 1]
+    assert list(tbl.as_matrix()[:, 2]) == [1, 1, 1, 1]
     assert tbl._conjugacy_class_reps == [g**2, g**3, g**4, g]
 
 
@@ -133,11 +148,12 @@ GROUPS = [
 @pytest.mark.parametrize("group", GROUPS, ids=lambda g: g.value)
 def test_generic_character_table(group):
     G = group.get_perm_group()
-    tbl = CharacterTable.from_perm_group(G)
+    table = CharacterTable(G)
     cc = G.conjugacy_classes()
-    reps = tbl.conjugacy_class_reps()
+    reps = table.conjugacy_class_reps()
     assert all(r in c for r, c in zip(reps, cc))
 
+    tbl = table.as_matrix()
     order = G.order()
     assert tbl.shape[0] == tbl.shape[1] == len(cc)
     assert all(v == 1 for v in tbl[0, :])

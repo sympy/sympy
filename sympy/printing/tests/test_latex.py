@@ -4,6 +4,7 @@ from sympy.algebras.quaternion import Quaternion
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
+from sympy.combinatorics.character_table import CharacterTable
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.containers import Tuple, Dict
@@ -3128,6 +3129,14 @@ def test_PermutationMatrix():
     p = Permutation(0, 3)(1, 2)
     assert latex(PermutationMatrix(p)) == \
         r'P_{\left( 0\; 3\right)\left( 1\; 2\right)}'
+
+
+def test_CharacterTable():
+    from sympy.combinatorics.named_groups import SymmetricGroup
+    tbl = CharacterTable(SymmetricGroup(1))
+    assert latex(tbl) == '\\left[\\begin{matrix}1\\end{matrix}\\right]'
+    tbl = CharacterTable(SymmetricGroup(2))
+    assert latex(tbl) == '\\left[\\begin{matrix}1 & 1\\\\1 & -1\\end{matrix}\\right]'
 
 
 def test_issue_21758():

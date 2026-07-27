@@ -402,6 +402,9 @@ class StrPrinter(Printer):
             [self.parenthesize(arg, precedence(expr)) for arg in expr.args]
         )
 
+    def _print_CharacterTable(self, P):
+        return P._format_str(self)
+
     def _print_ElementwiseApplyFunction(self, expr):
         return "{}.({})".format(
             expr.function,
