@@ -54,7 +54,7 @@ from typing import Any, Literal, Protocol, TYPE_CHECKING
 if TYPE_CHECKING:
     from sympy.assumptions.cnf import EncodedCNF
 
-ConflictClause = list[int]
+TheoryLemma = list[int]
 Explanation = list[int]
 Model = Any
 
@@ -68,9 +68,12 @@ class TheorySolver(Protocol):
     @classmethod
     def from_encoded_cnf(
         cls, formula: EncodedCNF
-    ) -> tuple[TheorySolver, list[ConflictClause]]:
+    ) -> tuple[TheorySolver, list[TheoryLemma]]:
         """
-        Create a Theory Solver instance from a formula.
+        Create a Theory Solver instance from a formula. Preprocessing also
+        evaluates the atoms that T decides on its own, e.g. Q.gt(2, 1) is
+        True and Q.gt(1, 2) is False. Each such atom is returned as a
+        lemma.
 
         Parameters
         ==========
@@ -82,11 +85,11 @@ class TheorySolver(Protocol):
         Returns
         =======
 
-        (solver, conflicts)
+        (solver, lemmas)
 
-        conflicts : list of conflict clauses
-            Clauses that follow from the atoms alone, and so hold no matter
-            what the engine later assigns.
+        lemmas : list of clauses/lemmas
+            Clauses valid in T, so the caller (DPLL(X) in this case) must combine them with F
+            before solving.
         """
         raise NotImplementedError
 
