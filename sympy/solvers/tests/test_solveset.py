@@ -3615,3 +3615,15 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+
+def test_solveset_Ne():
+    assert solveset(Ne(sqrt(x**2 - 4), 0), x, domain=S.Reals) == Union(
+        Interval.open(-oo, -2), Interval.open(2, oo))
+    assert solveset(Ne(sqrt(abs(x) - 1), 0), x, domain=S.Reals) == Union(
+        Interval.open(-oo, -1), Interval.open(1, oo))
+    assert solveset(Ne(log(abs(x) - 1), 0), x, domain=S.Reals) == Union(
+        Interval.open(-oo, -2),
+        Interval.open(-2, -1),
+        Interval.open(1, 2),
+        Interval.open(2, oo))

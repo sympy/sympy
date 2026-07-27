@@ -538,14 +538,14 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 #
                 # expanded_e, expr and gen used from enclosing scope
                 v = expanded_e.subs(gen, expand_mul(x))
+                if v.is_extended_real is False:
+                    return S.false
                 try:
                     r = expr.func(v, 0)
                 except TypeError:
                     r = S.false
                 if r in (S.true, S.false):
                     return r
-                if v.is_extended_real is False:
-                    return S.false
                 else:
                     v = v.n(2)
                     if v.is_comparable:
