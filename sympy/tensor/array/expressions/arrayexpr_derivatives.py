@@ -279,7 +279,7 @@ def _(expr: DiagMatrix, x: Expr):
     n = expr.shape[0]
     # position of the size-``n`` axis of the vector inside ``darg`` (the
     # vector may be either a column or a row):
-    vec_axis = rank_x if vector.shape[0] != 1 else rank_x + 1
+    vec_axis = rank_x if get_shape(vector)[0] != 1 else rank_x + 1
     tp = _array_tensor_product(darg, Identity(n))
     td = _array_diagonal(tp, (vec_axis, rank_x + 2))
     # ``td`` has shape ``x.shape + (1, n, n)``, with the trivial size-1 axis
@@ -362,7 +362,9 @@ def _(expr: MatrixBase, x):
 
 @array_derive.register(NDimArray)
 def _(expr: NDimArray, x):
-    if not set.intersection(expr.free_symbols, x.free_symbols):
+    # the abstract ``NDimArray`` does not declare ``free_symbols`` (concrete
+    # array classes inherit it from ``Basic``):
+    if not set.intersection(getattr(expr, "free_symbols", set()), x.free_symbols):
         return ZeroArray(*get_shape(x), *expr.shape)
     if isinstance(x, (MatrixExpr, ArraySymbol)) and all(isinstance(i, (int, Integer)) for i in get_shape(x)):
         x = x.as_explicit()
