@@ -30,6 +30,11 @@ def _get_contraction_links(args, sub_ndim_list, *contraction_indices):
             dlinks[arg1][pos1] = (arg2, pos2)
             dlinks[arg2][pos2] = (arg1, pos1)
             continue
+        # A group with three or more contracted axes cannot be expressed as
+        # a pairwise link; silently dropping it would misrepresent the
+        # contraction structure:
+        raise ValueError("contraction group %s involves more than two axes, "
+                         "it cannot be expressed as pairwise links" % (links,))
 
     return args, dict(dlinks)
 
