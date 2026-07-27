@@ -2271,36 +2271,3 @@ def test_PolyElement_quo_ground():
 
     R, x = ring("x", QQ)
     assert (x**2 + 3*x + 6).quo_ground(3) == (x**2)/3 + x + 2
-
-
-def test_PolyElement_imul_num():
-    R, x, y = ring("x, y", ZZ)
-
-    p = x
-    assert p.imul_num(3) == 3 * x and p.imul_num(3) is not p
-
-    p = x + y
-    assert p.imul_num(0) is p and p == R.zero
-
-    p = x + y ** 2
-    p_id = id(p)
-    q = p.imul_num(5)
-    assert q == 5 * x + 5 * y ** 2 and q is p and id(q) == p_id
-
-
-def test_PolyElement__iadd_monom():
-    R, x, y = ring("x, y", ZZ)
-
-    p = x
-    result = p._iadd_monom(((1, 2), ZZ(5)))
-    assert result == x + 5 * x * y ** 2 and result is not p
-
-    p = x ** 2 + y
-    result = p._iadd_monom(((3, 0), ZZ(4)))
-    assert result[(3, 0)] == 4 and result is p
-
-    p = x ** 2 + y
-    assert p._iadd_monom(((2, 0), ZZ(5)))[(2, 0)] == 6
-
-    p = x ** 2 + y
-    assert (2, 0) not in p._iadd_monom(((2, 0), ZZ(-1)))

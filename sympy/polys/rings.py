@@ -66,9 +66,6 @@ from sympy.polys.sparsetools import (
     smp_div_list,
     smp_evaluate,
     smp_get_coeff,
-    smp_iadd_monom,
-    smp_iadd_poly_monom,
-    smp_imul_num,
     smp_inflate,
     smp_is_ground,
     smp_is_linear,
@@ -2329,107 +2326,6 @@ class PolyElement(
             return q
         else:
             raise ExactQuotientFailed(self, G)
-
-    def _iadd_monom(self, mc: tuple[Mon, Er]) -> PolyElement[Er]:
-        """add to self the monomial coeff*x0**i0*x1**i1*...
-        unless self is a generator -- then just return the sum of the two.
-
-        mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y = ring('x, y', ZZ)
-        >>> p = x**4 + 2*y
-        >>> m = (1, 2)
-        >>> p1 = p._iadd_monom((m, 5))
-        >>> p1
-        x**4 + 5*x*y**2 + 2*y
-        >>> p1 is p
-        True
-        >>> p = x
-        >>> p1 = p._iadd_monom((m, 5))
-        >>> p1
-        5*x*y**2 + x
-        >>> p1 is p
-        False
-
-        """
-        ring = self.ring
-        if self in ring._gens_set:
-            return self.new(smp_iadd_monom(self.copy(), mc, ring.ngens, ring.domain))
-
-        smp_iadd_monom(self, mc, ring.ngens, ring.domain)
-        return self
-
-    def _iadd_poly_monom(
-        self, p2: PolyElement[Er], mc: tuple[Mon, Er]
-    ) -> PolyElement[Er]:
-        """add to self the product of (p)*(coeff*x0**i0*x1**i1*...)
-        unless self is a generator -- then just return the sum of the two.
-
-        mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y, z = ring('x, y, z', ZZ)
-        >>> p1 = x**4 + 2*y
-        >>> p2 = y + z
-        >>> m = (1, 2, 3)
-        >>> p1 = p1._iadd_poly_monom(p2, (m, 3))
-        >>> p1
-        x**4 + 3*x*y**3*z**3 + 3*x*y**2*z**4 + 2*y
-
-        """
-        ring = self.ring
-        if self in ring._gens_set:
-            return self.new(
-                smp_iadd_poly_monom(self.copy(), p2, mc, ring.ngens, ring.domain)
-            )
-
-        smp_iadd_poly_monom(self, p2, mc, ring.ngens, ring.domain)
-        return self
-
-    def imul_num(self, c: Er | int) -> PolyElement[Er]:
-        """multiply inplace the polynomial p by an element in the
-        coefficient ring, provided p is not one of the generators;
-        else multiply not inplace
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y = ring('x, y', ZZ)
-        >>> p = x + y**2
-        >>> p1 = p.imul_num(3)
-        >>> p1
-        3*x + 3*y**2
-        >>> p1 is p
-        True
-        >>> p = x
-        >>> p1 = p.imul_num(3)
-        >>> p1
-        3*x
-        >>> p1 is p
-        False
-
-        """
-        ring = self.ring
-        c = ring.domain_new(c)
-        if self in ring._gens_set:
-            return self.new(smp_imul_num(self.copy(), c, ring.ngens, ring.domain))
-
-        smp_imul_num(self, c, ring.ngens, ring.domain)
-        return self
 
     def _rem(self, g: PolyElement[Er]) -> PolyElement[Er]:
         """Remainder when dividing by a single polynomial g"""
