@@ -851,7 +851,7 @@ def test_derivative_hadamard_of_outer_product():
     truth = Array(derive_by_array(
         Matrix(2, 2, lambda i, j: xs[i, 0]*xs[j, 0]*A2[i, j]), xs))
     truth_n = _explicit_numeric(truth, {x2: nx, A2: nA})
-    assert [e for e in got] == [e for e in truth_n]
+    assert list(got) == list(truth_n)
     assert (HadamardProduct(a2, x2) + B2*x2).diff(x2).shape == (2, 2)
 
 
