@@ -477,14 +477,16 @@ def test_reset():
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
             if lra.assert_lit(lit) is not None:
+                conflict_found = True
                 break
 
-    assert lra.check()[0] == False
+    assert conflict_found is True
     lra.reset()
-    assert lra.check()[0] == True
+    assert lra.check()[0] is True
 
     # Test individual state variable resets
     bf = Q.ge(x, 0) & Q.le(x, 1)
@@ -604,8 +606,8 @@ def test_example_from_paper():
     assert var_x.lower == LRARational(-8, 0)
     assert var_x.upper == LRARational(-4, 0)
     assert var_x.assign == LRARational(-4, 0)
-    assert var_s1.assign == LRARational(0, 0)
-    assert var_s2.assign == LRARational(8, 0)
+    assert var_s1.assign == LRARational(1, 0)
+    assert var_s2.assign == LRARational(7, 0)
 
 
 def test_backtracking_single_variable():

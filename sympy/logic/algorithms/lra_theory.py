@@ -185,7 +185,6 @@ class LRASolver():
         self.all_var = nonslack_variables + slack_variables
 
         self.bound_history = [[]]
-        self.last_assign_snapshot = {var: var.assign for var in self.all_var}
 
     @staticmethod
     def from_encoded_cnf(encoded_cnf, testing_mode=False):
@@ -368,7 +367,6 @@ class LRASolver():
         Resets the state of the LRASolver to before
         anything was asserted.
         """
-        self.result = None
         for var in self.all_var:
             var.initialize()
 
@@ -417,11 +415,6 @@ class LRASolver():
             if res and res[0] is False:
                 break
 
-        if self.is_sat and all(b.var in self.nonbasic for b in boundaries):
-            self.is_sat = res is None
-        else:
-            self.is_sat = False
-
         return res
 
     def _assert_bound(self, boundary, literal):
@@ -440,6 +433,7 @@ class LRASolver():
 
         s = 1 if upper else -1
         target_bound = xi.upper if upper else xi.lower
+        target_lit = xi.upper_literal if upper else xi.lower_literal
         opposing_bound = xi.lower if upper else xi.upper
         conflicting_lit = xi.lower_literal if upper else xi.upper_literal
 
@@ -460,7 +454,7 @@ class LRASolver():
 
             return False, [-conflicting_lit, -literal]
 
-        self.bound_history[-1].append((xi, target_bound, upper))
+        self.bound_history[-1].append((xi, target_bound, target_lit, upper))
 
         xi.set_bound(boundary, literal)
 
@@ -505,12 +499,6 @@ class LRASolver():
 
         explanation : set of ints
         """
-        if self.is_sat:
-            self.last_assign_snapshot = {var: var.assign for var in self.all_var}
-            return True, self.last_assign_snapshot
-        if self.result:
-            return self.result
-
         while True:
             if self.run_checks:
                 # nonbasic variables must always be within bounds
@@ -534,8 +522,7 @@ class LRASolver():
             cand = [(r, b) for r, b in enumerate(self.basic)
                     if b.assign < b.lower or b.assign > b.upper]
             if not cand:
-                self.last_assign_snapshot = {var: var.assign for var in self.all_var}
-                return True, self.last_assign_snapshot
+                return True, {v: v.assign for v in self.all_var}
             i, xi = min(cand, key=lambda t: t[1].col_idx)  # Bland's rule
 
             if xi.assign < xi.lower:
@@ -551,9 +538,6 @@ class LRASolver():
                     conflict += [nb.lower_literal for nb in N_minus]
                     conflict.append(xi.lower_literal)
                     conflict = [-conflicting_lit for conflicting_lit in conflict]
-                    # Restore assignments before returning failure
-                    for var in self.all_var:
-                        var.assign = self.last_assign_snapshot[var]
                     return False, conflict
                 xj = min(cand, key=str)
                 self._pivot_and_update(i, xi, xj, xi.lower)
@@ -573,9 +557,6 @@ class LRASolver():
                     conflict_bounds.append(xi.upper_literal)
 
                     conflict = [-conflicting_lit for conflicting_lit in conflict_bounds]
-                    # Restore assignments before returning failure
-                    for var in self.all_var:
-                        var.assign = self.last_assign_snapshot[var]
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
                 self._pivot_and_update(i, xi, xj, xi.upper)
@@ -672,12 +653,12 @@ class LRASolver():
         if not self.bound_history[-1]:
             raise ValueError("Cannot backtrack, bound_history stack is empty")
 
-        xi, old_bound, upper = self.bound_history[-1].pop()
+        xi, old_bound, old_lit, upper = self.bound_history[-1].pop()
 
         if upper:
-            xi.upper = old_bound
+            xi.upper, xi.upper_literal = old_bound, old_lit
         else:
-            xi.lower = old_bound
+            xi.lower, xi.lower_literal = old_bound, old_lit
 
     def pop_level(self):
         """

@@ -132,15 +132,12 @@ class SATSolver:
         self.lra = lra_theory
 
         # Create the base level
-        self.levels = [Level(0)]
+        self.levels = []
+        self._create_level(0)
         self._current_level.var_settings = set(var_settings)
-        if self.lra:
-            self.lra.bound_history.append([])
-            for lit in self._current_level.var_settings:
-                res = self.lra.assert_lit(lit)
-                if res and res[0] is False:
-                    self.is_unsatisfied = True
-                    break
+        if self.lra and self._current_level.var_settings:
+            raise NotImplementedError("A non-empty var_settings is not "
+                                      "supported when using the LRA theory.")
 
         # Keep stats
         self.num_decisions = 0
@@ -233,9 +230,6 @@ class SATSolver:
                     res = None
                     if self.lra:
                         res = self.lra.check()
-                        self.lra.reset()
-                    else:
-                        res = None
                     if res is None or res[0]:
                         yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
@@ -262,22 +256,22 @@ class SATSolver:
                         return
                     flip_lit = -self._current_level.decision
                     self._undo()
-                    if self.lra:
-                        self.lra.bound_history.append([])
-                    self.levels.append(Level(flip_lit, flipped=True))
+                    self._create_level(flip_lit, flipped=True)
                     flip_var = True
                     continue
 
                 # Start the new decision level
-                if self.lra:
-                    self.lra.bound_history.append([])
-                self.levels.append(Level(lit))
+                self._create_level(lit)
 
             # Assign the literal, updating the clauses it satisfies
-            self._assign_literal(lit)
-
-            # _simplify the theory
-            self._simplify()
+            conflict = self._assign_literal(lit)
+            if conflict is not None:
+                self.is_unsatisfied = True
+                self._simple_add_learned_clause(conflict)
+                self._unit_prop_queue = []
+            else:
+                # simplify the theory
+                self._simplify()
 
             # Check if we've made the theory unsat
             if self.is_unsatisfied:
@@ -298,9 +292,7 @@ class SATSolver:
                 # Try the opposite setting of the most recent decision
                 flip_lit = -self._current_level.decision
                 self._undo()
-                if self.lra:
-                    self.lra.bound_history.append([])
-                self.levels.append(Level(flip_lit, flipped=True))
+                self._create_level(flip_lit, flipped=True)
                 flip_var = True
 
     ########################
@@ -405,11 +397,11 @@ class SATSolver:
         self.variable_set[abs(lit)] = True
         self.heur_lit_assigned(lit)
 
-        if self.lra and not self.is_unsatisfied:
+        conflict = None
+        if self.lra:
             res = self.lra.assert_lit(lit)
             if res and res[0] is False:
-                self.is_unsatisfied = True
-                self._simple_add_learned_clause(res[1])
+                conflict = res[1]
 
         sentinel_list = list(self.sentinels[-lit])
 
@@ -429,6 +421,20 @@ class SATSolver:
                 # Check if no sentinel update exists
                 if other_sentinel:
                     self._unit_prop_queue.append(other_sentinel)
+
+        return conflict
+
+    def _create_level(self, lit, flipped=False):
+        """
+        Start a new decision level for ``lit``.
+
+        If a theory solver is being used it is told to start a new level too,
+        so that the bounds asserted while this level is current can all be
+        undone together when `_undo` pops the level.
+        """
+        if self.lra:
+            self.lra.bound_history.append([])
+        self.levels.append(Level(lit, flipped=flipped))
 
     def _undo(self):
         """
@@ -510,13 +516,15 @@ class SATSolver:
             next_lit = self._unit_prop_queue.pop()
             if -next_lit in self.var_settings:
                 self.is_unsatisfied = True
+            else:
+                conflict = self._assign_literal(next_lit)
+                if conflict is not None:
+                    self.is_unsatisfied = True
+                    self._simple_add_learned_clause(conflict)
+
+            if self.is_unsatisfied:
                 self._unit_prop_queue = []
                 return False
-            else:
-                self._assign_literal(next_lit)
-                if self.is_unsatisfied:
-                    self._unit_prop_queue = []
-                    return False
 
         return result
 
