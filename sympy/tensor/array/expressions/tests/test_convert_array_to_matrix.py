@@ -927,7 +927,7 @@ def test_convert_array_to_matrix_identity_contractions():
     # (this expression is the diagonal of M, of shape (k,)):
     from sympy import Matrix
     cg = _array_contraction(_array_tensor_product(M, I), (0, 1, 2))
-    conv = convert_array_to_matrix(cg)
+    convert_array_to_matrix(cg)  # must not raise
     n = 2
     M1 = MatrixSymbol("M1", n, n)
     In = Identity(n)
