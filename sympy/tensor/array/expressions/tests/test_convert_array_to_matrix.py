@@ -186,7 +186,10 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a)
 
     cg = _array_diagonal(_array_tensor_product(I, x, I1), (0, 2), (3, 5))
-    assert _array_diag2contr_diagmatrix(cg) == _array_contraction(_array_tensor_product(I, OneArray(1), I1, DiagMatrix(x)), (0, 5))
+    # The second diagonal group (3, 5) involves only size-1 axes but must be
+    # kept: dropping it used to change the rank of the expression from 4 to 5:
+    assert _array_diag2contr_diagmatrix(cg) == _array_diagonal(
+        _array_contraction(_array_tensor_product(I, OneArray(1), I1, DiagMatrix(x)), (0, 5)), (1, 3))
     assert convert_array_to_matrix(cg) == DiagMatrix(x)
 
     cg = _array_diagonal(_array_tensor_product(I, x, A, B), (1, 2), (5, 6))
@@ -249,7 +252,12 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     assert convert_array_to_matrix(cg) == 1
 
     cg = _array_contraction(_array_tensor_product(I, I, I, I, A), (1, 2, 8), (5, 6, 9))
-    assert convert_array_to_matrix(cg.split_multiple_contractions()).doit() == A
+    # ``cg`` has shape (k, k, k, k): its element (a, b, c, d) is
+    # A[a, c]*delta_{ab}*delta_{cd}, the conversion must NOT drop the
+    # duplicated diagonal axes (it used to return the (k, k) matrix ``A``):
+    ret = convert_array_to_matrix(cg.split_multiple_contractions()).doit()
+    assert ret.shape == (k, k, k, k)
+    assert ret == _permute_dims(_array_diagonal(_array_tensor_product(A, I, I), (0, 2), (1, 4)), Permutation(0, 2, 3, 1))
 
     cg = _array_contraction(_array_tensor_product(A, a, C, a, B), (1, 2, 4), (5, 6, 8))
     expected = _array_contraction(_array_tensor_product(A, DiagMatrix(a), OneArray(1), C, DiagMatrix(a), OneArray(1), B), (1, 3), (2, 5), (6, 7), (8, 10))
@@ -670,9 +678,14 @@ def test_array_contraction_to_diagonal_multiple_identities():
     assert _array_contraction_to_diagonal_multiple_identity(expr) == (expr, [])
     assert convert_array_to_matrix(expr) == _array_contraction(_array_tensor_product(A, B, C), (1, 2, 4))
 
+    # The result must keep the duplicated diagonal axis: expr has shape
+    # (k, k, k) with element (a, b, c) equal to A[a, b]*delta_{bc}; it used
+    # to be converted to the (k, k) matrix ``A``, silently changing shape:
     expr = _array_contraction(_array_tensor_product(A, I, I), (1, 2, 4))
-    assert _array_contraction_to_diagonal_multiple_identity(expr) == (A, [2])
-    assert convert_array_to_matrix(expr) == A
+    expected = _permute_dims(_array_diagonal(_array_tensor_product(A, I), (1, 2)), Permutation(1, 2))
+    assert _array_contraction_to_diagonal_multiple_identity(expr) == (expected, [])
+    assert convert_array_to_matrix(expr) == expected
+    assert expected.shape == (k, k, k)
 
     expr = _array_contraction(_array_tensor_product(A, I, I, B), (1, 2, 4), (3, 6))
     assert _array_contraction_to_diagonal_multiple_identity(expr) == (expr, [])
@@ -958,3 +971,100 @@ def test_convert_array_to_matrix_scalar_times_array():
     cg = _array_contraction(_array_tensor_product(A1, b1), (0, 1, 2))
     # Expected value: Sum(A1[i, i]*b1[i, 0]):
     assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+
+def test_convert_array_to_matrix_multi_slot_contraction_group_no_trace():
+    # A contraction group with three or more axis slots (left over by
+    # split_multiple_contractions) used to be partially consumed by the
+    # pairwise matrix-multiplication/trace recognition, e.g. the x-derivative
+    # of Trace(x.T*HadamardProduct(a, x)) came back as the constant vector
+    # 2*Trace(a*x.T)*[1, 1] instead of [2*a[0]*x[0], 2*a[1]*x[1]]:
+    from sympy import Matrix
+    a1 = MatrixSymbol("a1", 2, 1)
+    x1 = MatrixSymbol("x1", 2, 1)
+    I2 = Identity(2)
+    cg = _array_contraction(_array_tensor_product(a1, x1, I2, I1), (0, 2, 5), (1, 3, 7))
+    ret = convert_array_to_matrix(cg)
+    assert not ret.has(Trace)
+    subs = {a1: Matrix([[3], [5]]), x1: Matrix([[7], [11]])}
+    # Expected (squeezed) value: [a1[0]*x1[0], a1[1]*x1[1]]:
+    assert _explicit_equal_squeezed(cg, ret, subs)
+
+
+def test_convert_array_to_matrix_diag2contraction_surviving_group_permutation():
+    # When _array_diag2contr_diagmatrix turns a diagonal group into a
+    # contraction (DiagMatrix replacement), the output axis of a surviving
+    # diagonal group changes its relative position: a compensating
+    # permutation must be added.  The x-derivative of
+    # HadamardProduct(x*x.T, A) used to have its last two axes transposed:
+    from sympy import Matrix
+    n = 2
+    A1 = MatrixSymbol("A1", n, n)
+    x1 = MatrixSymbol("x1", n, 1)
+    I2 = Identity(n)
+    cg = _array_diagonal(_array_tensor_product(I2, x1.T, A1), (1, 4), (3, 5))
+    ret = _array_diag2contr_diagmatrix(cg)
+    assert ret.shape == cg.shape
+    assert ret == _permute_dims(_array_diagonal(_array_contraction(
+        _array_tensor_product(I2, OneArray(1), A1, DiagMatrix(x1.T)), (4, 6)), (1, 3)), Permutation(2, 3))
+    subs = {A1: Matrix([[2, 7], [11, 13]]), x1: Matrix([[3], [5]])}
+    assert _explicit_equal_squeezed(cg, ret, subs)
+    assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+    # With the diagonal groups in the opposite order no permutation is needed:
+    cg2 = _array_diagonal(_array_tensor_product(I2, x1.T, A1), (3, 5), (1, 4))
+    ret2 = _array_diag2contr_diagmatrix(cg2)
+    assert ret2.shape == cg2.shape
+    assert _explicit_equal_squeezed(cg2, ret2, subs)
+
+
+def test_convert_array_to_matrix_duplicated_diagonal_axis_kept():
+    # ArrayContraction(ArrayTensorProduct(A, I, I), (0, 1, 3, 5)) is the
+    # matrix diag(A[0, 0], ..., A[k, k]) (this is the X-derivative of
+    # Trace(HadamardProduct(A, X))): it used to convert to the rank-1
+    # ArrayDiagonal(A, (0, 1)), silently dropping a non-trivial axis:
+    from sympy import Matrix
+    cg = _array_contraction(_array_tensor_product(A, I, I), (0, 1, 3, 5))
+    ret = convert_array_to_matrix(cg)
+    assert ret == HadamardProduct(I, A.T)
+    assert ret.shape == (k, k)
+    n = 2
+    A1 = MatrixSymbol("A1", n, n)
+    I2 = Identity(n)
+    cg1 = _array_contraction(_array_tensor_product(A1, I2, I2), (0, 1, 3, 5))
+    subs = {A1: Matrix([[2, 7], [11, 13]])}
+    assert _explicit_equal_squeezed(cg1, convert_array_to_matrix(cg1), subs)
+
+
+def test_convert_array_to_matrix_mixed_rank_addends():
+    # The two addends of this ArrayAdd (the x-derivative of
+    # HadamardProduct(a, x) + B*x) have shape (2, 1, 2, 1); the conversion of
+    # the ArrayDiagonal addend used to change its rank, making the final
+    # ArrayAdd/MatAdd reconstruction crash with
+    # "summing arrays of different number of dims":
+    from sympy import Matrix
+    n = 2
+    B1 = MatrixSymbol("B1", n, n)
+    a1 = MatrixSymbol("a1", n, 1)
+    I2 = Identity(n)
+    cg = ArrayAdd(
+        _permute_dims(_array_contraction(_array_tensor_product(I2, I1, B1), (1, 5)), Permutation(2, 3)),
+        _array_diagonal(_array_tensor_product(I2, I1, a1), (1, 4), (3, 5)))
+    ret = convert_array_to_matrix(cg)
+    assert ret == DiagMatrix(a1) + B1.T
+    subs = {B1: Matrix([[2, 7], [11, 13]]), a1: Matrix([[3], [5]])}
+    assert _explicit_equal_squeezed(cg, ret, subs)
+
+
+def test_convert_array_to_matrix_rank0_applyfunc_to_scalar():
+    # A rank-0 ArrayElementwiseApplyFunc whose operand converts to a scalar
+    # must be converted to a plain scalar; it used to survive as a
+    # noncommutative "scalar" factor, crashing MatMul (e.g. the X-derivative
+    # of 1/(2*Trace(X))):
+    from sympy import Lambda, Rational, S, Symbol
+    d = Symbol("_d")
+    cg = _array_contraction(_array_tensor_product(
+        S.Half,
+        ArrayElementwiseApplyFunc(Lambda(d, -1/d**2), _array_contraction(X, (0, 1))),
+        I, I), (1, 3))
+    ret = convert_array_to_matrix(cg)
+    assert ret == -Rational(1, 2)*Trace(X)**(-2)*I

@@ -87,3 +87,17 @@ def test_applyfunc_scalar_and_iterator_input():
         # a one-shot iterator with an explicit shape must be accepted:
         assert array_type(iter([7]), ())[()] == 7
         assert list(array_type((i for i in range(3)), (3,))) == [0, 1, 2]
+
+
+def test_eval_derivative_direction():
+    # NDimArray._eval_derivative used to differentiate in the wrong
+    # direction (variable.diff(element) instead of element.diff(variable)),
+    # which was masked for arrays of plain Symbols but wrong in general.
+    from sympy.core.function import Derivative, Function
+    f = Function('f')
+    for ArrayType in array_types:
+        arr = ArrayType([f(x), x])
+        assert arr._eval_derivative(x) == ArrayType([f(x).diff(x), 1])
+        arr2 = ArrayType([[x, y], [x*y, x**2]])
+        assert arr2._eval_derivative(x) == ArrayType([[1, 0], [y, 2*x]])
+        assert Derivative(arr2, x).doit() == ArrayType([[1, 0], [y, 2*x]])

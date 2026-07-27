@@ -1106,3 +1106,34 @@ def test_array_elementwise_apply_func_rank_zero_as_explicit():
     assert tr.shape == ()
     expr = ArrayElementwiseApplyFunc(Lambda(d, 1/d), tr)
     assert expr.as_explicit() == 1/(X[0, 0] + X[1, 1])
+
+
+def test_get_contraction_links_rejects_multi_slot_groups():
+    # Contraction groups with more than two axes cannot be represented as
+    # pairwise links: _get_contraction_links used to silently drop them,
+    # misrepresenting the contraction structure of the expression:
+    X = MatrixSymbol("X", k, k)
+    Y = MatrixSymbol("Y", k, k)
+    Z = MatrixSymbol("Z", k, k)
+    cg = _array_contraction(_array_tensor_product(X, Y, Z), (1, 2), (3, 4))
+    # Pairwise groups are still supported:
+    dlinks = cg._get_contraction_links()
+    assert dlinks == {0: {0: (1, 1), 1: (2, 0)}, 1: {1: (0, 0)}, 2: {0: (0, 1)}}
+    cg = _array_contraction(_array_tensor_product(X, Y, Z), (0, 2, 4))
+    raises(ValueError, lambda: cg._get_contraction_links())
+
+
+def test_edit_array_contraction_merge_scalars_rank_zero_applyfunc():
+    # merge_scalars must not put a rank-0 ArrayElementwiseApplyFunc (a
+    # noncommutative object) into a Mul with matrix elements; it is a plain
+    # scalar and has to be converted (e.g. the X-derivative of 1/Trace(X)
+    # used to crash with "noncommutative scalars in MatMul"):
+    from sympy import Lambda, Trace
+    d = symbols("d")
+    X = MatrixSymbol("X", k, k)
+    aeaf = ArrayElementwiseApplyFunc(Lambda(d, 1/d), _array_contraction(X, (0, 1)))
+    assert get_shape(aeaf) == ()
+    cg = _array_contraction(_array_tensor_product(aeaf, X, X), (1, 2))
+    editor = _EditArrayContraction(cg)
+    ret = editor.to_array_contraction()
+    assert ret == _array_contraction(_array_tensor_product(1/Trace(X)*X, X), (1, 2))

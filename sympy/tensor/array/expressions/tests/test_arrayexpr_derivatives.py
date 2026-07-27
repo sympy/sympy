@@ -1,10 +1,13 @@
 from __future__ import annotations
-from sympy import (exp, Matrix, Array, derive_by_array, ImmutableMatrix,
-    ImmutableDenseNDimArray, Transpose, Inverse, Determinant, MatPow, ZeroMatrix)
+from sympy import (exp, log, Matrix, Array, derive_by_array, ImmutableMatrix,
+    ImmutableDenseNDimArray, Transpose, Inverse, Determinant, MatPow, ZeroMatrix,
+    Trace, atan2)
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
-from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
+from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
+from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixSymbol, MatrixElement
 from sympy.matrices.expressions.special import Identity, MatrixUnit
+from sympy.testing.pytest import raises
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayTensorProduct, \
     PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, ArrayContraction, _permute_dims, \
@@ -182,6 +185,102 @@ def test_array_derive_ndimarray_symbolic_x():
     arr = ImmutableDenseNDimArray([v[0], v[1]**2])
     assert ImmutableDenseNDimArray(array_derive(arr, v)) == \
         derive_by_array(arr, v.as_explicit())
+
+
+def _check_numeric(expr, wrt, replmap, numreplmap={}):
+    # Compare the array derivative against entrywise differentiation of the
+    # explicit form.  ``replmap`` maps matrix symbols to explicit matrices;
+    # ``numreplmap`` optionally substitutes numbers at the end (to keep the
+    # simplification of expressions with matrix inverses cheap).
+    res = array_derive(expr, wrt)
+    got = res.as_explicit().subs(replmap)
+    got = ImmutableDenseNDimArray(got).applyfunc(lambda t: t.doit(deep=True))
+    if isinstance(expr, MatrixExpr):
+        ground = expr.as_explicit().subs(replmap)
+    else:
+        ground = expr.subs(replmap).doit(deep=True)
+    expected = derive_by_array(ground, ImmutableDenseNDimArray(replmap[wrt]))
+    got = got.subs(numreplmap)
+    expected = expected.subs(numreplmap)
+    diff = (got - expected).applyfunc(lambda t: t.doit(deep=True).simplify())
+    assert diff == ImmutableDenseNDimArray.zeros(*expected.shape), expr
+
+
+def test_array_derive_matpow_negative_exponent():
+    # The MatPow rule used to build a summation with an empty (hence zero)
+    # summation range for negative exponents, so e.g. ``MatPow(X, -2)``
+    # silently differentiated to zero:
+    M = MatrixSymbol("M", 2, 2)
+    Mexp = ImmutableMatrix(2, 2, symbols("m:4"))
+    numrepl = dict(zip(symbols("m:4"), [3, 1, 2, 5]))  # invertible matrix
+    for e in (-1, -2, -3, 2, 3):
+        _check_numeric(MatPow(M, e), M, {M: Mexp}, numrepl)
+    # MatPow(M, -1) has to agree with the Inverse rule:
+    d1 = array_derive(MatPow(M, -1), M).as_explicit().subs(M, Mexp).subs(numrepl)
+    d2 = array_derive(Inverse(M), M).as_explicit().subs(M, Mexp).subs(numrepl)
+    diff = (ImmutableDenseNDimArray(d1) - ImmutableDenseNDimArray(d2)
+            ).applyfunc(lambda t: t.doit().simplify())
+    assert diff == ImmutableDenseNDimArray.zeros(2, 2, 2, 2)
+    # products of inverses auto-canonicalize to negative powers:
+    _check_numeric((Inverse(M)*Inverse(M)).doit(), M, {M: Mexp}, numrepl)
+    # a zeroth power is the identity matrix, a constant:
+    assert array_derive(MatPow(M, 0), M) == ZeroArray(2, 2, 2, 2)
+
+
+def test_array_derive_function_of_matrix_scalar():
+    # Scalar functions wrapping matrix scalars (e.g. traces) used to raise
+    # NotImplementedError: ``Trace`` is not a ``MatrixExpr``, so the function
+    # rule recursed into the generic ``Expr`` fallback.
+    M = MatrixSymbol("M", 2, 2)
+    N = MatrixSymbol("N", 2, 2)
+    Mexp = ImmutableMatrix(2, 2, symbols("m:4"))
+    Nexp = ImmutableMatrix(2, 2, symbols("n:4"))
+    repl = {M: Mexp, N: Nexp}
+    numrepl = dict(zip(symbols("m:4"), [3, 1, 2, 5]))
+    _check_numeric(Trace(M), M, repl)
+    _check_numeric(Trace(Inverse(M)), M, repl, numrepl)
+    _check_numeric(sin(Trace(M)), M, repl)
+    _check_numeric(exp(Trace(M*N)), M, repl)
+    _check_numeric(log(Trace(M.T*M)), M, repl)
+    _check_numeric(sin(Trace(M))*cos(Trace(N*M)), M, repl)
+    _check_numeric(exp(Trace(M))*Trace(M*N), M, repl)
+    # multi-argument functions use the full chain rule:
+    _check_numeric(atan2(Trace(M), Trace(M*M)), M, repl)
+    # a function of a constant scalar has a zero derivative:
+    assert array_derive(sin(Trace(N)), M) == ZeroArray(2, 2)
+
+
+def test_array_derive_diag_matrix():
+    # DiagMatrix used to raise NotImplementedError because it is left
+    # unchanged by convert_matrix_to_array and no dedicated rule existed.
+    A2 = MatrixSymbol("A", 2, 2)
+    B2 = MatrixSymbol("B", 2, 2)
+    v = MatrixSymbol("v", 2, 1)
+    vexp = ImmutableMatrix(2, 1, symbols("v:2"))
+    Aexp = ImmutableMatrix(2, 2, symbols("a:4"))
+    Bexp = ImmutableMatrix(2, 2, symbols("b:4"))
+    repl = {A2: Aexp, B2: Bexp, v: vexp}
+    _check_numeric(DiagMatrix(v), v, repl)
+    _check_numeric(DiagMatrix(v.T), v, repl)   # row vector
+    _check_numeric(DiagMatrix(A2*v), v, repl)  # composite argument
+    _check_numeric(A2*DiagMatrix(v)*B2, v, repl)
+    # differentiation with respect to an unrelated matrix gives zero:
+    assert array_derive(DiagMatrix(v), A2) == ZeroArray(2, 2, 2, 2)
+
+
+def test_array_derive_diagonal_matrix():
+    A2 = MatrixSymbol("A", 2, 2)
+    M = MatrixSymbol("M", 2, 2)
+    Mexp = ImmutableMatrix(2, 2, symbols("m:4"))
+    Aexp = ImmutableMatrix(2, 2, symbols("a:4"))
+    repl = {M: Mexp, A2: Aexp}
+    _check_numeric(DiagonalMatrix(M), M, repl)
+    _check_numeric(DiagonalMatrix(A2*M), M, repl)
+    assert array_derive(DiagonalMatrix(M), A2) == ZeroArray(2, 2, 2, 2)
+    # non-square arguments are not supported (elements beyond the diagonal
+    # length are zeroed, which the diagonalization cannot express):
+    N23 = MatrixSymbol("N", 2, 3)
+    raises(NotImplementedError, lambda: array_derive(DiagonalMatrix(N23), N23))
 
 
 def test_array_derive_ndimarray_returns_result():

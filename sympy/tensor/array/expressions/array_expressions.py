@@ -2003,7 +2003,19 @@ class _EditArrayContraction:
                 scalars.append(arg_with_ind)
         for i in scalars:
             self.args_with_ind.remove(i)
-        scalar = Mul.fromiter([i.element for i in scalars])
+        elements = []
+        for i in scalars:
+            element = i.element
+            if isinstance(element, ArrayElementwiseApplyFunc) and get_ndim(element) == 0:
+                # A rank-0 elementwise function application is a plain
+                # scalar: convert it, otherwise it would end up as a
+                # noncommutative "scalar" factor inside a ``Mul``/``MatMul``:
+                from sympy.tensor.array.expressions.from_array_to_matrix import _array2matrix
+                converted = _array2matrix(element)
+                if not hasattr(converted, "shape"):
+                    element = converted
+            elements.append(element)
+        scalar = Mul.fromiter(elements)
         if len(self.args_with_ind) == 0:
             self.args_with_ind.append(_ArgE(scalar))
         else:
