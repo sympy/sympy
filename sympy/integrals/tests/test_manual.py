@@ -264,8 +264,23 @@ def test_manualintegrate_rational():
     # apart splits this into 1/(x + 1) and the undecomposable 1/(x**4 + 1).
     f = (x**4 + x + 2)/((x + 1)*(x**4 + 1))
     F = manualintegrate(f, x)
-    assert F == log(x + 1) - sqrt(2)*log(x**2 - sqrt(2)*x + 1)/8 + \
-        sqrt(2)*log(x**2 + sqrt(2)*x + 1)/8 + sqrt(2)*atan(sqrt(2)*x - 1)/4 + sqrt(2)*atan(sqrt(2)*x + 1)/4
+    assert F == (log(x + 1) - sqrt(2)*log(x**2 - sqrt(2)*x + 1)/8 +
+        sqrt(2)*log(x**2 + sqrt(2)*x + 1)/8 + sqrt(2)*atan(sqrt(2)*x - 1)/4 +
+        sqrt(2)*atan(sqrt(2)*x + 1)/4)
+    assert (F.diff(x) - f).cancel() == 0
+    # undecomposable denominator, reached directly through the Pow key
+    f = 1/(x**4 + 1)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert (F.diff(x) - f).cancel() == 0
+    # apart normalizes but cannot split rational functions with Float
+    # coefficients; ratint still integrates them
+    F = manualintegrate(1/(x**4 + 1.5), x)
+    assert not F.has(Integral)
+    # rational in x with transcendental coefficients
+    f = 1/(x**4 + exp(y))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
     assert (F.diff(x) - f).cancel() == 0
 
 

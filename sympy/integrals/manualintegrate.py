@@ -65,6 +65,7 @@ from .integrals import Integral
 from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
+from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
@@ -607,7 +608,10 @@ class RatintRule(AtomicRule):
     __slots__ = ()
 
     def eval(self) -> Expr:
-        return ratint(self.integrand, self.variable)
+        try:
+            return ratint(self.integrand, self.variable)
+        except (PolynomialError, NotImplementedError):
+            return Integral(self.integrand, self.variable)
 
 
 class AlternativeRule(Rule):
@@ -2766,16 +2770,19 @@ def partial_fractions_rule(integral):
     integrand, symbol = integral
     if not integrand.is_rational_function(symbol):
         return
+    debug("Integral: {} is rewritten with apart on symbol: {}".format(integrand, symbol))
 
     rewritten = integrand.apart(symbol)
-    if rewritten == integrand:
-        # If apart cannot decompose the rational function any further,
-        # use ratint as the final fallback for rational integration.
-        return RatintRule(integrand, symbol)
+    if rewritten != integrand:
+        substep = integral_steps(rewritten, symbol)
+        if not substep.contains_dont_know():
+            return RewriteRule(integrand, symbol, rewritten, substep)
 
-    substep = integral_steps(rewritten, symbol)
-    if not isinstance(substep, DontKnowRule):
-        return RewriteRule(integrand, symbol, rewritten, substep)
+    # apart either could not decompose the rational function any further
+    # (it may still have normalized it without splitting it, e.g. with
+    # Float coefficients) or some of the pieces could not be integrated
+    # manually: use ratint as the final fallback for rational integration.
+    return RatintRule(integrand, symbol)
 
 cancel_rule = rewriter(
     # lambda integrand, symbol: integrand.is_algebraic_expr(),
