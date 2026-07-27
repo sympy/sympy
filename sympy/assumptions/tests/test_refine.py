@@ -389,3 +389,16 @@ def test_refine_tanh():
 
     # No simplification for general positive x
     assert refine(tanh(x), Q.positive(x)) == tanh(x)
+
+def test_refine_coth():
+    from sympy import coth, cot, zoo, I
+    x = Symbol('x')
+
+    # coth(0) -> zoo (ComplexInfinity)
+    assert refine(coth(x), Q.zero(x)) == zoo
+
+    # coth(I*x) -> -I*cot(x) when x is real
+    assert refine(coth(I*x), Q.real(x)) == -I*cot(x)
+
+    # No simplification for general positive x
+    assert refine(coth(x), Q.positive(x)) == coth(x)
