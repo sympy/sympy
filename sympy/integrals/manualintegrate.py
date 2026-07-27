@@ -2836,8 +2836,10 @@ def substitution_rule(integral):
     if substitutions:
         debug("List of Substitution Rules")
         ways = []
-        factored_integrand = integrand.factor()
-        _, denom_integrand = factored_integrand.as_numer_denom()
+        is_rational = integrand.is_rational_function()
+        if is_rational:
+            factored_integrand = integrand.factor()
+            _, denom_integrand = factored_integrand.as_numer_denom()
         for u_func, c, substituted in substitutions:
             subrule = integral_steps(substituted, u_var)
             count = count + 1
@@ -2853,20 +2855,35 @@ def substitution_rule(integral):
 
                 if denom_c.free_symbols:
                     pieces = []
-                    factors_denom_c = factor_list(denom_c)[1]
-                    for pole, _ in factors_denom_c:
-                        # only substitute poles introduced by the constant c if they were not already poles of the original integrand
-                        if not _if_zero_implies_zero(pole, denom_integrand):
-                            rewritten_integral = manual_subs(factored_integrand, pole, 0)
-                            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten_integral, symbol))
-                            substep = integral_steps(rewritten_integral, symbol)
-
-                            if substep:
-                                substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
-                                pieces.append((
-                                    substep,
-                                    Eq(pole, 0)
-                                ))
+                    if is_rational:
+                        # only substitute poles introduced by c if they were
+                        # not already poles of the original integrand
+                        factors_denom_c = factor_list(denom_c)[1]
+                        for pole, _ in factors_denom_c:
+                            if not _if_zero_implies_zero(pole, denom_integrand):
+                                rewritten_integral = manual_subs(factored_integrand, pole, 0)
+                                debug("Integral: {} is rewritten with {} on symbol: {}".format(
+                                    integrand, rewritten_integral, symbol))
+                                substep = integral_steps(rewritten_integral, symbol)
+                                if substep:
+                                    substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
+                                    pieces.append((substep, Eq(pole, 0)))
+                    else:
+                        # integrand isn't a rational function (e.g. trig/exp of
+                        # a linear argument) -- factor() would mangle its
+                        # arguments and break structural matching, so
+                        # substitute directly into the unfactored integrand
+                        # instead
+                        could_be_zero = Mul.make_args(denom_c)
+                        for pole in could_be_zero:
+                            if not fuzzy_not(pole.is_zero):
+                                rewritten_integral = manual_subs(integrand, pole, 0)
+                                debug("Integral: {} is rewritten with {} on symbol: {}".format(
+                                    integrand, rewritten_integral, symbol))
+                                substep = integral_steps(rewritten_integral, symbol)
+                                if substep:
+                                    substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
+                                    pieces.append((substep, Eq(pole, 0)))
                     if pieces:
                         pieces.append((subrule, True))
                         subrule = PiecewiseRule(substituted, symbol, pieces)
