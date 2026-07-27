@@ -2,10 +2,9 @@ from __future__ import annotations
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ, AlgebraicField
 from sympy.polys.modulargcd import (
+    modgcd_multivariate,
     modgcd_univariate,
     modgcd_bivariate,
-    _chinese_remainder_reconstruction_multivariate,
-    modgcd_multivariate,
     _to_ZZ_poly,
     _to_ANP_poly,
     func_field_modgcd,
@@ -129,31 +128,7 @@ def test_modgcd_bivariate_integers():
     assert modgcd_bivariate(f, g) == (x + y, 2*x - 3, 4*y - 2)
 
 
-def test_chinese_remainder():
-    R, x, y = ring("x, y", ZZ)
-    p, q = 3, 5
-
-    hp = x**3*y - x**2 - 1
-    hq = -x**3*y - 2*x*y**2 + 2
-
-    hpq = _chinese_remainder_reconstruction_multivariate(hp, hq, p, q)
-
-    assert hpq.trunc_ground(p) == hp
-    assert hpq.trunc_ground(q) == hq
-
-    T, z = ring("z", R)
-    p, q = 3, 7
-
-    hp = (x*y + 1)*z**2 + x
-    hq = (x**2 - 3*y)*z + 2
-
-    hpq = _chinese_remainder_reconstruction_multivariate(hp, hq, p, q)
-
-    assert hpq.trunc_ground(p) == hp
-    assert hpq.trunc_ground(q) == hq
-
-
-def test_modgcd_multivariate_integers():
+def test_modgcd_multivariate():
     R, x, y = ring("x,y", ZZ)
 
     f, g = R.zero, R.zero

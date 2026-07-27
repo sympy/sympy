@@ -8160,6 +8160,7 @@ class GroebnerBasis(Basic):
         ([Poly(2*x, x, y, domain='ZZ'), Poly(1, x, y, domain='ZZ')], Poly(x**2 + y**2 + y, x, y, domain='ZZ'))
 
         """
+        expr = _sympify(expr)
         if isinstance(expr, Poly):
 
             if expr.gens != self._options.gens:

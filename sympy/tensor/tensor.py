@@ -2545,6 +2545,8 @@ class TensAdd(TensExpr, AssocOp):
         # it there is only a component tensor return it
         if len(args) == 1:
             return args[0]
+        if not any(isinstance(a, TensExpr) for a in args):
+            return Add(*args)
 
         obj = self.func(*args)
         return obj
@@ -2857,8 +2859,8 @@ class Tensor(TensExpr):
     ===========
 
     This object is usually created from a ``TensorHead``, by attaching indices
-    to it. Indices preceded by a minus sign are considered contravariant,
-    otherwise covariant.
+    to it. Indices preceded by a minus sign are considered covariant,
+    otherwise contravariant.
 
     Examples
     ========

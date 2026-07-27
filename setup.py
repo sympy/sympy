@@ -100,6 +100,8 @@ modules = [
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',
     'sympy.parsing.latex.lark',
+    'sympy.parsing.smtlib',
+    'sympy.parsing.smtlib.lark',
     'sympy.physics',
     'sympy.physics.biomechanics',
     'sympy.physics.continuum_mechanics',
@@ -338,6 +340,7 @@ if __name__ == '__main__':
                   'test-examples/README.txt',
                   ],
               'sympy.parsing.latex': ['*.txt', '*.g4', 'lark/grammar/*.lark'],
+              'sympy.parsing.smtlib': ['lark/grammar/*.lark'],
               'sympy.plotting.tests': ['test_region_*.png'],
               'sympy': ['py.typed']
               },

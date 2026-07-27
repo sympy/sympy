@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy import sin, Function, symbols, Dummy, Lambda, cos, Symbol, factorial, S
-from sympy.parsing.mathematica import parse_mathematica, MathematicaParser
+from sympy.parsing.mathematica import (
+    parse_mathematica, parse_mathematica_to_fullformlist, MathematicaParser)
 from sympy.core.sympify import sympify
 from sympy.abc import n, w, x, y, z
 from sympy.testing.pytest import raises
@@ -108,15 +109,17 @@ def test_mathematica():
 
 
 def test_parser_mathematica_tokenizer():
-    parser = MathematicaParser()
-
-    chain = lambda expr: parser._from_tokens_to_fullformlist(parser._from_mathematica_to_tokens(expr))
+    # ``parse_mathematica_to_fullformlist`` is the public entry point for the
+    # intermediate FullForm (as nested Python lists), i.e. the parse pipeline up
+    # to (but excluding) the conversion into SymPy objects.
+    chain = parse_mathematica_to_fullformlist
 
     # Basic patterns
     assert chain("x") == "x"
     assert chain("42") == "42"
     assert chain(".2") == ".2"
-    assert chain("+x") == "x"
+    # Unary plus is kept: Mathematica reads ``+x`` as ``Plus[x]``.
+    assert chain("+x") == ["Plus", "x"]
     assert chain("-1") == "-1"
     assert chain("- 3") == "-3"
     assert chain("α") == "α"
@@ -129,7 +132,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("α + βγ") == ["Plus", "α", "βγ"]
     assert chain("α + β γ") == ["Plus", "α", ["Times", "β", "γ"]]
     assert chain("α̇ + 𝔟⃗ 𝒞̂") == ["Plus", "α̇", ["Times", "𝔟⃗", "𝒞̂"]]
-    assert chain("+Sin[x]") == ["Sin", "x"]
+    assert chain("+Sin[x]") == ["Plus", ["Sin", "x"]]
     assert chain("-Sin[x]") == ["Times", "-1", ["Sin", "x"]]
     assert chain("Cos(1/2 * π)") == ["Times", "Cos", ["Times", "1", ["Power", "2", "-1"], "π"]]
     assert chain("Cos[1/2 * π]") == ["Cos", ["Times", "1", ["Power", "2", "-1"], "π"]]
@@ -137,7 +140,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("Cos[x]!=Sin[y]") == ["Unequal", ["Cos", "x"], ["Sin", "y"]]
     assert chain("x(a+1)") == ["Times", "x", ["Plus", "a", "1"]]
     assert chain("(x)") == "x"
-    assert chain("(+x)") == "x"
+    assert chain("(+x)") == ["Plus", "x"]
     assert chain("-a") == ["Times", "-1", "a"]
     assert chain("(-x)") == ["Times", "-1", "x"]
     assert chain("(x + y)") == ["Plus", "x", "y"]
@@ -225,9 +228,10 @@ def test_parser_mathematica_tokenizer():
     assert chain("a/.b") == ["ReplaceAll", "a", "b"]
     assert chain("a/.b/.c/.d") == ["ReplaceAll", ["ReplaceAll", ["ReplaceAll", "a", "b"], "c"], "d"]
 
-    assert chain("a//b") == ["a", "b"]
-    assert chain("a//b//c") == [["a", "b"], "c"]
-    assert chain("a//b//c//d") == [[["a", "b"], "c"], "d"]
+    # ``//`` is postfix application: ``x // f`` is ``f[x]`` (left associative).
+    assert chain("a//b") == ["b", "a"]
+    assert chain("a//b//c") == ["c", ["b", "a"]]
+    assert chain("a//b//c//d") == ["d", ["c", ["b", "a"]]]
 
     # Not operator
     assert chain("!x") == ["Not", "x"]
@@ -271,14 +275,27 @@ def test_parser_mathematica_tokenizer():
     assert chain("y___") == ["Pattern", "y", ["BlankNullSequence"]]
     assert chain("a[b_.,c_]") == ["a", ["Optional", ["Pattern", "b", ["Blank"]]], ["Pattern", "c", ["Blank"]]]
     assert chain("b_. c") == ["Times", ["Optional", ["Pattern", "b", ["Blank"]]], "c"]
+    # Patterns in head position, i.e. ``Pattern[F, Blank[]][Pattern[x, Blank[]]]``
+    assert chain("F_[x_]") == [["Pattern", "F", ["Blank"]], ["Pattern", "x", ["Blank"]]]
+    assert chain("F_[x_, y_[z_]]") == [
+        ["Pattern", "F", ["Blank"]],
+        ["Pattern", "x", ["Blank"]],
+        [["Pattern", "y", ["Blank"]], ["Pattern", "z", ["Blank"]]],
+    ]
 
-    # Slots for lambda functions
+    # Slots for lambda functions.  A positional slot (``#3``) carries an
+    # integer index; a named slot (``#name``) carries a string, which in the
+    # FullForm list is ``["_Str", "name"]`` (matching Mathematica's Slot["name"]).
     assert chain("#") == ["Slot", "1"]
     assert chain("#3") == ["Slot", "3"]
-    assert chain("#n") == ["Slot", "n"]
-    assert chain("#name") == ["Slot", "name"]
+    assert chain("#n") == ["Slot", ["_Str", "n"]]
+    assert chain("#name") == ["Slot", ["_Str", "name"]]
     assert chain("##") == ["SlotSequence", "1"]
-    assert chain("##a") == ["SlotSequence", "a"]
+    assert chain("##3") == ["SlotSequence", "3"]
+    # ``SlotSequence`` only takes an integer index, so ``##name`` is
+    # ``SlotSequence[1] * name`` (implicit multiplication), not a named slot.
+    assert chain("##a") == ["Times", ["SlotSequence", "1"], "a"]
+    assert chain("##name") == ["Times", ["SlotSequence", "1"], "name"]
 
     # Lambda functions
     assert chain("x&") == ["Function", "x"]
@@ -289,6 +306,106 @@ def test_parser_mathematica_tokenizer():
     assert chain("#&[x]") == [["Function", ["Slot", "1"]], "x"]
     assert chain("#1 + #2 & [x, y]") == [["Function", ["Plus", ["Slot", "1"], ["Slot", "2"]]], "x", "y"]
     assert chain("#1^2#2^3&") == ["Function", ["Times", ["Power", ["Slot", "1"], "2"], ["Power", ["Slot", "2"], "3"]]]
+
+    # Assignment operators
+    assert chain("a=b") == ["Set", "a", "b"]
+    assert chain("a:=b") == ["SetDelayed", "a", "b"]
+    assert chain("a+=b") == ["AddTo", "a", "b"]
+    assert chain("a-=b") == ["SubtractFrom", "a", "b"]
+    assert chain("a*=b") == ["TimesBy", "a", "b"]
+    assert chain("a/=b") == ["DivideBy", "a", "b"]
+
+    # Rules, replacement and conditions
+    assert chain("a->b") == ["Rule", "a", "b"]
+    assert chain("a:>b") == ["RuleDelayed", "a", "b"]
+    assert chain("a/;b") == ["Condition", "a", "b"]
+    # both are right associative
+    assert chain("a->b->c") == ["Rule", "a", ["Rule", "b", "c"]]
+    assert chain("a:>b:>c") == ["RuleDelayed", "a", ["RuleDelayed", "b", "c"]]
+    # ... and the way rules are actually used: applied with ReplaceAll
+    assert chain("x /. a->b") == ["ReplaceAll", "x", ["Rule", "a", "b"]]
+    assert chain("f[x] /. x->1") == ["ReplaceAll", ["f", "x"], ["Rule", "x", "1"]]
+    assert chain("{a->1, b:>2}") == \
+        ["List", ["Rule", "a", "1"], ["RuleDelayed", "b", "2"]]
+    assert chain("x /. {a->b, c:>d}") == \
+        ["ReplaceAll", "x", ["List", ["Rule", "a", "b"], ["RuleDelayed", "c", "d"]]]
+
+    # Comparison operators
+    assert chain("a>b") == ["Greater", "a", "b"]
+    assert chain("a>=b") == ["GreaterEqual", "a", "b"]
+    assert chain("a<b") == ["Less", "a", "b"]
+    assert chain("a<=b") == ["LessEqual", "a", "b"]
+    assert chain("a===b") == ["SameQ", "a", "b"]
+    assert chain("a=!=b") == ["UnsameQ", "a", "b"]
+
+    # Function application operators.  ``@`` is prefix application and ``//``
+    # is postfix; ``@@``/``@@@`` are Apply, ``/@``/``//@`` are Map/MapAll.
+    assert chain("f@x") == ["f", "x"]
+    assert chain("a@b@c") == ["a", ["b", "c"]]         # right associative
+    assert chain("f@@x") == ["Apply", "f", "x"]
+    assert chain("f@@@x") == ["Apply", "f", "x", ["List", "1"]]
+    assert chain("f/@x") == ["Map", "f", "x"]
+    assert chain("f//@x") == ["MapAll", "f", "x"]
+
+    # Derivative: ``f'`` is ``Derivative[1][f]``; primes accumulate the order.
+    assert chain("f'") == [["Derivative", "1"], "f"]
+    assert chain("f''") == [["Derivative", "2"], "f"]
+    assert chain("x'[t]") == [[["Derivative", "1"], "x"], "t"]
+    # The prime binds to the whole pattern, not to the symbol inside it:
+    # ``f_'[x_]`` is ``Derivative[1][Pattern[f, Blank[]]][Pattern[x, Blank[]]]``.
+    assert chain("f_'[x_]") == [[["Derivative", "1"], ["Pattern", "f", ["Blank"]]],
+                                ["Pattern", "x", ["Blank"]]]
+    assert chain("f_''[x_]") == [[["Derivative", "2"], ["Pattern", "f", ["Blank"]]],
+                                 ["Pattern", "x", ["Blank"]]]
+    # The prime binds tighter than ``[``, so ``f'[x]`` is ``Derivative[1][f][x]``
+    # and not ``Derivative[1][f[x]]``.  This has to keep holding when ``f'[x]``
+    # is a subexpression rather than the whole input:
+    d1fx = [[["Derivative", "1"], "f"], "x"]
+    assert chain("f'[x]") == d1fx
+    assert chain("f'[x]*g[x]") == ["Times", d1fx, ["g", "x"]]
+    assert chain("f'[x]g[x]") == ["Times", d1fx, ["g", "x"]]
+    assert chain("2 f'[x]") == ["Times", "2", d1fx]
+    assert chain("f'[x]^2") == ["Power", d1fx, "2"]
+    assert chain("f'[x][y]") == [d1fx, "y"]
+    assert chain("f'[g'[x]]") == [[["Derivative", "1"], "f"],
+                                  [[["Derivative", "1"], "g"], "x"]]
+    # ... and equally for a run of several primes:
+    d2fx = [[["Derivative", "2"], "f"], "x"]
+    d3fx = [[["Derivative", "3"], "f"], "x"]
+    assert chain("f''[x]") == d2fx
+    assert chain("f'''[x]") == d3fx
+    assert chain("f''[x]*g[x]") == ["Times", d2fx, ["g", "x"]]
+    assert chain("2 f''[x]") == ["Times", "2", d2fx]
+    assert chain("f''[x]^2") == ["Power", d2fx, "2"]
+    assert chain("f''[x][y]") == [d2fx, "y"]
+    assert chain("f'[x]+f''[x]+f'''[x]") == ["Plus", d1fx, d2fx, d3fx]
+    assert chain("f''[x]/g'''[y]") == [
+        "Times", d2fx, ["Power", [[["Derivative", "3"], "g"], "y"], "-1"]]
+    # Conversely, a prime *after* a closed bracket takes the whole bracketed
+    # expression as its operand: ``f[x]'`` is ``Derivative[1][f[x]]``.
+    assert chain("f[x]'") == [["Derivative", "1"], ["f", "x"]]
+    assert chain("f[x]'[y]") == [[["Derivative", "1"], ["f", "x"]], "y"]
+    assert chain("f'[[1]]") == ["Part", [["Derivative", "1"], "f"], "1"]
+    assert chain("(f+g)'[x]") == [[["Derivative", "1"], ["Plus", "f", "g"]], "x"]
+    # Same deferral when the prime follows another still unapplied postfix op.
+    assert chain("f!'") == [["Derivative", "1"], ["Factorial", "f"]]
+    assert chain("f'!") == ["Factorial", [["Derivative", "1"], "f"]]
+
+    # Postfix operators and Alternatives / PatternTest / Repeated
+    assert chain("a--") == ["Decrement", "a"]
+    assert chain("a!!") == ["Factorial2", "a"]
+    assert chain("a|b|c") == ["Alternatives", "a", "b", "c"]
+    assert chain("a?b") == ["PatternTest", "a", "b"]
+    assert chain("a..") == ["Repeated", "a"]
+    assert chain("a...") == ["RepeatedNull", "a"]
+
+    # Span (``;;``) flattens into a single node with up to three arguments
+    assert chain("a;;b") == ["Span", "a", "b"]
+    assert chain("a;;b;;c") == ["Span", "a", "b", "c"]
+    assert chain("a[[b;;c]]") == ["Part", "a", ["Span", "b", "c"]]
+
+    # Typed blank via the infix ``_`` (e.g. ``x_Integer``)
+    assert chain("x_Integer") == ["Pattern", "x", ["Blank", "Integer"]]
 
     # Strings inside Mathematica expressions:
     assert chain('"abc"') == ["_Str", "abc"]
@@ -347,7 +464,16 @@ def test_Mathematica_literal_regex():
     from sympy.parsing.mathematica import MathematicaParser
     literal_regex = re.compile(MathematicaParser._literal)
 
+    # Mathematica allows ``$`` anywhere in a symbol and ``` ` ``` as the context
+    # separator, neither of which is a Python identifier character.
+    assert literal_regex.fullmatch("$Version")
+    assert literal_regex.fullmatch("x$1")
+    assert literal_regex.fullmatch("Global`sym")
+    assert not literal_regex.match("`")
+
     for c in map(chr, range(sys.maxunicode+1)):
+        if c in "$`":
+            continue
         if c == "_" or (not c.isidentifier() and not f"x{c}".isidentifier()):
             assert not literal_regex.match(c)
             assert not literal_regex.fullmatch(f"x{c}")
@@ -378,3 +504,319 @@ def test_mathematica_not_operator():
     # Factorial with implicit multiplication
     assert parse_mathematica("x!y") == y*factorial(x)
     assert parse_mathematica("x!y!") == factorial(x)*factorial(y)
+
+
+def test_mathematica_star_operator():
+    # \[Star], the literal ⋆ (U+22C6) and "Star[...]" are the same operator,
+    # which is distinct from Times.  Assertions are made on the FullForm list so
+    # they are not affected by any SymPy-level reordering.
+    fullform = parse_mathematica_to_fullformlist
+    assert fullform(r"a \[Star] b") == ["Star", "a", "b"]
+    assert fullform("a \N{STAR OPERATOR} b") == ["Star", "a", "b"]
+    assert fullform("Star[a, b]") == ["Star", "a", "b"]
+
+    # Star is flat: a ⋆ b ⋆ c -> Star[a, b, c]
+    assert fullform("a \N{STAR OPERATOR} b \N{STAR OPERATOR} c") == ["Star", "a", "b", "c"]
+
+    # Precedence: Star binds looser than Times but tighter than Plus.
+    assert fullform("a + b \N{STAR OPERATOR} c") == ["Plus", "a", ["Star", "b", "c"]]
+    assert fullform("a*b \N{STAR OPERATOR} c*d") == \
+        ["Star", ["Times", "a", "b"], ["Times", "c", "d"]]
+
+    # Times is unaffected.
+    assert fullform("a * b") == ["Times", "a", "b"]
+
+    # End-to-end: with no built-in meaning Star becomes an undefined Function.
+    a, b = symbols("a b")
+    assert parse_mathematica(r"a \[Star] b") == Function("Star")(a, b)
+
+
+def test_mathematica_operators_without_builtin_meaning():
+    # Operators listed under "Operators without built-in meanings" in
+    # https://reference.wolfram.com/language/tutorial/TextualInputAndOutput.html
+    # Each must produce its own head instead of being dropped/parsed as Times.
+    # Assertions are on the FullForm list (see parse_mathematica_to_fullformlist).
+    fullform = parse_mathematica_to_fullformlist
+
+    # Infix operators, both named-character and literal forms. CirclePlus,
+    # CircleTimes, TildeTilde and LeftRightArrow are flat (x op y op z ->
+    # op[x, y, z]).
+    assert fullform(r"x \[CirclePlus] y") == ["CirclePlus", "x", "y"]
+    assert fullform("x \N{CIRCLED PLUS} y \N{CIRCLED PLUS} z") == \
+        ["CirclePlus", "x", "y", "z"]
+    assert fullform(r"x \[CircleTimes] y") == ["CircleTimes", "x", "y"]
+    assert fullform("x \N{CIRCLED TIMES} y \N{CIRCLED TIMES} z") == \
+        ["CircleTimes", "x", "y", "z"]
+    assert fullform(r"x \[TildeTilde] y") == ["TildeTilde", "x", "y"]
+    assert fullform("x \N{ALMOST EQUAL TO} y \N{ALMOST EQUAL TO} z") == \
+        ["TildeTilde", "x", "y", "z"]
+    assert fullform(r"x \[LeftRightArrow] y") == ["LeftRightArrow", "x", "y"]
+    assert fullform("x \N{LEFT RIGHT ARROW} y \N{LEFT RIGHT ARROW} z") == \
+        ["LeftRightArrow", "x", "y", "z"]
+
+    # Therefore is right-associative: x ∴ y ∴ z groups as x ∴ (y ∴ z).
+    # https://reference.wolfram.com/language/ref/Therefore.html
+    assert fullform(r"x \[Therefore] y") == ["Therefore", "x", "y"]
+    assert fullform("x \N{THEREFORE} y \N{THEREFORE} z") == \
+        ["Therefore", "x", ["Therefore", "y", "z"]]
+
+    # Prefix operators.
+    assert fullform(r"\[Del] x") == ["Del", "x"]
+    assert fullform("\N{NABLA}x") == ["Del", "x"]
+    assert fullform("\N{NABLA}(x + y)") == ["Del", ["Plus", "x", "y"]]
+    assert fullform(r"\[Square] x") == ["Square", "x"]
+    assert fullform("\N{WHITE SQUARE}x") == ["Square", "x"]
+
+    # Matchfix AngleBracket, with one or more comma-separated arguments.
+    assert fullform(r"\[LeftAngleBracket] x \[RightAngleBracket]") == \
+        ["AngleBracket", "x"]
+    assert fullform(r"\[LeftAngleBracket] a, b, c \[RightAngleBracket]") == \
+        ["AngleBracket", "a", "b", "c"]
+
+    # Precedence matches Wolfram: CirclePlus binds looser than Times but
+    # tighter than Plus; CircleTimes binds tighter than Times; Del (prefix)
+    # binds looser than Power.
+    assert fullform("a + b \N{CIRCLED PLUS} c") == ["Plus", "a", ["CirclePlus", "b", "c"]]
+    assert fullform("a \N{CIRCLED PLUS} b*c") == ["CirclePlus", "a", ["Times", "b", "c"]]
+    assert fullform("a*b \N{CIRCLED TIMES} c*d") == \
+        ["Times", "a", ["CircleTimes", "b", "c"], "d"]
+    assert fullform("\N{NABLA}x^2") == ["Del", ["Power", "x", "2"]]
+
+    # End-to-end: with no built-in meaning each head becomes an undefined
+    # Function once converted to SymPy.
+    x, y = symbols("x y")
+    assert parse_mathematica(r"x \[CirclePlus] y") == Function("CirclePlus")(x, y)
+    assert parse_mathematica(r"\[Del] x") == Function("Del")(x)
+    assert parse_mathematica(r"\[LeftAngleBracket] x, y \[RightAngleBracket]") == \
+        Function("AngleBracket")(x, y)
+
+
+def test_parse_mathematica_to_fullformlist():
+    # The function returns the intermediate FullForm as nested Python lists,
+    # with heads and atoms represented as strings.
+    assert parse_mathematica_to_fullformlist("Sin[x]^2 Tan[y]") == \
+        ['Times', ['Power', ['Sin', 'x'], '2'], ['Tan', 'y']]
+    assert parse_mathematica_to_fullformlist("x*(a + b)") == \
+        ['Times', 'x', ['Plus', 'a', 'b']]
+    assert parse_mathematica_to_fullformlist("F[7, 5, 3]") == ['F', '7', '5', '3']
+
+    # Named characters are resolved before tokenizing, unlike the raw tokenizer
+    # stages, so both the \[Name] form and the literal character are accepted.
+    assert parse_mathematica_to_fullformlist(r"a \[CirclePlus] b") == \
+        ['CirclePlus', 'a', 'b']
+    assert parse_mathematica_to_fullformlist("a \N{STAR OPERATOR} b \N{STAR OPERATOR} c") == \
+        ['Star', 'a', 'b', 'c']
+
+    # The method form on the parser class is equivalent.
+    assert MathematicaParser().parse_fullformlist("a + b") == ['Plus', 'a', 'b']
+
+
+def test_mathematica_derivative_precedence():
+    # ``'`` is positional: it takes as operand whatever precedes it, bounded by
+    # operators binding tighter than itself.  All of these were checked against
+    # Wolfram Mathematica's FullForm.
+    chain = parse_mathematica_to_fullformlist
+    d1f = [["Derivative", "1"], "f"]
+    d2f = [["Derivative", "2"], "f"]
+
+    # tighter than ``^``, ``*``, ``+``, ``.`` and ``;;`` -- the prime takes only
+    # the token on its left
+    assert chain("a^b'") == ["Power", "a", [["Derivative", "1"], "b"]]
+    assert chain("a*b'") == ["Times", "a", [["Derivative", "1"], "b"]]
+    assert chain("a+b'") == ["Plus", "a", [["Derivative", "1"], "b"]]
+    assert chain("a.b'") == ["Dot", "a", [["Derivative", "1"], "b"]]
+    # ... but looser than the ``@`` family, so there it takes the whole left side
+    assert chain("a@b'") == [["Derivative", "1"], ["a", "b"]]
+    assert chain("a@@b'") == [["Derivative", "1"], ["Apply", "a", "b"]]
+    assert chain("a/@b'") == [["Derivative", "1"], ["Map", "a", "b"]]
+    assert chain("a@b@c'") == [["Derivative", "1"], ["a", ["b", "c"]]]
+    assert chain("c@f'[x]") == [[["Derivative", "1"], ["c", "f"]], "x"]
+    # a prime *before* the application still binds to the head alone
+    assert chain("f'@x") == [d1f, "x"]
+    assert chain("f'^2") == ["Power", d1f, "2"]
+
+    # ``!`` and ``[`` bind tighter than ``'`` and are applied first
+    assert chain("f'!") == ["Factorial", d1f]
+    assert chain("f!'") == [["Derivative", "1"], ["Factorial", "f"]]
+    assert chain("f'[x]!") == ["Factorial", [d1f, "x"]]
+
+    # ``?`` (PatternTest) binds tighter than ``'`` and than ``[``, but its left
+    # operand is still the completed expression
+    assert chain("f[x]?c") == ["PatternTest", ["f", "x"], "c"]
+    assert chain("f'[x]?c") == ["PatternTest", [d1f, "x"], "c"]
+    assert chain("f'[x][y]?c") == ["PatternTest", [[d1f, "x"], "y"], "c"]
+    assert chain("a?b[c]") == [["PatternTest", "a", "b"], "c"]
+
+    # stacked prefix/postfix operators need more than one pass
+    assert chain("- -a") == ["Times", "-1", ["Times", "-1", "a"]]
+    assert chain(r"\[Del]\[Del]a") == ["Del", ["Del", "a"]]
+    assert chain("a&'") == [["Derivative", "1"], ["Function", "a"]]
+
+    assert chain("f''[x]?c") == ["PatternTest", [d2f, "x"], "c"]
+
+
+def test_mathematica_unary_plus():
+    # ``+x`` is ``Plus[x]``, but a unary plus heading a term of a ``+`` chain is
+    # absorbed: ``a + +b`` and ``+a + b`` are both plain ``Plus[a, b]``.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("+a") == ["Plus", "a"]
+    assert chain("+f[x]") == ["Plus", ["f", "x"]]
+    assert chain("a*+b") == ["Times", "a", ["Plus", "b"]]
+    assert chain("a + +b") == ["Plus", "a", "b"]
+    assert chain("+a + b") == ["Plus", "a", "b"]
+    assert chain("+a - b") == ["Plus", "a", ["Times", "-1", "b"]]
+    # after an infix ``-`` the term is negated, so the unary plus is kept
+    assert chain("a-+b") == ["Plus", "a", ["Times", "-1", ["Plus", "b"]]]
+    assert chain("-+a") == ["Times", "-1", ["Plus", "a"]]
+
+
+def test_mathematica_blank_needs_a_symbol():
+    # ``x_``/``x_h`` build a Pattern only after a symbol.  After anything else
+    # the blank stands on its own and merely multiplies: Mathematica reads
+    # ``f[b]_c`` as ``Times[f[b], Blank[c]]``.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("a_b") == ["Pattern", "a", ["Blank", "b"]]
+    assert chain("x_Integer") == ["Pattern", "x", ["Blank", "Integer"]]
+    assert chain("a_") == ["Pattern", "a", ["Blank"]]
+    assert chain("f[b]_c") == ["Times", ["f", "b"], ["Blank", "c"]]
+    assert chain("f[b]_") == ["Times", ["f", "b"], ["Blank"]]
+    assert chain("f[b]__") == ["Times", ["f", "b"], ["BlankSequence"]]
+    assert chain("f[b]___") == ["Times", ["f", "b"], ["BlankNullSequence"]]
+    assert chain("f[b]_.") == ["Times", ["f", "b"], ["Optional", ["Blank"]]]
+    assert chain("a'_") == ["Times", [["Derivative", "1"], "a"], ["Blank"]]
+    assert chain("a____") == \
+        ["Times", ["Pattern", "a", ["BlankNullSequence"]], ["Blank"]]
+    assert chain("_?NumberQ") == ["PatternTest", ["Blank"], "NumberQ"]
+    assert chain("f[x_?NumberQ]") == \
+        ["f", ["PatternTest", ["Pattern", "x", ["Blank"]], "NumberQ"]]
+
+
+def test_parse_mathematica_derivative():
+    # Mathematica curries derivative heads (``f'[x]`` is ``Derivative[1][f][x]``);
+    # SymPy has no curried heads, so the idiom is translated as a whole.
+    f, g = Function("f"), Function("g")
+    assert parse_mathematica("f'[x]") == f(x).diff(x)
+    assert parse_mathematica("f''[x]") == f(x).diff(x, 2)
+    assert parse_mathematica("f'[x]*g[x]") == f(x).diff(x)*g(x)
+    assert parse_mathematica("2 f''[x] + g'[y]") == 2*f(x).diff(x, 2) + g(y).diff(y)
+    assert parse_mathematica("Derivative[1][f][x]") == f(x).diff(x)
+    assert parse_mathematica("Derivative[1,1][f][x,y]") == f(x, y).diff(x, y)
+    assert parse_mathematica("Derivative[2,1][f][x,y]") == f(x, y).diff(x, x, y)
+    assert parse_mathematica("Sin'[x]") == sin(x).diff(x)
+
+    # a derivative taken at something that is not a plain symbol needs a Subs,
+    # since the differentiation is with respect to the argument slot
+    e = parse_mathematica("f'[2 x]")
+    assert e.func.__name__ == "Subs"
+    assert e.doit() == f(2*x).diff(x)/2
+
+    # applied to nothing, the derivative operator itself is the value
+    e = parse_mathematica("f'")
+    assert isinstance(e, Lambda)
+    assert e(x) == f(x).diff(x)
+
+
+def test_mathematica_blanks_and_patterns():
+    # Anonymous blanks: with no symbol on the left there is nothing to name, so
+    # the blank stands on its own -- ``f[_]``, ``f[_Integer]``, ``__Integer``.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("_") == ["Blank"]
+    assert chain("__") == ["BlankSequence"]
+    assert chain("___") == ["BlankNullSequence"]
+    assert chain("_.") == ["Optional", ["Blank"]]
+    assert chain("f[_]") == ["f", ["Blank"]]
+    assert chain("f[__]") == ["f", ["BlankSequence"]]
+    assert chain("f[___]") == ["f", ["BlankNullSequence"]]
+    assert chain("FalseQ[_]") == ["FalseQ", ["Blank"]]
+    # ... and the head-restricted forms, named or not
+    assert chain("_Integer") == ["Blank", "Integer"]
+    assert chain("__Integer") == ["BlankSequence", "Integer"]
+    assert chain("___Integer") == ["BlankNullSequence", "Integer"]
+    assert chain("IntegersQ[__Integer]") == ["IntegersQ", ["BlankSequence", "Integer"]]
+    assert chain("x_Integer") == ["Pattern", "x", ["Blank", "Integer"]]
+    assert chain("x__Integer") == ["Pattern", "x", ["BlankSequence", "Integer"]]
+    assert chain("x___Integer") == ["Pattern", "x", ["BlankNullSequence", "Integer"]]
+    assert chain("_?NumberQ") == ["PatternTest", ["Blank"], "NumberQ"]
+    assert chain("_Integer?Positive") == \
+        ["PatternTest", ["Blank", "Integer"], "Positive"]
+
+    # ``p : v`` names a pattern after a symbol and supplies a default otherwise.
+    assert chain("a:b") == ["Pattern", "a", "b"]
+    assert chain("s:{__}") == ["Pattern", "s", ["List", ["BlankSequence"]]]
+    assert chain("x_:1") == ["Optional", ["Pattern", "x", ["Blank"]], "1"]
+    assert chain("_:1") == ["Optional", ["Blank"], "1"]
+    assert chain("__:b") == ["Optional", ["BlankSequence"], "b"]
+    assert chain("a:b:c") == ["Optional", ["Pattern", "a", "b"], "c"]     # left assoc
+    assert chain("a:b+c") == ["Pattern", "a", ["Plus", "b", "c"]]
+    assert chain("a:b->c") == ["Rule", ["Pattern", "a", "b"], "c"]
+    assert chain("f[s:{__}]") == ["f", ["Pattern", "s", ["List", ["BlankSequence"]]]]
+    assert chain("s:{__}:>s") == \
+        ["RuleDelayed", ["Pattern", "s", ["List", ["BlankSequence"]]], "s"]
+
+    # A bracketing prefix must be completed before a tighter operator consumes it
+    assert chain("(a+b)?c") == ["PatternTest", ["Plus", "a", "b"], "c"]
+    assert chain("{a,b}?c") == ["PatternTest", ["List", "a", "b"], "c"]
+
+
+def test_mathematica_message_name():
+    chain = parse_mathematica_to_fullformlist
+    assert chain("Foo::usage") == ["MessageName", "Foo", ["_Str", "usage"]]
+    assert chain("Foo::usage::extra") == \
+        ["MessageName", "Foo", ["_Str", "usage"], ["_Str", "extra"]]
+    # binds tighter than everything else
+    assert chain("a::b+c") == ["Plus", ["MessageName", "a", ["_Str", "b"]], "c"]
+    assert chain("a::b[c]") == [["MessageName", "a", ["_Str", "b"]], "c"]
+    assert chain('a::usage = "text"') == \
+        ["Set", ["MessageName", "a", ["_Str", "usage"]], ["_Str", "text"]]
+
+
+def test_mathematica_whitespace_sensitive_tokens():
+    # Blanks and slots bind to a neighbour only without a space between them.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("a_b") == ["Pattern", "a", ["Blank", "b"]]
+    assert chain("a _ b") == ["Times", "a", ["Blank"], "b"]
+    assert chain("a__b") == ["Pattern", "a", ["BlankSequence", "b"]]
+    assert chain("a __ b") == ["Times", "a", ["BlankSequence"], "b"]
+    assert chain("a! _ b") == ["Times", ["Factorial", "a"], ["Blank"], "b"]
+    assert chain("a + _") == ["Plus", "a", ["Blank"]]
+    assert chain("#a") == ["Slot", ["_Str", "a"]]
+    assert chain("# a") == ["Times", ["Slot", "1"], "a"]
+    assert chain("#1") == ["Slot", "1"]
+    assert chain("# f[x]") == ["Times", ["Slot", "1"], ["f", "x"]]
+
+
+def test_mathematica_symbol_names():
+    # ``$`` is a symbol character and ``` ` ``` separates the context, which
+    # Mathematica resolves away.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("$SomeVariable") == "$SomeVariable"
+    assert chain("x$1") == "x$1"
+    assert chain("Block[{$Var = 2}, $Var]") == \
+        ["Block", ["List", ["Set", "$Var", "2"]], "$Var"]
+    # Only the contexts on $ContextPath are stripped; any other stays part of
+    # the name, exactly as Mathematica resolves them in a default session.
+    assert chain("Global`sym") == "sym"
+    assert chain("System`Plus") == "Plus"
+    assert chain("System`Sin[x]") == ["Sin", "x"]
+    assert chain("Foo`Private`x") == "Foo`Private`x"
+    assert chain("MyPkg`fn") == "MyPkg`fn"
+    # \[Rule] and \[RuleDelayed] parse both spelled out and as the character
+    assert chain(r"a \[Rule] b") == ["Rule", "a", "b"]
+    assert chain("a \uf522 b") == ["Rule", "a", "b"]
+    assert chain(r"a \[Rule] b \[RuleDelayed] c") == \
+        ["Rule", "a", ["RuleDelayed", "b", "c"]]
+    assert chain(r"{a \[Rule] 1, b \[RuleDelayed] 2}") == \
+        ["List", ["Rule", "a", "1"], ["RuleDelayed", "b", "2"]]
+
+
+def test_mathematica_assignment_and_right_associativity():
+    # Right-associative levels chain across different operators of the level,
+    # and ``=``/``:=`` bind looser than the compound assignments.
+    chain = parse_mathematica_to_fullformlist
+    assert chain("a = b := c") == ["Set", "a", ["SetDelayed", "b", "c"]]
+    assert chain("a -> b :> c") == ["Rule", "a", ["RuleDelayed", "b", "c"]]
+    assert chain("a /@ b @@ c") == ["Map", "a", ["Apply", "b", "c"]]
+    assert chain("a = b += c") == ["Set", "a", ["AddTo", "b", "c"]]
+    assert chain("a += b = c") == ["Set", ["AddTo", "a", "b"], "c"]
+    assert chain("a += b *= c") == ["AddTo", "a", ["TimesBy", "b", "c"]]
+    assert chain("a *= b := c") == ["SetDelayed", ["TimesBy", "a", "b"], "c"]
