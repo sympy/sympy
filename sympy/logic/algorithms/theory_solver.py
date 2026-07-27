@@ -34,7 +34,7 @@ T-consistency
 model
     M is a model of F if M satisfies F.
 
-explanation
+explanation (conflict clause)
     A clause stating why an assignment is T-inconsistent. It is obtained
     by negating the literals responsible for the conflict.
 
@@ -54,6 +54,7 @@ from typing import Any, Literal, Protocol, TYPE_CHECKING
 if TYPE_CHECKING:
     from sympy.assumptions.cnf import EncodedCNF
 
+ConflictClause = list[int]
 Explanation = list[int]
 Model = Any
 
@@ -66,15 +67,15 @@ class TheorySolver(Protocol):
     """
     @classmethod
     def from_encoded_cnf(
-        cls, encoded_cnf: EncodedCNF
-    ) -> tuple[TheorySolver, list[Explanation]]:
+        cls, formula: EncodedCNF
+    ) -> tuple[TheorySolver, list[ConflictClause]]:
         """
-        Create a Theory Solver instance from an encoded CNF.
+        Create a Theory Solver instance from a formula.
 
         Parameters
         ==========
 
-        encoded_cnf : EncodedCNF
+        formula : EncodedCNF
             The formula to solve. Only the atoms belonging to the theory T
             are handled by the solver; the rest are ignored.
 
@@ -84,9 +85,8 @@ class TheorySolver(Protocol):
         (solver, conflicts)
 
         conflicts : list of conflict clauses
-            Conflicts that are known before anything is asserted, for
-            example a pair of atoms that can never hold at the same time.
-            They should be added to the formula by the caller.
+            Clauses that follow from the atoms alone, and so hold no matter
+            what the engine later assigns.
         """
         raise NotImplementedError
 
@@ -130,7 +130,7 @@ class TheorySolver(Protocol):
 
     def reset(self) -> None:
         """
-        Reset the (partial) state M to initial state M'.
+        Reset the (partial) assignment M to initial state M'.
 
         This operation is not needed to be comprehensive, it is enough
         for the state M' to be logically equivalent to the initial state.
@@ -138,5 +138,4 @@ class TheorySolver(Protocol):
 
         The most simplistic approach would be to rebuild the solver.
         """
-dd
         raise NotImplementedError
