@@ -14,6 +14,7 @@ from sympy.core.intfunc import igcd
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.monomials import monom
 from sympy.polys.orderings import lex, MonomialOrder
+from sympy.polys.polyerrors import ExactQuotientFailed
 
 if TYPE_CHECKING:
     from sympy.polys.domains.domain import Domain, Er
@@ -126,8 +127,8 @@ def smp_coeff_wrt(
 
 
 def smp_deflate(
-    polys: list[smp[Er]], n: int, domain: Domain[Er]
-) -> tuple[tuple[int, ...], list[smp[Er]]]:
+    polys: Sequence[smp[Er]], n: int, domain: Domain[Er]
+) -> tuple[tuple[int, ...], Sequence[smp[Er]]]:
     # Deflate sparse polynomial exponents by their coordinate-wise gcd.
     J = [0] * n
     for d in polys:
@@ -148,7 +149,7 @@ def smp_deflate(
 
 
 def smp_deflate_by(
-    polys: list[smp[Er]], J: Sequence[int], n: int, domain: Domain[Er]
+    polys: Sequence[smp[Er]], J: Sequence[int], n: int, domain: Domain[Er]
 ) -> list[smp[Er]]:
     # Deflate sparse polynomial exponents by given coordinate-wise factors.
     deflated = []
@@ -387,22 +388,17 @@ def smp_imul_num(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> smp[Er]:
 
 
 def smp_quo_ground(d: smp[Er], x: Er, n: int, domain: Domain[Er]) -> smp[Er]:
-    # Divide exactly divisible coefficients by a ground element.
+    # Divide exactly divisible coefficients by a ground element, discard non exactly
+    # divisible coefficients.
     h: smp[Er] = {}
 
-    if domain.is_Field:
-        quo = domain.quo
-        for mon, coeff in d.items():
-            quotient = quo(coeff, x)
-            if quotient:
-                h[mon] = quotient
-    else:
-        # This is not valid for all domains (e.g. GF(p)).
-        for mon, coeff in d.items():
-            if not (coeff % x):  # type: ignore
-                quotient = coeff // x  # type: ignore
-                if quotient:
-                    h[mon] = quotient
+    for mon, coeff in d.items():
+        try:
+            quotient = domain.exquo(coeff, x)
+        except ExactQuotientFailed:
+            continue
+        if quotient:
+            h[mon] = quotient
 
     return h
 
@@ -414,14 +410,15 @@ def smp_trunc_ground(d: smp[Er], p: Er, n: int, domain: Domain[Er]) -> smp[Er]:
     if domain.is_ZZ:
         p = domain.convert(p)
         for mon, coeff in d.items():
-            coeff = domain.convert(coeff % p)  # type: ignore
-            if coeff > p // 2:  # type: ignore
+            coeff = domain.rem(coeff, p)
+            c = coeff - domain.quo(p, domain.convert(2))
+            if domain.is_positive(c):
                 coeff = domain.convert(coeff - p)
             if coeff:
                 h[mon] = coeff
     else:
         for mon, coeff in d.items():
-            coeff = domain.convert(coeff % p)  # type: ignore
+            coeff = domain.rem(coeff, p)
             if coeff:
                 h[mon] = coeff
 
@@ -591,11 +588,9 @@ def smp_term_div(
         if any(exp < 0 for exp in mon):
             return None
 
-    if domain.is_Field:
-        return mon, domain.quo(coeff1, coeff2)
-    elif not (coeff1 % coeff2):  # type: ignore
-        return mon, domain.quo(coeff1, coeff2)
-    else:
+    try:
+        return mon, domain.exquo(coeff1, coeff2)
+    except ExactQuotientFailed:
         return None
 
 
@@ -615,7 +610,7 @@ def smp_quo_term(
 
 def smp_div_list(
     d: smp[Er],
-    gs: list[smp[Er]],
+    gs: Sequence[smp[Er]],
     n: int,
     domain: Domain[Er],
     order: MonomialOrder = lex,
@@ -653,7 +648,7 @@ def smp_div_list(
 
 def smp_rem_list(
     d: smp[Er],
-    gs: list[smp[Er]],
+    gs: Sequence[smp[Er]],
     n: int,
     domain: Domain[Er],
     order: MonomialOrder = lex,
