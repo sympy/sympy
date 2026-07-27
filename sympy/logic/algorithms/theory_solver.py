@@ -30,4 +30,12 @@ class TheorySolver(Protocol):
         raise NotImplementedError
 
     def reset(self) -> None:
+        """
+        Reset the (pre) state M to initial state M'.
+
+        This operation is not needed to be comprehensive, it is enough
+        for the state M' to be logically equivalent to the initial state.
+        Or in other words, it can be more "simplified" version of the initial state.
+        """
+
         raise NotImplementedError
