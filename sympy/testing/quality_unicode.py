@@ -48,6 +48,9 @@ unicode_whitelist = [
     # joint.py uses some unicode for variable names in the docstrings
     r'*/sympy/physics/mechanics/joint.py',
 
+    # lagrange.py uses some unicode for variable names in the docstrings
+    r'*/sympy/physics/mechanics/lagrange.py',
+
     # lll method has unicode in docstring references and author name
     r'*/sympy/polys/matrices/domainmatrix.py',
     r'*/sympy/matrices/repmatrix.py',

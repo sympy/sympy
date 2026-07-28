@@ -220,13 +220,13 @@ def test_latex_basic():
 
     k = ZZ.cyclotomic_field(5)
     assert latex(k.ext.field_element([1, 2, 3, 4])) == \
-        r"\zeta^{3} + 2 \zeta^{2} + 3 \zeta + 4"
+        r"\zeta_{5}^{3} + 2 \zeta_{5}^{2} + 3 \zeta_{5} + 4"
     assert latex(k.ext.field_element([1, 2, 3, 4]), order='old') == \
-        r"4 + 3 \zeta + 2 \zeta^{2} + \zeta^{3}"
+        r"4 + 3 \zeta_{5} + 2 \zeta_{5}^{2} + \zeta_{5}^{3}"
     assert latex(k.primes_above(19)[0]) == \
-        r"\left(19, \zeta^{2} + 5 \zeta + 1\right)"
+        r"\left(19, \zeta_{5}^{2} + 5 \zeta_{5} + 1\right)"
     assert latex(k.primes_above(19)[0], order='old') == \
-           r"\left(19, 1 + 5 \zeta + \zeta^{2}\right)"
+           r"\left(19, 1 + 5 \zeta_{5} + \zeta_{5}^{2}\right)"
     assert latex(k.primes_above(7)[0]) == r"\left(7\right)"
 
     assert latex(1.5e20*x) == r"1.5 \cdot 10^{20} x"
@@ -1138,6 +1138,17 @@ def test_latex_intervals():
     assert latex(Interval(0, a, True, False)) == r"\left(0, a\right]"
     assert latex(Interval(0, a, False, True)) == r"\left[0, a\right)"
     assert latex(Interval(0, a, True, True)) == r"\left(0, a\right)"
+
+    # default interval delimiters
+    assert latex(Interval(0, a)) == r"\left[0, a\right]"
+    assert latex(Interval.Ropen(0, a)) == r"\left[0, a\right)"
+    assert latex(Interval.Lopen(0, a)) == r"\left(0, a\right]"
+    assert latex(Interval.open(0, a)) == r"\left(0, a\right)"
+
+    # french interval delimiters
+    assert latex(Interval.Ropen(0, a), open_delim=("]","[")) == r"\left[0, a\right["
+    assert latex(Interval.Lopen(0, a), open_delim=("]","[")) == r"\left]0, a\right]"
+    assert latex(Interval.open(0, a), open_delim=("]","[")) == r"\left]0, a\right["
 
 
 def test_latex_AccumuBounds():

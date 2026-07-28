@@ -767,6 +767,8 @@ def test_solve_linear():
     assert solve_linear(eq) == (0, 1)
     eq = cos(x)**2 + sin(x)**2  # = 1
     assert solve_linear(eq) == (0, 1)
+    assert solve_linear(5) == (0, 1)
+    assert solve_linear(0) == (0, 1)
     raises(ValueError, lambda: solve_linear(Eq(x, 3), 3))
 
 

@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import clear_cache
@@ -335,6 +338,24 @@ def test_Lambda_equality():
     assert Lambda(x, 2*x) != Lambda(y, 2*y)
 
 
+def test_Lambda_curry():
+    assert Lambda((x, y), x + y).curry() == Lambda(x, Lambda(y, x + y))
+    assert Lambda((x, y, z), x*y + z).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, x*y + z)))
+    assert Lambda(x, x**2).curry() == Lambda(x, x**2)
+    assert Lambda(((x,),), x**2).curry() == Lambda(x, x**2)
+    assert Lambda((x,), x**2).curry() == Lambda(x, x**2)
+    assert Lambda(x, Lambda(y, x + y)).curry() == Lambda(x, Lambda(y, x + y))
+    assert Lambda((x, (y, z)), x*y*z).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, x*y*z)))
+    assert Lambda(((x, y), z), x + y + z).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, x + y + z)))
+    assert Lambda((x), 1).curry() == Lambda(x, 1)
+    assert Lambda((x, (y, (z, t))), 1).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, Lambda(t, 1))))
+    assert Lambda((), 1).curry() == Lambda((), 1)
+
+
 def test_Subs():
     assert Subs(1, (), ()) is S.One
     # check null subs influence on hashing
@@ -551,6 +572,9 @@ def test_function_complex():
     assert log(xzf).is_complex is True
 
 
+# XXX: Concurrent execution has a severe CPU-scaling issue that needs to be
+# investigated.
+@pytest.mark.thread_unsafe(reason="has severe CPU scaling under concurrent execution")
 def test_function__eval_nseries():
     n = Symbol('n')
 
@@ -1161,6 +1185,11 @@ def test_Derivative_as_finite_difference():
     assert (d2fdxdy.as_finite_difference() - ref2).simplify() == 0
 
 
+# XXX: The expression cache is shared between threads but does not include the
+# thread-local exp_is_pow setting in its cache keys.
+@pytest.mark.thread_unsafe(
+    reason="changes exp_is_pow while using the shared expression cache"
+)
 def test_issue_11159():
     # Tests Application._eval_subs
     with _exp_is_pow(False):

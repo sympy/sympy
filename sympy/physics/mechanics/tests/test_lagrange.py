@@ -8,7 +8,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.matrices.dense import Matrix
 from sympy.simplify.simplify import simplify
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_invalid_coordinates():
@@ -21,7 +21,7 @@ def test_invalid_coordinates():
     P.point.set_pos(O, l * (sin(q) * N.x - cos(q) * N.y))
     P.potential_energy = m * g * P.point.pos_from(O).dot(N.y)
     L = Lagrangian(N, P)
-    raises(ValueError, lambda: LagrangesMethod(L, [q], bodies=P))
+    raises(ValueError, lambda: LagrangesMethod(L, [q], bodies=[P]))
 
 
 def test_disc_on_an_incline_plane():
@@ -66,7 +66,11 @@ def test_disc_on_an_incline_plane():
     q = [y, theta]
     hol_coneqs = [y - R * theta]
     m = LagrangesMethod(L, q, hol_coneqs=hol_coneqs)
+    assert m.holonomic_constraints == Matrix(hol_coneqs)
+    assert m.velocity_constraints == Matrix(hol_coneqs).diff(dynamicsymbols._t)
     m.form_lagranges_equations()
+    assert m.lam_coeffs == -m.velocity_constraints.jacobian(m.u)
+    assert m.lam_coeffs == -m.constraints_jacobian
     rhs = m.rhs()
     rhs.simplify()
     assert rhs[2] == 2*g*sin(alpha)/3
@@ -108,6 +112,8 @@ def test_simp_pen():
 
     # The 'LagrangesMethod' class is invoked to obtain equations of motion.
     lm = LagrangesMethod(L, [q])
+    assert lm.frame is None
+    assert lm.holonomic_constraints == Matrix()
     lm.form_lagranges_equations()
     RHS = lm.rhs()
     assert RHS[1] == -g*sin(q)/l
@@ -132,6 +138,7 @@ def test_nonminimal_pendulum():
     Lag = Lagrangian(N, pP)
     LM = LagrangesMethod(Lag, [q1, q2], hol_coneqs=f_c,
             forcelist=[(P, m*g*N.x)], frame=N)
+    assert LM.frame == N
     LM.form_lagranges_equations()
     # Check solution
     lam1 = LM.lam_vec[0, 0]
@@ -141,6 +148,10 @@ def test_nonminimal_pendulum():
     # Check multiplier solution
     lam_sol = Matrix([(19.6*q1 + 2*q1d**2 + 2*q2d**2)/(4*q1**2/m + 4*q2**2/m)])
     assert simplify(LM.solve_multipliers(sol_type='Matrix')) == simplify(lam_sol)
+
+    assert LM.loads == [(P, m*g*N.x)]
+    with warns_deprecated_sympy():
+        assert LM.forcelist == [(P, m*g*N.x)]
 
 
 def test_dub_pen():
@@ -234,6 +245,7 @@ def test_rolling_disc():
     q2 = Function('q2')
     q3 = Function('q3')
     l = LagrangesMethod(Lag, q)
+    assert l.nonholonomic_constraints == Matrix()
     l.form_lagranges_equations()
     RHS = l.rhs()
     RHS.simplify()
@@ -246,3 +258,17 @@ def test_rolling_disc():
     assert RHS[5] == (-5*cos(q2(t))*Derivative(q1(t), t) + 6*tan(q2(t)
         )*Derivative(q3(t), t) + 4*Derivative(q1(t), t)/cos(q2(t))
         )*Derivative(q2(t), t)
+
+    # This test never added the nonholonmic constraints. Below the constraints
+    # are tested.
+    contact_point_vel = C.vel(N) + R.ang_vel_in(N).cross(-r*L.z)
+    nonholonomic = [contact_point_vel.dot(Y.x), contact_point_vel.dot(Y.y)]
+    l = LagrangesMethod(Lag, q, nonhol_coneqs=nonholonomic)
+    assert l.nonholonomic_constraints == Matrix(nonholonomic)
+    assert l.velocity_constraints == Matrix(nonholonomic)
+    l.form_lagranges_equations()
+    assert l.mass_matrix.shape == (3, 5)
+    assert l.mass_matrix == Matrix([
+        [3*m*r**2*sin(q2(t))**2/2 + m*r**2*cos(q2(t))**2/4,          0, 3*m*r**2*sin(q2(t))/2, r*sin(q2(t)),             0],
+        [                                                0, 5*m*r**2/4,                     0,            0, -r*cos(q2(t))],
+        [                            3*m*r**2*sin(q2(t))/2,          0,            3*m*r**2/2,            r,             0]])

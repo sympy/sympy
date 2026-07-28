@@ -1648,6 +1648,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     _reciprocal_of = None       # mandatory, to be defined in subclass
     _singularities = (S.ComplexInfinity,)
 
+    is_zero = False # Assuming that the subclasses are sec and csc
+
     # _is_even and _is_odd are used for correct evaluation of csc(-x), sec(-x)
     # TODO refactor into TrigonometricFunction common parts of
     # trigonometric functions eval() like even/odd, func(x+2*k*pi), etc.
@@ -1760,6 +1762,30 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         return (1/self._reciprocal_of(self.args[0]))._eval_nseries(x, n, logx)
+
+    def _eval_is_positive(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_extended_positive(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_nonnegative(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_extended_nonnegative(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_negative(self):
+        return self._reciprocal_of(self.args[0]).is_negative
+
+    def _eval_is_extended_negative(self):
+        return self._reciprocal_of(self.args[0]).is_negative
+
+    def _eval_is_nonpositive(self):
+        return self._reciprocal_of(self.args[0]).is_negative
+
+    def _eval_is_extended_nonpositive(self):
+        return self._reciprocal_of(self.args[0]).is_negative
 
 
 class sec(ReciprocalTrigonometricFunction):

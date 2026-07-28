@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mod import Mod
@@ -1693,6 +1696,9 @@ def test_AssocOp_doit():
     assert d.doit().args == (4*S.One, Pow(x,2))
 
 
+@pytest.mark.thread_unsafe(
+    reason="expects warning side effects from cached constructors"
+)
 def test_Add_Mul_Expr_args():
     nonexpr = [Basic(), Poly(x, x), FiniteSet(x)]
     for typ in [Add, Mul]:

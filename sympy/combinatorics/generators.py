@@ -1,11 +1,17 @@
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
 from sympy.combinatorics.permutations import Permutation
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import variations, rotate_left
 
 
-def symmetric(n):
+def symmetric(n: int) -> Iterator[Permutation]:
     """
     Generates the symmetric group of order n, Sn.
 
@@ -19,7 +25,7 @@ def symmetric(n):
     yield from (Permutation(perm) for perm in variations(range(n), n))
 
 
-def cyclic(n):
+def cyclic(n: int) -> Iterator[Permutation]:
     """
     Generates the cyclic group of order n, Cn.
 
@@ -42,7 +48,7 @@ def cyclic(n):
         gen = rotate_left(gen, 1)
 
 
-def alternating(n):
+def alternating(n: int) -> Iterator[Permutation]:
     """
     Generates the alternating group of order n, An.
 
@@ -59,7 +65,7 @@ def alternating(n):
             yield p
 
 
-def dihedral(n):
+def dihedral(n: int) -> Iterator[Permutation]:
     """
     Generates the dihedral group of order 2n, Dn.
 
@@ -95,7 +101,7 @@ def dihedral(n):
             gen = rotate_left(gen, 1)
 
 
-def rubik_cube_generators():
+def rubik_cube_generators() -> list[Permutation]:
     """Return the permutations of the 3x3 Rubik's cube, see
     https://www.gap-system.org/Doc/Examples/rubik.html
     """
@@ -116,7 +122,7 @@ def rubik_cube_generators():
     return [Permutation([[i - 1 for i in xi] for xi in x], size=48) for x in a]
 
 
-def rubik(n):
+def rubik(n: int) -> list[Permutation]:
     """Return permutations for an nxn Rubik's cube.
 
     Permutations returned are for rotation of each of the slice
@@ -241,7 +247,7 @@ def rubik(n):
             return p
         g.append(Permutation(p))
 
-    g = []  # container for the group's permutations
+    g: list[Permutation] = []  # container for the group's permutations
     I = list(range(6*n**2))  # the identity permutation used for checking
 
     # define permutations corresponding to cw rotations of the planes

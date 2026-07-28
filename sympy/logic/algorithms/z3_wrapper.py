@@ -93,7 +93,7 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
 
         symbols |= pred.free_symbols
         pred = pred_str
-        assertion = f"(assert  (implies d{enc} {pred}))"
+        assertion = f"(assert (= d{enc} {pred}))"
         assertions.append(assertion)
 
     for sym in symbols:

@@ -74,11 +74,10 @@ class Kind(object, metaclass=KindMeta):
 
     """
     def __new__(cls, *args):
-        if args in cls._inst:
-            inst = cls._inst[args]
-        else:
-            inst = super().__new__(cls)
-            cls._inst[args] = inst
+        inst = cls._inst.get(args)
+        if inst is None:
+            candidate = super().__new__(cls)
+            inst = cls._inst.setdefault(args, candidate)
         return inst
 
 

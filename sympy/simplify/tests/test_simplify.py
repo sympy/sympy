@@ -684,6 +684,10 @@ def test_besselsimp():
     assert besselsimp(x**2* besselj(a,x) + x**3*besselj(a+1, x) + besselj(a+2, x)) == \
     2*a*x*besselj(a + 1, x) + x**3*besselj(a + 1, x) - x**2*besselj(a + 2, x) + 2*x*besselj(a + 1, x) + besselj(a + 2, x)
 
+    assert besselsimp(besselj(a, x) + besselj(a+1, x) + besselj(a+2, x) + besselj(
+    b, x) + besselj(b+1, x) + besselj(b+2, x)) == (2*a*besselj(a+1,x) + 2*b*besselj(b+1,x) + \
+        x*besselj(a+1,x) + x*besselj(b+1,x) + 2*besselj(a+1,x) + 2*besselj(b+1,x))/x
+
 def test_Piecewise():
     e1 = x*(x + y) - y*(x + y)
     e2 = sin(x)**2 + cos(x)**2
@@ -1113,3 +1117,10 @@ def test_nc_recursion_coeff():
     X = symbols("X", commutative = False)
     assert (2 * cos(pi/3) * X).simplify() == X
     assert (2.0 * cos(pi/3) * X).simplify() == X
+
+
+def test_issue_14269():
+    x = symbols('x')
+    root = (sqrt(2) - 1)**Rational(1, 3) - (sqrt(2) + 1)**Rational(1, 3)
+    expr = (x**3 + 3*x + 2).subs(x, root)
+    assert simplify(expr) == 0
