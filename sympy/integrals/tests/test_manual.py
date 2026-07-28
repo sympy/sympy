@@ -244,12 +244,19 @@ def test_manualintegrate_inversetrig():
 
 
 def test_manualintegrate_trig_substitution():
-    assert manualintegrate(sqrt(16*x**2 - 9)/x, x) == \
-        Piecewise((sqrt(16*x**2 - 9) - 3*acos(3/(4*x)),
-                   And(x < Rational(3, 4), x > Rational(-3, 4))))
-    assert manualintegrate(1/(x**4 * sqrt(25-x**2)), x) == \
-        Piecewise((-sqrt(-x**2/25 + 1)/(125*x) -
-                   (-x**2/25 + 1)**(3*S.Half)/(15*x**3), And(x < 5, x > -5)))
+    f = sqrt(16*x**2 - 9)/x
+    F = (2*x + sqrt(16*x**2 - 9)/2
+         + 6*atan(3/(4*x + sqrt(16*x**2 - 9)))
+         - S(9)/2/(4*x + sqrt(16*x**2 - 9)))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    f = 1/(x**4*sqrt(25 - x**2))
+    F = -8*I*(1/(1250*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**2)
+              + 1/(1875*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**3))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
     assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
         sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
 
@@ -850,8 +857,40 @@ def test_manualintegrate_sqrt_fractional_linear():
     assert_is_integral_of(f, F)
 
 
+def test_manualintegrate_euler_substitution():
+    # General quadratic, with the radical nested inside a Pow
+    f = 1/(x + sqrt(x**2 + 2*x + 2))
+    F = (-log(1 + 1/(x + sqrt(x**2 + 2*x + 2)))/2
+         + log(x + sqrt(x**2 + 2*x + 2))/2
+         - S.Half/(1 + 1/(x + sqrt(x**2 + 2*x + 2))))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    # Proportional quadratic radicals
+    f = sqrt(2*x**2 + 2)/((x + sqrt(x**2 + 1))*sqrt(x**2 + 1))
+    F = sqrt(2)*(log(2*(x + sqrt(x**2 + 1))**2)
+                  - 1/(x + sqrt(x**2 + 1))**2)/4
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    # Quadratic with a double root (zero discriminant)
+    f = sqrt(x**2 + 2*x + 1)/(x + 1)
+    F = sqrt((x + 1)**2)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    # Symbolic quadratic coefficient and its degenerate branch
+    f = 1/(sqrt(c)*x + sqrt(c*x**2 + 1))
+    F1 = (log((sqrt(c)*x + sqrt(c*x**2 + 1))**2)/2
+          - 1/(2*(sqrt(c)*x + sqrt(c*x**2 + 1))**2))/(2*sqrt(c))
+    F2 = x
+    assert manualintegrate(f, x) == Piecewise((F1, Ne(c, 0)), (F2, True))
+    assert (F1.diff(x) - f).cancel() == 0
+    assert (F2.diff(x) - f.subs(c, 0)).cancel() == 0
+
+
 def test_manualintegrate_sqrt_quadratic():
-    assert_is_integral_of(1/sqrt((x - I)**2-1), log(2*x + 2*sqrt(x**2 - 2*I*x - 2) - 2*I))
+    assert_is_integral_of(1/sqrt((x - I)**2-1), log(x + sqrt(x**2 - 2*I*x - 2) - I))
     assert_is_integral_of(1/sqrt(3*x**2+4*x+5), sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3)
     assert_is_integral_of(1/sqrt(-3*x**2+4*x+5), sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3)
     assert_is_integral_of(1/sqrt(3*x**2+4*x-5), sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/3)
