@@ -127,7 +127,7 @@ class CharacterTable(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics import CharacterTable, AlternatingGroup
+        >>> from sympy.combinatorics import AlternatingGroup
         >>> AlternatingGroup(3).character_table().zeta_order
         3
         >>> AlternatingGroup(5).character_table().zeta_order
