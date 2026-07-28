@@ -403,7 +403,8 @@ class StrPrinter(Printer):
         )
 
     def _print_CharacterTable(self, P):
-        return P._format_str(self)
+        return "CharacterTable(%s, %s)" % (
+            self._print(P._rep), self._print(P._conjugacy_class_reps))
 
     def _print_ElementwiseApplyFunction(self, expr):
         return "{}.({})".format(

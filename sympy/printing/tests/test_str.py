@@ -4,7 +4,6 @@ from sympy.algebras.quaternion import Quaternion
 from sympy.assumptions.ask import Q
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.partitions import Partition
-from sympy.combinatorics.character_table import CharacterTable
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add
 from sympy.core.containers import (Dict, Tuple)
@@ -1041,12 +1040,11 @@ def test_MatrixSlice():
 
 def test_CharacterTable_str():
     from sympy.combinatorics.named_groups import SymmetricGroup
-    tbl = CharacterTable(SymmetricGroup(1))
-    assert str(tbl) == sstr(tbl) == 'CharacterTable([[1]])'
+    tbl = SymmetricGroup(1).character_table()
+    assert str(tbl) == sstr(tbl) == 'CharacterTable(DomainMatrix([[1]], (1, 1), ZZ), [(0)])'
 
-    tbl = CharacterTable(SymmetricGroup(2))
-    assert str(tbl) == 'CharacterTable([[1, 1], [1, -1]])'
-    assert sstr(tbl) == 'CharacterTable([\n[1,  1],\n[1, -1]])'
+    tbl = SymmetricGroup(2).character_table()
+    assert str(tbl) == sstr(tbl) == 'CharacterTable(DomainMatrix([[1, 1], [1, -1]], (2, 2), ZZ), [(1), (0 1)])'
 
 
 def test_true_false():

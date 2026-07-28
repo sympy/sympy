@@ -10,11 +10,10 @@ from sympy.polys.domains import ZZ, QQ, FiniteField
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.polyclasses import ANP
 from sympy.printing.defaults import DefaultPrinting
-from sympy.printing.str import StrPrinter
+from sympy.printing.repr import srepr
 
 if TYPE_CHECKING:
-    from typing import Protocol, Iterable, Iterator, Generator, Sequence
-    from typing_extensions import Self
+    from typing import Protocol, Iterable, Iterator, Sequence
     from sympy.combinatorics.perm_groups import PermutationGroup
     from sympy.core import Expr
     from sympy.polys.domains.domain import Domain, Er
@@ -43,18 +42,17 @@ class CharacterTable(DefaultPrinting):
     Examples
     ========
 
-    >>> from sympy.combinatorics import CharacterTable, SymmetricGroup, AlternatingGroup
-    >>> CharacterTable(SymmetricGroup(4)) # doctest: +SKIP
-    CharacterTable([
-     [1,  1,  1,  1,  1],
-     [1, -1,  1, -1,  1],
-     [2,  0,  2,  0, -1],
-     [3, -1, -1,  1,  0],
-     [3,  1, -1, -1,  0]])
+    The character table of a permutation group is computed by calling the
+    `character_table` method on the group.
+
+    >>> from sympy.combinatorics import SymmetricGroup, AlternatingGroup
+    >>> M = SymmetricGroup(4).character_table()
+    >>> type(M)
+    <class 'sympy.combinatorics.character_table.CharacterTable'>
 
     Calling `.as_matrix()` on the character table returns a matrix.
 
-    >>> CharacterTable(SymmetricGroup(4)).as_matrix() # doctest: +SKIP
+    >>> M.as_matrix()
     Matrix([
      [1,  1,  1,  1,  1],
      [1, -1,  1, -1,  1],
@@ -66,9 +64,9 @@ class CharacterTable(DefaultPrinting):
     the values of the characters as domain elements. The domain of a character table is
     either ZZ or a cyclotomic field.
 
-    >>> M = CharacterTable(AlternatingGroup(4))
-    >>> M # doctest: +SKIP
-    CharacterTable([
+    >>> M = AlternatingGroup(4).character_table()
+    >>> M.as_matrix()
+    Matrix([
      [1,          1,          1,  1],
      [1, -1 - zeta3,      zeta3,  1],
      [1,      zeta3, -1 - zeta3,  1],
@@ -82,7 +80,7 @@ class CharacterTable(DefaultPrinting):
     which can be accessed with the method `conjugacy_class_reps`.
 
     >>> M.conjugacy_class_reps() # doctest: +SKIP
-    [Permutation(3), Permutation(0, 2, 3), Permutation(0, 1, 3), Permutation(0, 2)(1, 3)]
+    [(3), (0 3 1), (3)(0 2 1), (0 3)(1 2)]
 
     References
     ==========
@@ -97,15 +95,9 @@ class CharacterTable(DefaultPrinting):
     _rep: DomainMatrix
     _conjugacy_class_reps: list[Permutation]
 
-    def __new__(cls, G: PermutationGroup):
-        return cls.from_perm_group(G)
-
-    @classmethod
-    def new(cls, rep: DomainMatrix, conjugacy_class_reps: list[Permutation]) -> Self:
-        obj = super().__new__(cls)
-        obj._rep = rep
-        obj._conjugacy_class_reps = conjugacy_class_reps
-        return obj
+    def __init__(self, rep: DomainMatrix, conjugacy_class_reps: list[Permutation]):
+        self._rep = rep
+        self._conjugacy_class_reps = conjugacy_class_reps
 
     def conjugacy_class_reps(self) -> list[Permutation]:
         return self._conjugacy_class_reps[:]
@@ -123,15 +115,8 @@ class CharacterTable(DefaultPrinting):
     def shape(self) -> tuple[int, int]:
         return self._rep.shape
 
-    def __str__(self) -> str:
-        return "CharacterTable(%s)" % str(self.tolist())
-
-    def _format_str(self, printer=None) -> str:
-        if not printer:
-            printer = StrPrinter()
-        linefeed = "\n" if self.shape[0] > 1 else ""
-        table = self.as_matrix().table(printer, rowsep=',\n')
-        return "CharacterTable([%s%s])" % (linefeed, table)
+    def __repr__(self):
+        return srepr(self)
 
     @property
     def zeta_order(self) -> int:
@@ -143,15 +128,15 @@ class CharacterTable(DefaultPrinting):
         ========
 
         >>> from sympy.combinatorics import CharacterTable, AlternatingGroup
-        >>> CharacterTable(AlternatingGroup(3)).zeta_order
+        >>> AlternatingGroup(3).character_table().zeta_order
         3
-        >>> CharacterTable(AlternatingGroup(5)).zeta_order
+        >>> AlternatingGroup(5).character_table().zeta_order
         5
 
         It returns 1 if the character table is over ZZ.
 
         >>> from sympy.combinatorics import SymmetricGroup
-        >>> CharacterTable(SymmetricGroup(4)).zeta_order
+        >>> SymmetricGroup(4).character_table().zeta_order
         1
         """
         if self._rep.domain.is_CyclotomicField:
@@ -177,7 +162,7 @@ class CharacterTable(DefaultPrinting):
         ========
 
         >>> from sympy.combinatorics import CharacterTable, AlternatingGroup
-        >>> CharacterTable.from_perm_group(AlternatingGroup(4)) # doctest: +SKIP
+        >>> CharacterTable.from_perm_group(AlternatingGroup(4)).as_matrix()
         Matrix([
          [1,          1,          1,  1],
          [1, -1 - zeta3,      zeta3,  1],
@@ -189,7 +174,7 @@ class CharacterTable(DefaultPrinting):
 
 def _compute_cmmatrices(
     cc: Sequence[CC], dom: Domain[Er]
-) -> Generator[DomainMatrix, None, None]:
+) -> Iterator[DomainMatrix]:
     """
     Compute the class multiplication matrices.
     """
@@ -233,6 +218,9 @@ def _simultaneous_diagonalize(
     Compute the simultaneous diagonalization of a list of DomainMatrices.
     Returns Z such that `Z * N * Z.inv()` is diagonal for all N in mats
     and Z is on the same domain as mats (assuming Z exists).
+
+    This is used internally for computing the simultaneous diagonalization
+    of class multiplication matrices, where such Z must exist.
     """
     it = iter(mats)
     N0 = next(it)
@@ -472,8 +460,8 @@ def dixon_character_table(conjugacy_classes: Sequence[set[Permutation]]) -> Char
     >>> from sympy.combinatorics.character_table import dixon_character_table
     >>> from sympy.combinatorics import AlternatingGroup
     >>> G = AlternatingGroup(4)
-    >>> dixon_character_table(G.conjugacy_classes())
-    CharacterTable([
+    >>> dixon_character_table(G.conjugacy_classes()).as_matrix()
+    Matrix([
      [1,          1,          1,  1],
      [1, -1 - zeta3,      zeta3,  1],
      [1,      zeta3, -1 - zeta3,  1],
@@ -527,4 +515,4 @@ def dixon_character_table(conjugacy_classes: Sequence[set[Permutation]]) -> Char
         dm = dm.extract(_rows, _cols)
 
     conjugacy_class_reps = [next(iter(c)) for c in conjugacy_classes]
-    return CharacterTable.new(dm, conjugacy_class_reps)
+    return CharacterTable(dm, conjugacy_class_reps)

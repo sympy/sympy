@@ -12,7 +12,7 @@ from sympy.combinatorics.galois import (
     S5TransitiveSubgroups,
     S6TransitiveSubgroups
 )
-from sympy.combinatorics.character_table import CharacterTable, dixon_character_table
+from sympy.combinatorics.character_table import dixon_character_table
 
 import pytest
 
@@ -24,16 +24,16 @@ def _cmp_tbl(tbl1, tbl2):
 
 
 def test_character_table():
-    tbl = CharacterTable(SymmetricGroup(1))
+    tbl = SymmetricGroup(1).character_table()
     assert (tbl.as_matrix() - Matrix([[1]])).is_zero_matrix
 
-    tbl = CharacterTable(SymmetricGroup(2))
+    tbl = SymmetricGroup(2).character_table()
     assert tbl.tolist() == [[1, 1], [1, -1]]
     assert (tbl.as_matrix() - Matrix([[1, 1], [1, -1]])).is_zero_matrix
     assert tbl.shape == (2, 2)
     assert tbl.zeta_order == 1
 
-    tbl = CharacterTable(AlternatingGroup(3))
+    tbl = AlternatingGroup(3).character_table()
     assert tbl.as_matrix()._rep.domain.is_CyclotomicField
     assert tbl.zeta_order == 3
 
@@ -148,7 +148,7 @@ GROUPS = [
 @pytest.mark.parametrize("group", GROUPS, ids=lambda g: g.value)
 def test_generic_character_table(group):
     G = group.get_perm_group()
-    table = CharacterTable(G)
+    table = G.character_table()
     cc = G.conjugacy_classes()
     reps = table.conjugacy_class_reps()
     assert all(r in c for r, c in zip(reps, cc))
