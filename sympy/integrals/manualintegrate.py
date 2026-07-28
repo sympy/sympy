@@ -2020,7 +2020,7 @@ def quadratic_denom_rule(integral):
     return
 
 def weierstrass_substitution(integral):
-     # look for rational function in sin/cos
+    # Look for a rational function in trigonometric functions
     integrand, x = integral
 
     TRIG = (sin, cos, tan, cot, sec, csc)
@@ -2032,7 +2032,7 @@ def weierstrass_substitution(integral):
     if integrand.is_rational_function(*trig_atoms) is not True:
         return None
     masked = integrand.xreplace({atom: Dummy() for atom in trig_atoms})
-    # esclude x*sin(x)
+    # exclude x*sin(x)
     if masked.has(x):
         return None
 
@@ -2060,7 +2060,7 @@ def weierstrass_substitution(integral):
     ratios = []
     for _, coeff, _ in variable_atoms:
         ratio = (coeff / coeff0).cancel()
-        # use this insted of is_rational to avoid taking 3/a
+        # use this instead of is_rational to avoid taking 3/a
         # if a is declared rational
         if not isinstance(ratio, Rational):
             return None
@@ -2074,19 +2074,26 @@ def weierstrass_substitution(integral):
     for atom, coeff, phase in variable_atoms:
         harmonic = (coeff / omega).cancel()
         if harmonic.is_negative:
-            # take - outside to help expand_trig work at first attempt
-            # for example tan(-2*u + b) would not work with minus inside (would leave tan(2*u))
+            # Move the minus sign outside to help expand_trig work on the first attempt
+            # For example, tan(-2*u + b) would not expand correctly with the minus sign inside
             positive_argument = -harmonic*u - phase
             replacement = atom.func(positive_argument)
             if atom.func in ODD_TRIG:
                 replacement = -replacement
         else:
             replacement = atom.func(harmonic*u + phase)
-    replacements[atom] = replacement
+        replacements[atom] = replacement
     expr_u = integrand.xreplace(replacements)
     # rewrites sin, cos, tan to substitute, for example
     # cos(2*u + 2) as (2*cos(u)**2 - 1)*cos(2) - 2*sin(2)*sin(u)*cos(u)
     expr_u = expand_trig(expr_u)
+
+    zero_replacements = {atom: atom.func(phase) for atom, _, phase in variable_atoms}
+    zero_integrand = integrand.xreplace(zero_replacements)
+
+    if omega.is_zero is True:
+        zero_substep = integral_steps(zero_integrand, x)
+        return RewriteRule(integrand, x, zero_integrand, zero_substep)
 
     t = Dummy("t")
     transformed = expr_u.xreplace({
@@ -2094,6 +2101,8 @@ def weierstrass_substitution(integral):
         cos(u): (1 - t**2)/(1 + t**2),
         tan(u): 2*t/(1 - t**2),
         cot(u): (1 - t**2)/(2*t),
+        sec(u): (1 + t**2)/(1 - t**2),
+        csc(u): (1 + t**2)/(2*t),
     })
 
     # divide by omega, omega = 0 is a degenerate condition
@@ -2108,13 +2117,10 @@ def weierstrass_substitution(integral):
     if omega.is_zero is False:
         return generic_step
 
-    zero_replacements = {atom: atom.func(phase) for atom, _, phase in variable_atoms}
-    zero_integrand = integrand.xreplace(zero_replacements)
     zero_substep = integral_steps(zero_integrand, x)
-    if zero_substep.contains_dont_know():
-        return None
+    zero_step = RewriteRule(integrand, x, zero_integrand, zero_substep)
 
-    return PiecewiseRule(integrand, x, [(zero_substep, Eq(omega, 0)), (generic_step, S.true)])
+    return PiecewiseRule(integrand, x, [(zero_step, Eq(omega, 0)), (generic_step, S.true)])
 
 def sqrt_fractional_linear_rule(integral : IntegralInfo):
     """
