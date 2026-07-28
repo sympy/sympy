@@ -176,6 +176,7 @@ class LRASolver():
 
         self.atom_id_to_boundaries = atom_id_to_boundaries
         self.A = A
+        self._A0 = A.copy() if self.run_checks else None
         # initially slack/basic and nonslack/nonbasic mean the same thing.
         # however, basic/nonbasic can be modified in process meanwhile slack/nonslack stays constant.
         self.basic = slack_variables
@@ -365,7 +366,7 @@ class LRASolver():
                            s_subs, testing_mode)
         return solver, conflicts
 
-    def reset_bounds(self):
+    def reset(self):
         """
         Resets the state of the LRASolver to before
         anything was asserted.
@@ -476,9 +477,8 @@ class LRASolver():
 
         if self.run_checks and all(not math.isinf(v.assign.q)
                                    for v in self.all_var):
-            M = self.A
             X = Matrix([v.assign.q for v in self.all_var])
-            assert all(abs(val) < 10 ** (-10) for val in M * X)
+            assert all(abs(val) < 10 ** (-10) for val in self._A0 * X)
 
         return None
 
@@ -489,9 +489,10 @@ class LRASolver():
         """
         i = xi.col_idx
         assert i is not None
+        dv = v - xi.assign
         for j, b in enumerate(self.basic):
-            aji = self.A[j, i]
-            b.assign = b.assign + (v - xi.assign)*aji
+            a_ji = self.A[j, i]
+            b.assign = b.assign + dv*a_ji
         xi.assign = v
 
     def check(self):
@@ -518,20 +519,16 @@ class LRASolver():
         if self.result:
             return self.result
 
-        from sympy.matrices.dense import Matrix
-        M = self.A.copy()
-        basic = {s: i for i, s in enumerate(self.basic)}  # contains the row index associated with each basic variable
-        nonbasic = set(self.nonbasic)
         while True:
             if self.run_checks:
                 # nonbasic variables must always be within bounds
-                assert all(((nb.assign >= nb.lower) == True) and ((nb.assign <= nb.upper) == True) for nb in nonbasic)
+                assert all(((nb.assign >= nb.lower) == True) and ((nb.assign <= nb.upper) == True) for nb in self.nonbasic)
 
                 # assignments for x must always satisfy Ax = 0
                 # probably have to turn this off when dealing with strict ineq
                 if all(not math.isinf(v.assign.q) for v in self.all_var):
                     X = Matrix([v.assign.q for v in self.all_var])
-                    assert all(abs(val) < 10**(-10) for val in M*X)
+                    assert all(abs(val) < 10**(-10) for val in self._A0*X)
 
                 # check upper and lower match this format:
                 # x <= rat + delta iff x < rat
@@ -542,22 +539,20 @@ class LRASolver():
                 assert all(x.upper.d <= 0 for x in self.all_var)
                 assert all(x.lower.d >= 0 for x in self.all_var)
 
-            cand = [b for b in basic if b.assign < b.lower or b.assign > b.upper]
-
-            if len(cand) == 0:
+            cand = [(r, b) for r, b in enumerate(self.basic)
+                    if b.assign < b.lower or b.assign > b.upper]
+            if not cand:
                 self.last_assign_snapshot = {var: var.assign for var in self.all_var}
                 return True, self.last_assign_snapshot
-
-            xi = min(cand, key=lambda v: v.col_idx) # Bland's rule
-            i = basic[xi]
+            i, xi = min(cand, key=lambda t: t[1].col_idx)  # Bland's rule
 
             if xi.assign < xi.lower:
-                cand = [nb for nb in nonbasic
-                        if (M[i, nb.col_idx] > 0 and nb.assign < nb.upper)
-                        or (M[i, nb.col_idx] < 0 and nb.assign > nb.lower)]
+                cand = [nb for nb in self.nonbasic
+                        if (self.A[i, nb.col_idx] > 0 and nb.assign < nb.upper)
+                        or (self.A[i, nb.col_idx] < 0 and nb.assign > nb.lower)]
                 if len(cand) == 0:
-                    N_plus = [nb for nb in nonbasic if M[i, nb.col_idx] > 0]
-                    N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
+                    N_plus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] > 0]
+                    N_minus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] < 0]
 
                     conflict = []
                     conflict += [nb.upper_literal for nb in N_plus]
@@ -566,16 +561,16 @@ class LRASolver():
                     conflict = [-conflicting_lit for conflicting_lit in conflict]
                     return False, conflict
                 xj = min(cand, key=str)
-                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
+                self._pivot_and_update(i, xi, xj, xi.lower)
 
             if xi.assign > xi.upper:
-                cand = [nb for nb in nonbasic
-                        if (M[i, nb.col_idx] < 0 and nb.assign < nb.upper)
-                        or (M[i, nb.col_idx] > 0 and nb.assign > nb.lower)]
+                cand = [nb for nb in self.nonbasic
+                        if (self.A[i, nb.col_idx] < 0 and nb.assign < nb.upper)
+                        or (self.A[i, nb.col_idx] > 0 and nb.assign > nb.lower)]
 
                 if len(cand) == 0:
-                    N_plus = [nb for nb in nonbasic if M[i, nb.col_idx] > 0]
-                    N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
+                    N_plus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] > 0]
+                    N_minus = [nb for nb in self.nonbasic if self.A[i, nb.col_idx] < 0]
 
                     conflict_bounds = []
                     conflict_bounds += [nb.upper_literal for nb in N_minus]
@@ -585,40 +580,36 @@ class LRASolver():
                     conflict = [-conflicting_lit for conflicting_lit in conflict_bounds]
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
-                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
+                self._pivot_and_update(i, xi, xj, xi.upper)
 
-    def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
+    def _pivot_and_update(self, i, xi, xj, v):
         """
         Pivots basic variable xi with nonbasic variable xj,
         and sets value of xi to v and adjusts the values of all basic variables
         to keep equations satisfied.
+
+        i is precomputed in check(), it is solely a parameter just for the small optimization, otherwise the method is exactly like [1] paper.
         """
-        i, j = basic[xi], xj.col_idx
+        j = xj.col_idx
         assert j is not None
-        assert M[i, j] != 0
-        theta = (v - xi.assign)*(1/M[i, j])
+        assert self.A[i, j] != 0
+        theta = (v - xi.assign)*(1/self.A[i, j])
         xi.assign = v
         xj.assign = xj.assign + theta
-        for xk in basic:
-            if xk != xi:
-                k = basic[xk]
-                akj = M[k, j]
-                xk.assign = xk.assign + theta*akj
-        # pivot
-        basic[xj] = basic[xi]
-        del basic[xi]
-        nonbasic.add(xi)
-        nonbasic.remove(xj)
-        return self._pivot(M, i, j)
+        for k in range(len(self.basic)):
+            if k != i:
+                self.basic[k].assign = self.basic[k].assign + theta*self.A[k, j]
+        self._pivot(i, j)
+        self.basic[i] = xj
+        self.nonbasic.discard(xj)
+        self.nonbasic.add(xi)
 
-    @staticmethod
-    def _pivot(M, i, j):
+    def _pivot(self, i, j):
         """
-        Performs a pivot operation about entry i, j of M by performing
-        a series of row operations on a copy of M and returning the result.
-        The original M is left unmodified.
+        Performs a pivot operation about entry i, j of A by performing
+        a series of row operations on A.
 
-        Conceptually, M represents a system of equations and pivoting
+        Conceptually, A represents a system of equations and pivoting
         can be thought of as rearranging equation i to be in terms of
         variable j and then substituting in the rest of the equations
         to get rid of other occurrences of variable j.
@@ -629,7 +620,9 @@ class LRASolver():
         >>> from sympy.matrices.dense import Matrix
         >>> from sympy.logic.algorithms.lra_theory import LRASolver
         >>> from sympy import var
-        >>> Matrix(3, 3, var('a:i'))
+        >>> lra = LRASolver.__new__(LRASolver)
+        >>> lra.A = Matrix(3, 3, var('a:i'))
+        >>> lra.A
         Matrix([
         [a, b, c],
         [d, e, f],
@@ -640,7 +633,8 @@ class LRASolver():
         0 = d*x + e*y + f*z
         0 = g*x + h*y + i*z
 
-        >>> LRASolver._pivot(_, 1, 0)
+        >>> lra._pivot(1, 0)
+        >>> lra.A
         Matrix([
         [ 0, -a*e/d + b, -a*f/d + c],
         [-1,       -e/d,       -f/d],
@@ -653,16 +647,13 @@ class LRASolver():
         0 = -x + (-e/d)*y + (-f/d)*z
         0 = 0 + (h - e*g/d)*y + (i - f*g/d)*z
         """
-        Mij = M[i, j]
-        if Mij == 0:
+        Aij = self.A[i, j]
+        if Aij == 0:
             raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
-        A = M.copy()
-        A[i, :] = -A[i, :]/Mij
-        for row in range(M.shape[0]):
+        self.A[i, :] = -self.A[i, :]/Aij
+        for row in range(self.A.shape[0]):
             if row != i:
-                A[row, :] = A[row, :] + A[row, j] * A[i, :]
-
-        return A
+                self.A[row, :] = self.A[row, :] + self.A[row, j] * self.A[i, :]
 
     def backtrack(self):
         """
