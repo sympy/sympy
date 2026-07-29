@@ -2238,8 +2238,7 @@ class TensExpr(Expr, ABC):
             if index1 in free2remaining:
                 pos2 = free2remaining.index(index1)
                 free2remaining[pos2] = None
-                continue
-            if -index1 in free2remaining:
+            elif -index1 in free2remaining:
                 pos2 = free2remaining.index(-index1)
                 free2remaining[pos2] = None
                 free_ind2[pos2] = index1
