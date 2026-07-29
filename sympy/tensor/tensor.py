@@ -2230,7 +2230,7 @@ class TensExpr(Expr, ABC):
 
         index_types1 = [i.tensor_index_type for i in free_ind1]
 
-        # Check if variance of indices needs to be fixed:
+        # Check if indices need to be raised or lowered:
         pos2up = []
         pos2down = []
         free2remaining = free_ind2[:]
