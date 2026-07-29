@@ -1503,6 +1503,7 @@ def special_function_rule(integral):
             (Pow, sqrt(a - d*sin(_symbol, evaluate=False)**2),
                 lambda a, d: a != d, EllipticERule),
         ))
+    a_wild, b_wild, c_wild, d_wild, e_wild = _wilds
     _integrand = integrand.subs(symbol, _symbol)
     for type_, pattern, constraint, rule in _special_function_patterns:
         if isinstance(_integrand, type_):
@@ -1511,7 +1512,20 @@ def special_function_rule(integral):
                 wild_vals = tuple(match.get(w) for w in _wilds
                                   if match.get(w) is not None)
                 if constraint is None or constraint(*wild_vals):
-                    return rule(integrand, symbol, *wild_vals)
+                    step = rule(integrand, symbol, *wild_vals)
+                    for w in (a_wild, d_wild):
+                        val = match.get(w)
+                        if val and not val.is_zero:
+                            degenerate_integrand = integrand.subs(val, 0)
+                            degenerate_step = integral_steps(degenerate_integrand, symbol)
+                            step = _add_degenerate_step(Ne(val, 0), step, degenerate_step)
+                    if rule in (EllipticFRule, EllipticERule):
+                        a_val, d_val = match.get(a_wild), match.get(d_wild)
+                        if a_val and d_val and not (a_val - d_val).is_zero:
+                            degenerate_integrand = integrand.subs(d_val, a_val)
+                            degenerate_step = integral_steps(degenerate_integrand, symbol)
+                            step = _add_degenerate_step(Ne(a_val, d_val), step, degenerate_step)
+                    return step
 
 
 def _add_degenerate_step(generic_cond, generic_step: Rule, degenerate_step: Rule | None) -> Rule:
