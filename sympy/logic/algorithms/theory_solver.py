@@ -49,14 +49,17 @@ References
 
 from __future__ import annotations
 
-from typing import Any, Literal, Protocol, TYPE_CHECKING
+from typing import Protocol, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sympy.assumptions.cnf import EncodedCNF
 
-TheoryLemma = list[int]
-Explanation = list[int]
-Model = Any
+Literal = int
+Clause = list[Literal]
+Assignment = list[Literal]
+TheoryLemma = Clause
+Explanation = Clause
+NO_DECISION: Literal = 0
 
 
 class TheorySolver(Protocol):
@@ -65,6 +68,13 @@ class TheorySolver(Protocol):
     Each Theory  can be instantiated with a specialized solver
     called Solver_T for a given Theory T.
     """
+
+    # Whether if the CDCL(X) loop is lazy or eager
+    # Currently, dpll2.py is lazy i.e it calls TheorySolver
+    # during/after the search. Eager is when all the Theory cruft
+    # is done before any SAT search is done.
+    is_lazy: bool = True
+
     @classmethod
     def from_encoded_cnf(
         cls, formula: EncodedCNF
@@ -93,52 +103,77 @@ class TheorySolver(Protocol):
         """
         raise NotImplementedError
 
-    def assert_lit(
-        self, literal: int
-    ) -> tuple[Literal[False], Explanation] | None:
+    def notify_assignment(self, lit: Literal, fixed: bool = False) -> None:
         """
         Notify the Theory Solver that the literal has been set true.
-        This method should also have its own weaker and very cheap check().
 
         Parameters
         ==========
-        literal: The literal that has been set to be true.
+        lit: The literal that has been set to be true.
 
-        Returns
-        =======
-        (False, Explanation): The literal is not satisfiable, and an explanation.
-
-        None: No conflict was detected, or the literal does not belong to
-            the theory T.
-
+        fixed: Whether the assignment is permanent, so that it is never
+            undone by a later notify_backtrack().
         """
         raise NotImplementedError
 
-    def check(self) -> tuple[Literal[True], Model] | tuple[Literal[False], Explanation]:
+    def notify_new_level(self) -> None:
         """
-        Fully check whether if the (partial) assignment M is T-consistent.
+        Notify DPLL(X) to make a new level. (similar to push() )
+        """
+        pass
+
+    def notify_backtrack(self, to: int) -> None:
+        """
+        Notify DPLL(X) to backtrack. (similar to pop(), used in parallel with
+        notify_new_level() to do backjumping)
+        """
+        pass
+
+    def check_model(self, model: Assignment) -> bool:
+        """
+        Fully check whether if the assignment M is T-consistent.
         This method should be comprehensive, although in the future, for the optimization
         reasons we may need weaker checks.
 
         Returns
         =======
 
-        (True, Model): The assignment M is T-consistent, and a model of it.
+        True: The assignment M is T-consistent.
 
-        (False, Explanation): The assignment M is T-inconsistent, and a
-            conflict clause explaining which of the asserted literals
-            cannot hold together.
+        False: The assignment M is T-inconsistent. The conflict clause
+            explaining which of the asserted literals cannot hold together
+            is then handed over by add_clause().
         """
         raise NotImplementedError
 
-    def reset(self) -> None:
+    def decide(self) -> Literal:
         """
-        Reset the (partial) assignment M to initial state M'.
+        Ask the Theory Solver whether it has its own decision to branch off.
+        Otherwise, DPLL(X) will handle it.
+        """
+        return NO_DECISION
 
-        This operation is not needed to be comprehensive, it is enough
-        for the state M' to be logically equivalent to the initial state.
-        Or in other words, it can be more "simplified" version of the initial state.
+    def propagate(self) -> list[Literal]:
+        """
+        Ask the Theory Solver whether it has its own propagation to make in the current
+        assignment.
+        """
+        return []
 
-        The most simplistic approach would be to rebuild the solver.
+    def provide_reason(self, lit: Literal) -> Explanation:
+        """
+        Ask the THeory Solver why propagate() was done.
+        """
+        raise NotImplementedError
+
+    def has_clause(self) -> bool:
+        """
+        Whether a clause is waiting to be handed over to the engine.
+        """
+        return False
+
+    def add_clause(self) -> Explanation:
+        """
+        Hand over one waiting clause. An empty clause means unsatisfiable.
         """
         raise NotImplementedError
