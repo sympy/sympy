@@ -261,6 +261,12 @@ def test_manualintegrate_trivial_substitution():
 def test_manualintegrate_rational():
     assert manualintegrate(1/(4 - x**2), x) == -log(x - 2)/4 + log(x + 2)/4
     assert manualintegrate(1/(-1 + x**2), x) == log(x - 1)/2 - log(x + 1)/2
+    # apart splits this into 1/(x + 1) and the undecomposable 1/(x**4 + 1).
+    f = (x**4 + x + 2)/((x + 1)*(x**4 + 1))
+    F = manualintegrate(f, x)
+    assert F == log(x + 1) - sqrt(2)*log(x**2 - sqrt(2)*x + 1)/8 + \
+        sqrt(2)*log(x**2 + sqrt(2)*x + 1)/8 + sqrt(2)*atan(sqrt(2)*x - 1)/4 + sqrt(2)*atan(sqrt(2)*x + 1)/4
+    assert (F.diff(x) - f).cancel() == 0
 
 
 def test_manualintegrate_special():
@@ -327,6 +333,18 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f, F = li(x), x*li(x) - Ei(2*log(x))
     assert_is_integral_of(f, F)
+
+def test_issue_29910():
+    f = x**2*exp(-x**2)
+    F = -x*exp(-x**2)/2 + sqrt(pi)*erf(x)/4
+    assert_is_integral_of(f, F)
+    f = x**2*sin(x**2)
+    F = -x*cos(x**2)/2 + sqrt(2)*sqrt(pi)*fresnelc(sqrt(2)*x/sqrt(pi))/4
+    assert_is_integral_of(f, F)
+    f = x**2*cos(x**2)
+    F = x*sin(x**2)/2 - sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/4
+    assert_is_integral_of(f, F)
+
 
 @slow
 def test_manualintegrate_special_slow():
@@ -561,8 +579,8 @@ def test_issue_9462():
     assert manualintegrate(sin(2*x)*exp(x), x) == exp(x)*sin(2*x)/5 - 2*exp(x)*cos(2*x)/5
     assert not integral_steps(sin(2*x)*exp(x), x).contains_dont_know()
     assert manualintegrate((x - 3) / (x**2 - 2*x + 2)**2, x) == \
-                           Integral(x/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x) \
-                           - 3*Integral(1/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x)
+                           (4 - 4*x)/(4*x**2 - 8*x + 8) - atan(x - 1) \
+                           - S.Half/(x**2 - 2*x + 2)
 
 
 def test_cyclic_parts():
@@ -579,7 +597,7 @@ def test_cyclic_parts():
 def test_issue_10847_slow():
     assert manualintegrate((4*x**4 + 4*x**3 + 16*x**2 + 12*x + 8)
                            / (x**6 + 2*x**5 + 3*x**4 + 4*x**3 + 3*x**2 + 2*x + 1), x) == \
-                           2*x/(x**2 + 1) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
+                           8*x/(4*x**2 + 4) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
 
 
 @slow
@@ -636,7 +654,7 @@ def test_issue_10847():
     assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5,2)/25
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
     assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == \
-        log(y)*log(-1 + 1/y) - Integral(log(-1 + 1/y)/y, y)
+        (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - Integral(log(y - 1)/y, y)
 
 
 def test_issue_12899():
@@ -710,7 +728,37 @@ def test_quadratic_denom():
     f = (5*x + 2)/(3*x**2 - 2*x + 8)
     assert manualintegrate(f, x) == 5*log(3*x**2 - 2*x + 8)/6 + 11*sqrt(23)*atan(3*sqrt(23)*(x - Rational(1, 3))/23)/69
     g = 3/(2*x**2 + 3*x + 1)
-    assert manualintegrate(g, x) == 3*log(4*x + 2) - 3*log(4*x + 4)
+    assert manualintegrate(g, x) == 3*log(x + S.Half) - 3*log(x + 1)
+    f = 1/(x**2 + 4*x + 2)**3
+    F = manualintegrate(f, x)
+    assert (f - F.diff(x)).cancel() == 0
+    # perfect square
+    f = 1/(x**2 + 2*x + 1)**3
+    F = manualintegrate(f, x)
+    assert (f - F.diff(x)).cancel() == 0
+    f = (3*x + 2)/(x**2 + 4*x + 2)**3
+    F = manualintegrate(f, x)
+    assert (f - F.diff(x)).cancel() == 0
+    # Polys simplification
+    f = 1/(3*((x - 1)*(x + 1)))
+    F = manualintegrate(f, x)
+    assert (f - F.diff(x)).cancel() == 0
+    A = symbols('A')
+    B = symbols('B')
+    f = (3*A*x + 2*B)/(2*a*x**2 + 2*x + c)**3
+    F = (piecewise_fold(manualintegrate(f, x))).args
+    # when Eq(a, 0)
+    assert (f.subs(a, 0) - F[2][0].diff(x)).cancel() == 0
+    # when Ne(a, 0) & Eq(a*c, 1/2)
+    assert (f.subs(c, 1/(2*a)) - (F[0][0].subs(c, 1/(2*a)).diff(x))).cancel() == 0
+    # a != 0
+    assert (f - F[1][0].diff(x)).cancel() == 0
+    # issue 30031: the Eq(b, 0) branch used to divide by b
+    h = a/(b*x**2 + c*x + d)
+    H = manualintegrate(h, x)
+    assert (h.subs({b: 0, c: 3}) - H.subs({b: 0, c: 3}).diff(x)).cancel() == 0
+    assert (h.subs({b: 0, c: 0}) - H.subs({b: 0, c: 0}).diff(x)).cancel() == 0
+
 
 def test_issue_22757():
     assert manualintegrate(sin(x), y) == y * sin(x)
@@ -786,7 +834,7 @@ def test_manualintegrate_sqrt_fractional_linear():
     assert F2.diff(x) == f.subs(a, 0)
     # linear dependent bases (2*x + 2)/(x - 1) and (x + 1)/(x - 1)
     f = ((2*x+2)/(x-1))**(S.One/4)*sqrt(((x+1)/(x-1)))
-    F = (-8*2**(S.One/4)*(-((x + 1)/(x - 1))**(S.One/4)*S(1)/8/(sqrt((x + 1)/(x - 1)) + 1)
+    F = (-8*2**(S.One/4)*(-((x + 1)/(x - 1))**(S.One/4)/2/(4*sqrt((x + 1)/(x - 1)) + 4)
          + 3*log(((x + 1)/(x - 1))**(S.One/4) - 1)/16 - 3*log(((x + 1)/(x - 1))**(S.One/4) + 1)/16
          + 3*atan(((x + 1)/(x - 1))**(S.One/4))/8 - S(1)/16/(((x + 1)/(x - 1))**(S.One/4) + 1)
          - S(1)/16/(((x + 1)/(x - 1))**(S.One/4) - 1)))

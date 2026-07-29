@@ -42,9 +42,10 @@ __all__ = [
     'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
     'ComplexField', 'PythonFiniteField', 'GMPYFiniteField',
     'PythonIntegerRing', 'GMPYIntegerRing', 'PythonRational',
-    'GMPYRationalField', 'AlgebraicField', 'PolynomialRing', 'FractionField',
-    'ExpressionDomain', 'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy',
-    'QQ_python', 'QQ_gmpy', 'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR',
+    'GMPYRationalField', 'AlgebraicField', 'CyclotomicField',
+    'PolynomialRing', 'FractionField', 'ExpressionDomain',
+    'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
+    'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR',
     'CC', 'EX', 'EXRAW',
 
     'construct_domain',
@@ -108,7 +109,7 @@ from .polyroots import roots
 from .domains import (Domain, FiniteField, IntegerRing, RationalField,
         RealField, ComplexField, PythonFiniteField, GMPYFiniteField,
         PythonIntegerRing, GMPYIntegerRing, PythonRational, GMPYRationalField,
-        AlgebraicField, PolynomialRing, FractionField, ExpressionDomain,
+        AlgebraicField, CyclotomicField, PolynomialRing, FractionField, ExpressionDomain,
         FF_python, FF_gmpy, ZZ_python, ZZ_gmpy, QQ_python, QQ_gmpy, GF, FF,
         ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, EXRAW)
 
