@@ -21,7 +21,7 @@ from functools import reduce
 from sympy.core.intfunc import ilcm, igcd
 from sympy.core import Dummy, Add, Mul, Pow, S
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
-    bound_degree)
+    bound_degree, _special_denom_cancel_bound)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     residue_reduce, splitfactor, residue_reduce_derivation, DecrementLevel,
     recognize_log_derivative)
@@ -112,7 +112,12 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     For case == 'primitive', k<t> == k[t], so it returns (a, b, G, 1) in this
     case.
     """
-    # TODO: Merge this with the very similar special_denom() in rde.py
+    # The cancellation-case bound is shared with special_denom() in rde.py
+    # via _special_denom_cancel_bound().  Note that N below is
+    # max(0, -nb), following the parametric algorithms of Section 7.1,
+    # while the non-parametric special_denom() uses max(0, -nb, n - nc)
+    # per Section 6.2; this difference is intentional (it matches the
+    # book), not a divergence.
     if case == 'auto':
         case = DE.case
 
@@ -132,33 +137,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancellation.
-        if case == 'exp':
-            dcoeff = DE.d.quo(Poly(DE.t, DE.t))
-            with DecrementLevel(DE):  # We are guaranteed to not have problems,
-                                      # because case != 'base'.
-                alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
-                etaa, etad = frac_in(dcoeff, DE.t)
-                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
-                if A is not None:
-                    Q, m, z = A
-                    if Q == 1:
-                        n = min(n, m)
-
-        elif case == 'tan':
-            dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
-            with DecrementLevel(DE):  # We are guaranteed to not have problems,
-                                      # because case != 'base'.
-                betaa, alphaa, alphad =  real_imag(ba, bd*a, DE.t)
-                betad = alphad
-                etaa, etad = frac_in(dcoeff, DE.t)
-                if recognize_log_derivative(Poly(2, DE.t)*betaa, betad, DE):
-                    A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
-                    B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
-                    if A is not None and B is not None:
-                        Q, s, z = A
-                        # TODO: Add test
-                        if Q == 1:
-                            n = min(n, s/2)
+        n = _special_denom_cancel_bound(a, ba, bd, n, DE, case)
 
     N = max(0, -nb)
     pN = p**N
@@ -885,6 +864,9 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     f = fa.as_expr()/fd.as_expr()
     w = wa.as_expr()/wd.as_expr()
     if f.is_Rational and w.is_Rational:
+        if f == 0 and w == 0:
+            # Any n works: n*0 == Dv/v + m*0 with v == 1, m == 0.
+            return (1, 0, Poly(1, DE.t))
         # solve n*x = m*y in integers, i.e., n=y, m=x (after dividing through
         # by gcd(x, y))
         x = f.p*w.q

@@ -119,6 +119,17 @@ def test_special_denom():
     assert special_denom(a, ba, bd, ca, cd, DE) == \
         (expected_a, expected_b, expected_c, expected_h)
 
+    # A hypertangent case with a nontrivial special denominator:
+    # t*Dq + t*q == (t - 2*t**2)/(t**2 + 1) has the solution
+    # q == 1/(t**2 + 1), so with h == t**2 + 1, r == q*h == 1 must satisfy
+    # A*Dr + B*r == C.
+    A, B, C, h = special_denom(Poly(t, t), Poly(t, t), Poly(1, t),
+        Poly(-2*t**2 + t, t), Poly(t**2 + 1, t), DE)
+    assert (A, B, C, h) == (Poly(t, t), Poly(-2*t**2 + t, t),
+        Poly(-2*t**2 + t, t), Poly(t**2 + 1, t))
+    # Verify the contract explicitly (r == q*h == 1, so Dr == 0)
+    assert C == B  # A*D(1) + B*1 == C
+
 def test_bound_degree_fail():
     # Primitive
     DE = DifferentialExtension(extension={'D': [Poly(1, x),
