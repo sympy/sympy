@@ -1456,7 +1456,9 @@ def integrate_primitive(a, d, DE, z=None):
     ret = ((g1[0].as_expr()/g1[1].as_expr() + q.as_expr()).subs(s) +
         residue_reduce_to_basic(g2, DE, z))
     if not b:
-        # TODO: This does not do the right thing when b is False
+        # i == p - Dq from integrate_primitive_polynomial(), which has been
+        # proven to have no elementary integral over k(t), and ret contains
+        # the partial q, so f == D(ret) + i holds for the returned values.
         i = NonElementaryIntegral(cancel(i.as_expr()).subs(s), DE.x)
     else:
         i = cancel(i.as_expr())

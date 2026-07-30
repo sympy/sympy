@@ -10,6 +10,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (atan, sin, tan)
 from sympy.polys.polytools import (Poly, cancel, factor)
+from sympy.polys.rationaltools import together
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -727,6 +728,18 @@ def test_risch_integrate():
 
 def test_risch_integrate_float():
     assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
+
+
+def test_integrate_primitive_nonelementary_residual():
+    # When integrate_primitive_polynomial() fails partway (b == False after
+    # a nonzero partial q has been computed), the elementary part and the
+    # NonElementaryIntegral residual must still satisfy f == D(g) + i.
+    for f in [log(x)*log(log(x)),  # fails after one reduction step (q != 0)
+              log(log(x))**2 + log(log(x))/log(x),
+              log(log(x))/log(x)]:
+        g, i = risch_integrate(f, x, separate_integral=True)
+        assert isinstance(i, NonElementaryIntegral)
+        assert cancel(together(diff(g, x) + i.function - f)) == 0
 
 
 def test_bound_degree_limited_integrate():
