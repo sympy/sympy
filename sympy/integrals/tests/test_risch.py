@@ -215,6 +215,15 @@ def test_recognize_log_derivative():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert recognize_log_derivative(Poly(1, t), Poly(t**2 - 2, t), DE) == False
     assert recognize_log_derivative(Poly(1, t), Poly(t**2 + t, t), DE) == False
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    # 1/(x**2 + 1) is not Dv/v for any rational v: the Rothstein-Trager
+    # resultant has the non-integer complex roots -I/2, I/2, which used to
+    # be missed entirely (only real roots were checked, and there are none).
+    assert recognize_log_derivative(Poly(1, x), Poly(x**2 + 1, x), DE) == False
+    # ... but complex poles with integer residues are fine:
+    # (2*x + 2)/(x**2 + 2*x + 2) == D(x**2 + 2*x + 2)/(x**2 + 2*x + 2)
+    assert recognize_log_derivative(Poly(2*x + 2, x), Poly(x**2 + 2*x + 2, x),
+        DE) == True
 
 
 def test_residue_reduce():
