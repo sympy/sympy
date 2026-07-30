@@ -2330,7 +2330,7 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
 
     f = S.One
     root_base = None
-    root_exp = S.Zero
+    root_exp: Expr = S.Zero
 
     # collect radicals
     for factor in Mul.make_args(starting_integrand):
@@ -2420,7 +2420,7 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
             step = SqrtQuadraticDenomRule(integrand, x, a, b, c, coeffs)
         return step
 
-    def sqrt_quadratic_reduction_rule(integrand: Expr, n: int, const: Expr):
+    def sqrt_quadratic_reduction_rule(integrand: Expr, n: Expr, const: Expr):
         # Implementation of Gradshteyn & Ryzhik 2.263.3
         k = (-n - 1) // 2
         delta = 4*a*c - b**2
