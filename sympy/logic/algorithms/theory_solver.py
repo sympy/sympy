@@ -54,6 +54,7 @@ from typing import Protocol, TYPE_CHECKING
 if TYPE_CHECKING:
     from sympy.assumptions.cnf import EncodedCNF
 
+Atom = int
 Literal = int
 Clause = list[Literal]
 Assignment = list[Literal]
@@ -69,12 +70,14 @@ class TheorySolver(Protocol):
     called Solver_T for a given Theory T.
     """
 
-    # Whether if the CDCL(X) loop is lazy or eager
-    # Currently, dpll2.py is lazy i.e it calls TheorySolver
-    # during/after the search. Eager is when all the Theory cruft
-    # is done before any SAT search is done.
-    is_lazy: bool = True
+    # Whether T only decides complete assignments
+    is_lazy: bool = False
+    # Whether DPLL(X) may discard the reasons given by provide_reason()
+    are_reasons_forgettable: bool = False
+    # The atoms that belong to the theory T.
+    observed: set[Atom]
 
+    # This is the only engine-internal method, i.e this is only used in internals of Theory Solver engine. All other methods are used between DPLL(X) and Theory Solvers
     @classmethod
     def from_encoded_cnf(
         cls, formula: EncodedCNF
@@ -103,31 +106,25 @@ class TheorySolver(Protocol):
         """
         raise NotImplementedError
 
-    def notify_assignment(self, lit: Literal, fixed: bool = False) -> None:
+    # ------ Methods for communicating between DPLL(X) and Theory Solvers
+    def notify_assignment(self, lits: Assignment) -> None:
         """
-        Notify the Theory Solver that the literal has been set true.
-
-        Parameters
-        ==========
-        lit: The literal that has been set to be true.
-
-        fixed: Whether the assignment is permanent, so that it is never
-            undone by a later notify_backtrack().
+        DPLL(X) notifies that the literals have been set true. Batched, so a
+        conflict noticed here is handed (should handed) over by has_clause()/add_clause().
         """
         raise NotImplementedError
 
-    def notify_new_level(self) -> None:
+    def notify_new_decision_level(self) -> None:
         """
-        Notify DPLL(X) to make a new level. (similar to push() )
+        A push/pop pair (notify/backtrack are pus/pop respectively). DPLL(X) notifies that it has opened a new decision
+        level, or that it has already backtracked to `to`. Levels are unnamed,
+        so the Theory Solver counts them itself, and `to` is an absolute level
+        whose every assertion above must be undone.
         """
-        pass
+        raise NotImplementedError
 
     def notify_backtrack(self, to: int) -> None:
-        """
-        Notify DPLL(X) to backtrack. (similar to pop(), used in parallel with
-        notify_new_level() to do backjumping)
-        """
-        pass
+        raise NotImplementedError
 
     def check_model(self, model: Assignment) -> bool:
         """
@@ -148,29 +145,31 @@ class TheorySolver(Protocol):
 
     def decide(self) -> Literal:
         """
-        Ask the Theory Solver whether it has its own decision to branch off.
+        Ask the Theory Solver whether if has its own decision to branch off.
         Otherwise, DPLL(X) will handle it.
         """
         return NO_DECISION
 
     def propagate(self) -> list[Literal]:
         """
-        Ask the Theory Solver whether it has its own propagation to make in the current
-        assignment.
+        The literals that T has derived to be true. DPLL(X) assigns them itself,
+        so returning nothing is always allowed.
         """
         return []
 
     def provide_reason(self, lit: Literal) -> Explanation:
         """
-        Ask the THeory Solver why propagate() was done.
+        Why a literal handed over by propagate() had to be true, as a clause
+        valid in T.
         """
         raise NotImplementedError
 
-    def has_clause(self) -> bool:
+    def has_clause(self) -> tuple[bool, bool]:
         """
-        Whether a clause is waiting to be handed over to the engine.
+        Whether a clause is waiting to be handed over to the engine, and
+        whether the engine may forget it once added.
         """
-        return False
+        raise NotImplementedError
 
     def add_clause(self) -> Explanation:
         """
