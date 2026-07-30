@@ -27,6 +27,7 @@ from __future__ import annotations
 from types import GeneratorType
 from functools import reduce
 
+from sympy.core.add import Add
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
@@ -36,12 +37,13 @@ from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.symbol import Dummy, Symbol
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.hyperbolic import (cosh, coth, sinh,
     tanh)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (atan, sin, cos,
-    tan, acot, cot, asin, acos)
+    tan, acot, cot, asin, acos, sec, csc)
 from .integrals import integrate, Integral
 from .heurisch import _symbols
 from sympy.polys.polyerrors import PolynomialError
@@ -118,6 +120,33 @@ def integer_powers(exprs):
     return sorted(iter(newterms.items()), key=lambda item: item[0].sort_key())
 
 
+def _tan_of_multiple(n, t):
+    """
+    Rewrite tan(n*a) as a rational function of ``t`` == tan(a).
+
+    Explanation
+    ===========
+
+    For an integer n, tan(n*a) == Im((1 + I*t)**n)/Re((1 + I*t)**n), that
+    is::
+
+        tan(n*a) == (binomial(n, 1)*t - binomial(n, 3)*t**3 + ...)/
+            (1 - binomial(n, 2)*t**2 + ...)
+
+    This is used to rewrite the tangents of integer multiples of a common
+    argument in terms of a single tangent, like exp of integer multiples
+    of a common argument is rewritten as powers of a single exponential.
+    """
+    n = int(n)
+    if n < 0:
+        return -_tan_of_multiple(-n, t)
+    num = Add(*[(-1)**k*binomial(n, 2*k + 1)*t**(2*k + 1)
+        for k in range((n + 1)//2)])
+    den = Add(*[(-1)**k*binomial(n, 2*k)*t**(2*k)
+        for k in range(n//2 + 1)])
+    return num/den
+
+
 class DifferentialExtension:
     """
     A container for all the information relating to a differential extension.
@@ -168,7 +197,8 @@ class DifferentialExtension:
         'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts', 'dummy')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=False,
+            extension=None, rewrite_complex=None, trig=True):
         """
         Tries to build a transcendental extension tower from ``f`` with respect to ``x``.
 
@@ -228,6 +258,7 @@ class DifferentialExtension:
         self.dummy = dummy
         self.reset()
         exp_new_extension, log_new_extension = True, True
+        tan_new_extension = bool(trig)
 
         # case of 'automatic' choosing
         if rewrite_complex is None:
@@ -242,12 +273,17 @@ class DifferentialExtension:
             for candidates, rule in rewritables.items():
                 self.newf = self.newf.rewrite(candidates, rule)
             self.newf = cancel(self.newf)
-        else:
+        elif not trig:
             if any(i.has(x) for i in self.f.atoms(sin, cos, cot, tan, sinh,
                     cosh, coth, tanh, asin, acos, acot, atan)):
                 raise NotImplementedError("Trigonometric and hyperbolic "
                     "extensions are not supported (yet!).  Try rewriting in "
-                    "terms of exp and log, or using rewrite_complex=True.")
+                    "terms of exp and log, using rewrite_complex=True, or "
+                    "using trig=True for the real trigonometric functions.")
+        else:
+            if any(i.has(x) for i in self.f.atoms(atan, asin, acos)):
+                raise NotImplementedError("Inverse trigonometric extensions "
+                "are not supported.")
 
         exps = set()
         pows = set()
@@ -255,12 +291,14 @@ class DifferentialExtension:
         sympows = set()
         logs = set()
         symlogs = set()
+        tans = set()
 
         while True:
             if self.newf.is_rational_function(*self.T):
                 break
 
-            if not exp_new_extension and not log_new_extension:
+            if not exp_new_extension and not log_new_extension and \
+                    not tan_new_extension:
                 # We couldn't find a new extension on the last pass, so I guess
                 # we can't do it.
                 raise NotImplementedError("Couldn't find an elementary "
@@ -271,6 +309,9 @@ class DifferentialExtension:
                     self._rewrite_exps_pows(exps, pows, numpows, sympows, log_new_extension)
 
             logs, symlogs = self._rewrite_logs(logs, symlogs)
+
+            if trig:
+                tans = self._rewrite_tans(tans)
 
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps)
@@ -283,6 +324,16 @@ class DifferentialExtension:
 
             if handle_first == 'log' or not exp_new_extension:
                 log_new_extension = self._log_part(logs)
+
+            if trig:
+                if exp_new_extension or log_new_extension:
+                    # Prefer building the exponential and logarithmic
+                    # extensions lower in the tower, so that the tangents
+                    # end up on top, where integrate_hypertangent() can
+                    # handle them.
+                    tan_new_extension = True
+                else:
+                    tan_new_extension = self._tan_part(tans)
 
         self.fa, self.fd = frac_in(self.newf, self.t)
         self._auto_attrs()
@@ -401,6 +452,45 @@ class DifferentialExtension:
             exps.append(newterm)
 
         return exps, pows, numpows, sympows, log_new_extension
+
+    def _rewrite_tans(self, tans):
+        """
+        Rewrite trigonometric functions in terms of tan for better processing.
+
+        Explanation
+        ===========
+
+        sin, cos, sec and csc of ``a`` are rational functions of tan(a/2)
+        (the Weierstrass substitution), and cot(a) == 1/tan(a), so they are
+        first rewritten in terms of tangents.  Then, like in the
+        exponential case, the arguments of the tangents are grouped with
+        integer_powers(), and tan of an integer multiple of the base
+        argument is rewritten as a rational function of tan of the base
+        argument, so that e.g. tan(x) and sin(x) can both be expressed in
+        the field generated by tan(x/2).
+        """
+        trigs = [i for i in self.newf.atoms(sin, cos, sec, csc, cot)
+            if i.args[0].is_rational_function(*self.T) and
+            i.args[0].has(*self.T)]
+        for i in ordered(trigs):
+            self.newf = self.newf.xreplace({i: i.rewrite(tan)})
+
+        atoms = self.newf.atoms(tan)
+        tans = update_sets(tans, atoms,
+            lambda i: i.args[0].is_rational_function(*self.T) and
+            i.args[0].has(*self.T))
+
+        ip = integer_powers([i.args[0] for i in tans])
+        for base, others in ip:
+            self.newf = self.newf.xreplace({tan(arg):
+                _tan_of_multiple(n, tan(base)) for arg, n in others if n != 1})
+
+        # Recollect, since the tangents of the multiples were rewritten.
+        tans = update_sets([], self.newf.atoms(tan),
+            lambda i: i.args[0].is_rational_function(*self.T) and
+            i.args[0].has(*self.T))
+
+        return tans
 
     def _rewrite_logs(self, logs, symlogs):
         """
@@ -610,6 +700,84 @@ class DifferentialExtension:
                 self.Tfuncs += [Lambda(i, log(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace({log(arg): self.t})
                 new_extension = True
+
+        return new_extension
+
+    def _tan_part(self, tans):
+        """
+        Try to build a tangent (hypertangent) extension.
+
+        Returns
+        =======
+
+        Returns True if there was a new extension and False if there was
+        no new extension.  Raises NotImplementedError if the argument of a
+        tangent differs from a rational multiple of the argument of
+        another one by a nonzero constant (like tan(x) and tan(x + 1)),
+        in which case the two tangents are algebraically dependent, which
+        is not supported.
+        """
+        new_extension = False
+        for arg in ordered([i.args[0] for i in tans]):
+            # tan(a) and tan(b) are algebraically dependent if and only if
+            # a - r*b is constant for some rational number r; the case
+            # a == r*b with the two tangents appearing in the same pass was
+            # already handled by integer_powers() in _rewrite_tans().
+            dependent = False
+            darg = derivation(arg, self, basic=True)
+            for i, ext in enumerate(self.exts):
+                if ext != 'tan':
+                    continue
+                other = self.extargs[i]
+                r = cancel(darg/derivation(other, self, basic=True))
+                if not r.is_Rational:
+                    continue
+                if cancel(arg - r*other) != 0:
+                    raise NotImplementedError("Tangents of arguments that "
+                        "differ by a constant, like %s and %s, are not "
+                        "supported." % (tan(arg), tan(other)))
+                if r.is_Integer:
+                    # arg is an integer multiple of the argument of an
+                    # existing tangent extension, so tan(arg) is a rational
+                    # function of it.
+                    self.newf = self.newf.xreplace({tan(arg):
+                        _tan_of_multiple(r, self.T[i])})
+                    dependent = True
+                    break
+                raise NotImplementedError("%s is algebraic over the "
+                    "existing extension tower containing %s, which is not "
+                    "supported." % (tan(arg), tan(other)))
+            if dependent:
+                continue
+
+            arga, argd = frac_in(arg, self.t)
+            darga = (argd*derivation(Poly(arga, self.t), self) -
+                arga*derivation(Poly(argd, self.t), self))
+            dargd = argd**2
+            darga, dargd = darga.cancel(dargd, include=True)
+            darg = darga.as_expr()/dargd.as_expr()
+            self.t = next(self.ts)
+            self.T.append(self.t)
+            self.extargs.append(arg)
+            self.exts.append('tan')
+            self.D.append(darg.as_poly(self.t, expand=False)*Poly(self.t**2 +
+                1, self.t, expand=False))
+            if self.dummy:
+                i = Dummy("i")
+            else:
+                i = Symbol('i')
+            self.Tfuncs += [Lambda(i, tan(arg.subs(self.x, i)))]
+            self.newf = self.newf.xreplace({tan(arg): self.t})
+            # The polynomial part of the integral of a hypertangent
+            # element contains terms c*log(tan(arg)**2 + 1); rewrite them
+            # in terms of cos to make the answer look nicer.  The pattern
+            # is expressed in terms of the original functions, since the
+            # back-substitution is applied after the T variables have been
+            # replaced by them.
+            args = arg.subs(list(zip(reversed(self.T[1:]),
+                reversed([f(self.x) for f in self.Tfuncs]))))
+            self.backsubs += [(log(tan(args)**2 + 1), -2*log(cos(args)))]
+            new_extension = True
 
         return new_extension
 
@@ -1685,6 +1853,127 @@ def integrate_hypertangent_polynomial(p, DE):
     return (q, c)
 
 
+def integrate_hypertangent_reduced(a, d, DE):
+    """
+    Integration of hypertangent reduced elements.
+
+    Explanation
+    ===========
+
+    Given a differential field k such that sqrt(-1) is not in k, a
+    hypertangent monomial t over k, and f == a/d in k(t) with d special
+    (a power of t**2 + 1 times an element of k), return qa, qd in k[t]
+    and b in {True, False} such that f - D(qa/qd) is in k[t] if b is
+    True, or f - D(qa/qd) does not have an elementary integral over k(t)
+    if b is False.
+
+    The terms of f with denominator (t**2 + 1)**m are eliminated by
+    solving a coupled differential system over k for the coefficients of
+    the ansatz (u*t + v)/(t**2 + 1)**m, for decreasing m.
+    """
+    from .rde import coupled_DE_system, order_at
+    p = Poly(DE.t**2 + 1, DE.t)
+    eta = DE.d.exquo(p).as_expr()
+    qa, qd = Poly(0, DE.t), Poly(1, DE.t)
+
+    while True:
+        a, d = a.cancel(d, include=True)
+        m = order_at(d, p, DE.t)
+        if m <= 0:
+            return (qa, qd, True)
+
+        # f == (c1*t + c0)/(t**2 + 1)**m + lower order terms, and
+        # D((u*t + v)/(t**2 + 1)**m) == ((Du - 2*m*eta*v)*t + Dv +
+        # 2*m*eta*u)/(t**2 + 1)**m + lower order terms.
+        w = d.to_field().exquo(p**m)  # in k
+        if w.degree(DE.t) > 0:
+            raise ValueError("The denominator of %s/%s is not special." %
+                (a, d))
+        w = w.TC()
+        crem = a.rem(p)
+        c0, c1 = cancel(crem.nth(0)/w), cancel(crem.nth(1)/w)
+        with DecrementLevel(DE):
+            try:
+                u, v = coupled_DE_system(S.Zero, 2*m*eta, c1, c0, DE)
+            except NonElementaryIntegralException:
+                return (qa, qd, False)
+        q0a = Poly(u*DE.t + v, DE.t)
+        q0d = p**m
+
+        qa, qd = (qa*q0d + q0a*qd).cancel(qd*q0d, include=True)
+        # f == f - D(q0a/q0d)
+        a, d = (a*q0d**2 - (derivation(q0a, DE)*q0d -
+            q0a*derivation(q0d, DE))*d).cancel(d*q0d**2, include=True)
+
+
+def integrate_hypertangent(a, d, DE, z=None):
+    """
+    Integration of hypertangent functions.
+
+    Explanation
+    ===========
+
+    Given a differential field k such that sqrt(-1) is not in k, a
+    hypertangent monomial t over k and f in k(t), return g elementary
+    over k(t), i in k(t), and b in {True, False} such that i == f - Dg
+    is in k if b is True or i == f - Dg does not have an elementary
+    integral over k(t) if b is False.
+
+    This function returns a Basic expression for the first argument.  If
+    b is True, the second argument is Basic expression in k to
+    recursively integrate.  If b is False, the second argument is an
+    unevaluated Integral, which has been proven to be nonelementary.
+    """
+    # XXX: a and d must be canceled, or this might return incorrect results
+    z = z or Dummy("z")
+    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+
+    g1, h, r = hermite_reduce(a, d, DE)
+    g2, b = residue_reduce(h[0], h[1], DE, z=z)
+
+    if not b:
+        i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
+            g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
+            residue_reduce_derivation(g2, DE, z))
+        i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
+        return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
+            residue_reduce_to_basic(g2, DE, z), i, b)
+
+    # p == h - Dg2 + r is in k[t] plus a reduced element whose denominator
+    # is a power of the special polynomial t**2 + 1.
+    p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
+        DE, z) + r[0].as_expr()/r[1].as_expr())
+    pa, pd = frac_in(p, DE.t, cancel=True)
+
+    q1a, q1d, b = integrate_hypertangent_reduced(pa, pd, DE)
+    # pp == p - D(q1a/q1d)
+    ppa, ppd = (pa*q1d**2 - (derivation(q1a, DE)*q1d -
+        q1a*derivation(q1d, DE))*pd).cancel(pd*q1d**2, include=True)
+
+    ret = (g1[0].as_expr()/g1[1].as_expr() +
+        q1a.as_expr()/q1d.as_expr()).subs(s) + \
+        residue_reduce_to_basic(g2, DE, z)
+    if not b:
+        i = NonElementaryIntegral(cancel(ppa.as_expr()/ppd.as_expr()).subs(s),
+            DE.x)
+        return (ret, i, b)
+
+    pp = ppa.to_field().exquo(ppd).as_poly(DE.t)
+    q2, c = integrate_hypertangent_polynomial(pp, DE)
+    if derivation(c, DE).is_zero:
+        # The polynomial part contributes c*log(t**2 + 1), since
+        # D(log(t**2 + 1)) == D(t**2 + 1)/(t**2 + 1) == 2*eta*t.
+        eta = DE.d.exquo(Poly(DE.t**2 + 1, DE.t)).as_expr()
+        i = pp - derivation(q2, DE) - Poly(c.as_expr()*2*eta*DE.t, DE.t)
+        ret += (q2.as_expr() + c.as_expr()*log(DE.t**2 + 1)).subs(s)
+        return (ret, cancel(i.as_expr()), True)
+    else:
+        i = pp - derivation(q2, DE)
+        ret += q2.as_expr().subs(s)
+        i = NonElementaryIntegral(cancel(i.as_expr()).subs(s), DE.x)
+        return (ret, i, False)
+
+
 def integrate_nonlinear_no_specials(a, d, DE, z=None):
     """
     Integration of nonlinear monomials with no specials.
@@ -1787,16 +2076,21 @@ class NonElementaryIntegral(Integral):
 
 def risch_integrate(f, x, extension=None, handle_first='log',
                     separate_integral=False, rewrite_complex=None,
-                    conds='piecewise'):
+                    conds='piecewise', trig=True):
     r"""
     The Risch Integration Algorithm.
 
     Explanation
     ===========
 
-    Only transcendental functions are supported.  Currently, only exponentials
-    and logarithms are supported, but support for trigonometric functions is
-    forthcoming.
+    Only transcendental functions are supported.  Currently, exponentials,
+    logarithms and real trigonometric functions (which are handled as
+    rational functions of tangents, using the half angle substitution for
+    sin, cos, sec and csc) are supported.  If ``trig=False``, trigonometric
+    functions raise NotImplementedError instead of being handled as
+    tangent extensions (unless the integrand contains I, or
+    ``rewrite_complex=True``, in which case they are rewritten in terms of
+    complex exponentials, as before).
 
     If this function returns an unevaluated Integral in the result, it means
     that it has proven that integral to be nonelementary.  Any errors will
@@ -1822,7 +2116,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     ========
 
     >>> from sympy.integrals.risch import risch_integrate
-    >>> from sympy import exp, log, pprint
+    >>> from sympy import exp, log, pprint, tan
     >>> from sympy.abc import x
 
     First, we try integrating exp(-x**2). Except for a constant factor of
@@ -1859,9 +2153,9 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     and is often denoted as Li(x).
 
     risch_integrate() currently only accepts purely transcendental functions
-    with exponentials and logarithms, though note that this can include
-    nested exponentials and logarithms, as well as exponentials with bases
-    other than E.
+    with exponentials, logarithms and trigonometric functions, though note
+    that this can include nested exponentials and logarithms, as well as
+    exponentials with bases other than E.
 
     >>> pprint(risch_integrate(exp(x)*exp(exp(x)), x))
      / x\
@@ -1873,6 +2167,19 @@ def risch_integrate(f, x, extension=None, handle_first='log',
      |  / x\
      |  \e /
      | e     dx
+     |
+    /
+
+    Trigonometric functions are handled as rational functions of tangents.
+
+    >>> risch_integrate(tan(x), x)
+    -log(cos(x))
+    >>> pprint(risch_integrate(tan(x)/x, x))
+      /
+     |
+     | tan(x)
+     | ------ dx
+     |   x
      |
     /
 
@@ -1899,7 +2206,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     f = S(f)
 
     DE = extension or DifferentialExtension(f, x, handle_first=handle_first,
-            dummy=True, rewrite_complex=rewrite_complex)
+            dummy=True, rewrite_complex=rewrite_complex, trig=trig)
     fa, fd = DE.fa, DE.fd
 
     result = S.Zero
@@ -1914,6 +2221,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             ans, i, b = integrate_hyperexponential(fa, fd, DE, conds=conds)
         elif case == 'primitive':
             ans, i, b = integrate_primitive(fa, fd, DE)
+        elif case == 'tan':
+            ans, i, b = integrate_hypertangent(fa, fd, DE)
         elif case == 'base':
             # XXX: We can't call ratint() directly here because it doesn't
             # handle polynomials correctly.
@@ -1921,8 +2230,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             b = False
             i = S.Zero
         else:
-            raise NotImplementedError("Only exponential and logarithmic "
-            "extensions are currently supported.")
+            raise NotImplementedError("Only exponential, logarithmic and "
+            "tangent extensions are currently supported.")
 
         result += ans
         if b:

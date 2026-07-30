@@ -7,7 +7,8 @@ from sympy.integrals.risch import (DifferentialExtension, derivation,
     NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
-    no_cancel_equal, cancel_primitive, cancel_exp, rischDE)
+    no_cancel_equal, cancel_primitive, cancel_exp, cancel_tan, rischDE,
+    coupled_DE_system, _pos_int_roots)
 
 from sympy.testing.pytest import raises
 from sympy.abc import x, t, z, n
@@ -237,6 +238,42 @@ def test_solve_poly_rde_cancel():
     assert cancel_primitive(b, c, 3, DE) == q
 
     # TODO: Add more primitive tests, including tests that require is_deriv_in_field()
+
+    # tan
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(t**2 + 1, t)]})
+    assert cancel_tan(Poly(1 - t, t), Poly(t + 1, t), 1, DE) == \
+        Poly(t, t, domain='QQ')
+    assert cancel_tan(Poly(1 - 3*t, t), Poly(t**3 + 3*t**2, t), 3, DE) == \
+        Poly(t**3, t, domain='QQ')
+    # Once the recursion has exhausted the t-coefficient of b, no more
+    # cancellation can occur and the no-cancellation algorithms take over.
+    assert cancel_tan(Poly(2, t), Poly(t**2 + 2*t + 1, t), 1, DE) == \
+        Poly(t, t)
+    raises(NonElementaryIntegralException,
+        lambda: cancel_tan(Poly(1 - t, t), Poly(t**2, t), 1, DE))
+
+
+def test_coupled_DE_system():
+    from sympy.core.singleton import S
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    # Dy1 - y2 == 2, Dy2 + y1 == 0
+    assert coupled_DE_system(S.Zero, S.One, S(2), S.Zero, DE) == (0, -2)
+    # Dy1 - y2 == x, Dy2 + y1 == 1
+    assert coupled_DE_system(S.Zero, S.One, x, S.One, DE) == (2, -x)
+    # y1 + I*y2 would be exp(-I*x)*Integral(exp(I*x)/x, x), which is not
+    # elementary
+    raises(NonElementaryIntegralException,
+        lambda: coupled_DE_system(S.Zero, S.One, 1/x, S.Zero, DE))
+
+
+def test_pos_int_roots():
+    assert _pos_int_roots(Poly((z - 2)*(z - 3)*(z + 1), z), z) == [2, 3]
+    # with I or other generators in the coefficients, the positive integer
+    # roots are the common roots of the coefficients of each monomial
+    assert _pos_int_roots(Poly((z - 2)*(z - I), z), z) == [2]
+    assert _pos_int_roots(Poly(x*(z - 4) + I*(z - 4)*x**2, z), z) == [4]
+    assert _pos_int_roots(Poly((z - 2)*x + (z - 3), z), z) == []
 
 
 def test_rischDE():

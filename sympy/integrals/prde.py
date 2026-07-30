@@ -1363,7 +1363,19 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         # Bronstein's book, page 255), so most likely this indicates a bug.
         return None
 
-    roots = [(i, i.real_roots()) for i, _ in H]
+    def rational_roots(p):
+        # All the roots of p are rational if and only if its monic form
+        # has rational coefficients, in which case they can be counted
+        # over QQ.  This avoids calling real_roots() on polynomials with
+        # coefficients in an extension field (like QQ(I), over which root
+        # counting raises NotImplementedError), for which the test below
+        # correctly fails.
+        p = Poly(p.to_field().monic().as_expr(), p.gen)
+        if p.domain.is_ZZ or p.domain.is_QQ:
+            return p.real_roots()
+        return []
+
+    roots = [(i, rational_roots(i)) for i, _ in H]
     if not all(len(j) == i.degree() and all(k.is_Rational for k in j) for
                i, j in roots):
         # If f is the logarithmic derivative of a k(t)-radical, then all the

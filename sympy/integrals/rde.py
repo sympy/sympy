@@ -26,6 +26,7 @@ from operator import mul
 from functools import reduce
 
 from sympy.core import oo
+from sympy.core.numbers import I
 from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
@@ -93,6 +94,39 @@ def order_at_oo(a, d, t):
     return d.degree(t) - a.degree(t)
 
 
+def _pos_int_roots(r, z):
+    """
+    Positive integer roots of ``r``, a Poly in ``z`` over some field k.
+
+    Explanation
+    ===========
+
+    The coefficients of ``r`` may involve I (e.g., when solving a coupled
+    differential system over k(sqrt(-1))) or other generators of k, in
+    which case a positive integer n is a root of ``r`` if and only if it
+    is a common root of the univariate polynomials in ``z`` obtained by
+    collecting the coefficients of each monomial in the remaining
+    generators.  This reduces the problem to real root finding over the
+    rationals, which is always possible.
+    """
+    r = Poly(r.as_expr(), z, field=True)
+    others = tuple(r.free_symbols - {z}) + ((I,) if r.expr.has(I) else ())
+    if others:
+        # Decompose r as an element of QQ[others][z]; n is a root of r iff
+        # it is a root of every coefficient of r with respect to others.
+        R = Poly(r.as_expr().as_numer_denom()[0], (z,) + others)
+        polys = {}
+        for monom, coeff in R.terms():
+            polys.setdefault(monom[1:], []).append((monom[0], coeff))
+        r = None
+        for terms in polys.values():
+            p = Poly.from_dict(dict(terms), z)
+            r = p if r is None else r.gcd(p)
+        if not r.expr.has(z):
+            return []
+    return [i for i in r.real_roots() if i in ZZ and i > 0]
+
+
 def weak_normalizer(a, d, DE, z=None):
     """
     Weak normalization.
@@ -133,7 +167,7 @@ def weak_normalizer(a, d, DE, z=None):
     if not r.expr.has(z):
         return (Poly(1, DE.t), (a, d))
 
-    N = [i for i in r.real_roots() if i in ZZ and i > 0]
+    N = _pos_int_roots(r, z)
 
     q = reduce(mul, [gcd(a - Poly(n, DE.t)*derivation(d1, DE), d1) for n in N],
         Poly(1, DE.t))
@@ -753,6 +787,69 @@ def cancel_exp(b, c, n, DE):
     return q
 
 
+def cancel_tan(b, c, n, DE):
+    """
+    Poly Risch Differential Equation - Cancellation: Hypertangent case.
+
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], n either an integer or +oo, ``b`` in k[t]
+    with deg(b) <= 1, and ``c`` in k[t] with Dt/(t**2 + 1) in k and
+    sqrt(-1) not in k, either raise NonElementaryIntegralException, in
+    which case the equation Dq + b*q == c has no solution of degree at
+    most n in k[t], or a solution q in k[t] of this equation with
+    deg(q) <= n.
+    """
+    # In Bronstein's book the procedure CancelTan(b0, c, n) takes b0 in k
+    # and solves Dq + (b0 - n*eta*t)*q == c.  Here the complete b is passed
+    # in, and its leading coefficient need not be an integer multiple of
+    # eta, so the recursion works with b directly: writing q == r + p*h,
+    # with p == t**2 + 1 and deg(r) <= 1, gives
+    # Dq + b*q == Dr + b*r + p*(Dh + (b + 2*eta*t)*h), so r is obtained
+    # from c mod p by solving a coupled differential system over k, and h
+    # from a smaller problem of the same type.
+    p = Poly(DE.t**2 + 1, DE.t)
+    eta = DE.d.exquo(p).as_expr()
+
+    if c.is_zero:
+        return c  # return 0
+    if n < 0:
+        raise NonElementaryIntegralException
+
+    b0, b1 = b.nth(0), b.nth(1)
+    if b1.is_zero:
+        # The t-coefficient of b has been exhausted by the recursion (or b
+        # was in k to begin with); since deg(b) < deg(Dt) - 1 == 1, no
+        # cancellation can happen anymore and solve_poly_rde() dispatches
+        # to the no-cancellation algorithms.
+        return solve_poly_rde(b, c, n, DE)
+
+    if n == 0:
+        # Any solution is in k, so Dq + b0*q + b1*q*t == c requires
+        # q == c1/b1, where c == c1*t + c0.
+        if c.degree(DE.t) > 1:
+            raise NonElementaryIntegralException
+        q = Poly(cancel(c.nth(1)/b1), DE.t)
+        if not (c - derivation(q, DE) - b*q).is_zero:
+            raise NonElementaryIntegralException
+        return q
+
+    # r == u*t + v, where u and v solve the coupled differential system
+    # Du + b0*u + b1*v == c1, Dv - b1*u + b0*v == c0 over k, with
+    # c == c1*t + c0 (mod t**2 + 1).
+    crem = c.rem(p)
+    c0, c1 = crem.nth(0), crem.nth(1)
+    with DecrementLevel(DE):
+        u, v = coupled_DE_system(b0, -b1, c1, c0, DE)
+    r = Poly(u*DE.t + v, DE.t)
+
+    cnew = (c - derivation(r, DE) - b*r).to_field().exquo(p)
+    bnew = b + Poly(2*eta*DE.t, DE.t)
+    h = cancel_tan(bnew, cnew, n - 2, DE)
+    return p*h + r
+
+
 def solve_poly_rde(b, cQ, n, DE, parametric=False):
     """
     Solve a Polynomial Risch Differential Equation with degree bound ``n``.
@@ -839,6 +936,12 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
                         "primitive case is not yet implemented.")
                 return cancel_primitive(b, cQ, n, DE)
 
+            elif DE.case == 'tan':
+                if parametric:
+                    raise NotImplementedError("Parametric RDE cancellation "
+                        "hypertangent case is not yet implemented.")
+                return cancel_tan(b, cQ, n, DE)
+
             else:
                 raise NotImplementedError("Other Poly (P)RDE cancellation "
                     "cases are not yet implemented (%s)." % DE.case)
@@ -894,3 +997,47 @@ def rischDE(fa, fd, ga, gd, DE):
     # The solution found so far is z == (alpha*y + beta)/(hn*hs); undo the
     # weak normalizer substitution y == z/q.
     return (alpha*y + beta, q*hn*hs)
+
+
+def coupled_DE_system(b1, b2, c1, c2, DE):
+    """
+    Solve a Coupled Differential System.
+
+    Explanation
+    ===========
+
+    Given a derivation D on k(t) such that sqrt(-1) is not in k(t), and
+    b1, b2, c1, c2 in k(t), either raise NonElementaryIntegralException,
+    in which case the system
+
+        Dy1 + b1*y1 - b2*y2 == c1
+        Dy2 + b2*y1 + b1*y2 == c2
+
+    has no solution y1, y2 in k(t), or return such a solution.
+
+    The arguments and the returned solution are Expr instances
+    representing elements of k(t).
+
+    This is the problem of Chapter 8 of Bronstein's book: setting
+    y == y1 + sqrt(-1)*y2 reduces the system to a single Risch
+    Differential Equation over k(t)(sqrt(-1)),
+
+        Dy + (b1 + sqrt(-1)*b2)*y == c1 + sqrt(-1)*c2,
+
+    which is solved by rischDE(), and the solution is split back into
+    real and imaginary parts (conjugation is the substitution
+    I -> -I, since all the generators of k(t) are real).
+    """
+    fa, fd = frac_in(cancel(b1 + I*b2), DE.t)
+    ga, gd = frac_in(cancel(c1 + I*c2), DE.t)
+    ya, yd = rischDE(fa, fd, ga, gd, DE)
+    y = ya.as_expr()/yd.as_expr()
+    ybar = y.subs(I, -I)
+    y1 = cancel((y + ybar)/2)
+    y2 = cancel((y - ybar)/(2*I))
+    if y1.has(I) or y2.has(I):
+        # cancel() was not able to recognize the real and imaginary
+        # parts, e.g. because of RootOf coefficients.
+        raise NotImplementedError("Cannot separate the solution of a "
+            "coupled differential system into real and imaginary parts.")
+    return (y1, y2)
