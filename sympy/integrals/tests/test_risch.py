@@ -176,14 +176,20 @@ def test_polynomial_reduce():
 
 
 def test_laurent_series():
+    # Example 2.7.1 from Bronstein.  The principal parts at the zeros of
+    # t**2 - 1 are -9/(t - 1)**2 - 3/(t + 1)**2 - 4/(t + 1) (this is also
+    # what apart() gives, together with 4/(t - 2)).
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
     a = Poly(36, t)
     d = Poly((t - 2)*(t**2 - 1)**2, t)
     F = Poly(t**2 - 1, t)
     n = 2
     assert laurent_series(a, d, F, n, DE) == \
-        (Poly(-3*t**3 + 3*t**2 - 6*t - 8, t), Poly(t**5 + t**4 - 2*t**3 - 2*t**2 + t + 1, t),
-        [Poly(-3*t**3 - 6*t**2, t, domain='QQ'), Poly(2*t**6 + 6*t**5 - 8*t**3, t, domain='QQ')])
+        (Poly(-4*t**3 - 8*t**2 - 8*t - 16, t), Poly(t**4 - 2*t**2 + 1, t),
+        [Poly(-3*t**3 - 6*t**2, t, domain='QQ'), Poly(-2*t**6 - 6*t**5 + 8*t**3, t, domain='QQ')])
+    # Example 2.7.2, first factor: the principal part at t == 2 is 4/(t - 2)
+    assert laurent_series(a, d, Poly(t - 2, t), 1, DE)[:2] == \
+        (Poly(4, t), Poly(t - 2, t))
 
 
 def test_recognize_derivative():
@@ -198,6 +204,22 @@ def test_recognize_derivative():
     assert recognize_derivative(Poly(x*t, t), Poly(1, t), DE) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert recognize_derivative(Poly(t, t), Poly(1, t), DE) == True
+    # Repeated factors in the denominator used to crash with
+    # ExactQuotientFailed (the multiplicity from the squarefree
+    # factorization was ignored), and the recognition check compared
+    # object identities, so it could not return True on any input that
+    # entered the loop.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    # D(1/x) == -1/x**2 and D(-1/x) == 1/x**2 are derivatives
+    assert recognize_derivative(Poly(-1, x), Poly(x**2, x), DE) == True
+    assert recognize_derivative(Poly(1, x), Poly(x**2, x), DE) == True
+    # 1/x and (x + 1)/x**2 == 1/x + 1/x**2 have nonzero residues
+    assert recognize_derivative(Poly(1, x), Poly(x, x), DE) == False
+    assert recognize_derivative(Poly(x + 1, x), Poly(x**2, x), DE) == False
+    # residues at complex poles are detected via polynomial divisibility
+    assert recognize_derivative(Poly(x, x), Poly((x**2 + 1)**2, x), DE) == True
+    assert recognize_derivative(Poly(1, x), Poly((x**2 + 1)**2, x), DE) == False
+    assert recognize_derivative(Poly(-2*x, x), Poly((x**2 - 1)**2, x), DE) == True
 
 
 def test_recognize_log_derivative():
