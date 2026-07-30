@@ -2,12 +2,13 @@
 from __future__ import annotations
 from sympy.core.function import (Function, Lambda, diff, expand_log,
     expand_trig)
-from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.error_functions import (Ei, erf, erfi, li)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.trigonometric import (acot, asin, atan, cos,
@@ -928,6 +929,49 @@ def test_risch_integrate_trig():
     # trig=False restores the old behavior
     raises(NotImplementedError, lambda: risch_integrate(tan(x), x,
         trig=False))
+
+
+def test_risch_integrate_special():
+    # erf and erfi
+    assert risch_integrate(exp(-x**2), x, special=True) == \
+        sqrt(pi)*erf(x)/2
+    assert risch_integrate(x**2*exp(-x**2), x, special=True) == \
+        -x*exp(-x**2)/2 + sqrt(pi)*erf(x)/4
+    assert risch_integrate(exp(x**2), x, special=True) == \
+        sqrt(pi)*erfi(x)/2
+    assert risch_integrate(exp(-(x + 1)**2), x, special=True) == \
+        sqrt(pi)*erf(x + 1)/2
+    assert risch_integrate(exp(-4*x**2 + x), x, special=True) == \
+        sqrt(pi)*exp(Rational(1, 16))*erf(2*x - Rational(1, 4))/4
+
+    # Ei
+    assert risch_integrate(exp(x)/x, x, special=True) == Ei(x)
+    assert risch_integrate(exp(x)/(x - 1), x, special=True) == E*Ei(x - 1)
+    assert risch_integrate(exp(x)/x**2, x, special=True) == Ei(x) - exp(x)/x
+
+    # li
+    assert risch_integrate(1/log(x), x, special=True) == li(x)
+    assert risch_integrate(1/log(x)**2, x, special=True) == \
+        -x/log(x) + li(x)
+    assert risch_integrate(x/log(x), x, special=True) == li(x**2)
+    assert risch_integrate((x + 1)/log(x), x, special=True) == \
+        li(x) + li(x**2)
+
+    # all at once
+    assert risch_integrate(exp(-x**2) + exp(x)/x + 1/log(x) + exp(x), x,
+        special=True) == exp(x) + Ei(x) + sqrt(pi)*erf(x)/2 + li(x)
+
+    # elementary integrals stay elementary
+    assert risch_integrate((2*x**2 + 1)*exp(x**2), x, special=True) == \
+        x*exp(x**2)
+    # unevaluated results still mean proven nonelementary
+    assert isinstance(risch_integrate(exp(x**3), x, special=True),
+        NonElementaryIntegral)
+    assert isinstance(risch_integrate(exp(exp(x)), x, special=True),
+        NonElementaryIntegral)
+    # special=False (the default) is unchanged
+    assert isinstance(risch_integrate(exp(-x**2), x),
+        NonElementaryIntegral)
 
 
 def test_risch_integrate_atan():

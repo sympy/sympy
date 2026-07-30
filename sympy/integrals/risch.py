@@ -31,7 +31,7 @@ from sympy.core.add import Add
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I
+from sympy.core.numbers import I, pi
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -39,6 +39,8 @@ from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.symbol import Dummy, Symbol
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.exponential import log, exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.error_functions import (Ei, erf, erfi, li)
 from sympy.functions.elementary.hyperbolic import (cosh, coth, sinh,
     tanh)
 from sympy.functions.elementary.piecewise import Piecewise
@@ -46,7 +48,8 @@ from sympy.functions.elementary.trigonometric import (atan, sin, cos,
     tan, acot, cot, asin, acos, sec, csc)
 from .integrals import integrate, Integral
 from .heurisch import _symbols
-from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.polyerrors import (DomainError, GeneratorsError,
+    PolynomialError)
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
 from sympy.polys.rootoftools import RootSum
@@ -1284,11 +1287,10 @@ def splitfactor_sqf(p, DE, coefficientD=False, z=None, basic=False):
     if p.is_zero:
         return (((p, 1),), ())
 
-    for pi, i in p_sqf:
-        Si = pi.as_poly(*kkinv).gcd(derivation(pi, DE,
+    for pj, i in p_sqf:
+        Si = pj.as_poly(*kkinv).gcd(derivation(pj, DE,
             coefficientD=coefficientD,basic=basic).as_poly(*kkinv)).as_poly(DE.t)
-        pi = Poly(pi, DE.t)
-        Si = Poly(Si, DE.t)
+        pi = Poly(pj, DE.t)
         Ni = pi.exquo(Si)
         if not Si.is_one:
             S.append((Si, i))
@@ -1741,7 +1743,68 @@ def integrate_primitive_polynomial(p, DE):
         q = q + q0
 
 
-def integrate_primitive(a, d, DE, z=None):
+def integrate_primitive_special(a, d, DE):
+    """
+    Integration of logarithmic functions in terms of li.
+
+    Explanation
+    ===========
+
+    Given t == log(w) over k and f == a/d in k(t), try to write
+    f == Dv + Sum(r_j*Dw/(t - c_j)) for v in k(t) and constants r_j and
+    c_j, using limited_integrate(); since
+    D(e**c*li(w*e**(-c))) == Dw/(log(w) - c), the integral is then
+    v + Sum(r_j*e**(c_j)*li(w*e**(-c_j))).  Returns the integral as an
+    Expr in terms of the original functions, or None.
+    """
+    from .prde import limited_integrate
+    w = DE.extargs[DE.level]
+    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+    dw = derivation(w, DE, basic=True)
+
+    gens = []
+    terms = []
+    for c in _constant_residue_candidates(DE.t, d, DE):
+        # D(e**(n*c)*li(w**n*e**(-n*c))) == w**(n - 1)*Dw/(t - c); the
+        # relevant integer multiples n of the logarithm are read off
+        # from the numerator of f at the pole t == c, which must be a
+        # combination of w**n*Dw/w with constant coefficients
+        ns = {1}
+        p = Poly(DE.t - c, DE.t)
+        from .rde import order_at
+        k = order_at(d, p, DE.t)
+        try:
+            ar = (a*d.to_field().exquo(p**k).invert(p)).rem(p)
+        except (DomainError, NotImplementedError, PolynomialError):
+            ar = None
+        if ar is not None and not ar.is_zero:
+            beta = cancel(ar.as_expr()*w/dw)
+            try:
+                bp = Poly(beta, w)
+                if all(derivation(co, DE, basic=True).is_zero
+                        for co in bp.coeffs()):
+                    ns.update(m[0] for m in bp.monoms() if m[0] != 0)
+            except (PolynomialError, GeneratorsError):
+                pass
+        for n in sorted(ns):
+            if not n:
+                continue
+            gens.append(frac_in(cancel(w**(n - 1)*dw/(DE.t - c)), DE.t))
+            terms.append(exp(n*c)*li(w**n*exp(-n*c)))
+    if not gens:
+        return None
+    try:
+        A = limited_integrate(a, d, gens, DE)
+    except NonElementaryIntegralException:
+        return None
+    if A is None:
+        return None
+    (va, vd), R = A
+    return (va.as_expr()/vd.as_expr() +
+        Add(*[R[j].as_expr()*terms[j] for j in range(len(terms))])).subs(s)
+
+
+def integrate_primitive(a, d, DE, z=None, special=False):
     """
     Integration of primitive functions.
 
@@ -1758,6 +1821,10 @@ def integrate_primitive(a, d, DE, z=None):
     If b is False, the second argument is an unevaluated Integral, which has
     been proven to be nonelementary.
 
+    If ``special=True`` and t is a logarithm, integrals with no elementary
+    form are expressed in terms of li when possible (see
+    integrate_primitive_special()).
+
     This is ``IntegratePrimitive`` from Section 5.8 of Bronstein's book.
     """
     # XXX: a and d must be canceled, or this might return incorrect results
@@ -1767,6 +1834,11 @@ def integrate_primitive(a, d, DE, z=None):
     g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
+        if special and DE.exts and DE.exts[DE.level] == 'log' and \
+                DE.extargs[DE.level] is not None:
+            A = integrate_primitive_special(a, d, DE)
+            if A is not None:
+                return (A, S.Zero, True)
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
             g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
@@ -1855,7 +1927,202 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     return (qa, qd, b)
 
 
-def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
+def _parametric_term_rde(fa, fd, ga, gd, gens, DE):
+    """
+    Solve Dy + f*y == g + Sum(r_j*gens_j) parametrically.
+
+    Explanation
+    ===========
+
+    Given f, g in k(t) and gens a list of (num, den) pairs in k(t),
+    either return None, in which case the equation has no solution with
+    y in k(t) and constants r_j, or return (y, R), where y is an Expr and
+    R the list of the constants r_j.  This is used to express integrals
+    in terms of special functions: the gens are the densities of the
+    derivatives of the special function candidates.
+    """
+    from .prde import param_rischDE
+    h, A = param_rischDE(fa, fd, [(ga, gd)] + gens, DE)
+    V = [v for v in A.nullspace() if v[0] != 0]
+    if not V:
+        return None
+    # normalize so that the coefficient of g is 1; then y == Sum(d_i*h_i)
+    # solves Dy + f*y == g + Sum(c_j*gens_j) for [1, c_1, ..., c_m,
+    # d_1, ..., d_r] the normalized nullspace vector
+    v = V[0]/V[0][0]
+    v = [i.as_expr() if isinstance(i, Poly) else S(i) for i in v]
+    r = len(h)
+    m = len(v) - r - 1
+    y = sum(v[m + 1 + j]*h[j][0].as_expr()/h[j][1].as_expr()
+        for j in range(r))
+    return (cancel(y), v[1:m + 1])
+
+
+def _complete_square_candidates(s, DE):
+    """
+    Ways of writing s in k as u**2 + c with u in k and c a constant.
+
+    Returns a list of (u, c) pairs, one for each variable of k in which
+    ``s`` is a quadratic polynomial with constant leading coefficient.
+    """
+    cands = []
+    for v in DE.T[:len(DE.T) + DE.level + 1]:
+        try:
+            p = Poly(s, v)
+        except PolynomialError:
+            continue
+        if p.degree(v) != 2:
+            continue
+        A, B = p.nth(2), p.nth(1)
+        if not derivation(A, DE, basic=True).is_zero:
+            continue
+        c = cancel(p.nth(0) - B**2/(4*A))
+        if not derivation(c, DE, basic=True).is_zero:
+            continue
+        cands.append((sqrt(A)*v + B/(2*sqrt(A)), c))
+    return cands
+
+
+def _constant_residue_candidates(w, d, DE):
+    """
+    Constants c such that w - c vanishes on a factor of d.
+
+    Explanation
+    ===========
+
+    Given w in k and a Poly d in DE.t over k, return the constants c for
+    which some irreducible factor p of d divides the numerator of w - c.
+    These give the candidate arguments w - c of Ei in the integration of
+    e**w-type integrands with denominator d (and similarly the poles
+    t == c for li in the logarithmic case).
+    """
+    from sympy.polys.polytools import factor_list
+    T = DE.T[:len(DE.T) + DE.level + 1]
+    try:
+        _, factors = factor_list(d.as_expr())
+    except (DomainError, PolynomialError, NotImplementedError,
+            GeneratorsError):
+        _, factors = d.sqf_list()
+        factors = [(p.as_expr(), m) for p, m in factors]
+    cands = []
+    for p, _ in factors:
+        # the main variable of the factor is the topmost variable of the
+        # tower appearing in it
+        vs = [v for v in reversed(T) if p.has(v)]
+        if not vs:
+            continue
+        v = vs[0]
+        try:
+            pp = Poly(p, v)
+            wa, wd = frac_in(w, v)
+        except PolynomialError:
+            continue
+        if pp.degree(v) < 1 or pp.gcd(wd).degree(v) > 0:
+            continue
+        try:
+            c = (wa*wd.invert(pp)).rem(pp)
+        except (DomainError, NotImplementedError):
+            continue
+        if c.degree(v) > 0:
+            continue
+        c = c.as_expr()
+        if derivation(c, DE, basic=True).is_zero and \
+                all(cancel(c - i) != 0 for i in cands):
+            cands.append(c)
+    return cands
+
+
+def integrate_hyperexponential_special(pp, DE, z):
+    """
+    Integration of hyperexponential polynomials in terms of special
+    functions.
+
+    Explanation
+    ===========
+
+    Given t == exp(g) hyperexponential over k and p in k[t, 1/t] whose
+    nonzero powers have no elementary integral, try to integrate each
+    term a*t**i in terms of erf, erfi and Ei: with u**2 + c == -i*g for u
+    in k and constant c, D(erf(u)) is a constant multiple of Du*t**i, and
+    with constant c such that i*g - c vanishes on a factor of the
+    denominator of a, D(Ei(i*g - c)) == e**(-c)*D(i*g)*t**i/(i*g - c).
+    The remaining part y*t**i is found by solving
+    Dy + i*Dg*y == a - Sum(r_j*gens_j) parametrically.
+
+    Returns (q, sp, r, b) such that q is an Expr in k(t), sp is an Expr
+    in terms of the original functions of the special part, r in k[t, 1/t]
+    is the untreated part, and p == Dq + D(sp untranslated) + r, with
+    b == True if all the nonzero powers were integrated.
+    """
+    t1 = DE.t
+    g = DE.extargs[DE.level]
+    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+    dg = (DE.d.exquo(Poly(DE.t, DE.t))).as_expr()
+
+    q = S.Zero
+    sp = S.Zero
+    b = True
+
+    if pp.is_zero:
+        return (q, sp, S.Zero, b)
+    r = pp.nth(0, 0)
+
+    for i in range(-pp.degree(z), pp.degree(t1) + 1):
+        if not i:
+            continue
+        if i < 0:
+            a = pp.as_poly(z, expand=False).nth(-i)
+        else:
+            a = pp.as_poly(t1, expand=False).nth(i)
+        if a == 0:
+            continue
+
+        with DecrementLevel(DE):
+            gens = []
+            terms = []
+            for u, c in _complete_square_candidates(cancel(-i*g), DE):
+                # e**(i*g) == e**(-c)*e**(-u**2), and D(erf(u)) is
+                # 2/sqrt(pi)*Du*e**(-u**2); for a negative leading
+                # coefficient u is imaginary, e**(-u**2) == e**(w**2)
+                # with u == I*w, and erfi is used instead
+                w = cancel(u/I)
+                if not w.has(I):
+                    if w.could_extract_minus_sign():
+                        w = -w
+                    gens.append(frac_in(derivation(w, DE, basic=True),
+                        DE.t))
+                    terms.append(sqrt(pi)/2*exp(-c)*erfi(w))
+                else:
+                    if u.could_extract_minus_sign():
+                        u = -u
+                    gens.append(frac_in(derivation(u, DE, basic=True),
+                        DE.t))
+                    terms.append(sqrt(pi)/2*exp(-c)*erf(u))
+            aa, ad = frac_in(a, DE.t)
+            w = cancel(i*g)
+            dw = cancel(i*dg)
+            for c in _constant_residue_candidates(w, ad, DE):
+                gens.append(frac_in(cancel(dw/(w - c)), DE.t))
+                terms.append(exp(c)*Ei(w - c))
+
+            A = None
+            if gens:
+                fa, fd = frac_in(dw, DE.t)
+                A = _parametric_term_rde(fa, fd, aa, ad, gens, DE)
+
+        if A is None:
+            b = False
+            r += a*t1**i if i > 0 else a*z**-i
+            continue
+        y, R = A
+        q += y*t1**i
+        sp -= Add(*[R[j]*terms[j] for j in range(len(terms))])
+
+    return (q, sp.subs(s), r, b)
+
+
+def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise',
+        special=False):
     """
     Integration of hyperexponential functions.
 
@@ -1871,6 +2138,10 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     True, the second argument is Basic expression in k to recursively integrate.
     If b is False, the second argument is an unevaluated Integral, which has
     been proven to be nonelementary.
+
+    If ``special=True``, parts of the integral without an elementary form
+    are expressed in terms of erf, erfi and Ei when possible (see
+    integrate_hyperexponential_special()).
 
     This is ``IntegrateHyperexponential`` from Section 5.9 of Bronstein's
     book.
@@ -1915,6 +2186,17 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
             )
     else:
         ret += qas/qds
+
+    if not b and special and DE.exts and DE.exts[DE.level] == 'exp' and \
+            DE.extargs[DE.level] is not None:
+        rem = cancel(p - (qd*derivation(qa, DE) -
+            qa*derivation(qd, DE)).as_expr()/(qd**2).as_expr())
+        q2, sp, rem2, b = integrate_hyperexponential_special(
+            as_poly_1t(rem, DE.t, z), DE, z)
+        ret += q2.subs(s) + sp
+        if not b:
+            i = NonElementaryIntegral(cancel(rem2).subs(s), DE.x)
+            return (ret, i, b)
 
     if not b:
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
@@ -2168,7 +2450,7 @@ class NonElementaryIntegral(Integral):
 
 def risch_integrate(f, x, extension=None, handle_first='log',
                     separate_integral=False, rewrite_complex=None,
-                    conds='piecewise', trig=True):
+                    conds='piecewise', trig=True, special=False):
     r"""
     The Risch Integration Algorithm.
 
@@ -2205,6 +2487,13 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     integrating the NonElementaryIntegral part using other algorithms to
     possibly get a solution in terms of special functions.  It is False by
     default.
+
+    If ``special`` is ``True``, parts of the integral that have no elementary
+    antiderivative are expressed in terms of the special functions erf,
+    erfi, Ei and li when they have such a form (see the examples below).
+    An unevaluated Integral remaining in the result still means that the
+    integrand has been proven to have no elementary antiderivative.  It
+    is False by default.
 
     Examples
     ========
@@ -2277,6 +2566,14 @@ def risch_integrate(f, x, extension=None, handle_first='log',
      |
     /
 
+    With ``special=True``, nonelementary parts are expressed in terms of
+    special functions when possible.
+
+    >>> risch_integrate(exp(-x**2), x, special=True)
+    sqrt(pi)*erf(x)/2
+    >>> risch_integrate(exp(x)/x + 1/log(x), x, special=True)
+    Ei(x) + li(x)
+
     >>> pprint(risch_integrate(x*x**x*log(x) + x**x + x*x**x, x))
        x
     x*x
@@ -2312,9 +2609,10 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
         fa, fd = fa.cancel(fd, include=True)
         if case == 'exp':
-            ans, i, b = integrate_hyperexponential(fa, fd, DE, conds=conds)
+            ans, i, b = integrate_hyperexponential(fa, fd, DE, conds=conds,
+                special=special)
         elif case == 'primitive':
-            ans, i, b = integrate_primitive(fa, fd, DE)
+            ans, i, b = integrate_primitive(fa, fd, DE, special=special)
         elif case == 'tan':
             ans, i, b = integrate_hypertangent(fa, fd, DE)
         elif case == 'base':
