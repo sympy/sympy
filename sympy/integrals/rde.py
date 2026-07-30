@@ -779,7 +779,12 @@ def rischDE(fa, fd, ga, gd, DE):
     solve the given Risch Differential Equation have not yet been
     implemented.
     """
-    _, (fa, fd) = weak_normalizer(fa, fd, DE)
+    # Substitute y == z/q, where q is the weak normalizer of f.  By Theorem
+    # 6.1.2, y in k(t) solves Dy + f*y == g iff z == q*y solves
+    # Dz + (f - Dq/q)*z == q*g, and f - Dq/q is weakly normalized, as
+    # required by normal_denom().
+    q, (fa, fd) = weak_normalizer(fa, fd, DE)
+    ga, gd = (ga*q).cancel(gd, include=True)
     a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
     A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
     try:
@@ -803,4 +808,6 @@ def rischDE(fa, fd, ga, gd, DE):
     else:
         y = solve_poly_rde(B, C, m, DE)
 
-    return (alpha*y + beta, hn*hs)
+    # The solution found so far is z == (alpha*y + beta)/(hn*hs); undo the
+    # weak normalizer substitution y == z/q.
+    return (alpha*y + beta, q*hn*hs)
