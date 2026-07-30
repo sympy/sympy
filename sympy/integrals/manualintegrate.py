@@ -2324,19 +2324,56 @@ def euler_substitution_rule(integral : IntegralInfo):
     return general_step
 
 def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
-    integrand, x = integral
-    a = Wild('a', exclude=[x])
-    b = Wild('b', exclude=[x])
-    c = Wild('c', exclude=[x, 0])
-    f = Wild('f')
-    n = Wild('n', properties=[lambda n: n.is_Integer and n.is_odd])
-    match = integrand.match(f*sqrt(a+b*x+c*x**2)**n)
-    if not match:
-        return
-    a, b, c, f, n = match[a], match[b], match[c], match[f], match[n]
+    # integrate f(x) * (a + b*x + c*x**2)**(n/2),
+    # where f(x) is a polynomial and n is an odd integer
+    starting_integrand, x = integral
+
+    f = S.One
+    root_base = None
+    root_exp = S.Zero
+
+    # collect radicals
+    for factor in Mul.make_args(starting_integrand):
+        if not factor.has(x):
+            f *= factor
+            continue
+        base, exp = factor.as_base_exp()
+        if exp.is_Integer is True:
+            f *= factor
+            continue
+        # exclude x**pi
+        if exp.is_Rational is not True:
+            return None
+        base_poly = base.as_poly(x)
+        # exclude sqrt(log(x))
+        if base_poly is None or base_poly.degree() != 2:
+            return None
+        base = base_poly.as_expr()
+        if root_base is None:
+            root_base = base
+            root_exp = exp
+            continue
+        reference_power = Pow(root_base, exp)
+        ratio = powsimp(factor/reference_power, force=False).cancel()
+        if ratio.has(x):
+            return None
+        f *= ratio
+        root_exp += exp
+
+    if root_base is None:
+        return None
     f_poly = f.as_poly(x)
     if f_poly is None:
-        return
+        return None
+    n = 2*root_exp
+    if n.is_Integer is not True or n.is_odd is not True:
+        return None
+    root_poly = root_base.as_poly(x)
+    a = root_poly.nth(0)
+    b = root_poly.nth(1)
+    c = root_poly.nth(2)
+    root_base = a + b*x + c*x**2
+    integrand = f*Pow(root_base, n/2)
 
     generic_cond = Ne(c, 0)
     if not degenerate or generic_cond is S.true:
@@ -2499,7 +2536,10 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         generic_step = sqrt_quadratic_reduction_rule(integrand, n, f)
     else:
         generic_step = sqrt_quadratic_polynomial_reduction_rule()
-    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+    step = _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+    if integrand != starting_integrand:
+        return RewriteRule(starting_integrand, x, integrand, step)
+    return step
 
 
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
