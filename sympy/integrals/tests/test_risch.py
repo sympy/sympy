@@ -10,8 +10,8 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.hyperbolic import tanh
-from sympy.functions.elementary.trigonometric import (atan, cos, cot, sec,
-    sin, tan)
+from sympy.functions.elementary.trigonometric import (acot, asin, atan, cos,
+    cot, sec, sin, tan)
 from sympy.polys.polytools import (Poly, cancel, factor)
 from sympy.polys.rationaltools import together
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
@@ -603,6 +603,26 @@ def test_DifferentialExtension_tan():
         tan(x) + tan(x + 1), x))
 
 
+def test_DifferentialExtension_atan():
+    assert DifferentialExtension(atan(x), x)._important_attrs == \
+        (Poly(t0, t0), Poly(1, t0), [Poly(1, x),
+        Poly(1/(x**2 + 1), t0, domain='ZZ(x)')], [x, t0],
+        [Lambda(i, atan(i))], [], [None, 'atan'], [None, x])
+    # acot(b) == atan(1/b)
+    assert DifferentialExtension(acot(x), x)._important_attrs == \
+        (Poly(t0, t0), Poly(1, t0), [Poly(1, x),
+        Poly(-1/(x**2 + 1), t0, domain='ZZ(x)')], [x, t0],
+        [Lambda(i, atan(1/i))], [], [None, 'atan'], [None, 1/x])
+    # tan(n*atan(b)) is a rational function of b
+    assert DifferentialExtension(tan(2*atan(x)) + atan(x),
+        x)._important_attrs[0] == Poly(t0*(1 - x**2) + 2*x, t0, domain='ZZ[x]')
+    # algebraically dependent inverse tangents are not supported
+    raises(NotImplementedError,
+        lambda: DifferentialExtension(atan(x) + atan(1/x), x))
+    raises(NotImplementedError,
+        lambda: DifferentialExtension(atan(2*x/(1 - x**2)) + atan(x), x))
+
+
 def test_tan_of_multiple():
     assert _tan_of_multiple(1, t) == t
     assert _tan_of_multiple(2, t) == 2*t/(1 - t**2)
@@ -721,7 +741,7 @@ def test_DifferentialExtension_misc():
         trig=False))
     raises(NotImplementedError, lambda: DifferentialExtension(tanh(x), x,
         trig=False))
-    raises(NotImplementedError, lambda: DifferentialExtension(atan(x), x))
+    raises(NotImplementedError, lambda: DifferentialExtension(asin(x), x))
     assert DifferentialExtension(10**x, x)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(log(10)*t0, t0)], [x, t0],
         [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], [None, 'exp'],
@@ -908,6 +928,27 @@ def test_risch_integrate_trig():
     # trig=False restores the old behavior
     raises(NotImplementedError, lambda: risch_integrate(tan(x), x,
         trig=False))
+
+
+def test_risch_integrate_atan():
+    assert risch_integrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
+    assert risch_integrate(x*atan(x), x) == \
+        x**2*atan(x)/2 - x/2 + atan(x)/2
+    assert risch_integrate(atan(x)/(x**2 + 1), x) == atan(x)**2/2
+    assert risch_integrate(1/((x**2 + 1)*atan(x)), x) == log(atan(x))
+    assert risch_integrate(exp(atan(x))/(x**2 + 1), x) == exp(atan(x))
+    assert risch_integrate(atan(log(x))/(x*(log(x)**2 + 1)), x) == \
+        atan(log(x))**2/2
+
+    # Proofs of nonelementarity
+    assert isinstance(risch_integrate(exp(atan(x)), x),
+        NonElementaryIntegral)
+    assert isinstance(risch_integrate(atan(x)/x, x), NonElementaryIntegral)
+    # atan(x)**2 has no elementary antiderivative (it needs dilogarithms),
+    # but an elementary part is split off
+    ans, i = risch_integrate(atan(x)**2, x, separate_integral=True)
+    assert ans == x*atan(x)**2
+    assert isinstance(i, NonElementaryIntegral)
 
 
 def test_risch_integrate_float():

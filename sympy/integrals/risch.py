@@ -281,9 +281,10 @@ class DifferentialExtension:
                     "terms of exp and log, using rewrite_complex=True, or "
                     "using trig=True for the real trigonometric functions.")
         else:
-            if any(i.has(x) for i in self.f.atoms(atan, asin, acos)):
-                raise NotImplementedError("Inverse trigonometric extensions "
-                "are not supported.")
+            if any(i.has(x) for i in self.f.atoms(asin, acos)):
+                raise NotImplementedError("The inverse trigonometric "
+                "extensions asin and acos are algebraic and are not "
+                "supported.")
 
         exps = set()
         pows = set()
@@ -292,6 +293,7 @@ class DifferentialExtension:
         logs = set()
         symlogs = set()
         tans = set()
+        atans = set()
 
         while True:
             if self.newf.is_rational_function(*self.T):
@@ -312,6 +314,14 @@ class DifferentialExtension:
 
             if trig:
                 tans = self._rewrite_tans(tans)
+                # acot(b) == atan(1/b) (with sympy's conventions)
+                self.newf = self.newf.xreplace({i: i.rewrite(atan) for i in
+                    self.newf.atoms(acot)
+                    if i.args[0].is_rational_function(*self.T) and
+                    i.args[0].has(*self.T)})
+                atans = update_sets(atans, self.newf.atoms(atan),
+                    lambda i: i.args[0].is_rational_function(*self.T) and
+                    i.args[0].has(*self.T))
 
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps)
@@ -333,7 +343,9 @@ class DifferentialExtension:
                     # handle them.
                     tan_new_extension = True
                 else:
-                    tan_new_extension = self._tan_part(tans)
+                    tan_new_extension = self._atan_part(atans)
+                    tan_new_extension = self._tan_part(tans) or \
+                        tan_new_extension
 
         self.fa, self.fd = frac_in(self.newf, self.t)
         self._auto_attrs()
@@ -703,6 +715,68 @@ class DifferentialExtension:
 
         return new_extension
 
+    def _atan_part(self, atans):
+        """
+        Try to build an inverse tangent extension.
+
+        Explanation
+        ===========
+
+        atan(b) is a primitive over k: D(atan(b)) == Db/(1 + b**2) is in
+        k.  It is a monomial over k unless Db/(1 + b**2) == Dv +
+        Sum(c_i*Dt_i) for v in k, constants c_i and the existing inverse
+        tangent extensions t_i (the arguments of the tangent extensions
+        are already in k, so they are absorbed by Dv), which is checked
+        with limited_integrate().  Since rewriting a dependent inverse
+        tangent in terms of the existing extensions requires determining
+        piecewise constants (like atan(x) + atan(1/x) == +-pi/2 or
+        atan(2*x/(1 - x**2)) == 2*atan(x) +- pi), dependent inverse
+        tangents raise NotImplementedError.
+
+        Returns True if there was a new extension and False if there was
+        no new extension.
+        """
+        from .prde import limited_integrate
+        new_extension = False
+        for arg in ordered([i.args[0] for i in atans]):
+            # limited_integrate() needs the level attributes (case, d, ...)
+            # that are otherwise only set after the extension is built.
+            self._auto_attrs()
+
+            arga, argd = frac_in(arg, self.t)
+            darga = (argd*derivation(Poly(arga, self.t), self) -
+                arga*derivation(Poly(argd, self.t), self))
+            dargd = argd**2
+            darg = darga.as_expr()/dargd.as_expr()
+            dcand = cancel(darg/(1 + arg**2))
+
+            G = [frac_in(self.D[i].as_expr(), self.t) for i, ext in
+                enumerate(self.exts) if ext == 'atan']
+            dca, dcd = frac_in(dcand, self.t)
+            try:
+                A = limited_integrate(dca, dcd, G, self)
+            except NonElementaryIntegralException:
+                A = None
+            if A is not None:
+                raise NotImplementedError("%s is algebraically dependent "
+                    "on the existing extension tower, which is not "
+                    "supported." % atan(arg))
+
+            self.t = next(self.ts)
+            self.T.append(self.t)
+            self.extargs.append(arg)
+            self.exts.append('atan')
+            self.D.append(dcand.as_poly(self.t, expand=False))
+            if self.dummy:
+                i = Dummy("i")
+            else:
+                i = Symbol('i')
+            self.Tfuncs += [Lambda(i, atan(arg.subs(self.x, i)))]
+            self.newf = self.newf.xreplace({atan(arg): self.t})
+            new_extension = True
+
+        return new_extension
+
     def _tan_part(self, tans):
         """
         Try to build a tangent (hypertangent) extension.
@@ -719,6 +793,24 @@ class DifferentialExtension:
         """
         new_extension = False
         for arg in ordered([i.args[0] for i in tans]):
+            # The tangent of a multiple of an inverse tangent extension is
+            # not transcendental: tan(n*atan(b)) is a rational function of
+            # b for an integer n (and algebraic otherwise).
+            atanvars = [(self.T[i], self.extargs[i]) for i, ext in
+                enumerate(self.exts) if ext == 'atan']
+            if any(arg.has(v) for v, _ in atanvars):
+                for v, b in atanvars:
+                    n = cancel(arg/v)
+                    if n.is_Integer:
+                        self.newf = self.newf.xreplace({tan(arg):
+                            _tan_of_multiple(n, b)})
+                        break
+                else:
+                    raise NotImplementedError("The tangent of an "
+                        "expression involving an inverse tangent, like "
+                        "%s, is not supported." % tan(arg))
+                continue
+
             # tan(a) and tan(b) are algebraically dependent if and only if
             # a - r*b is constant for some rational number r; the case
             # a == r*b with the two tangents appearing in the same pass was
@@ -2084,13 +2176,15 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     ===========
 
     Only transcendental functions are supported.  Currently, exponentials,
-    logarithms and real trigonometric functions (which are handled as
+    logarithms, real trigonometric functions (which are handled as
     rational functions of tangents, using the half angle substitution for
-    sin, cos, sec and csc) are supported.  If ``trig=False``, trigonometric
-    functions raise NotImplementedError instead of being handled as
-    tangent extensions (unless the integrand contains I, or
-    ``rewrite_complex=True``, in which case they are rewritten in terms of
-    complex exponentials, as before).
+    sin, cos, sec and csc) and inverse tangents (which are primitive
+    extensions like logarithms) are supported.  If ``trig=False``,
+    trigonometric functions raise NotImplementedError instead (unless the
+    integrand contains I, or ``rewrite_complex=True``, in which case they
+    are rewritten in terms of complex exponentials and logarithms, as
+    before).  asin and acos are algebraic over the tangents and are not
+    supported.
 
     If this function returns an unevaluated Integral in the result, it means
     that it has proven that integral to be nonelementary.  Any errors will
