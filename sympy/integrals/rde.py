@@ -33,9 +33,6 @@ from sympy.polys import Poly, gcd, ZZ, cancel
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)
 
-# TODO: Add messages to NonElementaryIntegralException errors
-
-
 def order_at(a, p, t):
     """
     Computes the order of a at p, with respect to t.
@@ -167,8 +164,8 @@ def normal_denom(fa, fd, ga, gd, DE):
     a = dn*h
     c = a*h
     if c.div(en)[1]:
-        # en does not divide dn*h**2
-        raise NonElementaryIntegralException
+        raise NonElementaryIntegralException("en does not divide dn*h**2 in "
+            "normal_denom().")
     ca = c*ga
     ca, cd = ca.cancel(gd, include=True)
 
@@ -273,6 +270,9 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
         B = ba.to_field().quo(bd)
         C = ca.to_field().quo(cd)
         return (a, B, C, Poly(1, DE.t))
+    elif case in ('other_linear', 'other_nonlinear'):
+        raise NotImplementedError("The %s case is not implemented in "
+            "special_denom()." % case)
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
             "'base'}, not %s." % case)
@@ -418,6 +418,9 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
         if db == da + delta - 1 and alpha.is_Integer:
             n = max(0, alpha, dc - db)
 
+    elif case == 'other_linear':
+        raise NotImplementedError("The other_linear case is not implemented "
+            "in bound_degree().")
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
             "'other_nonlinear', 'base'}, not %s." % case)
@@ -451,11 +454,13 @@ def spde(a, b, c, n, DE):
         if c.is_zero:
             return (zero, zero, 0, zero, beta)  # -1 is more to the point
         if (n < 0) is True:
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("n became negative in "
+                "spde().")
 
         g = a.gcd(b)
         if not c.rem(g).is_zero:  # g does not divide c
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("gcd(a, b) does not divide "
+                "c in spde().")
 
         a, b, c = a.quo(g), b.quo(g), c.quo(g)
 
@@ -491,7 +496,8 @@ def no_cancel_b_large(b, c, n, DE):
     while not c.is_zero:
         m = c.degree(DE.t) - b.degree(DE.t)
         if not 0 <= m <= n:  # n < 0 or m < 0 or m > n
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("deg(c) - deg(b) is not "
+                "between 0 and n in no_cancel_b_large().")
 
         p = Poly(c.as_poly(DE.t).LC()/b.as_poly(DE.t).LC()*DE.t**m, DE.t,
             expand=False)
@@ -527,14 +533,16 @@ def no_cancel_b_small(b, c, n, DE):
             m = c.degree(DE.t) - DE.d.degree(DE.t) + 1
 
         if not 0 <= m <= n:  # n < 0 or m < 0 or m > n
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("m is not between 0 and n "
+                "in no_cancel_b_small().")
 
         if m > 0:
             p = Poly(c.as_poly(DE.t).LC()/(m*DE.d.as_poly(DE.t).LC())*DE.t**m,
                 DE.t, expand=False)
         else:
             if b.degree(DE.t) != c.degree(DE.t):
-                raise NonElementaryIntegralException
+                raise NonElementaryIntegralException("deg(b) != deg(c) in "
+                    "the m == 0 case of no_cancel_b_small().")
             if b.degree(DE.t) == 0:
                 return (q, b.as_poly(DE.T[DE.level - 1]),
                     c.as_poly(DE.T[DE.level - 1]))
@@ -576,7 +584,8 @@ def no_cancel_equal(b, c, n, DE):
         m = max(M, c.degree(DE.t) - DE.d.degree(DE.t) + 1)
 
         if not 0 <= m <= n:  # n < 0 or m < 0 or m > n
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("m is not between 0 and n "
+                "in no_cancel_equal().")
 
         u = cancel(m*DE.d.as_poly(DE.t).LC() + b.as_poly(DE.t).LC())
         if u.is_zero:
@@ -585,9 +594,11 @@ def no_cancel_equal(b, c, n, DE):
             p = Poly(c.as_poly(DE.t).LC()/u*DE.t**m, DE.t, expand=False)
         else:
             if c.degree(DE.t) != DE.d.degree(DE.t) - 1:
-                raise NonElementaryIntegralException
+                raise NonElementaryIntegralException("deg(c) != deg(D) - 1 "
+                    "in the m == 0 case of no_cancel_equal().")
             else:
-                p = c.as_poly(DE.t).LC()/b.as_poly(DE.t).LC()
+                p = Poly(c.as_poly(DE.t).LC()/b.as_poly(DE.t).LC(), DE.t,
+                    expand=False)
 
         q = q + p
         n = m - 1
@@ -615,8 +626,8 @@ def cancel_primitive(b, c, n, DE):
         ba, bd = frac_in(b, DE.t)
         A = is_log_deriv_k_t_radical_in_field(ba, bd, DE)
         if A is not None:
-            n, z = A
-            if n == 1:  # b == Dz/z
+            m, z = A
+            if m == 1:  # b == Dz/z
                 raise NotImplementedError("is_deriv_in_field() is required to "
                     " solve this problem.")
                 # if z*c == Dp for p in k[t] and deg(p) <= n:
@@ -628,13 +639,15 @@ def cancel_primitive(b, c, n, DE):
         return c  # return 0
 
     if n < c.degree(DE.t):
-        raise NonElementaryIntegralException
+        raise NonElementaryIntegralException("n < deg(c) in "
+            "cancel_primitive().")
 
     q = Poly(0, DE.t)
     while not c.is_zero:
         m = c.degree(DE.t)
         if n < m:
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("n < deg(c) in "
+                "cancel_primitive().")
         with DecrementLevel(DE):
             a2a, a2d = frac_in(c.LC(), DE.t)
             sa, sd = rischDE(ba, bd, a2a, a2d, DE)
@@ -681,13 +694,14 @@ def cancel_exp(b, c, n, DE):
         return c  # return 0
 
     if n < c.degree(DE.t):
-        raise NonElementaryIntegralException
+        raise NonElementaryIntegralException("n < deg(c) in cancel_exp().")
 
     q = Poly(0, DE.t)
     while not c.is_zero:
         m = c.degree(DE.t)
         if n < m:
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("n < deg(c) in "
+                "cancel_exp().")
         # a1 = b + m*Dt/t
         a1 = b.as_expr()
         with DecrementLevel(DE):
@@ -791,12 +805,6 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
             else:
                 raise NotImplementedError("Other Poly (P)RDE cancellation "
                     "cases are not yet implemented (%s)." % DE.case)
-
-        if parametric:
-            raise NotImplementedError("Remaining cases for Poly PRDE not yet "
-                "implemented.")
-        raise NotImplementedError("Remaining cases for Poly RDE not yet "
-            "implemented.")
 
 
 def rischDE(fa, fd, ga, gd, DE):

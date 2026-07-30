@@ -201,6 +201,9 @@ def test_solve_poly_rde_no_cancel():
     assert no_cancel_equal(Poly(1 - t, t),
     Poly(t**3 + t**2 - 2*x*t - 2*x, t), oo, DE) == \
         (Poly(t**2, t), 1, Poly((-2 - 2*x)*t - 2*x, t))
+    # The m == 0 branch: Dq + t*q == t has the solution q == 1 (this used
+    # to return an Expr instead of a Poly)
+    assert no_cancel_equal(Poly(t, t), Poly(t, t), 5, DE) == Poly(1, t)
 
 
 def test_solve_poly_rde_cancel():
@@ -242,6 +245,12 @@ def test_rischDE():
     ga = Poly(1, t)
     gd = Poly(1, t)
     assert rischDE(fa, fd, ga, gd, DE) == (Poly(-1, t), Poly(t, t))
+
+    # A derivation with an 'other_linear' monomial raises a graceful
+    # NotImplementedError (it used to be an uncaught ValueError)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t + 1, t)]})
+    raises(NotImplementedError, lambda: rischDE(Poly(1, t), Poly(1, t),
+        Poly(t, t), Poly(1, t), DE))
 
     # Dy + y/x == 1.  f == 1/x is not weakly normalized; the weak normalizer
     # q == x must be applied to g and divided back out of the solution.

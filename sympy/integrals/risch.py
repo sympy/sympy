@@ -243,9 +243,11 @@ class DifferentialExtension:
                 self.newf = self.newf.rewrite(candidates, rule)
             self.newf = cancel(self.newf)
         else:
-            if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
-                raise NotImplementedError("Trigonometric extensions are not "
-                "supported (yet!)")
+            if any(i.has(x) for i in self.f.atoms(sin, cos, cot, tan, sinh,
+                    cosh, coth, tanh, asin, acos, acot, atan)):
+                raise NotImplementedError("Trigonometric and hyperbolic "
+                    "extensions are not supported (yet!).  Try rewriting in "
+                    "terms of exp and log, or using rewrite_complex=True.")
 
         exps = set()
         pows = set()

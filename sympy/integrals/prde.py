@@ -128,6 +128,9 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     elif case in ('primitive', 'base'):
         B = ba.quo(bd)
         return (a, B, G, Poly(1, DE.t))
+    elif case in ('other_linear', 'other_nonlinear'):
+        raise NotImplementedError("The %s case is not implemented in "
+            "prde_special_denom()." % case)
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
             "'base'}, not %s." % case)

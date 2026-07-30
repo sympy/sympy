@@ -8,7 +8,8 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (atan, sin, tan)
+from sympy.functions.elementary.hyperbolic import tanh
+from sympy.functions.elementary.trigonometric import (atan, cot, sin, tan)
 from sympy.polys.polytools import (Poly, cancel, factor)
 from sympy.polys.rationaltools import together
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
@@ -620,6 +621,11 @@ def test_DifferentialExtension_misc():
         [Poly(1, x, domain='ZZ'), Poly(t0, t0, domain='ZZ')], [x, t0],
         [Lambda(i, exp(i))], [], [None, 'exp'], [None, x])
     raises(NotImplementedError, lambda: DifferentialExtension(sin(x), x))
+    # cot, acot, and the hyperbolic functions used to fall through to the
+    # generic "Couldn't find an elementary transcendental extension" error
+    # instead of the informative trigonometric one
+    raises(NotImplementedError, lambda: DifferentialExtension(cot(x), x))
+    raises(NotImplementedError, lambda: DifferentialExtension(tanh(x), x))
     assert DifferentialExtension(10**x, x)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(log(10)*t0, t0)], [x, t0],
         [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], [None, 'exp'],
