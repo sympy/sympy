@@ -3569,19 +3569,22 @@ class IntegrationSolver:
     also yield other requests that read or update per-run solver state (see
     :class:`PartsUCheck`).
 
-    Everything that influences how the nested rules are applied — the
+    Everything that influences how the nested rules are applied (the
     loop-detection set, the integration-by-parts ``u`` counter and the
-    options passed to :func:`integral_steps` — is stored on the solver
+    options passed to :func:`integral_steps`) is stored on the solver
     instance instead of in module-global variables.
     """
 
-    def __init__(self, **options):
+    def __init__(self, max_depth: int | None = 100, **options):
+        # Hard limit on the depth of nested subproblems (None = unlimited):
+        # ``max_depth=1`` allows only rules that need no subintegrals.
+        self.max_depth = max_depth
         self.options = options
         # Subproblems on the current recursion path, to break cyclic integrals.
         self._active: set[Expr] = set()
         # Uses of each "u" by integration by parts, to avoid infinite repetition.
         self._parts_u_count: dict[Expr, int] = defaultdict(int)
-        self._strategy = None
+        self._strategy: Callable[[IntegralInfo], Rule] | None = None
 
     def solve(self, integrand, symbol) -> Rule:
         """Solve a (sub)integral by dispatching the rules on it.
@@ -3589,6 +3592,12 @@ class IntegrationSolver:
         This replaces the recursive calls to ``integral_steps`` that the
         rules used to perform themselves.
         """
+        # Every ancestor on the recursion path holds exactly one entry in
+        # ``_active``, so its size is the current depth.
+        if self.max_depth is not None and len(self._active) >= self.max_depth:
+            # Recursion budget exhausted: report the subproblem as
+            # unsolvable, so that callers fall back to shallower candidates.
+            return DontKnowRule(integrand, symbol)
         cachekey = integrand.xreplace({symbol: _cache_dummy})
         if cachekey in self._active:
             # Stop this attempt, because it leads around in a loop
