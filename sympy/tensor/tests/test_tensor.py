@@ -2068,6 +2068,7 @@ def test_tensor_replacement_transpose():
     # Transpose
     expr = H(j,i)
     repl = {H(i,j): [[1,2],[3,4]]}
+    assert expr._extract_data(repl) == ([j,i], Array([[1,2],[3,4]]))
     assert expr.replace_with_arrays(repl, [i,j]) == Array([[1,3],[2,4]])
 
     expr = I(j, k, l)
