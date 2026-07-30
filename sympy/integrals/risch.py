@@ -1179,24 +1179,34 @@ def laurent_series(a, d, F, n, DE):
         Q = Pa.quo(Pd)
         for i in range(0, j + 1):
             Q = Q.subs(Z[i], V[i])
+        # ha/hd == h**(j)/j!; differentiate once more (in both x and the
+        # differential indeterminate z) and divide by j + 1, using the
+        # quotient rule: D(ha/hd) == (hd*D(ha) - ha*D(hd))/hd**2.
         Dha = (hd*derivation(ha, DE, basic=True).as_poly(DE.t)
-             + ha*derivation(hd, DE, basic=True).as_poly(DE.t)
+             - ha*derivation(hd, DE, basic=True).as_poly(DE.t)
              + hd*derivation(ha, DE_new, basic=True).as_poly(DE.t)
-             + ha*derivation(hd, DE_new, basic=True).as_poly(DE.t))
+             - ha*derivation(hd, DE_new, basic=True).as_poly(DE.t))
         Dhd = Poly(j + 1, DE.t)*hd**2
         ha, hd = Dha, Dhd
+
+        QBC = Poly(Q, DE.t)*B**(1 + j)*C**(n + j)
+        H_list.append(QBC)
 
         Ff, _ = F.div(gcd(F, Q))
         F_stara, F_stard = frac_in(Ff, DE.t)
         if F_stara.degree(DE.t) - F_stard.degree(DE.t) > 0:
-            QBC = Poly(Q, DE.t)*B**(1 + j)*C**(n + j)
-            H = QBC
-            H_list.append(H)
+            # XXX: Only the principal parts at the real zeros of F are
+            # included; contributions from complex zeros are dropped (the
+            # H_list return value covers all zeros, since it is not
+            # evaluated at the roots).
             H = (QBC*F_stard).rem(F_stara)
             alphas = real_roots(F_stara)
             for alpha in list(alphas):
-                delta_a = delta_a*Poly((DE.t - alpha)**(n - j), DE.t) + Poly(H.eval(alpha), DE.t)
-                delta_d = delta_d*Poly((DE.t - alpha)**(n - j), DE.t)
+                # delta += H(alpha)/(t - alpha)**(n - j)
+                pa = Poly((DE.t - alpha)**(n - j), DE.t)
+                delta_a = delta_a*pa + Poly(H.eval(alpha), DE.t)*delta_d
+                delta_d = delta_d*pa
+    delta_a, delta_d = delta_a.cancel(delta_d, include=True)
     return (delta_a, delta_d, H_list)
 
 
@@ -1210,19 +1220,16 @@ def recognize_derivative(a, d, DE, z=None):
     rational function if and only if Ei = 1 for each i, which is equivalent to
     Di | H[-1] for each i.
     """
-    flag =True
+    flag = True
     a, d = a.cancel(d, include=True)
     _, r = a.div(d)
     Np, Sp = splitfactor_sqf(d, DE, coefficientD=True, z=z)
 
-    j = 1
-    for s, _ in Sp:
-        delta_a, delta_d, H = laurent_series(r, d, s, j, DE)
-        g = gcd(d, H[-1]).as_poly()
-        if g is not d:
+    for s, n in Sp:
+        delta_a, delta_d, H = laurent_series(r, d, s, n, DE)
+        if not H[-1].rem(s.as_poly(DE.t)).is_zero:  # Di does not divide H[-1]
             flag = False
             break
-        j = j + 1
     return flag
 
 
