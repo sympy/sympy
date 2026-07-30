@@ -729,6 +729,18 @@ def test_risch_integrate_float():
     assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
 
 
+def test_bound_degree_limited_integrate():
+    # bound_degree() used to raise "TypeError: '>' not supported between
+    # instances of 'Poly' and 'int'" on these when the sharp primitive-case
+    # bound from limited_integrate() fired.  It also now only uses the bound
+    # when it is an integer, as required by Lemma 6.3.3.
+    for F in [exp(1/log(x))/log(x), (1 + 1/log(x))*exp(1/log(x)),
+              exp(x/log(x)), exp(1/log(x))/(x*log(x)), exp(1/(x*log(x)))]:
+        f = cancel(diff(F, x))
+        ans = risch_integrate(f, x)
+        assert cancel(diff(ans, x) - f) == 0
+
+
 def test_NonElementaryIntegral():
     assert isinstance(risch_integrate(exp(x**2), x), NonElementaryIntegral)
     assert isinstance(risch_integrate(x**x*log(x), x), NonElementaryIntegral)

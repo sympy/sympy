@@ -321,14 +321,16 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                 from .prde import limited_integrate
                 # if alpha == m*Dt + Dz for z in k and m in ZZ:
                 try:
-                    (za, zd), m = limited_integrate(alphaa, alphad, [(etaa, etad)],
-                        DE)
+                    A = limited_integrate(alphaa, alphad, [(etaa, etad)], DE)
                 except NonElementaryIntegralException:
-                    pass
-                else:
+                    A = None
+                if A is not None:
+                    (za, zd), m = A
                     if len(m) != 1:
                         raise ValueError("Length of m should be 1")
-                    n = max(n, m[0])
+                    m = m[0].as_expr()
+                    if m.is_Integer:
+                        n = max(n, m)
 
             elif db == da:
                 # if alpha == Dz/z for z in k*:
@@ -345,14 +347,17 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                         betaa, betad = frac_in(beta, DE.t)
                         from .prde import limited_integrate
                         try:
-                            (za, zd), m = limited_integrate(betaa, betad,
+                            A = limited_integrate(betaa, betad,
                                 [(etaa, etad)], DE)
                         except NonElementaryIntegralException:
-                            pass
-                        else:
+                            A = None
+                        if A is not None:
+                            (za, zd), m = A
                             if len(m) != 1:
                                 raise ValueError("Length of m should be 1")
-                            n = max(n, m[0].as_expr())
+                            m = m[0].as_expr()
+                            if m.is_Integer:
+                                n = max(n, m)
 
     elif case == 'exp':
         from .prde import parametric_log_deriv
