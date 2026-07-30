@@ -2200,25 +2200,121 @@ def weierstrass_substitution(integral):
     if omega.is_zero is True:
         zero_substep = integral_steps(zero_integrand, x)
         return RewriteRule(integrand, x, zero_integrand, zero_substep)
-
     t = Dummy("t")
-    transformed = expr_u.xreplace({
-        sin(u): 2*t/(1 + t**2),
-        cos(u): (1 - t**2)/(1 + t**2),
-        tan(u): 2*t/(1 - t**2),
-        cot(u): (1 - t**2)/(2*t),
-        sec(u): (1 + t**2)/(1 - t**2),
-        csc(u): (1 + t**2)/(2*t),
+    s = Dummy("s")
+    c = Dummy("c")
+
+    expr_sc = expr_u.xreplace({
+        sin(u): s,
+        cos(u): c,
+        tan(u): s/c,
+        cot(u): c/s,
+        sec(u): 1/c,
+        csc(u): 1/s,
     })
 
-    # divide by omega, omega = 0 is a degenerate condition
-    transformed = transformed * 2/(omega*(1 + t**2))
+    def try_sin(w):
+        # try t = sin(w*x) when R(s, -c) = -R(s, c), so R/(w*c) is rational in s alone,
+        # this avoids poles introduced by tangent substitutions.
+        transformed = (expr_sc/(w*c)).cancel()
+        numerator, denominator = transformed.as_numer_denom()
 
-    generic_substep = integral_steps(transformed, t)
-    if generic_substep.contains_dont_know():
+        numerator = numerator.as_poly(c)
+        denominator = denominator.as_poly(c)
+
+        replacements = {s: t}
+
+        # powers of cos must be even so cos**(2*k) can be replaced by (1 - t**2)**k without branch problems
+        for polynomial in (numerator, denominator):
+            for (power,), coefficient in polynomial.terms():
+                if power % 2 and coefficient != 0:
+                    return None
+                if power:
+                    replacements[c**power] = (1 - t**2)**(power // 2)
+
+        numerator = numerator.as_expr().xreplace(replacements)
+        denominator = denominator.as_expr().xreplace(replacements)
+        transformed = (numerator/denominator).cancel()
+        substep = integral_steps(transformed, t)
+        return URule(integrand, x, t, sin(w*x), substep)
+
+    def try_cos(w):
+        # try t = cos(w*x) when R(-s, c) = -R(s, c), so -R/(w*s) is rational in c alone,
+        # this avoids poles introduced by tangent substitutions
+        transformed = (-expr_sc/(w*s)).cancel()
+        numerator, denominator = transformed.as_numer_denom()
+
+        numerator = numerator.as_poly(s)
+        denominator = denominator.as_poly(s)
+
+        replacements = {c: t}
+
+        # powers of sin must be even so sin**(2*k) can be replaced by (1 - t**2)**k without branch problems
+        for polynomial in (numerator, denominator):
+            for (power,), coefficient in polynomial.terms():
+                if power % 2 and coefficient != 0:
+                    return None
+                if power:
+                    replacements[s**power] = (1 - t**2)**(power // 2)
+
+        numerator = numerator.as_expr().xreplace(replacements)
+        denominator = denominator.as_expr().xreplace(replacements)
+        transformed = (numerator/denominator).cancel()
+        substep = integral_steps(transformed, t)
+        return URule(integrand, x, t, cos(w*x), substep)
+
+    def try_tan(w):
+        # try t = tan(w*x) when R(-s, -c) = R(s, c),
+        # this produces a lower-degree rational function than the half-angle substitution
+        transformed = ((expr_sc*c**2/w).xreplace({s: t*c})).cancel()
+
+        numerator, denominator = transformed.as_numer_denom()
+
+        numerator = numerator.as_poly(c)
+        denominator = denominator.as_poly(c)
+
+        replacements = {}
+
+        for polynomial in (numerator, denominator):
+            for (power,), _ in polynomial.terms():
+                if power % 2:
+                    return None
+                if power:
+                    replacements[c**power] = (1 + t**2)**(-(power // 2))
+
+        numerator = numerator.as_expr().xreplace(replacements)
+        denominator = denominator.as_expr().xreplace(replacements)
+        transformed = (numerator/denominator).cancel()
+        substep = integral_steps(transformed, t)
+        return URule(
+            integrand, x, t, tan(w*x), substep
+        )
+
+    def try_tan_half(w):
+        # fallback to the universal Weierstrass substitution t = tan(w*x/2)
+        transformed = expr_u.xreplace({
+            sin(u): 2*t/(1 + t**2),
+            cos(u): (1 - t**2)/(1 + t**2),
+            tan(u): 2*t/(1 - t**2),
+            cot(u): (1 - t**2)/(2*t),
+            sec(u): (1 + t**2)/(1 - t**2),
+            csc(u): (1 + t**2)/(2*t),
+        })
+
+        transformed *= 2/(w*(1 + t**2)).cancel()
+        substep = integral_steps(transformed, t)
+        return URule(integrand, x, t, tan(w*x/2), substep)
+
+    generic_step = try_sin(omega)
+    if generic_step is None:
+        generic_step = try_cos(omega)
+    if generic_step is None:
+        generic_step = try_tan(omega)
+    if generic_step is None:
+        generic_step = try_tan_half(omega)
+
+    if generic_step is None or generic_step.contains_dont_know():
         return None
-
-    generic_step = URule(integrand, x, t, tan(omega*x/2), generic_substep)
 
     if omega.is_zero is False:
         return generic_step
@@ -3016,8 +3112,7 @@ def integral_steps(integrand, symbol, **options):
             Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
                         null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule),
-                        null_safe(weierstrass_substitution)),
+                        null_safe(sqrt_fractional_linear_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
@@ -3025,8 +3120,7 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(trig_cmplx_exp_rule),
-                        null_safe(weierstrass_substitution)),
+                        null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
@@ -3061,6 +3155,7 @@ def integral_steps(integrand, symbol, **options):
                 trig_expand_rule
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
+            null_safe(condition(integral_is_subclass(Mul, Pow), weierstrass_substitution)),
             null_safe(trig_substitution_rule)
         ),
         fallback_rule)(integral)
