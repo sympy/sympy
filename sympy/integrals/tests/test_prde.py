@@ -10,6 +10,8 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
+from sympy.testing.pytest import raises
+
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -330,3 +332,25 @@ def test_parametric_log_deriv():
     assert parametric_log_deriv_heu(Poly(-2, x), Poly(5, x), Poly(2, x),
     Poly(3, x), DE) ==\
         (5, -3, Poly(1, x))
+
+    # Cases where z is in k, so the residue equations are vacuous.  These
+    # used to return None ("proven no solution"), which was wrong: at the
+    # base level they are completely decidable from the polynomial parts.
+    # f == -1 + 1/(x + 1), w == 1
+    assert parametric_log_deriv_heu(Poly(-x, x), Poly(x + 1, x), Poly(1, x),
+    Poly(1, x), DE) == \
+        (1, -1, x + 1)
+    # f == 1/x, w == 1 (arises while integrating log(log(x + exp(x))))
+    assert parametric_log_deriv_heu(Poly(1, x), Poly(x, x), Poly(1, x),
+    Poly(1, x), DE) == \
+        (1, 0, x)
+    # f == 1/(x**2 + 1), w == 1: proven no solution (complex residues)
+    assert parametric_log_deriv_heu(Poly(1, x), Poly(x**2 + 1, x), Poly(1, x),
+    Poly(1, x), DE) is None
+
+    # In a non-base field the z in k case cannot be decided by the
+    # heuristic ("failed" in the book), so it must raise
+    # NotImplementedError, not return None.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    raises(NotImplementedError, lambda: parametric_log_deriv_heu(
+        Poly(1, t), Poly(t + 1, t), Poly(1, t), Poly(1, t), DE))

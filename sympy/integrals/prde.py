@@ -944,9 +944,59 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     z = ls*ln.gcd(ln.diff(DE.t))
 
     if z.degree(DE.t) < 1:
-        # TODO: We treat this as 'no solution', until the structure
-        # theorem version of parametric_log_deriv is implemented.
-        return None
+        # The residue equations below would be vacuous, so the heuristic
+        # cannot determine the candidate for m/n from them ("failed" in
+        # Bronstein's ParametricLogarithmicDerivative).  Solutions may well
+        # exist, e.g. f == -1 + 1/(x + 1), w == 1 has the solution
+        # (1, -1, x + 1), so returning None here (proven no solution) would
+        # be wrong.
+        if DE.case == 'base':
+            # At the base level, Dv/v is a proper fraction for any
+            # v in k(x)*, so n*f == Dv/v + m*w requires the polynomial
+            # parts to cancel exactly: n*p == m*q.  This determines
+            # c1 == m/n == p/q (a constant), and the rest is decided by
+            # is_log_deriv_k_t_radical_in_field(), so this case is
+            # complete.
+            if q.is_zero:
+                if not p.is_zero:
+                    # n*p == 0 forces n == 0, which is not allowed.
+                    return None
+                # p == q == 0: m/n is not determined by the polynomial
+                # parts; this needs the structure theorems.
+                raise NotImplementedError("parametric_log_deriv_heu() "
+                    "heuristic failed: the full parametric logarithmic "
+                    "derivative problem (using the structure theorems) is "
+                    "not yet implemented.")
+            if p.is_zero:
+                cc = S.Zero
+            else:
+                if p*Poly(q.LC(), DE.t) != q*Poly(p.LC(), DE.t):
+                    # p is not a constant multiple of q, so n*p == m*q has
+                    # no solution with n != 0.
+                    return None
+                cc = cancel(p.LC()/q.LC())
+                if not cc.is_Rational:
+                    return None
+            M, N = cc.as_numer_denom()
+
+            nfmwa = Poly(N, DE.t)*fa*wd - Poly(M, DE.t)*wa*fd
+            nfmwd = fd*wd
+            Qv = is_log_deriv_k_t_radical_in_field(nfmwa, nfmwd, DE)
+            if Qv is None:
+                # (N*f - M*w) is not the logarithmic derivative of a
+                # k(t)-radical.
+                return None
+
+            Q, v = Qv
+
+            if Q.is_zero or v.is_zero:
+                return None
+
+            return (Q*N, Q*M, v)
+
+        raise NotImplementedError("parametric_log_deriv_heu() heuristic "
+            "failed: the full parametric logarithmic derivative problem "
+            "(using the structure theorems) is not yet implemented.")
 
     u1, r1 = (fa*l.quo(fd)).div(z)  # (l*f).div(z)
     u2, r2 = (wa*l.quo(wd)).div(z)  # (l*w).div(z)
@@ -975,14 +1025,11 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
 
 def parametric_log_deriv(fa, fd, wa, wd, DE):
-    # TODO: Write the full algorithm using the structure theorems.
-#    try:
+    # TODO: Write the full algorithm using the structure theorems.  Until
+    # then, this propagates NotImplementedError when the heuristic cannot
+    # decide (it must not be caught and treated as "no solution", since a
+    # solution may exist; see parametric_log_deriv_heu()).
     A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
-#    except NotImplementedError:
-        # Heuristic failed, we have to use the full method.
-        # TODO: This could be implemented more efficiently.
-        # It isn't too worrisome, because the heuristic handles most difficult
-        # cases.
     return A
 
 
