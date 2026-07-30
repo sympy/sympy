@@ -2,7 +2,7 @@
 from __future__ import annotations
 from sympy.core.numbers import (I, Rational, oo)
 from sympy.core.symbol import symbols
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, cancel
 from sympy.integrals.risch import (DifferentialExtension,
     NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
@@ -231,3 +231,15 @@ def test_rischDE():
     ga = Poly(1, t)
     gd = Poly(1, t)
     assert rischDE(fa, fd, ga, gd, DE) == (Poly(-1, t), Poly(t, t))
+
+    # Dy + y/x == 1.  f == 1/x is not weakly normalized; the weak normalizer
+    # q == x must be applied to g and divided back out of the solution.
+    # rischDE() used to discard it and return y == x, which solves
+    # Dy + y/x == 2, not 1.  The correct answer here is y == x/2 (plus any
+    # multiple of the homogeneous solution 1/x).
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    ya, yd = rischDE(Poly(1, x), Poly(x, x), Poly(1, x), Poly(1, x), DE)
+    assert (ya, yd) == (Poly(x**2/2, x), Poly(x, x))
+    # Explicitly verify Dy + f*y == g for the returned solution
+    y = ya.as_expr()/yd.as_expr()
+    assert cancel(y.diff(x) + y/x - 1) == 0
