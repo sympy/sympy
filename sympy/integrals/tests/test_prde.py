@@ -69,6 +69,14 @@ def test_prde_special_denom():
         (Poly(t + 1, t), Poly(0, t, domain='ZZ[x]'), [(Poly(t + x, t), Poly(x*t, t)), (Poly(2*t, t, x),
         Poly(x**2, t, x))], Poly(1, t))
 
+    # Hypertangent case with a nontrivial special denominator (parametric
+    # version of the corresponding test in test_rde.py)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    assert prde_special_denom(Poly(t, t), Poly(t, t), Poly(1, t),
+        [(Poly(-2*t**2 + t, t), Poly(t**2 + 1, t))], DE) == \
+        (Poly(t, t), Poly(-2*t**2 + t, t),
+        [(Poly(-2*t**2 + t, t), Poly(1, t))], Poly(t**2 + 1, t))
+
 
 def test_prde_linear_constraints():
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})

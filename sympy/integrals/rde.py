@@ -30,9 +30,6 @@ from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
-from sympy.functions.elementary.complexes import (im, re)
-from sympy.functions.elementary.miscellaneous import sqrt
-
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)
 
@@ -182,6 +179,66 @@ def normal_denom(fa, fd, ga, gd, DE):
     return (a, (ba, bd), (ca, cd), h)
 
 
+def _special_denom_cancel_bound(a, ba, bd, n, DE, case):
+    """
+    Sharpen the bound n on the special part of the denominator in the
+    possible-cancellation case nu_p(b) == 0.
+
+    This is the part of the special denominator algorithms (Sections 6.2 and
+    7.1 of Bronstein) shared by special_denom() and prde_special_denom().
+    ``case`` is 'exp' or 'tan'.
+    """
+    # Delayed imports, since prde imports this module at the module level.
+    from .prde import parametric_log_deriv, real_imag
+
+    if case == 'exp':
+        dcoeff = DE.d.quo(Poly(DE.t, DE.t))
+        with DecrementLevel(DE):  # We are guaranteed to not have problems,
+                                  # because case != 'base'.
+            alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
+            etaa, etad = frac_in(dcoeff, DE.t)
+            A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+            if A is not None:
+                Q, m, z = A
+                if Q == 1:
+                    n = min(n, m)
+
+    elif case == 'tan':
+        dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
+        # alpha*sqrt(-1) + beta == Remainder(-b/a, t**2 + 1), with alpha and
+        # beta in k.  real_imag() computes this without introducing sqrt(-1)
+        # into the coefficient domain.  This must be done at the current
+        # level, where t is the hypertangent monomial.
+        betaa, alphaa, alphad = real_imag(-ba, bd*a, DE.t)
+        betad = alphad
+        alpha = alphaa.as_expr()/alphad.as_expr()
+        beta = betaa.as_expr()/betad.as_expr()
+
+        with DecrementLevel(DE):  # We are guaranteed to not have problems,
+                                  # because case != 'base'.
+            alphaa, alphad = frac_in(alpha, DE.t)
+            betaa, betad = frac_in(beta, DE.t)
+            etaa, etad = frac_in(dcoeff, DE.t)
+
+            if recognize_log_derivative(Poly(2, DE.t)*betaa, betad, DE):
+                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+                if A is not None:
+                    Q, m, z = A
+                    # The condition from the book is
+                    # alpha*sqrt(-1) + beta == 2*m*eta*sqrt(-1) + Dz/z for
+                    # z in k(sqrt(-1))* and m in ZZ, in which case
+                    # n = min(n, m).  parametric_log_deriv() solves
+                    # n*alpha == Dv/v + m*eta over k, so its m corresponds
+                    # to 2*m in the book's condition.  This is only an
+                    # approximation of the real condition (z ranges over
+                    # k(sqrt(-1))*, not k*); the complete version needs the
+                    # structure theorems.
+                    if Q == 1 and m % 2 == 0:
+                        n = min(n, m//2)
+
+    return n
+
+
 def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     """
     Special part of the denominator.
@@ -226,33 +283,11 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancellation.
-        from .prde import parametric_log_deriv
-        if case == 'exp':
-            dcoeff = DE.d.quo(Poly(DE.t, DE.t))
-            with DecrementLevel(DE):  # We are guaranteed to not have problems,
-                                      # because case != 'base'.
-                alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
-                etaa, etad = frac_in(dcoeff, DE.t)
-                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
-                if A is not None:
-                    Q, m, z = A
-                    if Q == 1:
-                        n = min(n, m)
+        n = _special_denom_cancel_bound(a, ba, bd, n, DE, case)
 
-        elif case == 'tan':
-            dcoeff = DE.d.quo(Poly(DE.t**2+1, DE.t))
-            with DecrementLevel(DE):  # We are guaranteed to not have problems,
-                                      # because case != 'base'.
-                alphaa, alphad = frac_in(im(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
-                betaa, betad = frac_in(re(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
-                etaa, etad = frac_in(dcoeff, DE.t)
-
-                if recognize_log_derivative(Poly(2, DE.t)*betaa, betad, DE):
-                    A = parametric_log_deriv(alphaa*Poly(sqrt(-1), DE.t)*betad+alphad*betaa, alphad*betad, etaa, etad, DE)
-                    if A is not None:
-                        Q, m, z = A
-                        if Q == 1:
-                            n = min(n, m)
+    # Note that this N, from Section 6.2, intentionally differs from the
+    # N == max(0, -nb) of the parametric version in prde_special_denom()
+    # (Section 7.1).
     N = max(0, -nb, n - nc)
     pN = p**N
     pn = p**-n
