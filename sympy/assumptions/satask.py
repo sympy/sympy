@@ -10,7 +10,7 @@ from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
-from sympy.logic.inference import satisfiable
+from sympy.logic.algorithms.dpll2 import SATSolver
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
 
@@ -77,8 +77,15 @@ def check_satisfiability(prop, _prop, factbase):
     sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
     sat_false.add_from_cnf(_prop)
-    can_be_true = satisfiable(sat_true)
-    can_be_false = satisfiable(sat_false)
+
+    # The SATSolver is used directly rather than through satisfiable() so that
+    # its internal state is available here. A clause holding only False (which
+    # is encoded as 0) is unsatisfiable and has to be excluded by hand.
+    can_be_true, can_be_false = [
+        {0} not in cnf.data and
+        any(True for _ in SATSolver(cnf.data, cnf.variables,
+                                    set(), cnf.symbols)._find_model())
+        for cnf in (sat_true, sat_false)]
 
     if can_be_true and can_be_false:
         return None
