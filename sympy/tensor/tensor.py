@@ -2350,6 +2350,13 @@ class TensExpr(Expr, ABC):
         >>> expr.replace_with_arrays({A(i): [1, 2]})
         [[1, 2], [2, 4]]
 
+        Note that the labels used for the indices of the keys of
+        ``replacement_dict`` are not significant; only the position of the index
+        and its co/contra-variance are considered while making the replacement.
+
+        >>> A(i).replace_with_arrays({A(j): [1, 2]})
+        [1, 2]
+
         For contractions, specify the metric of the ``TensorIndexType``, which
         in this case is ``L``, in its covariant form:
 
