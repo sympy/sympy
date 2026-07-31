@@ -2163,31 +2163,53 @@ def weierstrass_substitution(integral):
         return None
 
     coeff0 = variable_atoms[0][1]
+    phase0 = variable_atoms[0][2]
+    proportional_phases = True
     ratios = []
-    for _, coeff, _ in variable_atoms:
+    for _, coeff, phase in variable_atoms:
         ratio = (coeff / coeff0).cancel()
         # use this instead of is_rational to avoid taking 3/a
         # if a is declared rational
         if not isinstance(ratio, Rational):
             return None
         ratios.append(ratio)
+        if proportional_phases:
+            determinant = (coeff0*phase - coeff*phase0).cancel()
+            if determinant.is_zero is not True:
+                proportional_phases = False
 
     denominator_lcm = lcm_list([ratio.q for ratio in ratios])
+
+    # Choose the largest common frequency omega such that every
+    # coefficient is an integer multiple of omega
     omega = (coeff0 / denominator_lcm).cancel()
+
+    # If all (coefficient, phase) pairs are proportional, absorb the
+    # common phase into u. For example, 2*x + 2 and 4*x + 4 become u and 2*u
+    if proportional_phases:
+        reference_harmonic = (coeff0 / omega).cancel()
+        phase_shift = (phase0 / reference_harmonic).cancel()
+    else:
+        phase_shift = S.Zero
+    u_func = omega*x + phase_shift
     u = Dummy("u")
     replacements = {}
     ODD_TRIG = (sin, tan, cot, csc)
     for atom, coeff, phase in variable_atoms:
         harmonic = (coeff / omega).cancel()
+        if proportional_phases:
+            argument = harmonic*u
+        else:
+            argument = harmonic*u + phase
         if harmonic.is_negative:
             # Move the minus sign outside to help expand_trig work on the first attempt
             # For example, tan(-2*u + b) would not expand correctly with the minus sign inside
-            positive_argument = -harmonic*u - phase
+            positive_argument = -argument
             replacement = atom.func(positive_argument)
             if atom.func in ODD_TRIG:
                 replacement = -replacement
         else:
-            replacement = atom.func(harmonic*u + phase)
+            replacement = atom.func(argument)
         replacements[atom] = replacement
     expr_u = integrand.xreplace(replacements)
     # rewrites sin, cos, tan to substitute, for example
@@ -2214,8 +2236,8 @@ def weierstrass_substitution(integral):
     })
 
     def try_sin(w):
-        # try t = sin(w*x) when R(s, -c) = -R(s, c), so R/(w*c) is rational in s alone,
-        # this avoids poles introduced by tangent substitutions.
+        # try t = sin(u_func) when R(s, -c) = -R(s, c), so R/(w*c)
+        # is rational in s alone. This avoids poles introduced by tangent substitutions
         transformed = (expr_sc/(w*c)).cancel()
         numerator, denominator = transformed.as_numer_denom()
 
@@ -2236,10 +2258,10 @@ def weierstrass_substitution(integral):
         denominator = denominator.as_expr().xreplace(replacements)
         transformed = (numerator/denominator).cancel()
         substep = integral_steps(transformed, t)
-        return URule(integrand, x, t, sin(w*x), substep)
+        return URule(integrand, x, t, sin(u_func), substep)
 
     def try_cos(w):
-        # try t = cos(w*x) when R(-s, c) = -R(s, c), so -R/(w*s) is rational in c alone,
+        # try t = cos(u_func) when R(-s, c) = -R(s, c), so -R/(w*s) is rational in c alone,
         # this avoids poles introduced by tangent substitutions
         transformed = (-expr_sc/(w*s)).cancel()
         numerator, denominator = transformed.as_numer_denom()
@@ -2261,10 +2283,10 @@ def weierstrass_substitution(integral):
         denominator = denominator.as_expr().xreplace(replacements)
         transformed = (numerator/denominator).cancel()
         substep = integral_steps(transformed, t)
-        return URule(integrand, x, t, cos(w*x), substep)
+        return URule(integrand, x, t, cos(u_func), substep)
 
     def try_tan(w):
-        # try t = tan(w*x) when R(-s, -c) = R(s, c),
+        # try t = tan(u_func) when R(-s, -c) = R(s, c),
         # this produces a lower-degree rational function than the half-angle substitution
         transformed = ((expr_sc*c**2/w).xreplace({s: t*c})).cancel()
 
@@ -2287,11 +2309,11 @@ def weierstrass_substitution(integral):
         transformed = (numerator/denominator).cancel()
         substep = integral_steps(transformed, t)
         return URule(
-            integrand, x, t, tan(w*x), substep
+            integrand, x, t, tan(u_func), substep
         )
 
     def try_tan_half(w):
-        # fallback to the universal Weierstrass substitution t = tan(w*x/2)
+        # fallback to the universal Weierstrass substitution t = tan(u_func/2)
         transformed = expr_u.xreplace({
             sin(u): 2*t/(1 + t**2),
             cos(u): (1 - t**2)/(1 + t**2),
@@ -2301,9 +2323,9 @@ def weierstrass_substitution(integral):
             csc(u): (1 + t**2)/(2*t),
         })
 
-        transformed *= 2/(w*(1 + t**2)).cancel()
+        transformed *= (2/(w*(1 + t**2))).cancel()
         substep = integral_steps(transformed, t)
-        return URule(integrand, x, t, tan(w*x/2), substep)
+        return URule(integrand, x, t, tan(u_func/2), substep)
 
     generic_step = try_sin(omega)
     if generic_step is None:
