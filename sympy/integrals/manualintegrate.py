@@ -2136,13 +2136,13 @@ def chebyshev_substitution_rule(integral):
     p = S.Zero
 
     for factor in Mul.make_args(integrand):
-        base, exponent = factor.as_base_exp()
-        if not exponent.is_Rational: # exclude x**pi
-            return None
-
         if not factor.has(x):
             c *= factor
             continue
+
+        base, exponent = factor.as_base_exp()
+        if not exponent.is_Rational: # exclude x**pi
+            return None
 
         if base == x:
             m += exponent
