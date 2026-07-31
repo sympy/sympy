@@ -26,15 +26,20 @@ smp = dict[monom, _T]
 
 def smp_add(f: smp[Er], g: smp[Er], domain: Domain[Er], n: int) -> smp[Er]:
     # Add two sparse polynomials and return a new dictionary.
-    zero = domain.zero
     h = f.copy()
-    for mon, coeff in g.items():
-        coeff = h.get(mon, zero) + coeff
-        if coeff:
-            h[mon] = coeff
-        elif mon in h:
-            del h[mon]
+    _smp_iadd(h, g, n, domain)
     return h
+
+
+def _smp_iadd(f: smp[Er], g: smp[Er], n: int, domain: Domain[Er]) -> None:
+    # Add one sparse polynomial to another in place.
+    zero = domain.zero
+    for mon, coeff in g.items():
+        coeff = f.get(mon, zero) + coeff
+        if coeff:
+            f[mon] = coeff
+        elif mon in f:
+            del f[mon]
 
 
 def smp_mul(f: smp[Er], g: smp[Er], domain: Domain[Er], n: int) -> smp[Er]:
@@ -54,15 +59,20 @@ def smp_mul(f: smp[Er], g: smp[Er], domain: Domain[Er], n: int) -> smp[Er]:
 
 def smp_sub(f: smp[Er], g: smp[Er], domain: Domain[Er], n: int) -> smp[Er]:
     # Subtract one sparse polynomial from another.
-    zero = domain.zero
     h = f.copy()
-    for mon, coeff in g.items():
-        coeff = h.get(mon, zero) - coeff
-        if coeff:
-            h[mon] = coeff
-        elif mon in h:
-            del h[mon]
+    _smp_isub(h, g, n, domain)
     return h
+
+
+def _smp_isub(f: smp[Er], g: smp[Er], n: int, domain: Domain[Er]) -> None:
+    # Subtract one sparse polynomial from another in place.
+    zero = domain.zero
+    for mon, coeff in g.items():
+        coeff = f.get(mon, zero) - coeff
+        if coeff:
+            f[mon] = coeff
+        elif mon in f:
+            del f[mon]
 
 
 def smp_degree(d: smp[Er], i_gen: int, n: int, domain: Domain[Er]) -> int:
@@ -185,16 +195,30 @@ def smp_content(d: smp[Er], n: int, domain: Domain[Er]) -> Er:
 
 def smp_primitive(d: smp[Er], n: int, domain: Domain[Er]) -> tuple[Er, smp[Er]]:
     # Return the content and primitive part of a sparse polynomial.
+    h = d.copy()
+    cont = _smp_iprimitive(h, n, domain)
+    return cont, h
+
+
+def _smp_iprimitive(d: smp[Er], n: int, domain: Domain[Er]) -> Er:
+    # Make a sparse polynomial primitive in place and return its content.
     cont = smp_content(d, n, domain)
-    if cont == domain.zero:
-        return cont, d.copy()
-    return cont, smp_quo_ground(d, cont, n, domain)
+    if cont != domain.zero:
+        _smp_iquo_ground(d, cont, n, domain)
+    return cont
 
 
 def smp_clear_denoms(d: smp[Er], n: int, domain: Domain[Er]) -> tuple[Er, smp[Er]]:
     # Clear denominators from sparse polynomial coefficients.
+    h = d.copy()
+    common = _smp_iclear_denoms(h, n, domain)
+    return common, h
+
+
+def _smp_iclear_denoms(d: smp[Er], n: int, domain: Domain[Er]) -> Er:
+    # Clear denominators from sparse polynomial coefficients in place.
     if not domain.is_Field or not domain.has_assoc_Ring:
-        return domain.one, d.copy()
+        return domain.one
 
     ground_ring = domain.get_ring()
     common = ground_ring.one
@@ -204,13 +228,14 @@ def smp_clear_denoms(d: smp[Er], n: int, domain: Domain[Er]) -> tuple[Er, smp[Er
     for coeff in d.values():
         common = lcm(common, denom(coeff))
 
-    h: smp[Er] = {}
-    for mon, coeff in d.items():
+    for mon, coeff in list(d.items()):
         new_coeff = coeff * common
         if new_coeff:
-            h[mon] = new_coeff
+            d[mon] = new_coeff
+        else:
+            del d[mon]
 
-    return common, h
+    return common
 
 
 def smp_is_zero(d: smp[Er], n: int, domain: Domain[Er]) -> bool:
@@ -325,50 +350,79 @@ def smp_iadd_poly_monom(
 def smp_add_ground(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> smp[Er]:
     # Add a ground coefficient to the constant term.
     h = d.copy()
+    _smp_iadd_ground(h, c, n, domain)
+    return h
+
+
+def _smp_iadd_ground(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> None:
+    # Add a ground coefficient to a sparse polynomial in place.
     if not c:
-        return h
+        return
 
     zm: monom = (0,) * n
     coeff = d.get(zm, domain.zero) + c
     if coeff:
-        h[zm] = coeff
-    elif zm in h:
-        del h[zm]
-    return h
+        d[zm] = coeff
+    elif zm in d:
+        del d[zm]
 
 
 def smp_sub_ground(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> smp[Er]:
     # Subtract a ground coefficient from the constant term.
     h = d.copy()
+    _smp_isub_ground(h, c, n, domain)
+    return h
+
+
+def _smp_isub_ground(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> None:
+    # Subtract a ground coefficient from a sparse polynomial in place.
     if not c:
-        return h
+        return
 
     zm: monom = (0,) * n
     coeff = d.get(zm, domain.zero) - c
     if coeff:
-        h[zm] = coeff
-    elif zm in h:
-        del h[zm]
-    return h
+        d[zm] = coeff
+    elif zm in d:
+        del d[zm]
 
 
 def smp_rsub_ground(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> smp[Er]:
     # Subtract the sparse polynomial from a ground coefficient.
-    h = {mon: -coeff for mon, coeff in d.items() if coeff}
-    return smp_add_ground(h, c, n, domain)
+    h = d.copy()
+    _smp_irsub_ground(h, c, n, domain)
+    return h
+
+
+def _smp_irsub_ground(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> None:
+    # Subtract a sparse polynomial from a ground coefficient in place.
+    for mon, coeff in list(d.items()):
+        if coeff:
+            d[mon] = -coeff
+        else:
+            del d[mon]
+    _smp_iadd_ground(d, c, n, domain)
 
 
 def smp_mul_ground(d: smp[Er], x: Er, n: int, domain: Domain[Er]) -> smp[Er]:
     # Multiply every coefficient by a ground element.
-    if not x:
-        return {}
+    h = d.copy()
+    _smp_imul_ground(h, x, n, domain)
+    return h
 
-    h: smp[Er] = {}
-    for mon, coeff in d.items():
+
+def _smp_imul_ground(d: smp[Er], x: Er, n: int, domain: Domain[Er]) -> None:
+    # Multiply every coefficient by a ground element in place.
+    if not x:
+        d.clear()
+        return
+
+    for mon, coeff in list(d.items()):
         coeff *= x
         if coeff:
-            h[mon] = coeff
-    return h
+            d[mon] = coeff
+        else:
+            del d[mon]
 
 
 def smp_imul_num(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> smp[Er]:
@@ -390,39 +444,52 @@ def smp_imul_num(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> smp[Er]:
 def smp_quo_ground(d: smp[Er], x: Er, n: int, domain: Domain[Er]) -> smp[Er]:
     # Divide exactly divisible coefficients by a ground element, discard non exactly
     # divisible coefficients.
-    h: smp[Er] = {}
+    h = d.copy()
+    _smp_iquo_ground(h, x, n, domain)
+    return h
 
-    for mon, coeff in d.items():
+
+def _smp_iquo_ground(d: smp[Er], x: Er, n: int, domain: Domain[Er]) -> None:
+    # Divide exactly divisible coefficients by a ground element in place.
+    for mon, coeff in list(d.items()):
         try:
             quotient = domain.exquo(coeff, x)
         except ExactQuotientFailed:
+            del d[mon]
             continue
         if quotient:
-            h[mon] = quotient
-
-    return h
+            d[mon] = quotient
+        else:
+            del d[mon]
 
 
 def smp_trunc_ground(d: smp[Er], p: Er, n: int, domain: Domain[Er]) -> smp[Er]:
     # Reduce coefficients modulo a ground element.
-    h: smp[Er] = {}
+    h = d.copy()
+    _smp_itrunc_ground(h, p, n, domain)
+    return h
 
+
+def _smp_itrunc_ground(d: smp[Er], p: Er, n: int, domain: Domain[Er]) -> None:
+    # Reduce coefficients modulo a ground element in place.
     if domain.is_ZZ:
         p = domain.convert(p)
-        for mon, coeff in d.items():
+        for mon, coeff in list(d.items()):
             coeff = domain.rem(coeff, p)
             c = coeff - domain.quo(p, domain.convert(2))
             if domain.is_positive(c):
                 coeff = domain.convert(coeff - p)
             if coeff:
-                h[mon] = coeff
+                d[mon] = coeff
+            else:
+                del d[mon]
     else:
-        for mon, coeff in d.items():
+        for mon, coeff in list(d.items()):
             coeff = domain.rem(coeff, p)
             if coeff:
-                h[mon] = coeff
-
-    return h
+                d[mon] = coeff
+            else:
+                del d[mon]
 
 
 def smp_subs(

@@ -50,9 +50,16 @@ from sympy.polys.polyutils import (
 )
 from sympy.printing.defaults import DefaultPrinting
 from sympy.polys.sparsetools import (
-    smp_add,
-    smp_add_ground,
-    smp_clear_denoms,
+    _smp_iadd,
+    _smp_iadd_ground,
+    _smp_iclear_denoms,
+    _smp_imul_ground,
+    _smp_iprimitive,
+    _smp_iquo_ground,
+    _smp_irsub_ground,
+    _smp_isub,
+    _smp_isub_ground,
+    _smp_itrunc_ground,
     smp_coeff,
     smp_compose,
     smp_content,
@@ -87,24 +94,17 @@ from sympy.polys.sparsetools import (
     smp_LM,
     smp_LT,
     smp_mul,
-    smp_mul_ground,
     smp_pow_generic,
     smp_pow_multinomial,
-    smp_primitive,
     smp_quo_term,
-    smp_quo_ground,
     smp_rem_list,
-    smp_rsub_ground,
     smp_square,
-    smp_sub,
-    smp_sub_ground,
     smp_subs,
     smp_subs_drop,
     smp_symmetrize,
     smp_tail_degree,
     smp_tail_degrees,
     smp_term_div,
-    smp_trunc_ground,
 )
 from sympy.utilities import public, subsets
 from sympy.utilities.iterables import is_sequence
@@ -1690,7 +1690,9 @@ class PolyElement(
 
     def trunc_ground(self, p: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(smp_trunc_ground(self, p, ring.ngens, ring.domain))
+        h = self.copy()
+        _smp_itrunc_ground(h, p, ring.ngens, ring.domain)
+        return h
 
     rem_ground = trunc_ground
 
@@ -2187,23 +2189,33 @@ class PolyElement(
 
     def _add(self, p2: PolyElement[Er]) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(smp_add(self, p2, ring.domain, ring.ngens))
+        h = self.copy()
+        _smp_iadd(h, p2, ring.ngens, ring.domain)
+        return h
 
     def _add_ground(self, cp2: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(smp_add_ground(self, cp2, ring.ngens, ring.domain))
+        h = self.copy()
+        _smp_iadd_ground(h, cp2, ring.ngens, ring.domain)
+        return h
 
     def _sub(self, p2: PolyElement[Er]) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(smp_sub(self, p2, ring.domain, ring.ngens))
+        h = self.copy()
+        _smp_isub(h, p2, ring.ngens, ring.domain)
+        return h
 
     def _sub_ground(self, cp2: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(smp_sub_ground(self, cp2, ring.ngens, ring.domain))
+        h = self.copy()
+        _smp_isub_ground(h, cp2, ring.ngens, ring.domain)
+        return h
 
     def _rsub_ground(self, cp2: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(smp_rsub_ground(self, cp2, ring.ngens, ring.domain))
+        h = self.copy()
+        _smp_irsub_ground(h, cp2, ring.ngens, ring.domain)
+        return h
 
     def _mul(self, other: PolyElement[Er]) -> PolyElement[Er]:
         ring = self.ring
@@ -2211,7 +2223,9 @@ class PolyElement(
 
     def mul_ground(self, x: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(smp_mul_ground(self, x, ring.ngens, ring.domain))
+        h = self.copy()
+        _smp_imul_ground(h, x, ring.ngens, ring.domain)
+        return h
 
     def _pow_int(self, n: int) -> PolyElement[Er]:
         if n == 1:
@@ -2404,8 +2418,9 @@ class PolyElement(
         if not domain.is_Field or not domain.has_assoc_Ring:
             return domain.one, self
 
-        common, poly = smp_clear_denoms(self, ring.ngens, domain)
-        return common, self.new(poly)
+        poly = self.copy()
+        common = _smp_iclear_denoms(poly, ring.ngens, domain)
+        return common, poly
 
     def _change_ring(self, new_ring):
         # Use fmpz_mpoly.compose() or fmpz_mpoly.compose() in case of python-flint
@@ -2748,10 +2763,11 @@ class PolyElement(
     def primitive(self) -> tuple[Er, PolyElement[Er]]:
         """Returns content and a primitive polynomial."""
         ring = self.ring
-        cont, primitive = smp_primitive(self, ring.ngens, ring.domain)
+        primitive = self.copy()
+        cont = _smp_iprimitive(primitive, ring.ngens, ring.domain)
         if cont == ring.domain.zero:
             return cont, self
-        return cont, self.new(primitive)
+        return cont, primitive
 
     def mul_monom(self, monom: Mon) -> PolyElement[Er]:
         monomial_mul = self.ring.monomial_mul
@@ -2777,7 +2793,9 @@ class PolyElement(
 
     def _quo_ground(self, x: Er) -> PolyElement[Er]:
         ring = self.ring
-        return self.new(smp_quo_ground(self, x, ring.ngens, ring.domain))
+        h = self.copy()
+        _smp_iquo_ground(h, x, ring.ngens, ring.domain)
+        return h
 
     def _quo_term(self, term: tuple[Mon, Er]) -> PolyElement[Er]:
         ring = self.ring
