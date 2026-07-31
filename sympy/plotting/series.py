@@ -599,7 +599,7 @@ class BaseSeries:
         * to set the number of discretization points along the x, y and z
           directions: ``s.n = [10, 15, 20]``
 
-        The following is highly unreccomended, because it prevents
+        The following is highly unrecommended, because it prevents
         the execution of necessary code in order to keep updated data:
         ``s.n[1] = 15``
         """
