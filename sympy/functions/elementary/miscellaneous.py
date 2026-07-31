@@ -670,7 +670,8 @@ class MinMaxBase(Expr, LatticeOp):
         for i in range(2):
             if x == y:
                 return True
-            t, f = Max, Min
+            t: type[Max] | type[Min] = Max
+            f: type[Max] | type[Min] = Min
             for op in "><":
                 for j in range(2):
                     try:
