@@ -2222,6 +2222,65 @@ class TensExpr(Expr, ABC):
         return permutedims(array, permu)
 
     @staticmethod
+    def _match_indices_variance(array, free_ind1, free_ind2, replacement_dict):
+        """
+        Given an array whose axes correspond to the indices given in free_ind2,
+        raise/lower indices to match the co/contra-variance of the indices in
+        free_ind1. Unlike _match_indices_with_other_tensor, this does not attempt
+        to match the index labels.
+        """
+        index_types1 = [i.tensor_index_type for i in free_ind1]
+
+        if len(free_ind1) > 0:
+            if len(free_ind1) != len(free_ind2):
+                raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
+
+        try:
+            ndim = array.ndim
+        except AttributeError:
+            ndim = 0
+
+        if len(free_ind2) != ndim:
+            raise ValueError(f"indices ({free_ind2}) do not match dimensionality of the given array ({ndim})")
+
+        # Check if indices need to be raised or lowered:
+        pos2up = []
+        pos2down = []
+        for pos, index1, index2 in zip(range(len(free_ind2)), free_ind1, free_ind2):
+            if index1.is_up ^ index2.is_up:
+                if index1.is_up:
+                    pos2up.append(pos)
+                else:
+                    pos2down.append(pos)
+
+        # Raise indices:
+        for pos in pos2up:
+            index_type_pos = index_types1[pos]
+            if index_type_pos not in replacement_dict:
+                raise ValueError("No metric provided to lower index")
+            metric = replacement_dict[index_type_pos]
+            metric_inverse = _TensorDataLazyEvaluator.inverse_matrix(metric)
+            array = TensExpr._contract_and_permute_with_metric(metric_inverse, array, pos, len(free_ind1))
+
+        # Lower indices:
+        for pos in pos2down:
+            index_type_pos = index_types1[pos]
+            if index_type_pos not in replacement_dict:
+                raise ValueError("No metric provided to lower index")
+            metric = replacement_dict[index_type_pos]
+            array = TensExpr._contract_and_permute_with_metric(metric, array, pos, len(free_ind1))
+
+        if free_ind1:
+            inds = free_ind1
+        else:
+            inds = free_ind2
+
+        if hasattr(array, "ndim") and array.ndim == 0:
+            array = array[()]
+
+        return inds, array
+
+    @staticmethod
     def _match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict):
         """
         Given an array whose axes correspond to the indices given in free_ind2, change the order of the axes to correspond to the indices in free_ind1 (raising/lowering indices if required)
@@ -3267,7 +3326,7 @@ class Tensor(TensExpr):
         free_ind1 = self.get_free_indices()
         free_ind2 = other.get_free_indices()
 
-        return self._match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict)
+        return self._match_indices_variance(array, free_ind1, free_ind2, replacement_dict)
 
     @property
     def data(self):
