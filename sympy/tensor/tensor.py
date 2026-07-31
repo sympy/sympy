@@ -3247,6 +3247,8 @@ class Tensor(TensExpr):
                     raise NotImplementedError(f"{other} with contractions is not implemented")
             # Remove elements in `dum2` from `dum1`:
             dum1 = [pair for pair in dum1 if pair not in dum2]
+
+        #For each pair of dummy indices in self, contract the corresponding (i.e. same position) indices in other.
         if len(dum1) > 0:
             indices1 = self.get_indices()
             indices2 = other.get_indices()
