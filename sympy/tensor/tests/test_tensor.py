@@ -2159,6 +2159,10 @@ def test_tensmul_replacement():
     repl = {A(i): [1, 2], K(i,j,k,l): Array([1]*2**4).reshape(2,2,2,2), L: diag(1, -1)}
     assert expr._extract_data(repl) == ([], 0)
 
+    # bug 28949
+    expr = I(l, -m, -k) * I(k, -i, -j)
+    repl = {I(i, -k, -l): Array.zeros(2,2,2), L: diag(1, 1)}
+    assert expr._extract_data(repl) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
 
 def test_tensadd_replacement():
     L = TensorIndexType("L")
@@ -2188,7 +2192,6 @@ def test_tensadd_replacement():
     repl = {H(i, j): [[1, 2], [3, 4]]}
     assert expr.replace_with_arrays(repl, [i, j]) == Array([[0, -1], [1, 0]])
     assert expr.replace_with_arrays(repl, [j, i]) == Array([[0, 1], [-1, 0]])
-
 
 def test_rewrite_tensor_to_Indexed():
     L = TensorIndexType("L", dim=4)
