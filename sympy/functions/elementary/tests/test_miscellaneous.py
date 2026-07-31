@@ -20,6 +20,8 @@ from sympy.testing.pytest import raises, skip, ignore_warnings
 
 def test_Min():
     from sympy.abc import x, y, z
+    from sympy.functions.elementary.complexes import Abs, re
+    from sympy.functions.elementary.exponential import exp
     n = Symbol('n', negative=True)
     n_ = Symbol('n_', negative=True)
     nn = Symbol('nn', nonnegative=True)
@@ -71,6 +73,11 @@ def test_Min():
     assert Min(p, 0) == 0
     assert Min(0, oo) == 0
     assert Min(oo, 0) == 0
+    assert Min(-2, p) == -2
+    assert Min(-2, nn) == -2
+    assert Min(-2, p, nn, p_) == -2
+    assert unchanged(Min, 3, p)
+    assert unchanged(Min, 3, nn)
     assert Min(nn, nn) == nn
     assert unchanged(Min, nn, p)
     assert Min(p, nn) == Min(nn, p)
@@ -89,6 +96,10 @@ def test_Min():
     # lists
     assert Min() is S.Infinity
     assert Min(x) == x
+    assert Min(x, x) == x
+    assert Min(x, (x+x)/2) == x
+    assert Min(x, x-2) == x-2
+    assert Min(x, x+2) == x
     assert Min(x, y) == Min(y, x)
     assert Min(x, y, z) == Min(z, y, x)
     assert Min(x, Min(y, z)) == Min(z, y, x)
@@ -142,6 +153,33 @@ def test_Min():
     assert m.is_nonnegative is None
     assert m.is_negative is None
 
+    # unrelated complex symbols where simplification is possible
+    assert Min(Abs(x)**2, -Abs(y)**2 - 1) == -Abs(y)**2 - 1
+    assert Min(Abs(x), -Abs(y) - 1) == -Abs(y) - 1
+    assert Min(Abs(x), -2) == -2
+    assert Min(Abs(x), 0) == 0
+    assert Min(exp(re(x)), -Abs(y)) == -Abs(y)
+    assert Min(re(x)**2, -Abs(y)**2 - 1) == -Abs(y)**2 - 1
+
+    # same idea with real symbols (x**2 is nonnegative without Abs)
+    xr = Symbol('xr', real=True)
+    yr = Symbol('yr', real=True)
+    assert Min(xr**2, -yr**2 - 1) == -yr**2 - 1
+    assert Min(xr**2, -2) == -2
+    assert Min(xr**2, 0) == 0
+    assert Min(exp(xr), -yr**2 - 1) == -yr**2 - 1
+    assert Min(-xr**2 - 1, yr**2) == -xr**2 - 1
+    assert unchanged(Min, xr, yr)
+
+    s = sin(1)**2 + cos(1)**2
+    # s > 1 does not resolve, so result should stay unevaluated
+    assert Min(1, s) == Min(1, s, evaluate=False)
+    assert Min(2, 1, s) == Min(1, s, evaluate=False)
+
+    # extended_positive infinite vs unconstrained real finite
+    M = Symbol('M', extended_positive=True, infinite=True)
+    assert Min(xr, M) == xr
+
 
 def test_Max():
     from sympy.abc import x, y, z
@@ -158,12 +196,23 @@ def test_Max():
 
     assert Max() is S.NegativeInfinity
     assert Max(x) == x
+    assert Max(x, x) == x
+    assert Max(x, (x+x)/2) == x
+    assert Max(x, x-2) == x
+    assert Max(x, x+2) == x+2
+
     assert Max(x, y) == Max(y, x)
     assert Max(x, y, z) == Max(z, y, x)
     assert Max(x, Max(y, z)) == Max(z, y, x)
     assert Max(x, Min(y, oo)) == Max(x, y)
     assert Max(n, -oo, n_, p, 2) == Max(p, 2)
     assert Max(n, -oo, n_, p) == p
+    # bare positive / nonnegative symbols vs numbers
+    assert Max(-5, p) == p
+    assert Max(-1, nn) == nn
+    assert Max(-5, p, nn, p_) == Max(p, nn, p_)
+    assert unchanged(Max, 2, p)
+    assert unchanged(Max, 2, nn)
     assert Max(2, x, p, n, -oo, S.NegativeInfinity, n_, p, 2) == Max(2, x, p)
     assert Max(0, x, 1, y) == Max(1, x, y)
     assert Max(r, r + 1, r - 1) == 1 + r
@@ -208,6 +257,20 @@ def test_Max():
     assert m.is_nonnegative is True
     assert m.is_negative is False
 
+    s = sin(1)**2 + cos(1)**2
+    assert Max(1, s) == Max(1, s, evaluate=False)
+    assert Max(0, 1, s) == Max(1, s, evaluate=False)
+
+    M = Symbol('M', extended_positive=True, infinite=True)
+    assert Max(r, M) == M
+
+def test_composed_min_max():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    assert Min(x, Max(x, y)) == x
+    assert Max(x, Min(x, y)) == x
+    assert Min(1, Max(x,1)) == 1
+    assert Max(1, Min(x,1)) == 1
 
 def test_minmax_assumptions():
     r = Symbol('r', real=True)

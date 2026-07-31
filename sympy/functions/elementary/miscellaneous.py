@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from sympy.core import S, sympify, NumberKind
 from sympy.utilities.iterables import sift
 from sympy.core.add import Add
@@ -15,12 +16,15 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.sorting import ordered
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
 from sympy.core.numbers import Integer
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, Boolean
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def _minmax_as_Piecewise(op, *args):
@@ -568,35 +572,98 @@ class MinMaxBase(Expr, LatticeOp):
             else:
                 yield arg
 
-    @classmethod
-    def _find_localzeros(cls, values, **options):
+    @staticmethod
+    def _is_sign_constrained(x: Expr) -> bool:
         """
-        Sequentially allocate values to localzeros.
-
-        When a value is identified as being more extreme than another member it
-        replaces that member; if this is never true, then the value is simply
-        appended to the localzeros.
+        check if x is guaranteed to be positive, negative, etc., which
+        implies that we need to consider it when comparing to other,
+        unrelated expressions.
         """
-        localzeros = set()
-        for v in values:
-            is_newzero = True
-            localzeros_ = list(localzeros)
-            for z in localzeros_:
-                if id(v) == id(z):
-                    is_newzero = False
-                else:
-                    con = cls._is_connected(v, z)
-                    if con:
-                        is_newzero = False
-                        if con is True or con == cls:
-                            localzeros.remove(z)
-                            localzeros.update([v])
-            if is_newzero:
-                localzeros.update([v])
-        return localzeros
+        return any(getattr(x, attr) is not None for attr in (
+            'is_positive', 'is_negative',
+            'is_nonnegative', 'is_nonpositive',
+            'is_extended_positive', 'is_extended_negative',
+            'is_extended_nonnegative', 'is_extended_nonpositive',
+        ))
 
     @classmethod
-    def _is_connected(cls, x, y):
+    def _is_more_extreme(cls, x: Expr, y: Expr) -> Boolean:
+        if cls == Min:
+            return x < y
+        if cls == Max:
+            return x > y
+        raise NotImplementedError(f"Unknown operation: {cls}")
+
+    @classmethod
+    def _split_values(cls, values: Iterable[Expr]) -> tuple[set[Expr], set[Expr], set[Expr]]:
+        """
+        Split an iterable of values into three sets:
+        - `extreme_numbers`: number values that are more extreme than all
+          other values (greater for Max, less for Min). There may be more
+          than one because not all numerical values can be compared
+          directly (e.g. `sin(1)**2 + cos(1)**2 > 1` does not resolve).
+        - `unconstrained_symbols`: bare symbols that are not
+          sign-constrained. We don't need to pairwise compare these.
+        - `rest`: all other values
+        """
+        extreme_numbers: set[Expr] = set()
+        unconstrained_symbols: set[Expr] = set()
+        rest: set[Expr] = set()
+        for value in values:
+            if value.is_number:
+                if value in extreme_numbers:
+                    continue
+                is_new_extreme = True
+                for extreme_number in list(extreme_numbers):
+                    comparison = cls._is_more_extreme(value, extreme_number)
+                    if comparison == False:
+                        is_new_extreme = False
+                        break
+                    elif comparison == True:
+                        extreme_numbers.remove(extreme_number)
+                    # undecidable: keep both
+                if is_new_extreme:
+                    extreme_numbers.add(value)
+            elif isinstance(value, Symbol) and not cls._is_sign_constrained(value):
+                unconstrained_symbols.add(value)
+            else:
+                rest.add(value)
+        return extreme_numbers, unconstrained_symbols, rest
+
+    @classmethod
+    def _find_localzeros(cls, values: Iterable[Expr]) -> set[Expr]:
+        extreme_numbers, unconstrained_symbols, rest = cls._split_values(values)
+        if extreme_numbers:
+            rest.update(extreme_numbers)
+        localzeros: set[Expr] = set()
+        for value in rest:
+            is_new_zero = True
+            if value in localzeros:
+                continue
+            for zero in list(localzeros):
+                if con := cls._is_connected(value, zero):
+                    is_new_zero = False
+                    if con is True or con == cls:
+                        localzeros.remove(zero)
+                        localzeros.add(value)
+            if is_new_zero:
+                localzeros.add(value)
+        unconstrained_symbol_zeros: set[Expr] = set()
+        for symbol in unconstrained_symbols:
+            is_new_zero = True
+            for zero in list(localzeros):
+                if con := cls._is_connected(symbol, zero):
+                    is_new_zero = False
+                    if con is True or con == cls:
+                        localzeros.remove(zero)
+                        unconstrained_symbol_zeros.add(symbol)
+            if is_new_zero:
+                unconstrained_symbol_zeros.add(symbol)
+        return localzeros | unconstrained_symbol_zeros
+
+
+    @classmethod
+    def _is_connected(cls, x: Expr, y: Expr) -> bool | type[Min] | type[Max]:
         """
         Check if x and y are connected somehow.
         """
