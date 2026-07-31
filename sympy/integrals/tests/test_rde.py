@@ -4,7 +4,7 @@ from sympy.core.numbers import (I, Rational, oo)
 from sympy.core.symbol import symbols
 from sympy.polys.polytools import Poly, cancel
 from sympy.integrals.risch import (DifferentialExtension, derivation,
-    NonElementaryIntegralException)
+    frac_in, NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
     no_cancel_equal, cancel_primitive, cancel_exp, cancel_tan, rischDE,
@@ -55,6 +55,16 @@ def test_weak_normalizer():
     r = weak_normalizer(Poly(1 + t**2), Poly(t, t), DE, z)
     assert r == (Poly(t, t), (Poly(0, t), Poly(1, t)))
     assert weak_normalizer(r[1][0], r[1][1], DE, z) == (Poly(1, t), r[1])
+
+    # coefficients in QQ(I), as produced by coupled_DE_system(); this used
+    # to raise "root counting not supported over ZZ_I"
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    assert weak_normalizer(Poly(2*I, x), Poly(x, x), DE) == \
+        (Poly(1, x), (Poly(2*I, x, domain='ZZ_I'), Poly(x, x, domain='ZZ_I')))
+    fa, fd = frac_in(2/x + I/(x - 1), x)
+    assert weak_normalizer(fa, fd, DE) == (Poly(x, x, domain='ZZ_I'),
+        (Poly((1 + I)*x - 1, x, domain='ZZ_I'),
+         Poly(x**2 - x, x, domain='ZZ_I')))
 
 
 def test_normal_denom():
@@ -147,7 +157,13 @@ def test_bound_degree():
 
     # Primitive (see above test_bound_degree_fail)
     # TODO: Add test for when the degree bound becomes larger after limited_integrate
-    # TODO: Add test for db == da - 1 case
+
+    # db == da - 1 case, where limited_integrate() finds a non-integer
+    # constant (1/2 here), which does not give a degree bound; this used
+    # to raise a TypeError from comparing a Poly with an int (it is also
+    # exercised by risch_integrate(1/log(x)**2, x, special=True))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    assert bound_degree(Poly(t, t), Poly(-1/(2*x), t), Poly(t, t), DE) == 1
 
     # Exp
     # TODO: Add tests

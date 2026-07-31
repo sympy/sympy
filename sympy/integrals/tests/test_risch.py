@@ -602,6 +602,13 @@ def test_DifferentialExtension_tan():
     # algebraically dependent, which is not supported
     raises(NotImplementedError, lambda: DifferentialExtension(
         tan(x) + tan(x + 1), x))
+    # relations spanning several tangents are also found: tan(x + x**2)
+    # is rewritten as a rational function of tan(x) and tan(x**2) via the
+    # addition formula
+    assert DifferentialExtension(tan(x + x**2) + tan(x) + tan(x**2),
+        x)._important_attrs[3] == [x, t0, t1]
+    raises(NotImplementedError, lambda: DifferentialExtension(
+        tan(x + x**2 + 1) + tan(x) + tan(x**2), x))
 
 
 def test_DifferentialExtension_atan():
@@ -925,6 +932,11 @@ def test_risch_integrate_trig():
     # x*tan(x**2) is elementary even though tan(x**2) is not, because
     # c == x/(2*eta) == 1/4 is constant
     assert risch_integrate(x*tan(x**2), x) == -log(cos(x**2))/2
+
+    # Multi-way relations among tangent arguments must be detected, or
+    # this identically zero integrand is "proven" nonelementary
+    e = tan(x + x**2) - (tan(x) + tan(x**2))/(1 - tan(x)*tan(x**2))
+    assert risch_integrate(e, x) == 0
 
     # trig=False restores the old behavior
     raises(NotImplementedError, lambda: risch_integrate(tan(x), x,

@@ -48,8 +48,8 @@ from sympy.functions.elementary.trigonometric import (atan, sin, cos,
     tan, acot, cot, asin, acos, sec, csc)
 from .integrals import integrate, Integral
 from .heurisch import _symbols
-from sympy.polys.polyerrors import (DomainError, GeneratorsError,
-    PolynomialError)
+from sympy.polys.polyerrors import (DomainError, ExactQuotientFailed,
+    GeneratorsError, PolynomialError)
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
 from sympy.polys.rootoftools import RootSum
@@ -150,6 +150,23 @@ def _tan_of_multiple(n, t):
     return num/den
 
 
+def _tan_of_combination(terms):
+    """
+    Rewrite tan(Sum(n_i*a_i)) as a rational function of t_i == tan(a_i).
+
+    ``terms`` is a list of (n_i, t_i) pairs with integer n_i; the multiple
+    angle formula and the addition formula
+    tan(a + b) == (tan(a) + tan(b))/(1 - tan(a)*tan(b)) are applied.
+    """
+    vals = [_tan_of_multiple(n, t) for n, t in terms if n]
+    if not vals:
+        return S.Zero
+    while len(vals) > 1:
+        ta, tb = vals.pop(), vals.pop()
+        vals.append(cancel((ta + tb)/(1 - ta*tb)))
+    return vals[0]
+
+
 class DifferentialExtension:
     """
     A container for all the information relating to a differential extension.
@@ -222,6 +239,15 @@ class DifferentialExtension:
         like the original integrand.
 
         If it is unsuccessful, it raises NotImplementedError.
+
+        If ``trig=True`` (the default), tangent extensions are built for
+        the trigonometric functions (with sin, cos, sec and csc rewritten
+        as rational functions of tan of the half angle) and inverse
+        tangent extensions for atan and acot; ``trig=False`` restores the
+        old behavior of raising NotImplementedError for trigonometric
+        integrands.  In both cases, if the integrand contains I or
+        ``rewrite_complex=True``, trigonometric functions are rewritten in
+        terms of complex exponentials and logarithms instead.
 
         You can also create an object by manually setting the attributes as a
         dictionary to the extension keyword argument.  You must include at least
@@ -788,11 +814,13 @@ class DifferentialExtension:
         =======
 
         Returns True if there was a new extension and False if there was
-        no new extension.  Raises NotImplementedError if the argument of a
-        tangent differs from a rational multiple of the argument of
-        another one by a nonzero constant (like tan(x) and tan(x + 1)),
-        in which case the two tangents are algebraically dependent, which
-        is not supported.
+        no new extension.  A tangent whose argument is an integer linear
+        combination of the arguments of the existing tangent extensions is
+        rewritten as a rational function of them; other algebraically
+        dependent tangents (whose argument differs from a rational linear
+        combination of the existing arguments by a constant, like tan(x)
+        and tan(x + 1), or tan(x/2) appearing after tan(x)) raise
+        NotImplementedError.
         """
         new_extension = False
         for arg in ordered([i.args[0] for i in tans]):
@@ -814,36 +842,40 @@ class DifferentialExtension:
                         "%s, is not supported." % tan(arg))
                 continue
 
-            # tan(a) and tan(b) are algebraically dependent if and only if
-            # a - r*b is constant for some rational number r; the case
-            # a == r*b with the two tangents appearing in the same pass was
-            # already handled by integer_powers() in _rewrite_tans().
-            dependent = False
+            # tan(arg) is algebraic over the existing tower if and only if
+            # arg differs from a rational linear combination of the
+            # arguments of the existing tangent extensions by a constant
+            # (tan of a sum is a rational function of the tangents of the
+            # summands).  Solving Darg == Sum(q_i*Da_i) for constant q_i
+            # finds all such relations at once, including ones spanning
+            # several tangents, like tan(x + x**2) with tan(x) and
+            # tan(x**2), which a pairwise check would miss.
             darg = derivation(arg, self, basic=True)
-            for i, ext in enumerate(self.exts):
-                if ext != 'tan':
-                    continue
-                other = self.extargs[i]
-                r = cancel(darg/derivation(other, self, basic=True))
-                if not r.is_Rational:
-                    continue
-                if cancel(arg - r*other) != 0:
-                    raise NotImplementedError("Tangents of arguments that "
-                        "differ by a constant, like %s and %s, are not "
-                        "supported." % (tan(arg), tan(other)))
-                if r.is_Integer:
-                    # arg is an integer multiple of the argument of an
-                    # existing tangent extension, so tan(arg) is a rational
-                    # function of it.
-                    self.newf = self.newf.xreplace({tan(arg):
-                        _tan_of_multiple(r, self.T[i])})
-                    dependent = True
-                    break
-                raise NotImplementedError("%s is algebraic over the "
-                    "existing extension tower containing %s, which is not "
-                    "supported." % (tan(arg), tan(other)))
-            if dependent:
-                continue
+            tanidx = [i for i, ext in enumerate(self.exts) if ext == 'tan']
+            if tanidx:
+                from .prde import constant_system
+                from sympy.polys.polymatrix import PolyMatrix
+                dargs = [derivation(self.extargs[i], self, basic=True)
+                    for i in tanidx]
+                dum = Dummy()
+                A, u = constant_system(PolyMatrix([dargs], dum),
+                    PolyMatrix([darg], dum), self)
+                u = u.to_Matrix()
+                if A and all(derivation(qi, self, basic=True).is_zero
+                        for qi in u) and cancel(darg -
+                        Add(*[qi*dai for qi, dai in zip(u, dargs)])) == 0:
+                    # arg == Sum(q_i*a_i) + const
+                    if all(qi.is_Integer for qi in u) and cancel(arg -
+                            Add(*[qi*self.extargs[i] for qi, i in
+                                zip(u, tanidx)])) == 0:
+                        self.newf = self.newf.xreplace({tan(arg):
+                            _tan_of_combination([(qi, self.T[i])
+                                for qi, i in zip(u, tanidx)])})
+                        continue
+                    raise NotImplementedError("%s is algebraically "
+                        "dependent on the tangents of %s, which is not "
+                        "supported." % (tan(arg), ', '.join(
+                            str(self.extargs[i]) for i in tanidx)))
 
             arga, argd = frac_in(arg, self.t)
             darga = (argd*derivation(Poly(arga, self.t), self) -
@@ -2332,7 +2364,12 @@ def integrate_hypertangent(a, d, DE, z=None):
             DE.x)
         return (ret, i, b)
 
-    pp = ppa.to_field().exquo(ppd).as_poly(DE.t)
+    try:
+        pp = ppa.to_field().exquo(ppd).as_poly(DE.t)
+    except ExactQuotientFailed:
+        raise ValueError("The part of %s/%s remaining after the reduced "
+            "part should be a polynomial in %s; the given extension is "
+            "probably not a hypertangent monomial." % (a, d, DE.t))
     q2, c = integrate_hypertangent_polynomial(pp, DE)
     if derivation(c, DE).is_zero:
         # The polynomial part contributes c*log(t**2 + 1), since
