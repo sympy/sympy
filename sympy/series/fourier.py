@@ -569,7 +569,7 @@ class FiniteFourierSeries(FourierSeries):
 
         sfunc = self.function.subs(x, x + s)
         _expr = self._get_full_expr().subs(x, x + s)
-        
+
         return self.func(sfunc, self.args[1], _expr)
 
     def scale(self, s):
