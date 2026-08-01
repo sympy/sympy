@@ -1820,10 +1820,10 @@ def parts_rule(integral):
 
         # Set a limit on the number of times u can be used
         if isinstance(u, (sin, cos, exp, sinh, cosh)):
-            cachekey = u.xreplace({symbol: _cache_dummy})
-            if _parts_u_cache[cachekey] > 2:
+            cachekey = u.xreplace({symbol: _active_solver.cache_dummy})
+            if _active_solver.parts_u_cache[cachekey] > 2:
                 return
-            _parts_u_cache[cachekey] += 1
+            _active_solver.parts_u_cache[cachekey] += 1
 
         # Try cyclic integration by parts a few times
         for _ in range(4):
@@ -2963,12 +2963,126 @@ def fallback_rule(integral):
     return DontKnowRule(*integral)
 
 
-# Cache is used to break cyclic integrals.
-# Need to use the same dummy variable in cached expressions for them to match.
-# Also record "u" of integration by parts, to avoid infinite repetition.
-_integral_cache: dict[Expr, Expr | None] = {}
-_parts_u_cache: dict[Expr, int] = defaultdict(int)
-_cache_dummy = Dummy("z")
+class Solver:
+    """Owns the mutable state used while computing integration steps for a
+    single top-level :func:`integral_steps` call.
+
+    This replaces the module-global ``_integral_cache`` (loop-detection
+    sentinel) and ``_parts_u_cache`` (integration-by-parts "u" budget) with
+    state that lives on an instance, one per top-level call, so it cannot
+    leak between unrelated calls.
+    """
+
+    __slots__ = ("integral_cache", "parts_u_cache", "cache_dummy", "options")
+
+    def __init__(self, **options):
+        # Cache is used to break cyclic integrals. Need to use the same
+        # dummy variable in cached expressions for them to match.
+        self.integral_cache: dict[Expr, Expr | None] = {}
+        # Records "u" of integration by parts, to avoid infinite repetition.
+        self.parts_u_cache: dict[Expr, int] = defaultdict(int)
+        self.cache_dummy = Dummy("z")
+        self.options = options
+
+    def solve(self, integrand, symbol):
+        cachekey = integrand.xreplace({symbol: self.cache_dummy})
+        if cachekey in self.integral_cache:
+            if self.integral_cache[cachekey] is None:
+                # Stop this attempt, because it leads around in a loop
+                return DontKnowRule(integrand, symbol)
+            else:
+                # TODO: This is for future development, as currently
+                # integral_cache gets no values other than None
+                return (self.integral_cache[cachekey].xreplace(self.cache_dummy, symbol),
+                    symbol)
+        else:
+            self.integral_cache[cachekey] = None
+
+        integral = IntegralInfo(integrand, symbol)
+
+        def key(integral):
+            integrand = integral.integrand
+
+            if symbol not in integrand.free_symbols:
+                return Number
+            for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
+                if isinstance(integrand, cls):
+                    return cls
+            return type(integrand)
+
+        def integral_is_subclass(*klasses):
+            def _integral_is_subclass(integral):
+                k = key(integral)
+                return k and issubclass(k, klasses)
+            return _integral_is_subclass
+
+        result = do_one(
+            null_safe(special_function_rule),
+            null_safe(switch(key, {
+                Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
+                            null_safe(quadratic_denom_rule),
+                            null_safe(sqrt_quadratic_rule),
+                            null_safe(sqrt_fractional_linear_rule),
+                            null_safe(euler_substitution_rule)),
+                Symbol: power_rule,
+                exp: exp_rule,
+                Add: add_rule,
+                Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
+                            null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
+                            null_safe(sqrt_quadratic_rule),
+                            null_safe(sqrt_fractional_linear_rule),
+                            null_safe(euler_substitution_rule),
+                            null_safe(trig_cmplx_exp_rule)),
+                Derivative: derivative_rule,
+                TrigonometricFunction: trig_rule,
+                Heaviside: heaviside_rule,
+                DiracDelta: dirac_delta_rule,
+                OrthogonalPolynomial: orthogonal_poly_rule,
+                Number: constant_rule
+            })),
+            do_one(
+                null_safe(trig_rule),
+                null_safe(hyperbolic_rule),
+                null_safe(alternatives(
+                    rewrites_rule,
+                    substitution_rule,
+                    condition(
+                        integral_is_subclass(Mul, Pow),
+                        partial_fractions_rule),
+                    condition(
+                        integral_is_subclass(Mul, Pow),
+                        cancel_rule),
+                    condition(
+                        integral_is_subclass(Mul),
+                        combine_power_rule),
+                    condition(
+                        integral_is_subclass(Mul, log,
+                                             *inverse_trig_functions,
+                                             *special_error_functions),
+                        parts_rule),
+                    condition(
+                        integral_is_subclass(Mul, Pow),
+                        distribute_expand_rule),
+                    trig_powers_products_rule,
+                    trig_expand_rule
+                )),
+                null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
+                null_safe(trig_substitution_rule)
+            ),
+            fallback_rule)(integral)
+        del self.integral_cache[cachekey]
+        return result
+
+
+# The Solver instance backing the currently-in-progress top-level
+# integral_steps() call, if any. Rule functions that have not yet been
+# converted to explicitly receive a Solver keep calling integral_steps(...)
+# unchanged; this pointer lets that call transparently reuse the active
+# Solver's cache/budget instead of starting a fresh one, which is what makes
+# loop detection and the by-parts budget work across the whole recursive
+# call tree of a single top-level call.
+_active_solver: Solver | None = None
+
 
 def integral_steps(integrand, symbol, **options):
     """Returns the steps needed to compute an integral.
@@ -3015,93 +3129,15 @@ def integral_steps(integrand, symbol, **options):
         to obtain a result.
 
     """
-    cachekey = integrand.xreplace({symbol: _cache_dummy})
-    if cachekey in _integral_cache:
-        if _integral_cache[cachekey] is None:
-            # Stop this attempt, because it leads around in a loop
-            return DontKnowRule(integrand, symbol)
-        else:
-            # TODO: This is for future development, as currently
-            # _integral_cache gets no values other than None
-            return (_integral_cache[cachekey].xreplace(_cache_dummy, symbol),
-                symbol)
-    else:
-        _integral_cache[cachekey] = None
-
-    integral = IntegralInfo(integrand, symbol)
-
-    def key(integral):
-        integrand = integral.integrand
-
-        if symbol not in integrand.free_symbols:
-            return Number
-        for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
-            if isinstance(integrand, cls):
-                return cls
-        return type(integrand)
-
-    def integral_is_subclass(*klasses):
-        def _integral_is_subclass(integral):
-            k = key(integral)
-            return k and issubclass(k, klasses)
-        return _integral_is_subclass
-
-    result = do_one(
-        null_safe(special_function_rule),
-        null_safe(switch(key, {
-            Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
-                        null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule),
-                        null_safe(euler_substitution_rule)),
-            Symbol: power_rule,
-            exp: exp_rule,
-            Add: add_rule,
-            Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
-                        null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule),
-                        null_safe(euler_substitution_rule),
-                        null_safe(trig_cmplx_exp_rule)),
-            Derivative: derivative_rule,
-            TrigonometricFunction: trig_rule,
-            Heaviside: heaviside_rule,
-            DiracDelta: dirac_delta_rule,
-            OrthogonalPolynomial: orthogonal_poly_rule,
-            Number: constant_rule
-        })),
-        do_one(
-            null_safe(trig_rule),
-            null_safe(hyperbolic_rule),
-            null_safe(alternatives(
-                rewrites_rule,
-                substitution_rule,
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    partial_fractions_rule),
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    cancel_rule),
-                condition(
-                    integral_is_subclass(Mul),
-                    combine_power_rule),
-                condition(
-                    integral_is_subclass(Mul, log,
-                                         *inverse_trig_functions,
-                                         *special_error_functions),
-                    parts_rule),
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    distribute_expand_rule),
-                trig_powers_products_rule,
-                trig_expand_rule
-            )),
-            null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
-            null_safe(trig_substitution_rule)
-        ),
-        fallback_rule)(integral)
-    del _integral_cache[cachekey]
-    return result
+    global _active_solver
+    if _active_solver is not None:
+        return _active_solver.solve(integrand, symbol)
+    solver = Solver(**options)
+    _active_solver = solver
+    try:
+        return solver.solve(integrand, symbol)
+    finally:
+        _active_solver = None
 
 
 def manualintegrate(f, var):
@@ -3154,8 +3190,6 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral
     """
     result = integral_steps(f, var).eval()
-    # Clear the cache of u-parts
-    _parts_u_cache.clear()
     # If we got Piecewise with two parts, put generic first
     if isinstance(result, Piecewise) and len(result.args) == 2:
         cond = result.args[0][1]
