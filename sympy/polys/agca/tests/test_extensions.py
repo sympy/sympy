@@ -2,9 +2,12 @@ from __future__ import annotations
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.polys import QQ, ZZ
+from sympy.polys.domains.ring import Ring
+from sympy.polys.domains.ringextension import RingExtension
 from sympy.polys.polytools import Poly
-from sympy.polys.polyerrors import NotInvertible
-from sympy.polys.agca.extensions import FiniteExtension
+from sympy.polys.polyerrors import (CoercionFailed, DomainError, NotInvertible,
+    NotReversible)
+from sympy.polys.agca.extensions import ExtensionElement, FiniteExtension
 from sympy.polys.domainmatrix import DomainMatrix
 
 from sympy.testing.pytest import raises
@@ -78,7 +81,7 @@ def test_FiniteExtension_mod():
     K = FiniteExtension(Poly(x**3 + 1, x, domain=QQ))
     xf = K(x)
     assert (xf**2 - 1) % 1 == K.zero
-    assert 1 % (xf**2 - 1) == K.zero
+    raises(ZeroDivisionError, lambda: 1 % (xf**2 - 1))
     assert (xf**2 - 1) / (xf - 1) == xf + 1
     assert (xf**2 - 1) // (xf - 1) == xf + 1
     assert (xf**2 - 1) % (xf - 1) == K.zero
@@ -107,6 +110,113 @@ def test_FiniteExtension_set_domain():
     assert KZ.set_domain(QQ) == KQ
 
 
+def test_FiniteExtension_ring_extension():
+    K = FiniteExtension(Poly(x**3 + 2*x + 1, x, domain=QQ))
+    xK = K.generator
+
+    assert isinstance(K, Ring)
+    assert isinstance(K, RingExtension)
+    assert K.dom == QQ
+    assert K.gens == (xK,)
+    assert K.ngens == 1
+    assert K.to_dict(3*xK**2 + 2) == {(2,): QQ(3), (0,): QQ(2)}
+
+
+def test_FiniteExtension_field_contract():
+    K = FiniteExtension(Poly(x**2 - 2, x, domain=QQ))
+    xK = K.generator
+
+    assert K.modulus_is_irreducible is True
+    assert K.is_Field is True
+    assert K.is_Ring is True
+    assert K.is_PID is True
+    assert K.has_assoc_Field is True
+    assert K.has_assoc_Ring is False
+    assert K.get_field() is K
+    raises(DomainError, K.get_ring)
+
+    assert K.gcd(K.zero, K.zero) == K.one
+    assert K.lcm(xK, xK + 1) == xK*(xK + 1)
+    s, t, h = K.gcdex(xK, xK + 1)
+    assert s*xK + t*(xK + 1) == h == K.one
+    assert K.div(xK + 1, xK) == ((xK + 1)/xK, K.zero)
+    assert K.rem(xK + 1, xK) == K.zero
+    assert K.revert(xK) == xK/2
+    assert K.numer(xK) == xK
+    assert K.denom(xK) == K.one
+    assert K.from_sympy(1/x) == xK/2
+    assert K.to_sympy(K.from_sympy((x + 1)/(x - 1))) == 2*x + 3
+
+    matrix = DomainMatrix([[xK, K.one]], (1, 2), K)
+    assert matrix.nullspace() == DomainMatrix([[-K.one, xK]], (1, 2), K)
+
+    F = FiniteExtension(Poly(x**3 - x + 1, x, modulus=3))
+    assert F.modulus_is_irreducible is True
+    assert F.is_Field is True
+
+    R = FiniteExtension(Poly(x**2 - 1, x, domain=QQ))
+    xR = R.generator
+    assert R.modulus_is_irreducible is False
+    assert R.is_Field is False
+    assert R.is_PID is False
+    assert R.has_assoc_Field is False
+    assert R.has_assoc_Ring is True
+    assert R.get_ring() is R
+    raises(DomainError, R.get_field)
+    raises(NotImplementedError, lambda: R.gcd(xR, R.one))
+    assert R.numer(xR) == xR
+    assert R.denom(xR) == R.one
+    assert R.is_unit(xR) is True
+    assert R.revert(xR) == xR
+    assert R.one % xR == R.zero
+    assert R.is_unit(xR - 1) is False
+    zero_divisor = xR - 1
+    raises(ZeroDivisionError, lambda: R.one % zero_divisor)
+    raises(ZeroDivisionError, lambda: R.rem(R.one, zero_divisor))
+    assert zero_divisor % zero_divisor == R.zero
+    assert R.div(zero_divisor, zero_divisor) == (
+        R.quo(zero_divisor, zero_divisor),
+        R.rem(zero_divisor, zero_divisor),
+    ) == (R.one, R.zero)
+    assert R.zero % zero_divisor == R.zero
+    assert R.div(R.zero, zero_divisor) == (
+        R.quo(R.zero, zero_divisor),
+        R.rem(R.zero, zero_divisor),
+    ) == (R.zero, R.zero)
+    raises(NotReversible, lambda: R.revert(zero_divisor))
+
+
+def test_FiniteExtension_unknown_irreducibility():
+    from sympy.polys.domains import GF
+
+    K = GF(5).frac_field(x)
+    A = FiniteExtension(Poly(y**2 - x, y, domain=K))
+
+    assert A.modulus_is_irreducible is None
+    assert A.is_Field is False
+    assert A.has_assoc_Field is False
+    assert A.has_assoc_Ring is True
+    assert A.generator**2 == A(x)
+    raises(NotImplementedError, lambda: A.gcd(A.one, A.one))
+
+
+def test_FiniteExtension_irreducibility_checked_once():
+    class CountingPoly(Poly):
+        irreducibility_checks = 0
+
+        @property
+        def is_irreducible(self):
+            type(self).irreducibility_checks += 1
+            return super().is_irreducible
+
+    K = FiniteExtension(CountingPoly(x**2 - 2, x, domain=QQ))
+
+    assert K.modulus_is_irreducible is True
+    assert K.is_Field is True
+    assert K.modulus_is_irreducible is True
+    assert CountingPoly.irreducibility_checks == 1
+
+
 def test_FiniteExtension_exquo():
     # Test exquo
     K = FiniteExtension(Poly(x**4 + 1))
@@ -130,16 +240,33 @@ def test_FiniteExtension_convert():
     assert K.convert_from(QQ(1, 2), QQ) == K.one/2
 
 
+def test_FiniteExtension_convert_provenance():
+    K = FiniteExtension(Poly(x**2 - 2, x, domain=QQ))
+    malformed = ExtensionElement(K.ring.convert(x**2), K)
+
+    assert malformed != K(2)
+    assert K.convert(malformed) == K(2)
+    assert K.convert_from(malformed, K) == K(2)
+
+    K2 = FiniteExtension(Poly(t**2 - 3, t, domain=K))
+    assert K2.convert(malformed) == K2(2)
+    assert K2.convert_from(malformed, K) == K2(2)
+
+    other = FiniteExtension(Poly(y**2 - 3, y, domain=QQ))
+    raises(CoercionFailed, lambda: K.convert_from(other.generator, K))
+    raises(CoercionFailed, lambda: K2.convert_from(other.generator, K))
+
+
 def test_FiniteExtension_division_ring():
     # Test division in FiniteExtension over a ring
     KQ = FiniteExtension(Poly(x**2 - 1, x, domain=QQ))
     KZ = FiniteExtension(Poly(x**2 - 1, x, domain=ZZ))
     KQt = FiniteExtension(Poly(x**2 - 1, x, domain=QQ[t]))
     KQtf = FiniteExtension(Poly(x**2 - 1, x, domain=QQ.frac_field(t)))
-    assert KQ.is_Field is True
+    assert KQ.is_Field is False
     assert KZ.is_Field is False
     assert KQt.is_Field is False
-    assert KQtf.is_Field is True
+    assert KQtf.is_Field is False
     for K in KQ, KZ, KQt, KQtf:
         xK = K.convert(x)
         assert xK / K.one == xK
@@ -148,7 +275,7 @@ def test_FiniteExtension_division_ring():
         raises(ZeroDivisionError, lambda: xK / K.zero)
         raises(ZeroDivisionError, lambda: xK // K.zero)
         raises(ZeroDivisionError, lambda: xK % K.zero)
-        if K.is_Field:
+        if K.domain.is_Field:
             assert xK / xK == K.one
             assert xK // xK == K.one
             assert xK % xK == K.zero
@@ -156,6 +283,42 @@ def test_FiniteExtension_division_ring():
             raises(NotImplementedError, lambda: xK / xK)
             raises(NotImplementedError, lambda: xK // xK)
             raises(NotImplementedError, lambda: xK % xK)
+
+
+def test_FiniteExtension_composite_domain_embedding():
+    u = symbols('u')
+    K = QQ.frac_field(x)
+    L = FiniteExtension(Poly(y**2 - x, y, domain=K))
+    yL = L.generator
+    R = L.poly_ring(u)
+    F = L.frac_field(u)
+
+    assert L.is_Field is True
+
+    yR = R.convert(yL)
+    yF = F.convert(yL)
+    assert yR == R.ring.ground_new(yL)
+    assert yF == F.field.ground_new(yL)
+
+    uR = R.gens[0]
+    uF = F.gens[0]
+    assert (uR + yR)*(uR - yR) == uR**2 - R.from_sympy(x)
+
+    poly = uR + yR
+    assert R.convert(F.convert(poly, R), F) == poly
+
+    value = F.from_sympy((u + y)/(u - y))
+    assert value == (uF + yF)/(uF - yF)
+    assert (uF - yF)*value == uF + yF
+    assert F.to_sympy(value) == (u + y)/(u - y)
+
+    matrix = DomainMatrix([[uF + yF, F.one]], (1, 2), F)
+    expected = DomainMatrix([[-F.one, uF + yF]], (1, 2), F)
+    assert matrix.nullspace() == expected
+
+    other = FiniteExtension(Poly(y**2 - x - 1, y, domain=K))
+    raises(CoercionFailed, lambda: R.convert(other.generator))
+    raises(CoercionFailed, lambda: F.convert(other.generator))
 
 
 def test_FiniteExtension_Poly():
@@ -166,14 +329,22 @@ def test_FiniteExtension_Poly():
     assert (p**2).as_expr() == 2
 
     K = FiniteExtension(Poly(x**2 - 2, x, domain=QQ))
-    K2 = FiniteExtension(Poly(t**2 - 2, t, domain=K))
-    assert str(K2) == 'QQ[x]/(x**2 - 2)[t]/(t**2 - 2)'
+    # t**2 - 3 is irreducible over QQ(sqrt(2)), but factoring over a
+    # MonogenicFiniteExtension is not implemented yet.
+    K2 = FiniteExtension(Poly(t**2 - 3, t, domain=K))
+    assert K2.modulus_is_irreducible is None
+    assert K2.is_Field is False
+    assert str(K2) == 'QQ[x]/(x**2 - 2)[t]/(t**2 - 3)'
+    assert K2.convert(K.generator) == K2.convert(x)
+
+    other = FiniteExtension(Poly(y**2 - 3, y, domain=QQ))
+    raises(CoercionFailed, lambda: K2.convert(other.generator))
 
     eK = K2.convert(x + t)
     assert K2.to_sympy(eK) == x + t
-    assert K2.to_sympy(eK ** 2) == 4 + 2*x*t
+    assert K2.to_sympy(eK ** 2) == 5 + 2*x*t
     p = Poly(x + t, y, domain=K2)
-    assert p**2 == Poly(4 + 2*x*t, y, domain=K2)
+    assert p**2 == Poly(5 + 2*x*t, y, domain=K2)
 
 
 def test_FiniteExtension_sincos_jacobian():
