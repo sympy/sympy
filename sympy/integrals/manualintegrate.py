@@ -1332,15 +1332,29 @@ def find_substitutions(integrand, symbol, u_var):
 
 def rewriter(condition, rewrite):
     """Strategy that rewrites an integrand."""
-    def _rewriter(integral):
+    def _rewriter_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
         integrand, symbol = integral
         debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewrite, symbol))
-        if condition(*integral):
-            rewritten = rewrite(*integral)
-            if rewritten != integrand:
-                substep = integral_steps(rewritten, symbol)
-                if not isinstance(substep, DontKnowRule) and substep:
-                    return RewriteRule(integrand, symbol, rewritten, substep)
+        if not condition(*integral):
+            return
+        rewritten = rewrite(*integral)
+        if rewritten == integrand:
+            return
+        tail = TailSpec(IntegralInfo(rewritten, symbol))
+
+        def combine(substeps: list[Rule]) -> Rule | None:
+            substep = substeps[0]
+            # Reject only if the tail itself is exactly the fallback rule
+            # (not merely if it contains one somewhere nested) - matches
+            # today's `not isinstance(substep, DontKnowRule)` check.
+            if isinstance(substep, DontKnowRule):
+                return None
+            return RewriteRule(integrand, symbol, rewritten, substep)
+
+        yield HyperedgeProposal("rewriter", [tail], combine)
+
+    def _rewriter(integral: IntegralInfo) -> Rule | None:
+        return _run_proposals(_rewriter_proposals(integral))
     return _rewriter
 
 def proxy_rewriter(condition, rewrite):
@@ -2700,12 +2714,21 @@ def uncurry(func):
     return uncurry_rl
 
 def trig_rewriter(rewrite):
-    def trig_rewriter_rl(args):
+    def _trig_rewriter_proposals(args) -> Iterator[HyperedgeProposal]:
         a, b, m, n, integrand, symbol = args
         rewritten = rewrite(a, b, m, n, integrand, symbol)
-        if rewritten != integrand:
-            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewrite, symbol))
-            return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
+        if rewritten == integrand:
+            return
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewrite, symbol))
+        tail = TailSpec(IntegralInfo(rewritten, symbol))
+
+        def combine(substeps: list[Rule]) -> Rule:
+            return RewriteRule(integrand, symbol, rewritten, substeps[0])
+
+        yield HyperedgeProposal("trig_rewriter", [tail], combine)
+
+    def trig_rewriter_rl(args) -> Rule | None:
+        return _run_proposals(_trig_rewriter_proposals(args))
     return trig_rewriter_rl
 
 sincos_botheven_condition = uncurry(
@@ -2817,16 +2840,25 @@ def trig_cotcsc_rule(integral):
             [match.get(i, S.Zero) for i in (a, b, m, n)] +
             [integrand, symbol]))
 
-def trig_sindouble_rule(integral):
+def trig_sindouble_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     integrand, symbol = integral
     a = Wild('a', exclude=[sin(2*symbol)])
     match = integrand.match(sin(2*symbol)*a)
-    if match:
-        sin_double = 2*sin(symbol)*cos(symbol)/sin(2*symbol)
-        rewritten = integrand * sin_double
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, integrand * sin_double, symbol))
-        substeps = integral_steps(rewritten, symbol)
-        return RewriteRule(integrand, symbol, rewritten, substeps)
+    if not match:
+        return
+    sin_double = 2*sin(symbol)*cos(symbol)/sin(2*symbol)
+    rewritten = integrand * sin_double
+    debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+    tail = TailSpec(IntegralInfo(rewritten, symbol))
+
+    def combine(substeps: list[Rule]) -> Rule:
+        return RewriteRule(integrand, symbol, rewritten, substeps[0])
+
+    yield HyperedgeProposal("trig_sindouble_rule", [tail], combine)
+
+
+def trig_sindouble_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(trig_sindouble_proposals(integral))
 
 def trig_powers_products_rule(integral):
     return do_one(null_safe(trig_sincos_rule),
@@ -3003,7 +3035,7 @@ def substitution_rule(integral: IntegralInfo) -> Rule | None:
     return None
 
 
-def partial_fractions_rule(integral):
+def partial_fractions_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     integrand, symbol = integral
     if not integrand.is_rational_function(symbol):
         return
@@ -3012,11 +3044,26 @@ def partial_fractions_rule(integral):
     if rewritten == integrand:
         # If apart cannot decompose the rational function any further,
         # use ratint as the final fallback for rational integration.
-        return RatintRule(integrand, symbol)
+        yield HyperedgeProposal(
+            "partial_fractions_rule", [],
+            lambda substeps: RatintRule(integrand, symbol))
+        return
 
-    substep = integral_steps(rewritten, symbol)
-    if not isinstance(substep, DontKnowRule):
+    tail = TailSpec(IntegralInfo(rewritten, symbol))
+
+    def combine(substeps: list[Rule]) -> Rule | None:
+        substep = substeps[0]
+        # Narrow, exact-type check (not contains_dont_know()) - matches
+        # today's `not isinstance(substep, DontKnowRule)`.
+        if isinstance(substep, DontKnowRule):
+            return None
         return RewriteRule(integrand, symbol, rewritten, substep)
+
+    yield HyperedgeProposal("partial_fractions_rule", [tail], combine)
+
+
+def partial_fractions_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(partial_fractions_proposals(integral))
 
 cancel_rule = rewriter(
     # lambda integrand, symbol: integrand.is_algebraic_expr(),
