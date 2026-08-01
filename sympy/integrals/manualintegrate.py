@@ -2866,7 +2866,7 @@ def trig_powers_products_rule(integral):
                   null_safe(trig_cotcsc_rule),
                   null_safe(trig_sindouble_rule))(integral)
 
-def trig_substitution_rule(integral):
+def trig_substitution_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     integrand, symbol = integral
     A = Wild('a', exclude=[0, symbol])
     B = Wild('b', exclude=[0, symbol])
@@ -2901,30 +2901,42 @@ def trig_substitution_rule(integral):
             constant = sqrt(-a)/sqrt(b)
             x_func = constant * sec(theta)
             restriction = And(symbol > -constant, symbol < constant)
-        if x_func:
-            # Manually simplify sqrt(trig(theta)**2) to trig(theta)
-            # Valid due to assumed domain restriction
-            substitutions = {}
-            for f in [sin, cos, tan,
-                      sec, csc, cot]:
-                substitutions[sqrt(f(theta)**2)] = f(theta)
-                substitutions[sqrt(f(theta)**(-2))] = 1/f(theta)
+        if not x_func:
+            continue
 
-            replaced = integrand.subs(symbol, x_func).trigsimp()
-            replaced = manual_subs(replaced, substitutions)
-            if not replaced.has(symbol):
-                replaced *= manual_diff(x_func, theta)
-                replaced = replaced.trigsimp()
-                secants = replaced.find(1/cos(theta))
-                if secants:
-                    replaced = replaced.xreplace({
-                        1/cos(theta): sec(theta)
-                    })
+        # Manually simplify sqrt(trig(theta)**2) to trig(theta)
+        # Valid due to assumed domain restriction
+        substitutions = {}
+        for f in [sin, cos, tan,
+                  sec, csc, cot]:
+            substitutions[sqrt(f(theta)**2)] = f(theta)
+            substitutions[sqrt(f(theta)**(-2))] = 1/f(theta)
 
-                substep = integral_steps(replaced, theta)
-                if not substep.contains_dont_know():
-                    return TrigSubstitutionRule(integrand, symbol,
-                        theta, x_func, replaced, substep, restriction)
+        replaced = integrand.subs(symbol, x_func).trigsimp()
+        replaced = manual_subs(replaced, substitutions)
+        if replaced.has(symbol):
+            continue
+        replaced *= manual_diff(x_func, theta)
+        replaced = replaced.trigsimp()
+        secants = replaced.find(1/cos(theta))
+        if secants:
+            replaced = replaced.xreplace({
+                1/cos(theta): sec(theta)
+            })
+
+        tail = TailSpec(IntegralInfo(replaced, theta), reject_if_dont_know=True)
+
+        def combine(
+            substeps: list[Rule], x_func=x_func, replaced=replaced, restriction=restriction,
+        ) -> Rule:
+            return TrigSubstitutionRule(integrand, symbol, theta, x_func,
+                                         replaced, substeps[0], restriction)
+
+        yield HyperedgeProposal("trig_substitution_rule", [tail], combine)
+
+
+def trig_substitution_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(trig_substitution_proposals(integral))
 
 def heaviside_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     integrand, symbol = integral
