@@ -2847,37 +2847,14 @@ class OwenT(DefinedFunction):
         h, a = self.args
         return r"T\left(%s, %s\right)" % (printer._print(h), printer._print(a))
 
+    def _eval_rewrite_as_Integral(self, h, a, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', [h, a]).name)
+        return Integral(exp(-h**2*(1 + t**2)/2)/(1 + t**2), (t, 0, a))/(2*pi)
+
     def _eval_evalf(self, prec):
-        from sympy.external.mpmath import local_workprec
-        h, a = self.args
-        h_val = complex(h.evalf(prec + 5))
-        a_val = complex(a.evalf(prec + 5))
-        # Use pure-real path when possible for speed/accuracy.
-        if abs(h_val.imag) < 1e-30:
-            h_val = h_val.real
-        if abs(a_val.imag) < 1e-30:
-            a_val = a_val.real
-
-        with local_workprec(prec + 15) as ctx:
-            h_mp = ctx.mpc(h_val) if isinstance(
-                h_val, complex) else ctx.mpf(h_val)
-            a_mp = ctx.mpc(a_val) if isinstance(
-                a_val, complex) else ctx.mpf(a_val)
-
-            if a_mp == 0:
-                result = ctx.mpf(0)
-            elif ctx.isinf(a_mp):
-                # T(h, +/-oo) = +/- erfc(sqrt(h**2)/sqrt(2)) / 4, since
-                # the defining integral is over an unbounded domain there.
-                sign = 1 if a_mp > 0 else -1
-                result = sign * ctx.erfc(ctx.sqrt(h_mp**2) / ctx.sqrt(2)) / 4
-            else:
-                def integrand(t):
-                    return ctx.exp(-h_mp**2 * (1 + t**2) / 2) / (1 + t**2)
-
-                result = ctx.quad(integrand, [0, a_mp]) / (2 * ctx.pi)
-
-        return sympify(complex(result)).evalf(prec)
+        from sympy.integrals.integrals import Integral
+        return self.rewrite(Integral)._eval_evalf(prec)
 
 
 ###############################################################################
