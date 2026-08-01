@@ -2836,7 +2836,7 @@ def substitution_rule(integral):
     if substitutions:
         debug("List of Substitution Rules")
         ways = []
-        is_rational = integrand.is_rational_function()
+        is_rational = integrand.is_rational_function(symbol)
         if is_rational:
             factored_integrand = integrand.factor()
             _, denom_integrand = factored_integrand.as_numer_denom()
