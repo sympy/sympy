@@ -558,15 +558,18 @@ class FiniteFourierSeries(FourierSeries):
     def length(self):
         return self.stop - self.start
 
+    def _get_full_expr(self):
+        return Add(*self.truncate(n=None))
+
     def shiftx(self, s):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
             raise ValueError("'%s' should be independent of %s" % (s, x))
 
-        _expr = self.truncate().subs(x, x + s)
         sfunc = self.function.subs(x, x + s)
-
+        _expr = self._get_full_expr().subs(x, x + s)
+        
         return self.func(sfunc, self.args[1], _expr)
 
     def scale(self, s):
@@ -575,9 +578,10 @@ class FiniteFourierSeries(FourierSeries):
         if x in s.free_symbols:
             raise ValueError("'%s' should be independent of %s" % (s, x))
 
-        _expr = self.truncate() * s
         sfunc = self.function * s
 
+        _expr = self._get_full_expr() * s
+        
         return self.func(sfunc, self.args[1], _expr)
 
     def scalex(self, s):
@@ -586,10 +590,12 @@ class FiniteFourierSeries(FourierSeries):
         if x in s.free_symbols:
             raise ValueError("'%s' should be independent of %s" % (s, x))
 
-        _expr = self.truncate().subs(x, x * s)
-        sfunc = self.function.subs(x, x * s)
+        sfunc = self.function.subs(x, s * x)
+        _expr = self._get_full_expr().subs(x, s * x)
 
-        return self.func(sfunc, self.args[1], _expr)
+        L = self.L / s
+
+        return self.func(sfunc, (x, -L, L), _expr)
 
     def _eval_term(self, pt):
         if pt == 0:
