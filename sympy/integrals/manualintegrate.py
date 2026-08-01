@@ -2220,11 +2220,12 @@ def quadratic_denom_rule(integral):
     return step
 
 
-def sqrt_fractional_linear_rule(integral : IntegralInfo):
+def sqrt_fractional_linear_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     """
     Substitute common ((a*x + b)/(c*x + d))**(1/n)
     """
     integrand, x = integral
+    solver = _active_solver
     a = Wild('a', exclude=[x])
     b = Wild('b', exclude=[x])
     c = Wild('c', exclude=[x])
@@ -2238,7 +2239,7 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
         if exp_.is_Integer or x not in base.free_symbols: # skip 1/x and sqrt(2)
             continue
         if not exp_.is_Rational: # exclude x**pi
-            return None
+            return
         num, den = base.as_numer_denom()
         match_num = num.match(a*x + b)
         match_den = den.match(c*x + d)
@@ -2247,7 +2248,7 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
         aa, bb = match_num[a], match_num[b]
         cc, dd = match_den[c], match_den[d]
         if cc.is_zero and dd.is_zero:
-            return None
+            return
         det = aa*dd - bb*cc
         if det.is_zero: # constant value as sqrt((5*x + 10)/(2*x +  4))
             const_val = (S(aa) / cc) if not cc.is_zero else (S(bb) / dd)
@@ -2262,20 +2263,25 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
         else:
             power_ratio = powsimp(pow_ / Pow(base0, exp_), force=False).cancel()
             if power_ratio.has(x):
-                return None
+                return
             powers.append(pow_)
             exps.append(exp_)
             ratios.append(power_ratio)
     if base0 is None and not constant_bases_subs:
-        return None
+        return
     if constant_bases_subs:
         integrand = integrand.xreplace(constant_bases_subs)
+
     if base0 is None:
-        substep = integral_steps(integrand, x)
-        if not substep.contains_dont_know():
+        tail = TailSpec(IntegralInfo(integrand, x), reject_if_dont_know=True)
+
+        def combine_constant_only(substeps: list[Rule], integrand=integrand) -> Rule:
             debug("Integral: {} is rewritten with {} on symbol: {}".format(integral.integrand, integrand, x))
-            return RewriteRule(integral.integrand, x, integrand, substep)
-        return None
+            return RewriteRule(integral.integrand, x, integrand, substeps[0])
+
+        yield HyperedgeProposal("sqrt_fractional_linear_rule", [tail], combine_constant_only)
+        return
+
     q0: Integer = lcm_list([exp_i.q for exp_i in exps])
     u = Dummy("u")
     u_x = base0**(S.One/q0)
@@ -2284,8 +2290,17 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     dx_u = (q0*(a0*d0 - b0*c0)*u**(q0 - 1))/(c0*u_pow - a0)**2
     subs_dict = {pow_i: ratio_i * u**(q0*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
     substituted = integrand.xreplace(subs_dict).xreplace({x: x_u}) * dx_u
-    substep = integral_steps(substituted, u)
-    if not substep.contains_dont_know():
+
+    def combine_main(
+        substeps: list[Rule], integrand=integrand, u=u, u_x=u_x,
+        powers=powers, exps=exps, ratios=ratios, a0=a0, b0=b0, c0=c0, d0=d0, base0=base0,
+    ) -> Rule:
+        # Secondary, conditional (Piecewise-branch) degenerate-case
+        # integrals, discovered from purely local algebra - resolved
+        # through the Solver directly (same pattern as
+        # substitution_rule's pole branches) rather than as declared
+        # upfront tails, so they are only ever attempted once the main
+        # substitution itself has actually succeeded, exactly as before.
         pieces: list[tuple[Rule, Boolean]] = []
         det = a0*d0 - b0*c0
         _, base0_denom = base0.as_numer_denom()
@@ -2300,16 +2315,16 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
                 const_val = a0 / c0
                 subs_a = {pow_i: ratio_i * Pow(const_val, exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
                 simplified_a = integrand.xreplace(subs_a)
-                degenerate_step_a = integral_steps(simplified_a, x)
+                degenerate_step_a = solver.solve(simplified_a, x)
                 pieces.append((degenerate_step_a, (And(Eq(det, 0), Ne(c0, 0)))))
             if not c0_implies_d0:
                 const_val = b0 / d0
                 subs_b = {pow_i: ratio_i * Pow(const_val, exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
                 simplified_b = integrand.xreplace(subs_b)
                 simplified_b = simplified_b.subs({a0: 0, c0: 0}) # if det = 0, c = 0 and d != 0, a must be 0
-                degenerate_step_b = integral_steps(simplified_b, x)
+                degenerate_step_b = solver.solve(simplified_b, x)
                 pieces.append((degenerate_step_b, (And(Eq(det, 0), Eq(c0, 0)))))
-        step: Rule = URule(integrand, x, u, u_x, substep)
+        step: Rule = URule(integrand, x, u, u_x, substeps[0])
         if pieces:
             pieces.append((step, S.true))
             step = PiecewiseRule(integrand, x, pieces)
@@ -2317,13 +2332,20 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
             debug("Integral: {} is rewritten with {} on symbol: {}".format(integral.integrand, integrand, x))
             return RewriteRule(integral.integrand, x, integrand, step)
         return step
-    return None
 
-def euler_substitution_rule(integral : IntegralInfo):
+    tail = TailSpec(IntegralInfo(substituted, u), reject_if_dont_know=True)
+    yield HyperedgeProposal("sqrt_fractional_linear_rule", [tail], combine_main)
+
+
+def sqrt_fractional_linear_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(sqrt_fractional_linear_proposals(integral))
+
+def euler_substitution_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     """
     Substitute common sqrt(a + b*x + c*x**2) terms using Euler substitution.
     """
     integrand, x = integral
+    solver = _active_solver
     base0 = None
     powers, exps, ratios = [], [], []
     # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x**2 + 1), then sqrt(2*x**2 + 2), x**2 + 1 chosen)
@@ -2332,12 +2354,12 @@ def euler_substitution_rule(integral : IntegralInfo):
         if exp_.is_Integer or x not in base.free_symbols: # skip 1/x and sqrt(2)
             continue
         if not exp_.is_Rational: # exclude (x**2 + 1)**pi
-            return None
+            return
         if exp_.q != 2:
-            return None
+            return
         base_poly = base.as_poly(x)
         if base_poly is None or base_poly.degree() != 2: # exclude cube polynomial roots and other radicals
-            return None
+            return
         aa = base_poly.nth(0)
         bb = base_poly.nth(1)
         cc = base_poly.nth(2)
@@ -2351,72 +2373,97 @@ def euler_substitution_rule(integral : IntegralInfo):
         else:
             power_ratio = (powsimp(Pow(R, exp_) / Pow(base0, exp_), force=False)).cancel()
             if power_ratio.has(x):
-                return None
+                return
             powers.append(pow_)
             exps.append(exp_)
             ratios.append(power_ratio)
     if base0 is None:
-        return None
+        return
 
-    pieces: list[tuple[Rule, Boolean]] = []
     delta = 4*a0*c0 - b0**2
     # substitution not valid for c0 = 0 and delta = 0
     c_zero_cond = Eq(c0, 0)
     delta_zero_cond = Eq(delta, 0)
 
-    def _delta_zero_step():
+    def delta_zero_rewritten():
         shift = x + b0/(2*c0)
         rewritten_base = c0*shift**2
         subs_dict = {pow_i: ratio_i*(rewritten_base)**exp_i for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
-        rewritten = integrand.xreplace(subs_dict)
-        step = integral_steps(rewritten, x)
-        return RewriteRule(integrand, x, rewritten, step)
+        return integrand.xreplace(subs_dict)
 
-    def _c_zero_step():
+    def delta_zero_step():
+        rewritten = delta_zero_rewritten()
+        return RewriteRule(integrand, x, rewritten, solver.solve(rewritten, x))
+
+    def c_zero_step():
         degenerate_integrand = integrand.subs(c0, 0)
         if b0.is_zero:
-            step = integral_steps(degenerate_integrand, x)
-        else:
-            step = sqrt_fractional_linear_rule(IntegralInfo(degenerate_integrand, x))
-            if step is None:
-                # since calling directly sqrt_fractional_linear_rule could return None we create a DontKnowRule
-                step = DontKnowRule(degenerate_integrand, x)
+            return solver.solve(degenerate_integrand, x)
+        step = sqrt_fractional_linear_rule(IntegralInfo(degenerate_integrand, x))
+        if step is None:
+            # since calling directly sqrt_fractional_linear_rule could return None we create a DontKnowRule
+            step = DontKnowRule(degenerate_integrand, x)
         return step
 
-    def _general_euler_step():
-        s = Dummy("s")
-        subs_dict = { pow_i: ratio_i * s**(2*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
-        rewritten = integrand.xreplace(subs_dict)
-        numer, denom = rewritten.as_numer_denom()
-        if numer.as_poly(x, s) is None or denom.as_poly(x, s) is None:
-            return None
-        # Euler's second substitution (u = sqrt(R) + sqrt(c)*x)
-        u = Dummy("u")
-        sqrt_c0 = sqrt(c0)
-        x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
-        s_u = u - sqrt_c0*x_u
-        dx_u = 2*(b0*u + sqrt_c0*(u**2 + a0))/(b0 + 2*sqrt_c0*u)**2
-        substituted = rewritten.xreplace({x: x_u, s: s_u}) * dx_u
-        substep = integral_steps(substituted, u)
-        u_func = sqrt(base0) + sqrt_c0*x
-        return URule(integrand, x, u, u_func, substep)
+    def build_pieces() -> list[tuple[Rule, Boolean]]:
+        # Secondary, conditional (Piecewise-branch) degenerate-case
+        # integrals - resolved through the Solver directly rather than as
+        # declared upfront tails (same pattern as substitution_rule's pole
+        # branches and sqrt_fractional_linear_rule's own degenerate
+        # branches), so they are only ever attempted once the main
+        # substitution has actually succeeded, exactly as before.
+        pieces: list[tuple[Rule, Boolean]] = []
+        if c0.is_zero is None:
+            pieces.append((c_zero_step(), c_zero_cond))
+        if delta.is_zero is None:
+            pieces.append((delta_zero_step(), delta_zero_cond))
+        return pieces
 
     if delta_zero_cond is S.true:
-        general_step = _delta_zero_step()
-        if general_step.contains_dont_know():
-            return None
-    else:
-        general_step = _general_euler_step()
-        if general_step is None or general_step.contains_dont_know():
-            return None
-    if c0.is_zero is None:
-        pieces.append((_c_zero_step(), c_zero_cond))
-    if delta.is_zero is None:
-        pieces.append((_delta_zero_step(), delta_zero_cond))
-    if pieces:
-        pieces.append((general_step, S.true))
-        general_step = PiecewiseRule(integrand, x, pieces)
-    return general_step
+        rewritten = delta_zero_rewritten()
+        tail = TailSpec(IntegralInfo(rewritten, x), reject_if_dont_know=True)
+
+        def combine(substeps: list[Rule], rewritten=rewritten) -> Rule:
+            general_step = RewriteRule(integrand, x, rewritten, substeps[0])
+            pieces = build_pieces()
+            if pieces:
+                pieces.append((general_step, S.true))
+                general_step = PiecewiseRule(integrand, x, pieces)
+            return general_step
+
+        yield HyperedgeProposal("euler_substitution_rule", [tail], combine)
+        return
+
+    s = Dummy("s")
+    subs_dict = {pow_i: ratio_i * s**(2*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+    rewritten = integrand.xreplace(subs_dict)
+    numer, denom = rewritten.as_numer_denom()
+    if numer.as_poly(x, s) is None or denom.as_poly(x, s) is None:
+        return
+    # Euler's second substitution (u = sqrt(R) + sqrt(c)*x)
+    u = Dummy("u")
+    sqrt_c0 = sqrt(c0)
+    x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
+    s_u = u - sqrt_c0*x_u
+    dx_u = 2*(b0*u + sqrt_c0*(u**2 + a0))/(b0 + 2*sqrt_c0*u)**2
+    substituted = rewritten.xreplace({x: x_u, s: s_u}) * dx_u
+    u_func = sqrt(base0) + sqrt_c0*x
+
+    tail = TailSpec(IntegralInfo(substituted, u), reject_if_dont_know=True)
+
+    def combine(substeps: list[Rule], u=u, u_func=u_func) -> Rule:
+        general_step = URule(integrand, x, u, u_func, substeps[0])
+        pieces = build_pieces()
+        if pieces:
+            pieces.append((general_step, S.true))
+            general_step = PiecewiseRule(integrand, x, pieces)
+        return general_step
+
+    yield HyperedgeProposal("euler_substitution_rule", [tail], combine)
+
+
+def euler_substitution_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(euler_substitution_proposals(integral))
 
 def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     # integrate f(x) * (a + b*x + c*x**2)**(n/2),
