@@ -581,7 +581,7 @@ class FiniteFourierSeries(FourierSeries):
         sfunc = self.function * s
 
         _expr = self._get_full_expr() * s
-        
+
         return self.func(sfunc, self.args[1], _expr)
 
     def scalex(self, s):
