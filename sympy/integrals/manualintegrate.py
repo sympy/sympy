@@ -1418,7 +1418,7 @@ def exp_rule(integral):
         return ExpRule(integrand, symbol, E, integrand.args[0])
 
 
-def combine_power_rule(integral):
+def combine_power_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     """
     Strategy that simplifies the exponent of a power.
     exp(a*x**2) * exp(b*x) -> exp((a*x**2 + b*x))
@@ -1437,9 +1437,19 @@ def combine_power_rule(integral):
 
     simplified = powsimp(integrand, combine='exp')
 
-    if simplified != integrand:
-        steps = integral_steps(simplified, symbol)
-        return RewriteRule(integrand, symbol, simplified, steps)
+    if simplified == integrand:
+        return
+
+    tail = TailSpec(IntegralInfo(simplified, symbol))
+
+    def combine(substeps: list[Rule]) -> Rule:
+        return RewriteRule(integrand, symbol, simplified, substeps[0])
+
+    yield HyperedgeProposal("combine_power_rule", [tail], combine)
+
+
+def combine_power_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(combine_power_proposals(integral))
 
 
 def orthogonal_poly_rule(integral):
@@ -1673,15 +1683,23 @@ def add_rule(integral: IntegralInfo) -> Rule | None:
     return _run_proposals(add_proposals(integral))
 
 
-def mul_rule(integral: IntegralInfo):
+def mul_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     integrand, symbol = integral
 
     # Constant times function case
     coeff, f = integrand.as_independent(symbol)
-    if coeff != 1:
-        next_step = integral_steps(f, symbol)
-        if next_step is not None:
-            return ConstantTimesRule(integrand, symbol, coeff, f, next_step)
+    if coeff == 1:
+        return
+    tail = TailSpec(IntegralInfo(f, symbol))
+
+    def combine(substeps: list[Rule]) -> Rule:
+        return ConstantTimesRule(integrand, symbol, coeff, f, substeps[0])
+
+    yield HyperedgeProposal("mul_rule", [tail], combine)
+
+
+def mul_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(mul_proposals(integral))
 
 
 special_error_functions = (erf, erfc, erfi, fresnelc, fresnels, Ci, Chi, Si, Shi, Ei, li)
@@ -1910,16 +1928,20 @@ def parts_rule(integral: IntegralInfo) -> Rule | None:
     return _run_proposals(parts_proposals(integral))
 
 
-def trig_rule(integral):
+def trig_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     integrand, symbol = integral
     if integrand == sin(symbol):
-        return SinRule(integrand, symbol)
+        yield HyperedgeProposal("trig_rule", [], lambda substeps: SinRule(integrand, symbol))
+        return
     if integrand == cos(symbol):
-        return CosRule(integrand, symbol)
+        yield HyperedgeProposal("trig_rule", [], lambda substeps: CosRule(integrand, symbol))
+        return
     if integrand == sec(symbol)**2:
-        return Sec2Rule(integrand, symbol)
+        yield HyperedgeProposal("trig_rule", [], lambda substeps: Sec2Rule(integrand, symbol))
+        return
     if integrand == csc(symbol)**2:
-        return Csc2Rule(integrand, symbol)
+        yield HyperedgeProposal("trig_rule", [], lambda substeps: Csc2Rule(integrand, symbol))
+        return
 
     if isinstance(integrand, tan):
         rewritten = sin(*integrand.args) / cos(*integrand.args)
@@ -1936,7 +1958,16 @@ def trig_rule(integral):
     else:
         return
 
-    return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
+    tail = TailSpec(IntegralInfo(rewritten, symbol))
+
+    def combine(substeps: list[Rule]) -> Rule:
+        return RewriteRule(integrand, symbol, rewritten, substeps[0])
+
+    yield HyperedgeProposal("trig_rule", [tail], combine)
+
+
+def trig_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(trig_proposals(integral))
 
 def trig_product_rule(integral: IntegralInfo):
     integrand, symbol = integral
@@ -1946,7 +1977,7 @@ def trig_product_rule(integral: IntegralInfo):
         return CscCotRule(integrand, symbol)
 
 
-def trig_cmplx_exp_rule(integral: IntegralInfo):
+def trig_cmplx_exp_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     """
     Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
     Useful for integration techniques that handle exponentials better.
@@ -1979,10 +2010,19 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
     # Replace trig and hyperbolic functions with their exponential forms
     rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
 
-    if rewritten != integrand:
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
-        steps = integral_steps(rewritten, symbol)
-        return RewriteRule(integrand, symbol, rewritten, steps)
+    if rewritten == integrand:
+        return
+    debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+    tail = TailSpec(IntegralInfo(rewritten, symbol))
+
+    def combine(substeps: list[Rule]) -> Rule:
+        return RewriteRule(integrand, symbol, rewritten, substeps[0])
+
+    yield HyperedgeProposal("trig_cmplx_exp_rule", [tail], combine)
+
+
+def trig_cmplx_exp_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(trig_cmplx_exp_proposals(integral))
 
 
 def quadratic_denom_rule(integral):
@@ -2854,15 +2894,24 @@ def trig_substitution_rule(integral):
                     return TrigSubstitutionRule(integrand, symbol,
                         theta, x_func, replaced, substep, restriction)
 
-def heaviside_rule(integral):
+def heaviside_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     integrand, symbol = integral
     pattern, m, b, g = heaviside_pattern(symbol)
     match = integrand.match(pattern)
-    if match and 0 != match[g]:
-        # f = Heaviside(m*x + b)*g
-        substep = integral_steps(match[g], symbol)
-        m, b = match[m], match[b]
-        return HeavisideRule(integrand, symbol, m*symbol + b, -b/m, substep)
+    if not match or 0 == match[g]:
+        return
+    # f = Heaviside(m*x + b)*g
+    m, b = match[m], match[b]
+    tail = TailSpec(IntegralInfo(match[g], symbol))
+
+    def combine(substeps: list[Rule]) -> Rule:
+        return HeavisideRule(integrand, symbol, m*symbol + b, -b/m, substeps[0])
+
+    yield HyperedgeProposal("heaviside_rule", [tail], combine)
+
+
+def heaviside_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(heaviside_proposals(integral))
 
 
 def dirac_delta_rule(integral: IntegralInfo):
@@ -3004,13 +3053,23 @@ def derivative_rule(integral):
     else:
         return ConstantRule(*integral)
 
-def rewrites_rule(integral):
+def rewrites_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     integrand, symbol = integral
 
-    if integrand.match(1/cos(symbol)):
-        rewritten = integrand.subs(1/cos(symbol), sec(symbol))
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
-        return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
+    if not integrand.match(1/cos(symbol)):
+        return
+    rewritten = integrand.subs(1/cos(symbol), sec(symbol))
+    debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+    tail = TailSpec(IntegralInfo(rewritten, symbol))
+
+    def combine(substeps: list[Rule]) -> Rule:
+        return RewriteRule(integrand, symbol, rewritten, substeps[0])
+
+    yield HyperedgeProposal("rewrites_rule", [tail], combine)
+
+
+def rewrites_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(rewrites_proposals(integral))
 
 def fallback_rule(integral):
     return DontKnowRule(*integral)
