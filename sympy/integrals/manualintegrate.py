@@ -1200,6 +1200,14 @@ class PartsUCheck(NamedTuple):
     u_key: Expr
 
 
+class BranchQuery(NamedTuple):
+    """Request, yielded by a generator rule, for the value of the solver's
+    ``branch`` option: ``True`` if the rule should collect every applicable
+    alternative into an :class:`AlternativeRule`, ``False`` if the first
+    workable candidate is enough.
+    """
+
+
 def manual_diff(f, symbol):
     """Derivative of f in form expected by find_substitutions
 
@@ -1383,20 +1391,43 @@ def multiplexer(conditions):
                 return rule(expr)
     return multiplexer_rl
 
-def alternatives(*rules):
-    """Strategy that makes an AlternativeRule out of multiple possible results."""
+def alternatives(*rules, branch=False):
+    """Strategy that makes an AlternativeRule out of multiple possible results.
+
+    With ``branch=False`` no ``AlternativeRule`` is built: the first rule
+    whose result is free of ``DontKnowRule`` is returned directly, falling
+    back to the first partial result if no rule solves the integral
+    completely.
+    """
     def _alternatives(integral):
         alts = []
+        first_partial = None
         count = 0
-        debug("List of Alternative Rules")
+        if branch:
+            debug("List of Alternative Rules")
         for rule in rules:
             count = count + 1
-            debug("Rule {}: {}".format(count, rule))
+            if branch:
+                debug("Rule {}: {}".format(count, rule))
 
             result = rule(integral)
-            if (result and not isinstance(result, DontKnowRule) and
-                result != integral and result not in alts):
+            if (not result or isinstance(result, DontKnowRule) or
+                    result == integral):
+                continue
+
+            if not branch:
+                if not result.contains_dont_know():
+                    return result
+                if first_partial is None:
+                    first_partial = result
+                continue
+
+            if result not in alts:
                 alts.append(result)
+
+        if not branch:
+            return first_partial
+
         if len(alts) == 1:
             return alts[0]
         elif alts:
@@ -2752,14 +2783,19 @@ def substitution_rule(integral):
     substitutions = find_substitutions(integrand, symbol, u_var)
     count = 0
     if substitutions:
-        debug("List of Substitution Rules")
+        # Ask the solver whether all alternative substitutions should be
+        # collected or only the first workable one is wanted.
+        branch = yield BranchQuery()
+        if branch:
+            debug("List of Substitution Rules")
         ways = []
         factored_integrand = integrand.factor()
         _, denom_integrand = factored_integrand.as_numer_denom()
         for u_func, c, substituted in substitutions:
             subrule = yield IntegralInfo(substituted, u_var)
             count = count + 1
-            debug("Rule {}: {}".format(count, subrule))
+            if branch:
+                debug("Rule {}: {}".format(count, subrule))
 
             if subrule.contains_dont_know():
                 continue
@@ -2789,7 +2825,10 @@ def substitution_rule(integral):
                         pieces.append((subrule, True))
                         subrule = PiecewiseRule(substituted, symbol, pieces)
 
-            ways.append(URule(integrand, symbol, u_var, u_func, subrule))
+            rule = URule(integrand, symbol, u_var, u_func, subrule)
+            if not branch:
+                return rule
+            ways.append(rule)
 
         if len(ways) > 1:
             return AlternativeRule(integrand, symbol, ways)
@@ -2897,7 +2936,7 @@ class IntegrationSolver:
     propose further subproblems after seeing the result of a previous one;
     the assembled :class:`Rule` is the generator's return value. Rules may
     also yield other requests that read or update per-run solver state (see
-    :class:`PartsUCheck`).
+    :class:`PartsUCheck` and :class:`BranchQuery`).
 
     Everything that influences how the nested rules are applied (the
     loop-detection set, the integration-by-parts ``u`` counter and the
@@ -2905,10 +2944,14 @@ class IntegrationSolver:
     instance instead of in module-global variables.
     """
 
-    def __init__(self, max_depth: int | None = None, **other_options):
+    def __init__(self, max_depth: int | None = None, branch: bool = False,
+                 **other_options):
         # Hard limit on the depth of nested subproblems (None = unlimited):
         # ``max_depth=1`` allows only rules that need no subintegrals.
         self.max_depth = max_depth
+        # Whether to collect all applicable rules into AlternativeRule
+        # nodes (True) or to keep only the first workable rule (False).
+        self.branch = branch
         self.options = other_options
         # Subproblems on the current recursion path, to break cyclic integrals.
         self._active: set[Expr] = set()
@@ -2961,6 +3004,8 @@ class IntegrationSolver:
                 response = self.solve(request.integrand, request.symbol)
             elif isinstance(request, PartsUCheck):
                 response = self._check_parts_u(request.u_key)
+            elif isinstance(request, BranchQuery):
+                response = self.branch
             else:
                 raise ValueError(
                     "unknown request from integration rule: %s" % (request,))
@@ -3028,7 +3073,8 @@ class IntegrationSolver:
                         _integral_is_subclass(Mul, Pow),
                         w(distribute_expand_rule)),
                     w(trig_powers_products_rule),
-                    w(trig_expand_rule)
+                    w(trig_expand_rule),
+                    branch=self.branch
                 )),
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(nested_pow_rule))),
                 null_safe(w(trig_substitution_rule))
@@ -3049,6 +3095,12 @@ def integral_steps(integrand, symbol, **options):
     integral. The code it uses to format the results of this function can be
     found at
     https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py.
+
+    By default, only the first rule that successfully applies at each step
+    is kept, even if multiple rules are applicable. Passing ``branch=True``
+    causes all applicable rules to be retained and combined into an
+    ``AlternativeRule``, so that alternative solution paths are preserved
+    rather than discarded.
 
     Examples
     ========
@@ -3071,6 +3123,20 @@ def integral_steps(integrand, symbol, **options):
     ConstantTimesRule(integrand=6*x**2, variable=x, constant=6, other=x**2,
     substep=PowerRule(integrand=x**2, variable=x, base=x, exp=2)),
     ConstantRule(integrand=9, variable=x)]))
+
+    Parameters
+    ==========
+
+    integrand : Expr
+        The expression to integrate.
+    symbol : Symbol
+        The variable of integration.
+    branch : bool, optional
+        If True, collect all applicable rules into an ``AlternativeRule``
+        instead of returning only the first workable one. Defaults to False.
+    max_depth : int, optional
+        Hard limit on the depth of nested subproblems; deeper subproblems
+        are reported as ``DontKnowRule``. Defaults to None (unlimited).
 
     Returns
     =======
