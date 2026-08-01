@@ -610,7 +610,7 @@ def refine_sinh_cosh_tanh(expr, assumptions):
     ========
 
     >>> from sympy.assumptions.refine import refine_sinh_cosh_tanh
-    >>> from sympy import Symbol, Q, sinh, cosh, tanh
+    >>> from sympy import Q, sinh, cosh, tanh
     >>> from sympy.abc import x
     >>> refine_sinh_cosh_tanh(sinh(x), Q.zero(x))
     0
