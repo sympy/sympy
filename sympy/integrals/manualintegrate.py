@@ -26,6 +26,7 @@ from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
+from enum import Enum, auto
 from functools import wraps
 from inspect import signature
 
@@ -2963,41 +2964,103 @@ def fallback_rule(integral):
     return DontKnowRule(*integral)
 
 
+class GoalStatus(Enum):
+    """Lifecycle of a :class:`GoalNode` within one :class:`Solver` run."""
+    OPEN = auto()
+    IN_PROGRESS = auto()
+    SOLVED = auto()
+    FAILED = auto()
+
+
+class GoalNode:
+    """A single proof-search goal: "integrate ``integrand`` with respect to
+    ``symbol``". ``key`` is the canonical, dummy-normalized form of the goal
+    (``integrand`` with ``symbol`` replaced by the Solver's shared dummy,
+    paired with that dummy) used to recognize the same goal reached again,
+    possibly through a different local variable - this is what loop
+    detection and memoization key off of.
+    """
+
+    __slots__ = ("integrand", "symbol", "key", "status", "rule", "edges")
+
+    def __init__(self, integrand: Expr, symbol: Symbol, key: tuple[Expr, Symbol]):
+        self.integrand = integrand
+        self.symbol = symbol
+        self.key = key
+        self.status = GoalStatus.OPEN
+        self.rule: Rule | None = None
+        # Every HyperEdge attempted against this node, for tracing/debugging
+        # (populated starting in a later phase, once HyperEdge exists).
+        self.edges: list = []
+
+
 class Solver:
     """Owns the mutable state used while computing integration steps for a
-    single top-level :func:`integral_steps` call.
-
-    This replaces the module-global ``_integral_cache`` (loop-detection
-    sentinel) and ``_parts_u_cache`` (integration-by-parts "u" budget) with
-    state that lives on an instance, one per top-level call, so it cannot
+    single top-level :func:`integral_steps` call: an AND-OR proof-search
+    graph over :class:`GoalNode` goals, plus the integration-by-parts "u"
+    budget. State lives on an instance, one per top-level call, so it cannot
     leak between unrelated calls.
     """
 
-    __slots__ = ("integral_cache", "parts_u_cache", "cache_dummy", "options")
+    __slots__ = ("memo", "in_progress", "stack", "parts_u_cache", "cache_dummy", "options")
 
     def __init__(self, **options):
-        # Cache is used to break cyclic integrals. Need to use the same
-        # dummy variable in cached expressions for them to match.
-        self.integral_cache: dict[Expr, Expr | None] = {}
+        # Real, symbol-exact memoization: (canonical key, symbol) -> solved
+        # GoalNode. Keying on the concrete symbol (not just the canonical
+        # key) is required for safety - a memoized Rule tree's substeps
+        # reference GoalNode.symbol throughout, so it can only be reused
+        # verbatim for another request with that exact same symbol.
+        self.memo: dict[tuple[tuple[Expr, Symbol], Symbol], GoalNode] = {}
+        # Loop detection: canonical key -> the GoalNode currently being
+        # dispatched for it, *regardless of which symbol requested it*.
+        # This intentionally mirrors the old None-sentinel cache exactly
+        # (entries live only while a dispatch for that canonical shape is
+        # on the stack, and are removed the moment it finishes) - unlike
+        # `memo`, it must stay symbol-agnostic, because a single top-level
+        # call chases through many fresh substitution dummies and the same
+        # *shape* recurring under a different dummy is exactly the cycle
+        # this needs to catch.
+        self.in_progress: dict[tuple[Expr, Symbol], GoalNode] = {}
+        # Active derivation stack, innermost last (for later-phase
+        # stack-walking, e.g. CyclicPartsRule loop closure).
+        self.stack: list[GoalNode] = []
         # Records "u" of integration by parts, to avoid infinite repetition.
         self.parts_u_cache: dict[Expr, int] = defaultdict(int)
         self.cache_dummy = Dummy("z")
         self.options = options
 
-    def solve(self, integrand, symbol):
-        cachekey = integrand.xreplace({symbol: self.cache_dummy})
-        if cachekey in self.integral_cache:
-            if self.integral_cache[cachekey] is None:
-                # Stop this attempt, because it leads around in a loop
-                return DontKnowRule(integrand, symbol)
-            else:
-                # TODO: This is for future development, as currently
-                # integral_cache gets no values other than None
-                return (self.integral_cache[cachekey].xreplace(self.cache_dummy, symbol),
-                    symbol)
-        else:
-            self.integral_cache[cachekey] = None
+    def solve(self, integrand: Expr, symbol: Symbol) -> Rule:
+        key = (integrand.xreplace({symbol: self.cache_dummy}), self.cache_dummy)
 
+        node = self.memo.get((key, symbol))
+        if node is not None:
+            return node.rule
+
+        if key in self.in_progress:
+            # Cycle: stop this attempt, because it leads around in a loop.
+            # (Rejecting only the offending proposal instead of this whole
+            # call is a later-phase improvement.)
+            return DontKnowRule(integrand, symbol)
+
+        node = GoalNode(integrand, symbol, key)
+        node.status = GoalStatus.IN_PROGRESS
+        self.in_progress[key] = node
+        self.stack.append(node)
+        try:
+            result = self._dispatch(integrand, symbol)
+        finally:
+            self.stack.pop()
+            del self.in_progress[key]
+        node.rule = result
+        node.status = GoalStatus.FAILED if isinstance(result, DontKnowRule) else GoalStatus.SOLVED
+        self.memo[(key, symbol)] = node
+        return result
+
+    def _dispatch(self, integrand: Expr, symbol: Symbol) -> Rule:
+        """Run the rule dispatch tree for (integrand, symbol) and return the
+        winning Rule. Does not touch the memo table or the derivation stack
+        - callers are responsible for that bookkeeping.
+        """
         integral = IntegralInfo(integrand, symbol)
 
         def key(integral):
@@ -3016,7 +3079,7 @@ class Solver:
                 return k and issubclass(k, klasses)
             return _integral_is_subclass
 
-        result = do_one(
+        return do_one(
             null_safe(special_function_rule),
             null_safe(switch(key, {
                 Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
@@ -3070,8 +3133,6 @@ class Solver:
                 null_safe(trig_substitution_rule)
             ),
             fallback_rule)(integral)
-        del self.integral_cache[cachekey]
-        return result
 
 
 # The Solver instance backing the currently-in-progress top-level
