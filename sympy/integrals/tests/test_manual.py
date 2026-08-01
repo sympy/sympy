@@ -19,7 +19,9 @@ from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, integral_steps, manual_subs)
+    _parts_rule, integral_steps, manual_subs, Solver, GoalNode, GoalStatus,
+    TailSpec, HyperedgeProposal, IntegralInfo, DontKnowRule, SinRule,
+    CyclicPartsRule, _try_proposal)
 from sympy.testing.pytest import raises, slow
 from typing import TYPE_CHECKING
 
@@ -998,3 +1000,98 @@ def test_mul_pow_derivative():
     assert_is_integral_of(x**3*Derivative(f(x), (x, 4)),
                           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) +
                           6*x*Derivative(f(x), x) - 6*f(x))
+
+
+def test_solver_ordinary_cycle_rejects_only_offending_proposal():
+    # A tail that canonically matches a goal still IN_PROGRESS on the
+    # derivation stack is an ordinary loop: Solver.solve returns a bare
+    # DontKnowRule for it (matching today's behavior exactly) instead of
+    # raising, and the ancestor GoalNode itself is left completely
+    # untouched - still IN_PROGRESS, free to keep trying its own other
+    # proposals afterwards.
+    solver = Solver()
+    stuck_integrand = sin(x)
+    key = (stuck_integrand.xreplace({x: solver.cache_dummy}), solver.cache_dummy)
+    node = GoalNode(stuck_integrand, x, key)
+    node.status = GoalStatus.IN_PROGRESS
+    solver.in_progress[key] = node
+    solver.stack.append(node)
+    try:
+        assert isinstance(solver.solve(stuck_integrand, x), DontKnowRule)
+
+        # A HyperedgeProposal whose only tail is that same stuck goal, with
+        # reject_if_dont_know=True (matching substitution_rule's "skip this
+        # candidate" semantics), is rejected...
+        bad_tail = TailSpec(IntegralInfo(stuck_integrand, x), reject_if_dont_know=True)
+        bad_proposal = HyperedgeProposal("bad", [bad_tail], lambda substeps: DontKnowRule(S.NaN, x))
+        assert _try_proposal(solver, bad_proposal) is None
+
+        # ...but that rejection is entirely local: a different proposal for
+        # the same node still succeeds normally right afterwards, and the
+        # ancestor is unaffected either way.
+        good_proposal = HyperedgeProposal("good", [], lambda substeps: SinRule(sin(x), x))
+        result = _try_proposal(solver, good_proposal)
+    finally:
+        solver.stack.pop()
+        del solver.in_progress[key]
+    assert isinstance(result, SinRule)
+    assert node.status is GoalStatus.IN_PROGRESS
+
+
+def test_solver_budget_generalization():
+    # Generalizes the old integration-by-parts-only "u" cache
+    # (sin/cos/exp/sinh/cosh, limit 2) to any (rule_name, subexpr).
+    solver = Solver()
+    assert solver.consult_budget("some_rule", sin(x), x, limit=2) is True
+    assert solver.consult_budget("some_rule", sin(x), x, limit=2) is True
+    assert solver.consult_budget("some_rule", sin(x), x, limit=2) is False
+
+    # Independent per rule name and per subexpression.
+    assert solver.consult_budget("other_rule", sin(x), x, limit=2) is True
+    assert solver.consult_budget("some_rule", cos(x), x, limit=2) is True
+
+    # Normalized the same way the old _cache_dummy trick normalized loop
+    # detection: the same shape reached through a different local variable
+    # shares its budget.
+    solver2 = Solver()
+    assert solver2.consult_budget("r", sin(x), x, limit=1) is True
+    assert solver2.consult_budget("r", sin(y), y, limit=1) is False
+
+
+def test_solver_cyclic_parts_loop_closure():
+    # Solver._close_cyclic_parts reconstructs today's CyclicPartsRule for
+    # exp(x)*sin(x)/exp(x)*cos(x) from the explicit derivation stack
+    # instead of parts_rule's local 4-iteration loop - simulating the case
+    # where that local search fell through to a real tail (as it would for
+    # a longer chain) instead of closing immediately, by spreading the two
+    # real by-parts hops (extracted directly via _parts_rule, exactly as
+    # parts_proposals itself would compute them) across two separate
+    # GoalNodes on the stack.
+    solver = Solver()
+    ancestor_integrand = exp(x)*sin(x)
+    u1, dv1, v1, du1, v_step1 = _parts_rule(ancestor_integrand, x)
+    hop2_constant, hop2_integrand = (v1*du1).as_coeff_Mul()
+    u2, dv2, v2, du2, v_step2 = _parts_rule(hop2_integrand, x)
+    u2 *= hop2_constant
+    du2 *= hop2_constant
+
+    def make_key(integrand):
+        return (integrand.xreplace({x: solver.cache_dummy}), solver.cache_dummy)
+
+    ancestor = GoalNode(ancestor_integrand, x, make_key(ancestor_integrand))
+    hop2 = GoalNode(hop2_integrand, x, make_key(hop2_integrand))
+    solver.stack.extend([ancestor, hop2])
+    solver.parts_hops[ancestor] = ([(u1, dv1, v1, du1, v_step1)], S.One, ancestor_integrand)
+    solver.parts_hops[hop2] = ([(u2, dv2, v2, du2, v_step2)], S.One, hop2_integrand)
+
+    rule = solver._close_cyclic_parts(ancestor, x)
+    assert isinstance(rule, CyclicPartsRule)
+    assert len(rule.parts_rules) == 2
+    assert rule.eval() == manualintegrate(exp(x)*sin(x), x)
+
+    # A cycle back to a node that never actually attempted parts_rule (no
+    # parts_hops entry) safely falls back to "not productive" instead of
+    # raising or fabricating a wrong rule.
+    unrelated = GoalNode(cos(x), x, make_key(cos(x)))
+    solver.stack.append(unrelated)
+    assert solver._close_cyclic_parts(unrelated, x) is None
