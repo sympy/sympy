@@ -2039,13 +2039,23 @@ def trig_cmplx_exp_rule(integral: IntegralInfo) -> Rule | None:
     return _run_proposals(trig_cmplx_exp_proposals(integral))
 
 
-def quadratic_denom_rule(integral):
+def quadratic_denom_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
+    # Every recursive call this rule makes is unconditionally embedded (no
+    # `contains_dont_know()` check anywhere rejects a substep and falls
+    # back to a different candidate - unlike substitution_rule/parts_rule/
+    # etc., this rule never makes an accept/reject decision based on a
+    # tail's content), so a full TailSpec/combine layer would add
+    # complexity without changing behavior. It's still routed through the
+    # Solver explicitly (`solver.solve` instead of the module-level
+    # `integral_steps` redirect) and wrapped in a single HyperedgeProposal
+    # so it participates in GoalNode.edges tracing like every other rule.
     integrand, symbol = integral
+    solver = _active_solver
     if not integrand.is_rational_function(symbol):
-        return None
+        return
     num, den = integrand.as_numer_denom()
     if den == 1:
-        return None
+        return
     # Prevents things like c*(c*x + d)**n from hiding the power
     den_const, den_x = den.as_independent(symbol, as_Add=False)
     if den_const != 1:
@@ -2064,9 +2074,9 @@ def quadratic_denom_rule(integral):
     # TODO: may add n = 1 here and do a general manual rational integration rule
     # instead of letting general substitution rule find the pattern
     if deg_den != 2:
-        return None
+        return
     if deg_num >= deg_den:
-        return None
+        return
 
     def _arctan_match(B, a, c, symbol, degenerate=True):
         # integrates B / a*x**2 + c
@@ -2075,11 +2085,11 @@ def quadratic_denom_rule(integral):
         # skips degenerate case if a != 0 or if a = 0 would cause null denominator
         if degenerate and not _if_zero_implies_zero(a, c):
             substituted = integrand.subs(a, 0)
-            substep = integral_steps(substituted, symbol)
+            substep = solver.solve(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
         if degenerate and not _if_zero_implies_zero(c, a):
             substituted = integrand.subs(c, 0)
-            substep = integral_steps(substituted, symbol)
+            substep = solver.solve(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(c, 0)))
         if a.is_extended_real and c.is_extended_real:
             positive_cond = c/a > 0
@@ -2117,7 +2127,7 @@ def quadratic_denom_rule(integral):
         # degenerate flags avoid recalculating Piecewise branches recursively
         if degenerate_a and not _if_zero_implies_zero(a, denominator):
             substituted = integrand.subs(a, 0)
-            substep = integral_steps(substituted, symbol)
+            substep = solver.solve(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
         if degenerate_discriminant and not _if_zero_implies_zero(discriminant, denominator):
             u = Dummy("u")
@@ -2125,7 +2135,7 @@ def quadratic_denom_rule(integral):
             u_func = symbol + b/(2*a)
             rewritten = (B/a**n) * u_func**(-2*n)
             subexpr = (B/a**n) * u**(-2*n)
-            substep = integral_steps(subexpr, u)
+            substep = solver.solve(subexpr, u)
             rule = RewriteRule(integrand, symbol, rewritten, URule(rewritten, symbol, u, u_func, substep))
             if discriminant.is_zero:
                 if pieces:
@@ -2171,7 +2181,7 @@ def quadratic_denom_rule(integral):
         integrand = (A*symbol + B) / denominator**n
         if not _if_zero_implies_zero(a, denominator):
             substituted = integrand.subs(a, 0)
-            substep = integral_steps(substituted, symbol)
+            substep = solver.solve(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
         # we divide by a, Piecewise condition above
         const =  A/(2*a)
@@ -2180,7 +2190,7 @@ def quadratic_denom_rule(integral):
         qprime_part = numer1 / denominator**n
         u = Dummy('u')
         step1 = URule(qprime_part, symbol,
-                      u, denominator, integral_steps(u**(-n), u))
+                      u, denominator, solver.solve(u**(-n), u))
         if const != 1:
             step1 = ConstantTimesRule(const*qprime_part, symbol, const, qprime_part, step1)
         if numer2.is_zero:
@@ -2217,7 +2227,11 @@ def quadratic_denom_rule(integral):
     if normalized_integrand != integrand:
         step = RewriteRule(integrand, symbol, normalized_integrand, step)
 
-    return step
+    yield HyperedgeProposal("quadratic_denom_rule", [], lambda substeps, step=step: step)
+
+
+def quadratic_denom_rule(integral: IntegralInfo) -> Rule | None:
+    return _run_proposals(quadratic_denom_proposals(integral))
 
 
 def sqrt_fractional_linear_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
