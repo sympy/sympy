@@ -15,13 +15,15 @@ Results are written as JSON Lines, one file per test module, mirroring the
 directory structure of the test suite under ``--results-dir``.  SymPy
 objects are serialized with ``str(expr)`` whenever
 ``eval(str(expr), namespace) == expr`` round-trips exactly.  The namespace
-is sympy's public names plus the expression's free symbols (listed in the
-record's ``symbols`` field) and undefined functions (listed in
-``functions``).  When plain ``str`` does not round-trip (Python evaluates
-literals like ``3/2`` to floats), the ``sympy_integers`` string form
-(``S(3)/2``) is tried; fields for which no readable form round-trips are
-stored as ``srepr`` instead and named in the record's ``srepr_fields``
-key.  The run is resumable: cases whose
+is sympy's public names plus a Symbol for each name in the record's
+``symbols`` field.  When plain ``str`` does not round-trip, the output of
+``EvalSafeStrPrinter`` is tried (rationals as ``S(3)/2``, undefined
+functions as ``Function('F')(x)``, constructor form for ``Mul``s that
+pairwise evaluation would re-distribute); expressions containing Dummy
+variables are accepted when ``dummy_eq`` holds and are listed in the
+record's ``dummy_eq_fields`` key.  Fields for which no readable form
+round-trips are stored as ``srepr`` instead and named in the record's
+``srepr_fields`` key.  The run is resumable: cases whose
 result line is already present are skipped, so the script can simply be
 re-launched after an interruption.  Files (and cases within each file) are
 processed in random order.
@@ -63,47 +65,102 @@ EXPR_FIELDS = ("integrand", "variable", "expected_integral",
                "integrand_original", "antiderivative")
 
 
-def _sympy_namespace(symbols, function_names=()):
-    """Namespace for eval-ing ``str(expr)``: everything public from sympy,
-    plus the undefined functions and free symbols appearing in the
-    expression (which shadow any sympy names)."""
+def _sympy_namespace(names):
+    """Namespace for eval-ing serialized expressions: everything public
+    from sympy, plus a plain Symbol for each given name (shadowing any
+    sympy names)."""
     import sympy
     ns = {k: v for k, v in vars(sympy).items() if not k.startswith("_")}
-    ns.update({name: sympy.Function(name) for name in function_names})
-    ns.update({s.name: s for s in symbols})
+    ns.update({name: sympy.Symbol(name) for name in names})
     return ns
 
 
-def serialize_expr(expr):
-    """Serialize *expr* as a readable string when it round-trips exactly
-    via ``eval`` in a sympy namespace with the expression's free symbols
-    (and undefined functions) declared.  Plain ``str(expr)`` is tried
-    first; if Python literals like ``3/2`` spoil the round trip, the
-    string printer's ``sympy_integers`` mode (which prints ``S(3)/2``) is
-    tried next; ``srepr`` is the last resort.
+def _make_eval_safe_printer():
+    """A StrPrinter whose output evals back to the original expression:
 
-    Returns ``(string, is_srepr, symbol_names, function_names)``.
+    * rationals print as ``S(3)/2`` (``sympy_integers`` setting), so
+      Python does not turn ``3/2`` into a float;
+    * ``Mul``s whose leading Number coefficient sits next to an ``Add``
+      factor print in constructor form ``Mul(S(2), 1/d, c + d*x)``:
+      the pairwise evaluation of ``S(2)*(c + d*x)/d`` would re-distribute
+      the coefficient over the Add, changing the structure;
+    * undefined functions print as ``Function('F')(x)``, so nothing but
+      sympy itself is needed in the namespace;
+    * ``Dummy`` variables print by bare name (reconstruction can then only
+      be checked with ``dummy_eq``).
+    """
+    from sympy import Add
+    from sympy.core.function import AppliedUndef
+    from sympy.printing.str import StrPrinter
+
+    class EvalSafeStrPrinter(StrPrinter):
+        def _print_Mul(self, expr):
+            # A Number coefficient printed next to an Add — directly, or
+            # via the coefficient's denominator meeting a 1/(...) factor
+            # in the printed denominator — re-distributes on pairwise
+            # eval: S(2)*(x + y) becomes 2*x + 2*y.  Constructor form
+            # rebuilds the Mul from all args at once, which is stable.
+            args = expr.args
+            if args and args[0].is_Number and any(
+                    a.is_Add or (a.is_Pow and a.base.is_Add
+                                 and a.exp.is_negative is True)
+                    for a in args[1:]):
+                return "Mul(%s)" % ", ".join(self._print(a) for a in args)
+            return super()._print_Mul(expr)
+
+        def _print_Function(self, expr):
+            if isinstance(expr, AppliedUndef):
+                return "Function(%r)(%s)" % (
+                    expr.func.__name__,
+                    ", ".join(self._print(a) for a in expr.args))
+            return super()._print_Function(expr)
+
+        def _print_Dummy(self, expr):
+            return expr.name
+
+    return EvalSafeStrPrinter({"sympy_integers": True})
+
+
+def serialize_expr(expr):
+    """Serialize *expr* as a readable string when it round-trips via
+    ``eval`` in a sympy namespace with the expression's symbols declared.
+    Plain ``str(expr)`` is tried first, then the eval-safe printer; the
+    round trip must reproduce the object exactly (identical ``srepr``),
+    except for expressions containing ``Dummy`` variables, which are
+    accepted when ``dummy_eq`` holds.  ``srepr`` is the last resort.
+
+    Returns ``(string, kind, symbol_names)`` with *kind* one of
+    ``"str"`` (exact round trip), ``"dummy_eq"`` (round trip up to dummy
+    renaming) or ``"srepr"``.
     """
     from sympy import srepr, Basic, Symbol, Dummy
-    from sympy.core.function import AppliedUndef
-    from sympy.printing import sstr
 
     # Bound (e.g. Lambda) variables need declaring too, hence atoms() and
-    # not free_symbols; Dummy can never round-trip through its name.
-    syms = {s for s in expr.atoms(Symbol) if not isinstance(s, Dummy)}
-    names = sorted(s.name for s in syms)
-    funcs = sorted({f.func.__name__ for f in expr.atoms(AppliedUndef)})
-    ns = _sympy_namespace(syms, funcs)
+    # not free_symbols.
+    atoms = expr.atoms(Symbol)
+    has_dummy = any(isinstance(s, Dummy) for s in atoms)
+    names = sorted({s.name for s in atoms})
+    ns = _sympy_namespace(names)
     reference = srepr(expr)
-    for text in (str(expr), sstr(expr, sympy_integers=True)):
+
+    candidates = []
+    if not has_dummy:
+        # str() prints Dummy('w') as '_w'; only the eval-safe printer
+        # handles dummies.
+        candidates.append(str(expr))
+    candidates.append(_make_eval_safe_printer().doprint(expr))
+    for text in candidates:
         try:
             parsed = eval(text, {"__builtins__": {}}, dict(ns))
         except Exception:
             continue
-        if (isinstance(parsed, Basic) and parsed == expr
-                and srepr(parsed) == reference):
-            return text, False, names, funcs
-    return reference, True, names, funcs
+        if not isinstance(parsed, Basic):
+            continue
+        if parsed == expr and srepr(parsed) == reference:
+            return text, "str", names
+        if has_dummy and parsed.dummy_eq(expr):
+            return text, "dummy_eq", names
+    return reference, "srepr", names
 
 
 def build_translation_map():
@@ -228,11 +285,10 @@ def child_worker(conn, integrand, variable):
     if "steps_error" not in rec:
         try:
             antiderivative = manualintegrate(integrand, variable)
-            text, is_srepr, names, funcs = serialize_expr(antiderivative)
+            text, kind, names = serialize_expr(antiderivative)
             rec["antiderivative"] = text
-            rec["antiderivative_is_srepr"] = is_srepr
+            rec["antiderivative_kind"] = kind
             rec["antiderivative_symbols"] = names
-            rec["antiderivative_functions"] = funcs
             rec["has_unevaluated_integral"] = bool(antiderivative.has(Integral))
         except Exception as e:
             rec["integrate_error"] = "%s: %s" % (type(e).__name__, e)
@@ -302,14 +358,16 @@ def reserialize_results(results_dir):
                     if not line:
                         continue
                     rec = json.loads(line)
-                    if "symbols" in rec and not rec.get("srepr_fields"):
+                    if ("symbols" in rec and "functions" not in rec
+                            and not rec.get("srepr_fields")):
                         out_lines.append(json.dumps(rec))
                         continue
-                    for key in ("symbols", "functions", "srepr_fields"):
+                    for key in ("symbols", "functions", "srepr_fields",
+                                "dummy_eq_fields"):
                         rec.pop(key, None)
                     symbol_names = set()
-                    function_names = set()
                     srepr_fields = []
+                    dummy_eq_fields = []
                     new_rec = {}
                     for key, value in rec.items():
                         if key not in EXPR_FIELDS:
@@ -324,15 +382,16 @@ def reserialize_results(results_dir):
                             new_rec[key] = value
                             srepr_fields.append(key)
                             continue
-                        text, is_srepr, names, funcs = serialize_expr(expr)
+                        text, kind, names = serialize_expr(expr)
                         symbol_names.update(names)
-                        function_names.update(funcs)
-                        if is_srepr:
+                        if kind == "srepr":
                             srepr_fields.append(key)
+                        elif kind == "dummy_eq":
+                            dummy_eq_fields.append(key)
                         new_rec[key] = text
                     new_rec["symbols"] = sorted(symbol_names)
-                    if function_names:
-                        new_rec["functions"] = sorted(function_names)
+                    if dummy_eq_fields:
+                        new_rec["dummy_eq_fields"] = sorted(dummy_eq_fields)
                     if srepr_fields:
                         new_rec["srepr_fields"] = sorted(srepr_fields)
                     out_lines.append(json.dumps(new_rec))
@@ -509,15 +568,16 @@ def main():
                     rec.pop("stage", None)
                     tc = st["tc"]
                     symbol_names = set()
-                    function_names = set()
                     srepr_fields = []
+                    dummy_eq_fields = []
 
                     def ser(field, expr):
-                        text, is_srepr, names, funcs = serialize_expr(expr)
+                        text, kind, names = serialize_expr(expr)
                         symbol_names.update(names)
-                        function_names.update(funcs)
-                        if is_srepr:
+                        if kind == "srepr":
                             srepr_fields.append(field)
+                        elif kind == "dummy_eq":
+                            dummy_eq_fields.append(field)
                         return text
 
                     record = {
@@ -536,13 +596,14 @@ def main():
                     record.update(rec)
                     symbol_names.update(
                         record.pop("antiderivative_symbols", []))
-                    function_names.update(
-                        record.pop("antiderivative_functions", []))
-                    if record.pop("antiderivative_is_srepr", False):
+                    anti_kind = record.pop("antiderivative_kind", None)
+                    if anti_kind == "srepr":
                         srepr_fields.append("antiderivative")
+                    elif anti_kind == "dummy_eq":
+                        dummy_eq_fields.append("antiderivative")
                     record["symbols"] = sorted(symbol_names)
-                    if function_names:
-                        record["functions"] = sorted(function_names)
+                    if dummy_eq_fields:
+                        record["dummy_eq_fields"] = sorted(dummy_eq_fields)
                     if srepr_fields:
                         record["srepr_fields"] = sorted(srepr_fields)
                     out.write(json.dumps(record) + "\n")
