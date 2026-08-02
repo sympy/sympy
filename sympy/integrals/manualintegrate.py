@@ -1515,13 +1515,13 @@ def special_function_rule(integral):
                     step = rule(integrand, symbol, *wild_vals)
                     for w in (a_wild, d_wild):
                         val = match.get(w)
-                        if val and not val.is_zero:
+                        if val and val.is_zero is not False:
                             degenerate_integrand = integrand.subs(val, 0)
                             degenerate_step = integral_steps(degenerate_integrand, symbol)
                             step = _add_degenerate_step(Ne(val, 0), step, degenerate_step)
                     if rule in (EllipticFRule, EllipticERule):
                         a_val, d_val = match.get(a_wild), match.get(d_wild)
-                        if a_val and d_val and not (a_val - d_val).is_zero:
+                        if a_val and d_val and (a_val - d_val).is_zero is not False:
                             degenerate_integrand = integrand.subs(d_val, a_val)
                             degenerate_step = integral_steps(degenerate_integrand, symbol)
                             step = _add_degenerate_step(Ne(a_val, d_val), step, degenerate_step)
