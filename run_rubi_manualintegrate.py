@@ -307,6 +307,28 @@ def child_worker(conn, integrand, variable):
     conn.close()
 
 
+def patch_applied_undef_list_args():
+    """The generated test suite applies undefined functions to plain
+    Python lists, e.g. ``Function('HypergeometricPFQ')([1, 1, 1], ...)``,
+    which crashes AppliedUndef construction (lists are unhashable and not
+    Basic).  Convert such arguments to ``Tuple`` so the test modules can
+    at least be imported."""
+    from sympy import Tuple
+    from sympy.core.function import AppliedUndef
+
+    if getattr(AppliedUndef, "_list_args_patched", False):
+        return
+    orig = AppliedUndef.__new__
+
+    def __new__(cls, *args, **options):
+        args = tuple(Tuple(*a) if isinstance(a, (list, tuple)) else a
+                     for a in args)
+        return orig(cls, *args, **options)
+
+    AppliedUndef.__new__ = __new__
+    AppliedUndef._list_args_patched = True
+
+
 def discover_test_modules(matchpy_root):
     suite_dir = os.path.join(matchpy_root, "rubi_rules", "rubi_test_suite")
     modules = []
@@ -480,6 +502,7 @@ def main():
 
     sys.path.insert(0, args.matchpy_root)
     import sympy
+    patch_applied_undef_list_args()
     print("Testing sympy %s from %s" % (sympy.__version__, sympy.__file__),
           flush=True)
 
@@ -496,7 +519,12 @@ def main():
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
         done = load_done_indices(out_path)
 
-        module = importlib.import_module(mod_name)
+        try:
+            module = importlib.import_module(mod_name)
+        except Exception as e:
+            print("!!! failed to import %s: %s: %s" %
+                  (rel, type(e).__name__, e), flush=True)
+            continue
         cases = module.TEST_CASES
         indices = [i for i in range(len(cases)) if i not in done]
         if not indices:
