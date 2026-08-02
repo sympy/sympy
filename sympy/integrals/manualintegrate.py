@@ -3628,6 +3628,55 @@ def integral_steps(integrand, symbol, **options):
         _active_solver = None
 
 
+def integral_steps_with_trace(
+    integrand: Expr, symbol: Symbol, **options,
+) -> tuple[Rule, dict[tuple[tuple[Expr, Symbol], Symbol], GoalNode]]:
+    """Like :func:`integral_steps`, but additionally returns the Solver's
+    full memo table of :class:`GoalNode` goals reached while solving this
+    integral, each carrying the list of :class:`HyperEdge` proposals
+    attempted against it (``GoalNode.edges``) - useful for step-by-step
+    display consumers (e.g. SymPy Gamma) that want to show more than just
+    the winning derivation.
+
+    This is purely additive: :func:`integral_steps` and
+    :func:`manualintegrate` are unaffected and keep their existing
+    signatures and return values.
+
+    Note that edge tracing is currently only populated for rules that have
+    been converted to the HyperedgeProposal protocol; rules still
+    implemented as plain Rule-returning functions do not record HyperEdges.
+
+    Examples
+    ========
+
+    >>> from sympy import sin
+    >>> from sympy.integrals.manualintegrate import integral_steps_with_trace
+    >>> from sympy.abc import x
+    >>> rule, memo = integral_steps_with_trace(sin(x) + x, x)
+    >>> rule
+    AddRule(integrand=x + sin(x), variable=x, substeps=[PowerRule(integrand=x, variable=x, base=x, exp=1), SinRule(integrand=sin(x), variable=x)])
+    >>> sorted(edge.rule_name for node in memo.values() for edge in node.edges)
+    ['add_rule', 'trig_rule']
+
+    """
+    # Mirrors integral_steps()'s own bootstrap: proposer functions read the
+    # active Solver off the _active_solver global rather than receiving it
+    # as a parameter, so it has to be installed there for the duration of
+    # this call, exactly like every other Solver-creating entry point.
+    global _active_solver
+    if _active_solver is not None:
+        solver = _active_solver
+        rule = solver.solve(integrand, symbol)
+        return rule, solver.memo
+    solver = Solver(**options)
+    _active_solver = solver
+    try:
+        rule = solver.solve(integrand, symbol)
+    finally:
+        _active_solver = None
+    return rule, solver.memo
+
+
 def manualintegrate(f, var):
     """manualintegrate(f, var)
 
