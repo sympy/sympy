@@ -33,6 +33,9 @@ def test_FiniteExtension():
     assert (2 + i)*(1 - i) == 3 - i
     assert (1 + i)**8 == A(16)
     assert A(1).inverse() == A(1)
+    assert A.is_unit(A.one) is True
+    assert A.is_unit(A(2)) is False
+    assert A.is_unit(A(1 + x)) is False
     raises(NotImplementedError, lambda: A(2).inverse())
 
     # Finite field of order 27
@@ -144,13 +147,19 @@ def test_FiniteExtension_field_contract():
     assert K.lcm(xK, xK + 1) == xK*(xK + 1)
     s, t, h = K.gcdex(xK, xK + 1)
     assert s*xK + t*(xK + 1) == h == K.one
+    assert K.gcdex(K.zero, K.zero) == (K.zero, K.one, K.zero)
+    s, t, h = K.gcdex(K.zero, xK)
+    assert s*K.zero + t*xK == h == K.one
     assert K.div(xK + 1, xK) == ((xK + 1)/xK, K.zero)
     assert K.rem(xK + 1, xK) == K.zero
     assert K.revert(xK) == xK/2
+    assert K.is_unit(K.zero) is False
+    assert K.is_unit(xK) is True
     assert K.numer(xK) == xK
     assert K.denom(xK) == K.one
     assert K.from_sympy(1/x) == xK/2
     assert K.to_sympy(K.from_sympy((x + 1)/(x - 1))) == 2*x + 3
+    raises(CoercionFailed, lambda: K.from_sympy(y))
 
     matrix = DomainMatrix([[xK, K.one]], (1, 2), K)
     assert matrix.nullspace() == DomainMatrix([[-K.one, xK]], (1, 2), K)
@@ -169,6 +178,9 @@ def test_FiniteExtension_field_contract():
     assert R.get_ring() is R
     raises(DomainError, R.get_field)
     raises(NotImplementedError, lambda: R.gcd(xR, R.one))
+    raises(NotImplementedError, lambda: R.gcdex(xR, R.one))
+    raises(NotImplementedError, lambda: R.lcm(xR, R.one))
+    raises(CoercionFailed, lambda: R.from_sympy(1/(x - 1)))
     assert R.numer(xR) == xR
     assert R.denom(xR) == R.one
     assert R.is_unit(xR) is True
@@ -178,6 +190,7 @@ def test_FiniteExtension_field_contract():
     zero_divisor = xR - 1
     raises(ZeroDivisionError, lambda: R.one % zero_divisor)
     raises(ZeroDivisionError, lambda: R.rem(R.one, zero_divisor))
+    raises(NotInvertible, lambda: R.div(R.one, zero_divisor))
     assert zero_divisor % zero_divisor == R.zero
     assert R.div(zero_divisor, zero_divisor) == (
         R.quo(zero_divisor, zero_divisor),
@@ -268,6 +281,7 @@ def test_FiniteExtension_convert_provenance():
 
     other = FiniteExtension(Poly(x**2 - 3, x, domain=QQ))
     raises(CoercionFailed, lambda: K.convert(other.generator))
+    raises(CoercionFailed, lambda: K.convert_from(K.generator, other))
     raises(CoercionFailed, lambda: K.convert_from(other.generator, other))
     raises(CoercionFailed, lambda: K2.convert_from(other.generator, other))
 
