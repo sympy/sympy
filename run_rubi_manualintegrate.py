@@ -13,7 +13,15 @@ matchpy checkout next to this repository) this script records:
 
 Results are written as JSON Lines, one file per test module, mirroring the
 directory structure of the test suite under ``--results-dir``.  SymPy
-objects are serialized with ``srepr``.  The run is resumable: cases whose
+objects are serialized with ``str(expr)`` whenever
+``eval(str(expr), namespace) == expr`` round-trips exactly.  The namespace
+is sympy's public names plus the expression's free symbols (listed in the
+record's ``symbols`` field) and undefined functions (listed in
+``functions``).  When plain ``str`` does not round-trip (Python evaluates
+literals like ``3/2`` to floats), the ``sympy_integers`` string form
+(``S(3)/2``) is tried; fields for which no readable form round-trips are
+stored as ``srepr`` instead and named in the record's ``srepr_fields``
+key.  The run is resumable: cases whose
 result line is already present are skipped, so the script can simply be
 re-launched after an interruption.  Files (and cases within each file) are
 processed in random order.
@@ -49,6 +57,53 @@ RULE_REPR_MAX = 50000
 NUMERIC_TRIES = 8
 NUMERIC_NEEDED = 3
 NUMERIC_TOL = 1e-8
+
+#: JSON fields that hold serialized SymPy expressions.
+EXPR_FIELDS = ("integrand", "variable", "expected_integral",
+               "integrand_original", "antiderivative")
+
+
+def _sympy_namespace(symbols, function_names=()):
+    """Namespace for eval-ing ``str(expr)``: everything public from sympy,
+    plus the undefined functions and free symbols appearing in the
+    expression (which shadow any sympy names)."""
+    import sympy
+    ns = {k: v for k, v in vars(sympy).items() if not k.startswith("_")}
+    ns.update({name: sympy.Function(name) for name in function_names})
+    ns.update({s.name: s for s in symbols})
+    return ns
+
+
+def serialize_expr(expr):
+    """Serialize *expr* as a readable string when it round-trips exactly
+    via ``eval`` in a sympy namespace with the expression's free symbols
+    (and undefined functions) declared.  Plain ``str(expr)`` is tried
+    first; if Python literals like ``3/2`` spoil the round trip, the
+    string printer's ``sympy_integers`` mode (which prints ``S(3)/2``) is
+    tried next; ``srepr`` is the last resort.
+
+    Returns ``(string, is_srepr, symbol_names, function_names)``.
+    """
+    from sympy import srepr, Basic, Symbol, Dummy
+    from sympy.core.function import AppliedUndef
+    from sympy.printing import sstr
+
+    # Bound (e.g. Lambda) variables need declaring too, hence atoms() and
+    # not free_symbols; Dummy can never round-trip through its name.
+    syms = {s for s in expr.atoms(Symbol) if not isinstance(s, Dummy)}
+    names = sorted(s.name for s in syms)
+    funcs = sorted({f.func.__name__ for f in expr.atoms(AppliedUndef)})
+    ns = _sympy_namespace(syms, funcs)
+    reference = srepr(expr)
+    for text in (str(expr), sstr(expr, sympy_integers=True)):
+        try:
+            parsed = eval(text, {"__builtins__": {}}, dict(ns))
+        except Exception:
+            continue
+        if (isinstance(parsed, Basic) and parsed == expr
+                and srepr(parsed) == reference):
+            return text, False, names, funcs
+    return reference, True, names, funcs
 
 
 def build_translation_map():
@@ -147,7 +202,7 @@ def child_worker(conn, integrand, variable):
     """Run one test case; stream partial results through *conn* so that the
     parent still has the ``integral_steps`` info if verification times out."""
     sys.setrecursionlimit(20000)
-    from sympy import srepr, Integral
+    from sympy import Integral
     from sympy.integrals.manualintegrate import integral_steps, manualintegrate
 
     rec = {}
@@ -173,7 +228,11 @@ def child_worker(conn, integrand, variable):
     if "steps_error" not in rec:
         try:
             antiderivative = manualintegrate(integrand, variable)
-            rec["antiderivative"] = srepr(antiderivative)
+            text, is_srepr, names, funcs = serialize_expr(antiderivative)
+            rec["antiderivative"] = text
+            rec["antiderivative_is_srepr"] = is_srepr
+            rec["antiderivative_symbols"] = names
+            rec["antiderivative_functions"] = funcs
             rec["has_unevaluated_integral"] = bool(antiderivative.has(Integral))
         except Exception as e:
             rec["integrate_error"] = "%s: %s" % (type(e).__name__, e)
@@ -220,6 +279,70 @@ def load_done_indices(out_path):
             except (ValueError, KeyError):
                 continue
     return done
+
+
+def reserialize_results(results_dir):
+    """Convert existing result files from all-srepr serialization to the
+    str-with-roundtrip-check scheme, adding the ``symbols`` (and, when
+    needed, ``srepr_fields``) keys.  Already-converted lines (those that
+    have a ``symbols`` key) are left untouched.  Files are rewritten
+    atomically."""
+    from sympy import sympify
+
+    for dirpath, _dirnames, filenames in os.walk(results_dir):
+        for fn in sorted(filenames):
+            if not fn.endswith(".jsonl"):
+                continue
+            path = os.path.join(dirpath, fn)
+            out_lines = []
+            converted = 0
+            with open(path) as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    rec = json.loads(line)
+                    if "symbols" in rec and not rec.get("srepr_fields"):
+                        out_lines.append(json.dumps(rec))
+                        continue
+                    for key in ("symbols", "functions", "srepr_fields"):
+                        rec.pop(key, None)
+                    symbol_names = set()
+                    function_names = set()
+                    srepr_fields = []
+                    new_rec = {}
+                    for key, value in rec.items():
+                        if key not in EXPR_FIELDS:
+                            new_rec[key] = value
+                            continue
+                        # srepr of hyper() is not sympifiable (TupleArg);
+                        # patch it so those old records can be recovered.
+                        source = value.replace("TupleArg(", "Tuple(")
+                        try:
+                            expr = sympify(source)
+                        except Exception:
+                            new_rec[key] = value
+                            srepr_fields.append(key)
+                            continue
+                        text, is_srepr, names, funcs = serialize_expr(expr)
+                        symbol_names.update(names)
+                        function_names.update(funcs)
+                        if is_srepr:
+                            srepr_fields.append(key)
+                        new_rec[key] = text
+                    new_rec["symbols"] = sorted(symbol_names)
+                    if function_names:
+                        new_rec["functions"] = sorted(function_names)
+                    if srepr_fields:
+                        new_rec["srepr_fields"] = sorted(srepr_fields)
+                    out_lines.append(json.dumps(new_rec))
+                    converted += 1
+            if converted:
+                tmp_path = path + ".tmp"
+                with open(tmp_path, "w") as f:
+                    f.write("\n".join(out_lines) + "\n")
+                os.replace(tmp_path, path)
+            print("%s: %d lines converted" % (path, converted), flush=True)
 
 
 def summarize(results_dir):
@@ -284,15 +407,20 @@ def main():
                         help="seed for the file/case shuffling")
     parser.add_argument("--summarize", action="store_true",
                         help="print a summary of existing results and exit")
+    parser.add_argument("--reserialize", action="store_true",
+                        help="convert existing all-srepr result files to "
+                             "the str-based serialization and exit")
     args = parser.parse_args()
 
     if args.summarize:
         summarize(args.results_dir)
         return
+    if args.reserialize:
+        reserialize_results(args.results_dir)
+        return
 
     sys.path.insert(0, args.matchpy_root)
     import sympy
-    from sympy import srepr
     print("Testing sympy %s from %s" % (sympy.__version__, sympy.__file__),
           flush=True)
 
@@ -380,18 +508,43 @@ def main():
                             rec["status"] = "incomplete"
                     rec.pop("stage", None)
                     tc = st["tc"]
+                    symbol_names = set()
+                    function_names = set()
+                    srepr_fields = []
+
+                    def ser(field, expr):
+                        text, is_srepr, names, funcs = serialize_expr(expr)
+                        symbol_names.update(names)
+                        function_names.update(funcs)
+                        if is_srepr:
+                            srepr_fields.append(field)
+                        return text
+
                     record = {
                         "index": st["index"],
                         "source_file": getattr(module, "SOURCE_FILE", rel),
-                        "integrand": srepr(st["integrand"]),
-                        "variable": srepr(tc.variable),
-                        "expected_integral": srepr(tc.integral),
+                        "integrand": ser("integrand", st["integrand"]),
+                        "variable": ser("variable", tc.variable),
+                        "expected_integral": ser("expected_integral",
+                                                 tc.integral),
                         "rubi_num_steps": tc.num_steps,
                         "time": round(time.time() - st["start"], 3),
                     }
                     if st["integrand"] != tc.integrand:
-                        record["integrand_original"] = srepr(tc.integrand)
+                        record["integrand_original"] = ser(
+                            "integrand_original", tc.integrand)
                     record.update(rec)
+                    symbol_names.update(
+                        record.pop("antiderivative_symbols", []))
+                    function_names.update(
+                        record.pop("antiderivative_functions", []))
+                    if record.pop("antiderivative_is_srepr", False):
+                        srepr_fields.append("antiderivative")
+                    record["symbols"] = sorted(symbol_names)
+                    if function_names:
+                        record["functions"] = sorted(function_names)
+                    if srepr_fields:
+                        record["srepr_fields"] = sorted(srepr_fields)
                     out.write(json.dumps(record) + "\n")
                     out.flush()
                     processed += 1
