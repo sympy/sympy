@@ -2479,10 +2479,18 @@ def euler_substitution_proposals(integral: IntegralInfo) -> Iterator[HyperedgePr
 def euler_substitution_rule(integral: IntegralInfo) -> Rule | None:
     return _run_proposals(euler_substitution_proposals(integral))
 
-def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
+def sqrt_quadratic_proposals(integral: IntegralInfo, degenerate=True) -> Iterator[HyperedgeProposal]:
+    # Same rationale as quadratic_denom_rule (see its comment): every
+    # recursive call here is unconditionally embedded, with no
+    # contains_dont_know() check anywhere that rejects a substep and falls
+    # back to something else, so this keeps its existing internal control
+    # flow untouched and is only routed through solver.solve explicitly,
+    # wrapped in one zero-tail HyperedgeProposal for GoalNode.edges tracing.
+    #
     # integrate f(x) * (a + b*x + c*x**2)**(n/2),
     # where f(x) is a polynomial and n is an odd integer
     starting_integrand, x = integral
+    solver = _active_solver
 
     f = S.One
     root_base = None
@@ -2499,11 +2507,11 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
             continue
         # exclude x**pi
         if exp.is_Rational is not True:
-            return None
+            return
         base_poly = base.as_poly(x)
         # exclude sqrt(log(x))
         if base_poly is None or base_poly.degree() != 2:
-            return None
+            return
         base = base_poly.as_expr()
         if root_base is None:
             root_base = base
@@ -2512,18 +2520,18 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         reference_power = Pow(root_base, exp)
         ratio = powsimp(factor/reference_power, force=False).cancel()
         if ratio.has(x):
-            return None
+            return
         f *= ratio
         root_exp += exp
 
     if root_base is None:
-        return None
+        return
     f_poly = f.as_poly(x)
     if f_poly is None:
-        return None
+        return
     n = 2*root_exp
     if n.is_Integer is not True or n.is_odd is not True:
-        return None
+        return
     root_poly = root_base.as_poly(x)
     a = root_poly.nth(0)
     b = root_poly.nth(1)
@@ -2535,7 +2543,7 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     if not degenerate or generic_cond is S.true:
         degenerate_step = None
     elif b.is_zero:
-        degenerate_step = integral_steps(f*sqrt(a)**n, x)
+        degenerate_step = solver.solve(f*sqrt(a)**n, x)
     else:
         degenerate_integrand = f*sqrt(a + b*x)**n
         degenerate_step = sqrt_fractional_linear_rule(IntegralInfo(degenerate_integrand, x))
@@ -2600,12 +2608,12 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
 
         rewrite_expr = Derivative(constant_term, x) + coeff * expr
         derive_expr = Derivative(constant_term, x)
-        derive_step = integral_steps(derive_expr, x)
+        derive_step = solver.solve(derive_expr, x)
 
         if coeff == 0:
             substep = derive_step
         else:
-            next_step = integral_steps(expr, x)
+            next_step = solver.solve(expr, x)
             if not next_step:
                 next_step = DontKnowRule(expr, x)
 
@@ -2694,8 +2702,27 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         generic_step = sqrt_quadratic_polynomial_reduction_rule()
     step = _add_degenerate_step(generic_cond, generic_step, degenerate_step)
     if integrand != starting_integrand:
-        return RewriteRule(starting_integrand, x, integrand, step)
-    return step
+        step = RewriteRule(starting_integrand, x, integrand, step)
+
+    yield HyperedgeProposal("sqrt_quadratic_rule", [], lambda substeps, step=step: step)
+
+
+def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True) -> Rule | None:
+    # Unlike every other converted rule, this one is also called directly
+    # from SqrtQuadraticRule.eval() - i.e. from *outside* any Solver.solve
+    # recursion, after the top-level call has already finished and reset
+    # _active_solver to None. Bootstrap a Solver here exactly like
+    # integral_steps() does, so sqrt_quadratic_proposals (which reads
+    # _active_solver) always has one to work with.
+    global _active_solver
+    if _active_solver is not None:
+        return _run_proposals(sqrt_quadratic_proposals(integral, degenerate))
+    solver = Solver()
+    _active_solver = solver
+    try:
+        return _run_proposals(sqrt_quadratic_proposals(integral, degenerate))
+    finally:
+        _active_solver = None
 
 
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
