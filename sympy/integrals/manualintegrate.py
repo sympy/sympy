@@ -599,6 +599,7 @@ class SqrtQuadraticRule(AtomicRule):
 
     def eval(self) -> Expr:
         step = sqrt_quadratic_rule(IntegralInfo(self.integrand, self.variable), degenerate=False)
+        assert step is not None
         return step.eval()
 
 
@@ -1643,6 +1644,7 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
 
     a, b, c = [match.get(i, S.Zero) for i in (a, b, c)]
     generic_cond = Ne(c, 0)
+    degenerate_step: Rule | None
     if not degenerate or generic_cond is S.true:
         degenerate_step = None
     elif b.is_zero:
@@ -1860,7 +1862,10 @@ def _build_parts_chain(
 
     u, dv, v, du, v_step = steps[0]
     second_step = make_second_step(steps[1:], v * du)
-    rule = PartsRule(integrand, symbol, u, dv, v_step, second_step)
+    # PartsRule.u is annotated Symbol, but LIATE "u" is not restricted to
+    # bare symbols (e.g. u = log(x)); pre-existing imprecision in the Rule
+    # class, not something this refactor changes.
+    rule: Rule = PartsRule(integrand, symbol, u, dv, v_step, second_step)  # type: ignore[arg-type]
     if constant != 1:
         rule = ConstantTimesRule(constant * integrand, symbol, constant, integrand, rule)
     return rule
@@ -1869,6 +1874,7 @@ def _build_parts_chain(
 def parts_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     integrand, symbol = integral
     solver = _active_solver
+    assert solver is not None
     constant, integrand = integrand.as_coeff_Mul()
 
     result = _parts_rule(integrand, symbol)
@@ -1899,13 +1905,20 @@ def parts_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
         if coefficient == 1:
             break
         if symbol not in coefficient.free_symbols:
-            rule = CyclicPartsRule(integrand, symbol,
-                [PartsRule(None, None, su, sdv, sv_step, None)
+            # PartsRule.integrand/variable/u are typed as required Expr/
+            # Symbol/Symbol, but here PartsRule is only ever used as a raw
+            # (u, v_step) ingredient for CyclicPartsRule.eval() (which never
+            # reads .integrand/.variable/.second_step) - the same
+            # pre-existing "None when is a substep of CyclicPartsRule"
+            # pattern already documented on PartsRule.second_step, not
+            # something this refactor changes.
+            rule: Rule = CyclicPartsRule(integrand, symbol,
+                [PartsRule(None, None, su, sdv, sv_step, None)  # type: ignore[arg-type]
                  for (su, sdv, sv, sdu, sv_step) in steps],
                 (-1) ** len(steps) * coefficient)
             if constant != 1:
                 rule = ConstantTimesRule(constant * integrand, symbol, constant, integrand, rule)
-            yield HyperedgeProposal("parts_rule", [], lambda substeps, rule=rule: rule)
+            yield HyperedgeProposal("parts_rule", [], lambda substeps: rule)
             return
 
         # _parts_rule is sensitive to constants, factor it out
@@ -2051,6 +2064,7 @@ def quadratic_denom_proposals(integral: IntegralInfo) -> Iterator[HyperedgePropo
     # so it participates in GoalNode.edges tracing like every other rule.
     integrand, symbol = integral
     solver = _active_solver
+    assert solver is not None
     if not integrand.is_rational_function(symbol):
         return
     num, den = integrand.as_numer_denom()
@@ -2061,7 +2075,7 @@ def quadratic_denom_proposals(integral: IntegralInfo) -> Iterator[HyperedgePropo
     if den_const != 1:
         num = num / den_const
     den = den_x
-    if den.is_Pow:
+    if isinstance(den, Pow):
         q = den.base
         n = den.exp
     else:
@@ -2227,7 +2241,7 @@ def quadratic_denom_proposals(integral: IntegralInfo) -> Iterator[HyperedgePropo
     if normalized_integrand != integrand:
         step = RewriteRule(integrand, symbol, normalized_integrand, step)
 
-    yield HyperedgeProposal("quadratic_denom_rule", [], lambda substeps, step=step: step)
+    yield HyperedgeProposal("quadratic_denom_rule", [], lambda substeps: step)
 
 
 def quadratic_denom_rule(integral: IntegralInfo) -> Rule | None:
@@ -2240,6 +2254,7 @@ def sqrt_fractional_linear_proposals(integral: IntegralInfo) -> Iterator[Hypered
     """
     integrand, x = integral
     solver = _active_solver
+    assert solver is not None
     a = Wild('a', exclude=[x])
     b = Wild('b', exclude=[x])
     c = Wild('c', exclude=[x])
@@ -2360,6 +2375,7 @@ def euler_substitution_proposals(integral: IntegralInfo) -> Iterator[HyperedgePr
     """
     integrand, x = integral
     solver = _active_solver
+    assert solver is not None
     base0 = None
     powers, exps, ratios = [], [], []
     # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x**2 + 1), then sqrt(2*x**2 + 2), x**2 + 1 chosen)
@@ -2437,15 +2453,15 @@ def euler_substitution_proposals(integral: IntegralInfo) -> Iterator[HyperedgePr
         rewritten = delta_zero_rewritten()
         tail = TailSpec(IntegralInfo(rewritten, x), reject_if_dont_know=True)
 
-        def combine(substeps: list[Rule], rewritten=rewritten) -> Rule:
-            general_step = RewriteRule(integrand, x, rewritten, substeps[0])
+        def combine_delta_zero(substeps: list[Rule], rewritten=rewritten) -> Rule:
+            general_step: Rule = RewriteRule(integrand, x, rewritten, substeps[0])
             pieces = build_pieces()
             if pieces:
                 pieces.append((general_step, S.true))
                 general_step = PiecewiseRule(integrand, x, pieces)
             return general_step
 
-        yield HyperedgeProposal("euler_substitution_rule", [tail], combine)
+        yield HyperedgeProposal("euler_substitution_rule", [tail], combine_delta_zero)
         return
 
     s = Dummy("s")
@@ -2465,15 +2481,15 @@ def euler_substitution_proposals(integral: IntegralInfo) -> Iterator[HyperedgePr
 
     tail = TailSpec(IntegralInfo(substituted, u), reject_if_dont_know=True)
 
-    def combine(substeps: list[Rule], u=u, u_func=u_func) -> Rule:
-        general_step = URule(integrand, x, u, u_func, substeps[0])
+    def combine_general_euler(substeps: list[Rule], u=u, u_func=u_func) -> Rule:
+        general_step: Rule = URule(integrand, x, u, u_func, substeps[0])
         pieces = build_pieces()
         if pieces:
             pieces.append((general_step, S.true))
             general_step = PiecewiseRule(integrand, x, pieces)
         return general_step
 
-    yield HyperedgeProposal("euler_substitution_rule", [tail], combine)
+    yield HyperedgeProposal("euler_substitution_rule", [tail], combine_general_euler)
 
 
 def euler_substitution_rule(integral: IntegralInfo) -> Rule | None:
@@ -2491,6 +2507,7 @@ def sqrt_quadratic_proposals(integral: IntegralInfo, degenerate=True) -> Iterato
     # where f(x) is a polynomial and n is an odd integer
     starting_integrand, x = integral
     solver = _active_solver
+    assert solver is not None
 
     f = S.One
     root_base = None
@@ -2704,7 +2721,7 @@ def sqrt_quadratic_proposals(integral: IntegralInfo, degenerate=True) -> Iterato
     if integrand != starting_integrand:
         step = RewriteRule(starting_integrand, x, integrand, step)
 
-    yield HyperedgeProposal("sqrt_quadratic_rule", [], lambda substeps, step=step: step)
+    yield HyperedgeProposal("sqrt_quadratic_rule", [], lambda substeps: step)
 
 
 def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True) -> Rule | None:
@@ -2972,6 +2989,7 @@ def trig_substitution_proposals(integral: IntegralInfo) -> Iterator[HyperedgePro
         a_negative = ((a.is_number and a < 0) or a.is_negative)
         b_negative = ((b.is_number and b < 0) or b.is_negative)
         x_func = None
+        restriction: bool | Boolean
         if a_positive and b_positive:
             # a**2 + b*x**2. Assume sec(theta) > 0, -pi/2 < theta < pi/2
             x_func = (sqrt(a)/sqrt(b)) * tan(theta)
@@ -3071,6 +3089,7 @@ def dirac_delta_rule(integral: IntegralInfo):
 def substitution_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal]:
     integrand, symbol = integral
     solver = _active_solver
+    assert solver is not None
 
     u_var = Dummy("u")
     substitutions = find_substitutions(integrand, symbol, u_var)
@@ -3092,7 +3111,7 @@ def substitution_proposals(integral: IntegralInfo) -> Iterator[HyperedgeProposal
                     subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
 
                 if denom_c.free_symbols:
-                    pieces = []
+                    pieces: list[tuple[Rule, bool | Boolean]] = []
                     factors_denom_c = factor_list(denom_c)[1]
                     for pole, _ in factors_denom_c:
                         # only substitute poles introduced by the constant c if they were not already poles of the original integrand
@@ -3331,6 +3350,7 @@ def _run_proposals(proposals: Iterator[HyperedgeProposal]) -> Rule | None:
     accepts its resolved tails (do_one semantics: first success wins).
     """
     solver = _active_solver
+    assert solver is not None
     for proposal in proposals:
         rule = _try_proposal(solver, proposal)
         if rule is not None:
@@ -3344,6 +3364,7 @@ def _collect_proposals(proposals: Iterator[HyperedgeProposal]) -> list[Rule]:
     an AlternativeRule).
     """
     solver = _active_solver
+    assert solver is not None
     return [rule for proposal in proposals
             if (rule := _try_proposal(solver, proposal)) is not None]
 
@@ -3431,10 +3452,13 @@ class Solver:
         coefficient = ((last_v * last_du) / ancestor_integrand).cancel()
         if coefficient == 1 or symbol in coefficient.free_symbols:
             return None
-        parts_rules = [PartsRule(None, None, u, dv, v_step, None)
+        # See the matching comment in parts_proposals: PartsRule used here
+        # only as a raw (u, v_step) ingredient for CyclicPartsRule.eval(),
+        # pre-existing pattern, not something this refactor changes.
+        parts_rules = [PartsRule(None, None, u, dv, v_step, None)  # type: ignore[arg-type]
                         for (u, dv, v, du, v_step) in all_raw_steps]
-        rule = CyclicPartsRule(ancestor_integrand, symbol, parts_rules,
-                                (-1) ** len(all_raw_steps) * coefficient)
+        rule: Rule = CyclicPartsRule(ancestor_integrand, symbol, parts_rules,
+                                      (-1) ** len(all_raw_steps) * coefficient)
         if ancestor_constant != 1:
             rule = ConstantTimesRule(ancestor_constant * ancestor_integrand, symbol,
                                       ancestor_constant, ancestor_integrand, rule)
@@ -3448,6 +3472,9 @@ class Solver:
 
         node = self.memo.get((key, symbol))
         if node is not None:
+            # Only ever stored in memo once solved (node.rule is set at the
+            # end of this same method, right before the memo write below).
+            assert node.rule is not None
             return node.rule
 
         ancestor = self.in_progress.get(key)
