@@ -285,6 +285,8 @@ class MonogenicFiniteExtension(Ring, RingExtension):
     def __init__(self, mod):
         if not (isinstance(mod, Poly) and mod.is_univariate):
             raise TypeError("modulus must be a univariate Poly")
+        if mod.degree() < 1:
+            raise ValueError("modulus must have positive degree")
 
         # Using auto=True (default) potentially changes the ground domain to a
         # field whereas auto=False raises if division is not exact.  We'll let

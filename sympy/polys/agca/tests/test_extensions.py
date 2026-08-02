@@ -122,6 +122,11 @@ def test_FiniteExtension_ring_extension():
     assert K.to_dict(3*xK**2 + 2) == {(2,): QQ(3), (0,): QQ(2)}
 
 
+def test_FiniteExtension_modulus_degree():
+    raises(ValueError, lambda: FiniteExtension(Poly(0, x, domain=QQ)))
+    raises(ValueError, lambda: FiniteExtension(Poly(1, x, domain=QQ)))
+
+
 def test_FiniteExtension_field_contract():
     K = FiniteExtension(Poly(x**2 - 2, x, domain=QQ))
     xK = K.generator
@@ -185,6 +190,10 @@ def test_FiniteExtension_field_contract():
     ) == (R.zero, R.zero)
     raises(NotReversible, lambda: R.revert(zero_divisor))
 
+    S = FiniteExtension(Poly(y**2 - 1, y, domain=R))
+    assert S.modulus_is_irreducible is None
+    assert S.is_Field is False
+
 
 def test_FiniteExtension_unknown_irreducibility():
     from sympy.polys.domains import GF
@@ -198,6 +207,11 @@ def test_FiniteExtension_unknown_irreducibility():
     assert A.has_assoc_Ring is True
     assert A.generator**2 == A(x)
     raises(NotImplementedError, lambda: A.gcd(A.one, A.one))
+
+    B = FiniteExtension(Poly(y**2 - x**2, y, domain=K))
+    assert B.modulus_is_irreducible is None
+    assert B.is_Field is False
+    assert (B.generator - B(x))*(B.generator + B(x)) == B.zero
 
 
 def test_FiniteExtension_irreducibility_checked_once():
@@ -252,9 +266,10 @@ def test_FiniteExtension_convert_provenance():
     assert K2.convert(malformed) == K2(2)
     assert K2.convert_from(malformed, K) == K2(2)
 
-    other = FiniteExtension(Poly(y**2 - 3, y, domain=QQ))
-    raises(CoercionFailed, lambda: K.convert_from(other.generator, K))
-    raises(CoercionFailed, lambda: K2.convert_from(other.generator, K))
+    other = FiniteExtension(Poly(x**2 - 3, x, domain=QQ))
+    raises(CoercionFailed, lambda: K.convert(other.generator))
+    raises(CoercionFailed, lambda: K.convert_from(other.generator, other))
+    raises(CoercionFailed, lambda: K2.convert_from(other.generator, other))
 
 
 def test_FiniteExtension_division_ring():
