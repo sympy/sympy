@@ -4,9 +4,11 @@ Features:
   - Clause learning
   - Watch literal scheme
   - VSIDS heuristic
+  - IPASIR style interface for incremental solving
 
 References:
   - https://en.wikipedia.org/wiki/DPLL_algorithm
+  - https://satcompetition.github.io/2020/track_incremental.html
 """
 from __future__ import annotations
 
@@ -17,6 +19,13 @@ from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
 from sympy.logic.algorithms.lra_theory import LRASolver
+
+
+# Status codes used by the IPASIR style interface of SATSolver. The values are
+# the ones mandated by the IPASIR standard for ``ipasir_solve``.
+UNKNOWN = 0
+SATISFIABLE = 10
+UNSATISFIABLE = 20
 
 
 def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
@@ -139,6 +148,10 @@ class SATSolver:
         self.original_num_clauses = len(self.clauses)
 
         self.lra = lra_theory
+
+        # State of the IPASIR style interface
+        self._status = UNKNOWN
+        self._models = None
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -292,6 +305,153 @@ class SATSolver:
                 self._undo()
                 self.levels.append(Level(flip_lit, flipped=True))
                 flip_var = True
+
+    ###############################
+    #    IPASIR Style Interface   #
+    ###############################
+    """
+    A subset of the IPASIR standard for incremental SAT solving, using the
+    names that CaDiCaL gives them in its C++ API. Only the parts needed to
+    inspect the root level before searching are implemented so far; adding
+    clauses to a solver that has already been used, assumptions and
+    ``failed`` are not supported yet.
+    """
+    def propagate(self):
+        """Propagate the unit clauses at the root decision level.
+
+        No decision is made here, so every literal that gets assigned is
+        implied by the clauses of the solver. The assignments can be
+        inspected with :meth:`fixed`, and :meth:`solve` may be called
+        afterwards to continue with a full search.
+
+        Returns ``UNSATISFIABLE`` if propagation runs into a conflict and
+        ``UNKNOWN`` otherwise, since propagation on its own cannot show
+        that the clauses are satisfiable.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> from sympy.logic.algorithms.dpll2 import UNKNOWN, UNSATISFIABLE
+
+        Propagating ``{1}`` through ``{-1, 2}`` implies the literal ``2``:
+
+        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+        >>> l.propagate() == UNKNOWN
+        True
+        >>> l.fixed(2)
+        1
+
+        A conflict at the root level means the clauses are unsatisfiable:
+
+        >>> l = SATSolver([{1}, {-1}], {1}, set())
+        >>> l.propagate() == UNSATISFIABLE
+        True
+
+        """
+        if len(self.levels) > 1:
+            raise ValueError("propagate() can only be used at the root level.")
+
+        self._simplify()
+        if self.is_unsatisfied:
+            self._status = UNSATISFIABLE
+
+        return self._status
+
+    def fixed(self, lit):
+        """Return 1 if *lit* is implied by the clauses, -1 if ``-lit`` is
+        implied by them, and 0 if neither is known at this point.
+
+        This is only defined at the root level, where no decision has been
+        made and therefore every assignment is implied by the clauses. Note
+        that the literals found by :meth:`propagate` are implied but are not
+        necessarily all of the implied literals, so 0 means "not known"
+        rather than "not implied".
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+        >>> l.propagate()
+        0
+        >>> l.fixed(1), l.fixed(2), l.fixed(-2)
+        (1, 1, -1)
+
+        Nothing is implied about ``3``, as it only occurs in a clause that
+        propagation cannot resolve:
+
+        >>> l.fixed(3)
+        0
+
+        """
+        if len(self.levels) > 1:
+            raise ValueError("fixed() is only defined at the root level.")
+
+        if lit in self.var_settings:
+            return 1
+        if -lit in self.var_settings:
+            return -1
+        return 0
+
+    def solve(self):
+        """Search for a model of the clauses.
+
+        Returns ``SATISFIABLE`` or ``UNSATISFIABLE``. When :meth:`propagate`
+        has already been called, the work it did at the root level is reused
+        rather than repeated. Use :meth:`val` to read the model afterwards.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> from sympy.logic.algorithms.dpll2 import SATISFIABLE
+
+        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+        >>> l.propagate()
+        0
+        >>> l.solve() == SATISFIABLE
+        True
+        >>> l.val(2)
+        2
+
+        """
+        if self._models is not None:
+            raise ValueError("solve() can only be called once, as restarting "
+                "the search is not implemented yet.")
+
+        self._models = self._find_model()
+        if next(self._models, None) is None:
+            self._status = UNSATISFIABLE
+        else:
+            self._status = SATISFIABLE
+
+        return self._status
+
+    def val(self, lit):
+        """Return *lit* if it is true in the model found by :meth:`solve`,
+        ``-lit`` if it is false there, and 0 if the model does not assign it.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+        >>> l.solve()
+        10
+        >>> l.val(1), l.val(2)
+        (1, 2)
+
+        """
+        if self._status != SATISFIABLE:
+            raise ValueError("val() is only defined once solve() has returned "
+                "SATISFIABLE.")
+
+        if lit in self.var_settings:
+            return lit
+        if -lit in self.var_settings:
+            return -lit
+        return 0
 
     ########################
     #    Helper Methods    #

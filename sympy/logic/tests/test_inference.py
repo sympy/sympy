@@ -12,6 +12,8 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
+from sympy.logic.algorithms.dpll2 import SATSolver, UNKNOWN, SATISFIABLE, \
+    UNSATISFIABLE
 
 from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
@@ -133,6 +135,87 @@ def test_dpll2_satisfiable():
         {B: True, A: True})
     assert dpll2_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
     assert dpll2_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
+
+
+def test_satsolver_propagate():
+    # Propagating {1} through {-1, 2} implies 2, which in turn implies 3.
+    s = SATSolver([{1}, {-1, 2}, {-2, 3}], {1, 2, 3}, set())
+    assert s.propagate() == UNKNOWN
+    assert (s.fixed(1), s.fixed(2), s.fixed(3)) == (1, 1, 1)
+    assert (s.fixed(-1), s.fixed(-2), s.fixed(-3)) == (-1, -1, -1)
+
+    # Nothing is implied when there is no unit clause to propagate from.
+    s = SATSolver([{1, 2}, {-1, 2}], {1, 2}, set())
+    assert s.propagate() == UNKNOWN
+    assert (s.fixed(1), s.fixed(2)) == (0, 0)
+
+    # Propagation is sound but not complete: 2 is implied by these clauses,
+    # yet finding that out needs a case split rather than propagation.
+    assert s.solve() == SATISFIABLE
+    assert s.val(2) == 2
+
+    # A conflict while propagating means the clauses are unsatisfiable.
+    s = SATSolver([{1}, {-1}], {1}, set())
+    assert s.propagate() == UNSATISFIABLE
+
+    # Propagating is idempotent.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    assert s.propagate() == UNKNOWN
+    assert s.propagate() == UNKNOWN
+    assert s.fixed(2) == 1
+
+
+def test_satsolver_solve_after_propagate():
+    # The three steps needed by the assumptions system: propagate at the root
+    # level, inspect what that implied, then run the full search.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+
+    assert s.propagate() == UNKNOWN
+    assert s.fixed(2) == 1
+    assert s.fixed(3) == 0
+
+    assert s.solve() == SATISFIABLE
+    # The literals fixed at the root level still hold in the model.
+    assert s.val(1) == 1
+    assert s.val(2) == 2
+    assert s.val(3) in (3, -3)
+
+    # Solving without propagating first gives the same answer.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+    assert s.solve() == SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+
+    # Unsatisfiable at the root level, both with and without propagating.
+    for propagate_first in (True, False):
+        s = SATSolver([{1}, {-1, 2}, {-2}], {1, 2}, set())
+        if propagate_first:
+            assert s.propagate() == UNSATISFIABLE
+        assert s.solve() == UNSATISFIABLE
+
+    # Unsatisfiable, but only the full search can show it.
+    s = SATSolver([{1, 2}, {1, -2}, {-1, 2}, {-1, -2}], {1, 2}, set())
+    assert s.propagate() == UNKNOWN
+    assert s.solve() == UNSATISFIABLE
+
+
+def test_satsolver_interface_errors():
+    # val() needs a model to read from.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    raises(ValueError, lambda: s.val(1))
+    assert s.solve() == SATISFIABLE
+    raises(ValueError, lambda: s.solve())
+
+    s = SATSolver([{1}, {-1}], {1}, set())
+    assert s.solve() == UNSATISFIABLE
+    raises(ValueError, lambda: s.val(1))
+
+    # Away from the root level an assignment is a guess rather than something
+    # the clauses imply, so fixed() and propagate() are not meaningful.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    assert s.solve() == SATISFIABLE
+    assert len(s.levels) > 1
+    raises(ValueError, lambda: s.fixed(1))
+    raises(ValueError, lambda: s.propagate())
 
 
 def test_minisat22_satisfiable():
