@@ -119,6 +119,11 @@ def run_file(path, solver='lra'):
     ``solver`` is one of :data:`SOLVERS`. ``none`` parses the file without
     solving it, and ``lra`` means dpll2 with the linear arithmetic theory,
     falling back to plain dpll2 for problems that have no theory atoms.
+
+    Whatever a stage raises becomes the file's reported outcome rather than
+    propagating: finding out how SymPy fails on a file is the point of the
+    exercise, and one unhandled file must not stop a run over a whole suite.
+    That is why the handlers below catch ``Exception`` broadly.
     """
     from sympy.assumptions.ask import Q
     from sympy.assumptions.assume import AppliedPredicate
@@ -153,7 +158,7 @@ def run_file(path, solver='lra'):
         tree = timed('parse', lambda: get_parser().doparse(text))
     except SMTLibSyntaxError as exc:
         return finish('parse-error', _describe(exc))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         return finish('error', _describe(exc))
 
     def build():
@@ -163,7 +168,7 @@ def run_file(path, solver='lra'):
 
     try:
         transformer = timed('build', build)
-    except Exception as raised:
+    except Exception as raised:  # noqa: BLE001
         # lark wraps whatever the transformer raised in a VisitError
         cause = getattr(raised, 'orig_exc', raised)
         unsupported = (NotImplementedError, UnknownSMTLibCommandError,
@@ -187,7 +192,7 @@ def run_file(path, solver='lra'):
         model = timed('solve', lambda: _solve(expr, solver))
     except UnhandledInput as exc:
         return finish('unsupported', _describe(exc))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         return finish('error', _describe(exc))
 
     if model is None:

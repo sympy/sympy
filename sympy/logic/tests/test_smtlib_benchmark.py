@@ -80,6 +80,15 @@ BITVECTOR = """
 (check-sat)
 """
 
+MIXED_BOOL_AND_THEORY = """
+(set-logic QF_LRA)
+(declare-const p Bool)
+(declare-const x Real)
+(assert (or p (> x 3)))
+(assert (< x 1))
+(check-sat)
+"""
+
 MALFORMED = """
 (declare-const x Real
 (assert (> x 3))
@@ -168,6 +177,15 @@ def test_malformed_input_is_reported_as_a_parse_error():
         assert 'line 3' in result.reason
         # the reason has to stay on one line so that the report lines up
         assert '\n' not in result.reason
+
+
+def test_an_unexpected_failure_is_reported_rather_than_raised():
+    # the LRA solver raises ValueError on a problem that mixes Boolean
+    # variables with theory atoms; a whole run must not stop because of it
+    with tempfile.TemporaryDirectory() as directory:
+        result = run_file(_write(directory, 'mixed.smt2', MIXED_BOOL_AND_THEORY))
+        assert result.status == 'error'
+        assert 'Unhandled Predicate' in result.reason
 
 
 def test_missing_file_is_reported_as_an_error():
