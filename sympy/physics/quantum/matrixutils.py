@@ -41,7 +41,10 @@ if not scipy:
     sparse = None
 else:
     sparse = scipy.sparse
-    scipy_sparse_matrix = sparse.spmatrix # type: ignore
+    if hasattr(sparse, 'sparray'):
+        scipy_sparse_matrix = (sparse.spmatrix, sparse.sparray)  # type: ignore
+    else:
+        scipy_sparse_matrix = sparse.spmatrix  # type: ignore
 
 
 def sympy_to_numpy(m, **options):
@@ -63,6 +66,8 @@ def sympy_to_scipy_sparse(m, **options):
         raise ImportError
     dtype = options.get('dtype', 'complex')
     if isinstance(m, MatrixBase):
+        if hasattr(sparse, 'csr_array'):
+            return sparse.csr_array(np.array(m.tolist(), dtype=dtype))
         return sparse.csr_matrix(np.array(m.tolist(), dtype=dtype))
     elif isinstance(m, Expr):
         if m.is_Number or m.is_NumberSymbol or m == I:
@@ -72,7 +77,8 @@ def sympy_to_scipy_sparse(m, **options):
 
 def scipy_sparse_to_sympy(m, **options):
     """Convert a scipy.sparse matrix to a SymPy matrix."""
-    return MatrixBase(m.todense())
+    from sympy.matrices.dense import Matrix
+    return Matrix(m.todense())
 
 
 def numpy_to_sympy(m, **options):
@@ -113,6 +119,8 @@ def to_scipy_sparse(m, **options):
     elif isinstance(m, numpy_ndarray):
         if not sparse:
             raise ImportError
+        if hasattr(sparse, 'csr_array'):
+            return sparse.csr_array(m)
         return sparse.csr_matrix(m)
     elif isinstance(m, scipy_sparse_matrix):
         return m
@@ -167,6 +175,8 @@ def _scipy_sparse_tensor_product(*product):
         answer = sparse.kron(answer, item)
     # The final matrices will just be multiplied, so csr is a good final
     # sparse format.
+    if hasattr(sparse, 'csr_array'):
+        return sparse.csr_array(answer)
     return sparse.csr_matrix(answer)
 
 
@@ -221,8 +231,12 @@ def _scipy_sparse_zeros(m, n, **options):
     if not sparse:
         raise ImportError
     if spmatrix == 'lil':
+        if hasattr(sparse, 'lil_array'):
+            return sparse.lil_array((m, n), dtype=dtype)
         return sparse.lil_matrix((m, n), dtype=dtype)
     elif spmatrix == 'csr':
+        if hasattr(sparse, 'csr_array'):
+            return sparse.csr_array((m, n), dtype=dtype)
         return sparse.csr_matrix((m, n), dtype=dtype)
 
 

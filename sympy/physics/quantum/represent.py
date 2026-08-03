@@ -182,6 +182,11 @@ def represent(expr, **options):
             base = inv(base.tocsc()).tocsr()
         if format == 'numpy':
             return np.linalg.matrix_power(base, exp)
+        if format == 'scipy.sparse':
+            from scipy import sparse
+            if hasattr(sparse, 'sparray') and isinstance(base, sparse.sparray):
+                from scipy.sparse.linalg import matrix_power
+                return matrix_power(base, exp)
         return base ** exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
@@ -231,8 +236,14 @@ def represent(expr, **options):
 
         next_arg = represent(arg, **options)
         if format == 'numpy' and isinstance(next_arg, np.ndarray):
-            # Must use np.matmult to "matrix multiply" two np.ndarray
+            # Must use np.matmul to "matrix multiply" two np.ndarray
             result = np.matmul(next_arg, result)
+        elif format == 'scipy.sparse':
+            from scipy import sparse
+            if hasattr(sparse, 'sparray') and isinstance(next_arg, sparse.sparray):
+                result = next_arg @ result
+            else:
+                result = next_arg*result
         else:
             result = next_arg*result
         last_arg = arg

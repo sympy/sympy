@@ -135,3 +135,16 @@ def test_matrix_zeros_scipy():
 
     sci = matrix_zeros(4, 4, format='scipy.sparse')
     assert isinstance(sci, scipy_sparse_matrix)
+
+
+def test_scipy_sparse_array_support():
+    if not np or not scipy:
+        skip("numpy or scipy not installed.")
+
+    sparse = scipy.sparse
+    if hasattr(sparse, 'csr_array'):
+        arr = sparse.csr_array([[1, 2], [3, 4]])
+        assert isinstance(arr, scipy_sparse_matrix)
+        sym_mat = to_sympy(arr)
+        assert sym_mat == Matrix([[1, 2], [3, 4]])
+

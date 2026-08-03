@@ -212,6 +212,8 @@ class Qubit(QubitState, Ket):
             return np.array(result, dtype='complex').transpose()
         elif _format == 'scipy.sparse':
             from scipy import sparse
+            if hasattr(sparse, 'csr_array'):
+                return sparse.csr_array(result, dtype='complex').transpose()
             return sparse.csr_matrix(result, dtype='complex').transpose()
 
     def _eval_trace(self, bra, **kwargs):
