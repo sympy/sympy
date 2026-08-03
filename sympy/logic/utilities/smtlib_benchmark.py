@@ -34,6 +34,19 @@ from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from sympy.assumptions.ask import Q
+from sympy.assumptions.assume import AppliedPredicate
+from sympy.core.symbol import Symbol
+from sympy.external import import_module
+from sympy.logic.algorithms.lra_theory import UnhandledInput
+from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
+from sympy.logic.boolalg import And, BooleanAtom, BooleanFunction
+from sympy.logic.inference import satisfiable
+from sympy.parsing.smtlib.lark.smtlib_parser import (
+    LarkSMTLibParser, SMTLibSyntaxError, UnknownSMTLibCommandError,
+    UnknownSMTLibOperatorError)
+from sympy.parsing.smtlib.lark.transformer import SMTLibTransformer
+
 
 #: Solvers that ``--solver`` accepts. ``none`` only parses the files, which is
 #: useful for measuring the parser on its own.
@@ -105,7 +118,6 @@ def get_parser():
     """
     global _parser
     if _parser is None:
-        from sympy.parsing.smtlib.lark.smtlib_parser import LarkSMTLibParser
         _parser = LarkSMTLibParser(transform=False)
     return _parser
 
@@ -125,14 +137,6 @@ def run_file(path, solver='lra'):
     exercise, and one unhandled file must not stop a run over a whole suite.
     That is why the handlers below catch ``Exception`` broadly.
     """
-    from sympy.assumptions.ask import Q
-    from sympy.assumptions.assume import AppliedPredicate
-    from sympy.logic.algorithms.lra_theory import UnhandledInput
-    from sympy.logic.boolalg import And
-    from sympy.parsing.smtlib.lark.smtlib_parser import (
-        SMTLibSyntaxError, UnknownSMTLibCommandError, UnknownSMTLibOperatorError)
-    from sympy.parsing.smtlib.lark.transformer import SMTLibTransformer
-
     result = FileResult(path=str(path))
     started = time.perf_counter()
 
@@ -207,9 +211,6 @@ def _has_theory_atoms(expr):
     An atom is either a bare symbol used as a proposition or something a theory
     has to reason about, such as ``x < 1``; only the latter needs LRA.
     """
-    from sympy.core.symbol import Symbol
-    from sympy.logic.boolalg import BooleanAtom, BooleanFunction
-
     stack = [expr]
     while stack:
         node = stack.pop()
@@ -222,10 +223,7 @@ def _has_theory_atoms(expr):
 
 def _solve(expr, solver):
     """Run ``solver`` on ``expr`` and return its raw result."""
-    from sympy.logic.inference import satisfiable
-
     if solver == 'z3':
-        from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
         return z3_satisfiable(expr)
     if solver == 'lra':
         return satisfiable(expr, use_lra_theory=True)
@@ -334,7 +332,6 @@ def main(argv=None):
                         help='give up on a file after this long (default: %(default)s)')
     args = parser.parse_args(argv)
 
-    from sympy.external import import_module
     # satisfiable() silently falls back to dpll2 when the module a solver needs
     # is missing, which would quietly benchmark the wrong solver
     for module in ('lark', SOLVER_MODULES.get(args.solver)):
