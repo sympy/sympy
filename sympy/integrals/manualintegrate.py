@@ -1532,6 +1532,8 @@ def special_function_rule(integral):
                             degenerate_integrand = integrand.subs(d_val, a_val)
                             degenerate_step = integral_steps(degenerate_integrand, symbol)
                             step = _add_degenerate_step(Ne(a_val, d_val), step, degenerate_step)
+                    if isinstance(step, PiecewiseRule):
+                        step.fold()
                     return step
 
 
