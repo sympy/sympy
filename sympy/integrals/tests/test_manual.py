@@ -12,7 +12,7 @@ from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
-from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfc, erfi, fresnelc, fresnels, li, OwenT)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfc, erfi, fresnelc, fresnels, li, owens_t)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
 from sympy.functions.special.zeta_functions import polylog
@@ -427,15 +427,15 @@ def test_manualintegrate_parts_special():
 
 def test_manualintegrate_owent():
     f = exp(-x**2)*erf(y*x)
-    F = -2*sqrt(pi)*OwenT(sqrt(2)*x, y)
+    F = -2*sqrt(pi)*owens_t(sqrt(2)*x, y)
     assert_is_integral_of(f, F)
 
     f = exp(-(3*x+2)**2)*erf(y*(3*x+2))
-    F = -2*sqrt(pi)*OwenT(sqrt(2)*(3*x + 2), y)/3
+    F = -2*sqrt(pi)*owens_t(sqrt(2)*(3*x + 2), y)/3
     assert_is_integral_of(f, F)
 
-    f = OwenT(x, y)
-    F = x*OwenT(x, y) + sqrt(2)*(sqrt(2)*y*erfi(x*(-y**2 - 1)/(2*sqrt(-y**2/2 - S.One/2)))/(2*sqrt(-y**2/2 - S.One/2)) - exp(-x**2/2)*erf(sqrt(2)*x*y/2))/(4*sqrt(pi))
+    f = owens_t(x, y)
+    F = x*owens_t(x, y) + sqrt(2)*(sqrt(2)*y*erfi(x*(-y**2 - 1)/(2*sqrt(-y**2/2 - S.One/2)))/(2*sqrt(-y**2/2 - S.One/2)) - exp(-x**2/2)*erf(sqrt(2)*x*y/2))/(4*sqrt(pi))
     assert_is_integral_of(f, F)
 
 

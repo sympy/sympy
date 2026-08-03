@@ -2706,7 +2706,7 @@ class fresnelc(FresnelIntegral):
         return super()._eval_aseries(n, args0, x, logx)
 
 
-class OwenT(DefinedFunction):
+class owens_t(DefinedFunction):
     r"""
     The Owen T-function.
 
@@ -2722,23 +2722,23 @@ class OwenT(DefinedFunction):
     Examples
     ========
 
-    >>> from sympy.functions.special.error_functions import OwenT
+    >>> from sympy.functions.special.error_functions import owens_t
     >>> from sympy.abc import h, a
-    >>> OwenT(0, a)
+    >>> owens_t(0, a)
     atan(a)/(2*pi)
-    >>> OwenT(h, 0)
+    >>> owens_t(h, 0)
     0
-    >>> OwenT(-h, a)
-    OwenT(h, a)
-    >>> OwenT(h, -a)
-    -OwenT(h, a)
+    >>> owens_t(-h, a)
+    owens_t(h, a)
+    >>> owens_t(h, -a)
+    -owens_t(h, a)
 
     Differentiation with respect to $h$ and $a$ is supported:
 
     >>> from sympy import diff
-    >>> diff(OwenT(h, a), h)
+    >>> diff(owens_t(h, a), h)
     -sqrt(2)*exp(-h**2/2)*erf(sqrt(2)*a*h/2)/(4*sqrt(pi))
-    >>> diff(OwenT(h, a), a)
+    >>> diff(owens_t(h, a), a)
     exp(-h**2*(a**2 + 1)/2)/(2*pi*(a**2 + 1))
 
     See Also

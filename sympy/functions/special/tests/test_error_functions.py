@@ -9,7 +9,7 @@ from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin, sinc, atan)
-from sympy.functions.special.error_functions import (Chi, Ci, E1, Ei, Li, Shi, Si, erf, erf2, erf2inv, erfc, erfcinv, erfi, erfinv, expint, fresnelc, fresnels, li, OwenT)
+from sympy.functions.special.error_functions import (Chi, Ci, E1, Ei, Li, Shi, Si, erf, erf2, erf2inv, erfc, erfcinv, erfi, erfinv, expint, fresnelc, fresnels, li, owens_t)
 from sympy.functions.special.gamma_functions import (gamma, uppergamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.integrals.integrals import (Integral, integrate)
@@ -867,87 +867,87 @@ def test_integral_rewrites(): #issues 26134, 26144, 26306
 
 def test_owent_eval_basic():
     # T(h, 0) = 0
-    assert OwenT(h, 0) is S.Zero
-    assert OwenT(1, 0) is S.Zero
+    assert owens_t(h, 0) is S.Zero
+    assert owens_t(1, 0) is S.Zero
 
     # T(0, a) = atan(a)/(2*pi)
-    assert OwenT(0, a) == atan(a) / (2 * pi)
-    assert OwenT(0, 1) == Rational(1, 8)
+    assert owens_t(0, a) == atan(a) / (2 * pi)
+    assert owens_t(0, 1) == Rational(1, 8)
 
     # NaN propagation
-    assert OwenT(nan, a) is S.NaN
-    assert OwenT(h, nan) is S.NaN
-    assert OwenT(nan, nan) is S.NaN
+    assert owens_t(nan, a) is S.NaN
+    assert owens_t(h, nan) is S.NaN
+    assert owens_t(nan, nan) is S.NaN
 
 
 def test_owent_eval_infinite_a():
-    assert OwenT(h, oo) == erfc(sqrt(h**2) / sqrt(2)) / 4
-    assert OwenT(h, -oo) == -erfc(sqrt(h**2) / sqrt(2)) / 4
+    assert owens_t(h, oo) == erfc(sqrt(h**2) / sqrt(2)) / 4
+    assert owens_t(h, -oo) == -erfc(sqrt(h**2) / sqrt(2)) / 4
 
 
 def test_owent_eval_unit_a():
-    assert OwenT(h, 1) == erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
-    assert OwenT(h, -1) == -erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
+    assert owens_t(h, 1) == erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
+    assert owens_t(h, -1) == -erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
 
 
 def test_owent_symmetry():
     # Even in h: T(-h, a) == T(h, a)
-    assert OwenT(-h, a) == OwenT(h, a)
-    assert OwenT(-x, y) == OwenT(x, y)
+    assert owens_t(-h, a) == owens_t(h, a)
+    assert owens_t(-x, y) == owens_t(x, y)
 
     # Odd in a: T(h, -a) == -T(h, a)
-    assert OwenT(h, -a) == -OwenT(h, a)
-    assert OwenT(x, -y) == -OwenT(x, y)
+    assert owens_t(h, -a) == -owens_t(h, a)
+    assert owens_t(x, -y) == -owens_t(x, y)
 
     # Both flipped simultaneously
-    assert OwenT(-x, -y) == -OwenT(x, y)
+    assert owens_t(-x, -y) == -owens_t(x, y)
 
 
 def test_owent_fdiff():
-    assert OwenT(h, a).fdiff(1) == \
+    assert owens_t(h, a).fdiff(1) == \
         -exp(-h**2 / 2) * erf(a * h / sqrt(2)) / (2 * sqrt(2 * pi))
-    assert OwenT(h, a).fdiff(2) == \
+    assert owens_t(h, a).fdiff(2) == \
         exp(-h**2 * (1 + a**2) / 2) / (2 * pi * (1 + a**2))
-    raises(ArgumentIndexError, lambda: OwenT(h, a).fdiff(3))
+    raises(ArgumentIndexError, lambda: owens_t(h, a).fdiff(3))
 
 
 def test_owent_diff():
     from sympy.core.function import diff
-    assert diff(OwenT(h, a), h) == \
+    assert diff(owens_t(h, a), h) == \
         -erf(sqrt(2) * a * h / 2) * exp(-h**2 / 2) / (2 * sqrt(2 * pi))
-    assert diff(OwenT(h, a), a) == \
+    assert diff(owens_t(h, a), a) == \
         exp(-h**2 * (a**2 + 1) / 2) / (2 * pi * (a**2 + 1))
 
 
 def test_owent_is_extended_real():
     hr, ar = symbols('hr ar', extended_real=True)
-    assert OwenT(hr, ar).is_extended_real is True
+    assert owens_t(hr, ar).is_extended_real is True
 
     # h.is_extended_real (False) and a.is_extended_real (True) short-circuits
     # via Python's `and` to False
     hc = symbols('hc', extended_real=False)
-    assert OwenT(hc, ar).is_extended_real is False
+    assert owens_t(hc, ar).is_extended_real is False
 
     # Order matters: a.is_extended_real (False) is only reached if
     # h.is_extended_real is truthy, so True and False -> False
-    assert OwenT(hr, hc).is_extended_real is False
+    assert owens_t(hr, hc).is_extended_real is False
 
     # When h's realness is unknown, the result is genuinely undetermined
     hu = symbols('hu')
-    assert OwenT(hu, ar).is_extended_real is None
+    assert owens_t(hu, ar).is_extended_real is None
 
 
 def test_owent_is_zero():
-    assert OwenT(h, 0).is_zero is True
-    assert OwenT(0, 0).is_zero is True
-    assert OwenT(oo, a).is_zero is True
-    assert OwenT(-oo, a).is_zero is True
-    assert OwenT(h, a).is_zero is None
+    assert owens_t(h, 0).is_zero is True
+    assert owens_t(0, 0).is_zero is True
+    assert owens_t(oo, a).is_zero is True
+    assert owens_t(-oo, a).is_zero is True
+    assert owens_t(h, a).is_zero is None
 
 
 def test_owent_conjugate():
-    assert conjugate(OwenT(h, a)) == OwenT(conjugate(h), conjugate(a))
-    assert conjugate(OwenT(w, a)) == OwenT(w, conjugate(a))
+    assert conjugate(owens_t(h, a)) == owens_t(conjugate(h), conjugate(a))
+    assert conjugate(owens_t(w, a)) == owens_t(w, conjugate(a))
 
 
 def test_owent_rewrite():
@@ -956,31 +956,31 @@ def test_owent_rewrite():
     # Put both sides on the same (erf-only) basis before comparing, since
     # erf(x) and erfc(x) = 1 - erf(x) expressions don't cancel to 0 under
     # expand() unless expressed in terms of a single function.
-    assert expand(OwenT(h, 1).rewrite(erf) - target.rewrite(erf)) == 0
-    assert expand(OwenT(h, 1).rewrite(erfc) - target) == 0
+    assert expand(owens_t(h, 1).rewrite(erf) - target.rewrite(erf)) == 0
+    assert expand(owens_t(h, 1).rewrite(erfc) - target) == 0
     # General a has no elementary closed form via this rewrite path
-    assert OwenT(h, a).rewrite(erf) == OwenT(h, a)
-    assert OwenT(h, a).rewrite(erfc) == OwenT(h, a)
+    assert owens_t(h, a).rewrite(erf) == owens_t(h, a)
+    assert owens_t(h, a).rewrite(erfc) == owens_t(h, a)
 
 
 def test_owent_evalf():
     # T(0, 1) = atan(1)/(2*pi) = 1/8
-    assert abs(OwenT(0, 1).evalf() - Rational(1, 8)) < 1E-10
+    assert abs(owens_t(0, 1).evalf() - Rational(1, 8)) < 1E-10
 
     # Known reference value: T(1, 1) ~ 0.0667418821657010
-    assert abs(OwenT(1, 1).evalf() - 0.0667418821657010) < 1E-10
+    assert abs(owens_t(1, 1).evalf() - 0.0667418821657010) < 1E-10
 
     # Generic (h, a) not hitting any special-cased eval() branch, so this
     # exercises the numerical quadrature path in _eval_evalf directly.
     # Reference computed independently via mpmath.quad on the defining
     # integral: T(1, 1/2) ~ 0.0430646911207854
-    assert abs(OwenT(1, S.Half).evalf() - 0.0430646911207854) < 1E-10
+    assert abs(owens_t(1, S.Half).evalf() - 0.0430646911207854) < 1E-10
     # T(0.3, 2) ~ 0.162604305932772
-    assert abs(OwenT(Rational(3, 10), 2).evalf() - 0.162604305932772) < 1E-10
+    assert abs(owens_t(Rational(3, 10), 2).evalf() - 0.162604305932772) < 1E-10
 
     # a -> oo special-cased evalf path
-    assert abs(OwenT(1, oo).evalf() - (erfc(1 / sqrt(2)) / 4).evalf()) < 1E-10
+    assert abs(owens_t(1, oo).evalf() - (erfc(1 / sqrt(2)) / 4).evalf()) < 1E-10
 
     # Symmetry should hold numerically too
-    assert abs(OwenT(-1, 2).evalf() - OwenT(1, 2).evalf()) < 1E-10
-    assert abs(OwenT(1, -2).evalf() + OwenT(1, 2).evalf()) < 1E-10
+    assert abs(owens_t(-1, 2).evalf() - owens_t(1, 2).evalf()) < 1E-10
+    assert abs(owens_t(1, -2).evalf() + owens_t(1, 2).evalf()) < 1E-10
