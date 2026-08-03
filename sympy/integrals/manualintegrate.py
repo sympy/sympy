@@ -49,7 +49,7 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
     cosh, coth, sech, sinh, tanh, asinh)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
     cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
@@ -698,10 +698,17 @@ class PiecewiseRule(Rule):
     ) -> None:
         super().__init__(integrand, variable)
         self.subfunctions = subfunctions
+        self.isfold = False
+
+    def fold(self):
+        self.isfold = True
 
     def eval(self) -> Expr:
-        return Piecewise(*[(substep.eval(), cond)
-                           for substep, cond in self.subfunctions])
+        piecewise = Piecewise(*[(substep.eval(), cond) for substep, cond in
+            self.subfunctions])
+        if self.isfold:
+            return piecewise_fold(piecewise)
+        return piecewise
 
     def contains_dont_know(self) -> bool:
         return any(substep.contains_dont_know() for substep, _ in self.subfunctions)
