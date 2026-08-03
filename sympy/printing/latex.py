@@ -1258,6 +1258,16 @@ class LatexPrinter(Printer):
         else:
             return r"\Pi%s" % tex
 
+    def _print_jtheta(self, expr, exp=None):
+        n, z, q = expr.args[:3]
+        tex = r"\vartheta_{%s}" % self._print(n)
+        if len(expr.args) == 4:
+            tex += r"^{(%s)}" % self._print(expr.args[3])
+        tex += r"\left(%s, %s\right)" % (self._print(z), self._print(q))
+        if exp is not None:
+            return r"\left(%s\right)^{%s}" % (tex, exp)
+        return tex
+
     def _print_beta(self, expr, exp=None):
         x = expr.args[0]
         # Deal with unevaluated single argument beta

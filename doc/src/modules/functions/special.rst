@@ -183,6 +183,13 @@ Elliptic integrals
 .. autoclass:: elliptic_pi
    :members:
 
+Jacobi theta functions
+----------------------
+.. module:: sympy.functions.special.elliptic_functions
+
+.. autoclass:: jtheta
+   :members:
+
 Mathieu Functions
 -----------------
 .. module:: sympy.functions.special.mathieu_functions

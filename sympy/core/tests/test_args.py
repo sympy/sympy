@@ -2560,6 +2560,12 @@ def test_sympy__functions__special__elliptic_integrals__elliptic_pi():
     assert _test_args(P(x, y, z))
 
 
+def test_sympy__functions__special__elliptic_functions__jtheta():
+    from sympy.functions.special.elliptic_functions import jtheta
+    assert _test_args(jtheta(1, x, y))
+    assert _test_args(jtheta(1, x, y, 2))
+
+
 def test_sympy__functions__special__delta_functions__DiracDelta():
     from sympy.functions.special.delta_functions import DiracDelta
     assert _test_args(DiracDelta(x, 1))

@@ -1917,6 +1917,24 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left(name))
         return pform
 
+    def _print_jtheta(self, e):
+        name = '\N{GREEK THETA SYMBOL}' if self._use_unicode else 'theta'
+        pretty_func = prettyForm(name)
+        index = self._print(e.args[0])
+        index_padding = prettyForm(" "*index.width())
+        index = prettyForm(*index_padding.below(index))
+        pretty_func = prettyForm(*pretty_func.right(index))
+        if len(e.args) == 4:
+            derivative = prettyForm(*self._print(e.args[3]).parens())
+            pretty_func = pretty_func**derivative
+        pretty_args = prettyForm(*self._print_seq(e.args[1:3]).parens())
+        pform = prettyForm(
+            binding=prettyForm.FUNC,
+            *stringPict.next(pretty_func, pretty_args))
+        pform.prettyFunc = pretty_func
+        pform.prettyArgs = pretty_args
+        return pform
+
     def _print_GoldenRatio(self, expr):
         if self._use_unicode:
             return prettyForm(pretty_symbol('phi'))
