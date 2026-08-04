@@ -402,6 +402,7 @@ def test_implicit_kinematics():
 
     # Inertial frame
     NED = ReferenceFrame('NED')
+    # Origin fixed in inertial reference frame.
     NED_o = Point('NED_o')
     NED_o.set_vel(NED, 0)
 
@@ -413,14 +414,14 @@ def test_implicit_kinematics():
     q_pos = dynamicsymbols('B_x:z')
     B_cm = NED_o.locatenew('B_cm', q_pos[0]*B.x + q_pos[1]*B.y + q_pos[2]*B.z)
 
-    q_ind = q_att[1:] + q_pos
-    q_dep = [q_att[0]]
+    q_ind = q_att[1:] + q_pos  # lam1, lam2, lam3, B_x, B_y, B_z
+    q_dep = [q_att[0]]  # lam0
 
     kinematic_eqs = []
 
-    # Generalized velocities
+    # Generalized speeds
     B_ang_vel = B.ang_vel_in(NED)
-    P, Q, R = dynamicsymbols('P Q R')
+    P, Q, R = dynamicsymbols('P, Q, R')
     B.set_ang_vel(NED, P*B.x + Q*B.y + R*B.z)
 
     B_ang_vel_kd = (B.ang_vel_in(NED) - B_ang_vel).simplify()
@@ -454,18 +455,41 @@ def test_implicit_kinematics():
     u_ind = [U, V, W, P, Q, R]
     u_dep = [X]
 
-    # constrain the quaternion to a magnitude of 1
+    # constrain the quaternion to a magnitude of 1, this is the system's single
+    # holonomic constraint
+    # NOTE : You can analytically solve for lam0:
+    # lam0 = sqrt(1 - lam1^2 - lam2^2 - lam3^2)
+    # so the lam0 generalized coordinate could be eliminated.
     q_att_vec = Matrix(q_att)
     # [lam0, lam1, lam2, lam3]*[lam0] = lam0^2 + lam1^2 + lam2^2 + lam3^2 = 1
     #                          [lam1]
     #                          [lam2]
     #                          [lam3]
     config_cons = [(q_att_vec.T*q_att_vec)[0] - 1]  # unit norm
-    # Should be of form: u = Y*q'
+    # A generalized speed is needed for the fourth generalized coordinate to
+    # comply with Kane's form of the definition of generalized speeds:
+    # u = Y*q'
+    # [P] = T*[lam0]
+    # [Q]     [lam1]
+    # [R}     [lam2]
+    #         [lam3]
+    # TODO : Is it allowed to introduce fewer generalized speeds than
+    # coordinates? If so, it may not be possible to solve for dependent speeds.
+    # I don't think Kane's method works if you don't have a dependent speed,
+    # then how do you for the constraints Fr and Frstar?
     # [lam0, lam1, lam2, lam3]*[lam0'] = lam0*lam0' + ... + lam3*lam3' = X
     #                          [lam1']
     #                          [lam2']
     #                          [lam3']
+    # NOTE : The original code for this test had X = 0, and that aligns with
+    # the textbook formula for d lam / dt:
+    # dlam/dt = 1/2 * [0 -P -Q -R] * [lam0]
+    #                 [P  0  R -Q]   [lam1]
+    #                 [Q -R  0  P]
+    #                 [R  Q -P  0]
+    # which defines this kinematical differential equation of the four lam' as
+    # a function of only 3 generalized speeds P, Q, R.
+
     kinematic_eqs = kinematic_eqs + [X - (q_att_vec.T*q_att_vec.diff())[0]]
     #kinematic_eqs = kinematic_eqs + [X - q_att[0].diff()]
 
@@ -537,10 +561,10 @@ def test_implicit_kinematics():
     qdot_candidate = forcing_kin_explicit.copy()
 
     quat_dot_textbook = Matrix([
-        [0, -P, -Q, -R],
-        [P,  0,  R, -Q],
-        [Q, -R,  0,  P],
-        [R,  Q, -P,  0],
+        [2*X, -P, -Q, -R],
+        [P,  2*X,  R, -Q],
+        [Q, -R,  2*X,  P],
+        [R,  Q, -P,  2*X],
     ]) * q_att_vec / 2
 
     # Again, if we don't use this "textbook" solution
