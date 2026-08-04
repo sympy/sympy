@@ -38,6 +38,7 @@ from types import GeneratorType
 from sympy import SYMPY_DEBUG
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
+from sympy.core.basic import Basic
 from sympy.core.containers import Dict
 from sympy.core.function import Derivative, Function, Lambda, expand_trig
 from sympy.core.logic import fuzzy_not
@@ -3275,6 +3276,145 @@ def exp_times_rational_rule(integral):
     return RewriteRule(integrand, x, rewritten, substep)
 
 
+class LogSinRule(AtomicRule):
+    """integrate(log(sin(a + b*x)), x) in terms of the dilogarithm:
+
+        (I*u**2/2 - u*log(2*I) - I*polylog(2, exp(-2*I*u))/2)/b,  u = a + b*x
+
+    (valid up to the usual branch choices).  With a shifted phase this
+    also covers log(cos(a + b*x)) = log(sin(a + pi/2 + b*x)).
+    """
+
+    __slots__ = ("a", "b")
+
+    a: Expr
+    b: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol,
+                 a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+
+    def eval(self) -> Expr:
+        u = self.a + self.b*self.variable
+        return (S.ImaginaryUnit*u**2/2 - u*log(2*S.ImaginaryUnit)
+                - S.ImaginaryUnit*polylog(2, exp(-2*S.ImaginaryUnit*u))/2)/self.b
+
+
+class LogSinhRule(AtomicRule):
+    """integrate(log(sinh(a + b*x)), x) =
+    (u**2/2 - u*log(2) + polylog(2, exp(-2*u))/2)/b with u = a + b*x."""
+
+    __slots__ = ("a", "b")
+
+    a: Expr
+    b: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol,
+                 a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+
+    def eval(self) -> Expr:
+        u = self.a + self.b*self.variable
+        return (u**2/2 - u*log(2) + polylog(2, exp(-2*u))/2)/self.b
+
+
+class LogCoshRule(AtomicRule):
+    """integrate(log(cosh(a + b*x)), x) =
+    (u**2/2 - u*log(2) + polylog(2, -exp(-2*u))/2)/b with u = a + b*x."""
+
+    __slots__ = ("a", "b")
+
+    a: Expr
+    b: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol,
+                 a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+
+    def eval(self) -> Expr:
+        u = self.a + self.b*self.variable
+        return (u**2/2 - u*log(2) + polylog(2, -exp(-2*u))/2)/self.b
+
+
+def log_of_trig_rule(integral):
+    """
+    Integrate the logarithm of a product of trigonometric or hyperbolic
+    functions of a common linear argument: log(sin(u)), log(cos(u)),
+    log(sinh(u)) and log(cosh(u)) close in terms of dilogarithms
+    (:class:`LogSinRule` and friends), and a general
+    log(k*g1(u)**n1*g2(u)**n2*...) is split into a sum of such
+    logarithms first (with the usual branch conventions), e.g.
+
+        log(a*tan(x)**n) = log(a) + n*log(sin(x)) - n*log(cos(x))
+    """
+    integrand, x = integral
+
+    if not isinstance(integrand, log):
+        return None
+    coefficient = S.One
+    factors = []
+    u_common = None
+    for factor in Mul.make_args(integrand.args[0]):
+        if not factor.has(x):
+            coefficient *= factor
+            continue
+        base, power = factor.as_base_exp()
+        if not isinstance(base, (sin, cos, tan, cot, sec, csc,
+                                 sinh, cosh, tanh, coth, sech, csch)):
+            return None
+        if power.has(x):
+            return None
+        u = base.args[0]
+        if u.diff(x).has(x):
+            return None
+        if u_common is None:
+            u_common = u
+        elif u != u_common:
+            return None
+        factors.append((type(base), u, power))
+    if not factors:
+        return None
+
+    if coefficient == 1 and len(factors) == 1 and factors[0][2] == 1:
+        fcls, u, _ = factors[0]
+        b = u.diff(x)
+        a = u - b*x
+        if fcls is sin:
+            return LogSinRule(integrand, x, a, b)
+        if fcls is cos:
+            return LogSinRule(integrand, x, a + pi/2, b)
+        if fcls is sinh:
+            return LogSinhRule(integrand, x, a, b)
+        if fcls is cosh:
+            return LogCoshRule(integrand, x, a, b)
+
+    quotient_split = {
+        sin: ((sin, 1),), cos: ((cos, 1),),
+        tan: ((sin, 1), (cos, -1)), cot: ((cos, 1), (sin, -1)),
+        sec: ((cos, -1),), csc: ((sin, -1),),
+        sinh: ((sinh, 1),), cosh: ((cosh, 1),),
+        tanh: ((sinh, 1), (cosh, -1)), coth: ((cosh, 1), (sinh, -1)),
+        sech: ((cosh, -1),), csch: ((sinh, -1),),
+    }
+    parts = [] if coefficient == 1 else [log(coefficient)]
+    for fcls, u, n in factors:
+        for g, sign in quotient_split[fcls]:
+            parts.append(sign*n*log(g(u)))
+    rewritten = Add(*parts)
+    if rewritten == integrand:
+        return None
+    substep = yield IntegralInfo(rewritten, x)
+    if substep.contains_dont_know():
+        return None
+    return RewriteRule(integrand, x, rewritten, substep)
+
+
 def log_inverse_parts_rule(integral):
     """
     Integrate R(x)*L1(x)*L2(x), for a rational function R and two factors
@@ -4288,12 +4428,13 @@ _canonical_dummies: dict[tuple, Dummy] = {}
 
 
 def _integral_cache_key(integrand, symbol):
-    """Cache key of a subproblem: the integration variable and any other
-    Dummy variables are replaced by canonical ones, so that structurally
-    identical subproblems that differ only in the identity of their dummy
-    variables (as minted by the substitution rules) compare equal."""
+    """Cache key of a subproblem and the replacements that produced it:
+    the integration variable and any other Dummy variables are replaced by
+    canonical ones, so that structurally identical subproblems that differ
+    only in the identity of their dummy variables (as minted by the
+    substitution rules) compare equal."""
     key = integrand.xreplace({symbol: _cache_dummy})
-    replacements = {}
+    replacements = {symbol: _cache_dummy}
     index = 0
     for node in preorder_traversal(key):
         if (isinstance(node, Dummy) and node is not _cache_dummy
@@ -4305,9 +4446,26 @@ def _integral_cache_key(integrand, symbol):
                 _canonical_dummies[(index, assumptions)] = canonical
             replacements[node] = canonical
             index += 1
-    if replacements:
+    if len(replacements) > 1:
         key = key.xreplace(replacements)
-    return key
+    return key, replacements
+
+
+def _rule_xreplace(rule, mapping):
+    """A copy of a Rule tree with the mapping applied to every Expr
+    field, to rename the variable and dummies of a cached solution."""
+    def map_value(v):
+        if isinstance(v, Rule):
+            return _rule_xreplace(v, mapping)
+        if isinstance(v, Basic):
+            return v.xreplace(mapping)
+        if isinstance(v, tuple):
+            return tuple(map_value(i) for i in v)
+        if isinstance(v, list):
+            return [map_value(i) for i in v]
+        return v
+    return type(rule)(*[map_value(getattr(rule, s))
+                        for s in rule._get_slots()])
 
 
 def _integral_key(integral):
@@ -4365,6 +4523,15 @@ class IntegrationSolver:
         self.options = other_options
         # Subproblems on the current recursion path, to break cyclic integrals.
         self._active: set[Expr] = set()
+        # Subproblems already found unsolvable, so that failing subtrees are
+        # not explored again from sibling branches.  Failures that were
+        # caused by a cycle break are not recorded, since those subproblems
+        # may well be solvable on a different recursion path.
+        self._dont_know: set[Expr] = set()
+        # Complete solutions by cache key, with the replacements that
+        # canonicalized them, for reuse on identical subproblems.
+        self._solved: dict[Expr, tuple[Rule, dict]] = {}
+        self._loop_breaks = 0
         # Uses of each "u" by integration by parts, to avoid infinite repetition.
         self._parts_u_count: dict[Expr, int] = defaultdict(int)
         self._strategy: Callable[[IntegralInfo], Rule] | None = None
@@ -4385,17 +4552,40 @@ class IntegrationSolver:
             if self._calls >= self.max_calls:
                 return DontKnowRule(integrand, symbol)
             self._calls += 1
-        cachekey = _integral_cache_key(integrand, symbol)
+        cachekey, canonical_map = _integral_cache_key(integrand, symbol)
+        if cachekey in self._dont_know:
+            return DontKnowRule(integrand, symbol)
+        hit = self._solved.get(cachekey)
+        if hit is not None:
+            rule, stored_map = hit
+            from_canonical = {c: e for e, c in canonical_map.items()}
+            mapping = {orig: from_canonical[canonical]
+                       for orig, canonical in stored_map.items()
+                       if orig != from_canonical[canonical]}
+            return _rule_xreplace(rule, mapping) if mapping else rule
         if cachekey in self._active:
             # Stop this attempt, because it leads around in a loop
+            self._loop_breaks += 1
             return DontKnowRule(integrand, symbol)
         self._active.add(cachekey)
+        loop_breaks = self._loop_breaks
         try:
             if self._strategy is None:
                 self._strategy = self._build_strategy()
-            return self._strategy(IntegralInfo(integrand, symbol))
+            result = self._strategy(IntegralInfo(integrand, symbol))
         finally:
             self._active.discard(cachekey)
+        if isinstance(result, DontKnowRule):
+            if loop_breaks == self._loop_breaks:
+                # The failure is unconditional (no cycle break was
+                # involved), so this subproblem need not be tried again.
+                self._dont_know.add(cachekey)
+        elif result is not None and not result.contains_dont_know():
+            # Complete solutions do not depend on the recursion path and
+            # can be reused for identical subproblems (up to renaming of
+            # the variable and dummies).
+            self._solved[cachekey] = (result, canonical_map)
+        return result
 
     def run(self, rule, integral):
         """Apply a single rule to ``integral``, driving it if it is a
@@ -4496,6 +4686,7 @@ class IntegrationSolver:
                     w(exp_power_rewrite_rule),
                     w(exp_over_linear_rule),
                     w(exp_times_rational_rule),
+                    w(log_of_trig_rule),
                     branch=self.branch
                 )),
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(nested_pow_rule))),

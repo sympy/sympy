@@ -485,6 +485,30 @@ def test_manualintegrate_exp_over_linear():
     assert not F.has(Integral)
 
 
+def test_manualintegrate_log_of_trig():
+    def assert_is_antiderivative(F, f):
+        difference = (F.diff(x) - f).subs([(a, 2), (n, 3)])
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-10
+                   for pt in (0.4, 1.1))
+
+    from sympy import polylog, I
+    F = manualintegrate(log(sin(x)), x)
+    assert F == I*x**2/2 - x*log(2*I) - I*polylog(2, exp(-2*I*x))/2
+    assert_is_antiderivative(F, log(sin(x)))
+
+    F = manualintegrate(log(a*sinh(x)), x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, log(a*sinh(x)))
+
+    F = manualintegrate(log(a*tan(x)**n), x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, log(a*tan(x)**n))
+
+    F = manualintegrate(log(a*cos(x)**2), x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, log(a*cos(x)**2))
+
+
 @slow
 def test_manualintegrate_log_inverse_parts():
     f = log(x)*atan(x)
