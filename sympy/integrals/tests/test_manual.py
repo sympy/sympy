@@ -327,6 +327,111 @@ def test_manualintegrate_inverse_function_substitution():
     assert_is_antiderivative(F, f)
 
 
+def test_manualintegrate_product_to_sum():
+    assert manualintegrate(sin(5*x)*cos(3*x), x) == \
+        -cos(2*x)/4 - cos(8*x)/16
+    assert manualintegrate(sin(x)*sin(2*x), x) == \
+        sin(x)/2 - sin(3*x)/6
+    assert manualintegrate(cosh(x)*cosh(4*x), x) == \
+        sinh(3*x)/6 + sinh(5*x)/10
+    assert manualintegrate(sinh(2*x)*cosh(x), x) == \
+        cosh(x)/2 + cosh(3*x)/6
+    # more than two factors, and constant differences of arguments
+    F = manualintegrate(sin(x)*sin(2*x)*sin(3*x), x)
+    assert not F.has(Integral)
+    assert (F.diff(x) - sin(x)*sin(2*x)*sin(3*x)).simplify() == 0
+    # polynomial cofactors pass through to tabular integration by parts
+    f = x*sin(a + b*x)**2
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    difference = (F.diff(x) - f).subs([(a, 1), (b, 2)])
+    assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+               for pt in (0.4, 1.2))
+    # exp pairs with the hyperbolic functions
+    assert manualintegrate(exp(2*x)*sinh(x)**2, x) == \
+        x/4 + exp(4*x)/16 - exp(2*x)/4
+
+
+def test_manualintegrate_tabular_parts():
+    assert manualintegrate(x**2*sin(a + b*x), x) == Piecewise(
+        (-x**2*cos(a + b*x)/b + 2*x*sin(a + b*x)/b**2
+         + 2*cos(a + b*x)/b**3, Ne(b, 0)),
+        (x**3*sin(a)/3, True))
+    assert manualintegrate(x*cosh(a + b*x), x) == Piecewise(
+        (x*sinh(a + b*x)/b - cosh(a + b*x)/b**2, Ne(b, 0)),
+        (x**2*cosh(a)/2, True))
+    assert manualintegrate((3*x**2 + 5)*exp(x), x) == \
+        3*x**2*exp(x) - 6*x*exp(x) + 11*exp(x)
+    assert manualintegrate(x**2*exp(2*x), x) == \
+        x**2*exp(2*x)/2 - x*exp(2*x)/2 + exp(2*x)/4
+
+
+@slow
+def test_manualintegrate_power_substitution():
+    def assert_is_antiderivative(F, f, subs=None):
+        difference = (F.diff(x) - f).subs(subs or {})
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+                   for pt in (0.4, 1.2))
+
+    f = x**3*sinh(a + b*x**2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 1, b: 2})
+
+    f = sinh(a + b*sqrt(x))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 1, b: 2})
+
+    f = sinh(a + b*sqrt(3*x + 2))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 1, b: 2})
+
+    f = x**7*sin(a + b*x**4)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 1, b: 2})
+
+    f = x*sec(x**2)
+    F = manualintegrate(f, x)
+    assert F == log(tan(x**2) + sec(x**2))/2
+
+
+@slow
+def test_manualintegrate_half_angle_square():
+    def assert_is_antiderivative(F, f, subs=None):
+        # verify inside a single branch of the half-angle square root
+        difference = (F.diff(x) - f).subs(subs or {})
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+                   for pt in (0.2, 0.5))
+
+    f = sqrt(a + a*cos(x))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 2})
+
+    f = sqrt(a + a*sin(x))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 2})
+
+    f = cos(x)/sqrt(a + a*sin(x))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 2})
+
+    f = (a*cosh(x) + a)**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 2})
+
+    f = sqrt(a*cosh(x) - a)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 2})
+
+
 @slow
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
@@ -630,12 +735,10 @@ def test_manualintegrate_parts_special():
     F = -x**2/2 + (x*log(x) - x)*li(x) + Ei(2*log(x))
     assert_is_integral_of(f, F)
     f = Ci(x)*Si(x)
-    F = (x*Ci(x)*Si(x) - sin(x)*Si(x) + cos(x)*Ci(x) +
-        Integral(sin(x)**2/x, x) - Integral(cos(x)**2/x, x))
+    F = (x*Ci(x)*Si(x) - sin(x)*Si(x) + cos(x)*Ci(x) - Ci(2*x))
     assert_is_integral_of(f, F)
     f = Chi(x)*Shi(x)
-    F = (x*Chi(x)*Shi(x) - sinh(x)*Shi(x) - cosh(x)*Chi(x) +
-        Integral(sinh(x)**2/x, x) + Integral(cosh(x)**2/x, x))
+    F = (x*Chi(x)*Shi(x) - sinh(x)*Shi(x) - cosh(x)*Chi(x) + Chi(2*x))
     assert_is_integral_of(f, F)
     f = Ei(x)*Si(x)
     F = (x*Ei(x)*Si(x) - I*(-Ei(x*(1 - I)) + Ei(x*(1 + I)))/2 -
@@ -718,7 +821,7 @@ def test_issue_6799():
     integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
     assert manualintegrate(integrand, x) == \
-        ((n*x/2 + sin(2*n*x)/4)*cos(n*phi) - sin(n*phi)*cos(n*x)**2/2)/n
+        x*cos(n*phi)/2 - sin(n*phi - 2*n*x)/(4*n)
     assert r * integrate(integrand, limits).trigsimp() / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
 
@@ -887,9 +990,9 @@ def test_constant_independent_of_symbol():
 
 def test_issue_12641():
     assert manualintegrate(sin(2*x), x) == -cos(2*x)/2
-    assert manualintegrate(cos(x)*sin(2*x), x) == -2*cos(x)**3/3
+    assert manualintegrate(cos(x)*sin(2*x), x) == -cos(x)/2 - cos(3*x)/6
     assert manualintegrate((sin(2*x)*cos(x))/(1 + cos(x)), x) == \
-        -2*log(cos(x) + 1) - cos(x)**2 + 2*cos(x)
+        -2*log(2*cos(x) + 2) - cos(x)**2 + 2*cos(x)
 
 
 @slow

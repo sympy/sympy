@@ -22,7 +22,7 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from __future__ import annotations
-from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
+from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING, cast
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
@@ -36,7 +36,7 @@ from sympy.core.containers import Dict
 from sympy.core.function import Derivative, Function, expand_trig
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Number, E, Rational
+from sympy.core.numbers import Integer, Number, E, Rational, pi
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
@@ -1906,6 +1906,182 @@ def trig_product_rule(integral: IntegralInfo):
         return CscCotRule(integrand, symbol)
 
 
+def trig_product_to_sum_rule(integral: IntegralInfo):
+    """
+    Rewrite a product of sines and cosines (or hyperbolic sines and
+    cosines) of at least two different linear arguments with the
+    product-to-sum identities
+
+        sin(A)*sin(B) = cos(A - B)/2 - cos(A + B)/2
+        sin(A)*cos(B) = sin(A + B)/2 + sin(A - B)/2
+        cos(A)*cos(B) = cos(A - B)/2 + cos(A + B)/2
+
+    (with cosh(A - B) and cosh(A + B) exchanged in the hyperbolic
+    versions), e.g. sin(5*x)*cos(3*x) = sin(8*x)/2 + sin(2*x)/2.
+    Applying the identity to one pair at a time and recursing reduces
+    any such product to a sum of single sines and cosines.
+    """
+    integrand, x = integral
+
+    coefficient = S.One
+    factors = []
+    for factor in Mul.make_args(integrand):
+        if isinstance(factor, exp):
+            # exp(2*x).as_base_exp() would give (E, 2*x)
+            base, power = factor, S.One  # type: tuple[Expr, Expr]
+        else:
+            base, power = factor.as_base_exp()
+        if (isinstance(base, (sin, cos, sinh, cosh, exp))
+                and power.is_Integer and power > 0
+                and not base.args[0].diff(x).has(x)):
+            factors.append((type(base), base.args[0], power))
+        else:
+            # other factors (polynomials, other functions) pass through
+            coefficient *= factor
+
+    circular = {f for f, _, _ in factors} & {sin, cos}
+    hyperbolic_ = {f for f, _, _ in factors} & {sinh, cosh, exp}
+    if circular and hyperbolic_:
+        return None
+    if not circular and not hyperbolic_ - {exp}:
+        # exp alone combines by itself; require a sinh or cosh to pair
+        return None
+    if sum(power for _, _, power in factors) < 2:
+        return None
+    if len({argument for _, argument, _ in factors}) < 2:
+        # only reduce same-argument powers for a cofactor free of further
+        # trigonometric functions: rewriting powers under a trigonometric
+        # cofactor can cycle against the expansion rules, and the plain
+        # sin(u)**m*cos(u)**n products have dedicated power rules
+        if coefficient.has(TrigonometricFunction, HyperbolicFunction):
+            return None
+        if circular and not coefficient.has(x):
+            return None
+
+    def combined(f1, A, f2, B):
+        rank = {sin: 0, sinh: 0, cos: 1, cosh: 1, exp: 2}
+        if rank[f1] > rank[f2]:
+            f1, f2, A, B = f2, f1, B, A
+        identities = {
+            (sin, sin): (cos(A - B) - cos(A + B))/2,
+            (sin, cos): (sin(A + B) + sin(A - B))/2,
+            (cos, cos): (cos(A - B) + cos(A + B))/2,
+            (sinh, sinh): (cosh(A + B) - cosh(A - B))/2,
+            (sinh, cosh): (sinh(A + B) + sinh(A - B))/2,
+            (cosh, cosh): (cosh(A + B) + cosh(A - B))/2,
+            (sinh, exp): (exp(A + B) - exp(B - A))/2,
+            (cosh, exp): (exp(A + B) + exp(B - A))/2,
+        }
+        return identities[(f1, f2)]
+
+    # combine the first factor with the first one of different argument,
+    # or with another same-argument factor in the hyperbolic case
+    f1, arg1, _ = factors[0]
+    j = next((i for i, (_, argument, _) in enumerate(factors)
+              if argument != arg1), None)
+    if j is None:
+        j = 1 if len(factors) > 1 else 0
+    f2, arg2, _ = factors[j]
+    rewritten = coefficient*combined(f1, arg1, f2, arg2)
+    for i, (f, argument, power) in enumerate(factors):
+        used = 2 if i == 0 == j else (1 if i in (0, j) else 0)
+        rewritten *= f(argument)**(power - used)
+    rewritten = rewritten.expand()
+    return RewriteRule(integrand, x, rewritten,
+                       integral_steps(rewritten, x))
+
+
+class TabularPartsRule(AtomicRule):
+    """integrate(P(x)*f(a + b*x), x) for a polynomial P and f one of sin,
+    cos, sinh, cosh, exp, by tabular integration by parts: alternately
+    differentiate P and antidifferentiate f until P vanishes,
+
+        Sum((-1)**k * P^(k)(x) * F_{k+1}(a + b*x) / b**(k+1), (k, 0, deg(P)))
+
+    where F_{k} denotes the k-th antiderivative of f.
+    """
+
+    __slots__ = ("poly_part", "func_part")
+
+    poly_part: Expr
+    func_part: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, poly_part: Expr, func_part: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.poly_part = poly_part
+        self.func_part = func_part
+
+    def eval(self) -> Expr:
+        u = cast('Expr', self.func_part.args[0])
+        b = u.diff(self.variable)
+
+        def antiderivative(F):
+            coefficient, g = F.as_coeff_Mul()
+            if isinstance(g, sin):
+                return -coefficient*cos(g.args[0])
+            if isinstance(g, cos):
+                return coefficient*sin(g.args[0])
+            if isinstance(g, sinh):
+                return coefficient*cosh(g.args[0])
+            if isinstance(g, cosh):
+                return coefficient*sinh(g.args[0])
+            return F  # exp
+
+        P = self.poly_part
+        F = self.func_part
+        total = S.Zero
+        sign = S.One
+        k = 1
+        while P != 0:
+            F = antiderivative(F)
+            total += sign*P*F/b**k
+            P = P.diff(self.variable)
+            sign = -sign
+            k += 1
+        return total.expand()
+
+
+def tabular_parts_rule(integral: IntegralInfo):
+    """Match P(x)*f(a + b*x) for TabularPartsRule, with a Piecewise for
+    a possibly vanishing b as in the other linear-argument rules."""
+    integrand, x = integral
+
+    func_part = None
+    poly_factors = []
+    for factor in Mul.make_args(integrand):
+        if isinstance(factor, exp):
+            # exp(2*x).as_base_exp() would give (E, 2*x)
+            base, power = factor, S.One  # type: tuple[Expr, Expr]
+        else:
+            base, power = factor.as_base_exp()
+        if (isinstance(base, (sin, cos, sinh, cosh, exp)) and power == 1
+                and base.has(x) and not base.args[0].diff(x).has(x)):
+            if func_part is not None:
+                return None
+            func_part = base
+            continue
+        poly_factors.append(factor)
+    if func_part is None:
+        return None
+    poly_part = Mul(*poly_factors)
+    poly = poly_part.as_poly(x)
+    if poly is None or poly.degree() < 1:
+        return None
+
+    u = func_part.args[0]
+    b = u.diff(x)
+    generic_step = TabularPartsRule(integrand, x, poly_part, func_part)
+    generic_cond = Ne(b, 0)
+    if generic_cond is S.true:
+        return generic_step
+    zero_integrand = poly_part*func_part.func(u - b*x)
+    zero_step = integral_steps(zero_integrand, x)
+    return PiecewiseRule(integrand, x,
+                         [(zero_step, Eq(b, 0)), (generic_step, S.true)])
+
+
 def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
@@ -2615,6 +2791,179 @@ def odd_power_trig_substitution(integral):
     zero_step = RewriteRule(integrand, x, zero_integrand, zero_substep)
 
     return PiecewiseRule(integrand, x, [(zero_step, Eq(omega, 0)), (generic_step, S.true)])
+
+def trig_half_angle_square_rule(integral):
+    """
+    Rewrite powers of a + b*sin(u), a + b*cos(u) with b = a or b = -a
+    (and the hyperbolic counterparts with cosh) using the half-angle
+    squares
+
+        1 + cos(u) = 2*cos(u/2)**2       1 - cos(u) = 2*sin(u/2)**2
+        1 + sin(u) = 2*cos(u/2 - pi/4)**2
+        1 - sin(u) = 2*sin(u/2 - pi/4)**2
+        cosh(u) + 1 = 2*cosh(u/2)**2     cosh(u) - 1 = 2*sinh(u/2)**2
+
+    which turns a fractional power p of the sum into a plain power 2*p
+    of a single sine or cosine, e.g.
+
+        sqrt(a + a*cos(x)) = sqrt(2*a)*cos(x/2)**(2/2)
+
+    The remaining trigonometric functions of u are rewritten in the
+    half-angle argument as well, so that the substitution rules for
+    powers of sines and cosines of a common argument apply.
+    """
+    integrand, x = integral
+
+    for factor in Mul.make_args(integrand):
+        base, p = factor.as_base_exp()
+        if not (p.is_Rational and not p.is_Integer):
+            continue
+        trig_atoms = base.atoms(sin, cos, cosh)
+        if len(trig_atoms) != 1:
+            continue
+        g, = trig_atoms
+        u = g.args[0]
+        if u.diff(x).has(x):
+            continue
+        g_var = Dummy("g")
+        base_poly = base.subs(g, g_var).as_poly(g_var)
+        if base_poly is None or base_poly.degree() != 1:
+            continue
+        c0, c1 = base_poly.nth(0), base_poly.nth(1)
+        if c0.has(x) or c1.has(x):
+            continue
+        if (c0 - c1).cancel() == 0:
+            positive_sign = True
+        elif (c0 + c1).cancel() == 0:
+            positive_sign = False
+        else:
+            continue
+        # base = c0*(1 +- g(u)) = scale*h(v)**2 with the half angle v
+        scale = 2*c0
+        if isinstance(g, cos):
+            v = u/2
+            h = cos if positive_sign else sin
+        elif isinstance(g, sin):
+            v = u/2 - pi/4
+            h = cos if positive_sign else sin
+        else:  # cosh(u) + 1 = 2*cosh(u/2)**2, cosh(u) - 1 = 2*sinh(u/2)**2
+            v = u/2
+            h = cosh if positive_sign else sinh
+            if not positive_sign:
+                # base = c1*(cosh(u) - 1), keeping the square positive
+                scale = 2*c1
+        new_factor = scale**p*h(v)**(2*p)
+        # rewrite the rest of the integrand in the half-angle argument
+        rest = integrand/factor
+        u_of_v = 2*v + (pi/2 if isinstance(g, sin) else 0)
+        replacements = {}
+        for f in rest.atoms(TrigonometricFunction, HyperbolicFunction):
+            if f.args[0] == u:
+                replacements[f] = f.func(u_of_v)
+        rest = expand_trig(rest.xreplace(replacements))
+        rewritten = new_factor*rest
+        substep = integral_steps(rewritten, x)
+        if not substep.contains_dont_know():
+            return RewriteRule(integrand, x, rewritten, substep)
+    return None
+
+def power_substitution_rule(integral):
+    """
+    Substitute u = x**n when a power x**n appears inside a function
+    argument and the integrand divided by the derivative n*x**(n - 1)
+    can be written in terms of u alone (assuming x > 0 for the branch
+    choice, as usual for such tables):
+
+        Integral(x**3*sinh(a + b*x**2), x)
+        -> Integral(u*sinh(a + b*u)/2, u),  u = x**2
+
+    Likewise substitute u = (c + d*x)**(1/q) for a radical of a linear
+    expression inside a function argument, inverting x = (u**q - c)/d:
+
+        Integral(sinh(a + b*sqrt(x)), x)
+        -> Integral(2*u*sinh(a + b*u), u),  u = sqrt(x)
+    """
+    integrand, x = integral
+
+    argument_candidates = []
+    power_candidates = []
+    for f in integrand.atoms(Function):
+        if not f.has(x) or isinstance(f, Piecewise):
+            continue
+        argument = f.args[0]
+        # linear arguments are handled by ordinary substitution
+        if not argument.has(x) or not argument.diff(x).has(x):
+            continue
+        pows = [p for p in argument.atoms(Pow) if p.has(x)]
+        if len(pows) != 1:
+            continue
+        p = pows[0]
+        base, e = p.base, p.exp
+        if e.has(x):
+            continue
+        if p.base == x and not (e.is_Rational and not e.is_Integer):
+            power_candidates.append(e)
+        p_var = Dummy("p")
+        arg_poly = argument.subs(p, p_var).as_poly(p_var)
+        if arg_poly is None or arg_poly.degree() != 1:
+            continue
+        c0, c1 = arg_poly.nth(0), arg_poly.nth(1)
+        if c0.has(x) or c1.has(x):
+            continue
+        if base == x:
+            b0, b1 = S.Zero, S.One
+        else:
+            base_poly = base.as_poly(x)
+            if base_poly is None or base_poly.degree() != 1:
+                continue
+            b0, b1 = base_poly.nth(0), base_poly.nth(1)
+        argument_candidates.append((argument, c0, c1, base, e, b0, b1))
+
+    def _improves(transformed, var):
+        # guard against substitution ping-pong: the transformed integrand
+        # must not contain radicals of var, inside or outside function
+        # arguments, which a later substitution would just undo
+        if any(pw.exp.is_Rational and not pw.exp.is_Integer
+               for pw in transformed.atoms(Pow) if pw.base.has(var)):
+            return False
+        return all(argument.is_polynomial(var)
+                   for f in transformed.atoms(Function)
+                   if f.has(var) and not isinstance(f, Piecewise)
+                   for argument in f.args)
+
+    u = Dummy("u")
+    # substitute the whole argument u = c0 + c1*(b0 + b1*x)**e, so that
+    # the substituted function comes out as a plain f(u)
+    for argument, c0, c1, base, e, b0, b1 in ordered(argument_candidates):
+        p_of_u = (u - c0)/c1
+        x_of_u = (p_of_u**(1/e) - b0)/b1
+        du_dx = c1*e*base**(e - 1)*b1
+        transformed = (integrand/du_dx).cancel()
+        # replace powers of the base whose exponent is a multiple of e
+        # exactly, before falling back to the branch-choosing x_of_u
+        replacements = {}
+        for pw in transformed.atoms(Pow):
+            if pw.base == base and not pw.exp.has(x):
+                ratio = (pw.exp/e).cancel()
+                if ratio.is_Integer:
+                    replacements[pw] = p_of_u**ratio
+        transformed = powsimp(transformed.xreplace(replacements).subs(x, x_of_u))
+        if transformed.has(x) or not _improves(transformed, u):
+            continue
+        substep = integral_steps(transformed, u)
+        if not substep.contains_dont_know():
+            return URule(integrand, x, u, argument, substep)
+    # substitute just the power u = x**n (assuming x > 0 for the branch
+    # choice, as usual for such tables)
+    u_pos = Dummy("u", positive=True)
+    for n in ordered(power_candidates):
+        transformed = powsimp((integrand/(n*x**(n - 1))).subs(x, u_pos**(1/n)))
+        if transformed.has(x) or not _improves(transformed, u_pos):
+            continue
+        substep = integral_steps(transformed, u_pos)
+        if not substep.contains_dont_know():
+            return URule(integrand, x, u_pos, x**n, substep)
+    return None
 
 def linear_power_product_rule(integral):
     """
@@ -3651,6 +4000,8 @@ def integral_steps(integrand, symbol, **options):
             exp: exp_rule,
             Add: add_rule,
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
+                        null_safe(trig_product_to_sum_rule),
+                        null_safe(tabular_parts_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
@@ -3687,7 +4038,8 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(Mul, Pow),
                     distribute_expand_rule),
                 trig_powers_products_rule,
-                trig_expand_rule
+                trig_expand_rule,
+                power_substitution_rule
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(condition(integral_is_subclass(Mul, Pow), weierstrass_substitution)),
@@ -3695,6 +4047,8 @@ def integral_steps(integrand, symbol, **options):
             null_safe(condition(integral_is_subclass(Mul, Pow), odd_power_trig_substitution)),
             null_safe(condition(integral_is_subclass(Mul, Pow), linear_power_product_rule)),
             null_safe(condition(integral_is_subclass(Mul, Pow), inverse_function_substitution_rule)),
+            null_safe(condition(integral_is_subclass(Mul, Pow), trig_half_angle_square_rule)),
+            null_safe(power_substitution_rule),
             null_safe(trig_substitution_rule)
         ),
         fallback_rule)(integral)
