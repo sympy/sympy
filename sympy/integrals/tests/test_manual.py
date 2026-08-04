@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.core.mul import Mul
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (asinh, atanh, csch, cosh, coth, sech, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
@@ -129,23 +129,22 @@ def test_manualintegrate_weierstrass_substitution():
         difference = (F.diff(x) - f).subs(x, 2*atan(t)/omega)
         assert expand_trig(difference).cancel() == 0
 
+    # the sin part is picked up by the substitution t = cos(x), which gives
+    # a simpler and continuous form than the half-angle substitution
     f = (a + b*sin(x))/(cos(x) + 2)
-    F = (2*sqrt(3)*a*atan(sqrt(3)*tan(x/2)/3)/3
-         + b*log(tan(x/2)**2 + 1) - b*log(tan(x/2)**2 + 3))
+    F = 2*sqrt(3)*a*atan(sqrt(3)*tan(x/2)/3)/3 - b*log(cos(x) + 2)
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
     f = 1/(tan(x) + 2)
-    F = (-log(tan(x/2)**2 + 1)/5
-         + log(tan(x/2)**2 - tan(x/2) - 1)/5
-         + 4*atan(tan(x/2))/5)
+    F = (log(tan(x) + 2)/5 - log(tan(x)**2 + 1)/10
+         + 2*atan(tan(x))/5)
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
     f = 1/(cot(x) + 2)
-    F = (log(1 + tan(x/2)**(-2))/5
-         - log(-1 + 4/tan(x/2) + tan(x/2)**(-2))/5
-         - 4*atan(1/tan(x/2))/5)
+    F = (-log(2*tan(x) + 1)/5 + log(tan(x)**2 + 1)/10
+         + 2*atan(tan(x))/5)
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
@@ -162,32 +161,170 @@ def test_manualintegrate_weierstrass_substitution():
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
-    # Commensurable fractional harmonics.
+    # Commensurable fractional harmonics: the denominator collapses to
+    # cos(x/2)**2 and the result comes from the tangent substitution.
     f = 1/(sin(x/2)**2 + cos(x))
-    F = -2/(tan(x/4) + 1) - 2/(tan(x/4) - 1)
+    F = 2*tan(x/2)
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F, S.Half)
 
     # A nonzero phase.
     f = 1/(tan(x + pi/4) + 2)
-    F = (-log(tan(x/2)**2 + 1)/5
-         + log(3*tan(x/2)**2 + 2*tan(x/2) - 3)/5
-         + 4*atan(tan(x/2))/5)
+    F = (log(tan(x + pi/4) + 2)/5 - log(tan(x + pi/4)**2 + 1)/10
+         + 2*atan(tan(x + pi/4))/5)
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
     # Symbolic frequency and multiple harmonics.
     f = 1/(sin(a*x) + cos(2*a*x) + 2)
-    F1 = Mul(
-        2, 1/a,
-        2*sqrt(5)*atan(3*sqrt(5)*(tan(a*x/2) - S(2)/3)/5)/25
-        - S.One/5/(tan(a*x/2) + 1),
-        evaluate=False)
+    F1 = (4*sqrt(5)*atan(3*sqrt(5)*(tan(a*x/2) - S(2)/3)/5)/(25*a)
+          - 2/(5*a*(tan(a*x/2) + 1)))
     F2 = x/3
     assert manualintegrate(f, x) == Piecewise(
         (F1, Ne(a, 0)), (F2, True))
     assert_is_integral_of_weierstrass(f, F1, a)
     assert (F2.diff(x) - f.subs(a, 0)).cancel() == 0
+
+
+@slow
+def test_manualintegrate_hyperbolic_rational_substitution():
+    def assert_is_antiderivative(F, f):
+        assert (F.diff(x) - f).rewrite(exp).together().powsimp().cancel() == 0
+
+    # odd in sinh: t = cosh(x)
+    f = sinh(x)**3/(cosh(x) + 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    # odd in cosh: t = sinh(x)
+    f = cosh(x)/(3*sinh(x) + 4)
+    assert manualintegrate(f, x) == log(3*sinh(x) + 4)/3
+
+    # even in both: t = tanh(x)
+    f = 1/(sinh(x)**2 + 4*cosh(x)**2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    # general case: t = exp(x)
+    f = 1/(sinh(x) + 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = csch(x)**2/(sinh(x) + 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    # linear argument with symbolic coefficients gives a Piecewise on b = 0
+    f = sinh(a + b*x)**3/(sinh(a + b*x) + 2)
+    F = manualintegrate(f, x)
+    assert F.has(Piecewise)
+    difference = (F.diff(x) - f).subs([(a, 1), (b, 3)])
+    assert difference.rewrite(exp).together().powsimp().cancel() == 0
+
+
+@slow
+def test_manualintegrate_odd_power_trig_substitution():
+    def assert_is_antiderivative(F, f):
+        # fractional powers make symbolic proof branch-sensitive; verify
+        # numerically inside the principal domain
+        difference = F.diff(x) - f
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+                   for pt in (0.3, 0.7, 1.1))
+
+    # odd power of cos with a fractional power of sin: t = sin(x)
+    f = cos(x)**3/sqrt(sin(x))
+    F = manualintegrate(f, x)
+    assert F == 2*sqrt(sin(x)) - 2*sin(x)**Rational(5, 2)/5
+    assert_is_antiderivative(F, f)
+
+    # odd power of sin: t = cos(x)
+    f = sin(x)**3*cos(x)**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    # exponents summing to an even integer: t = tan(x)
+    f = sin(x)**Rational(3, 2)/cos(x)**Rational(7, 2)
+    F = manualintegrate(f, x)
+    assert F == 2*tan(x)**Rational(5, 2)/5
+    assert_is_antiderivative(F, f)
+
+    # hyperbolic counterparts
+    f = cosh(x)**5/sqrt(sinh(x))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = sinh(x)**3*cosh(x)**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    # non-integer power inside a scaled base
+    f = sin(x)**5/(b*sec(x))**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+
+
+def test_manualintegrate_linear_power_product():
+    def assert_is_antiderivative(F, f):
+        difference = F.diff(x) - f
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+                   for pt in (0.3, 0.7, 1.1))
+
+    f = 1/(sqrt(x + 1)*sqrt(x + 2))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = sqrt(a + b*x)/(c + d*x)**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+
+    f = x**Rational(5, 2)*(2 - x)**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = (x + 1)**Rational(2, 3)/(x + 2)**Rational(2, 3)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+
+
+@slow
+def test_manualintegrate_inverse_function_substitution():
+    def assert_is_antiderivative(F, f):
+        difference = F.diff(x) - f
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+                   for pt in (0.3, 0.55, 0.8))
+
+    f = x**2*asin(x)**2
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = x**2*asinh(a*x)**4
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+
+    f = asin(x)**3
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = x**3*atanh(x)**2
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = x*acos(x)**2
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
 
 
 @slow

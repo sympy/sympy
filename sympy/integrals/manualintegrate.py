@@ -33,7 +33,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
-from sympy.core.function import Derivative, expand_trig
+from sympy.core.function import Derivative, Function, expand_trig
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Number, E, Rational
@@ -47,7 +47,7 @@ from sympy.core.function import WildFunction
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
-    cosh, coth, sech, sinh, tanh, asinh)
+    cosh, coth, sech, sinh, tanh, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
@@ -2346,6 +2346,378 @@ def weierstrass_substitution(integral):
 
     return PiecewiseRule(integrand, x, [(zero_step, Eq(omega, 0)), (generic_step, S.true)])
 
+def hyperbolic_rational_substitution(integral):
+    """
+    Integrate rational functions of hyperbolic functions of a common
+    linear argument u = omega*x + phi.
+
+    After rewriting the integrand as a rational function R(sinh(u), cosh(u)),
+    the classic sequence of substitutions is tried:
+
+    - R odd in sinh(u):  t = cosh(u), using sinh(u)**2 = cosh(u)**2 - 1
+    - R odd in cosh(u):  t = sinh(u), using cosh(u)**2 = sinh(u)**2 + 1
+    - R even in both:    t = tanh(u), using cosh(u)**2 = 1/(1 - t**2)
+    - otherwise:         t = exp(u), using sinh(u) = (t - 1/t)/2 and
+      cosh(u) = (t + 1/t)/2
+
+    Each substitution turns the integral into that of a rational function
+    of t.
+    """
+    integrand, x = integral
+
+    HYPERBOLIC = (sinh, cosh, tanh, coth, sech, csch)
+    hyp_atoms = tuple(ordered(integrand.atoms(*HYPERBOLIC)))
+    if not hyp_atoms:
+        return None
+    if integrand.is_rational_function(*hyp_atoms) is not True:
+        return None
+    masked = integrand.xreplace({atom: Dummy() for atom in hyp_atoms})
+    # exclude x*sinh(x)
+    if masked.has(x):
+        return None
+
+    arguments = {atom.args[0] for atom in hyp_atoms}
+    if len(arguments) != 1:
+        return None
+    u_func, = arguments
+    omega = u_func.diff(x)
+    # require a linear argument omega*x + phi
+    if omega.is_zero or omega.has(x):
+        return None
+
+    t = Dummy("t")
+    s = Dummy("s")
+    c = Dummy("c")
+
+    expr_sc = integrand.xreplace({
+        sinh(u_func): s,
+        cosh(u_func): c,
+        tanh(u_func): s/c,
+        coth(u_func): c/s,
+        sech(u_func): 1/c,
+        csch(u_func): 1/s,
+    })
+
+    def _replace_even_powers(transformed, var, square_image):
+        # Rewrite transformed, a rational function even in var, replacing
+        # var**2 by square_image; return None if odd powers remain
+        numerator, denominator = transformed.as_numer_denom()
+        numerator = numerator.as_poly(var)
+        denominator = denominator.as_poly(var)
+        if numerator is None or denominator is None:
+            return None
+        replacements = {}
+        for polynomial in (numerator, denominator):
+            for (power,), coefficient in polynomial.terms():
+                if power % 2 and coefficient != 0:
+                    return None
+                if power:
+                    replacements[var**power] = square_image**(power // 2)
+        numerator = numerator.as_expr().xreplace(replacements)
+        denominator = denominator.as_expr().xreplace(replacements)
+        return (numerator/denominator).cancel()
+
+    def try_cosh(w):
+        # t = cosh(u) when R(-s, c) = -R(s, c), so R/(w*s) is even in s
+        # and sinh(u)**2 becomes t**2 - 1; dt = w*sinh(u)*dx
+        transformed = (expr_sc/(w*s)).cancel()
+        transformed = _replace_even_powers(transformed, s, t**2 - 1)
+        if transformed is None:
+            return None
+        transformed = transformed.xreplace({c: t})
+        substep = integral_steps(transformed, t)
+        return URule(integrand, x, t, cosh(u_func), substep)
+
+    def try_sinh(w):
+        # t = sinh(u) when R(s, -c) = -R(s, c), so R/(w*c) is even in c
+        # and cosh(u)**2 becomes t**2 + 1; dt = w*cosh(u)*dx
+        transformed = (expr_sc/(w*c)).cancel()
+        transformed = _replace_even_powers(transformed, c, t**2 + 1)
+        if transformed is None:
+            return None
+        transformed = transformed.xreplace({s: t})
+        substep = integral_steps(transformed, t)
+        return URule(integrand, x, t, sinh(u_func), substep)
+
+    def try_tanh(w):
+        # t = tanh(u) when R(-s, -c) = R(s, c): R(t*c, c)*c**2 is then even
+        # in c with cosh(u)**2 = 1/(1 - t**2), and dx = c**2*dt/w
+        transformed = ((expr_sc*c**2/w).xreplace({s: t*c})).cancel()
+        transformed = _replace_even_powers(transformed, c, 1/(1 - t**2))
+        if transformed is None:
+            return None
+        substep = integral_steps(transformed, t)
+        return URule(integrand, x, t, tanh(u_func), substep)
+
+    def try_exp(w):
+        # universal substitution t = exp(u), dx = dt/(w*t)
+        transformed = (expr_sc.xreplace({
+            s: (t - 1/t)/2,
+            c: (t + 1/t)/2,
+        })/(w*t)).cancel()
+        substep = integral_steps(transformed, t)
+        return URule(integrand, x, t, exp(u_func), substep)
+
+    generic_step = None
+    for attempt in (try_cosh, try_sinh, try_tanh, try_exp):
+        generic_step = attempt(omega)
+        if generic_step is not None and not generic_step.contains_dont_know():
+            break
+    else:
+        return None
+
+    if omega.is_zero is False:
+        return generic_step
+
+    phase = u_func - omega*x
+    zero_integrand = integrand.xreplace(
+        {atom: atom.func(phase) for atom in hyp_atoms})
+    zero_substep = integral_steps(zero_integrand, x)
+    zero_step = RewriteRule(integrand, x, zero_integrand, zero_substep)
+
+    return PiecewiseRule(integrand, x, [(zero_step, Eq(omega, 0)), (generic_step, S.true)])
+
+def odd_power_trig_substitution(integral):
+    """
+    Integrate g(sin(u))*cos(u)**n with n an odd integer by substituting
+    t = sin(u), where u is linear in the integration variable and g may
+    involve arbitrary (fractional or symbolic) powers; likewise with sin
+    and cos exchanged, and for the hyperbolic counterparts.
+
+    For example cos(x)**3/sqrt(sin(x)) is g(sin(x))*cos(x)**3 with
+    g(t) = 1/sqrt(t), and the substitution t = sin(x) turns it into
+    (1 - t**2)/sqrt(t).
+
+    Also integrate sin(u)**m*cos(u)**n when m + n is an even integer by
+    substituting t = tan(u), which gives t**m*(1 + t**2)**(-(m + n)/2 - 1);
+    for example sin(x)**(3/2)/cos(x)**(7/2) becomes t**(3/2).  The
+    hyperbolic counterpart uses t = tanh(u) and 1 - t**2.
+
+    This complements weierstrass_substitution, which handles integrands
+    that are rational functions of the trigonometric functions.
+    """
+    integrand, x = integral
+
+    trig_atoms = integrand.atoms(sin, cos, tan, cot, sec, csc)
+    hyp_atoms = integrand.atoms(sinh, cosh, tanh, coth, sech, csch)
+    if trig_atoms and not hyp_atoms:
+        atoms = trig_atoms
+        sin_f, cos_f, tan_f, cot_f, sec_f, csc_f = sin, cos, tan, cot, sec, csc
+        hyperbolic = False
+    elif hyp_atoms and not trig_atoms:
+        atoms = hyp_atoms
+        sin_f, cos_f, tan_f, cot_f, sec_f, csc_f = sinh, cosh, tanh, coth, sech, csch
+        hyperbolic = True
+    else:
+        return None
+
+    arguments = {atom.args[0] for atom in atoms}
+    if len(arguments) != 1:
+        return None
+    u_func, = arguments
+    omega = u_func.diff(x)
+    # require a linear argument omega*x + phi
+    if omega.is_zero or omega.has(x):
+        return None
+
+    t = Dummy("t")
+    s = Dummy("s")
+    c = Dummy("c")
+    if hyperbolic:
+        # cosh(u)**2 = 1 + t**2 for t = sinh(u); sinh(u)**2 = t**2 - 1 for
+        # t = cosh(u); d(cosh(u)) has no minus sign, unlike d(cos(u))
+        cos_squared = 1 + t**2
+        sin_squared = t**2 - 1
+        cos_branch_sign = S.One
+    else:
+        # cos(u)**2 = 1 - t**2 for t = sin(u) and vice versa
+        cos_squared = 1 - t**2
+        sin_squared = 1 - t**2
+        cos_branch_sign = S.NegativeOne
+
+    # express quotient functions through sin and cos, also inside bases of
+    # non-integer powers like (b*sec(u))**(3/2)
+    expr_sc = integrand.xreplace({
+        tan_f(u_func): sin_f(u_func)/cos_f(u_func),
+        cot_f(u_func): cos_f(u_func)/sin_f(u_func),
+        sec_f(u_func): 1/cos_f(u_func),
+        csc_f(u_func): 1/sin_f(u_func),
+    }).xreplace({sin_f(u_func): s, cos_f(u_func): c})
+    if expr_sc.has(x):
+        return None
+
+    def _attempt(kept, removed, square_image, u_of_t, sign):
+        # integrand = g(kept)*removed**power: substitute t = kept(u), using
+        # removed**2 = square_image and one power of removed for dt/w
+        rest, dependent = expr_sc.as_independent(removed)
+        base, power = dependent.as_base_exp()
+        if base != removed or power.is_odd is not True:
+            return None
+        rest = rest.xreplace({kept: t})
+        if rest.has(s, c):
+            return None
+        t_integrand = sign*rest*square_image**((power - 1)/2)/omega
+        substep = integral_steps(t_integrand, t)
+        if substep.contains_dont_know():
+            return None
+        return URule(integrand, x, t, u_of_t, substep)
+
+    def _attempt_tangent():
+        # integrand = K*sin(u)**m*cos(u)**n with even integer m + n:
+        # substitute t = tan(u), so that sin(u) = t/sqrt(1 + t**2) and
+        # cos(u) = 1/sqrt(1 + t**2) give K*t**m*(1 + t**2)**(-(m + n)/2)
+        # with dx = dt/(w*(1 + t**2))
+        m_exp = n_exp = S.Zero
+        coefficient = S.One
+        for factor in Mul.make_args(expr_sc):
+            base, power = factor.as_base_exp()
+            if base == s:
+                m_exp += power
+            elif base == c:
+                n_exp += power
+            elif base == s/c:
+                m_exp += power
+                n_exp -= power
+            elif base == c/s:
+                n_exp += power
+                m_exp -= power
+            elif not factor.has(s, c):
+                coefficient *= factor
+            else:
+                return None
+        if (m_exp + n_exp).is_even is not True:
+            return None
+        if hyperbolic:
+            t_squared = 1 - t**2
+        else:
+            t_squared = 1 + t**2
+        t_integrand = coefficient*t**m_exp*t_squared**(-(m_exp + n_exp)/2 - 1)/omega
+        substep = integral_steps(t_integrand, t)
+        if substep.contains_dont_know():
+            return None
+        return URule(integrand, x, t, tan_f(u_func), substep)
+
+    generic_step = _attempt(s, c, cos_squared, sin_f(u_func), S.One)
+    if generic_step is None:
+        generic_step = _attempt(c, s, sin_squared, cos_f(u_func), cos_branch_sign)
+    if generic_step is None:
+        generic_step = _attempt_tangent()
+    if generic_step is None:
+        return None
+
+    if omega.is_zero is False:
+        return generic_step
+
+    phase = u_func - omega*x
+    zero_integrand = integrand.xreplace(
+        {atom: atom.func(phase) for atom in atoms})
+    zero_substep = integral_steps(zero_integrand, x)
+    zero_step = RewriteRule(integrand, x, zero_integrand, zero_substep)
+
+    return PiecewiseRule(integrand, x, [(zero_step, Eq(omega, 0)), (generic_step, S.true)])
+
+def linear_power_product_rule(integral):
+    """
+    Integrate K*(a + b*x)**m*(c + d*x)**n for non-integer rational
+    exponents whose sum m + n is an integer, by rewriting the integrand as
+
+        K*((a + b*x)/(c + d*x))**m*(c + d*x)**(m + n)
+
+    a rational function of x and of the fractional linear power
+    ((a + b*x)/(c + d*x))**(1/q), which sqrt_fractional_linear_rule
+    integrates by substituting t = ((a + b*x)/(c + d*x))**(1/q).
+
+    For example 1/(sqrt(x + 1)*sqrt(x + 2)) becomes
+    sqrt((x + 1)/(x + 2))/(x + 1) and t = sqrt((x + 1)/(x + 2)) leads to
+    a rational function of t.
+    """
+    integrand, x = integral
+
+    coefficient = S.One
+    linear_powers = []
+    for factor in Mul.make_args(integrand):
+        if not factor.has(x):
+            coefficient *= factor
+            continue
+        base, power = factor.as_base_exp()
+        if not (power.is_Rational and not power.is_Integer):
+            return None
+        base_poly = base.as_poly(x)
+        if base_poly is None or base_poly.degree() != 1:
+            return None
+        linear_powers.append((base, power))
+    if len(linear_powers) != 2:
+        return None
+    (base1, m), (base2, n) = linear_powers
+    if not (m + n).is_Integer:
+        return None
+    # exclude proportional bases such as (2*x + 2)**m*(x + 1)**n, which
+    # reduce to a single power
+    if not (base1/base2).cancel().has(x):
+        return None
+
+    rewritten = coefficient*(base1/base2)**m*base2**(m + n)
+    substep = sqrt_fractional_linear_rule(IntegralInfo(rewritten, x))
+    if substep is None or substep.contains_dont_know():
+        return None
+    return RewriteRule(integrand, x, rewritten, substep)
+
+def inverse_function_substitution_rule(integral):
+    """
+    Substitute u = ainv(w) for an inverse trigonometric or hyperbolic
+    function ainv of a linear argument w, inverting to x and integrating
+    in u; for example with u = asin(a*x)
+
+        Integral(x**2*asin(a*x)**4, x)
+        -> Integral(sin(u)**2*u**4*cos(u)/a**3, u)
+
+    This succeeds whenever the resulting trigonometric integral is
+    doable, e.g. for a polynomial multiplying a positive integer power of
+    the inverse function.
+
+    Since u lies in the range of the inverse function, factors such as
+    sqrt(cos(u)**2) arising from sqrt(1 - a**2*x**2) simplify to cos(u)
+    on that principal branch.
+    """
+    integrand, x = integral
+
+    INVERSES = {asin: sin, acos: cos, atan: tan, acot: cot, asec: sec,
+                acsc: csc, asinh: sinh, acosh: cosh, atanh: tanh,
+                acoth: coth, asech: sech, acsch: csch}
+    inv_atoms = integrand.atoms(*INVERSES)
+    if len(inv_atoms) != 1:
+        return None
+    inv_atom, = inv_atoms
+    w = inv_atom.args[0]
+    dw = w.diff(x)
+    # require a linear argument w = dw*x + phase
+    if dw.is_zero or dw.has(x):
+        return None
+    fn = INVERSES[type(inv_atom)]
+    u = Dummy("u")
+    masked = integrand.xreplace({inv_atom: u})
+    # only attempt when the rest of the integrand is algebraic in x:
+    # remaining transcendental factors such as log(x) rarely survive the
+    # transformation, and exploring them can be very slow
+    if any(f.has(x) for f in masked.atoms(Function)):
+        return None
+    x_of_u = ((fn(u) - (w - dw*x))/dw).expand()
+    replaced = masked.subs(x, x_of_u)
+    replaced = (replaced*manual_diff(x_of_u, u)).trigsimp()
+    if replaced.has(x):
+        return None
+    # simplify sqrt(trig(u)**2) -> trig(u): valid on the principal branch
+    # (e.g. cos(u) >= 0 for u = asin(w), sinh(u) >= 0 for u = acosh(w))
+    substitutions = {}
+    for f in (sin, cos, tan, sec, csc, cot, sinh, cosh, tanh, sech, csch, coth):
+        substitutions[sqrt(f(u)**2)] = f(u)
+        substitutions[sqrt(f(u)**(-2))] = 1/f(u)
+    replaced = manual_subs(replaced, substitutions)
+    substep = integral_steps(replaced, u)
+    if substep.contains_dont_know():
+        return None
+    return URule(integrand, x, u, inv_atom, substep)
+
 def sqrt_fractional_linear_rule(integral : IntegralInfo):
     """
     Substitute common ((a*x + b)/(c*x + d))**(1/n)
@@ -3319,6 +3691,10 @@ def integral_steps(integrand, symbol, **options):
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(condition(integral_is_subclass(Mul, Pow), weierstrass_substitution)),
+            null_safe(condition(integral_is_subclass(Mul, Pow), hyperbolic_rational_substitution)),
+            null_safe(condition(integral_is_subclass(Mul, Pow), odd_power_trig_substitution)),
+            null_safe(condition(integral_is_subclass(Mul, Pow), linear_power_product_rule)),
+            null_safe(condition(integral_is_subclass(Mul, Pow), inverse_function_substitution_rule)),
             null_safe(trig_substitution_rule)
         ),
         fallback_rule)(integral)
