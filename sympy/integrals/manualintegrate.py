@@ -3153,6 +3153,128 @@ def log_times_rational_rule(integral):
     return RewriteRule(integrand, x, rewritten, substep)
 
 
+class ExpOverLinearRule(AtomicRule):
+    """integrate(exp(a + b*x)/(c + d*x), x), the shifted exponential
+    integral:
+
+        exp(a - b*c/d)*Ei(b*(c + d*x)/d)/d
+    """
+
+    __slots__ = ("a", "b", "c", "d")
+
+    a: Expr
+    b: Expr
+    c: Expr
+    d: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol,
+                 a: Expr, b: Expr, c: Expr, d: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+
+    def eval(self) -> Expr:
+        a, b, c, d = self.a, self.b, self.c, self.d
+        x = self.variable
+        return exp(a - b*c/d)*Ei(b*(c + d*x)/d)/d
+
+
+def exp_over_linear_rule(integral):
+    """
+    Integrate K*exp(a + b*x)/(c + d*x)**n for a positive integer n: the
+    n = 1 case is the shifted exponential integral of
+    :class:`ExpOverLinearRule` and higher poles reduce with
+
+        exp(w)/q**n = (-exp(w)/(d*(n - 1)*q**(n - 1)))'
+                      + b/(d*(n - 1)) * exp(w)/q**(n - 1),  q = c + d*x
+    """
+    integrand, x = integral
+
+    exps = [f for f in integrand.atoms(exp) if f.has(x)]
+    if len(exps) != 1:
+        return None
+    E = exps[0]
+    w_poly = E.args[0].as_poly(x)
+    if w_poly is None or w_poly.degree() != 1:
+        return None
+    rest = powsimp(integrand/E, combine='exp')
+    if rest.has(exp):
+        return None
+    numer, denom = rest.as_numer_denom()
+    if numer.has(x):
+        return None
+    base, n = denom.as_base_exp()
+    if base.as_poly(x) is not None and base.as_poly(x).degree() > 1:
+        # recover a linear power from an expanded denominator
+        constant, factored = factor_terms(denom.factor()).as_independent(x)
+        numer, denom = numer/constant, factored
+        base, n = denom.as_base_exp()
+    base_poly = base.as_poly(x)
+    if (base_poly is None or base_poly.degree() != 1
+            or not (n.is_Integer and n >= 1)):
+        return None
+    a0, b0 = w_poly.nth(0), w_poly.nth(1)
+    c0, d0 = base_poly.nth(0), base_poly.nth(1)
+
+    core = E/base**n
+    if n == 1:
+        step: Rule = ExpOverLinearRule(core, x, a0, b0, c0, d0)
+    else:
+        boundary = -E/(d0*(n - 1)*base**(n - 1))
+        coefficient = b0/(d0*(n - 1))
+        remainder = E/base**(n - 1)
+        substep = yield from exp_over_linear_rule(
+            IntegralInfo(remainder, x))
+        if substep is None or substep.contains_dont_know():
+            return None
+        derivative = Derivative(boundary, x)
+        rewritten = derivative + coefficient*remainder
+        add_step = AddRule(rewritten, x, [
+            DerivativeRule(derivative, x),
+            ConstantTimesRule(coefficient*remainder, x, coefficient,
+                              remainder, substep)])
+        step = RewriteRule(core, x, rewritten, add_step)
+    if numer != 1:
+        step = ConstantTimesRule(integrand, x, numer, core, step)
+    return step
+
+
+def exp_times_rational_rule(integral):
+    """
+    Integrate exp(w)*R(x) for a linear w and rational R by splitting R
+    into partial fractions: the polynomial part integrates by tabular
+    parts and the pole terms are (shifted) exponential integrals.
+    """
+    integrand, x = integral
+
+    exps = [f for f in integrand.atoms(exp) if f.has(x)]
+    if len(exps) != 1:
+        return None
+    E = exps[0]
+    w_poly = E.args[0].as_poly(x)
+    if w_poly is None or w_poly.degree() != 1:
+        return None
+    R = powsimp(integrand/E, combine='exp').cancel()
+    if R.has(exp) or not R.is_rational_function(x):
+        return None
+    numer, denom = R.as_numer_denom()
+    if denom.as_poly(x) is None or degree(denom, x) < 1:
+        return None
+    try:
+        decomposed = R.apart(x)
+    except (PolynomialError, NotImplementedError):
+        return None
+    if decomposed == R or not isinstance(decomposed, Add):
+        return None
+    rewritten = Add(*[term*E for term in decomposed.args])
+    substep = yield IntegralInfo(rewritten, x)
+    if substep.contains_dont_know():
+        return None
+    return RewriteRule(integrand, x, rewritten, substep)
+
+
 def log_inverse_parts_rule(integral):
     """
     Integrate R(x)*L1(x)*L2(x), for a rational function R and two factors
@@ -4372,6 +4494,8 @@ class IntegrationSolver:
                     w(trig_expand_rule),
                     w(power_substitution_rule),
                     w(exp_power_rewrite_rule),
+                    w(exp_over_linear_rule),
+                    w(exp_times_rational_rule),
                     branch=self.branch
                 )),
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(nested_pow_rule))),
@@ -4383,6 +4507,8 @@ class IntegrationSolver:
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(trig_half_angle_square_rule))),
                 null_safe(condition(_integral_is_subclass(Mul), w(dilog_rule))),
                 null_safe(condition(_integral_is_subclass(Mul), w(log_times_rational_rule))),
+                null_safe(condition(_integral_is_subclass(Mul), w(exp_over_linear_rule))),
+                null_safe(condition(_integral_is_subclass(Mul), w(exp_times_rational_rule))),
                 null_safe(condition(_integral_is_subclass(Mul), w(log_inverse_parts_rule))),
                 null_safe(w(power_substitution_rule)),
                 null_safe(w(trig_substitution_rule))

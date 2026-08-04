@@ -434,7 +434,8 @@ def test_issue_13749():
 
 
 def test_issue_18133():
-    assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
+    # previously returned a NonElementaryIntegral; now solved in terms of Ei
+    assert integrate(exp(x)/(1 + x)**2, x) == exp(-1)*Ei(x + 1) - exp(x)/(x + 1)
 
 
 def test_issue_21741():

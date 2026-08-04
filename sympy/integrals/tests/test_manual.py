@@ -460,6 +460,31 @@ def test_manualintegrate_dilog():
     assert integrate(log(1 + x)/x, (x, 0, 1), manual=True) == pi**2/12
 
 
+def test_manualintegrate_exp_over_linear():
+    F = manualintegrate(exp(a + b*x)/(c + d*x), x)
+    assert F == exp(a)*exp(-b*c/d)*Ei(b*(c + d*x)/d)/d
+
+    def assert_is_antiderivative(F, f):
+        difference = (F.diff(x) - f).subs(
+            [(a, S(1)/3), (b, 2), (c, 3), (d, 5)]).doit()
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-10
+                   for pt in (0.3, 0.9))
+
+    f = exp(b*x)/(c + d*x)**3
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = x*exp(2*x)/(1 + x)**2
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = (a + b*x)**4*exp(-a - b*x)/(c + d*x)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+
+
 @slow
 def test_manualintegrate_log_inverse_parts():
     f = log(x)*atan(x)
