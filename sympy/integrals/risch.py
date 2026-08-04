@@ -1279,13 +1279,16 @@ def recognize_log_derivative(a, d, DE, z=None):
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
     for s, _ in Sp:
-        # All roots of the resultant must be integers.  Integers are real,
-        # so if s has any complex root (fewer real roots than deg(s)), f is
-        # not a logarithmic derivative.
+        # All roots of the resultant must be integers, which holds iff the
+        # rational roots of s, counted with multiplicity, account for its
+        # full degree (i.e., s splits into linear factors over QQ) and are
+        # all integers.  This covers complex and irrational real roots with
+        # the same degree count, and is much faster than isolating the real
+        # roots.
         s = s.as_poly(z)
-        a = real_roots(s)
+        r = s.ground_roots()
 
-        if len(a) != s.degree() or not all(j.is_Integer for j in a):
+        if sum(r.values()) != s.degree() or not all(j.is_Integer for j in r):
             return False
     return True
 
