@@ -464,8 +464,8 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     Parametric Poly Risch Differential Equation - Cancellation: Liouvillian case.
 
     This implements the primitive and hyperexponential cancellation cases
-    from the discussion in Section 7.1 of Bronstein's book (there is no
-    corresponding pseudocode function in the first edition).
+    from the discussion in Section 7.1 of Bronstein's book (neither edition
+    gives it as named pseudocode).
     """
     H = []
 
@@ -1123,13 +1123,12 @@ def is_deriv_k(fa, fd, DE):
 
     To handle the case where we are given Df/f, not f, use is_deriv_k_in_field().
 
+    This is an application of the Risch structure theorems from Section 9.3
+    of Bronstein's book (neither edition gives it as named pseudocode).
+
     See also
     ========
     is_log_deriv_k_t_radical_in_field, is_log_deriv_k_t_radical
-
-    This is an application of the Risch structure theorems from Section 9.3
-    of Bronstein's book (there is no corresponding pseudocode function in
-    the first edition).
     """
     # Compute Df/f
     dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)), fd*fa
@@ -1248,14 +1247,13 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     To handle the case where we are given Df, not f, use
     is_log_deriv_k_t_radical_in_field().
 
+    This is an application of the structure theorems from Sections 9.3 and
+    9.4 of Bronstein's book (neither edition gives it as named pseudocode).
+
     See also
     ========
 
     is_log_deriv_k_t_radical_in_field, is_deriv_k
-
-    This is an application of the structure theorems from Sections 9.3 and
-    9.4 of Bronstein's book (there is no corresponding pseudocode function
-    in the first edition).
     """
     if Df:
         dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)).cancel(fd**2,
@@ -1340,13 +1338,14 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     hyperexponential, and hypertangent cases, respectively.  If case is 'auto',
     it will attempt to determine the type of the derivation automatically.
 
+    This is the in-field logarithmic derivative of a k(t)-radical problem
+    from Section 5.12 of Bronstein's book (the "Recognizing Logarithmic
+    Derivatives of k(t)-radicals" subsection; neither edition gives it as
+    named pseudocode).
+
     See also
     ========
     is_log_deriv_k_t_radical, is_deriv_k
-
-    This is the in-field logarithmic derivative of a k(t)-radical problem
-    from Section 5.12 of Bronstein's book (named
-    ``InFieldLogarithmicDerivativeOfRadical`` in the second edition).
     """
     fa, fd = fa.cancel(fd, include=True)
 

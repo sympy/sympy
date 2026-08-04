@@ -1263,8 +1263,8 @@ def recognize_log_derivative(a, d, DE, z=None):
     produces u in K(x) such that du/dx = uf.
 
     This is the in-field logarithmic derivative problem from Section 5.12
-    of Bronstein's book (named ``InFieldLogarithmicDerivative`` in the
-    second edition).
+    of Bronstein's book (the "Recognizing Logarithmic Derivatives"
+    subsection; neither edition gives it as named pseudocode).
     """
 
     z = z or Dummy('z')
