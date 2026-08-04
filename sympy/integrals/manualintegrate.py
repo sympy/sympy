@@ -2364,6 +2364,60 @@ def quadratic_denom_rule(integral):
 
     return step
 
+class RectifyAtanRule(Rule):
+    """Wrap the result of a tangent substitution, rewriting each term
+    c*atan(w*tan(theta) + v) with numeric v**2 < 4*w as
+
+        c*(theta + atan(((w - 1)*sin(2*theta) + v*(1 + cos(2*theta)))
+           /((1 + w) + v*sin(2*theta) + (1 - w)*cos(2*theta))))
+
+    which has the same derivative but no jumps at the poles of the
+    tangent, so that the antiderivative is valid on domains of maximum
+    extent (D.J. Jeffrey, 1993).  For example 2*atan(3*tan(x/2)) from
+    3/(5 - 4*cos(x)) becomes x + 2*atan(sin(x)/(2 - cos(x))).
+    """
+
+    __slots__ = ("theta", "substep")
+
+    theta: Expr
+    substep: Rule
+
+    def __init__(self, integrand: Expr, variable: Symbol,
+                 theta: Expr, substep: Rule) -> None:
+        super().__init__(integrand, variable)
+        self.theta = theta
+        self.substep = substep
+
+    def eval(self) -> Expr:
+        result = self.substep.eval()
+        theta = self.theta
+        if not result.has(atan):
+            return result
+        T = Dummy("T")
+        double = 2*theta
+
+        def rectify(term):
+            coefficient, at = term.as_independent(atan)
+            if not isinstance(at, atan) or coefficient.has(self.variable):
+                return term
+            arg_poly = at.args[0].subs(tan(theta), T).as_poly(T)
+            if arg_poly is None or arg_poly.degree() != 1 or arg_poly.has(tan):
+                return term
+            v, w = arg_poly.nth(0), arg_poly.nth(1)
+            if v.has(self.variable) or w.has(self.variable):
+                return term
+            if (v**2 - 4*w).is_negative is not True:
+                return term
+            return coefficient*(theta + atan(
+                ((w - 1)*sin(double) + v*(1 + cos(double)))
+                /((1 + w) + v*sin(double) + (1 - w)*cos(double))))
+
+        return Add(*[rectify(t) for t in Add.make_args(result)])
+
+    def contains_dont_know(self) -> bool:
+        return self.substep.contains_dont_know()
+
+
 def weierstrass_substitution(integral):
     # Look for a rational function in trigonometric functions
     integrand, x = integral
@@ -2547,9 +2601,8 @@ def weierstrass_substitution(integral):
         denominator = denominator.as_expr().xreplace(replacements)
         transformed = (numerator/denominator).cancel()
         substep = yield IntegralInfo(transformed, t)
-        return URule(
-            integrand, x, t, tan(u_func), substep
-        )
+        inner = URule(integrand, x, t, tan(u_func), substep)
+        return RectifyAtanRule(integrand, x, u_func, inner)
 
     def try_tan_half(w):
         # fallback to the universal Weierstrass substitution t = tan(u_func/2)
@@ -2564,7 +2617,8 @@ def weierstrass_substitution(integral):
 
         transformed *= (2/(w*(1 + t**2))).cancel()
         substep = yield IntegralInfo(transformed, t)
-        return URule(integrand, x, t, tan(u_func/2), substep)
+        inner = URule(integrand, x, t, tan(u_func/2), substep)
+        return RectifyAtanRule(integrand, x, u_func/2, inner)
 
     generic_step = yield from try_sin(omega)
     if generic_step is None:
@@ -4662,6 +4716,12 @@ class IntegrationSolver:
                 null_safe(w(hyperbolic_rule)),
                 null_safe(alternatives(
                     w(rewrites_rule),
+                    # cheap specific closed-form rules come before the
+                    # general searches, so that table entries win over
+                    # (and cost less than) exploratory substitutions
+                    w(dilog_rule),
+                    w(exp_over_linear_rule),
+                    w(log_of_trig_rule),
                     w(substitution_rule),
                     condition(
                         _integral_is_subclass(Mul, Pow),
@@ -4684,9 +4744,7 @@ class IntegrationSolver:
                     w(trig_expand_rule),
                     w(power_substitution_rule),
                     w(exp_power_rewrite_rule),
-                    w(exp_over_linear_rule),
                     w(exp_times_rational_rule),
-                    w(log_of_trig_rule),
                     branch=self.branch
                 )),
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(nested_pow_rule))),
@@ -4696,7 +4754,6 @@ class IntegrationSolver:
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(linear_power_product_rule))),
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(inverse_function_substitution_rule))),
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(trig_half_angle_square_rule))),
-                null_safe(condition(_integral_is_subclass(Mul), w(dilog_rule))),
                 null_safe(condition(_integral_is_subclass(Mul), w(log_times_rational_rule))),
                 null_safe(condition(_integral_is_subclass(Mul), w(exp_over_linear_rule))),
                 null_safe(condition(_integral_is_subclass(Mul), w(exp_times_rational_rule))),

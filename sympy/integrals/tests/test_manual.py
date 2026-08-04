@@ -132,25 +132,24 @@ def test_manualintegrate_weierstrass_substitution():
     # the sin part is picked up by the substitution t = cos(x), which gives
     # a simpler and continuous form than the half-angle substitution
     f = (a + b*sin(x))/(cos(x) + 2)
-    F = 2*sqrt(3)*a*atan(sqrt(3)*tan(x/2)/3)/3 - b*log(cos(x) + 2)
+    F = (2*sqrt(3)*a*(x/2 + atan((-1 + sqrt(3)/3)*sin(x)
+         /((1 - sqrt(3)/3)*cos(x) + sqrt(3)/3 + 1)))/3 - b*log(cos(x) + 2))
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
     f = 1/(tan(x) + 2)
-    F = (log(tan(x) + 2)/5 - log(tan(x)**2 + 1)/10
-         + 2*atan(tan(x))/5)
+    F = 2*x/5 + log(tan(x) + 2)/5 - log(tan(x)**2 + 1)/10
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
     f = 1/(cot(x) + 2)
-    F = (-log(2*tan(x) + 1)/5 + log(tan(x)**2 + 1)/10
-         + 2*atan(tan(x))/5)
+    F = 2*x/5 - log(2*tan(x) + 1)/5 + log(tan(x)**2 + 1)/10
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
     f = 1/(sec(x) + 2)
-    F = (sqrt(3)*(log(tan(x/2) - sqrt(3))
-         - log(tan(x/2) + sqrt(3)))/6 + atan(tan(x/2)))
+    F = (x/2 + sqrt(3)*(log(tan(x/2) - sqrt(3))
+         - log(tan(x/2) + sqrt(3)))/6)
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
@@ -170,14 +169,16 @@ def test_manualintegrate_weierstrass_substitution():
 
     # A nonzero phase.
     f = 1/(tan(x + pi/4) + 2)
-    F = (log(tan(x + pi/4) + 2)/5 - log(tan(x + pi/4)**2 + 1)/10
-         + 2*atan(tan(x + pi/4))/5)
+    F = (2*x/5 + log(tan(x + pi/4) + 2)/5
+         - log(tan(x + pi/4)**2 + 1)/10 + pi/10)
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
     # Symbolic frequency and multiple harmonics.
     f = 1/(sin(a*x) + cos(2*a*x) + 2)
-    F1 = (4*sqrt(5)*atan(3*sqrt(5)*(tan(a*x/2) - S(2)/3)/5)/(25*a)
+    F1 = (4*sqrt(5)*(a*x/2 + atan((-2*sqrt(5)*(cos(a*x) + 1)/5
+          + (-1 + 3*sqrt(5)/5)*sin(a*x))/(-2*sqrt(5)*sin(a*x)/5
+          + (1 - 3*sqrt(5)/5)*cos(a*x) + 1 + 3*sqrt(5)/5)))/(25*a)
           - 2/(5*a*(tan(a*x/2) + 1)))
     F2 = x/3
     assert manualintegrate(f, x) == Piecewise(
@@ -462,7 +463,7 @@ def test_manualintegrate_dilog():
 
 def test_manualintegrate_exp_over_linear():
     F = manualintegrate(exp(a + b*x)/(c + d*x), x)
-    assert F == exp(a)*exp(-b*c/d)*Ei(b*(c + d*x)/d)/d
+    assert F == exp(a - b*c/d)*Ei(b*(c + d*x)/d)/d
 
     def assert_is_antiderivative(F, f):
         difference = (F.diff(x) - f).subs(
@@ -517,6 +518,24 @@ def test_manualintegrate_log_inverse_parts():
     difference = F.diff(x) - f
     assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
                for pt in (0.3, 0.9))
+
+
+def test_manualintegrate_rectified_atan():
+    # antiderivatives of continuous trigonometric rationals are rectified
+    # to be continuous on domains of maximum extent (Jeffrey 1993)
+    F = manualintegrate(3/(5 - 4*cos(x)), x)
+    assert F == x + 2*atan(2*sin(x)/(4 - 2*cos(x)))
+    assert (F.diff(x) - 3/(5 - 4*cos(x))).simplify() == 0
+    # no jump across x = pi
+    left = complex(F.subs(x, pi - S(1)/1000).n(20))
+    right = complex(F.subs(x, pi + S(1)/1000).n(20))
+    assert abs(left - right) < 0.01
+
+    F = manualintegrate(2/(3 + cos(2*x)), x)
+    assert (F.diff(x) - 2/(3 + cos(2*x))).simplify() == 0
+    left = complex(F.subs(x, pi/2 - S(1)/1000).n(20))
+    right = complex(F.subs(x, pi/2 + S(1)/1000).n(20))
+    assert abs(left - right) < 0.01
 
 
 @slow
