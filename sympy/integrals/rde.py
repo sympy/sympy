@@ -45,6 +45,8 @@ def order_at(a, p, t):
 
     To compute the order at a rational function, a/b, use the fact that
     nu_p(a/b) == nu_p(a) - nu_p(b).
+
+    This is the order function nu_p from Section 4.1 of Bronstein's book.
     """
     if a.is_zero:
         return oo
@@ -82,6 +84,9 @@ def order_at_oo(a, d, t):
 
     For f in k(t), the order or f at oo is defined as deg(d) - deg(a), where
     f == a/d.
+
+    This is the order at infinity nu_oo from Section 4.3 of Bronstein's
+    book.
     """
     if a.is_zero:
         return oo
@@ -107,6 +112,8 @@ def weak_normalizer(a, d, DE, z=None):
     in k[t].
 
     Returns (q, f - Dq/q)
+
+    This is ``WeakNormalizer`` from Section 6.1 of Bronstein's book.
     """
     z = z or Dummy('z')
     dn, ds = splitfactor(d, DE)
@@ -154,6 +161,8 @@ def normal_denom(fa, fd, ga, gd, DE):
     a*Dq + b*q == c.
 
     This constitutes step 1 in the outline given in the rde.py docstring.
+
+    This is ``RdeNormalDenominator`` from Section 6.1 of Bronstein's book.
     """
     dn, ds = splitfactor(fd, DE)
     en, es = splitfactor(gd, DE)
@@ -184,6 +193,11 @@ def _special_denom_cancel_bound(a, ba, bd, n, DE, case):
     This is the part of the special denominator algorithms (Sections 6.2 and
     7.1 of Bronstein) shared by special_denom() and prde_special_denom().
     ``case`` is 'exp' or 'tan'.
+
+    This is the possible-cancellation part of
+    ``RdeSpecialDenomExp``/``RdeSpecialDenomTan`` (Section 6.2) and
+    ``ParamRdeSpecialDenomExp``/``ParamRdeSpecialDenomTan`` (Section 7.1)
+    of Bronstein's book.
     """
     # Delayed imports, since prde imports this module at the module level.
     from .prde import parametric_log_deriv, real_imag
@@ -256,6 +270,9 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     this case.
 
     This constitutes step 2 of the outline given in the rde.py docstring.
+
+    This is ``RdeSpecialDenomExp`` and ``RdeSpecialDenomTan`` from Section
+    6.2 of Bronstein's book.
     """
     # TODO: finish writing this and write tests
 
@@ -318,6 +335,10 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     [q1, ..., qm], a list of Polys.
 
     This constitutes step 3 of the outline given in the rde.py docstring.
+
+    This combines ``RdeBoundDegreeBase``, ``RdeBoundDegreePrim``,
+    ``RdeBoundDegreeExp``, and ``RdeBoundDegreeNonLinear`` from Section 6.3
+    of Bronstein's book (and their parametric analogues from Section 7.1).
     """
     # TODO: finish writing this and write tests
 
@@ -444,6 +465,8 @@ def spde(a, b, c, n, DE):
     q == alpha*h + beta, where h in k[t], deg(h) <= m, and Dh + B*h == C.
 
     This constitutes step 4 of the outline given in the rde.py docstring.
+
+    This is ``SPDE`` from Section 6.4 of Bronstein's book.
     """
     zero = Poly(0, DE.t)
 
@@ -490,6 +513,8 @@ def no_cancel_b_large(b, c, n, DE):
     which case the equation ``Dq + b*q == c`` has no solution of degree at
     most n in k[t], or a solution q in k[t] of this equation with
     ``deg(q) < n``.
+
+    This is ``PolyRischDENoCancel1`` from Section 6.5 of Bronstein's book.
     """
     q = Poly(0, DE.t)
 
@@ -523,6 +548,8 @@ def no_cancel_b_small(b, c, n, DE):
     tuple (h, b0, c0) such that h in k[t], b0, c0, in k, and for any
     solution q in k[t] of degree at most n of Dq + bq == c, y == q - h
     is a solution in k of Dy + b0*y == c0.
+
+    This is ``PolyRischDENoCancel2`` from Section 6.5 of Bronstein's book.
     """
     q = Poly(0, DE.t)
 
@@ -572,6 +599,8 @@ def no_cancel_equal(b, c, n, DE):
     in k[t], m in ZZ, and C in k[t], and for any solution q in k[t] of
     degree at most n of Dq + b*q == c, y == q - h is a solution in k[t]
     of degree at most m of Dy + b*y == C.
+
+    This is ``PolyRischDENoCancel3`` from Section 6.5 of Bronstein's book.
     """
     q = Poly(0, DE.t)
     lc = cancel(-b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC())
@@ -619,6 +648,8 @@ def cancel_primitive(b, c, n, DE):
     NonElementaryIntegralException, in which case the equation Dq + b*q == c
     has no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n.
+
+    This is ``PolyRischDECancelPrim`` from Section 6.6 of Bronstein's book.
     """
     # Delayed imports
     from .prde import is_log_deriv_k_t_radical_in_field
@@ -671,6 +702,8 @@ def cancel_exp(b, c, n, DE):
     NonElementaryIntegralException, in which case the equation Dq + b*q == c
     has no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n.
+
+    This is ``PolyRischDECancelExp`` from Section 6.6 of Bronstein's book.
     """
     from .prde import parametric_log_deriv
     eta = DE.d.quo(Poly(DE.t, DE.t)).as_expr()
@@ -728,6 +761,10 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 
     For parametric=False, cQ is c, a Poly; for parametric=True, cQ is Q ==
     [q1, ..., qm], a list of Polys.
+
+    This dispatches among the algorithms of Sections 6.5 and 6.6 of
+    Bronstein's book (and their parametric analogues from Section 7.1); it
+    has no single named counterpart.
     """
     # No cancellation
     if not b.is_zero and (DE.case == 'base' or
@@ -821,6 +858,9 @@ def rischDE(fa, fd, ga, gd, DE):
     NotImplementedError, in which case, the algorithms necessary to
     solve the given Risch Differential Equation have not yet been
     implemented.
+
+    This chains together the algorithms of Sections 6.1-6.6 of Bronstein's
+    book; the book does not give it as a single named pseudocode function.
     """
     # Substitute y == z/q, where q is the weak normalizer of f.  By Theorem
     # 6.1.2, y in k(t) solves Dy + f*y == g iff z == q*y solves

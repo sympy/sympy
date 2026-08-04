@@ -45,6 +45,9 @@ def prde_normal_denom(fa, fd, G, DE):
     a, h in k[t], b in k<t>, G = [g1, ..., gm] in k(t)^m, and for any solution
     c1, ..., cm in Const(k) and y in k(t) of Dy + f*y == Sum(ci*gi, (i, 1, m)),
     q == y*h in k<t> satisfies a*Dq + b*q == Sum(ci*Gi, (i, 1, m)).
+
+    This is ``ParamRdeNormalDenominator`` from Section 7.1 of Bronstein's
+    book.
     """
     dn, ds = splitfactor(fd, DE)
     Gas, Gds = list(zip(*G))
@@ -111,6 +114,9 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
 
     For case == 'primitive', k<t> == k[t], so it returns (a, b, G, 1) in this
     case.
+
+    This is ``ParamRdeSpecialDenomExp`` and ``ParamRdeSpecialDenomTan``
+    from Section 7.1 of Bronstein's book.
     """
     # The cancellation-case bound is shared with special_denom() in rde.py
     # via _special_denom_cancel_bound().  Note that N below is
@@ -171,6 +177,8 @@ def prde_linear_constraints(a, b, G, DE):
 
     Because M has entries in k(t), and because Matrix does not play well with
     Poly, M will be a Matrix of Basic expressions.
+
+    This is ``LinearConstraints`` from Section 7.1 of Bronstein's book.
     """
     m = len(G)
 
@@ -195,6 +203,9 @@ def poly_linear_constraints(p, d):
     that Sum(ci*pi, (i, 1, m)), for c1, ..., cm in k, is divisible
     by d if and only if (c1, ..., cm) is a solution of Mx = 0, in
     which case the quotient is Sum(ci*qi, (i, 1, m)).
+
+    There is no named counterpart in Bronstein's book; this is a subroutine
+    used by the Section 7.1 algorithms.
     """
     m = len(p)
     q, r = zip(*[pi.div(d) for pi in p])
@@ -228,6 +239,8 @@ def constant_system(A, u, DE):
 
     Because Poly does not play well with Matrix yet, this algorithm assumes that
     all matrix entries are Basic expressions.
+
+    This is ``ConstantSystem`` from Section 7.1 of Bronstein's book.
     """
     if not A:
         return A, u
@@ -290,6 +303,8 @@ def prde_spde(a, b, Q, n, DE):
     c1, ..., cm in Const(k) and q in k[t] of degree at most n of
     a*Dq + b*q == Sum(ci*gi, (i, 1, m)), p = (q - Sum(ci*ri, (i, 1, m)))/a has
     degree at most n1 and satisfies A*Dp + B*p == Sum(ci*qi, (i, 1, m))
+
+    This is ``ParSPDE`` from Section 7.1 of Bronstein's book.
     """
     R, Z = list(zip(*[gcdex_diophantine(b, a, qi) for qi in Q]))
 
@@ -315,6 +330,9 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     if c1, ..., cm in Const(k) and q in k[t] satisfy deg(q) <= n and
     Dq + b*q == Sum(ci*qi, (i, 1, m)), then q = Sum(dj*hj, (j, 1, r)), where
     d1, ..., dr in Const(k) and A*Matrix([[c1, ..., cm, d1, ..., dr]]).T == 0.
+
+    This is ``ParamPolyRischDENoCancel1`` from Section 7.1 of Bronstein's
+    book.
     """
     db = b.degree(DE.t)
     m = len(Q)
@@ -351,6 +369,9 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     if c1, ..., cm in Const(k) and q in k[t] satisfy deg(q) <= n and
     Dq + b*q == Sum(ci*qi, (i, 1, m)) then q = Sum(dj*hj, (j, 1, r)) where
     d1, ..., dr in Const(k) and A*Matrix([[c1, ..., cm, d1, ..., dr]]).T == 0.
+
+    This is ``ParamPolyRischDENoCancel2`` from Section 7.1 of Bronstein's
+    book.
     """
     m = len(Q)
     H = [Poly(0, DE.t)]*m
@@ -440,7 +461,11 @@ def prde_no_cancel_b_small(b, Q, n, DE):
 
 def prde_cancel_liouvillian(b, Q, n, DE):
     """
-    Pg, 237.
+    Parametric Poly Risch Differential Equation - Cancellation: Liouvillian case.
+
+    This implements the primitive and hyperexponential cancellation cases
+    from the discussion in Section 7.1 of Bronstein's book (there is no
+    corresponding pseudocode function in the first edition).
     """
     H = []
 
@@ -499,6 +524,10 @@ def param_poly_rischDE(a, b, q, n, DE):
     in k[t] with c1, ..., cm in Const(k) if and only if p = Sum(dj*hj,
     (j, 1, r)) where d1, ..., dr are in Const(k) and (c1, ..., cm,
     d1, ..., dr) is a solution of Ax == 0.
+
+    This implements the polynomial parametric RDE procedure of Section 7.1
+    of Bronstein's book; there is no single corresponding pseudocode
+    function.
     """
     m = len(q)
     if n < 0:
@@ -639,6 +668,10 @@ def param_rischDE(fa, fd, G, DE):
     d1, ..., dr) is a solution of Ax == 0.
 
     Elements of k(t) are tuples (a, d) with a and d in k[t].
+
+    This chains together the parametric algorithms of Section 7.1 of
+    Bronstein's book; the book does not give it as a single named
+    pseudocode function.
     """
     m = len(G)
     q, (fa, fd) = weak_normalizer(fa, fd, DE)
@@ -779,6 +812,9 @@ def limited_integrate_reduce(fa, fd, G, DE):
     S1irr == Sirr.  Furthermore, it will automatically call bound_degree() when
     t is linear and non-Liouvillian, which for the transcendental case, implies
     that Dt == a*t + b with for some a, b in k*.
+
+    This is ``LimitedIntegrateReduce`` from Section 7.2 of Bronstein's
+    book.
     """
     dn, ds = splitfactor(fd, DE)
     E = [splitfactor(gd, DE) for _, gd in G]
@@ -812,6 +848,10 @@ def limited_integrate_reduce(fa, fd, G, DE):
 def limited_integrate(fa, fd, G, DE):
     """
     Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
+
+    This implements the limited integration procedure of Section 7.2 of
+    Bronstein's book (there is no single corresponding pseudocode
+    function).
     """
     fa, fd = fa*Poly(1/fd.LC(), DE.t), fd.monic()
     # interpreting limited integration problem as a
@@ -857,6 +897,9 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     used.
 
     The argument w == Dtheta/theta
+
+    This is ``ParametricLogarithmicDerivative`` from Section 7.3 of
+    Bronstein's book.
     """
     # Note: ideally the code here should let n = 1 whenever possible, as the
     # check in special_denom() only succeeds in that case.
@@ -1010,6 +1053,13 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
 
 def parametric_log_deriv(fa, fd, wa, wd, DE):
+    """
+    Solves the parametric logarithmic derivative problem.
+
+    This is the parametric logarithmic derivative problem from Section 7.3
+    of Bronstein's book; currently only the heuristic
+    (``ParametricLogarithmicDerivative``) is implemented.
+    """
     # TODO: Write the full algorithm using the structure theorems.  Until
     # then, this propagates NotImplementedError when the heuristic cannot
     # decide (it must not be caught and treated as "no solution", since a
@@ -1077,6 +1127,9 @@ def is_deriv_k(fa, fd, DE):
     ========
     is_log_deriv_k_t_radical_in_field, is_log_deriv_k_t_radical
 
+    This is an application of the Risch structure theorems from Section 9.3
+    of Bronstein's book (there is no corresponding pseudocode function in
+    the first edition).
     """
     # Compute Df/f
     dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)), fd*fa
@@ -1200,6 +1253,9 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 
     is_log_deriv_k_t_radical_in_field, is_deriv_k
 
+    This is an application of the structure theorems from Sections 9.3 and
+    9.4 of Bronstein's book (there is no corresponding pseudocode function
+    in the first edition).
     """
     if Df:
         dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)).cancel(fd**2,
@@ -1288,6 +1344,9 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     ========
     is_log_deriv_k_t_radical, is_deriv_k
 
+    This is the in-field logarithmic derivative of a k(t)-radical problem
+    from Section 5.12 of Bronstein's book (named
+    ``InFieldLogarithmicDerivativeOfRadical`` in the second edition).
     """
     fa, fd = fa.cancel(fd, include=True)
 
