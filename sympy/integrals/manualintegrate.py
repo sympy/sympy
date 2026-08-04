@@ -60,6 +60,9 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
     cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
+from sympy.functions.elementary.integers import ceiling, floor, frac
+from sympy.core.mod import Mod
+from sympy.concrete.summations import Sum
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.error_functions import (erf, erfc, erfi, fresnelc,
     fresnels, Ci, Chi, Si, Shi, Ei, li)
@@ -2400,14 +2403,25 @@ class RectifyAtanRule(Rule):
             coefficient, at = term.as_independent(atan)
             if not isinstance(at, atan) or coefficient.has(self.variable):
                 return term
-            arg_poly = at.args[0].subs(tan(theta), T).as_poly(T)
+            argument = at.args[0]
+            arg_poly = argument.subs(tan(theta), T).as_poly(T)
+            cotangent = False
             if arg_poly is None or arg_poly.degree() != 1 or arg_poly.has(tan):
-                return term
+                # try an argument linear in cot(theta) = 1/tan(theta)
+                arg_poly = argument.subs(tan(theta), 1/T).as_poly(T)
+                cotangent = True
+                if (arg_poly is None or arg_poly.degree() != 1
+                        or arg_poly.has(tan)):
+                    return term
             v, w = arg_poly.nth(0), arg_poly.nth(1)
             if v.has(self.variable) or w.has(self.variable):
                 return term
             if (v**2 - 4*w).is_negative is not True:
                 return term
+            if cotangent:
+                return coefficient*(-theta + atan(
+                    ((w - 1)*sin(double) + v*(1 - cos(double)))
+                    /((1 + w) + v*sin(double) - (1 - w)*cos(double))))
             return coefficient*(theta + atan(
                 ((w - 1)*sin(double) + v*(1 + cos(double)))
                 /((1 + w) + v*sin(double) + (1 - w)*cos(double))))
@@ -3470,40 +3484,71 @@ def log_of_trig_rule(integral):
 
 
 class PiecewiseContinuousRule(Rule):
-    """integrate f(x, sign(w1), Abs(w2), Heaviside(w3), ...) for linear
-    wi by replacing each piecewise-continuous factor with a temporary
+    """integrate f(x, sign(w1), Abs(w2), floor(w3), ...) for linear wi
+    by replacing each piecewise-continuous factor with a temporary
     constant, integrating, and then restoring the constants one at a
-    time while subtracting the jump at each breakpoint,
+    time while removing the jumps at the breakpoints: for a signum
 
         G_new = G(x, sign(w), ...) - (J/2)*sign(w),
         J = (G(b, 1, ...) - G(b, -1, ...)) at the breakpoint w(b) = 0,
 
-    so that the result is continuous on the domain of maximum extent
-    (Jeffrey & Rich, ISSAC 1998).
+    and for a floor, whose breakpoints are at w(x) = m for integer m,
+
+        G_new = G(x, floor(w), ...) - Sum(J(m), (m, 1, floor(w))),
+        J(m) = (G(x_m, m, ...) - G(x_m, m - 1, ...)) at w(x_m) = m,
+
+    with the sum evaluated in closed form when possible, so that the
+    result is continuous on the domain of maximum extent (Jeffrey &
+    Rich, ISSAC 1998).
     """
 
-    __slots__ = ("replacements", "substep")
+    __slots__ = ("sign_replacements", "floor_replacements", "substep")
 
-    # list of (temporary symbol, sign argument w) pairs
-    replacements: list[tuple[Symbol, Expr]]
+    # lists of (temporary symbol, argument w) pairs
+    sign_replacements: list[tuple[Symbol, Expr]]
+    floor_replacements: list[tuple[Symbol, Expr]]
     substep: Rule
 
     def __init__(self, integrand: Expr, variable: Symbol,
-                 replacements: list[tuple[Symbol, Expr]],
+                 sign_replacements: list[tuple[Symbol, Expr]],
+                 floor_replacements: list[tuple[Symbol, Expr]],
                  substep: Rule) -> None:
         super().__init__(integrand, variable)
-        self.replacements = replacements
+        self.sign_replacements = sign_replacements
+        self.floor_replacements = floor_replacements
         self.substep = substep
 
     def eval(self) -> Expr:
         from sympy.functions.elementary.complexes import sign
         x = self.variable
         G = self.substep.eval()
-        for s, w in self.replacements:
+        for s, w in self.sign_replacements:
             w_poly = w.as_poly(x)
             breakpoint = -w_poly.nth(0)/w_poly.nth(1)
             jump = (G.subs(s, 1) - G.subs(s, -1)).subs(x, breakpoint)
             G = G.subs(s, sign(w)) - jump/2*sign(w)
+        for f, w in self.floor_replacements:
+            w_poly = w.as_poly(x)
+            c0, c1 = w_poly.nth(0), w_poly.nth(1)
+            m = Dummy("m", integer=True)
+            x_m = (m - c0)/c1
+            jump = (G.subs(f, m) - G.subs(f, m - 1)).subs(x, x_m)
+            # signum factors proportional to the summation variable have
+            # the sign of w throughout the effective summation range
+            # (m = 1..floor(w) for w > 0 and, by the usual summation
+            # convention, m = floor(w)+1..0 for w < 0), which restores
+            # the S(x) factors of Jeffrey & Rich's results
+            sign_fixes = {}
+            for atom in jump.atoms(sign):
+                g_poly = atom.args[0].as_poly(m)
+                if (g_poly is not None and g_poly.degree() == 1
+                        and g_poly.nth(0).is_zero
+                        and g_poly.nth(1).is_positive):
+                    sign_fixes[atom] = sign(w)
+            if sign_fixes:
+                jump = jump.xreplace(sign_fixes)
+            total = Sum(jump, (m, 1, floor(w))).doit()
+            G = G.subs(f, floor(w)) - total
         return G
 
     def contains_dont_know(self) -> bool:
@@ -3512,43 +3557,72 @@ class PiecewiseContinuousRule(Rule):
 
 def piecewise_continuous_rule(integral):
     """
-    Match integrands containing Abs, sign or Heaviside of linear
-    arguments for :class:`PiecewiseContinuousRule`, using the
-    transformations Abs(w) -> w*sign(w) and
-    Heaviside(w) -> (1 + sign(w))/2.
+    Match integrands containing Abs, sign, Heaviside, floor, ceiling,
+    frac or Mod of linear arguments for
+    :class:`PiecewiseContinuousRule`, using the preliminary
+    transformations of Jeffrey & Rich (ISSAC 1998):
+
+        Abs(w) -> w*sign(w)           Heaviside(w) -> (1 + sign(w))/2
+        ceiling(w) -> -floor(-w)      frac(w) -> w - floor(w)
+        Mod(w, y) -> w - y*floor(w/y)
     """
     from sympy.functions.elementary.complexes import sign
     integrand, x = integral
 
     transformed = integrand
-    atoms = transformed.atoms(Abs, sign, Heaviside)
+    atoms = transformed.atoms(Abs, sign, Heaviside, floor, ceiling,
+                              frac, Mod)
     if not any(a.has(x) for a in atoms):
         return None
-    arguments = set()
-    for atom in atoms:
+    # preliminary transformations to sign and floor
+    for atom in transformed.atoms(Mod):
+        w, y = atom.args
+        if w.has(x) and not y.has(x):
+            transformed = transformed.xreplace({atom: w - y*floor(w/y)})
+    for atom in transformed.atoms(frac):
+        transformed = transformed.xreplace(
+            {atom: atom.args[0] - floor(atom.args[0])})
+    for atom in transformed.atoms(ceiling):
+        transformed = transformed.xreplace({atom: -floor(-atom.args[0])})
+    for atom in transformed.atoms(Abs, Heaviside):
+        w = atom.args[0]
+        if not w.has(x):
+            continue
+        if isinstance(atom, Abs):
+            transformed = transformed.xreplace({atom: w*sign(w)})
+        else:
+            transformed = transformed.xreplace({atom: (1 + sign(w))/2})
+
+    sign_replacements = []
+    for atom in transformed.atoms(sign):
         w = atom.args[0]
         if not w.has(x):
             continue
         w_poly = w.as_poly(x)
         if w_poly is None or w_poly.degree() != 1:
             return None
-        arguments.add(w)
-        if isinstance(atom, Abs):
-            transformed = transformed.xreplace({atom: w*sign(w)})
-        elif isinstance(atom, Heaviside):
-            transformed = transformed.xreplace(
-                {atom: (1 + sign(w))/2})
-    replacements = []
-    for w in arguments:
         s = Dummy("s")
-        transformed = transformed.xreplace({sign(w): s})
-        replacements.append((s, w))
-    if transformed.has(Abs, sign, Heaviside) or not replacements:
+        transformed = transformed.xreplace({atom: s})
+        sign_replacements.append((s, w))
+    floor_replacements = []
+    for atom in transformed.atoms(floor):
+        w = atom.args[0]
+        if not w.has(x):
+            continue
+        w_poly = w.as_poly(x)
+        if w_poly is None or w_poly.degree() != 1:
+            return None
+        f = Dummy("f")
+        transformed = transformed.xreplace({atom: f})
+        floor_replacements.append((f, w))
+    if (transformed.has(Abs, sign, Heaviside, floor, ceiling, frac, Mod)
+            or not (sign_replacements or floor_replacements)):
         return None
     substep = yield IntegralInfo(transformed.expand(), x)
     if substep.contains_dont_know():
         return None
-    return PiecewiseContinuousRule(integrand, x, replacements, substep)
+    return PiecewiseContinuousRule(integrand, x, sign_replacements,
+                                   floor_replacements, substep)
 
 
 def log_inverse_parts_rule(integral):

@@ -153,8 +153,8 @@ def test_manualintegrate_weierstrass_substitution():
     assert_is_integral_of_weierstrass(f, F)
 
     f = 1/(csc(x) + 2)
-    F = (sqrt(3)*log((-sqrt(3)*tan(x/2) + 2*tan(x/2) + 1)
-         /(sqrt(3)*tan(x/2) + 2*tan(x/2) + 1))/6 - atan(1/tan(x/2)))
+    F = (x/2 + sqrt(3)*log((-sqrt(3)*tan(x/2) + 2*tan(x/2) + 1)
+         /(sqrt(3)*tan(x/2) + 2*tan(x/2) + 1))/6)
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
@@ -549,6 +549,25 @@ def test_manualintegrate_piecewise_continuous():
     left = complex(F.subs(x, S(3)/2 - S(1)/10**9).n(20))
     right = complex(F.subs(x, S(3)/2 + S(1)/10**9).n(20))
     assert abs(left - right) < 1e-6
+
+    # the floor test suite of Jeffrey & Rich (ISSAC 1998)
+    from sympy import floor, frac, harmonic
+    assert manualintegrate(floor(x), x) == \
+        x*floor(x) - floor(x)**2/2 - floor(x)/2
+    assert manualintegrate(12*x*floor(x), x) == \
+        6*x**2*floor(x) - 2*floor(x)**3 - 3*floor(x)**2 - floor(x)
+    assert manualintegrate(2*sign(x)*floor(x), x).expand() == \
+        2*x*floor(x)*sign(x) - floor(x)**2*sign(x) - floor(x)*sign(x)
+    assert manualintegrate(floor(x)/x**2, x) == \
+        harmonic(floor(x)) - floor(x)/x
+    assert manualintegrate(frac(x), x) == \
+        x**2/2 - x*floor(x) + floor(x)**2/2 + floor(x)/2
+    # continuity of the sign*floor integral on both branches
+    F = manualintegrate(2*sign(x)*floor(x), x)
+    for bp in (-2, -1, 1, 2):
+        left = complex(F.subs(x, bp - S(1)/10**9).n(20))
+        right = complex(F.subs(x, bp + S(1)/10**9).n(20))
+        assert abs(left - right) < 1e-6
 
 
 def test_manualintegrate_combine_logs():
