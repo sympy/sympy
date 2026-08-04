@@ -33,7 +33,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
-from sympy.core.function import Derivative, Function, expand_trig
+from sympy.core.function import Derivative, Function, Lambda, expand_trig
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Number, E, Rational, pi
@@ -67,6 +67,8 @@ from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
 from sympy.simplify.fu import TR1, TR2
 from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
+from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.rootoftools import RootSum
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.simplify.powsimp import powsimp
@@ -2885,6 +2887,10 @@ def power_substitution_rule(integral):
     """
     integrand, x = integral
 
+    # substituting under a variable binder would capture the bound
+    # variable (e.g. the Lambda variable of a RootSum from ratint)
+    if integrand.has(RootSum, Lambda):
+        return None
     argument_candidates = []
     power_candidates = []
     for f in integrand.atoms(Function):
@@ -2965,6 +2971,163 @@ def power_substitution_rule(integral):
             return URule(integrand, x, u_pos, x**n, substep)
     return None
 
+def exp_power_rewrite_rule(integral):
+    """
+    Rewrite non-integer powers of exponentials as exponentials,
+    exp(u)**p = exp(p*u), e.g. sqrt(exp(a + b*x)) = exp(a/2 + b*x/2),
+    so that the exponential rules apply; for example
+    x*sqrt(exp(a + b*x)) then integrates by parts.
+    """
+    integrand, x = integral
+    replacements = {}
+    for pw in integrand.atoms(Pow):
+        if (isinstance(pw.base, exp) and pw.base.has(x)
+                and not pw.exp.has(x)):
+            replacements[pw] = exp((pw.exp*pw.base.args[0]).expand())
+    if not replacements:
+        return None
+    rewritten = integrand.xreplace(replacements)
+    substep = integral_steps(rewritten, x)
+    if substep.contains_dont_know():
+        return None
+    return RewriteRule(integrand, x, rewritten, substep)
+
+class DilogRule(AtomicRule):
+    """integrate(log(a + b*x)/(c + d*x), x), non-proportional arguments:
+
+        (log((a*d - b*c)/d)*log(c + d*x)
+         - polylog(2, -b*(c + d*x)/(a*d - b*c)))/d
+
+    the classic dilogarithm antiderivative (valid up to the usual branch
+    choices of log and polylog).
+    """
+
+    __slots__ = ("a", "b", "c", "d")
+
+    a: Expr
+    b: Expr
+    c: Expr
+    d: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol,
+                 a: Expr, b: Expr, c: Expr, d: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+
+    def eval(self) -> Expr:
+        a, b, c, d = self.a, self.b, self.c, self.d
+        x = self.variable
+        delta = a*d - b*c
+        return (log(delta/d)*log(c + d*x)
+                - polylog(2, -b*(c + d*x)/delta))/d
+
+
+def dilog_rule(integral):
+    """Match K*log(a + b*x)/(c + d*x) for DilogRule."""
+    integrand, x = integral
+    logs = [f for f in integrand.atoms(log) if f.has(x)]
+    if len(logs) != 1:
+        return None
+    L = logs[0]
+    w_poly = L.args[0].as_poly(x)
+    if w_poly is None or w_poly.degree() != 1:
+        return None
+    rest = (integrand/L).cancel()
+    if rest.has(log):
+        return None
+    numer, denom = rest.as_numer_denom()
+    if numer.has(x):
+        return None
+    denom_poly = denom.as_poly(x)
+    if denom_poly is None or denom_poly.degree() != 1:
+        return None
+    a, b = w_poly.nth(0), w_poly.nth(1)
+    c, d = denom_poly.nth(0), denom_poly.nth(1)
+    if (a*d - b*c).cancel() == 0:
+        # proportional arguments reduce by an ordinary substitution
+        return None
+    core = L/(c + d*x)
+    step = DilogRule(core, x, a, b, c, d)
+    if numer == 1:
+        return step
+    return ConstantTimesRule(integrand, x, numer, core, step)
+
+
+def log_times_rational_rule(integral):
+    """
+    Integrate log(w)*R(x) for a linear w and rational R by splitting R
+    into partial fractions: the polynomial and repeated-pole parts
+    integrate by parts and the simple-pole parts are dilogarithms.
+    """
+    integrand, x = integral
+    logs = [f for f in integrand.atoms(log) if f.has(x)]
+    if len(logs) != 1:
+        return None
+    L = logs[0]
+    R = (integrand/L).cancel()
+    if R.has(log) or not R.is_rational_function(x):
+        return None
+    numer, denom = R.as_numer_denom()
+    if denom.as_poly(x) is None or degree(denom, x) < 1:
+        return None
+    try:
+        decomposed = R.apart(x)
+    except (PolynomialError, NotImplementedError):
+        return None
+    if decomposed == R or not isinstance(decomposed, Add):
+        return None
+    rewritten = Add(*[term*L for term in decomposed.args])
+    substep = integral_steps(rewritten, x)
+    if substep.contains_dont_know():
+        return None
+    return RewriteRule(integrand, x, rewritten, substep)
+
+
+def log_inverse_parts_rule(integral):
+    """
+    Integrate R(x)*L1(x)*L2(x), for a rational function R and two factors
+    that are powers of logarithms or of inverse trigonometric or
+    hyperbolic functions, by parts with u = L1*L2 and dv = R dx:
+
+        Integral(R*L1*L2, x) = V*L1*L2 - Integral(V*(L1'*L2 + L1*L2'), x)
+
+    Differentiating a factor lowers its transcendence, so the remaining
+    integral has a single such factor and falls to the other rules; for
+    example (d + e*x**2)*log(c*x**n)*atanh(a*x) reduces to integrals of a
+    rational function times atanh(a*x) or times log(c*x**n).
+    """
+    integrand, x = integral
+
+    L_CLASSES = (log, asin, acos, atan, acot, asec, acsc,
+                 asinh, acosh, atanh, acoth, asech, acsch)
+    l_factors = []
+    rational_factors = []
+    for factor in Mul.make_args(integrand):
+        base, power = factor.as_base_exp()
+        if (isinstance(base, L_CLASSES) and base.has(x)
+                and power.is_Integer and power > 0):
+            l_factors.append(factor)
+        else:
+            rational_factors.append(factor)
+    if len(l_factors) < 2:
+        return None
+    R = Mul(*rational_factors)
+    if not R.is_rational_function(x):
+        return None
+    u = Mul(*l_factors)
+    v_step = integral_steps(R, x)
+    if v_step.contains_dont_know():
+        return None
+    V = v_step.eval()
+    remaining = (V*u.diff(x)).expand()
+    second_step = integral_steps(remaining, x)
+    if second_step.contains_dont_know():
+        return None
+    return PartsRule(integrand, x, u, R, v_step, second_step)
+
 def linear_power_product_rule(integral):
     """
     Integrate K*(a + b*x)**m*(c + d*x)**n for non-integer rational
@@ -3033,6 +3196,10 @@ def inverse_function_substitution_rule(integral):
     INVERSES = {asin: sin, acos: cos, atan: tan, acot: cot, asec: sec,
                 acsc: csc, asinh: sinh, acosh: cosh, atanh: tanh,
                 acoth: coth, asech: sech, acsch: csch}
+    if integrand.has(RootSum, Lambda):
+        # substituting x under a variable binder would capture the bound
+        # variable
+        return None
     inv_atoms = integrand.atoms(*INVERSES)
     if len(inv_atoms) != 1:
         return None
@@ -4039,7 +4206,8 @@ def integral_steps(integrand, symbol, **options):
                     distribute_expand_rule),
                 trig_powers_products_rule,
                 trig_expand_rule,
-                power_substitution_rule
+                power_substitution_rule,
+                exp_power_rewrite_rule
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(condition(integral_is_subclass(Mul, Pow), weierstrass_substitution)),
@@ -4048,6 +4216,9 @@ def integral_steps(integrand, symbol, **options):
             null_safe(condition(integral_is_subclass(Mul, Pow), linear_power_product_rule)),
             null_safe(condition(integral_is_subclass(Mul, Pow), inverse_function_substitution_rule)),
             null_safe(condition(integral_is_subclass(Mul, Pow), trig_half_angle_square_rule)),
+            null_safe(condition(integral_is_subclass(Mul), dilog_rule)),
+            null_safe(condition(integral_is_subclass(Mul), log_times_rational_rule)),
+            null_safe(condition(integral_is_subclass(Mul), log_inverse_parts_rule)),
             null_safe(power_substitution_rule),
             null_safe(trig_substitution_rule)
         ),

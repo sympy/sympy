@@ -432,6 +432,44 @@ def test_manualintegrate_half_angle_square():
     assert_is_antiderivative(F, f, {a: 2})
 
 
+def test_manualintegrate_exp_power_rewrite():
+    assert manualintegrate(x*sqrt(exp(a + b*x)), x) == Piecewise(
+        (2*x*exp(a/2)*exp(b*x/2)/b - 4*exp(a/2)*exp(b*x/2)/b**2, Ne(b, 0)),
+        (x**2*exp(a/2)/2, True))
+    F = manualintegrate(x*exp(a + b*x)**Rational(3, 2), x)
+    assert not F.has(Integral)
+
+
+def test_manualintegrate_dilog():
+    F = manualintegrate(log(a + b*x)/(c + d*x), x)
+    assert F == (log((a*d - b*c)/d)*log(c + d*x)
+                 - polylog(2, -b*(c + d*x)/(a*d - b*c)))/d
+    # verify inside the polylog disc
+    difference = (F.diff(x) - log(a + b*x)/(c + d*x)).subs(
+        [(a, 5), (b, 1), (c, 1), (d, 1)])
+    assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+               for pt in (0.3, 0.9))
+
+    f = log(x)/(1 - x**2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    difference = F.diff(x) - f
+    assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+               for pt in (0.3, 0.9))
+
+    assert integrate(log(1 + x)/x, (x, 0, 1), manual=True) == pi**2/12
+
+
+@slow
+def test_manualintegrate_log_inverse_parts():
+    f = log(x)*atan(x)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    difference = F.diff(x) - f
+    assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+               for pt in (0.3, 0.9))
+
+
 @slow
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
@@ -974,8 +1012,12 @@ def test_issue_10847():
     assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**Rational(5, 2)/20 - (2*x + 3)**Rational(3, 2)/4
     assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5,2)/25
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
+    # the last term is now a dilogarithm instead of an unevaluated
+    # Integral (valid on 0 < y < 1 with the principal branch of both
+    # log(y - 1) and polylog)
     assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == \
-        (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - Integral(log(y - 1)/y, y)
+        (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - I*pi*log(y) \
+        + polylog(2, y)
 
 
 def test_issue_12899():
