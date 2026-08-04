@@ -1539,7 +1539,7 @@ def test_issue_14437():
 
 
 def test_issue_14470():
-    assert integrate(1/sqrt(exp(x) + 1), x) == log(sqrt(exp(x) + 1) - 1) - log(sqrt(exp(x) + 1) + 1)
+    assert integrate(1/sqrt(exp(x) + 1), x) == log((sqrt(exp(x) + 1) - 1)/(sqrt(exp(x) + 1) + 1))
 
 
 def test_issue_14877():
@@ -2012,7 +2012,7 @@ def test_issue_23704():
 
 
 def test_exp_substitution():
-    assert integrate(1/sqrt(1-exp(2*x))) == log(sqrt(1 - exp(2*x)) - 1)/2 - log(sqrt(1 - exp(2*x)) + 1)/2
+    assert integrate(1/sqrt(1-exp(2*x))) == -log((sqrt(1 - exp(2*x)) + 1)/(sqrt(1 - exp(2*x)) - 1))/2
 
 
 def test_hyperbolic():

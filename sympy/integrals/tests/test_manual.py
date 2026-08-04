@@ -61,7 +61,7 @@ def test_manualintegrate_exponentials():
     assert manualintegrate(exp(2*x), x) == exp(2*x) / 2
     assert manualintegrate(2**x, x) == (2 ** x) / log(2)
     assert_is_integral_of(1/sqrt(1-exp(2*x)),
-                          log(sqrt(1 - exp(2*x)) - 1)/2 - log(sqrt(1 - exp(2*x)) + 1)/2)
+                          -log((sqrt(1 - exp(2*x)) + 1)/(sqrt(1 - exp(2*x)) - 1))/2)
 
     assert manualintegrate(1 / x, x) == log(x)
     assert manualintegrate(1 / (2*x + 3), x) == log(2*x + 3) / 2
@@ -106,7 +106,7 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
     assert manualintegrate(cos(3*x)*sec(x), x) == -x + sin(2*x)
     assert manualintegrate(sin(3*x)*sec(x), x) == \
-        -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
+        log(cos(x)) - 2*cos(x)**2
 
     assert_is_integral_of(sinh(2*x), cosh(2*x)/2)
     assert_is_integral_of(x*cosh(x**2), sinh(x**2)/2)
@@ -138,25 +138,23 @@ def test_manualintegrate_weierstrass_substitution():
     assert_is_integral_of_weierstrass(f, F)
 
     f = 1/(tan(x) + 2)
-    F = 2*x/5 + log(tan(x) + 2)/5 - log(tan(x)**2 + 1)/10
+    F = 2*x/5 + log((tan(x) + 2)**2*cos(x)**2)/10
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
     f = 1/(cot(x) + 2)
-    F = 2*x/5 - log(2*tan(x) + 1)/5 + log(tan(x)**2 + 1)/10
+    F = 2*x/5 + log(1/((2*tan(x) + 1)**2*cos(x)**2))/10
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
     f = 1/(sec(x) + 2)
-    F = (x/2 + sqrt(3)*(log(tan(x/2) - sqrt(3))
-         - log(tan(x/2) + sqrt(3)))/6)
+    F = x/2 + sqrt(3)*log((tan(x/2) - sqrt(3))/(tan(x/2) + sqrt(3)))/6
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
     f = 1/(csc(x) + 2)
-    F = (sqrt(3)*(log(-sqrt(3) + 2 + 1/tan(x/2))
-         - log(sqrt(3) + 2 + 1/tan(x/2)))/6
-         - atan(1/tan(x/2)))
+    F = (sqrt(3)*log((-sqrt(3)*tan(x/2) + 2*tan(x/2) + 1)
+         /(sqrt(3)*tan(x/2) + 2*tan(x/2) + 1))/6 - atan(1/tan(x/2)))
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
@@ -169,8 +167,7 @@ def test_manualintegrate_weierstrass_substitution():
 
     # A nonzero phase.
     f = 1/(tan(x + pi/4) + 2)
-    F = (2*x/5 + log(tan(x + pi/4) + 2)/5
-         - log(tan(x + pi/4)**2 + 1)/10 + pi/10)
+    F = 2*x/5 + log((tan(x) - 3)**2*cos(x)**2/2)/10 + pi/10
     assert manualintegrate(f, x) == F
     assert_is_integral_of_weierstrass(f, F)
 
@@ -536,6 +533,34 @@ def test_manualintegrate_rectified_atan():
     left = complex(F.subs(x, pi/2 - S(1)/1000).n(20))
     right = complex(F.subs(x, pi/2 + S(1)/1000).n(20))
     assert abs(left - right) < 0.01
+
+
+def test_manualintegrate_piecewise_continuous():
+    from sympy import sign, Abs
+    # Jeffrey & Rich (ISSAC 1998): continuous integrals of integrands
+    # containing Abs, sign and Heaviside of linear arguments
+    assert manualintegrate(Abs(x), x) == x**2*sign(x)/2
+    assert manualintegrate(x*Abs(x), x) == x**3*sign(x)/3
+    assert manualintegrate(x*sign(x + 3), x) == \
+        x**2*sign(x + 3)/2 - 9*sign(x + 3)/2
+    F = manualintegrate(Abs(2*x - 3), x)
+    assert not F.has(Integral)
+    # continuity at the breakpoint x = 3/2
+    left = complex(F.subs(x, S(3)/2 - S(1)/10**9).n(20))
+    right = complex(F.subs(x, S(3)/2 + S(1)/10**9).n(20))
+    assert abs(left - right) < 1e-6
+
+
+def test_manualintegrate_combine_logs():
+    # sums of logarithms of transcendental arguments are collected into
+    # a single logarithm, continuous on a wider domain (Jeffrey 1993)
+    assert manualintegrate(cot(x) + csc(x), x) == \
+        log(sin(x)**2/(cos(x) + 1))
+    assert manualintegrate(sin(3*x)*sec(x), x) == \
+        log(cos(x)) - 2*cos(x)**2
+    # logarithms of rational arguments keep their usual form
+    assert manualintegrate(1/(x**2 - 1), x) == \
+        log(x - 1)/2 - log(x + 1)/2
 
 
 @slow

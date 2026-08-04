@@ -3469,6 +3469,88 @@ def log_of_trig_rule(integral):
     return RewriteRule(integrand, x, rewritten, substep)
 
 
+class PiecewiseContinuousRule(Rule):
+    """integrate f(x, sign(w1), Abs(w2), Heaviside(w3), ...) for linear
+    wi by replacing each piecewise-continuous factor with a temporary
+    constant, integrating, and then restoring the constants one at a
+    time while subtracting the jump at each breakpoint,
+
+        G_new = G(x, sign(w), ...) - (J/2)*sign(w),
+        J = (G(b, 1, ...) - G(b, -1, ...)) at the breakpoint w(b) = 0,
+
+    so that the result is continuous on the domain of maximum extent
+    (Jeffrey & Rich, ISSAC 1998).
+    """
+
+    __slots__ = ("replacements", "substep")
+
+    # list of (temporary symbol, sign argument w) pairs
+    replacements: list[tuple[Symbol, Expr]]
+    substep: Rule
+
+    def __init__(self, integrand: Expr, variable: Symbol,
+                 replacements: list[tuple[Symbol, Expr]],
+                 substep: Rule) -> None:
+        super().__init__(integrand, variable)
+        self.replacements = replacements
+        self.substep = substep
+
+    def eval(self) -> Expr:
+        from sympy.functions.elementary.complexes import sign
+        x = self.variable
+        G = self.substep.eval()
+        for s, w in self.replacements:
+            w_poly = w.as_poly(x)
+            breakpoint = -w_poly.nth(0)/w_poly.nth(1)
+            jump = (G.subs(s, 1) - G.subs(s, -1)).subs(x, breakpoint)
+            G = G.subs(s, sign(w)) - jump/2*sign(w)
+        return G
+
+    def contains_dont_know(self) -> bool:
+        return self.substep.contains_dont_know()
+
+
+def piecewise_continuous_rule(integral):
+    """
+    Match integrands containing Abs, sign or Heaviside of linear
+    arguments for :class:`PiecewiseContinuousRule`, using the
+    transformations Abs(w) -> w*sign(w) and
+    Heaviside(w) -> (1 + sign(w))/2.
+    """
+    from sympy.functions.elementary.complexes import sign
+    integrand, x = integral
+
+    transformed = integrand
+    atoms = transformed.atoms(Abs, sign, Heaviside)
+    if not any(a.has(x) for a in atoms):
+        return None
+    arguments = set()
+    for atom in atoms:
+        w = atom.args[0]
+        if not w.has(x):
+            continue
+        w_poly = w.as_poly(x)
+        if w_poly is None or w_poly.degree() != 1:
+            return None
+        arguments.add(w)
+        if isinstance(atom, Abs):
+            transformed = transformed.xreplace({atom: w*sign(w)})
+        elif isinstance(atom, Heaviside):
+            transformed = transformed.xreplace(
+                {atom: (1 + sign(w))/2})
+    replacements = []
+    for w in arguments:
+        s = Dummy("s")
+        transformed = transformed.xreplace({sign(w): s})
+        replacements.append((s, w))
+    if transformed.has(Abs, sign, Heaviside) or not replacements:
+        return None
+    substep = yield IntegralInfo(transformed.expand(), x)
+    if substep.contains_dont_know():
+        return None
+    return PiecewiseContinuousRule(integrand, x, replacements, substep)
+
+
 def log_inverse_parts_rule(integral):
     """
     Integrate R(x)*L1(x)*L2(x), for a rational function R and two factors
@@ -4745,6 +4827,7 @@ class IntegrationSolver:
                     w(power_substitution_rule),
                     w(exp_power_rewrite_rule),
                     w(exp_times_rational_rule),
+                    w(piecewise_continuous_rule),
                     branch=self.branch
                 )),
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(nested_pow_rule))),
@@ -4837,6 +4920,81 @@ def integral_steps(integrand, symbol, **options):
     return IntegrationSolver(**options).solve(integrand, symbol)
 
 
+def _combine_logs(result, symbol):
+    """Combine sums of logarithms with rationally related coefficients,
+
+        alpha*log(f1) + beta*log(f2) -> (m/n)*log(f1**p*f2**q),
+
+    which for anti-derivatives is always permissible and always
+    preferable: the singular points of the collected logarithm are a
+    subset of those of the sum (D.J. Jeffrey, 1993).  Applied to the
+    top-level sum and inside Piecewise branches.
+    """
+    if isinstance(result, Piecewise):
+        return Piecewise(*[(_combine_logs(e, symbol), c)
+                           for e, c in result.args])
+    if not result.has(log):
+        return result
+    log_terms = []
+    others = []
+    queue = list(Add.make_args(result))
+    while queue:
+        term = queue.pop()
+        coefficient, rest = term.as_independent(log)
+        if coefficient.has(symbol):
+            others.append(term)
+        elif isinstance(rest, log) and rest.args[0].has(symbol):
+            log_terms.append((coefficient, rest.args[0]))
+        elif (isinstance(rest, Add) and rest.has(log)
+                and rest.has(TrigonometricFunction, HyperbolicFunction, exp)
+                and all(isinstance(t.as_independent(log)[1], log)
+                        and not t.as_independent(log)[0].has(symbol)
+                        for t in rest.args)):
+            # distribute constants over sums of logarithms of
+            # transcendental arguments, e.g. sqrt(3)*(log(A) - log(B))/6
+            queue.extend(coefficient*t for t in rest.args)
+        else:
+            others.append(term)
+    if len(log_terms) < 2:
+        return result
+    # group terms whose coefficient ratios are rational
+    groups: list[list[tuple[Expr, Expr]]] = []
+    for coefficient, argument in log_terms:
+        for group in groups:
+            ratio = (coefficient/group[0][0]).cancel()
+            if ratio.is_Rational:
+                group.append((coefficient, argument))
+                break
+        else:
+            groups.append([(coefficient, argument)])
+    combined = []
+    for group in groups:
+        # only collect logarithms of transcendental arguments, where the
+        # collected form removes cancelling singularities; sums of
+        # logarithms of rational arguments are left in their usual form
+        if (len(group) < 2 or not any(
+                argument.has(TrigonometricFunction, HyperbolicFunction, exp)
+                for _, argument in group)):
+            combined.extend(c*log(argument) for c, argument in group)
+            continue
+        c0 = group[0][0]
+        ratios = [(c/c0).cancel() for c, _ in group]
+        n = lcm_list([r.q for r in ratios])
+        powers = [r*n for r in ratios]
+        if any(abs(power) > 4 for power in powers):
+            # avoid unwieldy powers inside the collected logarithm
+            combined.extend(c*log(argument) for c, argument in group)
+            continue
+        collected = Mul(*[argument**int(power)
+                          for (_, argument), power in zip(group, powers)]).cancel()
+        if collected.has(TrigonometricFunction, HyperbolicFunction):
+            simplified = collected.trigsimp()
+            if simplified.count_ops() <= collected.count_ops():
+                collected = simplified
+        combined.append(c0/n*log(collected))
+    return Add(*(others + combined))
+
+
 def manualintegrate(f, var, max_depth=None, max_calls=None):
     """manualintegrate(f, var)
 
@@ -4907,4 +5065,7 @@ def manualintegrate(f, var, max_depth=None, max_calls=None):
         return False
     if _has_erf_trig_mul(f) and _has_erf_trig_mul(result):
         result = factor_terms(result)
+    # collect sums of logarithms into single logarithms, which are
+    # continuous on wider domains (Jeffrey 1993)
+    result = _combine_logs(result, var)
     return result
