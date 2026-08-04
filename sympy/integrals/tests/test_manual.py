@@ -582,6 +582,30 @@ def test_manualintegrate_combine_logs():
         log(x - 1)/2 - log(x + 1)/2
 
 
+def test_manualintegrate_polylog_ladder():
+    from sympy import polylog
+    # ladder: log powers against polylogarithms close in higher polylogs
+    F = manualintegrate(log(x)*polylog(2, x)/x, x)
+    assert F == log(x)*polylog(3, x) - polylog(4, x)
+    for f in (log(x)**2/(1 + x), log(x)*log(1 + x)/x, log(x)**3/(1 - x)):
+        F = manualintegrate(f, x)
+        assert not F.has(Integral)
+        difference = F.diff(x) - f
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-10
+                   for pt in (0.3, 0.7))
+
+
+def test_manualintegrate_general_base_exponential():
+    F = manualintegrate(x*2**x, x)
+    assert F == x*2**x/log(2) - 2**x/log(2)**2
+    f = x**2*b**(a + 2*x)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    difference = (F.diff(x) - f).subs([(a, 1), (b, 3)])
+    assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-10
+               for pt in (0.4, 1.3))
+
+
 @slow
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3

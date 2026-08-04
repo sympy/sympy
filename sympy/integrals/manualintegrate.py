@@ -2080,11 +2080,14 @@ class TabularPartsRule(AtomicRule):
         self.func_part = func_part
 
     def eval(self) -> Expr:
-        u = cast('Expr', self.func_part.args[0])
+        if isinstance(self.func_part, Pow) and not isinstance(self.func_part, exp):
+            u = cast('Expr', self.func_part.exp)
+        else:
+            u = cast('Expr', self.func_part.args[0])
         b = u.diff(self.variable)
 
         def antiderivative(F):
-            coefficient, g = F.as_coeff_Mul()
+            coefficient, g = F.as_independent(self.variable)
             if isinstance(g, sin):
                 return -coefficient*cos(g.args[0])
             if isinstance(g, cos):
@@ -2093,6 +2096,9 @@ class TabularPartsRule(AtomicRule):
                 return coefficient*cosh(g.args[0])
             if isinstance(g, cosh):
                 return coefficient*sinh(g.args[0])
+            if isinstance(g, Pow) and not isinstance(g, exp):
+                # F**u integrates to F**u/log(F) with respect to u
+                return coefficient*g/log(g.base)
             return F  # exp
 
         P = self.poly_part
@@ -2128,6 +2134,14 @@ def tabular_parts_rule(integral: IntegralInfo):
                 return None
             func_part = base
             continue
+        if (isinstance(factor, Pow) and not factor.base.has(x)
+                and factor.exp.has(x) and not factor.exp.diff(x).has(x)
+                and (factor.base.is_positive or factor.base.is_Symbol)):
+            # a general-base exponential F**(a + b*x)
+            if func_part is not None:
+                return None
+            func_part = factor
+            continue
         poly_factors.append(factor)
     if func_part is None:
         return None
@@ -2136,13 +2150,19 @@ def tabular_parts_rule(integral: IntegralInfo):
     if poly is None or poly.degree() < 1:
         return None
 
-    u = func_part.args[0]
+    if isinstance(func_part, Pow) and not isinstance(func_part, exp):
+        u = func_part.exp
+    else:
+        u = func_part.args[0]
     b = u.diff(x)
     generic_step = TabularPartsRule(integrand, x, poly_part, func_part)
     generic_cond = Ne(b, 0)
     if generic_cond is S.true:
         return generic_step
-    zero_integrand = poly_part*func_part.func(u - b*x)
+    if isinstance(func_part, Pow) and not isinstance(func_part, exp):
+        zero_integrand = poly_part*func_part.base**(u - b*x)
+    else:
+        zero_integrand = poly_part*func_part.func(u - b*x)
     zero_step = yield IntegralInfo(zero_integrand, x)
     return PiecewiseRule(integrand, x,
                          [(zero_step, Eq(b, 0)), (generic_step, S.true)])
@@ -3625,6 +3645,192 @@ def piecewise_continuous_rule(integral):
                                    floor_replacements, substep)
 
 
+class LogPolylogRule(AtomicRule):
+    """integrate(log(c*x**r)**m*polylog(k, a*x**n)/x, x) by the
+    integration-by-parts ladder that raises the polylog order while
+    lowering the logarithm power,
+
+        Sum((-1)**j*(m!/(m - j)!)*r**j*log(c*x**r)**(m - j)
+            *polylog(k + 1 + j, a*x**n)/n**(j + 1), (j, 0, m))
+    """
+
+    __slots__ = ("w", "m", "r", "k", "a", "n")
+
+    w: Expr  # c*x**r, the argument of the logarithm
+    m: int
+    r: Expr
+    k: Expr
+    a: Expr
+    n: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, w: Expr,
+                 m: int, r: Expr, k: Expr, a: Expr, n: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.w = w
+        self.m = m
+        self.r = r
+        self.k = k
+        self.a = a
+        self.n = n
+
+    def eval(self) -> Expr:
+        from sympy import factorial
+        x = self.variable
+        L = log(self.w)
+        return Add(*[(S.NegativeOne**j*factorial(self.m)/factorial(self.m - j)
+                      *self.r**j*L**(self.m - j)
+                      *polylog(self.k + 1 + j, self.a*x**self.n)
+                      /self.n**(j + 1))
+                     for j in range(self.m + 1)])
+
+
+class LogLogBinomialRule(AtomicRule):
+    """integrate(log(c*x**r)**m*log(a + b*x**n)/x, x) for a != 0, using
+    log(a + b*x**n) = log(a) + log(1 + b*x**n/a) and the polylogarithm
+    ladder of :class:`LogPolylogRule` for the second part (with
+    log(1 + z) = -polylog(1, -z), so the result contains polylogarithms
+    of order 2 and higher only).
+    """
+
+    __slots__ = ("w", "m", "r", "a", "b", "n")
+
+    w: Expr
+    m: int
+    r: Expr
+    a: Expr
+    b: Expr
+    n: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, w: Expr,
+                 m: int, r: Expr, a: Expr, b: Expr, n: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.w = w
+        self.m = m
+        self.r = r
+        self.a = a
+        self.b = b
+        self.n = n
+
+    def eval(self) -> Expr:
+        from sympy import factorial
+        x = self.variable
+        L = log(self.w)
+        m, r, n = self.m, self.r, self.n
+        constant_part = log(self.a)*L**(m + 1)/((m + 1)*r)
+        ladder = Add(*[(S.NegativeOne**j*factorial(m)/factorial(m - j)
+                        *r**j*L**(m - j)
+                        *polylog(2 + j, -self.b*x**n/self.a)
+                        /n**(j + 1))
+                       for j in range(m + 1)])
+        return constant_part - ladder
+
+
+def polylog_ladder_rule(integral):
+    """
+    Integrate products of logarithm powers with polylogarithms or
+    logarithms of binomials, closing in higher polylogarithms:
+
+    - K*log(c*x**r)**m*polylog(k, a*x**n)/x  (LogPolylogRule)
+    - K*log(c*x**r)**m*log(a + b*x**n)/x with a != 0, splitting
+      log(a + b*x**n) = log(a) - polylog(1, -b*x**n/a)
+    - K*log(c*x**r)**m/(c2 + d2*x) with m >= 2, by parts, which reduces
+      to the previous case
+    """
+    integrand, x = integral
+
+    coefficient = S.One
+    log_power = None      # (w, m, r) with w = c*x**r
+    polylog_part = None   # (k, a, n)
+    log_binomial = None   # (a0, b0, n)
+    denominator = None    # (c2, d2) for 1/(c2 + d2*x)
+    inv_x = False
+    for factor in Mul.make_args(integrand):
+        if not factor.has(x):
+            coefficient *= factor
+            continue
+        if factor == 1/x:
+            inv_x = True
+            continue
+        base, power = factor.as_base_exp()
+        if isinstance(base, log) and power.is_Integer and power >= 1:
+            argument = base.args[0]
+            c_part, x_part = argument.as_independent(x)
+            x_base, x_exp = x_part.as_base_exp()
+            if (c_part*x_part == argument and x_base == x
+                    and not x_exp.has(x) and log_power is None):
+                # a logarithm of c*x**r
+                log_power = (argument, int(power), x_exp)
+                continue
+            # log of a binomial a0 + b0*x**n
+            terms = Add.make_args(argument)
+            if len(terms) == 2 and log_binomial is None and power == 1:
+                consts = [t for t in terms if not t.has(x)]
+                xterms = [t for t in terms if t.has(x)]
+                if len(consts) == 1 and len(xterms) == 1:
+                    b0, x_part = xterms[0].as_independent(x)
+                    x_base, x_exp = x_part.as_base_exp()
+                    if x_base == x and not x_exp.has(x):
+                        log_binomial = (consts[0], b0, x_exp)
+                        continue
+            return None
+        if isinstance(base, polylog) and power == 1 and polylog_part is None:
+            k, argument = base.args
+            a0, x_part = argument.as_independent(x)
+            x_base, x_exp = x_part.as_base_exp()
+            if x_base == x and not x_exp.has(x):
+                polylog_part = (k, a0, x_exp)
+                continue
+            return None
+        if power == -1 and denominator is None:
+            base_poly = base.as_poly(x)
+            if base_poly is not None and base_poly.degree() == 1:
+                denominator = (base_poly.nth(0), base_poly.nth(1))
+                continue
+        return None
+
+    if log_power is None:
+        return None
+    w, m, r = log_power
+
+    if polylog_part is not None and inv_x and log_binomial is None \
+            and denominator is None:
+        k, a0, n = polylog_part
+        core = log(w)**m*polylog(k, a0*x**n)/x
+        step: Rule = LogPolylogRule(core, x, w, m, r, k, a0, n)
+        if coefficient != 1:
+            step = ConstantTimesRule(integrand, x, coefficient, core, step)
+        return step
+
+    if log_binomial is not None and inv_x and polylog_part is None \
+            and denominator is None:
+        a0, b0, n = log_binomial
+        if a0.is_zero:
+            return None
+        core = log(w)**m*log(a0 + b0*x**n)/x
+        step = LogLogBinomialRule(core, x, w, m, r, a0, b0, n)
+        if coefficient != 1:
+            step = ConstantTimesRule(integrand, x, coefficient, core, step)
+        return step
+
+    if denominator is not None and not inv_x and polylog_part is None \
+            and log_binomial is None and m >= 2:
+        c2, d2 = denominator
+        u = log(w)**m
+        dv = 1/(c2 + d2*x)
+        v_step = yield IntegralInfo(dv, x)
+        if v_step.contains_dont_know():
+            return None
+        V = v_step.eval()
+        remaining = (coefficient*V*u.diff(x)).expand()
+        second_step = yield IntegralInfo(remaining, x)
+        if second_step.contains_dont_know():
+            return None
+        return PartsRule(integrand, x, coefficient*u, dv, v_step,
+                         second_step)
+
+    return None
+
+
 def log_inverse_parts_rule(integral):
     """
     Integrate R(x)*L1(x)*L2(x), for a rational function R and two factors
@@ -4718,7 +4924,8 @@ class IntegrationSolver:
     """
 
     def __init__(self, max_depth: int | None = None, branch: bool = False,
-                 max_calls: int | None = None, **other_options):
+                 max_calls: int | None = None,
+                 soft_max_calls: int | None = None, **other_options):
         # Hard limit on the depth of nested subproblems (None = unlimited):
         # ``max_depth=1`` allows only rules that need no subintegrals.
         self.max_depth = max_depth
@@ -4726,6 +4933,12 @@ class IntegrationSolver:
         # unlimited); once exhausted, further subproblems are reported as
         # unsolvable, bounding the search on hard integrands.
         self.max_calls = max_calls
+        # Soft budget: beyond this many subproblems the expensive
+        # exploratory rules (substitution search, integration by parts,
+        # expansions) are skipped and only the cheap closed-form rules
+        # keep running, so hard integrands degrade gracefully instead of
+        # exploding.
+        self.soft_max_calls = soft_max_calls
         self._calls = 0
         # Whether to collect all applicable rules into AlternativeRule
         # nodes (True) or to keep only the first workable rule (False).
@@ -4758,10 +4971,9 @@ class IntegrationSolver:
             # Recursion budget exhausted: report the subproblem as
             # unsolvable, so that callers fall back to shallower candidates.
             return DontKnowRule(integrand, symbol)
-        if self.max_calls is not None:
-            if self._calls >= self.max_calls:
-                return DontKnowRule(integrand, symbol)
-            self._calls += 1
+        self._calls += 1
+        if self.max_calls is not None and self._calls > self.max_calls:
+            return DontKnowRule(integrand, symbol)
         cachekey, canonical_map = _integral_cache_key(integrand, symbol)
         if cachekey in self._dont_know:
             return DontKnowRule(integrand, symbol)
@@ -4841,6 +5053,15 @@ class IntegrationSolver:
                 return self.run(rule, integral)
             return rule_runner
 
+        def expensive(rule):
+            # skipped once the soft call budget is exhausted
+            def guarded(integral):
+                if (self.soft_max_calls is not None
+                        and self._calls > self.soft_max_calls):
+                    return None
+                return self.run(rule, integral)
+            return guarded
+
         return do_one(
             null_safe(w(special_function_rule)),
             null_safe(switch(_integral_key, {
@@ -4870,7 +5091,7 @@ class IntegrationSolver:
             do_one(
                 null_safe(w(trig_rule)),
                 null_safe(w(hyperbolic_rule)),
-                null_safe(alternatives(
+                null_safe(expensive(alternatives(
                     w(rewrites_rule),
                     # cheap specific closed-form rules come before the
                     # general searches, so that table entries win over
@@ -4878,6 +5099,7 @@ class IntegrationSolver:
                     w(dilog_rule),
                     w(exp_over_linear_rule),
                     w(log_of_trig_rule),
+                    w(polylog_ladder_rule),
                     w(substitution_rule),
                     condition(
                         _integral_is_subclass(Mul, Pow),
@@ -4903,20 +5125,20 @@ class IntegrationSolver:
                     w(exp_times_rational_rule),
                     w(piecewise_continuous_rule),
                     branch=self.branch
-                )),
-                null_safe(condition(_integral_is_subclass(Mul, Pow), w(nested_pow_rule))),
-                null_safe(condition(_integral_is_subclass(Mul, Pow), w(weierstrass_substitution))),
-                null_safe(condition(_integral_is_subclass(Mul, Pow), w(hyperbolic_rational_substitution))),
-                null_safe(condition(_integral_is_subclass(Mul, Pow), w(odd_power_trig_substitution))),
-                null_safe(condition(_integral_is_subclass(Mul, Pow), w(linear_power_product_rule))),
-                null_safe(condition(_integral_is_subclass(Mul, Pow), w(inverse_function_substitution_rule))),
-                null_safe(condition(_integral_is_subclass(Mul, Pow), w(trig_half_angle_square_rule))),
-                null_safe(condition(_integral_is_subclass(Mul), w(log_times_rational_rule))),
-                null_safe(condition(_integral_is_subclass(Mul), w(exp_over_linear_rule))),
-                null_safe(condition(_integral_is_subclass(Mul), w(exp_times_rational_rule))),
-                null_safe(condition(_integral_is_subclass(Mul), w(log_inverse_parts_rule))),
-                null_safe(w(power_substitution_rule)),
-                null_safe(w(trig_substitution_rule))
+                ))),
+                null_safe(condition(_integral_is_subclass(Mul, Pow), expensive(nested_pow_rule))),
+                null_safe(condition(_integral_is_subclass(Mul, Pow), expensive(weierstrass_substitution))),
+                null_safe(condition(_integral_is_subclass(Mul, Pow), expensive(hyperbolic_rational_substitution))),
+                null_safe(condition(_integral_is_subclass(Mul, Pow), expensive(odd_power_trig_substitution))),
+                null_safe(condition(_integral_is_subclass(Mul, Pow), expensive(linear_power_product_rule))),
+                null_safe(condition(_integral_is_subclass(Mul, Pow), expensive(inverse_function_substitution_rule))),
+                null_safe(condition(_integral_is_subclass(Mul, Pow), expensive(trig_half_angle_square_rule))),
+                null_safe(condition(_integral_is_subclass(Mul), expensive(log_times_rational_rule))),
+                null_safe(condition(_integral_is_subclass(Mul), expensive(exp_over_linear_rule))),
+                null_safe(condition(_integral_is_subclass(Mul), expensive(exp_times_rational_rule))),
+                null_safe(condition(_integral_is_subclass(Mul), expensive(log_inverse_parts_rule))),
+                null_safe(expensive(power_substitution_rule)),
+                null_safe(expensive(trig_substitution_rule))
             ),
             w(fallback_rule))
 
@@ -4981,6 +5203,12 @@ def integral_steps(integrand, symbol, **options):
         exhausted, further subproblems are reported as ``DontKnowRule``,
         bounding the search on hard integrands. Defaults to None
         (unlimited).
+    soft_max_calls : int, optional
+        Soft budget: beyond this many subproblems the expensive
+        exploratory rules (substitution search, integration by parts,
+        expansions) are skipped while the cheap closed-form rules keep
+        running, so hard integrands degrade gracefully. Defaults to
+        None (disabled).
 
     Returns
     =======
@@ -5069,7 +5297,8 @@ def _combine_logs(result, symbol):
     return Add(*(others + combined))
 
 
-def manualintegrate(f, var, max_depth=None, max_calls=None):
+def manualintegrate(f, var, max_depth=None, max_calls=None,
+                    soft_max_calls=None):
     """manualintegrate(f, var)
 
     Explanation
@@ -5123,7 +5352,8 @@ def manualintegrate(f, var, max_depth=None, max_calls=None):
     sympy.integrals.integrals.Integral
     """
     result = integral_steps(f, var, max_depth=max_depth,
-                            max_calls=max_calls).eval()
+                            max_calls=max_calls,
+                            soft_max_calls=soft_max_calls).eval()
     # If we got Piecewise with two parts, put generic first
     if isinstance(result, Piecewise) and len(result.args) == 2:
         cond = result.args[0][1]
