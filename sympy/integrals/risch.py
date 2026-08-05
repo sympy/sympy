@@ -1245,6 +1245,23 @@ def recognize_derivative(a, d, DE, z=None):
     _, r = a.div(d)
     Np, Sp = splitfactor_sqf(d, DE, coefficientD=True, z=z)
 
+    # Degree-zero (content) factors are not poles
+    Np = [(s, n) for s, n in Np if s.degree(DE.t) > 0]
+    if any(n == 1 for s, n in Np):
+        # A simple pole at a normal prime always has a nonzero residue
+        # (nu_p(Dv) == nu_p(v) - 1 <= -2 for any pole of Dv at a normal p),
+        # so f is not the derivative of a rational function.
+        return False
+    if Np:
+        # The Laurent series machinery below is only justified for factors
+        # with constant roots (Theorem 2.7.1 is stated for K[x] with the
+        # roots algebraic over the constant field K); deciding whether the
+        # residues vanish at nonconstant poles of order > 1 is not yet
+        # implemented.
+        raise NotImplementedError("recognize_derivative() cannot decide "
+            "residue vanishing at nonconstant poles of order greater "
+            "than 1.")
+
     for s, n in Sp:
         delta_a, delta_d, H = laurent_series(r, d, s, n, DE)
         if not H[-1].rem(s.as_poly(DE.t)).is_zero:  # Di does not divide H[-1]
@@ -1277,6 +1294,13 @@ def recognize_log_derivative(a, d, DE, z=None):
     r, _ = d.resultant(q, includePRS=True)
     r = Poly(r, z)
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
+
+    if any(s.as_poly(z).degree() > 0 for s, _ in Np):
+        # The normal part of the splitting factorization contains the
+        # factors of the resultant whose roots are not constants; such
+        # roots cannot be integers, so f is not the logarithmic derivative
+        # of a k(t)-radical.
+        return False
 
     for s, _ in Sp:
         # All roots of the resultant must be integers, which holds iff the
