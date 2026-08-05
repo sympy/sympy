@@ -104,7 +104,6 @@ from sympy.polys.sparsetools import (
     smp_symmetrize,
     smp_tail_degree,
     smp_tail_degrees,
-    smp_term_div,
 )
 from sympy.utilities import public, subsets
 from sympy.utilities.iterables import is_sequence
@@ -2290,14 +2289,6 @@ class PolyElement(
 
     def _truediv(self, p2):
         return self.exquo(p2)
-
-    def _term_div(self):
-        ring = self.ring
-
-        def term_div(term1, term2):
-            return smp_term_div(term1, term2, ring.ngens, ring.domain)
-
-        return term_div
 
     @overload
     def rem(self, G: PolyElement[Er]) -> PolyElement[Er]: ...

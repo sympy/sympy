@@ -38,6 +38,14 @@ def _get_monomial_mulpow(n: int) -> Callable[[monom, monom, int], monom]:
     return lambda a, b, k: ()
 
 
+def _get_monomial_div(
+    n: int,
+) -> Callable[[monom, monom], monom | None]:
+    if n:
+        return MonomialOps(n).div()
+    return lambda a, b: ()
+
+
 def smp_add(f: smp[Er], g: smp[Er], domain: Domain[Er], n: int) -> smp[Er]:
     # Add two sparse polynomials and return a new dictionary.
     h = f.copy()
@@ -656,25 +664,32 @@ def smp_coeff(d: smp[Er], monomial: smp[Er], n: int, domain: Domain[Er]) -> Er:
     raise ValueError(f"expected a monomial, got {monomial}")
 
 
-def smp_term_div(
-    term1: tuple[monom, Er], term2: tuple[monom, Er], n: int, domain: Domain[Er]
-) -> tuple[monom, Er] | None:
-    # Divide one polynomial term by another when the division is exact.
-    mon1, coeff1 = term1
-    mon2, coeff2 = term2
+def _smp_term_div(
+    n: int, domain: Domain[Er]
+) -> Callable[[tuple[monom, Er], tuple[monom, Er]], tuple[monom, Er] | None]:
+    # Return a function for exact polynomial term division.
     zm: monom = (0,) * n
+    monomial_div = _get_monomial_div(n)
 
-    if mon2 == zm:
-        mon = mon1
-    else:
-        mon = tuple(mon1[i] - mon2[i] for i in range(n))
-        if any(exp < 0 for exp in mon):
+    def smp_term_div(
+        term1: tuple[monom, Er], term2: tuple[monom, Er]
+    ) -> tuple[monom, Er] | None:
+        mon1, coeff1 = term1
+        mon2, coeff2 = term2
+
+        if mon2 == zm:
+            mon = mon1
+        else:
+            mon = monomial_div(mon1, mon2)
+            if mon is None:
+                return None
+
+        try:
+            return mon, domain.exquo(coeff1, coeff2)
+        except ExactQuotientFailed:
             return None
 
-    try:
-        return mon, domain.exquo(coeff1, coeff2)
-    except ExactQuotientFailed:
-        return None
+    return smp_term_div
 
 
 def smp_quo_term(
@@ -682,8 +697,9 @@ def smp_quo_term(
 ) -> smp[Er]:
     # Divide every exactly divisible term by a fixed polynomial term.
     h: smp[Er] = {}
+    smp_term_div = _smp_term_div(n, domain)
     for f_term in d.items():
-        q_term = smp_term_div(f_term, term, n, domain)
+        q_term = smp_term_div(f_term, term)
         if q_term is not None:
             mon, coeff = q_term
             if coeff:
@@ -706,6 +722,7 @@ def smp_div_list(
     lts = [smp_LT(g, n, domain, order) for g in gs]
     f = d.copy()
     r: smp[Er] = {}
+    smp_term_div = _smp_term_div(n, domain)
 
     while f:
         divoccurred = False
@@ -714,7 +731,7 @@ def smp_div_list(
             break
 
         for i, (g, lt_g) in enumerate(zip(gs, lts)):
-            q_term = smp_term_div((lm_f, f[lm_f]), lt_g, n, domain)
+            q_term = smp_term_div((lm_f, f[lm_f]), lt_g)
             if q_term is not None:
                 q_mon, c = q_term
                 smp_iadd_monom(qs[i], q_term, n, domain)
@@ -744,6 +761,7 @@ def smp_rem_list(
     r: smp[Er] = {}
     lts = [smp_LT(g, n, domain, order) for g in gs]
     f = d.copy()
+    smp_term_div = _smp_term_div(n, domain)
 
     while f:
         lm_f = smp_leading_expv(f, n, domain, order)
@@ -752,7 +770,7 @@ def smp_rem_list(
         lt_f = (lm_f, f[lm_f])
 
         for g, lt_g in zip(gs, lts):
-            q_term = smp_term_div(lt_f, lt_g, n, domain)
+            q_term = smp_term_div(lt_f, lt_g)
             if q_term is not None:
                 q_mon, c = q_term
                 for mon, coeff in g.items():
