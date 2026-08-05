@@ -1456,7 +1456,9 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     """
     expr = sympify(expr)
-    if isinstance(expr, Integer):
+    # exact rationals are already exact: return them unchanged rather than
+    # risking a spurious, float-indistinguishable replacement (see gh-30210)
+    if isinstance(expr, Rational):
         return expr
     expr = expr.xreplace({
         Float('inf'): S.Infinity,
