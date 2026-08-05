@@ -497,12 +497,12 @@ def smp_trunc_ground(d: smp[Er], p: Er, n: int, domain: Domain[Er]) -> smp[Er]:
 def _smp_itrunc_ground(d: smp[Er], p: Er, n: int, domain: Domain[Er]) -> None:
     # Reduce coefficients modulo a ground element in place.
     if domain.is_ZZ:
-        p = domain.convert(p)
+        t = domain.quo(p, domain.convert(2))
         for mon, coeff in list(d.items()):
             coeff = domain.rem(coeff, p)
-            c = coeff - domain.quo(p, domain.convert(2))
+            c = coeff - t
             if domain.is_positive(c):
-                coeff = domain.convert(coeff - p)
+                coeff = coeff - p
             if coeff:
                 d[mon] = coeff
             else:
