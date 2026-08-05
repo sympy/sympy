@@ -221,6 +221,16 @@ def test_recognize_derivative():
     assert recognize_derivative(Poly(x, x), Poly((x**2 + 1)**2, x), DE) == True
     assert recognize_derivative(Poly(1, x), Poly((x**2 + 1)**2, x), DE) == False
     assert recognize_derivative(Poly(-2*x, x), Poly((x**2 - 1)**2, x), DE) == True
+    # Poles at nonconstant normal primes used to be ignored entirely,
+    # giving false positives.  A simple such pole always has a nonzero
+    # residue: 1/(t + x) with t = log(x) is not a derivative.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    assert recognize_derivative(Poly(1, t), Poly(t + x, t), DE) == False
+    # Higher-order poles at nonconstant primes need residue machinery that
+    # is only justified for constant roots, so they raise for now (e.g.
+    # D(1/(t + x)) == -(1 + 1/x)/(t + x)**2 would need it).
+    raises(NotImplementedError, lambda: recognize_derivative(
+        Poly(-1 - 1/x, t), Poly((t + x)**2, t), DE))
 
 
 def test_recognize_log_derivative():
@@ -230,8 +240,16 @@ def test_recognize_log_derivative():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert recognize_log_derivative(a, d, DE, z) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
-    assert recognize_log_derivative(Poly(t + 1, t), Poly(t + x, t), DE) == True
-    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1, t), DE) == True
+    # These two used to wrongly return True: their Rothstein-Trager
+    # resultants have the nonconstant roots -x*(x - 1)/(x + 1) and -x, x,
+    # respectively, which are not integers.  Nonconstant roots land in the
+    # normal part of the splitting factorization, which used to be ignored.
+    assert recognize_log_derivative(Poly(t + 1, t), Poly(t + x, t), DE) == False
+    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1, t), DE) == False
+    # ... but log derivatives with nonconstant-looking denominators are
+    # still recognized: D(t + x)/(t + x) has the integer root 1
+    assert recognize_log_derivative(Poly(1 + 1/x, t), Poly(t + x, t),
+        DE) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
     assert recognize_log_derivative(Poly(1, x), Poly(x**2 - 2, x), DE) == False
     assert recognize_log_derivative(Poly(1, x), Poly(x**2 + x, x), DE) == True
