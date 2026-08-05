@@ -676,7 +676,7 @@ def _smp_term_div(
     ) -> tuple[monom, Er] | None:
         mon1, coeff1 = term1
         mon2, coeff2 = term2
-
+        mon: monom | None
         if mon2 == zm:
             mon = mon1
         else:
