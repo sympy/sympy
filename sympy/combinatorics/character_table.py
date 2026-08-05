@@ -6,7 +6,7 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.external.gmpy import gcd, lcm, sqrt as isqrt
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.ntheory import sqrt_mod, nextprime, primitive_root, primefactors
-from sympy.polys.domains import ZZ, QQ, FiniteField
+from sympy.polys.domains import ZZ, QQ, FiniteField, EXRAW
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.polyclasses import ANP
 from sympy.printing.defaults import DefaultPrinting
@@ -106,7 +106,10 @@ class CharacterTable(DefaultPrinting):
         return self._rep.copy()
 
     def as_matrix(self) -> MutableDenseMatrix:
-        return MutableDenseMatrix._fromrep(self._rep)
+        rep = self._rep.to_sparse()
+        if not rep.domain.is_ZZ:
+            rep = rep.convert_to(EXRAW)
+        return MutableDenseMatrix._fromrep(rep)
 
     def tolist(self) -> list[list[Expr]]:
         return self.as_matrix().tolist()
@@ -267,7 +270,7 @@ def _get_invmap(cc: Sequence[CC]) -> list[int]:
 
 
 def _get_powermap(cc: Sequence[CC], exponent: int) -> list[list[int]]:
-    """Compute `pm[i][pow] = k` such that `class[i]**pow == k`."""
+    """Compute `pm[i][pow] = k` such that `class[i]**pow == class[k]`."""
     n = len(cc)
     pm = [[-1] * exponent for _ in range(n)]
     reps = [next(iter(c)) for c in cc]
@@ -358,7 +361,7 @@ def _get_global_conductor(
 
 
 def _lift_to_minimal_field(
-    rows: list[list], pm: list[list[int]], k, e, Fp
+    rows: list[list], pm: list[list[int]], k: int, e: int, Fp: FiniteField
 ) -> DomainMatrix:
     """
     Lift the normalized character table from Fp to the
