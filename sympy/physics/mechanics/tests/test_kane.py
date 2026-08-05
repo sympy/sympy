@@ -420,8 +420,6 @@ def test_implicit_kinematics():
     q_ind = q_att[1:] + q_pos  # lam1, lam2, lam3, B_x, B_y, B_z
     q_dep = [q_att[0]]  # lam0
 
-    kinematic_eqs = []
-
     # Generalized speeds
     P, Q, R = dynamicsymbols('P, Q, R')
     U, V, W, X = dynamicsymbols('U V W, X')
@@ -440,17 +438,14 @@ def test_implicit_kinematics():
     # Kinematical differential equations
     # A generalized speed is needed for the fourth generalized coordinate to
     # comply with Kane's form of the definition of generalized speeds:
-    # u = Y*q'
-    # [P] = T*[lam0]
-    # [Q]     [lam1]
-    # [R}     [lam2]
-    #         [lam3]
-    # TODO : Is it allowed to introduce fewer generalized speeds than
-    # coordinates? If so, it may not be possible to solve for dependent speeds.
-    # I don't think Kane's method works if you don't have a dependent speed,
-    # then how do you for the constraints Fr and Frstar?
-    # NOTE : The original code for this test had X = 0, and that aligns with
-    # the textbook formula for d lam / dt:
+    # u = Y*q' where len(u) = len(q)
+    # The quaternion kinematical differential equation takes this form:
+    # [P] = Y*[lam0']
+    # [Q]     [lam1']
+    # [R]     [lam2']
+    #         [lam3']
+    # which is only 3 generalized speeds for 4 coordinates.
+    # Solved it looks like:
     # dlam/dt = 1/2 * [0 -P -Q -R] * [lam0]
     #                 [P  0  R -Q]   [lam1]
     #                 [Q -R  0  P]   [lam2]
@@ -460,9 +455,10 @@ def test_implicit_kinematics():
     B_ang_vel_kd = (B.ang_vel_in(NED) - B_ang_vel).simplify()
     B_ref_vel_kd = (B_cm.vel(NED) - B_cm_vel)
 
-    kinematic_eqs += [
-        #q_att[0].diff() - X,  # X = lam0'
-        (q_att_vec.T*q_att_vec.diff())[0, 0] - X,
+    # Add a differential equation that is equal to zero to manage the
+    # additional generalized speed.
+    kinematic_eqs = [
+        (q_att_vec.T*q_att_vec.diff())[0, 0] - X,  # use velocity constraint
         B_ang_vel_kd.dot(B.x),
         B_ang_vel_kd.dot(B.y),
         B_ang_vel_kd.dot(B.z),
@@ -602,7 +598,7 @@ def test_implicit_kinematics():
     # Alternative numerical check:
     syms = find_dynamicsymbols(expected - calculated)
     eval_comp = lambdify(list(syms), expected - calculated)
-    for v in eval_comp(*list(range(1, len(syms) + 1))).squeeze():
+    for v in eval_comp(*list(range(1, len(syms) + 1)))[:]:
         if abs(v) > 1e-13:
             raise AssertionError
 
