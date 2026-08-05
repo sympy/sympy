@@ -12,16 +12,30 @@ from typing import TYPE_CHECKING, Mapping, Sequence, TypeVar
 
 from sympy.core.intfunc import igcd
 from sympy.ntheory.multinomial import multinomial_coefficients
-from sympy.polys.monomials import monom
+from sympy.polys.monomials import MonomialOps, monom
 from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import ExactQuotientFailed
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from sympy.polys.domains.domain import Domain, Er
 
 _T = TypeVar("_T")
 
 smp = dict[monom, _T]
+
+
+def _get_monomial_mul(n: int) -> Callable[[monom, monom], monom]:
+    if n:
+        return MonomialOps(n).mul()
+    return lambda a, b: ()
+
+
+def _get_monomial_mulpow(n: int) -> Callable[[monom, monom, int], monom]:
+    if n:
+        return MonomialOps(n).mulpow()
+    return lambda a, b, k: ()
 
 
 def smp_add(f: smp[Er], g: smp[Er], domain: Domain[Er], n: int) -> smp[Er]:
@@ -46,9 +60,10 @@ def smp_mul(f: smp[Er], g: smp[Er], domain: Domain[Er], n: int) -> smp[Er]:
     # Multiply two sparse polynomials and return a new dictionary.
     zero = domain.zero
     h: smp[Er] = {}
+    monomial_mul = _get_monomial_mul(n)
     for mon1, coeff1 in f.items():
         for mon2, coeff2 in g.items():
-            mon = tuple(mon1[i] + mon2[i] for i in range(n))
+            mon = monomial_mul(mon1, mon2)
             coeff = h.get(mon, zero) + coeff1 * coeff2
             if coeff:
                 h[mon] = coeff
@@ -335,9 +350,10 @@ def smp_iadd_poly_monom(
     # Add d2 multiplied by one term to d1 in place.
     term_mon, term_coeff = term
     zero = domain.zero
+    monomial_mul = _get_monomial_mul(n)
 
     for mon, coeff in d2.items():
-        p_mon = tuple(mon[i] + term_mon[i] for i in range(n))
+        p_mon = monomial_mul(mon, term_mon)
         c = d1.get(p_mon, zero) + coeff * term_coeff
         if c:
             d1[p_mon] = c
@@ -724,6 +740,7 @@ def smp_rem_list(
     if not all(gs):
         raise ZeroDivisionError("polynomial division")
 
+    monomial_mul = _get_monomial_mul(n)
     r: smp[Er] = {}
     lts = [smp_LT(g, n, domain, order) for g in gs]
     f = d.copy()
@@ -739,7 +756,7 @@ def smp_rem_list(
             if q_term is not None:
                 q_mon, c = q_term
                 for mon, coeff in g.items():
-                    p_mon = tuple(mon[i] + q_mon[i] for i in range(n))
+                    p_mon = monomial_mul(mon, q_mon)
                     c1 = f.get(p_mon, domain.zero) - c * coeff
                     if c1:
                         f[p_mon] = c1
@@ -859,11 +876,12 @@ def smp_square(d: smp[Er], domain: Domain[Er], n: int) -> smp[Er]:
     h: smp[Er] = {}
     get = h.get
     mons = list(d.keys())
+    monomial_mul = _get_monomial_mul(n)
     for i, mon1 in enumerate(mons):
         coeff1 = d[mon1]
         for j in range(i):
             mon2 = mons[j]
-            mon = tuple(mon1[i] + mon2[i] for i in range(n))
+            mon = monomial_mul(mon1, mon2)
             coeff = get(mon, zero) + coeff1 * d[mon2]
             if coeff:
                 h[mon] = coeff
@@ -879,7 +897,7 @@ def smp_square(d: smp[Er], domain: Domain[Er], n: int) -> smp[Er]:
 
     get = h.get
     for mon, coeff in d.items():
-        mon2 = tuple(2 * mon[i] for i in range(n))
+        mon2 = monomial_mul(mon, mon)
         coeff = get(mon2, zero) + coeff**2
         if coeff:
             h[mon2] = coeff
@@ -936,13 +954,14 @@ def smp_pow_multinomial(d: smp[Er], exp: int, domain: Domain[Er], n: int) -> smp
     terms = d.items()
     zero = domain.zero
     h: smp[Er] = {}
+    mulpow = _get_monomial_mulpow(n)
 
     for multinomial, multinomial_coeff in multinomials:
         p_mon = zm
         c = domain.convert(multinomial_coeff)
         for term_exp, (mon, coeff) in zip(multinomial, terms):
             if term_exp:
-                p_mon = tuple(p_mon[i] + mon[i] * term_exp for i in range(n))
+                p_mon = mulpow(p_mon, mon, term_exp)
                 c *= coeff**term_exp
 
         coeff = h.get(p_mon, zero) + c
