@@ -341,6 +341,13 @@ def test_parametric_log_deriv():
     Poly(3, x), DE) ==\
         (5, -3, Poly(1, x))
 
+    # f == w == 0: any n works, with m == 0 and v == 1 (the rational
+    # shortcut used to raise ZeroDivisionError on this input, which
+    # arises from the degenerate hypertangent case in test_special_denom())
+    assert parametric_log_deriv_heu(Poly(0, x), Poly(1, x), Poly(0, x),
+    Poly(1, x), DE) == \
+        (1, 0, Poly(1, x))
+
     # Cases where z is in k, so the residue equations are vacuous.  These
     # used to return None ("proven no solution"), which was wrong: at the
     # base level they are completely decidable from the polynomial parts.
