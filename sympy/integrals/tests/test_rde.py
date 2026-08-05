@@ -3,7 +3,7 @@ from __future__ import annotations
 from sympy.core.numbers import (I, Rational, oo)
 from sympy.core.symbol import symbols
 from sympy.polys.polytools import Poly, cancel
-from sympy.integrals.risch import (DifferentialExtension,
+from sympy.integrals.risch import (DifferentialExtension, derivation,
     NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
@@ -226,6 +226,15 @@ def test_solve_poly_rde_cancel():
         Poly(t, t)
     assert cancel_primitive(Poly(4*x, t), Poly(4*x*t**2 + 2*t/x, t), 3, DE) == \
         Poly(t**2, t)
+
+    # The degree bound n must not be clobbered by the index returned from
+    # is_log_deriv_k_t_radical_in_field(): b == 1/(2*x) has index 2
+    # (2*b == D(x)/x), which used to replace n == 3 and wrongly reject
+    # the degree 3 solution q == t**3 of Dq + b*q == c.
+    b = Poly(Rational(1, 2)/x, t)
+    q = Poly(t**3, t)
+    c = derivation(q, DE) + b*q
+    assert cancel_primitive(b, c, 3, DE) == q
 
     # TODO: Add more primitive tests, including tests that require is_deriv_in_field()
 
