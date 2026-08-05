@@ -1,5 +1,4 @@
 from __future__ import annotations
-from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
 from sympy.logic.inference import satisfiable
@@ -11,7 +10,7 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 
 
-def lra_satask(proposition, assumptions=True, context=global_assumptions):
+def lra_satask(proposition, assumptions=True):
     """
     Function to evaluate the proposition with assumptions using SAT algorithm
     in conjunction with an Linear Real Arithmetic theory solver.
@@ -26,12 +25,6 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
     cnf = CNF.from_prop(assumptions)
     assumptions = EncodedCNF()
     assumptions.from_cnf(cnf)
-
-    context_cnf = CNF()
-    if context:
-        context_cnf = context_cnf.extend(context)
-
-    assumptions.add_from_cnf(context_cnf)
 
     return check_satisfiability(props, _props, assumptions)
 

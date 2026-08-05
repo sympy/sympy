@@ -469,6 +469,21 @@ class DFM:
         """Transpose a DFM matrix."""
         return self._new(self.rep.transpose(), (self.cols, self.rows), self.domain)
 
+    def conjugate(self):
+        """Return the conjugate of a DFM matrix."""
+        dom = self.domain
+        if not dom.is_ConjugateDomain:
+            raise DMDomainError("%s does not support conjugation" % dom)
+
+        if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+            return self.copy()
+        else:
+            return self.applyfunc(dom.conjugate, dom)
+
+    def adjoint(self):
+        """Return the adjoint of a DFM matrix."""
+        return self.conjugate().transpose()
+
     def hstack(self, *others):
         """Horizontally stack matrices."""
         return self.to_ddm().hstack(*[o.to_ddm() for o in others]).to_dfm()

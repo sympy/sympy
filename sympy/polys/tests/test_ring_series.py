@@ -367,6 +367,9 @@ def test_sin():
         EX(cos(a)/6)*x**3 + EX(cos(a))*x**2*y - EX(sin(a)/2)*x**2 + \
         EX(cos(a))*x + EX(sin(a))
 
+    R, x = ring('x', EX)
+    assert rs_sin(R(a), x, 5) == R(EX(sin(a)))
+
 
 def test_cos():
     R, x, y = ring('x, y', QQ)
@@ -393,9 +396,15 @@ def test_cos():
         EX(sin(a)/6)*x**3 - EX(sin(a))*x**2*y - EX(cos(a)/2)*x**2 - \
         EX(sin(a))*x + EX(cos(a))
 
+    R, x = ring('x', EX)
+    assert rs_cos(R(a), x, 5) == R(EX(cos(a)))
+
 
 def test_cos_sin():
     R, x, y = ring('x, y', QQ)
+    c, s = rs_cos_sin(R(0), x, 5)
+    assert c == R(1)
+    assert s == R(0)
     c, s = rs_cos_sin(x, x, 9)
     assert c == rs_cos(x, x, 9)
     assert s == rs_sin(x, x, 9)
@@ -497,6 +506,9 @@ def test_sinh():
         2)*x**4*y + EX(sinh(a)/24)*x**4 + EX(sinh(a))*x**3*y + EX(cosh(a)/6)*x**3 \
         + EX(cosh(a))*x**2*y + EX(sinh(a)/2)*x**2 + EX(cosh(a))*x + EX(sinh(a))
 
+    R, x = ring('x', EX)
+    assert rs_sinh(R(a), x, 5) == R(EX(sinh(a)))
+
 
 def test_cosh():
     R, x, y = ring('x, y', QQ)
@@ -506,6 +518,7 @@ def test_cosh():
         x**8*y**10/48 + x**8*y**8/40320 + x**7*y**10/6 + \
         x**7*y**8/120 + x**6*y**8/4 + x**6*y**6/720 + x**5*y**6/6 + \
         x**4*y**6/2 + x**4*y**4/24 + x**3*y**4 + x**2*y**2/2 + 1
+    assert rs_cosh(R(0), x, 5) == R(1)
 
     # constant term in series
     a = symbols('a')
@@ -522,9 +535,15 @@ def test_cosh():
         2)*x**4*y + EX(cosh(a)/24)*x**4 + EX(cosh(a))*x**3*y + EX(sinh(a)/6)*x**3 \
         + EX(sinh(a))*x**2*y + EX(cosh(a)/2)*x**2 + EX(sinh(a))*x + EX(cosh(a))
 
+    R, x = ring('x', EX)
+    assert rs_cosh(R(a), x, 5) == R(EX(cosh(a)))
+
 
 def test_cosh_sinh():
     R, x, y = ring('x, y', QQ)
+    ch, sh = rs_cosh_sinh(R(0), x, 5)
+    assert ch == R(1)
+    assert sh == R(0)
     ch, sh = rs_cosh_sinh(x, x, 9)
     assert ch == rs_cosh(x, x, 9)
     assert sh == rs_sinh(x, x, 9)
