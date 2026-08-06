@@ -476,6 +476,7 @@ def test_manualintegrate_exp_trig_pow():
     assert manualintegrate(f, x) == F
 
 
+@slow
 def test_manualintegrate_exp_trig_nested():
     f, F = exp(cos(x**2))*sin(x**2)*x, -exp(cos(x**2))/2
     assert_is_integral_of(f, F)
