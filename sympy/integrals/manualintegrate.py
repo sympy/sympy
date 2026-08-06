@@ -1510,7 +1510,7 @@ def special_function_rule(integral):
             (Pow, sqrt(a - d*sin(_symbol, evaluate=False)**2),
                 lambda a, d: a != d, EllipticERule),
         ))
-    a_wild, b_wild, c_wild, d_wild, e_wild = _wilds
+    a_wild, _, _, d_wild, _ = _wilds
     _integrand = integrand.subs(symbol, _symbol)
     for type_, pattern, constraint, rule in _special_function_patterns:
         if isinstance(_integrand, type_):
