@@ -927,7 +927,7 @@ def test_risch_integrate_trig():
             (sin(x) + 2)**-2, (1 + sin(x))/(3 + cos(x))]:
         ans = risch_integrate(e, x)
         assert not ans.has(Integral)
-        ans = ans.xreplace({f: S.Zero for f in ans.atoms(floor)})
+        ans = ans.xreplace(dict.fromkeys(ans.atoms(floor), S.Zero))
         assert cancel((diff(ans, x) - e).rewrite(exp)) == 0
 
     # Integrals with exponentials over tangent extensions; the second one
@@ -987,7 +987,7 @@ def test_risch_integrate_jeffrey_rich_examples():
     # (4)/(11)
     F = risch_integrate(3/(5 + 4*sin(x)), x)
     assert not F.has(Integral) and F.has(floor)
-    assert cancel((diff(F.xreplace({f: S.Zero for f in F.atoms(floor)}), x)
+    assert cancel((diff(F.xreplace(dict.fromkeys(F.atoms(floor), S.Zero)), x)
         - 3/(5 + 4*sin(x))).rewrite(exp)) == 0
     assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == 2*pi
     assert simplify(limit(F, x, pi, '-') - limit(F, x, pi, '+')) == 0
@@ -1000,7 +1000,7 @@ def test_risch_integrate_jeffrey_rich_examples():
     e = 15/(cos(x)*(5 - 4*cos(x)))
     F = risch_integrate(e, x)
     assert not F.has(Integral) and F.has(floor)
-    assert cancel((diff(F.xreplace({f: S.Zero for f in F.atoms(floor)}), x)
+    assert cancel((diff(F.xreplace(dict.fromkeys(F.atoms(floor), S.Zero)), x)
         - e).rewrite(exp)) == 0
     assert simplify(limit(F, x, pi, '-') - limit(F, x, pi, '+')) == 0
 
