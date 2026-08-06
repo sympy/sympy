@@ -284,7 +284,7 @@ def _special_denom_cancel_bound(a, ba, bd, n, DE, case):
     return n
 
 
-def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
+def special_denom(a, ba, bd, ca, cd, DE, case='auto', unsure=None):
     """
     Special part of the denominator.
 
@@ -302,6 +302,14 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
 
     For ``case == 'primitive'``, k<t> == k[t], so it returns (a, b, c, 1) in
     this case.
+
+    If ``unsure`` is a list and the parametric logarithmic derivative
+    heuristic cannot decide whether the bound on the special part can be
+    sharpened, the reason is appended to it and the unsharpened bound is
+    used instead of raising NotImplementedError.  A solution found with
+    the unsharpened bound is still correct, but the absence of a solution
+    is then not a proof of nonelementarity anymore, which the caller must
+    account for (see rischDE()).
 
     This constitutes step 2 of the outline given in the rde.py docstring.
 
@@ -334,7 +342,12 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancellation.
-        n = _special_denom_cancel_bound(a, ba, bd, n, DE, case)
+        try:
+            n = _special_denom_cancel_bound(a, ba, bd, n, DE, case)
+        except NotImplementedError as e:
+            if unsure is None:
+                raise
+            unsure.append(e)
 
     # Note that this N, from Section 6.2, intentionally differs from the
     # N == max(0, -nb) of the parametric version in prde_special_denom()
@@ -742,10 +755,20 @@ def cancel_exp(b, c, n, DE):
     from .prde import parametric_log_deriv
     eta = DE.d.quo(Poly(DE.t, DE.t)).as_expr()
 
+    unsure = None
     with DecrementLevel(DE):
         etaa, etad = frac_in(eta, DE.t)
         ba, bd = frac_in(b, DE.t)
-        A = parametric_log_deriv(ba, bd, etaa, etad, DE)
+        try:
+            A = parametric_log_deriv(ba, bd, etaa, etad, DE)
+        except NotImplementedError as e:
+            # It could not be decided whether b is of the degenerate form
+            # Dz/z + m*Dt/t.  If it is not, the loop below is still
+            # correct, so a solution it finds can be returned; but its
+            # failure is then not a proof that there is no solution (see
+            # the conversion at the bottom).
+            A = None
+            unsure = e
         if A is not None:
             a, m, z = A
             if a == 1:
@@ -761,12 +784,18 @@ def cancel_exp(b, c, n, DE):
         return c  # return 0
 
     if n < c.degree(DE.t):
+        if unsure is not None:
+            raise NotImplementedError("Cannot decide whether the Risch "
+                "differential equation has a solution: %s" % unsure)
         raise NonElementaryIntegralException("n < deg(c) in cancel_exp().")
 
     q = Poly(0, DE.t)
     while not c.is_zero:
         m = c.degree(DE.t)
         if n < m:
+            if unsure is not None:
+                raise NotImplementedError("Cannot decide whether the Risch "
+                    "differential equation has a solution: %s" % unsure)
             raise NonElementaryIntegralException("n < deg(c) in "
                 "cancel_exp().")
         # a1 = b + m*Dt/t
@@ -972,7 +1001,8 @@ def rischDE(fa, fd, ga, gd, DE):
     q, (fa, fd) = weak_normalizer(fa, fd, DE)
     ga, gd = (ga*q).cancel(gd, include=True)
     a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
-    A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
+    unsure = []
+    A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE, unsure=unsure)
     try:
         # Until this is fully implemented, use oo.  Note that this will almost
         # certainly cause non-termination in spde() (unless A == 1), and
@@ -988,11 +1018,20 @@ def rischDE(fa, fd, ga, gd, DE):
         #     "non-termination.")
         n = oo
 
-    B, C, m, alpha, beta = spde(A, B, C, n, DE)
-    if C.is_zero:
-        y = C
-    else:
-        y = solve_poly_rde(B, C, m, DE)
+    try:
+        B, C, m, alpha, beta = spde(A, B, C, n, DE)
+        if C.is_zero:
+            y = C
+        else:
+            y = solve_poly_rde(B, C, m, DE)
+    except NonElementaryIntegralException:
+        if unsure:
+            # The special part of the denominator could not be bounded
+            # exactly (see special_denom()), so failing to find a solution
+            # with the unsharpened bound does not prove that there is none.
+            raise NotImplementedError("Cannot decide whether the Risch "
+                "differential equation has a solution: %s" % unsure[0])
+        raise
 
     # The solution found so far is z == (alpha*y + beta)/(hn*hs); undo the
     # weak normalizer substitution y == z/q.

@@ -1826,8 +1826,11 @@ def integrate_primitive_special(a, d, DE):
     if not gens:
         return None
     try:
-        A = limited_integrate(a, d, gens, DE)
-    except NonElementaryIntegralException:
+        A = limited_integrate(a, d, gens, DE, unsure=[])
+    except (NonElementaryIntegralException, NotImplementedError):
+        # NotImplementedError means the candidates cannot be decided;
+        # since li is only a best-effort addition on top of a part of the
+        # integrand that was already proven nonelementary, give up on it.
         return None
     if A is None:
         return None
@@ -1898,7 +1901,7 @@ def integrate_primitive(a, d, DE, z=None, special=False):
     return (ret, i, b)
 
 
-def integrate_hyperexponential_polynomial(p, DE, z):
+def integrate_hyperexponential_polynomial(p, DE, z, unsure=None):
     """
     Integration of hyperexponential polynomials.
 
@@ -1908,6 +1911,11 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     Given a hyperexponential monomial t over k and ``p`` in k[t, 1/t], return q in
     k[t, 1/t] and a bool b in {True, False} such that p - Dq in k if b is True,
     or p - Dq does not have an elementary integral over k(t) if b is False.
+
+    If ``unsure`` is a list, powers of t whose Risch differential equation
+    cannot be decided (NotImplementedError) are appended to it and treated
+    like unsolved ones, instead of propagating the error; b == False then
+    only proves nonelementarity if ``unsure`` remains empty.
 
     This is ``IntegrateHyperexponentialPolynomial`` from Section 5.9 of
     Bronstein's book.
@@ -1946,6 +1954,14 @@ def integrate_hyperexponential_polynomial(p, DE, z):
                 va, vd = frac_in((va, vd), t1, cancel=True)
             except NonElementaryIntegralException:
                 b = False
+            except NotImplementedError:
+                if unsure is None:
+                    raise
+                # It could not be decided whether this term has an
+                # elementary integral; record it, so that the caller does
+                # not claim a nonelementarity proof for it.
+                unsure.append(i)
+                b = False
             else:
                 # q += v*t**i
                 if i > 0:
@@ -1974,7 +1990,17 @@ def _parametric_term_rde(fa, fd, ga, gd, gens, DE):
     derivatives of the special function candidates.
     """
     from .prde import param_rischDE
-    h, A = param_rischDE(fa, fd, [(ga, gd)] + gens, DE)
+    try:
+        # A solution found with unsure bounds is still a solution, and no
+        # nonelementarity claims are derived from a failure here, so unsure
+        # special denominator bounds are acceptable.
+        h, A = param_rischDE(fa, fd, [(ga, gd)] + gens, DE, unsure=[])
+    except NotImplementedError:
+        # The candidates cannot be decided; since the special functions
+        # are only a best-effort addition on top of a part of the
+        # integrand that was already proven nonelementary, treat this
+        # like the absence of a solution.
+        return None
     V = [v for v in A.nullspace() if v[0] != 0]
     if not V:
         return None
@@ -2064,7 +2090,7 @@ def _constant_residue_candidates(w, d, DE):
     return cands
 
 
-def integrate_hyperexponential_special(pp, DE, z):
+def integrate_hyperexponential_special(pp, DE, z, unsure=None):
     """
     Integration of hyperexponential polynomials in terms of special
     functions.
@@ -2147,6 +2173,9 @@ def integrate_hyperexponential_special(pp, DE, z):
             r += a*t1**i if i > 0 else a*z**-i
             continue
         y, R = A
+        if unsure and i in unsure:
+            # this power is solved after all
+            unsure.remove(i)
         q += y*t1**i
         sp -= Add(*[R[j]*terms[j] for j in range(len(terms))])
 
@@ -2198,7 +2227,13 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise',
         DE, z) + r[0].as_expr()/r[1].as_expr())
     pp = as_poly_1t(p, DE.t, z)
 
-    qa, qd, b = integrate_hyperexponential_polynomial(pp, DE, z)
+    # With special=True, terms whose Risch differential equation cannot be
+    # decided are collected in unsure and attempted with the special
+    # function candidates below; they are only fatal if they remain
+    # unsolved there.
+    unsure = [] if special else None
+    qa, qd, b = integrate_hyperexponential_polynomial(pp, DE, z,
+        unsure=unsure)
 
     i = pp.nth(0, 0)
 
@@ -2224,13 +2259,19 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise',
         rem = cancel(p - (qd*derivation(qa, DE) -
             qa*derivation(qd, DE)).as_expr()/(qd**2).as_expr())
         q2, sp, rem2, b = integrate_hyperexponential_special(
-            as_poly_1t(rem, DE.t, z), DE, z)
+            as_poly_1t(rem, DE.t, z), DE, z, unsure=unsure)
         ret += q2.subs(s) + sp
         if not b:
+            if unsure:
+                raise NotImplementedError("Cannot decide whether the "
+                    "remaining part of the integral is elementary.")
             i = NonElementaryIntegral(cancel(rem2).subs(s), DE.x)
             return (ret, i, b)
 
     if not b:
+        if unsure:
+            raise NotImplementedError("Cannot decide whether the remaining "
+                "part of the integral is elementary.")
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
             (qd**2).as_expr()
         i = NonElementaryIntegral(cancel(i).subs(s), DE.x)

@@ -94,7 +94,7 @@ def real_imag(ba, bd, gen):
     return (ba[0], ba[1], bd)
 
 
-def prde_special_denom(a, ba, bd, G, DE, case='auto'):
+def prde_special_denom(a, ba, bd, G, DE, case='auto', unsure=None):
     """
     Parametric Risch Differential Equation - Special part of the denominator.
 
@@ -145,7 +145,15 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancellation.
-        n = _special_denom_cancel_bound(a, ba, bd, n, DE, case)
+        try:
+            n = _special_denom_cancel_bound(a, ba, bd, n, DE, case)
+        except NotImplementedError as e:
+            # The unsharpened bound can only miss solutions, so with
+            # unsure given, solutions found downstream are still valid,
+            # but their absence is not a proof (see special_denom()).
+            if unsure is None:
+                raise
+            unsure.append(e)
 
     N = max(0, -nb)
     pN = p**N
@@ -651,7 +659,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     return h, A
 
 
-def param_rischDE(fa, fd, G, DE):
+def param_rischDE(fa, fd, G, DE, unsure=None):
     """
     Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
 
@@ -684,7 +692,7 @@ def param_rischDE(fa, fd, G, DE):
     # to solutions z = q/hn of the weakly normalized equation.
     gamma *= hn
 
-    A, B, G, hs = prde_special_denom(a, ba, bd, G, DE)
+    A, B, G, hs = prde_special_denom(a, ba, bd, G, DE, unsure=unsure)
     # Solutions p in k[t] of  A*Dp + B*p = Sum(ci*Gi) correspond
     # to solutions q = p/hs of the previous equation.
     gamma *= hs
@@ -844,7 +852,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     return (a, b, a, N, (a*hn*fa).cancel(fd, include=True), V)
 
 
-def limited_integrate(fa, fd, G, DE):
+def limited_integrate(fa, fd, G, DE, unsure=None):
     """
     Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
 
@@ -858,7 +866,7 @@ def limited_integrate(fa, fd, G, DE):
     Fa = Poly(0, DE.t)
     Fd = Poly(1, DE.t)
     G = [(fa, fd)] + G
-    h, A = param_rischDE(Fa, Fd, G, DE)
+    h, A = param_rischDE(Fa, Fd, G, DE, unsure=unsure)
     V = A.nullspace()
     V = [v for v in V if v[0] != 0]
     if not V:
