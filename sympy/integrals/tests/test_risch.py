@@ -7,6 +7,7 @@ from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.error_functions import (Ei, erf, erfi, li)
 from sympy.functions.elementary.piecewise import Piecewise
@@ -25,6 +26,8 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
     recognize_derivative, laurent_series, _tan_of_multiple)
 from sympy.integrals.integrals import Integral
+from sympy.series.limits import limit
+from sympy.simplify.simplify import simplify
 from sympy.testing.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
@@ -890,24 +893,28 @@ def test_risch_integrate():
 def test_risch_integrate_trig():
     assert risch_integrate(tan(x), x) == -log(cos(x))
     assert risch_integrate(tan(x)**2, x) == -x + tan(x)
-    assert risch_integrate(sec(x)**2, x) == -2*tan(x/2)/(tan(x/2)**2 - 1)
-    assert risch_integrate(sin(x), x) == -2/(tan(x/2)**2 + 1)
-    assert risch_integrate(cos(x), x) == 2*tan(x/2)/(tan(x/2)**2 + 1)
+    assert risch_integrate(sec(x)**2, x) == tan(x)
+    assert risch_integrate(sin(x), x) == -cos(x) - 1
+    assert risch_integrate(cos(x), x) == sin(x)
+    assert risch_integrate(sin(x)**2, x) == x/2 - sin(2*x)/4
     assert risch_integrate(1/sin(x), x) == log(tan(x/2))
     assert risch_integrate(tan(log(x))/x, x) == -log(cos(log(x)))
     assert risch_integrate((tan(log(x))**2 + 1)/x, x) == tan(log(x))
+    assert risch_integrate(exp(x)*sin(x), x) == \
+        exp(x)*sin(x)/2 - exp(x)*cos(x)/2
     assert risch_integrate(tan(x) + tan(2*x) + tan(x/2), x) == \
-        -log(tan(x/2)**2 - 1) - log(tan(x/2)**4 - 6*tan(x/2)**2 + 1)/2 - \
-        6*log(cos(x/2))
+        -2*log(cos(x/2)) - log(cos(x)) - log(cos(2*x))/2
+    assert risch_integrate(sin(x)/(cos(x) + 2), x) == -log(cos(x) + 2)
 
     # These integrals need the coupled differential system of Chapter 8 of
     # Bronstein's book for the reduced (special denominator) part.
     ans = risch_integrate(tan(x)/(tan(x)**2 + 1)**2, x)
-    assert ans == -1/(4*tan(x)**4 + 8*tan(x)**2 + 4)
-    for e in [sin(x)/(cos(x) + 2), 1/(cos(x) + 2), sin(x)**2*exp(x),
-            sin(log(x)), (sin(x) + 2)**-2]:
+    assert ans == -cos(x)**4/4
+    for e in [1/(cos(x) + 2), sin(x)**2*exp(x), sin(log(x)),
+            (sin(x) + 2)**-2, (1 + sin(x))/(3 + cos(x))]:
         ans = risch_integrate(e, x)
         assert not ans.has(Integral)
+        ans = ans.xreplace({f: S.Zero for f in ans.atoms(floor)})
         assert cancel((diff(ans, x) - e).rewrite(exp)) == 0
 
     # Integrals with exponentials over tangent extensions; the second one
@@ -932,6 +939,23 @@ def test_risch_integrate_trig():
     # x*tan(x**2) is elementary even though tan(x**2) is not, because
     # c == x/(2*eta) == 1/4 is constant
     assert risch_integrate(x*tan(x**2), x) == -log(cos(x**2))/2
+
+
+def test_risch_integrate_trig_continuity():
+    # The arctangents of tangents produced by the half angle substitution
+    # are made continuous at the poles of the tangent with floor terms,
+    # following Jeffrey & Rich (1994), like Integral.doit() does.
+    F = risch_integrate(1/(cos(x) + 2), x)
+    assert F == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) +
+        pi*floor((x/2 - pi/2)/pi))/3
+    # continuous at x == pi, where tan(x/2) has a pole ...
+    assert limit(F, x, pi, '-') == limit(F, x, pi, '+') == -sqrt(3)*pi/3
+    # ... so the fundamental theorem of calculus works across it
+    assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == 2*sqrt(3)*pi/3
+
+    F = risch_integrate((tan(x)**2 + 1)/(tan(x)**2 + 4), x)
+    assert F == atan(tan(x)/2)/2 + pi*floor((x - pi/2)/pi)/2
+    assert limit(F, x, pi/2, '-') == limit(F, x, pi/2, '+') == -pi/4
 
     # Multi-way relations among tangent arguments must be detected, or
     # this identically zero integrand is "proven" nonelementary

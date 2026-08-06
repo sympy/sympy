@@ -38,7 +38,9 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.symbol import Dummy, Symbol
 from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.exponential import log, exp
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.error_functions import (Ei, erf, erfi, li)
 from sympy.functions.elementary.hyperbolic import (cosh, coth, sinh,
@@ -1713,6 +1715,216 @@ def residue_reduce_to_basic(H, DE, z):
         {z: i}).subs(s))) for a in H)
 
 
+def residue_reduce_to_real(H, DE, z):
+    """
+    Converts the tuple returned by residue_reduce() into a real Basic
+    expression.
+
+    Explanation
+    ===========
+
+    Like residue_reduce_to_basic(), but the terms with rational or
+    quadratic residue polynomials are expressed with real logarithms and
+    arctangents instead of a RootSum: a pair of complex conjugate
+    residues a +- b*I with logand A +- B*I contributes
+    a*log(A**2 + B**2) + b*h, where h is the sum of arctangents produced
+    by the Lazard-Rioboo log_to_atan() algorithm (with
+    Dh == D(I*log((A + I*B)/(A - I*B)))), following the treatment of the
+    rational function case.  Residue polynomials of higher degree still
+    produce a RootSum.
+    """
+    from .rationaltools import log_to_atan
+    i = Dummy('i')
+    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+
+    result = S.Zero
+    for q, St in H:
+        q = q.as_poly(z)
+        try:
+            _, factors = q.factor_list()
+        except (DomainError, PolynomialError):
+            factors = [(q, 1)]
+        for f, _ in factors:
+            f = f.as_poly(z)
+            if f.degree(z) == 1:
+                r = cancel(-f.nth(0)/f.nth(1))
+                result += (r*log(St.as_expr().subs(z, r))).subs(s)
+                continue
+            if f.degree(z) == 2:
+                # roots a +- sqrt(D)/(2*lc), real logarithms for D > 0 and
+                # an arctangent for a complex conjugate pair
+                a = cancel(-f.nth(1)/(2*f.nth(2)))
+                D = cancel(f.nth(1)**2 - 4*f.nth(0)*f.nth(2))
+                if D.is_positive:
+                    rt = sqrt(D)/(2*f.nth(2))
+                    for r in (a + rt, a - rt):
+                        result += (r*log(St.as_expr().subs(z, r))).subs(s)
+                    continue
+                if D.is_negative:
+                    b = sqrt(-D)/(2*f.nth(2))
+                    w = St.as_expr().subs(z, a + b*I)
+                    wbar = w.subs(I, -I)
+                    A = cancel((w + wbar)/2)
+                    B = cancel((w - wbar)/(2*I))
+                    if not A.has(I) and not B.has(I):
+                        try:
+                            h = log_to_atan(Poly(A, DE.t), Poly(B, DE.t))
+                        except (PolynomialError, DomainError):
+                            h = None
+                        if h is not None:
+                            result += (a*log(A**2 + B**2) +
+                                b*h).subs(s)
+                            continue
+            # fall back to a RootSum for this factor
+            result += RootSum(f, Lambda(i, i*log(St.as_expr()).subs(
+                {z: i}).subs(s)))
+
+    return result
+
+
+def _tan_logs_to_trig(e, x):
+    """
+    Rewrite logarithms of polynomials in tan in terms of sin and cos.
+
+    Explanation
+    ===========
+
+    log(P(tan(a))), with P of degree d, equals
+    log(P(tan(a))*cos(a)**d) - d*log(cos(a)), and the first logand is a
+    polynomial in sin(a) and cos(a) that is continuous at the poles of
+    tan(a).  This both removes the spurious discontinuities of the
+    logarithmic terms there and combines them with the log(cos(a)) terms
+    into the customary forms, e.g.
+    -log(tan(x/2)**2 + 3) - 2*log(cos(x/2)) == -log(cos(x) + 2).  The
+    rewriting is only done if ``e`` also contains a log(cos(a)) term, so
+    that forms like log(tan(x/2)) are left alone.
+    """
+    from sympy.simplify.trigsimp import trigsimp
+    from sympy.simplify.fu import fu
+    logcos = {}
+    for lt in e.atoms(log):
+        arg = lt.args[0]
+        if isinstance(arg, cos) and x in arg.free_symbols:
+            logcos[arg.args[0]] = lt
+    if not logcos:
+        return e
+    for lt in list(e.atoms(log)):
+        arg = lt.args[0]
+        tans = arg.atoms(tan)
+        if len(tans) != 1:
+            continue
+        tan_part = tans.pop()
+        a = tan_part.args[0]
+        if a not in logcos or x not in a.free_symbols:
+            continue
+        try:
+            P = Poly(arg, tan_part)
+        except PolynomialError:
+            continue
+        d = P.degree()
+        if not d:
+            continue
+        # P(tan(a))*cos(a)**d as a polynomial in sin(a) and cos(a)
+        pc = Add(*[c*sin(a)**m[0]*cos(a)**(d - m[0])
+            for m, c in P.terms()])
+        pc2 = fu(pc)
+        if pc2.count_ops() > pc.count_ops():
+            pc2 = trigsimp(pc)
+        if pc2.count_ops() <= pc.count_ops():
+            pc = pc2
+        if pc.could_extract_minus_sign():
+            # log(-A) and log(A) differ by a constant
+            pc = -pc
+        if pc.count_ops() > arg.count_ops():
+            # the trigonometric form is more complicated; keep the
+            # tangent form for this logarithm
+            continue
+        e = e.subs(lt, log(pc) - d*logcos[a])
+    return e
+
+
+def _tan_rational_to_trig(e, x):
+    """
+    Rewrite the rational-in-tan terms of an antiderivative in terms of
+    sin and cos, when that gives a simpler form.
+
+    Explanation
+    ===========
+
+    The half angle substitution produces antiderivatives like
+    -2/(tan(x/2)**2 + 1) for integrate(sin(x)); rewrite such terms into
+    the customary -cos(x) - 1 with trigsimp(), keeping the tangent form
+    whenever it is not more complicated.  Only terms free of log, atan
+    and floor are touched (those are handled by _tan_logs_to_trig() and
+    add_tan_floor_terms()).
+    """
+    from sympy.core.function import expand_mul, expand_trig
+    from sympy.simplify.trigsimp import trigsimp
+    from sympy.simplify.fu import TR7
+    terms = Add.make_args(e)
+    new = []
+    for term in terms:
+        if (term.has(tan) and x in term.free_symbols and
+                not term.has(log, atan, floor, Integral) and
+                term.count_ops() < 100):
+            cand = TR7(trigsimp(term))
+            if any(g.args[0].is_Add and any(i.is_number for i in
+                    g.args[0].args) for g in cand.atoms(sin, cos, tan)):
+                # undo phase-shifted forms like cos(x + pi/4)
+                cand2 = expand_mul(expand_trig(cand))
+                if cand2.count_ops() <= cand.count_ops() + 4:
+                    cand = cand2
+            # allow slightly larger results when they eliminate the
+            # tangents (of half angles) entirely
+            slack = 4 if not cand.has(tan) else 0
+            if cand.count_ops() <= term.count_ops() + slack:
+                term = cand
+        new.append(term)
+    return Add(*new)
+
+
+def add_tan_floor_terms(e, x):
+    """
+    Make arctangents of tangents continuous with floor terms.
+
+    Explanation
+    ===========
+
+    An antiderivative containing atan(P(tan(a))) has a spurious jump
+    discontinuity of -pi*sign(lc(P)) at the poles of tan(a) when the
+    degree of P is odd, although the integrand is well defined there;
+    following [JeffreyRich1994]_, adding sign(lc(P))*pi*floor((a - pi/2)/pi)
+    removes it.  (For even degree the two one-sided limits agree and no
+    correction is needed.)  This matches the correction that
+    Integral.doit() applies for arguments linear in tan.
+
+    References
+    ==========
+
+    .. [JeffreyRich1994] D. J. Jeffrey, A. D. Rich, "The Evaluation of
+       Trigonometric Integrals Avoiding Spurious Discontinuities",
+       ACM Transactions on Mathematical Software 20 (1994), 124-135.
+    """
+    for atan_term in e.atoms(atan):
+        arg = atan_term.args[0]
+        tans = arg.atoms(tan)
+        if len(tans) != 1:
+            continue
+        tan_part = tans.pop()
+        a = tan_part.args[0]
+        if x not in a.free_symbols:
+            continue
+        try:
+            P = Poly(arg, tan_part)
+        except PolynomialError:
+            continue
+        lc = P.LC()
+        if P.degree() % 2 and not lc.free_symbols & a.free_symbols:
+            e = e.subs(atan_term, atan_term +
+                sign(lc)*pi*floor((a - pi/2)/pi))
+    return e
+
+
 def residue_reduce_derivation(H, DE, z):
     """
     Computes the derivation of an expression returned by residue_reduce().
@@ -2383,8 +2595,8 @@ def integrate_hypertangent(a, d, DE, z=None):
             g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
         i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
-        return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
-            residue_reduce_to_basic(g2, DE, z), i, b)
+        return (add_tan_floor_terms((g1[0].as_expr()/g1[1].as_expr()).subs(s)
+            + residue_reduce_to_real(g2, DE, z), DE.x), i, b)
 
     # p == h - Dg2 + r is in k[t] plus a reduced element whose denominator
     # is a power of the special polynomial t**2 + 1.
@@ -2397,9 +2609,9 @@ def integrate_hypertangent(a, d, DE, z=None):
     ppa, ppd = (pa*q1d**2 - (derivation(q1a, DE)*q1d -
         q1a*derivation(q1d, DE))*pd).cancel(pd*q1d**2, include=True)
 
-    ret = (g1[0].as_expr()/g1[1].as_expr() +
-        q1a.as_expr()/q1d.as_expr()).subs(s) + \
-        residue_reduce_to_basic(g2, DE, z)
+    ret = add_tan_floor_terms((g1[0].as_expr()/g1[1].as_expr() +
+        q1a.as_expr()/q1d.as_expr()).subs(s) +
+        residue_reduce_to_real(g2, DE, z), DE.x)
     if not b:
         i = NonElementaryIntegral(cancel(ppa.as_expr()/ppd.as_expr()).subs(s),
             DE.x)
@@ -2577,7 +2789,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     ========
 
     >>> from sympy.integrals.risch import risch_integrate
-    >>> from sympy import exp, log, pprint, tan
+    >>> from sympy import cos, exp, log, pprint, tan
     >>> from sympy.abc import x
 
     First, we try integrating exp(-x**2). Except for a constant factor of
@@ -2632,9 +2844,16 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     /
 
     Trigonometric functions are handled as rational functions of tangents.
+    The results are rewritten in terms of sin and cos where that gives
+    simpler forms, and arctangents of tangents are made continuous at the
+    poles of the tangent with floor terms, following Jeffrey & Rich
+    (1994), so that the fundamental theorem of calculus can be applied
+    across them.
 
     >>> risch_integrate(tan(x), x)
     -log(cos(x))
+    >>> risch_integrate(1/(cos(x) + 2), x)
+    2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3
     >>> pprint(risch_integrate(tan(x)/x, x))
       /
      |
@@ -2709,6 +2928,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             fa, fd = frac_in(i, DE.t)
         else:
             result = result.subs(DE.backsubs)
+            result = _tan_logs_to_trig(result, x)
+            result = _tan_rational_to_trig(result, x)
             if not i.is_zero:
                 i = NonElementaryIntegral(i.function.subs(DE.backsubs),i.limits)
             if not separate_integral:
