@@ -854,3 +854,7 @@ def test_array_sum():
 
     expr = ArrayContraction(ArraySum(T*sin(i), (i, 1, j)), (0, 1))
     assert expr.doit() == ArraySum(ArrayContraction(T*sin(i), (0, 1)), (i, 1, j))
+
+
+def test_array_contraction_empty_indices():
+    assert ArrayContraction(M, ()) == ArrayContraction(M)
