@@ -1905,6 +1905,9 @@ def trig_product_rule(integral: IntegralInfo):
         return CscCotRule(integrand, symbol)
 
 
+primary_trighyper_functions = (sin, cos, sinh, cosh)
+
+
 def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
@@ -1919,24 +1922,45 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     integrand, symbol = integral
 
-    if not integrand.has(exp) and not integrand.has(sin, cos, sinh, cosh):
+    factors = Mul.make_args(integrand)
+
+    # Require exp to appear as a genuine top-level factor with a polynomial
+    # argument, not merely somewhere in the expression tree (e.g. as a
+    # wrapper like exp(cos(x**2)), which is not a Gaussian or linear factor).
+    if not any(isinstance(t, exp) and t.args[0].is_polynomial(symbol) for t in factors):
         return
 
     a = Wild('a', exclude=[symbol, 0])
     b = Wild('b', exclude=[symbol])
     c = Wild('c', exclude=[symbol])
-    # n = Wild('n', exclude=[symbol], properties=[lambda n: n > 0])
     f = WildFunction('f')
-    guassian_pattern = exp(a * symbol**2 + b * symbol + c)
-    trigexp_over_x_pattern = f*exp(a * symbol)/symbol
+
+    quadratic_pattern = a * symbol**2 + b * symbol + c
+    linear_pattern = a * symbol + b
+
+    def trig_arg(term):
+        if isinstance(term, primary_trighyper_functions):
+            return term.args[0]
+        if isinstance(term, Pow) and isinstance(term.base, primary_trighyper_functions):
+            return term.base.args[0]
+        return None
+
+    quadratic_phase = any(
+        (arg := trig_arg(term)) is not None and arg.match(quadratic_pattern)
+        for term in factors
+    )
+    gaussian_pattern = exp(quadratic_pattern)
+    trigexp_over_x_pattern = f*exp(linear_pattern)/symbol
     trigexp_over_x_match = integrand.match(trigexp_over_x_pattern)
-    if not (any(term.match(guassian_pattern) for term in integrand.atoms(exp))
-            or (trigexp_over_x_match and
-                trigexp_over_x_match[f].has(sin, cos, sinh, cosh))):
+    if not (
+        any(term.match(gaussian_pattern) for term in factors if isinstance(term, exp))
+        or trigexp_over_x_match
+        or quadratic_phase
+    ):
         return
 
     # Replace trig and hyperbolic functions with their exponential forms
-    rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
+    rewritten = integrand.rewrite(primary_trighyper_functions, exp)
 
     if rewritten != integrand:
         debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
