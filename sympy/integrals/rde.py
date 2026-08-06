@@ -852,8 +852,8 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
             raise TypeError("Result should be a number")
 
         if parametric:
-            raise NotImplementedError("prde_no_cancel_b_equal() is not yet "
-                "implemented.")
+            from .prde import prde_no_cancel_b_equal
+            return prde_no_cancel_b_equal(b, cQ, n, DE)
 
         R = no_cancel_equal(b, cQ, n, DE)
 

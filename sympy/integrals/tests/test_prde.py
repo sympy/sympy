@@ -3,7 +3,8 @@ from __future__ import annotations
 from sympy.integrals.risch import DifferentialExtension, derivation
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
-    prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
+    prde_no_cancel_b_small, prde_no_cancel_b_equal, limited_integrate_reduce,
+    limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
     is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
     is_deriv_in_field,
@@ -168,6 +169,36 @@ def test_prde_no_cancel():
     assert V[0] == Matrix([Rational(-1, 2), 0, 0, 1, 0, 0]*3, ring=R)
     assert (Matrix([h])*V[0][6:, :])[0] == Poly(x**2/2, t, domain='QQ(x)')
     assert (Matrix([q])*V[0][:6, :])[0] == Poly(x - S.Half, t, domain='QQ(x)')
+
+
+def test_prde_no_cancel_b_equal():
+    # deg(b) == delta(t) - 1, with t == tan-like (Dt == t**2 + 1)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    # -lc(b)/lc(Dt) == -1 is not a positive integer, so the loop runs to
+    # N == 0: Dq + t*q == 2*t**2 + 1 has the solution q == t
+    assert prde_no_cancel_b_equal(Poly(t, t), [Poly(2*t**2 + 1, t)], 1, DE) == \
+        ([Poly(t, t)], Matrix([[1, -1]], DE.t))
+    # A solution with a nonconstant coefficient and two right hand sides:
+    # q == t**2 solves Dq + t*q == c1 for c == D(t**2) + t*t**2
+    b = Poly(t, t)
+    q = Poly(t**2, t)
+    c = derivation(q, DE) + b*q
+    h, A = prde_no_cancel_b_equal(b, [c, Poly(0, t)], 2, DE)
+    V = A.nullspace()
+    sols = 0
+    for v in V:
+        if v[0] != 0:
+            y = Add(*[(v[2 + j]*h[j]).as_expr() for j in range(len(h))])
+            yp = Poly(y/v[0].as_expr(), t, field=True)
+            if cancel(derivation(yp, DE).as_expr() + (b*yp).as_expr()
+                    - c.as_expr()) == 0:
+                sols += 1
+    assert sols >= 1
+    # When the possible-cancellation degree -lc(b)/lc(Dt) is reached, the
+    # rest is delegated to the cancellation algorithms, which are not yet
+    # implemented for delta(t) >= 2
+    raises(NotImplementedError, lambda: prde_no_cancel_b_equal(
+        Poly(-2*t, t), [Poly(t**4 + 3*t**2, t)], 3, DE))
 
 
 def test_prde_cancel_liouvillian():

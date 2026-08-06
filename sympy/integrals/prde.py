@@ -458,6 +458,81 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     return f + H, A.col_join(B).col_join(C)
 
 
+def prde_no_cancel_b_equal(b, Q, n, DE):
+    """
+    Parametric Poly Risch Differential Equation - No cancellation: deg(b) == delta(t) - 1
+
+    Explanation
+    ===========
+
+    Given a derivation D on k[t] with delta(t) >= 2, n in ZZ, and
+    b, q1, ..., qm in k[t] with deg(b) == delta(t) - 1 and
+    n > -lc(b)/lc(Dt), returns h1, ..., hr in k[t] and a matrix A with
+    coefficients in Const(k) such that if c1, ..., cm in Const(k) and
+    q in k[t] satisfy deg(q) <= n and Dq + b*q == Sum(ci*qi, (i, 1, m)),
+    then q == Sum(dj*hj, (j, 1, r)), where d1, ..., dr in Const(k) and
+    A*Matrix([c1, ..., cm, d1, ..., dr]).T == 0.
+
+    This implements the "When delta(t) >= 2 and deg(b) == delta(t) - 1"
+    discussion of Section 7.1 of Bronstein's book (neither edition gives
+    it as named pseudocode).  If the possible-cancellation degree
+    -lc(b)/lc(Dt) is a positive integer at most n, the remaining problem
+    is delegated to the cancellation algorithms via param_poly_rischDE(),
+    which for delta(t) >= 2 are not yet implemented, so this case
+    currently raises NotImplementedError.
+    """
+    m = len(Q)
+    delta = DE.d.degree(DE.t)
+    lam = DE.d.LC()
+
+    # The degree at which cancellation could occur
+    Mc = cancel(-b.LC()/lam)
+    if Mc.is_Integer and Mc > 0:
+        M = int(Mc)
+    else:
+        M = -1
+
+    H = [Poly(0, DE.t)]*m
+
+    for N in range(n, M, -1):  # [n, ..., M + 1]
+        u = cancel(N*lam + b.LC())  # nonzero, since N != -lc(b)/lam
+        for i in range(m):
+            si = Q[i].nth(N + delta - 1)/u
+            sitn = Poly(si*DE.t**N, DE.t)
+            H[i] = H[i] + sitn
+            Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
+
+    if M == -1:
+        # The loop ran through N == 0, so as in prde_no_cancel_b_large()
+        # any solution is q == Sum(ci*hi) and the (updated) right hand
+        # sides must satisfy Sum(ci*qi) == 0.
+        if all(qi.is_zero for qi in Q):
+            dc = -1
+        else:
+            dc = max(qi.degree(DE.t) for qi in Q)
+        Mmat = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
+        A, _ = constant_system(Mmat, zeros(dc + 1, 1, DE.t), DE)
+        c = eye(m, DE.t)
+        A = A.row_join(zeros(A.rows, m, DE.t)).col_join(c.row_join(-c))
+        return (H, A)
+
+    # We reached the possible-cancellation degree M > 0.  Solve the
+    # remaining problem, with the updated right hand sides and degree
+    # bound M, by the cancellation algorithms.
+    f, B = param_poly_rischDE(Poly(1, DE.t), b, Q, M, DE)
+    # Any solution is q == Sum(ci*hi) + Sum(dj*fj), where the fj and the
+    # matrix B constrain (c1, ..., cm, d1, ..., dr).  Combine into a
+    # relation matrix over the columns
+    # (c1, ..., cm, d_h1, ..., d_hm, d_f1, ..., d_fr), where the first
+    # block of rows enforces d_hi == ci.
+    r = len(f)
+    Bc = Matrix(B.rows, m, lambda i, j: B[i, j], DE.t)
+    Bd = Matrix(B.rows, r, lambda i, j: B[i, m + j], DE.t)
+    top = eye(m, DE.t).row_join(-eye(m, DE.t)).row_join(zeros(m, r, DE.t))
+    bottom = Bc.row_join(zeros(B.rows, m, DE.t)).row_join(Bd)
+    return (H + f, top.col_join(bottom))
+
+
 def prde_cancel_liouvillian(b, Q, n, DE):
     """
     Parametric Poly Risch Differential Equation - Cancellation: Liouvillian case.
@@ -566,8 +641,7 @@ def param_poly_rischDE(a, b, q, n, DE):
         elif (DE.d.degree() >= 2 and
               b.degree() == DE.d.degree() - 1 and
               n > -b.as_poly().LC()/DE.d.as_poly().LC()):
-            raise NotImplementedError("prde_no_cancel_b_equal() is "
-                "not yet implemented.")
+            return prde_no_cancel_b_equal(b, q, n, DE)
 
         else:
             # Liouvillian cases
