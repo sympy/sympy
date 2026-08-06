@@ -12,11 +12,12 @@ from sympy.polys.polymatrix import PolyMatrix as Matrix
 
 from sympy.testing.pytest import raises
 
+from sympy.core import Add
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.polys.domains.rationalfield import QQ
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, cancel
 from sympy.abc import x, t, n
 
 t0, t1, t2, t3, k = symbols('t:4 k')
@@ -189,6 +190,26 @@ def test_prde_cancel_liouvillian():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t, t)]})
     assert prde_cancel_liouvillian(Poly(0, t, domain='QQ[x]'), [Poly(1, t, domain='QQ(x)')], 0, DE) == \
             ([Poly(1, t, domain='QQ'), Poly(x, t, domain='ZZ(x)')], Matrix([[-1, 0, 1]], DE.t))
+
+    ### 3. case == 'exp' with b != 0 and n > 0.  This exercises the level at
+    ### which eta == Dt/t is computed and the sign of the residual update
+    ### Fi == -(D(h) + b*h), both of which used to be wrong.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    b = Poly(1/x, t, field=True)
+    Q = [Poly((x + 1)*t/x, t, field=True)]
+    h, A = prde_cancel_liouvillian(b, Q, 1, DE)
+    V = A.nullspace()
+    # Dy + y/x == c1*(x + 1)*t/x must have the solution y == t (c1 == 1)
+    found = False
+    for v in V:
+        if v[0] == 0:
+            continue
+        y = Add(*[(v[1 + j]*h[j]).as_expr() for j in range(len(h))])/v[0].as_expr()
+        yp = Poly(y, t, field=True)
+        if cancel(derivation(yp, DE).as_expr() + b.as_expr()*y
+                - Q[0].as_expr()) == 0:
+            found = True
+    assert found
 
 
 def test_param_poly_rischDE():

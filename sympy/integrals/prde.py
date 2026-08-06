@@ -468,6 +468,13 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     """
     H = []
 
+    if DE.case == 'exp':
+        # The coefficient of t**i satisfies the equation
+        # D(q_i) + (b + i*eta)*q_i == rhs_i over k, where eta == Dt/t.
+        # eta must be computed at the current level, before DecrementLevel
+        # is entered below.
+        eta = DE.d.quo(Poly(DE.t, DE.t)).as_expr()
+
     # Why use DecrementLevel? Below line answers that:
     # Assuming that we can solve such problems over 'k' (not k[t])
     if DE.case == 'primitive':
@@ -477,8 +484,7 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     for i in range(n, -1, -1):
         if DE.case == 'exp': # this re-checking can be avoided
             with DecrementLevel(DE):
-                ba, bd = frac_in(b + (i*(derivation(DE.t, DE)/DE.t)).as_poly(b.gens),
-                                DE.t, field=True)
+                ba, bd = frac_in(b.as_expr() + i*eta, DE.t, field=True)
         with DecrementLevel(DE):
             Qy = [frac_in(q.nth(i), DE.t, field=True) for q in Q]
             fi, Ai = param_rischDE(ba, bd, Qy, DE)
@@ -495,12 +501,15 @@ def prde_cancel_liouvillian(b, Q, n, DE):
 
         Fi, hi = [None]*ri, [None]*ri
 
-        # from eq. on top of p.238 (unnumbered)
+        # Substituting q == d*h + q_rest into Dq + b*q == Sum(ci*qi)
+        # leaves the residual equation
+        # D(q_rest) + b*q_rest == Sum(ci*qi) - d*(D(h) + b*h)
+        # (see the equation following (7.17) in Section 7.1).
         for j in range(ri):
             hji = fi[j] * (DE.t**i).as_poly(fi[j].gens)
             hi[j] = hji
-            # building up Sum(djn*(D(fjn*t^n) - b*fjnt^n))
-            Fi[j] = -(derivation(hji, DE) - b*hji)
+            # building up Sum(dji*(D(fji*t^i) + b*fji*t^i))
+            Fi[j] = -(derivation(hji, DE) + b*hji)
 
         H += hi
         # in the next loop instead of Q it has

@@ -801,6 +801,16 @@ def test_integrate_primitive_nonelementary_residual():
         assert cancel(together(diff(g, x) + i.function - f)) == 0
 
 
+def test_risch_integrate_cancellation():
+    # Requires the parametric Liouvillian cancellation case at the
+    # exponential level (prde_cancel_liouvillian() via limited_integrate());
+    # this used to hang because the coefficient shift i*Dt/t was computed
+    # at the wrong level.
+    e = exp(x)*log(exp(x) + 1)
+    assert risch_integrate(e, x) == \
+        exp(x)*log(exp(x) + 1) - exp(x) + log(exp(x) + 1)
+
+
 def test_bound_degree_limited_integrate():
     # bound_degree() used to raise "TypeError: '>' not supported between
     # instances of 'Poly' and 'int'" on these when the sharp primitive-case
