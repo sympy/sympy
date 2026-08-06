@@ -1861,8 +1861,12 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     integrand, symbol = integral
 
-    if not (integrand.is_Mul and integrand.has(exp) and
-            integrand.has(*primary_trighyper_functions)):
+    factors = Mul.make_args(integrand)
+
+    # Require exp to appear as a genuine top-level factor with a polynomial
+    # argument, not merely somewhere in the expression tree (e.g. as a
+    # wrapper like exp(cos(x**2)), which is not a Gaussian or linear factor).
+    if not any(isinstance(t, exp) and t.args[0].is_polynomial(symbol) for t in factors):
         return
 
     a = Wild('a', exclude=[symbol, 0])
@@ -1873,15 +1877,22 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
     quadratic_pattern = a * symbol**2 + b * symbol + c
     linear_pattern = a * symbol + b
 
+    def trig_arg(term):
+        if isinstance(term, primary_trighyper_functions):
+            return term.args[0]
+        if isinstance(term, Pow) and isinstance(term.base, primary_trighyper_functions):
+            return term.base.args[0]
+        return None
+
     quadratic_phase = any(
-        term.args[0].match(quadratic_pattern)
-        for term in integrand.atoms(*primary_trighyper_functions)
+        (arg := trig_arg(term)) is not None and arg.match(quadratic_pattern)
+        for term in factors
     )
-    guassian_pattern = exp(quadratic_pattern)
+    gaussian_pattern = exp(quadratic_pattern)
     trigexp_over_x_pattern = f*exp(linear_pattern)/symbol
     trigexp_over_x_match = integrand.match(trigexp_over_x_pattern)
     if not (
-        any(term.match(guassian_pattern) for term in integrand.atoms(exp))
+        any(term.match(gaussian_pattern) for term in factors if isinstance(term, exp))
         or trigexp_over_x_match
         or quadratic_phase
     ):
