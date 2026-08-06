@@ -269,12 +269,14 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(x*atan(a*x), x) == -a*(x/a**2 - Piecewise((x, Eq(a**2, 0)),
                                             (atan(x/sqrt(a**(-2)))/(a**2*sqrt(a**(-2))), True))/a**2)/2 + x**2*atan(a*x)/2
     # acsc
-    assert manualintegrate(acsc(x), x) == x*acsc(x) + Integral(1/(x*sqrt(1 - 1/x**2)), x)
-    assert manualintegrate(acsc(a*x), x) == x*acsc(a*x) + Integral(1/(x*sqrt(1 - 1/(a**2*x**2))), x)/a
+    assert manualintegrate(acsc(x), x) == x*acsc(x) - log(-1 + 1/(sqrt(1 - 1/x**2) + I/x)) + log(1 + 1/(sqrt(1 - 1/x**2) + I/x))
+    assert manualintegrate(acsc(a*x), x) == (a*x*acsc(a*x) - log(-1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))) +
+                                              log(1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))))/a
     assert manualintegrate(x*acsc(a*x), x) == x**2*acsc(a*x)/2 + Integral(1/sqrt(1 - 1/(a**2*x**2)), x)/(2*a)
     # asec
-    assert manualintegrate(asec(x), x) == x*asec(x) - Integral(1/(x*sqrt(1 - 1/x**2)), x)
-    assert manualintegrate(asec(a*x), x) == x*asec(a*x) - Integral(1/(x*sqrt(1 - 1/(a**2*x**2))), x)/a
+    assert manualintegrate(asec(x), x) == x*asec(x) + log(-1 + 1/(sqrt(1 - 1/x**2) + I/x)) - log(1 + 1/(sqrt(1 - 1/x**2) + I/x))
+    assert manualintegrate(asec(a*x), x) == (a*x*asec(a*x) + log(-1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))) -
+                                        log(1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))))/a
     assert manualintegrate(x*asec(a*x), x) == x**2*asec(a*x)/2 - Integral(1/sqrt(1 - 1/(a**2*x**2)), x)/(2*a)
     # acot
     assert manualintegrate(acot(x), x) == x*acot(x) + log(x**2 + 1)/2
@@ -296,12 +298,19 @@ def test_manualintegrate_inversetrig():
 
 
 def test_manualintegrate_trig_substitution():
-    assert manualintegrate(sqrt(16*x**2 - 9)/x, x) == \
-        Piecewise((sqrt(16*x**2 - 9) - 3*acos(3/(4*x)),
-                   And(x < Rational(3, 4), x > Rational(-3, 4))))
-    assert manualintegrate(1/(x**4 * sqrt(25-x**2)), x) == \
-        Piecewise((-sqrt(-x**2/25 + 1)/(125*x) -
-                   (-x**2/25 + 1)**(3*S.Half)/(15*x**3), And(x < 5, x > -5)))
+    f = sqrt(16*x**2 - 9)/x
+    F = (2*x + sqrt(16*x**2 - 9)/2
+         + 6*atan(3/(4*x + sqrt(16*x**2 - 9)))
+         - S(9)/2/(4*x + sqrt(16*x**2 - 9)))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    f = 1/(x**4*sqrt(25 - x**2))
+    F = -8*I*(1/(1250*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**2)
+              + 1/(1875*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**3))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
     assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
         sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
 
@@ -315,6 +324,12 @@ def test_manualintegrate_trivial_substitution():
 def test_manualintegrate_rational():
     assert manualintegrate(1/(4 - x**2), x) == -log(x - 2)/4 + log(x + 2)/4
     assert manualintegrate(1/(-1 + x**2), x) == log(x - 1)/2 - log(x + 1)/2
+    # apart splits this into 1/(x + 1) and the undecomposable 1/(x**4 + 1).
+    f = (x**4 + x + 2)/((x + 1)*(x**4 + 1))
+    F = manualintegrate(f, x)
+    assert F == log(x + 1) - sqrt(2)*log(x**2 - sqrt(2)*x + 1)/8 + \
+        sqrt(2)*log(x**2 + sqrt(2)*x + 1)/8 + sqrt(2)*atan(sqrt(2)*x - 1)/4 + sqrt(2)*atan(sqrt(2)*x + 1)/4
+    assert (F.diff(x) - f).cancel() == 0
 
 
 def test_manualintegrate_special():
@@ -607,18 +622,20 @@ def test_issue_6746():
     assert manualintegrate(1/((x**a + y**b + 4)*sqrt(a*x**2 + 1)), x) == \
         y**(-b)*Integral(x**(-a)/(y**(-b)*sqrt(a*x**2 + 1) +
         x**(-a)*sqrt(a*x**2 + 1) + 4*x**(-a)*y**(-b)*sqrt(a*x**2 + 1)), x)
-    assert manualintegrate(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x) == \
-        Integral(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x)
+    assert manualintegrate(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x) == -sqrt(15)*(log(-8*sqrt(15) + 31 + (2*x + sqrt(4*x**2 + 1))**(-2)) -\
+                                     log(8*sqrt(15) + 31 + (2*x + sqrt(4*x**2 + 1))**(-2)))/60
     assert manualintegrate(1/(x - a**x + x*b**2), x) == \
         Integral(1/(-a**x + b**2*x + x), x)
 
 
 @slow
 def test_issue_2850():
-    assert manualintegrate(asin(x)*log(x), x) == -x*asin(x) - sqrt(-x**2 + 1) \
-            + (x*asin(x) + sqrt(-x**2 + 1))*log(x) - Integral(sqrt(-x**2 + 1)/x, x)
-    assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + sqrt(-x**2 + 1) + \
-        (x*acos(x) - sqrt(-x**2 + 1))*log(x) + Integral(sqrt(-x**2 + 1)/x, x)
+    assert manualintegrate(asin(x)*log(x), x) == (-x*asin(x) - (I*x + 3*sqrt(1 - x**2))/2 + (x*asin(x)
+                + sqrt(1 - x**2))*log(x) - log(-1 + 1/(I*x + sqrt(1 - x**2)))
+                + log(1 + 1/(I*x + sqrt(1 - x**2))) - S.Half/(I*x + sqrt(1 - x**2)))
+    assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + I*x/2 + 3*sqrt(1 - x**2)/2 + \
+    (x*acos(x) - sqrt(1 - x**2))*log(x) + log(-1 + 1/(I*x + sqrt(1 - x**2))) - \
+    log(1 + 1/(I*x + sqrt(1 - x**2))) + S.Half/(I*x + sqrt(1 - x**2))
     assert manualintegrate(atan(x)*log(x), x) == -x*atan(x) + (x*atan(x) - \
             log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
 
@@ -892,6 +909,38 @@ def test_manualintegrate_sqrt_fractional_linear():
     F = (-4*2**(S.One/3)*sqrt(3)*(log(sqrt((x + 1)/(x - 1)) - 1)/4 - log(sqrt((x + 1)/(x - 1)) + 1)/4
         - S(1)/4/(sqrt((x + 1)/(x - 1)) + 1) - S(1)/4/(sqrt((x + 1)/(x - 1)) - 1)))/3
     assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_euler_substitution():
+    # General quadratic, with the radical nested inside a Pow
+    f = 1/(x + sqrt(x**2 + 2*x + 2))
+    F = (-log(1 + 1/(x + sqrt(x**2 + 2*x + 2)))/2
+         + log(x + sqrt(x**2 + 2*x + 2))/2
+         - S.Half/(1 + 1/(x + sqrt(x**2 + 2*x + 2))))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    # Proportional quadratic radicals
+    f = sqrt(2*x**2 + 2)/((x + sqrt(x**2 + 1))*sqrt(x**2 + 1))
+    F = sqrt(2)*(log(2*(x + sqrt(x**2 + 1))**2)
+                  - 1/(x + sqrt(x**2 + 1))**2)/4
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    # Quadratic with a double root (zero discriminant)
+    f = sqrt(x**2 + 2*x + 1)/(x + 1)
+    F = sqrt((x + 1)**2)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    # Symbolic quadratic coefficient and its degenerate branch
+    f = 1/(sqrt(c)*x + sqrt(c*x**2 + 1))
+    F1 = (log((sqrt(c)*x + sqrt(c*x**2 + 1))**2)/2
+          - 1/(2*(sqrt(c)*x + sqrt(c*x**2 + 1))**2))/(2*sqrt(c))
+    F2 = x
+    assert manualintegrate(f, x) == Piecewise((F1, Ne(c, 0)), (F2, True))
+    assert (F1.diff(x) - f).cancel() == 0
+    assert (F2.diff(x) - f.subs(c, 0)).cancel() == 0
 
 
 def test_manualintegrate_sqrt_quadratic():

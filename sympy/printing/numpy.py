@@ -369,7 +369,7 @@ class SciPyPrinter(NumPyPrinter):
             data.append(v)
 
         return "{name}(({data}, ({i}, {j})), shape={shape})".format(
-            name=self._module_format('scipy.sparse.coo_matrix'),
+            name=self._module_format('scipy.sparse.coo_array'),
             data=data, i=i, j=j, shape=expr.shape
         )
 

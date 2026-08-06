@@ -6,9 +6,10 @@ from sympy.core.function import (Derivative, Function)
 from sympy.core.numbers import pi
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
-from sympy.matrices.dense import Matrix
-from sympy.simplify.simplify import simplify
+from sympy.matrices.dense import Matrix, zeros
+from sympy.simplify.simplify import simplify, trigsimp
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.solvers.solveset import linear_eq_to_matrix
 
 
 def test_invalid_coordinates():
@@ -266,9 +267,16 @@ def test_rolling_disc():
     l = LagrangesMethod(Lag, q, nonhol_coneqs=nonholonomic)
     assert l.nonholonomic_constraints == Matrix(nonholonomic)
     assert l.velocity_constraints == Matrix(nonholonomic)
-    l.form_lagranges_equations()
+    eom = l.form_lagranges_equations()
+    x = Matrix(q).diff(t, 2).col_join(l.lam_vec)
     assert l.mass_matrix.shape == (3, 5)
-    assert l.mass_matrix == Matrix([
+    exp_mass_matrix, exp_forcing = linear_eq_to_matrix(eom, x[:])
+    # TODO : The following line fails because Lagrange's method uses the
+    # negative of the transpose of the Jacobian of the constraints.
+    # assert trigsimp(l.mass_matrix - exp_mass_matrix) == zeros(3, 5)
+    assert trigsimp(l.forcing - exp_forcing) == zeros(3, 1)
+    exp_mass_matrix = Matrix([
         [3*m*r**2*sin(q2(t))**2/2 + m*r**2*cos(q2(t))**2/4,          0, 3*m*r**2*sin(q2(t))/2, r*sin(q2(t)),             0],
         [                                                0, 5*m*r**2/4,                     0,            0, -r*cos(q2(t))],
         [                            3*m*r**2*sin(q2(t))/2,          0,            3*m*r**2/2,            r,             0]])
+    assert trigsimp(l.mass_matrix - exp_mass_matrix) == zeros(3, 5)

@@ -307,6 +307,22 @@ def test_parser_mathematica_tokenizer():
     assert chain("#1 + #2 & [x, y]") == [["Function", ["Plus", ["Slot", "1"], ["Slot", "2"]]], "x", "y"]
     assert chain("#1^2#2^3&") == ["Function", ["Times", ["Power", ["Slot", "1"], "2"], ["Power", ["Slot", "2"], "3"]]]
 
+    # Output references (``%``): ``%`` is ``Out[]``, a run of k percents is
+    # ``Out[-k]`` (the k-th previous result), and ``%n`` is ``Out[n]``.
+    assert chain("%") == ["Out"]
+    assert chain("%%") == ["Out", "-2"]
+    assert chain("%%%%%") == ["Out", "-5"]
+    assert chain("%5") == ["Out", "5"]
+    assert chain("Hold[%]") == ["Hold", ["Out"]]
+    assert chain("Hold[%%%%%]") == ["Hold", ["Out", "-5"]]
+    assert chain("f[%, %%, %3]") == ["f", ["Out"], ["Out", "-2"], ["Out", "3"]]
+    assert chain("%^2") == ["Power", ["Out"], "2"]
+    assert chain("2 + %") == ["Plus", "2", ["Out"]]
+    # a run counts only when the percents are adjacent; a space breaks it into
+    # a product of two ``Out[]`` references
+    assert chain("% %") == ["Times", ["Out"], ["Out"]]
+    assert chain("2%%") == ["Times", "2", ["Out", "-2"]]
+
     # Assignment operators
     assert chain("a=b") == ["Set", "a", "b"]
     assert chain("a:=b") == ["SetDelayed", "a", "b"]
@@ -314,6 +330,15 @@ def test_parser_mathematica_tokenizer():
     assert chain("a-=b") == ["SubtractFrom", "a", "b"]
     assert chain("a*=b") == ["TimesBy", "a", "b"]
     assert chain("a/=b") == ["DivideBy", "a", "b"]
+
+    # ``x =.`` clears a value: it is ``Unset[x]``.  The trailing ``.`` must not
+    # be read as the start of a number, so ``x=.5`` stays ``Set[x, 0.5]``.
+    assert chain("x=.") == ["Unset", "x"]
+    assert chain("x =. ") == ["Unset", "x"]
+    assert chain("Hold[x=.]") == ["Hold", ["Unset", "x"]]
+    assert chain("f[x]=.") == ["Unset", ["f", "x"]]
+    assert chain("x=.5") == ["Set", "x", ".5"]
+    assert chain("a==.5") == ["Equal", "a", ".5"]
 
     # Rules, replacement and conditions
     assert chain("a->b") == ["Rule", "a", "b"]

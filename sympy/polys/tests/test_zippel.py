@@ -1,105 +1,125 @@
 from __future__ import annotations
+from sympy.external.gmpy import MPZ
+from sympy.polys.densebasic import dup_to_dict
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ
-from sympy.polys.zippel import (_LC, _chinese_remainder_reconstruction_multivariate, _deg,
-    _gf_gcd, _trivial_gcd, _primitive)
+from sympy.polys.zippel import (
+    smp_LC_wrt_last, smp_chinese_remainder_reconstruction_multivariate,
+    smp_deg_wrt_last, smp_gf_gcd, smp_primitive_wrt_last,
+    smp_trivial_gcd)
 
 
-def test_gf_gcd():
+def test_smp_gf_gcd():
     R, x = ring("x", ZZ)
-    p = 7
+    p = MPZ(7)
     f = (x**2 + 2).trunc_ground(p)
     g = (x**2 + 3).trunc_ground(p)
-    assert _gf_gcd(f, g, p) == R.one
+    assert smp_gf_gcd(dict(f), dict(g), p, R.domain) == dict(R.one)
 
-    p = 11
+    p = MPZ(11)
     f = (x**2 + 5*x + 4).trunc_ground(p)
     g = (x**2 + 6*x + 8).trunc_ground(p)
-    assert _gf_gcd(f, g, p) == (x + 4).trunc_ground(p)
+    expected = (x + 4).trunc_ground(p)
+    assert smp_gf_gcd(dict(f), dict(g), p, R.domain) == dict(expected)
 
     # gcd in Z[x] would be not monic
-    p = 13
+    p = MPZ(13)
     f = (2*x**2 + 5*x + 3).trunc_ground(p)
     g = (2*x**2 - x - 6).trunc_ground(p)
-    assert _gf_gcd(f, g, p) == (x - 5).trunc_ground(p)
+    expected = (x - 5).trunc_ground(p)
+    assert smp_gf_gcd(dict(f), dict(g), p, R.domain) == dict(expected)
 
 
-def test_trivial_gcd():
+def test_smp_trivial_gcd():
     R, x, y, z = ring("x, y, z", ZZ)
+    n = R.ngens
+    dom = R.domain
 
-    assert _trivial_gcd(R.zero, R.zero) == (R.zero, R.zero, R.zero)
+    assert smp_trivial_gcd(dict(R.zero), dict(R.zero), n, dom) == ({}, {}, {})
 
     g = 2*x*y*z + x**2
-    assert _trivial_gcd(R.zero, g) == (g, R.zero, R.one)
+    assert smp_trivial_gcd(dict(R.zero), dict(g), n, dom) == (
+        dict(g), dict(R.zero), dict(R.one))
 
     g_neg = -3*x**3*y - z
-    assert _trivial_gcd(R.zero, g_neg) == (-g_neg, R.zero, -R.one)
+    assert smp_trivial_gcd(dict(R.zero), dict(g_neg), n, dom) == (
+        dict(-g_neg), dict(R.zero), dict(-R.one))
 
     f = 5*y**2 + x
-    assert _trivial_gcd(f, R.zero) == (f, R.one, R.zero)
+    assert smp_trivial_gcd(dict(f), dict(R.zero), n, dom) == (
+        dict(f), dict(R.one), dict(R.zero))
 
     f_const = R.ground_new(24)
     g_const = R.ground_new(36)
-    h, cff, cfg = _trivial_gcd(f_const, g_const)
-    assert h == R.ground_new(12)
-    assert cff == R.ground_new(2)
-    assert cfg == R.ground_new(3)
+    result = smp_trivial_gcd(dict(f_const), dict(g_const), n, dom)
+    assert result == (
+        dict(R.ground_new(12)),
+        dict(R.ground_new(2)),
+        dict(R.ground_new(3)))
 
-    assert _trivial_gcd(x**2 + y, x + z) is None
+    assert smp_trivial_gcd(dict(x**2 + y), dict(x + z), n, dom) is None
 
 
-def test_primitive():
+def test_smp_primitive_wrt_last():
     R, x, y, z = ring("x, y, z", ZZ)
-    p = 7
+    p = MPZ(7)
     C = (3*z**2 + 2*z + 1).trunc_ground(p)
     P = (x**2*y - x*z + 2).trunc_ground(p)
     f = (C * P).trunc_ground(p)
     C_expected = (5 * C).trunc_ground(p)
     P_expected = (3 * P).trunc_ground(p)
-    contf, ppf = _primitive(f, p)
+    contf, ppf = smp_primitive_wrt_last(dict(f), R.ngens, R.domain, p)
 
-    assert contf.set_ring(R) == C_expected
-    assert ppf == P_expected
-    assert (contf.set_ring(R) * ppf).trunc_ground(p) == f
+    expected_contf = {
+        (monom[-1],): R.domain.convert(coeff % p)
+        for monom, coeff in dict(C_expected).items()
+    }
+    assert dup_to_dict(contf, R.domain) == expected_contf
+    assert ppf == dict(P_expected)
+    assert (R.from_dict(ppf) * C_expected).trunc_ground(p) == f
 
 
-def test_LC():
+def test_smp_LC_wrt_last():
     R, x, y = ring("x, y", ZZ)
     f = x**2 * y**2 + 3 * x**2 + 5 * x * y + 7
     R_, y_ = ring("y", ZZ)
     expected_lc = y_**2 + 3
 
-    assert _LC(f) == expected_lc
+    assert smp_LC_wrt_last(dict(f), R.ngens, R.domain) == dict(expected_lc)
 
 
-def test_deg():
+def test_smp_deg_wrt_last():
     R, x, y, z = ring("x, y, z", ZZ)
     f1 = x**3 * y**2 * z**5 + x**4 * y * z + x**2 * y**3 * z**8
-    assert _deg(f1) == (4, 1)
+    assert smp_deg_wrt_last(dict(f1), R.ngens) == (4, 1)
 
     f2 = x**2 * y * z**3 + x * y**100 * z**5
-    assert _deg(f2) == (2, 1)
+    assert smp_deg_wrt_last(dict(f2), R.ngens) == (2, 1)
 
 
-def test_chinese_remainder_reconstruction_multivariate():
+def test_smp_chinese_remainder_reconstruction_multivariate():
     R, x, y = ring("x, y", ZZ)
-    p, q = 3, 5
+    p, q = MPZ(3), MPZ(5)
 
     hp = x**3*y - x**2 - 1
     hq = -x**3*y - 2*x*y**2 + 2
 
-    hpq = _chinese_remainder_reconstruction_multivariate(hp, hq, p, q)
+    hpq_dict = smp_chinese_remainder_reconstruction_multivariate(
+        dict(hp), dict(hq), p, q, R.domain, R.ngens)
+    hpq = R.from_dict(hpq_dict)
 
     assert hpq.trunc_ground(p) == hp
     assert hpq.trunc_ground(q) == hq
 
-    T, z = ring("z", R)
-    p, q = 3, 7
+    R, x, y, z = ring("x, y, z", ZZ)
+    p, q = MPZ(6), MPZ(5)
 
-    hp = (x*y + 1)*z**2 + x
-    hq = (x**2 - 3*y)*z + 2
+    hp = 3*x**4 - y**3*z + z
+    hq = -2*x**4 + z
 
-    hpq = _chinese_remainder_reconstruction_multivariate(hp, hq, p, q)
+    hpq_dict = smp_chinese_remainder_reconstruction_multivariate(
+        dict(hp), dict(hq), p, q, R.domain, R.ngens)
+    hpq = R.from_dict(hpq_dict)
 
     assert hpq.trunc_ground(p) == hp
     assert hpq.trunc_ground(q) == hq
