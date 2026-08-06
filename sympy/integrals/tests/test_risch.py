@@ -29,7 +29,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import limit
 from sympy.simplify.simplify import simplify
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 from sympy.abc import x, t, nu, z, a, y
 t0, t1, t2 = symbols('t:3')
@@ -1060,9 +1060,11 @@ def test_risch_integrate_special():
     assert risch_integrate((x + 1)/log(x), x, special=True) == \
         li(x) + li(x**2)
 
-    # all at once
-    assert risch_integrate(exp(-x**2) + exp(x)/x + 1/log(x) + exp(x), x,
-        special=True) == exp(x) + Ei(x) + sqrt(pi)*erf(x)/2 + li(x)
+    # mixed towers
+    assert risch_integrate(exp(-x**2) + exp(x)/x, x, special=True) == \
+        Ei(x) + sqrt(pi)*erf(x)/2
+    assert risch_integrate(exp(x) + exp(x)/x + 1/log(x), x, special=True) \
+        == exp(x) + Ei(x) + li(x)
 
     # elementary integrals stay elementary
     assert risch_integrate((2*x**2 + 1)*exp(x**2), x, special=True) == \
@@ -1075,6 +1077,14 @@ def test_risch_integrate_special():
     # special=False (the default) is unchanged
     assert isinstance(risch_integrate(exp(-x**2), x),
         NonElementaryIntegral)
+
+
+@slow
+def test_risch_integrate_special_slow():
+    # erf, Ei and li all at once; the erf candidates over the tower
+    # containing log(x) make this slow
+    assert risch_integrate(exp(-x**2) + exp(x)/x + 1/log(x) + exp(x), x,
+        special=True) == exp(x) + Ei(x) + sqrt(pi)*erf(x)/2 + li(x)
 
 
 def test_risch_integrate_atan():
