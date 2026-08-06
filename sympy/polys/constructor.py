@@ -37,8 +37,10 @@ def _construct_simple(coeffs, opt):
         else:
             is_complex = pure_complex(coeff)
             if is_complex:
-                complexes = True
                 x, y = is_complex
+                if x.is_finite is not True or y.is_finite is not True:
+                    return None
+                complexes = True
                 if x.is_Rational and y.is_Rational:
                     if not (x.is_Integer and y.is_Integer):
                         rationals = True
