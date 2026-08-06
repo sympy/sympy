@@ -15,6 +15,7 @@ from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.trigonometric import (acot, asin, atan, cos,
     cot, sec, sin, tan)
 from sympy.polys.polytools import (Poly, cancel, factor)
+from sympy.polys.rootoftools import RootSum
 from sympy.polys.rationaltools import together
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
@@ -956,6 +957,59 @@ def test_risch_integrate_trig_continuity():
     F = risch_integrate((tan(x)**2 + 1)/(tan(x)**2 + 4), x)
     assert F == atan(tan(x)/2)/2 + pi*floor((x - pi/2)/pi)/2
     assert limit(F, x, pi/2, '-') == limit(F, x, pi/2, '+') == -pi/4
+
+
+def test_risch_integrate_jeffrey_rich_examples():
+    # The worked examples of Jeffrey & Rich (1994); the equation numbers
+    # refer to the paper.  Equations (13) and (15) integrate sqrt(1 +- cos(x))
+    # and are algebraic, so they are outside the transcendental Risch
+    # algorithm and not included here.
+
+    # (1)/(3)/(10), and the definite integral (2) evaluated with the
+    # fundamental theorem of calculus straight across the poles of tan(x/2)
+    F = risch_integrate(3/(5 - 4*cos(x)), x)
+    assert F == 2*atan(3*tan(x/2)) + 2*pi*floor((x/2 - pi/2)/pi)
+    assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == 2*pi
+    assert limit(F, x, pi, '-') == limit(F, x, pi, '+') == -pi
+
+    # (4)/(11)
+    F = risch_integrate(3/(5 + 4*sin(x)), x)
+    assert not F.has(Integral) and F.has(floor)
+    assert cancel((diff(F.xreplace({f: S.Zero for f in F.atoms(floor)}), x)
+        - 3/(5 + 4*sin(x))).rewrite(exp)) == 0
+    assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == 2*pi
+    assert simplify(limit(F, x, pi, '-') - limit(F, x, pi, '+')) == 0
+
+    # (6): "the obviously correct continuous result x"
+    assert risch_integrate(sec(x)**2/(1 + tan(x)**2), x) == x
+
+    # (7)/(12): the singularities of the integrand at x == (n + 1/2)*pi
+    # remain, but the spurious discontinuity at x == pi is removed
+    e = 15/(cos(x)*(5 - 4*cos(x)))
+    F = risch_integrate(e, x)
+    assert not F.has(Integral) and F.has(floor)
+    assert cancel((diff(F.xreplace({f: S.Zero for f in F.atoms(floor)}), x)
+        - e).rewrite(exp)) == 0
+    assert simplify(limit(F, x, pi, '-') - limit(F, x, pi, '+')) == 0
+
+    # Section 7 (the Rioboo example): 2*sqrt(2)*(1 + cos(x))/(1 + cos(x)**2)
+    e = 2*sqrt(2)*(1 + cos(x))/(1 + cos(x)**2)
+    F = risch_integrate(e, x)
+    assert not F.has(Integral) and F.has(atan) and F.has(floor)
+    assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == 4*pi
+
+    # 1/(1 + sin(x)**2) (mentioned in section 3)
+    F = risch_integrate(1/(1 + sin(x)**2), x)
+    assert not F.has(Integral) and F.has(floor)
+    assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == sqrt(2)*pi
+    assert simplify(limit(F, x, pi, '-') - limit(F, x, pi, '+')) == 0
+
+    # Section 8: with a symbolic parameter the sign of the discriminant of
+    # the residue polynomial is unknown, so the result falls back to a
+    # RootSum (with no incorrect floor terms)
+    a = Symbol('a')
+    F = risch_integrate(1/(a + cos(x)), x)
+    assert F.has(RootSum) and not F.has(floor)
 
     # Multi-way relations among tangent arguments must be detected, or
     # this identically zero integrand is "proven" nonelementary
