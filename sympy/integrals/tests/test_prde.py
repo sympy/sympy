@@ -6,6 +6,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
     is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
+    is_deriv_in_field,
     prde_cancel_liouvillian)
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
@@ -373,6 +374,28 @@ def test_is_log_deriv_k_t_radical_in_field():
         (1, t)
     assert is_log_deriv_k_t_radical_in_field(Poly(1, t), Poly(2*x**2, t), DE) == \
         (2, 1/t)
+
+
+def test_is_deriv_in_field():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    assert is_deriv_in_field(Poly(2*x, x), Poly(1, x), DE) == \
+        (Poly(x**2, x), Poly(1, x, domain='QQ'))
+    assert is_deriv_in_field(Poly(1, x), Poly(x, x), DE) is None
+    # t == log(x): D(x*t) == t + 1; 1/(x*t) == D(log(log(x))) is not in the field
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    A = is_deriv_in_field(Poly(t + 1, t), Poly(1, t), DE)
+    assert A is not None
+    va, vd = A
+    vp = Poly(cancel(va.as_expr()/vd.as_expr()), t, field=True)
+    assert cancel(derivation(vp, DE).as_expr() - (t + 1)) == 0
+    assert is_deriv_in_field(Poly(1, t), Poly(x*t, t), DE) is None
+    # t == exp(x): D(x*t**2) == (2*x + 1)*t**2; t is not a derivative
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    A = is_deriv_in_field(Poly((2*x + 1)*t**2, t), Poly(1, t), DE)
+    assert A is not None
+    va, vd = A
+    vp = Poly(cancel(va.as_expr()/vd.as_expr()), t, field=True)
+    assert cancel(derivation(vp, DE).as_expr() - (2*x + 1)*t**2) == 0
 
 
 def test_parametric_log_deriv():

@@ -652,19 +652,35 @@ def cancel_primitive(b, c, n, DE):
     This is ``PolyRischDECancelPrim`` from Section 6.6 of Bronstein's book.
     """
     # Delayed imports
-    from .prde import is_log_deriv_k_t_radical_in_field
+    from .prde import is_log_deriv_k_t_radical_in_field, is_deriv_in_field
     with DecrementLevel(DE):
         ba, bd = frac_in(b, DE.t)
         A = is_log_deriv_k_t_radical_in_field(ba, bd, DE)
-        if A is not None:
-            m, z = A
-            if m == 1:  # b == Dz/z
-                raise NotImplementedError("is_deriv_in_field() is required to "
-                    " solve this problem.")
-                # if z*c == Dp for p in k[t] and deg(p) <= n:
-                #     return p/z
-                # else:
-                #     raise NonElementaryIntegralException
+
+    if A is not None:
+        m, z = A
+        if m == 1:  # b == Dz/z
+            # D(z*q) == z*(Dq + b*q), so q solves Dq + b*q == c iff
+            # p == z*q satisfies Dp == z*c.  So find an antiderivative
+            # p in k[t] of z*c with deg(p) <= n, and return q == p/z.
+            zca, zcd = frac_in(z*c.as_expr(), DE.t, cancel=True)
+            B = is_deriv_in_field(zca, zcd, DE)
+            if B is None:
+                raise NonElementaryIntegralException("z*c is not the "
+                    "derivative of an element of k(t) in cancel_primitive().")
+            pa, pd = B
+            # For a primitive t, an antiderivative in k(t) of an element
+            # of k[t] is itself in k[t] (it can have no poles), and any
+            # additive constant keeps q == p/z in k[t], so any choice of
+            # p will do.
+            q = cancel(pa.as_expr()/(pd.as_expr()*z)).as_poly(DE.t)
+            if q is None:
+                raise NonElementaryIntegralException("p/z is not in k[t] "
+                    "in cancel_primitive().")
+            if q.degree(DE.t) > n:
+                raise NonElementaryIntegralException("deg(p/z) > n in "
+                    "cancel_primitive().")
+            return q
 
     if c.is_zero:
         return c  # return 0
@@ -705,23 +721,51 @@ def cancel_exp(b, c, n, DE):
 
     This is ``PolyRischDECancelExp`` from Section 6.6 of Bronstein's book.
     """
-    from .prde import parametric_log_deriv
+    from .prde import parametric_log_deriv, is_deriv_in_field
     eta = DE.d.quo(Poly(DE.t, DE.t)).as_expr()
 
     with DecrementLevel(DE):
         etaa, etad = frac_in(eta, DE.t)
         ba, bd = frac_in(b, DE.t)
         A = parametric_log_deriv(ba, bd, etaa, etad, DE)
-        if A is not None:
-            a, m, z = A
-            if a == 1:
-                raise NotImplementedError("is_deriv_in_field() is required to "
-                    "solve this problem.")
-                # if c*z*t**m == Dp for p in k<t> and q = p/(z*t**m) in k[t] and
-                # deg(q) <= n:
-                #     return q
-                # else:
-                #     raise NonElementaryIntegralException
+
+    if A is not None:
+        a, m, z = A
+        if a == 1:
+            # b == Dz/z + m*Dt/t, so D(z*t**m*q) == z*t**m*(Dq + b*q).
+            # Hence q solves Dq + b*q == c iff p == z*t**m*q satisfies
+            # Dp == z*t**m*c.  So find an antiderivative p in k<t> of
+            # z*t**m*c; then q == p/(z*t**m) must be in k[t] with
+            # deg(q) <= n.
+            pa, pd = frac_in(z*DE.t**m*c.as_expr(), DE.t, cancel=True)
+            B = is_deriv_in_field(pa, pd, DE)
+            if B is None:
+                raise NonElementaryIntegralException("z*t**m*c is not the "
+                    "derivative of an element of k(t) in cancel_exp().")
+            va, vd = B
+            p = cancel(va.as_expr()/vd.as_expr())
+            if m > 0:
+                # p is determined only up to an additive constant.  For
+                # m > 0 the true p == z*t**m*q has no t-free term (all its
+                # monomials have degree >= m), while a constant term would
+                # make p/(z*t**m) non-polynomial, so remove it.
+                p -= p.subs(DE.t, 0)
+            # For m <= 0 any additive constant C leaves q in k[t]
+            # (C/(z*t**m) == C*t**(-m)/z), and q + C*t**(-m)/z is still a
+            # solution, since t**(-m)/z solves the homogeneous equation.
+            q = cancel(p/(z*DE.t**m)).as_poly(DE.t)
+            if q is None:
+                raise NonElementaryIntegralException("p/(z*t**m) is not in "
+                    "k[t] in cancel_exp().")
+            if q.degree(DE.t) > n:
+                if m < 0 and q.degree(DE.t) == -m:
+                    # The coefficient of t**(-m) is adjustable by the
+                    # constant of integration; remove that term.
+                    q = q - Poly(q.nth(-m)*DE.t**(-m), DE.t)
+                if q.degree(DE.t) > n:
+                    raise NonElementaryIntegralException("deg(p/(z*t**m)) "
+                        "> n in cancel_exp().")
+            return q
 
     if c.is_zero:
         return c  # return 0
@@ -824,8 +868,28 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
     else:
         # Cancellation
         if b.is_zero:
-            raise NotImplementedError("Remaining cases for Poly (P)RDE are "
-            "not yet implemented (is_deriv_in_field() required).")
+            if parametric:
+                raise NotImplementedError("Parametric cancellation with "
+                    "b == 0 is not yet implemented.")
+            # Dq == c: in-field integration (Section 6.6)
+            from .prde import is_deriv_in_field
+            B = is_deriv_in_field(cQ, Poly(1, DE.t), DE)
+            if B is None:
+                raise NonElementaryIntegralException("c is not the "
+                    "derivative of an element of k(t) in solve_poly_rde().")
+            va, vd = B
+            # For a primitive or hyperexponential t, an antiderivative in
+            # k(t) of an element of k[t] is itself in k[t], and any
+            # additive constant is also in k[t], so any choice of the
+            # antiderivative will do.
+            q = cancel(va.as_expr()/vd.as_expr()).as_poly(DE.t)
+            if q is None:
+                raise NonElementaryIntegralException("The antiderivative "
+                    "of c is not in k[t] in solve_poly_rde().")
+            if q.degree(DE.t) > n:
+                raise NonElementaryIntegralException("The antiderivative "
+                    "of c has degree > n in solve_poly_rde().")
+            return q
         else:
             if DE.case == 'exp':
                 if parametric:

@@ -888,6 +888,36 @@ def limited_integrate(fa, fd, G, DE):
         return Y, C
 
 
+def is_deriv_in_field(fa, fd, DE):
+    """
+    Checks if f can be written as the derivative of an element of k(t).
+
+    Explanation
+    ===========
+
+    f in k(t) is the derivative of an element of k(t) if there exists v in
+    k(t) such that f == Dv.  Either returns (va, vd), with va, vd in k[t]
+    such that f == D(va/vd), or None, which means that f is not the
+    derivative of an element of k(t).  Note that v is determined only up
+    to an additive constant.
+
+    This is the in-field integration problem from Section 5.12 of
+    Bronstein's book (the "Recognizing Derivatives" subsection; neither
+    edition gives it as named pseudocode).  It is solved here as the
+    special case of the limited integration problem (Section 7.2) with an
+    empty list of special elements.
+
+    See also
+    ========
+    limited_integrate, is_log_deriv_k_t_radical_in_field
+    """
+    A = limited_integrate(fa, fd, [], DE)
+    if A is None:
+        return None
+    (va, vd), _ = A
+    return (va, vd)
+
+
 def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     """
     Parametric logarithmic derivative heuristic.

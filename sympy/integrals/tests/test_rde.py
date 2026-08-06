@@ -222,7 +222,19 @@ def test_solve_poly_rde_cancel():
         Poly(1, t)
     assert cancel_exp(Poly(2*x, t), Poly((1 + 2*x)*t, t), 1, DE) == \
         Poly(t, t)
-    # TODO: Add more exp tests, including tests that require is_deriv_in_field()
+    # The is_deriv_in_field() branch: b == (2*x + 1)/x == D(x)/x + 2*Dt/t
+    # (parametric_log_deriv() gives (1, 2, x)), and Dq + b*q == c has the
+    # solution q == 1 for c == (2*x + 1)/x.
+    assert cancel_exp(Poly((2*x + 1)/x, t), Poly((2*x + 1)/x, t), 0, DE) == \
+        Poly(1, t)
+    # ... but 1/(2*x) also works for c == 1/x (the code finds solutions
+    # with denominators via p/(z*t**m)):
+    assert cancel_exp(Poly((2*x + 1)/x, t), Poly(1/x, t), 0, DE) == \
+        Poly(1/(2*x), t)
+    # c == 1/x**2 requires a' + 2*a == 1/x over QQ(x), which has no
+    # rational solution (pole order mismatch at 0), so no solution exists
+    raises(NonElementaryIntegralException, lambda: cancel_exp(
+        Poly((2*x + 1)/x, t), Poly(1/x**2, t), 0, DE))
 
     # primitive
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
@@ -246,6 +258,16 @@ def test_solve_poly_rde_cancel():
     assert cancel_primitive(Poly(4*x, t), Poly(4*x*t**2 + 2*t/x, t), 3, DE) == \
         Poly(t**2, t)
 
+    # The is_deriv_in_field() branch: b == 1/x == D(x)/x
+    # (is_log_deriv_k_t_radical_in_field() gives (1, x)), and
+    # Dq + b*q == c has the solution q == t for c == (t + 1)/x.
+    assert cancel_primitive(Poly(1/x, t), Poly((t + 1)/x, t), 1, DE) == \
+        Poly(t, t)
+    # z*c == t/(x + 1) has antiderivative t*log(x + 1) - log(x + 1) + x,
+    # which is not in QQ(x, log(x)), so no solution exists
+    raises(NonElementaryIntegralException, lambda: cancel_primitive(
+        Poly(1/x, t), Poly(t/(x*(x + 1)), t), 1, DE))
+
     # The degree bound n must not be clobbered by the index returned from
     # is_log_deriv_k_t_radical_in_field(): b == 1/(2*x) has index 2
     # (2*b == D(x)/x), which used to replace n == 3 and wrongly reject
@@ -255,7 +277,20 @@ def test_solve_poly_rde_cancel():
     c = derivation(q, DE) + b*q
     assert cancel_primitive(b, c, 3, DE) == q
 
-    # TODO: Add more primitive tests, including tests that require is_deriv_in_field()
+    # The b == 0 cancellation case (Dq == c by in-field integration):
+    # primitive (t == log(x)): D(t**2) == 2*t/x
+    assert solve_poly_rde(Poly(0, t), Poly(2*t/x, t), 2, DE) == Poly(t**2, t)
+    # (note Dq == 1/x has the in-field solution q == t == log(x); use an
+    # integrand whose antiderivative needs log(x + 1), which is not in
+    # the field)
+    raises(NonElementaryIntegralException, lambda: solve_poly_rde(
+        Poly(0, t), Poly(t/(x + 1), t), 2, DE))
+    # exp (t == exp(x)): D(x*t) == (x + 1)*t
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    assert solve_poly_rde(Poly(0, t), Poly((x + 1)*t, t), 1, DE) == \
+        Poly(x*t, t)
+    raises(NonElementaryIntegralException, lambda: solve_poly_rde(
+        Poly(0, t), Poly(t/x, t), 1, DE))
 
 
 def test_rischDE():
