@@ -505,7 +505,12 @@ class DifferentialExtension:
 
         sin, cos, sec and csc of ``a`` are rational functions of tan(a/2)
         (the Weierstrass substitution), and cot(a) == 1/tan(a), so they are
-        first rewritten in terms of tangents.  Then, like in the
+        first rewritten in terms of tangents.  Following choice (d) of
+        Jeffrey & Rich (1994), if the integrand only depends on the sines
+        and cosines of multiples of ``a`` through pi-periodic combinations
+        (like sin(a)**2 or sin(a)*cos(a)), it is a rational function of
+        tan(a) itself and the half angle is avoided, which keeps the
+        towers smaller and the results simpler.  Then, like in the
         exponential case, the arguments of the tangents are grouped with
         integer_powers(), and tan of an integer multiple of the base
         argument is rewritten as a rational function of tan of the base
@@ -515,6 +520,19 @@ class DifferentialExtension:
         trigs = [i for i in self.newf.atoms(sin, cos, sec, csc, cot)
             if i.args[0].is_rational_function(*self.T) and
             i.args[0].has(*self.T)]
+        sincos = [i for i in trigs if not isinstance(i, cot)]
+        if sincos:
+            # group together with the tangent arguments, so that e.g.
+            # tan(x) and sin(x)**2 share the base argument x
+            tanargs = [i.args[0] for i in self.newf.atoms(tan)
+                if i.args[0].is_rational_function(*self.T) and
+                i.args[0].has(*self.T)]
+            for base, others in integer_powers([i.args[0] for i in sincos]
+                    + tanargs):
+                mult = dict(others)
+                group = [i for i in sincos if i.args[0] in mult]
+                if group and self._full_angle_part(group, mult, base):
+                    trigs = [i for i in trigs if i not in group]
         for i in ordered(trigs):
             self.newf = self.newf.xreplace({i: i.rewrite(tan)})
 
@@ -534,6 +552,70 @@ class DifferentialExtension:
             i.args[0].has(*self.T))
 
         return tans
+
+    def _full_angle_part(self, group, mult, base):
+        """
+        Try to rewrite the sines and cosines of multiples of ``base`` as
+        rational functions of tan(base), avoiding the half angle.
+
+        Explanation
+        ===========
+
+        ``group`` is a list of sin/cos/sec/csc atoms whose arguments are
+        the integer multiples ``mult`` of ``base``.  The integrand is a
+        rational function of tan(base) if and only if it is invariant
+        under base -> base + pi, which flips the sign of the atoms with
+        odd multiples.  If it is, each atom is expanded into a polynomial
+        in sin(base) and cos(base), sin(base) is replaced by
+        tan(base)*cos(base), and the remaining powers of cos(base), which
+        are all even by the invariance, by powers of 1/(1 + tan(base)**2).
+
+        This is choice (d) of Table 1 in Jeffrey & Rich (1994) (choice
+        (a), the half angle, is used when the test fails).  Returns True
+        if the rewriting was done and False otherwise.
+        """
+        from sympy.core.function import expand_trig
+        from sympy.polys.rationaltools import together
+        flip = {i: -i for i in group if int(mult[i.args[0]]) % 2}
+        if flip and cancel(self.newf.xreplace(flip) - self.newf) != 0:
+            return False
+
+        # Expand everything into sin(base) and cos(base), then substitute
+        # sin(base) == tD*cD and cos(base) == cD, with tD standing for
+        # tan(base).
+        tD, cD = Dummy('t'), Dummy('c')
+        y = Dummy('y')
+        reps = {}
+        for i in group:
+            k = int(mult[i.args[0]])
+            if isinstance(i, (sec, csc)):
+                e = 1/expand_trig((sin if isinstance(i, csc) else cos)(k*y))
+            else:
+                e = expand_trig(i.func(k*y))
+            reps[i] = e.subs([(sin(y), tD*cD), (cos(y), cD)])
+        f = self.newf.xreplace(reps)
+        if f.has(sin(base), cos(base), sec(base), csc(base)):
+            return False
+        n, d = cancel(together(f)).as_numer_denom()
+        try:
+            Pn, Pd = Poly(n, cD), Poly(d, cD)
+        except PolynomialError:
+            return False
+
+        def strip(P):
+            # P == cD**p * Q(cD**2); return Q with cD**2 -> 1/(1 + tD**2)
+            pars = {m[0] % 2 for m in P.monoms()}
+            if len(pars) != 1:
+                return None
+            p = pars.pop()
+            return p, Add(*[c*(1 + tD**2)**(-(m[0] - p)//2)
+                for m, c in P.terms()])
+
+        rn, rd = strip(Pn), strip(Pd)
+        if rn is None or rd is None or rn[0] != rd[0]:
+            return False
+        self.newf = cancel(rn[1]/rd[1]).subs(tD, tan(base))
+        return True
 
     def _rewrite_logs(self, logs, symlogs):
         """

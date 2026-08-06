@@ -602,6 +602,18 @@ def test_DifferentialExtension_tan():
         [Lambda(i, log(i)), Lambda(i, tan(t0))],
         [(log(tan(log(x))**2 + 1), -2*log(cos(log(x))))],
         [None, 'log', 'tan'], [None, x, t0])
+    # pi-periodic integrands are rational functions of tan(x) itself
+    # (choice (d) of Jeffrey & Rich (1994)), so the half angle is avoided
+    assert DifferentialExtension(1/(1 + sin(x)**2), x)._important_attrs[7] \
+        == [None, x]
+    assert DifferentialExtension(sin(x)*cos(x) + tan(x),
+        x)._important_attrs[7] == [None, x]
+    # ... but not for integrands that need the half angle
+    assert DifferentialExtension(sin(x)**3, x)._important_attrs[7] == \
+        [None, x/2]
+    assert DifferentialExtension(sin(2*x) + cos(x), x)._important_attrs[7] \
+        == [None, x/2]
+
     # tangents whose arguments differ by a nonzero constant are
     # algebraically dependent, which is not supported
     raises(NotImplementedError, lambda: DifferentialExtension(
@@ -998,9 +1010,10 @@ def test_risch_integrate_jeffrey_rich_examples():
     assert not F.has(Integral) and F.has(atan) and F.has(floor)
     assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == 4*pi
 
-    # 1/(1 + sin(x)**2) (mentioned in section 3)
+    # 1/(1 + sin(x)**2): "best integrated using u = tan(x)" (section 3);
+    # the pi-periodicity is detected and choice (d) of Table 1 is used
     F = risch_integrate(1/(1 + sin(x)**2), x)
-    assert not F.has(Integral) and F.has(floor)
+    assert F == sqrt(2)*(atan(sqrt(2)*tan(x)) + pi*floor((x - pi/2)/pi))/2
     assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == sqrt(2)*pi
     assert simplify(limit(F, x, pi, '-') - limit(F, x, pi, '+')) == 0
 
