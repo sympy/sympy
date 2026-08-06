@@ -65,6 +65,7 @@ from sympy.functions.elementary.trigonometric import (atan, cos, sin, tan)
 from sympy.functions.special.bessel import (besseli, besselj, besselk)
 from sympy.functions.special.beta_functions import beta as beta_fn
 from sympy.concrete.summations import Sum
+from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.numbers import (I, Rational, pi)
@@ -2631,9 +2632,35 @@ class LogLogisticDistribution(SingleContinuousDistribution):
         a, b = self.alpha, self.beta
         return a*((p/(1 - p))**(1/b))
 
-    def expectation(self, expr, var, **kwargs):
-        a, b = self.args
-        return Piecewise((S.NaN, b <= 1), (pi*a/(b*sin(pi/b)), True))
+    def _raw_moment(self, k):
+        """The k-th raw moment, which exists only for beta > k."""
+        a, b = self.alpha, self.beta
+        if k.is_zero:
+            return S.One
+        return Piecewise((S.NaN, b <= k), (a**k*(k*pi/b)/sin(k*pi/b), True))
+
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate:
+            # There is no moment generating function for this distribution, so
+            # the generic implementation would integrate. Expand polynomials in
+            # `var` over the closed form for the raw moments instead. Anything
+            # else has no closed form here and is left to the generic path.
+            terms = []
+            for term in expr.expand().as_ordered_terms():
+                coeff, rest = term.as_independent(var, as_Add=False)
+                if rest is S.One:
+                    k = S.Zero
+                elif rest == var:
+                    k = S.One
+                elif rest.is_Pow and rest.base == var and rest.exp.is_positive:
+                    k = rest.exp
+                else:
+                    terms = None
+                    break
+                terms.append(coeff*self._raw_moment(k))
+            if terms is not None:
+                return Add(*terms)
+        return super().expectation(expr, var, evaluate, **kwargs)
 
 def LogLogistic(name, alpha, beta):
     r"""

@@ -907,6 +907,28 @@ def test_loglogistic():
     X = LogLogistic('x', 1, 2)
     assert median(X) == FiniteSet(1)
 
+    # Higher moments must use the k-th raw moment a**k*(k*pi/b)/sin(k*pi/b),
+    # not the mean. The expectation used to ignore the expression it was given
+    # and return the mean for every input, which silently made E(X**2),
+    # variance and every other moment wrong.
+    X = LogLogistic('x', 1, 3)
+    assert E(X) == pi/(3*sin(pi/3))
+    assert E(X**2) == 2*pi/(3*sin(2*pi/3))
+    assert E(2*X) == 2*pi/(3*sin(pi/3))
+    assert simplify(E(X**2 + X) - (2*pi/(3*sin(2*pi/3)) + pi/(3*sin(pi/3)))) == 0
+    assert simplify(variance(X) - (2*pi/(3*sin(2*pi/3)) - (pi/(3*sin(pi/3)))**2)) == 0
+
+    # The k-th moment only exists for beta > k.
+    assert E(X**3) is S.NaN
+    assert variance(LogLogistic('x', 1, 2)) is S.NaN
+
+    # The closed form has to agree with integrating the density directly.
+    z = Symbol('z', positive=True)
+    X = LogLogistic('x', 2, 5)
+    for k in (1, 2, 3, 4):
+        direct = Integral(z**k*density(X)(z), (z, 0, oo)).doit()
+        assert simplify(E(X**k) - direct) == 0
+
 def test_logitnormal():
     mu = Symbol('mu', real=True)
     s = Symbol('s', positive=True)
