@@ -768,9 +768,16 @@ def cancel_exp(b, c, n, DE):
                 raise NonElementaryIntegralException("p/(z*t**m) is not in "
                     "k[t] in cancel_exp().")
             if q.degree(DE.t) > n:
-                if m < 0 and q.degree(DE.t) == -m:
-                    # The coefficient of t**(-m) is adjustable by the
-                    # constant of integration; remove that term.
+                if m < 0 and q.degree(DE.t) == -m and \
+                        not cancel(z*q.nth(-m)).has(*DE.T):
+                    # The homogeneous solutions are C*t**(-m)/z for
+                    # constants C, so the t**(-m) coefficient of q is
+                    # adjustable by the constant of integration exactly
+                    # when it is C/z for a constant C; in that case,
+                    # remove that term.  (A non-constant coefficient
+                    # cannot be removed by any choice of the constant,
+                    # and stripping it anyway would return a q that does
+                    # not solve the equation.)
                     q = q - Poly(q.nth(-m)*DE.t**(-m), DE.t)
                 if q.degree(DE.t) > n:
                     raise NonElementaryIntegralException("deg(p/(z*t**m)) "

@@ -286,6 +286,20 @@ def test_solve_poly_rde_cancel():
     raises(NonElementaryIntegralException, lambda: cancel_exp(
         Poly((2*x + 1)/x, t), Poly(1/x**2, t), 0, DE))
 
+    # The t**(-m) stripping in the m < 0 branch is only valid when the
+    # stripped coefficient is C/z for a constant C.  Here b == 1/x - 2 ==
+    # D(x)/x - 2*Dt/t (z == x, m == -2), and the candidate q == 1 + t**2
+    # has t**2-coefficient 1, with z*1 == x nonconstant, so no choice of
+    # the integration constant removes the term: there is no solution
+    # with n == 0.  (Unconditional stripping used to return q == 1, which
+    # does not solve the equation.)
+    raises(NonElementaryIntegralException, lambda: cancel_exp(
+        Poly(1/x - 2, t, field=True),
+        Poly(1/x - 2 + t**2/x, t, field=True), 0, DE))
+    # ...while the same b with c == b has the genuine solution q == 1.
+    assert cancel_exp(Poly(1/x - 2, t, field=True),
+        Poly(1/x - 2, t, field=True), 0, DE) == Poly(1, t)
+
     # primitive
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
 
