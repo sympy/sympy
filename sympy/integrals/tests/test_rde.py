@@ -213,6 +213,10 @@ def test_solve_poly_rde_no_cancel():
     # The m == 0 branch: Dq + t*q == t has the solution q == 1 (this used
     # to return an Expr instead of a Poly)
     assert no_cancel_equal(Poly(t, t), Poly(t, t), 5, DE) == Poly(1, t)
+    # Immediate u == 0 return: -lc(b)/lc(Dt) == 3 is hit on the first
+    # iteration, reducing to a smaller problem of degree at most 3
+    assert no_cancel_equal(Poly(-3*t, t), Poly(t**2 + 1, t), oo, DE) == \
+        (Poly(0, t), 3, Poly(t**2 + 1, t))
 
 
 def test_solve_poly_rde_cancel():

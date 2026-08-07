@@ -271,21 +271,34 @@ def constant_system(A, u, DE):
 
     D = lambda x: derivation(x, DE, basic=True)
 
-    for j, i in itertools.product(range(A.cols), range(A.rows)):
-        if A[i, j].expr.has(*DE.T):
-            # This assumes that const(F(t0, ..., tn) == const(K) == F
-            Ri = A[i, :]
-            # Rm+1; m = A.rows
-            DAij = D(A[i, j])
-            Rm1 = Ri.applyfunc(lambda x: D(x) / DAij)
-            um1 = D(u[i]) / DAij
+    # Repeat until no entry of A is nonconstant, processing rows appended
+    # in earlier iterations as well ("while A is not constant do" in the
+    # book's ConstantSystem; iterating over a snapshot of the original
+    # rows would let nonconstant entries in the appended rows escape).
+    # The safety cap guards against nontermination in case cancel() fails
+    # to recognize an identically zero derivation (see the comment above).
+    for _ in range((Au.rows + 1)*(Au.cols + 1)*(len(DE.T) + 1) + 10):
+        for j, i in itertools.product(range(A.cols), range(A.rows)):
+            if A[i, j].expr.has(*DE.T):
+                break
+        else:
+            break
+        # This assumes that const(F(t0, ..., tn)) == const(K) == F
+        Ri = A[i, :]
+        # Rm+1; m = A.rows
+        DAij = D(A[i, j])
+        Rm1 = Ri.applyfunc(lambda x: D(x) / DAij)
+        um1 = D(u[i]) / DAij
 
-            Aj = A[:, j]
-            A = A - Aj * Rm1
-            u = u - Aj * um1
+        Aj = A[:, j]
+        A = A - Aj * Rm1
+        u = u - Aj * um1
 
-            A = A.col_join(Rm1)
-            u = u.col_join(Matrix([um1], u.gens))
+        A = A.col_join(Rm1)
+        u = u.col_join(Matrix([um1], u.gens))
+    else:
+        raise RuntimeError("constant_system() did not reach a constant "
+            "system; the constant field may not be computable by cancel().")
 
     return (A, u)
 
@@ -1323,6 +1336,51 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
     return A
 
 
+def _structure_system_solve(lhs, rhs, DE):
+    """
+    Find a constant solution x of the structure system lhs*x == rhs.
+
+    Explanation
+    ===========
+
+    lhs and rhs are matrices over K.  Returns a list of constant
+    solutions (free parameters set to zero), or None if there is no
+    constant solution.  constant_system() returns a reduced *system*,
+    not a solution, and treating its right hand side as a solution (as
+    this module once did) is only accidentally correct when the
+    reduction is identity-like, so the reduced system is solved
+    explicitly here and the solution is verified against the original
+    equation.
+
+    Raises NotImplementedError if the verification fails, which
+    indicates constants not computable by cancel() (see the comment in
+    constant_system()).
+    """
+    A, u = constant_system(lhs, rhs, DE)
+    if not A:
+        return None
+    um = u.to_Matrix()
+    if not all(derivation(i, DE, basic=True).is_zero for i in um):
+        # No constant solution
+        return None
+    from sympy.matrices import Matrix as EMatrix
+    try:
+        xs, params = EMatrix(A.to_Matrix()).gauss_jordan_solve(EMatrix(um))
+    except ValueError:
+        return None
+    xs = xs.subs(dict.fromkeys(params, S.Zero))
+    # Defensive verification against the original system
+    lhs_m = lhs.to_Matrix()
+    rhs_m = rhs.to_Matrix()
+    for i in range(lhs_m.rows):
+        if cancel(Add(*[lhs_m[i, j]*xs[j] for j in range(lhs_m.cols)])
+                - rhs_m[i]) != 0:
+            raise NotImplementedError("The candidate solution of the "
+                "structure system failed verification; the constant field "
+                "may not be computable by cancel().")
+    return list(xs)
+
+
 def is_deriv_k(fa, fd, DE):
     r"""
     Checks if Df/f is the derivative of an element of k(t).
@@ -1410,15 +1468,10 @@ def is_deriv_k(fa, fd, DE):
     lhs = Matrix([E_part + L_part], dum)
     rhs = Matrix([dfa.as_expr()/dfd.as_expr()], dum)
 
-    A, u = constant_system(lhs, rhs, DE)
+    u = _structure_system_solve(lhs, rhs, DE)
 
-    u = u.to_Matrix()  # Poly to Expr
-
-    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u):
-        # If the elements of u are not all constant
-        # Note: See comment in constant_system
-
-        # Also note: derivation(basic=True) calls cancel()
+    if u is None:
+        # No constant solution
         return None
     else:
         if not all(i.is_Rational for i in u):
@@ -1537,15 +1590,10 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     lhs = Matrix([E_part + L_part], dum)
     rhs = Matrix([dfa.as_expr()/dfd.as_expr()], dum)
 
-    A, u = constant_system(lhs, rhs, DE)
+    u = _structure_system_solve(lhs, rhs, DE)
 
-    u = u.to_Matrix()  # Poly to Expr
-
-    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u):
-        # If the elements of u are not all constant
-        # Note: See comment in constant_system
-
-        # Also note: derivation(basic=True) calls cancel()
+    if u is None:
+        # No constant solution
         return None
     else:
         if not all(i.is_Rational for i in u):
@@ -1556,7 +1604,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
                 "coefficients in this case.")
         else:
             n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u])
-            u *= n
+            u = [n*i for i in u]
             terms = ([DE.T[i] for i in DE.indices('exp')] +
                     [DE.extargs[i - 1] for i in DE.indices('log')])
             ans = list(zip(terms, u))

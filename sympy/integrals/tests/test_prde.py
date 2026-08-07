@@ -15,14 +15,15 @@ from sympy.polys.polymatrix import PolyMatrix as Matrix
 
 from sympy.testing.pytest import raises
 
-from sympy.core import Add
+from sympy.core import Add, Dummy
+from sympy.matrices import MutableDenseMatrix
 from sympy.core.numbers import Rational
 from sympy.functions.elementary.exponential import exp
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.polytools import Poly, cancel
-from sympy.abc import x, t, n
+from sympy.abc import x, t, n, y
 
 t0, t1, t2, t3, k = symbols('t:4 k')
 
@@ -113,6 +114,29 @@ def test_constant_system():
                  [0, 1, 0],
                  [0, 0, 0],
                  [0, 0, 1]], ring=R), Matrix([0, 1, 0, 0], ring=R))
+
+    # Multiple rows with symbolic constants: pivoting on y is sound, since
+    # y is a nonzero element of the constant field QQ(y)
+    dum = Dummy()
+    A = Matrix([[y, 1, x], [0, y, 1 + x]], dum)
+    u = Matrix([[x + y], [x + 2]], dum)
+    B, v = constant_system(A, u, DE)
+    assert (B.to_Matrix(), v.to_Matrix()) == \
+        (MutableDenseMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+         MutableDenseMatrix([[(y**2 - 1)/y**2], [1/y], [1]]))
+
+    # An entry whose derivation-quotient rows still contain tower
+    # variables, requiring more than one pass of the elimination loop
+    # ("while A is not constant" in the book's ConstantSystem); the
+    # output must be fully constant
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0),
+        Poly((t0 + x*t0)*t1, t1)], 'exts': ['exp', 'exp'],
+        'extargs': [x, x*t0]})
+    A = Matrix([[t1, t0]], dum)
+    u = Matrix([[0]], dum)
+    B, v = constant_system(A, u, DE)
+    assert not any(B.to_Matrix()[i, j].has(t0, t1)
+        for i in range(B.rows) for j in range(B.cols))
 
 
 def test_prde_spde():
@@ -333,6 +357,9 @@ def test_limited_integrate():
     # An empty list of special elements (the is_deriv_in_field() case)
     assert limited_integrate(Poly(2*x, x), Poly(1, x), [], DE) == \
         ((Poly(x**2, x), Poly(1, x, domain='QQ')), [])
+    # ... and with a symbolic constant coefficient
+    assert limited_integrate(Poly(2*y*x, x), Poly(1, x), [], DE) == \
+        ((Poly(y*x**2, x), Poly(1, x, domain='QQ')), [])
 
 
 def test_is_log_deriv_k_t_radical():
@@ -350,6 +377,15 @@ def test_is_log_deriv_k_t_radical():
         'exts': ['exp', 'log'], 'extargs': [x, x]})
     assert is_log_deriv_k_t_radical(Poly(x + t/2 + 3, t), Poly(1, t), DE) == \
         ([(t0, 2), (x, 1)], x*t0**2, 2, 3)
+
+
+    # A tower with a symbolic constant parameter: t0 == exp(y*x).
+    # exp(2*y*x) == t0**2 is a K-radical; the structure coefficients are
+    # rational even though the constant field is QQ(y)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(y*t0, t0)],
+        'exts': ['exp'], 'extargs': [y*x]})
+    assert is_log_deriv_k_t_radical(Poly(2*y*x, t0), Poly(1, t0), DE) == \
+        ([(t0, 2)], t0**2, 1, 0)
 
 
 def test_structure_theorem_guards():
@@ -408,6 +444,21 @@ def test_is_deriv_k():
         'exts': ['log'], 'extargs': [1/x]})
     assert is_deriv_k(Poly(1, t), Poly(x, t), DE) == ([(t, 1)], t, 1)
 
+
+    # Linearly dependent tower generators (log(x) and log(x**2)) make the
+    # structure system underdetermined; the solution must still be a
+    # correct full-length coefficient vector (the reduced system used to
+    # be misread as a solution vector and silently zip-truncated)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0),
+        Poly(2/x, t1)], 'exts': ['log', 'log'],
+        'extargs': [x, x**2]})
+    assert is_deriv_k(Poly(x, t0), Poly(1, t0), DE) == \
+        ([(t0, 1), (t1, 0)], t0, 1)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2/x, t0),
+        Poly(1/x, t1)], 'exts': ['log', 'log'],
+        'extargs': [x**2, x]})
+    assert is_deriv_k(Poly(x, t0), Poly(1, t0), DE) == \
+        ([(t0, S.Half), (t1, 0)], t0/2, 1)
 
 def test_is_log_deriv_k_t_radical_in_field():
     # NOTE: any potential constant factor in the second element of the result

@@ -221,6 +221,9 @@ def test_recognize_derivative():
     assert recognize_derivative(Poly(x, x), Poly((x**2 + 1)**2, x), DE) == True
     assert recognize_derivative(Poly(1, x), Poly((x**2 + 1)**2, x), DE) == False
     assert recognize_derivative(Poly(-2*x, x), Poly((x**2 - 1)**2, x), DE) == True
+    # Multiplicity 3: D(1/(x**2 + 1)**2) == -4*x/(x**2 + 1)**3
+    assert recognize_derivative(Poly(-4*x, x), Poly((x**2 + 1)**3, x), DE) == True
+    assert recognize_derivative(Poly(1, x), Poly((x**2 + 1)**3, x), DE) == False
     # Poles at nonconstant normal primes used to be ignored entirely,
     # giving false positives.  A simple such pole always has a nonzero
     # residue: 1/(t + x) with t = log(x) is not a derivative.
@@ -784,6 +787,13 @@ def test_risch_integrate():
     # sin(x).rewrite(exp)
     expr = -I*(exp(I*x) - exp(-I*x))/2
     assert risch_integrate(expr, x) == -exp(I*x)/2 - exp(-I*x)/2
+
+def test_risch_integrate_symbolic_constant():
+    # A symbolic constant in the exponential argument; the generic answer
+    # holds for y != 0 and the degenerate case is handled by conds
+    assert risch_integrate(exp(x*y), x) == \
+        Piecewise((exp(x*y)/y, Ne(y, 0)), (x, True))
+
 
 def test_risch_integrate_float():
     assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
