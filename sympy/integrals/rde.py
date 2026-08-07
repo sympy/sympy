@@ -797,37 +797,26 @@ def cancel_exp(b, c, n, DE):
     return q
 
 
-def solve_poly_rde(b, cQ, n, DE, parametric=False):
+def solve_poly_rde(b, c, n, DE):
     """
     Solve a Polynomial Risch Differential Equation with degree bound ``n``.
 
     This constitutes step 4 of the outline given in the rde.py docstring.
 
-    For parametric=False, cQ is c, a Poly; for parametric=True, cQ is Q ==
-    [q1, ..., qm], a list of Polys.
-
     This dispatches among the algorithms of Sections 6.5 and 6.6 of
-    Bronstein's book (and their parametric analogues from Section 7.1); it
-    has no single named counterpart.
+    Bronstein's book; it has no single named counterpart.  The parametric
+    analogue of this dispatch is param_poly_rischDE() in prde.py.
     """
     # No cancellation
     if not b.is_zero and (DE.case == 'base' or
             b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
 
-        if parametric:
-            # Delayed imports
-            from .prde import prde_no_cancel_b_large
-            return prde_no_cancel_b_large(b, cQ, n, DE)
-        return no_cancel_b_large(b, cQ, n, DE)
+        return no_cancel_b_large(b, c, n, DE)
 
     elif (b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1) and \
             (DE.case == 'base' or DE.d.degree(DE.t) >= 2):
 
-        if parametric:
-            from .prde import prde_no_cancel_b_small
-            return prde_no_cancel_b_small(b, cQ, n, DE)
-
-        R = no_cancel_b_small(b, cQ, n, DE)
+        R = no_cancel_b_small(b, c, n, DE)
 
         if isinstance(R, Poly):
             return R
@@ -851,11 +840,7 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
         if not b.as_poly(DE.t).LC().is_number:
             raise TypeError("Result should be a number")
 
-        if parametric:
-            from .prde import prde_no_cancel_b_equal
-            return prde_no_cancel_b_equal(b, cQ, n, DE)
-
-        R = no_cancel_equal(b, cQ, n, DE)
+        R = no_cancel_equal(b, c, n, DE)
 
         if isinstance(R, Poly):
             return R
@@ -868,12 +853,9 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
     else:
         # Cancellation
         if b.is_zero:
-            if parametric:
-                raise NotImplementedError("Parametric cancellation with "
-                    "b == 0 is not yet implemented.")
             # Dq == c: in-field integration (Section 6.6)
             from .prde import is_deriv_in_field
-            B = is_deriv_in_field(cQ, Poly(1, DE.t), DE)
+            B = is_deriv_in_field(c, Poly(1, DE.t), DE)
             if B is None:
                 raise NonElementaryIntegralException("c is not the "
                     "derivative of an element of k(t) in solve_poly_rde().")
@@ -892,16 +874,10 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
             return q
         else:
             if DE.case == 'exp':
-                if parametric:
-                    raise NotImplementedError("Parametric RDE cancellation "
-                        "hyperexponential case is not yet implemented.")
-                return cancel_exp(b, cQ, n, DE)
+                return cancel_exp(b, c, n, DE)
 
             elif DE.case == 'primitive':
-                if parametric:
-                    raise NotImplementedError("Parametric RDE cancellation "
-                        "primitive case is not yet implemented.")
-                return cancel_primitive(b, cQ, n, DE)
+                return cancel_primitive(b, c, n, DE)
 
             else:
                 raise NotImplementedError("Other Poly (P)RDE cancellation "
