@@ -1906,6 +1906,9 @@ def trig_product_rule(integral: IntegralInfo):
         return CscCotRule(integrand, symbol)
 
 
+primary_trighyper_functions = (sin, cos, sinh, cosh)
+
+
 def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
@@ -1920,24 +1923,45 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     integrand, symbol = integral
 
-    if not integrand.has(exp) and not integrand.has(sin, cos, sinh, cosh):
+    factors = Mul.make_args(integrand)
+
+    # Require exp to appear as a genuine top-level factor with a polynomial
+    # argument, not merely somewhere in the expression tree (e.g. as a
+    # wrapper like exp(cos(x**2)), which is not a Gaussian or linear factor).
+    if not any(isinstance(t, exp) and t.args[0].is_polynomial(symbol) for t in factors):
         return
 
     a = Wild('a', exclude=[symbol, 0])
     b = Wild('b', exclude=[symbol])
     c = Wild('c', exclude=[symbol])
-    # n = Wild('n', exclude=[symbol], properties=[lambda n: n > 0])
     f = WildFunction('f')
-    guassian_pattern = exp(a * symbol**2 + b * symbol + c)
-    trigexp_over_x_pattern = f*exp(a * symbol)/symbol
+
+    quadratic_pattern = a * symbol**2 + b * symbol + c
+    linear_pattern = a * symbol + b
+
+    def trig_arg(term):
+        if isinstance(term, primary_trighyper_functions):
+            return term.args[0]
+        if isinstance(term, Pow) and isinstance(term.base, primary_trighyper_functions):
+            return term.base.args[0]
+        return None
+
+    quadratic_phase = any(
+        (arg := trig_arg(term)) is not None and arg.match(quadratic_pattern)
+        for term in factors
+    )
+    gaussian_pattern = exp(quadratic_pattern)
+    trigexp_over_x_pattern = f*exp(linear_pattern)/symbol
     trigexp_over_x_match = integrand.match(trigexp_over_x_pattern)
-    if not (any(term.match(guassian_pattern) for term in integrand.atoms(exp))
-            or (trigexp_over_x_match and
-                trigexp_over_x_match[f].has(sin, cos, sinh, cosh))):
+    if not (
+        any(term.match(gaussian_pattern) for term in factors if isinstance(term, exp))
+        or trigexp_over_x_match
+        or quadratic_phase
+    ):
         return
 
     # Replace trig and hyperbolic functions with their exponential forms
-    rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
+    rewritten = integrand.rewrite(primary_trighyper_functions, exp)
 
     if rewritten != integrand:
         debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
@@ -2356,7 +2380,7 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     c = Wild('c', exclude=[x])
     d = Wild('d', exclude=[x])
     base0 = None
-    bases, qs, ratios = [], [], []
+    powers, exps, ratios = [], [], []
     constant_bases_subs = {}
     # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x), then cbrt(2x), x chosen)
     for pow_ in ordered(integrand.find((Pow))): # collect all ((a*x + b)/(c*x + d))**(p/q)
@@ -2382,36 +2406,34 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
         if base0 is None:
             base0 = base
             a0, b0, c0, d0 = aa, bb, cc, dd
-            bases.append(base)
+            powers.append(pow_)
+            exps.append(exp_)
             ratios.append(S.One)
-            qs.append(exp_.q)
         else:
-            K = (base / base0).cancel()
-            if K.has(x): # cannot substitute both sqrt(x) and sqrt(x + 1)
+            power_ratio = powsimp(pow_ / Pow(base0, exp_), force=False).cancel()
+            if power_ratio.has(x):
                 return None
-            bases.append(base)
-            ratios.append(K)
-            qs.append(exp_.q)
+            powers.append(pow_)
+            exps.append(exp_)
+            ratios.append(power_ratio)
     if base0 is None and not constant_bases_subs:
         return None
     if constant_bases_subs:
-        integrand = integrand.subs(constant_bases_subs)
+        integrand = integrand.xreplace(constant_bases_subs)
     if base0 is None:
         substep = integral_steps(integrand, x)
         if not substep.contains_dont_know():
             debug("Integral: {} is rewritten with {} on symbol: {}".format(integral.integrand, integrand, x))
             return RewriteRule(integral.integrand, x, integrand, substep)
         return None
-    q0: Integer = lcm_list(qs)
+    q0: Integer = lcm_list([exp_i.q for exp_i in exps])
     u = Dummy("u")
     u_x = base0**(S.One/q0)
     u_pow = u**q0
     x_u = (b0 - d0*u_pow)/(c0*u_pow - a0)
     dx_u = (q0*(a0*d0 - b0*c0)*u**(q0 - 1))/(c0*u_pow - a0)**2
-    subs_dict = {}
-    for base_i, ratio_i, q_i in zip(bases, ratios, qs):
-        subs_dict[base_i**(S.One/q_i)] = (ratio_i)**(S.One/q_i) * u**(q0/q_i)
-    substituted = integrand.subs(subs_dict).subs(x, x_u) * dx_u
+    subs_dict = {pow_i: ratio_i * u**(q0*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+    substituted = integrand.xreplace(subs_dict).xreplace({x: x_u}) * dx_u
     substep = integral_steps(substituted, u)
     if not substep.contains_dont_know():
         pieces: list[tuple[Rule, Boolean]] = []
@@ -2426,14 +2448,14 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
             # takes a/c if they both imply each other (eg. (a*x + b)/3*x + 4)) (taking b/d would be the same)
             if not d0_implies_c0 or (c0_implies_d0 and d0_implies_c0):
                 const_val = a0 / c0
-                subs_a = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
-                simplified_a = integrand.subs(subs_a)
+                subs_a = {pow_i: ratio_i * Pow(const_val, exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+                simplified_a = integrand.xreplace(subs_a)
                 degenerate_step_a = integral_steps(simplified_a, x)
                 pieces.append((degenerate_step_a, (And(Eq(det, 0), Ne(c0, 0)))))
             if not c0_implies_d0:
                 const_val = b0 / d0
-                subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
-                simplified_b = integrand.subs(subs_b)
+                subs_b = {pow_i: ratio_i * Pow(const_val, exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+                simplified_b = integrand.xreplace(subs_b)
                 simplified_b = simplified_b.subs({a0: 0, c0: 0}) # if det = 0, c = 0 and d != 0, a must be 0
                 degenerate_step_b = integral_steps(simplified_b, x)
                 pieces.append((degenerate_step_b, (And(Eq(det, 0), Eq(c0, 0)))))
@@ -2447,21 +2469,156 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
         return step
     return None
 
+def euler_substitution_rule(integral : IntegralInfo):
+    """
+    Substitute common sqrt(a + b*x + c*x**2) terms using Euler substitution.
+    """
+    integrand, x = integral
+    base0 = None
+    powers, exps, ratios = [], [], []
+    # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x**2 + 1), then sqrt(2*x**2 + 2), x**2 + 1 chosen)
+    for pow_ in ordered(integrand.find(Pow)): # collect all (a + b*x + c*x**2)**(p/2)
+        base, exp_ = pow_.base, pow_.exp
+        if exp_.is_Integer or x not in base.free_symbols: # skip 1/x and sqrt(2)
+            continue
+        if not exp_.is_Rational: # exclude (x**2 + 1)**pi
+            return None
+        if exp_.q != 2:
+            return None
+        base_poly = base.as_poly(x)
+        if base_poly is None or base_poly.degree() != 2: # exclude cube polynomial roots and other radicals
+            return None
+        aa = base_poly.nth(0)
+        bb = base_poly.nth(1)
+        cc = base_poly.nth(2)
+        R = base_poly.as_expr()
+        if base0 is None:
+            base0 = R
+            a0, b0, c0 = aa, bb, cc
+            powers.append(pow_)
+            exps.append(exp_)
+            ratios.append(S.One)
+        else:
+            power_ratio = (powsimp(Pow(R, exp_) / Pow(base0, exp_), force=False)).cancel()
+            if power_ratio.has(x):
+                return None
+            powers.append(pow_)
+            exps.append(exp_)
+            ratios.append(power_ratio)
+    if base0 is None:
+        return None
+
+    pieces: list[tuple[Rule, Boolean]] = []
+    delta = 4*a0*c0 - b0**2
+    # substitution not valid for c0 = 0 and delta = 0
+    c_zero_cond = Eq(c0, 0)
+    delta_zero_cond = Eq(delta, 0)
+
+    def _delta_zero_step():
+        shift = x + b0/(2*c0)
+        rewritten_base = c0*shift**2
+        subs_dict = {pow_i: ratio_i*(rewritten_base)**exp_i for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+        rewritten = integrand.xreplace(subs_dict)
+        step = integral_steps(rewritten, x)
+        return RewriteRule(integrand, x, rewritten, step)
+
+    def _c_zero_step():
+        degenerate_integrand = integrand.subs(c0, 0)
+        if b0.is_zero:
+            step = integral_steps(degenerate_integrand, x)
+        else:
+            step = sqrt_fractional_linear_rule(IntegralInfo(degenerate_integrand, x))
+            if step is None:
+                # since calling directly sqrt_fractional_linear_rule could return None we create a DontKnowRule
+                step = DontKnowRule(degenerate_integrand, x)
+        return step
+
+    def _general_euler_step():
+        s = Dummy("s")
+        subs_dict = { pow_i: ratio_i * s**(2*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+        rewritten = integrand.xreplace(subs_dict)
+        numer, denom = rewritten.as_numer_denom()
+        if numer.as_poly(x, s) is None or denom.as_poly(x, s) is None:
+            return None
+        # Euler's second substitution (u = sqrt(R) + sqrt(c)*x)
+        u = Dummy("u")
+        sqrt_c0 = sqrt(c0)
+        x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
+        s_u = u - sqrt_c0*x_u
+        dx_u = 2*(b0*u + sqrt_c0*(u**2 + a0))/(b0 + 2*sqrt_c0*u)**2
+        substituted = rewritten.xreplace({x: x_u, s: s_u}) * dx_u
+        substep = integral_steps(substituted, u)
+        u_func = sqrt(base0) + sqrt_c0*x
+        return URule(integrand, x, u, u_func, substep)
+
+    if delta_zero_cond is S.true:
+        general_step = _delta_zero_step()
+        if general_step.contains_dont_know():
+            return None
+    else:
+        general_step = _general_euler_step()
+        if general_step is None or general_step.contains_dont_know():
+            return None
+    if c0.is_zero is None:
+        pieces.append((_c_zero_step(), c_zero_cond))
+    if delta.is_zero is None:
+        pieces.append((_delta_zero_step(), delta_zero_cond))
+    if pieces:
+        pieces.append((general_step, S.true))
+        general_step = PiecewiseRule(integrand, x, pieces)
+    return general_step
 
 def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
-    integrand, x = integral
-    a = Wild('a', exclude=[x])
-    b = Wild('b', exclude=[x])
-    c = Wild('c', exclude=[x, 0])
-    f = Wild('f')
-    n = Wild('n', properties=[lambda n: n.is_Integer and n.is_odd])
-    match = integrand.match(f*sqrt(a+b*x+c*x**2)**n)
-    if not match:
-        return
-    a, b, c, f, n = match[a], match[b], match[c], match[f], match[n]
+    # integrate f(x) * (a + b*x + c*x**2)**(n/2),
+    # where f(x) is a polynomial and n is an odd integer
+    starting_integrand, x = integral
+
+    f = S.One
+    root_base = None
+    root_exp: Expr = S.Zero
+
+    # collect radicals
+    for factor in Mul.make_args(starting_integrand):
+        if not factor.has(x):
+            f *= factor
+            continue
+        base, exp = factor.as_base_exp()
+        if exp.is_Integer is True:
+            f *= factor
+            continue
+        # exclude x**pi
+        if exp.is_Rational is not True:
+            return None
+        base_poly = base.as_poly(x)
+        # exclude sqrt(log(x))
+        if base_poly is None or base_poly.degree() != 2:
+            return None
+        base = base_poly.as_expr()
+        if root_base is None:
+            root_base = base
+            root_exp = exp
+            continue
+        reference_power = Pow(root_base, exp)
+        ratio = powsimp(factor/reference_power, force=False).cancel()
+        if ratio.has(x):
+            return None
+        f *= ratio
+        root_exp += exp
+
+    if root_base is None:
+        return None
     f_poly = f.as_poly(x)
     if f_poly is None:
-        return
+        return None
+    n = 2*root_exp
+    if n.is_Integer is not True or n.is_odd is not True:
+        return None
+    root_poly = root_base.as_poly(x)
+    a = root_poly.nth(0)
+    b = root_poly.nth(1)
+    c = root_poly.nth(2)
+    root_base = a + b*x + c*x**2
+    integrand = f*Pow(root_base, n/2)
 
     generic_cond = Ne(c, 0)
     if not degenerate or generic_cond is S.true:
@@ -2508,7 +2665,7 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
             step = SqrtQuadraticDenomRule(integrand, x, a, b, c, coeffs)
         return step
 
-    def sqrt_quadratic_reduction_rule(integrand: Expr, n: int, const: Expr):
+    def sqrt_quadratic_reduction_rule(integrand: Expr, n: Expr, const: Expr):
         # Implementation of Gradshteyn & Ryzhik 2.263.3
         k = (-n - 1) // 2
         delta = 4*a*c - b**2
@@ -2624,7 +2781,10 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         generic_step = sqrt_quadratic_reduction_rule(integrand, n, f)
     else:
         generic_step = sqrt_quadratic_polynomial_reduction_rule()
-    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+    step = _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+    if integrand != starting_integrand:
+        return RewriteRule(starting_integrand, x, integrand, step)
+    return step
 
 
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
@@ -2963,6 +3123,9 @@ def substitution_rule(integral):
                         if not _if_zero_implies_zero(pole, denom_integrand):
                             rewritten_integral = manual_subs(factored_integrand, pole, 0)
                             debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten_integral, symbol))
+                            # additional check not to replace a if it is not valid (for example ln(a*x))
+                            if rewritten_integral.has(S.ComplexInfinity, S.Infinity, S.NegativeInfinity, S.NaN):
+                                continue
                             substep = integral_steps(rewritten_integral, symbol)
 
                             if substep:
@@ -3134,7 +3297,8 @@ def integral_steps(integrand, symbol, **options):
             Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
                         null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule)),
+                        null_safe(sqrt_fractional_linear_rule),
+                        null_safe(euler_substitution_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
@@ -3142,6 +3306,7 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
+                        null_safe(euler_substitution_rule),
                         null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
