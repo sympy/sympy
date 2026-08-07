@@ -284,6 +284,12 @@ def constant_system(A, u, DE):
         else:
             break
         # This assumes that const(F(t0, ..., tn)) == const(K) == F
+        # TODO: If A[i, j] contains symbolic constants, D(A[i, j]) can
+        # vanish for special values of them (e.g. an entry y*t is
+        # nonconstant except at y == 0), and dividing by it makes the
+        # reduced system valid only generically.  The correct result
+        # would be a Piecewise over the (solve()-generated) vanishing
+        # conditions of each pivot.
         Ri = A[i, :]
         # Rm+1; m = A.rows
         DAij = D(A[i, j])
@@ -499,7 +505,15 @@ def prde_no_cancel_b_equal(b, Q, n, DE):
     delta = DE.d.degree(DE.t)
     lam = DE.d.LC()
 
-    # The degree at which cancellation could occur
+    # The degree at which cancellation could occur.
+    # TODO: If b or Dt contains symbolic constants, Mc may be an integer
+    # only for special values of them (e.g. b == -y*t gives Mc == y), and
+    # the divisions by u below then produce a result that is valid only
+    # generically: e.g. H == [-t**3/(y - 3) - 3*t/(y**2 - 4*y + 3)] is
+    # undefined at y == 3 and y == 1.  The correct result would be a
+    # Piecewise with one condition per loop iteration where
+    # solve(N*lam + lc(b), y) is nonempty, with the cancellation
+    # algorithms handling those special values.
     Mc = cancel(-b.LC()/lam)
     if Mc.is_Integer and Mc > 0:
         M = int(Mc)
@@ -999,6 +1013,11 @@ def limited_integrate(fa, fd, G, DE):
         return None
     # we can take any vector from W; take W[0], scaled so that the
     # g-coefficient is 1
+    # TODO: If W[0][0] contains symbolic constants, it can vanish for
+    # special values of them, making the result valid only generically;
+    # a different nullspace vector may serve those special values, and
+    # the correct result would be a Piecewise over the corresponding
+    # conditions.
     w = W[0]/W[0][0]
     r = len(hs)
     m = len(w) - r - 1
@@ -1165,6 +1184,14 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
                     return None
                 cc = cancel(p.LC()/q.LC())
                 if not cc.is_Rational:
+                    # If cc contains symbolic constants, it may be
+                    # rational only for special values of them (a
+                    # condition like "y in QQ" that is not expressible
+                    # as a Piecewise relational); None here is correct
+                    # generically and at worst yields a false
+                    # nonelementary proof at those values, never a
+                    # wrong antiderivative, so no Piecewise handling is
+                    # needed.
                     return None
             M, N = cc.as_numer_denom()
 
@@ -1289,6 +1316,11 @@ def parametric_log_deriv_structure(fa, fd, wa, wd, DE):
     except ValueError:
         # Inconsistent system: f - (m/n)*w is not a combination of the
         # available logarithmic derivatives for any m/n.
+        # With symbolic constants, inconsistency is decided only
+        # generically; at special values of the constants a solution may
+        # exist.  The wrapper then raises NotImplementedError, which is
+        # sound (an honest error, never a wrong answer), so no Piecewise
+        # handling is needed here.
         return None
     xs = xs.subs(dict.fromkeys(params, S.Zero))
 
@@ -1367,6 +1399,13 @@ def _structure_system_solve(lhs, rhs, DE):
     try:
         xs, params = EMatrix(A.to_Matrix()).gauss_jordan_solve(EMatrix(um))
     except ValueError:
+        # With symbolic constants in the system, inconsistency (and
+        # the pivoting above) is decided only generically; at special
+        # values of the constants a solution may exist.  Returning None
+        # here errs on the incomplete-but-sound side (a spurious
+        # "not a derivative"/"not a radical" answer, at worst a false
+        # nonelementary proof, never a wrong antiderivative), so no
+        # Piecewise handling is needed here.
         return None
     xs = xs.subs(dict.fromkeys(params, S.Zero))
     # Defensive verification against the original system
