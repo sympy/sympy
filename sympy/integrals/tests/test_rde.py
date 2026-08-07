@@ -166,6 +166,25 @@ def test_bound_degree():
     assert bound_degree(Poly(t, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t), DE) == 0
 
 
+def test_bound_degree_rational_z():
+    # Primitive case with deg(a) == deg(b) and alpha == 1/(x*(x + 1)) ==
+    # Dz/z for z == x/(x + 1) -- a proper ratio in k*, so derivation(z, DE)
+    # inside bound_degree() needs basic=True (z is not polynomial in the
+    # tower generators; this used to crash with SympifyError).
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'exts': ['log'], 'extargs': [x]})
+    assert bound_degree(Poly(t, t, field=True),
+        Poly(-t/(x*(x + 1)), t, field=True), Poly(1, t, field=True), DE) == 0
+    # The same alpha end-to-end: Dy - y/(x*(x + 1)) == (x + 1 - t)/(x*(x + 1))
+    # has the solution y == t (plus c*x/(x + 1) for any constant c, so check
+    # the defining equation rather than the exact result).
+    ya, yd = rischDE(Poly(-1, t, field=True), Poly(x*(x + 1), t, field=True),
+        Poly(x + 1 - t, t, field=True), Poly(x*(x + 1), t, field=True), DE)
+    y = ya.as_expr()/yd.as_expr()
+    assert cancel(derivation(Poly(y, t, field=True), DE).as_expr() -
+        y/(x*(x + 1)) - (x + 1 - t)/(x*(x + 1))) == 0
+
+
 def test_bound_degree_undecidable():
     # Exp case with deg(a) == deg(b) and alpha == -lc(b)/lc(a) == 1/(x + 1):
     # deciding whether alpha == m*Dt/t + Dz/z requires log(x + 1), which is
