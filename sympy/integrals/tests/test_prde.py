@@ -330,6 +330,9 @@ def test_limited_integrate():
     G = [(Poly(1, x), Poly(x, x))]
     assert limited_integrate(Poly(5*x**2, x), Poly(3, x), G, DE) == \
         ((Poly(5*x**3/9, x), Poly(1, x, domain='QQ')), [0])
+    # An empty list of special elements (the is_deriv_in_field() case)
+    assert limited_integrate(Poly(2*x, x), Poly(1, x), [], DE) == \
+        ((Poly(x**2, x), Poly(1, x, domain='QQ')), [])
 
 
 def test_is_log_deriv_k_t_radical():

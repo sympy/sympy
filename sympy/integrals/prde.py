@@ -226,11 +226,12 @@ def constant_system(A, u, DE):
 
     Given a differential field (K, D) with constant field C = Const(K), a Matrix
     A, and a vector (Matrix) u with coefficients in K, returns the tuple
-    (B, v, s), where B is a Matrix with coefficients in C and v is a vector
-    (Matrix) such that either v has coefficients in C, in which case s is True
-    and the solutions in C of Ax == u are exactly all the solutions of Bx == v,
-    or v has a non-constant coefficient, in which case s is False Ax == u has no
-    constant solution.
+    (B, v), where B is a Matrix with coefficients in C and v is a vector
+    (Matrix) such that either v has coefficients in C, in which case the
+    solutions in C of Ax == u are exactly all the solutions of Bx == v, or v
+    has a non-constant coefficient, in which case Ax == u has no constant
+    solution.  Note that B and v are a reduced *system*, not a solution:
+    callers must check that v is constant and then solve Bx == v themselves.
 
     This algorithm is used both in solving parametric problems and in
     determining if an element a of K is a derivative of an element of K or the
@@ -541,6 +542,10 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     from the discussion in Section 7.1 of Bronstein's book (neither edition
     gives it as named pseudocode).
     """
+    if DE.case not in ('primitive', 'exp'):
+        raise ValueError("case must be 'primitive' or 'exp', not %s." %
+            DE.case)
+
     H = []
 
     if DE.case == 'exp':
@@ -734,44 +739,24 @@ def param_poly_rischDE(a, b, q, n, DE):
     return h, A
 
 
-def param_rischDE(fa, fd, G, DE):
+def _prde_normalized_solve(A, B, G, gamma, DE, n=None):
     """
-    Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
+    Common tail of param_rischDE() and limited_integrate().
 
     Explanation
     ===========
 
-    Given a derivation D in k(t), f in k(t), and G
-    = [G1, ..., Gm] in k(t)^m, return h = [h1, ..., hr] in k(t)^r and
-    a matrix A with m + r columns and entries in Const(k) such that
-    Dy + f*y = Sum(ci*Gi, (i, 1, m)) has a solution y
-    in k(t) with c1, ..., cm in Const(k) if and only if y = Sum(dj*hj,
-    (j, 1, r)) where d1, ..., dr are in Const(k) and (c1, ..., cm,
-    d1, ..., dr) is a solution of Ax == 0.
-
-    Elements of k(t) are tuples (a, d) with a and d in k[t].
-
-    This chains together the parametric algorithms of Section 7.1 of
-    Bronstein's book; the book does not give it as a single named
-    pseudocode function.
+    Given A, B in k[t] and G = [G1, ..., Gm] in k(t)^m with the equation
+    A*Dp + B*p == Sum(ci*Gi, (i, 1, m)) already reduced (weakly
+    normalized, denominators cleared), return h = [h1, ..., hr] in
+    k(t)^r and a matrix C with entries in Const(k) such that solutions
+    of the original problem are y == Sum(dj*hj, (j, 1, r))/1 with
+    (c1, ..., cm, d1, ..., dr) in the nullspace of C, where the
+    returned hj have already been divided by gamma.  If ``n`` is None,
+    the degree bound is computed with bound_degree(); otherwise ``n``
+    is used as a proven degree bound, avoiding bound_degree() entirely.
     """
     m = len(G)
-    q, (fa, fd) = weak_normalizer(fa, fd, DE)
-    # Solutions of the weakly normalized equation Dz + f*z = q*Sum(ci*Gi)
-    # correspond to solutions y = z/q of the original equation.
-    gamma = q
-    G = [(q*ga).cancel(gd, include=True) for ga, gd in G]
-
-    a, (ba, bd), G, hn = prde_normal_denom(fa, fd, G, DE)
-    # Solutions q in k<t> of  a*Dq + b*q = Sum(ci*Gi) correspond
-    # to solutions z = q/hn of the weakly normalized equation.
-    gamma *= hn
-
-    A, B, G, hs = prde_special_denom(a, ba, bd, G, DE)
-    # Solutions p in k[t] of  A*Dp + B*p = Sum(ci*Gi) correspond
-    # to solutions q = p/hs of the previous equation.
-    gamma *= hs
-
     g = A.gcd(B)
     a, b, g = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for
         gia, gid in G]
@@ -815,15 +800,16 @@ def param_rischDE(fa, fd, G, DE):
     # Solutions of a*Dp + b*p = Sum(dj*rj) correspond to solutions
     # y = p/gamma of the initial equation with ci = Sum(dj*aji).
 
-    try:
-        # We try n=5. At least for prde_spde, it will always
-        # terminate no matter what n is.
-        n = bound_degree(a, b, r, DE, parametric=True)
-    except NotImplementedError:
-        # A temporary bound is set. Eventually, it will be removed.
-        # the currently added test case takes large time
-        # even with n=5, and much longer with large n's.
-        n = 5
+    if n is None:
+        try:
+            # We try n=5. At least for prde_spde, it will always
+            # terminate no matter what n is.
+            n = bound_degree(a, b, r, DE, parametric=True)
+        except NotImplementedError:
+            # A temporary bound is set. Eventually, it will be removed.
+            # the currently added test case takes large time
+            # even with n=5, and much longer with large n's.
+            n = 5
 
     h, B = param_poly_rischDE(a, b, r, n, DE)
 
@@ -872,6 +858,46 @@ def param_rischDE(fa, fd, G, DE):
     C = Matrix([ni[:] for ni in N], DE.t)  # rows n1, ..., ns.
 
     return [hk.cancel(gamma, include=True) for hk in h], C
+
+
+def param_rischDE(fa, fd, G, DE):
+    """
+    Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
+
+    Explanation
+    ===========
+
+    Given a derivation D in k(t), f in k(t), and G
+    = [G1, ..., Gm] in k(t)^m, return h = [h1, ..., hr] in k(t)^r and
+    a matrix A with m + r columns and entries in Const(k) such that
+    Dy + f*y = Sum(ci*Gi, (i, 1, m)) has a solution y
+    in k(t) with c1, ..., cm in Const(k) if and only if y = Sum(dj*hj,
+    (j, 1, r)) where d1, ..., dr are in Const(k) and (c1, ..., cm,
+    d1, ..., dr) is a solution of Ax == 0.
+
+    Elements of k(t) are tuples (a, d) with a and d in k[t].
+
+    This chains together the parametric algorithms of Section 7.1 of
+    Bronstein's book; the book does not give it as a single named
+    pseudocode function.
+    """
+    q, (fa, fd) = weak_normalizer(fa, fd, DE)
+    # Solutions of the weakly normalized equation Dz + f*z = q*Sum(ci*Gi)
+    # correspond to solutions y = z/q of the original equation.
+    gamma = q
+    G = [(q*ga).cancel(gd, include=True) for ga, gd in G]
+
+    a, (ba, bd), G, hn = prde_normal_denom(fa, fd, G, DE)
+    # Solutions q in k<t> of  a*Dq + b*q = Sum(ci*Gi) correspond
+    # to solutions z = q/hn of the weakly normalized equation.
+    gamma *= hn
+
+    A, B, G, hs = prde_special_denom(a, ba, bd, G, DE)
+    # Solutions p in k[t] of  A*Dp + B*p = Sum(ci*Gi) correspond
+    # to solutions q = p/hs of the previous equation.
+    gamma *= hs
+
+    return _prde_normalized_solve(A, B, G, gamma, DE)
 
 
 def limited_integrate_reduce(fa, fd, G, DE):
@@ -943,30 +969,33 @@ def limited_integrate(fa, fd, G, DE):
     function).
     """
     fa, fd = fa*Poly(1/fd.LC(), DE.t), fd.monic()
-    # interpreting limited integration problem as a
-    # parametric Risch DE problem
-    Fa = Poly(0, DE.t)
-    Fd = Poly(1, DE.t)
-    G = [(fa, fd)] + G
-    h, A = param_rischDE(Fa, Fd, G, DE)
-    V = A.nullspace()
-    V = [v for v in V if v[0] != 0]
-    if not V:
+    # Reduction to a polynomial problem (LimitedIntegrateReduce, Section
+    # 7.2): for any solution v in k(t), c1, ..., cm in Const(k) of
+    # f == Dv + Sum(ci*wi), p == v*h is in k[t] and satisfies
+    # A*Dp + b*p == g + Sum(ci*vi) with deg(p) <= N.
+    A, b, h, N, g, V = limited_integrate_reduce(fa, fd, G, DE)
+    # Solve the parametric problem with right hand sides [g] + V.
+    # Solutions of the original problem correspond to parametric
+    # solutions whose g-coefficient is 1.  N is a proven degree bound,
+    # so bound_degree() is not needed.
+    Q = [g] + V
+    hs, C = _prde_normalized_solve(A, b, Q, h, DE, n=N)
+    W = C.nullspace()
+    W = [w for w in W if w[0] != 0]
+    if not W:
         return None
-    else:
-        # we can take any vector from V, we take V[0]
-        c0 = V[0][0]
-        # v = [-1, c1, ..., cm, d1, ..., dr]
-        v = V[0]/(-c0)
-        r = len(h)
-        m = len(v) - r - 1
-        C = list(v[1: m + 1])
-        y = -sum((v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr()
-                for i in range(r)), S.Zero)
-        y_num, y_den = y.as_numer_denom()
-        Ya, Yd = Poly(y_num, DE.t), Poly(y_den, DE.t)
-        Y = Ya*Poly(1/Yd.LC(), DE.t), Yd.monic()
-        return Y, C
+    # we can take any vector from W; take W[0], scaled so that the
+    # g-coefficient is 1
+    w = W[0]/W[0][0]
+    r = len(hs)
+    m = len(w) - r - 1
+    C = list(w[1: m + 1])
+    y = sum((w[m + 1 + i]*hs[i][0].as_expr()/hs[i][1].as_expr()
+            for i in range(r)), S.Zero)
+    y_num, y_den = y.as_numer_denom()
+    Ya, Yd = Poly(y_num, DE.t), Poly(y_den, DE.t)
+    Y = Ya*Poly(1/Yd.LC(), DE.t), Yd.monic()
+    return Y, C
 
 
 def is_deriv_in_field(fa, fd, DE):
