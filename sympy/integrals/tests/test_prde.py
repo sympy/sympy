@@ -1,6 +1,6 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import annotations
-from sympy.integrals.risch import DifferentialExtension, derivation
+from sympy.integrals.risch import DifferentialExtension, derivation, frac_in
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, prde_no_cancel_b_equal, limited_integrate_reduce,
@@ -17,6 +17,7 @@ from sympy.testing.pytest import raises
 
 from sympy.core import Add
 from sympy.core.numbers import Rational
+from sympy.functions.elementary.exponential import exp
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.polys.domains.rationalfield import QQ
@@ -427,6 +428,27 @@ def test_parametric_log_deriv_structure():
         Poly(1, t), Poly(1, t), DE) is None
     raises(NotImplementedError, lambda: parametric_log_deriv(
         Poly(1, t), Poly(x + 1, t), Poly(1, t), Poly(1, t), DE))
+
+    # Nontrivial n and m: f == 1/(2*x) + 3, w == 2:
+    # 2*f == Dx/x + 3*w
+    assert parametric_log_deriv_structure(Poly(6*x + 1, t), Poly(2*x, t),
+        Poly(2, t), Poly(1, t), DE) == (2, 3, x)
+
+    # Underdetermined system (w lies in the span of the generators) and a
+    # w == 0 query.  Which solution is returned depends on the free
+    # parameter choice, so check the defining equation n*f == Dv/v + m*w
+    # instead of an exact tuple.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t),
+        Poly(t1, t1)], 'exts': ['log', 'exp'], 'extargs': [x, x]})
+    for f, w in [(1/x + 2, S(3)), (1/x + 5, S.Zero)]:
+        fa, fd = frac_in(f, t1)
+        wa, wd = frac_in(w, t1)
+        A = parametric_log_deriv_structure(fa, fd, wa, wd, DE)
+        assert A is not None
+        n, m, v = A
+        assert n > 0 and n.is_Integer and m.is_Integer
+        vv = v.subs(t1, exp(x))  # t1 == exp(x) in this extension
+        assert cancel(n*f - m*w - vv.diff(x)/vv) == 0
 
 
 def test_is_deriv_in_field():

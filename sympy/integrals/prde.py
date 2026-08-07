@@ -1218,20 +1218,42 @@ def parametric_log_deriv_structure(fa, fd, wa, wd, DE):
     rhs = Matrix([f], dum)
 
     A, u = constant_system(lhs, rhs, DE)
-    u = u.to_Matrix()
 
-    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u):
-        return None
-    if not all(i.is_Rational for i in u):
+    # A*x == u is now a linear system with constant coefficients for the
+    # rational unknowns x == (m/n, r1, ..., rk).  Note that u is the
+    # reduced right hand side, not a solution: the system may be
+    # underdetermined (e.g. when w is a combination of the generators),
+    # so solve it explicitly, setting any free parameters to zero.
+    Am = A.to_Matrix()
+    um = u.to_Matrix()
+    if not (all(i.is_Rational for i in Am) and
+            all(i.is_Rational for i in um)):
+        if not all(derivation(i, DE, basic=True).is_zero for i in Am.vec()) \
+                or not all(derivation(i, DE, basic=True).is_zero for i in um):
+            # The system could not be reduced to one over the constants
+            return None
         raise NotImplementedError("Cannot work with non-rational "
             "coefficients in this case.")
+    from sympy.matrices import Matrix as _Matrix
+    try:
+        xs, params = _Matrix(Am).gauss_jordan_solve(_Matrix(um))
+    except ValueError:
+        # Inconsistent system: f - (m/n)*w is not a combination of the
+        # available logarithmic derivatives for any m/n.
+        return None
+    xs = xs.subs(dict.fromkeys(params, S.Zero))
 
-    n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u], S.One)
-    u *= n  # now integers: [m, n*r1, ..., n*rk]
-    m = u[0]
+    n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in xs], S.One)
+    xs *= n  # now integers: [m, n*r1, ..., n*rk]
+    m = xs[0]
     terms = ([DE.T[i] for i in E_indices] + [DE.extargs[i - 1] for i in L_indices])
-    v = Mul(*[Pow(i, j) for i, j in zip(terms, u[1:])])
+    v = Mul(*[Pow(i, j) for i, j in zip(terms, xs[1:])])
     if n == 0:
+        return None
+    # Defensive check of n*f == Dv/v + m*w (Dv/v is the same QQ-linear
+    # combination of the generator logarithmic derivatives by construction)
+    lhs_check = Add(*[Mul(j, i) for i, j in zip(E_part + L_part, xs[1:])])
+    if cancel(n*f - m*w - lhs_check) != 0:
         return None
     if n < 0:
         n, m, v = -n, -m, 1/v

@@ -817,6 +817,14 @@ def test_risch_integrate_cancellation():
     assert isinstance(i, NonElementaryIntegral)
     assert cancel(together(diff(g, x) + i.function - e)) == 0
 
+    # Purely elementary results through the same fallback (these raised
+    # NotImplementedError before)
+    for F in [(x - 1)*log(exp(x) + log(x)), exp(x)*log(exp(x) + log(x))]:
+        e = cancel(diff(F, x))
+        ans = risch_integrate(e, x)
+        assert not ans.has(NonElementaryIntegral)
+        assert cancel(together(diff(ans, x) - e)) == 0
+
 
 def test_bound_degree_limited_integrate():
     # bound_degree() used to raise "TypeError: '>' not supported between
