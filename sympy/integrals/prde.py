@@ -287,9 +287,11 @@ def constant_system(A, u, DE):
         # TODO: If A[i, j] contains symbolic constants, D(A[i, j]) can
         # vanish for special values of them (e.g. an entry y*t is
         # nonconstant except at y == 0), and dividing by it makes the
-        # reduced system valid only generically.  The correct result
-        # would be a Piecewise over the (solve()-generated) vanishing
-        # conditions of each pivot.
+        # reduced system valid only generically.  The same applies to
+        # the pivots of the rref() calls, which also divide by
+        # parameter-dependent entries.  The correct result would be a
+        # Piecewise over the (solve()-generated) vanishing conditions of
+        # each pivot.
         Ri = A[i, :]
         # Rm+1; m = A.rows
         DAij = D(A[i, j])
@@ -611,7 +613,13 @@ def prde_cancel_liouvillian(b, Q, n, DE):
         # Substituting q == d*h + q_rest into Dq + b*q == Sum(ci*qi)
         # leaves the residual equation
         # D(q_rest) + b*q_rest == Sum(ci*qi) - d*(D(h) + b*h)
-        # (see the equation following (7.17) in Section 7.1).
+        # (see the equation following (7.17) in Section 7.1; the sign of
+        # the b*h term is misprinted as a minus in the 1st edition).
+        # Note that only the t**(i-1)-coefficient of Fi[j] is ever
+        # consumed (the loop descends strictly through the degrees), and
+        # the b*hji term contributes only to the t**i-coefficient, so
+        # the sign of b*hji cannot affect the result; it is written in
+        # the book's (2nd edition) form for clarity.
         for j in range(ri):
             hji = fi[j] * (DE.t**i).as_poly(fi[j].gens)
             hi[j] = hji
@@ -1409,6 +1417,12 @@ def _structure_system_solve(lhs, rhs, DE):
         # nonelementary proof, never a wrong antiderivative), so no
         # Piecewise handling is needed here.
         return None
+    # TODO: Zeroing the free parameters can miss a rational solution when
+    # a pivot divided by a symbolic constant: e.g. y*x1 + x2 == 1 gives
+    # xs == [(1 - tau)/y, tau], which is non-rational at tau == 0 but
+    # rational at tau == 1.  Choosing a rational point of the affine
+    # solution space (when one exists) would decide more towers; failing
+    # that only causes an honest NotImplementedError downstream.
     xs = xs.subs(dict.fromkeys(params, S.Zero))
     # Defensive verification against the original system
     lhs_m = lhs.to_Matrix()
