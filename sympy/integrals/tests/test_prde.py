@@ -304,6 +304,22 @@ def test_limited_integrate_reduce():
         (Poly(t, t), Poly(-1/x, t), Poly(t, t), 1, (Poly(x, t), Poly(1, t, domain='ZZ[x]')),
         [(Poly(-x*t, t), Poly(1, t, domain='ZZ[x]'))])
 
+    # An exp case with a nontrivial special part (hs != 1).  This
+    # distinguishes the first return component, which must be hn rather
+    # than a == hn*hs (the book returns a, which does not satisfy the
+    # stated contract): check the contract directly for the known
+    # solution v == 1/(t*x), c1 == 3 of f == Dv + c1*w1.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    fa, fd = frac_in((3*x**2*t - x - 1)/(x**2*t), t)
+    G = [(Poly(1, t), Poly(1, t))]
+    A, b, h, N, g, V = limited_integrate_reduce(fa, fd, G, DE)
+    p = Poly(cancel(h.as_expr()/(t*x)), t, field=True)  # p == v*h
+    assert p.degree(t) <= N
+    lhs = (A*derivation(p, DE) + b*p).as_expr()
+    rhs = cancel(g[0].as_expr()/g[1].as_expr() +
+        3*V[0][0].as_expr()/V[0][1].as_expr())
+    assert cancel(lhs - rhs) == 0
+
 
 def test_limited_integrate():
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})

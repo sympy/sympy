@@ -900,7 +900,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     """
     dn, ds = splitfactor(fd, DE)
     E = [splitfactor(gd, DE) for _, gd in G]
-    En, Es = list(zip(*E))
+    En, Es = list(zip(*E)) if E else ((), ())
     c = reduce(lambda i, j: i.lcm(j), (dn,) + En)  # lcm(dn, en1, ..., enm)
     hn = c.gcd(c.diff(DE.t))
     a = hn
@@ -913,8 +913,8 @@ def limited_integrate_reduce(fa, fd, G, DE):
         hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es)  # lcm(ds, es1, ..., esm)
         a = hn*hs
         b -= (hn*derivation(hs, DE)).quo(hs)
-        mu = min(order_at_oo(fa, fd, DE.t), min(order_at_oo(ga, gd, DE.t) for
-            ga, gd in G))
+        mu = min([order_at_oo(fa, fd, DE.t)] + [order_at_oo(ga, gd, DE.t) for
+            ga, gd in G])
         # So far, all the above are also nonlinear or Liouvillian, but if this
         # changes, then this will need to be updated to call bound_degree()
         # as per the docstring of this function (DE.case == 'other_linear').
@@ -924,7 +924,14 @@ def limited_integrate_reduce(fa, fd, G, DE):
         raise NotImplementedError
 
     V = [(-a*hn*ga).cancel(gd, include=True) for ga, gd in G]
-    return (a, b, a, N, (a*hn*fa).cancel(fd, include=True), V)
+    # Note: the first component is hn, not a.  Both editions of the book
+    # return a here, but that does not satisfy the stated contract when
+    # hs != 1: from v == p/a, the original equation multiplied by a**2
+    # gives a*Dp - Da*p == a**2*f - Sum(ci*a**2*wi), and dividing through
+    # by hs (which divides Da exactly, since hs is special) gives
+    # hn*Dp + b*p == a*hn*f - Sum(ci*a*hn*wi) with the b and right hand
+    # sides constructed above.
+    return (hn, b, a, N, (a*hn*fa).cancel(fd, include=True), V)
 
 
 def limited_integrate(fa, fd, G, DE):
