@@ -810,6 +810,13 @@ def test_risch_integrate_cancellation():
     assert risch_integrate(e, x) == \
         exp(x)*log(exp(x) + 1) - exp(x) + log(exp(x) + 1)
 
+    # Requires the structure-theorem fallback of parametric_log_deriv()
+    # (the heuristic alone raises NotImplementedError on this one)
+    e = log(exp(x) + log(x))
+    g, i = risch_integrate(e, x, separate_integral=True)
+    assert isinstance(i, NonElementaryIntegral)
+    assert cancel(together(diff(g, x) + i.function - e)) == 0
+
 
 def test_bound_degree_limited_integrate():
     # bound_degree() used to raise "TypeError: '>' not supported between

@@ -1164,19 +1164,104 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     return (Q*N, Q*M, v)
 
 
+def parametric_log_deriv_structure(fa, fd, wa, wd, DE):
+    """
+    Parametric logarithmic derivative problem via the structure theorems.
+
+    Explanation
+    ===========
+
+    Tries to solve n*f == Dv/v + m*w for n, m in ZZ, n != 0, and v in
+    k(t)*, by solving the structure equation
+
+        f == (m/n)*w + Sum(ri*Dti/ti, i in E) + Sum(ri*Dti, i in L)
+
+    for rational (m/n, r1, ..., rk), where E and L are the
+    hyperexponential and logarithmic monomials of the current tower (up
+    to the current level), as in equation (7.44) of Section 7.3 of
+    Bronstein's book, with theta adjoined as an extra hyperexponential
+    generator.  A solution yields (n, m, v) with
+    v == Product(termi**(n*ri)) directly.
+
+    Either returns (n, m, v), or None, which means that f - (m/n)*w is
+    not a QQ-linear combination of the logarithmic derivatives available
+    from the current tower for any m/n in QQ.  Note that None does NOT
+    prove that no solution exists: a solution whose v requires monomials
+    not in the tower (e.g. new logarithms) is not found by this method.
+    Callers must treat None as inconclusive.
+    """
+    # The same assumptions as in is_log_deriv_k_t_radical()
+    if len(DE.exts) != len(DE.D) - 1:
+        if [i for i in DE.cases if i == 'tan'] or \
+                ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
+                        set(DE.indices('log'))):
+            raise NotImplementedError("Real version of the structure "
+                "theorems with hypertangent support is not yet implemented.")
+        raise NotImplementedError("Nonelementary extensions not supported "
+            "in the structure theorems.")
+
+    # Use only the part of the tower visible at the current level: the
+    # callers pose this problem inside DecrementLevel, and v must lie in
+    # the current field (w itself is usually the log derivative of the
+    # monomial one level up, which must not appear in v).
+    top = len(DE.T) + DE.level
+    E_indices = [i for i in DE.indices('exp') if i <= top]
+    L_indices = [i for i in DE.indices('log') if i <= top]
+    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in E_indices]
+    L_part = [DE.D[i].as_expr() for i in L_indices]
+
+    w = wa.as_expr()/wd.as_expr()
+    f = fa.as_expr()/fd.as_expr()
+
+    dum = Dummy()
+    lhs = Matrix([[w] + E_part + L_part], dum)
+    rhs = Matrix([f], dum)
+
+    A, u = constant_system(lhs, rhs, DE)
+    u = u.to_Matrix()
+
+    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u):
+        return None
+    if not all(i.is_Rational for i in u):
+        raise NotImplementedError("Cannot work with non-rational "
+            "coefficients in this case.")
+
+    n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u], S.One)
+    u *= n  # now integers: [m, n*r1, ..., n*rk]
+    m = u[0]
+    terms = ([DE.T[i] for i in E_indices] + [DE.extargs[i - 1] for i in L_indices])
+    v = Mul(*[Pow(i, j) for i, j in zip(terms, u[1:])])
+    if n == 0:
+        return None
+    if n < 0:
+        n, m, v = -n, -m, 1/v
+    return (n, m, v)
+
+
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     """
     Solves the parametric logarithmic derivative problem.
 
     This is the parametric logarithmic derivative problem from Section 7.3
-    of Bronstein's book; currently only the heuristic
-    (``ParametricLogarithmicDerivative``) is implemented.
+    of Bronstein's book: n*f == Dv/v + m*w for n, m in ZZ, n != 0, and
+    v in k(t)*.  The heuristic (``ParametricLogarithmicDerivative``) is
+    tried first; if it cannot decide, the structure theorem method of the
+    same section is tried.
     """
-    # TODO: Write the full algorithm using the structure theorems.  Until
-    # then, this propagates NotImplementedError when the heuristic cannot
-    # decide (it must not be caught and treated as "no solution", since a
-    # solution may exist; see parametric_log_deriv_heu()).
-    A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
+    try:
+        A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
+    except NotImplementedError:
+        A = parametric_log_deriv_structure(fa, fd, wa, wd, DE)
+        if A is None:
+            # The structure method proves nonexistence only when the
+            # elementary extension containing Integral(f) needs no
+            # monomials outside the current tower, which we cannot check
+            # here, so an inconclusive result must not be reported as
+            # "no solution".
+            raise NotImplementedError("parametric_log_deriv() could not "
+                "decide: the heuristic failed and f - (m/n)*w is not a "
+                "combination of logarithmic derivatives from the current "
+                "tower for any m/n in QQ.")
     return A
 
 

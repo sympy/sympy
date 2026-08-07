@@ -6,6 +6,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_no_cancel_b_small, prde_no_cancel_b_equal, limited_integrate_reduce,
     limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
+    parametric_log_deriv, parametric_log_deriv_structure,
     is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
     is_deriv_in_field,
     prde_cancel_liouvillian)
@@ -405,6 +406,27 @@ def test_is_log_deriv_k_t_radical_in_field():
         (1, t)
     assert is_log_deriv_k_t_radical_in_field(Poly(1, t), Poly(2*x**2, t), DE) == \
         (2, 1/t)
+
+
+def test_parametric_log_deriv_structure():
+    # The heuristic fails on all of these (z in k at a primitive level);
+    # the structure-theorem method (equation (7.44)) decides them.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'exts': ['log'], 'extargs': [x]})
+    # f == 1/x == Dx/x, w == 1: 1*f == Dx/x + 0*w
+    assert parametric_log_deriv_structure(Poly(1, t), Poly(x, t),
+        Poly(1, t), Poly(1, t), DE) == (1, 0, x)
+    # f == 1 + 1/(2*x), w == 1: 2*f == Dx/x + 2*w  (through the wrapper,
+    # exercising the heuristic -> structure fallback)
+    assert parametric_log_deriv(Poly(2*x + 1, t), Poly(2*x, t),
+        Poly(1, t), Poly(1, t), DE) == (2, 2, x)
+    # f == 1/(x + 1), w == 1 has the solution (1, 0, x + 1), but x + 1 is
+    # not in the tower, so the structure method is inconclusive (None) and
+    # the wrapper must raise rather than claim no solution exists.
+    assert parametric_log_deriv_structure(Poly(1, t), Poly(x + 1, t),
+        Poly(1, t), Poly(1, t), DE) is None
+    raises(NotImplementedError, lambda: parametric_log_deriv(
+        Poly(1, t), Poly(x + 1, t), Poly(1, t), Poly(1, t), DE))
 
 
 def test_is_deriv_in_field():
