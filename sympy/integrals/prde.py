@@ -828,15 +828,17 @@ def _prde_normalized_solve(A, B, G, gamma, DE, n=None):
     # y = p/gamma of the initial equation with ci = Sum(dj*aji).
 
     if n is None:
-        try:
-            # We try n=5. At least for prde_spde, it will always
-            # terminate no matter what n is.
-            n = bound_degree(a, b, r, DE, parametric=True)
-        except NotImplementedError:
-            # A temporary bound is set. Eventually, it will be removed.
-            # the currently added test case takes large time
-            # even with n=5, and much longer with large n's.
-            n = 5
+        # bound_degree() raises NotImplementedError when it cannot decide
+        # one of its structure-theorem queries, and we let that propagate.
+        # Guessing a finite bound here instead (n = 5 from 2017 to 2026)
+        # is unsound: solutions of degree above the guess are silently
+        # lost, so a caller like is_deriv_in_field() can be tricked into
+        # a false proof that an elementary integral is nonelementary.
+        # Falling back to n == oo (as rischDE() does) is not an option
+        # either, since the parametric no-cancellation and cancellation
+        # algorithms iterate over range(n, ...), which requires a finite
+        # bound.
+        n = bound_degree(a, b, r, DE, parametric=True)
 
     h, B = param_poly_rischDE(a, b, r, n, DE)
 

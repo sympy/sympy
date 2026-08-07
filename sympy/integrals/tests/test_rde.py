@@ -166,6 +166,22 @@ def test_bound_degree():
     assert bound_degree(Poly(t, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t), DE) == 0
 
 
+def test_bound_degree_undecidable():
+    # Exp case with deg(a) == deg(b) and alpha == -lc(b)/lc(a) == 1/(x + 1):
+    # deciding whether alpha == m*Dt/t + Dz/z requires log(x + 1), which is
+    # not in the tower, so parametric_log_deriv() cannot decide and
+    # bound_degree() must raise rather than return an unsound bound.
+    # param_rischDE() propagates this (it used to guess n = 5 instead,
+    # which could truncate the parametric solution basis and turn into a
+    # false proof of nonelementarity downstream in is_deriv_in_field()).
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0),
+        Poly(t1, t1)], 'exts': ['log', 'exp'], 'extargs': [x, x]})
+    raises(NotImplementedError, lambda: bound_degree(Poly(t1, t1),
+        Poly(-t1/(x + 1), t1, field=True), Poly(1, t1), DE))
+    raises(NotImplementedError, lambda: bound_degree(Poly(t1, t1),
+        Poly(-t1/(x + 1), t1, field=True), [Poly(1, t1)], DE, parametric=True))
+
+
 def test_spde():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     raises(NonElementaryIntegralException, lambda: spde(Poly(t, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t), 0, DE))
