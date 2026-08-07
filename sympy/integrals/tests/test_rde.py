@@ -208,6 +208,17 @@ def test_spde():
         (Poly(0, x, domain='ZZ'), Poly(0, x), 0, Poly(0, x), Poly(3*x**3 - 2*x**2, x, domain='QQ'))
     assert spde(Poly(x**2 - x, x), Poly(x**2 - 5*x + 3, x), Poly(x**7 - x**6 - 2*x**4 + 3*x**3 - x**2, x), 5, DE) == \
         (Poly(1, x, domain='QQ'), Poly(x + 1, x, domain='QQ'), 1, Poly(x**4 - x**3, x), Poly(x**3 - x**2, x, domain='QQ'))
+    # n == oo (from rischDE() when bound_degree() cannot decide) must not
+    # loop forever when deg(a) > 0: a == t, b == 1, c == x has no
+    # solution and gcd(a, b) == 1 stays trivial, so no other exit is
+    # ever taken.  This used to spin indefinitely.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    raises(NotImplementedError, lambda: spde(Poly(t, t), Poly(1, t),
+        Poly(x, t, domain='ZZ[x]'), oo, DE))
+    # ...but with deg(a) == 0 it returns immediately, so n == oo is fine.
+    assert spde(Poly(2, t), Poly(t, t), Poly(t, t), oo, DE) == \
+        (Poly(t/2, t, domain='QQ'), Poly(t/2, t, domain='QQ'), oo,
+         Poly(1, t, domain='ZZ'), Poly(0, t, domain='ZZ'))
 
 def test_solve_poly_rde_no_cancel():
     # deg(b) large

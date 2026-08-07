@@ -492,6 +492,16 @@ def spde(a, b, c, n, DE):
             c = c.to_field().quo(a)
             return (b, c, n, alpha, beta)
 
+        if n is oo:
+            # Each pass through the reduction below decreases n by
+            # deg(a) > 0 and "no solution" is detected by n < 0, so with
+            # no degree bound the loop can run forever when there is no
+            # solution (e.g. a == t, b == 1, c == x over t == exp(x):
+            # gcd(a, b) == 1 stays trivial and no other exit is ever
+            # taken).  Raise rather than loop.
+            raise NotImplementedError("spde() with an infinite degree bound "
+                "terminates only when deg(a) becomes 0.")
+
         r, z = gcdex_diophantine(b, a, c)
         b += derivation(a, DE)
         c = z - derivation(r, DE)
@@ -911,18 +921,15 @@ def rischDE(fa, fd, ga, gd, DE):
     a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
     A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
     try:
-        # Until this is fully implemented, use oo.  Note that this will almost
-        # certainly cause non-termination in spde() (unless A == 1), and
-        # *might* lead to non-termination in the next step for a nonelementary
-        # integral (I don't know for certain yet).  Fortunately, spde() is
-        # currently written recursively, so this will just give
-        # RuntimeError: maximum recursion depth exceeded.
         n = bound_degree(A, B, C, DE)
     except NotImplementedError:
-        # Useful for debugging:
-        # import warnings
-        # warnings.warn("rischDE: Proceeding with n = oo; may cause "
-        #     "non-termination.")
+        # bound_degree() could not decide one of its structure-theorem
+        # queries.  Proceeding with n == oo is sound: no bound is needed
+        # to accept a solution, and the no-cancellation and cancellation
+        # algorithms all terminate by descending on deg(c).  The only
+        # step that needs a finite bound to terminate is the deg(a) > 0
+        # reduction in spde(), which raises NotImplementedError instead
+        # of looping forever when it would need one.
         n = oo
 
     B, C, m, alpha, beta = spde(A, B, C, n, DE)
