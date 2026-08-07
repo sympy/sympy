@@ -234,7 +234,11 @@ def test_spde():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     raises(NotImplementedError, lambda: spde(Poly(t, t), Poly(1, t),
         Poly(x, t, domain='ZZ[x]'), oo, DE))
-    # ...but with deg(a) == 0 it returns immediately, so n == oo is fine.
+    # ...while a solvable positive-degree case with n == oo still reduces
+    # and returns (q == 1 here; c becomes zero after one pass)...
+    assert spde(Poly(t, t), Poly(1, t), Poly(1, t), oo, DE) == \
+        (Poly(0, t), Poly(0, t), 0, Poly(0, t), Poly(1, t, domain='QQ'))
+    # ...and with deg(a) == 0 it returns immediately, so n == oo is fine.
     assert spde(Poly(2, t), Poly(t, t), Poly(t, t), oo, DE) == \
         (Poly(t/2, t, domain='QQ'), Poly(t/2, t, domain='QQ'), oo,
          Poly(1, t, domain='ZZ'), Poly(0, t, domain='ZZ'))

@@ -473,6 +473,11 @@ def spde(a, b, c, n, DE):
     alpha = Poly(1, DE.t)
     beta = Poly(0, DE.t)
 
+    # Generous pass allowance for n == oo (see below); any solution of
+    # degree d is found within about d/deg(a) passes, so this only
+    # defers solutions of very high degree to an honest error.
+    oo_passes = 4*(a.degree(DE.t) + b.degree(DE.t) + c.degree(DE.t) + 4)
+
     while True:
         if c.is_zero:
             return (zero, zero, 0, zero, beta)  # -1 is more to the point
@@ -497,10 +502,16 @@ def spde(a, b, c, n, DE):
             # deg(a) > 0 and "no solution" is detected by n < 0, so with
             # no degree bound the loop can run forever when there is no
             # solution (e.g. a == t, b == 1, c == x over t == exp(x):
-            # gcd(a, b) == 1 stays trivial and no other exit is ever
-            # taken).  Raise rather than loop.
-            raise NotImplementedError("spde() with an infinite degree bound "
-                "terminates only when deg(a) becomes 0.")
+            # gcd(a, b) == 1 stays trivial, c cycles through nonzero
+            # constants, and no other exit is ever taken).  Allow a
+            # generous number of passes (solvable cases terminate
+            # quickly, with c becoming zero), then give up with an
+            # honest error -- NotImplementedError, not a nonexistence
+            # claim.
+            oo_passes -= 1
+            if oo_passes < 0:
+                raise NotImplementedError("spde() ran out of passes with "
+                    "an infinite degree bound; cannot decide solvability.")
 
         r, z = gcdex_diophantine(b, a, c)
         b += derivation(a, DE)
