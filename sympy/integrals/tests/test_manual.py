@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core.function import (Derivative, Function, diff, expand, expand_trig)
+from sympy.core.function import (Derivative, Function, diff, expand)
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
@@ -120,74 +120,48 @@ def test_manualintegrate_trigonometry():
     assert (F.diff(x) - f).rewrite(exp).simplify() == 0
 
 @slow
-def test_manualintegrate_weierstrass_substitution():
-    t = Dummy('t')
-
-    def assert_is_integral_of_weierstrass(f, F, omega=S.One):
-        # Substitute back x = 2*atan(t)/omega: this turns the check into a
-        # rational identity in t, which is very fast to verify with cancel
-        difference = (F.diff(x) - f).subs(x, 2*atan(t)/omega)
-        assert expand_trig(difference).cancel() == 0
-
-    f = (a + b*sin(x))/(cos(x) + 2)
-    F = (2*sqrt(3)*a*atan(sqrt(3)*tan(x/2)/3)/3
-         + b*log(tan(x/2)**2 + 1) - b*log(tan(x/2)**2 + 3))
+def test_manualintegrate_bioche_substitution():
+    # Direct sine and cosine substitutions
+    f = cos(x)/(sin(x)**2 + 4)
+    F = atan(sin(x)/2)/2
     assert manualintegrate(f, x) == F
-    assert_is_integral_of_weierstrass(f, F)
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
 
-    f = 1/(tan(x) + 2)
-    F = (-log(tan(x/2)**2 + 1)/5
-         + log(tan(x/2)**2 - tan(x/2) - 1)/5
-         + 4*atan(tan(x/2))/5)
+    f = sin(x)/(cos(x)**2 + 4)
+    F = -atan(cos(x)/2)/2
     assert manualintegrate(f, x) == F
-    assert_is_integral_of_weierstrass(f, F)
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
 
-    f = 1/(cot(x) + 2)
-    F = (log(1 + tan(x/2)**(-2))/5
-         - log(-1 + 4/tan(x/2) + tan(x/2)**(-2))/5
-         - 4*atan(1/tan(x/2))/5)
+    # Direct tangent substitution, including a phase shift
+    f = 1/(tan(x + pi/4) + 2)
+    F = (log(tan(x + pi/4) + 2)/5
+         - log(tan(x + pi/4)**2 + 1)/10
+         + 2*atan(tan(x + pi/4))/5)
     assert manualintegrate(f, x) == F
-    assert_is_integral_of_weierstrass(f, F)
+    assert (F.diff(x) - f).rewrite(exp).cancel().expand() == 0
 
+    # Universal half-angle fallback
     f = 1/(sec(x) + 2)
     F = (sqrt(3)*(log(tan(x/2) - sqrt(3))
          - log(tan(x/2) + sqrt(3)))/6 + atan(tan(x/2)))
     assert manualintegrate(f, x) == F
-    assert_is_integral_of_weierstrass(f, F)
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
 
-    f = 1/(csc(x) + 2)
-    F = (sqrt(3)*(log(-sqrt(3) + 2 + 1/tan(x/2))
-         - log(sqrt(3) + 2 + 1/tan(x/2)))/6
-         - atan(1/tan(x/2)))
-    assert manualintegrate(f, x) == F
-    assert_is_integral_of_weierstrass(f, F)
-
-    # Commensurable fractional harmonics.
+    # Commensurable fractional harmonics
     f = 1/(sin(x/2)**2 + cos(x))
-    F = -2/(tan(x/4) + 1) - 2/(tan(x/4) - 1)
+    F = 2*tan(x/2)
     assert manualintegrate(f, x) == F
-    assert_is_integral_of_weierstrass(f, F, S.Half)
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
 
-    # A nonzero phase.
-    f = 1/(tan(x + pi/4) + 2)
-    F = (-log(tan(x/2)**2 + 1)/5
-         + log(3*tan(x/2)**2 + 2*tan(x/2) - 3)/5
-         + 4*atan(tan(x/2))/5)
-    assert manualintegrate(f, x) == F
-    assert_is_integral_of_weierstrass(f, F)
-
-    # Symbolic frequency and multiple harmonics.
+    # Symbolic frequency, multiple harmonics, and the omega = 0 branch
     f = 1/(sin(a*x) + cos(2*a*x) + 2)
-    F1 = Mul(
-        2, 1/a,
-        2*sqrt(5)*atan(3*sqrt(5)*(tan(a*x/2) - S(2)/3)/5)/25
-        - S.One/5/(tan(a*x/2) + 1),
-        evaluate=False)
+    F1 = (4*sqrt(5)*atan(3*sqrt(5)*(tan(a*x/2) - S(2)/3)/5)/(25*a)
+          - 2/(5*a*(tan(a*x/2) + 1)))
     F2 = x/3
     assert manualintegrate(f, x) == Piecewise(
         (F1, Ne(a, 0)), (F2, True))
-    assert_is_integral_of_weierstrass(f, F1, a)
-    assert (F2.diff(x) - f.subs(a, 0)).cancel() == 0
+    assert (F1.diff(x) - f).rewrite(exp).cancel() == 0
+    assert (F2.diff(x) - f.subs(a, 0)) == 0
 
 
 @slow

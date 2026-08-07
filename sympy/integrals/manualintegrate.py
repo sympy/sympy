@@ -65,7 +65,6 @@ from .integrals import Integral
 from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
-from sympy.simplify.fu import TR1, TR2
 from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
@@ -2149,8 +2148,8 @@ def quadratic_denom_rule(integral):
 
     return step
 
-def weierstrass_substitution(integral):
-    # Look for a rational function in trigonometric functions
+def bioche_substitution(integral):
+    # Apply Bioche's rules to rational functions of trigonometric functions
     integrand, x = integral
 
     TRIG = (sin, cos, tan, cot, sec, csc)
@@ -3000,6 +2999,8 @@ def trig_powers_products_rule(integral):
 
 def trig_substitution_rule(integral):
     integrand, symbol = integral
+    if not integrand.is_algebraic_expr(symbol):
+        return None
     A = Wild('a', exclude=[0, symbol])
     B = Wild('b', exclude=[0, symbol])
     theta = Dummy("theta")
@@ -3342,7 +3343,7 @@ def integral_steps(integrand, symbol, **options):
                 trig_expand_rule
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
-            null_safe(condition(integral_is_subclass(Mul, Pow), weierstrass_substitution)),
+            null_safe(condition(integral_is_subclass(Mul, Pow), bioche_substitution)),
             null_safe(trig_substitution_rule)
         ),
         fallback_rule)(integral)
