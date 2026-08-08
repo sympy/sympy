@@ -29,7 +29,6 @@ from sympy.polys.sparsetools import (
     smp_is_ground,
     smp_LC,
     smp_is_one,
-    smp_leading_expv,
     smp_mul,
     smp_mul_ground,
     smp_primitive,
@@ -155,9 +154,9 @@ def smp_swap(f, i, n, domain):
     Make the variable `x_i` the leading one in a multivariate polynomial `f`.
     """
     fswap = {}
-    for monom, coeff in f.items():
-        monomswap = (monom[i],) + monom[:i] + monom[i+1:]
-        fswap[monomswap] = coeff
+    for mon, coeff in f.items():
+        monswap = (mon[i],) + mon[:i] + mon[i+1:]
+        fswap[monswap] = coeff
     return fswap
 
 
@@ -688,7 +687,7 @@ def sparse_gcd(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int
         B_ = smp_subs_drop(B, {n - 1: t}, n, ZZ)
         _smp_itrunc_ground(B_, p, n - 1, ZZ)
         G = sparse_gcd(A_, B_, p, n-1)
-        if G == None:
+        if G is None:
             M = []
             h = []
             skippable = set()
@@ -723,7 +722,7 @@ def sparse_gcd(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int
             _smp_itrunc_ground(A_, p, n-1, ZZ)
             _smp_itrunc_ground(B_, p, n-1, ZZ)
             G_ = zippel_interp(A_, B_, G_s, p, monic, pseudomonic, n-1)
-            if G_ == None:
+            if G_ is None:
                 skeleton_chances += 1
                 if skeleton_chances < 3:
                     continue
@@ -832,7 +831,7 @@ def zippel_interp(A: smp[MPZ], B: smp[MPZ],
     """
     deg_a = smp_degree(A, 0, n, ZZ)
     lc_A = smp_coeff_wrt(A, 0, deg_a, n, ZZ)
-    lengths = list(len(el) for el in G.values())
+    lengths = [len(el) for el in G.values()]
     nt = lengths[-1]
     # base case: for one variable its sufficient to take the gcd's coefficients
     # the function runs also without this base case, but it allows for an early exit
@@ -890,8 +889,8 @@ def zippel_interp(A: smp[MPZ], B: smp[MPZ],
                 break
 
         deg_b = smp_degree(B, 0, n, ZZ)
-        A_flat = list({} for _ in range(deg_a +1))
-        B_flat = list({} for _ in range(deg_b +1))
+        A_flat = [{} for _ in range(deg_a +1)]
+        B_flat = [{} for _ in range(deg_b +1)]
 
         for mon, coeff in A.items():
             j = 1
