@@ -1252,21 +1252,23 @@ def recognize_derivative(a, d, DE, z=None):
         # (nu_p(Dv) == nu_p(v) - 1 <= -2 for any pole of Dv at a normal p),
         # so f is not the derivative of a rational function.
         return False
-    if Np:
-        # The Laurent series machinery below is only justified for factors
-        # with constant roots (Theorem 2.7.1 is stated for K[x] with the
-        # roots algebraic over the constant field K); deciding whether the
-        # residues vanish at nonconstant poles of order > 1 is not yet
-        # implemented.
-        raise NotImplementedError("recognize_derivative() cannot decide "
-            "residue vanishing at nonconstant poles of order greater "
-            "than 1.")
-
     for s, n in Sp:
         delta_a, delta_d, H = laurent_series(r, d, s, n, DE)
         if not H[-1].rem(s.as_poly(DE.t)).is_zero:  # Di does not divide H[-1]
+            # A conclusive False from a special factor stands regardless
+            # of any undecidable normal factors, so check these first.
             flag = False
             break
+    else:
+        if Np:
+            # The Laurent series machinery above is only justified for
+            # factors with constant roots (Theorem 2.7.1 is stated for
+            # K[x] with the roots algebraic over the constant field K);
+            # deciding whether the residues vanish at nonconstant poles
+            # of order > 1 is not yet implemented.
+            raise NotImplementedError("recognize_derivative() cannot decide "
+                "residue vanishing at nonconstant poles of order greater "
+                "than 1.")
     return flag
 
 

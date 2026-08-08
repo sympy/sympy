@@ -644,6 +644,12 @@ def test_DifferentialExtension_misc():
     # instead of the informative trigonometric one
     raises(NotImplementedError, lambda: DifferentialExtension(cot(x), x))
     raises(NotImplementedError, lambda: DifferentialExtension(tanh(x), x))
+    # ...and the message must be the informative one (a generic
+    # NotImplementedError was already raised before the guard existed)
+    try:
+        DifferentialExtension(cot(x), x)
+    except NotImplementedError as e:
+        assert "Trigonometric and hyperbolic" in str(e)
     assert DifferentialExtension(10**x, x)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(log(10)*t0, t0)], [x, t0],
         [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], [None, 'exp'],
@@ -806,6 +812,7 @@ def test_bound_degree_limited_integrate():
               exp(x/log(x)), exp(1/log(x))/(x*log(x)), exp(1/(x*log(x)))]:
         f = cancel(diff(F, x))
         ans = risch_integrate(f, x)
+        assert not ans.has(NonElementaryIntegral)
         assert cancel(diff(ans, x) - f) == 0
 
 

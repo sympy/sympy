@@ -6,8 +6,9 @@ from sympy.polys.polytools import Poly, cancel
 from sympy.integrals.risch import (DifferentialExtension, derivation,
     NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
-    normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
-    no_cancel_equal, cancel_primitive, cancel_exp, rischDE)
+    normal_denom, special_denom, _special_denom_cancel_bound, bound_degree,
+    spde, solve_poly_rde, no_cancel_equal, cancel_primitive, cancel_exp,
+    rischDE)
 
 from sympy.testing.pytest import raises
 from sympy.abc import x, t, z, n
@@ -130,6 +131,14 @@ def test_special_denom():
     # Verify the contract explicitly (r == q*h == 1, so Dr == 0)
     assert C == B  # A*D(1) + B*1 == C
 
+    # The possible-cancellation sharpening itself: a == 1, b == 2*t over
+    # Dt == t**2 + 1 admits the solution q == 1/(t**2 + 1) of
+    # Dq + 2*t*q == 0, so the bound must drop from 0 to -1 (the earlier
+    # hypertangent cases enter the helper with n already at -1, which
+    # cannot detect a broken adjustment).
+    assert _special_denom_cancel_bound(Poly(1, t), Poly(2*t, t),
+        Poly(1, t), 0, DE, 'tan') == -1
+
 def test_bound_degree_fail():
     # Primitive
     DE = DifferentialExtension(extension={'D': [Poly(1, x),
@@ -221,6 +230,16 @@ def test_solve_poly_rde_cancel():
     # If the DecrementLevel context manager is working correctly, this shouldn't
     # cause any problems with the further tests.
     raises(NonElementaryIntegralException, lambda: cancel_primitive(Poly(1, t), Poly(t, t), oo, DE))
+
+    # b == 1/(2*x) has radical index 2 (2*b == Dx/x, so
+    # is_log_deriv_k_t_radical_in_field() returns (2, x)); the polynomial
+    # loop must keep the caller's degree bound n == 3 rather than
+    # clobbering it with the radical index (which would wrongly raise
+    # NonElementaryIntegralException for the solution q == t**3).
+    b = Poly(1/(2*x), t, field=True)
+    q0 = Poly(t**3, t)
+    c = (derivation(q0, DE) + b*q0).to_field()
+    assert cancel_primitive(b, c, 3, DE).as_expr() == t**3
 
     assert cancel_primitive(Poly(1, t), Poly(t + 1/x, t), 2, DE) == \
         Poly(t, t)

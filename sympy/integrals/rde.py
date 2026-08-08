@@ -292,7 +292,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
             "special_denom()." % case)
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
-            "'base'}, not %s." % case)
+            "'base', 'other_linear', 'other_nonlinear'}, not %s." % case)
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
     nc = order_at(ca, p, DE.t) - order_at(cd, p, DE.t)
@@ -444,7 +444,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
             "in bound_degree().")
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
-            "'other_nonlinear', 'base'}, not %s." % case)
+            "'base', 'other_linear', 'other_nonlinear'}, not %s." % case)
 
     return n
 

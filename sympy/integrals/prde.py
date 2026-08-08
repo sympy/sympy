@@ -138,7 +138,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
             "prde_special_denom()." % case)
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
-            "'base'}, not %s." % case)
+            "'base', 'other_linear', 'other_nonlinear'}, not %s." % case)
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
     nc = min(order_at(Ga, p, DE.t) - order_at(Gd, p, DE.t) for Ga, Gd in G)
