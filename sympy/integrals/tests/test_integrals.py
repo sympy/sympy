@@ -2262,3 +2262,8 @@ def test_issue_29909():
 
     assert integrate(f, x) == F
     assert F.diff(x).equals(f)
+
+
+def test_issue_26523():
+    Int = Integral((1 - t**z) / (1 - t), (t, 0, 1))
+    assert Int.doit() == polygamma(0, z + 1) + EulerGamma

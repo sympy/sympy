@@ -96,6 +96,9 @@ def heuristics(e, z, z0, dir):
                         return heuristics(m, z, z0, dir)
                     return
                 return
+            elif (not (l.has(S.Infinity) or l.has(S.NegativeInfinity))
+                  and l.is_finite is False):
+                r.append(S.ComplexInfinity)
             if isinstance(l, Limit) or l is S.NaN:
                 return
             r.append(l)
@@ -353,6 +356,8 @@ class Limit(Expr):
                 return coeff
             if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
                 return self
+            from sympy.simplify.gammasimp import gammasimp
+            coeff = gammasimp(coeff)
             if not coeff.has(newz):
                 if ex.is_positive:
                     return S.Zero

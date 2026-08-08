@@ -4,7 +4,7 @@ from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import ArgumentIndexError, expand_mul, DefinedFunction
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -215,6 +215,72 @@ class lerchphi(DefinedFunction):
 
     def _eval_rewrite_as_polylog(self, z, s, a, **kwargs):
         return self._eval_rewrite_helper(polylog)
+
+    def _eval_is_finite(self):
+        z, s, a = self.args
+        if z.is_infinite or s.is_infinite or a.is_infinite:
+            # TODO: Write a valid implementation for infinite numbers.
+            return None
+        if z.is_zero:
+            # a^(-s)
+            # I follow the sympy convention of 0^0 = 1
+            return fuzzy_or([re(s).is_nonpositive, a.is_nonzero])
+        # The following parts assume analytic continuation
+        z_is_one = (z-1).is_zero
+        if z_is_one:
+            # zeta(s, a)
+            return (s-1).is_nonzero
+        if s.is_zero:
+            # 1/(1-z)
+            # One could be tempted to exclude z=1,
+            # but lerchphi(1,0,a)=zeta(0,a) is finite.
+            return True
+        if a.is_integer and a.is_nonpositive:
+            # The sum contains 0^(-s)
+            if re(s).is_positive:
+                # These are would be divergent results, but the actual result
+                # depends on z
+                if z_is_one is None and (s-1).is_zero is not True:
+                    return None
+                if z.is_zero is None and a.is_zero is not True:
+                    return None
+            return re(s).is_nonpositive
+        return None
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        '''
+        Use the relation lerchphi(1, s, a) = zeta(s, a) for z = 1 and the
+        expansions given in [1]
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Lerch_zeta_function#Series_representations
+
+        '''
+        from sympy.functions.special.gamma_functions import digamma, gamma
+        z, s, a = self.args
+        z0, s0, a0 = (arg.subs(x, 0).cancel() for arg in self.args)
+        lt = S.Zero
+        if (z - 1).is_zero:
+            # Let zeta function handle this case
+            lt = zeta(s, a)
+        elif (z0 - 1).is_zero:
+            if (s - 1).is_zero:
+                if not a.has(x):
+                    # This could be generalised for arbitrary a if we check
+                    # that this term doesn't vanish.
+                    lt = -log(-log(z)) - S.EulerGamma - digamma(a)
+            elif s.is_integer and s.is_positive or re(s0 - 1).is_positive:
+                return zeta(s0, a0)
+            elif re(s0 - 1).is_negative:
+                lt = gamma(1-s)*(-log(z))**(s-1)
+        elif a0.is_integer and a0.is_nonpositive:
+            if s.is_real and s.is_positive:
+                lt = z**(-a0)/(a-a0)**s
+        if lt.is_zero:
+            return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
+        return lt._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
@@ -578,6 +644,13 @@ class zeta(DefinedFunction):
 
         if e.is_negative and not s.is_positive:
             raise NotImplementedError
+
+        s0, a0 = (arg.subs(x, 0).cancel() for arg in self.args)
+        if (s0 - 1).is_nonzero:
+            if (lt := zeta(s0, a0)).is_nonzero:
+                return lt
+        elif s.has(x) and (s0 - 1).is_zero:
+            return (1 / (s - 1))._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
         return super(zeta, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
