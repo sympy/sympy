@@ -52,6 +52,11 @@ def test_multiplication():
 
 def test_exponentiation():
     w = omega
+    assert ord0**ord0 == Ordinal(OmegaPower(0, 1))
+    assert 1**w == Ordinal(OmegaPower(0, 1))
+    assert 2**(w**w+w**2+w*3+4) == w**w**w * w**w * w**3 * 16
+    assert (w**w*2+1)**w == w**(w**2)
+    assert (w**2*3+2)**3==(w**2*3+2)*(w**2*3+2)*(w**2*3+2)
     assert w**2 == w*w
     assert w**3 == w*w*w
     assert w**(w + 1) == Ordinal(OmegaPower(omega + 1, 1))
