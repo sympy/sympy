@@ -3615,3 +3615,11 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+
+def test_substitution_inconsistent():
+    from sympy.solvers.solveset import substitution
+    from sympy import symbols, EmptySet
+    x, y = symbols('x y')
+    # System: x + y - 1 = 0, x + y - 2 = 0
+    assert substitution([x + y - 1, x + y - 2], [x, y]) == EmptySet
