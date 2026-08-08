@@ -553,27 +553,32 @@ def _(expr, assumptions):
 @ImaginaryPredicate.register(Add) # type:ignore
 def _(expr, assumptions):
     """
-    * Imaginary + Imaginary -> Imaginary
+    * Imaginary + Imaginary -> Imaginary if nonzero
     * Imaginary + Complex   -> ?
-    * Imaginary + Real      -> !Imaginary
+    * Imaginary + Real      -> Imaginary if Real nonzero and Imaginary nonzero
     """
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
 
-    reals = 0
+    reals = []
+    imaginary = []
     for arg in expr.args:
         if _ask_recursive(Q.imaginary(arg), assumptions):
-            pass
+            imaginary.append(arg)
         elif _ask_recursive(Q.real(arg), assumptions):
-            reals += 1
+            reals.append(arg)
         else:
-            break
-    else:
-        if reals == 0:
-            return True
-        if reals in (1, len(expr.args)):
-            # two reals could sum 0 thus giving an imaginary
-            return False
+            return None
+
+    if not imaginary:
+        return False
+    real_zero = _ask_recursive(Q.zero(Add(*reals)), assumptions)
+    imag_zero = _ask_recursive(Q.zero(Add(*imaginary)), assumptions)
+    if real_zero is False or imag_zero is True:
+        return False
+    if real_zero is True and imag_zero is False:
+        return True
+    return None
 
 @ImaginaryPredicate.register(Mul) # type:ignore
 def _(expr, assumptions):
