@@ -759,7 +759,15 @@ def bc_matadd(expr):
         return block
 
 def bc_block_plus_ident(expr):
-    idents = [arg for arg in expr.args if arg.is_Identity]
+    idents = []
+    scalars = []
+    for arg in expr.args:
+        coeff, mat = arg.as_coeff_mmul()
+        mat = unpack(mat)
+        if mat.is_Identity:
+            idents.append(arg)
+            scalars.append(coeff)
+
     if not idents:
         return expr
 
@@ -768,8 +776,8 @@ def bc_block_plus_ident(expr):
                and blocks[0].is_structurally_symmetric):
         block_id = BlockDiagMatrix(*[Identity(k)
                                         for k in blocks[0].rowblocksizes])
-        rest = [arg for arg in expr.args if not arg.is_Identity and not isinstance(arg, BlockMatrix)]
-        return MatAdd(block_id * len(idents), *blocks, *rest).doit()
+        rest = [arg for arg in expr.args if arg not in idents and not isinstance(arg, BlockMatrix)]
+        return MatAdd(block_id * Add(*scalars), *blocks, *rest).doit()
 
     return expr
 
