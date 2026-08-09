@@ -968,7 +968,7 @@ def test_DifferentialExtension_printing():
         "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]), ('fa', Poly(t1 + t0**2, t1, domain='ZZ[t0]')), "
         "('fd', Poly(1, t1, domain='ZZ')), ('Tfuncs', [Lambda(i, exp(i**2)), Lambda(i, log(t0 + 1))]), "
         "('backsubs', []), ('exts', ['exp', 'log']), ('extargs', [x**2, t0 + 1]), "
-        "('cases', ['base', 'exp', 'primitive']), ('case', 'primitive'), ('t', t1), "
+        "('cases', ['base', 'exp', 'primitive']), ('case', 'primitive'), ('transcendental', True), ('t', t1), "
         "('d', Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')), ('newf', t0**2 + t1), ('level', -1), "
         "('dummy', False)]))")
 

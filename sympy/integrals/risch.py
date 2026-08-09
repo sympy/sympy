@@ -212,6 +212,12 @@ class DifferentialExtension:
                                  "the extension flag to DifferentialExtension.")
             for attr in extension:
                 setattr(self, attr, extension[attr])
+            if 'transcendental' not in extension:
+                # A manual extension may declare transcendental=False to
+                # mark an algebraic tower (e.g. t representing x**(S(1)/2)
+                # as exp(log(x)/2)); nonelementary conclusions are then
+                # invalid and are degraded to unevaluated Integrals.
+                self.transcendental = True
 
             self._auto_attrs()
 
@@ -411,7 +417,13 @@ class DifferentialExtension:
                     # rather prove that it has no elementary integral)
                     # without first manually rewriting it as exp(x*log(x))
                     self.newf = self.newf.xreplace({old: new})
-                    self.backsubs += [(new, old)]
+                    if new != old:
+                        # new == old happens when exp auto-simplifies the
+                        # rewritten form straight back (e.g.
+                        # exp(log(x)/2) -> sqrt(x) on the first pass,
+                        # before log(x) is a tower symbol); an identity
+                        # pair would just pollute backsubs.
+                        self.backsubs += [(new, old)]
                     log_new_extension = self._log_part([log(i.base)])
                     exps = update_sets(exps, self.newf.atoms(exp), lambda i:
                                        i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
@@ -435,7 +447,8 @@ class DifferentialExtension:
                 # i in numpows
                 newterm = new
                 # TODO: Just put it in self.Tfuncs
-            self.backsubs.append((new, old))
+            if new != old:
+                self.backsubs.append((new, old))
             self.newf = self.newf.xreplace({old: newterm})
             exps.append(newterm)
 
