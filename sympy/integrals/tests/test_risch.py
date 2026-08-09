@@ -13,6 +13,7 @@ from sympy.functions.elementary.trigonometric import (atan, cot, sin, tan)
 from sympy.polys.polytools import (Poly, cancel, factor)
 from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import RootSum
+from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -20,7 +21,8 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     integrate_hyperexponential, integrate_hypertangent_polynomial,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
     risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
-    recognize_derivative, laurent_series)
+    recognize_derivative, laurent_series, _nontrans_is_kernel,
+    _nontrans_accept)
 from sympy.testing.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
@@ -755,6 +757,50 @@ def test_DecrementLevel():
     assert DE.t == t1
     assert DE.d == Poly(t0/(t0 + 1), t1)
     assert DE.case == 'primitive'
+
+
+def test_nontranscendental_tower():
+    # The tower [x, t0 == log(x), t1 == exp(t0/2)], with t1 representing
+    # sqrt(x): a non-transcendental tower, declared as such.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0),
+        Poly(t1/(2*x), t1)], 'exts': ['log', 'exp'],
+        'extargs': [x, t0/2], 'transcendental': False})
+    # The formal field has genuinely new constants...
+    assert derivation(t1**2/x, DE, basic=True) == 0
+    # ...whose kernel counterparts (elements evaluating to zero) are
+    # recognized from the power relation t1**2 == x:
+    assert _nontrans_is_kernel(t1**2 - x, DE)
+    assert _nontrans_is_kernel(x*(t1**2/x - 1), DE)
+    assert not _nontrans_is_kernel(t1**2 + x, DE)
+    assert not _nontrans_is_kernel(t1 - x, DE)
+
+    # Acceptance filter for f == t1 (i.e. sqrt(x)):
+    fa, fd = Poly(t1, t1), Poly(1, t1)
+    # the genuine antiderivative 2/3*x*t1 passes...
+    assert _nontrans_accept(Rational(2, 3)*x*t1, [], S.Zero, fa, fd, DE, None)
+    # ...a wrong candidate fails the formal-identity check...
+    assert not _nontrans_accept(x*t1, [], S.Zero, fa, fd, DE, None)
+    # ...and a kernel denominator fails the evaluation check even though
+    # the formal identity holds (x/(t1**2 - x) is a formal constant, so
+    # adding it does not disturb the derivative)
+    assert not _nontrans_accept(Rational(2, 3)*x*t1 + x/(t1**2 - x), [],
+        S.Zero, fa, fd, DE, None)
+
+
+def test_risch_integrate_algebraic():
+    # Proof-of-concept algebraic integration via exp-log towers:
+    # sqrt(y) == exp(log(y)/2).  Solved cases are verified by
+    # _nontrans_accept(), and negative conclusions are degraded to
+    # plain Integrals (nonelementary proofs assume transcendence).
+    y = Symbol('y', positive=True)
+    assert risch_integrate(sqrt(y), y) == 2*y**Rational(3, 2)/3
+    assert risch_integrate(1/sqrt(y), y) == 2*sqrt(y)
+    assert risch_integrate(y*sqrt(y), y) == 2*y**Rational(5, 2)/5
+    # unsolved algebraic integrals must come back as plain Integrals,
+    # never as NonElementaryIntegral
+    r = risch_integrate(exp(sqrt(y)), y)
+    assert r == Integral(exp(sqrt(y)), y)
+    assert not r.has(NonElementaryIntegral)
 
 
 def test_risch_integrate():

@@ -46,7 +46,7 @@ from .integrals import integrate, Integral
 from .heurisch import _symbols
 from .rationaltools import log_to_real
 from sympy.polys.polyerrors import PolynomialError
-from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
+from sympy.polys.polytools import (real_roots, cancel, Poly, gcd, rem,
     reduced)
 from sympy.polys.rootoftools import RootSum
 from sympy.utilities.iterables import numbered_symbols
@@ -1549,6 +1549,107 @@ def residue_reduce_derivation(H, DE, z):
         DE).as_expr().subs(z, i)/a[1].as_expr().subs(z, i))) for a in H))
 
 
+def _nontrans_power_relations(DE):
+    """
+    The known algebraic relations of a non-transcendental tower.
+
+    Returns (t, rel) pairs, ordered by tower level, where rel == 0 in
+    the actual (evaluated) tower and rel is polynomial in t with its
+    leading coefficient free of t and of every higher generator.  Only
+    generators of the form t == exp(c*tj) with c == p/q a non-integer
+    Rational and tj == log(u) are recognized; such a t represents
+    u**(p/q) and satisfies t**q == u**p.
+
+    TODO: relations among *several* radicals are not captured -- branch
+    choices like t1*t2 == 1 for t1 == exp(t0/2), t2 == exp(-t0/2), or
+    radicals with dependent arguments.  The kernel test below is then
+    incomplete (it can miss actual zeros), though still sound.
+    """
+    rels = []
+    for i, ext in enumerate(DE.exts, 1):
+        if ext != 'exp':
+            continue
+        coeff, rest = DE.extargs[i - 1].as_coeff_Mul()
+        if (coeff.is_Rational and not coeff.is_Integer and rest in DE.T[1:]
+                and DE.exts[DE.T.index(rest) - 1] == 'log'):
+            u = DE.extargs[DE.T.index(rest) - 1]
+            p, q = coeff.p, coeff.q
+            if p >= 0:
+                rel = DE.T[i]**q - u**p
+            else:
+                rel = DE.T[i]**q*u**-p - 1
+            rels.append((DE.T[i], rel))
+    return rels
+
+
+def _nontrans_is_kernel(e, DE):
+    """
+    Decide whether e, polynomial in the tower generators, evaluates to
+    zero in a non-transcendental tower (i.e. lies in the kernel of the
+    evaluation map), by reducing modulo the recognized power relations,
+    highest generator first.  The relations are triangular (each
+    involves only its own and lower generators), so this terminates,
+    and e evaluates to zero iff the reduced form is zero -- exactly, if
+    the quotient by the recognized relations is an integral domain
+    (always true for a single radical), and soundly-but-incompletely
+    otherwise (see _nontrans_power_relations()).
+    """
+    e = cancel(e)
+    for t, r in reversed(_nontrans_power_relations(DE)):
+        if e.has(t):
+            e = rem(e, r, t)
+    return cancel(e) == 0
+
+
+def _nontrans_accept(elem, g2, i, a, d, DE, z):
+    """
+    Acceptance filter for a candidate result of integrate_primitive()
+    or integrate_hyperexponential() over a non-transcendental tower:
+
+    1. a/d == D(elem) + D(residue part) + i must hold as a formal
+       rational-function identity in the tower generators, decided by
+       cancel() -- pure rational arithmetic, no algebraic
+       simplification.
+    2. The denominators of elem and i must not evaluate to zero under
+       the tower's algebraic relations (_nontrans_is_kernel()).
+
+    Why this suffices: the machinery computes in the formal field
+    Q(x, t0, ..., tn), where the generators really are transcendental,
+    and the actual functions are the image of an evaluation map that is
+    defined only on elements whose denominators avoid the kernel of the
+    tower's relations (t**2 - x for t representing sqrt(x)).  A formal
+    identity between elements on which the evaluation is defined pushes
+    forward to an identity of functions, since the evaluation commutes
+    with the derivation by construction.  So a candidate passing both
+    checks is a genuine antiderivative relation, no matter what invalid
+    transcendence assumptions were used to find it.  The checks cannot
+    vouch for *negative* conclusions (nonelementary proofs), which is
+    why those are separately degraded to unevaluated Integrals.
+
+    Check 1 catches machinery bugs surfacing under the broken
+    hypotheses; check 2 catches the subtler failure mode: the formal
+    field has genuinely new constants (D(t**2/x) == 0 for t
+    representing sqrt(x)), so internal divisions by formally-nonzero
+    constants can smuggle kernel factors (t**2/x - 1, which evaluates
+    to zero) into denominators while keeping the formal identity
+    intact.
+
+    TODO: the arguments of the residue-part logarithms are divisors of
+    d for the log terms produced by residue_reduce(), hence kernel-free
+    whenever d is, but the z-dependent coefficients inside RootSum
+    terms are not checked here.
+    """
+    lhs = cancel(a.as_expr()/d.as_expr())
+    total = cancel(lhs - derivation(elem, DE, basic=True) -
+        residue_reduce_derivation(g2, DE, z) - i)
+    if total != 0:
+        return False
+    for e in (elem, i):
+        if _nontrans_is_kernel(cancel(e).as_numer_denom()[1], DE):
+            return False
+    return True
+
+
 def integrate_primitive_polynomial(p, DE):
     """
     Integration of primitive polynomials.
@@ -1627,6 +1728,10 @@ def integrate_primitive(a, d, DE, z=None):
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
             g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
+        if not DE.transcendental and not _nontrans_accept(
+                g1[0].as_expr()/g1[1].as_expr(), g2, i, a, d, DE, z):
+            return (S.Zero, Integral(cancel(
+                (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
         if DE.transcendental:
             i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
         else:
@@ -1640,6 +1745,11 @@ def integrate_primitive(a, d, DE, z=None):
     p = p.as_poly(DE.t)
 
     q, i, b = integrate_primitive_polynomial(p, DE)
+    if not DE.transcendental and not _nontrans_accept(
+            g1[0].as_expr()/g1[1].as_expr() + q.as_expr(), g2, i.as_expr(),
+            a, d, DE, z):
+        return (S.Zero, Integral(cancel(
+            (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
 
     ret = ((g1[0].as_expr()/g1[1].as_expr() + q.as_expr()).subs(s) +
         residue_reduce_to_basic(g2, DE, z))
@@ -1749,6 +1859,10 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
             g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
+        if not DE.transcendental and not _nontrans_accept(
+                g1[0].as_expr()/g1[1].as_expr(), g2, i, a, d, DE, z):
+            return (S.Zero, Integral(cancel(
+                (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
         if DE.transcendental:
             i = NonElementaryIntegral(cancel(i.subs(s)), DE.x)
         else:
@@ -1763,6 +1877,18 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     pp = as_poly_1t(p, DE.t, z)
 
     qa, qd, b = integrate_hyperexponential_polynomial(pp, DE, z)
+
+    if not DE.transcendental:
+        if b:
+            it = pp.nth(0, 0)
+        else:
+            # Same residual as in the not-b branch below.
+            it = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)
+                ).as_expr()/(qd**2).as_expr()
+        if not _nontrans_accept(g1[0].as_expr()/g1[1].as_expr() +
+                qa.as_expr()/qd.as_expr(), g2, it, a, d, DE, z):
+            return (S.Zero, Integral(cancel(
+                (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
 
     i = pp.nth(0, 0)
 
