@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.sparsetools import (
     smp_add,
     smp_coeff_wrt,
@@ -101,3 +102,16 @@ def smp_pdiv(
     r = smp_mul(r, c, dom, n)
 
     return q, r
+
+
+def smp_pquo(f: smp[Er], g: smp[Er], i: int, n: int, dom: Domain[Er]) -> smp[Er]:
+    return smp_pdiv(f, g, i, n, dom)[0]
+
+
+def smp_pexquo(f: smp[Er], g: smp[Er], i: int, n: int, dom: Domain[Er]) -> smp[Er]:
+    q, r = smp_pdiv(f, g, i, n, dom)
+
+    if r == {}:
+        return q
+    else:
+        raise ExactQuotientFailed(f, g)

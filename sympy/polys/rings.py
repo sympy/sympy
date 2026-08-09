@@ -48,7 +48,7 @@ from sympy.polys.polyutils import (
     _dict_reorder,
     _parallel_dict_from_expr,
 )
-from sympy.polys.sparseprs import smp_pdiv, smp_prem
+from sympy.polys.sparseprs import smp_pdiv, smp_pexquo, smp_pquo, smp_prem
 from sympy.printing.defaults import DefaultPrinting
 from sympy.polys.sparsetools import (
     _smp_iadd,
@@ -2024,8 +2024,10 @@ class PolyElement(
         prem, pdiv, pexquo, sympy.polys.domains.ring.Ring.quo
 
         """
-        x_index = self.ring.index(x)
-        return self._pquo(g, x_index)
+        ring = self.ring
+        x_index = ring.index(x)
+        q = smp_pquo(self, g, x_index, ring.ngens, ring.domain)
+        return self.new(q)
 
     def pexquo(self, g: PolyElement[Er], x: PolyElement[Er] | int | None = None):
         """
@@ -2056,8 +2058,10 @@ class PolyElement(
         prem, pdiv, pquo, sympy.polys.domains.ring.Ring.exquo
 
         """
-        x_index = self.ring.index(x)
-        return self._pexquo(g, x_index)
+        ring = self.ring
+        x_index = ring.index(x)
+        q = smp_pexquo(self, g, x_index, ring.ngens, ring.domain)
+        return self.new(q)
 
     def subresultants(self, g: PolyElement[Er], x: PolyElement[Er] | int | None = None):
         """
@@ -2993,18 +2997,6 @@ class PolyElement(
     # methods in case of python-flint since their speeds don't exactly matter wrt the
     # flint version.
 
-    def _pquo(self, g: PolyElement[Er], x: int) -> PolyElement[Er]:
-        f = self
-        return f.pdiv(g, x)[0]
-
-    def _pexquo(self, g: PolyElement[Er], x: int):
-        f = self
-        q, r = f.pdiv(g, x)
-
-        if r.is_zero:
-            return q
-        else:
-            raise ExactQuotientFailed(f, g)
 
     def _subresultants(self, g: PolyElement[Er], x: int):
         f = self
