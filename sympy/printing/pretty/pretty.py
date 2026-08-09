@@ -1976,7 +1976,7 @@ class PrettyPrinter(Printer):
             elif term.is_Rational and term.q > 1:
                 pforms.append(None)
                 indices.append(i)
-            elif term.is_Number and term < 0:
+            elif term.is_Number and term.is_extended_negative:
                 pform = self._print(-term)
                 pforms.append(pretty_negative(pform, i))
             elif (
