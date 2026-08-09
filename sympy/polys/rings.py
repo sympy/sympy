@@ -48,6 +48,7 @@ from sympy.polys.polyutils import (
     _dict_reorder,
     _parallel_dict_from_expr,
 )
+from sympy.polys.sparseprs import smp_pdiv, smp_prem
 from sympy.printing.defaults import DefaultPrinting
 from sympy.polys.sparsetools import (
     _smp_iadd,
@@ -1906,8 +1907,9 @@ class PolyElement(
         pdiv, pquo, pexquo, sympy.polys.domains.ring.Ring.rem
 
         """
-        x_index = self.ring.index(x)
-        return self._prem(g, x_index)
+        ring = self.ring
+        x_index = ring.index(x)
+        return self.new(smp_prem(self, g, x_index, ring.ngens, ring.domain))
 
     def pdiv(
         self, g: PolyElement[Er], x: PolyElement[Er] | int | None = None
@@ -1972,10 +1974,10 @@ class PolyElement(
         (2*x + 2*y - 2, -4*y + 4)
         >>> f.div(g) # shows the difference between pdiv and div
         (0, x**2 + x*y)
-        >>> f.pdiv(g, y) # generator is given
-        (2*x**3 + 2*x**2*y + 6*x**2 + 2*x*y + 8*x + 4, 0)
-        >>> f.pdiv(g, 1) # generator index is given
-        (2*x**3 + 2*x**2*y + 6*x**2 + 2*x*y + 8*x + 4, 0)
+        >>> f.pdiv(g, y)  # generator is given
+        (2*x**3 + 2*x**2*y + 2*x**2 + 2*x*y, 0)
+        >>> f.pdiv(g, 1)  # generator index is given
+        (2*x**3 + 2*x**2*y + 2*x**2 + 2*x*y, 0)
 
         See Also
         ========
@@ -1992,7 +1994,8 @@ class PolyElement(
 
         """
         x_index = self.ring.index(x)
-        return self._pdiv(g, x_index)
+        q, r = smp_pdiv(self, g, x_index, self.ring.ngens, self.ring.domain)
+        return self.new(q), self.new(r)
 
     def pquo(self, g: PolyElement[Er], x: PolyElement[Er] | int | None = None):
         """
@@ -2989,89 +2992,6 @@ class PolyElement(
     # The following _p* and _subresultants methods can just be converted to pure python
     # methods in case of python-flint since their speeds don't exactly matter wrt the
     # flint version.
-    def _prem(self, g: PolyElement[Er], x: int) -> PolyElement[Er]:
-        f = self
-
-        df = f._degree_int(x)
-        dg = g._degree_int(x)
-
-        if dg < 0:
-            raise ZeroDivisionError("polynomial division")
-
-        r, dr = f, df
-
-        if df < dg:
-            return r
-
-        N = df - dg + 1
-
-        lc_g = g.coeff_wrt(x, dg)
-
-        xp = f.ring.gens[x]
-
-        while True:
-            lc_r = r.coeff_wrt(x, dr)
-            j, N = dr - dg, N - 1
-
-            R = r * lc_g
-            G = g * lc_r * xp**j
-            r = R - G
-
-            dr = r._degree_int(x)
-
-            if dr < dg:
-                break
-
-        c = lc_g**N
-
-        return r * c
-
-    def _pdiv(
-        self, g: PolyElement[Er], x: int
-    ) -> tuple[PolyElement[Er], PolyElement[Er]]:
-        f = self
-
-        df = f._degree_int(x)
-        dg = g._degree_int(x)
-
-        if dg < 0:
-            raise ZeroDivisionError("polynomial division")
-
-        q, r, dr = self.ring(x), f, df
-
-        if df < dg:
-            return q, r
-
-        N = df - dg + 1
-        lc_g = g.coeff_wrt(x, dg)
-
-        xp = f.ring.gens[x]
-
-        while True:
-            lc_r = r.coeff_wrt(x, dr)
-            j, N = dr - dg, N - 1
-
-            Q = q * lc_g
-
-            q = Q + (lc_r) * xp**j
-
-            R = r * lc_g
-
-            G = g * lc_r * xp**j
-
-            r = R - G
-
-            dr = r._degree_int(x)
-
-            if dr < dg:
-                break
-
-        c = lc_g**N
-
-        q = q * c
-        r = r * c
-
-        return q, r
 
     def _pquo(self, g: PolyElement[Er], x: int) -> PolyElement[Er]:
         f = self
