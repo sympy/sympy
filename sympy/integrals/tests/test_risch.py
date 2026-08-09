@@ -793,12 +793,17 @@ def test_risch_integrate_algebraic():
     # _nontrans_accept(), and negative conclusions are degraded to
     # plain Integrals (nonelementary proofs assume transcendence).
     y = Symbol('y', positive=True)
-    assert risch_integrate(sqrt(y), y) == 2*y**Rational(3, 2)/3
-    assert risch_integrate(1/sqrt(y), y) == 2*sqrt(y)
-    assert risch_integrate(y*sqrt(y), y) == 2*y**Rational(5, 2)/5
+    # off by default: plain integrate()'s automatic risch attempt must
+    # not start building algebraic towers
+    raises(NotImplementedError, lambda: risch_integrate(sqrt(y), y))
+    assert risch_integrate(sqrt(y), y, algebraic=True) == \
+        2*y**Rational(3, 2)/3
+    assert risch_integrate(1/sqrt(y), y, algebraic=True) == 2*sqrt(y)
+    assert risch_integrate(y*sqrt(y), y, algebraic=True) == \
+        2*y**Rational(5, 2)/5
     # unsolved algebraic integrals must come back as plain Integrals,
     # never as NonElementaryIntegral
-    r = risch_integrate(exp(sqrt(y)), y)
+    r = risch_integrate(exp(sqrt(y)), y, algebraic=True)
     assert r == Integral(exp(sqrt(y)), y)
     assert not r.has(NonElementaryIntegral)
 
@@ -1016,7 +1021,7 @@ def test_DifferentialExtension_printing():
         "('backsubs', []), ('exts', ['exp', 'log']), ('extargs', [x**2, t0 + 1]), "
         "('cases', ['base', 'exp', 'primitive']), ('case', 'primitive'), ('transcendental', True), ('t', t1), "
         "('d', Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')), ('newf', t0**2 + t1), ('level', -1), "
-        "('dummy', False)]))")
+        "('dummy', False), ('algebraic', False)]))")
 
     assert str(DE) == ("DifferentialExtension({fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), "
         "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "

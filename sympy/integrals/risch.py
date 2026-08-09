@@ -170,9 +170,11 @@ class DifferentialExtension:
     # to have a safeguard when debugging.
     __slots__ = ('f', 'origf', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs',
         'backsubs', 'exts', 'extargs', 'cases', 'case', 'transcendental',
-        't', 'd', 'newf', 'level', 'ts', 'dummy')
+        't', 'd', 'newf', 'level', 'ts', 'dummy', 'algebraic')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
+    def __init__(self, f=None, x=None, handle_first='log',
+            dummy=False, extension=None, rewrite_complex=None,
+            algebraic=False):
         """
         Tries to build a transcendental extension tower from ``f`` with respect to ``x``.
 
@@ -205,6 +207,8 @@ class DifferentialExtension:
         testing/debugging purposes.
         """
         # XXX: If you need to debug this function, set the break point here
+
+        self.algebraic = algebraic
 
         if extension:
             if 'D' not in extension:
@@ -384,7 +388,8 @@ class DifferentialExtension:
                            i.exp.has(*self.T))
         pows = update_sets(pows, self.newf.atoms(Pow),
                            lambda i: i.exp.is_rational_function(*self.T) and
-                           (i.exp.has(*self.T) or (i.exp.is_Rational and not i.exp.is_Integer)))
+                           (i.exp.has(*self.T) or (self.algebraic and
+                            i.exp.is_Rational and not i.exp.is_Integer)))
         numpows = update_sets(numpows, set(pows),
                               lambda i: not i.base.has(*self.T))
         sympows = update_sets(sympows, set(pows) - set(numpows),
@@ -401,9 +406,12 @@ class DifferentialExtension:
             # exp to do that :)
             if i in sympows:
                 if i.exp.is_Rational:
+                    if not self.algebraic:
+                        raise NotImplementedError("Algebraic extensions are "
+                            "not supported (%s).  Rerun with algebraic=True "
+                            "to represent it as an exp-log tower "
+                            "(experimental)." % str(i))
                     self.transcendental = False
-                    # raise NotImplementedError("Algebraic extensions are "
-                    #                           "not supported (%s)." % str(i))
                 # We can add a**b only if log(a) in the extension, because
                 # a**b == exp(b*log(a)).
                 basea, based = frac_in(i.base, self.t)
@@ -585,11 +593,10 @@ class DifferentialExtension:
                             restart = True
                             break
                         # else: fall through to add extension normally
-                    else:
+                    elif not self.algebraic:
                         # TODO: give algebraic dependence in error string
-                        # raise NotImplementedError("Cannot integrate over "
-                        #     "algebraic extensions.")
-                        pass
+                        raise NotImplementedError("Cannot integrate over "
+                            "algebraic extensions.")
 
             arga, argd = frac_in(arg, self.t)
             darga = (argd*derivation(Poly(arga, self.t), self) -
@@ -2043,7 +2050,7 @@ class NonElementaryIntegral(Integral):
 
 def risch_integrate(f, x, extension=None, handle_first='log',
                     separate_integral=False, rewrite_complex=None,
-                    conds='piecewise'):
+                    conds='piecewise', algebraic=False):
     r"""
     The Risch Integration Algorithm.
 
@@ -2155,7 +2162,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     f = S(f)
 
     DE = extension or DifferentialExtension(f, x, handle_first=handle_first,
-            dummy=True, rewrite_complex=rewrite_complex)
+            dummy=True, rewrite_complex=rewrite_complex, algebraic=algebraic)
     fa, fd = DE.fa, DE.fd
 
     result = S.Zero
