@@ -478,6 +478,18 @@ def test_is_log_deriv_k_t_radical_in_field():
     assert is_log_deriv_k_t_radical_in_field(Poly(1, t), Poly(2*x**2, t), DE) == \
         (2, 1/t)
 
+    # exp case: u must come back as an Expr, never as a malformed Poly
+    # with the tower generator inside the coefficient domain (this used
+    # to return Poly(t, x, domain='ZZ[t]')-shaped results, and issued
+    # the deprecated Poly/Expr mixing warning when residue terms were
+    # present)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    assert is_log_deriv_k_t_radical_in_field(Poly(1, t), Poly(1, t), DE) == \
+        (1, t)
+    # f == Dt/t + Dt/(t + 1): the log-derivative of t*(t + 1)
+    assert is_log_deriv_k_t_radical_in_field(Poly(2*t + 1, t),
+        Poly(t + 1, t), DE) == (1, t**2 + t)
+
 
 def test_parametric_log_deriv_structure():
     # The heuristic fails on all of these (z in k at a primitive level);

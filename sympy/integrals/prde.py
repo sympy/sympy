@@ -1761,6 +1761,14 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         if A is None:
             return None
         n, e, u = A
+        # parametric_log_deriv() may return v as a Poly (e.g. the
+        # rational shortcut returns Poly(1, t)); keep u an Expr
+        # throughout.  Mixing Poly with Expr here built malformed Polys
+        # like Poly(t, x, domain='ZZ[t]') (with the tower generator in
+        # the coefficient domain) -- deprecated since SymPy 1.6, and
+        # only working downstream by accident of as_expr() round-trips.
+        if isinstance(u, Poly):
+            u = u.as_expr()
         u *= DE.t**e
 
     elif case == 'primitive':
