@@ -398,6 +398,11 @@ def smp_sub_ground(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> smp[Er]:
     return h
 
 
+def smp_neg(f: smp[Er], n: int, domain: Domain[Er]) -> smp[Er]:
+    # Return the opposite of a sparse polynomial.
+    return {mon: -coeff for mon, coeff in f.items() if coeff}
+
+
 def _smp_isub_ground(d: smp[Er], c: Er, n: int, domain: Domain[Er]) -> None:
     # Subtract a ground coefficient from a sparse polynomial in place.
     if not c:
