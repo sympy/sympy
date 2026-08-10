@@ -121,7 +121,26 @@ def _force_mutable(x):
 
 
 class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
+    """A mutable dense matrix with element-wise operations.
 
+    This is the default implementation used for the ``Matrix`` class. Entries
+    are stored densely and can be constructed from a list of lists, a flat
+    list with dimensions, a lambda, or another matrix.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> Matrix([[1, 2], [3, 4]])
+    Matrix([
+    [1, 2],
+    [3, 4]])
+    >>> Matrix(2, 2, lambda i, j: i + j)
+    Matrix([
+    [0, 1],
+    [1, 2]])
+
+    """
     # The simplify method for mutable mattrices is inconsistent with the
     # one for immutable matrices.
 
