@@ -581,7 +581,7 @@ def rs_series_reversion(p, x, n, y):
     ``p`` is a series with ``O(x**n)`` of the form $p = ax + f(x)$
     where $a$ is a number different from 0.
 
-    $f(x) = \sum_{k=2}^{n-1} a_kx_k$
+    $f(x) = \sum_{k=2}^{n-1} a_k x^k$
 
     Parameters
     ==========
