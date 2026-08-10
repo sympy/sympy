@@ -995,3 +995,176 @@ def smp_pow_multinomial(d: smp[Er], exp: int, domain: Domain[Er], n: int) -> smp
             del h[p_mon]
 
     return h
+
+
+def free_variables(self):
+    """
+    Examples
+    ========
+
+    >>> from sympy import ZZ, ring
+    >>> R, x, y = ring("x, y", ZZ)
+    >>> p = 3*x**2 + 7*x**2*y
+    >>> p.free_variables()
+    {0, 1}
+
+    """
+    p = self
+    exponents = list(map(sum, zip(*p)))
+
+    # Set to keep track of variables
+    variables = set()
+
+    for n, e in enumerate(exponents):
+        if e:
+            variables.add(n)
+
+    return variables
+
+def main_variable(self):
+    """
+    Return the leading generator index of the generators present in the
+    polynomial.
+
+    Examples
+    ========
+
+    >>> from sympy import ZZ, ring
+    >>> R, x, y = ring("x, y", ZZ)
+    >>> p = y**2 + 2 - y**3 + 4*y
+    >>> p.main_variable()
+    1
+
+    >>> p = x*y**2 - y**3 + 4*y
+    >>> p.main_variable()
+    0
+
+    """
+    p = self
+    free_sym = p.free_variables()
+    if 0 in free_sym:
+        return 0
+    if not free_sym:
+        return 0
+    return min(free_sym)
+
+
+def monomial_extract(polynomials):
+    """
+    Extracts any common monomial from the polynomials.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.rings import monomial_extract
+    >>> from sympy import ZZ, ring
+    >>> R, x, y = ring("x, y", ZZ)
+
+    >>> f = x + y
+    >>> g = x**2*y + x*y
+    >>> polynomials = [f, g]
+    >>> monomial_extract(polynomials)
+    ([x + y, x**2*y + x*y], 1)
+
+    >>> f = x**2*y
+    >>> g = x**2*y + x*y
+    >>> polynomials = [f, g]
+    >>> monomial_extract(polynomials)
+    ([x, x + 1], x*y)
+
+    """
+    ring = polynomials[0].ring
+    domain = ring.domain
+
+    zero_monom = ring.zero_monom
+    monoms = chain(*polynomials)
+
+    # Check for the presence of zero_monom in any polynomial
+    if any(zero_monom in poly for poly in polynomials):
+        return polynomials, domain.one
+
+    monom_gcd = monomial_ngcd(list(monoms))
+
+    if monom_gcd == ring.zero_monom:
+        return polynomials, domain.one
+    else:
+        d = ring({monom_gcd: ring.domain.one})
+        p = [pi.exquo(d) for pi in polynomials]  # TODO: Use monomial_ldiv
+        return p, d
+
+def _coeff_split_syms(self, syms):
+    """
+    Reorganize a polynomial over multiple variables into a polynomial over a
+    subset of those variables with coefficients being polynomials over the
+    remaining variables.
+    """
+    p1 = self
+    p2 = defaultdict(dict)
+    r = range(len(p1.ring.gens))
+
+    # Convert symbols to indices if they are not integers
+    if not all(isinstance(s, int) for s in syms):
+        syms = {p1.ring.gens.index(s) if isinstance(s, (str, Symbol)) else s for s in syms}
+
+    # Iterate through the terms and coefficients of the input polynomial
+    for m1, c1 in p1.items():
+        sym_indices = set(compress(r, m1))
+        m21 = [0] * len(r)
+        m22 = [0] * len(r)
+
+        # Separate variables into symbol and non-symbol categories
+        for i in sym_indices & syms:
+            m21[i] = m1[i]
+        for i in sym_indices - syms:
+            m22[i] = m1[i]
+
+        p2[tuple(m21)][tuple(m22)] = c1
+
+    return p2
+
+def coeff_split(self, syms):
+    """
+    Get the coefficients of a polynomial with respect to the specified
+    ``syms``.
+
+    For example, given a polynomial in ``p`` in ``K[x,y,z,t]``, ``p.
+    coeff_split({y, t})`` converts ``p`` to an element of ``K[x, z][y, t]``
+    and returns the coefficients as elements of ``K[x, z]``
+
+    Parameters
+    ==========
+
+    syms : set or symbols
+        A set of symbols or generator objects representing symbol variables
+
+    Returns
+    =======
+
+    list
+        A list of polynomials resulting from splitting the input
+        polynomial.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x, y, z = ring("x, y, z", ZZ)
+
+    >>> f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
+    >>> syms = {z} # Using generator
+    >>> f.coeff_split(syms)
+    [2*x**4 + 3*y**4, 10*x + 10]
+
+    >>> syms = {2} # Using generator index
+    >>> f.coeff_split(syms)
+    [2*x**4 + 3*y**4, 10*x + 10]
+
+    See Also
+    ========
+
+    coeff, coeffs, coeff_wrt, drop_to_ground
+    """
+    p1 = self
+    syms = {x if isinstance(x, int) else p1.ring.gens.index(x) for x in syms}
+    p2 = p1._coeff_split_syms(syms)
+    return [p1.ring(pi) for pi in p2.values()]
