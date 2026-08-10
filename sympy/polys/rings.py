@@ -48,7 +48,7 @@ from sympy.polys.polyutils import (
     _dict_reorder,
     _parallel_dict_from_expr,
 )
-from sympy.polys.sparseprs import smp_pdiv, smp_pexquo, smp_pquo, smp_prem
+from sympy.polys.sparseprs import smp_pdiv, smp_pexquo, smp_pquo, smp_prem, smp_subresultants
 from sympy.printing.defaults import DefaultPrinting
 from sympy.polys.sparsetools import (
     _smp_iadd,
@@ -2097,8 +2097,10 @@ class PolyElement(
         [x**2*y + x*y, x + y, x**3 + x**2]
 
         """
-        x_index = self.ring.index(x)
-        return self._subresultants(g, x_index)
+        ring = self.ring
+        x_index = ring.index(x)
+        return [self.new(el) for el in
+        smp_subresultants(self, g, x_index, ring.ngens, ring.domain)]
 
     def symmetrize(
         self,
@@ -2996,64 +2998,6 @@ class PolyElement(
     # The following _p* and _subresultants methods can just be converted to pure python
     # methods in case of python-flint since their speeds don't exactly matter wrt the
     # flint version.
-
-
-    def _subresultants(self, g: PolyElement[Er], x: int):
-        f = self
-
-        n = f._degree_int(x)
-        m = g._degree_int(x)
-
-        if n < m:
-            f, g = g, f
-            n, m = m, n
-
-        if f == 0:
-            return [0, 0]
-
-        if g == 0:
-            return [f, 1]
-
-        R = [f, g]
-
-        d = n - m
-        b = (-1) ** (d + 1)
-
-        # Compute the pseudo-remainder for f and g
-        h = f.prem(g, x)
-        h = h * b
-
-        # Compute the coefficient of g with respect to x**m
-        lc = g.coeff_wrt(x, m)
-
-        c = lc**d
-
-        S = [1, c]
-
-        c = -c
-
-        while h:
-            k = h.degree(x)
-
-            R.append(h)
-            f, g, m, d = g, h, k, m - k
-
-            b = -lc * c**d
-            h = f.prem(g, x)
-            h = h.exquo(b)
-
-            lc = g.coeff_wrt(x, k)
-
-            if d > 1:
-                p = (-lc) ** d
-                q = c ** (d - 1)
-                c = p.exquo(q)
-            else:
-                c = -lc
-
-            S.append(-c)
-
-        return R
 
     def _subs(self, subs_dict: Mapping[int, Er]) -> PolyElement[Er]:
         ring = self.ring
