@@ -287,10 +287,12 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
 
     @property
     def set(self):
+        """ Return the set of the distribution. """
         return self.distribution.set
 
     @property
     def domain(self):
+        """ Return the domain of the space. """
         return SingleDiscreteDomain(self.symbol, self.set)
 
     def sample(self, size=(), library='scipy', seed=None):
@@ -302,6 +304,23 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
         return {self.value: self.distribution.sample(size, library=library, seed=seed)}
 
     def compute_expectation(self, expr, rvs=None, evaluate=True, **kwargs):
+        """
+        Compute the mathematical expectation E(X), E(expr).
+
+        Parameters
+        ==========
+
+        expr : Expr
+            The expression for which the expectation is to be computed.
+        rvs : RandomSymbol or sequence of RandomSymbol
+            The random variable(s) the expectation is taken over.
+        evaluate : bool
+            If True, try to evaluate the expectation; otherwise return an
+            unevaluated form when the distribution cannot compute it.
+        kwargs : dict
+            Additional keyword arguments passed to the distribution's
+            expectation method.
+        """
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
@@ -318,6 +337,18 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
                     **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
+        """
+        Compute the cumulative distribution function of the random variable.
+
+        Parameters
+        ==========
+
+        expr : RandomSymbol
+            The random variable whose CDF is to be computed.
+        kwargs : dict
+            Additional keyword arguments passed to the distribution's cdf
+            method.
+        """
         if expr == self.value:
             x = Dummy("x", real=True)
             return Lambda(x, self.distribution.cdf(x, **kwargs))
@@ -325,6 +356,17 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
             raise NotImplementedError()
 
     def compute_density(self, expr, **kwargs):
+        """
+        Compute the density (probability mass function) of the random variable.
+
+        Parameters
+        ==========
+
+        expr : RandomSymbol
+            The random variable whose density is to be computed.
+        kwargs : dict
+            Additional keyword arguments (unused for this space).
+        """
         if expr == self.value:
             return self.distribution
         raise NotImplementedError()
