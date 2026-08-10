@@ -141,12 +141,12 @@ def smp_subresultants(
     R = [f, g]
 
     d = l - m
-    b = dom((-1) ** (d + 1))
+    v = dom((-1) ** (d + 1))
 
     # Compute the pseudo-remainder for f and g
     h = smp_prem(f, g, i, n, dom)
 
-    _smp_imul_ground(h, b, n, dom)
+    _smp_imul_ground(h, v, n, dom)
 
     # Compute the coefficient of g with respect to x**m
     lc = smp_coeff_wrt(g, i, m, n, dom)
