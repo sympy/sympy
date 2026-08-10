@@ -1,6 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import annotations
 from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.polys.polytools import Poly, cancel
 from sympy.integrals.risch import (DifferentialExtension, derivation,
@@ -238,6 +239,10 @@ def test_spde():
     # and returns (q == 1 here; c becomes zero after one pass)...
     assert spde(Poly(t, t), Poly(1, t), Poly(1, t), oo, DE) == \
         (Poly(0, t), Poly(0, t), 0, Poly(0, t), Poly(1, t, domain='QQ'))
+    # A SymPy Integer bound must behave like the equal plain int
+    # (this used to loop forever: (S(-1) < 0) is not the True singleton)
+    raises(NonElementaryIntegralException, lambda: spde(Poly(t, t),
+        Poly(1, t), Poly(x, t, domain='ZZ[x]'), S(1), DE))
     # ...and with deg(a) == 0 it returns immediately, so n == oo is fine.
     assert spde(Poly(2, t), Poly(t, t), Poly(t, t), oo, DE) == \
         (Poly(t/2, t, domain='QQ'), Poly(t/2, t, domain='QQ'), oo,

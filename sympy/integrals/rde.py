@@ -481,7 +481,9 @@ def spde(a, b, c, n, DE):
     while True:
         if c.is_zero:
             return (zero, zero, 0, zero, beta)  # -1 is more to the point
-        if (n < 0) is True:
+        # == True so a SymPy Integer n works too ((S(-1) < 0) is
+        # BooleanTrue), while a symbolic n still falls through
+        if (n < 0) == True:
             raise NonElementaryIntegralException("n became negative in "
                 "spde().")
 
