@@ -481,8 +481,6 @@ def spde(a, b, c, n, DE):
     while True:
         if c.is_zero:
             return (zero, zero, 0, zero, beta)  # -1 is more to the point
-        # == True so a SymPy Integer n works too ((S(-1) < 0) is
-        # BooleanTrue), while a symbolic n still falls through
         if (n < 0) == True:
             raise NonElementaryIntegralException("n became negative in "
                 "spde().")
@@ -786,11 +784,7 @@ def cancel_exp(b, c, n, DE):
                     # The homogeneous solutions are C*t**(-m)/z for
                     # constants C, so the t**(-m) coefficient of q is
                     # adjustable by the constant of integration exactly
-                    # when it is C/z for a constant C; in that case,
-                    # remove that term.  (A non-constant coefficient
-                    # cannot be removed by any choice of the constant,
-                    # and stripping it anyway would return a q that does
-                    # not solve the equation.)
+                    # when it is C/z for a constant C.
                     q = q - Poly(q.nth(-m)*DE.t**(-m), DE.t)
                 if q.degree(DE.t) > n:
                     raise NonElementaryIntegralException("deg(p/(z*t**m)) "

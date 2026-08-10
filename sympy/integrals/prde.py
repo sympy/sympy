@@ -615,11 +615,6 @@ def prde_cancel_liouvillian(b, Q, n, DE):
         # D(q_rest) + b*q_rest == Sum(ci*qi) - d*(D(h) + b*h)
         # (see the equation following (7.17) in Section 7.1; the sign of
         # the b*h term is misprinted as a minus in the 1st edition).
-        # Note that only the t**(i-1)-coefficient of Fi[j] is ever
-        # consumed (the loop descends strictly through the degrees), and
-        # the b*hji term contributes only to the t**i-coefficient, so
-        # the sign of b*hji cannot affect the result; it is written in
-        # the book's (2nd edition) form for clarity.
         for j in range(ri):
             hji = fi[j] * (DE.t**i).as_poly(fi[j].gens)
             hi[j] = hji
@@ -1761,12 +1756,6 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         if A is None:
             return None
         n, e, u = A
-        # parametric_log_deriv() may return v as a Poly (e.g. the
-        # rational shortcut returns Poly(1, t)); keep u an Expr
-        # throughout.  Mixing Poly with Expr here built malformed Polys
-        # like Poly(t, x, domain='ZZ[t]') (with the tower generator in
-        # the coefficient domain) -- deprecated since SymPy 1.6, and
-        # only working downstream by accident of as_expr() round-trips.
         if isinstance(u, Poly):
             u = u.as_expr()
         u *= DE.t**e

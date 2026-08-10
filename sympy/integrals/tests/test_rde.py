@@ -240,7 +240,6 @@ def test_spde():
     assert spde(Poly(t, t), Poly(1, t), Poly(1, t), oo, DE) == \
         (Poly(0, t), Poly(0, t), 0, Poly(0, t), Poly(1, t, domain='QQ'))
     # A SymPy Integer bound must behave like the equal plain int
-    # (this used to loop forever: (S(-1) < 0) is not the True singleton)
     raises(NonElementaryIntegralException, lambda: spde(Poly(t, t),
         Poly(1, t), Poly(x, t, domain='ZZ[x]'), S(1), DE))
     # ...and with deg(a) == 0 it returns immediately, so n == oo is fine.
@@ -300,8 +299,7 @@ def test_solve_poly_rde_cancel():
     # D(x)/x - 2*Dt/t (z == x, m == -2), and the candidate q == 1 + t**2
     # has t**2-coefficient 1, with z*1 == x nonconstant, so no choice of
     # the integration constant removes the term: there is no solution
-    # with n == 0.  (Unconditional stripping used to return q == 1, which
-    # does not solve the equation.)
+    # with n == 0.
     raises(NonElementaryIntegralException, lambda: cancel_exp(
         Poly(1/x - 2, t, field=True),
         Poly(1/x - 2 + t**2/x, t, field=True), 0, DE))
