@@ -395,6 +395,15 @@ def _rref(
         each pivot is normalized to be `1` before row operations are
         used to zero above and below the pivot.
 
+    Returns
+    =======
+
+    tuple
+        A tuple ``(rref_matrix, pivot_columns)`` where ``rref_matrix`` is
+        the reduced row-echelon form of the matrix and ``pivot_columns``
+        is a tuple of the column indices of the pivot columns.  If
+        ``pivots=False``, only ``rref_matrix`` is returned.
+
     Examples
     ========
 
