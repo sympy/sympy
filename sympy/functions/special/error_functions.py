@@ -2823,19 +2823,6 @@ class owens_t(DefinedFunction):
         h, a = self.args
         return self.func(h.conjugate(), a.conjugate())
 
-    def _pretty(self, printer, **kwargs):
-        h, a = self.args
-        # Build "T(h, a)" using the printer's own pretty-forms for h, a
-        # so nested expressions (fractions, sqrt, etc.) still render nicely.
-        from sympy.printing.pretty.stringpict import prettyForm
-        args_pform = printer._print_seq((h, a), '(', ')',
-                                        delimiter=', ')
-        return prettyForm(*args_pform.left('T'))
-
-    def _latex(self, printer, **kwargs):
-        h, a = self.args
-        return r"T\left(%s, %s\right)" % (printer._print(h), printer._print(a))
-
     def _eval_rewrite_as_Integral(self, h, a, **kwargs):
         from sympy.integrals.integrals import Integral
         t = Dummy(uniquely_named_symbol('t', [h, a]).name)
