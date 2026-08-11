@@ -963,6 +963,36 @@ def test_owent_rewrite():
     assert owens_t(h, a).rewrite(erfc) == owens_t(h, a)
 
 
+def test_owent_expand_func():
+    # Owen (1956) eq. 2.8, the addition/inversion formula:
+    #   T(h, a) + T(a*h, 1/a) = [Phi(h) + Phi(a*h)]/2 - Phi(h)*Phi(a*h)
+    # for a > 0, with Phi(z) = erfc(-z/sqrt(2))/2. expand_func should
+    # only apply this (as an argument-reduction step bringing |a| below
+    # 1) when a > 1 is known; otherwise it's a no-op.
+    Phi = lambda z: erfc(-z / sqrt(2)) / 2
+    target = (Phi(h) + Phi(3*h)) / 2 - Phi(h)*Phi(3*h) - owens_t(3*h, Rational(1, 3))
+    assert expand_func(owens_t(h, 3)) == target
+
+    # numerical spot check against the identity itself, independent of
+    # the exact symbolic form produced above
+    for hv, av in [(Float(0.7), S(4)), (Float(-1.3), Rational(5, 2))]:
+        lhs = owens_t(hv, av).evalf(25)
+        rhs = expand_func(owens_t(h, a)).subs({h: hv, a: av}).evalf(25)
+        assert abs(lhs - rhs) < Float('1e-20')
+
+    # a <= 1, a <= 0, or a with unknown/non-positive sign: unchanged,
+    # since the formula only reduces the argument when a > 1
+    assert expand_func(owens_t(h, Rational(1, 2))) == owens_t(h, Rational(1, 2))
+    am = symbols('am', negative=True)
+    assert expand_func(owens_t(h, am)) == owens_t(h, am)
+    assert expand_func(owens_t(h, a)) == owens_t(h, a)
+
+    # the reduction is not reapplied to the owens_t(a*h, 1/a) term it
+    # just introduced, since |1/a| < 1 fails the a > 1 guard
+    reduced = expand_func(owens_t(h, 3))
+    assert owens_t(3*h, Rational(1, 3)) in reduced.atoms(owens_t)
+
+
 def test_owent_evalf():
     # T(0, 1) = atan(1)/(2*pi) = 1/8
     assert abs(owens_t(0, 1).evalf() - Rational(1, 8)) < 1E-10

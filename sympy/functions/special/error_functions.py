@@ -2741,6 +2741,13 @@ class owens_t(DefinedFunction):
     >>> diff(owens_t(h, a), a)
     exp(-h**2*(a**2 + 1)/2)/(2*pi*(a**2 + 1))
 
+    For $a > 1$, ``expand(func=True)`` applies Owen's addition/inversion
+    formula, rewriting $T(h, a)$ in terms of $T(ah, 1/a)$, whose second
+    argument has magnitude below 1:
+
+    >>> owens_t(h, 3).expand(func=True)
+    -erfc(sqrt(2)*h/2)*erfc(3*sqrt(2)*h/2)/4 + erfc(sqrt(2)*h/2)/4 + erfc(3*sqrt(2)*h/2)/4 - owens_t(3*h, 1/3)
+
     See Also
     ========
 
@@ -2822,6 +2829,24 @@ class owens_t(DefinedFunction):
     def _eval_conjugate(self):
         h, a = self.args
         return self.func(h.conjugate(), a.conjugate())
+
+    def _eval_expand_func(self, **hints):
+        # Owen (1956) eq. 2.8, the addition/inversion formula:
+        #   T(h, a) + T(a*h, 1/a) = [Phi(h) + Phi(a*h)]/2 - Phi(h)*Phi(a*h)
+        # for a > 0, with Phi(z) = erfc(-z/sqrt(2))/2. This isn't a
+        # simplification in general (the right-hand side still contains
+        # an owens_t call), so it doesn't fire in eval(); it's only
+        # useful as an explicit argument-reduction step, bringing |a|
+        # below 1 (the domain Patefield-Tandy-style implementations
+        # actually evaluate on). Only applied for a > 1: since |1/a| < 1
+        # afterwards, the guard below fails on the resulting owens_t(a*h,
+        # 1/a) term, so this cannot recurse into what it just produced.
+        h, a = self.args
+        if a.is_extended_positive and (a - 1).is_extended_positive:
+            Phi_h = erfc(-h / sqrt(2)) / 2
+            Phi_ah = erfc(-a * h / sqrt(2)) / 2
+            return (Phi_h + Phi_ah) / 2 - Phi_h * Phi_ah - self.func(a * h, 1 / a)
+        return self.func(*self.args)
 
     def _eval_rewrite_as_Integral(self, h, a, **kwargs):
         from sympy.integrals.integrals import Integral
