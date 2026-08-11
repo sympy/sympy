@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import annotations
 from sympy.core.function import (Function, Lambda, diff, expand_log)
-from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.numbers import (I, Rational, pi, zoo)
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -785,6 +785,28 @@ def test_nontranscendental_tower():
     # adding it does not disturb the derivative)
     assert not _nontrans_accept(Rational(2, 3)*x*t1 + x/(t1**2 - x), [],
         S.Zero, fa, fd, DE, None)
+
+
+def test_nontranscendental_kernel_reject():
+    # Over [x, t0 == log(x), t1 == exp(t0/2), t2 == exp(x)], the element
+    # t1**2/x - 1 is a formal constant that evaluates to zero, so
+    # f == t2/(1 + (t1**2/x - 1)*t2) is exp(x) as a function while the
+    # formal machinery sees a pole with residue -x/(x - t1**2) -- a
+    # kernel denominator that survives the formal-identity check (it
+    # cancels against the argument's derivative) and must be caught by
+    # the residue-coefficient kernel check in _nontrans_accept().
+    DE = DifferentialExtension(extension={
+        'D': [Poly(1, x), Poly(1/x, t0), Poly(t1/(2*x), t1), Poly(t2, t2)],
+        'exts': ['log', 'exp', 'exp'],
+        'extargs': [x, t0/2, x],
+        'Tfuncs': [log, Lambda(i, sqrt(i)), exp],
+        'transcendental': False})
+    fa, fd = frac_in(cancel(t2/(1 + (t1**2/x - 1)*t2)), t2)
+    ans, it, b = integrate_hyperexponential(fa, fd, DE)
+    assert (ans, b) == (0, False)
+    assert it == Integral(exp(x), x)
+    assert not isinstance(it, NonElementaryIntegral)
+    assert not it.has(zoo)
 
 
 def test_risch_integrate_algebraic():

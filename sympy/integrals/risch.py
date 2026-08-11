@@ -1642,17 +1642,22 @@ def _nontrans_accept(elem, g2, i, a, d, DE, z):
     to zero) into denominators while keeping the formal identity
     intact.
 
-    TODO: the arguments of the residue-part logarithms are divisors of
-    d for the log terms produced by residue_reduce(), hence kernel-free
-    whenever d is, but the z-dependent coefficients inside RootSum
-    terms are not checked here.
+    The residue terms are checked through the coefficient denominators
+    of their root polynomials and logarithm arguments (a kernel there
+    means an infinite residue or an undefined argument; the derivative
+    alone cannot show it, since the kernel factors cancel against the
+    argument's derivative).  TODO: a logarithm argument that itself
+    evaluates to zero is not detected here.
     """
     lhs = cancel(a.as_expr()/d.as_expr())
     total = cancel(lhs - derivation(elem, DE, basic=True) -
         residue_reduce_derivation(g2, DE, z) - i)
     if total != 0:
         return False
-    for e in (elem, i):
+    checked = [elem, i]
+    for qz, sz in g2:
+        checked.extend([qz.as_expr(), sz.as_expr()])
+    for e in checked:
         if _nontrans_is_kernel(cancel(e).as_numer_denom()[1], DE):
             return False
     return True
