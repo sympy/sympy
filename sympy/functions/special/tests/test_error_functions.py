@@ -923,14 +923,14 @@ def test_owent_is_extended_real():
     hr, ar = symbols('hr ar', extended_real=True)
     assert owens_t(hr, ar).is_extended_real is True
 
-    # h.is_extended_real (False) and a.is_extended_real (True) short-circuits
-    # via Python's `and` to False
+    # T(h, a) depends on h only through h**2, so a non-real h does not
+    # rule out a real result: T(I, 1) ~= 0.23863 is real
     hc = symbols('hc', extended_real=False)
-    assert owens_t(hc, ar).is_extended_real is False
+    assert owens_t(hc, ar).is_extended_real is None
 
-    # Order matters: a.is_extended_real (False) is only reached if
-    # h.is_extended_real is truthy, so True and False -> False
-    assert owens_t(hr, hc).is_extended_real is False
+    # a's realness genuinely matters, but unknown realness of h can only
+    # ever fail to confirm, never deny
+    assert owens_t(hr, hc).is_extended_real is None
 
     # When h's realness is unknown, the result is genuinely undetermined
     hu = symbols('hu')
