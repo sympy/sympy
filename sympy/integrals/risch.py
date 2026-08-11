@@ -458,7 +458,8 @@ class DifferentialExtension:
             if new != old:
                 self.backsubs.append((new, old))
             self.newf = self.newf.xreplace({old: newterm})
-            exps.append(newterm)
+            if isinstance(newterm, exp):
+                exps.append(newterm)
 
         return exps, pows, numpows, sympows, log_new_extension
 

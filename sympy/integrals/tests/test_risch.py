@@ -806,6 +806,11 @@ def test_risch_integrate_algebraic():
     r = risch_integrate(exp(sqrt(y)), y, algebraic=True)
     assert r == Integral(exp(sqrt(y)), y)
     assert not r.has(NonElementaryIntegral)
+    # nested rational powers: the rewritten exponential collapses to a
+    # Mul, which must not end up in the exps worklist
+    a, b, c = symbols('a b c')
+    raises(NotImplementedError, lambda: risch_integrate(
+        (c*(a + b*x)**Rational(3, 2))**Rational(2, 3), x, algebraic=True))
 
 
 def test_risch_integrate():
