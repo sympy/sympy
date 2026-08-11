@@ -2790,6 +2790,11 @@ class owens_t(DefinedFunction):
         if a is S.NegativeInfinity:
             return -erfc(sqrt(h**2) / sqrt(2)) / 4
 
+        # T(h, a) = 0 for h = +-oo (finite a), since T depends on h only
+        # through h**2 in the integrand
+        if h in (S.Infinity, S.NegativeInfinity):
+            return S.Zero
+
         # T(h, 1) = erfc(-h/sqrt2) * erfc(h/sqrt2) / 8
         if a is S.One:
             return erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
@@ -2805,8 +2810,12 @@ class owens_t(DefinedFunction):
             return -cls(h, -a)
 
     def _eval_is_extended_real(self):
+        # T(h, a) depends on h only through h**2, so a non-real h does
+        # not rule out a real result (e.g. T(I, 1) is real); this can
+        # only ever confirm realness, never deny it.
         h, a = self.args
-        return h.is_extended_real and a.is_extended_real
+        if h.is_extended_real and a.is_extended_real:
+            return True
 
     def _eval_is_zero(self):
         h, a = self.args
