@@ -1059,10 +1059,10 @@ class OwensTRule(AtomicRule):
 
     a: Expr
     b: Expr
-    y: Symbol
+    y: Expr
 
     def __init__(
-        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, y: Symbol
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, y: Expr
     ) -> None:
         super().__init__(integrand, variable)
         self.a = a
@@ -1488,8 +1488,7 @@ def special_function_rule(integral):
         d = Wild('d', exclude=[_symbol], properties=[lambda x: not x.is_zero])
         e = Wild('e', exclude=[_symbol], properties=[
             lambda x: not (x.is_nonnegative and x.is_integer)])
-        y = Wild('y', exclude=[_symbol], properties=[lambda x: x.is_symbol])
-        _wilds.extend((a, b, c, d, e, y))
+        _wilds.extend((a, b, c, d, e))
         # patterns consist of a SymPy class, a wildcard expr, an optional
         # condition coded as a lambda (when Wild properties are not enough),
         # followed by an applicable rule
@@ -1503,7 +1502,8 @@ def special_function_rule(integral):
             (Mul, sinh(linear_pattern, evaluate=False)/_symbol, None, ShiRule),
             (Pow, 1/log(linear_pattern, evaluate=False), None, LiRule),
             (exp, exp(quadratic_pattern, evaluate=False), None, ErfRule),
-            (Mul, exp(-(linear_pattern)**2, evaluate=False) * erf(y*(linear_pattern)), None, OwensTRule),
+            (Mul, exp(-(linear_pattern)**2, evaluate=False) * erf(d*(linear_pattern)),
+                lambda a, b, d: d != 1 and d != -1, OwensTRule),
             (sin, sin(quadratic_pattern, evaluate=False), None, FresnelSRule),
             (cos, cos(quadratic_pattern, evaluate=False), None, FresnelCRule),
             (Mul, _symbol**e*exp(a*_symbol, evaluate=False), None, UpperGammaRule),
