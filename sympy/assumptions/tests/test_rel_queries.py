@@ -5,7 +5,8 @@ from sympy.assumptions.ask import Q, ask
 
 from sympy.core import symbols, Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.core.numbers import I
+from sympy.core.numbers import nan, oo, zoo, I
+from sympy.core.singleton import S
 
 from sympy.testing.pytest import raises, XFAIL
 x, y, z = symbols("x y z", real=True)
@@ -165,8 +166,6 @@ def test_equality():
     # sub-predicates like Q.zero - a recursive pattern related to GH-28129.
     # These cases exercise the paths that a naive non-recursive
     # reimplementation is most likely to get wrong.
-    from sympy.core.numbers import nan, oo, zoo, I
-    from sympy.core.singleton import S
 
     # NaN is never equal to anything, not even itself, even though it is
     # structurally equal to itself (S.NaN == S.NaN is True in Python).
