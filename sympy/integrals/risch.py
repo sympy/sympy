@@ -46,7 +46,7 @@ from .integrals import integrate, Integral
 from .heurisch import _symbols
 from .rationaltools import log_to_real
 from sympy.polys.polyerrors import PolynomialError
-from sympy.polys.polytools import (real_roots, cancel, Poly, gcd, rem,
+from sympy.polys.polytools import (real_roots, cancel, Poly, gcd, rem, factor,
     reduced)
 from sympy.polys.rootoftools import RootSum
 from sympy.utilities.iterables import numbered_symbols
@@ -369,6 +369,24 @@ class DifferentialExtension:
             else:
                 subs_map[i] = j
         self.newf = self.newf.xreplace(subs_map)
+
+        if self.algebraic:
+            # Factor radicands and distribute the fractional power over
+            # the factors, so that content like a perfect square does
+            # not become a spurious tower generator.  This chooses
+            # principal branches, like the exp-log representation of
+            # the radicals themselves.
+            reps = {}
+            for i in self.newf.atoms(Pow):
+                if (i.exp.is_Rational and not i.exp.is_Integer and
+                        not i.base.is_Symbol and not isinstance(i.base, exp)):
+                    bf = factor(i.base)
+                    if bf != i.base and isinstance(bf, (Mul, Pow)):
+                        reps[i] = Mul(*[Pow(b, e*i.exp) for b, e in
+                                        bf.as_powers_dict().items()])
+            if reps:
+                self.backsubs += [(v, k) for k, v in reps.items()]
+                self.newf = self.newf.xreplace(reps)
 
         # To make the process deterministic, the args are sorted
         # so that functions with smaller op-counts are processed first.

@@ -833,6 +833,12 @@ def test_risch_integrate_algebraic():
     a, b, c = symbols('a b c')
     raises(NotImplementedError, lambda: risch_integrate(
         (c*(a + b*x)**Rational(3, 2))**Rational(2, 3), x, algebraic=True))
+    # radicands are factored before generators are erected, so content
+    # like a perfect square does not become a spurious radical
+    assert risch_integrate(sqrt(y**2 + 2*y + 1)/y, y, algebraic=True) == \
+        sqrt(y**2 + 2*y + 1) + log(y) - 1
+    assert risch_integrate(sqrt((y + 1)**2*(y + 2))*(y + 2), y,
+        algebraic=True) is not None
 
 
 def test_risch_integrate():
