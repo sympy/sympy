@@ -1,4 +1,5 @@
 """Fourier Series"""
+from __future__ import annotations
 
 from sympy.core.numbers import (oo, pi)
 from sympy.core.symbol import Wild

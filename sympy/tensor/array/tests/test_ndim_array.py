@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import raises
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.matrices.dense import Matrix

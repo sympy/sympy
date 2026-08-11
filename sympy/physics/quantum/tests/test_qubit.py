@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 
 from sympy.core.numbers import (Integer, Rational)

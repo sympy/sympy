@@ -2413,6 +2413,9 @@ def nP(n, k=None, replacement=False):
     .. [1] https://en.wikipedia.org/wiki/Permutation
 
     """
+    if k is not None and k < 0:
+        raise ValueError("k cannot be negative")
+
     try:
         n = as_int(n)
     except ValueError:

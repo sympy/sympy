@@ -6,6 +6,7 @@
 # More functions could be added here if needed but these are the ones that were
 # used in the sympy codebase when this module was added.
 #
+from __future__ import annotations
 from functools import update_wrapper as _update_wrapper
 
 
@@ -76,7 +77,6 @@ from mpmath.libmp import (
     mpf_ge,
     mpf_gt,
     mpf_le,
-    mpf_log,
     mpf_lt,
     mpf_mod,
     mpf_mul,
@@ -92,7 +92,6 @@ from mpmath.libmp import (
     normalize,
     phi_fixed,
     prec_to_dps,
-    repr_dps,
     round_nearest,
     sqrtrem,
     to_float,
@@ -100,8 +99,24 @@ from mpmath.libmp import (
     to_rational,
     to_str,
 )
+try:
+    from mpmath.libmp import mpf_ln
+except ImportError:
+    # mpmath < 1.4.0
+    from mpmath.libmp import mpf_log as mpf_ln
+
 from mpmath.libmp.libintmath import giant_steps
 from mpmath.matrices.matrices import _matrix
+
+
+def repr_dps(n: int) -> int:
+    # This is how mpmath's repr_dps was implemented in mpmath < 1.5
+    # Keep a stable version here that is not affected by the mpmath version.
+    dps = prec_to_dps(n)
+    if dps == 15:
+        return 17
+    return dps + 3
+
 
 __all__ = [
     "MPContext",
@@ -164,7 +179,7 @@ __all__ = [
     "mpf_ge",
     "mpf_gt",
     "mpf_le",
-    "mpf_log",
+    "mpf_ln",
     "mpf_lt",
     "mpf_mod",
     "mpf_mul",

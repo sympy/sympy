@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.matrices import msigma, mgamma, minkowski_tensor, pat_matrix, mdft
 from sympy.core.numbers import (I, Rational)
 from sympy.core.singleton import S

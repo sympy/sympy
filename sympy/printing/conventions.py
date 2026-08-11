@@ -1,6 +1,7 @@
 """
 A few practical conventions common to all printers.
 """
+from __future__ import annotations
 
 import re
 

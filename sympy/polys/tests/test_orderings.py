@@ -1,4 +1,5 @@
 """Tests of monomial orderings. """
+from __future__ import annotations
 
 from sympy.polys.orderings import (
     monomial_key, lex, grlex, grevlex, ilex, igrlex,

@@ -10,6 +10,7 @@ Examples
 ========
 
 """
+from __future__ import annotations
 from sympy.geometry.point import Point, Point2D, Point3D
 from sympy.geometry.line import Line, Ray, Segment, Line2D, Segment2D, Ray2D, \
     Line3D, Segment3D, Ray3D

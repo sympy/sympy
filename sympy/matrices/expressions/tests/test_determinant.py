@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, symbols
 from sympy.matrices import eye, ones, Matrix, ShapeError
 from sympy.matrices.expressions import (

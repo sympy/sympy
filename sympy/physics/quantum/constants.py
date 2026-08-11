@@ -1,4 +1,5 @@
 """Constants (like hbar) related to quantum mechanics."""
+from __future__ import annotations
 
 from sympy.core.numbers import NumberSymbol
 from sympy.core.singleton import Singleton

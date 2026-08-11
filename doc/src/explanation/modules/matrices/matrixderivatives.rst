@@ -1,22 +1,37 @@
 Matrix derivatives
 ==================
 
+Matrix derivatives are a powerful tool utilized in theoretical statistics and
+machine learning.  SymPy provides support for computing closed-formula
+derivatives of matrices and, more broadly, symbolic expressions involving
+matrices.
+
+Matrix derivatives constitute a complex concept that encompasses both the
+principles of matrices and higher-dimensional arrays in general.  The
+conventional matrix syntax employed in mathematics, although powerful,
+occasionally proves incomplete.
+
+In this explanation, we will introduce the framework of matrix expressions and
+array expressions in SymPy, before exploring a detailed description of the
+matrix derivation algorithm.
+
 Matrix and array expressions in SymPy
 -------------------------------------
 
 SymPy provides matrices and general N-dimensional arrays through the modules
-``sympy.matrices`` and ``sympy.tensor.array``, respectively. Each of these two
-modules is component-explicit, meaning that every element is stored and
-directly accessible, so the object explicitly contains the full set of
-component values rather than representing them implicitly.
+``sympy.matrices`` and ``sympy.tensor.array``, respectively. The basic objects
+of these two modules are component-explicit, meaning that every element is
+stored and directly accessible, so the object explicitly contains the full set
+of component values rather than representing them implicitly.
 
 SymPy also supports symbolic matrix expressions and array expressions through
-dedicated modules. These represent matrices and arrays abstractly as symbols,
-defined solely by an identifying name (such as $X$ or $M$) and a shape tuple.
-For matrices, the shape is always a 2-element tuple, representing the number of
-rows and columns. The dimensions within this tuple can be either fixed integers
-(for known sizes) or arbitrary symbolic expressions (when dimensions are
-undetermined).
+the respective dedicated submodules ``sympy.matrices.expressions`` and
+``sympy.tensor.array.expressions``.  These represent matrices and arrays
+abstractly as symbols, defined solely by an identifying name (such as $X$ or
+$M$) and a shape tuple.  For matrices, the shape is always a 2-element tuple,
+representing the number of rows and columns. The dimensions within this tuple
+can be either fixed integers (for known sizes) or arbitrary symbolic
+expressions (when dimensions are undetermined).
 
 Unlike component-explicit matrices, which perform elementwise calculations
 immediately, symbolic matrix expressions retain operations unevaluated in
@@ -24,11 +39,11 @@ expression trees. Arithmetic operations (addition, multiplication, transpose,
 etc.) are formally applied but frozen as symbolic representations rather than
 computed results. This aligns with conventional mathematical notation in
 textbooks, where expressions like ``M*N.T*P`` (also written as
-$\mathbf{M}\mathbf{N}' \mathbf{P}$) represent abstract matrix multiplication
+$\mathbf{M}\mathbf{N}^{T} \mathbf{P}$) represent abstract matrix multiplication
 rather than explicit numerical results.
 
 Array expressions are analogous, the only difference is that they may have any
-number of dimensions, whereas matrices are define to have exactly two.
+number of dimensions, whereas matrices are defined to have exactly two.
 
 In SymPy both matrix symbols and array symbols support Python's ``[ ]``
 operator to reference individual elements. For example:
@@ -65,12 +80,13 @@ A[k, l, m]
 Operations on matrix and array expressions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The matrix expression module in SymPy reflects the common convention used in
-mathematics to represent matrices when indices are not explicit. Therefore,
-``M*N`` or `\mathbf{M}\cdot\mathbf{N}` is the matrix multiplication, or in
-index-explicit form $\sum_j M_{ij} N_{jk}$ with final free indices
-${}_{\{ik\}}$.  Common operators such as determinant, trace, Hadamard product
-and Hadamard power are provided.
+The matrix expression module ``sympy.matrices.expressions`` in SymPy reflects
+the common convention used in mathematics to represent matrices when indices
+are not explicit. Therefore, ``M*N`` or `\mathbf{M}\cdot\mathbf{N}` is the
+matrix multiplication, or in index-explicit form $\sum_j M_{ij} N_{jk}$ with
+final free indices ${}_{\{ik\}}$.  Common operators such as determinant, trace,
+Hadamard (i.e. elementwise) product and Hadamard (i.e. elementwise) power are
+provided.
 
 When a function is applied to a matrix, it is understood in the mathematical
 sense, so ``exp(M)`` or `\exp(\mathbf{M})` denotes the matrix exponential.
@@ -83,25 +99,27 @@ from the matrix exponential.
 The array expressions module, by contrast, is designed to express arbitrary
 operations on arrays of any dimension.
 
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| operation name            | SymPy object            | representation                            | index-explicit equivalent                                                                                 |
-+===========================+=========================+===========================================+===========================================================================================================+
-| tensor product            | ``ArrayTensorProduct``  | $A \otimes B$                             | $A_{ij} B_{kl}$                                                                                           |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| contraction               | ``ArrayContraction``    | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow \sum_j A_{i_{1} \ldots j \ldots j \ldots}$ |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| diagonal                  | ``ArrayDiagonal``       | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow A_{i_{1} \ldots j \ldots j \ldots}$        |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| permutation of dimensions | ``PermuteDims``         | permutation $\sigma$ on axes of $A$       | $A_{i_{1} i_{2} \ldots} \Rightarrow A_{i_{\sigma(1)} i_{\sigma(2) \ldots}}$                               |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| addition                  | ``ArrayAdd``            | elementwise $A + B$                       | $A_{ij} + B_{ij}$                                                                                         |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| summation                 | ``ArraySum``            | summation $\sum_{x} A^{x}$                | $\sum_{x} A^{x}_{ij}$                                                                                     |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| operation name            | SymPy object                   | representation                            | index-explicit equivalent                                                                                 |
++===========================+================================+===========================================+===========================================================================================================+
+| tensor product            | ``ArrayTensorProduct``         | $A \boxtimes B$                           | $A_{ij} B_{kl}$                                                                                           |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| contraction               | ``ArrayContraction``           | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow \sum_j A_{i_{1} \ldots j \ldots j \ldots}$ |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| diagonal                  | ``ArrayDiagonal``              | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow A_{i_{1} \ldots j \ldots j \ldots}$        |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| permutation of dimensions | ``PermuteDims``                | permutation $\sigma$ on axes of $A$       | $A_{i_{1} i_{2} \ldots} \Rightarrow A_{i_{\sigma(1)} i_{\sigma(2) \ldots}}$                               |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| addition                  | ``ArrayAdd``                   | elementwise $A + B$                       | $A_{ij} + B_{ij}$                                                                                         |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| summation                 | ``ArraySum``                   | summation $\sum_{x} A^{x}$                | $\sum_{x} A^{x}_{ij}$                                                                                     |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| elementwise application   | ``ArrayElementwiseApplyFunc``  | $f$ applied to elements of $f_{\circ}(A)$ | $f(A^{x}_{ij})$                                                                                           |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
 
-In SymPy, array expressions are built from four primitive nodes
-``ArrayTensorProduct``, ``ArrayContraction``, ``ArrayDiagonal``,
-``PermuteDims`` that compose and manipulate arrays of arbitrary dimension.
+In SymPy, array expressions are built from four primitive nodes, most
+importantly ``ArrayTensorProduct``, ``ArrayContraction``, ``ArrayDiagonal``,
+``PermuteDims``, that compose and manipulate arrays of arbitrary dimension.
 
 These four operators have a canonical form where, when all four are present,
 they must be nested in the following sequence (from outermost to innermost):
@@ -139,28 +157,28 @@ expressions encompass a more general set of operations.
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
 | matrix operation          | matrix expression form                    | index form                                                 | array expression form                                                            |
 +===========================+===========================================+============================================================+==================================================================================+
-| matrix multiplication     | $\mathbf{M} \mathbf{N}$                   | ${}_{\{ij\}} \Rightarrow \sum_k M_{ik} N_{kj}$             | contraction: $M \otimes N$ on 2nd and 3rd axes                                   |
+| matrix multiplication     | $\mathbf{M} \mathbf{N}$                   | ${}_{\{ij\}} \Rightarrow \sum_k M_{ik} N_{kj}$             | contraction: $M \boxtimes N$ on 2nd and 3rd axes                                 |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
 | trace                     | $\mbox{tr}(\mathbf{M})$                   | ${}_{\{\}} \Rightarrow \sum_i M_{ii}$                      | contraction: $M$ on 1st and 2nd axes                                             |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
 | diagonal                  | $\mbox{diag}(\mathbf{M})$                 | ${}_{\{i\}} \Rightarrow  M_{ii}$                           | diagonalize: $M$ on 1st and 2nd axes                                             |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
-| transposition             | $\mathbf{M}'$                             | ${}_{\{ij\}} \Rightarrow M_{ji}$                           | permutation: $M$ on 1st and 2nd axes                                             |
+| transposition             | $\mathbf{M}^{T}$                          | ${}_{\{ij\}} \Rightarrow M_{ji}$                           | permutation: $M$ on 1st and 2nd axes                                             |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
-| Hadamard product          | $\mathbf{M} \circ \mathbf{N}$             | ${}_{\{ij\}} \Rightarrow M_{ij} N_{ij}$                    | diagonalize: $M \otimes N$ on 1st-3rd axes and 2nd-4th axes                      |
+| Hadamard product          | $\mathbf{M} \circ \mathbf{N}$             | ${}_{\{ij\}} \Rightarrow M_{ij} N_{ij}$                    | diagonalize: $M \boxtimes N$ on 1st-3rd axes and 2nd-4th axes                    |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
-| Kronecker product         | $\mathbf{M} \boxtimes \mathbf{N}$         | ${}_{\{m=id_1+k,n=jd_2+l\}} \Longrightarrow A_{ij} B_{kl}$ | permute $M \otimes N$ on 2nd and 3rd axes, then reshape                          |
+| Kronecker product         | $\mathbf{M} \otimes \mathbf{N}$         | ${}_{\{m=id_1+k,n=jd_2+l\}} \Longrightarrow A_{ij} B_{kl}$ | permute $M \boxtimes N$ on 2nd and 3rd axes, then reshape                          |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
 
 Kronecker product versus tensor product
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In SymPy, the Kronecker product $\boxtimes$ and tensor product $\otimes$
+In SymPy, the Kronecker product $\otimes$ and tensor product $\boxtimes$
 represent very similar underlying operations.  Given matrices $\mathbf{A}$ and
 $\mathbf{B}$, the elements of the resulting tensor product are combined as the
 product of the individual elements:
 
-$$\mathbf{A} \otimes \mathbf{B} \Longrightarrow A_{ij} B_{kl} $$
+$$\mathbf{A} \boxtimes \mathbf{B} \Longrightarrow A_{ij} B_{kl} $$
 
 When representing this expression as an array, different approaches arise
 depending on the index-order and the reshaping of the 4-dimensional array into
@@ -177,7 +195,7 @@ $$\left[
 
 The Kronecker product can be defined in terms of indices ${}_{\{mn\}}$ where $m$ spans over rows of both $\mathbf{A}$
 and $\mathbf{B}$, while $n$ spans over their columns:
-$$A \boxtimes B = \Big[ {}_{\{mn\}} = {}_{\{m=id_1+k,n=jd_2+l\}} \Longrightarrow A_{ij} B_{kl} \Big]$$
+$$A \otimes B = \Big[ {}_{\{mn\}} = {}_{\{m=id_1+k,n=jd_2+l\}} \Longrightarrow A_{ij} B_{kl} \Big]$$
 where $[d_1 \times d_2]$ is the shape of $\mathbf{A}$.
 
 The Kronecker product, implemented by ``KroneckerProduct`` and ``kronecker_product``, combines the rows and columns of $\mathbf{A}$ and $\mathbf{B}$
@@ -246,7 +264,8 @@ $$D_{mnij} = \frac{\partial}{\partial X_{mn}} \Big (Y_{ij} \Big ).$$
 
 SymPy adopts a denominator-first index ordering for derivatives, placing the
 indices of the differentiation variable ${}_{\{mn\}}$ before those of the
-derivand ${}_{\{ij\}}$.  This ${}_{\{mnij\}}$ convention aligns with Wolfram
+derivand ${}_{\{ij\}}$. This roughly corresponds to the mixed layout convention,
+see [LayoutConventions]_.  This ${}_{\{mnij\}}$ convention aligns with Wolfram
 Mathematica but differs from PyTorch/NumPy, which implicitly follow the
 ${}_{\{ijmn\}}$ index-order convention.
 
@@ -265,11 +284,33 @@ this shows that differentiation indices ($mn$) precede the derivand indices
 ($ij$).  Importantly, this notation inherently captures index permutations,
 eliminating the need for operators such as transposition. For example:
 
-$${}_{\{ij\}} \Longrightarrow \Big(M'\Big)_{ij} = M_{ji}$$
+$${}_{\{ij\}} \Longrightarrow \Big(M^{T}\Big)_{ij} = M_{ji}$$
 
 demonstrates how transposition is encoded solely through index-order
 reversal, the ${}_{\{ij\}}$ mapping of $M_{ji}$ directly yields the
 component expression of the transposition.
+
+Exceptions to the derivative index-order
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Be aware that certain functions within the matrix module, such as
+``.jacobian(...)``, employ their own index ordering conventions, which are
+typically derivand-first.  Specifically, in the case of the Jacobian function,
+the derivand axis corresponds to the columns, while the deriving variable axis
+corresponds to the rows of the resulting Jacobian matrix.
+
+Indeed, let's consider the following example:
+$$X = \left[\begin{matrix}f{\left(x,y \right)}\\g{\left(x,y \right)}\end{matrix}\right]$$
+and
+$$Y = \left[\begin{matrix}x\\y\end{matrix}\right]$$
+
+Using the matrix derivative convention, ``X.diff(Y).reshape(2, 2)`` returns:
+
+$$\left[\begin{matrix}\frac{\partial}{\partial x} f{\left(x,y \right)} & \frac{\partial}{\partial x} g{\left(x,y \right)}\\\frac{\partial}{\partial y} f{\left(x,y \right)} & \frac{\partial}{\partial y} g{\left(x,y \right)}\end{matrix}\right]$$
+
+In contrast, calling ``X.jacobian(Y)`` returns the previous matrix transposed:
+
+$$\left[\begin{matrix}\frac{\partial}{\partial x} f{\left(x,y \right)} & \frac{\partial}{\partial y} f{\left(x,y \right)}\\\frac{\partial}{\partial x} g{\left(x,y \right)} & \frac{\partial}{\partial y} g{\left(x,y \right)}\end{matrix}\right]$$
 
 Reconstructing a matrix expression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -289,13 +330,13 @@ denominator has length 1, the result can be collapsed to the $[k \times k]$
 identity matrix $\mathbf{I}_{[k]}$ instead of keeping the full tensor form.
 Explicitly:
 
-$$\left[{}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial x_{mn}}x_{ij} = \delta_{mi} \delta_{nj} = \big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[1]} \big)_{minj}\right] \rightarrow \Big[ {}_{\{mi\}}\Longrightarrow \big(\mathbf{I}_{[k]}\big)_{mi}\Big]$$
+$$\left[{}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial x_{mn}}x_{ij} = \delta_{mi} \delta_{nj} = \big( \mathbf{I}_{[k]} \boxtimes \mathbf{I}_{[1]} \big)_{minj}\right] \rightarrow \Big[ {}_{\{mi\}}\Longrightarrow \big(\mathbf{I}_{[k]}\big)_{mi}\Big]$$
 
 Here, the second and fourth axes are singletons, appearing in the derivative as
 scalar identity matrix $\mathbf{I}_{[1]}$, equivalent to scalar unit.  In index
 notation they only survive in a Kronecker $\delta_{nj}$.
 
-Likewise, $\frac{\partial}{\partial \mathbf{x}}\mathbf{x}'$ has shape
+Likewise, $\frac{\partial}{\partial \mathbf{x}}\mathbf{x}^{T}$ has shape
 $[k \times 1 \times 1 \times k]$, and collapses again to the same
 $[k \times k]$ identity matrix $\mathbf{I}_{[k]}$.
 
@@ -305,7 +346,7 @@ Derive matrix by itself
 As an example, the derivative of $[k \times l]$ matrix $\mathbf{X}$ by itself
 is given by identity relationships between indices:
 
-$${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial X_{mn}} \Big ( X_{ij} \Big ) = \delta_{mi} \delta_{nj} = \Big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[l]} \Big)_{minj}, $$
+$${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial X_{mn}} \Big ( X_{ij} \Big ) = \delta_{mi} \delta_{nj} = \Big( \mathbf{I}_{[k]} \boxtimes \mathbf{I}_{[l]} \Big)_{minj}, $$
 
 where $\delta$ is the Kronecker delta, which satisfies $\delta_{ab} = 1$ if
 $a = b$ and $\delta_{ab} = 0$ otherwise.  Indeed, matrix $\mathbf{X}$ is made of
@@ -337,9 +378,9 @@ Notice that the result of ``X.diff(X)`` can also be expressed as
 
 indeed some authors represent
 
-$$\frac{\partial}{\partial \mathbf{X}}\mathbf{X} = \mathbf{I}_{[k]} \bar\boxtimes \mathbf{I}_{[l]},$$
+$$\frac{\partial}{\partial \mathbf{X}}\mathbf{X} = \mathbf{I}_{[k]} \bar\otimes \mathbf{I}_{[l]},$$
 
-where $\bar\boxtimes$ represents the 4-dimensionally reshaped Kronecker
+where $\bar\otimes$ represents the 4-dimensionally reshaped Kronecker
 product.
 
 Mixing symbols and elements
@@ -368,7 +409,7 @@ A common example in neural networks involves deriving expressions for matrices
 that undergo elementwise functions. For instance, consider a matrix $\mathbf{W}$
 of shape $[k \times l]$ and a matrix-vector $\mathbf{x}$ of shape $[l \times 1]$
 
-$$\frac{\partial}{\partial \mathbf{x}}{\operatorname{atanh}}_{\circ}\left({\mathbf{W} \mathbf{x}}\right) = \mathbf{W}' \operatorname{diag}\left({\left( d \mapsto \frac{1}{1 - d^{2}} \right)}_{\circ}\left({\mathbf{W} \mathbf{x}}\right)\right)$$
+$$\frac{\partial}{\partial \mathbf{x}}{\operatorname{atanh}}_{\circ}\left({\mathbf{W} \mathbf{x}}\right) = \mathbf{W}^{T} \operatorname{diag}\left({\left( d \mapsto \frac{1}{1 - d^{2}} \right)}_{\circ}\left({\mathbf{W} \mathbf{x}}\right)\right)$$
 
 The symbol ${}_{\circ}$ is used to mark the function as acting elementwise.
 Here, we have used the **diag** operator:
@@ -416,25 +457,25 @@ the chain rule expression, while the deriving indices need to be brought in
 front of all others (remember, we use the convention that the indices of the
 deriving variable precede the indices of the expression to be derived).
 
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| operation                      | expression                      | chain rule                                                                          |
-+================================+=================================+=====================================================================================+
-| matrix addition                | $\mathbf{Y} + \mathbf{Z}$       | $\partial \mathbf{Y} + \partial\mathbf{Z}$                                          |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| matrix multiplication          | $\mathbf{Y}\mathbf{Z}$          | $(\partial \mathbf{Y})\mathbf{Z} + \mathbf{Y} (\partial\mathbf{Z})$                 |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| Hadamard (elementwise) product | $\mathbf{Y} \circ \mathbf{Z}$   | $(\partial \mathbf{Y})\circ\mathbf{Z} + \mathbf{Y}\circ(\partial\mathbf{Z})$        |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| tensor product                 | $\mathbf{Y}\otimes\mathbf{Z}$   | $(\partial \mathbf{Y})\otimes\mathbf{Z} + \mathbf{Y}\otimes(\partial\mathbf{Z})$    |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| inverse                        | $\mathbf{Y}^{-1}$               | $-\mathbf{Y}^{-1} (\partial \mathbf{Y}) \mathbf{Y}^{-1}$                            |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| trace                          | $\mbox{tr}(\mathbf{Y})$         | $\mbox{tr}(\partial\mathbf{Y})$                                                     |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| determinant                    | $\mbox{det}(\mathbf{Y})$        | $\mbox{det}(\mathbf{Y}) \mbox{tr}(\mathbf{Y}^{-1}\partial\mathbf{Y})$               |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| transposition                  | $\mathbf{Y}'$                   | $(\partial\mathbf{Y})'$                                                             |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| operation                      | expression                      | chain rule                                                                           |
++================================+=================================+======================================================================================+
+| matrix addition                | $\mathbf{Y} + \mathbf{Z}$       | $\partial \mathbf{Y} + \partial\mathbf{Z}$                                           |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| matrix multiplication          | $\mathbf{Y}\mathbf{Z}$          | $(\partial \mathbf{Y})\mathbf{Z} + \mathbf{Y} (\partial\mathbf{Z})$                  |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| Hadamard (elementwise) product | $\mathbf{Y} \circ \mathbf{Z}$   | $(\partial \mathbf{Y})\circ\mathbf{Z} + \mathbf{Y}\circ(\partial\mathbf{Z})$         |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| tensor product                 | $\mathbf{Y}\boxtimes\mathbf{Z}$ | $(\partial \mathbf{Y})\boxtimes\mathbf{Z} + \mathbf{Y}\boxtimes(\partial\mathbf{Z})$ |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| inverse                        | $\mathbf{Y}^{-1}$               | $-\mathbf{Y}^{-1} (\partial \mathbf{Y}) \mathbf{Y}^{-1}$                             |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| trace                          | $\mbox{tr}(\mathbf{Y})$         | $\mbox{tr}(\partial\mathbf{Y})$                                                      |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| determinant                    | $\mbox{det}(\mathbf{Y})$        | $\mbox{det}(\mathbf{Y}) \mbox{tr}(\mathbf{Y}^{-1}\partial\mathbf{Y})$                |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| transposition                  | $\mathbf{Y}^{T}$                | $(\partial\mathbf{Y})^{T}$                                                           |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
 
 When differentiating with respect to a matrix $\mathbf{X}$, we treat the
 gradient $\partial \mathbf{Y}$ as a 4-dimensional array whose first two axes
@@ -480,7 +521,7 @@ using our array expression syntax, this can be represented as
 
 here, ``array_derive(Y, X)`` returns a 4-dimensional array expression, we then proceed to create an 8-dimensional
 array expression,
-$$-\mathbf{Y}^{-1} \otimes \frac{\partial\mathbf{Y}}{\partial\mathbf{X}} \otimes \mathbf{Y}^{-1}$$
+$$-\mathbf{Y}^{-1} \boxtimes \frac{\partial\mathbf{Y}}{\partial\mathbf{X}} \boxtimes \mathbf{Y}^{-1}$$
 which is then contracted on the 2-nd and 5-th axes, i.e. (1, 4), and on the 6-th and 7-th axes, i.e. (5, 6).
 $$-\frac{1}{\partial\mathbf{X}} \Big( \mathbf{Y}^{-1} (\partial\mathbf{Y}) \mathbf{Y}^{-1} \Big)$$
 The contraction reproduce the structure of the matrix multiplication of the chain rule for the inverse.
@@ -489,7 +530,7 @@ as they are the axes referring to the deriving variable $\mathbf{X}$.
 
 A **concrete example** involving the inverse matrix taken from [MatrixCookbook]_ (number 124):
 
-$$\frac{\partial}{\partial \mathbf{X}} \operatorname{tr}\left(\mathbf{A} \mathbf{X}^{-1} \mathbf{B} \right) = - \left(\mathbf{X}'\right)^{-1} \mathbf{A}' \mathbf{B}' \left(\mathbf{X}'\right)^{-1} $$
+$$\frac{\partial}{\partial \mathbf{X}} \operatorname{tr}\left(\mathbf{A} \mathbf{X}^{-1} \mathbf{B} \right) = - \left(\mathbf{X}^{T}\right)^{-1} \mathbf{A}^{T} \mathbf{B}^{T} \left(\mathbf{X}^{T}\right)^{-1} $$
 
 >>> from sympy import MatrixSymbol, Trace, Inverse
 >>> from sympy.abc import k
@@ -508,7 +549,7 @@ Some examples of the derivative of the determinant:
 
 [MatrixCookbook]_ example 49:
 
-$$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{X}) = \mbox{det}(\mathbf{X}) \left(\mathbf{X}'\right)^{-1}$$
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{X}) = \mbox{det}(\mathbf{X}) \left(\mathbf{X}^{T}\right)^{-1}$$
 
 >>> from sympy import Determinant
 >>> expr = Determinant(X)
@@ -517,7 +558,7 @@ Determinant(X)*X.T**(-1)
 
 [MatrixCookbook]_ example 51:
 
-$$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}) = \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}) \left(\mathbf{X}'\right)^{-1}$$
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}) = \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}) \left(\mathbf{X}^{T}\right)^{-1}$$
 
 >>> expr = Determinant(A*X*B)
 >>> expr.diff(X)
@@ -525,7 +566,7 @@ $$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}
 
 [MatrixCookbook]_ example 55:
 
-$$\frac{\partial}{\partial \mathbf{X}} \log\,\mbox{det}(\mathbf{X}) = 2 \left(\mathbf{X}'\right)^{-1}$$
+$$\frac{\partial}{\partial \mathbf{X}} \log\,\mbox{det}(\mathbf{X}) = 2 \left(\mathbf{X}^{T}\right)^{-1}$$
 
 >>> from sympy import log
 >>> expr = log(Determinant(X.T*X))
@@ -538,7 +579,7 @@ Example derivatives of the trace
 
 [MatrixCookbook]_ example 107:
 
-$$\frac{\partial}{\partial \mathbf{X}} \mbox{tr}(\mathbf{X}^2\mathbf{B}) = \left( \mathbf{X} \mathbf{B} + \mathbf{B}\mathbf{X}\right)'$$
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{tr}(\mathbf{X}^2\mathbf{B}) = \left( \mathbf{X} \mathbf{B} + \mathbf{B}\mathbf{X}\right)^{T}$$
 
 >>> expr = Trace(X**2*B)
 >>> expr.diff(X)
@@ -546,7 +587,7 @@ B.T*X.T + X.T*B.T
 
 [MatrixCookbook]_ example 108:
 
-$$\frac{\partial}{\partial \mathbf{X}} \mbox{tr}(\mathbf{X}'\mathbf{B}\mathbf{X}) = \mathbf{B} \mathbf{X} + \mathbf{B}' \mathbf{X}$$
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{tr}(\mathbf{X}^{T}\mathbf{B}\mathbf{X}) = \mathbf{B} \mathbf{X} + \mathbf{B}^{T} \mathbf{X}$$
 
 >>> expr = Trace(X.T*B*X)
 >>> expr.diff(X)
@@ -567,13 +608,13 @@ spotting the equivalent matrix multiplication or trace forms is straightforward.
 For example:
 
 $$\sum_{b,c,e,f} M_{cb} N_{cd} P_{ef} Q_{ba} R_{fe}
-\Longrightarrow \mathbf{Q}' \mathbf{M}' \mathbf{N} \, \mbox{tr}\big( \mathbf{P} \mathbf{R} \big)
+\Longrightarrow \mathbf{Q}^{T} \mathbf{M}^{T} \mathbf{N} \, \mbox{tr}\big( \mathbf{P} \mathbf{R} \big)
 $$
 
 * generally, open two-paired contraction lines are matrix multiplications:
-  $$\sum_{j} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mathbf{A} \mathbf{B}' $$
+  $$\sum_{j} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mathbf{A} \mathbf{B}^{T} $$
 * while closed two-paired contraction lines are traces:
-  $$\sum_{ij} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mbox{tr}\Big(\mathbf{A} \mathbf{B}'\Big) $$
+  $$\sum_{ij} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mbox{tr}\Big(\mathbf{A} \mathbf{B}^{T}\Big) $$
 
 Matrix multiplication is the most frequent pattern, but traces, diag-expansions, and Hadamard products may also appear.
 
@@ -590,13 +631,13 @@ The simplification step tries to drop any singleton or diagonal dimensions;
 if this reduces the array to two dimensions, an equivalent matrix expression is sought.
 A handful of tricks is used to collapse the array dimensions:
 
-* tensor product of two matrix-vectors $\mathbf{a}$ and $\mathbf{a}$, of shape $[k \times 1]$ each, $\mathbf{a} \otimes \mathbf{b}$, can be turned into a matrix multiplication over their trivial dimension: $\mathbf{a} \cdot \mathbf{b}'$. Indeed
-  $$\mathbf{a} \otimes \mathbf{b} = a_{i0} b_{j0} \Longrightarrow \sum_{k=0}^0 a_{ik} b_{jk} = \mathbf{a} \mathbf{b}' $$
+* tensor product of two matrix-vectors $\mathbf{a}$ and $\mathbf{a}$, of shape $[k \times 1]$ each, $\mathbf{a} \boxtimes \mathbf{b}$, can be turned into a matrix multiplication over their trivial dimension: $\mathbf{a} \cdot \mathbf{b}^{T}$. Indeed
+  $$\mathbf{a} \boxtimes \mathbf{b} = a_{i0} b_{j0} \Longrightarrow \sum_{k=0}^0 a_{ik} b_{jk} = \mathbf{a} \mathbf{b}^{T} $$
   This has shrunk the array from $[k \times 1 \times k \times 1]$ to $[k \times k]$ by squeezing out the singleton dimensions.
 * similar to the previous point, but more complex:
-  $$\mathbf{a} \otimes \mathbf{b} \otimes \mathbf{x}'\mathbf{x} \Longrightarrow \mathbf{a} \mathbf{x}' \mathbf{x} \mathbf{b}' $$
-* if one term of the tensor product has shape $[1 \times 1]$, the result may be expressed as a Kronecker product $\boxtimes$ between matrices:
-  $$\mathbf{x}' \mathbf{x} \otimes \mathbf{A} \Longrightarrow \left( \mathbf{x}' \mathbf{x} \right) \boxtimes \mathbf{A} $$
+  $$\mathbf{a} \boxtimes \mathbf{b} \boxtimes \mathbf{x}^{T}\mathbf{x} \Longrightarrow \mathbf{a} \mathbf{x}^{T} \mathbf{x} \mathbf{b}^{T} $$
+* if one term of the tensor product has shape $[1 \times 1]$, the result may be expressed as a Kronecker product $\otimes$ between matrices:
+  $$\mathbf{x}^{T} \mathbf{x} \boxtimes \mathbf{A} \Longrightarrow \left( \mathbf{x}^{T} \mathbf{x} \right) \otimes \mathbf{A} $$
   This has shrunk the array from $[1 \times 1 \times k \times k]$ to $[k \times k]$.
 * the triple contraction of two matrices and a matrix-vector may be reinterpreted in terms of matrix multiplication:
   $$\sum_{j} \mathbf{A}_{ij} \mathbf{b}_{j0} \mathbf{C}_{jk} \Longrightarrow \mathbf{A}\, \mbox{diag}(\mathbf{b}) \, \mathbf{C}.$$
@@ -609,13 +650,17 @@ A handful of tricks is used to collapse the array dimensions:
   Notice that an arbitrary number of matrix-vectors can be added, each contributes to the final expression with a singleton dimension,
   which can be dropped.
 * multi-index contractions involving identity matrices may create redundant diagonal axes that can be simplified away:
-  $$\sum_{j} A_{ij} I_{jk} I_{jl} \Longrightarrow \mathbf{A}$$
-  this is equivalent to:
+  $$\sum_{l} A_{il} I_{lk} I_{jl} \Longrightarrow \mathbf{A}$$
+  by summing up, this is equivalent to:
+  $${}_{\{ijk\}} \Rightarrow A_{ik} I_{kj}$$
+  or in component-explicit form:
   $$\left[\begin{matrix}\left[\begin{matrix}{A}_{00} & 0 & 0\\0 & {A}_{01} & 0\\0 & 0 & {A}_{02}\end{matrix}\right] & \left[\begin{matrix}{A}_{10} & 0 & 0\\0 & {A}_{11} & 0\\0 & 0 & {A}_{12}\end{matrix}\right] & \left[\begin{matrix}{A}_{20} & 0 & 0\\0 & {A}_{21} & 0\\0 & 0 & {A}_{22}\end{matrix}\right]\end{matrix}\right]\Longrightarrow \left[\begin{matrix}{A}_{00} & {A}_{01} & {A}_{02}\\{A}_{10} & {A}_{11} & {A}_{12}\\{A}_{20} & {A}_{21} & {A}_{22}\end{matrix}\right]$$
   This collapse has shrunk a **non-singleton dimension**, from $[k \times k \times k]$ to $[k \times k]$.
   Unlike squeezing singleton dimensions, this simplification cannot be done by a simple array reshaping.
   Similarly,
-  $$\sum_{j} I_{ij} A_{kj} I_{jl} \Longrightarrow \mathbf{A}'$$
+  $$\sum_{l} A_{lj} I_{il} I_{lk} \Longrightarrow \mathbf{A}^{T}$$
+  summing up reduces it to
+  $${}_{\{ijk\}} \Rightarrow A_{ij} I_{ik} $$
   which is equivalent, in explicit form, to:
   $$\left[\begin{matrix}\left[\begin{matrix}{A}_{00} & 0 & 0\\{A}_{01} & 0 & 0\\{A}_{02} & 0 & 0\end{matrix}\right] & \left[\begin{matrix}0 & {A}_{10} & 0\\0 & {A}_{11} & 0\\0 & {A}_{12} & 0\end{matrix}\right] & \left[\begin{matrix}0 & 0 & {A}_{20}\\0 & 0 & {A}_{21}\\0 & 0 & {A}_{22}\end{matrix}\right]\end{matrix}\right] \Longrightarrow \left[\begin{matrix}{A}_{00} & {A}_{10} & {A}_{20}\\{A}_{01} & {A}_{11} & {A}_{21}\\{A}_{02} & {A}_{12} & {A}_{22}\end{matrix}\right] $$
   this last expression has three axes, but the second ${}_{\{j\}}$ and third ${}_{\{k\}}$ are diagonal:
@@ -656,7 +701,7 @@ $$\min_{\boldsymbol{\beta}} \Big\Vert \mathbf{y} - \mathbf{X} \boldsymbol{\beta}
 The variable ``obj`` is the objective function to be minimized, here
 represented as a dot-product,
 
-$$\left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right)' \left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right).$$
+$$\left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right)^{T} \left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right).$$
 
 A standard way to find the minimizer is to differentiate this objective
 function with respect to $\boldsymbol{\beta}$ and set the resulting gradient
@@ -668,7 +713,7 @@ equal to zero:
 that is, computing the derivative of the objective function with respect to
 $\boldsymbol{\beta}$ yields
 
-$$- 2 \mathbf{X}' \left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right).$$
+$$- 2 \mathbf{X}^{T} \left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right).$$
 
 Setting this derivative equal to zero gives the normal equations, which can
 then be solved to obtain the ordinary least squares estimator.  We can
@@ -677,12 +722,12 @@ rearrange:
 >>> ((X.T*X).inv() * obj.diff(beta)).expand()
 -2*(X.T*X)**(-1)*X.T*y + 2*beta
 
-that is, $- 2 \left(\mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y} + 2 \boldsymbol{\beta}$.
+that is, $- 2 \left(\mathbf{X}^{T} \mathbf{X}\right)^{-1} \mathbf{X}^{T} \mathbf{y} + 2 \boldsymbol{\beta}$.
 
 This leads immediately to the well-known closed-form solution for the ordinary
 least squares estimator:
 
-$$\boldsymbol{\beta} = \left(\mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y}$$
+$$\boldsymbol{\beta} = \left(\mathbf{X}^{T} \mathbf{X}\right)^{-1} \mathbf{X}^{T} \mathbf{y}$$
 
 Ridge regression
 ~~~~~~~~~~~~~~~~
@@ -707,7 +752,7 @@ Using SymPy, the objective function can be written as:
 >>> obj
 lambda*beta.T*beta + (-beta.T*X.T + y.T)*(-X*beta + y)
 
-which corresponds to $\lambda \boldsymbol{\beta}' \boldsymbol{\beta} + \left( \mathbf{y}' - \boldsymbol{\beta}' \mathbf{X}' \right) \left( \mathbf{y} -
+which corresponds to $\lambda \boldsymbol{\beta}^{T} \boldsymbol{\beta} + \left( \mathbf{y}^{T} - \boldsymbol{\beta}^{T} \mathbf{X}^{T} \right) \left( \mathbf{y} -
 \mathbf{X} \boldsymbol{\beta} \right)$.
 
 Taking the derivative of the objective function with respect to
@@ -716,16 +761,16 @@ $\boldsymbol{\beta}$ yields:
 >>> obj.diff(beta)
 (2*lambda)*beta - 2*X.T*(-X*beta + y)
 
-which is $2 \lambda \boldsymbol{\beta} - 2 \mathbf{X}' \left( \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \right)$.
+which is $2 \lambda \boldsymbol{\beta} - 2 \mathbf{X}^{T} \left( \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \right)$.
 Regrouping the terms by $\boldsymbol{\beta}$ and dropping the constant factor
 of 2, we obtain:
 
-$$\left(\lambda \mathbf{I} + \mathbf{X}' \mathbf{X}\right  ) \boldsymbol{\beta} - \mathbf{X}' \mathbf{y}$$
+$$\left(\lambda \mathbf{I} + \mathbf{X}^{T} \mathbf{X}\right  ) \boldsymbol{\beta} - \mathbf{X}^{T} \mathbf{y}$$
 
 Solving for the stationary point by setting this derivative equal to zero gives
 the normal equations for ridge regression:
 
-$$\boldsymbol{\beta} = \left(\lambda \mathbf{I} + \mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y}$$
+$$\boldsymbol{\beta} = \left(\lambda \mathbf{I} + \mathbf{X}^{T} \mathbf{X}\right)^{-1} \mathbf{X}^{T} \mathbf{y}$$
 
 Principal component analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -744,12 +789,12 @@ $$\underset{\mathbf{w}}{\operatorname{arg\,max}} \, \Big\Vert \mathbf{X} \mathbf
 
 Expressing the norms in terms of matrix products, the problem can be written as
 
-$$\underset{\mathbf{w}}{\operatorname{arg\,max}} \left( \mathbf{w}' \mathbf{X}' \mathbf{X} \mathbf{w} \right) \\ \mbox{with } \mathbf{w}'\mathbf{w} = 1$$
+$$\underset{\mathbf{w}}{\operatorname{arg\,max}} \left( \mathbf{w}^{T} \mathbf{X}^{T} \mathbf{X} \mathbf{w} \right) \\ \mbox{with } \mathbf{w}^{T}\mathbf{w} = 1$$
 
 To solve this constrained optimization problem, we introduce a Lagrange
 multiplier and define the Lagrangian
 
-$$\mathcal{L} = \mathbf{w}' \mathbf{X}' \mathbf{X} \mathbf{w} + \lambda ( \mathbf{w}'\mathbf{w} - 1 )$$
+$$\mathcal{L} = \mathbf{w}^{T} \mathbf{X}^{T} \mathbf{X} \mathbf{w} + \lambda ( \mathbf{w}^{T}\mathbf{w} - 1 )$$
 
 In SymPy, this setup can be expressed as follows:
 
@@ -776,15 +821,16 @@ and setting them equal to zero in order to obtain the stationary conditions for
 this optimization problem.  That is, we are required to solve the following two
 equations:
 
-$$\frac{\partial \mathcal{L}}{\partial \mathbf{w}} = 2 \lambda \mathbf{w} + 2 \mathbf{X}' \mathbf{X} \mathbf{w} = 0$$
+$$\frac{\partial \mathcal{L}}{\partial \mathbf{w}} = 2 \lambda \mathbf{w} + 2 \mathbf{X}^{T} \mathbf{X} \mathbf{w} = 0$$
 
-$$\frac{\partial \mathcal{L}}{\partial \lambda} = \mathbf{w}' \mathbf{w} - \mathbb{I} = 0$$
+$$\frac{\partial \mathcal{L}}{\partial \lambda} = \mathbf{w}^{T} \mathbf{w} - \mathbb{I} = 0$$
 
 The first equation corresponds to the eigenvalue equation of the matrix
-$\mathbf{X}' \mathbf{X}$. Therefore, we conclude that $\mathbf{w}$ must be an
-eigenvector of $\mathbf{X}' \mathbf{X}$.
+$\mathbf{X}^{T} \mathbf{X}$. Therefore, we conclude that $\mathbf{w}$ must be an
+eigenvector of $\mathbf{X}^{T} \mathbf{X}$.
 
 References
 ----------
 
 .. [MatrixCookbook] The Matrix Cookbook, by Kaare Brandt Petersen and Michael Syskind Pedersen, https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf
+.. [LayoutConventions] https://en.wikipedia.org/wiki/Matrix_calculus#Layout_conventions

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.sets.setexpr import SetExpr
 from sympy.sets import Interval, FiniteSet, Intersection, ImageSet, Union
 

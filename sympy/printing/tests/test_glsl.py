@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import (pi, symbols, Rational, Integer, GoldenRatio, EulerGamma,
                         Catalan, Lambda, Dummy, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt

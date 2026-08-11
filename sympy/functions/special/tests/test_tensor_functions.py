@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.relational import Ne
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (adjoint, conjugate, transpose)

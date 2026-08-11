@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.strategies.tools import subs, typed
 from sympy.strategies.rl import rm_id
 from sympy.core.basic import Basic

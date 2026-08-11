@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external import import_module
 
 lfortran = import_module('lfortran')

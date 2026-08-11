@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.core.function import Lambda

@@ -1,4 +1,5 @@
 """Geometry objects for use by wrapping pathways."""
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import ZZ, QQ, ZZ_I, EX, Matrix, eye, zeros, symbols
 from sympy.polys.matrices import DM, DomainMatrix
 from sympy.polys.matrices.dense import ddm_irref_den, ddm_irref

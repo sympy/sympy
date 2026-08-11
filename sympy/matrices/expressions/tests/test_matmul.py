@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import I, symbols, Basic, Mul, S
 from sympy.core.mul import mul
 from sympy.functions import adjoint, transpose

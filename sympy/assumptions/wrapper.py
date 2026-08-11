@@ -42,6 +42,7 @@ None
 False
 
 """
+from __future__ import annotations
 
 from sympy.assumptions import ask, Q
 from sympy.core.basic import Basic

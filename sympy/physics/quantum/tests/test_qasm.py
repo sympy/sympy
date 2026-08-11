@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.quantum.qasm import Qasm, flip_index, trim,\
      get_index, nonblank, fullsplit, fixcommand, stripquotes, read_qasm
 from sympy.physics.quantum.gate import X, Z, H, S, T

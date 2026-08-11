@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.containers import TupleKind
@@ -1425,10 +1426,15 @@ def test_issue_9447():
 def test_issue_10337():
     assert (FiniteSet(2) == 3) is False
     assert (FiniteSet(2) != 3) is True
-    raises(TypeError, lambda: FiniteSet(2) < 3)
-    raises(TypeError, lambda: FiniteSet(2) <= 3)
-    raises(TypeError, lambda: FiniteSet(2) > 3)
-    raises(TypeError, lambda: FiniteSet(2) >= 3)
+    for other in (3, x):
+        raises(TypeError, lambda: FiniteSet(2) < other)
+        raises(TypeError, lambda: FiniteSet(2) <= other)
+        raises(TypeError, lambda: FiniteSet(2) > other)
+        raises(TypeError, lambda: FiniteSet(2) >= other)
+        raises(TypeError, lambda: other < FiniteSet(2))
+        raises(TypeError, lambda: other <= FiniteSet(2))
+        raises(TypeError, lambda: other > FiniteSet(2))
+        raises(TypeError, lambda: other >= FiniteSet(2))
 
 
 def test_issue_10326():

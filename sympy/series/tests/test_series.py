@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, PoleError, Subs)
 from sympy.core.numbers import (E, Float, Rational, oo, pi, I)

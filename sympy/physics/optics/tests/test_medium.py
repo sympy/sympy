@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.optics import Medium
 from sympy.abc import epsilon, mu, n

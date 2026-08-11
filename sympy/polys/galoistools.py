@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
 from math import ceil as _ceil, sqrt as _sqrt, prod
 
 from sympy.core.random import uniform, _randint
 from sympy.external.gmpy import MPZ, invert
-from sympy.polys.domains.domain import Domain
-from sympy.polys.densebasic import dup
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import _sort_factors_single, _sort_factors_multiple
+
+if TYPE_CHECKING:
+    from sympy.polys.densebasic import dup
+    from sympy.polys.domains.domain import Domain
 
 
 def gf_crt(U: list[MPZ], M: list[MPZ], K: Domain[MPZ]) -> MPZ:

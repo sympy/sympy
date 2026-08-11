@@ -1,4 +1,5 @@
 """The commutator: [A,B] = A*B - B*A."""
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr

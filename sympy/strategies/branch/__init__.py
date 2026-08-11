@@ -1,3 +1,4 @@
+from __future__ import annotations
 from . import traverse
 from .core import (
     condition, debug, multiplex, exhaust, notempty,

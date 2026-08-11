@@ -12,6 +12,7 @@ Medium Term Todo:
 * Get UGate to work with either sympy/numpy matrices and output either
   format. This should also use the matrix slots.
 """
+from __future__ import annotations
 
 from itertools import chain
 import random

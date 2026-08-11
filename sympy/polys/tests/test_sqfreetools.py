@@ -1,4 +1,5 @@
 """Tests for square-free decomposition algorithms and related tools. """
+from __future__ import annotations
 
 from sympy.polys.rings import ring
 from sympy.polys.domains import FF, ZZ, QQ

@@ -1,4 +1,5 @@
 """Hypergeometric and Meijer G-functions"""
+from __future__ import annotations
 from collections import Counter
 
 from sympy.core import S, Mod

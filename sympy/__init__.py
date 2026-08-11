@@ -1,3 +1,4 @@
+# noqa: I002
 """
 SymPy is a Python library for symbolic mathematics. It aims to become a
 full-featured computer algebra system (CAS) while keeping the code as simple
@@ -72,7 +73,7 @@ from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         true, false, satisfiable)
 
 from .assumptions import (AppliedPredicate, Predicate, AssumptionsContext,
-        assuming, Q, ask, register_handler, remove_handler, refine)
+        assuming, Q, ask, refine)
 
 from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         degree, total_degree, degree_list, LC, LM, LT, pdiv, prem, pquo,
@@ -100,9 +101,9 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         ComplexRootOf, RootSum, roots, Domain, FiniteField, IntegerRing,
         RationalField, RealField, ComplexField, PythonFiniteField,
         GMPYFiniteField, PythonIntegerRing, GMPYIntegerRing, PythonRational,
-        GMPYRationalField, AlgebraicField, PolynomialRing, FractionField,
-        ExpressionDomain, FF_python, FF_gmpy, ZZ_python, ZZ_gmpy, QQ_python,
-        QQ_gmpy, GF, FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, EXRAW,
+        GMPYRationalField, AlgebraicField, CyclotomicField, PolynomialRing,
+        FractionField, ExpressionDomain, FF_python, FF_gmpy, ZZ_python, ZZ_gmpy,
+        QQ_python, QQ_gmpy, GF, FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, EXRAW,
         construct_domain, swinnerton_dyer_poly, cyclotomic_poly,
         symmetric_poly, random_poly, interpolating_poly, jacobi_poly,
         chebyshevt_poly, chebyshevu_poly, hermite_poly, hermite_prob_poly,
@@ -291,7 +292,7 @@ __all__ = [
 
     # sympy.assumptions
     'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming', 'Q',
-    'ask', 'register_handler', 'remove_handler', 'refine',
+    'ask',  'refine',
 
     # sympy.polys
     'Poly', 'PurePoly', 'poly_from_expr', 'parallel_poly_from_expr', 'degree',
@@ -320,8 +321,8 @@ __all__ = [
     'CRootOf', 'rootof', 'RootOf', 'ComplexRootOf', 'RootSum', 'roots',
     'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
     'ComplexField', 'PythonFiniteField', 'GMPYFiniteField', 'PythonIntegerRing',
-    'GMPYIntegerRing', 'PythonRational', 'GMPYRationalField',
-    'AlgebraicField', 'PolynomialRing', 'FractionField', 'ExpressionDomain',
+    'GMPYIntegerRing', 'PythonRational', 'GMPYRationalField', 'AlgebraicField',
+    'CyclotomicField', 'PolynomialRing', 'FractionField', 'ExpressionDomain',
     'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
     'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX', 'EXRAW',
     'construct_domain', 'swinnerton_dyer_poly', 'cyclotomic_poly',

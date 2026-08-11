@@ -1,4 +1,5 @@
 """Module for querying SymPy objects about assumptions."""
+from __future__ import annotations
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
@@ -7,10 +8,8 @@ from sympy.core import sympify
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.inference import satisfiable
+from sympy.logic.boolalg import And
 from sympy.utilities.decorator import memoize_property
-from sympy.utilities.exceptions import (sympy_deprecation_warning,
-                                        SymPyDeprecationWarning,
-                                        ignore_warnings)
 
 
 # Memoization is necessary for the properties of AssumptionKeys to
@@ -498,6 +497,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     from sympy.assumptions.lra_satask import lra_satask
     from sympy.logic.algorithms.lra_theory import UnhandledInput
 
+    assumptions = And(assumptions, *context)
+
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
 
@@ -518,7 +519,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     # convert local and global assumptions to CNF
     assump_cnf = CNF.from_prop(assumptions)
-    assump_cnf.extend(context)
 
     # extract the relevant facts from assumptions with respect to args
     local_facts = _extract_all_facts(assump_cnf, args)
@@ -544,12 +544,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return bool(res)
 
     # using satask (still costly)
-    res = satask(proposition, assumptions=assumptions, context=context)
+    res = satask(proposition, assumptions=assumptions)
     if res is not None:
         return res
 
     try:
-        res = lra_satask(proposition, assumptions=assumptions, context=context)
+        res = lra_satask(proposition, assumptions=assumptions)
     except UnhandledInput:
         return None
 
@@ -558,7 +558,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
 def _ask_single_fact(key, local_facts):
     """
-    Compute the truth value of single predicate using assumptions.
+    Determine whether the key is directly implied or refuted by any unit clause in local_facts.
 
     Parameters
     ==========
@@ -607,85 +607,58 @@ def _ask_single_fact(key, local_facts):
     >>> _ask_single_fact(key, local_facts)
     False
     """
-    if local_facts.clauses:
+    if not local_facts.clauses:
+        return None
 
-        known_facts_dict = get_known_facts_dict()
+    known_facts_dict = get_known_facts_dict()
+    get_facts = lambda k: known_facts_dict.get(k, (set(), set()))
 
-        if len(local_facts.clauses) == 1:
-            cl, = local_facts.clauses
-            if len(cl) == 1:
-                f, = cl
-                prop_facts = known_facts_dict.get(key, None)
-                prop_req = prop_facts[0] if prop_facts is not None else set()
-                if f.is_Not and f.arg in prop_req:
-                    # the prerequisite of proposition is rejected
-                    return False
+    for clause in local_facts.clauses:
+        if len(clause) != 1:
+            continue
+        (f,) = clause
+        pred, negated = f.arg, f.is_Not
 
-        for clause in local_facts.clauses:
-            if len(clause) == 1:
-                f, = clause
-                prop_facts = known_facts_dict.get(f.arg, None) if not f.is_Not else None
-                if prop_facts is None:
-                    continue
+        # Negative literal
+        key_req, _ = get_facts(key)
+        if negated and pred in key_req:
+            # If key implies pred and pred is false,
+            # then key must be false.
+            return False
 
-                prop_req, prop_rej = prop_facts
-                if key in prop_req:
-                    # assumption implies the proposition
-                    return True
-                elif key in prop_rej:
-                    # proposition rejects the assumption
-                    return False
+        # Positive literal
+        if not negated:
+            req, rej = get_facts(pred)
+            if key in req:
+                # key is implied by pred
+                return True
+            if key in rej:
+                # ~key is implied by pred
+                return False
 
     return None
 
 
-def register_handler(key, handler):
+def _ask_recursive(proposition, assumptions):
     """
-    Register a handler in the ask system. key must be a string and handler a
-    class inheriting from AskHandler.
-
-    .. deprecated:: 1.8.
-        Use multipledispatch handler instead. See :obj:`~.Predicate`.
-
+    Answers query by relying only on recursive handlers and `_ask_single_fact`
+    and avoiding expensive SAT solver queries.
     """
-    sympy_deprecation_warning(
-        """
-        The AskHandler system is deprecated. The register_handler() function
-        should be replaced with the multipledispatch handler of Predicate.
-        """,
-        deprecated_since_version="1.8",
-        active_deprecations_target='deprecated-askhandler',
-    )
-    if isinstance(key, Predicate):
-        key = key.name.name
-    Qkey = getattr(Q, key, None)
-    if Qkey is not None:
-        Qkey.add_handler(handler)
+    if isinstance(proposition, AppliedPredicate):
+        key, args = proposition.function, proposition.arguments
     else:
-        setattr(Q, key, Predicate(key, handlers=[handler]))
+        key, args = Q.is_true, (proposition,)
 
+    assump_cnf = CNF.from_prop(assumptions)
+    local_facts = _extract_all_facts(assump_cnf, args)
 
-def remove_handler(key, handler):
-    """
-    Removes a handler from the ask system.
+    res = _ask_single_fact(key, local_facts)
+    if res is not None:
+        return res
 
-    .. deprecated:: 1.8.
-        Use multipledispatch handler instead. See :obj:`~.Predicate`.
-
-    """
-    sympy_deprecation_warning(
-        """
-        The AskHandler system is deprecated. The remove_handler() function
-        should be replaced with the multipledispatch handler of Predicate.
-        """,
-        deprecated_since_version="1.8",
-        active_deprecations_target='deprecated-askhandler',
-    )
-    if isinstance(key, Predicate):
-        key = key.name.name
-    # Don't show the same warning again recursively
-    with ignore_warnings(SymPyDeprecationWarning):
-        getattr(Q, key).remove_handler(handler)
+    res = key(*args)._eval_ask(assumptions)
+    if res is not None:
+        return bool(res)
 
 
 from sympy.assumptions.ask_generated import (get_all_known_facts,

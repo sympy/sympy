@@ -3,10 +3,13 @@
 # NOTE: keep tests sorted by (module, class name) key. If a class can't
 # be instantiated, add it here anyway with @SKIP("abstract class) (see
 # e.g. Function).
+from __future__ import annotations
 
 import os
 import re
 from pathlib import Path
+
+import pytest
 
 from sympy.assumptions.ask import Q
 from sympy.core.basic import Basic
@@ -29,6 +32,9 @@ whitelist = [
      "sympy.assumptions.relation.equality",    # tested by test_predicates()
 ]
 
+@pytest.mark.thread_unsafe(
+    reason="performs a package-wide import scan that cannot run concurrently"
+)
 def test_all_classes_are_tested():
     this = os.path.split(__file__)[0]
     path = os.path.join(this, os.pardir, os.pardir)

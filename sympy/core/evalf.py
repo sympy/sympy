@@ -3,7 +3,7 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING, Any, overload, Type
+from typing import Callable, TYPE_CHECKING, Any, overload
 
 import math
 
@@ -11,7 +11,7 @@ from sympy.external.mpmath import (
     inf as mpmath_inf, make_mpf, make_mpc, mpc, mpf,
     MPZ, from_int, from_man_exp, from_rational, fhalf, fnan, finf, fninf,
     fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan, mpf_atan2, mpf_cmp,
-    mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul, mpf_neg, mpf_pi,
+    mpf_cos, mpf_e, mpf_exp, mpf_ln, mpf_lt, mpf_mul, mpf_neg, mpf_pi,
     mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt, normalize,
     round_nearest, to_int, to_str, mpf_tan, mpc_abs, mpc_pow, mpc_pow_mpf,
     mpc_pow_int, mpc_sqrt, mpc_exp, dps_to_prec, prec_to_dps,
@@ -988,7 +988,7 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
 
     imaginary_term = (mpf_cmp(xre, fzero) < 0)
 
-    re = mpf_log(mpf_abs(xre), prec, rnd)
+    re = mpf_ln(mpf_abs(xre), prec, rnd)
     size = fastlog(re)
     if prec - size > workprec:
         from .add import Add
@@ -998,7 +998,7 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
         if xre != fzero and (xre_acc is None or xre_acc > 1):
             prec2 = workprec - fastlog(xre)
             # xre is now x - 1 so we add 1 back here to calculate x
-            re = mpf_log(mpf_abs(mpf_add(xre, fone, prec2)), prec, rnd)
+            re = mpf_ln(mpf_abs(mpf_add(xre, fone, prec2)), prec, rnd)
 
     re_acc = prec
 
@@ -1393,7 +1393,7 @@ def evalf_symbol(x: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
         cache[x] = (v, prec)
         return v
 
-evalf_table: dict[Type[Expr], Callable[[Expr, int, OPT_DICT], TMP_RES]] = {}
+evalf_table: dict[type[Expr], Callable[[Expr, int, OPT_DICT], TMP_RES]] = {}
 
 
 def _create_evalf_table():

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.multipledispatch.conflict import (supercedes, ordering, ambiguities,
         ambiguous, super_signature, consistent)
 

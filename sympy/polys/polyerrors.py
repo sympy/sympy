@@ -1,4 +1,5 @@
 """Definitions of common exceptions for `polys` module. """
+from __future__ import annotations
 
 
 from sympy.utilities import public

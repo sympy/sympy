@@ -7,6 +7,7 @@ Many-Particle Systems."
 This module is a predecessor of the sympy.physics.quantum package, and it will
 be superseded by it in the future versions.
 """
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy.core.add import Add

@@ -88,6 +88,7 @@ total multiplicity available for that component (u).  This saves
 time that would be spent skipping over zeros.
 
 """
+from __future__ import annotations
 
 class PartComponent:
     """Internal class used in support of the multiset partitions

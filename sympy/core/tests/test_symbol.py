@@ -1,3 +1,4 @@
+from __future__ import annotations
 import threading
 
 from sympy.core.function import Function, UndefinedFunction

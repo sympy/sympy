@@ -7,6 +7,7 @@ Although the name 'intfunc' was chosen to represent functions that
 work with integers, it can also be thought of as containing
 internal/core functions that are needed by the classes of the core.
 """
+from __future__ import annotations
 
 import math
 import sys

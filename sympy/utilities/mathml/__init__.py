@@ -3,6 +3,7 @@ content in MathML presentation.
 
 To use this module, you will need lxml.
 """
+from __future__ import annotations
 
 from pathlib import Path
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 import math
 from sympy.core.random import _randint
 from sympy.ntheory import qs, qs_factor
@@ -20,6 +21,7 @@ def test_qs_1():
         {18640889198609, 20991129234731}
 
 
+@pytest.mark.thread_unsafe(reason="Uses a global RNG that is shared across threads")
 def test_qs_2() -> None:
     n = 10009202107
     M = 50

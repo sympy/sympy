@@ -1,8 +1,9 @@
+from __future__ import annotations
 import operator
 from functools import reduce, singledispatch
 
 from sympy.core.singleton import S
-from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, MatPow, Dummy
+from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, MatPow, Dummy, Pow, Mul
 from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -35,6 +36,20 @@ def _(expr: Expr, x: _ArrayExpr):
             return MatrixUnit(x.shape[0], x.shape[1], expr.i, expr.j)
         raise NotImplementedError("algorithm not implemented for this case")
     return ZeroArray(*x.shape)
+
+
+@array_derive.register(Mul)
+def _(expr: Mul, x: _ArrayExpr):
+    args = expr.args
+    return ArrayAdd.fromiter([
+        _array_tensor_product(Mul.fromiter(args[:i]), array_derive(arg, x), Mul.fromiter(args[(i+1):]))
+        for i, arg in enumerate(args)
+    ])
+
+
+@array_derive.register(Pow)
+def _(expr: Pow, x: _ArrayExpr):
+    return Pow._eval_derivative(expr, x)
 
 
 @array_derive.register(Function)
@@ -197,17 +212,17 @@ def _(expr: HadamardProduct, x: Expr):
 @array_derive.register(ArrayContraction)
 def _(expr: ArrayContraction, x: Expr):
     fd = array_derive(expr.expr, x)
-    ndim_x = len(get_shape(x))
+    rank_x = len(get_shape(x))
     contraction_indices = expr.contraction_indices
-    new_contraction_indices = [tuple(j + ndim_x for j in i) for i in contraction_indices]
+    new_contraction_indices = [tuple(j + rank_x for j in i) for i in contraction_indices]
     return _array_contraction(fd, *new_contraction_indices)
 
 
 @array_derive.register(ArrayDiagonal)
 def _(expr: ArrayDiagonal, x: Expr):
     dsubexpr = array_derive(expr.expr, x)
-    ndim_x = len(get_shape(x))
-    diag_indices = [[j + ndim_x for j in i] for i in expr.diagonal_indices]
+    rank_x = len(get_shape(x))
+    diag_indices = [[j + rank_x for j in i] for i in expr.diagonal_indices]
     return _array_diagonal(dsubexpr, *diag_indices)
 
 

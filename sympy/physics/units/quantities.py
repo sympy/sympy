@@ -1,6 +1,7 @@
 """
 Physical quantities.
 """
+from __future__ import annotations
 
 from sympy.core.expr import AtomicExpr
 from sympy.core.symbol import Symbol

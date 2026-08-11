@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import (Symbol, symbols, sin, cos, Matrix, zeros,
                                 simplify)
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols, Dyadic

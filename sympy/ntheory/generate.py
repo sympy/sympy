@@ -41,6 +41,58 @@ class Sieve:
     >>> sieve._list
     array('L', [2, 3, 5, 7, 11, 13, 17, 19, 23])
     """
+
+    #
+    # Notes about thread safety.
+    #
+    # The global sieve instance is used indirectly by many high-level sympy
+    # functions and needs to work correctly under multithreading. Managing
+    # shared mutable state like this is tricky and requires careful attention
+    # to exactly when and how it is accessed.
+    #
+    # The pattern used here is copy-on-write (COW) to avoid the need for locks.
+    # This is efficient if the array is grown by a large factor each time it is
+    # extended but would be inefficient (quadratic) if the array is grown by
+    # repeatedly adding small increments.
+    #
+    # An instance of the sieve holds a mutable reference to an array that must
+    # not be mutated in-place. Any thread can atomically reassign that
+    # reference with
+    #
+    #    self._list = new_list
+    #
+    # at any time but must ensure that new_list is already fully initialised
+    # with correct values and will not be mutated in-place afterwards.
+    #
+    # The arrays are extended using
+    #
+    #    _list = _list + array(...)
+    #
+    # which is safe while
+    #
+    #    _list += array(...)
+    #
+    # is not since it mutates the array in place.
+    #
+    # Code that wants to read from the array should retrieve a reference as a
+    # local variable and then use that to access the array without worrying
+    # about another thread mutating the array that is referred to by the local
+    # variable:
+    #
+    #    _list = self._list
+    #    if len(_list) > 10:
+    #        return _list[10]
+    #
+    # Repeated access to the local _list is thread safe but separate attribute
+    # lookups using self._list are not. This would *NOT* be safe:
+    #
+    #    if len(self._list) > 10:
+    #        return self._list[10]
+    #
+    # Another thread might reassign self._list to a shorter array in between
+    # the two attribute lookups.
+    #
+
     _n: int
     _list: _array[int]
     _tlist: _array[int]
@@ -116,19 +168,30 @@ class Sieve:
         True
         """
         n = int(n)
+        self._extend(n)
+
+    def _extend(self, n: int) -> _array[int]:
+        """Grow the sieve to cover all primes <= n and return the array."""
         # `num` is even at any point in the function.
         # This satisfies the condition required by `self._primerange`.
-        num = self._list[-1] + 1
+
+        _list = self._list
+
+        num = _list[-1] + 1
         if n < num:
-            return
+            return _list
         num2 = num**2
         while num2 <= n:
-            self._list += _array('L', self._primerange(num, num2))
+            _list = _list + _array('L', self._primerange(num, num2, _list))
             num, num2 = num2, num2**2
         # Merge the sieves
-        self._list += _array('L', self._primerange(num, n + 1))
+        _list = _list + _array('L', self._primerange(num, n + 1, _list))
 
-    def _primerange(self, a: int, b: int) -> Iterator[int]:
+        self._list = _list
+
+        return _list
+
+    def _primerange(self, a: int, b: int, _list: _array[int]) -> Iterator[int]:
         """ Generate all prime numbers in the range (a, b).
 
         Parameters
@@ -136,7 +199,9 @@ class Sieve:
 
         a, b : positive integers assuming the following conditions
                 * a is an even number
-                * 2 < self._list[-1] < a < b < nextprime(self._list[-1])**2
+                * 2 < _list[-1] < a < b < nextprime(_list[-1])**2
+
+        _list : list of primes
 
         Yields
         ======
@@ -150,7 +215,7 @@ class Sieve:
         >>> s = Sieve()
         >>> s._list[-1]
         13
-        >>> list(s._primerange(18, 31))
+        >>> list(s._primerange(18, 31, s._list))
         [19, 23, 29]
 
         """
@@ -161,7 +226,7 @@ class Sieve:
             # Create the list such that block[x] iff (a + 2x + 1) is prime.
             # Note that even numbers are not considered here.
             block = [True] * block_size
-            for p in self._list[1:bisect(self._list, sqrt(a + 2 * block_size + 1))]:
+            for p in _list[1:bisect(_list, sqrt(a + 2 * block_size + 1))]:
                 for t in range((-(a + 1 + p) // 2) % p, block_size, p):
                     block[t] = False
             for idx, p in enumerate(block):
@@ -193,8 +258,15 @@ class Sieve:
         likely that it will be longer than requested.
         """
         i = as_int(i)
-        while len(self._list) < i:
-            self.extend(int(self._list[-1] * 1.5))
+        self._extend_to_no(i)
+
+    def _extend_to_no(self, i: int) -> _array[int]:
+        """Extend to include the ith prime number and return the array."""
+        i = as_int(i)
+        _list = self._list
+        while len(_list) < i:
+            _list = self._extend(int(_list[-1] * 1.5))
+        return _list
 
     def primerange(self, a: int, b: int | None = None) -> Iterator[int]:
         """Generate all prime numbers in the range [2, a) or [a, b).
@@ -228,9 +300,10 @@ class Sieve:
             b = _as_int_ceiling(b)
         if a >= b:
             return
-        self.extend(b)
-        yield from self._list[bisect_left(self._list, a):
-                              bisect_left(self._list, b)]
+        _list = self._extend(b)
+        ai = bisect_left(_list, a)
+        bi = bisect_left(_list, b)
+        yield from _list[ai:bi]
 
     def totientrange(self, a: int, b: int) -> Iterator[int]:
         """Generate all totient numbers for the range [a, b).
@@ -244,30 +317,31 @@ class Sieve:
         """
         a = max(1, _as_int_ceiling(a))
         b = _as_int_ceiling(b)
-        n = len(self._tlist)
+
+        _tlist = self._tlist
+        n = len(_tlist)
+
         if a >= b:
             return
-        elif b <= n:
-            for i in range(a, b):
-                yield self._tlist[i]
-        else:
-            self._tlist += _array('L', range(n, b))
+        elif b > n:
+            _tlist = _tlist + _array('L', range(n, b))
+
             for i in range(1, n):
-                ti = self._tlist[i]
+                ti = _tlist[i]
                 if ti == i - 1:
                     startindex = (n + i - 1) // i * i
                     for j in range(startindex, b, i):
-                        self._tlist[j] -= self._tlist[j] // i
-                if i >= a:
-                    yield ti
+                        _tlist[j] -= _tlist[j] // i
 
             for i in range(n, b):
-                ti = self._tlist[i]
+                ti = _tlist[i]
                 if ti == i:
                     for j in range(i, b, i):
-                        self._tlist[j] -= self._tlist[j] // i
-                if i >= a:
-                    yield self._tlist[i]
+                        _tlist[j] -= _tlist[j] // i
+
+            self._tlist = _tlist
+
+        yield from _tlist[a:b]
 
     def mobiusrange(self, a: int, b: int) -> Iterator[int]:
         """Generate all mobius numbers for the range [a, b).
@@ -290,28 +364,29 @@ class Sieve:
         """
         a = max(1, _as_int_ceiling(a))
         b = _as_int_ceiling(b)
-        n = len(self._mlist)
+
+        _mlist = self._mlist
+        n = len(_mlist)
+
         if a >= b:
             return
-        elif b <= n:
-            for i in range(a, b):
-                yield self._mlist[i]
-        else:
-            self._mlist += _array('i', [0]*(b - n))
+        elif b > n:
+            _mlist = _mlist + _array('i', [0]*(b - n))
+
             for i in range(1, n):
-                mi = self._mlist[i]
+                mi = _mlist[i]
                 startindex = (n + i - 1) // i * i
                 for j in range(startindex, b, i):
-                    self._mlist[j] -= mi
-                if i >= a:
-                    yield mi
+                    _mlist[j] -= mi
 
             for i in range(n, b):
-                mi = self._mlist[i]
+                mi = _mlist[i]
                 for j in range(2 * i, b, i):
-                    self._mlist[j] -= mi
-                if i >= a:
-                    yield mi
+                    _mlist[j] -= mi
+
+            self._mlist = _mlist
+
+        yield from _mlist[a:b]
 
     def search(self, n: int) -> tuple[int, int]:
         """Return the indices i, j of the primes that bound n.
@@ -334,10 +409,11 @@ class Sieve:
         n = as_int(n)
         if n < 2:
             raise ValueError(f"n should be >= 2 but got: {n}")
-        if n > self._list[-1]:
-            self.extend(n)
-        b = bisect(self._list, n)
-        if self._list[b - 1] == test:
+        _list = self._list
+        if n > _list[-1]:
+            _list = self._extend(n)
+        b = bisect(_list, n)
+        if _list[b - 1] == test:
             return b, b
         else:
             return b, b + 1
@@ -368,24 +444,26 @@ class Sieve:
     def __getitem__(self, n: int | slice) -> int | _array[int]:
         """Return the nth prime number"""
         if isinstance(n, slice):
-            self.extend_to_no(n.stop)
+            _list = self._extend_to_no(n.stop)
             start = n.start if n.start is not None else 0
             if start < 1:
                 # sieve[:5] would be empty (starting at -1), let's
                 # just be explicit and raise.
                 raise IndexError("Sieve indices start at 1.")
-            return self._list[start - 1:n.stop - 1:n.step]
+            return _list[start - 1:n.stop - 1:n.step]
         else:
             if n < 1:
                 # offset is one, so forbid explicit access to sieve[0]
                 # (would surprisingly return the last one).
                 raise IndexError("Sieve indices start at 1.")
             n = as_int(n)
-            self.extend_to_no(n)
-            return self._list[n - 1]
+            _list = self._extend_to_no(n)
+            return _list[n - 1]
+
 
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()
+
 
 def prime(nth: SupportsIndex) -> int:
     r"""
@@ -434,16 +512,17 @@ def prime(nth: SupportsIndex) -> int:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
 
     # Check if n is within the sieve range
-    if n <= len(sieve._list):
-        return sieve[n]
+    _list = sieve._list
+    if n <= len(_list):
+        return _list[n-1]
 
     from sympy.functions.elementary.exponential import log
     from sympy.functions.special.error_functions import li
 
     if n < 1000:
         # Extend sieve up to 8*n as this is empirically sufficient
-        sieve.extend(8 * n)
-        return sieve[n]
+        _list = sieve._extend(8 * n)
+        return _list[n-1]
 
     a = 2
     # Estimate an upper bound for the nth prime using the prime number theorem
@@ -702,10 +781,11 @@ def _nextprime(n: int, ith: int = 1) -> int:
         i -= 1
     if n <= sieve._list[-2]:
         l, _ = sieve.search(n)
-        if l + i - 1 < len(sieve._list):
-            return sieve._list[l + i - 1]
-        n = sieve._list[-1]
-        i += l - len(sieve._list)
+        _list = sieve._list
+        if l + i - 1 < len(_list):
+            return _list[l + i - 1]
+        n = _list[-1]
+        i += l - len(_list)
     nn = 6*(n//6)
     if nn == n:
         n += 1
@@ -723,7 +803,7 @@ def _nextprime(n: int, ith: int = 1) -> int:
         n += 4
     else:
         n = nn + 5
-    while 1:
+    while True:
         if isprime(n):
             i -= 1
             if not i:
@@ -774,7 +854,7 @@ def prevprime(n: SupportsIndex) -> int:
         n -= 4
     else:
         n = nn + 1
-    while 1:
+    while True:
         if isprime(n):
             return n
         n -= 2
@@ -870,19 +950,20 @@ def _primerange(a: int, b: int) -> Iterator[int]:
     if a >= b:
         return
     # If we already have the range, return it.
-    largest_known_prime = sieve._list[-1]
+    _list = sieve._list
+    largest_known_prime = _list[-1]
     if b <= largest_known_prime:
         yield from sieve.primerange(a, b)
         return
     # If we know some of it, return it.
     if a <= largest_known_prime:
-        yield from sieve._list[bisect_left(sieve._list, a):]
+        yield from _list[bisect_left(_list, a):]
         a = largest_known_prime + 1
     elif a % 2:
         a -= 1
     tail = min(b, (largest_known_prime)**2)
     if a < tail:
-        yield from sieve._primerange(a, tail)
+        yield from sieve._primerange(a, tail, _list)
         a = tail
     if b <= a:
         return
@@ -1006,6 +1087,14 @@ def primorial(n: int, nth: bool = True) -> int:
             p *= i
     return p
 
+@overload
+def cycle_length(
+    f: Callable[[int], int],
+    x0: int,
+    nmax: int | None = None,
+    values: Literal[False] = False,
+) -> Iterator[tuple[int, int | None]]:
+    ...
 
 @overload
 def cycle_length(

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.expr import unchanged
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol

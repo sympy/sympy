@@ -1,3 +1,4 @@
+from __future__ import annotations
 import itertools
 from collections.abc import Iterable
 
@@ -105,7 +106,7 @@ def _util_contraction_diagonal(array, *contraction_or_diagonal_axes):
                 raise ValueError("cannot contract or diagonalize between axes of different dimension")
             taken_dims.add(d)
 
-    ndim = array.rank()
+    ndim = array.ndim
 
     remaining_shape = [dim for i, dim in enumerate(array.shape) if i not in taken_dims]
     cum_shape = [0]*ndim
@@ -434,7 +435,7 @@ def permutedims(expr, perm=None, index_order_old=None, index_order_new=None):
     if not isinstance(perm, Permutation):
         perm = Permutation(list(perm))
 
-    if perm.size != expr.rank():
+    if perm.size != expr.ndim:
         raise ValueError("wrong permutation size")
 
     # Get the inverse permutation:

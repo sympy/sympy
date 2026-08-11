@@ -1,6 +1,7 @@
 """
 Number theory module (primes, etc)
 """
+from __future__ import annotations
 
 from .generate import nextprime, prevprime, prime, primepi, primerange, \
     randprime, Sieve, sieve, primorial, cycle_length, composite, compositepi

@@ -1,7 +1,6 @@
 from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.expr import Expr
 from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.mod import Mod
@@ -23,6 +22,10 @@ from sympy.logic.boolalg import And
 from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.iterables import numbered_symbols
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 ###############################################################################
@@ -559,6 +562,21 @@ class sin(TrigonometricFunction):
                 or self.args[0].is_complex:
             return True
 
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_nonnegative:
+            if n.is_Integer:
+                match n % 4:
+                    case 0:
+                        return sin(s)
+                    case 1:
+                        return cos(s)
+                    case 2:
+                        return -sin(s)
+                    case 3:
+                        return -cos(s)
+            return sin(s + pi*n/2)
+        return super()._eval_derivative_n_times(s, n)
+
 
 class cos(TrigonometricFunction):
     """
@@ -930,6 +948,21 @@ class cos(TrigonometricFunction):
         rest, pi_mult = _peeloff_pi(self.args[0])
         if rest.is_zero and pi_mult:
             return (pi_mult - S.Half).is_integer
+
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_nonnegative:
+            if n.is_Integer:
+                match n % 4:
+                    case 0:
+                        return cos(s)
+                    case 1:
+                        return -sin(s)
+                    case 2:
+                        return -cos(s)
+                    case 3:
+                        return sin(s)
+            return cos(s + pi*n/2)
+        return super()._eval_derivative_n_times(s, n)
 
 
 class tan(TrigonometricFunction):
@@ -1615,6 +1648,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     _reciprocal_of = None       # mandatory, to be defined in subclass
     _singularities = (S.ComplexInfinity,)
 
+    is_zero = False # Assuming that the subclasses are sec and csc
+
     # _is_even and _is_odd are used for correct evaluation of csc(-x), sec(-x)
     # TODO refactor into TrigonometricFunction common parts of
     # trigonometric functions eval() like even/odd, func(x+2*k*pi), etc.
@@ -1727,6 +1762,30 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         return (1/self._reciprocal_of(self.args[0]))._eval_nseries(x, n, logx)
+
+    def _eval_is_positive(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_extended_positive(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_nonnegative(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_extended_nonnegative(self):
+        return self._reciprocal_of(self.args[0]).is_positive
+
+    def _eval_is_negative(self):
+        return self._reciprocal_of(self.args[0]).is_negative
+
+    def _eval_is_extended_negative(self):
+        return self._reciprocal_of(self.args[0]).is_negative
+
+    def _eval_is_nonpositive(self):
+        return self._reciprocal_of(self.args[0]).is_negative
+
+    def _eval_is_extended_nonpositive(self):
+        return self._reciprocal_of(self.args[0]).is_negative
 
 
 class sec(ReciprocalTrigonometricFunction):
@@ -3215,7 +3274,7 @@ class asec(InverseTrigonometricFunction):
             ang = narg.args[0]
             if ang.is_comparable:
                 if minus:
-                    pi/2 + acsc(narg)
+                    return pi/2 + acsc(narg)
                 return pi/2 - acsc(narg)
 
     def fdiff(self, argindex=1):

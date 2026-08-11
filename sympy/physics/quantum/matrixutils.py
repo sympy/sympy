@@ -1,4 +1,7 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sympy.core.expr import Expr
 from sympy.core.numbers import I
@@ -23,24 +26,36 @@ __all__ = [
     'matrix_zeros'
 ]
 
-# Conditionally define the base classes for numpy and scipy.sparse arrays
-# for use in isinstance tests.
+# Conditionally define the base classes for NumPy and SciPy sparse arrays and
+# matrices for use in isinstance tests.  Sparse matrices are included here so
+# that they continue to be accepted as inputs even though the functions in
+# this module create sparse arrays.
 
 np = import_module('numpy')
-if not np:
+if TYPE_CHECKING:
+    from numpy import ndarray as numpy_ndarray
+elif not np:
     class numpy_ndarray:
         pass
 else:
-    numpy_ndarray = np.ndarray  # type: ignore
+    numpy_ndarray = np.ndarray
 
 scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
-if not scipy:
+if TYPE_CHECKING:
+    from scipy import sparse
+    from scipy.sparse import sparray as scipy_sparse_matrix
+elif not scipy:
     class scipy_sparse_matrix:
         pass
     sparse = None
 else:
     sparse = scipy.sparse
-    scipy_sparse_matrix = sparse.spmatrix # type: ignore
+    if hasattr(sparse, 'sparray'):
+        # Since SciPy 1.11 sparse arrays and matrices have separate bases.
+        scipy_sparse_matrix = (sparse.sparray, sparse.spmatrix)
+    else:
+        # In SciPy 1.8-1.10 sparse arrays inherit from spmatrix.
+        scipy_sparse_matrix = sparse.spmatrix
 
 
 def sympy_to_numpy(m, **options):
@@ -57,12 +72,13 @@ def sympy_to_numpy(m, **options):
 
 
 def sympy_to_scipy_sparse(m, **options):
-    """Convert a SymPy Matrix/complex number to a numpy matrix or scalar."""
+    """Convert a SymPy Matrix/complex number to a SciPy sparse array or
+    scalar."""
     if not np or not sparse:
         raise ImportError
     dtype = options.get('dtype', 'complex')
     if isinstance(m, MatrixBase):
-        return sparse.csr_matrix(np.array(m.tolist(), dtype=dtype))
+        return sparse.csr_array(np.array(m.tolist(), dtype=dtype))
     elif isinstance(m, Expr):
         if m.is_Number or m.is_NumberSymbol or m == I:
             return complex(m)
@@ -70,7 +86,7 @@ def sympy_to_scipy_sparse(m, **options):
 
 
 def scipy_sparse_to_sympy(m, **options):
-    """Convert a scipy.sparse matrix to a SymPy matrix."""
+    """Convert a SciPy sparse array or matrix to a SymPy matrix."""
     return MatrixBase(m.todense())
 
 
@@ -105,14 +121,14 @@ def to_numpy(m, **options):
 
 
 def to_scipy_sparse(m, **options):
-    """Convert a sympy/numpy matrix to a scipy.sparse matrix."""
+    """Convert a SymPy/NumPy matrix to a SciPy sparse array."""
     dtype = options.get('dtype', 'complex')
     if isinstance(m, (MatrixBase, Expr)):
         return sympy_to_scipy_sparse(m, dtype=dtype)
     elif isinstance(m, numpy_ndarray):
         if not sparse:
             raise ImportError
-        return sparse.csr_matrix(m)
+        return sparse.csr_array(m)
     elif isinstance(m, scipy_sparse_matrix):
         return m
     raise TypeError('Expected sympy/numpy/scipy.sparse matrix, got: %r' % m)
@@ -166,7 +182,7 @@ def _scipy_sparse_tensor_product(*product):
         answer = sparse.kron(answer, item)
     # The final matrices will just be multiplied, so csr is a good final
     # sparse format.
-    return sparse.csr_matrix(answer)
+    return sparse.csr_array(answer)
 
 
 def matrix_tensor_product(*product):
@@ -190,7 +206,9 @@ def _scipy_sparse_eye(n):
     """scipy.sparse version of complex eye."""
     if not sparse:
         raise ImportError
-    return sparse.eye(n, n, dtype='complex')
+    indices = np.arange(n)
+    return sparse.csr_array(
+        (np.ones(n, dtype='complex'), (indices, indices)), shape=(n, n))
 
 
 def matrix_eye(n, **options):
@@ -220,9 +238,9 @@ def _scipy_sparse_zeros(m, n, **options):
     if not sparse:
         raise ImportError
     if spmatrix == 'lil':
-        return sparse.lil_matrix((m, n), dtype=dtype)
+        return sparse.lil_array((m, n), dtype=dtype)
     elif spmatrix == 'csr':
-        return sparse.csr_matrix((m, n), dtype=dtype)
+        return sparse.csr_array((m, n), dtype=dtype)
 
 
 def matrix_zeros(m, n, **options):

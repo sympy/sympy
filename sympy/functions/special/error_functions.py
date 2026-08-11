@@ -1,5 +1,6 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
+from __future__ import annotations
 
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
@@ -1321,7 +1322,7 @@ class expint(DefinedFunction):
     >>> expint(nu, z).diff(nu)
     -z**(nu - 1)*meijerg(((), (1, 1)), ((0, 0, 1 - nu), ()), z)
 
-    At non-postive integer orders, the exponential integral reduces to the
+    At non-positive integer orders, the exponential integral reduces to the
     exponential function:
 
     >>> expint(0, z)

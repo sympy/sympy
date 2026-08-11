@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.pring import wavefunction, energy
 from sympy.core.numbers import (I, pi)
 from sympy.functions.elementary.exponential import exp

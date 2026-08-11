@@ -23,6 +23,7 @@ which case it will just return a Poly in t, or in k(t), in which case it
 will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
+from __future__ import annotations
 from types import GeneratorType
 from functools import reduce
 

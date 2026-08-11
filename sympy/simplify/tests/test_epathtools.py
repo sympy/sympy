@@ -1,4 +1,5 @@
 """Tests for tools for manipulation of expressions using paths. """
+from __future__ import annotations
 
 from sympy.simplify.epathtools import epath, EPath
 from sympy.testing.pytest import raises

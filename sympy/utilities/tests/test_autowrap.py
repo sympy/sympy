@@ -1,5 +1,6 @@
 # Tests that require installed backends go into
 # sympy/test_external/test_autowrap
+from __future__ import annotations
 
 import os
 import tempfile

@@ -7,6 +7,7 @@ References:
   - https://en.wikipedia.org/wiki/DPLL_algorithm
   - https://www.researchgate.net/publication/242384772_Implementations_of_the_DPLL_Algorithm
 """
+from __future__ import annotations
 
 from sympy.core.sorting import default_sort_key
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \

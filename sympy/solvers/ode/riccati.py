@@ -195,6 +195,7 @@ Step 13 : For each solution in ``sol``, apply an inverse transformation,
 so that the solutions of the original equation are found using the
 solutions of the equation in its normal form.
 """
+from __future__ import annotations
 
 
 from itertools import product

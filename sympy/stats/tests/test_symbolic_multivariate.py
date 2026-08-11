@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.stats import Expectation, Normal, Variance, Covariance
 from sympy.testing.pytest import raises
 from sympy.core.symbol import symbols

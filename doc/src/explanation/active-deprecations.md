@@ -76,7 +76,20 @@ SymPy deprecation warnings.
 
 ## Version 1.15
 
-There are no deprecations yet for SymPy 1.15.
+(deprecated-mechanics-bodyforcelist)=
+### Use .loads instead of .forcelist and .bodies instead of .bodylist
+
+All methods classes in SymPy Physics Mechanics now use the same set of
+attribute names for shared features. ``.bodylist`` and ``.forcelist`` are now
+``.bodies`` and ``.loads``, respectively.
+
+(ndim-array-rank)=
+### Use .ndim instead of .rank for the number of dimensions of arrays.
+
+N-dimensional arrays have used to method `rank` to return the number of
+dimensions.  Unfortunately this not the proper term and it can be confused with
+the concept of matrix rank.  From now on, please use `.ndim` property or the
+`get_ndim(...)` function instead.
 
 ## Version 1.14
 
@@ -135,18 +148,6 @@ sympy's aesaracode module is deprecated because aesara itself
 is umaintained and cannot be installed on Python 3.13.
 
 ## Version 1.13
-
-(rename-rank-to-ndim)=
-### Rename `get_rank` to `get_ndim` in array expressions
-
-In the array expressions subsystem, the function `get_rank(expr)` used the term
-*rank* to refer to the number of dimensions of an array, which is confusing
-because “rank” usually means matrix rank.
-
-`get_rank(expr)` is deprecated and replaced by `get_ndim(expr)`.
-
-```py
->>> get_rank(expr)  # doctest: +SKIP
 
 (deprecated-mechanics-body-class)=
 ### Deprecated mechanics Body class
@@ -1028,21 +1029,6 @@ However, this new behavior was considered confusing, as discussed in issue
 Now, `sample_iter` should be used if a iterator is needed. Consequently, the
 `numsamples` parameter is no longer needed for `sample()`.
 
-(deprecated-rawmatrix)=
-### `sympy.polys.solvers.RawMatrix`
-
-The `RawMatrix` class is deprecated. The `RawMatrix` class was a subclass
-of `Matrix` that used domain elements instead of `Expr` as the elements of
-the matrix. This breaks a key internal invariant of `Matrix` and this kind
-of subclassing limits improvements to the `Matrix` class.
-
-The only part of SymPy that documented the use of the `RawMatrix` class was
-the Smith normal form code, and that has now been changed to use
-`DomainMatrix` instead. It is recommended that anyone using `RawMatrix` with
-the previous Smith Normal Form code should switch to using `DomainMatrix` as
-shown in issue [#21402](https://github.com/sympy/sympy/pull/21402). A better
-API for the Smith normal form will be added later.
-
 (deprecated-non-expr-in-matrix)=
 ### Non-`Expr` objects in a Matrix
 
@@ -1067,7 +1053,7 @@ The main reason for making this possible was that there were a number of
 `Matrix` subclasses in the SymPy codebase that wanted to work with objects
 from the polys module, e.g.
 
-1. `RawMatrix` (see [above](deprecated-rawmatrix)) was used in `solve_lin_sys`
+1. `RawMatrix` was used in `solve_lin_sys`
    which was part of `heurisch` and was also used by `smith_normal_form`. The
    `NewMatrix` class used domain elements as the elements of the Matrix rather
    than `Expr`.
@@ -1237,43 +1223,6 @@ into a new project called [Aesara](https://github.com/aesara-devs/aesara). The
 {mod}`sympy.printing.aesaracode`, and all the corresponding functions have
 been renamed (e.g., `theano_code` has been renamed to {func}`~.aesara_code`,
 `TheanoPrinter` has been renamed to {class}`~.AesaraPrinter`, and so on).
-
-(deprecated-askhandler)=
-### `sympy.assumptions.handlers.AskHandler` and related methods
-
-`Predicate` has experienced a big design change. Previously, its handler was a
-list of `AskHandler` classes and registration was done by `add_handler()` and
-`remove_handler()` functions. Now, its handler is a multipledispatch instance
-and registration is done by `register()` or `register_many()` methods. Users
-must define a predicate class to introduce a new one.
-
-Previously, handlers were defined and registered this way:
-
-```python
-class AskPrimeHandler(AskHandler):
-    @staticmethod
-    def Integer(expr, assumptions):
-        return expr.is_prime
-
-register_handler('prime', AskPrimeHandler)
-```
-
-It should be changed to this:
-
-```python
-# Predicate definition.
-# Not needed if you are registering the handler to existing predicate.
-class PrimePredicate(Predicate):
-    name = 'prime'
-Q.prime = PrimePredicate()
-
-# Handler registration
-@Q.prime.register(Integer)
-def _(expr, assumptions):
-    return expr.is_prime
-```
-
-See GitHub issue [#20209](https://github.com/sympy/sympy/issues/20209).
 
 ## Version 1.7.1
 

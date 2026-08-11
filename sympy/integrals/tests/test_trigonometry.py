@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Ne, Rational, Symbol
 from sympy.functions import sin, cos, tan, csc, sec, cot, log, Piecewise
 from sympy.integrals.trigonometry import trigintegrate

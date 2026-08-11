@@ -1,7 +1,7 @@
+from __future__ import annotations
 from sympy.core.symbol import symbols
 from sympy.series.order import O
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
 from sympy.polys.series.ring import (
     PowerSeriesElement,
     PowerSeriesRingRing,
@@ -31,6 +31,10 @@ from sympy.polys.ring_series import (
     rs_cosh,
 )
 from sympy.polys.densebasic import dup_random
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
 
 # Rings
 Ring_ZZ: list[type[PowerSeriesRingProto]] = [PythonPowerSeriesRingZZ]

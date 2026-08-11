@@ -3,6 +3,7 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
+from __future__ import annotations
 from sympy import KroneckerProduct, Matrix, diff, eye, Array, MatPow
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
@@ -148,6 +149,18 @@ def test_issue_28708():
 
     expr = Determinant((X**j).subs(j, -1))
     assert expr.diff(X) == - X.T.inv()/Determinant(X)
+
+
+def test_issue_28838_det_in_non_matrix_expr():
+
+    expr = k * Determinant(X)
+    assert expr.diff(X) == k * Determinant(X) * X.T ** (-1)
+
+    expr = 1 / Determinant(X)
+    assert expr.diff(X) == -1 / Determinant(X) * X.T ** (-1)
+
+    expr = k / Determinant(X)
+    assert expr.diff(X) == -k / Determinant(X) * X.T ** (-1)
 
 
 def test_matrix_derivative_with_inverse():

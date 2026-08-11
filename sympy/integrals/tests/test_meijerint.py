@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import expand_func
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S

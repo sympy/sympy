@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import chain
 from sympy.codegen.fnodes import Module
 from sympy.core.symbol import Dummy

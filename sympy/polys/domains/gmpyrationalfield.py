@@ -1,4 +1,5 @@
 """Implementation of :class:`GMPYRationalField` class. """
+from __future__ import annotations
 
 
 from sympy.polys.domains.groundtypes import (

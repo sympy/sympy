@@ -1,14 +1,15 @@
+from __future__ import annotations
 from sympy.physics.mechanics import (Body, Lagrangian, KanesMethod, LagrangesMethod,
                                     RigidBody, Particle)
 from sympy.physics.mechanics.body_base import BodyBase
-from sympy.physics.mechanics.method import _Methods
+from sympy.physics.mechanics.method import MethodBase
 from sympy import Matrix
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['JointsMethod']
 
 
-class JointsMethod(_Methods):
+class JointsMethod(MethodBase):
     """Method for formulating the equations of motion using a set of interconnected bodies with joints.
 
     .. deprecated:: 1.13
@@ -26,8 +27,15 @@ class JointsMethod(_Methods):
     Attributes
     ==========
 
-    q, u : iterable
-        Iterable of the generalized coordinates and speeds
+    frame : ReferenceFrame
+        Inertial reference frame that the equations of motion were formulated
+        with respect to.
+    q : list
+        List of the generalized coordinates.
+    u : list
+        List of the generalized speeds.
+    holonomic_constraints : Matrix, shape(0, 0)
+        Column matrix of the holonomic constraint residuals.
     bodies : iterable
         Iterable of Body objects in the system.
     loads : iterable
@@ -101,9 +109,9 @@ class JointsMethod(_Methods):
             active_deprecations_target="deprecated-mechanics-jointsmethod"
         )
         if isinstance(newtonion, BodyBase):
-            self.frame = newtonion.frame
+            self._frame = newtonion.frame
         else:
-            self.frame = newtonion
+            self._frame = newtonion
 
         self._joints = joints
         self._bodies = self._generate_bodylist()
@@ -222,6 +230,9 @@ class JointsMethod(_Methods):
                 bodylist.append(part)
         return bodylist
 
+    def _form_eoms(self):
+        return self.form_eoms()
+
     def form_eoms(self, method=KanesMethod):
         """Method to form system's equation of motions.
 
@@ -297,7 +308,7 @@ class JointsMethod(_Methods):
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
-            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
+            :py:meth:`~sympy.matrices.matrixbase.MatrixBase.inv`.
 
         Returns
         ========
@@ -308,11 +319,35 @@ class JointsMethod(_Methods):
         See Also
         ========
 
-        sympy.physics.mechanics.kane.KanesMethod.rhs:
-            KanesMethod's rhs function.
-        sympy.physics.mechanics.lagrange.LagrangesMethod.rhs:
-            LagrangesMethod's rhs function.
+        sympy.physics.mechanics.method.MethodBase.rhs:
+            Standard form and behavior of the ``rhs()`` method.
 
         """
 
         return self.method.rhs(inv_method=inv_method)
+
+    @property
+    def frame(self):
+        """Inertial reference frame that the equations of motion were
+        formulated with respect to."""
+        return self._frame
+
+    @property
+    def holonomic_constraints(self):
+        """JointsMethod does not support constraints."""
+        return Matrix()
+
+    @property
+    def nonholonomic_constraints(self):
+        """JointsMethod does not support constraints."""
+        return Matrix()
+
+    @property
+    def velocity_constraints(self):
+        """JointsMethod does not support constraints."""
+        return Matrix()
+
+    @property
+    def acceleration_constraints(self):
+        """JointsMethod does not support constraints."""
+        return Matrix()

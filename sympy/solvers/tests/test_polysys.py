@@ -1,4 +1,5 @@
 """Tests for solvers of systems of polynomial equations. """
+from __future__ import annotations
 from sympy.polys.domains import  ZZ, QQ_I
 from sympy.core.numbers import (I, Integer, Rational)
 from sympy.core.singleton import S

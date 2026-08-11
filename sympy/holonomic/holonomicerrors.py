@@ -1,4 +1,5 @@
 """ Common Exceptions for `holonomic` module. """
+from __future__ import annotations
 
 class BaseHolonomicError(Exception):
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import symbols
 from sympy.core.function import Function
 from sympy.matrices.dense import Matrix

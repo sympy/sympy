@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.strategies.branch.core import (
     exhaust, debug, multiplex, condition, notempty, chain, onaction, sfilter,
     yieldify, do_one, identity)

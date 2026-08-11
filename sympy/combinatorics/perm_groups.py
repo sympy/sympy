@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import factorial as _factorial, log, prod
 from itertools import chain, product
 
@@ -9,7 +10,7 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
     _strip, _strip_af)
-from sympy.core import Basic
+from sympy.core import Add, Expr, Basic, Mul, S
 from sympy.core.random import _randrange, randrange, choice
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
@@ -143,7 +144,8 @@ class PermutationGroup(Basic):
         if dups:
             args = list(uniq([_af_new(list(a)) for a in args]))
         if len(args) > 1:
-            args = [g for g in args if not g.is_identity]
+            non_identity = [g for g in args if not g.is_identity]
+            args = non_identity if non_identity else [args[0]]
         return Basic.__new__(cls, *args, **kwargs)
 
     def __init__(self, *args, **kwargs):
@@ -471,7 +473,7 @@ class PermutationGroup(Basic):
         """
         if self._base == []:
             self.schreier_sims()
-        return self._base
+        return self._base[:]
 
     def baseswap(self, base, strong_gens, pos, randomized=False,
                  transversals=None, basic_orbits=None, strong_gens_distr=None):
@@ -637,7 +639,7 @@ class PermutationGroup(Basic):
         """
         if self._basic_orbits == []:
             self.schreier_sims()
-        return self._basic_orbits
+        return [orbit[:] for orbit in self._basic_orbits]
 
     @property
     def basic_stabilizers(self):
@@ -719,7 +721,7 @@ class PermutationGroup(Basic):
 
         if self._transversals == []:
             self.schreier_sims()
-        return self._transversals
+        return [transversal.copy() for transversal in self._transversals]
 
     def composition_series(self):
         r"""
@@ -1693,7 +1695,7 @@ class PermutationGroup(Basic):
         [(1 2), (2)(0 1)]
 
         """
-        return self._generators
+        return self._generators[:]
 
     def contains(self, g, strict=True):
         """Test if permutation ``g`` belong to self, ``G``.
@@ -2105,7 +2107,7 @@ class PermutationGroup(Basic):
         d_gr = gr.degree
         if self.is_trivial and (d_self == d_gr or not strict):
             return True
-        if self._is_abelian:
+        if gr._is_abelian:
             return True
         new_self = self.copy()
         if not strict and d_self != d_gr:
@@ -2711,6 +2713,63 @@ class PermutationGroup(Basic):
                 known_elements.update(new_class)
 
         return classes
+
+    def molien(self, x: Expr | None = None) -> Expr:
+        r"""Return the Molien rational function for the permutation action on
+        ``k[x_1, ..., x_n]``.
+
+        Explanation
+        ===========
+
+        For a finite permutation group `G \le S_n`, this computes the generating function
+        for the Molien series
+
+        .. math::
+            \mathrm{Mol}_G(t) = \frac{1}{|G|}\sum_{g\in G}
+            \prod_{i=1}^{n} (1 - t^i)^{-c_i(g)},
+
+        where `c_i(g)` is the number of `i`-cycles of `g`.
+
+        The implementation aggregates by conjugacy classes of ``G``.
+
+        Parameters
+        ==========
+
+        x : Symbol, optional
+            Indeterminate for the Molien function. Defaults to ``t``.
+
+        Returns
+        =======
+
+        Expr
+            The Molien function as a rational SymPy expression.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S3 = SymmetricGroup(3)
+        >>> S3.molien()
+        1/(3*(1 - t**3)) + 1/(2*(1 - t)*(1 - t**2)) + 1/(6*(1 - t)**3)
+        """
+        x = Symbol('t') if x is None else _sympify(x)
+        if self.degree == 0:
+            return S.One
+
+        order = self.order()
+        terms = []
+
+        for conjugacy_class in self.conjugacy_classes():
+            representative = next(iter(conjugacy_class))
+            factors = [S(len(conjugacy_class))]
+            for cycle_length, count in representative.cycle_structure.items():
+                factors.append((1 - x**cycle_length)**(-count))
+            term = Mul(*factors)
+            terms.append(term)
+
+        molien = Add(*terms)
+        molien = molien/S(order)
+        return molien
 
     def normal_closure(self, other, k=10):
         r"""Return the normal closure of a subgroup/set of permutations.
@@ -3981,7 +4040,7 @@ class PermutationGroup(Basic):
         """
         if self._strong_gens == []:
             self.schreier_sims()
-        return self._strong_gens
+        return self._strong_gens[:]
 
     def subgroup(self, gens):
         """
@@ -4727,31 +4786,40 @@ class PermutationGroup(Basic):
         for b in betas:
             k_gens = K.stabilizer(b).generators
             for y in k_gens:
-                new_rel = transversal[b]
                 gens = K.generator_product(y, original=True)
-                for g in gens[::-1]:
-                    new_rel = new_rel*phi.invert(g)
-                new_rel = new_rel*transversal[b]**-1
+                dtype = type(transversal[b])
+                new_rel = dtype.prod(chain(
+                    (transversal[b],),
+                    (phi.invert(g) for g in gens[::-1]),
+                    (transversal[b]**-1,),
+                ))
 
                 perm = phi(new_rel)
                 try:
                     gens = K.generator_product(perm, original=True)
                 except ValueError:
                     return False, perm
-                for g in gens:
-                    new_rel = new_rel*phi.invert(g)**-1
+                new_rel = dtype.prod(chain(
+                    (new_rel,),
+                    (phi.invert(g)**-1 for g in gens),
+                ))
                 if new_rel not in rels:
                     rels.append(new_rel)
 
         for gamma in gammas:
-            new_rel = transversal[gamma]*phi.invert(z)*transversal[gamma^z]**-1
+            dtype = type(transversal[gamma])
+            new_rel = dtype.prod((
+                transversal[gamma], phi.invert(z), transversal[gamma^z]**-1,
+            ))
             perm = phi(new_rel)
             try:
                 gens = K.generator_product(perm, original=True)
             except ValueError:
                 return False, perm
-            for g in gens:
-                new_rel = new_rel*phi.invert(g)**-1
+            new_rel = dtype.prod(chain(
+                (new_rel,),
+                (phi.invert(g)**-1 for g in gens),
+            ))
             if new_rel not in rels:
                 rels.append(new_rel)
 
@@ -4827,8 +4895,12 @@ class PermutationGroup(Basic):
                         t = K.orbit_rep(alpha, alpha^z)
                         rel = phi.invert(z)*phi.invert(t)**-1
                         perm = z*t**-1
-                    for g in K.generator_product(perm, original=True):
-                        rel = rel*phi.invert(g)**-1
+                    dtype = type(rel)
+                    rel = dtype.prod(chain(
+                        (rel,),
+                        (phi.invert(g)**-1 for g in
+                            K.generator_product(perm, original=True)),
+                    ))
                     new_rels = [rel]
                 elif len(orbit_k) == 1:
                     # `success` is always true because `strong_gens`
@@ -4976,9 +5048,9 @@ class PermutationGroup(Basic):
             gen = G_p.generators[x//2]**((-1)**(x % 2))
             new_rel = transversal[beta]*gen*transversal[C[beta][x]]**-1
             perm = T(new_rel)
-            nxt = G_p.identity
-            for s in H.generator_product(perm, original=True):
-                nxt = nxt*T.invert(s)**-1
+            dtype = type(G_p.identity)
+            nxt = dtype.prod(T.invert(s)**-1 for s in
+                H.generator_product(perm, original=True))
             new_rel = new_rel*nxt
 
             # continue coset enumeration
@@ -4987,7 +5059,7 @@ class PermutationGroup(Basic):
             C_p = G_p.coset_enumeration([], strategy="coset_table",
                                 draft=C_p, max_cosets=n, incomplete=True)
 
-        self._fp_presentation = simplify_presentation(G_p)
+        self._fp_presentation = simplify_presentation(G_p, change_gens=eliminate_gens)
         return self._fp_presentation
 
     def polycyclic_group(self):

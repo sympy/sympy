@@ -5,6 +5,7 @@ This module defines the facts between unary predicates in ``get_known_facts()``,
 and supports functions to generate the contents in
 ``sympy.assumptions.ask_generated`` file.
 """
+from __future__ import annotations
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import AppliedPredicate

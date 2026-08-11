@@ -4,6 +4,7 @@ Base class to provide str and repr hooks that `init_printing` can overwrite.
 This is exposed publicly in the `printing.defaults` module,
 but cannot be defined there without causing circular imports.
 """
+from __future__ import annotations
 
 class Printable:
     """

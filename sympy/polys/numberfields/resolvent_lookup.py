@@ -4,6 +4,7 @@
 # The entire job took 543.23s.
 # Of this, Case (6, 1) took 539.03s.
 # The final polynomial of Case (6, 1) alone took 455.09s.
+from __future__ import annotations
 resolvent_coeff_lambdas = {
     (4, 0): [
         lambda s1, s2, s3, s4: (-2*s1*s2 + 6*s3),

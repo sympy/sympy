@@ -1,4 +1,5 @@
 """Tests for tools for manipulation of rational expressions. """
+from __future__ import annotations
 
 from sympy.polys.rationaltools import together
 

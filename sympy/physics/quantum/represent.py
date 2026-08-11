@@ -5,6 +5,7 @@ TODO:
 * Get represent working with continuous hilbert spaces.
 * Document default basis functionality.
 """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -18,7 +19,9 @@ from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
-from sympy.physics.quantum.matrixutils import flatten_scalar
+from sympy.physics.quantum.matrixutils import (
+    flatten_scalar, matrix_eye, scipy_sparse_matrix,
+)
 from sympy.physics.quantum.state import KetBase, BraBase, StateBase
 from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.qapply import qapply
@@ -49,6 +52,23 @@ def _sympy_to_scalar(e):
         elif e.is_Number or e.is_NumberSymbol or e == I:
             return complex(e)
     raise TypeError('Expected number, got: %r' % e)
+
+
+try:
+    from scipy.sparse.linalg import matrix_power as _scipy_sparse_matrix_power
+except ImportError:
+    # Compatibility fallback for SciPy < 1.12, which does not provide
+    # scipy.sparse.linalg.matrix_power.
+    def _scipy_sparse_matrix_power(base, exp):
+        """Raise a SciPy sparse array to a nonnegative integer power."""
+        result = matrix_eye(base.shape[0], format='scipy.sparse')
+        while exp:
+            if exp % 2:
+                result = result @ base
+            exp //= 2
+            if exp:
+                base = base @ base
+        return result
 
 
 def represent(expr, **options):
@@ -181,6 +201,8 @@ def represent(expr, **options):
             base = inv(base.tocsc()).tocsr()
         if format == 'numpy':
             return np.linalg.matrix_power(base, exp)
+        if format == 'scipy.sparse':
+            return _scipy_sparse_matrix_power(base, exp)
         return base ** exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
@@ -230,8 +252,12 @@ def represent(expr, **options):
 
         next_arg = represent(arg, **options)
         if format == 'numpy' and isinstance(next_arg, np.ndarray):
-            # Must use np.matmult to "matrix multiply" two np.ndarray
+            # Must use np.matmul to matrix multiply two NumPy arrays.
             result = np.matmul(next_arg, result)
+        elif (format == 'scipy.sparse' and
+              isinstance(next_arg, scipy_sparse_matrix) and
+              isinstance(result, scipy_sparse_matrix)):
+            result = next_arg @ result
         else:
             result = next_arg*result
         last_arg = arg

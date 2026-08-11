@@ -284,7 +284,7 @@ lambda. For example
 
 ```py
 from sympy.testing.pytest.raises
-raises(TypeError, lambda: cos(x, y)
+raises(TypeError, lambda: cos(x, y))
 ```
 
 Remember to include the `lambda`. Otherwise, the code will be executed

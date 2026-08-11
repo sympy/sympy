@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import expand_mul
 from sympy.core.numbers import pi
 from sympy.core.singleton import S

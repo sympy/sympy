@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.multipledispatch.dispatcher import (Dispatcher, MDNotImplementedError,
                                          MethodDispatcher, halt_ordering,
                                          restart_ordering,

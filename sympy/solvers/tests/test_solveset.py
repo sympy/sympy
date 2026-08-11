@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import isclose
 
 from sympy.calculus.util import stationary_points
@@ -474,6 +475,11 @@ def test_solve_polynomial():
     assert solveset_real(x**Rational(1, 3) - 3, x) == FiniteSet(27)
     assert len(solveset_real(x**5 + x**3 + 1, x)) == 1
     assert len(solveset_real(-2*x**3 + 4*x**2 - 2*x + 6, x)) > 0
+
+
+@slow
+def test_solve_polynomial_complex_coeff():
+    x = Symbol('x', real=True)
     assert solveset_real(x**6 + x**4 + I, x) is S.EmptySet
 
 
@@ -922,6 +928,7 @@ def test_solveset_complex_tan():
         imageset(Lambda(n, pi*n + pi/2), S.Integers))
 
 
+@slow
 @_both_exp_pow
 def test_solve_trig():
     assert dumeq(solveset_real(sin(x), x),
@@ -1872,6 +1879,13 @@ def test_nonlinsolve_abs():
     raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 2, x + y], x, y))
 
 
+def test_nonlinsolve_sign():
+    raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x*y - 4], [x, y]))
+    raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x - y], [x, y]))
+    result = nonlinsolve([sign(x) - 1], [x])
+    assert isinstance(result, FiniteSet)
+
+
 def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
@@ -2089,6 +2103,18 @@ def test_nonlinsolve_issue_25182():
         (1.0*b1*ca + 1.0*sqrt(a1**2 + b1**2*ca**2 - b1**2),
         1.0*sqrt(a1**2 + b1**2*ca**2 - b1**2)/a1,
         -1.0*b1*(ca - 1)*(ca + 1)/a1 - 1.0*ca*sqrt(a1**2 + b1**2*ca**2 - b1**2)/a1))
+
+
+def test_nonlinsolve_issue_29750():
+    s, c = symbols('s c')
+    eq1 = 2*s*c - 2*sqrt(3)*c**2 + sqrt(3)*s - 3*c
+    eq2 = s**2 + c**2 - 1
+    sol = nonlinsolve([eq1, eq2], [s, c])
+    expected = FiniteSet(
+        (-sqrt(3)/2, -S.Half), (sqrt(3)/2, S.Half),
+        (-S.Half, -sqrt(3)/2), (S.Half, -sqrt(3)/2),
+    )
+    assert sol == expected
 
 
 def test_issue_14642():
@@ -2413,6 +2439,7 @@ def test_substitution_basic():
         {x + 1}, [y, x]) == S.EmptySet
 
 
+@slow
 def test_substitution_incorrect():
     # the solutions in the following two tests are incorrect. The
     # correct result is EmptySet in both cases.
@@ -3271,6 +3298,7 @@ def test_solve_modular():
 
 # end of modular tests
 
+@slow
 def test_issue_17276():
     assert nonlinsolve([Eq(x, 5**(S(1)/5)), Eq(x*y, 25*sqrt(5))], x, y) == \
      FiniteSet((5**(S(1)/5), 25*5**(S(3)/10)))

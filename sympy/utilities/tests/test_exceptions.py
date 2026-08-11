@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import raises
 from sympy.utilities.exceptions import sympy_deprecation_warning
 

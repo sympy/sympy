@@ -2,12 +2,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from sympy.core import S
-from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.core.parameters import global_parameters
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.misc import func_name
 from sympy.sets.sets import Set
+
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
 
 
 class Contains(Boolean):

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add
@@ -1770,14 +1771,19 @@ def test_issue_17841():
 
 def test_issue_21034():
     x = Symbol('x', real=True, nonzero=True)
-    f1 = x*(-x**4/asin(5)**4 - x*sinh(x + log(asin(5))) + 5)
     f2 = (x + cosh(cos(4)))/(x*(x + 1/(12*x)))
-
-    assert integrate(f1, x) == \
-        -x**6/(6*asin(5)**4) - x**2*cosh(x + log(asin(5))) + 5*x**2/2 + 2*x*sinh(x + log(asin(5))) - 2*cosh(x + log(asin(5)))
 
     assert integrate(f2, x) == \
         log(x**2 + S(1)/12)/2 + 2*sqrt(3)*cosh(cos(4))*atan(2*sqrt(3)*x)
+
+
+@slow
+def test_issue_21034_slow():
+    x = Symbol('x', real=True, nonzero=True)
+    f1 = x*(-x**4/asin(5)**4 - x*sinh(x + log(asin(5))) + 5)
+
+    assert integrate(f1, x) == \
+        -x**6/(6*asin(5)**4) - x**2*cosh(x + log(asin(5))) + 5*x**2/2 + 2*x*sinh(x + log(asin(5))) - 2*cosh(x + log(asin(5)))
 
 
 def test_issue_4187():
@@ -2030,6 +2036,7 @@ def test_sqrt_quadratic():
     assert integrate(1/sqrt(a+b*x+c*x**2), x) == \
         Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
                   ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), Ne(c, 0)),
+                  (x/sqrt(a), Eq(b, 0)),
                   (2*sqrt(a + b*x)/b, Ne(b, 0)), (x/sqrt(a), True))
 
     assert integrate((7*x+6)/sqrt(3*x**2+4*x+5)) == \
@@ -2043,7 +2050,8 @@ def test_sqrt_quadratic():
                    Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
                              ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
                    e*sqrt(a + b*x + c*x**2)/c, Ne(c, 0)),
-                  ((2*d*sqrt(a + b*x) + 2*e*(-a*sqrt(a + b*x) + (a + b*x)**(S(3)/2)/3)/b)/b, Ne(b, 0)),
+                   ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
+                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), Ne(b, 0)),
                   ((d*x + e*x**2/2)/sqrt(a), True))
 
     assert integrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2)) == \
@@ -2057,6 +2065,7 @@ def test_sqrt_quadratic():
                    Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
                              ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
                    (b/(4*c) + x/2)*sqrt(a + b*x + c*x**2), Ne(c, 0)),
+                   (sqrt(a)*x, Eq(b, 0)),
                   (2*(a + b*x)**(S(3)/2)/(3*b), Ne(b, 0)),
                   (sqrt(a)*x, True))
 
@@ -2109,6 +2118,13 @@ def test_issue_19427():
 
     # Sum of the above, used to incorrectly return 0 for a while:
     assert integrate((x ** 4 - 2 * x ** 2 + 1) * sqrt(1 - x ** 2), (x, -1, 1)) == 5 * pi / 16
+
+
+def test_issue_19639():
+    # https://github.com/sympy/sympy/issues/19639
+    r = symbols('r')
+    f = sqrt(1 - r**2)*(a*r**3 + b*r**4)
+    assert integrate(f, (r, 0, 1)) == 2*a/15 + pi*b/32
 
 
 def test_issue_23942():
@@ -2227,3 +2243,22 @@ def test_issue_15566():
     assert isinstance(result, Piecewise)
 
     assert result.has(erf)
+
+
+@slow
+def test_issue_29910():
+    # integrate(x**2*exp(-x**2)*ln(x), x)
+    f = x**2*exp(-x**2)*log(x)
+    F = -x*hyper((Rational(1, 2), Rational(1, 2)), (Rational(3, 2), Rational(3, 2)), -x**2) \
+        * S.One/2 - x*exp(-x**2)*log(x) * S.One/2 + sqrt(pi)*log(x)*erf(x) * S.One/4 \
+        + sqrt(pi)*erf(x) * S.One/4
+
+    assert integrate(f, x) == F
+
+
+def test_issue_29909():
+    f = x*exp(x)*erf(x)
+    F = x*exp(x)*erf(x) - exp(x)*erf(x) + exp(x)*exp(-x**2)/sqrt(pi) + exp(Rational(1, 4))*erf(x - Rational(1, 2))/2
+
+    assert integrate(f, x) == F
+    assert F.diff(x).equals(f)

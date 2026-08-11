@@ -1,4 +1,5 @@
 """Benchmarks for polynomials over Galois fields. """
+from __future__ import annotations
 
 
 from sympy.polys.galoistools import gf_from_dict, gf_factor_sqf

@@ -2,6 +2,7 @@
 Contains the base class for series
 Made using sequences in mind
 """
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.singleton import S

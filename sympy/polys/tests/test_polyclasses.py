@@ -1,4 +1,5 @@
 """Tests for OO layer of several polynomial representations. """
+from __future__ import annotations
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.domains import ZZ, QQ

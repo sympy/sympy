@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions import Predicate, AppliedPredicate, Q
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.multipledispatch import Dispatcher

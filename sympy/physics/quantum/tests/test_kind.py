@@ -1,4 +1,5 @@
 """Tests for sympy.physics.quantum.kind."""
+from __future__ import annotations
 
 from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.symbol import symbols

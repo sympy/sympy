@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import symbols, Matrix, cos, sin, atan, sqrt, Rational
 from sympy.core.sympify import sympify
 from sympy.simplify.simplify import simplify
@@ -227,6 +228,10 @@ def test_linearize_pendulum_kane_nonminimal():
             u_dependent=[u1], configuration_constraints=f_c,
             velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde)
     (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
+
+    assert KM.holonomic_constraints == f_c
+    assert KM.velocity_constraints == f_v
+    assert KM.acceleration_constraints == f_a.xreplace(dq_dict)
 
     # Set the operating point to be straight down, and non-moving
     q_op = {q1: L, q2: 0}

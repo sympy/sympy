@@ -1,4 +1,5 @@
 """Tests for efficient functions for generating Appell sequences."""
+from __future__ import annotations
 from sympy.core.numbers import Rational as Q
 from sympy.polys.polytools import Poly
 from sympy.testing.pytest import raises

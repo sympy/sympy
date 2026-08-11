@@ -1,3 +1,4 @@
+from __future__ import annotations
 import re
 import fnmatch
 
@@ -27,6 +28,7 @@ unicode_whitelist = [
     r'*/sympy/physics/vector/tests/test_printing.py',
     r'*/physics/quantum/tests/test_printing.py',
     r'*/sympy/vector/tests/test_printing.py',
+    r'*/sympy/vector/tests/test_field_functions.py',
     r'*/sympy/parsing/tests/test_sympy_parser.py',
     r'*/sympy/printing/pretty/stringpict.py',
     r'*/sympy/printing/pretty/tests/test_pretty.py',
@@ -45,6 +47,9 @@ unicode_whitelist = [
 
     # joint.py uses some unicode for variable names in the docstrings
     r'*/sympy/physics/mechanics/joint.py',
+
+    # lagrange.py uses some unicode for variable names in the docstrings
+    r'*/sympy/physics/mechanics/lagrange.py',
 
     # lll method has unicode in docstring references and author name
     r'*/sympy/polys/matrices/domainmatrix.py',

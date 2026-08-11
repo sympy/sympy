@@ -35,7 +35,6 @@ from math import gcd
 from decimal import Decimal
 from fractions import Fraction
 import sys
-from typing import Type
 
 
 # Used for __hash__
@@ -331,7 +330,7 @@ class PythonMPQ:
         else:
             return NotImplemented
 
-    _compatible_types: tuple[Type, ...] = ()
+    _compatible_types: tuple[type, ...] = ()
 
 #
 # These are the types that PythonMPQ will interoperate with for operations

@@ -14,6 +14,7 @@ Otherwise, it will return the library. See the docstring of
 import_module() for more information.
 
 """
+from __future__ import annotations
 
 from sympy.external.importtools import import_module
 

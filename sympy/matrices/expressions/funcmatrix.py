@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .matexpr import MatrixExpr
 from sympy.core.function import FunctionClass, Lambda
 from sympy.core.symbol import Dummy
