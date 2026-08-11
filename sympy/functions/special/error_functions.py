@@ -2717,7 +2717,7 @@ class owens_t(DefinedFunction):
 
     .. math ::
         T(h, a) = \frac{1}{2\pi} \int_0^a
-            \frac{e^{-h^2(1+t^2)/2}}{1+t^2}\, \mathrm{d}t, \qquad |\arg a| < \pi
+            \frac{e^{-h^2(1+t^2)/2}}{1+t^2}\, \mathrm{d}t
 
     Examples
     ========
@@ -2770,9 +2770,6 @@ class owens_t(DefinedFunction):
 
     @classmethod
     def eval(cls, h, a):
-        h = sympify(h)
-        a = sympify(a)
-
         if h is S.NaN or a is S.NaN:
             return S.NaN
 
@@ -2821,27 +2818,10 @@ class owens_t(DefinedFunction):
         h, a = self.args
         if a.is_zero or h is S.Infinity or h is S.NegativeInfinity:
             return True
-        if h.is_zero and a.is_zero:
-            return True
 
     def _eval_conjugate(self):
         h, a = self.args
         return self.func(h.conjugate(), a.conjugate())
-
-    def _eval_rewrite_as_erf(self, h, a, **kwargs):
-        # Only closed forms are the a=1 and a->oo special cases; for
-        # general a there is no elementary erf-only rewrite, so we
-        # only fire when the special value machinery in eval() would
-        # already have simplified it (kept here for completeness/API
-        # symmetry with erf's rewrite methods).
-        if a == 1:
-            return erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
-        return self
-
-    def _eval_rewrite_as_erfc(self, h, a, **kwargs):
-        if a == 1:
-            return erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
-        return self
 
     def _pretty(self, printer, **kwargs):
         h, a = self.args
