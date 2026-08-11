@@ -6,7 +6,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan
 from sympy.integrals.integrals import integrate
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, cancel
 from sympy.simplify.simplify import simplify
 
 from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
@@ -136,6 +136,15 @@ def test_issue_5817():
     assert simplify(ratint(a/(b*c*x**2 + a**2 + b*a), x)) == \
         sqrt(a)*atan(sqrt(
             b)*sqrt(c)*x/(sqrt(a)*sqrt(a + b)))/(sqrt(b)*sqrt(c)*sqrt(a + b))
+
+
+def test_ratint_radical_coefficients():
+    # issue 26502
+    a = symbols('a', positive=True)
+    f = (-x**2 + sqrt(2))/(x**4 - sqrt(2)*x**2 + 1)
+    assert cancel((ratint(f, x).diff(x) - f).together()) == 0
+    g = (2*sqrt(a) - x**2)/(-sqrt(a)*x**2 + a + x**4)
+    assert cancel((ratint(g, x).diff(x) - g).together()) == 0
 
 
 def test_issue_5981():

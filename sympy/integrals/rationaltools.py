@@ -229,7 +229,15 @@ def ratint_logpart(f, g, x, t=None):
     a, b = g, f - g.diff()*Poly(t, x)
 
     res, R = resultant(a, b, includePRS=True)
-    res = Poly(res, t, composite=False)
+    res = cancel(res, extension=True)
+    p, q = res.as_numer_denom()
+    if q.has(t):
+        # The subresultant PRS over a coefficient ring with radicals can
+        # return the resultant as an unreduced quotient that cancel()
+        # cannot always clear; the division is exact, so do it in t.
+        res = Poly(p, t, composite=False).exquo(Poly(q, t, composite=False))
+    else:
+        res = Poly(res, t, composite=False)
 
     assert res, "BUG: resultant(%s, %s) cannot be zero" % (a, b)
 
