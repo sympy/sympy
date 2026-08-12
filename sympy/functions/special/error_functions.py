@@ -2838,10 +2838,33 @@ class owens_t(DefinedFunction):
         if h.is_extended_real and a.is_extended_real:
             return True
 
+    def _eval_is_finite(self):
+        # |T(h, a)| <= 1/4 for all real h, a (the integrand is bounded
+        # by 1/(1+t**2), whose integral over all of R is pi), so T stays
+        # finite even when h or a is infinite.
+        h, a = self.args
+        if h.is_extended_real and a.is_extended_real:
+            return True
+
+    def _eval_is_positive(self):
+        # The integrand is strictly positive for real h, so T(h, a)
+        # has the same sign as a whenever h is real (and thus finite --
+        # if h were literally +-oo, T would be exactly 0 instead).
+        h, a = self.args
+        if h.is_real:
+            return a.is_extended_positive
+
+    def _eval_is_negative(self):
+        h, a = self.args
+        if h.is_real:
+            return a.is_extended_negative
+
     def _eval_is_zero(self):
         h, a = self.args
         if a.is_zero or h is S.Infinity or h is S.NegativeInfinity:
             return True
+        if h.is_real and a.is_real:
+            return a.is_zero
 
     def _eval_conjugate(self):
         h, a = self.args

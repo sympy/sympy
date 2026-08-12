@@ -938,12 +938,49 @@ def test_owent_is_extended_real():
     assert owens_t(hu, ar).is_extended_real is None
 
 
+def test_owent_sign_and_finite():
+    # T(h, a) is strictly positive/negative when h is real (hence
+    # finite) and a is a positive/negative real -- the integrand is
+    # always strictly positive for real h, so the sign of the integral
+    # from 0 to a matches the sign of a.
+    hr = symbols('hr', real=True)
+    ap = symbols('ap', real=True, positive=True)
+    an = symbols('an', real=True, negative=True)
+    assert owens_t(hr, ap).is_positive is True
+    assert owens_t(hr, ap).is_negative is False
+    assert owens_t(hr, an).is_negative is True
+    assert owens_t(hr, an).is_positive is False
+
+    # unknown realness of h: can't conclude a sign
+    assert owens_t(h, ap).is_positive is None
+    assert owens_t(h, an).is_negative is None
+
+    # unknown sign of a: can't conclude a sign either
+    assert owens_t(hr, a).is_positive is None
+
+    # |T(h, a)| <= 1/4 always, so T is finite whenever h and a are
+    # extended real, even at the +-oo endpoints
+    ar = symbols('ar', extended_real=True)
+    assert owens_t(hr, ap).is_finite is True
+    assert owens_t(oo, ar).is_finite is True
+    assert owens_t(hr, oo).is_finite is True
+    assert owens_t(h, a).is_finite is None
+
+
 def test_owent_is_zero():
     assert owens_t(h, 0).is_zero is True
     assert owens_t(0, 0).is_zero is True
     assert owens_t(oo, a).is_zero is True
     assert owens_t(-oo, a).is_zero is True
     assert owens_t(h, a).is_zero is None
+
+    # tightened: a real and known nonzero, with h real (hence finite),
+    # means T is definitely not zero
+    hr = symbols('hr', real=True)
+    an = symbols('an', real=True, negative=True)
+    assert owens_t(hr, an).is_zero is False
+    # h's realness unknown: can't conclude
+    assert owens_t(h, an).is_zero is None
 
 
 def test_owent_conjugate():
