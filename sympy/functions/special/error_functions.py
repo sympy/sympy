@@ -2748,6 +2748,23 @@ class owens_t(DefinedFunction):
     >>> owens_t(h, 3).expand(func=True)
     -erfc(sqrt(2)*h/2)*erfc(3*sqrt(2)*h/2)/4 + erfc(sqrt(2)*h/2)/4 + erfc(3*sqrt(2)*h/2)/4 - owens_t(3*h, 1/3)
 
+    Owen's original series (convergent for $|a| \le 1$) is available
+    through ``rewrite(Sum)``:
+
+    >>> from sympy import Sum
+    >>> owens_t(h, a).rewrite(Sum)
+    Sum((-1)**_k*a**(2*_k + 1)*uppergamma(_k + 1, h**2/2)/((2*_k + 1)*factorial(_k)), (_k, 0, oo))/(2*pi)
+
+    The Taylor series in $h$ around $h = 0$ works automatically through
+    ``fdiff``, and the asymptotic behavior as $h \to \pm\infty$ is
+    available through ``series`` too:
+
+    >>> owens_t(h, a).series(h, 0, 3)
+    atan(a)/(2*pi) - a*h**2/(4*pi) + O(h**3)
+    >>> from sympy import oo
+    >>> owens_t(h, a).series(h, oo, 2)
+    (sqrt(2)/h + O(h**(-2), (h, oo)))*exp(-h**2/2)*sign(a)/(4*sqrt(pi))
+
     See Also
     ========
 
@@ -2852,6 +2869,38 @@ class owens_t(DefinedFunction):
         from sympy.integrals.integrals import Integral
         t = Dummy(uniquely_named_symbol('t', [h, a]).name)
         return Integral(exp(-h**2*(1 + t**2)/2)/(1 + t**2), (t, 0, a))/(2*pi)
+
+    def _eval_rewrite_as_Sum(self, h, a, **kwargs):
+        # Owen's original Maclaurin series in a, obtained by expanding
+        # exp(-h**2*t**2/2)/(1+t**2) as a Cauchy product of power series
+        # in t**2 and integrating term by term (T(h, 0) = 0):
+        #   T(h, a) = 1/(2*pi) * sum_{k=0}^oo (-1)**k/(2*k+1)
+        #                 * uppergamma(k+1, h**2/2)/k! * a**(2*k+1)
+        # Convergent for |a| <= 1, since uppergamma(k+1, h**2/2)/k! -> 1
+        # as k -> oo, matching the arctan(a) series' radius of
+        # convergence (the branch points of T(h, a), as a function of
+        # a, sit at a = +-i).
+        from sympy.concrete.summations import Sum
+        from sympy.functions.special.gamma_functions import uppergamma
+        k = Dummy("k")
+        kern = (S.NegativeOne**k / (2*k + 1)) * uppergamma(k + 1, h**2/2) / factorial(k) * a**(2*k + 1)
+        return Sum(kern, (k, 0, S.Infinity)) / (2*pi)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        # As h -> +-oo (a fixed and nonzero), T(h, a) approaches
+        # sign(a)*T(h, oo) = sign(a)*erfc(sqrt(h**2)/sqrt(2))/4 to all
+        # algebraic orders in 1/h: truncating the defining integral at a
+        # finite a instead of infinity only changes it by O(exp(-h**2*
+        # a**2/2)), which is beyond all orders of the 1/h asymptotic
+        # series (e.g. T(h, 1) - erfc(h/sqrt(2))/4 = -erfc(h/sqrt(2))**2/8,
+        # exponentially smaller than erfc(h/sqrt(2)) itself).
+        point = args0[0]
+        if point in (S.Infinity, S.NegativeInfinity):
+            from sympy.functions.elementary.complexes import sign
+            h, a = self.args
+            series = erfc(sqrt(h**2)/sqrt(2))._eval_aseries(n, (S.Infinity,), x, logx)
+            return sign(a) * series / 4
+        return super()._eval_aseries(n, args0, x, logx)
 
     def _eval_evalf(self, prec):
         from sympy.integrals.integrals import Integral

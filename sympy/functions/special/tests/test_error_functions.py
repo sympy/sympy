@@ -9,6 +9,7 @@ from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin, sinc, atan)
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.error_functions import (Chi, Ci, E1, Ei, Li, Shi, Si, erf, erf2, erf2inv, erfc, erfcinv, erfi, erfinv, expint, fresnelc, fresnels, li, owens_t)
 from sympy.functions.special.gamma_functions import (gamma, uppergamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
@@ -991,6 +992,52 @@ def test_owent_expand_func():
     # just introduced, since |1/a| < 1 fails the a > 1 guard
     reduced = expand_func(owens_t(h, 3))
     assert owens_t(3*h, Rational(1, 3)) in reduced.atoms(owens_t)
+
+
+def test_owent_rewrite_Sum():
+    from sympy.concrete.summations import Sum
+    k = Dummy("k")
+    target = Sum((-1)**k * a**(2*k + 1) * uppergamma(k + 1, h**2/2) /
+                 ((2*k + 1) * factorial(k)), (k, 0, oo)) / (2*pi)
+    assert owens_t(h, a).rewrite(Sum).dummy_eq(target)
+
+    # numerically check a truncated partial sum against the defining
+    # integral, for a couple of (h, a) with |a| <= 1 (the series'
+    # radius of convergence, since T(h, a) has branch points at a = +-I)
+    for hv, av, ref in [
+        (Float(1), Rational(1, 2), 0.0430646911207854),
+        (Rational(3, 10), Float(-0.7), -0.0923156057304274),
+    ]:
+        summand = [s for s in owens_t(h, a).rewrite(Sum).atoms(Sum)][0]
+        idx = summand.limits[0][0]
+        partial = Sum(summand.function, (idx, 0, 40)).doit()
+        approx = (partial / (2*pi)).subs({h: hv, a: av})
+        assert abs(approx.evalf() - ref) < Float('1e-10')
+
+
+def test_owent_series():
+    # Taylor series in h around h = 0 already work automatically via
+    # fdiff; check a couple of orders explicitly.
+    assert owens_t(h, a).series(h, 0, 3) == \
+        atan(a)/(2*pi) - a*h**2/(4*pi) + O(h**3)
+
+    # As h -> +-oo (a fixed, positive), T(h, a) approaches
+    # T(h, oo) = erfc(h/sqrt(2))/4 to all algebraic orders in 1/h --
+    # truncating the defining integral at a finite a only changes it
+    # by an amount beyond all these orders.
+    hp = symbols('hp', positive=True)
+    ap = symbols('ap', positive=True)
+    am = symbols('am', negative=True)
+    assert (owens_t(hp, ap).series(hp, oo, 4) -
+            erfc(hp/sqrt(2)).series(hp, oo, 4)/4).removeO() == 0
+    assert (owens_t(hp, am).series(hp, oo, 4) +
+            erfc(hp/sqrt(2)).series(hp, oo, 4)/4).removeO() == 0
+
+    # unknown sign of a: the leading behavior still carries sign(a)
+    hu = symbols('hu', positive=True)
+    s = owens_t(hu, a).series(hu, oo, 2)
+    assert s.subs(a, 0) == 0
+    assert s.subs(a, 3) == erfc(hu/sqrt(2)).series(hu, oo, 2)/4
 
 
 def test_owent_evalf():
