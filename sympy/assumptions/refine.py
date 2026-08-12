@@ -161,6 +161,24 @@ def refine_Pow(expr, assumptions):
             if isinstance(expr.base, Pow):
                 return abs(expr.base.base) ** (expr.base.exp * expr.exp)
 
+        if expr.base is S.Exp1:
+            coeff = expr.exp.as_coefficient(S.Pi * S.ImaginaryUnit)
+            if coeff is not None:
+                integer_terms = []
+                remaining_terms = []
+                terms = coeff.args if coeff.is_Add else (coeff,)
+                for term in terms:
+                    if ask(Q.integer(term), assumptions):
+                        integer_terms.append(term)
+                    else:
+                        remaining_terms.append(term)
+
+                if integer_terms:
+                    integer_part = Add(*integer_terms)
+                    remaining_part = Add(*remaining_terms)
+                    phase = expr.base**(S.Pi * S.ImaginaryUnit * remaining_part)
+                    return (-1)**integer_part * phase
+
         if expr.base is S.NegativeOne:
             if expr.exp.is_Add:
 
