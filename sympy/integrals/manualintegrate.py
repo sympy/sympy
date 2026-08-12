@@ -66,10 +66,8 @@ from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
 from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
-from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.simplify.powsimp import powsimp
-from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
@@ -761,77 +759,6 @@ class DiracDeltaRule(AtomicRule):
         if n == 0:
             return Heaviside(a+b*x)/b
         return DiracDelta(a+b*x, n-1)/b
-
-
-class TrigSubstitutionRule(Rule):
-
-    __slots__ = ("theta", "func", "rewritten", "substep", "restriction")
-
-    theta: Expr
-    func: Expr
-    rewritten: Expr
-    substep: Rule
-    restriction: bool | Boolean
-
-    def __init__(
-        self,
-        integrand: Expr,
-        variable: Symbol,
-        theta: Expr,
-        func: Expr,
-        rewritten: Expr,
-        substep: Rule,
-        restriction: bool | Boolean,
-    ) -> None:
-        super().__init__(integrand, variable)
-        self.theta = theta
-        self.func = func
-        self.rewritten = rewritten
-        self.substep = substep
-        self.restriction = restriction
-
-    def eval(self) -> Expr:
-        theta, func, x = self.theta, self.func, self.variable
-        func = func.subs(sec(theta), 1/cos(theta))
-        func = func.subs(csc(theta), 1/sin(theta))
-        func = func.subs(cot(theta), 1/tan(theta))
-
-        trig_function = list(func.find(TrigonometricFunction))
-        assert len(trig_function) == 1
-        trig_function = trig_function[0]
-        relation = solve(x - func, trig_function)
-        assert len(relation) == 1
-        numer, denom = fraction(relation[0])
-
-        if isinstance(trig_function, sin):
-            opposite = numer
-            hypotenuse = denom
-            adjacent = sqrt(denom**2 - numer**2)
-            inverse = asin(relation[0])
-        elif isinstance(trig_function, cos):
-            adjacent = numer
-            hypotenuse = denom
-            opposite = sqrt(denom**2 - numer**2)
-            inverse = acos(relation[0])
-        else:  # tan
-            opposite = numer
-            adjacent = denom
-            hypotenuse = sqrt(denom**2 + numer**2)
-            inverse = atan(relation[0])
-
-        substitution = [
-            (sin(theta), opposite/hypotenuse),
-            (cos(theta), adjacent/hypotenuse),
-            (tan(theta), opposite/adjacent),
-            (theta, inverse)
-        ]
-        return Piecewise(
-                (self.substep.eval().subs(substitution).trigsimp(), self.restriction) # type: ignore
-        )
-
-    def contains_dont_know(self) -> bool:
-        return self.substep.contains_dont_know()
-
 
 class ArctanRule(AtomicRule):
     """integrate(a/(b*x**2+c), x) -> a/b / sqrt(c/b) * atan(x/sqrt(c/b))"""
@@ -2777,66 +2704,6 @@ def trig_powers_products_rule(integral):
                   null_safe(trig_cotcsc_rule),
                   null_safe(trig_sindouble_rule))(integral)
 
-def trig_substitution_rule(integral):
-    integrand, symbol = integral
-    A = Wild('a', exclude=[0, symbol])
-    B = Wild('b', exclude=[0, symbol])
-    theta = Dummy("theta")
-    target_pattern = A + B*symbol**2
-
-    matches = integrand.find(target_pattern)
-    for expr in matches:
-        match = expr.match(target_pattern)
-        a = match.get(A, S.Zero)
-        b = match.get(B, S.Zero)
-
-        a_positive = ((a.is_number and a > 0) or a.is_positive)
-        b_positive = ((b.is_number and b > 0) or b.is_positive)
-        a_negative = ((a.is_number and a < 0) or a.is_negative)
-        b_negative = ((b.is_number and b < 0) or b.is_negative)
-        x_func = None
-        if a_positive and b_positive:
-            # a**2 + b*x**2. Assume sec(theta) > 0, -pi/2 < theta < pi/2
-            x_func = (sqrt(a)/sqrt(b)) * tan(theta)
-            # Do not restrict the domain: tan(theta) takes on any real
-            # value on the interval -pi/2 < theta < pi/2 so x takes on
-            # any value
-            restriction = True
-        elif a_positive and b_negative:
-            # a**2 - b*x**2. Assume cos(theta) > 0, -pi/2 < theta < pi/2
-            constant = sqrt(a)/sqrt(-b)
-            x_func = constant * sin(theta)
-            restriction = And(symbol > -constant, symbol < constant)
-        elif a_negative and b_positive:
-            # b*x**2 - a**2. Assume sin(theta) > 0, 0 < theta < pi
-            constant = sqrt(-a)/sqrt(b)
-            x_func = constant * sec(theta)
-            restriction = And(symbol > -constant, symbol < constant)
-        if x_func:
-            # Manually simplify sqrt(trig(theta)**2) to trig(theta)
-            # Valid due to assumed domain restriction
-            substitutions = {}
-            for f in [sin, cos, tan,
-                      sec, csc, cot]:
-                substitutions[sqrt(f(theta)**2)] = f(theta)
-                substitutions[sqrt(f(theta)**(-2))] = 1/f(theta)
-
-            replaced = integrand.subs(symbol, x_func).trigsimp()
-            replaced = manual_subs(replaced, substitutions)
-            if not replaced.has(symbol):
-                replaced *= manual_diff(x_func, theta)
-                replaced = replaced.trigsimp()
-                secants = replaced.find(1/cos(theta))
-                if secants:
-                    replaced = replaced.xreplace({
-                        1/cos(theta): sec(theta)
-                    })
-
-                substep = integral_steps(replaced, theta)
-                if not substep.contains_dont_know():
-                    return TrigSubstitutionRule(integrand, symbol,
-                        theta, x_func, replaced, substep, restriction)
-
 def heaviside_rule(integral):
     integrand, symbol = integral
     pattern, m, b, g = heaviside_pattern(symbol)
@@ -3121,7 +2988,6 @@ def integral_steps(integrand, symbol, **options):
                 trig_expand_rule
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
-            null_safe(trig_substitution_rule)
         ),
         fallback_rule)(integral)
     del _integral_cache[cachekey]

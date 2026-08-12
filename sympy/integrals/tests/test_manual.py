@@ -243,23 +243,6 @@ def test_manualintegrate_inversetrig():
                   (x/sqrt(ra), True))
 
 
-def test_manualintegrate_trig_substitution():
-    f = sqrt(16*x**2 - 9)/x
-    F = (2*x + sqrt(16*x**2 - 9)/2
-         + 6*atan(3/(4*x + sqrt(16*x**2 - 9)))
-         - S(9)/2/(4*x + sqrt(16*x**2 - 9)))
-    assert manualintegrate(f, x) == F
-    assert (F.diff(x) - f).cancel() == 0
-
-    f = 1/(x**4*sqrt(25 - x**2))
-    F = -8*I*(1/(1250*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**2)
-              + 1/(1875*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**3))
-    assert manualintegrate(f, x) == F
-    assert (F.diff(x) - f).cancel() == 0
-
-    assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
-        sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
-
 def test_manualintegrate_trivial_substitution():
     assert manualintegrate((exp(x) - exp(-x))/x, x) == -Ei(-x) + Ei(x)
     f = Function('f')
@@ -965,6 +948,23 @@ def test_manualintegrate_euler_substitution():
     assert manualintegrate(f, x) == Piecewise((F1, Ne(c, 0)), (F2, True))
     assert (F1.diff(x) - f).cancel() == 0
     assert (F2.diff(x) - f.subs(c, 0)).cancel() == 0
+
+    # previous tests from trig_substitution
+    f = sqrt(16*x**2 - 9)/x
+    F = (2*x + sqrt(16*x**2 - 9)/2
+            + 6*atan(3/(4*x + sqrt(16*x**2 - 9)))
+            - S(9)/2/(4*x + sqrt(16*x**2 - 9)))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    f = 1/(x**4*sqrt(25 - x**2))
+    F = -8*I*(1/(1250*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**2)
+                + 1/(1875*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**3))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
+        sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
 
 
 def test_manualintegrate_sqrt_quadratic():
