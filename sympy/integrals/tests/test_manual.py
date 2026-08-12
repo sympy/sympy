@@ -963,9 +963,6 @@ def test_manualintegrate_euler_substitution():
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).cancel() == 0
 
-    assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
-        sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
-
 
 def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of(1/sqrt((x - I)**2-1), log(2*x + 2*sqrt(x**2 - 2*I*x - 2) - 2*I))
@@ -1016,6 +1013,8 @@ def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of(x*sqrt(x**2+2*x+4),
                           (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2)
 
+    assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
+            sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
 
 def test_manualintegrate_sqrt_quadratic_reduction():
     # Tests for Gradshteyn & Ryzhik 2.263.3 reduction rule (n < -1 odd)
