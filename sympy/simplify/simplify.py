@@ -588,6 +588,31 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     not reduce it and you should use :func:`~.refine` or :func:`~.ask`
     function. This inconsistency will be resolved in future version.
 
+    Notes
+    =====
+
+    The heuristics applied by ``simplify()`` are tried in roughly this order,
+    based on what subexpressions are detected in the input:
+
+    1. :func:`~.kroneckersimp` -- if the expression contains ``KroneckerDelta``
+    2. :func:`~.besselsimp` -- if the expression contains ``BesselBase``
+    3. :func:`~.trigsimp` -- if the expression contains ``TrigonometricFunction``
+       or ``HyperbolicFunction``
+    4. :func:`~.logcombine` / :func:`~.expand_log` -- if the expression contains ``log``
+    5. :func:`~.combsimp` -- if the expression contains ``CombinatorialFunction``
+       or ``gamma``
+    6. ``sum_simplify`` -- if the expression contains ``Sum``
+    7. ``factor_terms`` on ``Integral`` subexpressions -- if the expression
+       contains ``Integral``
+    8. ``product_simplify`` -- if the expression contains ``Product``
+    9. ``quantity_simplify`` -- if the expression contains ``Quantity``
+
+    This ordering explains some non-obvious behavior. For example, a ``Sum``
+    that evaluates to a ``log`` may not simplify further the first time
+    ``simplify()`` is called -- the ``Sum`` pass runs before the ``log`` pass,
+    so the newly created ``log`` is never seen by :func:`~.logcombine`.
+    Calling ``simplify()`` a second time resolves this.
+
     See Also
     ========
 
@@ -783,7 +808,44 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
 
 def sum_simplify(s, **kwargs):
-    """Main function for Sum simplification"""
+    """Simplify a Sum expression or an expression containing sums.
+
+    Explanation
+    ===========
+
+    Expands the expression, collects ``Sum`` terms, simplifies each sum
+    individually, then combines sums that share the same limits or summand
+    using :func:`sum_combine`.
+
+    Parameters
+    ==========
+
+    s : Expr
+        The expression to simplify. May be a ``Sum`` or any ``Add``
+        expression containing ``Sum`` terms.
+
+    Returns
+    =======
+
+    Expr
+        The simplified expression.
+
+    Examples
+    ========
+
+    >>> from sympy import Sum
+    >>> from sympy.abc import n
+    >>> from sympy.simplify.simplify import sum_simplify
+    >>> s = Sum(n, (n, 1, 3)) + Sum(n, (n, 1, 3))
+    >>> sum_simplify(s)
+    2*Sum(n, (n, 1, 3))
+
+    See Also
+    ========
+
+    sum_combine : combines a list of Sum terms
+
+    """
     if not isinstance(s, Add):
         s = s.xreplace({a: sum_simplify(a, **kwargs)
             for a in s.atoms(Add) if a.has(Sum)})
@@ -810,10 +872,44 @@ def sum_simplify(s, **kwargs):
 
 
 def sum_combine(s_t):
-    """Helper function for Sum simplification
+    """Combine a list of Sum terms by merging those with identical limits or summands.
 
-       Attempts to simplify a list of sums, by combining limits / sum function's
-       returns the simplified sum
+    Explanation
+    ===========
+
+    Iterates over pairs of ``Sum`` terms and attempts two combination methods:
+
+    - **Method 0**: sums with identical limits are merged by adding their summands.
+    - **Method 1**: sums with identical summands and adjacent limits are merged
+      by extending the range.
+
+    Parameters
+    ==========
+
+    s_t : list
+        A list of expressions, each being a ``Sum`` or a scalar multiple
+        of a ``Sum``.
+
+    Returns
+    =======
+
+    Expr
+        The combined expression.
+
+    Examples
+    ========
+
+    >>> from sympy import Sum
+    >>> from sympy.abc import n
+    >>> from sympy.simplify.simplify import sum_combine
+    >>> sum_combine([Sum(n, (n, 1, 3)), Sum(n, (n, 1, 3))])
+    2*Sum(n, (n, 1, 3))
+
+    See Also
+    ========
+
+    sum_simplify : the main function that calls this helper
+
     """
     used = [False] * len(s_t)
 
@@ -906,7 +1002,43 @@ def sum_add(self, other, method=0):
 
 
 def product_simplify(s, **kwargs):
-    """Main function for Product simplification"""
+    """Simplify a Product expression or an expression containing products.
+
+    Explanation
+    ===========
+
+    Separates ``Product`` terms from other factors, optionally simplifies
+    each product's function deeply, then merges products that share the
+    same limits or integrand using :func:`product_mul`.
+
+    Parameters
+    ==========
+
+    s : Expr
+        The expression to simplify.
+
+    Returns
+    =======
+
+    Expr
+        The simplified expression.
+
+    Examples
+    ========
+
+    >>> from sympy import Product
+    >>> from sympy.abc import n
+    >>> from sympy.simplify.simplify import product_simplify
+    >>> p = Product(n, (n, 1, 3)) * Product(n**2, (n, 1, 3))
+    >>> product_simplify(p)
+    Product(n**3, (n, 1, 3))
+
+    See Also
+    ========
+
+    product_mul : helper that combines two Product terms
+
+    """
     terms = Mul.make_args(s)
     p_t = [] # Product Terms
     o_t = [] # Other Terms
@@ -944,7 +1076,51 @@ def product_simplify(s, **kwargs):
 
 
 def product_mul(self, other, method=0):
-    """Helper function for Product simplification"""
+    """Combine two Product expressions if possible.
+
+    Explanation
+    ===========
+
+    - **Method 0**: if both products share the same limits, their functions
+      are multiplied together into a single ``Product``.
+    - **Method 1**: if both products share the same function and have adjacent
+      limits, the limits are merged into one continuous range.
+
+    Parameters
+    ==========
+
+    self : Product
+        First product.
+    other : Product
+        Second product.
+    method : int, optional
+        Combination strategy. ``0`` (default) combines by limits;
+        ``1`` combines by adjacent ranges.
+
+    Returns
+    =======
+
+    Expr
+        A combined ``Product`` if combination was possible, otherwise
+        ``Mul(self, other)``.
+
+    Examples
+    ========
+
+    >>> from sympy import Product
+    >>> from sympy.abc import n
+    >>> from sympy.simplify.simplify import product_mul
+    >>> p1 = Product(n, (n, 1, 3))
+    >>> p2 = Product(n**2, (n, 1, 3))
+    >>> product_mul(p1, p2)
+    Product(n**3, (n, 1, 3))
+
+    See Also
+    ========
+
+    product_simplify : the main function that calls this helper
+
+    """
     if type(self) is type(other):
         if method == 0:
             if self.limits == other.limits:
