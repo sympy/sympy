@@ -2120,6 +2120,13 @@ def test_issue_19427():
     assert integrate((x ** 4 - 2 * x ** 2 + 1) * sqrt(1 - x ** 2), (x, -1, 1)) == 5 * pi / 16
 
 
+def test_issue_19639():
+    # https://github.com/sympy/sympy/issues/19639
+    r = symbols('r')
+    f = sqrt(1 - r**2)*(a*r**3 + b*r**4)
+    assert integrate(f, (r, 0, 1)) == 2*a/15 + pi*b/32
+
+
 def test_issue_23942():
     I1 = Integral(1/sqrt(a*(1 + x)**3 + (1 + x)**2), (x, 0, z))
     assert I1.series(a, 1, n=1) == Integral(1/sqrt(x**3 + 4*x**2 + 5*x + 2), (x, 0, z)) + O(a - 1, (a, 1))
@@ -2236,6 +2243,18 @@ def test_issue_15566():
     assert isinstance(result, Piecewise)
 
     assert result.has(erf)
+
+
+@slow
+def test_issue_29910():
+    # integrate(x**2*exp(-x**2)*ln(x), x)
+    f = x**2*exp(-x**2)*log(x)
+    F = -x*hyper((Rational(1, 2), Rational(1, 2)), (Rational(3, 2), Rational(3, 2)), -x**2) \
+        * S.One/2 - x*exp(-x**2)*log(x) * S.One/2 + sqrt(pi)*log(x)*erf(x) * S.One/4 \
+        + sqrt(pi)*erf(x) * S.One/4
+
+    assert integrate(f, x) == F
+
 
 def test_issue_29909():
     f = x*exp(x)*erf(x)
