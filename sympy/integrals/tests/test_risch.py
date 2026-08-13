@@ -818,6 +818,13 @@ def test_risch_integrate_log_to_atan():
     assert ans == log(exp(x) + 3)/2 + atan(exp(x))
     assert cancel(diff(ans, x) - e) == 0
 
+    # Complex residues with a nonzero real part give both a log and an
+    # atan term
+    e = (exp(x) + 4)*exp(x)/((exp(x) + 1)**2 + 1)
+    ans = risch_integrate(e, x)
+    assert ans == log(exp(2*x) + 2*exp(x) + 2)/2 + 3*atan(exp(x) + 1)
+    assert cancel(diff(ans, x) - e) == 0
+
     # Residues that are real but irrational are still returned as a RootSum
     assert risch_integrate(exp(x)/(exp(2*x) - 2), x) == \
         RootSum(Poly(8*z**2 - 1, z), Lambda(z, z*log(-4*z + exp(x))))
