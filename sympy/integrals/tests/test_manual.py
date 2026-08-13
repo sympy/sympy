@@ -816,6 +816,39 @@ def test_manualintegrate_sqrt_linear():
                           (9*x/10 + 11*(4*x + 5)**(S(3)/2)/40 + sqrt(4*x + 5)/40 + (4*x + 5)**2/10 + S(11)/10)/2)
 
 
+def test_manualintegrate_chebyshev_substitution():
+    # Integer p: collect proportional binomial factors before expanding.
+    integrand = (1 + x**3)**(S.One/3)*(2 + 2*x**3)**(S(2)/3)
+    antiderivative = 2**(S(2)/3)*x**4/4 + 2**(S(2)/3)*x
+    assert manualintegrate(integrand, x) == antiderivative
+    assert (antiderivative.diff(x) - integrand).cancel() == 0
+
+    # Negative integer p: clear the fractional exponents with u = x**(1/6).
+    integrand = sqrt(x)/(1 + x**(S.One/3))
+    antiderivative = (6*x**(S(7)/6)/7 - 6*x**(S(5)/6)/5
+                      - 6*x**(S.One/6) + 2*sqrt(x) + 6*atan(x**(S.One/6)))
+    assert manualintegrate(integrand, x) == antiderivative
+    assert (antiderivative.diff(x) - integrand).cancel() == 0
+
+    # (m + 1)/n is an integer. Check the generic and b = 0 branches.
+    integrand = x**5*(a + b*x**2)**(S.One/3)
+    antiderivative = manualintegrate(integrand, x)
+    (generic, generic_cond), (degenerate, otherwise) = antiderivative.args
+    assert generic_cond == Ne(b, 0)
+    assert otherwise is S.true
+    assert (generic.diff(x) - integrand).cancel() == 0
+    assert degenerate.diff(x) == integrand.subs(b, 0)
+
+    # (m + 1)/n + p is an integer. Check the a = 0 branch separately.
+    integrand = sqrt(x)/sqrt(a + x**3)
+    antiderivative = piecewise_fold(manualintegrate(integrand, x))
+    (degenerate, degenerate_cond), (generic, otherwise) = antiderivative.args
+    assert degenerate_cond == Eq(a, 0)
+    assert otherwise is S.true
+    assert degenerate.diff(x) == integrand.subs(a, 0)
+    assert (generic.diff(x) - integrand).cancel() == 0
+
+
 @slow
 def test_manualintegrate_sqrt_fractional_linear():
     # https://github.com/sympy/sympy/issues/28945
