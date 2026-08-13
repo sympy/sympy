@@ -32,11 +32,11 @@ git_whitelist = {
     # CI
     '.github/PULL_REQUEST_TEMPLATE.md',
     '.github/CODEOWNERS',
+    '.github/circleci-artifacts.yml',
     '.github/dependabot.yml',
     '.github/workflows/runtests.yml',
     '.github/workflows/emscripten.yml',
     '.github/workflows/release.yml',
-    '.github/workflows/docs-preview.yml',
     '.github/workflows/checkconflict.yml',
     '.github/workflows/nightly-wheels.yml',
     '.github/workflows/zizmor.yml',

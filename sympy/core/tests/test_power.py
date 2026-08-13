@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.core import (
     Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
     Expr, I, nan, pi, symbols, oo, zoo, N)
@@ -195,6 +198,9 @@ def test_issue_4362():
     assert ((1 + x/y)**i).as_numer_denom() == ((x + y)**i, y**i)
 
 
+@pytest.mark.thread_unsafe(
+    reason="expects warning side effects from cached constructors"
+)
 def test_Pow_Expr_args():
     bases = [Basic(), Poly(x, x), FiniteSet(x)]
     for base in bases:

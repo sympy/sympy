@@ -4,7 +4,7 @@ Unit system for physical quantities; include definition of constants.
 from __future__ import annotations
 
 from sympy.core.add import Add
-from sympy.core.function import (Derivative, Function)
+from sympy.core.function import (Application, Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -192,10 +192,27 @@ class UnitSystem(_QuantityMapper):
                 factor /= ifactor**count
                 dim /= idim**count
             return factor, dim
-        elif isinstance(expr, Function):
+        elif isinstance(expr, Application):
+            # ``Application`` (rather than ``Function``) so that ``Min``/``Max``
+            # and similar applied functions -- which are not ``Function``
+            # subclasses -- are handled too, instead of falling through to the
+            # ``else`` branch and being treated as opaque dimensionless objects.
             fds = [self._collect_factor_and_dimension(arg) for arg in expr.args]
-            dims = [Dimension(1) if self.get_dimension_system().is_dimensionless(d[1]) else d[1] for d in fds]
-            return (expr.func(*(f[0] for f in fds)), *dims)
+            dims = [Dimension(1) if self.get_dimension_system().is_dimensionless(d[1])
+                    else d[1] for d in fds]
+            # ``_collect_factor_and_dimension`` must return a single
+            # ``(factor, dimension)`` pair; the previous code splatted one
+            # dimension per argument, which produced a malformed tuple (and a
+            # crash when the result was unpacked) for multi-argument functions.
+            # The arguments of a function must all carry the same dimension,
+            # which is the dimension of the result.
+            dim = dims[0] if dims else Dimension(1)
+            for d in dims[1:]:
+                if not self.get_dimension_system().equivalent_dims(dim, d):
+                    raise ValueError(
+                        'Dimension of "{}" is {}, but it should be {}'.format(
+                            expr, d, dim))
+            return expr.func(*(f[0] for f in fds)), dim
         elif isinstance(expr, Dimension):
             return S.One, expr
         else:

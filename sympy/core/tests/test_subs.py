@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -768,6 +771,11 @@ def test_pow_eval_subs_no_cache():
     assert result == 1/y
 
 
+# XXX: Concurrent root isolation has a severe CPU-scaling issue that needs to
+# be investigated.
+@pytest.mark.thread_unsafe(
+    reason="has severe CPU scaling during concurrent root isolation"
+)
 def test_RootOf_issue_10092():
     x = Symbol('x', real=True)
     eq = x**3 - 17*x**2 + 81*x - 118
