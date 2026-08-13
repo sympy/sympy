@@ -675,7 +675,7 @@ def test_messy():
         log(S.Half + sqrt(2)/2)
 
     assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
-        Piecewise((-acosh(1/x), abs(x**(-2)) > 1), (I*asin(1/x), True))
+        Piecewise((-acosh(sqrt(x**(-2)))/(x*sqrt(x**(-2))) + I*pi/(2*x*sqrt(x**(-2))), 1/Abs(x**2) > 1), (I*asin(sqrt(x**(-2)))/(x*sqrt(x**(-2))), True))
 
 
 def test_issue_6122():
@@ -759,9 +759,9 @@ def test_indefinite_1_bug():
 
 
 def test_pr_23583():
-    # This result is wrong. Check whether new result is correct when this test fail.
+    # The previous result (acosh(x - I)) was wrong. This new result is correct.
     assert integrate(1/sqrt((x - I)**2-1), meijerg=True) == \
-           Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+        Piecewise(((x - I)*acosh(sqrt((x - I)**2))/sqrt((x - I)**2) - I*pi*(x - I)/(2*sqrt((x - I)**2)), Abs((x - I)**2) > 1), (-I*(x - I)*asin(sqrt((x - I)**2))/sqrt((x - I)**2), True))
 
 
 # 25786
