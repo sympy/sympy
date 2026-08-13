@@ -10,7 +10,7 @@ from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
-from sympy.logic.inference import satisfiable
+from sympy.logic.algorithms.dpll2 import SATSolver
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
 
@@ -73,12 +73,85 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
 
 
 def check_satisfiability(prop, _prop, factbase):
+    # Run `propogate()` on the assumptions
+    solver = SATSolver(factbase.data, factbase.variables, set(), factbase.symbols)
+    if solver.propagate() == 20:
+        raise ValueError("Inconsistent Assumptions")
+
+    # Check whether proposition is entailed by any of the assigned literals.
+    for clauses, answer in ((prop.clauses, True), (_prop.clauses, False)):
+        all_satisfied = True # Flag to check if all clauses are satisfied
+        for clause in clauses:
+            satisfied = False # Flag to check if the clause can be satisfied
+            all_lits_false = True # Flag to track if all literals in a clause are false
+            for lit in clause:
+                # fixed() takes an int in this factbase's numbering, not a
+                # Literal. Predicates it never encoded cannot have been fixed.
+                # For example `Q.gt` and other relational predicate.
+                var = factbase.encoding.get(lit.lit)
+                if var is None:
+                    lit_is_implied = 0
+                else:
+                    lit_is_implied = solver.fixed(-var if lit.is_Not else var)
+                if lit_is_implied == 1:
+                    satisfied = True
+                    all_lits_false = False
+                    break
+                if lit_is_implied == 0:
+                    all_lits_false = False
+            if satisfied:
+                continue
+            if all_lits_false:
+                # If the current clause is false then the CNF in scan
+                # is false, by false meaning the opposite of the `answer`
+                return not answer
+            # Undecided. This CNF cannot be entailed any more, but keep
+            # scanning, since a later clause may still turn out to be false.
+            all_satisfied = False
+
+        if all_satisfied:
+            # If everything works out, just return answer
+            return answer
+
+    # Continue on the propogated solver, just call solve() on it.
+    if solver.solve() == 20:
+        raise ValueError("Inconsistent assumptions")
+
+    # This model satisfies the factbase, so it witness one of the two
+    # searches below: whichever of prop and _prop it satisfies.
+    # Whichever it satisfies, we just need to build a solver for the other side.
+    prop_in_model = True
+    for clause in prop.clauses:
+        unknown_lit = False
+        for lit in clause:
+            var = factbase.encoding.get(lit.lit)
+            if var is None:
+                unknown_lit = True
+                continue
+            value = -var if lit.is_Not else var
+            if solver.val(value) == value:
+                break
+        else:
+            prop_in_model = None if unknown_lit else False
+            break
+
     sat_true = factbase.copy()
     sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
     sat_false.add_from_cnf(_prop)
-    can_be_true = satisfiable(sat_true)
-    can_be_false = satisfiable(sat_false)
+
+    # Search only for the side the witness which is remaining
+    # Build the solver for that side
+    can_be_true = prop_in_model == True
+    can_be_false = prop_in_model == False
+
+    if not can_be_true and {0} not in sat_true.data:
+        true_solver = SATSolver(sat_true.data, sat_true.variables, set(), sat_true.symbols)
+        can_be_true = true_solver.solve() == 10
+
+    if not can_be_false and {0} not in sat_false.data:
+        false_solver = SATSolver(sat_false.data, sat_false.variables, set(), sat_false.symbols)
+        can_be_false = false_solver.solve() == 10
 
     if can_be_true and can_be_false:
         return None
