@@ -598,45 +598,30 @@ class MinMaxBase(Expr, LatticeOp):
     def _split_values(cls, values: Iterable[Expr]) -> tuple[set[Expr], set[Expr], set[Expr]]:
         """
         Split an iterable of values into three sets:
-        - `extreme_numbers`: number values that are more extreme than all
-          other values (greater for Max, less for Min). There may be more
-          than one because not all numerical values can be compared
-          directly (e.g. `sin(1)**2 + cos(1)**2 > 1` does not resolve).
+        - `numbers`: number values that can be compared easily.
         - `unconstrained_symbols`: bare symbols that are not
           sign-constrained. We don't need to pairwise compare these.
-        - `rest`: all other values
+        - `rest`: all other values.
         """
-        extreme_numbers: set[Expr] = set()
+        numbers: set[Expr] = set()
         unconstrained_symbols: set[Expr] = set()
         rest: set[Expr] = set()
         for value in values:
             if value.is_number:
-                if value in extreme_numbers:
-                    continue
-                is_new_extreme = True
-                for extreme_number in list(extreme_numbers):
-                    comparison = cls._is_more_extreme(value, extreme_number)
-                    if comparison == False:
-                        is_new_extreme = False
-                        break
-                    elif comparison == True:
-                        extreme_numbers.remove(extreme_number)
-                    # undecidable: keep both
-                if is_new_extreme:
-                    extreme_numbers.add(value)
+                numbers.add(value)
             elif isinstance(value, Symbol) and not cls._is_sign_constrained(value):
                 unconstrained_symbols.add(value)
             else:
                 rest.add(value)
-        return extreme_numbers, unconstrained_symbols, rest
+        return numbers, unconstrained_symbols, rest
 
     @classmethod
     def _find_localzeros(cls, values: Iterable[Expr]) -> set[Expr]:
-        extreme_numbers, unconstrained_symbols, rest = cls._split_values(values)
-        if extreme_numbers:
-            rest.update(extreme_numbers)
+        numbers, unconstrained_symbols, rest = cls._split_values(values)
         localzeros: set[Expr] = set()
-        for value in rest:
+        # compare numbers first because they can be eliminated faster
+        to_compare = list(numbers) + list(rest)
+        for value in to_compare:
             is_new_zero = True
             if value in localzeros:
                 continue
