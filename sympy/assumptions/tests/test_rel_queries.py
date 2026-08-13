@@ -161,7 +161,7 @@ def test_equality():
     assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z)) is True
 
     # Regression tests for GH-29863: EqualityPredicate/GreaterThanPredicate
-    # (and friends) used to call is_eq/is_ge from sympy.core.relational,
+    # (and friends) used to call is_eq/is_ge from sympy.core.relational ,
     # which routes through AssumptionsWrapper straight back into ask() for
     # sub-predicates like Q.zero - a recursive pattern related to GH-28129.
     # These cases exercise the paths that a naive non-recursive
