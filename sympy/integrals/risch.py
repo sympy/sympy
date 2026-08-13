@@ -137,8 +137,10 @@ class DifferentialExtension:
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
-    - exts:
-    - extargs:
+    - exts: The type ('exp' or 'log') of each extension; exts[i]
+      describes T[i + 1] (T[0] == x is not an extension).
+    - extargs: The argument of the exp or log of each extension, indexed
+      like exts.
     - cases: List of string representations of the cases of T.
     - t: The top level extension variable, as defined by the current level
       (see level below).
@@ -663,8 +665,8 @@ class DifferentialExtension:
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
         self.level = -1
-        self.exts = [None]
-        self.extargs = [None]
+        self.exts = []
+        self.extargs = []
         if self.dummy:
             self.ts = numbered_symbols('t', cls=Dummy)
         else:
@@ -687,8 +689,9 @@ class DifferentialExtension:
         Returns
         =======
 
-        list: A list of indices of 'exts' where extension of
-            type 'extension' is present.
+        list: A list of indices into T (and D) of the extensions of
+            type 'extension'.  Note that self.exts[i] describes the
+            extension T[i + 1], since T[0] == x is not an extension.
 
         Examples
         ========
@@ -703,7 +706,7 @@ class DifferentialExtension:
         [1]
 
         """
-        return [i for i, ext in enumerate(self.exts) if ext == extension]
+        return [i for i, ext in enumerate(self.exts, 1) if ext == extension]
 
     def increment_level(self):
         """
