@@ -434,7 +434,8 @@ def test_issue_13749():
 
 
 def test_issue_18133():
-    assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
+    # previously returned a NonElementaryIntegral; now solved in terms of Ei
+    assert integrate(exp(x)/(1 + x)**2, x) == exp(-1)*Ei(x + 1) - exp(x)/(x + 1)
 
 
 def test_issue_21741():
@@ -1311,8 +1312,7 @@ def test_powers():
 
 def test_manual_option():
     raises(ValueError, lambda: integrate(1/x, x, manual=True, meijerg=True))
-    # an example of a function that manual integration cannot handle
-    assert integrate(log(1+x)/x, (x, 0, 1), manual=True).has(Integral)
+    assert integrate(log(1+x)/x, (x, 0, 1), manual=True) == pi**2/12
 
 
 def test_meijerg_option():
@@ -1539,7 +1539,7 @@ def test_issue_14437():
 
 
 def test_issue_14470():
-    assert integrate(1/sqrt(exp(x) + 1), x) == log(sqrt(exp(x) + 1) - 1) - log(sqrt(exp(x) + 1) + 1)
+    assert integrate(1/sqrt(exp(x) + 1), x) == log((sqrt(exp(x) + 1) - 1)/(sqrt(exp(x) + 1) + 1))
 
 
 def test_issue_14877():
@@ -1930,12 +1930,12 @@ def test_issue_21671():
 
 
 def test_issue_18527():
-    # The manual integrator can not currently solve this. Assert that it does
-    # not give an incorrect result involving Abs when x has real assumptions.
+    # Assert that the manual integrator does not give an incorrect result
+    # involving Abs when x has real assumptions.
     xr = symbols('xr', real=True)
     expr = (cos(x)/(4+(sin(x))**2))
     res_real = integrate(expr.subs(x, xr), xr, manual=True).subs(xr, x)
-    assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
+    assert integrate(expr, x, manual=True) == res_real == atan(sin(x)/2)/2
 
 
 def test_issue_23718():
@@ -2012,7 +2012,7 @@ def test_issue_23704():
 
 
 def test_exp_substitution():
-    assert integrate(1/sqrt(1-exp(2*x))) == log(sqrt(1 - exp(2*x)) - 1)/2 - log(sqrt(1 - exp(2*x)) + 1)/2
+    assert integrate(1/sqrt(1-exp(2*x))) == -log((sqrt(1 - exp(2*x)) + 1)/(sqrt(1 - exp(2*x)) - 1))/2
 
 
 def test_hyperbolic():

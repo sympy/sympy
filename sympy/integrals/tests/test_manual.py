@@ -1,12 +1,12 @@
 from __future__ import annotations
-from sympy.core.function import (Derivative, Function, diff, expand)
+from sympy.core.function import (Derivative, Function, diff, expand, expand_trig)
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.core.mul import Mul
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (asinh, atanh, csch, cosh, coth, sech, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
@@ -61,7 +61,7 @@ def test_manualintegrate_exponentials():
     assert manualintegrate(exp(2*x), x) == exp(2*x) / 2
     assert manualintegrate(2**x, x) == (2 ** x) / log(2)
     assert_is_integral_of(1/sqrt(1-exp(2*x)),
-                          log(sqrt(1 - exp(2*x)) - 1)/2 - log(sqrt(1 - exp(2*x)) + 1)/2)
+                          -log((sqrt(1 - exp(2*x)) + 1)/(sqrt(1 - exp(2*x)) - 1))/2)
 
     assert manualintegrate(1 / x, x) == log(x)
     assert manualintegrate(1 / (2*x + 3), x) == log(2*x + 3) / 2
@@ -106,7 +106,7 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
     assert manualintegrate(cos(3*x)*sec(x), x) == -x + sin(2*x)
     assert manualintegrate(sin(3*x)*sec(x), x) == \
-        -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
+        log(cos(x)) - 2*cos(x)**2
 
     assert_is_integral_of(sinh(2*x), cosh(2*x)/2)
     assert_is_integral_of(x*cosh(x**2), sinh(x**2)/2)
@@ -118,6 +118,492 @@ def test_manualintegrate_trigonometry():
     f, F = csch(x), log(tanh(x/2))
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).rewrite(exp).simplify() == 0
+
+@slow
+def test_manualintegrate_weierstrass_substitution():
+    t = Dummy('t')
+
+    def assert_is_integral_of_weierstrass(f, F, omega=S.One):
+        # Substitute back x = 2*atan(t)/omega: this turns the check into a
+        # rational identity in t, which is very fast to verify with cancel
+        difference = (F.diff(x) - f).subs(x, 2*atan(t)/omega)
+        assert expand_trig(difference).cancel() == 0
+
+    # the sin part is picked up by the substitution t = cos(x), which gives
+    # a simpler and continuous form than the half-angle substitution
+    f = (a + b*sin(x))/(cos(x) + 2)
+    F = (2*sqrt(3)*a*(x/2 + atan((-1 + sqrt(3)/3)*sin(x)
+         /((1 - sqrt(3)/3)*cos(x) + sqrt(3)/3 + 1)))/3 - b*log(cos(x) + 2))
+    assert manualintegrate(f, x) == F
+    assert_is_integral_of_weierstrass(f, F)
+
+    f = 1/(tan(x) + 2)
+    F = 2*x/5 + log((tan(x) + 2)**2*cos(x)**2)/10
+    assert manualintegrate(f, x) == F
+    assert_is_integral_of_weierstrass(f, F)
+
+    f = 1/(cot(x) + 2)
+    F = 2*x/5 + log(1/((2*tan(x) + 1)**2*cos(x)**2))/10
+    assert manualintegrate(f, x) == F
+    assert_is_integral_of_weierstrass(f, F)
+
+    f = 1/(sec(x) + 2)
+    F = x/2 + sqrt(3)*log((tan(x/2) - sqrt(3))/(tan(x/2) + sqrt(3)))/6
+    assert manualintegrate(f, x) == F
+    assert_is_integral_of_weierstrass(f, F)
+
+    f = 1/(csc(x) + 2)
+    F = (x/2 + sqrt(3)*log((-sqrt(3)*tan(x/2) + 2*tan(x/2) + 1)
+         /(sqrt(3)*tan(x/2) + 2*tan(x/2) + 1))/6)
+    assert manualintegrate(f, x) == F
+    assert_is_integral_of_weierstrass(f, F)
+
+    # Commensurable fractional harmonics: the denominator collapses to
+    # cos(x/2)**2 and the result comes from the tangent substitution.
+    f = 1/(sin(x/2)**2 + cos(x))
+    F = 2*tan(x/2)
+    assert manualintegrate(f, x) == F
+    assert_is_integral_of_weierstrass(f, F, S.Half)
+
+    # A nonzero phase.
+    f = 1/(tan(x + pi/4) + 2)
+    F = 2*x/5 + log((tan(x) - 3)**2*cos(x)**2/2)/10 + pi/10
+    assert manualintegrate(f, x) == F
+    assert_is_integral_of_weierstrass(f, F)
+
+    # Symbolic frequency and multiple harmonics.
+    f = 1/(sin(a*x) + cos(2*a*x) + 2)
+    F1 = (4*sqrt(5)*(a*x/2 + atan((-2*sqrt(5)*(cos(a*x) + 1)/5
+          + (-1 + 3*sqrt(5)/5)*sin(a*x))/(-2*sqrt(5)*sin(a*x)/5
+          + (1 - 3*sqrt(5)/5)*cos(a*x) + 1 + 3*sqrt(5)/5)))/(25*a)
+          - 2/(5*a*(tan(a*x/2) + 1)))
+    F2 = x/3
+    assert manualintegrate(f, x) == Piecewise(
+        (F1, Ne(a, 0)), (F2, True))
+    assert_is_integral_of_weierstrass(f, F1, a)
+    assert (F2.diff(x) - f.subs(a, 0)).cancel() == 0
+
+
+@slow
+def test_manualintegrate_hyperbolic_rational_substitution():
+    def assert_is_antiderivative(F, f):
+        assert (F.diff(x) - f).rewrite(exp).together().powsimp().cancel() == 0
+
+    # odd in sinh: t = cosh(x)
+    f = sinh(x)**3/(cosh(x) + 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    # odd in cosh: t = sinh(x)
+    f = cosh(x)/(3*sinh(x) + 4)
+    assert manualintegrate(f, x) == log(3*sinh(x) + 4)/3
+
+    # even in both: t = tanh(x)
+    f = 1/(sinh(x)**2 + 4*cosh(x)**2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    # general case: t = exp(x)
+    f = 1/(sinh(x) + 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = csch(x)**2/(sinh(x) + 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    # linear argument with symbolic coefficients gives a Piecewise on b = 0
+    f = sinh(a + b*x)**3/(sinh(a + b*x) + 2)
+    F = manualintegrate(f, x)
+    assert F.has(Piecewise)
+    difference = (F.diff(x) - f).subs([(a, 1), (b, 3)])
+    assert difference.rewrite(exp).together().powsimp().cancel() == 0
+
+
+@slow
+def test_manualintegrate_odd_power_trig_substitution():
+    def assert_is_antiderivative(F, f):
+        # fractional powers make symbolic proof branch-sensitive; verify
+        # numerically inside the principal domain
+        difference = F.diff(x) - f
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+                   for pt in (0.3, 0.7, 1.1))
+
+    # odd power of cos with a fractional power of sin: t = sin(x)
+    f = cos(x)**3/sqrt(sin(x))
+    F = manualintegrate(f, x)
+    assert F == 2*sqrt(sin(x)) - 2*sin(x)**Rational(5, 2)/5
+    assert_is_antiderivative(F, f)
+
+    # odd power of sin: t = cos(x)
+    f = sin(x)**3*cos(x)**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    # exponents summing to an even integer: t = tan(x)
+    f = sin(x)**Rational(3, 2)/cos(x)**Rational(7, 2)
+    F = manualintegrate(f, x)
+    assert F == 2*tan(x)**Rational(5, 2)/5
+    assert_is_antiderivative(F, f)
+
+    # hyperbolic counterparts
+    f = cosh(x)**5/sqrt(sinh(x))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = sinh(x)**3*cosh(x)**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    # non-integer power inside a scaled base
+    f = sin(x)**5/(b*sec(x))**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+
+
+def test_manualintegrate_linear_power_product():
+    def assert_is_antiderivative(F, f):
+        difference = F.diff(x) - f
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+                   for pt in (0.3, 0.7, 1.1))
+
+    f = 1/(sqrt(x + 1)*sqrt(x + 2))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = sqrt(a + b*x)/(c + d*x)**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+
+    f = x**Rational(5, 2)*(2 - x)**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = (x + 1)**Rational(2, 3)/(x + 2)**Rational(2, 3)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+
+
+@slow
+def test_manualintegrate_inverse_function_substitution():
+    def assert_is_antiderivative(F, f):
+        difference = F.diff(x) - f
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+                   for pt in (0.3, 0.55, 0.8))
+
+    f = x**2*asin(x)**2
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = x**2*asinh(a*x)**4
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+
+    f = asin(x)**3
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = x**3*atanh(x)**2
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = x*acos(x)**2
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+
+def test_manualintegrate_product_to_sum():
+    assert manualintegrate(sin(5*x)*cos(3*x), x) == \
+        -cos(2*x)/4 - cos(8*x)/16
+    assert manualintegrate(sin(x)*sin(2*x), x) == \
+        sin(x)/2 - sin(3*x)/6
+    assert manualintegrate(cosh(x)*cosh(4*x), x) == \
+        sinh(3*x)/6 + sinh(5*x)/10
+    assert manualintegrate(sinh(2*x)*cosh(x), x) == \
+        cosh(x)/2 + cosh(3*x)/6
+    # more than two factors, and constant differences of arguments
+    F = manualintegrate(sin(x)*sin(2*x)*sin(3*x), x)
+    assert not F.has(Integral)
+    assert (F.diff(x) - sin(x)*sin(2*x)*sin(3*x)).simplify() == 0
+    # polynomial cofactors pass through to tabular integration by parts
+    f = x*sin(a + b*x)**2
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    difference = (F.diff(x) - f).subs([(a, 1), (b, 2)])
+    assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+               for pt in (0.4, 1.2))
+    # exp pairs with the hyperbolic functions
+    assert manualintegrate(exp(2*x)*sinh(x)**2, x) == \
+        x/4 + exp(4*x)/16 - exp(2*x)/4
+
+
+def test_manualintegrate_tabular_parts():
+    assert manualintegrate(x**2*sin(a + b*x), x) == Piecewise(
+        (-x**2*cos(a + b*x)/b + 2*x*sin(a + b*x)/b**2
+         + 2*cos(a + b*x)/b**3, Ne(b, 0)),
+        (x**3*sin(a)/3, True))
+    assert manualintegrate(x*cosh(a + b*x), x) == Piecewise(
+        (x*sinh(a + b*x)/b - cosh(a + b*x)/b**2, Ne(b, 0)),
+        (x**2*cosh(a)/2, True))
+    assert manualintegrate((3*x**2 + 5)*exp(x), x) == \
+        3*x**2*exp(x) - 6*x*exp(x) + 11*exp(x)
+    assert manualintegrate(x**2*exp(2*x), x) == \
+        x**2*exp(2*x)/2 - x*exp(2*x)/2 + exp(2*x)/4
+
+
+@slow
+def test_manualintegrate_power_substitution():
+    def assert_is_antiderivative(F, f, subs=None):
+        difference = (F.diff(x) - f).subs(subs or {})
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+                   for pt in (0.4, 1.2))
+
+    f = x**3*sinh(a + b*x**2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 1, b: 2})
+
+    f = sinh(a + b*sqrt(x))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 1, b: 2})
+
+    f = sinh(a + b*sqrt(3*x + 2))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 1, b: 2})
+
+    f = x**7*sin(a + b*x**4)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 1, b: 2})
+
+    f = x*sec(x**2)
+    F = manualintegrate(f, x)
+    assert F == log(tan(x**2) + sec(x**2))/2
+
+
+@slow
+def test_manualintegrate_half_angle_square():
+    def assert_is_antiderivative(F, f, subs=None):
+        # verify inside a single branch of the half-angle square root
+        difference = (F.diff(x) - f).subs(subs or {})
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+                   for pt in (0.2, 0.5))
+
+    f = sqrt(a + a*cos(x))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 2})
+
+    f = sqrt(a + a*sin(x))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 2})
+
+    f = cos(x)/sqrt(a + a*sin(x))
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 2})
+
+    f = (a*cosh(x) + a)**Rational(3, 2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 2})
+
+    f = sqrt(a*cosh(x) - a)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f, {a: 2})
+
+
+def test_manualintegrate_exp_power_rewrite():
+    assert manualintegrate(x*sqrt(exp(a + b*x)), x) == Piecewise(
+        (2*x*exp(a/2)*exp(b*x/2)/b - 4*exp(a/2)*exp(b*x/2)/b**2, Ne(b, 0)),
+        (x**2*exp(a/2)/2, True))
+    F = manualintegrate(x*exp(a + b*x)**Rational(3, 2), x)
+    assert not F.has(Integral)
+
+
+def test_manualintegrate_dilog():
+    F = manualintegrate(log(a + b*x)/(c + d*x), x)
+    assert F == (log((a*d - b*c)/d)*log(c + d*x)
+                 - polylog(2, -b*(c + d*x)/(a*d - b*c)))/d
+    # verify inside the polylog disc
+    difference = (F.diff(x) - log(a + b*x)/(c + d*x)).subs(
+        [(a, 5), (b, 1), (c, 1), (d, 1)])
+    assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+               for pt in (0.3, 0.9))
+
+    f = log(x)/(1 - x**2)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    difference = F.diff(x) - f
+    assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+               for pt in (0.3, 0.9))
+
+    assert integrate(log(1 + x)/x, (x, 0, 1), manual=True) == pi**2/12
+
+
+def test_manualintegrate_exp_over_linear():
+    F = manualintegrate(exp(a + b*x)/(c + d*x), x)
+    assert F == exp(a - b*c/d)*Ei(b*(c + d*x)/d)/d
+
+    def assert_is_antiderivative(F, f):
+        difference = (F.diff(x) - f).subs(
+            [(a, S(1)/3), (b, 2), (c, 3), (d, 5)]).doit()
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-10
+                   for pt in (0.3, 0.9))
+
+    f = exp(b*x)/(c + d*x)**3
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = x*exp(2*x)/(1 + x)**2
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, f)
+
+    f = (a + b*x)**4*exp(-a - b*x)/(c + d*x)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+
+
+def test_manualintegrate_log_of_trig():
+    def assert_is_antiderivative(F, f):
+        difference = (F.diff(x) - f).subs([(a, 2), (n, 3)])
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-10
+                   for pt in (0.4, 1.1))
+
+    from sympy import polylog, I
+    F = manualintegrate(log(sin(x)), x)
+    assert F == I*x**2/2 - x*log(2*I) - I*polylog(2, exp(-2*I*x))/2
+    assert_is_antiderivative(F, log(sin(x)))
+
+    F = manualintegrate(log(a*sinh(x)), x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, log(a*sinh(x)))
+
+    F = manualintegrate(log(a*tan(x)**n), x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, log(a*tan(x)**n))
+
+    F = manualintegrate(log(a*cos(x)**2), x)
+    assert not F.has(Integral)
+    assert_is_antiderivative(F, log(a*cos(x)**2))
+
+
+@slow
+def test_manualintegrate_log_inverse_parts():
+    f = log(x)*atan(x)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    difference = F.diff(x) - f
+    assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-12
+               for pt in (0.3, 0.9))
+
+
+def test_manualintegrate_rectified_atan():
+    # antiderivatives of continuous trigonometric rationals are rectified
+    # to be continuous on domains of maximum extent (Jeffrey 1993)
+    F = manualintegrate(3/(5 - 4*cos(x)), x)
+    assert F == x + 2*atan(2*sin(x)/(4 - 2*cos(x)))
+    assert (F.diff(x) - 3/(5 - 4*cos(x))).simplify() == 0
+    # no jump across x = pi
+    left = complex(F.subs(x, pi - S(1)/1000).n(20))
+    right = complex(F.subs(x, pi + S(1)/1000).n(20))
+    assert abs(left - right) < 0.01
+
+    F = manualintegrate(2/(3 + cos(2*x)), x)
+    assert (F.diff(x) - 2/(3 + cos(2*x))).simplify() == 0
+    left = complex(F.subs(x, pi/2 - S(1)/1000).n(20))
+    right = complex(F.subs(x, pi/2 + S(1)/1000).n(20))
+    assert abs(left - right) < 0.01
+
+
+def test_manualintegrate_piecewise_continuous():
+    from sympy import sign, Abs
+    # Jeffrey & Rich (ISSAC 1998): continuous integrals of integrands
+    # containing Abs, sign and Heaviside of linear arguments
+    assert manualintegrate(Abs(x), x) == x**2*sign(x)/2
+    assert manualintegrate(x*Abs(x), x) == x**3*sign(x)/3
+    assert manualintegrate(x*sign(x + 3), x) == \
+        x**2*sign(x + 3)/2 - 9*sign(x + 3)/2
+    F = manualintegrate(Abs(2*x - 3), x)
+    assert not F.has(Integral)
+    # continuity at the breakpoint x = 3/2
+    left = complex(F.subs(x, S(3)/2 - S(1)/10**9).n(20))
+    right = complex(F.subs(x, S(3)/2 + S(1)/10**9).n(20))
+    assert abs(left - right) < 1e-6
+
+    # the floor test suite of Jeffrey & Rich (ISSAC 1998)
+    from sympy import floor, frac, harmonic
+    assert manualintegrate(floor(x), x) == \
+        x*floor(x) - floor(x)**2/2 - floor(x)/2
+    assert manualintegrate(12*x*floor(x), x) == \
+        6*x**2*floor(x) - 2*floor(x)**3 - 3*floor(x)**2 - floor(x)
+    assert manualintegrate(2*sign(x)*floor(x), x).expand() == \
+        2*x*floor(x)*sign(x) - floor(x)**2*sign(x) - floor(x)*sign(x)
+    assert manualintegrate(floor(x)/x**2, x) == \
+        harmonic(floor(x)) - floor(x)/x
+    assert manualintegrate(frac(x), x) == \
+        x**2/2 - x*floor(x) + floor(x)**2/2 + floor(x)/2
+    # continuity of the sign*floor integral on both branches
+    F = manualintegrate(2*sign(x)*floor(x), x)
+    for bp in (-2, -1, 1, 2):
+        left = complex(F.subs(x, bp - S(1)/10**9).n(20))
+        right = complex(F.subs(x, bp + S(1)/10**9).n(20))
+        assert abs(left - right) < 1e-6
+
+
+def test_manualintegrate_combine_logs():
+    # sums of logarithms of transcendental arguments are collected into
+    # a single logarithm, continuous on a wider domain (Jeffrey 1993)
+    assert manualintegrate(cot(x) + csc(x), x) == \
+        log(sin(x)**2/(cos(x) + 1))
+    assert manualintegrate(sin(3*x)*sec(x), x) == \
+        log(cos(x)) - 2*cos(x)**2
+    # logarithms of rational arguments keep their usual form
+    assert manualintegrate(1/(x**2 - 1), x) == \
+        log(x - 1)/2 - log(x + 1)/2
+
+
+def test_manualintegrate_polylog_ladder():
+    from sympy import polylog
+    # ladder: log powers against polylogarithms close in higher polylogs
+    F = manualintegrate(log(x)*polylog(2, x)/x, x)
+    assert F == log(x)*polylog(3, x) - polylog(4, x)
+    for f in (log(x)**2/(1 + x), log(x)*log(1 + x)/x, log(x)**3/(1 - x)):
+        F = manualintegrate(f, x)
+        assert not F.has(Integral)
+        difference = F.diff(x) - f
+        assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-10
+                   for pt in (0.3, 0.7))
+
+
+def test_manualintegrate_general_base_exponential():
+    F = manualintegrate(x*2**x, x)
+    assert F == x*2**x/log(2) - 2**x/log(2)**2
+    f = x**2*b**(a + 2*x)
+    F = manualintegrate(f, x)
+    assert not F.has(Integral)
+    difference = (F.diff(x) - f).subs([(a, 1), (b, 3)])
+    assert all(abs(complex(difference.subs(x, pt).n(20))) < 1e-10
+               for pt in (0.4, 1.3))
 
 
 @slow
@@ -423,12 +909,10 @@ def test_manualintegrate_parts_special():
     F = -x**2/2 + (x*log(x) - x)*li(x) + Ei(2*log(x))
     assert_is_integral_of(f, F)
     f = Ci(x)*Si(x)
-    F = (x*Ci(x)*Si(x) - sin(x)*Si(x) + cos(x)*Ci(x) +
-        Integral(sin(x)**2/x, x) - Integral(cos(x)**2/x, x))
+    F = (x*Ci(x)*Si(x) - sin(x)*Si(x) + cos(x)*Ci(x) - Ci(2*x))
     assert_is_integral_of(f, F)
     f = Chi(x)*Shi(x)
-    F = (x*Chi(x)*Shi(x) - sinh(x)*Shi(x) - cosh(x)*Chi(x) +
-        Integral(sinh(x)**2/x, x) + Integral(cosh(x)**2/x, x))
+    F = (x*Chi(x)*Shi(x) - sinh(x)*Shi(x) - cosh(x)*Chi(x) + Chi(2*x))
     assert_is_integral_of(f, F)
     f = Ei(x)*Si(x)
     F = (x*Ei(x)*Si(x) - I*(-Ei(x*(1 - I)) + Ei(x*(1 + I)))/2 -
@@ -438,6 +922,48 @@ def test_manualintegrate_parts_special():
     f = Ei(x)*Shi(x)
     F = x*Ei(x)*Shi(x) - exp(x)*Shi(x) - cosh(x)*Ei(x) + Ei(2*x)
     assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_special_alternatives():
+    f = (x + 1)*Ei(x)
+    F = -(x/2 + 1)*exp(x) + (x**2/2 + x)*Ei(x) + exp(x)/2
+    # Because -(x/2 + 1) != (-x/2 - 1) we are using expand
+    assert manualintegrate(f, x).expand() == F.expand()
+    assert F.diff().expand() == f.expand()
+
+
+def test_integral_steps_branch():
+    from sympy.integrals.manualintegrate import AlternativeRule
+    # By default only the first workable rule is kept at each step, so no
+    # AlternativeRule node appears in the tree.
+    f = x*exp(x**2)
+    rule = f, x
+    assert not any(isinstance(r, AlternativeRule)
+                   for r in _rules_in_tree(integral_steps(*rule)))
+    # With branch=True all applicable alternatives are preserved.
+    branched = integral_steps(*rule, branch=True)
+    assert any(isinstance(r, AlternativeRule)
+               for r in _rules_in_tree(branched))
+    # Both trees evaluate to a correct antiderivative.
+    assert integral_steps(*rule).eval().diff(x).equals(f)
+    assert branched.eval().diff(x).equals(f)
+    # The branch flag reaches recursive subproblems without any global
+    # state, so concurrent solvers with different settings cannot clash.
+    assert not any(isinstance(r, AlternativeRule)
+                   for r in _rules_in_tree(integral_steps(*rule)))
+
+
+def _rules_in_tree(rule):
+    from sympy.integrals.manualintegrate import Rule
+    yield rule
+    for name in rule._get_slots():
+        stack = [getattr(rule, name)]
+        while stack:
+            v = stack.pop()
+            if isinstance(v, Rule):
+                yield from _rules_in_tree(v)
+            elif isinstance(v, (list, tuple)):
+                stack.extend(v)
 
 
 def test_manualintegrate_derivative():
@@ -511,7 +1037,7 @@ def test_issue_6799():
     integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
     assert manualintegrate(integrand, x) == \
-        ((n*x/2 + sin(2*n*x)/4)*cos(n*phi) - sin(n*phi)*cos(n*x)**2/2)/n
+        x*cos(n*phi)/2 - sin(n*phi - 2*n*x)/(4*n)
     assert r * integrate(integrand, limits).trigsimp() / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
 
@@ -582,8 +1108,9 @@ def test_issue_2850():
     assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + I*x/2 + 3*sqrt(1 - x**2)/2 + \
     (x*acos(x) - sqrt(1 - x**2))*log(x) + log(-1 + 1/(I*x + sqrt(1 - x**2))) - \
     log(1 + 1/(I*x + sqrt(1 - x**2))) + S.Half/(I*x + sqrt(1 - x**2))
+    # the last term is now a dilogarithm instead of an unevaluated Integral
     assert manualintegrate(atan(x)*log(x), x) == -x*atan(x) + (x*atan(x) - \
-            log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
+            log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 - polylog(2, -x**2)/4
 
 
 def test_issue_9462():
@@ -664,8 +1191,12 @@ def test_issue_10847():
     assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**Rational(5, 2)/20 - (2*x + 3)**Rational(3, 2)/4
     assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5,2)/25
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
+    # the last term is now a dilogarithm instead of an unevaluated
+    # Integral (valid on 0 < y < 1 with the principal branch of both
+    # log(y - 1) and polylog)
     assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == \
-        (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - Integral(log(y - 1)/y, y)
+        (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - I*pi*log(y) \
+        + polylog(2, y)
 
 
 def test_issue_12899():
@@ -680,9 +1211,9 @@ def test_constant_independent_of_symbol():
 
 def test_issue_12641():
     assert manualintegrate(sin(2*x), x) == -cos(2*x)/2
-    assert manualintegrate(cos(x)*sin(2*x), x) == -2*cos(x)**3/3
+    assert manualintegrate(cos(x)*sin(2*x), x) == -cos(x)/2 - cos(3*x)/6
     assert manualintegrate((sin(2*x)*cos(x))/(1 + cos(x)), x) == \
-        -2*log(cos(x) + 1) - cos(x)**2 + 2*cos(x)
+        -2*log(2*cos(x) + 2) - cos(x)**2 + 2*cos(x)
 
 
 @slow
