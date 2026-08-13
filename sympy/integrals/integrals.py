@@ -659,9 +659,17 @@ class Integral(AddWithLimits):
 
             if antideriv is None:
                 undone_limits.append(xab)
-                function = self.func(*([function] + [xab])).factor()
-                factored_function = function.factor()
-                if not isinstance(factored_function, Integral):
+                integral = self.func(*([function] + [xab]))
+                factored_function = integral.factor()
+                if factored_function != integral:
+                    # factoring may have revealed a form (e.g. Abs terms
+                    # exposed by pulling a perfect square out of a sqrt)
+                    # that is integrable even though the original
+                    # integrand was not; force a deep retry since the
+                    # newly exposed sub-integral has not been attempted
+                    retry_hints = dict(hints, deep=True)
+                    function = factored_function.doit(**retry_hints)
+                else:
                     function = factored_function
                 continue
             else:

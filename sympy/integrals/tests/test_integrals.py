@@ -1377,8 +1377,8 @@ def test_issue_2708():
     assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)
     assert integrate(2*f + exp(z), (z, 2, 3)) == \
         2*integral_f - exp(2) + exp(3)
-    assert integrate(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x)) == \
-        NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
+    assert integrate(exp(1.2*n*s*z*(-t + z)/t)/(z + 1), (z, 0, x)) == \
+        NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t)/(z + 1),
                                   (z, 0, x))
 
 
@@ -2262,3 +2262,19 @@ def test_issue_29909():
 
     assert integrate(f, x) == F
     assert F.diff(x).equals(f)
+
+
+def test_sqrt_abs_factor_consistency():
+    # integrate() used to give a different (unevaluated) result for a
+    # sqrt integrand depending on whether a numerical factor sat inside
+    # or outside the square root, even though the two integrands are
+    # identical.  sqrt(k**2*A) does not automatically simplify to
+    # k*sqrt(A) when A is a sum, so the two forms could take different
+    # paths through the integration heuristics; the k*sqrt(A) form was
+    # left with an Abs(sin(x))*Abs(cos(x)) factor unevaluated.
+    trig_sum = sin(x)**4*cos(x)**2 + sin(x)**2*cos(x)**4
+    outside = 12*sqrt(trig_sum)
+    inside = sqrt(144*trig_sum)
+    assert outside.equals(inside)
+    assert integrate(outside, (x, 0, pi/6)) == Rational(3, 2)
+    assert integrate(inside, (x, 0, pi/6)) == Rational(3, 2)
