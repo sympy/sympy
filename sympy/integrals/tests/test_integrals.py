@@ -2262,3 +2262,11 @@ def test_issue_29909():
 
     assert integrate(f, x) == F
     assert F.diff(x).equals(f)
+
+
+def test_issue_29637():
+    # https://github.com/sympy/sympy/issues/29637
+    f = 1/(1 + x**10)
+    F = integrate(f, x)
+    assert not F.has(Integral)
+    assert (F.diff(x) - f).cancel() == 0
