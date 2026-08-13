@@ -2577,6 +2577,8 @@ def perfect_square_radicand_rule(integral: IntegralInfo):
     integrand, symbol = integral
     if symbol.is_real:
         return
+    if not isinstance(integrand, Mul) and not isinstance(integrand, Pow):
+        return
 
     H_ = Wild('H', exclude=[0])
     G_ = Wild('G', exclude=[1])
@@ -3119,8 +3121,7 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(euler_substitution_rule),
-                        null_safe(perfect_square_radicand_rule)),
+                        null_safe(euler_substitution_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
@@ -3129,8 +3130,7 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
                         null_safe(euler_substitution_rule),
-                        null_safe(trig_cmplx_exp_rule),
-                        null_safe(perfect_square_radicand_rule)),
+                        null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
@@ -3165,7 +3165,8 @@ def integral_steps(integrand, symbol, **options):
                 trig_expand_rule
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
-            null_safe(trig_substitution_rule)
+            null_safe(trig_substitution_rule),
+            null_safe(perfect_square_radicand_rule)
         ),
         fallback_rule)(integral)
     del _integral_cache[cachekey]
