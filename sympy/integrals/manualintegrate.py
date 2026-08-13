@@ -65,7 +65,7 @@ from .integrals import Integral
 from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
-from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
+from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly, sqf_list
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.simplify.powsimp import powsimp
@@ -2566,6 +2566,48 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     return step
 
 
+def perfect_square_radicand_rule(integral: IntegralInfo):
+    r"""
+    Rewrite an integral containing a square-root denominator by extracting
+    perfect-square factors from its radicand. Useful for integrals in the
+    complex domain of the form
+
+    integral H(z)/sqrt(c*G(z)) dz = (F(z)*sqrt(c*R(z)))/sqrt(c*G(z)) * integral H(z)/(F(z)*sqrt(c*R(z))) dz
+    """
+    integrand, symbol = integral
+    if symbol.is_real:
+        return
+
+    H_ = Wild('H', exclude=[0])
+    G_ = Wild('G', exclude=[1])
+    pattern = H_/sqrt(G_)
+    match = integrand.match(pattern)
+    if not match:
+        return
+    H, G = match[H_], match[G_]
+
+    square_free = sqf_list(G)
+    c = square_free[0]
+    reducible = {r[0]**(r[1]/2) for r in square_free[1] if r[1] % 2 == 0}
+    irreducible = {r[0]**r[1] for r in square_free[1] if r[1] % 2 != 0}
+
+    if not reducible:
+        return
+
+    F = Mul(*reducible)
+    R = c * Mul(*irreducible)
+    factor = (F*sqrt(c*R))/sqrt(G)
+    rewritten = H/(F*sqrt(c*R))
+
+    # The factor must be constant with respect to the integration variable,
+    # otherwise the step is invalid.
+    if factor.diff(symbol) != 0:
+        return
+
+    substep = integral_steps(rewritten, symbol)
+    return ConstantTimesRule(integrand, symbol, factor, rewritten, substep)
+
+
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
     integrand, symbol = integral
     if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
@@ -3077,7 +3119,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(euler_substitution_rule)),
+                        null_safe(euler_substitution_rule),
+                        null_safe(perfect_square_radicand_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
@@ -3086,7 +3129,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
                         null_safe(euler_substitution_rule),
-                        null_safe(trig_cmplx_exp_rule)),
+                        null_safe(trig_cmplx_exp_rule),
+                        null_safe(perfect_square_radicand_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
