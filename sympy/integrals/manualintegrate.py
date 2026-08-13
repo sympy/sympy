@@ -2315,6 +2315,12 @@ def trig_poly_mul_rule(integral: IntegralInfo):
     b = match[b_]
     c = match[c_]
 
+    generic_cond = Ne(a, 0)
+    degenerate_step = None
+    if generic_cond is not S.true:
+        degenerate_trig = sin(b*symbol + c) if is_sin else cos(b*symbol + c)
+        degenerate_step = integral_steps(poly * degenerate_trig, symbol)
+
     # Complete the square and shift.
     h = -b / (2*a)
     k = c - b**2 / (4*a)
@@ -2336,7 +2342,8 @@ def trig_poly_mul_rule(integral: IntegralInfo):
     if substep.contains_dont_know():
         return
     substep = URule(rewritten, symbol, u, u_func, substep)
-    return CompleteSquareRule(integrand, symbol, rewritten, substep)
+    generic_step = CompleteSquareRule(integrand, symbol, rewritten, substep)
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
 def trig_product_to_sum_rule(integral: IntegralInfo):
