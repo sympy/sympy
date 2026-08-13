@@ -2276,14 +2276,14 @@ def trig_poly_mul_rule(integral: IntegralInfo):
     """
     Integrate poly(x) * sin(a*x**2+b*x+c) or poly(x) * cos(a*x**2+b*x+c).
 
-    * If the quadratic has a nonzero linear or constant term, complete the
-      square and shift to u = x + b/(2a), expand the trig function of
-      (a*u**2 + k) with the angle-sum identities, and recurse: the result
-      is a sum of terms poly(u) * sin(a*u**2) and poly(u) * cos(a*u**2).
+    * If the quadratic has a nonzero linear term, complete the square and
+      shift to u = x + b/(2a), expand the trig function of (a*u**2 + k)
+      with the angle-sum identities, and recurse: the result is a sum of
+      terms poly(u) * sin(a*u**2) and poly(u) * cos(a*u**2).
     """
     integrand, symbol = integral
     if not integrand.is_Mul:
-        return None
+        return
 
     a_ = Wild('a', exclude=[symbol, 0])
     b_ = Wild('b', exclude=[symbol, 0])
@@ -2296,7 +2296,7 @@ def trig_poly_mul_rule(integral: IntegralInfo):
     for factor in integrand.args:
         if not match and isinstance(factor, (sin, cos)):
             match = factor.args[0].match(quadratic_pattern)
-            if match and match[a_] != 0:
+            if match:
                 is_sin = isinstance(factor, sin)
                 continue
             else:
@@ -2333,7 +2333,7 @@ def trig_poly_mul_rule(integral: IntegralInfo):
     rewritten = new_integrand.subs(u, u_func)
 
     substep = integral_steps(new_integrand, u)
-    if substep is None or substep.contains_dont_know():
+    if substep.contains_dont_know():
         return
     substep = URule(rewritten, symbol, u, u_func, substep)
     return CompleteSquareRule(integrand, symbol, rewritten, substep)
