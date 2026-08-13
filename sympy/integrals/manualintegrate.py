@@ -31,6 +31,7 @@ from inspect import signature
 
 from sympy import SYMPY_DEBUG
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.function import Derivative
@@ -3095,10 +3096,33 @@ def fallback_rule(integral):
     return DontKnowRule(*integral)
 
 
-# Cache is used to break cyclic integrals.
+def _rule_xreplace(rule, mapping):
+    """Like Basic.xreplace, but recurses through a Rule tree.
+
+    Rule is a plain (non-Basic) container of Expr, Rule, and
+    list/tuple-of-those fields, so it doesn't get xreplace for free.
+    """
+    if isinstance(rule, Basic):
+        return rule.xreplace(mapping)
+    if isinstance(rule, Rule):
+        new_rule = object.__new__(type(rule))
+        for attr in rule._get_slots():
+            setattr(new_rule, attr, _rule_xreplace(getattr(rule, attr), mapping))
+        return new_rule
+    if isinstance(rule, tuple):
+        return tuple(_rule_xreplace(item, mapping) for item in rule)
+    if isinstance(rule, list):
+        return [_rule_xreplace(item, mapping) for item in rule]
+    return rule
+
+
+# Cache is used to break cyclic integrals, and to memoize the steps found
+# for a given integrand within a single top-level integral_steps() call, so
+# that identical subintegrals reached via different paths (e.g. a poly*trig
+# rewrite explored from several alternative branches) are solved once.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
-_integral_cache: dict[Expr, Expr | None] = {}
+_integral_cache: dict[Expr, 'Rule | None'] = {}
 _parts_u_cache: dict[Expr, int] = defaultdict(int)
 _cache_dummy = Dummy("z")
 
@@ -3147,18 +3171,21 @@ def integral_steps(integrand, symbol, **options):
         to obtain a result.
 
     """
+    # An empty cache here means this is the outermost integral_steps() call
+    # in the current search (nested/recursive calls always see a non-empty
+    # cache, since the outermost call inserts its own entry before
+    # recursing). Only the outermost call clears the cache when it's done,
+    # so identical subintegrals reached via different paths within one
+    # search are solved once and reused, not recomputed from scratch.
+    is_top_level = not _integral_cache
     cachekey = integrand.xreplace({symbol: _cache_dummy})
     if cachekey in _integral_cache:
         if _integral_cache[cachekey] is None:
             # Stop this attempt, because it leads around in a loop
             return DontKnowRule(integrand, symbol)
         else:
-            # TODO: This is for future development, as currently
-            # _integral_cache gets no values other than None
-            return (_integral_cache[cachekey].xreplace(_cache_dummy, symbol),
-                symbol)
-    else:
-        _integral_cache[cachekey] = None
+            return _rule_xreplace(_integral_cache[cachekey], {_cache_dummy: symbol})
+    _integral_cache[cachekey] = None
 
     integral = IntegralInfo(integrand, symbol)
 
@@ -3237,7 +3264,9 @@ def integral_steps(integrand, symbol, **options):
             null_safe(trig_substitution_rule)
         ),
         fallback_rule)(integral)
-    del _integral_cache[cachekey]
+    _integral_cache[cachekey] = _rule_xreplace(result, {symbol: _cache_dummy})
+    if is_top_level:
+        _integral_cache.clear()
     return result
 
 
