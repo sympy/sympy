@@ -3073,11 +3073,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-<<<<<<< HEAD
-                        null_safe(chebyshev_substitution_rule)),
-=======
+                        null_safe(chebyshev_substitution_rule),
                         null_safe(euler_substitution_rule)),
->>>>>>> origin/master
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
@@ -3085,11 +3082,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-<<<<<<< HEAD
                         null_safe(chebyshev_substitution_rule),
-=======
                         null_safe(euler_substitution_rule),
->>>>>>> origin/master
                         null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
