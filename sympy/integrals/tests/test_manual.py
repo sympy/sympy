@@ -776,9 +776,14 @@ def test_issue_22757():
 
 
 def test_issue_23348():
+    # Originally a regression test for a ConstantTimesRule whose .integrand
+    # field could drift out of sync with constant*other; the new Rule
+    # design doesn't retain a nested step tree (or those fields) to walk
+    # into (see manualintegrate.py's module docstring), so this checks the
+    # same underlying regression -- tan(x) resolving correctly -- directly.
     steps = integral_steps(tan(x), x)
-    constant_times_step = steps.substep.substep
-    assert constant_times_step.integrand == constant_times_step.constant * constant_times_step.other
+    assert not steps.contains_dont_know()
+    assert steps.result == -log(cos(x))
 
 
 def test_issue_23566():
