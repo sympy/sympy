@@ -477,7 +477,7 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     for i in range(n, -1, -1):
         if DE.case == 'exp': # this re-checking can be avoided
             with DecrementLevel(DE):
-                ba, bd = frac_in(b + (i*(derivation(DE.t, DE)/DE.t)).as_poly(b.gens),
+                ba, bd = frac_in(b + (i*(derivation(Poly(DE.t, DE.t), DE)/DE.t)).as_poly(b.gens),
                                 DE.t, field=True)
         with DecrementLevel(DE):
             Qy = [frac_in(q.nth(i), DE.t, field=True) for q in Q]
@@ -934,7 +934,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     p, a = fa.div(fd)
     q, b = wa.div(wd)
 
-    B = max(0, derivation(DE.t, DE).degree(DE.t) - 1)
+    B = max(0, derivation(Poly(DE.t, DE.t), DE).degree(DE.t) - 1)
     C = max(p.degree(DE.t), q.degree(DE.t))
 
     if q.degree(DE.t) > B:

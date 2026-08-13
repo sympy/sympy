@@ -26,6 +26,7 @@ from the names used in Bronstein's book.
 from __future__ import annotations
 from types import GeneratorType
 from functools import reduce
+from typing import TYPE_CHECKING, Literal, overload
 
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
@@ -49,6 +50,10 @@ from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
 from sympy.polys.rootoftools import RootSum
 from sympy.utilities.iterables import numbered_symbols
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from sympy.core.expr import Expr
 
 
 def integer_powers(exprs):
@@ -169,6 +174,29 @@ class DifferentialExtension:
     __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs',
         'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts', 'dummy')
+
+    # When the extension flag is used, attributes not given in the extension
+    # dictionary are None at runtime (see __getattr__), but the algorithms
+    # assume they are set, so they are annotated with the types they have when
+    # the extension is fully built.
+    f: Expr
+    x: Symbol
+    T: list[Symbol]
+    D: list[Poly]
+    fa: Poly
+    fd: Poly
+    Tfuncs: list[Lambda]
+    backsubs: list[tuple[Expr, Expr]]
+    exts: list[str]
+    extargs: list[Expr]
+    cases: list[str]
+    case: str
+    t: Symbol
+    d: Poly
+    newf: Expr
+    level: int
+    ts: Iterator[Symbol]
+    dummy: bool
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
         """
@@ -814,7 +842,7 @@ def gcdex_diophantine(a, b, c):
     return (s, t)
 
 
-def frac_in(f, t, *, cancel=False, **kwargs):
+def frac_in(f, t, *, cancel=False, **kwargs) -> tuple[Poly, Poly]:
     """
     Returns the tuple (fa, fd), where fa and fd are Polys in t.
 
@@ -884,6 +912,13 @@ def as_poly_1t(p, t, z):
     return ans
 
 
+@overload
+def derivation(p: Poly, DE: DifferentialExtension,
+    coefficientD: bool = False, basic: Literal[False] = False) -> Poly: ...
+@overload
+def derivation(p: Poly, DE: DifferentialExtension,
+    coefficientD: bool = False, *, basic: Literal[True]) -> Expr: ...
+
 def derivation(p, DE, coefficientD=False, basic=False):
     """
     Computes Dp.
@@ -938,7 +973,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
     return r
 
 
-def get_case(d, t):
+def get_case(d: Poly, t: Symbol) -> str:
     """
     Returns the type of the derivation d.
 
