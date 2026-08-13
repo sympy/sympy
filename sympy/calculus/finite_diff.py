@@ -18,6 +18,9 @@ for:
 """
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
+
 from sympy.core.function import Derivative
 from sympy.core.singleton import S
 from sympy.core.function import Subs
@@ -26,8 +29,14 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 
 
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
+    from sympy.core.expr import Expr
+    from sympy.core.symbol import Symbol
 
-def finite_diff_weights(order, x_list, x0=S.One):
+
+
+def finite_diff_weights(order: int, x_list: Sequence[Expr], x0: Expr = S.One) -> list[list[list[Expr]]]:
     """
     Calculates the finite difference weights for an arbitrarily spaced
     one-dimensional grid (``x_list``) for derivatives at ``x0`` of order
@@ -194,7 +203,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     return delta
 
 
-def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
+def apply_finite_diff(order: int, x_list: Sequence[Expr], y_list: Sequence[Expr], x0: Expr = S.Zero) -> Expr:
     """
     Calculates the finite difference approximation of
     the derivative of requested order at ``x0`` from points
@@ -281,7 +290,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     return derivative
 
 
-def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
+def _as_finite_diff(derivative: Derivative | Expr, points: Sequence[Expr] | Expr = 1, x0: Expr | None = None, wrt: Symbol | None = None) -> Basic:
     """
     Returns an approximation of a derivative of a function in
     the form of a finite difference formula. The expression is a
@@ -405,8 +414,8 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x in points], x0)
 
 
-def differentiate_finite(expr, *symbols,
-                         points=1, x0=None, wrt=None, evaluate=False):
+def differentiate_finite(expr: Expr, *symbols: Symbol,
+                         points: Sequence[Expr] | Expr = 1, x0: Expr | None = None, wrt: Symbol | None = None, evaluate: bool = False) -> Expr:
     r""" Differentiate expr and replace Derivatives with finite differences.
 
     Parameters
