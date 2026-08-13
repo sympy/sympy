@@ -3,13 +3,58 @@ from sympy.core.symbol import Dummy
 from sympy.external.mpmath import sqrt
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
+from sympy.polys.densebasic import dup_to_dict
 from sympy.polys.domains import PolynomialRing
 from sympy.polys.galoistools import (gf_gcdex, gf_div, gf_lcm)
 from sympy.polys.polyerrors import ModularGCDFailed
 from sympy.polys.zippel import (
-    _LC, _chinese_remainder_reconstruction_multivariate, _gf_gcd, _primitive, _trivial_gcd)
+    smp_LC_wrt_last, smp_deg_wrt_last, smp_gf_gcd,
+    smp_primitive_wrt_last, smp_trivial_gcd)
 
 import random
+
+
+def _gf_gcd(fp, gp, p):
+    ring = fp.ring
+    gcd = smp_gf_gcd(dict(fp), dict(gp), p, ring.domain)
+    return fp.new(gcd)
+
+
+def _trivial_gcd(f, g):
+    ring = f.ring
+    result = smp_trivial_gcd(dict(f), dict(g), ring.ngens, ring.domain)
+
+    if result is None:
+        return None
+
+    h, cff, cfg = result
+    return f.new(h), f.new(cff), f.new(cfg)
+
+
+def _primitive(f, p):
+    ring = f.ring
+    dom = ring.domain
+    k = ring.ngens
+
+    cont, prim = smp_primitive_wrt_last(dict(f), k, dom, p)
+
+    yring = ring.clone(symbols=[ring.symbols[k-1]])
+    contf = yring.zero.new(dup_to_dict(cont, dom)).trunc_ground(p)
+
+    return contf, f.new(prim).trunc_ground(p)
+
+
+def _LC(f):
+    ring = f.ring
+    k = ring.ngens
+    yring = ring.clone(symbols=ring.symbols[k-1])
+    lcf = smp_LC_wrt_last(dict(f), k, ring.domain)
+    return yring.zero.new(lcf)
+
+
+def _deg(f):
+    k = f.ring.ngens
+    return smp_deg_wrt_last(f, k)
 
 
 def _degree_bound_univariate(f, g):
@@ -107,6 +152,62 @@ def _chinese_remainder_reconstruction_univariate(hp, hq, p, q):
         hpq[(i,)] = crt([p, q], [hp.coeff(x**i), hq.coeff(x**i)], symmetric=True)[0]
 
     hpq.strip_zero()
+    return hpq
+
+
+def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
+    r"""
+    Construct a polynomial `h_{pq}` in
+    `\mathbb{Z}_{p q}[x_0, \ldots, x_{k-1}]` such that
+
+    .. math ::
+
+        h_{pq} = h_p \; \mathrm{mod} \, p
+
+        h_{pq} = h_q \; \mathrm{mod} \, q
+
+    for relatively prime integers `p` and `q` and polynomials
+    `h_p` and `h_q` in `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]` and
+    `\mathbb{Z}_q[x_0, \ldots, x_{k-1}]` respectively.
+
+    The coefficients of the polynomial `h_{pq}` are computed with the
+    Chinese Remainder Theorem. The symmetric representation in
+    `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]`,
+    `\mathbb{Z}_q[x_0, \ldots, x_{k-1}]` and
+    `\mathbb{Z}_{p q}[x_0, \ldots, x_{k-1}]` is used.
+    """
+    hpmonoms = set(hp.monoms())
+    hqmonoms = set(hq.monoms())
+    monoms = hpmonoms.intersection(hqmonoms)
+    hpmonoms.difference_update(monoms)
+    hqmonoms.difference_update(monoms)
+
+    domain = hp.ring.domain
+    zero = domain.zero
+
+    hpq = hp.ring.zero
+
+    if isinstance(hp.ring.domain, PolynomialRing):
+        for monom in monoms:
+            hpq[monom] = _chinese_remainder_reconstruction_multivariate(
+                hp[monom], hq[monom], p, q)
+        for monom in hpmonoms:
+            hpq[monom] = _chinese_remainder_reconstruction_multivariate(
+                hp[monom], zero, p, q)
+        for monom in hqmonoms:
+            hpq[monom] = _chinese_remainder_reconstruction_multivariate(
+                zero, hq[monom], p, q)
+    else:
+        def crt_scalar(cp, cq, p, q):
+            return domain(crt([p, q], [cp, cq], symmetric=True)[0])
+
+        for monom in monoms:
+            hpq[monom] = crt_scalar(hp[monom], hq[monom], p, q)
+        for monom in hpmonoms:
+            hpq[monom] = crt_scalar(hp[monom], zero, p, q)
+        for monom in hqmonoms:
+            hpq[monom] = crt_scalar(zero, hq[monom], p, q)
+
     return hpq
 
 
