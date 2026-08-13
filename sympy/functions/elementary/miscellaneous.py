@@ -598,29 +598,29 @@ class MinMaxBase(Expr, LatticeOp):
     def _split_values(cls, values: Iterable[Expr]) -> tuple[set[Expr], set[Expr], set[Expr]]:
         """
         Split an iterable of values into three sets:
-        - `numbers`: number values that can be compared easily.
+        - `comparables`: values that can be compared easily.
         - `unconstrained_symbols`: bare symbols that are not
           sign-constrained. We don't need to pairwise compare these.
         - `rest`: all other values.
         """
-        numbers: set[Expr] = set()
+        comparables: set[Expr] = set()
         unconstrained_symbols: set[Expr] = set()
         rest: set[Expr] = set()
         for value in values:
-            if value.is_number:
-                numbers.add(value)
+            if value.is_comparable:
+                comparables.add(value)
             elif isinstance(value, Symbol) and not cls._is_sign_constrained(value):
                 unconstrained_symbols.add(value)
             else:
                 rest.add(value)
-        return numbers, unconstrained_symbols, rest
+        return comparables, unconstrained_symbols, rest
 
     @classmethod
     def _find_localzeros(cls, values: Iterable[Expr]) -> set[Expr]:
-        numbers, unconstrained_symbols, rest = cls._split_values(values)
+        comparables, unconstrained_symbols, rest = cls._split_values(values)
         localzeros: set[Expr] = set()
-        # compare numbers first because they can be eliminated faster
-        to_compare = list(numbers) + list(rest)
+        # compare comparables first because they can be eliminated faster
+        to_compare = list(comparables) + list(rest)
         for value in to_compare:
             is_new_zero = True
             if value in localzeros:
