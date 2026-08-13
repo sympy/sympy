@@ -3057,7 +3057,7 @@ def integral_steps(integrand, symbol, **options):
     Examples
     ========
 
-    >>> from sympy import exp, sin
+    >>> from sympy import sin
     >>> from sympy.integrals.manualintegrate import integral_steps
     >>> from sympy.abc import x
     >>> integral_steps(sin(x), x)
