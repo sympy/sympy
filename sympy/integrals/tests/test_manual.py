@@ -1070,6 +1070,16 @@ def test_manualintegrate_sqrt_quadratic_polynomial_reduction_rule():
     # case delta = 0
     assert (result.args[1][0].subs(c, b**2/12).diff(x) - f.subs(c, b**2/12)).cancel() == 0
 
+
+def test_manualintegrate_perfect_square_radicand_rule():
+    f = 1/sqrt(-z*sin(x)**2)
+    F = sin(x)*Integral(1/sin(x), x)/sqrt(-z*sin(x)**2)
+    assert_is_integral_of(f, F)
+
+    f = x/sqrt(-z*sin(x)**2)
+    F = sin(x)*Integral(x/sin(x), x)/sqrt(-z*sin(x)**2)
+    assert_is_integral_of(f, F)
+
 def test_mul_pow_derivative():
     assert_is_integral_of(x*sec(x)*tan(x), x*sec(x) - log(tan(x) + sec(x)))
     assert_is_integral_of(x*sec(x)**2, x*tan(x) + log(cos(x)))
