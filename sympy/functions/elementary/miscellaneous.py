@@ -572,8 +572,8 @@ class MinMaxBase(Expr, LatticeOp):
             else:
                 yield arg
 
-    @staticmethod
-    def _is_sign_constrained(x: Expr) -> bool:
+    @classmethod
+    def _is_sign_constrained(cls, x: Expr) -> bool:
         """
         check if x is guaranteed to be positive, negative, etc., which
         implies that we need to consider it when comparing to other,
