@@ -46,7 +46,7 @@ enable simple substitutions, add the match to ``find_substitutions``.
 """
 
 from __future__ import annotations
-from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
+from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING, cast
 from abc import ABC
 from collections import defaultdict
 from collections.abc import Mapping
@@ -68,8 +68,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import WildFunction
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
-    cosh, coth, sech, sinh, tanh, asinh)
+from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
+    cosh, coth, sinh, tanh, asinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
@@ -96,6 +96,7 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
 if TYPE_CHECKING:
+    from sympy.core.basic import Basic
     from sympy.core.expr import Expr
 
 
@@ -119,6 +120,7 @@ def _if_zero_implies_zero(P, Q):
         if factored_num_q.subs(factor, 0) != 0:
             return False
     return True
+
 
 
 class IntegralInfo(NamedTuple):
@@ -146,7 +148,7 @@ class IntegralInfo(NamedTuple):
 _CANON_POOL = [Dummy(f"_d{i}") for i in range(256)]
 
 
-def canon(expr: Expr) -> Expr:
+def canon(expr: Basic) -> Basic:
     """Deterministically rename every free Dummy symbol in expr to a
     canonical sequence (_d0, _d1, ...), assigned in a fixed (preorder)
     traversal order. Non-Dummy symbols are untouched."""
@@ -169,8 +171,8 @@ def canonical_goal(info: IntegralInfo) -> IntegralInfo:
     """Canonicalizes integrand and symbol together (the bound variable may
     itself be a Dummy from a prior substitution), so a shared dummy renames
     consistently across both."""
-    combined = canon(STuple(info.integrand, info.symbol))
-    return IntegralInfo(combined[0], combined[1])
+    combined = cast(STuple, canon(STuple(info.integrand, info.symbol)))
+    return IntegralInfo(cast("Expr", combined[0]), cast(Symbol, combined[1]))
 
 
 # ---------------------------------------------------------------------------
@@ -213,13 +215,15 @@ class Rule(ABC):
             self.result = self.result.xreplace({atom: resolved[g]})
         self.subgoals = ()
 
-    def expand(self, resolved: Mapping[IntegralInfo, Expr]) -> IntegralInfo | None:
+    def expand(self, resolved: Mapping[IntegralInfo, Expr], solver: "ManualSolver") -> IntegralInfo | None:
         """Return one more goal to solve before this rule is AND-satisfied,
         derived from whatever has resolved so far, or None once there's
         nothing more needed. Default: no dynamic expansion -- every
         subgoal was already declared upfront. Only PartsRule overrides
         this: its second integral (du*v) needs v's concrete value before
-        it can even be stated."""
+        it can even be stated, and it also greedily re-applies parts to
+        that product a few more times (see PartsRule.expand), which needs
+        the solver to look up _parts_rule with."""
         return None
 
     def contains_dont_know(self) -> bool:
@@ -923,16 +927,30 @@ class TrigSubstitutionRule(Rule):
 class PartsRule(Rule):
     """integrate(u(x)*v'(x), x) -> u(x)*v(x) - integrate(u'(x)*v(x), x)
 
-    `v` is declared as a real subgoal (`v_goal`) instead of being computed
-    eagerly via a recursive call before this Rule even exists. The second
-    subgoal (integrate du*v) genuinely cannot be stated until v has a
-    concrete value, so it is not declared upfront: `expand()` is called by
-    the solver once v_goal resolves, and only then derives and hands back
-    the second goal. `eval()` combines u*v - second from the resolved
-    mapping -- no rule needs to reach back into the solver.
+    `v` is declared as a real subgoal instead of being computed eagerly via
+    a recursive call before this Rule even exists: the second integral
+    (integrate du*v) genuinely cannot be stated until v has a concrete
+    value, so it is not declared upfront. `expand()` is called by the
+    solver once each v_goal in the chain below resolves, and only then
+    derives and hands back the next goal. `eval()` combines the chain from
+    the resolved mapping -- no rule needs to reach back into the solver.
+
+    `expand()` doesn't stop at one application, though: it greedily
+    re-applies _parts_rule to the du*v product a few more times first (up
+    to 4 rounds, mirroring the original parts_rule's "try cyclic
+    integration by parts a few times" loop bound) before falling back to
+    generic dispatch for a final subgoal. This is NOT cycle detection --
+    that's exp_trig_cyclic_rule's job, tried earlier in dispatch -- it's
+    what makes an ordinary chain of nested by-parts applications (e.g. a
+    doubly-nested erf integral) land in the same algebraic grouping the
+    original implementation produced, rather than a differently-grouped
+    but equally correct answer, by staying on the same "keep applying
+    parts directly" path instead of handing the intermediate product to
+    the general dispatch chain (which would normalize/distribute it
+    differently along the way).
     """
 
-    __slots__ = ("u", "dv", "du", "v_goal", "second_goal")
+    __slots__ = ("u", "dv", "du", "v_goal", "second_goal", "_chain", "_chain_done")
 
     def __init__(self, goal: IntegralInfo, u: Expr, dv: Expr, du: Expr) -> None:
         v_goal = IntegralInfo(dv, goal.symbol)
@@ -943,24 +961,61 @@ class PartsRule(Rule):
         self.du = du
         self.v_goal = v_goal
         self.second_goal: IntegralInfo | None = None
+        # chain of (u_i, dv_i, du_i, v_goal_i), extended by expand()
+        self._chain: list[tuple[Expr, Expr, Expr, IntegralInfo]] = [(u, dv, du, v_goal)]
+        self._chain_done = False
 
-    def expand(self, resolved: Mapping[IntegralInfo, Expr]) -> IntegralInfo | None:
+    def expand(self, resolved: Mapping[IntegralInfo, Expr], solver: "ManualSolver") -> IntegralInfo | None:
+        last_u, last_dv, last_du, last_v_goal = self._chain[-1]
+        if last_v_goal not in resolved:
+            return last_v_goal
+
+        if not self._chain_done:
+            v = resolved[last_v_goal]
+            if last_dv != 1 and len(self._chain) < 4:
+                next_integrand = last_du * v
+                next_constant, next_stripped = next_integrand.as_coeff_Mul()
+                result = _parts_rule(next_stripped, self.goal.symbol, solver)
+                if result is not None:
+                    next_u, next_dv, next_du = result
+                    next_u = next_u * next_constant
+                    next_du = next_du * next_constant
+                    # NOT canonicalized: canonicalization is purely internal
+                    # bookkeeping for the solver's own memoization/cycle-
+                    # detection dicts (done inside ManualSolver.solve());
+                    # the goal handed to proposers -- and therefore the
+                    # variable names appearing in the returned value --
+                    # must stay exactly as constructed here.
+                    next_v_goal = IntegralInfo(next_dv, self.goal.symbol)
+                    self._chain.append((next_u, next_dv, next_du, next_v_goal))
+                    self.subgoals = (next_v_goal,)
+                    return next_v_goal
+            self._chain_done = True
+
         if self.second_goal is None:
-            v = resolved[self.v_goal]
-            # NOT canonicalized here: canonicalization is purely internal
-            # bookkeeping for the solver's own memoization/cycle-detection
-            # dicts (done inside ManualSolver.solve()); the goal handed to
-            # proposers -- and therefore the variable names appearing in
-            # the returned value -- must stay exactly as constructed here.
-            self.second_goal = IntegralInfo(self.du * v, self.goal.symbol)
+            v = resolved[last_v_goal]
+            self.second_goal = IntegralInfo(last_du * v, self.goal.symbol)
             self.subgoals = (self.second_goal,)
             return self.second_goal
+
         return None
 
     def eval(self, resolved: Mapping[IntegralInfo, Expr]) -> None:
-        v = resolved[self.v_goal]
-        second = resolved[self.second_goal]
-        self.result = self.u * v - second
+        # sign * (u_i * v_i), NOT sign * u_i * v_i: Python evaluates the
+        # latter left-to-right as (sign*u_i)*v_i, which lets the sign
+        # auto-distribute into u_i when it's an Add (a pure Number
+        # multiplying an Add directly does distribute in SymPy). Grouping
+        # the product first and multiplying by sign afterward matches the
+        # original nested `u*v - second_step.eval()` composition, which
+        # builds u*v as one Mul before ever combining it with a sign.
+        assert self.second_goal is not None
+        result: Expr = S.Zero
+        sign = S.One
+        for u_i, dv_i, du_i, v_goal_i in self._chain:
+            result += sign * (u_i * resolved[v_goal_i])
+            sign = -sign
+        result += sign * resolved[self.second_goal]
+        self.result = result
         self.subgoals = ()
 
 
@@ -1287,7 +1342,7 @@ class ManualSolver:
             for g in frontier:
                 resolved_map[g] = self.extract(g)
             rule.subgoals = frontier
-            next_goal = rule.expand(resolved_map)
+            next_goal = rule.expand(resolved_map, self)
             if next_goal is None:
                 break
             frontier = (next_goal,)
@@ -1391,7 +1446,7 @@ def orthogonal_poly_rule(goal: IntegralInfo, solver: ManualSolver) -> Rule | Non
     return None
 
 
-_special_function_patterns: list[tuple[type, Expr, Callable | None, tuple]] = []
+_special_function_patterns: list[tuple[type, Expr, Callable | None, type["Rule"]]] = []
 _wilds: list[Wild] = []
 _sf_symbol = Dummy('x')
 
@@ -1448,8 +1503,9 @@ def _add_degenerate_step(
 ) -> Rule:
     if degenerate_step is None:
         return generic_step
+    branches: list[tuple[Expr, bool | Boolean]]
     if isinstance(generic_step, PiecewiseRule):
-        branches = [(expr, (cond & generic_cond).simplify())
+        branches = [(expr, And(cond, generic_cond).simplify())
                     for expr, cond in generic_step.branches]
     else:
         branches = [(generic_step.result, generic_cond)]
@@ -1548,6 +1604,7 @@ def inverse_trig_rule(goal: IntegralInfo, solver: ManualSolver, degenerate: bool
 
     a, b, c = [match.get(i, S.Zero) for i in (a, b, c)]
     generic_cond = Ne(c, 0)
+    degenerate_step: Rule | None
     if not degenerate or generic_cond is S.true:
         degenerate_step = None
     elif b.is_zero:
@@ -1588,8 +1645,11 @@ def inverse_trig_rule(goal: IntegralInfo, solver: ManualSolver, degenerate: bool
                 step = generic_step
         return _add_degenerate_step(goal, generic_cond, step, degenerate_step)
     if exp == S.Half:
-        step = sqrt_quadratic_rule(goal, solver, degenerate=False)
-        return _add_degenerate_step(goal, generic_cond, step, degenerate_step)
+        # degenerate=False on a base already confirmed to match: always
+        # produces a real Rule, never declines.
+        half_step = sqrt_quadratic_rule(goal, solver, degenerate=False)
+        assert half_step is not None
+        return _add_degenerate_step(goal, generic_cond, half_step, degenerate_step)
     return None
 
 
@@ -1627,20 +1687,31 @@ def exp_trig_cyclic_rule(goal: IntegralInfo, solver: ManualSolver) -> Rule | Non
         if not match:
             continue
         aa, bb = match[a], match[b]
+        # Built as an explicit sum of two separate Mul terms (matching the
+        # original CyclicPartsRule.eval()'s Add(*result)/(1-coefficient)
+        # shape), NOT as exp(...)*(a*trig1 - b*trig2)/denom: the two are
+        # mathematically equal but NOT structurally == in SymPy (Mul does
+        # not auto-distribute over Add), and manualintegrate's exact output
+        # shape is part of its tested behavior (e.g. exp(x)*sin(x)/2 -
+        # exp(x)*cos(x)/2, not (sin(x)-cos(x))*exp(x)/2).
         if trig in (sinh, cosh):
             denom = aa**2 - bb**2
             if denom == 0:
                 continue
             if trig is sinh:
-                closed = exp(aa*symbol)*(aa*sinh(bb*symbol) - bb*cosh(bb*symbol))/denom
+                closed = (aa*exp(aa*symbol)*sinh(bb*symbol)
+                          - bb*exp(aa*symbol)*cosh(bb*symbol)) / denom
             else:
-                closed = exp(aa*symbol)*(aa*cosh(bb*symbol) - bb*sinh(bb*symbol))/denom
+                closed = (aa*exp(aa*symbol)*cosh(bb*symbol)
+                          - bb*exp(aa*symbol)*sinh(bb*symbol)) / denom
         else:
             denom = aa**2 + bb**2
             if trig is sin:
-                closed = exp(aa*symbol)*(aa*sin(bb*symbol) - bb*cos(bb*symbol))/denom
+                closed = (aa*exp(aa*symbol)*sin(bb*symbol)
+                          - bb*exp(aa*symbol)*cos(bb*symbol)) / denom
             else:
-                closed = exp(aa*symbol)*(aa*cos(bb*symbol) + bb*sin(bb*symbol))/denom
+                closed = (aa*exp(aa*symbol)*cos(bb*symbol)
+                          + bb*exp(aa*symbol)*sin(bb*symbol)) / denom
         return ExpTrigCyclicRule(goal, closed)
     return None
 
@@ -1711,7 +1782,7 @@ def _parts_rule(
                         inner.is_polynomial(symbol) and  # type: ignore
                         degree(inner, symbol) == 2
                     ):
-                        dv = target * symbol
+                        dv = target * symbol  # type: ignore
                         u = integrand / dv
                         return u, dv
             return None
@@ -1900,7 +1971,7 @@ def quadratic_denom_rule(goal: IntegralInfo, solver: ManualSolver) -> Rule | Non
     if den_const != 1:
         num = num / den_const
     den = den_x
-    if den.is_Pow:
+    if isinstance(den, Pow):
         q = den.base
         n = den.exp
     else:
@@ -2002,7 +2073,6 @@ def quadratic_denom_rule(goal: IntegralInfo, solver: ManualSolver) -> Rule | Non
             F = B*T / ((n - 1)*discriminant*denominator**(n - 1))
             derivative = Derivative(F, symbol, evaluate=False)
             coeff = 2*a*(2*n - 3) / ((n - 1)*discriminant)
-            remainder = B / denominator**(n - 1)
             derivative_value = DerivativeRule(IntegralInfo(derivative, symbol)).result
             remainder_step = _complete_square(B, a, b, c, n - 1, symbol, degenerate_a=False, degenerate_discriminant=False)
             value = derivative_value + coeff * remainder_step.result
@@ -2027,9 +2097,7 @@ def quadratic_denom_rule(goal: IntegralInfo, solver: ManualSolver) -> Rule | Non
             subgoals.append(IntegralInfo(substituted, symbol))
         # we divide by a, Piecewise condition above
         const = A/(2*a)
-        numer1 = (2*a*symbol + b)
         numer2 = -const*b + B
-        qprime_part = numer1 / denominator**n
         u = Dummy('u')
         # integrate u**(-n) w.r.t. u directly: a bare Dummy base, so this
         # is exactly what power_rule would deterministically produce via
@@ -2057,10 +2125,6 @@ def quadratic_denom_rule(goal: IntegralInfo, solver: ManualSolver) -> Rule | Non
     b = den_poly.nth(1)
     c = den_poly.nth(0)
 
-    normalized_num = num_poly.as_expr()
-    normalized_den = den_poly.as_expr()
-    normalized_integrand = normalized_num / normalized_den**n
-
     if b == 0 and deg_num == 0 and n == 1:
         step = _arctan_match(B, a, c, symbol)
     elif deg_num == 1:
@@ -2069,10 +2133,10 @@ def quadratic_denom_rule(goal: IntegralInfo, solver: ManualSolver) -> Rule | Non
     else:
         step = _complete_square(B, a, b, c, n, symbol)
 
-    # `step`'s value is already the antiderivative of normalized_integrand
-    # (== integrand, just possibly written differently after clearing a
-    # common denominator factor) -- reuse it directly instead of discarding
-    # it and re-dispatching from scratch.
+    # `step`'s value is already the antiderivative of integrand (just
+    # possibly written differently after clearing a common denominator
+    # factor) -- reuse it directly instead of discarding it and
+    # re-dispatching from scratch.
     return Rule(goal, step.result, step.subgoals)
 
 
@@ -2301,6 +2365,7 @@ def _sqrt_quadratic_denom_value(a, b, c, coeffs, x, solver: ManualSolver) -> Exp
         I0 = S.Zero
     else:
         step = inverse_trig_rule(IntegralInfo(1/s, x), solver, degenerate=False)
+        assert step is not None
         I0 = constant*step.result
     return Add(*(result_coeffs[i]*x**(len(coeffs)-2-i)
                  for i in range(len(result_coeffs))), e/c)*s + I0
@@ -2379,8 +2444,8 @@ def sqrt_quadratic_rule(goal: IntegralInfo, solver: ManualSolver, degenerate: bo
             # rewrite numerator to A*(2*c*x+b) + B
             A = e/(2*c)
             B = d-A*b
-            linear_value: Expr | None = None
-            constant_value: Expr | None = None
+            linear_value: Expr = S.Zero
+            constant_value: Expr = S.Zero
             if A != 0:
                 # d/dx sqrt(a+b*x+c*x**2) = (2*c*x+b) / (2*sqrt(a+b*x+c*x**2))
                 # so integral of (2*c*x+b)/denom is 2*sqrt(a+b*x+c*x**2)
@@ -2389,14 +2454,11 @@ def sqrt_quadratic_rule(goal: IntegralInfo, solver: ManualSolver, degenerate: bo
                     linear_value = A*linear_value
             if B != 0:
                 constant_step = inverse_trig_rule(IntegralInfo(1/denom, x), solver, degenerate=False)
+                assert constant_step is not None
                 constant_value = constant_step.result
                 if B != 1:
                     constant_value = B*constant_value
-            if linear_value is not None and constant_value is not None:
-                value = linear_value + constant_value
-            else:
-                value = linear_value if linear_value is not None else constant_value
-            return Rule(IntegralInfo(integrand, x), value)
+            return Rule(IntegralInfo(integrand, x), linear_value + constant_value)
         else:
             coeffs = numer_poly.all_coeffs()
             value = _sqrt_quadratic_denom_value(a, b, c, coeffs, x, solver)
@@ -2448,7 +2510,6 @@ def sqrt_quadratic_rule(goal: IntegralInfo, solver: ManualSolver, degenerate: bo
     def sqrt_quadratic_polynomial_reduction_rule() -> Rule:
         # reduce non-constant polynomial numerators by writing f = q*R + r,
         # then split the linear remainder into a multiple of R' and a constant.
-        terms = []
         values = []
         root_base_ = c*x**2 + b*x + a
         root_poly = Poly(root_base_, x)
@@ -2457,7 +2518,6 @@ def sqrt_quadratic_rule(goal: IntegralInfo, solver: ManualSolver, degenerate: bo
             # n is increasing by 2 at each step, we will fall in one of the cases above
             quotient_integrand = quotient.as_expr() * sqrt(root_base_)**(n + 2)
             quotient_step = sqrt_quadratic_rule(IntegralInfo(quotient_integrand, x), solver, degenerate=False)
-            terms.append(quotient_integrand)
             values.append(quotient_step.result if quotient_step is not None else Integral(quotient_integrand, x))
         if not rest.is_zero:
             # split the linear remainder as A*R' + B, where R' = 2*c*x + b.
@@ -2469,17 +2529,12 @@ def sqrt_quadratic_rule(goal: IntegralInfo, solver: ManualSolver, degenerate: bo
                 # solved by substitution u = root_base_:
                 # integral of (2*c*x+b)*sqrt(root_base_)**n dx
                 #   = integral of u**(n/2) du = 2*sqrt(root_base_)**(n+2)/(n+2)
-                base = (2*c*x + b) * sqrt(root_base_)**n
-                term = A * base
                 u_value = 2*sqrt(root_base_)**(n+2) / (n+2)
                 values.append(A*u_value if A != 1 else u_value)
-                terms.append(term)
             if B != 0:
                 term = B * sqrt(root_base_)**n
                 const_step = sqrt_quadratic_reduction_rule(term, n, B)
-                terms.append(term)
                 values.append(const_step.result)
-        rewritten = Add(*terms, evaluate=False)
         value = Add(*values)
         return Rule(IntegralInfo(integrand, x), value)
 
@@ -2855,7 +2910,8 @@ def distribute_expand_rule(goal: IntegralInfo, solver: ManualSolver) -> Rule | N
     integrand, symbol = goal
     applicable = (
         (isinstance(integrand, (Pow, Mul))
-         or all(arg.is_Pow or arg.is_polynomial(symbol) for arg in integrand.args))
+         or all(arg.is_Pow or arg.is_polynomial(symbol)  # type: ignore
+                for arg in integrand.args))
         and not integrand.is_rational_function(symbol)
     )
     if not applicable:
@@ -3022,11 +3078,11 @@ def integral_steps(integrand, symbol, **options):
 def _reorder_piecewise(result: Expr) -> Expr:
     # If we got Piecewise with two parts, put generic first
     if isinstance(result, Piecewise) and len(result.args) == 2:
-        cond = result.args[0][1]
-        if isinstance(cond, Eq) and result.args[1][1] == True:  # noqa: E712
+        cond = result.args[0][1]  # type: ignore[index]
+        if isinstance(cond, Eq) and result.args[1][1] == True:  # type: ignore[index]  # noqa: E712
             result = result.func(
-                (result.args[1][0], Ne(*cond.args)),
-                (result.args[0][0], True))
+                (result.args[1][0], Ne(*cond.args)),  # type: ignore[index]
+                (result.args[0][0], True))  # type: ignore[index]
     return result
 
 
