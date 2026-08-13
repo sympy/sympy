@@ -579,12 +579,12 @@ class MinMaxBase(Expr, LatticeOp):
         implies that we need to consider it when comparing to other,
         unrelated expressions.
         """
-        return any(getattr(x, attr) is not None for attr in (
-            'is_positive', 'is_negative',
-            'is_nonnegative', 'is_nonpositive',
-            'is_extended_positive', 'is_extended_negative',
-            'is_extended_nonnegative', 'is_extended_nonpositive',
-        ))
+        return bool(
+            x.is_extended_positive or
+            x.is_extended_negative or
+            x.is_extended_nonnegative or
+            x.is_extended_nonpositive
+        )
 
     @classmethod
     def _is_more_extreme(cls, x: Expr, y: Expr) -> Boolean:

@@ -8,7 +8,8 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.external import import_module
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.complexes import Abs, re
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
                                                       Max, real_root, Rem)
@@ -20,8 +21,6 @@ from sympy.testing.pytest import raises, skip, ignore_warnings
 
 def test_Min():
     from sympy.abc import x, y, z
-    from sympy.functions.elementary.complexes import Abs, re
-    from sympy.functions.elementary.exponential import exp
     n = Symbol('n', negative=True)
     n_ = Symbol('n_', negative=True)
     nn = Symbol('nn', nonnegative=True)
@@ -339,6 +338,15 @@ def test_minmax_assumptions():
             else:
                 assert ext(x, y).is_prime is None
 
+def test_minmax_infinite_symbols():
+    r = Symbol('r', real=True)
+    w = Symbol('w', extended_real=True, infinite=True)
+
+    assert w.is_extended_positive is None
+    assert w.is_extended_negative is None
+    # w might be positive or negative infinity
+    assert Min(r, w) == Min(r, w, evaluate=False)
+    assert Max(r, w) == Max(r, w, evaluate=False)
 
 def test_issue_8413():
     x = Symbol('x', real=True)
