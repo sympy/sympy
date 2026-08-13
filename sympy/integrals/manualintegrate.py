@@ -2378,6 +2378,14 @@ def trig_product_to_sum_rule(integral: IntegralInfo):
     if not (A.has(symbol) and B.has(symbol)):
         return
 
+    def _is_linear(expr):
+        return expr.is_polynomial(symbol) and Poly(expr, symbol).degree() <= 1
+
+    if _is_linear(A) and _is_linear(B):
+        # Both arguments are linear in symbol; other, cheaper rules already
+        # handle this case, so don't pay for the recursive rewrite below.
+        return
+
     if isinstance(f1, sin) and isinstance(f2, sin):
         replacement = (cos(A - B) - cos(A + B)) / 2
     elif isinstance(f1, cos) and isinstance(f2, cos):
