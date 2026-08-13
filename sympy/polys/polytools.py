@@ -1890,7 +1890,7 @@ class Poly(Basic):
                 raise PolynomialError(
                     "a valid generator expected, got %s" % gen)
 
-    def degree(f, gen: int = 0) -> int | NegativeInfinity:
+    def degree(f, gen: int | Expr = 0) -> int | NegativeInfinity:
         """
         Returns degree of ``f`` in ``x_j``.
 
