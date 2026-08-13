@@ -121,6 +121,12 @@ def test_manualintegrate_trigonometry():
 
 @slow
 def test_manualintegrate_bioche_substitution():
+    # Double-angle substitution when both sine and cosine substitutions apply
+    f = sin(x)*cos(x)/(1 + sin(x)**2*cos(x)**2)
+    F = (sqrt(5)*(log(cos(2*x) - sqrt(5))
+         - log(cos(2*x) + sqrt(5)))/10)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
     # Direct sine and cosine substitutions
     f = cos(x)/(sin(x)**2 + 4)
     F = atan(sin(x)/2)/2

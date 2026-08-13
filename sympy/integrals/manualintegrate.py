@@ -2126,6 +2126,7 @@ def quadratic_denom_rule(integral):
 
 def bioche_substitution(integral):
     # Apply Bioche's rules to rational functions of trigonometric functions
+    # https://en.wikipedia.org/wiki/Bioche%27s_rules
     integrand, x = integral
 
     TRIG = (sin, cos, tan, cot, sec, csc)
@@ -2234,6 +2235,35 @@ def bioche_substitution(integral):
         csc(u): 1/s,
     })
 
+    def try_cos_double(w):
+        # try t = cos(2*u_func) when both R(s, -c) = -R(s, c) and
+        # R(-s, c) = -R(s, c), so -R/(4*w*s*c) is rational in t alone
+        # Condition 4 on Wikipedia
+        transformed = (-expr_sc/(4*w*s*c)).cancel()
+        numerator, denominator = transformed.as_numer_denom()
+
+        numerator = numerator.as_poly(s, c)
+        denominator = denominator.as_poly(s, c)
+
+        replacements = {}
+
+        # powers of both sin and cos must be even so they can be replaced
+        # using sin(u)**2 = (1 - t)/2 and cos(u)**2 = (1 + t)/2
+        for polynomial in (numerator, denominator):
+            for (s_power, c_power), coefficient in polynomial.terms():
+                if (s_power % 2 or c_power % 2) and coefficient != 0:
+                    return None
+                if s_power:
+                    replacements[s**s_power] = ((1 - t)/2)**(s_power // 2)
+                if c_power:
+                    replacements[c**c_power] = ((1 + t)/2)**(c_power // 2)
+
+        numerator = numerator.as_expr().xreplace(replacements)
+        denominator = denominator.as_expr().xreplace(replacements)
+        transformed = (numerator/denominator).cancel()
+        substep = integral_steps(transformed, t)
+        return URule(integrand, x, t, cos(2*u_func), substep)
+
     def try_sin(w):
         # try t = sin(u_func) when R(s, -c) = -R(s, c), so R/(w*c)
         # is rational in s alone. This avoids poles introduced by tangent substitutions
@@ -2326,7 +2356,9 @@ def bioche_substitution(integral):
         substep = integral_steps(transformed, t)
         return URule(integrand, x, t, tan(u_func/2), substep)
 
-    generic_step = try_sin(omega)
+    generic_step = try_cos_double(omega)
+    if generic_step is None:
+        generic_step = try_sin(omega)
     if generic_step is None:
         generic_step = try_cos(omega)
     if generic_step is None:
