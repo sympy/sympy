@@ -2970,7 +2970,7 @@ def manualintegrate(f, var):
     >>> manualintegrate(exp(x) / (1 + exp(2 * x)), x)
     atan(exp(x))
     >>> integrate(exp(x) / (1 + exp(2 * x)))
-    RootSum(4*w**2 + 1, Lambda(w, w*log(2*w + exp(x))))
+    atan(exp(x))
     >>> manualintegrate(cos(x)**4 * sin(x), x)
     -cos(x)**5/5
     >>> integrate(cos(x)**4 * sin(x), x)

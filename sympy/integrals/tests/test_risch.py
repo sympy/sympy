@@ -12,6 +12,7 @@ from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.trigonometric import (atan, cot, sin, tan)
 from sympy.polys.polytools import (Poly, cancel, factor)
 from sympy.polys.rationaltools import together
+from sympy.polys.rootoftools import RootSum
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -797,6 +798,29 @@ def test_risch_integrate_symbolic_constant():
 
 def test_risch_integrate_float():
     assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
+
+
+def test_risch_integrate_log_to_atan():
+    # Residues that come in complex-conjugate pairs give real arc-tangents
+    # instead of complex logarithms (Bronstein, Section 2.8).
+    e = exp(x)/((exp(x) + 1)**2 + 1)
+    ans = risch_integrate(e, x)
+    assert ans == atan(exp(x) + 1)
+    assert cancel(diff(ans, x) - e) == 0
+
+    assert risch_integrate(exp(x)/(exp(2*x) + 1), x) == atan(exp(x))
+    assert risch_integrate(1/(x*(log(x)**2 + 1)), x) == atan(log(x))
+    assert risch_integrate(1/(x**2 + 1), x) == atan(x)
+
+    # Real and complex residues in a single term
+    e = (exp(2*x) + 2*exp(x) + 7)*exp(x)/(2*(exp(x) + 3)*(exp(2*x) + 1))
+    ans = risch_integrate(e, x)
+    assert ans == log(exp(x) + 3)/2 + atan(exp(x))
+    assert cancel(diff(ans, x) - e) == 0
+
+    # Residues that are real but irrational are still returned as a RootSum
+    assert risch_integrate(exp(x)/(exp(2*x) - 2), x) == \
+        RootSum(Poly(8*z**2 - 1, z), Lambda(z, z*log(-4*z + exp(x))))
 
 
 def test_integrate_primitive_nonelementary_residual():
