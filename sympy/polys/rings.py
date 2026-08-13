@@ -2883,7 +2883,7 @@ class PolyElement(
     def _gcd_ZZ(
         self, other: PolyElement[Er]
     ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
-        return heugcd(self, other)
+        return heugcd(self, other) # type: ignore
 
     def _gcd_QQ(
         self, g: PolyElement[Er]
