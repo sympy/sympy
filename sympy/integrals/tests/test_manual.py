@@ -243,23 +243,6 @@ def test_manualintegrate_inversetrig():
                   (x/sqrt(ra), True))
 
 
-def test_manualintegrate_trig_substitution():
-    f = sqrt(16*x**2 - 9)/x
-    F = (2*x + sqrt(16*x**2 - 9)/2
-         + 6*atan(3/(4*x + sqrt(16*x**2 - 9)))
-         - S(9)/2/(4*x + sqrt(16*x**2 - 9)))
-    assert manualintegrate(f, x) == F
-    assert (F.diff(x) - f).cancel() == 0
-
-    f = 1/(x**4*sqrt(25 - x**2))
-    F = -8*I*(1/(1250*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**2)
-              + 1/(1875*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**3))
-    assert manualintegrate(f, x) == F
-    assert (F.diff(x) - f).cancel() == 0
-
-    assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
-        sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
-
 def test_manualintegrate_trivial_substitution():
     assert manualintegrate((exp(x) - exp(-x))/x, x) == -Ei(-x) + Ei(x)
     f = Function('f')
@@ -395,126 +378,48 @@ def test_manualintegrate_special_slow():
 
 
 @slow
-def test_manualintegrate_parts_fresnel():
+def test_manualintegrate_parts_special():
     f = fresnelc(x)*log(x)
-    F = ((x*log(x) - x)*fresnelc(x) -
-        (log(x) - 1)*sin(pi*x**2/2)/pi +
+    F = ((x*log(x) - x)*fresnelc(x) - (log(x) - 1)*sin(pi*x**2/2)/pi +
         Si(pi*x**2/2)/(2*pi))
     assert_is_integral_of(f, F)
-
     f = fresnels(x)*log(x)
-    F = ((x*log(x) - x)*fresnels(x) +
-        (log(x) - 1)*cos(pi*x**2/2)/pi -
+    F = ((x*log(x) - x)*fresnels(x) + (log(x) - 1)*cos(pi*x**2/2)/pi -
         Ci(pi*x**2/2)/(2*pi))
     assert_is_integral_of(f, F)
-
-
-@slow
-def test_manualintegrate_parts_trig_integrals():
     f = Ci(x)*log(x)
     F = (x*log(x) - x)*Ci(x) - (log(x) - 1)*sin(x) + Si(x)
     assert_is_integral_of(f, F)
-
     f = Si(x)*log(x)
     F = (x*log(x) - x)*Si(x) + (log(x) - 1)*cos(x) - Ci(x)
     assert_is_integral_of(f, F)
-
+    f = Chi(x)*log(x)
+    F = (x*log(x) - x)*Chi(x) - (log(x) - 1)*sinh(x) + Shi(x)
+    assert_is_integral_of(f, F)
+    f = Shi(x)*log(x)
+    F = (x*log(x) - x)*Shi(x) - (log(x) - 1)*cosh(x) + Chi(x)
+    assert_is_integral_of(f, F)
+    f = Ei(x)*log(x)
+    F = (x*log(x) - x)*Ei(x) - (log(x) - 1)*exp(x) + Ei(x)
+    assert_is_integral_of(f, F)
+    f = li(x)*log(x)
+    F = -x**2/2 + (x*log(x) - x)*li(x) + Ei(2*log(x))
+    assert_is_integral_of(f, F)
     f = Ci(x)*Si(x)
     F = (x*Ci(x)*Si(x) - sin(x)*Si(x) + cos(x)*Ci(x) +
         Integral(sin(x)**2/x, x) - Integral(cos(x)**2/x, x))
     assert_is_integral_of(f, F)
-
-
-@slow
-def test_manualintegrate_parts_hyperbolic_integrals():
-    f = Chi(x)*log(x)
-    F = (x*log(x) - x)*Chi(x) - (log(x) - 1)*sinh(x) + Shi(x)
-    assert_is_integral_of(f, F)
-
-    f = Shi(x)*log(x)
-    F = (x*log(x) - x)*Shi(x) - (log(x) - 1)*cosh(x) + Chi(x)
-    assert_is_integral_of(f, F)
-
     f = Chi(x)*Shi(x)
     F = (x*Chi(x)*Shi(x) - sinh(x)*Shi(x) - cosh(x)*Chi(x) +
         Integral(sinh(x)**2/x, x) + Integral(cosh(x)**2/x, x))
     assert_is_integral_of(f, F)
-
-
-@slow
-def test_manualintegrate_parts_ei_li():
-    f = Ei(x)*log(x)
-    F = (x*log(x) - x)*Ei(x) - (log(x) - 1)*exp(x) + Ei(x)
-    assert_is_integral_of(f, F)
-
-    f = li(x)*log(x)
-    F = -x**2/2 + (x*log(x) - x)*li(x) + Ei(2*log(x))
-    assert_is_integral_of(f, F)
-
     f = Ei(x)*Si(x)
-    F = (x*Ei(x)*Si(x) -
-        I*(-Ei(x*(1 - I)) + Ei(x*(1 + I)))/2 -
-        exp(x)*Si(x) + cos(x)*Ei(x) -
-        Ei(x*(1 - I))/2 - Ei(x*(1 + I))/2)
+    F = (x*Ei(x)*Si(x) - I*(-Ei(x*(1 - I)) + Ei(x*(1 + I)))/2 -
+        exp(x)*Si(x) + cos(x)*Ei (x) - Ei(x*(1 - I))/2 - Ei(x*(1 +
+            I))/2)
     assert_is_integral_of(f, F)
-
     f = Ei(x)*Shi(x)
-    F = (x*Ei(x)*Shi(x) - exp(x)*Shi(x) -
-        cosh(x)*Ei(x) + Ei(2*x))
-    assert_is_integral_of(f, F)
-
-
-def test_manualintegrate_exp_trig():
-    f = exp(x)*cos(x**2)
-    F = I**(Rational(3, 2))*sqrt(pi)*exp(I/4)*erfi(I**(Rational(3, 2))*(2*I*x + 1)/2)/4 + sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(4*sqrt(-I))
-    # Didn't use assert_is_integral_of because the derivative of F.diff(x) is
-    # too complicated to simplify to f.
-    assert manualintegrate(f, x) == F
-
-    f = exp(x)*sin(x**2)
-    F = -I*(I**(Rational(3, 2))*sqrt(pi)*exp(I/4)*erfi(I**(Rational(3, 2))*(2*I*x + 1)/2)/2 - sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(2*sqrt(-I)))/2
-    assert manualintegrate(f, x) == F
-
-    f = exp(x)*cosh(x**2)
-    F = sqrt(pi)*exp(S.One/4)*erf(x - S.One/2)/4 + sqrt(pi)*exp(-S.One/4)*erfi(x + S.One/2)/4
-    assert manualintegrate(f, x) == F
-
-    f = exp(x)*sinh(x**2)
-    F = -sqrt(pi)*exp(S.One/4)*erf(x - S.One/2)/4 + sqrt(pi)*exp(-S.One/4)*erfi(x + S.One/2)/4
-    assert manualintegrate(f, x) == F
-
-
-@slow
-def test_manualintegrate_exp_trig_pow():
-    f = exp(x)*cos(x**2)**2
-    F = exp(x)/2 + sqrt(pi)*(1 - I)*exp(I/8)*erfi((2 - 2*I)*(4*I*x + 1)/8)/16 + sqrt(pi)*(1 + I)*exp(-I/8)*erfi((2 + 2*I)*(-4*I*x + 1)/8)/16
-    assert manualintegrate(f, x) == F
-
-    f = exp(x)*sin(x**2)**3
-    F = I*(-3*I**(Rational(3, 2))*sqrt(pi)*exp(I/4)*erfi(I**(Rational(3, 2))*(2*I*x + 1)/2)/2 + 3*sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(2*sqrt(-I)) + sqrt(3)*I**(Rational(3, 2))*sqrt(pi)*exp(I/12)*erfi(sqrt(3)*I**(Rational(3, 2))*(6*I*x + 1)/6)/6 - sqrt(3)*sqrt(pi)*exp(-I/12)*erfi(sqrt(3)*(-6*I*x + 1)/(6*sqrt(-I)))/(6*sqrt(-I)))/8
-    assert manualintegrate(f, x) == F
-
-    f = exp(x)*cosh(x**2)**4
-    F = 3*exp(x)/8 + sqrt(2)*sqrt(pi)*exp(Rational(1, 8))*erf(sqrt(2)*(4*x - 1)/4)/16 + sqrt(pi)*exp(Rational(1, 16))*erf(2*x - Rational(1, 4))/64 + sqrt(2)*sqrt(pi)*exp(-Rational(1, 8))*erfi(sqrt(2)*(4*x + 1)/4)/16 + sqrt(pi)*exp(-Rational(1, 16))*erfi(2*x + Rational(1, 4))/64
-    assert manualintegrate(f, x) == F
-
-    f = exp(x)*sinh(x**2)**5
-    F = 5*sqrt(3)*sqrt(pi)*exp(Rational(1, 12))*erf(sqrt(3)*(6*x - 1)/6)/192 - sqrt(5)*sqrt(pi)*exp(Rational(1, 20))*erf(sqrt(5)*(10*x - 1)/10)/320 - 5*sqrt(pi)*exp(Rational(1, 4))*erf(x - Rational(1, 2))/32 - 5*sqrt(3)*sqrt(pi)*exp(-Rational(1, 12))*erfi(sqrt(3)*(6*x + 1)/6)/192 + sqrt(5)*sqrt(pi)*exp(-Rational(1, 20))*erfi(sqrt(5)*(10*x + 1)/10)/320 + 5*sqrt(pi)*exp(-Rational(1, 4))*erfi(x + Rational(1, 2))/32
-    assert manualintegrate(f, x) == F
-
-
-@slow
-def test_manualintegrate_exp_trig_nested():
-    f, F = exp(cos(x**2))*sin(x**2)*x, -exp(cos(x**2))/2
-    assert_is_integral_of(f, F)
-
-    f, F = exp(sin(x**2))*cos(x**2)*x, exp(sin(x**2))/2
-    assert_is_integral_of(f, F)
-
-    f, F = exp(cosh(x**2))*sinh(x**2)*x, exp(cosh(x**2))/2
-    assert_is_integral_of(f, F)
-
-    f, F = exp(sinh(x**2))*cosh(x**2)*x, exp(sinh(x**2))/2
+    F = x*Ei(x)*Shi(x) - exp(x)*Shi(x) - cosh(x)*Ei(x) + Ei(2*x)
     assert_is_integral_of(f, F)
 
 
@@ -966,6 +871,20 @@ def test_manualintegrate_euler_substitution():
     assert (F1.diff(x) - f).cancel() == 0
     assert (F2.diff(x) - f.subs(c, 0)).cancel() == 0
 
+    # previous tests from trig_substitution
+    f = sqrt(16*x**2 - 9)/x
+    F = (2*x + sqrt(16*x**2 - 9)/2
+            + 6*atan(3/(4*x + sqrt(16*x**2 - 9)))
+            - S(9)/2/(4*x + sqrt(16*x**2 - 9)))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    f = 1/(x**4*sqrt(25 - x**2))
+    F = -8*I*(1/(1250*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**2)
+                + 1/(1875*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**3))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
 
 def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of(1/sqrt((x - I)**2-1), log(2*x + 2*sqrt(x**2 - 2*I*x - 2) - 2*I))
@@ -1016,6 +935,8 @@ def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of(x*sqrt(x**2+2*x+4),
                           (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2)
 
+    assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
+            sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
 
 def test_manualintegrate_sqrt_quadratic_reduction():
     # Tests for Gradshteyn & Ryzhik 2.263.3 reduction rule (n < -1 odd)
