@@ -66,10 +66,8 @@ from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
 from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
-from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.simplify.powsimp import powsimp
-from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
@@ -761,77 +759,6 @@ class DiracDeltaRule(AtomicRule):
         if n == 0:
             return Heaviside(a+b*x)/b
         return DiracDelta(a+b*x, n-1)/b
-
-
-class TrigSubstitutionRule(Rule):
-
-    __slots__ = ("theta", "func", "rewritten", "substep", "restriction")
-
-    theta: Expr
-    func: Expr
-    rewritten: Expr
-    substep: Rule
-    restriction: bool | Boolean
-
-    def __init__(
-        self,
-        integrand: Expr,
-        variable: Symbol,
-        theta: Expr,
-        func: Expr,
-        rewritten: Expr,
-        substep: Rule,
-        restriction: bool | Boolean,
-    ) -> None:
-        super().__init__(integrand, variable)
-        self.theta = theta
-        self.func = func
-        self.rewritten = rewritten
-        self.substep = substep
-        self.restriction = restriction
-
-    def eval(self) -> Expr:
-        theta, func, x = self.theta, self.func, self.variable
-        func = func.subs(sec(theta), 1/cos(theta))
-        func = func.subs(csc(theta), 1/sin(theta))
-        func = func.subs(cot(theta), 1/tan(theta))
-
-        trig_function = list(func.find(TrigonometricFunction))
-        assert len(trig_function) == 1
-        trig_function = trig_function[0]
-        relation = solve(x - func, trig_function)
-        assert len(relation) == 1
-        numer, denom = fraction(relation[0])
-
-        if isinstance(trig_function, sin):
-            opposite = numer
-            hypotenuse = denom
-            adjacent = sqrt(denom**2 - numer**2)
-            inverse = asin(relation[0])
-        elif isinstance(trig_function, cos):
-            adjacent = numer
-            hypotenuse = denom
-            opposite = sqrt(denom**2 - numer**2)
-            inverse = acos(relation[0])
-        else:  # tan
-            opposite = numer
-            adjacent = denom
-            hypotenuse = sqrt(denom**2 + numer**2)
-            inverse = atan(relation[0])
-
-        substitution = [
-            (sin(theta), opposite/hypotenuse),
-            (cos(theta), adjacent/hypotenuse),
-            (tan(theta), opposite/adjacent),
-            (theta, inverse)
-        ]
-        return Piecewise(
-                (self.substep.eval().subs(substitution).trigsimp(), self.restriction) # type: ignore
-        )
-
-    def contains_dont_know(self) -> bool:
-        return self.substep.contains_dont_know()
-
 
 class ArctanRule(AtomicRule):
     """integrate(a/(b*x**2+c), x) -> a/b / sqrt(c/b) * atan(x/sqrt(c/b))"""
@@ -3351,8 +3278,7 @@ def integral_steps(integrand, symbol, **options):
                 trig_expand_rule
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
-            null_safe(condition(integral_is_subclass(Mul, Pow), bioche_substitution)),
-            null_safe(trig_substitution_rule)
+            null_safe(condition(integral_is_subclass(Mul, Pow), bioche_substitution))
         ),
         fallback_rule)(integral)
     del _integral_cache[cachekey]

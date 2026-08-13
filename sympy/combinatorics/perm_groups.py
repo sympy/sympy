@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from math import factorial as _factorial, log, prod
 from itertools import chain, product
 
@@ -19,6 +20,10 @@ from sympy.ntheory import primefactors, sieve
 from sympy.ntheory.factor_ import (factorint, multiplicity)
 from sympy.ntheory.primetest import isprime
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
+
+if TYPE_CHECKING:
+    from sympy.combinatorics.character_table import CharacterTable
+
 
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
@@ -5141,6 +5146,26 @@ class PermutationGroup(Basic):
             gen.append(Permutation(p))
 
         return PermutationGroup(gen)
+
+    def character_table(self) -> CharacterTable:
+        """
+        Computes the character table of the permutation group.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics import AlternatingGroup
+
+        >>> M = AlternatingGroup(4).character_table()
+        >>> M.as_matrix()
+        Matrix([
+         [1,          1,          1,  1],
+         [1, -1 - zeta3,      zeta3,  1],
+         [1,      zeta3, -1 - zeta3,  1],
+         [3,          0,          0, -1]])
+
+        """
+        from sympy.combinatorics.character_table import CharacterTable
+        return CharacterTable.from_perm_group(self)
 
 
 def _orbit(degree, generators, alpha, action='tuples'):

@@ -3130,6 +3130,14 @@ def test_PermutationMatrix():
         r'P_{\left( 0\; 3\right)\left( 1\; 2\right)}'
 
 
+def test_CharacterTable():
+    from sympy.combinatorics.named_groups import SymmetricGroup
+    tbl = SymmetricGroup(1).character_table()
+    assert latex(tbl) == '\\left[\\begin{matrix}1\\end{matrix}\\right]'
+    tbl = SymmetricGroup(2).character_table()
+    assert latex(tbl) == '\\left[\\begin{matrix}1 & 1\\\\1 & -1\\end{matrix}\\right]'
+
+
 def test_issue_21758():
     from sympy.functions.elementary.piecewise import piecewise_fold
     from sympy.series.fourier import FourierSeries

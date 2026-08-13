@@ -1925,6 +1925,9 @@ class LatexPrinter(Printer):
         perm_str = self._print(P.args[0])
         return "P_{%s}" % perm_str
 
+    def _print_CharacterTable(self, P):
+        return self._print(P.as_matrix())
+
     def _print_NDimArray(self, expr: NDimArray):
 
         if expr.ndim == 0:
