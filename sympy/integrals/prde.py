@@ -1134,7 +1134,7 @@ def is_deriv_k(fa, fd, DE):
     dfa, dfd = dfa.cancel(dfd, include=True)
 
     # Our assumption here is that each monomial is recursively transcendental
-    if len(DE.exts) != len(DE.D):
+    if len(DE.exts) != len(DE.D) - 1:
         if [i for i in DE.cases if i == 'tan'] or \
                 ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
                         set(DE.indices('log'))):
@@ -1169,12 +1169,12 @@ def is_deriv_k(fa, fd, DE):
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
-            terms = ([DE.extargs[i] for i in DE.indices('exp')] +
+            terms = ([DE.extargs[i - 1] for i in DE.indices('exp')] +
                     [DE.T[i] for i in DE.indices('log')])
             ans = list(zip(terms, u))
             result = Add(*[Mul(i, j) for i, j in ans])
             argterms = ([DE.T[i] for i in DE.indices('exp')] +
-                    [DE.extargs[i] for i in DE.indices('log')])
+                    [DE.extargs[i - 1] for i in DE.indices('log')])
             l = []
             ld = []
             for i, j in zip(argterms, u):
@@ -1261,7 +1261,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         dfa, dfd = fa, fd
 
     # Our assumption here is that each monomial is recursively transcendental
-    if len(DE.exts) != len(DE.D):
+    if len(DE.exts) != len(DE.D) - 1:
         if [i for i in DE.cases if i == 'tan'] or \
                 ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
                         set(DE.indices('log'))):
@@ -1302,13 +1302,13 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u])
             u *= n
             terms = ([DE.T[i] for i in DE.indices('exp')] +
-                    [DE.extargs[i] for i in DE.indices('log')])
+                    [DE.extargs[i - 1] for i in DE.indices('log')])
             ans = list(zip(terms, u))
             result = Mul(*[Pow(i, j) for i, j in ans])
 
             # exp(f) will be the same as result up to a multiplicative
             # constant.  We now find the log of that constant.
-            argterms = ([DE.extargs[i] for i in DE.indices('exp')] +
+            argterms = ([DE.extargs[i - 1] for i in DE.indices('exp')] +
                     [DE.T[i] for i in DE.indices('log')])
             const = cancel(fa.as_expr()/fd.as_expr() -
                 Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
