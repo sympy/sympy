@@ -154,7 +154,7 @@ def test_generic_character_table(group):
     assert all(r in c for r, c in zip(reps, cc))
 
     tbl = table.as_matrix()
-    order = int(G.order())
+    order = G.order()
     assert tbl.shape[0] == tbl.shape[1] == len(cc)
     assert all(v == 1 for v in tbl[0, :])
     assert tbl[:, 0].dot(tbl[:, 0]) == order
