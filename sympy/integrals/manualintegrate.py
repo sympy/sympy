@@ -1314,7 +1314,19 @@ def alternatives(*rules):
                 return AlternativeRule(*integral, alts)
     return _alternatives
 
-def constant_rule(integral):
+def constant_rule(integral): 
+    """
+    Returns the integral of a constant.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.integrals.manualintegrate import manualintegrate
+    >>> x = Symbol('x')
+    >>> manualintegrate(5, x)
+    5*x
+    """
     return ConstantRule(*integral)
 
 def power_rule(integral):
