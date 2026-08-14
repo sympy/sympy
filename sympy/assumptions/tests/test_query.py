@@ -1683,7 +1683,7 @@ def test_integer():
     assert _ask_recursive(Q.integer(x), ~Q.integer(x)) is False
     assert _ask_recursive(Q.integer(x), ~Q.real(x)) is False
     assert _ask_recursive(Q.integer(x), ~Q.positive(x)) is None
-    assert _ask_recursive(Q.integer(x), Q.even(x) | Q.odd(x)) is None
+    assert ask(Q.integer(x), Q.even(x) | Q.odd(x)) is True
 
     assert _ask_recursive(Q.integer(2*x), Q.integer(x)) is True
     assert _ask_recursive(Q.integer(2*x), Q.even(x)) is True
@@ -1768,7 +1768,7 @@ def test_nonzero():
     assert _ask_recursive(Q.nonzero(x), Q.real(x)) is None
     assert _ask_recursive(Q.nonzero(x), Q.positive(x)) is True
     assert _ask_recursive(Q.nonzero(x), Q.negative(x)) is True
-    assert _ask_recursive(Q.nonzero(x), Q.negative(x) | Q.positive(x)) is None
+    assert ask(Q.nonzero(x), Q.negative(x) | Q.positive(x)) is True
 
     assert _ask_recursive(Q.nonzero(x + y)) is None
     assert _ask_recursive(Q.nonzero(x + y), Q.positive(x) & Q.positive(y)) is True
@@ -1805,9 +1805,9 @@ def test_zero():
     assert _ask_recursive(Q.zero(x), Q.real(x)) is None
     assert _ask_recursive(Q.zero(x), Q.positive(x)) is False
     assert _ask_recursive(Q.zero(x), Q.negative(x)) is False
-    assert _ask_recursive(Q.zero(x), Q.negative(x) | Q.positive(x)) is None
+    assert ask(Q.zero(x), Q.negative(x) | Q.positive(x)) is False
 
-    assert _ask_recursive(Q.zero(x), Q.nonnegative(x) & Q.nonpositive(x)) is None
+    assert ask(Q.zero(x), Q.nonnegative(x) & Q.nonpositive(x)) is True
 
     assert _ask_recursive(Q.zero(x + y)) is None
     assert _ask_recursive(Q.zero(x + y), Q.positive(x) & Q.positive(y)) is False
@@ -1827,7 +1827,7 @@ def test_zero():
     assert _ask_recursive(Q.odd(x), Q.zero(x)) is False
     assert _ask_recursive(Q.zero(x), Q.even(x)) is None
     assert _ask_recursive(Q.zero(x), Q.odd(x)) is False
-    assert _ask_recursive(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is None
+    assert ask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
 
 
 def test_odd_query():
@@ -2240,14 +2240,14 @@ def test_custom_context():
 
 
 def test_functions_in_assumptions():
-    assert _ask_recursive(Q.negative(x), Q.real(x) >> Q.positive(x)) is None
-    assert _ask_recursive(Q.negative(x), Equivalent(Q.real(x), Q.positive(x))) is None
-    assert _ask_recursive(Q.negative(x), Xor(Q.real(x), Q.negative(x))) is None
+    assert ask(Q.negative(x), Q.real(x) >> Q.positive(x)) is False
+    assert ask(Q.negative(x), Equivalent(Q.real(x), Q.positive(x))) is False
+    assert ask(Q.negative(x), Xor(Q.real(x), Q.negative(x))) is False
 
 
 def test_composite_ask():
-    assert _ask_recursive(Q.negative(x) & Q.integer(x),
-        assumptions=Q.real(x) >> Q.positive(x)) is None
+    assert ask(Q.negative(x) & Q.integer(x),
+        assumptions=Q.real(x) >> Q.positive(x)) is False
 
 
 def test_composite_proposition():
@@ -2266,11 +2266,11 @@ def test_composite_proposition():
     assert _ask_recursive(Equivalent(Q.integer(x), Q.even(x)), Q.even(x)) is True
     assert _ask_recursive(Equivalent(Q.integer(x), Q.even(x))) is None
     assert _ask_recursive(Equivalent(Q.positive(x), Q.integer(x)), Q.integer(x)) is None
-    assert _ask_recursive(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is None
+    assert ask(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
 
 def test_tautology():
-    assert _ask_recursive(Q.real(x) | ~Q.real(x)) is None
-    assert _ask_recursive(Q.real(x) & ~Q.real(x)) is None
+    assert ask(Q.real(x) | ~Q.real(x)) is True
+    assert ask(Q.real(x) & ~Q.real(x)) is False
 
 def test_composite_assumptions():
     assert _ask_recursive(Q.real(x), Q.real(x) & Q.real(y)) is True
@@ -2587,3 +2587,25 @@ def test_issue_28127():
     assert _ask_recursive(Q.gt(y,x), Q.lt(x,y)) is True
     assert _ask_recursive(Q.lt(y,x), Q.gt(x,y)) is True
     assert _ask_recursive(Q.le(y,x), Q.ge(x,y)) is True
+
+
+# https://github.com/sympy/sympy/pull/30175
+@XFAIL
+def test_queries_require_satask():
+    """
+    Queries that `ask` only answers through `satask`. `_ask_recursive`
+    returns None for every assertion below.
+    """
+    assert _ask_recursive(Q.integer(x), Q.even(x) | Q.odd(x)) is True
+    assert _ask_recursive(Q.nonzero(x), Q.negative(x) | Q.positive(x)) is True
+    assert _ask_recursive(Q.zero(x), Q.negative(x) | Q.positive(x)) is False
+    assert _ask_recursive(Q.zero(x), Q.nonnegative(x) & Q.nonpositive(x)) is True
+    assert _ask_recursive(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
+    assert _ask_recursive(Q.negative(x), Q.real(x) >> Q.positive(x)) is False
+    assert _ask_recursive(Q.negative(x), Equivalent(Q.real(x), Q.positive(x))) is False
+    assert _ask_recursive(Q.negative(x), Xor(Q.real(x), Q.negative(x))) is False
+    assert _ask_recursive(Q.negative(x) & Q.integer(x),
+        assumptions=Q.real(x) >> Q.positive(x)) is False
+    assert _ask_recursive(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
+    assert _ask_recursive(Q.real(x) | ~Q.real(x)) is True
+    assert _ask_recursive(Q.real(x) & ~Q.real(x)) is False

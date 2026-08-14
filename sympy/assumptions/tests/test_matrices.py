@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.assumptions.ask import (Q, _ask_recursive)
+from sympy.assumptions.ask import (Q, ask, _ask_recursive)
 from sympy.core.symbol import Symbol
 from sympy.matrices.expressions.diagonal import (DiagMatrix, DiagonalMatrix)
 from sympy.matrices.dense import Matrix
@@ -183,7 +183,7 @@ def test_diagonal():
     assert _ask_recursive(Q.diagonal(OneMatrix(1, 1))) is True
     assert _ask_recursive(Q.diagonal(OneMatrix(3, 3))) is False
     assert _ask_recursive(Q.lower_triangular(X) & Q.upper_triangular(X), Q.diagonal(X)) is True
-    assert _ask_recursive(Q.diagonal(X), Q.lower_triangular(X) & Q.upper_triangular(X)) is None
+    assert ask(Q.diagonal(X), Q.lower_triangular(X) & Q.upper_triangular(X)) is True
     assert _ask_recursive(Q.symmetric(X), Q.diagonal(X)) is True
     assert _ask_recursive(Q.triangular(X), Q.diagonal(X)) is True
     assert _ask_recursive(Q.diagonal(C0x0)) is True
@@ -282,3 +282,14 @@ def test_matrix_element_sets_slices_blocks():
 def test_matrix_element_sets_determinant_trace():
     assert _ask_recursive(Q.integer(Determinant(X)), Q.integer_elements(X)) is True
     assert _ask_recursive(Q.integer(Trace(X)), Q.integer_elements(X)) is True
+
+
+# https://github.com/sympy/sympy/pull/30175
+@XFAIL
+def test_queries_require_satask():
+    """
+    Queries that `ask` only answers through `satask`. `_ask_recursive`
+    returns None for every assertion below.
+    """
+    assert _ask_recursive(Q.diagonal(X),
+        Q.lower_triangular(X) & Q.upper_triangular(X)) is True
