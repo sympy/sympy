@@ -24,6 +24,7 @@ from __future__ import annotations
 import itertools
 
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.function import expand
 from sympy.core.singleton import S
 from sympy.matrices.matrixbase import MatrixBase
@@ -269,11 +270,11 @@ def _commutativity_simplify_add(add: ArrayAdd):
 
     # Decompose every term into elementary-basis components and group the
     # prefactors by (elementary basis, remaining factors):
-    groups: dict[tuple, dict[tuple, Basic]] = {}
+    groups: dict[tuple, dict[tuple, Expr]] = {}
     for coeff, arrays in terms:
-        decomposed = [(coeff, {})]
+        decomposed: list[tuple[Expr, dict[int, tuple]]] = [(coeff, {})]
         for i in comm_slots:
-            new_decomposed = []
+            new_decomposed: list[tuple[Expr, dict[int, tuple]]] = []
             for prefactor, basis_map in decomposed:
                 for index, entry in _iter_nonzero_entries(arrays[i]):
                     new_basis_map = dict(basis_map)
