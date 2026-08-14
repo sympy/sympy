@@ -18,7 +18,6 @@ for:
 """
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from sympy.core.function import Derivative
@@ -30,6 +29,7 @@ from sympy.utilities.iterables import iterable
 
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from sympy.core.basic import Basic
     from sympy.core.expr import Expr
     from sympy.core.symbol import Symbol
