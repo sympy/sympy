@@ -97,7 +97,8 @@ def test_matrix_derivative_non_matrix_result():
     assert A.diff(A) == AdA
     assert A.T.diff(A) == PermuteDims(ArrayTensorProduct(I, I), Permutation(3)(1, 2, 3))
     assert (2*A).diff(A) == PermuteDims(ArrayTensorProduct(2*I, I), Permutation(3)(1, 2))
-    assert MatAdd(A, A).diff(A) == ArrayAdd(AdA, AdA)
+    # The two identical addend derivatives are collected:
+    assert MatAdd(A, A).diff(A) == PermuteDims(ArrayTensorProduct(2*I, I), Permutation(3)(1, 2))
     assert (A + B).diff(A) == AdA
 
 

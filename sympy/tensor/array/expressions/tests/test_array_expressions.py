@@ -733,7 +733,8 @@ def test_array_expressions_no_canonicalization():
     assert expr.doit() == ArrayAdd(M, N, P)
 
     expr = ArrayAdd(M, ArrayAdd(N, ArrayAdd(P, M)))
-    assert expr.doit() == ArrayAdd(M, N, P, M)
+    # The two occurrences of M are collected on canonicalization:
+    assert expr.doit() == ArrayAdd(ArrayTensorProduct(2, M), N, P)
     assert expr._canonicalize() == ArrayAdd(M, N, ArrayAdd(P, M))
 
     expr = ArrayAdd(M, ZeroArray(k, k), N)

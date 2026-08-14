@@ -744,7 +744,11 @@ def _a2m_tensor_product(*args):
     if len(arrays) == 0:
         return scalar
     if scalar != 1:
-        if isinstance(arrays[0], _CodegenArrayAbstract):
+        # A structurally noncommutative scalar (e.g. a rank-0
+        # ArrayElementwiseApplyFunc) cannot be absorbed into a MatMul
+        # coefficient; keep it as a rank-0 tensor-product factor:
+        if isinstance(arrays[0], _CodegenArrayAbstract) or \
+                scalar.is_commutative is False:
             arrays = [scalar] + arrays
         else:
             arrays[0] *= scalar
