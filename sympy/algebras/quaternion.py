@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, cast, overload
 
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.relational import is_eq
-from sympy.external.mpmath import prec_to_dps
+from sympy.external.mpmath import prec_to_dps  # type: ignore
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -459,9 +459,9 @@ class Quaternion(Expr):
         qk = cls.from_axis_angle(e[k], angles[2])
 
         if extrinsic:
-            return trigsimp(qk * qj * qi)
+            return cast('Quaternion', trigsimp(qk * qj * qi))
         else:
-            return trigsimp(qi * qj * qk)
+            return cast('Quaternion', trigsimp(qi * qj * qk))
 
     def to_euler(self, seq: str,
                        angle_addition: bool = True,
@@ -723,7 +723,7 @@ class Quaternion(Expr):
         return self * sympify(other)**-1
 
     def __rtruediv__(self, other: SExpr) -> Quaternion:
-        return sympify(other) * self**-1
+        return cast('Quaternion', sympify(other) * self**-1)
 
     def _eval_Integral(self, *args) -> Quaternion:
         return self.integrate(*args)
@@ -1239,7 +1239,7 @@ class Quaternion(Expr):
         v = (x, y, z)
         t = (v, angle)
 
-        return t
+        return cast('tuple[tuple[Expr, Expr, Expr], Expr]', t)
 
     def to_rotation_matrix(self, v: tuple[SExpr, SExpr, SExpr] | None = None,
                                 homogeneous: bool = True) -> Matrix:
@@ -1698,7 +1698,7 @@ class Quaternion(Expr):
         norm
 
         """
-        return self.norm() * self.axis()
+        return cast('Quaternion', self.norm() * self.axis())
 
     def mensor(self) -> Expr:
         """
