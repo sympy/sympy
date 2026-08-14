@@ -22,9 +22,9 @@ intermediate expressions, so they are not applied automatically.
 from __future__ import annotations
 
 import itertools
+from typing import TYPE_CHECKING
 
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
 from sympy.core.function import expand
 from sympy.core.singleton import S
 from sympy.matrices.matrixbase import MatrixBase
@@ -34,6 +34,9 @@ from sympy.tensor.array.ndim_array import NDimArray
 from sympy.tensor.array.expressions.array_expressions import (
     ArrayAdd, ZeroArray, _array_add, _array_term_as_coeff_arrays,
     _array_term_from_coeff_arrays, get_shape)
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def collect_tensor_products(expr):
