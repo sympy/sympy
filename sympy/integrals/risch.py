@@ -871,7 +871,7 @@ def as_poly_1t(p, t, z):
 
     t_part, remainder = pa.div(pd)
 
-    ans = t_part.as_poly(t, z, expand=False)
+    ans = Poly(t_part, t, z, expand=False)
 
     if remainder:
         one = remainder.one
@@ -879,7 +879,7 @@ def as_poly_1t(p, t, z):
         r = pd.degree() - remainder.degree()
         z_part = remainder.transform(one, tp) * tp**r
         z_part = z_part.replace(t, z).to_field().quo_ground(pd.LC())
-        ans += z_part.as_poly(t, z, expand=False)
+        ans += Poly(z_part, t, z, expand=False)
 
     return ans
 
@@ -1093,7 +1093,7 @@ def hermite_reduce(a, d, DE):
     gd = Poly(1, DE.t)
 
     dd = derivation(d, DE)
-    dm = gcd(d.to_field(), dd.to_field()).as_poly(DE.t)
+    dm = Poly(gcd(d.to_field(), dd.to_field()), DE.t)
     ds, _ = d.div(dm)
 
     while dm.degree(DE.t) > 0:
@@ -1104,13 +1104,13 @@ def hermite_reduce(a, d, DE):
         ds_ddm = ds.mul(ddm)
         ds_ddm_dm, _ = ds_ddm.div(dm)
 
-        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t),
-            dms.as_poly(DE.t), a.as_poly(DE.t))
-        b, c = b.as_poly(DE.t), c.as_poly(DE.t)
+        b, c = gcdex_diophantine(-Poly(ds_ddm_dm, DE.t),
+            Poly(dms, DE.t), Poly(a, DE.t))
+        b, c = Poly(b, DE.t), Poly(c, DE.t)
 
-        db = derivation(b, DE).as_poly(DE.t)
+        db = Poly(derivation(b, DE), DE.t)
         ds_dms, _ = ds.div(dms)
-        a = c.as_poly(DE.t) - db.mul(ds_dms).as_poly(DE.t)
+        a = Poly(c, DE.t) - Poly(db.mul(ds_dms), DE.t)
 
         ga = ga*dm + b*gd
         gd = gd*dm
@@ -1185,7 +1185,7 @@ def laurent_series(a, d, F, n, DE):
     """
     if F.degree() == 0:
         return (Poly(0, DE.t), Poly(1, DE.t), [])
-    Z = _symbols('z', n)
+    Z: list[Symbol] = [*_symbols('z', n)]
     z = Symbol('z')
     Z.insert(0, z)
     delta_a = Poly(0, DE.t)
@@ -1317,7 +1317,7 @@ def recognize_log_derivative(a, d, DE, z=None):
     r = Poly(r, z)
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
-    if any(s.as_poly(z).degree() > 0 for s, _ in Np):
+    if any(Poly(s, z).degree() > 0 for s, _ in Np):
         # The normal part of the splitting factorization contains the
         # factors of the resultant whose roots are not constants; such
         # roots cannot be integers, so f is not the logarithmic derivative
@@ -1413,8 +1413,9 @@ def residue_reduce(a, d, DE, z=None, invert=True):
             s = Poly(s, z).monic()
 
             if invert:
-                h_lc = Poly(h.as_poly(DE.t).LC(), DE.t, field=True, expand=False)
-                inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S.One]
+                h_lc = Poly(Poly(h, DE.t).LC(), DE.t, field=True, expand=False)
+                inv = Poly(h_lc, z, field=True).invert(s)
+                coeffs = [S.One]
 
                 for coeff in h.coeffs()[1:]:
                     L = reduced(inv*coeff.as_poly(inv.gens), [s])[1]
@@ -1952,8 +1953,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             fa, fd = frac_in(i, DE.t)
         else:
             result = result.subs(DE.backsubs)
-            if not i.is_zero:
-                i = NonElementaryIntegral(i.function.subs(DE.backsubs),i.limits)
+            if isinstance(i, Integral):
+                i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
             if not separate_integral:
                 result += i
                 return result
