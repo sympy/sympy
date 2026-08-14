@@ -53,7 +53,12 @@ from sympy.utilities.iterables import numbered_symbols
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+    from typing import TypeAlias
     from sympy.core.expr import Expr
+
+    _Extension: TypeAlias = Literal['exp', 'log']
+    _Case: TypeAlias = Literal['base', 'primitive', 'exp', 'tan',
+        'other_linear', 'other_nonlinear']
 
 
 def integer_powers(exprs):
@@ -187,10 +192,10 @@ class DifferentialExtension:
     fd: Poly
     Tfuncs: list[Lambda]
     backsubs: list[tuple[Expr, Expr]]
-    exts: list[str]
+    exts: list[_Extension]
     extargs: list[Expr]
-    cases: list[str]
-    case: str
+    cases: list[_Case]
+    case: _Case
     t: Symbol
     d: Poly
     newf: Expr
@@ -198,7 +203,8 @@ class DifferentialExtension:
     ts: Iterator[Symbol]
     dummy: bool
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
+    def __init__(self, f=None, x=None, handle_first: _Extension = 'log',
+            dummy=False, extension=None, rewrite_complex=None):
         """
         Tries to build a transcendental extension tower from ``f`` with respect to ``x``.
 
@@ -279,12 +285,12 @@ class DifferentialExtension:
                     "extensions are not supported (yet!).  Try rewriting in "
                     "terms of exp and log, or using rewrite_complex=True.")
 
-        exps = set()
-        pows = set()
-        numpows = set()
-        sympows = set()
-        logs = set()
-        symlogs = set()
+        exps: list[exp] = []
+        pows: list[Pow] = []
+        numpows: list[Pow] = []
+        sympows: list[Pow] = []
+        logs: list[log] = []
+        symlogs: list[log] = []
 
         while True:
             if self.newf.is_rational_function(*self.T):
@@ -706,7 +712,7 @@ class DifferentialExtension:
         self.Tfuncs = []
         self.newf = self.f
 
-    def indices(self, extension):
+    def indices(self, extension: _Extension) -> list[int]:
         """
         Parameters
         ==========
@@ -973,7 +979,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
     return r
 
 
-def get_case(d: Poly, t: Symbol) -> str:
+def get_case(d: Poly, t: Symbol) -> _Case:
     """
     Returns the type of the derivation d.
 
@@ -1842,7 +1848,7 @@ class NonElementaryIntegral(Integral):
     pass
 
 
-def risch_integrate(f, x, extension=None, handle_first='log',
+def risch_integrate(f, x, extension=None, handle_first: _Extension = 'log',
                     separate_integral=False, rewrite_complex=None,
                     conds='piecewise'):
     r"""
