@@ -2008,7 +2008,7 @@ def test_positive():
     assert _ask_recursive(Q.positive(log(x + 2)), Q.positive(x)) is True
 
     # factorial
-    assert _ask_recursive(Q.positive(factorial(x)), Q.integer(x) & Q.positive(x))
+    assert _ask_recursive(Q.positive(factorial(x)), Q.integer(x) & Q.positive(x)) is True
     assert _ask_recursive(Q.positive(factorial(x)), Q.integer(x)) is None
 
     #absolute value
@@ -2017,10 +2017,10 @@ def test_positive():
 
 
 def test_nonpositive():
-    assert _ask_recursive(Q.nonpositive(-1))
-    assert _ask_recursive(Q.nonpositive(0))
+    assert _ask_recursive(Q.nonpositive(-1)) is True
+    assert _ask_recursive(Q.nonpositive(0)) is True
     assert _ask_recursive(Q.nonpositive(1)) is False
-    assert _ask_recursive(~Q.positive(x), Q.nonpositive(x))
+    assert _ask_recursive(~Q.positive(x), Q.nonpositive(x)) is True
     assert _ask_recursive(Q.nonpositive(x), Q.positive(x)) is False
     assert _ask_recursive(Q.nonpositive(sqrt(-1))) is False
     assert _ask_recursive(Q.nonpositive(x), Q.imaginary(x)) is False
@@ -2028,9 +2028,9 @@ def test_nonpositive():
 
 def test_nonnegative():
     assert _ask_recursive(Q.nonnegative(-1)) is False
-    assert _ask_recursive(Q.nonnegative(0))
-    assert _ask_recursive(Q.nonnegative(1))
-    assert _ask_recursive(~Q.negative(x), Q.nonnegative(x))
+    assert _ask_recursive(Q.nonnegative(0)) is True
+    assert _ask_recursive(Q.nonnegative(1)) is True
+    assert _ask_recursive(~Q.negative(x), Q.nonnegative(x)) is True
     assert _ask_recursive(Q.nonnegative(x), Q.negative(x)) is False
     assert _ask_recursive(Q.nonnegative(sqrt(-1))) is False
     assert _ask_recursive(Q.nonnegative(x), Q.imaginary(x)) is False
@@ -2518,7 +2518,7 @@ def test_custom_AskHandler():
         def _(expr, assumptions):
             if expr in conjuncts(assumptions):
                 return True
-        assert _ask_recursive(Q.mersenne(7))
+        assert _ask_recursive(Q.mersenne(7)) is True
         assert _ask_recursive(Q.mersenne(n), Q.mersenne(n)) is None
     finally:
         del Q.mersenne
@@ -2545,8 +2545,8 @@ def test_polyadic_predicate():
                 return False
             return args[2] - args[1] == 6 and args[1] - args[0] == 6
 
-        assert _ask_recursive(Q.sexyprime(5, 11))
-        assert _ask_recursive(Q.sexyprime(7, 13, 19))
+        assert _ask_recursive(Q.sexyprime(5, 11)) is True
+        assert _ask_recursive(Q.sexyprime(7, 13, 19)) is True
     finally:
         del Q.sexyprime
 
@@ -2565,10 +2565,10 @@ def test_Predicate_handler_is_unique():
 
 
 def test_relational():
-    assert _ask_recursive(Q.eq(x, 0), Q.zero(x))
-    assert not _ask_recursive(Q.eq(x, 0), Q.nonzero(x))
-    assert not _ask_recursive(Q.ne(x, 0), Q.zero(x))
-    assert _ask_recursive(Q.ne(x, 0), Q.nonzero(x))
+    assert _ask_recursive(Q.eq(x, 0), Q.zero(x)) is True
+    assert _ask_recursive(Q.eq(x, 0), Q.nonzero(x)) is False
+    assert _ask_recursive(Q.ne(x, 0), Q.zero(x)) is False
+    assert _ask_recursive(Q.ne(x, 0), Q.nonzero(x)) is True
 
 
 def test_issue_25221():
