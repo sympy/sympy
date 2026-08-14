@@ -2868,6 +2868,20 @@ def test_TensorProduct_printing():
     assert latex(TensorProduct(A, B)) == r"A \otimes B"
 
 
+def test_ArrayTensorProduct_printing():
+    from sympy.tensor.array.expressions import ArrayAdd, ArrayTensorProduct
+    A = MatrixSymbol("A", 3, 4)
+    B = MatrixSymbol("B", 4, 5)
+    C = MatrixSymbol("C", 3, 4)
+    assert latex(ArrayTensorProduct(A, B)) == r"A \otimes B"
+    assert latex(ArrayAdd(ArrayTensorProduct(A, B), ArrayTensorProduct(C, B))) == \
+        r"A \otimes B + C \otimes B"
+    assert latex(ArrayTensorProduct(ArrayAdd(A, C), B)) == \
+        r"\left(A + C\right) \otimes B"
+    assert latex(ArrayTensorProduct(A + C, B)) == \
+        r"\left(A + C\right) \otimes B"
+
+
 def test_WedgeProduct_printing():
     from sympy.diffgeom.rn import R2
     from sympy.diffgeom import WedgeProduct

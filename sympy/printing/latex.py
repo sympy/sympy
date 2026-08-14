@@ -2099,6 +2099,19 @@ class LatexPrinter(Printer):
         elements = [self._print(a) for a in expr.args]
         return r' \wedge '.join(elements)
 
+    def _print_ArrayTensorProduct(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import ArrayAdd
+        elements = []
+        for a in expr.args:
+            s = self._print(a)
+            if isinstance(a, (Add, ArrayAdd)):
+                s = r"\left(%s\right)" % s
+            elements.append(s)
+        return r' \otimes '.join(elements)
+
+    def _print_ArrayAdd(self, expr):
+        return ' + '.join([self._print(a) for a in expr.args])
+
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
 
