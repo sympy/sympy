@@ -21,6 +21,7 @@ from __future__ import annotations
 from collections.abc import Sequence  # noqa: TC003
 from typing import TYPE_CHECKING, cast
 
+from sympy.core.expr import Expr
 from sympy.core.function import Derivative
 from sympy.core.singleton import S
 from sympy.core.function import Subs
@@ -31,7 +32,6 @@ from sympy.utilities.iterables import iterable
 
 if TYPE_CHECKING:
     from sympy.core.basic import Basic
-    from sympy.core.expr import Expr
     from sympy.core.symbol import Symbol
 
 
