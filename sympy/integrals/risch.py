@@ -916,7 +916,7 @@ def as_poly_1t(p, t, z):
 def derivation(p: Poly, DE: DifferentialExtension,
     coefficientD: bool = False, basic: Literal[False] = False) -> Poly: ...
 @overload
-def derivation(p: Poly, DE: DifferentialExtension,
+def derivation(p: Poly | Expr, DE: DifferentialExtension,
     coefficientD: bool = False, *, basic: Literal[True]) -> Expr: ...
 
 def derivation(p, DE, coefficientD=False, basic=False):
