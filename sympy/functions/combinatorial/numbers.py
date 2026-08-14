@@ -41,7 +41,7 @@ from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 
 
-def _product(a, b):
+def _product(a:int, b:int):
     return prod(range(a, b + 1))
 
 
@@ -107,7 +107,7 @@ class carmichael(DefinedFunction):
     """
 
     @staticmethod
-    def is_perfect_square(n):
+    def is_perfect_square(n:int):
         sympy_deprecation_warning(
         """
 is_perfect_square is just a wrapper around sympy.ntheory.primetest.is_square
@@ -130,7 +130,7 @@ so use that directly instead.
         return n % p == 0
 
     @staticmethod
-    def is_prime(n):
+    def is_prime(n:int):
         sympy_deprecation_warning(
         """
 is_prime is just a wrapper around sympy.ntheory.primetest.isprime so use that
@@ -142,7 +142,7 @@ directly instead.
         return isprime(n)
 
     @staticmethod
-    def is_carmichael(n):
+    def is_carmichael(n:int):
         sympy_deprecation_warning(
         """
 is_carmichael is just a wrapper around sympy.ntheory.factor_.is_carmichael so use that
@@ -228,16 +228,16 @@ class fibonacci(DefinedFunction):
     """
 
     @staticmethod
-    def _fib(n):
+    def _fib(n:int):
         return _ifib(n)
 
     @staticmethod
     @recurrence_memo([None, S.One, _sym])
-    def _fibpoly(n, prev):
+    def _fibpoly(n, prev:list[int]):
         return (prev[-2] + _sym*prev[-1]).expand()
 
     @classmethod
-    def eval(cls, n, sym=None):
+    def eval(cls, n:int, sym=None):
         if n is S.Infinity:
             return S.Infinity
 
@@ -254,15 +254,15 @@ class fibonacci(DefinedFunction):
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
 
-    def _eval_rewrite_as_tractable(self, n, **kwargs):
+    def _eval_rewrite_as_tractable(self, n:int, **kwargs):
         from sympy.functions import sqrt, cos
         return (S.GoldenRatio**n - cos(S.Pi*n)/S.GoldenRatio**n)/sqrt(5)
 
-    def _eval_rewrite_as_sqrt(self, n, **kwargs):
+    def _eval_rewrite_as_sqrt(self, n:int, **kwargs):
         from sympy.functions.elementary.miscellaneous import sqrt
         return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
 
-    def _eval_rewrite_as_GoldenRatio(self,n, **kwargs):
+    def _eval_rewrite_as_GoldenRatio(self,n:int, **kwargs):
         return (S.GoldenRatio**n - 1/(-S.GoldenRatio)**n)/(2*S.GoldenRatio-1)
 
 
@@ -691,7 +691,7 @@ class bell(DefinedFunction):
         return expand_mul(_sym * s)
 
     @staticmethod
-    def _bell_incomplete_poly(n, k, symbols):
+    def _bell_incomplete_poly(n:int, k:int, symbols:Expr):
         r"""
         The second kind of Bell polynomials (incomplete Bell polynomials).
 
@@ -720,7 +720,7 @@ class bell(DefinedFunction):
         return expand_mul(s)
 
     @classmethod
-    def eval(cls, n, k_sym=None, symbols=None):
+    def eval(cls, n:int, k_sym=None, symbols=None):
         if n is S.Infinity:
             if k_sym is None:
                 return S.Infinity
@@ -894,7 +894,7 @@ class harmonic(DefinedFunction):
     harmonic_cache: dict[Integer, Callable[[int], Rational]] = {}
 
     @classmethod
-    def eval(cls, n, m=None):
+    def eval(cls, n:int, m=None):
         from sympy.functions.special.zeta_functions import zeta
         if m is S.One:
             return cls(n)
@@ -990,7 +990,7 @@ class harmonic(DefinedFunction):
 
         return self
 
-    def _eval_rewrite_as_tractable(self, n, m=1, limitvar=None, **kwargs):
+    def _eval_rewrite_as_tractable(self, n:int, m=1, limitvar=None, **kwargs):
         from sympy.functions.special.zeta_functions import zeta
         from sympy.functions.special.gamma_functions import polygamma
         pg = self.rewrite(polygamma)
