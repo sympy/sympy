@@ -83,14 +83,14 @@ def real_imag(ba, bd, gen):
     ba = ba.as_poly(gen).as_dict()
     denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
     denom_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in bd.items()]
-    bd_real = sum(r for r in denom_real)
-    bd_imag = sum(r for r in denom_imag)
+    bd_real = sum(denom_real, S.Zero)
+    bd_imag = sum(denom_imag, S.Zero)
     num_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in ba.items()]
     num_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in ba.items()]
-    ba_real = sum(r for r in num_real)
-    ba_imag = sum(r for r in num_imag)
-    ba = ((ba_real*bd_real + ba_imag*bd_imag).as_poly(gen), (ba_imag*bd_real - ba_real*bd_imag).as_poly(gen))
-    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
+    ba_real = sum(num_real, S.Zero)
+    ba_imag = sum(num_imag, S.Zero)
+    ba = (Poly(ba_real*bd_real + ba_imag*bd_imag, gen), Poly(ba_imag*bd_real - ba_real*bd_imag, gen))
+    bd = Poly(bd_real*bd_real + bd_imag*bd_imag, gen)
     return (ba[0], ba[1], bd)
 
 
@@ -871,8 +871,8 @@ def limited_integrate(fa, fd, G, DE):
         r = len(h)
         m = len(v) - r - 1
         C = list(v[1: m + 1])
-        y = -sum(v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr() \
-                for i in range(r))
+        y = -sum((v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr()
+                for i in range(r)), S.Zero)
         y_num, y_den = y.as_numer_denom()
         Ya, Yd = Poly(y_num, DE.t), Poly(y_den, DE.t)
         Y = Ya*Poly(1/Yd.LC(), DE.t), Yd.monic()
