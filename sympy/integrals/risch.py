@@ -44,7 +44,7 @@ from sympy.functions.elementary.trigonometric import (atan, sin, cos,
     tan, acot, cot, asin, acos)
 from .integrals import integrate, Integral
 from .heurisch import _symbols
-from .rationaltools import log_to_atan, _roots_real_complex
+from .rationaltools import log_to_real
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
@@ -1426,75 +1426,28 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     return (H, b)
 
 
-def residue_reduce_log_to_real(s, h, DE, z):
-    """
-    Try to express a term returned by residue_reduce() using real functions.
-
-    Explanation
-    ===========
-
-    Given a pair ``(s, h)`` from the tuple returned by residue_reduce(),
-    return a sum of real logarithms and arc-tangents of polynomials in
-    ``DE.t`` whose derivative equals that of RootSum(s, Lambda(z,
-    z*log(h))), or None if s has no complex roots or if its roots cannot
-    all be computed explicitly.  The rewriting is only valid when the
-    generators of the differential extension represent real functions.
-
-    This is Rioboo's ``LogToReal`` from Section 2.8 of Bronstein's book,
-    applied to the output of ``ResidueReduce``: the roots of s are the
-    residues, playing the part of the roots of the Rothstein-Trager
-    resultant in Chapter 2, and h plays the part of the resultant's
-    remainder.
-    """
-    from sympy.simplify.radsimp import collect
-
-    if s.as_expr().has(I) or h.as_expr().has(I) or any(
-            f(DE.x).has(I) for f in DE.Tfuncs):
-        return None
-
-    rs = _roots_real_complex(s)
-    if rs is None:
-        return None
-    reals, complexes = rs
-    if not complexes:
-        return None
-
-    u, v = Dummy('u'), Dummy('v')
-    H = h.as_expr().xreplace({z: u + I*v}).expand()
-    H_map = collect(H, I, evaluate=False)
-    a, b = H_map.get(S.One, S.Zero), H_map.get(I, S.Zero)
-
-    result = S.Zero
-    for r_u, r_v in complexes:
-        A = Poly(a.xreplace({u: r_u, v: r_v}), DE.t)
-        B = Poly(b.xreplace({u: r_u, v: r_v}), DE.t)
-
-        result += r_u*log((A**2 + B**2).as_expr())
-        if not (A.is_zero or B.is_zero):
-            # If A or B is zero, this term is a constant.
-            result += r_v*log_to_atan(A, B)
-
-    for r in reals:
-        result += r*log(h.as_expr().xreplace({z: r}))
-
-    return result
-
-
 def residue_reduce_to_basic(H, DE, z):
     """
     Converts the tuple returned by residue_reduce() into a Basic expression.
 
-    Terms whose residues come in complex-conjugate pairs are rewritten as
-    real logarithms and arc-tangents using residue_reduce_log_to_real();
-    the remaining terms are returned as RootSums.
+    Terms whose residues can all be computed explicitly are rewritten as
+    real logarithms and arc-tangents using log_to_real() (Rioboo's
+    algorithm from Section 2.8 of Bronstein's book, with the roots of
+    each s_i as the residues and S_i in place of the Rothstein-Trager
+    resultant's remainder); the remaining terms are returned as RootSums.
+    log_to_real() is only valid over a real field, so it is not used when
+    I appears in a term or in the extension tower.
     """
     # TODO: check what Lambda does with RootOf
     i = Dummy('i')
     s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+    real_tower = not any(f(DE.x).has(I) for f in DE.Tfuncs)
 
     result = S.Zero
     for a in H:
-        real = residue_reduce_log_to_real(a[0].as_poly(z), a[1], DE, z)
+        real = None
+        if real_tower and not (a[0].as_expr().has(I) or a[1].as_expr().has(I)):
+            real = log_to_real(a[1], a[0].as_poly(z), DE.t, z)
         if real is not None:
             result += real.subs(s)
         else:

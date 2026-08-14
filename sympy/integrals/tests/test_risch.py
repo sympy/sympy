@@ -825,9 +825,18 @@ def test_risch_integrate_log_to_atan():
     assert ans == log(exp(2*x) + 2*exp(x) + 2)/2 + 3*atan(exp(x) + 1)
     assert cancel(diff(ans, x) - e) == 0
 
-    # Residues that are real but irrational are still returned as a RootSum
+    # Real irrational residues also give explicit logarithms when the
+    # roots can be computed
     assert risch_integrate(exp(x)/(exp(2*x) - 2), x) == \
-        RootSum(Poly(8*z**2 - 1, z), Lambda(z, z*log(-4*z + exp(x))))
+        sqrt(2)*log(exp(x) - sqrt(2))/4 - sqrt(2)*log(exp(x) + sqrt(2))/4
+
+    # Terms whose residues cannot all be computed explicitly fall back
+    # to a RootSum
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'Tfuncs': [log]})
+    H = [(Poly(z**5 - z - 1, z), Poly(t + z, t))]
+    assert residue_reduce_to_basic(H, DE, z) == \
+        RootSum(Poly(z**5 - z - 1, z), Lambda(z, z*log(z + log(x))))
 
 
 def test_integrate_primitive_nonelementary_residual():
