@@ -23,6 +23,7 @@ from sympy.core.symbol import (Dummy, Symbol)
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.diagonal import diagonalize_vector
 from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.tensor.array.arrayop import (permutedims, tensorcontraction, tensordiagonal, tensorproduct)
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
@@ -237,6 +238,35 @@ class _CodegenArrayAbstract(Expr):
             return self._canonicalize()
 
 
+def _split_scalar_coefficient(arg):
+    """Split *arg* into a scalar coefficient and its array part.
+
+    Return the pair ``(coefficient, array)``, where ``array`` is None if
+    *arg* is entirely scalar.  Only structural splitting is performed:
+    scalar factors are extracted from ``MatMul`` objects and from ``Mul``
+    objects containing a single array-shaped factor.
+    """
+    if isinstance(arg, MatMul):
+        coeff, matrices = arg.as_coeff_matrices()
+        if coeff is S.One:
+            return S.One, arg
+        rest = MatMul(*matrices) if len(matrices) > 1 else matrices[0]
+        return coeff, rest
+    if isinstance(arg, Mul):
+        scalars = [f for f in arg.args if get_shape(f) == ()]
+        arrays = [f for f in arg.args if get_shape(f) != ()]
+        if len(arrays) == 1:
+            return Mul(*scalars), arrays[0]
+        if len(arrays) > 1:
+            # A Mul of multiple array-shaped factors is not a well-defined
+            # array expression; leave it untouched.
+            return S.One, arg
+        return arg, None
+    if get_shape(arg) == ():
+        return arg, None
+    return S.One, arg
+
+
 class ArrayTensorProduct(_CodegenArrayAbstract):
     r"""
     Class to represent the tensor product of array-like objects.
@@ -244,6 +274,22 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
 
     def __new__(cls, *args, **kwargs):
         args = [_sympify(arg) for arg in args]
+
+        # A Mul argument containing an array-shaped factor (e.g.
+        # 2*ArraySymbol("A", (2, 2))) has no shape attribute and would be
+        # wrongly treated as a scalar; split it into its scalar coefficient
+        # and its array part:
+        normalized_args = []
+        for arg in args:
+            if isinstance(arg, Mul) and not isinstance(arg, MatrixExpr):
+                coeff, array = _split_scalar_coefficient(arg)
+                if array is not None:
+                    if coeff is not S.One:
+                        normalized_args.append(coeff)
+                    normalized_args.append(array)
+                    continue
+            normalized_args.append(arg)
+        args = normalized_args
 
         canonicalize = kwargs.pop("canonicalize", False)
 
@@ -264,6 +310,37 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
     def _canonicalize(self):
         args = self.args
         args = self._flatten(args)
+
+        # Merge scalar (rank-0) arguments into a single leading scalar
+        # factor, so that e.g. ArrayTensorProduct(x, A, y, B) becomes
+        # ArrayTensorProduct(x*y, A, B).  The scalar is kept as a rank-0
+        # argument (instead of returning Mul(coefficient, ...)) so that
+        # the result remains a valid array expression with a well-defined
+        # shape.  Scalar coefficients inside MatrixExpr arguments (e.g.
+        # ArrayTensorProduct(2*M, N) with M a MatrixSymbol) are NOT
+        # extracted, as the matrix-recognition machinery in
+        # from_array_to_matrix relies on matrix arguments keeping their
+        # coefficients; use _split_scalar_coefficient to compare
+        # arguments modulo their scalar coefficient.
+        def _is_plain_scalar(arg):
+            # Rank-0 array expressions (e.g. full contractions) are not
+            # merged: the branches below lift them into the expression.
+            return (get_shape(arg) == () and
+                    not isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract)))
+
+        scalars = [arg for arg in args if _is_plain_scalar(arg)]
+        if scalars:
+            coeff = Mul.fromiter(scalars)
+            array_args = [arg for arg in args if not _is_plain_scalar(arg)]
+            if coeff.is_zero is True:
+                shapes = reduce(operator.add, [get_shape(i) for i in array_args], ())
+                return ZeroArray(*shapes)
+            if not array_args:
+                return coeff
+            if coeff is S.One:
+                args = array_args
+            else:
+                args = [coeff] + array_args
 
         ndim_list = [get_ndim(arg) for arg in args]
 
