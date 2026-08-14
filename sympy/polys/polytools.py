@@ -3644,6 +3644,15 @@ class Poly(Basic):
         """
         return sympy.polys.rootoftools.rootof(f, index, radicals=radicals)
 
+    @overload
+    def real_roots(
+        f, multiple: Literal[True] = True, radicals: bool = True
+    ) -> list[Expr]: ...
+    @overload
+    def real_roots(
+        f, multiple: Literal[False], *, radicals: bool = True
+    ) -> list[tuple[Expr, int]]: ...
+
     def real_roots(f, multiple=True, radicals=True):
         """
         Return a list of real roots with multiplicities.
@@ -5991,7 +6000,7 @@ def gcd(f: Expr | complex, g: Poly, *gens, **args) -> Poly: ...
 @overload
 def gcd(f: Expr | complex, g: Expr | complex, *gens, **args) -> Expr: ...
 @overload
-def gcd(f, g=None, *gens, **args) -> Any: ...
+def gcd(f, g=None, *gens, **args) -> Poly | Expr: ...
 
 @public
 def gcd(f, g=None, *gens, **args):
@@ -7397,6 +7406,13 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
 
     return F.all_roots(multiple=multiple, radicals=radicals)
 
+
+@overload
+def real_roots(f, multiple: Literal[True] = True, radicals: bool = True,
+    extension: bool = False) -> list[Expr]: ...
+@overload
+def real_roots(f, multiple: Literal[False], radicals: bool = True,
+    extension: bool = False) -> list[tuple[Expr, int]]: ...
 
 @public
 def real_roots(f, multiple=True, radicals=True, extension=False):
