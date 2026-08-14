@@ -1193,7 +1193,8 @@ def polynomial_reduce(p, DE):
     return (q, p)
 
 
-def laurent_series(a, d, F, n, DE):
+def laurent_series(a: Poly, d: Poly, F: Poly, n: int,
+        DE: DifferentialExtension) -> tuple[Poly, Poly, list[Poly]]:
     """
     Contribution of ``F`` to the full partial fraction decomposition of A/D.
 
