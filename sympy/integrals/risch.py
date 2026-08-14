@@ -1161,10 +1161,27 @@ def laurent_series(a, d, F, n, DE):
     free factorization of D, return the principal parts of the Laurent series of
     A/D at all the zeros of ``F``.
 
-    This is ``LaurentSeries`` from Section 2.7 of Bronstein's book.
+    Returns
+    =======
+
+    (delta_a, delta_d, H) : tuple
+        ``delta_a`` and ``delta_d`` are Polys in ``DE.t`` such that
+        ``delta_a/delta_d`` is the sum of the principal parts of the
+        Laurent series of A/D at the real zeros of ``F``.  ``H`` is the
+        list of Polys ``[H_1, ..., H_n]`` from Theorem 2.7.1: at each
+        zero ``alpha`` of ``F``, ``H_j(alpha)`` is the coefficient of
+        ``1/(t - alpha)**(n - j + 1)`` in the principal part of A/D at
+        ``alpha``; in particular, ``H[-1]`` evaluated at ``alpha`` is the
+        residue of A/D at ``alpha``.  If ``F`` has degree 0 (and so has
+        no zeros), ``(Poly(0, DE.t), Poly(1, DE.t), [])`` is returned.
+
+    This is ``LaurentSeries`` from Section 2.7 of Bronstein's book.  The
+    book's version returns only the sum of the principal parts (so the
+    degree 0 case returns the expression 0); ``H`` is additionally
+    returned here for use by ``recognize_derivative()``.
     """
-    if F.degree()==0:
-        return 0
+    if F.degree() == 0:
+        return (Poly(0, DE.t), Poly(1, DE.t), [])
     Z = _symbols('z', n)
     z = Symbol('z')
     Z.insert(0, z)
