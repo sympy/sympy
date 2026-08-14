@@ -42,7 +42,6 @@ def test_singular():
     assert ask(Q.singular(X), Q.invertible(X)) is False
     assert ask(Q.singular(X), ~Q.invertible(X)) is True
 
-@XFAIL
 def test_invertible_fullrank():
     assert ask(Q.invertible(X), Q.fullrank(X)) is True
 

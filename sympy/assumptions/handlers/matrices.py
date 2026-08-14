@@ -24,7 +24,7 @@ from ..predicates.matrices import (SquarePredicate, SymmetricPredicate,
     InvertiblePredicate, OrthogonalPredicate, UnitaryPredicate,
     FullRankPredicate, PositiveDefinitePredicate, UpperTriangularPredicate,
     LowerTriangularPredicate, DiagonalPredicate, IntegerElementsPredicate,
-    RealElementsPredicate, ComplexElementsPredicate)
+    RealElementsPredicate, ComplexElementsPredicate, SingularPredicate)
 
 
 def _Factorization(predicate, expr, assumptions):
@@ -139,6 +139,8 @@ def _(expr, assumptions):
         return False
     if Q.invertible(expr) in conjuncts(assumptions):
         return True
+    if _ask_recursive(Q.fullrank(expr), assumptions):
+        return True
 
 @InvertiblePredicate.register_many(Identity, Inverse)
 def _(expr, assumptions):
@@ -207,6 +209,14 @@ def _(expr, assumptions):
     if expr.rowblocksizes != expr.colblocksizes:
         return None
     return fuzzy_and([_ask_recursive(Q.invertible(a), assumptions) for a in expr.diag])
+
+
+# SingularPredicate
+
+@SingularPredicate.register(MatrixExpr)
+def _(expr, assumptions):
+    if expr.is_square and _ask_recursive(Q.invertible(expr), assumptions) is False:
+        return True
 
 
 # OrthogonalPredicate
