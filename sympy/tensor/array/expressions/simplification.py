@@ -214,7 +214,7 @@ def commutativity_simplify(expr):
     The two addends below represent the same tensor, with the scalar
     ``z`` placed in a different factor:
 
-    >>> from sympy import Array, Symbol, symbols
+    >>> from sympy import Array, Symbol
     >>> from sympy.tensor.array.expressions import ArrayAdd, ArrayTensorProduct
     >>> from sympy.tensor.array.expressions import commutativity_simplify
     >>> z = Symbol("z")
