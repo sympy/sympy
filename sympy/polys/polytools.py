@@ -4056,6 +4056,11 @@ class Poly(Basic):
         A, B = ev(a), ev(b)
         return (A.real - B.real)**2 + (A.imag - B.imag)**2 < eps_sq
 
+    @overload
+    def cancel(f, g, include: Literal[False] = False) -> tuple[Expr, Poly, Poly]: ...
+    @overload
+    def cancel(f, g, include: Literal[True]) -> tuple[Poly, Poly]: ...
+
     def cancel(f, g, include=False):
         """
         Cancel common factors in a rational function ``f/g``.
@@ -5974,6 +5979,19 @@ def gcd_list(seq, *gens, **args):
     else:
         return result
 
+
+@overload
+def gcd(f, g=None, *gens, polys: Literal[True], **args) -> Poly: ...
+@overload
+def gcd(f, g=None, *gens, polys: Literal[False], **args) -> Expr: ...
+@overload
+def gcd(f: Poly, g: Poly | Expr | complex, *gens, **args) -> Poly: ...
+@overload
+def gcd(f: Expr | complex, g: Poly, *gens, **args) -> Poly: ...
+@overload
+def gcd(f: Expr | complex, g: Expr | complex, *gens, **args) -> Expr: ...
+@overload
+def gcd(f, g=None, *gens, **args) -> Any: ...
 
 @public
 def gcd(f, g=None, *gens, **args):
