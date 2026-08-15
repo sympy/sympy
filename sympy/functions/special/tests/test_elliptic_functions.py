@@ -4,7 +4,10 @@ from sympy.core import S
 from sympy.core.numbers import Float, I, Rational, pi
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_functions import jtheta
+from sympy.series.order import O
 from sympy.testing.pytest import raises
 
 
@@ -30,6 +33,11 @@ def test_jtheta_definition():
     raises(ValueError, lambda: jtheta(1, z, q, -1))
     raises(ValueError, lambda: jtheta(1, z, q, Rational(1, 2)))
     raises(ValueError, lambda: jtheta(1, z, q, Float(1)))
+
+    # Do not reject an expression that might represent a valid index merely
+    # because it is numeric and has not simplified to an Integer.
+    unsimplified_three = ((1 + sqrt(2))**2 + (1 - sqrt(2))**2)/2
+    assert jtheta(unsimplified_three, z, q).args[0] == unsimplified_three
 
 
 def test_jtheta_special_values():
@@ -64,6 +72,38 @@ def test_jtheta_diff():
     assert jtheta(n, z, q).diff(q) == -jtheta(n, z, q, 2)/(4*q)
     assert jtheta(n, z, q, d).diff(q) == \
         -jtheta(n, z, q, d + 2)/(4*q)
+
+
+def test_jtheta_nseries():
+    assert jtheta(1, z, q).series(q, 0, 3) == (
+        2*q**Rational(1, 4)*sin(z)
+        - 2*q**Rational(9, 4)*sin(3*z) + O(q**3))
+    assert jtheta(2, z, q).series(q, 0, 3) == (
+        2*q**Rational(1, 4)*cos(z)
+        + 2*q**Rational(9, 4)*cos(3*z) + O(q**3))
+    assert jtheta(3, z, q).series(q, 0, 3) == (
+        1 + 2*q*cos(2*z) + O(q**3))
+    assert jtheta(4, z, q).series(q, 0, 3) == (
+        1 - 2*q*cos(2*z) + O(q**3))
+
+    assert jtheta(1, z, q, 1).series(q, 0, 3) == (
+        2*q**Rational(1, 4)*cos(z)
+        - 6*q**Rational(9, 4)*cos(3*z) + O(q**3))
+
+    x = Symbol('x', positive=True)
+    assert jtheta(3, z, x**2).series(x, 0, 7) == (
+        1 + 2*x**2*cos(2*z) + O(x**7))
+
+
+def test_jtheta_limits_at_zero():
+    from sympy.series.limits import limit
+
+    assert [limit(jtheta(index, z, q), q, 0)
+            for index in (1, 2, 3, 4)] == [0, 0, 1, 1]
+    assert limit(jtheta(3, z, q).diff(q), q, 0) == 2*cos(2*z)
+    assert limit(jtheta(4, z, q).diff(q), q, 0) == -2*cos(2*z)
+    assert limit(jtheta(1, pi/2, q).diff(q), q, 0, dir='+') is S.Infinity
+    assert limit(jtheta(2, 0, q).diff(q), q, 0, dir='+') is S.Infinity
 
 
 def test_jtheta_evalf():

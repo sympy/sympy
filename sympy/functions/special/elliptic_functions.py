@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from sympy.core import S
 from sympy.core.function import ArgumentIndexError, DefinedFunction
+from sympy.core.numbers import pi
+from sympy.functions.elementary.trigonometric import cos, sin
 
 
 class jtheta(DefinedFunction):
     r"""
-    The Jacobi theta function of index $n$.
+    The Jacobi theta function ``jtheta(n, z, q[, d])`` of index $n$.
 
     Explanation
     ===========
@@ -30,9 +32,15 @@ class jtheta(DefinedFunction):
         \vartheta_4(z, q) = 1 + 2 \sum_{k=1}^{\infty}
             (-1)^k q^{k^2} \cos(2kz).
 
-    Here $z$ is the argument and $q$ is the nome, with $|q| < 1$.
-    The optional fourth argument $d$ denotes the order of differentiation
-    with respect to $z$.
+    Here $z$ is the argument and $q$ is the nome, with $|q| < 1$. The
+    optional fourth argument $d$ is a nonnegative integer denoting the order
+    of differentiation with respect to $z$:
+
+    .. math::
+        \operatorname{jtheta}(n,z,q,d)
+        = \frac{\partial^d}{\partial z^d}\vartheta_n(z,q).
+
+    Omitting $d$ is equivalent to taking $d=0$.
 
     SymPy also supports differentiation with respect to the nome. Since
     $q=\exp(i\pi\tau)$, the theta-function heat equation [3]_ gives
@@ -43,10 +51,6 @@ class jtheta(DefinedFunction):
 
     More generally, differentiating ``jtheta(n, z, q, d)`` with respect to
     $q$ returns ``-jtheta(n, z, q, d + 2)/(4*q)``.
-
-    When $q = \exp(i \pi \tau)$, fractional powers of $q$ are understood
-    as $q^a = \exp(i \pi \tau a)$. This fixes the branch when $q$ is
-    specified through the half-period ratio $\tau$.
 
     For integers $m$ and $n$, the functions are quasi-periodic on the
     period lattice [1]_:
@@ -141,17 +145,17 @@ class jtheta(DefinedFunction):
 
     @classmethod
     def eval(cls, n, z, q, d=None):
-        if n.is_number:
+        if n.is_Integer:
             if n not in (S.One, S(2), S(3), S(4)):
                 raise ValueError("jtheta index must be 1, 2, 3 or 4")
-        elif n.is_integer is False:
+        elif n.is_Float or n.is_integer is False:
             raise ValueError("jtheta index must be an integer")
 
         if d is not None:
-            if d.is_number and not d.is_Integer:
+            if d.is_Float or d.is_integer is False:
                 raise ValueError("jtheta derivative order must be "
                                  "a nonnegative integer")
-            if d.is_integer is False or d.is_nonnegative is False:
+            if d.is_nonnegative is False:
                 raise ValueError("jtheta derivative order must be "
                                  "a nonnegative integer")
             if d.is_zero:
@@ -205,3 +209,53 @@ class jtheta(DefinedFunction):
         if argindex == 3:
             return -self.func(n, z, q, d + 2)/(4*q)
         raise ArgumentIndexError(self, argindex)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+
+        index, z, q = self.args[:3]
+        d = self.derivative_order
+
+        if not q.has(x) or q.subs(x, S.Zero).is_zero is not True:
+            return super()._eval_nseries(x, n, logx, cdir)
+
+        if (index not in (S.One, S(2), S(3), S(4))
+                or not d.is_Integer or d.is_nonnegative is not True):
+            raise NotImplementedError(
+                "jtheta series requires an explicit index and derivative "
+                "order")
+
+        q_leading = q.as_leading_term(x, logx=logx, cdir=cdir)
+        _, q_order = q_leading.as_coeff_exponent(x)
+        if q_order.is_number is not True or q_order.is_positive is not True:
+            raise NotImplementedError(
+                "jtheta series requires a nome with explicit positive order")
+
+        terms = []
+        if index in (S(3), S(4)):
+            if d.is_zero:
+                terms.append(S.One)
+            k = 1
+            while k**2*q_order < n:
+                coefficient = 2*(2*k)**d*cos(2*k*z + d*pi/2)
+                if index is S(4):
+                    coefficient *= S.NegativeOne**k
+                terms.append(coefficient*q**(k**2))
+                k += 1
+        else:
+            k = 0
+            exponent = (S(k) + S.Half)**2
+            while exponent*q_order < n:
+                harmonic = 2*k + 1
+                if index is S.One:
+                    coefficient = (2*S.NegativeOne**k*harmonic**d
+                                   * sin(harmonic*z + d*pi/2))
+                else:
+                    coefficient = (2*harmonic**d
+                                   * cos(harmonic*z + d*pi/2))
+                terms.append(coefficient*q**exponent)
+                k += 1
+                exponent = (S(k) + S.Half)**2
+
+        series = sum(terms, S.Zero)
+        return series._eval_nseries(x, n, logx, cdir) + Order(x**n, x)
