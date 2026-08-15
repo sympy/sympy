@@ -215,7 +215,9 @@ def _(expr, assumptions):
 
 @SingularPredicate.register(MatrixExpr)
 def _(expr, assumptions):
-    if expr.is_square and _ask_recursive(Q.invertible(expr), assumptions) is False:
+    if expr.is_square is False:
+        return False
+    if _ask_recursive(Q.invertible(expr), assumptions) is False:
         return True
 
 
