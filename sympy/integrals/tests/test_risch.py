@@ -828,11 +828,13 @@ def test_risch_integrate_algebraic():
     r = risch_integrate(exp(sqrt(y)), y, algebraic=True)
     assert r == Integral(exp(sqrt(y)), y)
     assert not r.has(NonElementaryIntegral)
-    # nested rational powers: the rewritten exponential collapses to a
-    # Mul, which must not end up in the exps worklist
+    # nested rational powers collapse under the radicand split (the
+    # branch ratio absorbs the fractional-exponent bookkeeping), where
+    # this once raised NotImplementedError from the exps worklist
     a, b, c = symbols('a b c')
-    raises(NotImplementedError, lambda: risch_integrate(
-        (c*(a + b*x)**Rational(3, 2))**Rational(2, 3), x, algebraic=True))
+    r = risch_integrate(
+        (c*(a + b*x)**Rational(3, 2))**Rational(2, 3), x, algebraic=True)
+    assert not r.has(Integral)
     # nested symbolic radicals build towers with EX coefficient matrices
     d = symbols('d')
     raises(NotImplementedError, lambda: risch_integrate(
@@ -855,7 +857,13 @@ def test_risch_integrate_algebraic_branches():
     # every affected region (symbolic zero-testing of radical
     # identities is not reliable enough to use here).
     def deriv_ok(f, r, pts):
+        from sympy import Derivative, sign
         err = r.diff(x) - f
+        # sign() is locally constant and the points avoid its
+        # breakpoints, so its (unevaluatable) derivative is zero there
+        err = err.replace(
+            lambda e: isinstance(e, Derivative) and e.has(sign),
+            lambda e: S.Zero)
         return all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
                    for p in pts)
 
@@ -890,6 +898,24 @@ def test_risch_integrate_algebraic_branches():
     assert _nontrans_is_kernel(s**2 - 1, DE)
     assert not _nontrans_is_kernel(s - 1, DE)
     assert not _nontrans_is_kernel(s, DE)
+
+    # jump corrections (Jeffrey, Labahn, von Mohrenschildt & Rich):
+    # substituting the ratios back leaves constant jumps at the real
+    # roots and poles of the split factors; a -J*sign(x - r) term
+    # restores continuity there when J is finite and real
+    from sympy import sign
+    r = risch_integrate(3*x**2*sqrt(1 + 1/x**2), x, algebraic=True)
+    assert r.coeff(sign(x)) == -1  # Jeffrey's Example 1, J == 1
+    f = sqrt(x**3 + 4*x**2 + 5*x + 2)  # (x + 1)**2*(x + 2)
+    r = risch_integrate(f, x, algebraic=True)
+    assert r.coeff(sign(x + 1)) == Rational(4, 15)
+    assert deriv_ok(f, r, [Rational(-19, 10), Rational(-3, 2),
+                           Rational(-1, 2), 3])
+    # a complex jump (breakpoint at a singularity of the integrand)
+    # must not be "corrected": that would make the answer complex on
+    # regions where it is real
+    r = risch_integrate(sqrt(x**2 + 2*x + 1)/x, x, algebraic=True)
+    assert not r.has(sign)
 
 
 def test_risch_integrate():

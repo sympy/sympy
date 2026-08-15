@@ -27,10 +27,11 @@ from __future__ import annotations
 from types import GeneratorType
 from functools import reduce
 
+from sympy.core.add import Add
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I
+from sympy.core.numbers import Float, I, Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -45,6 +46,7 @@ from sympy.functions.elementary.trigonometric import (atan, sin, cos,
 from .integrals import integrate, Integral
 from .heurisch import _symbols
 from .rationaltools import log_to_real
+from sympy.polys.rationaltools import together
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd, rem, factor,
     reduced)
@@ -390,11 +392,11 @@ class DifferentialExtension:
                 if (i.exp.is_Rational and not i.exp.is_Integer and
                         not i.base.is_Symbol and not isinstance(i.base, exp)):
                     bf = factor(i.base)
-                    if bf != i.base and isinstance(bf, (Mul, Pow)):
+                    pd = bf.as_powers_dict()
+                    if len(pd) > 1 or any(e != 1 for e in pd.values()):
                         split = Mul(*[Pow(b, e*i.exp) for b, e in
-                                      bf.as_powers_dict().items()])
-                        if all(b.is_nonnegative for b in
-                               bf.as_powers_dict()):
+                                      pd.items()])
+                        if all(b.is_nonnegative for b in pd):
                             self.backsubs.append((split, i))
                             reps[i] = split
                         else:
@@ -1631,6 +1633,102 @@ def _nontrans_power_relations(DE):
     return rels
 
 
+def _nontrans_branch_corrections(result, DE):
+    """
+    Substitute the branch-ratio constants back into ``result`` and
+    correct the jumps their substitution introduces.
+
+    The candidate was found with each ratio held as a formal constant
+    s, so ``result`` with s substituted is an antiderivative on every
+    connected region where the ratio really is constant, but it may
+    jump by a constant where the ratio changes value (the real roots
+    and poles of the radicand factors).  Following Jeffrey, Labahn,
+    von Mohrenschildt & Rich (Theorem 5), subtracting
+    J*sign(x - r) with J == (G(r+) - G(r-))/2 at each such breakpoint
+    r restores continuity, extending the answer to Jeffrey's domain of
+    maximum extent.  The corrections are locally constant, so they
+    never affect the derivative; every step here is therefore free to
+    give up (unlocatable breakpoints, an unrecognizable ratio value, a
+    singular or infinite jump), leaving the plain substitution, which
+    is already correct on each region.
+    """
+    from sympy.core.numbers import pi
+    from sympy.functions.elementary.complexes import sign
+    from sympy.polys.polyroots import roots
+
+    x = DE.x
+    sign_subs = {s: R for s, R, _ in DE.sign_consts}
+    subbed = result.subs(sign_subs)
+    if not any(result.has(s) for s in sign_subs):
+        return subbed
+
+    # Breakpoints: real roots of every factor under a ratio (numerator
+    # and denominator -- the ratios jump only where some factor crosses
+    # zero or infinity).  Only exactly-representable, provably-real
+    # roots are usable; others just leave their jump uncorrected.
+    pts = set()
+    for _, R, _ in DE.sign_consts:
+        for p in R.atoms(Pow):
+            for b in p.base.as_numer_denom():
+                if not b.has(x):
+                    continue
+                try:
+                    rs = roots(Poly(b, x))
+                except PolynomialError:
+                    continue
+                pts.update(r for r in rs
+                           if r.is_real is True and r.is_comparable)
+    if not pts:
+        return subbed
+    pts = sorted(pts, key=lambda r: float(r))
+
+    def ratio_at(R, q, pt):
+        # the ratio's value just left/right of a breakpoint, snapped to
+        # an exact q-th root of unity (None if it isn't recognizably one)
+        try:
+            v = complex(R.subs(x, Float(pt)).evalf(30))
+        except (TypeError, ValueError):
+            return None
+        best = None
+        for j in range(q):
+            w = exp(2*I*pi*Rational(j, q))
+            d = abs(v - complex(w.evalf(30)))
+            if d < 0.01 and (best is None or d < best[1]):
+                best = (w, d)
+        return best[0] if best else None
+
+    corrections = []
+    for r in pts:
+        gap = min([1.0] + [abs(float(r) - float(s2))
+                           for s2 in pts if s2 != r])
+        d = Rational(int(gap/4 * 2**20) or 1, 2**20)
+        left, right = {}, {}
+        ok = True
+        for s, R, q in DE.sign_consts:
+            vl = ratio_at(R, q, float(r) - d)
+            vr_ = ratio_at(R, q, float(r) + d)
+            if vl is None or vr_ is None:
+                ok = False
+                break
+            left[s], right[s] = vl, vr_
+        if not ok or left == right:
+            continue
+        # cancel before substituting the breakpoint: singularities of
+        # the candidate there are often removable, but only in the
+        # s-form (the cancellation needs s*w*sqrt(v) still split)
+        Gl = cancel(together(result.subs(left))).subs(x, r)
+        Gr = cancel(together(result.subs(right))).subs(x, r)
+        J = cancel(together((Gr - Gl)/2))
+        if J == 0 or J.free_symbols or J.is_real is not True:
+            # a complex jump would make the answer complex on whole
+            # regions where it is real now; an infinite or undecidable
+            # one cannot be corrected by a constant.  Leave the jump:
+            # the result is still an antiderivative on each region.
+            continue
+        corrections.append(J*sign(x - r))
+    return subbed - Add(*corrections)
+
+
 def _nontrans_is_kernel(e, DE):
     """
     Decide whether e, polynomial in the tower generators, evaluates to
@@ -2239,7 +2337,17 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             DE.decrement_level()
             fa, fd = frac_in(i, DE.t)
         else:
-            result = result.subs(DE.backsubs)
+            sign_symbols = {s for s, _, _ in DE.sign_consts or []}
+            result = result.subs([(o, n) for o, n in DE.backsubs
+                                  if o not in sign_symbols])
+            if sign_symbols:
+                if i == 0:
+                    result = _nontrans_branch_corrections(result, DE)
+                else:
+                    # with a leftover integral the total antiderivative
+                    # is unknown, so its jumps cannot be corrected
+                    result = result.subs(
+                        {s: R for s, R, _ in DE.sign_consts})
             if isinstance(i, Integral):
                 if DE.transcendental:
                     i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
