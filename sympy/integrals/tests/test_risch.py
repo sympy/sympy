@@ -943,6 +943,13 @@ def test_risch_integrate_algebraic_branches():
     f = (sqrt(x**2 + 2*x + 1) + x + 1)*exp(x**2)
     r = risch_integrate(f, x, algebraic=True)
     assert not r.has(NonElementaryIntegral)
+    # the base case never reaches the acceptance filter, and ratint()
+    # over QQ(s) can divide by s-polynomials that vanish at attained
+    # values: this candidate is nan on all of x > -1 (where the
+    # integrand is just 1) and must be rejected, not returned
+    f = 1/(x**2 - x**2*sqrt(x**2 + 2*x + 1)/(x + 1) + 1)
+    r = risch_integrate(f, x, algebraic=True)
+    assert r == Integral(f, x)
 
 
 def test_risch_integrate():

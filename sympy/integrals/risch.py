@@ -31,7 +31,7 @@ from sympy.core.add import Add
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I, Rational
+from sympy.core.numbers import I, Rational, oo, zoo
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -313,6 +313,8 @@ class DifferentialExtension:
                     self.reset()
                     self.sign_consts = sign_consts
                     self.backsubs += [(s, R) for s, R, _ in sign_consts]
+                    if sign_consts:
+                        self.transcendental = False
                     exp_new_extension = True
                     continue
 
@@ -2416,6 +2418,23 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             result = result.subs([(o, n) for o, n in DE.backsubs
                                   if o not in sign_symbols])
             if sign_symbols:
+                # The acceptance filter runs per level, but the base
+                # case (everything collapsed to a rational function of
+                # x and the ratio constants) never reaches it, and
+                # ratint() over QQ(s) can divide by s-polynomials that
+                # vanish at attained values.  So vet the total result
+                # under every possible assignment of the ratio
+                # constants before substituting them.
+                assignments = _nontrans_sign_assignments(DE)
+                if assignments is None or any(
+                        _nontrans_is_kernel(
+                            cancel(result).as_numer_denom()[1].subs(sig),
+                            DE) or
+                        result.subs(sig).has(S.NaN, oo, zoo)
+                        for sig in assignments):
+                    if not separate_integral:
+                        return Integral(f, x)
+                    return (S.Zero, Integral(f, x))
                 if i == 0:
                     result = _nontrans_branch_corrections(result, DE)
                 else:
