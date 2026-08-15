@@ -771,9 +771,9 @@ Zippel algorithm
 .. autofunction:: from_newt_to_poly
 .. autofunction:: incremental_newton_interp
 .. autofunction:: skeleton_sorter
-.. autofunction:: zippel_gcd
-.. autofunction:: sparse_gcd
-.. autofunction:: zippel_interp
+.. autofunction:: smp_zippel_gcd
+.. autofunction:: smp_zippel_gcd_mod
+.. autofunction:: smp_zippel_interp_mod
 
 
 Undocumented

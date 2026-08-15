@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from random import randint
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sympy.ntheory.generate import nextprime
 from sympy.polys.densebasic import dup_from_dict, dup_to_dict
@@ -18,7 +18,6 @@ from sympy.polys.domains.integerring import ZZ
 from sympy.polys.galoistools import gf_add, gf_div, gf_eval, gf_gcd, gf_mul, gf_quo, gf_from_dict
 from sympy.ntheory.modular import crt
 from sympy.polys.matrices.domainmatrix import DomainMatrix
-from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
 from sympy.polys.sparsetools import (
     _smp_itrunc_ground,
     smp_coeff_wrt,
@@ -120,8 +119,8 @@ def smp_primitive_wrt_last(
         for i, el in enumerate(quotient):
             if el != 0:
                 prim[mon + (deg - 1 - i,)] = el
-
-    return cont, smp_trunc_ground(prim, p, n, dom)
+    _smp_itrunc_ground(prim, p, n, dom)
+    return cont, prim
 
 
 def smp_deg_wrt_last(f: smp[MPZ], n: int) -> monom:
@@ -216,16 +215,13 @@ def smp_chinese_remainder_reconstruction_multivariate(
 
     for mon in monoms:
         coeff = crt_scalar(hp[mon], hq[mon], p, q)
-        if coeff:
-            hpq[mon] = coeff
+        hpq[mon] = coeff
     for mon in hpmonoms:
         coeff = crt_scalar(hp[mon], zero, p, q)
-        if coeff:
-            hpq[mon] = coeff
+        hpq[mon] = coeff
     for mon in hqmonoms:
         coeff = crt_scalar(zero, hq[mon], p, q)
-        if coeff:
-            hpq[mon] = coeff
+        hpq[mon] = coeff
 
     return hpq
 
@@ -412,7 +408,7 @@ def skeleton_sorter(
     degrees for the remaining variables, useful to evaluate quickly the monomials.
 
     It also saves the coefficients of each monomial in a list of lists, and
-    2 booleans needed by the function ``zippel_interp()`` to choose the right routine.
+    2 booleans needed by the function ``smp_zippel_interp_mod()`` to choose the right routine.
 
     Examples
     ========
@@ -461,17 +457,94 @@ def skeleton_sorter(
     return S, h, monic, pseudomonic
 
 
-def zippel_gcd(f: smp[MPZ], g: smp[MPZ], n: int) -> tuple[smp[MPZ], smp[MPZ], smp[MPZ]]:
+def _random_eval_point(p: MPZ) -> MPZ:
+    return ZZ(randint(1, int(p - 1)))
+
+
+def _solve_scaling_system(A_m: DomainMatrix, B_m: DomainMatrix) -> None | int | tuple[DomainMatrix, Any]:
+    ncols = A_m.shape[1]
+    aug = A_m.hstack(B_m)
+    aug_rref, den, pivots = aug.rref_den()
+
+    rank = sum(pivot < ncols for pivot in pivots)
+    inconsistent = any(pivot >= ncols for pivot in pivots)
+
+    if inconsistent:
+        return None
+
+    nullity = ncols - rank
+    if nullity:
+        return nullity
+
+    num = aug_rref[:ncols, ncols:]
+
+    return (num, den)
+
+
+def _random_eval_tuple(p: MPZ, len: int) -> tuple[MPZ, ...]:
+    return tuple(ZZ(randint(1, int(p - 1))) for _ in range(len))
+
+
+def _validate_eval_tuple(t: tuple[MPZ, ...],
+    lc_A: smp[MPZ],
+    lc_B: smp[MPZ],
+    G: dict[int, list[tuple[monom, list[tuple[int, int]]]]],
+    p: MPZ,
+    z: range,
+) -> list[list[MPZ]] | None:
+    lc_A_ev: dict[MPZ, MPZ] = {}
+    lc_B_ev: dict[MPZ, MPZ] = {}
+    all_vand_basis = []
+    # checking that the leading coeff of A and B isn't zero in the chosen tuple
+    for mon, coeff in lc_A.items():
+        k = ZZ.one
+        for i, j in enumerate(mon[1:]):
+            k = (k *pow(t[i], j, p)) %p
+        lc_A_ev[k] = (lc_A_ev.get(k, ZZ.zero) + coeff) %p
+    for i in z:
+        k = ZZ.zero
+        for val, coeff in lc_A_ev.items():
+            k = (k + pow(val, i, p) * coeff) %p
+        if k == ZZ.zero:
+            return None
+
+    for mon, coeff in lc_B.items():
+        k = ZZ.one
+        for i, j in enumerate(mon[1:]):
+            k = (k *pow(t[i], j, p)) %p
+        lc_B_ev[k] = (lc_B_ev.get(k, ZZ.zero) + coeff) %p
+    for i in z:
+        k = ZZ.zero
+        for val, coeff in lc_B_ev.items():
+            k = (k + pow(val, i, p) * coeff) %p
+        if k == ZZ.zero:
+            return None
+
+    for deg, el in G.items():
+        vand_bas = []
+        for smon in el:
+            k = ZZ.one
+            for i, j in smon[1]:
+                k =  (k * pow(t[i], j, p)) %p
+            if k in vand_bas:
+                return None
+
+            vand_bas.append(k)
+        all_vand_basis.append(vand_bas)
+    return all_vand_basis
+
+
+def smp_zippel_gcd(f: smp[MPZ], g: smp[MPZ], n: int) -> tuple[smp[MPZ], smp[MPZ], smp[MPZ]]:
     r"""
     Compute the GCD of two polynomials in `\mathbb{Z}[x_0, \ldots, x_{k-1}]`
     using the Zippel algorithm.
-
+    This function needs preprocessing of the input polynomials before it is called.
     The algorithm computes the GCD of two multivariate integer polynomials
     `f` and `g` by calculating the GCD in
     `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]` for suitable primes `p` and then
     reconstructing the coefficients with the Chinese Remainder Theorem. To
     compute the multivariate GCD over `\mathbb{Z}_p` the recursive
-    subroutine :func:`sparse_gcd` is used. To verify the result in
+    subroutine :func:`smp_zippel_gcd_mod` is used. To verify the result in
     `\mathbb{Z}[x_0, \ldots, x_{k-1}]`, trial division is done, but only for
     candidates which are very likely the desired GCD.
 
@@ -496,7 +569,7 @@ def zippel_gcd(f: smp[MPZ], g: smp[MPZ], n: int) -> tuple[smp[MPZ], smp[MPZ], sm
     Examples
     ========
 
-    >>> from sympy.polys.zippel import zippel_gcd
+    >>> from sympy.polys.zippel import smp_zippel_gcd
     >>> from sympy.polys import ring, ZZ
 
     >>> R, x, y = ring("x, y", ZZ)
@@ -504,7 +577,7 @@ def zippel_gcd(f: smp[MPZ], g: smp[MPZ], n: int) -> tuple[smp[MPZ], smp[MPZ], sm
     >>> f = x**2 - y**2
     >>> g = x**2 + 2*x*y + y**2
 
-    >>> h, cff, cfg = zippel_gcd(f, g, 2)
+    >>> h, cff, cfg = smp_zippel_gcd(f, g, 2)
     >>> R.from_dict(h), R.from_dict(cff), R.from_dict(cfg)
     (x + y, x - y, x + y)
 
@@ -513,12 +586,9 @@ def zippel_gcd(f: smp[MPZ], g: smp[MPZ], n: int) -> tuple[smp[MPZ], smp[MPZ], sm
     >>> f = x*z**2 - y*z**2
     >>> g = x**2*z + z
 
-    >>> h, cff, cfg = zippel_gcd(f, g, 3)
+    >>> h, cff, cfg = smp_zippel_gcd(f, g, 3)
     >>> R.from_dict(h), R.from_dict(cff), R.from_dict(cfg)
     (z, x*z - y*z, x**2 + 1)
-
-    References
-    ==========
 
     References
     ==========
@@ -529,7 +599,7 @@ def zippel_gcd(f: smp[MPZ], g: smp[MPZ], n: int) -> tuple[smp[MPZ], smp[MPZ], sm
     See also
     ========
 
-    sparse_gcd
+    smp_zippel_gcd_mod
 
     """
 
@@ -566,7 +636,7 @@ def zippel_gcd(f: smp[MPZ], g: smp[MPZ], n: int) -> tuple[smp[MPZ], smp[MPZ], sm
         fp = smp_trunc_ground(f, p, n, ZZ)
         gp =  smp_trunc_ground(g, p, n, ZZ)
 
-        hp = sparse_gcd(fp, gp, p, n)
+        hp = smp_zippel_gcd_mod(fp, gp, p, n)
         if hp is not None:
             if hlastm != {}:
                 if smp_degrees(hp, n, ZZ) > smp_degrees(hlastm, n, ZZ):
@@ -578,8 +648,6 @@ def zippel_gcd(f: smp[MPZ], g: smp[MPZ], n: int) -> tuple[smp[MPZ], smp[MPZ], sm
             hp_k = ZZ.invert(smp_LC(hp, n, ZZ), p)
             for mon, coeff in hp.items():
                 hp[mon] = coeff * hp_k
-                if not hp[mon]:
-                    del hp[mon]
         else:
             continue
 
@@ -610,7 +678,7 @@ def zippel_gcd(f: smp[MPZ], g: smp[MPZ], n: int) -> tuple[smp[MPZ], smp[MPZ], sm
             return h, cff, cfg
 
 
-def sparse_gcd(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int
+def smp_zippel_gcd_mod(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int
     ) -> smp[MPZ] | None:
     r"""
     Compute the GCD of two multivariate polynomials over a finite field.
@@ -656,16 +724,16 @@ def sparse_gcd(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int
     # here c is elevated to a dict poly with all variables
     c = {(0,)*(n-1) + (i,): coeff for i, coeff in enumerate(c[::-1]) if coeff != 0}
 
+    max_gcd_deg = min(smp_degree(A, n - 1, n, ZZ), smp_degree(B, n - 1, n, ZZ))
+
     g = smp_gf_gcd(smp_LC_wrt_last(A, n, ZZ), smp_LC_wrt_last(B, n, ZZ), p, ZZ)
     M: list[MPZ] = []
     h: list[list[MPZ]] = []
     skippable: set[int] = set()
     pt_chances = 0
     while True:
-        t = ZZ(randint(1, int(p - 1)))
-        gk = smp_evaluate(g, {0:t}, 1, ZZ) %p
-        if t in M:
-            continue
+        t = _random_eval_point(p)
+        gk = smp_evaluate(g, {0:t}, 1, ZZ) % p
         if gk == 0:
             pt_chances +=1
             if pt_chances < 3:
@@ -678,7 +746,7 @@ def sparse_gcd(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int
 
         B_ = smp_subs_drop(B, {n - 1: t}, n, ZZ)
         _smp_itrunc_ground(B_, p, n - 1, ZZ)
-        G_ = sparse_gcd(A_, B_, p, n-1)
+        G_ = smp_zippel_gcd_mod(A_, B_, p, n-1)
         if G_ is None:
             M = []
             h = []
@@ -714,7 +782,7 @@ def sparse_gcd(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int
             B_ = smp_subs_drop(B, {n-1: t}, n, ZZ)
             _smp_itrunc_ground(A_, p, n-1, ZZ)
             _smp_itrunc_ground(B_, p, n-1, ZZ)
-            G_ = zippel_interp(A_, B_, G_s, p, monic, pseudomonic, n-1)
+            G_ = smp_zippel_interp_mod(A_, B_, G_s, p, monic, pseudomonic, n-1)
             if G_ is None:
                 skeleton_chances += 1
                 if skeleton_chances < 3:
@@ -739,6 +807,8 @@ def sparse_gcd(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int
                 else:
                     skippable.add(i)
             M.append(t)
+            if len(M) > max_gcd_deg + 2:
+                    return None
             if not repeat:
                 gcd = {}
                 for i, mon in enumerate(G_.keys()):
@@ -749,18 +819,11 @@ def sparse_gcd(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int
                 _, gcd = smp_primitive_wrt_last(gcd, n, ZZ, p)
 
                 # modular conversion to perform test divisions
-                A_mod = {}
-                for mon, coeff in A.items():
-                    if coeff % p != 0:
-                        A_mod[mon] = FF(p)(coeff)
-                B_mod = {}
-                for mon, coeff in B.items():
-                    if coeff % p != 0:
-                        B_mod[mon] = FF(p)(coeff)
-                gcd_mod = {}
-                for mon, coeff in gcd.items():
-                    if coeff % p != 0:
-                        gcd_mod[mon] = FF(p)(coeff)
+                A_mod = {mon: FF(p)(coeff) for mon, coeff in A.items()}
+
+                B_mod = {mon: FF(p)(coeff) for mon, coeff in B.items()}
+
+                gcd_mod = {mon: FF(p)(coeff) for mon, coeff in gcd.items()}
 
                 if smp_rem_list(A_mod, [gcd_mod], n, FF(p)) == {} and smp_rem_list(B_mod, [gcd_mod], n, FF(p)) == {}:
                     gcd = smp_mul(gcd, c, ZZ, n)
@@ -776,7 +839,7 @@ def sparse_gcd(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int
                         return None
 
 
-def zippel_interp(A: smp[MPZ], B: smp[MPZ],
+def smp_zippel_interp_mod(A: smp[MPZ], B: smp[MPZ],
     G: dict[int, list[tuple[monom, list[tuple[int, int]]]]], p: MPZ, monic: bool,
     pseudomonic: bool, n: int) -> smp[MPZ] | None:
 
@@ -823,10 +886,14 @@ def zippel_interp(A: smp[MPZ], B: smp[MPZ],
 
     """
     deg_a = smp_degree(A, 0, n, ZZ)
+    deg_b = smp_degree(B, 0, n, ZZ)
     lc_A = smp_coeff_wrt(A, 0, deg_a, n, ZZ)
+    lc_B = smp_coeff_wrt(B, 0, deg_b, n, ZZ)
     lengths = [len(el) for el in G.values()]
+    if not monic and len(lengths) == 1:
+        return None
     nt = lengths[-1]
-    # base case: for one variable its sufficient to take the gcd's coefficients
+    # base case: for one variable it is sufficient to take the gcd's coefficients
     # the function runs also without this base case, but it allows for an early exit
     if n == 1:
         C: smp[MPZ] = {}
@@ -840,48 +907,22 @@ def zippel_interp(A: smp[MPZ], B: smp[MPZ],
             C[monoms[0][0]] = gcd.get((deg,), ZZ.zero)
         return C
 
+    if monic:
+        z = nt
+    else:
+        y = len(lengths)
+        z = max(nt, (sum(lengths) + y - 3) // (y - 1))
+
     for _ in range(3):
         while True:
-            t = tuple(ZZ(randint(int(1), int(p-1))) for _ in range(n-1))
-            is_bad_tuple = False
-            lc_A_ev: dict[MPZ, MPZ] = {}
-            all_vand_basis = []
-            # checking that the leading coeff of A isn't zero in the chosen tuple
-            for mon, coeff in lc_A.items():
-                k = ZZ.one
-                for i, j in enumerate(mon[1:]):
-                    k = (k *pow(t[i], j, p)) %p
-                lc_A_ev[k] = (lc_A_ev.get(k, ZZ.zero) + coeff) %p
-            for i in range(nt):
-                k = ZZ.zero
-                for val, coeff in lc_A_ev.items():
-                    k = (k + pow(val, i, p) * coeff) %p
-                if k == ZZ.zero:
-                    is_bad_tuple = True
-                    break
-            if is_bad_tuple:
-                continue
+            t = _random_eval_tuple(p, n - 1)
 
-            for deg, el in G.items():
-                vand_bas = []
-                for smon in el:
-                    k = ZZ.one
-                    for i, j in smon[1]:
-                        k =  (k * pow(t[i], j, p)) %p
-                    if k in vand_bas:
-                        is_bad_tuple = True
-                        break
-
-                    vand_bas.append(k)
-                if is_bad_tuple:
-                    break
-                all_vand_basis.append(vand_bas)
-            if is_bad_tuple:
+            all_vand_basis = _validate_eval_tuple(t, lc_A, lc_B, G, p, range(1, z+1))
+            if all_vand_basis is None:
                 continue
             else:
                 break
 
-        deg_b = smp_degree(B, 0, n, ZZ)
         A_flat: list[dict[MPZ, MPZ]] = [{} for _ in range(deg_a +1)]
         B_flat: list[dict[MPZ, MPZ]] = [{} for _ in range(deg_b +1)]
 
@@ -905,117 +946,137 @@ def zippel_interp(A: smp[MPZ], B: smp[MPZ],
         # so that to evaluate in powers of the tuple I can do a linear combination t1**k*c1+...+tn**k*cn
 
         eval_points: dict[int, list[MPZ]] = {deg:[] for deg in G.keys()}
-        if monic:
-            z = nt
-        else:
-            y = len(lengths)
-            z = max(nt, (sum(lengths) + y - 3) // (y - 1))
-
+        _freedom_deg = None
+        data = None
+        unlucky_cont = False
         lc_ev = ZZ.one
+        bad_tuple = False
         if pseudomonic:
             lc = G[max(G.keys())][0][1]
             for i, j in lc:
                 lc_ev *= pow(t[i], j, p) % p
 
-        for i in range(z):
-            A_ev = []
-            B_ev = []
-            for pol in A_flat:
-                if pol == {}:
-                    A_ev.append(ZZ.zero)
-                else:
-                    h = ZZ.zero
-                    for c, k in pol.items():
-                        # this i+1 is to prevent
-                        # the first evaluation point from always being (1,..,1),
-                        # we start the powers of the tuple from 1 and not from 0
-                        h = (h + pow(c, (i+1), p) *k) %p
-                    A_ev.append(h)
+        z_ = z
+        while True:
+            for i in range(z_):
+                A_ev = []
+                B_ev = []
+                for pol in A_flat:
+                    if pol == {}:
+                        A_ev.append(ZZ.zero)
+                    else:
+                        h = ZZ.zero
+                        for c, k in pol.items():
+                            # this i+1 is to prevent
+                            # the first evaluation point from always being (1,..,1),
+                            # we start the powers of the tuple from 1 and not from 0
+                            h = (h + pow(c, (i+1), p) *k) %p
+                        A_ev.append(h)
 
-            for pol in B_flat:
-                if pol == {}:
-                    B_ev.append(ZZ.zero)
-                else:
-                    h = ZZ.zero
-                    for c, k in pol.items():
-                        h = (h+ pow(c, (i+1), p) *k) %p
-                    B_ev.append(h)
+                for pol in B_flat:
+                    if pol == {}:
+                        B_ev.append(ZZ.zero)
+                    else:
+                        h = ZZ.zero
+                        for c, k in pol.items():
+                            h = (h+ pow(c, (i+1), p) *k) %p
+                        B_ev.append(h)
 
-            G_ev = gf_gcd(A_ev[::-1], B_ev[::-1], p, ZZ)
-            G_ev.reverse()
-            # checking that the skeleton wasn't wrongly determined
-            max_deg = max(G)
-            if len(G_ev) != max_deg + 1:
-                return None
-            for j, el in enumerate(G_ev):
-                if el != 0 and j not in G.keys():
+                G_ev = gf_gcd(A_ev[::-1], B_ev[::-1], p, ZZ)
+                G_ev.reverse()
+                # checking that the skeleton wasn't wrongly determined
+                max_deg = max(G)
+                if len(G_ev) != max_deg + 1:
                     return None
-            for deg in G.keys():
-                if pseudomonic:
-                    eval_points[deg].append((G_ev[deg] * pow(lc_ev, i, p)) % p)
-                else:
-                    eval_points[deg].append(G_ev[deg])
-
-        C = {}
-        if monic:
-            for i, (deg, monoms) in enumerate(G.items()):
-                v = lag_basis(all_vand_basis[i], p)
-                s = vandermonde_interp(v, eval_points[deg][:len(v)], p, trans=True)
-                for j, smon in enumerate(monoms):
-
-                    C[smon[0]] = (s[j] * pow(all_vand_basis[i][j], -1, p) ) %p
-            return C
-        else:
-            # building the matrix to determine scaling coeffs
-            mat: list[list[MPZ]] = []
-            zeros = [ZZ.zero] * (z-1)
-            b: list[list[MPZ]] = []
-            for j, evalp in enumerate(eval_points.values()):
-                for r in range(len(mat)):
-                    mat[r] = mat[r][:-(z-1)] + [ZZ.zero]*lengths[j] + mat[r][-(z-1):]
-                row = [ZZ.zero] * sum(lengths[:j])
-                for i in range(z):
-                    new_row = row + [pow(el, i+1, p) for el in all_vand_basis[j]]
-                    if i != 0:
-                        zeros[i-1] = - evalp[i]
-                        new_row += zeros
-                        zeros[i-1] = ZZ.zero
+                for j, el in enumerate(G_ev):
+                    if el != 0 and j not in G.keys():
+                        return None
+                for deg in G.keys():
+                    if pseudomonic:
+                        eval_points[deg].append((G_ev[deg] * pow(lc_ev, i, p)) % p)
                     else:
-                        new_row += zeros
-                    mat.append(new_row)
+                        eval_points[deg].append(G_ev[deg])
 
-                b += [[evalp[0]]] + [[el] for el in zeros]
-
-                # the first matrix will always be underdetermined
-                if j == 0:
-                    continue
-
-                A_m = DomainMatrix.from_list(mat, FF(p))
-                B_m = DomainMatrix.from_list(b, FF(p))
-
-                try:
-                    xnum, xden = A_m.solve_den_rref(B_m)
-                except DMNonInvertibleMatrixError:
-                    continue
-
-                xden_inv = ZZ.invert(ZZ(xden), p)
-                already_sol = j
-                sol = [(int(el) * xden_inv) % p for el in xnum.to_list_flat()]
-                scal_coeffs = [1] + sol[-(z - 1):]
-
+            C = {}
+            if monic:
                 for i, (deg, monoms) in enumerate(G.items()):
-                    if i <= already_sol:
-                        for j, smon in enumerate(monoms):
-                            C[smon[0]] = sol[sum(lengths[:i]) + j]
+                    v = lag_basis(all_vand_basis[i], p)
+                    s = vandermonde_interp(v, eval_points[deg][:len(v)], p, trans=True)
+                    for j, smon in enumerate(monoms):
 
-                    else:
-                        v = lag_basis(all_vand_basis[i], p)
-                        scaled_evalp = []
-                        for x, y in zip(eval_points[deg][:len(v)], scal_coeffs[:len(v)]):
-                            scaled_evalp.append((x * y) % p)
-
-                        s = vandermonde_interp(v, scaled_evalp, p, trans=True)
-                        for j, smon in enumerate(monoms):
-                            C[smon[0]] = (s[j] * ZZ.invert(all_vand_basis[i][j], p) ) %p
+                        C[smon[0]] = (s[j] * pow(all_vand_basis[i][j], -1, p) ) %p
                 return C
+            else:
+                # building the matrix to determine scaling coeffs
+                mat: list[list[MPZ]] = []
+                zeros = [ZZ.zero] * (z_-1)
+                b: list[list[MPZ]] = []
+                for j, evalp in enumerate(eval_points.values()):
+                    for r in range(len(mat)):
+                        mat[r] = mat[r][:-(z_-1)] + [ZZ.zero]*lengths[j] + mat[r][-(z_-1):]
+                    row = [ZZ.zero] * sum(lengths[:j])
+                    for i in range(z_):
+                        new_row = row + [pow(el, i+1, p) for el in all_vand_basis[j]]
+                        if i != 0:
+                            zeros[i-1] = - evalp[i]
+                            new_row += zeros
+                            zeros[i-1] = ZZ.zero
+                        else:
+                            new_row += zeros
+                        mat.append(new_row)
+
+                    b += [[evalp[0]]] + [[el] for el in zeros]
+
+                    # the first matrix will always be underdetermined
+                    if j == 0:
+                        continue
+
+                    A_m = DomainMatrix.from_list(mat, FF(p))
+                    B_m = DomainMatrix.from_list(b, FF(p))
+
+                    data = _solve_scaling_system(A_m, B_m)
+                    if data is None:
+                        break
+                    elif isinstance(data, tuple):
+                        xnum, xden = data
+                    else:
+                        freedom_deg = data
+                        if j == len(eval_points) - 1:
+                            if freedom_deg == _freedom_deg:
+                                unlucky_cont = True
+                                break
+                            else:
+                                z_ = z_ + 1
+                                check = _validate_eval_tuple(t, lc_A, lc_B, G, p, range(z_,z_+1))
+
+                                if check is None:
+                                    bad_tuple = True
+                                    break
+                                # TODO build new matrix without discarding previous eval_points
+                                eval_points = {deg:[] for deg in G.keys()}
+                                _freedom_deg = freedom_deg
+                                break
+                        continue
+                    xden_inv = ZZ.invert(ZZ.convert(xden, FF(p)), p)
+                    already_sol = j
+                    sol = [(int(el) * xden_inv) % p for el in xnum.to_list_flat()]
+                    scal_coeffs = [1] + sol[-(z_ - 1):]
+
+                    for i, (deg, monoms) in enumerate(G.items()):
+                        if i <= already_sol:
+                            for j, smon in enumerate(monoms):
+                                C[smon[0]] = sol[sum(lengths[:i]) + j]
+
+                        else:
+                            v = lag_basis(all_vand_basis[i], p)
+                            scaled_evalp = []
+                            for x, y in zip(eval_points[deg][:len(v)], scal_coeffs[:len(v)]):
+                                scaled_evalp.append((x * y) % p)
+
+                            s = vandermonde_interp(v, scaled_evalp, p, trans=True)
+                            for j, smon in enumerate(monoms):
+                                C[smon[0]] = (s[j] * ZZ.invert(all_vand_basis[i][j], p) ) %p
+                    return C
+            if data is None or unlucky_cont or bad_tuple:
+                break
     return None
