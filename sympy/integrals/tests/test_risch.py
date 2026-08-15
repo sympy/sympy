@@ -959,6 +959,27 @@ def test_risch_integrate_algebraic_branches():
     r = risch_integrate(f, x, algebraic=True)
     assert not r.has(Integral)
     assert deriv_ok(f, r, [-3, 1])
+    # the final vetting classifies positions, not mere occurrence: an
+    # unenumerable constant inside an entire function's argument or as
+    # a numerator factor is safe; inside log or a denominator it is
+    # not, and a RootSum leading coefficient that can vanish under an
+    # assignment silently changes the root set and must be rejected
+    from sympy.integrals.risch import _nontrans_vet
+    from sympy.polys.rootoftools import RootSum
+    DE7 = DifferentialExtension(f, x, algebraic=True)
+    [(s7, _, _)] = DE7.sign_consts
+    assert _nontrans_vet(s7*x + exp(s7*x), DE7)
+    assert not _nontrans_vet(log(s7*x), DE7)
+    assert not _nontrans_vet(1/(x + s7), DE7)
+    assert not _nontrans_vet(exp(x/(x + s7)), DE7)
+    t_ = Symbol('t')
+    bad = RootSum(Poly((s - 1)*t_**5 + t_ + 1, t_),
+                  Lambda(t_, t_*log(x + t_)))
+    good = RootSum(Poly((s + 3)*t_**5 + t_ + 1, t_),
+                   Lambda(t_, t_*log(x + t_)))
+    assert bad.has(RootSum) and good.has(RootSum)
+    assert not _nontrans_vet(bad, DE)
+    assert _nontrans_vet(good, DE)
     # breakpoint sets must be complete: real_roots() isolates the real
     # root of the quintic exactly (roots() cannot express it)
     f = sqrt((x**5 - x - 1)**2)

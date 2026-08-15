@@ -1819,6 +1819,61 @@ def _nontrans_sign_assignments(DE, exprs):
             for combo in product(*values)]
 
 
+def _nontrans_vet(result, DE):
+    """
+    Final check of a sign-carrying result before the ratio constants
+    are substituted back, returning False if the result must be
+    rejected.
+
+    The acceptance filter runs per tower level, but the base case
+    (everything collapsed to a rational function of x and the ratio
+    constants) never reaches it, and ratint() over QQ(s) can divide by
+    s-polynomials that vanish at attained values.  So the total result
+    is vetted under every possible assignment of the ratio constants:
+    the denominator must stay out of the relation kernel, the leading
+    coefficients of RootSum defining polynomials must not vanish
+    (specialization would silently change the root set, which no
+    value check can see), and the assigned result must not evaluate
+    to nan or an infinity.
+
+    Only constants in positions that can turn singular need
+    assigning: denominators at any depth (the top-level one, and
+    those inside function arguments and fractional-power bases, which
+    as_numer_denom() does not see into), arguments of non-entire
+    functions (log(0) is zoo, but no finite exp() argument is
+    singular), exponents, and RootSum defining polynomials.  A
+    constant occurring purely as a numerator polynomial factor cannot
+    produce a singularity.  Nested structures are covered by the
+    atoms() walks being recursive.
+    """
+    den = cancel(result).as_numer_denom()[1]
+    risky = [den]
+    for fn in result.atoms(Function):
+        if isinstance(fn, exp):
+            risky.extend(cancel(arg).as_numer_denom()[1]
+                         for arg in fn.args)
+        else:
+            risky.extend(fn.args)
+    for p in result.atoms(Pow):
+        risky.append(p.exp)
+        if not p.exp.is_Integer:
+            risky.append(cancel(p.base).as_numer_denom()[1])
+    rootsums = list(result.atoms(RootSum))
+    risky.extend(rs.poly.as_expr() for rs in rootsums)
+    assignments = _nontrans_sign_assignments(DE, risky)
+    if assignments is None:
+        return False
+    for sig in assignments:
+        if _nontrans_is_kernel(den.subs(sig), DE):
+            return False
+        if any(_nontrans_is_kernel(rs.poly.LC().subs(sig), DE)
+               for rs in rootsums):
+            return False
+        if result.subs(sig).has(S.NaN, oo, zoo):
+            return False
+    return True
+
+
 def _nontrans_accept(elem, g2, i, a, d, DE, z):
     """
     Acceptance filter for a candidate result of integrate_primitive()
@@ -2426,27 +2481,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             result = result.subs([(o, n) for o, n in DE.backsubs
                                   if o not in sign_symbols])
             if sign_symbols:
-                # The acceptance filter runs per level, but the base
-                # case (everything collapsed to a rational function of
-                # x and the ratio constants) never reaches it, and
-                # ratint() over QQ(s) can divide by s-polynomials that
-                # vanish at attained values.  So vet the total result
-                # under every possible assignment of the ratio
-                # constants before substituting them.  Only constants
-                # in positions that can turn singular need assigning:
-                # the denominator, function arguments (log(0) is zoo),
-                # and exponents -- a constant occurring purely as a
-                # numerator polynomial factor cannot produce one.
-                den = cancel(result).as_numer_denom()[1]
-                risky = [den]
-                risky.extend(arg for fn in result.atoms(Function)
-                             for arg in fn.args)
-                risky.extend(p.exp for p in result.atoms(Pow))
-                assignments = _nontrans_sign_assignments(DE, risky)
-                if assignments is None or any(
-                        _nontrans_is_kernel(den.subs(sig), DE) or
-                        result.subs(sig).has(S.NaN, oo, zoo)
-                        for sig in assignments):
+                if not _nontrans_vet(result, DE):
                     if not separate_integral:
                         return Integral(f, x)
                     return (S.Zero, Integral(f, x))
