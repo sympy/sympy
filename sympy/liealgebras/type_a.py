@@ -1,6 +1,7 @@
 from __future__ import annotations
+
 from sympy.liealgebras.cartan_type import Standard_Cartan
-from sympy.core.backend import eye
+from sympy.core.backend import eye, Matrix
 
 
 class TypeA(Standard_Cartan):
@@ -10,13 +11,13 @@ class TypeA(Standard_Cartan):
     ====
     """
 
-    def __new__(cls, n):
+    def __new__(cls, n: int):
         if n < 1:
             raise ValueError("n cannot be less than 1")
         return Standard_Cartan.__new__(cls, "A", n)
 
 
-    def dimension(self):
+    def dimension(self) -> int:
         """Dimension of the vector space V underlying the Lie algebra
 
         Examples
@@ -30,7 +31,7 @@ class TypeA(Standard_Cartan):
         return self.n+1
 
 
-    def basic_root(self, i, j):
+    def basic_root(self, i: int, j: int) -> list[int]:
         """
         This is a method just to generate roots
         with a 1 iin the ith position and a -1
@@ -44,7 +45,7 @@ class TypeA(Standard_Cartan):
         root[j] = -1
         return root
 
-    def simple_root(self, i):
+    def simple_root(self, i: int) -> list[int]:
         """
         Every lie algebra has a unique root system.
         Given a root system Q, there is a subset of the
@@ -73,7 +74,7 @@ class TypeA(Standard_Cartan):
 
         return self.basic_root(i-1, i)
 
-    def positive_roots(self):
+    def positive_roots(self) -> dict[int, list[int]]:
         """
         This method generates all the positive roots of
         A_n.  This is half of all of the roots of A_n;
@@ -99,21 +100,21 @@ class TypeA(Standard_Cartan):
                 posroots[k] = self.basic_root(i, j)
         return posroots
 
-    def highest_root(self):
+    def highest_root(self) -> list[int]:
         """
         Returns the highest weight root for A_n
         """
 
         return self.basic_root(0, self.n)
 
-    def roots(self):
+    def roots(self) -> int:
         """
         Returns the total number of roots for A_n
         """
         n = self.n
         return n*(n+1)
 
-    def cartan_matrix(self):
+    def cartan_matrix(self) -> Matrix:
         """
         Returns the Cartan matrix for A_n.
         The Cartan matrix matrix for a Lie algebra is
@@ -144,21 +145,21 @@ class TypeA(Standard_Cartan):
         m[n-1, n-2] = -1
         return m
 
-    def basis(self):
+    def basis(self) -> int:
         """
         Returns the number of independent generators of A_n
         """
         n = self.n
         return n**2 - 1
 
-    def lie_algebra(self):
+    def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with A_n
         """
         n = self.n
         return "su(" + str(n + 1) + ")"
 
-    def dynkin_diagram(self):
+    def dynkin_diagram(self) -> str:
         n = self.n
         diag = "---".join("0" for i in range(1, n+1)) + "\n"
         diag += "   ".join(str(i) for i in range(1, n+1))

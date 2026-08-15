@@ -1,16 +1,19 @@
 from __future__ import annotations
+
+from typing import Literal
+
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import Matrix, Rational
 
 
 class TypeF(Standard_Cartan):
 
-    def __new__(cls, n):
+    def __new__(cls, n: Literal[4]):
         if n != 4:
             raise ValueError("n should be 4")
         return Standard_Cartan.__new__(cls, "F", 4)
 
-    def dimension(self):
+    def dimension(self) -> int:
         """Dimension of the vector space V underlying the Lie algebra
 
         Examples
@@ -36,7 +39,7 @@ class TypeF(Standard_Cartan):
         root[j] = -1
         return root
 
-    def simple_root(self, i):
+    def simple_root(self, i: int) -> list[int]:
         """The ith simple root of F_4
 
         Every lie algebra has a unique root system.
@@ -67,8 +70,9 @@ class TypeF(Standard_Cartan):
         if i == 4:
             root = [Rational(-1, 2)]*4
             return root
+        raise ValueError("F_4 has four simple roots")
 
-    def positive_roots(self):
+    def positive_roots(self) -> dict[int, list[int]]:
         """Generate all the positive roots of A_n
 
         This is half of all of the roots of F_4; by multiplying all the
@@ -120,13 +124,13 @@ class TypeF(Standard_Cartan):
         return posroots
 
 
-    def roots(self):
+    def roots(self) -> int:
         """
         Returns the total number of roots for F_4
         """
         return 48
 
-    def cartan_matrix(self):
+    def cartan_matrix(self) -> Matrix:
         """The Cartan matrix for F_4
 
         The Cartan matrix matrix for a Lie algebra is
@@ -151,13 +155,13 @@ class TypeF(Standard_Cartan):
             -1, 2, -1, 0, 0, -1, 2])
         return m
 
-    def basis(self):
+    def basis(self) -> int:
         """
         Returns the number of independent generators of F_4
         """
         return 52
 
-    def dynkin_diagram(self):
+    def dynkin_diagram(self) -> str:
         diag = "0---0=>=0---0\n"
         diag += "   ".join(str(i) for i in range(1, 5))
         return diag
