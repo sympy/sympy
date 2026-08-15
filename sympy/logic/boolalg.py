@@ -2879,8 +2879,8 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
                for a in expr.args):
            return expr
     from sympy.core.relational import Relational
+    variables = expr.atoms(Relational) - {expr}
     if deep:
-        variables = expr.atoms(Relational)
         from sympy.simplify.simplify import simplify
         s = tuple(map(simplify, variables))
         expr = expr.xreplace(dict(zip(variables, s)))
