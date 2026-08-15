@@ -278,6 +278,34 @@ def test_is_log_deriv_k_t_radical():
         ([(t0, 2), (x, 1)], x*t0**2, 2, 3)
 
 
+def test_structure_theorem_guards():
+    # A tower with an unlabeled top monomial (len(exts) < len(D)) is not
+    # supported by the structure theorems.  When every primitive monomial
+    # in it is a logarithm, it is reported as a nonelementary tower.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
+        Poly(t2, t2)], 'exts': [None, 'log'], 'extargs': [None, x]})
+    for func in (is_deriv_k, is_log_deriv_k_t_radical):
+        try:
+            func(Poly(t2, t2), Poly(1, t2), DE)
+        except NotImplementedError as e:
+            assert "Nonelementary extensions" in str(e)
+        else:
+            raise AssertionError("NotImplementedError was not raised")
+
+    # A primitive monomial that is not a logarithm (here an unlabeled
+    # arctangent-like monomial) needs the real version of the structure
+    # theorems instead.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
+        Poly(1/(x**2 + 1), t2)], 'exts': [None, 'log'], 'extargs': [None, x]})
+    for func in (is_deriv_k, is_log_deriv_k_t_radical):
+        try:
+            func(Poly(t2, t2), Poly(1, t2), DE)
+        except NotImplementedError as e:
+            assert "hypertangent" in str(e)
+        else:
+            raise AssertionError("NotImplementedError was not raised")
+
+
 def test_is_deriv_k():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)],
         'exts': [None, 'log', 'log'], 'extargs': [None, x, x + 1]})
