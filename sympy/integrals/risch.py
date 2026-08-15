@@ -28,7 +28,7 @@ from types import GeneratorType
 from functools import reduce
 
 from sympy.core.add import Add
-from sympy.core.function import Lambda
+from sympy.core.function import Function, Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Rational, oo, zoo
@@ -1677,7 +1677,6 @@ def _nontrans_branch_corrections(result, DE):
     region.
     """
     from sympy.core.numbers import pi
-    from sympy.polys.polyroots import roots
 
     x = DE.x
     sign_subs = {s: R for s, R, _ in DE.sign_consts}
@@ -1687,20 +1686,25 @@ def _nontrans_branch_corrections(result, DE):
 
     # Breakpoints: real roots of every factor under a ratio (numerator
     # and denominator -- the ratios jump only where some factor crosses
-    # zero or infinity).  Only exactly-representable, provably-real
-    # roots are usable; others just leave their jump uncorrected.
+    # zero or infinity).  The set must be *complete*: a missing root
+    # would let a side sample cross an unrecognized breakpoint and
+    # certify a nonlocal ratio value, so real_roots() (exact isolation)
+    # is used and every factor must yield its full real-root set or no
+    # correction is attempted at all.
+    from sympy.polys.polyerrors import CoercionFailed, DomainError
     pts = set()
     for _, R, _ in DE.sign_consts:
         for p in R.atoms(Pow):
             for b in p.base.as_numer_denom():
                 if not b.has(x):
                     continue
+                if b.free_symbols != {x}:
+                    return subbed
                 try:
-                    rs = roots(Poly(b, x))
-                except PolynomialError:
-                    continue
-                pts.update(r for r in rs
-                           if r.is_real is True and r.is_comparable)
+                    pts.update(Poly(b, x).real_roots())
+                except (PolynomialError, DomainError, CoercionFailed,
+                        NotImplementedError):
+                    return subbed
     if not pts:
         return subbed
     pts = sorted(pts, key=lambda r: r.evalf(30))
@@ -1778,21 +1782,25 @@ def _nontrans_is_kernel(e, DE):
     return cancel(e) == 0
 
 
-def _nontrans_sign_assignments(DE):
+def _nontrans_sign_assignments(DE, exprs):
     """
-    Every assignment of the branch-ratio constants to their possible
-    root-of-unity values, as a list of substitution dicts ([{}] when
-    there are none), or None if the assignments cannot be enumerated
-    in exact radical-free-of-transcendentals form (a root of unity of
-    high order whose cos/sin do not evaluate, or too many
-    combinations) -- the caller must then reject the candidate, since
-    the per-branch denominator check cannot be run.
+    Every assignment of the branch-ratio constants occurring in
+    ``exprs`` to their possible root-of-unity values, as a list of
+    substitution dicts ([{}] when none occur), or None if the
+    assignments cannot be enumerated in exact
+    radical-free-of-transcendentals form (a root of unity of high
+    order whose cos/sin do not evaluate, or too many combinations) --
+    the caller must then reject the candidate, since the per-branch
+    check cannot be run.  Constants absent from ``exprs`` need no
+    assignment: substituting them cannot change the checked
+    expressions.
     """
     from itertools import product
 
     from sympy.core.numbers import pi
 
-    consts = DE.sign_consts or []
+    consts = [sc for sc in DE.sign_consts or []
+              if any(e.has(sc[0]) for e in exprs)]
     values = []
     for _, _, q in consts:
         vals = []
@@ -1865,14 +1873,14 @@ def _nontrans_accept(elem, g2, i, a, d, DE, z):
         residue_reduce_derivation(g2, DE, z) - i)
     if total != 0:
         return False
-    assignments = _nontrans_sign_assignments(DE)
-    if assignments is None:
-        return False
     checked = [elem, i]
     for qz, sz in g2:
         checked.extend([qz.as_expr(), sz.as_expr()])
-    for e in checked:
-        den = cancel(e).as_numer_denom()[1]
+    dens = [cancel(e).as_numer_denom()[1] for e in checked]
+    assignments = _nontrans_sign_assignments(DE, dens)
+    if assignments is None:
+        return False
+    for den in dens:
         for sig in assignments:
             if _nontrans_is_kernel(den.subs(sig), DE):
                 return False
@@ -2424,12 +2432,19 @@ def risch_integrate(f, x, extension=None, handle_first='log',
                 # ratint() over QQ(s) can divide by s-polynomials that
                 # vanish at attained values.  So vet the total result
                 # under every possible assignment of the ratio
-                # constants before substituting them.
-                assignments = _nontrans_sign_assignments(DE)
+                # constants before substituting them.  Only constants
+                # in positions that can turn singular need assigning:
+                # the denominator, function arguments (log(0) is zoo),
+                # and exponents -- a constant occurring purely as a
+                # numerator polynomial factor cannot produce one.
+                den = cancel(result).as_numer_denom()[1]
+                risky = [den]
+                risky.extend(arg for fn in result.atoms(Function)
+                             for arg in fn.args)
+                risky.extend(p.exp for p in result.atoms(Pow))
+                assignments = _nontrans_sign_assignments(DE, risky)
                 if assignments is None or any(
-                        _nontrans_is_kernel(
-                            cancel(result).as_numer_denom()[1].subs(sig),
-                            DE) or
+                        _nontrans_is_kernel(den.subs(sig), DE) or
                         result.subs(sig).has(S.NaN, oo, zoo)
                         for sig in assignments):
                     if not separate_integral:

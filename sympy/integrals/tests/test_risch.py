@@ -896,7 +896,9 @@ def test_risch_integrate_algebraic_branches():
     # non-kernel is not enough for denominators: s - 1 is formally
     # nonzero (a zero divisor mod s**2 - 1) but the ratio equals 1 on
     # whole regions, so acceptance must check every attainable value
-    assert _nontrans_sign_assignments(DE) == [{s: 1}, {s: -1}]
+    assert _nontrans_sign_assignments(DE, [s - 1]) == [{s: 1}, {s: -1}]
+    # constants absent from the checked expressions need no assignment
+    assert _nontrans_sign_assignments(DE, [x + 1]) == [{}]
     z = Dummy('z')
     assert not _nontrans_accept(1/(s - 1), [], S.Zero,
         Poly(0, DE.t), Poly(1, DE.t), DE, z)
@@ -950,6 +952,19 @@ def test_risch_integrate_algebraic_branches():
     f = 1/(x**2 - x**2*sqrt(x**2 + 2*x + 1)/(x + 1) + 1)
     r = risch_integrate(f, x, algebraic=True)
     assert r == Integral(f, x)
+    # a seventh-root ratio has no exact algebraic roots of unity, but
+    # a constant occurring only as a numerator polynomial factor needs
+    # no assignment, so this must not be over-rejected
+    f = (x**2 + 2*x + 1)**Rational(1, 7)
+    r = risch_integrate(f, x, algebraic=True)
+    assert not r.has(Integral)
+    assert deriv_ok(f, r, [-3, 1])
+    # breakpoint sets must be complete: real_roots() isolates the real
+    # root of the quintic exactly (roots() cannot express it)
+    f = sqrt((x**5 - x - 1)**2)
+    r = risch_integrate(f, x, algebraic=True)
+    assert not r.has(Integral)
+    assert deriv_ok(f, r, [0, 2])
 
 
 def test_risch_integrate():
