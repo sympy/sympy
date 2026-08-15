@@ -31,7 +31,7 @@ from sympy.core.add import Add
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import Float, I, Rational
+from sympy.core.numbers import I, Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -300,10 +300,19 @@ class DifferentialExtension:
                     # first be folded back into newf, or the Dummy leaks
                     # into the final result as a free symbol and the
                     # original notation is never re-encountered by the
-                    # rebuild.
-                    self.newf = self.newf.subs(self.backsubs)
+                    # rebuild.  The branch-ratio constants are the
+                    # exception: their Dummys stay in newf as opaque
+                    # constants, so their mapping must instead survive
+                    # the reset and be re-recorded.
+                    sign_consts = self.sign_consts
+                    ratio_dummies = {s for s, _, _ in sign_consts}
+                    self.newf = self.newf.subs(
+                        [(a, b) for a, b in self.backsubs
+                         if a not in ratio_dummies])
                     self.f = self.newf
                     self.reset()
+                    self.sign_consts = sign_consts
+                    self.backsubs += [(s, R) for s, R, _ in sign_consts]
                     exp_new_extension = True
                     continue
 
@@ -404,6 +413,13 @@ class DifferentialExtension:
                             self.sign_consts.append((s, i/split, i.exp.q))
                             self.backsubs.append((s, i/split))
                             reps[i] = s*split
+                            # results are only generic in s (it is not a
+                            # transcendental constant but a root of
+                            # unity), so even if every radical collapses
+                            # to integer powers the candidates need the
+                            # acceptance filter and nonelementary
+                            # conclusions are invalid
+                            self.transcendental = False
             if reps:
                 self.newf = self.newf.xreplace(reps)
 
@@ -1644,16 +1660,21 @@ def _nontrans_branch_corrections(result, DE):
     jump by a constant where the ratio changes value (the real roots
     and poles of the radicand factors).  Following Jeffrey, Labahn,
     von Mohrenschildt & Rich (Theorem 5), subtracting
-    J*sign(x - r) with J == (G(r+) - G(r-))/2 at each such breakpoint
-    r restores continuity, extending the answer to Jeffrey's domain of
-    maximum extent.  The corrections are locally constant, so they
-    never affect the derivative; every step here is therefore free to
-    give up (unlocatable breakpoints, an unrecognizable ratio value, a
-    singular or infinite jump), leaving the plain substitution, which
-    is already correct on each region.
+    J*(x - r)/sqrt((x - r)**2) with J == (G(r+) - G(r-))/2 at each
+    such breakpoint r restores continuity on the real line, extending
+    the answer to Jeffrey's domain of maximum extent.  The correction
+    factor equals sign(x - r) for real x but, unlike sign, is locally
+    constant on the complex plane away from the vertical line
+    Re(x) == r, so the answer stays an antiderivative at complex
+    points too (off that line -- the same status as any branch cut).
+    The corrections are locally constant, so they never affect the
+    derivative; every step here is therefore free to give up
+    (unlocatable breakpoints, an unrecognizable ratio value, a
+    singular or infinite jump, an uncertifiable sampling offset),
+    leaving the plain substitution, which is already correct on each
+    region.
     """
     from sympy.core.numbers import pi
-    from sympy.functions.elementary.complexes import sign
     from sympy.polys.polyroots import roots
 
     x = DE.x
@@ -1680,13 +1701,13 @@ def _nontrans_branch_corrections(result, DE):
                            if r.is_real is True and r.is_comparable)
     if not pts:
         return subbed
-    pts = sorted(pts, key=lambda r: float(r))
+    pts = sorted(pts, key=lambda r: r.evalf(30))
 
     def ratio_at(R, q, pt):
-        # the ratio's value just left/right of a breakpoint, snapped to
+        # the ratio's value at an exact off-breakpoint point, snapped to
         # an exact q-th root of unity (None if it isn't recognizably one)
         try:
-            v = complex(R.subs(x, Float(pt)).evalf(30))
+            v = complex(R.subs(x, pt).evalf(30))
         except (TypeError, ValueError):
             return None
         best = None
@@ -1698,15 +1719,22 @@ def _nontrans_branch_corrections(result, DE):
         return best[0] if best else None
 
     corrections = []
-    for r in pts:
-        gap = min([1.0] + [abs(float(r) - float(s2))
-                           for s2 in pts if s2 != r])
-        d = Rational(int(gap/4 * 2**20) or 1, 2**20)
+    for idx, r in enumerate(pts):
+        # an exactly-certified sampling offset: r -+ d must not cross
+        # the neighboring breakpoints, or the side values are nonlocal
+        prev_ = pts[idx - 1] if idx else None
+        next_ = pts[idx + 1] if idx + 1 < len(pts) else None
+        for d in (Rational(1, 2)**k for k in range(2, 64)):
+            if ((prev_ is None or (r - d - prev_).is_positive) and
+                    (next_ is None or (next_ - r - d).is_positive)):
+                break
+        else:
+            continue
         left, right = {}, {}
         ok = True
         for s, R, q in DE.sign_consts:
-            vl = ratio_at(R, q, float(r) - d)
-            vr_ = ratio_at(R, q, float(r) + d)
+            vl = ratio_at(R, q, r - d)
+            vr_ = ratio_at(R, q, r + d)
             if vl is None or vr_ is None:
                 ok = False
                 break
@@ -1725,7 +1753,7 @@ def _nontrans_branch_corrections(result, DE):
             # one cannot be corrected by a constant.  Leave the jump:
             # the result is still an antiderivative on each region.
             continue
-        corrections.append(J*sign(x - r))
+        corrections.append(J*(x - r)*Pow((x - r)**2, Rational(-1, 2)))
     return subbed - Add(*corrections)
 
 
@@ -1746,6 +1774,39 @@ def _nontrans_is_kernel(e, DE):
         if e.has(t):
             e = rem(e, r, t)
     return cancel(e) == 0
+
+
+def _nontrans_sign_assignments(DE):
+    """
+    Every assignment of the branch-ratio constants to their possible
+    root-of-unity values, as a list of substitution dicts ([{}] when
+    there are none), or None if the assignments cannot be enumerated
+    in exact radical-free-of-transcendentals form (a root of unity of
+    high order whose cos/sin do not evaluate, or too many
+    combinations) -- the caller must then reject the candidate, since
+    the per-branch denominator check cannot be run.
+    """
+    from itertools import product
+
+    from sympy.core.numbers import pi
+
+    consts = DE.sign_consts or []
+    values = []
+    for _, _, q in consts:
+        vals = []
+        for j in range(q):
+            v = (cos(2*pi*Rational(j, q)) + I*sin(2*pi*Rational(j, q)))
+            if v.has(sin, cos, exp):
+                return None
+            vals.append(v)
+        values.append(vals)
+    n = 1
+    for vals in values:
+        n *= len(vals)
+        if n > 64:
+            return None
+    return [dict(zip([s for s, _, _ in consts], combo))
+            for combo in product(*values)]
 
 
 def _nontrans_accept(elem, g2, i, a, d, DE, z):
@@ -1787,18 +1848,32 @@ def _nontrans_accept(elem, g2, i, a, d, DE, z):
     alone cannot show it, since the kernel factors cancel against the
     argument's derivative).  TODO: a logarithm argument that itself
     evaluates to zero is not detected here.
+
+    The branch-ratio constants need more than the generic kernel test:
+    s**q - 1 is reducible, so its quotient has zero divisors, and a
+    denominator like s - 1 is formally nonzero yet the actual ratio
+    equals 1 on whole regions.  So every denominator is additionally
+    checked under every assignment of the ratio constants to their
+    possible root-of-unity values (conservative: assignments the
+    ratios never attain are not excluded, so this can over-reject,
+    never under-reject).
     """
     lhs = cancel(a.as_expr()/d.as_expr())
     total = cancel(lhs - derivation(elem, DE, basic=True) -
         residue_reduce_derivation(g2, DE, z) - i)
     if total != 0:
         return False
+    assignments = _nontrans_sign_assignments(DE)
+    if assignments is None:
+        return False
     checked = [elem, i]
     for qz, sz in g2:
         checked.extend([qz.as_expr(), sz.as_expr()])
     for e in checked:
-        if _nontrans_is_kernel(cancel(e).as_numer_denom()[1], DE):
-            return False
+        den = cancel(e).as_numer_denom()[1]
+        for sig in assignments:
+            if _nontrans_is_kernel(den.subs(sig), DE):
+                return False
     return True
 
 

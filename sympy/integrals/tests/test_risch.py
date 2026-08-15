@@ -4,7 +4,7 @@ from sympy.core.function import (Function, Lambda, diff, expand_log)
 from sympy.core.numbers import (I, Rational, pi, zoo)
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -857,13 +857,7 @@ def test_risch_integrate_algebraic_branches():
     # every affected region (symbolic zero-testing of radical
     # identities is not reliable enough to use here).
     def deriv_ok(f, r, pts):
-        from sympy import Derivative, sign
         err = r.diff(x) - f
-        # sign() is locally constant and the points avoid its
-        # breakpoints, so its (unevaluatable) derivative is zero there
-        err = err.replace(
-            lambda e: isinstance(e, Derivative) and e.has(sign),
-            lambda e: S.Zero)
         return all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
                    for p in pts)
 
@@ -891,31 +885,64 @@ def test_risch_integrate_algebraic_branches():
 
     # the branch-ratio constants satisfy s**q == 1, and the kernel test
     # must know it: a denominator containing s**q - 1 is actually zero
-    from sympy.integrals.risch import _nontrans_is_kernel
+    from sympy.integrals.risch import (_nontrans_accept,
+        _nontrans_is_kernel, _nontrans_sign_assignments)
     DE = DifferentialExtension(x/sqrt(x**2 - 1), x, algebraic=True)
     [(s, _, q)] = DE.sign_consts
     assert q == 2
     assert _nontrans_is_kernel(s**2 - 1, DE)
     assert not _nontrans_is_kernel(s - 1, DE)
     assert not _nontrans_is_kernel(s, DE)
+    # non-kernel is not enough for denominators: s - 1 is formally
+    # nonzero (a zero divisor mod s**2 - 1) but the ratio equals 1 on
+    # whole regions, so acceptance must check every attainable value
+    assert _nontrans_sign_assignments(DE) == [{s: 1}, {s: -1}]
+    z = Dummy('z')
+    assert not _nontrans_accept(1/(s - 1), [], S.Zero,
+        Poly(0, DE.t), Poly(1, DE.t), DE, z)
+    assert _nontrans_accept(1/(s + 3), [], S.Zero,
+        Poly(0, DE.t), Poly(1, DE.t), DE, z)
 
-    # jump corrections (Jeffrey, Labahn, von Mohrenschildt & Rich):
-    # substituting the ratios back leaves constant jumps at the real
-    # roots and poles of the split factors; a -J*sign(x - r) term
-    # restores continuity there when J is finite and real
-    from sympy import sign
-    r = risch_integrate(3*x**2*sqrt(1 + 1/x**2), x, algebraic=True)
-    assert r.coeff(sign(x)) == -1  # Jeffrey's Example 1, J == 1
+    # jump corrections (Jeffrey, Labahn, von Mohrenschildt & Rich): the
+    # ratio substitution leaves constant jumps at the real roots and
+    # poles of the split factors; a -J*(x - r)/sqrt((x - r)**2) term
+    # (sign(x - r) on the real line, but locally constant on the
+    # complex plane off Re(x) == r) restores continuity there when J
+    # is finite and real
+    def jump(r, bp):
+        eps = Rational(1, 1000)
+        return abs(complex(r.subs(x, bp + eps).evalf(40)) -
+                   complex(r.subs(x, bp - eps).evalf(40)))
+
+    f = 3*x**2*sqrt(1 + 1/x**2)
+    r = risch_integrate(f, x, algebraic=True)
+    assert r.coeff(x*(x**2)**Rational(-1, 2)) == -1  # Example 1, J == 1
+    assert deriv_ok(f, r, [-2, Rational(1, 2), 1 + I])
+    assert jump(r, 0) < 1e-4
     f = sqrt(x**3 + 4*x**2 + 5*x + 2)  # (x + 1)**2*(x + 2)
     r = risch_integrate(f, x, algebraic=True)
-    assert r.coeff(sign(x + 1)) == Rational(4, 15)
     assert deriv_ok(f, r, [Rational(-19, 10), Rational(-3, 2),
-                           Rational(-1, 2), 3])
+                           Rational(-1, 2), 3, 1 + I])
+    assert jump(r, -1) < 1e-4
     # a complex jump (breakpoint at a singularity of the integrand)
     # must not be "corrected": that would make the answer complex on
-    # regions where it is real
+    # regions where it is real -- the discontinuity stays
     r = risch_integrate(sqrt(x**2 + 2*x + 1)/x, x, algebraic=True)
-    assert not r.has(sign)
+    assert jump(r, -1) > 1
+
+    # the _exp_part restart must not lose the branch-ratio state (its
+    # Dummy constants used to leak into the result unsubstituted)
+    f = sqrt(x**2 + 2*x + 1)*(exp(x) + exp(x/2 + 1))
+    r = risch_integrate(f, x, algebraic=True)
+    assert not r.atoms(Dummy)
+    assert deriv_ok(f, r, [-3, 1])
+    # results are only generic in the ratio constants, so collapsed
+    # radicals must not yield nonelementary claims: this integrand is
+    # proportional to s + 1 and vanishes identically where the ratio
+    # is -1, however nonelementary it is elsewhere
+    f = (sqrt(x**2 + 2*x + 1) + x + 1)*exp(x**2)
+    r = risch_integrate(f, x, algebraic=True)
+    assert not r.has(NonElementaryIntegral)
 
 
 def test_risch_integrate():
