@@ -284,6 +284,7 @@ def test_pos_neg():
     assert satask(Q.negative(x), Q.real(x) >> Q.positive(x)) is False
     assert satask(Q.negative(x), Equivalent(Q.real(x), Q.positive(x))) is False
     assert satask(Q.negative(x), Xor(Q.real(x), Q.negative(x))) is False
+    assert satask(Q.positive(x**y), Q.zero(x) & Q.positive(y)) is False
 
 
 def test_pow_pos_neg():
@@ -408,7 +409,9 @@ def test_composite_proposition():
 
 
 # https://github.com/sympy/sympy/pull/30175
-def test_diagonal():
+def test_matrix_predicates():
     X = MatrixSymbol('X', 2, 2)
     assert satask(Q.diagonal(X),
         Q.lower_triangular(X) & Q.upper_triangular(X)) is True
+    assert satask(Q.invertible(X), Q.fullrank(X) & Q.square(X)) is True
+    assert satask(Q.singular(X), ~Q.invertible(X)) is True

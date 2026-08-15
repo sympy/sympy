@@ -35,12 +35,12 @@ def test_invertible():
     assert _ask_recursive(Q.invertible(ZeroMatrix(3, 3))) is False
     assert _ask_recursive(Q.invertible(OneMatrix(1, 1))) is True
     assert _ask_recursive(Q.invertible(OneMatrix(3, 3))) is False
-    assert _ask_recursive(Q.invertible(X), Q.fullrank(X) & Q.square(X)) is None
+    assert ask(Q.invertible(X), Q.fullrank(X) & Q.square(X)) is True
 
 def test_singular():
     assert _ask_recursive(Q.singular(X)) is None
     assert _ask_recursive(Q.singular(X), Q.invertible(X)) is False
-    assert _ask_recursive(Q.singular(X), ~Q.invertible(X)) is None
+    assert ask(Q.singular(X), ~Q.invertible(X)) is True
 
 @XFAIL
 def test_invertible_fullrank():
@@ -293,3 +293,5 @@ def test_queries_require_satask():
     """
     assert _ask_recursive(Q.diagonal(X),
         Q.lower_triangular(X) & Q.upper_triangular(X)) is True
+    assert _ask_recursive(Q.invertible(X), Q.fullrank(X) & Q.square(X)) is True
+    assert _ask_recursive(Q.singular(X), ~Q.invertible(X)) is True

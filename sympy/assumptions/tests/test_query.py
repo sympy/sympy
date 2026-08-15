@@ -1993,7 +1993,7 @@ def test_positive():
     assert _ask_recursive(Q.negative(exp(pi*I, evaluate=False)), Q.imaginary(x)) is True
     assert _ask_recursive(Q.positive(exp(x*pi*I)), Q.even(x)) is True
     assert _ask_recursive(Q.positive(exp(x*pi*I)), Q.odd(x)) is False
-    assert _ask_recursive(Q.positive(x**y), Q.zero(x) & Q.positive(y)) is None
+    assert ask(Q.positive(x**y), Q.zero(x) & Q.positive(y)) is False
     assert _ask_recursive(Q.positive(exp(x*pi*I)), Q.real(x)) is None
     assert _ask_recursive(Q.positive(x**2), Q.real(x)) is None
     assert _ask_recursive(Q.positive(x**y), Q.even(y) & Q.real(x)) is None
@@ -2516,10 +2516,10 @@ def test_custom_AskHandler():
                 return True
         @Q.mersenne.register(Symbol)
         def _(expr, assumptions):
-            if expr in conjuncts(assumptions):
+            if Q.mersenne(expr) in conjuncts(assumptions):
                 return True
         assert _ask_recursive(Q.mersenne(7)) is True
-        assert _ask_recursive(Q.mersenne(n), Q.mersenne(n)) is None
+        assert _ask_recursive(Q.mersenne(n), Q.mersenne(n)) is True
     finally:
         del Q.mersenne
 
@@ -2609,3 +2609,4 @@ def test_queries_require_satask():
     assert _ask_recursive(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
     assert _ask_recursive(Q.real(x) | ~Q.real(x)) is True
     assert _ask_recursive(Q.real(x) & ~Q.real(x)) is False
+    assert _ask_recursive(Q.positive(x**y), Q.zero(x) & Q.positive(y)) is False
