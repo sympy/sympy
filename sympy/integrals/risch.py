@@ -1848,8 +1848,11 @@ def _nontrans_vet(result, DE):
     """
     den = cancel(result).as_numer_denom()[1]
     risky = [den]
+    # entire functions: no finite argument is singular (tan, cot,
+    # coth have poles and atan is singular at +-I, so they stay risky)
+    entire = (exp, sin, cos, sinh, cosh)
     for fn in result.atoms(Function):
-        if isinstance(fn, exp):
+        if isinstance(fn, entire):
             risky.extend(cancel(arg).as_numer_denom()[1]
                          for arg in fn.args)
         else:

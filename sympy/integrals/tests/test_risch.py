@@ -9,7 +9,8 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.hyperbolic import tanh
-from sympy.functions.elementary.trigonometric import (atan, cot, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, cos, cot, sin,
+    tan)
 from sympy.polys.polytools import (Poly, cancel, factor)
 from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import RootSum
@@ -969,9 +970,12 @@ def test_risch_integrate_algebraic_branches():
     DE7 = DifferentialExtension(f, x, algebraic=True)
     [(s7, _, _)] = DE7.sign_consts
     assert _nontrans_vet(s7*x + exp(s7*x), DE7)
+    assert _nontrans_vet(sin(s7*x) + cos(s7*x) + tanh(x)*s7, DE7)
     assert not _nontrans_vet(log(s7*x), DE7)
+    assert not _nontrans_vet(tan(s7*x), DE7)
     assert not _nontrans_vet(1/(x + s7), DE7)
     assert not _nontrans_vet(exp(x/(x + s7)), DE7)
+    assert not _nontrans_vet(sin(x/(x + s7)), DE7)
     t_ = Symbol('t')
     bad = RootSum(Poly((s - 1)*t_**5 + t_ + 1, t_),
                   Lambda(t_, t_*log(x + t_)))
