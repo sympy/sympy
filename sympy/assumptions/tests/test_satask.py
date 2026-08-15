@@ -91,6 +91,19 @@ def test_invertible():
     assert satask(Q.invertible(A) & Q.invertible(B), Q.invertible(A*B)) is True
 
 
+def test_singular():
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 3)
+    # A non-square matrix can never be singular, regardless of invertibility.
+    assert satask(Q.singular(B), ~Q.invertible(B)) is False
+    assert satask(Q.singular(B), ~Q.invertible(B) & ~Q.square(B)) is False
+    assert satask(Q.singular(B)) is False
+    # For square matrices, singular means square and not invertible.
+    assert satask(Q.singular(A), ~Q.invertible(A)) is True
+    assert satask(Q.singular(A), Q.invertible(A)) is False
+    assert satask(Q.singular(A), Q.square(A)) is None
+
+
 def test_prime():
     assert satask(Q.prime(5)) is True
     assert satask(Q.prime(6)) is False
