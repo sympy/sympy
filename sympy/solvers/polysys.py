@@ -872,3 +872,77 @@ def _poly_sort_key(poly):
 def _sys_sort_key(sys):
     """Sort key for lists of polynomials"""
     return list(zip(*map(_poly_sort_key, sys)))
+
+
+def get_irreducible_groebner_bases(eqs, gens=None):
+
+    polys, opts = parallel_poly_from_expr(eqs, gens)
+    domain, orig_gens = opts.domain, opts.gens
+
+    gb = groebner(polys, *orig_gens, domain=domain)
+
+    irreducible_bases = []
+    systems_to_process = [list(gb)]
+    processed_systems = set()
+
+    while systems_to_process:
+        system = systems_to_process.pop()
+
+        system_key = tuple(sorted(str(p) for p in system))
+        if system_key in processed_systems:
+            continue
+        processed_systems.add(system_key)
+
+        factored_output = factor_system_poly(system)
+        factored_systems = [sys for sys in factored_output if not _is_degenerate(sys)]
+
+        if not factored_systems:
+            irreducible_bases.append(system)
+            continue
+
+        if len(factored_systems) == 1 and all(p in factored_systems[0] for p in system) and all(
+            p in system for p in factored_systems[0]):
+            irreducible_bases.append(system)
+            continue
+
+        for sys in factored_systems:
+            if sys:
+                new_gb = groebner(sys, *orig_gens, domain=domain)
+                systems_to_process.append(list(new_gb))
+
+    return remove_redundant_bases(irreducible_bases, orig_gens, domain)
+
+
+def remove_redundant_bases(bases: list[list[Poly]], gens=None, domain=None) -> list[list[Poly]]:
+
+    if not bases:
+        return []
+
+    gb_objs = []
+    for base in bases:
+        gb_objs.append(groebner(base, *gens, domain=domain))
+
+    non_redundant = []
+
+    for i, base1 in enumerate(bases):
+        is_redundant = False
+
+        for j, base2 in enumerate(bases):
+            if i == j:
+                continue
+
+            all_reduced = True
+            for eq in base2:
+                _, remainder = gb_objs[i].reduce(eq)
+                if remainder != 0:
+                    all_reduced = False
+                    break
+
+            if all_reduced:
+                is_redundant = True
+                break
+
+        if not is_redundant:
+            non_redundant.append(base1)
+
+    return non_redundant
