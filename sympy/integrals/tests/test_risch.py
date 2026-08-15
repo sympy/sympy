@@ -192,6 +192,15 @@ def test_laurent_series():
     # Example 2.7.2, first factor: the principal part at t == 2 is 4/(t - 2)
     assert laurent_series(a, d, Poly(t - 2, t), 1, DE)[:2] == \
         (Poly(4, t), Poly(t - 2, t))
+    # Special irreducible factors (p | Dp) admit no inverse of D(F) mod
+    # F, so the construction does not apply (this used to crash with
+    # ExactQuotientFailed)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    raises(NotImplementedError, lambda: laurent_series(
+        Poly(1, t), Poly(t**2, t), Poly(t, t), 2, DE))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    raises(NotImplementedError, lambda: laurent_series(
+        Poly(t, t), Poly((t**2 + 1)**2, t), Poly(t**2 + 1, t), 2, DE))
 
 
 def test_recognize_derivative():
@@ -235,6 +244,21 @@ def test_recognize_derivative():
     # D(1/(t + x)) == -(1 + 1/x)/(t + x)**2 would need it).
     raises(NotImplementedError, lambda: recognize_derivative(
         Poly(-1 - 1/x, t), Poly((t + x)**2, t), DE))
+    # Poles at special primes need residue machinery the Laurent series
+    # construction cannot provide, so they raise too (these used to
+    # crash with ExactQuotientFailed): 1/t**2 with t = exp(x), and
+    # t/(t**2 + 1)**2 with t = tan(x)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    raises(NotImplementedError, lambda: recognize_derivative(
+        Poly(1, t), Poly(t**2, t), DE))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    raises(NotImplementedError, lambda: recognize_derivative(
+        Poly(t, t), Poly((t**2 + 1)**2, t), DE))
+    # ... but a conclusive False from a decidable factor is returned
+    # even in the presence of an undecidable special factor: the simple
+    # pole at t == 2 has a nonzero residue
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    assert recognize_derivative(Poly(1, t), Poly(t*(t - 2), t), DE) == False
 
 
 def test_recognize_log_derivative():
@@ -257,6 +281,16 @@ def test_recognize_log_derivative():
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
     assert recognize_log_derivative(Poly(1, x), Poly(x**2 - 2, x), DE) == False
     assert recognize_log_derivative(Poly(1, x), Poly(x**2 + x, x), DE) == True
+    # If f == Dv/v, the proper part of f is simple, so a non-normal
+    # denominator is conclusive.  These used to wrongly return True
+    # (their Rothstein-Trager resultants are constants, so the integer
+    # root check was vacuous): 1/x**2, 1/t**2 with t = log(x), and
+    # 1/t**2 with t = exp(x) (t special)
+    assert recognize_log_derivative(Poly(1, x), Poly(x**2, x), DE) == False
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    assert recognize_log_derivative(Poly(1, t), Poly(t**2, t), DE) == False
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    assert recognize_log_derivative(Poly(1, t), Poly(t**2, t), DE) == False
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert recognize_log_derivative(Poly(1, t), Poly(t**2 - 2, t), DE) == False
     assert recognize_log_derivative(Poly(1, t), Poly(t**2 + t, t), DE) == False

@@ -1243,7 +1243,10 @@ def laurent_series(a, d, F, n, DE):
     This is ``LaurentSeries`` from Section 2.7 of Bronstein's book.  The
     book's version returns only the sum of the principal parts (so the
     degree 0 case returns the expression 0); ``H`` is additionally
-    returned here for use by ``recognize_derivative()``.
+    returned here for use by ``recognize_derivative()``.  ``F`` may not
+    contain special irreducible factors (p dividing Dp): the
+    construction needs D(F) invertible mod F, so such an ``F`` raises
+    ``NotImplementedError``.
     """
     if F.degree() == 0:
         return (Poly(0, DE.t), Poly(1, DE.t), [])
@@ -1256,6 +1259,14 @@ def laurent_series(a, d, F, n, DE):
     E = d.quo(F**n)
     ha, hd = (a, E*Poly(z**n, DE.t))
     dF = derivation(F,DE)
+    if gcd(F, dF).degree(DE.t) > 0:
+        # F has special irreducible factors (p divides Dp).  The
+        # construction below needs D(F) invertible mod F (the analogue
+        # of gcd(F, F') == 1 for squarefree F in K[x]), so the
+        # principal parts at special primes cannot be computed this
+        # way.
+        raise NotImplementedError("laurent_series() cannot compute the "
+            "principal parts at special primes (gcd(F, DF) != 1).")
     B, _ = gcdex_diophantine(E, F, Poly(1,DE.t))
     C, _ = gcdex_diophantine(dF, F, Poly(1,DE.t))
 
@@ -1319,8 +1330,11 @@ def recognize_derivative(a, d, DE, z=None):
     rational function if and only if Ei = 1 for each i, which is equivalent to
     Di | H[-1] for each i.
 
-    There is no named counterpart in Bronstein's book; this is based on
-    Theorem 2.7.1 (Section 2.7) via ``LaurentSeries``.
+    This is the first derivative-recognition criterion from Section 2.9
+    of Bronstein's book (stated there for K(x)), via Theorem 2.7.1
+    (Section 2.7) and ``LaurentSeries``.  The generalization to monomial
+    extensions is only justified at primes with constant roots that are
+    not special; poles at other primes raise ``NotImplementedError``.
     """
     flag = True
     a, d = a.cancel(d, include=True)
@@ -1334,11 +1348,26 @@ def recognize_derivative(a, d, DE, z=None):
         # (nu_p(Dv) == nu_p(v) - 1 <= -2 for any pole of Dv at a normal p),
         # so f is not the derivative of a rational function.
         return False
+    undecidable_special = []
     for s, n in Sp:
-        delta_a, delta_d, H = laurent_series(r, d, s, n, DE)
-        if not H[-1].rem(s.as_poly(DE.t)).is_zero:  # Di does not divide H[-1]
-            # A conclusive False from a special factor stands regardless
-            # of any undecidable normal factors, so check these first.
+        sp = s.as_poly(DE.t)
+        # Special irreducible factors (p divides Dp): the Laurent
+        # series machinery cannot compute the principal parts there,
+        # so set them aside (for a squarefree s, the special part is
+        # exactly gcd(s, Ds)), decide every other factor first (a
+        # conclusive False stands), and raise only if none of them
+        # settles the question.
+        s_special = gcd(sp, derivation(sp, DE)).as_poly(DE.t)
+        if s_special.degree(DE.t) > 0:
+            undecidable_special.append(s_special)
+            sp = sp.quo(s_special)
+            if sp.degree(DE.t) == 0:
+                continue
+        delta_a, delta_d, H = laurent_series(r, d, sp, n, DE)
+        if not H[-1].rem(sp).is_zero:  # Di does not divide H[-1]
+            # A conclusive False from a decidable factor stands
+            # regardless of any undecidable factors, so check these
+            # first.
             flag = False
             break
     else:
@@ -1351,21 +1380,30 @@ def recognize_derivative(a, d, DE, z=None):
             raise NotImplementedError("recognize_derivative() cannot decide "
                 "residue vanishing at nonconstant poles of order greater "
                 "than 1.")
+        if undecidable_special:
+            raise NotImplementedError("recognize_derivative() cannot decide "
+                "residue vanishing at special primes.")
     return flag
 
 
 def recognize_log_derivative(a, d, DE, z=None):
     """
-    There exists a v in K(x)* such that f = dv/v
-    where f a rational function if and only if f can be written as f = A/D
-    where D is squarefree,deg(A) < deg(D), gcd(A, D) = 1,
-    and all the roots of the Rothstein-Trager resultant are integers. In that case,
-    any of the Rothstein-Trager, Lazard-Rioboo-Trager or Czichowski algorithm
-    produces u in K(x) such that du/dx = uf.
+    Necessary conditions for f == a/d to be Dv/v for some v in k(t)*.
 
-    This is the in-field logarithmic derivative problem from Section 5.12
-    of Bronstein's book (the "Recognizing Logarithmic Derivatives"
-    subsection; neither edition gives it as named pseudocode).
+    Explanation
+    ===========
+
+    If f == Dv/v for v in k(t)*, then the proper part of f is simple
+    (its denominator is normal) and all the roots of its
+    Rothstein-Trager resultant are integers (Section 5.12 of
+    Bronstein's book, the "Recognizing Logarithmic Derivatives"
+    subsection; neither edition gives it as named pseudocode).  This
+    function checks exactly those conditions, so False is conclusive
+    (f is not a logarithmic derivative), while True is not: the
+    polynomial part of f is discarded unexamined (deciding it requires
+    the recursive and parametric machinery of Section 5.12), which
+    makes this a sound cheap filter to run before the full parametric
+    logarithmic derivative problem.
     """
 
     z = z or Dummy('z')
@@ -1374,6 +1412,11 @@ def recognize_log_derivative(a, d, DE, z=None):
 
     pz = Poly(z, DE.t)
     Dd = derivation(d, DE)
+    if gcd(d, Dd).degree(DE.t) > 0:
+        # If f == Dv/v, the denominator of the proper part of f is
+        # normal (squarefree and coprime with its derivative), so a
+        # non-normal denominator is conclusive.
+        return False
     q = a - pz*Dd
     r, _ = d.resultant(q, includePRS=True)
     r = Poly(r, z)
@@ -1769,7 +1812,7 @@ def integrate_hypertangent_polynomial(p, DE):
 
     Given a differential field k such that sqrt(-1) is not in k, a
     hypertangent monomial t over k, and p in k[t], return q in k[t] and
-    c in k such that p - Dq - c*D(t**2 + 1)/(t**1 + 1) is in k and p -
+    c in k such that p - Dq - c*D(t**2 + 1)/(t**2 + 1) is in k and p -
     Dq does not have an elementary integral over k(t) if Dc != 0.
 
     This is ``IntegrateHypertangentPolynomial`` from Section 5.10 of

@@ -274,8 +274,6 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     This is ``RdeSpecialDenomExp`` and ``RdeSpecialDenomTan`` from Section
     6.2 of Bronstein's book.
     """
-    # TODO: finish writing this and write tests
-
     if case == 'auto':
         case = DE.case
 
@@ -340,8 +338,6 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     ``RdeBoundDegreeExp``, and ``RdeBoundDegreeNonLinear`` from Section 6.3
     of Bronstein's book (and their parametric analogues from Section 7.1).
     """
-    # TODO: finish writing this and write tests
-
     if case == 'auto':
         case = DE.case
 
