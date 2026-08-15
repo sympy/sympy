@@ -169,8 +169,9 @@ class DifferentialExtension:
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
     __slots__ = ('f', 'origf', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs',
-        'backsubs', 'exts', 'extargs', 'cases', 'case', 'transcendental',
-        't', 'd', 'newf', 'level', 'ts', 'dummy', 'algebraic')
+            'backsubs', 'exts', 'extargs', 'cases', 'case', 'transcendental',
+            't', 'd', 'newf', 'level', 'ts', 'dummy', 'algebraic',
+            'sign_consts')
 
     def __init__(self, f=None, x=None, handle_first='log',
             dummy=False, extension=None, rewrite_complex=None,
@@ -373,19 +374,35 @@ class DifferentialExtension:
         if self.algebraic:
             # Factor radicands and distribute the fractional power over
             # the factors, so that content like a perfect square does
-            # not become a spurious tower generator.  This chooses
-            # principal branches, like the exp-log representation of
-            # the radicals themselves.
+            # not become a spurious tower generator.  Distributing a
+            # fractional power is not branch-faithful (sqrt(u*v) ==
+            # sqrt(u)*sqrt(v) fails when u and v are both negative), so
+            # unless every factor is provably nonnegative the split is
+            # multiplied by a fresh constant s standing for the exact
+            # branch ratio original/split.  The ratio is locally
+            # constant away from branch points (its logarithmic
+            # derivative vanishes identically) and satisfies s**q == 1,
+            # so s really is a constant of the extension; substituting
+            # it back after integration restores the principal branch
+            # everywhere.
             reps = {}
             for i in self.newf.atoms(Pow):
                 if (i.exp.is_Rational and not i.exp.is_Integer and
                         not i.base.is_Symbol and not isinstance(i.base, exp)):
                     bf = factor(i.base)
                     if bf != i.base and isinstance(bf, (Mul, Pow)):
-                        reps[i] = Mul(*[Pow(b, e*i.exp) for b, e in
-                                        bf.as_powers_dict().items()])
+                        split = Mul(*[Pow(b, e*i.exp) for b, e in
+                                      bf.as_powers_dict().items()])
+                        if all(b.is_nonnegative for b in
+                               bf.as_powers_dict()):
+                            self.backsubs.append((split, i))
+                            reps[i] = split
+                        else:
+                            s = Dummy('s%d' % len(self.sign_consts))
+                            self.sign_consts.append((s, i/split, i.exp.q))
+                            self.backsubs.append((s, i/split))
+                            reps[i] = s*split
             if reps:
-                self.backsubs += [(v, k) for k, v in reps.items()]
                 self.newf = self.newf.xreplace(reps)
 
         # To make the process deterministic, the args are sorted
@@ -783,6 +800,7 @@ class DifferentialExtension:
             # For various things that we change to make things work that we need to
             # change back when we are done.
         self.backsubs = []
+        self.sign_consts = []
         self.Tfuncs = []
         self.newf = self.f
 
@@ -1590,8 +1608,13 @@ def _nontrans_power_relations(DE):
     choices like t1*t2 == 1 for t1 == exp(t0/2), t2 == exp(-t0/2), or
     radicals with dependent arguments.  The kernel test below is then
     incomplete (it can miss actual zeros), though still sound.
+
+    The branch-ratio constants introduced by the radicand splitting are
+    included through their root-of-unity relations s**q == 1 (so that a
+    denominator containing a factor of s**q - 1, formally nonzero but
+    actually zero, is caught).
     """
-    rels = []
+    rels = [(s, s**q - 1) for s, _, q in DE.sign_consts or []]
     for i, ext in enumerate(DE.exts, 1):
         if ext != 'exp':
             continue

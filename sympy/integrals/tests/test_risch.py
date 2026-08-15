@@ -845,6 +845,53 @@ def test_risch_integrate_algebraic():
         algebraic=True) is not None
 
 
+def test_risch_integrate_algebraic_branches():
+    # Distributing a fractional power over the factors of the radicand
+    # is not branch-faithful (sqrt(u*v) != sqrt(u)*sqrt(v) when u and v
+    # are both negative), so the split rides with a branch-ratio
+    # constant that is substituted back after integration.  Each of
+    # these used to come back with a derivative that was wrong on part
+    # of the real line; check the derivative numerically at points in
+    # every affected region (symbolic zero-testing of radical
+    # identities is not reliable enough to use here).
+    def deriv_ok(f, r, pts):
+        err = r.diff(x) - f
+        return all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
+                   for p in pts)
+
+    # square content: wrong for x < -1 before
+    f = sqrt(x**2 + 2*x + 1)/x
+    r = risch_integrate(f, x, algebraic=True)
+    assert r.free_symbols == {x}
+    assert deriv_ok(f, r, [-3, Rational(-1, 2), 2, 1 + I])
+    # distinct factors both negative: wrong for x < -1 before
+    f = x/sqrt(x**2 - 1)
+    r = risch_integrate(f, x, algebraic=True)
+    assert deriv_ok(f, r, [-2, Rational(1, 2), 2, 1 + I])
+    # odd-order radical with square content (Timofeev ch. 0): wrong for
+    # x < 3 before, returning complex values where the integrand is real
+    f = (x**3 - 5*x**2 + 3*x + 9)**Rational(-2, 3)
+    r = risch_integrate(f, x, algebraic=True)
+    assert deriv_ok(f, r, [-2, Rational(1, 2), 4])
+    # a symbolic constant factor extracted from the radicand: wrong
+    # where c and a + b*x are both negative before
+    a, b, c = symbols('a b c')
+    f = 1/sqrt(c*(a + b*x))
+    r = risch_integrate(f, x, algebraic=True)
+    sub = {a: -2, b: 3, c: Rational(-1, 2)}
+    assert deriv_ok(f.subs(sub), r.subs(sub), [-1, Rational(1, 2), 2])
+
+    # the branch-ratio constants satisfy s**q == 1, and the kernel test
+    # must know it: a denominator containing s**q - 1 is actually zero
+    from sympy.integrals.risch import _nontrans_is_kernel
+    DE = DifferentialExtension(x/sqrt(x**2 - 1), x, algebraic=True)
+    [(s, _, q)] = DE.sign_consts
+    assert q == 2
+    assert _nontrans_is_kernel(s**2 - 1, DE)
+    assert not _nontrans_is_kernel(s - 1, DE)
+    assert not _nontrans_is_kernel(s, DE)
+
+
 def test_risch_integrate():
     assert risch_integrate(t0*exp(x), x) == t0*exp(x)
     assert risch_integrate(sin(x), x, rewrite_complex=True) == -exp(I*x)/2 - exp(-I*x)/2
@@ -1058,7 +1105,7 @@ def test_DifferentialExtension_printing():
         "('backsubs', []), ('exts', ['exp', 'log']), ('extargs', [x**2, t0 + 1]), "
         "('cases', ['base', 'exp', 'primitive']), ('case', 'primitive'), ('transcendental', True), ('t', t1), "
         "('d', Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')), ('newf', t0**2 + t1), ('level', -1), "
-        "('dummy', False), ('algebraic', False)]))")
+        "('dummy', False), ('algebraic', False), ('sign_consts', [])]))")
 
     assert str(DE) == ("DifferentialExtension({fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), "
         "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
