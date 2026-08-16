@@ -22,7 +22,7 @@ from sympy.core.intfunc import ilcm, igcd
 from sympy.core import Dummy, Add, Mul, Pow, S
 from sympy.core.numbers import oo
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
-    bound_degree, _special_denom_cancel_bound)
+    bound_degree, _special_denom_cancel_bound, _no_cancel_equal_applies)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     residue_reduce, splitfactor, residue_reduce_derivation, DecrementLevel)
 from sympy.polys import Poly, lcm, cancel, sqf_list
@@ -500,9 +500,9 @@ def prde_no_cancel_b_equal(b, Q, n, DE):
     discussion of Section 7.1 of Bronstein's book (neither edition gives
     it as named pseudocode).  If the possible-cancellation degree
     -lc(b)/lc(Dt) is a positive integer at most n, the remaining problem
-    is delegated to the cancellation algorithms via param_poly_rischDE(),
-    which for delta(t) >= 2 are not yet implemented, so this case
-    currently raises NotImplementedError.
+    is delegated to the cancellation algorithms via param_poly_rischDE()
+    (prde_cancel_tan() in the hypertangent case; other nonlinear cases
+    are not implemented and raise NotImplementedError there).
     """
     m = len(Q)
     Q = list(Q)  # updated in place below; do not mutate the caller's list
@@ -721,7 +721,6 @@ def prde_cancel_tan(b0, Q, n, DE):
             for (ua, ud), (va, vd) in R]
     An = An.set_gens(DE.t)
     rp = [Poly(ue + ve*DE.t, DE.t, field=True) for ue, ve in R]
-    r1 = len(rp)
 
     # h == (q - Sum(ej*rj))/p satisfies the same kind of equation with
     # b0 unchanged (b + Dp/p == b0 - (n - 2)*eta*t) and bound n - 2,
@@ -782,7 +781,7 @@ def param_poly_rischDE(a, b, q, n, DE):
 
         elif (DE.d.degree() >= 2 and
               b.degree() == DE.d.degree() - 1 and
-              n > -b.as_poly().LC()/DE.d.as_poly().LC()):
+              _no_cancel_equal_applies(b, n, DE)):
             return prde_no_cancel_b_equal(b, q, n, DE)
 
         else:

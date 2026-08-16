@@ -405,6 +405,32 @@ def test_cancel_tan():
         Poly(x*(t**2 + 1), t)]})
     assert solve_poly_rde(Poly(1 - x*t, t), Poly(x*t**3 + t**2 + 2*x*t, t),
         2, DE) == Poly(t**2, t)
+    # ... including when the ratio only becomes a number after
+    # cancellation ((2*x + 2)/(x + 1) does not auto-simplify, so the
+    # uncancelled dispatch comparison used to raise TypeError)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly((x + 1)*(t**2 + 1), t)]})
+    b = Poly(1 - (2*x + 2)*t, t)
+    q0 = Poly(t**2, t)
+    c = derivation(q0, DE) + b*q0
+    assert solve_poly_rde(b, c, 2, DE) == q0
+    # A ratio that is a nonconstant element of k ((x**2 - 1)/(x - 1)
+    # == x + 1) never equals an integer degree, so no cancellation
+    # occurs and no_cancel_equal() decides the equation (this also
+    # used to raise TypeError from the dispatch comparison)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly((x - 1)*(t**2 + 1), t)]})
+    b = Poly(1 - (x**2 - 1)*t, t)
+    q0 = Poly(t, t)
+    c = derivation(q0, DE) + b*q0
+    assert solve_poly_rde(b, c, 1, DE) == q0
+    # A ratio depending on a parameter of the constant field is still
+    # refused (no_cancel_equal()'s divisions would only be
+    # generically valid)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(t**2 + 1, t)]})
+    raises(TypeError, lambda: solve_poly_rde(Poly(1 - k*t, t),
+        Poly(1, t), 2, DE))
 
 
 def test_rischDE():

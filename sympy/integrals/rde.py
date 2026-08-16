@@ -908,6 +908,36 @@ def cancel_tan(b0, c, n, DE):
     return p*h + r
 
 
+def _no_cancel_equal_applies(b, n, DE):
+    """
+    Whether no_cancel_equal() decides the deg(b) == deg(Dt) - 1 case.
+
+    Explanation
+    ===========
+
+    The possible-cancellation degree is the ratio -lc(b)/lc(Dt),
+    compared after cancellation: the Poly leading coefficients are
+    expanded forms whose quotient does not auto-simplify (e.g.
+    (2*x + 2)/(x + 1)), and an uncancelled comparison with n raises
+    TypeError.  When the ratio is a number, no_cancel_equal() strips
+    the degrees above it, so it applies iff n exceeds the ratio (at
+    or below it, the cancellation algorithms take over).  A ratio
+    that is a nonconstant element of k never equals an integer
+    degree, so no cancellation occurs at any degree and
+    no_cancel_equal() decides the equation for every n.  A ratio
+    depending on parameters of the constant field would make the
+    cancellation degree parameter-dependent and no_cancel_equal()'s
+    divisions only generically valid, so it is refused.
+    """
+    ratio = cancel(-b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC())
+    if ratio.is_number:
+        return n > ratio
+    if ratio.free_symbols <= set(DE.T):
+        return True
+    raise TypeError("-lc(b)/lc(Dt) must be a number or a nonconstant "
+        "element of k in solve_poly_rde().")
+
+
 def solve_poly_rde(b, c, n, DE):
     """
     Solve a Polynomial Risch Differential Equation with degree bound ``n``.
@@ -944,18 +974,7 @@ def solve_poly_rde(b, c, n, DE):
             return h + y
 
     elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t) - 1 and \
-            n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC():
-
-        # A symbolic -lc(b)/lc(Dt) (possible when the constant field
-        # has parameters) would make the cancellation degree u == 0 in
-        # no_cancel_equal() depend on the parameters, and the divisions
-        # by u there would only be generically valid, so refuse it.  A
-        # nonconstant lc(b) with a constant ratio is fine: u is then
-        # lc(Dt)*(N - ratio), a nonzero element of k at every
-        # non-cancellation degree N.
-        if not cancel(-b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC()).is_number:
-            raise TypeError("-lc(b)/lc(Dt) must be a number in "
-                "solve_poly_rde().")
+            _no_cancel_equal_applies(b, n, DE):
 
         R = no_cancel_equal(b, c, n, DE)
 
