@@ -587,14 +587,6 @@ class MinMaxBase(Expr, LatticeOp):
         )
 
     @classmethod
-    def _is_more_extreme(cls, x: Expr, y: Expr) -> Boolean:
-        if cls == Min:
-            return x < y
-        if cls == Max:
-            return x > y
-        raise NotImplementedError(f"Unknown operation: {cls}")
-
-    @classmethod
     def _split_values(cls, values: Iterable[Expr]) -> tuple[set[Expr], set[Expr], set[Expr]]:
         """
         Split an iterable of values into three sets:
