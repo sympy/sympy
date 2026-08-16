@@ -2053,12 +2053,26 @@ def test_sympy__functions__combinatorial__numbers__carmichael():
     assert _test_args(carmichael(x))
 
 
+def test_sympy__functions__combinatorial__numbers__delannoy():
+    from sympy.functions.combinatorial.numbers import delannoy
+    m = symbols('m', integer=True)
+    n = symbols('n', integer=True)
+    assert _test_args(delannoy(m, n))
+
+
 def test_sympy__functions__combinatorial__numbers__divisor_sigma():
     from sympy.functions.combinatorial.numbers import divisor_sigma
     k = symbols('k', integer=True)
     n = symbols('n', integer=True)
     t = divisor_sigma(n, k)
     assert _test_args(t)
+
+
+def test_sympy__functions__combinatorial__numbers__lobb():
+    from sympy.functions.combinatorial.numbers import lobb
+    m = symbols('m', integer=True)
+    n = symbols('n', integer=True)
+    assert _test_args(lobb(m, n))
 
 
 def test_sympy__functions__combinatorial__numbers__fibonacci():
