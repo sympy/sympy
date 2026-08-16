@@ -1055,12 +1055,6 @@ class Integral(AddWithLimits):
                 continue
 
             if not (manual or meijerg or risch):
-                # g(x) = Mul(trig)
-                h = trigintegrate(g, x, conds=conds)
-                if h is not None:
-                    parts.append(coeff * h)
-                    continue
-
                 # g(x) has at least a DiracDelta term
                 h = deltaintegrate(g, x)
                 if h is not None:
@@ -1644,4 +1638,3 @@ def _(expr):
 # Delayed imports
 from .deltafunctions import deltaintegrate
 from .meijerint import meijerint_definite, meijerint_indefinite, _debug
-from .trigonometry import trigintegrate

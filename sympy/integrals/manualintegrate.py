@@ -61,6 +61,8 @@ from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
     legendre, hermite, laguerre, assoc_laguerre, gegenbauer, jacobi,
     OrthogonalPolynomial)
 from sympy.functions.special.zeta_functions import polylog
+from sympy.functions.special.hyper import hyper
+from sympy.functions.combinatorial.factorials import binomial
 from .integrals import Integral
 from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
@@ -448,6 +450,113 @@ class CoshRule(HyperbolicRule):
 
     def eval(self):
         return sinh(self.variable)
+
+
+class TrigPowerRule(AtomicRule):
+    r"""
+    General formula
+    ===============
+    \int sin^n(x) cos^m(x) dx = \frac{\cos^{m - 1}(x) \cos^2(x)^{\frac{1}{2} - \frac{m}{2}} \sin^{n + 1}(x) \, _2F_1\left(\frac{1 - m}{2}, \frac{n + 1}{2}; \frac{n + 3}{2}; \sin^2(x)\right)}{n + 1}
+
+    Integer special cases
+    =============
+    | Condition                | Antiderivative                                                                  |
+    | ------------------------ | ------------------------------------------------------------------------------- |
+    | (m=2r+1) (odd)           | I_{2r+1,n}(x)=\sum_{k=0}^{r}(-1)^k\binom{r}{k}\frac{\sin^{,n+2k+1}x}{n+2k+1}+C  |
+    | (n=2s+1) (odd)           | I_{m,2s+1}(x)=-\sum_{k=0}^{s}(-1)^k\binom{s}{k}\frac{\cos^{,m+2k+1}x}{m+2k+1}+C |
+    | (m=2r,;n=2s) (both even) | I_{2r,2s}(x)=A_0x+\sum_{j=1}^{r+s}A_j\frac{\sin(2jx)}{2j}+C                     |
+
+    A_j = \frac{1}{2^{2r+2s}}\sum_{a=0}^{r}\sum_{b=0}^{s}(-1)^b\binom{r}{a}\binom{s}{b}\left[\binom{a+b}{\frac{a+b-j}{2}}+\binom{a+b}{\frac{a+b+j}{2}}\right]
+    """
+
+    __slots__ = ("n", "m", "a", "b")
+
+    n: Expr
+    m: Expr
+    a: Expr
+    b: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr, m: Expr, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.n = n
+        self.m = m
+        self.a = a
+        self.b = b
+
+    def _C(self, n, k):
+        if k != int(k):
+            return 0
+        k = int(k)
+        if k < 0 or k > n:
+            return 0
+        return binomial(n, k)
+
+    def _A(self, r, s, j):
+        total = 0
+        for a in range(r + 1):
+            for b in range(s + 1):
+                total += (
+                    (-1)**b
+                    * binomial(r, a)
+                    * binomial(s, b)
+                    / 2**(a+b)
+                    * (
+                        self._C(a+b, (a+b-j)/2)
+                        + self._C(a+b, (a+b+j)/2)
+                    )
+                )
+        return total / 2**(r+s)
+
+    def eval(self) -> Expr:
+        n, m = self.n, self.m
+        a, b, = self.a, self.b
+        x = self.variable
+
+        constant_case = x * sin(b)**n * cos(b)**m
+
+        is_either_integer = n.is_integer or m.is_integer
+        is_both_number = n.is_number and m.is_number
+        is_even_with_noninteger = (n.is_even and not m.is_integer) \
+            or (m.is_even and not n.is_integer)
+        if (
+            not is_either_integer
+            or not is_both_number
+            or is_even_with_noninteger
+        ):
+            prefactor = cos(a*x+b)**(m - 1) * (cos(a*x+b)**2)**((1 - m)/2) * \
+                sin(a*x+b)**(n + 1) / (n+1)
+            hypergeo = hyper(((1 - m)/2, (n + 1)/2), ((n + 3)/2,),
+                             sin((a*x+b))**2)
+            result = prefactor * hypergeo / a
+
+        else:
+
+            r = int(m // 2)
+            s = int(n // 2)
+
+            # If both odd, take the smallest
+            if m.is_odd and (not n.is_odd or m < n):
+                terms = [
+                    (-1)**k * binomial(r, k) * sin(a*x+b)**(n + 2*k + 1) / (n + 2*k + 1)
+                    for k in range(r + 1)
+                ]
+                result = Add(*terms)/a
+
+            elif n.is_odd:
+                terms = [
+                    (-1)**k * binomial(s, k) * cos(a*x+b)**(m + 2*k + 1) / (m + 2*k + 1)
+                    for k in range(s + 1)
+                ]
+                result = -Add(*terms)/a
+
+            else:
+                terms = [self._A(r, s, 0) * (a*x+b)/2] + [
+                    self._A(r, s, j) * sin(2*j*(a*x+b)) / (2*j)
+                    for j in range(1, r + s + 1)
+                ]
+                result = Add(*terms) / a
+
+        return Piecewise((result.expand(), Ne(a, 0)), (constant_case, True))
 
 
 class ExpRule(AtomicRule):
@@ -1871,6 +1980,24 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
         return RewriteRule(integrand, symbol, rewritten, steps)
 
 
+def trig_power_rule(integral: IntegralInfo):
+    integrand, symbol = integral
+
+    a_ = Wild('a', exclude=[symbol])
+    b_ = Wild('b', exclude=[symbol])
+    # Avoid negative integer powers, which would lead to singularities in the integrand
+    n_ = Wild('n', exclude=[symbol], properties=[lambda n: not (n.is_integer and n.is_negative) or (n.is_nonnegative)])
+    m_ = Wild('m', exclude=[symbol], properties=[lambda m: not (m.is_integer and m.is_negative) or (m.is_nonnegative)])
+
+    match = integrand.match(sin(a_*symbol+b_)**n_ * cos(a_*symbol+b_)**m_)
+    if not match:
+        return
+
+    n, m, a, b = match[n_], match[m_], match[a_], match[b_]
+
+    return TrigPowerRule(integrand, symbol, n, m, a, b)
+
+
 def quadratic_denom_rule(integral):
     integrand, symbol = integral
     if not integrand.is_rational_function(symbol):
@@ -2722,8 +2849,10 @@ def substitution_rule(integral):
     if substitutions:
         debug("List of Substitution Rules")
         ways = []
-        factored_integrand = integrand.factor()
-        _, denom_integrand = factored_integrand.as_numer_denom()
+        is_rational = integrand.is_rational_function(symbol)
+        if is_rational:
+            factored_integrand = integrand.factor()
+            _, denom_integrand = factored_integrand.as_numer_denom()
         for u_func, c, substituted in substitutions:
             subrule = integral_steps(substituted, u_var)
             count = count + 1
@@ -2739,23 +2868,41 @@ def substitution_rule(integral):
 
                 if denom_c.free_symbols:
                     pieces = []
-                    factors_denom_c = factor_list(denom_c)[1]
-                    for pole, _ in factors_denom_c:
-                        # only substitute poles introduced by the constant c if they were not already poles of the original integrand
-                        if not _if_zero_implies_zero(pole, denom_integrand):
-                            rewritten_integral = manual_subs(factored_integrand, pole, 0)
-                            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten_integral, symbol))
-                            # additional check not to replace a if it is not valid (for example ln(a*x))
-                            if rewritten_integral.has(S.ComplexInfinity, S.Infinity, S.NegativeInfinity, S.NaN):
-                                continue
-                            substep = integral_steps(rewritten_integral, symbol)
-
-                            if substep:
-                                substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
-                                pieces.append((
-                                    substep,
-                                    Eq(pole, 0)
-                                ))
+                    if is_rational:
+                        # only substitute poles introduced by c if they were
+                        # not already poles of the original integrand
+                        factors_denom_c = factor_list(denom_c)[1]
+                        for pole, _ in factors_denom_c:
+                            if not _if_zero_implies_zero(pole, denom_integrand):
+                                rewritten_integral = manual_subs(factored_integrand, pole, 0)
+                                debug("Integral: {} is rewritten with {} on symbol: {}".format(
+                                    integrand, rewritten_integral, symbol))
+                                # additional check not to replace a if it is not valid (for example ln(a*x))
+                                if rewritten_integral.has(S.ComplexInfinity, S.Infinity, S.NegativeInfinity, S.NaN):
+                                    continue
+                                substep = integral_steps(rewritten_integral, symbol)
+                                if substep:
+                                    substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
+                                    pieces.append((substep, Eq(pole, 0)))
+                    else:
+                        # integrand isn't a rational function (e.g. trig/exp of
+                        # a linear argument) -- factor() would mangle its
+                        # arguments and break structural matching, so
+                        # substitute directly into the unfactored integrand
+                        # instead
+                        could_be_zero = Mul.make_args(denom_c)
+                        for pole in could_be_zero:
+                            if not fuzzy_not(pole.is_zero):
+                                rewritten_integral = manual_subs(integrand, pole, 0)
+                                debug("Integral: {} is rewritten with {} on symbol: {}".format(
+                                    integrand, rewritten_integral, symbol))
+                                # additional check not to replace a if it is not valid (for example ln(a*x))
+                                if rewritten_integral.has(S.ComplexInfinity, S.Infinity, S.NegativeInfinity, S.NaN):
+                                    continue
+                                substep = integral_steps(rewritten_integral, symbol)
+                                if substep:
+                                    substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
+                                    pieces.append((substep, Eq(pole, 0)))
                     if pieces:
                         pieces.append((subrule, True))
                         subrule = PiecewiseRule(substituted, symbol, pieces)
@@ -2920,7 +3067,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(euler_substitution_rule)),
+                        null_safe(euler_substitution_rule),
+                        null_safe(trig_power_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
@@ -2929,7 +3077,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
                         null_safe(euler_substitution_rule),
-                        null_safe(trig_cmplx_exp_rule)),
+                        null_safe(trig_cmplx_exp_rule),
+                        null_safe(trig_power_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
