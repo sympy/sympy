@@ -221,6 +221,13 @@ def test_reduce_inequalities_boolean():
     assert reduce_inequalities([Eq(x**2, 0), False]) == False
     assert reduce_inequalities(x**2 >= 0) is S.true  # issue 10196
 
+    # issue 23953: And/Or boolean expressions should be flattened
+    assert reduce_inequalities((x > 0) & (x < 1), x) == \
+        reduce_inequalities([x > 0, x < 1], x)
+    assert reduce_inequalities((x > 0) & Eq(x, 3)) == Eq(x, 3)
+    assert reduce_inequalities((x >= -1) & (x <= 1) & (x > 0), x) == \
+        reduce_inequalities([x >= -1, x <= 1, x > 0], x)
+
 
 def test_reduce_inequalities_multivariate():
     assert reduce_inequalities([Ge(x**2, 1), Ge(y**2, 1)]) == And(
