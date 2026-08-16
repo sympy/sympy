@@ -2291,6 +2291,9 @@ class TensExpr(Expr, ABC):
         free_ind2_igv = [i if i.is_up else -i for i in free_ind2]
 
         if free_ind1:
+            if set(free_ind2_igv) != set(free_ind1_igv):
+                raise ValueError(f"incompatible indices: {free_ind2} and {free_ind1}")
+
             permutation = TensExpr._get_indices_permutation(free_ind2_igv, free_ind1_igv)
             array = permutedims(array, permutation)
             inds = [free_ind2[i] for i in permutation]
