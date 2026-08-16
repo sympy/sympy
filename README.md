@@ -9,17 +9,17 @@
 [![Powered by NumFocus](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
 [![Commits since last release](https://img.shields.io/github/commits-since/sympy/sympy/latest.svg?longCache=true&style=flat-square&logo=git&logoColor=fff)](https://github.com/sympy/sympy/releases)
 
-[![SymPy Banner](https://github.com/sympy/sympy/raw/master/banner.svg)](https://sympy.org/)
+[![SymPy Banner](https://github.com/sympy/sympy/raw/main/banner.svg)](https://sympy.org/)
 
 
-See the [AUTHORS](https://github.com/sympy/sympy/blob/master/AUTHORS) file for the list of authors.
+See the [AUTHORS](https://github.com/sympy/sympy/blob/main/AUTHORS) file for the list of authors.
 
 And many more people helped on the SymPy mailing list, reported bugs,
 helped organize SymPy's participation in the Google Summer of Code, the
 Google Highly Open Participation Contest, Google Code-In, wrote and
 blogged about SymPy...
 
-License: New BSD License (see the [LICENSE](https://github.com/sympy/sympy/blob/master/LICENSE) file for details) covers all
+License: New BSD License (see the [LICENSE](https://github.com/sympy/sympy/blob/main/LICENSE) file for details) covers all
 files in the sympy repository unless stated otherwise.
 
 Our mailing list is at
@@ -127,7 +127,7 @@ To execute all tests, run:
 in the current directory.
 
 For the more fine-grained running of tests or doctests, use `bin/test`
-or respectively `bin/doctest`. The master branch is automatically tested
+or respectively `bin/doctest`. The main branch is automatically tested
 by GitHub Actions.
 
 To test pull requests, use
@@ -211,7 +211,7 @@ place. Ondřej Čertík is still active in the community but is too busy
 with work and family to play a lead development role.
 
 Since then, a lot more people have joined the development and some
-people have also left. You can see the full list in [AUTHORS](https://github.com/sympy/sympy/blob/master/AUTHORS).
+people have also left. You can see the full list in [AUTHORS](https://github.com/sympy/sympy/blob/main/AUTHORS).
 
 The git history goes back to 2007 when development moved from svn to hg.
 To see the history before that point, look at
