@@ -2062,14 +2062,9 @@ def chebyshev_substitution_rule(integral):
     if integrand.is_rational_function(x):
         return None
 
-    a = Wild('a', exclude=[x, 0])
-    b = Wild('b', exclude=[x, 0])
-    n = Wild("n", exclude=[x, 0])
-
     c = S.One
     m = S.Zero
     reference_base = None
-    reference_data = None
     p = S.Zero
 
     for factor in Mul.make_args(integrand):
@@ -2085,21 +2080,26 @@ def chebyshev_substitution_rule(integral):
             m += exponent
             continue
 
-        match_base = base.match(a + b*x**n)
-        if not match_base:
+        if not base.is_Add:
             return None
-        aa, bb, nn = match_base[a], match_base[b], match_base[n]
-        if not nn.is_Rational:
+
+        matched_a, xterm = base.as_independent(x, as_Add=True)
+        if matched_a.is_zero is True or xterm.is_Add:
             return None
+
+        matched_b, xpower = xterm.as_independent(x, as_Add=False)
+        xbase, matched_n = xpower.as_base_exp()
+        if xbase != x or not matched_n.is_Rational or matched_n.is_zero:
+            return None
+
         if reference_base is None:
             reference_base = base
-            reference_data = aa, bb, nn
+            aa, bb, nn = matched_a, matched_b, matched_n
             p = exponent
             continue
 
-        _, _, reference_n = reference_data
         # cannot collect both (1 + x**2)**p and (1 + x**3)**q
-        if nn != reference_n:
+        if matched_n != nn:
             return None
 
         reference_power = Pow(reference_base, exponent)
@@ -2113,13 +2113,12 @@ def chebyshev_substitution_rule(integral):
     if reference_base is None:
         return None
 
-    aa, bb, nn = reference_data
-
     # The collector has proved that the original integrand is equivalent to
     # c*x**m*(aa + bb*x**nn)**p.
     # see issue #30148 for further explanation of the cases below
 
     canonical_integrand = c*x**m*Pow(reference_base, p)
+    _, denominator_c = c.as_numer_denom()
 
     # Case 1a: p is a nonnegative integer
     if p.is_Integer is True and p.is_nonnegative is True:
@@ -2139,8 +2138,6 @@ def chebyshev_substitution_rule(integral):
         u_func = Pow(x, S.One/L)
         transformed = (c*L * u**(L*(m + 1) - 1) * Pow(aa + bb*u**(L*nn), p))
         substep = integral_steps(transformed, u)
-        if substep.contains_dont_know():
-            return None
         return URule(integrand, x, u, u_func, substep)
 
     P = p.p
@@ -2149,26 +2146,18 @@ def chebyshev_substitution_rule(integral):
 
     # Case 2: (m + 1)/n is an integer
     if r.is_Integer is True:
-        degenerate_integrand = c*x**m*Pow(aa, p)
-
-        # The substitution is degenerate when b = 0 (occurs in the denominator below)
-        if bb.is_zero is True:
-            degenerate_substep = integral_steps(degenerate_integrand, x)
-            return RewriteRule(integrand, x, degenerate_integrand, degenerate_substep)
 
         u = Dummy("u")
         u_func = Pow(reference_base, S.One/q)
         transformed = c*S(q)/(bb*nn)*u**(P + q - 1)*Pow((u**q - aa)/bb, r - 1)
         substep = integral_steps(transformed, u)
-
-        if substep.contains_dont_know():
-            return None
-
         general_step = URule(integrand, x, u, u_func, substep)
 
-        if bb.is_zero is False:
+        if _if_zero_implies_zero(bb, denominator_c) or (p.is_negative and _if_zero_implies_zero(bb, reference_base)):
             return general_step
 
+        # The substitution is degenerate when b = 0 (occurs in the denominator above)
+        degenerate_integrand = canonical_integrand.subs(bb, 0)
         degenerate_substep = integral_steps(degenerate_integrand, x)
         degenerate_step = RewriteRule(integrand, x, degenerate_integrand, degenerate_substep)
         return PiecewiseRule(integrand, x, [(degenerate_step, Eq(bb, 0)), (general_step, S.true)])
@@ -2177,27 +2166,18 @@ def chebyshev_substitution_rule(integral):
 
     # Case 3: (m + 1)/n + p is an integer
     if s.is_Integer is True:
-        degenerate_integrand = c*x**m*(bb*x**nn)**p
-
-        # The substitution is degenerate when a = 0 (occurs in the denominator below)
-        if aa.is_zero is True:
-            degenerate_substep = integral_steps(degenerate_integrand, x)
-            return RewriteRule(integrand, x, degenerate_integrand, degenerate_substep)
 
         u = Dummy("u")
         u_func = reference_base**(S.One/q)*x**(-nn/S(q))
         transformed = -c*S(q)/(aa*nn)*u**(P + q - 1)*Pow(aa/(u**q - bb), s + 1)
         substep = integral_steps(transformed, u)
 
-        if substep.contains_dont_know():
-            return None
-
         general_step = URule(integrand, x, u, u_func, substep)
 
-        if aa.is_zero is False:
+        # The substitution is degenerate when a = 0 (occurs in the denominator above)
+        if _if_zero_implies_zero(aa, denominator_c) or (p.is_negative and _if_zero_implies_zero(aa, reference_base)):
             return general_step
-
-        # Do not split (bb*x**nn)**p into bb**p*x**(nn*p)
+        degenerate_integrand = canonical_integrand.subs(aa, 0)
         degenerate_substep = integral_steps(degenerate_integrand, x)
         degenerate_step = RewriteRule(integrand, x, degenerate_integrand, degenerate_substep)
         return PiecewiseRule(integrand, x, [(degenerate_step, Eq(aa, 0)), (general_step, S.true)])
