@@ -946,10 +946,16 @@ def solve_poly_rde(b, c, n, DE):
     elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t) - 1 and \
             n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC():
 
-        # TODO: Is this check necessary, and if so, what should it do if it fails?
-        # b comes from the first element returned from spde()
-        if not b.as_poly(DE.t).LC().is_number:
-            raise TypeError("Result should be a number")
+        # A symbolic -lc(b)/lc(Dt) (possible when the constant field
+        # has parameters) would make the cancellation degree u == 0 in
+        # no_cancel_equal() depend on the parameters, and the divisions
+        # by u there would only be generically valid, so refuse it.  A
+        # nonconstant lc(b) with a constant ratio is fine: u is then
+        # lc(Dt)*(N - ratio), a nonzero element of k at every
+        # non-cancellation degree N.
+        if not cancel(-b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC()).is_number:
+            raise TypeError("-lc(b)/lc(Dt) must be a number in "
+                "solve_poly_rde().")
 
         R = no_cancel_equal(b, c, n, DE)
 

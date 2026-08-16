@@ -397,6 +397,14 @@ def test_cancel_tan():
     # the degree bound appears in the equation itself, so n == oo is
     # not allowed
     raises(ValueError, lambda: cancel_tan(Poly(1, t), Poly(1, t), oo, DE))
+    # A nonconstant eta (Dt == x*(t**2 + 1)) with a constant
+    # -lc(b)/lc(Dt) must pass the symbolic-ratio guard in
+    # solve_poly_rde() (which used to test lc(b) itself):
+    # Dq + (1 - x*t)*q == x*t**3 + t**2 + 2*x*t has the solution t**2
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(x*(t**2 + 1), t)]})
+    assert solve_poly_rde(Poly(1 - x*t, t), Poly(x*t**3 + t**2 + 2*x*t, t),
+        2, DE) == Poly(t**2, t)
 
 
 def test_rischDE():
