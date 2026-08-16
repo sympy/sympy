@@ -45,9 +45,6 @@ def test_latex_printer():
 
 
 def test_vector_pretty_print():
-
-   
-
     # TODO : The pretty print division does not print correctly here:
     # w = alpha * N.x + sin(omega) * N.y + alpha / beta * N.z
 
