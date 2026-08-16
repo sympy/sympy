@@ -2525,10 +2525,14 @@ def risch_integrate(f, x, extension=None, handle_first='log',
                     i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
                 else:
                     i = Integral(i.function.subs(DE.backsubs), *i.limits)
+            leaked = result.free_symbols
+            if isinstance(i, Integral):
+                leaked = leaked | i.function.free_symbols
             if not DE.transcendental and \
-                    result.free_symbols - f.free_symbols - {x}:
+                    leaked - f.free_symbols - {x}:
                 # an internal symbol survived the back-substitutions (a
-                # tower Dummy leaked into a residue term, say); the
+                # tower Dummy leaked into a residue term, say), in the
+                # elementary part or in the residual integrand; the
                 # result is unusable and must not be returned
                 if not separate_integral:
                     return Integral(f, x)
