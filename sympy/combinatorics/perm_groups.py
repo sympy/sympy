@@ -1305,7 +1305,13 @@ class PermutationGroup(Basic):
 
         """
         if not self.base:
-            if self.contains(g):
+            if isinstance(g, Cycle):
+                g = g.list(self._degree)
+            elif isinstance(g, Permutation):
+                g = g.list()
+            if len(g) != self._degree:
+                raise ValueError('g should be the same size as permutations of G')
+            if g == list(range(self._degree)):
                 return 0
             return None
         factors = self.coset_factor(g, True)
