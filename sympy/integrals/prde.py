@@ -489,20 +489,23 @@ def prde_no_cancel_b_equal(b, Q, n, DE):
     ===========
 
     Given a derivation D on k[t] with delta(t) >= 2, n in ZZ, and
-    b, q1, ..., qm in k[t] with deg(b) == delta(t) - 1 and
-    n > -lc(b)/lc(Dt), returns h1, ..., hr in k[t] and a matrix A with
-    coefficients in Const(k) such that if c1, ..., cm in Const(k) and
-    q in k[t] satisfy deg(q) <= n and Dq + b*q == Sum(ci*qi, (i, 1, m)),
-    then q == Sum(dj*hj, (j, 1, r)), where d1, ..., dr in Const(k) and
+    b, q1, ..., qm in k[t] with deg(b) == delta(t) - 1, returns
+    h1, ..., hr in k[t] and a matrix A with coefficients in Const(k)
+    such that if c1, ..., cm in Const(k) and q in k[t] satisfy
+    deg(q) <= n and Dq + b*q == Sum(ci*qi, (i, 1, m)), then
+    q == Sum(dj*hj, (j, 1, r)), where d1, ..., dr in Const(k) and
     A*Matrix([c1, ..., cm, d1, ..., dr]).T == 0.
 
     This implements the "When delta(t) >= 2 and deg(b) == delta(t) - 1"
     discussion of Section 7.1 of Bronstein's book (neither edition gives
-    it as named pseudocode).  If the possible-cancellation degree
-    -lc(b)/lc(Dt) is a positive integer at most n, the remaining problem
-    is delegated to the cancellation algorithms via param_poly_rischDE()
-    (prde_cancel_tan() in the hypertangent case; other nonlinear cases
-    are not implemented and raise NotImplementedError there).
+    it as named pseudocode).  Cancellation is only possible at degree
+    -lc(b)/lc(Dt); if that ratio is a positive integer at most n, the
+    remaining problem at that degree is delegated to the cancellation
+    algorithms via param_poly_rischDE() (prde_cancel_tan() in the
+    hypertangent case; other nonlinear cases are not implemented and
+    raise NotImplementedError there).  In every other case — including
+    a ratio above n, which no solution of degree at most n can attain —
+    the descent through the degrees decides the equation completely.
     """
     m = len(Q)
     Q = list(Q)  # updated in place below; do not mutate the caller's list
