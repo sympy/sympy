@@ -11,7 +11,7 @@ from sympy.core.decorators import call_highest_priority
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.integrals import integrate
-from sympy.tensor.array import Array
+from sympy.tensor.array import Array, permutedims
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensor_heads, \
@@ -2085,6 +2085,11 @@ def test_tensor_replacement_transpose():
     arr = Array(range(2**4)).reshape(2,2,2,2)
     repl = {K(i,j,k,l): arr, L: diag(1, -1)}
     assert expr.replace_with_arrays(repl, [j,k,l,i]) == arr
+
+    expr = K(j, k, l, i)
+    arr = Array(range(2**4)).reshape(2,2,2,2)
+    repl = {K(i,j,k,l): arr, L: diag(1, -1)}
+    assert expr.replace_with_arrays(repl, [j,i,l,k]) == permutedims(arr, [0,3,2,1])
 
     # Transposed replacement array
     repl = {
