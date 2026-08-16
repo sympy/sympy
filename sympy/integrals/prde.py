@@ -20,6 +20,7 @@ from functools import reduce
 
 from sympy.core.intfunc import ilcm, igcd
 from sympy.core import Dummy, Add, Mul, Pow, S
+from sympy.core.numbers import oo
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, _special_denom_cancel_bound)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
@@ -504,6 +505,7 @@ def prde_no_cancel_b_equal(b, Q, n, DE):
     currently raises NotImplementedError.
     """
     m = len(Q)
+    Q = list(Q)  # updated in place below; do not mutate the caller's list
     delta = DE.d.degree(DE.t)
     lam = DE.d.LC()
 
@@ -629,6 +631,111 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     return (H, M)
 
 
+def prde_cancel_tan(b0, Q, n, DE):
+    """
+    Parametric Poly Risch Differential Equation - Cancellation: Tangent case.
+
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], an integer ``n >= 0``, ``b0`` in k
+    (a Poly in DE.t of degree 0), and Q = [q1, ..., qm] in k[t]^m,
+    with Dt/(t**2 + 1) == eta in k and sqrt(-1) not in k(t), return
+    H = [h1, ..., hr] in k[t]^r and a matrix A with m + r columns and
+    constant entries such that Dq + (b0 - n*eta*t)*q ==
+    Sum(ci*qi, (i, 1, m)) has a solution q of degree at most n in
+    k[t] with c1, ..., cm in Const(k) if and only if
+    q == Sum(dj*hj, (j, 1, r)) with d1, ..., dr in Const(k) and
+    (c1, ..., cm, d1, ..., dr) a solution of Ax == 0.
+
+    As in cancel_tan(), ``n`` appears in the equation itself, so it
+    must be a finite integer.
+
+    This is the parametric analogue of cancel_tan()
+    (``PolyRischDECancelTan``, Section 6.6 of Bronstein's book); the
+    book gives no parametric counterpart, so this follows the pattern
+    of the Section 7.1 cancellation discussion applied to the tangent
+    projection: the remainders mod t**2 + 1 of any solution satisfy a
+    parametric coupled differential system over k, and the quotients
+    satisfy the same kind of equation with n - 2 in place of n, whose
+    right hand side generators are the quotients by t**2 + 1 of the
+    original generators and of the residuals of the coupled system's
+    basis (their remainders cancel exactly on the constraint set, so
+    dropping them is what makes the recursion's generators
+    polynomial).
+    """
+    # Delayed import, since cde imports this module at the module
+    # level.
+    from .cde import param_coupled_DE_system
+
+    m = len(Q)
+    if n == oo:
+        raise ValueError("n must be a finite integer in "
+            "prde_cancel_tan().")
+
+    if n < 0:
+        # Only the trivial zero solution is possible: constrain
+        # Sum(ci*qi) == 0.
+        if all(qi.is_zero for qi in Q):
+            return ([], zeros(1, m, DE.t))
+        N = max(qi.degree(DE.t) for qi in Q)
+        M = Matrix(N + 1, m, lambda i, j: Q[j].nth(i), DE.t)
+        A, _ = constant_system(M, zeros(M.rows, 1, DE.t), DE)
+        return ([], A)
+
+    if n == 0:
+        # q is in k, so Dq + b0*q is in k: the coefficients of t**j
+        # for j >= 1 of Sum(ci*qi) must vanish, and the constant
+        # coefficients give a parametric Risch differential equation
+        # over k.
+        with DecrementLevel(DE):
+            b0a, b0d = frac_in(b0.as_expr(), DE.t, field=True)
+            Qy = [frac_in(qi.nth(0), DE.t, field=True) for qi in Q]
+            f, A0 = param_rischDE(b0a, b0d, Qy, DE)
+        H = [Poly(fa.as_expr()/fd.as_expr(), DE.t, field=True)
+            for fa, fd in f]
+        r = len(H)
+        A = A0.set_gens(DE.t)
+        N = max(qi.degree(DE.t) for qi in Q)
+        if N > 0:
+            M = Matrix(N, m, lambda i, j: Q[j].nth(i + 1), DE.t)
+            Ac, _ = constant_system(M, zeros(M.rows, 1, DE.t), DE)
+            A = A.col_join(Ac.row_join(zeros(Ac.rows, r, DE.t)))
+        return (H, A)
+
+    eta = DE.d.exquo(Poly(DE.t**2 + 1, DE.t)).as_expr()
+    p = Poly(DE.t**2 + 1, DE.t)
+    b = Poly(b0.as_expr() - n*eta*DE.t, DE.t)
+
+    # Project mod t - sqrt(-1): with c1i*t + c0i the remainder of qi
+    # by p, the remainder u + v*t of any solution satisfies the
+    # parametric coupled system Du + b0*u + n*eta*v == Sum(ci*c0i),
+    # Dv - n*eta*u + b0*v == Sum(ci*c1i) over k.
+    divs = [qi.div(p) for qi in Q]
+    with DecrementLevel(DE):
+        G = [(frac_in(rem.nth(0), DE.t), frac_in(rem.nth(1), DE.t))
+            for _, rem in divs]
+        R, An = param_coupled_DE_system(frac_in(b0.as_expr(), DE.t),
+            frac_in(-n*eta, DE.t), G, DE)
+        R = [(ua.as_expr()/ud.as_expr(), va.as_expr()/vd.as_expr())
+            for (ua, ud), (va, vd) in R]
+    An = An.set_gens(DE.t)
+    rp = [Poly(ue + ve*DE.t, DE.t, field=True) for ue, ve in R]
+    r1 = len(rp)
+
+    # h == (q - Sum(ej*rj))/p satisfies the same kind of equation with
+    # b0 unchanged (b + Dp/p == b0 - (n - 2)*eta*t) and bound n - 2,
+    # with generators the quotients by p of the qi and of the
+    # residuals -(D(rj) + b*rj); the remainders of the combined right
+    # hand side cancel exactly by the An constraints.
+    Qnew = [quo for quo, _ in divs] + \
+        [-((derivation(rj, DE) + b*rj).div(p)[0]) for rj in rp]
+    H2, M2 = prde_cancel_tan(b0, Qnew, n - 2, DE)
+    H = rp + [p*h for h in H2]
+    M = An.row_join(zeros(An.rows, len(H2), DE.t)).col_join(M2)
+    return (H, M)
+
+
 def param_poly_rischDE(a, b, q, n, DE):
     """Polynomial solutions of a parametric Risch differential equation.
 
@@ -679,12 +786,24 @@ def param_poly_rischDE(a, b, q, n, DE):
             return prde_no_cancel_b_equal(b, q, n, DE)
 
         else:
-            # Liouvillian cases
+            # Cancellation cases
             if DE.case in ('primitive', 'exp'):
                 return prde_cancel_liouvillian(b, q, n, DE)
+            elif DE.case == 'tan':
+                # The cancellation case has b == b0 - n*eta*t with
+                # b0 in k, where n is the degree bound (Section 6.6);
+                # the pipeline reaches this branch in that shape via
+                # prde_no_cancel_b_equal()'s hand-off.
+                eta = DE.d.exquo(Poly(DE.t**2 + 1, DE.t)).as_expr()
+                if n is not oo and b.degree(DE.t) <= 1 and \
+                        cancel(b.nth(1) + n*eta) == 0:
+                    return prde_cancel_tan(Poly(b.nth(0), DE.t), q, n, DE)
+                raise NotImplementedError("The tangent cancellation case "
+                    "requires b == b0 - n*eta*t with b0 in k in "
+                    "param_poly_rischDE().")
             else:
-                raise NotImplementedError("non-linear and hypertangent "
-                        "cases have not yet been implemented")
+                raise NotImplementedError("nonlinear cases have not yet "
+                    "been implemented")
 
     # else: deg(a) > 0
 

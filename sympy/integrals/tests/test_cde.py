@@ -5,8 +5,8 @@ from sympy.polys.polytools import Poly, cancel
 from sympy.simplify.simplify import simplify
 from sympy.integrals.risch import (DifferentialExtension, derivation,
     NonElementaryIntegralException)
-from sympy.integrals.cde import (coupled_DE_system, coupled_DE_cancel_prim,
-    coupled_DE_cancel_exp, coupled_DE_cancel_tan)
+from sympy.integrals.cde import (coupled_DE_system, param_coupled_DE_system,
+    coupled_DE_cancel_prim, coupled_DE_cancel_exp, coupled_DE_cancel_tan)
 
 from sympy.testing.pytest import raises
 from sympy.abc import x, t
@@ -43,6 +43,29 @@ def test_coupled_DE_system():
         (Poly(4 - 4*x, x), one), DE)
     assert cancel(y1a.as_expr()/y1d.as_expr()) == -1
     assert cancel(y2a.as_expr()/y2d.as_expr()) == 2*x + 1
+
+
+def test_param_coupled_DE_system():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    one = Poly(1, x)
+    # The inner system of Example 8.4.1, parametrized:
+    # Du - (4*x - 2)*v == c1*(2 - 8*x**2), Dv + (4*x - 2)*u == c1*(4 - 4*x)
+    # has exactly the solutions (u, v) == c1*(-1, 2*x + 1)
+    H, A = param_coupled_DE_system((Poly(0, x), one), (Poly(4*x - 2, x), one),
+        [((Poly(2 - 8*x**2, x), one), (Poly(4 - 4*x, x), one))], DE)
+    found = False
+    for v in A.nullspace():
+        c1 = v[0].as_expr()
+        u = cancel(sum((v[1 + j]*H[j][0][0]).as_expr()/H[j][0][1].as_expr()
+            for j in range(len(H))))
+        w = cancel(sum((v[1 + j]*H[j][1][0]).as_expr()/H[j][1][1].as_expr()
+            for j in range(len(H))))
+        # each nullspace vector solves the system
+        assert simplify(u.diff(x) - (4*x - 2)*w - c1*(2 - 8*x**2)) == 0
+        assert simplify(w.diff(x) + (4*x - 2)*u - c1*(4 - 4*x)) == 0
+        if c1 == 1 and (u, w) == (-1, 2*x + 1):
+            found = True
+    assert found
 
 
 def test_coupled_DE_cancel_prim():

@@ -9,7 +9,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     parametric_log_deriv, parametric_log_deriv_structure,
     is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
     is_deriv_in_field,
-    prde_cancel_liouvillian)
+    prde_cancel_liouvillian, prde_cancel_tan)
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
@@ -17,7 +17,7 @@ from sympy.testing.pytest import raises
 
 from sympy.core import Add, Dummy
 from sympy.matrices import MutableDenseMatrix
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, oo
 from sympy.functions.elementary.exponential import exp
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -221,10 +221,24 @@ def test_prde_no_cancel_b_equal():
                 sols += 1
     assert sols >= 1
     # When the possible-cancellation degree -lc(b)/lc(Dt) is reached, the
-    # rest is delegated to the cancellation algorithms, which are not yet
-    # implemented for delta(t) >= 2
-    raises(NotImplementedError, lambda: prde_no_cancel_b_equal(
-        Poly(-2*t, t), [Poly(t**4 + 3*t**2, t)], 3, DE))
+    # rest is delegated to the cancellation algorithms (this used to
+    # raise NotImplementedError before prde_cancel_tan() existed):
+    # Dq - 2*t*q == c1*(t**4 + 3*t**2) has the solutions
+    # q == c1*t**3 + d*(t**2 + 1) (t**2 + 1 solves the homogeneous
+    # equation)
+    b = Poly(-2*t, t)
+    Q = [Poly(t**4 + 3*t**2, t)]
+    h, A = prde_no_cancel_b_equal(b, Q, 3, DE)
+    matched = set()
+    for v in A.nullspace():
+        c1 = v[0].as_expr()
+        y = Poly(Add(*[(v[1 + j]*h[j]).as_expr() for j in range(len(h))]),
+            t, field=True)
+        assert cancel((derivation(y, DE) + b*y).as_expr()
+            - c1*(t**4 + 3*t**2)) == 0
+        matched.add((c1, y.as_expr()))
+    assert (1, t**3) in matched
+    assert (0, t**2 + 1) in matched
 
 
 def test_prde_cancel_liouvillian():
@@ -268,6 +282,55 @@ def test_prde_cancel_liouvillian():
                 - Q[0].as_expr()) == 0:
             found = True
     assert found
+
+
+def test_prde_cancel_tan():
+    # t = tan(x)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    b = Poly(1 - t, t)
+    Q = [Poly(t**3 + t**2 - 2*x*t - 2*x, t)]
+
+    def solutions(h, A, b, Q):
+        # Every nullspace vector of A must produce a solution of
+        # Dq + b*q == Sum(ci*qi); return the (c, q) pairs.
+        sols = []
+        for v in A.nullspace():
+            cs = [v[i].as_expr() for i in range(len(Q))]
+            q = Poly(Add(*[(v[len(Q) + j]*h[j]).as_expr()
+                for j in range(len(h))]), t, field=True)
+            lhs = derivation(q, DE) + b*q
+            rhs = Add(*[ci*qi.as_expr() for ci, qi in zip(cs, Q)])
+            assert cancel(lhs.as_expr() - rhs) == 0
+            sols.append((cs, q))
+        return sols
+
+    # The parametric version of Example 6.6.1, reached through the
+    # full param_poly_rischDE() hand-off (the parametric Example
+    # 6.5.3): Dq + (1 - t)*q == c1*(t**3 + t**2 - 2*x*t - 2*x) with
+    # n == 2 has exactly the solutions q == c1*(t**2 - 2*x*t)
+    h, A = param_poly_rischDE(Poly(1, t), b, Q, 2, DE)
+    sols = solutions(h, A, b, Q)
+    assert any(cs == [1] and q.as_expr() == t**2 - 2*x*t for cs, q in sols)
+
+    # Homogeneous solutions are found: D(t**2 + 1) == 2*t*(t**2 + 1),
+    # so q == t**2 + 1 solves Dq - 2*t*q == 0 (b0 == 0, n == 2)
+    b0 = Poly(0, t)
+    h, A = prde_cancel_tan(b0, [Poly(0, t)], 2, DE)
+    sols = solutions(h, A, Poly(-2*t, t), [Poly(0, t)])
+    assert any(q.as_expr() == t**2 + 1 for cs, q in sols)
+
+    # n == 0: q in k, so the t-coefficients of the right hand side
+    # must vanish: Dq + q == c1*(x + 1) + c2*t forces c2 == 0, with
+    # the solution q == c1*x
+    h, A = prde_cancel_tan(Poly(1, t), [Poly(x + 1, t), Poly(t, t)], 0, DE)
+    sols = solutions(h, A, Poly(1, t), [Poly(x + 1, t), Poly(t, t)])
+    assert sols and all(cs[1] == 0 for cs, q in sols)
+    assert any(cs == [1, 0] and q.as_expr() == x for cs, q in sols)
+
+    # The degree bound appears in the equation itself, so n == oo is
+    # not allowed
+    raises(ValueError, lambda: prde_cancel_tan(Poly(1, t), [Poly(1, t)],
+        oo, DE))
 
 
 def test_param_poly_rischDE():

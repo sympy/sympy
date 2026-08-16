@@ -36,10 +36,11 @@ generates a == -1, and the hypertangent case of Section 8.4 requires
 it.
 """
 from sympy.core.numbers import I, oo
+from sympy.polys.polymatrix import PolyMatrix as Matrix
 from sympy.polys.polytools import Poly, cancel
 
 from .prde import (is_deriv_in_field, is_log_deriv_k_t_radical_in_field,
-    parametric_log_deriv, real_imag)
+    parametric_log_deriv, param_rischDE, real_imag)
 from .rde import rischDE
 from .risch import (DecrementLevel, NonElementaryIntegralException,
     derivation, frac_in)
@@ -112,6 +113,80 @@ def coupled_DE_system(f1, f2, g1, g2, DE):
     ya, yd = rischDE(fa, fd, ga, gd, DE)
     y1, y2 = real_imag_expr(ya.as_expr()/yd.as_expr())
     return (frac_in(y1, DE.t, cancel=True), frac_in(y2, DE.t, cancel=True))
+
+
+def param_coupled_DE_system(f1, f2, G, DE):
+    """
+    Solve a Parametric Coupled Differential System.
+
+    Explanation
+    ===========
+
+    Given a derivation D on k(t) with sqrt(-1) not in k(t), f1, f2 in
+    k(t), each given as a tuple (fa, fd) of Polys in DE.t, and G =
+    [(g11, g21), ..., (g1m, g2m)] a list of pairs of such tuples,
+    return H = [(u1, v1), ..., (ur, vr)], a list of pairs of tuples of
+    Polys in DE.t, and a matrix A with m + 2*r' columns (r == 2*r')
+    and constant entries, such that
+
+        Du + f1*u - f2*v == Sum(ci*g1i, (i, 1, m))
+        Dv + f2*u + f1*v == Sum(ci*g2i, (i, 1, m))
+
+    has a solution (u, v) in k(t) x k(t) with c1, ..., cm in Const(k)
+    if and only if (u, v) == Sum(dj*(uj, vj), (j, 1, r)) where d1,
+    ..., dr are in Const(k) and (c1, ..., cm, d1, ..., dr) is a
+    solution of Ax == 0.
+
+    This solves the system through the equivalent parametric Risch
+    differential equation Dy + (f1 + f2*sqrt(-1))*y ==
+    Sum(ci*(g1i + g2i*sqrt(-1))) over k(sqrt(-1))(t) (see
+    coupled_DE_system()), splitting param_rischDE()'s basis and
+    constraint matrix into real and imaginary parts: each complex
+    basis element y == y1 + y2*sqrt(-1) with complex coefficient
+    d == d1 + d2*sqrt(-1) contributes the real basis pairs (y1, y2)
+    (for d1) and (-y2, y1) (for d2), and each complex constraint row
+    A1 + A2*sqrt(-1) splits into the two real rows
+    (A1c, A1d, -A2d) and (A2c, A2d, A1d) over the columns
+    (c, d1's, d2's), using that the ci are real.  There is no
+    counterpart in Bronstein's book.
+    """
+    f1a, f1d = frac_in(f1, DE.t)
+    f2a, f2d = frac_in(f2, DE.t)
+    fa, fd = frac_in(f1a.as_expr()/f1d.as_expr() +
+        I*f2a.as_expr()/f2d.as_expr(), DE.t, cancel=True)
+    Gc = []
+    for g1, g2 in G:
+        g1a, g1d = frac_in(g1, DE.t)
+        g2a, g2d = frac_in(g2, DE.t)
+        Gc.append(frac_in(g1a.as_expr()/g1d.as_expr() +
+            I*g2a.as_expr()/g2d.as_expr(), DE.t, cancel=True))
+    h, A = param_rischDE(fa, fd, Gc, DE)
+
+    m = len(G)
+    rc = len(h)
+    H = []
+    for ya, yd in h:
+        y1, y2 = real_imag_expr(ya.as_expr()/yd.as_expr())
+        H.append((frac_in(y1, DE.t, cancel=True),
+            frac_in(y2, DE.t, cancel=True)))
+    for ya, yd in h:
+        y1, y2 = real_imag_expr(ya.as_expr()/yd.as_expr())
+        H.append((frac_in(-y2, DE.t, cancel=True),
+            frac_in(y1, DE.t, cancel=True)))
+
+    def entry(i, j):
+        if i < A.rows:
+            # Real part of row i: A1c*c + A1d*d1 - A2d*d2 == 0.
+            if j < m + rc:
+                return real_imag_expr(A[i, j].as_expr())[0]
+            return -real_imag_expr(A[i, j - rc].as_expr())[1]
+        # Imaginary part of row i: A2c*c + A2d*d1 + A1d*d2 == 0.
+        i -= A.rows
+        if j < m + rc:
+            return real_imag_expr(A[i, j].as_expr())[1]
+        return real_imag_expr(A[i, j - rc].as_expr())[0]
+
+    return (H, Matrix(2*A.rows, m + 2*rc, entry, DE.t))
 
 
 def coupled_DE_cancel_prim(b1, b2, c1, c2, DE, n):
