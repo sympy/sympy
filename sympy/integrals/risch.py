@@ -499,10 +499,13 @@ class DifferentialExtension:
                     # the principal choice), so this rewrite needs the
                     # same branch-ratio correction as the radicand
                     # split: e.g. it maps sqrt(-w) to I*sqrt(w), which
-                    # has the wrong sign where w < 0
-                    images = dict(zip(reversed(self.T),
+                    # has the wrong sign where w < 0.  Both i and
+                    # newterm live in tower symbols here, and Tfuncs
+                    # images can reference lower generators, so the
+                    # substitutions must be sequential, highest first.
+                    tower_subs = list(zip(reversed(self.T),
                         reversed([f(self.x) for f in self.Tfuncs])))
-                    ratio = i/newterm.xreplace(images)
+                    ratio = (i/newterm).subs(tower_subs)
                     if ratio != 1:
                         s = Dummy('s%d' % len(self.sign_consts))
                         self.sign_consts.append((s, ratio, i.exp.q))
@@ -2522,6 +2525,14 @@ def risch_integrate(f, x, extension=None, handle_first='log',
                     i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
                 else:
                     i = Integral(i.function.subs(DE.backsubs), *i.limits)
+            if not DE.transcendental and \
+                    result.free_symbols - f.free_symbols - {x}:
+                # an internal symbol survived the back-substitutions (a
+                # tower Dummy leaked into a residue term, say); the
+                # result is unusable and must not be returned
+                if not separate_integral:
+                    return Integral(f, x)
+                return (S.Zero, Integral(f, x))
             if not separate_integral:
                 result += i
                 return result

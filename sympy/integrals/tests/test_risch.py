@@ -1001,6 +1001,13 @@ def test_risch_integrate_algebraic_branches():
     f = 1/(sqrt(-3*x - 2)*sqrt(3*x + 2))
     r = risch_integrate(f, x, algebraic=True)
     assert deriv_ok(f, r, [-2, 1])
+    # nested proportional radicands: the ratio is built from tower
+    # symbols whose images reference lower generators, so the
+    # back-substitution must be sequential or a Dummy leaks
+    f = sqrt(log(x))/sqrt(-log(x))
+    r = risch_integrate(f, x, algebraic=True)
+    assert r.free_symbols == {x}
+    assert deriv_ok(f, r, [Rational(1, 2), 2])
 
 
 def test_risch_integrate():
