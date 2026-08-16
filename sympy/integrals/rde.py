@@ -621,7 +621,10 @@ def no_cancel_equal(b, c, n, DE):
     """
     q = Poly(0, DE.t)
     lc = cancel(-b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC())
-    if lc.is_Integer and lc.is_positive:
+    # A cancellation degree above the bound n is unattainable
+    # (solutions have degree at most n), so treat it like a
+    # noninteger ratio: no cancellation at any reachable degree.
+    if lc.is_Integer and lc.is_positive and lc <= n:
         M = lc
     else:
         M = -1
@@ -915,30 +918,31 @@ def _no_cancel_equal_applies(b, n, DE):
     Explanation
     ===========
 
-    Cancellation is only possible at deg(q) == -lc(b)/lc(Dt), so it
-    requires that ratio to be a positive integer no larger than the
-    degree bound n; in every other case no_cancel_equal() decides the
-    equation.  The ratio is compared after cancellation: the Poly
-    leading coefficients are expanded forms whose quotient does not
-    auto-simplify (e.g. (2*x + 2)/(x + 1)), and an uncancelled
-    comparison with n raises TypeError.  When the ratio is a positive
-    integer, no_cancel_equal() strips the degrees above it, so it
-    applies iff n exceeds the ratio (at or below it, the cancellation
-    algorithms take over).  A nonconstant ratio never equals an
-    integer degree, so no cancellation occurs at any degree — but
-    that must hold under every specialization of any parameters of
-    the constant field, since a parameter-dependent cancellation
-    degree would make no_cancel_equal()'s divisions only generically
-    valid.  This is automatic for a ratio free of parameters, and a
-    parameter-mixed ratio is accepted when its denominator is free of
-    the tower variables and its numerator has a positive-degree
-    monomial in them with a (nonzero) numeric coefficient, which
-    survives every specialization; other parameter-dependent ratios
-    are refused.
+    Cancellation is only possible at deg(q) == -lc(b)/lc(Dt), so the
+    cancellation algorithms take over exactly when that ratio is a
+    positive integer equal to the degree bound n (when n exceeds the
+    ratio, no_cancel_equal() strips the degrees above it and hands
+    off at the ratio; when n is below it, or the ratio is not a
+    positive integer at all — including non-real numeric ratios,
+    which admit no ordered comparison — the cancellation degree is
+    unattainable and no_cancel_equal() decides the equation, ignoring
+    it).  The ratio is computed after cancellation: the Poly leading
+    coefficients are expanded forms whose quotient does not
+    auto-simplify (e.g. (2*x + 2)/(x + 1)).  A nonconstant ratio
+    never equals an integer degree, so no cancellation occurs at any
+    degree — but that must hold under every specialization of any
+    parameters of the constant field, since a parameter-dependent
+    cancellation degree would make no_cancel_equal()'s divisions only
+    generically valid.  This is automatic for a ratio free of
+    parameters, and a parameter-mixed ratio is accepted when its
+    denominator is free of the tower variables and its numerator has
+    a positive-degree monomial in them with a (nonzero) numeric
+    coefficient, which survives every specialization; other
+    parameter-dependent ratios are refused.
     """
     ratio = cancel(-b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC())
     if ratio.is_number:
-        return n > ratio or not (ratio.is_Integer and ratio.is_positive)
+        return not (ratio.is_Integer and ratio.is_positive) or n != ratio
     if ratio.free_symbols <= set(DE.T):
         return True
     num, den = ratio.as_numer_denom()

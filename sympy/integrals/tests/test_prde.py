@@ -239,6 +239,22 @@ def test_prde_no_cancel_b_equal():
         matched.add((c1, y.as_expr()))
     assert (1, t**3) in matched
     assert (0, t**2 + 1) in matched
+    # A cancellation degree above the bound n is unattainable, so the
+    # descent runs through N == 0 instead of handing off with a bound
+    # above the caller's: Dq + (1 - 2*t)*q == c1*(-t**2 + t + 1) with
+    # n == 1 has the solutions q == c1*t
+    b = Poly(1 - 2*t, t)
+    Q = [Poly(-t**2 + t + 1, t)]
+    h, A = prde_no_cancel_b_equal(b, Q, 1, DE)
+    matched = set()
+    for v in A.nullspace():
+        c1 = v[0].as_expr()
+        y = Poly(Add(*[(v[1 + j]*h[j]).as_expr() for j in range(len(h))]),
+            t, field=True)
+        assert cancel((derivation(y, DE) + b*y).as_expr()
+            - c1*(-t**2 + t + 1)) == 0
+        matched.add((c1, y.as_expr()))
+    assert (1, t) in matched
 
 
 def test_prde_cancel_liouvillian():

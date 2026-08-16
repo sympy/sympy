@@ -434,6 +434,19 @@ def test_cancel_tan():
     q0 = Poly(t, t, field=True)
     c = derivation(q0, DE) + b*q0
     assert solve_poly_rde(b, c, 1, DE).as_expr() == t
+    # A positive-integer ratio above the degree bound is likewise
+    # unattainable: Dq + (1 - 2*t)*q == -t**2 + t + 1 with n == 1 has
+    # the solution t (this used to raise NotImplementedError from the
+    # cancellation dispatch, and no_cancel_equal() used to turn it
+    # into a false no-solution proof)
+    b = Poly(1 - 2*t, t)
+    assert solve_poly_rde(b, Poly(-t**2 + t + 1, t), 1, DE).as_expr() == t
+    # A non-real numeric ratio (here sqrt(-1)) admits no ordered
+    # comparison with n but can never be a cancellation degree
+    b = Poly(1 - I*t, t)
+    q0 = Poly(t, t)
+    c = derivation(q0, DE) + b*q0
+    assert solve_poly_rde(b, c, 1, DE).as_expr().expand() == t
     # A parameter-mixed ratio whose tower-dependent part survives
     # every specialization (x + k: the coefficient of x is 1) is
     # accepted...

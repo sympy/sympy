@@ -519,7 +519,10 @@ def prde_no_cancel_b_equal(b, Q, n, DE):
     # solve(N*lam + lc(b), y) is nonempty, with the cancellation
     # algorithms handling those special values.
     Mc = cancel(-b.LC()/lam)
-    if Mc.is_Integer and Mc > 0:
+    # A cancellation degree above the bound n is unattainable
+    # (solutions have degree at most n), so treat it like a
+    # noninteger ratio: no cancellation at any reachable degree.
+    if Mc.is_Integer and Mc > 0 and Mc <= n:
         M = int(Mc)
     else:
         M = -1
