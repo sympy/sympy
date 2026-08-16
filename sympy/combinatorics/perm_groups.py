@@ -1188,11 +1188,11 @@ class PermutationGroup(Basic):
         >>> f[0] == tr[0][f1[0]]
         True
 
-        If g is not an element of G then [] is returned:
+        If g is not an element of G then None is returned:
 
         >>> c = Permutation(5, 6, 7)
-        >>> G.coset_factor(c)
-        []
+        >>> G.coset_factor(c) is None
+        True
 
         See Also
         ========
@@ -1200,7 +1200,9 @@ class PermutationGroup(Basic):
         sympy.combinatorics.util._strip
 
         """
-        if isinstance(g, (Cycle, Permutation)):
+        if isinstance(g, Cycle):
+            g = g.list(self._degree)
+        elif isinstance(g, Permutation):
             g = g.list()
         if len(g) != self._degree:
             # this could either adjust the size or return [] immediately
@@ -1219,12 +1221,12 @@ class PermutationGroup(Basic):
                 factors.append(beta)
                 continue
             if beta not in basic_orbits[i]:
-                return []
+                return None
             u = transversals[i][beta]._array_form
             h = _af_rmul(_af_invert(u), h)
             factors.append(beta)
         if h != I:
-            return []
+            return None
         if factor_index:
             return factors
         tr = self.basic_transversals
@@ -1262,6 +1264,8 @@ class PermutationGroup(Basic):
                 return product
 
         f = self.coset_factor(g, True)
+        if f is None:
+            return []
         for i, j in enumerate(f):
             slp = self._transversal_slp[i][j]
             for s in slp:
@@ -1304,18 +1308,8 @@ class PermutationGroup(Basic):
         coset_factor
 
         """
-        if not self.base:
-            if isinstance(g, Cycle):
-                g = g.list(self._degree)
-            elif isinstance(g, Permutation):
-                g = g.list()
-            if len(g) != self._degree:
-                raise ValueError('g should be the same size as permutations of G')
-            if g == list(range(self._degree)):
-                return 0
-            return None
         factors = self.coset_factor(g, True)
-        if not factors:
+        if factors is None:
             return None
         rank = 0
         b = 1
@@ -1772,7 +1766,7 @@ class PermutationGroup(Basic):
             g = Permutation(g, size=self.degree)
         if g in self.generators:
             return True
-        return bool(self.coset_factor(g.array_form, True))
+        return self.coset_factor(g.array_form, True) is not None
 
     @property
     def is_perfect(self):
@@ -2135,7 +2129,7 @@ class PermutationGroup(Basic):
         for g1 in gens1:
             for g2 in gens2:
                 p = _af_rmuln(g1, g2, _af_invert(g1))
-                if not new_self.coset_factor(p, True):
+                if new_self.coset_factor(p, True) is None:
                     return False
         return True
 

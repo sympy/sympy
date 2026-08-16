@@ -288,7 +288,7 @@ def test_coset_factor():
     a = Permutation([0, 2, 1])
     G = PermutationGroup([a])
     c = Permutation([2, 1, 0])
-    assert not G.coset_factor(c)
+    assert G.coset_factor(c) is None
     assert G.coset_rank(c) is None
 
     a = Permutation([2, 0, 1, 3, 4, 5])
@@ -296,7 +296,7 @@ def test_coset_factor():
     g = PermutationGroup([a, b])
     assert g.order() == 360
     d = Permutation([1, 0, 2, 3, 4, 5])
-    assert not g.coset_factor(d.array_form)
+    assert g.coset_factor(d.array_form) is None
     assert not g.contains(d)
     assert Permutation(2) in G
     c = Permutation([1, 0, 2, 3, 5, 4])
@@ -310,7 +310,7 @@ def test_coset_factor():
     assert g.contains(c)
     G = PermutationGroup([Permutation([2, 1, 0])])
     p = Permutation([1, 0, 2])
-    assert G.coset_factor(p) == []
+    assert G.coset_factor(p) is None
 
 
 def test_orbits():
