@@ -2056,6 +2056,11 @@ def test_tensor_replacement_invalid():
     repl = {U(u1): [[1]]}
     raises(ValueError, lambda: expr.replace_with_arrays(repl, [u1, -u2]))
 
+    # mismatch between specified indices and the free indices of the expression
+    expr = A(i)
+    repl = {A(j): [1,2]}
+    raises(ValueError, lambda: expr.replace_with_arrays(repl, indices=[k]))
+
 def test_tensor_replacement_transpose():
     L = TensorIndexType("L")
     i, j, k, l, m = tensor_indices("i j k l m", L)
