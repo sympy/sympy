@@ -1304,6 +1304,10 @@ class PermutationGroup(Basic):
         coset_factor
 
         """
+        if not self.base:
+            if self.contains(g):
+                return 0
+            return None
         factors = self.coset_factor(g, True)
         if not factors:
             return None

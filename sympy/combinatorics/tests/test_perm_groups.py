@@ -255,6 +255,22 @@ def test_coset_rank():
     assert G.coset_unrank(48) is None
     assert G.coset_unrank(G.coset_rank(gens[0])) == gens[0]
 
+    # Trivial groups (order 1, base is [])
+    G_triv = PermutationGroup(Permutation([0, 1, 2]))
+    assert G_triv.order() == 1
+    assert G_triv.base == []
+    assert G_triv.coset_rank(G_triv.identity) == 0
+    assert G_triv.coset_unrank(0) == G_triv.identity
+    assert G_triv.coset_unrank(1) is None
+    assert G_triv.coset_rank(Permutation([1, 0, 2])) is None
+
+    G_triv1 = PermutationGroup(Permutation(0))
+    assert G_triv1.order() == 1
+    assert G_triv1.base == []
+    assert G_triv1.coset_rank(G_triv1.identity) == 0
+    assert G_triv1.coset_unrank(0) == G_triv1.identity
+    assert G_triv1.coset_unrank(1) is None
+
 
 def test_coset_factor():
     a = Permutation([0, 2, 1])
