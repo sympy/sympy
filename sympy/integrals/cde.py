@@ -35,6 +35,8 @@ a with sqrt(a) not in k(t), but the integration algorithm only ever
 generates a == -1, and the hypertangent case of Section 8.4 requires
 it.
 """
+from __future__ import annotations
+
 from sympy.core.numbers import I, oo
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 from sympy.polys.polytools import Poly, cancel

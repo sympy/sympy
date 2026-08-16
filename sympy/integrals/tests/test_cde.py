@@ -1,4 +1,6 @@
 """Most of these tests come from the examples in Bronstein's book."""
+from __future__ import annotations
+
 from sympy.core.numbers import oo
 from sympy.core.singleton import S
 from sympy.polys.polytools import Poly, cancel
