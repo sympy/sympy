@@ -990,6 +990,17 @@ def test_risch_integrate_algebraic_branches():
     r = risch_integrate(f, x, algebraic=True)
     assert not r.has(Integral)
     assert deriv_ok(f, r, [0, 2])
+    # proportional radicands route through the is_deriv_k rewrite,
+    # whose principal log(const) (log(-1) == I*pi) needs the same
+    # branch-ratio correction: sqrt(-w) == I*sqrt(w) has the wrong
+    # sign where w < 0
+    f = sqrt(a + b*x)/sqrt(-a - b*x)
+    r = risch_integrate(f, x, algebraic=True)
+    sub = {a: 2, b: 3}
+    assert deriv_ok(f.subs(sub), r.subs(sub), [-2, 1])
+    f = 1/(sqrt(-3*x - 2)*sqrt(3*x + 2))
+    r = risch_integrate(f, x, algebraic=True)
+    assert deriv_ok(f, r, [-2, 1])
 
 
 def test_risch_integrate():

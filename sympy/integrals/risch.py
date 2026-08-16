@@ -493,6 +493,22 @@ class DifferentialExtension:
                     continue
                 ans, u, const = A
                 newterm = exp(i.exp*(log(const) + u))
+                if i.exp.is_Rational and not i.exp.is_Integer:
+                    # log(base) can differ from log(const) + u by
+                    # 2*pi*I times an integer winding (log(-1) above is
+                    # the principal choice), so this rewrite needs the
+                    # same branch-ratio correction as the radicand
+                    # split: e.g. it maps sqrt(-w) to I*sqrt(w), which
+                    # has the wrong sign where w < 0
+                    images = dict(zip(reversed(self.T),
+                        reversed([f(self.x) for f in self.Tfuncs])))
+                    ratio = i/newterm.xreplace(images)
+                    if ratio != 1:
+                        s = Dummy('s%d' % len(self.sign_consts))
+                        self.sign_consts.append((s, ratio, i.exp.q))
+                        self.backsubs.append((s, ratio))
+                        self.transcendental = False
+                        newterm = s*newterm
                 # Under the current implementation, exp kills terms
                 # only if they are of the form a*log(x), where a is a
                 # Number.  This case should have already been killed by the
@@ -515,6 +531,10 @@ class DifferentialExtension:
             self.newf = self.newf.xreplace({old: newterm})
             if isinstance(newterm, exp):
                 exps.append(newterm)
+            elif isinstance(newterm, Mul):
+                # a branch-ratio constant may ride along; only the exp
+                # factor belongs in the worklist
+                exps.extend(a for a in newterm.args if isinstance(a, exp))
 
         return exps, pows, numpows, sympows, log_new_extension
 
@@ -1694,8 +1714,10 @@ def _nontrans_branch_corrections(result, DE):
     from sympy.polys.polyerrors import CoercionFailed, DomainError
     pts = set()
     for _, R, _ in DE.sign_consts:
-        for p in R.atoms(Pow):
-            for b in p.base.as_numer_denom():
+        pieces = [p.base for p in R.atoms(Pow)]
+        pieces.extend(lg.args[0] for lg in R.atoms(log))
+        for piece in pieces:
+            for b in piece.as_numer_denom():
                 if not b.has(x):
                     continue
                 if b.free_symbols != {x}:
