@@ -21,7 +21,7 @@ from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
 from sympy.core.numbers import Integer
-from sympy.logic.boolalg import And, Or, Boolean
+from sympy.logic.boolalg import And, Or
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
