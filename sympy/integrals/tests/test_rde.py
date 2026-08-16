@@ -424,11 +424,27 @@ def test_cancel_tan():
     q0 = Poly(t, t)
     c = derivation(q0, DE) + b*q0
     assert solve_poly_rde(b, c, 1, DE) == q0
-    # A ratio depending on a parameter of the constant field is still
-    # refused (no_cancel_equal()'s divisions would only be
-    # generically valid)
+    # A numeric ratio that is not a positive integer (here 3/2) can
+    # never be a cancellation degree, so no_cancel_equal() decides
+    # the equation even with n below the ratio (this used to fall
+    # into the cancellation dispatch and raise NotImplementedError)
     DE = DifferentialExtension(extension={'D': [Poly(1, x),
         Poly(t**2 + 1, t)]})
+    b = Poly(1 - Rational(3, 2)*t, t, field=True)
+    q0 = Poly(t, t, field=True)
+    c = derivation(q0, DE) + b*q0
+    assert solve_poly_rde(b, c, 1, DE).as_expr() == t
+    # A parameter-mixed ratio whose tower-dependent part survives
+    # every specialization (x + k: the coefficient of x is 1) is
+    # accepted...
+    b = Poly(1 - (x + k)*t, t)
+    q0 = Poly(t, t, field=True)
+    c = derivation(q0, DE) + b*q0
+    assert solve_poly_rde(b, c, 1, DE).as_expr() == t
+    # ... while a ratio depending only on a parameter of the constant
+    # field is still refused (the cancellation degree would be
+    # parameter-dependent, making no_cancel_equal()'s divisions only
+    # generically valid)
     raises(TypeError, lambda: solve_poly_rde(Poly(1 - k*t, t),
         Poly(1, t), 2, DE))
 

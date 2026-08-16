@@ -915,27 +915,41 @@ def _no_cancel_equal_applies(b, n, DE):
     Explanation
     ===========
 
-    The possible-cancellation degree is the ratio -lc(b)/lc(Dt),
-    compared after cancellation: the Poly leading coefficients are
-    expanded forms whose quotient does not auto-simplify (e.g.
-    (2*x + 2)/(x + 1)), and an uncancelled comparison with n raises
-    TypeError.  When the ratio is a number, no_cancel_equal() strips
-    the degrees above it, so it applies iff n exceeds the ratio (at
-    or below it, the cancellation algorithms take over).  A ratio
-    that is a nonconstant element of k never equals an integer
-    degree, so no cancellation occurs at any degree and
-    no_cancel_equal() decides the equation for every n.  A ratio
-    depending on parameters of the constant field would make the
-    cancellation degree parameter-dependent and no_cancel_equal()'s
-    divisions only generically valid, so it is refused.
+    Cancellation is only possible at deg(q) == -lc(b)/lc(Dt), so it
+    requires that ratio to be a positive integer no larger than the
+    degree bound n; in every other case no_cancel_equal() decides the
+    equation.  The ratio is compared after cancellation: the Poly
+    leading coefficients are expanded forms whose quotient does not
+    auto-simplify (e.g. (2*x + 2)/(x + 1)), and an uncancelled
+    comparison with n raises TypeError.  When the ratio is a positive
+    integer, no_cancel_equal() strips the degrees above it, so it
+    applies iff n exceeds the ratio (at or below it, the cancellation
+    algorithms take over).  A nonconstant ratio never equals an
+    integer degree, so no cancellation occurs at any degree — but
+    that must hold under every specialization of any parameters of
+    the constant field, since a parameter-dependent cancellation
+    degree would make no_cancel_equal()'s divisions only generically
+    valid.  This is automatic for a ratio free of parameters, and a
+    parameter-mixed ratio is accepted when its denominator is free of
+    the tower variables and its numerator has a positive-degree
+    monomial in them with a (nonzero) numeric coefficient, which
+    survives every specialization; other parameter-dependent ratios
+    are refused.
     """
     ratio = cancel(-b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC())
     if ratio.is_number:
-        return n > ratio
+        return n > ratio or not (ratio.is_Integer and ratio.is_positive)
     if ratio.free_symbols <= set(DE.T):
         return True
-    raise TypeError("-lc(b)/lc(Dt) must be a number or a nonconstant "
-        "element of k in solve_poly_rde().")
+    num, den = ratio.as_numer_denom()
+    if not den.has(*DE.T):
+        nump = num.as_poly(*DE.T)
+        if nump is not None and any(coeff.is_number
+                for monom, coeff in nump.terms() if any(monom)):
+            return True
+    raise TypeError("-lc(b)/lc(Dt) must be a number or an element of k "
+        "that stays nonconstant under every specialization of the "
+        "parameters in solve_poly_rde().")
 
 
 def solve_poly_rde(b, c, n, DE):
