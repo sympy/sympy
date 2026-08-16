@@ -817,6 +817,97 @@ def cancel_exp(b, c, n, DE):
     return q
 
 
+def cancel_tan(b0, c, n, DE):
+    """
+    Poly Risch Differential Equation - Cancellation: Tangent case.
+
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], an integer ``n >= 0``, ``b0`` in k, and
+    ``c`` in k[t] with Dt/(t**2 + 1) == eta in k and sqrt(-1) not in
+    k(t), either raise NonElementaryIntegralException, in which case
+    the equation Dq + (b0 - n*eta*t)*q == c has no solution of degree
+    at most n in k[t], or return a solution q in k[t] of this equation
+    with deg(q) <= n.  ``b0`` is a Poly in DE.t (of degree 0).
+
+    Unlike in the primitive and hyperexponential cases, ``n`` must be
+    a finite integer: it appears in the equation itself, and the
+    recursion descends from n by 2 to 0.  The callers get n from
+    bound_degree(), which is always finite in the nonlinear case.
+
+    This is ``PolyRischDECancelTan`` from Section 6.6 of Bronstein's
+    book.  The book's pseudocode returns u + v*t unverified when
+    n == 1; since the t**2 coefficient of Dq + (b0 - eta*t)*q
+    vanishes identically for deg(q) <= 1, a right hand side with a
+    nonzero t**2 coefficient has no solution while the projected
+    coupled system may well be solvable, so the unverified return can
+    produce a wrong answer (e.g. b0 == 1, c == t**2 + 1 returns
+    q == 0).  Here n == 1 runs through the same reduction as n >= 2,
+    and the recursion (at n == -1) verifies that the residual is
+    exactly zero.
+    """
+    # Delayed imports: cde and prde import this module at the module
+    # level.
+    from .cde import coupled_DE_system
+    from .prde import is_deriv_in_field
+
+    if n == oo:
+        raise ValueError("n must be a finite integer in cancel_tan().")
+    if n < 0:
+        if c.is_zero:
+            return c  # return 0
+        raise NonElementaryIntegralException("n < 0 and c != 0 in "
+            "cancel_tan().")
+
+    if n == 0:
+        if c.degree(DE.t) > 0:
+            raise NonElementaryIntegralException("deg(c) > 0 == n in "
+                "cancel_tan().")
+        if b0.is_zero:
+            # Dq == c with q, c in k: in-field integration in k.
+            with DecrementLevel(DE):
+                ca, cd = frac_in(c.nth(0), DE.t)
+                B = is_deriv_in_field(ca, cd, DE)
+                if B is None:
+                    raise NonElementaryIntegralException("c is not the "
+                        "derivative of an element of k in cancel_tan().")
+                va, vd = B
+                q = va.as_expr()/vd.as_expr()
+            return Poly(q, DE.t)
+        with DecrementLevel(DE):
+            b0a, b0d = frac_in(b0.as_expr(), DE.t)
+            ca, cd = frac_in(c.nth(0), DE.t)
+            sa, sd = rischDE(b0a, b0d, ca, cd, DE)
+            s = sa.as_expr()/sd.as_expr()
+        return Poly(s, DE.t)
+
+    eta = DE.d.exquo(Poly(DE.t**2 + 1, DE.t)).as_expr()
+    p = Poly(DE.t**2 + 1, DE.t)
+
+    # Project mod t - sqrt(-1) (evaluate at t == sqrt(-1)): with
+    # c1*t + c0 the remainder of c by p, the constant coefficients
+    # (u, v) of any solution q == u + v*t + p*h satisfy the coupled
+    # system Du + b0*u + n*eta*v == c0, Dv - n*eta*u + b0*v == c1
+    # over k.
+    _, rem = c.div(p)
+    c0, c1 = rem.nth(0), rem.nth(1)
+    with DecrementLevel(DE):
+        u, v = coupled_DE_system(frac_in(b0.as_expr(), DE.t),
+            frac_in(-n*eta, DE.t), frac_in(c0, DE.t), frac_in(c1, DE.t),
+            DE)
+        ue = u[0].as_expr()/u[1].as_expr()
+        ve = v[0].as_expr()/v[1].as_expr()
+    r = Poly(ue + ve*DE.t, DE.t)
+    b = Poly(b0.as_expr() - n*eta*DE.t, DE.t)
+    # h == (q - r)/p solves the same kind of equation with the same
+    # b0 and a degree bound of n - 2 (b + Dp/p == b0 - (n - 2)*eta*t),
+    # and its right hand side is an exact quotient by construction.
+    cnew = (c - derivation(r, DE) - b*r).exquo(p)
+    h = cancel_tan(b0, cnew, n - 2, DE)
+    return p*h + r
+
+
 def solve_poly_rde(b, c, n, DE):
     """
     Solve a Polynomial Risch Differential Equation with degree bound ``n``.
@@ -898,6 +989,19 @@ def solve_poly_rde(b, c, n, DE):
 
             elif DE.case == 'primitive':
                 return cancel_primitive(b, c, n, DE)
+
+            elif DE.case == 'tan':
+                # The cancellation case has b == b0 - n*eta*t with
+                # b0 in k, where n is the degree bound (Section 6.6);
+                # the pipeline reaches this branch in that shape via
+                # no_cancel_equal()'s hand-off.
+                eta = DE.d.exquo(Poly(DE.t**2 + 1, DE.t)).as_expr()
+                if n is not oo and b.degree(DE.t) <= 1 and \
+                        cancel(b.nth(1) + n*eta) == 0:
+                    return cancel_tan(Poly(b.nth(0), DE.t), c, n, DE)
+                raise NotImplementedError("The tangent cancellation case "
+                    "requires b == b0 - n*eta*t with b0 in k in "
+                    "solve_poly_rde().")
 
             else:
                 raise NotImplementedError("Other Poly (P)RDE cancellation "

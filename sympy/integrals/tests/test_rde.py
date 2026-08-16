@@ -9,7 +9,7 @@ from sympy.integrals.risch import (DifferentialExtension, derivation,
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, _special_denom_cancel_bound, bound_degree,
     spde, solve_poly_rde, no_cancel_equal, cancel_primitive, cancel_exp,
-    rischDE)
+    cancel_tan, rischDE)
 
 from sympy.testing.pytest import raises
 from sympy.abc import x, t, z, n
@@ -362,6 +362,41 @@ def test_solve_poly_rde_cancel():
         Poly(x*t, t)
     raises(NonElementaryIntegralException, lambda: solve_poly_rde(
         Poly(0, t), Poly(t/x, t), 1, DE))
+
+
+def test_cancel_tan():
+    # t = tan(x)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    # Example 6.6.1: Dq + (1 - t)*q == -2*(x + 1)*t - 2*x with n == 1
+    # (b0 == 1) has the solution q == -2*x*t
+    assert cancel_tan(Poly(1, t), Poly(-2*(x + 1)*t - 2*x, t), 1, DE) == \
+        Poly(-2*x*t, t)
+    # ... reached from solve_poly_rde() via no_cancel_equal()'s
+    # hand-off (Example 6.5.3), and from rischDE(): equation (6.21),
+    # Dy + (1 - t)*y == t**3 + t**2 - 2*x*t - 2*x, has the solution
+    # y == t**2 - 2*x*t
+    assert solve_poly_rde(Poly(1 - t, t), Poly(t**3 + t**2 - 2*x*t - 2*x, t),
+        2, DE) == Poly(t**2 - 2*x*t, t)
+    ya, yd = rischDE(Poly(1 - t, t), Poly(1, t),
+        Poly(t**3 + t**2 - 2*x*t - 2*x, t), Poly(1, t), DE)
+    assert cancel(ya.as_expr()/yd.as_expr()) == t**2 - 2*x*t
+    # n == 0 with b0 != 0 is a Risch differential equation over k
+    assert cancel_tan(Poly(1, t), Poly(x + 1, t), 0, DE) == Poly(x, t)
+    # n == 0 with b0 == 0 is in-field integration in k
+    assert cancel_tan(Poly(0, t), Poly(2*x, t), 0, DE) == Poly(x**2, t)
+    raises(NonElementaryIntegralException, lambda: cancel_tan(
+        Poly(0, t), Poly(1/x, t), 0, DE))
+    # The book's pseudocode returns u + v*t unverified when n == 1,
+    # which is a wrong answer here: the t**2 coefficient of
+    # Dq + (1 - t)*q vanishes identically for deg(q) <= 1, so
+    # c == t**2 + 1 has no solution, while the projected coupled
+    # system is solvable (by (u, v) == (0, 0), so the book returns
+    # q == 0 with Dq + (1 - t)*q == 0 != c)
+    raises(NonElementaryIntegralException, lambda: cancel_tan(
+        Poly(1, t), Poly(t**2 + 1, t), 1, DE))
+    # the degree bound appears in the equation itself, so n == oo is
+    # not allowed
+    raises(ValueError, lambda: cancel_tan(Poly(1, t), Poly(1, t), oo, DE))
 
 
 def test_rischDE():
