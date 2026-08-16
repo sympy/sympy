@@ -3084,6 +3084,186 @@ class motzkin(DefinedFunction):
         return Integer(cls._motzkin(n - 1))
 
 
+# ----------------------------------------------------------------------------
+#
+#                           Delannoy numbers
+#
+# ----------------------------------------------------------------------------
+
+
+class delannoy(DefinedFunction):
+    r"""
+    Delannoy numbers
+
+    The Delannoy number `D(m, n)` counts the number of lattice paths
+    from `(0, 0)` to `(m, n)` using steps East `(1, 0)`, North `(0, 1)`,
+    and Northeast `(1, 1)`.
+
+    .. math:: D(m, n) = \sum_{k=0}^{\min(m, n)}
+              2^k \binom{m}{k} \binom{n}{k}
+
+    When `m = n`, these are the *central* Delannoy numbers.
+
+    * ``delannoy(m, n)`` gives the Delannoy number `D(m, n)`
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import delannoy
+
+    >>> [delannoy(n, n) for n in range(7)]
+    [1, 3, 13, 63, 321, 1683, 8989]
+
+    >>> [delannoy(3, n) for n in range(5)]
+    [1, 7, 25, 63, 129]
+
+    >>> delannoy(3, 3)
+    63
+
+    The Delannoy numbers satisfy the recurrence relation:
+
+    >>> delannoy(4, 4) == delannoy(3, 4) + delannoy(4, 3) + delannoy(3, 3)
+    True
+
+    Symmetry property:
+
+    >>> delannoy(3, 5) == delannoy(5, 3)
+    True
+
+    See Also
+    ========
+
+    catalan, motzkin, lobb,
+    sympy.functions.combinatorial.factorials.binomial
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Delannoy_number
+    .. [2] https://mathworld.wolfram.com/DelannoyNumber.html
+    .. [3] https://oeis.org/A008288
+
+    """
+
+    is_integer = True
+    is_positive = True
+
+    @classmethod
+    def eval(cls, m, n):
+        if m.is_integer is False:
+            raise TypeError("m should be an integer")
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if m.is_negative is True or n.is_negative is True:
+            return S.Zero
+        if m.is_Integer and n.is_Integer:
+            return Integer(cls._eval_delannoy(int(m), int(n)))
+
+    @staticmethod
+    def _eval_delannoy(m, n):
+        from math import comb
+        return sum(
+            (1 << k) * comb(m, k) * comb(n, k)
+            for k in range(min(m, n) + 1)
+        )
+
+    def _eval_rewrite_as_Sum(self, m, n, **kwargs):
+        from sympy.concrete.summations import Sum
+        k = Dummy('k', integer=True, nonnegative=True)
+        from sympy.functions.elementary.miscellaneous import Min
+        return Sum(2**k * binomial(m, k) * binomial(n, k), (k, 0, Min(m, n)))
+
+    def _eval_rewrite_as_binomial(self, m, n, **kwargs):
+        return self._eval_rewrite_as_Sum(m, n, **kwargs)
+
+
+# ----------------------------------------------------------------------------
+#
+#                             Lobb numbers
+#
+# ----------------------------------------------------------------------------
+
+
+class lobb(DefinedFunction):
+    r"""
+    Lobb numbers
+
+    The Lobb number `L(m, n)` counts the number of ways that `n + m`
+    open parentheses and `m - n` close parentheses can be arranged to
+    form the start of a valid sequence of balanced parentheses.
+
+    .. math:: L(m, n) = \frac{2n + 1}{m + n + 1} \binom{2m}{m - n}
+
+    The Lobb numbers generalize the Catalan numbers:
+    `L(m, 0) = C_m`, the `m`-th Catalan number.
+
+    * ``lobb(m, n)`` gives the Lobb number `L(m, n)` for `m \ge n \ge 0`
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import lobb
+
+    >>> [lobb(n, 0) for n in range(7)]
+    [1, 1, 2, 5, 14, 42, 132]
+
+    >>> lobb(4, 2)
+    20
+
+    The Lobb number `L(m, 0)` equals the Catalan number `C_m`:
+
+    >>> from sympy import catalan
+    >>> all(lobb(m, 0) == catalan(m) for m in range(10))
+    True
+
+    Row sum identity:
+
+    >>> from sympy import binomial
+    >>> m = 5
+    >>> sum(lobb(m, n) for n in range(m + 1)) == binomial(2*m, m)
+    True
+
+    Boundary: `L(m, m) = 1`:
+
+    >>> all(lobb(m, m) == 1 for m in range(10))
+    True
+
+    See Also
+    ========
+
+    catalan, delannoy,
+    sympy.functions.combinatorial.factorials.binomial
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lobb_number
+    .. [2] https://oeis.org/A039599
+
+    """
+
+    is_integer = True
+    is_nonnegative = True
+
+    @classmethod
+    def eval(cls, m, n):
+        if m.is_integer is False:
+            raise TypeError("m should be an integer")
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if m.is_negative is True or n.is_negative is True:
+            return S.Zero
+        if m.is_Integer and n.is_Integer:
+            m_int, n_int = int(m), int(n)
+            if m_int < n_int:
+                return S.Zero
+            from math import comb
+            return Integer((2 * n_int + 1) * comb(2 * m_int, m_int - n_int) // (m_int + n_int + 1))
+
+    def _eval_rewrite_as_binomial(self, m, n, **kwargs):
+        return (2 * n + 1) * binomial(2 * m, m - n) / (m + n + 1)
+
+
 def nD(i=None, brute=None, *, n=None, m=None):
     """return the number of derangements for: ``n`` unique items, ``i``
     items (as a sequence or multiset), or multiplicities, ``m`` given
