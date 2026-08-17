@@ -17,6 +17,7 @@ from sympy.logic.algorithms.dpll2 import SATSolver, UNKNOWN, SATISFIABLE, \
 
 from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.logic.algorithms.lra_theory import LRASolver
 from sympy.logic.tests.test_lra_theory import make_random_problem
 from sympy.core.random import randint
 
@@ -139,7 +140,7 @@ def test_dpll2_satisfiable():
 
 def test_satsolver_propagate():
     # Propagating {1} through {-1, 2} implies 2, which in turn implies 3.
-    s = SATSolver([{1}, {-1, 2}, {-2, 3}], {1, 2, 3}, set())
+    s = SATSolver([{1}, {-1, 2}, {-2, 3}, {4, -4}], {1, 2, 3, 4}, set())
     assert s.propagate() == UNKNOWN
     assert (s.fixed(1), s.fixed(2), s.fixed(3)) == (1, 1, 1)
     assert (s.fixed(-1), s.fixed(-2), s.fixed(-3)) == (-1, -1, -1)
@@ -158,8 +159,26 @@ def test_satsolver_propagate():
     s = SATSolver([{1}, {-1}], {1}, set())
     assert s.propagate() == UNSATISFIABLE
 
-    # Propagating is idempotent.
+    # Propagation leaving no variable unassigned is a model, so no decision
+    # has to be made and the clauses are satisfiable.
     s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    assert s.propagate() == SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+    assert s.solve() == SATISFIABLE
+
+    # An assignment of every variable is only a model if it holds in the LRA
+    # theory as well, so propagating on its own cannot report satisfiable.
+    x = symbols('x')
+    enc = EncodedCNF()
+    enc.from_cnf(CNF.from_prop((x > 1) & (x < 0)))
+    lra, conflicts = LRASolver.from_encoded_cnf(enc)
+    s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols,
+                  lra_theory=lra)
+    assert s.propagate() == UNKNOWN
+    assert s.solve() == UNSATISFIABLE
+
+    # Propagating is idempotent.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
     assert s.propagate() == UNKNOWN
     assert s.propagate() == UNKNOWN
     assert s.fixed(2) == 1

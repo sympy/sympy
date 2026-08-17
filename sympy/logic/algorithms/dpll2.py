@@ -315,32 +315,54 @@ class SATSolver:
     inspect the root level before searching are implemented so far; adding
     clauses to a solver that has already been used, assumptions and
     ``failed`` are not supported yet.
+
+    # https://github.com/arminbiere/cadical/blob/master/src/cadical.hpp
     """
     def propagate(self):
         """Propagate the unit clauses at the root decision level.
 
         No decision is made here, so every literal that gets assigned is
         implied by the clauses of the solver. The assignments can be
-        inspected with :meth:`fixed`, and :meth:`solve` may be called
+        inspected with ``fixed()``, and ``solve()`` may be called
         afterwards to continue with a full search.
 
         Returns ``UNSATISFIABLE`` if propagation runs into a conflict and
-        ``UNKNOWN`` otherwise, since propagation on its own cannot show
-        that the clauses are satisfiable.
+        ``SATISFIABLE`` if it leaves no variable unassigned, as no decision
+        is needed to satisfy the clauses then and ``val()`` can read the
+        model. Otherwise ``UNKNOWN`` is returned.
+
+        TODO: in IPASIR this propagates at whatever decision level the solver
+        is on, which is not implemented here yet, so a ``ValueError`` is
+        raised away from the root level rather than propagating there.
+
+        TODO: an assignment also has to hold in the LRA theory to be a model,
+        so ``UNKNOWN`` is returned for a solver that has one and the theory
+        is left for ``solve()`` to check.
 
         Examples
         ========
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> from sympy.logic.algorithms.dpll2 import UNKNOWN, UNSATISFIABLE
+        >>> from sympy.logic.algorithms.dpll2 import UNKNOWN
+        >>> from sympy.logic.algorithms.dpll2 import SATISFIABLE, UNSATISFIABLE
 
-        Propagating ``{1}`` through ``{-1, 2}`` implies the literal ``2``:
+        Propagating ``{1}`` through ``{-1, 2}`` implies the literal ``2``,
+        which leaves ``3`` for the search to decide on:
 
-        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+        >>> l = SATSolver([{1}, {-1, 2}, {3, -3}], {1, 2, 3}, set())
         >>> l.propagate() == UNKNOWN
         True
         >>> l.fixed(2)
         1
+
+        With ``3`` gone, propagation assigns every variable and the clauses
+        are satisfied without any search:
+
+        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+        >>> l.propagate() == SATISFIABLE
+        True
+        >>> l.val(2)
+        2
 
         A conflict at the root level means the clauses are unsatisfiable:
 
@@ -355,6 +377,9 @@ class SATSolver:
         self._simplify()
         if self.is_unsatisfied:
             self._status = UNSATISFIABLE
+        elif self.lra is None and all(self.variable_set[1:]):
+            # Nothing is left to decide on, so the assignments are a model.
+            self._status = SATISFIABLE
 
         return self._status
 
@@ -364,9 +389,13 @@ class SATSolver:
 
         This is only defined at the root level, where no decision has been
         made and therefore every assignment is implied by the clauses. Note
-        that the literals found by :meth:`propagate` are implied but are not
+        that the literals found by ``propagate()`` are implied but are not
         necessarily all of the implied literals, so 0 means "not known"
         rather than "not implied".
+
+        TODO: in IPASIR this can be asked at any decision level, which needs
+        the assignments made at the root level to be kept apart from the ones
+        that follow from a decision.
 
         Examples
         ========
@@ -397,9 +426,9 @@ class SATSolver:
     def solve(self):
         """Search for a model of the clauses.
 
-        Returns ``SATISFIABLE`` or ``UNSATISFIABLE``. When :meth:`propagate`
+        Returns ``SATISFIABLE`` or ``UNSATISFIABLE``. When ``propagate()``
         has already been called, the work it did at the root level is reused
-        rather than repeated. Use :meth:`val` to read the model afterwards.
+        rather than repeated. Use ``val()`` to read the model afterwards.
 
         Examples
         ========
@@ -407,7 +436,7 @@ class SATSolver:
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> from sympy.logic.algorithms.dpll2 import SATISFIABLE
 
-        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+        >>> l = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
         >>> l.propagate()
         0
         >>> l.solve() == SATISFIABLE
@@ -429,7 +458,7 @@ class SATSolver:
         return self._status
 
     def val(self, lit):
-        """Return *lit* if it is true in the model found by :meth:`solve`,
+        """Return *lit* if it is true in the model found by ``solve()``,
         ``-lit`` if it is false there, and 0 if the model does not assign it.
 
         Examples
