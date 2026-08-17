@@ -494,7 +494,7 @@ def test_issue_6799():
     integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
     assert manualintegrate(integrand, x) == \
-        ((n*x/2 + sin(2*n*x)/4)*cos(n*phi) - sin(n*phi)*cos(n*x)**2/2)/n
+        x*cos(n*phi)/2 - sin(n*phi - 2*n*x)/(4*n)
     assert r * integrate(integrand, limits).trigsimp() / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
 
@@ -663,7 +663,7 @@ def test_constant_independent_of_symbol():
 
 def test_issue_12641():
     assert manualintegrate(sin(2*x), x) == -cos(2*x)/2
-    assert manualintegrate(cos(x)*sin(2*x), x) == -2*cos(x)**3/3
+    assert manualintegrate(cos(x)*sin(2*x), x) == -cos(x)/2 - cos(3*x)/6
     assert manualintegrate((sin(2*x)*cos(x))/(1 + cos(x)), x) == \
         -2*log(cos(x) + 1) - cos(x)**2 + 2*cos(x)
 
