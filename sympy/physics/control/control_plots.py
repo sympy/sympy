@@ -982,7 +982,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         show=False, grid=grid, show_axes=show_axes,
         freq_unit=freq_unit, **kwargs)
     mag.title(f'Bode Plot of ${latex(system)}$', pad=20)
-    mag.xlabel(None)
+    plt.xlabel('')
     plt.subplot(212)
     bode_phase_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes, freq_unit=freq_unit, phase_unit=phase_unit, phase_unwrap=phase_unwrap, **kwargs).title(None)
