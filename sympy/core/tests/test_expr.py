@@ -1948,7 +1948,7 @@ def test_equals():
         2*sqrt(2)*x**(S(3)/2)*(1 + 1/(2*x))**(S(5)/2)/(-6 - 3/x)
     ans = sqrt(2*x + 1)*(6*x**2 + x - 1)/15
     diff = i - ans
-    assert diff.equals(0) is None  # should be False, but previously this was False due to wrong intermediate result
+    assert diff.equals(0) is False
     assert diff.subs(x, Rational(-1, 2)/2) == 7*sqrt(2)/120
     # there are regions for x for which the expression is True, for
     # example, when x < -1/2 or x > 0 the expression is zero
