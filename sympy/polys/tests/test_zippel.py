@@ -1,5 +1,5 @@
 from __future__ import annotations
-from unittest.mock import patch
+from typing import Callable, Iterable
 from sympy.external.gmpy import MPZ
 from sympy.matrices.dense import Matrix
 from sympy.polys.densebasic import dup_to_dict
@@ -213,6 +213,31 @@ def test_skeleton_sorter():
     assert monic == pseudomonic == True
 
 
+def _eval_tuple(
+    values: Iterable[tuple[MPZ, ...]],
+) -> Callable[[MPZ, int], tuple[MPZ, ...]]:
+    iterator = iter(values)
+
+    def eval_tuple(
+        p: MPZ,
+        length: int,
+    ) -> tuple[MPZ, ...]:
+        return next(iterator)
+
+    return eval_tuple
+
+
+def _eval_point(
+    values: Iterable[MPZ],
+) -> Callable[[MPZ], MPZ]:
+    iterator = iter(values)
+
+    def eval_point(p: MPZ) -> MPZ:
+        return next(iterator)
+
+    return eval_point
+
+
 def test_smp_zippel_gcd():
     # trivial tests
     R, x, y = ring("x, y", ZZ)
@@ -310,11 +335,8 @@ def test_smp_zippel_gcd():
     q = (y - 1) * (y - 2) * (y - 3)
     f = x * q + 1
     g = x * q + y
-    with patch(
-        "sympy.polys.zippel.randint",
-        side_effect=[1, 2, 3, 4, 4],
-    ):
-        gcd, cff, cfg = smp_zippel_gcd(dict(f), dict(g), 2)
+    eval_points = _eval_point(map(ZZ, [1, 2, 3, 4, 4]))
+    gcd, cff, cfg = smp_zippel_gcd(f, g, 2, rand_point=eval_points)
     assert (R(gcd), R(cff), R(cfg)) == (R.one, f, g)
 
     # unlucky first evaluation leads to wrong skeleton, that leads to inconsistent system
@@ -325,11 +347,8 @@ def test_smp_zippel_gcd():
     h = x**2 * (H2 + (z - 1) * y**3) + x * (H1 + (z - 1) * y**5) + H0 + (z - 1) * y**6
     f = (x + 1) * h
     g = (x + 2) * h
-    with patch(
-        "sympy.polys.zippel._random_eval_point",
-        side_effect=[1, 17, 23, 2, 3, 4, 5, 6, 7, 8],
-    ):
-        gcd, cff, cfg = smp_zippel_gcd(f, g, 3)
+    eval_points = _eval_point(map(ZZ, [1, 17, 23, 2, 3, 4, 5, 6, 7, 8]))
+    gcd, cff, cfg = smp_zippel_gcd(f, g, 3, rand_point=eval_points)
     assert (R(gcd), R(cff), R(cfg)) == (h, x + 1, x + 2)
 
     # returned gcd's LC with positive sign
@@ -384,22 +403,16 @@ def test_smp_zippel_gcd_mod():
     R, x, y, z = ring("x, y, z", ZZ)
     f = (x + y - z) * (x**2 * y + x * (z - 3) + y * (z - 2) + (z - 5))
     g = (x + y + z) * (x**2 * y + x * (z - 3) + y * (z - 2) + (z - 5))
-    with patch(
-        "sympy.polys.zippel._random_eval_point",
-        side_effect=[2, 3, 5],
-    ):
-        gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3)
+    eval_points = _eval_point(map(ZZ, [2, 3, 5]))
+    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
     assert gcd is None
 
     # smp_zippel_gcd_mod returns None in recursive call
     R, x, y, z, w = ring("x, y, z, w", ZZ)
     f = (x + y - z * w) * (x**2 * y + x * (z - 3) + y * (z - 2) + (z - 5) + w)
     g = (x + y + z * w) * (x**2 * y + x * (z - 3) + y * (z - 2) + (z - 5) + w)
-    with patch(
-        "sympy.polys.zippel._random_eval_point",
-        side_effect=[2, 3, 5, 2, 3, 5, 2, 3, 5],
-    ):
-        gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 4)
+    eval_points = _eval_point(map(ZZ, [2, 3, 5, 2, 3, 5, 2, 3, 5]))
+    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 4, rand_point=eval_points)
     assert gcd is None
 
     # y*(z - 2) incorrectly interpolated as 2*(z - 2) by repeatedly
@@ -408,67 +421,46 @@ def test_smp_zippel_gcd_mod():
     h = x**2 * y + y * (z - 2) + 1
     f = (x + y) * h
     g = (x - y) * h
-    with (
-        patch(
-            "sympy.polys.zippel._random_eval_point",
-            side_effect=[2, 1, 2, 3, 3, 4, 5, 6, 7, 8],
-        ),
-        patch(
-            "sympy.polys.zippel._random_eval_tuple",
-            return_value=(2,),
-        ),
-    ):
-        gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3)
+    eval_points = _eval_point(map(ZZ, [2, 1, 2, 3, 3, 4, 5, 6, 7, 8]))
+    eval_tuples = _eval_tuple(
+        [(ZZ(2),), (ZZ(2),), (ZZ(2),), (ZZ(2),), (ZZ(2),), (ZZ(2),)]
+    )
+    gcd = smp_zippel_gcd_mod(
+        f, g, ZZ(10009), 3, rand_point=eval_points, rand_tuple=eval_tuples
+    )
     assert gcd is None
 
     # test unlucky first evaluation
     R, x, y = ring("x, y", ZZ)
     f = x + 17
     g = x + y
-    with (
-        patch(
-            "sympy.polys.zippel._random_eval_point",
-            side_effect=[17, 3, 4, 5, 6, 7, 8],
-        ),
-    ):
-        gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 2)
+    eval_points = _eval_point(map(ZZ, [17, 3, 4, 5, 6, 7, 8]))
+    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 2, rand_point=eval_points)
     assert gcd is None
 
     f = (x + 1) * (x**2 + (y - 17) * x)
     g = (x - 1) * (x**2 + (y - 17) * x)
-    with (
-        patch(
-            "sympy.polys.zippel._random_eval_point",
-            side_effect=[17, 3, 4, 5, 6, 7, 8],
-        ),
-    ):
-        gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 2)
+    eval_points = _eval_point(map(ZZ, [17, 3, 4, 5, 6, 7, 8]))
+    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 2, rand_point=eval_points)
     assert gcd is None
 
     # test unlucky first evaluation
     R, x, y, z = ring("x, y, z", ZZ)
     f = x + y + z
     g = x + y + 17
-    with (
-        patch(
-            "sympy.polys.zippel._random_eval_point",
-            side_effect=[17, 3, 4, 5, 6, 7, 8],
-        ),
-    ):
-        gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3)
+    eval_points = _eval_point(map(ZZ, [17, 3, 4, 5, 6, 7, 8]))
+    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
     assert gcd is None
 
     # test repeated choice of same evaluation point
     R, x, y = ring("x, y", ZZ)
     f = (x + 1) * (x + y)
     g = (x - 1) * (x + y)
-    with (
-        patch(
-            "sympy.polys.zippel.randint",
-            side_effect=[3, 3, 3, 5, 6, 7, 8, 9],
-        ),
-    ):
-        gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 2)
+    init_point = _eval_point([ZZ(3)])
+    eval_points = _eval_point(map(ZZ, [3, 3, 3, 5, 6, 7, 8, 9]))
+    gcd = smp_zippel_gcd_mod(
+        f, g, ZZ(10009), 2, rand_point=init_point, rand_point_=eval_points
+    )
     assert R(gcd) == x + y
 
     # not-monic case with content fails, preprocessing needs to extract it
@@ -487,24 +479,24 @@ def test_smp_zippel_gcd_mod():
     h = x**2 * (H2 + (z - 1) * y**3) + x * (H1 + (z - 1) * y**5) + H0 + (z - 1) * y**6
     f = (x + 1) * h
     g = (x + 2) * h
-    with patch("sympy.polys.zippel._random_eval_point", side_effect=[1, 17, 23]):
-        gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3)
+    eval_points = _eval_point(map(ZZ, [1, 17, 23]))
+    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
     assert gcd is None
 
     # unlucky evaluation leads to content wrt x in non monic case
     R, x, y, z = ring("x, y, z", ZZ)
     f = (y + 1) * (x**2 * (y + z) + x * (z - 1))
     g = (y - 1) * (x**2 * (y + z) + x * (z - 1))
-    with patch("sympy.polys.zippel._random_eval_point", side_effect=[1, 17, 23]):
-        gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3)
+    eval_points = _eval_point(map(ZZ, [1, 17, 23]))
+    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
     assert gcd is None
 
     # unlucky evaluation leads to content wrt x in monic case
     R, x, y, z = ring("x, y, z", ZZ)
     f = (y + 1) * (x**2 * (y) + x * (z - 1))
     g = (y - 1) * (x**2 * (y) + x * (z - 1))
-    with patch("sympy.polys.zippel._random_eval_point", side_effect=[1, 17, 23]):
-        gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3)
+    eval_points = _eval_point(map(ZZ, [1, 17, 23]))
+    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
     assert gcd is None
 
 
@@ -515,18 +507,10 @@ def test_smp_zippel_interp_mod():
     f = (x + 1) * h
     g = (x + 2) * h
     G, _, monic, pseudomonic = skeleton_sorter(h)
-    with patch(
-        "sympy.polys.zippel._random_eval_tuple", side_effect=[(1, 100), (1, 1), (1, 2)]
-    ):
-        result = smp_zippel_interp_mod(
-            f,
-            g,
-            G,
-            ZZ(101),
-            monic,
-            pseudomonic,
-            3,
-        )
+    eval_tuples = _eval_tuple([(ZZ(1), ZZ(100)), (ZZ(1), ZZ(1)), (ZZ(1), ZZ(2))])
+    result = smp_zippel_interp_mod(
+        f, g, G, ZZ(101), monic, pseudomonic, 3, rand_tuple=eval_tuples
+    )
     assert result == {(0, 0, 0): 34, (1, 1, 0): 34, (1, 0, 1): 34}
 
     # evaluation tuple becomes bad when an additional image is added
@@ -537,11 +521,10 @@ def test_smp_zippel_interp_mod():
     f = (x + 1) * h
     g = (x - 1) * h
     G, _, monic, pseudomonic = skeleton_sorter(h)
-    with patch(
-        "sympy.polys.zippel._random_eval_tuple",
-        side_effect=[(ZZ(1), ZZ(2)), (ZZ(1), ZZ(5))],
-    ):
-        gcd = smp_zippel_interp_mod(f, g, G, ZZ(13), monic, pseudomonic, 3)
+    eval_tuples = _eval_tuple([(ZZ(1), ZZ(2)), (ZZ(1), ZZ(5))])
+    gcd = smp_zippel_interp_mod(
+        f, g, G, ZZ(13), monic, pseudomonic, 3, rand_tuple=eval_tuples
+    )
     assert R(gcd) == R(gcd).LC * h
 
     # evaluation tuple cancels the leading coefficient of B but not A
@@ -550,10 +533,10 @@ def test_smp_zippel_interp_mod():
     f = (x + 1) * (x + 2)
     g = (x + 1) * ((y - 2) * x + 1)
     G, _, monic, pseudomonic = skeleton_sorter(h)
-    with patch(
-        "sympy.polys.zippel._random_eval_tuple", side_effect=[(ZZ(2),), (ZZ(3),)]
-    ):
-        gcd = smp_zippel_interp_mod(f, g, G, ZZ(101), monic, pseudomonic, 2)
+    eval_tuples = _eval_tuple([(ZZ(2),), (ZZ(3),)])
+    gcd = smp_zippel_interp_mod(
+        f, g, G, ZZ(101), monic, pseudomonic, 2, rand_tuple=eval_tuples
+    )
     assert R(gcd) == h
 
     # here the first number of equations (z) chosen "a priori" won't be enough, and will be updated

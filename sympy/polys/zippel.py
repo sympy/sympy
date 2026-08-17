@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from random import randint
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from sympy.ntheory.generate import nextprime
 from sympy.polys.densebasic import dup_from_dict, dup_to_dict
@@ -549,7 +549,11 @@ def _validate_eval_tuple(
 
 
 def smp_zippel_gcd(
-    f: smp[MPZ], g: smp[MPZ], n: int
+    f: smp[MPZ],
+    g: smp[MPZ],
+    n: int,
+    rand_point: Callable[[MPZ], MPZ] = _random_eval_point,
+    rand_tuple: Callable[[MPZ, int], tuple[MPZ, ...]] = _random_eval_tuple,
 ) -> tuple[smp[MPZ], smp[MPZ], smp[MPZ]]:
     r"""
     Compute the GCD of two polynomials in `\mathbb{Z}[x_0, \ldots, x_{k-1}]`
@@ -651,7 +655,9 @@ def smp_zippel_gcd(
         fp = smp_trunc_ground(f, p, n, ZZ)
         gp = smp_trunc_ground(g, p, n, ZZ)
 
-        hp = smp_zippel_gcd_mod(fp, gp, p, n)
+        hp = smp_zippel_gcd_mod(
+            fp, gp, p, n, rand_point=rand_point, rand_tuple=rand_tuple
+        )
         if hp is not None:
             if hlastm != {}:
                 if smp_degrees(hp, n, ZZ) > smp_degrees(hlastm, n, ZZ):
@@ -693,7 +699,15 @@ def smp_zippel_gcd(
             return h, cff, cfg
 
 
-def smp_zippel_gcd_mod(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int) -> smp[MPZ] | None:
+def smp_zippel_gcd_mod(
+    A: smp[MPZ],
+    B: smp[MPZ],
+    p: MPZ,
+    n: int,
+    rand_point: Callable[[MPZ], MPZ] = _random_eval_point,
+    rand_point_: Callable[[MPZ], MPZ] = _random_eval_point,
+    rand_tuple: Callable[[MPZ, int], tuple[MPZ, ...]] = _random_eval_tuple,
+) -> smp[MPZ] | None:
     r"""
     Compute the GCD of two multivariate polynomials over a finite field.
 
@@ -746,7 +760,7 @@ def smp_zippel_gcd_mod(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int) -> smp[MPZ] | N
     skippable: set[int] = set()
     pt_chances = 0
     while True:
-        t = _random_eval_point(p)
+        t = rand_point(p)
         gk = smp_evaluate(g, {0: t}, 1, ZZ) % p
         if gk == 0:
             pt_chances += 1
@@ -760,7 +774,7 @@ def smp_zippel_gcd_mod(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int) -> smp[MPZ] | N
 
         B_ = smp_subs_drop(B, {n - 1: t}, n, ZZ)
         _smp_itrunc_ground(B_, p, n - 1, ZZ)
-        G_ = smp_zippel_gcd_mod(A_, B_, p, n - 1)
+        G_ = smp_zippel_gcd_mod(A_, B_, p, n - 1, rand_point, rand_point_, rand_tuple)
         if G_ is None:
             M = []
             h = []
@@ -787,7 +801,7 @@ def smp_zippel_gcd_mod(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int) -> smp[MPZ] | N
             initial_h = [coeffs.copy() for coeffs in h]
         skeleton_chances = 0
         while True:
-            t = ZZ(randint(1, int(p - 1)))
+            t = rand_point_(p)
             gk = smp_evaluate(g, {0: t}, 1, ZZ) % p
             if t in M or gk == 0:
                 continue
@@ -796,7 +810,9 @@ def smp_zippel_gcd_mod(A: smp[MPZ], B: smp[MPZ], p: MPZ, n: int) -> smp[MPZ] | N
             B_ = smp_subs_drop(B, {n - 1: t}, n, ZZ)
             _smp_itrunc_ground(A_, p, n - 1, ZZ)
             _smp_itrunc_ground(B_, p, n - 1, ZZ)
-            G_ = smp_zippel_interp_mod(A_, B_, G_s, p, monic, pseudomonic, n - 1)
+            G_ = smp_zippel_interp_mod(
+                A_, B_, G_s, p, monic, pseudomonic, n - 1, rand_tuple
+            )
             if G_ is None:
                 skeleton_chances += 1
                 if skeleton_chances < 3:
@@ -864,6 +880,7 @@ def smp_zippel_interp_mod(
     monic: bool,
     pseudomonic: bool,
     n: int,
+    rand_tuple: Callable[[MPZ, int], tuple[MPZ, ...]] = _random_eval_tuple,
 ) -> smp[MPZ] | None:
     r"""
     Recover a sparse modular GCD from a prescribed skeleton.
@@ -937,7 +954,7 @@ def smp_zippel_interp_mod(
 
     for _ in range(3):
         while True:
-            t = _random_eval_tuple(p, n - 1)
+            t = rand_tuple(p, n - 1)
 
             all_vand_basis = _validate_eval_tuple(t, lc_A, lc_B, G, p, range(1, z + 1))
             if all_vand_basis is None:
