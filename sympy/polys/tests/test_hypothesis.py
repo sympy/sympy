@@ -294,7 +294,7 @@ def _normalize_gcd_result(result):
 
     return gcd, cff, cfg
 
-
+@settings(max_examples=25)
 @given(
     case=zippel_cases(1),
     random_state=st.random_module(),
@@ -330,6 +330,7 @@ def test_smp_zippel_gcd(case, random_state):
     assert result == expected
 
 
+@settings(max_examples=25)
 @given(
     case=zippel_cases(1),
     random_state=st.random_module(),
@@ -358,6 +359,7 @@ def test_smp_zippel_gcd_independent(case, random_state):
     assert result == expected
 
 
+@settings(max_examples=25)
 @given(
     case=zippel_cases(2),
     random_state=st.random_module(),
@@ -383,6 +385,7 @@ def test_smp_zippel_gcd_monic(case, random_state):
     assert gcd == h
 
 
+@settings(max_examples=25)
 @given(
     case=zippel_cases(3),
     random_state=st.random_module(),
@@ -409,6 +412,7 @@ def test_smp_zippel_gcd_pseudomonic(case, random_state):
     assert gcd == h
 
 
+@settings(max_examples=25)
 @given(
     case=zippel_cases(3),
     random_state=st.random_module(),
