@@ -1,7 +1,7 @@
 """Elliptic functions."""
 from __future__ import annotations
 
-from sympy.core import S
+from sympy.core import Add, S
 from sympy.core.function import ArgumentIndexError, DefinedFunction
 from sympy.core.numbers import pi
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -257,5 +257,5 @@ class jtheta(DefinedFunction):
                 k += 1
                 exponent = (S(k) + S.Half)**2
 
-        series = sum(terms, S.Zero)
+        series = Add(*terms)
         return series._eval_nseries(x, n, logx, cdir) + Order(x**n, x)
