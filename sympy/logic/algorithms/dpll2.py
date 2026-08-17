@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from copy import deepcopy
+from enum import Enum
 from heapq import heappush, heappop
 
 from sympy.core.sorting import ordered
@@ -22,11 +23,12 @@ from sympy.assumptions.cnf import EncodedCNF
 from sympy.logic.algorithms.lra_theory import LRASolver
 
 
-# Status codes used by the IPASIR style interface of SATSolver. The values are
-# the ones mandated by the IPASIR standard for ``ipasir_solve``.
-UNKNOWN = 0
-SATISFIABLE = 10
-UNSATISFIABLE = 20
+class IpasirStatus(Enum):
+    # Status codes used by the IPASIR style interface of SATSolver. The values are
+    # the ones mandated by the IPASIR standard for ``ipasir_solve``.
+    UNKNOWN = 0
+    SATISFIABLE = 10
+    UNSATISFIABLE = 20
 
 
 def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
@@ -151,7 +153,7 @@ class SATSolver:
         self.lra = lra_theory
 
         # State of the IPASIR style interface
-        self._status = UNKNOWN
+        self._status = IpasirStatus.UNKNOWN
         self._models = None
         self._clause_buffer = []
 
@@ -328,31 +330,30 @@ class SATSolver:
         inspected with ``fixed()``, and ``solve()`` may be called
         afterwards to continue with a full search.
 
-        Returns ``UNSATISFIABLE`` if propagation runs into a conflict and
-        ``SATISFIABLE`` if it leaves no variable unassigned, as no decision
-        is needed to satisfy the clauses then and ``val()`` can read the
-        model. Otherwise ``UNKNOWN`` is returned.
+        Returns ``IpasirStatus.UNSATISFIABLE`` if propagation runs into a
+        conflict and ``IpasirStatus.SATISFIABLE`` if it leaves no variable
+        unassigned, as no decision is needed to satisfy the clauses then and
+        ``val()`` can read the model. Otherwise ``IpasirStatus.UNKNOWN`` is
+        returned.
 
         TODO: in IPASIR this propagates at whatever decision level the solver
         is on, which is not implemented here yet, so a ``ValueError`` is
         raised away from the root level rather than propagating there.
 
         TODO: an assignment also has to hold in the LRA theory to be a model,
-        so ``UNKNOWN`` is returned for a solver that has one and the theory
-        is left for ``solve()`` to check.
+        so ``IpasirStatus.UNKNOWN`` is returned for a solver that has one and
+        the theory is left for ``solve()`` to check.
 
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> from sympy.logic.algorithms.dpll2 import UNKNOWN
-        >>> from sympy.logic.algorithms.dpll2 import SATISFIABLE, UNSATISFIABLE
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
 
         Propagating ``{1}`` through ``{-1, 2}`` implies the literal ``2``,
         which leaves ``3`` for the search to decide on:
 
         >>> l = SATSolver([{1}, {-1, 2}, {3, -3}], {1, 2, 3}, set())
-        >>> l.propagate() == UNKNOWN
+        >>> l.propagate() == IpasirStatus.UNKNOWN
         True
         >>> l.fixed(2)
         1
@@ -361,7 +362,7 @@ class SATSolver:
         are satisfied without any search:
 
         >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
-        >>> l.propagate() == SATISFIABLE
+        >>> l.propagate() == IpasirStatus.SATISFIABLE
         True
         >>> l.val(2)
         2
@@ -369,7 +370,7 @@ class SATSolver:
         A conflict at the root level means the clauses are unsatisfiable:
 
         >>> l = SATSolver([{1}, {-1}], {1}, set())
-        >>> l.propagate() == UNSATISFIABLE
+        >>> l.propagate() == IpasirStatus.UNSATISFIABLE
         True
 
         """
@@ -378,10 +379,10 @@ class SATSolver:
 
         self._simplify()
         if self.is_unsatisfied:
-            self._status = UNSATISFIABLE
+            self._status = IpasirStatus.UNSATISFIABLE
         elif self.lra is None and all(self.variable_set[1:]):
             # Nothing is left to decide on, so the assignments are a model.
-            self._status = SATISFIABLE
+            self._status = IpasirStatus.SATISFIABLE
 
         return self._status
 
@@ -402,10 +403,10 @@ class SATSolver:
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
         >>> l = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
-        >>> l.propagate()
-        0
+        >>> l.propagate() == IpasirStatus.UNKNOWN
+        True
         >>> l.fixed(1), l.fixed(2), l.fixed(-2)
         (1, 1, -1)
 
@@ -428,20 +429,20 @@ class SATSolver:
     def solve(self):
         """Search for a model of the clauses.
 
-        Returns ``SATISFIABLE`` or ``UNSATISFIABLE``. When ``propagate()``
-        has already been called, the work it did at the root level is reused
-        rather than repeated. Use ``val()`` to read the model afterwards.
+        Returns ``IpasirStatus.SATISFIABLE`` or
+        ``IpasirStatus.UNSATISFIABLE``. When ``propagate()`` has already been
+        called, the work it did at the root level is reused rather than
+        repeated. Use ``val()`` to read the model afterwards.
 
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> from sympy.logic.algorithms.dpll2 import SATISFIABLE
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
 
         >>> l = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
-        >>> l.propagate()
-        0
-        >>> l.solve() == SATISFIABLE
+        >>> l.propagate() == IpasirStatus.UNKNOWN
+        True
+        >>> l.solve() == IpasirStatus.SATISFIABLE
         True
         >>> l.val(2)
         2
@@ -454,9 +455,9 @@ class SATSolver:
 
         self._models = self._find_model()
         if next(self._models, None) is None:
-            self._status = UNSATISFIABLE
+            self._status = IpasirStatus.UNSATISFIABLE
         else:
-            self._status = SATISFIABLE
+            self._status = IpasirStatus.SATISFIABLE
 
         return self._status
 
@@ -467,15 +468,15 @@ class SATSolver:
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
         >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
-        >>> l.solve()
-        10
+        >>> l.solve() == IpasirStatus.SATISFIABLE
+        True
         >>> l.val(1), l.val(2)
         (1, 2)
 
         """
-        if self._status != SATISFIABLE:
+        if self._status != IpasirStatus.SATISFIABLE:
             raise ValueError("val() is only defined once solve() has returned "
                 "SATISFIABLE.")
 
@@ -496,8 +497,7 @@ class SATSolver:
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> from sympy.logic.algorithms.dpll2 import SATISFIABLE, UNSATISFIABLE
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
 
         A clause added one literal at a time:
 
@@ -505,7 +505,7 @@ class SATSolver:
         >>> l.add(-1)
         >>> l.add(2)
         >>> l.add(0)
-        >>> l.propagate() == SATISFIABLE
+        >>> l.propagate() == IpasirStatus.SATISFIABLE
         True
         >>> l.fixed(2)
         1
@@ -513,11 +513,11 @@ class SATSolver:
         Clauses may be added to a solver that has already been used:
 
         >>> l = SATSolver([{1, 2}], {1, 2}, set())
-        >>> l.solve() == SATISFIABLE
+        >>> l.solve() == IpasirStatus.SATISFIABLE
         True
         >>> l.clause(-1)
         >>> l.clause(-2)
-        >>> l.solve() == UNSATISFIABLE
+        >>> l.solve() == IpasirStatus.UNSATISFIABLE
         True
 
         """
@@ -537,8 +537,8 @@ class SATSolver:
             self._undo()
 
         self._models = None
-        if self._status == SATISFIABLE:
-            self._status = UNKNOWN
+        if self._status == IpasirStatus.SATISFIABLE:
+            self._status = IpasirStatus.UNKNOWN
 
         cls_num = len(self.clauses)
         self.clauses.append(cls)
@@ -560,7 +560,7 @@ class SATSolver:
                 self._unit_prop_queue.append(unassigned[0])
             else:
                 self.is_unsatisfied = True
-                self._status = UNSATISFIABLE
+                self._status = IpasirStatus.UNSATISFIABLE
 
     def clause(self, *lits):
         """Add the clause made up of *lits* to the solver.
@@ -574,15 +574,14 @@ class SATSolver:
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> from sympy.logic.algorithms.dpll2 import UNSATISFIABLE
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
 
         >>> l = SATSolver([{1, 2}], {1, 2}, set())
         >>> l.clause(-1, 2)
-        >>> l.propagate()
-        0
+        >>> l.propagate() == IpasirStatus.UNKNOWN
+        True
         >>> l.clause([-2])
-        >>> l.propagate() == UNSATISFIABLE
+        >>> l.propagate() == IpasirStatus.UNSATISFIABLE
         True
 
         """
@@ -609,19 +608,18 @@ class SATSolver:
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> from sympy.logic.algorithms.dpll2 import SATISFIABLE, UNSATISFIABLE
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
 
         Trying ``-2`` without giving up the work already done:
 
         >>> l = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
-        >>> l.propagate()
-        0
+        >>> l.propagate() == IpasirStatus.UNKNOWN
+        True
         >>> temporary = l.copy()
         >>> temporary.clause(-2)
-        >>> temporary.solve() == UNSATISFIABLE
+        >>> temporary.solve() == IpasirStatus.UNSATISFIABLE
         True
-        >>> l.solve() == SATISFIABLE
+        >>> l.solve() == IpasirStatus.SATISFIABLE
         True
 
         """
