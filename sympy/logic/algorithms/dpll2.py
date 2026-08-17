@@ -13,6 +13,7 @@ References:
 from __future__ import annotations
 
 from collections import defaultdict
+from copy import deepcopy
 from heapq import heappush, heappop
 
 from sympy.core.sorting import ordered
@@ -152,6 +153,7 @@ class SATSolver:
         # State of the IPASIR style interface
         self._status = UNKNOWN
         self._models = None
+        self._clause_buffer = []
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -312,8 +314,8 @@ class SATSolver:
     """
     A subset of the IPASIR standard for incremental SAT solving, using the
     names that CaDiCaL gives them in its C++ API. Only the parts needed to
-    inspect the root level before searching are implemented so far; adding
-    clauses to a solver that has already been used, assumptions and
+    inspect the root level before searching and to keep solving after new
+    clauses have been added are implemented so far; assumptions and
     ``failed`` are not supported yet.
 
     # https://github.com/arminbiere/cadical/blob/master/src/cadical.hpp
@@ -446,8 +448,9 @@ class SATSolver:
 
         """
         if self._models is not None:
-            raise ValueError("solve() can only be called once, as restarting "
-                "the search is not implemented yet.")
+            raise ValueError("solve() can only be called again once new "
+                "clauses have been added with add() or clause(), as "
+                "restarting the same search is not implemented yet.")
 
         self._models = self._find_model()
         if next(self._models, None) is None:
@@ -481,6 +484,159 @@ class SATSolver:
         if -lit in self.var_settings:
             return -lit
         return 0
+
+    def add(self, lit):
+        """Add *lit* to the clause that is being built, or add that clause to
+        the solver when *lit* is 0.
+
+        Adding a clause backtracks to the root level, keeping the literals
+        implied there, so ``solve()`` may be called again afterwards. An
+        unsatisfiable solver stays unsatisfiable.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> from sympy.logic.algorithms.dpll2 import SATISFIABLE, UNSATISFIABLE
+
+        A clause added one literal at a time:
+
+        >>> l = SATSolver([{1}], {1, 2}, set())
+        >>> l.add(-1)
+        >>> l.add(2)
+        >>> l.add(0)
+        >>> l.propagate() == SATISFIABLE
+        True
+        >>> l.fixed(2)
+        1
+
+        Clauses may be added to a solver that has already been used:
+
+        >>> l = SATSolver([{1, 2}], {1, 2}, set())
+        >>> l.solve() == SATISFIABLE
+        True
+        >>> l.clause(-1)
+        >>> l.clause(-2)
+        >>> l.solve() == UNSATISFIABLE
+        True
+
+        """
+        if lit != 0:
+            if abs(lit) >= len(self.variable_set):
+                raise ValueError("%s is not a literal of one of the variables "
+                    "the solver was created with." % lit)
+
+            self._clause_buffer.append(lit)
+            return
+
+        cls = self._clause_buffer
+        self._clause_buffer = []
+
+        # The decisions were made without this clause, so the search restarts.
+        while len(self.levels) > 1:
+            self._undo()
+
+        self._models = None
+        if self._status == SATISFIABLE:
+            self._status = UNKNOWN
+
+        cls_num = len(self.clauses)
+        self.clauses.append(cls)
+
+        for cls_lit in cls:
+            self.occurrence_count[cls_lit] += 1
+
+        # Only a literal that is not already false can be a sentinel. With
+        # fewer than two of those the clause is satisfied, unit, or false, and
+        # none of those needs to be watched.
+        unassigned = [cls_lit for cls_lit in cls
+                      if not self.variable_set[abs(cls_lit)]]
+
+        if len(unassigned) > 1:
+            self.sentinels[unassigned[0]].add(cls_num)
+            self.sentinels[unassigned[-1]].add(cls_num)
+        elif not any(cls_lit in self.var_settings for cls_lit in cls):
+            if unassigned:
+                self._unit_prop_queue.append(unassigned[0])
+            else:
+                self.is_unsatisfied = True
+                self._status = UNSATISFIABLE
+
+    def clause(self, *lits):
+        """Add the clause made up of *lits* to the solver.
+
+        The literals are given either one by one or as a single iterable of
+        them, covering the ``clause(int, ...)`` and ``clause(const
+        std::vector<int> &)`` overloads of CaDiCaL. This is ``add()`` called
+        on each of them and then on 0, so the remarks made there apply here as
+        well. Without any literal it adds the empty clause, which is false.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> from sympy.logic.algorithms.dpll2 import UNSATISFIABLE
+
+        >>> l = SATSolver([{1, 2}], {1, 2}, set())
+        >>> l.clause(-1, 2)
+        >>> l.propagate()
+        0
+        >>> l.clause([-2])
+        >>> l.propagate() == UNSATISFIABLE
+        True
+
+        """
+        if len(lits) == 1 and not isinstance(lits[0], int):
+            lits = lits[0]
+
+        for lit in lits:
+            self.add(lit)
+
+        self.add(0)
+
+    def copy(self):
+        """Return a solver with the same clauses and the same state as this
+        one, but independent of it.
+
+        Adding clauses to the copy or searching with it leaves this solver
+        untouched. The model of a previous ``solve()`` is not carried over,
+        so the copy is free to search again.
+
+        Unlike ``copy`` in CaDiCaL, which copies the formula into a solver
+        given to it, this returns a new solver and copies the state of the
+        search along with the formula.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver
+        >>> from sympy.logic.algorithms.dpll2 import SATISFIABLE, UNSATISFIABLE
+
+        Trying ``-2`` without giving up the work already done:
+
+        >>> l = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+        >>> l.propagate()
+        0
+        >>> temporary = l.copy()
+        >>> temporary.clause(-2)
+        >>> temporary.solve() == UNSATISFIABLE
+        True
+        >>> l.solve() == SATISFIABLE
+        True
+
+        """
+        # A generator cannot be copied, and the symbols are only ever read.
+        models, symbols = self._models, self.symbols
+        self._models, self.symbols = None, None
+
+        try:
+            other = deepcopy(self)
+        finally:
+            self._models, self.symbols = models, symbols
+
+        other.symbols = symbols
+
+        return other
 
     ########################
     #    Helper Methods    #

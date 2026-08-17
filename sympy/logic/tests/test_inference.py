@@ -236,6 +236,100 @@ def test_satsolver_interface_errors():
     raises(ValueError, lambda: s.fixed(1))
     raises(ValueError, lambda: s.propagate())
 
+    # A variable the solver does not have cannot be introduced.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    raises(ValueError, lambda: s.add(3))
+    raises(ValueError, lambda: s.clause(-1, 3))
+
+
+def test_satsolver_add_clause():
+    # A clause is built one literal at a time and added by a final 0.
+    s = SATSolver([{1}], {1, 2}, set())
+    s.add(-1)
+    s.add(2)
+    s.add(0)
+    assert s.propagate() == SATISFIABLE
+    assert (s.fixed(1), s.fixed(2)) == (1, 1)
+
+    # clause() takes the literals one by one or as a single iterable.
+    s = SATSolver([{1}], {1, 2}, set())
+    s.clause(-1, 2)
+    assert s.solve() == SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+
+    s = SATSolver([{1}], {1, 2}, set())
+    s.clause({-1, 2})
+    assert s.solve() == SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+
+    # A solver that already searched can be given clauses and search again.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    assert s.solve() == SATISFIABLE
+    s.clause(-1)
+    assert s.solve() == SATISFIABLE
+    assert s.val(1) == -1
+    assert s.val(2) == 2
+
+    # An unsatisfiable solver stays unsatisfiable.
+    s.clause(-2)
+    assert s.solve() == UNSATISFIABLE
+    s.clause(1, 2)
+    assert s.solve() == UNSATISFIABLE
+
+    # A clause falsified by the literals fixed at the root level conflicts,
+    # and one with a single literal left over propagates it.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    assert s.propagate() == SATISFIABLE
+    s.clause(-2)
+    assert s.propagate() == UNSATISFIABLE
+
+    s = SATSolver([{1}], {1, 2, 3}, set())
+    assert s.propagate() == UNKNOWN
+    s.clause(-1, -2, 3)
+    s.clause(2)
+    assert s.propagate() == SATISFIABLE
+    assert s.fixed(3) == 1
+
+    # The empty clause is false.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.clause()
+    assert s.solve() == UNSATISFIABLE
+
+
+def test_satsolver_copy():
+    # The copy has the state of the original without sharing it.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+    assert s.propagate() == UNKNOWN
+
+    temporary = s.copy()
+    assert (temporary.fixed(1), temporary.fixed(2)) == (1, 1)
+
+    # Clauses added to the copy say nothing about the original.
+    temporary.clause(-2)
+    assert temporary.solve() == UNSATISFIABLE
+    assert s.fixed(2) == 1
+    assert s.solve() == SATISFIABLE
+    assert s.val(2) == 2
+
+    # The copy of a solved solver searches again, the original keeps its model.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    assert s.solve() == SATISFIABLE
+    model = (s.val(1), s.val(2))
+
+    temporary = s.copy()
+    temporary.clause(-1)
+    temporary.clause(-2)
+    assert temporary.solve() == UNSATISFIABLE
+    assert (s.val(1), s.val(2)) == model
+
+    # The clauses of the original are left alone too.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    temporary = s.copy()
+    temporary.clause(-1, -2)
+    assert temporary.solve() == SATISFIABLE
+    assert s.clauses == [[1, 2]]
+    assert s.solve() == SATISFIABLE
+
 
 def test_minisat22_satisfiable():
     A, B, C = symbols('A,B,C')
