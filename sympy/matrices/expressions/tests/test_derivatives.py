@@ -707,3 +707,18 @@ def test_matexpr_derivative_by_matrix_element():
 
     A = MatrixSymbol(a, a, a)
     assert A.diff(Y[a,a]) == ZeroMatrix(a, a)
+
+
+def test_transpose_derivative_by_matrix():
+    from sympy import Function, Derivative
+    from sympy.tensor.array.array_derivatives import ArrayDerivative
+    m = symbols('m')
+    u = MatrixSymbol('u', m, 1)
+    r_bar = u.applyfunc(Function('phi'))
+    W = MatrixSymbol('W', m, m)
+    expr = (u - W * r_bar).T
+    assert isinstance(Derivative(expr, u), ArrayDerivative)
+    res = Derivative(expr, u).doit()
+    assert res.dummy_eq(diff(expr, u))
+
+
