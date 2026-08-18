@@ -731,6 +731,8 @@ class Expr(Basic, EvalfMixin):
                     a = expr.subs(subs, simultaneous=True)
                 except ZeroDivisionError:
                     a = S.NaN
+                except ValueError:
+                    a = S.NaN
             if a is None: a = S.NaN
 
             # Try S.One
@@ -741,6 +743,8 @@ class Expr(Basic, EvalfMixin):
                     b = expr.subs(subs, simultaneous=True)
                 except ZeroDivisionError:
                     b = S.NaN
+                except ValueError:
+                    a = S.NaN
                 if b is None: b = S.NaN
                 if (b is not S.NaN):
                     if (a is not S.NaN):
@@ -756,6 +760,8 @@ class Expr(Basic, EvalfMixin):
                     c = expr.subs(subs, simultaneous=True)
                 except ZeroDivisionError:
                     c = S.NaN
+                except ValueError:
+                    a = S.NaN
                 if c is None: c = S.NaN
                 if (c is not S.NaN):
                     if (a is not S.NaN):
@@ -782,6 +788,8 @@ class Expr(Basic, EvalfMixin):
                     a = expr.evalf(12, subs=subs)
                 except ZeroDivisionError:
                     a = S.NaN
+                except ValueError:
+                    a = S.NaN
             if a is None: a = S.NaN
 
             # Try 1.0
@@ -792,6 +800,8 @@ class Expr(Basic, EvalfMixin):
                     b = expr.evalf(12, subs=subs)
                 except ZeroDivisionError:
                     b = S.NaN
+                except ValueError:
+                    a = S.NaN
 
                 if b is None: b = S.NaN
                 if (b is not S.NaN):
@@ -809,6 +819,8 @@ class Expr(Basic, EvalfMixin):
                     c = expr.evalf(12, subs=subs)
                 except ZeroDivisionError:
                     c = S.NaN
+                except ValueError:
+                    a = S.NaN
 
                 if c is None: c = S.NaN
                 if (c is not S.NaN):
@@ -830,6 +842,8 @@ class Expr(Basic, EvalfMixin):
                     d = expr._random(12, -1.0, 0.0, 1.0, 0.0)
                 except ZeroDivisionError:
                     d = S.NaN
+                except ValueError:
+                    a = S.NaN
 
                 if d is None: d = S.NaN
                 if (d is not S.NaN):
@@ -856,6 +870,8 @@ class Expr(Basic, EvalfMixin):
                     e = expr._random(12, -1.0, -1.0, 1.0, 1.0)
                 except ZeroDivisionError:
                     e = S.NaN
+                except ValueError:
+                    a = S.NaN
 
                 if e is None: e = S.NaN
                 if (e is not S.NaN):
