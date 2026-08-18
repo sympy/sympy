@@ -2221,19 +2221,22 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
 
     qa, qd, b = integrate_hyperexponential_polynomial(pp, DE, z)
 
+    i = pp.nth(0, 0)
+    if b:
+        resid = i
+    else:
+        # the residual that the not-b branch below will return.  The
+        # arithmetic is done on expressions: as Polys, qa and qd can
+        # disagree about whether the residue dummy z belongs to the
+        # ground domain, which fails to unify.
+        resid = p - (qd.as_expr()*derivation(qa, DE).as_expr() -
+            qa.as_expr()*derivation(qd, DE).as_expr())/qd.as_expr()**2
+
     if not DE.transcendental:
-        if b:
-            it = pp.nth(0, 0)
-        else:
-            # Same residual as in the not-b branch below.
-            it = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)
-                ).as_expr()/(qd**2).as_expr()
         if not _nontrans_accept(g1[0].as_expr()/g1[1].as_expr() +
-                qa.as_expr()/qd.as_expr(), g2, it, a, d, DE, z):
+                qa.as_expr()/qd.as_expr(), g2, resid, a, d, DE, z):
             return (S.Zero, Integral(cancel(
                 (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
-
-    i = pp.nth(0, 0)
 
     ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) \
         + residue_reduce_to_basic(g2, DE, z))
@@ -2250,12 +2253,16 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
         else:
             # t == 1 encodes "the exponential degenerates to 1", which
             # has no meaning for an algebraic generator (t representing
-            # sqrt(u) does not become 1 when a parameter vanishes);
-            # leave the degenerate branch unevaluated.  Only the piece
-            # whose generic antiderivative is qas/qds goes in -- the
-            # other components of the answer and the residual are
-            # accounted for by the caller
-            fallback = Integral(cancel((p - i).subs(s)), DE.x)
+            # sqrt(u) does not become 1 when a parameter vanishes).  Nor
+            # can the degenerate branch replace only the qas/qds piece:
+            # the generic decomposition itself divides by qds, so every
+            # piece of it may be invalid there.  Since the caller still
+            # adds ret and keeps integrating the residual, the branch
+            # is the unevaluated rest of this level minus ret, so that
+            # the assembled degenerate value is exactly
+            # Integral(a/d - resid) + (the residual's integral).
+            fallback = Integral(cancel((a.as_expr()/d.as_expr()
+                - resid).subs(s)), DE.x) - ret
         ret += Piecewise(
                 (qas/qds, Ne(qds, 0)),
                 (fallback, True)
@@ -2264,12 +2271,10 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
         ret += qas/qds
 
     if not b:
-        i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
-            (qd**2).as_expr()
         if DE.transcendental:
-            i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
+            i = NonElementaryIntegral(cancel(resid).subs(s), DE.x)
         else:
-            i = Integral(cancel(i).subs(s), DE.x)
+            i = Integral(cancel(resid).subs(s), DE.x)
     return (ret, i, b)
 
 

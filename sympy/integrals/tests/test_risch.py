@@ -955,6 +955,21 @@ def test_risch_integrate_algebraic_branches():
     f = 1/(x**2 - x**2*sqrt(x**2 + 2*x + 1)/(x + 1) + 1)
     r = risch_integrate(f, x, algebraic=True)
     assert r == Integral(f, x)
+    # a partially integrated level (unsolved nonconstant part) with a
+    # parameter-dependent denominator: the residual stays outside for
+    # the caller to keep integrating, and the degenerate branch is the
+    # unevaluated rest of the level, so the assembled degenerate value
+    # is Integral(f - resid) + Integral(resid) with nothing counted
+    # twice
+    f = 1/(x**2 + a**2)**Rational(3, 2) + sqrt(x**2 + a**2)
+    r = risch_integrate(f, x)
+    assert r == Piecewise(
+        ((a**2*x + x**3)/(a**2*(a**2 + x**2)**Rational(3, 2)),
+         Ne(a**2, 0)),
+        (Integral((a**2 + 3*x**2)/(a**4*sqrt(a**2 + x**2)
+                  + a**2*x**2*sqrt(a**2 + x**2)), x), True)) + \
+        Integral((a**2*(a**2 + x**2)**2 - 3*x**2)
+                 / (a**2*(a**2 + x**2)**Rational(3, 2)), x)
     # a seventh-root ratio has no exact algebraic roots of unity, but
     # a constant occurring only as a numerator polynomial factor needs
     # no assignment, so this must not be over-rejected
