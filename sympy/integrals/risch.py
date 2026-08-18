@@ -2256,11 +2256,19 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
             # sqrt(u) does not become 1 when a parameter vanishes).  Nor
             # can the degenerate branch replace only the qas/qds piece:
             # the generic decomposition itself divides by qds, so every
-            # piece of it may be invalid there.  Since the caller still
-            # adds ret and keeps integrating the residual, the branch
-            # is the unevaluated rest of this level minus ret, so that
-            # the assembled degenerate value is exactly
-            # Integral(a/d - resid) + (the residual's integral).
+            # piece of it may be invalid there.
+            if not b:
+                # with a residual returned separately, no branch value
+                # can survive the degenerate substitution (both the
+                # rest of the level and the residual keep the vanishing
+                # denominator); give the level up so the caller retries
+                # the original integrand whole
+                return (S.Zero, Integral(cancel(
+                    (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
+            # everything else this level produced is inside ret, so the
+            # branch is the unevaluated rest of the level minus ret,
+            # and the assembled degenerate value is exactly
+            # Integral(a/d - i) plus the continuing constant's integral
             fallback = Integral(cancel((a.as_expr()/d.as_expr()
                 - resid).subs(s)), DE.x) - ret
         ret += Piecewise(
