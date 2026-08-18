@@ -20,7 +20,7 @@ from sympy.utilities.misc import filldedent
 import string
 import re as _re
 import random
-from itertools import product
+from itertools import count, product
 
 
 if TYPE_CHECKING:
@@ -502,7 +502,7 @@ class Dummy(Symbol):
     # If a new session is started between `srepr` and `eval`, there is a very
     # small chance that `d2` will be equal to a previously-created Dummy.
 
-    _count = 0
+    _count = count()
     _prng = random.Random()
     _base_dummy_index = _prng.randint(10**6, 9*10**6)
 
@@ -516,12 +516,11 @@ class Dummy(Symbol):
         if dummy_index is not None:
             assert name is not None, "If you specify a dummy_index, you must also provide a name"
 
-        if name is None:
-            name = "Dummy_" + str(Dummy._count)
-
         if dummy_index is None:
-            dummy_index = Dummy._base_dummy_index + Dummy._count
-            Dummy._count += 1
+            count_value = next(Dummy._count)
+            dummy_index = Dummy._base_dummy_index + count_value
+            if name is None:
+                name = "Dummy_" + str(count_value)
 
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)

@@ -1,6 +1,8 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 from __future__ import annotations
 
+import pytest
+
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
@@ -187,6 +189,7 @@ def test_roots_cubic():
         ]
 
 
+@pytest.mark.thread_unsafe(reason="has pathological scaling with concurrent root analysis")
 def test_roots_quartic():
     assert roots_quartic(Poly(x**4, x)) == [0, 0, 0, 0]
     assert roots_quartic(Poly(x**4 + x**3, x)) in [
@@ -250,6 +253,7 @@ def test_issue_21287():
         Poly(x**4 - x**2*(3 + 5*I) + 2*x*(-1 + I) - 1 + 3*I, x)))
 
 
+@pytest.mark.thread_unsafe(reason="has pathological scaling with concurrent root analysis")
 def test_roots_quintic():
     eqs = (x**5 - 2,
             (x/2 + 1)**5 - 5*(x/2 + 1) + 12,
