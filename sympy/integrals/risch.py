@@ -2394,6 +2394,13 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     possibly get a solution in terms of special functions.  It is False by
     default.
 
+    If ``algebraic`` is ``True``, the transcendental machinery is used to
+    solve integrals involving radicals (internally, by representing `x**(1/n)`
+    as ``exp(log(x)/n)``). In this case, an unevaluated ``Integral`` result is
+    not a proof of nonelementaryness. It only means the transcendental
+    algorithms aren't able to handle the radical integrand, and the full
+    algebraic Risch algorithm may be required.
+
     Examples
     ========
 
