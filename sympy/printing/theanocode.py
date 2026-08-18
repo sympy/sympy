@@ -2,8 +2,8 @@
 .. deprecated:: 1.8
 
   ``sympy.printing.theanocode`` is deprecated. Theano has been renamed to
-  Aesara. Use ``sympy.printing.aesaracode`` instead. See
-  :ref:`theanocode-deprecated` for more information.
+  Aesara, and later to PyTensor. Use ``sympy.printing.aesaracode`` instead.
+  See :ref:`theanocode-deprecated` for more information.
 
 """
 from __future__ import annotations
@@ -360,7 +360,7 @@ def theano_code(expr, cache=None, **kwargs):
     sympy_deprecation_warning(
         """
         sympy.printing.theanocode is deprecated. Theano has been renamed to
-        Aesara. Use sympy.printing.aesaracode instead.""",
+        Aesara, and later to PyTensor. Use sympy.printing.aesaracode instead.""",
         deprecated_since_version="1.8",
     active_deprecations_target='theanocode-deprecated')
 
@@ -518,7 +518,8 @@ def theano_function(inputs, outputs, scalar=False, *,
     """
     sympy_deprecation_warning(
         """
-        sympy.printing.theanocode is deprecated. Theano has been renamed to Aesara. Use sympy.printing.aesaracode instead""",
+        sympy.printing.theanocode is deprecated. Theano has been renamed to
+        Aesara, and later to PyTensor. Use sympy.printing.aesaracode instead""",
         deprecated_since_version="1.8",
     active_deprecations_target='theanocode-deprecated')
 
