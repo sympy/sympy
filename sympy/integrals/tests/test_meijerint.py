@@ -725,9 +725,12 @@ def test_issue_10211():
     # wrong sign for h < 0: the integrand is even in h)
     G = (h**4 + 2*h**2*w**2 + w**4)/(h**2*(h**2 + w**2)**Rational(3, 2))
     N = (-h**4 - 2*h**2*w**2 - w**4)/(h**2*(h**2 + w**2)**Rational(3, 2))
+    r = sqrt(h**2 + x**2 - 2*x*y + y**2)
     assert integrate((1/sqrt((y-x)**2 + h**2)**3), (x,0,w), (y,0,w)) == \
         Piecewise((-2*h**2/(h**2)**Rational(3, 2) + G - N,
-                   (h > -oo) & (h < oo) & Ne(h, 0)), (w**2, True))
+                   (h > -oo) & (h < oo) & Ne(h, 0)),
+                  (Integral(1/(h**2*r + x**2*r - 2*x*y*r + y**2*r),
+                            (x, 0, w), (y, 0, w)), True))
 
 
 def test_issue_11806():

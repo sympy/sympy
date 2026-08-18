@@ -2245,9 +2245,18 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
 
         # XXX: Does qd = 0 always necessarily correspond to the exponential
         # equaling 1?
+        if DE.transcendental:
+            fallback = integrate((p - i).subs(DE.t, 1).subs(s), DE.x)
+        else:
+            # t == 1 encodes "the exponential degenerates to 1", which
+            # has no meaning for an algebraic generator (t representing
+            # sqrt(u) does not become 1 when a parameter vanishes);
+            # leave the degenerate branch unevaluated
+            fallback = Integral(cancel(
+                (a.as_expr()/d.as_expr()).subs(s)), DE.x)
         ret += Piecewise(
                 (qas/qds, Ne(qds, 0)),
-                (integrate((p - i).subs(DE.t, 1).subs(s), DE.x), True)
+                (fallback, True)
             )
     else:
         ret += qas/qds
@@ -2395,12 +2404,15 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     Only transcendental functions are supported.  Currently, only exponentials
     and logarithms are supported, but support for trigonometric functions is
-    forthcoming.
+    forthcoming.  Radicals are handled through the ``algebraic`` flag
+    described below.
 
-    If this function returns an unevaluated Integral in the result, it means
-    that it has proven that integral to be nonelementary.  Any errors will
-    result in raising NotImplementedError.  The unevaluated Integral will be
-    an instance of NonElementaryIntegral, a subclass of Integral.
+    If this function returns a NonElementaryIntegral (a subclass of Integral)
+    in the result, it means that it has proven that integral to be
+    nonelementary.  A plain unevaluated Integral carries no such proof: it is
+    returned for radical integrands (see ``algebraic`` below), where the
+    nonelementary conclusions of the transcendental machinery are not valid.
+    Any errors will result in raising NotImplementedError.
 
     handle_first may be either 'exp' or 'log'.  This changes the order in
     which the extension is built, and may result in a different (but
@@ -2411,11 +2423,12 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     exponential case has been implemented.
 
     If ``separate_integral`` is ``True``, the result is returned as a tuple (ans, i),
-    where the integral is ans + i, ans is elementary, and i is either a
-    NonElementaryIntegral or 0.  This useful if you want to try further
-    integrating the NonElementaryIntegral part using other algorithms to
-    possibly get a solution in terms of special functions.  It is False by
-    default.
+    where the integral is ans + i, ans is elementary, and i is either 0, a
+    NonElementaryIntegral, or a plain unevaluated Integral (for radical
+    integrands, where nonelementaryness is not proven).  This is useful if
+    you want to try further integrating the leftover part using other
+    algorithms to possibly get a solution in terms of special functions.  It
+    is False by default.
 
     If ``algebraic`` is ``True`` (the default), the transcendental machinery
     is used to solve integrals involving radicals (internally, by representing

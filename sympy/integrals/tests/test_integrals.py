@@ -1735,7 +1735,8 @@ def test_issue_2975():
     F = (C*w/2 + w**3/8)/(C*(C + w**2/4)**(S(3)/2))
     assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == \
         Piecewise((F - F.subs(w, -w), (C > -oo) & (C < oo) & Ne(C, 0)),
-                  (w, True))
+                  (Integral(1/(C*sqrt(C + y**2) + y**2*sqrt(C + y**2)),
+                            (y, -w/2, w/2)), True))
 
 
 def test_issue_7827():
@@ -2151,7 +2152,9 @@ def test_old_issues():
     # wrong sign for y < 0)
     I2 = integrate(1/(x**2+y**2)**(Rational(3,2)),x)
     assert I2 == Piecewise(((x**3 + x*y**2)/(y**2*(x**2 + y**2)**Rational(3,2)),
-        Ne(y**2, 0)), (x, True))
+        Ne(y**2, 0)),
+        (Integral(1/(x**2*sqrt(x**2 + y**2) + y**2*sqrt(x**2 + y**2)), x),
+        True))
     # https://github.com/sympy/sympy/issues/6278
     I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
     assert I3 == 2*sqrt(3)*pi/3
