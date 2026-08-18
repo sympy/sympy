@@ -2248,8 +2248,14 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
 
         # XXX: Does qd = 0 always necessarily correspond to the exponential
         # equaling 1?
+        cond = Ne(qds, 0)
         if DE.transcendental:
             fallback = integrate((p - i).subs(DE.t, 1).subs(s), DE.x)
+        elif cond is S.true:
+            # the denominator provably cannot vanish; there is no
+            # degenerate branch
+            ret += qas/qds
+            cond = None
         else:
             # t == 1 encodes "the exponential degenerates to 1", which
             # has no meaning for an algebraic generator (t representing
@@ -2271,10 +2277,11 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
             # Integral(a/d - i) plus the continuing constant's integral
             fallback = Integral(cancel((a.as_expr()/d.as_expr()
                 - resid).subs(s)), DE.x) - ret
-        ret += Piecewise(
-                (qas/qds, Ne(qds, 0)),
-                (fallback, True)
-            )
+        if cond is not None:
+            ret += Piecewise(
+                    (qas/qds, cond),
+                    (fallback, True)
+                )
     else:
         ret += qas/qds
 

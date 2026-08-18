@@ -965,6 +965,12 @@ def test_risch_integrate_algebraic_branches():
     assert r == Integral(
         (a**4 + 2*a**2*x**2 + x**4 + 1)
         / (a**2*sqrt(a**2 + x**2) + x**2*sqrt(a**2 + x**2)), x)
+    # but with a denominator that provably cannot vanish, a partially
+    # integrated level keeps its elementary part
+    f = x*sqrt(x**2 + 1) + 1/sqrt(x**2 + 1)
+    r = risch_integrate(f, x)
+    assert r == (x**2 + 1)**Rational(3, 2)/3 + \
+        Integral(1/sqrt(x**2 + 1), x)
     # a seventh-root ratio has no exact algebraic roots of unity, but
     # a constant occurring only as a numerator polynomial factor needs
     # no assignment, so this must not be over-rejected
