@@ -716,19 +716,23 @@ class Expr(Basic, EvalfMixin):
         # Don't attempt substitution or differentiation with non-number symbols
         wrt_number = {sym for sym in wrt if sym.kind is NumberKind}
 
+        # substitute symbols that are known to be zero
+        num_expr = expr.subs({f: S.Zero for f in wrt_number if f.is_zero}, simultaneous=True)
+        num_free = {f for f in wrt_number if f.is_zero is not True}
+
         # try numerical evaluation to see if we get two different values
         failing_number = None
-        if wrt_number == free and all(sym.is_finite is not False for sym in free):
+        if wrt_number == free and (len(num_free) > 0) and all(sym.is_finite is not False for sym in num_free):
 
             # TRY FORMAL SUBTITUTION S.Zero, S.One, -S.One
             # They are tried only if they comply assumptions
 
             # Try S.Zero
             a = S.NaN
-            if all(sym.is_zero is not False for sym in free):
+            if all(sym.is_zero is not False for sym in num_free):
                 try:
-                    subs = dict.fromkeys(free, S.Zero)
-                    a = expr.subs(subs, simultaneous=True)
+                    subs = dict.fromkeys(num_free, S.Zero)
+                    a = num_expr.subs(subs, simultaneous=True)
                 except ZeroDivisionError:
                     a = S.NaN
                 except ValueError:
@@ -737,10 +741,10 @@ class Expr(Basic, EvalfMixin):
 
             # Try S.One
             b = S.NaN
-            if all(sym.is_positive is not False for sym in free):
+            if all(sym.is_positive is not False for sym in num_free):
                 try:
-                    subs = dict.fromkeys(free, S.One)
-                    b = expr.subs(subs, simultaneous=True)
+                    subs = dict.fromkeys(num_free, S.One)
+                    b = num_expr.subs(subs, simultaneous=True)
                 except ZeroDivisionError:
                     b = S.NaN
                 except ValueError:
@@ -754,10 +758,10 @@ class Expr(Basic, EvalfMixin):
 
             # Try -S.One
             c = S.NaN
-            if all(sym.is_negative is not False for sym in free):
+            if all(sym.is_negative is not False for sym in num_free):
                 try:
-                    subs = dict.fromkeys(free, -S.One)
-                    c = expr.subs(subs, simultaneous=True)
+                    subs = dict.fromkeys(num_free, -S.One)
+                    c = num_expr.subs(subs, simultaneous=True)
                 except ZeroDivisionError:
                     c = S.NaN
                 except ValueError:
@@ -782,10 +786,10 @@ class Expr(Basic, EvalfMixin):
 
             # Try 0.0
             a = S.NaN
-            if all(sym.is_zero is not False for sym in free):
+            if all(sym.is_zero is not False for sym in num_free):
                 try:
-                    subs = dict.fromkeys(free, 0.0)
-                    a = expr.evalf(12, subs=subs)
+                    subs = dict.fromkeys(num_free, 0.0)
+                    a = num_expr.evalf(12, subs=subs)
                 except ZeroDivisionError:
                     a = S.NaN
                 except ValueError:
@@ -794,10 +798,10 @@ class Expr(Basic, EvalfMixin):
 
             # Try 1.0
             b = S.NaN
-            if all(sym.is_positive is not False for sym in free):
+            if all(sym.is_positive is not False for sym in num_free):
                 try:
-                    subs = dict.fromkeys(free, 1.0)
-                    b = expr.evalf(12, subs=subs)
+                    subs = dict.fromkeys(num_free, 1.0)
+                    b = num_expr.evalf(12, subs=subs)
                 except ZeroDivisionError:
                     b = S.NaN
                 except ValueError:
@@ -813,10 +817,10 @@ class Expr(Basic, EvalfMixin):
 
             # Try -1.0
             c = S.NaN
-            if all(sym.is_negative is not False for sym in free):
+            if all(sym.is_negative is not False for sym in num_free):
                 try:
-                    subs = dict.fromkeys(free, -1.0)
-                    c = expr.evalf(12, subs=subs)
+                    subs = dict.fromkeys(num_free, -1.0)
+                    c = num_expr.evalf(12, subs=subs)
                 except ZeroDivisionError:
                     c = S.NaN
                 except ValueError:
@@ -837,9 +841,9 @@ class Expr(Basic, EvalfMixin):
 
             # Try real
             d = S.NaN
-            if all(sym.is_real is not False for sym in free):
+            if all(sym.is_real is not False for sym in num_free):
                 try:
-                    d = expr._random(12, -1.0, 0.0, 1.0, 0.0)
+                    d = num_expr._random(12, -1.0, 0.0, 1.0, 0.0)
                 except ZeroDivisionError:
                     d = S.NaN
                 except ValueError:
@@ -865,9 +869,9 @@ class Expr(Basic, EvalfMixin):
 
             # Try complex
             e = S.NaN
-            if all(sym.is_complex is not False for sym in free):
+            if all(sym.is_complex is not False for sym in num_free):
                 try:
-                    e = expr._random(12, -1.0, -1.0, 1.0, 1.0)
+                    e = num_expr._random(12, -1.0, -1.0, 1.0, 1.0)
                 except ZeroDivisionError:
                     e = S.NaN
                 except ValueError:
