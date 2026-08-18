@@ -313,6 +313,11 @@ class SATSolver:
     ###############################
     #    IPASIR Style Interface   #
     ###############################
+
+    # The following code is not implemented fully, there are
+    # a lot of things that can be added to the Interface. This is
+    # the most minimalistic version of it. Add new required features as TODO.
+
     """
     A subset of the IPASIR standard for incremental SAT solving, using the
     names that CaDiCaL gives them in its C++ API. Only the parts needed to
@@ -529,7 +534,7 @@ class SATSolver:
             self._clause_buffer.append(lit)
             return
 
-        cls = self._clause_buffer
+        clause_to_add = self._clause_buffer
         self._clause_buffer = []
 
         # The decisions were made without this clause, so the search restarts.
@@ -540,22 +545,23 @@ class SATSolver:
         if self._status == IpasirStatus.SATISFIABLE:
             self._status = IpasirStatus.UNKNOWN
 
-        cls_num = len(self.clauses)
-        self.clauses.append(cls)
+        clause_num = len(self.clauses)
+        self.clauses.append(clause_to_add)
 
-        for cls_lit in cls:
-            self.occurrence_count[cls_lit] += 1
+        for clause_lit in clause_to_add:
+            self.occurrence_count[clause_lit] += 1
 
         # Only a literal that is not already false can be a sentinel. With
         # fewer than two of those the clause is satisfied, unit, or false, and
         # none of those needs to be watched.
-        unassigned = [cls_lit for cls_lit in cls
-                      if not self.variable_set[abs(cls_lit)]]
+        unassigned = [clause_lit for clause_lit in clause_to_add
+                      if not self.variable_set[abs(clause_lit)]]
 
         if len(unassigned) > 1:
-            self.sentinels[unassigned[0]].add(cls_num)
-            self.sentinels[unassigned[-1]].add(cls_num)
-        elif not any(cls_lit in self.var_settings for cls_lit in cls):
+            self.sentinels[unassigned[0]].add(clause_num)
+            self.sentinels[unassigned[-1]].add(clause_num)
+        elif not any(clause_lit in self.var_settings
+                     for clause_lit in clause_to_add):
             if unassigned:
                 self._unit_prop_queue.append(unassigned[0])
             else:
