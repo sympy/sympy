@@ -816,9 +816,11 @@ def test_risch_integrate_algebraic():
     # _nontrans_accept(), and negative conclusions are degraded to
     # plain Integrals (nonelementary proofs assume transcendence).
     y = Symbol('y', positive=True)
-    # off by default: plain integrate()'s automatic risch attempt must
-    # not start building algebraic towers
-    raises(NotImplementedError, lambda: risch_integrate(sqrt(y), y))
+    # on by default; algebraic=False keeps the purely transcendental
+    # behavior of raising on radicals
+    raises(NotImplementedError, lambda: risch_integrate(sqrt(y), y,
+        algebraic=False))
+    assert risch_integrate(sqrt(y), y) == 2*y**Rational(3, 2)/3
     assert risch_integrate(sqrt(y), y, algebraic=True) == \
         2*y**Rational(3, 2)/3
     assert risch_integrate(1/sqrt(y), y, algebraic=True) == 2*sqrt(y)

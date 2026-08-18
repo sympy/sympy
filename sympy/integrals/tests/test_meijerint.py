@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.core.function import expand_func
 from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
@@ -720,15 +721,21 @@ def test_issue_8368():
 
 def test_issue_10211():
     from sympy.abc import h, w
+    # (the historical expectation 2*sqrt(1 + w**2/h**2)/h - 2/h has the
+    # wrong sign for h < 0: the integrand is even in h)
+    G = (h**4 + 2*h**2*w**2 + w**4)/(h**2*(h**2 + w**2)**Rational(3, 2))
+    N = (-h**4 - 2*h**2*w**2 - w**4)/(h**2*(h**2 + w**2)**Rational(3, 2))
     assert integrate((1/sqrt((y-x)**2 + h**2)**3), (x,0,w), (y,0,w)) == \
-        2*sqrt(1 + w**2/h**2)/h - 2/h
+        Piecewise((-2*h**2/(h**2)**Rational(3, 2) + G - N,
+                   (h > -oo) & (h < oo) & Ne(h, 0)), (w**2, True))
 
 
 def test_issue_11806():
     from sympy.core.symbol import symbols
     y, L = symbols('y L', positive=True)
+    F = (L**3 + L*y**2)/(y**2*(L**2 + y**2)**Rational(3, 2))
     assert integrate(1/sqrt(x**2 + y**2)**3, (x, -L, L)) == \
-        2*L/(y**2*sqrt(L**2 + y**2))
+        F - F.subs(L, -L)
 
 def test_issue_10681():
     from sympy.polys.domains.realfield import RR

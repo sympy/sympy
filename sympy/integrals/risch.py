@@ -405,6 +405,29 @@ class DifferentialExtension:
                     bf = factor(i.base)
                     pd = bf.as_powers_dict()
                     if len(pd) > 1 or any(e != 1 for e in pd.values()):
+                        # factor() is not canonical about factor signs
+                        # (they can depend on the symbol names), which
+                        # would make structurally equal radicands split
+                        # differently; normalize each factor to a
+                        # positive leading coefficient in x.  The branch
+                        # ratio absorbs any sign choice, so this is
+                        # purely a canonicalization.
+                        norm = {}
+                        negexp = S.Zero
+                        for b, e in pd.items():
+                            if b.is_Add:
+                                try:
+                                    lc = Poly(b, self.x).LC()
+                                except PolynomialError:
+                                    lc = None
+                                if lc is not None and lc.is_negative:
+                                    b = -b
+                                    negexp += e
+                            norm[b] = norm.get(b, S.Zero) + e
+                        if negexp:
+                            norm[S.NegativeOne] = norm.get(S.NegativeOne,
+                                S.Zero) + negexp
+                        pd = norm
                         split = Mul(*[Pow(b, e*i.exp) for b, e in
                                       pd.items()])
                         if all(b.is_nonnegative for b in pd):
@@ -2363,7 +2386,7 @@ class NonElementaryIntegral(Integral):
 
 def risch_integrate(f, x, extension=None, handle_first='log',
                     separate_integral=False, rewrite_complex=None,
-                    conds='piecewise', algebraic=False):
+                    conds='piecewise', algebraic=True):
     r"""
     The Risch Integration Algorithm.
 
@@ -2394,12 +2417,13 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     possibly get a solution in terms of special functions.  It is False by
     default.
 
-    If ``algebraic`` is ``True``, the transcendental machinery is used to
-    solve integrals involving radicals (internally, by representing `x**(1/n)`
-    as ``exp(log(x)/n)``). In this case, an unevaluated ``Integral`` result is
-    not a proof of nonelementaryness. It only means the transcendental
-    algorithms aren't able to handle the radical integrand, and the full
-    algebraic Risch algorithm may be required.
+    If ``algebraic`` is ``True`` (the default), the transcendental machinery
+    is used to solve integrals involving radicals (internally, by representing
+    `x**(1/n)` as ``exp(log(x)/n)``). In this case, an unevaluated
+    ``Integral`` result is not a proof of nonelementaryness. It only means the
+    transcendental algorithms aren't able to handle the radical integrand, and
+    the full algebraic Risch algorithm may be required.  With
+    ``algebraic=False``, radical integrands raise ``NotImplementedError``.
 
     Examples
     ========
