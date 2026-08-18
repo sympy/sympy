@@ -2000,8 +2000,8 @@ def test_positive():
     assert _ask_recursive(Q.positive(x**y),Q.zero(x)) is None
     assert _ask_recursive(Q.positive(x**y), Q.zero(x) & Q.negative(y)) is None
     assert _ask_recursive(Q.positive(x**y), Q.zero(x) & Q.even(y)) is None
-    assert ask(Q.positive(exp(1 + I))) is False
-    assert ask(Q.positive(Pow(E, 1 + I, evaluate=False))) is False
+    assert _ask_recursive(Q.positive(exp(1 + I))) is False
+    assert _ask_recursive(Q.positive(Pow(E, 1 + I, evaluate=False))) is False
 
     # logarithm
     assert _ask_recursive(Q.positive(log(x)), Q.imaginary(x)) is False
