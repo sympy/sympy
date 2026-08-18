@@ -328,55 +328,24 @@ class SATSolver:
     # https://github.com/arminbiere/cadical/blob/master/src/cadical.hpp
     """
     def propagate(self):
-        """Propagate the unit clauses at the root decision level.
+        """Propagate the unit clauses at the root level, deciding nothing.
 
-        No decision is made here, so every literal that gets assigned is
-        implied by the clauses of the solver. The assignments can be
-        inspected with ``fixed()``, and ``solve()`` may be called
-        afterwards to continue with a full search.
+        Returns ``UNSATISFIABLE`` on a conflict, ``SATISFIABLE`` if it leaves
+        no variable unassigned, and ``UNKNOWN`` otherwise.
 
-        Returns ``IpasirStatus.UNSATISFIABLE`` if propagation runs into a
-        conflict and ``IpasirStatus.SATISFIABLE`` if it leaves no variable
-        unassigned, as no decision is needed to satisfy the clauses then and
-        ``val()`` can read the model. Otherwise ``IpasirStatus.UNKNOWN`` is
-        returned.
-
-        TODO: in IPASIR this propagates at whatever decision level the solver
-        is on, which is not implemented here yet, so a ``ValueError`` is
-        raised away from the root level rather than propagating there.
-
-        TODO: an assignment also has to hold in the LRA theory to be a model,
-        so ``IpasirStatus.UNKNOWN`` is returned for a solver that has one and
-        the theory is left for ``solve()`` to check.
+        TODO: IPASIR propagates at any decision level, while this is limited
+        to the root, and a solver with an LRA theory always gets ``UNKNOWN``
+        since the theory is only checked by ``solve()``.
 
         Examples
         ========
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-
-        Propagating ``{1}`` through ``{-1, 2}`` implies the literal ``2``,
-        which leaves ``3`` for the search to decide on:
-
-        >>> l = SATSolver([{1}, {-1, 2}, {3, -3}], {1, 2, 3}, set())
-        >>> l.propagate() == IpasirStatus.UNKNOWN
-        True
-        >>> l.fixed(2)
-        1
-
-        With ``3`` gone, propagation assigns every variable and the clauses
-        are satisfied without any search:
-
         >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
         >>> l.propagate() == IpasirStatus.SATISFIABLE
         True
-        >>> l.val(2)
-        2
-
-        A conflict at the root level means the clauses are unsatisfiable:
-
-        >>> l = SATSolver([{1}, {-1}], {1}, set())
-        >>> l.propagate() == IpasirStatus.UNSATISFIABLE
-        True
+        >>> l.fixed(2)
+        1
 
         """
         if len(self.levels) > 1:
@@ -393,33 +362,10 @@ class SATSolver:
 
     def fixed(self, lit):
         """Return 1 if *lit* is implied by the clauses, -1 if ``-lit`` is
-        implied by them, and 0 if neither is known at this point.
+        implied, and 0 if neither is known yet.
 
-        This is only defined at the root level, where no decision has been
-        made and therefore every assignment is implied by the clauses. Note
-        that the literals found by ``propagate()`` are implied but are not
-        necessarily all of the implied literals, so 0 means "not known"
-        rather than "not implied".
-
-        TODO: in IPASIR this can be asked at any decision level, which needs
-        the assignments made at the root level to be kept apart from the ones
-        that follow from a decision.
-
-        Examples
-        ========
-
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-        >>> l = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
-        >>> l.propagate() == IpasirStatus.UNKNOWN
-        True
-        >>> l.fixed(1), l.fixed(2), l.fixed(-2)
-        (1, 1, -1)
-
-        Nothing is implied about ``3``, as it only occurs in a clause that
-        propagation cannot resolve:
-
-        >>> l.fixed(3)
-        0
+        TODO: IPASIR answers this at any decision level, which needs the root
+        level assignments to be kept apart from those a decision implies.
 
         """
         if len(self.levels) > 1:
@@ -432,25 +378,8 @@ class SATSolver:
         return 0
 
     def solve(self):
-        """Search for a model of the clauses.
-
-        Returns ``IpasirStatus.SATISFIABLE`` or
-        ``IpasirStatus.UNSATISFIABLE``. When ``propagate()`` has already been
-        called, the work it did at the root level is reused rather than
-        repeated. Use ``val()`` to read the model afterwards.
-
-        Examples
-        ========
-
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-
-        >>> l = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
-        >>> l.propagate() == IpasirStatus.UNKNOWN
-        True
-        >>> l.solve() == IpasirStatus.SATISFIABLE
-        True
-        >>> l.val(2)
-        2
+        """Search for a model, reusing the work ``propagate()`` already did,
+        and return ``SATISFIABLE`` or ``UNSATISFIABLE``.
 
         """
         if self._models is not None:
@@ -470,16 +399,6 @@ class SATSolver:
         """Return *lit* if it is true in the model found by ``solve()``,
         ``-lit`` if it is false there, and 0 if the model does not assign it.
 
-        Examples
-        ========
-
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
-        >>> l.solve() == IpasirStatus.SATISFIABLE
-        True
-        >>> l.val(1), l.val(2)
-        (1, 2)
-
         """
         if self._status != IpasirStatus.SATISFIABLE:
             raise ValueError("val() is only defined once solve() has returned "
@@ -492,38 +411,28 @@ class SATSolver:
         return 0
 
     def add(self, lit):
-        """Add *lit* to the clause that is being built, or add that clause to
-        the solver when *lit* is 0.
+        """Add *lit* to the clause being built, or add that clause to the
+        solver when *lit* is 0.
 
-        Adding a clause backtracks to the root level, keeping the literals
-        implied there, so ``solve()`` may be called again afterwards. An
-        unsatisfiable solver stays unsatisfiable.
+        The search restarts from the root level, so ``solve()`` may be called
+        again, and an unsatisfiable solver stays unsatisfiable.
+
+        TODO: only literals of the variables the solver was created with can
+        be added, as there is no way to introduce a new variable yet.
 
         Examples
         ========
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-
-        A clause added one literal at a time:
-
-        >>> l = SATSolver([{1}], {1, 2}, set())
-        >>> l.add(-1)
-        >>> l.add(2)
-        >>> l.add(0)
-        >>> l.propagate() == IpasirStatus.SATISFIABLE
-        True
-        >>> l.fixed(2)
-        1
-
-        Clauses may be added to a solver that has already been used:
-
         >>> l = SATSolver([{1, 2}], {1, 2}, set())
         >>> l.solve() == IpasirStatus.SATISFIABLE
         True
-        >>> l.clause(-1)
-        >>> l.clause(-2)
-        >>> l.solve() == IpasirStatus.UNSATISFIABLE
+        >>> l.add(-1)
+        >>> l.add(0)
+        >>> l.solve() == IpasirStatus.SATISFIABLE
         True
+        >>> l.val(1)
+        -1
 
         """
         if lit != 0:
@@ -569,26 +478,10 @@ class SATSolver:
                 self._status = IpasirStatus.UNSATISFIABLE
 
     def clause(self, *lits):
-        """Add the clause made up of *lits* to the solver.
+        """Add the clause made up of *lits*, given one by one or as a single
+        iterable, which covers the ``clause`` overloads of CaDiCaL.
 
-        The literals are given either one by one or as a single iterable of
-        them, covering the ``clause(int, ...)`` and ``clause(const
-        std::vector<int> &)`` overloads of CaDiCaL. This is ``add()`` called
-        on each of them and then on 0, so the remarks made there apply here as
-        well. Without any literal it adds the empty clause, which is false.
-
-        Examples
-        ========
-
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-
-        >>> l = SATSolver([{1, 2}], {1, 2}, set())
-        >>> l.clause(-1, 2)
-        >>> l.propagate() == IpasirStatus.UNKNOWN
-        True
-        >>> l.clause([-2])
-        >>> l.propagate() == IpasirStatus.UNSATISFIABLE
-        True
+        Without any literal it adds the empty clause, which is false.
 
         """
         if len(lits) == 1 and not isinstance(lits[0], int):
@@ -597,30 +490,22 @@ class SATSolver:
         for lit in lits:
             self.add(lit)
 
+        # Zero is never a literal, which is why IPASIR uses it to mark the
+        # end of a clause rather than passing a length around.
         self.add(0)
 
     def copy(self):
-        """Return a solver with the same clauses and the same state as this
-        one, but independent of it.
+        """Return an independent solver with the same clauses and state, so
+        that adding clauses to it or searching with it changes nothing here.
 
-        Adding clauses to the copy or searching with it leaves this solver
-        untouched. The model of a previous ``solve()`` is not carried over,
-        so the copy is free to search again.
-
-        Unlike ``copy`` in CaDiCaL, which copies the formula into a solver
-        given to it, this returns a new solver and copies the state of the
-        search along with the formula.
+        Unlike ``copy`` in CaDiCaL this returns a new solver and copies the
+        state of the search along with the formula.
 
         Examples
         ========
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-
-        Trying ``-2`` without giving up the work already done:
-
-        >>> l = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
-        >>> l.propagate() == IpasirStatus.UNKNOWN
-        True
+        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
         >>> temporary = l.copy()
         >>> temporary.clause(-2)
         >>> temporary.solve() == IpasirStatus.UNSATISFIABLE
