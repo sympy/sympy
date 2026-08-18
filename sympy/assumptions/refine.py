@@ -441,6 +441,59 @@ def refine_matrixelement(expr, assumptions):
         return MatrixElement(matrix, j, i)
 
 
+def _decompose_trig_arg(arg, assumptions, sin_shift=False):
+    """
+    Decompose a trigonometric argument into integer multiples of ``pi/2``.
+    Used to handle the periodic simplification of trig functions.
+
+    Returns
+    =======
+
+    known : Expr
+        The summed coefficient of ``pi/2`` over the terms whose parity is
+        known to be odd or even.
+    known_is_even : bool
+        Whether ``known`` is even (its negation when ``sin_shift`` is set).
+    rem : Expr
+        The leftover argument, the non-``pi`` terms together with the
+        unknown-parity multiples of ``pi/2``.
+
+    ``None`` is returned when no simplification is possible.
+    """
+    half_units = []
+    rest = []
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        theta = term.coeff(S.Pi)
+        if theta and ask(Q.integer(2 * theta), assumptions):
+            half_units.append(2 * theta)
+        else:
+            rest.append(term)
+    if not half_units:
+        return None
+
+    known = 0
+    unknown = 0
+    known_is_even = True
+    for theta in half_units:
+        theta_is_even = ask(Q.even(theta), assumptions)
+        if theta_is_even is None:
+            unknown += theta
+        else:
+            known += theta
+            known_is_even = (known_is_even == theta_is_even)
+
+    if known == 0:
+        return None
+
+    rem = Add(*rest) + unknown * S.Pi / 2
+    # from sin to cos shift, the parity should be odd.
+    if sin_shift:
+        known = known - 1 # -1 is equvalent to -pi/2
+        known_is_even = not known_is_even
+    return known, known_is_even, rem
+
+
 def refine_sin_cos(expr, assumptions):
     """
     Handler for sin and cos functions.
@@ -449,9 +502,8 @@ def refine_sin_cos(expr, assumptions):
     ========
 
     >>> from sympy.assumptions.refine import refine_sin_cos
-    >>> from sympy import Symbol, Q, sin, cos, pi
-    >>> from sympy.abc import x, y
-    >>> n = Symbol('n')
+    >>> from sympy import Q, sin, cos, pi
+    >>> from sympy.abc import x, y, n
     >>> refine_sin_cos(cos(n*pi), Q.even(n))
     1
     >>> refine_sin_cos(sin(n*pi/2), Q.odd(n) & Q.odd((n-1)/2))
@@ -479,51 +531,17 @@ def refine_sin_cos(expr, assumptions):
     if ask(Q.zero(arg), assumptions):
         return 0 if expr_is_sin else 1
 
-    integer_coeffs_of_pi_half = []
-    remaining_terms = []
-
-    terms = arg.args if arg.is_Add else (arg,)
-    for term in terms:
-        coeff_of_pi = term.coeff(S.Pi)
-        if coeff_of_pi and ask(Q.integer(2 * coeff_of_pi), assumptions):
-            coeff_of_pi_half = 2 * coeff_of_pi
-            integer_coeffs_of_pi_half.append(coeff_of_pi_half)
-        else:
-            remaining_terms.append(term)
-
-    if not integer_coeffs_of_pi_half:
-        return expr
-
-    sum_of_parity_known_coeffs = 0
-    sum_of_parity_unknown_coeffs = 0
-    sum_of_parity_known_coeffs_is_even = True
-    for coeff in integer_coeffs_of_pi_half:
-        coeff_is_even = ask(Q.even(coeff), assumptions)
-        if coeff_is_even is None:
-            sum_of_parity_unknown_coeffs += coeff
-        else:
-            sum_of_parity_known_coeffs += coeff
-            sum_of_parity_known_coeffs_is_even = (
-                sum_of_parity_known_coeffs_is_even == coeff_is_even
-            )
-
-    if sum_of_parity_known_coeffs == 0:
-        return expr
-
     # Treat sin as a phase-shifted cosine so a single logic path can handle both.
-    if expr_is_sin:
-        k = sum_of_parity_known_coeffs - 1
-        k_is_even = not sum_of_parity_known_coeffs_is_even
-    else:
-        k = sum_of_parity_known_coeffs
-        k_is_even = sum_of_parity_known_coeffs_is_even
+    decomposition = _decompose_trig_arg(arg, assumptions, sin_shift=expr_is_sin)
+    if decomposition is None:
+        return expr
+    k, k_is_even, rem = decomposition
 
     # If k is even:
     #    `cos(rem + k*pi/2)` -> `(-1)^(k/2) * cos(rem)`
     #
     # If k is odd:
     #    `cos(rem + k*pi/2)` -> `(-1)^((k+1)/2) * sin(rem)`
-    rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
     if k_is_even:
         pow_expr = (-1)**(k / 2)
         refined_pow = refine_Pow(pow_expr, assumptions)
@@ -532,6 +550,55 @@ def refine_sin_cos(expr, assumptions):
         pow_expr = (-1)**((k + 1) / 2)
         refined_pow = refine_Pow(pow_expr, assumptions)
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
+
+
+def refine_tan_cot(expr, assumptions):
+    """
+    Handler for the tan and cot functions.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_tan_cot
+    >>> from sympy import Q, tan, cot, pi
+    >>> from sympy.abc import x, n
+    >>> refine_tan_cot(tan(n*pi), Q.integer(n))
+    0
+    >>> refine_tan_cot(tan(x + n*pi), Q.integer(n))
+    tan(x)
+    >>> refine_tan_cot(cot(x + n*pi), Q.integer(n))
+    cot(x)
+    >>> refine_tan_cot(tan(n*pi/2), Q.even(n))
+    0
+    >>> refine_tan_cot(tan(n*pi/2), Q.odd(n))
+    zoo
+    """
+    from sympy.functions.elementary.trigonometric import tan, cot
+    from sympy.calculus.accumulationbounds import AccumBounds
+    if not isinstance(expr, (tan, cot)):
+        raise TypeError("refine_tan_cot expects a tan or cot function.")
+
+    arg = expr.args[0]
+    if (ask(Q.infinite(arg), assumptions) and
+            ask(Q.extended_real(arg), assumptions)):
+        return AccumBounds(S.NegativeInfinity, S.Infinity)
+
+    if ask(Q.zero(arg), assumptions):
+        return S.Zero if isinstance(expr, tan) else S.ComplexInfinity
+
+    decomposition = _decompose_trig_arg(arg, assumptions)
+    if decomposition is None:
+        return expr
+    _, known_is_even, rem = decomposition
+
+    # tan(rem + EVEN*pi/2) = tan(rem)
+    # cot(rem + EVEN*pi/2) = tan(rem)
+    if known_is_even:
+        return expr.func(rem)
+    # known is odd ->
+    # tan(rem + ODD*pi/2) = -cot(rem)
+    # tan(rem + ODD*pi/2) = -tan(rem)
+    return -cot(rem) if isinstance(expr, tan) else -tan(rem)
 
 
 def refine_Heaviside(expr, assumptions):
@@ -613,6 +680,8 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'tan': refine_tan_cot,
+    'cot': refine_tan_cot,
     'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
