@@ -1757,10 +1757,7 @@ def _trig_base_rule(integral):
     original_integrand, symbol = integral
     integrand = original_integrand
     base, power = integrand.as_base_exp()
-    reciprocal_functions = {
-        sin: csc, cos: sec, tan: cot,
-        cot: tan, sec: cos, csc: sin,
-    }
+    reciprocal_functions = {sin: csc, cos: sec, tan: cot, cot: tan, sec: cos, csc: sin}
     if power == -1 and base.func in reciprocal_functions:
         integrand = reciprocal_functions[base.func](symbol)
 
@@ -1791,13 +1788,10 @@ def _trig_base_rule(integral):
         else:
             return
 
-        step = _trig_substitution_rule(
-            IntegralInfo(integrand, symbol), rewritten, S.One,
-            u_var, u_func, substituted)
+        step = _trig_substitution_rule(IntegralInfo(integrand, symbol), rewritten, S.One, u_var, u_func, substituted)
 
     if integrand != original_integrand:
-        return RewriteRule(
-            original_integrand, symbol, integrand, step)
+        return RewriteRule(original_integrand, symbol, integrand, step)
     return step
 
 
@@ -1806,8 +1800,7 @@ def trig_rule(integral):
     base, power = integrand.as_base_exp()
     if isinstance(integrand, (sin, cos, tan, cot, sec, csc)):
         argument = integrand.args[0]
-    elif (power == -1 and
-            isinstance(base, (sin, cos, tan, cot, sec, csc))):
+    elif power == -1 and isinstance(base, (sin, cos, tan, cot, sec, csc)):
         argument = base.args[0]
     else:
         return
@@ -1826,10 +1819,8 @@ def trig_rule(integral):
     if coefficient != 1:
         constant = 1/coefficient
         scaled_integrand = constant*standard_integrand
-        substep = ConstantTimesRule(
-            scaled_integrand, u_var, constant, standard_integrand, substep)
-    generic_step = URule(
-        integrand, symbol, u_var, argument, substep)
+        substep = ConstantTimesRule(scaled_integrand, u_var, constant, standard_integrand, substep)
+    generic_step = URule(integrand, symbol, u_var, argument, substep)
     return _add_trig_degenerate_step(integral, coefficient, generic_step)
 
 def trig_cmplx_exp_rule(integral: IntegralInfo):
@@ -2537,10 +2528,8 @@ def _add_trig_degenerate_step(integral, coefficient, generic_step):
     generic_cond = Ne(coefficient, 0)
     if generic_cond is S.true:
         return generic_step
-
     degenerate_integrand = integrand.subs(symbol, 0).subs(coefficient, 0)
-    if degenerate_integrand.has(
-            S.ComplexInfinity, S.Infinity, S.NegativeInfinity, S.NaN):
+    if degenerate_integrand.has(S.ComplexInfinity, S.Infinity, S.NegativeInfinity, S.NaN):
         return generic_step
     degenerate_step = RewriteRule(
         integrand, symbol, degenerate_integrand,
@@ -2554,75 +2543,57 @@ def _trig_substitution_rule(integral, rewritten, coefficient, u_var, u_func,
     substep = integral_steps(substituted, u_var)
     generic_step = URule(rewritten, symbol, u_var, u_func, substep)
     if rewritten != integrand:
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(
-            integrand, rewritten, symbol))
-        generic_step = RewriteRule(
-            integrand, symbol, rewritten, generic_step)
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+        generic_step = RewriteRule(integrand, symbol, rewritten, generic_step)
     return _add_trig_degenerate_step(integral, coefficient, generic_step)
 
 
+def _rewrite_to_reciprocal(integrand, function, reciprocal):
+    def rewrite_factor(factor):
+        base, power = factor.as_base_exp()
+        # Positive powers may be better handled in their original family.
+        if (base.func == function and power.is_integer is True and power.is_negative is True):
+            return reciprocal(base.args[0])**(-power)
+        return factor
+    return Mul(*(rewrite_factor(factor) for factor in Mul.make_args(integrand)))
+
 def sincos_sinodd(integral, argument, coefficient, m, n):
-    rewritten = ((1 - cos(argument)**2)**((m - 1) / 2) *
-                 sin(argument) * cos(argument)**n)
+    rewritten = ((1 - cos(argument)**2)**((m - 1) / 2) * sin(argument) * cos(argument)**n)
     u_var = Dummy("u")
-    substituted = (-(1 - u_var**2)**((m - 1) / 2) * u_var**n /
-                   coefficient)
-    return _trig_substitution_rule(
-        integral, rewritten, coefficient, u_var, cos(argument), substituted)
+    substituted = -(1 - u_var**2)**((m - 1) / 2) * u_var**n / coefficient
+    return _trig_substitution_rule(integral, rewritten, coefficient, u_var, cos(argument), substituted)
 
 
 def sincos_cosodd(integral, argument, coefficient, m, n):
-    rewritten = ((1 - sin(argument)**2)**((n - 1) / 2) *
-                 cos(argument) * sin(argument)**m)
+    rewritten = ((1 - sin(argument)**2)**((n - 1) / 2) * cos(argument) * sin(argument)**m)
     u_var = Dummy("u")
-    substituted = ((1 - u_var**2)**((n - 1) / 2) * u_var**m /
-                   coefficient)
-    return _trig_substitution_rule(
-        integral, rewritten, coefficient, u_var, sin(argument), substituted)
+    substituted = (1 - u_var**2)**((n - 1) / 2) * u_var**m / coefficient
+    return _trig_substitution_rule(integral, rewritten, coefficient, u_var, sin(argument), substituted)
 
 
 def sincos_product_to_sum(integral):
     integrand, symbol = integral
     rewritten = sincos_to_sum(integrand)
     if rewritten != integrand:
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(
-            integrand, rewritten, symbol))
-        return RewriteRule(integrand, symbol, rewritten,
-                           integral_steps(rewritten, symbol))
-
-def _rewrite_to_reciprocal(integrand, function, reciprocal):
-    def rewrite_factor(factor):
-        base, power = factor.as_base_exp()
-        if base.func == function and power.is_integer is True:
-            return reciprocal(base.args[0])**(-power)
-        return factor
-
-    return Mul(*(rewrite_factor(factor)
-                 for factor in Mul.make_args(integrand)))
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+        return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
 
 
 def tansec_tanodd(integral, argument, coefficient, m, n):
-    rewritten = ((sec(argument)**2 - 1)**((m - 1) / 2) *
-                 tan(argument) * sec(argument)**n)
+    rewritten = ((sec(argument)**2 - 1)**((m - 1) / 2) * tan(argument) * sec(argument)**n)
     u_var = Dummy("u")
-    substituted = ((u_var**2 - 1)**((m - 1) / 2) *
-                   u_var**(n - 1) / coefficient)
-    return _trig_substitution_rule(
-        integral, rewritten, coefficient, u_var, sec(argument), substituted)
+    substituted = (u_var**2 - 1)**((m - 1) / 2) * u_var**(n - 1) / coefficient
+    return _trig_substitution_rule(integral, rewritten, coefficient, u_var, sec(argument), substituted)
 
 
 def tansec_seceven(integral, argument, coefficient, m, n):
-    rewritten = ((1 + tan(argument)**2)**((n - 2) / 2) *
-                 sec(argument)**2 * tan(argument)**m)
+    rewritten = ((1 + tan(argument)**2)**((n - 2) / 2) * sec(argument)**2 * tan(argument)**m)
     u_var = Dummy("u")
-    substituted = ((1 + u_var**2)**((n - 2) / 2) *
-                   u_var**m / coefficient)
-    return _trig_substitution_rule(
-        integral, rewritten, coefficient, u_var, tan(argument), substituted)
+    substituted = (1 + u_var**2)**((n - 2) / 2) * u_var**m / coefficient
+    return _trig_substitution_rule(integral, rewritten, coefficient, u_var, tan(argument), substituted)
 
 
-def tansec_tan_reduction(integral, argument, coefficient, m,
-                         degenerate=True):
+def tansec_tan_reduction(integral, argument, coefficient, m, degenerate=True):
     integrand, symbol = integral
     reduced = tan(argument)**(m - 2)
     substitution_integrand = reduced*sec(argument)**2
@@ -2630,47 +2601,35 @@ def tansec_tan_reduction(integral, argument, coefficient, m,
 
     u_var = Dummy("u")
     substituted = u_var**(m - 2) / coefficient
-    substitution_step = URule(
-        substitution_integrand, symbol, u_var, tan(argument),
-        integral_steps(substituted, u_var))
+    substitution_step = URule(substitution_integrand, symbol, u_var, tan(argument), integral_steps(substituted, u_var))
 
     if m == 2:
         reduction_step = ConstantRule(S.One, symbol)
     else:
-        reduction_step = trig_tansec_rule(
-            IntegralInfo(reduced, symbol), degenerate=False)
-    negative_reduced = -reduced
-    reduction_step = ConstantTimesRule(
-        negative_reduced, symbol, S.NegativeOne, reduced, reduction_step)
-    generic_step = RewriteRule(
-        integrand, symbol, rewritten,
-        AddRule(rewritten, symbol, [substitution_step, reduction_step]))
+        reduction_step = trig_tansec_rule(IntegralInfo(reduced, symbol), degenerate=False)
+
+    reduction_step = ConstantTimesRule(-reduced, symbol, S.NegativeOne, reduced, reduction_step)
+    generic_step = RewriteRule(integrand, symbol, rewritten, AddRule(rewritten, symbol, [substitution_step, reduction_step]))
     if not degenerate:
         return generic_step
     return _add_trig_degenerate_step(integral, coefficient, generic_step)
 
+
 def cotcsc_cotodd(integral, argument, coefficient, m, n):
-    rewritten = ((csc(argument)**2 - 1)**((m - 1) / 2) *
-                 cot(argument) * csc(argument)**n)
+    rewritten = ((csc(argument)**2 - 1)**((m - 1) / 2) * cot(argument) * csc(argument)**n)
     u_var = Dummy("u")
-    substituted = (-(u_var**2 - 1)**((m - 1) / 2) *
-                   u_var**(n - 1) / coefficient)
-    return _trig_substitution_rule(
-        integral, rewritten, coefficient, u_var, csc(argument), substituted)
+    substituted = -(u_var**2 - 1)**((m - 1) / 2) * u_var**(n - 1) / coefficient
+    return _trig_substitution_rule(integral, rewritten, coefficient, u_var, csc(argument), substituted)
 
 
 def cotcsc_csceven(integral, argument, coefficient, m, n):
-    rewritten = ((1 + cot(argument)**2)**((n - 2) / 2) *
-                 csc(argument)**2 * cot(argument)**m)
+    rewritten = ((1 + cot(argument)**2)**((n - 2) / 2) * csc(argument)**2 * cot(argument)**m)
     u_var = Dummy("u")
-    substituted = (-(1 + u_var**2)**((n - 2) / 2) *
-                   u_var**m / coefficient)
-    return _trig_substitution_rule(
-        integral, rewritten, coefficient, u_var, cot(argument), substituted)
+    substituted = -(1 + u_var**2)**((n - 2) / 2) * u_var**m / coefficient
+    return _trig_substitution_rule(integral, rewritten, coefficient, u_var, cot(argument), substituted)
 
 
-def cotcsc_cot_reduction(integral, argument, coefficient, m,
-                         degenerate=True):
+def cotcsc_cot_reduction(integral, argument, coefficient, m, degenerate=True):
     integrand, symbol = integral
     reduced = cot(argument)**(m - 2)
     substitution_integrand = reduced*csc(argument)**2
@@ -2678,24 +2637,19 @@ def cotcsc_cot_reduction(integral, argument, coefficient, m,
 
     u_var = Dummy("u")
     substituted = -u_var**(m - 2) / coefficient
-    substitution_step = URule(
-        substitution_integrand, symbol, u_var, cot(argument),
-        integral_steps(substituted, u_var))
+    substitution_step = URule(substitution_integrand, symbol, u_var, cot(argument), integral_steps(substituted, u_var))
 
     if m == 2:
         reduction_step = ConstantRule(S.One, symbol)
     else:
-        reduction_step = trig_cotcsc_rule(
-            IntegralInfo(reduced, symbol), degenerate=False)
-    negative_reduced = -reduced
-    reduction_step = ConstantTimesRule(
-        negative_reduced, symbol, S.NegativeOne, reduced, reduction_step)
-    generic_step = RewriteRule(
-        integrand, symbol, rewritten,
-        AddRule(rewritten, symbol, [substitution_step, reduction_step]))
+        reduction_step = trig_cotcsc_rule(IntegralInfo(reduced, symbol), degenerate=False)
+
+    reduction_step = ConstantTimesRule(-reduced, symbol, S.NegativeOne, reduced, reduction_step)
+    generic_step = RewriteRule(integrand, symbol, rewritten, AddRule(rewritten, symbol, [substitution_step, reduction_step]))
     if not degenerate:
         return generic_step
     return _add_trig_degenerate_step(integral, coefficient, generic_step)
+
 
 def trig_sincos_rule(integral):
     integrand, symbol = integral
@@ -2710,31 +2664,40 @@ def trig_sincos_rule(integral):
         coefficient = coefficients[argument]
         sin_power = powers[sin].get(argument, S.Zero)
         cos_power = powers[cos].get(argument, S.Zero)
-        if (sin_power.is_negative and cos_power.is_zero and
-                sin_power.is_even):
-            return
-        if (cos_power.is_negative and sin_power.is_zero and
-                cos_power.is_even):
-            return
-        # TODO: delegate also negative odd powers once reductions for sec and
-        # csc are implemented.
-        if sin_power.is_odd:
-            return sincos_sinodd(
-                integral, argument, coefficient, sin_power, cos_power)
-        if cos_power.is_odd:
-            return sincos_cosodd(
-                integral, argument, coefficient, sin_power, cos_power)
 
+        # TODO: Sec/csc reductions could give cleaner negative-odd results.
+        if sin_power.is_odd:
+            return sincos_sinodd(integral, argument, coefficient,
+                                 sin_power, cos_power)
+        if cos_power.is_odd:
+            return sincos_cosodd(integral, argument, coefficient,
+                                 sin_power, cos_power)
+
+        # Move negative even powers to a reciprocal trig family.
+        if (sin_power.is_even and cos_power.is_even and
+                (sin_power.is_negative or cos_power.is_negative)):
+            reciprocal_power = -(sin_power + cos_power)
+            if sin_power.is_negative:
+                rewritten = cot(argument)**cos_power * csc(argument)**reciprocal_power
+                rule = trig_cotcsc_rule
+            else:
+                rewritten = tan(argument)**sin_power * sec(argument)**reciprocal_power
+                rule = trig_tansec_rule
+            substep = rule(IntegralInfo(rewritten, symbol))
+            # Symbolic powers may make the delegated rule undecidable.
+            if substep is not None:
+                return RewriteRule(integrand, symbol, rewritten, substep)
+
+    # Linearize products not handled by a direct substitution.
     if all(power.is_integer is True and power.is_nonnegative is True
            for function_powers in powers.values()
            for power in function_powers.values()):
         return sincos_product_to_sum(integral)
 
+
 def trig_tansec_rule(integral, degenerate=True):
     original_integrand, symbol = integral
     integrand = _rewrite_to_reciprocal(original_integrand, cos, sec)
-    integrand = _rewrite_to_reciprocal(integrand, cot, tan)
-
     collected = _collect_trig_powers(integrand, symbol, (tan, sec))
     if collected is None:
         return
@@ -2749,33 +2712,29 @@ def trig_tansec_rule(integral, degenerate=True):
     tan_power = powers[tan].get(argument, S.Zero)
     sec_power = powers[sec].get(argument, S.Zero)
 
-    # Delegate negative tangent powers to the cotangent rule.
+    # Leave pure reciprocal tangent powers to the cot/csc rule.
     if tan_power.is_negative and sec_power.is_zero:
         return
     integral = IntegralInfo(integrand, symbol)
-    if (sec_power.is_integer and sec_power.is_negative and
-            tan_power.is_zero):
+    # Return pure reciprocal secant powers to the sin/cos rule.
+    if sec_power.is_integer and sec_power.is_negative and tan_power.is_zero:
         rewritten = _rewrite_to_reciprocal(integrand, sec, cos)
         substep = trig_sincos_rule(IntegralInfo(rewritten, symbol))
         if substep is None:
             return
         step = RewriteRule(integrand, symbol, rewritten, substep)
     elif tan_power.is_odd:
-        step = tansec_tanodd(
-            integral, argument, coefficient, tan_power, sec_power)
+        step = tansec_tanodd(integral, argument, coefficient, tan_power, sec_power)
     elif sec_power.is_even and sec_power.is_nonzero:
-        step = tansec_seceven(
-            integral, argument, coefficient, tan_power, sec_power)
-    elif (sec_power.is_zero and isinstance(tan_power, Integer) and
-            tan_power >= 2):
-        step = tansec_tan_reduction(
-            integral, argument, coefficient, tan_power, degenerate)
+        step = tansec_seceven(integral, argument, coefficient, tan_power, sec_power)
+    elif sec_power.is_zero and isinstance(tan_power, Integer) and tan_power >= 2:
+        step = tansec_tan_reduction(integral, argument, coefficient, tan_power, degenerate)
     else:
         return
     if integrand != original_integrand:
-        return RewriteRule(
-            original_integrand, symbol, integrand, step)
+        return RewriteRule(original_integrand, symbol, integrand, step)
     return step
+
 
 def trig_cotcsc_rule(integral, degenerate=True):
     original_integrand, symbol = integral
@@ -2797,28 +2756,23 @@ def trig_cotcsc_rule(integral, degenerate=True):
     csc_power = powers[csc].get(argument, S.Zero)
 
     integral = IntegralInfo(integrand, symbol)
-    if (csc_power.is_integer and csc_power.is_negative and
-            cot_power.is_zero):
+    # Return pure reciprocal cosecant powers to the sin/cos rule.
+    if csc_power.is_integer and csc_power.is_negative and cot_power.is_zero:
         rewritten = _rewrite_to_reciprocal(integrand, csc, sin)
         substep = trig_sincos_rule(IntegralInfo(rewritten, symbol))
         if substep is None:
             return
         step = RewriteRule(integrand, symbol, rewritten, substep)
     elif cot_power.is_odd:
-        step = cotcsc_cotodd(
-            integral, argument, coefficient, cot_power, csc_power)
+        step = cotcsc_cotodd(integral, argument, coefficient, cot_power, csc_power)
     elif csc_power.is_even and csc_power.is_nonzero:
-        step = cotcsc_csceven(
-            integral, argument, coefficient, cot_power, csc_power)
-    elif (csc_power.is_zero and isinstance(cot_power, Integer) and
-            cot_power >= 2):
-        step = cotcsc_cot_reduction(
-            integral, argument, coefficient, cot_power, degenerate)
+        step = cotcsc_csceven(integral, argument, coefficient, cot_power, csc_power)
+    elif csc_power.is_zero and isinstance(cot_power, Integer) and cot_power >= 2:
+        step = cotcsc_cot_reduction(integral, argument, coefficient, cot_power, degenerate)
     else:
         return
     if integrand != original_integrand:
-        return RewriteRule(
-            original_integrand, symbol, integrand, step)
+        return RewriteRule(original_integrand, symbol, integrand, step)
     return step
 
 
@@ -2826,6 +2780,7 @@ def trig_powers_products_rule(integral):
     return do_one(null_safe(trig_sincos_rule),
                   null_safe(trig_tansec_rule),
                   null_safe(trig_cotcsc_rule))(integral)
+
 
 def heaviside_rule(integral):
     integrand, symbol = integral
