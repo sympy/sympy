@@ -2155,6 +2155,9 @@ def test_old_issues():
         Ne(y**2, 0)),
         (Integral(1/(x**2*sqrt(x**2 + y**2) + y**2*sqrt(x**2 + y**2)), x),
         True))
+    # a base-field part must not be double-counted in the degenerate
+    # branch's unevaluated Integral
+    assert integrate(1 + 1/(x**2+y**2)**(Rational(3,2)), x) == x + I2
     # https://github.com/sympy/sympy/issues/6278
     I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
     assert I3 == 2*sqrt(3)*pi/3

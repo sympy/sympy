@@ -2251,9 +2251,11 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
             # t == 1 encodes "the exponential degenerates to 1", which
             # has no meaning for an algebraic generator (t representing
             # sqrt(u) does not become 1 when a parameter vanishes);
-            # leave the degenerate branch unevaluated
-            fallback = Integral(cancel(
-                (a.as_expr()/d.as_expr()).subs(s)), DE.x)
+            # leave the degenerate branch unevaluated.  Only the piece
+            # whose generic antiderivative is qas/qds goes in -- the
+            # other components of the answer and the residual are
+            # accounted for by the caller
+            fallback = Integral(cancel((p - i).subs(s)), DE.x)
         ret += Piecewise(
                 (qas/qds, Ne(qds, 0)),
                 (fallback, True)
@@ -2425,7 +2427,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     If ``separate_integral`` is ``True``, the result is returned as a tuple (ans, i),
     where the integral is ans + i, ans is elementary, and i is either 0, a
     NonElementaryIntegral, or a plain unevaluated Integral (for radical
-    integrands, where nonelementaryness is not proven).  This is useful if
+    integrands, where nonelementarity is not proven).  This is useful if
     you want to try further integrating the leftover part using other
     algorithms to possibly get a solution in terms of special functions.  It
     is False by default.
@@ -2433,7 +2435,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     If ``algebraic`` is ``True`` (the default), the transcendental machinery
     is used to solve integrals involving radicals (internally, by representing
     `x**(1/n)` as ``exp(log(x)/n)``). In this case, an unevaluated
-    ``Integral`` result is not a proof of nonelementaryness. It only means the
+    ``Integral`` result is not a proof of nonelementarity. It only means the
     transcendental algorithms aren't able to handle the radical integrand, and
     the full algebraic Risch algorithm may be required.  With
     ``algebraic=False``, radical integrands raise ``NotImplementedError``.
