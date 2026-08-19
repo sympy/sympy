@@ -2689,7 +2689,7 @@ def trig_sincos_rule(integral):
                 return RewriteRule(integrand, symbol, rewritten, substep)
 
     # Linearize products not handled by a direct substitution.
-    if all(power.is_integer is True and power.is_nonnegative is True
+    if all(isinstance(power, Integer) and power >= 0
            for function_powers in powers.values()
            for power in function_powers.values()):
         return sincos_product_to_sum(integral)
