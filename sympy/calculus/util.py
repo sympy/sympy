@@ -159,7 +159,7 @@ def continuous_domain(f, symbol, domain):
     return cont_domain - singularities(f, symbol, domain)
 
 
-def function_range(f, symbol, domain):
+def function_range(f, symbol, domain, loc=False):
     """
     Finds the range of a function in a given domain.
     This method is limited by the ability to determine the singularities and
@@ -246,7 +246,7 @@ def function_range(f, symbol, domain):
                 if singleton in domain:
                     range_int += FiniteSet(f.subs(symbol, singleton))
         elif isinstance(interval, Interval):
-            vals = S.EmptySet
+            vals_map = {}
             critical_values = S.EmptySet
             bounds = ((interval.left_open, interval.inf, '+'),
                    (interval.right_open, interval.sup, '-'))
@@ -254,9 +254,18 @@ def function_range(f, symbol, domain):
             for is_open, limit_point, direction in bounds:
                 if is_open:
                     critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
-                    vals += critical_values
+
+                    limiting_value = limit(f, symbol, limit_point, direction)
+                    if not vals_map.get(limiting_value) and vals_map.get(limiting_value) != 0:
+                        vals_map[limiting_value] = FiniteSet(limit_point)
+                    else:
+                        vals_map[limiting_value] = Union(vals_map[limiting_value], FiniteSet(limit_point))
                 else:
-                    vals += FiniteSet(f.subs(symbol, limit_point))
+                    value = f.subs(symbol, limit_point)
+                    if not vals_map.get(value) and vals_map.get(value) != 0:
+                        vals_map[value] = FiniteSet(limit_point)
+                    else:
+                        vals_map[value] = Union(vals_map[value], FiniteSet(limit_point))
 
             critical_points = solveset(f.diff(symbol), symbol, interval)
 
@@ -268,10 +277,14 @@ def function_range(f, symbol, domain):
                         'Infinite number of critical points for {}'.format(f))
 
             for critical_point in critical_points:
-                vals += FiniteSet(f.subs(symbol, critical_point))
+                value = f.subs(symbol, critical_point)
+                if not vals_map.get(value) and vals_map.get(value) != 0:
+                    vals_map[value] = FiniteSet(critical_point)
+                else:
+                    vals_map[value] = Union(vals_map[value], FiniteSet(critical_point))
 
             left_open, right_open = False, False
-
+            vals = FiniteSet(*vals_map.keys())
             if critical_values is not S.EmptySet:
                 if critical_values.inf == vals.inf:
                     left_open = True
@@ -282,6 +295,9 @@ def function_range(f, symbol, domain):
             range_int += Interval(vals.inf, vals.sup, left_open, right_open)
         else:
             raise NotImplementedError("Unable to find range for the given domain.")
+
+    if loc:
+        return vals_map
 
     return range_int
 
@@ -802,7 +818,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     return set
 
 
-def maximum(f, symbol, domain=S.Reals):
+def maximum(f, symbol, domain=S.Reals, loc=False):
     """
     Returns the maximum value of a function in the given domain.
 
@@ -844,12 +860,18 @@ def maximum(f, symbol, domain=S.Reals):
         if domain is S.EmptySet:
             raise ValueError("Maximum value not defined for empty domain.")
 
+        if loc:
+            vals_map = function_range(f, symbol, domain, loc)
+            max_val = FiniteSet(*vals_map.keys()).sup
+            max_loc = vals_map[max_val]
+            return max_loc, max_val
+
         return function_range(f, symbol, domain).sup
     else:
         raise ValueError("%s is not a valid symbol." % symbol)
 
 
-def minimum(f, symbol, domain=S.Reals):
+def minimum(f, symbol, domain=S.Reals, loc=False):
     """
     Returns the minimum value of a function in the given domain.
 
@@ -890,6 +912,12 @@ def minimum(f, symbol, domain=S.Reals):
     if isinstance(symbol, Symbol):
         if domain is S.EmptySet:
             raise ValueError("Minimum value not defined for empty domain.")
+
+        if loc:
+            vals_map = function_range(f, symbol, domain, loc)
+            min_val = FiniteSet(*vals_map.keys()).inf
+            min_loc = vals_map[min_val]
+            return min_loc, min_val
 
         return function_range(f, symbol, domain).inf
     else:
