@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from functools import lru_cache
+from functools import cache
 
 from sympy.combinatorics.permutations import Permutation
 from sympy.external.gmpy import gcd, lcm, sqrt as isqrt
@@ -525,7 +525,7 @@ def dixon_character_table(conjugacy_classes: Sequence[set[Permutation]]) -> Char
     return CharacterTable(dm, conjugacy_class_reps)
 
 
-def character_table_sn(n: int, cache_size: int | None = 128) -> CharacterTable:
+def character_table_sn(n: int) -> CharacterTable:
     r"""
     Compute the character table of the symmetric group `S_n`
     using the Murnaghan-Nakayama rule.
@@ -540,9 +540,6 @@ def character_table_sn(n: int, cache_size: int | None = 128) -> CharacterTable:
     ==========
     n : int
         The degree of the symmetric group.
-    cache_size : int or None, optional
-        The maximum size of the internal caches. ``None`` means unbounded
-        caching.
 
     Returns
     =======
@@ -587,7 +584,7 @@ def character_table_sn(n: int, cache_size: int | None = 128) -> CharacterTable:
             if value > n - 1 - index
         )
 
-    @lru_cache(maxsize=cache_size)
+    @cache
     def character(lam: tuple[int, ...], mu: tuple[int, ...]) -> int:
         if not mu:
             return int(not lam)
