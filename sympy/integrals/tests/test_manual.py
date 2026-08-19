@@ -137,6 +137,51 @@ def test_manualintegrate_trigpowers():
     assert manualintegrate(cot(x)**2 * csc(x)**6, x) == \
         -cot(x)**7/7 - 2*cot(x)**5/5 - cot(x)**3/3
 
+    f = sin(2*x)**3*cos(3*x)
+    F = 3*cos(x)/8 + cos(3*x)/24 - 3*cos(5*x)/40 + cos(9*x)/72
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    argument = 3*x + 2
+    f, F = sin(argument)**3*cos(argument)**2, cos(argument)**5/15 - cos(argument)**3/9
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+    f, F = tan(argument)**3*sec(argument)**2, sec(argument)**4/12 - sec(argument)**2/6
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+    f, F = cot(argument)**3*csc(argument)**2, -csc(argument)**4/12 + csc(argument)**2/6
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    argument = a*x + b
+    f = tan(argument)**6
+    generic_F = tan(argument)**5/(5*a) - tan(argument)**3/(3*a) + tan(argument)/a - x
+    degenerate_F = x*tan(b)**6
+    F = Piecewise((generic_F, Ne(a, 0)), (degenerate_F, True))
+    assert manualintegrate(f, x) == F
+    assert (generic_F.diff(x) - f).cancel() == 0
+    assert (degenerate_F.diff(x) - f.subs(a, 0)).cancel() == 0
+    f = cot(argument)**6
+    generic_F = -cot(argument)**5/(5*a) + cot(argument)**3/(3*a) - cot(argument)/a - x
+    degenerate_F = x*cot(b)**6
+    F = Piecewise((generic_F, Ne(a, 0)), (degenerate_F, True))
+    assert manualintegrate(f, x) == F
+    assert (generic_F.diff(x) - f).cancel() == 0
+    assert (degenerate_F.diff(x) - f.subs(a, 0)).cancel() == 0
+
+    f = cos(20*x)**3*sin(16*x)**2
+    F = (-sin(12*x)/64 + 3*sin(20*x)/160 - sin(28*x)/448
+         - 3*sin(52*x)/832 + sin(60*x)/480 - sin(92*x)/1472)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    f, F = cot(x)**-2, tan(x) - x
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+    f, F = cot(2*x)**-4, tan(2*x)**3/6 - tan(2*x)/2 + x
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
 
 @slow
 def test_manualintegrate_inversetrig():
@@ -494,7 +539,7 @@ def test_issue_6799():
     integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
     assert manualintegrate(integrand, x) == \
-        ((n*x/2 + sin(2*n*x)/4)*cos(n*phi) - sin(n*phi)*cos(n*x)**2/2)/n
+        x*cos(n*phi)/2 - sin(n*phi - 2*n*x)/(4*n)
     assert r * integrate(integrand, limits).trigsimp() / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
 
@@ -663,7 +708,7 @@ def test_constant_independent_of_symbol():
 
 def test_issue_12641():
     assert manualintegrate(sin(2*x), x) == -cos(2*x)/2
-    assert manualintegrate(cos(x)*sin(2*x), x) == -2*cos(x)**3/3
+    assert manualintegrate(cos(x)*sin(2*x), x) == -cos(x)/2 - cos(3*x)/6
     assert manualintegrate((sin(2*x)*cos(x))/(1 + cos(x)), x) == \
         -2*log(cos(x) + 1) - cos(x)**2 + 2*cos(x)
 
