@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy import solve
+from sympy import lambdify
 from sympy import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros, eye)
 from sympy.simplify.simplify import simplify
@@ -386,104 +387,182 @@ def test_input_format():
 
 
 def test_implicit_kinematics():
-    # Test that implicit kinematics can handle complicated
-    # equations that explicit form struggles with
-    # See https://github.com/sympy/sympy/issues/22626
+    # Test that implicit kinematics can handle complicated equations that
+    # explicit form struggles with See
+    # https://github.com/sympy/sympy/issues/22626 This test was originally
+    # designed to check whether the dynamical differential equations had
+    # significantly fewer mathematical operations if the kinematical
+    # differential equations were left in implicit form, but the reason the
+    # equations had fewer operations was partially due to the fact that the
+    # time differentiated holonomic constraint (quaternion length in this case)
+    # was not provided to KanesMethod. At the time this test was written,
+    # passing in a configuration constraint without passing in a velocity
+    # constraint simply meant that the constraint was ignored and the
+    # unconstrainted dynamical differential equations were formed, which would
+    # have much fewer operations than if the constraint was properly supplied.
 
     # Inertial frame
     NED = ReferenceFrame('NED')
+    # Origin fixed in inertial reference frame
     NED_o = Point('NED_o')
     NED_o.set_vel(NED, 0)
 
-    # body frame
-    q_att = dynamicsymbols('lambda_0:4', real=True)
+    # Orientation generalized coordinates
+    q_att = dynamicsymbols('lambda_0:4', real=True)  # quaternion scalars
+    q_att_vec = Matrix(q_att)
     B = NED.orientnew('B', 'Quaternion', q_att)
 
-    # Generalized coordinates
+    # Position generalized coordinates
     q_pos = dynamicsymbols('B_x:z')
     B_cm = NED_o.locatenew('B_cm', q_pos[0]*B.x + q_pos[1]*B.y + q_pos[2]*B.z)
 
-    q_ind = q_att[1:] + q_pos
-    q_dep = [q_att[0]]
+    # Cooordinates
+    q_ind = q_att[1:] + q_pos  # lam1, lam2, lam3, B_x, B_y, B_z
+    q_dep = [q_att[0]]  # lam0
 
-    kinematic_eqs = []
-
-    # Generalized velocities
-    B_ang_vel = B.ang_vel_in(NED)
-    P, Q, R = dynamicsymbols('P Q R')
-    B.set_ang_vel(NED, P*B.x + Q*B.y + R*B.z)
-
-    B_ang_vel_kd = (B.ang_vel_in(NED) - B_ang_vel).simplify()
-
-    # Equating the two gives us the kinematic equation
-    kinematic_eqs += [
-        B_ang_vel_kd & B.x,
-        B_ang_vel_kd & B.y,
-        B_ang_vel_kd & B.z
-    ]
-
-    B_cm_vel = B_cm.vel(NED)
-    U, V, W = dynamicsymbols('U V W')
-    B_cm.set_vel(NED, U*B.x + V*B.y + W*B.z)
-
-    # Compute the velocity of the point using the two methods
-    B_ref_vel_kd = (B_cm.vel(NED) - B_cm_vel)
-
-    # taking dot product with unit vectors to get kinematic equations
-    # relating body coordinates and velocities
-
-    # Note, there is a choice to dot with NED.xyz here. That makes
-    # the implicit form have some bigger terms but is still fine, the
-    # explicit form still struggles though
-    kinematic_eqs += [
-                      B_ref_vel_kd & B.x,
-                      B_ref_vel_kd & B.y,
-                      B_ref_vel_kd & B.z,
-                     ]
+    # Generalized speeds
+    P, Q, R = dynamicsymbols('P, Q, R')
+    U, V, W, X = dynamicsymbols('U V W, X')
 
     u_ind = [U, V, W, P, Q, R]
+    u_dep = [X]
 
-    # constraints
-    q_att_vec = Matrix(q_att)
-    config_cons = [(q_att_vec.T*q_att_vec)[0] - 1] #unit norm
-    kinematic_eqs = kinematic_eqs + [(q_att_vec.T * q_att_vec.diff())[0]]
+    # Angular velocity
+    B_ang_vel = B.ang_vel_in(NED)
+    B.set_ang_vel(NED, P*B.x + Q*B.y + R*B.z)
 
-    try:
-        KM = KanesMethod(
-            NED,
-            q_ind,
-            u_ind,
-            q_dependent=q_dep,
-            kd_eqs=kinematic_eqs,
-            configuration_constraints=config_cons,
-            velocity_constraints=[],
-            u_dependent=[],  # no dependent speeds
-            u_auxiliary=[],  # no auxiliary speeds
-            explicit_kinematics=False  # implicit kinematics
-        )
-    except Exception as e:
-        raise e
+    # Translational velocity
+    B_cm_vel = B_cm.vel(NED)
+    B_cm.set_vel(NED, U*B.x + V*B.y + W*B.z)
 
-    # mass and inertia dyadic relative to CM
+    # Kinematical differential equations
+    # A generalized speed is needed for the fourth generalized coordinate to
+    # comply with Kane's form of the definition of generalized speeds:
+    # u = Y*q' where len(u) = len(q)
+    # The quaternion kinematical differential equation takes this form:
+    # [P] = Y*[lam0']
+    # [Q]     [lam1']
+    # [R]     [lam2']
+    #         [lam3']
+    # which is only 3 generalized speeds for 4 coordinates.
+    # Solved it looks like:
+    # dlam/dt = 1/2 * [0 -P -Q -R] * [lam0]
+    #                 [P  0  R -Q]   [lam1]
+    #                 [Q -R  0  P]   [lam2]
+    #                 [R  Q -P  0]   [lam3]
+    # which defines this kinematical differential equation of the four lam' as
+    # a function of only 3 generalized speeds P, Q, R.
+    B_ang_vel_kd = (B.ang_vel_in(NED) - B_ang_vel).simplify()
+    B_ref_vel_kd = (B_cm.vel(NED) - B_cm_vel)
+
+    # Add a differential equation that is equal to zero to manage the
+    # additional generalized speed.
+    kinematic_eqs = [
+        (q_att_vec.T*q_att_vec.diff())[0, 0] - X,  # use velocity constraint
+        B_ang_vel_kd.dot(B.x),
+        B_ang_vel_kd.dot(B.y),
+        B_ang_vel_kd.dot(B.z),
+        B_ref_vel_kd.dot(B.x),
+        B_ref_vel_kd.dot(B.y),
+        B_ref_vel_kd.dot(B.z),
+    ]
+    qdots_sol = solve(kinematic_eqs, Matrix(q_dep + q_ind).diff())
+
+    # Holonomic constraint: quaternion magnitude must equal 1
+    # NOTE : You can analytically solve for lam0:
+    # lam0 = sqrt(1 - lam1^2 - lam2^2 - lam3^2)
+    # so the lam0 generalized coordinate could be eliminated.
+    # [lam0, lam1, lam2, lam3]*[lam0] = lam0^2 + lam1^2 + lam2^2 + lam3^2 = 1
+    #                          [lam1]
+    #                          [lam2]
+    #                          [lam3]
+    config_cons = [(q_att_vec.T*q_att_vec)[0] - 1]  # unit norm
+    # constraint is: lam0**2 + lam1**2 + lam2**2 + lam3**2 = 1
+    # time derivative of the constraint is:
+    # 2*lam0*lam0' + 2*lam1*lam1' + 2*lam2*lam2' + 2*lam3*lam3' = 0
+    # or:
+    # lam0*lam0' + lam1*lam1' + lamlam2' + lam3*lam3' = 0
+    # [lam0, lam1, lam2, lam3]*[lam0'] = lam0*lam0' + ... + lam3*lam3' = X
+    #                          [lam1']
+    #                          [lam2']
+    #                          [lam3']
+    #vel_cons = [simplify((q_att_vec.T*q_att_vec.diff())[0, 0].xreplace(qdots_sol))]
+    vel_cons = [X]
+
+    # Single rigid body described by a central inertia dyadic
     M_B = symbols('M_B')
     J_B = inertia(B, *[S(f'J_B_{ax}')*(1 if ax[0] == ax[1] else -1)
-            for ax in ['xx', 'yy', 'zz', 'xy', 'yz', 'xz']])
+                       for ax in ['xx', 'yy', 'zz', 'xy', 'yz', 'xz']])
     J_B = J_B.subs({S('J_B_xy'): 0, S('J_B_yz'): 0})
     RB = RigidBody('RB', B_cm, B, M_B, (J_B, B_cm))
 
     rigid_bodies = [RB]
     # Forces
     force_list = [
-        #gravity pointing down
+        # gravity pointing down
         (RB.masscenter, RB.mass*S('g')*NED.z),
-        #generic forces and torques in body frame(inputs)
+        # generic forces and torques in body frame(inputs)
         (RB.frame, dynamicsymbols('T_z')*B.z),
         (RB.masscenter, dynamicsymbols('F_z')*B.z)
     ]
 
-    KM.kanes_equations(rigid_bodies, force_list)
+    # OPTION 1: Ignore the constraints and form the equations of motion as an
+    # unconstrained system. The holonomic constraint would need to be handled
+    # by augementing with Lagrange multipliers.
+    KM = KanesMethod(
+        NED,
+        q_dep + q_ind,
+        u_dep + u_ind,
+        kd_eqs=kinematic_eqs,
+        bodies=rigid_bodies,
+        forcelist=force_list,
+    )
+    KM.kanes_equations()
 
-    # Expecting implicit form to be less than 5% of the flops
+    # OPTION 2: Include the configuration constraint and let the velocity and
+    # acceleration constraints be automatically handled.
+    KM2 = KanesMethod(
+        NED,
+        q_ind,
+        u_ind,
+        q_dependent=q_dep,
+        u_dependent=u_dep,
+        configuration_constraints=config_cons,
+        kd_eqs=kinematic_eqs,
+        bodies=rigid_bodies,
+        forcelist=force_list,
+    )
+    KM2.kanes_equations()
+
+    # OPTION 3: Provide both the configuration and (simplified) velocity
+    # constraints.
+    KM3 = KanesMethod(
+        NED,
+        q_ind,
+        u_ind,
+        q_dependent=q_dep,
+        u_dependent=u_dep,
+        configuration_constraints=config_cons,
+        velocity_constraints=vel_cons,
+        kd_eqs=kinematic_eqs,
+        bodies=rigid_bodies,
+        forcelist=force_list,
+    )
+    KM3.kanes_equations()
+
+    # TODO : OPTION 4: Solve for the dependent coordinate analytically.
+
+    n_ops_explicit = sum(
+        [x.count_ops() for x in KM.forcing_full] +
+        [x.count_ops() for x in KM.mass_matrix_full]
+    )
+    mass_matrix_kin_explicit = KM.mass_matrix_kin
+    forcing_kin_explicit = KM.forcing_kin
+
+    # The effect of changing this attribute to False is only that Mk*q' = Fk is
+    # combined with the dynamical differential equations instead of I*q' =
+    # Inv(Mk)*Fk, making the kinematical differential equations shorter.
+    KM.explicit_kinematics = False
     n_ops_implicit = sum(
         [x.count_ops() for x in KM.forcing_full] +
         [x.count_ops() for x in KM.mass_matrix_full]
@@ -492,48 +571,63 @@ def test_implicit_kinematics():
     mass_matrix_kin_implicit = KM.mass_matrix_kin
     forcing_kin_implicit = KM.forcing_kin
 
-    KM.explicit_kinematics = True
-    n_ops_explicit = sum(
-        [x.count_ops() for x in KM.forcing_full] +
-        [x.count_ops() for x in KM.mass_matrix_full]
-    )
-    forcing_kin_explicit = KM.forcing_kin
+    # Expecting implicit form to be less than 15% of the flops
+    assert n_ops_implicit / n_ops_explicit < .15
 
-    assert n_ops_implicit / n_ops_explicit < .05
-
-    # Ideally we would check that implicit and explicit equations give the same result as done in test_one_dof
-    # But the whole raison-d'etre of the implicit equations is to deal with problems such
-    # as this one where the explicit form is too complicated to handle, especially the angular part
+    # Ideally we would check that implicit and explicit equations give the same
+    # result as done in test_one_dof, but the whole raison-d'etre of the
+    # implicit equations is to deal with problems such as this one where the
+    # explicit form is too complicated to handle, especially the angular part
     # (i.e. tests would be too slow)
-    # Instead, we check that the kinematic equations are correct using more fundamental tests:
+    # Instead, we check that the kinematic equations are correct using more
+    # fundamental tests:
     #
     # (1) that we recover the kinematic equations we have provided
-    assert (mass_matrix_kin_implicit * KM.q.diff() - forcing_kin_implicit) == Matrix(kinematic_eqs)
+    # M_imp*q' = F_imp
+    expected = Matrix(kinematic_eqs)
+    calculated = mass_matrix_kin_implicit*KM.q.diff() - forcing_kin_implicit
+    assert simplify(expected - calculated) == zeros(len(KM.q), 1)
 
-    # (2) that rate of quaternions matches what 'textbook' solutions give
-    # Note that we just use the explicit kinematics for the linear velocities
-    # as they are not as complicated as the angular ones
-    qdot_candidate = forcing_kin_explicit
+    # M_exp*q' = F_exp
+    expected = Matrix([qdi - qdots_sol[qdi] for qdi in KM.q.diff()])
+    calculated = (mass_matrix_kin_explicit*KM.q.diff() - forcing_kin_explicit)
+    expected = Matrix([qdots_sol[qdi] for qdi in KM.q.diff()])
+    calculated = forcing_kin_explicit
+    # TODO : Slow comparison.
+    #assert simplify(expected - calculated) == zeros(len(KM.q), 1)
+    # Alternative numerical check:
+    syms = find_dynamicsymbols(expected - calculated)
+    eval_comp = lambdify(list(syms), expected - calculated)
+    for v in eval_comp(*list(range(1, len(syms) + 1)))[:]:
+        if abs(v) > 1e-13:
+            raise AssertionError
+
+    # (2) that rate of the quaternion matches the textbook solution
+    # NOTE : The diagonal is not zero because we introduce a generalized speed
+    # X = vel_con = 0.
+    qdot_candidate = Matrix([qdots_sol[qdi] for qdi in q_att_vec.diff()])
+    qdot_candidate = qdot_candidate.subs(2*config_cons[0] + 1, 1)
 
     quat_dot_textbook = Matrix([
-        [0, -P, -Q, -R],
-        [P,  0,  R, -Q],
-        [Q, -R,  0,  P],
-        [R,  Q, -P,  0],
-    ]) * q_att_vec / 2
+        [2*X, -P, -Q, -R],
+        [P,  2*X,  R, -Q],
+        [Q, -R,  2*X,  P],
+        [R,  Q, -P,  2*X],
+    ])*q_att_vec/2
 
-    # Again, if we don't use this "textbook" solution
-    # sympy will struggle to deal with the terms related to quaternion rates
-    # due to the number of operations involved
-    qdot_candidate[-1] = quat_dot_textbook[0] # lambda_0, note the [-1] as sympy's Kane puts the dependent coordinate last
-    qdot_candidate[0]  = quat_dot_textbook[1] # lambda_1
-    qdot_candidate[1]  = quat_dot_textbook[2] # lambda_2
-    qdot_candidate[2]  = quat_dot_textbook[3] # lambda_3
+    assert simplify(qdot_candidate - quat_dot_textbook) == zeros(4, 1)
 
-    # sub the config constraint in the candidate solution and compare to the implicit rhs
+    # sub the config constraint in the candidate solution and compare to the
+    # implicit rhs
     lambda_0_sol = solve(config_cons[0], q_att_vec[0])[1]
-    lhs_candidate = simplify(mass_matrix_kin_implicit * qdot_candidate).subs({q_att_vec[0]: lambda_0_sol})
-    assert lhs_candidate == forcing_kin_implicit
+    # This seems to do M_imp*F_exp == F_imp, why???
+    lhs_candidate = simplify(
+        (mass_matrix_kin_implicit[0:4, 0:4]*qdot_candidate).subs(
+            {q_att_vec[0]: lambda_0_sol}))
+    assert simplify(
+        lhs_candidate - forcing_kin_implicit[[0, 1, 2, 3], :]
+    ) == zeros(4, 1)
+
 
 @slow
 def test_issue_24887():
@@ -561,3 +655,142 @@ def test_issue_24887():
     assert find_dynamicsymbols(kane.forcing).issubset({q1, q2, q3, u1, u2, u3})
     assert simplify(kane.mass_matrix - expected_md) == zeros(3, 3)
     assert simplify(kane.forcing - expected_fd) == zeros(3, 1)
+
+
+def test_constraint_combos():
+    # This tests the combinations of ways you can supply the constraints.
+
+    l, m, c = symbols('l m c')
+    q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1:4 u1:4')
+    N, A = ReferenceFrame('N'), ReferenceFrame('A')
+    A.orient_body_fixed(N, (q1, q2, q3), 'zxy')
+    N_w_A = A.ang_vel_in(N)
+    kdes = [N_w_A.dot(A.x) - u1, N_w_A.dot(A.y) - u2, N_w_A.dot(A.z) - u3]
+    O = Point('O')
+    O.set_vel(N, 0)
+    Po = O.locatenew('Po', -l*A.y)
+    Po.set_vel(A, 0)
+    P = Particle('P', Po, m)
+
+    # no constraints
+    kane = KanesMethod(
+        N,
+        [q1, q2, q3],
+        [u1, u2, u3],
+        kdes, bodies=[P]
+    )
+    assert kane.holonomic_constraints == Matrix([])
+    assert kane.nonholonomic_constraints == Matrix([])
+    assert kane.velocity_constraints == Matrix([])
+
+    # empty constraints
+    kane = KanesMethod(
+        N,
+        [q1, q2, q3],
+        [u1, u2, u3],
+        kdes, bodies=[P],
+        configuration_constraints=[],
+        nonholonomic_constraints=[],
+    )
+    assert kane.holonomic_constraints == Matrix([])
+    assert kane.nonholonomic_constraints == Matrix([])
+    assert kane.velocity_constraints == Matrix([])
+
+    # only holonomic constraints
+    kane = KanesMethod(
+        N,
+        [q2, q3],
+        [u2, u3],
+        kdes, bodies=[P],
+        q_dependent=[q1],
+        configuration_constraints=[q1 - q2],
+        u_dependent=[u1],
+    )
+    assert kane.holonomic_constraints == Matrix([q1 - q2])
+    assert kane.nonholonomic_constraints == Matrix([])
+    assert kane.velocity_constraints == Matrix([kane.kindiffdict()[q1.diff()] -
+                                                kane.kindiffdict()[q2.diff()]])
+
+    # only nonholonomic constraints
+    kane = KanesMethod(
+        N,
+        [q1, q2, q3],
+        [u2, u3],
+        kdes, bodies=[P],
+        nonholonomic_constraints=[u1 - u2],
+        u_dependent=[u1],
+    )
+    assert kane.holonomic_constraints == Matrix([])
+    assert kane.nonholonomic_constraints == Matrix([u1 - u2])
+    assert kane.velocity_constraints == Matrix([u1 - u2])
+
+    # holonomic and nonholonomic constraints
+    kane = KanesMethod(
+        N,
+        [q2, q3],
+        [u2],
+        kdes, bodies=[P],
+        configuration_constraints=[q1 - q2],
+        q_dependent=[q1],
+        nonholonomic_constraints=[u2 - u3],
+        u_dependent=[u1, u3],
+    )
+    assert kane.holonomic_constraints == Matrix([q1 - q2])
+    assert kane.nonholonomic_constraints == Matrix([u2 - u3])
+    assert kane.velocity_constraints == Matrix([kane.kindiffdict()[q1.diff()] -
+                                                kane.kindiffdict()[q2.diff()],
+                                                u2 - u3])
+
+    # holonomic and velocity constraints
+    kane = KanesMethod(
+        N,
+        [q2, q3],
+        [u2],
+        kdes, bodies=[P],
+        configuration_constraints=[q1 - q2],
+        q_dependent=[q1],
+        velocity_constraints=[q1.diff() - q2.diff(), u2 - u3],
+        u_dependent=[u1, u3],
+    )
+    assert kane.holonomic_constraints == Matrix([q1 - q2])
+    assert kane.nonholonomic_constraints == Matrix([])
+    assert kane.velocity_constraints == Matrix([kane.kindiffdict()[q1.diff()] -
+                                                kane.kindiffdict()[q2.diff()],
+                                                u2 - u3])
+
+    # nonholonomic and velocity not simultaneously allowed
+    with raises(ValueError):
+        kane = KanesMethod(
+            N,
+            [q1, q2, q3],
+            [u1, u2, u3],
+            kdes, bodies=[P],
+            velocity_constraints=[],
+            nonholonomic_constraints=[],
+        )
+
+    # incorrect number of dependent coordinates
+    with raises(ValueError):
+        kane = KanesMethod(
+            N,
+            [q1, q2, q3],
+            [u2],
+            kdes, bodies=[P],
+            configuration_constraints=[q1 - q2],
+            q_dependent=[],
+            nonholonomic_constraints=[u2 - u3],
+            u_dependent=[u1, u3],
+        )
+
+    # incorrect number of dependent speeds
+    with raises(ValueError):
+        kane = KanesMethod(
+            N,
+            [q1, q2, q3],
+            [u1, u2],
+            kdes, bodies=[P],
+            configuration_constraints=[q1 - q2],
+            q_dependent=[q1],
+            nonholonomic_constraints=[u2 - u3],
+            u_dependent=[u3],
+        )
