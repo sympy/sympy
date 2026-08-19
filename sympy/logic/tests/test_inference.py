@@ -1,6 +1,8 @@
 """For more tests on satisfiability, see test_dimacs"""
 from __future__ import annotations
 
+from itertools import product
+
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
 from sympy.core.relational import Ne, Eq, Unequality
@@ -18,7 +20,7 @@ from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic.algorithms.lra_theory import LRASolver
 from sympy.logic.tests.test_lra_theory import make_random_problem
-from sympy.core.random import randint
+from sympy.core.random import randint, choice
 
 from sympy.testing.pytest import raises, skip
 from sympy.external import import_module
@@ -328,6 +330,40 @@ def test_satsolver_copy():
     assert temporary.solve() == IpasirStatus.SATISFIABLE
     assert s.clauses == [[1, 2]]
     assert s.solve() == IpasirStatus.SATISFIABLE
+
+
+def test_satsolver_add_clause_random():
+    # Adding clauses to a solver that has already searched and then searching
+    # again has to agree with checking every assignment by hand.
+    for _ in range(150):
+        num_vars = randint(2, 6)
+        variables = set(range(1, num_vars + 1))
+        clauses = [{randint(1, num_vars) * choice([-1, 1])
+                    for _ in range(randint(1, 3))}
+                   for _ in range(randint(1, 3))]
+
+        solver = SATSolver(clauses, variables, set())
+
+        for _ in range(12):
+            satisfiable = any(
+                all(any((lit > 0) == assignment[abs(lit) - 1] for lit in clause)
+                    for clause in clauses)
+                for assignment in product([False, True], repeat=num_vars))
+
+            assert (solver.solve() == IpasirStatus.SATISFIABLE) == satisfiable
+
+            if satisfiable:
+                # The model has to assign every variable and satisfy every
+                # clause the solver has been given so far.
+                for var in variables:
+                    assert solver.val(var) in (var, -var)
+                for clause in clauses:
+                    assert any(solver.val(lit) == lit for lit in clause)
+
+            new_clause = {randint(1, num_vars) * choice([-1, 1])
+                          for _ in range(randint(1, 3))}
+            clauses.append(new_clause)
+            solver.clause(new_clause)
 
 
 def test_minisat22_satisfiable():
