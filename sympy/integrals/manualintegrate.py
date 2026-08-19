@@ -2698,6 +2698,7 @@ def trig_sincos_rule(integral):
 def trig_tansec_rule(integral, degenerate=True):
     original_integrand, symbol = integral
     integrand = _rewrite_to_reciprocal(original_integrand, cos, sec)
+    integrand = _rewrite_to_reciprocal(integrand, cot, tan)
     collected = _collect_trig_powers(integrand, symbol, (tan, sec))
     if collected is None:
         return

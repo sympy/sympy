@@ -175,6 +175,13 @@ def test_manualintegrate_trigpowers():
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).rewrite(exp).cancel() == 0
 
+    f, F = cot(x)**-2, tan(x) - x
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+    f, F = cot(2*x)**-4, tan(2*x)**3/6 - tan(2*x)/2 + x
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
 
 @slow
 def test_manualintegrate_inversetrig():
