@@ -12,6 +12,7 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
+from sympy.logic.algorithms.lra_theory import LRASolver
 
 from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
@@ -405,7 +406,7 @@ def test_z3_vs_lra_dpll2():
         cnf = And(*clauses)
         return boolean_formula_to_encoded_cnf(cnf)
 
-    lra_dpll2_satisfiable = lambda x: dpll2_satisfiable(x, use_lra_theory=True)
+    lra_dpll2_satisfiable = lambda x: dpll2_satisfiable(x, theory_solvers=[LRASolver])
 
     for _ in range(50):
         cnf = make_random_cnf(num_clauses=10, num_constraints=15, num_var=2)
@@ -441,7 +442,7 @@ def test_issue_27733():
     encoding[Q.lt(x, 0)] = 12
 
     cnf = EncodedCNF(clauses, encoding)
-    assert satisfiable(cnf, use_lra_theory=True) is False
+    assert dpll2_satisfiable(cnf, theory_solvers=[LRASolver]) is False
 
 
 def test_issue_27733_second_fix():
@@ -450,4 +451,4 @@ def test_issue_27733_second_fix():
     clauses = [[1, 2], [-3, -4]]
     encoding = {Q.gt(x0, x1): 1, Q.lt(x1, x0): 2, Q.le(x1, x0): 3, Q.ge(x0, x1): 4}
     cnf = EncodedCNF(clauses, encoding)
-    assert satisfiable(cnf, use_lra_theory=True) is False
+    assert dpll2_satisfiable(cnf, theory_solvers=[LRASolver]) is False

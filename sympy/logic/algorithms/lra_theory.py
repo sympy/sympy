@@ -127,6 +127,7 @@ from sympy.core.singleton import S
 from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
 from sympy.utilities.iterables import sift
+from sympy.logic.algorithms.theory_solver import TheorySolver
 import math
 
 
@@ -142,7 +143,7 @@ ALLOWED_PRED = {Q.eq: Eq, Q.gt: Gt, Q.lt: Lt, Q.le: Le, Q.ge: Ge}
 # if true ~Q.gt(x, y) implies Q.le(x, y)
 HANDLE_NEGATION = True
 
-class LRASolver():
+class LRASolver(TheorySolver):
     """
     Linear Arithmetic Solver for DPLL(T) implemented with an algorithm based on
     the Dual Simplex method. Uses Bland's pivoting rule to avoid cycling.
@@ -190,8 +191,8 @@ class LRASolver():
         self.bound_history = []
         self.last_assign_snapshot = {var: var.assign for var in self.all_var}
 
-    @staticmethod
-    def from_encoded_cnf(encoded_cnf, testing_mode=False):
+    @classmethod
+    def from_encoded_cnf(cls, encoded_cnf, testing_mode=False):
         """
         Creates an LRASolver from an EncodedCNF object
         and a list of conflict clauses for propositions
@@ -362,8 +363,8 @@ class LRASolver():
         for idx, var in enumerate(nonbasic + basic):
             var.col_idx = idx
 
-        solver = LRASolver(A, basic, nonbasic, atom_id_to_boundaries,
-                           s_subs, testing_mode)
+        solver = cls(A, basic, nonbasic, atom_id_to_boundaries,
+                     s_subs, testing_mode)
         return solver, conflicts
 
     def reset(self):
@@ -400,6 +401,9 @@ class LRASolver():
             A conflict clause that "explains" why
             the literals asserted so far are unsatisfiable.
         """
+        batch = []
+        self.bound_history.append(batch)
+
         if abs(literal) not in self.atom_id_to_boundaries:
             return None
 
@@ -416,7 +420,7 @@ class LRASolver():
 
         res = None
         for boundary in boundaries:
-            res = self._assert_bound(boundary, literal)
+            res = self._assert_bound(boundary, literal, batch)
             if res and res[0] is False:
                 break
 
@@ -427,7 +431,7 @@ class LRASolver():
 
         return res
 
-    def _assert_bound(self, boundary, literal):
+    def _assert_bound(self, boundary, literal, batch):
         """
         Adjusts the upper or lower bound on variable xi if the new bound is
         more limiting. The assignment of variable xi is adjusted to be
@@ -468,7 +472,8 @@ class LRASolver():
             self.result = False, [-conflicting_lit, -literal]
             return self.result
 
-        self.bound_history.append((xi, target_bound, upper))
+        target_literal = xi.upper_literal if upper else xi.lower_literal
+        batch.append((xi, target_bound, target_literal, upper))
 
         xi.set_bound(boundary, literal)
 
@@ -674,12 +679,14 @@ class LRASolver():
         if not self.bound_history:
             raise ValueError("Cannot backtrack, bound_history stack is empty")
 
-        xi, old_bound, upper = self.bound_history.pop()
-
-        if upper:
-            xi.upper = old_bound
-        else:
-            xi.lower = old_bound
+        batch = self.bound_history.pop()
+        for xi, old_bound, old_literal, upper in batch:
+            if upper:
+                xi.upper = old_bound
+                xi.upper_literal = old_literal
+            else:
+                xi.lower = old_bound
+                xi.lower_literal = old_literal
 
         for var in self.all_var:
             var.assign = self.last_assign_snapshot[var]
