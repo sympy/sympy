@@ -57,8 +57,9 @@ tox.ini
 covhtml/
 
 # Built doc files (cd doc; make html)
-doc/_build/
+doc/_build/*
 doc/sphinx/
+!doc/_build/logo/
 
 # pdf files generated from svg files (cd doc; make latex)
 *.svg.html
