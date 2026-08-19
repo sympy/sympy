@@ -67,6 +67,19 @@ geometry module.
     >>> intersection(c, l)
     [Point2D(-5*sqrt(2)/2, -5*sqrt(2)/2), Point2D(5*sqrt(2)/2, 5*sqrt(2)/2)]
 
+The circle can be visualized using ``plot_implicit``:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+
+   >>> from sympy import Eq, symbols
+   >>> from sympy.plotting import plot_implicit
+   >>> u, v = symbols('u v')
+   >>> plot_implicit(Eq(u**2 + v**2, 25), aspect_ratio=(1, 1))
+   Plot object containing:
+   [0]: Implicit expression: Eq(u**2 + v**2, 25) for u over (-5.0, 5.0) and v over (-5.0, 5.0)
+
 Intersection of medians
 -----------------------
 ::
