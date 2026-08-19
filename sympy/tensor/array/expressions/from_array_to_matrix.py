@@ -262,7 +262,8 @@ def _(expr: ArrayContraction):
 @_array2matrix.register(ArrayDiagonal)
 def _(expr: ArrayDiagonal):
     pexpr = _array_diagonal(_array2matrix(expr.expr), *expr.diagonal_indices)
-    pexpr = identify_hadamard_products(pexpr)
+    if isinstance(pexpr, (ArrayContraction, ArrayDiagonal)):
+        pexpr = identify_hadamard_products(pexpr)
     if isinstance(pexpr, ArrayDiagonal):
         pexpr = _array_diag2contr_diagmatrix(pexpr)
     if expr == pexpr:
@@ -707,9 +708,20 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
                 diag_indices[i] = None
                 args[pos2_outer] = OneArray(arg2.shape[pos2_in2])
                 replaced[pos2_outer] = True
-        diag_indices_new = [i for i in diag_indices if i is not None]
         cumul = list(accumulate([0] + [get_ndim(arg) for arg in args]))
         contr_indices2 = [tuple(cumul[a] + b for a, b in i) for i in contr_indices]
+        diag_indices_new = []
+        contracted_axes = [x for ci in contr_indices2 for x in ci]
+        for i, abs_pos in enumerate(diag_indices):
+            if abs_pos is not None:
+                rel_pos = tuple_links[i]
+                new_abs_pos = []
+                for (pos_outer, pos_inner) in rel_pos:
+                    pre_contr_pos = cumul[pos_outer] + pos_inner
+                    shift = sum(1 for c in contracted_axes if c < pre_contr_pos)
+                    new_abs_pos.append(pre_contr_pos - shift)
+                diag_indices_new.append(tuple(new_abs_pos))
+
         tc = _array_contraction(
             _array_tensor_product(*args), *contr_indices2
         )
