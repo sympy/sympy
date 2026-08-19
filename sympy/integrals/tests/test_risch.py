@@ -1,24 +1,35 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import annotations
-from sympy.core.function import (Function, Lambda, diff, expand_log)
-from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.function import (Function, Lambda, diff, expand_log,
+    expand_trig)
+from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.error_functions import (Ei, erf, erfi, li)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (atan, sin, tan)
+from sympy.functions.elementary.hyperbolic import tanh
+from sympy.functions.elementary.trigonometric import (acot, asin, atan, cos,
+    cot, sec, sin, tan)
 from sympy.polys.polytools import (Poly, cancel, factor)
+from sympy.polys.rootoftools import RootSum
+from sympy.polys.rationaltools import together
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
     integrate_primitive, integrate_hyperexponential_polynomial,
     integrate_hyperexponential, integrate_hypertangent_polynomial,
+    integrate_hypertangent_reduced, integrate_hypertangent,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
     risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
-    recognize_derivative, laurent_series)
-from sympy.testing.pytest import raises
+    recognize_derivative, laurent_series, _tan_of_multiple)
+from sympy.integrals.integrals import Integral
+from sympy.series.limits import limit
+from sympy.simplify.simplify import simplify
+from sympy.testing.pytest import raises, slow
 
 from sympy.abc import x, t, nu, z, a, y
 t0, t1, t2 = symbols('t:3')
@@ -175,14 +186,20 @@ def test_polynomial_reduce():
 
 
 def test_laurent_series():
+    # Example 2.7.1 from Bronstein.  The principal parts at the zeros of
+    # t**2 - 1 are -9/(t - 1)**2 - 3/(t + 1)**2 - 4/(t + 1) (this is also
+    # what apart() gives, together with 4/(t - 2)).
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
     a = Poly(36, t)
     d = Poly((t - 2)*(t**2 - 1)**2, t)
     F = Poly(t**2 - 1, t)
     n = 2
     assert laurent_series(a, d, F, n, DE) == \
-        (Poly(-3*t**3 + 3*t**2 - 6*t - 8, t), Poly(t**5 + t**4 - 2*t**3 - 2*t**2 + t + 1, t),
-        [Poly(-3*t**3 - 6*t**2, t, domain='QQ'), Poly(2*t**6 + 6*t**5 - 8*t**3, t, domain='QQ')])
+        (Poly(-4*t**3 - 8*t**2 - 8*t - 16, t), Poly(t**4 - 2*t**2 + 1, t),
+        [Poly(-3*t**3 - 6*t**2, t, domain='QQ'), Poly(-2*t**6 - 6*t**5 + 8*t**3, t, domain='QQ')])
+    # Example 2.7.2, first factor: the principal part at t == 2 is 4/(t - 2)
+    assert laurent_series(a, d, Poly(t - 2, t), 1, DE)[:2] == \
+        (Poly(4, t), Poly(t - 2, t))
 
 
 def test_recognize_derivative():
@@ -197,6 +214,32 @@ def test_recognize_derivative():
     assert recognize_derivative(Poly(x*t, t), Poly(1, t), DE) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert recognize_derivative(Poly(t, t), Poly(1, t), DE) == True
+    # Repeated factors in the denominator used to crash with
+    # ExactQuotientFailed (the multiplicity from the squarefree
+    # factorization was ignored), and the recognition check compared
+    # object identities, so it could not return True on any input that
+    # entered the loop.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    # D(1/x) == -1/x**2 and D(-1/x) == 1/x**2 are derivatives
+    assert recognize_derivative(Poly(-1, x), Poly(x**2, x), DE) == True
+    assert recognize_derivative(Poly(1, x), Poly(x**2, x), DE) == True
+    # 1/x and (x + 1)/x**2 == 1/x + 1/x**2 have nonzero residues
+    assert recognize_derivative(Poly(1, x), Poly(x, x), DE) == False
+    assert recognize_derivative(Poly(x + 1, x), Poly(x**2, x), DE) == False
+    # residues at complex poles are detected via polynomial divisibility
+    assert recognize_derivative(Poly(x, x), Poly((x**2 + 1)**2, x), DE) == True
+    assert recognize_derivative(Poly(1, x), Poly((x**2 + 1)**2, x), DE) == False
+    assert recognize_derivative(Poly(-2*x, x), Poly((x**2 - 1)**2, x), DE) == True
+    # Poles at nonconstant normal primes used to be ignored entirely,
+    # giving false positives.  A simple such pole always has a nonzero
+    # residue: 1/(t + x) with t = log(x) is not a derivative.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    assert recognize_derivative(Poly(1, t), Poly(t + x, t), DE) == False
+    # Higher-order poles at nonconstant primes need residue machinery that
+    # is only justified for constant roots, so they raise for now (e.g.
+    # D(1/(t + x)) == -(1 + 1/x)/(t + x)**2 would need it).
+    raises(NotImplementedError, lambda: recognize_derivative(
+        Poly(-1 - 1/x, t), Poly((t + x)**2, t), DE))
 
 
 def test_recognize_log_derivative():
@@ -206,14 +249,31 @@ def test_recognize_log_derivative():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert recognize_log_derivative(a, d, DE, z) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
-    assert recognize_log_derivative(Poly(t + 1, t), Poly(t + x, t), DE) == True
-    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1, t), DE) == True
+    # These two used to wrongly return True: their Rothstein-Trager
+    # resultants have the nonconstant roots -x*(x - 1)/(x + 1) and -x, x,
+    # respectively, which are not integers.  Nonconstant roots land in the
+    # normal part of the splitting factorization, which used to be ignored.
+    assert recognize_log_derivative(Poly(t + 1, t), Poly(t + x, t), DE) == False
+    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1, t), DE) == False
+    # ... but log derivatives with nonconstant-looking denominators are
+    # still recognized: D(t + x)/(t + x) has the integer root 1
+    assert recognize_log_derivative(Poly(1 + 1/x, t), Poly(t + x, t),
+        DE) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
     assert recognize_log_derivative(Poly(1, x), Poly(x**2 - 2, x), DE) == False
     assert recognize_log_derivative(Poly(1, x), Poly(x**2 + x, x), DE) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert recognize_log_derivative(Poly(1, t), Poly(t**2 - 2, t), DE) == False
     assert recognize_log_derivative(Poly(1, t), Poly(t**2 + t, t), DE) == False
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    # 1/(x**2 + 1) is not Dv/v for any rational v: the Rothstein-Trager
+    # resultant has the non-integer complex roots -I/2, I/2, which used to
+    # be missed entirely (only real roots were checked, and there are none).
+    assert recognize_log_derivative(Poly(1, x), Poly(x**2 + 1, x), DE) == False
+    # ... but complex poles with integer residues are fine:
+    # (2*x + 2)/(x**2 + 2*x + 2) == D(x**2 + 2*x + 2)/(x**2 + 2*x + 2)
+    assert recognize_log_derivative(Poly(2*x + 2, x), Poly(x**2 + 2*x + 2, x),
+        DE) == True
 
 
 def test_residue_reduce():
@@ -416,6 +476,37 @@ def test_integrate_hypertangent_polynomial():
         (Poly(1/(4*a)*t**4 - 1/(2*a)*t**2, t), Poly(1/(2*a), t))
 
 
+def test_integrate_hypertangent_reduced():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    assert integrate_hypertangent_reduced(Poly(t, t), Poly(t**2 + 1, t), DE) == \
+        (Poly(-1, t, domain='QQ'), Poly(2*t**2 + 2, t, domain='QQ'), True)
+    assert integrate_hypertangent_reduced(Poly(t, t),
+        Poly((t**2 + 1)**2, t), DE) == \
+        (Poly(-1, t, domain='QQ'), Poly(4*t**4 + 8*t**2 + 4, t, domain='QQ'),
+        True)
+    # f in k[t] is returned unchanged
+    assert integrate_hypertangent_reduced(Poly(t**2 + x*t, t),
+        Poly(1, t), DE) == (Poly(0, t), Poly(1, t), True)
+
+
+def test_integrate_hypertangent():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)],
+        'Tfuncs': [tan]})
+    assert integrate_hypertangent(Poly(t, t), Poly(1, t), DE) == \
+        (log(tan(x)**2 + 1)/2, 0, True)
+    assert integrate_hypertangent(Poly(t**2, t), Poly(1, t), DE) == \
+        (tan(x), -1, True)
+    # Sum of the two above
+    assert integrate_hypertangent(Poly(t**2 + t, t), Poly(1, t), DE) == \
+        (log(tan(x)**2 + 1)/2 + tan(x), -1, True)
+    # D(c*log(t**2 + 1)) == 2*c*eta*t requires Dc == 0, so t/x is proven
+    # nonelementary
+    a, i, b = integrate_hypertangent(Poly(t, t), Poly(x, t), DE)
+    assert (a, b) == (0, False)
+    assert isinstance(i, NonElementaryIntegral)
+    assert i == NonElementaryIntegral(tan(x)/x, x)
+
+
 def test_integrate_nonlinear_no_specials():
     a, d, = Poly(x**2*t**5 + x*t**4 - nu**2*t**3 - x*(x**2 + 1)*t**2 - (x**2 -
     nu**2)*t - x**5/4, t), Poly(x**2*t**4 + x**2*(x**2 + 2)*t**2 + x**2 + x**4 + x**6/4, t)
@@ -486,6 +577,84 @@ def test_DifferentialExtension_log():
         Poly((1 + t0)*t1, t1)], [x, t0, t1], [Lambda(i, log(i)),
         Lambda(i, exp(t0*i))], [(exp(x*log(x)), x**x)], [None, 'log', 'exp'],
         [None, x, t0*x])
+
+
+def test_DifferentialExtension_tan():
+    assert DifferentialExtension(tan(x), x)._important_attrs == \
+        (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0**2 + 1, t0)],
+        [x, t0], [Lambda(i, tan(i))],
+        [(log(tan(x)**2 + 1), -2*log(cos(x)))], [None, 'tan'], [None, x])
+    # sin, cos, sec and csc are rewritten using the half angle substitution
+    assert DifferentialExtension(sin(x), x)._important_attrs == \
+        (Poly(2*t0, t0), Poly(t0**2 + 1, t0),
+        [Poly(1, x), Poly(t0**2/2 + S.Half, t0)], [x, t0],
+        [Lambda(i, tan(i/2))], [(log(tan(x/2)**2 + 1), -2*log(cos(x/2)))],
+        [None, 'tan'], [None, x/2])
+    # tangents of integer multiples of a common argument are rewritten in
+    # terms of the tangent of that argument
+    assert DifferentialExtension(tan(x) + tan(2*x), x)._important_attrs == \
+        (Poly(-t0**3 + 3*t0, t0), Poly(-t0**2 + 1, t0),
+        [Poly(1, x), Poly(t0**2 + 1, t0)], [x, t0], [Lambda(i, tan(i))],
+        [(log(tan(x)**2 + 1), -2*log(cos(x)))], [None, 'tan'], [None, x])
+    assert DifferentialExtension(tan(log(x)), x)._important_attrs == \
+        (Poly(t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
+        Poly(t1**2/x + 1/x, t1)], [x, t0, t1],
+        [Lambda(i, log(i)), Lambda(i, tan(t0))],
+        [(log(tan(log(x))**2 + 1), -2*log(cos(log(x))))],
+        [None, 'log', 'tan'], [None, x, t0])
+    # pi-periodic integrands are rational functions of tan(x) itself
+    # (choice (d) of Jeffrey & Rich (1994)), so the half angle is avoided
+    assert DifferentialExtension(1/(1 + sin(x)**2), x)._important_attrs[7] \
+        == [None, x]
+    assert DifferentialExtension(sin(x)*cos(x) + tan(x),
+        x)._important_attrs[7] == [None, x]
+    # ... but not for integrands that need the half angle
+    assert DifferentialExtension(sin(x)**3, x)._important_attrs[7] == \
+        [None, x/2]
+    assert DifferentialExtension(sin(2*x) + cos(x), x)._important_attrs[7] \
+        == [None, x/2]
+
+    # tangents whose arguments differ by a nonzero constant are
+    # algebraically dependent, which is not supported
+    raises(NotImplementedError, lambda: DifferentialExtension(
+        tan(x) + tan(x + 1), x))
+    # relations spanning several tangents are also found: tan(x + x**2)
+    # is rewritten as a rational function of tan(x) and tan(x**2) via the
+    # addition formula
+    assert DifferentialExtension(tan(x + x**2) + tan(x) + tan(x**2),
+        x)._important_attrs[3] == [x, t0, t1]
+    raises(NotImplementedError, lambda: DifferentialExtension(
+        tan(x + x**2 + 1) + tan(x) + tan(x**2), x))
+
+
+def test_DifferentialExtension_atan():
+    assert DifferentialExtension(atan(x), x)._important_attrs == \
+        (Poly(t0, t0), Poly(1, t0), [Poly(1, x),
+        Poly(1/(x**2 + 1), t0, domain='ZZ(x)')], [x, t0],
+        [Lambda(i, atan(i))], [], [None, 'atan'], [None, x])
+    # acot(b) == atan(1/b)
+    assert DifferentialExtension(acot(x), x)._important_attrs == \
+        (Poly(t0, t0), Poly(1, t0), [Poly(1, x),
+        Poly(-1/(x**2 + 1), t0, domain='ZZ(x)')], [x, t0],
+        [Lambda(i, atan(1/i))], [], [None, 'atan'], [None, 1/x])
+    # tan(n*atan(b)) is a rational function of b
+    assert DifferentialExtension(tan(2*atan(x)) + atan(x),
+        x)._important_attrs[0] == Poly(t0*(1 - x**2) + 2*x, t0, domain='ZZ[x]')
+    # algebraically dependent inverse tangents are not supported
+    raises(NotImplementedError,
+        lambda: DifferentialExtension(atan(x) + atan(1/x), x))
+    raises(NotImplementedError,
+        lambda: DifferentialExtension(atan(2*x/(1 - x**2)) + atan(x), x))
+
+
+def test_tan_of_multiple():
+    assert _tan_of_multiple(1, t) == t
+    assert _tan_of_multiple(2, t) == 2*t/(1 - t**2)
+    assert _tan_of_multiple(3, t) == (-t**3 + 3*t)/(1 - 3*t**2)
+    assert _tan_of_multiple(-2, t) == -2*t/(1 - t**2)
+    for n in range(2, 6):
+        assert cancel(_tan_of_multiple(n, tan(x)) -
+            expand_trig(tan(n*x))) == 0
 
 
 def test_DifferentialExtension_symlog():
@@ -587,7 +756,16 @@ def test_DifferentialExtension_misc():
         (Poly(sin(y)*t0, t0, domain='ZZ[sin(y)]'), Poly(1, t0, domain='ZZ'),
         [Poly(1, x, domain='ZZ'), Poly(t0, t0, domain='ZZ')], [x, t0],
         [Lambda(i, exp(i))], [], [None, 'exp'], [None, x])
-    raises(NotImplementedError, lambda: DifferentialExtension(sin(x), x))
+    raises(NotImplementedError, lambda: DifferentialExtension(sin(x), x,
+        trig=False))
+    # cot, acot, and the hyperbolic functions used to fall through to the
+    # generic "Couldn't find an elementary transcendental extension" error
+    # instead of the informative trigonometric one
+    raises(NotImplementedError, lambda: DifferentialExtension(cot(x), x,
+        trig=False))
+    raises(NotImplementedError, lambda: DifferentialExtension(tanh(x), x,
+        trig=False))
+    raises(NotImplementedError, lambda: DifferentialExtension(asin(x), x))
     assert DifferentialExtension(10**x, x)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(log(10)*t0, t0)], [x, t0],
         [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], [None, 'exp'],
@@ -725,8 +903,237 @@ def test_risch_integrate():
     expr = -I*(exp(I*x) - exp(-I*x))/2
     assert risch_integrate(expr, x) == -exp(I*x)/2 - exp(-I*x)/2
 
+def test_risch_integrate_trig():
+    assert risch_integrate(tan(x), x) == -log(cos(x))
+    assert risch_integrate(tan(x)**2, x) == -x + tan(x)
+    assert risch_integrate(sec(x)**2, x) == tan(x)
+    assert risch_integrate(sin(x), x) == -cos(x) - 1
+    assert risch_integrate(cos(x), x) == sin(x)
+    assert risch_integrate(sin(x)**2, x) == x/2 - sin(2*x)/4
+    assert risch_integrate(1/sin(x), x) == log(tan(x/2))
+    assert risch_integrate(tan(log(x))/x, x) == -log(cos(log(x)))
+    assert risch_integrate((tan(log(x))**2 + 1)/x, x) == tan(log(x))
+    assert risch_integrate(exp(x)*sin(x), x) == \
+        exp(x)*sin(x)/2 - exp(x)*cos(x)/2
+    assert risch_integrate(tan(x) + tan(2*x) + tan(x/2), x) == \
+        -2*log(cos(x/2)) - log(cos(x)) - log(cos(2*x))/2
+    assert risch_integrate(sin(x)/(cos(x) + 2), x) == -log(cos(x) + 2)
+
+    # These integrals need the coupled differential system of Chapter 8 of
+    # Bronstein's book for the reduced (special denominator) part.
+    ans = risch_integrate(tan(x)/(tan(x)**2 + 1)**2, x)
+    assert ans == -cos(x)**4/4
+    for e in [1/(cos(x) + 2), sin(x)**2*exp(x), sin(log(x)),
+            (sin(x) + 2)**-2, (1 + sin(x))/(3 + cos(x))]:
+        ans = risch_integrate(e, x)
+        assert not ans.has(Integral)
+        ans = ans.xreplace(dict.fromkeys(ans.atoms(floor), S.Zero))
+        assert cancel((diff(ans, x) - e).rewrite(exp)) == 0
+
+    # Integrals with exponentials over tangent extensions; the second one
+    # exercises the hypertangent cancellation case of the Risch
+    # differential equation.
+    assert risch_integrate((tan(x) + 1)*(tan(x)**2 + 1)*exp(tan(x)), x) == \
+        exp(tan(x))*tan(x)
+    assert risch_integrate((1 - 2*tan(x)/(tan(x)**2 + 1))*exp(tan(x)), x) == \
+        exp(tan(x))/(tan(x)**2 + 1)
+
+    # Proofs of nonelementarity
+    for e in [tan(x)/x, x*tan(x), tan(x**2), tan(tan(x)), exp(tan(x)),
+            tan(x)*exp(x)]:
+        ans = risch_integrate(e, x)
+        assert isinstance(ans, NonElementaryIntegral)
+    # ... including ones where an elementary part is split off
+    ans, i = risch_integrate((tan(x)**2 + 1)*exp(x), x,
+        separate_integral=True)
+    assert ans == exp(x)*tan(x)
+    assert isinstance(i, NonElementaryIntegral)
+
+    # x*tan(x**2) is elementary even though tan(x**2) is not, because
+    # c == x/(2*eta) == 1/4 is constant
+    assert risch_integrate(x*tan(x**2), x) == -log(cos(x**2))/2
+
+
+def test_risch_integrate_trig_continuity():
+    # The arctangents of tangents produced by the half angle substitution
+    # are made continuous at the poles of the tangent with floor terms,
+    # following Jeffrey & Rich (1994), like Integral.doit() does.
+    F = risch_integrate(1/(cos(x) + 2), x)
+    assert F == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) +
+        pi*floor((x/2 - pi/2)/pi))/3
+    # continuous at x == pi, where tan(x/2) has a pole ...
+    assert limit(F, x, pi, '-') == limit(F, x, pi, '+') == -sqrt(3)*pi/3
+    # ... so the fundamental theorem of calculus works across it
+    assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == 2*sqrt(3)*pi/3
+
+    F = risch_integrate((tan(x)**2 + 1)/(tan(x)**2 + 4), x)
+    assert F == atan(tan(x)/2)/2 + pi*floor((x - pi/2)/pi)/2
+    assert limit(F, x, pi/2, '-') == limit(F, x, pi/2, '+') == -pi/4
+
+
+def test_risch_integrate_jeffrey_rich_examples():
+    # The worked examples of Jeffrey & Rich (1994); the equation numbers
+    # refer to the paper.  Equations (13) and (15) integrate sqrt(1 +- cos(x))
+    # and are algebraic, so they are outside the transcendental Risch
+    # algorithm and not included here.
+
+    # (1)/(3)/(10), and the definite integral (2) evaluated with the
+    # fundamental theorem of calculus straight across the poles of tan(x/2)
+    F = risch_integrate(3/(5 - 4*cos(x)), x)
+    assert F == 2*atan(3*tan(x/2)) + 2*pi*floor((x/2 - pi/2)/pi)
+    assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == 2*pi
+    assert limit(F, x, pi, '-') == limit(F, x, pi, '+') == -pi
+
+    # (4)/(11)
+    F = risch_integrate(3/(5 + 4*sin(x)), x)
+    assert not F.has(Integral) and F.has(floor)
+    assert cancel((diff(F.xreplace(dict.fromkeys(F.atoms(floor), S.Zero)), x)
+        - 3/(5 + 4*sin(x))).rewrite(exp)) == 0
+    assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == 2*pi
+    assert simplify(limit(F, x, pi, '-') - limit(F, x, pi, '+')) == 0
+
+    # (6): "the obviously correct continuous result x"
+    assert risch_integrate(sec(x)**2/(1 + tan(x)**2), x) == x
+
+    # (7)/(12): the singularities of the integrand at x == (n + 1/2)*pi
+    # remain, but the spurious discontinuity at x == pi is removed
+    e = 15/(cos(x)*(5 - 4*cos(x)))
+    F = risch_integrate(e, x)
+    assert not F.has(Integral) and F.has(floor)
+    assert cancel((diff(F.xreplace(dict.fromkeys(F.atoms(floor), S.Zero)), x)
+        - e).rewrite(exp)) == 0
+    assert simplify(limit(F, x, pi, '-') - limit(F, x, pi, '+')) == 0
+
+    # Section 7 (the Rioboo example): 2*sqrt(2)*(1 + cos(x))/(1 + cos(x)**2)
+    e = 2*sqrt(2)*(1 + cos(x))/(1 + cos(x)**2)
+    F = risch_integrate(e, x)
+    assert not F.has(Integral) and F.has(atan) and F.has(floor)
+    assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == 4*pi
+
+    # 1/(1 + sin(x)**2): "best integrated using u = tan(x)" (section 3);
+    # the pi-periodicity is detected and choice (d) of Table 1 is used
+    F = risch_integrate(1/(1 + sin(x)**2), x)
+    assert F == sqrt(2)*(atan(sqrt(2)*tan(x)) + pi*floor((x - pi/2)/pi))/2
+    assert simplify(F.subs(x, 2*pi) - F.subs(x, 0)) == sqrt(2)*pi
+    assert simplify(limit(F, x, pi, '-') - limit(F, x, pi, '+')) == 0
+
+    # Section 8: with a symbolic parameter the sign of the discriminant of
+    # the residue polynomial is unknown, so the result falls back to a
+    # RootSum (with no incorrect floor terms)
+    a = Symbol('a')
+    F = risch_integrate(1/(a + cos(x)), x)
+    assert F.has(RootSum) and not F.has(floor)
+
+    # Multi-way relations among tangent arguments must be detected, or
+    # this identically zero integrand is "proven" nonelementary
+    e = tan(x + x**2) - (tan(x) + tan(x**2))/(1 - tan(x)*tan(x**2))
+    assert risch_integrate(e, x) == 0
+
+    # trig=False restores the old behavior
+    raises(NotImplementedError, lambda: risch_integrate(tan(x), x,
+        trig=False))
+
+
+def test_risch_integrate_special():
+    # erf and erfi
+    assert risch_integrate(exp(-x**2), x, special=True) == \
+        sqrt(pi)*erf(x)/2
+    assert risch_integrate(x**2*exp(-x**2), x, special=True) == \
+        -x*exp(-x**2)/2 + sqrt(pi)*erf(x)/4
+    assert risch_integrate(exp(x**2), x, special=True) == \
+        sqrt(pi)*erfi(x)/2
+    assert risch_integrate(exp(-(x + 1)**2), x, special=True) == \
+        sqrt(pi)*erf(x + 1)/2
+    assert risch_integrate(exp(-4*x**2 + x), x, special=True) == \
+        sqrt(pi)*exp(Rational(1, 16))*erf(2*x - Rational(1, 4))/4
+
+    # Ei
+    assert risch_integrate(exp(x)/x, x, special=True) == Ei(x)
+    assert risch_integrate(exp(x)/(x - 1), x, special=True) == E*Ei(x - 1)
+    assert risch_integrate(exp(x)/x**2, x, special=True) == Ei(x) - exp(x)/x
+
+    # li
+    assert risch_integrate(1/log(x), x, special=True) == li(x)
+    assert risch_integrate(1/log(x)**2, x, special=True) == \
+        -x/log(x) + li(x)
+    assert risch_integrate(x/log(x), x, special=True) == li(x**2)
+    assert risch_integrate((x + 1)/log(x), x, special=True) == \
+        li(x) + li(x**2)
+
+    # mixed towers
+    assert risch_integrate(exp(-x**2) + exp(x)/x, x, special=True) == \
+        Ei(x) + sqrt(pi)*erf(x)/2
+    assert risch_integrate(exp(x) + exp(x)/x + 1/log(x), x, special=True) \
+        == exp(x) + Ei(x) + li(x)
+
+    # elementary integrals stay elementary
+    assert risch_integrate((2*x**2 + 1)*exp(x**2), x, special=True) == \
+        x*exp(x**2)
+    # unevaluated results still mean proven nonelementary
+    assert isinstance(risch_integrate(exp(x**3), x, special=True),
+        NonElementaryIntegral)
+    assert isinstance(risch_integrate(exp(exp(x)), x, special=True),
+        NonElementaryIntegral)
+    # special=False (the default) is unchanged
+    assert isinstance(risch_integrate(exp(-x**2), x),
+        NonElementaryIntegral)
+
+
+@slow
+def test_risch_integrate_special_slow():
+    # erf, Ei and li all at once; the erf candidates over the tower
+    # containing log(x) make this slow
+    assert risch_integrate(exp(-x**2) + exp(x)/x + 1/log(x) + exp(x), x,
+        special=True) == exp(x) + Ei(x) + sqrt(pi)*erf(x)/2 + li(x)
+
+
+def test_risch_integrate_atan():
+    assert risch_integrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
+    assert risch_integrate(x*atan(x), x) == \
+        x**2*atan(x)/2 - x/2 + atan(x)/2
+    assert risch_integrate(atan(x)/(x**2 + 1), x) == atan(x)**2/2
+    assert risch_integrate(1/((x**2 + 1)*atan(x)), x) == log(atan(x))
+    assert risch_integrate(exp(atan(x))/(x**2 + 1), x) == exp(atan(x))
+    assert risch_integrate(atan(log(x))/(x*(log(x)**2 + 1)), x) == \
+        atan(log(x))**2/2
+
+    # Proofs of nonelementarity
+    assert isinstance(risch_integrate(exp(atan(x)), x),
+        NonElementaryIntegral)
+    assert isinstance(risch_integrate(atan(x)/x, x), NonElementaryIntegral)
+    # atan(x)**2 has no elementary antiderivative (it needs dilogarithms),
+    # but an elementary part is split off
+    ans, i = risch_integrate(atan(x)**2, x, separate_integral=True)
+    assert ans == x*atan(x)**2
+    assert isinstance(i, NonElementaryIntegral)
+
+
 def test_risch_integrate_float():
     assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
+
+
+def test_integrate_primitive_nonelementary_residual():
+    # When integrate_primitive_polynomial() fails partway (b == False after
+    # a nonzero partial q has been computed), the elementary part and the
+    # NonElementaryIntegral residual must still satisfy f == D(g) + i.
+    for f in [log(x)*log(log(x)),  # fails after one reduction step (q != 0)
+              log(log(x))**2 + log(log(x))/log(x),
+              log(log(x))/log(x)]:
+        g, i = risch_integrate(f, x, separate_integral=True)
+        assert isinstance(i, NonElementaryIntegral)
+        assert cancel(together(diff(g, x) + i.function - f)) == 0
+
+
+def test_bound_degree_limited_integrate():
+    # bound_degree() used to raise "TypeError: '>' not supported between
+    # instances of 'Poly' and 'int'" on these when the sharp primitive-case
+    # bound from limited_integrate() fired.  It also now only uses the bound
+    # when it is an integer, as required by Lemma 6.3.3.
+    for F in [exp(1/log(x))/log(x), (1 + 1/log(x))*exp(1/log(x)),
+              exp(x/log(x)), exp(1/log(x))/(x*log(x)), exp(1/(x*log(x)))]:
+        f = cancel(diff(F, x))
+        ans = risch_integrate(f, x)
+        assert cancel(diff(ans, x) - f) == 0
 
 
 def test_NonElementaryIntegral():

@@ -139,9 +139,10 @@ SymPy first applies several heuristic algorithms, as these are the fastest:
    procedure that can determine whether an elementary solution exists, and in
    that case calculate it. It can be extended to handle many nonelementary
    functions in addition to the elementary ones. However, the version implemented
-   in SymPy only supports a small subset of the full algorithm, particularly, on
-   part of the transcendental algorithm for exponentials and logarithms is
-   implemented. An advantage of :func:`.risch_integrate` over other methods is
+   in SymPy only supports a subset of the full algorithm, particularly, part of
+   the transcendental algorithm for exponentials, logarithms and (when calling
+   :func:`.risch_integrate` directly) trigonometric functions is implemented.
+   An advantage of :func:`.risch_integrate` over other methods is
    that if it returns an instance of :class:`.NonElementaryIntegral`, the
    integral is proven to be nonelementary by the algorithm, meaning the integral
    cannot be represented using a combination of exponentials, logarithms, trig

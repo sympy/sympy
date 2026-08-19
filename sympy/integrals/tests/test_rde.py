@@ -2,12 +2,13 @@
 from __future__ import annotations
 from sympy.core.numbers import (I, Rational, oo)
 from sympy.core.symbol import symbols
-from sympy.polys.polytools import Poly
-from sympy.integrals.risch import (DifferentialExtension,
-    NonElementaryIntegralException)
+from sympy.polys.polytools import Poly, cancel
+from sympy.integrals.risch import (DifferentialExtension, derivation,
+    frac_in, NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
-    no_cancel_equal, cancel_primitive, cancel_exp, rischDE)
+    no_cancel_equal, cancel_primitive, cancel_exp, cancel_tan, rischDE,
+    coupled_DE_system, _pos_int_roots)
 
 from sympy.testing.pytest import raises
 from sympy.abc import x, t, z, n
@@ -54,6 +55,16 @@ def test_weak_normalizer():
     r = weak_normalizer(Poly(1 + t**2), Poly(t, t), DE, z)
     assert r == (Poly(t, t), (Poly(0, t), Poly(1, t)))
     assert weak_normalizer(r[1][0], r[1][1], DE, z) == (Poly(1, t), r[1])
+
+    # coefficients in QQ(I), as produced by coupled_DE_system(); this used
+    # to raise "root counting not supported over ZZ_I"
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    assert weak_normalizer(Poly(2*I, x), Poly(x, x), DE) == \
+        (Poly(1, x), (Poly(2*I, x, domain='ZZ_I'), Poly(x, x, domain='ZZ_I')))
+    fa, fd = frac_in(2/x + I/(x - 1), x)
+    assert weak_normalizer(fa, fd, DE) == (Poly(x, x, domain='ZZ_I'),
+        (Poly((1 + I)*x - 1, x, domain='ZZ_I'),
+         Poly(x**2 - x, x, domain='ZZ_I')))
 
 
 def test_normal_denom():
@@ -119,6 +130,17 @@ def test_special_denom():
     assert special_denom(a, ba, bd, ca, cd, DE) == \
         (expected_a, expected_b, expected_c, expected_h)
 
+    # A hypertangent case with a nontrivial special denominator:
+    # t*Dq + t*q == (t - 2*t**2)/(t**2 + 1) has the solution
+    # q == 1/(t**2 + 1), so with h == t**2 + 1, r == q*h == 1 must satisfy
+    # A*Dr + B*r == C.
+    A, B, C, h = special_denom(Poly(t, t), Poly(t, t), Poly(1, t),
+        Poly(-2*t**2 + t, t), Poly(t**2 + 1, t), DE)
+    assert (A, B, C, h) == (Poly(t, t), Poly(-2*t**2 + t, t),
+        Poly(-2*t**2 + t, t), Poly(t**2 + 1, t))
+    # Verify the contract explicitly (r == q*h == 1, so Dr == 0)
+    assert C == B  # A*D(1) + B*1 == C
+
 def test_bound_degree_fail():
     # Primitive
     DE = DifferentialExtension(extension={'D': [Poly(1, x),
@@ -135,7 +157,13 @@ def test_bound_degree():
 
     # Primitive (see above test_bound_degree_fail)
     # TODO: Add test for when the degree bound becomes larger after limited_integrate
-    # TODO: Add test for db == da - 1 case
+
+    # db == da - 1 case, where limited_integrate() finds a non-integer
+    # constant (1/2 here), which does not give a degree bound; this used
+    # to raise a TypeError from comparing a Poly with an int (it is also
+    # exercised by risch_integrate(1/log(x)**2, x, special=True))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    assert bound_degree(Poly(t, t), Poly(-1/(2*x), t), Poly(t, t), DE) == 1
 
     # Exp
     # TODO: Add tests
@@ -190,6 +218,9 @@ def test_solve_poly_rde_no_cancel():
     assert no_cancel_equal(Poly(1 - t, t),
     Poly(t**3 + t**2 - 2*x*t - 2*x, t), oo, DE) == \
         (Poly(t**2, t), 1, Poly((-2 - 2*x)*t - 2*x, t))
+    # The m == 0 branch: Dq + t*q == t has the solution q == 1 (this used
+    # to return an Expr instead of a Poly)
+    assert no_cancel_equal(Poly(t, t), Poly(t, t), 5, DE) == Poly(1, t)
 
 
 def test_solve_poly_rde_cancel():
@@ -213,7 +244,52 @@ def test_solve_poly_rde_cancel():
     assert cancel_primitive(Poly(4*x, t), Poly(4*x*t**2 + 2*t/x, t), 3, DE) == \
         Poly(t**2, t)
 
+    # The degree bound n must not be clobbered by the index returned from
+    # is_log_deriv_k_t_radical_in_field(): b == 1/(2*x) has index 2
+    # (2*b == D(x)/x), which used to replace n == 3 and wrongly reject
+    # the degree 3 solution q == t**3 of Dq + b*q == c.
+    b = Poly(Rational(1, 2)/x, t)
+    q = Poly(t**3, t)
+    c = derivation(q, DE) + b*q
+    assert cancel_primitive(b, c, 3, DE) == q
+
     # TODO: Add more primitive tests, including tests that require is_deriv_in_field()
+
+    # tan
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(t**2 + 1, t)]})
+    assert cancel_tan(Poly(1 - t, t), Poly(t + 1, t), 1, DE) == \
+        Poly(t, t, domain='QQ')
+    assert cancel_tan(Poly(1 - 3*t, t), Poly(t**3 + 3*t**2, t), 3, DE) == \
+        Poly(t**3, t, domain='QQ')
+    # Once the recursion has exhausted the t-coefficient of b, no more
+    # cancellation can occur and the no-cancellation algorithms take over.
+    assert cancel_tan(Poly(2, t), Poly(t**2 + 2*t + 1, t), 1, DE) == \
+        Poly(t, t)
+    raises(NonElementaryIntegralException,
+        lambda: cancel_tan(Poly(1 - t, t), Poly(t**2, t), 1, DE))
+
+
+def test_coupled_DE_system():
+    from sympy.core.singleton import S
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    # Dy1 - y2 == 2, Dy2 + y1 == 0
+    assert coupled_DE_system(S.Zero, S.One, S(2), S.Zero, DE) == (0, -2)
+    # Dy1 - y2 == x, Dy2 + y1 == 1
+    assert coupled_DE_system(S.Zero, S.One, x, S.One, DE) == (2, -x)
+    # y1 + I*y2 would be exp(-I*x)*Integral(exp(I*x)/x, x), which is not
+    # elementary
+    raises(NonElementaryIntegralException,
+        lambda: coupled_DE_system(S.Zero, S.One, 1/x, S.Zero, DE))
+
+
+def test_pos_int_roots():
+    assert _pos_int_roots(Poly((z - 2)*(z - 3)*(z + 1), z), z) == [2, 3]
+    # with I or other generators in the coefficients, the positive integer
+    # roots are the common roots of the coefficients of each monomial
+    assert _pos_int_roots(Poly((z - 2)*(z - I), z), z) == [2]
+    assert _pos_int_roots(Poly(x*(z - 4) + I*(z - 4)*x**2, z), z) == [4]
+    assert _pos_int_roots(Poly((z - 2)*x + (z - 3), z), z) == []
 
 
 def test_rischDE():
@@ -231,3 +307,21 @@ def test_rischDE():
     ga = Poly(1, t)
     gd = Poly(1, t)
     assert rischDE(fa, fd, ga, gd, DE) == (Poly(-1, t), Poly(t, t))
+
+    # A derivation with an 'other_linear' monomial raises a graceful
+    # NotImplementedError (it used to be an uncaught ValueError)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t + 1, t)]})
+    raises(NotImplementedError, lambda: rischDE(Poly(1, t), Poly(1, t),
+        Poly(t, t), Poly(1, t), DE))
+
+    # Dy + y/x == 1.  f == 1/x is not weakly normalized; the weak normalizer
+    # q == x must be applied to g and divided back out of the solution.
+    # rischDE() used to discard it and return y == x, which solves
+    # Dy + y/x == 2, not 1.  The correct answer here is y == x/2 (plus any
+    # multiple of the homogeneous solution 1/x).
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    ya, yd = rischDE(Poly(1, x), Poly(x, x), Poly(1, x), Poly(1, x), DE)
+    assert (ya, yd) == (Poly(x**2/2, x), Poly(x, x))
+    # Explicitly verify Dy + f*y == g for the returned solution
+    y = ya.as_expr()/yd.as_expr()
+    assert cancel(y.diff(x) + y/x - 1) == 0

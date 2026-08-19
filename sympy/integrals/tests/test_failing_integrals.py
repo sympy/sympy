@@ -113,7 +113,6 @@ def test_issue_4992():
     assert not integrate(log(x) * x**(k - 1) * exp(-x) / gamma(k), (x, 0, oo)).has(Integral)
 
 
-@XFAIL
 def test_issue_16396a():
     i = integrate(1/(1+sqrt(tan(x))), (x, pi/3, pi/6))
     assert not i.has(Integral)

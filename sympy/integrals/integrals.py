@@ -857,10 +857,11 @@ class Integral(AddWithLimits):
              given any elementary function, it will either compute an
              elementary antiderivative, or else prove that none exists.
              Currently, part of transcendental case is implemented, meaning
-             elementary integrals containing exponentials, logarithms, and
-             (soon!) trigonometric functions can be computed.  The algebraic
-             case, e.g., functions containing roots, is much more difficult
-             and is not implemented yet.
+             elementary integrals containing exponentials and logarithms can
+             be computed (with risch=True, also trigonometric functions,
+             which are handled as rational functions of tangents).  The
+             algebraic case, e.g., functions containing roots, is much more
+             difficult and is not implemented yet.
 
            - If the routine fails (because the integrand is not elementary, or
              because a case is not implemented yet), it continues on to the
@@ -965,8 +966,12 @@ class Integral(AddWithLimits):
 
         if risch is not False:
             try:
+                # trig=False, so that trigonometric integrands keep being
+                # handled by the specialized routines below, which return
+                # them in the customary form instead of as rational
+                # functions of tangents.
                 result, i = risch_integrate(f, x, separate_integral=True,
-                    conds=conds)
+                    conds=conds, trig=False)
             except NotImplementedError:
                 pass
             else:
@@ -1078,7 +1083,7 @@ class Integral(AddWithLimits):
                 if risch is not False:
                     try:
                         h, i = risch_integrate(g, x,
-                            separate_integral=True, conds=conds)
+                            separate_integral=True, conds=conds, trig=False)
                     except NotImplementedError:
                         h = None
                     else:
