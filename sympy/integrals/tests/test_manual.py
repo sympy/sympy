@@ -470,16 +470,16 @@ def test_manualintegrate_parts_special():
 
 def test_manualintegrate_owent():
     f = exp(-x**2)*erf(y*x)
-    F = Piecewise((-2*sqrt(pi)*owens_t(sqrt(2)*x, y), Ne(y, 0)), (0, True))
+    F = -2*sqrt(pi)*owens_t(sqrt(2)*x, y)
     assert_is_integral_of(f, F)
 
     f = exp(-(3*x+2)**2)*erf(y*(3*x+2))
-    F = Piecewise((-2*sqrt(pi)*owens_t(sqrt(2)*(3*x + 2), y)/3, Ne(y, 0)), (0, True))
+    F = -2*sqrt(pi)*owens_t(sqrt(2)*(3*x + 2), y)/3
     assert_is_integral_of(f, F)
 
     f = owens_t(x, y)
-    F = x*owens_t(x, y) + sqrt(2)*(sqrt(2)*y*Piecewise((sqrt(pi)*erfi(x*(-y**2 - 1)/(2*sqrt(-y**2/2 - S.One/2)))/(2*sqrt(-y**2/2 - S.One/2)), Ne(y**2, -1)), (Integral(exp(-x**2*y**2/2 - x**2/2), x), True))/sqrt(pi) - exp(-x**2/2)*erf(sqrt(2)*x*y/2))/(4*sqrt(pi))
-    assert_is_integral_of(f, F)
+    F = x*owens_t(x, y) + sqrt(2)*(sqrt(2)*y*Piecewise((sqrt(pi)*erfi(x*(-y**2 - 1)/(2*sqrt(-y**2/2 - S.One/2)))/(2*sqrt(-y**2/2 - S.One/2)), Ne(y**2, - 1)), (Integral(exp(-x**2*y**2/2 - x**2/2), x), True))/sqrt(pi) - exp(-x**2/2)*erf(sqrt(2)*x*y/2))/(4*sqrt(pi))
+    assert manualintegrate(f, x) == F
 
     f = exp(-x**2)*erf(2*x)
     F = -2*sqrt(pi)*owens_t(sqrt(2)*x, 2)
