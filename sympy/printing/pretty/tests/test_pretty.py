@@ -3795,6 +3795,19 @@ def test_tensor_TensorProduct():
     assert upretty(TensorProduct(A, B, A)) == "A\u2297B\u2297A"
 
 
+def test_tensor_ArrayTensorProduct():
+    from sympy.tensor.array.expressions import ArrayAdd, ArrayTensorProduct
+    A = MatrixSymbol("A", 3, 4)
+    B = MatrixSymbol("B", 4, 5)
+    C = MatrixSymbol("C", 3, 4)
+    assert upretty(ArrayTensorProduct(A, B)) == "A\u2297B"
+    assert pretty(ArrayTensorProduct(A, B)) == "A.*B"
+    assert upretty(ArrayAdd(ArrayTensorProduct(A, B), ArrayTensorProduct(C, B))) == \
+        "A\u2297B + C\u2297B"
+    assert upretty(ArrayTensorProduct(ArrayAdd(A, C), B)) == "(A + C)\u2297B"
+    assert upretty(ArrayTensorProduct(A + C, B)) == "(A + C)\u2297B"
+
+
 def test_diffgeom_print_WedgeProduct():
     from sympy.diffgeom.rn import R2
     from sympy.diffgeom import WedgeProduct
