@@ -82,6 +82,29 @@ The trace of a matrix in the array expression form:
 >>> convert_indexed_to_array(Sum(A[i, i], (i, 0, 2)), [i])
 ArrayContraction(A, (0, 1))
 
+The einsum operator
+-------------------
+
+Array expressions may also be built from NumPy-style ``einsum`` subscript
+strings. The ``Einsum`` class is an unevaluated equivalent of NumPy's
+``einsum`` operator:
+
+>>> from sympy.tensor.array.expressions import Einsum
+>>> Einsum("ij,jk->ik", A, B)
+Einsum('ij,jk->ik', A, B)
+>>> Einsum("ij,jk->ik", A, B).as_array_expression()
+ArrayContraction(ArrayTensorProduct(A, B), (1, 2))
+
+The functions ``convert_einsum_to_array( ... )`` and
+``convert_array_to_einsum( ... )`` convert between the two forms directly:
+
+>>> from sympy.tensor.array.expressions import convert_einsum_to_array, convert_array_to_einsum
+>>> from sympy.tensor.array.expressions import ArrayContraction, ArrayDiagonal
+>>> convert_einsum_to_array("ii->i", A)
+ArrayDiagonal(A, (0, 1))
+>>> convert_array_to_einsum(ArrayContraction(ArrayTensorProduct(A, B), (1, 2)))
+Einsum('ab,bc->ac', A, B)
+
 Compatibility with matrices
 ---------------------------
 
@@ -163,16 +186,20 @@ __all__ = [
     "ArrayAdd",
     "ArrayElementwiseApplyFunc",
     "Reshape",
+    "Einsum",
     "convert_array_to_matrix",
     "convert_matrix_to_array",
     "convert_array_to_indexed",
     "convert_indexed_to_array",
+    "convert_array_to_einsum",
+    "convert_einsum_to_array",
     "array_derive",
 ]
 
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, PermuteDims, ArrayDiagonal, \
     ArrayContraction, Reshape, ArraySymbol, ArrayElement, ZeroArray, OneArray, ArrayElementwiseApplyFunc
 from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
+from sympy.tensor.array.expressions.einsum import Einsum, convert_array_to_einsum, convert_einsum_to_array
 from sympy.tensor.array.expressions.from_array_to_indexed import convert_array_to_indexed
 from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
 from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
