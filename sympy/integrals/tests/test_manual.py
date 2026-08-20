@@ -661,30 +661,28 @@ def test_issue_10847():
     assert manualintegrate(sqrt(x) * log(x), x) == 2*x**Rational(3, 2)*log(x)/3 - 4*x**Rational(3, 2)/9
 
     result = manualintegrate(sqrt(a*x + b) / x, x)
-    assert result == Piecewise((-2*b*Piecewise((1/sqrt(a*x + b), Eq(b, 0)), (-atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b), True)) + 2*sqrt(a*x + b), Ne(a, 0)),
-                                (sqrt(b)*log(x), True))
-
-    assert piecewise_fold(result) == Piecewise((-2*b/sqrt(a*x + b) + 2*sqrt(a*x + b), Eq(b, 0) & Ne(a, 0)),
-                   (2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b), Ne(a, 0)), (sqrt(b)*log(x), True))
+    assert result == Piecewise((sqrt(b)*log(x), Eq(a, 0)),
+                                (-2*b/sqrt(a*x + b) + 2*sqrt(a*x + b), Eq(b, 0)),
+                                (2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b), True))
 
     ra = Symbol('a', real=True)
     rb = Symbol('b', real=True)
     assert manualintegrate(sqrt(ra*x + rb) / x, x) == \
-        Piecewise((-2*rb * Piecewise(
-            (1/sqrt(ra*x + rb), Eq(rb, 0)),
-            (-I*(log(-sqrt(rb) + sqrt(ra*x + rb)) - log(sqrt(rb) + sqrt(ra*x + rb)))/(2*sqrt(-rb)), rb > 0),
-            (-atan(sqrt(ra*x + rb)/sqrt(-rb))/sqrt(-rb), True)) + 2*sqrt(ra*x + rb), Ne(ra, 0)), (sqrt(rb)*log(x), True))
+        Piecewise((sqrt(rb)*log(x), Eq(ra, 0)),
+                  (-2*rb/sqrt(ra*x + rb) + 2*sqrt(ra*x + rb), Eq(rb, 0)),
+                  (I*rb*(log(-sqrt(rb) + sqrt(ra*x + rb)) - log(sqrt(rb) + sqrt(ra*x + rb)))/sqrt(-rb)
+                   + 2*sqrt(ra*x + rb), rb > 0),
+                  (2*rb*atan(sqrt(ra*x + rb)/sqrt(-rb))/sqrt(-rb) + 2*sqrt(ra*x + rb), True))
 
     assert expand(manualintegrate(sqrt(ra*x + rb) / (x + rc), x)) == \
-           Piecewise((-2*ra*rc*Piecewise((-1/sqrt(ra*x + rb), Eq(ra*rc - rb, 0)),
-                                         (log(-sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)) -
-                                          log(sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)), ra*rc - rb < 0),
-                                            (atan(sqrt(ra*x + rb)/sqrt(ra*rc - rb))/sqrt(ra*rc - rb), True))
-                                        + 2*rb*Piecewise((-1/sqrt(ra*x + rb), Eq(ra*rc - rb, 0)),
-                                        (log(-sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)) -
-                                         log(sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)), ra*rc - rb < 0),
-                                        (atan(sqrt(ra*x + rb)/sqrt(ra*rc - rb))/sqrt(ra*rc - rb), True))
-                                          + 2*sqrt(ra*x + rb), Ne(ra, 0)), (sqrt(rb)*log(rc + x), True))
+           Piecewise((sqrt(rb)*log(rc + x), Eq(ra, 0)),
+                     (2*ra*rc/sqrt(ra*x + rb) - 2*rb/sqrt(ra*x + rb) + 2*sqrt(ra*x + rb), Eq(ra*rc - rb, 0)),
+                     (-ra*rc*log(-sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/sqrt(-ra*rc + rb) +
+                      ra*rc*log(sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/sqrt(-ra*rc + rb) +
+                      rb*log(-sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/sqrt(-ra*rc + rb) -
+                      rb*log(sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/sqrt(-ra*rc + rb) +
+                      2*sqrt(ra*x + rb), ra*rc - rb < 0),
+                     (-2*sqrt(ra*rc - rb)*atan(sqrt(ra*x + rb)/sqrt(ra*rc - rb)) + 2*sqrt(ra*x + rb), True))
 
     assert manualintegrate(sqrt(2*x + 3) / (x + 1), x) == 2*sqrt(2*x + 3) - log(sqrt(2*x + 3) + 1) + log(sqrt(2*x + 3) - 1)
     assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**Rational(5, 2)/20 - (2*x + 3)**Rational(3, 2)/4
