@@ -1,9 +1,8 @@
 """Implementation of the Kronecker product"""
 from __future__ import annotations
-from functools import reduce
 from math import prod
 
-from sympy.core import Mul, sympify
+from sympy.core import Mul, S, sympify
 from sympy.functions import adjoint
 from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
@@ -213,10 +212,23 @@ class KroneckerProduct(MatrixExpr):
         return flatten(canon(typed({KroneckerProduct: distribute(KroneckerProduct, MatAdd)}))(self))
 
     def _kronecker_add(self, other):
+        # The sum of two Kronecker products can be written as a single
+        # Kronecker product only if the arguments coincide in all factors
+        # except at most one: A x B + C x B = (A + C) x B.  Merging more
+        # than one factor at a time is invalid, as the product distributes
+        # over every factor: (A + C) x (B + D) is the sum of FOUR
+        # Kronecker products.
         if self.structurally_equal(other):
-            return self.__class__(*[a + b for (a, b) in zip(self.args, other.args)])
-        else:
-            return self + other
+            diff = [i for i, (a, b) in enumerate(zip(self.args, other.args))
+                    if a != b]
+            if len(diff) == 0:
+                return 2*self
+            if len(diff) == 1:
+                i = diff[0]
+                newargs = list(self.args)
+                newargs[i] = newargs[i] + other.args[i]
+                return self.__class__(*newargs)
+        return self + other
 
     def _kronecker_mul(self, other):
         if self.has_matching_shape(other):
@@ -351,11 +363,46 @@ canonicalize = exhaust(condition(lambda x: isinstance(x, KroneckerProduct),
                                  do_one(*rules)))
 
 
-def _kronecker_dims_key(expr):
+def _coeff_kron(expr):
+    """Split *expr* into a scalar coefficient and a KroneckerProduct, or
+    return None if *expr* is not a scalar multiple of a KroneckerProduct."""
     if isinstance(expr, KroneckerProduct):
-        return tuple(a.shape for a in expr.args)
+        return S.One, expr
+    if isinstance(expr, MatMul):
+        coeff, matrices = expr.as_coeff_matrices()
+        if len(matrices) == 1 and isinstance(matrices[0], KroneckerProduct):
+            return coeff, matrices[0]
+    return None
+
+
+def _kronecker_dims_key(expr):
+    ck = _coeff_kron(expr)
+    if ck is not None:
+        return tuple(a.shape for a in ck[1].args)
     else:
         return (0,)
+
+
+def _kronecker_merge_add(pair1, pair2):
+    """Merge two (coefficient, KroneckerProduct) pairs into a single pair
+    representing their sum, or return None if they cannot be merged.
+
+    The sum of two Kronecker products is itself a Kronecker product only
+    when the factors coincide in all slots except at most one:
+    c1*(A x B) + c2*(C x B) = (c1*A + c2*C) x B.
+    """
+    (c1, k1), (c2, k2) = pair1, pair2
+    if not k1.structurally_equal(k2):
+        return None
+    diff = [i for i, (a, b) in enumerate(zip(k1.args, k2.args)) if a != b]
+    if len(diff) == 0:
+        return (c1 + c2, k1)
+    if len(diff) == 1:
+        i = diff[0]
+        newargs = list(k1.args)
+        newargs[i] = c1*k1.args[i] + c2*k2.args[i]
+        return (S.One, k1.__class__(*newargs))
+    return None
 
 
 def kronecker_mat_add(expr):
@@ -364,8 +411,19 @@ def kronecker_mat_add(expr):
     if not args:
         return expr
 
-    krons = [reduce(lambda x, y: x._kronecker_add(y), group)
-             for group in args.values()]
+    krons = []
+    for group in args.values():
+        # Greedily merge each addend into the first mergeable partner:
+        merged: list[tuple] = []
+        for pair in map(_coeff_kron, group):
+            for i, other in enumerate(merged):
+                combined = _kronecker_merge_add(other, pair)
+                if combined is not None:
+                    merged[i] = combined
+                    break
+            else:
+                merged.append(pair)
+        krons.extend([coeff*kron for coeff, kron in merged])
 
     if not nonkrons:
         return MatAdd(*krons)
@@ -412,8 +470,15 @@ def combine_kronecker(expr):
     >>> B = MatrixSymbol('B', n, m)
     >>> combine_kronecker(KroneckerProduct(A, B)*KroneckerProduct(B, A))
     KroneckerProduct(A*B, B*A)
+
+    A sum of Kronecker products can be written as a single Kronecker
+    product only when the factors coincide in all slots except at most
+    one:
+
+    >>> combine_kronecker(KroneckerProduct(A, B)+KroneckerProduct(B.T, B))
+    KroneckerProduct(A + B.T, B)
     >>> combine_kronecker(KroneckerProduct(A, B)+KroneckerProduct(B.T, A.T))
-    KroneckerProduct(A + B.T, B + A.T)
+    KroneckerProduct(A, B) + KroneckerProduct(B.T, A.T)
     >>> C = MatrixSymbol('C', n, n)
     >>> D = MatrixSymbol('D', m, m)
     >>> combine_kronecker(KroneckerProduct(C, D)**m)
