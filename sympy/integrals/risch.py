@@ -590,8 +590,35 @@ class DifferentialExtension:
             A = is_deriv_k(arga, argd, self)
             if A is not None:
                 ans, u, const = A
-                newterm = log(const) + u
-                self.newf = self.newf.xreplace({log(arg): newterm})
+                # u + log(const) equals log(arg) only up to a locally
+                # constant branch term: log(const) is the principal-branch
+                # choice, valid where every argument involved is positive
+                # (e.g. log(-x**2) == 2*log(x) + I*pi only holds for
+                # x > 0).  The one case where it is exact everywhere is a
+                # single tower logarithm with coefficient one and a
+                # positive constant: log(c*w) == log(c) + log(w) for
+                # c > 0 on the whole complex plane.
+                if (u is not self.x and u in self.T and const.is_positive and
+                        self.exts[self.T.index(u) - 1] == 'log'):
+                    self.newf = self.newf.xreplace({log(arg): log(const) + u})
+                    continue
+                # Otherwise the difference log(arg) - u is locally
+                # constant wherever the functions are defined, so
+                # integrating with an opaque constant in its place and
+                # restoring the exact difference on backsubstitution keeps
+                # the answer, now expressed through the original
+                # logarithm, correct on every connected component.
+                branch_const = Dummy('log_branch')
+                # arg and u may involve tower symbols; express the
+                # difference through the concrete functions (and through
+                # any originals recorded in backsubs so far, so that
+                # e.g. x**x reappears as x**x rather than exp(x*log(x))).
+                concrete = list(zip(reversed(self.T),
+                    reversed([f(self.x) for f in self.Tfuncs])))
+                diff_expr = (log(arg.subs(concrete)) -
+                    u.subs(concrete)).subs(self.backsubs)
+                self.backsubs.append((branch_const, diff_expr))
+                self.newf = self.newf.xreplace({log(arg): branch_const + u})
                 continue
 
             else:

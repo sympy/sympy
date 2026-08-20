@@ -530,11 +530,18 @@ def test_DifferentialExtension_exp():
 
 
 def test_DifferentialExtension_log():
-    assert DifferentialExtension(log(x)*log(x + 1)*log(2*x**2 + 2*x), x)._important_attrs == \
-        (Poly(t0*t1**2 + (t0*log(2) + t0**2)*t1, t1), Poly(1, t1),
+    # log(2*x**2 + 2*x) is rewritten in terms of the other two logarithms
+    # plus an opaque locally-constant branch term (restored by backsubs),
+    # not the principal-branch constant log(2), which is only valid where
+    # the arguments are all positive.
+    DE = DifferentialExtension(log(x)*log(x + 1)*log(2*x**2 + 2*x), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(t0*t1**2 + (c*t0 + t0**2)*t1, t1), Poly(1, t1),
         [Poly(1, x), Poly(1/x, t0),
         Poly(1/(x + 1), t1, expand=False)], [x, t0, t1],
-        [Lambda(i, log(i)), Lambda(i, log(i + 1))], [], ['log', 'log'],
+        [Lambda(i, log(i)), Lambda(i, log(i + 1))],
+        [(c, log(2*x**2 + 2*x) - log(x) - log(x + 1))], ['log', 'log'],
         [x, x + 1])
     assert DifferentialExtension(x**x*log(x), x)._important_attrs == \
         (Poly(t0*t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
@@ -545,10 +552,13 @@ def test_DifferentialExtension_log():
 
 def test_DifferentialExtension_symlog():
     # See comment on test_risch_integrate below
-    assert DifferentialExtension(log(x**x), x)._important_attrs == \
-        (Poly(t0*x, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0), Poly((t0 +
+    DE = DifferentialExtension(log(x**x), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(t0*x + c, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0), Poly((t0 +
             1)*t1, t1)], [x, t0, t1], [Lambda(i, log(i)), Lambda(i, exp(i*t0))],
-            [(exp(x*log(x)), x**x)], ['log', 'exp'], [x, t0*x])
+            [(exp(x*log(x)), x**x), (c, log(x**x) - x*log(x))],
+            ['log', 'exp'], [x, t0*x])
     assert DifferentialExtension(log(x**y), x)._important_attrs == \
         (Poly(y*t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
         [Lambda(i, log(i))], [(y*log(x), log(x**y))], ['log'],
@@ -658,9 +668,11 @@ def test_DifferentialExtension_misc():
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(log(10)*t0, t0)], [x, t0],
         [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], ['exp'],
         [x*log(10)])
-    assert DifferentialExtension(log(x) + log(x**2), x)._important_attrs == \
-        (Poly(3*t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
-        [Lambda(i, log(i))], [], ['log'], [x])
+    DE = DifferentialExtension(log(x) + log(x**2), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(3*t0 + c, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
+        [Lambda(i, log(i))], [(c, log(x**2) - 2*log(x))], ['log'], [x])
     assert DifferentialExtension(S.Zero, x)._important_attrs == \
         (Poly(0, x), Poly(1, x), [Poly(1, x)], [x], [], [], [], [])
     assert DifferentialExtension(tan(atan(x).rewrite(log)), x)._important_attrs == \
@@ -751,19 +763,20 @@ def test_risch_integrate():
     e2 = (log(-1/y)/2 - log(1/y)/2)/y - (log(1 - 1/y)/2 - log(1 + 1/y)/2)/y
     ans2 = risch_integrate(e2, y)
     assert ans2 == log(1/y)*log(1 - 1/y)/2 - log(1/y)*log(1 + 1/y)/2 + \
-            NonElementaryIntegral((I*pi*y**2 - 2*y*log(1/y) - I*pi)/(2*y**3 - 2*y), y)
+            NonElementaryIntegral((y**2*(log(-1/y) - log(1/y)) - 2*y*log(1/y)
+                - log(-1/y) + log(1/y))/(2*y**3 - 2*y), y)
     assert expand_log(cancel(diff(ans2, y) - e2), force=True) == 0
 
     # These are tested here in addition to in test_DifferentialExtension above
     # (symlogs) to test that backsubs works correctly.  The integrals should be
     # written in terms of the original logarithms in the integrands.
 
-    # XXX: Unfortunately, making backsubs work on this one is a little
-    # trickier, because x**x is converted to exp(x*log(x)), and so log(x**x)
-    # is converted to x*log(x). (x**2*log(x)).subs(x*log(x), log(x**x)) is
-    # smart enough, the issue is that these splits happen at different places
-    # in the algorithm.  Maybe a heuristic is in order
-    assert risch_integrate(log(x**x), x) == x**2*log(x)/2 - x**2/4
+    # The answer carries the locally-constant difference
+    # log(x**x) - x*log(x) explicitly (it vanishes on the domain where
+    # x**x is real, but not identically), so the original log(x**x)
+    # notation reappears through it.
+    assert risch_integrate(log(x**x), x) == \
+        x**2*log(x)/2 - x**2/4 + x*(log(x**x) - x*log(x))
 
     assert risch_integrate(log(x**y), x) == x*log(x**y) - x*y
     assert risch_integrate(log(sqrt(x)), x) == x*log(sqrt(x)) - x/2
