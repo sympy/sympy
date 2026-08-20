@@ -19,7 +19,8 @@ from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, integral_steps, manual_subs)
+    _parts_rule, integral_steps, manual_subs, IntegralInfo,
+    perfect_square_radicand_rule)
 from sympy.testing.pytest import raises, slow
 from typing import TYPE_CHECKING
 
@@ -1000,6 +1001,42 @@ def test_manualintegrate_perfect_square_radicand_rule():
     f = x/sqrt(-z*sin(x)**2)
     F = sin(x)*Integral(x/sin(x), x)/sqrt(-z*sin(x)**2)
     assert_is_integral_of(f, F)
+
+    # the radicand need not involve a trig function; any factor whose
+    # multiplicity in the square-free decomposition is even is pulled out
+    f = 1/sqrt(z*x**4)
+    F = -x/sqrt(z*x**4)
+    assert_is_integral_of(f, F)
+
+    f = x**3/sqrt(z*x**4)
+    F = sqrt(z*x**4)/(2*z)
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(-z*x**2)
+    F = x*log(x)/sqrt(-z*x**2)
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(z*exp(2*x))
+    F = -1/sqrt(z*exp(2*x))
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(z*log(x)**2)
+    F = log(x)*li(x)/sqrt(z*log(x)**2)
+    assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_perfect_square_radicand_rule_real_symbol():
+    # for a real integration variable, sympy already extracts even powers
+    # from sqrt() using Abs() at construction time (e.g. sqrt(t**4) == t**2
+    # since t**4 >= 0), so the rule is a no-op and must not fire again
+    t = symbols('t', real=True)
+    integral = IntegralInfo(1/sqrt(z*t**4), t)
+    assert perfect_square_radicand_rule(integral) is None
+
+    f = 1/sqrt(z*t**4)
+    F = -1/(t*sqrt(z))
+    assert manualintegrate(f, t) == F
+
 
 def test_mul_pow_derivative():
     assert_is_integral_of(x*sec(x)*tan(x), x*sec(x) - log(tan(x) + sec(x)))
