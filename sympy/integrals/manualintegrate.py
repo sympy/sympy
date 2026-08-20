@@ -2628,11 +2628,6 @@ def perfect_square_radicand_rule(integral: IntegralInfo):
     factor = (F*sqrt(c*R))/sqrt(G)
     rewritten = H/(F*sqrt(c*R))
 
-    # The factor must be constant with respect to the integration variable,
-    # otherwise the step is invalid.
-    if factor.diff(symbol) != 0:
-        return
-
     substep = integral_steps(rewritten, symbol)
     return ConstantTimesRule(integrand, symbol, factor, rewritten, substep)
 
