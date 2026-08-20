@@ -37,6 +37,7 @@ from types import GeneratorType
 
 from sympy import SYMPY_DEBUG
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.function import Derivative
@@ -2884,6 +2885,26 @@ def _integral_is_subclass(*klasses):
     return _check
 
 
+def _rule_xreplace(rule, rule_map):
+    """:meth:`~.Basic.xreplace`-alike that also recurses through a
+    :class:`Rule` tree.
+
+    ``Rule`` is a plain slotted class, not a :class:`~.Basic` subclass, so
+    it has no ``xreplace`` of its own. This walks a rule's fields (which are
+    themselves ``Rule``, ``Basic``, ``list``/``tuple``, or plain values such
+    as the ``bool`` in ``TrigSubstitutionRule.restriction``) and substitutes
+    ``rule_map`` inside every ``Basic`` it finds along the way.
+    """
+    if isinstance(rule, Rule):
+        fields = [_rule_xreplace(getattr(rule, s), rule_map) for s in rule._get_slots()]
+        return rule.__class__(*fields)
+    if isinstance(rule, Basic):
+        return rule.xreplace(rule_map)
+    if isinstance(rule, (list, tuple)):
+        return type(rule)(_rule_xreplace(item, rule_map) for item in rule)
+    return rule
+
+
 class IntegrationSolver:
     """Performs the recursive calls on behalf of the integration rules and
     owns all the state of a single integration run.
@@ -2914,6 +2935,13 @@ class IntegrationSolver:
         self._active: set[Expr] = set()
         # Uses of each "u" by integration by parts, to avoid infinite repetition.
         self._parts_u_count: dict[Expr, int] = defaultdict(int)
+        # Rules already computed for a subproblem, keyed the same way as
+        # ``_active``, so that a subintegral reached again through a
+        # different search path is served from here instead of being solved
+        # from scratch. Lives only as long as this solver, i.e. one
+        # top-level integral_steps() call, so it can never leak stale steps
+        # into an unrelated integration request.
+        self._solved: dict[Expr, Rule] = {}
         self._strategy: Callable[[IntegralInfo], Rule] | None = None
 
     def solve(self, integrand, symbol) -> Rule:
@@ -2929,6 +2957,8 @@ class IntegrationSolver:
             # unsolvable, so that callers fall back to shallower candidates.
             return DontKnowRule(integrand, symbol)
         cachekey = integrand.xreplace({symbol: _cache_dummy})
+        if cachekey in self._solved:
+            return _rule_xreplace(self._solved[cachekey], {_cache_dummy: symbol})
         if cachekey in self._active:
             # Stop this attempt, because it leads around in a loop
             return DontKnowRule(integrand, symbol)
@@ -2936,9 +2966,18 @@ class IntegrationSolver:
         try:
             if self._strategy is None:
                 self._strategy = self._build_strategy()
-            return self._strategy(IntegralInfo(integrand, symbol))
+            result = self._strategy(IntegralInfo(integrand, symbol))
+            if self.max_depth is None:
+                # Only memoize when recursion is unbounded: with a
+                # max_depth budget, a DontKnowRule can be an artifact of
+                # running out of budget at this particular point in the
+                # tree, rather than a genuine "no rule found" - reusing it
+                # for the same subproblem reached with a different amount
+                # of budget left would be wrong.
+                self._solved[cachekey] = _rule_xreplace(result, {symbol: _cache_dummy})
         finally:
             self._active.discard(cachekey)
+        return result
 
     def run(self, rule, integral):
         """Apply a single rule to ``integral``, driving it if it is a
