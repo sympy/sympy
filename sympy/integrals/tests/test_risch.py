@@ -510,15 +510,20 @@ def test_DifferentialExtension_exp():
         (Poly((1 + S.Exp1*t0)*t1 + t0, t1), Poly(1, t1), [Poly(1, x),
         Poly(t0, t0), Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i)),
         Lambda(i, exp(i**2))], [], ['exp', 'exp'], [x, x**2])
+    # exp(x/2 + x**2) makes the tower use exp(x/2) internally; the answer
+    # must stay in that exact form, not be rewritten into the principal
+    # root sqrt(exp(x)) the user never wrote (which differs from exp(x/2)
+    # by a locally constant sign off the real line), so no backsubs pair
+    # is recorded.
     assert DifferentialExtension(exp(x) + exp(x**2) + exp(x/2 + x**2), x)._important_attrs == \
         (Poly((t0 + 1)*t1 + t0**2, t1), Poly(1, t1), [Poly(1, x),
         Poly(t0/2, t0), Poly(2*x*t1, t1)], [x, t0, t1],
         [Lambda(i, exp(i/2)), Lambda(i, exp(i**2))],
-        [(exp(x/2), sqrt(exp(x)))], ['exp', 'exp'], [x/2, x**2])
+        [], ['exp', 'exp'], [x/2, x**2])
     assert DifferentialExtension(exp(x) + exp(x**2) + exp(x/2 + x**2 + 3), x)._important_attrs == \
         (Poly((t0*exp(3) + 1)*t1 + t0**2, t1), Poly(1, t1), [Poly(1, x),
         Poly(t0/2, t0), Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i/2)),
-        Lambda(i, exp(i**2))], [(exp(x/2), sqrt(exp(x)))], ['exp', 'exp'],
+        Lambda(i, exp(i**2))], [], ['exp', 'exp'],
         [x/2, x**2])
     assert DifferentialExtension(sqrt(exp(x)), x)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)], [x, t0],
@@ -923,6 +928,7 @@ def test_DifferentialExtension_equality():
 def test_DifferentialExtension_printing():
     DE = DifferentialExtension(exp(2*x**2) + log(exp(x**2) + 1), x)
     assert repr(DE) == ("DifferentialExtension(dict([('f', exp(2*x**2) + log(exp(x**2) + 1)), "
+        "('origf', exp(2*x**2) + log(exp(x**2) + 1)), "
         "('x', x), ('T', [x, t0, t1]), ('D', [Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
         "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]), ('fa', Poly(t1 + t0**2, t1, domain='ZZ[t0]')), "
         "('fd', Poly(1, t1, domain='ZZ')), ('Tfuncs', [Lambda(i, exp(i**2)), Lambda(i, log(t0 + 1))]), "

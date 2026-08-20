@@ -167,9 +167,9 @@ class DifferentialExtension:
     # of the class easily (the memory use doesn't matter too much, since we
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
-    __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs',
-        'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf', 'level',
-        'ts', 'dummy')
+    __slots__ = ('f', 'origf', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs',
+        'backsubs', 'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf',
+        'level', 'ts', 'dummy')
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
         """
@@ -224,8 +224,10 @@ class DifferentialExtension:
                 str(handle_first))
 
         # f will be the original function, self.f might change if we reset
-        # (e.g., we pull out a constant from an exponential)
+        # (e.g., we pull out a constant from an exponential); origf always
+        # stays the expression the user handed in
         self.f = f
+        self.origf = f
         self.x = x
         # setting the default value 'dummy'
         self.dummy = dummy
@@ -322,7 +324,19 @@ class DifferentialExtension:
 
         ratpows_repl = [
             (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
-        self.backsubs += [(j, i) for i, j in ratpows_repl]
+        # exp(u)**q == exp(q*u) is exact for integer q, but for
+        # fractional q the left side is a principal root that differs
+        # from exp(q*u) by a locally constant root of unity off the real
+        # line.  Radicals of exponentials also arise internally (the
+        # radical case of _exp_part substitutes t**(p/n) and restarts),
+        # and rewriting those into the answer turned correctly
+        # integrated results into non-antiderivatives at complex points.
+        # So the notation is only restored where it is the user's own:
+        # a fractional power is put back only if it appears in the
+        # original integrand.
+        self.backsubs += [(j, i) for i, j in ratpows_repl
+                          if i.exp.is_Integer or
+                          (self.origf is not None and self.origf.has(i))]
         self.newf = self.newf.xreplace(dict(ratpows_repl))
 
         # To make the process deterministic, the args are sorted
