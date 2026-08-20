@@ -1024,6 +1024,13 @@ def test_manualintegrate_perfect_square_radicand_rule():
     F = log(x)*li(x)/sqrt(z*log(x)**2)
     assert_is_integral_of(f, F)
 
+    # regression test: the extracted exponent used to be a Python float
+    # (r[1]/2 for an integer multiplicity r[1]), which leaked a literal
+    # float exponent like exp(x)**1.0 into the unsimplified result
+    f = x/sqrt(z*exp(2*x))
+    F = (-x*exp(-x) - exp(-x))*exp(x)/sqrt(z*exp(2*x))
+    assert_is_integral_of(f, F)
+
 
 def test_manualintegrate_perfect_square_radicand_rule_real_symbol():
     # for a real integration variable, sympy already extracts even powers

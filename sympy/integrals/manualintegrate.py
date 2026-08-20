@@ -2493,7 +2493,7 @@ def perfect_square_radicand_rule(integral: IntegralInfo):
 
     square_free = sqf_list(G)
     c = square_free[0]
-    reducible = {r[0]**(r[1]/2) for r in square_free[1] if r[1] % 2 == 0}
+    reducible = {r[0]**(Integer(r[1])/2) for r in square_free[1] if r[1] % 2 == 0}
     irreducible = {r[0]**r[1] for r in square_free[1] if r[1] % 2 != 0}
 
     if not reducible:
