@@ -2264,6 +2264,7 @@ def test_issue_29909():
     assert F.diff(x).equals(f)
 
 
+@slow
 def test_sqrt_abs_factor_consistency():
     # integrate() used to give a different (unevaluated) result for a
     # sqrt integrand depending on whether a numerical factor sat inside
@@ -2272,6 +2273,8 @@ def test_sqrt_abs_factor_consistency():
     # k*sqrt(A) when A is a sum, so the two forms could take different
     # paths through the integration heuristics; the k*sqrt(A) form was
     # left with an Abs(sin(x))*Abs(cos(x)) factor unevaluated.
+    # NOTE: heurisch() is inherently slow (~20s) on both forms of this
+    # quartic trig integrand regardless of that fix, hence @slow.
     trig_sum = sin(x)**4*cos(x)**2 + sin(x)**2*cos(x)**4
     outside = 12*sqrt(trig_sum)
     inside = sqrt(144*trig_sum)
