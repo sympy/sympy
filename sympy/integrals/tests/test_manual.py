@@ -431,6 +431,48 @@ def test_manualintegrate_parts_special():
     assert_is_integral_of(f, F)
 
 
+def test_manualintegrate_special_alternatives():
+    f = (x + 1)*Ei(x)
+    F = -(x/2 + 1)*exp(x) + (x**2/2 + x)*Ei(x) + exp(x)/2
+    # Because -(x/2 + 1) != (-x/2 - 1) we are using expand
+    assert manualintegrate(f, x).expand() == F.expand()
+    assert F.diff().expand() == f.expand()
+
+
+def test_integral_steps_branch():
+    from sympy.integrals.manualintegrate import AlternativeRule
+    # By default only the first workable rule is kept at each step, so no
+    # AlternativeRule node appears in the tree.
+    f = x*exp(x**2)
+    rule = f, x
+    assert not any(isinstance(r, AlternativeRule)
+                   for r in _rules_in_tree(integral_steps(*rule)))
+    # With branch=True all applicable alternatives are preserved.
+    branched = integral_steps(*rule, branch=True)
+    assert any(isinstance(r, AlternativeRule)
+               for r in _rules_in_tree(branched))
+    # Both trees evaluate to a correct antiderivative.
+    assert integral_steps(*rule).eval().diff(x).equals(f)
+    assert branched.eval().diff(x).equals(f)
+    # The branch flag reaches recursive subproblems without any global
+    # state, so concurrent solvers with different settings cannot clash.
+    assert not any(isinstance(r, AlternativeRule)
+                   for r in _rules_in_tree(integral_steps(*rule)))
+
+
+def _rules_in_tree(rule):
+    from sympy.integrals.manualintegrate import Rule
+    yield rule
+    for name in rule._get_slots():
+        stack = [getattr(rule, name)]
+        while stack:
+            v = stack.pop()
+            if isinstance(v, Rule):
+                yield from _rules_in_tree(v)
+            elif isinstance(v, (list, tuple)):
+                stack.extend(v)
+
+
 def test_manualintegrate_derivative():
     assert manualintegrate(pi * Derivative(x**2 + 2*x + 3), x) == \
         pi * (x**2 + 2*x + 3)
