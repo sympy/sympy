@@ -78,7 +78,7 @@ class ArraySymbol(_ArrayExpr):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("cannot express explicit array with symbolic shape")
         data = [self[i] for i in itertools.product(*[range(j) for j in self.shape])]
-        return ImmutableDenseNDimArray(data).reshape(*self.shape)
+        return ImmutableDenseNDimArray(data, tuple(self.shape))
 
 
 class ArrayElement(Expr):
@@ -168,10 +168,44 @@ class ArraySum(Sum, _ArrayExpr):
         return obj
 
     def doit(self, **hints):
+        deep = hints.get("deep", True)
+        function = self.function.doit(**hints) if deep else self.function
+        limits = self.limits
+        if all(len(i) == 3 and i[1].is_Integer and i[2].is_Integer for i in limits):
+            # Expand the summation over the concrete integer limits. The
+            # summands are array expressions, so an ``ArrayAdd`` has to be
+            # used instead of a scalar ``Add`` (which would lose the array
+            # character of the expression, e.g. its shape):
+            if any(i[2] < i[1] for i in limits):
+                return ZeroArray(*self.shape)
+            terms = []
+            for values in itertools.product(*[range(int(i[1]), int(i[2]) + 1) for i in limits]):
+                terms.append(function.subs(dict(zip([i[0] for i in limits], values))))
+            if all(isinstance(term, MatrixExpr) for term in terms):
+                # The sum of matrix expressions is itself a valid matrix
+                # expression, no need for ``ArrayAdd``:
+                return reduce(operator.add, terms)
+            return _array_add(*terms)
         done = super().doit(**hints)
         if (done == 0) == True:
             return ZeroArray(*self.shape)
         return done
+
+    def as_explicit(self):
+        limits = self.limits
+        if not all(len(i) == 3 and i[1].is_Integer and i[2].is_Integer for i in limits):
+            raise ValueError("cannot express explicit form of array sum with symbolic limits")
+        if not all(i.is_Integer for i in self.shape):
+            raise ValueError("cannot express explicit array with symbolic shape")
+        if any(i[2] < i[1] for i in limits):
+            return ImmutableDenseNDimArray.zeros(*self.shape)
+        terms = []
+        for values in itertools.product(*[range(int(i[1]), int(i[2]) + 1) for i in limits]):
+            term = self.function.subs(dict(zip([i[0] for i in limits], values)))
+            if hasattr(term, "as_explicit"):
+                term = term.as_explicit()
+            terms.append(term if isinstance(term, NDimArray) else ImmutableDenseNDimArray(term))
+        return reduce(operator.add, terms)
 
     def _eval_simplify(self, **kwargs):
         ret = super()._eval_simplify(**kwargs)
@@ -401,9 +435,13 @@ class ArrayAdd(_CodegenArrayAbstract):
         return new_args
 
     def as_explicit(self):
-        return reduce(
-            operator.add,
-            [arg.as_explicit() if hasattr(arg, "as_explicit") else arg for arg in self.args])
+        terms = [arg.as_explicit() if hasattr(arg, "as_explicit") else arg for arg in self.args]
+        if any(isinstance(term, NDimArray) for term in terms) and \
+                not all(isinstance(term, NDimArray) for term in terms):
+            # Mixing matrices and N-dim arrays is not supported by the
+            # addition operator, normalize everything to N-dim arrays:
+            terms = [term if isinstance(term, NDimArray) else ImmutableDenseNDimArray(term) for term in terms]
+        return reduce(operator.add, terms)
 
 
 class PermuteDims(_CodegenArrayAbstract):
@@ -605,75 +643,6 @@ class PermuteDims(_CodegenArrayAbstract):
         return new_expr, new_permutation
 
     @classmethod
-    def _check_permutation_mapping(cls, expr, permutation):
-        subndim = _get_sub_ndim_list(expr)
-        index2arg = [i for i, arg in enumerate(expr.args) for j in range(_get_sub_ndim_list(expr)[i])]
-        permuted_indices = [permutation(i) for i in range(_get_sub_ndim(expr))]
-        new_args = list(expr.args)
-        arg_candidate_index = index2arg[permuted_indices[0]]
-        current_indices = []
-        new_permutation = []
-        inserted_arg_cand_indices = set()
-        for i, idx in enumerate(permuted_indices):
-            if index2arg[idx] != arg_candidate_index:
-                new_permutation.extend(current_indices)
-                current_indices = []
-                arg_candidate_index = index2arg[idx]
-            current_indices.append(idx)
-            arg_candidate_ndim = subndim[arg_candidate_index]
-            if len(current_indices) == arg_candidate_ndim:
-                new_permutation.extend(sorted(current_indices))
-                local_current_indices = [j - min(current_indices) for j in current_indices]
-                i1 = index2arg[i]
-                new_args[i1] = _permute_dims(new_args[i1], Permutation(local_current_indices))
-                inserted_arg_cand_indices.add(arg_candidate_index)
-                current_indices = []
-        new_permutation.extend(current_indices)
-
-        # TODO: swap args positions in order to simplify the expression:
-        # TODO: this should be in a function
-        args_positions = list(range(len(new_args)))
-        # Get possible shifts:
-        maps = {}
-        cumulative_sub_ndim_list = [0] + list(accumulate(subndim))
-        for i in range(len(subndim)):
-            s = {index2arg[new_permutation[j]] for j in range(cumulative_sub_ndim_list[i], cumulative_sub_ndim_list[i+1])}
-            if len(s) != 1:
-                continue
-            elem = next(iter(s))
-            if i != elem:
-                maps[i] = elem
-
-        # Find cycles in the map:
-        lines = []
-        current_line = []
-        while maps:
-            if len(current_line) == 0:
-                k, v = maps.popitem()
-                current_line.append(k)
-            else:
-                k = current_line[-1]
-                if k not in maps:
-                    current_line = []
-                    continue
-                v = maps.pop(k)
-            if v in current_line:
-                lines.append(current_line)
-                current_line = []
-                continue
-            current_line.append(v)
-        for line in lines:
-            for i, e in enumerate(line):
-                args_positions[line[(i + 1) % len(line)]] = e
-
-        # TODO: function in order to permute the args:
-        permutation_blocks = [[new_permutation[cumulative_sub_ndim_list[i] + j] for j in range(e)] for i, e in enumerate(subndim)]
-        new_args = [new_args[i] for i in args_positions]
-        new_permutation_blocks = [permutation_blocks[i] for i in args_positions]
-        new_permutation2 = [j for i in new_permutation_blocks for j in i]
-        return _array_tensor_product(*new_args), Permutation(new_permutation2)  # **(-1)
-
-    @classmethod
     def _check_if_there_are_closed_cycles(cls, expr, permutation):
         args = list(expr.args)
         sub_ndim_list = _get_sub_ndim_list(expr)
@@ -835,6 +804,18 @@ class ArrayDiagonal(_CodegenArrayAbstract):
             return ZeroArray(*shape)
         return self.func(expr, *diagonal_indices, canonicalize=False)
 
+    def doit(self, **hints):
+        deep = hints.get("deep", True)
+        if deep:
+            args = [arg.doit(**hints) for arg in self.args]
+        else:
+            args = self.args
+        # ``allow_trivial_diags`` has to be re-passed upon reconstruction,
+        # otherwise objects constructed with trivial (i.e. length-1) diagonal
+        # groups would fail validation. Trivial groups are subsequently
+        # removed by the canonicalization:
+        return self.func(*args, allow_trivial_diags=True)._canonicalize()
+
     @staticmethod
     def _validate(expr, *diagonal_indices, **kwargs):
         # Check that no diagonalization happens on indices with mismatched
@@ -914,7 +895,10 @@ class ArrayDiagonal(_CodegenArrayAbstract):
 
         def transform(x):
             for i, e in enumerate(self._positions):
-                if (isinstance(e, int) and x == e) or (isinstance(e, tuple) and x in e):
+                # diagonal groups in ``_positions`` are sympy ``Tuple``s, which
+                # are not Python ``tuple``s, so both must be accepted here (as
+                # the static ``_push_indices_up`` already does)
+                if (isinstance(e, int) and x == e) or (isinstance(e, (tuple, Tuple)) and x in e):
                     return i
 
         return _apply_recursively_over_nested_lists(transform, indices)
@@ -947,6 +931,14 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         return positions, shape
 
     def as_explicit(self):
+        if any(len(i) == 1 for i in self.diagonal_indices):
+            # ``tensordiagonal`` does not accept length-1 (trivial) diagonal
+            # groups. The canonical form (a ``PermuteDims`` over an
+            # ``ArrayDiagonal`` without trivial groups) is equivalent:
+            ret = self._canonicalize()
+            if hasattr(ret, "as_explicit"):
+                ret = ret.as_explicit()
+            return ret
         expr = self.expr
         if hasattr(expr, "as_explicit"):
             expr = expr.as_explicit()
@@ -991,6 +983,12 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
         expr = self.expr
         if hasattr(expr, "as_explicit"):
             expr = expr.as_explicit()
+        if get_shape(self.expr) == ():
+            # a rank-0 operand explicitizes to a scalar (or rank-0 array),
+            # which has no applyfunc
+            if isinstance(expr, NDimArray):
+                expr = expr[()]
+            return self.function(expr)
         return expr.applyfunc(self.function)
 
     def _canonicalize(self):
@@ -1047,6 +1045,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         obj._mapping = _get_mapping_from_sub_ndim_list(obj._sub_ndim_list)
 
         free_indices_to_position = {i: i for i in range(sum(obj._sub_ndim_list)) if all(i not in cind for cind in contraction_indices)}
+        obj._free_indices = list(free_indices_to_position)
         obj._free_indices_to_position = free_indices_to_position
 
         shape = get_shape(expr)
@@ -1066,7 +1065,7 @@ class ArrayContraction(_CodegenArrayAbstract):
             return expr
 
         if isinstance(expr, ArraySum):
-            return expr.func(_array_contraction(expr.function, *contraction_indices), expr.limits)
+            return expr.func(_array_contraction(expr.function, *contraction_indices), *expr.limits)
 
         if isinstance(expr, ArrayContraction):
             return self._ArrayContraction_denest_ArrayContraction(expr, *contraction_indices)
@@ -1090,9 +1089,21 @@ class ArrayContraction(_CodegenArrayAbstract):
             return self._ArrayContraction_denest_ArrayAdd(expr, *contraction_indices)
 
         # Check single index contractions on 1-dimensional axes:
-        contraction_indices = [i for i in contraction_indices if len(i) > 1 or get_shape(expr)[i[0]] != 1]
-        if len(contraction_indices) == 0:
-            return expr
+        shape = get_shape(expr)
+        if shape is not None:
+            trivial_singles = [i for i in contraction_indices if len(i) == 1 and shape[i[0]] == 1]
+            if trivial_singles:
+                # A single-index contraction group sums over its axis, thus
+                # removing it. On a size-1 axis the summation is trivial, but
+                # the axis still has to be removed from the resulting shape,
+                # which is achieved by a reshape:
+                new_shape = tuple(shp for i, shp in enumerate(shape) if not any(i in j for j in contraction_indices))
+                if len(new_shape) > 0:
+                    remaining = [i for i in contraction_indices if i not in trivial_singles]
+                    newexpr = _array_contraction(expr, *remaining)
+                    if get_shape(newexpr) == new_shape:
+                        return newexpr
+                    return Reshape(newexpr, new_shape)
 
         return self.func(expr, *contraction_indices, canonicalize=False)
 
@@ -1216,6 +1227,13 @@ class ArrayContraction(_CodegenArrayAbstract):
 
             positions = editor.get_mapping_for_index(indl)
 
+            # If an argument has more than one of its axes in the same
+            # contraction group (e.g. a trace-like contraction), it cannot be
+            # part of a matrix multiplication line, skip this group:
+            args_in_group = [arg_ind for arg_ind, rel_ind in positions]
+            if len(set(args_in_group)) != len(args_in_group):
+                continue
+
             # Also consider the case of diagonal matrices being contracted:
             current_dimension = self.expr.shape[links[0]]
 
@@ -1243,9 +1261,13 @@ class ArrayContraction(_CodegenArrayAbstract):
             # - zero non-vectors
             # - one non-vector
             # - two non-vectors
-            for v, rel_ind in vectors:
-                v.element = diagonalize_vector(v.element)
             vectors_to_loop = not_vectors[:1] + vectors + not_vectors[1:]
+            # Only the vectors in the middle of the multiplication line get
+            # diagonalized: a vector at the boundary of the line keeps its
+            # size-1 axis as a free index, diagonalizing it would leave a
+            # dangling free axis of the contracted dimension:
+            for v, rel_ind in vectors_to_loop[1:-1]:
+                v.element = diagonalize_vector(v.element)
             first_not_vector, rel_ind = vectors_to_loop[0]
             new_index = first_not_vector.indices[rel_ind]
 
@@ -1267,7 +1289,10 @@ class ArrayContraction(_CodegenArrayAbstract):
     def flatten_contraction_of_diagonal(self):
         if not isinstance(self.expr, ArrayDiagonal):
             return self
-        contraction_down = self.expr._push_indices_down(self.expr.diagonal_indices, self.contraction_indices)
+        contraction_down = self.expr._push_indices_down(self.expr.diagonal_indices, self.contraction_indices, get_ndim(self.expr.expr))
+        # Contraction indices pointing at a diagonalized axis have been mapped
+        # to the corresponding group of diagonal indices, flatten them:
+        contraction_down = [tuple(k for j in i for k in (j if isinstance(j, (tuple, Tuple)) else [j])) for i in contraction_down]
         new_contraction_indices = []
         diagonal_indices = self.expr.diagonal_indices[:]
         for i in contraction_down:
@@ -1278,7 +1303,7 @@ class ArrayContraction(_CodegenArrayAbstract):
                 diagonal_indices = [k for k in diagonal_indices if k not in diagonal_with]
             new_contraction_indices.append(sorted(set(contraction_group)))
 
-        new_contraction_indices = ArrayDiagonal._push_indices_up(diagonal_indices, new_contraction_indices)
+        new_contraction_indices = ArrayDiagonal._push_indices_up(diagonal_indices, new_contraction_indices, get_ndim(self.expr.expr))
         return _array_contraction(
             _array_diagonal(
                 self.expr.expr,
@@ -1781,7 +1806,19 @@ class _EditArrayContraction:
                 scalars.append(arg_with_ind)
         for i in scalars:
             self.args_with_ind.remove(i)
-        scalar = Mul.fromiter([i.element for i in scalars])
+        elements = []
+        for i in scalars:
+            element = i.element
+            if isinstance(element, ArrayElementwiseApplyFunc) and get_ndim(element) == 0:
+                # A rank-0 elementwise function application is a plain
+                # scalar: convert it, otherwise it would end up as a
+                # noncommutative "scalar" factor inside a ``Mul``/``MatMul``:
+                from sympy.tensor.array.expressions.from_array_to_matrix import _array2matrix
+                converted = _array2matrix(element)
+                if not hasattr(converted, "shape"):
+                    element = converted
+            elements.append(element)
+        scalar = Mul.fromiter(elements)
         if len(self.args_with_ind) == 0:
             self.args_with_ind.append(_ArgE(scalar))
         else:
