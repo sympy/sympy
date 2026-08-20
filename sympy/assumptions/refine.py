@@ -602,6 +602,23 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_conjugate(expr, assumptions):
+    """
+    Simplify conjugate(x) given assumptions about x.
+
+    conjugation is a unary operation that reverses the sign of the imaginary part.
+    For conjugate to simplify, we need to know whether the argument is real
+    (in which case conjugate(x) = x) or purely imaginary (where it becomes -x).
+
+    This handler covers the real case which is the most common and useful
+    simplification.
+    """
+    arg = expr.args[0] if expr.args else expr
+    if ask(Q.real(arg), assumptions):
+        return arg
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -616,5 +633,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
-    'ceiling' : refine_floor_ceiling,
+    'ceiling': refine_floor_ceiling,
+    'conjugate': refine_conjugate,
 }
