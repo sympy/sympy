@@ -19,7 +19,7 @@ from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, bioche_substitution, integral_steps, manual_subs)
+    _parts_rule, bioche_substitution, integral_steps, manual_subs, IntegrationSolver)
 from sympy.testing.pytest import raises, slow
 from typing import TYPE_CHECKING
 
@@ -1324,6 +1324,28 @@ def test_manualintegrate_sqrt_quadratic_polynomial_reduction_rule():
     assert (result.args[0][0].diff(x) - f).cancel() == 0
     # case delta = 0
     assert (result.args[1][0].subs(c, b**2/12).diff(x) - f.subs(c, b**2/12)).cancel() == 0
+
+
+def test_manualintegrate_solver_cache_with_max_depth():
+    # A subtree whose computation completes within the depth budget is
+    # cached, same as with unbounded recursion.
+    solver = IntegrationSolver(max_depth=50)
+    result = solver.solve(exp(x)*sin(x), x)
+    assert solver._solved
+    assert not result.contains_dont_know()
+
+    # A subtree that has to give up because it runs out of depth budget
+    # is never cached.
+    starved_solver = IntegrationSolver(max_depth=1)
+    starved_result = starved_solver.solve(exp(x)*sin(x), x)
+    assert not starved_solver._solved
+    assert starved_result.contains_dont_know()
+
+    # Unbounded recursion still caches exactly as before.
+    unbounded_solver = IntegrationSolver(max_depth=None)
+    unbounded_solver.solve(exp(x)*sin(x), x)
+    assert len(unbounded_solver._solved) == len(solver._solved)
+
 
 def test_mul_pow_derivative():
     assert_is_integral_of(x*sec(x)*tan(x), x*sec(x) - log(tan(x) + sec(x)))

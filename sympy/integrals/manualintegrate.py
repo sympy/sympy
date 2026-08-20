@@ -37,6 +37,7 @@ from types import GeneratorType
 
 from sympy import SYMPY_DEBUG
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.function import Derivative, expand_mul, expand_trig
@@ -2192,6 +2193,7 @@ def quadratic_denom_rule(integral):
 
     return step
 
+
 def bioche_substitution(integral):
     # Apply Bioche's rules to rational functions of trigonometric functions
     # https://en.wikipedia.org/wiki/Bioche%27s_rules
@@ -2667,6 +2669,7 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
             return RewriteRule(integral.integrand, x, integrand, step)
         return step
     return None
+
 
 def euler_substitution_rule(integral : IntegralInfo):
     """
@@ -3574,7 +3577,10 @@ def _rule_xreplace(rule, rule_map):
     it has no ``xreplace`` of its own. This walks a rule's fields (which are
     themselves ``Rule``, ``Basic``, ``list``/``tuple``, or plain values such
     as the ``bool`` in ``PiecewiseRule.subfunctions``) and substitutes
-    ``rule_map`` inside every ``Basic`` it finds along the way.
+    ``rule_map`` inside every ``Basic`` it finds along the way. It does not
+    recurse into ``dict``-valued fields (e.g. ``ReparameterizationRule
+    .replacements``); those are only safe to leave untouched as long as
+    their values never depend on the integration variable.
     """
     if isinstance(rule, Rule):
         # Build via __new__ + setattr rather than calling __init__(*fields):
@@ -3627,6 +3633,20 @@ class IntegrationSolver:
         self._active: set[Expr] = set()
         # Uses of each "u" by integration by parts, to avoid infinite repetition.
         self._parts_u_count: dict[Expr, int] = defaultdict(int)
+        # Rules already computed for a subproblem, keyed the same way as
+        # ``_active``, so that a subintegral reached again through a
+        # different search path is served from here instead of being solved
+        # from scratch. Only populated for a subtree whose computation never
+        # hit the max_depth budget (see ``_starved`` below): a result that
+        # did would be a possible depth artifact rather than the true
+        # answer, and could be wrong to reuse for the same subproblem
+        # reached elsewhere with more budget left. Lives only as long as
+        # this solver, i.e. one top-level integral_steps() call, so it can
+        # never leak stale steps into an unrelated integration request.
+        self._solved: dict[Expr, Rule] = {}
+        # Whether the subproblem currently being solved (or any of its
+        # descendants) has bottomed out on the max_depth budget.
+        self._starved = False
         self._strategy: Callable[[IntegralInfo], Rule] | None = None
 
     def solve(self, integrand, symbol) -> Rule:
@@ -3635,23 +3655,44 @@ class IntegrationSolver:
         This replaces the recursive calls to ``integral_steps`` that the
         rules used to perform themselves.
         """
+        cachekey = integrand.xreplace({symbol: _cache_dummy})
+        if cachekey in self._solved:
+            # A cached result is always budget-independent (see below), so
+            # it can be served regardless of how much budget is left here.
+            return _rule_xreplace(self._solved[cachekey], {_cache_dummy: symbol})
         # Every ancestor on the recursion path holds exactly one entry in
         # ``_active``, so its size is the current depth.
         if self.max_depth is not None and len(self._active) >= self.max_depth:
             # Recursion budget exhausted: report the subproblem as
             # unsolvable, so that callers fall back to shallower candidates.
+            self._starved = True
             return DontKnowRule(integrand, symbol)
-        cachekey = integrand.xreplace({symbol: _cache_dummy})
         if cachekey in self._active:
             # Stop this attempt, because it leads around in a loop
             return DontKnowRule(integrand, symbol)
+        had_ancestor = bool(self._active)
         self._active.add(cachekey)
+        # Track whether this subtree's own computation bottoms out on the
+        # depth budget, independently of whatever an ancestor already
+        # accumulated (or of a stale flag left by an unrelated, already
+        # finished top-level call on this same solver).
+        outer_starved, self._starved = (self._starved if had_ancestor else False), False
         try:
             if self._strategy is None:
                 self._strategy = self._build_strategy()
-            return self._strategy(IntegralInfo(integrand, symbol))
+            result = self._strategy(IntegralInfo(integrand, symbol))
+            if not self._starved:
+                # Only memoize a result whose computation never hit the
+                # depth budget anywhere in its own subtree: such a result
+                # would be a possible artifact of running out of budget at
+                # this particular point in the tree, rather than a genuine
+                # answer - reusing it for the same subproblem reached with
+                # a different amount of budget left would be wrong.
+                self._solved[cachekey] = _rule_xreplace(result, {symbol: _cache_dummy})
         finally:
             self._active.discard(cachekey)
+            self._starved = outer_starved or self._starved
+        return result
 
     def run(self, rule, integral):
         """Apply a single rule to ``integral``, driving it if it is a
