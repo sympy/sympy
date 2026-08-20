@@ -91,6 +91,14 @@ class vectorize:
                 raise TypeError("a is of invalid type")
         self.mdargs = mdargs
 
+    def __eq__(self, other):
+        if not isinstance(other, vectorize):
+            return NotImplemented
+        return self.mdargs == other.mdargs
+
+    def __hash__(self):
+        return hash((type(self), self.mdargs))
+
     def __call__(self, f):
         """
         Returns a wrapper for the one-dimensional function that can handle
