@@ -1,8 +1,19 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from sympy.core.sympify import sympify
 
+if TYPE_CHECKING:
+    from sympy.core import Expr, Symbol
 
-def series(expr, x=None, x0=0, n=6, dir="+"):
+
+def series(
+    expr: Expr,
+    x: Symbol | None = None,
+    x0: Expr | int | float = 0,
+    n: int = 6,
+    dir: str = "+",
+) -> Expr:
     """Series expansion of expr around point `x = x0`.
 
     Parameters
@@ -61,4 +72,4 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
     sympy.core.expr.Expr.series: See the docstring of Expr.series() for complete details of this wrapper.
     """
     expr = sympify(expr)
-    return expr.series(x, x0, n, dir)
+    return expr.series(x, x0, n, dir)  # pyright: ignore[reportArgumentType]
