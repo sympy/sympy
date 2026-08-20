@@ -3,6 +3,7 @@ This module implements a method to find
 Euler-Lagrange Equations for given Lagrangian.
 """
 from __future__ import annotations
+from collections.abc import Iterable
 from itertools import combinations_with_replacement
 from typing import TYPE_CHECKING
 
@@ -11,11 +12,9 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.utilities.iterables import iterable
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
+    from sympy.core.basic import Basic
     from sympy.core.expr import Expr
 
 
@@ -81,7 +80,11 @@ def euler_equations(
 
     """
 
-    funcs_tuple: tuple[Function, ...] = tuple(funcs) if iterable(funcs) else (funcs,)  # type: ignore[arg-type, assignment]
+    funcs_tuple: tuple[Function, ...]
+    if isinstance(funcs, Iterable):
+        funcs_tuple = tuple(funcs)
+    else:
+        funcs_tuple = (funcs,)
 
     if not funcs_tuple:
         funcs_tuple = tuple(L.atoms(Function))
@@ -90,12 +93,16 @@ def euler_equations(
             if not isinstance(f, Function):
                 raise TypeError('Function expected, got: %s' % f)
 
-    vars_tuple: tuple[Symbol, ...] = tuple(vars) if iterable(vars) else (vars,)  # type: ignore[arg-type, assignment]
+    vars_tuple: tuple[Basic, ...]
+    if isinstance(vars, Iterable):
+        vars_tuple = tuple(vars)
+    else:
+        vars_tuple = (vars,)
 
     if not vars_tuple:
-        vars_tuple = funcs_tuple[0].args  # type: ignore[assignment]
+        vars_tuple = funcs_tuple[0].args
     else:
-        vars_tuple = tuple(sympify(var) for var in vars_tuple)  # type: ignore[misc]
+        vars_tuple = tuple(sympify(var) for var in vars_tuple)
 
     if not all(isinstance(v, Symbol) for v in vars_tuple):
         raise TypeError('Variables are not symbols, got %s' % vars_tuple)
