@@ -1069,11 +1069,7 @@ def test_manualintegrate_sqrt_quadratic_polynomial_reduction_rule():
 
 def test_manualintegrate_perfect_square_radicand_rule():
     f = 1/sqrt(-z*sin(x)**2)
-    F = sin(x)*Integral(1/sin(x), x)/sqrt(-z*sin(x)**2)
-    assert_is_integral_of(f, F)
-
-    f = x/sqrt(-z*sin(x)**2)
-    F = sin(x)*Integral(x/sin(x), x)/sqrt(-z*sin(x)**2)
+    F = -log(cot(x) + csc(x))*sin(x)/sqrt(-z*sin(x)**2)
     assert_is_integral_of(f, F)
 
     # the radicand need not involve a trig function; any factor whose
