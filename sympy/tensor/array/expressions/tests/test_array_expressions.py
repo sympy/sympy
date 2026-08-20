@@ -13,7 +13,7 @@ from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
     ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE, _array_tensor_product, \
-    _array_contraction, _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum
+    _array_contraction, _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum, _split_scalar_coefficient
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -230,6 +230,51 @@ def test_flattening_issue_28823():
 
     expr = ArrayDiagonal(ArrayDiagonal(ArrayDiagonal(A, (0, 1)), (0, 1)), (1, 2))
     assert expr.doit() == ArrayDiagonal(A, (0, 1), (2, 3), (5, 6))
+
+
+def test_arrayexpr_tensor_product_scalar_coefficients():
+    x, y = symbols("x y")
+    Ms = MatrixSymbol("Ms", k, k)
+    Ns = MatrixSymbol("Ns", k, k)
+
+    # Scalar (rank-0) arguments are merged into a single leading scalar
+    # factor during canonicalization:
+    assert ArrayTensorProduct(x, M, y, N).doit() == ArrayTensorProduct(x*y, M, N)
+    assert ArrayTensorProduct(x, M, y, N).doit().shape == (k, k, k, k)
+    assert ArrayTensorProduct(2, M, 3, N).doit() == ArrayTensorProduct(6, M, N)
+
+    # A zero scalar coefficient gives a ZeroArray of the full shape:
+    assert ArrayTensorProduct(0, M, N).doit() == ZeroArray(k, k, k, k)
+    assert ArrayTensorProduct(x, M, 0, N).doit() == ZeroArray(k, k, k, k)
+
+    # A product of scalars only collapses to a plain scalar product:
+    assert ArrayTensorProduct(x, y).doit() == x*y
+
+    # A Mul argument containing an array factor used to be silently
+    # treated as a scalar, computing a wrong shape; it is now split into
+    # its scalar coefficient and its array part on construction:
+    tp = ArrayTensorProduct(2*M, N)
+    assert tp.args == (2, M, N)
+    assert tp.shape == (k, k, k, k)
+    assert tp.doit() == ArrayTensorProduct(2, M, N)
+    assert ArrayTensorProduct(x*y*M, N).doit() == ArrayTensorProduct(x*y, M, N)
+
+    # Scalar coefficients of MatrixExpr arguments are kept in place, as
+    # the matrix-recognition machinery relies on them:
+    assert ArrayTensorProduct(2*Ms, Ns).doit() == ArrayTensorProduct(2*Ms, Ns)
+
+    # Rank-0 array expressions (e.g. full contractions) are not merged
+    # into the scalar coefficient:
+    tr = ArrayContraction(Ms, (0, 1))
+    assert _array_tensor_product(3, tr) == ArrayContraction(ArrayTensorProduct(3, Ms), (0, 1))
+
+    # _split_scalar_coefficient splits arguments modulo their scalar
+    # coefficient:
+    from sympy import S
+    assert _split_scalar_coefficient(2*Ms) == (2, Ms)
+    assert _split_scalar_coefficient(Ms) == (S.One, Ms)
+    assert _split_scalar_coefficient(x*y) == (x*y, None)
+    assert _split_scalar_coefficient(2*M) == (2, M)
 
 
 def test_arrayexpr_array_diagonal():
