@@ -1045,7 +1045,7 @@ def test_owent_rewrite_Sum():
         (Float(1), Rational(1, 2), 0.0430646911207854),
         (Rational(3, 10), Float(-0.7), -0.0923156057304274),
     ]:
-        summand = [s for s in owens_t(h, a).rewrite(Sum).atoms(Sum)][0]
+        summand = list(owens_t(h, a).rewrite(Sum).atoms(Sum))[0]
         idx = summand.limits[0][0]
         partial = Sum(summand.function, (idx, 0, 40)).doit()
         approx = (partial / (2*pi)).subs({h: hv, a: av})
