@@ -1068,7 +1068,7 @@ def test_issue_4100():
 
 
 def test_issue_5167():
-    from sympy.abc import w, x, y, z
+    from sympy.abc import x, y, z
     f = Function('f')
     assert Integral(Integral(f(x), x), x) == Integral(f(x), x, x)
     assert Integral(f(x)).args == (f(x), Tuple(x))
