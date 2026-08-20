@@ -866,6 +866,13 @@ def test_latex_fresnel():
     assert latex(fresnelc(z)**2) == r'C^{2}\left(z\right)'
 
 
+def test_latex_owens_t():
+    from sympy.functions.special.error_functions import owens_t
+    from sympy.abc import h, a
+    assert latex(owens_t(h, a)) == r'T\left(h, a\right)'
+    assert latex(owens_t(h, a)**2) == r'T^{2}\left(h, a\right)'
+
+
 def test_latex_brackets():
     assert latex((-1)**x) == r"\left(-1\right)^{x}"
 

@@ -6,7 +6,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import polygamma
-from sympy.functions.special.error_functions import (Si, Ci)
+from sympy.functions.special.error_functions import (Si, Ci, owens_t)
 from sympy.matrices import Matrix
 from sympy.matrices.expressions.blockmatrix import BlockMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -380,6 +380,7 @@ def test_scipy_print_methods():
     assert prntr.doprint(polygamma(k, x)) == "scipy.special.polygamma(k, x)"
     assert prntr.doprint(Si(x)) == "scipy.special.sici(x)[0]"
     assert prntr.doprint(Ci(x)) == "scipy.special.sici(x)[1]"
+    assert prntr.doprint(owens_t(x, a)) == "scipy.special.owens_t(x, a)"
 
 def test_numpy_contains_integers():
     if not np:
