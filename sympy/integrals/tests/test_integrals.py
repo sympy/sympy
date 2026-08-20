@@ -39,7 +39,8 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
+from sympy.testing.pytest import (XFAIL, raises, slow, warns_deprecated_sympy,
+    warns)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
@@ -2148,8 +2149,6 @@ def test_old_issues():
     I1 = integrate(cos(log(x**2))/x)
     assert I1 == sin(log(x**2))/2
     # https://github.com/sympy/sympy/issues/5462
-    # (the historical expectation x/(y**3*sqrt(x**2/y**2 + 1)) has the
-    # wrong sign for y < 0)
     I2 = integrate(1/(x**2+y**2)**(Rational(3,2)),x)
     assert I2 == Piecewise(((x**3 + x*y**2)/(y**2*(x**2 + y**2)**Rational(3,2)),
         Ne(y**2, 0)),
@@ -2161,6 +2160,15 @@ def test_old_issues():
     # https://github.com/sympy/sympy/issues/6278
     I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
     assert I3 == 2*sqrt(3)*pi/3
+
+
+@XFAIL
+def test_meijerg_issue_5462_sign():
+    # meijerg returns x/(y**3*sqrt(x**2/y**2 + 1)), which differentiates
+    # back to the integrand only for y > 0
+    f = 1/(x**2 + y**2)**Rational(3, 2)
+    F = integrate(f, x, meijerg=True)
+    assert (F.diff(x) - f).subs({y: -2, x: 1}).equals(0)
 
 
 def test_integral_issue_26566():

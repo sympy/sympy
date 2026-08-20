@@ -2909,10 +2909,6 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
 
     '1st_homogeneous_coeff_best_04': {
         'eq': (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x),
-        # equal to C1 - 2*sqrt(-x/f(x) + 1), which is what the inner
-        # integral gave before risch handled it.  The factors are
-        # ordered so that the 2 is not distributed over the difference,
-        # which is how dsolve builds it.
         'sol': [Eq(log(f(x)), C1 + 2/sqrt(-x/f(x) + 1)*(x/f(x) - 1))],
         'slow': True,
     },
