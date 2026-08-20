@@ -530,10 +530,8 @@ def test_issue_6746():
     assert manualintegrate(y**x, x) == Piecewise(
         (y**x/log(y), Ne(log(y), 0)), (x, True))
     assert manualintegrate(y**(n*x), x) == Piecewise(
-        (Piecewise(
-            (y**(n*x)/log(y), Ne(log(y), 0)),
-            (n*x, True)
-        )/n, Ne(n, 0)),
+        (x, Eq(n, 0)),
+        (y**(n*x)/(n*log(y)), Ne(log(y), 0)),
         (x, True))
     assert manualintegrate(exp(n*x), x) == Piecewise(
         (exp(n*x)/n, Ne(n, 0)), (x, True))
@@ -748,11 +746,11 @@ def test_quadratic_denom():
     f = (3*A*x + 2*B)/(2*a*x**2 + 2*x + c)**3
     F = (piecewise_fold(manualintegrate(f, x))).args
     # when Eq(a, 0)
-    assert (f.subs(a, 0) - F[2][0].diff(x)).cancel() == 0
+    assert (f.subs(a, 0) - F[0][0].diff(x)).cancel() == 0
     # when Ne(a, 0) & Eq(a*c, 1/2)
-    assert (f.subs(c, 1/(2*a)) - (F[0][0].subs(c, 1/(2*a)).diff(x))).cancel() == 0
+    assert (f.subs(c, 1/(2*a)) - (F[1][0].subs(c, 1/(2*a)).diff(x))).cancel() == 0
     # a != 0
-    assert (f - F[1][0].diff(x)).cancel() == 0
+    assert (f - F[2][0].diff(x)).cancel() == 0
     # issue 30031: the Eq(b, 0) branch used to divide by b
     h = a/(b*x**2 + c*x + d)
     H = manualintegrate(h, x)
@@ -806,7 +804,7 @@ def test_nested_pow():
     F1 = (c*(a + b*x)**d)**e*(a/b + x)/(d*e + 1)
     F2 = (c*(a + b*x)**d)**e*(a/b + x)*log(a/b + x)
     assert manualintegrate(f, x) == \
-        Piecewise((Piecewise((F1, Ne(d*e, -1)), (F2, True)), Ne(b, 0)), (x*(a**d*c)**e, True))
+        Piecewise((F1, Ne(b, 0) & Ne(d*e, -1)), (F2, Ne(b, 0)), (x*(a**d*c)**e, True))
     assert F1.diff(x).equals(f)
     assert F2.diff(x).subs(d*e, -1).equals(f)
 
@@ -872,13 +870,14 @@ def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of((7*x+6)/sqrt(3*x**2+4*x-5),
                           7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/9)
     assert manualintegrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
-        Piecewise(((-b*e/(2*c) + d) *
-                   Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
-                             ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
-                   e*sqrt(a + b*x + c*x**2)/c, Ne(c, 0)),
-                   ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
-                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), Ne(b, 0)),
-                  ((d*x + e*x**2/2)/sqrt(a), True))
+        Piecewise((e*sqrt(a + b*x + c*x**2)/c +
+                   (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c),
+                   Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
+                  (e*sqrt(a + b*x + c*x**2)/c +
+                   (b/(2*c) + x)*(-b*e/(2*c) + d)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2),
+                   Ne(c, 0)),
+                  ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
+                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), True))
 
     assert manualintegrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2), x) == \
         sqrt(x**2 - 3*x + 2)*(x**2 + 13*x/4 + S(101)/8) + 135*log(2*x + 2*sqrt(x**2 - 3*x + 2) - 3)/16
@@ -887,17 +886,19 @@ def test_manualintegrate_sqrt_quadratic():
                           (x/2 - S(16683)/53225)*sqrt(53225*x**2 - 66732*x + 23013) +
                           111576969*sqrt(2129)*asinh(53225*x/10563 - S(11122)/3521)/1133160250)
     assert manualintegrate(sqrt(a+c*x**2), x) == \
-        Piecewise((a*Piecewise((log(2*sqrt(c)*sqrt(a + c*x**2) + 2*c*x)/sqrt(c), Ne(a, 0)),
-                               (x*log(x)/sqrt(c*x**2), True))/2 + x*sqrt(a + c*x**2)/2, Ne(c, 0)),
+        Piecewise((a*log(2*sqrt(c)*sqrt(a + c*x**2) + 2*c*x)/(2*sqrt(c)) + x*sqrt(a + c*x**2)/2,
+                   Ne(a, 0) & Ne(c, 0)),
+                  (a*x*log(x)/(2*sqrt(c*x**2)) + x*sqrt(a + c*x**2)/2, Ne(c, 0)),
                   (sqrt(a)*x, True))
     assert manualintegrate(sqrt(a+b*x+c*x**2), x) == \
-        Piecewise(((a/2 - b**2/(8*c)) *
-                   Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
-                             ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
-                   (b/(4*c) + x/2)*sqrt(a + b*x + c*x**2), Ne(c, 0)),
-                   (sqrt(a)*x, Eq(b, 0)),
-                  (2*(a + b*x)**(S(3)/2)/(3*b), Ne(b, 0)),
-                  (sqrt(a)*x, True))
+        Piecewise(((b/(4*c) + x/2)*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c),
+                   Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
+                  ((b/(4*c) + x/2)*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*(b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2),
+                   Ne(c, 0)),
+                  (sqrt(a)*x, Eq(b, 0)),
+                  (2*(a + b*x)**(S(3)/2)/(3*b), True))
 
     assert_is_integral_of(x*sqrt(x**2+2*x+4),
                           (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2)

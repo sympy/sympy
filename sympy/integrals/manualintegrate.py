@@ -686,7 +686,7 @@ class CompleteSquareRule(RewriteRule):
 
 class PiecewiseRule(Rule):
 
-    __slots__ = ("subfunctions", "folded")
+    __slots__ = ("subfunctions",)
 
     subfunctions: Sequence[tuple[Rule, bool | Boolean]]
 
@@ -698,17 +698,11 @@ class PiecewiseRule(Rule):
     ) -> None:
         super().__init__(integrand, variable)
         self.subfunctions = subfunctions
-        self.folded = False
-
-    def fold(self):
-        self.folded = True
 
     def eval(self) -> Expr:
         piecewise = Piecewise(*[(substep.eval(), cond) for substep, cond in
             self.subfunctions])
-        if self.folded:
-            return piecewise_fold(piecewise)
-        return piecewise
+        return piecewise_fold(piecewise)
 
     def contains_dont_know(self) -> bool:
         return any(substep.contains_dont_know() for substep, _ in self.subfunctions)
@@ -1532,8 +1526,6 @@ def special_function_rule(integral):
                             degenerate_integrand = integrand.subs(d_val, a_val)
                             degenerate_step = integral_steps(degenerate_integrand, symbol)
                             step = _add_degenerate_step(Ne(a_val, d_val), step, degenerate_step)
-                    if isinstance(step, PiecewiseRule):
-                        step.fold()
                     return step
 
 
