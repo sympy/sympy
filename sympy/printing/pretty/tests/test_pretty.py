@@ -6987,6 +6987,12 @@ def test_pretty_Add():
     eq = Mul(-2, x - 2, evaluate=False) + 5
     assert pretty(eq) == '5 - 2*(x - 2)'
 
+    assert pretty(Add(S.NaN, x, evaluate=False)) == 'x + nan'
+
+    assert pretty(Add(S.NaN, 3*I, evaluate=False)) == 'nan + 3*I'
+
+    assert pretty(Add(S.NaN, x, -oo, evaluate=False)) == 'x - oo + nan'
+
 
 def test_issue_7179():
     assert upretty(Not(Equivalent(x, y))) == 'x ⇎ y'
