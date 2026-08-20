@@ -5,13 +5,7 @@ to 2D Trusses.
 from __future__ import annotations
 
 
-from cmath import atan, inf
-from sympy.core.add import Add
-from sympy.core.evalf import INF
-from sympy.core.mul import Mul
-from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
-from sympy import Matrix, pi
+from sympy import Matrix, pi, atan, oo, Symbol, sympify, Add, Mul
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import zeros
@@ -744,7 +738,7 @@ class Truss:
         forces_matrix = (Matrix(coefficients_matrix)**-1)*load_matrix
         self._reaction_loads = {}
         i = 0
-        min_load = inf
+        min_load = oo
         for node in self._nodes:
             if node[0] in self._loads:
                 for load in self._loads[node[0]]:
@@ -839,10 +833,10 @@ class Truss:
         load_annotations = self._draw_loads()
         annotations += load_annotations
 
-        xmax = -INF
-        xmin = INF
-        ymax = -INF
-        ymin = INF
+        xmax = -oo
+        xmin = oo
+        ymax = -oo
+        ymin = oo
 
         for node in self._node_coordinates:
             xmax = max(xmax, self._node_coordinates[node][0])
@@ -910,10 +904,10 @@ class Truss:
 
         member_rectangles = []
 
-        xmax = -INF
-        xmin = INF
-        ymax = -INF
-        ymin = INF
+        xmax = -oo
+        xmin = oo
+        ymax = -oo
+        ymin = oo
 
         for node in self._node_coordinates:
             xmax = max(xmax, self._node_coordinates[node][0])
@@ -1000,10 +994,10 @@ class Truss:
     def _draw_supports(self):
         support_markers = []
 
-        xmax = -INF
-        xmin = INF
-        ymax = -INF
-        ymin = INF
+        xmax = -oo
+        xmin = oo
+        ymax = -oo
+        ymin = oo
 
         for node in self._node_coordinates:
             xmax = max(xmax, self._node_coordinates[node][0])
@@ -1070,10 +1064,10 @@ class Truss:
     def _draw_loads(self):
         load_annotations = []
 
-        xmax = -INF
-        xmin = INF
-        ymax = -INF
-        ymin = INF
+        xmax = -oo
+        xmin = oo
+        ymax = -oo
+        ymin = oo
 
         for node in self._node_coordinates:
             xmax = max(xmax, self._node_coordinates[node][0])
