@@ -1176,6 +1176,19 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 result.append(arg)
         return result
 
+    def visit_UnaryOp(self, node):
+        if (isinstance(node.op, ast.USub)
+                and isinstance(node.operand, ast.BinOp)
+                and isinstance(node.operand.op, (ast.Add, ast.Mult, ast.Div))):
+            operand = self.visit(node.operand)
+            new_node = ast.Call(
+                func=ast.Name(id='Mul', ctx=ast.Load()),
+                args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)), operand],
+                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
+            )
+            return new_node
+        return self.generic_visit(node)
+
     def visit_BinOp(self, node):
         if node.op.__class__ in self.operators:
             sympy_class = self.operators[node.op.__class__]

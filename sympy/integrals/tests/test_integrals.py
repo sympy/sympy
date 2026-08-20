@@ -2281,3 +2281,11 @@ def test_sqrt_abs_factor_consistency():
     assert outside.equals(inside)
     assert integrate(outside, (x, 0, pi/6)) == Rational(3, 2)
     assert integrate(inside, (x, 0, pi/6)) == Rational(3, 2)
+
+
+def test_issue_29637():
+    # https://github.com/sympy/sympy/issues/29637
+    f = 1/(1 + x**10)
+    F = integrate(f, x)
+    assert not F.has(Integral)
+    assert (F.diff(x) - f).cancel() == 0
