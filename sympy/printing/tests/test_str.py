@@ -1037,6 +1037,16 @@ def test_MatrixSlice():
     assert str(X[0:1:2, 0:1:2]) == 'X[:1:2, :1:2]'
     assert str((Y + Z)[2:, 2:]) == '(Y + Z)[2:, 2:]'
 
+
+def test_CharacterTable_str():
+    from sympy.combinatorics.named_groups import SymmetricGroup
+    tbl = SymmetricGroup(1).character_table()
+    assert str(tbl) == sstr(tbl) == 'CharacterTable(DomainMatrix([[1]], (1, 1), ZZ), [(0)])'
+
+    tbl = SymmetricGroup(2).character_table()
+    assert str(tbl) == sstr(tbl) == 'CharacterTable(DomainMatrix([[1, 1], [1, -1]], (2, 2), ZZ), [(1), (0 1)])'
+
+
 def test_true_false():
     assert str(true) == repr(true) == sstr(true) == "True"
     assert str(false) == repr(false) == sstr(false) == "False"
