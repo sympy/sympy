@@ -1553,7 +1553,7 @@ def test_issue_28721():
     assert expr.simplify() == ZeroMatrix(3, 3)
     assert isinstance(expr.simplify(), ZeroMatrix)
 
-@XFAIL
+
 def test_matrixsymbol_summation_symbolic_limits():
     N = Symbol('N', integer=True, positive=True)
 
