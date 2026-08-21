@@ -793,6 +793,22 @@ def test_risch_integrate():
     assert risch_integrate(log(x**y), x) == x*log(x**y) - x*y
     assert risch_integrate(log(sqrt(x)), x) == x*log(sqrt(x)) - x/2
 
+    # A restart (from the exponential radical path) clears backsubs, so
+    # the branch-constant Dummy recorded by _log_part() must be folded
+    # back into newf first, or it leaks into the result as a free symbol.
+    ans = risch_integrate(log(x) + log(x**2) + exp(x) + exp(x/2 + 1), x)
+    assert ans.free_symbols == {x}
+    assert cancel(diff(ans, x) - (log(x) + log(x**2) + exp(x) +
+        exp(x/2 + 1))) == 0
+
+    # Mixed notation: when the integrand contains both sqrt(exp(x)) and
+    # its folded form exp(x/2), restoring the radical globally would
+    # also rewrite the genuine exp(x/2), so the answer stays in the
+    # exact exponential form.
+    assert risch_integrate(sqrt(exp(x)) + exp(x/2), x) == 4*exp(x/2)
+    # A pure user radical keeps its notation.
+    assert risch_integrate(sqrt(exp(x)), x) == 2*sqrt(exp(x))
+
     # Example 6.2.1
     expr = (exp(x) - x**2 + 2*x)/((exp(x) + x)**2*x**2)*exp((x**2 - 1)/x + 1/(exp(x) + x))
     assert risch_integrate(expr, x) == exp(-x)*exp(1/(x + exp(x)) + (x**2 - 1)/x)

@@ -280,7 +280,14 @@ class DifferentialExtension:
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps)
                 if exp_new_extension is None:
-                    # reset and restart
+                    # Reset and restart.  reset() clears backsubs, so any
+                    # rewrite recorded there -- a branch-constant Dummy
+                    # from _log_part(), a user radical's notation -- must
+                    # first be folded back into newf, or the Dummy leaks
+                    # into the final result as a free symbol and the
+                    # original notation is never re-encountered by the
+                    # rebuild.
+                    self.newf = self.newf.subs(self.backsubs)
                     self.f = self.newf
                     self.reset()
                     exp_new_extension = True
@@ -333,10 +340,14 @@ class DifferentialExtension:
         # integrated results into non-antiderivatives at complex points.
         # So the notation is only restored where it is the user's own:
         # a fractional power is put back only if it appears in the
-        # original integrand.
+        # original integrand -- and not when the integrand also contains
+        # the folded exponential form itself, since a global
+        # substitution would then rewrite genuine exp(q*u) occurrences
+        # into the principal root as well.
         self.backsubs += [(j, i) for i, j in ratpows_repl
                           if i.exp.is_Integer or
-                          (self.origf is not None and self.origf.has(i))]
+                          (self.origf is not None and self.origf.has(i)
+                           and not self.origf.has(j))]
         self.newf = self.newf.xreplace(dict(ratpows_repl))
 
         # To make the process deterministic, the args are sorted
