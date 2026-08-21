@@ -223,10 +223,10 @@ class Qasm:
 
     def qdef(self, name: str, ncontrols: str, symbol: str) -> None:
         from sympy.physics.quantum.circuitplot import CreateOneQubitGate, CreateCGate
-        ncontrols = int(ncontrols)
+        ncontrol_count = int(ncontrols)
         command = fixcommand(name)
         symbol = stripquotes(symbol)
-        if ncontrols > 0:
+        if ncontrol_count > 0:
             self.defs[command] = CreateCGate(symbol)
         else:
             self.defs[command] = CreateOneQubitGate(symbol)
