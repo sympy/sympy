@@ -19,6 +19,7 @@ from sympy.core import Add, Dummy
 from sympy.matrices import MutableDenseMatrix
 from sympy.core.numbers import Rational
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.polys.domains.rationalfield import QQ
@@ -414,6 +415,35 @@ def test_structure_theorem_guards():
             assert "hypertangent" in str(e)
         else:
             raise AssertionError("NotImplementedError was not raised")
+
+
+def test_structure_theorem_nontranscendental_guards():
+    # A structure-system solution with non-rational constants is
+    # undecidable rationality: over a transcendental tower a None
+    # return would be a proof of nonexistence, so these raise; over a
+    # non-transcendental tower every nonelementary conclusion is
+    # degraded to an unevaluated Integral and solved results are vetted
+    # independently, so the undecided question is answered "no
+    # relation" instead of aborting the integration.  Here
+    # t1 == log(x**sqrt(2)), and matching a logarithmic derivative
+    # against Dt1 == sqrt(2)/x needs the constant 1/sqrt(2).
+    for transcendental in (True, False):
+        DE = DifferentialExtension(extension={
+            'D': [Poly(1, x), Poly(sqrt(2)/x, t1)],
+            'exts': ['log'], 'extargs': [x**sqrt(2)],
+            'transcendental': transcendental})
+        calls = [
+            lambda: is_deriv_k(Poly(x, t1), Poly(1, t1), DE),
+            lambda: is_log_deriv_k_t_radical(Poly(1, t1), Poly(x, t1), DE,
+                Df=False),
+            lambda: parametric_log_deriv_structure(Poly(sqrt(2), t1),
+                Poly(x, t1), Poly(1, t1), Poly(x, t1), DE),
+        ]
+        for call in calls:
+            if transcendental:
+                raises(NotImplementedError, call)
+            else:
+                assert call() is None
 
 
 def test_is_deriv_k():

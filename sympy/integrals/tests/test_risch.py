@@ -842,6 +842,11 @@ def test_risch_integrate_algebraic():
     d = symbols('d')
     raises(NotImplementedError, lambda: risch_integrate(
         sqrt(a + b*sqrt(d/x) + c/x), x, algebraic=True))
+    # inexact input skips the algebraic path entirely: the towers do
+    # exact arithmetic, where a Float coefficient becomes a rational
+    # with an astronomical denominator that the structure-theorem
+    # constant systems grind on
+    raises(NotImplementedError, lambda: risch_integrate(1.5*sqrt(y), y))
     # radicands are factored before generators are erected, so content
     # like a perfect square does not become a spurious radical
     assert risch_integrate(sqrt(y**2 + 2*y + 1)/y, y, algebraic=True) == \
@@ -1246,6 +1251,21 @@ def test_DifferentialExtension_printing():
     assert str(DE) == ("DifferentialExtension({fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), "
         "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
         "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]})")
+
+
+def test_risch_integrate_algebraic_undecidable_structure():
+    # An undecidable structure question over an algebraic tower (here
+    # parametric_log_deriv()'s heuristic and structure method are both
+    # inconclusive) is answered "no relation" instead of aborting the
+    # integration: nonelementary conclusions are degraded to
+    # unevaluated Integrals and solved results are vetted
+    # independently, so the answer stays sound.  From the Blake corpus.
+    f = 1/(x**2*(x**4 - 1)**Rational(3, 4))
+    r = risch_integrate(f, x)
+    assert not r.has(Integral)
+    err = r.diff(x) - f
+    assert all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
+               for p in [-3, Rational(-1, 2), Rational(1, 2), 2, 2 + I])
 
 
 def test_issue_23948():
