@@ -1,10 +1,11 @@
 """
 Congruence Closure Engine for EUF
 
-The engine has 3 major parts:
+The engine has 4 major parts:
     1) Union-find data structue for the congruence closure engine. Ref: [1], Section 2
     2) explain_classical() method to produce explanations for the engine's outputs. Ref: [1], Section 2-3
     3) Greedy algorithm with its expain() method to produce shorter explanations from explan_classical(). Ref: [2] Section 2.3, 2.4, 3 ,4
+    4) backtrack() method
 
     Note that everything on explanation() method side, (2) and (3) use lazy versions of the algorithms.
 
@@ -89,7 +90,6 @@ class EUFCongruenceClosure:
         self._dummies = numbered_symbols('c', Dummy)
         self._term_to_const = {}                 # _term_to_const[expr] -> const. USED for not doing _flatten twice
         self._const_to_app = {}                  # const -> (func, arg consts). USED for Greedy algorithm
-        self._lambda_cache = {}                  # Lambda -> const. USED for mapping equivalent lambdas to the same const
 
         """
         Part 2) of the engine
@@ -138,6 +138,13 @@ class EUFCongruenceClosure:
         self._extra_edges_seen = set()
         self.greedy_fuel = 10
 
+        """
+        Part 4) of the engine
+        _asserted: the equations currently asserted, in order. backtrack() drops
+            the last n of them and rebuilds the closure from the rest.
+        """
+        self._asserted = []
+
         # Transform every term of the input equations first, then merge.
         for eq in equations:
             if not (isinstance(eq, AppliedPredicate) and eq.function == Q.eq):
@@ -145,6 +152,7 @@ class EUFCongruenceClosure:
             left_id = self._flatten(eq.lhs)
             right_id = self._flatten(eq.rhs)
             self.pending.append((left_id, right_id, eq))
+            self._asserted.append(eq)
         self._process_pending_unions()
 
     def _register(self, const):
@@ -180,11 +188,8 @@ class EUFCongruenceClosure:
             const = self._record_app(expr.function, arg_ids)
         elif isinstance(expr, Lambda):
             lam = expr if len(expr.variables) == 1 else expr.curry()
-            body_id = self._find_repr(self._flatten(lam.expr))
-            lam_key = Lambda(lam.variables[0], body_id)
-            if lam_key not in self._lambda_cache:
-                self._lambda_cache[lam_key] = self._new_dummy()
-            const = self._lambda_cache[lam_key]
+            const = self._record_app((Lambda, lam.variables[0]),
+                                     (self._flatten(lam.expr),))
         else:
             func = expr.func
             func_id = self._find_repr(self._flatten(func)) if isinstance(func, Basic) else func
@@ -199,11 +204,19 @@ class EUFCongruenceClosure:
         Record the application f(a) in the related data structures, and
         return a new dummy d that replaced it in _flatten i.e f(a) = d
         """
+        d = self._new_dummy()
+        self._const_to_app[d] = (func, arg_ids)
+        self._index_app(func, arg_ids, d)
+        return d
+
+    def _index_app(self, func, arg_ids, d):
+        """
+        Put the application f(a) = d into lookup_table and use_list under the
+        representatives the classes have right now
+        """
         rep_args = tuple(self._find_repr(arg) for arg in arg_ids)
         key = (func, rep_args)
-        d = self._new_dummy()
         eq = (func, arg_ids, d)
-        self._const_to_app[d] = (func, arg_ids)
         if key in self.lookup_table:
             other = self.lookup_table[key]
             self.pending.append((d, other[2], (eq, other)))
@@ -212,7 +225,6 @@ class EUFCongruenceClosure:
             self.lookup_table[key] = eq
             for arg_id in set(rep_args):
                 self.use_list[arg_id].append(eq)
-        return d
 
     def _find_repr(self, const):
         return self.representative[const]
@@ -276,7 +288,9 @@ class EUFCongruenceClosure:
         >>> cc.are_congruent(x, y)
         True
         """
-        self.pending.append((self._flatten(lhs), self._flatten(rhs), Q.eq(lhs, rhs)))
+        eq = Q.eq(lhs, rhs)
+        self._asserted.append(eq)
+        self.pending.append((self._flatten(lhs), self._flatten(rhs), eq))
         self._process_pending_unions()
 
     def are_congruent(self, lhs, rhs):
@@ -569,6 +583,72 @@ class EUFCongruenceClosure:
             node, label = predecessor[node]
             path.append(label)
         return path
+
+    # ----------- backtracking
+
+    def _rebuild(self):
+        """
+        Discard everything that depends on which equations are asserted, then
+        derive it again from self._asserted.
+        """
+        consts = list(self.representative)          # in registration order
+        apps = list(self._const_to_app.items())
+        asserted = self._asserted
+
+        self.pending = deque()
+        self.representative = {}
+        self.classlist = defaultdict(set)
+        self.lookup_table = {}
+        self.use_list = defaultdict(list)
+        self.pf_parent = {}
+        self.pf_label = {}
+        self._aux_parent = {}
+        self.adjacency = defaultdict(list)
+        self._level = {}
+        self._level_counter = 0
+        self._n_edges_during_union = 0
+        self._n_edges_extra = 0
+        self._extra_edges_seen = set()
+
+        for const in consts:
+            self._register(const)
+        for d, (func, arg_ids) in apps:
+            self._index_app(func, arg_ids, d)
+        for eq in asserted:
+            self.pending.append((self._flatten(eq.lhs), self._flatten(eq.rhs), eq))
+            self._process_pending_unions()
+
+    def backtrack(self, n):
+        """
+        Retract the last n asserted equations.
+
+        TODO: Currently this just rebuilds the CC from scratch. The sources
+        used in this file did not have proper backtracking information, and I am
+        not even sure if it existed it would be faster than this kind of backtracking?
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from sympy.assumptions.ask import Q
+        >>> from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
+        >>> a, b, c = symbols('a b c')
+        >>> cc = EUFCongruenceClosure([Q.eq(a, b)])
+        >>> cc.merge(b, c)
+        >>> cc.are_congruent(a, c)
+        True
+        >>> cc.backtrack(1)
+        >>> cc.are_congruent(a, c)
+        False
+        >>> cc.are_congruent(a, b)
+        True
+        """
+        if n == 0:
+            return
+        if not 0 < n <= len(self._asserted):
+            raise ValueError("cannot backtrack %s of %s merge steps"
+                             % (n, len(self._asserted)))
+        del self._asserted[-n:]
+        self._rebuild()
 
     def explain(self, lhs, rhs):
         """

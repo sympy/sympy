@@ -388,55 +388,40 @@ def test_explain_may_be_redundant_but_sound():
     _check_explanation(cc, eqs, a, c)
 
 
-# ---------------------------------------------------------------------------
-# Input validation and queries on unseen terms.
-# ---------------------------------------------------------------------------
-
 def test_rejects_non_equality_input():
     raises(EUFUnhandledInput, lambda: EUFCongruenceClosure([Q.positive(x)]))
     raises(EUFUnhandledInput, lambda: EUFCongruenceClosure([Q.ne(x, y)]))
     raises(EUFUnhandledInput, lambda: EUFCongruenceClosure([Eq(x, y)]))
-    # A bad equation anywhere in the list is rejected, not silently dropped.
     raises(EUFUnhandledInput,
            lambda: EUFCongruenceClosure([Q.eq(x, y), Q.positive(z)]))
 
 
 def test_are_congruent_on_unseen_terms():
-    # Querying terms the engine has never flattened must answer, not raise.
     cc = EUFCongruenceClosure([Q.eq(a, b)])
     assert not cc.are_congruent(h(z), h(w))
-    assert cc.are_congruent(f(a), f(b))     # congruence found on first query
+    assert cc.are_congruent(f(a), f(b))
     cc.merge(z, w)
-    assert cc.are_congruent(h(z), h(w))     # closure catches up after merge
+    assert cc.are_congruent(h(z), h(w))
 
 
 def test_get_canonical_form():
     cc = EUFCongruenceClosure([])
     fa = cc._flatten(f(a))
     fb = cc._flatten(f(b))
-    # A constant that replaced no application is its own canonical form.
     assert cc._get_canonical_form(a) == a
     assert cc._get_canonical_form(fa) != cc._get_canonical_form(fb)
     cc.merge(a, b)
-    # Arguments are rewritten to representatives, so both apps now agree.
     assert cc._get_canonical_form(fa) == cc._get_canonical_form(fb)
 
-
-# ---------------------------------------------------------------------------
-# explain() -- greedy (c-graph) path.
-# ---------------------------------------------------------------------------
 
 def test_explain_reflexive_and_disconnected():
     cc = EUFCongruenceClosure([Q.eq(a, b)])
     assert cc.explain(a, a) == set()
     assert cc.explain(f(a), f(a)) == set()
-    assert cc.explain(a, z) is None          # z is unknown, hence not equal
+    assert cc.explain(a, z) is None
 
 
 def test_explain_prefers_shortcut_over_chain():
-    # e0 = e10 is redundant when it arrives, so the proof forest drops it
-    # while the c-graph keeps it.  Explaining e0 = e11 must take that
-    # shortcut instead of walking the ten chain edges.
     v = symbols('e0:12')
     shortcut = Q.eq(v[0], v[10])
     eqs = ([Q.eq(v[i], v[i + 1]) for i in range(10)]
@@ -447,9 +432,6 @@ def test_explain_prefers_shortcut_over_chain():
 
 
 def test_explain_shortcut_is_level_bounded():
-    # The same shortcut may not be used for e0 = e10 itself: at the moment
-    # those two became equal the edge did not exist yet, so the greedy search
-    # must ignore it and still return a sound explanation.
     v = symbols('n0:11')
     shortcut = Q.eq(v[0], v[10])
     eqs = [Q.eq(v[i], v[i + 1]) for i in range(10)] + [shortcut]
@@ -458,8 +440,6 @@ def test_explain_shortcut_is_level_bounded():
 
 
 def test_explain_zero_fuel_falls_back_to_classical():
-    # With no greedy fuel every congruence edge is expanded classically; the
-    # answer must stay sound.
     eqs = [Q.eq(a, b), Q.eq(g(f(a)), x), Q.eq(g(f(b)), y)]
     cc = EUFCongruenceClosure(eqs)
     cc.greedy_fuel = 0
@@ -467,8 +447,6 @@ def test_explain_zero_fuel_falls_back_to_classical():
 
 
 def test_explain_is_stable_across_calls():
-    # explain() mutates c-graph state (extra edges, seen pairs); repeating a
-    # query must not change the answer or corrupt later ones.
     eqs = [Q.eq(a, b), Q.eq(f(a), x), Q.eq(f(b), y), Q.eq(z, w)]
     cc = EUFCongruenceClosure(eqs)
     first = _check_explanation(cc, eqs, x, y)
@@ -488,7 +466,6 @@ def test_extra_edges_stay_within_budget():
 
 
 def test_explain_after_incremental_merges():
-    # Labels produced by merge() must be usable as explanations too.
     eqs = [Q.eq(f(a), x), Q.eq(f(b), y), Q.eq(a, b)]
     cc = EUFCongruenceClosure([])
     for eq in eqs:
@@ -497,8 +474,6 @@ def test_explain_after_incremental_merges():
 
 
 def test_explain_soundness_stress():
-    # Random equality graph: every derivable pair must get an explanation
-    # that is a subset of the inputs and re-proves the equality on its own.
     rng = random.Random(20250821)
     s = symbols('s0:12')
     eqs = []
@@ -518,8 +493,6 @@ def test_explain_soundness_stress():
 
 
 def test_predicate_terms_are_uninterpreted_functions():
-    # An AppliedPredicate appearing as a *term* is flattened like any other
-    # application, so congruence applies to it.
     eqs = [Q.eq(a, b), Q.eq(Q.positive(a), x)]
     cc = EUFCongruenceClosure(eqs)
     assert cc.are_congruent(Q.positive(a), Q.positive(b))
@@ -529,7 +502,6 @@ def test_predicate_terms_are_uninterpreted_functions():
 
 
 def test_trivial_and_duplicate_equalities():
-    # Self-equalities and repeats must be absorbed without corrupting state.
     eqs = [Q.eq(a, a), Q.eq(a, b), Q.eq(a, b), Q.eq(b, a)]
     cc = EUFCongruenceClosure(eqs)
     cc.merge(a, a)
@@ -540,8 +512,6 @@ def test_trivial_and_duplicate_equalities():
 
 
 def test_greedy_explanation_never_larger_than_classical():
-    # explain() is not required to be minimal, but the greedy search must
-    # never do worse than the plain proof-forest walk it replaces ([2] S.3).
     rng = random.Random(26)
     s = symbols('t0:12')
     eqs = []
@@ -552,7 +522,6 @@ def test_greedy_explanation_never_larger_than_classical():
         else:
             eqs.append(Q.eq(s[i], s[j]))
     greedy = EUFCongruenceClosure(eqs)
-    # A second engine, so the greedy c-graph state cannot skew the baseline.
     classical = EUFCongruenceClosure(eqs)
     shortened = 0
     for i in range(12):
@@ -566,5 +535,178 @@ def test_greedy_explanation_never_larger_than_classical():
             expl = _check_explanation(greedy, eqs, s[i], s[j])
             assert len(expl) <= len(baseline)
             shortened += len(expl) < len(baseline)
-    # The fixture must actually exercise the shortening, not just tie.
     assert shortened > 0
+
+
+def _snapshot(cc):
+    def kept(mapping):
+        return {k: (set(v) if isinstance(v, set) else list(v))
+                for k, v in mapping.items() if v}
+    forest = {frozenset((child, parent)): cc.pf_label[child]
+              for child, parent in cc.pf_parent.items()}
+    return (dict(cc.representative), kept(cc.classlist), dict(cc.lookup_table),
+            kept(cc.use_list), forest, kept(cc.adjacency), dict(cc._level),
+            cc._n_edges_during_union, cc._n_edges_extra)
+
+
+def test_backtrack_retracts_congruence():
+    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    cc.merge(b, c)
+    cc.merge(c, d)
+    assert cc.are_congruent(a, d)
+    cc.backtrack(2)
+    assert cc.are_congruent(a, b)
+    assert not cc.are_congruent(b, c)
+    assert not cc.are_congruent(a, d)
+    cc.backtrack(1)
+    assert not cc.are_congruent(a, b)
+
+
+def test_backtrack_retracts_propagated_congruence():
+    cc = EUFCongruenceClosure([])
+    for t in (g(f(a)), g(f(b))):
+        cc._flatten(t)
+    cc.merge(a, b)
+    assert cc.are_congruent(g(f(a)), g(f(b)))
+    cc.backtrack(1)
+    assert not cc.are_congruent(f(a), f(b))
+    assert not cc.are_congruent(g(f(a)), g(f(b)))
+
+
+def test_backtrack_keeps_constant_identity():
+    cc = EUFCongruenceClosure([])
+    consts = {t: cc._flatten(t) for t in (f(a), g(b), h(a, b), x)}
+    cc.merge(a, b)
+    cc.merge(f(a), x)
+    cc.backtrack(2)
+    assert {t: cc._flatten(t) for t in consts} == consts
+    for const in consts.values():
+        assert const in cc.representative
+
+
+def test_backtrack_is_deterministic():
+    cc = EUFCongruenceClosure([])
+    for t in (g(f(a)), g(f(b)), f(c), f(d), x, y):
+        cc._flatten(t)
+    cc.merge(c, d)
+    cc.merge(a, b)
+    cc.merge(g(f(a)), x)
+    cc.backtrack(2)
+    once = _snapshot(cc)
+    assert cc.are_congruent(c, d)
+    cc.merge(a, b)
+    cc.merge(g(f(b)), y)
+    cc.merge(x, y)
+    cc.backtrack(3)
+    assert _snapshot(cc) == once
+
+
+def test_backtrack_counts_every_asserted_equation():
+    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    cc.merge(b, c)
+    cc.merge(a, c)
+    assert len(cc._asserted) == 3
+    cc.backtrack(1)
+    assert cc.are_congruent(b, c)
+    cc.backtrack(1)
+    assert cc.are_congruent(a, b)
+    assert not cc.are_congruent(b, c)
+    cc.backtrack(1)
+    assert not cc.are_congruent(a, b)
+    assert len(cc._asserted) == 0
+
+
+def test_backtrack_argument_validation():
+    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    cc.backtrack(0)
+    assert cc.are_congruent(a, b)
+    raises(ValueError, lambda: cc.backtrack(2))
+    raises(ValueError, lambda: cc.backtrack(-1))
+    cc.backtrack(1)
+    raises(ValueError, lambda: cc.backtrack(1))
+
+
+def test_backtrack_handles_applications_registered_afterwards():
+    cc = EUFCongruenceClosure([])
+    cc.merge(a, b)
+    assert cc.are_congruent(f(a), f(b))
+    cc.backtrack(1)
+    assert not cc.are_congruent(a, b)
+    assert not cc.are_congruent(f(a), f(b))
+    cc.merge(a, b)
+    assert cc.are_congruent(f(a), f(b))
+
+
+def test_backtrack_handles_application_merged_on_registration():
+    cc = EUFCongruenceClosure([])
+    cc._flatten(f(a))
+    cc.merge(a, b)
+    cc.merge(f(b), c)
+    cc.backtrack(1)
+    assert cc.are_congruent(a, b)
+    assert cc.are_congruent(f(a), f(b))
+    assert not cc.are_congruent(f(b), c)
+
+
+def test_backtrack_splits_collapsed_lambdas():
+    l1, l2 = Lambda(x, f(a)), Lambda(x, f(b))
+    cc = EUFCongruenceClosure([])
+    cc.merge(a, b)
+    assert cc.are_congruent(l1, l2)
+    cc.backtrack(1)
+    assert not cc.are_congruent(a, b)
+    assert not cc.are_congruent(l1, l2)
+
+
+def test_backtrack_then_remerge():
+    cc = EUFCongruenceClosure([])
+    for t in (f(a), f(b), f(c)):
+        cc._flatten(t)
+    for _ in range(3):
+        cc.merge(a, b)
+        cc.merge(b, c)
+        assert cc.are_congruent(f(a), f(c))
+        cc.backtrack(2)
+        assert not cc.are_congruent(a, b)
+        assert not cc.are_congruent(f(a), f(b))
+
+
+def test_explain_after_backtrack_uses_only_live_equations():
+    v = symbols('p0:8')
+    base = [Q.eq(v[i], v[i + 1]) for i in range(4)]
+    cc = EUFCongruenceClosure(base)
+    cc.explain(v[0], v[4])
+    for eq in (Q.eq(v[4], v[5]), Q.eq(v[0], v[5])):
+        cc.merge(eq.lhs, eq.rhs)
+    cc.explain(v[0], v[5])
+    cc.backtrack(2)
+    assert not cc.are_congruent(v[0], v[5])
+    live = base + [Q.eq(v[4], v[6])]
+    cc.merge(v[4], v[6])
+    _check_explanation(cc, live, v[0], v[6])
+
+
+def test_backtrack_random_differential():
+    rng = random.Random(31337)
+    s = symbols('q0:9')
+    cc = EUFCongruenceClosure([])
+    live = []
+    for _ in range(70):
+        if live and rng.random() < 0.4:
+            k = rng.randint(1, len(live))
+            cc.backtrack(k)
+            del live[-k:]
+        else:
+            i, j = rng.sample(range(9), 2)
+            lhs, rhs = (s[i], s[j]) if rng.random() < 0.7 else (f(s[i]), f(s[j]))
+            if cc.are_congruent(lhs, rhs):
+                continue
+            cc.merge(lhs, rhs)
+            live.append(Q.eq(lhs, rhs))
+        assert len(cc._asserted) == len(live)
+        ref = EUFCongruenceClosure(live)
+        for i in range(9):
+            for j in range(9):
+                for term in (lambda u: u, f):
+                    assert (cc.are_congruent(term(s[i]), term(s[j]))
+                            is ref.are_congruent(term(s[i]), term(s[j])))
