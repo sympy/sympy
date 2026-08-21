@@ -451,3 +451,15 @@ def test_issue_27733_second_fix():
     encoding = {Q.gt(x0, x1): 1, Q.lt(x1, x0): 2, Q.le(x1, x0): 3, Q.ge(x0, x1): 4}
     cnf = EncodedCNF(clauses, encoding)
     assert satisfiable(cnf, use_lra_theory=True) is False
+
+
+def test_satisfiable_all_models_lra():
+    x = symbols('x')
+    clauses = [[1, 2]]
+    encoding = {Q.gt(x, 0): 1, Q.lt(x, 0): 2}
+    cnf = EncodedCNF(clauses, encoding)
+
+    models = list(satisfiable(cnf, all_models=True, use_lra_theory=True))
+    assert len(models) == 2
+    assert {Q.gt(x, 0): True, Q.lt(x, 0): False} in models
+    assert {Q.lt(x, 0): True, Q.gt(x, 0): False} in models
