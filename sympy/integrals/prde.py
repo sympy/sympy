@@ -1313,17 +1313,10 @@ def parametric_log_deriv_structure(fa, fd, wa, wd, DE):
                 or not all(derivation(i, DE, basic=True).is_zero for i in um):
             # The system could not be reduced to one over the constants
             return None
-        if not DE.transcendental:
-            # The raise below refuses to decide rationality of the
-            # constants because a None return is a proof of
-            # nonexistence.  Over a non-transcendental tower every
-            # nonelementary conclusion downstream of that proof is
-            # degraded to an unevaluated Integral anyway, and solved
-            # results are vetted independently, so an inconclusive
-            # answer may as well be "no".
-            return None
-        raise NotImplementedError("Cannot work with non-rational "
-            "coefficients in this case.")
+        # Constant but not provably rational entries: the rationality
+        # of any solution is undecided, and None is inconclusive by
+        # this function's contract, so no more needs deciding here.
+        return None
     from sympy.matrices import Matrix as _Matrix
     try:
         xs, params = _Matrix(Am).gauss_jordan_solve(_Matrix(um))
@@ -1363,7 +1356,10 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
     of Bronstein's book: n*f == Dv/v + m*w for n, m in ZZ, n != 0, and
     v in k(t)*.  The heuristic (``ParametricLogarithmicDerivative``) is
     tried first; if it cannot decide, the structure theorem method of the
-    same section is tried.
+    same section is tried.  If that is inconclusive too, None is returned
+    as an unproven "no solution" and DE.transcendental is set to False,
+    which degrades every downstream nonelementary conclusion to an
+    unevaluated Integral and subjects solved results to vetting.
     """
     try:
         A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
@@ -1373,19 +1369,12 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
             # The structure method proves nonexistence only when the
             # elementary extension containing Integral(f) needs no
             # monomials outside the current tower, which we cannot check
-            # here, so an inconclusive result must not be reported as
-            # "no solution" -- over a transcendental tower, where "no
-            # solution" feeds valid nonelementary proofs.  Over a
-            # non-transcendental tower those proofs are degraded to
-            # unevaluated Integrals and solved results are vetted
-            # independently, so "no" is a safe answer and much better
-            # than aborting the whole integration.
-            if not DE.transcendental:
-                return None
-            raise NotImplementedError("parametric_log_deriv() could not "
-                "decide: the heuristic failed and f - (m/n)*w is not a "
-                "combination of logarithmic derivatives from the current "
-                "tower for any m/n in QQ.")
+            # here, so this "no solution" answer is not a proof.  Record
+            # that the tower's nonexistence answers are no longer
+            # certain: nonelementary conclusions are then degraded to
+            # unevaluated Integrals and solved results are vetted, as
+            # for a tower with algebraic generators.
+            DE.transcendental = False
     return A
 
 
@@ -1396,14 +1385,17 @@ def _structure_system_solve(lhs, rhs, DE):
     Explanation
     ===========
 
-    lhs and rhs are matrices over K.  Returns a list of constant
-    solutions (free parameters set to zero), or None if there is no
-    constant solution.  constant_system() returns a reduced *system*,
-    not a solution, and treating its right hand side as a solution (as
-    this module once did) is only accidentally correct when the
-    reduction is identity-like, so the reduced system is solved
-    explicitly here and the solution is verified against the original
-    equation.
+    lhs and rhs are matrices over K.  Returns (solution, unique), where
+    solution is a list of constants (free parameters set to zero) and
+    unique is True when the system had no free parameters, or None if
+    there is no constant solution.  Callers may draw conclusions from
+    the individual entries (e.g. their irrationality) only when unique
+    is True: zeroing a free parameter picks an arbitrary point of the
+    solution space.  constant_system() returns a reduced *system*, not
+    a solution, and treating its right hand side as a solution (as this
+    module once did) is only accidentally correct when the reduction is
+    identity-like, so the reduced system is solved explicitly here and
+    the solution is verified against the original equation.
 
     Raises NotImplementedError if the verification fails, which
     indicates constants not computable by cancel() (see the comment in
@@ -1433,7 +1425,7 @@ def _structure_system_solve(lhs, rhs, DE):
     # xs == [(1 - tau)/y, tau], which is non-rational at tau == 0 but
     # rational at tau == 1.  Choosing a rational point of the affine
     # solution space (when one exists) would decide more towers; failing
-    # that only causes an honest NotImplementedError downstream.
+    # that only degrades the tower downstream (undecided rationality).
     xs = xs.subs(dict.fromkeys(params, S.Zero))
     # Defensive verification against the original system
     lhs_m = lhs.to_Matrix()
@@ -1444,7 +1436,7 @@ def _structure_system_solve(lhs, rhs, DE):
             raise NotImplementedError("The candidate solution of the "
                 "structure system failed verification; the constant field "
                 "may not be computable by cancel().")
-    return list(xs)
+    return list(xs), not params
 
 
 def is_deriv_k(fa, fd, DE):
@@ -1459,6 +1451,11 @@ def is_deriv_k(fa, fd, DE):
     which means that Df/f is not the derivative of an element of k(t).  ans is
     a list of tuples such that Add(*[i*j for i, j in ans]) == u.  This is useful
     for seeing exactly which elements of k(t) produce u.
+
+    When the rationality of the structure coefficients cannot be decided,
+    None is returned as an unproven "no" and DE.transcendental is set to
+    False, which degrades every downstream nonelementary conclusion to an
+    unevaluated Integral and subjects solved results to vetting.
 
     This function uses the structure theorem approach, which says that for any
     f in K, Df/f is the derivative of a element of K if and only if there are ri
@@ -1534,22 +1531,29 @@ def is_deriv_k(fa, fd, DE):
     lhs = Matrix([E_part + L_part], dum)
     rhs = Matrix([dfa.as_expr()/dfd.as_expr()], dum)
 
-    u = _structure_system_solve(lhs, rhs, DE)
+    sol = _structure_system_solve(lhs, rhs, DE)
 
-    if u is None:
+    if sol is None:
         # No constant solution
         return None
     else:
+        u, unique = sol
         if not all(i.is_Rational for i in u):
-            if not DE.transcendental:
-                # Undecidable rationality of the coefficients: treat as
-                # no relation.  This can only add a redundant generator
-                # or forgo a rewrite; over a non-transcendental tower
-                # nonelementary conclusions are degraded and solved
-                # results are vetted, so soundness is not affected.
+            if unique and any(i.is_rational is False for i in u):
+                # The unique solution has a provably irrational entry,
+                # so no rational solution exists: Df/f is not the
+                # derivative of an element of k(t).
                 return None
-            raise NotImplementedError("Cannot work with non-rational "
-                "coefficients in this case.")
+            # The rationality of the coefficients is undecided (or a
+            # zeroed free parameter may be hiding a rational solution).
+            # Answer "no relation" -- which can only add a redundant
+            # generator or forgo a rewrite -- and record that the
+            # tower's transcendence is no longer certain, so that
+            # nonelementary conclusions are degraded to unevaluated
+            # Integrals and solved results are vetted, as for a tower
+            # with algebraic generators.
+            DE.transcendental = False
+            return None
         else:
             terms = ([DE.extargs[i - 1] for i in DE.indices('exp')] +
                     [DE.T[i] for i in DE.indices('log')])
@@ -1586,6 +1590,11 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     written as the logarithmic derivative of a k(t)-radical.  ans is a list of
     tuples such that Mul(*[i**j for i, j in ans]) == u.  This is useful for
     seeing exactly what elements of k(t) produce u.
+
+    When the rationality of the structure coefficients cannot be decided,
+    None is returned as an unproven "no" and DE.transcendental is set to
+    False, which degrades every downstream nonelementary conclusion to an
+    unevaluated Integral and subjects solved results to vetting.
 
     This function uses the structure theorem approach, which says that for any
     f in K, Df is the logarithmic derivative of a K-radical if and only if there
@@ -1663,23 +1672,28 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     lhs = Matrix([E_part + L_part], dum)
     rhs = Matrix([dfa.as_expr()/dfd.as_expr()], dum)
 
-    u = _structure_system_solve(lhs, rhs, DE)
+    sol = _structure_system_solve(lhs, rhs, DE)
 
-    if u is None:
+    if sol is None:
         # No constant solution
         return None
     else:
+        u, unique = sol
         if not all(i.is_Rational for i in u):
-            if not DE.transcendental:
-                # As above: over a non-transcendental tower an
-                # undecided rationality question may be answered "no
-                # relation" without risking an invalid proof.
+            if unique and any(i.is_rational is False for i in u):
+                # The unique solution has a provably irrational entry
+                # (e.g. log(2) for exp(log(2)*log(x)) over QQ(x, log(x))),
+                # so no rational solution exists: Df is not the
+                # logarithmic derivative of a k(t)-radical.
                 return None
-            # TODO: But maybe we can tell if they're not rational, like
-            # log(2)/log(3). Also, there should be an option to continue
-            # anyway, even if the result might potentially be wrong.
-            raise NotImplementedError("Cannot work with non-rational "
-                "coefficients in this case.")
+            # Undecided rationality (e.g. log(2)/log(3), or a zeroed
+            # free parameter hiding a rational solution): answer "no
+            # relation" and record that the tower's transcendence is no
+            # longer certain, degrading nonelementary conclusions and
+            # vetting solved results as for a tower with algebraic
+            # generators.
+            DE.transcendental = False
+            return None
         else:
             n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u])
             u = [n*i for i in u]

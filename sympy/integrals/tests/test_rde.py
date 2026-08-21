@@ -189,17 +189,22 @@ def test_bound_degree_rational_z():
 def test_bound_degree_undecidable():
     # Exp case with deg(a) == deg(b) and alpha == -lc(b)/lc(a) == 1/(x + 1):
     # deciding whether alpha == m*Dt/t + Dz/z requires log(x + 1), which is
-    # not in the tower, so parametric_log_deriv() cannot decide and
-    # bound_degree() must raise rather than return an unsound bound.
-    # param_rischDE() propagates this (it used to guess n = 5 instead,
-    # which could truncate the parametric solution basis and turn into a
-    # false proof of nonelementarity downstream in is_deriv_in_field()).
+    # not in the tower, so parametric_log_deriv() cannot decide.  The
+    # returned bound skips the undecided m-correction and so is not a
+    # proof (it could truncate the solution basis); to keep that sound,
+    # the tower's transcendence is downgraded to unproven, which vets
+    # solved results and degrades nonelementary conclusions downstream.
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0),
         Poly(t1, t1)], 'exts': ['log', 'exp'], 'extargs': [x, x]})
-    raises(NotImplementedError, lambda: bound_degree(Poly(t1, t1),
-        Poly(-t1/(x + 1), t1, field=True), Poly(1, t1), DE))
-    raises(NotImplementedError, lambda: bound_degree(Poly(t1, t1),
-        Poly(-t1/(x + 1), t1, field=True), [Poly(1, t1)], DE, parametric=True))
+    assert DE.transcendental is True
+    assert bound_degree(Poly(t1, t1), Poly(-t1/(x + 1), t1, field=True),
+        Poly(1, t1), DE) == 0
+    assert DE.transcendental is False
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0),
+        Poly(t1, t1)], 'exts': ['log', 'exp'], 'extargs': [x, x]})
+    assert bound_degree(Poly(t1, t1), Poly(-t1/(x + 1), t1, field=True),
+        [Poly(1, t1)], DE, parametric=True) == 0
+    assert DE.transcendental is False
 
 
 def test_spde():

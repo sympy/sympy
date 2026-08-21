@@ -18,7 +18,8 @@ from sympy.testing.pytest import raises
 from sympy.core import Add, Dummy
 from sympy.matrices import MutableDenseMatrix
 from sympy.core.numbers import Rational
-from sympy.functions.elementary.exponential import exp
+from sympy.core.numbers import pi
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -417,33 +418,39 @@ def test_structure_theorem_guards():
             raise AssertionError("NotImplementedError was not raised")
 
 
-def test_structure_theorem_nontranscendental_guards():
-    # A structure-system solution with non-rational constants is
-    # undecidable rationality: over a transcendental tower a None
-    # return would be a proof of nonexistence, so these raise; over a
-    # non-transcendental tower every nonelementary conclusion is
-    # degraded to an unevaluated Integral and solved results are vetted
-    # independently, so the undecided question is answered "no
-    # relation" instead of aborting the integration.  Here
-    # t1 == log(x**sqrt(2)), and matching a logarithmic derivative
-    # against Dt1 == sqrt(2)/x needs the constant 1/sqrt(2).
-    for transcendental in (True, False):
+def test_structure_theorem_nonrational_coefficients():
+    # Here t1 == log(x**sqrt(2)), and matching a logarithmic derivative
+    # against Dt1 == sqrt(2)/x needs the constant 1/sqrt(2).  The
+    # structure system's solution is unique and provably irrational, so
+    # "no relation" is a proven answer and the tower stays proven
+    # transcendental.
+    DE = DifferentialExtension(extension={
+        'D': [Poly(1, x), Poly(sqrt(2)/x, t1)],
+        'exts': ['log'], 'extargs': [x**sqrt(2)]})
+    assert is_deriv_k(Poly(x, t1), Poly(1, t1), DE) is None
+    assert is_log_deriv_k_t_radical(Poly(1, t1), Poly(x, t1), DE,
+        Df=False) is None
+    # parametric_log_deriv_structure's None is inconclusive by contract
+    # (the wrapper decides what to do with it), so it never raises on
+    # non-rational constants either
+    assert parametric_log_deriv_structure(Poly(sqrt(2), t1),
+        Poly(x, t1), Poly(1, t1), Poly(x, t1), DE) is None
+    assert DE.transcendental is True
+
+    # With t1 == log(x**log(pi)) the needed constant is 1/log(pi), whose
+    # rationality is undecided (log(pi).is_rational is None), so the
+    # question is answered "no relation" without proof and the tower is
+    # degraded: nonelementary conclusions become unevaluated Integrals
+    # and solved results are vetted.
+    for call in (lambda DE: is_deriv_k(Poly(x, t1), Poly(1, t1), DE),
+            lambda DE: is_log_deriv_k_t_radical(Poly(1, t1), Poly(x, t1),
+                DE, Df=False)):
         DE = DifferentialExtension(extension={
-            'D': [Poly(1, x), Poly(sqrt(2)/x, t1)],
-            'exts': ['log'], 'extargs': [x**sqrt(2)],
-            'transcendental': transcendental})
-        calls = [
-            lambda: is_deriv_k(Poly(x, t1), Poly(1, t1), DE),
-            lambda: is_log_deriv_k_t_radical(Poly(1, t1), Poly(x, t1), DE,
-                Df=False),
-            lambda: parametric_log_deriv_structure(Poly(sqrt(2), t1),
-                Poly(x, t1), Poly(1, t1), Poly(x, t1), DE),
-        ]
-        for call in calls:
-            if transcendental:
-                raises(NotImplementedError, call)
-            else:
-                assert call() is None
+            'D': [Poly(1, x), Poly(log(pi)/x, t1)],
+            'exts': ['log'], 'extargs': [x**log(pi)]})
+        assert DE.transcendental is True
+        assert call(DE) is None
+        assert DE.transcendental is False
 
 
 def test_is_deriv_k():
@@ -535,11 +542,17 @@ def test_parametric_log_deriv_structure():
         Poly(1, t), Poly(1, t), DE) == (2, 2, x)
     # f == 1/(x + 1), w == 1 has the solution (1, 0, x + 1), but x + 1 is
     # not in the tower, so the structure method is inconclusive (None) and
-    # the wrapper must raise rather than claim no solution exists.
+    # the wrapper's "no solution" answer is not a proof: it must degrade
+    # the tower rather than let that answer feed a nonelementary
+    # conclusion.
     assert parametric_log_deriv_structure(Poly(1, t), Poly(x + 1, t),
         Poly(1, t), Poly(1, t), DE) is None
-    raises(NotImplementedError, lambda: parametric_log_deriv(
-        Poly(1, t), Poly(x + 1, t), Poly(1, t), Poly(1, t), DE))
+    assert DE.transcendental is True
+    assert parametric_log_deriv(
+        Poly(1, t), Poly(x + 1, t), Poly(1, t), Poly(1, t), DE) is None
+    assert DE.transcendental is False
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'exts': ['log'], 'extargs': [x]})
 
     # Nontrivial n and m: f == 1/(2*x) + 3, w == 2:
     # 2*f == Dx/x + 3*w

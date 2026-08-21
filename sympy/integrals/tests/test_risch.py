@@ -1268,6 +1268,47 @@ def test_risch_integrate_algebraic_undecidable_structure():
                for p in [-3, Rational(-1, 2), Rational(1, 2), 2, 2 + I])
 
 
+def test_risch_integrate_nonrational_structure_constants():
+    # 2**log(x) == x**log(2) builds the tower exp(log(2)*log(x)) over
+    # QQ(x, log(x)).  The structure system's unique solution log(2) is
+    # provably irrational, so the new exponential is proven not to be a
+    # radical of the tower: the tower stays proven transcendental and
+    # keeps its nonelementary proofs.
+    for f in [2**log(x)/x**2, 2**log(x), 2**log(x)*log(x)]:
+        r = risch_integrate(f, x)
+        assert not r.has(Integral)
+        err = r.diff(x) - f
+        assert all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
+                   for p in [Rational(1, 3), 2, 5])
+    assert DifferentialExtension(2**log(x)/x**2, x).transcendental is True
+
+    # For 2**x + 3**x the relation between exp(x*log(2)) and
+    # exp(x*log(3)) hinges on the rationality of log(3)/log(2), which
+    # sympy cannot decide, so the tower is built assuming no relation
+    # and its transcendence is downgraded to unproven: solved results
+    # are vetted and nonelementary conclusions become unevaluated
+    # Integrals.
+    f = 2**x + 3**x
+    assert risch_integrate(f, x) == 2**x/log(2) + 3**x/log(3)
+    assert DifferentialExtension(f, x).transcendental is False
+
+    # For 2**x*3**(x**2) the structure system for the second exponential
+    # has no constant solution at all (the argument ratio is not
+    # constant), which is a sound "no relation": the tower stays proven
+    # transcendental and the nonelementary proof stands.
+    r = risch_integrate(2**x*3**(x**2), x)
+    assert isinstance(r, NonElementaryIntegral)
+    assert DifferentialExtension(2**x*3**(x**2), x).transcendental is True
+
+    # pi**log(x)/x needs the rationality of log(pi), which is undecided
+    # (is_rational is None), so this exercises the degraded path end to
+    # end with a solved, vetted result.
+    f = pi**log(x)/x
+    r = risch_integrate(f, x)
+    assert r == exp(log(pi)*log(x))/log(pi)
+    assert DifferentialExtension(f, x).transcendental is False
+
+
 def test_issue_23948():
     f = (
         ( (-2*x**5 + 28*x**4 - 144*x**3 + 324*x**2 - 270*x)*log(x)**2

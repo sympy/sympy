@@ -150,7 +150,13 @@ class DifferentialExtension:
     - d: The top level extension derivation, as defined by the current
       derivation (see level below).
     - case: The string representation of the case of self.d.
-    - transcendental: Whether all the extensions in the tower are transcendental
+    - transcendental: Whether the tower is proven purely transcendental:
+      every extension is transcendental and every structure-theorem
+      question asked about the tower was decided.  When False -- because
+      an extension is algebraic, or because an undecided question was
+      answered "no" without proof -- nonexistence answers cannot be
+      trusted, so nonelementary conclusions are degraded to unevaluated
+      Integrals and solved results are independently vetted.
     (Note that self.T and self.D will always contain the complete extension,
     regardless of the level.  Therefore, you should ALWAYS use DE.t and DE.d
     instead of DE.T[-1] and DE.D[-1].  If you want to have a list of the

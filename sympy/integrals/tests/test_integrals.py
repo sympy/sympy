@@ -678,9 +678,14 @@ def test_integrate_returns_piecewise():
     assert integrate(exp(x*y), (x, 0, z)) == Piecewise(
         (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
     # https://github.com/sympy/sympy/issues/23707
+    # The degenerate slot (x == y + 1, where the integrand is 1 and the
+    # integral is t) is an honest unevaluated Integral: the generic
+    # methods answer wrongly at exactly the parameter values that select
+    # that slot, and validating a candidate on the degenerate variety is
+    # the deferred special-values problem.
     assert integrate(exp(t)*exp(-t*sqrt(x - y)), t) == Piecewise(
-        (-exp(t)/(sqrt(x - y)*exp(t*sqrt(x - y)) - exp(t*sqrt(x - y))),
-        Ne(x, y + 1)), (t, True))
+        (-exp(t)*exp(-t*sqrt(x - y))/(sqrt(x - y) - 1), Ne(sqrt(x - y), 1)),
+        (Integral(exp(t)*exp(-t*sqrt(x - y)), t), True))
 
 
 def test_integrate_max_min():
