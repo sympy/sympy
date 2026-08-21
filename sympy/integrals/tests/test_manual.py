@@ -119,7 +119,7 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).rewrite(exp).simplify() == 0
 
-
+@slow
 def test_manualintegrate_bioche_substitution():
     # Double-angle substitution when both sine and cosine substitutions apply
     f = sin(x)*cos(x)/(1 + sin(x)**2*cos(x)**2)
