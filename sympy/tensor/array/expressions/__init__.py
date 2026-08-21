@@ -168,11 +168,14 @@ __all__ = [
     "convert_array_to_indexed",
     "convert_indexed_to_array",
     "array_derive",
+    "collect_tensor_products",
+    "commutativity_simplify",
 ]
 
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, PermuteDims, ArrayDiagonal, \
     ArrayContraction, Reshape, ArraySymbol, ArrayElement, ZeroArray, OneArray, ArrayElementwiseApplyFunc
 from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
+from sympy.tensor.array.expressions.simplification import collect_tensor_products, commutativity_simplify
 from sympy.tensor.array.expressions.from_array_to_indexed import convert_array_to_indexed
 from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
 from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
