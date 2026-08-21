@@ -19,7 +19,7 @@ from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, integral_steps, manual_subs)
+    _parts_rule, bioche_substitution, integral_steps, manual_subs)
 from sympy.testing.pytest import raises, slow
 from typing import TYPE_CHECKING
 
@@ -119,7 +119,7 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).rewrite(exp).simplify() == 0
 
-@slow
+
 def test_manualintegrate_bioche_substitution():
     # Double-angle substitution when both sine and cosine substitutions apply
     f = sin(x)*cos(x)/(1 + sin(x)**2*cos(x)**2)
@@ -168,6 +168,39 @@ def test_manualintegrate_bioche_substitution():
         (F1, Ne(a, 0)), (F2, True))
     assert (F1.diff(x) - f).rewrite(exp).cancel() == 0
     assert (F2.diff(x) - f.subs(a, 0)) == 0
+
+    # Multiple harmonics with a common phase shift
+    f = 1/(sin(2*x + 2) + cos(4*x + 4) + 2)
+    F = (2*sqrt(5)*atan(3*sqrt(5)*(tan(x + 1) - S(2)/3)/5)/25
+         - S.One/5/(tan(x + 1) + 1))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    # Negative harmonics
+    f = 1/(sin(-2*x) + cos(4*x) + 2)
+    F = (2*sqrt(5)*atan(3*sqrt(5)*(tan(x) + S(2)/3)/5)/25
+         - S.One/5/(tan(x) - 1))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    # Cotangent and cosecant inputs
+    f = csc(x)**2/(cot(x)**2 + 4)
+    F = atan(2*tan(x))/2
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    f = 1/(csc(2*x) + 2)
+    F = (-sqrt(3)*(log(tan(x) - sqrt(3) + 2)
+         - log(tan(x) + sqrt(3) + 2))/12 + atan(tan(x))/2)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    # Inputs outside the scope of Bioche's rules
+    for f in (1/(sin(x**2) + 2),
+              1/(sin(cos(x)) + 2),
+              1/(sin(x) + cos(sqrt(2)*x) + 2),
+              x*sin(x)):
+        assert bioche_substitution((f, x)) is None
 
 
 @slow
