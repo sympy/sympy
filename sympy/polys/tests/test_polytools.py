@@ -2110,6 +2110,21 @@ def test_gcdex():
     raises(DomainError, lambda: invert(x + 1, 2*x + 1, auto=False))
 
 
+def test_invert_algebraic_fraction_field():
+    C = QQ.algebraic_field(sqrt(2))
+    K = C.frac_field(x)
+    f = Poly(sqrt(2)*t, t, domain=K)
+    g = Poly(t + 1, t, domain=K)
+
+    assert invert(f, g) == Poly(-sqrt(2)/2, t, domain=K)
+
+
+def test_invert_finite_fraction_field():
+    K = FF(7).frac_field(x)
+
+    assert invert(2*t, t + 1, domain=K) == 3
+
+
 def test_revert():
     f = Poly(1 - x**2/2 + x**4/24 - x**6/720)
     g = Poly(61*x**6/720 + 5*x**4/24 + x**2/2 + 1)

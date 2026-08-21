@@ -2950,10 +2950,14 @@ class PolyElement(
             p = p.mul_ground(cp)
             q = q.mul_ground(cq)
 
-        # Make canonical with respect to sign or quadrant in the case of ZZ_I
-        # or QQ_I. This ensures that the LC of the denominator is canonical by
-        # multiplying top and bottom by a unit of the ring.
-        u = q.canonical_unit()
+        # Make the denominator monic over exact fields without an associated
+        # ring. Otherwise make it canonical with respect to sign or quadrant
+        # in the case of ZZ_I or QQ_I.
+        if (q and domain.is_Exact and domain.is_Field
+                and not domain.has_assoc_Ring):
+            u = domain.quo(domain.one, q.LC)
+        else:
+            u = q.canonical_unit()
         if u == domain.one:
             pass
         elif u == -domain.one:
