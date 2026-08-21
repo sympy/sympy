@@ -19,7 +19,7 @@ from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, integral_steps, manual_subs)
+    _parts_rule, bioche_substitution, integral_steps, manual_subs)
 from sympy.testing.pytest import raises, slow
 from typing import TYPE_CHECKING
 
@@ -118,6 +118,110 @@ def test_manualintegrate_trigonometry():
     f, F = csch(x), log(tanh(x/2))
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).rewrite(exp).simplify() == 0
+
+@slow
+def test_manualintegrate_bioche_substitution():
+    # Double-angle substitution when both sine and cosine substitutions apply
+    f = sin(x)*cos(x)/(1 + sin(x)**2*cos(x)**2)
+    F = (sqrt(5)*(log(cos(2*x) - sqrt(5))
+         - log(cos(2*x) + sqrt(5)))/10)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+    # Direct sine and cosine substitutions
+    f = cos(x)/(sin(x)**2 + 4)
+    F = atan(sin(x)/2)/2
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    f = sin(x)/(cos(x)**2 + 4)
+    F = -atan(cos(x)/2)/2
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    # Direct tangent substitution, including a phase shift
+    f = 1/(tan(x + pi/4) + 2)
+    F = (log(tan(x + pi/4) + 2)/5
+         - log(tan(x + pi/4)**2 + 1)/10
+         + 2*atan(tan(x + pi/4))/5)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel().expand() == 0
+
+    # The double-angle substitution produces a quadratic whose discriminant
+    # expands to zero.
+    f = tan(x)/(a + b*tan(x)**2)**2
+    F = Piecewise((
+        Mul(-1, 1/((4*a**2 - 4*b**2)/(4*a**2 - 8*a*b + 4*b**2) + cos(2*x)),
+            1/(2*a**2 - 4*a*b + 2*b**2),
+            (4*a**2 - 4*b**2)/(4*a**2 - 8*a*b + 4*b**2) - 1, evaluate=False)
+        - log(2*a**2 + 4*a*b + 2*b**2 + (4*a**2 - 4*b**2)*cos(2*x)
+              + (2*a**2 - 4*a*b + 2*b**2)*cos(2*x)**2)/(4*a**2 - 8*a*b + 4*b**2),
+        Ne(2*a**2 - 4*a*b + 2*b**2, 0)),
+        ((-cos(2*x)**2/2 - cos(2*x))/(2*a**2 + 4*a*b + 2*b**2), True))
+    assert manualintegrate(f, x) == F
+    assert (F.args[0][0].diff(x) - f).rewrite(exp).cancel() == 0
+    assert (F.args[1][0].subs(b, a).diff(x) - f.subs(b, a)).rewrite(exp).cancel() == 0
+
+    # Universal half-angle fallback
+    f = 1/(sec(x) + 2)
+    F = (sqrt(3)*(log(tan(x/2) - sqrt(3))
+         - log(tan(x/2) + sqrt(3)))/6 + atan(tan(x/2)))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    # Commensurable fractional harmonics
+    f = 1/(sin(x/2)**2 + cos(x))
+    F = 2*tan(x/2)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    # Symbolic frequency, multiple harmonics, and the omega = 0 branch
+    f = 1/(sin(a*x) + cos(2*a*x) + 2)
+    F1 = (4*sqrt(5)*atan(3*sqrt(5)*(tan(a*x/2) - S(2)/3)/5)/(25*a)
+          - 2/(5*a*(tan(a*x/2) + 1)))
+    F2 = x/3
+    assert manualintegrate(f, x) == Piecewise(
+        (F1, Ne(a, 0)), (F2, True))
+    assert (F1.diff(x) - f).rewrite(exp).cancel() == 0
+    assert (F2.diff(x) - f.subs(a, 0)) == 0
+
+    # Multiple harmonics with a common phase shift
+    f = 1/(sin(2*x + 2) + cos(4*x + 4) + 2)
+    F = (2*sqrt(5)*atan(3*sqrt(5)*(tan(x + 1) - S(2)/3)/5)/25
+         - S.One/5/(tan(x + 1) + 1))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    # Negative harmonics
+    f = 1/(sin(-2*x) + cos(4*x) + 2)
+    F = (2*sqrt(5)*atan(3*sqrt(5)*(tan(x) + S(2)/3)/5)/25
+         - S.One/5/(tan(x) - 1))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    # Cotangent and cosecant inputs
+    f = csc(x)**2/(cot(x)**2 + 4)
+    F = atan(2*tan(x))/2
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    # Cotangent must be treated as a polynomial generator in the guard above
+    f = 1/(cot(x)**2 + 1)
+    F = atan(tan(x))/2 - 2*tan(x)/(4*tan(x)**2 + 4)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    f = 1/(csc(2*x) + 2)
+    F = (-sqrt(3)*(log(tan(x) - sqrt(3) + 2)
+         - log(tan(x) + sqrt(3) + 2))/12 + atan(tan(x))/2)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    # Inputs outside the scope of Bioche's rules
+    for f in (1/(sin(x**2) + 2),
+              1/(sin(cos(x)) + 2),
+              1/(sin(x) + cos(sqrt(2)*x) + 2),
+              x*sin(x)):
+        assert bioche_substitution((f, x)) is None
 
 
 @slow
