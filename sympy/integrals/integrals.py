@@ -537,9 +537,6 @@ class Integral(AddWithLimits):
                 undone_limits.append(xab)
                 ulj.update(uli)
                 function = self.func(*([function] + [xab]))
-                factored_function = function.factor()
-                if not isinstance(factored_function, Integral):
-                    function = factored_function
                 continue
 
             if function.has(Abs, sign) and (
@@ -659,10 +656,7 @@ class Integral(AddWithLimits):
 
             if antideriv is None:
                 undone_limits.append(xab)
-                function = self.func(*([function] + [xab])).factor()
-                factored_function = function.factor()
-                if not isinstance(factored_function, Integral):
-                    function = factored_function
+                function = self.func(*([function] + [xab]))
                 continue
             else:
                 if len(xab) == 1:
@@ -728,9 +722,6 @@ class Integral(AddWithLimits):
                             # complicated way on limits that cannot be computed
                             undone_limits.append(xab)
                             function = self.func(*([function] + [xab]))
-                            factored_function = function.factor()
-                            if not isinstance(factored_function, Integral):
-                                function = factored_function
         return function
 
     def _eval_derivative(self, sym):
