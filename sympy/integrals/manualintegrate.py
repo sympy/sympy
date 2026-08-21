@@ -83,6 +83,8 @@ def _if_zero_implies_zero(P, Q):
     Returns True if P is not zero or if substituting every irreducible
     factor of the numerator of P in the numerator of Q makes Q = 0.
     """
+    P = P.expand()
+    Q = Q.expand()
     if P.is_zero is False:
         return True
     if P.is_zero is True:
@@ -1974,12 +1976,16 @@ def quadratic_denom_rule(integral):
     def _complete_square(B, a, b, c, n, symbol, degenerate_a=True, degenerate_discriminant=True):
         # integrates B / (a*x**2 + b*x + c)**n
         pieces = []
-        discriminant = 4*a*c - b**2
+        discriminant = (4*a*c - b**2).expand()
         denominator = a*symbol**2 + b*symbol + c
         integrand = B / denominator**n
         # degenerate flags avoid recalculating Piecewise branches recursively
         if degenerate_a and not _if_zero_implies_zero(a, denominator):
-            substituted = integrand.subs(a, 0)
+            if discriminant.is_zero is True:
+                # If a = 0 and 4*a*c - b**2 = 0 identically, then b = 0 too.
+                substituted = integrand.subs({a: 0, b: 0}, simultaneous=True)
+            else:
+                substituted = integrand.subs(a, 0)
             substep = integral_steps(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
         if degenerate_discriminant and not _if_zero_implies_zero(discriminant, denominator):
@@ -2032,8 +2038,13 @@ def quadratic_denom_rule(integral):
         pieces = []
         denominator = (a*symbol**2 + b*symbol + c)
         integrand = (A*symbol + B) / denominator**n
+        discriminant = (4*a*c - b**2).expand()
         if not _if_zero_implies_zero(a, denominator):
-            substituted = integrand.subs(a, 0)
+            if discriminant.is_zero is True:
+                # If a = 0 and 4*a*c - b**2 = 0 identically, then b = 0 too.
+                substituted = integrand.subs({a: 0, b: 0}, simultaneous=True)
+            else:
+                substituted = integrand.subs(a, 0)
             substep = integral_steps(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
         # we divide by a, Piecewise condition above

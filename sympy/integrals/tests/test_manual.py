@@ -146,6 +146,21 @@ def test_manualintegrate_bioche_substitution():
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).rewrite(exp).cancel().expand() == 0
 
+    # The double-angle substitution produces a quadratic whose discriminant
+    # expands to zero.
+    f = tan(x)/(a + b*tan(x)**2)**2
+    F = Piecewise((
+        Mul(-1, 1/((4*a**2 - 4*b**2)/(4*a**2 - 8*a*b + 4*b**2) + cos(2*x)),
+            1/(2*a**2 - 4*a*b + 2*b**2),
+            (4*a**2 - 4*b**2)/(4*a**2 - 8*a*b + 4*b**2) - 1, evaluate=False)
+        - log(2*a**2 + 4*a*b + 2*b**2 + (4*a**2 - 4*b**2)*cos(2*x)
+              + (2*a**2 - 4*a*b + 2*b**2)*cos(2*x)**2)/(4*a**2 - 8*a*b + 4*b**2),
+        Ne(2*a**2 - 4*a*b + 2*b**2, 0)),
+        ((-cos(2*x)**2/2 - cos(2*x))/(2*a**2 + 4*a*b + 2*b**2), True))
+    assert manualintegrate(f, x) == F
+    assert (F.args[0][0].diff(x) - f).rewrite(exp).cancel() == 0
+    assert (F.args[1][0].subs(b, a).diff(x) - f.subs(b, a)).rewrite(exp).cancel() == 0
+
     # Universal half-angle fallback
     f = 1/(sec(x) + 2)
     F = (sqrt(3)*(log(tan(x/2) - sqrt(3))
