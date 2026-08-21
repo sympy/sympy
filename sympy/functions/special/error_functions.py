@@ -19,7 +19,7 @@ from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh
-from sympy.functions.elementary.trigonometric import cos, sin, sinc
+from sympy.functions.elementary.trigonometric import cos, sin, sinc, atan
 from sympy.functions.special.hyper import hyper, meijerg
 
 # TODO series expansions
@@ -2704,6 +2704,230 @@ class fresnelc(FresnelIntegral):
 
         # All other points are not handled
         return super()._eval_aseries(n, args0, x, logx)
+
+
+class owens_t(DefinedFunction):
+    r"""
+    The Owen T-function.
+
+    Explanation
+    ===========
+
+    This function is defined as:
+
+    .. math ::
+        T(h, a) = \frac{1}{2\pi} \int_0^a
+            \frac{e^{-h^2(1+t^2)/2}}{1+t^2}\, \mathrm{d}t
+
+    Examples
+    ========
+
+    >>> from sympy.functions.special.error_functions import owens_t
+    >>> from sympy.abc import h, a
+    >>> owens_t(0, a)
+    atan(a)/(2*pi)
+    >>> owens_t(h, 0)
+    0
+    >>> owens_t(-h, a)
+    owens_t(h, a)
+    >>> owens_t(h, -a)
+    -owens_t(h, a)
+
+    Differentiation with respect to $h$ and $a$ is supported:
+
+    >>> from sympy import diff
+    >>> diff(owens_t(h, a), h)
+    -sqrt(2)*exp(-h**2/2)*erf(sqrt(2)*a*h/2)/(4*sqrt(pi))
+    >>> diff(owens_t(h, a), a)
+    exp(-h**2*(a**2 + 1)/2)/(2*pi*(a**2 + 1))
+
+    For $a > 1$, ``expand(func=True)`` applies Owen's addition/inversion
+    formula, rewriting $T(h, a)$ in terms of $T(ah, 1/a)$, whose second
+    argument has magnitude below 1:
+
+    >>> owens_t(h, 3).expand(func=True)
+    -erfc(sqrt(2)*h/2)*erfc(3*sqrt(2)*h/2)/4 + erfc(sqrt(2)*h/2)/4 + erfc(3*sqrt(2)*h/2)/4 - owens_t(3*h, 1/3)
+
+    Owen's original series (convergent for $|a| \le 1$) is available
+    through ``rewrite(Sum)``:
+
+    >>> from sympy import Sum
+    >>> owens_t(h, a).rewrite(Sum)
+    Sum((-1)**_k*a**(2*_k + 1)*uppergamma(_k + 1, h**2/2)/((2*_k + 1)*factorial(_k)), (_k, 0, oo))/(2*pi)
+
+    The Taylor series in $h$ around $h = 0$ works automatically through
+    ``fdiff``, and the asymptotic behavior as $h \to \pm\infty$ is
+    available through ``series`` too:
+
+    >>> owens_t(h, a).series(h, 0, 3)
+    atan(a)/(2*pi) - a*h**2/(4*pi) + O(h**3)
+    >>> from sympy import oo
+    >>> owens_t(h, a).series(h, oo, 2)
+    (sqrt(2)/h + O(h**(-2), (h, oo)))*exp(-h**2/2)*sign(a)/(4*sqrt(pi))
+
+    See Also
+    ========
+
+    erf, erfc
+
+    References
+    ==========
+
+    .. [1] Owen, D. B. (1956). "Tables for computing bivariate normal
+           probabilities." Ann. Math. Statist. 27(4), 1075-1090.
+    .. [2] Brychkov, Yu. A., Savischenko, N. V. (2015). "Some properties
+           of the Owen T-function." Integral Transforms Spec. Funct.
+    """
+
+    nargs = 2
+
+    def fdiff(self, argindex=1):
+        h, a = self.args
+        if argindex == 1:
+            # d/dh T(h,a) = -exp(-h**2/2)/(2*sqrt(2*pi)) * erf(a*h/sqrt(2))
+            return -exp(-h**2 / 2) * erf(a * h / sqrt(2)) / (2 * sqrt(2 * pi))
+        elif argindex == 2:
+            # d/da T(h,a) = exp(-h**2*(1+a**2)/2) / (2*pi*(1+a**2))
+            return exp(-h**2 * (1 + a**2) / 2) / (2 * pi * (1 + a**2))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, h, a):
+        if h is S.NaN or a is S.NaN:
+            return S.NaN
+
+        # T(h, 0) = 0
+        if a.is_zero:
+            return S.Zero
+
+        # T(0, a) = arctan(a) / (2*pi)
+        if h.is_zero:
+            return atan(a) / (2 * pi)
+
+        # T(h, oo) = erfc(sqrt(h**2)/sqrt(2)) / 4   (Re h**2 > 0)
+        if a is S.Infinity:
+            return erfc(sqrt(h**2) / sqrt(2)) / 4
+        if a is S.NegativeInfinity:
+            return -erfc(sqrt(h**2) / sqrt(2)) / 4
+
+        # T(h, a) = 0 for h = +-oo (finite a), since T depends on h only
+        # through h**2 in the integrand
+        if h in (S.Infinity, S.NegativeInfinity):
+            return S.Zero
+
+        # T(h, 1) = erfc(-h/sqrt2) * erfc(h/sqrt2) / 8
+        if a is S.One:
+            return erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
+        if a is S.NegativeOne:
+            return -erfc(-h / sqrt(2)) * erfc(h / sqrt(2)) / 8
+
+        # T(h, a) is even in h: T(-h, a) = T(h, a)
+        if h.could_extract_minus_sign():
+            return cls(-h, a)
+
+        # T(h, a) is odd in a: T(h, -a) = -T(h, a)
+        if a.could_extract_minus_sign():
+            return -cls(h, -a)
+
+    def _eval_is_extended_real(self):
+        # T(h, a) depends on h only through h**2, so a non-real h does
+        # not rule out a real result (e.g. T(I, 1) is real); this can
+        # only ever confirm realness, never deny it.
+        h, a = self.args
+        if h.is_extended_real and a.is_extended_real:
+            return True
+
+    def _eval_is_finite(self):
+        # |T(h, a)| <= 1/4 for all real h, a (the integrand is bounded
+        # by 1/(1+t**2), whose integral over all of R is pi), so T stays
+        # finite even when h or a is infinite.
+        h, a = self.args
+        if h.is_extended_real and a.is_extended_real:
+            return True
+
+    def _eval_is_positive(self):
+        # The integrand is strictly positive for real h, so T(h, a)
+        # has the same sign as a whenever h is real (and thus finite --
+        # if h were literally +-oo, T would be exactly 0 instead).
+        h, a = self.args
+        if h.is_real:
+            return a.is_extended_positive
+
+    def _eval_is_negative(self):
+        h, a = self.args
+        if h.is_real:
+            return a.is_extended_negative
+
+    def _eval_is_zero(self):
+        h, a = self.args
+        if a.is_zero or h is S.Infinity or h is S.NegativeInfinity:
+            return True
+        if h.is_real and a.is_real:
+            return a.is_zero
+
+    def _eval_conjugate(self):
+        h, a = self.args
+        return self.func(h.conjugate(), a.conjugate())
+
+    def _eval_expand_func(self, **hints):
+        # Owen (1956) eq. 2.8, the addition/inversion formula:
+        #   T(h, a) + T(a*h, 1/a) = [Phi(h) + Phi(a*h)]/2 - Phi(h)*Phi(a*h)
+        # for a > 0, with Phi(z) = erfc(-z/sqrt(2))/2. This isn't a
+        # simplification in general (the right-hand side still contains
+        # an owens_t call), so it doesn't fire in eval(); it's only
+        # useful as an explicit argument-reduction step, bringing |a|
+        # below 1 (the domain Patefield-Tandy-style implementations
+        # actually evaluate on). Only applied for a > 1: since |1/a| < 1
+        # afterwards, the guard below fails on the resulting owens_t(a*h,
+        # 1/a) term, so this cannot recurse into what it just produced.
+        h, a = self.args
+        if a.is_extended_positive and (a - 1).is_extended_positive:
+            Phi_h = erfc(-h / sqrt(2)) / 2
+            Phi_ah = erfc(-a * h / sqrt(2)) / 2
+            return (Phi_h + Phi_ah) / 2 - Phi_h * Phi_ah - self.func(a * h, 1 / a)
+        return self.func(*self.args)
+
+    def _eval_rewrite_as_Integral(self, h, a, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', [h, a]).name)
+        return Integral(exp(-h**2*(1 + t**2)/2)/(1 + t**2), (t, 0, a))/(2*pi)
+
+    def _eval_rewrite_as_Sum(self, h, a, **kwargs):
+        # Owen's original Maclaurin series in a, obtained by expanding
+        # exp(-h**2*t**2/2)/(1+t**2) as a Cauchy product of power series
+        # in t**2 and integrating term by term (T(h, 0) = 0):
+        #   T(h, a) = 1/(2*pi) * sum_{k=0}^oo (-1)**k/(2*k+1)
+        #                 * uppergamma(k+1, h**2/2)/k! * a**(2*k+1)
+        # Convergent for |a| <= 1, since uppergamma(k+1, h**2/2)/k! -> 1
+        # as k -> oo, matching the arctan(a) series' radius of
+        # convergence (the branch points of T(h, a), as a function of
+        # a, sit at a = +-i).
+        from sympy.concrete.summations import Sum
+        from sympy.functions.special.gamma_functions import uppergamma
+        k = Dummy("k")
+        kern = (S.NegativeOne**k / (2*k + 1)) * uppergamma(k + 1, h**2/2) / factorial(k) * a**(2*k + 1)
+        return Sum(kern, (k, 0, S.Infinity)) / (2*pi)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        # As h -> +-oo (a fixed and nonzero), T(h, a) approaches
+        # sign(a)*T(h, oo) = sign(a)*erfc(sqrt(h**2)/sqrt(2))/4 to all
+        # algebraic orders in 1/h: truncating the defining integral at a
+        # finite a instead of infinity only changes it by O(exp(-h**2*
+        # a**2/2)), which is beyond all orders of the 1/h asymptotic
+        # series (e.g. T(h, 1) - erfc(h/sqrt(2))/4 = -erfc(h/sqrt(2))**2/8,
+        # exponentially smaller than erfc(h/sqrt(2)) itself).
+        point = args0[0]
+        if point in (S.Infinity, S.NegativeInfinity):
+            from sympy.functions.elementary.complexes import sign
+            h, a = self.args
+            series = erfc(sqrt(h**2)/sqrt(2))._eval_aseries(n, (S.Infinity,), x, logx)
+            return sign(a) * series / 4
+        return super()._eval_aseries(n, args0, x, logx)
+
+    def _eval_evalf(self, prec):
+        from sympy.integrals.integrals import Integral
+        return self.rewrite(Integral)._eval_evalf(prec)
 
 
 ###############################################################################

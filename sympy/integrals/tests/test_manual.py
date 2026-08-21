@@ -12,7 +12,7 @@ from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
-from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfc, erfi, fresnelc, fresnels, li)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfc, erfi, fresnelc, fresnels, li, owens_t)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
 from sympy.functions.special.zeta_functions import polylog
@@ -187,6 +187,51 @@ def test_manualintegrate_trigpowers():
     assert manualintegrate(cot(x)**2 * csc(x)**6, x) == \
         -cot(x)**7/7 - 2*cot(x)**5/5 - cot(x)**3/3
 
+    f = sin(2*x)**3*cos(3*x)
+    F = 3*cos(x)/8 + cos(3*x)/24 - 3*cos(5*x)/40 + cos(9*x)/72
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    argument = 3*x + 2
+    f, F = sin(argument)**3*cos(argument)**2, cos(argument)**5/15 - cos(argument)**3/9
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+    f, F = tan(argument)**3*sec(argument)**2, sec(argument)**4/12 - sec(argument)**2/6
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+    f, F = cot(argument)**3*csc(argument)**2, -csc(argument)**4/12 + csc(argument)**2/6
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    argument = a*x + b
+    f = tan(argument)**6
+    generic_F = tan(argument)**5/(5*a) - tan(argument)**3/(3*a) + tan(argument)/a - x
+    degenerate_F = x*tan(b)**6
+    F = Piecewise((generic_F, Ne(a, 0)), (degenerate_F, True))
+    assert manualintegrate(f, x) == F
+    assert (generic_F.diff(x) - f).cancel() == 0
+    assert (degenerate_F.diff(x) - f.subs(a, 0)).cancel() == 0
+    f = cot(argument)**6
+    generic_F = -cot(argument)**5/(5*a) + cot(argument)**3/(3*a) - cot(argument)/a - x
+    degenerate_F = x*cot(b)**6
+    F = Piecewise((generic_F, Ne(a, 0)), (degenerate_F, True))
+    assert manualintegrate(f, x) == F
+    assert (generic_F.diff(x) - f).cancel() == 0
+    assert (degenerate_F.diff(x) - f.subs(a, 0)).cancel() == 0
+
+    f = cos(20*x)**3*sin(16*x)**2
+    F = (-sin(12*x)/64 + 3*sin(20*x)/160 - sin(28*x)/448
+         - 3*sin(52*x)/832 + sin(60*x)/480 - sin(92*x)/1472)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+    f, F = cot(x)**-2, tan(x) - x
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+    f, F = cot(2*x)**-4, tan(2*x)**3/6 - tan(2*x)/2 + x
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
 
 @slow
 def test_manualintegrate_inversetrig():
@@ -265,15 +310,15 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(x*atan(a*x), x) == -a*(x/a**2 - Piecewise((x, Eq(a**2, 0)),
                                             (atan(x/sqrt(a**(-2)))/(a**2*sqrt(a**(-2))), True))/a**2)/2 + x**2*atan(a*x)/2
     # acsc
-    assert manualintegrate(acsc(x), x) == x*acsc(x) - log(-1 + 1/(sqrt(1 - 1/x**2) + I/x)) + log(1 + 1/(sqrt(1 - 1/x**2) + I/x))
-    assert manualintegrate(acsc(a*x), x) == (a*x*acsc(a*x) - log(-1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))) +
-                                              log(1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))))/a
-    assert manualintegrate(x*acsc(a*x), x) == x**2*acsc(a*x)/2 + Integral(1/sqrt(1 - 1/(a**2*x**2)), x)/(2*a)
+    assert manualintegrate(acsc(x), x) == x*acsc(x) - log(sqrt(1 - 1/x**2) - 1)/2 + log(sqrt(1 - 1/x**2) + 1)/2
+    assert manualintegrate(acsc(a*x), x) == (a*x*acsc(a*x) - log(sqrt(1 - 1/(a**2*x**2)) - 1)/2 +
+                                              log(sqrt(1 - 1/(a**2*x**2)) + 1)/2)/a
+    assert manualintegrate(x*acsc(a*x), x) == x**2*acsc(a*x)/2 + x*sqrt(1 - 1/(a**2*x**2))/(2*a)
     # asec
-    assert manualintegrate(asec(x), x) == x*asec(x) + log(-1 + 1/(sqrt(1 - 1/x**2) + I/x)) - log(1 + 1/(sqrt(1 - 1/x**2) + I/x))
-    assert manualintegrate(asec(a*x), x) == (a*x*asec(a*x) + log(-1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))) -
-                                        log(1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))))/a
-    assert manualintegrate(x*asec(a*x), x) == x**2*asec(a*x)/2 - Integral(1/sqrt(1 - 1/(a**2*x**2)), x)/(2*a)
+    assert manualintegrate(asec(x), x) == x*asec(x) + log(sqrt(1 - 1/x**2) - 1)/2 - log(sqrt(1 - 1/x**2) + 1)/2
+    assert manualintegrate(asec(a*x), x) == (a*x*asec(a*x) + log(sqrt(1 - 1/(a**2*x**2)) - 1)/2 -
+                                        log(sqrt(1 - 1/(a**2*x**2)) + 1)/2)/a
+    assert manualintegrate(x*asec(a*x), x) == x**2*asec(a*x)/2 - x*sqrt(1 - 1/(a**2*x**2))/(2*a)
     # acot
     assert manualintegrate(acot(x), x) == x*acot(x) + log(x**2 + 1)/2
     assert manualintegrate(acot(a*x), x) == Piecewise(((a*x*acot(a*x) + log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (pi*x/2, True))
@@ -473,6 +518,28 @@ def test_manualintegrate_parts_special():
     assert_is_integral_of(f, F)
 
 
+def test_manualintegrate_owent():
+    f = exp(-x**2)*erf(y*x)
+    F = -2*sqrt(pi)*owens_t(sqrt(2)*x, y)
+    assert_is_integral_of(f, F)
+
+    f = exp(-(3*x+2)**2)*erf(y*(3*x+2))
+    F = -2*sqrt(pi)*owens_t(sqrt(2)*(3*x + 2), y)/3
+    assert_is_integral_of(f, F)
+
+    f = owens_t(x, y)
+    F = x*owens_t(x, y) + sqrt(2)*(sqrt(2)*y*Piecewise((sqrt(pi)*erfi(x*(-y**2 - 1)/(2*sqrt(-y**2/2 - S.One/2)))/(2*sqrt(-y**2/2 - S.One/2)), Ne(y**2, - 1)), (Integral(exp(-x**2*y**2/2 - x**2/2), x), True))/sqrt(pi) - exp(-x**2/2)*erf(sqrt(2)*x*y/2))/(4*sqrt(pi))
+    assert manualintegrate(f, x) == F
+
+    f = exp(-x**2)*erf(2*x)
+    F = -2*sqrt(pi)*owens_t(sqrt(2)*x, 2)
+    assert_is_integral_of(f, F)
+
+    f = exp(-x**2)*erf(x)
+    F = sqrt(pi)*erf(x)**2/4
+    assert_is_integral_of(f, F)
+
+
 def test_manualintegrate_derivative():
     assert manualintegrate(pi * Derivative(x**2 + 2*x + 3), x) == \
         pi * (x**2 + 2*x + 3)
@@ -544,7 +611,7 @@ def test_issue_6799():
     integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
     assert manualintegrate(integrand, x) == \
-        ((n*x/2 + sin(2*n*x)/4)*cos(n*phi) - sin(n*phi)*cos(n*x)**2/2)/n
+        x*cos(n*phi)/2 - sin(n*phi - 2*n*x)/(4*n)
     assert r * integrate(integrand, limits).trigsimp() / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
 
@@ -572,10 +639,8 @@ def test_issue_6746():
     assert manualintegrate(y**x, x) == Piecewise(
         (y**x/log(y), Ne(log(y), 0)), (x, True))
     assert manualintegrate(y**(n*x), x) == Piecewise(
-        (Piecewise(
-            (y**(n*x)/log(y), Ne(log(y), 0)),
-            (n*x, True)
-        )/n, Ne(n, 0)),
+        (x, Eq(n, 0)),
+        (y**(n*x)/(n*log(y)), Ne(log(y), 0)),
         (x, True))
     assert manualintegrate(exp(n*x), x) == Piecewise(
         (exp(n*x)/n, Ne(n, 0)), (x, True))
@@ -609,12 +674,12 @@ def test_issue_6746():
 
 @slow
 def test_issue_2850():
-    assert manualintegrate(asin(x)*log(x), x) == (-x*asin(x) - (I*x + 3*sqrt(1 - x**2))/2 + (x*asin(x)
-                + sqrt(1 - x**2))*log(x) - log(-1 + 1/(I*x + sqrt(1 - x**2)))
-                + log(1 + 1/(I*x + sqrt(1 - x**2))) - S.Half/(I*x + sqrt(1 - x**2)))
-    assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + I*x/2 + 3*sqrt(1 - x**2)/2 + \
-    (x*acos(x) - sqrt(1 - x**2))*log(x) + log(-1 + 1/(I*x + sqrt(1 - x**2))) - \
-    log(1 + 1/(I*x + sqrt(1 - x**2))) + S.Half/(I*x + sqrt(1 - x**2))
+    assert manualintegrate(asin(x)*log(x), x) == (-x*asin(x) - 2*sqrt(1 - x**2) + (x*asin(x)
+                + sqrt(1 - x**2))*log(x) - log(sqrt(1 - x**2) - 1)/2
+                + log(sqrt(1 - x**2) + 1)/2)
+    assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + 2*sqrt(1 - x**2) + \
+    (x*acos(x) - sqrt(1 - x**2))*log(x) + log(sqrt(1 - x**2) - 1)/2 - \
+    log(sqrt(1 - x**2) + 1)/2
     assert manualintegrate(atan(x)*log(x), x) == -x*atan(x) + (x*atan(x) - \
             log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
 
@@ -668,30 +733,28 @@ def test_issue_10847():
     assert manualintegrate(sqrt(x) * log(x), x) == 2*x**Rational(3, 2)*log(x)/3 - 4*x**Rational(3, 2)/9
 
     result = manualintegrate(sqrt(a*x + b) / x, x)
-    assert result == Piecewise((-2*b*Piecewise((1/sqrt(a*x + b), Eq(b, 0)), (-atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b), True)) + 2*sqrt(a*x + b), Ne(a, 0)),
-                                (sqrt(b)*log(x), True))
-
-    assert piecewise_fold(result) == Piecewise((-2*b/sqrt(a*x + b) + 2*sqrt(a*x + b), Eq(b, 0) & Ne(a, 0)),
-                   (2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b), Ne(a, 0)), (sqrt(b)*log(x), True))
+    assert result == Piecewise((sqrt(b)*log(x), Eq(a, 0)),
+                                (-2*b/sqrt(a*x + b) + 2*sqrt(a*x + b), Eq(b, 0)),
+                                (2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b), True))
 
     ra = Symbol('a', real=True)
     rb = Symbol('b', real=True)
     assert manualintegrate(sqrt(ra*x + rb) / x, x) == \
-        Piecewise((-2*rb * Piecewise(
-            (1/sqrt(ra*x + rb), Eq(rb, 0)),
-            (-I*(log(-sqrt(rb) + sqrt(ra*x + rb)) - log(sqrt(rb) + sqrt(ra*x + rb)))/(2*sqrt(-rb)), rb > 0),
-            (-atan(sqrt(ra*x + rb)/sqrt(-rb))/sqrt(-rb), True)) + 2*sqrt(ra*x + rb), Ne(ra, 0)), (sqrt(rb)*log(x), True))
+        Piecewise((sqrt(rb)*log(x), Eq(ra, 0)),
+                  (-2*rb/sqrt(ra*x + rb) + 2*sqrt(ra*x + rb), Eq(rb, 0)),
+                  (I*rb*(log(-sqrt(rb) + sqrt(ra*x + rb)) - log(sqrt(rb) + sqrt(ra*x + rb)))/sqrt(-rb)
+                   + 2*sqrt(ra*x + rb), rb > 0),
+                  (2*rb*atan(sqrt(ra*x + rb)/sqrt(-rb))/sqrt(-rb) + 2*sqrt(ra*x + rb), True))
 
     assert expand(manualintegrate(sqrt(ra*x + rb) / (x + rc), x)) == \
-           Piecewise((-2*ra*rc*Piecewise((-1/sqrt(ra*x + rb), Eq(ra*rc - rb, 0)),
-                                         (log(-sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)) -
-                                          log(sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)), ra*rc - rb < 0),
-                                            (atan(sqrt(ra*x + rb)/sqrt(ra*rc - rb))/sqrt(ra*rc - rb), True))
-                                        + 2*rb*Piecewise((-1/sqrt(ra*x + rb), Eq(ra*rc - rb, 0)),
-                                        (log(-sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)) -
-                                         log(sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)), ra*rc - rb < 0),
-                                        (atan(sqrt(ra*x + rb)/sqrt(ra*rc - rb))/sqrt(ra*rc - rb), True))
-                                          + 2*sqrt(ra*x + rb), Ne(ra, 0)), (sqrt(rb)*log(rc + x), True))
+           Piecewise((sqrt(rb)*log(rc + x), Eq(ra, 0)),
+                     (2*ra*rc/sqrt(ra*x + rb) - 2*rb/sqrt(ra*x + rb) + 2*sqrt(ra*x + rb), Eq(ra*rc - rb, 0)),
+                     (-ra*rc*log(-sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/sqrt(-ra*rc + rb) +
+                      ra*rc*log(sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/sqrt(-ra*rc + rb) +
+                      rb*log(-sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/sqrt(-ra*rc + rb) -
+                      rb*log(sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/sqrt(-ra*rc + rb) +
+                      2*sqrt(ra*x + rb), ra*rc - rb < 0),
+                     (-2*sqrt(ra*rc - rb)*atan(sqrt(ra*x + rb)/sqrt(ra*rc - rb)) + 2*sqrt(ra*x + rb), True))
 
     assert manualintegrate(sqrt(2*x + 3) / (x + 1), x) == 2*sqrt(2*x + 3) - log(sqrt(2*x + 3) + 1) + log(sqrt(2*x + 3) - 1)
     assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**Rational(5, 2)/20 - (2*x + 3)**Rational(3, 2)/4
@@ -713,7 +776,7 @@ def test_constant_independent_of_symbol():
 
 def test_issue_12641():
     assert manualintegrate(sin(2*x), x) == -cos(2*x)/2
-    assert manualintegrate(cos(x)*sin(2*x), x) == -2*cos(x)**3/3
+    assert manualintegrate(cos(x)*sin(2*x), x) == -cos(x)/2 - cos(3*x)/6
     assert manualintegrate((sin(2*x)*cos(x))/(1 + cos(x)), x) == \
         -2*log(cos(x) + 1) - cos(x)**2 + 2*cos(x)
 
@@ -792,11 +855,11 @@ def test_quadratic_denom():
     f = (3*A*x + 2*B)/(2*a*x**2 + 2*x + c)**3
     F = (piecewise_fold(manualintegrate(f, x))).args
     # when Eq(a, 0)
-    assert (f.subs(a, 0) - F[2][0].diff(x)).cancel() == 0
+    assert (f.subs(a, 0) - F[0][0].diff(x)).cancel() == 0
     # when Ne(a, 0) & Eq(a*c, 1/2)
-    assert (f.subs(c, 1/(2*a)) - (F[0][0].subs(c, 1/(2*a)).diff(x))).cancel() == 0
+    assert (f.subs(c, 1/(2*a)) - (F[1][0].subs(c, 1/(2*a)).diff(x))).cancel() == 0
     # a != 0
-    assert (f - F[1][0].diff(x)).cancel() == 0
+    assert (f - F[2][0].diff(x)).cancel() == 0
     # issue 30031: the Eq(b, 0) branch used to divide by b
     h = a/(b*x**2 + c*x + d)
     H = manualintegrate(h, x)
@@ -823,15 +886,22 @@ def test_issue_23566():
 def test_issue_25093():
     ap = Symbol('ap', positive=True)
     an = Symbol('an', negative=True)
-    assert manualintegrate(exp(a*x**2 + b), x) == sqrt(pi)*exp(b)*erfi(sqrt(a)*x)/(2*sqrt(a))
+    assert manualintegrate(exp(a*x**2 + b), x) == Piecewise(
+        (sqrt(pi)*exp(b)*erfi(sqrt(a)*x)/(2*sqrt(a)), Ne(a, 0)),
+        (x*exp(b), True))
     assert manualintegrate(exp(ap*x**2 + b), x) == sqrt(pi)*exp(b)*erfi(sqrt(ap)*x)/(2*sqrt(ap))
     assert manualintegrate(exp(an*x**2 + b), x) == -sqrt(pi)*exp(b)*erf(an*x/sqrt(-an))/(2*sqrt(-an))
-    assert manualintegrate(sin(a*x**2 + b), x) == (
-        sqrt(2)*sqrt(pi)*(sin(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi))
-        + cos(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)))
-    assert manualintegrate(cos(a*x**2 + b), x) == (
-        sqrt(2)*sqrt(pi)*(-sin(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi))
-        + cos(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)))
+    assert manualintegrate(sin(a*x**2 + b), x) == Piecewise(
+        (sqrt(2)*sqrt(pi)*(sin(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)) +
+            cos(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)),
+         Ne(a, 0)),
+        (x*sin(b), True))
+    assert manualintegrate(cos(a*x**2 + b), x) == Piecewise(
+        (sqrt(2)*sqrt(pi)*(-sin(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi)) +
+            cos(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)),
+         Ne(a, 0)),
+        (x*cos(b), True))
+
 
 
 def test_nested_pow():
@@ -843,7 +913,7 @@ def test_nested_pow():
     F1 = (c*(a + b*x)**d)**e*(a/b + x)/(d*e + 1)
     F2 = (c*(a + b*x)**d)**e*(a/b + x)*log(a/b + x)
     assert manualintegrate(f, x) == \
-        Piecewise((Piecewise((F1, Ne(d*e, -1)), (F2, True)), Ne(b, 0)), (x*(a**d*c)**e, True))
+        Piecewise((F1, Ne(b, 0) & Ne(d*e, -1)), (F2, Ne(b, 0)), (x*(a**d*c)**e, True))
     assert F1.diff(x).equals(f)
     assert F2.diff(x).subs(d*e, -1).equals(f)
 
@@ -864,6 +934,50 @@ def test_manualintegrate_sqrt_linear():
     assert_is_integral_of(sqrt(2*x+3+sqrt(4*x+5))**3,
                           sqrt(2*x + sqrt(4*x + 5) + 3) *
                           (9*x/10 + 11*(4*x + 5)**(S(3)/2)/40 + sqrt(4*x + 5)/40 + (4*x + 5)**2/10 + S(11)/10)/2)
+
+
+def test_manualintegrate_chebyshev_substitution():
+    # Integer p: collect proportional binomial factors before expanding.
+    integrand = (1 + x**3)**(S.One/3)*(2 + 2*x**3)**(S(2)/3)
+    antiderivative = 2**(S(2)/3)*x**4/4 + 2**(S(2)/3)*x
+    assert manualintegrate(integrand, x) == antiderivative
+    assert (antiderivative.diff(x) - integrand).cancel() == 0
+
+    # Negative integer p: clear the fractional exponents with u = x**(1/6).
+    integrand = sqrt(x)/(1 + x**(S.One/3))
+    antiderivative = (6*x**(S(7)/6)/7 - 6*x**(S(5)/6)/5
+                      - 6*x**(S.One/6) + 2*sqrt(x) + 6*atan(x**(S.One/6)))
+    assert manualintegrate(integrand, x) == antiderivative
+    assert (antiderivative.diff(x) - integrand).cancel() == 0
+
+    # (m + 1)/n is an integer. Check the generic and b = 0 branches.
+    integrand = x**5*(a + b*x**2)**(S.One/3)
+    antiderivative = manualintegrate(integrand, x)
+    (generic, generic_cond), (degenerate, otherwise) = antiderivative.args
+    assert generic_cond == Ne(b, 0)
+    assert otherwise is S.true
+    assert (generic.diff(x) - integrand).cancel() == 0
+    assert degenerate.diff(x) == integrand.subs(b, 0)
+
+    # (m + 1)/n + p is an integer. Check the a = 0 branch separately.
+    integrand = sqrt(x)/sqrt(a + x**3)
+    antiderivative = piecewise_fold(manualintegrate(integrand, x))
+    (degenerate, degenerate_cond), (generic, otherwise) = antiderivative.args
+    assert degenerate_cond == Eq(a, 0)
+    assert otherwise is S.true
+    assert degenerate.diff(x) == integrand.subs(a, 0)
+    assert (generic.diff(x) - integrand).cancel() == 0
+
+    # previous tests from trig_substitution
+    f = sqrt(16*x**2 - 9)/x
+    F = sqrt(16*x**2 - 9) - 3*atan(sqrt(16*x**2 - 9)/3)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
+
+    f = 1/(x**4*sqrt(25 - x**2))
+    F = -sqrt(25 - x**2)/(625*x) - (25 - x**2)**(S(3)/2)/(1875*x**3)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).cancel() == 0
 
 
 @slow
@@ -921,21 +1035,6 @@ def test_manualintegrate_euler_substitution():
     assert (F1.diff(x) - f).cancel() == 0
     assert (F2.diff(x) - f.subs(c, 0)).cancel() == 0
 
-    # previous tests from trig_substitution
-    f = sqrt(16*x**2 - 9)/x
-    F = (2*x + sqrt(16*x**2 - 9)/2
-            + 6*atan(3/(4*x + sqrt(16*x**2 - 9)))
-            - S(9)/2/(4*x + sqrt(16*x**2 - 9)))
-    assert manualintegrate(f, x) == F
-    assert (F.diff(x) - f).cancel() == 0
-
-    f = 1/(x**4*sqrt(25 - x**2))
-    F = -8*I*(1/(1250*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**2)
-                + 1/(1875*(-1 + 25/(I*x + sqrt(25 - x**2))**2)**3))
-    assert manualintegrate(f, x) == F
-    assert (F.diff(x) - f).cancel() == 0
-
-
 def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of(1/sqrt((x - I)**2-1), log(2*x + 2*sqrt(x**2 - 2*I*x - 2) - 2*I))
     assert_is_integral_of(1/sqrt(3*x**2+4*x+5), sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3)
@@ -955,13 +1054,14 @@ def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of((7*x+6)/sqrt(3*x**2+4*x-5),
                           7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/9)
     assert manualintegrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
-        Piecewise(((-b*e/(2*c) + d) *
-                   Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
-                             ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
-                   e*sqrt(a + b*x + c*x**2)/c, Ne(c, 0)),
-                   ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
-                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), Ne(b, 0)),
-                  ((d*x + e*x**2/2)/sqrt(a), True))
+        Piecewise((e*sqrt(a + b*x + c*x**2)/c +
+                   (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c),
+                   Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
+                  (e*sqrt(a + b*x + c*x**2)/c +
+                   (b/(2*c) + x)*(-b*e/(2*c) + d)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2),
+                   Ne(c, 0)),
+                  ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
+                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), True))
 
     assert manualintegrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2), x) == \
         sqrt(x**2 - 3*x + 2)*(x**2 + 13*x/4 + S(101)/8) + 135*log(2*x + 2*sqrt(x**2 - 3*x + 2) - 3)/16
@@ -970,17 +1070,19 @@ def test_manualintegrate_sqrt_quadratic():
                           (x/2 - S(16683)/53225)*sqrt(53225*x**2 - 66732*x + 23013) +
                           111576969*sqrt(2129)*asinh(53225*x/10563 - S(11122)/3521)/1133160250)
     assert manualintegrate(sqrt(a+c*x**2), x) == \
-        Piecewise((a*Piecewise((log(2*sqrt(c)*sqrt(a + c*x**2) + 2*c*x)/sqrt(c), Ne(a, 0)),
-                               (x*log(x)/sqrt(c*x**2), True))/2 + x*sqrt(a + c*x**2)/2, Ne(c, 0)),
+        Piecewise((a*log(2*sqrt(c)*sqrt(a + c*x**2) + 2*c*x)/(2*sqrt(c)) + x*sqrt(a + c*x**2)/2,
+                   Ne(a, 0) & Ne(c, 0)),
+                  (a*x*log(x)/(2*sqrt(c*x**2)) + x*sqrt(a + c*x**2)/2, Ne(c, 0)),
                   (sqrt(a)*x, True))
     assert manualintegrate(sqrt(a+b*x+c*x**2), x) == \
-        Piecewise(((a/2 - b**2/(8*c)) *
-                   Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
-                             ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
-                   (b/(4*c) + x/2)*sqrt(a + b*x + c*x**2), Ne(c, 0)),
-                   (sqrt(a)*x, Eq(b, 0)),
-                  (2*(a + b*x)**(S(3)/2)/(3*b), Ne(b, 0)),
-                  (sqrt(a)*x, True))
+        Piecewise(((b/(4*c) + x/2)*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c),
+                   Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
+                  ((b/(4*c) + x/2)*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*(b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2),
+                   Ne(c, 0)),
+                  (sqrt(a)*x, Eq(b, 0)),
+                  (2*(a + b*x)**(S(3)/2)/(3*b), True))
 
     assert_is_integral_of(x*sqrt(x**2+2*x+4),
                           (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2)

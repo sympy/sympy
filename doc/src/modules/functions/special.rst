@@ -61,6 +61,8 @@ Error Functions and Fresnel Integrals
    :members:
 .. autoclass:: sympy.functions.special.error_functions.erf2inv
    :members:
+.. autoclass:: sympy.functions.special.error_functions.owens_t
+   :members:
 
 .. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
    :members:
