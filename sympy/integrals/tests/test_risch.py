@@ -1246,7 +1246,8 @@ def test_DifferentialExtension_printing():
         "('backsubs', []), ('exts', ['exp', 'log']), ('extargs', [x**2, t0 + 1]), "
         "('cases', ['base', 'exp', 'primitive']), ('case', 'primitive'), ('transcendental', True), ('t', t1), "
         "('d', Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')), ('newf', t0**2 + t1), ('level', -1), "
-        "('dummy', False), ('algebraic', False), ('sign_consts', [])]))")
+        "('dummy', False), ('algebraic', False), ('sign_consts', []), "
+        "('algebraic_gens', False)]))")
 
     assert str(DE) == ("DifferentialExtension({fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), "
         "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
@@ -1307,6 +1308,38 @@ def test_risch_integrate_nonrational_structure_constants():
     r = risch_integrate(f, x)
     assert r == exp(log(pi)*log(x))/log(pi)
     assert DifferentialExtension(f, x).transcendental is False
+
+    # A proven radical relation (exp(x*log(2)/2 + 1)**2 == E**2*2**x)
+    # discovered after the tower's transcendence was already downgraded
+    # (by the undecided 2**x-vs-3**x relation) must still trigger the
+    # restart-and-regroup rewrite -- restarting is gated on the tower
+    # actually containing algebraic generators, not on unproven
+    # transcendence -- so the relation ends up explicit in the
+    # regrouped generators (2**x == t**2 over t == exp(x*log(2)/2))
+    # instead of an adjoined generator with a relation invisible to
+    # the kernel checks.
+    f = 2**x + 3**x + exp(x*log(2)/2 + 1)
+    DE = DifferentialExtension(f, x)
+    assert DE.extargs == [x*log(2)/2, x*log(3)]
+    assert DE.transcendental is False and DE.algebraic_gens is False
+    r = risch_integrate(f, x)
+    assert not r.has(Integral)
+    err = r.diff(x) - f
+    assert all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
+               for p in [Rational(1, 3), 2, 5])
+
+    # The same restart in a fully proven tower: the exponential factors
+    # of the radical are folded to exp((p/n)*arg) directly, so the
+    # backsubs fold (exp(x*log(2)) -> 2**x) cannot strand the radical
+    # as sqrt(2**x), which the rebuild would not recognize.
+    f = 2**x + exp(x*log(2)/2 + 1)
+    DE = DifferentialExtension(f, x)
+    assert DE.extargs == [x*log(2)/2]
+    assert DE.transcendental is True
+    r = risch_integrate(f, x)
+    err = r.diff(x) - f
+    assert all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
+               for p in [Rational(1, 3), 2, 5])
 
 
 def test_issue_23948():

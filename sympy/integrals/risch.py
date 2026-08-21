@@ -157,6 +157,14 @@ class DifferentialExtension:
       answered "no" without proof -- nonexistence answers cannot be
       trusted, so nonelementary conclusions are degraded to unevaluated
       Integrals and solved results are independently vetted.
+    - algebraic_gens: Whether the tower is deliberately erecting
+      algebraic (radical) generators.  Implies transcendental == False,
+      but not conversely: a tower whose transcendence is merely
+      unproven (an undecided structure question) has no algebraic
+      generators, and construction decisions that depend on the actual
+      tower contents -- like _exp_part()'s restart-versus-adjoin choice
+      for a proven radical relation -- must use this, not
+      transcendental.
     (Note that self.T and self.D will always contain the complete extension,
     regardless of the level.  Therefore, you should ALWAYS use DE.t and DE.d
     instead of DE.T[-1] and DE.D[-1].  If you want to have a list of the
@@ -179,7 +187,7 @@ class DifferentialExtension:
     __slots__ = ('f', 'origf', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs',
             'backsubs', 'exts', 'extargs', 'cases', 'case', 'transcendental',
             't', 'd', 'newf', 'level', 'ts', 'dummy', 'algebraic',
-            'sign_consts')
+            'sign_consts', 'algebraic_gens')
 
     def __init__(self, f=None, x=None, handle_first='log',
             dummy=False, extension=None, rewrite_complex=None,
@@ -231,6 +239,8 @@ class DifferentialExtension:
                 # as exp(log(x)/2)); nonelementary conclusions are then
                 # invalid and are degraded to unevaluated Integrals.
                 self.transcendental = True
+            if 'algebraic_gens' not in extension:
+                self.algebraic_gens = not self.transcendental
 
             self._auto_attrs()
 
@@ -321,6 +331,7 @@ class DifferentialExtension:
                     self.backsubs += [(s, R) for s, R, _ in sign_consts]
                     if sign_consts:
                         self.transcendental = False
+                        self.algebraic_gens = True
                     exp_new_extension = True
                     continue
 
@@ -451,6 +462,7 @@ class DifferentialExtension:
                             # acceptance filter and nonelementary
                             # conclusions are invalid
                             self.transcendental = False
+                            self.algebraic_gens = True
             if reps:
                 self.newf = self.newf.xreplace(reps)
 
@@ -496,6 +508,7 @@ class DifferentialExtension:
                             "to represent it as an exp-log tower "
                             "(experimental)." % str(i))
                     self.transcendental = False
+                    self.algebraic_gens = True
                 # We can add a**b only if log(a) in the extension, because
                 # a**b == exp(b*log(a)).
                 basea, based = frac_in(i.base, self.t)
@@ -540,6 +553,7 @@ class DifferentialExtension:
                         self.sign_consts.append((s, ratio, i.exp.q))
                         self.backsubs.append((s, ratio))
                         self.transcendental = False
+                        self.algebraic_gens = True
                         newterm = s*newterm
                 # Under the current implementation, exp kills terms
                 # only if they are of the form a*log(x), where a is a
@@ -690,10 +704,34 @@ class DifferentialExtension:
                     # handle exp(log(x)/2) because it equals sqrt(x).
 
                     if const or len(ans) > 1:
-                        # If we're building a non-transcendental extension,
-                        # don't restart - just continue to avoid infinite loops
-                        if self.transcendental:
-                            rad = Mul(*[term**(power/n) for term, power in ans])
+                        # If we're deliberately building an algebraic
+                        # extension, don't restart - just continue to avoid
+                        # infinite loops.  A tower whose transcendence is
+                        # merely unproven still restarts: the rewrite
+                        # records the (proven) radical relation in the
+                        # regrouped generators, where adjoining a new
+                        # generator would leave it invisible to the
+                        # kernel checks.
+                        if not self.algebraic_gens:
+                            # Fold exponential factors of the radical to
+                            # exp((power/n)*arg) directly -- exact, since an
+                            # internally generated root denotes a
+                            # construction-chosen branch.  Leaving them as
+                            # exp(arg)**(power/n) can deadlock the rebuild:
+                            # the backsubs fold on restart can turn the base
+                            # into a non-exp power (2**x), which the
+                            # exp(u)**q folding in _rewrite_exps_pows() no
+                            # longer recognizes, and each pass then
+                            # regenerates the unfolded radical.
+                            radfactors = []
+                            for term, power in ans:
+                                if term in self.T[1:] and self.exts[
+                                        self.T.index(term) - 1] == 'exp':
+                                    radfactors.append(exp(self.extargs[
+                                        self.T.index(term) - 1]*power/n))
+                                else:
+                                    radfactors.append(term**(power/n))
+                            rad = Mul(*radfactors)
                             self.newf = self.newf.xreplace({exp(p*exparg):
                                                             exp(const*p)*rad for exparg, p in others})
                             self.newf = self.newf.xreplace(dict(list(zip(reversed(self.T),
@@ -861,6 +899,7 @@ class DifferentialExtension:
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
         self.transcendental = True
+        self.algebraic_gens = False
         self.level = -1
         self.exts = []
         self.extargs = []
