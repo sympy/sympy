@@ -21,12 +21,16 @@ __all__ = [
     'Qasm',
     ]
 
-from collections.abc import Iterator
 from math import prod
+from typing import TYPE_CHECKING
 
-from sympy.core.expr import Expr
 from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS, SWAP, S, T,CPHASE
 from sympy.physics.quantum.circuitplot import Mz
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from sympy.core.expr import Expr
 
 def read_qasm(lines: str) -> Qasm:
     return Qasm(*lines.splitlines())
