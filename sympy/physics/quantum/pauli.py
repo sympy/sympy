@@ -300,7 +300,10 @@ class SigmaMinus(SigmaOpBase):
         return 2 * self
 
     def _eval_commutator_SigmaMinus(self, other, **hints):
-        return SigmaZ(self.name)
+        if self.name != other.name:
+            return S.Zero
+        else:
+            return SigmaZ(self.name)
 
     def _eval_anticommutator_SigmaZ(self, other, **hints):
         return S.Zero
@@ -389,7 +392,10 @@ class SigmaPlus(SigmaOpBase):
             return -2 * self
 
     def _eval_commutator_SigmaMinus(self, other, **hints):
-        return SigmaZ(self.name)
+        if self.name != other.name:
+            return S.Zero
+        else:
+            return SigmaZ(self.name)
 
     def _eval_anticommutator_SigmaZ(self, other, **hints):
         return S.Zero
