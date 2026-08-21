@@ -335,20 +335,29 @@ class DifferentialExtension:
         # fractional q the left side is a principal root that differs
         # from exp(q*u) by a locally constant root of unity off the real
         # line.  Radicals of exponentials also arise internally (the
-        # radical case of _exp_part substitutes t**(p/n) and restarts),
-        # and rewriting those into the answer turned correctly
+        # radical case of _exp_part substitutes t**(p/n) and restarts);
+        # those denote a root the construction is free to choose, so
+        # folding them to exp(q*u) is exact, and rewriting the answer
+        # back into principal-root notation is what turned correctly
         # integrated results into non-antiderivatives at complex points.
-        # So the notation is only restored where it is the user's own:
-        # a fractional power is put back only if it appears in the
-        # original integrand -- and not when the integrand also contains
-        # the folded exponential form itself, since a global
-        # substitution would then rewrite genuine exp(q*u) occurrences
-        # into the principal root as well.
-        self.backsubs += [(j, i) for i, j in ratpows_repl
-                          if i.exp.is_Integer or
-                          (self.origf is not None and self.origf.has(i)
-                           and not self.origf.has(j))]
-        self.newf = self.newf.xreplace(dict(ratpows_repl))
+        # A fractional power the user wrote, however, means the
+        # principal root specifically: fold it as ratio*exp(q*u) with an
+        # opaque locally constant ratio (a root of unity on each
+        # component), restored exactly on backsubstitution -- which also
+        # keeps integrands mixing exp(u)**q with exp(q*u) itself
+        # pointwise correct.
+        subs_map = {}
+        for i, j in ratpows_repl:
+            if i.exp.is_Integer:
+                self.backsubs.append((j, i))
+                subs_map[i] = j
+            elif self.origf is not None and self.origf.has(i):
+                ratio = Dummy('exp_branch')
+                self.backsubs.append((ratio, i/j))
+                subs_map[i] = ratio*j
+            else:
+                subs_map[i] = j
+        self.newf = self.newf.xreplace(subs_map)
 
         # To make the process deterministic, the args are sorted
         # so that functions with smaller op-counts are processed first.

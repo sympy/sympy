@@ -532,9 +532,13 @@ def test_DifferentialExtension_exp():
         Poly(t0/2, t0), Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i/2)),
         Lambda(i, exp(i**2))], [], ['exp', 'exp'],
         [x/2, x**2])
-    assert DifferentialExtension(sqrt(exp(x)), x)._important_attrs == \
-        (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)], [x, t0],
-        [Lambda(i, exp(i/2))], [(exp(x/2), sqrt(exp(x)))], ['exp'], [x/2])
+    # A user-written radical of an exponential folds to an opaque
+    # locally constant ratio times exp(x/2); backsubs restores it exactly.
+    DE = DifferentialExtension(sqrt(exp(x)), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(c*t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)], [x, t0],
+        [Lambda(i, exp(i/2))], [(c, exp(-x/2)*sqrt(exp(x)))], ['exp'], [x/2])
 
     assert DifferentialExtension(exp(x/2), x)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)], [x, t0],
@@ -801,11 +805,13 @@ def test_risch_integrate():
     assert cancel(diff(ans, x) - (log(x) + log(x**2) + exp(x) +
         exp(x/2 + 1))) == 0
 
-    # Mixed notation: when the integrand contains both sqrt(exp(x)) and
-    # its folded form exp(x/2), restoring the radical globally would
-    # also rewrite the genuine exp(x/2), so the answer stays in the
-    # exact exponential form.
-    assert risch_integrate(sqrt(exp(x)) + exp(x/2), x) == 4*exp(x/2)
+    # Mixed notation: sqrt(exp(x)) and exp(x/2) are different functions
+    # off the real line (a locally constant sign apart), and both keep
+    # their identity: the radical is folded with an opaque ratio that is
+    # restored exactly, so the answer differentiates back to the mixed
+    # integrand on every component.
+    ans = risch_integrate(sqrt(exp(x)) + exp(x/2), x)
+    assert cancel((ans - 2*sqrt(exp(x)) - 2*exp(x/2)).expand()) == 0
     # A pure user radical keeps its notation.
     assert risch_integrate(sqrt(exp(x)), x) == 2*sqrt(exp(x))
 
