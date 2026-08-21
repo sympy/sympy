@@ -634,7 +634,7 @@ class Monomial(PicklableWithSlots):
         return self.rebuild(monomial_lcm(self.exponents, exponents))
 
 
-def monomial_ngcd(monomials):
+def monomial_ngcd(monomials: list[monom]) ->  monom:
     """
     Computes the greatest common divisor (GCD) of the exponents for each
     variable in the monomials.
@@ -642,7 +642,7 @@ def monomial_ngcd(monomials):
     Parameters
     ==========
 
-    monomials : iterable of tuples
+    monomials : list of tuples
         Represents monomials, where each monomial is a tuple of exponents for variables.
 
     Returns

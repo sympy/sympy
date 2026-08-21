@@ -1,4 +1,12 @@
-def gcd_terms(polynomials, ring, domain):
+from sympy.polys.monomials import monomial_ngcd
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.external.gmpy import MPZ
+    from sympy.polys.sparsetools import smp
+    from sympy.polys.domains.domain import Domain, Er
+
+def gcd_terms(polynomials: list[smp[Er]], domain: Domain[Er]) -> smp[Er]:
     """
     Returns the greatest common divisor (GCD) of all terms in a list of
     polynomials p with respect to a given ring and domain.
@@ -25,16 +33,14 @@ def gcd_terms(polynomials, ring, domain):
     coeffs = set()
 
     for pi in polynomials:
-        for monomial, coeff in pi.terms():
+        for monomial, coeff in pi.items():
             monomials.add(monomial)
             coeffs.add(coeff)
 
     monom_gcd = monomial_ngcd(list(monomials))
     coeff_gcd = domain.gcdn(coeffs)
-    term_gcd = ring({monom_gcd: coeff_gcd})
 
-    return term_gcd
-
+    return {monom_gcd: coeff_gcd}
 
 def gcd_prs(f, g):
     """
