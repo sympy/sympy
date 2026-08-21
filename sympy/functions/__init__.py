@@ -11,7 +11,8 @@ from sympy.functions.combinatorial.factorials import (factorial, factorial2,
 from sympy.functions.combinatorial.numbers import (carmichael, fibonacci, lucas, tribonacci,
         harmonic, bernoulli, bell, euler, catalan, genocchi, andre, partition, divisor_sigma,
         udivisor_sigma, legendre_symbol, jacobi_symbol, kronecker_symbol, mobius,
-        primenu, primeomega, totient, reduced_totient, primepi, motzkin)
+        primenu, primeomega, totient, reduced_totient, primepi, motzkin,
+        delannoy, lobb)
 from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
         Id, real_root, cbrt, Rem)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
@@ -60,6 +61,7 @@ __all__ = [
     'bernoulli', 'bell', 'euler', 'catalan', 'genocchi', 'andre', 'partition',
     'divisor_sigma', 'udivisor_sigma', 'legendre_symbol', 'jacobi_symbol', 'kronecker_symbol',
     'mobius', 'primenu', 'primeomega', 'totient', 'reduced_totient', 'primepi',
+    'delannoy', 'lobb',
 
     'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root', 'cbrt', 'Rem',
 
