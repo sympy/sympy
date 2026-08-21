@@ -1360,6 +1360,173 @@ class PrettyPrinter(Printer):
             sym = -sym
         return self._print(sym)
 
+    def _print_AlgebraicZeroTensor(self, expr):
+        shape_parts = []
+        for rows, cols in expr.shape:
+            if self._use_unicode:
+                sp = prettyForm(*stringPict.next(
+                    self._print(rows), prettyForm("\u00d7"), self._print(cols)))
+            else:
+                sp = prettyForm(*stringPict.next(
+                    self._print(rows), prettyForm("x"), self._print(cols)))
+            shape_parts.append(sp)
+        if len(shape_parts) > 1:
+            inner_parts = []
+            for i, sp in enumerate(shape_parts):
+                if i > 0:
+                    inner_parts.append(prettyForm(", "))
+                inner_parts.append(sp)
+            inner = prettyForm(*stringPict.next(*inner_parts))
+        else:
+            inner = shape_parts[0]
+        base = prettyForm("0")
+        return prettyForm(*base.below(inner))
+
+    def _print_AlgebraicPureTensor(self, expr):
+        from sympy.core.add import Add
+        from sympy.core.singleton import S
+        from sympy.printing.pretty.pretty_symbology import pretty_atom
+        coeff = expr.coeff
+        factors = expr.factors
+        if self._use_unicode:
+            delim = pretty_atom('TensorProduct')
+        else:
+            delim = "x"
+        factor_pforms = []
+        for f in factors:
+            fp = self._print(f)
+            if isinstance(f, Add):
+                fp = prettyForm(*fp.parens())
+            factor_pforms.append(fp)
+        if len(factor_pforms) > 1:
+            parts = []
+            for i, fp in enumerate(factor_pforms):
+                if i > 0:
+                    parts.append(prettyForm(" "))
+                    parts.append(prettyForm(delim))
+                    parts.append(prettyForm(" "))
+                parts.append(fp)
+            result = prettyForm(*stringPict.next(*parts))
+        else:
+            result = factor_pforms[0]
+        if coeff is S.One:
+            return result
+        if coeff is S.NegativeOne:
+            return prettyForm(*result.left("-"))
+        coeff_pform = self._print(coeff)
+        if isinstance(coeff, Add):
+            coeff_pform = prettyForm(*coeff_pform.parens())
+        return prettyForm(*stringPict.next(coeff_pform, prettyForm(" "), result))
+
+    def _print_AlgebraicTensor(self, expr):
+        from sympy.core.add import Add
+        from sympy.core.numbers import Number
+        from sympy.core.singleton import S
+        from sympy.printing.pretty.pretty_symbology import pretty_atom
+        from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+        from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+
+        if self._use_unicode:
+            tp_delim = pretty_atom('TensorProduct')
+        else:
+            tp_delim = "x"
+
+        def _pure_tensor_body(pt):
+            fpforms = []
+            for f in pt.factors:
+                fp = self._print(f)
+                if isinstance(f, Add):
+                    fp = prettyForm(*fp.parens())
+                fpforms.append(fp)
+            if len(fpforms) > 1:
+                parts = []
+                for i, fp in enumerate(fpforms):
+                    if i > 0:
+                        parts.append(prettyForm(" "))
+                        parts.append(prettyForm(tp_delim))
+                        parts.append(prettyForm(" "))
+                    parts.append(fp)
+                return prettyForm(*stringPict.next(*parts))
+            else:
+                return fpforms[0]
+
+        parts = []
+        for arg in expr.args:
+            if isinstance(arg, Number):
+                continue
+            if isinstance(arg, AlgebraicZeroTensor):
+                continue
+            if isinstance(arg, AlgebraicPureTensor):
+                c = arg.coeff
+                body = _pure_tensor_body(arg)
+                neg = c.is_negative
+                if neg:
+                    c = -c
+                if parts:
+                    if neg:
+                        if c is S.One:
+                            parts.append(prettyForm(" - "))
+                            parts.append(body)
+                        else:
+                            cs = self._print(c)
+                            if isinstance(c, Add):
+                                cs = prettyForm(*cs.parens())
+                            parts.append(prettyForm(" - "))
+                            parts.append(cs)
+                            parts.append(prettyForm(" "))
+                            parts.append(body)
+                    else:
+                        if c is S.One:
+                            parts.append(prettyForm(" + "))
+                            parts.append(body)
+                        else:
+                            cs = self._print(c)
+                            if isinstance(c, Add):
+                                cs = prettyForm(*cs.parens())
+                            parts.append(prettyForm(" + "))
+                            parts.append(cs)
+                            parts.append(prettyForm(" "))
+                            parts.append(body)
+                else:
+                    if neg:
+                        if c is S.One:
+                            parts.append(prettyForm("-"))
+                            parts.append(body)
+                        else:
+                            cs = self._print(c)
+                            if isinstance(c, Add):
+                                cs = prettyForm(*cs.parens())
+                            parts.append(prettyForm("-"))
+                            parts.append(cs)
+                            parts.append(prettyForm(" "))
+                            parts.append(body)
+                    else:
+                        if c is S.One:
+                            parts.append(body)
+                        else:
+                            cs = self._print(c)
+                            if isinstance(c, Add):
+                                cs = prettyForm(*cs.parens())
+                            parts.append(cs)
+                            parts.append(prettyForm(" "))
+                            parts.append(body)
+            else:
+                s = self._print(arg)
+                if parts:
+                    raw = str(s)
+                    if raw.startswith("-"):
+                        parts.append(prettyForm(" - "))
+                        parts.append(s)
+                    else:
+                        parts.append(prettyForm(" + "))
+                        parts.append(s)
+                else:
+                    parts.append(s)
+        if not parts:
+            return self._print_AlgebraicZeroTensor(
+                AlgebraicZeroTensor(expr.shape))
+        return prettyForm(*stringPict.next(*parts))
+
     def _print_PartialDerivative(self, deriv):
         if self._use_unicode:
             deriv_symbol = U('PARTIAL DIFFERENTIAL')

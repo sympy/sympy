@@ -28,9 +28,11 @@ def _sympifyit(arg, retval=None):
         def __sympifyit_wrapper(a, b):
             try:
                 b = _sympify(b)
-                return func(a, b)
             except SympifyError:
                 return retval
+            if not isinstance(b, Expr):
+                raise TypeError(f"cannot operate with {type(b).__name__}")
+            return func(a, b)
 
         return __sympifyit_wrapper
 

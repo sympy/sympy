@@ -12,6 +12,7 @@ Contents
 .. toctree::
    :titlesonly:
 
+   algebraic.rst
    array.rst
    array_expressions.rst
    indexed.rst
