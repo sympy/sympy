@@ -1342,6 +1342,15 @@ class LatexPrinter(Printer):
         else:
             return r"C%s" % tex
 
+    def _print_owens_t(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                         self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"T^{%s}%s" % (exp, tex)
+        else:
+            return r"T%s" % tex
+
     def _print_subfactorial(self, expr, exp=None):
         tex = r"!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
 
@@ -1924,6 +1933,9 @@ class LatexPrinter(Printer):
     def _print_PermutationMatrix(self, P):
         perm_str = self._print(P.args[0])
         return "P_{%s}" % perm_str
+
+    def _print_CharacterTable(self, P):
+        return self._print(P.as_matrix())
 
     def _print_NDimArray(self, expr: NDimArray):
 

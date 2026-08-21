@@ -2668,6 +2668,11 @@ def test_sympy__functions__special__error_functions__expint():
     assert _test_args(expint(y, x))
 
 
+def test_sympy__functions__special__error_functions__owens_t():
+    from sympy.functions.special.error_functions import owens_t
+    assert _test_args(owens_t(2, 3))
+
+
 def test_sympy__functions__special__gamma_functions__gamma():
     from sympy.functions.special.gamma_functions import gamma
     assert _test_args(gamma(x))
