@@ -3,7 +3,11 @@ from sympy.core.symbol import symbols, Symbol, Dummy
 from sympy.assumptions.ask import Q
 from sympy.core.numbers import Integer
 from sympy.core.function import Function, Lambda
-from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
+from sympy.core.relational import Eq
+from sympy.logic.algorithms.euf_theory import (EUFCongruenceClosure,
+    EUFUnhandledInput)
+from sympy.testing.pytest import raises
+import random
 
 f, g, h = symbols('f g h', cls=Function)
 x, y, z, w, a, b, c, d = symbols('x y z w a b c d')
@@ -382,3 +386,185 @@ def test_explain_may_be_redundant_but_sound():
            Q.eq(f(a1), a), Q.eq(f(b1), b), Q.eq(f(c1), c)]
     cc = EUFCongruenceClosure(eqs)
     _check_explanation(cc, eqs, a, c)
+
+
+# ---------------------------------------------------------------------------
+# Input validation and queries on unseen terms.
+# ---------------------------------------------------------------------------
+
+def test_rejects_non_equality_input():
+    raises(EUFUnhandledInput, lambda: EUFCongruenceClosure([Q.positive(x)]))
+    raises(EUFUnhandledInput, lambda: EUFCongruenceClosure([Q.ne(x, y)]))
+    raises(EUFUnhandledInput, lambda: EUFCongruenceClosure([Eq(x, y)]))
+    # A bad equation anywhere in the list is rejected, not silently dropped.
+    raises(EUFUnhandledInput,
+           lambda: EUFCongruenceClosure([Q.eq(x, y), Q.positive(z)]))
+
+
+def test_are_congruent_on_unseen_terms():
+    # Querying terms the engine has never flattened must answer, not raise.
+    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    assert not cc.are_congruent(h(z), h(w))
+    assert cc.are_congruent(f(a), f(b))     # congruence found on first query
+    cc.merge(z, w)
+    assert cc.are_congruent(h(z), h(w))     # closure catches up after merge
+
+
+def test_get_canonical_form():
+    cc = EUFCongruenceClosure([])
+    fa = cc._flatten(f(a))
+    fb = cc._flatten(f(b))
+    # A constant that replaced no application is its own canonical form.
+    assert cc._get_canonical_form(a) == a
+    assert cc._get_canonical_form(fa) != cc._get_canonical_form(fb)
+    cc.merge(a, b)
+    # Arguments are rewritten to representatives, so both apps now agree.
+    assert cc._get_canonical_form(fa) == cc._get_canonical_form(fb)
+
+
+# ---------------------------------------------------------------------------
+# explain() -- greedy (c-graph) path.
+# ---------------------------------------------------------------------------
+
+def test_explain_reflexive_and_disconnected():
+    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    assert cc.explain(a, a) == set()
+    assert cc.explain(f(a), f(a)) == set()
+    assert cc.explain(a, z) is None          # z is unknown, hence not equal
+
+
+def test_explain_prefers_shortcut_over_chain():
+    # e0 = e10 is redundant when it arrives, so the proof forest drops it
+    # while the c-graph keeps it.  Explaining e0 = e11 must take that
+    # shortcut instead of walking the ten chain edges.
+    v = symbols('e0:12')
+    shortcut = Q.eq(v[0], v[10])
+    eqs = ([Q.eq(v[i], v[i + 1]) for i in range(10)]
+           + [shortcut, Q.eq(v[10], v[11])])
+    cc = EUFCongruenceClosure(eqs)
+    expl = _check_explanation(cc, eqs, v[0], v[11])
+    assert expl == {shortcut, Q.eq(v[10], v[11])}
+
+
+def test_explain_shortcut_is_level_bounded():
+    # The same shortcut may not be used for e0 = e10 itself: at the moment
+    # those two became equal the edge did not exist yet, so the greedy search
+    # must ignore it and still return a sound explanation.
+    v = symbols('n0:11')
+    shortcut = Q.eq(v[0], v[10])
+    eqs = [Q.eq(v[i], v[i + 1]) for i in range(10)] + [shortcut]
+    cc = EUFCongruenceClosure(eqs)
+    assert _check_explanation(cc, eqs, v[0], v[10]) == set(eqs) - {shortcut}
+
+
+def test_explain_zero_fuel_falls_back_to_classical():
+    # With no greedy fuel every congruence edge is expanded classically; the
+    # answer must stay sound.
+    eqs = [Q.eq(a, b), Q.eq(g(f(a)), x), Q.eq(g(f(b)), y)]
+    cc = EUFCongruenceClosure(eqs)
+    cc.greedy_fuel = 0
+    assert _check_explanation(cc, eqs, x, y) == set(eqs)
+
+
+def test_explain_is_stable_across_calls():
+    # explain() mutates c-graph state (extra edges, seen pairs); repeating a
+    # query must not change the answer or corrupt later ones.
+    eqs = [Q.eq(a, b), Q.eq(f(a), x), Q.eq(f(b), y), Q.eq(z, w)]
+    cc = EUFCongruenceClosure(eqs)
+    first = _check_explanation(cc, eqs, x, y)
+    assert cc.explain(x, y) == first
+    assert _check_explanation(cc, eqs, y, x) is not None
+    assert cc.explain(z, w) == {Q.eq(z, w)}
+
+
+def test_extra_edges_stay_within_budget():
+    v = symbols('m0:10')
+    eqs = ([Q.eq(v[i], v[i + 1]) for i in range(9)]
+           + [Q.eq(f(v[i]), g(v[i])) for i in range(10)])
+    cc = EUFCongruenceClosure(eqs)
+    for i in range(10):
+        cc.explain(f(v[0]), f(v[i]))
+    assert cc._n_edges_extra <= 2 * cc._n_edges_during_union
+
+
+def test_explain_after_incremental_merges():
+    # Labels produced by merge() must be usable as explanations too.
+    eqs = [Q.eq(f(a), x), Q.eq(f(b), y), Q.eq(a, b)]
+    cc = EUFCongruenceClosure([])
+    for eq in eqs:
+        cc.merge(eq.lhs, eq.rhs)
+    assert _check_explanation(cc, eqs, x, y) == set(eqs)
+
+
+def test_explain_soundness_stress():
+    # Random equality graph: every derivable pair must get an explanation
+    # that is a subset of the inputs and re-proves the equality on its own.
+    rng = random.Random(20250821)
+    s = symbols('s0:12')
+    eqs = []
+    for _ in range(18):
+        i, j = rng.sample(range(12), 2)
+        if rng.random() < 0.3:
+            eqs.append(Q.eq(f(s[i]), f(s[j])))
+        else:
+            eqs.append(Q.eq(s[i], s[j]))
+    cc = EUFCongruenceClosure(eqs)
+    for i in range(12):
+        for j in range(i + 1, 12):
+            if cc.are_congruent(s[i], s[j]):
+                _check_explanation(cc, eqs, s[i], s[j])
+            else:
+                assert cc.explain(s[i], s[j]) is None
+
+
+def test_predicate_terms_are_uninterpreted_functions():
+    # An AppliedPredicate appearing as a *term* is flattened like any other
+    # application, so congruence applies to it.
+    eqs = [Q.eq(a, b), Q.eq(Q.positive(a), x)]
+    cc = EUFCongruenceClosure(eqs)
+    assert cc.are_congruent(Q.positive(a), Q.positive(b))
+    assert cc.are_congruent(Q.positive(b), x)
+    assert not cc.are_congruent(Q.negative(a), x)
+    _check_explanation(cc, eqs, Q.positive(b), x)
+
+
+def test_trivial_and_duplicate_equalities():
+    # Self-equalities and repeats must be absorbed without corrupting state.
+    eqs = [Q.eq(a, a), Q.eq(a, b), Q.eq(a, b), Q.eq(b, a)]
+    cc = EUFCongruenceClosure(eqs)
+    cc.merge(a, a)
+    cc.merge(f(a), f(a))
+    assert cc.are_congruent(a, b)
+    assert cc.explain(a, a) == set()
+    assert cc.explain(a, b) <= set(eqs)
+
+
+def test_greedy_explanation_never_larger_than_classical():
+    # explain() is not required to be minimal, but the greedy search must
+    # never do worse than the plain proof-forest walk it replaces ([2] S.3).
+    rng = random.Random(26)
+    s = symbols('t0:12')
+    eqs = []
+    for _ in range(18):
+        i, j = rng.sample(range(12), 2)
+        if rng.random() < 0.3:
+            eqs.append(Q.eq(f(s[i]), f(s[j])))
+        else:
+            eqs.append(Q.eq(s[i], s[j]))
+    greedy = EUFCongruenceClosure(eqs)
+    # A second engine, so the greedy c-graph state cannot skew the baseline.
+    classical = EUFCongruenceClosure(eqs)
+    shortened = 0
+    for i in range(12):
+        for j in range(i + 1, 12):
+            if not greedy.are_congruent(s[i], s[j]):
+                continue
+            baseline = set()
+            classical._explain_classical(classical._flatten(s[i]),
+                                         classical._flatten(s[j]), baseline)
+            assert EUFCongruenceClosure(list(baseline)).are_congruent(s[i], s[j])
+            expl = _check_explanation(greedy, eqs, s[i], s[j])
+            assert len(expl) <= len(baseline)
+            shortened += len(expl) < len(baseline)
+    # The fixture must actually exercise the shortening, not just tie.
+    assert shortened > 0
