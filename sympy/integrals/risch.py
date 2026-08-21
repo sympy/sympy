@@ -31,7 +31,7 @@ from sympy.core.add import Add
 from sympy.core.function import Function, Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I, Rational, oo, zoo
+from sympy.core.numbers import Float, I, Rational, oo, zoo
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -47,7 +47,7 @@ from .integrals import integrate, Integral
 from .heurisch import _symbols
 from .rationaltools import log_to_real
 from sympy.polys.rationaltools import together
-from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.polyerrors import NotInvertible, PolynomialError
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd, rem, factor,
     reduced)
 from sympy.polys.rootoftools import RootSum
@@ -1599,7 +1599,19 @@ def residue_reduce(a, d, DE, z=None, invert=True):
 
             if invert:
                 h_lc = Poly(Poly(h, DE.t).LC(), DE.t, field=True, expand=False)
-                inv = Poly(h_lc, z, field=True).invert(s)
+                try:
+                    inv = Poly(h_lc, z, field=True).invert(s)
+                except NotInvertible:
+                    if DE.transcendental:
+                        raise
+                    # The leading coefficient shares a factor with this
+                    # resultant factor, so this residue term cannot be
+                    # normalized.  Give the residues up: the uncaptured
+                    # mass stays in the remainder f - Dg, and b == False
+                    # sends the level down the give-up path, whose
+                    # nonelementary conclusion is degraded to an honest
+                    # unevaluated Integral for non-transcendental towers.
+                    return (H, False)
                 coeffs = [S.One]
 
                 for coeff in h.coeffs()[1:]:
@@ -2539,6 +2551,16 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     function).
     """
     f = S(f)
+
+    if algebraic and f.has(Float):
+        # The algebraic towers do exact arithmetic: a Float coefficient
+        # becomes a rational with an astronomical denominator
+        # (0.333333333333333 == 333333333333333/10**15) and the
+        # structure-theorem constant systems grind on it, while nothing
+        # exact can be concluded from inexact input anyway.  Leave
+        # radical integrands with Floats to the numeric-friendly
+        # fallbacks in integrate().
+        algebraic = False
 
     DE = extension or DifferentialExtension(f, x, handle_first=handle_first,
             dummy=True, rewrite_complex=rewrite_complex, algebraic=algebraic)

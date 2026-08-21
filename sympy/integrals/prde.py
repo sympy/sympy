@@ -1313,6 +1313,15 @@ def parametric_log_deriv_structure(fa, fd, wa, wd, DE):
                 or not all(derivation(i, DE, basic=True).is_zero for i in um):
             # The system could not be reduced to one over the constants
             return None
+        if not DE.transcendental:
+            # The raise below refuses to decide rationality of the
+            # constants because a None return is a proof of
+            # nonexistence.  Over a non-transcendental tower every
+            # nonelementary conclusion downstream of that proof is
+            # degraded to an unevaluated Integral anyway, and solved
+            # results are vetted independently, so an inconclusive
+            # answer may as well be "no".
+            return None
         raise NotImplementedError("Cannot work with non-rational "
             "coefficients in this case.")
     from sympy.matrices import Matrix as _Matrix
@@ -1365,7 +1374,14 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
             # elementary extension containing Integral(f) needs no
             # monomials outside the current tower, which we cannot check
             # here, so an inconclusive result must not be reported as
-            # "no solution".
+            # "no solution" -- over a transcendental tower, where "no
+            # solution" feeds valid nonelementary proofs.  Over a
+            # non-transcendental tower those proofs are degraded to
+            # unevaluated Integrals and solved results are vetted
+            # independently, so "no" is a safe answer and much better
+            # than aborting the whole integration.
+            if not DE.transcendental:
+                return None
             raise NotImplementedError("parametric_log_deriv() could not "
                 "decide: the heuristic failed and f - (m/n)*w is not a "
                 "combination of logarithmic derivatives from the current "
@@ -1525,6 +1541,13 @@ def is_deriv_k(fa, fd, DE):
         return None
     else:
         if not all(i.is_Rational for i in u):
+            if not DE.transcendental:
+                # Undecidable rationality of the coefficients: treat as
+                # no relation.  This can only add a redundant generator
+                # or forgo a rewrite; over a non-transcendental tower
+                # nonelementary conclusions are degraded and solved
+                # results are vetted, so soundness is not affected.
+                return None
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
@@ -1647,6 +1670,11 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         return None
     else:
         if not all(i.is_Rational for i in u):
+            if not DE.transcendental:
+                # As above: over a non-transcendental tower an
+                # undecided rationality question may be answered "no
+                # relation" without risking an invalid proof.
+                return None
             # TODO: But maybe we can tell if they're not rational, like
             # log(2)/log(3). Also, there should be an option to continue
             # anyway, even if the result might potentially be wrong.
