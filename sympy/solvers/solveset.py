@@ -3444,7 +3444,10 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         u = Dummy('u')
         if n:
             eq = eq.subs(n, 0)
-        satisfy = eq if eq in (True, False) else checksol(u, u, eq, minimal=True)
+        if isinstance(eq, bool) or eq is S.true or eq is S.false:
+            satisfy = bool(eq)
+        else:
+            satisfy = checksol(u, u, eq, minimal=True)
         if satisfy is False:
             delete_soln = True
             res = {}
@@ -3500,7 +3503,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         elif satisfy_exclude:
             delete_soln = True
             rnew = {}
-        _restore_imgset(rnew, original_imageset, newresult)
+        if not delete_soln:
+            _restore_imgset(rnew, original_imageset, newresult)
         return newresult, delete_soln
 
     def _new_order_result(result, eq):
