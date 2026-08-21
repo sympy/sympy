@@ -1408,7 +1408,6 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     z = z or Dummy('z')
     a, d = a.cancel(d, include=True)
     a, d = a.to_field().mul_ground(1/d.LC()), d.to_field().mul_ground(1/d.LC())
-    kkinv = [1/x for x in DE.T[:DE.level]] + DE.T[:DE.level]
 
     if a.is_zero:
         return ([], True)
@@ -1439,15 +1438,14 @@ def residue_reduce(a, d, DE, z=None, invert=True):
             h = R_map.get(i)
             if h is None:
                 continue
-            h_lc = Poly(h.as_poly(DE.t).LC(), DE.t, field=True)
+            s = Poly(s, z).monic()
+            h_lc = Poly(h.as_poly(DE.t).LC(), z, field=True)
 
             h_lc_sqf = h_lc.sqf_list_include(all=True)
 
             for a, j in h_lc_sqf:
-                h = Poly(h, DE.t, field=True).exquo(Poly(gcd(a, s**j, *kkinv),
-                    DE.t))
-
-            s = Poly(s, z).monic()
+                g = a.gcd(s)
+                h = Poly(h, DE.t, field=True).exquo(Poly(g.as_expr()**j, DE.t))
 
             if invert:
                 h_lc = Poly(Poly(h, DE.t).LC(), DE.t, field=True, expand=False)

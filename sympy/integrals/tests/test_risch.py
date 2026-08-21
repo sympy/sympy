@@ -301,6 +301,13 @@ def test_residue_reduce():
     assert residue_reduce(Poly(t, t), Poly(t + sqrt(2), t), DE, z) == \
         ([(Poly(z - 1, z, domain='QQ'), Poly(t + sqrt(2), t))], True)
 
+    # issue 26502: the leading coefficient of the subresultant remainder has
+    # a non-monomial denominator in x
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)], 'Tfuncs': [log]})
+    assert residue_reduce(Poly(-2*x*t - 2*x - 2, t),
+        Poly((x**3 + 2*x**2 + x)*t**2 - x, t), DE, z) == \
+        ([(Poly(z**2 - 1, z, domain='QQ'), Poly(t + z/(x + 1), t, domain='ZZ(x,z)'))], True)
+
 
 def test_integrate_hyperexponential():
     # TODO: Add tests for integrate_hyperexponential() from the book
@@ -806,6 +813,12 @@ def test_risch_integrate():
     # sin(x).rewrite(exp)
     expr = -I*(exp(I*x) - exp(-I*x))/2
     assert risch_integrate(expr, x) == -exp(I*x)/2 - exp(-I*x)/2
+
+    # issue 26502
+    expr = (-2*x*log(x) - 2*x - 2)/(x**3*log(x)**2 + 2*x**2*log(x)**2 +
+        x*log(x)**2 - x)
+    assert risch_integrate(expr, x) == \
+        log(log(x) + 1/(x + 1)) - log(log(x) - 1/(x + 1))
 
 def test_risch_integrate_symbolic_constant():
     # A symbolic constant in the exponential argument; the generic answer
