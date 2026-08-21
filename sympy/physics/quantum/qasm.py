@@ -24,11 +24,12 @@ __all__ = [
 from math import prod
 from typing import TYPE_CHECKING
 
+from sympy.core.singleton import S as _S
 from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS, SWAP, S, T,CPHASE
 from sympy.physics.quantum.circuitplot import Mz
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
     from sympy.core.expr import Expr
 
@@ -131,7 +132,7 @@ class Qasm:
     CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
     """
     def __init__(self, *args: str, **kwargs: str) -> None:
-        self.defs: dict[str, type] = {}
+        self.defs: dict[str, Callable[..., Expr]] = {}
         self.circuit: list[Expr] = []
         self.labels: list[str] = []
         self.inits: dict[str, str] = {}
@@ -141,8 +142,8 @@ class Qasm:
     def add(self, *lines: str) -> None:
         for line in nonblank(lines):
             command, rest = fullsplit(line)
-            if self.defs.get(command): #defs come first, since you can override built-in
-                function = self.defs.get(command)
+            if command in self.defs: #defs come first, since you can override built-in
+                function = self.defs[command]
                 indices = self.indices(rest)
                 if len(indices) == 1:
                     self.circuit.append(function(indices[0]))
@@ -155,7 +156,7 @@ class Qasm:
                 print("Function %s not defined. Skipping" % command)
 
     def get_circuit(self) -> Expr:
-        return prod(reversed(self.circuit))
+        return prod(reversed(self.circuit), start=_S.One)
 
     def get_labels(self) -> list[str]:
         return list(reversed(self.labels))
