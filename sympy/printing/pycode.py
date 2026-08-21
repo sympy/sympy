@@ -270,6 +270,9 @@ class AbstractPythonCodePrinter(CodePrinter):
     def _print_ImaginaryUnit(self, expr):
         return '1j'
 
+    def _print_conjugate(self, expr):
+        return '({}).conjugate()'.format(self._print(expr.args[0]))
+
     def _print_KroneckerDelta(self, expr):
         a, b = expr.args
 
