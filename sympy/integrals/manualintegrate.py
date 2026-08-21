@@ -2149,7 +2149,7 @@ def bioche_substitution(integral):
     expr_u = (expand_trig(expr_u)).cancel()
 
     # avoid Bioche for cos(3*x)/cos(x)
-    if expr_u.is_polynomial(sin(u), cos(u), tan(u)):
+    if expr_u.is_polynomial(*(func(u) for func in TRIG)):
         if (u_func - x).cancel().is_zero is True:
             expanded = expr_u.xreplace({u: x})
             generic_step = RewriteRule(integrand, x, expanded, integral_steps(expanded, x))

@@ -189,6 +189,12 @@ def test_manualintegrate_bioche_substitution():
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).rewrite(exp).cancel() == 0
 
+    # Cotangent must be treated as a polynomial generator in the guard above
+    f = 1/(cot(x)**2 + 1)
+    F = atan(tan(x))/2 - 2*tan(x)/(4*tan(x)**2 + 4)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
     f = 1/(csc(2*x) + 2)
     F = (-sqrt(3)*(log(tan(x) - sqrt(3) + 2)
          - log(tan(x) + sqrt(3) + 2))/12 + atan(tan(x))/2)
