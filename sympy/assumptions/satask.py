@@ -10,7 +10,7 @@ from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
-from sympy.logic.algorithms.dpll2 import SATSolver
+from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
 
@@ -75,7 +75,7 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
 def check_satisfiability(prop, _prop, factbase):
     # Run `propogate()` on the assumptions
     solver = SATSolver(factbase.data, factbase.variables, set(), factbase.symbols)
-    if solver.propagate() == 20:
+    if solver.propagate() == IpasirStatus.UNSATISFIABLE:
         raise ValueError("Inconsistent Assumptions")
 
     # Check whether proposition is entailed by any of the assigned literals.
@@ -114,7 +114,7 @@ def check_satisfiability(prop, _prop, factbase):
             return answer
 
     # Continue on the propogated solver, just call solve() on it.
-    if solver.solve() == 20:
+    if solver.solve() == IpasirStatus.UNSATISFIABLE:
         raise ValueError("Inconsistent assumptions")
 
     # This model satisfies the factbase, so it witness one of the two
@@ -147,11 +147,11 @@ def check_satisfiability(prop, _prop, factbase):
 
     if not can_be_true and {0} not in sat_true.data:
         true_solver = SATSolver(sat_true.data, sat_true.variables, set(), sat_true.symbols)
-        can_be_true = true_solver.solve() == 10
+        can_be_true = true_solver.solve() == IpasirStatus.SATISFIABLE
 
     if not can_be_false and {0} not in sat_false.data:
         false_solver = SATSolver(sat_false.data, sat_false.variables, set(), sat_false.symbols)
-        can_be_false = false_solver.solve() == 10
+        can_be_false = false_solver.solve() == IpasirStatus.SATISFIABLE
 
     if can_be_true and can_be_false:
         return None
