@@ -50,7 +50,7 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi, polylog,
-    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta, bell,
+    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, jtheta, DiracDelta, bell,
     bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
     mathieusprime, mathieucprime)
 
@@ -6587,6 +6587,14 @@ Pi|3; -|6|\n\
     expr = elliptic_pi(3, 4/x, 6)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+    expr = jtheta(1, z, y)
+    assert pretty(expr) == "theta (z, y)\n     1      "
+    assert upretty(expr) == "\u03d1 (z, y)\n 1      "
+
+    expr = jtheta(1, z, y, 2)
+    assert pretty(expr) == "      (2)      \ntheta    (z, y)\n     1         "
+    assert upretty(expr) == "  (2)      \n\u03d1    (z, y)\n 1         "
 
 
 def test_RandomDomain():
