@@ -258,4 +258,6 @@ class jtheta(DefinedFunction):
                 exponent = (S(k) + S.Half)**2
 
         series = Add(*terms)
+        # Expand the finite nome series in x because q and z can depend on x.
+        # The explicit Order accounts for the omitted theta-series terms.
         return series._eval_nseries(x, n, logx, cdir) + Order(x**n, x)

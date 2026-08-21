@@ -17,7 +17,7 @@ from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.special.bessel import (airyai, airyaiprime, airybi, airybiprime)
 from sympy.functions.special.delta_functions import Heaviside
-from sympy.functions.special.error_functions import (fresnelc, fresnels)
+from sympy.functions.special.error_functions import (fresnelc, fresnels, owens_t)
 from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import dirichlet_eta
 from sympy.geometry.line import (Ray, Segment)
@@ -8041,6 +8041,8 @@ def test_pretty_misc_functions():
     assert upretty(fresnelc(x)) == 'C(x)'
     assert pretty(fresnels(x)) == 'S(x)'
     assert upretty(fresnels(x)) == 'S(x)'
+    assert pretty(owens_t(x, y)) == 'T(x, y)'
+    assert upretty(owens_t(x, y)) == 'T(x, y)'
     assert pretty(Heaviside(x)) == 'Heaviside(x)'
     assert upretty(Heaviside(x)) == 'θ(x)'
     assert pretty(Heaviside(x, y)) == 'Heaviside(x, y)'

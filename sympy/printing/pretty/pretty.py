@@ -1737,6 +1737,9 @@ class PrettyPrinter(Printer):
     def _print_fresnelc(self, e):
         return self._print_Function(e, func_name="C")
 
+    def _print_owens_t(self, e):
+        return self._print_Function(e, func_name="T")
+
     def _print_airyai(self, e):
         return self._print_Function(e, func_name="Ai")
 

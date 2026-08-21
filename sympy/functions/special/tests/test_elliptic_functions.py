@@ -122,8 +122,8 @@ def test_jtheta_evalf():
                 - Float('1.634292858119162417301683', 25)*I)
     assert abs(value - expected) < S(10)**-24
 
-    # These values were independently computed with Mathematica and are also
-    # used by mpmath's test_jtheta:
+    # These values were independently computed using Wolfram Engine and are
+    # also used by mpmath's test_jtheta:
     # https://github.com/mpmath/mpmath/blob/c90e2427418ea9e69674e957394c3ef2bf3ac0bc/mpmath/tests/test_elliptic.py
     references = (
         '0.1069552990104042681962096',

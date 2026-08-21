@@ -965,12 +965,12 @@ def test_sylow_subgroup():
     G = SymmetricGroup(100)
     S = G.sylow_subgroup(3)
     assert G.order() % S.order() == 0
-    assert G.order()/S.order() % 3 > 0
+    assert G.order() // S.order() % 3 > 0
 
     G = AlternatingGroup(100)
     S = G.sylow_subgroup(2)
     assert G.order() % S.order() == 0
-    assert G.order()/S.order() % 2 > 0
+    assert G.order() // S.order() % 2 > 0
 
     G = DihedralGroup(18)
     S = G.sylow_subgroup(p=2)
