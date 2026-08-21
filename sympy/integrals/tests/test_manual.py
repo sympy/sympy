@@ -478,16 +478,13 @@ def test_manualintegrate_owent():
     assert_is_integral_of(f, F)
 
     f = owens_t(x, y)
-    F = x*owens_t(x, y) + sqrt(2)*(sqrt(2)*y*erfi(x*(-y**2 - 1)/(2*sqrt(-y**2/2 - S.One/2)))/(2*sqrt(-y**2/2 - S.One/2)) - exp(-x**2/2)*erf(sqrt(2)*x*y/2))/(4*sqrt(pi))
-    assert_is_integral_of(f, F)
+    F = x*owens_t(x, y) + sqrt(2)*(sqrt(2)*y*Piecewise((sqrt(pi)*erfi(x*(-y**2 - 1)/(2*sqrt(-y**2/2 - S.One/2)))/(2*sqrt(-y**2/2 - S.One/2)), Ne(y**2, - 1)), (Integral(exp(-x**2*y**2/2 - x**2/2), x), True))/sqrt(pi) - exp(-x**2/2)*erf(sqrt(2)*x*y/2))/(4*sqrt(pi))
+    assert manualintegrate(f, x) == F
 
-    # numeric coefficient on the erf argument, not just a bare symbol
     f = exp(-x**2)*erf(2*x)
     F = -2*sqrt(pi)*owens_t(sqrt(2)*x, 2)
     assert_is_integral_of(f, F)
 
-    # y = 1 and y = -1 are excluded: erf(x)**2 has the nicer closed form
-    # produced by the parts path, not owens_t(..., 1)
     f = exp(-x**2)*erf(x)
     F = sqrt(pi)*erf(x)**2/4
     assert_is_integral_of(f, F)

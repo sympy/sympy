@@ -1379,18 +1379,21 @@ _symbol = Dummy('x')
 def special_function_rule(integral):
     integrand, symbol = integral
     if not _special_function_patterns:
-        a = Wild('a', exclude=[_symbol], properties=[lambda x: not x.is_zero])
+        # Wild cards set to non-zero should only be used when the result is not
+        # valid e.g. Integral * 1/a
+        a_nonzero = Wild('a', exclude=[_symbol], properties=[lambda x: not x.is_zero])
         b = Wild('b', exclude=[_symbol])
         c = Wild('c', exclude=[_symbol])
-        d = Wild('d', exclude=[_symbol], properties=[lambda x: not x.is_zero])
-        e = Wild('e', exclude=[_symbol], properties=[
+        d_nonzero = Wild('d', exclude=[_symbol], properties=[lambda x: not x.is_zero])
+        e_nonnegative_integer = Wild('e', exclude=[_symbol], properties=[
             lambda x: not (x.is_nonnegative and x.is_integer)])
-        _wilds.extend((a, b, c, d, e))
+        y = Wild('y', exclude=[_symbol])
+        _wilds.extend((a_nonzero, b, c, d_nonzero, e_nonnegative_integer, y))
         # patterns consist of a SymPy class, a wildcard expr, an optional
         # condition coded as a lambda (when Wild properties are not enough),
         # followed by an applicable rule
-        linear_pattern = a*_symbol + b
-        quadratic_pattern = a*_symbol**2 + b*_symbol + c
+        linear_pattern = a_nonzero*_symbol + b
+        quadratic_pattern = a_nonzero*_symbol**2 + b*_symbol + c
         _special_function_patterns.extend((
             (Mul, exp(linear_pattern, evaluate=False)/_symbol, None, EiRule),
             (Mul, cos(linear_pattern, evaluate=False)/_symbol, None, CiRule),
@@ -1399,18 +1402,18 @@ def special_function_rule(integral):
             (Mul, sinh(linear_pattern, evaluate=False)/_symbol, None, ShiRule),
             (Pow, 1/log(linear_pattern, evaluate=False), None, LiRule),
             (exp, exp(quadratic_pattern, evaluate=False), None, ErfRule),
-            (Mul, exp(-(linear_pattern)**2, evaluate=False) * erf(d*(linear_pattern)),
-                lambda a, b, d: d != 1 and d != -1, OwensTRule),
+            (Mul, exp(-(linear_pattern)**2, evaluate=False) * erf(y*(linear_pattern)),
+                lambda a, b, y: y != 1 and y != -1, OwensTRule),
             (sin, sin(quadratic_pattern, evaluate=False), None, FresnelSRule),
             (cos, cos(quadratic_pattern, evaluate=False), None, FresnelCRule),
-            (Mul, _symbol**e*exp(a*_symbol, evaluate=False), None, UpperGammaRule),
-            (Mul, polylog(b, a*_symbol, evaluate=False)/_symbol, None, PolylogRule),
-            (Pow, 1/sqrt(a - d*sin(_symbol, evaluate=False)**2),
+            (Mul, _symbol**e_nonnegative_integer*exp(a_nonzero*_symbol, evaluate=False), None, UpperGammaRule),
+            (Mul, polylog(b, a_nonzero*_symbol, evaluate=False)/_symbol, None, PolylogRule),
+            (Pow, 1/sqrt(a_nonzero - d_nonzero*sin(_symbol, evaluate=False)**2),
                 lambda a, d: a != d, EllipticFRule),
-            (Pow, sqrt(a - d*sin(_symbol, evaluate=False)**2),
+            (Pow, sqrt(a_nonzero - d_nonzero*sin(_symbol, evaluate=False)**2),
                 lambda a, d: a != d, EllipticERule),
         ))
-    a_wild, _, _, d_wild, _ = _wilds
+    a_wild, _, _, d_wild, _, _ = _wilds
     _integrand = integrand.subs(symbol, _symbol)
     for type_, pattern, constraint, rule in _special_function_patterns:
         if isinstance(_integrand, type_):
