@@ -324,11 +324,11 @@ def _(expr, assumptions):
 
     if expr.is_number:
         return _PositivePredicate_number(expr, assumptions)
+    zero_base = _ask_recursive(Q.zero(expr.base), assumptions)
+    if zero_base and _ask_recursive(Q.positive(expr.exp), assumptions):
+        return False
     if _ask_recursive(Q.even(expr.exp), assumptions) and _ask_recursive(Q.real(expr.base), assumptions):
-        zero_base = _ask_recursive(Q.zero(expr.base), assumptions)
-        if zero_base and _ask_recursive(Q.positive(expr.exp), assumptions):
-            return False
-        elif zero_base is False:
+        if zero_base is False:
             return True
     if _ask_recursive(Q.positive(expr.base), assumptions):
         if _ask_recursive(Q.real(expr.exp), assumptions):
