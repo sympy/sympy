@@ -214,7 +214,13 @@ class MutablePolyDenseMatrix:
                 other_ds = DomainScalar(Kx.from_sympy(other), Kx)
             except (CoercionFailed, ValueError):
                 other_ds = DomainScalar.from_sympy(other)
-            return self.from_dm(self._dm * other_ds)
+            dm = self._dm * other_ds
+            if not dm.domain.is_PolynomialRing:
+                # a fallback scalar over a ground domain (e.g. EX) can
+                # drag the product's domain below a polynomial ring,
+                # which from_dm cannot represent
+                dm = dm.convert_to(dm.domain[self.gens])
+            return self.from_dm(dm)
         return NotImplemented
 
     def __rmul__(self, other):
@@ -222,7 +228,10 @@ class MutablePolyDenseMatrix:
             other = _sympify(other)
         if isinstance(other, Expr):
             other_ds = DomainScalar.from_sympy(other)
-            return self.from_dm(other_ds * self._dm)
+            dm = other_ds * self._dm
+            if not dm.domain.is_PolynomialRing:
+                dm = dm.convert_to(dm.domain[self.gens])
+            return self.from_dm(dm)
         return NotImplemented
 
     def __truediv__(self, other):

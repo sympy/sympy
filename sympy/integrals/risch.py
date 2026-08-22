@@ -27,7 +27,8 @@ from __future__ import annotations
 from types import GeneratorType
 from functools import reduce
 
-from sympy.core.function import Lambda
+from sympy.core.add import Add
+from sympy.core.function import Lambda, expand_trig
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I
@@ -41,9 +42,10 @@ from sympy.functions.elementary.hyperbolic import (cosh, coth, sinh,
     tanh)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (atan, sin, cos,
-    tan, acot, cot, asin, acos)
+    tan, acot, cot, asin, acos, sec, csc)
 from .integrals import integrate, Integral
 from .heurisch import _symbols
+from .rationaltools import log_to_real
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
@@ -137,8 +139,10 @@ class DifferentialExtension:
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
-    - exts:
-    - extargs:
+    - exts: The type ('exp', 'log', 'tan' or 'atan') of each extension;
+      exts[i] describes T[i + 1] (T[0] == x is not an extension).
+    - extargs: The argument of the exp, log, tan or atan of each
+      extension, indexed like exts (i.e. T[i + 1] == exts[i](extargs[i])).
     - cases: List of string representations of the cases of T.
     - t: The top level extension variable, as defined by the current level
       (see level below).
@@ -164,9 +168,9 @@ class DifferentialExtension:
     # of the class easily (the memory use doesn't matter too much, since we
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
-    __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs',
-        'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf', 'level',
-        'ts', 'dummy')
+    __slots__ = ('f', 'origf', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs',
+        'backsubs', 'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf',
+        'level', 'ts', 'dummy')
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
         """
@@ -221,8 +225,10 @@ class DifferentialExtension:
                 str(handle_first))
 
         # f will be the original function, self.f might change if we reset
-        # (e.g., we pull out a constant from an exponential)
+        # (e.g., we pull out a constant from an exponential); origf always
+        # stays the expression the user handed in
         self.f = f
+        self.origf = f
         self.x = x
         # setting the default value 'dummy'
         self.dummy = dummy
@@ -243,11 +249,13 @@ class DifferentialExtension:
                 self.newf = self.newf.rewrite(candidates, rule)
             self.newf = cancel(self.newf)
         else:
-            if any(i.has(x) for i in self.f.atoms(sin, cos, cot, tan, sinh,
-                    cosh, coth, tanh, asin, acos, acot, atan)):
-                raise NotImplementedError("Trigonometric and hyperbolic "
-                    "extensions are not supported (yet!).  Try rewriting in "
-                    "terms of exp and log, or using rewrite_complex=True.")
+            if any(i.has(x) for i in self.f.atoms(sinh, cosh, coth, tanh,
+                    asin, acos)):
+                raise NotImplementedError("Hyperbolic, arc-sine and "
+                    "arc-cosine extensions are not supported (yet!).  Try "
+                    "rewriting in terms of exp and log, or using "
+                    "rewrite_complex=True.")
+            self._rewrite_trig()
 
         exps = set()
         pows = set()
@@ -255,12 +263,16 @@ class DifferentialExtension:
         sympows = set()
         logs = set()
         symlogs = set()
+        tans = set()
+        atans = set()
+        tan_new_extension, atan_new_extension = True, True
 
         while True:
             if self.newf.is_rational_function(*self.T):
                 break
 
-            if not exp_new_extension and not log_new_extension:
+            if not (exp_new_extension or log_new_extension or
+                    tan_new_extension or atan_new_extension):
                 # We couldn't find a new extension on the last pass, so I guess
                 # we can't do it.
                 raise NotImplementedError("Couldn't find an elementary "
@@ -275,19 +287,71 @@ class DifferentialExtension:
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps)
                 if exp_new_extension is None:
-                    # reset and restart
+                    # Reset and restart.  reset() clears backsubs, so any
+                    # rewrite recorded there -- a branch-constant Dummy
+                    # from _log_part(), a user radical's notation -- must
+                    # first be folded back into newf, or the Dummy leaks
+                    # into the final result as a free symbol and the
+                    # original notation is never re-encountered by the
+                    # rebuild.
+                    self.newf = self.newf.subs(self.backsubs)
                     self.f = self.newf
                     self.reset()
+                    # The fold restores acot from its branch constant
+                    self._rewrite_trig()
                     exp_new_extension = True
                     continue
 
             if handle_first == 'log' or not exp_new_extension:
                 log_new_extension = self._log_part(logs)
 
+            tans = update_sets(tans, self.newf.atoms(tan),
+                lambda i: i.args[0].is_rational_function(*self.T) and
+                i.args[0].has(*self.T))
+            tan_new_extension = self._tan_part(tans)
+            atans = update_sets(atans, self.newf.atoms(atan),
+                lambda i: i.args[0].is_rational_function(*self.T) and
+                i.args[0].has(*self.T))
+            atan_new_extension = self._atan_part(atans)
+
         self.fa, self.fd = frac_in(self.newf, self.t)
         self._auto_attrs()
 
         return
+
+    def _rewrite_trig(self):
+        """
+        Rewrite the real trigonometric functions of x in terms of tan and
+        atan, which are the functions the tower is built from.
+
+        Explanation
+        ===========
+
+        sin, cos, sec and csc become rational functions of the tangent of
+        the half angle, cot becomes 1/tan, and acot(u) becomes atan(1/u)
+        plus an opaque constant that is restored on backsubstitution (the
+        difference is locally constant wherever both are defined).
+        Functions of constants are left alone.
+        """
+        # xreplace() does not descend into the replacements, so nested
+        # functions (e.g. acot(sin(x))) take several passes.
+        acots = {}
+        while True:
+            reps = {}
+            for i in self.newf.atoms(sin, cos, sec, csc, cot):
+                if i.has(self.x):
+                    reps[i] = i.rewrite(tan)
+            for i in self.newf.atoms(acot):
+                if i.has(self.x):
+                    if i not in acots:
+                        branch_const = Dummy('acot_branch')
+                        new = atan(1/i.args[0])
+                        self.backsubs.append((branch_const, i - new))
+                        acots[i] = new + branch_const
+                    reps[i] = acots[i]
+            if not reps:
+                return
+            self.newf = self.newf.xreplace(reps)
 
     def __getattr__(self, attr):
         # Avoid AttributeErrors when debugging
@@ -319,8 +383,33 @@ class DifferentialExtension:
 
         ratpows_repl = [
             (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
-        self.backsubs += [(j, i) for i, j in ratpows_repl]
-        self.newf = self.newf.xreplace(dict(ratpows_repl))
+        # exp(u)**q == exp(q*u) is exact for integer q, but for
+        # fractional q the left side is a principal root that differs
+        # from exp(q*u) by a locally constant root of unity off the real
+        # line.  Radicals of exponentials also arise internally (the
+        # radical case of _exp_part substitutes t**(p/n) and restarts);
+        # those denote a root the construction is free to choose, so
+        # folding them to exp(q*u) is exact, and rewriting the answer
+        # back into principal-root notation is what turned correctly
+        # integrated results into non-antiderivatives at complex points.
+        # A fractional power the user wrote, however, means the
+        # principal root specifically: fold it as ratio*exp(q*u) with an
+        # opaque locally constant ratio (a root of unity on each
+        # component), restored exactly on backsubstitution -- which also
+        # keeps integrands mixing exp(u)**q with exp(q*u) itself
+        # pointwise correct.
+        subs_map = {}
+        for i, j in ratpows_repl:
+            if i.exp.is_Integer:
+                self.backsubs.append((j, i))
+                subs_map[i] = j
+            elif self.origf is not None and self.origf.has(i):
+                ratio = Dummy('exp_branch')
+                self.backsubs.append((ratio, i/j))
+                subs_map[i] = ratio*j
+            else:
+                subs_map[i] = j
+        self.newf = self.newf.xreplace(subs_map)
 
         # To make the process deterministic, the args are sorted
         # so that functions with smaller op-counts are processed first.
@@ -587,8 +676,35 @@ class DifferentialExtension:
             A = is_deriv_k(arga, argd, self)
             if A is not None:
                 ans, u, const = A
-                newterm = log(const) + u
-                self.newf = self.newf.xreplace({log(arg): newterm})
+                # u + log(const) equals log(arg) only up to a locally
+                # constant branch term: log(const) is the principal-branch
+                # choice, valid where every argument involved is positive
+                # (e.g. log(-x**2) == 2*log(x) + I*pi only holds for
+                # x > 0).  The one case where it is exact everywhere is a
+                # single tower logarithm with coefficient one and a
+                # positive constant: log(c*w) == log(c) + log(w) for
+                # c > 0 on the whole complex plane.
+                if (u is not self.x and u in self.T and const.is_positive and
+                        self.exts[self.T.index(u) - 1] == 'log'):
+                    self.newf = self.newf.xreplace({log(arg): log(const) + u})
+                    continue
+                # Otherwise the difference log(arg) - u is locally
+                # constant wherever the functions are defined, so
+                # integrating with an opaque constant in its place and
+                # restoring the exact difference on backsubstitution keeps
+                # the answer, now expressed through the original
+                # logarithm, correct on every connected component.
+                branch_const = Dummy('log_branch')
+                # arg and u may involve tower symbols; express the
+                # difference through the concrete functions (and through
+                # any originals recorded in backsubs so far, so that
+                # e.g. x**x reappears as x**x rather than exp(x*log(x))).
+                concrete = list(zip(reversed(self.T),
+                    reversed([f(self.x) for f in self.Tfuncs])))
+                diff_expr = (log(arg.subs(concrete)) -
+                    u.subs(concrete)).subs(self.backsubs)
+                self.backsubs.append((branch_const, diff_expr))
+                self.newf = self.newf.xreplace({log(arg): branch_const + u})
                 continue
 
             else:
@@ -610,6 +726,151 @@ class DifferentialExtension:
                 self.Tfuncs += [Lambda(i, log(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace({log(arg): self.t})
                 new_extension = True
+
+        return new_extension
+
+    def _tan_part(self, tans):
+        """
+        Try to build a hypertangent extension.
+
+        Returns
+        =======
+
+        Returns True if there was a new extension and False if there was no
+        new extension but it was able to rewrite the given tangents in terms
+        of the existing extension.  If a tangent is algebraic of degree
+        greater than one over the existing extension (e.g. tan(atan(x)/2)
+        over QQ(x, atan(x))), it raises NotImplementedError.
+        """
+        from .prde import is_log_deriv_k_t_radical_tan
+        new_extension = False
+        # tan(n*g + c) is a rational function of tan(g) for any integer n
+        # and constant c (multiple-angle and addition formulas), so the
+        # arguments are split into a constant part and a part depending on
+        # the tower, and the latter are grouped as integer multiples of a
+        # common base with integer_powers(), as for exponentials.  Note
+        # that, unlike the exponential case, the rewriting through tan(g)
+        # is an exact identity wherever the functions are defined, so no
+        # branch constants are needed.
+        split = {}
+        for i in tans:
+            c, g = i.args[0].as_independent(*self.T, as_Add=True)
+            split.setdefault(g, []).append((i, c))
+        for g, others in integer_powers(list(split)):
+            ga, gd = frac_in(g, self.t)
+            A = is_log_deriv_k_t_radical_tan(ga, gd, self)
+            if A is None:
+                darga = (gd*derivation(Poly(ga, self.t), self) -
+                    ga*derivation(Poly(gd, self.t), self))
+                dargd = gd**2
+                darga, dargd = darga.cancel(dargd, include=True)
+                darg = darga.as_expr()/dargd.as_expr()
+                self.t = next(self.ts)
+                self.T.append(self.t)
+                self.extargs.append(g)
+                self.exts.append('tan')
+                self.D.append(darg.as_poly(self.t, expand=False)*Poly(
+                    self.t**2 + 1, self.t, expand=False))
+                if self.dummy:
+                    i = Dummy("i")
+                else:
+                    i = Symbol('i')
+                self.Tfuncs += [Lambda(i, tan(g.subs(self.x, i)))]
+                tang = self.t
+                new_extension = True
+            else:
+                ans, u, n, const = A
+                if n != 1:
+                    raise NotImplementedError("Cannot integrate over "
+                        "algebraic extensions (tan(%s) is algebraic of "
+                        "degree %s over the tower)." % (g, n))
+                # tan(g) == tan(u + const) where u == Sum(ri*termi) with
+                # integer ri; each termi is either the argument of a
+                # tangent generator (tan(termi) is that generator) or an
+                # arc-tangent generator (tan(termi) is its argument).
+                tanterms = []
+                for term, r in ans:
+                    if term in self.T:
+                        tanterms.append((self.extargs[self.T.index(term) - 1], r))
+                    else:
+                        tanterms.append((self.T[self.extargs.index(term) + 1], r))
+                tang = self._tan_combination(tanterms, const)
+            for gi, p in others:
+                for tanatom, c in split[gi]:
+                    self.newf = self.newf.xreplace(
+                        {tanatom: self._tan_combination([(tang, p)], c)})
+
+        return new_extension
+
+    @staticmethod
+    def _tan_combination(tanterms, c):
+        """
+        tan(Sum(ri*ai) + c) as a rational function of the tan(ai), which
+        are given as the list of tuples (tan(ai), ri) with integer ri.
+        """
+        ys = [Dummy() for _ in tanterms]
+        cd = Dummy()
+        arg = Add(*[r*y for (_, r), y in zip(tanterms, ys)])
+        if c != 0:
+            arg += cd
+        new = expand_trig(tan(arg))
+        reps = {tan(y): i for (i, _), y in zip(tanterms, ys)}
+        reps[tan(cd)] = tan(c)
+        return new.xreplace(reps)
+
+    def _atan_part(self, atans):
+        """
+        Try to build an arc-tangent extension.
+
+        Returns
+        =======
+
+        Returns True if there was a new extension and False if there was no
+        new extension but it was able to rewrite the given arc-tangents in
+        terms of the existing extension.  Like logarithms, an arc-tangent
+        that is not transcendental over the existing extension is in it up
+        to an additive constant, so this function never raises
+        NotImplementedError.
+        """
+        from .prde import is_deriv_k_atan
+        new_extension = False
+        for arg in ordered({i.args[0] for i in atans}):
+            arga, argd = frac_in(arg, self.t)
+            A = is_deriv_k_atan(arga, argd, self)
+            if A is not None:
+                ans, u = A
+                # atan(arg) - u is locally constant wherever the functions
+                # are defined, but only piecewise constant as a function
+                # (e.g. atan(2*x/(1 - x**2)) - 2*atan(x) jumps at x == 1),
+                # so, as for logarithms in _log_part(), integrate with an
+                # opaque constant in its place and restore the exact
+                # difference on backsubstitution.
+                branch_const = Dummy('atan_branch')
+                concrete = list(zip(reversed(self.T),
+                    reversed([f(self.x) for f in self.Tfuncs])))
+                diff_expr = (atan(arg.subs(concrete)) -
+                    u.subs(concrete)).subs(self.backsubs)
+                self.backsubs.append((branch_const, diff_expr))
+                self.newf = self.newf.xreplace({atan(arg): branch_const + u})
+                continue
+
+            darga = (argd*derivation(Poly(arga, self.t), self) -
+                arga*derivation(Poly(argd, self.t), self))
+            dargd = argd**2
+            darg = darga.as_expr()/dargd.as_expr()
+            self.t = next(self.ts)
+            self.T.append(self.t)
+            self.extargs.append(arg)
+            self.exts.append('atan')
+            self.D.append(cancel(darg/(arg**2 + 1)).as_poly(self.t,
+                expand=False))
+            if self.dummy:
+                i = Dummy("i")
+            else:
+                i = Symbol('i')
+            self.Tfuncs += [Lambda(i, atan(arg.subs(self.x, i)))]
+            self.newf = self.newf.xreplace({atan(arg): self.t})
+            new_extension = True
 
         return new_extension
 
@@ -663,8 +924,8 @@ class DifferentialExtension:
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
         self.level = -1
-        self.exts = [None]
-        self.extargs = [None]
+        self.exts = []
+        self.extargs = []
         if self.dummy:
             self.ts = numbered_symbols('t', cls=Dummy)
         else:
@@ -687,8 +948,9 @@ class DifferentialExtension:
         Returns
         =======
 
-        list: A list of indices of 'exts' where extension of
-            type 'extension' is present.
+        list: A list of indices into T (and D) of the extensions of
+            type 'extension'.  Note that self.exts[i] describes the
+            extension T[i + 1], since T[0] == x is not an extension.
 
         Examples
         ========
@@ -703,7 +965,7 @@ class DifferentialExtension:
         [1]
 
         """
-        return [i for i, ext in enumerate(self.exts) if ext == extension]
+        return [i for i, ext in enumerate(self.exts, 1) if ext == extension]
 
     def increment_level(self):
         """
@@ -868,7 +1130,7 @@ def as_poly_1t(p, t, z):
 
     t_part, remainder = pa.div(pd)
 
-    ans = t_part.as_poly(t, z, expand=False)
+    ans = Poly(t_part, t, z, expand=False)
 
     if remainder:
         one = remainder.one
@@ -876,7 +1138,7 @@ def as_poly_1t(p, t, z):
         r = pd.degree() - remainder.degree()
         z_part = remainder.transform(one, tp) * tp**r
         z_part = z_part.replace(t, z).to_field().quo_ground(pd.LC())
-        ans += z_part.as_poly(t, z, expand=False)
+        ans += Poly(z_part, t, z, expand=False)
 
     return ans
 
@@ -1090,7 +1352,7 @@ def hermite_reduce(a, d, DE):
     gd = Poly(1, DE.t)
 
     dd = derivation(d, DE)
-    dm = gcd(d.to_field(), dd.to_field()).as_poly(DE.t)
+    dm = Poly(gcd(d.to_field(), dd.to_field()), DE.t)
     ds, _ = d.div(dm)
 
     while dm.degree(DE.t) > 0:
@@ -1101,13 +1363,13 @@ def hermite_reduce(a, d, DE):
         ds_ddm = ds.mul(ddm)
         ds_ddm_dm, _ = ds_ddm.div(dm)
 
-        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t),
-            dms.as_poly(DE.t), a.as_poly(DE.t))
-        b, c = b.as_poly(DE.t), c.as_poly(DE.t)
+        b, c = gcdex_diophantine(-Poly(ds_ddm_dm, DE.t),
+            Poly(dms, DE.t), Poly(a, DE.t))
+        b, c = Poly(b, DE.t), Poly(c, DE.t)
 
-        db = derivation(b, DE).as_poly(DE.t)
+        db = Poly(derivation(b, DE), DE.t)
         ds_dms, _ = ds.div(dms)
-        a = c.as_poly(DE.t) - db.mul(ds_dms).as_poly(DE.t)
+        a = Poly(c, DE.t) - Poly(db.mul(ds_dms), DE.t)
 
         ga = ga*dm + b*gd
         gd = gd*dm
@@ -1178,11 +1440,14 @@ def laurent_series(a, d, F, n, DE):
     This is ``LaurentSeries`` from Section 2.7 of Bronstein's book.  The
     book's version returns only the sum of the principal parts (so the
     degree 0 case returns the expression 0); ``H`` is additionally
-    returned here for use by ``recognize_derivative()``.
+    returned here for use by ``recognize_derivative()``.  ``F`` may not
+    contain special irreducible factors (p dividing Dp): the
+    construction needs D(F) invertible mod F, so such an ``F`` raises
+    ``NotImplementedError``.
     """
     if F.degree() == 0:
         return (Poly(0, DE.t), Poly(1, DE.t), [])
-    Z = _symbols('z', n)
+    Z: list[Symbol] = [*_symbols('z', n)]
     z = Symbol('z')
     Z.insert(0, z)
     delta_a = Poly(0, DE.t)
@@ -1191,6 +1456,14 @@ def laurent_series(a, d, F, n, DE):
     E = d.quo(F**n)
     ha, hd = (a, E*Poly(z**n, DE.t))
     dF = derivation(F,DE)
+    if gcd(F, dF).degree(DE.t) > 0:
+        # F has special irreducible factors (p divides Dp).  The
+        # construction below needs D(F) invertible mod F (the analogue
+        # of gcd(F, F') == 1 for squarefree F in K[x]), so the
+        # principal parts at special primes cannot be computed this
+        # way.
+        raise NotImplementedError("laurent_series() cannot compute the "
+            "principal parts at special primes (gcd(F, DF) != 1).")
     B, _ = gcdex_diophantine(E, F, Poly(1,DE.t))
     C, _ = gcdex_diophantine(dF, F, Poly(1,DE.t))
 
@@ -1254,8 +1527,11 @@ def recognize_derivative(a, d, DE, z=None):
     rational function if and only if Ei = 1 for each i, which is equivalent to
     Di | H[-1] for each i.
 
-    There is no named counterpart in Bronstein's book; this is based on
-    Theorem 2.7.1 (Section 2.7) via ``LaurentSeries``.
+    This is the first derivative-recognition criterion from Section 2.9
+    of Bronstein's book (stated there for K(x)), via Theorem 2.7.1
+    (Section 2.7) and ``LaurentSeries``.  The generalization to monomial
+    extensions is only justified at primes with constant roots that are
+    not special; poles at other primes raise ``NotImplementedError``.
     """
     flag = True
     a, d = a.cancel(d, include=True)
@@ -1269,11 +1545,26 @@ def recognize_derivative(a, d, DE, z=None):
         # (nu_p(Dv) == nu_p(v) - 1 <= -2 for any pole of Dv at a normal p),
         # so f is not the derivative of a rational function.
         return False
+    undecidable_special = []
     for s, n in Sp:
-        delta_a, delta_d, H = laurent_series(r, d, s, n, DE)
-        if not H[-1].rem(s.as_poly(DE.t)).is_zero:  # Di does not divide H[-1]
-            # A conclusive False from a special factor stands regardless
-            # of any undecidable normal factors, so check these first.
+        sp = s.as_poly(DE.t)
+        # Special irreducible factors (p divides Dp): the Laurent
+        # series machinery cannot compute the principal parts there,
+        # so set them aside (for a squarefree s, the special part is
+        # exactly gcd(s, Ds)), decide every other factor first (a
+        # conclusive False stands), and raise only if none of them
+        # settles the question.
+        s_special = gcd(sp, derivation(sp, DE)).as_poly(DE.t)
+        if s_special.degree(DE.t) > 0:
+            undecidable_special.append(s_special)
+            sp = sp.quo(s_special)
+            if sp.degree(DE.t) == 0:
+                continue
+        delta_a, delta_d, H = laurent_series(r, d, sp, n, DE)
+        if not H[-1].rem(sp).is_zero:  # Di does not divide H[-1]
+            # A conclusive False from a decidable factor stands
+            # regardless of any undecidable factors, so check these
+            # first.
             flag = False
             break
     else:
@@ -1286,21 +1577,30 @@ def recognize_derivative(a, d, DE, z=None):
             raise NotImplementedError("recognize_derivative() cannot decide "
                 "residue vanishing at nonconstant poles of order greater "
                 "than 1.")
+        if undecidable_special:
+            raise NotImplementedError("recognize_derivative() cannot decide "
+                "residue vanishing at special primes.")
     return flag
 
 
 def recognize_log_derivative(a, d, DE, z=None):
     """
-    There exists a v in K(x)* such that f = dv/v
-    where f a rational function if and only if f can be written as f = A/D
-    where D is squarefree,deg(A) < deg(D), gcd(A, D) = 1,
-    and all the roots of the Rothstein-Trager resultant are integers. In that case,
-    any of the Rothstein-Trager, Lazard-Rioboo-Trager or Czichowski algorithm
-    produces u in K(x) such that du/dx = uf.
+    Necessary conditions for f == a/d to be Dv/v for some v in k(t)*.
 
-    This is the in-field logarithmic derivative problem from Section 5.12
-    of Bronstein's book (the "Recognizing Logarithmic Derivatives"
-    subsection; neither edition gives it as named pseudocode).
+    Explanation
+    ===========
+
+    If f == Dv/v for v in k(t)*, then the proper part of f is simple
+    (its denominator is normal) and all the roots of its
+    Rothstein-Trager resultant are integers (Section 5.12 of
+    Bronstein's book, the "Recognizing Logarithmic Derivatives"
+    subsection; neither edition gives it as named pseudocode).  This
+    function checks exactly those conditions, so False is conclusive
+    (f is not a logarithmic derivative), while True is not: the
+    polynomial part of f is discarded unexamined (deciding it requires
+    the recursive and parametric machinery of Section 5.12), which
+    makes this a sound cheap filter to run before the full parametric
+    logarithmic derivative problem.
     """
 
     z = z or Dummy('z')
@@ -1309,12 +1609,17 @@ def recognize_log_derivative(a, d, DE, z=None):
 
     pz = Poly(z, DE.t)
     Dd = derivation(d, DE)
+    if gcd(d, Dd).degree(DE.t) > 0:
+        # If f == Dv/v, the denominator of the proper part of f is
+        # normal (squarefree and coprime with its derivative), so a
+        # non-normal denominator is conclusive.
+        return False
     q = a - pz*Dd
     r, _ = d.resultant(q, includePRS=True)
     r = Poly(r, z)
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
-    if any(s.as_poly(z).degree() > 0 for s, _ in Np):
+    if any(Poly(s, z).degree() > 0 for s, _ in Np):
         # The normal part of the splitting factorization contains the
         # factors of the resultant whose roots are not constants; such
         # roots cannot be integers, so f is not the logarithmic derivative
@@ -1360,15 +1665,9 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     This is ``ResidueReduce`` (the Lazard-Rioboo-Trager version) from
     Section 5.6 of Bronstein's book.
     """
-    # TODO: Use log_to_atan() from rationaltools.py
-    # If r = residue_reduce(...), then the logarithmic part is given by:
-    # sum([RootSum(a[0].as_poly(z), lambda i: i*log(a[1].as_expr()).subs(z,
-    # i)).subs(t, log(x)) for a in r[0]])
-
     z = z or Dummy('z')
     a, d = a.cancel(d, include=True)
     a, d = a.to_field().mul_ground(1/d.LC()), d.to_field().mul_ground(1/d.LC())
-    kkinv = [1/x for x in DE.T[:DE.level]] + DE.T[:DE.level]
 
     if a.is_zero:
         return ([], True)
@@ -1399,19 +1698,19 @@ def residue_reduce(a, d, DE, z=None, invert=True):
             h = R_map.get(i)
             if h is None:
                 continue
-            h_lc = Poly(h.as_poly(DE.t).LC(), DE.t, field=True)
+            s = Poly(s, z).monic()
+            h_lc = Poly(h.as_poly(DE.t).LC(), z, field=True)
 
             h_lc_sqf = h_lc.sqf_list_include(all=True)
 
             for a, j in h_lc_sqf:
-                h = Poly(h, DE.t, field=True).exquo(Poly(gcd(a, s**j, *kkinv),
-                    DE.t))
-
-            s = Poly(s, z).monic()
+                g = a.gcd(s)
+                h = Poly(h, DE.t, field=True).exquo(Poly(g.as_expr()**j, DE.t))
 
             if invert:
-                h_lc = Poly(h.as_poly(DE.t).LC(), DE.t, field=True, expand=False)
-                inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S.One]
+                h_lc = Poly(Poly(h, DE.t).LC(), DE.t, field=True, expand=False)
+                inv = Poly(h_lc, z, field=True).invert(s)
+                coeffs = [S.One]
 
                 for coeff in h.coeffs()[1:]:
                     L = reduced(inv*coeff.as_poly(inv.gens), [s])[1]
@@ -1429,13 +1728,32 @@ def residue_reduce(a, d, DE, z=None, invert=True):
 def residue_reduce_to_basic(H, DE, z):
     """
     Converts the tuple returned by residue_reduce() into a Basic expression.
+
+    Terms whose residues can all be computed explicitly are rewritten as
+    real logarithms and arc-tangents using log_to_real() (Rioboo's
+    algorithm from Section 2.8 of Bronstein's book, with the roots of
+    each s_i as the residues and S_i in place of the Rothstein-Trager
+    resultant's remainder); the remaining terms are returned as RootSums.
+    log_to_real() is only valid over a real field, so it is not used when
+    I appears in a term or in the extension tower.
     """
     # TODO: check what Lambda does with RootOf
     i = Dummy('i')
     s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+    real_tower = not any(f(DE.x).has(I) for f in DE.Tfuncs)
 
-    return sum(RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
-        {z: i}).subs(s))) for a in H)
+    result = S.Zero
+    for a in H:
+        real = None
+        if real_tower and not (a[0].as_expr().has(I) or a[1].as_expr().has(I)):
+            real = log_to_real(a[1], a[0].as_poly(z), DE.t, z)
+        if real is not None:
+            result += real.subs(s)
+        else:
+            result += RootSum(a[0].as_poly(z), Lambda(i, i*log(
+                a[1].as_expr()).subs({z: i}).subs(s)))
+
+    return result
 
 
 def residue_reduce_derivation(H, DE, z):
@@ -1691,7 +2009,7 @@ def integrate_hypertangent_polynomial(p, DE):
 
     Given a differential field k such that sqrt(-1) is not in k, a
     hypertangent monomial t over k, and p in k[t], return q in k[t] and
-    c in k such that p - Dq - c*D(t**2 + 1)/(t**1 + 1) is in k and p -
+    c in k such that p - Dq - c*D(t**2 + 1)/(t**2 + 1) is in k and p -
     Dq does not have an elementary integral over k(t) if Dc != 0.
 
     This is ``IntegrateHypertangentPolynomial`` from Section 5.10 of
@@ -1702,6 +2020,131 @@ def integrate_hypertangent_polynomial(p, DE):
     a = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
     c = Poly(r.nth(1)/(2*a.as_expr()), DE.t)
     return (q, c)
+
+
+def integrate_hypertangent_reduced(pa, pd, DE):
+    """
+    Integration of hypertangent reduced elements.
+
+    Explanation
+    ===========
+
+    Given a differential field k such that sqrt(-1) is not in k, a
+    hypertangent monomial t over k, and p == pa/pd in k<t> (i.e. pd is a
+    power of t**2 + 1 up to a unit), return (qa, qd, b) with q == qa/qd
+    in k(t) and b in {True, False} such that p - Dq is in k[t] if b is
+    True, or p - Dq does not have an elementary integral over k(t) if b
+    is False.
+
+    Each step removes the highest power of t**2 + 1 from the denominator
+    by solving the coupled differential system (5.20) of Bronstein's
+    book over k for the coefficients c, d of the numerator c*t + d of
+    the candidate (c*t + d)/(t**2 + 1)**m.
+
+    This is ``IntegrateHypertangentReduced`` from Section 5.10 of
+    Bronstein's book.
+    """
+    from .cde import coupled_DE_system
+    from .rde import order_at
+    h2 = Poly(DE.t**2 + 1, DE.t)
+    eta = DE.d.exquo(h2).as_expr()
+    qa, qd = Poly(0, DE.t), Poly(1, DE.t)
+    pa, pd = pa.cancel(pd, include=True)
+    while True:
+        m = order_at(pd, h2, DE.t)
+        if pd.degree(DE.t) != 2*m:
+            raise ValueError("%s/%s is not reduced (the denominator must "
+                "be a power of t**2 + 1)." % (pa, pd))
+        if m <= 0:
+            return (qa, qd, True)
+        # h == p*(t**2 + 1)**m in k[t], h == (t**2 + 1)*q + a*t + b
+        h = (pa*h2**m).exquo(pd)
+        r = h.rem(h2)
+        a, b = r.nth(1), r.nth(0)
+        with DecrementLevel(DE):
+            f2 = frac_in(2*m*eta, DE.t)
+            g1 = frac_in(a, DE.t)
+            g2 = frac_in(b, DE.t)
+            try:
+                # Dc - 2*m*eta*d == a, Dd + 2*m*eta*c == b
+                (ca, cd), (da, dd) = coupled_DE_system(
+                    (Poly(0, DE.t), Poly(1, DE.t)), f2, g1, g2, DE)
+            except NonElementaryIntegralException:
+                return (qa, qd, False)
+        c = ca.as_expr()/cd.as_expr()
+        d = da.as_expr()/dd.as_expr()
+        q0a, q0d = frac_in((c*DE.t + d)/h2.as_expr()**m, DE.t, cancel=True)
+        # p -= Dq0, q += q0
+        dq0a = q0d*derivation(q0a, DE) - q0a*derivation(q0d, DE)
+        dq0d = q0d**2
+        pa, pd = (pa*dq0d - dq0a*pd).cancel(pd*dq0d, include=True)
+        qa, qd = (qa*q0d + q0a*qd).cancel(qd*q0d, include=True)
+
+
+def integrate_hypertangent(a, d, DE, z=None):
+    """
+    Integration of hypertangent functions.
+
+    Explanation
+    ===========
+
+    Given a differential field k such that sqrt(-1) is not in k, a
+    hypertangent monomial t over k and f in k(t), return g elementary
+    over k(t), i in k(t), and b in {True, False} such that i = f - Dg is
+    in k if b is True or i = f - Dg does not have an elementary integral
+    over k(t) if b is False.
+
+    This function returns a Basic expression for the first argument.  If b is
+    True, the second argument is Basic expression in k to recursively integrate.
+    If b is False, the second argument is an unevaluated Integral, which has
+    been proven to be nonelementary.
+
+    This is ``IntegrateHypertangent`` from Section 5.10 of Bronstein's
+    book.
+    """
+    # XXX: a and d must be canceled, or this might return incorrect results
+    z = z or Dummy("z")
+    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+
+    g1, h, r = hermite_reduce(a, d, DE)
+    g2, b = residue_reduce(h[0], h[1], DE, z=z)
+    if not b:
+        i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
+            g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
+            residue_reduce_derivation(g2, DE, z))
+        i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
+        return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
+            residue_reduce_to_basic(g2, DE, z), i, b)
+
+    # p == h - Dg2 + r is reduced, since Sirr == {t**2 + 1}
+    p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
+        DE, z) + r[0].as_expr()/r[1].as_expr())
+    pa, pd = frac_in(p, DE.t, cancel=True)
+    q1a, q1d, b = integrate_hypertangent_reduced(pa, pd, DE)
+    q1 = q1a.as_expr()/q1d.as_expr()
+
+    ret = ((g1[0].as_expr()/g1[1].as_expr() + q1).subs(s) +
+        residue_reduce_to_basic(g2, DE, z))
+    p = cancel(p - (q1d*derivation(q1a, DE) -
+        q1a*derivation(q1d, DE)).as_expr()/(q1d**2).as_expr())
+    if not b:
+        i = NonElementaryIntegral(p.subs(s), DE.x)
+        return (ret, i, b)
+
+    # p is now in k[t]
+    pp = p.as_poly(DE.t)
+    q2, c = integrate_hypertangent_polynomial(pp, DE)
+    ret += q2.as_expr().subs(s)
+    p = pp - derivation(q2, DE)
+    if derivation(c, DE).is_zero:
+        # p - c*D(t**2 + 1)/(t**2 + 1) == p - 2*c*eta*t is in k
+        c = c.as_expr()
+        eta = DE.d.exquo(Poly(DE.t**2 + 1, DE.t)).as_expr()
+        ret += c*log(DE.t**2 + 1).subs(s)
+        i = cancel((p - Poly(2*c*eta*DE.t, DE.t)).as_expr())
+        return (ret, i, True)
+    i = NonElementaryIntegral(cancel(p.as_expr()).subs(s), DE.x)
+    return (ret, i, False)
 
 
 def integrate_nonlinear_no_specials(a, d, DE, z=None):
@@ -1813,9 +2256,10 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     Explanation
     ===========
 
-    Only transcendental functions are supported.  Currently, only exponentials
-    and logarithms are supported, but support for trigonometric functions is
-    forthcoming.
+    Only transcendental functions are supported: exponentials, logarithms,
+    tangents and arc-tangents (sin, cos, sec, csc and cot are rewritten
+    through the tangent of the half angle, and acot through atan;
+    hyperbolic functions, asin and acos need ``rewrite_complex=True``).
 
     If this function returns an unevaluated Integral in the result, it means
     that it has proven that integral to be nonelementary.  Any errors will
@@ -1933,6 +2377,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             ans, i, b = integrate_hyperexponential(fa, fd, DE, conds=conds)
         elif case == 'primitive':
             ans, i, b = integrate_primitive(fa, fd, DE)
+        elif case == 'tan':
+            ans, i, b = integrate_hypertangent(fa, fd, DE)
         elif case == 'base':
             # XXX: We can't call ratint() directly here because it doesn't
             # handle polynomials correctly.
@@ -1940,8 +2386,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             b = False
             i = S.Zero
         else:
-            raise NotImplementedError("Only exponential and logarithmic "
-            "extensions are currently supported.")
+            raise NotImplementedError("Only exponential, logarithmic, "
+            "hypertangent and primitive extensions are currently supported.")
 
         result += ans
         if b:
@@ -1949,8 +2395,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             fa, fd = frac_in(i, DE.t)
         else:
             result = result.subs(DE.backsubs)
-            if not i.is_zero:
-                i = NonElementaryIntegral(i.function.subs(DE.backsubs),i.limits)
+            if isinstance(i, Integral):
+                i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
             if not separate_integral:
                 result += i
                 return result

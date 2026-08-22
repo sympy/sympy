@@ -10,13 +10,15 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo, pi
+from sympy.core.numbers import I, oo, pi
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
 from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
+    InverseTrigonometricFunction)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -963,7 +965,17 @@ class Integral(AddWithLimits):
         if poly is not None and not (manual or meijerg or risch):
             return poly.integrate().as_expr()
 
-        if risch is not False:
+        # risch_integrate() handles real trigonometric integrands through
+        # tangent and arc-tangent towers, but it expresses the answers
+        # through tan(u/2) etc., which is much less readable than what the
+        # other methods return (e.g. -2/(tan(x/2)**2 + 1) for -cos(x)), so
+        # the automatic attempts here are reserved for integrands without
+        # them; risch=True uses it for them anyway.
+        def _real_trig(g):
+            return not g.has(I) and any(i.has(x) for i in
+                g.atoms(TrigonometricFunction, InverseTrigonometricFunction))
+
+        if risch is not False and not _real_trig(f):
             try:
                 result, i = risch_integrate(f, x, separate_integral=True,
                     conds=conds)
@@ -1075,7 +1087,7 @@ class Integral(AddWithLimits):
                     continue
 
                 # Try risch again.
-                if risch is not False:
+                if risch is not False and not _real_trig(g):
                     try:
                         h, i = risch_integrate(g, x,
                             separate_integral=True, conds=conds)
