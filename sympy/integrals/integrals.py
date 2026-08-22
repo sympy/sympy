@@ -966,11 +966,11 @@ class Integral(AddWithLimits):
             return poly.integrate().as_expr()
 
         # risch_integrate() handles real trigonometric integrands through
-        # tangent and arc-tangent towers, but it expresses the answers
-        # through tan(u/2) etc., which is much less readable than what the
-        # other methods return (e.g. -2/(tan(x/2)**2 + 1) for -cos(x)), so
-        # the automatic attempts here are reserved for integrands without
-        # them; risch=True uses it for them anyway.
+        # tangent and arc-tangent towers, but the other methods are faster
+        # for them and return the conventional forms, so the automatic
+        # attempts here are reserved for integrands without them; for the
+        # rest it is the last resort (below), and risch=True uses it for
+        # them directly.
         def _real_trig(g):
             return not g.has(I) and any(i.has(x) for i in
                 g.atoms(TrigonometricFunction, InverseTrigonometricFunction))
@@ -1173,6 +1173,24 @@ class Integral(AddWithLimits):
                     # expression, but maybe it will be able to pick out parts,
                     # like x*(exp(x) + erf(x)).
                     return self._eval_integral(f, x, **eval_kwargs)
+
+            # The last resort for real trigonometric integrands: the Risch
+            # algorithm, which may also prove the integral nonelementary.
+            if h is None and risch is not False and _real_trig(g):
+                try:
+                    h, i = risch_integrate(g, x, separate_integral=True,
+                        conds=conds)
+                except NotImplementedError:
+                    h = None
+                else:
+                    if h == 0:
+                        # Nothing was integrated, so the other methods
+                        # have already failed on the whole of it
+                        h = NonElementaryIntegral(g, x)
+                    elif i:
+                        # The floor terms of the final round must not be
+                        # added to the nonelementary part twice
+                        h = h + i.doit(risch=False, final=False)
 
             if h is not None:
                 parts.append(coeff * h)

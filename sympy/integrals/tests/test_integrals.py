@@ -1330,6 +1330,24 @@ def test_risch_option():
     # TODO: How to test risch=False?
 
 
+def test_risch_real_trig():
+    # The Risch algorithm is the last resort for real trigonometric
+    # integrands, so the conventional answers of the other methods stay
+    assert integrate(sin(x)/x, x) == Si(x)
+    assert integrate(1/(2 + cos(x)), x) == \
+        2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3
+    # but nonelementary integrals are recognized
+    assert integrate(exp(x)/(1 + tan(x)), x) == \
+        NonElementaryIntegral(exp(x)/(1 + tan(x)), x)
+    assert integrate(sin(x) + exp(x)*tan(x), x) == \
+        -cos(x) + NonElementaryIntegral(exp(x)*tan(x), x)
+    # The floor terms of the final round also handle arc-tangents of
+    # polynomials of odd degree in a tangent
+    assert integrate(1/(1 + sin(x)**2), x, risch=True) == \
+        sqrt(2)*(2*atan(sqrt(2)*tan(x/2)/4) + 2*atan(sqrt(2)*tan(x/2)**3/4 +
+        7*sqrt(2)*tan(x/2)/4) + 4*pi*floor((x/2 - pi/2)/pi))/4
+
+
 @slow
 def test_heurisch_option():
     raises(ValueError, lambda: integrate(1/x, x, risch=True, heurisch=True))
@@ -1481,11 +1499,12 @@ def test_singularities():
 
 def test_issue_12645():
     x, y = symbols('x y', real=True)
+    # The inner integral is proven nonelementary
     assert (integrate(sin(x*x*x + y*y),
                       (x, -sqrt(pi - y*y), sqrt(pi - y*y)),
                       (y, -sqrt(pi), sqrt(pi)))
-                == Integral(sin(x**3 + y**2),
-                            (x, -sqrt(-y**2 + pi), sqrt(-y**2 + pi)),
+                == Integral(NonElementaryIntegral(sin(x**3 + y**2),
+                            (x, -sqrt(-y**2 + pi), sqrt(-y**2 + pi))),
                             (y, -sqrt(pi), sqrt(pi))))
 
 
