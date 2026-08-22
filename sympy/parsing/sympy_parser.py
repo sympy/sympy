@@ -1179,7 +1179,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
     def visit_UnaryOp(self, node):
         if (isinstance(node.op, ast.USub)
                 and isinstance(node.operand, ast.BinOp)
-                and isinstance(node.operand.op, (ast.Add, ast.Mult, ast.Div))):
+                and isinstance(node.operand.op, (ast.Add, ast.Mult, ast.Div, ast.Sub))):
             operand = self.visit(node.operand)
             new_node = ast.Call(
                 func=ast.Name(id='Mul', ctx=ast.Load()),
