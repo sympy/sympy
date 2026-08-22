@@ -2208,7 +2208,7 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     qas = qa.as_expr().subs(s)
     qds = qd.as_expr().subs(s)
     if (conds == 'piecewise' and DE.x not in qds.free_symbols and
-            not qds.is_nonzero):
+            qds.is_zero is not False):
         # We have to be careful if the exponent is S.Zero!
 
         # XXX: Does qd = 0 always necessarily correspond to the exponential
