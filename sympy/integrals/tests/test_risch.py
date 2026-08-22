@@ -1062,8 +1062,7 @@ def test_risch_integrate_trig():
     assert risch_integrate(tan(x)**2 + x*tan(x) + 1, x) == \
         tan(x) + NonElementaryIntegral(x*tan(x), x)
     # Example 5.10.2
-    assert risch_integrate(sin(x)/x, x) == \
-        NonElementaryIntegral(2*tan(x/2)/(x*tan(x/2)**2 + x), x)
+    assert risch_integrate(sin(x)/x, x) == NonElementaryIntegral(sin(x)/x, x)
     # Example 5.10.3
     f = (tan(x)**5 + tan(x)**3 + x**2*tan(x) + 1)/(tan(x)**2 + 1)**3
     ans = risch_integrate(f, x)
@@ -1081,8 +1080,10 @@ def test_risch_integrate_trig():
         x**2*atan(x)/2 - x/2 + atan(x)/2
     assert risch_integrate(1/((x**2 + 1)*atan(x)), x) == log(atan(x))
     assert risch_integrate(atan(x)/(x**2 + 1), x) == atan(x)**2/2
-    # The half-angle rewriting of sin and cos: ugly but correct
-    assert risch_integrate(sin(x), x) == -2/(tan(x/2)**2 + 1)
+    # The half-angle rewriting of sin and cos is undone in the answers
+    # (see test_restore_sincos); arc-tangents of polynomials in the
+    # half-angle tangent stay as they are
+    assert risch_integrate(sin(x), x) == -cos(x)
     assert risch_integrate(1/(2 + cos(x)), x) == \
         2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
     # Opaque constants for piecewise-constant differences
@@ -1092,11 +1093,56 @@ def test_risch_integrate_trig():
     # Algebraic tangents
     raises(NotImplementedError, lambda: risch_integrate(
         (tan(atan(x)/3)**2 + 1)/(x**2 + 1), x))
+    assert integrate(sin(x), x, risch=True) == -cos(x)
+
+
+def test_restore_sincos():
+    # Rational functions of the half-angle tangents are rewritten through
+    # the sines and cosines the user wrote, also inside the arguments of
+    # other functions and in the nonelementary part; additive constants
+    # are dropped from the answer
+    assert risch_integrate(sin(x)**2, x) == x/2 - sin(x)*cos(x)/2
+    assert risch_integrate(sin(x)**3, x) == cos(x)**3/3 - cos(x)
+    assert risch_integrate(cos(x)**3, x) == sin(x) - sin(x)**3/3
+    assert risch_integrate(1/(1 + sin(x)), x) == (sin(x) - 1)/cos(x)
+    assert risch_integrate(sin(x)/cos(x)**2, x) == 1/cos(x)
+    assert risch_integrate(x*cos(x), x) == x*sin(x) + cos(x)
+    assert risch_integrate(exp(x)*sin(x), x) == \
+        exp(x)*sin(x)/2 - exp(x)*cos(x)/2
+    assert risch_integrate(exp(sin(x))*cos(x), x) == exp(sin(x))
+    assert risch_integrate(log(sin(x))*cos(x), x) == \
+        log(sin(x))*sin(x) - sin(x)
+    assert risch_integrate(exp(x)*sin(exp(x)), x) == -cos(exp(x))
+    assert risch_integrate(sin(sin(x))*cos(x), x) == -cos(sin(x))
+    assert risch_integrate(sin(3*x), x) == -cos(3*x)/3
+    assert risch_integrate(log(x)*sin(x), x) == \
+        NonElementaryIntegral(log(x)*sin(x), x)
+    # Logarithms with commensurable coefficients are combined into one,
+    # constant factors being dropped from its argument, when that is
+    # shorter
+    assert risch_integrate(sin(x)/(cos(x) + 2), x) == -log(cos(x) + 2)
+    assert risch_integrate(cos(x)/(sin(x) + 2), x) == log(sin(x) + 2)
+    assert risch_integrate(sec(x), x) == log((sin(x) + 1)/cos(x))
+    assert risch_integrate(sin(x) + tan(x), x) == -log(cos(x)) - cos(x)
+    assert risch_integrate(sin(x)*cos(x)/(sin(x)**2 + 1), x) == \
+        log(2 - cos(x)**2)/2
+    # The tangent form is kept when it is shorter
+    assert risch_integrate(1/sin(x), x) == log(tan(x/2))
+    assert risch_integrate(1/(1 + cos(x))**2, x) == \
+        tan(x/2)**3/6 + tan(x/2)/2
+    # A tangent or cotangent the user wrote stays a tangent
+    assert risch_integrate(tan(x), x) == log(tan(x)**2 + 1)/2
+    assert risch_integrate(cot(x), x) == \
+        log(tan(x)) - log(tan(x)**2 + 1)/2
+    assert risch_integrate(sin(x)*tan(x/2), x) == \
+        x - 2*tan(x/2)/(tan(x/2)**2 + 1)
+    # A generator whose double angle is not an angle the user wrote
+    assert risch_integrate(sin(x/2) + sin(x), x) == \
+        2*sin(x/2)**2 - 2*cos(x/2)
     # integrate() does not use the Risch algorithm for real trigonometric
-    # integrands on its own, because of the form of its answers
+    # integrands on its own, except as a last resort
     assert integrate(sin(x), x) == -cos(x)
     assert integrate(tan(x), x) == -log(cos(x))
-    assert integrate(sin(x), x, risch=True) == -2/(tan(x/2)**2 + 1)
 
 
 def test_risch_integrate_symbolic_constant():
@@ -1224,7 +1270,8 @@ def test_DifferentialExtension_printing():
         "('x', x), ('T', [x, t0, t1]), ('D', [Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
         "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]), ('fa', Poly(t1 + t0**2, t1, domain='ZZ[t0]')), "
         "('fd', Poly(1, t1, domain='ZZ')), ('Tfuncs', [Lambda(i, exp(i**2)), Lambda(i, log(t0 + 1))]), "
-        "('backsubs', []), ('exts', ['exp', 'log']), ('extargs', [x**2, t0 + 1]), "
+        "('backsubs', []), ('sincos_args', set()), ('exts', ['exp', 'log']), "
+        "('extargs', [x**2, t0 + 1]), "
         "('cases', ['base', 'exp', 'primitive']), ('case', 'primitive'), ('t', t1), "
         "('d', Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')), ('newf', t0**2 + t1), ('level', -1), "
         "('dummy', False)]))")

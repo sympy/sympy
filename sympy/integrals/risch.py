@@ -28,7 +28,8 @@ from types import GeneratorType
 from functools import reduce
 
 from sympy.core.add import Add
-from sympy.core.function import Lambda, expand_trig
+from sympy.core.function import Lambda, count_ops, expand, expand_trig
+from sympy.core.exprtools import factor_terms
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I
@@ -46,6 +47,7 @@ from sympy.functions.elementary.trigonometric import (atan, sin, cos,
 from .integrals import integrate, Integral
 from .heurisch import _symbols
 from .rationaltools import log_to_real
+from sympy.simplify.radsimp import fraction
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
@@ -120,6 +122,171 @@ def integer_powers(exprs):
     return sorted(iter(newterms.items()), key=lambda item: item[0].sort_key())
 
 
+def _half_angle_to_sincos(expr, tang, theta, x=None):
+    """
+    Rewrite the rational functions of ``tang`` == tan(theta/2) in ``expr``
+    as rational functions of sin(theta) and cos(theta).
+
+    Explanation
+    ===========
+
+    tan(theta/2) == sin(theta)/(1 + cos(theta)), so a rational function of
+    the half-angle tangent is a rational function of s = sin(theta) and
+    c = cos(theta), and the two agree as meromorphic functions: the
+    rewriting is exact, also inside the arguments of other functions.
+    Modulo s**2 + c**2 == 1, the numerator and the denominator are each
+    reduced to be linear in s (or in c), and the denominator is optionally
+    made free of s (or of c) by multiplying with its conjugate.  Of those
+    four forms, the one with the fewest operations is used, unless the
+    tangent form has fewer still.
+
+    Each maximal rational subexpression is rewritten as a whole
+    (rational terms of a sum, rational factors of a product), except
+    for the argument of an arc-tangent that is a polynomial in ``tang``:
+    atan(c*tan(theta/2) + d) is the conventional form, and the one
+    whose spurious discontinuities are removed by Integral.doit().
+
+    If ``x`` is given, ``expr`` is an antiderivative with respect to x,
+    and its presentation may change by a locally constant function:
+    additive constants are dropped from its rational part, and its
+    logarithmic terms with polynomial arguments in ``tang`` and
+    commensurable constant coefficients are combined into a single
+    logarithm, constant factors being dropped from its argument, whenever
+    that is shorter (e.g. log(tan(x/2)**2 + 1) - log(tan(x/2)**2 + 3)
+    becomes -log(cos(x) + 2)).
+    """
+    T, s, c = Dummy('T'), Dummy('s'), Dummy('c')
+    sincos = {s: sin(theta), c: cos(theta)}
+
+    def dropconst(e):
+        return Add(*[i for i in Add.make_args(e) if i.has(x)])
+
+    def forms(e, top=False):
+        # The candidate forms of the rational function e of T: the
+        # sine/cosine forms, then the tangent form
+        n, d = fraction(cancel(e))
+        n, d = Poly(n, T), Poly(d, T)
+        m = max(n.degree(), d.degree())
+        # t == s/(1 + c), with the powers of 1 + c cleared
+        n, d = [Add(*[coeff*s**k*(1 + c)**(m - k)
+            for (k,), coeff in p.terms()]) for p in (n, d)]
+        cands = []
+        for lin, other in ((s, c), (c, s)):
+            G = Poly(lin**2 + other**2 - 1, lin, other)
+            nl = Poly(n, lin, other).rem(G)
+            dl = Poly(d, lin, other).rem(G)
+            cands.append(nl.as_expr()/dl.as_expr())
+            if dl.degree(lin) == 1:
+                d0, d1 = Poly(dl.as_expr(), lin).all_coeffs()[::-1]
+                conj = d0 - d1*lin
+                nl = Poly(nl.as_expr()*conj, lin, other).rem(G)
+                dl = Poly(dl.as_expr()*conj, lin, other).rem(G)
+                cands.append(nl.as_expr()/dl.as_expr())
+        out = []
+        for i in cands:
+            ni, di = fraction(cancel(i))
+            if not di.has(s, c):
+                i = expand(ni/di)
+            elif top:
+                # Split off the polynomial part, so that the constant
+                # term can be dropped
+                (q,), r = reduced(ni, [di], s, c)
+                i = expand(q) + r/di
+            else:
+                i = ni/di
+            i = i.xreplace(sincos)
+            if top:
+                i = dropconst(i)
+            out.append(i)
+        out.append(e.xreplace({T: tang}))
+        return out
+
+    def pick(cands, key=count_ops):
+        # The first shortest sine/cosine form, unless the tangent form is
+        # strictly shorter
+        best = min(cands[:-1], key=key)
+        if key(cands[-1]) < key(best):
+            return cands[-1]
+        return best
+
+    def rational(e, top=False):
+        return pick(forms(e, top))
+
+    def logterm(coeff, p):
+        # coeff*log(p) up to a constant: a constant factor and a constant
+        # numerator are pulled out of p
+        def strip(q):
+            n, d = [factor_terms(i.primitive()[1]).as_independent(x,
+                as_Add=False)[1] for i in fraction(q)]
+            if not n.has(x):
+                return (S.NegativeOne, d)
+            return (S.One, n/d)
+        sgn, p = pick([strip(q) for q in forms(p)], lambda i: count_ops(i[1]))
+        return sgn*coeff*log(p)
+
+    def rw(e):
+        if not e.has(T):
+            return e
+        if e.is_rational_function(T):
+            return rational(e)
+        if e.is_Add or e.is_Mul:
+            rat, rest = [], []
+            for i in e.args:
+                if i.has(T) and i.is_rational_function(T):
+                    rat.append(i)
+                else:
+                    rest.append(rw(i))
+            if rat:
+                rest.append(rational(e.func(*rat)))
+            return e.func(*rest)
+        if isinstance(e, atan) and e.args[0].is_polynomial(T):
+            return e.xreplace({T: tang})
+        return e.func(*[rw(i) for i in e.args])
+
+    def top(e):
+        rat, logs, rest = [], [], []
+        for i in Add.make_args(e):
+            coeff, l = i.as_independent(T)
+            if not i.has(T):
+                rest.append(i)
+            elif i.is_rational_function(T):
+                rat.append(i)
+            elif (isinstance(l, log) and l.args[0].is_polynomial(T) and
+                    not coeff.has(x)):
+                logs.append((coeff, l.args[0]))
+            else:
+                rest.append(rw(i))
+        if rat:
+            rest.append(rational(Add(*rat), top=True))
+        # Group the logarithms by commensurable coefficients
+        groups = []
+        for coeff, p in logs:
+            for group in groups:
+                ratio = coeff/group[0]
+                if ratio.is_Rational:
+                    group[1].append((ratio, p))
+                    break
+            else:
+                if coeff.could_extract_minus_sign():
+                    groups.append((-coeff, [(S.NegativeOne, p)]))
+                else:
+                    groups.append((coeff, [(S.One, p)]))
+        for r, items in groups:
+            separate = Add(*[logterm(r*n, p) for n, p in items])
+            l = ilcm(1, *[n.q for n, p in items])
+            combined = logterm(r/l, Mul(*[p**(n*l) for n, p in items]))
+            if count_ops(combined) <= count_ops(separate):
+                rest.append(combined)
+            else:
+                rest.append(separate)
+        return Add(*rest)
+
+    expr = expr.xreplace({tang: T})
+    if x is None:
+        return rw(expr)
+    return top(expr)
+
+
 class DifferentialExtension:
     """
     A container for all the information relating to a differential extension.
@@ -139,6 +306,10 @@ class DifferentialExtension:
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
+    - sincos_args: The set of arguments of the sines, cosines, secants and
+      cosecants that were rewritten through the tangent of the half angle
+      to build the tower; restore_sincos() rewrites rational functions of
+      those tangents back through them.
     - exts: The type ('exp', 'log', 'tan' or 'atan') of each extension;
       exts[i] describes T[i + 1] (T[0] == x is not an extension).
     - extargs: The argument of the exp, log, tan or atan of each
@@ -169,8 +340,8 @@ class DifferentialExtension:
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
     __slots__ = ('f', 'origf', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs',
-        'backsubs', 'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf',
-        'level', 'ts', 'dummy')
+        'backsubs', 'sincos_args', 'exts', 'extargs', 'cases', 'case', 't',
+        'd', 'newf', 'level', 'ts', 'dummy')
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
         """
@@ -331,7 +502,9 @@ class DifferentialExtension:
         the half angle, cot becomes 1/tan, and acot(u) becomes atan(1/u)
         plus an opaque constant that is restored on backsubstitution (the
         difference is locally constant wherever both are defined).
-        Functions of constants are left alone.
+        Functions of constants are left alone.  The arguments of the
+        rewritten sines, cosines, secants and cosecants are recorded in
+        sincos_args for restore_sincos().
         """
         # xreplace() does not descend into the replacements, so nested
         # functions (e.g. acot(sin(x))) take several passes.
@@ -341,6 +514,8 @@ class DifferentialExtension:
             for i in self.newf.atoms(sin, cos, sec, csc, cot):
                 if i.has(self.x):
                     reps[i] = i.rewrite(tan)
+                    if not isinstance(i, cot):
+                        self.sincos_args.add(i.args[0])
             for i in self.newf.atoms(acot):
                 if i.has(self.x):
                     if i not in acots:
@@ -934,8 +1109,57 @@ class DifferentialExtension:
         # For various things that we change to make things work that we need to
         # change back when we are done.
         self.backsubs = []
+        self.sincos_args = set()
         self.Tfuncs = []
         self.newf = self.f
+
+    def restore_sincos(self, expr, drop_constants=False):
+        """
+        Rewrite the half-angle tangents that _rewrite_trig() introduced
+        back through the sines and cosines of the original angles.
+
+        Explanation
+        ===========
+
+        For each hypertangent generator tan(g) of the tower that was not
+        written by the user as tan(g) or cot(g), but whose double angle 2*g
+        is (up to a constant shift) the argument of a sine, cosine, secant
+        or cosecant that _rewrite_trig() rewrote, the rational functions
+        of tan(g) in ``expr`` are rewritten as rational functions of
+        sin(2*g) and cos(2*g) by _half_angle_to_sincos(), which is exact.
+        If ``drop_constants`` is True, ``expr`` is an antiderivative and
+        additive terms that do not depend on x are dropped from it.
+
+        ``expr`` must already be back-substituted (functions of x, not
+        the tower variables).  Generators are processed from the bottom of
+        the tower up, so that the argument of a nested generator (e.g.
+        tan(sin(x)/2) for sin(sin(x))) has the same form as in ``expr``
+        when its turn comes.  A double angle that the rewriting does not
+        reproduce syntactically is not recognized, and its generator is
+        left as a tangent.
+        """
+        if not self.sincos_args:
+            return expr
+        s = list(zip(reversed(self.T), reversed([f(self.x) for f in self.Tfuncs])))
+        usertans = self.origf.atoms(tan) | {tan(i.args[0])
+            for i in self.origf.atoms(cot)}
+        done = []
+        for i in self.indices('tan'):
+            g = self.extargs[i - 1].subs(s)
+            for tang, theta in done:
+                g = _half_angle_to_sincos(g, tang, theta)
+            tang = tan(g)
+            theta = 2*g
+            if tang in usertans or not any(
+                    not (u - theta).expand().has(self.x)
+                    for u in self.sincos_args):
+                continue
+            expr = _half_angle_to_sincos(expr, tang, theta,
+                self.x if drop_constants else None)
+            done.append((tang, theta))
+        if drop_constants:
+            expr = Add(*[i for i in Add.make_args(expr) if i.has(self.x)])
+        return expr
 
     def indices(self, extension):
         """
@@ -2258,8 +2482,9 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     Only transcendental functions are supported: exponentials, logarithms,
     tangents and arc-tangents (sin, cos, sec, csc and cot are rewritten
-    through the tangent of the half angle, and acot through atan;
-    hyperbolic functions, asin and acos need ``rewrite_complex=True``).
+    through the tangent of the half angle, which the answer is rewritten
+    back from, and acot through atan; hyperbolic functions, asin and acos
+    need ``rewrite_complex=True``).
 
     If this function returns an unevaluated Integral in the result, it means
     that it has proven that integral to be nonelementary.  Any errors will
@@ -2394,9 +2619,11 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             DE.decrement_level()
             fa, fd = frac_in(i, DE.t)
         else:
-            result = result.subs(DE.backsubs)
+            result = DE.restore_sincos(result.subs(DE.backsubs),
+                drop_constants=True)
             if isinstance(i, Integral):
-                i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
+                i = NonElementaryIntegral(DE.restore_sincos(
+                    i.function.subs(DE.backsubs)), i.limits)
             if not separate_integral:
                 result += i
                 return result
