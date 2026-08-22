@@ -639,7 +639,8 @@ class Integral(AddWithLimits):
                 antideriv is not None):
                 # The integrands of integrals left unevaluated (e.g. a
                 # nonelementary part) must not be changed
-                integrals = {i: Dummy() for i in antideriv.atoms(Integral)}
+                integrals = {i: Dummy(commutative=i.is_commutative)
+                    for i in antideriv.atoms(Integral)}
                 antideriv = antideriv.xreplace(integrals)
                 for atan_term in antideriv.atoms(atan):
                     atan_arg = atan_term.args[0]
