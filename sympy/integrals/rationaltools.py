@@ -229,7 +229,7 @@ def ratint_logpart(f, g, x, t=None):
     a, b = g, f - g.diff()*Poly(t, x)
 
     res, R = resultant(a, b, includePRS=True)
-    res = Poly(res, t, composite=False)
+    res = Poly(res, t)
 
     assert res, "BUG: resultant(%s, %s) cannot be zero" % (a, b)
 
