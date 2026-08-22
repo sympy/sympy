@@ -1275,7 +1275,7 @@ class _EvaluatorPrinter:
         # Args of type Dummy can cause name collisions with args
         # of type Symbol.  Force dummify of everything in this
         # situation.
-        dummify = self._dummify or any(
+        has_dummy_args = any(
             isinstance(arg, Dummy) for arg in flatten(args))
 
         argstrs = [None]*len(args)
@@ -1295,7 +1295,7 @@ class _EvaluatorPrinter:
                 s = str(arg)
             elif isinstance(arg, Basic) and arg.is_symbol:
                 s = str(arg)
-                if dummify or not self._is_safe_ident(s):
+                if self._dummify or not self._is_safe_ident(s) or (has_dummy_args and isinstance(arg, Dummy)):
                     dummy = Dummy()
                     if isinstance(expr, Expr):
                         dummy = uniquely_named_symbol(
@@ -1303,7 +1303,7 @@ class _EvaluatorPrinter:
                     s = self._argrepr(dummy)
                     update_dummies(arg, dummy)
                     expr = self._subexpr(expr, _dummies_dict)
-            elif dummify or isinstance(arg, (Function, Derivative)):
+            elif self._dummify or isinstance(arg, (Function, Derivative)):
                 dummy = Dummy()
                 s = self._argrepr(dummy)
                 update_dummies(arg, dummy)
