@@ -15,6 +15,7 @@ from sympy.functions.combinatorial.factorials import (binomial, factorial)
 from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
+from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
@@ -1124,3 +1125,18 @@ def test_issue_14269():
     root = (sqrt(2) - 1)**Rational(1, 3) - (sqrt(2) + 1)**Rational(1, 3)
     expr = (x**3 + 3*x + 2).subs(x, root)
     assert simplify(expr) == 0
+
+
+def test_issue_30300():
+    x, y = symbols('x y', real=True)
+    # ceiling(x) == -floor(-x), so these cancel exactly
+    assert simplify(floor(x) + ceiling(-x)) == 0
+    assert simplify(ceiling(x) + floor(-x)) == 0
+    assert simplify(floor(2*x) + ceiling(-2*x)) == 0
+    assert simplify(floor(sin(x)) + ceiling(-sin(x))) == 0
+    assert simplify(floor(x) + ceiling(-x) + y) == y
+    # nothing cancels here, so the expressions are left alone
+    assert simplify(ceiling(x)) == ceiling(x)
+    assert simplify(floor(x)) == floor(x)
+    assert simplify(frac(x)) == frac(x)
+    assert simplify(ceiling(x) + floor(x)) == ceiling(x) + floor(x)
