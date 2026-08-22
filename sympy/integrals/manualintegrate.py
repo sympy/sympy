@@ -48,6 +48,7 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
     cosh, coth, sech, sinh, tanh, asinh)
+from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
@@ -2096,108 +2097,142 @@ def quadratic_denom_rule(integral):
 def bioche_substitution(integral):
     # Apply Bioche's rules to rational functions of trigonometric functions
     # https://en.wikipedia.org/wiki/Bioche%27s_rules
+
     integrand, x = integral
-
     TRIG = (sin, cos, tan, cot, sec, csc)
-
     trig_atoms = tuple(ordered(integrand.atoms(*TRIG)))
 
     if not trig_atoms:
         return None
-    # Polynomial trig expressions are better handled termwise after expansion, for example
-    # (sin(2*x) + cos(3*x))**2
-    # Bioche is useful here only for genuinely rational trig expressions
+    # Polynomial trig expressions are better handled termwise after expansion
     if integrand.is_polynomial(*trig_atoms):
         return None
     if integrand.is_rational_function(*trig_atoms) is not True:
         return None
     masked = integrand.xreplace({atom: Dummy() for atom in trig_atoms})
-    # exclude x*sin(x)
+    # Exclude explicit dependence on x outside trigonometric functions
     if masked.has(x):
         return None
 
-    variable_atoms = []
-    ratios = []
-    coeff0 = phase0 = None
-
+    trig_data = []
     for atom in trig_atoms:
-        argument = atom.args[0]
-        # exclude sin(cos(x))
-        if not argument.is_polynomial(x):
+        argument = atom.args[0].as_poly(x)
+        # Trigonometric arguments must be affine
+        if argument is None or argument.degree() > 1:
             return None
-        argument = Poly(argument, x)
-        # exclude sin(2*x**2)
-        # exclude sin(2). Constant arguments may come from prior
-        # trig_expand_rule and can make the resulting ratint problem
-        # prohibitively expensive
-        if argument.degree() != 1:
-            return None
-        coeff = argument.nth(1)
-        phase = argument.nth(0)
-        if coeff0 is None:
-            coeff0, phase0 = coeff, phase
-            ratio = S.One
-        else:
-            if (coeff0*phase - coeff*phase0).cancel().is_zero is not True:
-                return None
-            ratio = (coeff / coeff0).cancel()
-            if not isinstance(ratio, Rational):
-                return None
-        variable_atoms.append((atom, coeff, phase))
-        ratios.append(ratio)
-    if not variable_atoms:
+        trig_data.append((atom, argument.nth(1), argument.nth(0)))
+
+    # At least one trigonometric argument must depend on x
+    reference = next(((coeff, phase_i) for _, coeff, phase_i in trig_data if coeff != 0), None)
+    if reference is None:
         return None
+
+    coeff0, phase0 = reference
+    ratios = []
+    phase_residuals = []
+    for _, coeff, phase_i in trig_data:
+        ratio = (coeff/coeff0).cancel()
+        # All frequencies must be rationally proportional
+        if not isinstance(ratio, Rational):
+            return None
+        ratios.append(ratio)
+        phase_residuals.append((phase_i - ratio*phase0).cancel())
     denominator_lcm = lcm_list([ratio.q for ratio in ratios])
-    # Choose the largest common frequency omega such that every
-    # coefficient is an integer multiple of omega
-    omega = (coeff0 / denominator_lcm).cancel()
-    u_func = (omega * (x + phase0/coeff0)).cancel()
+    # Choose the largest common frequency
+    omega = (coeff0/denominator_lcm).cancel()
+    harmonics = [ratio*denominator_lcm for ratio in ratios]
 
+    # Absorb the reference phase into u
+    phase_shift = (phase0/denominator_lcm).cancel()
+    phase_base = next((residual for residual in phase_residuals if residual.is_zero is not True), None)
+    if phase_base is None:
+        # All phases can be absorbed into u
+        phase_multiples = [S.Zero]*len(trig_data)
+    else:
+        phase_ratios = [(residual/phase_base).cancel() for residual in phase_residuals]
+        # Residual phases must have rational rank at most one
+        if not all(isinstance(ratio, Rational) for ratio in phase_ratios):
+            return None
+        # Write every residual phase as an integer multiple of phase
+        phase_lcm = lcm_list([ratio.q for ratio in phase_ratios])
+        phase = (phase_base/phase_lcm).cancel()
+        phase_multiples = [ratio*phase_lcm for ratio in phase_ratios]
+        # Minimize max(abs(m_i - n_i*k)); candidates occur where two terms are equal up to sign
+        candidates = {S.Zero}
+        for i, (m_i, n_i) in enumerate(zip(phase_multiples, harmonics)):
+            for j in range(i):
+                m_j = phase_multiples[j]
+                n_j = harmonics[j]
+                for numerator, denominator in ((m_i - m_j, n_i - n_j), (m_i + m_j, n_i + n_j)):
+                    if denominator != 0:
+                        value = numerator/denominator
+                        candidates.update((floor(value), ceiling(value)))
+        best_k = min(ordered(candidates), key=lambda k: max(abs(m - n*k) for m, n in zip(phase_multiples, harmonics)))
+        phase_shift = (phase_shift + best_k*phase).cancel()
+        phase_multiples = [m - n*best_k for m, n in zip(phase_multiples, harmonics)]
+
+    u_func = omega*x + phase_shift
     u = Dummy("u")
-    replacements = {atom: atom.func((coeff / omega).cancel() * u) for atom, coeff, _ in variable_atoms}
+    v = Dummy("v")
+    replacements = {atom: atom.func(harmonic*u + phase_multiple*v)
+                for (atom, _, _), harmonic, phase_multiple in zip(trig_data, harmonics, phase_multiples)}
     expr_u = integrand.xreplace(replacements)
-    # rewrites sin, cos, tan to substitute
-    expr_u = (expand_trig(expr_u)).cancel()
+    # Rewrite multiple angles before applying Bioche's substitutions
+    expr_u = expand_trig(expr_u).cancel()
 
-    # avoid Bioche for cos(3*x)/cos(x)
+    phase_substitution = {}
+    singular_condition = S.false
+    singular_expr_u = None
+    if phase_base is not None:
+        # Parametrize the single residual phase rationally
+        z = Dummy("z")
+        expr_u = expr_u.xreplace({sin(v): 2*z/(1 + z**2),
+                cos(v): (1 - z**2)/(1 + z**2),
+                tan(v): 2*z/(1 - z**2),
+                cot(v): (1 - z**2)/(2*z),
+                sec(v): (1 + z**2)/(1 - z**2),
+                csc(v): (1 + z**2)/(2*z)}).cancel()
+        phase_substitution = {z: tan(phase/2)}
+        singular_condition = Eq(cos(phase/2), 0)
+        if singular_condition is not S.false:
+            # Use the cotangent chart when tan(phase/2) may be singular
+            w = Dummy("w")
+            singular_expr_u = expr_u.xreplace({z: 1/w}).cancel().xreplace({w: S.Zero})
+        if singular_condition is S.true:
+            # Avoid constructing the invalid tangent-chart branch.
+            expr_u = singular_expr_u
+            phase_substitution = {}
+            singular_expr_u = None
+
+    # Avoid Bioche when expansion already gives an easier integral
     if expr_u.is_polynomial(*(func(u) for func in TRIG)):
+        expr_step = expr_u.xreplace(phase_substitution)
         if (u_func - x).cancel().is_zero is True:
-            expanded = expr_u.xreplace({u: x})
+            expanded = expr_step.xreplace({u: x})
             generic_step = RewriteRule(integrand, x, expanded, integral_steps(expanded, x))
         else:
-            generic_step = URule(integrand, x, u, u_func, integral_steps(expr_u / omega, u))
-
+            generic_step = URule(integrand, x, u, u_func, integral_steps(expr_step/omega, u))
     else:
         t = Dummy("t")
         s = Dummy("s")
         c = Dummy("c")
+        expr_sc = expr_u.xreplace({sin(u): s, cos(u): c, tan(u): s/c, cot(u): c/s, sec(u): 1/c, csc(u): 1/s})
 
-        expr_sc = expr_u.xreplace({
-            sin(u): s,
-            cos(u): c,
-            tan(u): s/c,
-            cot(u): c/s,
-            sec(u): 1/c,
-            csc(u): 1/s,
-        })
+        def rational_step(transformed):
+            # Restore the residual phase before delegating to integral_steps
+            return integral_steps(transformed.xreplace(phase_substitution), t)
 
-        def try_cos_double(w):
-            # try t = cos(2*u_func) when both R(s, -c) = -R(s, c) and
-            # R(-s, c) = -R(s, c), so -R/(4*w*s*c) is rational in t alone
-            # Condition 4 on Wikipedia
-            transformed = (-expr_sc/(4*w*s*c)).cancel()
+        def try_cos_double():
+            # Try t = cos(2*u_func) when both sine and cosine powers are even
+            transformed = (-expr_sc/(4*omega*s*c)).cancel()
             numerator, denominator = transformed.as_numer_denom()
-
             numerator = numerator.as_poly(s, c)
             denominator = denominator.as_poly(s, c)
-
             replacements = {}
 
-            # powers of both sin and cos must be even so they can be replaced
-            # using sin(u)**2 = (1 - t)/2 and cos(u)**2 = (1 + t)/2
             for polynomial in (numerator, denominator):
-                for (s_power, c_power), coefficient in polynomial.terms():
-                    if (s_power % 2 or c_power % 2) and coefficient != 0:
+                for (s_power, c_power), _ in polynomial.terms():
+                    if s_power % 2 or c_power % 2:
                         return None
                     if s_power:
                         replacements[s**s_power] = ((1 - t)/2)**(s_power // 2)
@@ -2207,24 +2242,20 @@ def bioche_substitution(integral):
             numerator = numerator.as_expr().xreplace(replacements)
             denominator = denominator.as_expr().xreplace(replacements)
             transformed = (numerator/denominator).cancel()
-            substep = integral_steps(transformed, t)
+            substep = rational_step(transformed)
             return URule(integrand, x, t, cos(2*u_func), substep)
 
-        def try_sin(w):
-            # try t = sin(u_func) when R(s, -c) = -R(s, c), so R/(w*c)
-            # is rational in s alone. This avoids poles introduced by tangent substitutions
-            transformed = (expr_sc/(w*c)).cancel()
+        def try_sin():
+            # Try t = sin(u_func) when only even powers of cosine remain
+            transformed = (expr_sc/(omega*c)).cancel()
             numerator, denominator = transformed.as_numer_denom()
-
             numerator = numerator.as_poly(c)
             denominator = denominator.as_poly(c)
-
             replacements = {s: t}
 
-            # powers of cos must be even so cos**(2*k) can be replaced by (1 - t**2)**k without branch problems
             for polynomial in (numerator, denominator):
-                for (power,), coefficient in polynomial.terms():
-                    if power % 2 and coefficient != 0:
+                for (power,), _ in polynomial.terms():
+                    if power % 2:
                         return None
                     if power:
                         replacements[c**power] = (1 - t**2)**(power // 2)
@@ -2232,24 +2263,20 @@ def bioche_substitution(integral):
             numerator = numerator.as_expr().xreplace(replacements)
             denominator = denominator.as_expr().xreplace(replacements)
             transformed = (numerator/denominator).cancel()
-            substep = integral_steps(transformed, t)
+            substep = rational_step(transformed)
             return URule(integrand, x, t, sin(u_func), substep)
 
-        def try_cos(w):
-            # try t = cos(u_func) when R(-s, c) = -R(s, c), so -R/(w*s) is rational in c alone,
-            # this avoids poles introduced by tangent substitutions
-            transformed = (-expr_sc/(w*s)).cancel()
+        def try_cos():
+            # Try t = cos(u_func) when only even powers of sine remain
+            transformed = (-expr_sc/(omega*s)).cancel()
             numerator, denominator = transformed.as_numer_denom()
-
             numerator = numerator.as_poly(s)
             denominator = denominator.as_poly(s)
-
             replacements = {c: t}
 
-            # powers of sin must be even so sin**(2*k) can be replaced by (1 - t**2)**k without branch problems
             for polynomial in (numerator, denominator):
-                for (power,), coefficient in polynomial.terms():
-                    if power % 2 and coefficient != 0:
+                for (power,), _ in polynomial.terms():
+                    if power % 2:
                         return None
                     if power:
                         replacements[s**power] = (1 - t**2)**(power // 2)
@@ -2257,19 +2284,15 @@ def bioche_substitution(integral):
             numerator = numerator.as_expr().xreplace(replacements)
             denominator = denominator.as_expr().xreplace(replacements)
             transformed = (numerator/denominator).cancel()
-            substep = integral_steps(transformed, t)
+            substep = rational_step(transformed)
             return URule(integrand, x, t, cos(u_func), substep)
 
-        def try_tan(w):
-            # try t = tan(u_func) when R(-s, -c) = R(s, c),
-            # this produces a lower-degree rational function than the half-angle substitution
-            transformed = ((expr_sc*c**2/w).xreplace({s: t*c})).cancel()
-
+        def try_tan():
+            # Try t = tan(u_func) before the higher-degree half-angle substitution
+            transformed = ((expr_sc*c**2/omega).xreplace({s: t*c})).cancel()
             numerator, denominator = transformed.as_numer_denom()
-
             numerator = numerator.as_poly(c)
             denominator = denominator.as_poly(c)
-
             replacements = {}
 
             for polynomial in (numerator, denominator):
@@ -2282,13 +2305,11 @@ def bioche_substitution(integral):
             numerator = numerator.as_expr().xreplace(replacements)
             denominator = denominator.as_expr().xreplace(replacements)
             transformed = (numerator/denominator).cancel()
-            substep = integral_steps(transformed, t)
-            return URule(
-                integrand, x, t, tan(u_func), substep
-            )
+            substep = rational_step(transformed)
+            return URule(integrand, x, t, tan(u_func), substep)
 
-        def try_tan_half(w):
-            # fallback to the universal Weierstrass substitution t = tan(u_func/2)
+        def try_tan_half():
+            # Fall back to the universal Weierstrass substitution
             transformed = expr_u.xreplace({
                 sin(u): 2*t/(1 + t**2),
                 cos(u): (1 - t**2)/(1 + t**2),
@@ -2297,32 +2318,32 @@ def bioche_substitution(integral):
                 sec(u): (1 + t**2)/(1 - t**2),
                 csc(u): (1 + t**2)/(2*t),
             })
-
-            transformed = (transformed * (2/(w*(1 + t**2)))).cancel()
-            substep = integral_steps(transformed, t)
+            transformed = (transformed * 2/(omega*(1 + t**2))).cancel()
+            substep = rational_step(transformed)
             return URule(integrand, x, t, tan(u_func/2), substep)
 
-        generic_step = try_cos_double(omega)
-        if generic_step is None:
-            generic_step = try_sin(omega)
-        if generic_step is None:
-            generic_step = try_cos(omega)
-        if generic_step is None:
-            generic_step = try_tan(omega)
-        if generic_step is None:
-            generic_step = try_tan_half(omega)
+        generic_step = None
+        for method in (try_cos_double, try_sin, try_cos, try_tan, try_tan_half):
+            step = method()
+            if step is not None and not step.contains_dont_know():
+                generic_step = step
+                break
 
     if generic_step is None or generic_step.contains_dont_know():
         return None
-
+    if singular_expr_u is not None:
+        singular_substep = integral_steps((singular_expr_u/omega).cancel(), u)
+        singular_step = URule(integrand, x, u, u_func, singular_substep)
+        if singular_step.contains_dont_know():
+            return None
+        generic_step = PiecewiseRule(integrand, x,
+            [(singular_step, singular_condition), (generic_step, S.true)])
     if omega.is_zero is False:
         return generic_step
-
-    zero_replacements = {atom: atom.func(phase) for atom, _, phase in variable_atoms}
+    zero_replacements = {atom: atom.func(phase_i) for atom, _, phase_i in trig_data}
     zero_integrand = integrand.xreplace(zero_replacements)
     zero_substep = integral_steps(zero_integrand, x)
     zero_step = RewriteRule(integrand, x, zero_integrand, zero_substep)
-
     return PiecewiseRule(integrand, x, [(zero_step, Eq(omega, 0)), (generic_step, S.true)])
 
 def chebyshev_substitution_rule(integral):
