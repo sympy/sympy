@@ -27,10 +27,11 @@ from __future__ import annotations
 from types import GeneratorType
 from functools import reduce
 
-from sympy.core.function import Lambda
+from sympy.core.add import Add
+from sympy.core.function import Function, Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I
+from sympy.core.numbers import Float, I, Rational, oo, zoo
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -44,8 +45,10 @@ from sympy.functions.elementary.trigonometric import (atan, sin, cos,
     tan, acot, cot, asin, acos)
 from .integrals import integrate, Integral
 from .heurisch import _symbols
-from sympy.polys.polyerrors import PolynomialError
-from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
+from .rationaltools import log_to_real
+from sympy.polys.rationaltools import together
+from sympy.polys.polyerrors import NotInvertible, PolynomialError
+from sympy.polys.polytools import (real_roots, cancel, Poly, gcd, rem, factor,
     reduced)
 from sympy.polys.rootoftools import RootSum
 from sympy.utilities.iterables import numbered_symbols
@@ -137,14 +140,31 @@ class DifferentialExtension:
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
-    - exts:
-    - extargs:
+    - exts: The type ('exp' or 'log') of each extension; exts[i]
+      describes T[i + 1] (T[0] == x is not an extension).
+    - extargs: The argument of the exp or log of each extension, indexed
+      like exts.
     - cases: List of string representations of the cases of T.
     - t: The top level extension variable, as defined by the current level
       (see level below).
     - d: The top level extension derivation, as defined by the current
       derivation (see level below).
     - case: The string representation of the case of self.d.
+    - transcendental: Whether the tower is proven purely transcendental:
+      every extension is transcendental and every structure-theorem
+      question asked about the tower was decided.  When False -- because
+      an extension is algebraic, or because an undecided question was
+      answered "no" without proof -- nonexistence answers cannot be
+      trusted, so nonelementary conclusions are degraded to unevaluated
+      Integrals and solved results are independently vetted.
+    - algebraic_gens: Whether the tower is deliberately erecting
+      algebraic (radical) generators.  Implies transcendental == False,
+      but not conversely: a tower whose transcendence is merely
+      unproven (an undecided structure question) has no algebraic
+      generators, and construction decisions that depend on the actual
+      tower contents -- like _exp_part()'s restart-versus-adjoin choice
+      for a proven radical relation -- must use this, not
+      transcendental.
     (Note that self.T and self.D will always contain the complete extension,
     regardless of the level.  Therefore, you should ALWAYS use DE.t and DE.d
     instead of DE.T[-1] and DE.D[-1].  If you want to have a list of the
@@ -164,11 +184,14 @@ class DifferentialExtension:
     # of the class easily (the memory use doesn't matter too much, since we
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
-    __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs',
-        'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf', 'level',
-        'ts', 'dummy')
+    __slots__ = ('f', 'origf', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs',
+            'backsubs', 'exts', 'extargs', 'cases', 'case', 'transcendental',
+            't', 'd', 'newf', 'level', 'ts', 'dummy', 'algebraic',
+            'sign_consts', 'algebraic_gens')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
+    def __init__(self, f=None, x=None, handle_first='log',
+            dummy=False, extension=None, rewrite_complex=None,
+            algebraic=False):
         """
         Tries to build a transcendental extension tower from ``f`` with respect to ``x``.
 
@@ -202,27 +225,39 @@ class DifferentialExtension:
         """
         # XXX: If you need to debug this function, set the break point here
 
+        self.algebraic = algebraic
+
         if extension:
             if 'D' not in extension:
                 raise ValueError("At least the key D must be included with "
-                    "the extension flag to DifferentialExtension.")
+                                 "the extension flag to DifferentialExtension.")
             for attr in extension:
                 setattr(self, attr, extension[attr])
+            if 'transcendental' not in extension:
+                # A manual extension may declare transcendental=False to
+                # mark an algebraic tower (e.g. t representing x**(S(1)/2)
+                # as exp(log(x)/2)); nonelementary conclusions are then
+                # invalid and are degraded to unevaluated Integrals.
+                self.transcendental = True
+            if 'algebraic_gens' not in extension:
+                self.algebraic_gens = not self.transcendental
 
             self._auto_attrs()
 
             return
         elif f is None or x is None:
             raise ValueError("Either both f and x or a manual extension must "
-            "be given.")
+                             "be given.")
 
         if handle_first not in ('log', 'exp'):
             raise ValueError("handle_first must be 'log' or 'exp', not %s." %
-                str(handle_first))
+                             str(handle_first))
 
         # f will be the original function, self.f might change if we reset
-        # (e.g., we pull out a constant from an exponential)
+        # (e.g., we pull out a constant from an exponential); origf always
+        # stays the expression the user handed in
         self.f = f
+        self.origf = f
         self.x = x
         # setting the default value 'dummy'
         self.dummy = dummy
@@ -241,7 +276,7 @@ class DifferentialExtension:
             # rewrite the trigonometric components
             for candidates, rule in rewritables.items():
                 self.newf = self.newf.rewrite(candidates, rule)
-            self.newf = cancel(self.newf)
+                self.newf = cancel(self.newf)
         else:
             if any(i.has(x) for i in self.f.atoms(sin, cos, cot, tan, sinh,
                     cosh, coth, tanh, asin, acos, acot, atan)):
@@ -264,20 +299,39 @@ class DifferentialExtension:
                 # We couldn't find a new extension on the last pass, so I guess
                 # we can't do it.
                 raise NotImplementedError("Couldn't find an elementary "
-                    "transcendental extension for %s.  Try using a " % str(f) +
-                    "manual extension with the extension flag.")
+                                          "transcendental extension for %s.  Try using a " % str(f) +
+                                          "manual extension with the extension flag.")
 
             exps, pows, numpows, sympows, log_new_extension = \
-                    self._rewrite_exps_pows(exps, pows, numpows, sympows, log_new_extension)
+                self._rewrite_exps_pows(exps, pows, numpows, sympows, log_new_extension)
 
             logs, symlogs = self._rewrite_logs(logs, symlogs)
 
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps)
                 if exp_new_extension is None:
-                    # reset and restart
+                    # Reset and restart.  reset() clears backsubs, so any
+                    # rewrite recorded there -- a branch-constant Dummy
+                    # from _log_part(), a user radical's notation -- must
+                    # first be folded back into newf, or the Dummy leaks
+                    # into the final result as a free symbol and the
+                    # original notation is never re-encountered by the
+                    # rebuild.  The branch-ratio constants are the
+                    # exception: their Dummys stay in newf as opaque
+                    # constants, so their mapping must instead survive
+                    # the reset and be re-recorded.
+                    sign_consts = self.sign_consts
+                    ratio_dummies = {s for s, _, _ in sign_consts}
+                    self.newf = self.newf.subs(
+                        [(a, b) for a, b in self.backsubs
+                         if a not in ratio_dummies])
                     self.f = self.newf
                     self.reset()
+                    self.sign_consts = sign_consts
+                    self.backsubs += [(s, R) for s, R, _ in sign_consts]
+                    if sign_consts:
+                        self.transcendental = False
+                        self.algebraic_gens = True
                     exp_new_extension = True
                     continue
 
@@ -296,7 +350,7 @@ class DifferentialExtension:
         return None
 
     def _rewrite_exps_pows(self, exps, pows, numpows,
-            sympows, log_new_extension):
+                           sympows, log_new_extension):
         """
         Rewrite exps/pows for better processing.
         """
@@ -319,8 +373,98 @@ class DifferentialExtension:
 
         ratpows_repl = [
             (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
-        self.backsubs += [(j, i) for i, j in ratpows_repl]
-        self.newf = self.newf.xreplace(dict(ratpows_repl))
+        # exp(u)**q == exp(q*u) is exact for integer q, but for
+        # fractional q the left side is a principal root that differs
+        # from exp(q*u) by a locally constant root of unity off the real
+        # line.  Radicals of exponentials also arise internally (the
+        # radical case of _exp_part substitutes t**(p/n) and restarts);
+        # those denote a root the construction is free to choose, so
+        # folding them to exp(q*u) is exact, and rewriting the answer
+        # back into principal-root notation is what turned correctly
+        # integrated results into non-antiderivatives at complex points.
+        # A fractional power the user wrote, however, means the
+        # principal root specifically: fold it as ratio*exp(q*u) with an
+        # opaque locally constant ratio (a root of unity on each
+        # component), restored exactly on backsubstitution -- which also
+        # keeps integrands mixing exp(u)**q with exp(q*u) itself
+        # pointwise correct.
+        subs_map = {}
+        for i, j in ratpows_repl:
+            if i.exp.is_Integer:
+                self.backsubs.append((j, i))
+                subs_map[i] = j
+            elif self.origf is not None and self.origf.has(i):
+                ratio = Dummy('exp_branch')
+                self.backsubs.append((ratio, i/j))
+                subs_map[i] = ratio*j
+            else:
+                subs_map[i] = j
+        self.newf = self.newf.xreplace(subs_map)
+
+        if self.algebraic:
+            # Factor radicands and distribute the fractional power over
+            # the factors, so that content like a perfect square does
+            # not become a spurious tower generator.  Distributing a
+            # fractional power is not branch-faithful (sqrt(u*v) ==
+            # sqrt(u)*sqrt(v) fails when u and v are both negative), so
+            # unless every factor is provably nonnegative the split is
+            # multiplied by a fresh constant s standing for the exact
+            # branch ratio original/split.  The ratio is locally
+            # constant away from branch points (its logarithmic
+            # derivative vanishes identically) and satisfies s**q == 1,
+            # so s really is a constant of the extension; substituting
+            # it back after integration restores the principal branch
+            # everywhere.
+            reps = {}
+            for i in self.newf.atoms(Pow):
+                if (i.exp.is_Rational and not i.exp.is_Integer and
+                        not i.base.is_Symbol and not isinstance(i.base, exp)):
+                    bf = factor(i.base)
+                    pd = bf.as_powers_dict()
+                    if len(pd) > 1 or any(e != 1 for e in pd.values()):
+                        # factor() is not canonical about factor signs
+                        # (they can depend on the symbol names), which
+                        # would make structurally equal radicands split
+                        # differently; normalize each factor to a
+                        # positive leading coefficient in x.  The branch
+                        # ratio absorbs any sign choice, so this is
+                        # purely a canonicalization.
+                        norm = {}
+                        negexp = S.Zero
+                        for b, e in pd.items():
+                            if b.is_Add:
+                                try:
+                                    lc = Poly(b, self.x).LC()
+                                except PolynomialError:
+                                    lc = None
+                                if lc is not None and lc.is_negative:
+                                    b = -b
+                                    negexp += e
+                            norm[b] = norm.get(b, S.Zero) + e
+                        if negexp:
+                            norm[S.NegativeOne] = norm.get(S.NegativeOne,
+                                S.Zero) + negexp
+                        pd = norm
+                        split = Mul(*[Pow(b, e*i.exp) for b, e in
+                                      pd.items()])
+                        if all(b.is_nonnegative for b in pd):
+                            self.backsubs.append((split, i))
+                            reps[i] = split
+                        else:
+                            s = Dummy('s%d' % len(self.sign_consts))
+                            self.sign_consts.append((s, i/split, i.exp.q))
+                            self.backsubs.append((s, i/split))
+                            reps[i] = s*split
+                            # results are only generic in s (it is not a
+                            # transcendental constant but a root of
+                            # unity), so even if every radical collapses
+                            # to integer powers the candidates need the
+                            # acceptance filter and nonelementary
+                            # conclusions are invalid
+                            self.transcendental = False
+                            self.algebraic_gens = True
+            if reps:
+                self.newf = self.newf.xreplace(reps)
 
         # To make the process deterministic, the args are sorted
         # so that functions with smaller op-counts are processed first.
@@ -336,16 +480,17 @@ class DifferentialExtension:
         # TODO: This probably doesn't need to be completely recomputed at
         # each pass.
         exps = update_sets(exps, self.newf.atoms(exp),
-            lambda i: i.exp.is_rational_function(*self.T) and
-            i.exp.has(*self.T))
+                           lambda i: i.exp.is_rational_function(*self.T) and
+                           i.exp.has(*self.T))
         pows = update_sets(pows, self.newf.atoms(Pow),
-            lambda i: i.exp.is_rational_function(*self.T) and
-            i.exp.has(*self.T))
+                           lambda i: i.exp.is_rational_function(*self.T) and
+                           (i.exp.has(*self.T) or (self.algebraic and
+                            i.exp.is_Rational and not i.exp.is_Integer)))
         numpows = update_sets(numpows, set(pows),
-            lambda i: not i.base.has(*self.T))
+                              lambda i: not i.base.has(*self.T))
         sympows = update_sets(sympows, set(pows) - set(numpows),
-            lambda i: i.base.is_rational_function(*self.T) and
-            not i.exp.is_Integer)
+                              lambda i: i.base.is_rational_function(*self.T) and
+                              not i.exp.is_Integer)
 
         # The easiest way to deal with non-base E powers is to convert them
         # into base E, integrate, and then convert back.
@@ -357,8 +502,13 @@ class DifferentialExtension:
             # exp to do that :)
             if i in sympows:
                 if i.exp.is_Rational:
-                    raise NotImplementedError("Algebraic extensions are "
-                        "not supported (%s)." % str(i))
+                    if not self.algebraic:
+                        raise NotImplementedError("Algebraic extensions are "
+                            "not supported (%s).  Rerun with algebraic=True "
+                            "to represent it as an exp-log tower "
+                            "(experimental)." % str(i))
+                    self.transcendental = False
+                    self.algebraic_gens = True
                 # We can add a**b only if log(a) in the extension, because
                 # a**b == exp(b*log(a)).
                 basea, based = frac_in(i.base, self.t)
@@ -372,13 +522,39 @@ class DifferentialExtension:
                     # rather prove that it has no elementary integral)
                     # without first manually rewriting it as exp(x*log(x))
                     self.newf = self.newf.xreplace({old: new})
-                    self.backsubs += [(new, old)]
+                    if new != old:
+                        # new == old happens when exp auto-simplifies the
+                        # rewritten form straight back (e.g.
+                        # exp(log(x)/2) -> sqrt(x) on the first pass,
+                        # before log(x) is a tower symbol); an identity
+                        # pair would just pollute backsubs.
+                        self.backsubs += [(new, old)]
                     log_new_extension = self._log_part([log(i.base)])
                     exps = update_sets(exps, self.newf.atoms(exp), lambda i:
-                        i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
+                                       i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
                     continue
                 ans, u, const = A
                 newterm = exp(i.exp*(log(const) + u))
+                if i.exp.is_Rational and not i.exp.is_Integer:
+                    # log(base) can differ from log(const) + u by
+                    # 2*pi*I times an integer winding (log(-1) above is
+                    # the principal choice), so this rewrite needs the
+                    # same branch-ratio correction as the radicand
+                    # split: e.g. it maps sqrt(-w) to I*sqrt(w), which
+                    # has the wrong sign where w < 0.  Both i and
+                    # newterm live in tower symbols here, and Tfuncs
+                    # images can reference lower generators, so the
+                    # substitutions must be sequential, highest first.
+                    tower_subs = list(zip(reversed(self.T),
+                        reversed([f(self.x) for f in self.Tfuncs])))
+                    ratio = (i/newterm).subs(tower_subs)
+                    if ratio != 1:
+                        s = Dummy('s%d' % len(self.sign_consts))
+                        self.sign_consts.append((s, ratio, i.exp.q))
+                        self.backsubs.append((s, ratio))
+                        self.transcendental = False
+                        self.algebraic_gens = True
+                        newterm = s*newterm
                 # Under the current implementation, exp kills terms
                 # only if they are of the form a*log(x), where a is a
                 # Number.  This case should have already been killed by the
@@ -395,10 +571,16 @@ class DifferentialExtension:
             else:
                 # i in numpows
                 newterm = new
-            # TODO: Just put it in self.Tfuncs
-            self.backsubs.append((new, old))
+                # TODO: Just put it in self.Tfuncs
+            if new != old:
+                self.backsubs.append((new, old))
             self.newf = self.newf.xreplace({old: newterm})
-            exps.append(newterm)
+            if isinstance(newterm, exp):
+                exps.append(newterm)
+            elif isinstance(newterm, Mul):
+                # a branch-ratio constant may ride along; only the exp
+                # factor belongs in the worklist
+                exps.extend(a for a in newterm.args if isinstance(a, exp))
 
         return exps, pows, numpows, sympows, log_new_extension
 
@@ -408,12 +590,12 @@ class DifferentialExtension:
         """
         atoms = self.newf.atoms(log)
         logs = update_sets(logs, atoms,
-            lambda i: i.args[0].is_rational_function(*self.T) and
-            i.args[0].has(*self.T))
+                           lambda i: i.args[0].is_rational_function(*self.T) and
+                           i.args[0].has(*self.T))
         symlogs = update_sets(symlogs, atoms,
-            lambda i: i.has(*self.T) and i.args[0].is_Pow and
-            i.args[0].base.is_rational_function(*self.T) and
-            not i.args[0].exp.is_Integer)
+                              lambda i: i.has(*self.T) and i.args[0].is_Pow and
+                              i.args[0].base.is_rational_function(*self.T) and
+                              not i.args[0].exp.is_Integer)
 
         # We can handle things like log(x**y) by converting it to y*log(x)
         # This will fix not only symbolic exponents of the argument, but any
@@ -495,7 +677,7 @@ class DifferentialExtension:
                     self.newf = self.newf.xreplace({exp(arg): exp(const)*Mul(*[
                         u**power for u, power in ans])})
                     self.newf = self.newf.xreplace({exp(p*exparg):
-                        exp(const*p) * Mul(*[u**power for u, power in ans])
+                                                    exp(const*p) * Mul(*[u**power for u, power in ans])
                         for exparg, p in others})
                     # TODO: Add something to backsubs to put exp(const*p)
                     # back together.
@@ -522,39 +704,66 @@ class DifferentialExtension:
                     # handle exp(log(x)/2) because it equals sqrt(x).
 
                     if const or len(ans) > 1:
-                        rad = Mul(*[term**(power/n) for term, power in ans])
-                        self.newf = self.newf.xreplace({exp(p*exparg):
-                            exp(const*p)*rad for exparg, p in others})
-                        self.newf = self.newf.xreplace(dict(list(zip(reversed(self.T),
-                            reversed([f(self.x) for f in self.Tfuncs])))))
-                        restart = True
-                        break
-                    else:
+                        # If we're deliberately building an algebraic
+                        # extension, don't restart - just continue to avoid
+                        # infinite loops.  A tower whose transcendence is
+                        # merely unproven still restarts: the rewrite
+                        # records the (proven) radical relation in the
+                        # regrouped generators, where adjoining a new
+                        # generator would leave it invisible to the
+                        # kernel checks.
+                        if not self.algebraic_gens:
+                            # Fold exponential factors of the radical to
+                            # exp((power/n)*arg) directly -- exact, since an
+                            # internally generated root denotes a
+                            # construction-chosen branch.  Leaving them as
+                            # exp(arg)**(power/n) can deadlock the rebuild:
+                            # the backsubs fold on restart can turn the base
+                            # into a non-exp power (2**x), which the
+                            # exp(u)**q folding in _rewrite_exps_pows() no
+                            # longer recognizes, and each pass then
+                            # regenerates the unfolded radical.
+                            radfactors = []
+                            for term, power in ans:
+                                if term in self.T[1:] and self.exts[
+                                        self.T.index(term) - 1] == 'exp':
+                                    radfactors.append(exp(self.extargs[
+                                        self.T.index(term) - 1]*power/n))
+                                else:
+                                    radfactors.append(term**(power/n))
+                            rad = Mul(*radfactors)
+                            self.newf = self.newf.xreplace({exp(p*exparg):
+                                                            exp(const*p)*rad for exparg, p in others})
+                            self.newf = self.newf.xreplace(dict(list(zip(reversed(self.T),
+                                                                         reversed([f(self.x) for f in self.Tfuncs])))))
+                            restart = True
+                            break
+                        # else: fall through to add extension normally
+                    elif not self.algebraic:
                         # TODO: give algebraic dependence in error string
                         raise NotImplementedError("Cannot integrate over "
                             "algebraic extensions.")
 
+            arga, argd = frac_in(arg, self.t)
+            darga = (argd*derivation(Poly(arga, self.t), self) -
+                     arga*derivation(Poly(argd, self.t), self))
+            dargd = argd**2
+            darga, dargd = darga.cancel(dargd, include=True)
+            darg = darga.as_expr()/dargd.as_expr()
+            self.t = next(self.ts)
+            self.T.append(self.t)
+            self.extargs.append(arg)
+            self.exts.append('exp')
+            self.D.append(darg.as_poly(self.t, expand=False)*Poly(self.t,
+                                                                  self.t, expand=False))
+            if self.dummy:
+                i = Dummy("i")
             else:
-                arga, argd = frac_in(arg, self.t)
-                darga = (argd*derivation(Poly(arga, self.t), self) -
-                    arga*derivation(Poly(argd, self.t), self))
-                dargd = argd**2
-                darga, dargd = darga.cancel(dargd, include=True)
-                darg = darga.as_expr()/dargd.as_expr()
-                self.t = next(self.ts)
-                self.T.append(self.t)
-                self.extargs.append(arg)
-                self.exts.append('exp')
-                self.D.append(darg.as_poly(self.t, expand=False)*Poly(self.t,
-                    self.t, expand=False))
-                if self.dummy:
-                    i = Dummy("i")
-                else:
-                    i = Symbol('i')
-                self.Tfuncs += [Lambda(i, exp(arg.subs(self.x, i)))]
-                self.newf = self.newf.xreplace(
-                        {exp(exparg): self.t**p for exparg, p in others})
-                new_extension = True
+                i = Symbol('i')
+            self.Tfuncs += [Lambda(i, exp(arg.subs(self.x, i)))]
+            self.newf = self.newf.xreplace(
+                {exp(exparg): self.t**p for exparg, p in others})
+            new_extension = True
 
         if restart:
             return None
@@ -587,14 +796,41 @@ class DifferentialExtension:
             A = is_deriv_k(arga, argd, self)
             if A is not None:
                 ans, u, const = A
-                newterm = log(const) + u
-                self.newf = self.newf.xreplace({log(arg): newterm})
+                # u + log(const) equals log(arg) only up to a locally
+                # constant branch term: log(const) is the principal-branch
+                # choice, valid where every argument involved is positive
+                # (e.g. log(-x**2) == 2*log(x) + I*pi only holds for
+                # x > 0).  The one case where it is exact everywhere is a
+                # single tower logarithm with coefficient one and a
+                # positive constant: log(c*w) == log(c) + log(w) for
+                # c > 0 on the whole complex plane.
+                if (u is not self.x and u in self.T and const.is_positive and
+                        self.exts[self.T.index(u) - 1] == 'log'):
+                    self.newf = self.newf.xreplace({log(arg): log(const) + u})
+                    continue
+                # Otherwise the difference log(arg) - u is locally
+                # constant wherever the functions are defined, so
+                # integrating with an opaque constant in its place and
+                # restoring the exact difference on backsubstitution keeps
+                # the answer, now expressed through the original
+                # logarithm, correct on every connected component.
+                branch_const = Dummy('log_branch')
+                # arg and u may involve tower symbols; express the
+                # difference through the concrete functions (and through
+                # any originals recorded in backsubs so far, so that
+                # e.g. x**x reappears as x**x rather than exp(x*log(x))).
+                concrete = list(zip(reversed(self.T),
+                    reversed([f(self.x) for f in self.Tfuncs])))
+                diff_expr = (log(arg.subs(concrete)) -
+                    u.subs(concrete)).subs(self.backsubs)
+                self.backsubs.append((branch_const, diff_expr))
+                self.newf = self.newf.xreplace({log(arg): branch_const + u})
                 continue
 
             else:
                 arga, argd = frac_in(arg, self.t)
                 darga = (argd*derivation(Poly(arga, self.t), self) -
-                    arga*derivation(Poly(argd, self.t), self))
+                         arga*derivation(Poly(argd, self.t), self))
                 dargd = argd**2
                 darg = darga.as_expr()/dargd.as_expr()
                 self.t = next(self.ts)
@@ -602,7 +838,7 @@ class DifferentialExtension:
                 self.extargs.append(arg)
                 self.exts.append('log')
                 self.D.append(cancel(darg.as_expr()/arg).as_poly(self.t,
-                    expand=False))
+                                                                 expand=False))
                 if self.dummy:
                     i = Dummy("i")
                 else:
@@ -627,7 +863,7 @@ class DifferentialExtension:
         exts, extargs).
         """
         return (self.fa, self.fd, self.D, self.T, self.Tfuncs,
-            self.backsubs, self.exts, self.extargs)
+                self.backsubs, self.exts, self.extargs)
 
     # NOTE: this printing doesn't follow the Python's standard
     # eval(repr(DE)) == DE, where DE is the DifferentialExtension object,
@@ -662,17 +898,20 @@ class DifferentialExtension:
         self.t = self.x
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
+        self.transcendental = True
+        self.algebraic_gens = False
         self.level = -1
-        self.exts = [None]
-        self.extargs = [None]
+        self.exts = []
+        self.extargs = []
         if self.dummy:
             self.ts = numbered_symbols('t', cls=Dummy)
         else:
             # For testing
             self.ts = numbered_symbols('t')
-        # For various things that we change to make things work that we need to
-        # change back when we are done.
+            # For various things that we change to make things work that we need to
+            # change back when we are done.
         self.backsubs = []
+        self.sign_consts = []
         self.Tfuncs = []
         self.newf = self.f
 
@@ -687,8 +926,9 @@ class DifferentialExtension:
         Returns
         =======
 
-        list: A list of indices of 'exts' where extension of
-            type 'extension' is present.
+        list: A list of indices into T (and D) of the extensions of
+            type 'extension'.  Note that self.exts[i] describes the
+            extension T[i + 1], since T[0] == x is not an extension.
 
         Examples
         ========
@@ -703,7 +943,7 @@ class DifferentialExtension:
         [1]
 
         """
-        return [i for i, ext in enumerate(self.exts) if ext == extension]
+        return [i for i, ext in enumerate(self.exts, 1) if ext == extension]
 
     def increment_level(self):
         """
@@ -718,7 +958,7 @@ class DifferentialExtension:
         """
         if self.level >= -1:
             raise ValueError("The level of the differential extension cannot "
-                "be incremented any further.")
+                             "be incremented any further.")
 
         self.level += 1
         self.t = self.T[self.level]
@@ -739,7 +979,7 @@ class DifferentialExtension:
         """
         if self.level <= -len(self.T):
             raise ValueError("The level of the differential extension cannot "
-                "be decremented any further.")
+                             "be decremented any further.")
 
         self.level -= 1
         self.t = self.T[self.level]
@@ -868,7 +1108,7 @@ def as_poly_1t(p, t, z):
 
     t_part, remainder = pa.div(pd)
 
-    ans = t_part.as_poly(t, z, expand=False)
+    ans = Poly(t_part, t, z, expand=False)
 
     if remainder:
         one = remainder.one
@@ -876,7 +1116,7 @@ def as_poly_1t(p, t, z):
         r = pd.degree() - remainder.degree()
         z_part = remainder.transform(one, tp) * tp**r
         z_part = z_part.replace(t, z).to_field().quo_ground(pd.LC())
-        ans += z_part.as_poly(t, z, expand=False)
+        ans += Poly(z_part, t, z, expand=False)
 
     return ans
 
@@ -1090,7 +1330,7 @@ def hermite_reduce(a, d, DE):
     gd = Poly(1, DE.t)
 
     dd = derivation(d, DE)
-    dm = gcd(d.to_field(), dd.to_field()).as_poly(DE.t)
+    dm = Poly(gcd(d.to_field(), dd.to_field()), DE.t)
     ds, _ = d.div(dm)
 
     while dm.degree(DE.t) > 0:
@@ -1101,13 +1341,13 @@ def hermite_reduce(a, d, DE):
         ds_ddm = ds.mul(ddm)
         ds_ddm_dm, _ = ds_ddm.div(dm)
 
-        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t),
-            dms.as_poly(DE.t), a.as_poly(DE.t))
-        b, c = b.as_poly(DE.t), c.as_poly(DE.t)
+        b, c = gcdex_diophantine(-Poly(ds_ddm_dm, DE.t),
+            Poly(dms, DE.t), Poly(a, DE.t))
+        b, c = Poly(b, DE.t), Poly(c, DE.t)
 
-        db = derivation(b, DE).as_poly(DE.t)
+        db = Poly(derivation(b, DE), DE.t)
         ds_dms, _ = ds.div(dms)
-        a = c.as_poly(DE.t) - db.mul(ds_dms).as_poly(DE.t)
+        a = Poly(c, DE.t) - Poly(db.mul(ds_dms), DE.t)
 
         ga = ga*dm + b*gd
         gd = gd*dm
@@ -1182,7 +1422,7 @@ def laurent_series(a, d, F, n, DE):
     """
     if F.degree() == 0:
         return (Poly(0, DE.t), Poly(1, DE.t), [])
-    Z = _symbols('z', n)
+    Z: list[Symbol] = [*_symbols('z', n)]
     z = Symbol('z')
     Z.insert(0, z)
     delta_a = Poly(0, DE.t)
@@ -1314,7 +1554,7 @@ def recognize_log_derivative(a, d, DE, z=None):
     r = Poly(r, z)
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
-    if any(s.as_poly(z).degree() > 0 for s, _ in Np):
+    if any(Poly(s, z).degree() > 0 for s, _ in Np):
         # The normal part of the splitting factorization contains the
         # factors of the resultant whose roots are not constants; such
         # roots cannot be integers, so f is not the logarithmic derivative
@@ -1360,15 +1600,9 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     This is ``ResidueReduce`` (the Lazard-Rioboo-Trager version) from
     Section 5.6 of Bronstein's book.
     """
-    # TODO: Use log_to_atan() from rationaltools.py
-    # If r = residue_reduce(...), then the logarithmic part is given by:
-    # sum([RootSum(a[0].as_poly(z), lambda i: i*log(a[1].as_expr()).subs(z,
-    # i)).subs(t, log(x)) for a in r[0]])
-
     z = z or Dummy('z')
     a, d = a.cancel(d, include=True)
     a, d = a.to_field().mul_ground(1/d.LC()), d.to_field().mul_ground(1/d.LC())
-    kkinv = [1/x for x in DE.T[:DE.level]] + DE.T[:DE.level]
 
     if a.is_zero:
         return ([], True)
@@ -1399,19 +1633,31 @@ def residue_reduce(a, d, DE, z=None, invert=True):
             h = R_map.get(i)
             if h is None:
                 continue
-            h_lc = Poly(h.as_poly(DE.t).LC(), DE.t, field=True)
+            s = Poly(s, z).monic()
+            h_lc = Poly(h.as_poly(DE.t).LC(), z, field=True)
 
             h_lc_sqf = h_lc.sqf_list_include(all=True)
 
             for a, j in h_lc_sqf:
-                h = Poly(h, DE.t, field=True).exquo(Poly(gcd(a, s**j, *kkinv),
-                    DE.t))
-
-            s = Poly(s, z).monic()
+                g = a.gcd(s)
+                h = Poly(h, DE.t, field=True).exquo(Poly(g.as_expr()**j, DE.t))
 
             if invert:
-                h_lc = Poly(h.as_poly(DE.t).LC(), DE.t, field=True, expand=False)
-                inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S.One]
+                h_lc = Poly(Poly(h, DE.t).LC(), DE.t, field=True, expand=False)
+                try:
+                    inv = Poly(h_lc, z, field=True).invert(s)
+                except NotInvertible:
+                    if DE.transcendental:
+                        raise
+                    # The leading coefficient shares a factor with this
+                    # resultant factor, so this residue term cannot be
+                    # normalized.  Give the residues up: the uncaptured
+                    # mass stays in the remainder f - Dg, and b == False
+                    # sends the level down the give-up path, whose
+                    # nonelementary conclusion is degraded to an honest
+                    # unevaluated Integral for non-transcendental towers.
+                    return (H, False)
+                coeffs = [S.One]
 
                 for coeff in h.coeffs()[1:]:
                     L = reduced(inv*coeff.as_poly(inv.gens), [s])[1]
@@ -1429,13 +1675,32 @@ def residue_reduce(a, d, DE, z=None, invert=True):
 def residue_reduce_to_basic(H, DE, z):
     """
     Converts the tuple returned by residue_reduce() into a Basic expression.
+
+    Terms whose residues can all be computed explicitly are rewritten as
+    real logarithms and arc-tangents using log_to_real() (Rioboo's
+    algorithm from Section 2.8 of Bronstein's book, with the roots of
+    each s_i as the residues and S_i in place of the Rothstein-Trager
+    resultant's remainder); the remaining terms are returned as RootSums.
+    log_to_real() is only valid over a real field, so it is not used when
+    I appears in a term or in the extension tower.
     """
     # TODO: check what Lambda does with RootOf
     i = Dummy('i')
     s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+    real_tower = not any(f(DE.x).has(I) for f in DE.Tfuncs)
 
-    return sum(RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
-        {z: i}).subs(s))) for a in H)
+    result = S.Zero
+    for a in H:
+        real = None
+        if real_tower and not (a[0].as_expr().has(I) or a[1].as_expr().has(I)):
+            real = log_to_real(a[1], a[0].as_poly(z), DE.t, z)
+        if real is not None:
+            result += real.subs(s)
+        else:
+            result += RootSum(a[0].as_poly(z), Lambda(i, i*log(
+                a[1].as_expr()).subs({z: i}).subs(s)))
+
+    return result
 
 
 def residue_reduce_derivation(H, DE, z):
@@ -1449,6 +1714,340 @@ def residue_reduce_derivation(H, DE, z):
     i = Dummy('i')
     return S(sum(RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1],
         DE).as_expr().subs(z, i)/a[1].as_expr().subs(z, i))) for a in H))
+
+
+def _nontrans_power_relations(DE):
+    """
+    The known algebraic relations of a non-transcendental tower.
+
+    Returns (t, rel) pairs, ordered by tower level, where rel == 0 in
+    the actual (evaluated) tower and rel is polynomial in t with its
+    leading coefficient free of t and of every higher generator.  Only
+    generators of the form t == exp(c*tj) with c == p/q a non-integer
+    Rational and tj == log(u) are recognized; such a t represents
+    u**(p/q) and satisfies t**q == u**p.
+
+    TODO: relations among *several* radicals are not captured -- branch
+    choices like t1*t2 == 1 for t1 == exp(t0/2), t2 == exp(-t0/2), or
+    radicals with dependent arguments.  The kernel test below is then
+    incomplete (it can miss actual zeros), though still sound.
+
+    The branch-ratio constants introduced by the radicand splitting are
+    included through their root-of-unity relations s**q == 1 (so that a
+    denominator containing a factor of s**q - 1, formally nonzero but
+    actually zero, is caught).
+    """
+    rels = [(s, s**q - 1) for s, _, q in DE.sign_consts or []]
+    for i, ext in enumerate(DE.exts, 1):
+        if ext != 'exp':
+            continue
+        coeff, rest = DE.extargs[i - 1].as_coeff_Mul()
+        if (coeff.is_Rational and not coeff.is_Integer and rest in DE.T[1:]
+                and DE.exts[DE.T.index(rest) - 1] == 'log'):
+            u = DE.extargs[DE.T.index(rest) - 1]
+            p, q = coeff.p, coeff.q
+            if p >= 0:
+                rel = DE.T[i]**q - u**p
+            else:
+                rel = DE.T[i]**q*u**-p - 1
+            rels.append((DE.T[i], rel))
+    return rels
+
+
+def _nontrans_branch_corrections(result, DE):
+    """
+    Substitute the branch-ratio constants back into ``result`` and
+    correct the jumps their substitution introduces.
+
+    The candidate was found with each ratio held as a formal constant
+    s, so ``result`` with s substituted is an antiderivative on every
+    connected region where the ratio really is constant, but it may
+    jump by a constant where the ratio changes value (the real roots
+    and poles of the radicand factors).  Following Jeffrey, Labahn,
+    von Mohrenschildt & Rich (Theorem 5), subtracting
+    J*(x - r)/sqrt((x - r)**2) with J == (G(r+) - G(r-))/2 at each
+    such breakpoint r restores continuity on the real line, extending
+    the answer to Jeffrey's domain of maximum extent.  The correction
+    factor equals sign(x - r) for real x but, unlike sign, is locally
+    constant on the complex plane away from the vertical line
+    Re(x) == r, so the answer stays an antiderivative at complex
+    points too (off that line -- the same status as any branch cut).
+    The corrections are locally constant, so they never affect the
+    derivative; every step here is therefore free to give up
+    (unlocatable breakpoints, an unrecognizable ratio value, a
+    singular or infinite jump, an uncertifiable sampling offset),
+    leaving the plain substitution, which is already correct on each
+    region.
+    """
+    from sympy.core.numbers import pi
+
+    x = DE.x
+    sign_subs = {s: R for s, R, _ in DE.sign_consts}
+    subbed = result.subs(sign_subs)
+    if not any(result.has(s) for s in sign_subs):
+        return subbed
+
+    # Breakpoints: real roots of every factor under a ratio (numerator
+    # and denominator -- the ratios jump only where some factor crosses
+    # zero or infinity).  The set must be *complete*: a missing root
+    # would let a side sample cross an unrecognized breakpoint and
+    # certify a nonlocal ratio value, so real_roots() (exact isolation)
+    # is used and every factor must yield its full real-root set or no
+    # correction is attempted at all.
+    from sympy.polys.polyerrors import CoercionFailed, DomainError
+    pts = set()
+    for _, R, _ in DE.sign_consts:
+        pieces = [p.base for p in R.atoms(Pow)]
+        pieces.extend(lg.args[0] for lg in R.atoms(log))
+        for piece in pieces:
+            for b in piece.as_numer_denom():
+                if not b.has(x):
+                    continue
+                if b.free_symbols != {x}:
+                    return subbed
+                try:
+                    pts.update(Poly(b, x).real_roots())
+                except (PolynomialError, DomainError, CoercionFailed,
+                        NotImplementedError):
+                    return subbed
+    if not pts:
+        return subbed
+    pts = sorted(pts, key=lambda r: r.evalf(30))
+
+    def ratio_at(R, q, pt):
+        # the ratio's value at an exact off-breakpoint point, snapped to
+        # an exact q-th root of unity (None if it isn't recognizably one)
+        try:
+            v = complex(R.subs(x, pt).evalf(30))
+        except (TypeError, ValueError):
+            return None
+        best = None
+        for j in range(q):
+            w = exp(2*I*pi*Rational(j, q))
+            d = abs(v - complex(w.evalf(30)))
+            if d < 0.01 and (best is None or d < best[1]):
+                best = (w, d)
+        return best[0] if best else None
+
+    corrections = []
+    for idx, r in enumerate(pts):
+        # an exactly-certified sampling offset: r -+ d must not cross
+        # the neighboring breakpoints, or the side values are nonlocal
+        prev_ = pts[idx - 1] if idx else None
+        next_ = pts[idx + 1] if idx + 1 < len(pts) else None
+        for d in (Rational(1, 2)**k for k in range(2, 64)):
+            if ((prev_ is None or (r - d - prev_).is_positive) and
+                    (next_ is None or (next_ - r - d).is_positive)):
+                break
+        else:
+            continue
+        left, right = {}, {}
+        ok = True
+        for s, R, q in DE.sign_consts:
+            vl = ratio_at(R, q, r - d)
+            vr_ = ratio_at(R, q, r + d)
+            if vl is None or vr_ is None:
+                ok = False
+                break
+            left[s], right[s] = vl, vr_
+        if not ok or left == right:
+            continue
+        # cancel before substituting the breakpoint: singularities of
+        # the candidate there are often removable, but only in the
+        # s-form (the cancellation needs s*w*sqrt(v) still split)
+        Gl = cancel(together(result.subs(left))).subs(x, r)
+        Gr = cancel(together(result.subs(right))).subs(x, r)
+        J = cancel(together((Gr - Gl)/2))
+        if J == 0 or J.free_symbols or J.is_real is not True:
+            # a complex jump would make the answer complex on whole
+            # regions where it is real now; an infinite or undecidable
+            # one cannot be corrected by a constant.  Leave the jump:
+            # the result is still an antiderivative on each region.
+            continue
+        corrections.append(J*(x - r)*Pow((x - r)**2, Rational(-1, 2)))
+    return subbed - Add(*corrections)
+
+
+def _nontrans_is_kernel(e, DE):
+    """
+    Decide whether e, polynomial in the tower generators, evaluates to
+    zero in a non-transcendental tower (i.e. lies in the kernel of the
+    evaluation map), by reducing modulo the recognized power relations,
+    highest generator first.  The relations are triangular (each
+    involves only its own and lower generators), so this terminates,
+    and e evaluates to zero iff the reduced form is zero -- exactly, if
+    the quotient by the recognized relations is an integral domain
+    (always true for a single radical), and soundly-but-incompletely
+    otherwise (see _nontrans_power_relations()).
+    """
+    e = cancel(e)
+    for t, r in reversed(_nontrans_power_relations(DE)):
+        if e.has(t):
+            e = rem(e, r, t)
+    return cancel(e) == 0
+
+
+def _nontrans_sign_assignments(DE, exprs):
+    """
+    Every assignment of the branch-ratio constants occurring in
+    ``exprs`` to their possible root-of-unity values, as a list of
+    substitution dicts ([{}] when none occur), or None if the
+    assignments cannot be enumerated in exact
+    radical-free-of-transcendentals form (a root of unity of high
+    order whose cos/sin do not evaluate, or too many combinations) --
+    the caller must then reject the candidate, since the per-branch
+    check cannot be run.  Constants absent from ``exprs`` need no
+    assignment: substituting them cannot change the checked
+    expressions.
+    """
+    from itertools import product
+
+    from sympy.core.numbers import pi
+
+    consts = [sc for sc in DE.sign_consts or []
+              if any(e.has(sc[0]) for e in exprs)]
+    values = []
+    for _, _, q in consts:
+        vals = []
+        for j in range(q):
+            v = (cos(2*pi*Rational(j, q)) + I*sin(2*pi*Rational(j, q)))
+            if v.has(sin, cos, exp):
+                return None
+            vals.append(v)
+        values.append(vals)
+    n = 1
+    for vals in values:
+        n *= len(vals)
+        if n > 64:
+            return None
+    return [dict(zip([s for s, _, _ in consts], combo))
+            for combo in product(*values)]
+
+
+def _nontrans_vet(result, DE):
+    """
+    Final check of a sign-carrying result before the ratio constants
+    are substituted back, returning False if the result must be
+    rejected.
+
+    The acceptance filter runs per tower level, but the base case
+    (everything collapsed to a rational function of x and the ratio
+    constants) never reaches it, and ratint() over QQ(s) can divide by
+    s-polynomials that vanish at attained values.  So the total result
+    is vetted under every possible assignment of the ratio constants:
+    the denominator must stay out of the relation kernel, the leading
+    coefficients of RootSum defining polynomials must not vanish
+    (specialization would silently change the root set, which no
+    value check can see), and the assigned result must not evaluate
+    to nan or an infinity.
+
+    Only constants in positions that can turn singular need
+    assigning: denominators at any depth (the top-level one, and
+    those inside function arguments and fractional-power bases, which
+    as_numer_denom() does not see into), arguments of non-entire
+    functions (log(0) is zoo, but no finite exp() argument is
+    singular), exponents, and RootSum defining polynomials.  A
+    constant occurring purely as a numerator polynomial factor cannot
+    produce a singularity.  Nested structures are covered by the
+    atoms() walks being recursive.
+    """
+    den = cancel(result).as_numer_denom()[1]
+    risky = [den]
+    # entire functions: no finite argument is singular (tan, cot,
+    # coth have poles and atan is singular at +-I, so they stay risky)
+    entire = (exp, sin, cos, sinh, cosh)
+    for fn in result.atoms(Function):
+        if isinstance(fn, entire):
+            risky.extend(cancel(arg).as_numer_denom()[1]
+                         for arg in fn.args)
+        else:
+            risky.extend(fn.args)
+    for p in result.atoms(Pow):
+        risky.append(p.exp)
+        if not p.exp.is_Integer:
+            risky.append(cancel(p.base).as_numer_denom()[1])
+    rootsums = list(result.atoms(RootSum))
+    risky.extend(rs.poly.as_expr() for rs in rootsums)
+    assignments = _nontrans_sign_assignments(DE, risky)
+    if assignments is None:
+        return False
+    for sig in assignments:
+        if _nontrans_is_kernel(den.subs(sig), DE):
+            return False
+        if any(_nontrans_is_kernel(rs.poly.LC().subs(sig), DE)
+               for rs in rootsums):
+            return False
+        if result.subs(sig).has(S.NaN, oo, zoo):
+            return False
+    return True
+
+
+def _nontrans_accept(elem, g2, i, a, d, DE, z):
+    """
+    Acceptance filter for a candidate result of integrate_primitive()
+    or integrate_hyperexponential() over a non-transcendental tower:
+
+    1. a/d == D(elem) + D(residue part) + i must hold as a formal
+       rational-function identity in the tower generators, decided by
+       cancel() -- pure rational arithmetic, no algebraic
+       simplification.
+    2. The denominators of elem and i must not evaluate to zero under
+       the tower's algebraic relations (_nontrans_is_kernel()).
+
+    Why this suffices: the machinery computes in the formal field
+    Q(x, t0, ..., tn), where the generators really are transcendental,
+    and the actual functions are the image of an evaluation map that is
+    defined only on elements whose denominators avoid the kernel of the
+    tower's relations (t**2 - x for t representing sqrt(x)).  A formal
+    identity between elements on which the evaluation is defined pushes
+    forward to an identity of functions, since the evaluation commutes
+    with the derivation by construction.  So a candidate passing both
+    checks is a genuine antiderivative relation, no matter what invalid
+    transcendence assumptions were used to find it.  The checks cannot
+    vouch for *negative* conclusions (nonelementary proofs), which is
+    why those are separately degraded to unevaluated Integrals.
+
+    Check 1 catches machinery bugs surfacing under the broken
+    hypotheses; check 2 catches the subtler failure mode: the formal
+    field has genuinely new constants (D(t**2/x) == 0 for t
+    representing sqrt(x)), so internal divisions by formally-nonzero
+    constants can smuggle kernel factors (t**2/x - 1, which evaluates
+    to zero) into denominators while keeping the formal identity
+    intact.
+
+    The residue terms are checked through the coefficient denominators
+    of their root polynomials and logarithm arguments (a kernel there
+    means an infinite residue or an undefined argument; the derivative
+    alone cannot show it, since the kernel factors cancel against the
+    argument's derivative).  TODO: a logarithm argument that itself
+    evaluates to zero is not detected here.
+
+    The branch-ratio constants need more than the generic kernel test:
+    s**q - 1 is reducible, so its quotient has zero divisors, and a
+    denominator like s - 1 is formally nonzero yet the actual ratio
+    equals 1 on whole regions.  So every denominator is additionally
+    checked under every assignment of the ratio constants to their
+    possible root-of-unity values (conservative: assignments the
+    ratios never attain are not excluded, so this can over-reject,
+    never under-reject).
+    """
+    lhs = cancel(a.as_expr()/d.as_expr())
+    total = cancel(lhs - derivation(elem, DE, basic=True) -
+        residue_reduce_derivation(g2, DE, z) - i)
+    if total != 0:
+        return False
+    checked = [elem, i]
+    for qz, sz in g2:
+        checked.extend([qz.as_expr(), sz.as_expr()])
+    dens = [cancel(e).as_numer_denom()[1] for e in checked]
+    assignments = _nontrans_sign_assignments(DE, dens)
+    if assignments is None:
+        return False
+    for den in dens:
+        for sig in assignments:
+            if _nontrans_is_kernel(den.subs(sig), DE):
+                return False
+    return True
 
 
 def integrate_primitive_polynomial(p, DE):
@@ -1529,7 +2128,14 @@ def integrate_primitive(a, d, DE, z=None):
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
             g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
-        i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
+        if not DE.transcendental and not _nontrans_accept(
+                g1[0].as_expr()/g1[1].as_expr(), g2, i, a, d, DE, z):
+            return (S.Zero, Integral(cancel(
+                (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
+        if DE.transcendental:
+            i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
+        else:
+            i = Integral(cancel(i).subs(s), DE.x)
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), i, b)
 
@@ -1539,6 +2145,11 @@ def integrate_primitive(a, d, DE, z=None):
     p = p.as_poly(DE.t)
 
     q, i, b = integrate_primitive_polynomial(p, DE)
+    if not DE.transcendental and not _nontrans_accept(
+            g1[0].as_expr()/g1[1].as_expr() + q.as_expr(), g2, i.as_expr(),
+            a, d, DE, z):
+        return (S.Zero, Integral(cancel(
+            (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
 
     ret = ((g1[0].as_expr()/g1[1].as_expr() + q.as_expr()).subs(s) +
         residue_reduce_to_basic(g2, DE, z))
@@ -1546,7 +2157,11 @@ def integrate_primitive(a, d, DE, z=None):
         # i == p - Dq from integrate_primitive_polynomial(), which has been
         # proven to have no elementary integral over k(t), and ret contains
         # the partial q, so f == D(ret) + i holds for the returned values.
-        i = NonElementaryIntegral(cancel(i.as_expr()).subs(s), DE.x)
+        # The nonelementary proof is only valid for transcendental towers.
+        if DE.transcendental:
+            i = NonElementaryIntegral(cancel(i.as_expr()).subs(s), DE.x)
+        else:
+            i = Integral(cancel(i.as_expr()).subs(s), DE.x)
     else:
         i = cancel(i.as_expr())
 
@@ -1644,7 +2259,14 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
             g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
-        i = NonElementaryIntegral(cancel(i.subs(s)), DE.x)
+        if not DE.transcendental and not _nontrans_accept(
+                g1[0].as_expr()/g1[1].as_expr(), g2, i, a, d, DE, z):
+            return (S.Zero, Integral(cancel(
+                (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
+        if DE.transcendental:
+            i = NonElementaryIntegral(cancel(i.subs(s)), DE.x)
+        else:
+            i = Integral(cancel(i.subs(s)), DE.x)
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), i, b)
 
@@ -1657,6 +2279,21 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     qa, qd, b = integrate_hyperexponential_polynomial(pp, DE, z)
 
     i = pp.nth(0, 0)
+    if b:
+        resid = i
+    else:
+        # the residual that the not-b branch below will return.  The
+        # arithmetic is done on expressions: as Polys, qa and qd can
+        # disagree about whether the residue dummy z belongs to the
+        # ground domain, which fails to unify.
+        resid = p - (qd.as_expr()*derivation(qa, DE).as_expr() -
+            qa.as_expr()*derivation(qd, DE).as_expr())/qd.as_expr()**2
+
+    if not DE.transcendental:
+        if not _nontrans_accept(g1[0].as_expr()/g1[1].as_expr() +
+                qa.as_expr()/qd.as_expr(), g2, resid, a, d, DE, z):
+            return (S.Zero, Integral(cancel(
+                (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
 
     ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) \
         + residue_reduce_to_basic(g2, DE, z))
@@ -1668,17 +2305,48 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
 
         # XXX: Does qd = 0 always necessarily correspond to the exponential
         # equaling 1?
-        ret += Piecewise(
-                (qas/qds, Ne(qds, 0)),
-                (integrate((p - i).subs(DE.t, 1).subs(s), DE.x), True)
-            )
+        cond = Ne(qds, 0)
+        if DE.transcendental:
+            fallback = integrate((p - i).subs(DE.t, 1).subs(s), DE.x)
+        elif cond is S.true:
+            # the denominator provably cannot vanish; there is no
+            # degenerate branch
+            ret += qas/qds
+            cond = None
+        else:
+            # t == 1 encodes "the exponential degenerates to 1", which
+            # has no meaning for an algebraic generator (t representing
+            # sqrt(u) does not become 1 when a parameter vanishes).  Nor
+            # can the degenerate branch replace only the qas/qds piece:
+            # the generic decomposition itself divides by qds, so every
+            # piece of it may be invalid there.
+            if not b:
+                # with a residual returned separately, no branch value
+                # can survive the degenerate substitution (both the
+                # rest of the level and the residual keep the vanishing
+                # denominator); give the level up so the caller retries
+                # the original integrand whole
+                return (S.Zero, Integral(cancel(
+                    (a.as_expr()/d.as_expr()).subs(s)), DE.x), False)
+            # everything else this level produced is inside ret, so the
+            # branch is the unevaluated rest of the level minus ret,
+            # and the assembled degenerate value is exactly
+            # Integral(a/d - i) plus the continuing constant's integral
+            fallback = Integral(cancel((a.as_expr()/d.as_expr()
+                - resid).subs(s)), DE.x) - ret
+        if cond is not None:
+            ret += Piecewise(
+                    (qas/qds, cond),
+                    (fallback, True)
+                )
     else:
         ret += qas/qds
 
     if not b:
-        i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
-            (qd**2).as_expr()
-        i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
+        if DE.transcendental:
+            i = NonElementaryIntegral(cancel(resid).subs(s), DE.x)
+        else:
+            i = Integral(cancel(resid).subs(s), DE.x)
     return (ret, i, b)
 
 
@@ -1806,7 +2474,7 @@ class NonElementaryIntegral(Integral):
 
 def risch_integrate(f, x, extension=None, handle_first='log',
                     separate_integral=False, rewrite_complex=None,
-                    conds='piecewise'):
+                    conds='piecewise', algebraic=True):
     r"""
     The Risch Integration Algorithm.
 
@@ -1815,12 +2483,15 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     Only transcendental functions are supported.  Currently, only exponentials
     and logarithms are supported, but support for trigonometric functions is
-    forthcoming.
+    forthcoming.  Radicals are handled through the ``algebraic`` flag
+    described below.
 
-    If this function returns an unevaluated Integral in the result, it means
-    that it has proven that integral to be nonelementary.  Any errors will
-    result in raising NotImplementedError.  The unevaluated Integral will be
-    an instance of NonElementaryIntegral, a subclass of Integral.
+    If this function returns a NonElementaryIntegral (a subclass of Integral)
+    in the result, it means that it has proven that integral to be
+    nonelementary.  A plain unevaluated Integral carries no such proof: it is
+    returned for radical integrands (see ``algebraic`` below), where the
+    nonelementary conclusions of the transcendental machinery are not valid.
+    Any errors will result in raising NotImplementedError.
 
     handle_first may be either 'exp' or 'log'.  This changes the order in
     which the extension is built, and may result in a different (but
@@ -1831,11 +2502,20 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     exponential case has been implemented.
 
     If ``separate_integral`` is ``True``, the result is returned as a tuple (ans, i),
-    where the integral is ans + i, ans is elementary, and i is either a
-    NonElementaryIntegral or 0.  This useful if you want to try further
-    integrating the NonElementaryIntegral part using other algorithms to
-    possibly get a solution in terms of special functions.  It is False by
-    default.
+    where the integral is ans + i, ans is elementary, and i is either 0, a
+    NonElementaryIntegral, or a plain unevaluated Integral (for radical
+    integrands, where nonelementarity is not proven).  This is useful if
+    you want to try further integrating the leftover part using other
+    algorithms to possibly get a solution in terms of special functions.  It
+    is False by default.
+
+    If ``algebraic`` is ``True`` (the default), the transcendental machinery
+    is used to solve integrals involving radicals (internally, by representing
+    `x**(1/n)` as ``exp(log(x)/n)``). In this case, an unevaluated
+    ``Integral`` result is not a proof of nonelementarity. It only means the
+    transcendental algorithms aren't able to handle the radical integrand, and
+    the full algebraic Risch algorithm may be required.  With
+    ``algebraic=False``, radical integrands raise ``NotImplementedError``.
 
     Examples
     ========
@@ -1917,8 +2597,18 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     """
     f = S(f)
 
+    if algebraic and f.has(Float):
+        # The algebraic towers do exact arithmetic: a Float coefficient
+        # becomes a rational with an astronomical denominator
+        # (0.333333333333333 == 333333333333333/10**15) and the
+        # structure-theorem constant systems grind on it, while nothing
+        # exact can be concluded from inexact input anyway.  Leave
+        # radical integrands with Floats to the numeric-friendly
+        # fallbacks in integrate().
+        algebraic = False
+
     DE = extension or DifferentialExtension(f, x, handle_first=handle_first,
-            dummy=True, rewrite_complex=rewrite_complex)
+            dummy=True, rewrite_complex=rewrite_complex, algebraic=algebraic)
     fa, fd = DE.fa, DE.fd
 
     result = S.Zero
@@ -1948,15 +2638,40 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             DE.decrement_level()
             fa, fd = frac_in(i, DE.t)
         else:
-            result = result.subs(DE.backsubs)
-            if not i.is_zero:
-                i = NonElementaryIntegral(i.function.subs(DE.backsubs),i.limits)
+            sign_symbols = {s for s, _, _ in DE.sign_consts or []}
+            result = result.subs([(o, n) for o, n in DE.backsubs
+                                  if o not in sign_symbols])
+            if sign_symbols:
+                if not _nontrans_vet(result, DE):
+                    if not separate_integral:
+                        return Integral(f, x)
+                    return (S.Zero, Integral(f, x))
+                if i == 0:
+                    result = _nontrans_branch_corrections(result, DE)
+                else:
+                    # with a leftover integral the total antiderivative
+                    # is unknown, so its jumps cannot be corrected
+                    result = result.subs(
+                        {s: R for s, R, _ in DE.sign_consts})
+            if isinstance(i, Integral):
+                if DE.transcendental:
+                    i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
+                else:
+                    i = Integral(i.function.subs(DE.backsubs), *i.limits)
+            leaked = result.free_symbols
+            if isinstance(i, Integral):
+                leaked = leaked | i.function.free_symbols
+            if not DE.transcendental and \
+                    leaked - f.free_symbols - {x}:
+                # an internal symbol survived the back-substitutions (a
+                # tower Dummy leaked into a residue term, say), in the
+                # elementary part or in the residual integrand; the
+                # result is unusable and must not be returned
+                if not separate_integral:
+                    return Integral(f, x)
+                return (S.Zero, Integral(f, x))
             if not separate_integral:
                 result += i
                 return result
             else:
-
-                if isinstance(i, NonElementaryIntegral):
-                    return (result, i)
-                else:
-                    return (result, 0)
+                return (result, i)

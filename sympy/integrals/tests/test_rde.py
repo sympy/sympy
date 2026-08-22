@@ -1,6 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import annotations
 from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.polys.polytools import Poly, cancel
 from sympy.integrals.risch import (DifferentialExtension, derivation,
@@ -166,6 +167,46 @@ def test_bound_degree():
     assert bound_degree(Poly(t, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t), DE) == 0
 
 
+def test_bound_degree_rational_z():
+    # Primitive case with deg(a) == deg(b) and alpha == 1/(x*(x + 1)) ==
+    # Dz/z for z == x/(x + 1) -- a proper ratio in k*, so derivation(z, DE)
+    # inside bound_degree() needs basic=True (z is not polynomial in the
+    # tower generators; this used to crash with SympifyError).
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'exts': ['log'], 'extargs': [x]})
+    assert bound_degree(Poly(t, t, field=True),
+        Poly(-t/(x*(x + 1)), t, field=True), Poly(1, t, field=True), DE) == 0
+    # The same alpha end-to-end: Dy - y/(x*(x + 1)) == (x + 1 - t)/(x*(x + 1))
+    # has the solution y == t (plus c*x/(x + 1) for any constant c, so check
+    # the defining equation rather than the exact result).
+    ya, yd = rischDE(Poly(-1, t, field=True), Poly(x*(x + 1), t, field=True),
+        Poly(x + 1 - t, t, field=True), Poly(x*(x + 1), t, field=True), DE)
+    y = ya.as_expr()/yd.as_expr()
+    assert cancel(derivation(Poly(y, t, field=True), DE).as_expr() -
+        y/(x*(x + 1)) - (x + 1 - t)/(x*(x + 1))) == 0
+
+
+def test_bound_degree_undecidable():
+    # Exp case with deg(a) == deg(b) and alpha == -lc(b)/lc(a) == 1/(x + 1):
+    # deciding whether alpha == m*Dt/t + Dz/z requires log(x + 1), which is
+    # not in the tower, so parametric_log_deriv() cannot decide.  The
+    # returned bound skips the undecided m-correction and so is not a
+    # proof (it could truncate the solution basis); to keep that sound,
+    # the tower's transcendence is downgraded to unproven, which vets
+    # solved results and degrades nonelementary conclusions downstream.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0),
+        Poly(t1, t1)], 'exts': ['log', 'exp'], 'extargs': [x, x]})
+    assert DE.transcendental is True
+    assert bound_degree(Poly(t1, t1), Poly(-t1/(x + 1), t1, field=True),
+        Poly(1, t1), DE) == 0
+    assert DE.transcendental is False
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0),
+        Poly(t1, t1)], 'exts': ['log', 'exp'], 'extargs': [x, x]})
+    assert bound_degree(Poly(t1, t1), Poly(-t1/(x + 1), t1, field=True),
+        [Poly(1, t1)], DE, parametric=True) == 0
+    assert DE.transcendental is False
+
+
 def test_spde():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     raises(NonElementaryIntegralException, lambda: spde(Poly(t, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t), 0, DE))
@@ -192,6 +233,24 @@ def test_spde():
         (Poly(0, x, domain='ZZ'), Poly(0, x), 0, Poly(0, x), Poly(3*x**3 - 2*x**2, x, domain='QQ'))
     assert spde(Poly(x**2 - x, x), Poly(x**2 - 5*x + 3, x), Poly(x**7 - x**6 - 2*x**4 + 3*x**3 - x**2, x), 5, DE) == \
         (Poly(1, x, domain='QQ'), Poly(x + 1, x, domain='QQ'), 1, Poly(x**4 - x**3, x), Poly(x**3 - x**2, x, domain='QQ'))
+    # n == oo (from rischDE() when bound_degree() cannot decide) must not
+    # loop forever when deg(a) > 0: a == t, b == 1, c == x has no
+    # solution and gcd(a, b) == 1 stays trivial, so no other exit is
+    # ever taken.  This used to spin indefinitely.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    raises(NotImplementedError, lambda: spde(Poly(t, t), Poly(1, t),
+        Poly(x, t, domain='ZZ[x]'), oo, DE))
+    # ...while a solvable positive-degree case with n == oo still reduces
+    # and returns (q == 1 here; c becomes zero after one pass)...
+    assert spde(Poly(t, t), Poly(1, t), Poly(1, t), oo, DE) == \
+        (Poly(0, t), Poly(0, t), 0, Poly(0, t), Poly(1, t, domain='QQ'))
+    # A SymPy Integer bound must behave like the equal plain int
+    raises(NonElementaryIntegralException, lambda: spde(Poly(t, t),
+        Poly(1, t), Poly(x, t, domain='ZZ[x]'), S(1), DE))
+    # ...and with deg(a) == 0 it returns immediately, so n == oo is fine.
+    assert spde(Poly(2, t), Poly(t, t), Poly(t, t), oo, DE) == \
+        (Poly(t/2, t, domain='QQ'), Poly(t/2, t, domain='QQ'), oo,
+         Poly(1, t, domain='ZZ'), Poly(0, t, domain='ZZ'))
 
 def test_solve_poly_rde_no_cancel():
     # deg(b) large
@@ -213,6 +272,10 @@ def test_solve_poly_rde_no_cancel():
     # The m == 0 branch: Dq + t*q == t has the solution q == 1 (this used
     # to return an Expr instead of a Poly)
     assert no_cancel_equal(Poly(t, t), Poly(t, t), 5, DE) == Poly(1, t)
+    # Immediate u == 0 return: -lc(b)/lc(Dt) == 3 is hit on the first
+    # iteration, reducing to a smaller problem of degree at most 3
+    assert no_cancel_equal(Poly(-3*t, t), Poly(t**2 + 1, t), oo, DE) == \
+        (Poly(0, t), 3, Poly(t**2 + 1, t))
 
 
 def test_solve_poly_rde_cancel():
@@ -222,7 +285,32 @@ def test_solve_poly_rde_cancel():
         Poly(1, t)
     assert cancel_exp(Poly(2*x, t), Poly((1 + 2*x)*t, t), 1, DE) == \
         Poly(t, t)
-    # TODO: Add more exp tests, including tests that require is_deriv_in_field()
+    # The is_deriv_in_field() branch: b == (2*x + 1)/x == D(x)/x + 2*Dt/t
+    # (parametric_log_deriv() gives (1, 2, x)), and Dq + b*q == c has the
+    # solution q == 1 for c == (2*x + 1)/x.
+    assert cancel_exp(Poly((2*x + 1)/x, t), Poly((2*x + 1)/x, t), 0, DE) == \
+        Poly(1, t)
+    # ... but 1/(2*x) also works for c == 1/x (the code finds solutions
+    # with denominators via p/(z*t**m)):
+    assert cancel_exp(Poly((2*x + 1)/x, t), Poly(1/x, t), 0, DE) == \
+        Poly(1/(2*x), t)
+    # c == 1/x**2 requires a' + 2*a == 1/x over QQ(x), which has no
+    # rational solution (pole order mismatch at 0), so no solution exists
+    raises(NonElementaryIntegralException, lambda: cancel_exp(
+        Poly((2*x + 1)/x, t), Poly(1/x**2, t), 0, DE))
+
+    # The t**(-m) stripping in the m < 0 branch is only valid when the
+    # stripped coefficient is C/z for a constant C.  Here b == 1/x - 2 ==
+    # D(x)/x - 2*Dt/t (z == x, m == -2), and the candidate q == 1 + t**2
+    # has t**2-coefficient 1, with z*1 == x nonconstant, so no choice of
+    # the integration constant removes the term: there is no solution
+    # with n == 0.
+    raises(NonElementaryIntegralException, lambda: cancel_exp(
+        Poly(1/x - 2, t, field=True),
+        Poly(1/x - 2 + t**2/x, t, field=True), 0, DE))
+    # ...while the same b with c == b has the genuine solution q == 1.
+    assert cancel_exp(Poly(1/x - 2, t, field=True),
+        Poly(1/x - 2, t, field=True), 0, DE) == Poly(1, t)
 
     # primitive
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
@@ -246,6 +334,16 @@ def test_solve_poly_rde_cancel():
     assert cancel_primitive(Poly(4*x, t), Poly(4*x*t**2 + 2*t/x, t), 3, DE) == \
         Poly(t**2, t)
 
+    # The is_deriv_in_field() branch: b == 1/x == D(x)/x
+    # (is_log_deriv_k_t_radical_in_field() gives (1, x)), and
+    # Dq + b*q == c has the solution q == t for c == (t + 1)/x.
+    assert cancel_primitive(Poly(1/x, t), Poly((t + 1)/x, t), 1, DE) == \
+        Poly(t, t)
+    # z*c == t/(x + 1) has antiderivative t*log(x + 1) - log(x + 1) + x,
+    # which is not in QQ(x, log(x)), so no solution exists
+    raises(NonElementaryIntegralException, lambda: cancel_primitive(
+        Poly(1/x, t), Poly(t/(x*(x + 1)), t), 1, DE))
+
     # The degree bound n must not be clobbered by the index returned from
     # is_log_deriv_k_t_radical_in_field(): b == 1/(2*x) has index 2
     # (2*b == D(x)/x), which used to replace n == 3 and wrongly reject
@@ -255,7 +353,20 @@ def test_solve_poly_rde_cancel():
     c = derivation(q, DE) + b*q
     assert cancel_primitive(b, c, 3, DE) == q
 
-    # TODO: Add more primitive tests, including tests that require is_deriv_in_field()
+    # The b == 0 cancellation case (Dq == c by in-field integration):
+    # primitive (t == log(x)): D(t**2) == 2*t/x
+    assert solve_poly_rde(Poly(0, t), Poly(2*t/x, t), 2, DE) == Poly(t**2, t)
+    # (note Dq == 1/x has the in-field solution q == t == log(x); use an
+    # integrand whose antiderivative needs log(x + 1), which is not in
+    # the field)
+    raises(NonElementaryIntegralException, lambda: solve_poly_rde(
+        Poly(0, t), Poly(t/(x + 1), t), 2, DE))
+    # exp (t == exp(x)): D(x*t) == (x + 1)*t
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    assert solve_poly_rde(Poly(0, t), Poly((x + 1)*t, t), 1, DE) == \
+        Poly(x*t, t)
+    raises(NonElementaryIntegralException, lambda: solve_poly_rde(
+        Poly(0, t), Poly(t/x, t), 1, DE))
 
 
 def test_rischDE():

@@ -971,13 +971,20 @@ class Integral(AddWithLimits):
                 pass
             else:
                 if i:
-                    # There was a nonelementary integral. Try integrating it.
+                    # There was a leftover integral. Try integrating it.
 
-                    # if no part of the NonElementaryIntegral is integrated by
-                    # the Risch algorithm, then use the original function to
-                    # integrate, instead of re-written one
+                    # if no part of the integral was computed by the
+                    # Risch algorithm, then use the original function to
+                    # integrate, instead of re-written one.  The leftover
+                    # is only provably nonelementary if risch_integrate()
+                    # said so: over a non-transcendental tower it returns
+                    # a plain Integral, and stamping that as
+                    # NonElementaryIntegral here would assert a proof
+                    # that was never made.
                     if result == 0:
-                        return NonElementaryIntegral(f, x).doit(risch=False)
+                        if isinstance(i, NonElementaryIntegral):
+                            return NonElementaryIntegral(f, x).doit(risch=False)
+                        return Integral(f, x).doit(risch=False)
                     else:
                         return result + i.doit(risch=False)
                 else:
@@ -1539,9 +1546,9 @@ def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
 
     >>> from sympy import sqrt
     >>> integrate(sqrt(1 + x), (x, 0, x))
-    2*(x + 1)**(3/2)/3 - 2/3
+    sqrt(x + 1)*(2*x + 2)/3 - 2/3
     >>> integrate(sqrt(1 + x), x)
-    2*(x + 1)**(3/2)/3
+    sqrt(x + 1)*(2*x + 2)/3
 
     >>> integrate(x*y)
     Traceback (most recent call last):
