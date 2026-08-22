@@ -2625,8 +2625,13 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             result = DE.restore_sincos(result.subs(DE.backsubs),
                 drop_constants=True)
             if isinstance(i, Integral):
-                i = NonElementaryIntegral(DE.restore_sincos(
-                    i.function.subs(DE.backsubs)), i.limits)
+                if result == 0:
+                    # Nothing was integrated, so i is f itself: show it
+                    # as the user wrote it
+                    i = NonElementaryIntegral(f, x)
+                else:
+                    i = NonElementaryIntegral(DE.restore_sincos(
+                        i.function.subs(DE.backsubs)), i.limits)
             if not separate_integral:
                 result += i
                 return result
