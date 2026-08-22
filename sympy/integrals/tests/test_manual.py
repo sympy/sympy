@@ -19,7 +19,8 @@ from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, integral_steps, manual_subs)
+    _parts_rule, integral_steps, manual_subs, IntegralInfo,
+    perfect_square_radicand_rule)
 from sympy.testing.pytest import raises, slow
 from typing import TYPE_CHECKING
 
@@ -1092,6 +1093,47 @@ def test_manualintegrate_sqrt_quadratic_polynomial_reduction_rule():
     assert (result.args[0][0].diff(x) - f).cancel() == 0
     # case delta = 0
     assert (result.args[1][0].subs(c, b**2/12).diff(x) - f.subs(c, b**2/12)).cancel() == 0
+
+
+def test_manualintegrate_perfect_square_radicand_rule():
+    f = 1/sqrt(-z*sin(x)**2)
+    F = -log(cot(x) + csc(x))*sin(x)/sqrt(-z*sin(x)**2)
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(z*x**4)
+    F = -x/sqrt(z*x**4)
+    assert_is_integral_of(f, F)
+
+    f = x**3/sqrt(z*x**4)
+    F = sqrt(z*x**4)/(2*z)
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(-z*x**2)
+    F = x*log(x)/sqrt(-z*x**2)
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(z*exp(2*x))
+    F = -1/sqrt(z*exp(2*x))
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(z*log(x)**2)
+    F = log(x)*li(x)/sqrt(z*log(x)**2)
+    assert_is_integral_of(f, F)
+
+    f = x/sqrt(z*exp(2*x))
+    F = (-x*exp(-x) - exp(-x))*exp(x)/sqrt(z*exp(2*x))
+    assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_perfect_square_radicand_rule_real_symbol():
+    t = symbols('t', real=True)
+    integral = IntegralInfo(1/sqrt(z*t**4), t)
+    assert perfect_square_radicand_rule(integral) is None
+
+    f = 1/sqrt(z*t**4)
+    F = -1/(t*sqrt(z))
+    assert manualintegrate(f, t) == F
+
 
 def test_mul_pow_derivative():
     assert_is_integral_of(x*sec(x)*tan(x), x*sec(x) - log(tan(x) + sec(x)))
