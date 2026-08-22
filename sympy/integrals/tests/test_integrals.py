@@ -1242,7 +1242,7 @@ def test_issue_3558():
 
 
 def test_issue_4422():
-    assert integrate(1/sqrt(16 + 4*x**2), x) == asinh(x/2) / 2
+    assert integrate(1/sqrt(16 + 4*x**2), x) == x*asinh(sqrt(x**2)/2)/(2*sqrt(x**2))
 
 
 def test_issue_4493():
@@ -1361,11 +1361,7 @@ def test_issue_4234():
 
 def test_issue_4492():
     assert simplify(integrate(x**2 * sqrt(5 - x**2), x)).factor(
-        deep=True) == Piecewise(
-        (I*(2*x**5 - 15*x**3 + 25*x - 25*sqrt(x**2 - 5)*acosh(sqrt(5)*x/5)) /
-            (8*sqrt(x**2 - 5)), (x > sqrt(5)) | (x < -sqrt(5))),
-        ((2*x**5 - 15*x**3 + 25*x - 25*sqrt(5 - x**2)*asin(sqrt(5)*x/5)) /
-            (-8*sqrt(-x**2 + 5)), True))
+        deep=True) == Piecewise((I*x*(4*x**4*sqrt(x**2) - 30*x**2*sqrt(x**2) - 50*sqrt(x**2 - 5)*acosh(sqrt(5)*sqrt(x**2)/5) - 25*I*pi*sqrt(x**2 - 5) + 50*sqrt(x**2))/(16*sqrt(x**2 - 5)*sqrt(x**2)), (x > sqrt(5)) | (x < -sqrt(5))), (-x*(2*x**4*sqrt(x**2) - 15*x**2*sqrt(x**2) - 25*sqrt(5 - x**2)*asin(sqrt(5)*sqrt(x**2)/5) + 25*sqrt(x**2))/(8*sqrt(5 - x**2)*sqrt(x**2)), True))
 
 
 def test_issue_2708():
@@ -1966,8 +1962,7 @@ def test_issue_23566():
 
 
 def test_pr_23583():
-    # This result from meijerg is wrong. Check whether new result is correct when this test fail.
-    assert integrate(1/sqrt((x - I)**2-1)) == Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+    assert integrate(1/sqrt((x - I)**2-1)) == Piecewise(((x - I)*acosh(sqrt((x - I)**2))/sqrt((x - I)**2) - I*pi*(x - I)/(2*sqrt((x - I)**2)), Abs((x - I)**2) > 1), (-I*(x - I)*asin(sqrt((x - I)**2))/sqrt((x - I)**2), True))
 
 
 def test_issue_7264():
