@@ -52,7 +52,7 @@ def ratint(f, x, **flags):
     else:
         p, q = f.as_numer_denom()
 
-    p, q = Poly(p, x, composite=False, field=True), Poly(q, x, composite=False, field=True)
+    p, q = Poly(p, x, field=True), Poly(q, x, field=True)
 
     coeff, p, q = p.cancel(q)
     poly, p = p.div(q)
