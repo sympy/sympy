@@ -22,7 +22,7 @@ from sympy.functions.combinatorial.numbers import (bernoulli, bell, catalan, eul
                                                    lucas, fibonacci, tribonacci, divisor_sigma, udivisor_sigma,
                                                    mobius, primenu, primeomega,
                                                    totient, reduced_totient)
-from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
+from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re, )  # transpose,
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, coth)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
@@ -107,6 +107,20 @@ class lowergamma(sym.lowergamma):
 x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')
 k, m, n = symbols('k m n', integer=True)
 
+
+def test_latex_complexes():
+    # Add to  test_functions
+    # --- import ''transpose'' on Line 23
+# rrb   A, B = symbols("A B", commutative=False)
+#    l1 = latex( transpose(A*B) )
+#    l2 = latex( transpose(A+B) )
+#    l3 = latex( transpose(A**2) )
+
+#    C, D = symbols("C D", commutative=True, atom=False)
+#    l4 = latex( transpose(C*D))
+#    l5 = latex( transpose(C+D))
+# rrb   l6 = latex( transpose(C**2) )
+    pass
 
 def test_printmethod():
     class R(Abs):
