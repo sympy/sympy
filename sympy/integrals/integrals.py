@@ -637,6 +637,10 @@ class Integral(AddWithLimits):
             # continuous should only be added in the final round
             if (final and not isinstance(antideriv, Integral) and
                 antideriv is not None):
+                # The integrands of integrals left unevaluated (e.g. a
+                # nonelementary part) must not be changed
+                integrals = {i: Dummy() for i in antideriv.atoms(Integral)}
+                antideriv = antideriv.xreplace(integrals)
                 for atan_term in antideriv.atoms(atan):
                     atan_arg = atan_term.args[0]
                     # Checking `atan_arg` to be a polynomial of odd degree
@@ -658,6 +662,8 @@ class Integral(AddWithLimits):
                             a = cot_part.args[0]
                             antideriv = antideriv.subs(atan_term, Add(atan_term,
                                 sign(coeff)*pi*floor((a)/pi)))
+                antideriv = antideriv.xreplace(
+                    {v: k for k, v in integrals.items()})
 
             if antideriv is None:
                 undone_limits.append(xab)

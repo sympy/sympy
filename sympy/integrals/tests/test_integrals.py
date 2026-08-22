@@ -1341,6 +1341,10 @@ def test_risch_real_trig():
         NonElementaryIntegral(exp(x)/(1 + tan(x)), x)
     assert integrate(sin(x) + exp(x)*tan(x), x) == \
         -cos(x) + NonElementaryIntegral(exp(x)*tan(x), x)
+    # The floor terms of the final round do not touch the integrand of
+    # the nonelementary part
+    assert integrate(exp(2*x) + exp(x)*atan(tan(x) + 2)/x, x, risch=True) == \
+        exp(2*x)/2 + NonElementaryIntegral(exp(x)*atan(tan(x) + 2)/x, x)
     # The floor terms of the final round also handle arc-tangents of
     # polynomials of odd degree in a tangent
     assert integrate(1/(1 + sin(x)**2), x, risch=True) == \
