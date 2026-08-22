@@ -33,10 +33,10 @@ from sympy import SYMPY_DEBUG
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, expand_trig
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Number, E
+from sympy.core.numbers import Integer, Number, E, Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
@@ -48,6 +48,7 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
     cosh, coth, sech, sinh, tanh, asinh)
+from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
@@ -83,6 +84,8 @@ def _if_zero_implies_zero(P, Q):
     Returns True if P is not zero or if substituting every irreducible
     factor of the numerator of P in the numerator of Q makes Q = 0.
     """
+    P = P.expand()
+    Q = Q.expand()
     if P.is_zero is False:
         return True
     if P.is_zero is True:
@@ -1974,12 +1977,16 @@ def quadratic_denom_rule(integral):
     def _complete_square(B, a, b, c, n, symbol, degenerate_a=True, degenerate_discriminant=True):
         # integrates B / (a*x**2 + b*x + c)**n
         pieces = []
-        discriminant = 4*a*c - b**2
+        discriminant = (4*a*c - b**2).expand()
         denominator = a*symbol**2 + b*symbol + c
         integrand = B / denominator**n
         # degenerate flags avoid recalculating Piecewise branches recursively
         if degenerate_a and not _if_zero_implies_zero(a, denominator):
-            substituted = integrand.subs(a, 0)
+            if discriminant.is_zero is True:
+                # If a = 0 and 4*a*c - b**2 = 0 identically, then b = 0 too.
+                substituted = integrand.subs({a: 0, b: 0}, simultaneous=True)
+            else:
+                substituted = integrand.subs(a, 0)
             substep = integral_steps(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
         if degenerate_discriminant and not _if_zero_implies_zero(discriminant, denominator):
@@ -2032,8 +2039,13 @@ def quadratic_denom_rule(integral):
         pieces = []
         denominator = (a*symbol**2 + b*symbol + c)
         integrand = (A*symbol + B) / denominator**n
+        discriminant = (4*a*c - b**2).expand()
         if not _if_zero_implies_zero(a, denominator):
-            substituted = integrand.subs(a, 0)
+            if discriminant.is_zero is True:
+                # If a = 0 and 4*a*c - b**2 = 0 identically, then b = 0 too.
+                substituted = integrand.subs({a: 0, b: 0}, simultaneous=True)
+            else:
+                substituted = integrand.subs(a, 0)
             substep = integral_steps(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
         # we divide by a, Piecewise condition above
@@ -2082,6 +2094,257 @@ def quadratic_denom_rule(integral):
 
     return step
 
+def bioche_substitution(integral):
+    # Apply Bioche's rules to rational functions of trigonometric functions
+    # https://en.wikipedia.org/wiki/Bioche%27s_rules
+
+    integrand, x = integral
+    TRIG = (sin, cos, tan, cot, sec, csc)
+    trig_atoms = tuple(ordered(integrand.atoms(*TRIG)))
+
+    if not trig_atoms:
+        return None
+    # Polynomial trig expressions are better handled termwise after expansion
+    if integrand.is_polynomial(*trig_atoms):
+        return None
+    if integrand.is_rational_function(*trig_atoms) is not True:
+        return None
+    masked = integrand.xreplace({atom: Dummy() for atom in trig_atoms})
+    # Exclude explicit dependence on x outside trigonometric functions
+    if masked.has(x):
+        return None
+
+    trig_data = []
+    for atom in trig_atoms:
+        argument = atom.args[0].as_poly(x)
+        # Trigonometric arguments must be affine
+        if argument is None or argument.degree() > 1:
+            return None
+        trig_data.append((atom, argument.nth(1), argument.nth(0)))
+
+    # At least one trigonometric argument must depend on x
+    reference = next(((coeff, phase_i) for _, coeff, phase_i in trig_data if coeff != 0), None)
+    if reference is None:
+        return None
+
+    coeff0, phase0 = reference
+    ratios = []
+    phase_residuals = []
+    for _, coeff, phase_i in trig_data:
+        ratio = (coeff/coeff0).cancel()
+        # All frequencies must be rationally proportional
+        if not isinstance(ratio, Rational):
+            return None
+        ratios.append(ratio)
+        phase_residuals.append((phase_i - ratio*phase0).cancel())
+    denominator_lcm = lcm_list([ratio.q for ratio in ratios])
+    # Choose the largest common frequency
+    omega = (coeff0/denominator_lcm).cancel()
+    harmonics = [ratio*denominator_lcm for ratio in ratios]
+
+    # Absorb the reference phase into u
+    phase_shift = (phase0/denominator_lcm).cancel()
+    phase_base = next((residual for residual in phase_residuals if residual.is_zero is not True), None)
+    if phase_base is None:
+        # All phases can be absorbed into u
+        phase_multiples = [S.Zero]*len(trig_data)
+    else:
+        phase_ratios = [(residual/phase_base).cancel() for residual in phase_residuals]
+        # Residual phases must have rational rank at most one
+        if not all(isinstance(ratio, Rational) for ratio in phase_ratios):
+            return None
+        # Write every residual phase as an integer multiple of phase
+        phase_lcm = lcm_list([ratio.q for ratio in phase_ratios])
+        phase = (phase_base/phase_lcm).cancel()
+        phase_multiples = [ratio*phase_lcm for ratio in phase_ratios]
+        # Minimize max(abs(m_i - n_i*k)); candidates occur where two terms are equal up to sign
+        candidates = {S.Zero}
+        for i, (m_i, n_i) in enumerate(zip(phase_multiples, harmonics)):
+            for j in range(i):
+                m_j = phase_multiples[j]
+                n_j = harmonics[j]
+                for numerator, denominator in ((m_i - m_j, n_i - n_j), (m_i + m_j, n_i + n_j)):
+                    if denominator != 0:
+                        value = numerator/denominator
+                        candidates.update((floor(value), ceiling(value)))
+        best_k = min(ordered(candidates), key=lambda k: max(abs(m - n*k) for m, n in zip(phase_multiples, harmonics)))
+        phase_shift = (phase_shift + best_k*phase).cancel()
+        phase_multiples = [m - n*best_k for m, n in zip(phase_multiples, harmonics)]
+
+    u_func = omega*x + phase_shift
+    u = Dummy("u")
+    v = Dummy("v")
+    replacements = {atom: atom.func(harmonic*u + phase_multiple*v)
+                for (atom, _, _), harmonic, phase_multiple in zip(trig_data, harmonics, phase_multiples)}
+    expr_u = integrand.xreplace(replacements)
+    # Rewrite multiple angles before applying Bioche's substitutions
+    expr_u = expand_trig(expr_u).cancel()
+
+    phase_substitution = {}
+    singular_condition = S.false
+    singular_expr_u = None
+    if phase_base is not None:
+        # Parametrize the single residual phase rationally
+        z = Dummy("z")
+        expr_u = expr_u.xreplace({sin(v): 2*z/(1 + z**2),
+                cos(v): (1 - z**2)/(1 + z**2),
+                tan(v): 2*z/(1 - z**2),
+                cot(v): (1 - z**2)/(2*z),
+                sec(v): (1 + z**2)/(1 - z**2),
+                csc(v): (1 + z**2)/(2*z)}).cancel()
+        phase_substitution = {z: tan(phase/2)}
+        singular_condition = Eq(cos(phase/2), 0)
+        if singular_condition is not S.false:
+            # Use the cotangent chart when tan(phase/2) may be singular
+            w = Dummy("w")
+            singular_expr_u = expr_u.xreplace({z: 1/w}).cancel().xreplace({w: S.Zero})
+        if singular_condition is S.true:
+            # Avoid constructing the invalid tangent-chart branch.
+            expr_u = singular_expr_u
+            phase_substitution = {}
+            singular_expr_u = None
+
+    # Avoid Bioche when expansion already gives an easier integral
+    if expr_u.is_polynomial(*(func(u) for func in TRIG)):
+        expr_step = expr_u.xreplace(phase_substitution)
+        if (u_func - x).cancel().is_zero is True:
+            expanded = expr_step.xreplace({u: x})
+            generic_step = RewriteRule(integrand, x, expanded, integral_steps(expanded, x))
+        else:
+            generic_step = URule(integrand, x, u, u_func, integral_steps(expr_step/omega, u))
+    else:
+        t = Dummy("t")
+        s = Dummy("s")
+        c = Dummy("c")
+        expr_sc = expr_u.xreplace({sin(u): s, cos(u): c, tan(u): s/c, cot(u): c/s, sec(u): 1/c, csc(u): 1/s})
+
+        def rational_step(transformed):
+            # Restore the residual phase before delegating to integral_steps
+            return integral_steps(transformed.xreplace(phase_substitution), t)
+
+        def try_cos_double():
+            # Try t = cos(2*u_func) when both sine and cosine powers are even
+            transformed = (-expr_sc/(4*omega*s*c)).cancel()
+            numerator, denominator = transformed.as_numer_denom()
+            numerator = numerator.as_poly(s, c)
+            denominator = denominator.as_poly(s, c)
+            replacements = {}
+
+            for polynomial in (numerator, denominator):
+                for (s_power, c_power), _ in polynomial.terms():
+                    if s_power % 2 or c_power % 2:
+                        return None
+                    if s_power:
+                        replacements[s**s_power] = ((1 - t)/2)**(s_power // 2)
+                    if c_power:
+                        replacements[c**c_power] = ((1 + t)/2)**(c_power // 2)
+
+            numerator = numerator.as_expr().xreplace(replacements)
+            denominator = denominator.as_expr().xreplace(replacements)
+            transformed = (numerator/denominator).cancel()
+            substep = rational_step(transformed)
+            return URule(integrand, x, t, cos(2*u_func), substep)
+
+        def try_sin():
+            # Try t = sin(u_func) when only even powers of cosine remain
+            transformed = (expr_sc/(omega*c)).cancel()
+            numerator, denominator = transformed.as_numer_denom()
+            numerator = numerator.as_poly(c)
+            denominator = denominator.as_poly(c)
+            replacements = {s: t}
+
+            for polynomial in (numerator, denominator):
+                for (power,), _ in polynomial.terms():
+                    if power % 2:
+                        return None
+                    if power:
+                        replacements[c**power] = (1 - t**2)**(power // 2)
+
+            numerator = numerator.as_expr().xreplace(replacements)
+            denominator = denominator.as_expr().xreplace(replacements)
+            transformed = (numerator/denominator).cancel()
+            substep = rational_step(transformed)
+            return URule(integrand, x, t, sin(u_func), substep)
+
+        def try_cos():
+            # Try t = cos(u_func) when only even powers of sine remain
+            transformed = (-expr_sc/(omega*s)).cancel()
+            numerator, denominator = transformed.as_numer_denom()
+            numerator = numerator.as_poly(s)
+            denominator = denominator.as_poly(s)
+            replacements = {c: t}
+
+            for polynomial in (numerator, denominator):
+                for (power,), _ in polynomial.terms():
+                    if power % 2:
+                        return None
+                    if power:
+                        replacements[s**power] = (1 - t**2)**(power // 2)
+
+            numerator = numerator.as_expr().xreplace(replacements)
+            denominator = denominator.as_expr().xreplace(replacements)
+            transformed = (numerator/denominator).cancel()
+            substep = rational_step(transformed)
+            return URule(integrand, x, t, cos(u_func), substep)
+
+        def try_tan():
+            # Try t = tan(u_func) before the higher-degree half-angle substitution
+            transformed = ((expr_sc*c**2/omega).xreplace({s: t*c})).cancel()
+            numerator, denominator = transformed.as_numer_denom()
+            numerator = numerator.as_poly(c)
+            denominator = denominator.as_poly(c)
+            replacements = {}
+
+            for polynomial in (numerator, denominator):
+                for (power,), _ in polynomial.terms():
+                    if power % 2:
+                        return None
+                    if power:
+                        replacements[c**power] = (1 + t**2)**(-(power // 2))
+
+            numerator = numerator.as_expr().xreplace(replacements)
+            denominator = denominator.as_expr().xreplace(replacements)
+            transformed = (numerator/denominator).cancel()
+            substep = rational_step(transformed)
+            return URule(integrand, x, t, tan(u_func), substep)
+
+        def try_tan_half():
+            # Fall back to the universal Weierstrass substitution
+            transformed = expr_u.xreplace({
+                sin(u): 2*t/(1 + t**2),
+                cos(u): (1 - t**2)/(1 + t**2),
+                tan(u): 2*t/(1 - t**2),
+                cot(u): (1 - t**2)/(2*t),
+                sec(u): (1 + t**2)/(1 - t**2),
+                csc(u): (1 + t**2)/(2*t),
+            })
+            transformed = (transformed * 2/(omega*(1 + t**2))).cancel()
+            substep = rational_step(transformed)
+            return URule(integrand, x, t, tan(u_func/2), substep)
+
+        generic_step = None
+        for method in (try_cos_double, try_sin, try_cos, try_tan, try_tan_half):
+            step = method()
+            if step is not None and not step.contains_dont_know():
+                generic_step = step
+                break
+
+    if generic_step is None or generic_step.contains_dont_know():
+        return None
+    if singular_expr_u is not None:
+        singular_substep = integral_steps((singular_expr_u/omega).cancel(), u)
+        singular_step = URule(integrand, x, u, u_func, singular_substep)
+        if singular_step.contains_dont_know():
+            return None
+        generic_step = PiecewiseRule(integrand, x,
+            [(singular_step, singular_condition), (generic_step, S.true)])
+    if omega.is_zero is False:
+        return generic_step
+    zero_replacements = {atom: atom.func(phase_i) for atom, _, phase_i in trig_data}
+    zero_integrand = integrand.xreplace(zero_replacements)
+    zero_substep = integral_steps(zero_integrand, x)
+    zero_step = RewriteRule(integrand, x, zero_integrand, zero_substep)
+    return PiecewiseRule(integrand, x, [(zero_step, Eq(omega, 0)), (generic_step, S.true)])
 
 def chebyshev_substitution_rule(integral):
     """
@@ -2956,6 +3219,7 @@ def trig_powers_products_rule(integral):
                   null_safe(trig_cotcsc_rule))(integral)
 
 
+
 def heaviside_rule(integral):
     integrand, symbol = integral
     pattern, m, b, g = heaviside_pattern(symbol)
@@ -3189,6 +3453,13 @@ def integral_steps(integrand, symbol, **options):
             return k and issubclass(k, klasses)
         return _integral_is_subclass
 
+    # TODO: Prefer substitution_rule over bioche_substitution once the rule
+    # dispatcher can stop at the first complete result. Putting Bioche inside
+    # alternatives() currently evaluates trig_expand_rule eagerly, while
+    # putting it after alternatives() can make it unreachable. For example,
+    # substitution_rule integrates sec(x)*tan(x)/(sec(x) + 1) as
+    # log(sec(x) + 1), while Bioche returns
+    # log(cos(x) + 1) - log(cos(x)).
     result = do_one(
         null_safe(special_function_rule),
         null_safe(switch(key, {
@@ -3200,7 +3471,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
                         null_safe(chebyshev_substitution_rule),
-                        null_safe(euler_substitution_rule)),
+                        null_safe(euler_substitution_rule),
+                        null_safe(bioche_substitution)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
@@ -3211,7 +3483,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(sqrt_fractional_linear_rule),
                         null_safe(chebyshev_substitution_rule),
                         null_safe(euler_substitution_rule),
-                        null_safe(trig_cmplx_exp_rule)),
+                        null_safe(trig_cmplx_exp_rule),
+                        null_safe(bioche_substitution)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
@@ -3243,7 +3516,7 @@ def integral_steps(integrand, symbol, **options):
                     distribute_expand_rule),
                 trig_expand_rule
             )),
-            null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
+            null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule))
         ),
         fallback_rule)(integral)
     del _integral_cache[cachekey]

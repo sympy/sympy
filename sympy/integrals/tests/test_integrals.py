@@ -1819,7 +1819,7 @@ def test_issue_15810():
 def test_issue_21024():
     x = Symbol('x', real=True, nonzero=True)
     f = log(x)*log(4*x) + log(3*x + exp(2))
-    F = x*log(x)**2 + x*log(3*x + exp(2)) + x*(1 - 2*log(2)) + \
+    F = x*log(x)**2 + x*log(3*x + exp(2)) - x*(-1 + 2*log(2)) + \
         (-2*x + 2*x*log(2))*log(x) + exp(2)*log(3*x + exp(2))/3
     assert F == integrate(f, x)
 
@@ -1930,12 +1930,9 @@ def test_issue_21671():
 
 
 def test_issue_18527():
-    # The manual integrator can not currently solve this. Assert that it does
-    # not give an incorrect result involving Abs when x has real assumptions.
     xr = symbols('xr', real=True)
-    expr = (cos(x)/(4+(sin(x))**2))
-    res_real = integrate(expr.subs(x, xr), xr, manual=True).subs(xr, x)
-    assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
+    expr = cos(xr)/(4 + sin(xr)**2)
+    assert integrate(expr, xr, manual=True) == atan(sin(xr)/2)/2
 
 
 def test_issue_23718():
