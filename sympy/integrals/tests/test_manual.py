@@ -191,6 +191,28 @@ def test_manualintegrate_bioche_substitution():
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).rewrite(exp).cancel() == 0
 
+    # Commensurate arguments with a residual phase
+    f = 1/(sin(x) + cos(x + pi/3) + 2)
+    radical = sqrt(4*sqrt(3)/9 + S(8)/9)
+    F = 4*atan((tan(x/2) - sqrt(3)/3 + S(2)/3)/radical)/(3*radical)
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).simplify() == 0
+
+    # A symbolic residual phase requires both tangent charts
+    f = cos(x + a)/(sin(x) + 2)
+    ta, tx = tan(a/2), tan(x/2)
+    first_term = Mul(2, 1/(ta**2 + 1),
+        (ta**2/2 - S.Half)*log(tx**2 + 1) - 2*ta*atan(tx),
+        evaluate=False)
+    second_term = ((ta**2 - 1)*log(tx**2 + tx + 1)
+        - 8*sqrt(3)*ta*atan(2*sqrt(3)*(tx + S.Half)/3)/3)/(ta**2 + 1)
+    F1 = first_term - second_term
+    F2 = -log(sin(x) + 2)
+    F = Piecewise((F1, Ne(cos(a/2), 0)), (F2, True))
+    assert manualintegrate(f, x) == F
+    assert (F1.subs(a, pi/3).diff(x) - f.subs(a, pi/3)).simplify() == 0
+    assert (F2.diff(x) - f.subs(a, pi)).simplify() == 0
+
     # Negative harmonics
     f = 1/(sin(-2*x) + cos(4*x) + 2)
     F = (2*sqrt(5)*atan(3*sqrt(5)*(tan(x) + S(2)/3)/5)/25
@@ -220,6 +242,7 @@ def test_manualintegrate_bioche_substitution():
     for f in (1/(sin(x**2) + 2),
               1/(sin(cos(x)) + 2),
               1/(sin(x) + cos(sqrt(2)*x) + 2),
+              1/(sin(x) + cos(x + a) + tan(x + b) + 4),
               x*sin(x)):
         assert bioche_substitution((f, x)) is None
 
