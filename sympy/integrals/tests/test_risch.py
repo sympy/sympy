@@ -873,6 +873,21 @@ def test_DifferentialExtension_atan():
         [Lambda(i, tan(i/2)), Lambda(i, atan((t0**2 + 1)/(2*t0)))],
         [(c, acot(sin(x)) - atan(1/sin(x)))], ['tan', 'atan'],
         [x/2, (t0**2 + 1)/(2*t0)])
+    # ... and the other nesting order, where the branch constant of the
+    # rewritten acot ends up inside a tangent argument: t0 == atan(1/x),
+    # t1 == tan(x + t0)
+    DE = DifferentialExtension(tan(acot(x) + x), x)
+    c = DE.backsubs[-1][0]
+    assert DE.T == [x, t0, t1] and DE.exts == ['atan', 'tan']
+    assert DE.extargs == [1/x, t0 + x] and DE.backsubs == \
+        [(c, acot(x) - atan(1/x))]
+    assert cancel(DE.fa.as_expr()/DE.fd.as_expr() -
+        (t1 + tan(c))/(1 - t1*tan(c))) == 0
+    # (sin(acot(x)) and friends evaluate to algebraic expressions before
+    # they ever reach the extension building, and sin of an arc-tangent
+    # plus a constant needs the algebraic tan(atan(x)/2))
+    raises(NotImplementedError, lambda: DifferentialExtension(sin(acot(x)), x))
+    raises(NotImplementedError, lambda: DifferentialExtension(sin(acot(x) + 1), x))
     # The acot rewriting survives the restart of the exponential part
     # (exp(x/2 + 1) over QQ(x, exp(x)) pulls out the constant and
     # rebuilds the tower from scratch)
