@@ -170,7 +170,7 @@ class EUFCongruenceClosure:
 
     def _flatten(self, expr):
         """
-        Curryfy, and flatten the expression. This method, in parallel, registers.
+        flatten the expression. This method, in parallel, registers.
         This method should be called before any merging.
 
         Returns
@@ -181,20 +181,19 @@ class EUFCongruenceClosure:
         if expr in self._term_to_const:
             return self._term_to_const[expr]
 
-        # symbols are already proper constants so register them only
+        # symbols are (should be) already proper constants so register them only
         if isinstance(expr, Symbol):
             self._register(expr)
             const = expr
         elif isinstance(expr, Atom):
             const = self._new_dummy()
-        elif isinstance(expr, AppliedPredicate):
-            arg_ids = tuple(self._flatten(arg) for arg in expr.arguments)
-            const = self._record_app(expr.function, arg_ids)
         elif isinstance(expr, Lambda):
+            # lambda-like, should be also currified
             lam = expr.curry()
             const = self._record_app((Lambda, lam.variables[0]),
                                      (self._flatten(lam.expr),))
         else:
+            # function-like f(args) = const
             arg_ids = tuple(self._flatten(arg) for arg in expr.args)
             const = self._record_app(expr.func, arg_ids)
 
@@ -418,6 +417,7 @@ class EUFCongruenceClosure:
     def _insert_cgraph_edge(self, a, b, label, level=None):
         """
         Insert a-b edge to the c-graph.
+        Returns None if it could not add the edges
         """
         if a == b:
             return None
