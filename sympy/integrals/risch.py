@@ -44,6 +44,7 @@ from sympy.functions.elementary.trigonometric import (atan, sin, cos,
     tan, acot, cot, asin, acos)
 from .integrals import integrate, Integral
 from .heurisch import _symbols
+from .rationaltools import log_to_real
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
@@ -137,8 +138,10 @@ class DifferentialExtension:
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
-    - exts:
-    - extargs:
+    - exts: The type ('exp' or 'log') of each extension; exts[i]
+      describes T[i + 1] (T[0] == x is not an extension).
+    - extargs: The argument of the exp or log of each extension, indexed
+      like exts.
     - cases: List of string representations of the cases of T.
     - t: The top level extension variable, as defined by the current level
       (see level below).
@@ -164,9 +167,9 @@ class DifferentialExtension:
     # of the class easily (the memory use doesn't matter too much, since we
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
-    __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs',
-        'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf', 'level',
-        'ts', 'dummy')
+    __slots__ = ('f', 'origf', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs',
+        'backsubs', 'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf',
+        'level', 'ts', 'dummy')
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
         """
@@ -221,8 +224,10 @@ class DifferentialExtension:
                 str(handle_first))
 
         # f will be the original function, self.f might change if we reset
-        # (e.g., we pull out a constant from an exponential)
+        # (e.g., we pull out a constant from an exponential); origf always
+        # stays the expression the user handed in
         self.f = f
+        self.origf = f
         self.x = x
         # setting the default value 'dummy'
         self.dummy = dummy
@@ -275,7 +280,14 @@ class DifferentialExtension:
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps)
                 if exp_new_extension is None:
-                    # reset and restart
+                    # Reset and restart.  reset() clears backsubs, so any
+                    # rewrite recorded there -- a branch-constant Dummy
+                    # from _log_part(), a user radical's notation -- must
+                    # first be folded back into newf, or the Dummy leaks
+                    # into the final result as a free symbol and the
+                    # original notation is never re-encountered by the
+                    # rebuild.
+                    self.newf = self.newf.subs(self.backsubs)
                     self.f = self.newf
                     self.reset()
                     exp_new_extension = True
@@ -319,8 +331,33 @@ class DifferentialExtension:
 
         ratpows_repl = [
             (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
-        self.backsubs += [(j, i) for i, j in ratpows_repl]
-        self.newf = self.newf.xreplace(dict(ratpows_repl))
+        # exp(u)**q == exp(q*u) is exact for integer q, but for
+        # fractional q the left side is a principal root that differs
+        # from exp(q*u) by a locally constant root of unity off the real
+        # line.  Radicals of exponentials also arise internally (the
+        # radical case of _exp_part substitutes t**(p/n) and restarts);
+        # those denote a root the construction is free to choose, so
+        # folding them to exp(q*u) is exact, and rewriting the answer
+        # back into principal-root notation is what turned correctly
+        # integrated results into non-antiderivatives at complex points.
+        # A fractional power the user wrote, however, means the
+        # principal root specifically: fold it as ratio*exp(q*u) with an
+        # opaque locally constant ratio (a root of unity on each
+        # component), restored exactly on backsubstitution -- which also
+        # keeps integrands mixing exp(u)**q with exp(q*u) itself
+        # pointwise correct.
+        subs_map = {}
+        for i, j in ratpows_repl:
+            if i.exp.is_Integer:
+                self.backsubs.append((j, i))
+                subs_map[i] = j
+            elif self.origf is not None and self.origf.has(i):
+                ratio = Dummy('exp_branch')
+                self.backsubs.append((ratio, i/j))
+                subs_map[i] = ratio*j
+            else:
+                subs_map[i] = j
+        self.newf = self.newf.xreplace(subs_map)
 
         # To make the process deterministic, the args are sorted
         # so that functions with smaller op-counts are processed first.
@@ -587,8 +624,35 @@ class DifferentialExtension:
             A = is_deriv_k(arga, argd, self)
             if A is not None:
                 ans, u, const = A
-                newterm = log(const) + u
-                self.newf = self.newf.xreplace({log(arg): newterm})
+                # u + log(const) equals log(arg) only up to a locally
+                # constant branch term: log(const) is the principal-branch
+                # choice, valid where every argument involved is positive
+                # (e.g. log(-x**2) == 2*log(x) + I*pi only holds for
+                # x > 0).  The one case where it is exact everywhere is a
+                # single tower logarithm with coefficient one and a
+                # positive constant: log(c*w) == log(c) + log(w) for
+                # c > 0 on the whole complex plane.
+                if (u is not self.x and u in self.T and const.is_positive and
+                        self.exts[self.T.index(u) - 1] == 'log'):
+                    self.newf = self.newf.xreplace({log(arg): log(const) + u})
+                    continue
+                # Otherwise the difference log(arg) - u is locally
+                # constant wherever the functions are defined, so
+                # integrating with an opaque constant in its place and
+                # restoring the exact difference on backsubstitution keeps
+                # the answer, now expressed through the original
+                # logarithm, correct on every connected component.
+                branch_const = Dummy('log_branch')
+                # arg and u may involve tower symbols; express the
+                # difference through the concrete functions (and through
+                # any originals recorded in backsubs so far, so that
+                # e.g. x**x reappears as x**x rather than exp(x*log(x))).
+                concrete = list(zip(reversed(self.T),
+                    reversed([f(self.x) for f in self.Tfuncs])))
+                diff_expr = (log(arg.subs(concrete)) -
+                    u.subs(concrete)).subs(self.backsubs)
+                self.backsubs.append((branch_const, diff_expr))
+                self.newf = self.newf.xreplace({log(arg): branch_const + u})
                 continue
 
             else:
@@ -663,8 +727,8 @@ class DifferentialExtension:
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
         self.level = -1
-        self.exts = [None]
-        self.extargs = [None]
+        self.exts = []
+        self.extargs = []
         if self.dummy:
             self.ts = numbered_symbols('t', cls=Dummy)
         else:
@@ -687,8 +751,9 @@ class DifferentialExtension:
         Returns
         =======
 
-        list: A list of indices of 'exts' where extension of
-            type 'extension' is present.
+        list: A list of indices into T (and D) of the extensions of
+            type 'extension'.  Note that self.exts[i] describes the
+            extension T[i + 1], since T[0] == x is not an extension.
 
         Examples
         ========
@@ -703,7 +768,7 @@ class DifferentialExtension:
         [1]
 
         """
-        return [i for i, ext in enumerate(self.exts) if ext == extension]
+        return [i for i, ext in enumerate(self.exts, 1) if ext == extension]
 
     def increment_level(self):
         """
@@ -868,7 +933,7 @@ def as_poly_1t(p, t, z):
 
     t_part, remainder = pa.div(pd)
 
-    ans = t_part.as_poly(t, z, expand=False)
+    ans = Poly(t_part, t, z, expand=False)
 
     if remainder:
         one = remainder.one
@@ -876,7 +941,7 @@ def as_poly_1t(p, t, z):
         r = pd.degree() - remainder.degree()
         z_part = remainder.transform(one, tp) * tp**r
         z_part = z_part.replace(t, z).to_field().quo_ground(pd.LC())
-        ans += z_part.as_poly(t, z, expand=False)
+        ans += Poly(z_part, t, z, expand=False)
 
     return ans
 
@@ -1090,7 +1155,7 @@ def hermite_reduce(a, d, DE):
     gd = Poly(1, DE.t)
 
     dd = derivation(d, DE)
-    dm = gcd(d.to_field(), dd.to_field()).as_poly(DE.t)
+    dm = Poly(gcd(d.to_field(), dd.to_field()), DE.t)
     ds, _ = d.div(dm)
 
     while dm.degree(DE.t) > 0:
@@ -1101,13 +1166,13 @@ def hermite_reduce(a, d, DE):
         ds_ddm = ds.mul(ddm)
         ds_ddm_dm, _ = ds_ddm.div(dm)
 
-        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t),
-            dms.as_poly(DE.t), a.as_poly(DE.t))
-        b, c = b.as_poly(DE.t), c.as_poly(DE.t)
+        b, c = gcdex_diophantine(-Poly(ds_ddm_dm, DE.t),
+            Poly(dms, DE.t), Poly(a, DE.t))
+        b, c = Poly(b, DE.t), Poly(c, DE.t)
 
-        db = derivation(b, DE).as_poly(DE.t)
+        db = Poly(derivation(b, DE), DE.t)
         ds_dms, _ = ds.div(dms)
-        a = c.as_poly(DE.t) - db.mul(ds_dms).as_poly(DE.t)
+        a = Poly(c, DE.t) - Poly(db.mul(ds_dms), DE.t)
 
         ga = ga*dm + b*gd
         gd = gd*dm
@@ -1182,7 +1247,7 @@ def laurent_series(a, d, F, n, DE):
     """
     if F.degree() == 0:
         return (Poly(0, DE.t), Poly(1, DE.t), [])
-    Z = _symbols('z', n)
+    Z: list[Symbol] = [*_symbols('z', n)]
     z = Symbol('z')
     Z.insert(0, z)
     delta_a = Poly(0, DE.t)
@@ -1314,7 +1379,7 @@ def recognize_log_derivative(a, d, DE, z=None):
     r = Poly(r, z)
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
-    if any(s.as_poly(z).degree() > 0 for s, _ in Np):
+    if any(Poly(s, z).degree() > 0 for s, _ in Np):
         # The normal part of the splitting factorization contains the
         # factors of the resultant whose roots are not constants; such
         # roots cannot be integers, so f is not the logarithmic derivative
@@ -1360,15 +1425,9 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     This is ``ResidueReduce`` (the Lazard-Rioboo-Trager version) from
     Section 5.6 of Bronstein's book.
     """
-    # TODO: Use log_to_atan() from rationaltools.py
-    # If r = residue_reduce(...), then the logarithmic part is given by:
-    # sum([RootSum(a[0].as_poly(z), lambda i: i*log(a[1].as_expr()).subs(z,
-    # i)).subs(t, log(x)) for a in r[0]])
-
     z = z or Dummy('z')
     a, d = a.cancel(d, include=True)
     a, d = a.to_field().mul_ground(1/d.LC()), d.to_field().mul_ground(1/d.LC())
-    kkinv = [1/x for x in DE.T[:DE.level]] + DE.T[:DE.level]
 
     if a.is_zero:
         return ([], True)
@@ -1399,19 +1458,19 @@ def residue_reduce(a, d, DE, z=None, invert=True):
             h = R_map.get(i)
             if h is None:
                 continue
-            h_lc = Poly(h.as_poly(DE.t).LC(), DE.t, field=True)
+            s = Poly(s, z).monic()
+            h_lc = Poly(h.as_poly(DE.t).LC(), z, field=True)
 
             h_lc_sqf = h_lc.sqf_list_include(all=True)
 
             for a, j in h_lc_sqf:
-                h = Poly(h, DE.t, field=True).exquo(Poly(gcd(a, s**j, *kkinv),
-                    DE.t))
-
-            s = Poly(s, z).monic()
+                g = a.gcd(s)
+                h = Poly(h, DE.t, field=True).exquo(Poly(g.as_expr()**j, DE.t))
 
             if invert:
-                h_lc = Poly(h.as_poly(DE.t).LC(), DE.t, field=True, expand=False)
-                inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S.One]
+                h_lc = Poly(Poly(h, DE.t).LC(), DE.t, field=True, expand=False)
+                inv = Poly(h_lc, z, field=True).invert(s)
+                coeffs = [S.One]
 
                 for coeff in h.coeffs()[1:]:
                     L = reduced(inv*coeff.as_poly(inv.gens), [s])[1]
@@ -1429,13 +1488,32 @@ def residue_reduce(a, d, DE, z=None, invert=True):
 def residue_reduce_to_basic(H, DE, z):
     """
     Converts the tuple returned by residue_reduce() into a Basic expression.
+
+    Terms whose residues can all be computed explicitly are rewritten as
+    real logarithms and arc-tangents using log_to_real() (Rioboo's
+    algorithm from Section 2.8 of Bronstein's book, with the roots of
+    each s_i as the residues and S_i in place of the Rothstein-Trager
+    resultant's remainder); the remaining terms are returned as RootSums.
+    log_to_real() is only valid over a real field, so it is not used when
+    I appears in a term or in the extension tower.
     """
     # TODO: check what Lambda does with RootOf
     i = Dummy('i')
     s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+    real_tower = not any(f(DE.x).has(I) for f in DE.Tfuncs)
 
-    return sum(RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
-        {z: i}).subs(s))) for a in H)
+    result = S.Zero
+    for a in H:
+        real = None
+        if real_tower and not (a[0].as_expr().has(I) or a[1].as_expr().has(I)):
+            real = log_to_real(a[1], a[0].as_poly(z), DE.t, z)
+        if real is not None:
+            result += real.subs(s)
+        else:
+            result += RootSum(a[0].as_poly(z), Lambda(i, i*log(
+                a[1].as_expr()).subs({z: i}).subs(s)))
+
+    return result
 
 
 def residue_reduce_derivation(H, DE, z):
@@ -1949,8 +2027,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             fa, fd = frac_in(i, DE.t)
         else:
             result = result.subs(DE.backsubs)
-            if not i.is_zero:
-                i = NonElementaryIntegral(i.function.subs(DE.backsubs),i.limits)
+            if isinstance(i, Integral):
+                i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
             if not separate_integral:
                 result += i
                 return result

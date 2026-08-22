@@ -229,7 +229,15 @@ def ratint_logpart(f, g, x, t=None):
     a, b = g, f - g.diff()*Poly(t, x)
 
     res, R = resultant(a, b, includePRS=True)
-    res = Poly(res, t, composite=False)
+    res = cancel(res, extension=True)
+    p, q = res.as_numer_denom()
+    if q.has(t):
+        # The subresultant PRS over a coefficient ring with radicals can
+        # return the resultant as an unreduced quotient that cancel()
+        # cannot always clear; the division is exact, so do it in t.
+        res = Poly(p, t, composite=False).exquo(Poly(q, t, composite=False))
+    else:
+        res = Poly(res, t, composite=False)
 
     assert res, "BUG: resultant(%s, %s) cannot be zero" % (a, b)
 
@@ -359,7 +367,7 @@ def _roots_real_complex(poly):
     return reals, complexes
 
 
-def log_to_real(h, q, x, t):
+def log_to_real(h, q, x, t, complex_only=False):
     r"""
     Convert complex logarithms to real functions.
 
@@ -373,6 +381,12 @@ def log_to_real(h, q, x, t):
                   -- = --  )  a log(h(a, x))
                   dx   dx /__,
                          a | q(a) = 0
+
+    None is returned when the roots of q cannot all be computed
+    explicitly, and, if ``complex_only=True``, when no roots of q come
+    in complex-conjugate pairs (so the caller can keep the sum of
+    logarithms in unevaluated form unless rewriting it removes complex
+    logarithms).
 
     Examples
     ========
@@ -400,6 +414,9 @@ def log_to_real(h, q, x, t):
 
     reals, complexes = rs
 
+    if complex_only and not complexes:
+        return None
+
     u = Dummy('u')
     v = Dummy('v')
 
@@ -418,7 +435,10 @@ def log_to_real(h, q, x, t):
 
         AB = (A**2 + B**2).as_expr()
 
-        result += r_u*log(AB) + r_v*log_to_atan(A, B)
+        result += r_u*log(AB)
+        if not (A.is_zero or B.is_zero):
+            # If A or B is zero, the arc-tangent term is a constant
+            result += r_v*log_to_atan(A, B)
 
     for r in reals:
         result += r*log(h.as_expr().subs(t, r))
