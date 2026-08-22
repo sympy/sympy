@@ -9,7 +9,8 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.hyperbolic import tanh
-from sympy.functions.elementary.trigonometric import (atan, cot, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, cot, sin, tan,
+    cos, sec, csc, acot, asin)
 from sympy.polys.polytools import (Poly, cancel, factor)
 from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import RootSum
@@ -18,9 +19,11 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
     integrate_primitive, integrate_hyperexponential_polynomial,
     integrate_hyperexponential, integrate_hypertangent_polynomial,
+    integrate_hypertangent_reduced, integrate_hypertangent,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
     risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
     recognize_derivative, laurent_series)
+from sympy.integrals.integrals import integrate, Integral
 from sympy.testing.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
@@ -512,6 +515,60 @@ def test_integrate_hypertangent_polynomial():
         (Poly(1/(4*a)*t**4 - 1/(2*a)*t**2, t), Poly(1/(2*a), t))
 
 
+def test_integrate_hypertangent_reduced():
+    # Example 5.10.2 (t == tan(x/2)): sin(x)/x == 2*t/(x*(t**2 + 1)) has
+    # no elementary integral
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)]})
+    assert integrate_hypertangent_reduced(Poly(2*t/x, t), Poly(t**2 + 1, t),
+        DE) == (Poly(0, t), Poly(1, t), False)
+    # Example 5.10.3 (t == tan(x)): the three reduction steps
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    pa = Poly(t**5 + t**3 + x**2*t + 1, t)
+    pd = Poly((t**2 + 1)**3, t)
+    qa, qd, b = integrate_hypertangent_reduced(pa, pd, DE)
+    assert b is True
+    assert cancel(qa.as_expr()/qd.as_expr() -
+        (5*(x/3 + 1)*t/16 - S(43)/96)/(t**2 + 1) -
+        (5*(x/3 + 1)*t/24 + S(77)/288)/(t**2 + 1)**2 -
+        ((x/3 + 1)*t/6 - (x**2 - S(1)/18)/6)/(t**2 + 1)**3) == 0
+    # p - Dq == 5*(1 + x/3)/16 is in k[t]
+    assert cancel(pa.as_expr()/pd.as_expr() - (qd*derivation(qa, DE) -
+        qa*derivation(qd, DE)).as_expr()/(qd**2).as_expr()) == \
+        S(5)/16 + 5*x/48
+    # Already polynomial: nothing to do
+    assert integrate_hypertangent_reduced(Poly(t**2 + x, t), Poly(1, t), DE) == \
+        (Poly(0, t), Poly(1, t), True)
+    # Not reduced
+    raises(ValueError, lambda: integrate_hypertangent_reduced(Poly(1, t),
+        Poly(t, t), DE))
+
+
+def test_integrate_hypertangent():
+    # Example 5.10.1: tan(x)**2 + x*tan(x) + 1 == D(tan(x)) + x*tan(x), and
+    # x*tan(x) has no elementary integral
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)],
+        'Tfuncs': [tan]})
+    assert integrate_hypertangent(Poly(t**2 + x*t + 1, t), Poly(1, t), DE) == \
+        (tan(x), NonElementaryIntegral(x*tan(x), x), False)
+    # Example 5.10.3
+    ans, rem, b = integrate_hypertangent(Poly(t**5 + t**3 + x**2*t + 1, t),
+        Poly((t**2 + 1)**3, t), DE)
+    assert (b, rem) == (True, S(5)/16 + 5*x/48)  # 5*(1 + x/3)/16
+    assert cancel(ans.diff(x) + rem - (tan(x)**5 + tan(x)**3 + x**2*tan(x) + 1)/
+        (tan(x)**2 + 1)**3) == 0
+    # tan(x) == D(log(tan(x)**2 + 1))/2 (c == 1/2 in the polynomial part)
+    assert integrate_hypertangent(Poly(t, t), Poly(1, t), DE) == \
+        (log(tan(x)**2 + 1)/2, 0, True)
+    # Exercise 5.6 f): the residue part gives the real arc-tangent
+    assert integrate_hypertangent(Poly(t**2 + 2, t), Poly((t + x)**2 + 1, t),
+        DE) == (atan(x + tan(x)), 0, True)
+    # Example 5.10.2 through the whole routine (t == tan(x/2))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)],
+        'Tfuncs': [Lambda(i, tan(i/2))]})
+    assert integrate_hypertangent(Poly(2*t, t), Poly(x*(t**2 + 1), t), DE) == \
+        (0, NonElementaryIntegral(2*tan(x/2)/(x*tan(x/2)**2 + x), x), False)
+
+
 def test_integrate_nonlinear_no_specials():
     a, d, = Poly(x**2*t**5 + x*t**4 - nu**2*t**3 - x*(x**2 + 1)*t**2 - (x**2 -
     nu**2)*t - x**5/4, t), Poly(x**2*t**4 + x**2*(x**2 + 2)*t**2 + x**2 + x**4 + x**6/4, t)
@@ -702,18 +759,15 @@ def test_DifferentialExtension_misc():
         (Poly(sin(y)*t0, t0, domain='ZZ[sin(y)]'), Poly(1, t0, domain='ZZ'),
         [Poly(1, x, domain='ZZ'), Poly(t0, t0, domain='ZZ')], [x, t0],
         [Lambda(i, exp(i))], [], ['exp'], [x])
-    raises(NotImplementedError, lambda: DifferentialExtension(sin(x), x))
-    # cot, acot, and the hyperbolic functions used to fall through to the
+    # The hyperbolic functions (and asin, acos) used to fall through to the
     # generic "Couldn't find an elementary transcendental extension" error
-    # instead of the informative trigonometric one
-    raises(NotImplementedError, lambda: DifferentialExtension(cot(x), x))
+    # instead of the informative one
     raises(NotImplementedError, lambda: DifferentialExtension(tanh(x), x))
-    # ...and the message must be the informative one (a generic
-    # NotImplementedError was already raised before the guard existed)
     try:
-        DifferentialExtension(cot(x), x)
+        DifferentialExtension(tanh(x), x)
     except NotImplementedError as e:
-        assert "Trigonometric and hyperbolic" in str(e)
+        assert "Hyperbolic" in str(e)
+    raises(NotImplementedError, lambda: DifferentialExtension(asin(x), x))
     assert DifferentialExtension(10**x, x)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(log(10)*t0, t0)], [x, t0],
         [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], ['exp'],
@@ -727,6 +781,92 @@ def test_DifferentialExtension_misc():
         (Poly(0, x), Poly(1, x), [Poly(1, x)], [x], [], [], [], [])
     assert DifferentialExtension(tan(atan(x).rewrite(log)), x)._important_attrs == \
         (Poly(x, x), Poly(1, x), [Poly(1, x)], [x], [], [], [], [])
+
+
+def test_DifferentialExtension_tan():
+    # t0 == tan(x), a hypertangent monomial with Dt0 == t0**2 + 1
+    assert DifferentialExtension(tan(x), x)._important_attrs == \
+        (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0**2 + 1, t0)], [x, t0],
+        [Lambda(i, tan(i))], [], ['tan'], [x])
+    # Arguments that are integer multiples of each other (up to constants)
+    # share the generator, through the multiple-angle and addition
+    # formulas: tan(x) == 2*t0/(1 - t0**2) with t0 == tan(x/2), and
+    # tan(x + 1) == (t0 + tan(1))/(1 - t0*tan(1)) with t0 == tan(x)
+    assert DifferentialExtension(tan(x) + tan(x/2), x)._important_attrs == \
+        (Poly(-t0**3 + 3*t0, t0), Poly(1 - t0**2, t0),
+        [Poly(1, x), Poly(t0**2/2 + S.Half, t0)], [x, t0],
+        [Lambda(i, tan(i/2))], [], ['tan'], [x/2])
+    DE = DifferentialExtension(tan(x) + tan(x + 1), x)
+    assert DE.T == [x, t0] and DE.exts == ['tan'] and DE.extargs == [x]
+    assert cancel(DE.fa.as_expr()/DE.fd.as_expr() -
+        (t0 + (t0 + tan(1))/(1 - t0*tan(1)))) == 0
+    # sin, cos, sec, csc and cot are rewritten through the tangent of the
+    # half angle (resp. 1/tan), the trigonometric functions of constants
+    # are left alone
+    assert DifferentialExtension(sin(x), x)._important_attrs == \
+        (Poly(2*t0, t0), Poly(t0**2 + 1, t0),
+        [Poly(1, x), Poly(t0**2/2 + S.Half, t0)], [x, t0],
+        [Lambda(i, tan(i/2))], [], ['tan'], [x/2])
+    assert DifferentialExtension(cos(x) + sec(x) + csc(x) + sin(y), x).T == [x, t0]
+    assert DifferentialExtension(cot(x), x)._important_attrs == \
+        (Poly(1, t0), Poly(t0, t0), [Poly(1, x), Poly(t0**2 + 1, t0)], [x, t0],
+        [Lambda(i, tan(i))], [], ['tan'], [x])
+    # tan(atan(x)) == x (note that SymPy already evaluates it); over
+    # QQ(x, atan(x)), tan(2*atan(x)) is 2*x/(1 - x**2) by the structure
+    # theorem (n == 1), whereas tan(atan(x)/2) is algebraic (n == 2)
+    DE = DifferentialExtension(atan(x) + tan(2*atan(x)), x)
+    assert DE.T == [x, t0] and DE.exts == ['atan'] and DE.extargs == [x]
+    assert cancel(DE.fa.as_expr()/DE.fd.as_expr() - (t0 + 2*x/(1 - x**2))) == 0
+    raises(NotImplementedError, lambda: DifferentialExtension(tan(atan(x)/2), x))
+    # Nested towers in both orders
+    assert DifferentialExtension(exp(tan(x)), x)._important_attrs == \
+        (Poly(t1, t1), Poly(1, t1), [Poly(1, x), Poly(t0**2 + 1, t0),
+        Poly((t0**2 + 1)*t1, t1)], [x, t0, t1],
+        [Lambda(i, tan(i)), Lambda(i, exp(t0))], [], ['tan', 'exp'], [x, t0])
+    assert DifferentialExtension(tan(log(x)), x)._important_attrs == \
+        (Poly(t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
+        Poly((t1**2 + 1)/x, t1)], [x, t0, t1],
+        [Lambda(i, log(i)), Lambda(i, tan(t0))], [], ['log', 'tan'], [x, t0])
+    # With I present, the complex rewriting is used, as before
+    assert DifferentialExtension(I*tan(x), x).exts == ['exp']
+
+
+def test_DifferentialExtension_atan():
+    # t0 == atan(x), a primitive monomial with Dt0 == 1/(x**2 + 1)
+    assert DifferentialExtension(atan(x), x)._important_attrs == \
+        (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/(x**2 + 1), t0)],
+        [x, t0], [Lambda(i, atan(i))], [], ['atan'], [x])
+    # atan(1/x) == -atan(x) + c with c == atan(x) + atan(1/x) locally
+    # constant (it is sign(x)*pi/2), kept as an opaque constant that is
+    # restored on backsubstitution, as for logarithms
+    DE = DifferentialExtension(atan(x) + atan(1/x), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(c, t0), Poly(1, t0), [Poly(1, x), Poly(1/(x**2 + 1), t0)],
+        [x, t0], [Lambda(i, atan(i))], [(c, atan(1/x) + atan(x))], ['atan'], [x])
+    # atan(2*x/(1 - x**2)) == 2*atan(x) + c
+    DE = DifferentialExtension(atan(2*x/(1 - x**2)) + atan(x), x)
+    c = DE.backsubs[-1][0]
+    assert DE.fa == Poly(3*t0 + c, t0) and DE.backsubs == \
+        [(c, -2*atan(x) + atan(2*x/(1 - x**2)))]
+    # atan(tan(x)) == x + c
+    DE = DifferentialExtension(atan(tan(x)), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(c + x, t0), Poly(1, t0), [Poly(1, x), Poly(t0**2 + 1, t0)],
+        [x, t0], [Lambda(i, tan(i))], [(c, -x + atan(tan(x)))], ['tan'], [x])
+    # acot(u) is atan(1/u) plus an opaque constant
+    DE = DifferentialExtension(acot(x), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(t0 + c, t0), Poly(1, t0), [Poly(1, x), Poly(-1/(x**2 + 1), t0)],
+        [x, t0], [Lambda(i, atan(1/i))], [(c, acot(x) - atan(1/x))], ['atan'],
+        [1/x])
+    # atan of a non-rational function is a new monomial over the tower
+    assert DifferentialExtension(atan(exp(x)), x)._important_attrs == \
+        (Poly(t1, t1), Poly(1, t1), [Poly(1, x), Poly(t0, t0),
+        Poly(t0/(t0**2 + 1), t1)], [x, t0, t1],
+        [Lambda(i, exp(i)), Lambda(i, atan(t0))], [], ['exp', 'atan'], [x, t0])
 
 
 def test_DifferentialExtension_Rothstein():
@@ -875,6 +1015,53 @@ def test_risch_integrate():
         x*log(x)**2 - x)
     assert risch_integrate(expr, x) == \
         log(log(x) + 1/(x + 1)) - log(log(x) - 1/(x + 1))
+
+def test_risch_integrate_trig():
+    # Hypertangent towers end-to-end (Section 5.10)
+    assert risch_integrate(tan(x), x) == log(tan(x)**2 + 1)/2
+    assert risch_integrate(tan(x)**2, x) == tan(x) - x
+    assert risch_integrate(tan(x)**5, x) == \
+        log(tan(x)**2 + 1)/2 + tan(x)**4/4 - tan(x)**2/2
+    # Example 5.10.1
+    assert risch_integrate(tan(x)**2 + x*tan(x) + 1, x) == \
+        tan(x) + NonElementaryIntegral(x*tan(x), x)
+    # Example 5.10.2
+    assert risch_integrate(sin(x)/x, x) == \
+        NonElementaryIntegral(2*tan(x/2)/(x*tan(x/2)**2 + x), x)
+    # Example 5.10.3
+    f = (tan(x)**5 + tan(x)**3 + x**2*tan(x) + 1)/(tan(x)**2 + 1)**3
+    ans = risch_integrate(f, x)
+    assert not ans.has(Integral) and cancel(ans.diff(x) - f) == 0
+    # Exercise 5.6 f)
+    assert risch_integrate((2 + tan(x)**2)/(1 + (tan(x) + x)**2), x) == \
+        atan(x + tan(x))
+    # A hyperexponential monomial over a hypertangent one: rischDE at the
+    # tangent level, including its special denominator
+    assert risch_integrate(exp(tan(x))*(1 + x*(1 + tan(x)**2)), x) == \
+        x*exp(tan(x))
+    # Arc-tangent towers (primitive case with the real structure theorems)
+    assert risch_integrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
+    assert risch_integrate(x*atan(x), x) == \
+        x**2*atan(x)/2 - x/2 + atan(x)/2
+    assert risch_integrate(1/((x**2 + 1)*atan(x)), x) == log(atan(x))
+    assert risch_integrate(atan(x)/(x**2 + 1), x) == atan(x)**2/2
+    # The half-angle rewriting of sin and cos: ugly but correct
+    assert risch_integrate(sin(x), x) == -2/(tan(x/2)**2 + 1)
+    assert risch_integrate(1/(2 + cos(x)), x) == \
+        2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
+    # Opaque constants for piecewise-constant differences
+    assert risch_integrate(atan(x) + atan(1/x), x) == x*(atan(x) + atan(1/x))
+    assert risch_integrate(acot(x), x) == \
+        x*(acot(x) - atan(1/x)) + x*atan(1/x) + log(x**2 + 1)/2
+    # Algebraic tangents
+    raises(NotImplementedError, lambda: risch_integrate(
+        (tan(atan(x)/3)**2 + 1)/(x**2 + 1), x))
+    # integrate() does not use the Risch algorithm for real trigonometric
+    # integrands on its own, because of the form of its answers
+    assert integrate(sin(x), x) == -cos(x)
+    assert integrate(tan(x), x) == -log(cos(x))
+    assert integrate(sin(x), x, risch=True) == -2/(tan(x/2)**2 + 1)
+
 
 def test_risch_integrate_symbolic_constant():
     # A symbolic constant in the exponential argument; the generic answer
