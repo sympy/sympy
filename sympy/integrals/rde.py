@@ -562,9 +562,9 @@ def no_cancel_b_small(b, c, n, DE):
     deg(D) >= 2, either raise NonElementaryIntegralException, in which case the
     equation Dq + b*q == c has no solution of degree at most n in k[t],
     or a solution q in k[t] of this equation with deg(q) <= n, or the
-    tuple (h, b0, c0) such that h in k[t], b0, c0, in k, and for any
-    solution q in k[t] of degree at most n of Dq + bq == c, y == q - h
-    is a solution in k of Dy + b0*y == c0.
+    tuple (h, b0, c0) such that h in k[t], b0, c0, in k (as constant
+    polynomials in t), and for any solution q in k[t] of degree at most n
+    of Dq + bq == c, y == q - h is a solution in k of Dy + b0*y == c0.
 
     This is ``PolyRischDENoCancel2`` from Section 6.5 of Bronstein's book.
     """
@@ -588,8 +588,7 @@ def no_cancel_b_small(b, c, n, DE):
                 raise NonElementaryIntegralException("deg(b) != deg(c) in "
                     "the m == 0 case of no_cancel_b_small().")
             if b.degree(DE.t) == 0:
-                return (q, b.as_poly(DE.T[DE.level - 1]),
-                    c.as_poly(DE.T[DE.level - 1]))
+                return (q, b, c)
             p = Poly(c.as_poly(DE.t).LC()/b.as_poly(DE.t).LC(), DE.t,
                 expand=False)
 
@@ -980,16 +979,18 @@ def solve_poly_rde(b, c, n, DE):
         if isinstance(R, Poly):
             return R
         else:
-            # XXX: Might k be a field? (pg. 209)
+            # The solution y in k of Dy + b0*y == c0 (pg. 209): k is a
+            # field, so this is a Risch differential equation over k, or
+            # the equation b0*y == c0 if k is the constant field
             h, b0, c0 = R
+            if DE.case == 'base':
+                return h + Poly(c0.as_expr()/b0.as_expr(), DE.t)
             with DecrementLevel(DE):
-                b0, c0 = b0.as_poly(DE.t), c0.as_poly(DE.t)
-                if b0 is None:  # See above comment
-                    raise ValueError("b0 should be a non-Null value")
-                if c0 is  None:
-                    raise ValueError("c0 should be a non-Null value")
-                y = solve_poly_rde(b0, c0, n, DE).as_poly(DE.t)
-            return h + y
+                ba, bd = frac_in(b0.as_expr(), DE.t)
+                ca, cd = frac_in(c0.as_expr(), DE.t)
+                ya, yd = rischDE(ba, bd, ca, cd, DE)
+                y = ya.as_expr()/yd.as_expr()
+            return h + Poly(y, DE.t)
 
     elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t) - 1 and \
             _no_cancel_equal_applies(b, n, DE):

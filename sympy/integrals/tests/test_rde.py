@@ -258,7 +258,12 @@ def test_solve_poly_rde_no_cancel():
         Poly(x**2/4 - x/4, x)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert solve_poly_rde(Poly(2, t), Poly(t**2 + 2*t + 3, t), 1, DE) == \
-        Poly(t + 1, t, x)
+        Poly(t + 1, t)
+    # The reduced equation Dy + b0*y == c0 is solved over the field k:
+    # here y == 1/x
+    assert solve_poly_rde(Poly(x, t), Poly(t**2 + x*t + 2 - 1/x**2, t), 1,
+        DE) == \
+        Poly(t + 1/x, t, domain='ZZ(x)')
     # deg(b) == deg(D) - 1
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert no_cancel_equal(Poly(1 - t, t),
