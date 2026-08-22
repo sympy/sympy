@@ -32,6 +32,9 @@ Short introduction to terminologies:
         A representative of a constant a is usually written as a'.
     Application (app): A function with it args. I.e f(a) is an app, f is a function,
         and a is an argument.
+    Ground term: a term with only constants and functions. f(a,g(b)) is a ground term, f(x, g(b)) is
+        not as x is a variable.
+    Ground equation: An equation where both sides are ground terms
 
 Classes
 -------
@@ -41,11 +44,10 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from heapq import heappush, heappop
+from sympy.core import Atom
 from sympy.core.symbol import Symbol
 from sympy.core.function import Lambda
 from sympy.core.symbol import Dummy
-from sympy.core.numbers import Number
-from sympy.core import Basic
 from sympy.utilities.iterables import numbered_symbols
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
@@ -175,26 +177,26 @@ class EUFCongruenceClosure:
         -------
         Symbol/Dummy : the new and unique constant that replaced the term.
         """
+        # check if expr is flattened already
         if expr in self._term_to_const:
             return self._term_to_const[expr]
 
-        if isinstance(expr, (Dummy, Symbol)):
+        # symbols are already proper constants so register them only
+        if isinstance(expr, Symbol):
             self._register(expr)
             const = expr
-        elif isinstance(expr, Number) or getattr(expr, "is_Atom", False):
+        elif isinstance(expr, Atom):
             const = self._new_dummy()
         elif isinstance(expr, AppliedPredicate):
             arg_ids = tuple(self._flatten(arg) for arg in expr.arguments)
             const = self._record_app(expr.function, arg_ids)
         elif isinstance(expr, Lambda):
-            lam = expr if len(expr.variables) == 1 else expr.curry()
+            lam = expr.curry()
             const = self._record_app((Lambda, lam.variables[0]),
                                      (self._flatten(lam.expr),))
         else:
-            func = expr.func
-            func_id = self._find_repr(self._flatten(func)) if isinstance(func, Basic) else func
             arg_ids = tuple(self._flatten(arg) for arg in expr.args)
-            const = self._record_app(func_id, arg_ids)
+            const = self._record_app(expr.func, arg_ids)
 
         self._term_to_const[expr] = const
         return const
