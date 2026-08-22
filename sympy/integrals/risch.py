@@ -297,6 +297,8 @@ class DifferentialExtension:
                     self.newf = self.newf.subs(self.backsubs)
                     self.f = self.newf
                     self.reset()
+                    # The fold restores acot from its branch constant
+                    self._rewrite_trig()
                     exp_new_extension = True
                     continue
 
@@ -331,17 +333,25 @@ class DifferentialExtension:
         difference is locally constant wherever both are defined).
         Functions of constants are left alone.
         """
-        reps = {}
-        for i in self.newf.atoms(sin, cos, sec, csc, cot):
-            if i.has(self.x):
-                reps[i] = i.rewrite(tan)
-        for i in self.newf.atoms(acot):
-            if i.has(self.x):
-                branch_const = Dummy('acot_branch')
-                new = atan(1/i.args[0])
-                self.backsubs.append((branch_const, i - new))
-                reps[i] = new + branch_const
-        self.newf = self.newf.xreplace(reps)
+        # xreplace() does not descend into the replacements, so nested
+        # functions (e.g. acot(sin(x))) take several passes.
+        acots = {}
+        while True:
+            reps = {}
+            for i in self.newf.atoms(sin, cos, sec, csc, cot):
+                if i.has(self.x):
+                    reps[i] = i.rewrite(tan)
+            for i in self.newf.atoms(acot):
+                if i.has(self.x):
+                    if i not in acots:
+                        branch_const = Dummy('acot_branch')
+                        new = atan(1/i.args[0])
+                        self.backsubs.append((branch_const, i - new))
+                        acots[i] = new + branch_const
+                    reps[i] = acots[i]
+            if not reps:
+                return
+            self.newf = self.newf.xreplace(reps)
 
     def __getattr__(self, attr):
         # Avoid AttributeErrors when debugging

@@ -862,6 +862,27 @@ def test_DifferentialExtension_atan():
         (Poly(t0 + c, t0), Poly(1, t0), [Poly(1, x), Poly(-1/(x**2 + 1), t0)],
         [x, t0], [Lambda(i, atan(1/i))], [(c, acot(x) - atan(1/x))], ['atan'],
         [1/x])
+    # Nested trigonometric functions are rewritten inside out:
+    # acot(sin(x)) == atan(1/sin(x)) + c with sin(x) == 2*t0/(t0**2 + 1),
+    # t0 == tan(x/2), and t1 == atan((t0**2 + 1)/(2*t0))
+    DE = DifferentialExtension(acot(sin(x)), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(t1 + c, t1), Poly(1, t1), [Poly(1, x), Poly(t0**2/2 + S.Half, t0),
+        Poly((t0**4 - 1)/(t0**4 + 6*t0**2 + 1), t1)], [x, t0, t1],
+        [Lambda(i, tan(i/2)), Lambda(i, atan((t0**2 + 1)/(2*t0)))],
+        [(c, acot(sin(x)) - atan(1/sin(x)))], ['tan', 'atan'],
+        [x/2, (t0**2 + 1)/(2*t0)])
+    # The acot rewriting survives the restart of the exponential part
+    # (exp(x/2 + 1) over QQ(x, exp(x)) pulls out the constant and
+    # rebuilds the tower from scratch)
+    DE = DifferentialExtension(acot(x) + exp(x) + exp(x/2 + 1), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(t0**2 + exp(1)*t0 + t1 + c, t1), Poly(1, t1), [Poly(1, x),
+        Poly(t0/2, t0), Poly(-1/(x**2 + 1), t1)], [x, t0, t1],
+        [Lambda(i, exp(i/2)), Lambda(i, atan(1/i))],
+        [(c, acot(x) - atan(1/x))], ['exp', 'atan'], [x/2, 1/x])
     # atan of a non-rational function is a new monomial over the tower
     assert DifferentialExtension(atan(exp(x)), x)._important_attrs == \
         (Poly(t1, t1), Poly(1, t1), [Poly(1, x), Poly(t0, t0),
