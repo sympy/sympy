@@ -659,9 +659,27 @@ class Integral(AddWithLimits):
 
             if antideriv is None:
                 undone_limits.append(xab)
-                function = self.func(*([function] + [xab])).factor()
-                factored_function = function.factor()
-                if not isinstance(factored_function, Integral):
+                integral = self.func(*([function] + [xab]))
+                factored_function = integral.factor()
+                coeff, integral_args = S.One, []
+                for arg in Mul.make_args(factored_function):
+                    if isinstance(arg, Integral):
+                        integral_args.append(arg)
+                    else:
+                        coeff *= arg
+                if coeff != 1 and len(integral_args) == 1:
+                    # factoring pulled a multiplicative prefactor out of
+                    # the integrand (e.g. sqrt(k**2*A) -> k*sqrt(A)),
+                    # which may expose a form (such as an Abs term) that
+                    # is integrable even though the original integrand
+                    # was not; retry doit() on just the newly exposed
+                    # integrand. A blind retry whenever factor() changes
+                    # anything is not used here since factor() can also
+                    # just rewrite the integrand into an equally hard
+                    # (or harder) equivalent form, in which case a full
+                    # retry only doubles the cost of failing again.
+                    function = coeff*integral_args[0].doit(**hints)
+                else:
                     function = factored_function
                 continue
             else:
