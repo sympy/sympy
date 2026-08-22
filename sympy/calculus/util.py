@@ -247,16 +247,17 @@ def function_range(f, symbol, domain):
                     range_int += FiniteSet(f.subs(symbol, singleton))
         elif isinstance(interval, Interval):
             vals = S.EmptySet
-            critical_values = S.EmptySet
+            attained_values = S.EmptySet
             bounds = ((interval.left_open, interval.inf, '+'),
                    (interval.right_open, interval.sup, '-'))
 
             for is_open, limit_point, direction in bounds:
                 if is_open:
-                    critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
-                    vals += critical_values
+                    vals += FiniteSet(limit(f, symbol, limit_point, direction))
                 else:
-                    vals += FiniteSet(f.subs(symbol, limit_point))
+                    endpoint_value = f.subs(symbol, limit_point)
+                    vals += FiniteSet(endpoint_value)
+                    attained_values += FiniteSet(endpoint_value)
 
             critical_points = solveset(f.diff(symbol), symbol, interval)
 
@@ -268,16 +269,12 @@ def function_range(f, symbol, domain):
                         'Infinite number of critical points for {}'.format(f))
 
             for critical_point in critical_points:
-                vals += FiniteSet(f.subs(symbol, critical_point))
+                critical_point_value = f.subs(symbol, critical_point)
+                vals += FiniteSet(critical_point_value)
+                attained_values += FiniteSet(critical_point_value)
 
-            left_open, right_open = False, False
-
-            if critical_values is not S.EmptySet:
-                if critical_values.inf == vals.inf:
-                    left_open = True
-
-                if critical_values.sup == vals.sup:
-                    right_open = True
+            left_open = vals.inf not in attained_values
+            right_open = vals.sup not in attained_values
 
             range_int += Interval(vals.inf, vals.sup, left_open, right_open)
         else:

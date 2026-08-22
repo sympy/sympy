@@ -68,6 +68,15 @@ def test_function_range():
         sin(x)/2, x, S.Naturals))
 
 
+def test_function_range_attained_bounds():
+    # issue 30293
+    assert function_range(x*exp(-x), x, Interval(0, oo)
+        ) == Interval(0, exp(-1))
+    assert function_range(-x*exp(-x), x, Interval(0, oo)
+        ) == Interval(-exp(-1), 0)
+    assert function_range(exp(x), x, S.Reals) == Interval.open(0, oo)
+
+
 @slow
 def test_function_range1():
     assert function_range(tan(x)**2 + tan(3*x)**2 + 1, x, S.Reals) == Interval(1,oo)
