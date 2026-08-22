@@ -138,10 +138,10 @@ class DifferentialExtension:
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
-    - exts: The type ('exp' or 'log') of each extension; exts[i]
-      describes T[i + 1] (T[0] == x is not an extension).
-    - extargs: The argument of the exp or log of each extension, indexed
-      like exts.
+    - exts: The type ('exp', 'log', 'tan' or 'atan') of each extension;
+      exts[i] describes T[i + 1] (T[0] == x is not an extension).
+    - extargs: The argument of the exp, log, tan or atan of each
+      extension, indexed like exts (i.e. T[i + 1] == exts[i](extargs[i])).
     - cases: List of string representations of the cases of T.
     - t: The top level extension variable, as defined by the current level
       (see level below).

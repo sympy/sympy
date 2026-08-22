@@ -20,7 +20,7 @@ from functools import reduce
 
 from sympy.core.intfunc import ilcm, igcd
 from sympy.core import Dummy, Add, Mul, Pow, S
-from sympy.core.numbers import oo
+from sympy.core.numbers import I, oo
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, _special_denom_cancel_bound, _no_cancel_equal_applies)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
@@ -1395,23 +1395,13 @@ def parametric_log_deriv_structure(fa, fd, wa, wd, DE):
     not in the tower (e.g. new logarithms) is not found by this method.
     Callers must treat None as inconclusive.
     """
-    # The same assumptions as in is_log_deriv_k_t_radical()
-    if len(DE.exts) != len(DE.D) - 1:
-        if [i for i in DE.cases if i == 'tan'] or \
-                ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
-                        set(DE.indices('log'))):
-            raise NotImplementedError("Real version of the structure "
-                "theorems with hypertangent support is not yet implemented.")
-        raise NotImplementedError("Nonelementary extensions not supported "
-            "in the structure theorems.")
-
     # Use only the part of the tower visible at the current level: the
     # callers pose this problem inside DecrementLevel, and v must lie in
     # the current field (w itself is usually the log derivative of the
-    # monomial one level up, which must not appear in v).
-    top = len(DE.T) + DE.level
-    E_indices = [i for i in DE.indices('exp') if i <= top]
-    L_indices = [i for i in DE.indices('log') if i <= top]
+    # monomial one level up, which must not appear in v).  As in
+    # is_log_deriv_k_t_radical(), hypertangent and arc-tangent monomials
+    # do not contribute (Corollary 9.3.2 (ii)).
+    E_indices, L_indices, _, _ = _structure_tower(DE, fa, fd, wa, wd)
     E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in E_indices]
     L_part = [DE.D[i].as_expr() for i in L_indices]
 
@@ -1555,6 +1545,83 @@ def _structure_system_solve(lhs, rhs, DE):
     return list(xs)
 
 
+def _tower_has_I(DE, *exprs):
+    """
+    Checks if sqrt(-1) appears explicitly in exprs or in the derivations
+    of the tower at or below the current level.
+    """
+    top = len(DE.T) + DE.level
+    return (any(i.has(I) for i in exprs) or
+        any(d.as_expr().has(I) for d in DE.D[:top + 1]))
+
+
+def _structure_tower(DE, *exprs):
+    """
+    The index sets E, L, T and A of the tower at the current level.
+
+    Explanation
+    ===========
+
+    Returns the lists of indices into DE.T of the hyperexponential (E),
+    logarithmic (L), hypertangent (T) and arc-tangent (A) monomials at
+    or below the current level, as labeled by DE.exts; these are the
+    index sets (9.6), (9.7), (9.10) and (9.11) of Section 9.3 of
+    Bronstein's book.
+
+    The structure theorems need every monomial of the tower labeled, and
+    the real version (Theorem 9.3.2, which is needed as soon as T or A
+    is nonempty) needs sqrt(-1) not in the field, so the tower and the
+    given expressions (the inputs of the caller) are checked for
+    explicit I.  Raises NotImplementedError otherwise.
+    """
+    if len(DE.exts) != len(DE.D) - 1:
+        raise NotImplementedError("The structure theorems need every "
+            "monomial of the tower labeled as 'exp', 'log', 'tan' or 'atan' "
+            "in DE.exts; nonelementary extensions are not supported.")
+    top = len(DE.T) + DE.level
+    E, L, T, A = [[i for i in DE.indices(ext) if i <= top]
+        for ext in ('exp', 'log', 'tan', 'atan')]
+    if (T or A) and _tower_has_I(DE, *exprs):
+        raise NotImplementedError("The real version of the structure "
+            "theorems (Section 9.3 of Bronstein's book), needed for towers "
+            "with hypertangent or arc-tangent monomials, requires sqrt(-1) "
+            "not in the field.")
+    return E, L, T, A
+
+
+def _structure_solve(parts, rhs, DE):
+    """
+    Solves the structure equation Sum(ri*parts[i]) == rhs for ri in QQ.
+
+    Explanation
+    ===========
+
+    Returns the list of rational coefficients ri, or None, which means
+    that rhs is not a constant combination of parts.  rhs == 0 is
+    trivially the empty combination.
+
+    Raises NotImplementedError if the constant solution is not rational
+    (e.g. a coefficient like log(2)/log(3)): deciding whether it could
+    be made rational would need a QQ-basis of the constant field (see
+    the discussion following Corollary 9.3.1 of Bronstein's book).
+    """
+    if rhs == 0:
+        return [S.Zero]*len(parts)
+    # The expressions might not be polynomial in any of their symbols,
+    # so use a Dummy as the generator for PolyMatrix.
+    dum = Dummy()
+    u = _structure_system_solve(Matrix([parts], dum), Matrix([rhs], dum), DE)
+    if u is None:
+        return None
+    if not all(i.is_Rational for i in u):
+        # TODO: But maybe we can tell if they're not rational, like
+        # log(2)/log(3). Also, there should be an option to continue
+        # anyway, even if the result might potentially be wrong.
+        raise NotImplementedError("Cannot work with non-rational "
+            "coefficients in this case.")
+    return u
+
+
 def is_deriv_k(fa, fd, DE):
     r"""
     Checks if Df/f is the derivative of an element of k(t).
@@ -1610,6 +1677,12 @@ def is_deriv_k(fa, fd, DE):
 
     To handle the case where we are given Df/f, not f, use is_deriv_k_in_field().
 
+    Towers containing hypertangent ('tan') and arc-tangent ('atan')
+    monomials are handled by the real version of the structure theorem
+    (Theorem 9.3.2 and Corollary 9.3.2 (i)): those monomials never
+    contribute to the sum above, but sqrt(-1) must not be in K, so
+    NotImplementedError is raised if I appears in the tower or in f.
+
     This is an application of the Risch structure theorems from Section 9.3
     of Bronstein's book (neither edition gives it as named pseudocode).
 
@@ -1622,56 +1695,33 @@ def is_deriv_k(fa, fd, DE):
     dfa, dfd = dfa.cancel(dfd, include=True)
 
     # Our assumption here is that each monomial is recursively transcendental
-    if len(DE.exts) != len(DE.D) - 1:
-        if [i for i in DE.cases if i == 'tan'] or \
-                ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
-                        set(DE.indices('log'))):
-            raise NotImplementedError("Real version of the structure "
-                "theorems with hypertangent support is not yet implemented.")
+    E, L, _, _ = _structure_tower(DE, fa, fd)
+    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in E]
+    L_part = [DE.D[i].as_expr() for i in L]
 
-        # TODO: What should really be done in this case?
-        raise NotImplementedError("Nonelementary extensions not supported "
-            "in the structure theorems.")
-
-    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.indices('exp')]
-    L_part = [DE.D[i].as_expr() for i in DE.indices('log')]
-
-    # The expression dfa/dfd might not be polynomial in any of its symbols so we
-    # use a Dummy as the generator for PolyMatrix.
-    dum = Dummy()
-    lhs = Matrix([E_part + L_part], dum)
-    rhs = Matrix([dfa.as_expr()/dfd.as_expr()], dum)
-
-    u = _structure_system_solve(lhs, rhs, DE)
-
+    u = _structure_solve(E_part + L_part, dfa.as_expr()/dfd.as_expr(), DE)
     if u is None:
         # No constant solution
         return None
-    else:
-        if not all(i.is_Rational for i in u):
-            raise NotImplementedError("Cannot work with non-rational "
-                "coefficients in this case.")
-        else:
-            terms = ([DE.extargs[i - 1] for i in DE.indices('exp')] +
-                    [DE.T[i] for i in DE.indices('log')])
-            ans = list(zip(terms, u))
-            result = Add(*[Mul(i, j) for i, j in ans])
-            argterms = ([DE.T[i] for i in DE.indices('exp')] +
-                    [DE.extargs[i - 1] for i in DE.indices('log')])
-            l = []
-            ld = []
-            for i, j in zip(argterms, u):
-                # We need to get around things like sqrt(x**2) != x
-                # and also sqrt(x**2 + 2*x + 1) != x + 1
-                # Issue 10798: i need not be a polynomial
-                i, d = i.as_numer_denom()
-                icoeff, iterms = sqf_list(i)
-                l.append(Mul(*([Pow(icoeff, j)] + [Pow(b, e*j) for b, e in iterms])))
-                dcoeff, dterms = sqf_list(d)
-                ld.append(Mul(*([Pow(dcoeff, j)] + [Pow(b, e*j) for b, e in dterms])))
-            const = cancel(fa.as_expr()/fd.as_expr()/Mul(*l)*Mul(*ld))
 
-            return (ans, result, const)
+    terms = [DE.extargs[i - 1] for i in E] + [DE.T[i] for i in L]
+    ans = list(zip(terms, u))
+    result = Add(*[Mul(i, j) for i, j in ans])
+    argterms = [DE.T[i] for i in E] + [DE.extargs[i - 1] for i in L]
+    l = []
+    ld = []
+    for i, j in zip(argterms, u):
+        # We need to get around things like sqrt(x**2) != x
+        # and also sqrt(x**2 + 2*x + 1) != x + 1
+        # Issue 10798: i need not be a polynomial
+        i, d = i.as_numer_denom()
+        icoeff, iterms = sqf_list(i)
+        l.append(Mul(*([Pow(icoeff, j)] + [Pow(b, e*j) for b, e in iterms])))
+        dcoeff, dterms = sqf_list(d)
+        ld.append(Mul(*([Pow(dcoeff, j)] + [Pow(b, e*j) for b, e in dterms])))
+    const = cancel(fa.as_expr()/fd.as_expr()/Mul(*l)*Mul(*ld))
+
+    return (ans, result, const)
 
 
 def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
@@ -1729,6 +1779,12 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     To handle the case where we are given Df, not f, use
     is_log_deriv_k_t_radical_in_field().
 
+    Towers containing hypertangent ('tan') and arc-tangent ('atan')
+    monomials are handled by the real version of the structure theorem
+    (Theorem 9.3.2 and Corollary 9.3.2 (ii)): those monomials never
+    contribute to the sum above, but sqrt(-1) must not be in K, so
+    NotImplementedError is raised if I appears in the tower or in f.
+
     This is an application of the structure theorems from Sections 9.3 and
     9.4 of Bronstein's book (neither edition gives it as named pseudocode).
 
@@ -1744,54 +1800,208 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         dfa, dfd = fa, fd
 
     # Our assumption here is that each monomial is recursively transcendental
-    if len(DE.exts) != len(DE.D) - 1:
-        if [i for i in DE.cases if i == 'tan'] or \
-                ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
-                        set(DE.indices('log'))):
-            raise NotImplementedError("Real version of the structure "
-                "theorems with hypertangent support is not yet implemented.")
+    E, L, _, _ = _structure_tower(DE, fa, fd)
+    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in E]
+    L_part = [DE.D[i].as_expr() for i in L]
 
-        # TODO: What should really be done in this case?
-        raise NotImplementedError("Nonelementary extensions not supported "
-            "in the structure theorems.")
-
-    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.indices('exp')]
-    L_part = [DE.D[i].as_expr() for i in DE.indices('log')]
-
-    # The expression dfa/dfd might not be polynomial in any of its symbols so we
-    # use a Dummy as the generator for PolyMatrix.
-    dum = Dummy()
-    lhs = Matrix([E_part + L_part], dum)
-    rhs = Matrix([dfa.as_expr()/dfd.as_expr()], dum)
-
-    u = _structure_system_solve(lhs, rhs, DE)
-
+    u = _structure_solve(E_part + L_part, dfa.as_expr()/dfd.as_expr(), DE)
     if u is None:
         # No constant solution
         return None
-    else:
-        if not all(i.is_Rational for i in u):
-            # TODO: But maybe we can tell if they're not rational, like
-            # log(2)/log(3). Also, there should be an option to continue
-            # anyway, even if the result might potentially be wrong.
-            raise NotImplementedError("Cannot work with non-rational "
-                "coefficients in this case.")
-        else:
-            n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u])
-            u = [n*i for i in u]
-            terms = ([DE.T[i] for i in DE.indices('exp')] +
-                    [DE.extargs[i - 1] for i in DE.indices('log')])
-            ans = list(zip(terms, u))
-            result = Mul(*[Pow(i, j) for i, j in ans])
 
-            # exp(f) will be the same as result up to a multiplicative
-            # constant.  We now find the log of that constant.
-            argterms = ([DE.extargs[i - 1] for i in DE.indices('exp')] +
-                    [DE.T[i] for i in DE.indices('log')])
-            const = cancel(fa.as_expr()/fd.as_expr() -
-                Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
+    n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u], S.One)
+    u = [n*i for i in u]
+    terms = [DE.T[i] for i in E] + [DE.extargs[i - 1] for i in L]
+    ans = list(zip(terms, u))
+    result = Mul(*[Pow(i, j) for i, j in ans])
 
-            return (ans, result, n, const)
+    # exp(f) will be the same as result up to a multiplicative
+    # constant.  We now find the log of that constant.
+    argterms = [DE.extargs[i - 1] for i in E] + [DE.T[i] for i in L]
+    const = cancel(fa.as_expr()/fd.as_expr() -
+        Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
+
+    return (ans, result, n, const)
+
+
+def is_deriv_k_atan(fa, fd, DE):
+    r"""
+    Checks if Df/(f**2 + 1) is the derivative of an element of k(t).
+
+    Explanation
+    ===========
+
+    Df/(f**2 + 1) == D(atan(f)), so this decides whether atan(f) is a
+    new monomial over k(t): if not, atan(f) == u + c for some u in k(t)
+    and some c in Const(k(t)).  Either returns (ans, u), such that
+    Df/(f**2 + 1) == Du, or None, which means that Df/(f**2 + 1) is
+    not the derivative of an element of k(t).  ans is a list of tuples
+    such that Add(*[i*j for i, j in ans]) == u.
+
+    This function uses the real version of the structure theorem
+    (Corollary 9.3.2 (iii) of Bronstein's book), which says that for any
+    f in K, Df/(f**2 + 1) is the derivative of an element of K if and
+    only if there are ri in QQ such that::
+
+            ---               ---       Dt
+            \    r  * Dt   +  \    r  *   i        Df
+            /     i     i     /     i   ------  =  ------,
+            ---               ---        2          2
+         i in A            i in T       t  + 1     f  + 1
+               K/C(x)            K/C(x)  i
+
+    where A_K/C(x) is the set of indices of the arc-tangent monomials
+    of K over C(x) (Dt_i == Da_i/(a_i**2 + 1) for some a_i in
+    C(x)(t_1, ..., t_i-1), labeled 'atan' in DE.exts) and T_K/C(x) is
+    the set of indices of the hypertangent monomials (Dt_i/(t_i**2 + 1)
+    == Da_i, labeled 'tan'), as defined in (9.10) and (9.11) of
+    Section 9.3.  Logarithmic and hyperexponential monomials never
+    contribute.  The theorem requires K to be a real elementary
+    extension of C(x) with sqrt(-1) not in K, so NotImplementedError is
+    raised if I appears in the tower or in f.
+
+    The constant c == atan(f) - u is not computed here: it is locally
+    constant but in general only piecewise constant as a function (e.g.
+    atan(2*x/(1 - x**2)) - 2*atan(x) jumps at x == 1), so callers must
+    treat it as an opaque constant, exactly as for the branch constant
+    of a logarithm in is_deriv_k().
+
+    Neither edition of Bronstein's book gives this as named pseudocode;
+    it is equation (4) of Bronstein, "Simplification of Real Elementary
+    Functions" (ISSAC 1989).
+
+    Examples
+    ========
+
+    >>> from sympy import Poly, S
+    >>> from sympy.abc import x
+    >>> from sympy.integrals.risch import DifferentialExtension
+    >>> from sympy.integrals.prde import is_deriv_k_atan
+    >>> DE = DifferentialExtension(extension={'D': [Poly(1, x)],
+    ...     'exts': [], 'extargs': []})
+    >>> is_deriv_k_atan(Poly(x, x), Poly(1, x), DE) is None
+    True
+
+    so atan(x) is a monomial over QQ(x).  Over QQ(x, atan(x)),
+    atan(2*x/(1 - x**2)) is 2*atan(x) up to a constant:
+
+    >>> from sympy.abc import t
+    >>> DE = DifferentialExtension(extension={'D': [Poly(1, x),
+    ...     Poly(1/(x**2 + 1), t)], 'exts': ['atan'], 'extargs': [x]})
+    >>> is_deriv_k_atan(Poly(2*x, t), Poly(1 - x**2, t), DE)
+    ([(t, 2)], 2*t)
+
+    See also
+    ========
+
+    is_deriv_k, is_log_deriv_k_t_radical_tan
+    """
+    # Compute Df/(f**2 + 1)
+    dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)), fa**2 + fd**2
+    dfa, dfd = dfa.cancel(dfd, include=True)
+
+    _, _, T, A = _structure_tower(DE, fa, fd)
+    T_part = [DE.D[i].quo(Poly(DE.T[i]**2 + 1, DE.T[i])).as_expr() for i in T]
+    A_part = [DE.D[i].as_expr() for i in A]
+
+    u = _structure_solve(T_part + A_part, dfa.as_expr()/dfd.as_expr(), DE)
+    if u is None:
+        # No constant solution
+        return None
+
+    terms = [DE.extargs[i - 1] for i in T] + [DE.T[i] for i in A]
+    ans = list(zip(terms, u))
+    result = Add(*[Mul(i, j) for i, j in ans])
+
+    return (ans, result)
+
+
+def is_log_deriv_k_t_radical_tan(fa, fd, DE):
+    r"""
+    Checks if sqrt(-1)*Df is the logarithmic derivative of a
+    k(t)(sqrt(-1))-radical.
+
+    Explanation
+    ===========
+
+    By Theorem 5.10.1 of Bronstein's book, this decides whether tan(f)
+    is a new monomial over k(t) (with sqrt(-1) not in k(t)): if not,
+    then n*f == u + n*c for some integer n > 0, u in k(t) and c in
+    Const(k(t)), so tan(f) == tan(u/n + c) is algebraic over k(t)(tan(c))
+    (it is in k(t)(tan(c)) itself when n == 1, by the addition formula
+    for the tangent).  Either returns (ans, u, n, const) such that
+    f == u/n + const, or None, which means that sqrt(-1)*Df is not the
+    logarithmic derivative of a k(t)(sqrt(-1))-radical.  ans is a list
+    of tuples such that Add(*[i*j for i, j in ans]) == u.
+
+    This function uses the real version of the structure theorem
+    (Corollary 9.3.2 (iv) of Bronstein's book), which says that for any
+    f in K, sqrt(-1)*Df is the logarithmic derivative of a
+    K(sqrt(-1))-radical if and only if there are ri in QQ such that::
+
+            ---               ---       Dt
+            \    r  * Dt   +  \    r  *   i
+            /     i     i     /     i   ------  =  Df,
+            ---               ---        2
+         i in A            i in T       t  + 1
+               K/C(x)            K/C(x)  i
+
+    where A_K/C(x) and T_K/C(x) are the sets of indices of the
+    arc-tangent and hypertangent monomials of K over C(x), as in
+    is_deriv_k_atan().  Logarithmic and hyperexponential monomials
+    never contribute.  The theorem requires K to be a real elementary
+    extension of C(x) with sqrt(-1) not in K, so NotImplementedError is
+    raised if I appears in the tower or in f.
+
+    Neither edition of Bronstein's book gives this as named pseudocode;
+    it is equation (3) of Bronstein, "Simplification of Real Elementary
+    Functions" (ISSAC 1989).
+
+    Examples
+    ========
+
+    >>> from sympy import Poly, S
+    >>> from sympy.abc import x, t
+    >>> from sympy.integrals.risch import DifferentialExtension
+    >>> from sympy.integrals.prde import is_log_deriv_k_t_radical_tan
+    >>> DE = DifferentialExtension(extension={'D': [Poly(1, x)],
+    ...     'exts': [], 'extargs': []})
+    >>> is_log_deriv_k_t_radical_tan(Poly(x, x), Poly(1, x), DE) is None
+    True
+
+    so tan(x) is a monomial over QQ(x).  Over QQ(x, atan(x)),
+    tan(atan(x)/3) is algebraic of degree 3 (Example 1 of the paper):
+
+    >>> DE = DifferentialExtension(extension={'D': [Poly(1, x),
+    ...     Poly(1/(x**2 + 1), t)], 'exts': ['atan'], 'extargs': [x]})
+    >>> is_log_deriv_k_t_radical_tan(Poly(t, t), Poly(3, t), DE)
+    ([(t, 1)], t, 3, 0)
+
+    See also
+    ========
+
+    is_log_deriv_k_t_radical, is_deriv_k_atan
+    """
+    dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)).cancel(fd**2,
+        include=True)
+
+    _, _, T, A = _structure_tower(DE, fa, fd)
+    T_part = [DE.D[i].quo(Poly(DE.T[i]**2 + 1, DE.T[i])).as_expr() for i in T]
+    A_part = [DE.D[i].as_expr() for i in A]
+
+    u = _structure_solve(T_part + A_part, dfa.as_expr()/dfd.as_expr(), DE)
+    if u is None:
+        # No constant solution
+        return None
+
+    n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u], S.One)
+    u = [n*i for i in u]
+    terms = [DE.extargs[i - 1] for i in T] + [DE.T[i] for i in A]
+    ans = list(zip(terms, u))
+    result = Add(*[Mul(i, j) for i, j in ans])
+    const = cancel(fa.as_expr()/fd.as_expr() - result/n)
+
+    return (ans, result, n, const)
 
 
 def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
@@ -1906,8 +2116,30 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         return (n, u)
 
     elif case == 'tan':
-        raise NotImplementedError("The hypertangent case is "
-        "not yet implemented for is_log_deriv_k_t_radical_in_field()")
+        if _tower_has_I(DE, fa.as_expr(), fd.as_expr()):
+            raise NotImplementedError("The hypertangent case of "
+                "is_log_deriv_k_t_radical_in_field() requires sqrt(-1) not "
+                "in k(t).")
+        # p == a + b*t with a, b in k, and u == v*(t**2 + 1)**e with v in
+        # k* and e in ZZ (the special polynomial is t**2 + 1), so
+        # n*p == Du/u is equivalent to n*a == Dv/v and n*b/(2*eta) == e,
+        # where eta == Dt/(t**2 + 1) is in k.
+        eta = DE.d.quo(Poly(DE.t**2 + 1, DE.t)).as_expr()
+        a, b = p.nth(0), p.nth(1)
+        ratio = cancel(b/(2*eta))
+        if not ratio.is_Rational:
+            return None
+        if a == 0:
+            na, v = S.One, S.One
+        else:
+            with DecrementLevel(DE):
+                aa, ad = frac_in(a, DE.t)
+                A = is_log_deriv_k_t_radical_in_field(aa, ad, DE, case='auto')
+            if A is None:
+                return None
+            na, v = A
+        n = S.One*ilcm(na, ratio.q)
+        u = v**(n/na)*(DE.t**2 + 1)**(n*ratio)
 
     elif case in ('other_linear', 'other_nonlinear'):
         # XXX: If these are supported by the structure theorems, change to NotImplementedError.

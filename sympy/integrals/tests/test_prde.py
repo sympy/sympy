@@ -8,7 +8,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
     parametric_log_deriv, parametric_log_deriv_structure,
     is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
-    is_deriv_in_field,
+    is_deriv_in_field, is_deriv_k_atan, is_log_deriv_k_t_radical_tan,
     prde_cancel_liouvillian, prde_cancel_tan)
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
@@ -17,7 +17,7 @@ from sympy.testing.pytest import raises
 
 from sympy.core import Add, Dummy
 from sympy.matrices import MutableDenseMatrix
-from sympy.core.numbers import Rational, oo
+from sympy.core.numbers import I, Rational, oo
 from sympy.functions.elementary.exponential import exp
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -466,33 +466,61 @@ def test_is_log_deriv_k_t_radical():
     assert is_log_deriv_k_t_radical(Poly(2*y*x, t0), Poly(1, t0), DE) == \
         ([(t0, 2)], t0**2, 1, 0)
 
+    # A constant is the logarithmic derivative of the radical 1
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)], 'exts': [],
+        'extargs': []})
+    assert is_log_deriv_k_t_radical(Poly(2, x), Poly(1, x), DE) == \
+        ([], 1, 1, 2)
+
+    # Real towers (Corollary 9.3.2 (ii)): hypertangent and arc-tangent
+    # monomials never contribute.  t0 == exp(x), t1 == tan(x),
+    # t2 == atan(x); exp(2*x) == t0**2
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0),
+        Poly(1 + t1**2, t1), Poly(1/(x**2 + 1), t2)],
+        'exts': ['exp', 'tan', 'atan'], 'extargs': [x, x, x]})
+    assert is_log_deriv_k_t_radical(Poly(2*x, t2), Poly(1, t2), DE) == \
+        ([(t0, 2)], t0**2, 1, 0)
+    # ... but exp(atan(x)) is a new monomial over it
+    assert is_log_deriv_k_t_radical(Poly(t2, t2), Poly(1, t2), DE) is None
+
 
 def test_structure_theorem_guards():
-    # A tower with an unlabeled top monomial (len(exts) < len(D)) is not
-    # supported by the structure theorems.  When every primitive monomial
-    # in it is a logarithm, it is reported as a nonelementary tower.
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
-        Poly(t2, t2)], 'exts': ['log'], 'extargs': [x]})
-    for func in (is_deriv_k, is_log_deriv_k_t_radical):
-        try:
-            func(Poly(t2, t2), Poly(1, t2), DE)
-        except NotImplementedError as e:
-            assert "Nonelementary extensions" in str(e)
-        else:
-            raise AssertionError("NotImplementedError was not raised")
+    # The structure theorems need every monomial of the tower labeled
+    # (len(exts) == len(D) - 1)
+    for D in ([Poly(1, x), Poly(1/x, t1), Poly(t2, t2)],
+              [Poly(1, x), Poly(1/x, t1), Poly(1/(x**2 + 1), t2)]):
+        DE = DifferentialExtension(extension={'D': D, 'exts': ['log'],
+            'extargs': [x]})
+        for func in (is_deriv_k, is_log_deriv_k_t_radical, is_deriv_k_atan,
+                is_log_deriv_k_t_radical_tan):
+            try:
+                func(Poly(t2, t2), Poly(1, t2), DE)
+            except NotImplementedError as e:
+                assert "labeled" in str(e)
+            else:
+                raise AssertionError("NotImplementedError was not raised")
 
-    # A primitive monomial that is not a logarithm (here an unlabeled
-    # arctangent-like monomial) needs the real version of the structure
-    # theorems instead.
+    # The real version of the structure theorems, needed as soon as the
+    # tower has a hypertangent or arc-tangent monomial, requires sqrt(-1)
+    # not in the field: neither in the input ...
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
-        Poly(1/(x**2 + 1), t2)], 'exts': ['log'], 'extargs': [x]})
-    for func in (is_deriv_k, is_log_deriv_k_t_radical):
+        Poly(1 + t2**2, t2)], 'exts': ['log', 'tan'], 'extargs': [x, x]})
+    for func in (is_deriv_k, is_log_deriv_k_t_radical, is_deriv_k_atan,
+            is_log_deriv_k_t_radical_tan):
         try:
-            func(Poly(t2, t2), Poly(1, t2), DE)
+            func(Poly(I*x, t2), Poly(1, t2), DE)
         except NotImplementedError as e:
-            assert "hypertangent" in str(e)
+            assert "sqrt(-1)" in str(e)
         else:
             raise AssertionError("NotImplementedError was not raised")
+    # ... nor in the tower (t2 == tan(I*x))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
+        Poly(I*(1 + t2**2), t2)], 'exts': ['log', 'tan'], 'extargs': [x, I*x]})
+    raises(NotImplementedError, lambda: is_deriv_k(Poly(x, t2), Poly(1, t2), DE))
+    # whereas with only exponentials and logarithms, I is a fine constant
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(I*t1, t1)],
+        'exts': ['exp'], 'extargs': [I*x]})
+    assert is_deriv_k(Poly(t1, t1), Poly(1, t1), DE) == ([(I*x, 1)], I*x, 1)
 
 
 def test_is_deriv_k():
@@ -539,6 +567,108 @@ def test_is_deriv_k():
     assert is_deriv_k(Poly(x, t0), Poly(1, t0), DE) == \
         ([(t0, S.Half), (t1, 0)], t0/2, 1)
 
+    # A constant is the derivative of 0
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)], 'exts': [],
+        'extargs': []})
+    assert is_deriv_k(Poly(2, x), Poly(1, x), DE) == ([], 0, 2)
+
+    # Real towers (Corollary 9.3.2 (i)): hypertangent and arc-tangent
+    # monomials never contribute.  t0 == exp(x), t1 == tan(x),
+    # t2 == atan(x); log(exp(x)) == x
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0),
+        Poly(1 + t1**2, t1), Poly(1/(x**2 + 1), t2)],
+        'exts': ['exp', 'tan', 'atan'], 'extargs': [x, x, x]})
+    assert is_deriv_k(Poly(t0, t2), Poly(1, t2), DE) == ([(x, 1)], x, 1)
+    # ... but log(x) and log(tan(x)) are new monomials over it
+    assert is_deriv_k(Poly(x, t2), Poly(1, t2), DE) is None
+    assert is_deriv_k(Poly(t1, t2), Poly(1, t2), DE) is None
+
+
+def test_is_deriv_k_atan():
+    # atan(x) is a monomial over QQ(x) (Example 1 of Bronstein's 1989
+    # paper, equation (4) with an empty sum)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)], 'exts': [],
+        'extargs': []})
+    assert is_deriv_k_atan(Poly(x, x), Poly(1, x), DE) is None
+
+    # t == atan(x): atan(x) == t and atan(2*x/(1 - x**2)) == 2*t, both
+    # up to a constant
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(1/(x**2 + 1), t)], 'exts': ['atan'], 'extargs': [x]})
+    assert is_deriv_k_atan(Poly(x, t), Poly(1, t), DE) == ([(t, 1)], t)
+    assert is_deriv_k_atan(Poly(2*x, t), Poly(1 - x**2, t), DE) == \
+        ([(t, 2)], 2*t)
+    assert is_deriv_k_atan(Poly(x**2, t), Poly(1, t), DE) is None
+
+    # t == tan(x): atan(tan(x)) == x up to a constant, and atan(x) is a
+    # monomial over QQ(x, tan(x))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(1 + t**2, t)], 'exts': ['tan'], 'extargs': [x]})
+    assert is_deriv_k_atan(Poly(t, t), Poly(1, t), DE) == ([(x, 1)], x)
+    assert is_deriv_k_atan(Poly(x, t), Poly(1, t), DE) is None
+
+    # Exponentials and logarithms never contribute: atan(exp(x)) is a
+    # monomial over QQ(x, exp(x))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)],
+        'exts': ['exp'], 'extargs': [x]})
+    assert is_deriv_k_atan(Poly(t, t), Poly(1, t), DE) is None
+
+    # Both kinds of monomials at once: t1 == atan(x), t2 == tan(x)
+    # (the 1989 paper's Example 2): atan of the tangent addition
+    # formula for tan(x + 2 - 3*atan(x)/4)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(1/(x**2 + 1), t1), Poly(1 + t2**2, t2)],
+        'exts': ['atan', 'tan'], 'extargs': [x, x]})
+    assert is_deriv_k_atan(Poly(t2 + x, t2), Poly(1 - t2*x, t2), DE) == \
+        ([(x, 1), (t1, 1)], t1 + x)
+
+
+def test_is_log_deriv_k_t_radical_tan():
+    # tan(x) is a monomial over QQ(x); tan(1) is a constant
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)], 'exts': [],
+        'extargs': []})
+    assert is_log_deriv_k_t_radical_tan(Poly(x, x), Poly(1, x), DE) is None
+    assert is_log_deriv_k_t_radical_tan(Poly(1, x), Poly(1, x), DE) == \
+        ([], 0, 1, 1)
+
+    # Example 1 of Bronstein's 1989 paper: t == atan(x), and
+    # tan(atan(x)/3) is algebraic of degree 3 over QQ(x, atan(x))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(1/(x**2 + 1), t)], 'exts': ['atan'], 'extargs': [x]})
+    assert is_log_deriv_k_t_radical_tan(Poly(t, t), Poly(3, t), DE) == \
+        ([(t, 1)], t, 3, 0)
+    # tan(2*atan(x)) == 2*x/(1 - x**2) is in the field (n == 1)
+    assert is_log_deriv_k_t_radical_tan(Poly(2*t, t), Poly(1, t), DE) == \
+        ([(t, 2)], 2*t, 1, 0)
+    # tan(x) and tan(x*atan(x)) are monomials over QQ(x, atan(x))
+    assert is_log_deriv_k_t_radical_tan(Poly(x, t), Poly(1, t), DE) is None
+    assert is_log_deriv_k_t_radical_tan(Poly(x*t, t), Poly(1, t), DE) is None
+
+    # Example 2 of the paper: t1 == atan(x), t2 == tan(x), and
+    # tan(x + 2 - 3*atan(x)/4) is algebraic of degree 4 over
+    # QQ(x, atan(x), tan(x), tan(2))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(1/(x**2 + 1), t1), Poly(1 + t2**2, t2)],
+        'exts': ['atan', 'tan'], 'extargs': [x, x]})
+    assert is_log_deriv_k_t_radical_tan(Poly(x + 2 - Rational(3, 4)*t1, t2),
+        Poly(1, t2), DE) == ([(x, 4), (t1, -3)], 4*x - 3*t1, 4, 2)
+
+    # t == tan(x): tan(2*x + 1) is in QQ(x, tan(x), tan(1)) (n == 1)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(1 + t**2, t)], 'exts': ['tan'], 'extargs': [x]})
+    assert is_log_deriv_k_t_radical_tan(Poly(2*x + 1, t), Poly(1, t), DE) == \
+        ([(x, 2)], 2*x, 1, 1)
+    # but tan(x/2) is algebraic of degree 2 over it
+    assert is_log_deriv_k_t_radical_tan(Poly(x, t), Poly(2, t), DE) == \
+        ([(x, 1)], x, 2, 0)
+
+    # Exponentials and logarithms never contribute: tan(log(x)) is a
+    # monomial over QQ(x, log(x))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'exts': ['log'], 'extargs': [x]})
+    assert is_log_deriv_k_t_radical_tan(Poly(t, t), Poly(1, t), DE) is None
+
+
 def test_is_log_deriv_k_t_radical_in_field():
     # NOTE: any potential constant factor in the second element of the result
     # doesn't matter, because it cancels in Da/a.
@@ -568,6 +698,36 @@ def test_is_log_deriv_k_t_radical_in_field():
     # f == Dt/t + Dt/(t + 1): the log-derivative of t*(t + 1)
     assert is_log_deriv_k_t_radical_in_field(Poly(2*t + 1, t),
         Poly(t + 1, t), DE) == (1, t**2 + t)
+
+    # Hypertangent case (Section 5.12), t == tan(x): after the residue
+    # reduction p == a + b*t, and u == v*(t**2 + 1)**e with n*a == Dv/v
+    # and e == n*b/(2*eta), eta == Dt/(t**2 + 1)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})
+    # D(t**2 + 1)/(t**2 + 1) == 2*t
+    assert is_log_deriv_k_t_radical_in_field(Poly(2*t, t), Poly(1, t), DE) == \
+        (1, t**2 + 1)
+    assert is_log_deriv_k_t_radical_in_field(Poly(t, t), Poly(1, t), DE) == \
+        (2, t**2 + 1)
+    # a != 0 recurses into k: D(x*(t**2 + 1))/(x*(t**2 + 1))
+    assert is_log_deriv_k_t_radical_in_field(Poly(1 + 2*t*x, t), Poly(x, t),
+        DE) == (1, t**2*x + x)
+    # with a residue term: D(t - 1)/(t - 1) and D((t - 1)*(t**2 + 1))/...
+    assert is_log_deriv_k_t_radical_in_field(Poly(1 + t**2, t), Poly(t - 1, t),
+        DE) == (1, t - 1)
+    assert is_log_deriv_k_t_radical_in_field(Poly(1 + t**2 + 2*t*(t - 1), t),
+        Poly(t - 1, t), DE) == (1, t**3 - t**2 + t - 1)
+    # 1 == Dv/v needs v == exp(x), and x*t needs e == n*x/2, neither in k(t)
+    assert is_log_deriv_k_t_radical_in_field(Poly(1, t), Poly(1, t), DE) is None
+    assert is_log_deriv_k_t_radical_in_field(Poly(x*t, t), Poly(1, t), DE) is None
+    # the book's precondition sqrt(-1) not in k(t)
+    raises(NotImplementedError, lambda: is_log_deriv_k_t_radical_in_field(
+        Poly(I*t, t), Poly(1, t), DE))
+    # nested hypertangents, t1 == tan(x), t2 == tan(tan(x)): the
+    # recursion goes through the hypertangent case of the level below
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t1**2, t1),
+        Poly((1 + t1**2)*(1 + t2**2), t2)]})
+    assert is_log_deriv_k_t_radical_in_field(Poly(2*t1 + 2*(1 + t1**2)*t2, t2),
+        Poly(1, t2), DE) == (1, t1**2*t2**2 + t1**2 + t2**2 + 1)
 
 
 def test_parametric_log_deriv_structure():
