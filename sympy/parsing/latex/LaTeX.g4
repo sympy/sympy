@@ -303,7 +303,7 @@ limit_sub:
 	)? R_BRACE;
 
 func_arg: expr | (expr ',' func_arg);
-func_arg_noparens: mp_nofunc;
+func_arg_noparens: unary_nofunc;
 
 subexpr: UNDERSCORE (atom | L_BRACE expr R_BRACE);
 supexpr: CARET (atom | L_BRACE expr R_BRACE);
