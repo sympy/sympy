@@ -639,16 +639,16 @@ class Integral(AddWithLimits):
                 antideriv is not None):
                 for atan_term in antideriv.atoms(atan):
                     atan_arg = atan_term.args[0]
-                    # Checking `atan_arg` to be linear combination of `tan` or `cot`
+                    # Checking `atan_arg` to be a polynomial of odd degree
+                    # in `tan` (the jump at the poles of tan is then
+                    # sign(lc)*pi) or a linear combination of `cot`
                     for tan_part in atan_arg.atoms(tan):
                         x1 = Dummy('x1')
-                        tan_exp1 = atan_arg.subs(tan_part, x1)
-                        # The coefficient of `tan` should be constant
-                        coeff = tan_exp1.diff(x1)
-                        if x1 not in coeff.free_symbols:
+                        tan_exp1 = atan_arg.subs(tan_part, x1).as_poly(x1)
+                        if tan_exp1 is not None and tan_exp1.degree() % 2 == 1:
                             a = tan_part.args[0]
                             antideriv = antideriv.subs(atan_term, Add(atan_term,
-                                sign(coeff)*pi*floor((a-pi/2)/pi)))
+                                sign(tan_exp1.LC())*pi*floor((a-pi/2)/pi)))
                     for cot_part in atan_arg.atoms(cot):
                         x1 = Dummy('x1')
                         cot_exp1 = atan_arg.subs(cot_part, x1)
