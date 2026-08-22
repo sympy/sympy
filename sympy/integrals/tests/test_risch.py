@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import annotations
 from sympy.core.function import (Function, Lambda, diff, expand_log)
-from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -1114,6 +1114,9 @@ def test_restore_sincos():
         log(sin(x))*sin(x) - sin(x)
     assert risch_integrate(exp(x)*sin(exp(x)), x) == -cos(exp(x))
     assert risch_integrate(sin(sin(x))*cos(x), x) == -cos(sin(x))
+    # The record survives the exponential restart
+    assert risch_integrate(sin(x) + exp(x) + exp(x/2 + 1), x) == \
+        2*E*exp(x/2) + exp(x) - cos(x)
     assert risch_integrate(sin(3*x), x) == -cos(3*x)/3
     assert risch_integrate(log(x)*sin(x), x) == \
         NonElementaryIntegral(log(x)*sin(x), x)

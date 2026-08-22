@@ -403,6 +403,9 @@ class DifferentialExtension:
         self.x = x
         # setting the default value 'dummy'
         self.dummy = dummy
+        # Not cleared by reset(): the restarts below work on the
+        # rewritten integrand, where the original functions are gone
+        self.sincos_args = set()
         self.reset()
         exp_new_extension, log_new_extension = True, True
 
@@ -1109,7 +1112,6 @@ class DifferentialExtension:
         # For various things that we change to make things work that we need to
         # change back when we are done.
         self.backsubs = []
-        self.sincos_args = set()
         self.Tfuncs = []
         self.newf = self.f
 
