@@ -1555,7 +1555,7 @@ def _tower_has_I(DE, *exprs):
         any(d.as_expr().has(I) for d in DE.D[:top + 1]))
 
 
-def _structure_tower(DE, *exprs):
+def _structure_tower(DE, *exprs, real=False):
     """
     The index sets E, L, T and A of the tower at the current level.
 
@@ -1570,9 +1570,10 @@ def _structure_tower(DE, *exprs):
 
     The structure theorems need every monomial of the tower labeled, and
     the real version (Theorem 9.3.2, which is needed as soon as T or A
-    is nonempty) needs sqrt(-1) not in the field, so the tower and the
-    given expressions (the inputs of the caller) are checked for
-    explicit I.  Raises NotImplementedError otherwise.
+    is nonempty, or always when real=True) needs sqrt(-1) not in the
+    field, so the tower and the given expressions (the inputs of the
+    caller) are checked for explicit I.  Raises NotImplementedError
+    otherwise.
     """
     if len(DE.exts) != len(DE.D) - 1:
         raise NotImplementedError("The structure theorems need every "
@@ -1581,7 +1582,7 @@ def _structure_tower(DE, *exprs):
     top = len(DE.T) + DE.level
     E, L, T, A = [[i for i in DE.indices(ext) if i <= top]
         for ext in ('exp', 'log', 'tan', 'atan')]
-    if (T or A) and _tower_has_I(DE, *exprs):
+    if (real or T or A) and _tower_has_I(DE, *exprs):
         raise NotImplementedError("The real version of the structure "
             "theorems (Section 9.3 of Bronstein's book), needed for towers "
             "with hypertangent or arc-tangent monomials, requires sqrt(-1) "
@@ -1900,7 +1901,7 @@ def is_deriv_k_atan(fa, fd, DE):
     dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)), fa**2 + fd**2
     dfa, dfd = dfa.cancel(dfd, include=True)
 
-    _, _, T, A = _structure_tower(DE, fa, fd)
+    _, _, T, A = _structure_tower(DE, fa, fd, real=True)
     T_part = [DE.D[i].quo(Poly(DE.T[i]**2 + 1, DE.T[i])).as_expr() for i in T]
     A_part = [DE.D[i].as_expr() for i in A]
 
@@ -1985,7 +1986,7 @@ def is_log_deriv_k_t_radical_tan(fa, fd, DE):
     dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)).cancel(fd**2,
         include=True)
 
-    _, _, T, A = _structure_tower(DE, fa, fd)
+    _, _, T, A = _structure_tower(DE, fa, fd, real=True)
     T_part = [DE.D[i].quo(Poly(DE.T[i]**2 + 1, DE.T[i])).as_expr() for i in T]
     A_part = [DE.D[i].as_expr() for i in A]
 

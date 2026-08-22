@@ -521,6 +521,23 @@ def test_structure_theorem_guards():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(I*t1, t1)],
         'exts': ['exp'], 'extargs': [I*x]})
     assert is_deriv_k(Poly(t1, t1), Poly(1, t1), DE) == ([(I*x, 1)], I*x, 1)
+    # ... except for the tan/atan adjunction tests, which always use the
+    # real theorem: over QQ(I)(x, exp(I*x)), tan(x) is in the field, and
+    # over QQ(I)(x, log((1 + I*x)/(1 - I*x))), atan(x) == -I*t/2 is, so
+    # a "no solution" answer from the real theorem's empty sums would be
+    # wrong
+    raises(NotImplementedError, lambda: is_log_deriv_k_t_radical_tan(
+        Poly(x, t1), Poly(1, t1), DE))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(2*I/(1 + x**2), t1)], 'exts': ['log'],
+        'extargs': [(1 + I*x)/(1 - I*x)]})
+    raises(NotImplementedError, lambda: is_deriv_k_atan(Poly(x, t1),
+        Poly(1, t1), DE))
+    # and even over QQ(x) when f itself involves I
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)], 'exts': [],
+        'extargs': []})
+    raises(NotImplementedError, lambda: is_deriv_k_atan(Poly(I*x, x),
+        Poly(1, x), DE))
 
 
 def test_is_deriv_k():
@@ -708,9 +725,12 @@ def test_is_log_deriv_k_t_radical_in_field():
         (1, t**2 + 1)
     assert is_log_deriv_k_t_radical_in_field(Poly(t, t), Poly(1, t), DE) == \
         (2, t**2 + 1)
-    # a != 0 recurses into k: D(x*(t**2 + 1))/(x*(t**2 + 1))
+    # a != 0 recurses into k: D(x*(t**2 + 1))/(x*(t**2 + 1)), and the
+    # same with both n's equal to 2, i.e. (1/2)*D(x*(t**2 + 1))/(...)
     assert is_log_deriv_k_t_radical_in_field(Poly(1 + 2*t*x, t), Poly(x, t),
         DE) == (1, t**2*x + x)
+    assert is_log_deriv_k_t_radical_in_field(Poly(1 + 2*t*x, t),
+        Poly(2*x, t), DE) == (2, t**2*x + x)
     # with a residue term: D(t - 1)/(t - 1) and D((t - 1)*(t**2 + 1))/...
     assert is_log_deriv_k_t_radical_in_field(Poly(1 + t**2, t), Poly(t - 1, t),
         DE) == (1, t - 1)
