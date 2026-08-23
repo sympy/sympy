@@ -13,6 +13,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 from sympy.external import import_module
+from sympy.testing.pytest import skip
 from sympy.logic.utilities.smtlib_benchmark import (
     FileResult, collect_files, main, run_file, run_file_with_timeout
 )
@@ -86,6 +87,14 @@ MIXED_BOOL_AND_THEORY = """
 (declare-const x Real)
 (assert (or p (> x 3)))
 (assert (< x 1))
+(check-sat)
+"""
+
+INTEGER_NO_STATUS = """
+(set-logic QF_LIA)
+(declare-const n Int)
+(assert (> n 0))
+(assert (< n 1))
 (check-sat)
 """
 
@@ -186,6 +195,48 @@ def test_an_unexpected_failure_is_reported_rather_than_raised():
         result = run_file(_write(directory, 'mixed.smt2', MIXED_BOOL_AND_THEORY))
         assert result.status == 'error'
         assert 'Unhandled Predicate' in result.reason
+
+
+def test_a_reference_solver_supplies_the_answer_a_file_does_not_record():
+    z3 = import_module('z3')
+    if z3 is None:
+        skip("z3 is not installed")
+    with tempfile.TemporaryDirectory() as directory:
+        path = _write(directory, 'plain.smt2', NO_STATUS)
+        # without a reference there is nothing to check the answer against
+        assert run_file(path).check == ''
+        result = run_file(path, reference='z3')
+        assert result.expected == ''
+        assert result.reference == 'sat'
+        assert result.check == 'ok'
+
+
+def test_a_reference_solver_catches_a_wrong_answer():
+    z3 = import_module('z3')
+    if z3 is None:
+        skip("z3 is not installed")
+    # 0 < n < 1 is satisfiable over the reals but not over the integers, and
+    # SymPy has no integer solver. z3 reads the file itself, so unlike a
+    # reference built from SymPy's expression it sees the Int sort.
+    with tempfile.TemporaryDirectory() as directory:
+        result = run_file(_write(directory, 'int.smt2', INTEGER_NO_STATUS),
+                          reference='z3')
+        assert result.status == 'sat'
+        assert result.reference == 'unsat'
+        assert result.check == 'WRONG'
+
+
+def test_a_recorded_status_wins_over_the_reference():
+    # the suite's own answer is what the benchmark asserts about the problem
+    result = FileResult(path='a', status='sat', expected='sat', reference='unsat')
+    assert result.answer == 'sat'
+    assert result.check == 'ok'
+
+
+def test_a_reference_that_has_no_answer_is_ignored():
+    result = FileResult(path='a', status='sat', reference='')
+    assert result.answer == ''
+    assert result.check == ''
 
 
 def test_missing_file_is_reported_as_an_error():

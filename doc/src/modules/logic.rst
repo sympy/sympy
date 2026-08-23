@@ -213,6 +213,12 @@ Pass ``--solver z3`` to run the same files through
 ``sympy.logic.algorithms.z3_wrapper`` instead, or ``--help`` for the other
 options.
 
+Many benchmark files, in particular the scrambled ones used in the yearly
+competition, record no ``:status`` at all. Pass ``--reference z3`` to have z3
+answer each file as well, so those can still be checked. z3 is handed the file
+as it stands rather than SymPy's expression, so it also catches a constant
+given the wrong sort or an operator parsed wrongly.
+
 Note that SymPy has no solver for integer arithmetic, so a problem declaring
 ``Int`` constants is solved over the reals and may well disagree with the
 answer the file records.

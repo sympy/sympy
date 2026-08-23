@@ -61,6 +61,11 @@ PHASES = ('parse', 'build', 'solve')
 #: Modules the solvers that are not built into SymPy need.
 SOLVER_MODULES = {'z3': 'z3', 'pycosat': 'pycosat', 'minisat22': 'pysat'}
 
+#: Solvers that can be used to check an answer. These read the SMT-LIB file
+#: themselves rather than going through SymPy, which is what makes them worth
+#: comparing against.
+REFERENCE_SOLVERS = ('z3',)
+
 DEFAULT_TIMEOUT = 30.0
 
 
@@ -78,17 +83,31 @@ class FileResult:
     status: str = 'error'
     #: the answer recorded by ``(set-info :status ...)``, or ``''``
     expected: str = ''
+    #: the answer a reference solver gave, or ``''`` if none was run
+    reference: str = ''
     #: why the file could not be handled, for the non-answer statuses
     reason: str = ''
     times: dict[str, float] = field(default_factory=dict)
     total: float = 0.0
 
     @property
+    def answer(self):
+        """What the file's answer is taken to be, or ``''`` if unknown.
+
+        The status the file records is preferred over what a reference solver
+        says, since it is what the benchmark suite asserts about the problem.
+        """
+        for candidate in (self.expected, self.reference):
+            if candidate in ('sat', 'unsat'):
+                return candidate
+        return ''
+
+    @property
     def check(self):
-        """``ok`` or ``WRONG`` when the file records an expected answer."""
-        if self.status not in ('sat', 'unsat') or self.expected not in ('sat', 'unsat'):
+        """``ok`` or ``WRONG`` when there is an answer to compare against."""
+        if self.status not in ('sat', 'unsat') or not self.answer:
             return ''
-        return 'ok' if self.status == self.expected else 'WRONG'
+        return 'ok' if self.status == self.answer else 'WRONG'
 
 
 def collect_files(paths):
@@ -122,7 +141,7 @@ def get_parser():
     return _parser
 
 
-def run_file(path, solver='lra'):
+def run_file(path, solver='lra', reference=None):
     """Parse and solve one SMT-LIB file and return a :class:`FileResult`.
 
     This runs in the calling process and has no timeout of its own; use
@@ -131,6 +150,12 @@ def run_file(path, solver='lra'):
     ``solver`` is one of :data:`SOLVERS`. ``none`` parses the file without
     solving it, and ``lra`` means dpll2 with the linear arithmetic theory,
     falling back to plain dpll2 for problems that have no theory atoms.
+
+    ``reference`` names an external solver to answer the file independently,
+    so that files recording no ``:status`` can still be checked. It reads the
+    file itself rather than SymPy's expression, which means it checks the
+    parser and the sorts as well as the solver. It runs only once the file has
+    been timed, and so counts towards none of the times.
 
     Whatever a stage raises becomes the file's reported outcome rather than
     propagating: finding out how SymPy fails on a file is the point of the
@@ -202,7 +227,38 @@ def run_file(path, solver='lra'):
     if model is None:
         return finish('unknown')  # z3 returns None when it gives up
     # a satisfying model can be an empty dict, so compare against False
-    return finish('unsat' if model is False else 'sat')
+    finish('unsat' if model is False else 'sat')
+
+    if reference is not None:
+        result.reference = _reference_answer(text, reference)
+    return result
+
+
+def _reference_answer(text, reference, timeout=DEFAULT_TIMEOUT):
+    """Ask an external solver what an SMT-LIB file's answer is.
+
+    The solver is handed the file as it stands, so its answer is independent
+    of everything SymPy did with it. That is the point: it catches a symbol
+    given the wrong sort or an operator parsed wrongly, which a reference
+    built from SymPy's own expression could not.
+
+    Returns ``'sat'``, ``'unsat'``, or ``''`` if the solver had no answer.
+    """
+    if reference != 'z3':
+        raise ValueError(f"unknown reference solver {reference!r}")
+
+    z3 = import_module('z3')
+    if z3 is None:
+        return ''
+    try:
+        solver = z3.Solver()
+        solver.set('timeout', int(timeout * 1000))
+        solver.from_string(text)
+        answer = str(solver.check())
+    except Exception:  # noqa: BLE001
+        # the reference failing says nothing about the answer under test
+        return ''
+    return answer if answer in ('sat', 'unsat') else ''
 
 
 def _has_theory_atoms(expr):
@@ -253,11 +309,12 @@ def _describe(exc):
     return text if len(text) <= MAX_REASON else text[:MAX_REASON - 3] + '...'
 
 
-def _worker(path, solver, results):
-    results.put(run_file(path, solver))
+def _worker(path, solver, reference, results):
+    results.put(run_file(path, solver, reference))
 
 
-def run_file_with_timeout(path, solver='lra', timeout=DEFAULT_TIMEOUT):
+def run_file_with_timeout(path, solver='lra', timeout=DEFAULT_TIMEOUT,
+                          reference=None):
     """Run one file in a child process, killing it after ``timeout`` seconds.
 
     Forking, where it is available, lets the child inherit the compiled grammar
@@ -270,7 +327,8 @@ def run_file_with_timeout(path, solver='lra', timeout=DEFAULT_TIMEOUT):
         ctx = multiprocessing.get_context()
 
     results = ctx.Queue()
-    process = ctx.Process(target=_worker, args=(str(path), solver, results))
+    process = ctx.Process(target=_worker,
+                          args=(str(path), solver, reference, results))
     started = time.perf_counter()
     process.start()
     try:
@@ -298,7 +356,7 @@ def _print_row(cells, path):
 def _print_result(result):
     times = ['%8.3f' % result.times[p] if p in result.times else ' ' * 8
              for p in PHASES]
-    _print_row([result.status, result.expected or '-', result.check or '-',
+    _print_row([result.status, result.answer or '-', result.check or '-',
                 *times, '%8.3f' % result.total], result.path)
     if result.reason:
         print(f"    {result.reason}")
@@ -330,11 +388,16 @@ def main(argv=None):
     parser.add_argument('-t', '--timeout', type=float, default=DEFAULT_TIMEOUT,
                         metavar='SECONDS',
                         help='give up on a file after this long (default: %(default)s)')
+    parser.add_argument('-r', '--reference', choices=REFERENCE_SOLVERS,
+                        help='answer each file with this solver too, so that '
+                             'files recording no :status can still be checked; '
+                             'it is not timed')
     args = parser.parse_args(argv)
 
     # satisfiable() silently falls back to dpll2 when the module a solver needs
     # is missing, which would quietly benchmark the wrong solver
-    for module in ('lark', SOLVER_MODULES.get(args.solver)):
+    for module in ('lark', SOLVER_MODULES.get(args.solver),
+                   SOLVER_MODULES.get(args.reference)):
         if module and import_module(module) is None:
             print(f"this needs the {module!r} module, which is not installed",
                   file=sys.stderr)
@@ -349,12 +412,16 @@ def main(argv=None):
     # build the parser here: every forked child inherits it, so its cost
     # belongs to the run as a whole rather than to the first file
     get_parser()
+    if args.reference:
+        print('checking answers against %r where a file records no :status'
+              % args.reference)
     _print_row(['status', 'expected', 'check',
                 *['%8s' % p for p in PHASES], '%8s' % 'total'], 'file')
 
     results = []
     for path in files:
-        result = run_file_with_timeout(path, args.solver, args.timeout)
+        result = run_file_with_timeout(path, args.solver, args.timeout,
+                                       args.reference)
         results.append(result)
         _print_result(result)
 
