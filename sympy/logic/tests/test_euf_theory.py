@@ -7,6 +7,8 @@ from sympy.core.relational import Eq
 from sympy.logic.algorithms.euf_theory import (EUFCongruenceClosure,
     EUFUnhandledInput)
 from sympy.testing.pytest import raises
+from sympy.core.random import choice, randint, sample, shuffle
+from collections import defaultdict
 import random
 
 f, g, h = symbols('f g h', cls=Function)
@@ -124,10 +126,10 @@ def test_process_pending_chain_merges():
     cc.lookup_table[(f1, (x1,))] = (f1, (x1,), fx)
     cc.lookup_table[(f1, (y1,))] = (f1, (y1,), fy)
     cc.lookup_table[(f1, (z1,))] = (f1, (z1,), fz)
-    cc.pending.append((x1, y1))
-    cc.pending.append((y1, z1))
-    cc.pending.append((fx, fy))
-    cc.pending.append((fy, fz))
+    cc.pending.append((x1, y1, Q.eq(x1, y1)))
+    cc.pending.append((y1, z1, Q.eq(y1, z1)))
+    cc.pending.append((fx, fy, Q.eq(f1(x1), f1(y1))))
+    cc.pending.append((fy, fz, Q.eq(f1(y1), f1(z1))))
     cc._process_pending_unions()
     assert cc._find_repr(x1) == cc._find_repr(y1) == cc._find_repr(z1)
     assert cc._find_repr(fx) == cc._find_repr(fy) == cc._find_repr(fz)
@@ -704,9 +706,250 @@ def test_backtrack_random_differential():
             cc.merge(lhs, rhs)
             live.append(Q.eq(lhs, rhs))
         assert len(cc._asserted) == len(live)
+        _check_invariants(cc)
         ref = EUFCongruenceClosure(live)
         for i in range(9):
             for j in range(9):
                 for term in (lambda u: u, f):
                     assert (cc.are_congruent(term(s[i]), term(s[j]))
                             is ref.are_congruent(term(s[i]), term(s[j])))
+
+
+# ---------------------------------------------------------------------------
+# Textbook problems.  These are the standard congruence closure exercises from
+# Bradley & Manna, "The Calculus of Computation" (section 9.2) and the QF_UF
+# regressions that ship with SMT solvers; they are small but each one fails
+# unless the congruence rule (not just transitivity) is propagated correctly.
+# ---------------------------------------------------------------------------
+
+def test_self_applied_function():
+    # g(a, b) = a  |-  g(g(a, b), b) = a
+    cc = EUFCongruenceClosure([Q.eq(g(a, b), a)])
+    assert cc.are_congruent(g(g(a, b), b), a)
+    assert cc.are_congruent(g(g(g(a, b), b), b), a)
+
+
+def test_iterated_function_cycles():
+    # f^3(a) = a together with f^5(a) = a entail f(a) = a.
+    powers = [a]
+    for _ in range(5):
+        powers.append(f(powers[-1]))
+    eqs = [Q.eq(powers[3], a), Q.eq(powers[5], a)]
+    cc = EUFCongruenceClosure(eqs)
+    assert cc.are_congruent(f(a), a)
+    assert cc.are_congruent(powers[2], a)
+    _check_explanation(cc, eqs, f(a), a)
+
+
+def test_iterated_function_cycle_is_not_entailed():
+    # f^4(a) = a on its own says nothing about f(a).
+    powers = [a]
+    for _ in range(4):
+        powers.append(f(powers[-1]))
+    cc = EUFCongruenceClosure([Q.eq(powers[4], a)])
+    assert not cc.are_congruent(f(a), a)
+    assert cc.are_congruent(f(powers[4]), f(a))
+
+
+def test_arity_is_part_of_the_signature():
+    # f(a) and f(a, b) share a head but must never be congruent.
+    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    assert not cc.are_congruent(f(a), f(a, b))
+    assert not cc.are_congruent(f(a, b), f(b))
+    assert cc.are_congruent(f(a, b), f(b, a))
+
+
+def test_distinct_heads_never_merge():
+    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    assert not cc.are_congruent(f(a), g(b))
+    assert cc.explain(f(a), g(b)) is None
+
+
+def test_diamond_explanation_stays_linear():
+    # The "diamonds" family used to benchmark proof-producing congruence
+    # closure: each diamond offers two routes of equal length, so a proof of
+    # the endpoints has to pick one route per diamond rather than explore the
+    # 2**n combinations.
+    n = 8
+    v = symbols('dm0:%s' % (3*n + 1))
+    eqs = []
+    for i in range(n):
+        lower, upper = v[3*i], v[3*(i + 1)]
+        eqs += [Q.eq(lower, v[3*i + 1]), Q.eq(v[3*i + 1], upper),
+                Q.eq(lower, v[3*i + 2]), Q.eq(v[3*i + 2], upper)]
+    cc = EUFCongruenceClosure(eqs)
+    assert len(_check_explanation(cc, eqs, v[0], v[3*n])) == 2*n
+    _check_invariants(cc)
+
+
+# ---------------------------------------------------------------------------
+# Differential testing against a naive reference, plus internal invariants.
+# The reference shares no code with the engine: it just saturates the merge
+# rule over every subterm until nothing changes, so agreeing with it is real
+# evidence and not the engine confirming itself.
+# ---------------------------------------------------------------------------
+
+def _subterms(expr, acc):
+    acc.add(expr)
+    for arg in expr.args:
+        _subterms(arg, acc)
+    return acc
+
+
+def _reference_congruent(eqs, terms):
+    """Return ``congruent(p, q)`` computed by brute-force fixpoint."""
+    universe = set()
+    for eq in eqs:
+        _subterms(eq.lhs, universe)
+        _subterms(eq.rhs, universe)
+    for term in terms:
+        _subterms(term, universe)
+    parent = {t: t for t in universe}
+
+    def find(t):
+        while parent[t] is not t:
+            parent[t] = parent[parent[t]]
+            t = parent[t]
+        return t
+
+    def union(u, v):
+        root_u, root_v = find(u), find(v)
+        if root_u is root_v:
+            return False
+        parent[root_u] = root_v
+        return True
+
+    for eq in eqs:
+        union(eq.lhs, eq.rhs)
+    apps = [t for t in universe if t.args]
+    changed = True
+    while changed:
+        changed = False
+        for i, u in enumerate(apps):
+            for v in apps[i + 1:]:
+                if u.func != v.func or len(u.args) != len(v.args):
+                    continue
+                if all(find(p) is find(q) for p, q in zip(u.args, v.args)):
+                    changed |= union(u, v)
+    return lambda p, q: find(p) is find(q)
+
+
+def _check_invariants(cc):
+    """Assert that the engine's internal state is self-consistent."""
+    for const, rep in cc.representative.items():
+        assert cc.representative[rep] == rep
+        assert const in cc.classlist[rep]
+    assert set(cc.classlist) == set(cc.representative.values())
+    assert sum(len(m) for m in cc.classlist.values()) == len(cc.representative)
+
+    # every application is still reachable through the signature it has now
+    for const, (func, arg_ids) in cc._const_to_app.items():
+        key = (func, tuple(cc._find_repr(arg) for arg in arg_ids))
+        assert key in cc.lookup_table
+        assert cc._find_repr(cc.lookup_table[key][2]) == cc._find_repr(const)
+
+    # use_list is filed under live representatives only
+    for rep, eqs in cc.use_list.items():
+        assert not eqs or cc._find_repr(rep) == rep
+
+    # each class is spanned by an acyclic proof tree of |class| - 1 edges
+    edges = defaultdict(int)
+    for child, parent in cc.pf_parent.items():
+        assert cc._find_repr(child) == cc._find_repr(parent)
+        edges[cc._find_repr(child)] += 1
+    for rep, members in cc.classlist.items():
+        assert edges[rep] == len(members) - 1
+    seen = set()
+    for node in cc.pf_parent:
+        walked = set()
+        cursor = node
+        while cursor in cc.pf_parent and cursor not in seen:
+            assert cursor not in walked
+            walked.add(cursor)
+            seen.add(cursor)
+            cursor = cc.pf_parent[cursor]
+
+    assert cc._n_edges_extra <= 2 * cc._n_edges_during_union
+
+
+def _random_equations(pool, count):
+    return [Q.eq(*sample(pool, 2)) for _ in range(count)]
+
+
+def _partition(cc, pool):
+    """Group the pool of terms by the class each of them lands in."""
+    classes = defaultdict(set)
+    for term in pool:
+        classes[cc._find_repr(cc._flatten(term))].add(term)
+    return {frozenset(members) for members in classes.values()}
+
+
+def test_random_closure_matches_reference():
+    s = symbols('r0:6')
+    pool = list(s) + [f(t) for t in s] + [g(t, u) for t, u in zip(s, s[1:])]
+    pool += [f(f(s[0])), f(g(s[0], s[1])), h(s[0], s[1], s[2])]
+    for _ in range(15):
+        eqs = _random_equations(pool, 8)
+        cc = EUFCongruenceClosure(eqs)
+        congruent = _reference_congruent(eqs, pool)
+        for i, p in enumerate(pool):
+            for q in pool[i + 1:]:
+                assert cc.are_congruent(p, q) is congruent(p, q)
+        _check_invariants(cc)
+
+
+def test_random_explanations_are_sound():
+    s = symbols('e0:6')
+    pool = list(s) + [f(t) for t in s] + [g(t, t) for t in s]
+    for _ in range(10):
+        eqs = _random_equations(pool, 8)
+        cc = EUFCongruenceClosure(eqs)
+        for i, p in enumerate(pool):
+            for q in pool[i + 1:]:
+                if cc.are_congruent(p, q):
+                    _check_explanation(cc, eqs, p, q)
+                else:
+                    assert cc.explain(p, q) is None
+        _check_invariants(cc)
+
+
+def test_explain_interleaved_with_merge_and_backtrack():
+    # explain() is not read-only: it grows the c-graph with extra edges.  The
+    # closure reported afterwards must still match a freshly built engine.
+    s = symbols('i0:6')
+    pool = list(s) + [f(t) for t in s] + [g(t, t) for t in s]
+    cc = EUFCongruenceClosure([])
+    live = []
+    for _ in range(20):
+        action = choice(['merge', 'merge', 'explain', 'backtrack'])
+        if action == 'backtrack' and live:
+            k = randint(1, len(live))
+            cc.backtrack(k)
+            del live[-k:]
+        elif action == 'explain':
+            p, q = sample(pool, 2)
+            expl = cc.explain(p, q)
+            if expl is None:
+                assert not cc.are_congruent(p, q)
+            else:
+                assert expl <= set(live)
+                assert EUFCongruenceClosure(list(expl)).are_congruent(p, q)
+        else:
+            p, q = sample(pool, 2)
+            cc.merge(p, q)
+            live.append(Q.eq(p, q))
+        _check_invariants(cc)
+        assert _partition(cc, pool) == _partition(EUFCongruenceClosure(live), pool)
+
+
+def test_closure_is_order_independent():
+    # The closure is a fixpoint, so the order the equations arrive in cannot
+    # change which terms end up congruent.
+    s = symbols('o0:6')
+    pool = list(s) + [f(t) for t in s] + [g(t, t) for t in s]
+    eqs = _random_equations(pool, 9)
+    reference = _partition(EUFCongruenceClosure(eqs), pool)
+    for _ in range(4):
+        permuted = list(eqs)
+        shuffle(permuted)
+        assert _partition(EUFCongruenceClosure(permuted), pool) == reference
