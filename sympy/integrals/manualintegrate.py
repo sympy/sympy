@@ -3403,12 +3403,9 @@ def integral_steps(integrand, symbol, **options):
             return k and issubclass(k, klasses)
         return _integral_is_subclass
 
-    # TODO: Prefer substitution_rule over bioche_substitution once the rule
-    # dispatcher can stop at the first complete result. Putting Bioche inside
-    # alternatives() currently evaluates trig_expand_rule eagerly, while
-    # putting it after alternatives() can make it unreachable. For example,
-    # substitution_rule integrates sec(x)*tan(x)/(sec(x) + 1) as
-    # log(sec(x) + 1), while Bioche returns
+    # TODO: Prefer substitution_rule once alternatives() supports lazy exit;
+    # otherwise Bioche is eager or unreachable. For sec(x)*tan(x)/(sec(x) + 1),
+    # substitution gives log(sec(x) + 1), while Bioche gives
     # log(cos(x) + 1) - log(cos(x)).
     result = do_one(
         null_safe(special_function_rule),
