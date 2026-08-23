@@ -17,9 +17,11 @@ from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
 from sympy.logic.algorithms.lra_theory import LRASolver
+from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
 
 
-def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
+def dpll_satisfiable(expr, all_models=False, use_lra_theory=False,
+                     use_euf_theory=False):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds.
@@ -48,11 +50,13 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
         return False
 
     if use_lra_theory:
-        lra, immediate_conflicts = LRASolver.from_encoded_cnf(expr)
+        theory, immediate_conflicts = LRASolver.from_encoded_cnf(expr)
+    elif use_euf_theory:
+        theory, immediate_conflicts = EUFTheorySolver.from_encoded_cnf(expr)
     else:
-        lra = None
+        theory = None
         immediate_conflicts = []
-    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra)
+    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, theory=theory)
     models = solver._find_model()
 
     if all_models:
@@ -89,7 +93,7 @@ class SATSolver:
 
     def __init__(self, clauses, variables, var_settings, symbols=None,
                 heuristic='vsids', clause_learning='none', INTERVAL=500,
-                 lra_theory = None):
+                 theory = None):
 
         self.var_settings = var_settings
         self.heuristic = heuristic
@@ -138,7 +142,7 @@ class SATSolver:
         self.num_learned_clauses = 0
         self.original_num_clauses = len(self.clauses)
 
-        self.lra = lra_theory
+        self.theory = theory
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -224,14 +228,14 @@ class SATSolver:
                 # Stopping condition for a satisfying theory
                 if 0 == lit:
 
-                    # check if assignment satisfies lra theory
-                    if self.lra:
+                    # check if assignment satisfies the theory
+                    if self.theory:
                         for enc_var in self.var_settings:
-                            res = self.lra.assert_lit(enc_var)
+                            res = self.theory.assert_lit(enc_var)
                             if res is not None:
                                 break
-                        res = self.lra.check()
-                        self.lra.reset()
+                        res = self.theory.check()
+                        self.theory.reset()
                     else:
                         res = None
                     if res is None or res[0]:
