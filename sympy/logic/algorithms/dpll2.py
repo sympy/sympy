@@ -337,9 +337,10 @@ class SATSolver:
         Returns ``UNSATISFIABLE`` on a conflict, ``SATISFIABLE`` if it leaves
         no variable unassigned, and ``UNKNOWN`` otherwise.
 
+        A conflict the LRA theory finds is reported too, but never a model.
+
         TODO: IPASIR propagates at any decision level, while this is limited
-        to the root, and a solver with an LRA theory always gets ``UNKNOWN``
-        since the theory is only checked by ``solve()``.
+        to the root.
 
         Examples
         ========

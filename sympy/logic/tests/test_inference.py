@@ -167,16 +167,26 @@ def test_satsolver_propagate():
     assert (s.val(1), s.val(2)) == (1, 2)
     assert s.solve() == IpasirStatus.SATISFIABLE
 
-    # An assignment of every variable is only a model if it holds in the LRA
-    # theory as well, so propagating on its own cannot report satisfiable.
+    # The bounds are asserted into the LRA theory as the literals are
+    # propagated, so a conflict the theory finds is a conflict like any other.
     x = symbols('x')
     enc = EncodedCNF()
     enc.from_cnf(CNF.from_prop((x > 1) & (x < 0)))
     lra, conflicts = LRASolver.from_encoded_cnf(enc)
     s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols,
                   lra_theory=lra)
-    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.propagate() == IpasirStatus.UNSATISFIABLE
     assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # An assignment of every variable is only a model if it holds in the LRA
+    # theory as well, so propagating on its own cannot report satisfiable.
+    enc = EncodedCNF()
+    enc.from_cnf(CNF.from_prop((x > 1) & (x < 5)))
+    lra, conflicts = LRASolver.from_encoded_cnf(enc)
+    s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols,
+                  lra_theory=lra)
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.solve() == IpasirStatus.SATISFIABLE
 
     # Propagating is idempotent.
     s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
