@@ -69,24 +69,30 @@ class EUFCongruenceClosure:
         Parameters
         ----------
         equations : list of Q.eq or SymPy expressions
-            The ground equalities to be saturated.
+            The ground equalities to be saturated. Ground equalities are equalities with no variable args (see the header file)
         """
 
         """
         Part 1) of the engine
 
         pending:  list of pairs of constants yet to be merged.
-        representative:  returns the class representative of the constant
-        classlist: set of all the constants in the class.
-        lookup_table: maps an app to a constant.
-        use_list: all the apps that use the input rep as an argument.
+        representative[c] -> rep:  returns the class representative of the constant
+        classlist[repr] -> list of constants: set of all the constants in the class.
+        lookup_table[func, repr_args] -> (func, args, d): maps an app (usually with repr args) to a eqaution.
+            if it returns an app, what it means is that  the key and the output are congruent, and all the methods
+            that use this data structure should  send them to pending for the merge (unless they are in the same class). So, there should never be a case that lookup_table should return more than one equation
+            If it returns nothing/absent, usually the equation with non-rep args will be the output of the key application with the same equation but with repr args. (TODO: explain this better)
+        use_list[rep] -> list of (func, args, d): all the apps that use the input rep as an argument.
+            This is used in  two cases:
+                1) whenever lookup_table returns nothing/absent, app the rep_args of the key of lookup_table store the equation.
+                2) during _union, after the smaller class a is merged to class b, we check all the equation of a with _use_list[a] for rekeying
 
         """
         self.pending = deque()
-        self.representative = {}                 # Representative[c]
-        self.classlist = defaultdict(set)        # ClassList[rep]
-        self.lookup_table = {}                   # Lookup_table[function, args]
-        self.use_list = defaultdict(list)        # UseList[rep]
+        self.representative = {}
+        self.classlist = defaultdict(set)
+        self.lookup_table = {}
+        self.use_list = defaultdict(list)
 
         # _flatten caches/stuff
         self._dummies = numbered_symbols('c', Dummy)
@@ -218,11 +224,13 @@ class EUFCongruenceClosure:
         rep_args = tuple(self._find_repr(arg) for arg in arg_ids)
         key = (func, rep_args)
         eq = (func, arg_ids, d)
+        # check if there's another equation that are congruent
         if key in self.lookup_table:
-            other = self.lookup_table[key]
-            self.pending.append((d, other[2], (eq, other)))
+            other_eq = self.lookup_table[key]
+            self.pending.append((d, other_eq[2], (eq, other_eq)))
             self._process_pending_unions()
         else:
+            # otherwise, add its own registry in lookup_table for future checks
             self.lookup_table[key] = eq
             for arg_id in set(rep_args):
                 self.use_list[arg_id].append(eq)
@@ -232,10 +240,12 @@ class EUFCongruenceClosure:
 
     def _union(self, a, b, label=None):
         """
-        TODO: add docs. arguably the most important method in this file.
+        A method for the union of two classes (possibly the same) of terms a and b.
         """
         rep_a, rep_b = self._find_repr(a), self._find_repr(b)
         if rep_a == rep_b:
+            # Even if the terms are still in the same class, we add cgraph from a to b
+            # for the explanation
             if isinstance(label, AppliedPredicate):
                 if self._insert_cgraph_edge(a, b, label) is not None:
                     self._n_edges_during_union += 1
@@ -244,6 +254,7 @@ class EUFCongruenceClosure:
         if len(self.classlist[rep_a]) > len(self.classlist[rep_b]):
             rep_a, rep_b = rep_b, rep_a
             a, b = b, a
+        # add c-graph and pf graph edges from a to b
         self._insert_pf_edge(a, b, label)
         self._n_edges_during_union += 1
         level = self._insert_cgraph_edge(a, b, label)
@@ -253,16 +264,21 @@ class EUFCongruenceClosure:
             self.representative[c] = rep_b
             self.classlist[rep_b].add(c)
         del self.classlist[rep_a]
-        # For each application (func, args, term) in UseList(rep_a)
+        # For each equation (func, args, term) in UseList(rep_a)
+        # i.e all the equation that includes rep_a:
         for eq in self.use_list.pop(rep_a, []):
             func, arg_ids, term = eq
             rep_args = tuple(self._find_repr(arg) for arg in arg_ids)
             key = (func, rep_args)
+            # if there's a constant other = key
             if key in self.lookup_table:
-                other = self.lookup_table[key]
-                if self._find_repr(other[2]) != self._find_repr(term):
-                    self.pending.append((term, other[2], (eq, other)))
+                other_eq = self.lookup_table[key]
+                # if they are not yet in the same class, add into pending for them to be in the
+                # same class
+                if self._find_repr(other_eq[2]) != self._find_repr(term):
+                    self.pending.append((term, other_eq[2], (eq, other_eq)))
             else:
+                # if there's no such key in lookup_table, add it to the register these for future
                 self.lookup_table[key] = eq
                 self.use_list[rep_b].append(eq)
 
