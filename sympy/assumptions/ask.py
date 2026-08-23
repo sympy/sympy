@@ -639,7 +639,7 @@ def _ask_single_fact(key, local_facts):
     return None
 
 
-def _ask_recursive(proposition, assumptions):
+def _ask_recursive(proposition, assumptions=True):
     """
     Answers query by relying only on recursive handlers and `_ask_single_fact`
     and avoiding expensive SAT solver queries.

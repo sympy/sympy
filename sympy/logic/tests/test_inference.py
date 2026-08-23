@@ -1,6 +1,8 @@
 """For more tests on satisfiability, see test_dimacs"""
 from __future__ import annotations
 
+from itertools import product
+
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
 from sympy.core.relational import Ne, Eq, Unequality
@@ -12,11 +14,13 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
+from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
 
 from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.logic.algorithms.lra_theory import LRASolver
 from sympy.logic.tests.test_lra_theory import make_random_problem
-from sympy.core.random import randint
+from sympy.core.random import randint, choice
 
 from sympy.testing.pytest import raises, skip
 from sympy.external import import_module
@@ -133,6 +137,233 @@ def test_dpll2_satisfiable():
         {B: True, A: True})
     assert dpll2_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
     assert dpll2_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
+
+
+def test_satsolver_propagate():
+    # Propagating {1} through {-1, 2} implies 2, which in turn implies 3.
+    s = SATSolver([{1}, {-1, 2}, {-2, 3}, {4, -4}], {1, 2, 3, 4}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert (s.fixed(1), s.fixed(2), s.fixed(3)) == (1, 1, 1)
+    assert (s.fixed(-1), s.fixed(-2), s.fixed(-3)) == (-1, -1, -1)
+
+    # Nothing is implied when there is no unit clause to propagate from.
+    s = SATSolver([{1, 2}, {-1, 2}], {1, 2}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert (s.fixed(1), s.fixed(2)) == (0, 0)
+
+    # Propagation is sound but not complete: 2 is implied by these clauses,
+    # yet finding that out needs a case split rather than propagation.
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(2) == 2
+
+    # A conflict while propagating means the clauses are unsatisfiable.
+    s = SATSolver([{1}, {-1}], {1}, set())
+    assert s.propagate() == IpasirStatus.UNSATISFIABLE
+
+    # Propagation leaving no variable unassigned is a model, so no decision
+    # has to be made and the clauses are satisfiable.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    assert s.propagate() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+
+    # An assignment of every variable is only a model if it holds in the LRA
+    # theory as well, so propagating on its own cannot report satisfiable.
+    x = symbols('x')
+    enc = EncodedCNF()
+    enc.from_cnf(CNF.from_prop((x > 1) & (x < 0)))
+    lra, conflicts = LRASolver.from_encoded_cnf(enc)
+    s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols,
+                  lra_theory=lra)
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # Propagating is idempotent.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.fixed(2) == 1
+
+
+def test_satsolver_solve_after_propagate():
+    # The three steps needed by the assumptions system: propagate at the root
+    # level, inspect what that implied, then run the full search.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.fixed(2) == 1
+    assert s.fixed(3) == 0
+
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    # The literals fixed at the root level still hold in the model.
+    assert s.val(1) == 1
+    assert s.val(2) == 2
+    assert s.val(3) in (3, -3)
+
+    # Solving without propagating first gives the same answer.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+
+    # Unsatisfiable at the root level, both with and without propagating.
+    for propagate_first in (True, False):
+        s = SATSolver([{1}, {-1, 2}, {-2}], {1, 2}, set())
+        if propagate_first:
+            assert s.propagate() == IpasirStatus.UNSATISFIABLE
+        assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # Unsatisfiable, but only the full search can show it.
+    s = SATSolver([{1, 2}, {1, -2}, {-1, 2}, {-1, -2}], {1, 2}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+
+def test_satsolver_interface_errors():
+    # val() needs a model to read from.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    raises(ValueError, lambda: s.val(1))
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    raises(ValueError, lambda: s.solve())
+
+    s = SATSolver([{1}, {-1}], {1}, set())
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+    raises(ValueError, lambda: s.val(1))
+
+    # Away from the root level an assignment is a guess rather than something
+    # the clauses imply, so fixed() and propagate() are not meaningful.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert len(s.levels) > 1
+    raises(ValueError, lambda: s.fixed(1))
+    raises(ValueError, lambda: s.propagate())
+
+    # A variable the solver does not have cannot be introduced.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    raises(ValueError, lambda: s.add(3))
+    raises(ValueError, lambda: s.clause(-1, 3))
+
+
+def test_satsolver_add_clause():
+    # A clause is built one literal at a time and added by a final 0.
+    s = SATSolver([{1}], {1, 2}, set())
+    s.add(-1)
+    s.add(2)
+    s.add(0)
+    assert s.propagate() == IpasirStatus.SATISFIABLE
+    assert (s.fixed(1), s.fixed(2)) == (1, 1)
+
+    # clause() takes the literals one by one or as a single iterable.
+    s = SATSolver([{1}], {1, 2}, set())
+    s.clause(-1, 2)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+
+    s = SATSolver([{1}], {1, 2}, set())
+    s.clause({-1, 2})
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+
+    # A solver that already searched can be given clauses and search again.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    s.clause(-1)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(1) == -1
+    assert s.val(2) == 2
+
+    # An unsatisfiable solver stays unsatisfiable.
+    s.clause(-2)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+    s.clause(1, 2)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # A clause falsified by the literals fixed at the root level conflicts,
+    # and one with a single literal left over propagates it.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    assert s.propagate() == IpasirStatus.SATISFIABLE
+    s.clause(-2)
+    assert s.propagate() == IpasirStatus.UNSATISFIABLE
+
+    s = SATSolver([{1}], {1, 2, 3}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    s.clause(-1, -2, 3)
+    s.clause(2)
+    assert s.propagate() == IpasirStatus.SATISFIABLE
+    assert s.fixed(3) == 1
+
+    # The empty clause is false.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.clause()
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+
+def test_satsolver_copy():
+    # The copy has the state of the original without sharing it.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+
+    temporary = s.copy()
+    assert (temporary.fixed(1), temporary.fixed(2)) == (1, 1)
+
+    # Clauses added to the copy say nothing about the original.
+    temporary.clause(-2)
+    assert temporary.solve() == IpasirStatus.UNSATISFIABLE
+    assert s.fixed(2) == 1
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(2) == 2
+
+    # The copy of a solved solver searches again, the original keeps its model.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    model = (s.val(1), s.val(2))
+
+    temporary = s.copy()
+    temporary.clause(-1)
+    temporary.clause(-2)
+    assert temporary.solve() == IpasirStatus.UNSATISFIABLE
+    assert (s.val(1), s.val(2)) == model
+
+    # The clauses of the original are left alone too.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    temporary = s.copy()
+    temporary.clause(-1, -2)
+    assert temporary.solve() == IpasirStatus.SATISFIABLE
+    assert s.clauses == [[1, 2]]
+    assert s.solve() == IpasirStatus.SATISFIABLE
+
+
+def test_satsolver_add_clause_random():
+    # Adding clauses to a solver that has already searched and then searching
+    # again has to agree with checking every assignment by hand.
+    for _ in range(150):
+        num_vars = randint(2, 6)
+        variables = set(range(1, num_vars + 1))
+        clauses = [{randint(1, num_vars) * choice([-1, 1])
+                    for _ in range(randint(1, 3))}
+                   for _ in range(randint(1, 3))]
+
+        solver = SATSolver(clauses, variables, set())
+
+        for _ in range(12):
+            satisfiable = any(
+                all(any((lit > 0) == assignment[abs(lit) - 1] for lit in clause)
+                    for clause in clauses)
+                for assignment in product([False, True], repeat=num_vars))
+
+            assert (solver.solve() == IpasirStatus.SATISFIABLE) == satisfiable
+
+            if satisfiable:
+                # The model has to assign every variable and satisfy every
+                # clause the solver has been given so far.
+                for var in variables:
+                    assert solver.val(var) in (var, -var)
+                for clause in clauses:
+                    assert any(solver.val(lit) == lit for lit in clause)
+
+            new_clause = {randint(1, num_vars) * choice([-1, 1])
+                          for _ in range(randint(1, 3))}
+            clauses.append(new_clause)
+            solver.clause(new_clause)
 
 
 def test_minisat22_satisfiable():

@@ -4,19 +4,31 @@ Features:
   - Clause learning
   - Watch literal scheme
   - VSIDS heuristic
+  - IPASIR style interface for incremental solving
 
 References:
   - https://en.wikipedia.org/wiki/DPLL_algorithm
+  - https://satcompetition.github.io/2020/track_incremental.html
 """
 from __future__ import annotations
 
 from collections import defaultdict
+from copy import deepcopy
+from enum import Enum
 from heapq import heappush, heappop
 
 from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
 from sympy.logic.algorithms.lra_theory import LRASolver
+
+
+class IpasirStatus(Enum):
+    # Status codes used by the IPASIR style interface of SATSolver. The values are
+    # the ones mandated by the IPASIR standard for ``ipasir_solve``.
+    UNKNOWN = 0
+    SATISFIABLE = 10
+    UNSATISFIABLE = 20
 
 
 def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
@@ -143,6 +155,13 @@ class SATSolver:
         self.num_decisions = 0
         self.num_learned_clauses = 0
         self.original_num_clauses = len(self.clauses)
+
+        self.lra = lra_theory
+
+        # State of the IPASIR style interface
+        self._status = IpasirStatus.UNKNOWN
+        self._models = None
+        self._clause_buffer = []
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -294,6 +313,223 @@ class SATSolver:
                 self._undo()
                 self._create_level(flip_lit, flipped=True)
                 flip_var = True
+
+    ###############################
+    #    IPASIR Style Interface   #
+    ###############################
+
+    # The following code is not implemented fully, there are
+    # a lot of things that can be added to the Interface. This is
+    # the most minimalistic version of it. Add new required features as TODO.
+
+    """
+    A subset of the IPASIR standard for incremental SAT solving, using the
+    names that CaDiCaL gives them in its C++ API. Only the parts needed to
+    inspect the root level before searching and to keep solving after new
+    clauses have been added are implemented so far; assumptions and
+    ``failed`` are not supported yet.
+
+    # https://github.com/arminbiere/cadical/blob/master/src/cadical.hpp
+    """
+    def propagate(self):
+        """Propagate the unit clauses at the root level, deciding nothing.
+
+        Returns ``UNSATISFIABLE`` on a conflict, ``SATISFIABLE`` if it leaves
+        no variable unassigned, and ``UNKNOWN`` otherwise.
+
+        TODO: IPASIR propagates at any decision level, while this is limited
+        to the root, and a solver with an LRA theory always gets ``UNKNOWN``
+        since the theory is only checked by ``solve()``.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
+        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+        >>> l.propagate() == IpasirStatus.SATISFIABLE
+        True
+        >>> l.fixed(2)
+        1
+
+        """
+        if len(self.levels) > 1:
+            raise ValueError("propagate() can only be used at the root level.")
+
+        self._simplify()
+        if self.is_unsatisfied:
+            self._status = IpasirStatus.UNSATISFIABLE
+        elif self.lra is None and all(self.variable_set[1:]):
+            # Nothing is left to decide on, so the assignments are a model.
+            self._status = IpasirStatus.SATISFIABLE
+
+        return self._status
+
+    def fixed(self, lit):
+        """Return 1 if *lit* is implied by the clauses, -1 if ``-lit`` is
+        implied, and 0 if neither is known yet.
+
+        TODO: IPASIR answers this at any decision level, which needs the root
+        level assignments to be kept apart from those a decision implies.
+
+        """
+        if len(self.levels) > 1:
+            raise ValueError("fixed() is only defined at the root level.")
+
+        if lit in self.var_settings:
+            return 1
+        if -lit in self.var_settings:
+            return -1
+        return 0
+
+    def solve(self):
+        """Search for a model, reusing the work ``propagate()`` already did,
+        and return ``SATISFIABLE`` or ``UNSATISFIABLE``.
+
+        """
+        if self._models is not None:
+            raise ValueError("solve() can only be called again once new "
+                "clauses have been added with add() or clause(), as "
+                "restarting the same search is not implemented yet.")
+
+        self._models = self._find_model()
+        if next(self._models, None) is None:
+            self._status = IpasirStatus.UNSATISFIABLE
+        else:
+            self._status = IpasirStatus.SATISFIABLE
+
+        return self._status
+
+    def val(self, lit):
+        """Return *lit* if it is true in the model found by ``solve()``,
+        ``-lit`` if it is false there, and 0 if the model does not assign it.
+
+        """
+        if self._status != IpasirStatus.SATISFIABLE:
+            raise ValueError("val() is only defined once solve() has returned "
+                "SATISFIABLE.")
+
+        if lit in self.var_settings:
+            return lit
+        if -lit in self.var_settings:
+            return -lit
+        return 0
+
+    def add(self, lit):
+        """Add *lit* to the clause being built, or add that clause to the
+        solver when *lit* is 0.
+
+        The search restarts from the root level, so ``solve()`` may be called
+        again, and an unsatisfiable solver stays unsatisfiable.
+
+        TODO: only literals of the variables the solver was created with can
+        be added, as there is no way to introduce a new variable yet.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
+        >>> l = SATSolver([{1, 2}], {1, 2}, set())
+        >>> l.solve() == IpasirStatus.SATISFIABLE
+        True
+        >>> l.add(-1)
+        >>> l.add(0)
+        >>> l.solve() == IpasirStatus.SATISFIABLE
+        True
+        >>> l.val(1)
+        -1
+
+        """
+        if lit != 0:
+            if abs(lit) >= len(self.variable_set):
+                raise ValueError("%s is not a literal of one of the variables "
+                    "the solver was created with." % lit)
+
+            self._clause_buffer.append(lit)
+            return
+
+        clause_to_add = self._clause_buffer
+        self._clause_buffer = []
+
+        # The decisions were made without this clause, so the search restarts.
+        while len(self.levels) > 1:
+            self._undo()
+
+        self._models = None
+        if self._status == IpasirStatus.SATISFIABLE:
+            self._status = IpasirStatus.UNKNOWN
+
+        clause_num = len(self.clauses)
+        self.clauses.append(clause_to_add)
+
+        for clause_lit in clause_to_add:
+            self.occurrence_count[clause_lit] += 1
+
+        # Only a literal that is not already false can be a sentinel. With
+        # fewer than two of those the clause is satisfied, unit, or false, and
+        # none of those needs to be watched.
+        unassigned = [clause_lit for clause_lit in clause_to_add
+                      if not self.variable_set[abs(clause_lit)]]
+
+        if len(unassigned) > 1:
+            self.sentinels[unassigned[0]].add(clause_num)
+            self.sentinels[unassigned[-1]].add(clause_num)
+        elif not any(clause_lit in self.var_settings
+                     for clause_lit in clause_to_add):
+            if unassigned:
+                self._unit_prop_queue.append(unassigned[0])
+            else:
+                self.is_unsatisfied = True
+                self._status = IpasirStatus.UNSATISFIABLE
+
+    def clause(self, *lits):
+        """Add the clause made up of *lits*, given one by one or as a single
+        iterable, which covers the ``clause`` overloads of CaDiCaL.
+
+        Without any literal it adds the empty clause, which is false.
+
+        """
+        if len(lits) == 1 and not isinstance(lits[0], int):
+            lits = lits[0]
+
+        for lit in lits:
+            self.add(lit)
+
+        # Zero is never a literal, which is why IPASIR uses it to mark the
+        # end of a clause rather than passing a length around.
+        self.add(0)
+
+    def copy(self):
+        """Return an independent solver with the same clauses and state, so
+        that adding clauses to it or searching with it changes nothing here.
+
+        Unlike ``copy`` in CaDiCaL this returns a new solver and copies the
+        state of the search along with the formula.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
+        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+        >>> temporary = l.copy()
+        >>> temporary.clause(-2)
+        >>> temporary.solve() == IpasirStatus.UNSATISFIABLE
+        True
+        >>> l.solve() == IpasirStatus.SATISFIABLE
+        True
+
+        """
+        # A generator cannot be copied, and the symbols are only ever read.
+        models, symbols = self._models, self.symbols
+        self._models, self.symbols = None, None
+
+        try:
+            other = deepcopy(self)
+        finally:
+            self._models, self.symbols = models, symbols
+
+        other.symbols = symbols
+
+        return other
 
     ########################
     #    Helper Methods    #

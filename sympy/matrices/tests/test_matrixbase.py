@@ -3512,11 +3512,16 @@ def test_17522_mpmath():
 def test_17522_scipy():
     from sympy.matrices.common import _matrixify
     try:
-        from scipy.sparse import csr_matrix
+        from scipy.sparse import csr_array, csr_matrix
     except ImportError:
-        skip('SciPy must be available to test indexing matrixified SciPy sparse matrices')
+        skip('SciPy must be available to test indexing matrixified SciPy sparse arrays and matrices')
 
-    m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
+    m = _matrixify(csr_array([[1, 2], [3, 4]]))
+    assert m[3] == 4
+    assert list(m) == [1, 2, 3, 4]
+
+    with ignore_warnings(DeprecationWarning):
+        m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 
