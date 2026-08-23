@@ -333,7 +333,7 @@ class EUFCongruenceClosure:
         rhs_id = self._flatten(rhs)
         return self._find_repr(lhs_id) == self._find_repr(rhs_id)
 
-    # ------ classical explain()
+    # classical explain()
 
     def _insert_pf_edge(self, a, b, label):
         """
@@ -349,7 +349,7 @@ class EUFCongruenceClosure:
             path.append((cursor, self.pf_parent[cursor], self.pf_label[cursor]))
             cursor = self.pf_parent[cursor]
 
-        # reverse the path, self explanators
+        # reverse the path
         for child, parent, path_label in path:
             self.pf_parent[parent] = child
             self.pf_label[parent] = path_label
@@ -362,7 +362,7 @@ class EUFCongruenceClosure:
     def _highest_node(self, a):
         """
         Return the highest node among all the nodes of the proof tree in the class of a.
-        I.e return the node that is closes to root.
+        I.e return the node that is closest to root.
         """
         parent = self._aux_parent
         root = a
@@ -428,7 +428,7 @@ class EUFCongruenceClosure:
             self._explain_along_path(x, c, output, pending_proofs)
             self._explain_along_path(y, c, output, pending_proofs)
 
-    # ----------- greedy algorithm
+    # greedy algorithm
 
     def _insert_cgraph_edge(self, a, b, label, level=None):
         """
@@ -567,7 +567,8 @@ class EUFCongruenceClosure:
         """
         Method discussed in [2] no paper clearly discusses this though.
         Compute the shortest weighted path from a to b in the c-graph.
-        TODO: add more docs
+        TODO: add more docs, this is djiksta's algorithm and claude
+        was used heavily here, probably should triple check this for correctness
         """
         distance = {a: 0}
         predecessor = {}
@@ -602,7 +603,8 @@ class EUFCongruenceClosure:
             path.append(label)
         return path
 
-    # ----------- backtracking
+    # backtracking
+    # this is the simplest backtracking possible
 
     def _rebuild(self):
         """
@@ -640,9 +642,11 @@ class EUFCongruenceClosure:
         """
         Retract the last n asserted equations.
 
-        TODO: Currently this just rebuilds the CC from scratch. The sources
+        TODO: Currently this just rebuilds the CC. The sources
         used in this file did not have proper backtracking information, and I am
         not even sure if it existed it would be faster than this kind of backtracking?
+
+        This should be usable for backjumping in CDCL(X)
 
         Examples
         --------
