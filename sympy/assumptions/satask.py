@@ -73,10 +73,26 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
 
 
 def check_satisfiability(prop, _prop, factbase):
-    # Run `propogate()` on the assumptions
-    solver = SATSolver(factbase.data, factbase.variables, set(), factbase.symbols)
+    sat_true = factbase.copy()
+    sat_true.data = []
+    sat_true.add_from_cnf(prop)
+
+    sat_false = sat_true.copy()
+    sat_false.data = []
+    sat_false.add_from_cnf(_prop)
+
+    # The propositions only go in once the facts have had their say, so a
+    # question the facts alone settle never pays for them.
+    selector = len(sat_false.encoding) + 1
+    solver = SATSolver(factbase.data, range(1, selector + 1), set(), sat_false.symbols + [selector])
+
+    # EncodedCNF encodes False as the literal 0, which the solver cannot see
+    # as false.
+    if {0} in factbase.data:
+        raise ValueError("Inconsistent assumptions")
+
     if solver.propagate() == IpasirStatus.UNSATISFIABLE:
-        raise ValueError("Inconsistent Assumptions")
+        raise ValueError("Inconsistent assumptions")
 
     # Check whether proposition is entailed by any of the assigned literals.
     for clauses, answer in ((prop.clauses, True), (_prop.clauses, False)):
@@ -85,10 +101,9 @@ def check_satisfiability(prop, _prop, factbase):
             satisfied = False # Flag to check if the clause can be satisfied
             all_lits_false = True # Flag to track if all literals in a clause are false
             for lit in clause:
-                # fixed() takes an int in this factbase's numbering, not a
-                # Literal. Predicates it never encoded cannot have been fixed.
-                # For example `Q.gt` and other relational predicate.
-                var = factbase.encoding.get(lit.lit)
+                # fixed() takes an int in this solver's numbering, not a
+                # Literal, and the False literal has no variable of its own.
+                var = sat_false.encoding.get(lit.lit)
                 if var is None:
                     lit_is_implied = 0
                 else:
@@ -113,45 +128,22 @@ def check_satisfiability(prop, _prop, factbase):
             # If everything works out, just return answer
             return answer
 
+    # Dropping the 0 leaves a side nothing can satisfy as the unit {guard}.
+    for side, guard in ((sat_true, -selector), (sat_false, selector)):
+        for clause in side.data:
+            solver.clause((clause - {0}) | {guard})
+
     # Continue on the propogated solver, just call solve() on it.
     if solver.solve() == IpasirStatus.UNSATISFIABLE:
         raise ValueError("Inconsistent assumptions")
 
-    # This model satisfies the factbase, so it witness one of the two
-    # searches below: whichever of prop and _prop it satisfies.
-    # Whichever it satisfies, we just need to build a solver for the other side.
-    prop_in_model = True
-    for clause in prop.clauses:
-        unknown_lit = False
-        for lit in clause:
-            var = factbase.encoding.get(lit.lit)
-            if var is None:
-                unknown_lit = True
-                continue
-            value = -var if lit.is_Not else var
-            if solver.val(value) == value:
-                break
-        else:
-            prop_in_model = None if unknown_lit else False
-            break
+    # The model settles the side it activated, so ask about the other one.
+    witnessed = solver.val(selector)
+    solver.assume(-witnessed)
+    other = solver.solve() == IpasirStatus.SATISFIABLE
 
-    sat_true = factbase.copy()
-    sat_false = factbase.copy()
-    sat_true.add_from_cnf(prop)
-    sat_false.add_from_cnf(_prop)
-
-    # Search only for the side the witness which is remaining
-    # Build the solver for that side
-    can_be_true = prop_in_model == True
-    can_be_false = prop_in_model == False
-
-    if not can_be_true and {0} not in sat_true.data:
-        true_solver = SATSolver(sat_true.data, sat_true.variables, set(), sat_true.symbols)
-        can_be_true = true_solver.solve() == IpasirStatus.SATISFIABLE
-
-    if not can_be_false and {0} not in sat_false.data:
-        false_solver = SATSolver(sat_false.data, sat_false.variables, set(), sat_false.symbols)
-        can_be_false = false_solver.solve() == IpasirStatus.SATISFIABLE
+    can_be_true = witnessed > 0 or other
+    can_be_false = witnessed < 0 or other
 
     if can_be_true and can_be_false:
         return None
