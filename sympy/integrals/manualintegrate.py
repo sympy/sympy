@@ -2217,12 +2217,12 @@ def bioche_substitution(integral):
             (expr_sc.xreplace({s: z*c}), {c: (1 + z**2)**-1}, {}, tan(phase), Eq(cos(phase), 0)),
         )
 
-        for candidate, squares, replacements, phase_value, condition in phase_methods:
+        for candidate, squares, replacements, phase_value, phase_condition in phase_methods:
             transformed = rewrite_even(candidate, squares, replacements)
             if transformed is not None:
                 expr_u = transformed
                 phase_substitution = {z: phase_value}
-                singular_condition = condition
+                singular_condition = phase_condition
                 break
         else:
             # Fall back to the universal tangent half-angle parametrization
