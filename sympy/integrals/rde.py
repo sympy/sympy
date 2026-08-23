@@ -274,8 +274,6 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     This is ``RdeSpecialDenomExp`` and ``RdeSpecialDenomTan`` from Section
     6.2 of Bronstein's book.
     """
-    # TODO: finish writing this and write tests
-
     if case == 'auto':
         case = DE.case
 
@@ -340,8 +338,6 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     ``RdeBoundDegreeExp``, and ``RdeBoundDegreeNonLinear`` from Section 6.3
     of Bronstein's book (and their parametric analogues from Section 7.1).
     """
-    # TODO: finish writing this and write tests
-
     if case == 'auto':
         case = DE.case
 
@@ -398,7 +394,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                 if A is not None:
                     aa, z = A
                     if aa == 1:
-                        beta = -(a*derivation(z, DE).as_poly(t1) +
+                        beta = -(a*derivation(z, DE, basic=True).as_poly(t1) +
                             b*z.as_poly(t1)).LC()/(z.as_expr()*a.LC())
                         betaa, betad = frac_in(beta, DE.t)
                         from .prde import limited_integrate
@@ -473,10 +469,15 @@ def spde(a, b, c, n, DE):
     alpha = Poly(1, DE.t)
     beta = Poly(0, DE.t)
 
+    # Generous pass allowance for n == oo (see below); any solution of
+    # degree d is found within about d/deg(a) passes, so this only
+    # defers solutions of very high degree to an honest error.
+    oo_passes = 4*(a.degree(DE.t) + b.degree(DE.t) + c.degree(DE.t) + 4)
+
     while True:
         if c.is_zero:
             return (zero, zero, 0, zero, beta)  # -1 is more to the point
-        if (n < 0) is True:
+        if (n < 0) == True:
             raise NonElementaryIntegralException("n became negative in "
                 "spde().")
 
@@ -491,6 +492,22 @@ def spde(a, b, c, n, DE):
             b = b.to_field().quo(a)
             c = c.to_field().quo(a)
             return (b, c, n, alpha, beta)
+
+        if n is oo:
+            # Each pass through the reduction below decreases n by
+            # deg(a) > 0 and "no solution" is detected by n < 0, so with
+            # no degree bound the loop can run forever when there is no
+            # solution (e.g. a == t, b == 1, c == x over t == exp(x):
+            # gcd(a, b) == 1 stays trivial, c cycles through nonzero
+            # constants, and no other exit is ever taken).  Allow a
+            # generous number of passes (solvable cases terminate
+            # quickly, with c becoming zero), then give up with an
+            # honest error -- NotImplementedError, not a nonexistence
+            # claim.
+            oo_passes -= 1
+            if oo_passes < 0:
+                raise NotImplementedError("spde() ran out of passes with "
+                    "an infinite degree bound; cannot decide solvability.")
 
         r, z = gcdex_diophantine(b, a, c)
         b += derivation(a, DE)
@@ -545,9 +562,9 @@ def no_cancel_b_small(b, c, n, DE):
     deg(D) >= 2, either raise NonElementaryIntegralException, in which case the
     equation Dq + b*q == c has no solution of degree at most n in k[t],
     or a solution q in k[t] of this equation with deg(q) <= n, or the
-    tuple (h, b0, c0) such that h in k[t], b0, c0, in k, and for any
-    solution q in k[t] of degree at most n of Dq + bq == c, y == q - h
-    is a solution in k of Dy + b0*y == c0.
+    tuple (h, b0, c0) such that h in k[t], b0, c0, in k (as constant
+    polynomials in t), and for any solution q in k[t] of degree at most n
+    of Dq + bq == c, y == q - h is a solution in k of Dy + b0*y == c0.
 
     This is ``PolyRischDENoCancel2`` from Section 6.5 of Bronstein's book.
     """
@@ -571,8 +588,7 @@ def no_cancel_b_small(b, c, n, DE):
                 raise NonElementaryIntegralException("deg(b) != deg(c) in "
                     "the m == 0 case of no_cancel_b_small().")
             if b.degree(DE.t) == 0:
-                return (q, b.as_poly(DE.T[DE.level - 1]),
-                    c.as_poly(DE.T[DE.level - 1]))
+                return (q, b, c)
             p = Poly(c.as_poly(DE.t).LC()/b.as_poly(DE.t).LC(), DE.t,
                 expand=False)
 
@@ -604,7 +620,10 @@ def no_cancel_equal(b, c, n, DE):
     """
     q = Poly(0, DE.t)
     lc = cancel(-b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC())
-    if lc.is_Integer and lc.is_positive:
+    # A cancellation degree above the bound n is unattainable
+    # (solutions have degree at most n), so treat it like a
+    # noninteger ratio: no cancellation at any reachable degree.
+    if lc.is_Integer and lc.is_positive and lc <= n:
         M = lc
     else:
         M = -1
@@ -652,19 +671,35 @@ def cancel_primitive(b, c, n, DE):
     This is ``PolyRischDECancelPrim`` from Section 6.6 of Bronstein's book.
     """
     # Delayed imports
-    from .prde import is_log_deriv_k_t_radical_in_field
+    from .prde import is_log_deriv_k_t_radical_in_field, is_deriv_in_field
     with DecrementLevel(DE):
         ba, bd = frac_in(b, DE.t)
         A = is_log_deriv_k_t_radical_in_field(ba, bd, DE)
-        if A is not None:
-            m, z = A
-            if m == 1:  # b == Dz/z
-                raise NotImplementedError("is_deriv_in_field() is required to "
-                    " solve this problem.")
-                # if z*c == Dp for p in k[t] and deg(p) <= n:
-                #     return p/z
-                # else:
-                #     raise NonElementaryIntegralException
+
+    if A is not None:
+        m, z = A
+        if m == 1:  # b == Dz/z
+            # D(z*q) == z*(Dq + b*q), so q solves Dq + b*q == c iff
+            # p == z*q satisfies Dp == z*c.  So find an antiderivative
+            # p in k[t] of z*c with deg(p) <= n, and return q == p/z.
+            zca, zcd = frac_in(z*c.as_expr(), DE.t, cancel=True)
+            B = is_deriv_in_field(zca, zcd, DE)
+            if B is None:
+                raise NonElementaryIntegralException("z*c is not the "
+                    "derivative of an element of k(t) in cancel_primitive().")
+            pa, pd = B
+            # For a primitive t, an antiderivative in k(t) of an element
+            # of k[t] is itself in k[t] (it can have no poles), and any
+            # additive constant keeps q == p/z in k[t], so any choice of
+            # p will do.
+            q = cancel(pa.as_expr()/(pd.as_expr()*z)).as_poly(DE.t)
+            if q is None:
+                raise NonElementaryIntegralException("p/z is not in k[t] "
+                    "in cancel_primitive().")
+            if q.degree(DE.t) > n:
+                raise NonElementaryIntegralException("deg(p/z) > n in "
+                    "cancel_primitive().")
+            return q
 
     if c.is_zero:
         return c  # return 0
@@ -705,23 +740,54 @@ def cancel_exp(b, c, n, DE):
 
     This is ``PolyRischDECancelExp`` from Section 6.6 of Bronstein's book.
     """
-    from .prde import parametric_log_deriv
+    from .prde import parametric_log_deriv, is_deriv_in_field
     eta = DE.d.quo(Poly(DE.t, DE.t)).as_expr()
 
     with DecrementLevel(DE):
         etaa, etad = frac_in(eta, DE.t)
         ba, bd = frac_in(b, DE.t)
         A = parametric_log_deriv(ba, bd, etaa, etad, DE)
-        if A is not None:
-            a, m, z = A
-            if a == 1:
-                raise NotImplementedError("is_deriv_in_field() is required to "
-                    "solve this problem.")
-                # if c*z*t**m == Dp for p in k<t> and q = p/(z*t**m) in k[t] and
-                # deg(q) <= n:
-                #     return q
-                # else:
-                #     raise NonElementaryIntegralException
+
+    if A is not None:
+        a, m, z = A
+        if a == 1:
+            # b == Dz/z + m*Dt/t, so D(z*t**m*q) == z*t**m*(Dq + b*q).
+            # Hence q solves Dq + b*q == c iff p == z*t**m*q satisfies
+            # Dp == z*t**m*c.  So find an antiderivative p in k<t> of
+            # z*t**m*c; then q == p/(z*t**m) must be in k[t] with
+            # deg(q) <= n.
+            pa, pd = frac_in(z*DE.t**m*c.as_expr(), DE.t, cancel=True)
+            B = is_deriv_in_field(pa, pd, DE)
+            if B is None:
+                raise NonElementaryIntegralException("z*t**m*c is not the "
+                    "derivative of an element of k(t) in cancel_exp().")
+            va, vd = B
+            p = cancel(va.as_expr()/vd.as_expr())
+            if m > 0:
+                # p is determined only up to an additive constant.  For
+                # m > 0 the true p == z*t**m*q has no t-free term (all its
+                # monomials have degree >= m), while a constant term would
+                # make p/(z*t**m) non-polynomial, so remove it.
+                p -= p.subs(DE.t, 0)
+            # For m <= 0 any additive constant C leaves q in k[t]
+            # (C/(z*t**m) == C*t**(-m)/z), and q + C*t**(-m)/z is still a
+            # solution, since t**(-m)/z solves the homogeneous equation.
+            q = cancel(p/(z*DE.t**m)).as_poly(DE.t)
+            if q is None:
+                raise NonElementaryIntegralException("p/(z*t**m) is not in "
+                    "k[t] in cancel_exp().")
+            if q.degree(DE.t) > n:
+                if m < 0 and q.degree(DE.t) == -m and \
+                        not cancel(z*q.nth(-m)).has(*DE.T):
+                    # The homogeneous solutions are C*t**(-m)/z for
+                    # constants C, so the t**(-m) coefficient of q is
+                    # adjustable by the constant of integration exactly
+                    # when it is C/z for a constant C.
+                    q = q - Poly(q.nth(-m)*DE.t**(-m), DE.t)
+                if q.degree(DE.t) > n:
+                    raise NonElementaryIntegralException("deg(p/(z*t**m)) "
+                        "> n in cancel_exp().")
+            return q
 
     if c.is_zero:
         return c  # return 0
@@ -753,65 +819,183 @@ def cancel_exp(b, c, n, DE):
     return q
 
 
-def solve_poly_rde(b, cQ, n, DE, parametric=False):
+def cancel_tan(b0, c, n, DE):
+    """
+    Poly Risch Differential Equation - Cancellation: Tangent case.
+
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], an integer ``n >= 0``, ``b0`` in k, and
+    ``c`` in k[t] with Dt/(t**2 + 1) == eta in k and sqrt(-1) not in
+    k(t), either raise NonElementaryIntegralException, in which case
+    the equation Dq + (b0 - n*eta*t)*q == c has no solution of degree
+    at most n in k[t], or return a solution q in k[t] of this equation
+    with deg(q) <= n.  ``b0`` is a Poly in DE.t (of degree 0).
+
+    Unlike in the primitive and hyperexponential cases, ``n`` must be
+    a finite integer: it appears in the equation itself, and the
+    recursion descends from n by 2 to 0.  The callers get n from
+    bound_degree(), which is always finite in the nonlinear case.
+
+    This is ``PolyRischDECancelTan`` from Section 6.6 of Bronstein's
+    book.  The book's pseudocode returns u + v*t unverified when
+    n == 1; since the t**2 coefficient of Dq + (b0 - eta*t)*q
+    vanishes identically for deg(q) <= 1, a right hand side with a
+    nonzero t**2 coefficient has no solution while the projected
+    coupled system may well be solvable, so the unverified return can
+    produce a wrong answer (e.g. b0 == 1, c == t**2 + 1 returns
+    q == 0).  Here n == 1 runs through the same reduction as n >= 2,
+    and the recursion (at n == -1) verifies that the residual is
+    exactly zero.
+    """
+    # Delayed imports: cde and prde import this module at the module
+    # level.
+    from .cde import coupled_DE_system
+    from .prde import is_deriv_in_field
+
+    if n == oo:
+        raise ValueError("n must be a finite integer in cancel_tan().")
+    if n < 0:
+        if c.is_zero:
+            return c  # return 0
+        raise NonElementaryIntegralException("n < 0 and c != 0 in "
+            "cancel_tan().")
+
+    if n == 0:
+        if c.degree(DE.t) > 0:
+            raise NonElementaryIntegralException("deg(c) > 0 == n in "
+                "cancel_tan().")
+        if b0.is_zero:
+            # Dq == c with q, c in k: in-field integration in k.
+            with DecrementLevel(DE):
+                ca, cd = frac_in(c.nth(0), DE.t)
+                B = is_deriv_in_field(ca, cd, DE)
+                if B is None:
+                    raise NonElementaryIntegralException("c is not the "
+                        "derivative of an element of k in cancel_tan().")
+                va, vd = B
+                q = va.as_expr()/vd.as_expr()
+            return Poly(q, DE.t)
+        with DecrementLevel(DE):
+            b0a, b0d = frac_in(b0.as_expr(), DE.t)
+            ca, cd = frac_in(c.nth(0), DE.t)
+            sa, sd = rischDE(b0a, b0d, ca, cd, DE)
+            s = sa.as_expr()/sd.as_expr()
+        return Poly(s, DE.t)
+
+    eta = DE.d.exquo(Poly(DE.t**2 + 1, DE.t)).as_expr()
+    p = Poly(DE.t**2 + 1, DE.t)
+
+    # Project mod t - sqrt(-1) (evaluate at t == sqrt(-1)): with
+    # c1*t + c0 the remainder of c by p, the constant coefficients
+    # (u, v) of any solution q == u + v*t + p*h satisfy the coupled
+    # system Du + b0*u + n*eta*v == c0, Dv - n*eta*u + b0*v == c1
+    # over k.
+    _, rem = c.div(p)
+    c0, c1 = rem.nth(0), rem.nth(1)
+    with DecrementLevel(DE):
+        u, v = coupled_DE_system(frac_in(b0.as_expr(), DE.t),
+            frac_in(-n*eta, DE.t), frac_in(c0, DE.t), frac_in(c1, DE.t),
+            DE)
+        ue = u[0].as_expr()/u[1].as_expr()
+        ve = v[0].as_expr()/v[1].as_expr()
+    r = Poly(ue + ve*DE.t, DE.t)
+    b = Poly(b0.as_expr() - n*eta*DE.t, DE.t)
+    # h == (q - r)/p solves the same kind of equation with the same
+    # b0 and a degree bound of n - 2 (b + Dp/p == b0 - (n - 2)*eta*t),
+    # and its right hand side is an exact quotient by construction.
+    cnew = (c - derivation(r, DE) - b*r).exquo(p)
+    h = cancel_tan(b0, cnew, n - 2, DE)
+    return p*h + r
+
+
+def _no_cancel_equal_applies(b, n, DE):
+    """
+    Whether no_cancel_equal() decides the deg(b) == deg(Dt) - 1 case.
+
+    Explanation
+    ===========
+
+    Cancellation is only possible at deg(q) == -lc(b)/lc(Dt), so the
+    cancellation algorithms take over exactly when that ratio is a
+    positive integer equal to the degree bound n (when n exceeds the
+    ratio, no_cancel_equal() strips the degrees above it and hands
+    off at the ratio; when n is below it, or the ratio is not a
+    positive integer at all — including non-real numeric ratios,
+    which admit no ordered comparison — the cancellation degree is
+    unattainable and no_cancel_equal() decides the equation, ignoring
+    it).  The ratio is computed after cancellation: the Poly leading
+    coefficients are expanded forms whose quotient does not
+    auto-simplify (e.g. (2*x + 2)/(x + 1)).  A nonconstant ratio
+    never equals an integer degree, so no cancellation occurs at any
+    degree — but that must hold under every specialization of any
+    parameters of the constant field, since a parameter-dependent
+    cancellation degree would make no_cancel_equal()'s divisions only
+    generically valid.  This is automatic for a ratio free of
+    parameters, and a parameter-mixed ratio is accepted when its
+    denominator is free of the tower variables and its numerator has
+    a positive-degree monomial in them with a (nonzero) numeric
+    coefficient, which survives every specialization; other
+    parameter-dependent ratios are refused.
+    """
+    ratio = cancel(-b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC())
+    if ratio.is_number:
+        return not (ratio.is_Integer and ratio.is_positive) or n != ratio
+    if ratio.free_symbols <= set(DE.T):
+        return True
+    num, den = ratio.as_numer_denom()
+    if not den.has(*DE.T):
+        nump = num.as_poly(*DE.T)
+        if nump is not None and any(coeff.is_number
+                for monom, coeff in nump.terms() if any(monom)):
+            return True
+    raise TypeError("-lc(b)/lc(Dt) must be a number or an element of k "
+        "that stays nonconstant under every specialization of the "
+        "parameters in solve_poly_rde().")
+
+
+def solve_poly_rde(b, c, n, DE):
     """
     Solve a Polynomial Risch Differential Equation with degree bound ``n``.
 
     This constitutes step 4 of the outline given in the rde.py docstring.
 
-    For parametric=False, cQ is c, a Poly; for parametric=True, cQ is Q ==
-    [q1, ..., qm], a list of Polys.
-
     This dispatches among the algorithms of Sections 6.5 and 6.6 of
-    Bronstein's book (and their parametric analogues from Section 7.1); it
-    has no single named counterpart.
+    Bronstein's book; it has no single named counterpart.  The parametric
+    analogue of this dispatch is param_poly_rischDE() in prde.py.
     """
     # No cancellation
     if not b.is_zero and (DE.case == 'base' or
             b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
 
-        if parametric:
-            # Delayed imports
-            from .prde import prde_no_cancel_b_large
-            return prde_no_cancel_b_large(b, cQ, n, DE)
-        return no_cancel_b_large(b, cQ, n, DE)
+        return no_cancel_b_large(b, c, n, DE)
 
     elif (b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1) and \
             (DE.case == 'base' or DE.d.degree(DE.t) >= 2):
 
-        if parametric:
-            from .prde import prde_no_cancel_b_small
-            return prde_no_cancel_b_small(b, cQ, n, DE)
-
-        R = no_cancel_b_small(b, cQ, n, DE)
+        R = no_cancel_b_small(b, c, n, DE)
 
         if isinstance(R, Poly):
             return R
         else:
-            # XXX: Might k be a field? (pg. 209)
+            # The solution y in k of Dy + b0*y == c0 (pg. 209): k is a
+            # field, so this is a Risch differential equation over k, or
+            # the equation b0*y == c0 if k is the constant field
             h, b0, c0 = R
+            if DE.case == 'base':
+                return h + Poly(c0.as_expr()/b0.as_expr(), DE.t)
             with DecrementLevel(DE):
-                b0, c0 = b0.as_poly(DE.t), c0.as_poly(DE.t)
-                if b0 is None:  # See above comment
-                    raise ValueError("b0 should be a non-Null value")
-                if c0 is  None:
-                    raise ValueError("c0 should be a non-Null value")
-                y = solve_poly_rde(b0, c0, n, DE).as_poly(DE.t)
-            return h + y
+                ba, bd = frac_in(b0.as_expr(), DE.t)
+                ca, cd = frac_in(c0.as_expr(), DE.t)
+                ya, yd = rischDE(ba, bd, ca, cd, DE)
+                y = ya.as_expr()/yd.as_expr()
+            return h + Poly(y, DE.t)
 
     elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t) - 1 and \
-            n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC():
+            _no_cancel_equal_applies(b, n, DE):
 
-        # TODO: Is this check necessary, and if so, what should it do if it fails?
-        # b comes from the first element returned from spde()
-        if not b.as_poly(DE.t).LC().is_number:
-            raise TypeError("Result should be a number")
-
-        if parametric:
-            raise NotImplementedError("prde_no_cancel_b_equal() is not yet "
-                "implemented.")
-
-        R = no_cancel_equal(b, cQ, n, DE)
+        R = no_cancel_equal(b, c, n, DE)
 
         if isinstance(R, Poly):
             return R
@@ -824,20 +1008,44 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
     else:
         # Cancellation
         if b.is_zero:
-            raise NotImplementedError("Remaining cases for Poly (P)RDE are "
-            "not yet implemented (is_deriv_in_field() required).")
+            # Dq == c: in-field integration (Section 6.6)
+            from .prde import is_deriv_in_field
+            B = is_deriv_in_field(c, Poly(1, DE.t), DE)
+            if B is None:
+                raise NonElementaryIntegralException("c is not the "
+                    "derivative of an element of k(t) in solve_poly_rde().")
+            va, vd = B
+            # For a primitive or hyperexponential t, an antiderivative in
+            # k(t) of an element of k[t] is itself in k[t], and any
+            # additive constant is also in k[t], so any choice of the
+            # antiderivative will do.
+            q = cancel(va.as_expr()/vd.as_expr()).as_poly(DE.t)
+            if q is None:
+                raise NonElementaryIntegralException("The antiderivative "
+                    "of c is not in k[t] in solve_poly_rde().")
+            if q.degree(DE.t) > n:
+                raise NonElementaryIntegralException("The antiderivative "
+                    "of c has degree > n in solve_poly_rde().")
+            return q
         else:
             if DE.case == 'exp':
-                if parametric:
-                    raise NotImplementedError("Parametric RDE cancellation "
-                        "hyperexponential case is not yet implemented.")
-                return cancel_exp(b, cQ, n, DE)
+                return cancel_exp(b, c, n, DE)
 
             elif DE.case == 'primitive':
-                if parametric:
-                    raise NotImplementedError("Parametric RDE cancellation "
-                        "primitive case is not yet implemented.")
-                return cancel_primitive(b, cQ, n, DE)
+                return cancel_primitive(b, c, n, DE)
+
+            elif DE.case == 'tan':
+                # The cancellation case has b == b0 - n*eta*t with
+                # b0 in k, where n is the degree bound (Section 6.6);
+                # the pipeline reaches this branch in that shape via
+                # no_cancel_equal()'s hand-off.
+                eta = DE.d.exquo(Poly(DE.t**2 + 1, DE.t)).as_expr()
+                if n is not oo and b.degree(DE.t) <= 1 and \
+                        cancel(b.nth(1) + n*eta) == 0:
+                    return cancel_tan(Poly(b.nth(0), DE.t), c, n, DE)
+                raise NotImplementedError("The tangent cancellation case "
+                    "requires b == b0 - n*eta*t with b0 in k in "
+                    "solve_poly_rde().")
 
             else:
                 raise NotImplementedError("Other Poly (P)RDE cancellation "
@@ -871,18 +1079,15 @@ def rischDE(fa, fd, ga, gd, DE):
     a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
     A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
     try:
-        # Until this is fully implemented, use oo.  Note that this will almost
-        # certainly cause non-termination in spde() (unless A == 1), and
-        # *might* lead to non-termination in the next step for a nonelementary
-        # integral (I don't know for certain yet).  Fortunately, spde() is
-        # currently written recursively, so this will just give
-        # RuntimeError: maximum recursion depth exceeded.
         n = bound_degree(A, B, C, DE)
     except NotImplementedError:
-        # Useful for debugging:
-        # import warnings
-        # warnings.warn("rischDE: Proceeding with n = oo; may cause "
-        #     "non-termination.")
+        # bound_degree() could not decide one of its structure-theorem
+        # queries.  Proceeding with n == oo is sound: no bound is needed
+        # to accept a solution, and the no-cancellation and cancellation
+        # algorithms all terminate by descending on deg(c).  The only
+        # step that needs a finite bound to terminate is the deg(a) > 0
+        # reduction in spde(), which raises NotImplementedError instead
+        # of looping forever when it would need one.
         n = oo
 
     B, C, m, alpha, beta = spde(A, B, C, n, DE)
