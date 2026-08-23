@@ -247,6 +247,55 @@ def test_manualintegrate_bioche_substitution():
         assert bioche_substitution((f, x)) is None
 
 
+def test_manualintegrate_bioche_phase_parametrization():
+    # Parametrize an even residual phase using cos(2*a)
+    f = 1/(sin(x + a)*sin(x - a) + sin(x)**2 + 2)
+    ca = cos(2*a)
+    radical = sqrt((ca + 3)/(ca + 7))
+    F = 2*Piecewise(
+        (-tan(x)/4, Eq(ca, -7)),
+        (-1/(4*tan(x)), Eq(ca, -3)),
+        (atan(tan(x)/radical)/(radical*(ca + 7)), True))
+    assert manualintegrate(f, x) == F
+    assert (F.subs(a, 0).diff(x) - f.subs(a, 0)).rewrite(exp).cancel() == 0
+
+    # Parametrize a residual phase using sin(a)
+    f = 1/(cos(x - a) - cos(x + a) + sin(x) + 3)
+    sa = sin(a)
+    linear = 2*sa/3 + tan(x/2) + S.One/3
+    radical = sqrt(-4*sa**2/9 - 4*sa/9 + S(8)/9)
+    F = 2*Piecewise(
+        (-S.One/3/linear, Eq(16*sa**2 + 16*sa, 32)),
+        (atan(linear/radical)/(3*radical), True))
+    assert manualintegrate(f, x) == F
+    assert (F.subs(a, 0).diff(x) - f.subs(a, 0)).rewrite(exp).cancel() == 0
+    assert (F.subs(a, pi/2).diff(x) - f.subs(a, pi/2)).rewrite(exp).cancel() == 0
+
+    # Parametrize a residual phase using cos(a)
+    f = 1/(sin(x + a) + sin(x - a) + sin(x) + 3)
+    ca = cos(a)
+    linear = 2*ca/3 + tan(x/2) + S.One/3
+    radical = sqrt(-4*ca**2/9 - 4*ca/9 + S(8)/9)
+    F = 2*Piecewise(
+        (-S.One/3/linear, Eq(16*ca**2 + 16*ca, 32)),
+        (atan(linear/radical)/(3*radical), True))
+    assert manualintegrate(f, x) == F
+    assert (F.subs(a, pi/2).diff(x) - f.subs(a, pi/2)).rewrite(exp).cancel() == 0
+    assert (F.subs(a, 0).diff(x) - f.subs(a, 0)).rewrite(exp).cancel() == 0
+
+    # Parametrize a homogeneous residual phase using tan(a)
+    f = ((sin(a)*sin(x) + 2*cos(a)*cos(x))
+        /(sin(a)*cos(x) - cos(a)*sin(x)))
+    ta, tax = tan(a), tan(a - x)
+    F1 = (((ta**2/2 + 1)*log(tax**2 + 1) - ta*atan(tax))/(ta**2 + 1)
+        - (ta**2 + 2)*log(-tax)/(ta**2 + 1))
+    F2 = -log(1 - cos(a - x)**2)/2
+    F = Piecewise((F1, Ne(cos(a), 0)), (F2, True))
+    assert manualintegrate(f, x) == F
+    assert (F1.subs(a, 0).diff(x) - f.subs(a, 0)).rewrite(exp).cancel() == 0
+    assert (F2.subs(a, pi/2).diff(x) - f.subs(a, pi/2)).rewrite(exp).cancel() == 0
+
+
 @slow
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
