@@ -5,11 +5,12 @@ from sympy.polys.polymatrix import PolyMatrix
 from sympy.polys import Poly
 
 from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import Matrix
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.domains.rationalfield import QQ
 
-from sympy.abc import x, y
+from sympy.abc import t, x, y
 
 
 def _test_polymatrix():
@@ -184,3 +185,10 @@ def test_polymatrix_nullspace():
     raises(ValueError, lambda: PolyMatrix([1, 2], ring=ZZ[x]).nullspace())
     raises(ValueError, lambda: PolyMatrix([1, x], ring=QQ[x]).nullspace())
     assert M.rank() == 1
+
+
+def test_polymatrix_scalar_mul_ground_fallback():
+    M = PolyMatrix([[Poly(x*t, t)]], t)
+    expected = PolyMatrix([[Poly(x*(y + sqrt(y))*t, t, domain='EX')]], t)
+    assert M*(y + sqrt(y)) == expected
+    assert (y + sqrt(y))*M == expected

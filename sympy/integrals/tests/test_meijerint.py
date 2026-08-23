@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.core.function import expand_func
 from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
@@ -18,7 +19,7 @@ from sympy.simplify.simplify import simplify
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
     meijerint_indefinite, _inflate_g, _create_lookup_table,
     meijerint_definite, meijerint_inversion)
-from sympy.testing.pytest import slow
+from sympy.testing.pytest import XFAIL, slow
 from sympy.core.random import (verify_numerically,
         random_complex_number as randcplx)
 from sympy.abc import x, y, a, b, c, d, s, t, z
@@ -720,15 +721,32 @@ def test_issue_8368():
 
 def test_issue_10211():
     from sympy.abc import h, w
+    G = (h**4 + 2*h**2*w**2 + w**4)/(h**2*(h**2 + w**2)**Rational(3, 2))
+    N = (-h**4 - 2*h**2*w**2 - w**4)/(h**2*(h**2 + w**2)**Rational(3, 2))
+    r = sqrt(h**2 + x**2 - 2*x*y + y**2)
     assert integrate((1/sqrt((y-x)**2 + h**2)**3), (x,0,w), (y,0,w)) == \
-        2*sqrt(1 + w**2/h**2)/h - 2/h
+        Piecewise((-2*h**2/(h**2)**Rational(3, 2) + G - N,
+                   (h > -oo) & (h < oo) & Ne(h, 0)),
+                  (Integral(1/(h**2*r + x**2*r - 2*x*y*r + y**2*r),
+                            (x, 0, w), (y, 0, w)), True))
+
+
+@XFAIL
+def test_meijerg_issue_10211_sign():
+    from sympy.abc import h, w
+    # the integrand is even in h, but meijerg returns
+    # 2*sqrt(1 + w**2/h**2)/h - 2/h, which is odd
+    F = integrate(1/sqrt((y - x)**2 + h**2)**3, (x, 0, w), (y, 0, w),
+                  meijerg=True)
+    assert F.subs({h: 1, w: 1}) == F.subs({h: -1, w: 1})
 
 
 def test_issue_11806():
     from sympy.core.symbol import symbols
     y, L = symbols('y L', positive=True)
+    F = (L**3 + L*y**2)/(y**2*(L**2 + y**2)**Rational(3, 2))
     assert integrate(1/sqrt(x**2 + y**2)**3, (x, -L, L)) == \
-        2*L/(y**2*sqrt(L**2 + y**2))
+        F - F.subs(L, -L)
 
 def test_issue_10681():
     from sympy.polys.domains.realfield import RR

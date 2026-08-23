@@ -2909,7 +2909,7 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
 
     '1st_homogeneous_coeff_best_04': {
         'eq': (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x),
-        'sol': [Eq(log(f(x)), C1 - 2*sqrt(-x/f(x) + 1))],
+        'sol': [Eq(log(f(x)), C1 + 2/sqrt(-x/f(x) + 1)*(x/f(x) - 1))],
         'slow': True,
     },
 

@@ -39,7 +39,8 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
+from sympy.testing.pytest import (XFAIL, raises, slow, warns_deprecated_sympy,
+    warns)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
@@ -677,9 +678,14 @@ def test_integrate_returns_piecewise():
     assert integrate(exp(x*y), (x, 0, z)) == Piecewise(
         (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
     # https://github.com/sympy/sympy/issues/23707
+    # The degenerate slot (x == y + 1, where the integrand is 1 and the
+    # integral is t) is an honest unevaluated Integral: the generic
+    # methods answer wrongly at exactly the parameter values that select
+    # that slot, and validating a candidate on the degenerate variety is
+    # the deferred special-values problem.
     assert integrate(exp(t)*exp(-t*sqrt(x - y)), t) == Piecewise(
-        (-exp(t)/(sqrt(x - y)*exp(t*sqrt(x - y)) - exp(t*sqrt(x - y))),
-        Ne(x, y + 1)), (t, True))
+        (-exp(t)*exp(-t*sqrt(x - y))/(sqrt(x - y) - 1), Ne(sqrt(x - y), 1)),
+        (Integral(exp(t)*exp(-t*sqrt(x - y)), t), True))
 
 
 def test_integrate_max_min():
@@ -929,12 +935,7 @@ def test_doit_integrals():
 
 
 def test_issue_4884():
-    assert integrate(sqrt(x)*(1 + x)) == \
-        Piecewise(
-            (2*sqrt(x)*(x + 1)**2/5 - 2*sqrt(x)*(x + 1)/15 - 4*sqrt(x)/15,
-            Abs(x + 1) > 1),
-            (2*I*sqrt(-x)*(x + 1)**2/5 - 2*I*sqrt(-x)*(x + 1)/15 -
-            4*I*sqrt(-x)/15, True))
+    assert integrate(sqrt(x)*(1 + x)) == sqrt(x)*(6*x**2 + 10*x)/15
     assert integrate(x**x*(1 + log(x))) == x**x
 
 def test_issue_18153():
@@ -1052,9 +1053,7 @@ def test_issue_4403():
     x = Symbol('x', real=True)
     y = Symbol('y', positive=True)
     assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \
-        x/(y**2*sqrt(x**2 + y**2))
-    # If y is real and nonzero, we get x*Abs(y)/(y**3*sqrt(x**2 + y**2)),
-    # which results from sqrt(1 + x**2/y**2) = sqrt(x**2 + y**2)/|y|.
+        (x**3 + x*y**2)/(y**2*(x**2 + y**2)**S('3/2'))
 
 
 def test_issue_4403_2():
@@ -1739,7 +1738,11 @@ def test_issue_2975():
     w = Symbol('w')
     C = Symbol('C')
     y = Symbol('y')
-    assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))
+    F = (C*w/2 + w**3/8)/(C*(C + w**2/4)**(S(3)/2))
+    assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == \
+        Piecewise((F - F.subs(w, -w), (C > -oo) & (C < oo) & Ne(C, 0)),
+                  (Integral(1/(C*sqrt(C + y**2) + y**2*sqrt(C + y**2)),
+                            (y, -w/2, w/2)), True))
 
 
 def test_issue_7827():
@@ -2032,7 +2035,8 @@ def test_sqrt_quadratic():
     assert integrate(1/sqrt(3*x**2+4*x+5)) == sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3
     assert integrate(1/sqrt(-3*x**2+4*x+5)) == sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3
     assert integrate(1/sqrt(3*x**2+4*x-5)) == sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/3
-    assert integrate(1/sqrt(4*x**2-4*x+1)) == (x - S.Half)*log(x - S.Half)/(2*sqrt((x - S.Half)**2))
+    assert integrate(1/sqrt(4*x**2-4*x+1)) == \
+        (2*x - 1)*log(2*x - 1)/(2*sqrt(4*x**2 - 4*x + 1))
     assert integrate(1/sqrt(a+b*x+c*x**2), x) == \
         Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
                   ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), Ne(c, 0)),
@@ -2153,10 +2157,25 @@ def test_old_issues():
     assert I1 == sin(log(x**2))/2
     # https://github.com/sympy/sympy/issues/5462
     I2 = integrate(1/(x**2+y**2)**(Rational(3,2)),x)
-    assert I2 == x/(y**3*sqrt(x**2/y**2 + 1))
+    assert I2 == Piecewise(((x**3 + x*y**2)/(y**2*(x**2 + y**2)**Rational(3,2)),
+        Ne(y**2, 0)),
+        (Integral(1/(x**2*sqrt(x**2 + y**2) + y**2*sqrt(x**2 + y**2)), x),
+        True))
+    # a base-field part must not be double-counted in the degenerate
+    # branch's unevaluated Integral
+    assert integrate(1 + 1/(x**2+y**2)**(Rational(3,2)), x) == x + I2
     # https://github.com/sympy/sympy/issues/6278
     I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
     assert I3 == 2*sqrt(3)*pi/3
+
+
+@XFAIL
+def test_meijerg_issue_5462_sign():
+    # meijerg returns x/(y**3*sqrt(x**2/y**2 + 1)), which differentiates
+    # back to the integrand only for y > 0
+    f = 1/(x**2 + y**2)**Rational(3, 2)
+    F = integrate(f, x, meijerg=True)
+    assert (F.diff(x) - f).subs({y: -2, x: 1}).equals(0)
 
 
 def test_integral_issue_26566():

@@ -1,17 +1,20 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import annotations
 from sympy.core.function import (Function, Lambda, diff, expand_log)
-from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.numbers import (I, Rational, pi, zoo)
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.hyperbolic import tanh
-from sympy.functions.elementary.trigonometric import (atan, cot, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, cos, cot, sin,
+    tan)
 from sympy.polys.polytools import (Poly, cancel, factor)
 from sympy.polys.rationaltools import together
+from sympy.polys.rootoftools import RootSum
+from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -19,7 +22,8 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     integrate_hyperexponential, integrate_hypertangent_polynomial,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
     risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
-    recognize_derivative, laurent_series)
+    recognize_derivative, laurent_series, _nontrans_is_kernel,
+    _nontrans_accept)
 from sympy.testing.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
@@ -221,6 +225,9 @@ def test_recognize_derivative():
     assert recognize_derivative(Poly(x, x), Poly((x**2 + 1)**2, x), DE) == True
     assert recognize_derivative(Poly(1, x), Poly((x**2 + 1)**2, x), DE) == False
     assert recognize_derivative(Poly(-2*x, x), Poly((x**2 - 1)**2, x), DE) == True
+    # Multiplicity 3: D(1/(x**2 + 1)**2) == -4*x/(x**2 + 1)**3
+    assert recognize_derivative(Poly(-4*x, x), Poly((x**2 + 1)**3, x), DE) == True
+    assert recognize_derivative(Poly(1, x), Poly((x**2 + 1)**3, x), DE) == False
     # Poles at nonconstant normal primes used to be ignored entirely,
     # giving false positives.  A simple such pole always has a nonzero
     # residue: 1/(t + x) with t = log(x) is not a derivative.
@@ -296,6 +303,13 @@ def test_residue_reduce():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert residue_reduce(Poly(t, t), Poly(t + sqrt(2), t), DE, z) == \
         ([(Poly(z - 1, z, domain='QQ'), Poly(t + sqrt(2), t))], True)
+
+    # issue 26502: the leading coefficient of the subresultant remainder has
+    # a non-monomial denominator in x
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)], 'Tfuncs': [log]})
+    assert residue_reduce(Poly(-2*x*t - 2*x - 2, t),
+        Poly((x**3 + 2*x**2 + x)*t**2 - x, t), DE, z) == \
+        ([(Poly(z**2 - 1, z, domain='QQ'), Poly(t + z/(x + 1), t, domain='ZZ(x,z)'))], True)
 
 
 def test_integrate_hyperexponential():
@@ -491,79 +505,98 @@ def test_DifferentialExtension_exp():
     assert DifferentialExtension(exp(x) + exp(x**2), x)._important_attrs == \
         (Poly(t1 + t0, t1), Poly(1, t1), [Poly(1, x,), Poly(t0, t0),
         Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i)),
-        Lambda(i, exp(i**2))], [], [None, 'exp', 'exp'], [None, x, x**2])
+        Lambda(i, exp(i**2))], [], ['exp', 'exp'], [x, x**2])
     assert DifferentialExtension(exp(x) + exp(2*x), x)._important_attrs == \
         (Poly(t0**2 + t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0, t0)], [x, t0],
-        [Lambda(i, exp(i))], [], [None, 'exp'], [None, x])
+        [Lambda(i, exp(i))], [], ['exp'], [x])
     assert DifferentialExtension(exp(x) + exp(x/2), x)._important_attrs == \
         (Poly(t0**2 + t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)],
-        [x, t0], [Lambda(i, exp(i/2))], [], [None, 'exp'], [None, x/2])
+        [x, t0], [Lambda(i, exp(i/2))], [], ['exp'], [x/2])
     assert DifferentialExtension(exp(x) + exp(x**2) + exp(x + x**2), x)._important_attrs == \
         (Poly((1 + t0)*t1 + t0, t1), Poly(1, t1), [Poly(1, x), Poly(t0, t0),
         Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i)),
-        Lambda(i, exp(i**2))], [], [None, 'exp', 'exp'], [None, x, x**2])
+        Lambda(i, exp(i**2))], [], ['exp', 'exp'], [x, x**2])
     assert DifferentialExtension(exp(x) + exp(x**2) + exp(x + x**2 + 1), x)._important_attrs == \
         (Poly((1 + S.Exp1*t0)*t1 + t0, t1), Poly(1, t1), [Poly(1, x),
         Poly(t0, t0), Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i)),
-        Lambda(i, exp(i**2))], [], [None, 'exp', 'exp'], [None, x, x**2])
+        Lambda(i, exp(i**2))], [], ['exp', 'exp'], [x, x**2])
+    # exp(x/2 + x**2) makes the tower use exp(x/2) internally; the answer
+    # must stay in that exact form, not be rewritten into the principal
+    # root sqrt(exp(x)) the user never wrote (which differs from exp(x/2)
+    # by a locally constant sign off the real line), so no backsubs pair
+    # is recorded.
     assert DifferentialExtension(exp(x) + exp(x**2) + exp(x/2 + x**2), x)._important_attrs == \
         (Poly((t0 + 1)*t1 + t0**2, t1), Poly(1, t1), [Poly(1, x),
         Poly(t0/2, t0), Poly(2*x*t1, t1)], [x, t0, t1],
         [Lambda(i, exp(i/2)), Lambda(i, exp(i**2))],
-        [(exp(x/2), sqrt(exp(x)))], [None, 'exp', 'exp'], [None, x/2, x**2])
+        [], ['exp', 'exp'], [x/2, x**2])
     assert DifferentialExtension(exp(x) + exp(x**2) + exp(x/2 + x**2 + 3), x)._important_attrs == \
         (Poly((t0*exp(3) + 1)*t1 + t0**2, t1), Poly(1, t1), [Poly(1, x),
         Poly(t0/2, t0), Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i/2)),
-        Lambda(i, exp(i**2))], [(exp(x/2), sqrt(exp(x)))], [None, 'exp', 'exp'],
-        [None, x/2, x**2])
-    assert DifferentialExtension(sqrt(exp(x)), x)._important_attrs == \
-        (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)], [x, t0],
-        [Lambda(i, exp(i/2))], [(exp(x/2), sqrt(exp(x)))], [None, 'exp'], [None, x/2])
+        Lambda(i, exp(i**2))], [], ['exp', 'exp'],
+        [x/2, x**2])
+    # A user-written radical of an exponential folds to an opaque
+    # locally constant ratio times exp(x/2); backsubs restores it exactly.
+    DE = DifferentialExtension(sqrt(exp(x)), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(c*t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)], [x, t0],
+        [Lambda(i, exp(i/2))], [(c, exp(-x/2)*sqrt(exp(x)))], ['exp'], [x/2])
 
     assert DifferentialExtension(exp(x/2), x)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(t0/2, t0)], [x, t0],
-        [Lambda(i, exp(i/2))], [], [None, 'exp'], [None, x/2])
+        [Lambda(i, exp(i/2))], [], ['exp'], [x/2])
 
 
 def test_DifferentialExtension_log():
-    assert DifferentialExtension(log(x)*log(x + 1)*log(2*x**2 + 2*x), x)._important_attrs == \
-        (Poly(t0*t1**2 + (t0*log(2) + t0**2)*t1, t1), Poly(1, t1),
+    # log(2*x**2 + 2*x) is rewritten in terms of the other two logarithms
+    # plus an opaque locally-constant branch term (restored by backsubs),
+    # not the principal-branch constant log(2), which is only valid where
+    # the arguments are all positive.
+    DE = DifferentialExtension(log(x)*log(x + 1)*log(2*x**2 + 2*x), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(t0*t1**2 + (c*t0 + t0**2)*t1, t1), Poly(1, t1),
         [Poly(1, x), Poly(1/x, t0),
         Poly(1/(x + 1), t1, expand=False)], [x, t0, t1],
-        [Lambda(i, log(i)), Lambda(i, log(i + 1))], [], [None, 'log', 'log'],
-        [None, x, x + 1])
+        [Lambda(i, log(i)), Lambda(i, log(i + 1))],
+        [(c, log(2*x**2 + 2*x) - log(x) - log(x + 1))], ['log', 'log'],
+        [x, x + 1])
     assert DifferentialExtension(x**x*log(x), x)._important_attrs == \
         (Poly(t0*t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
         Poly((1 + t0)*t1, t1)], [x, t0, t1], [Lambda(i, log(i)),
-        Lambda(i, exp(t0*i))], [(exp(x*log(x)), x**x)], [None, 'log', 'exp'],
-        [None, x, t0*x])
+        Lambda(i, exp(t0*i))], [(exp(x*log(x)), x**x)], ['log', 'exp'],
+        [x, t0*x])
 
 
 def test_DifferentialExtension_symlog():
     # See comment on test_risch_integrate below
-    assert DifferentialExtension(log(x**x), x)._important_attrs == \
-        (Poly(t0*x, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0), Poly((t0 +
+    DE = DifferentialExtension(log(x**x), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(t0*x + c, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0), Poly((t0 +
             1)*t1, t1)], [x, t0, t1], [Lambda(i, log(i)), Lambda(i, exp(i*t0))],
-            [(exp(x*log(x)), x**x)], [None, 'log', 'exp'], [None, x, t0*x])
+            [(exp(x*log(x)), x**x), (c, log(x**x) - x*log(x))],
+            ['log', 'exp'], [x, t0*x])
     assert DifferentialExtension(log(x**y), x)._important_attrs == \
         (Poly(y*t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
-        [Lambda(i, log(i))], [(y*log(x), log(x**y))], [None, 'log'],
-        [None, x])
+        [Lambda(i, log(i))], [(y*log(x), log(x**y))], ['log'],
+        [x])
     assert DifferentialExtension(log(sqrt(x)), x)._important_attrs == \
         (Poly(t0, t0), Poly(2, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
-        [Lambda(i, log(i))], [(log(x)/2, log(sqrt(x)))], [None, 'log'],
-        [None, x])
+        [Lambda(i, log(i))], [(log(x)/2, log(sqrt(x)))], ['log'],
+        [x])
 
 
 def test_DifferentialExtension_handle_first():
     assert DifferentialExtension(exp(x)*log(x), x, handle_first='log')._important_attrs == \
         (Poly(t0*t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
         Poly(t1, t1)], [x, t0, t1], [Lambda(i, log(i)), Lambda(i, exp(i))],
-        [], [None, 'log', 'exp'], [None, x, x])
+        [], ['log', 'exp'], [x, x])
     assert DifferentialExtension(exp(x)*log(x), x, handle_first='exp')._important_attrs == \
         (Poly(t0*t1, t1), Poly(1, t1), [Poly(1, x), Poly(t0, t0),
         Poly(1/x, t1)], [x, t0, t1], [Lambda(i, exp(i)), Lambda(i, log(i))],
-        [], [None, 'exp', 'log'], [None, x, x])
+        [], ['exp', 'log'], [x, x])
 
     # This one must have the log first, regardless of what we set it to
     # (because the log is inside of the exponential: x**x == exp(x*log(x)))
@@ -574,7 +607,7 @@ def test_DifferentialExtension_handle_first():
         (Poly((-1 + x - x*t0**2)*t1, t1), Poly(x, t1),
             [Poly(1, x), Poly(1/x, t0), Poly((1 + t0)*t1, t1)], [x, t0, t1],
             [Lambda(i, log(i)), Lambda(i, exp(t0*i))], [(exp(x*log(x)), x**x)],
-            [None, 'log', 'exp'], [None, x, t0*x])
+            ['log', 'exp'], [x, t0*x])
 
 
 def test_DifferentialExtension_all_attrs():
@@ -626,9 +659,9 @@ def test_DifferentialExtension_extension_flag():
     assert DE.case == 'exp'
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)],
-        'exts': [None, 'exp'], 'extargs': [None, x]})
+        'exts': ['exp'], 'extargs': [x]})
     assert DE._important_attrs == (None, None, [Poly(1, x), Poly(t, t)], [x, t],
-        None, None, [None, 'exp'], [None, x])
+        None, None, ['exp'], [x])
     raises(ValueError, lambda: DifferentialExtension())
 
 
@@ -637,7 +670,7 @@ def test_DifferentialExtension_misc():
     assert DifferentialExtension(sin(y)*exp(x), x)._important_attrs == \
         (Poly(sin(y)*t0, t0, domain='ZZ[sin(y)]'), Poly(1, t0, domain='ZZ'),
         [Poly(1, x, domain='ZZ'), Poly(t0, t0, domain='ZZ')], [x, t0],
-        [Lambda(i, exp(i))], [], [None, 'exp'], [None, x])
+        [Lambda(i, exp(i))], [], ['exp'], [x])
     raises(NotImplementedError, lambda: DifferentialExtension(sin(x), x))
     # cot, acot, and the hyperbolic functions used to fall through to the
     # generic "Couldn't find an elementary transcendental extension" error
@@ -652,15 +685,17 @@ def test_DifferentialExtension_misc():
         assert "Trigonometric and hyperbolic" in str(e)
     assert DifferentialExtension(10**x, x)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(log(10)*t0, t0)], [x, t0],
-        [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], [None, 'exp'],
-        [None, x*log(10)])
-    assert DifferentialExtension(log(x) + log(x**2), x)._important_attrs == \
-        (Poly(3*t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
-        [Lambda(i, log(i))], [], [None, 'log'], [None, x])
+        [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], ['exp'],
+        [x*log(10)])
+    DE = DifferentialExtension(log(x) + log(x**2), x)
+    c = DE.backsubs[-1][0]
+    assert DE._important_attrs == \
+        (Poly(3*t0 + c, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
+        [Lambda(i, log(i))], [(c, log(x**2) - 2*log(x))], ['log'], [x])
     assert DifferentialExtension(S.Zero, x)._important_attrs == \
-        (Poly(0, x), Poly(1, x), [Poly(1, x)], [x], [], [], [None], [None])
+        (Poly(0, x), Poly(1, x), [Poly(1, x)], [x], [], [], [], [])
     assert DifferentialExtension(tan(atan(x).rewrite(log)), x)._important_attrs == \
-        (Poly(x, x), Poly(1, x), [Poly(1, x)], [x], [], [], [None], [None])
+        (Poly(x, x), Poly(1, x), [Poly(1, x)], [x], [], [], [], [])
 
 
 def test_DifferentialExtension_Rothstein():
@@ -673,7 +708,7 @@ def test_DifferentialExtension_Rothstein():
         [Poly(1, x), Poly(t0, t0), Poly(-(10 + 21*t0 + 10*t0**2)/(1 + 2*t0 +
         t0**2)*t1, t1, domain='ZZ(t0)')], [x, t0, t1],
         [Lambda(i, exp(i)), Lambda(i, exp(1/(t0 + 1) - 10*i))], [],
-        [None, 'exp', 'exp'], [None, x, 1/(t0 + 1) - 10*x])
+        ['exp', 'exp'], [x, 1/(t0 + 1) - 10*x])
 
 
 class _TestingException(Exception):
@@ -725,6 +760,279 @@ def test_DecrementLevel():
     assert DE.case == 'primitive'
 
 
+def test_nontranscendental_tower():
+    # The tower [x, t0 == log(x), t1 == exp(t0/2)], with t1 representing
+    # sqrt(x): a non-transcendental tower, declared as such.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0),
+        Poly(t1/(2*x), t1)], 'exts': ['log', 'exp'],
+        'extargs': [x, t0/2], 'transcendental': False})
+    # The formal field has genuinely new constants...
+    assert derivation(t1**2/x, DE, basic=True) == 0
+    # ...whose kernel counterparts (elements evaluating to zero) are
+    # recognized from the power relation t1**2 == x:
+    assert _nontrans_is_kernel(t1**2 - x, DE)
+    assert _nontrans_is_kernel(x*(t1**2/x - 1), DE)
+    assert not _nontrans_is_kernel(t1**2 + x, DE)
+    assert not _nontrans_is_kernel(t1 - x, DE)
+
+    # Acceptance filter for f == t1 (i.e. sqrt(x)):
+    fa, fd = Poly(t1, t1), Poly(1, t1)
+    # the genuine antiderivative 2/3*x*t1 passes...
+    assert _nontrans_accept(Rational(2, 3)*x*t1, [], S.Zero, fa, fd, DE, None)
+    # ...a wrong candidate fails the formal-identity check...
+    assert not _nontrans_accept(x*t1, [], S.Zero, fa, fd, DE, None)
+    # ...and a kernel denominator fails the evaluation check even though
+    # the formal identity holds (x/(t1**2 - x) is a formal constant, so
+    # adding it does not disturb the derivative)
+    assert not _nontrans_accept(Rational(2, 3)*x*t1 + x/(t1**2 - x), [],
+        S.Zero, fa, fd, DE, None)
+
+
+def test_nontranscendental_kernel_reject():
+    # Over [x, t0 == log(x), t1 == exp(t0/2), t2 == exp(x)], the element
+    # t1**2/x - 1 is a formal constant that evaluates to zero, so
+    # f == t2/(1 + (t1**2/x - 1)*t2) is exp(x) as a function while the
+    # formal machinery sees a pole with residue -x/(x - t1**2) -- a
+    # kernel denominator that survives the formal-identity check (it
+    # cancels against the argument's derivative) and must be caught by
+    # the residue-coefficient kernel check in _nontrans_accept().
+    DE = DifferentialExtension(extension={
+        'D': [Poly(1, x), Poly(1/x, t0), Poly(t1/(2*x), t1), Poly(t2, t2)],
+        'exts': ['log', 'exp', 'exp'],
+        'extargs': [x, t0/2, x],
+        'Tfuncs': [log, Lambda(i, sqrt(i)), exp],
+        'transcendental': False})
+    fa, fd = frac_in(cancel(t2/(1 + (t1**2/x - 1)*t2)), t2)
+    ans, it, b = integrate_hyperexponential(fa, fd, DE)
+    assert (ans, b) == (0, False)
+    assert it == Integral(exp(x), x)
+    assert not isinstance(it, NonElementaryIntegral)
+    assert not it.has(zoo)
+
+
+def test_risch_integrate_algebraic():
+    # Proof-of-concept algebraic integration via exp-log towers:
+    # sqrt(y) == exp(log(y)/2).  Solved cases are verified by
+    # _nontrans_accept(), and negative conclusions are degraded to
+    # plain Integrals (nonelementary proofs assume transcendence).
+    y = Symbol('y', positive=True)
+    # on by default; algebraic=False keeps the purely transcendental
+    # behavior of raising on radicals
+    raises(NotImplementedError, lambda: risch_integrate(sqrt(y), y,
+        algebraic=False))
+    assert risch_integrate(sqrt(y), y) == 2*y**Rational(3, 2)/3
+    assert risch_integrate(sqrt(y), y, algebraic=True) == \
+        2*y**Rational(3, 2)/3
+    assert risch_integrate(1/sqrt(y), y, algebraic=True) == 2*sqrt(y)
+    assert risch_integrate(y*sqrt(y), y, algebraic=True) == \
+        2*y**Rational(5, 2)/5
+    # unsolved algebraic integrals must come back as plain Integrals,
+    # never as NonElementaryIntegral
+    r = risch_integrate(exp(sqrt(y)), y, algebraic=True)
+    assert r == Integral(exp(sqrt(y)), y)
+    assert not r.has(NonElementaryIntegral)
+    # nested rational powers collapse under the radicand split (the
+    # branch ratio absorbs the fractional-exponent bookkeeping), where
+    # this once raised NotImplementedError from the exps worklist
+    a, b, c = symbols('a b c')
+    r = risch_integrate(
+        (c*(a + b*x)**Rational(3, 2))**Rational(2, 3), x, algebraic=True)
+    assert not r.has(Integral)
+    # nested symbolic radicals build towers with EX coefficient matrices
+    d = symbols('d')
+    raises(NotImplementedError, lambda: risch_integrate(
+        sqrt(a + b*sqrt(d/x) + c/x), x, algebraic=True))
+    # inexact input skips the algebraic path entirely: the towers do
+    # exact arithmetic, where a Float coefficient becomes a rational
+    # with an astronomical denominator that the structure-theorem
+    # constant systems grind on
+    raises(NotImplementedError, lambda: risch_integrate(1.5*sqrt(y), y))
+    # radicands are factored before generators are erected, so content
+    # like a perfect square does not become a spurious radical
+    assert risch_integrate(sqrt(y**2 + 2*y + 1)/y, y, algebraic=True) == \
+        sqrt(y**2 + 2*y + 1) + log(y) - 1
+    assert risch_integrate(sqrt((y + 1)**2*(y + 2))*(y + 2), y,
+        algebraic=True) is not None
+
+
+def test_risch_integrate_algebraic_branches():
+    # Distributing a fractional power over the factors of the radicand
+    # is not branch-faithful (sqrt(u*v) != sqrt(u)*sqrt(v) when u and v
+    # are both negative), so the split rides with a branch-ratio
+    # constant that is substituted back after integration.  Each of
+    # these used to come back with a derivative that was wrong on part
+    # of the real line; check the derivative numerically at points in
+    # every affected region (symbolic zero-testing of radical
+    # identities is not reliable enough to use here).
+    def deriv_ok(f, r, pts):
+        err = r.diff(x) - f
+        return all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
+                   for p in pts)
+
+    # square content: wrong for x < -1 before
+    f = sqrt(x**2 + 2*x + 1)/x
+    r = risch_integrate(f, x, algebraic=True)
+    assert r.free_symbols == {x}
+    assert deriv_ok(f, r, [-3, Rational(-1, 2), 2, 1 + I])
+    # distinct factors both negative: wrong for x < -1 before
+    f = x/sqrt(x**2 - 1)
+    r = risch_integrate(f, x, algebraic=True)
+    assert deriv_ok(f, r, [-2, Rational(1, 2), 2, 1 + I])
+    # odd-order radical with square content (Timofeev ch. 0): wrong for
+    # x < 3 before, returning complex values where the integrand is real
+    f = (x**3 - 5*x**2 + 3*x + 9)**Rational(-2, 3)
+    r = risch_integrate(f, x, algebraic=True)
+    assert deriv_ok(f, r, [-2, Rational(1, 2), 4])
+    # a symbolic constant factor extracted from the radicand: wrong
+    # where c and a + b*x are both negative before
+    a, b, c = symbols('a b c')
+    f = 1/sqrt(c*(a + b*x))
+    r = risch_integrate(f, x, algebraic=True)
+    sub = {a: -2, b: 3, c: Rational(-1, 2)}
+    assert deriv_ok(f.subs(sub), r.subs(sub), [-1, Rational(1, 2), 2])
+
+    # the branch-ratio constants satisfy s**q == 1, and the kernel test
+    # must know it: a denominator containing s**q - 1 is actually zero
+    from sympy.integrals.risch import (_nontrans_accept,
+        _nontrans_is_kernel, _nontrans_sign_assignments)
+    DE = DifferentialExtension(x/sqrt(x**2 - 1), x, algebraic=True)
+    [(s, _, q)] = DE.sign_consts
+    assert q == 2
+    assert _nontrans_is_kernel(s**2 - 1, DE)
+    assert not _nontrans_is_kernel(s - 1, DE)
+    assert not _nontrans_is_kernel(s, DE)
+    # non-kernel is not enough for denominators: s - 1 is formally
+    # nonzero (a zero divisor mod s**2 - 1) but the ratio equals 1 on
+    # whole regions, so acceptance must check every attainable value
+    assert _nontrans_sign_assignments(DE, [s - 1]) == [{s: 1}, {s: -1}]
+    # constants absent from the checked expressions need no assignment
+    assert _nontrans_sign_assignments(DE, [x + 1]) == [{}]
+    z = Dummy('z')
+    assert not _nontrans_accept(1/(s - 1), [], S.Zero,
+        Poly(0, DE.t), Poly(1, DE.t), DE, z)
+    assert _nontrans_accept(1/(s + 3), [], S.Zero,
+        Poly(0, DE.t), Poly(1, DE.t), DE, z)
+
+    # jump corrections (Jeffrey, Labahn, von Mohrenschildt & Rich): the
+    # ratio substitution leaves constant jumps at the real roots and
+    # poles of the split factors; a -J*(x - r)/sqrt((x - r)**2) term
+    # (sign(x - r) on the real line, but locally constant on the
+    # complex plane off Re(x) == r) restores continuity there when J
+    # is finite and real
+    def jump(r, bp):
+        eps = Rational(1, 1000)
+        return abs(complex(r.subs(x, bp + eps).evalf(40)) -
+                   complex(r.subs(x, bp - eps).evalf(40)))
+
+    f = 3*x**2*sqrt(1 + 1/x**2)
+    r = risch_integrate(f, x, algebraic=True)
+    assert r.coeff(x*(x**2)**Rational(-1, 2)) == -1  # Example 1, J == 1
+    assert deriv_ok(f, r, [-2, Rational(1, 2), 1 + I])
+    assert jump(r, 0) < 1e-4
+    f = sqrt(x**3 + 4*x**2 + 5*x + 2)  # (x + 1)**2*(x + 2)
+    r = risch_integrate(f, x, algebraic=True)
+    assert deriv_ok(f, r, [Rational(-19, 10), Rational(-3, 2),
+                           Rational(-1, 2), 3, 1 + I])
+    assert jump(r, -1) < 1e-4
+    # a complex jump (breakpoint at a singularity of the integrand)
+    # must not be "corrected": that would make the answer complex on
+    # regions where it is real -- the discontinuity stays
+    r = risch_integrate(sqrt(x**2 + 2*x + 1)/x, x, algebraic=True)
+    assert jump(r, -1) > 1
+
+    # the _exp_part restart must not lose the branch-ratio state (its
+    # Dummy constants used to leak into the result unsubstituted)
+    f = sqrt(x**2 + 2*x + 1)*(exp(x) + exp(x/2 + 1))
+    r = risch_integrate(f, x, algebraic=True)
+    assert not r.atoms(Dummy)
+    assert deriv_ok(f, r, [-3, 1])
+    # results are only generic in the ratio constants, so collapsed
+    # radicals must not yield nonelementary claims: this integrand is
+    # proportional to s + 1 and vanishes identically where the ratio
+    # is -1, however nonelementary it is elsewhere
+    f = (sqrt(x**2 + 2*x + 1) + x + 1)*exp(x**2)
+    r = risch_integrate(f, x, algebraic=True)
+    assert not r.has(NonElementaryIntegral)
+    # the base case never reaches the acceptance filter, and ratint()
+    # over QQ(s) can divide by s-polynomials that vanish at attained
+    # values: this candidate is nan on all of x > -1 (where the
+    # integrand is just 1) and must be rejected, not returned
+    f = 1/(x**2 - x**2*sqrt(x**2 + 2*x + 1)/(x + 1) + 1)
+    r = risch_integrate(f, x, algebraic=True)
+    assert r == Integral(f, x)
+    # a partially integrated level (unsolved nonconstant part) with a
+    # parameter-dependent denominator: no per-piece degenerate branch
+    # is possible (every piece of the generic decomposition divides by
+    # that denominator, and so does the residual), so the whole level
+    # comes back unevaluated for the caller to retry
+    f = 1/(x**2 + a**2)**Rational(3, 2) + sqrt(x**2 + a**2)
+    r = risch_integrate(f, x)
+    assert r == Integral(
+        (a**4 + 2*a**2*x**2 + x**4 + 1)
+        / (a**2*sqrt(a**2 + x**2) + x**2*sqrt(a**2 + x**2)), x)
+    # but with a denominator that provably cannot vanish, a partially
+    # integrated level keeps its elementary part
+    f = x*sqrt(x**2 + 1) + 1/sqrt(x**2 + 1)
+    r = risch_integrate(f, x)
+    assert r == (x**2 + 1)**Rational(3, 2)/3 + \
+        Integral(1/sqrt(x**2 + 1), x)
+    # a seventh-root ratio has no exact algebraic roots of unity, but
+    # a constant occurring only as a numerator polynomial factor needs
+    # no assignment, so this must not be over-rejected
+    f = (x**2 + 2*x + 1)**Rational(1, 7)
+    r = risch_integrate(f, x, algebraic=True)
+    assert not r.has(Integral)
+    assert deriv_ok(f, r, [-3, 1])
+    # the final vetting classifies positions, not mere occurrence: an
+    # unenumerable constant inside an entire function's argument or as
+    # a numerator factor is safe; inside log or a denominator it is
+    # not, and a RootSum leading coefficient that can vanish under an
+    # assignment silently changes the root set and must be rejected
+    from sympy.integrals.risch import _nontrans_vet
+    from sympy.polys.rootoftools import RootSum
+    DE7 = DifferentialExtension(f, x, algebraic=True)
+    [(s7, _, _)] = DE7.sign_consts
+    assert _nontrans_vet(s7*x + exp(s7*x), DE7)
+    assert _nontrans_vet(sin(s7*x) + cos(s7*x) + tanh(x)*s7, DE7)
+    assert not _nontrans_vet(log(s7*x), DE7)
+    assert not _nontrans_vet(tan(s7*x), DE7)
+    assert not _nontrans_vet(1/(x + s7), DE7)
+    assert not _nontrans_vet(exp(x/(x + s7)), DE7)
+    assert not _nontrans_vet(sin(x/(x + s7)), DE7)
+    t_ = Symbol('t')
+    bad = RootSum(Poly((s - 1)*t_**5 + t_ + 1, t_),
+                  Lambda(t_, t_*log(x + t_)))
+    good = RootSum(Poly((s + 3)*t_**5 + t_ + 1, t_),
+                   Lambda(t_, t_*log(x + t_)))
+    assert bad.has(RootSum) and good.has(RootSum)
+    assert not _nontrans_vet(bad, DE)
+    assert _nontrans_vet(good, DE)
+    # breakpoint sets must be complete: real_roots() isolates the real
+    # root of the quintic exactly (roots() cannot express it)
+    f = sqrt((x**5 - x - 1)**2)
+    r = risch_integrate(f, x, algebraic=True)
+    assert not r.has(Integral)
+    assert deriv_ok(f, r, [0, 2])
+    # proportional radicands route through the is_deriv_k rewrite,
+    # whose principal log(const) (log(-1) == I*pi) needs the same
+    # branch-ratio correction: sqrt(-w) == I*sqrt(w) has the wrong
+    # sign where w < 0
+    f = sqrt(a + b*x)/sqrt(-a - b*x)
+    r = risch_integrate(f, x, algebraic=True)
+    sub = {a: 2, b: 3}
+    assert deriv_ok(f.subs(sub), r.subs(sub), [-2, 1])
+    f = 1/(sqrt(-3*x - 2)*sqrt(3*x + 2))
+    r = risch_integrate(f, x, algebraic=True)
+    assert deriv_ok(f, r, [-2, 1])
+    # nested proportional radicands: the ratio is built from tower
+    # symbols whose images reference lower generators, so the
+    # back-substitution must be sequential or a Dummy leaks
+    f = sqrt(log(x))/sqrt(-log(x))
+    r = risch_integrate(f, x, algebraic=True)
+    assert r.free_symbols == {x}
+    assert deriv_ok(f, r, [Rational(1, 2), 2])
+
+
 def test_risch_integrate():
     assert risch_integrate(t0*exp(x), x) == t0*exp(x)
     assert risch_integrate(sin(x), x, rewrite_complex=True) == -exp(I*x)/2 - exp(-I*x)/2
@@ -747,22 +1055,41 @@ def test_risch_integrate():
     e2 = (log(-1/y)/2 - log(1/y)/2)/y - (log(1 - 1/y)/2 - log(1 + 1/y)/2)/y
     ans2 = risch_integrate(e2, y)
     assert ans2 == log(1/y)*log(1 - 1/y)/2 - log(1/y)*log(1 + 1/y)/2 + \
-            NonElementaryIntegral((I*pi*y**2 - 2*y*log(1/y) - I*pi)/(2*y**3 - 2*y), y)
+            NonElementaryIntegral((y**2*(log(-1/y) - log(1/y)) - 2*y*log(1/y)
+                - log(-1/y) + log(1/y))/(2*y**3 - 2*y), y)
     assert expand_log(cancel(diff(ans2, y) - e2), force=True) == 0
 
     # These are tested here in addition to in test_DifferentialExtension above
     # (symlogs) to test that backsubs works correctly.  The integrals should be
     # written in terms of the original logarithms in the integrands.
 
-    # XXX: Unfortunately, making backsubs work on this one is a little
-    # trickier, because x**x is converted to exp(x*log(x)), and so log(x**x)
-    # is converted to x*log(x). (x**2*log(x)).subs(x*log(x), log(x**x)) is
-    # smart enough, the issue is that these splits happen at different places
-    # in the algorithm.  Maybe a heuristic is in order
-    assert risch_integrate(log(x**x), x) == x**2*log(x)/2 - x**2/4
+    # The answer carries the locally-constant difference
+    # log(x**x) - x*log(x) explicitly (it vanishes on the domain where
+    # x**x is real, but not identically), so the original log(x**x)
+    # notation reappears through it.
+    assert risch_integrate(log(x**x), x) == \
+        x**2*log(x)/2 - x**2/4 + x*(log(x**x) - x*log(x))
 
     assert risch_integrate(log(x**y), x) == x*log(x**y) - x*y
     assert risch_integrate(log(sqrt(x)), x) == x*log(sqrt(x)) - x/2
+
+    # A restart (from the exponential radical path) clears backsubs, so
+    # the branch-constant Dummy recorded by _log_part() must be folded
+    # back into newf first, or it leaks into the result as a free symbol.
+    ans = risch_integrate(log(x) + log(x**2) + exp(x) + exp(x/2 + 1), x)
+    assert ans.free_symbols == {x}
+    assert cancel(diff(ans, x) - (log(x) + log(x**2) + exp(x) +
+        exp(x/2 + 1))) == 0
+
+    # Mixed notation: sqrt(exp(x)) and exp(x/2) are different functions
+    # off the real line (a locally constant sign apart), and both keep
+    # their identity: the radical is folded with an opaque ratio that is
+    # restored exactly, so the answer differentiates back to the mixed
+    # integrand on every component.
+    ans = risch_integrate(sqrt(exp(x)) + exp(x/2), x)
+    assert cancel((ans - 2*sqrt(exp(x)) - 2*exp(x/2)).expand()) == 0
+    # A pure user radical keeps its notation.
+    assert risch_integrate(sqrt(exp(x)), x) == 2*sqrt(exp(x))
 
     # Example 6.2.1
     expr = (exp(x) - x**2 + 2*x)/((exp(x) + x)**2*x**2)*exp((x**2 - 1)/x + 1/(exp(x) + x))
@@ -785,8 +1112,60 @@ def test_risch_integrate():
     expr = -I*(exp(I*x) - exp(-I*x))/2
     assert risch_integrate(expr, x) == -exp(I*x)/2 - exp(-I*x)/2
 
+    # issue 26502
+    expr = (-2*x*log(x) - 2*x - 2)/(x**3*log(x)**2 + 2*x**2*log(x)**2 +
+        x*log(x)**2 - x)
+    assert risch_integrate(expr, x) == \
+        log(log(x) + 1/(x + 1)) - log(log(x) - 1/(x + 1))
+
+def test_risch_integrate_symbolic_constant():
+    # A symbolic constant in the exponential argument; the generic answer
+    # holds for y != 0 and the degenerate case is handled by conds
+    assert risch_integrate(exp(x*y), x) == \
+        Piecewise((exp(x*y)/y, Ne(y, 0)), (x, True))
+
+
 def test_risch_integrate_float():
     assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
+
+
+def test_risch_integrate_log_to_atan():
+    # Residues that come in complex-conjugate pairs give real arc-tangents
+    # instead of complex logarithms (Bronstein, Section 2.8).
+    e = exp(x)/((exp(x) + 1)**2 + 1)
+    ans = risch_integrate(e, x)
+    assert ans == atan(exp(x) + 1)
+    assert cancel(diff(ans, x) - e) == 0
+
+    assert risch_integrate(exp(x)/(exp(2*x) + 1), x) == atan(exp(x))
+    assert risch_integrate(1/(x*(log(x)**2 + 1)), x) == atan(log(x))
+    assert risch_integrate(1/(x**2 + 1), x) == atan(x)
+
+    # Real and complex residues in a single term
+    e = (exp(2*x) + 2*exp(x) + 7)*exp(x)/(2*(exp(x) + 3)*(exp(2*x) + 1))
+    ans = risch_integrate(e, x)
+    assert ans == log(exp(x) + 3)/2 + atan(exp(x))
+    assert cancel(diff(ans, x) - e) == 0
+
+    # Complex residues with a nonzero real part give both a log and an
+    # atan term
+    e = (exp(x) + 4)*exp(x)/((exp(x) + 1)**2 + 1)
+    ans = risch_integrate(e, x)
+    assert ans == log(exp(2*x) + 2*exp(x) + 2)/2 + 3*atan(exp(x) + 1)
+    assert cancel(diff(ans, x) - e) == 0
+
+    # Real irrational residues also give explicit logarithms when the
+    # roots can be computed
+    assert risch_integrate(exp(x)/(exp(2*x) - 2), x) == \
+        sqrt(2)*log(exp(x) - sqrt(2))/4 - sqrt(2)*log(exp(x) + sqrt(2))/4
+
+    # Terms whose residues cannot all be computed explicitly fall back
+    # to a RootSum
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'Tfuncs': [log]})
+    H = [(Poly(z**5 - z - 1, z), Poly(t + z, t))]
+    assert residue_reduce_to_basic(H, DE, z) == \
+        RootSum(Poly(z**5 - z - 1, z), Lambda(z, z*log(z + log(x))))
 
 
 def test_integrate_primitive_nonelementary_residual():
@@ -799,6 +1178,31 @@ def test_integrate_primitive_nonelementary_residual():
         g, i = risch_integrate(f, x, separate_integral=True)
         assert isinstance(i, NonElementaryIntegral)
         assert cancel(together(diff(g, x) + i.function - f)) == 0
+
+
+def test_risch_integrate_cancellation():
+    # Requires the parametric Liouvillian cancellation case at the
+    # exponential level (prde_cancel_liouvillian() via limited_integrate());
+    # this used to hang because the coefficient shift i*Dt/t was computed
+    # at the wrong level.
+    e = exp(x)*log(exp(x) + 1)
+    assert risch_integrate(e, x) == \
+        exp(x)*log(exp(x) + 1) - exp(x) + log(exp(x) + 1)
+
+    # Requires the structure-theorem fallback of parametric_log_deriv()
+    # (the heuristic alone raises NotImplementedError on this one)
+    e = log(exp(x) + log(x))
+    g, i = risch_integrate(e, x, separate_integral=True)
+    assert isinstance(i, NonElementaryIntegral)
+    assert cancel(together(diff(g, x) + i.function - e)) == 0
+
+    # Purely elementary results through the same fallback (these raised
+    # NotImplementedError before)
+    for F in [(x - 1)*log(exp(x) + log(x)), exp(x)*log(exp(x) + log(x))]:
+        e = cancel(diff(F, x))
+        ans = risch_integrate(e, x)
+        assert not ans.has(NonElementaryIntegral)
+        assert cancel(together(diff(ans, x) - e)) == 0
 
 
 def test_bound_degree_limited_integrate():
@@ -835,17 +1239,107 @@ def test_DifferentialExtension_equality():
 def test_DifferentialExtension_printing():
     DE = DifferentialExtension(exp(2*x**2) + log(exp(x**2) + 1), x)
     assert repr(DE) == ("DifferentialExtension(dict([('f', exp(2*x**2) + log(exp(x**2) + 1)), "
+        "('origf', exp(2*x**2) + log(exp(x**2) + 1)), "
         "('x', x), ('T', [x, t0, t1]), ('D', [Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
         "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]), ('fa', Poly(t1 + t0**2, t1, domain='ZZ[t0]')), "
         "('fd', Poly(1, t1, domain='ZZ')), ('Tfuncs', [Lambda(i, exp(i**2)), Lambda(i, log(t0 + 1))]), "
-        "('backsubs', []), ('exts', [None, 'exp', 'log']), ('extargs', [None, x**2, t0 + 1]), "
-        "('cases', ['base', 'exp', 'primitive']), ('case', 'primitive'), ('t', t1), "
+        "('backsubs', []), ('exts', ['exp', 'log']), ('extargs', [x**2, t0 + 1]), "
+        "('cases', ['base', 'exp', 'primitive']), ('case', 'primitive'), ('transcendental', True), ('t', t1), "
         "('d', Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')), ('newf', t0**2 + t1), ('level', -1), "
-        "('dummy', False)]))")
+        "('dummy', False), ('algebraic', False), ('sign_consts', []), "
+        "('algebraic_gens', False)]))")
 
     assert str(DE) == ("DifferentialExtension({fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), "
         "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
         "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]})")
+
+
+def test_risch_integrate_algebraic_undecidable_structure():
+    # An undecidable structure question over an algebraic tower (here
+    # parametric_log_deriv()'s heuristic and structure method are both
+    # inconclusive) is answered "no relation" instead of aborting the
+    # integration: nonelementary conclusions are degraded to
+    # unevaluated Integrals and solved results are vetted
+    # independently, so the answer stays sound.  From the Blake corpus.
+    f = 1/(x**2*(x**4 - 1)**Rational(3, 4))
+    r = risch_integrate(f, x)
+    assert not r.has(Integral)
+    err = r.diff(x) - f
+    assert all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
+               for p in [-3, Rational(-1, 2), Rational(1, 2), 2, 2 + I])
+
+
+def test_risch_integrate_nonrational_structure_constants():
+    # 2**log(x) == x**log(2) builds the tower exp(log(2)*log(x)) over
+    # QQ(x, log(x)).  The structure system's unique solution log(2) is
+    # provably irrational, so the new exponential is proven not to be a
+    # radical of the tower: the tower stays proven transcendental and
+    # keeps its nonelementary proofs.
+    for f in [2**log(x)/x**2, 2**log(x), 2**log(x)*log(x)]:
+        r = risch_integrate(f, x)
+        assert not r.has(Integral)
+        err = r.diff(x) - f
+        assert all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
+                   for p in [Rational(1, 3), 2, 5])
+    assert DifferentialExtension(2**log(x)/x**2, x).transcendental is True
+
+    # For 2**x + 3**x the relation between exp(x*log(2)) and
+    # exp(x*log(3)) hinges on the rationality of log(3)/log(2), which
+    # sympy cannot decide, so the tower is built assuming no relation
+    # and its transcendence is downgraded to unproven: solved results
+    # are vetted and nonelementary conclusions become unevaluated
+    # Integrals.
+    f = 2**x + 3**x
+    assert risch_integrate(f, x) == 2**x/log(2) + 3**x/log(3)
+    assert DifferentialExtension(f, x).transcendental is False
+
+    # For 2**x*3**(x**2) the structure system for the second exponential
+    # has no constant solution at all (the argument ratio is not
+    # constant), which is a sound "no relation": the tower stays proven
+    # transcendental and the nonelementary proof stands.
+    r = risch_integrate(2**x*3**(x**2), x)
+    assert isinstance(r, NonElementaryIntegral)
+    assert DifferentialExtension(2**x*3**(x**2), x).transcendental is True
+
+    # pi**log(x)/x needs the rationality of log(pi), which is undecided
+    # (is_rational is None), so this exercises the degraded path end to
+    # end with a solved, vetted result.
+    f = pi**log(x)/x
+    r = risch_integrate(f, x)
+    assert r == exp(log(pi)*log(x))/log(pi)
+    assert DifferentialExtension(f, x).transcendental is False
+
+    # A proven radical relation (exp(x*log(2)/2 + 1)**2 == E**2*2**x)
+    # discovered after the tower's transcendence was already downgraded
+    # (by the undecided 2**x-vs-3**x relation) must still trigger the
+    # restart-and-regroup rewrite -- restarting is gated on the tower
+    # actually containing algebraic generators, not on unproven
+    # transcendence -- so the relation ends up explicit in the
+    # regrouped generators (2**x == t**2 over t == exp(x*log(2)/2))
+    # instead of an adjoined generator with a relation invisible to
+    # the kernel checks.
+    f = 2**x + 3**x + exp(x*log(2)/2 + 1)
+    DE = DifferentialExtension(f, x)
+    assert DE.extargs == [x*log(2)/2, x*log(3)]
+    assert DE.transcendental is False and DE.algebraic_gens is False
+    r = risch_integrate(f, x)
+    assert not r.has(Integral)
+    err = r.diff(x) - f
+    assert all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
+               for p in [Rational(1, 3), 2, 5])
+
+    # The same restart in a fully proven tower: the exponential factors
+    # of the radical are folded to exp((p/n)*arg) directly, so the
+    # backsubs fold (exp(x*log(2)) -> 2**x) cannot strand the radical
+    # as sqrt(2**x), which the rebuild would not recognize.
+    f = 2**x + exp(x*log(2)/2 + 1)
+    DE = DifferentialExtension(f, x)
+    assert DE.extargs == [x*log(2)/2]
+    assert DE.transcendental is True
+    r = risch_integrate(f, x)
+    err = r.diff(x) - f
+    assert all(abs(complex(err.subs(x, p).evalf(30))) < 1e-25
+               for p in [Rational(1, 3), 2, 5])
 
 
 def test_issue_23948():
