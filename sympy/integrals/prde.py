@@ -83,14 +83,14 @@ def real_imag(ba, bd, gen):
     ba = ba.as_poly(gen).as_dict()
     denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
     denom_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in bd.items()]
-    bd_real = sum(r for r in denom_real)
-    bd_imag = sum(r for r in denom_imag)
+    bd_real = sum(denom_real, S.Zero)
+    bd_imag = sum(denom_imag, S.Zero)
     num_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in ba.items()]
     num_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in ba.items()]
-    ba_real = sum(r for r in num_real)
-    ba_imag = sum(r for r in num_imag)
-    ba = ((ba_real*bd_real + ba_imag*bd_imag).as_poly(gen), (ba_imag*bd_real - ba_real*bd_imag).as_poly(gen))
-    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
+    ba_real = sum(num_real, S.Zero)
+    ba_imag = sum(num_imag, S.Zero)
+    ba = (Poly(ba_real*bd_real + ba_imag*bd_imag, gen), Poly(ba_imag*bd_real - ba_real*bd_imag, gen))
+    bd = Poly(bd_real*bd_real + bd_imag*bd_imag, gen)
     return (ba[0], ba[1], bd)
 
 
@@ -226,11 +226,12 @@ def constant_system(A, u, DE):
 
     Given a differential field (K, D) with constant field C = Const(K), a Matrix
     A, and a vector (Matrix) u with coefficients in K, returns the tuple
-    (B, v, s), where B is a Matrix with coefficients in C and v is a vector
-    (Matrix) such that either v has coefficients in C, in which case s is True
-    and the solutions in C of Ax == u are exactly all the solutions of Bx == v,
-    or v has a non-constant coefficient, in which case s is False Ax == u has no
-    constant solution.
+    (B, v), where B is a Matrix with coefficients in C and v is a vector
+    (Matrix) such that either v has coefficients in C, in which case the
+    solutions in C of Ax == u are exactly all the solutions of Bx == v, or v
+    has a non-constant coefficient, in which case Ax == u has no constant
+    solution.  Note that B and v are a reduced *system*, not a solution:
+    callers must check that v is constant and then solve Bx == v themselves.
 
     This algorithm is used both in solving parametric problems and in
     determining if an element a of K is a derivative of an element of K or the
@@ -270,21 +271,42 @@ def constant_system(A, u, DE):
 
     D = lambda x: derivation(x, DE, basic=True)
 
-    for j, i in itertools.product(range(A.cols), range(A.rows)):
-        if A[i, j].expr.has(*DE.T):
-            # This assumes that const(F(t0, ..., tn) == const(K) == F
-            Ri = A[i, :]
-            # Rm+1; m = A.rows
-            DAij = D(A[i, j])
-            Rm1 = Ri.applyfunc(lambda x: D(x) / DAij)
-            um1 = D(u[i]) / DAij
+    # Repeat until no entry of A is nonconstant, processing rows appended
+    # in earlier iterations as well ("while A is not constant do" in the
+    # book's ConstantSystem; iterating over a snapshot of the original
+    # rows would let nonconstant entries in the appended rows escape).
+    # The safety cap guards against nontermination in case cancel() fails
+    # to recognize an identically zero derivation (see the comment above).
+    for _ in range((Au.rows + 1)*(Au.cols + 1)*(len(DE.T) + 1) + 10):
+        for j, i in itertools.product(range(A.cols), range(A.rows)):
+            if A[i, j].expr.has(*DE.T):
+                break
+        else:
+            break
+        # This assumes that const(F(t0, ..., tn)) == const(K) == F
+        # TODO: If A[i, j] contains symbolic constants, D(A[i, j]) can
+        # vanish for special values of them (e.g. an entry y*t is
+        # nonconstant except at y == 0), and dividing by it makes the
+        # reduced system valid only generically.  The same applies to
+        # the pivots of the rref() calls, which also divide by
+        # parameter-dependent entries.  The correct result would be a
+        # Piecewise over the (solve()-generated) vanishing conditions of
+        # each pivot.
+        Ri = A[i, :]
+        # Rm+1; m = A.rows
+        DAij = D(A[i, j])
+        Rm1 = Ri.applyfunc(lambda x: D(x) / DAij)
+        um1 = D(u[i]) / DAij
 
-            Aj = A[:, j]
-            A = A - Aj * Rm1
-            u = u - Aj * um1
+        Aj = A[:, j]
+        A = A - Aj * Rm1
+        u = u - Aj * um1
 
-            A = A.col_join(Rm1)
-            u = u.col_join(Matrix([um1], u.gens))
+        A = A.col_join(Rm1)
+        u = u.col_join(Matrix([um1], u.gens))
+    else:
+        raise RuntimeError("constant_system() did not reach a constant "
+            "system; the constant field may not be computable by cancel().")
 
     return (A, u)
 
@@ -458,6 +480,89 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     return f + H, A.col_join(B).col_join(C)
 
 
+def prde_no_cancel_b_equal(b, Q, n, DE):
+    """
+    Parametric Poly Risch Differential Equation - No cancellation: deg(b) == delta(t) - 1
+
+    Explanation
+    ===========
+
+    Given a derivation D on k[t] with delta(t) >= 2, n in ZZ, and
+    b, q1, ..., qm in k[t] with deg(b) == delta(t) - 1 and
+    n > -lc(b)/lc(Dt), returns h1, ..., hr in k[t] and a matrix A with
+    coefficients in Const(k) such that if c1, ..., cm in Const(k) and
+    q in k[t] satisfy deg(q) <= n and Dq + b*q == Sum(ci*qi, (i, 1, m)),
+    then q == Sum(dj*hj, (j, 1, r)), where d1, ..., dr in Const(k) and
+    A*Matrix([c1, ..., cm, d1, ..., dr]).T == 0.
+
+    This implements the "When delta(t) >= 2 and deg(b) == delta(t) - 1"
+    discussion of Section 7.1 of Bronstein's book (neither edition gives
+    it as named pseudocode).  If the possible-cancellation degree
+    -lc(b)/lc(Dt) is a positive integer at most n, the remaining problem
+    is delegated to the cancellation algorithms via param_poly_rischDE(),
+    which for delta(t) >= 2 are not yet implemented, so this case
+    currently raises NotImplementedError.
+    """
+    m = len(Q)
+    delta = DE.d.degree(DE.t)
+    lam = DE.d.LC()
+
+    # The degree at which cancellation could occur.
+    # TODO: If b or Dt contains symbolic constants, Mc may be an integer
+    # only for special values of them (e.g. b == -y*t gives Mc == y), and
+    # the divisions by u below then produce a result that is valid only
+    # generically: e.g. H == [-t**3/(y - 3) - 3*t/(y**2 - 4*y + 3)] is
+    # undefined at y == 3 and y == 1.  The correct result would be a
+    # Piecewise with one condition per loop iteration where
+    # solve(N*lam + lc(b), y) is nonempty, with the cancellation
+    # algorithms handling those special values.
+    Mc = cancel(-b.LC()/lam)
+    if Mc.is_Integer and Mc > 0:
+        M = int(Mc)
+    else:
+        M = -1
+
+    H = [Poly(0, DE.t)]*m
+
+    for N in range(n, M, -1):  # [n, ..., M + 1]
+        u = cancel(N*lam + b.LC())  # nonzero, since N != -lc(b)/lam
+        for i in range(m):
+            si = Q[i].nth(N + delta - 1)/u
+            sitn = Poly(si*DE.t**N, DE.t)
+            H[i] = H[i] + sitn
+            Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
+
+    if M == -1:
+        # The loop ran through N == 0, so as in prde_no_cancel_b_large()
+        # any solution is q == Sum(ci*hi) and the (updated) right hand
+        # sides must satisfy Sum(ci*qi) == 0.
+        if all(qi.is_zero for qi in Q):
+            dc = -1
+        else:
+            dc = max(qi.degree(DE.t) for qi in Q)
+        Mmat = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
+        A, _ = constant_system(Mmat, zeros(dc + 1, 1, DE.t), DE)
+        c = eye(m, DE.t)
+        A = A.row_join(zeros(A.rows, m, DE.t)).col_join(c.row_join(-c))
+        return (H, A)
+
+    # We reached the possible-cancellation degree M > 0.  Solve the
+    # remaining problem, with the updated right hand sides and degree
+    # bound M, by the cancellation algorithms.
+    f, B = param_poly_rischDE(Poly(1, DE.t), b, Q, M, DE)
+    # Any solution is q == Sum(ci*hi) + Sum(dj*fj), where the fj and the
+    # matrix B constrain (c1, ..., cm, d1, ..., dr).  Combine into a
+    # relation matrix over the columns
+    # (c1, ..., cm, d_h1, ..., d_hm, d_f1, ..., d_fr), where the first
+    # block of rows enforces d_hi == ci.
+    r = len(f)
+    Bc = Matrix(B.rows, m, lambda i, j: B[i, j], DE.t)
+    Bd = Matrix(B.rows, r, lambda i, j: B[i, m + j], DE.t)
+    top = eye(m, DE.t).row_join(-eye(m, DE.t)).row_join(zeros(m, r, DE.t))
+    bottom = Bc.row_join(zeros(B.rows, m, DE.t)).row_join(Bd)
+    return (H + f, top.col_join(bottom))
+
+
 def prde_cancel_liouvillian(b, Q, n, DE):
     """
     Parametric Poly Risch Differential Equation - Cancellation: Liouvillian case.
@@ -466,7 +571,18 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     from the discussion in Section 7.1 of Bronstein's book (neither edition
     gives it as named pseudocode).
     """
+    if DE.case not in ('primitive', 'exp'):
+        raise ValueError("case must be 'primitive' or 'exp', not %s." %
+            DE.case)
+
     H = []
+
+    if DE.case == 'exp':
+        # The coefficient of t**i satisfies the equation
+        # D(q_i) + (b + i*eta)*q_i == rhs_i over k, where eta == Dt/t.
+        # eta must be computed at the current level, before DecrementLevel
+        # is entered below.
+        eta = DE.d.quo(Poly(DE.t, DE.t)).as_expr()
 
     # Why use DecrementLevel? Below line answers that:
     # Assuming that we can solve such problems over 'k' (not k[t])
@@ -477,8 +593,7 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     for i in range(n, -1, -1):
         if DE.case == 'exp': # this re-checking can be avoided
             with DecrementLevel(DE):
-                ba, bd = frac_in(b + (i*(derivation(DE.t, DE)/DE.t)).as_poly(b.gens),
-                                DE.t, field=True)
+                ba, bd = frac_in(b.as_expr() + i*eta, DE.t, field=True)
         with DecrementLevel(DE):
             Qy = [frac_in(q.nth(i), DE.t, field=True) for q in Q]
             fi, Ai = param_rischDE(ba, bd, Qy, DE)
@@ -495,12 +610,16 @@ def prde_cancel_liouvillian(b, Q, n, DE):
 
         Fi, hi = [None]*ri, [None]*ri
 
-        # from eq. on top of p.238 (unnumbered)
+        # Substituting q == d*h + q_rest into Dq + b*q == Sum(ci*qi)
+        # leaves the residual equation
+        # D(q_rest) + b*q_rest == Sum(ci*qi) - d*(D(h) + b*h)
+        # (see the equation following (7.17) in Section 7.1; the sign of
+        # the b*h term is misprinted as a minus in the 1st edition).
         for j in range(ri):
             hji = fi[j] * (DE.t**i).as_poly(fi[j].gens)
             hi[j] = hji
-            # building up Sum(djn*(D(fjn*t^n) - b*fjnt^n))
-            Fi[j] = -(derivation(hji, DE) - b*hji)
+            # building up Sum(dji*(D(fji*t^i) + b*fji*t^i))
+            Fi[j] = -(derivation(hji, DE) + b*hji)
 
         H += hi
         # in the next loop instead of Q it has
@@ -557,8 +676,7 @@ def param_poly_rischDE(a, b, q, n, DE):
         elif (DE.d.degree() >= 2 and
               b.degree() == DE.d.degree() - 1 and
               n > -b.as_poly().LC()/DE.d.as_poly().LC()):
-            raise NotImplementedError("prde_no_cancel_b_equal() is "
-                "not yet implemented.")
+            return prde_no_cancel_b_equal(b, q, n, DE)
 
         else:
             # Liouvillian cases
@@ -651,44 +769,24 @@ def param_poly_rischDE(a, b, q, n, DE):
     return h, A
 
 
-def param_rischDE(fa, fd, G, DE):
+def _prde_normalized_solve(A, B, G, gamma, DE, n=None):
     """
-    Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
+    Common tail of param_rischDE() and limited_integrate().
 
     Explanation
     ===========
 
-    Given a derivation D in k(t), f in k(t), and G
-    = [G1, ..., Gm] in k(t)^m, return h = [h1, ..., hr] in k(t)^r and
-    a matrix A with m + r columns and entries in Const(k) such that
-    Dy + f*y = Sum(ci*Gi, (i, 1, m)) has a solution y
-    in k(t) with c1, ..., cm in Const(k) if and only if y = Sum(dj*hj,
-    (j, 1, r)) where d1, ..., dr are in Const(k) and (c1, ..., cm,
-    d1, ..., dr) is a solution of Ax == 0.
-
-    Elements of k(t) are tuples (a, d) with a and d in k[t].
-
-    This chains together the parametric algorithms of Section 7.1 of
-    Bronstein's book; the book does not give it as a single named
-    pseudocode function.
+    Given A, B in k[t] and G = [G1, ..., Gm] in k(t)^m with the equation
+    A*Dp + B*p == Sum(ci*Gi, (i, 1, m)) already reduced (weakly
+    normalized, denominators cleared), return h = [h1, ..., hr] in
+    k(t)^r and a matrix C with entries in Const(k) such that solutions
+    of the original problem are y == Sum(dj*hj, (j, 1, r))/1 with
+    (c1, ..., cm, d1, ..., dr) in the nullspace of C, where the
+    returned hj have already been divided by gamma.  If ``n`` is None,
+    the degree bound is computed with bound_degree(); otherwise ``n``
+    is used as a proven degree bound, avoiding bound_degree() entirely.
     """
     m = len(G)
-    q, (fa, fd) = weak_normalizer(fa, fd, DE)
-    # Solutions of the weakly normalized equation Dz + f*z = q*Sum(ci*Gi)
-    # correspond to solutions y = z/q of the original equation.
-    gamma = q
-    G = [(q*ga).cancel(gd, include=True) for ga, gd in G]
-
-    a, (ba, bd), G, hn = prde_normal_denom(fa, fd, G, DE)
-    # Solutions q in k<t> of  a*Dq + b*q = Sum(ci*Gi) correspond
-    # to solutions z = q/hn of the weakly normalized equation.
-    gamma *= hn
-
-    A, B, G, hs = prde_special_denom(a, ba, bd, G, DE)
-    # Solutions p in k[t] of  A*Dp + B*p = Sum(ci*Gi) correspond
-    # to solutions q = p/hs of the previous equation.
-    gamma *= hs
-
     g = A.gcd(B)
     a, b, g = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for
         gia, gid in G]
@@ -732,15 +830,18 @@ def param_rischDE(fa, fd, G, DE):
     # Solutions of a*Dp + b*p = Sum(dj*rj) correspond to solutions
     # y = p/gamma of the initial equation with ci = Sum(dj*aji).
 
-    try:
-        # We try n=5. At least for prde_spde, it will always
-        # terminate no matter what n is.
+    if n is None:
+        # bound_degree() raises NotImplementedError when it cannot decide
+        # one of its structure-theorem queries, and we let that propagate.
+        # Guessing a finite bound here instead (n = 5 from 2017 to 2026)
+        # is unsound: solutions of degree above the guess are silently
+        # lost, so a caller like is_deriv_in_field() can be tricked into
+        # a false proof that an elementary integral is nonelementary.
+        # Falling back to n == oo (as rischDE() does) is not an option
+        # either, since the parametric no-cancellation and cancellation
+        # algorithms iterate over range(n, ...), which requires a finite
+        # bound.
         n = bound_degree(a, b, r, DE, parametric=True)
-    except NotImplementedError:
-        # A temporary bound is set. Eventually, it will be removed.
-        # the currently added test case takes large time
-        # even with n=5, and much longer with large n's.
-        n = 5
 
     h, B = param_poly_rischDE(a, b, r, n, DE)
 
@@ -791,6 +892,46 @@ def param_rischDE(fa, fd, G, DE):
     return [hk.cancel(gamma, include=True) for hk in h], C
 
 
+def param_rischDE(fa, fd, G, DE):
+    """
+    Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
+
+    Explanation
+    ===========
+
+    Given a derivation D in k(t), f in k(t), and G
+    = [G1, ..., Gm] in k(t)^m, return h = [h1, ..., hr] in k(t)^r and
+    a matrix A with m + r columns and entries in Const(k) such that
+    Dy + f*y = Sum(ci*Gi, (i, 1, m)) has a solution y
+    in k(t) with c1, ..., cm in Const(k) if and only if y = Sum(dj*hj,
+    (j, 1, r)) where d1, ..., dr are in Const(k) and (c1, ..., cm,
+    d1, ..., dr) is a solution of Ax == 0.
+
+    Elements of k(t) are tuples (a, d) with a and d in k[t].
+
+    This chains together the parametric algorithms of Section 7.1 of
+    Bronstein's book; the book does not give it as a single named
+    pseudocode function.
+    """
+    q, (fa, fd) = weak_normalizer(fa, fd, DE)
+    # Solutions of the weakly normalized equation Dz + f*z = q*Sum(ci*Gi)
+    # correspond to solutions y = z/q of the original equation.
+    gamma = q
+    G = [(q*ga).cancel(gd, include=True) for ga, gd in G]
+
+    a, (ba, bd), G, hn = prde_normal_denom(fa, fd, G, DE)
+    # Solutions q in k<t> of  a*Dq + b*q = Sum(ci*Gi) correspond
+    # to solutions z = q/hn of the weakly normalized equation.
+    gamma *= hn
+
+    A, B, G, hs = prde_special_denom(a, ba, bd, G, DE)
+    # Solutions p in k[t] of  A*Dp + B*p = Sum(ci*Gi) correspond
+    # to solutions q = p/hs of the previous equation.
+    gamma *= hs
+
+    return _prde_normalized_solve(A, B, G, gamma, DE)
+
+
 def limited_integrate_reduce(fa, fd, G, DE):
     """
     Simpler version of step 1 & 2 for the limited integration problem.
@@ -817,7 +958,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     """
     dn, ds = splitfactor(fd, DE)
     E = [splitfactor(gd, DE) for _, gd in G]
-    En, Es = list(zip(*E))
+    En, Es = list(zip(*E)) if E else ((), ())
     c = reduce(lambda i, j: i.lcm(j), (dn,) + En)  # lcm(dn, en1, ..., enm)
     hn = c.gcd(c.diff(DE.t))
     a = hn
@@ -830,8 +971,8 @@ def limited_integrate_reduce(fa, fd, G, DE):
         hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es)  # lcm(ds, es1, ..., esm)
         a = hn*hs
         b -= (hn*derivation(hs, DE)).quo(hs)
-        mu = min(order_at_oo(fa, fd, DE.t), min(order_at_oo(ga, gd, DE.t) for
-            ga, gd in G))
+        mu = min([order_at_oo(fa, fd, DE.t)] + [order_at_oo(ga, gd, DE.t) for
+            ga, gd in G])
         # So far, all the above are also nonlinear or Liouvillian, but if this
         # changes, then this will need to be updated to call bound_degree()
         # as per the docstring of this function (DE.case == 'other_linear').
@@ -841,7 +982,14 @@ def limited_integrate_reduce(fa, fd, G, DE):
         raise NotImplementedError
 
     V = [(-a*hn*ga).cancel(gd, include=True) for ga, gd in G]
-    return (a, b, a, N, (a*hn*fa).cancel(fd, include=True), V)
+    # Note: the first component is hn, not a.  Both editions of the book
+    # return a here, but that does not satisfy the stated contract when
+    # hs != 1: from v == p/a, the original equation multiplied by a**2
+    # gives a*Dp - Da*p == a**2*f - Sum(ci*a**2*wi), and dividing through
+    # by hs (which divides Da exactly, since hs is special) gives
+    # hn*Dp + b*p == a*hn*f - Sum(ci*a*hn*wi) with the b and right hand
+    # sides constructed above.
+    return (hn, b, a, N, (a*hn*fa).cancel(fd, include=True), V)
 
 
 def limited_integrate(fa, fd, G, DE):
@@ -853,30 +1001,68 @@ def limited_integrate(fa, fd, G, DE):
     function).
     """
     fa, fd = fa*Poly(1/fd.LC(), DE.t), fd.monic()
-    # interpreting limited integration problem as a
-    # parametric Risch DE problem
-    Fa = Poly(0, DE.t)
-    Fd = Poly(1, DE.t)
-    G = [(fa, fd)] + G
-    h, A = param_rischDE(Fa, Fd, G, DE)
-    V = A.nullspace()
-    V = [v for v in V if v[0] != 0]
-    if not V:
+    # Reduction to a polynomial problem (LimitedIntegrateReduce, Section
+    # 7.2): for any solution v in k(t), c1, ..., cm in Const(k) of
+    # f == Dv + Sum(ci*wi), p == v*h is in k[t] and satisfies
+    # A*Dp + b*p == g + Sum(ci*vi) with deg(p) <= N.
+    A, b, h, N, g, V = limited_integrate_reduce(fa, fd, G, DE)
+    # Solve the parametric problem with right hand sides [g] + V.
+    # Solutions of the original problem correspond to parametric
+    # solutions whose g-coefficient is 1.  N is a proven degree bound,
+    # so bound_degree() is not needed.
+    Q = [g] + V
+    hs, C = _prde_normalized_solve(A, b, Q, h, DE, n=N)
+    W = C.nullspace()
+    W = [w for w in W if w[0] != 0]
+    if not W:
         return None
-    else:
-        # we can take any vector from V, we take V[0]
-        c0 = V[0][0]
-        # v = [-1, c1, ..., cm, d1, ..., dr]
-        v = V[0]/(-c0)
-        r = len(h)
-        m = len(v) - r - 1
-        C = list(v[1: m + 1])
-        y = -sum(v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr() \
-                for i in range(r))
-        y_num, y_den = y.as_numer_denom()
-        Ya, Yd = Poly(y_num, DE.t), Poly(y_den, DE.t)
-        Y = Ya*Poly(1/Yd.LC(), DE.t), Yd.monic()
-        return Y, C
+    # we can take any vector from W; take W[0], scaled so that the
+    # g-coefficient is 1
+    # TODO: If W[0][0] contains symbolic constants, it can vanish for
+    # special values of them, making the result valid only generically;
+    # a different nullspace vector may serve those special values, and
+    # the correct result would be a Piecewise over the corresponding
+    # conditions.
+    w = W[0]/W[0][0]
+    r = len(hs)
+    m = len(w) - r - 1
+    C = list(w[1: m + 1])
+    y = sum((w[m + 1 + i]*hs[i][0].as_expr()/hs[i][1].as_expr()
+            for i in range(r)), S.Zero)
+    y_num, y_den = y.as_numer_denom()
+    Ya, Yd = Poly(y_num, DE.t), Poly(y_den, DE.t)
+    Y = Ya*Poly(1/Yd.LC(), DE.t), Yd.monic()
+    return Y, C
+
+
+def is_deriv_in_field(fa, fd, DE):
+    """
+    Checks if f can be written as the derivative of an element of k(t).
+
+    Explanation
+    ===========
+
+    f in k(t) is the derivative of an element of k(t) if there exists v in
+    k(t) such that f == Dv.  Either returns (va, vd), with va, vd in k[t]
+    such that f == D(va/vd), or None, which means that f is not the
+    derivative of an element of k(t).  Note that v is determined only up
+    to an additive constant.
+
+    This is the in-field integration problem from Section 5.12 of
+    Bronstein's book (the "Recognizing Derivatives" subsection; neither
+    edition gives it as named pseudocode).  It is solved here as the
+    special case of the limited integration problem (Section 7.2) with an
+    empty list of special elements.
+
+    See also
+    ========
+    limited_integrate, is_log_deriv_k_t_radical_in_field
+    """
+    A = limited_integrate(fa, fd, [], DE)
+    if A is None:
+        return None
+    (va, vd), _ = A
+    return (va, vd)
 
 
 def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
@@ -1003,6 +1189,14 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
                     return None
                 cc = cancel(p.LC()/q.LC())
                 if not cc.is_Rational:
+                    # If cc contains symbolic constants, it may be
+                    # rational only for special values of them (a
+                    # condition like "y in QQ" that is not expressible
+                    # as a Piecewise relational); None here is correct
+                    # generically and at worst yields a false
+                    # nonelementary proof at those values, never a
+                    # wrong antiderivative, so no Piecewise handling is
+                    # needed.
                     return None
             M, N = cc.as_numer_denom()
 
@@ -1051,20 +1245,190 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     return (Q*N, Q*M, v)
 
 
+def parametric_log_deriv_structure(fa, fd, wa, wd, DE):
+    """
+    Parametric logarithmic derivative problem via the structure theorems.
+
+    Explanation
+    ===========
+
+    Tries to solve n*f == Dv/v + m*w for n, m in ZZ, n != 0, and v in
+    k(t)*, by solving the structure equation
+
+        f == (m/n)*w + Sum(ri*Dti/ti, i in E) + Sum(ri*Dti, i in L)
+
+    for rational (m/n, r1, ..., rk), where E and L are the
+    hyperexponential and logarithmic monomials of the current tower (up
+    to the current level), as in equation (7.44) of Section 7.3 of
+    Bronstein's book, with theta adjoined as an extra hyperexponential
+    generator.  A solution yields (n, m, v) with
+    v == Product(termi**(n*ri)) directly.
+
+    Either returns (n, m, v), or None, which means that f - (m/n)*w is
+    not a QQ-linear combination of the logarithmic derivatives available
+    from the current tower for any m/n in QQ.  Note that None does NOT
+    prove that no solution exists: a solution whose v requires monomials
+    not in the tower (e.g. new logarithms) is not found by this method.
+    Callers must treat None as inconclusive.
+    """
+    # The same assumptions as in is_log_deriv_k_t_radical()
+    if len(DE.exts) != len(DE.D) - 1:
+        if [i for i in DE.cases if i == 'tan'] or \
+                ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
+                        set(DE.indices('log'))):
+            raise NotImplementedError("Real version of the structure "
+                "theorems with hypertangent support is not yet implemented.")
+        raise NotImplementedError("Nonelementary extensions not supported "
+            "in the structure theorems.")
+
+    # Use only the part of the tower visible at the current level: the
+    # callers pose this problem inside DecrementLevel, and v must lie in
+    # the current field (w itself is usually the log derivative of the
+    # monomial one level up, which must not appear in v).
+    top = len(DE.T) + DE.level
+    E_indices = [i for i in DE.indices('exp') if i <= top]
+    L_indices = [i for i in DE.indices('log') if i <= top]
+    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in E_indices]
+    L_part = [DE.D[i].as_expr() for i in L_indices]
+
+    w = wa.as_expr()/wd.as_expr()
+    f = fa.as_expr()/fd.as_expr()
+
+    dum = Dummy()
+    lhs = Matrix([[w] + E_part + L_part], dum)
+    rhs = Matrix([f], dum)
+
+    A, u = constant_system(lhs, rhs, DE)
+
+    # A*x == u is now a linear system with constant coefficients for the
+    # rational unknowns x == (m/n, r1, ..., rk).  Note that u is the
+    # reduced right hand side, not a solution: the system may be
+    # underdetermined (e.g. when w is a combination of the generators),
+    # so solve it explicitly, setting any free parameters to zero.
+    Am = A.to_Matrix()
+    um = u.to_Matrix()
+    if not (all(i.is_Rational for i in Am) and
+            all(i.is_Rational for i in um)):
+        if not all(derivation(i, DE, basic=True).is_zero for i in Am.vec()) \
+                or not all(derivation(i, DE, basic=True).is_zero for i in um):
+            # The system could not be reduced to one over the constants
+            return None
+        raise NotImplementedError("Cannot work with non-rational "
+            "coefficients in this case.")
+    from sympy.matrices import Matrix as _Matrix
+    try:
+        xs, params = _Matrix(Am).gauss_jordan_solve(_Matrix(um))
+    except ValueError:
+        # Inconsistent system: f - (m/n)*w is not a combination of the
+        # available logarithmic derivatives for any m/n.
+        # With symbolic constants, inconsistency is decided only
+        # generically; at special values of the constants a solution may
+        # exist.  The wrapper then raises NotImplementedError, which is
+        # sound (an honest error, never a wrong answer), so no Piecewise
+        # handling is needed here.
+        return None
+    xs = xs.subs(dict.fromkeys(params, S.Zero))
+
+    n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in xs], S.One)
+    xs *= n  # now integers: [m, n*r1, ..., n*rk]
+    m = xs[0]
+    terms = ([DE.T[i] for i in E_indices] + [DE.extargs[i - 1] for i in L_indices])
+    v = Mul(*[Pow(i, j) for i, j in zip(terms, xs[1:])])
+    if n == 0:
+        return None
+    # Defensive check of n*f == Dv/v + m*w (Dv/v is the same QQ-linear
+    # combination of the generator logarithmic derivatives by construction)
+    lhs_check = Add(*[Mul(j, i) for i, j in zip(E_part + L_part, xs[1:])])
+    if cancel(n*f - m*w - lhs_check) != 0:
+        return None
+    if n < 0:
+        n, m, v = -n, -m, 1/v
+    return (n, m, v)
+
+
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     """
     Solves the parametric logarithmic derivative problem.
 
     This is the parametric logarithmic derivative problem from Section 7.3
-    of Bronstein's book; currently only the heuristic
-    (``ParametricLogarithmicDerivative``) is implemented.
+    of Bronstein's book: n*f == Dv/v + m*w for n, m in ZZ, n != 0, and
+    v in k(t)*.  The heuristic (``ParametricLogarithmicDerivative``) is
+    tried first; if it cannot decide, the structure theorem method of the
+    same section is tried.
     """
-    # TODO: Write the full algorithm using the structure theorems.  Until
-    # then, this propagates NotImplementedError when the heuristic cannot
-    # decide (it must not be caught and treated as "no solution", since a
-    # solution may exist; see parametric_log_deriv_heu()).
-    A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
+    try:
+        A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
+    except NotImplementedError:
+        A = parametric_log_deriv_structure(fa, fd, wa, wd, DE)
+        if A is None:
+            # The structure method proves nonexistence only when the
+            # elementary extension containing Integral(f) needs no
+            # monomials outside the current tower, which we cannot check
+            # here, so an inconclusive result must not be reported as
+            # "no solution".
+            raise NotImplementedError("parametric_log_deriv() could not "
+                "decide: the heuristic failed and f - (m/n)*w is not a "
+                "combination of logarithmic derivatives from the current "
+                "tower for any m/n in QQ.")
     return A
+
+
+def _structure_system_solve(lhs, rhs, DE):
+    """
+    Find a constant solution x of the structure system lhs*x == rhs.
+
+    Explanation
+    ===========
+
+    lhs and rhs are matrices over K.  Returns a list of constant
+    solutions (free parameters set to zero), or None if there is no
+    constant solution.  constant_system() returns a reduced *system*,
+    not a solution, and treating its right hand side as a solution (as
+    this module once did) is only accidentally correct when the
+    reduction is identity-like, so the reduced system is solved
+    explicitly here and the solution is verified against the original
+    equation.
+
+    Raises NotImplementedError if the verification fails, which
+    indicates constants not computable by cancel() (see the comment in
+    constant_system()).
+    """
+    A, u = constant_system(lhs, rhs, DE)
+    if not A:
+        return None
+    um = u.to_Matrix()
+    if not all(derivation(i, DE, basic=True).is_zero for i in um):
+        # No constant solution
+        return None
+    from sympy.matrices import Matrix as EMatrix
+    try:
+        xs, params = EMatrix(A.to_Matrix()).gauss_jordan_solve(EMatrix(um))
+    except ValueError:
+        # With symbolic constants in the system, inconsistency (and
+        # the pivoting above) is decided only generically; at special
+        # values of the constants a solution may exist.  Returning None
+        # here errs on the incomplete-but-sound side (a spurious
+        # "not a derivative"/"not a radical" answer, at worst a false
+        # nonelementary proof, never a wrong antiderivative), so no
+        # Piecewise handling is needed here.
+        return None
+    # TODO: Zeroing the free parameters can miss a rational solution when
+    # a pivot divided by a symbolic constant: e.g. y*x1 + x2 == 1 gives
+    # xs == [(1 - tau)/y, tau], which is non-rational at tau == 0 but
+    # rational at tau == 1.  Choosing a rational point of the affine
+    # solution space (when one exists) would decide more towers; failing
+    # that only causes an honest NotImplementedError downstream.
+    xs = xs.subs(dict.fromkeys(params, S.Zero))
+    # Defensive verification against the original system
+    lhs_m = lhs.to_Matrix()
+    rhs_m = rhs.to_Matrix()
+    for i in range(lhs_m.rows):
+        if cancel(Add(*[lhs_m[i, j]*xs[j] for j in range(lhs_m.cols)])
+                - rhs_m[i]) != 0:
+            raise NotImplementedError("The candidate solution of the "
+                "structure system failed verification; the constant field "
+                "may not be computable by cancel().")
+    return list(xs)
 
 
 def is_deriv_k(fa, fd, DE):
@@ -1134,7 +1498,7 @@ def is_deriv_k(fa, fd, DE):
     dfa, dfd = dfa.cancel(dfd, include=True)
 
     # Our assumption here is that each monomial is recursively transcendental
-    if len(DE.exts) != len(DE.D):
+    if len(DE.exts) != len(DE.D) - 1:
         if [i for i in DE.cases if i == 'tan'] or \
                 ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
                         set(DE.indices('log'))):
@@ -1154,27 +1518,22 @@ def is_deriv_k(fa, fd, DE):
     lhs = Matrix([E_part + L_part], dum)
     rhs = Matrix([dfa.as_expr()/dfd.as_expr()], dum)
 
-    A, u = constant_system(lhs, rhs, DE)
+    u = _structure_system_solve(lhs, rhs, DE)
 
-    u = u.to_Matrix()  # Poly to Expr
-
-    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u):
-        # If the elements of u are not all constant
-        # Note: See comment in constant_system
-
-        # Also note: derivation(basic=True) calls cancel()
+    if u is None:
+        # No constant solution
         return None
     else:
         if not all(i.is_Rational for i in u):
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
-            terms = ([DE.extargs[i] for i in DE.indices('exp')] +
+            terms = ([DE.extargs[i - 1] for i in DE.indices('exp')] +
                     [DE.T[i] for i in DE.indices('log')])
             ans = list(zip(terms, u))
             result = Add(*[Mul(i, j) for i, j in ans])
             argterms = ([DE.T[i] for i in DE.indices('exp')] +
-                    [DE.extargs[i] for i in DE.indices('log')])
+                    [DE.extargs[i - 1] for i in DE.indices('log')])
             l = []
             ld = []
             for i, j in zip(argterms, u):
@@ -1261,7 +1620,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         dfa, dfd = fa, fd
 
     # Our assumption here is that each monomial is recursively transcendental
-    if len(DE.exts) != len(DE.D):
+    if len(DE.exts) != len(DE.D) - 1:
         if [i for i in DE.cases if i == 'tan'] or \
                 ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
                         set(DE.indices('log'))):
@@ -1281,15 +1640,10 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     lhs = Matrix([E_part + L_part], dum)
     rhs = Matrix([dfa.as_expr()/dfd.as_expr()], dum)
 
-    A, u = constant_system(lhs, rhs, DE)
+    u = _structure_system_solve(lhs, rhs, DE)
 
-    u = u.to_Matrix()  # Poly to Expr
-
-    if not A or not all(derivation(i, DE, basic=True).is_zero for i in u):
-        # If the elements of u are not all constant
-        # Note: See comment in constant_system
-
-        # Also note: derivation(basic=True) calls cancel()
+    if u is None:
+        # No constant solution
         return None
     else:
         if not all(i.is_Rational for i in u):
@@ -1300,15 +1654,15 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
                 "coefficients in this case.")
         else:
             n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u])
-            u *= n
+            u = [n*i for i in u]
             terms = ([DE.T[i] for i in DE.indices('exp')] +
-                    [DE.extargs[i] for i in DE.indices('log')])
+                    [DE.extargs[i - 1] for i in DE.indices('log')])
             ans = list(zip(terms, u))
             result = Mul(*[Pow(i, j) for i, j in ans])
 
             # exp(f) will be the same as result up to a multiplicative
             # constant.  We now find the log of that constant.
-            argterms = ([DE.extargs[i] for i in DE.indices('exp')] +
+            argterms = ([DE.extargs[i - 1] for i in DE.indices('exp')] +
                     [DE.T[i] for i in DE.indices('log')])
             const = cancel(fa.as_expr()/fd.as_expr() -
                 Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
@@ -1402,6 +1756,8 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         if A is None:
             return None
         n, e, u = A
+        if isinstance(u, Poly):
+            u = u.as_expr()
         u *= DE.t**e
 
     elif case == 'primitive':

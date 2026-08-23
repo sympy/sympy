@@ -6,12 +6,13 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan
 from sympy.integrals.integrals import integrate
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, cancel
 from sympy.simplify.simplify import simplify
 
-from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
+from sympy.integrals.rationaltools import (ratint, ratint_logpart,
+    log_to_atan, log_to_real)
 
-from sympy.abc import a, b, x, t
+from sympy.abc import a, b, x, t, y
 
 half = S.Half
 
@@ -138,6 +139,15 @@ def test_issue_5817():
             b)*sqrt(c)*x/(sqrt(a)*sqrt(a + b)))/(sqrt(b)*sqrt(c)*sqrt(a + b))
 
 
+def test_ratint_radical_coefficients():
+    # issue 26502
+    a = symbols('a', positive=True)
+    f = (-x**2 + sqrt(2))/(x**4 - sqrt(2)*x**2 + 1)
+    assert cancel((ratint(f, x).diff(x) - f).together()) == 0
+    g = (2*sqrt(a) - x**2)/(-sqrt(a)*x**2 + a + x**4)
+    assert cancel((ratint(g, x).diff(x) - g).together()) == 0
+
+
 def test_issue_5981():
     u = symbols('u')
     assert integrate(1/(u**2 + 1)) == atan(u)
@@ -171,6 +181,19 @@ def test_log_to_atan():
     fg_ans = 2*atan(2*sqrt(3)*x/3 + sqrt(3)/3)
     assert log_to_atan(f, g) == fg_ans
     assert log_to_atan(g, f) == -fg_ans
+
+
+def test_log_to_real_complex_only():
+    h = Poly(x + 3*y/2 + S.Half, x, domain='QQ[y]')
+    q = Poly(3*y**2 + 1, y, domain='ZZ')
+    ans = 2*sqrt(3)*atan(2*sqrt(3)*x/3 + sqrt(3)/3)/3
+    assert log_to_real(h, q, x, y) == ans
+    assert log_to_real(h, q, x, y, complex_only=True) == ans
+    # With complex_only=True, a q with only real roots is not converted
+    h = Poly(x**2 - 1, x, domain='ZZ')
+    q = Poly(-2*y + 1, y, domain='ZZ')
+    assert log_to_real(h, q, x, y) == log(x**2 - 1)/2
+    assert log_to_real(h, q, x, y, complex_only=True) is None
 
 
 def test_issue_25896():

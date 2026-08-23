@@ -1,23 +1,29 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import annotations
-from sympy.integrals.risch import DifferentialExtension, derivation
+from sympy.integrals.risch import DifferentialExtension, derivation, frac_in
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
-    prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
+    prde_no_cancel_b_small, prde_no_cancel_b_equal, limited_integrate_reduce,
+    limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
+    parametric_log_deriv, parametric_log_deriv_structure,
     is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
+    is_deriv_in_field,
     prde_cancel_liouvillian)
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
 from sympy.testing.pytest import raises
 
+from sympy.core import Add, Dummy
+from sympy.matrices import MutableDenseMatrix
 from sympy.core.numbers import Rational
+from sympy.functions.elementary.exponential import exp
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.polys.domains.rationalfield import QQ
-from sympy.polys.polytools import Poly
-from sympy.abc import x, t, n
+from sympy.polys.polytools import Poly, cancel
+from sympy.abc import x, t, n, y
 
 t0, t1, t2, t3, k = symbols('t:4 k')
 
@@ -109,6 +115,29 @@ def test_constant_system():
                  [0, 0, 0],
                  [0, 0, 1]], ring=R), Matrix([0, 1, 0, 0], ring=R))
 
+    # Multiple rows with symbolic constants: pivoting on y is sound, since
+    # y is a nonzero element of the constant field QQ(y)
+    dum = Dummy()
+    A = Matrix([[y, 1, x], [0, y, 1 + x]], dum)
+    u = Matrix([[x + y], [x + 2]], dum)
+    B, v = constant_system(A, u, DE)
+    assert (B.to_Matrix(), v.to_Matrix()) == \
+        (MutableDenseMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+         MutableDenseMatrix([[(y**2 - 1)/y**2], [1/y], [1]]))
+
+    # An entry whose derivation-quotient rows still contain tower
+    # variables, requiring more than one pass of the elimination loop
+    # ("while A is not constant" in the book's ConstantSystem); the
+    # output must be fully constant
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0),
+        Poly((t0 + x*t0)*t1, t1)], 'exts': ['exp', 'exp'],
+        'extargs': [x, x*t0]})
+    A = Matrix([[t1, t0]], dum)
+    u = Matrix([[0]], dum)
+    B, v = constant_system(A, u, DE)
+    assert not any(B.to_Matrix()[i, j].has(t0, t1)
+        for i in range(B.rows) for j in range(B.cols))
+
 
 def test_prde_spde():
     D = [Poly(x, t), Poly(-x*t, t)]
@@ -168,6 +197,36 @@ def test_prde_no_cancel():
     assert (Matrix([q])*V[0][:6, :])[0] == Poly(x - S.Half, t, domain='QQ(x)')
 
 
+def test_prde_no_cancel_b_equal():
+    # deg(b) == delta(t) - 1, with t == tan-like (Dt == t**2 + 1)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    # -lc(b)/lc(Dt) == -1 is not a positive integer, so the loop runs to
+    # N == 0: Dq + t*q == 2*t**2 + 1 has the solution q == t
+    assert prde_no_cancel_b_equal(Poly(t, t), [Poly(2*t**2 + 1, t)], 1, DE) == \
+        ([Poly(t, t)], Matrix([[1, -1]], DE.t))
+    # A solution with a nonconstant coefficient and two right hand sides:
+    # q == t**2 solves Dq + t*q == c1 for c == D(t**2) + t*t**2
+    b = Poly(t, t)
+    q = Poly(t**2, t)
+    c = derivation(q, DE) + b*q
+    h, A = prde_no_cancel_b_equal(b, [c, Poly(0, t)], 2, DE)
+    V = A.nullspace()
+    sols = 0
+    for v in V:
+        if v[0] != 0:
+            y = Add(*[(v[2 + j]*h[j]).as_expr() for j in range(len(h))])
+            yp = Poly(y/v[0].as_expr(), t, field=True)
+            if cancel(derivation(yp, DE).as_expr() + (b*yp).as_expr()
+                    - c.as_expr()) == 0:
+                sols += 1
+    assert sols >= 1
+    # When the possible-cancellation degree -lc(b)/lc(Dt) is reached, the
+    # rest is delegated to the cancellation algorithms, which are not yet
+    # implemented for delta(t) >= 2
+    raises(NotImplementedError, lambda: prde_no_cancel_b_equal(
+        Poly(-2*t, t), [Poly(t**4 + 3*t**2, t)], 3, DE))
+
+
 def test_prde_cancel_liouvillian():
     ### 1. case == 'primitive'
     # used when integrating f = log(x) - log(x - 1)
@@ -189,6 +248,26 @@ def test_prde_cancel_liouvillian():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t, t)]})
     assert prde_cancel_liouvillian(Poly(0, t, domain='QQ[x]'), [Poly(1, t, domain='QQ(x)')], 0, DE) == \
             ([Poly(1, t, domain='QQ'), Poly(x, t, domain='ZZ(x)')], Matrix([[-1, 0, 1]], DE.t))
+
+    ### 3. case == 'exp' with b != 0 and n > 0.  This exercises the level at
+    ### which eta == Dt/t is computed and the sign of the residual update
+    ### Fi == -(D(h) + b*h), both of which used to be wrong.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    b = Poly(1/x, t, field=True)
+    Q = [Poly((x + 1)*t/x, t, field=True)]
+    h, A = prde_cancel_liouvillian(b, Q, 1, DE)
+    V = A.nullspace()
+    # Dy + y/x == c1*(x + 1)*t/x must have the solution y == t (c1 == 1)
+    found = False
+    for v in V:
+        if v[0] == 0:
+            continue
+        y = Add(*[(v[1 + j]*h[j]).as_expr() for j in range(len(h))])/v[0].as_expr()
+        yp = Poly(y, t, field=True)
+        if cancel(derivation(yp, DE).as_expr() + b.as_expr()*y
+                - Q[0].as_expr()) == 0:
+            found = True
+    assert found
 
 
 def test_param_poly_rischDE():
@@ -249,6 +328,22 @@ def test_limited_integrate_reduce():
         (Poly(t, t), Poly(-1/x, t), Poly(t, t), 1, (Poly(x, t), Poly(1, t, domain='ZZ[x]')),
         [(Poly(-x*t, t), Poly(1, t, domain='ZZ[x]'))])
 
+    # An exp case with a nontrivial special part (hs != 1).  This
+    # distinguishes the first return component, which must be hn rather
+    # than a == hn*hs (the book returns a, which does not satisfy the
+    # stated contract): check the contract directly for the known
+    # solution v == 1/(t*x), c1 == 3 of f == Dv + c1*w1.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    fa, fd = frac_in((3*x**2*t - x - 1)/(x**2*t), t)
+    G = [(Poly(1, t), Poly(1, t))]
+    A, b, h, N, g, V = limited_integrate_reduce(fa, fd, G, DE)
+    p = Poly(cancel(h.as_expr()/(t*x)), t, field=True)  # p == v*h
+    assert p.degree(t) <= N
+    lhs = (A*derivation(p, DE) + b*p).as_expr()
+    rhs = cancel(g[0].as_expr()/g[1].as_expr() +
+        3*V[0][0].as_expr()/V[0][1].as_expr())
+    assert cancel(lhs - rhs) == 0
+
 
 def test_limited_integrate():
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
@@ -259,23 +354,38 @@ def test_limited_integrate():
     G = [(Poly(1, x), Poly(x, x))]
     assert limited_integrate(Poly(5*x**2, x), Poly(3, x), G, DE) == \
         ((Poly(5*x**3/9, x), Poly(1, x, domain='QQ')), [0])
+    # An empty list of special elements (the is_deriv_in_field() case)
+    assert limited_integrate(Poly(2*x, x), Poly(1, x), [], DE) == \
+        ((Poly(x**2, x), Poly(1, x, domain='QQ')), [])
+    # ... and with a symbolic constant coefficient
+    assert limited_integrate(Poly(2*y*x, x), Poly(1, x), [], DE) == \
+        ((Poly(y*x**2, x), Poly(1, x, domain='QQ')), [])
 
 
 def test_is_log_deriv_k_t_radical():
-    DE = DifferentialExtension(extension={'D': [Poly(1, x)], 'exts': [None],
-        'extargs': [None]})
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)], 'exts': [],
+        'extargs': []})
     assert is_log_deriv_k_t_radical(Poly(2*x, x), Poly(1, x), DE) is None
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2*t1, t1), Poly(1/x, t2)],
-        'exts': [None, 'exp', 'log'], 'extargs': [None, 2*x, x]})
+        'exts': ['exp', 'log'], 'extargs': [2*x, x]})
     assert is_log_deriv_k_t_radical(Poly(x + t2/2, t2), Poly(1, t2), DE) == \
         ([(t1, 1), (x, 1)], t1*x, 2, 0)
     # TODO: Add more tests
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0), Poly(1/x, t)],
-        'exts': [None, 'exp', 'log'], 'extargs': [None, x, x]})
+        'exts': ['exp', 'log'], 'extargs': [x, x]})
     assert is_log_deriv_k_t_radical(Poly(x + t/2 + 3, t), Poly(1, t), DE) == \
         ([(t0, 2), (x, 1)], x*t0**2, 2, 3)
+
+
+    # A tower with a symbolic constant parameter: t0 == exp(y*x).
+    # exp(2*y*x) == t0**2 is a K-radical; the structure coefficients are
+    # rational even though the constant field is QQ(y)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(y*t0, t0)],
+        'exts': ['exp'], 'extargs': [y*x]})
+    assert is_log_deriv_k_t_radical(Poly(2*y*x, t0), Poly(1, t0), DE) == \
+        ([(t0, 2)], t0**2, 1, 0)
 
 
 def test_structure_theorem_guards():
@@ -283,7 +393,7 @@ def test_structure_theorem_guards():
     # supported by the structure theorems.  When every primitive monomial
     # in it is a logarithm, it is reported as a nonelementary tower.
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
-        Poly(t2, t2)], 'exts': [None, 'log'], 'extargs': [None, x]})
+        Poly(t2, t2)], 'exts': ['log'], 'extargs': [x]})
     for func in (is_deriv_k, is_log_deriv_k_t_radical):
         try:
             func(Poly(t2, t2), Poly(1, t2), DE)
@@ -296,7 +406,7 @@ def test_structure_theorem_guards():
     # arctangent-like monomial) needs the real version of the structure
     # theorems instead.
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
-        Poly(1/(x**2 + 1), t2)], 'exts': [None, 'log'], 'extargs': [None, x]})
+        Poly(1/(x**2 + 1), t2)], 'exts': ['log'], 'extargs': [x]})
     for func in (is_deriv_k, is_log_deriv_k_t_radical):
         try:
             func(Poly(t2, t2), Poly(1, t2), DE)
@@ -308,32 +418,47 @@ def test_structure_theorem_guards():
 
 def test_is_deriv_k():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)],
-        'exts': [None, 'log', 'log'], 'extargs': [None, x, x + 1]})
+        'exts': ['log', 'log'], 'extargs': [x, x + 1]})
     assert is_deriv_k(Poly(2*x**2 + 2*x, t2), Poly(1, t2), DE) == \
         ([(t1, 1), (t2, 1)], t1 + t2, 2)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(t2, t2)],
-        'exts': [None, 'log', 'exp'], 'extargs': [None, x, x]})
+        'exts': ['log', 'exp'], 'extargs': [x, x]})
     assert is_deriv_k(Poly(x**2*t2**3, t2), Poly(1, t2), DE) == \
         ([(x, 3), (t1, 2)], 2*t1 + 3*x, 1)
     # TODO: Add more tests, including ones with exponentials
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2/x, t1)],
-        'exts': [None, 'log'], 'extargs': [None, x**2]})
+        'exts': ['log'], 'extargs': [x**2]})
     assert is_deriv_k(Poly(x, t1), Poly(1, t1), DE) == \
         ([(t1, S.Half)], t1/2, 1)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2/(1 + x), t0)],
-        'exts': [None, 'log'], 'extargs': [None, x**2 + 2*x + 1]})
+        'exts': ['log'], 'extargs': [x**2 + 2*x + 1]})
     assert is_deriv_k(Poly(1 + x, t0), Poly(1, t0), DE) == \
         ([(t0, S.Half)], t0/2, 1)
 
     # Issue 10798
     # DE = DifferentialExtension(log(1/x), x)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-1/x, t)],
-        'exts': [None, 'log'], 'extargs': [None, 1/x]})
+        'exts': ['log'], 'extargs': [1/x]})
     assert is_deriv_k(Poly(1, t), Poly(x, t), DE) == ([(t, 1)], t, 1)
 
+
+    # Linearly dependent tower generators (log(x) and log(x**2)) make the
+    # structure system underdetermined; the solution must still be a
+    # correct full-length coefficient vector (the reduced system used to
+    # be misread as a solution vector and silently zip-truncated)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0),
+        Poly(2/x, t1)], 'exts': ['log', 'log'],
+        'extargs': [x, x**2]})
+    assert is_deriv_k(Poly(x, t0), Poly(1, t0), DE) == \
+        ([(t0, 1), (t1, 0)], t0, 1)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2/x, t0),
+        Poly(1/x, t1)], 'exts': ['log', 'log'],
+        'extargs': [x**2, x]})
+    assert is_deriv_k(Poly(x, t0), Poly(1, t0), DE) == \
+        ([(t0, S.Half), (t1, 0)], t0/2, 1)
 
 def test_is_log_deriv_k_t_radical_in_field():
     # NOTE: any potential constant factor in the second element of the result
@@ -352,6 +477,82 @@ def test_is_log_deriv_k_t_radical_in_field():
         (1, t)
     assert is_log_deriv_k_t_radical_in_field(Poly(1, t), Poly(2*x**2, t), DE) == \
         (2, 1/t)
+
+    # exp case: u must come back as an Expr, never as a malformed Poly
+    # with the tower generator inside the coefficient domain (this used
+    # to return Poly(t, x, domain='ZZ[t]')-shaped results, and issued
+    # the deprecated Poly/Expr mixing warning when residue terms were
+    # present)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    assert is_log_deriv_k_t_radical_in_field(Poly(1, t), Poly(1, t), DE) == \
+        (1, t)
+    # f == Dt/t + Dt/(t + 1): the log-derivative of t*(t + 1)
+    assert is_log_deriv_k_t_radical_in_field(Poly(2*t + 1, t),
+        Poly(t + 1, t), DE) == (1, t**2 + t)
+
+
+def test_parametric_log_deriv_structure():
+    # The heuristic fails on all of these (z in k at a primitive level);
+    # the structure-theorem method (equation (7.44)) decides them.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'exts': ['log'], 'extargs': [x]})
+    # f == 1/x == Dx/x, w == 1: 1*f == Dx/x + 0*w
+    assert parametric_log_deriv_structure(Poly(1, t), Poly(x, t),
+        Poly(1, t), Poly(1, t), DE) == (1, 0, x)
+    # f == 1 + 1/(2*x), w == 1: 2*f == Dx/x + 2*w  (through the wrapper,
+    # exercising the heuristic -> structure fallback)
+    assert parametric_log_deriv(Poly(2*x + 1, t), Poly(2*x, t),
+        Poly(1, t), Poly(1, t), DE) == (2, 2, x)
+    # f == 1/(x + 1), w == 1 has the solution (1, 0, x + 1), but x + 1 is
+    # not in the tower, so the structure method is inconclusive (None) and
+    # the wrapper must raise rather than claim no solution exists.
+    assert parametric_log_deriv_structure(Poly(1, t), Poly(x + 1, t),
+        Poly(1, t), Poly(1, t), DE) is None
+    raises(NotImplementedError, lambda: parametric_log_deriv(
+        Poly(1, t), Poly(x + 1, t), Poly(1, t), Poly(1, t), DE))
+
+    # Nontrivial n and m: f == 1/(2*x) + 3, w == 2:
+    # 2*f == Dx/x + 3*w
+    assert parametric_log_deriv_structure(Poly(6*x + 1, t), Poly(2*x, t),
+        Poly(2, t), Poly(1, t), DE) == (2, 3, x)
+
+    # Underdetermined system (w lies in the span of the generators) and a
+    # w == 0 query.  Which solution is returned depends on the free
+    # parameter choice, so check the defining equation n*f == Dv/v + m*w
+    # instead of an exact tuple.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t),
+        Poly(t1, t1)], 'exts': ['log', 'exp'], 'extargs': [x, x]})
+    for f, w in [(1/x + 2, S(3)), (1/x + 5, S.Zero)]:
+        fa, fd = frac_in(f, t1)
+        wa, wd = frac_in(w, t1)
+        A = parametric_log_deriv_structure(fa, fd, wa, wd, DE)
+        assert A is not None
+        n, m, v = A
+        assert n > 0 and n.is_Integer and m.is_Integer
+        vv = v.subs(t1, exp(x))  # t1 == exp(x) in this extension
+        assert cancel(n*f - m*w - vv.diff(x)/vv) == 0
+
+
+def test_is_deriv_in_field():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    assert is_deriv_in_field(Poly(2*x, x), Poly(1, x), DE) == \
+        (Poly(x**2, x), Poly(1, x, domain='QQ'))
+    assert is_deriv_in_field(Poly(1, x), Poly(x, x), DE) is None
+    # t == log(x): D(x*t) == t + 1; 1/(x*t) == D(log(log(x))) is not in the field
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    A = is_deriv_in_field(Poly(t + 1, t), Poly(1, t), DE)
+    assert A is not None
+    va, vd = A
+    vp = Poly(cancel(va.as_expr()/vd.as_expr()), t, field=True)
+    assert cancel(derivation(vp, DE).as_expr() - (t + 1)) == 0
+    assert is_deriv_in_field(Poly(1, t), Poly(x*t, t), DE) is None
+    # t == exp(x): D(x*t**2) == (2*x + 1)*t**2; t is not a derivative
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    A = is_deriv_in_field(Poly((2*x + 1)*t**2, t), Poly(1, t), DE)
+    assert A is not None
+    va, vd = A
+    vp = Poly(cancel(va.as_expr()/vd.as_expr()), t, field=True)
+    assert cancel(derivation(vp, DE).as_expr() - (2*x + 1)*t**2) == 0
 
 
 def test_parametric_log_deriv():
