@@ -36,7 +36,7 @@ from sympy.core.containers import Dict
 from sympy.core.function import Derivative
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Number, E
+from sympy.core.numbers import Integer, Number, E, I
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
@@ -1018,6 +1018,28 @@ class PolylogRule(AtomicRule):
     def eval(self) -> Expr:
         return polylog(self.b + 1, self.a * self.variable)
 
+class PolylogTrigRule(AtomicRule):
+    """integrate(x*csc(a*x + b), x) using complex exponentials"""
+
+    __slots__ = ("a", "b")
+
+    a: Expr
+    b: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+
+    def eval(self) -> Expr:
+        a, b, x = self.a, self.b, self.variable
+        u = a*x + b
+        return (
+            I*(polylog(2, -exp(I*u)) - polylog(2, exp(I*u)))/a**2 +
+            x*(log(1 - exp(I*u)) - log(1 + exp(I*u)))/a
+        )
 
 class UpperGammaRule(AtomicRule):
 
@@ -1861,6 +1883,25 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
         steps = integral_steps(rewritten, symbol)
         return RewriteRule(integrand, symbol, rewritten, steps)
 
+
+def trig_polylog_rule(integral: IntegralInfo):
+    """Integrate x*csc(a*x + b) using complex exponentials and polylogs."""
+    original_integrand, symbol = integral
+    integrand = _rewrite_to_reciprocal(original_integrand, sin, csc)
+
+    m = Wild('m', exclude=[symbol], properties=[lambda m: not m.is_zero])
+    n = Wild('n', exclude=[symbol])
+    a = Wild('a', exclude=[symbol, 0])
+    b = Wild('b', exclude=[symbol])
+
+    match = integrand.match((m*symbol + n)*csc(a*symbol + b))
+    if not match:
+        return
+
+    step: Rule = PolylogTrigRule(integrand, symbol, match[a], match[b])
+    if integrand != original_integrand:
+        return RewriteRule(original_integrand, symbol, integrand, step)
+    return step
 
 def quadratic_denom_rule(integral):
     integrand, symbol = integral
@@ -3166,6 +3207,7 @@ def integral_steps(integrand, symbol, **options):
             Add: add_rule,
             Mul: do_one(null_safe(mul_rule),
                         null_safe(trig_powers_products_rule),
+                        null_safe(trig_polylog_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),

@@ -120,6 +120,19 @@ def test_manualintegrate_trigonometry():
     assert (F.diff(x) - f).rewrite(exp).simplify() == 0
 
 
+def test_manualintegrate_trig_polylog():
+    # integrate(x*csc(x), x) via complex exponentials and polylogs
+    F = I*(polylog(2, -exp(I*x)) - polylog(2, exp(I*x))) + \
+        x*(log(1 - exp(I*x)) - log(1 + exp(I*x)))
+    assert manualintegrate(x/sin(x), x) == F
+    assert manualintegrate(x*csc(x), x) == F
+    # equals() returns None for these expressions, so verify symbolically
+    # using polylog(1, z) = -log(1 - z)
+    d = manualintegrate(x*csc(a*x + b), x).diff(x) - x*csc(a*x + b)
+    assert d.rewrite(exp).replace(
+        polylog, lambda s, z: -log(1 - z)).simplify() == 0
+
+
 @slow
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
