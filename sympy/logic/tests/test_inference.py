@@ -218,6 +218,63 @@ def test_satsolver_solve_after_propagate():
     assert s.solve() == IpasirStatus.UNSATISFIABLE
 
 
+def test_satsolver_assume():
+    # The same solver answers both questions, one assumption at a time.
+    s = SATSolver([{1, 2}, {-1, -2}], {1, 2}, set())
+    s.assume(1)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, -2)
+    s.assume(-1)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (-1, 2)
+
+    # Assumptions constrain one search only, so dropping them makes the
+    # solver answer about the clauses on their own again.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.assume(-1)
+    s.assume(-2)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+    assert s.solve() == IpasirStatus.SATISFIABLE
+
+    # Assuming a literal the clauses contradict fails, and assuming one they
+    # imply changes nothing.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    s.assume(-1)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+    s.assume(2)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(2) == 2
+
+    # Assumptions that contradict each other cannot be satisfied either.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.assume(1)
+    s.assume(-1)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # Selector variables, which is what assumptions are for: 3 guards the
+    # clause {1} and 4 guards {-1}, and assuming one activates it.
+    s = SATSolver([{1, -3}, {-1, -4}], {1, 2, 3, 4}, set())
+    s.assume(3)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(1) == 1
+    s.assume(4)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(1) == -1
+    s.assume(3)
+    s.assume(4)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # Assumptions are not clauses, so the root level knows nothing of them.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.assume(1)
+    assert s.fixed(1) == 0
+    assert s.propagate() == IpasirStatus.UNKNOWN
+
+    # Only a literal of an existing variable can be assumed.
+    raises(ValueError, lambda: s.assume(0))
+    raises(ValueError, lambda: s.assume(9))
+
+
 def test_satsolver_interface_errors():
     # val() needs a model to read from.
     s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
