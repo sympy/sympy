@@ -4,7 +4,7 @@ from sympy.assumptions.ask import Q
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic.inference import satisfiable
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
+from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver, TRUE
 from sympy.logic.boolalg import And, Or
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
 from sympy.core.random import choice, randint, sample
@@ -43,14 +43,49 @@ def test_from_encoded_cnf_decides_reflexive_atoms():
                                         [-enc.encoding[Q.ne(b, b)]]])
 
 
-def test_non_equality_atoms_are_left_alone():
-    # EUF says nothing about Q.positive, so it stays a free boolean.
+def test_predicate_atoms_are_reified():
+    # Q.positive(x) becomes the equation Q.positive(x) = TRUE.
     enc = _encode(Q.positive(x) & Q.eq(a, b))
     euf, conflicts = EUFTheorySolver.from_encoded_cnf(enc)
     assert conflicts == []
-    assert list(euf.atom_id_to_equality) == [enc.encoding[Q.eq(a, b)]]
+    assert euf.atom_id_to_equality[enc.encoding[Q.positive(x)]] == (
+        Q.positive(x), TRUE, True)
     assert euf.assert_lit(enc.encoding[Q.positive(x)]) is None
     assert euf.check()[0] is True
+
+
+def test_predicate_congruence():
+    # a = b forces Q.positive(a) and Q.positive(b) to agree.
+    enc = _encode(Q.eq(a, b) & Q.positive(a) & Q.positive(b))
+    euf, _ = EUFTheorySolver.from_encoded_cnf(enc)
+    ab, pa, pb = (enc.encoding[p] for p in
+                  (Q.eq(a, b), Q.positive(a), Q.positive(b)))
+    euf.assert_lit(pa)
+    euf.assert_lit(-pb)
+    res = euf.assert_lit(ab)
+    assert res[0] is False
+    assert set(res[1]) == {-ab, -pa, pb}
+
+
+def test_different_predicates_do_not_collide():
+    # Q.positive and Q.negative are distinct heads, and two predicates that
+    # are merely both false say nothing about each other.
+    enc = _encode(Q.eq(a, b) & Q.positive(a) & Q.negative(b))
+    euf, _ = EUFTheorySolver.from_encoded_cnf(enc)
+    for prop in (Q.eq(a, b), Q.positive(a)):
+        assert euf.assert_lit(enc.encoding[prop]) is None
+    assert euf.assert_lit(-enc.encoding[Q.negative(b)]) is None
+    assert euf.check()[0] is True
+
+
+def test_predicate_congruence_end_to_end():
+    assert satisfiable(Q.eq(a, b) & Q.positive(a) & ~Q.positive(b),
+                       use_euf_theory=True) is False
+    assert satisfiable(Q.eq(a, b) & Q.positive(a) & ~Q.negative(b),
+                       use_euf_theory=True) is not False
+    # nested inside a function application
+    assert satisfiable(Q.eq(a, b) & Q.positive(f(a)) & ~Q.positive(f(b)),
+                       use_euf_theory=True) is False
 
 
 def test_assert_lit_reports_transitivity_conflict():

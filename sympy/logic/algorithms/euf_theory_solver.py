@@ -26,15 +26,22 @@ from __future__ import annotations
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import AppliedPredicate
+from sympy.core.symbol import Dummy
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
+
+# The constant a predicate atom is equated to when the atom is asserted true.
+TRUE = Dummy('true')
 
 
 class EUFTheorySolver:
     """
     Decides conjunctions of equalities and disequalities between ground terms.
 
-    Every atom that is not an equality is left alone: EUF says nothing about
-    it, so it stays a free boolean for the SAT solver.
+    A predicate atom such as ``Q.positive(x)`` is reified as the equality
+    ``Q.positive(x) = TRUE``, so congruence reaches predicates as well: once
+    ``a = b`` holds, ``Q.positive(a)`` and ``Q.positive(b)`` have to agree.
+    Anything that is not an applied predicate is left alone, as EUF says
+    nothing about it.
     """
 
     def __init__(self, atom_id_to_equality):
@@ -97,8 +104,10 @@ class EUFTheorySolver:
             if prop == False:
                 conflicts.append([-atom_id])
                 continue
-            if not (isinstance(prop, AppliedPredicate)
-                    and prop.function in (Q.eq, Q.ne)):
+            if not isinstance(prop, AppliedPredicate):
+                continue
+            if prop.function not in (Q.eq, Q.ne):
+                atom_id_to_equality[atom_id] = (prop, TRUE, True)
                 continue
 
             is_equality = prop.function == Q.eq
