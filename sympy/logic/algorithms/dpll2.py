@@ -425,11 +425,14 @@ class SATSolver:
             self._status = IpasirStatus.SATISFIABLE
 
         # Asking again without them is a different question, not a restart.
+        status = self._status
         if assumed:
             self._assumptions = []
             self._models = None
+            if status == IpasirStatus.UNSATISFIABLE:
+                self._status = IpasirStatus.UNKNOWN
 
-        return self._status
+        return status
 
     def val(self, lit):
         """Return *lit* if it is true in the model found by ``solve()``,
