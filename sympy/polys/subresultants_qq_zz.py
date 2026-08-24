@@ -1433,53 +1433,53 @@ def modified_subresultants_pg(p, q, x):
     a2 = - rem(a0, a1, domain=QQ)             # first remainder
 
     if a2 == 0:                               # q | p; sequence terminates
-        d2 = S.Zero                           # with the pair (p, q)
+        return subres_l                       # with the pair (p, q)
+
+    rho2 =  LC(a2, x)                         # leading coeff of a2
+    d2 =  degree(a2, x)                       # actual degree of a2
+    deg_diff_new = exp_deg - d2               # expected - actual degree
+    del1 = d1 - d2                            # degree difference
+
+    # mul_fac is the factor by which a2 is multiplied to
+    # get integer coefficients
+    mul_fac_old = rho1**(del0 + del1 - deg_diff_new)
+
+    # update Pell-Gordon variables
+    p_list.append(1 + deg_diff_new)              # deg_diff_new is 0 for complete seq
+
+    # apply Pell-Gordon formula (7) in second reference
+    num = 1                                     # numerator of fraction
+    for u in u_list:
+        num *= (-1)**u
+    num = num * (-1)**v
+
+    # denominator depends on complete / incomplete seq
+    if deg_diff_new == 0:                        # complete seq
+        den = 1
+        for k in range(len(rho_list)):
+            den *= rho_list[k]**(p_list[k] + p_list[k + 1])
+        den = den * rho_list_minus_1
+    else:                                       # incomplete seq
+        den = 1
+        for k in range(len(rho_list)-1):
+            den *= rho_list[k]**(p_list[k] + p_list[k + 1])
+        den = den * rho_list_minus_1
+        expo = (p_list[len(rho_list) - 1] + p_list[len(rho_list)] - deg_diff_new)
+        den = den * rho_list[len(rho_list) - 1]**expo
+
+    # the sign of the determinant depends on sg(num / den)
+    if  sign(num / den) > 0:
+        subres_l.append( simplify(rho_1**degdif*a2* Abs(mul_fac_old) ) )
     else:
-        rho2 =  LC(a2, x)                     # leading coeff of a2
-        d2 =  degree(a2, x)                   # actual degree of a2
-        deg_diff_new = exp_deg - d2           # expected - actual degree
-        del1 = d1 - d2                        # degree difference
+        subres_l.append(- simplify(rho_1**degdif*a2* Abs(mul_fac_old) ) )
 
-        # mul_fac is the factor by which a2 is multiplied to
-        # get integer coefficients
-        mul_fac_old = rho1**(del0 + del1 - deg_diff_new)
-
-        # update Pell-Gordon variables
-        p_list.append(1 + deg_diff_new)              # deg_diff_new is 0 for complete seq
-
-        # apply Pell-Gordon formula (7) in second reference
-        num = 1                                     # numerator of fraction
-        for u in u_list:
-            num *= (-1)**u
-        num = num * (-1)**v
-
-        # denominator depends on complete / incomplete seq
-        if deg_diff_new == 0:                        # complete seq
-            den = 1
-            for k in range(len(rho_list)):
-                den *= rho_list[k]**(p_list[k] + p_list[k + 1])
-            den = den * rho_list_minus_1
-        else:                                       # incomplete seq
-            den = 1
-            for k in range(len(rho_list)-1):
-                den *= rho_list[k]**(p_list[k] + p_list[k + 1])
-            den = den * rho_list_minus_1
-            expo = (p_list[len(rho_list) - 1] + p_list[len(rho_list)] - deg_diff_new)
-            den = den * rho_list[len(rho_list) - 1]**expo
-
-        # the sign of the determinant depends on sg(num / den)
-        if  sign(num / den) > 0:
-            subres_l.append( simplify(rho_1**degdif*a2* Abs(mul_fac_old) ) )
-        else:
-            subres_l.append(- simplify(rho_1**degdif*a2* Abs(mul_fac_old) ) )
-
-        # update Pell-Gordon variables
-        k = var('k')
-        rho_list.append( sign(rho2))
-        u =  summation(k, (k, 1, p_list[len(p_list) - 1]))
-        u_list.append(u)
-        v = sum(p_list)
-        deg_diff_old=deg_diff_new
+    # update Pell-Gordon variables
+    k = var('k')
+    rho_list.append( sign(rho2))
+    u =  summation(k, (k, 1, p_list[len(p_list) - 1]))
+    u_list.append(u)
+    v = sum(p_list)
+    deg_diff_old=deg_diff_new
 
     # main loop
     while d2 > 0:
