@@ -33,7 +33,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
-from sympy.core.function import Derivative, expand_trig
+from sympy.core.function import Derivative, expand_mul, expand_trig
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Number, E, Rational
@@ -303,6 +303,29 @@ class URule(Rule):
                 # avoid needless -log(1/x) from substitution
                 result = result.subs(log(self.u_var), -log(base))
         return result.subs(self.u_var, self.u_func)
+
+    def contains_dont_know(self) -> bool:
+        return self.substep.contains_dont_know()
+
+
+class ReparameterizationRule(Rule):
+    """Restore auxiliary parameters after evaluating a substep."""
+
+    __slots__ = ("replacements", "substep")
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        replacements: dict,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.replacements = replacements
+        self.substep = substep
+
+    def eval(self) -> Expr:
+        return self.substep.eval().xreplace(self.replacements)
 
     def contains_dont_know(self) -> bool:
         return self.substep.contains_dont_know()
@@ -2168,7 +2191,8 @@ def bioche_substitution(integral):
                     if denominator:
                         value = numerator/denominator
                         candidates.update((floor(value), ceiling(value)))
-        best_k = min(ordered(candidates), key=lambda k: max(abs(m - n*k) for m, n in zip(phase_multiples, harmonics)))
+        best_k = min(ordered(candidates), key=lambda k: (
+            max(abs(m - n*k) for m, n in zip(phase_multiples, harmonics)), abs(k)))
         phase_shift = (phase_shift + best_k*phase).cancel()
         phase_multiples = [m - n*best_k for m, n in zip(phase_multiples, harmonics)]
 
@@ -2203,16 +2227,27 @@ def bioche_substitution(integral):
         numerator, denominator = [polynomial.as_expr().xreplace(power_replacements) for polynomial in polynomials]
         return (numerator/denominator).cancel()
 
-    # Avoid Bioche when expansion already gives an easier integral (e.g. cos(3*x)/cos(x))
-    if expr_u.is_polynomial(*(func(u) for func in TRIG)):
-        expr_step = expr_u.xreplace({v: phase}) if phase_base is not None else expr_u
+    # Avoid Bioche when expansion already gives an easier termwise integral
+    # (e.g. cos(3*x)/cos(x) or cos(x + a)/(sin(x) + 2)).
+    expanded = expand_mul(expr_u)
+    polynomial = expanded.is_polynomial(*(func(u) for func in TRIG))
+    separable = phase_base is not None and expanded.is_Add and all(
+        not term.as_independent(u, as_Add=False)[1].has(v)
+        for term in Add.make_args(expanded))
+    if phase_base is not None:
+        expanded = expanded.xreplace({v: phase})
+    termwise = polynomial or separable
+
+    if termwise:
         if (u_func - x).cancel().is_zero is True:
-            expanded = expr_step.xreplace({u: x})
+            expanded = expanded.xreplace({u: x})
             generic_step = RewriteRule(integrand, x, expanded, integral_steps(expanded, x))
         else:
-            generic_step = URule(integrand, x, u, u_func, integral_steps(expr_step/omega, u))
+            generic_step = URule(integrand, x, u, u_func, integral_steps(expanded/omega, u))
+        if separable and generic_step.contains_dont_know():
+            termwise = False
 
-    else:
+    if not termwise:
         phase_substitution = {}
         singular_expr_u = None
         if phase_base is not None:
@@ -2244,16 +2279,14 @@ def bioche_substitution(integral):
                 # Use the reciprocal chart when the tangent parametrization may be singular
                 w = Dummy("w")
                 singular_expr_u = expr_u.xreplace({z: 1/w}).cancel().xreplace({w: S.Zero})
+                if singular_expr_u.has(S.ComplexInfinity, S.NaN):
+                    return None
             if singular_condition is S.true:
                 # Avoid constructing the invalid tangent-chart branch.
                 expr_u, phase_substitution, singular_expr_u = singular_expr_u, {}, None
 
         t = Dummy("t")
         expr_sc = expr_u.xreplace(trig_replacements(u, s, c))
-
-        def rational_step(transformed):
-            # Restore the residual phase before delegating to integral_steps
-            return integral_steps(transformed.xreplace(phase_substitution), t)
 
         methods = (
             # Try t = cos(2*u_func) when both sine and cosine powers are even
@@ -2270,7 +2303,7 @@ def bioche_substitution(integral):
             transformed = rewrite_even(transformed, squares, replacements)
             if transformed is None:
                 continue
-            substep = rational_step(transformed)
+            substep = integral_steps(transformed, t)
             step = URule(integrand, x, t, substitution, substep)
             if not step.contains_dont_know():
                 generic_step = step
@@ -2279,7 +2312,7 @@ def bioche_substitution(integral):
             # Fall back to the universal Weierstrass substitution
             transformed = expr_sc.xreplace({s: 2*t/(1 + t**2), c: (1 - t**2)/(1 + t**2)})
             transformed = (transformed * 2/(omega*(1 + t**2))).cancel()
-            substep = rational_step(transformed)
+            substep = integral_steps(transformed, t)
             generic_step = URule(integrand, x, t, tan(u_func/2), substep)
 
         if singular_expr_u is not None:
@@ -2287,6 +2320,10 @@ def bioche_substitution(integral):
             singular_step = URule(integrand, x, u, u_func, singular_substep)
             generic_step = PiecewiseRule(integrand, x,
                 [(singular_step, singular_condition), (generic_step, S.true)])
+
+        if phase_substitution:
+            generic_step = ReparameterizationRule(
+                integrand, x, phase_substitution, generic_step)
 
     if generic_step.contains_dont_know():
         return None

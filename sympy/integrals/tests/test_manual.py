@@ -198,20 +198,15 @@ def test_manualintegrate_bioche_substitution():
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).simplify() == 0
 
-    # A symbolic residual phase requires both tangent charts
+    # Expand a separable symbolic residual phase termwise
     f = cos(x + a)/(sin(x) + 2)
-    ta, tx = tan(a/2), tan(x/2)
-    first_term = Mul(2, 1/(ta**2 + 1),
-        (ta**2/2 - S.Half)*log(tx**2 + 1) - 2*ta*atan(tx),
-        evaluate=False)
-    second_term = ((ta**2 - 1)*log(tx**2 + tx + 1)
-        - 8*sqrt(3)*ta*atan(2*sqrt(3)*(tx + S.Half)/3)/3)/(ta**2 + 1)
-    F1 = first_term - second_term
-    F2 = -log(sin(x) + 2)
-    F = Piecewise((F1, Ne(cos(a/2), 0)), (F2, True))
+    first_term = Mul(-1,
+        -4*sqrt(3)*atan(2*sqrt(3)*(tan(x/2) + S.Half)/3)/3
+        + 2*atan(tan(x/2)), sin(a), evaluate=False)
+    F = first_term + log(sin(x) + 2)*cos(a)
     assert manualintegrate(f, x) == F
-    assert (F1.subs(a, pi/3).diff(x) - f.subs(a, pi/3)).simplify() == 0
-    assert (F2.diff(x) - f.subs(a, pi)).simplify() == 0
+    assert manualintegrate(f.subs(a, 1), x) == F.subs(a, 1)
+    assert (F.diff(x) - f).rewrite(exp).cancel() == 0
 
     # Negative harmonics
     f = 1/(sin(-2*x) + cos(4*x) + 2)
@@ -283,17 +278,36 @@ def test_manualintegrate_bioche_phase_parametrization():
     assert (F.subs(a, pi/2).diff(x) - f.subs(a, pi/2)).rewrite(exp).cancel() == 0
     assert (F.subs(a, 0).diff(x) - f.subs(a, 0)).rewrite(exp).cancel() == 0
 
+    # Prefer the smallest phase shift when several choices are equivalent
+    f = 1/(sin(a) + cos(x))
+    sa = sin(a)
+    radical = sqrt((sa + 1)/(sa - 1))
+    F = 2*Piecewise(
+        (tan(x/2)/2, Eq(sa, 1)),
+        (1/(2*tan(x/2)), Eq(sa, -1)),
+        (atan(tan(x/2)/radical)/(radical*(sa - 1)), True))
+    assert manualintegrate(f, x) == F
+    for value in (pi/2, -pi/2, pi/6):
+        assert (F.subs(a, value).diff(x)
+            - f.subs(a, value)).rewrite(exp).cancel() == 0
+
     # Parametrize a homogeneous residual phase using tan(a)
     f = ((sin(a)*sin(x) + 2*cos(a)*cos(x))
         /(sin(a)*cos(x) - cos(a)*sin(x)))
-    ta, tax = tan(a), tan(a - x)
-    F1 = (((ta**2/2 + 1)*log(tax**2 + 1) - ta*atan(tax))/(ta**2 + 1)
-        - (ta**2 + 2)*log(-tax)/(ta**2 + 1))
-    F2 = -log(1 - cos(a - x)**2)/2
+    ta, tx = tan(a), tan(x)
+    F1 = (((ta**2/2 + 1)*log(tx**2 + 1) + ta*atan(tx))/(ta**2 + 1)
+        - (ta**2 + 2)*log(-ta + tx)/(ta**2 + 1))
+    F2 = -log(cos(x))
     F = Piecewise((F1, Ne(cos(a), 0)), (F2, True))
     assert manualintegrate(f, x) == F
+    assert manualintegrate(f.subs(a, 1), x) == F.subs(a, 1)
     assert (F1.subs(a, 0).diff(x) - f.subs(a, 0)).rewrite(exp).cancel() == 0
     assert (F2.subs(a, pi/2).diff(x) - f.subs(a, pi/2)).rewrite(exp).cancel() == 0
+
+    # Reject an invalid reciprocal chart
+    f = (tan(a)**2 + cos(x))/(2 + sin(x)*tan(a))
+    assert bioche_substitution((f, x)) is None
+    assert not manualintegrate(f, x).has(S.ComplexInfinity, S.NaN)
 
 
 @slow
