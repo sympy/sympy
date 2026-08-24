@@ -231,15 +231,21 @@ def _sympy_broadcast(result, *args):
 
     # Check for PyTorch tensor
     for val in flat_vals:
-        if type(val).__name__ == 'Tensor' and type(val).__module__.startswith('torch'):
+        val_type = type(val)
+        if (val_type.__name__ == 'Tensor' and
+                val_type.__module__.startswith('torch')):
             try:
                 import torch
-                res_tensor = torch.as_tensor(result) if not torch.is_tensor(result) else result
+                res_tensor = (
+                    torch.as_tensor(result)
+                    if not torch.is_tensor(result)
+                    else result
+                )
                 tensor_args = [torch.as_tensor(a) for a in flat_vals]
                 return torch.broadcast_tensors(res_tensor, *tensor_args)[0]
             except (ValueError, RuntimeError):
                 raise
-            except Exception:
+            except (ImportError, AttributeError, TypeError):
                 pass
 
     # Check for TensorFlow tensor
@@ -250,14 +256,15 @@ def _sympy_broadcast(result, *args):
                 res_tensor = tf.convert_to_tensor(result)
                 try:
                     import tensorflow.experimental.numpy as tnp
-                    return tnp.broadcast_arrays(res_tensor, *[tf.convert_to_tensor(a) for a in flat_vals])[0]
+                    tf_args = [tf.convert_to_tensor(a) for a in flat_vals]
+                    return tnp.broadcast_arrays(res_tensor, *tf_args)[0]
                 except (ValueError, RuntimeError):
                     raise
-                except Exception:
+                except (ImportError, AttributeError, TypeError):
                     pass
             except (ValueError, RuntimeError):
                 raise
-            except Exception:
+            except (ImportError, AttributeError, TypeError):
                 pass
 
     # Check for JAX array
@@ -268,7 +275,7 @@ def _sympy_broadcast(result, *args):
                 return jnp.broadcast_arrays(result, *flat_vals)[0]
             except (ValueError, RuntimeError):
                 raise
-            except Exception:
+            except (ImportError, AttributeError, TypeError):
                 pass
 
     # Default NumPy/SciPy/JAX
@@ -277,7 +284,7 @@ def _sympy_broadcast(result, *args):
         return np.broadcast_arrays(result, *flat_vals)[0]
     except (ValueError, RuntimeError):
         raise
-    except Exception:
+    except (ImportError, AttributeError, TypeError):
         pass
 
     return result
@@ -1340,13 +1347,19 @@ class _EvaluatorPrinter:
             return set()
 
         flat_args = list(flatten(args))
-        input_symbols = set(s for s in flat_args if isinstance(s, Symbol))
+        input_symbols = {s for s in flat_args if isinstance(s, Symbol)}
         free_syms = get_free_symbols(expr)
 
-        needs_broadcasting = bool(input_symbols and not input_symbols.issubset(free_syms))
+        needs_broadcasting = bool(
+            input_symbols and not input_symbols.issubset(free_syms)
+        )
 
         if needs_broadcasting:
-            funcbody.append('return _sympy_broadcast({}, {})'.format(str_expr, ', '.join(funcargs)))
+            funcbody.append(
+                'return _sympy_broadcast({}, {})'.format(
+                    str_expr, ', '.join(funcargs)
+                )
+            )
         else:
             funcbody.append('return {}'.format(str_expr))
 
