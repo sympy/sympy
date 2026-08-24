@@ -660,7 +660,7 @@ def test_issue_24887():
 def test_constraint_combos():
     # This tests the combinations of ways you can supply the constraints.
 
-    l, m, c = symbols('l m c')
+    l, m = symbols('l m')
     q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1:4 u1:4')
     N, A = ReferenceFrame('N'), ReferenceFrame('A')
     A.orient_body_fixed(N, (q1, q2, q3), 'zxy')
