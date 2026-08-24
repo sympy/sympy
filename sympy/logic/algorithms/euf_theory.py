@@ -138,6 +138,9 @@ class EUFCongruenceClosure:
         flatten the expression. This method, in parallel, registers.
         This method should be called before any merging.
 
+        TODO: there are small problems about currying functions here, should not
+        be a problem in the grand scheme of the things
+
         Returns
         -------
         Symbol/Dummy : the new and unique constant that replaced the term.
@@ -370,7 +373,7 @@ class EUFCongruenceClosure:
 
     def _explain_classical(self, c1, c2, output):
         """
-        TODO: add more docs
+        See the section 5 for the explanation for this method.
         """
         self._aux_parent = {}
         pending_proofs = [(c1, c2)]
@@ -381,6 +384,9 @@ class EUFCongruenceClosure:
             self._explain_along_path(y, c, output, pending_proofs)
 
     def explain(self, lhs, rhs):
+        """
+        Explain why lhs and rhs are equal to each other
+        """
         a = self._flatten(lhs)
         b = self._flatten(rhs)
         self._process_pending_unions()
