@@ -416,7 +416,7 @@ def test_implicit_kinematics():
     q_pos = dynamicsymbols('B_x:z')
     B_cm = NED_o.locatenew('B_cm', q_pos[0]*B.x + q_pos[1]*B.y + q_pos[2]*B.z)
 
-    # Cooordinates
+    # Coordinates
     q_ind = q_att[1:] + q_pos  # lam1, lam2, lam3, B_x, B_y, B_z
     q_dep = [q_att[0]]  # lam0
 
