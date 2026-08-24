@@ -38,7 +38,7 @@ Classes
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from sympy.core import Atom
+from sympy.core import Atom, Basic, sympify
 from sympy.core.symbol import Symbol
 from sympy.core.function import Lambda
 from sympy.core.symbol import Dummy
@@ -142,6 +142,8 @@ class EUFCongruenceClosure:
         -------
         Symbol/Dummy : the new and unique constant that replaced the term.
         """
+        expr = sympify(expr)
+
         # check if expr is flattened already
         if expr in self._term_to_const:
             return self._term_to_const[expr]
