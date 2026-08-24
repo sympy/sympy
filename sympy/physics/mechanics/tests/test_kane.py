@@ -481,7 +481,7 @@ def test_implicit_kinematics():
     # time derivative of the constraint is:
     # 2*lam0*lam0' + 2*lam1*lam1' + 2*lam2*lam2' + 2*lam3*lam3' = 0
     # or:
-    # lam0*lam0' + lam1*lam1' + lamlam2' + lam3*lam3' = 0
+    # lam0*lam0' + lam1*lam1' + lam2*lam2' + lam3*lam3' = 0
     # [lam0, lam1, lam2, lam3]*[lam0'] = lam0*lam0' + ... + lam3*lam3' = X
     #                          [lam1']
     #                          [lam2']
