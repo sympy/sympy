@@ -398,7 +398,7 @@ def test_implicit_kinematics():
     # was not provided to KanesMethod. At the time this test was written,
     # passing in a configuration constraint without passing in a velocity
     # constraint simply meant that the constraint was ignored and the
-    # unconstrainted dynamical differential equations were formed, which would
+    # unconstrained dynamical differential equations were formed, which would
     # have much fewer operations than if the constraint was properly supplied.
 
     # Inertial frame
