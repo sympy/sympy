@@ -2203,50 +2203,51 @@ def bioche_substitution(integral):
         numerator, denominator = [polynomial.as_expr().xreplace(power_replacements) for polynomial in polynomials]
         return (numerator/denominator).cancel()
 
-    phase_substitution = {}
-    singular_expr_u = None
-    if phase_base is not None:
-        # Parametrize the single residual phase as cheaply as possible
-        # Parametrizing this keeps the coefficient domain structured and makes ratint significantly faster
-        z = Dummy("z")
-        expr_sc = expr_u.xreplace(trig_replacements(v, s, c))
-        phase_methods = (
-            (expr_sc, {s: (1 - z)/2, c: (1 + z)/2}, {}, cos(2*phase), S.false),
-            (expr_sc, {c: 1 - z**2}, {s: z}, sin(phase), S.false),
-            (expr_sc, {s: 1 - z**2}, {c: z}, cos(phase), S.false),
-            (expr_sc.xreplace({s: z*c}), {c: (1 + z**2)**-1}, {}, tan(phase), Eq(cos(phase), 0)),
-        )
-
-        for candidate, squares, replacements, phase_value, phase_condition in phase_methods:
-            transformed = rewrite_even(candidate, squares, replacements)
-            if transformed is not None:
-                expr_u = transformed
-                phase_substitution = {z: phase_value}
-                singular_condition = phase_condition
-                break
-        else:
-            # Fall back to the universal tangent half-angle parametrization
-            expr_u = expr_sc.xreplace({s: 2*z/(1 + z**2), c: (1 - z**2)/(1 + z**2)}).cancel()
-            phase_substitution = {z: tan(phase/2)}
-            singular_condition = Eq(cos(phase/2), 0)
-
-        if singular_condition is not S.false:
-            # Use the reciprocal chart when the tangent parametrization may be singular
-            w = Dummy("w")
-            singular_expr_u = expr_u.xreplace({z: 1/w}).cancel().xreplace({w: S.Zero})
-        if singular_condition is S.true:
-            # Avoid constructing the invalid tangent-chart branch.
-            expr_u, phase_substitution, singular_expr_u = singular_expr_u, {}, None
-
-    # Avoid Bioche when expansion already gives an easier integral
+    # Avoid Bioche when expansion already gives an easier integral (e.g. cos(3*x)/cos(x))
     if expr_u.is_polynomial(*(func(u) for func in TRIG)):
-        expr_step = expr_u.xreplace(phase_substitution)
+        expr_step = expr_u.xreplace({v: phase}) if phase_base is not None else expr_u
         if (u_func - x).cancel().is_zero is True:
             expanded = expr_step.xreplace({u: x})
             generic_step = RewriteRule(integrand, x, expanded, integral_steps(expanded, x))
         else:
             generic_step = URule(integrand, x, u, u_func, integral_steps(expr_step/omega, u))
+
     else:
+        phase_substitution = {}
+        singular_expr_u = None
+        if phase_base is not None:
+            # Parametrize the single residual phase as cheaply as possible
+            # Parametrizing this keeps the coefficient domain structured and makes ratint significantly faster
+            z = Dummy("z")
+            expr_sc = expr_u.xreplace(trig_replacements(v, s, c))
+            phase_methods = (
+                (expr_sc, {s: (1 - z)/2, c: (1 + z)/2}, {}, cos(2*phase), S.false),
+                (expr_sc, {c: 1 - z**2}, {s: z}, sin(phase), S.false),
+                (expr_sc, {s: 1 - z**2}, {c: z}, cos(phase), S.false),
+                (expr_sc.xreplace({s: z*c}), {c: (1 + z**2)**-1}, {}, tan(phase), Eq(cos(phase), 0)),
+            )
+
+            for candidate, squares, replacements, phase_value, phase_condition in phase_methods:
+                transformed = rewrite_even(candidate, squares, replacements)
+                if transformed is not None:
+                    expr_u = transformed
+                    phase_substitution = {z: phase_value}
+                    singular_condition = phase_condition
+                    break
+            else:
+                # Fall back to the universal tangent half-angle parametrization
+                expr_u = expr_sc.xreplace({s: 2*z/(1 + z**2), c: (1 - z**2)/(1 + z**2)}).cancel()
+                phase_substitution = {z: tan(phase/2)}
+                singular_condition = Eq(cos(phase/2), 0)
+
+            if singular_condition is not S.false:
+                # Use the reciprocal chart when the tangent parametrization may be singular
+                w = Dummy("w")
+                singular_expr_u = expr_u.xreplace({z: 1/w}).cancel().xreplace({w: S.Zero})
+            if singular_condition is S.true:
+                # Avoid constructing the invalid tangent-chart branch.
+                expr_u, phase_substitution, singular_expr_u = singular_expr_u, {}, None
+
         t = Dummy("t")
         expr_sc = expr_u.xreplace(trig_replacements(u, s, c))
 
@@ -2281,11 +2282,12 @@ def bioche_substitution(integral):
             substep = rational_step(transformed)
             generic_step = URule(integrand, x, t, tan(u_func/2), substep)
 
-    if singular_expr_u is not None:
-        singular_substep = integral_steps((singular_expr_u/omega).cancel(), u)
-        singular_step = URule(integrand, x, u, u_func, singular_substep)
-        generic_step = PiecewiseRule(integrand, x,
-            [(singular_step, singular_condition), (generic_step, S.true)])
+        if singular_expr_u is not None:
+            singular_substep = integral_steps((singular_expr_u/omega).cancel(), u)
+            singular_step = URule(integrand, x, u, u_func, singular_substep)
+            generic_step = PiecewiseRule(integrand, x,
+                [(singular_step, singular_condition), (generic_step, S.true)])
+
     if generic_step.contains_dont_know():
         return None
     if omega.is_zero is False:
