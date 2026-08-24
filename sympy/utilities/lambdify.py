@@ -235,7 +235,7 @@ def _sympy_broadcast(result, *args):
         if (val_type.__name__ == 'Tensor' and
                 val_type.__module__.startswith('torch')):
             try:
-                import torch
+                import torch  # type: ignore
                 res_tensor = (
                     torch.as_tensor(result)
                     if not torch.is_tensor(result)
@@ -252,10 +252,10 @@ def _sympy_broadcast(result, *args):
     for val in flat_vals:
         if 'tensorflow' in type(val).__module__:
             try:
-                import tensorflow as tf
+                import tensorflow as tf  # type: ignore
                 res_tensor = tf.convert_to_tensor(result)
                 try:
-                    import tensorflow.experimental.numpy as tnp
+                    import tensorflow.experimental.numpy as tnp  # type: ignore
                     tf_args = [tf.convert_to_tensor(a) for a in flat_vals]
                     return tnp.broadcast_arrays(res_tensor, *tf_args)[0]
                 except (ValueError, RuntimeError):
@@ -271,7 +271,7 @@ def _sympy_broadcast(result, *args):
     for val in flat_vals:
         if 'jax' in type(val).__module__:
             try:
-                import jax.numpy as jnp
+                import jax.numpy as jnp  # type: ignore
                 return jnp.broadcast_arrays(result, *flat_vals)[0]
             except (ValueError, RuntimeError):
                 raise
