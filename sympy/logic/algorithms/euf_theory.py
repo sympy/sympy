@@ -38,7 +38,7 @@ Classes
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from sympy.core import Atom, Basic, sympify
+from sympy.core import Atom, sympify
 from sympy.core.symbol import Symbol
 from sympy.core.function import Lambda
 from sympy.core.symbol import Dummy
