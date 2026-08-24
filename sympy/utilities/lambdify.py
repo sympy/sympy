@@ -204,6 +204,84 @@ def _import(module, reload=False):
     if 'Abs' not in namespace:
         namespace['Abs'] = abs
 
+def _sympy_broadcast(result, *args):
+    """Broadcasts `result` to the shape of `args` if any argument is an array/tensor."""
+    if not args:
+        return result
+
+    def flatten_args(a):
+        flat = []
+        for item in a:
+            if isinstance(item, (list, tuple)):
+                flat.extend(flatten_args(item))
+            else:
+                flat.append(item)
+        return flat
+
+    flat_vals = flatten_args(args)
+
+    has_array = False
+    for val in flat_vals:
+        if hasattr(val, 'shape') and getattr(val, 'shape', None) is not None:
+            has_array = True
+            break
+
+    if not has_array:
+        return result
+
+    # Check for PyTorch tensor
+    for val in flat_vals:
+        if type(val).__name__ == 'Tensor' and type(val).__module__.startswith('torch'):
+            try:
+                import torch
+                res_tensor = torch.as_tensor(result) if not torch.is_tensor(result) else result
+                tensor_args = [torch.as_tensor(a) for a in flat_vals]
+                return torch.broadcast_tensors(res_tensor, *tensor_args)[0]
+            except (ValueError, RuntimeError):
+                raise
+            except Exception:
+                pass
+
+    # Check for TensorFlow tensor
+    for val in flat_vals:
+        if 'tensorflow' in type(val).__module__:
+            try:
+                import tensorflow as tf
+                res_tensor = tf.convert_to_tensor(result)
+                try:
+                    import tensorflow.experimental.numpy as tnp
+                    return tnp.broadcast_arrays(res_tensor, *[tf.convert_to_tensor(a) for a in flat_vals])[0]
+                except (ValueError, RuntimeError):
+                    raise
+                except Exception:
+                    pass
+            except (ValueError, RuntimeError):
+                raise
+            except Exception:
+                pass
+
+    # Check for JAX array
+    for val in flat_vals:
+        if 'jax' in type(val).__module__:
+            try:
+                import jax.numpy as jnp
+                return jnp.broadcast_arrays(result, *flat_vals)[0]
+            except (ValueError, RuntimeError):
+                raise
+            except Exception:
+                pass
+
+    # Default NumPy/SciPy/JAX
+    try:
+        import numpy as np
+        return np.broadcast_arrays(result, *flat_vals)[0]
+    except (ValueError, RuntimeError):
+        raise
+    except Exception:
+        pass
+
+    return result
+
 # Used for dynamically generated filenames that are inserted into the
 # linecache.
 _lambdify_generated_counter = 1
@@ -959,7 +1037,7 @@ or tuple for the function arguments.
                 imp_mod_lines.append(ln)
 
     # Provide lambda expression with builtins, and compatible implementation of range
-    namespace.update({'builtins':builtins, 'range':range})
+    namespace.update({'builtins':builtins, 'range':range, '_sympy_broadcast': _sympy_broadcast})
 
     funclocals = {}
     global _lambdify_generated_counter
@@ -1247,7 +1325,30 @@ class _EvaluatorPrinter:
 
         if '\n' in str_expr:
             str_expr = '({})'.format(str_expr)
-        funcbody.append('return {}'.format(str_expr))
+
+        from sympy.core.symbol import Symbol
+        from sympy.utilities.iterables import flatten
+
+        def get_free_symbols(e):
+            if hasattr(e, 'free_symbols'):
+                return e.free_symbols
+            if iterable(e):
+                syms = set()
+                for item in e:
+                    syms.update(get_free_symbols(item))
+                return syms
+            return set()
+
+        flat_args = list(flatten(args))
+        input_symbols = set(s for s in flat_args if isinstance(s, Symbol))
+        free_syms = get_free_symbols(expr)
+
+        needs_broadcasting = bool(input_symbols and not input_symbols.issubset(free_syms))
+
+        if needs_broadcasting:
+            funcbody.append('return _sympy_broadcast({}, {})'.format(str_expr, ', '.join(funcargs)))
+        else:
+            funcbody.append('return {}'.format(str_expr))
 
         funclines = [funcsig]
         funclines.extend(['    ' + line for line in funcbody])
