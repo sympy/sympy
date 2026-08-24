@@ -2352,4 +2352,3 @@ def test_lambdify_constant_broadcasting():
     M_val, F_val = f2(1.0, 2.0)
     assert numpy.array_equal(M_val, numpy.array([[1, 2], [3, 4]]))
     assert numpy.array_equal(F_val, numpy.array([[1.0], [2.0]]))
-
