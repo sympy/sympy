@@ -2155,6 +2155,22 @@ def test_resultant():
     assert resultant(f, g, polys=True) == H
     assert resultant(F, G, polys=False) == h
 
+    f, g, h = x + a, x**3, -a**3
+
+    assert resultant(f, g, x) == h
+    assert resultant(g, f, x) == a**3
+    assert resultant(x + a, x**5, x) == -a**5
+    assert Poly(x + a, x).resultant(Poly(x**3, x)) == -a**3
+    assert Poly(x + 2, x).rep.resultant(Poly(x**3, x).rep) == -8
+
+    f, g = 2*x - 4, 3*x**3 + 3*x**2 + 4*x + 4
+
+    assert resultant(f, g, x) == 384
+    assert resultant(g, f, x) == -384
+
+    assert resultant(x*y + 3, x*y**3 + 5, y) == 5*x**3 - 27*x
+    assert resultant(x*y**3 + 5, x*y + 3, y) == 27*x - 5*x**3
+
     raises(ComputationFailed, lambda: resultant(4, 2))
 
 
