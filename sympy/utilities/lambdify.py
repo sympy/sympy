@@ -1348,10 +1348,10 @@ class _EvaluatorPrinter:
 
         flat_args = list(flatten(args))
         input_symbols = {s for s in flat_args if isinstance(s, Symbol)}
-        free_syms = get_free_symbols(expr)
+        free_syms = get_free_symbols(expr) & input_symbols
 
         needs_broadcasting = bool(
-            input_symbols and not input_symbols.issubset(free_syms)
+            input_symbols and not free_syms and not iterable(expr)
         )
 
         if needs_broadcasting:
