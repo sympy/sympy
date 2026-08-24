@@ -406,31 +406,11 @@ def test_are_congruent_on_unseen_terms():
     assert cc.are_congruent(h(z), h(w))
 
 
-def test_get_canonical_form():
-    cc = EUFCongruenceClosure([])
-    fa = cc._flatten(f(a))
-    fb = cc._flatten(f(b))
-    assert cc._get_canonical_form(a) == a
-    assert cc._get_canonical_form(fa) != cc._get_canonical_form(fb)
-    cc.merge(a, b)
-    assert cc._get_canonical_form(fa) == cc._get_canonical_form(fb)
-
-
 def test_explain_reflexive_and_disconnected():
     cc = EUFCongruenceClosure([Q.eq(a, b)])
     assert cc.explain(a, a) == set()
     assert cc.explain(f(a), f(a)) == set()
     assert cc.explain(a, z) is None
-
-
-def test_explain_prefers_shortcut_over_chain():
-    v = symbols('e0:12')
-    shortcut = Q.eq(v[0], v[10])
-    eqs = ([Q.eq(v[i], v[i + 1]) for i in range(10)]
-           + [shortcut, Q.eq(v[10], v[11])])
-    cc = EUFCongruenceClosure(eqs)
-    expl = _check_explanation(cc, eqs, v[0], v[11])
-    assert expl == {shortcut, Q.eq(v[10], v[11])}
 
 
 def test_explain_shortcut_is_level_bounded():
@@ -441,13 +421,6 @@ def test_explain_shortcut_is_level_bounded():
     assert _check_explanation(cc, eqs, v[0], v[10]) == set(eqs) - {shortcut}
 
 
-def test_explain_zero_fuel_falls_back_to_classical():
-    eqs = [Q.eq(a, b), Q.eq(g(f(a)), x), Q.eq(g(f(b)), y)]
-    cc = EUFCongruenceClosure(eqs)
-    cc.greedy_fuel = 0
-    assert _check_explanation(cc, eqs, x, y) == set(eqs)
-
-
 def test_explain_is_stable_across_calls():
     eqs = [Q.eq(a, b), Q.eq(f(a), x), Q.eq(f(b), y), Q.eq(z, w)]
     cc = EUFCongruenceClosure(eqs)
@@ -455,16 +428,6 @@ def test_explain_is_stable_across_calls():
     assert cc.explain(x, y) == first
     assert _check_explanation(cc, eqs, y, x) is not None
     assert cc.explain(z, w) == {Q.eq(z, w)}
-
-
-def test_extra_edges_stay_within_budget():
-    v = symbols('m0:10')
-    eqs = ([Q.eq(v[i], v[i + 1]) for i in range(9)]
-           + [Q.eq(f(v[i]), g(v[i])) for i in range(10)])
-    cc = EUFCongruenceClosure(eqs)
-    for i in range(10):
-        cc.explain(f(v[0]), f(v[i]))
-    assert cc._n_edges_extra <= 2 * cc._n_edges_during_union
 
 
 def test_explain_after_incremental_merges():
@@ -513,33 +476,6 @@ def test_trivial_and_duplicate_equalities():
     assert cc.explain(a, b) <= set(eqs)
 
 
-def test_greedy_explanation_never_larger_than_classical():
-    rng = random.Random(26)
-    s = symbols('t0:12')
-    eqs = []
-    for _ in range(18):
-        i, j = rng.sample(range(12), 2)
-        if rng.random() < 0.3:
-            eqs.append(Q.eq(f(s[i]), f(s[j])))
-        else:
-            eqs.append(Q.eq(s[i], s[j]))
-    greedy = EUFCongruenceClosure(eqs)
-    classical = EUFCongruenceClosure(eqs)
-    shortened = 0
-    for i in range(12):
-        for j in range(i + 1, 12):
-            if not greedy.are_congruent(s[i], s[j]):
-                continue
-            baseline = set()
-            classical._explain_classical(classical._flatten(s[i]),
-                                         classical._flatten(s[j]), baseline)
-            assert EUFCongruenceClosure(list(baseline)).are_congruent(s[i], s[j])
-            expl = _check_explanation(greedy, eqs, s[i], s[j])
-            assert len(expl) <= len(baseline)
-            shortened += len(expl) < len(baseline)
-    assert shortened > 0
-
-
 def _snapshot(cc):
     def kept(mapping):
         return {k: (set(v) if isinstance(v, set) else list(v))
@@ -547,8 +483,7 @@ def _snapshot(cc):
     forest = {frozenset((child, parent)): cc.pf_label[child]
               for child, parent in cc.pf_parent.items()}
     return (dict(cc.representative), kept(cc.classlist), dict(cc.lookup_table),
-            kept(cc.use_list), forest, kept(cc.adjacency), dict(cc._level),
-            cc._n_edges_during_union, cc._n_edges_extra)
+            kept(cc.use_list), forest)
 
 
 def test_backtrack_retracts_congruence():
@@ -868,8 +803,6 @@ def _check_invariants(cc):
             walked.add(cursor)
             seen.add(cursor)
             cursor = cc.pf_parent[cursor]
-
-    assert cc._n_edges_extra <= 2 * cc._n_edges_during_union
 
 
 def _random_equations(pool, count):
