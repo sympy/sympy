@@ -438,7 +438,7 @@ def test_implicit_kinematics():
     # Kinematical differential equations
     # A generalized speed is needed for the fourth generalized coordinate to
     # comply with Kane's form of the definition of generalized speeds:
-    # u = Y*q' where len(u) = len(q)
+    # u = Y*q' where len(u) = len(q), and Y must be regular.
     # The quaternion kinematical differential equation takes this form:
     # [P] = Y*[lam0']
     # [Q]     [lam1']
