@@ -422,7 +422,7 @@ def test_implicit_kinematics():
 
     # Generalized speeds
     P, Q, R = dynamicsymbols('P, Q, R')
-    U, V, W, X = dynamicsymbols('U V W, X')
+    U, V, W, X = dynamicsymbols('U, V,  W, X')
 
     u_ind = [U, V, W, P, Q, R]
     u_dep = [X]
