@@ -96,37 +96,9 @@ def check_satisfiability(prop, _prop, factbase):
 
     # Check whether proposition is entailed by any of the assigned literals.
     for clauses, answer in ((prop.clauses, True), (_prop.clauses, False)):
-        all_satisfied = True # Flag to check if all clauses are satisfied
-        for clause in clauses:
-            satisfied = False # Flag to check if the clause can be satisfied
-            all_lits_false = True # Flag to track if all literals in a clause are false
-            for lit in clause:
-                # fixed() takes an int in this solver's numbering, not a
-                # Literal, and the False literal has no variable of its own.
-                var = sat_false.encoding.get(lit.lit)
-                if var is None:
-                    lit_is_implied = 0
-                else:
-                    lit_is_implied = solver.fixed(-var if lit.is_Not else var)
-                if lit_is_implied == 1:
-                    satisfied = True
-                    all_lits_false = False
-                    break
-                if lit_is_implied == 0:
-                    all_lits_false = False
-            if satisfied:
-                continue
-            if all_lits_false:
-                # If the current clause is false then the CNF in scan
-                # is false, by false meaning the opposite of the `answer`
-                return not answer
-            # Undecided. This CNF cannot be entailed any more, but keep
-            # scanning, since a later clause may still turn out to be false.
-            all_satisfied = False
-
-        if all_satisfied:
-            # If everything works out, just return answer
-            return answer
+        entailed = _is_entailed(clauses, solver, sat_false.encoding)
+        if entailed is not None:
+            return answer if entailed else not answer
 
     # Dropping the 0 leaves a side nothing can satisfy as the unit {guard}.
     for side, guard in ((sat_true, -selector), (sat_false, selector)):
@@ -159,6 +131,28 @@ def check_satisfiability(prop, _prop, factbase):
         # assumptions, global_assumptions, and relevant_facts are
         # inconsistent.
         raise ValueError("Inconsistent assumptions")
+
+
+def _is_entailed(clauses, solver, encoding):
+    """
+    Return True if the literals *solver* has fixed make the CNF *clauses*
+    true, False if they make it false, and None if they leave it undecided.
+    """
+    entailed = True
+    for clause in clauses:
+        # fixed() takes an int in this solver's numbering, not a Literal,
+        # and a predicate it never encoded cannot have been fixed.
+        values = [solver.fixed(-var if lit.is_Not else var)
+                  if (var := encoding.get(lit.lit)) else 0
+                  for lit in clause]
+
+        # One false clause makes the whole CNF false. An undecided one only
+        # rules out entailment, so keep looking for a false clause.
+        if all(value == -1 for value in values):
+            return False
+        entailed = entailed and 1 in values
+
+    return entailed or None
 
 
 def extract_predargs(proposition, assumptions=None):
