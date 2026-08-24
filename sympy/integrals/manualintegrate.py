@@ -2244,10 +2244,8 @@ def bioche_substitution(integral):
             generic_step = RewriteRule(integrand, x, expanded, integral_steps(expanded, x))
         else:
             generic_step = URule(integrand, x, u, u_func, integral_steps(expanded/omega, u))
-        if separable and generic_step.contains_dont_know():
-            termwise = False
 
-    if not termwise:
+    else:
         phase_substitution = {}
         singular_expr_u = None
         if phase_base is not None:
