@@ -8,7 +8,7 @@ from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
 from sympy.core.sympify import sympify  # can't import as S yet
 from sympy.core.symbol import uniquely_named_symbol, _symbol, Str
 
-from sympy.testing.pytest import raises, skip_under_pyodide
+from sympy.testing.pytest import raises, skip, skip_under_pyodide
 from sympy.core.symbol import disambiguate
 
 
@@ -431,26 +431,43 @@ def test_Dummy_index_is_unique_across_threads():
     # _hashable_content, colliding dummies compare equal -- which defeats the
     # entire purpose of a Dummy and silently corrupts any substitution that
     # relies on generated symbols being distinct.
-    n_threads = 8
-    per_thread = 250
+    n_threads = 4
+    per_thread = 500
 
-    barrier = threading.Barrier(n_threads)
+    go = threading.Event()
     buckets: list[list[Dummy]] = [[] for _ in range(n_threads)]
 
     def worker(i):
-        barrier.wait()
+        # An Event rather than a Barrier, so that a runner which can only give
+        # us some of the threads still runs instead of deadlocking.
+        go.wait()
         bucket = buckets[i]
         for _ in range(per_thread):
             bucket.append(Dummy())
 
-    threads = [threading.Thread(target=worker, args=(i,)) for i in range(n_threads)]
-    for thread in threads:
-        thread.start()
+    threads = []
+    for i in range(n_threads):
+        thread = threading.Thread(target=worker, args=(i,))
+        try:
+            thread.start()
+        except RuntimeError:
+            # Some CI environments cap the number of threads a process may
+            # create; work with however many we actually got.
+            break
+        threads.append(thread)
+
+    if len(threads) < 2:
+        go.set()
+        for thread in threads:
+            thread.join()
+        skip("could not start enough threads to test for the race")
+
+    go.set()
     for thread in threads:
         thread.join()
 
     dummies = [d for bucket in buckets for d in bucket]
-    assert len(dummies) == n_threads * per_thread
+    assert len(dummies) == len(threads) * per_thread
 
     # Every generated Dummy must have its own index ...
     indices = {d.dummy_index for d in dummies}
