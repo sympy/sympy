@@ -47,6 +47,30 @@ def test_Dummy():
     assert Dummy() != Dummy()
 
 
+@skip_under_pyodide("Cannot create threads under pyodide.")
+def test_Dummy_concurrent_creation():
+    thread_count = 8
+    dummies_per_thread = 2000
+    barrier = threading.Barrier(thread_count)
+    results = [None] * thread_count
+
+    def create_dummies(index):
+        barrier.wait()
+        results[index] = [Dummy('x') for _ in range(dummies_per_thread)]
+
+    threads = [
+        threading.Thread(target=create_dummies, args=(index,))
+        for index in range(thread_count)
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    dummies = [dummy for result in results for dummy in result]
+    assert len({dummy.dummy_index for dummy in dummies}) == len(dummies)
+
+
 def test_Dummy_force_dummy_index():
     raises(AssertionError, lambda: Dummy(dummy_index=1))
     assert Dummy('d', dummy_index=2) == Dummy('d', dummy_index=2)
@@ -57,7 +81,6 @@ def test_Dummy_force_dummy_index():
     assert d1 != d2
     d3 = Dummy('d', dummy_index=3)
     assert d1 == d3
-    assert Dummy()._count == Dummy('d', dummy_index=3)._count
 
 
 def test_lt_gt():

@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
@@ -66,6 +68,7 @@ def dup_one_const(draw, min_size=3, max_size=25):
 
 @settings(max_examples=25)
 @given(f=dup_zero_const())
+@pytest.mark.thread_unsafe(reason="has pathological scaling under concurrent series expansion")
 def test_rs_series_zero(f):
     Rs, _ = power_series_ring("x", QQ, 25)
     Rp, x = ring("x", QQ)
@@ -89,6 +92,7 @@ def test_rs_series_zero(f):
 
 
 @given(f=dup_one_const())
+@pytest.mark.thread_unsafe(reason="has pathological scaling under concurrent series expansion")
 def test_rs_series_one(f):
     Rs, _ = power_series_ring("x", QQ, 25)
     Rp, x = ring("x", QQ)
@@ -122,6 +126,7 @@ def test_global_series_zero(f):
 
 
 @given(f=dup_one_const(max_size=5))
+@pytest.mark.thread_unsafe(reason="has pathological scaling under concurrent series expansion")
 def test_global_series_one(f):
     Rs, _ = power_series_ring("x", QQ, 5)
 

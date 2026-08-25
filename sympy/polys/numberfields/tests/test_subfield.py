@@ -1,6 +1,8 @@
 """Tests for the subfield problem and allied problems. """
 from __future__ import annotations
 
+import pytest
+
 from sympy.core.numbers import (AlgebraicNumber, I, pi, Rational)
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
@@ -306,6 +308,7 @@ def test_issue_22736():
     assert field_isomorphism(a, b) == [1, 0]
 
 
+@pytest.mark.thread_unsafe(reason="has pathological scaling with concurrent root analysis")
 def test_issue_27798():
     # https://github.com/sympy/sympy/issues/27798
     a, b = CRootOf(49*x**3 - 49*x**2 + 14*x - 1, 2), CRootOf(49*x**3 - 49*x**2 + 14*x - 1, 0)
