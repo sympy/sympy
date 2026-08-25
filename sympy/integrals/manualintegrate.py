@@ -2127,8 +2127,8 @@ def bioche_substitution(integral):
 
     if not trig_atoms:
         return None
-    # Polynomial trig expressions are better handled termwise after expansion
-    if integrand.is_polynomial(*trig_atoms):
+    # Pure sin/cos polynomial expressions, e.g. (sin(x) + cos(x))**2, are better handled termwise after expansion
+    if all(atom.func in (sin, cos) for atom in trig_atoms) and integrand.is_polynomial(*trig_atoms):
         return None
     if integrand.is_rational_function(*trig_atoms) is not True:
         return None
@@ -2192,7 +2192,9 @@ def bioche_substitution(integral):
                         value = numerator/denominator
                         candidates.update((floor(value), ceiling(value)))
         best_k = min(ordered(candidates), key=lambda k: (
-            max(abs(m - n*k) for m, n in zip(phase_multiples, harmonics)), abs(k)))
+            tuple(sorted((abs(m - n*k)
+                for m, n in zip(phase_multiples, harmonics)), reverse=True)),
+            abs(k)))
         phase_shift = (phase_shift + best_k*phase).cancel()
         phase_multiples = [m - n*best_k for m, n in zip(phase_multiples, harmonics)]
 
@@ -2230,8 +2232,10 @@ def bioche_substitution(integral):
     # Avoid Bioche when expansion already gives an easier termwise integral
     # (e.g. cos(3*x)/cos(x) or cos(x + a)/(sin(x) + 2)).
     expanded = expand_mul(expr_u)
-    polynomial = expanded.is_polynomial(*(func(u) for func in TRIG))
-    separable = phase_base is not None and expanded.is_Add and all(
+    expanded_trig_atoms = tuple(ordered(expanded.atoms(*TRIG)))
+    polynomial = all(atom.func in (sin, cos) for atom in expanded_trig_atoms) and (
+        not expanded_trig_atoms or expanded.is_polynomial(*expanded_trig_atoms))
+    separable = phase_base is not None and all(
         not term.as_independent(u, as_Add=False)[1].has(v)
         for term in Add.make_args(expanded))
     if phase_base is not None:
@@ -2244,7 +2248,6 @@ def bioche_substitution(integral):
             generic_step = RewriteRule(integrand, x, expanded, integral_steps(expanded, x))
         else:
             generic_step = URule(integrand, x, u, u_func, integral_steps(expanded/omega, u))
-
     else:
         phase_substitution = {}
         singular_expr_u = None
@@ -2323,8 +2326,6 @@ def bioche_substitution(integral):
             generic_step = ReparameterizationRule(
                 integrand, x, phase_substitution, generic_step)
 
-    if generic_step.contains_dont_know():
-        return None
     if omega.is_zero is False:
         return generic_step
     zero_replacements = {atom: atom.func(phase_i) for atom, _, phase_i in trig_data}

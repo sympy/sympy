@@ -106,7 +106,7 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
     assert manualintegrate(cos(3*x)*sec(x), x) == -x + sin(2*x)
     assert manualintegrate(sin(3*x)*sec(x), x) == \
-        -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
+        log(-2*cos(2*x) - 2)/2 - cos(2*x) - 1
 
     assert_is_integral_of(sinh(2*x), cosh(2*x)/2)
     assert_is_integral_of(x*cosh(x**2), sinh(x**2)/2)
