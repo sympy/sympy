@@ -2037,8 +2037,8 @@ def _get_examples_ode_sol_nth_linear_var_of_parameters():
     # https://github.com/sympy/sympy/issues/14395
     'var_of_parameters_15': {
         'eq': Derivative(f(x), x, x) + 9*f(x) - sec(x),
-        'sol': [Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))
-        - 2*log(cos(x)**2)/3 + 2*cos(x)**2/3)*cos(3*x))],
+        'sol': [Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x)
+        + (C2 - log(-4*cos(x)**2)/6 + cos(2*x)/3)*cos(3*x))],
         'slow': True,
     },
     }
