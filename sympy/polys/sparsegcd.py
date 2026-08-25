@@ -23,7 +23,7 @@ def gcd_terms(polynomials: list[smp[Er]], domain: Domain[Er]) -> smp[Er]:
     >>> polynomials = [p1, p2]
     >>> ring = p1.ring
     >>> domain = ring.domain
-    >>> gcd_terms(polynomials, ring, domain)
+    >>> R(gcd_terms(polynomials, domain))
     2*x**2*y**2
     >>> p1.gcd(p2) # Shows the difference between the gcd_terms and gcd
     2*x**3*y**2 - 2*x**2*y**3
@@ -41,6 +41,7 @@ def gcd_terms(polynomials: list[smp[Er]], domain: Domain[Er]) -> smp[Er]:
     coeff_gcd = domain.gcdn(coeffs)
 
     return {monom_gcd: coeff_gcd}
+
 
 def gcd_prs(f, g):
     """
@@ -85,7 +86,7 @@ def gcd_prs(f, g):
 
 def gcd_extract(polynomials, tag):
     """
-    Returns the greatest common divisor (GCD) of a set of polynomials.
+    Returns the greatest common divisor (GCD) of a list of polynomials.
 
     Examples
     ========
@@ -103,7 +104,7 @@ def gcd_extract(polynomials, tag):
     domain = ring.domain
 
     if any(len(pi) == 1 for pi in polynomials):
-        return gcd_terms(polynomials, ring, domain)
+        return gcd_terms(polynomials, domain)
 
     polynomials, monom_gcd = monomial_extract(polynomials)
 
@@ -151,7 +152,7 @@ def gcd_extract(polynomials, tag):
         return gcd
 
 
-def _gcd_preprocess_polys(polynomials):
+def _gcd_preprocess_polys(polynomials, dom):
     """
     Simplify a list of polynomials whose gcd is wanted. Returns a possibly
     longer list of simpler polynomials having the same gcd as the input.
@@ -195,7 +196,7 @@ def _gcd_preprocess_polys(polynomials):
             if not common:
                 ring = polynomials[0].ring
                 domain = ring.domain
-                gcd = gcd_terms(polynomials, ring, domain)
+                gcd = gcd_terms(polynomials, dom) #I think that here the gcd should be scalar, and we shouldn't call gcd_terms
                 return [gcd], None
 
             syms = pi.free_variables()
@@ -217,7 +218,7 @@ def _gcd_preprocess_polys(polynomials):
             if any(len(c) == 1 for c in coeffs_i):
                 ring = polynomials[0].ring
                 domain = ring.domain
-                gcd = gcd_terms((all_polys + polynomials[i+1:]), ring, domain)
+                gcd = gcd_terms((all_polys + polynomials[i+1:]), dom)
                 return [gcd], None
 
 
@@ -282,3 +283,72 @@ def primitive_wrt(self, x):
     cont = gcd_extract(coeffs, "prs")
     prim = p.exquo(cont)
     return cont, prim
+
+
+def zippel_preprocess(A, B):
+    """
+    checks if in any variable the gcd is monic
+    if it doesn't find any variable with monic gcd
+    it extracts content wrt the first variable
+    and proceeds to compute the gcd
+    maybe it is better to call the generic sympy gcd rather than
+    modgcd_multivariate once the whole dispatching heuristic is implemented
+    """
+    ring = A.ring
+    ngens = ring.ngens
+    syms = ring.symbols
+    t = None
+
+    for i in range(ngens):
+        m_A = max(el[i]for el in A.keys())
+        m_B = max(el[i] for el in B.keys())
+        if t == None and (m_A != 0 or m_B != 0):
+            t = i
+        lc_A = A.coeff_wrt(i, m_A)
+        lc_B = B.coeff_wrt(i, m_B)
+        if len(lc_A) == 1 or len(lc_B) == 1:
+            if i == 0:
+                gcd, _, _ = modgcd_multivariate(A, B, "zippel")
+                return gcd
+            new_syms = (syms[i],) + syms[:i] + syms[i+1:]
+            new_ring = ring.clone(symbols = new_syms)
+            A_ = A.set_ring(new_ring)
+            B_ = B.set_ring(new_ring)
+            gcd, _, _ = modgcd_multivariate(A_, B_, "zippel")
+            return gcd.set_ring(ring)
+    if t == None:
+        gcd, _, _ = modgcd_multivariate(A, B, "zippel")
+        return gcd
+
+    A_cont, A_prim = A.primitive_wrt(t)
+    B_cont, B_prim = B.primitive_wrt(t)
+    cont_gcd = zippel_preprocess(A_cont, B_cont)
+    gcd,_ , _ = modgcd_multivariate(A_prim, B_prim, "zippel")
+    return gcd * cont_gcd
+
+
+def gcd_extract(v):
+
+    # faster than computing the gcd iteratively
+    # when gcd is computed with Zippel
+
+    if len(v) == 1:
+        return v[1]
+    if len(v) == 2:
+        return zippel_preprocess(v_sor[0], v_sor[1])
+    v_sor = sorted(v, key=lambda p: len(p))
+    A = v_sor[1]
+    while True:
+        for el in v_sor[2:]:
+            k = random.randint(1, 10009)
+            A += el * k
+        gcd = zippel_preprocess(v_sor[0], A)
+        restart = False
+        for pol in v:
+            if pol.rem(gcd) != 0:
+                restart = True
+                break
+        if not restart:
+            break
+
+    return gcd
