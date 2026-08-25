@@ -73,37 +73,22 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
 
 
 def check_satisfiability(prop, _prop, factbase):
-    sat_true = factbase.copy()
-    sat_true.data = []
-    sat_true.add_from_cnf(prop)
-
-    sat_false = sat_true.copy()
-    sat_false.data = []
-    sat_false.add_from_cnf(_prop)
-
-    # The propositions only go in once the facts have had their say, so a
-    # question the facts alone settle never pays for them.
-    selector = len(sat_false.encoding) + 1
-    solver = SATSolver(factbase.data, range(1, selector + 1), set(), sat_false.symbols + [selector])
-
-    # EncodedCNF encodes False as the literal 0, which the solver cannot see
-    # as false.
     if {0} in factbase.data:
         raise ValueError("Inconsistent assumptions")
 
+    true_false_guarded, selector = _encode_with_selector(prop, _prop, factbase)
+
+    # Run `propogate()` on the assumptions
+    solver = SATSolver(true_false_guarded.data, range(1, selector + 1), set(),
+                       true_false_guarded.symbols + [selector])
     if solver.propagate() == IpasirStatus.UNSATISFIABLE:
         raise ValueError("Inconsistent assumptions")
 
     # Check whether proposition is entailed by any of the assigned literals.
     for clauses, answer in ((prop.clauses, True), (_prop.clauses, False)):
-        entailed = _is_entailed(clauses, solver, sat_false.encoding)
+        entailed = solver._is_entailed(clauses, true_false_guarded.encoding)
         if entailed is not None:
             return answer if entailed else not answer
-
-    # Dropping the 0 leaves a side nothing can satisfy as the unit {guard}.
-    for side, guard in ((sat_true, -selector), (sat_false, selector)):
-        for clause in side.data:
-            solver.clause((clause - {0}) | {guard})
 
     # Continue on the propogated solver, just call solve() on it.
     if solver.solve() == IpasirStatus.UNSATISFIABLE:
@@ -133,26 +118,24 @@ def check_satisfiability(prop, _prop, factbase):
         raise ValueError("Inconsistent assumptions")
 
 
-def _is_entailed(clauses, solver, encoding):
+def _encode_with_selector(prop, _prop, factbase):
+    """Return *factbase* with the clauses of prop and _prop added to it, and
+    the selector variable that activates prop when true and _prop when false.
     """
-    Return True if the literals *solver* has fixed make the CNF *clauses*
-    true, False if they make it false, and None if they leave it undecided.
-    """
-    entailed = True
-    for clause in clauses:
-        # fixed() takes an int in this solver's numbering, not a Literal,
-        # and a predicate it never encoded cannot have been fixed.
-        values = [solver.fixed(-var if lit.is_Not else var)
-                  if (var := encoding.get(lit.lit)) else 0
-                  for lit in clause]
+    true_false_guarded = factbase.copy()
+    sides = [[true_false_guarded.encode(clause) for clause in side.clauses]
+             for side in (prop, _prop)]
 
-        # One false clause makes the whole CNF false. An undecided one only
-        # rules out entailment, so keep looking for a false clause.
-        if all(value == -1 for value in values):
-            return False
-        entailed = entailed and 1 in values
+    # One past the last predicate, so the selector is a variable of its own.
+    selector = len(true_false_guarded.encoding) + 1
 
-    return entailed or None
+    for clauses, guard in zip(sides, (-selector, selector)):
+        # Dropping the 0 that encodes False leaves a side nothing can satisfy
+        # as the unit {guard}.
+        true_false_guarded.data += [(clause - {0}) | {guard}
+                                    for clause in clauses]
+
+    return true_false_guarded, selector
 
 
 def extract_predargs(proposition, assumptions=None):
