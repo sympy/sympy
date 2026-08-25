@@ -420,3 +420,41 @@ def test_issue_gh_16734():
     thread.start()
     thread2()
     thread.join()
+
+
+def test_Dummy_index_is_unique_across_threads():
+    # https://github.com/sympy/sympy/issues/28239
+    #
+    # Dummy.__new__ read Dummy._count and incremented it as two separate
+    # operations, so concurrent Dummy() calls could be handed the same count
+    # and therefore the same dummy_index.  Because dummy_index is part of
+    # _hashable_content, colliding dummies compare equal -- which defeats the
+    # entire purpose of a Dummy and silently corrupts any substitution that
+    # relies on generated symbols being distinct.
+    n_threads = 8
+    per_thread = 250
+
+    barrier = threading.Barrier(n_threads)
+    buckets: list[list[Dummy]] = [[] for _ in range(n_threads)]
+
+    def worker(i):
+        barrier.wait()
+        bucket = buckets[i]
+        for _ in range(per_thread):
+            bucket.append(Dummy())
+
+    threads = [threading.Thread(target=worker, args=(i,)) for i in range(n_threads)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    dummies = [d for bucket in buckets for d in bucket]
+    assert len(dummies) == n_threads * per_thread
+
+    # Every generated Dummy must have its own index ...
+    indices = {d.dummy_index for d in dummies}
+    assert len(indices) == len(dummies)
+
+    # ... and therefore no two of them may compare equal.
+    assert len(set(dummies)) == len(dummies)

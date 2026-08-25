@@ -18,6 +18,7 @@ from sympy.utilities.iterables import is_sequence, _sift_true_false
 from sympy.utilities.misc import filldedent
 
 import string
+import threading
 import re as _re
 import random
 from itertools import product
@@ -503,6 +504,11 @@ class Dummy(Symbol):
     # small chance that `d2` will be equal to a previously-created Dummy.
 
     _count = 0
+    # Reading _count and incrementing it are two separate operations.  Without
+    # this lock two threads can be handed the same value, and because
+    # dummy_index is part of _hashable_content two Dummy objects that collide
+    # on it compare equal -- silently defeating the whole point of a Dummy.
+    _count_lock = threading.Lock()
     _prng = random.Random()
     _base_dummy_index = _prng.randint(10**6, 9*10**6)
 
@@ -516,12 +522,19 @@ class Dummy(Symbol):
         if dummy_index is not None:
             assert name is not None, "If you specify a dummy_index, you must also provide a name"
 
-        if name is None:
-            name = "Dummy_" + str(Dummy._count)
-
         if dummy_index is None:
-            dummy_index = Dummy._base_dummy_index + Dummy._count
-            Dummy._count += 1
+            # A caller that supplies dummy_index must also supply name (see the
+            # assert above), so this branch covers every case that consumes the
+            # counter.  Taking one value under the lock also guarantees the
+            # generated name and the index come from the same count.
+            with Dummy._count_lock:
+                count = Dummy._count
+                Dummy._count = count + 1
+
+            if name is None:
+                name = "Dummy_" + str(count)
+
+            dummy_index = Dummy._base_dummy_index + count
 
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
