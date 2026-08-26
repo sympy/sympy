@@ -2046,13 +2046,14 @@ def test_sqrt_quadratic():
     assert integrate((7*x+6)/sqrt(3*x**2+4*x-5)) == \
            7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/9
     assert integrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
-        Piecewise(((-b*e/(2*c) + d) *
-                   Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
-                             ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
-                   e*sqrt(a + b*x + c*x**2)/c, Ne(c, 0)),
-                   ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
-                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), Ne(b, 0)),
-                  ((d*x + e*x**2/2)/sqrt(a), True))
+        Piecewise((e*sqrt(a + b*x + c*x**2)/c +
+                   (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c),
+                   Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
+                  (e*sqrt(a + b*x + c*x**2)/c +
+                   (b/(2*c) + x)*(-b*e/(2*c) + d)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2),
+                   Ne(c, 0)),
+                  ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
+                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), True))
 
     assert integrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2)) == \
            sqrt(x**2 - 3*x + 2)*(x**2 + 13*x/4 + S(101)/8) + 135*log(2*x + 2*sqrt(x**2 - 3*x + 2) - 3)/16
@@ -2061,13 +2062,14 @@ def test_sqrt_quadratic():
            (x/2 - S(16683)/53225)*sqrt(53225*x**2 - 66732*x + 23013) + \
            111576969*sqrt(2129)*asinh(53225*x/10563 - S(11122)/3521)/1133160250
     assert integrate(sqrt(a+b*x+c*x**2), x) == \
-        Piecewise(((a/2 - b**2/(8*c)) *
-                   Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
-                             ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
-                   (b/(4*c) + x/2)*sqrt(a + b*x + c*x**2), Ne(c, 0)),
-                   (sqrt(a)*x, Eq(b, 0)),
-                  (2*(a + b*x)**(S(3)/2)/(3*b), Ne(b, 0)),
-                  (sqrt(a)*x, True))
+        Piecewise(((b/(4*c) + x/2)*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c),
+                   Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
+                  ((b/(4*c) + x/2)*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*(b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2),
+                   Ne(c, 0)),
+                  (sqrt(a)*x, Eq(b, 0)),
+                  (2*(a + b*x)**(S(3)/2)/(3*b), True))
 
     assert integrate(x*sqrt(x**2+2*x+4)) == \
         (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2

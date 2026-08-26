@@ -28,7 +28,7 @@ from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold,
                                                   piecewise_exclusive)
 from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
         erfinv, erfcinv, erf2inv, Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
-        fresnels, fresnelc)
+        fresnels, fresnelc, owens_t)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma,
         uppergamma, polygamma, loggamma, digamma, trigamma, multigamma)
 from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,
@@ -81,7 +81,7 @@ __all__ = [
 
     'erf', 'erfc', 'erfi', 'erf2', 'erfinv', 'erfcinv', 'erf2inv', 'Ei',
     'expint', 'E1', 'li', 'Li', 'Si', 'Ci', 'Shi', 'Chi', 'fresnels',
-    'fresnelc',
+    'fresnelc', 'owens_t',
 
     'gamma', 'lowergamma', 'uppergamma', 'polygamma', 'loggamma', 'digamma',
     'trigamma', 'multigamma',

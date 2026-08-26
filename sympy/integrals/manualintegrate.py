@@ -49,12 +49,12 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
     cosh, coth, sech, sinh, tanh, asinh)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
     cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.error_functions import (erf, erfc, erfi, fresnelc,
-    fresnels, Ci, Chi, Si, Shi, Ei, li)
+    fresnels, Ci, Chi, Si, Shi, Ei, li, owens_t)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.elliptic_integrals import elliptic_e, elliptic_f
 from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
@@ -663,8 +663,9 @@ class PiecewiseRule(Rule):
         self.subfunctions = subfunctions
 
     def eval(self) -> Expr:
-        return Piecewise(*[(substep.eval(), cond)
-                           for substep, cond in self.subfunctions])
+        piecewise = Piecewise(*[(substep.eval(), cond) for substep, cond in
+            self.subfunctions])
+        return piecewise_fold(piecewise)
 
     def contains_dont_know(self) -> bool:
         return any(substep.contains_dont_know() for substep, _ in self.subfunctions)
@@ -956,6 +957,26 @@ class ErfRule(AtomicRule):
         return sqrt(S.Pi)/sqrt(a)/2 * exp(c - b**2/(4*a)) * \
                 erfi((2*a*x + b)/(2*sqrt(a)))
 
+
+class OwensTRule(AtomicRule):
+
+    __slots__ = ("a", "b", "y")
+
+    a: Expr
+    b: Expr
+    y: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, y: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.y = y
+
+    def eval(self) -> Expr:
+        a, b, y, x = self.a, self.b, self.y, self.variable
+        return - 2*sqrt(S.Pi)/a * owens_t(sqrt(2)*(a*x+b), y)
 
 class FresnelCRule(AtomicRule):
 
@@ -1378,6 +1399,8 @@ def special_function_rule(integral):
             (Mul, sinh(linear_pattern, evaluate=False)/_symbol, None, ShiRule),
             (Pow, 1/log(linear_pattern, evaluate=False), None, LiRule),
             (exp, exp(quadratic_pattern, evaluate=False), None, ErfRule),
+            (Mul, exp(-(linear_pattern)**2, evaluate=False) * erf(d*(linear_pattern)),
+                lambda a, b, d: d != 1 and d != -1, OwensTRule),
             (sin, sin(quadratic_pattern, evaluate=False), None, FresnelSRule),
             (cos, cos(quadratic_pattern, evaluate=False), None, FresnelCRule),
             (Mul, _symbol**e*exp(a*_symbol, evaluate=False), None, UpperGammaRule),
@@ -1387,6 +1410,7 @@ def special_function_rule(integral):
             (Pow, sqrt(a - d*sin(_symbol, evaluate=False)**2),
                 lambda a, d: a != d, EllipticERule),
         ))
+    a_wild, _, _, d_wild, _ = _wilds
     _integrand = integrand.subs(symbol, _symbol)
     for type_, pattern, constraint, rule in _special_function_patterns:
         if isinstance(_integrand, type_):
@@ -1395,7 +1419,20 @@ def special_function_rule(integral):
                 wild_vals = tuple(match.get(w) for w in _wilds
                                   if match.get(w) is not None)
                 if constraint is None or constraint(*wild_vals):
-                    return rule(integrand, symbol, *wild_vals)
+                    step = rule(integrand, symbol, *wild_vals)
+                    for w in (a_wild, d_wild):
+                        val = match.get(w)
+                        if val and val.is_zero is not False:
+                            degenerate_integrand = integrand.subs(val, 0)
+                            degenerate_step = integral_steps(degenerate_integrand, symbol)
+                            step = _add_degenerate_step(Ne(val, 0), step, degenerate_step)
+                    if rule in (EllipticFRule, EllipticERule):
+                        a_val, d_val = match.get(a_wild), match.get(d_wild)
+                        if a_val and d_val and (a_val - d_val).is_zero is not False:
+                            degenerate_integrand = integrand.subs(d_val, a_val)
+                            degenerate_step = integral_steps(degenerate_integrand, symbol)
+                            step = _add_degenerate_step(Ne(a_val, d_val), step, degenerate_step)
+                    return step
 
 
 def _add_degenerate_step(generic_cond, generic_step: Rule, degenerate_step: Rule | None) -> Rule:
@@ -1560,7 +1597,7 @@ def mul_rule(integral: IntegralInfo):
             return ConstantTimesRule(integrand, symbol, coeff, f, next_step)
 
 
-special_error_functions = (erf, erfc, erfi, fresnelc, fresnels, Ci, Chi, Si, Shi, Ei, li)
+special_error_functions = (erf, erfc, erfi, fresnelc, fresnels, Ci, Chi, Si, Shi, Ei, li, owens_t)
 
 
 def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None:
