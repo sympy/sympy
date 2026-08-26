@@ -1471,14 +1471,12 @@ def test_derivs():
     assert acosh(x).diff(x) == 1/(sqrt(x - 1)*sqrt(x + 1))
     assert acosh(x).diff(x) == acosh(x).rewrite(log).diff(x).together()
     assert atanh(x).diff(x) == 1/(-x**2 + 1)
-    assert asech(x).diff(x) == -1/(x**2*sqrt(1/x - 1)*sqrt(1/x + 1))
+    assert asech(x).diff(x) == -sqrt(1/(x + 1))/(x*sqrt(1 - x))
     assert acsch(x).diff(x) == -1/(x**2*sqrt(1 + x**(-2)))
 
 
 def test_asech_deriv_branch():
-    # issue 30335: the derivative of asech must be correct on the whole
-    # complex plane, in particular for x < -1 where the old formula
-    # -1/(x*sqrt(1 - x**2)) had the wrong sign.
+    # issue 30335
     x = Symbol('x')
     deriv = asech(x).diff(x)
     assert deriv.subs(x, -2) == sqrt(3)*I/6
