@@ -261,8 +261,8 @@ def test_rewrite():
         assert hn1(order, z) == hn1(order, z).rewrite(f)
         assert hn2(order, z) == hn2(order, z).rewrite(f)
 
-    assert jn(order, z).rewrite(besselj) == sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(order + S.Half, z)/2
-    assert jn(order, z).rewrite(bessely) == (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-order - S.Half, z)/2
+    assert jn(order, z).rewrite(besselj) == sqrt(2)*sqrt(pi)*besselj(order + S.Half, z)/(2*sqrt(z))
+    assert jn(order, z).rewrite(bessely) == (-1)**nu*sqrt(2)*sqrt(pi)*bessely(-order - S.Half, z)/(2*sqrt(z))
 
     # for integral orders rewriting SBFs w.r.t bessel[jy] is allowed
     N = Symbol('n', integer=True)
@@ -277,6 +277,17 @@ def test_rewrite():
     for func, refunc in product((yn, jn, hn1, hn2),
                                 (jn, yn, besselj, bessely)):
         assert tn(func(ri, z), func(ri, z).rewrite(refunc), z)
+
+
+def test_issue_23970():
+    # evalf gave the wrong sign on the negative real axis
+    assert jn(0, -2).evalf() > 0
+    for f in (jn, yn, hn1, hn2):
+        for order in (0, 1, 2):
+            for zval in (-2, Rational(-5, 2), -1 + I, -1 - I, 3):
+                got = f(order, zval).evalf(15)
+                ref = expand_func(f(order, x)).subs(x, zval).evalf(15)
+                assert abs(got - ref) < 1e-13
 
 
 def test_expand():
