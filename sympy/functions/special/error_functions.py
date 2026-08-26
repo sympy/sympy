@@ -1751,7 +1751,7 @@ class Li(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        return self.rewrite(li)._eval_evalf(prec)
+        return self.rewrite(li).evalf(n=prec_to_dps(prec))
 
     def _eval_rewrite_as_li(self, z, **kwargs):
         return li(z) - li(2)

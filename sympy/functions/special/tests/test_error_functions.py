@@ -608,6 +608,12 @@ def test_Li():
     raises(ArgumentIndexError, lambda: Li(z).fdiff(2))
 
 
+def test_Li_evalf_cancellation():
+    result = Li(2 + Rational(1, 10**20)).evalf()
+    expected = Float('1.442695040888963407354721258549378e-20', 50)
+    assert abs(result - expected) < 1e-34
+
+
 def test_si():
     assert Si(I*x) == I*Shi(x)
     assert Shi(I*x) == I*Si(x)
