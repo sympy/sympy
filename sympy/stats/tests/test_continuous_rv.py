@@ -1179,6 +1179,7 @@ def test_skewnormal():
 
     raises(ValueError, lambda: SkewNormal('x', 0, -1, 1))
     raises(ValueError, lambda: SkewNormal('x', 0, 0, 1))
+    raises(ValueError, lambda: SkewNormal('x', 0, 1, I))
 
 
 def test_studentt():

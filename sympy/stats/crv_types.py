@@ -4012,6 +4012,7 @@ class SkewNormalDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(xi, omega, alpha):
         _value_check(omega > 0, "Scale parameter must be positive")
+        _value_check(alpha.is_real != False, "Shape parameter alpha must be real.")
 
     def pdf(self, x):
         xi, omega, alpha = self.xi, self.omega, self.alpha
