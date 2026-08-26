@@ -1786,6 +1786,8 @@ def test_expr_sorting():
     a, b = exprs = [Dummy('x'), Dummy('x')]
     assert sorted([b, a], key=default_sort_key) == exprs
 
+    exprs = [f(nan), f(-1), f(1)]
+    assert sorted(exprs, key=default_sort_key) == exprs
 
 def test_as_ordered_factors():
 
