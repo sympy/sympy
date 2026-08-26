@@ -21,6 +21,7 @@ from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc, atan
 from sympy.functions.special.hyper import hyper, meijerg
+from sympy.external.mpmath import prec_to_dps
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
@@ -2927,7 +2928,7 @@ class owens_t(DefinedFunction):
 
     def _eval_evalf(self, prec):
         from sympy.integrals.integrals import Integral
-        return self.rewrite(Integral)._eval_evalf(prec)
+        return self.rewrite(Integral).evalf(n=prec_to_dps(prec))
 
 
 ###############################################################################
