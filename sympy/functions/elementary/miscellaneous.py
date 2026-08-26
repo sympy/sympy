@@ -310,7 +310,7 @@ def root(arg: Expr | complex, n: Expr | complex, k: Expr | complex = 0, evaluate
     """
     n = sympify(n)
     if k:
-        return Mul(Pow(arg, S.One/n, evaluate=evaluate), S.NegativeOne**(2*k/n), evaluate=evaluate)
+        return Mul(Pow(arg, S.One/n, evaluate=evaluate), S.NegativeOne**(2*k/n), evaluate=evaluate)  # type: ignore[arg-type]
     return Pow(arg, 1/n, evaluate=evaluate)
 
 
@@ -364,7 +364,7 @@ def real_root(arg: Expr | complex, n: Expr | complex | None = None, evaluate: bo
     if n is not None:
         return Piecewise(
             (root(arg, n, evaluate=evaluate), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
-            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate),
+            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate),  # type: ignore[arg-type]
             And(Eq(im(arg), S.Zero), Eq(Mod(n, 2), S.One))),
             (root(arg, n, evaluate=evaluate), True))
     rv = sympify(arg)
