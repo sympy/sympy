@@ -608,6 +608,12 @@ def test_Li():
     raises(ArgumentIndexError, lambda: Li(z).fdiff(2))
 
 
+def test_Li_evalf_cancellation():
+    result = Li(2 + Rational(1, 10**20)).evalf()
+    expected = Float('1.442695040888963407354721258549378e-20', 50)
+    assert abs(result - expected) < 1e-34
+
+
 def test_si():
     assert Si(I*x) == I*Shi(x)
     assert Shi(I*x) == I*Si(x)
@@ -1098,3 +1104,16 @@ def test_owent_evalf():
     # Symmetry should hold numerically too
     assert abs(owens_t(-1, 2).evalf() - owens_t(1, 2).evalf()) < 1E-10
     assert abs(owens_t(1, -2).evalf() + owens_t(1, 2).evalf()) < 1E-10
+
+
+def test_owent_evalf_cancellation():
+    h, a = -6, 2
+    expr = erf(sqrt(2)*h/2)/2 + S.Half - 2*owens_t(h, a)
+
+    # The default precision must be propagated into the numerical integral so
+    # that Add can recover the cancellation in this left-tail probability.
+    result = expr.evalf()
+    # Independent 100-digit mpmath quadrature gives this reference value.
+    expected = Float('7.1180791906932412294852794865326e-43', 50)
+    assert result.is_Float
+    assert abs(result - expected) < 1e-55
