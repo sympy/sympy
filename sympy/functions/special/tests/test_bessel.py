@@ -290,6 +290,18 @@ def test_issue_23970():
                 assert abs(got - ref) < 1e-13
 
 
+def test_hn_rewrite_hankel():
+    # the rewrites of hn1/hn2 in terms of hankel1/hankel2 used the order
+    # nu instead of nu + 1/2
+    for f, target in ((hn1, hankel1), (hn2, hankel2)):
+        for order in (0, 1, 2):
+            for zval in (-2, Rational(-5, 2), -1 + I, -1 - I, 3):
+                rewritten = f(order, x).rewrite(target)
+                reference = expand_func(f(order, x))
+                assert abs(rewritten.subs(x, zval).evalf(15)
+                           - reference.subs(x, zval).evalf(15)) < 1e-13
+
+
 def test_expand():
     assert expand_func(besselj(S.Half, z).rewrite(jn)) == \
         sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))

@@ -1184,7 +1184,7 @@ class hn1(SphericalHankelBase):
     >>> hn1(nu, z).rewrite(yn)
     (-1)**nu*yn(-nu - 1, z) + I*yn(nu, z)
     >>> hn1(nu, z).rewrite(hankel1)
-    sqrt(2)*sqrt(pi)*hankel1(nu, z)/(2*sqrt(z))
+    sqrt(2)*sqrt(pi)*hankel1(nu + 1/2, z)/(2*sqrt(z))
 
     See Also
     ========
@@ -1202,7 +1202,7 @@ class hn1(SphericalHankelBase):
 
     @assume_integer_order
     def _eval_rewrite_as_hankel1(self, nu, z, **kwargs):
-        return sqrt(pi/2)/sqrt(z)*hankel1(nu, z)
+        return sqrt(pi/2)/sqrt(z)*hankel1(nu + S.Half, z)
 
 
 class hn2(SphericalHankelBase):
@@ -1236,7 +1236,7 @@ class hn2(SphericalHankelBase):
     >>> print(expand_func(hn2(1, z)))
     I*sin(z)/z - cos(z)/z + sin(z)/z**2 + I*cos(z)/z**2
     >>> hn2(nu, z).rewrite(hankel2)
-    sqrt(2)*sqrt(pi)*hankel2(nu, z)/(2*sqrt(z))
+    sqrt(2)*sqrt(pi)*hankel2(nu + 1/2, z)/(2*sqrt(z))
     >>> hn2(nu, z).rewrite(jn)
     -(-1)**(nu + 1)*I*jn(-nu - 1, z) + jn(nu, z)
     >>> hn2(nu, z).rewrite(yn)
@@ -1258,7 +1258,7 @@ class hn2(SphericalHankelBase):
 
     @assume_integer_order
     def _eval_rewrite_as_hankel2(self, nu, z, **kwargs):
-        return sqrt(pi/2)/sqrt(z)*hankel2(nu, z)
+        return sqrt(pi/2)/sqrt(z)*hankel2(nu + S.Half, z)
 
 
 def jn_zeros(n, k, method="sympy", dps=15):
