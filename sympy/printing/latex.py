@@ -148,6 +148,7 @@ class LatexPrinter(Printer):
         "fold_func_brackets": False,
         "fold_short_frac": None,
         "inv_trig_style": "abbreviated",
+        "trig_pow_outside": False,
         "itex": False,
         "ln_notation": False,
         "long_frac_ratio": None,
@@ -993,6 +994,13 @@ class LatexPrinter(Printer):
                 "acsch", "asech", "acoth",
             ]
 
+            inv_trig_table_full = [
+                "arcsin", "arccos", "arctan",
+                "arccsc", "arcsec", "arccot",
+                "arsinh", "arcosh", "artanh",
+                "arcsch", "arsech", "arcoth",
+            ]
+
             # If the function is an inverse trig function, handle the style
             if func in inv_trig_table:
                 if inv_trig_style == "abbreviated":
@@ -1007,6 +1015,14 @@ class LatexPrinter(Printer):
                     if exp is not None:
                         can_fold_brackets = False
 
+            trig_table = [
+                "sin", "cos", "tan",
+                "csc", "sec", "cot",
+                "sinh", "cosh", "tanh",
+                "csch", "sech", "coth",
+            ] + inv_trig_table + inv_trig_table_full
+            trig_pow_outside = self._settings['trig_pow_outside']
+
             if inv_trig_power_case:
                 if func in accepted_latex_functions:
                     name = r"\%s^{-1}" % func
@@ -1015,7 +1031,10 @@ class LatexPrinter(Printer):
             elif exp is not None:
                 func_tex = self._hprint_Function(func)
                 func_tex = self.parenthesize_super(func_tex)
-                name = r'%s^{%s}' % (func_tex, exp)
+                if not trig_pow_outside and func in trig_table:
+                    name = r'%s^{%s}' % (func_tex, exp)
+                else:
+                    name = func_tex
             else:
                 name = self._hprint_Function(func)
 
@@ -1029,8 +1048,12 @@ class LatexPrinter(Printer):
             else:
                 name += r"{\left(%s \right)}"
 
-            if inv_trig_power_case and exp is not None:
-                name += r"^{%s}" % exp
+            if exp is not None:
+                if inv_trig_power_case:
+                    name = self._add_parens(name)
+                    name += r"^{%s}" % exp
+                elif trig_pow_outside or func not in trig_table:
+                    name += r"^{%s}" % exp
 
             return name % ",".join(args)
 
@@ -1222,7 +1245,7 @@ class LatexPrinter(Printer):
     def _print_elliptic_k(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:
-            return r"K^{%s}%s" % (exp, tex)
+            return r"K%s^{%s}" % (tex, exp)
         else:
             return r"K%s" % tex
 
@@ -1230,7 +1253,7 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\middle| %s\right)" % \
             (self._print(expr.args[0]), self._print(expr.args[1]))
         if exp is not None:
-            return r"F^{%s}%s" % (exp, tex)
+            return r"F%s^{%s}" % (tex, exp)
         else:
             return r"F%s" % tex
 
@@ -1241,7 +1264,7 @@ class LatexPrinter(Printer):
         else:
             tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:
-            return r"E^{%s}%s" % (exp, tex)
+            return r"E%s^{%s}" % (tex, exp)
         else:
             return r"E%s" % tex
 
@@ -1254,7 +1277,7 @@ class LatexPrinter(Printer):
             tex = r"\left(%s\middle| %s\right)" % \
                 (self._print(expr.args[0]), self._print(expr.args[1]))
         if exp is not None:
-            return r"\Pi^{%s}%s" % (exp, tex)
+            return r"\Pi%s^{%s}" % (tex, exp)
         else:
             return r"\Pi%s" % tex
 
@@ -1265,7 +1288,7 @@ class LatexPrinter(Printer):
         tex = r"\left(%s, %s\right)" % (self._print(x), self._print(y))
 
         if exp is not None:
-            return r"\operatorname{B}^{%s}%s" % (exp, tex)
+            return r"\operatorname{B}%s^{%s}" % (tex, exp)
         else:
             return r"\operatorname{B}%s" % tex
 
@@ -1274,7 +1297,7 @@ class LatexPrinter(Printer):
         tex = r"\left(%s, %s\right)" % (largs[0], largs[1])
 
         if exp is not None:
-            return r"\operatorname{%s}_{(%s, %s)}^{%s}%s" % (operator, largs[2], largs[3], exp, tex)
+            return r"\operatorname{%s}_{(%s, %s)}%s^{%s}" % (operator, largs[2], largs[3], tex, exp)
         else:
             return r"\operatorname{%s}_{(%s, %s)}%s" % (operator, largs[2], largs[3], tex)
 
@@ -1286,7 +1309,7 @@ class LatexPrinter(Printer):
                                         self._print(expr.args[1]))
 
         if exp is not None:
-            return r"\Gamma^{%s}%s" % (exp, tex)
+            return r"\Gamma%s^{%s}" % (tex, exp)
         else:
             return r"\Gamma%s" % tex
 
@@ -1295,7 +1318,7 @@ class LatexPrinter(Printer):
                                         self._print(expr.args[1]))
 
         if exp is not None:
-            return r"\gamma^{%s}%s" % (exp, tex)
+            return r"\gamma%s^{%s}" % (tex, exp)
         else:
             return r"\gamma%s" % tex
 
@@ -1313,7 +1336,7 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"\operatorname{Chi}^{%s}%s" % (exp, tex)
+            return r"\operatorname{Chi}%s^{%s}" % (tex, exp)
         else:
             return r"\operatorname{Chi}%s" % tex
 
@@ -1322,7 +1345,7 @@ class LatexPrinter(Printer):
         nu = self._print(expr.args[0])
 
         if exp is not None:
-            return r"\operatorname{E}_{%s}^{%s}%s" % (nu, exp, tex)
+            return r"\operatorname{E}_{%s}%s^{%s}" % (nu, tex, exp)
         else:
             return r"\operatorname{E}_{%s}%s" % (nu, tex)
 
@@ -1330,7 +1353,7 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"S^{%s}%s" % (exp, tex)
+            return r"S%s^{%s}" % (tex, exp)
         else:
             return r"S%s" % tex
 
@@ -1338,7 +1361,7 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"C^{%s}%s" % (exp, tex)
+            return r"C%s^{%s}" % (tex, exp)
         else:
             return r"C%s" % tex
 
