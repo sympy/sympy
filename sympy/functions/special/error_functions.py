@@ -642,7 +642,7 @@ class erfi(DefinedFunction):
         return sqrt(-z**2)/z*(uppergamma(S.Half, -z**2)/sqrt(pi) - S.One)
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
-        return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(pi)
+        return -sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(pi)
 
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
@@ -1576,9 +1576,9 @@ class li(DefinedFunction):
     >>> li(z).rewrite(Ci)
     -log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z))
     >>> li(z).rewrite(Shi)
-    -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
+    -log(1/log(z))/2 - log(log(z))/2 + Chi(log(z)) + Shi(log(z))
     >>> li(z).rewrite(Chi)
-    -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
+    -log(1/log(z))/2 - log(log(z))/2 + Chi(log(z)) + Shi(log(z))
 
     See Also
     ========
@@ -1645,7 +1645,7 @@ class li(DefinedFunction):
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
 
     def _eval_rewrite_as_Shi(self, z, **kwargs):
-        return (Chi(log(z)) - Shi(log(z)) - S.Half*(log(S.One/log(z)) - log(log(z))))
+        return (Chi(log(z)) + Shi(log(z)) - S.Half*(log(S.One/log(z)) + log(log(z))))
 
     _eval_rewrite_as_Chi = _eval_rewrite_as_Shi
 
