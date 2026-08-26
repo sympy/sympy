@@ -4075,10 +4075,8 @@ def SkewNormal(name, xi, omega, alpha):
     Setting :math:`\alpha = 0` reduces to a Normal distribution:
 
     >>> from sympy.stats import Normal
-    >>> from sympy import simplify
-    >>> simplify(density(SkewNormal("x", xi, omega, 0))(x) -
-    ...          density(Normal("x", xi, omega))(x))
-    0
+    >>> density(SkewNormal("x", xi, omega, 0))(x) == density(Normal("x", xi, omega))(x)
+    True
 
     References
     ==========

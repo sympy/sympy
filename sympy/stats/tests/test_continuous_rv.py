@@ -1168,10 +1168,8 @@ def test_skewnormal():
     assert cdf(X)(x) == erf(sqrt(2)*z/2)/2 + S.Half - 2*owens_t(z, alpha)
 
     # alpha = 0 reduces to a Normal distribution
-    assert simplify(density(SkewNormal("x", xi, omega, 0))(x) -
-                     density(Normal("x", xi, omega))(x)) == 0
-    assert simplify(cdf(SkewNormal("x", xi, omega, 0))(x) -
-                     cdf(Normal("x", xi, omega))(x)) == 0
+    assert density(SkewNormal("x", xi, omega, 0))(x) == density(Normal("x", xi, omega))(x)
+    assert cdf(SkewNormal("x", xi, omega, 0))(x) == cdf(Normal("x", xi, omega))(x)
 
     # -X ~ SkewNormal(-xi, omega, -alpha)
     Y = SkewNormal("y", -xi, omega, -alpha)
