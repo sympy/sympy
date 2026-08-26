@@ -4007,8 +4007,6 @@ def ShiftedGompertz(name, b, eta):
 class SkewNormalDistribution(SingleContinuousDistribution):
     _argnames = ('xi', 'omega', 'alpha')
 
-    set = Interval(-oo, oo)
-
     @staticmethod
     def check(xi, omega, alpha):
         _value_check(omega > 0, "Scale parameter must be positive")
