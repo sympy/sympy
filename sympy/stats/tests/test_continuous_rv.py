@@ -1524,6 +1524,7 @@ def test_long_precomputed_cdf():
             Laplace("LA", -5, 4),
             Logistic("L", -6, 7),
             Nakagami("N", 2, 7),
+            SkewNormal("SN", -2, 3, 4),
             StudentT("S", 4)
             ]
     for distr in distribs:
