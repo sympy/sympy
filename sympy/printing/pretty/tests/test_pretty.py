@@ -54,7 +54,7 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
     mathieusprime, mathieucprime)
 
-from sympy.matrices import (Adjoint, Inverse, MatrixSymbol, Transpose,
+from sympy.matrices import (Adjoint, Inverse, MatAdd, MatrixSymbol, Transpose,
                             KroneckerProduct, BlockMatrix, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions import hadamard_power
 
@@ -8265,3 +8265,38 @@ def test_center():
     assert center('1', 3) == ' 1 '
     assert center('1', 3, '-') == '-1-'
     assert center('1', 5, '-') == '--1--'
+
+
+def test_issue_2747():
+    # the = and + operators should be vertically centered
+    y = MatrixSymbol('y', 5, 1)
+    x = MatrixSymbol('x', 5, 2)
+    b = MatrixSymbol('b', 2, 1)
+    e = MatrixSymbol('epsilon', 5, 1)
+    expr = Eq(y.as_explicit(), MatAdd((x*b).as_explicit(), e.as_explicit()))
+    ascii_str = \
+"""\
+[y_00]   [b_00*x_00 + b_10*x_01]   [epsilon_00]\n\
+[    ]   [                     ]   [          ]\n\
+[y_10]   [b_00*x_10 + b_10*x_11]   [epsilon_10]\n\
+[    ]   [                     ]   [          ]\n\
+[y_20] = [b_00*x_20 + b_10*x_21] + [epsilon_20]\n\
+[    ]   [                     ]   [          ]\n\
+[y_30]   [b_00*x_30 + b_10*x_31]   [epsilon_30]\n\
+[    ]   [                     ]   [          ]\n\
+[y_40]   [b_00*x_40 + b_10*x_41]   [epsilon_40]\
+"""
+    ucode_str = \
+"""\
+⎡y₀₀⎤   ⎡b₀₀⋅x₀₀ + b₁₀⋅x₀₁⎤   ⎡ε₀₀⎤\n\
+⎢   ⎥   ⎢                 ⎥   ⎢   ⎥\n\
+⎢y₁₀⎥   ⎢b₀₀⋅x₁₀ + b₁₀⋅x₁₁⎥   ⎢ε₁₀⎥\n\
+⎢   ⎥   ⎢                 ⎥   ⎢   ⎥\n\
+⎢y₂₀⎥ = ⎢b₀₀⋅x₂₀ + b₁₀⋅x₂₁⎥ + ⎢ε₂₀⎥\n\
+⎢   ⎥   ⎢                 ⎥   ⎢   ⎥\n\
+⎢y₃₀⎥   ⎢b₀₀⋅x₃₀ + b₁₀⋅x₃₁⎥   ⎢ε₃₀⎥\n\
+⎢   ⎥   ⎢                 ⎥   ⎢   ⎥\n\
+⎣y₄₀⎦   ⎣b₀₀⋅x₄₀ + b₁₀⋅x₄₁⎦   ⎣ε₄₀⎦\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
