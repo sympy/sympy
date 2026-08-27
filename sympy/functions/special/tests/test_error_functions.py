@@ -587,7 +587,8 @@ def test_li():
                                   Chi(log(z)) + Shi(log(z)))
     # the rewrites must agree with li numerically for 0 < z < 1, z > 1
     # and complex z in all quadrants
-    for zval in (Rational(1, 4), Rational(9, 8), 3, 1 + 2*I, -1 + I, -2 - 3*I):
+    for zval in (Rational(1, 4), Rational(9, 8), 3, -2, 2*I, -2*I,
+                 1 + 2*I, -1 + I, -2 - 3*I):
         for target in (Si, Ci, Shi, Chi):
             r = li(z).rewrite(target).subs(z, zval)
             assert abs(r.evalf(15) - li(zval).evalf(15)) < 1e-13
