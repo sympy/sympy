@@ -559,7 +559,7 @@ def test_implicit_kinematics():
         [x.count_ops() for x in KM.forcing_full] +
         [x.count_ops() for x in KM.mass_matrix_full]
     )
-    mass_matrix_kin_explicit = KM.mass_matrix_kin
+    #mass_matrix_kin_explicit = KM.mass_matrix_kin
     forcing_kin_explicit = KM.forcing_kin
 
     # The effect of changing this attribute to False is only that Mk*q' = Fk is
