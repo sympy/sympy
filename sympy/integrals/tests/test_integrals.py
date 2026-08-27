@@ -1819,7 +1819,7 @@ def test_issue_15810():
 def test_issue_21024():
     x = Symbol('x', real=True, nonzero=True)
     f = log(x)*log(4*x) + log(3*x + exp(2))
-    F = x*log(x)**2 + x*log(3*x + exp(2)) + x*(1 - 2*log(2)) + \
+    F = x*log(x)**2 + x*log(3*x + exp(2)) - x*(-1 + 2*log(2)) + \
         (-2*x + 2*x*log(2))*log(x) + exp(2)*log(3*x + exp(2))/3
     assert F == integrate(f, x)
 
@@ -1930,12 +1930,9 @@ def test_issue_21671():
 
 
 def test_issue_18527():
-    # The manual integrator can not currently solve this. Assert that it does
-    # not give an incorrect result involving Abs when x has real assumptions.
     xr = symbols('xr', real=True)
-    expr = (cos(x)/(4+(sin(x))**2))
-    res_real = integrate(expr.subs(x, xr), xr, manual=True).subs(xr, x)
-    assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
+    expr = cos(xr)/(4 + sin(xr)**2)
+    assert integrate(expr, xr, manual=True) == atan(sin(xr)/2)/2
 
 
 def test_issue_23718():
@@ -2233,6 +2230,19 @@ def test_integration_of_piecewise_with_simbolic_boundaries():
 
     assert integrate( Piecewise( (2,t2<1) , (nan , True)) , (t2,0,t1) ) == \
         Piecewise((2*t1, t1 < 0), (2*Min(1, t1), t1 <= Min(1, t1)), (nan, True))
+
+
+def test_issue_14709a():
+    x, h = symbols('x h', positive=True)
+    i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
+    assert i == 5*h**2*pi/16
+
+
+def test_issue_7147():
+    x, a, b, c = symbols('x a b c', positive=True)
+    f = x/sqrt(a*x**2 + b*x + c)**3
+    F = Piecewise((-b*(2*a*x + b)/(a*(4*a*c - b**2)*sqrt(a*x**2 + b*x + c)), Ne(4*a*c - b**2, 0)), (b*(x + b/(2*a))/(4*a*(sqrt(a)*x + b/(2*sqrt(a)))**3), True)) - 1/(a*sqrt(a*x**2 + b*x + c))
+    assert integrate(f, x) == F
 
 
 def test_issue_15566():
