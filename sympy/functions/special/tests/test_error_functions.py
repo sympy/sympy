@@ -247,7 +247,10 @@ def test_erfi():
     assert erfi(z).rewrite('meijerg') == z*meijerg([S.Half], [], [0], [Rational(-1, 2)], -z**2)/sqrt(pi)
     assert erfi(z).rewrite('uppergamma') == (sqrt(-z**2)/z*(uppergamma(S.Half,
         -z**2)/sqrt(S.Pi) - S.One))
-    assert erfi(z).rewrite('expint') == sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
+    assert erfi(z).rewrite('expint') == -sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
+    for zval in (Rational(3, 4), 2, -2, I, -2*I, 1 + I, -1 + I, -2 - I):
+        r = erfi(z).rewrite(expint).subs(z, zval)
+        assert abs(r.evalf(15) - erfi(zval).evalf(15)) < 1e-13
     assert erfi(z).rewrite('tractable') == -I*(-_erfs(I*z)*exp(z**2) + 1)
     assert expand_func(erfi(I*z)) == I*erf(z)
 
@@ -578,10 +581,17 @@ def test_li():
                                  log(log(z))/2 + Ci(I*log(z)) + Shi(log(z)))
     assert li(z).rewrite(Ci) == (-log(I*log(z)) - log(1/log(z))/2 +
                                  log(log(z))/2 + Ci(I*log(z)) + Shi(log(z)))
-    assert li(z).rewrite(Shi) == (-log(1/log(z))/2 + log(log(z))/2 +
-                                  Chi(log(z)) - Shi(log(z)))
-    assert li(z).rewrite(Chi) == (-log(1/log(z))/2 + log(log(z))/2 +
-                                  Chi(log(z)) - Shi(log(z)))
+    assert li(z).rewrite(Shi) == (-log(1/log(z))/2 - log(log(z))/2 +
+                                  Chi(log(z)) + Shi(log(z)))
+    assert li(z).rewrite(Chi) == (-log(1/log(z))/2 - log(log(z))/2 +
+                                  Chi(log(z)) + Shi(log(z)))
+    # the rewrites must agree with li numerically for 0 < z < 1, z > 1
+    # and complex z in all quadrants
+    for zval in (Rational(1, 4), Rational(9, 8), 3, -2, 2*I, -2*I,
+                 1 + 2*I, -1 + I, -2 - 3*I):
+        for target in (Si, Ci, Shi, Chi):
+            r = li(z).rewrite(target).subs(z, zval)
+            assert abs(r.evalf(15) - li(zval).evalf(15)) < 1e-13
     assert li(z).rewrite(hyper) ==(log(z)*hyper((1, 1), (2, 2), log(z)) -
                                    log(1/log(z))/2 + log(log(z))/2 + EulerGamma)
     assert li(z).rewrite(meijerg) == (-log(1/log(z))/2 - log(-log(z)) + log(log(z))/2 -
