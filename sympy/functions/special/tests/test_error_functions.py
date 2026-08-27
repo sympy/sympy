@@ -248,7 +248,7 @@ def test_erfi():
     assert erfi(z).rewrite('uppergamma') == (sqrt(-z**2)/z*(uppergamma(S.Half,
         -z**2)/sqrt(S.Pi) - S.One))
     assert erfi(z).rewrite('expint') == -sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
-    for zval in (Rational(3, 4), 2, I, 1 + I, -1 + I, -2 - I):
+    for zval in (Rational(3, 4), 2, -2, I, -2*I, 1 + I, -1 + I, -2 - I):
         r = erfi(z).rewrite(expint).subs(z, zval)
         assert abs(r.evalf(15) - erfi(zval).evalf(15)) < 1e-13
     assert erfi(z).rewrite('tractable') == -I*(-_erfs(I*z)*exp(z**2) + 1)
