@@ -575,6 +575,36 @@ def pretty_symbol(symb_name, bold_name=False):
 
     name = translate(name, bold_name)
 
+    # Only use subscripts for single characters or pure numbers to avoid font issues
+    def should_use_subscripts(items):
+        """Check if subscripts should be used based on item complexity.
+
+        Issue #20207: Some multi-character subscripts don't render properly
+        in terminals. The problematic characters are those with poor font
+        support (like 'p', 't', 'd', 'g', 'b', 'f', etc in some fonts).
+        """
+        # Greek letters that have Unicode subscript support
+        greek_subs = ['beta', 'gamma', 'rho', 'phi', 'chi']
+
+        # Characters known to have poor subscript support in many fonts
+        # Based on issue #20207 discussion
+        poor_support = 'pbtdfgycwzjqm'
+
+        for item in items:
+            # Always allow single characters
+            if len(item) == 1:
+                continue
+            # Always allow pure numbers
+            if item.isdigit():
+                continue
+            # Allow known Greek letters
+            if item in greek_subs:
+                continue
+            # Reject if contains any poorly-supported characters
+            if any(c in poor_support for c in item):
+                return False
+        return True
+
     # Let's prettify sups/subs. If it fails at one of them, pretty sups/subs are
     # not used at all.
     def pretty_list(l, mapping):
@@ -590,7 +620,7 @@ def pretty_symbol(symb_name, bold_name=False):
         return result
 
     pretty_sups = pretty_list(sups, sup)
-    if pretty_sups is not None:
+    if pretty_sups is not None and should_use_subscripts(subs):
         pretty_subs = pretty_list(subs, sub)
     else:
         pretty_subs = None
