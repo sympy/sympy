@@ -413,10 +413,9 @@ class KanesMethod(MethodBase):
             try:
                 self._Ars = -linear_solver(self._B_dep, self._B_ind)
             except NonInvertibleMatrixError as e:
-                msg = ('Ars is singular, maybe due to a wrong set of dependent'
-                      ' speeds. Try a different set of dependent speeds.')
-                e.args = e.args + (msg,)
-                raise
+                msg = (' Ars is singular, maybe due to a wrong set of dependent'
+                       ' speeds. Try a different set of dependent speeds.')
+                raise NonInvertibleMatrixError(str(e) + msg) from e
         else:
             self._f_nh = Matrix()
             self._k_nh = Matrix()
