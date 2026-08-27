@@ -1,8 +1,6 @@
 from __future__ import annotations
-from sympy import solve
-from sympy import lambdify
-from sympy import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
-                                zeros, eye)
+from sympy import (solve, lambdify, cos, expand, Matrix, sin, symbols, tan,
+                   sqrt, S, zeros, eye)
 from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
@@ -508,7 +506,7 @@ def test_implicit_kinematics():
 
     # OPTION 1: Ignore the constraints and form the equations of motion as an
     # unconstrained system. The holonomic constraint would need to be handled
-    # by augementing with Lagrange multipliers.
+    # by augmenting with Lagrange multipliers.
     KM = KanesMethod(
         NED,
         q_dep + q_ind,
@@ -552,6 +550,11 @@ def test_implicit_kinematics():
 
     # TODO : OPTION 4: Solve for the dependent coordinate analytically.
 
+    assert simplify(KM2.forcing - KM3.forcing) == zeros(len(KM2.u), 1)
+    assert KM2.mass_matrix[:-1, :] == KM3.mass_matrix[:-1, :]
+    assert KM2.mass_matrix[-1, :] == 2*KM3.mass_matrix[-1, :]
+    assert KM2.forcing[-1] == 0
+
     n_ops_explicit = sum(
         [x.count_ops() for x in KM.forcing_full] +
         [x.count_ops() for x in KM.mass_matrix_full]
@@ -572,7 +575,7 @@ def test_implicit_kinematics():
     forcing_kin_implicit = KM.forcing_kin
 
     # Expecting implicit form to be less than 15% of the flops
-    assert n_ops_implicit / n_ops_explicit < .15
+    assert n_ops_implicit / n_ops_explicit < .02
 
     # Ideally we would check that implicit and explicit equations give the same
     # result as done in test_one_dof, but the whole raison-d'etre of the
@@ -589,8 +592,6 @@ def test_implicit_kinematics():
     assert simplify(expected - calculated) == zeros(len(KM.q), 1)
 
     # M_exp*q' = F_exp
-    expected = Matrix([qdi - qdots_sol[qdi] for qdi in KM.q.diff()])
-    calculated = (mass_matrix_kin_explicit*KM.q.diff() - forcing_kin_explicit)
     expected = Matrix([qdots_sol[qdi] for qdi in KM.q.diff()])
     calculated = forcing_kin_explicit
     # TODO : Slow comparison.
