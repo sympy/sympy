@@ -25,7 +25,8 @@ Exercises
 =========
 
 This tutorial was the basis for a tutorial given at the 2013 SciPy conference
-in Austin, TX.  The website for that tutorial is `here
-<https://certik.github.io/scipy-2013-tutorial/html/index.html>`_. It has links
-to videos, materials, and IPython notebook exercises.  The IPython notebook
-exercises in particular are recommended to anyone going through this tutorial.
+in Austin, TX.  The original tutorial website (hosted at
+``certik.github.io/scipy-2013-tutorial``) is no longer maintained and its math
+rendering is broken due to a defunct MathJax CDN.  For historical reference,
+the source repository is available at
+`GitHub <https://github.com/certik/scipy-2013-tutorial>`_.
