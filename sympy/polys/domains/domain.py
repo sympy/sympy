@@ -1575,7 +1575,7 @@ class Domain(Generic[Er]):
         """Return the characteristic of this domain. """
         raise NotImplementedError('characteristic()')
 
-    def gcdn(self, coeff_lst):
+    def gcdn(self, coeff_lst: Iterable[Er]) -> Er:
         """
         Return the greatest common divisor (GCD) of a list of domain elements.
 

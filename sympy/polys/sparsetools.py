@@ -20,7 +20,7 @@ from sympy.polys.polyerrors import ExactQuotientFailed
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from sympy.polys.domains.domain import Domain, Er
+    from sympy.polys.domains.domain import Domain, Er, Es
 
 _T = TypeVar("_T")
 
@@ -998,7 +998,8 @@ def smp_pow_multinomial(d: smp[Er], exp: int, domain: Domain[Er], n: int) -> smp
     return h
 
 
-def smp_active_var(f: smp[Er], n: int, domain: Domain[Er]):
+def smp_active_var(f: smp[Er], n: int, domain: Domain[Er],
+ ind: list[int] | None = None)-> set[int]:
     """
     Examples
     ========
@@ -1011,19 +1012,21 @@ def smp_active_var(f: smp[Er], n: int, domain: Domain[Er]):
     {0, 1}
 
     """
+    if not ind:
+        ind = list(range(n))
+    ind.sort()
     exponents = list(map(sum, zip(*f)))
-
     # Set to keep track of variables
     variables = set()
 
-    for n, e in enumerate(exponents):
+    for i, e in zip(ind, exponents):
         if e:
-            variables.add(n)
+            variables.add(i)
 
     return variables
 
 
-def smp_main_var(f: smp[Er], n: int, domain: Domain[Er]):
+def smp_main_var(f: smp[Er], n: int, domain: Domain[Er]) -> int:
     """
     Return the leading generator index of the generators present in the
     polynomial.
@@ -1095,7 +1098,7 @@ def smp_monomial_extract(polynomials: list[smp[Er]], n: int, domain: Domain[Er]
         return p, {monom_gcd: domain.one}
 
 
-def smp_coeff_split(f: smp[Er], syms: list[int], n: int, domain: Domain[Er]
+def smp_reorg_poly(f: smp[Er], syms: list[int], n: int, domain: Domain[Er]
     ) -> dict[monom, smp[Er]]:
     """
     Reorganize a polynomial over multiple variables into a polynomial over a
@@ -1115,3 +1118,27 @@ def smp_coeff_split(f: smp[Er], syms: list[int], n: int, domain: Domain[Er]
         g[outer][inner] = coeff
 
     return g
+
+
+def smp_domain_convert(f: smp[Er], dom1: Domain[Er], dom2: Domain[Es], n: int) -> smp[Es]:
+    result: smp[Es] = {}
+    for mon, coeff in f.items():
+        new_coeff = dom2.convert(coeff, dom1)
+        if new_coeff:
+            result[mon] = new_coeff
+    return result
+
+
+def smp_unique_polys(polys: list[smp[Er]], n: int, domain: Domain[Er]
+) -> list[smp[Er]]:
+    # eliminates duplicates from a list of polynomials.
+    seen = set()
+    unique: list[smp[Er]] = []
+
+    for pol in polys:
+        key = frozenset(pol.items())
+
+        if key not in seen:
+            seen.add(key)
+            unique.append(pol)
+    return unique
