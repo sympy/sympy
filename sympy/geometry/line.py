@@ -299,7 +299,7 @@ class LinearEntity(GeometrySet):
         return self.p1 + (self.p2 - self.p1)*t
 
     @staticmethod
-    def are_concurrent(*lines:list[LinearEntity])->bool:
+    def are_concurrent(*lines:LinearEntity)->bool:
         """Is a sequence of linear entities concurrent?
 
         Two or more linear entities are concurrent if they all
@@ -390,7 +390,7 @@ class LinearEntity(GeometrySet):
         """
         return self.p2 - self.p1
 
-    def intersection(self, other:Point|LinearEntity)->[GeometryEntity]:
+    def intersection(self, other:Point|LinearEntity)->list[GeometryEntity]:
         """The intersection with another geometrical entity.
 
         Parameters
