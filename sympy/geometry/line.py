@@ -41,7 +41,6 @@ from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import Undecidable, filldedent
 
-from typing import Union
 
 
 import random
