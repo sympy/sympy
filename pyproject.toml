@@ -138,6 +138,15 @@ module = [
 ]
 ignore_errors = true
 
+# sympy._version is created by setuptools-scm when building sdist:
+[[tool.mypy.overrides]]
+module = ["sympy.release"]
+disable_error_code = ["no-redef"]
+
+[[tool.mypy.overrides]]
+module = ["sympy._version"]
+ignore_missing_imports = true
+
 # Third-party untyped code:
 [[tool.mypy.overrides]]
 module = [
