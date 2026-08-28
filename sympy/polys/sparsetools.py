@@ -1142,3 +1142,19 @@ def smp_unique_polys(polys: list[smp[Er]], n: int, domain: Domain[Er]
             seen.add(key)
             unique.append(pol)
     return unique
+
+
+def smp_swap_var(f: smp[Er], i: int, n: int, domain: Domain[Er],
+) -> smp[Er]:
+    """Swap the main variable with the variable at index ``i``."""
+    if i == 0:
+        return f.copy()
+
+    g: smp[Er] = {}
+
+    for mon, coeff in f.items():
+        new_mon = list(mon)
+        new_mon[0], new_mon[i] = new_mon[i], new_mon[0]
+        g[tuple(new_mon)] = coeff
+
+    return g

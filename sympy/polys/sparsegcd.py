@@ -12,8 +12,8 @@ from sympy.polys.orderings import MonomialOrder, lex
 from sympy.polys.polyerrors import HeuristicGCDFailed
 from sympy.polys.sparseprs import smp_subresultants
 from sympy.polys.sparsetools import  (_smp_imul_ground, smp_LC, smp_active_var, smp_add, smp_clear_denoms, smp_coeff_wrt, smp_div_list,
-    smp_domain_convert, smp_is_one, smp_monomial_extract, smp_mul, smp_mul_ground, smp_rem_list, smp_reorg_poly, smp_unique_polys)
-from sympy.polys.zippel import _smp_zippel_gcd, _smp_zippel_gcd_mod, smp_swap
+    smp_domain_convert, smp_is_one, smp_monomial_extract, smp_mul, smp_mul_ground, smp_rem_list, smp_reorg_poly, smp_swap_var, smp_unique_polys)
+from sympy.polys.zippel import _smp_zippel_gcd, _smp_zippel_gcd_mod
 
 if TYPE_CHECKING:
     from sympy.external.gmpy import MPZ
@@ -202,10 +202,10 @@ data: tuple[Callable[..., smp[Er]], bool, int] | None = None) -> smp[Er]:
     # forse ha più senso fare restituire a gcd_algorithm_slector un bool
     # sulla base del quale decidere se usare le combinazioni lineari oppure l'iterazione
     if comb:
-        gcd = smp_gcd_list_lin_comb(polys, p, m, domain, f_)
+        gcd = smp_gcd_list_lin_comb(polys, p, m, domain, f_, data)
 
     else:
-        gcd = smp_gcd_list_iterative(polys, f_, m, domain)
+        gcd = smp_gcd_list_iterative(polys, f_, m, domain, data)
 
     gcd = smp_elevate(gcd, common_var, n, domain)
     if mon_gcd is not None:
@@ -234,7 +234,7 @@ data: tuple[Callable[..., smp[MPZ]], bool, int] | None = None) -> smp[MPZ]:
     try:
         gcd, _, _ =  smp_heugcd(A, B, n)
     except HeuristicGCDFailed:
-        gcd, _, _ = smp_zippel_gcd(A, B, n)
+        gcd, _, _ = smp_zippel_gcd(A, B, n, data)
     return gcd
 
 
@@ -379,18 +379,18 @@ data: tuple[Callable[..., smp[MPZ]], bool, int] | None = None
         lc_B = smp_coeff_wrt(B, i, m_B, n, ZZ)
         if len(lc_A) == 1 or len(lc_B) == 1:
             if i == 0:
-                gcd, cff, cfg = _smp_zippel_gcd(A, B, n)
-            A_ = smp_swap(A, i, n, ZZ)
-            B_ = smp_swap(B, i, n, ZZ)
+                return _smp_zippel_gcd(A, B, n)
+            A_ = smp_swap_var(A, i, n, ZZ) # swap non scambia le variabili, crea nuova funzione
+            B_ = smp_swap_var(B, i, n, ZZ)
             gcd, cff, cfg = _smp_zippel_gcd(A_, B_, n)
-            return smp_swap(gcd, i, n, ZZ), smp_swap(cff, i, n, ZZ), smp_swap(cfg, i, n, ZZ)
+            return smp_swap_var(gcd, i, n, ZZ), smp_swap_var(cff, i, n, ZZ), smp_swap_var(cfg, i, n, ZZ)
 
     A_cont, A_prim = smp_primitive_wrt(A, 0, n, ZZ, data)
     B_cont, B_prim = smp_primitive_wrt(B, 0, n, ZZ, data)
-    cont_gcd = _gcd_list([A_cont, B_cont], n, ZZ, data)
+    cont_gcd = _gcd_list([A_cont, B_cont], n-1, ZZ, data)
     gcd, cff, cfg = _smp_zippel_gcd(A_prim, B_prim, n)
     cont_gcd = smp_elevate(cont_gcd, [el for el in range(1, n)], n, ZZ)
-    return smp_mul(cont_gcd, gcd, ZZ, n), cff, cfg
+    return smp_mul(cont_gcd, gcd, ZZ, n), cff, cfg # wrong cofactors, multiply by content/content_gcd
 
 
 def smp_zippel_gcd_mod(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
@@ -418,19 +418,19 @@ data: tuple[Callable[..., smp[Er]], bool, int] | None = None) -> smp[Er] | None:
                 if gcd == None:
                     return None
                 return smp_domain_convert(gcd, ZZ, domain, n)
-            A_z_ = smp_swap(A_z, i, n, ZZ)
-            B_z_ = smp_swap(B_z, i, n, ZZ)
+            A_z_ = smp_swap_var(A_z, i, n, ZZ)
+            B_z_ = smp_swap_var(B_z, i, n, ZZ)
             gcd = _smp_zippel_gcd_mod(A_z_, B_z_, p, n)
-            gcd = smp_swap(gcd, i, n, ZZ)
             if gcd == None:
                 return None
+            gcd = smp_swap_var(gcd, i, n, ZZ)
             return smp_domain_convert(gcd, ZZ, domain, n)
 
     Ac, Ap = smp_primitive_wrt(A, 0, n, domain, data)
     Bc, Bp = smp_primitive_wrt(B, 0, n, domain, data)
     Ap_z = smp_domain_convert(Ap, domain, ZZ, n)
     Bp_z = smp_domain_convert(Bp, domain, ZZ, n)
-    cont_gcd = _gcd_list([Ac, Bc], n, domain, data)
+    cont_gcd = _gcd_list([Ac, Bc], n-1, domain, data)
     gcdp = _smp_zippel_gcd_mod(Ap_z, Bp_z, p, n)
     if gcdp == None:
         return None
@@ -463,8 +463,8 @@ data: tuple[Callable[..., smp[Er]], bool, int] | None = None
         gcd = f(polys[0], polys[1], n, domain, data)
         return gcd
     v_sor = sorted(polys, key=lambda p: len(p))
-    B = v_sor[1].copy()
     while True:
+        B = v_sor[1].copy()
         for pol in v_sor[2:]:
             k = domain(random.randint(1, t))
             smp_mul_ground(pol, k, n, domain)
