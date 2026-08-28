@@ -1446,8 +1446,21 @@ class Rational(Number):
             if isinstance(other, Integer):
                 return Rational._new(self.p + self.q*other.p, self.q, 1)
             elif isinstance(other, Rational):
-                #TODO: this can probably be optimized more
-                return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
+                g = igcd(self.q, other.q)
+                if g == 1:
+                    p = self.p*other.q + self.q*other.p
+                    q = self.q*other.q
+                else:
+                    q1, q2 = self.q // g, other.q // g
+                    p = self.p*q2 + other.p*q1
+                    q = q1*q2
+                    g2 = igcd(p, g)
+                    if g2 > 1:
+                        p //= g2
+                        q *= (g // g2)
+                    else:
+                        q *= g
+                return Rational.from_coprime_ints(p, q)
             elif isinstance(other, Float):
                 return other + self
             else:
@@ -1461,7 +1474,21 @@ class Rational(Number):
             if isinstance(other, Integer):
                 return Rational._new(self.p - self.q*other.p, self.q, 1)
             elif isinstance(other, Rational):
-                return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
+                g = igcd(self.q, other.q)
+                if g == 1:
+                    p = self.p*other.q - self.q*other.p
+                    q = self.q*other.q
+                else:
+                    q1, q2 = self.q // g, other.q // g
+                    p = self.p*q2 - other.p*q1
+                    q = q1*q2
+                    g2 = igcd(p, g)
+                    if g2 > 1:
+                        p //= g2
+                        q *= (g // g2)
+                    else:
+                        q *= g
+                return Rational.from_coprime_ints(p, q)
             elif isinstance(other, Float):
                 return -other + self
             else:
@@ -1473,7 +1500,21 @@ class Rational(Number):
             if isinstance(other, Integer):
                 return Rational._new(self.q*other.p - self.p, self.q, 1)
             elif isinstance(other, Rational):
-                return Rational(self.q*other.p - self.p*other.q, self.q*other.q)
+                g = igcd(self.q, other.q)
+                if g == 1:
+                    p = self.q*other.p - self.p*other.q
+                    q = self.q*other.q
+                else:
+                    q1, q2 = self.q // g, other.q // g
+                    p = other.p*q1 - self.p*q2
+                    q = q1*q2
+                    g2 = igcd(p, g)
+                    if g2 > 1:
+                        p //= g2
+                        q *= (g // g2)
+                    else:
+                        q *= g
+                return Rational.from_coprime_ints(p, q)
             elif isinstance(other, Float):
                 return -self + other
             else:
@@ -1483,9 +1524,18 @@ class Rational(Number):
     def __mul__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational._new(self.p*other.p, self.q, igcd(other.p, self.q))
+                x = igcd(other.p, self.q)
+                p = self.p * (other.p // x)
+                q = self.q // x
+                if q < 0:
+                    p, q = -p, -q
+                return Rational.from_coprime_ints(p, q)
             elif isinstance(other, Rational):
-                return Rational._new(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
+                x1 = igcd(self.p, other.q)
+                x2 = igcd(other.p, self.q)
+                p = (self.p // x1) * (other.p // x2)
+                q = (self.q // x2) * (other.q // x1)
+                return Rational.from_coprime_ints(p, q)
             elif isinstance(other, Float):
                 return other*self
             else:
@@ -1497,12 +1547,36 @@ class Rational(Number):
     def __truediv__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                if self.p and other.p == S.Zero:
+                if other.p == 0:
+                    if self.p == 0:
+                        if _errdict["divide"]:
+                            raise ValueError("Indeterminate 0/0")
+                        return S.NaN
                     return S.ComplexInfinity
-                else:
-                    return Rational._new(self.p, self.q*other.p, igcd(self.p, other.p))
+                if self.p == 0:
+                    return S.Zero
+                x = igcd(self.p, other.p)
+                p = self.p // x
+                q = self.q * (other.p // x)
+                if q < 0:
+                    p, q = -p, -q
+                return Rational.from_coprime_ints(p, q)
             elif isinstance(other, Rational):
-                return Rational._new(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+                if other.p == 0:
+                    if self.p == 0:
+                        if _errdict["divide"]:
+                            raise ValueError("Indeterminate 0/0")
+                        return S.NaN
+                    return S.ComplexInfinity
+                if self.p == 0:
+                    return S.Zero
+                x1 = igcd(self.p, other.p)
+                x2 = igcd(self.q, other.q)
+                p = (self.p // x1) * (other.q // x2)
+                q = (self.q // x2) * (other.p // x1)
+                if q < 0:
+                    p, q = -p, -q
+                return Rational.from_coprime_ints(p, q)
             elif isinstance(other, Float):
                 return self*(1/other)
             else:
@@ -1512,9 +1586,36 @@ class Rational(Number):
     def __rtruediv__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational._new(other.p*self.q, self.p, igcd(self.p, other.p))
+                if self.p == 0:
+                    if other.p == 0:
+                        if _errdict["divide"]:
+                            raise ValueError("Indeterminate 0/0")
+                        return S.NaN
+                    return S.ComplexInfinity
+                if other.p == 0:
+                    return S.Zero
+                x = igcd(self.p, other.p)
+                p = (other.p // x) * self.q
+                q = self.p // x
+                if q < 0:
+                    p, q = -p, -q
+                return Rational.from_coprime_ints(p, q)
             elif isinstance(other, Rational):
-                return Rational._new(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+                if self.p == 0:
+                    if other.p == 0:
+                        if _errdict["divide"]:
+                            raise ValueError("Indeterminate 0/0")
+                        return S.NaN
+                    return S.ComplexInfinity
+                if other.p == 0:
+                    return S.Zero
+                x1 = igcd(self.p, other.p)
+                x2 = igcd(self.q, other.q)
+                p = (other.p // x1) * (self.q // x2)
+                q = (other.q // x2) * (self.p // x1)
+                if q < 0:
+                    p, q = -p, -q
+                return Rational.from_coprime_ints(p, q)
             elif isinstance(other, Float):
                 return other*(1/self)
             else:
