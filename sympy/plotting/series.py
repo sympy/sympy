@@ -1014,6 +1014,8 @@ class Line2DBaseSeries(BaseSeries):
         self.eps = kwargs.get("eps", 0.01)
         self.is_polar = kwargs.get("is_polar", kwargs.get("polar", False))
         self.unwrap = kwargs.get("unwrap", False)
+        self.arrow = kwargs.get("arrow", False)
+        self.arrow_kw = kwargs.get("arrow_kw", {})
         # when detect_poles="symbolic", stores the location of poles so that
         # they can be appropriately rendered
         self.poles_locations = []
@@ -1225,6 +1227,20 @@ class Line2DBaseSeries(BaseSeries):
         else:
             return c*np.ones(self.nb_of_points)
 
+    @staticmethod
+    def _get_arrow_positions(x, y, n=1):
+        """Return [(x0,y0,x1,y1), ...] segments for placing direction arrows
+        evenly along a curve defined by x, y arrays."""
+        x, y = list(x), list(y)
+        m = len(x)
+        if m < 2:
+            return []
+        fracs = [(i + 1) / (n + 1) for i in range(n)]
+        segments = []
+        for fraction in fracs:
+            idx = min(int(fraction * (m - 1)), m - 2)
+            segments.append((x[idx], y[idx], x[idx + 1], y[idx + 1]))
+        return segments
 
 class List2DSeries(Line2DBaseSeries):
     """Representation for a line consisting of list of points."""
