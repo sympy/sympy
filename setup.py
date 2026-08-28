@@ -26,12 +26,9 @@ sympy@googlegroups.com and ask for help.
 """
 
 import sys
-import os
-import subprocess
 from pathlib import Path
 
 from setuptools import setup, Command
-from setuptools.command.sdist import sdist
 
 
 extra_kwargs = {
@@ -200,36 +197,6 @@ class antlr(Command):
             sys.exit(-1)
 
 
-class sdist_sympy(sdist):
-    def run(self):
-        # Fetch git commit hash and write down to commit_hash.txt before
-        # shipped in tarball.
-        commit_hash = None
-        commit_hash_filepath = 'doc/commit_hash.txt'
-        try:
-            commit_hash = \
-                subprocess.check_output(['git', 'rev-parse', 'HEAD'])
-            commit_hash = commit_hash.decode('ascii')
-            commit_hash = commit_hash.rstrip()
-            print('Commit hash found : {}.'.format(commit_hash))
-            print('Writing it to {}.'.format(commit_hash_filepath))
-        except Exception:
-            pass
-
-        if commit_hash:
-            Path(commit_hash_filepath).write_text(commit_hash)
-
-        super().run()
-
-        try:
-            os.remove(commit_hash_filepath)
-            print(
-                'Successfully removed temporary file {}.'
-                .format(commit_hash_filepath))
-        except OSError as e:
-            print("Error deleting %s - %s." % (e.filename, e.strerror))
-
-
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
 tests = [
@@ -341,7 +308,6 @@ if __name__ == '__main__':
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
                     'antlr': antlr,
-                    'sdist': sdist_sympy,
                     },
           # Keep in sync with version check above and sympy/__init__.py
           python_requires='>=3.10',
