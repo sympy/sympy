@@ -18,6 +18,10 @@ for:
 """
 from __future__ import annotations
 
+from collections.abc import Sequence  # noqa: TC003
+from typing import TYPE_CHECKING, cast
+
+from sympy.core.expr import Expr
 from sympy.core.function import Derivative
 from sympy.core.singleton import S
 from sympy.core.function import Subs
@@ -26,8 +30,13 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 
 
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
+    from sympy.core.symbol import Symbol
 
-def finite_diff_weights(order, x_list, x0=S.One):
+
+
+def finite_diff_weights(order: int, x_list: Sequence[Expr], x0: Expr = S.One) -> list[list[list[Expr]]]:
     """
     Calculates the finite difference weights for an arbitrarily spaced
     one-dimensional grid (``x_list``) for derivatives at ``x0`` of order
@@ -163,16 +172,16 @@ def finite_diff_weights(order, x_list, x0=S.One):
 
     """
     # The notation below closely corresponds to the one used in the paper.
-    order = S(order)
-    if not order.is_number:
+    order_ = S(order)
+    if not order_.is_number:
         raise ValueError("Cannot handle symbolic order.")
-    if order < 0:
+    if order_ < 0:
         raise ValueError("Negative derivative order illegal.")
-    if int(order) != order:
+    if int(order_) != order_:
         raise ValueError("Non-integer order illegal")
-    M = order
+    M = int(order_)
     N = len(x_list) - 1
-    delta = [[[0 for nu in range(N+1)] for n in range(N+1)] for
+    delta: list[list[list[Expr]]] = [[[S.Zero for nu in range(N+1)] for n in range(N+1)] for
              m in range(M+1)]
     delta[0][0][0] = S.One
     c1 = S.One
@@ -182,7 +191,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
             c3 = x_list[n] - x_list[nu]
             c2 = c2 * c3
             if n <= M:
-                delta[n][n-1][nu] = 0
+                delta[n][n-1][nu] = S.Zero
             for m in range(min(n, M)+1):
                 delta[m][n][nu] = (x_list[n]-x0)*delta[m][n-1][nu] -\
                     m*delta[m-1][n-1][nu]
@@ -194,7 +203,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     return delta
 
 
-def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
+def apply_finite_diff(order: int, x_list: Sequence[Expr], y_list: Sequence[Expr], x0: Expr = S.Zero) -> Expr:
     """
     Calculates the finite difference approximation of
     the derivative of requested order at ``x0`` from points
@@ -275,13 +284,13 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
 
     delta = finite_diff_weights(order, x_list, x0)
 
-    derivative = 0
+    derivative: Expr = S.Zero
     for nu in range(len(x_list)):
         derivative += delta[order][N][nu]*y_list[nu]
     return derivative
 
 
-def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
+def _as_finite_diff(derivative: Basic, points: Sequence[Expr] | Expr = S.One, x0: Expr | None = None, wrt: Symbol | None = None) -> Basic:
     """
     Returns an approximation of a derivative of a function in
     the form of a finite difference formula. The expression is a
@@ -366,6 +375,8 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
             [_as_finite_diff(ar, points, x0, wrt) for ar
              in derivative.args], **derivative.assumptions0)
 
+    assert isinstance(derivative, Derivative)
+
     if wrt is None:
         old = None
         for v in derivative.variables:
@@ -381,32 +392,35 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x0 = wrt
 
     if not iterable(points):
+        points = cast(Expr, points)
         if getattr(points, 'is_Function', False) and wrt in points.args:
             points = points.subs(wrt, x0)
         # points is simply the step-size, let's make it a
         # equidistant sequence centered around x0
         if order % 2 == 0:
             # even order => odd number of points, grid point included
-            points = [x0 + points*i for i
+            points_seq: Sequence[Expr] = [x0 + points*i for i
                       in range(-order//2, order//2 + 1)]
         else:
             # odd order => even number of points, half-way wrt grid point
-            points = [x0 + points*S(i)/2 for i
+            points_seq = [x0 + points*S(i)/2 for i
                       in range(-order, order + 1, 2)]
+    else:
+        points_seq = cast(Sequence[Expr], points)
     others = [wrt, 0]
     for v in set(derivative.variables):
         if v == wrt:
             continue
         others += [v, derivative.variables.count(v)]
-    if len(points) < order+1:
+    if len(points_seq) < order+1:
         raise ValueError("Too few points for order %d" % order)
-    return apply_finite_diff(order, points, [
+    return apply_finite_diff(order, points_seq, [
         Derivative(derivative.expr.subs({wrt: x}), *others) for
-        x in points], x0)
+        x in points_seq], x0)
 
 
-def differentiate_finite(expr, *symbols,
-                         points=1, x0=None, wrt=None, evaluate=False):
+def differentiate_finite(expr: Expr, *symbols: Symbol,
+                         points: Sequence[Expr] | Expr = S.One, x0: Expr | None = None, wrt: Symbol | None = None, evaluate: bool = False) -> Basic:
     r""" Differentiate expr and replace Derivatives with finite differences.
 
     Parameters
@@ -454,7 +468,7 @@ def differentiate_finite(expr, *symbols,
     if any(term.is_Derivative for term in list(preorder_traversal(expr))):
         evaluate = False
 
-    Dexpr = expr.diff(*symbols, evaluate=evaluate)
+    Dexpr: Derivative = cast(Derivative, expr.diff(*symbols, evaluate=evaluate))
     if evaluate:
         sympy_deprecation_warning("""
         The evaluate flag to differentiate_finite() is deprecated.
