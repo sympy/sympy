@@ -1,3 +1,25 @@
+prune .ci
+prune .circleci
+prune .devcontainer
+prune .github
+prune bin
+prune release
+
+exclude .editorconfig
+exclude .flake8
+exclude .gitattributes
+exclude .gitignore
+exclude .mailmap
+exclude CITATION.cff
+exclude CODE_OF_CONDUCT.md
+exclude CONTRIBUTING.md
+exclude MANIFEST.in
+exclude asv.conf.actions.json
+exclude banner.svg
+exclude codecov.yml
+exclude conftest.py
+exclude requirements-dev.txt
+
 recursive-include data *
 recursive-include doc *
 prune doc/_build

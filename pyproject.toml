@@ -1,6 +1,10 @@
 [build-system]
-requires = ["setuptools>=77.0.3"]
+requires = ["setuptools>=77.0.3", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "sympy/_version.py"
+version_scheme = "release-branch-semver"
 
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.

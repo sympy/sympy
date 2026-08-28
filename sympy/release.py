@@ -1,2 +1,6 @@
 from __future__ import annotations
-__version__ = "1.15.0.dev"
+
+try:
+    from sympy._version import __version__
+except ImportError:
+    __version__ = "0.0.dev0+uninstalled"

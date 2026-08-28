@@ -34,9 +34,6 @@ from setuptools import setup, Command
 from setuptools.command.sdist import sdist
 
 
-# This directory
-dir_setup = os.path.dirname(os.path.realpath(__file__))
-
 extra_kwargs = {
     'zip_safe': False,
     'entry_points': {
@@ -305,13 +302,9 @@ tests = [
 ]
 
 
-# Defines __version__
-exec(Path(os.path.join(dir_setup, 'sympy', 'release.py')).read_text())
-
-
 if __name__ == '__main__':
     setup(name='sympy',
-          version=__version__, # noqa: F821
+          use_scm_version=True,
           description='Computer algebra system (CAS) in Python',
           long_description=(Path(__file__).parent / 'README.md').read_text("UTF-8"),
           long_description_content_type='text/markdown',
