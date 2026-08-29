@@ -9,6 +9,9 @@ from sympy.utilities.memoization import recurrence_memo
 import math
 from itertools import count
 
+_factor: list[int]
+_totient: list[int]
+
 def _pre():
     maxn = 10**5
     factor = [0]*maxn
@@ -38,7 +41,7 @@ def _pre():
     _factor = factor
     _totient = totient
 
-def _a(n, k, prec):
+def _a(n: int, k: int, prec: int) -> tuple:
     """ Compute the inner sum in HRR formula [1]_
 
     References
