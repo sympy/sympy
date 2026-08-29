@@ -189,9 +189,8 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     assert convert_array_to_matrix(cg) == DiagMatrix(x)
 
     cg = _array_diagonal(_array_tensor_product(I, x, A, B), (1, 2), (5, 6))
-    assert _array_diag2contr_diagmatrix(cg) == _array_diagonal(_array_contraction(_array_tensor_product(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (5, 6))
-    # TODO: this is returning a wrong result:
-    # convert_array_to_matrix(cg)
+    assert _array_diag2contr_diagmatrix(cg) == _array_diagonal(_array_contraction(_array_tensor_product(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (3, 4))
+    assert convert_array_to_matrix(cg) == _permute_dims(_array_diagonal(_array_tensor_product(DiagMatrix(x), A, B), (3, 4)), [0, 2, 3, 1, 4])
 
     cg = _array_diagonal(_array_tensor_product(I1, a, b), (1, 3, 5))
     assert convert_array_to_matrix(cg) == a*b.T
