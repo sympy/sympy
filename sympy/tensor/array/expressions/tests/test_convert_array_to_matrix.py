@@ -189,7 +189,7 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     assert convert_array_to_matrix(cg) == DiagMatrix(x)
 
     cg = _array_diagonal(_array_tensor_product(I, x, A, B), (1, 2), (5, 6))
-    assert _array_diag2contr_diagmatrix(cg) == _array_diagonal(_array_contraction(_array_tensor_product(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (5, 6))
+    assert _array_diag2contr_diagmatrix(cg) == _array_diagonal(_array_contraction(_array_tensor_product(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (3, 4))
     # TODO: this is returning a wrong result:
     # convert_array_to_matrix(cg)
 
@@ -747,3 +747,10 @@ def test_array_sum_conversion():
 
     expr = ArraySum(X, (i, 1, 10))
     assert convert_array_to_matrix(expr) == 10*X
+
+
+def test_array_diag2contr_diagmatrix_multi_pair():
+    cg = _array_diagonal(_array_tensor_product(I, x, OneArray(1), B), (1, 2), (5, 6))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res == _array_diagonal(_array_contraction(_array_tensor_product(I, OneArray(1), OneArray(1), B, DiagMatrix(x)), (1, 6)), (3, 4))
+
