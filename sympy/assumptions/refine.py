@@ -298,6 +298,53 @@ def refine_atan2(expr, assumptions):
         return expr
 
 
+def refine_frac(expr, assumptions):
+    """
+    Handler for the frac (fractional part) function.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, refine, Q, frac
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> refine(frac(x), Q.integer(x))
+    0
+    >>> refine(frac(x), Q.zero(x))
+    0
+    >>> refine(frac(x + y), Q.integer(x))
+    frac(y)
+    >>> refine(frac(frac(x)))
+    frac(x)
+    """
+    from sympy.functions.elementary.integers import frac
+    arg = expr.args[0]
+
+    # If the argument is an integer or zero, frac(arg) is 0
+    if ask(Q.integer(arg), assumptions) or ask(Q.zero(arg), assumptions):
+        return S.Zero
+
+    # frac(frac(x)) is frac(x)
+    if isinstance(arg, frac):
+        return arg
+
+    # If the argument is an addition (e.g. integer + non-integer)
+    if isinstance(arg, Add):
+        non_integer_terms = []
+        has_integer = False
+        for term in arg.args:
+            if ask(Q.integer(term), assumptions) or isinstance(term, frac):
+                has_integer = True
+                if isinstance(term, frac):
+                    non_integer_terms.append(term)
+            else:
+                non_integer_terms.append(term)
+        if has_integer:
+            return frac(Add(*non_integer_terms))
+
+    return expr
+
+
 def refine_re(expr, assumptions):
     """
     Handler for real part.
@@ -617,4 +664,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'frac': refine_frac,
 }
