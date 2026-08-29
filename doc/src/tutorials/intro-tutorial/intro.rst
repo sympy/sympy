@@ -55,10 +55,10 @@ computation systems (which by the way, are also often called computer algebra
 systems, or just CASs) such as SymPy are capable of computing symbolic
 expressions with variables.
 
-As we will see later, in SymPy, variables are defined using ``symbols``.
-Unlike many symbolic manipulation systems, variables in SymPy must be defined
-before they are used (the reason for this will be discussed in the :ref:`next
-section <tutorial-gotchas-symbols>`).
+As we will see later, in SymPy, variables are defined using
+:func:`~sympy.core.symbol.symbols`. Unlike many symbolic manipulation systems, 
+variables in SymPy must be defined before they are used (the reason for this 
+will be discussed in the :ref:`next section <tutorial-gotchas-symbols>`).
 
 Let us define a symbolic expression, representing the mathematical expression
 `x + 2y`.
