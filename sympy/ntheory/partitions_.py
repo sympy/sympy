@@ -9,8 +9,8 @@ from sympy.utilities.memoization import recurrence_memo
 import math
 from itertools import count
 
-_factor: list[int]
-_totient: list[int]
+_factor: list[int] = []
+_totient: list[int] = []
 
 def _pre():
     maxn = 10**5
