@@ -386,6 +386,13 @@ def solve_triangulated(polys, *gens, **args):
         A List of tuples. Solutions for symbols that satisfy the
         equations listed in polys
 
+    Raises
+    ======
+
+    NotImplementedError
+        If the system is not zero-dimensional, that is it has
+        infinitely many solutions.
+
     Examples
     ========
 
@@ -460,6 +467,11 @@ def solve_triangulated(polys, *gens, **args):
 
                     if g.degree(var) == h.degree():
                         H.append(h)
+
+            if not H:
+                raise NotImplementedError(
+                    "solve_triangulated only supports zero-dimensional systems "
+                    "(finitely many solutions)")
 
             p = min(H, key=lambda h: h.degree())
             zeros = _solve_univariate(p)
