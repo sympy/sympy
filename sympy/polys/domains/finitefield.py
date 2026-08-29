@@ -28,13 +28,7 @@ if GROUND_TYPES == 'flint':
 flint: ModuleType | None
 
 if GROUND_TYPES == 'flint':
-    import flint as _flint
-    flint = _flint
-    # Don't use python-flint < 0.5.0 because nmod was missing some features in
-    # previous versions of python-flint and fmpz_mod was not yet added.
-    _major, _minor, *_ = _flint.__version__.split('.')
-    if (int(_major), int(_minor)) < (0, 5):
-        flint = None
+    import flint
 else:
     flint = None
 

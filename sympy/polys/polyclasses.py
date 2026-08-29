@@ -2210,7 +2210,7 @@ class DUP_Flint(DMP[Er], Generic[Er, _TFlintPoly]):
 
     def LC(f) -> Er:
         """Returns the leading coefficient of ``f``. """
-        return f._rep[f._rep.degree()]
+        return f._rep.leading_coefficient()
 
     def TC(f) -> Er:
         """Returns the trailing coefficient of ``f``. """
@@ -2318,15 +2318,13 @@ class DUP_Flint(DMP[Er], Generic[Er, _TFlintPoly]):
         res, R = f.to_DMP_Python()._resultant_includePRS(g.to_DMP_Python())
         return res, [ g.to_DUP_Flint() for g in R ] # type: ignore
 
-    def _resultant(f, g: Self) -> Self:
+    def _resultant(f, g: Self) -> Er:
         """Computes resultant of ``f`` and ``g``. """
-        # XXX: Use fmpz_mpoly etc when possible...
-        return f.to_DMP_Python()._resultant(g.to_DMP_Python()) # type: ignore
+        return f._rep.resultant(g._rep)
 
     def discriminant(f: Self) -> Er:
         """Computes discriminant of ``f``. """
-        # XXX: Use fmpz_mpoly etc when possible...
-        return f.to_DMP_Python().discriminant() # type: ignore
+        return f._rep.discriminant()
 
     def _cofactors(f, g: Self) -> tuple[Self, Self, Self]:
         """Returns GCD of ``f`` and ``g`` and their cofactors. """
@@ -2410,7 +2408,10 @@ class DUP_Flint(DMP[Er], Generic[Er, _TFlintPoly]):
 
     def content(f) -> Er:
         """Returns GCD of polynomial coefficients. """
-        # XXX: python-flint should have a content method
+        if f.dom.is_ZZ:
+            if isinstance(f._rep, flint.fmpz_poly):
+                return f._rep.content()
+            raise RuntimeError("DUP_Flint: Expected fmpz_poly representation over ZZ")
         return f.to_DMP_Python().content()
 
     def primitive(f) -> tuple[Er, Self]:
@@ -2476,9 +2477,24 @@ class DUP_Flint(DMP[Er], Generic[Er, _TFlintPoly]):
 
     def sqf_list(f, all=False) -> tuple[Er, list[tuple[Self, int]]]:
         """Returns a list of square-free factors of ``f``. """
-        # XXX: python-flint should provide square free factorisation.
-        coeff, factors = f.to_DMP_Python().sqf_list(all=all)
-        return coeff, [ (g.to_DUP_Flint(), k) for g, k in factors ] # type: ignore
+        if all and f.dom.is_FiniteField:
+            raise ValueError("'all=True' is not supported yet")
+
+        if f.degree() <= 0:
+            return f.LC(), []
+
+        coeff, factors_raw = f._rep.factor_squarefree()
+        factors = [(f.from_rep(g, f.dom), k) for g, k in factors_raw]
+        factors.sort(key=lambda factor: factor[1])
+
+        if all:
+            factors_by_exp = {k: g for g, k in factors}
+            factors = [
+                (factors_by_exp.get(k, f._one()), k)
+                for k in range(1, factors[-1][1] + 1)
+            ]
+
+        return coeff, factors
 
     def sqf_list_include(f, all=False) -> list[tuple[Self, int]]:
         """Returns a list of square-free factors of ``f``. """
