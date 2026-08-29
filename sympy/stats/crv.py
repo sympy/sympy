@@ -459,7 +459,8 @@ class ContinuousPSpace(PSpace):
             # XXX: Converting set to tuple. The order matters to Lambda though
             # so we shouldn't be starting with a set here...
             density = Lambda(tuple(domain.symbols), pdf)
-
+        else:
+            raise NotImplementedError("normalize=False is not implemented")
         return ContinuousPSpace(domain, density)
 
 
