@@ -28,7 +28,8 @@ if GROUND_TYPES == 'flint':
 flint: ModuleType | None
 
 if GROUND_TYPES == 'flint':
-    import flint
+    import flint as _flint
+    flint = _flint
 else:
     flint = None
 
