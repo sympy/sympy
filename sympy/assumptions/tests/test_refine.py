@@ -1,15 +1,15 @@
 from __future__ import annotations
 from sympy.assumptions.ask import Q
-from sympy.assumptions.refine import refine, refine_sin_cos
+from sympy.assumptions.refine import refine, refine_sin_cos, refine_sec_csc
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
-from sympy.core.numbers import (I, Rational, nan, pi)
+from sympy.core.numbers import (I, Rational, nan, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, csc, sec, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -320,6 +320,58 @@ def test_sin_cos():
     raises(TypeError, lambda: refine_sin_cos(tan(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(exp(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(x, Q.real(x)))
+
+
+def test_sec_csc():
+    n = Symbol('n')
+    # integer multiples of pi
+    assert refine(sec(n*pi), Q.integer(n)) == (-1)**n
+    assert refine(sec(n*pi), Q.even(n)) == 1
+    assert refine(sec(n*pi), Q.odd(n)) == -1
+    assert refine(csc(n*pi/2), Q.odd(n)) == (-1)**((n + 3)/2)
+
+    # even multiples of pi/2
+    assert refine(sec(n*pi/2), Q.even(n)) == (-1)**(n/2)
+    assert refine(csc(n*pi/2), Q.odd(n) & Q.even((n - 1)/2)) == 1
+    assert refine(csc(n*pi/2), Q.odd(n) & Q.odd((n - 1)/2)) == -1
+
+    # remaining symbolic terms
+    assert refine(sec(x + n*pi), Q.integer(n)) == ((-1)**n)*sec(x)
+    assert refine(csc(x + n*pi), Q.integer(n)) == ((-1)**n)*csc(x)
+    assert refine(sec(x + n*pi), Q.even(n)) == sec(x)
+    assert refine(csc(x + n*pi), Q.even(n)) == csc(x)
+    assert refine(sec(x + n*pi), Q.odd(n)) == -sec(x)
+    assert refine(csc(x + n*pi), Q.odd(n)) == -csc(x)
+    assert refine(sec(x - n*pi), Q.even(n)) == sec(x)
+    assert refine(sec(x + n*pi/2), Q.even(n)) == ((-1)**(n/2))*sec(x)
+    assert refine(csc(x + n*pi/2), Q.even(n)) == ((-1)**(n/2))*csc(x)
+
+    # sec/csc swap when the shift is an odd multiple of pi/2
+    assert refine(sec(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 1)/2))*csc(x)
+    assert refine(csc(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 3)/2))*sec(x)
+
+    # zero argument
+    assert refine(sec(x), Q.zero(x)) == 1
+    assert refine(csc(x + n*pi), Q.zero(n)) == csc(x)
+
+    # poles of sec/csc
+    assert refine(sec(n*pi/2), Q.odd(n)) is zoo
+    assert refine(csc(n*pi), Q.integer(n)) is zoo
+
+    # infinite argument is left untouched
+    assert refine(sec(x), Q.infinite(x) & Q.extended_real(x)) == sec(x)
+    assert refine(csc(x), Q.infinite(x) & Q.extended_real(x)) == csc(x)
+
+    # cases that should not simplify
+    assert refine(sec(x + n*pi), True) == sec(x + n*pi)
+    assert refine(csc(x), True) == csc(x)
+    assert refine(sec(x), Q.real(x)) == sec(x)
+    assert refine(sec(x + n*pi/2), Q.integer(n)) == sec(x + n*pi/2)
+    assert refine(csc(x + n*pi/2), Q.integer(n)) == csc(x + n*pi/2)
+
+    raises(TypeError, lambda: refine_sec_csc(tan(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sec_csc(sin(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sec_csc(x, Q.real(x)))
 
 
 def test_floor_ceiling():

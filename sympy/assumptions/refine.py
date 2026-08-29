@@ -534,6 +534,71 @@ def refine_sin_cos(expr, assumptions):
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
 
 
+def refine_sec_csc(expr, assumptions):
+    """
+    Handler for sec and csc functions.
+
+    Explanation
+    ===========
+
+    Since ``sec(x) == 1/cos(x)`` and ``csc(x) == 1/sin(x)``, the reciprocal
+    sin or cos function is refined with :func:`refine_sin_cos` and the result
+    is translated back into sec/csc form.  The leading factor produced by
+    :func:`refine_sin_cos` is always a power of ``-1`` and therefore its own
+    reciprocal, so only the trigonometric factor needs to be inverted.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_sec_csc
+    >>> from sympy import Symbol, Q, sec, csc, pi
+    >>> from sympy.abc import x
+    >>> n = Symbol('n')
+    >>> refine_sec_csc(sec(n*pi), Q.integer(n))
+    (-1)**n
+    >>> refine_sec_csc(csc(n*pi/2), Q.odd(n))
+    (-1)**(n/2 + 3/2)
+    >>> refine_sec_csc(sec(x + n*pi), Q.integer(n))
+    (-1)**n*sec(x)
+    >>> refine_sec_csc(csc(x + n*pi), Q.integer(n))
+    (-1)**n*csc(x)
+    >>> refine_sec_csc(sec(x + n*pi/2), Q.even(n))
+    (-1)**(n/2)*sec(x)
+    """
+    from sympy.functions.elementary.trigonometric import sin, cos, sec, csc
+    from sympy.calculus.accumulationbounds import AccumBounds
+
+    if not isinstance(expr, (sec, csc)):
+        raise TypeError("refine_sec_csc expects a sec or csc function.")
+
+    arg = expr.args[0]
+    expr_is_sec = isinstance(expr, sec)
+
+    # Refine the reciprocal sin/cos function and invert the outcome.
+    reciprocal = cos(arg) if expr_is_sec else sin(arg)
+    refined = refine_sin_cos(reciprocal, assumptions)
+
+    # refine_sin_cos may return a bare python int for the zero-argument case.
+    refined = S(refined)
+
+    if refined == reciprocal or isinstance(refined, AccumBounds):
+        return expr
+
+    # A vanishing cos/sin means the original sec/csc has a pole.
+    if refined.is_zero:
+        return S.ComplexInfinity
+
+    # The refined reciprocal is either a constant or a constant times a single
+    # sin/cos factor.  The constant is +-1, hence its own reciprocal, so only
+    # the trigonometric factor has to be turned into sec/csc.
+    coeff, trig = refined.as_independent(sin, cos)
+    if isinstance(trig, cos):
+        return coeff * sec(trig.args[0])
+    if isinstance(trig, sin):
+        return coeff * csc(trig.args[0])
+    return coeff
+
+
 def refine_Heaviside(expr, assumptions):
     """
     Handler for the Heaviside step function.
@@ -613,6 +678,8 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'sec': refine_sec_csc,
+    'csc': refine_sec_csc,
     'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
