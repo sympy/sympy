@@ -243,7 +243,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create "$release_version" dist/*
+          gh release create "sympy-$release_version" dist/*
               --prerelease
               --title "SymPy $release_version"
               --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-$final_release_version for release notes"
@@ -253,7 +253,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create "$release_version" dist/*
+          gh release create "sympy-$release_version" dist/*
               --title "SymPy $release_version"
               --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-$final_release_version for release notes"
 
