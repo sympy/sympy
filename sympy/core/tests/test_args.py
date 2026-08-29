@@ -2566,6 +2566,26 @@ def test_sympy__functions__special__elliptic_functions__jtheta():
     assert _test_args(jtheta(1, x, y, 2))
 
 
+def test_sympy__functions__special__elliptic_functions__JacobiEllipticBase():
+    from sympy.functions.special.elliptic_functions import JacobiEllipticBase
+    assert _test_args(JacobiEllipticBase(x, y))
+
+
+def test_sympy__functions__special__elliptic_functions__jacobisn():
+    from sympy.functions.special.elliptic_functions import jacobisn
+    assert _test_args(jacobisn(x, y))
+
+
+def test_sympy__functions__special__elliptic_functions__jacobicn():
+    from sympy.functions.special.elliptic_functions import jacobicn
+    assert _test_args(jacobicn(x, y))
+
+
+def test_sympy__functions__special__elliptic_functions__jacobidn():
+    from sympy.functions.special.elliptic_functions import jacobidn
+    assert _test_args(jacobidn(x, y))
+
+
 def test_sympy__functions__special__delta_functions__DiracDelta():
     from sympy.functions.special.delta_functions import DiracDelta
     assert _test_args(DiracDelta(x, 1))

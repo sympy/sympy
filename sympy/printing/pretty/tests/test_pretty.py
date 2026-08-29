@@ -50,9 +50,9 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi, polylog,
-    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, jtheta, DiracDelta, bell,
-    bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
-    mathieusprime, mathieucprime)
+    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, jacobicn, jacobidn,
+    jacobisn, jtheta, DiracDelta, bell, bernoulli, fibonacci, tribonacci, lucas,
+    stieltjes, mathieuc, mathieus, mathieusprime, mathieucprime)
 
 from sympy.matrices import (Adjoint, Inverse, MatAdd, MatrixSymbol, Transpose,
                             KroneckerProduct, BlockMatrix, OneMatrix, ZeroMatrix)
@@ -6595,6 +6595,11 @@ Pi|3; -|6|\n\
     expr = jtheta(1, z, y, 2)
     assert pretty(expr) == "      (2)      \ntheta    (z, y)\n     1         "
     assert upretty(expr) == "  (2)      \n\u03d1    (z, y)\n 1         "
+
+    for func, name in ((jacobisn, 'sn'), (jacobicn, 'cn'), (jacobidn, 'dn')):
+        expr = func(z, y)
+        assert pretty(expr) == f"{name}(z|y)"
+        assert upretty(expr) == f"{name}(z\u2502y)"
 
 
 def test_RandomDomain():
