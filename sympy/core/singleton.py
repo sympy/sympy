@@ -32,6 +32,14 @@ if TYPE_CHECKING:
         BooleanTrue as _BooleanTrue,
         BooleanFalse as _BooleanFalse,
     )
+    from sympy.sets.fancysets import (
+        Naturals as _Naturals,
+        Naturals0 as _Naturals0,
+        Integers as _Integers,
+        Rationals as _Rationals,
+        Reals as _Reals,
+        Complexes as _Complexes,
+    )
 
     from .basic import Basic
     from .expr import Expr
@@ -135,6 +143,13 @@ class SingletonRegistry(Registry):
 
     true: _BooleanTrue
     false: _BooleanFalse
+
+    Naturals: _Naturals
+    Naturals0: _Naturals0
+    Integers: _Integers
+    Rationals: _Rationals
+    Reals: _Reals
+    Complexes: _Complexes
 
     # Also allow things like S(5)
     @overload
