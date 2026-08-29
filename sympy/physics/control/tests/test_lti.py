@@ -14,7 +14,7 @@ from sympy.functions.elementary.trigonometric import atan
 from sympy.functions.elementary.complexes import re, im
 from sympy.matrices.dense import eye
 from sympy.physics.control.lti import SISOLinearTimeInvariant
-from sympy.polys.polytools import factor
+from sympy.polys.polytools import cancel, factor
 from sympy.polys.rootoftools import CRootOf
 from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
@@ -2864,6 +2864,58 @@ def test_TransferFunctionMatrix_construction():
     # all transfer function should have the same sampling time.
     raises(ValueError, lambda: TransferFunctionMatrix([[dtf1, dtf2],
                                                        [dtf3, dtf1]]))
+
+def test_TransferFunctionMatrix_rewrite_StateSpace():
+    tf1 = TransferFunction(1, s + 1, s)
+    tf2 = TransferFunction(1, 2*s + 1, s)
+
+    # SIMO: previously raised AttributeError (issue #28678).
+    G = TransferFunctionMatrix([[tf1], [tf2]])
+    ss = G.rewrite(StateSpace)
+    assert ss == StateSpace(
+        Matrix([[-1, 0], [0, Rational(-1, 2)]]),
+        Matrix([[1], [1]]),
+        Matrix([[1, 0], [0, Rational(1, 2)]]),
+        Matrix([[0], [0]]))
+    assert (ss.num_states, ss.num_inputs, ss.num_outputs) == (2, 1, 2)
+    # Round-trips back to the original transfer function matrix.
+    back = ss.rewrite(TransferFunction)
+    assert cancel(back[0][0].to_expr() - tf1.to_expr()) == 0
+    assert cancel(back[1][0].to_expr() - tf2.to_expr()) == 0
+
+    # MIMO round-trip.
+    tf3 = TransferFunction(3, s + 2, s)
+    tf4 = TransferFunction(1, s + 3, s)
+    G2 = TransferFunctionMatrix([[tf1, tf3], [tf2, tf4]])
+    ss2 = G2.rewrite(StateSpace)
+    assert (ss2.num_states, ss2.num_inputs, ss2.num_outputs) == (4, 2, 2)
+    back2 = ss2.rewrite(TransferFunction)
+    for i, row in enumerate(G2.args[0]):
+        for j, tf in enumerate(row):
+            assert cancel(back2[i][j].to_expr() - tf.to_expr()) == 0
+
+    # Discrete-time systems.
+    dtf1 = DiscreteTransferFunction(1, z + 1, z, 0.1)
+    dtf2 = DiscreteTransferFunction(1, 2*z + 1, z, 0.1)
+    DG = TransferFunctionMatrix([[dtf1], [dtf2]])
+    dss = DG.rewrite(DiscreteStateSpace)
+    assert dss == DiscreteStateSpace(
+        Matrix([[-1, 0], [0, Rational(-1, 2)]]),
+        Matrix([[1], [1]]),
+        Matrix([[1, 0], [0, Rational(1, 2)]]),
+        Matrix([[0], [0]]), 0.1)
+
+    # Series/Parallel entries are collapsed before realization.
+    G3 = TransferFunctionMatrix([[Series(tf1, tf2)], [Parallel(tf1, tf2)]])
+    back3 = G3.rewrite(StateSpace).rewrite(TransferFunction)
+    for i in range(2):
+        assert cancel(back3[i][0].to_expr()
+                      - G3.args[0][i][0].doit().to_expr()) == 0
+
+    # Continuous/discrete mismatches are rejected.
+    raises(TypeError, lambda: G.rewrite(DiscreteStateSpace))
+    raises(TypeError, lambda: DG.rewrite(StateSpace))
+
 
 def test_TransferFunctionMatrix_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
