@@ -61,8 +61,8 @@ from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
 from sympy.utilities.misc import as_int, filldedent, func_name
 
 import mpmath
-from sympy.external.mpmath import (prec_to_dps, mpf, mpc, mp, workprec, diff as
-                                   mpmath_diff)
+from sympy.external.mpmath import (
+    local_workprec, mp, mpc, mpf, prec_to_dps, workprec)
 
 import inspect
 from collections import Counter
@@ -534,27 +534,19 @@ class Function(Application, Expr):
 
     def _eval_evalf(self, prec):
 
-        def _get_mpmath_func(fname):
+        def _get_mpmath_func(fname, ctx=mpmath):
             """Lookup mpmath function based on name"""
             if isinstance(self, AppliedUndef):
                 # Shouldn't lookup in mpmath but might have ._imp_
                 return None
 
-            if not hasattr(mpmath, fname):
+            if not hasattr(ctx, fname):
                 fname = MPMATH_TRANSLATIONS.get(fname, None)
                 if fname is None:
                     return None
-            return getattr(mpmath, fname)
+            return getattr(ctx, fname)
 
-        _eval_mpmath = getattr(self, '_eval_mpmath', None)
-        if _eval_mpmath is None:
-            func = _get_mpmath_func(self.func.__name__)
-            args = self.args
-        else:
-            func, args = _eval_mpmath()
-
-        # Fall-back evaluation
-        if func is None:
+        def evalf_fallback():
             imp = getattr(self, '_imp_', None)
             if imp is None:
                 return None
@@ -563,44 +555,60 @@ class Function(Application, Expr):
             except (TypeError, ValueError):
                 return None
 
-        # Convert all args to mpf or mpc
-        # Convert the arguments to *higher* precision than requested for the
-        # final result.
-        # XXX + 5 is a guess, it is similar to what is used in evalf.py. Should
-        #     we be more intelligent about it?
-        try:
-            args = [arg._to_mpmath(prec + 5) for arg in args]
-            def bad(m):
-                # the precision of an mpf value is the last element
-                # if that is 1 (and m[1] is not 1 which would indicate a
-                # power of 2), then the eval failed; so check that none of
-                # the arguments failed to compute to a finite precision.
-                # Note: An mpc value has two parts, the re and imag tuple;
-                # check each of those parts, too. Anything else is allowed to
-                # pass
-                if isinstance(m, mpf):
-                    m = m._mpf_
-                    return m[1] !=1 and m[-1] == 1
-                elif isinstance(m, mpc):
-                    m, n = m._mpc_
-                    return m[1] !=1 and m[-1] == 1 and \
-                        n[1] !=1 and n[-1] == 1
-                else:
-                    return False
+        def bad(m):
+            # the precision of an mpf value is the last element
+            # if that is 1 (and m[1] is not 1 which would indicate a
+            # power of 2), then the eval failed; so check that none of
+            # the arguments failed to compute to a finite precision.
+            # Note: An mpc value has two parts, the re and imag tuple;
+            # check each of those parts, too. Anything else is allowed to
+            # pass
+            if isinstance(m, mpf):
+                m = m._mpf_
+                return m[1] !=1 and m[-1] == 1
+            elif isinstance(m, mpc):
+                m, n = m._mpc_
+                return m[1] !=1 and m[-1] == 1 and \
+                    n[1] !=1 and n[-1] == 1
+            else:
+                return False
+
+        _eval_mpmath = getattr(self, '_eval_mpmath', None)
+        if _eval_mpmath is not None:
+            # The _eval_mpmath hook can return an arbitrary callable that needs
+            # to use mpmath's global context. We keep this path for
+            # compatibility with downstream subclasses but don't use it in the
+            # sympy codebase.
+            func, args = _eval_mpmath()
+            if func is None:
+                return evalf_fallback()
+            try:
+                args = [arg._to_mpmath(prec + 5) for arg in args]
+            except ValueError:
+                return
             if any(bad(a) for a in args):
-                raise ValueError  # one or more args failed to compute with significance
-        except ValueError:
-            return
+                return
+            with workprec(prec):
+                v = func(*args)
+            return Expr._from_mpmath(v, prec)
 
-        # XXX: This should really use local_workprec rather than
-        # mpmath.workprec to avoid messing with mpmath's global precision. That
-        # would be incompatible with any class that uses _eval_mpmath though
-        # since those would have to use the global precision.
-
-        with workprec(prec):
+        # This is the common path for functions implemented by mpmath. Lookup,
+        # argument conversion and evaluation all use the same local context so
+        # that evaluating a function does not change mpmath's global precision.
+        func_name = self.func.__name__
+        func = _get_mpmath_func(func_name)
+        if func is None:
+            return evalf_fallback()
+        with local_workprec(prec) as ctx:
+            func = _get_mpmath_func(func_name, ctx)
+            try:
+                args = [arg._to_mpmath_ctx(ctx, prec=prec + 5) for arg in self.args]
+            except ValueError:
+                return
+            if any(bad(a) for a in args):
+                return
             v = func(*args)
-
-        return Expr._from_mpmath(v, prec)
+            return Expr._from_mpmath(v, prec)
 
     def _eval_derivative(self, s):
         # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
@@ -1658,17 +1666,15 @@ class Derivative(Expr):
             raise NotImplementedError('partials and higher order derivatives')
         z = list(self.free_symbols)[0]
 
-        # XXX: This should not depend on the precision that is set in mp.
-        # The precision should be a parameter.
+        prec = mp.prec
+        with local_workprec(prec) as ctx:
+            def eval(x):
+                f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=ctx.prec))
+                f0 = f0.evalf(prec_to_dps(ctx.prec))
+                return f0._to_mpmath_ctx(ctx)
 
-        def eval(x):
-            f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mp.prec))
-            f0 = f0.evalf(prec_to_dps(mp.prec))
-            return f0._to_mpmath(mp.prec)
-
-        fp = mpmath_diff(eval, z0._to_mpmath(mp.prec))
-
-        return Expr._from_mpmath(fp, mp.prec)
+            fp = ctx.diff(eval, z0._to_mpmath_ctx(ctx))
+            return Expr._from_mpmath(fp, ctx.prec)
 
     @property
     def expr(self):
