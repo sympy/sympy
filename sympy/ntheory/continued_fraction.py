@@ -1,5 +1,6 @@
 from __future__ import annotations
 import itertools
+from typing import Any, Iterable, Iterator
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Integer, Rational
 from sympy.core.singleton import S
@@ -8,7 +9,7 @@ from sympy.core.sympify import _sympify
 from sympy.utilities.misc import as_int
 
 
-def continued_fraction(a) -> list:
+def continued_fraction(a: Any) -> list[Any]:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
@@ -72,7 +73,7 @@ def continued_fraction(a) -> list:
     raise ValueError(f"expecting a rational or quadratic irrational, not {e}")
 
 
-def continued_fraction_periodic(p, q, d=0, s=1) -> list:
+def continued_fraction_periodic(p: int, q: int, d: int = 0, s: int = 1) -> list[Any]:
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.
 
@@ -181,7 +182,7 @@ def continued_fraction_periodic(p, q, d=0, s=1) -> list:
     return terms[:i] + [terms[i:]]  # type: ignore
 
 
-def continued_fraction_reduce(cf):
+def continued_fraction_reduce(cf: Iterable[Any]) -> Any:
     """
     Reduce a continued fraction to a rational or quadratic irrational.
 
@@ -226,10 +227,10 @@ def continued_fraction_reduce(cf):
     """
     from sympy.solvers import solve
 
-    period = []
+    period: list[Any] = []
     x = Dummy('x')
 
-    def untillist(cf):
+    def untillist(cf: Iterable[Any]) -> Iterator[Any]:
         for nxt in cf:
             if isinstance(nxt, list):
                 period.extend(nxt)
@@ -256,7 +257,7 @@ def continued_fraction_reduce(cf):
     return rv
 
 
-def continued_fraction_iterator(x):
+def continued_fraction_iterator(x: Any) -> Iterator[Any]:
     """
     Return continued fraction expansion of x as iterator.
 
@@ -300,7 +301,7 @@ def continued_fraction_iterator(x):
         x = 1/x
 
 
-def continued_fraction_convergents(cf):
+def continued_fraction_convergents(cf: Iterable[Any]) -> Iterator[Any]:
     """
     Return an iterator over the convergents of a continued fraction (cf).
 
@@ -359,8 +360,10 @@ def continued_fraction_convergents(cf):
     """
     if isinstance(cf, list) and isinstance(cf[-1], list):
         cf = itertools.chain(cf[:-1], itertools.cycle(cf[-1]))
-    p_2, q_2 = S.Zero, S.One
-    p_1, q_1 = S.One, S.Zero
+    p_2: Any = S.Zero
+    q_2: Any = S.One
+    p_1: Any = S.One
+    q_1: Any = S.Zero
     for a in cf:
         p, q = a*p_1 + p_2, a*q_1 + q_2
         p_2, q_2 = p_1, q_1
