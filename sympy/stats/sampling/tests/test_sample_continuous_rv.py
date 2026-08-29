@@ -2,6 +2,7 @@ from __future__ import annotations
 from sympy.core.numbers import oo
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.special.delta_functions import DiracDelta
 from sympy.sets.sets import Interval
 from sympy.external import import_module
 from sympy.stats import Beta, Chi, Normal, Gamma, Exponential, LogNormal, Pareto, ChiSquared, Uniform, sample, \
@@ -98,6 +99,19 @@ def test_sample_pymc():
                 assert sam in X.pspace.domain.set
         raises(NotImplementedError,
                lambda: sample(Chi("C", 1), library='pymc'))
+
+
+def test_sample_continuous_handmade_diracdelta():
+    # A DiracDelta in the PDF describes a degenerate distribution that scipy
+    # cannot sample by integrating a numeric PDF. This used to raise a
+    # confusing ``NameError: name 'DiracDelta' is not defined`` from the
+    # lambdified PDF; it should raise NotImplementedError instead (issue #29783).
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests for _sample_scipy.')
+    x = Symbol('x')
+    X = ContinuousRV(x, DiracDelta(x - 2))
+    raises(NotImplementedError, lambda: sample(X, library='scipy'))
 
 
 def test_sampling_gamma_inverse():
