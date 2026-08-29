@@ -644,6 +644,10 @@ def test_lambertw():
     n = Symbol('n', negative=True)
     assert LambertW(n).is_zero is False
 
+def test_issue_29737():
+    x = symbols('x')
+    expr = exp(LambertW(x))*LambertW(x) - x
+    assert simplify(expr).is_zero is True
 
 def test_issue_5673():
     e = LambertW(-1)
