@@ -202,7 +202,11 @@ class Beam:
         self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
+        self._rotation_jumps = {}
+        self._deflection_jumps = {}
         self._ild_reactions = {}
+        self._ild_rotation_jumps = {}
+        self._ild_deflection_jumps = {}
         self._ild_shear = 0
         self._ild_moment = 0
         # _original_load is a copy of _load equations with unsubstituted reaction
@@ -255,7 +259,7 @@ class Beam:
         The rotation jump is the rotation (in radian) in a rotation hinge. This can
         be seen as a jump in the slope plot.
         """
-        return self._ild_rotations_jumps
+        return self._ild_rotation_jumps
 
     @property
     def ild_deflection_jumps(self):
@@ -2058,7 +2062,7 @@ class Beam:
         deflection_solution = solution[rotation_index:]
 
         self._ild_reactions = dict(zip(reactions, reaction_solution))
-        self._ild_rotations_jumps = dict(zip(rotation_jumps, rotation_solution))
+        self._ild_rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
         self._ild_deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
 
     def plot_ild_reactions(self, subs=None):
