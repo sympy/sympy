@@ -2408,10 +2408,7 @@ class DUP_Flint(DMP[Er], Generic[Er, _TFlintPoly]):
 
     def content(f) -> Er:
         """Returns GCD of polynomial coefficients. """
-        if f.dom.is_ZZ:
-            if isinstance(f._rep, flint.fmpz_poly):
-                return f._rep.content()
-            raise RuntimeError("DUP_Flint: Expected fmpz_poly representation over ZZ")
+        # XXX: python-flint should have a content method
         return f.to_DMP_Python().content()
 
     def primitive(f) -> tuple[Er, Self]:
@@ -2477,14 +2474,20 @@ class DUP_Flint(DMP[Er], Generic[Er, _TFlintPoly]):
 
     def sqf_list(f, all=False) -> tuple[Er, list[tuple[Self, int]]]:
         """Returns a list of square-free factors of ``f``. """
-        if all and f.dom.is_FiniteField:
-            raise ValueError("'all=True' is not supported yet")
-
         if f.degree() <= 0:
             return f.LC(), []
 
         coeff, factors_raw = f._rep.factor_squarefree()
         factors = [(f.from_rep(g, f.dom), k) for g, k in factors_raw]
+
+        if f.dom.is_QQ:
+            factors_monic = []
+            for g, k in factors:
+                lc = g.LC()
+                coeff *= lc**k
+                factors_monic.append((g._exquo_ground(lc), k))
+            factors = factors_monic
+
         factors.sort(key=lambda factor: factor[1])
 
         if all:
