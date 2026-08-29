@@ -138,11 +138,12 @@ module = [
 ]
 ignore_errors = true
 
-# sympy._version is created by setuptools-scm when building sdist:
+# sympy.release imports names that are declared before the optional import.
 [[tool.mypy.overrides]]
 module = ["sympy.release"]
 disable_error_code = ["no-redef"]
 
+# sympy._version is created by setuptools-scm when building distributions.
 [[tool.mypy.overrides]]
 module = ["sympy._version"]
 ignore_missing_imports = true
