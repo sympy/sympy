@@ -354,3 +354,11 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_log():
+    from sympy import log, exp
+    x = Symbol('x')
+    assert refine(log(exp(x)), Q.real(x)) == x
+    assert refine(log(1), True) == S.Zero
+    assert refine(log(x), Q.positive(x)) == log(x)
