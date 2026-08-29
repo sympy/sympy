@@ -655,8 +655,7 @@ def test_Sum_doit():
     # issue 2597
     nmax = symbols('N', integer=True, positive=True)
     pw = Piecewise((1, And(1 <= n, n <= nmax)), (0, True))
-    assert Sum(pw, (n, 1, nmax)).doit() == Sum(Piecewise((1, nmax >= n),
-                    (0, True)), (n, 1, nmax))
+    assert Sum(pw, (n, 1, nmax)).doit() == nmax
 
     q, s = symbols('q, s')
     assert summation(1/n**(2*s), (n, 1, oo)) == Piecewise((zeta(2*s), 2*re(s) > 1),
