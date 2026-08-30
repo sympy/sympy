@@ -1290,24 +1290,26 @@ class Rational(Number):
 
     __slots__ = ('_val',)
 
+    _val: MPQ | MPZ
+
     is_Rational = True
 
     @property
-    def p(self) -> MPZ:
-        return self._val.numerator
+    def p(self) -> int:
+        return getattr(self._val, 'numerator', self._val)  # type: ignore[return-value,arg-type]
 
     @p.setter
     def p(self, val: int | MPZ):
-        q = self._val.denominator if hasattr(self, '_val') else 1
+        q = getattr(self._val, 'denominator', 1) if hasattr(self, '_val') else 1
         self._val = MPQ(val, q)
 
     @property
-    def q(self) -> MPZ:
-        return self._val.denominator
+    def q(self) -> int:
+        return getattr(self._val, 'denominator', 1)  # type: ignore[return-value]
 
     @q.setter
     def q(self, val: int | MPZ):
-        p = self._val.numerator if hasattr(self, '_val') else 1
+        p = getattr(self._val, 'numerator', self._val) if hasattr(self, '_val') else 1  # type: ignore[arg-type]
         self._val = MPQ(p, val)
 
     @classmethod
@@ -1632,7 +1634,7 @@ class Rational(Number):
         return _make_mpf(_from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self) -> Rational:
-        return Rational._from_mpq(abs(self._val))
+        return Rational._from_mpq(-self._val if self._val < 0 else self._val)
 
     def __int__(self):
         p, q = self.p, self.q
@@ -1726,7 +1728,7 @@ class Rational(Number):
         return Expr.__le__(*rv)
 
     def __hash__(self):
-        return super().__hash__()
+        return hash(self._val)
 
     def __format__(self, format_spec):
         return format(fractions.Fraction(self.p, self.q), format_spec)
@@ -1863,9 +1865,11 @@ class Integer(Rational):
 
     __slots__ = ()
 
+    _val: MPZ  # type: ignore[assignment]
+
     @property
-    def p(self) -> MPZ:
-        return self._val
+    def p(self) -> int:
+        return self._val  # type: ignore[return-value]
 
     @p.setter
     def p(self, val: int | MPZ):
@@ -1874,6 +1878,10 @@ class Integer(Rational):
     @property
     def q(self) -> int:
         return 1
+
+    @q.setter
+    def q(self, val: int | MPZ):
+        pass
 
     def _as_mpf_val(self, prec):
         return _from_int(self.p, prec, rnd)
@@ -2871,7 +2879,7 @@ class Zero(IntegerConstant, metaclass=Singleton):
     .. [1] https://en.wikipedia.org/wiki/Zero
     """
 
-    _val = MPZ(0)
+    _val: MPZ = MPZ(0)
     is_positive = False
     is_negative = False
     is_zero = True
@@ -2938,7 +2946,7 @@ class One(IntegerConstant, metaclass=Singleton):
     is_number = True
     is_positive = True
 
-    _val = MPZ(1)
+    _val: MPZ = MPZ(1)
 
     __slots__ = ()
 
@@ -2993,7 +3001,7 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
     """
     is_number = True
 
-    _val = MPZ(-1)
+    _val: MPZ = MPZ(-1)
 
     __slots__ = ()
 
@@ -3050,7 +3058,7 @@ class Half(RationalConstant, metaclass=Singleton):
     """
     is_number = True
 
-    _val = MPQ(1, 2)
+    _val: MPQ = MPQ(1, 2)
 
     __slots__ = ()
 
