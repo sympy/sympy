@@ -602,6 +602,89 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_log(expr, assumptions):
+    """
+    symplifying logarithmic expression using assumptions.
+    TODO:right now handling only real cases
+    >>> from sympy import Q, exp, log, refine, S, symbols
+    >>> x, z,w,a = symbols('x,z,w,a')
+
+    >>> refine(log(x**a), Q.positive(x) & Q.real(a))
+    a*log(x)
+    >>> refine(log(exp(x)), Q.real(x))
+    x
+    >>> refine(log(x**(3*S.Half)), Q.negative(x))
+    3*log(-x)/2 - I*pi/2
+    >>> refine(log(x**3), Q.negative(x))
+    3*log(-x) + I*pi
+    >>> refine(log(x**a), Q.negative(x) & Q.real(a))
+    a*log(-x) + I*pi*(a - 2*ceiling((a - 1)/2))
+    >>> refine(log(x**a), Q.positive(x))
+    log(x**a)
+    >>> refine(log(z**w),Q.complex(z))
+    log(z**w)
+    """
+    
+    from sympy.functions.elementary.exponential import exp
+    from sympy.assumptions import Q, ask
+    from sympy import ceiling, sqrt, atan2
+    
+    arg = expr.args[0]
+    if isinstance(arg, Pow):
+        base, exponent = arg.base, arg.exp
+        if ask(Q.real(base), assumptions):
+            if ask(Q.real(exponent), assumptions):
+                
+                if ask(Q.positive(base), assumptions):
+                    return exponent*expr.func(base)
+                elif ask(Q.negative(base), assumptions):
+                    theta = S.Pi
+                    ceil_term=ceiling((exponent - 1)/2)
+                    return exponent*expr.func(abs(base)) + S.ImaginaryUnit*theta* (exponent - 2*ceil_term)
+                else: return expr                
+
+        if ask(Q.real(base), assumptions):
+            if ask(Q.complex(exponent), assumptions):
+                real_imag =exponent.as_real_imag()
+                if real_imag is None:
+                    return expr
+                a, b = real_imag
+                
+                if ask(Q.positive(base), assumptions):
+                    argz = b*expr.func(abs(base))
+                    ceil_term = ceiling((argz - S.Pi)/(2*S.Pi))
+                    return a*expr.func(abs(base)) + S.ImaginaryUnit*(argz - 2*S.Pi*ceil_term)
+                elif ask(Q.negative(base), assumptions):
+                    argz = b*expr.func(abs(base))
+                    ceil_term = ceiling((argz - S.Pi)/(2*S.Pi))
+                    return a*expr.func(abs(base)) - b*S.Pi + S.ImaginaryUnit*(argz - 2*S.Pi*ceil_term)
+                else:
+                    return expr
+
+        if ask(Q.complex(base), assumptions):
+            if ask(Q.complex(exponent), assumptions):
+                real_imag_base = base.as_real_imag()
+                real_imag_exp = exponent.as_real_imag()
+                if real_imag_base is None:
+                    return expr
+                if real_imag_exp is None:
+                    return expr
+
+                x,y = real_imag_base
+                a,b = real_imag_exp
+                
+                r, theta = sqrt(x**2 + y**2), atan2(y,x)
+                argz = a*S.Pi + b*expr.func(r)
+                ceil_term = ceiling((argz - S.Pi)/(2*S.Pi))
+                return a*expr.func(r) - b*theta + S.ImaginaryUnit*(argz - 2*S.Pi*ceil_term)
+            
+    if isinstance(arg, exp):
+        if ask(Q.real(arg.exp), assumptions):
+            return arg.exp           
+        
+    return expr        
+            
+            
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -617,4 +700,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'log':refine_log
 }
