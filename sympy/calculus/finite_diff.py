@@ -26,7 +26,6 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 from collections.abc import Sequence
 from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol
 
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
