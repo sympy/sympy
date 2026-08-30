@@ -38,6 +38,7 @@ from sympy.testing.pytest import (raises, _both_exp_pow,
                                   warns_deprecated_sympy)
 from sympy import Add
 
+from sympy.external.gmpy import MPQ
 from mpmath import mpf
 import mpmath
 from sympy.external.mpmath import finf, fninf, conserve_mpmath_dps
@@ -373,11 +374,11 @@ def test_Rational_new():
     assert Rational(PythonRational(2, 6)) == Rational(1, 3)
 
     with warns_deprecated_sympy():
-        assert Rational(2, 4, gcd=1).q == 4
+        r = Rational(2, 4, gcd=1)
+    assert r == S.Half
     with warns_deprecated_sympy():
         n = Rational(2, -4, gcd=1)
-    assert n.q == 4
-    assert n.p == -2
+    assert n == -S.Half
 
     assert Rational.from_coprime_ints(3, 5) == Rational(3, 5)
 

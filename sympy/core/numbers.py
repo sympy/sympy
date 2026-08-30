@@ -23,6 +23,7 @@ from .sorting import ordered
 from sympy.external.gmpy import MPZ, MPQ, SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
 from sympy.external.mpmath import (
+    MPZ as mpmath_MPZ,
     mpnumeric,
     make_mpf as _make_mpf,
     mpf as _mpf,
@@ -205,7 +206,7 @@ def mpf_norm(mpf, prec):
             return mpf
 
     # Necessary if mpmath is using the gmpy backend
-    rv = mpf_normalize(sign, MPZ(man), expt, bc, prec, rnd)
+    rv = mpf_normalize(sign, mpmath_MPZ(man), expt, bc, prec, rnd)
     return rv
 
 # TODO: we should use the warnings module
@@ -891,7 +892,7 @@ class Float(Number):
                 # See issue #19690.
                 num[1] = num[1].removeprefix('0x').removesuffix('L')
                 # Now we can assume that it is in standard form
-                num[1] = MPZ(num[1], 16)
+                num[1] = mpmath_MPZ(num[1], 16)
                 _mpf_ = tuple(num)
             else:
                 if len(num) == 4:
@@ -1316,6 +1317,8 @@ class Rational(Number):
     def _from_mpq(cls, q: MPQ) -> Rational:
         if isinstance(q, SYMPY_INTS):
             return Integer(q)
+        if q == 0 or q.numerator == 0:
+            return S.Zero
         if q.denominator == 1:
             return Integer(q.numerator)
         if q.numerator == 1 and q.denominator == 2:
@@ -1359,7 +1362,7 @@ class Rational(Number):
                     except ValueError:
                         pass  # error will raise below
                     else:
-                        return cls._new(p.numerator, p.denominator, 1)
+                        return cls.from_coprime_ints(p.numerator, p.denominator)
 
                 if not isinstance(p, Rational):
                     raise TypeError('invalid input: %s' % p)
@@ -1405,18 +1408,18 @@ class Rational(Number):
                     return S.NaN
             return S.ComplexInfinity
 
+        if p == 0:
+            return S.Zero
+
         if q < 0:
             q = -q
             p = -p
 
-        if gcd is None:
-            return cls._from_mpq(MPQ(p, q))
-
-        if gcd > 1:
+        if gcd is not None and gcd > 1:
             p //= gcd
             q //= gcd
 
-        return cls.from_coprime_ints(p, q)
+        return cls._from_mpq(MPQ(p, q))
 
     @classmethod
     def from_coprime_ints(cls, p: int, q: int) -> Rational:
@@ -1430,6 +1433,8 @@ class Rational(Number):
         arguments may or may not be checked so it should not be relied upon to
         pass unvalidated or invalid arguments to this function.
         """
+        if p == 0:
+            return S.Zero
         if q == 1:
             return Integer(p)
         if p == 1 and q == 2:
@@ -1455,7 +1460,7 @@ class Rational(Number):
         311/99
 
         """
-        f = fractions.Fraction(self.p, self.q)
+        f = fractions.Fraction(int(self.p), int(self.q))
         return Rational(f.limit_denominator(fractions.Fraction(int(max_denominator))))
 
     def __getnewargs__(self):
@@ -1628,10 +1633,10 @@ class Rational(Number):
         return
 
     def _as_mpf_val(self, prec):
-        return _from_rational(self.p, self.q, prec, rnd)
+        return _from_rational(int(self.p), int(self.q), prec, rnd)
 
     def _mpmath_(self, prec, rnd):
-        return _make_mpf(_from_rational(self.p, self.q, prec, rnd))
+        return _make_mpf(_from_rational(int(self.p), int(self.q), prec, rnd))
 
     def __abs__(self) -> Rational:
         return Rational._from_mpq(-self._val if self._val < 0 else self._val)
@@ -1731,7 +1736,7 @@ class Rational(Number):
         return hash(self._val)
 
     def __format__(self, format_spec):
-        return format(fractions.Fraction(self.p, self.q), format_spec)
+        return format(fractions.Fraction(int(self.p), int(self.q)), format_spec)
 
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
@@ -1884,7 +1889,7 @@ class Integer(Rational):
         pass
 
     def _as_mpf_val(self, prec):
-        return _from_int(self.p, prec, rnd)
+        return _from_int(int(self.p), prec, rnd)
 
     def _mpmath_(self, prec, rnd):
         return _make_mpf(self._as_mpf_val(prec))
@@ -2254,25 +2259,37 @@ class Integer(Rational):
     # bitwise operations.
     def __lshift__(self, other):
         if isinstance(other, (int, Integer, numbers.Integral)):
-            return Integer(self.p << int(other))
+            shift = int(other)
+            if shift < 0:
+                raise ValueError("negative shift count")
+            return Integer(self.p << shift)
         else:
             return NotImplemented
 
     def __rlshift__(self, other):
         if isinstance(other, (int, numbers.Integral)):
-            return Integer(int(other) << self.p)
+            shift = int(self.p)
+            if shift < 0:
+                raise ValueError("negative shift count")
+            return Integer(int(other) << shift)
         else:
             return NotImplemented
 
     def __rshift__(self, other):
         if isinstance(other, (int, Integer, numbers.Integral)):
-            return Integer(self.p >> int(other))
+            shift = int(other)
+            if shift < 0:
+                raise ValueError("negative shift count")
+            return Integer(self.p >> shift)
         else:
             return NotImplemented
 
     def __rrshift__(self, other):
         if isinstance(other, (int, numbers.Integral)):
-            return Integer(int(other) >> self.p)
+            shift = int(self.p)
+            if shift < 0:
+                raise ValueError("negative shift count")
+            return Integer(int(other) >> shift)
         else:
             return NotImplemented
 
@@ -4331,7 +4348,7 @@ def equal_valued(x, y):
     # Rational could be prohibitively expensive.
 
     sign, man, exp, _ = y._mpf_
-    p, q = x.p, x.q
+    p, q = int(x.p), int(x.q)
 
     if sign:
         man = -man
