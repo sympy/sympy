@@ -38,7 +38,6 @@ from sympy.testing.pytest import (raises, _both_exp_pow,
                                   warns_deprecated_sympy)
 from sympy import Add
 
-from sympy.external.gmpy import MPQ
 from mpmath import mpf
 import mpmath
 from sympy.external.mpmath import finf, fninf, conserve_mpmath_dps
