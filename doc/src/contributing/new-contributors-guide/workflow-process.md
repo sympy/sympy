@@ -658,7 +658,7 @@ time of the next SymPy release.
 Joe Bloggs <joe@bloggs.com>
 ```
 
-The first line their says that the .mailmap file was "reordered". This is because the file should be in alphabetical order. The script will have moved your name into the correct position so now you can see the change as:
+The first line there says that the .mailmap file was "reordered". This is because the file should be in alphabetical order. The script will have moved your name into the correct position so now you can see the change as:
 
 ```bash
 $ git diff
