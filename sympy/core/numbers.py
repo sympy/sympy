@@ -1297,7 +1297,7 @@ class Rational(Number):
 
     @property
     def p(self) -> int:
-        return getattr(self._val, 'numerator', self._val)  # type: ignore[return-value,arg-type]
+        return int(getattr(self._val, 'numerator', self._val))
 
     @p.setter
     def p(self, val: int | MPZ):
@@ -1306,7 +1306,7 @@ class Rational(Number):
 
     @property
     def q(self) -> int:
-        return getattr(self._val, 'denominator', 1)  # type: ignore[return-value]
+        return int(getattr(self._val, 'denominator', 1))
 
     @q.setter
     def q(self, val: int | MPZ):
@@ -1874,7 +1874,7 @@ class Integer(Rational):
 
     @property
     def p(self) -> int:
-        return self._val  # type: ignore[return-value]
+        return int(self._val)
 
     @p.setter
     def p(self, val: int | MPZ):
