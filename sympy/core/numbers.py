@@ -20,7 +20,7 @@ from .intfunc import num_digits, igcd, ilcm, mod_inverse, integer_nthroot
 from .logic import fuzzy_not
 from .kind import NumberKind
 from .sorting import ordered
-from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
+from sympy.external.gmpy import MPZ, MPQ, SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
 from sympy.external.mpmath import (
     mpnumeric,
@@ -40,7 +40,6 @@ from sympy.external.mpmath import (
     from_rational as _from_rational,
     from_float as _from_float,
     from_str as _from_str,
-    MPZ,
     mpf_neg as _mpf_neg,
     mpf_gt as _mpf_gt,
     mpf_lt as _mpf_lt,
@@ -1289,18 +1288,46 @@ class Rational(Number):
     is_rational = True
     is_number = True
 
-    __slots__ = ('p', 'q')
-
-    p: int
-    q: int
+    __slots__ = ('_val',)
 
     is_Rational = True
+
+    @property
+    def p(self) -> MPZ:
+        return self._val.numerator
+
+    @p.setter
+    def p(self, val: int | MPZ):
+        q = self._val.denominator if hasattr(self, '_val') else 1
+        self._val = MPQ(val, q)
+
+    @property
+    def q(self) -> MPZ:
+        return self._val.denominator
+
+    @q.setter
+    def q(self, val: int | MPZ):
+        p = self._val.numerator if hasattr(self, '_val') else 1
+        self._val = MPQ(p, val)
+
+    @classmethod
+    def _from_mpq(cls, q: MPQ) -> Rational:
+        if q.denominator == 1:
+            return Integer(q.numerator)
+        if q.numerator == 1 and q.denominator == 2:
+            return S.Half
+        obj = Expr.__new__(cls)
+        obj._val = q
+        return obj
 
     @cacheit
     def __new__(cls, p, q=None, gcd=None):
         if q is None:
             if isinstance(p, Rational):
                 return p
+
+            if isinstance(p, MPQ):
+                return cls._from_mpq(p)
 
             if isinstance(p, SYMPY_INTS):
                 pass
@@ -1379,7 +1406,7 @@ class Rational(Number):
             p = -p
 
         if gcd is None:
-            gcd = igcd(abs(p), q)
+            return cls._from_mpq(MPQ(p, q))
 
         if gcd > 1:
             p //= gcd
@@ -1405,8 +1432,10 @@ class Rational(Number):
             return S.Half
 
         obj = Expr.__new__(cls)
-        obj.p = p
-        obj.q = q
+        if hasattr(MPQ, '_new'):
+            obj._val = MPQ._new(p, q)
+        else:
+            obj._val = MPQ(p, q)
         return obj
 
     def limit_denominator(self, max_denominator=1000000):
@@ -1438,29 +1467,13 @@ class Rational(Number):
         return self.p == 0
 
     def __neg__(self):
-        return Rational(-self.p, self.q)
+        return Rational._from_mpq(-self._val)
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, Integer):
-                return Rational._new(self.p + self.q*other.p, self.q, 1)
-            elif isinstance(other, Rational):
-                g = igcd(self.q, other.q)
-                if g == 1:
-                    p = self.p*other.q + self.q*other.p
-                    q = self.q*other.q
-                else:
-                    q1, q2 = self.q // g, other.q // g
-                    p = self.p*q2 + other.p*q1
-                    q = q1*q2
-                    g2 = igcd(p, g)
-                    if g2 > 1:
-                        p //= g2
-                        q *= (g // g2)
-                    else:
-                        q *= g
-                return Rational.from_coprime_ints(p, q)
+            if isinstance(other, Rational):
+                return Rational._from_mpq(self._val + other._val)
             elif isinstance(other, Float):
                 return other + self
             else:
@@ -1471,71 +1484,30 @@ class Rational(Number):
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, Integer):
-                return Rational._new(self.p - self.q*other.p, self.q, 1)
-            elif isinstance(other, Rational):
-                g = igcd(self.q, other.q)
-                if g == 1:
-                    p = self.p*other.q - self.q*other.p
-                    q = self.q*other.q
-                else:
-                    q1, q2 = self.q // g, other.q // g
-                    p = self.p*q2 - other.p*q1
-                    q = q1*q2
-                    g2 = igcd(p, g)
-                    if g2 > 1:
-                        p //= g2
-                        q *= (g // g2)
-                    else:
-                        q *= g
-                return Rational.from_coprime_ints(p, q)
+            if isinstance(other, Rational):
+                return Rational._from_mpq(self._val - other._val)
             elif isinstance(other, Float):
                 return -other + self
             else:
                 return Number.__sub__(self, other)
         return Number.__sub__(self, other)
+
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, Integer):
-                return Rational._new(self.q*other.p - self.p, self.q, 1)
-            elif isinstance(other, Rational):
-                g = igcd(self.q, other.q)
-                if g == 1:
-                    p = self.q*other.p - self.p*other.q
-                    q = self.q*other.q
-                else:
-                    q1, q2 = self.q // g, other.q // g
-                    p = other.p*q1 - self.p*q2
-                    q = q1*q2
-                    g2 = igcd(p, g)
-                    if g2 > 1:
-                        p //= g2
-                        q *= (g // g2)
-                    else:
-                        q *= g
-                return Rational.from_coprime_ints(p, q)
+            if isinstance(other, Rational):
+                return Rational._from_mpq(other._val - self._val)
             elif isinstance(other, Float):
                 return -self + other
             else:
                 return Number.__rsub__(self, other)
         return Number.__rsub__(self, other)
+
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, Integer):
-                x = igcd(other.p, self.q)
-                p = self.p * (other.p // x)
-                q = self.q // x
-                if q < 0:
-                    p, q = -p, -q
-                return Rational.from_coprime_ints(p, q)
-            elif isinstance(other, Rational):
-                x1 = igcd(self.p, other.q)
-                x2 = igcd(other.p, self.q)
-                p = (self.p // x1) * (other.p // x2)
-                q = (self.q // x2) * (other.q // x1)
-                return Rational.from_coprime_ints(p, q)
+            if isinstance(other, Rational):
+                return Rational._from_mpq(self._val * other._val)
             elif isinstance(other, Float):
                 return other*self
             else:
@@ -1546,7 +1518,7 @@ class Rational(Number):
     @_sympifyit('other', NotImplemented)
     def __truediv__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, Integer):
+            if isinstance(other, Rational):
                 if other.p == 0:
                     if self.p == 0:
                         if _errdict["divide"]:
@@ -1555,37 +1527,19 @@ class Rational(Number):
                     return S.ComplexInfinity
                 if self.p == 0:
                     return S.Zero
-                x = igcd(self.p, other.p)
-                p = self.p // x
-                q = self.q * (other.p // x)
-                if q < 0:
-                    p, q = -p, -q
-                return Rational.from_coprime_ints(p, q)
-            elif isinstance(other, Rational):
-                if other.p == 0:
-                    if self.p == 0:
-                        if _errdict["divide"]:
-                            raise ValueError("Indeterminate 0/0")
-                        return S.NaN
-                    return S.ComplexInfinity
-                if self.p == 0:
-                    return S.Zero
-                x1 = igcd(self.p, other.p)
-                x2 = igcd(self.q, other.q)
-                p = (self.p // x1) * (other.q // x2)
-                q = (self.q // x2) * (other.p // x1)
-                if q < 0:
-                    p, q = -p, -q
-                return Rational.from_coprime_ints(p, q)
+                if isinstance(self, Integer) and isinstance(other, Integer):
+                    return Rational._from_mpq(MPQ(self._val, other._val))
+                return Rational._from_mpq(self._val / other._val)
             elif isinstance(other, Float):
                 return self*(1/other)
             else:
                 return Number.__truediv__(self, other)
         return Number.__truediv__(self, other)
+
     @_sympifyit('other', NotImplemented)
     def __rtruediv__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, Integer):
+            if isinstance(other, Rational):
                 if self.p == 0:
                     if other.p == 0:
                         if _errdict["divide"]:
@@ -1594,28 +1548,9 @@ class Rational(Number):
                     return S.ComplexInfinity
                 if other.p == 0:
                     return S.Zero
-                x = igcd(self.p, other.p)
-                p = (other.p // x) * self.q
-                q = self.p // x
-                if q < 0:
-                    p, q = -p, -q
-                return Rational.from_coprime_ints(p, q)
-            elif isinstance(other, Rational):
-                if self.p == 0:
-                    if other.p == 0:
-                        if _errdict["divide"]:
-                            raise ValueError("Indeterminate 0/0")
-                        return S.NaN
-                    return S.ComplexInfinity
-                if other.p == 0:
-                    return S.Zero
-                x1 = igcd(self.p, other.p)
-                x2 = igcd(self.q, other.q)
-                p = (other.p // x1) * (self.q // x2)
-                q = (other.q // x2) * (self.p // x1)
-                if q < 0:
-                    p, q = -p, -q
-                return Rational.from_coprime_ints(p, q)
+                if isinstance(self, Integer) and isinstance(other, Integer):
+                    return Rational._from_mpq(MPQ(other._val, self._val))
+                return Rational._from_mpq(other._val / self._val)
             elif isinstance(other, Float):
                 return other*(1/self)
             else:
@@ -1626,8 +1561,10 @@ class Rational(Number):
     def __mod__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Rational):
+                if other._val == 0:
+                    raise ZeroDivisionError("modulo by zero")
                 n = (self.p*other.q) // (other.p*self.q)
-                return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
+                return Rational._from_mpq(self._val - n*other._val)
             if isinstance(other, Float):
                 # calculate mod with Rationals, *then* round the answer
                 return Float(self.__mod__(Rational(other)),
@@ -1664,7 +1601,7 @@ class Rational(Number):
                 return S.Zero
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                return Rational._new(self.p**expt.p, self.q**expt.p, 1)
+                return Rational._from_mpq(self._val ** expt.p)
             if isinstance(expt, Rational):
                 intpart = expt.p // expt.q
                 if intpart:
@@ -1693,7 +1630,7 @@ class Rational(Number):
         return _make_mpf(_from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self) -> Rational:
-        return Rational(abs(self.p), self.q)
+        return Rational._from_mpq(abs(self._val))
 
     def __int__(self):
         p, q = self.p, self.q
@@ -1917,13 +1854,24 @@ class Integer(Rational):
     Python integers are automatically converted to Integer when they
     are used in SymPy expressions.
     """
-    q = 1
     is_integer = True
     is_number = True
 
     is_Integer = True
 
     __slots__ = ()
+
+    @property
+    def p(self) -> MPZ:
+        return self._val
+
+    @p.setter
+    def p(self, val: int | MPZ):
+        self._val = MPZ(val)
+
+    @property
+    def q(self) -> int:
+        return 1
 
     def _as_mpf_val(self, prec):
         return _from_int(self.p, prec, rnd)
@@ -1955,7 +1903,7 @@ class Integer(Rational):
         if ival == 0:
             return S.Zero
         obj = Expr.__new__(cls)
-        obj.p = ival
+        obj._val = MPZ(ival)
         return obj
 
     def __getnewargs__(self):
@@ -1963,38 +1911,38 @@ class Integer(Rational):
 
     # Arithmetic operations are here for efficiency
     def __int__(self):
-        return self.p
+        return int(self._val)
 
     def floor(self):
-        return Integer(self.p)
+        return self
 
     def ceiling(self):
-        return Integer(self.p)
+        return self
 
     def __floor__(self):
-        return self.floor()
+        return self
 
     def __ceil__(self):
-        return self.ceiling()
+        return self
 
     def __neg__(self):
-        return Integer(-self.p)
+        return Integer(-self._val)
 
     def __abs__(self) -> Integer:
-        if self.p >= 0:
+        if self._val >= 0:
             return self
         else:
-            return Integer(-self.p)
+            return Integer(-self._val)
 
     def __divmod__(self, other):
         if isinstance(other, Integer) and global_parameters.evaluate:
-            return Tuple(*(divmod(self.p, other.p)))
+            return Tuple(*(divmod(self._val, other._val)))
         else:
             return Number.__divmod__(self, other)
 
     def __rdivmod__(self, other):
         if isinstance(other, int) and global_parameters.evaluate:
-            return Tuple(*(divmod(other, self.p)))
+            return Tuple(*(divmod(other, self._val)))
         else:
             try:
                 other = Number(other)
@@ -2009,11 +1957,11 @@ class Integer(Rational):
     def __add__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, int):
-                return Integer(self.p + other)
+                return Integer(self._val + other)
             elif isinstance(other, Integer):
-                return Integer(self.p + other.p)
+                return Integer(self._val + other._val)
             elif isinstance(other, Rational):
-                return Rational._new(self.p*other.q + other.p, other.q, 1)
+                return Rational._from_mpq(self._val + other._val)
             return Rational.__add__(self, other)
         else:
             return Add(self, other)
@@ -2021,67 +1969,67 @@ class Integer(Rational):
     def __radd__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, int):
-                return Integer(other + self.p)
+                return Integer(other + self._val)
             elif isinstance(other, Rational):
-                return Rational._new(other.p + self.p*other.q, other.q, 1)
+                return Rational._from_mpq(other._val + self._val)
             return Rational.__radd__(self, other)
         return Rational.__radd__(self, other)
 
     def __sub__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, int):
-                return Integer(self.p - other)
+                return Integer(self._val - other)
             elif isinstance(other, Integer):
-                return Integer(self.p - other.p)
+                return Integer(self._val - other._val)
             elif isinstance(other, Rational):
-                return Rational._new(self.p*other.q - other.p, other.q, 1)
+                return Rational._from_mpq(self._val - other._val)
             return Rational.__sub__(self, other)
         return Rational.__sub__(self, other)
 
     def __rsub__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, int):
-                return Integer(other - self.p)
+                return Integer(other - self._val)
             elif isinstance(other, Rational):
-                return Rational._new(other.p - self.p*other.q, other.q, 1)
+                return Rational._from_mpq(other._val - self._val)
             return Rational.__rsub__(self, other)
         return Rational.__rsub__(self, other)
 
     def __mul__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, int):
-                return Integer(self.p*other)
+                return Integer(self._val * other)
             elif isinstance(other, Integer):
-                return Integer(self.p*other.p)
+                return Integer(self._val * other._val)
             elif isinstance(other, Rational):
-                return Rational._new(self.p*other.p, other.q, igcd(self.p, other.q))
+                return Rational._from_mpq(self._val * other._val)
             return Rational.__mul__(self, other)
         return Rational.__mul__(self, other)
 
     def __rmul__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, int):
-                return Integer(other*self.p)
+                return Integer(other * self._val)
             elif isinstance(other, Rational):
-                return Rational._new(other.p*self.p, other.q, igcd(self.p, other.q))
+                return Rational._from_mpq(other._val * self._val)
             return Rational.__rmul__(self, other)
         return Rational.__rmul__(self, other)
 
     def __mod__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, int):
-                return Integer(self.p % other)
+                return Integer(self._val % other)
             elif isinstance(other, Integer):
-                return Integer(self.p % other.p)
+                return Integer(self._val % other._val)
             return Rational.__mod__(self, other)
         return Rational.__mod__(self, other)
 
     def __rmod__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, int):
-                return Integer(other % self.p)
+                return Integer(other % self._val)
             elif isinstance(other, Integer):
-                return Integer(other.p % self.p)
+                return Integer(other._val % self._val)
             return Rational.__rmod__(self, other)
         return Rational.__rmod__(self, other)
 
@@ -2093,15 +2041,15 @@ class Integer(Rational):
             except ValueError:
                 pass
             else:
-                return Integer(pow(self.p, other_int, mod_int))
+                return Integer(pow(self._val, other_int, mod_int))
 
         return super().__pow__(other, mod)
 
     def __eq__(self, other):
         if isinstance(other, int):
-            return (self.p == other)
+            return (self._val == other)
         elif isinstance(other, Integer):
-            return (self.p == other.p)
+            return (self._val == other._val)
         return Rational.__eq__(self, other)
 
     def __ne__(self, other):
@@ -2113,7 +2061,7 @@ class Integer(Rational):
         except SympifyError:
             return NotImplemented
         if other.is_Integer:
-            return _sympify(self.p > other.p)
+            return _sympify(self._val > other._val)
         return Rational.__gt__(self, other)
 
     def __lt__(self, other):
@@ -2122,7 +2070,7 @@ class Integer(Rational):
         except SympifyError:
             return NotImplemented
         if other.is_Integer:
-            return _sympify(self.p < other.p)
+            return _sympify(self._val < other._val)
         return Rational.__lt__(self, other)
 
     def __ge__(self, other):
@@ -2131,7 +2079,7 @@ class Integer(Rational):
         except SympifyError:
             return NotImplemented
         if other.is_Integer:
-            return _sympify(self.p >= other.p)
+            return _sympify(self._val >= other._val)
         return Rational.__ge__(self, other)
 
     def __le__(self, other):
@@ -2140,14 +2088,14 @@ class Integer(Rational):
         except SympifyError:
             return NotImplemented
         if other.is_Integer:
-            return _sympify(self.p <= other.p)
+            return _sympify(self._val <= other._val)
         return Rational.__le__(self, other)
 
     def __hash__(self):
-        return hash(self.p)
+        return hash(self._val)
 
     def __index__(self):
-        return self.p
+        return int(self._val)
 
     ########################################
 
@@ -2921,8 +2869,7 @@ class Zero(IntegerConstant, metaclass=Singleton):
     .. [1] https://en.wikipedia.org/wiki/Zero
     """
 
-    p = 0
-    q = 1
+    _val = MPZ(0)
     is_positive = False
     is_negative = False
     is_zero = True
@@ -2989,8 +2936,7 @@ class One(IntegerConstant, metaclass=Singleton):
     is_number = True
     is_positive = True
 
-    p = 1
-    q = 1
+    _val = MPZ(1)
 
     __slots__ = ()
 
@@ -3045,8 +2991,7 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
     """
     is_number = True
 
-    p = -1
-    q = 1
+    _val = MPZ(-1)
 
     __slots__ = ()
 
@@ -3103,8 +3048,7 @@ class Half(RationalConstant, metaclass=Singleton):
     """
     is_number = True
 
-    p = 1
-    q = 2
+    _val = MPQ(1, 2)
 
     __slots__ = ()
 
@@ -4552,10 +4496,10 @@ _sympy_converter[fractions.Fraction] = sympify_fractions
 if gmpy is not None:
 
     def sympify_mpz(x):
-        return Integer(int(x))
+        return Integer(x)
 
     def sympify_mpq(x):
-        return Rational(int(x.numerator), int(x.denominator))
+        return Rational._from_mpq(x)
 
     _sympy_converter[type(gmpy.mpz(1))] = sympify_mpz
     _sympy_converter[type(gmpy.mpq(1, 2))] = sympify_mpq
@@ -4564,13 +4508,21 @@ if gmpy is not None:
 if flint is not None:
 
     def sympify_fmpz(x):
-        return Integer(int(x))
+        return Integer(x)
 
     def sympify_fmpq(x):
-        return Rational(int(x.numerator), int(x.denominator))
+        return Rational._from_mpq(x)
 
     _sympy_converter[type(flint.fmpz(1))] = sympify_fmpz
     _sympy_converter[type(flint.fmpq(1, 2))] = sympify_fmpq
+
+
+from sympy.external.pythonmpq import PythonMPQ
+
+def sympify_pythonmpq(x):
+    return Rational._from_mpq(x)
+
+_sympy_converter[PythonMPQ] = sympify_pythonmpq
 
 
 def sympify_mpmath(x):

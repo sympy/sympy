@@ -69,12 +69,12 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomai
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
-        return SymPyRational(int(a.numerator), int(a.denominator))
+        return SymPyRational._from_mpq(a)
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Rational:
-            return MPQ(a.p, a.q)
+            return a._val
         elif a.is_Float:
             from sympy.polys.domains import RR
             return MPQ(*map(int, RR.to_rational(a)))
