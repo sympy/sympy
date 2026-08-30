@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sympy.external.gmpy import MPQ
+from sympy.external.gmpy import MPQ, SYMPY_INTS
 
-from sympy.polys.domains.groundtypes import SymPyRational, is_square, sqrtrem
+from sympy.polys.domains.groundtypes import SymPyRational, SymPyInteger, is_square, sqrtrem
 
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
@@ -69,12 +69,18 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomai
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
-        return SymPyRational._from_mpq(a)
+        if isinstance(a, MPQ):
+            return SymPyRational._from_mpq(a)
+        elif isinstance(a, SYMPY_INTS):
+            return SymPyInteger(a)
+        return SymPyRational(a)
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Rational:
-            return a._val
+            if isinstance(a._val, MPQ):
+                return a._val
+            return MPQ(a.p, a.q)
         elif a.is_Float:
             from sympy.polys.domains import RR
             return MPQ(*map(int, RR.to_rational(a)))

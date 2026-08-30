@@ -1312,6 +1312,8 @@ class Rational(Number):
 
     @classmethod
     def _from_mpq(cls, q: MPQ) -> Rational:
+        if isinstance(q, SYMPY_INTS):
+            return Integer(q)
         if q.denominator == 1:
             return Integer(q.numerator)
         if q.numerator == 1 and q.denominator == 2:
