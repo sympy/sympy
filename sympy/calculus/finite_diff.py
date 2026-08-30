@@ -24,8 +24,10 @@ from sympy.core.function import Subs
 from sympy.core.traversal import preorder_traversal
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
-from collections.abc import Sequence
-from sympy.core.expr import Expr
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from sympy.core.expr import Expr
 
 def finite_diff_weights(order, x_list, x0=S.One):
     """
