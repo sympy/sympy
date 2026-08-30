@@ -28,7 +28,9 @@ from collections.abc import Sequence
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+    from sympy.core.symbol import Symbol
 
 def finite_diff_weights(order: int | Expr, x_list: Sequence[Expr | int | float], x0: Expr = S.One) -> list[list[list[Expr]]]:
     """
