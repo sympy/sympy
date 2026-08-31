@@ -29,6 +29,7 @@ find_substitutions.
 from __future__ import annotations
 from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
 from abc import ABC, abstractmethod
+import sys
 from collections import defaultdict
 from collections.abc import Mapping
 from functools import wraps
@@ -83,6 +84,7 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
 if TYPE_CHECKING:
+    from types import FrameType
     from sympy.core.expr import Expr
 
 def _if_zero_implies_zero(P, Q):
@@ -3777,6 +3779,16 @@ def fallback_rule(integral):
 _cache_dummy = Dummy("z")
 
 
+def _frame_depth() -> int:
+    """Number of Python frames currently on the stack."""
+    depth = 0
+    frame: FrameType | None = sys._getframe()
+    while frame is not None:
+        depth += 1
+        frame = frame.f_back
+    return depth
+
+
 def _integral_key(integral):
     integrand, symbol = integral
 
@@ -3846,27 +3858,56 @@ class IntegrationSolver:
     instance instead of in module-global variables.
     """
 
-    def __init__(self, max_depth: int | None = 100, branch: bool = False,
-                 **other_options):
-        # Hard limit on the depth of nested subproblems (None = unlimited):
+    # Python frames that one level of nested subproblems occupies on the
+    # way from ``solve`` to the next ``solve`` (through the strategy
+    # combinators, ``run`` and ``run_generator``), and the frames kept free
+    # for the work the rules do at the deepest level.
+    _FRAMES_PER_LEVEL = 10
+    _FRAMES_MARGIN = 150
+
+    def __init__(self, max_depth: int | None = 100, branch: bool = False):
+        # Limit on the depth of nested subproblems (None = unlimited):
         # ``max_depth=1`` allows only rules that need no subintegrals.
         self.max_depth = max_depth
         # Whether to collect all applicable rules into AlternativeRule
         # nodes (True) or to keep only the first workable rule (False).
         self.branch = branch
-        self.options = other_options
         # Subproblems on the current recursion path, to break cyclic integrals.
         self._active: set[Expr] = set()
-        # Uses of each "u" by integration by parts, to avoid infinite repetition.
+        # Uses of each "u" by integration by parts, to avoid infinite
+        # repetition. Reset at the start of every top-level call.
         self._parts_u_count: dict[Expr, int] = defaultdict(int)
         # Rules already computed for a subproblem, keyed the same way as
         # ``_active``, so that a subintegral reached again through a
         # different search path is served from here instead of being solved
-        # from scratch. Lives only as long as this solver, i.e. one
-        # top-level integral_steps() call, so it can never leak stale steps
-        # into an unrelated integration request.
+        # from scratch. Only holds results that do not depend on how much
+        # of the max_depth budget was left when they were computed (see
+        # ``solve``), so it stays valid across top-level calls on the same
+        # solver.
         self._solved: dict[Expr, Rule] = {}
+        # Whether the subproblem currently being solved (or any of its
+        # descendants) has bottomed out on the depth budget.
+        self._starved = False
+        # Depth limit in force for the current top-level call: ``max_depth``,
+        # lowered if the interpreter's recursion limit would be reached
+        # first (see ``_start_run``).
+        self._depth_limit = max_depth
         self._strategy: Callable[[IntegralInfo], Rule] | None = None
+
+    def _start_run(self) -> None:
+        """Reset the per-run state at the start of a top-level call."""
+        self._parts_u_count.clear()
+        self._starved = False
+        self._depth_limit = self.max_depth
+        if self.max_depth is not None:
+            # Make sure the depth limit is reached before Python's recursion
+            # limit is, so that a too deep subproblem is reported as
+            # unsolvable instead of raising RecursionError, wherever the
+            # top-level call comes from.
+            headroom = (sys.getrecursionlimit() - _frame_depth()
+                        - self._FRAMES_MARGIN)
+            self._depth_limit = max(
+                min(self.max_depth, headroom // self._FRAMES_PER_LEVEL), 1)
 
     def solve(self, integrand, symbol) -> Rule:
         """Solve a (sub)integral by dispatching the rules on it.
@@ -3874,11 +3915,16 @@ class IntegrationSolver:
         This replaces the recursive calls to ``integral_steps`` that the
         rules used to perform themselves.
         """
+        if not self._active:
+            self._start_run()
         # Every ancestor on the recursion path holds exactly one entry in
-        # ``_active``, so its size is the current depth.
-        if self.max_depth is not None and len(self._active) >= self.max_depth:
+        # ``_active``, so its size is the current depth. Checked before the
+        # memo, so that whether a subproblem at the limit is solved does
+        # not depend on whether it happens to have been seen before.
+        if self._depth_limit is not None and len(self._active) >= self._depth_limit:
             # Recursion budget exhausted: report the subproblem as
             # unsolvable, so that callers fall back to shallower candidates.
+            self._starved = True
             return DontKnowRule(integrand, symbol)
         cachekey = integrand.xreplace({symbol: _cache_dummy})
         if cachekey in self._solved:
@@ -3887,20 +3933,25 @@ class IntegrationSolver:
             # Stop this attempt, because it leads around in a loop
             return DontKnowRule(integrand, symbol)
         self._active.add(cachekey)
+        # Track whether this subtree's own computation bottoms out on the
+        # depth budget, independently of whatever an ancestor already
+        # accumulated.
+        outer_starved, self._starved = self._starved, False
         try:
             if self._strategy is None:
                 self._strategy = self._build_strategy()
             result = self._strategy(IntegralInfo(integrand, symbol))
-            if self.max_depth is None:
-                # Only memoize when recursion is unbounded: with a
-                # max_depth budget, a DontKnowRule can be an artifact of
-                # running out of budget at this particular point in the
-                # tree, rather than a genuine "no rule found" - reusing it
-                # for the same subproblem reached with a different amount
-                # of budget left would be wrong.
+            if not self._starved or not result.contains_dont_know():
+                # A complete rule tree is a valid answer whatever the
+                # budget was. An incomplete one computed while running out
+                # of budget somewhere in its subtree is not memoized: it may
+                # be an artifact of the budget left at this particular point
+                # of the search, and reusing it for the same subproblem
+                # reached with more budget left would be wrong.
                 self._solved[cachekey] = _rule_xreplace(result, {symbol: _cache_dummy})
         finally:
             self._active.discard(cachekey)
+            self._starved = outer_starved or self._starved
         return result
 
     def run(self, rule, integral):
@@ -4070,9 +4121,10 @@ def integral_steps(integrand, symbol, **options):
     branch : bool, optional
         If True, collect all applicable rules into an ``AlternativeRule``
         instead of returning only the first workable one. Defaults to False.
-    max_depth : int, optional
-        Hard limit on the depth of nested subproblems; deeper subproblems
-        are reported as ``DontKnowRule``. Defaults to None (unlimited).
+    max_depth : int or None, optional
+        Limit on the depth of nested subproblems; deeper subproblems are
+        reported as ``DontKnowRule``. Defaults to 100; ``None`` means
+        unlimited.
 
     Returns
     =======

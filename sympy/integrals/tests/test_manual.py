@@ -1486,6 +1486,61 @@ def test_manualintegrate_perfect_square_radicand_rule_real_symbol():
     assert manualintegrate(f, t) == F
 
 
+def test_manualintegrate_solver_cache_with_max_depth():
+    # A subtree whose computation completes within the depth budget is
+    # cached, same as with unbounded recursion.
+    solver = IntegrationSolver(max_depth=50)
+    result = solver.solve(exp(x)*sin(x), x)
+    assert solver._solved
+    assert not result.contains_dont_know()
+
+    # A subtree that has to give up because it runs out of depth budget
+    # is never cached.
+    starved_solver = IntegrationSolver(max_depth=1)
+    starved_result = starved_solver.solve(exp(x)*sin(x), x)
+    assert not starved_solver._solved
+    assert starved_result.contains_dont_know()
+
+    # Unbounded recursion still caches exactly as before.
+    unbounded_solver = IntegrationSolver(max_depth=None)
+    unbounded_solver.solve(exp(x)*sin(x), x)
+    assert len(unbounded_solver._solved) == len(solver._solved)
+
+
+def test_manualintegrate_solver_depth_limit():
+    # The depth limit applies before the memo is consulted, so the result
+    # does not depend on whether a subproblem at the limit was cached by an
+    # earlier sibling: the two integrands only differ by the name of the
+    # parameter, which changes the order in which the terms are visited.
+    f1 = x*exp(x)*sin(x) + a*exp(x)*cos(x)
+    f2 = f1.subs(a, y)
+    assert (integral_steps(f1, x, max_depth=4).contains_dont_know() ==
+            integral_steps(f2, x, max_depth=4).contains_dont_know())
+
+    # A complete result is memoized even when a discarded attempt on a
+    # sibling candidate ran out of budget.
+    solver = IntegrationSolver(max_depth=6)
+    assert not solver.solve(csc(x)**3, x).contains_dont_know()
+    assert solver._solved
+
+    # The limit is lowered so that Python's recursion limit is not reached
+    # from a deeply nested caller: the result is partial, not an exception.
+    def nest(n, fn):
+        return fn() if n == 0 else nest(n - 1, fn)
+    result = nest(300, lambda: manualintegrate(log(x)**250, x))
+    assert result.has(Integral)
+
+    # Unknown options are rejected instead of being silently ignored
+    raises(TypeError, lambda: integral_steps(x, x, max_dept=5))
+
+
+def test_manualintegrate_solver_reuse():
+    # The integration-by-parts u counter is reset for every top-level call
+    solver = IntegrationSolver()
+    results = [solver.solve(exp(k*x)*sin(x), x) for k in range(1, 6)]
+    assert not any(result.contains_dont_know() for result in results)
+
+
 def test_manualintegrate_parts_polynomial_u():
     # Integration by parts with dv = x*cos(x**2 + x) is only tried with a
     # polynomial u; with u = x*sin(x**2 + x) the search did not terminate.
