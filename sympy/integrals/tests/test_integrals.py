@@ -18,7 +18,7 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan, sec)
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
-from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li)
+from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li, expint)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.functions.special.singularity_functions import SingularityFunction
@@ -434,7 +434,7 @@ def test_issue_13749():
 
 
 def test_issue_18133():
-    assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
+    assert integrate(exp(x)/(1 + x)**2, x) == -exp(-1)*expint(2, -x - 1)/(x + 1)
 
 
 def test_issue_21741():
