@@ -91,10 +91,13 @@ def check_satisfiability(prop, _prop, factbase, early_return=False):
 
     # Check whether proposition is entailed by any of the assigned literals.
     if early_return:
-        for clauses, answer in ((prop.clauses, True), (_prop.clauses, False)):
-            entailed = solver._is_entailed(clauses, true_false_guarded.encoding)
-            if entailed is not None:
-                return answer if entailed else not answer
+        entailed = solver._is_entailed(prop.clauses, true_false_guarded.encoding)
+        if entailed is not None:
+            return entailed
+
+        entailed = solver._is_entailed(_prop.clauses, true_false_guarded.encoding)
+        if entailed is not None:
+            return not entailed
 
     # Continue on the propogated solver, just call solve() on it.
     if solver.solve() == IpasirStatus.UNSATISFIABLE:
