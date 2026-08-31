@@ -15,7 +15,8 @@ from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
 
 
-def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
+def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo,
+           early_return=False):
     """
     Function to evaluate the proposition with assumptions using SAT algorithm.
 
@@ -45,6 +46,10 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
         Number of times that relevant facts are recursively extracted.
         Default is infinite times until no new fact is found.
 
+    early_return : bool, optional.
+        If ``True``, answer from the propagated facts alone, trusting
+        *assumptions* to be consistent. Default is ``False``.
+
     Returns
     =======
 
@@ -69,10 +74,10 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
         use_known_facts=use_known_facts, iterations=iterations)
     sat.add_from_cnf(assumptions)
 
-    return check_satisfiability(props, _props, sat)
+    return check_satisfiability(props, _props, sat, early_return)
 
 
-def check_satisfiability(prop, _prop, factbase):
+def check_satisfiability(prop, _prop, factbase, early_return=False):
     if {0} in factbase.data:
         raise ValueError("Inconsistent assumptions")
 
@@ -85,10 +90,11 @@ def check_satisfiability(prop, _prop, factbase):
         raise ValueError("Inconsistent assumptions")
 
     # Check whether proposition is entailed by any of the assigned literals.
-    for clauses, answer in ((prop.clauses, True), (_prop.clauses, False)):
-        entailed = solver._is_entailed(clauses, true_false_guarded.encoding)
-        if entailed is not None:
-            return answer if entailed else not answer
+    if early_return:
+        for clauses, answer in ((prop.clauses, True), (_prop.clauses, False)):
+            entailed = solver._is_entailed(clauses, true_false_guarded.encoding)
+            if entailed is not None:
+                return answer if entailed else not answer
 
     # Continue on the propogated solver, just call solve() on it.
     if solver.solve() == IpasirStatus.UNSATISFIABLE:
