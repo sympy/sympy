@@ -184,7 +184,7 @@ class LRASolver():
 
         self.all_var = nonslack_variables + slack_variables
 
-        self.bound_history = [[]]
+        self.bound_history = [BoundLevel()]
 
     @staticmethod
     def from_encoded_cnf(encoded_cnf, testing_mode=False):
@@ -433,7 +433,6 @@ class LRASolver():
 
         s = 1 if upper else -1
         target_bound = xi.upper if upper else xi.lower
-        target_lit = xi.upper_literal if upper else xi.lower_literal
         opposing_bound = xi.lower if upper else xi.upper
         conflicting_lit = xi.lower_literal if upper else xi.upper_literal
 
@@ -454,7 +453,7 @@ class LRASolver():
 
             return False, [-conflicting_lit, -literal]
 
-        self.bound_history[-1].append((xi, target_bound, target_lit, upper))
+        self.bound_history[-1].record(xi, upper)
 
         xi.set_bound(boundary, literal)
 
@@ -650,22 +649,24 @@ class LRASolver():
             If called when the ``bound_history`` stack is empty, indicating
             the solver's internal state is out of sync.
         """
-        if not self.bound_history[-1]:
+        if not self.bound_history[-1].updates:
             raise ValueError("Cannot backtrack, bound_history stack is empty")
 
-        xi, old_bound, old_lit, upper = self.bound_history[-1].pop()
+        self.bound_history[-1].undo()
 
-        if upper:
-            xi.upper, xi.upper_literal = old_bound, old_lit
-        else:
-            xi.lower, xi.lower_literal = old_bound, old_lit
+    def push_level(self):
+        """
+        Save the state of the LRA solver so that pop_level() can restore it.
+        Called when the SAT solver starts a new decision level.
+        """
+        self.bound_history.append(BoundLevel())
 
     def pop_level(self):
         """
         Restore the LRA solver to its state at the most recent push_level().
         Called when the SAT solver backtracks a decision level.
         """
-        while self.bound_history[-1]:
+        while self.bound_history[-1].updates:
             self.backtrack()
         self.bound_history.pop()
 
@@ -835,6 +836,35 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
         n = len(new_nonbasic+new_basic)
         assert A[:, n-m:] == -eye(m)
     return A, new_basic, new_nonbasic
+
+
+class BoundLevel:
+    """
+    The bound updates made while one decision level of the SAT solver was
+    current, together with enough information to undo them.
+    """
+
+    def __init__(self):
+        self.updates = []
+
+    def record(self, var, upper):
+        """
+        Save the bound on the given side of ``var`` before it is replaced.
+        The literal goes with it, since `check` builds conflict clauses from it.
+        """
+        if upper:
+            self.updates.append((var, var.upper, var.upper_literal, upper))
+        else:
+            self.updates.append((var, var.lower, var.lower_literal, upper))
+
+    def undo(self):
+        """Restore the most recent bound update."""
+        var, bound, literal, upper = self.updates.pop()
+
+        if upper:
+            var.upper, var.upper_literal = bound, literal
+        else:
+            var.lower, var.lower_literal = bound, literal
 
 
 class Boundary:

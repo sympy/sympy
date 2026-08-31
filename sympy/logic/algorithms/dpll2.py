@@ -670,7 +670,7 @@ class SATSolver:
         undone together when `_undo` pops the level.
         """
         if self.lra:
-            self.lra.bound_history.append([])
+            self.lra.push_level()
         self.levels.append(Level(lit, flipped=flipped))
 
     def _undo(self):
