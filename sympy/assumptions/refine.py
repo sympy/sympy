@@ -601,6 +601,37 @@ def refine_floor_ceiling(expr, assumptions):
         return Add(*gaussian_integer_terms) + expr.func(Add(*nongausian_intergers_terms))
     return expr
 
+def refine_Mod(expr, assumptions):
+    """
+    Handler for the modulo function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_Mod
+    >>> from sympy import Q, Mod
+    >>> from sympy.abc import x
+    >>> refine_Mod(Mod(x, 2), Q.even(x))
+    0
+    >>> refine_Mod(Mod(x, 2), Q.odd(x))
+    1
+    >>> refine_Mod(Mod(x, 1), Q.integer(x))
+    0
+    """
+    arg, mod = expr.args
+
+    if mod == 2:
+        if ask(Q.even(arg), assumptions):
+            return S.Zero
+        if ask(Q.odd(arg), assumptions):
+            return S.One
+
+    if mod == 1:
+        if ask(Q.integer(arg), assumptions):
+            return S.Zero
+
+    return expr
+
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
@@ -617,4 +648,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'Mod': refine_Mod,
 }
