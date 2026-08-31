@@ -50,7 +50,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import WildFunction
+from sympy.core.function import WildFunction, count_ops
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -281,6 +281,25 @@ class AddRule(Rule):
         return any(substep.contains_dont_know() for substep in self.substeps)
 
 
+def _drop_additive_constant(expr: Expr, var: Symbol) -> Expr:
+    """Remove the terms of ``expr`` that do not depend on ``var``, also
+    inside a constant factor and in the branches of a Piecewise."""
+    if expr.is_Add:
+        return Add(*[term for term in expr.args if term.has(var)])  # type: ignore
+    if expr.is_Mul:
+        indep, dep = expr.as_independent(var)
+        if indep != 1 and (dep.is_Add or isinstance(dep, Piecewise)):
+            return indep*_drop_additive_constant(dep, var)
+        return expr
+    if isinstance(expr, Piecewise):
+        branches = []
+        for branch in expr.args:
+            e, c = branch.args
+            branches.append((_drop_additive_constant(e, var), c))  # type: ignore
+        return Piecewise(*branches)
+    return expr
+
+
 class URule(Rule):
     """integrate(f(g(x))*g'(x), x) -> integrate(f(u), u), u = g(x)"""
 
@@ -310,7 +329,13 @@ class URule(Rule):
             if exp_ == -1:
                 # avoid needless -log(1/x) from substitution
                 result = result.subs(log(self.u_var), -log(base))
-        return result.subs(self.u_var, self.u_func)
+        result = result.subs(self.u_var, self.u_func)
+        # Substituting u = a*x + b back into a term of the substep's
+        # antiderivative that is a polynomial in u (u itself, for a
+        # ConstantRule) leaves an additive constant behind: an arbitrary
+        # constant of integration, dropped so that results do not depend
+        # on which substitution was chosen.
+        return _drop_additive_constant(result, self.variable)
 
     def contains_dont_know(self) -> bool:
         return self.substep.contains_dont_know()
@@ -1206,7 +1231,6 @@ def find_substitutions(integrand, symbol, u_var):
         substituted = integrand / u_diff
         debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
-
         if substituted.has_free(symbol):
             return False
         # avoid increasing the degree of a rational function
@@ -1282,6 +1306,7 @@ def find_substitutions(integrand, symbol, u_var):
             if substitution not in results:
                 results.append(substitution)
 
+    results.sort(key=lambda sub: count_ops(sub[2]))
     return results
 
 def rewriter(condition, rewrite):
@@ -4118,6 +4143,7 @@ def manualintegrate(f, var):
             result = result.func(
                 (result.args[1][0], Ne(*cond.args)),
                 (result.args[0][0], True))
+
     # Factor terms like erf(x)*sin(x) that may have been expanded
     def _has_erf_trig_mul(expr):
         for sub in expr.find(Mul):

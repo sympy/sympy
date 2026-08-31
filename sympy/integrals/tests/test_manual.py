@@ -107,7 +107,7 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
     assert manualintegrate(cos(3*x)*sec(x), x) == -x + sin(2*x)
     assert manualintegrate(sin(3*x)*sec(x), x) == \
-        log(-2*cos(2*x) - 2)/2 - cos(2*x) - 1
+        log(-2*cos(2*x) - 2)/2 - cos(2*x)
 
     assert_is_integral_of(sinh(2*x), cosh(2*x)/2)
     assert_is_integral_of(x*cosh(x**2), sinh(x**2)/2)
@@ -1492,6 +1492,20 @@ def test_manualintegrate_parts_polynomial_u():
     f = x**2*sin(x**2 + x)*cos(x**2 + x)
     assert manualintegrate(f, x) == Integral(f, x)
     assert not manualintegrate(x**2*cos(x**2 + x), x).has(Integral)
+
+
+def test_manualintegrate_substitution_constant():
+    # The additive constant produced by substituting back u = 2*t + 2 is
+    # dropped by the URule itself, so that the steps and manualintegrate
+    # agree
+    f = sin(3*x)*sec(x)
+    F = log(-2*cos(2*x) - 2)/2 - cos(2*x)
+    assert manualintegrate(f, x) == F
+    assert integral_steps(f, x).eval() == F
+
+    # Also inside a constant factor and the branches of a Piecewise
+    assert manualintegrate(2*a**(2*x + 2), x) == Piecewise(
+        (a**(2*x + 2)/log(a), Ne(log(a), 0)), (2*x, True))
 
 
 def test_mul_pow_derivative():
