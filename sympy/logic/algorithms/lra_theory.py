@@ -369,6 +369,7 @@ class LRASolver():
         """
         for var in self.all_var:
             var.initialize()
+        self.bound_history = [BoundLevel()]
 
     def assert_lit(self, literal):
         """

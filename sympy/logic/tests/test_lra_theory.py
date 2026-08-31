@@ -488,6 +488,15 @@ def test_reset():
     lra.reset()
     assert lra.check()[0] is True
 
+    # reset also drops the bound history, so nothing is left to undo
+    lra.push_level()
+    lra.assert_lit(1)
+    assert len(lra.bound_history) == 2
+    assert lra.bound_history[-1].updates != []
+    lra.reset()
+    assert len(lra.bound_history) == 1
+    assert lra.bound_history[0].updates == []
+
     # Test individual state variable resets
     bf = Q.ge(x, 0) & Q.le(x, 1)
     enc = boolean_formula_to_encoded_cnf(bf)
