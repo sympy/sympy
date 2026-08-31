@@ -74,6 +74,7 @@ from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
 from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly, sqf_list
+from sympy.polys.rationaltools import together
 from sympy.simplify.simplify import simplify
 from sympy.simplify.fu import sincos_to_sum
 from sympy.simplify.powsimp import powsimp
@@ -522,15 +523,38 @@ class ReciprocalSqrtQuadraticRule(AtomicRule):
         return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
 
 
+def _sqrt_quadratic_denom_reduce(
+    coeffs: list[Expr], a: Expr, b: Expr, c: Expr
+) -> tuple[list[Expr], Expr, Expr]:
+    # Integrate poly/sqrt(a+b*x+c*x**2) using recursion.
+    # coeffs are coefficients of the polynomial.
+    # Let I_n = x**n/sqrt(a+b*x+c*x**2), then
+    # I_n = A * x**(n-1)*sqrt(a+b*x+c*x**2) - B * I_{n-1} - C * I_{n-2}
+    # where A = 1/(n*c), B = (2*n-1)*b/(2*n*c), C = (n-1)*a/(n*c)
+    # See https://github.com/sympy/sympy/pull/23608 for proof.
+    coeffs = coeffs.copy()
+    result_coeffs = []
+    for i in range(len(coeffs)-2):
+        n = len(coeffs)-1-i
+        coeff = coeffs[i]/(c*n)
+        result_coeffs.append(coeff)
+        coeffs[i+1] -= (2*n-1)*b/2*coeff
+        coeffs[i+2] -= (n-1)*a*coeff
+    d, e = coeffs[-1], coeffs[-2]
+    constant = d-b*e/(2*c)
+    return result_coeffs, e, constant
+
+
 class SqrtQuadraticDenomRule(AtomicRule):
     """integrate(poly(x)/sqrt(a+b*x+c*x**2), x)"""
 
-    __slots__ = ("a", "b", "c", "coeffs")
+    __slots__ = ("a", "b", "c", "coeffs", "i0_step")
 
     a: Expr
     b: Expr
     c: Expr
     coeffs: list[Expr]
+    i0_step: Rule | None
 
     def __init__(
         self,
@@ -540,63 +564,26 @@ class SqrtQuadraticDenomRule(AtomicRule):
         b: Expr,
         c: Expr,
         coeffs: list[Expr],
+        i0_step: Rule | None,
     ) -> None:
         super().__init__(integrand, variable)
         self.a = a
         self.b = b
         self.c = c
         self.coeffs = coeffs
+        # Rule for I0 = integrate(1/sqrt(a+b*x+c*x**2), x), solved ahead of
+        # time (through the same recursion budget as the rest of the search)
+        # rather than at eval() time, so it isn't exempt from max_depth.
+        self.i0_step = i0_step
 
     def eval(self) -> Expr:
-        a, b, c, coeffs, x = self.a, self.b, self.c, self.coeffs.copy(), self.variable
-        # Integrate poly/sqrt(a+b*x+c*x**2) using recursion.
-        # coeffs are coefficients of the polynomial.
-        # Let I_n = x**n/sqrt(a+b*x+c*x**2), then
-        # I_n = A * x**(n-1)*sqrt(a+b*x+c*x**2) - B * I_{n-1} - C * I_{n-2}
-        # where A = 1/(n*c), B = (2*n-1)*b/(2*n*c), C = (n-1)*a/(n*c)
-        # See https://github.com/sympy/sympy/pull/23608 for proof.
-        result_coeffs = []
-        coeffs = coeffs.copy()
-        for i in range(len(coeffs)-2):
-            n = len(coeffs)-1-i
-            coeff = coeffs[i]/(c*n)
-            result_coeffs.append(coeff)
-            coeffs[i+1] -= (2*n-1)*b/2*coeff
-            coeffs[i+2] -= (n-1)*a*coeff
-        d, e = coeffs[-1], coeffs[-2]
+        a, b, c, x = self.a, self.b, self.c, self.variable
+        result_coeffs, e, constant = _sqrt_quadratic_denom_reduce(self.coeffs, a, b, c)
         s = sqrt(a+b*x+c*x**2)
-        constant = d-b*e/(2*c)
-        if constant == 0:
-            I0 = 0
-        else:
-            gen = inverse_trig_rule(IntegralInfo(1/s, x), degenerate=False)
-            step = IntegrationSolver().run_generator(gen)
-            I0 = constant*step.eval()
-        return Add(*(result_coeffs[i]*x**(len(coeffs)-2-i)
+        I0 = constant*self.i0_step.eval() if self.i0_step is not None else 0
+        n_coeffs = len(self.coeffs)
+        return Add(*(result_coeffs[i]*x**(n_coeffs-2-i)
                      for i in range(len(result_coeffs))), e/c)*s + I0
-
-
-class SqrtQuadraticRule(AtomicRule):
-    """integrate(sqrt(a+b*x+c*x**2), x)"""
-
-    __slots__ = ("a", "b", "c")
-
-    a: Expr
-    b: Expr
-    c: Expr
-
-    def __init__(
-        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
-    ) -> None:
-        super().__init__(integrand, variable)
-        self.a = a
-        self.b = b
-        self.c = c
-
-    def eval(self) -> Expr:
-        gen = sqrt_quadratic_rule(IntegralInfo(self.integrand, self.variable), degenerate=False)
-        step = IntegrationSolver().run_generator(gen)
-        return step.eval()
 
 
 class RatintRule(AtomicRule):
@@ -1657,7 +1644,7 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
                 step = generic_step
         return _add_degenerate_step(generic_cond, step, degenerate_step)
     if exp == S.Half:
-        step = SqrtQuadraticRule(integrand, symbol, a, b, c)
+        step = yield from sqrt_quadratic_rule(IntegralInfo(integrand, symbol), degenerate=False)
         return _add_degenerate_step(generic_cond, step, degenerate_step)
 
 
@@ -2886,7 +2873,11 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
                 step = linear_step or constant_step
         else:
             coeffs = numer_poly.all_coeffs()
-            step = SqrtQuadraticDenomRule(integrand, x, a, b, c, coeffs)
+            _, _, constant = _sqrt_quadratic_denom_reduce(coeffs, a, b, c)
+            i0_step: Rule | None = None
+            if constant != 0:
+                i0_step = yield from inverse_trig_rule(IntegralInfo(1/denom, x), degenerate=False)
+            step = SqrtQuadraticDenomRule(integrand, x, a, b, c, coeffs, i0_step)
         return step
 
     def sqrt_quadratic_reduction_rule(integrand: Expr, n: Expr, const: Expr):
@@ -3155,6 +3146,10 @@ def perfect_square_radicand_rule(integral: IntegralInfo):
     if not match:
         return
     H, G = match[H_], match[G_]
+
+    _, denom = together(G).as_numer_denom()
+    if denom.has(symbol):
+        return
 
     square_free = sqf_list(G)
     c = square_free[0]
@@ -3803,7 +3798,7 @@ class IntegrationSolver:
     instance instead of in module-global variables.
     """
 
-    def __init__(self, max_depth: int | None = None, branch: bool = False,
+    def __init__(self, max_depth: int | None = 100, branch: bool = False,
                  **other_options):
         # Hard limit on the depth of nested subproblems (None = unlimited):
         # ``max_depth=1`` allows only rules that need no subintegrals.
