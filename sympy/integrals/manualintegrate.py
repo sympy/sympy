@@ -40,7 +40,7 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
-from sympy.core.function import Derivative, expand_mul, expand_trig
+from sympy.core.function import Derivative, expand, expand_mul, expand_trig
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Number, E, Rational
@@ -73,7 +73,7 @@ from .integrals import Integral
 from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
-from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
+from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly, sqf_list
 from sympy.simplify.simplify import simplify
 from sympy.simplify.fu import sincos_to_sum
 from sympy.simplify.powsimp import powsimp
@@ -1965,6 +1965,9 @@ def trig_rule(integral):
         integrand, symbol, u_var, argument, substep)
     return _add_trig_degenerate_step(integral, coefficient, generic_step)
 
+primary_trighyper_functions = (sin, cos, sinh, cosh)
+
+
 def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
@@ -1979,24 +1982,42 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
     integrand, symbol = integral
 
-    if not integrand.has(exp) and not integrand.has(sin, cos, sinh, cosh):
+    factors = Mul.make_args(integrand)
+
+    if not any(isinstance(t, exp) and t.args[0].is_polynomial(symbol) for t in factors):
         return
 
     a = Wild('a', exclude=[symbol, 0])
     b = Wild('b', exclude=[symbol])
     c = Wild('c', exclude=[symbol])
-    # n = Wild('n', exclude=[symbol], properties=[lambda n: n > 0])
     f = WildFunction('f')
-    guassian_pattern = exp(a * symbol**2 + b * symbol + c)
-    trigexp_over_x_pattern = f*exp(a * symbol)/symbol
+
+    quadratic_pattern = a * symbol**2 + b * symbol + c
+    linear_pattern = a * symbol + b
+
+    def trig_arg(term):
+        if isinstance(term, primary_trighyper_functions):
+            return term.args[0]
+        if isinstance(term, Pow) and isinstance(term.base, primary_trighyper_functions):
+            return term.base.args[0]
+        return None
+
+    quadratic_phase = any(
+        (arg := trig_arg(term)) is not None and arg.match(quadratic_pattern)
+        for term in factors
+    )
+    gaussian_pattern = exp(quadratic_pattern)
+    trigexp_over_x_pattern = f*exp(linear_pattern)/symbol
     trigexp_over_x_match = integrand.match(trigexp_over_x_pattern)
-    if not (any(term.match(guassian_pattern) for term in integrand.atoms(exp))
-            or (trigexp_over_x_match and
-                trigexp_over_x_match[f].has(sin, cos, sinh, cosh))):
+    if not (
+        any(term.match(gaussian_pattern) for term in factors if isinstance(term, exp))
+        or trigexp_over_x_match
+        or quadratic_phase
+    ):
         return
 
     # Replace trig and hyperbolic functions with their exponential forms
-    rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
+    rewritten = integrand.rewrite(primary_trighyper_functions, exp)
 
     if rewritten != integrand:
         debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
@@ -2990,6 +3011,168 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     return step
 
 
+def trig_poly_mul_rule(integral: IntegralInfo):
+    """
+    Integrate poly(x) * sin(a*x**2+b*x+c) or poly(x) * cos(a*x**2+b*x+c).
+
+    * If the quadratic has a nonzero linear term, complete the square and
+      shift to u = x + b/(2a), expand the trig function of (a*u**2 + k)
+      with the angle-sum identities, and recurse: the result is a sum of
+      terms poly(u) * sin(a*u**2) and poly(u) * cos(a*u**2).
+    """
+    integrand, symbol = integral
+    if not integrand.is_Mul:
+        return
+
+    a_ = Wild('a', exclude=[symbol, 0])
+    b_ = Wild('b', exclude=[symbol, 0])
+    c_ = Wild('c', exclude=[symbol])
+    quadratic_pattern = a_*symbol**2 + b_*symbol + c_
+
+    is_sin = None
+    match = None
+    rest = []
+    for factor in integrand.args:
+        if not match and isinstance(factor, (sin, cos)):
+            match = factor.args[0].match(quadratic_pattern)
+            if match:
+                is_sin = isinstance(factor, sin)
+                continue
+            else:
+                match = None
+        rest.append(factor)
+
+    if not match:
+        return
+
+    poly = Mul(*rest)  # type: ignore
+    if (symbol not in poly.free_symbols
+            or not poly.is_polynomial(symbol)):
+        return
+
+    a = match[a_]
+    b = match[b_]
+    c = match[c_]
+
+    generic_cond = Ne(a, 0)
+    degenerate_step = None
+    if generic_cond is not S.true:
+        degenerate_trig = sin(b*symbol + c) if is_sin else cos(b*symbol + c)
+        degenerate_step = yield IntegralInfo(poly * degenerate_trig, symbol)
+
+    # Complete the square and shift.
+    h = -b / (2*a)
+    k = c - b**2 / (4*a)
+
+    u = Dummy('u')
+    u_func = symbol - h  # u = x - h => x = u + h
+
+    poly_u = poly.subs(symbol, u + h).expand()
+
+    if is_sin:
+        expanded_trig = sin(a*u**2)*cos(k) + cos(a*u**2)*sin(k)
+    else:
+        expanded_trig = cos(a*u**2)*cos(k) - sin(a*u**2)*sin(k)
+
+    new_integrand = expand(poly_u * expanded_trig)
+    rewritten = new_integrand.subs(u, u_func)
+
+    substep = yield IntegralInfo(new_integrand, u)
+    if substep.contains_dont_know():
+        return
+    substep = URule(rewritten, symbol, u, u_func, substep)
+    generic_step = CompleteSquareRule(integrand, symbol, rewritten, substep)
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+
+
+def trig_product_to_sum_rule(integral: IntegralInfo):
+    """
+    Rewrite a product of two sin/cos factors with different arguments using the
+    product-to-sum identities, e.g.
+
+        sin(x**2)*cos(x) -> (sin(x**2+x) + sin(x**2-x)) / 2
+
+    This is useful when at least one of the arguments is not linear in the
+    integration variable.
+    """
+    integrand, symbol = integral
+    if not integrand.is_Mul:
+        return
+
+    trig_factors = []
+    rest = []
+    for f in integrand.args:
+        if isinstance(f, (sin, cos)):
+            trig_factors.append(f)
+        else:
+            rest.append(f)
+
+    if len(trig_factors) != 2:
+        return
+
+    f1, f2 = trig_factors[0], trig_factors[1]
+    A, B = f1.args[0], f2.args[0]
+    if A == B or A == -B:
+        return
+    if not (A.has(symbol) and B.has(symbol)):
+        return
+
+    def _is_linear(expr):
+        return expr.is_polynomial(symbol) and Poly(expr, symbol).degree() <= 1
+
+    if _is_linear(A) and _is_linear(B):
+        # Both arguments are linear in symbol; other, cheaper rules already
+        # handle this case, so don't pay for the recursive rewrite below.
+        return
+
+    rewritten = expand(Mul(*rest) * sincos_to_sum(f1*f2))  # type: ignore
+
+    substep = yield IntegralInfo(rewritten, symbol)
+    if substep.contains_dont_know():
+        return
+
+    return RewriteRule(integrand, symbol, rewritten, substep)
+
+
+def perfect_square_radicand_rule(integral: IntegralInfo):
+    r"""
+    Rewrite an integral containing a square-root denominator by extracting
+    perfect-square factors from its radicand. Useful for integrals in the
+    complex domain of the form
+
+    integral H(z)/sqrt(c*G(z)) dz = (F(z)*sqrt(c*R(z)))/sqrt(c*G(z)) * integral H(z)/(F(z)*sqrt(c*R(z))) dz
+    """
+    integrand, symbol = integral
+    if symbol.is_real:
+        return
+    if not isinstance(integrand, Mul) and not isinstance(integrand, Pow):
+        return
+
+    H_ = Wild('H', exclude=[0])
+    G_ = Wild('G', exclude=[1])
+    pattern = H_/sqrt(G_)
+    match = integrand.match(pattern)
+    if not match:
+        return
+    H, G = match[H_], match[G_]
+
+    square_free = sqf_list(G)
+    c = square_free[0]
+    reducible = {r[0]**(Integer(r[1])/2) for r in square_free[1] if r[1] % 2 == 0}
+    irreducible = {r[0]**r[1] for r in square_free[1] if r[1] % 2 != 0}
+
+    if not reducible:
+        return
+
+    F = Mul(*reducible)
+    R = c * Mul(*irreducible)
+    factor = (F*sqrt(c*R))/sqrt(G)
+    rewritten = H/(F*sqrt(c*R))
+
+    substep = yield IntegralInfo(rewritten, symbol)
+    return ConstantTimesRule(integrand, symbol, factor, rewritten, substep)
+
+
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
     integrand, symbol = integral
     if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
@@ -3577,7 +3760,10 @@ def _rule_xreplace(rule, rule_map):
     it has no ``xreplace`` of its own. This walks a rule's fields (which are
     themselves ``Rule``, ``Basic``, ``list``/``tuple``, or plain values such
     as the ``bool`` in ``PiecewiseRule.subfunctions``) and substitutes
-    ``rule_map`` inside every ``Basic`` it finds along the way.
+    ``rule_map`` inside every ``Basic`` it finds along the way. It does not
+    recurse into ``dict``-valued fields (e.g. ``ReparameterizationRule
+    .replacements``); those are only safe to leave untouched as long as
+    their values never depend on the integration variable.
     """
     if isinstance(rule, Rule):
         # Build via __new__ + setattr rather than calling __init__(*fields):
@@ -3746,6 +3932,7 @@ class IntegrationSolver:
                             null_safe(w(chebyshev_substitution_rule)),
                             null_safe(w(euler_substitution_rule)),
                             null_safe(w(trig_cmplx_exp_rule)),
+                            null_safe(w(trig_poly_mul_rule)),
                             null_safe(w(bioche_substitution))),
                 Derivative: w(derivative_rule),
                 TrigonometricFunction: w(trig_rule),
@@ -3777,9 +3964,13 @@ class IntegrationSolver:
                         _integral_is_subclass(Mul, Pow),
                         w(distribute_expand_rule)),
                     w(trig_expand_rule),
+                    condition(
+                        _integral_is_subclass(Mul),
+                        w(trig_product_to_sum_rule)),
                     branch=self.branch
                 )),
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(nested_pow_rule))),
+                null_safe(w(perfect_square_radicand_rule)),
             ),
             w(fallback_rule))
 
