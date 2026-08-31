@@ -357,7 +357,6 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
 
 
-
 def test_mod():
     x = Symbol('x')
     assert refine(Mod(x, 2), Q.even(x)) == 0
@@ -367,4 +366,3 @@ def test_mod():
     assert refine(Mod(x, 2)) == Mod(x, 2)
     # Modulus 3 with even(x) should not simplify (we only handle mod 2)
     assert refine(Mod(x, 3), Q.even(x)) == Mod(x, 3)
-
