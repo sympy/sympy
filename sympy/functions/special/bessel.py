@@ -1844,7 +1844,7 @@ class airyaiprime(AiryBase):
             a = Pow(z, Rational(3, 2))
             b = Pow(a, tt)
             c = Pow(a, -tt)
-            return ot * (z**2*c*besseli(tt, tt*a) - b*besseli(-ot, tt*a))
+            return ot * (z**2*c*besseli(tt, tt*a) - b*besseli(-tt, tt*a))
 
     def _eval_rewrite_as_hyper(self, z, **kwargs):
         pf1 = z**2 / (2*3**Rational(2, 3)*gamma(Rational(2, 3)))

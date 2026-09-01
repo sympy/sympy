@@ -162,6 +162,7 @@ class SATSolver:
         self._status = IpasirStatus.UNKNOWN
         self._models = None
         self._clause_buffer = []
+        self._assumptions = []
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -227,6 +228,27 @@ class SATSolver:
         if self.is_unsatisfied:
             return
 
+        # The assumptions are decisions the search cannot take back. Failing
+        # one rules out models, not the clauses themselves.
+        for assumed_lit in self._assumptions:
+            if assumed_lit in self.var_settings:
+                continue
+
+            if -assumed_lit not in self.var_settings:
+                self.levels.append(Level(assumed_lit))
+                self._assign_literal(assumed_lit)
+                self._simplify()
+                if not self.is_unsatisfied:
+                    continue
+                self.is_unsatisfied = False
+
+            while len(self.levels) > 1:
+                self._undo()
+            return
+
+        # Undoing an assumption would answer a different question.
+        assumption_level = len(self.levels)
+
         # While the theory still has clauses remaining
         while True:
             # Perform cleanup / fixup at regular intervals
@@ -258,7 +280,7 @@ class SATSolver:
                         # Backtrack until reaching a level with one of the conflict causing literals.
                         inconsistent_literals = [-lit for lit in res[1]]
                         while True:
-                            if len(self.levels) == 1:
+                            if len(self.levels) == assumption_level:
                                 # If theory-inconsistent literals were set right off the bat
                                 # at level 0, the formula is unsat.
                                 return
@@ -271,7 +293,7 @@ class SATSolver:
                     # simulate a conflict and backtrack to the most recent unflipped decision.
                     while self._current_level.flipped:
                         self._undo()
-                    if len(self.levels) == 1:
+                    if len(self.levels) == assumption_level:
                         return
                     flip_lit = -self._current_level.decision
                     self._undo()
@@ -302,8 +324,12 @@ class SATSolver:
                     self._undo()
 
                     # If we've unrolled all the way, the theory is unsat
-                    if 1 == len(self.levels):
+                    if assumption_level == len(self.levels):
                         return
+
+                # The literal to flip would be an assumption, not ours to flip.
+                if assumption_level == len(self.levels):
+                    return
 
                 # Detect and add a learned clause
                 self.add_learned_clause(self.compute_conflict())
@@ -325,9 +351,9 @@ class SATSolver:
     """
     A subset of the IPASIR standard for incremental SAT solving, using the
     names that CaDiCaL gives them in its C++ API. Only the parts needed to
-    inspect the root level before searching and to keep solving after new
-    clauses have been added are implemented so far; assumptions and
-    ``failed`` are not supported yet.
+    inspect the root level before searching, to keep solving after new
+    clauses have been added and to solve under assumptions are implemented so
+    far; ``failed`` is not supported yet.
 
     # https://github.com/arminbiere/cadical/blob/master/src/cadical.hpp
     """
@@ -392,11 +418,21 @@ class SATSolver:
                 "clauses have been added with add() or clause(), as "
                 "restarting the same search is not implemented yet.")
 
+        while len(self.levels) > 1:
+            self._undo()
+
+        assumed = bool(self._assumptions)
+
         self._models = self._find_model()
         if next(self._models, None) is None:
             self._status = IpasirStatus.UNSATISFIABLE
         else:
             self._status = IpasirStatus.SATISFIABLE
+
+        # Asking again without them is a different question, not a restart.
+        if assumed:
+            self._assumptions = []
+            self._models = None
 
         return self._status
 
@@ -414,6 +450,38 @@ class SATSolver:
         if -lit in self.var_settings:
             return -lit
         return 0
+
+    def assume(self, lit):
+        """Constrain the next call to ``solve()`` with *lit*, which it drops
+        again afterwards, letting one solver answer several questions.
+
+        TODO: ``failed()``, which reports the assumptions a search could not
+        satisfy, is not implemented yet.
+
+        Examples
+        ========
+
+        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
+        >>> l = SATSolver([{1, 2}, {-1, -2}], {1, 2}, set())
+        >>> l.assume(1)
+        >>> l.solve() == IpasirStatus.SATISFIABLE
+        True
+        >>> l.val(2)
+        -2
+
+        """
+        if lit == 0 or abs(lit) >= len(self.variable_set):
+            raise ValueError(f"{lit} is not a literal of one of the variables "
+                "the solver was created with.")
+
+        while len(self.levels) > 1:
+            self._undo()
+
+        self._models = None
+        if self._status == IpasirStatus.SATISFIABLE:
+            self._status = IpasirStatus.UNKNOWN
+
+        self._assumptions.append(lit)
 
     def add(self, lit):
         """Add *lit* to the clause being built, or add that clause to the
@@ -555,6 +623,27 @@ class SATSolver:
 
         """
         return self.levels[-1]
+
+    def _is_entailed(self, clauses, encoding):
+        """Return True if the literals fixed so far make the CNF *clauses*
+        true, False if they make it false, and None if they leave it
+        undecided. *encoding* numbers their predicates as this solver does.
+        """
+        entailed = True
+        for clause in clauses:
+            # fixed() takes an int in this solver's numbering, not a Literal,
+            # and a predicate it never encoded cannot have been fixed.
+            values = [self.fixed(-var if lit.is_Not else var)
+                      if (var := encoding.get(lit.lit)) else 0
+                      for lit in clause]
+
+            # One false clause makes the whole CNF false. An undecided one
+            # only rules out entailment, so keep looking for a false clause.
+            if all(value == -1 for value in values):
+                return False
+            entailed = entailed and 1 in values
+
+        return entailed or None
 
     def _clause_sat(self, cls):
         """Check if a clause is satisfied by the current variable setting.

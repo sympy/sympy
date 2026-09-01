@@ -157,3 +157,10 @@ a theoretical foundation for implementing polynomials manipulation module.
 .. [Abbott13] John Abbott. "Bounds on factors in Z[x]".
     Journal of Symbolic Computation 50 (2013), pp. 532-563
     https://doi.org/10.1016/j.jsc.2012.09.004
+
+.. [Yang09] S. Yang, Computing the Greatest Common Divisor of
+    Multivariate Polynomials over Finite Fields, Simon Fraser University, 2009.
+
+.. [Zippel79] R. Zippel, Probabilistic Algorithms for Sparse Polynomials,
+    Springer, 1979, pp. 216--226.
+    https://www.cecm.sfu.ca/~monaganm/teaching/TopicsinCA15/zippel79.pdf
