@@ -1,11 +1,14 @@
 [build-system]
-requires = ["setuptools>=77.0.3", "setuptools-scm>=8"]
+requires = ["setuptools>=77.0.3", "setuptools-scm>=10"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 version_file = "sympy/_version.py"
 version_scheme = "release-branch-semver"
-git_describe_command = "git describe --dirty --tags --long --match sympy-*"
+
+[tool.setuptools_scm.scm.git]
+pre_parse = "fetch_on_shallow"
+describe_command = "git describe --dirty --tags --long --match sympy-*"
 
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.

@@ -35,6 +35,7 @@ jobs:
       - run: python -m pip install --upgrade pip setuptools
 
       - run: pip install -r requirements-dev.txt
+      - run: pip install .
       - name: Basic code quality tests
         run: bin/test quality
 
@@ -49,8 +50,6 @@ jobs:
 
       - name: Test all modules are listed in setup.py
         run: bin/test_setup.py
-
-      - run: pip install .
 
       - name: Check for incorrect use of ``__slots__`` using slotscheck
         run: python bin/slotscheck
@@ -159,6 +158,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
+      - run: pip install .
       - run: bin/doctest --force-colors
 
   # ------------------------- Test latest Python ------------------- #
@@ -179,6 +179,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
+      - run: pip install .
       - run: pytest -n auto --timeout 10 --durations=50 --durations-min=5
 
   # -------------------- Optional dependency tests ----------------- #
@@ -220,6 +221,8 @@ jobs:
                          gmpy2                                            \
                          uncertainties                                    \
                          #
+
+      - run: pip install .
 
       # Test external imports
       - run: bin/test_external_imports.py
@@ -316,6 +319,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install numpy scipy tensorflow
+      - run: pip install .
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
 
@@ -336,6 +340,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install .
       # Test modules that can use pytorch
       - run: bin/test_pytorch.py
 
@@ -356,6 +361,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install numpy symengine
+      - run: pip install .
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
         env:
@@ -378,6 +384,7 @@ jobs:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
+      - run: pip install .
       - run: pytest -m slow --timeout 595 -n auto -v --durations=0
 
   # -------------------- Test older (and newer) Python --------------- #
@@ -414,6 +421,7 @@ jobs:
           else
             pip install -r requirements-dev.txt
           fi
+      - run: pip install .
       - run: pytest -n auto
 
   # -------------------- Doctests older (and newer) Python --------------------- #
@@ -442,6 +450,7 @@ jobs:
           allow-prereleases: true
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
+      - run: pip install .
       - run: bin/doctest --force-colors
 
   # -------------------- Test with mpmath master ------------------- #
@@ -463,6 +472,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -r requirements-dev.txt
+      - run: pip install .
       - run: pytest -n auto
 
   # -------------------- Build the html/latex docs ----------------- #
@@ -481,6 +491,7 @@ jobs:
           python-version: '3.14'
       - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
+      - run: pip install .
       - run: bin/test_sphinx.sh
 
       - name: Upload built docs
