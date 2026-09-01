@@ -21,6 +21,7 @@ from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc, atan
 from sympy.functions.special.hyper import hyper, meijerg
+from sympy.external.mpmath import prec_to_dps
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
@@ -642,7 +643,7 @@ class erfi(DefinedFunction):
         return sqrt(-z**2)/z*(uppergamma(S.Half, -z**2)/sqrt(pi) - S.One)
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
-        return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(pi)
+        return -sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(pi)
 
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
@@ -1576,9 +1577,9 @@ class li(DefinedFunction):
     >>> li(z).rewrite(Ci)
     -log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z))
     >>> li(z).rewrite(Shi)
-    -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
+    -log(1/log(z))/2 - log(log(z))/2 + Chi(log(z)) + Shi(log(z))
     >>> li(z).rewrite(Chi)
-    -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
+    -log(1/log(z))/2 - log(log(z))/2 + Chi(log(z)) + Shi(log(z))
 
     See Also
     ========
@@ -1645,7 +1646,7 @@ class li(DefinedFunction):
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
 
     def _eval_rewrite_as_Shi(self, z, **kwargs):
-        return (Chi(log(z)) - Shi(log(z)) - S.Half*(log(S.One/log(z)) - log(log(z))))
+        return (Chi(log(z)) + Shi(log(z)) - S.Half*(log(S.One/log(z)) + log(log(z))))
 
     _eval_rewrite_as_Chi = _eval_rewrite_as_Shi
 
@@ -1750,7 +1751,7 @@ class Li(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        return self.rewrite(li)._eval_evalf(prec)
+        return self.rewrite(li).evalf(n=prec_to_dps(prec))
 
     def _eval_rewrite_as_li(self, z, **kwargs):
         return li(z) - li(2)
@@ -2927,7 +2928,7 @@ class owens_t(DefinedFunction):
 
     def _eval_evalf(self, prec):
         from sympy.integrals.integrals import Integral
-        return self.rewrite(Integral)._eval_evalf(prec)
+        return self.rewrite(Integral).evalf(n=prec_to_dps(prec))
 
 
 ###############################################################################
