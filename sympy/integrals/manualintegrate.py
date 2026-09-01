@@ -194,7 +194,35 @@ class ConstantRule(AtomicRule):
 
 
 class ConstantTimesRule(Rule):
-    """integrate(a*f(x), x)  ->  a*integrate(f(x), x)"""
+    """integrate(a*f(x), x)  ->  a*integrate(f(x), x)
+
+    ``eval()`` returns ``constant * substep.eval()``, where ``substep``
+    integrates ``other``.
+
+    Examples
+    ========
+
+    Extraction of the perfect-square factors of a radicand by
+    :func:`perfect_square_radicand_rule`; ``constant`` is the
+    piecewise-constant ratio between the original and the rewritten
+    integrand:
+
+    >>> from sympy import Symbol, sqrt
+    >>> from sympy.integrals.manualintegrate import (ConstantTimesRule,
+    ...     PowerRule)
+    >>> x, z = Symbol('x'), Symbol('z')
+    >>> # the rule tree that IntegrationSolver().run(
+    >>> #     perfect_square_radicand_rule,
+    >>> #     IntegralInfo(1/sqrt(z*x**4), x)) finds:
+    >>> rule = ConstantTimesRule(1/sqrt(x**4*z), x,
+    ...     x**2*sqrt(z)/sqrt(x**4*z), 1/(x**2*sqrt(z)),
+    ...     ConstantTimesRule(1/(x**2*sqrt(z)), x, 1/sqrt(z), x**(-2),
+    ...         PowerRule(x**(-2), x, x, -2)))
+    >>> rule.constant
+    x**2*sqrt(z)/sqrt(x**4*z)
+    >>> rule.eval()
+    -x/sqrt(x**4*z)
+    """
 
     __slots__ = ('constant', 'other', 'substep')
 
@@ -303,7 +331,59 @@ def _drop_additive_constant(expr: Expr, var: Symbol) -> Expr:
 
 
 class URule(Rule):
-    """integrate(f(g(x))*g'(x), x) -> integrate(f(u), u), u = g(x)"""
+    """integrate(f(g(x))*g'(x), x) -> integrate(f(u), u), u = g(x)
+
+    ``eval()`` evaluates ``substep``, the integral in ``u_var``, and
+    substitutes ``u_var -> u_func`` back.
+
+    Examples
+    ========
+
+    The universal tangent half-angle (Weierstrass) substitution
+    u = tan(x/2), the fallback of :func:`bioche_substitution`:
+
+    >>> from sympy import Symbol, Dummy, Rational, S, sin, sqrt, tan
+    >>> from sympy.integrals.manualintegrate import (URule, ArctanRule,
+    ...     RewriteRule, AddRule, ConstantTimesRule, PowerRule)
+    >>> x = Symbol('x')
+    >>> t, u = Dummy('t'), Dummy('u')
+    >>> # the rule tree that IntegrationSolver().run(bioche_substitution,
+    >>> #     IntegralInfo(1/(2 + sin(x)), x)) finds:
+    >>> rule = URule(1/(sin(x) + 2), x, t, tan(x/2),
+    ...     URule(1/(t**2 + t + 1), t, u, t + Rational(1, 2),
+    ...         ArctanRule(1/(u**2 + Rational(3, 4)), u,
+    ...                    S.One, S.One, Rational(3, 4))))
+    >>> rule.u_func
+    tan(x/2)
+    >>> rule.eval()
+    2*sqrt(3)*atan(2*sqrt(3)*(tan(x/2) + 1/2)/3)/3
+
+    A Chebyshev substitution for the binomial integrand
+    x**m*(a + b*x**n)**p, from :func:`chebyshev_substitution_rule`:
+
+    >>> # the rule tree that IntegrationSolver().run(
+    >>> #     chebyshev_substitution_rule,
+    >>> #     IntegralInfo(x**5*sqrt(1 + x**2), x)) finds:
+    >>> rule = URule(x**5*sqrt(x**2 + 1), x, u, sqrt(x**2 + 1),
+    ...     RewriteRule(u**2*(u**2 - 1)**2, u, u**6 - 2*u**4 + u**2,
+    ...         AddRule(u**6 - 2*u**4 + u**2, u, [
+    ...             PowerRule(u**6, u, u, 6),
+    ...             ConstantTimesRule(-2*u**4, u, -2, u**4,
+    ...                 PowerRule(u**4, u, u, 4)),
+    ...             PowerRule(u**2, u, u, 2)])))
+    >>> rule.u_func
+    sqrt(x**2 + 1)
+    >>> rule.eval()
+    (x**2 + 1)**(7/2)/7 - 2*(x**2 + 1)**(5/2)/5 + (x**2 + 1)**(3/2)/3
+
+    The Bioche chart substitutions (u = cos(2*x), sin(x), cos(x) or
+    tan(x)) of :func:`bioche_substitution`, the Euler substitution
+    u = sqrt(a + b*x + c*x**2) + sqrt(c)*x of
+    :func:`euler_substitution_rule` and the substitution
+    u = ((a*x + b)/(c*x + d))**(1/n) of
+    :func:`sqrt_fractional_linear_rule` produce URule trees of the same
+    shape.
+    """
 
     __slots__ = ("u_var", "u_func", "substep")
 
@@ -670,7 +750,59 @@ class DerivativeRule(AtomicRule):
 
 
 class RewriteRule(Rule):
-    """Rewrite integrand to another form that is easier to handle."""
+    """Rewrite integrand to another form that is easier to handle.
+
+    ``eval()`` evaluates ``substep``, the integral of ``rewritten``.
+
+    Examples
+    ========
+
+    A partial-fraction decomposition applied by
+    :func:`partial_fractions_rule`:
+
+    >>> from sympy import Symbol, Dummy, Rational, sin, cos
+    >>> from sympy.integrals.manualintegrate import (RewriteRule, AddRule,
+    ...     ConstantTimesRule, URule, ReciprocalRule, FresnelSRule)
+    >>> x, u = Symbol('x'), Dummy('u')
+    >>> # the rule tree that IntegrationSolver().run(partial_fractions_rule,
+    >>> #     IntegralInfo((x + 3)/(x**2 - 3*x + 2), x)) finds:
+    >>> rule = RewriteRule((x + 3)/(x**2 - 3*x + 2), x,
+    ...     -4/(x - 1) + 5/(x - 2),
+    ...     AddRule(-4/(x - 1) + 5/(x - 2), x, [
+    ...         ConstantTimesRule(-4/(x - 1), x, -4, 1/(x - 1),
+    ...             URule(1/(x - 1), x, u, x - 1,
+    ...                 ReciprocalRule(1/u, u, u))),
+    ...         ConstantTimesRule(5/(x - 2), x, 5, 1/(x - 2),
+    ...             URule(1/(x - 2), x, u, x - 2,
+    ...                 ReciprocalRule(1/u, u, u)))]))
+    >>> rule.rewritten
+    -4/(x - 1) + 5/(x - 2)
+    >>> rule.eval()
+    5*log(x - 2) - 4*log(x - 1)
+
+    A product-to-sum identity applied by
+    :func:`trig_product_to_sum_rule`:
+
+    >>> # the rule tree that IntegrationSolver().run(
+    >>> #     trig_product_to_sum_rule,
+    >>> #     IntegralInfo(sin(x**2)*cos(x), x)) finds:
+    >>> rule = RewriteRule(sin(x**2)*cos(x), x,
+    ...     sin(x**2 - x)/2 + sin(x**2 + x)/2,
+    ...     AddRule(sin(x**2 - x)/2 + sin(x**2 + x)/2, x, [
+    ...         ConstantTimesRule(sin(x**2 - x)/2, x,
+    ...             Rational(1, 2), sin(x**2 - x),
+    ...             FresnelSRule(sin(x**2 - x), x, 1, -1, 0)),
+    ...         ConstantTimesRule(sin(x**2 + x)/2, x,
+    ...             Rational(1, 2), sin(x**2 + x),
+    ...             FresnelSRule(sin(x**2 + x), x, 1, 1, 0))]))
+    >>> rule.rewritten
+    sin(x**2 - x)/2 + sin(x**2 + x)/2
+
+    The complex-exponential rewriting of :func:`trig_cmplx_exp_rule` and
+    the reciprocal identities of :func:`trig_sincos_rule`,
+    :func:`trig_tansec_rule` and :func:`trig_cotcsc_rule` produce
+    RewriteRule trees of the same shape.
+    """
 
     __slots__ = ("rewritten", "substep")
 
@@ -692,7 +824,27 @@ class RewriteRule(Rule):
 
 
 class CompleteSquareRule(RewriteRule):
-    """Rewrite a+b*x+c*x**2 to a-b**2/(4*c) + c*(x+b/(2*c))**2"""
+    """Rewrite a+b*x+c*x**2 to a-b**2/(4*c) + c*(x+b/(2*c))**2
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Dummy, Rational, sqrt
+    >>> from sympy.integrals.manualintegrate import (CompleteSquareRule,
+    ...     URule, ArcsinRule)
+    >>> x, u = Symbol('x'), Dummy('u')
+    >>> # the rule tree that IntegrationSolver().run(inverse_trig_rule,
+    >>> #     IntegralInfo(1/sqrt(-x**2 + 2*x + 3), x)) finds:
+    >>> rule = CompleteSquareRule(1/sqrt(-x**2 + 2*x + 3), x,
+    ...     1/sqrt(4 - (x - 1)**2),
+    ...     URule(1/sqrt(4 - (x - 1)**2), x, u, x/2 - Rational(1, 2),
+    ...         ArcsinRule(1/sqrt(1 - u**2), u)))
+    >>> rule.eval()
+    asin(x/2 - 1/2)
+
+    :func:`trig_poly_mul_rule` produces a CompleteSquareRule when it
+    completes the square in the argument of a trigonometric factor.
+    """
     __slots__ = ()
 
 
