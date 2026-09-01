@@ -179,7 +179,7 @@ class SATSolver:
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
-        self.sentinels = defaultdict(set)
+        self.watched_lits = defaultdict(set)
         self.occurrence_count = defaultdict(int)
         self.variable_set = [False] * (len(variables) + 1)
 
@@ -188,7 +188,7 @@ class SATSolver:
 
         For each clause, the following changes are made:
         - Unit clauses are queued for propagation right away.
-        - Non-unit clauses have their first and last literals set as sentinels.
+        - Non-unit clauses have their first and last literals set as watched literals.
         - The number of clauses a literal appears in is computed.
         """
         self.clauses = [list(clause) for clause in clauses]
@@ -200,8 +200,8 @@ class SATSolver:
                 self._unit_prop_queue.append(clause[0])
                 continue
 
-            self.sentinels[clause[0]].add(i)
-            self.sentinels[clause[-1]].add(i)
+            self.watched_lits[clause[0]].add(i)
+            self.watched_lits[clause[-1]].add(i)
 
             for lit in clause:
                 self.occurrence_count[lit] += 1
@@ -546,15 +546,15 @@ class SATSolver:
         for clause_lit in clause_to_add:
             self.occurrence_count[clause_lit] += 1
 
-        # Only a literal that is not already false can be a sentinel. With
+        # Only a literal that is not already false can be a watched literal. With
         # fewer than two of those the clause is satisfied, unit, or false, and
         # none of those needs to be watched.
         unassigned = [clause_lit for clause_lit in clause_to_add
                       if not self.variable_set[abs(clause_lit)]]
 
         if len(unassigned) > 1:
-            self.sentinels[unassigned[0]].add(clause_num)
-            self.sentinels[unassigned[-1]].add(clause_num)
+            self.watched_lits[unassigned[0]].add(clause_num)
+            self.watched_lits[unassigned[-1]].add(clause_num)
         elif not any(clause_lit in self.var_settings
                      for clause_lit in clause_to_add):
             if unassigned:
@@ -681,8 +681,8 @@ class SATSolver:
                 return True
         return False
 
-    def _is_sentinel(self, lit, cls):
-        """Check if a literal is a sentinel of a given clause.
+    def _is_watched_lit(self, lit, cls):
+        """Check if a literal is a watched literal of a given clause.
 
         Examples
         ========
@@ -692,22 +692,22 @@ class SATSolver:
         ... {3, -2}], {1, 2, 3}, set())
         >>> next(l._find_model())
         {1: True, 2: False, 3: False}
-        >>> l._is_sentinel(2, 3)
+        >>> l._is_watched_lit(2, 3)
         True
-        >>> l._is_sentinel(-3, 1)
+        >>> l._is_watched_lit(-3, 1)
         False
 
         """
-        return cls in self.sentinels[lit]
+        return cls in self.watched_lits[lit]
 
     def _assign_literal(self, lit):
         """Make a literal assignment.
 
         The literal assignment must be recorded as part of the current
         decision level. Additionally, if the literal is marked as a
-        sentinel of any clause, then a new sentinel must be chosen. If
-        this is not possible, then unit propagation is triggered and
-        another literal is added to the queue to be set in the future.
+        watched literal of any clause, then a new watched literal must be
+        chosen. If this is not possible, then unit propagation is triggered
+        and another literal is added to the queue to be set in the future.
 
         Examples
         ========
@@ -742,24 +742,24 @@ class SATSolver:
             if res and res[0] is False:
                 conflict = res[1]
 
-        sentinel_list = list(self.sentinels[-lit])
+        watched_list = list(self.watched_lits[-lit])
 
-        for cls in sentinel_list:
+        for cls in watched_list:
             if not self._clause_sat(cls):
-                other_sentinel = None
+                other_watched_lit = None
                 for newlit in self.clauses[cls]:
                     if newlit != -lit:
-                        if self._is_sentinel(newlit, cls):
-                            other_sentinel = newlit
+                        if self._is_watched_lit(newlit, cls):
+                            other_watched_lit = newlit
                         elif not self.variable_set[abs(newlit)]:
-                            self.sentinels[-lit].remove(cls)
-                            self.sentinels[newlit].add(cls)
-                            other_sentinel = None
+                            self.watched_lits[-lit].remove(cls)
+                            self.watched_lits[newlit].add(cls)
+                            other_watched_lit = None
                             break
 
-                # Check if no sentinel update exists
-                if other_sentinel:
-                    self._unit_prop_queue.append(other_sentinel)
+                # Check if no watched literal update exists
+                if other_watched_lit:
+                    self._unit_prop_queue.append(other_watched_lit)
 
         return conflict
 
@@ -830,14 +830,14 @@ class SATSolver:
         ... {3, -2}], {1, 2, 3}, set())
         >>> l.variable_set
         [False, False, False, False]
-        >>> l.sentinels
+        >>> l.watched_lits
         {-3: {0, 2}, -2: {3, 4}, 2: {0, 3}, 3: {2, 4}}
 
         >>> l._simplify()
 
         >>> l.variable_set
         [False, True, False, False]
-        >>> l.sentinels
+        >>> l.watched_lits
         {-3: {0, 2}, -2: {3, 4}, -1: set(), 2: {0, 3},
         ...3: {2, 4}}
 
@@ -1012,14 +1012,14 @@ class SATSolver:
         0
         >>> l.clauses
         [[2, -3], [1], [3, -3], [2, -2], [3, -2]]
-        >>> l.sentinels
+        >>> l.watched_lits
         {-3: {0, 2}, -2: {3, 4}, 2: {0, 3}, 3: {2, 4}}
 
         >>> l._simple_add_learned_clause([3])
 
         >>> l.clauses
         [[2, -3], [1], [3, -3], [2, -2], [3, -2], [3]]
-        >>> l.sentinels
+        >>> l.watched_lits
         {-3: {0, 2}, -2: {3, 4}, 2: {0, 3}, 3: {2, 4, 5}}
 
         """
@@ -1029,8 +1029,8 @@ class SATSolver:
         for lit in cls:
             self.occurrence_count[lit] += 1
 
-        self.sentinels[cls[0]].add(cls_num)
-        self.sentinels[cls[-1]].add(cls_num)
+        self.watched_lits[cls[0]].add(cls_num)
+        self.watched_lits[cls[-1]].add(cls_num)
 
         self.heur_clause_added(cls)
 
