@@ -93,9 +93,11 @@ jobs:
           grep -vx 'ruff' sympy-checkout/requirements-dev.txt | pip install -r /dev/stdin
           pip install matplotlib numpy scipy
 
-          # Trigger the test suite, excluding slow and tooslow tests
+          # Trigger the test suite, excluding slow and tooslow tests. The test
+          # runner tests require the source checkout's directory layout.
           pytest -svra --pyargs sympy \
           -m 'not slow and not tooslow' \
+          --ignore-glob='*/sympy/testing/tests/test_runtests_pytest.py' \
           --durations 20 \
           --splits "$MATRIX_SPLITS" --group "$MATRIX_GROUP" \
           --store-durations
