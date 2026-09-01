@@ -148,6 +148,12 @@ ignore_errors = true
 module = ["sympy.release"]
 disable_error_code = ["no-redef"]
 
+# Compatibility with installations created before release.py became the
+# setuptools-scm-generated version file.
+[[tool.mypy.overrides]]
+module = ["sympy._version"]
+ignore_missing_imports = true
+
 # Third-party untyped code:
 [[tool.mypy.overrides]]
 module = [
