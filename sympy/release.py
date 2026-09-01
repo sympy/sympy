@@ -39,8 +39,14 @@ except ImportError:
         git_description,
     )
     if match is None:
-        __commit_id__ = None
-        __version__ = "0.0.dev0+uninstalled"
+        raise ImportError(
+            "SymPy could not determine its version. This source tree is "
+            "neither an installed SymPy distribution nor an intact Git "
+            "checkout. GitHub's automatically generated source archives "
+            "do not contain the version metadata needed by SymPy. Install "
+            "an official release from PyPI or a SymPy source distribution, "
+            "or obtain the development source with Git."
+        ) from None
     else:
         tag = match["tag"]
         distance = int(match["distance"])
