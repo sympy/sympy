@@ -51,18 +51,6 @@ def smp_primitive_wrt_ZZ(g: smp[MPZ], i: int, n: int
     """
     Returns the content and primitive part of a polynomial with respect to a
     specified variable.
-
-    Examples
-    ========
-
-    >>> from sympy.polys import ring, ZZ
-    >>> R, x, y = ring("x, y", ZZ)
-    >>> p = 6*x**2*y - 9*x**3*y**2 + 3*x*y
-    >>> smp_primitive_wrt_ZZ(x)
-    (3*y, -3*x**3*y + 2*x**2 + x)
-
-    >>> p.primitive() # Distinguishing primitive and primitive_wrt outcomes
-    (3, -3*x**3*y**2 + 2*x**2*y + x*y)
     """
     g_r = smp_reorg_poly(g, [i], n, ZZ)
     cont = smp_gcd_list_ZZ(list(g_r.values()), n-1)
@@ -347,18 +335,6 @@ def smp_primitive_wrt_FF(g: smp[Er], i: int, n: int, domain
     """
     Returns the content and primitive part of a polynomial with respect to a
     specified variable.
-
-    Examples
-    ========
-
-    >>> from sympy.polys import ring, ZZ
-    >>> R, x, y = ring("x, y", ZZ)
-    >>> p = 6*x**2*y - 9*x**3*y**2 + 3*x*y
-    >>> p.primitive_wrt(x)
-    (3*y, -3*x**3*y + 2*x**2 + x)
-
-    >>> p.primitive() # Distinguishing primitive and primitive_wrt outcomes
-    (3, -3*x**3*y**2 + 2*x**2*y + x*y)
     """
     g_r = smp_reorg_poly(g, [i], n, domain)
     cont = smp_gcd_list_FF(list(g_r.values()), n-1, domain)
@@ -373,18 +349,6 @@ def smp_primitive_wrt(g: smp[Er], i: int, n: int, domain
     """
     Returns the content and primitive part of a polynomial with respect to a
     specified variable.
-
-    Examples
-    ========
-
-    >>> from sympy.polys import ring, ZZ
-    >>> R, x, y = ring("x, y", ZZ)
-    >>> p = 6*x**2*y - 9*x**3*y**2 + 3*x*y
-    >>> p.primitive_wrt(x)
-    (3*y, -3*x**3*y + 2*x**2 + x)
-
-    >>> p.primitive() # Distinguishing primitive and primitive_wrt outcomes
-    (3, -3*x**3*y**2 + 2*x**2*y + x*y)
     """
     g_r = smp_reorg_poly(g, [i], n, domain)
     cont = smp_gcd_list(list(g_r.values()), n-1, domain)
@@ -430,38 +394,42 @@ def smp_cofactors_FF(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
 def smp_gcd_prs(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er]
 ) -> smp[Er]:
     """
-    Returns the greatest common divisor (GCD) of two polynomials using the
-    Polynomial Resultant Sequences (PRS) method.
+    Compute a greatest common divisor using a subresultant polynomial
+    remainder sequence (PRS).
+
+    The result is not normalized and may differ from a canonical GCD by a
+    unit of the coefficient domain. Normalization is performed by
+    ``smp_cofactors``.
 
     Examples
     ========
 
-    >>> from sympy.polys.rings import gcd_prs
+    >>> from sympy.polys.sparsegcd import smp_gcd_prs
     >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
-
-    >>> f = 4*x**2 + 8*x + 10*y
-    >>> g = 2*x**3 + 4*x**2*y + 2*x*y**2
-    >>> gcd_prs(f, g)
-    2
-
+    >>> c = x**2 + x*y + y**2 - 1
+    >>> f = (x + 1)*c
+    >>> g = (x - 1)*c
+    >>> h = R.from_dict(smp_gcd_prs(f, g, 2, ZZ))
+    >>> h == c or h == -c
+    True
     """
+
     if n == 0:
         a = next(iter(A.values()), domain.zero)
         b = next(iter(B.values()), domain.zero)
         gc = domain.gcd(a, b)
         return {(): gc} if gc else {}
 
-    map = [i for i in range(1,n)]
+    map = list(range(1,n))
     c1, pp1 = smp_primitive_wrt(A, 0, n, domain)
     c2, pp2 = smp_primitive_wrt(B, 0, n, domain)
 
     cont = smp_gcd_prs(c1, c2, n-1, domain)
 
-    # h = pp1.subresultants(pp2, x)[-1]
     h = smp_subresultants(pp1, pp2, 0, n, domain)[-1]
     _, h = smp_primitive_wrt(h, 0, n, domain)
-    map = [i for i in range(1,n)]
+    map = list(range(1,n))
     h = smp_mul(h, smp_elevate(cont, map, n, domain), domain, n)
 
     return h
