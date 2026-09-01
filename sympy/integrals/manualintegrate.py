@@ -1716,7 +1716,15 @@ def _parts_rule_gen(integrand, symbol):
                     ):
                         dv = target * symbol
                         u = integrand / dv
-                        return u, dv
+                        # The point of this candidate is a polynomial u,
+                        # whose derivative is simpler. If another
+                        # non-polynomial factor is left in u, each parts
+                        # step only trades a trigonometric or exponential
+                        # factor for a Fresnel or error function one, and
+                        # the search does not terminate (e.g.
+                        # x**2*sin(x**2 + x)*cos(x**2 + x)).
+                        if u.is_polynomial(symbol):
+                            return u, dv
             return None
 
         return pull_out_dv_rl
@@ -1989,8 +1997,14 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
             return term.base.args[0]
         return None
 
+    def is_quadratic(arg):
+        # Cheaper than matching quadratic_pattern, which is slow to fail on
+        # the common linear argument.
+        poly = arg.as_poly(symbol)
+        return poly is not None and poly.degree() == 2
+
     quadratic_phase = any(
-        (arg := trig_arg(term)) is not None and arg.match(quadratic_pattern)
+        (arg := trig_arg(term)) is not None and is_quadratic(arg)
         for term in factors
     )
     gaussian_pattern = exp(quadratic_pattern)
@@ -3136,22 +3150,31 @@ def perfect_square_radicand_rule(integral: IntegralInfo):
     integrand, symbol = integral
     if symbol.is_real:
         return
-    if not isinstance(integrand, Mul) and not isinstance(integrand, Pow):
+    if not isinstance(integrand, (Mul, Pow)):
         return
 
-    H_ = Wild('H', exclude=[0])
-    G_ = Wild('G', exclude=[1])
-    pattern = H_/sqrt(G_)
-    match = integrand.match(pattern)
-    if not match:
+    # Look for the square-root denominator among the factors of the
+    # integrand, i.e. a factor G**(-1/2) whose base depends on the symbol.
+    for factor in Mul.make_args(integrand):
+        if (isinstance(factor, Pow) and factor.exp == -S.Half and
+                factor.base.has(symbol)):
+            G = factor.base
+            H = integrand / factor
+            break
+    else:
         return
-    H, G = match[H_], match[G_]
 
     _, denom = together(G).as_numer_denom()
     if denom.has(symbol):
         return
 
-    square_free = sqf_list(G)
+    # Give sqf_list the generator explicitly when G is a polynomial in the
+    # symbol, so that a symbolic constant such as 1/a in a coefficient is
+    # treated as a coefficient and not as a (non-polynomial) generator.
+    if G.is_polynomial(symbol):
+        square_free = sqf_list(G, symbol)
+    else:
+        square_free = sqf_list(G)
     c = square_free[0]
     reducible = {r[0]**(Integer(r[1])/2) for r in square_free[1] if r[1] % 2 == 0}
     irreducible = {r[0]**r[1] for r in square_free[1] if r[1] % 2 != 0}
@@ -3160,7 +3183,7 @@ def perfect_square_radicand_rule(integral: IntegralInfo):
         return
 
     F = Mul(*reducible)
-    R = c * Mul(*irreducible)
+    R = Mul(*irreducible)
     factor = (F*sqrt(c*R))/sqrt(G)
     rewritten = H/(F*sqrt(c*R))
 

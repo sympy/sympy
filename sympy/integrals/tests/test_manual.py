@@ -1463,6 +1463,19 @@ def test_manualintegrate_perfect_square_radicand_rule():
     assert_is_integral_of(f, F)
 
 
+def test_manualintegrate_perfect_square_radicand_rule_polynomial():
+    # A radicand containing the literal 1 used to be rejected by the rule
+    f = 1/(x*sqrt(x**2 + 2*x + 1))
+    F = (x + 1)*(log(x) - log(x + 1))/sqrt((x + 1)**2)
+    assert_is_integral_of(f, F)
+
+    # A symbolic constant in a denominator of the radicand used to raise
+    # PolynomialError from sqf_list
+    f = 1/sqrt(x**2*(x + 1)**2/a)
+    F = (x**2 + x)*(log(x) - log(x + 1))/sqrt(x**4/a + 2*x**3/a + x**2/a)
+    assert_is_integral_of(f, F)
+
+
 def test_manualintegrate_perfect_square_radicand_rule_real_symbol():
     t = symbols('t', real=True)
     integral = IntegralInfo(1/sqrt(z*t**4), t)
@@ -1471,6 +1484,14 @@ def test_manualintegrate_perfect_square_radicand_rule_real_symbol():
     f = 1/sqrt(z*t**4)
     F = -1/(t*sqrt(z))
     assert manualintegrate(f, t) == F
+
+
+def test_manualintegrate_parts_polynomial_u():
+    # Integration by parts with dv = x*cos(x**2 + x) is only tried with a
+    # polynomial u; with u = x*sin(x**2 + x) the search did not terminate.
+    f = x**2*sin(x**2 + x)*cos(x**2 + x)
+    assert manualintegrate(f, x) == Integral(f, x)
+    assert not manualintegrate(x**2*cos(x**2 + x), x).has(Integral)
 
 
 def test_mul_pow_derivative():

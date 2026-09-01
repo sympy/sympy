@@ -2127,6 +2127,10 @@ def test_issue_19639():
 
 
 def test_issue_23942():
+    # The radicand of the original report, a*(1 + x)**3 + (1 + x)**2, is
+    # integrated at a = 1 since perfect_square_radicand_rule was added
+    assert integrate(1/sqrt((1 + x)**3 + (1 + x)**2), x) == (x + 1)*sqrt(x + 2)*(
+        log(sqrt(x + 2) - 1) - log(sqrt(x + 2) + 1))/sqrt(x**3 + 4*x**2 + 5*x + 2)
     I1 = Integral(1/sqrt(a*(1 + x)**3 + (2 + x)**2), (x, 0, z))
     assert I1.series(a, 1, n=1) == Integral(1/sqrt(x**3 + 4*x**2 + 7*x + 5), (x, 0, z)) + O(a - 1, (a, 1))
     I2 = Integral(1/sqrt(a*(4 - x)**4 + (5 + x)**2), (x, 0, z))
