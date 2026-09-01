@@ -227,7 +227,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     >>> from sympy import apply_finite_diff
     >>> cube = lambda arg: (1.0*arg)**3
     >>> xlist = range(-3,3+1)
-    >>> apply_finite_diff(2, xlist, map(cube, xlist), 2) - 12 # doctest: +SKIP
+    >>> apply_finite_diff(2, xlist, map(cube, xlist), 2) - 12
     -3.55271367880050e-15
 
     we see that the example above only contain rounding errors.
@@ -268,7 +268,8 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     # In the original paper the following holds for the notation:
     # M = order
     # N = len(x_list) - 1
-
+    x_list = list(x_list)
+    y_list = list(y_list)
     N = len(x_list) - 1
     if len(x_list) != len(y_list):
         raise ValueError("x_list and y_list not equal in length.")
