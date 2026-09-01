@@ -3,7 +3,8 @@ requires = ["setuptools>=77.0.3", "setuptools-scm>=10"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-version_file = "sympy/_version.py"
+version_file = "sympy/release.py"
+write_to_source = false
 version_scheme = "release-branch-semver"
 
 [tool.setuptools_scm.scm.git]
@@ -146,11 +147,6 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = ["sympy.release"]
 disable_error_code = ["no-redef"]
-
-# sympy._version is created by setuptools-scm when building distributions.
-[[tool.mypy.overrides]]
-module = ["sympy._version"]
-ignore_missing_imports = true
 
 # Third-party untyped code:
 [[tool.mypy.overrides]]

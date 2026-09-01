@@ -47,7 +47,6 @@ my/
 dist/
 build/
 sympy.egg-info/
-/sympy/_version.py
 
 # Tox files
 tox.ini

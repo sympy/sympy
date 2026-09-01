@@ -22,7 +22,6 @@ if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
 
 submodule_whitelist = [
-    '_version',
     'algebras',
     'assumptions',
     'calculus',
