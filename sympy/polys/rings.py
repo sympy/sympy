@@ -29,7 +29,6 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Domain, Er, Es, Et
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.monomials import MonomialOps
 from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import (
@@ -48,6 +47,7 @@ from sympy.polys.polyutils import (
     _dict_reorder,
     _parallel_dict_from_expr,
 )
+from sympy.polys.sparsegcd import smp_cofactors
 from sympy.polys.sparseprs import smp_pdiv, smp_pexquo, smp_pquo, smp_prem, smp_subresultants
 from sympy.printing.defaults import DefaultPrinting
 from sympy.polys.sparsetools import (
@@ -2824,98 +2824,11 @@ class PolyElement(
     def cofactors(
         self: PolyElement[Er], other: PolyElement[Er]
     ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
-        if not self and not other:
-            zero = self.ring.zero
-            return zero, zero, zero
-        elif not self:
-            h, cff, cfg = self._gcd_zero(other)
-            return h, cff, cfg
-        elif not other:
-            h, cfg, cff = other._gcd_zero(self)
-            return h, cff, cfg
-        elif len(self) == 1:
-            h, cff, cfg = self._gcd_monom(other)
-            return h, cff, cfg
-        elif len(other) == 1:
-            h, cfg, cff = other._gcd_monom(self)
-            return h, cff, cfg
-
-        J, (self, other) = self.deflate(other)
-        h, cff, cfg = self._gcd(other)
-
-        return (h.inflate(J), cff.inflate(J), cfg.inflate(J))
-
-    def _gcd_zero(
-        self, other: PolyElement[Er]
-    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
-        one, zero = self.ring.one, self.ring.zero
-        if other.is_nonnegative:
-            return other, zero, one
-        else:
-            return -other, zero, -one
-
-    def _gcd_monom(
-        self, other: PolyElement[Er]
-    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
         ring = self.ring
-        ground_gcd = ring.domain.gcd
-        ground_quo = ring.domain.quo
-        monomial_gcd = ring.monomial_gcd
-        monomial_ldiv = ring.monomial_ldiv
-        mf, cf = self.listterms()[0]
-        _mgcd, _cgcd = mf, cf
-        for mg, cg in other.iterterms():
-            _mgcd = monomial_gcd(_mgcd, mg)
-            _cgcd = ground_gcd(_cgcd, cg)
-        h = self.new([(_mgcd, _cgcd)])
-        cff = self.new([(monomial_ldiv(mf, _mgcd), ground_quo(cf, _cgcd))])
-        cfg = self.new(
-            [
-                (monomial_ldiv(mg, _mgcd), ground_quo(cg, _cgcd))
-                for mg, cg in other.iterterms()
-            ]
-        )
-        return h, cff, cfg
+        h, cff, cfg = smp_cofactors(self, other, ring.ngens, ring.domain, ring.order)
 
-    def _gcd(
-        self, other: PolyElement[Er]
-    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
-        ring = self.ring
+        return self.new(h), self.new(cff), self.new(cfg)
 
-        if ring.domain.is_QQ:
-            return self._gcd_QQ(other)
-        elif ring.domain.is_ZZ:
-            return self._gcd_ZZ(other)
-        else:  # TODO: don't use dense representation (port PRS algorithms)
-            return ring.dmp_inner_gcd(self, other)
-
-    def _gcd_ZZ(
-        self, other: PolyElement[Er]
-    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
-        return heugcd(self, other) # type: ignore
-
-    def _gcd_QQ(
-        self, g: PolyElement[Er]
-    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
-        f = self
-        ring = f.ring
-        new_ring = ring.clone(domain=ring.domain.get_ring())
-
-        cf, f = f.clear_denoms()
-        cg, g = g.clear_denoms()
-
-        f = f.set_ring(new_ring)
-        g = g.set_ring(new_ring)
-
-        h, cff, cfg = f._gcd_ZZ(g)
-
-        h = h.set_ring(ring)
-        c, h = h.LC, h.monic()
-
-        cff = cff.set_ring(ring).mul_ground(ring.domain.quo(c, cf))
-        cfg = cfg.set_ring(ring).mul_ground(ring.domain.quo(c, cg))
-
-        return h, cff, cfg
 
     def cancel(self, g: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
         """
