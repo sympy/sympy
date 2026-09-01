@@ -12,33 +12,53 @@ except ImportError:
     # useful, but explicitly uninstalled, development version. Keep these
     # imports here so they are not loaded by older installed copies.
     import re
-    import subprocess
     from pathlib import Path
 
     try:
-        git_description = subprocess.check_output(
-            [
-                "git",
-                "describe",
-                "--tags",
-                "--long",
-                "--dirty",
-                "--match",
-                "sympy-*",
-            ],
-            cwd=Path(__file__).resolve().parent.parent,
-            encoding="ascii",
-            stderr=subprocess.DEVNULL,
-        ).strip()
-    except (OSError, subprocess.CalledProcessError):
+        import subprocess
+    except ImportError:
+        subprocess = None  # type: ignore[assignment]
+
+    if subprocess is None:
+        git_unavailable = True
         git_description = ""
+    else:
+        try:
+            git_description = subprocess.check_output(
+                [
+                    "git",
+                    "describe",
+                    "--tags",
+                    "--long",
+                    "--dirty",
+                    "--match",
+                    "sympy-*",
+                ],
+                cwd=Path(__file__).resolve().parent.parent,
+                encoding="ascii",
+                stderr=subprocess.DEVNULL,
+            ).strip()
+        except OSError:
+            git_unavailable = True
+            git_description = ""
+        except subprocess.CalledProcessError:
+            git_unavailable = False
+            git_description = ""
+        else:
+            git_unavailable = False
 
     match = re.fullmatch(
         r"sympy-(?P<tag>.+)-(?P<distance>\d+)-g"
         r"(?P<commit>[0-9a-f]+)(?P<dirty>-dirty)?",
         git_description,
     )
-    if match is None:
+    if git_unavailable:
+        # Some constrained Python runtimes have neither subprocess support nor
+        # a Git executable. Keep a direct source checkout importable without
+        # claiming to know its release or commit.
+        __commit_id__ = None
+        __version__ = "0+unknown.uninstalled"
+    elif match is None:
         try:
             is_shallow = subprocess.check_output(
                 ["git", "rev-parse", "--is-shallow-repository"],
