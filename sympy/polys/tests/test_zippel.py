@@ -9,7 +9,7 @@ from sympy.polys.zippel import (
     from_newt_to_poly,
     incremental_newton_interp,
     lag_basis,
-    skeleton_sorter,
+    _skeleton_sorter,
     smp_LC_wrt_last,
     smp_chinese_remainder_reconstruction_multivariate,
     smp_deg_wrt_last,
@@ -191,7 +191,7 @@ def test_from_newt_to_poly():
 def test_skeleton_sorter():
     R, x, y, z, w = ring("x, y, z, w", ZZ)
     G = 4 * x**3 * y**2 * w - 2 * x**3 * z**5 * w**2 + 7 * x * y * z * w
-    S, h, monic, pseudomonic = skeleton_sorter(dict(G))
+    S, h, monic, pseudomonic = _skeleton_sorter(dict(G))
 
     assert S == {
         1: [((1, 1, 1, 1), [(0, 1), (1, 1), (2, 1)])],
@@ -202,7 +202,7 @@ def test_skeleton_sorter():
 
     R, x, y, z = ring("x, y, z", ZZ)
     G = 5 * x**2 * y**2 + 7 * x * y**5 * z**3 + 8 * x * z**4
-    S, h, monic, pseudomonic = skeleton_sorter(G)
+    S, h, monic, pseudomonic = _skeleton_sorter(G)
 
     assert S == {
         2: [((2, 2, 0), [(0, 2)])],
@@ -506,7 +506,7 @@ def test_smp_zippel_interp_mod():
     h = x * y + x * z + 1
     f = (x + 1) * h
     g = (x + 2) * h
-    G, _, monic, pseudomonic = skeleton_sorter(h)
+    G, _, monic, pseudomonic = _skeleton_sorter(h)
     eval_tuples = _eval_tuple([(ZZ(1), ZZ(100)), (ZZ(1), ZZ(1)), (ZZ(1), ZZ(2))])
     result = _smp_zippel_interp_mod(
         f, g, G, ZZ(101), monic, pseudomonic, 3, rand_tuple=eval_tuples
@@ -520,7 +520,7 @@ def test_smp_zippel_interp_mod():
     h = (x + 1) * P + x**2 * Q
     f = (x + 1) * h
     g = (x - 1) * h
-    G, _, monic, pseudomonic = skeleton_sorter(h)
+    G, _, monic, pseudomonic = _skeleton_sorter(h)
     eval_tuples = _eval_tuple([(ZZ(1), ZZ(2)), (ZZ(1), ZZ(5))])
     gcd = _smp_zippel_interp_mod(
         f, g, G, ZZ(13), monic, pseudomonic, 3, rand_tuple=eval_tuples
@@ -532,7 +532,7 @@ def test_smp_zippel_interp_mod():
     h = x + 1
     f = (x + 1) * (x + 2)
     g = (x + 1) * ((y - 2) * x + 1)
-    G, _, monic, pseudomonic = skeleton_sorter(h)
+    G, _, monic, pseudomonic = _skeleton_sorter(h)
     eval_tuples = _eval_tuple([(ZZ(2),), (ZZ(3),)])
     gcd = _smp_zippel_interp_mod(
         f, g, G, ZZ(101), monic, pseudomonic, 2, rand_tuple=eval_tuples
@@ -547,6 +547,6 @@ def test_smp_zippel_interp_mod():
     h = (x + 1) * P + x**2 * Q
     f = (x + 1) * h
     g = (x - 1) * h
-    G, _, monic, pseudomonic = skeleton_sorter(h)
+    G, _, monic, pseudomonic = _skeleton_sorter(h)
     gcd = _smp_zippel_interp_mod(f, g, G, p, monic, pseudomonic, 3)
     assert R(gcd) == R(gcd).LC * h

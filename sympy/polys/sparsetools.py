@@ -1021,7 +1021,7 @@ def smp_reorg_poly(f: smp[Er], syms: list[int], n: int, domain: Domain[Er]
     subset of those variables with coefficients being polynomials over the
     remaining variables.
     For example, given a polynomial in ``p`` in ``K[x,y,z,t]``, ``p.
-    coeff_split([1, 3])`` converts ``p`` to an element of ``K[x, z][y, t]``.
+    smp_reorg_poly([1, 3])`` converts ``p`` to an element of ``K[x, z][y, t]``.
     """
     syms = sorted(syms)
     g: defaultdict[monom, smp[Er]] = defaultdict(dict)

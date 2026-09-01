@@ -1,6 +1,4 @@
 from __future__ import annotations
-from itertools import chain
-from math import floor
 
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.heuristicgcd import smp_heugcd
@@ -155,36 +153,6 @@ def smp_monomial_extract_ZZ(A: smp[MPZ], B: smp[MPZ], n: int
     return A, B, gcd
 
 
-def smp_cofactors_ZZ(A: smp[MPZ], B: smp[MPZ], n: int
-) -> tuple[smp[MPZ], smp[MPZ], smp[MPZ]]:
-
-    algo = alg_selector_ZZ(A, B, n)
-    zm: monom = (0,) * n
-    one: smp[MPZ] = {zm: ZZ.one}
-    m = one
-
-    if algo == "zippel":
-        A_, B_, m_ = smp_monomial_extract_ZZ(A, B, n)
-
-        if m_ != one:
-            A, B, m = A_, B_, m_
-            algo = alg_selector_ZZ(A, B, n)
-
-    if algo == "heugcd":
-        try:
-            h, cfa, cfb = smp_heugcd(A, B, n)
-        except HeuristicGCDFailed:
-            h, cfa, cfb = smp_zippel_gcd(A, B, n)
-
-    else:
-        h, cfa, cfb = smp_zippel_gcd(A, B, n)
-
-    if m != one:
-        h = smp_mul(m, h, ZZ, n)
-
-    return h, cfa, cfb
-
-
 def smp_cofactors(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er], order: MonomialOrder = lex
 ) -> tuple[smp[Er], smp[Er], smp[Er]]:
     # Entry point of the gcd API:
@@ -306,13 +274,13 @@ def smp_zippel_gcd_mod(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
             B_z = smp_domain_convert(B, domain, ZZ, n)
             if i == 0:
                 gcd = _smp_zippel_gcd_mod(A_z, B_z, p, n)
-                if gcd == None:
+                if gcd is None:
                     return None
                 return smp_domain_convert(gcd, ZZ, domain, n)
             A_z_ = smp_swap_var(A_z, i, n, ZZ)
             B_z_ = smp_swap_var(B_z, i, n, ZZ)
             gcd = _smp_zippel_gcd_mod(A_z_, B_z_, p, n)
-            if gcd == None:
+            if gcd is None:
                 return None
             gcd = smp_swap_var(gcd, i, n, ZZ)
             return smp_domain_convert(gcd, ZZ, domain, n)
@@ -323,7 +291,7 @@ def smp_zippel_gcd_mod(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
     Bp_z = smp_domain_convert(Bp, domain, ZZ, n)
     cont_gcd, _, _ = smp_cofactors_FF(Ac, Bc, n-1, domain)
     gcdp = _smp_zippel_gcd_mod(Ap_z, Bp_z, p, n)
-    if gcdp == None:
+    if gcdp is None:
         return None
     cont_gcd = smp_elevate(cont_gcd, list(range(1, n)), n, domain)
     gcdp_dom: smp[Er] = smp_domain_convert(gcdp, ZZ, domain, n)
@@ -379,8 +347,14 @@ def smp_cofactors_FF(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
 ) -> tuple[smp[Er], smp[Er], smp[Er]]:
     # Returns the gcd and cofactors when domain is a finite field.
     p = domain.characteristic()
+    # 10**5 was chosen because in a low characteristic field Zippel's algorithm could
+    # run out of evaluation points, and the algorithm could run into an infinite loop.
+    # The choice is under the assumption that the number of var and the degree of the polynomials
+    # will be considerably smaller than 10**5. The choice could be improved, allowing smaller fields.
     if p > 10**5:
         gcd = smp_zippel_gcd_mod(A, B, n, domain)
+        # smp_zippel_gcd_mod could be rewritten so that when it performs test
+        # division it also returns the cofactors
         if gcd:
             [cff], rff = smp_div_list(A, [gcd], n, domain)
             [cfg], rfg = smp_div_list(B, [gcd], n, domain)
@@ -460,43 +434,51 @@ def smp_cofactors_QQ(
     return h, cff, cfg
 
 
-def alg_selector_ZZ(A: smp[MPZ], B: smp[MPZ], n: int) -> str:
+def smp_cofactors_ZZ(A: smp[MPZ], B: smp[MPZ], n: int
+) -> tuple[smp[MPZ], smp[MPZ], smp[MPZ]]:
+    # Dispatches the gcd to either zippel or heugcd and returns gcd and cofactors.
+    # The dispatching choice is based on a formula fitted on benchmarking data.
+
+    zm: monom = (0,) * n
+    one: smp[MPZ] = {zm: ZZ.one}
+
+    A, B, m = smp_monomial_extract_ZZ(A, B, n)
 
     terms = min(len(A), len(B))
-
-    i = min(n, 40) - 1
-    row = thresholds[i]
-
-    if terms <= row[-1]:
-        return "heugcd"
 
     deg_A = max(map(sum, A))
     deg_B = max(map(sum, B))
     deg = min(deg_A, deg_B)
 
-    if deg < 2:
-        return "heugcd"
+    if n <= 3 or deg < 4:
+        try:
+            h, cfa, cfb = smp_heugcd(A, B, n)
+        except HeuristicGCDFailed:
+            h, cfa, cfb = smp_zippel_gcd(A, B, n)
+        if m != one:
+            h = smp_mul(h, m, ZZ, n)
 
-    j = min(deg, 40) - 2
+        return h, cfa, cfb
 
-    if terms > row[j]:
-        """
-        The benchmarking showed that the max degree alone can be misleading:
-        if the max degree differs much from the max degree in a single variable,
-        then the input is misclassified in favour of zippel
-        the rule of thumb adopted is to penalize the difference between max degree
-        and max degree in one variable, by lowering the max degree towards
-        the zone more favourable to heugcd: the more max degree and max degree in one variable
-        differ the bigger the shift. This is just a rule of thumb and can be improved.
-        """
-        max_deg_var = min(max(smp_degrees(A, n, ZZ)), max(smp_degrees(B, n, ZZ)))
-        k = deg/max_deg_var
-        steps = max(0, floor(k) - 1)
-        j = max(0, j - steps)
-        if terms > row[j]:
-            return "zippel"
+    max_deg_var = min(max(smp_degrees(A, n, ZZ)), max(smp_degrees(B, n, ZZ)))
 
-    return "heugcd"
+    # Total degree can overstate the cost when it is spread over many
+    # variables, so use a lower effective degree for widely spread inputs.
+    deg -= max(0, deg // max_deg_var - 1)
+    score = (n - 3) * (deg - 3) + deg // 2
+
+    if score >= 150 or terms * max(score - 25, 1) > 500:
+        h, cfa, cfb = smp_zippel_gcd(A, B, n)
+    else:
+        try:
+            h, cfa, cfb = smp_heugcd(A, B, n)
+        except HeuristicGCDFailed:
+            h, cfa, cfb = smp_zippel_gcd(A, B, n)
+
+    if m != one:
+        h = smp_mul(h, m, ZZ, n)
+
+    return h, cfa, cfb
 
 
 def smp_gcd_list_ZZ(polys: list[smp[MPZ]], n: int) -> smp[MPZ]:
@@ -574,57 +556,3 @@ def smp_gcd_monom(
     cfg = {monomial_ldiv(mg, mgcd): domain.quo(cg, cgcd) for mg, cg in B.items()}
 
     return h, cff, cfg
-
-"""
-The threshold table was obtained through benchmarking: rows represent #variables, columns represent max degree
-(taken as the minimum of the max degrees of f and g, because benchmarking showed that the minimum was the
-most significant metric),
-and the element M[i][j] of the threshold matrix is the minimum number of terms (the number of terms is also
-taken as the minimum numer of terms of f and g) after which zippel becomes faster than heugcd.
-An eventual future benchmark should take into consideration more data, for example the degree tuples of the inputs
-in all variables.
-"""
-h = 10**10
-z = -1
-thresholds = (
-    (h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h),  # n = 1
-    (h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h),  # n = 2
-    (h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h, h),  # n = 3
-    (h, h, 391, 391, 391, 391, 391, 391, 391, 391, 391, 391, 391, 391, 391, 391, 391, 391, 391, 119, 119, 90, 90, 49, 49, 25, 25, 25, 25, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4),  # n = 4
-    (h, h, 388, 388, 388, 388, 388, 388, 388, 383, 383, 220, 220, 119, 119, 25, 25, 9, 9, 9, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4),  # n = 5
-    (h, h, 388, 388, 388, 388, 388, 388, 388, 223, 89, 25, 25, 9, 9, 9, 9, 9, 9, 4, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 6
-    (h, h, 387, 387, 387, 387, 386, 386, 70, 49, 25, 25, 9, 9, 4, 4, 4, 4, 4, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 7
-    (h, h, 387, 387, 387, 387, 223, 223, 49, 49, 9, 9, 9, 9, 4, 4, 4, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 8
-    (h, h, 387, 387, 387, 387, 120, 120, 25, 25, 9, 9, 9, 4, 4, 4, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 9
-    (h, h, 382, 382, 222, 222, 90, 90, 25, 25, 9, 9, 4, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 10
-    (h, h, 382, 382, 119, 119, 70, 70, 25, 25, 9, 9, 4, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 11
-    (h, h, 382, 382, 118, 118, 49, 49, 9, 9, 4, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 12
-    (h, h, 382, 382, 118, 118, 25, 25, 9, 9, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 13
-    (h, h, 382, 382, 118, 118, 25, 25, 9, 9, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 14
-    (h, h, 223, 223, 90, 90, 25, 25, 9, 9, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 15
-    (h, h, 223, 223, 90, 90, 25, 25, 9, 9, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 16
-    (h, h, 223, 223, 90, 90, 25, 25, 9, 9, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 17
-    (h, h, 223, 223, 90, 90, 25, 25, 4, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 18
-    (h, h, 223, 223, 90, 90, 25, 25, 4, 4, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 19
-    (h, h, 223, 223, 70, 70, 25, 25, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 20
-    (h, h, 223, 223, 69, 69, 25, 25, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 21
-    (h, h, 120, 120, 69, 69, 25, 25, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 22
-    (h, h, 120, 120, 49, 49, 25, 25, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 23
-    (h, h, 120, 120, 49, 49, 25, 25, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 24
-    (h, h, 120, 120, 49, 49, 25, 25, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 25
-    (h, h, 120, 120, 49, 49, 24, 24, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 26
-    (h, h, 120, 120, 49, 49, 24, 24, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 27
-    (h, h, 120, 120, 49, 49, 24, 24, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 28
-    (h, h, 120, 120, 49, 49, 24, 24, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 29
-    (h, h, 120, 120, 49, 49, 24, 24, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 30
-    (h, h, 120, 120, 49, 49, 24, 24, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 31
-    (h, h, 120, 120, 49, 49, 24, 24, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 32
-    (h, h, 120, 120, 48, 48, 24, 24, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 33
-    (h, h, 120, 120, 48, 48, 24, 24, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 34
-    (h, h, 120, 120, 48, 48, 24, 24, 4, 4, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 35
-    (h, h, 120, 120, 48, 48, 9, 9, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 36
-    (h, h, 120, 120, 48, 48, 9, 9, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 37
-    (h, h, 120, 120, 48, 48, 9, 9, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 38
-    (h, h, 120, 120, 48, 48, 9, 9, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 39
-    (h, h, 90, 90, 25, 25, 9, 9, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z),  # n = 40
-)
