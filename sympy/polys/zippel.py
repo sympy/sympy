@@ -637,7 +637,7 @@ def _smp_zippel_gcd(
     ch = ZZ.gcd(cf, cg)
     if f == g:
         if smp_LC(f, n, ZZ) < 0:
-                ch = -ch
+            ch = -ch
         h = smp_mul_ground(f, ch, n, ZZ)
 
         zm = (0,) * n

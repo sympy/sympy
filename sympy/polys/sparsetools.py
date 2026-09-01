@@ -998,7 +998,11 @@ def smp_pow_multinomial(d: smp[Er], exp: int, domain: Domain[Er], n: int) -> smp
     return h
 
 
-def smp_swap_var(f: smp[Er], i: int, n: int, domain: Domain[Er],
+def smp_swap_var(
+    f: smp[Er],
+    i: int,
+    n: int,
+    domain: Domain[Er],
 ) -> smp[Er]:
     """Swap the main variable with the variable at index ``i``."""
     if i == 0:
@@ -1014,8 +1018,9 @@ def smp_swap_var(f: smp[Er], i: int, n: int, domain: Domain[Er],
     return g
 
 
-def smp_reorg_poly(f: smp[Er], syms: list[int], n: int, domain: Domain[Er]
-    ) -> dict[monom, smp[Er]]:
+def smp_reorg_poly(
+    f: smp[Er], syms: list[int], n: int, domain: Domain[Er]
+) -> dict[monom, smp[Er]]:
     """
     Reorganize a polynomial over multiple variables into a polynomial over a
     subset of those variables with coefficients being polynomials over the
@@ -1036,7 +1041,9 @@ def smp_reorg_poly(f: smp[Er], syms: list[int], n: int, domain: Domain[Er]
     return g
 
 
-def smp_domain_convert(f: smp[Er], dom1: Domain[Er], dom2: Domain[Es], n: int) -> smp[Es]:
+def smp_domain_convert(
+    f: smp[Er], dom1: Domain[Er], dom2: Domain[Es], n: int
+) -> smp[Es]:
     result: smp[Es] = {}
     for mon, coeff in f.items():
         new_coeff = dom2.convert(coeff, dom1)

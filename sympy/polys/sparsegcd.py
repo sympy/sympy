@@ -9,8 +9,24 @@ from sympy.polys.monomials import monomial_gcd
 from sympy.polys.orderings import MonomialOrder, lex
 from sympy.polys.polyerrors import ExactQuotientFailed, HeuristicGCDFailed
 from sympy.polys.sparseprs import smp_subresultants
-from sympy.polys.sparsetools import  (smp_LC, smp_clear_denoms, smp_coeff_wrt, smp_deflate, smp_degrees, smp_div_list, smp_domain_convert, smp_inflate, smp_is_one,
-    smp_mul, smp_mul_ground, smp_neg, smp_quo_ground, smp_quo_term, smp_reorg_poly, smp_swap_var)
+from sympy.polys.sparsetools import (
+    smp_LC,
+    smp_clear_denoms,
+    smp_coeff_wrt,
+    smp_deflate,
+    smp_degrees,
+    smp_div_list,
+    smp_domain_convert,
+    smp_inflate,
+    smp_is_one,
+    smp_mul,
+    smp_mul_ground,
+    smp_neg,
+    smp_quo_ground,
+    smp_quo_term,
+    smp_reorg_poly,
+    smp_swap_var,
+)
 from sympy.polys.zippel import _smp_zippel_gcd, _smp_zippel_gcd_mod
 
 if TYPE_CHECKING:
@@ -44,14 +60,13 @@ def smp_cofactors_norm(
     return gcd, cff, cfg
 
 
-def smp_primitive_wrt_ZZ(g: smp[MPZ], i: int, n: int
-) -> tuple[smp[MPZ], smp[MPZ]]:
+def smp_primitive_wrt_ZZ(g: smp[MPZ], i: int, n: int) -> tuple[smp[MPZ], smp[MPZ]]:
     """
     Returns the content and primitive part of a polynomial with respect to a
     specified variable.
     """
     g_r = smp_reorg_poly(g, [i], n, ZZ)
-    cont = smp_gcd_list_ZZ(list(g_r.values()), n-1)
+    cont = smp_gcd_list_ZZ(list(g_r.values()), n - 1)
     map = [j for j in range(n) if j != i]
     cont_ = smp_elevate(cont, map, n, ZZ)
     [prim], _ = smp_div_list(g, [cont_], n, ZZ)
@@ -64,9 +79,9 @@ def smp_zippel_gcd(
     n: int,
 ) -> tuple[smp[MPZ], smp[MPZ], smp[MPZ]]:
 
-    #Check whether the GCD is monic in any variable.
+    # Check whether the GCD is monic in any variable.
 
-    #If no suitable variable is found, extract the content with respect
+    # If no suitable variable is found, extract the content with respect
     # to the first variable and compute the GCD of the primitive parts.
 
     for i in range(n):
@@ -119,15 +134,16 @@ def smp_elevate(f, map: list[int], n: int, domain: Domain[Er]) -> smp[Er]:
     # adds variables to a polynomial
     h = {}
     for mon, coeff in f.items():
-        m = [0]*n
+        m = [0] * n
         for i, exp in zip(map, mon):
             m[i] = exp
         h[tuple(m)] = coeff
     return h
 
 
-def smp_monomial_extract_ZZ(A: smp[MPZ], B: smp[MPZ], n: int
-    ) -> tuple[smp[MPZ], smp[MPZ], smp[MPZ]]:
+def smp_monomial_extract_ZZ(
+    A: smp[MPZ], B: smp[MPZ], n: int
+) -> tuple[smp[MPZ], smp[MPZ], smp[MPZ]]:
     # Extracts any common monomial from the polynomials.
     zm = (0,) * n
     monoms: list[monom] = []
@@ -153,7 +169,8 @@ def smp_monomial_extract_ZZ(A: smp[MPZ], B: smp[MPZ], n: int
     return A, B, gcd
 
 
-def smp_cofactors(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er], order: MonomialOrder = lex
+def smp_cofactors(
+    A: smp[Er], B: smp[Er], n: int, domain: Domain[Er], order: MonomialOrder = lex
 ) -> tuple[smp[Er], smp[Er], smp[Er]]:
     # Entry point of the gcd API:
 
@@ -165,15 +182,13 @@ def smp_cofactors(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er], order: Mon
     if result is None:
         J, (A, B) = smp_deflate((A, B), n, domain)
 
-        #changes the domain of the inputs in one managable by the sympy algorithms
+        # changes the domain of the inputs in one managable by the sympy algorithms
         if not domain.is_Exact:
             domain_ex = domain.get_exact()
             A_ex = smp_domain_convert(A, domain, domain_ex, n)
             B_ex = smp_domain_convert(B, domain, domain_ex, n)
 
-            h_ex, cff_ex, cfg_ex = smp_cofactors(
-                A_ex, B_ex, n, domain_ex, order
-            )
+            h_ex, cff_ex, cfg_ex = smp_cofactors(A_ex, B_ex, n, domain_ex, order)
 
             h = smp_domain_convert(h_ex, domain_ex, domain, n)
             cff = smp_domain_convert(cff_ex, domain_ex, domain, n)
@@ -190,13 +205,14 @@ def smp_cofactors(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er], order: Mon
     return smp_cofactors_norm(*result, n, domain, order)
 
 
-def _smp_cofactors(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er]
+def _smp_cofactors(
+    A: smp[Er], B: smp[Er], n: int, domain: Domain[Er]
 ) -> tuple[smp[Er], smp[Er], smp[Er]]:
     if domain.is_QQ:
         return smp_cofactors_QQ(A, B, n, domain)
 
     elif domain.is_ZZ:
-        return smp_cofactors_ZZ(A, B, n) # type: ignore
+        return smp_cofactors_ZZ(A, B, n)  # type: ignore
 
     elif domain.is_FiniteField:
         return smp_cofactors_FF(A, B, n, domain)
@@ -234,7 +250,8 @@ def _smp_cofactors_trivial(
     return None
 
 
-def smp_cofactors_prs(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er]
+def smp_cofactors_prs(
+    A: smp[Er], B: smp[Er], n: int, domain: Domain[Er]
 ) -> tuple[smp[Er], smp[Er], smp[Er]]:
     # Computes the gcd and cofactors using the PRS.
     gcd = smp_gcd_prs(A, B, n, domain)
@@ -250,7 +267,11 @@ def smp_cofactors_prs(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er]
     return gcd, cff, cfg
 
 
-def smp_zippel_gcd_mod(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
+def smp_zippel_gcd_mod(
+    A: smp[Er],
+    B: smp[Er],
+    n: int,
+    domain: Domain[Er],
 ) -> smp[Er] | None:
     """
     Check whether the GCD is monic in any variable.
@@ -289,7 +310,7 @@ def smp_zippel_gcd_mod(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
     Bc, Bp = smp_primitive_wrt(B, 0, n, domain)
     Ap_z = smp_domain_convert(Ap, domain, ZZ, n)
     Bp_z = smp_domain_convert(Bp, domain, ZZ, n)
-    cont_gcd, _, _ = smp_cofactors_FF(Ac, Bc, n-1, domain)
+    cont_gcd, _, _ = smp_cofactors_FF(Ac, Bc, n - 1, domain)
     gcdp = _smp_zippel_gcd_mod(Ap_z, Bp_z, p, n)
     if gcdp is None:
         return None
@@ -298,28 +319,26 @@ def smp_zippel_gcd_mod(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
     return smp_mul(cont_gcd, gcdp_dom, domain, n)
 
 
-def smp_primitive_wrt_FF(g: smp[Er], i: int, n: int, domain
-) -> tuple[smp[Er], smp[Er]]:
+def smp_primitive_wrt_FF(g: smp[Er], i: int, n: int, domain) -> tuple[smp[Er], smp[Er]]:
     """
     Returns the content and primitive part of a polynomial with respect to a
     specified variable.
     """
     g_r = smp_reorg_poly(g, [i], n, domain)
-    cont = smp_gcd_list_FF(list(g_r.values()), n-1, domain)
+    cont = smp_gcd_list_FF(list(g_r.values()), n - 1, domain)
     map = [j for j in range(n) if j != i]
     cont_ = smp_elevate(cont, map, n, domain)
     [prim], _ = smp_div_list(g, [cont_], n, domain)
     return cont, prim
 
 
-def smp_primitive_wrt(g: smp[Er], i: int, n: int, domain
-) -> tuple[smp[Er], smp[Er]]:
+def smp_primitive_wrt(g: smp[Er], i: int, n: int, domain) -> tuple[smp[Er], smp[Er]]:
     """
     Returns the content and primitive part of a polynomial with respect to a
     specified variable.
     """
     g_r = smp_reorg_poly(g, [i], n, domain)
-    cont = smp_gcd_list(list(g_r.values()), n-1, domain)
+    cont = smp_gcd_list(list(g_r.values()), n - 1, domain)
     map = [j for j in range(n) if j != i]
     cont_ = smp_elevate(cont, map, n, domain)
     [prim], _ = smp_div_list(g, [cont_], n, domain)
@@ -343,7 +362,11 @@ def smp_gcd_list(polys: list[smp[Er]], n: int, domain) -> smp[Er]:
     return gcd
 
 
-def smp_cofactors_FF(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
+def smp_cofactors_FF(
+    A: smp[Er],
+    B: smp[Er],
+    n: int,
+    domain: Domain[Er],
 ) -> tuple[smp[Er], smp[Er], smp[Er]]:
     # Returns the gcd and cofactors when domain is a finite field.
     p = domain.characteristic()
@@ -365,8 +388,7 @@ def smp_cofactors_FF(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
     return smp_cofactors_prs(A, B, n, domain)
 
 
-def smp_gcd_prs(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er]
-) -> smp[Er]:
+def smp_gcd_prs(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er]) -> smp[Er]:
     """
     Compute a greatest common divisor using a subresultant polynomial
     remainder sequence (PRS).
@@ -395,15 +417,15 @@ def smp_gcd_prs(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er]
         gc = domain.gcd(a, b)
         return {(): gc} if gc else {}
 
-    map = list(range(1,n))
+    map = list(range(1, n))
     c1, pp1 = smp_primitive_wrt(A, 0, n, domain)
     c2, pp2 = smp_primitive_wrt(B, 0, n, domain)
 
-    cont = smp_gcd_prs(c1, c2, n-1, domain)
+    cont = smp_gcd_prs(c1, c2, n - 1, domain)
 
     h = smp_subresultants(pp1, pp2, 0, n, domain)[-1]
     _, h = smp_primitive_wrt(h, 0, n, domain)
-    map = list(range(1,n))
+    map = list(range(1, n))
     h = smp_mul(h, smp_elevate(cont, map, n, domain), domain, n)
 
     return h
@@ -434,7 +456,8 @@ def smp_cofactors_QQ(
     return h, cff, cfg
 
 
-def smp_cofactors_ZZ(A: smp[MPZ], B: smp[MPZ], n: int
+def smp_cofactors_ZZ(
+    A: smp[MPZ], B: smp[MPZ], n: int
 ) -> tuple[smp[MPZ], smp[MPZ], smp[MPZ]]:
     # Dispatches the gcd to either zippel or heugcd and returns gcd and cofactors.
     # The dispatching choice is based on a formula fitted on benchmarking data.
