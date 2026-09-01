@@ -325,7 +325,7 @@ def smp_zippel_gcd_mod(A: smp[Er], B: smp[Er], n: int, domain: Domain[Er],
     gcdp = _smp_zippel_gcd_mod(Ap_z, Bp_z, p, n)
     if gcdp == None:
         return None
-    cont_gcd = smp_elevate(cont_gcd, [el for el in range(1, n)], n, domain)
+    cont_gcd = smp_elevate(cont_gcd, list(range(1, n)), n, domain)
     gcdp_dom: smp[Er] = smp_domain_convert(gcdp, ZZ, domain, n)
     return smp_mul(cont_gcd, gcdp_dom, domain, n)
 
