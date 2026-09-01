@@ -39,6 +39,23 @@ except ImportError:
         git_description,
     )
     if match is None:
+        try:
+            is_shallow = subprocess.check_output(
+                ["git", "rev-parse", "--is-shallow-repository"],
+                cwd=Path(__file__).resolve().parent.parent,
+                encoding="ascii",
+                stderr=subprocess.DEVNULL,
+            ).strip() == "true"
+        except (OSError, subprocess.CalledProcessError):
+            is_shallow = False
+
+        if is_shallow:
+            raise ImportError(
+                "SymPy could not determine its version because this is a "
+                "shallow Git checkout. Run 'git fetch --unshallow --tags' "
+                "or install SymPy with 'python -m pip install .'."
+            ) from None
+
         raise ImportError(
             "SymPy could not determine its version. This source tree is "
             "neither an installed SymPy distribution nor an intact Git "
