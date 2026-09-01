@@ -1,7 +1,7 @@
 """Useful utility decorators. """
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import Any, Callable, Optional, TypeVar
 import sys
 import types
 import inspect
@@ -17,14 +17,14 @@ T = TypeVar('T')
 """A generic type"""
 
 
-def threaded_factory(func, use_add):
+def threaded_factory(func: Callable[..., Any], use_add: bool) -> Callable[..., Any]:
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify
     from sympy.matrices import MatrixBase
     from sympy.utilities.iterables import iterable
 
     @wraps(func)
-    def threaded_func(expr, *args, **kwargs):
+    def threaded_func(expr: Any, *args: Any, **kwargs: Any) -> Any:
         if isinstance(expr, MatrixBase):
             return expr.applyfunc(lambda f: func(f, *args, **kwargs))
         elif iterable(expr):
@@ -46,7 +46,7 @@ def threaded_factory(func, use_add):
     return threaded_func
 
 
-def threaded(func):
+def threaded(func: Callable[..., Any]) -> Callable[..., Any]:
     """Apply ``func`` to sub--elements of an object, including :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
@@ -66,7 +66,7 @@ def threaded(func):
     return threaded_factory(func, True)
 
 
-def xthreaded(func):
+def xthreaded(func: Callable[..., Any]) -> Callable[..., Any]:
     """Apply ``func`` to sub--elements of an object, excluding :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
@@ -105,11 +105,11 @@ class no_attrs_in_subclass:
     False
 
     """
-    def __init__(self, cls, f):
+    def __init__(self, cls: type, f: Any) -> None:
         self.cls = cls
         self.f = f
 
-    def __get__(self, instance, owner=None):
+    def __get__(self, instance: Any, owner: Optional[type] = None) -> Any:
         if owner == self.cls:
             if hasattr(self.f, '__get__'):
                 return self.f.__get__(instance, owner)
@@ -117,8 +117,11 @@ class no_attrs_in_subclass:
         raise AttributeError
 
 
-def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
-                       python_version=None, ground_types=None):
+def doctest_depends_on(exe: Optional[list[str]] = None,
+                       modules: Optional[list[str]] = None,
+                       disable_viewers: Optional[list[str]] = None,
+                       python_version: Optional[tuple[int, ...]] = None,
+                       ground_types: Optional[str] = None) -> Callable[[Any], Any]:
     """
     Adds metadata about the dependencies which need to be met for doctesting
     the docstrings of the decorated objects.
@@ -132,7 +135,7 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
     ``python_version`` should be the minimum Python version required, as a tuple
     (like ``(3, 0)``)
     """
-    dependencies = {}
+    dependencies: dict[str, Any] = {}
     if exe is not None:
         dependencies['executables'] = exe
     if modules is not None:
@@ -144,7 +147,7 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
     if ground_types is not None:
         dependencies['ground_types'] = ground_types
 
-    def skiptests():
+    def skiptests() -> bool:
         from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter # lazy import
         r = PyTestReporter()
         t = SymPyDocTests(r, None)
@@ -155,11 +158,12 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
         else:
             return False # Run doctests
 
-    def depends_on_deco(fn):
+    def depends_on_deco(fn: Any) -> Any:
         fn._doctest_depends_on = dependencies
         fn.__doctest_skip__ = skiptests
 
-        if inspect.isclass(fn):
+        _is_class = inspect.isclass(fn)
+        if _is_class:
             fn._doctest_depdends_on = no_attrs_in_subclass(
                 fn, fn._doctest_depends_on)
             fn.__doctest_skip__ = no_attrs_in_subclass(
@@ -218,7 +222,7 @@ def public(obj: T) -> T:
     return obj
 
 
-def memoize_property(propfunc):
+def memoize_property(propfunc: Callable[..., Any]) -> property:
     """Property decorator that caches the value of potentially expensive
     ``propfunc`` after the first evaluation. The cached value is stored in
     the corresponding property name with an attached underscore."""
@@ -226,7 +230,7 @@ def memoize_property(propfunc):
     sentinel = object()
 
     @wraps(propfunc)
-    def accessor(self):
+    def accessor(self: Any) -> Any:
         val = getattr(self, attrname, sentinel)
         if val is sentinel:
             val = propfunc(self)
@@ -236,8 +240,9 @@ def memoize_property(propfunc):
     return property(accessor)
 
 
-def deprecated(message, *, deprecated_since_version,
-               active_deprecations_target, stacklevel=3):
+def deprecated(message: str, *, deprecated_since_version: str,
+               active_deprecations_target: str,
+               stacklevel: int = 3) -> Callable[[Any], Any]:
     '''
     Mark a function as deprecated.
 
@@ -302,26 +307,28 @@ def deprecated(message, *, deprecated_since_version,
     '''
     decorator_kwargs = {"deprecated_since_version": deprecated_since_version,
                "active_deprecations_target": active_deprecations_target}
-    def deprecated_decorator(wrapped):
+    def deprecated_decorator(wrapped: Any) -> Any:
         if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
-            class wrapper(wrapped):
+            class _DeprecatedClass(wrapped):
                 __doc__ = wrapped.__doc__
                 __module__ = wrapped.__module__
                 _sympy_deprecated_func = wrapped
                 if '__new__' in wrapped.__dict__:
-                    def __new__(cls, *args, **kwargs):
+                    def __new__(cls: type, *args: Any, **kwargs: Any) -> Any: # type: ignore[misc]
                         sympy_deprecation_warning(message, **decorator_kwargs, stacklevel=stacklevel)
-                        return super().__new__(cls, *args, **kwargs)
+                        return super().__new__(cls, *args, **kwargs) # type: ignore[misc]
                 else:
-                    def __init__(self, *args, **kwargs):
+                    def __init__(self: Any, *args: Any, **kwargs: Any) -> None:
                         sympy_deprecation_warning(message, **decorator_kwargs, stacklevel=stacklevel)
                         super().__init__(*args, **kwargs)
-            wrapper.__name__ = wrapped.__name__
+            _DeprecatedClass.__name__ = wrapped.__name__
+            wrapper: Any = _DeprecatedClass
         else:
             @wraps(wrapped)
-            def wrapper(*args, **kwargs):
+            def _DeprecatedFunc(*args: Any, **kwargs: Any) -> Any:
                 sympy_deprecation_warning(message, **decorator_kwargs, stacklevel=stacklevel)
                 return wrapped(*args, **kwargs)
-            wrapper._sympy_deprecated_func = wrapped
+            _DeprecatedFunc._sympy_deprecated_func = wrapped  # type: ignore[attr-defined]
+            wrapper = _DeprecatedFunc
         return wrapper
     return deprecated_decorator
