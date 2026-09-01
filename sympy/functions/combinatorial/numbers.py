@@ -697,8 +697,9 @@ class bell(DefinedFunction):
         # root occupies tree[0]
         tree[0]=[0]*(n-1)+[1]
         def divmod(p,q):
-            _divmod=lambda r,p: (r,p) if len(p)<len(q) else _divmod([p[-1]]+r,p[:-len(q)]+[a-p[-1]*b for a,b in zip(p[-len(q):-1],q[:-1])])
-            return _divmod([],p)
+            r=[]
+            while len(p)>=len(q): r,p=[p[-1]]+r,p[:-len(q)]+[a-p[-1]*b for a,b in zip(p[-len(q):-1],q[:-1])]
+            return (r,p)
         # split forwards through each branch
         for d in range(L):
             for j in range(1<<d,0,-1):
