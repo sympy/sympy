@@ -91,7 +91,7 @@ jobs:
           grep -vx 'ruff' sympy-checkout/requirements-dev.txt | pip install -r /dev/stdin
           pip install matplotlib numpy scipy
 
-          # Trigger test suite (slow and tooslow tests are skipped by default)
+          # Trigger the test suite, excluding slow and tooslow tests
           pytest -svra --pyargs sympy \
           -m 'not slow and not tooslow' \
           --durations 20 \
