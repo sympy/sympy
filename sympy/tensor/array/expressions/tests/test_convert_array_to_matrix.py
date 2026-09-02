@@ -16,7 +16,8 @@ from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices import Trace, MatMul, Transpose
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, \
     ArrayElement, ArraySymbol, ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
-    _array_diagonal, _permute_dims, PermuteDims, ArrayAdd, ArrayDiagonal, ArrayContraction, ArrayTensorProduct, ArraySum
+    _array_diagonal, _permute_dims, PermuteDims, ArrayAdd, ArrayDiagonal, ArrayContraction, ArrayTensorProduct, ArraySum, \
+    _array_add
 from sympy.testing.pytest import raises
 
 
@@ -747,3 +748,36 @@ def test_array_sum_conversion():
 
     expr = ArraySum(X, (i, 1, 10))
     assert convert_array_to_matrix(expr) == 10*X
+
+
+def test_arrayexpr_convert_array_to_matrix_scalar_coefficients():
+    # Scalar coefficients of matrix arguments are extracted by the
+    # canonicalization of ArrayTensorProduct into a leading rank-0 argument
+    # (see issue #30387); the matrix recognition has to absorb them back.
+    x, y = symbols("x y")
+
+    cg = _array_contraction(_array_tensor_product(2*M, N), (1, 2))
+    assert cg == _array_contraction(_array_tensor_product(2, M, N), (1, 2))
+    assert convert_array_to_matrix(cg) == 2*M*N
+
+    cg = _array_contraction(_array_tensor_product(x*M, y*N, P), (1, 2), (3, 4))
+    assert convert_array_to_matrix(cg) == x*y*M*N*P
+
+    cg = _array_contraction(_array_tensor_product(3*M), (0, 1))
+    assert convert_array_to_matrix(cg) == 3*Trace(M)
+
+    assert convert_array_to_matrix(_array_tensor_product(2*M, 3*N)) == ArrayTensorProduct(6, M, N)
+    assert convert_array_to_matrix(_array_add(_array_tensor_product(2*M, N), _array_tensor_product(M, 3*N))) == \
+        ArrayTensorProduct(5, M, N)
+
+    # Permutations act on the matrix axes only, the coefficient has none:
+    cg = PermuteDims(_array_tensor_product(2*M, N), Permutation([2, 3, 0, 1]))
+    assert convert_array_to_matrix(cg) == ArrayTensorProduct(2, N, M)
+
+    cg = PermuteDims(_array_contraction(_array_tensor_product(3*M, N, P), (1, 2)), Permutation([1, 0, 3, 2]))
+    assert convert_array_to_matrix(cg) == ArrayTensorProduct(3, N.T*M.T, P.T)
+
+    cg = PermuteDims(_array_contraction(_array_tensor_product(3*M, N, P), (1, 2)), Permutation([2, 3, 0, 1]))
+    assert convert_array_to_matrix(cg) == ArrayTensorProduct(3, P, M*N)
+
+    assert _support_function_tp1_recognize([(1, 2)], [2*M, N]) == 2*M*N

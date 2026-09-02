@@ -320,17 +320,28 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
         # ArrayTensorProduct(x*y, A, B).  The scalar is kept as a rank-0
         # argument (instead of returning Mul(coefficient, ...)) so that
         # the result remains a valid array expression with a well-defined
-        # shape.  Scalar coefficients inside MatrixExpr arguments (e.g.
-        # ArrayTensorProduct(2*M, N) with M a MatrixSymbol) are NOT
-        # extracted, as the matrix-recognition machinery in
-        # from_array_to_matrix relies on matrix arguments keeping their
-        # coefficients; use _split_scalar_coefficient to compare
-        # arguments modulo their scalar coefficient.
+        # shape.  Scalar coefficients of MatrixExpr arguments (e.g.
+        # ArrayTensorProduct(2*M, N) with M a MatrixSymbol) are extracted
+        # as well; the matrix recognition in from_array_to_matrix absorbs
+        # the leading coefficient back into its matrix result.
         def _is_plain_scalar(arg):
             # Rank-0 array expressions (e.g. full contractions) are not
             # merged: the branches below lift them into the expression.
             return (get_shape(arg) == () and
                     not isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract)))
+
+        # Extract the scalar coefficients of matrix arguments, e.g.
+        # ArrayTensorProduct(2*M, N) becomes ArrayTensorProduct(2, M, N):
+        split_args = []
+        for arg in args:
+            if isinstance(arg, MatrixExpr):
+                coeff, array = _split_scalar_coefficient(arg)
+                if coeff is not S.One:
+                    split_args.append(coeff)
+                split_args.append(array)
+            else:
+                split_args.append(arg)
+        args = split_args
 
         scalars = [arg for arg in args if _is_plain_scalar(arg)]
         if scalars:

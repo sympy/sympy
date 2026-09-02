@@ -111,4 +111,4 @@ def test_array_add_collect_derivative_regression():
     Ak = MatrixSymbol("Ak", k, k)
     I = Identity(k)
     assert MatAdd(Ak, Ak).diff(Ak) == \
-        PermuteDims(ArrayTensorProduct(2*I, I), Permutation(3)(1, 2))
+        PermuteDims(ArrayTensorProduct(2, I, I), Permutation(3)(1, 2))

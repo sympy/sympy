@@ -96,9 +96,9 @@ def test_matrix_derivative_non_matrix_result():
     AdA = PermuteDims(ArrayTensorProduct(I, I), Permutation(3)(1, 2))
     assert A.diff(A) == AdA
     assert A.T.diff(A) == PermuteDims(ArrayTensorProduct(I, I), Permutation(3)(1, 2, 3))
-    assert (2*A).diff(A) == PermuteDims(ArrayTensorProduct(2*I, I), Permutation(3)(1, 2))
+    assert (2*A).diff(A) == PermuteDims(ArrayTensorProduct(2, I, I), Permutation(3)(1, 2))
     # The two identical addend derivatives are collected:
-    assert MatAdd(A, A).diff(A) == PermuteDims(ArrayTensorProduct(2*I, I), Permutation(3)(1, 2))
+    assert MatAdd(A, A).diff(A) == PermuteDims(ArrayTensorProduct(2, I, I), Permutation(3)(1, 2))
     assert (A + B).diff(A) == AdA
 
 
@@ -243,7 +243,7 @@ def test_matrix_derivatives_of_traces():
 
     expr = Trace(A)*A
     I = Identity(k)
-    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A)*I, I), Permutation(3)(1, 2)))
+    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A), I, I), Permutation(3)(1, 2)))
     assert expr[i, j].diff(A[m, n]).doit() == (
         KDelta(i, m)*KDelta(j, n)*Trace(A) +
         KDelta(m, n)*A[i, j]
@@ -407,7 +407,7 @@ def test_mixed_deriv_mixed_expressions():
 
     expr = Trace(A)*A
     I = Identity(k)
-    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A)*I, I), Permutation(3)(1, 2)))
+    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A), I, I), Permutation(3)(1, 2)))
 
     expr = Trace(Trace(A)*A)
     assert expr.diff(A) == (2*Trace(A))*Identity(k)
@@ -672,7 +672,7 @@ def test_issue_15667():
     # https://github.com/sympy/sympy/issues/15667
     expr = Trace(A) * A
     I = Identity(k)
-    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A)*I, I), Permutation(3)(1, 2)))
+    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A), I, I), Permutation(3)(1, 2)))
 
 
 def test_matpow_derivative():

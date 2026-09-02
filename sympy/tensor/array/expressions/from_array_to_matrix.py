@@ -22,7 +22,7 @@ from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayD
     ArrayTensorProduct, OneArray, get_ndim, _get_sub_ndim, ZeroArray, ArrayContraction, \
     ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE, \
     ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims, ArraySum, \
-    _get_sub_ndim_list
+    _get_sub_ndim_list, _array_term_as_coeff_arrays
 from sympy.tensor.array.expressions.utils import _get_mapping_from_sub_ndim_list
 
 
@@ -71,6 +71,22 @@ def _insert_candidate_into_editor(editor: _EditArrayContraction, arg_with_ind: _
     editor.args_with_ind.remove(candidate)
     new_arge = _ArgE(new_element)
     return new_arge, other_index
+
+
+def _a2m_absorb_scalars(expr):
+    """Turn a tensor product of scalar coefficients and a single matrix
+    expression into the matrix expression multiplied by the coefficients.
+
+    ``ArrayTensorProduct`` canonicalizes ``2*M`` to ``ArrayTensorProduct(2,
+    M)``; when a matrix expression is expected the coefficient has to be
+    absorbed back into the matrix.
+    """
+    if isinstance(expr, ArrayTensorProduct):
+        coeff, arrays = _array_term_as_coeff_arrays(expr)
+        if len(arrays) == 1 and isinstance(arrays[0], MatrixExpr) and \
+                coeff.is_commutative is not False:
+            return coeff*arrays[0]
+    return expr
 
 
 def _support_function_tp1_recognize(contraction_indices, args):
@@ -128,7 +144,7 @@ def _support_function_tp1_recognize(contraction_indices, args):
             break
 
     editor.refresh_indices()
-    return editor.to_array_contraction()
+    return _a2m_absorb_scalars(editor.to_array_contraction())
 
 
 def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
@@ -211,7 +227,7 @@ def _(expr: ArrayTensorProduct):
 
 @_array2matrix.register(ArraySum)
 def _(expr: ArraySum):
-    new_function = _array2matrix(expr.function)
+    new_function = _a2m_absorb_scalars(_array2matrix(expr.function))
     output = expr.func(new_function, *expr.limits).simplify()
     if isinstance(output, ZeroArray) and get_ndim(output) == 2:
         return ZeroMatrix(*output.shape)
@@ -303,20 +319,26 @@ def _(expr: PermuteDims):
         mat_mul_lines = _array2matrix(expr.expr)
         if not isinstance(mat_mul_lines, ArrayTensorProduct):
             return _permute_dims(mat_mul_lines, expr.permutation)
-        # TODO: this assumes that all arguments are matrices, it may not be the case:
-        permutation = Permutation(2*len(mat_mul_lines.args)-1)*expr.permutation
-        permuted = [permutation(i) for i in range(2*len(mat_mul_lines.args))]
-        args_array = [None for i in mat_mul_lines.args]
-        for i in range(len(mat_mul_lines.args)):
+        # Rank-0 arguments (scalar coefficients) carry no axes, so the
+        # permutation only acts on the matrix arguments:
+        ndims = [get_ndim(arg) for arg in mat_mul_lines.args]
+        if any(ndim not in (0, 2) for ndim in ndims):
+            return _permute_dims(mat_mul_lines, expr.permutation)
+        scalars = [arg for arg, ndim in zip(mat_mul_lines.args, ndims) if ndim == 0]
+        matrices = [arg for arg, ndim in zip(mat_mul_lines.args, ndims) if ndim == 2]
+        permutation = Permutation(2*len(matrices)-1)*expr.permutation
+        permuted = [permutation(i) for i in range(2*len(matrices))]
+        args_array = [None for i in matrices]
+        for i in range(len(matrices)):
             p1 = permuted[2*i]
             p2 = permuted[2*i+1]
             if p1 // 2 != p2 // 2:
                 return _permute_dims(mat_mul_lines, permutation)
             if p1 > p2:
-                args_array[i] = _a2m_transpose(mat_mul_lines.args[p1 // 2])
+                args_array[i] = _a2m_transpose(matrices[p1 // 2])
             else:
-                args_array[i] = mat_mul_lines.args[p1 // 2]
-        return _a2m_tensor_product(*args_array)
+                args_array[i] = matrices[p1 // 2]
+        return _a2m_tensor_product(*scalars, *args_array)
     else:
         return expr
 
@@ -657,9 +679,9 @@ def convert_array_to_matrix(expr):
 
     The two lines have free indices at axes 0, 3 and 4, 7, respectively.
     """
-    rec = _array2matrix(expr)
+    rec = _a2m_absorb_scalars(_array2matrix(expr))
     rec, removed = _remove_trivial_dims(rec)
-    return rec
+    return _a2m_absorb_scalars(rec)
 
 
 def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
@@ -752,6 +774,11 @@ def _a2m_tensor_product(*args):
             arrays = [scalar] + arrays
         else:
             arrays[0] *= scalar
+    if len(arrays) == 1:
+        # Return the (possibly coefficient-carrying) matrix expression as
+        # is: canonicalizing it as a tensor product would extract the
+        # coefficient again into a leading rank-0 argument.
+        return arrays[0]
     return _array_tensor_product(*arrays)
 
 
