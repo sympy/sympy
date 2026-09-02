@@ -6,6 +6,7 @@ from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot, find_dynamicsymbols)
 from sympy.testing.pytest import raises, warns_deprecated_sympy, slow
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 
 
 def test_invalid_coordinates():
@@ -657,6 +658,58 @@ def test_issue_24887():
     assert simplify(kane.mass_matrix - expected_md) == zeros(3, 3)
     assert simplify(kane.forcing - expected_fd) == zeros(3, 1)
 
+def test_Ars_warning():
+    """
+    Tests that the additional warning is raised when the mass matrix is
+    singular and that the correct error message is displayed.
+    It is a simple pendulum on a post, where the pole must not move in the
+    y direction. Clearly, if y is not the dependent speed,
+    Ars will be singular.
+    """
+    N, A = symbols('N A', cls=ReferenceFrame)
+    O, P0, P1, P2 = symbols('O P0 P1 P2', cls=Point)
+    t = dynamicsymbols._t
+    O.set_vel(N, 0)
+
+    l = symbols('l')
+
+    x, y, q = dynamicsymbols('x y q')
+    ux, uy, uq = dynamicsymbols('ux uy uq')
+
+    A.orient_axis(N, q, N.z)
+
+    P0.set_pos(O, x * N.x + y * N.y)
+    P0.set_vel(N, ux * N.x + uy * N.y)
+    P1.set_pos(P0, 2*l * N.y)
+    P2.set_pos(P1, l * A.x)
+    P2.v2pt_theory(P1, N, A)
+
+    kd = Matrix([ux - x.diff(), uy - y.diff(), uq - q.diff()])
+
+    config_constr = Matrix([y])
+    speed_constr = config_constr.diff(t)
+
+    q_ind = [x, y]
+    q_dep = [q]
+    u_ind = [ux, uy]
+    u_dep = [uq]
+
+    msg = ("Ars is singular, maybe due to a "
+           "wrong set of dependent speeds. Try a different set of "
+           "dependent speeds.")
+
+    with raises(NonInvertibleMatrixError) as excinfo:
+        _ = KanesMethod(N,
+                           q_ind,
+                           u_ind,
+                           kd_eqs=kd,
+                           q_dependent=q_dep,
+                           u_dependent=u_dep,
+                           configuration_constraints=config_constr,
+                           velocity_constraints=speed_constr
+        )
+
+    assert msg in str(excinfo.value)
 
 def test_constraint_combos():
     # This tests the combinations of ways you can supply the constraints.

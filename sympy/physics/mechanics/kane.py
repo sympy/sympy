@@ -13,6 +13,7 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 
 
 __all__ = ['KanesMethod']
@@ -415,7 +416,12 @@ class KanesMethod(MethodBase):
             # to independent speeds as: udep = Ars*uind, neglecting the C term.
             self._B_ind = self._k_nh[:, :num_dof]
             self._B_dep = self._k_nh[:, num_dof:num_speeds]
-            self._Ars = -linear_solver(self._B_dep, self._B_ind)
+            try:
+                self._Ars = -linear_solver(self._B_dep, self._B_ind)
+            except NonInvertibleMatrixError as e:
+                msg = ('Ars is singular, maybe due to a wrong set of dependent'
+                       ' speeds. Try a different set of dependent speeds.')
+                raise NonInvertibleMatrixError(msg) from e
         else:
             self._f_nh = Matrix()
             self._k_nh = Matrix()
