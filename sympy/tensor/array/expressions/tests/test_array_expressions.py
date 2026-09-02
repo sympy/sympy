@@ -13,7 +13,8 @@ from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
     ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE, _array_tensor_product, \
-    _array_contraction, _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum, _split_scalar_coefficient
+    _array_contraction, _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum, _split_scalar_coefficient, \
+    get_shape, get_ndim
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -134,11 +135,14 @@ def test_arrayexpr_contraction_construction():
     assert indtup == [[(0, 0), (1, 1)], [(0, 1), (2, 0)]]
     assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [(0, 3), (1, 4)]
 
-    # Test removal of trivial contraction:
-    assert _array_contraction(a, (1,)) == a
-    assert _array_contraction(
-        _array_tensor_product(a, b), (0, 2), (1,), (3,)) == _array_contraction(
-        _array_tensor_product(a, b), (0, 2))
+    # Test removal of trivial contraction: a single-index contraction group
+    # sums over the axis, hence removing it from the shape (on a size-1 axis
+    # this amounts to just dropping the axis, expressed by a reshape):
+    assert _array_contraction(a, (1,)) == Reshape(a, (k,))
+    assert _array_contraction(a, (1,)).shape == ArrayContraction(a, (1,)).shape == (k,)
+    expr = _array_contraction(_array_tensor_product(a, b), (0, 2), (1,), (3,))
+    assert expr.shape == ()
+    assert get_shape(expr) == ArrayContraction(_array_tensor_product(a, b), (0, 2), (1,), (3,)).shape
 
 
 def test_arrayexpr_array_flatten():
@@ -901,3 +905,248 @@ def test_array_sum():
 
     expr = ArrayContraction(ArraySum(T*sin(i), (i, 1, j)), (0, 1))
     assert expr.doit() == ArraySum(ArrayContraction(T*sin(i), (0, 1)), (i, 1, j))
+
+
+def test_array_diagonal_push_indices_up_nonstatic():
+    # _push_indices_up_nonstatic must agree with the static _push_indices_up.
+    # The diagonal groups stored in ``_positions`` are sympy ``Tuple``s, which
+    # are not Python ``tuple``s, so the isinstance check must accept both --
+    # otherwise indices landing in a diagonal group came back as ``None``.
+    from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
+    d = symbols("d")
+    M = ArraySymbol("M", (d, d, d))
+    diag = ArrayDiagonal(M, (0, 2))
+    indices = [0, 1]
+    assert diag._push_indices_up_nonstatic(indices) == \
+        ArrayDiagonal._push_indices_up([(0, 2)], indices, 3)
+    assert diag._push_indices_up_nonstatic([0, 1]) == (1, 0)
+
+
+def test_apply_recursively_over_nested_lists_preserves_tuple():
+    # A nested sympy ``Tuple`` must stay a ``Tuple`` (the branch handling it was
+    # unreachable, so it used to be rebuilt as a plain ``tuple``).
+    from sympy import Tuple
+    from sympy.tensor.array.expressions.utils import \
+        _apply_recursively_over_nested_lists as apply_nested
+    ident = lambda x: x
+    assert isinstance(apply_nested(ident, Tuple(1, Tuple(2, 3))), Tuple)
+    # plain lists/tuples are still returned as tuples
+    assert isinstance(apply_nested(ident, [1, 2]), tuple)
+    assert isinstance(apply_nested(ident, (1, 2)), tuple)
+
+
+def test_arrayexpr_contraction_free_indices():
+    # ArrayContraction.free_indices used to raise AttributeError because
+    # ``_free_indices`` was never assigned in ``__new__``:
+    cg = _array_contraction(_array_tensor_product(M, N), (1, 2))
+    assert cg.free_indices == [0, 3]
+    assert cg.free_indices_to_position == {0: 0, 3: 3}
+
+
+def test_arrayexpr_contraction_of_array_sum_with_multiple_limits():
+    # The limits of the ArraySum were not unpacked when the contraction was
+    # moved inside the summation (raising a ValueError for >= 2 limits):
+    X = MatrixSymbol("X", 3, 3)
+    s = ArraySum(i*j*X, (i, 0, 2), (j, 1, 4))
+    expr = _array_contraction(s, (0, 1))
+    assert isinstance(expr, ArraySum)
+    assert expr.limits == s.limits
+
+
+def test_arrayexpr_flatten_contraction_of_diagonal():
+    # Both ``_push_indices_down/up`` calls missed the mandatory ``ndim``
+    # argument, so this method always raised a TypeError:
+    A3 = ArraySymbol("A", (2, 2, 2))
+    B2 = ArraySymbol("B", (2, 2))
+    d = ArrayDiagonal(_array_tensor_product(A3, B2), (0, 3))
+    cg = ArrayContraction(d, (0, 1))
+    flattened = cg.flatten_contraction_of_diagonal()
+    assert flattened.as_explicit() == cg.as_explicit()
+    # Contraction group touching the diagonalized output axis:
+    cg2 = ArrayContraction(d, (0, 3))
+    flattened2 = cg2.flatten_contraction_of_diagonal()
+    assert flattened2.as_explicit() == cg2.as_explicit()
+
+
+def test_arrayexpr_split_multiple_contractions_boundary_vectors():
+    # Vectors at the boundary of the multiplication line must not be
+    # diagonalized, otherwise the second axis of the resulting diagonal
+    # matrix is left dangling as a free index of the wrong dimension:
+    A = MatrixSymbol("A", 2, 2)
+    bv = MatrixSymbol("b", 2, 1)
+    cv = MatrixSymbol("c", 2, 1)
+
+    # one non-vector, chain ends with a vector:
+    cg = ArrayContraction(ArrayTensorProduct(A, bv, cv), (1, 2, 4))
+    split = cg.split_multiple_contractions()
+    assert split.shape == cg.shape == (2, 1, 1)
+    assert split.as_explicit() == cg.as_explicit()
+
+    # one non-vector in the middle of the chain:
+    c3 = MatrixSymbol("c", 3, 1)
+    s3 = MatrixSymbol("s", 1, 3)
+    D3 = MatrixSymbol("D", 3, 2)
+    cg = ArrayContraction(ArrayTensorProduct(c3, s3, D3), (0, 3, 4))
+    split = cg.split_multiple_contractions()
+    assert split.shape == cg.shape == (1, 1, 2)
+    assert split.as_explicit() == cg.as_explicit()
+
+    # zero non-vectors:
+    r2 = MatrixSymbol("r", 1, 2)
+    cg = ArrayContraction(ArrayTensorProduct(bv, bv, r2), (0, 2, 5))
+    split = cg.split_multiple_contractions()
+    assert split.shape == cg.shape == (1, 1, 1)
+    assert split.as_explicit() == cg.as_explicit()
+
+    # the classic case A_ij b_j C_jk must still be split:
+    B = MatrixSymbol("B", 2, 2)
+    cg = ArrayContraction(ArrayTensorProduct(A, bv, B), (1, 2, 4))
+    split = cg.split_multiple_contractions()
+    assert split == _array_contraction(_array_tensor_product(A, DiagMatrix(bv), OneArray(1), B), (1, 2), (3, 5))
+    assert split.as_explicit() == cg.as_explicit()
+
+
+def test_arrayexpr_split_multiple_contractions_repeated_argument():
+    # An argument appearing with both its axes in the same contraction group
+    # used to be classified as a vector twice, raising a ValueError:
+    av = MatrixSymbol("a", 2, 1)
+    x11 = MatrixSymbol("x", 1, 1)
+    cg = ArrayContraction(ArrayTensorProduct(av, x11), (1, 2, 3))
+    split = cg.split_multiple_contractions()
+    # the contraction group is not split (only args are re-sorted):
+    assert split == _array_contraction(_array_tensor_product(x11, av), (0, 1, 3))
+    assert split.shape == cg.shape
+    assert split.as_explicit() == cg.as_explicit()
+
+
+def test_arrayexpr_contraction_single_index_size_one_axis():
+    # A single-index contraction group sums over (i.e. removes) the axis;
+    # ``doit`` used to just drop the group, silently changing the shape:
+    Aa = ArraySymbol("A", (3, 1))
+    e = ArrayContraction(Aa, (1,))
+    assert e.shape == (3,)
+    d = e.doit()
+    assert d == Reshape(Aa, (3,))
+    assert d.shape == (3,)
+    assert d.as_explicit() == e.as_explicit()
+    # nested inside a larger expression:
+    B2 = ArraySymbol("B", (2, 2))
+    big = ArrayTensorProduct(ArrayContraction(Aa, (1,)), B2)
+    bigd = big.doit()
+    assert bigd.shape == (3, 2, 2)
+    assert bigd.as_explicit() == big.as_explicit()
+    # a single-index contraction on an axis of size > 1 sums over the axis:
+    Dd = ArraySymbol("D", (3, 2))
+    e2 = ArrayContraction(Dd, (1,))
+    assert e2.doit().shape == (3,)
+    assert e2.doit().as_explicit() == ImmutableDenseNDimArray(
+        [Dd[i0, 0] + Dd[i0, 1] for i0 in range(3)])
+
+
+def test_arrayexpr_diagonal_trivial_diags_doit_as_explicit():
+    # ``doit`` used to fail re-validation because ``allow_trivial_diags`` was
+    # not re-passed; ``as_explicit`` used to forward length-1 groups to
+    # ``tensordiagonal`` which rejects them:
+    X = ArraySymbol("X", (2, 3, 2))
+    dd = ArrayDiagonal(X, (1,), (0, 2), allow_trivial_diags=True)
+    assert dd.shape == (3, 2)
+    ground_truth = ImmutableDenseNDimArray(
+        [[X[i0, i1, i0] for i0 in range(2)] for i1 in range(3)])
+    assert dd.as_explicit() == ground_truth
+    ddd = dd.doit()
+    assert ddd.shape == (3, 2)
+    assert ddd.as_explicit() == ground_truth
+
+
+def test_arrayexpr_rank_zero_array_symbol_as_explicit():
+    S0 = ArraySymbol("S", ())
+    expl = S0.as_explicit()
+    assert expl == ImmutableDenseNDimArray([S0[()]], ())
+    assert expl.shape == ()
+
+
+def test_arrayexpr_array_add_as_explicit_mixed_types():
+    # Matrix and NDimArray explicit terms could not be added together:
+    M2 = MatrixSymbol("M", 2, 2)
+    N2 = MatrixSymbol("N", 2, 2)
+    expr = ArrayAdd(M2, PermuteDims(N2, [1, 0]))
+    expl = expr.as_explicit()
+    assert expl == ImmutableDenseNDimArray(M2.as_explicit() + N2.as_explicit().T)
+    # matrix-only additions keep returning a matrix:
+    assert ArrayAdd(M2, N2).as_explicit() == M2.as_explicit() + N2.as_explicit()
+
+
+def test_array_sum_doit_and_as_explicit():
+    # ``doit`` used to collapse to a scalar ``Add`` of array expressions
+    # (thus losing the shape) and ``as_explicit`` did not exist:
+    X = MatrixSymbol("X", 2, 2)
+    s = ArraySum(ArrayTensorProduct(i, X), (i, 1, 3))
+    ground_truth = ImmutableDenseNDimArray(6*X.as_explicit())
+    d = s.doit()
+    assert d.shape == (2, 2)
+    assert ImmutableDenseNDimArray(d.as_explicit()) == ground_truth
+    assert ImmutableDenseNDimArray(s.as_explicit()) == ground_truth
+    # multiple limits:
+    s2 = ArraySum(ArrayTensorProduct(i*j, X), (i, 0, 2), (j, 1, 2))
+    ground_truth2 = ImmutableDenseNDimArray(9*X.as_explicit())
+    assert ImmutableDenseNDimArray(s2.doit().as_explicit()) == ground_truth2
+    assert ImmutableDenseNDimArray(s2.as_explicit()) == ground_truth2
+    # symbolic limits are left unevaluated as an ArraySum:
+    s3 = ArraySum(ArrayTensorProduct(i, X), (i, 1, n))
+    assert isinstance(s3.doit(), ArraySum)
+    raises(ValueError, lambda: s3.as_explicit())
+
+
+def test_array_elementwise_apply_func_rank_zero_as_explicit():
+    # applyfunc does not exist on the scalar that a rank-0 operand
+    # explicitizes to:
+    from sympy import Lambda
+    d = symbols("d")
+    X = MatrixSymbol("X", 2, 2)
+    tr = _array_contraction(X, (0, 1))
+    assert tr.shape == ()
+    expr = ArrayElementwiseApplyFunc(Lambda(d, 1/d), tr)
+    assert expr.as_explicit() == 1/(X[0, 0] + X[1, 1])
+
+
+def test_get_contraction_links_rejects_multi_slot_groups():
+    # Contraction groups with more than two axes cannot be represented as
+    # pairwise links: _get_contraction_links used to silently drop them,
+    # misrepresenting the contraction structure of the expression:
+    X = MatrixSymbol("X", k, k)
+    Y = MatrixSymbol("Y", k, k)
+    Z = MatrixSymbol("Z", k, k)
+    cg = _array_contraction(_array_tensor_product(X, Y, Z), (1, 2), (3, 4))
+    # Pairwise groups are still supported:
+    dlinks = cg._get_contraction_links()
+    assert dlinks == {0: {0: (1, 1), 1: (2, 0)}, 1: {1: (0, 0)}, 2: {0: (0, 1)}}
+    cg = _array_contraction(_array_tensor_product(X, Y, Z), (0, 2, 4))
+    raises(ValueError, lambda: cg._get_contraction_links())
+
+
+def test_edit_array_contraction_merge_scalars_rank_zero_applyfunc():
+    # merge_scalars must not put a rank-0 ArrayElementwiseApplyFunc (a
+    # noncommutative object) into a Mul with matrix elements; it is a plain
+    # scalar and has to be converted (e.g. the X-derivative of 1/Trace(X)
+    # used to crash with "noncommutative scalars in MatMul"):
+    from sympy import Lambda, Trace
+    d = symbols("d")
+    X = MatrixSymbol("X", k, k)
+    aeaf = ArrayElementwiseApplyFunc(Lambda(d, 1/d), _array_contraction(X, (0, 1)))
+    assert get_shape(aeaf) == ()
+    cg = _array_contraction(_array_tensor_product(aeaf, X, X), (1, 2))
+    editor = _EditArrayContraction(cg)
+    ret = editor.to_array_contraction()
+    assert ret == _array_contraction(_array_tensor_product(1/Trace(X)*X, X), (1, 2))
+
+
+def test_get_ndim_matrix_element():
+    A = MatrixSymbol("A", k, k)
+    # a matrix element is a scalar, consistently with get_shape:
+    assert get_shape(A[0, 1]) == ()
+    assert get_ndim(A[0, 1]) == 0
+    # so it can be a scalar factor of a tensor product containing a
+    # contraction (this used to raise an IndexError):
+    expr = _array_tensor_product(A[0, 1], _array_contraction(A, (0, 1)))
+    assert expr == _array_contraction(_array_tensor_product(A[0, 1], A), (0, 1))
+    assert get_shape(expr) == ()

@@ -105,10 +105,6 @@ class MatAdd(MatrixExpr, Add):
         # MatAdd does not remove ZeroMatrix unless you call .doit():
         return super()._eval_derivative(x).doit()
 
-    def _eval_derivative_matrix_lines(self, x):
-        add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
-        return [j for i in add_lines for j in i]
-
 add.register_handlerclass((Add, MatAdd), MatAdd)
 
 
