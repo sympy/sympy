@@ -112,3 +112,103 @@ def test_array_add_collect_derivative_regression():
     I = Identity(k)
     assert MatAdd(Ak, Ak).diff(Ak) == \
         PermuteDims(ArrayTensorProduct(2*I, I), Permutation(3)(1, 2))
+
+
+def test_commutativity_simplify():
+    from sympy import Symbol
+    from sympy.tensor.array.expressions import commutativity_simplify
+
+    z, w = symbols("z w")
+    u = Symbol("u", commutative=False)
+    v = Symbol("v", commutative=False)
+
+    E00 = Array([[1, 0], [0, 0]])
+    E11 = Array([[0, 0], [0, 1]])
+    X = Array([[u, 0], [0, v]])
+    zE00 = Array([[z, 0], [0, 0]])
+
+    # The scalar z can be moved between commutative factors; the two
+    # addends differ in two slots, so collect_tensor_products alone
+    # cannot merge them, but the basis decomposition can:
+    expr = ArrayAdd(ArrayTensorProduct(zE00, E00, X),
+                    ArrayTensorProduct(E00, zE00, X))
+    collected = collect_tensor_products(expr)
+    assert isinstance(collected, ArrayAdd)
+    assert commutativity_simplify(expr) == ArrayTensorProduct(2*z, E00, E00, X)
+
+    # Cancellation of terms with redistributed entries:
+    expr = ArrayAdd(ArrayTensorProduct(zE00, E00, X),
+                    ArrayTensorProduct(-1, E00, zE00, X))
+    assert commutativity_simplify(expr) == ZeroArray(2, 2, 2, 2, 2, 2)
+
+    # Decomposing a full matrix regroups its entries; the result is
+    # value-equivalent to the input:
+    M = Array([[z, w], [w, z]])
+    expr = ArrayAdd(ArrayTensorProduct(M, X), ArrayTensorProduct(zE00, X))
+    simplified = commutativity_simplify(expr)
+    assert simplified.as_explicit() == expr.as_explicit()
+
+    # Non-decomposable sums fall back to plain collection:
+    expr = ArrayAdd(ArrayTensorProduct(Ra, Rb), ArrayTensorProduct(Rc, Rb))
+    assert commutativity_simplify(expr) == ArrayTensorProduct(ArrayAdd(Ra, Rc), Rb)
+
+    # Terms whose noncommutative factors coincide merge even when every
+    # commutative factor differs, when the basis components match:
+    Y = Array([[u, v], [v, u]])
+    expr = ArrayAdd(ArrayTensorProduct(2*E00, Y), ArrayTensorProduct(E00, Y),
+                    ArrayTensorProduct(E11, Y))
+    simplified = commutativity_simplify(expr)
+    assert simplified.as_explicit() == expr.as_explicit()
+
+
+def test_commutativity_simplify_commutator_example():
+    # A miniature version of the Dirac-commutator computation of
+    # PR #30131: expand [D, a] = D.a - a.D as a sum of tensor products
+    # of explicit matrices with noncommutative entries, then verify that
+    # commutativity_simplify preserves the value while reducing the
+    # number of addends:
+    from sympy import Symbol
+    from sympy.tensor.array.expressions import commutativity_simplify
+
+    z, w = symbols("z w")
+    ups = Symbol("Upsilon", commutative=False)
+    upsc = Symbol("Upsilon_c", commutative=False)
+
+    pL = Array([[1, 0], [0, 0]])
+    pR = Array([[0, 0], [0, 1]])
+    m = Array([[0, ups], [upsc, 0]])
+    a1 = Array([[z, 0], [0, w]])
+    a2 = Array([[w, 0], [0, z]])
+    id2 = Array([[1, 0], [0, 1]])
+
+    # Terms of the expanded commutator (schematically).  With this
+    # symmetric choice of algebra elements the commutator vanishes
+    # identically, which the basis decomposition detects:
+    terms = [
+        ArrayTensorProduct(pL, m, a1),
+        ArrayTensorProduct(pR, m, a2),
+        ArrayTensorProduct(-1, a1, m, pL),
+        ArrayTensorProduct(-1, a2, m, pR),
+        ArrayTensorProduct(z, pL, m, id2),
+        ArrayTensorProduct(-z, pL, m, id2),
+    ]
+    expr = ArrayAdd(*terms)
+    assert expr.as_explicit() == ZeroArray(2, 2, 2, 2, 2, 2).as_explicit()
+    assert commutativity_simplify(expr) == ZeroArray(2, 2, 2, 2, 2, 2)
+
+    # An asymmetric variant does not vanish; the six addends collapse to
+    # two basis terms:
+    a1b = Array([[z, 0], [0, 3*w]])
+    terms = [
+        ArrayTensorProduct(pL, m, a1b),
+        ArrayTensorProduct(pR, m, a2),
+        ArrayTensorProduct(-1, a1b, m, pL),
+        ArrayTensorProduct(-1, a2, m, pR),
+        ArrayTensorProduct(z, pL, m, id2),
+        ArrayTensorProduct(-z, pL, m, id2),
+    ]
+    expr = ArrayAdd(*terms)
+    simplified = commutativity_simplify(expr)
+    assert simplified.as_explicit() == expr.as_explicit()
+    assert isinstance(simplified, ArrayAdd)
+    assert len(simplified.args) == 2
