@@ -1767,7 +1767,8 @@ def _parts_rule_gen(integrand, symbol):
                     ):
                         dv = target * symbol
                         u = integrand / dv
-                        return u, dv
+                        if u.is_polynomial(symbol):
+                            return u, dv
             return None
 
         return pull_out_dv_rl
