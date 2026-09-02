@@ -2,9 +2,13 @@
     of incomplete gamma functions. It should probably be renamed. """
 from __future__ import annotations
 
+import mpmath
+from mpmath import workprec
+
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import DefinedFunction, ArgumentIndexError, expand_mul
 from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import I, pi, Rational, Integer
@@ -2927,8 +2931,26 @@ class owens_t(DefinedFunction):
         return super()._eval_aseries(n, args0, x, logx)
 
     def _eval_evalf(self, prec):
-        from sympy.integrals.integrals import Integral
-        return self.rewrite(Integral).evalf(n=prec_to_dps(prec))
+        h, a = self.args
+        if not (h.is_number and a.is_number):
+            return None
+        try:
+            hm = h._to_mpmath(prec)
+            am = a._to_mpmath(prec)
+        except (ValueError, TypeError):
+            return None
+        # Evaluate the defining integral by mpmath quadrature at the
+        # requested precision (with guard bits): the working precision
+        # matters, because ``Add`` retries at higher precision to recover
+        # cancellation between T(h, a) and error function terms. An
+        # mpmath integrand is much cheaper than evaluating the symbolic
+        # integrand at every node through ``evalf``.
+        with workprec(prec + 10):
+            def integrand(t):
+                s = 1 + t**2
+                return mpmath.exp(-hm**2*s/2)/s
+            result = mpmath.quad(integrand, [0, am])/(2*mpmath.pi)
+        return Expr._from_mpmath(result, prec)
 
 
 ###############################################################################
