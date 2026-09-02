@@ -14,7 +14,7 @@ from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
     ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE, _array_tensor_product, \
     _array_contraction, _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum, _split_scalar_coefficient, \
-    get_shape
+    get_shape, get_ndim
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -1137,3 +1137,15 @@ def test_edit_array_contraction_merge_scalars_rank_zero_applyfunc():
     editor = _EditArrayContraction(cg)
     ret = editor.to_array_contraction()
     assert ret == _array_contraction(_array_tensor_product(1/Trace(X)*X, X), (1, 2))
+
+
+def test_get_ndim_matrix_element():
+    A = MatrixSymbol("A", k, k)
+    # a matrix element is a scalar, consistently with get_shape:
+    assert get_shape(A[0, 1]) == ()
+    assert get_ndim(A[0, 1]) == 0
+    # so it can be a scalar factor of a tensor product containing a
+    # contraction (this used to raise an IndexError):
+    expr = _array_tensor_product(A[0, 1], _array_contraction(A, (0, 1)))
+    assert expr == _array_contraction(_array_tensor_product(A[0, 1], A), (0, 1))
+    assert get_shape(expr) == ()

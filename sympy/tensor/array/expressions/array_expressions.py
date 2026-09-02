@@ -2195,8 +2195,11 @@ class _EditArrayContraction:
 
 
 def get_ndim(expr):
-    if isinstance(expr, (MatrixExpr, MatrixElement)):
+    if isinstance(expr, MatrixExpr):
         return 2
+    if isinstance(expr, MatrixElement):
+        # a matrix element is a scalar (consistently with ``get_shape``):
+        return 0
     if isinstance(expr, _CodegenArrayAbstract):
         return len(expr.shape)
     if isinstance(expr, NDimArray):

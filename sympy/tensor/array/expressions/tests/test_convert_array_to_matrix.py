@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy import Lambda, S, Dummy, KroneckerProduct, Array, exp
+from sympy import Lambda, S, Dummy, KroneckerProduct, Array, Matrix, exp
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -1068,3 +1068,17 @@ def test_convert_array_to_matrix_rank0_applyfunc_to_scalar():
         I, I), (1, 3))
     ret = convert_array_to_matrix(cg)
     assert ret == -Rational(1, 2)*Trace(X)**(-2)*I
+
+
+def test_convert_array_to_matrix_contraction_group_with_identities_is_not_a_trace():
+    # The single contraction group involves both axes of two matrices and
+    # one axis of each of two identity matrices: the result is the
+    # Hadamard product of the matrices embedded on the diagonal, not a
+    # trace multiplied by an identity matrix.
+    expr = ArrayContraction(ArrayTensorProduct(3*M, M, I, I), (0, 1, 2, 3, 5, 7))
+    ret = convert_array_to_matrix(expr)
+    assert ret.shape == (k, k)
+    M2 = MatrixSymbol("M", 2, 2)
+    expr2 = expr.subs(k, 2).subs(M, M2)
+    ret2 = convert_array_to_matrix(expr2)
+    assert ret2.as_explicit() == Matrix([[3*M2[0, 0]**2, 0], [0, 3*M2[1, 1]**2]])

@@ -934,6 +934,20 @@ def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
                         editor.args_with_ind.remove(i)
             continue
         if len(k) == 1 and next(iter(k)) >= 0 and sum(next(iter(k)) in i for i in map_contr_to_args) == 1:
+            ind = next(iter(k))
+            if map_ind_to_inds[ind] != 2*len(v):
+                # The index is also carried by arguments with free axes
+                # (e.g. identity matrices embedding the result on a
+                # diagonal), so this is not a trace.  Merge the fully
+                # contracted matrices into a single Hadamard product (only
+                # their diagonals contribute, hence the orientation of the
+                # factors is irrelevant) and leave the contraction in place:
+                if len(v) > 1 and all(isinstance(i.element, MatrixExpr) for i in v):
+                    hp = hadamard_product(*[i.element for i in v])
+                    editor.insert_after(v[0], _ArgE(hp, [ind, ind]))
+                    for i in v:
+                        editor.args_with_ind.remove(i)
+                continue
             # This is a trace: the arguments are fully contracted with only one
             # index, and the index isn't used anywhere else:
             make_trace = True

@@ -4,7 +4,7 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from __future__ import annotations
-from sympy import KroneckerProduct, Matrix, diff, eye, Array, MatPow
+from sympy import KroneckerProduct, Matrix, diag, diff, eye, Array, MatPow
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import Rational
@@ -750,6 +750,13 @@ def test_matrix_element_derivative_by_matrix_symbol():
     t = symbols("t")
     assert (t*X)[0, 1].diff(t) == X[0, 1]
 
+    # A matrix element multiplying a matrix expression used to raise an
+    # IndexError (the element was treated as a rank-2 object):
+    d = (X[0, 1]*Trace(X)).diff(X)
+    assert d == X[0, 1]*Identity(3) + Trace(X)*MatrixUnit(3, 3, 0, 1)
+    assert d.as_explicit() == Matrix([
+        [X[0, 1], Trace(X), 0], [0, X[0, 1], 0], [0, 0, X[0, 1]]])
+
 
 def _explicit_numeric(expr, subs_map):
     # Evaluate an expression to an explicit Array at a numeric point given by
@@ -811,6 +818,11 @@ def test_derivative_trace_of_hadamard_shape():
     d2 = Trace(HadamardPower(X2, 2)).diff(X2)
     assert d2.shape == (2, 2)
     assert d2.as_explicit() == Matrix([[2*X2[0, 0], 0], [0, 2*X2[1, 1]]])
+    # a contraction group shared by two fully contracted matrices and the
+    # axes of two identity matrices used to be misread as a trace:
+    d3 = Trace(HadamardPower(X2, 3)).diff(X2)
+    assert d3.shape == (2, 2)
+    assert d3.as_explicit() == Matrix([[3*X2[0, 0]**2, 0], [0, 3*X2[1, 1]**2]])
 
 
 def test_derivative_trace_of_vector_hadamard():
@@ -828,11 +840,17 @@ def test_derivative_trace_of_vector_hadamard():
 def test_derivative_diag_matrix():
     # DiagMatrix used to be non-differentiable, which also blocked second
     # derivatives of elementwise-applied functions:
+    from sympy import derive_by_array
     x2 = MatrixSymbol("x", 2, 1)
+    xs = Matrix(2, 1, lambda i, j: x2[i, 0])
     d = DiagMatrix(x2).diff(x2)
-    assert d.as_explicit().shape == (2, 1, 2, 2)
+    assert d.shape == (2, 1, 2, 2)
+    # d[k, 0, i, j] = delta(k, i)*delta(i, j):
+    assert d.as_explicit() == derive_by_array(diag(*xs), xs)
     dd = x2.applyfunc(sin).diff(x2).diff(x2)
-    assert dd.as_explicit().shape == (2, 1, 2, 2)
+    assert dd.shape == (2, 1, 2, 2)
+    # dd[k, 0, i, j] = -sin(x[i, 0])*delta(k, i)*delta(i, j):
+    assert dd.as_explicit() == derive_by_array(diag(*xs.applyfunc(cos)), xs)
 
 
 def test_derivative_hadamard_of_outer_product():
