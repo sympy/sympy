@@ -33,9 +33,11 @@ def _compare_einsum_numpy(path, *a):
 
 
 def _get_random_path(*a):
+    # Uses the ``random`` module only, which the test runner seeds, so that
+    # a failure can be reproduced from the reported seed:
     dim = sum([len(i.shape) for i in a])
     letters = string.ascii_letters[:dim]
-    indices_src = numpy.random.choice(list(letters), size=dim, replace=True)
+    indices_src = [random.choice(letters) for _ in range(dim)]
     indices_src_by_arg = []
     counter = 0
     for i in a:
@@ -47,7 +49,7 @@ def _get_random_path(*a):
     min0 = 0 if indices_sing else 1
     if random.random() > 0.5:
         indices_sing = [i for i in indices_sing if random.random() > 0.5]
-    indices_dst = indices_sing + list(numpy.random.choice(indices_mult, size=numpy.random.randint(min0, len(indices_mult)), replace=False))
+    indices_dst = indices_sing + random.sample(indices_mult, random.randint(min0, len(indices_mult)))
     random.shuffle(indices_dst)
     path = f"{','.join([''.join(i) for i in indices_src_by_arg])}->{''.join(indices_dst)}"
     return path
@@ -504,9 +506,12 @@ def test_from_to_einsum_numpy():
 
     base_dim = 2
 
-    a = numpy.random.randint(0, 100, base_dim**4).reshape(base_dim, base_dim, base_dim, base_dim)
-    b = numpy.random.randint(0, 100, base_dim**4).reshape(base_dim, base_dim, base_dim, base_dim)
-    c = numpy.random.randint(0, 100, base_dim**2).reshape(base_dim, base_dim)
+    # Seed NumPy's generator from the (seeded) ``random`` module, so that
+    # the arrays depend on the test seed reported by the test runner:
+    rng = numpy.random.default_rng(random.getrandbits(32))
+    a = rng.integers(0, 100, base_dim**4).reshape(base_dim, base_dim, base_dim, base_dim)
+    b = rng.integers(0, 100, base_dim**4).reshape(base_dim, base_dim, base_dim, base_dim)
+    c = rng.integers(0, 100, base_dim**2).reshape(base_dim, base_dim)
 
     _compare_einsum_numpy("ijkl->jkil", a)
     _compare_einsum_numpy("iijk->kj", a)
@@ -527,8 +532,9 @@ def test_convert_array_to_einsum_random_numpy():
 
     # Round-trip random array expressions through Einsum, checking the
     # explicit values against the original expression:
-    a = numpy.random.randint(0, 10, 16).reshape(2, 2, 2, 2)
-    b = numpy.random.randint(0, 10, 4).reshape(2, 2)
+    rng = numpy.random.default_rng(random.getrandbits(32))
+    a = rng.integers(0, 10, 16).reshape(2, 2, 2, 2)
+    b = rng.integers(0, 10, 4).reshape(2, 2)
     sa = Array(a.tolist())
     sb = Array(b.tolist())
 

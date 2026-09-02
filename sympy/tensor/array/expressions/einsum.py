@@ -440,6 +440,14 @@ class Einsum(_ArrayExpr):
             repr(self.path_string),
             ", ".join(printer._print(arg) for arg in self.array_args))
 
+    def _latex(self, printer):
+        # The subscript string is typeset verbatim: printed as a
+        # mathematical expression, "->" would come out as an arrow-less
+        # minus and greater-than sign sequence.
+        return r"\operatorname{Einsum}\left(\texttt{%s}, %s\right)" % (
+            self.path_string,
+            ", ".join(printer._print(arg) for arg in self.array_args))
+
 
 class _EinsumBuilder:
     def __init__(self, path_src, path_dst, *args):
