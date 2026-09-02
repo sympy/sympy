@@ -1433,11 +1433,11 @@ def test_issue_8945():
     assert integrate(cos(x)**2/x**2, x) == -Si(2*x) - cos(2*x)/(2*x) - 1/(2*x)
 
 
-@slow
 def test_issue_7130():
     i, L, a, b = symbols('i L a b')
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
-    assert x not in integrate(integrand, (x, 0, L)).free_symbols
+    # The expressions do not match exactly, but they are equivalent.
+    assert simplify(integrate(integrand, (x, 0, L)) - Piecewise((L/a, (Eq(b, 0) & Eq(i, 0)) | (Eq(b, 0) & Eq(i, 0) & Ne(I*pi*i/(L*b), 0))), ((-I*L*exp(2*I*pi*i) + 2*I*L*log(exp(-2*I*pi*i)) + I*L*exp(-2*I*pi*i))/(8*pi*a*i), Eq(b, 0) | (Eq(b, 0) & Ne(I*pi*i/(L*b), 0))), (-(exp(4*I*pi*a*i/(L*b))*Ei(-2*I*pi*a*i/(L*b)) + 2*exp(2*I*pi*a*i/(L*b))*log(a) + Ei(2*I*pi*a*i/(L*b)))*exp(-2*I*pi*a*i/(L*b))/(4*b) + (exp(4*I*pi*a*i/(L*b))*Ei(-2*I*pi*i*(L*b + a)/(L*b)) + 2*exp(2*I*pi*a*i/(L*b))*log(L*b + a) + Ei(2*I*pi*i*(L*b + a)/(L*b)))*exp(-2*I*pi*a*i/(L*b))/(4*b), Ne(I*pi*i/(L*b), 0) | (Eq(i, 0) & Ne(I*pi*i/(L*b), 0))), (-(exp(4*I*pi*a*i/(L*b))*log(a) + 2*exp(2*I*pi*a*i/(L*b))*log(a) + log(a))*exp(-2*I*pi*a*i/(L*b))/(4*b) + (exp(4*I*pi*a*i/(L*b))*log(L*b + a) + 2*exp(2*I*pi*a*i/(L*b))*log(L*b + a) + log(L*b + a))*exp(-2*I*pi*a*i/(L*b))/(4*b), True))) == 0
 
 
 def test_issue_10567():

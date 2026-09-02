@@ -1445,7 +1445,7 @@ def combine_power_rule(integral):
     For example, this is useful for the ErfRule.
     """
     integrand, symbol = integral
-    a = Wild('a', exclude=[symbol])
+    a = Wild('a', exclude=[symbol, 0])
     b = Wild('b', exclude=[symbol])
     k = Wild('k', exclude=[symbol])
     rest = Wild('rest')
