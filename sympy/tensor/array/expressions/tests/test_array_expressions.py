@@ -263,9 +263,10 @@ def test_arrayexpr_tensor_product_scalar_coefficients():
     assert tp.doit() == ArrayTensorProduct(2, M, N)
     assert ArrayTensorProduct(x*y*M, N).doit() == ArrayTensorProduct(x*y, M, N)
 
-    # Scalar coefficients of MatrixExpr arguments are kept in place, as
-    # the matrix-recognition machinery relies on them:
-    assert ArrayTensorProduct(2*Ms, Ns).doit() == ArrayTensorProduct(2*Ms, Ns)
+    # Scalar coefficients of MatrixExpr arguments are extracted as well:
+    assert ArrayTensorProduct(2*Ms, Ns).doit() == ArrayTensorProduct(2, Ms, Ns)
+    assert ArrayTensorProduct(2*Ms, 3*Ns).doit() == ArrayTensorProduct(6, Ms, Ns)
+    assert ArrayTensorProduct(x*Ms*Ns, y*Ns).doit() == ArrayTensorProduct(x*y, Ms*Ns, Ns)
 
     # Rank-0 array expressions (e.g. full contractions) are not merged
     # into the scalar coefficient:
@@ -881,19 +882,19 @@ def test_array_sum():
     assert expr.doit() == 5*X
 
     expr = ArrayTensorProduct(ArraySum(X, (i, 1, 5)), Y)
-    assert expr.doit() == ArrayTensorProduct(5*X, Y)
+    assert expr.doit() == ArrayTensorProduct(5, X, Y)
 
     expr = ArrayTensorProduct(A, ArraySum(X, (i, 1, j)), B, ArraySum(Y, (i, 1, m)), C)
-    assert expr.doit() == ArrayTensorProduct(A, j*X, B, m*Y, C)
+    assert expr.doit() == ArrayTensorProduct(j*m, A, X, B, Y, C)
 
     expr = ArrayTensorProduct(A, ArraySum(X*sin(i), (i, 1, j)), B, ArraySum(Y*sin(i), (i, 1, m)), C)
-    assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(A, sin(i)*X, B, sin(n)*Y, C), (i, 1, j), (n, 1, m)))
+    assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(sin(i)*sin(n), A, X, B, Y, C), (i, 1, j), (n, 1, m)))
 
     expr = ArrayTensorProduct(ArraySum(X**sin(i), (i, 1, j)), Y)
     assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(X**sin(i), Y), (i, 1, j)))
 
     expr = ArrayTensorProduct(ArraySum(X**sin(i), (i, 1, j)), i*Y)
-    assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(X**sin(m), i*Y), (m, 1, j)))
+    assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(i, X**sin(m), Y), (m, 1, j)))
 
     expr = ArrayContraction(ArraySum(X, (i, 0, j)), (0, 1))
     assert expr.doit() == ArrayContraction((j + 1)*X, (0, 1))
