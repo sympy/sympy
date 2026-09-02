@@ -694,7 +694,7 @@ def test_Ars_warning():
     u_ind = [ux, uy]
     u_dep = [uq]
 
-    msg = ("Matrix det == 0; not invertible. Ars is singular, maybe due to a "
+    msg = ("Ars is singular, maybe due to a "
            "wrong set of dependent speeds. Try a different set of "
            "dependent speeds.")
 
