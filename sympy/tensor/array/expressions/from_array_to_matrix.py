@@ -73,6 +73,12 @@ def _insert_candidate_into_editor(editor: _EditArrayContraction, arg_with_ind: _
     return new_arge, other_index
 
 
+def _count_index_slots(editor: _EditArrayContraction, index) -> int:
+    # Total number of axis slots (counting repetitions inside a single
+    # argument) carrying the given contraction index:
+    return sum(arg.indices.count(index) for arg in editor.args_with_ind)
+
+
 def _support_function_tp1_recognize(contraction_indices, args):
     if len(contraction_indices) == 0:
         return _a2m_tensor_product(*args)
@@ -99,10 +105,15 @@ def _support_function_tp1_recognize(contraction_indices, args):
                 arg_with_ind.indices = []
                 break
 
+            # An index can only be interpreted as a matrix-multiplication (or
+            # trace) link if its contraction group involves exactly two axis
+            # slots; a group with three or more slots (e.g. a partial
+            # diagonal-carrying contraction left over by
+            # ``split_multiple_contractions``) must not be consumed pairwise:
             scan_indices = []
-            if first_frequency == 2:
+            if first_frequency == 2 and _count_index_slots(editor, first_index) == 2:
                 scan_indices.append(first_index)
-            if second_frequency == 2:
+            if second_frequency == 2 and _count_index_slots(editor, second_index) == 2:
                 scan_indices.append(second_index)
 
             candidate, transpose, found_index = _get_candidate_for_matmul_from_contraction(scan_indices, editor.args_with_ind[i+1:])
@@ -117,9 +128,20 @@ def _support_function_tp1_recognize(contraction_indices, args):
                     new_arge.indices = [first_index, other_index]
                 set_indices = set(new_arge.indices)
                 if len(set_indices) == 1 and set_indices != {None}:
-                    # This is a trace:
-                    new_arge.element = Trace(new_arge.element)._normalize()
-                    new_arge.indices = []
+                    # Both indices of the merged argument belong to the same
+                    # contraction group: this is a trace only if no other
+                    # argument still carries the index (otherwise the group
+                    # has three or more slots and is not a pairwise trace).
+                    # ``candidate`` has already been removed from the editor
+                    # while ``args_with_ind[i]`` still holds ``arg_with_ind``:
+                    ind = new_arge.indices[0]
+                    remaining_slots = sum(arg.indices.count(ind)
+                                          for arg in editor.args_with_ind
+                                          if arg is not arg_with_ind)
+                    if remaining_slots == 0:
+                        # This is a trace:
+                        new_arge.element = Trace(new_arge.element)._normalize()
+                        new_arge.indices = []
                 editor.args_with_ind[i] = new_arge
                 # TODO: is this break necessary?
                 break
@@ -212,31 +234,47 @@ def _(expr: ArrayTensorProduct):
 @_array2matrix.register(ArraySum)
 def _(expr: ArraySum):
     new_function = _array2matrix(expr.function)
-    output = expr.func(new_function, *expr.limits).simplify()
-    if isinstance(output, ZeroArray) and get_ndim(output) == 2:
-        return ZeroMatrix(*output.shape)
-    return output
+    output = expr.func(new_function, *expr.limits)
+    if isinstance(new_function, MatrixExpr) and all(
+            len(i) == 3 and i[1].is_Integer and i[2].is_Integer for i in output.limits):
+        # Expand over the concrete limits: this keeps the result a matrix
+        # expression, while ``simplify`` below may rebuild a scalar ``Sum``
+        # of matrices, which has no shape:
+        return output.doit(deep=False)
+    simplified = output.simplify()
+    if get_shape(simplified) != get_shape(output):
+        # Simplification lost the array character of the expression (e.g. it
+        # rebuilt the sum as a shapeless scalar node), keep the shaped form:
+        simplified = output
+    if isinstance(simplified, ZeroArray) and get_ndim(simplified) == 2:
+        return ZeroMatrix(*simplified.shape)
+    return simplified
 
 
 @_array2matrix.register(ArrayContraction)
 def _(expr: ArrayContraction):
     expr = expr.flatten_contraction_of_diagonal()
     expr = identify_removable_identity_matrices(expr)
+    if not isinstance(expr, ArrayContraction):
+        return _array2matrix(expr)
     expr = expr.split_multiple_contractions()
     expr = identify_hadamard_products(expr)
     if not isinstance(expr, ArrayContraction):
         return _array2matrix(expr)
     subexpr = expr.expr
     contraction_indices: tuple[tuple[int]] = expr.contraction_indices
-    if contraction_indices == ((0,), (1,)) or (
-        contraction_indices == ((0,),) and subexpr.shape[1] == 1
-    ) or (
-        contraction_indices == ((1,),) and subexpr.shape[0] == 1
-    ):
+    if get_ndim(subexpr) == 2 and contraction_indices in (((0,), (1,)), ((0,),), ((1,),)):
+        # Sum over rows and/or columns of a matrix, express it as a product
+        # by OneMatrix objects:
         shape = subexpr.shape
         subexpr = _array2matrix(subexpr)
         if isinstance(subexpr, MatrixExpr):
-            return OneMatrix(1, shape[0])*subexpr*OneMatrix(shape[1], 1)
+            ret2: MatrixExpr = subexpr
+            if (0,) in contraction_indices:
+                ret2 = OneMatrix(1, shape[0])*ret2
+            if (1,) in contraction_indices:
+                ret2 = ret2*OneMatrix(shape[1], 1)
+            return ret2
     if isinstance(subexpr, ArrayTensorProduct):
         newexpr = _array_contraction(_array2matrix(subexpr), *contraction_indices)
         contraction_indices = newexpr.contraction_indices
@@ -252,8 +290,7 @@ def _(expr: ArrayContraction):
         return ret
     elif not isinstance(subexpr, _CodegenArrayAbstract):
         ret = _array2matrix(subexpr)
-        if isinstance(ret, MatrixExpr):
-            assert expr.contraction_indices == ((0, 1),)
+        if isinstance(ret, MatrixExpr) and expr.contraction_indices == ((0, 1),):
             return _a2m_trace(ret)
         else:
             return _array_contraction(ret, *expr.contraction_indices)
@@ -398,16 +435,22 @@ def _(expr: ArrayTensorProduct):
             # Matrix is equivalent to scalar:
             if len(newargs) == 0:
                 newargs.append(arg)
+                pending = 1
+                prev_i = i
             elif 1 in get_shape(newargs[-1]):
                 if newargs[-1].shape[1] == 1:
                     newargs[-1] = newargs[-1]*arg
                 else:
                     newargs[-1] = arg*newargs[-1]
                 removed.extend(current_range)
+                # The (1, 1) matrix has been merged into the previous
+                # argument: keep ``pending`` and ``prev_i`` referring to that
+                # argument (they were set when it was processed), only the
+                # axes of the current (1, 1) argument have been removed.
             else:
                 newargs.append(arg)
-            pending = 1
-            prev_i = i
+                pending = 1
+                prev_i = i
         elif 1 in arg.shape:
             k = [i for i in arg.shape if i != 1][0]
             if pending is None:
@@ -420,7 +463,7 @@ def _(expr: ArrayTensorProduct):
                     newargs[-1] = prev*arg
                 else:  # case args.shape[1] == 1
                     newargs[-1] = arg*prev
-                removed.extend([cumul[prev_i], cumul[prev_i] + 1])  # type: ignore
+                removed.extend([j for j in (cumul[prev_i], cumul[prev_i] + 1) if j not in removed])  # type: ignore
                 pending = k  # type: ignore
                 prev_i = i
             elif pending == k:
@@ -671,6 +714,8 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
         contr_indices = []
         total_ndim = get_ndim(expr)
         replaced = [False for arg in args]
+        converted = [False for i in diag_indices]
+        partner_used: set[int] = set()
         for i, (abs_pos, rel_pos) in enumerate(zip(diag_indices, tuple_links)):
             if len(abs_pos) != 2:
                 continue
@@ -678,14 +723,13 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
             arg1 = args[pos1_outer]
             arg2 = args[pos2_outer]
             if get_ndim(arg1) != 2 or get_ndim(arg2) != 2:
-                if replaced[pos1_outer]:
-                    diag_indices[i] = None
-                if replaced[pos2_outer]:
-                    diag_indices[i] = None
+                # This group references an argument that was replaced by a
+                # ``OneArray`` (or has non-matrix rank): keep it as a
+                # surviving diagonal group, it will be remapped below.
                 continue
             pos1_in2 = 1 - pos1_inner
             pos2_in2 = 1 - pos2_inner
-            if arg1.shape[pos1_in2] == 1:
+            if arg1.shape[pos1_in2] == 1 and pos1_outer not in partner_used:
                 if arg1.shape[pos1_inner] != 1:
                     darg1 = DiagMatrix(arg1)
                 else:
@@ -694,9 +738,11 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
                 contr_indices.append(((pos2_outer, pos2_inner), (len(args)-1, pos1_inner)))
                 total_ndim += 1
                 diag_indices[i] = None
+                converted[i] = True
                 args[pos1_outer] = OneArray(arg1.shape[pos1_in2])
                 replaced[pos1_outer] = True
-            elif arg2.shape[pos2_in2] == 1:
+                partner_used.add(pos2_outer)
+            elif arg2.shape[pos2_in2] == 1 and pos2_outer not in partner_used:
                 if arg2.shape[pos2_inner] != 1:
                     darg2 = DiagMatrix(arg2)
                 else:
@@ -705,15 +751,68 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
                 contr_indices.append(((pos1_outer, pos1_inner), (len(args)-1, pos2_inner)))
                 total_ndim += 1
                 diag_indices[i] = None
+                converted[i] = True
                 args[pos2_outer] = OneArray(arg2.shape[pos2_in2])
                 replaced[pos2_outer] = True
-        diag_indices_new = [i for i in diag_indices if i is not None]
+                partner_used.add(pos1_outer)
+        if not any(converted):
+            return expr
         cumul = list(accumulate([0] + [get_ndim(arg) for arg in args]))
         contr_indices2 = [tuple(cumul[a] + b for a, b in i) for i in contr_indices]
+        if any(replaced):
+            # Some arguments have been replaced by ``OneArray`` objects of
+            # lower dimension and new arguments have been appended at the
+            # end: the surviving diagonal indices (still expressed in the
+            # old axis numbering) need to be remapped to the new layout.
+            # The diagonal is applied on top of the contraction, so the
+            # contracted axes have to be dropped from the numbering as well:
+            contracted_axes = sorted(j for i in contr_indices2 for j in i)
+            diag_indices_new = []
+            for dind, rel_pos in zip(diag_indices, tuple_links):
+                if dind is None:
+                    continue
+                if any(replaced[outer] for outer, _ in rel_pos) and len(dind) != 2:
+                    # A larger surviving diagonal group references a replaced
+                    # argument: bail out to preserve correctness:
+                    return expr
+                # A replaced argument has been substituted by a ``OneArray``
+                # with a single axis (its leftover size-1 free axis), which
+                # is the only axis a surviving group can reference:
+                newpos = [cumul[outer] + (0 if replaced[outer] else inner) for outer, inner in rel_pos]
+                diag_indices_new.append(tuple(p - sum(1 for q in contracted_axes if q < p) for p in newpos))
+        else:
+            diag_indices_new = [i for i in diag_indices if i is not None]
         tc = _array_contraction(
             _array_tensor_product(*args), *contr_indices2
         )
         td = _array_diagonal(tc, *diag_indices_new)
+        # The output axes of ``expr`` are the free (non-diagonal) axes
+        # followed by one axis per diagonal group, in the order the groups
+        # appear in ``expr.diagonal_indices``.  In ``td`` the output axis of
+        # each CONVERTED group is the free axis of the appended
+        # DiagMatrix-argument, which comes right after the free axes (in
+        # conversion order), while the surviving diagonal groups are
+        # appended at the very end: compensate with a permutation restoring
+        # the original group order:
+        n_groups = len(diag_indices)
+        n_free = get_ndim(expr) - n_groups
+        n_converted = sum(converted)
+        perm = list(range(n_free))
+        conv_rank = 0
+        surv_rank = 0
+        new_positions = [0]*n_groups
+        for i in range(n_groups):
+            if converted[i]:
+                new_positions[i] = n_free + conv_rank
+                conv_rank += 1
+            else:
+                new_positions[i] = n_free + n_converted + surv_rank
+                surv_rank += 1
+        perm += [0]*n_groups
+        for i in range(n_groups):
+            perm[new_positions[i]] = n_free + i
+        if perm != list(range(len(perm))):
+            td = _permute_dims(td, perm)
         return td
     return expr
 
@@ -733,6 +832,11 @@ def _a2m_tensor_product(*args):
     scalars = []
     arrays = []
     for arg in args:
+        if isinstance(arg, ArrayElementwiseApplyFunc) and get_ndim(arg) == 0:
+            # A rank-0 elementwise function application is a plain scalar
+            # (e.g. the derivative of ``1/Trace(X)``): convert it, it must
+            # not be treated as a noncommutative scalar factor:
+            arg = _array2matrix(arg)
         if isinstance(arg, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
             arrays.append(arg)
         elif isinstance(arg, (NDimArray, MatrixBase)):
@@ -744,11 +848,13 @@ def _a2m_tensor_product(*args):
     if len(arrays) == 0:
         return scalar
     if scalar != 1:
-        # A structurally noncommutative scalar (e.g. a rank-0
-        # ArrayElementwiseApplyFunc) cannot be absorbed into a MatMul
-        # coefficient; keep it as a rank-0 tensor-product factor:
-        if isinstance(arrays[0], _CodegenArrayAbstract) or \
+        if isinstance(arrays[0], (_CodegenArrayAbstract, _ArrayExpr)) or \
                 scalar.is_commutative is False:
+            # An in-place multiplication would create a shapeless ``Mul``
+            # object (or a ``MatMul`` with a structurally noncommutative
+            # scalar, e.g. a rank-0 ArrayElementwiseApplyFunc), let
+            # ``_array_tensor_product`` absorb the scalar instead:
+            # ``_array_tensor_product`` absorb the scalar instead:
             arrays = [scalar] + arrays
         else:
             arrays[0] *= scalar
@@ -757,6 +863,10 @@ def _a2m_tensor_product(*args):
 
 def _a2m_add(*args):
     if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
+        if not any(isinstance(i, MatrixExpr) for i in args):
+            # All addends are scalars (e.g. traces):
+            from sympy.core.add import Add
+            return Add(*args)
         from sympy.matrices.expressions.matadd import MatAdd
         return MatAdd(*args).doit()
     else:
@@ -781,6 +891,13 @@ def _a2m_transpose(arg):
 
 def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
 
+    # Only contraction/diagonal/tensor-product expressions can be loaded into
+    # the editor below; anything else (e.g. a PermuteDims produced while
+    # converting the inner expression) has no Hadamard product to identify, so
+    # leave it untouched instead of letting _EditArrayContraction raise.
+    if not isinstance(expr, (ArrayContraction, ArrayDiagonal, ArrayTensorProduct)):
+        return expr
+
     editor: _EditArrayContraction = _EditArrayContraction(expr)
 
     map_contr_to_args: dict[frozenset, list[_ArgE]] = defaultdict(list)
@@ -796,7 +913,41 @@ def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
     v: list[_ArgE]
     for k, v in map_contr_to_args.items():
         make_trace: bool = False
+        if len(k) == 1 and next(iter(k)) < 0:
+            # Negative indices are diagonal indices: the arguments in ``v``
+            # have both of their axes in the same diagonal group.  If the
+            # group is shared with exactly one axis of an identity matrix
+            # whose other axis is free, this is the diagonal embedding of a
+            # Hadamard product:  D[b, e] = M_ee * delta_be = (M o I)[b, e]
+            ind = next(iter(k))
+            identities = [i for i in editor.args_with_ind if isinstance(i.element, Identity)
+                          and i.indices.count(ind) == 1 and None in i.indices]
+            total_slots = sum(i.indices.count(ind) for i in editor.args_with_ind)
+            if len(identities) == 1 and total_slots == 2*len(v) + 1:
+                id_arg = identities[0]
+                if all(isinstance(i.element, MatrixExpr) and i.element.shape == id_arg.element.shape for i in v):
+                    hp = hadamard_product(*([i.element for i in v] + [id_arg.element]))
+                    # The Hadamard product has entries only on the main
+                    # diagonal, hence its orientation is irrelevant:
+                    id_arg.element = hp
+                    for i in v:
+                        editor.args_with_ind.remove(i)
+            continue
         if len(k) == 1 and next(iter(k)) >= 0 and sum(next(iter(k)) in i for i in map_contr_to_args) == 1:
+            ind = next(iter(k))
+            if map_ind_to_inds[ind] != 2*len(v):
+                # The index is also carried by arguments with free axes
+                # (e.g. identity matrices embedding the result on a
+                # diagonal), so this is not a trace.  Merge the fully
+                # contracted matrices into a single Hadamard product (only
+                # their diagonals contribute, hence the orientation of the
+                # factors is irrelevant) and leave the contraction in place:
+                if len(v) > 1 and all(isinstance(i.element, MatrixExpr) for i in v):
+                    hp = hadamard_product(*[i.element for i in v])
+                    editor.insert_after(v[0], _ArgE(hp, [ind, ind]))
+                    for i in v:
+                        editor.args_with_ind.remove(i)
+                continue
             # This is a trace: the arguments are fully contracted with only one
             # index, and the index isn't used anywhere else:
             make_trace = True
@@ -869,7 +1020,7 @@ def identify_removable_identity_matrices(expr):
                     if counted == 1:
                         # Identity matrix contracted only on one index with itself,
                         # transform to a OneArray(k) element:
-                        editor.insert_after(arg_with_ind, OneArray(k))
+                        editor.insert_after(arg_with_ind, _ArgE(OneArray(k)))
                         editor.args_with_ind.remove(arg_with_ind)
                         flag = True
                         break
@@ -933,12 +1084,21 @@ def remove_identity_matrices(expr: ArrayContraction):
         # (otherwise they would be contractions to some other elements)
         if any(None not in i.indices for i in identity_matrices):
             continue
+        # If the non-identity element has the contraction index on both of
+        # its axes, removing the identity matrices would turn the
+        # contraction into a diagonal extraction: skip this group and leave
+        # it to the diagonalization logic:
+        if non_identity.indices.count(ind) != 1:
+            continue
         # Mark the identity matrices for removal:
         for i in identity_matrices:
             i.element = None
             removed.extend(range(free_map[i], free_map[i] + len([j for j in i.indices if j is None])))
         last_removed = removed.pop(-1)
-        update_pairs[last_removed, ind] = non_identity.indices[:]
+        # Store the non-identity argument itself: it differs per pair, so the
+        # ``free_map`` offset below must be looked up from it rather than from
+        # whatever ``non_identity`` happens to hold after the loop ends.
+        update_pairs[last_removed, ind] = non_identity, non_identity.indices[:]
         # Remove the indices from the non-identity matrix, as the contraction
         # no longer exists:
         non_identity.indices = [None if i == ind else i for i in non_identity.indices]
@@ -946,11 +1106,26 @@ def remove_identity_matrices(expr: ArrayContraction):
     removed.sort()
 
     shifts = list(accumulate([1 if i in removed else 0 for i in range(get_ndim(expr))]))
-    for (last_removed, ind), non_identity_indices in update_pairs.items():
-        pos = [free_map[non_identity] + i for i, e in enumerate(non_identity_indices) if e == ind]
-        assert len(pos) == 1
-        for j in pos:
-            permutation_map[j] = last_removed
+    for (last_removed, ind), (non_identity, non_identity_indices) in update_pairs.items():
+        # Raw position, within the non-identity argument, of the axis that was
+        # contracted with the identity (and so has just been freed):
+        freed_positions = [i for i, e in enumerate(non_identity_indices) if e == ind]
+        assert len(freed_positions) == 1
+        freed = freed_positions[0]
+        # Find that freed axis' position among the free axes of the *result* by
+        # walking the surviving arguments (removed identities have had their
+        # element set to None) and counting their free axes -- this is robust
+        # when several identities are removed, unlike an offset computed from
+        # the original layout.
+        j = 0
+        for arg in editor.args_with_ind:
+            if arg.element is None:
+                continue
+            if arg is non_identity:
+                j += sum(1 for e in arg.indices[:freed] if e is None)
+                break
+            j += sum(1 for e in arg.indices if e is None)
+        permutation_map[j] = last_removed
 
     editor.args_with_ind = [i for i in editor.args_with_ind if i.element is not None]
     ret_expr = editor.to_array_contraction()
@@ -1031,9 +1206,14 @@ def _array_contraction_to_diagonal_multiple_identity(expr: ArrayContraction):
             break
         if flag:
             continue
+        # The contraction is turned into a diagonal: the free axis of ``id1``
+        # becomes the diagonal output axis.  Any further identity matrix in
+        # the group is KEPT as an argument with its group-axis joining the
+        # diagonal: its free axis duplicates the diagonal output (the result
+        # is a diagonal embedding).  Removing it would silently drop a
+        # non-trivial axis and change the shape of the expression:
         for arg in identities[:i1] + identities[i1+1:]:
-            arg.element = None
-            removed.extend(range(*editor.get_absolute_free_range(arg)))
+            arg.indices = [new_diag_ind if j == i else j for j in arg.indices]
         for arg in args:
             arg.indices = [new_diag_ind if j == i else j for j in arg.indices]
     for j, e in enumerate(editor.args_with_ind):
