@@ -2107,7 +2107,9 @@ class LatexPrinter(Printer):
             if isinstance(a, (Add, ArrayAdd)):
                 s = r"\left(%s\right)" % s
             elements.append(s)
-        return r' \otimes '.join(elements)
+        # \boxtimes is the notation for the tensor product of arrays used in
+        # the documentation (\otimes is the Kronecker product):
+        return r' \boxtimes '.join(elements)
 
     def _print_ArrayAdd(self, expr):
         return ' + '.join([self._print(a) for a in expr.args])

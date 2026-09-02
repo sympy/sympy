@@ -798,11 +798,14 @@ class PrettyPrinter(Printer):
     def _print_ArrayTensorProduct(self, expr):
         from sympy.core.add import Add
         from sympy.tensor.array.expressions.array_expressions import ArrayAdd
+        # Squared times (the LaTeX \boxtimes) is the notation for the tensor
+        # product of arrays used in the documentation; the circled times of
+        # TensorProduct denotes the Kronecker product there.
         if self._use_unicode:
-            circled_times = "\u2297"
+            boxed_times = "\u22a0"
         else:
-            circled_times = ".*"
-        return self._print_seq(expr.args, None, None, circled_times,
+            boxed_times = ".*"
+        return self._print_seq(expr.args, None, None, boxed_times,
             parenthesize=lambda x: isinstance(x, (Add, ArrayAdd)) or
                 precedence_traditional(x) <= PRECEDENCE["Mul"])
 

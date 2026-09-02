@@ -2873,13 +2873,13 @@ def test_ArrayTensorProduct_printing():
     A = MatrixSymbol("A", 3, 4)
     B = MatrixSymbol("B", 4, 5)
     C = MatrixSymbol("C", 3, 4)
-    assert latex(ArrayTensorProduct(A, B)) == r"A \otimes B"
+    assert latex(ArrayTensorProduct(A, B)) == r"A \boxtimes B"
     assert latex(ArrayAdd(ArrayTensorProduct(A, B), ArrayTensorProduct(C, B))) == \
-        r"A \otimes B + C \otimes B"
+        r"A \boxtimes B + C \boxtimes B"
     assert latex(ArrayTensorProduct(ArrayAdd(A, C), B)) == \
-        r"\left(A + C\right) \otimes B"
+        r"\left(A + C\right) \boxtimes B"
     assert latex(ArrayTensorProduct(A + C, B)) == \
-        r"\left(A + C\right) \otimes B"
+        r"\left(A + C\right) \boxtimes B"
 
 
 def test_WedgeProduct_printing():
