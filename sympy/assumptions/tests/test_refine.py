@@ -359,26 +359,26 @@ def test_log():
     assert refine(log(x**a), Q.positive(x) & Q.real(a)) == a*log(x)
     assert refine(log(x**2), Q.positive(x)) == 2*log(x)
     assert refine(log(x**2), Q.negative(x)) == 2*log(-x)
-    assert refine(log(x**3), Q.negative(x)) == 3*log(-x) + I*pi 
+    assert refine(log(x**3), Q.negative(x)) == 3*log(-x) + I*pi
     assert refine(log(x**(-1)), Q.negative(x)) == -log(-x) + I*pi
     assert refine(log(x**(-2)), Q.negative(x)) == -2*log(-x)
     assert refine(log(x**S.Half), Q.negative(x)) == log(-x)/2 + I*pi/2
     assert refine(log(x**(3*S.Half)), Q.negative(x)) == 3*log(-x)/2 - I*pi/2
     assert refine(log(x**(5*S.Half)), Q.negative(x)) == 5*log(-x)/2 + I*pi/2
-    
+
     assert refine(log(x**a), Q.positive(x)) == log(x**a)
     assert refine(log(x**a), Q.real(a)) == log(x**a)
     assert refine(log(x**a), Q.positive(y)) == log(x**a)
     assert refine(log(x**a), Q.real(x) & Q.real(a)) == log(x**a)
     assert refine(log(x**a), True) == log(x**a)
     assert refine(log(x**a), Q.complex(x)) == log(x**a)
-    assert refine(log(x**a), Q.complex(a)) == log(x**a)  
+    assert refine(log(x**a), Q.complex(a)) == log(x**a)
     assert refine(log(x**a), Q.real(x) & Q.complex(a)) == log(x**a)
-    
+
     assert refine(log(x**(S.ImaginaryUnit*a)), Q.negative(x) & Q.real(a)) == (-pi*a + I*(a*log(-x) - 2*pi*ceiling((a*log(-x) - pi)/(2*pi))))
     assert refine(log((-S.Exp1)**S.ImaginaryUnit), True) == -pi + I
     assert refine(log((-S.Exp1)**(2*S.ImaginaryUnit)), True) == -2*pi + 2*I
 
     assert refine(log(exp(S.ImaginaryUnit*S.Pi)), True) == I*pi
-    assert refine(log(exp(-S.ImaginaryUnit*S.Pi)), True) == I*pi 
-    assert refine(log(exp(4*S.ImaginaryUnit)), True) == -2*I*pi + 4*I   
+    assert refine(log(exp(-S.ImaginaryUnit*S.Pi)), True) == I*pi
+    assert refine(log(exp(4*S.ImaginaryUnit)), True) == -2*I*pi + 4*I
