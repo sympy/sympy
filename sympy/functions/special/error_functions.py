@@ -2931,12 +2931,6 @@ class owens_t(DefinedFunction):
         h, a = self.args
         if not (h.is_number and a.is_number):
             return None
-        # Evaluate the defining integral by mpmath quadrature at the
-        # requested precision (with guard bits): the working precision
-        # matters, because ``Add`` retries at higher precision to recover
-        # cancellation between T(h, a) and error function terms. An
-        # mpmath integrand is much cheaper than evaluating the symbolic
-        # integrand at every node through ``evalf``.
         with local_workprec(prec + 10) as ctx:
             try:
                 hm = ctx.convert(h._to_mpmath(prec + 10))
