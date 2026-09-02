@@ -384,7 +384,7 @@ def test_input_format():
     assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
                                     c2 * u2) / m)
 
-
+@slow
 def test_implicit_kinematics():
     # Test that implicit kinematics can handle complicated equations that
     # explicit form struggles with See
