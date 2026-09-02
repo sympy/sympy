@@ -58,10 +58,10 @@ def test_function_range():
         ) == Interval(-1, 1)
     assert function_range(cos(x), x, S.EmptySet) == S.EmptySet
     assert function_range(x/sqrt(x**2+1), x, S.Reals) == Interval.open(-1,1)
+    assert function_range(sin(x) + x, x, S.Reals) == S.Reals  # issue 13273
+    assert function_range(x + 1/(x**2 + 1), x, S.Reals) == S.Reals
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
-    raises(NotImplementedError, lambda : function_range(
-        sin(x) + x, x, S.Reals)) # issue 13273
     raises(NotImplementedError, lambda : function_range(
         log(x), x, S.Integers))
     raises(NotImplementedError, lambda : function_range(

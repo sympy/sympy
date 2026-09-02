@@ -4,7 +4,7 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from __future__ import annotations
-from sympy import KroneckerProduct, Matrix, diff, eye, Array, MatPow
+from sympy import KroneckerProduct, Matrix, diag, diff, eye, Array, MatPow
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import Rational
@@ -97,7 +97,8 @@ def test_matrix_derivative_non_matrix_result():
     assert A.diff(A) == AdA
     assert A.T.diff(A) == PermuteDims(ArrayTensorProduct(I, I), Permutation(3)(1, 2, 3))
     assert (2*A).diff(A) == PermuteDims(ArrayTensorProduct(2*I, I), Permutation(3)(1, 2))
-    assert MatAdd(A, A).diff(A) == ArrayAdd(AdA, AdA)
+    # The two identical addend derivatives are collected:
+    assert MatAdd(A, A).diff(A) == PermuteDims(ArrayTensorProduct(2*I, I), Permutation(3)(1, 2))
     assert (A + B).diff(A) == AdA
 
 
@@ -707,3 +708,177 @@ def test_matexpr_derivative_by_matrix_element():
 
     A = MatrixSymbol(a, a, a)
     assert A.diff(Y[a,a]) == ZeroMatrix(a, a)
+
+
+def test_matrixexpr_eval_derivative_unhandled_returns_none():
+    # MatrixExpr._eval_derivative used to raise AttributeError when no
+    # class in the MRO provided an implementation; it should return None
+    # so that Derivative stays unevaluated.
+    from sympy.core.function import Derivative
+    from sympy.core.sympify import _sympify
+    from sympy.matrices.expressions.matexpr import MatrixExpr
+
+    class CustomMatExpr(MatrixExpr):
+        shape = (2, 2)
+
+        def __new__(cls, arg):
+            return super().__new__(cls, _sympify(arg))
+
+    t = symbols("t")
+    m = CustomMatExpr(t)
+    assert m._eval_derivative(t) is None
+    assert Derivative(m, t).doit() == Derivative(m, t)
+
+
+def test_matrix_element_derivative_by_matrix_symbol():
+    # Differentiating a MatrixElement by a MatrixSymbol used to raise a
+    # TypeError (higher-rank array derivatives are not 2-subscriptable):
+    from sympy.matrices.expressions.matexpr import MatrixElement
+
+    X = MatrixSymbol("X", 3, 3)
+    Y = MatrixSymbol("Y", 3, 3)
+
+    assert X[0, 1].diff(X) == MatrixUnit(3, 3, 0, 1)
+    assert X[0, 1]._eval_derivative(X) == MatrixUnit(3, 3, 0, 1)
+
+    # If the parent's derivative is not a 2-dimensional matrix expression,
+    # return None (cannot evaluate) instead of crashing:
+    assert X[0, 1]._eval_derivative(Y) is None
+    assert MatrixElement(X*Y, 0, 1)._eval_derivative(Y) is None
+
+    # Scalar differentiation of matrix elements is unaffected:
+    t = symbols("t")
+    assert (t*X)[0, 1].diff(t) == X[0, 1]
+
+    # A matrix element multiplying a matrix expression used to raise an
+    # IndexError (the element was treated as a rank-2 object):
+    d = (X[0, 1]*Trace(X)).diff(X)
+    assert d == X[0, 1]*Identity(3) + Trace(X)*MatrixUnit(3, 3, 0, 1)
+    assert d.as_explicit() == Matrix([
+        [X[0, 1], Trace(X), 0], [0, X[0, 1], 0], [0, 0, X[0, 1]]])
+
+
+def _explicit_numeric(expr, subs_map):
+    # Evaluate an expression to an explicit Array at a numeric point given by
+    # ``subs_map`` (MatrixSymbol -> Matrix of rationals). The expression is
+    # made explicit entrywise first, so that matrix functions of numeric
+    # matrices (e.g. the inverse) are computed on the scalar entries.
+    from sympy import Array, sympify, ImmutableMatrix
+    e = sympify(expr)
+    if hasattr(e, "as_explicit"):
+        e = e.as_explicit()
+    e = Array(e)
+    mat_subs = {s: ImmutableMatrix(v) for s, v in subs_map.items()}
+    return Array([sympify(x).subs(mat_subs).doit() for x in e], e.shape)
+
+
+def test_derivatives_of_scalar_functions_of_traces():
+    # sin/exp/log wrapping a Trace used to raise NotImplementedError:
+    A2 = MatrixSymbol("A", 2, 2)
+    B2 = MatrixSymbol("B", 2, 2)
+    nA = Matrix([[1, 2], [3, 5]])
+    nB = Matrix([[7, 1], [2, 4]])
+    assert sin(Trace(A2)).diff(A2) == cos(Trace(A2))*Identity(2)
+    d = exp(Trace(A2*B2)).diff(A2)
+    assert d.shape == (2, 2)
+    assert _explicit_numeric(d, {A2: nA, B2: nB}) == \
+        _explicit_numeric(exp(Trace(nA*nB))*nB.T, {})
+    # a scalar coefficient on an inverted trace used to crash:
+    d2 = (1/(2*Trace(A2))).diff(A2)
+    assert _explicit_numeric(d2, {A2: nA}) == \
+        _explicit_numeric(-Rational(1, 2)/Trace(nA)**2*eye(2), {})
+
+
+def test_derivative_negative_matrix_power():
+    # MatPow with a negative exponent used to silently differentiate to zero:
+    A2 = MatrixSymbol("A", 2, 2)
+    B2 = MatrixSymbol("B", 2, 2)
+    nA = Matrix([[1, 2], [3, 5]])
+    assert MatPow(A2, -1).diff(A2).as_explicit() == \
+        Inverse(A2).diff(A2).as_explicit()
+    from sympy import derive_by_array, Array
+    d = MatPow(A2, -2).diff(A2)
+    got = _explicit_numeric(d, {A2: nA})
+    truth = Array(derive_by_array(
+        Matrix(2, 2, lambda i, j: A2[i, j]).inv()**2,
+        Matrix(2, 2, lambda i, j: A2[i, j])))
+    assert got == _explicit_numeric(truth, {A2: nA})
+    # Trace of a negative power gives a shaped, closed-form matrix:
+    td = Trace(B2*MatPow(A2, -2)).diff(A2)
+    assert td.shape == (2, 2)
+
+
+def test_derivative_trace_of_hadamard_shape():
+    # used to return a (k,)-shaped diagonal vector instead of a (k, k) matrix:
+    A2 = MatrixSymbol("A", 2, 2)
+    X2 = MatrixSymbol("X", 2, 2)
+    d = Trace(HadamardProduct(A2, X2)).diff(X2)
+    assert d.shape == (2, 2)
+    assert d.as_explicit() == Matrix([[A2[0, 0], 0], [0, A2[1, 1]]])
+    d2 = Trace(HadamardPower(X2, 2)).diff(X2)
+    assert d2.shape == (2, 2)
+    assert d2.as_explicit() == Matrix([[2*X2[0, 0], 0], [0, 2*X2[1, 1]]])
+    # a contraction group shared by two fully contracted matrices and the
+    # axes of two identity matrices used to be misread as a trace:
+    d3 = Trace(HadamardPower(X2, 3)).diff(X2)
+    assert d3.shape == (2, 2)
+    assert d3.as_explicit() == Matrix([[3*X2[0, 0]**2, 0], [0, 3*X2[1, 1]**2]])
+
+
+def test_derivative_trace_of_vector_hadamard():
+    # a >=3-slot contraction group used to be misread as a trace, giving a
+    # constant vector replicated instead of the entrywise result:
+    a2 = MatrixSymbol("a", 2, 1)
+    x2 = MatrixSymbol("x", 2, 1)
+    d = Trace(x2.T*HadamardProduct(a2, x2)).diff(x2)
+    na = Matrix([[2], [3]])
+    nx = Matrix([[5], [7]])
+    got = _explicit_numeric(d, {a2: na, x2: nx})
+    assert list(got.reshape(2)) == [2*2*5, 2*3*7]
+
+
+def test_derivative_diag_matrix():
+    # DiagMatrix used to be non-differentiable, which also blocked second
+    # derivatives of elementwise-applied functions:
+    from sympy import derive_by_array
+    x2 = MatrixSymbol("x", 2, 1)
+    xs = Matrix(2, 1, lambda i, j: x2[i, 0])
+    d = DiagMatrix(x2).diff(x2)
+    assert d.shape == (2, 1, 2, 2)
+    # d[k, 0, i, j] = delta(k, i)*delta(i, j):
+    assert d.as_explicit() == derive_by_array(diag(*xs), xs)
+    dd = x2.applyfunc(sin).diff(x2).diff(x2)
+    assert dd.shape == (2, 1, 2, 2)
+    # dd[k, 0, i, j] = -sin(x[i, 0])*delta(k, i)*delta(i, j):
+    assert dd.as_explicit() == derive_by_array(diag(*xs.applyfunc(cos)), xs)
+
+
+def test_derivative_hadamard_of_outer_product():
+    # the DiagMatrix rewrite used to transpose the last two axes of the
+    # result, and mixed-rank ArrayAdd addends used to crash:
+    from sympy import derive_by_array, Array
+    x2 = MatrixSymbol("x", 2, 1)
+    a2 = MatrixSymbol("a", 2, 1)
+    A2 = MatrixSymbol("A", 2, 2)
+    B2 = MatrixSymbol("B", 2, 2)
+    nx = Matrix([[5], [7]])
+    nA = Matrix([[1, 2], [3, 5]])
+    d = HadamardProduct(x2*x2.T, A2).diff(x2)
+    got = _explicit_numeric(d, {x2: nx, A2: nA})
+    xs = Matrix(2, 1, lambda i, j: x2[i, 0])
+    truth = Array(derive_by_array(
+        Matrix(2, 2, lambda i, j: xs[i, 0]*xs[j, 0]*A2[i, j]), xs))
+    truth_n = _explicit_numeric(truth, {x2: nx, A2: nA})
+    assert list(got) == list(truth_n)
+    assert (HadamardProduct(a2, x2) + B2*x2).diff(x2).shape == (2, 2)
+
+
+def test_derivative_object_routing():
+    # a directly constructed Derivative used to bypass the matrix-aware
+    # dispatch on doit(), crashing or giving wrong results:
+    from sympy.core.function import Derivative
+    A2 = MatrixSymbol("A", 2, 2)
+    X2 = MatrixSymbol("X", 2, 2)
+    assert Derivative(Trace(A2*X2), X2).doit() == A2.T
+    assert Derivative(Trace(X2*X2), X2, 2).doit() == \
+        Trace(X2*X2).diff(X2).diff(X2)

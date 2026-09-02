@@ -23,6 +23,7 @@ from sympy.core.symbol import (Dummy, Symbol)
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.diagonal import diagonalize_vector
 from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.tensor.array.arrayop import (permutedims, tensorcontraction, tensordiagonal, tensorproduct)
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
@@ -78,7 +79,7 @@ class ArraySymbol(_ArrayExpr):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("cannot express explicit array with symbolic shape")
         data = [self[i] for i in itertools.product(*[range(j) for j in self.shape])]
-        return ImmutableDenseNDimArray(data).reshape(*self.shape)
+        return ImmutableDenseNDimArray(data, tuple(self.shape))
 
 
 class ArrayElement(Expr):
@@ -168,10 +169,44 @@ class ArraySum(Sum, _ArrayExpr):
         return obj
 
     def doit(self, **hints):
+        deep = hints.get("deep", True)
+        function = self.function.doit(**hints) if deep else self.function
+        limits = self.limits
+        if all(len(i) == 3 and i[1].is_Integer and i[2].is_Integer for i in limits):
+            # Expand the summation over the concrete integer limits. The
+            # summands are array expressions, so an ``ArrayAdd`` has to be
+            # used instead of a scalar ``Add`` (which would lose the array
+            # character of the expression, e.g. its shape):
+            if any(i[2] < i[1] for i in limits):
+                return ZeroArray(*self.shape)
+            terms = []
+            for values in itertools.product(*[range(int(i[1]), int(i[2]) + 1) for i in limits]):
+                terms.append(function.subs(dict(zip([i[0] for i in limits], values))))
+            if all(isinstance(term, MatrixExpr) for term in terms):
+                # The sum of matrix expressions is itself a valid matrix
+                # expression, no need for ``ArrayAdd``:
+                return reduce(operator.add, terms)
+            return _array_add(*terms)
         done = super().doit(**hints)
         if (done == 0) == True:
             return ZeroArray(*self.shape)
         return done
+
+    def as_explicit(self):
+        limits = self.limits
+        if not all(len(i) == 3 and i[1].is_Integer and i[2].is_Integer for i in limits):
+            raise ValueError("cannot express explicit form of array sum with symbolic limits")
+        if not all(i.is_Integer for i in self.shape):
+            raise ValueError("cannot express explicit array with symbolic shape")
+        if any(i[2] < i[1] for i in limits):
+            return ImmutableDenseNDimArray.zeros(*self.shape)
+        terms = []
+        for values in itertools.product(*[range(int(i[1]), int(i[2]) + 1) for i in limits]):
+            term = self.function.subs(dict(zip([i[0] for i in limits], values)))
+            if hasattr(term, "as_explicit"):
+                term = term.as_explicit()
+            terms.append(term if isinstance(term, NDimArray) else ImmutableDenseNDimArray(term))
+        return reduce(operator.add, terms)
 
     def _eval_simplify(self, **kwargs):
         ret = super()._eval_simplify(**kwargs)
@@ -237,6 +272,39 @@ class _CodegenArrayAbstract(Expr):
             return self._canonicalize()
 
 
+def _split_scalar_coefficient(arg):
+    """Split *arg* into a scalar coefficient and its array part.
+
+    Return the pair ``(coefficient, array)``, where ``array`` is None if
+    *arg* is entirely scalar.  Only structural splitting is performed:
+    scalar factors are extracted from ``MatMul`` objects and from ``Mul``
+    objects containing a single array-shaped factor.
+    """
+    if isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract)):
+        # Array expressions are kept whole, even when they have rank 0
+        # (e.g. a full contraction):
+        return S.One, arg
+    if isinstance(arg, MatMul):
+        coeff, matrices = arg.as_coeff_matrices()
+        if coeff is S.One:
+            return S.One, arg
+        rest = MatMul(*matrices) if len(matrices) > 1 else matrices[0]
+        return coeff, rest
+    if isinstance(arg, Mul):
+        scalars = [f for f in arg.args if get_shape(f) == ()]
+        arrays = [f for f in arg.args if get_shape(f) != ()]
+        if len(arrays) == 1:
+            return Mul(*scalars), arrays[0]
+        if len(arrays) > 1:
+            # A Mul of multiple array-shaped factors is not a well-defined
+            # array expression; leave it untouched.
+            return S.One, arg
+        return arg, None
+    if get_shape(arg) == ():
+        return arg, None
+    return S.One, arg
+
+
 class ArrayTensorProduct(_CodegenArrayAbstract):
     r"""
     Class to represent the tensor product of array-like objects.
@@ -244,6 +312,22 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
 
     def __new__(cls, *args, **kwargs):
         args = [_sympify(arg) for arg in args]
+
+        # A Mul argument containing an array-shaped factor (e.g.
+        # 2*ArraySymbol("A", (2, 2))) has no shape attribute and would be
+        # wrongly treated as a scalar; split it into its scalar coefficient
+        # and its array part:
+        normalized_args = []
+        for arg in args:
+            if isinstance(arg, Mul) and not isinstance(arg, MatrixExpr):
+                coeff, array = _split_scalar_coefficient(arg)
+                if array is not None:
+                    if coeff is not S.One:
+                        normalized_args.append(coeff)
+                    normalized_args.append(array)
+                    continue
+            normalized_args.append(arg)
+        args = normalized_args
 
         canonicalize = kwargs.pop("canonicalize", False)
 
@@ -264,6 +348,52 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
     def _canonicalize(self):
         args = self.args
         args = self._flatten(args)
+
+        # Merge scalar (rank-0) arguments into a single leading scalar
+        # factor, so that e.g. ArrayTensorProduct(x, A, y, B) becomes
+        # ArrayTensorProduct(x*y, A, B).  The scalar is kept as a rank-0
+        # argument (instead of returning Mul(coefficient, ...)) so that
+        # the result remains a valid array expression with a well-defined
+        # shape.  Scalar coefficients inside MatrixExpr arguments (e.g.
+        # ArrayTensorProduct(2*M, N) with M a MatrixSymbol) are NOT
+        # extracted, as the matrix-recognition machinery in
+        # from_array_to_matrix relies on matrix arguments keeping their
+        # coefficients; use _split_scalar_coefficient to compare
+        # arguments modulo their scalar coefficient.
+        def _is_plain_scalar(arg):
+            # Rank-0 array expressions (e.g. full contractions) are not
+            # merged: the branches below lift them into the expression.
+            return (get_shape(arg) == () and
+                    not isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract)))
+
+        scalars = [arg for arg in args if _is_plain_scalar(arg)]
+        if scalars:
+            # Structurally noncommutative rank-0 factors (e.g. a rank-0
+            # ArrayElementwiseApplyFunc, possibly inside a Mul) are kept
+            # as separate arguments, so that e.g. the conversion to
+            # matrix expressions can process them individually; only
+            # commutative scalars are merged into the coefficient:
+            comm_scalars = []
+            nc_scalars = []
+            for arg in scalars:
+                if isinstance(arg, Mul):
+                    comm_scalars.extend([f for f in arg.args if f.is_commutative])
+                    nc_scalars.extend([f for f in arg.args if not f.is_commutative])
+                elif arg.is_commutative is False:
+                    nc_scalars.append(arg)
+                else:
+                    comm_scalars.append(arg)
+            coeff = Mul.fromiter(comm_scalars)
+            array_args = [arg for arg in args if not _is_plain_scalar(arg)]
+            if coeff.is_zero is True:
+                shapes = reduce(operator.add, [get_shape(i) for i in array_args], ())
+                return ZeroArray(*shapes)
+            if not array_args and not nc_scalars:
+                return coeff
+            if coeff is S.One:
+                args = nc_scalars + array_args
+            else:
+                args = [coeff] + nc_scalars + array_args
 
         ndim_list = [get_ndim(arg) for arg in args]
 
@@ -347,6 +477,50 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
         return tensorproduct(*[arg.as_explicit() if hasattr(arg, "as_explicit") else arg for arg in self.args])
 
 
+def _array_term_as_coeff_arrays(term):
+    """Decompose *term* into a scalar coefficient and a tuple of
+    coefficient-free array factors.
+
+    An ``ArrayTensorProduct`` is decomposed argument by argument (using
+    ``_split_scalar_coefficient``); any other expression is treated as a
+    single factor.  The result is the pair ``(coefficient, arrays)``, with
+    ``arrays`` an empty tuple if *term* is entirely scalar.
+    """
+    if isinstance(term, ArrayTensorProduct):
+        coeff = S.One
+        arrays = []
+        for arg in term.args:
+            c, array = _split_scalar_coefficient(arg)
+            coeff = coeff * c
+            if array is not None:
+                arrays.append(array)
+        return coeff, tuple(arrays)
+    c, array = _split_scalar_coefficient(term)
+    if array is None:
+        return c, ()
+    return c, (array,)
+
+
+def _array_term_from_coeff_arrays(coeff, arrays):
+    """Rebuild an array expression from the decomposition returned by
+    ``_array_term_as_coeff_arrays``.
+
+    A scalar coefficient multiplying a single ``MatrixExpr`` is absorbed
+    into it (giving a ``MatMul``); otherwise it is kept as a leading
+    rank-0 argument of the tensor product.
+    """
+    if not arrays:
+        return coeff
+    if coeff is S.One:
+        if len(arrays) == 1:
+            return arrays[0]
+        return _array_tensor_product(*arrays)
+    if len(arrays) == 1 and isinstance(arrays[0], MatrixExpr) and \
+            coeff.is_commutative is not False:
+        return coeff*arrays[0]
+    return _array_tensor_product(coeff, *arrays)
+
+
 class ArrayAdd(_CodegenArrayAbstract):
     r"""
     Class for elementwise array additions.
@@ -354,6 +528,21 @@ class ArrayAdd(_CodegenArrayAbstract):
 
     def __new__(cls, *args, **kwargs):
         args = [_sympify(arg) for arg in args]
+
+        # A Mul argument containing an array-shaped factor (e.g.
+        # 2*ArraySymbol("A", (2, 2))) has no shape attribute and would be
+        # wrongly treated as a scalar; convert it to a tensor product of
+        # its scalar coefficient and its array part:
+        normalized_args = []
+        for arg in args:
+            if isinstance(arg, Mul) and not isinstance(arg, MatrixExpr):
+                coeff, array = _split_scalar_coefficient(arg)
+                if array is not None:
+                    normalized_args.append(ArrayTensorProduct(coeff, array))
+                    continue
+            normalized_args.append(arg)
+        args = normalized_args
+
         ndims = [get_ndim(arg) for arg in args]
         ndims = list(set(ndims))
         if len(ndims) != 1:
@@ -382,6 +571,13 @@ class ArrayAdd(_CodegenArrayAbstract):
 
         shapes = [get_shape(arg) for arg in args]
         args = [arg for arg in args if not isinstance(arg, (ZeroArray, ZeroMatrix))]
+
+        # Collect terms that are equal up to a scalar coefficient by
+        # summing their coefficients, e.g. 2*(A x B) + 3*(A x B) becomes
+        # 5*(A x B):
+        if len(args) > 1:
+            args = self._collect_scalar_coefficients(args)
+
         if len(args) == 0:
             if any(i for i in shapes if i is None):
                 raise NotImplementedError("cannot handle addition of ZeroMatrix/ZeroArray and undefined shape object")
@@ -389,6 +585,41 @@ class ArrayAdd(_CodegenArrayAbstract):
         elif len(args) == 1:
             return args[0]
         return self.func(*args, canonicalize=False)
+
+    @classmethod
+    def _collect_scalar_coefficients(cls, args):
+        """Merge addends that are equal up to a scalar coefficient.
+
+        Each addend is decomposed into a scalar coefficient and a tuple
+        of coefficient-free array factors; addends with the same factor
+        tuple are merged by summing their coefficients.  Addends whose
+        summed coefficient is zero are dropped.
+        """
+        coeff_map: dict[tuple, Expr] = {}
+        scalar_terms = []
+        for arg in args:
+            coeff, arrays = _array_term_as_coeff_arrays(arg)
+            if not arrays:
+                # Rank-0 scalar addends are kept untouched, so that a sum
+                # of scalars remains an ArrayAdd:
+                scalar_terms.append(arg)
+                continue
+            if arrays in coeff_map:
+                coeff_map[arrays] = coeff_map[arrays] + coeff
+            else:
+                coeff_map[arrays] = coeff
+
+        if all(coeff is S.One for coeff in coeff_map.values()) and \
+                len(coeff_map) + len(scalar_terms) == len(args):
+            # Nothing to merge:
+            return args
+
+        new_args = []
+        for arrays, coeff in coeff_map.items():
+            if coeff.is_zero is True:
+                continue
+            new_args.append(_array_term_from_coeff_arrays(coeff, arrays))
+        return new_args + scalar_terms
 
     @classmethod
     def _flatten_args(cls, args):
@@ -401,9 +632,13 @@ class ArrayAdd(_CodegenArrayAbstract):
         return new_args
 
     def as_explicit(self):
-        return reduce(
-            operator.add,
-            [arg.as_explicit() if hasattr(arg, "as_explicit") else arg for arg in self.args])
+        terms = [arg.as_explicit() if hasattr(arg, "as_explicit") else arg for arg in self.args]
+        if any(isinstance(term, NDimArray) for term in terms) and \
+                not all(isinstance(term, NDimArray) for term in terms):
+            # Mixing matrices and N-dim arrays is not supported by the
+            # addition operator, normalize everything to N-dim arrays:
+            terms = [term if isinstance(term, NDimArray) else ImmutableDenseNDimArray(term) for term in terms]
+        return reduce(operator.add, terms)
 
 
 class PermuteDims(_CodegenArrayAbstract):
@@ -605,75 +840,6 @@ class PermuteDims(_CodegenArrayAbstract):
         return new_expr, new_permutation
 
     @classmethod
-    def _check_permutation_mapping(cls, expr, permutation):
-        subndim = _get_sub_ndim_list(expr)
-        index2arg = [i for i, arg in enumerate(expr.args) for j in range(_get_sub_ndim_list(expr)[i])]
-        permuted_indices = [permutation(i) for i in range(_get_sub_ndim(expr))]
-        new_args = list(expr.args)
-        arg_candidate_index = index2arg[permuted_indices[0]]
-        current_indices = []
-        new_permutation = []
-        inserted_arg_cand_indices = set()
-        for i, idx in enumerate(permuted_indices):
-            if index2arg[idx] != arg_candidate_index:
-                new_permutation.extend(current_indices)
-                current_indices = []
-                arg_candidate_index = index2arg[idx]
-            current_indices.append(idx)
-            arg_candidate_ndim = subndim[arg_candidate_index]
-            if len(current_indices) == arg_candidate_ndim:
-                new_permutation.extend(sorted(current_indices))
-                local_current_indices = [j - min(current_indices) for j in current_indices]
-                i1 = index2arg[i]
-                new_args[i1] = _permute_dims(new_args[i1], Permutation(local_current_indices))
-                inserted_arg_cand_indices.add(arg_candidate_index)
-                current_indices = []
-        new_permutation.extend(current_indices)
-
-        # TODO: swap args positions in order to simplify the expression:
-        # TODO: this should be in a function
-        args_positions = list(range(len(new_args)))
-        # Get possible shifts:
-        maps = {}
-        cumulative_sub_ndim_list = [0] + list(accumulate(subndim))
-        for i in range(len(subndim)):
-            s = {index2arg[new_permutation[j]] for j in range(cumulative_sub_ndim_list[i], cumulative_sub_ndim_list[i+1])}
-            if len(s) != 1:
-                continue
-            elem = next(iter(s))
-            if i != elem:
-                maps[i] = elem
-
-        # Find cycles in the map:
-        lines = []
-        current_line = []
-        while maps:
-            if len(current_line) == 0:
-                k, v = maps.popitem()
-                current_line.append(k)
-            else:
-                k = current_line[-1]
-                if k not in maps:
-                    current_line = []
-                    continue
-                v = maps.pop(k)
-            if v in current_line:
-                lines.append(current_line)
-                current_line = []
-                continue
-            current_line.append(v)
-        for line in lines:
-            for i, e in enumerate(line):
-                args_positions[line[(i + 1) % len(line)]] = e
-
-        # TODO: function in order to permute the args:
-        permutation_blocks = [[new_permutation[cumulative_sub_ndim_list[i] + j] for j in range(e)] for i, e in enumerate(subndim)]
-        new_args = [new_args[i] for i in args_positions]
-        new_permutation_blocks = [permutation_blocks[i] for i in args_positions]
-        new_permutation2 = [j for i in new_permutation_blocks for j in i]
-        return _array_tensor_product(*new_args), Permutation(new_permutation2)  # **(-1)
-
-    @classmethod
     def _check_if_there_are_closed_cycles(cls, expr, permutation):
         args = list(expr.args)
         sub_ndim_list = _get_sub_ndim_list(expr)
@@ -835,6 +1001,18 @@ class ArrayDiagonal(_CodegenArrayAbstract):
             return ZeroArray(*shape)
         return self.func(expr, *diagonal_indices, canonicalize=False)
 
+    def doit(self, **hints):
+        deep = hints.get("deep", True)
+        if deep:
+            args = [arg.doit(**hints) for arg in self.args]
+        else:
+            args = self.args
+        # ``allow_trivial_diags`` has to be re-passed upon reconstruction,
+        # otherwise objects constructed with trivial (i.e. length-1) diagonal
+        # groups would fail validation. Trivial groups are subsequently
+        # removed by the canonicalization:
+        return self.func(*args, allow_trivial_diags=True)._canonicalize()
+
     @staticmethod
     def _validate(expr, *diagonal_indices, **kwargs):
         # Check that no diagonalization happens on indices with mismatched
@@ -914,7 +1092,10 @@ class ArrayDiagonal(_CodegenArrayAbstract):
 
         def transform(x):
             for i, e in enumerate(self._positions):
-                if (isinstance(e, int) and x == e) or (isinstance(e, tuple) and x in e):
+                # diagonal groups in ``_positions`` are sympy ``Tuple``s, which
+                # are not Python ``tuple``s, so both must be accepted here (as
+                # the static ``_push_indices_up`` already does)
+                if (isinstance(e, int) and x == e) or (isinstance(e, (tuple, Tuple)) and x in e):
                     return i
 
         return _apply_recursively_over_nested_lists(transform, indices)
@@ -947,6 +1128,14 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         return positions, shape
 
     def as_explicit(self):
+        if any(len(i) == 1 for i in self.diagonal_indices):
+            # ``tensordiagonal`` does not accept length-1 (trivial) diagonal
+            # groups. The canonical form (a ``PermuteDims`` over an
+            # ``ArrayDiagonal`` without trivial groups) is equivalent:
+            ret = self._canonicalize()
+            if hasattr(ret, "as_explicit"):
+                ret = ret.as_explicit()
+            return ret
         expr = self.expr
         if hasattr(expr, "as_explicit"):
             expr = expr.as_explicit()
@@ -991,6 +1180,12 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
         expr = self.expr
         if hasattr(expr, "as_explicit"):
             expr = expr.as_explicit()
+        if get_shape(self.expr) == ():
+            # a rank-0 operand explicitizes to a scalar (or rank-0 array),
+            # which has no applyfunc
+            if isinstance(expr, NDimArray):
+                expr = expr[()]
+            return self.function(expr)
         return expr.applyfunc(self.function)
 
     def _canonicalize(self):
@@ -1047,6 +1242,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         obj._mapping = _get_mapping_from_sub_ndim_list(obj._sub_ndim_list)
 
         free_indices_to_position = {i: i for i in range(sum(obj._sub_ndim_list)) if all(i not in cind for cind in contraction_indices)}
+        obj._free_indices = list(free_indices_to_position)
         obj._free_indices_to_position = free_indices_to_position
 
         shape = get_shape(expr)
@@ -1066,7 +1262,7 @@ class ArrayContraction(_CodegenArrayAbstract):
             return expr
 
         if isinstance(expr, ArraySum):
-            return expr.func(_array_contraction(expr.function, *contraction_indices), expr.limits)
+            return expr.func(_array_contraction(expr.function, *contraction_indices), *expr.limits)
 
         if isinstance(expr, ArrayContraction):
             return self._ArrayContraction_denest_ArrayContraction(expr, *contraction_indices)
@@ -1090,9 +1286,21 @@ class ArrayContraction(_CodegenArrayAbstract):
             return self._ArrayContraction_denest_ArrayAdd(expr, *contraction_indices)
 
         # Check single index contractions on 1-dimensional axes:
-        contraction_indices = [i for i in contraction_indices if len(i) > 1 or get_shape(expr)[i[0]] != 1]
-        if len(contraction_indices) == 0:
-            return expr
+        shape = get_shape(expr)
+        if shape is not None:
+            trivial_singles = [i for i in contraction_indices if len(i) == 1 and shape[i[0]] == 1]
+            if trivial_singles:
+                # A single-index contraction group sums over its axis, thus
+                # removing it. On a size-1 axis the summation is trivial, but
+                # the axis still has to be removed from the resulting shape,
+                # which is achieved by a reshape:
+                new_shape = tuple(shp for i, shp in enumerate(shape) if not any(i in j for j in contraction_indices))
+                if len(new_shape) > 0:
+                    remaining = [i for i in contraction_indices if i not in trivial_singles]
+                    newexpr = _array_contraction(expr, *remaining)
+                    if get_shape(newexpr) == new_shape:
+                        return newexpr
+                    return Reshape(newexpr, new_shape)
 
         return self.func(expr, *contraction_indices, canonicalize=False)
 
@@ -1216,6 +1424,13 @@ class ArrayContraction(_CodegenArrayAbstract):
 
             positions = editor.get_mapping_for_index(indl)
 
+            # If an argument has more than one of its axes in the same
+            # contraction group (e.g. a trace-like contraction), it cannot be
+            # part of a matrix multiplication line, skip this group:
+            args_in_group = [arg_ind for arg_ind, rel_ind in positions]
+            if len(set(args_in_group)) != len(args_in_group):
+                continue
+
             # Also consider the case of diagonal matrices being contracted:
             current_dimension = self.expr.shape[links[0]]
 
@@ -1243,9 +1458,13 @@ class ArrayContraction(_CodegenArrayAbstract):
             # - zero non-vectors
             # - one non-vector
             # - two non-vectors
-            for v, rel_ind in vectors:
-                v.element = diagonalize_vector(v.element)
             vectors_to_loop = not_vectors[:1] + vectors + not_vectors[1:]
+            # Only the vectors in the middle of the multiplication line get
+            # diagonalized: a vector at the boundary of the line keeps its
+            # size-1 axis as a free index, diagonalizing it would leave a
+            # dangling free axis of the contracted dimension:
+            for v, rel_ind in vectors_to_loop[1:-1]:
+                v.element = diagonalize_vector(v.element)
             first_not_vector, rel_ind = vectors_to_loop[0]
             new_index = first_not_vector.indices[rel_ind]
 
@@ -1267,7 +1486,10 @@ class ArrayContraction(_CodegenArrayAbstract):
     def flatten_contraction_of_diagonal(self):
         if not isinstance(self.expr, ArrayDiagonal):
             return self
-        contraction_down = self.expr._push_indices_down(self.expr.diagonal_indices, self.contraction_indices)
+        contraction_down = self.expr._push_indices_down(self.expr.diagonal_indices, self.contraction_indices, get_ndim(self.expr.expr))
+        # Contraction indices pointing at a diagonalized axis have been mapped
+        # to the corresponding group of diagonal indices, flatten them:
+        contraction_down = [tuple(k for j in i for k in (j if isinstance(j, (tuple, Tuple)) else [j])) for i in contraction_down]
         new_contraction_indices = []
         diagonal_indices = self.expr.diagonal_indices[:]
         for i in contraction_down:
@@ -1278,7 +1500,7 @@ class ArrayContraction(_CodegenArrayAbstract):
                 diagonal_indices = [k for k in diagonal_indices if k not in diagonal_with]
             new_contraction_indices.append(sorted(set(contraction_group)))
 
-        new_contraction_indices = ArrayDiagonal._push_indices_up(diagonal_indices, new_contraction_indices)
+        new_contraction_indices = ArrayDiagonal._push_indices_up(diagonal_indices, new_contraction_indices, get_ndim(self.expr.expr))
         return _array_contraction(
             _array_diagonal(
                 self.expr.expr,
@@ -1781,7 +2003,19 @@ class _EditArrayContraction:
                 scalars.append(arg_with_ind)
         for i in scalars:
             self.args_with_ind.remove(i)
-        scalar = Mul.fromiter([i.element for i in scalars])
+        elements = []
+        for i in scalars:
+            element = i.element
+            if isinstance(element, ArrayElementwiseApplyFunc) and get_ndim(element) == 0:
+                # A rank-0 elementwise function application is a plain
+                # scalar: convert it, otherwise it would end up as a
+                # noncommutative "scalar" factor inside a ``Mul``/``MatMul``:
+                from sympy.tensor.array.expressions.from_array_to_matrix import _array2matrix
+                converted = _array2matrix(element)
+                if not hasattr(converted, "shape"):
+                    element = converted
+            elements.append(element)
+        scalar = Mul.fromiter(elements)
         if len(self.args_with_ind) == 0:
             self.args_with_ind.append(_ArgE(scalar))
         else:
@@ -1961,8 +2195,11 @@ class _EditArrayContraction:
 
 
 def get_ndim(expr):
-    if isinstance(expr, (MatrixExpr, MatrixElement)):
+    if isinstance(expr, MatrixExpr):
         return 2
+    if isinstance(expr, MatrixElement):
+        # a matrix element is a scalar (consistently with ``get_shape``):
+        return 0
     if isinstance(expr, _CodegenArrayAbstract):
         return len(expr.shape)
     if isinstance(expr, NDimArray):

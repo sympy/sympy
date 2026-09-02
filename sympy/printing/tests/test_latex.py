@@ -32,6 +32,7 @@ from sympy.functions.elementary.trigonometric import (acsc, asin, cos, cot, sin,
 from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f, elliptic_k, elliptic_pi)
+from sympy.functions.special.elliptic_functions import jtheta
 from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, expint)
 from sympy.functions.special.gamma_functions import (gamma, uppergamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
@@ -712,6 +713,12 @@ def test_latex_functions():
         r"\Pi^{2}\left(x; y\middle| z\right)"
     assert latex(elliptic_pi(x, y)) == r"\Pi\left(x\middle| y\right)"
     assert latex(elliptic_pi(x, y)**2) == r"\Pi^{2}\left(x\middle| y\right)"
+    assert latex(jtheta(n, x, y)) == \
+        r"\vartheta_{n}\left(x, y\right)"
+    assert latex(jtheta(n, x, y, 2)) == \
+        r"\vartheta_{n}^{(2)}\left(x, y\right)"
+    assert latex(jtheta(n, x, y, 2)**3) == \
+        r"\left(\vartheta_{n}^{(2)}\left(x, y\right)\right)^{3}"
 
     assert latex(Ei(x)) == r'\operatorname{Ei}{\left(x \right)}'
     assert latex(Ei(x)**2) == r'\operatorname{Ei}^{2}{\left(x \right)}'
@@ -864,6 +871,13 @@ def test_latex_fresnel():
     assert latex(fresnelc(z)) == r'C\left(z\right)'
     assert latex(fresnels(z)**2) == r'S^{2}\left(z\right)'
     assert latex(fresnelc(z)**2) == r'C^{2}\left(z\right)'
+
+
+def test_latex_owens_t():
+    from sympy.functions.special.error_functions import owens_t
+    from sympy.abc import h, a
+    assert latex(owens_t(h, a)) == r'T\left(h, a\right)'
+    assert latex(owens_t(h, a)**2) == r'T^{2}\left(h, a\right)'
 
 
 def test_latex_brackets():
@@ -2866,6 +2880,20 @@ def test_TensorProduct_printing():
     A = MatrixSymbol("A", 3, 3)
     B = MatrixSymbol("B", 3, 3)
     assert latex(TensorProduct(A, B)) == r"A \otimes B"
+
+
+def test_ArrayTensorProduct_printing():
+    from sympy.tensor.array.expressions import ArrayAdd, ArrayTensorProduct
+    A = MatrixSymbol("A", 3, 4)
+    B = MatrixSymbol("B", 4, 5)
+    C = MatrixSymbol("C", 3, 4)
+    assert latex(ArrayTensorProduct(A, B)) == r"A \boxtimes B"
+    assert latex(ArrayAdd(ArrayTensorProduct(A, B), ArrayTensorProduct(C, B))) == \
+        r"A \boxtimes B + C \boxtimes B"
+    assert latex(ArrayTensorProduct(ArrayAdd(A, C), B)) == \
+        r"\left(A + C\right) \boxtimes B"
+    assert latex(ArrayTensorProduct(A + C, B)) == \
+        r"\left(A + C\right) \boxtimes B"
 
 
 def test_WedgeProduct_printing():

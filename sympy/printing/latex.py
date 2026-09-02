@@ -1258,6 +1258,16 @@ class LatexPrinter(Printer):
         else:
             return r"\Pi%s" % tex
 
+    def _print_jtheta(self, expr, exp=None):
+        n, z, q = expr.args[:3]
+        tex = r"\vartheta_{%s}" % self._print(n)
+        if len(expr.args) == 4:
+            tex += r"^{(%s)}" % self._print(expr.args[3])
+        tex += r"\left(%s, %s\right)" % (self._print(z), self._print(q))
+        if exp is not None:
+            return r"\left(%s\right)^{%s}" % (tex, exp)
+        return tex
+
     def _print_beta(self, expr, exp=None):
         x = expr.args[0]
         # Deal with unevaluated single argument beta
@@ -1341,6 +1351,15 @@ class LatexPrinter(Printer):
             return r"C^{%s}%s" % (exp, tex)
         else:
             return r"C%s" % tex
+
+    def _print_owens_t(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                         self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"T^{%s}%s" % (exp, tex)
+        else:
+            return r"T%s" % tex
 
     def _print_subfactorial(self, expr, exp=None):
         tex = r"!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
@@ -2098,6 +2117,21 @@ class LatexPrinter(Printer):
     def _print_WedgeProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
         return r' \wedge '.join(elements)
+
+    def _print_ArrayTensorProduct(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import ArrayAdd
+        elements = []
+        for a in expr.args:
+            s = self._print(a)
+            if isinstance(a, (Add, ArrayAdd)):
+                s = r"\left(%s\right)" % s
+            elements.append(s)
+        # \boxtimes is the notation for the tensor product of arrays used in
+        # the documentation (\otimes is the Kronecker product):
+        return r' \boxtimes '.join(elements)
+
+    def _print_ArrayAdd(self, expr):
+        return ' + '.join([self._print(a) for a in expr.args])
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
