@@ -2,9 +2,6 @@
     of incomplete gamma functions. It should probably be renamed. """
 from __future__ import annotations
 
-import mpmath
-from mpmath import workprec
-
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -25,7 +22,7 @@ from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc, atan
 from sympy.functions.special.hyper import hyper, meijerg
-from sympy.external.mpmath import prec_to_dps
+from sympy.external.mpmath import prec_to_dps, local_workprec
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
@@ -2934,22 +2931,24 @@ class owens_t(DefinedFunction):
         h, a = self.args
         if not (h.is_number and a.is_number):
             return None
-        try:
-            hm = h._to_mpmath(prec)
-            am = a._to_mpmath(prec)
-        except (ValueError, TypeError):
-            return None
         # Evaluate the defining integral by mpmath quadrature at the
         # requested precision (with guard bits): the working precision
         # matters, because ``Add`` retries at higher precision to recover
         # cancellation between T(h, a) and error function terms. An
         # mpmath integrand is much cheaper than evaluating the symbolic
         # integrand at every node through ``evalf``.
-        with workprec(prec + 10):
+        with local_workprec(prec + 10) as ctx:
+            try:
+                hm = ctx.convert(h._to_mpmath(prec + 10))
+                am = ctx.convert(a._to_mpmath(prec + 10))
+            except (ValueError, TypeError):
+                return None
+
             def integrand(t):
                 s = 1 + t**2
-                return mpmath.exp(-hm**2*s/2)/s
-            result = mpmath.quad(integrand, [0, am])/(2*mpmath.pi)
+                return ctx.exp(-hm**2*s/2)/s
+
+            result = ctx.quad(integrand, [0, am])/(2*ctx.pi)
         return Expr._from_mpmath(result, prec)
 
 
