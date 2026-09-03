@@ -22,7 +22,6 @@ pull request, or even before committing a change.
 
   ```bash
   python bin/test quality
-  flake8 sympy/
   ruff check sympy
   ```
 
@@ -167,7 +166,7 @@ create a pull request, but you can also run them locally with
 
 ```
 python bin/test quality
-flake8 sympy/
+ruff check sympy
 ```
 
 Additionally, all tests are required to pass. The CI will automatically run

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from threading import RLock
 
 # it is sufficient to import "pyglet" here once
