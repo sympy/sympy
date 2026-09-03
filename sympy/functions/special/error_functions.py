@@ -5,6 +5,7 @@ from __future__ import annotations
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import DefinedFunction, ArgumentIndexError, expand_mul
 from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import I, pi, Rational, Integer
@@ -21,7 +22,7 @@ from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc, atan
 from sympy.functions.special.hyper import hyper, meijerg
-from sympy.external.mpmath import prec_to_dps
+from sympy.external.mpmath import prec_to_dps, local_workprec
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
@@ -2927,8 +2928,19 @@ class owens_t(DefinedFunction):
         return super()._eval_aseries(n, args0, x, logx)
 
     def _eval_evalf(self, prec):
-        from sympy.integrals.integrals import Integral
-        return self.rewrite(Integral).evalf(n=prec_to_dps(prec))
+        h, a = self.args
+        if not (h.is_number and a.is_number):
+            return None
+        with local_workprec(prec + 10) as ctx:
+            hm = ctx.convert(h._to_mpmath(prec + 10))
+            am = ctx.convert(a._to_mpmath(prec + 10))
+
+            def integrand(t):
+                s = 1 + t**2
+                return ctx.exp(-hm**2*s/2)/s
+
+            result = ctx.quad(integrand, [0, am])/(2*ctx.pi)
+        return Expr._from_mpmath(result, prec)
 
 
 ###############################################################################
