@@ -66,6 +66,9 @@ def test_function_range():
         log(x), x, S.Integers))
     raises(NotImplementedError, lambda : function_range(
         sin(x)/2, x, S.Naturals))
+    # issue 30386: the critical point at pi was dropped
+    assert function_range(cos(x)*cos(4*x), x, S.Reals).inf == -1
+    assert function_range(cos(x)*cos(6*x), x, S.Reals).inf == -1
 
 
 @slow
