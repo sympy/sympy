@@ -86,10 +86,7 @@ def assert_close_nl(sol1, sol2):
 def test_invert_real():
     x = Symbol('x', real=True)
 
-    def ireal(x, s=S.Reals):
-        return Intersection(s, x)
-
-    assert invert_real(exp(x), z, x) == (x, ireal(FiniteSet(log(z))))
+    assert dumeq(invert_real(exp(x), z, x), (x, ImageSet(Lambda(x, log(x)), Intersection(FiniteSet(z), Interval.open(0, oo)))))
 
     y = Symbol('y', positive=True)
     n = Symbol('n', real=True)
@@ -100,7 +97,7 @@ def test_invert_real():
     assert invert_real(exp(3*x), y, x) == (x, FiniteSet(log(y) / 3))
     assert invert_real(exp(x + 3), y, x) == (x, FiniteSet(log(y) - 3))
 
-    assert invert_real(exp(x) + 3, y, x) == (x, ireal(FiniteSet(log(y - 3))))
+    assert dumeq(invert_real(exp(x) + 3, y, x), (x, ImageSet(Lambda(x, log(x)), Intersection(FiniteSet(y - 3), Interval.open(0, oo)))))
     assert invert_real(exp(x)*3, y, x) == (x, FiniteSet(log(y / 3)))
 
     assert invert_real(log(x), y, x) == (x, FiniteSet(exp(y)))
@@ -110,7 +107,7 @@ def test_invert_real():
     assert invert_real(Abs(x), y, x) == (x, FiniteSet(y, -y))
 
     assert invert_real(2**x, y, x) == (x, FiniteSet(log(y)/log(2)))
-    assert invert_real(2**exp(x), y, x) == (x, ireal(FiniteSet(log(log(y)/log(2)))))
+    assert dumeq(invert_real(2**exp(x), y, x), (x, ImageSet(Lambda(x, log(x)), Intersection(FiniteSet(log(y)/log(2)), Interval.open(0, oo)))))
 
     assert invert_real(x**2, y, x) == (x, FiniteSet(sqrt(y), -sqrt(y)))
     assert invert_real(x**S.Half, y, x) == (x, FiniteSet(y**2))
@@ -138,8 +135,9 @@ def test_invert_real():
 
     assert dumeq(invert_real(sin(exp(x)), y, x), (x,
         ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
-            ImageSet(Lambda(n, log(2*n*pi + asin(y))), S.Integers),
-            ImageSet(Lambda(n, log(pi*2*n + pi - asin(y))), S.Integers)))))
+            ImageSet(Lambda(x, log(x)), Intersection(
+                ImageSet(Lambda(n, 2*n*pi + asin(y)), S.Integers), Interval.open(0, oo))),
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi - asin(y) + pi), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(csc(x), y, x), (x,
         ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
@@ -147,9 +145,10 @@ def test_invert_real():
                 ImageSet(Lambda(n, 2*n*pi - acsc(y) + pi), S.Integers)))))
 
     assert dumeq(invert_real(csc(exp(x)), y, x), (x,
-        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
-            Union(ImageSet(Lambda(n, log(2*n*pi + acsc(y))), S.Integers),
-                ImageSet(Lambda(n, log(2*n*pi - acsc(y) + pi)), S.Integers)))))
+        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))), Union(
+            ImageSet(Lambda(x, log(x)), Intersection(
+                ImageSet(Lambda(n, 2*n*pi + acsc(y)), S.Integers), Interval.open(0, oo))),
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi - acsc(y) + pi), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(cos(x), y, x), (x,
         ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
@@ -158,8 +157,9 @@ def test_invert_real():
 
     assert dumeq(invert_real(cos(exp(x)), y, x), (x,
         ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
-            ImageSet(Lambda(n, log(2*n*pi + acos(y))), S.Integers),
-            ImageSet(Lambda(n, log(2*n*pi - acos(y))), S.Integers)))))
+            ImageSet(Lambda(x, log(x)), Intersection(
+                ImageSet(Lambda(n, 2*n*pi - acos(y)), S.Integers), Interval.open(0, oo))),
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi + acos(y)), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(sec(x), y, x), (x,
         ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
@@ -167,9 +167,11 @@ def test_invert_real():
                 ImageSet(Lambda(n, 2*n*pi - asec(y)), S.Integers)))))
 
     assert dumeq(invert_real(sec(exp(x)), y, x), (x,
-        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
-            Union(ImageSet(Lambda(n, log(2*n*pi - asec(y))), S.Integers),
-                ImageSet(Lambda(n, log(2*n*pi + asec(y))), S.Integers)))))
+        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <=S(-1))), Union(
+            ImageSet(Lambda(x, log(x)), Intersection(
+                ImageSet(Lambda(n, 2*n*pi - asec(y)), S.Integers),
+                Interval.open(0, oo))),
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi + asec(y)), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(tan(x), y, x), (x,
         ConditionSet(x, (-oo < y) & (y < oo),
@@ -177,15 +179,16 @@ def test_invert_real():
 
     assert dumeq(invert_real(tan(exp(x)), y, x), (x,
         ConditionSet(x, (-oo < y) & (y < oo),
-            ImageSet(Lambda(n, log(n*pi + atan(y))), S.Integers))))
+                     ImageSet(Lambda(x, log(x)), Intersection(
+                         ImageSet(Lambda(n, n*pi + atan(y)), S.Integers), Interval.open(0, oo))))))
 
     assert dumeq(invert_real(cot(x), y, x), (x,
         ConditionSet(x, (-oo < y) & (y < oo),
             ImageSet(Lambda(n, n*pi + acot(y)), S.Integers))))
 
     assert dumeq(invert_real(cot(exp(x)), y, x), (x,
-        ConditionSet(x, (-oo < y) & (y < oo),
-            ImageSet(Lambda(n, log(n*pi + acot(y))), S.Integers))))
+        ConditionSet(x, (-oo < y) & (y < oo), ImageSet(Lambda(x, log(x)),
+            Intersection(ImageSet(Lambda(n, n*pi + acot(y)), S.Integers), Interval.open(0, oo))))))
 
     assert dumeq(invert_real(tan(tan(x)), y, x),
         (x, ConditionSet(x, Eq(tan(tan(x)), y), S.Reals)))
@@ -426,8 +429,7 @@ def test_solve_invert():
     assert solveset_real(3**(x + 2), x) == FiniteSet()
     assert solveset_real(3**(2 - x), x) == FiniteSet()
 
-    assert solveset_real(y - b*exp(a/x), x) == Intersection(
-        S.Reals, FiniteSet(a/log(y/b)))
+    assert solveset_real(y - b*exp(a/x), x) == ImageSet(Lambda(x, a/log(x)), Intersection(FiniteSet(y/b), Interval.open(0, oo)))
 
     # issue 4504
     assert solveset_real(2**x - 10, x) == FiniteSet(1 + log(5)/log(2))
@@ -797,8 +799,9 @@ def test_units():
 def test_solve_only_exp_1():
     y = Symbol('y', positive=True)
     assert solveset_real(exp(x) - y, x) == FiniteSet(log(y))
-    assert solveset_real(exp(x) + exp(-x) - 4, x) == \
-        FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
+    assert solveset_real(exp(x) + exp(-x) - 4, x) == Union(
+        ImageSet(Lambda(x, log(x)), FiniteSet(2 - sqrt(3))),
+        ImageSet(Lambda(x, log(x)), FiniteSet(sqrt(3) + 2)))
     assert solveset_real(exp(x) + exp(-x) - y, x) != S.EmptySet
 
 
@@ -2314,7 +2317,8 @@ def test_issue_5132_2():
     x, y = symbols('x, y', real=True)
     eqs = [exp(x)**2 - sin(y) + z**2]
     n = Dummy('n')
-    soln_real = (log(-z**2 + sin(y))/2, z)
+    soln_real = (ImageSet(Lambda(x, log(x)/2),
+        Intersection(FiniteSet(-z**2 + sin(y)), Interval.open(0, oo))), z)
     lam = Lambda( n, I*(2*n*pi + arg(-z**2 + sin(y)))/2 + log(Abs(z**2 - sin(y)))/2)
     img = ImageSet(lam, S.Integers)
     # not sure about the complex soln. But it looks correct.
@@ -2717,7 +2721,7 @@ def test_issue_8715():
 
 def test_issue_11174():
     eq = z**2 + exp(2*x) - sin(y)
-    soln = Intersection(S.Reals, FiniteSet(log(-z**2 + sin(y))/2))
+    soln = ImageSet(Lambda(x, log(x)/2), Intersection(FiniteSet(-z**2 + sin(y)), Interval.open(0, oo)))
     assert solveset(eq, x, S.Reals) == soln
 
     eq = sqrt(r)*Abs(tan(t))/sqrt(tan(t)**2 + 1) + x*tan(t)
@@ -2842,10 +2846,8 @@ def test_issue_10158():
 
 def test_issue_14300():
     f = 1 - exp(-18000000*x) - y
-    a1 = FiniteSet(-log(-y + 1)/18000000)
 
-    assert solveset(f, x, S.Reals) == \
-        Intersection(S.Reals, a1)
+    assert solveset(f, x, S.Reals) == ImageSet(Lambda(x, -log(x)/18000000), Intersection(FiniteSet(-y + 1), Interval.open(0, oo)))
     assert dumeq(solveset(f, x),
         ImageSet(Lambda(n, -I*(2*n*pi + arg(-y + 1))/18000000 -
             log(Abs(y - 1))/18000000), S.Integers))
@@ -2902,8 +2904,7 @@ def test_exponential_real():
     assert solveset(e2, x, S.Reals) == FiniteSet(Rational(4, 15))
     assert solveset(e3, x, S.Reals) == S.EmptySet
     assert solveset(e4, x, S.Reals) == FiniteSet(0)
-    assert solveset(e5, x, S.Reals) == Intersection(
-        S.Reals, FiniteSet(y*log(2*exp(z/y))))
+    assert solveset(e5, x, S.Reals) == ImageSet(Lambda(x, y*log(x)), Intersection(FiniteSet(2*exp(z/y)), Interval.open(0, oo)))
     assert solveset(e6, x, S.Reals) == FiniteSet(0)
     assert solveset(e7, x, S.Reals) == FiniteSet(2)
     assert solveset(e8, x, S.Reals) == FiniteSet(-2*log(2)/5 + 2*log(3)/5 + Rational(4, 5))
@@ -2919,8 +2920,7 @@ def test_exponential_real():
     # coverage test
     C1, C2 = symbols('C1 C2')
     f = Function('f')
-    assert solveset_real(C1 + C2/x**2 - exp(-f(x)), f(x)) == Intersection(
-        S.Reals, FiniteSet(-log(C1 + C2/x**2)))
+    assert solveset_real(C1 + C2/x**2 - exp(-f(x)), f(x)) == ImageSet(Lambda(x, -log(x)), Intersection(FiniteSet(C1 + C2/x**2), Interval.open(0, oo)))
     y = symbols('y', positive=True)
     assert solveset_real(x**2 - y**2/exp(x), y) == Intersection(
         S.Reals, FiniteSet(-sqrt(x**2*exp(x)), sqrt(x**2*exp(x))))
@@ -3615,3 +3615,11 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+def test_invert_exp():
+    # issue 29674
+    assert dumeq(solveset(sin(exp(x)), x, domain=S.Reals),
+          Union(ImageSet(Lambda(n, log(2*n*pi + pi)), Range(0, oo, 1)),
+                ImageSet(Lambda(n, log(2*n*pi + 2*pi)), Range(0, oo, 1))))
+    assert invert_real(exp(x), -1, x) == (x, S.EmptySet)
+    assert invert_real(exp(x), 1, x) == (x, FiniteSet(0))
