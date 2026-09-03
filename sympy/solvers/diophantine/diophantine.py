@@ -588,7 +588,7 @@ class BinaryQuadratic(DiophantineEquationType):
 
         elif is_square(discr):
             if A != 0:
-                r = sqrt(discr)
+                r = sqrt(discr)  # type: ignore[assignment]
                 u, v = symbols("u, v", integer=True)
                 eq = _mexpand(
                     4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) +
