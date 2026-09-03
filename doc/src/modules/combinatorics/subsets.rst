@@ -5,6 +5,8 @@ Subsets
 
 .. module:: sympy.combinatorics.subsets
 
+.. py:class:: T
+
 .. autoclass:: Subset
    :members:
 
