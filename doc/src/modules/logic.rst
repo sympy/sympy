@@ -192,3 +192,37 @@ sentence ``True``. If it is not satisfiable it will return ``False``.
 .. autofunction:: sympy.logic.inference::satisfiable
 
 .. TODO: write about CNF file format
+
+Benchmarking against SMT-LIB files
+----------------------------------
+
+SMT solvers are compared using the standard benchmark suites published at
+https://smt-lib.org. The ``sympy.logic.utilities.smtlib_benchmark`` module is a
+developer tool for running SymPy's solvers over such a suite, checking the
+answers against the ``(set-info :status ...)`` line recorded in each file and
+measuring where the time goes::
+
+    $ python -m sympy.logic.utilities.smtlib_benchmark --solver lra -t 5 QF_LRA/
+
+Each file is run in a separate process so that a solver which takes too long
+can be killed, and the report gives the time spent parsing, building the SymPy
+expression and solving it, both per file and in total. A file SymPy cannot
+handle -- because it uses a theory such as bitvectors, or because it is
+quantified -- is reported with the reason rather than counted as a failure.
+Pass ``--solver z3`` to run the same files through
+``sympy.logic.algorithms.z3_wrapper`` instead, or ``--help`` for the other
+options.
+
+Many benchmark files, in particular the scrambled ones used in the yearly
+competition, record no ``:status`` at all. Pass ``--reference z3`` to have z3
+answer each file as well, so those can still be checked. z3 is handed the file
+as it stands rather than SymPy's expression, so it also catches a constant
+given the wrong sort or an operator parsed wrongly.
+
+Note that SymPy has no solver for integer arithmetic, so a problem declaring
+``Int`` constants is solved over the reals and may well disagree with the
+answer the file records.
+
+The benchmark files themselves are not distributed with SymPy and running a
+suite takes far longer than a test run, so this is a command line tool rather
+than part of the test suite.
