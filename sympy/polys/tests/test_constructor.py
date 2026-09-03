@@ -252,3 +252,12 @@ def test_issue_25337():
 
     x_algebraic = Symbol('x', algebraic=True)
     assert construct_domain(x_algebraic)[0] == ZZ[x_algebraic]
+
+
+def test_issue_30061():
+    # construct_domain used to raise TypeError on non-finite complex
+    # coefficients like oo*I, because ComplexField's mpf-based domain
+    # can't represent infinite components. It should fall back to EX.
+    assert construct_domain([S.Infinity*I]) == (EX, [EX(S.Infinity*I)])
+    assert construct_domain([-S.Infinity*I]) == (EX, [EX(-S.Infinity*I)])
+    assert construct_domain([-S.Infinity + 2*I]) == (EX, [EX(-S.Infinity + 2*I)])
