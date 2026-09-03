@@ -252,3 +252,14 @@ def test_issue_25337():
 
     x_algebraic = Symbol('x', algebraic=True)
     assert construct_domain(x_algebraic)[0] == ZZ[x_algebraic]
+
+
+def test_issue_30061():
+    # A complex number with a non-finite real or imaginary part cannot be
+    # represented in ZZ_I/QQ_I/CC and must fall back to EX rather than raising.
+    assert construct_domain([S.Infinity*I]) == (EX, [EX(S.Infinity*I)])
+    assert construct_domain([S.NegativeInfinity*I]) == (EX, [EX(S.NegativeInfinity*I)])
+    assert construct_domain([2 + S.Infinity*I]) == (EX, [EX(2 + S.Infinity*I)])
+    # Ordinary finite complex coefficients are unaffected.
+    assert construct_domain([2 + 3*I]) == (ZZ_I, [ZZ_I(2, 3)])
+    assert construct_domain([Rational(1, 2) + I]) == (QQ_I, [QQ_I(Rational(1, 2), 1)])
