@@ -469,6 +469,19 @@ def test_array_printer():
     assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'numpy.einsum("abcde->abe", A)'
     assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'
 
+    # Elementwise function application prints as the (elementwise) NumPy
+    # function or arithmetic applied to the printed operand:
+    from sympy.core.function import Lambda
+    from sympy.core.symbol import Dummy
+    from sympy.functions.elementary.trigonometric import sin
+    from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc, ArrayTensorProduct
+    B = ArraySymbol('B', (3, 3))
+    d = Dummy('d')
+    assert prntr.doprint(ArrayElementwiseApplyFunc(sin, B)) == 'numpy.sin(B)'
+    assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, d**2), B)) == 'B**2'
+    assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, 1/d), ArrayContraction(ArrayTensorProduct(B, B), (1, 2)))) == \
+        'numpy.einsum("ab,bc->ac", B,B)**(-1.0)'
+
     prntr = TensorflowPrinter()
     assert prntr.doprint(ZeroArray(5)) == 'tensorflow.zeros((5,))'
     assert prntr.doprint(OneArray(5)) == 'tensorflow.ones((5,))'

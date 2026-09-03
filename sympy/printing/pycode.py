@@ -541,6 +541,41 @@ class ArrayPrinter:
     def _print_ArrayAdd(self, expr):
         return self._expand_fold_binary_op(self._module + "." + self._add, expr.args)
 
+    def _print_ArrayElementwiseApplyFunc(self, expr):
+        from sympy.core.function import Lambda
+        from sympy.core.symbol import Symbol
+        # Print the function applied to a scalar placeholder, then splice
+        # the printed operand in its place. Scalar functions and
+        # arithmetic are elementwise in the array libraries, while applying
+        # the function to the operand symbolically would turn e.g. d**2
+        # into a matrix power for a matrix operand.
+        placeholder = Symbol("_elementwise_operand")
+        function = expr.function
+        if isinstance(function, Lambda):
+            body = function.expr.xreplace({function.variables[0]: placeholder})
+        else:
+            body = function(placeholder)
+        operand = self._print(expr.expr)
+        if not self._is_atomic_code(operand):
+            operand = "(%s)" % operand
+        return self._print(body).replace(self._print(placeholder), operand)
+
+    @staticmethod
+    def _is_atomic_code(code):
+        # Whether ``code`` is an identifier or a single call, i.e. needs no
+        # parentheses when an operator is applied to it.
+        if code.isidentifier():
+            return True
+        head, sep, rest = code.partition("(")
+        if not sep or not head.replace(".", "").isidentifier() or not rest.endswith(")"):
+            return False
+        depth = 1
+        for i, c in enumerate(rest):
+            depth += (c == "(") - (c == ")")
+            if depth == 0:
+                return i == len(rest) - 1
+        return False
+
     def _print_OneArray(self, expr):
         return "%s((%s,))" % (
             self._module_format(self._module+ "." + self._ones),

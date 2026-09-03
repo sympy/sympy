@@ -16,7 +16,7 @@ from sympy.tensor.array.expressions import ArrayElementwiseApplyFunc
 from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, \
+from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, _ArrayExpr, _CodegenArrayAbstract, \
     get_shape, ArrayElement, _array_tensor_product, _array_diagonal, _array_contraction, _array_add, \
     _permute_dims, OneArray, ArrayAdd
 from sympy.tensor.array.expressions.utils import _get_argindex, _get_diagonal_indices
@@ -106,6 +106,13 @@ def convert_indexed_to_array(expr, first_indices=None):
         return _array_add(*[_permute_dims(arg, permutation) for arg in result.args])
     else:
         return _permute_dims(result, permutation)
+
+
+def _is_array_expression(expr):
+    # Whether a converted (sub)expression is an array expression, as opposed
+    # to a plain scalar. Rank-0 array expressions (e.g. a full contraction)
+    # have no indices but still have to be combined with array operators.
+    return isinstance(expr, (_ArrayExpr, _CodegenArrayAbstract))
 
 
 def _convert_indexed_to_array(expr):
@@ -258,6 +265,9 @@ def _convert_indexed_to_array(expr):
     if isinstance(expr, Add):
         args, indices = zip(*[_convert_indexed_to_array(arg) for arg in expr.args])
         args = list(args)
+        if not any(indices) and not any(_is_array_expression(arg) for arg in args):
+            # A sum of scalars stays a scalar:
+            return expr, ()
         # Check if all indices are compatible. Otherwise expand the dimensions:
         index0 = []
         shape0 = []
@@ -279,13 +289,17 @@ def _convert_indexed_to_array(expr):
         return _array_add(*args), tuple(index0)
     if isinstance(expr, Pow):
         subexpr, subindices = _convert_indexed_to_array(expr.base)
-        if not subindices:
+        if not subindices and not _is_array_expression(subexpr):
             # Scalar base, no array axes involved:
             return expr, ()
         exp = expr.exp
         if isinstance(exp, (int, Integer)) and exp >= 1:
             if exp == 1:
                 return subexpr, subindices
+            if not subindices:
+                # Power of a rank-0 array expression (e.g. of a full
+                # contraction): a rank-0 tensor product.
+                return _array_tensor_product(*[subexpr for i in range(exp)]), ()
             diags = zip(*[(2*i, 2*i + 1) for i in range(exp)])
             arr = _array_diagonal(_array_tensor_product(*[subexpr for i in range(exp)]), *diags)
             return arr, subindices
@@ -307,5 +321,8 @@ def _convert_indexed_to_array(expr):
             raise NotImplementedError(
                 "cannot convert multi-argument function to array expression: %s" % expr)
         subexpr, subindices = _convert_indexed_to_array(expr.args[0])
+        if not subindices and not _is_array_expression(subexpr):
+            # A function of a scalar stays a scalar:
+            return expr, ()
         return ArrayElementwiseApplyFunc(type(expr), subexpr), subindices
     return expr, ()

@@ -492,3 +492,13 @@ def test_tensorflow_isnan_isinf():
     for _input, _expected in [(float('inf'), 0.0), (float('-inf'), 0.0), (float('nan'), 1.0), (1.0, 1.0)]:
         _output = lambdify((x), expression, modules="tensorflow")(x=tf.constant([_input]))
         assert (_output == _expected).numpy().all()
+
+
+def test_tensorflow_elementwise_apply_func():
+    from sympy.core.function import Lambda
+    from sympy.core.symbol import Dummy
+    from sympy.functions.elementary.trigonometric import sin
+    from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc
+    d = Dummy('d')
+    assert tensorflow_code(ArrayElementwiseApplyFunc(sin, M)) == 'tensorflow.math.sin(M)'
+    assert tensorflow_code(ArrayElementwiseApplyFunc(Lambda(d, d**2), M)) == 'tensorflow.math.pow(M, 2)'
