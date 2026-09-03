@@ -894,10 +894,10 @@ def test_asech_nseries():
     17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
     assert asech(-I*x + 3)._eval_nseries(x, 4, None) == asech(3) + sqrt(2)*x/12 + \
     17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
-    assert asech(I*x - 3)._eval_nseries(x, 4, None) == -asech(-3) - sqrt(2)*x/12 - \
-    17*sqrt(2)*I*x**2/576 + 443*sqrt(2)*x**3/41472 + O(x**4)
-    assert asech(-I*x - 3)._eval_nseries(x, 4, None) == asech(-3) - sqrt(2)*x/12 + \
-    17*sqrt(2)*I*x**2/576 + 443*sqrt(2)*x**3/41472 + O(x**4)
+    assert asech(I*x - 3)._eval_nseries(x, 4, None) == -asech(-3) + sqrt(2)*x/12 + \
+    17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
+    assert asech(-I*x - 3)._eval_nseries(x, 4, None) == asech(-3) + sqrt(2)*x/12 - \
+    17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
     # Tests concerning im(ndir) == 0
     assert asech(-I*x**2 + x - 2)._eval_nseries(x, 3, None) == 2*I*pi/3 + \
     x*(-sqrt(3) + 3*I)/(6*sqrt(3) + 6*I) + x**2*(36 + sqrt(3)*(7 - 12*I) + 21*I)/(72*sqrt(3) - \
@@ -1471,8 +1471,19 @@ def test_derivs():
     assert acosh(x).diff(x) == 1/(sqrt(x - 1)*sqrt(x + 1))
     assert acosh(x).diff(x) == acosh(x).rewrite(log).diff(x).together()
     assert atanh(x).diff(x) == 1/(-x**2 + 1)
-    assert asech(x).diff(x) == -1/(x*sqrt(1 - x**2))
+    assert asech(x).diff(x) == -sqrt(1/(x + 1))/(x*sqrt(1 - x))
     assert acsch(x).diff(x) == -1/(x**2*sqrt(1 + x**(-2)))
+
+
+def test_asech_deriv_branch():
+    # issue 30335
+    x = Symbol('x')
+    deriv = asech(x).diff(x)
+    assert deriv.subs(x, -2) == sqrt(3)*I/6
+    logderiv = asech(x).rewrite(log).diff(x)
+    for pt in (-2, -S.Half, S.Half, 2, S.Half + I, -S.Half - I,
+               -2 + I/1000, -2 - I/1000, 2 + I/1000, 2 - I/1000):
+        assert (deriv.subs(x, pt) - logderiv.subs(x, pt)).evalf(chop=True) == 0
 
 
 def test_sinh_expansion():
