@@ -474,6 +474,96 @@ class ReciprocalRule(AtomicRule):
     def eval(self) -> Expr:
         return log(self.base)
 
+class AbsCscRule(AtomicRule):
+    """integrate (1/Abs(sin(a*x + b)),x) -> Log(Abs(tan(x/2)))"""
+
+    __slots__ = ("a","b")
+    a: Expr
+    b: Expr
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+    def eval(self) -> Expr:
+        from sympy.functions.elementary.complexes import sign
+        a, b, x = self.a, self.b, self.variable
+        arg = a*x + b
+        return sign(sin(arg)) * log(Abs(tan(arg/2)))/a
+
+class AbsSinRule(AtomicRule):
+    """integrate(Abs(sin(a*x + b)), x) -> -sign(sin(a*x + b))*cos(a*x + b)/a"""
+    __slots__ = ("a", "b")
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a, self.b = a, b
+
+    def eval(self) -> Expr:
+        from sympy.functions.elementary.complexes import sign
+        a, b, x = self.a, self.b, self.variable
+        arg = a * x + b
+        return -sign(sin(arg)) * cos(arg) / a
+
+
+class AbsCosRule(AtomicRule):
+    """integrate(Abs(cos(a*x + b)), x) -> sign(cos(a*x + b))*sin(a*x + b)/a"""
+    __slots__ = ("a", "b")
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a, self.b = a, b
+
+    def eval(self) -> Expr:
+        from sympy.functions.elementary.complexes import sign
+        a, b, x = self.a, self.b, self.variable
+        arg = a * x + b
+        return sign(cos(arg)) * sin(arg) / a
+
+
+class AbsSecRule(AtomicRule):
+    """integrate(Abs(sec(a*x + b)), x) or 1/Abs(cos(a*x + b))"""
+    __slots__ = ("a", "b")
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a, self.b = a, b
+
+    def eval(self) -> Expr:
+        from sympy.functions.elementary.complexes import sign, Abs
+        a, b, x = self.a, self.b, self.variable
+        arg = a * x + b
+        return sign(cos(arg)) * log(Abs(sec(arg) + tan(arg))) / a
+
+
+class AbsTanRule(AtomicRule):
+    """integrate(Abs(tan(a*x + b)), x) or 1/Abs(cot(a*x + b))"""
+    __slots__ = ("a", "b")
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a, self.b = a, b
+
+    def eval(self) -> Expr:
+        from sympy.functions.elementary.complexes import sign, Abs
+        a, b, x = self.a, self.b, self.variable
+        arg = a * x + b
+        return -sign(tan(arg)) * log(Abs(cos(arg))) / a
+
+
+class AbsCotRule(AtomicRule):
+    """integrate(Abs(cot(a*x + b)), x) or 1/Abs(tan(a*x + b))"""
+    __slots__ = ("a", "b")
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a, self.b = a, b
+
+    def eval(self) -> Expr:
+        from sympy.functions.elementary.complexes import sign, Abs
+        a, b, x = self.a, self.b, self.variable
+        arg = a * x + b
+        return sign(cot(arg)) * log(Abs(sin(arg))) / a
+
 
 class ArcsinRule(AtomicRule):
     """integrate(1/sqrt(1-x**2), x) -> asin(x)"""
@@ -1818,6 +1908,55 @@ def parts_rule(integral):
             rule = ConstantTimesRule(constant * integrand, symbol, constant, integrand, rule)
         return rule
 
+def abs_trig_rule(integral: IntegralInfo) -> Rule | None:
+    integrand, symbol = integral.integrand, integral.symbol
+
+    a = Wild('a', exclude=[symbol])
+    b = Wild('b', exclude=[symbol])
+
+    # Direct Abs(...) cases
+    match = integrand.match(Abs(sin(a * symbol + b)))
+    if match:
+        return AbsSinRule(integrand, symbol, match[a], match[b])
+
+    match = integrand.match(Abs(cos(a * symbol + b)))
+    if match:
+        return AbsCosRule(integrand, symbol, match[a], match[b])
+
+    match = integrand.match(Abs(tan(a * symbol + b)))
+    if match:
+        return AbsTanRule(integrand, symbol, match[a], match[b])
+
+    match = integrand.match(Abs(cot(a * symbol + b)))
+    if match:
+        return AbsCotRule(integrand, symbol, match[a], match[b])
+
+    match = integrand.match(Abs(sec(a * symbol + b)))
+    if match:
+        return AbsSecRule(integrand, symbol, match[a], match[b])
+
+    match = integrand.match(Abs(csc(a * symbol + b)))
+    if match:
+        return AbsCscRule(integrand, symbol, match[a], match[b])
+
+    # Reciprocal 1/Abs(...) cases
+    match = integrand.match(1 / Abs(sin(a * symbol + b)))
+    if match:
+        return AbsCscRule(integrand, symbol, match[a], match[b])
+
+    match = integrand.match(1 / Abs(cos(a * symbol + b)))
+    if match:
+        return AbsSecRule(integrand, symbol, match[a], match[b])
+
+    match = integrand.match(1 / Abs(tan(a * symbol + b)))
+    if match:
+        return AbsCotRule(integrand, symbol, match[a], match[b])
+
+    match = integrand.match(1 / Abs(cot(a * symbol + b)))
+    if match:
+        return AbsTanRule(integrand, symbol, match[a], match[b])
+
+    return None
 
 def _trig_base_rule(integral):
     original_integrand, symbol = integral
@@ -3447,6 +3586,7 @@ def integral_steps(integrand, symbol, **options):
     # log(cos(x) + 1) - log(cos(x)).
     result = do_one(
         null_safe(special_function_rule),
+        null_safe(abs_trig_rule),
         null_safe(switch(key, {
             Pow: do_one(null_safe(power_rule),
                         null_safe(trig_rule),
