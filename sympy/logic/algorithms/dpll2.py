@@ -200,11 +200,10 @@ class SATSolver:
                 self._unit_prop_queue.append(clause[0])
                 continue
 
-            self.watched_lits[clause[0]].add(i)
-            self.watched_lits[clause[-1]].add(i)
-
             for lit in clause:
                 self.occurrence_count[lit] += 1
+            # watched literals for ith clause
+            self._watch(i)
 
     def _find_model(self):
         """
@@ -483,22 +482,13 @@ class SATSolver:
         -2
 
         """
-        if lit == 0 or abs(lit) >= len(self.variable_set):
-            raise ValueError(f"{lit} is not a literal of one of the variables "
-                "the solver was created with.")
-
-        while len(self.levels) > 1:
-            self._undo()
-
-        self._models = None
-        if self._status == IpasirStatus.SATISFIABLE:
-            self._status = IpasirStatus.UNKNOWN
-
-        self._assumptions.append(lit)
+        self._restart()
+        self._assumptions.append(self._filter_lit(lit))
 
     def add(self, lit):
         """Add *lit* to the clause being built, or add that clause to the
-        solver when *lit* is 0.
+        solver when *lit* is 0. ``clause()`` adds a whole clause at once,
+        without the terminator.
 
         The search restarts from the root level, so ``solve()`` may be called
         again, and an unsatisfiable solver stays unsatisfiable.
@@ -521,47 +511,12 @@ class SATSolver:
         -1
 
         """
-        if lit != 0:
-            if abs(lit) >= len(self.variable_set):
-                raise ValueError("%s is not a literal of one of the variables "
-                    "the solver was created with." % lit)
-
-            self._clause_buffer.append(lit)
+        if lit == 0:  # The end of clause marker of IPASIR.
+            self._add_clause(self._clause_buffer)
+            # reset the buffer for future use
+            self._clause_buffer = []
             return
-
-        clause_to_add = self._clause_buffer
-        self._clause_buffer = []
-
-        # The decisions were made without this clause, so the search restarts.
-        while len(self.levels) > 1:
-            self._undo()
-
-        self._models = None
-        if self._status == IpasirStatus.SATISFIABLE:
-            self._status = IpasirStatus.UNKNOWN
-
-        clause_num = len(self.clauses)
-        self.clauses.append(clause_to_add)
-
-        for clause_lit in clause_to_add:
-            self.occurrence_count[clause_lit] += 1
-
-        # Only a literal that is not already false can be a watched literal. With
-        # fewer than two of those the clause is satisfied, unit, or false, and
-        # none of those needs to be watched.
-        unassigned = [clause_lit for clause_lit in clause_to_add
-                      if not self.variable_set[abs(clause_lit)]]
-
-        if len(unassigned) > 1:
-            self.watched_lits[unassigned[0]].add(clause_num)
-            self.watched_lits[unassigned[-1]].add(clause_num)
-        elif not any(clause_lit in self.var_settings
-                     for clause_lit in clause_to_add):
-            if unassigned:
-                self._unit_prop_queue.append(unassigned[0])
-            else:
-                self.is_unsatisfied = True
-                self._status = IpasirStatus.UNSATISFIABLE
+        self._clause_buffer.append(self._filter_lit(lit))
 
     def clause(self, *lits):
         """Add the clause made up of *lits*, given one by one or as a single
@@ -572,13 +527,7 @@ class SATSolver:
         """
         if len(lits) == 1 and not isinstance(lits[0], int):
             lits = lits[0]
-
-        for lit in lits:
-            self.add(lit)
-
-        # Zero is never a literal, which is why IPASIR uses it to mark the
-        # end of a clause rather than passing a length around.
-        self.add(0)
+        self._add_clause([self._filter_lit(lit) for lit in lits])
 
     def copy(self):
         """Return an independent solver with the same clauses and state, so
@@ -612,6 +561,42 @@ class SATSolver:
         other.symbols = symbols
 
         return other
+
+    def _filter_lit(self, lit):
+        """
+        Return lit, raise if it is not a literal of a known variable.
+        TODO: In future, this method should be removed and instead handle unknown
+        variables.
+        """
+        if lit == 0 or abs(lit) >= len(self.variable_set):
+            raise ValueError(f"{lit} is not a literal of one of the variables "
+                "the solver was created with.")
+        return lit
+
+    def _restart(self):
+        """Undo the search back to the root level"""
+        # undo all the levels
+        while len(self.levels) > 1:
+            self._undo()
+        # reset the model
+        self._models = None
+        # reset the status
+        if self._status == IpasirStatus.SATISFIABLE:
+            self._status = IpasirStatus.UNKNOWN
+
+    def _add_clause(self, lits):
+        """Register the clause made up of lits with the solver."""
+        # The decisions were made without this clause, so the search restarts.
+        self._restart()
+        # register the new clause on self.clauses
+        self.clauses.append(lits)
+        # count the lits for the heuristic
+        for lit in lits:
+            self.occurrence_count[lit] += 1
+        # register watched literals for the new clause we have added
+        self._watch(len(self.clauses) - 1)
+        if self.is_unsatisfied:
+            self._status = IpasirStatus.UNSATISFIABLE
 
     ########################
     #    Helper Methods    #
@@ -699,6 +684,28 @@ class SATSolver:
 
         """
         return cls in self.watched_lits[lit]
+
+    def _watch(self, i):
+        """
+        Watch two literals of the ith clause
+        NOTE: this method only works on the root level
+        """
+        clause = self.clauses[i]
+        # unassigned lits from the clause
+        unassigned = [lit for lit in clause if not self.variable_set[abs(lit)]]
+
+        if len(unassigned) > 1:
+            self.watched_lits[unassigned[0]].add(i)
+            self.watched_lits[unassigned[-1]].add(i)
+        # If there's no possible watched literals,
+        # check if clause is true already
+        elif not any(lit in self.var_settings for lit in clause):
+            # check if the clause is unit
+            if unassigned:
+                self._unit_prop_queue.append(unassigned[0])
+            # else the clause is false
+            else:
+                self.is_unsatisfied = True
 
     def _assign_literal(self, lit):
         """Make a literal assignment.
