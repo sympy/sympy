@@ -2932,11 +2932,8 @@ class owens_t(DefinedFunction):
         if not (h.is_number and a.is_number):
             return None
         with local_workprec(prec + 10) as ctx:
-            try:
-                hm = ctx.convert(h._to_mpmath(prec + 10))
-                am = ctx.convert(a._to_mpmath(prec + 10))
-            except (ValueError, TypeError):
-                return None
+            hm = ctx.convert(h._to_mpmath(prec + 10))
+            am = ctx.convert(a._to_mpmath(prec + 10))
 
             def integrand(t):
                 s = 1 + t**2
