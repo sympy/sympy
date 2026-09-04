@@ -6,6 +6,7 @@ from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.kind import NumberKind, UndefinedKind
+from sympy.assumptions.ask import Q
 from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_known_number_facts
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
@@ -28,6 +29,11 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo,
 
     Proposition is evaluated to ``True`` or ``False`` if the truth value can be
     determined. If not, ``None`` is returned.
+
+    What the SAT solver leaves undecided is handed over to the Linear Real
+    Arithmetic theory solver of ``lra_satask``, which is what answers the
+    inequalities. That only happens for input it can handle, which above all
+    means that every expression has to be known to be real.
 
     Parameters
     ==========
@@ -74,10 +80,16 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo,
         use_known_facts=use_known_facts, iterations=iterations)
     sat.add_from_cnf(assumptions)
 
-    return check_satisfiability(props, _props, sat, early_return)
+    return check_satisfiability(props, _props, sat, early_return, assumptions)
 
 
-def check_satisfiability(prop, _prop, factbase, early_return=False):
+def check_satisfiability(prop, _prop, factbase, early_return=False,
+                         assumptions=None):
+    """Decide *prop* against *factbase*, which has to contain *assumptions*.
+
+    When *assumptions* is given, an undecided proposition is passed on to the
+    LRA theory solver, which is skipped otherwise.
+    """
     if {0} in factbase.data:
         raise ValueError("Inconsistent assumptions")
 
@@ -99,6 +111,16 @@ def check_satisfiability(prop, _prop, factbase, early_return=False):
         if entailed is not None:
             return not entailed
 
+    # Only the root level answers `fixed()`, so what it says about the
+    # expressions the theory solver would see has to be read before `solve()`
+    # decides anything. Their old assumptions are not asked for here, since
+    # that costs far more than a lookup and does not need the solver.
+    if assumptions is None:
+        exprs = root_real = None
+    else:
+        exprs = _predicate_exprs(prop, _prop, assumptions)
+        root_real = _root_real_exprs(exprs, solver, true_false_guarded.encoding)
+
     # Continue on the propogated solver, just call solve() on it.
     if solver.solve() == IpasirStatus.UNSATISFIABLE:
         raise ValueError("Inconsistent assumptions")
@@ -112,6 +134,8 @@ def check_satisfiability(prop, _prop, factbase, early_return=False):
     can_be_false = witnessed < 0 or other
 
     if can_be_true and can_be_false:
+        if exprs is not None:
+            return _lra_satask(prop, _prop, assumptions, exprs, root_real)
         return None
 
     if can_be_true and not can_be_false:
@@ -145,6 +169,55 @@ def _encode_with_selector(prop, _prop, factbase):
                                     for clause in clauses]
 
     return true_false_guarded, selector
+
+
+def _predicate_exprs(*cnfs):
+    """Return every expression a predicate of *cnfs* is applied to."""
+    exprs = set()
+    for cnf in cnfs:
+        for pred in cnf.all_predicates():
+            if isinstance(pred, AppliedPredicate):
+                exprs.update(pred.arguments)
+    return exprs
+
+
+def _root_real_exprs(exprs, solver, encoding):
+    """Return the expressions of *exprs* that the root level of *solver* fixed
+    ``Q.real`` for, which is what the new assumptions and the facts propagated
+    from them settle. *encoding* numbers the predicates as *solver* does.
+    """
+    real = set()
+    for expr in exprs:
+        lit = encoding.get(Q.real(expr))
+        if lit is not None and solver.fixed(lit) == 1:
+            real.add(expr)
+    return real
+
+
+def _lra_satask(prop, _prop, assumptions, exprs, root_real):
+    """Decide *prop* with the LRA theory solver, or return ``None`` if the
+    input turns out to be one that it cannot handle after all.
+
+    The theory solver is only sound on real expressions, so every expression
+    of *exprs* has to be real. What the root level left open in *root_real*
+    is asked of the old assumptions here, where the answer is needed.
+    """
+    known_real = root_real | {expr for expr in exprs if expr not in root_real
+                              and getattr(expr, "is_real", None) is True}
+    if known_real != exprs:
+        return None
+
+    from sympy.assumptions.lra_satask import check_satisfiability
+    from sympy.logic.algorithms.lra_theory import UnhandledInput
+
+    encoded_assumptions = EncodedCNF()
+    encoded_assumptions.from_cnf(assumptions)
+
+    try:
+        return check_satisfiability(prop, _prop, encoded_assumptions,
+                                    known_real=known_real)
+    except UnhandledInput:
+        return None
 
 
 def extract_predargs(proposition, assumptions=None):

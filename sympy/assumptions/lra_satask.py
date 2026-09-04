@@ -37,7 +37,13 @@ WHITE_LIST = ALLOWED_PRED.keys() | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q
                                     Q.positive_infinite}
 
 
-def check_satisfiability(prop, _prop, factbase):
+def check_satisfiability(prop, _prop, factbase, known_real=frozenset()):
+    """Answer *prop* with the LRA theory solver.
+
+    *known_real* holds the expressions that are known to be real by something
+    other than their old assumptions, such as the root level inference that
+    ``satask`` does before handing over to this solver.
+    """
     sat_true = factbase.copy()
     sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
@@ -56,7 +62,7 @@ def check_satisfiability(prop, _prop, factbase):
 
     # convert old assumptions into predicates and add them to sat_true and sat_false
     # also check for unhandled predicates
-    for assm in extract_pred_from_old_assum(all_exprs):
+    for assm in extract_pred_from_old_assum(all_exprs, known_real):
         n = len(sat_true.encoding)
         if assm not in sat_true.encoding:
             sat_true.encoding[assm] = n+1
@@ -217,13 +223,14 @@ def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
 
     return all_pred, all_exprs
 
-def extract_pred_from_old_assum(all_exprs):
+def extract_pred_from_old_assum(all_exprs, known_real=frozenset()):
     """
     Returns a list of relevant new assumption predicate
     based on any old assumptions.
 
     Raises an UnhandledInput exception if any of the assumptions are
-    unhandled.
+    unhandled. An expression listed in *known_real* is taken to be real
+    even if its old assumptions do not say so.
 
     Ignored predicate:
     - commutative
@@ -251,7 +258,7 @@ def extract_pred_from_old_assum(all_exprs):
         if len(expr.free_symbols) == 0:
             continue
 
-        if expr.is_real is not True:
+        if expr.is_real is not True and expr not in known_real:
             raise UnhandledInput(f"LRASolver: {expr} must be real")
         # test for I times imaginary variable; such expressions are considered real
         if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
