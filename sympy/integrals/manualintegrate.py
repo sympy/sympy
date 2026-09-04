@@ -1836,7 +1836,7 @@ def _parts_rule_gen(integrand, symbol):
             # Can integrate a polynomial times OrthogonalPolynomial
             if rule == pull_out_algebraic:
                 if dv.is_Derivative or dv.has(TrigonometricFunction, HyperbolicFunction) or \
-                        isinstance(dv, OrthogonalPolynomial):
+                        isinstance(dv, (OrthogonalPolynomial, polygamma)):
                     v_step = yield IntegralInfo(dv, symbol)
                     if v_step.contains_dont_know():
                         return None

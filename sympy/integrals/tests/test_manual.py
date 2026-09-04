@@ -597,6 +597,8 @@ def test_manualintegrate_polygamma():
     assert_is_integral_of(f, F)
     f, F = polygamma(0, 2*x + 1), loggamma(2*x + 1)/2
     assert_is_integral_of(f, F)
+    f, F = x*polygamma(1, x), x*polygamma(0, x) - loggamma(x)
+    assert_is_integral_of(f, F)
 
 
 def test_issue_29910():
