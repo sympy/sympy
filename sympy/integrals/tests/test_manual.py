@@ -1465,3 +1465,13 @@ def test_mul_pow_derivative():
     assert_is_integral_of(x**3*Derivative(f(x), (x, 4)),
                           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) +
                           6*x*Derivative(f(x), x) - 6*f(x))
+
+def test_polygamma_integration():
+    from sympy import symbols, polygamma, integrate, loggamma
+    from sympy.integrals.manualintegrate import manualintegrate
+    x = symbols('x')
+    assert manualintegrate(polygamma(1, x), x) == polygamma(0, x)
+    assert manualintegrate(polygamma(2, 3*x), x) == polygamma(1, 3*x)/3
+    assert manualintegrate(polygamma(2, 2*x + 5), x) == polygamma(1, 2*x + 5)/2
+    assert manualintegrate(polygamma(0, x), x) == loggamma(x)
+    assert integrate(polygamma(1, x), x) == polygamma(0, x)

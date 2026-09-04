@@ -1081,6 +1081,24 @@ class FresnelSRule(AtomicRule):
             sin(b**2/(4*a) - c)*fresnelc((2*a*x + b)/sqrt(2*a*S.Pi)))
 
 
+
+class PolyGammaRule(AtomicRule):
+    __slots__ = ("n", "z")
+    n: Expr
+    z: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr, z: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.n = n
+        self.z = z
+
+    def eval(self) -> Expr:
+        from sympy.functions.special.gamma_functions import polygamma
+        n, z, x = self.n, self.z, self.variable
+        c = z.coeff(x)
+        if not c or z.as_independent(x)[0].has(x):
+            raise ValueError(f"PolyGammaRule recibió un argumento no afín: {z}")
+        return polygamma(n - 1, z) / c
 class PolylogRule(AtomicRule):
 
     __slots__ = ("a", "b")
@@ -1490,6 +1508,17 @@ def orthogonal_poly_rule(integral):
 _special_function_patterns: list[tuple[type, Expr, Callable | None, tuple]] = []
 _wilds: list[Wild] = []
 _symbol = Dummy('x')
+
+
+
+def poly_gamma_rule(integral):
+    from sympy.functions.special.gamma_functions import polygamma
+    integrand, symbol = integral
+    if isinstance(integrand, polygamma):
+        n, z = integrand.args
+        c = z.coeff(symbol)
+        if (z == symbol) or (c and not z.as_independent(symbol)[0].has(symbol)):
+            return PolyGammaRule(integrand, symbol, n, z)
 
 
 def special_function_rule(integral):
@@ -3930,6 +3959,7 @@ class IntegrationSolver:
         # log(cos(x) + 1) - log(cos(x)).
         return do_one(
             null_safe(w(special_function_rule)),
+            null_safe(w(poly_gamma_rule)),
             null_safe(switch(_integral_key, {
                 Pow: do_one(null_safe(w(power_rule)),
                             null_safe(w(trig_rule)),
