@@ -13,7 +13,7 @@ from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, as
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
 from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfc, erfi, fresnelc, fresnels, li, owens_t)
-from sympy.functions.special.gamma_functions import uppergamma
+from sympy.functions.special.gamma_functions import loggamma, polygamma, uppergamma
 from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
 from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
@@ -565,7 +565,6 @@ def test_manualintegrate_special():
     f = log(x)*exp(-x**2)
     F = sqrt(pi)*log(x)*erf(x)/2 - sqrt(pi)*Integral(erf(x)/x, x)/2
     assert_is_integral_of(f, F)
-
     f, F = erf(x), x*erf(x) + exp(-x**2)/sqrt(pi)
     assert_is_integral_of(f, F)
     f, F = erfc(x), x*erfc(x) - exp(-x**2)/sqrt(pi)
@@ -588,6 +587,17 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f, F = li(x), x*li(x) - Ei(2*log(x))
     assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_polygamma():
+    f, F = polygamma(2, 3*x + 1), polygamma(1, 3*x + 1)/3
+    assert_is_integral_of(f, F)
+    na = symbols('a', nonzero=True)
+    f, F = polygamma(n, na*x + b), polygamma(n - 1, na*x + b)/na
+    assert_is_integral_of(f, F)
+    f, F = polygamma(0, 2*x + 1), loggamma(2*x + 1)/2
+    assert_is_integral_of(f, F)
+
 
 def test_issue_29910():
     f = x**2*exp(-x**2)

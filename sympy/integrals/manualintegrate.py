@@ -63,7 +63,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.error_functions import (erf, erfc, erfi, fresnelc,
     fresnels, Ci, Chi, Si, Shi, Ei, li, owens_t)
-from sympy.functions.special.gamma_functions import uppergamma
+from sympy.functions.special.gamma_functions import polygamma, uppergamma
 from sympy.functions.special.elliptic_integrals import elliptic_e, elliptic_f
 from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
     legendre, hermite, laguerre, assoc_laguerre, gegenbauer, jacobi,
@@ -1114,6 +1114,28 @@ class UpperGammaRule(AtomicRule):
         return x**e * (-a*x)**(-e) * uppergamma(e + 1, -a*x)/a
 
 
+class PolyGammaRule(AtomicRule):
+    """integrate(polygamma(n, a*x + b), x) -> polygamma(n - 1, a*x + b)/a"""
+
+    __slots__ = ("a", "b", "n")
+
+    a: Expr
+    b: Expr
+    n: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, n: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.n = n
+
+    def eval(self) -> Expr:
+        a, b, n, x = self.a, self.b, self.n, self.variable
+        return polygamma(n - 1, a*x + b)/a
+
+
 class EllipticFRule(AtomicRule):
 
     __slots__ = ("a", "d")
@@ -1504,7 +1526,8 @@ def special_function_rule(integral):
         e_nonnegative_integer = Wild('e', exclude=[_symbol], properties=[
             lambda x: not (x.is_nonnegative and x.is_integer)])
         y = Wild('y', exclude=[_symbol])
-        _wilds.extend((a_nonzero, b, c, d_nonzero, e_nonnegative_integer, y))
+        n_order = Wild('n', exclude=[_symbol])
+        _wilds.extend((a_nonzero, b, c, d_nonzero, e_nonnegative_integer, y, n_order))
         # patterns consist of a SymPy class, a wildcard expr, an optional
         # condition coded as a lambda (when Wild properties are not enough),
         # followed by an applicable rule
@@ -1517,6 +1540,7 @@ def special_function_rule(integral):
             (Mul, sin(linear_pattern, evaluate=False)/_symbol, None, SiRule),
             (Mul, sinh(linear_pattern, evaluate=False)/_symbol, None, ShiRule),
             (Pow, 1/log(linear_pattern, evaluate=False), None, LiRule),
+            (polygamma, polygamma(n_order, linear_pattern, evaluate=False), None, PolyGammaRule),
             (exp, exp(quadratic_pattern, evaluate=False), None, ErfRule),
             (Mul, exp(-(linear_pattern)**2, evaluate=False) * erf(y*(linear_pattern)),
                 lambda a, b, y: y != 1 and y != -1, OwensTRule),
@@ -1529,7 +1553,7 @@ def special_function_rule(integral):
             (Pow, sqrt(a_nonzero - d_nonzero*sin(_symbol, evaluate=False)**2),
                 lambda a, d: a != d, EllipticERule),
         ))
-    a_wild, _, _, d_wild, _, _ = _wilds
+    a_wild, _, _, d_wild, _, _, _ = _wilds
     _integrand = integrand.subs(symbol, _symbol)
     for type_, pattern, constraint, rule in _special_function_patterns:
         if isinstance(_integrand, type_):
