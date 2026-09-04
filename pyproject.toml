@@ -1,3 +1,16 @@
+[build-system]
+requires = ["setuptools>=77.0.3", "setuptools-scm>=10"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "sympy/release.py"
+write_to_source = false
+version_scheme = "release-branch-semver"
+
+[tool.setuptools_scm.scm.git]
+pre_parse = "fetch_on_shallow"
+describe_command = "git describe --dirty --tags --long --match sympy-*"
+
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.
 addopts = "-m 'not slow and not tooslow'"
@@ -129,6 +142,17 @@ module = [
     "sympy.plotting.pygletplot.*",
 ]
 ignore_errors = true
+
+# sympy.release imports names that are declared before the optional import.
+[[tool.mypy.overrides]]
+module = ["sympy.release"]
+disable_error_code = ["no-redef"]
+
+# Compatibility with installations created before release.py became the
+# setuptools-scm-generated version file.
+[[tool.mypy.overrides]]
+module = ["sympy._version"]
+ignore_missing_imports = true
 
 # Third-party untyped code:
 [[tool.mypy.overrides]]

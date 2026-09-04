@@ -28,6 +28,8 @@ jobs:
         group: [1, 2, 3, 4]
     env:
       PYODIDE_VERSION: 0.27.2
+      # The checkout's conftest.py normally selects this headless backend.
+      MPLBACKEND: Agg
       # PYTHON_VERSION and EMSCRIPTEN_VERSION are determined by PYODIDE_VERSION.
       # The appropriate versions can be found in the Pyodide repodata.json
       # "info" field, or in Makefile.envs:
@@ -40,6 +42,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Keep the checkout off sys.path so the tests import the installed
+          # Pyodide package, whose release.py has static version information.
+          path: sympy-checkout
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -82,14 +87,17 @@ jobs:
 
           # Activate the virtual environment and install SymPy
           source .venv-pyodide/bin/activate
-          pip install .
+          pip install ./sympy-checkout
 
           # Install dependencies. Exclude ruff, since Pyodide cannot install it.
-          grep -vx 'ruff' requirements-dev.txt | pip install -r /dev/stdin
+          grep -vx 'ruff' sympy-checkout/requirements-dev.txt | pip install -r /dev/stdin
           pip install matplotlib numpy scipy
 
-          # Trigger test suite (slow and tooslow tests are skipped by default)
+          # Trigger the test suite, excluding slow and tooslow tests. The test
+          # runner tests require the source checkout's directory layout.
           pytest -svra --pyargs sympy \
+          -m 'not slow and not tooslow' \
+          --ignore-glob='*/sympy/testing/tests/test_runtests_pytest.py' \
           --durations 20 \
           --splits "$MATRIX_SPLITS" --group "$MATRIX_GROUP" \
           --store-durations
