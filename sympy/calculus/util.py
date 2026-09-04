@@ -12,6 +12,7 @@ from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import frac
+from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
     TrigonometricFunction, sin, cos, tan, cot, csc, sec,
@@ -806,6 +807,25 @@ def stationary_points(f, symbol, domain=S.Reals):
     return set
 
 
+def _is_continuous_on_closed_interval_and_globally_convex(f, symbol, domain):
+    if not (isinstance(domain, Interval) and domain.is_closed and
+            domain.inf.is_finite and domain.sup.is_finite):
+        return False
+    if symbol not in f.free_symbols:
+        return False
+    x = Dummy('x', real=True)
+    f_x = f.subs(symbol, x)
+    if f_x.is_real is not True:
+        return False
+    if f_x.diff(x, 2).is_nonnegative is not True:
+        return False
+    if f_x.diff(x).equals(S.Zero):
+        return False
+    if periodicity(f, symbol) == S.Zero:
+        return False
+    return continuous_domain(f, symbol, domain) == domain
+
+
 def maximum(f, symbol, domain=S.Reals):
     """
     Returns the maximum value of a function in the given domain.
@@ -847,6 +867,11 @@ def maximum(f, symbol, domain=S.Reals):
     if isinstance(symbol, Symbol):
         if domain is S.EmptySet:
             raise ValueError("Maximum value not defined for empty domain.")
+
+        if _is_continuous_on_closed_interval_and_globally_convex(
+                f, symbol, domain):
+            return Max(f.subs(symbol, domain.inf),
+                       f.subs(symbol, domain.sup))
 
         return function_range(f, symbol, domain).sup
     else:
@@ -894,6 +919,11 @@ def minimum(f, symbol, domain=S.Reals):
     if isinstance(symbol, Symbol):
         if domain is S.EmptySet:
             raise ValueError("Minimum value not defined for empty domain.")
+
+        if _is_continuous_on_closed_interval_and_globally_convex(
+                -f, symbol, domain):
+            return Min(f.subs(symbol, domain.inf),
+                       f.subs(symbol, domain.sup))
 
         return function_range(f, symbol, domain).inf
     else:
