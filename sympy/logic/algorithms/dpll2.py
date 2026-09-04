@@ -116,6 +116,7 @@ class SATSolver:
                 heuristic='vsids', clause_learning='none', INTERVAL=500,
                  lra_theory = None):
 
+        self.levels = []
         self.var_settings = var_settings
         self.heuristic = heuristic
         self.is_unsatisfied = False
@@ -157,7 +158,6 @@ class SATSolver:
         self.lra = lra_theory
 
         # Create the base level
-        self.levels = []
         self._create_level(0)
         self._current_level.var_settings = set(var_settings)
         if self.lra and self._current_level.var_settings:
@@ -688,24 +688,27 @@ class SATSolver:
     def _watch(self, i):
         """
         Watch two literals of the ith clause
-        NOTE: this method only works on the root level
         """
+        # this method works on root level only
+        assert len(self.levels) <= 1
         clause = self.clauses[i]
+
+        # A clause that is true at the root
+        if any(lit in self.var_settings for lit in clause):
+            return
+
         # unassigned lits from the clause
         unassigned = [lit for lit in clause if not self.variable_set[abs(lit)]]
 
-        if len(unassigned) > 1:
+        # every literal is false
+        if not unassigned:
+            self.is_unsatisfied = True
+        # the clause is unit
+        elif len(unassigned) == 1:
+            self._unit_prop_queue.append(unassigned[0])
+        else:
             self.watched_lits[unassigned[0]].add(i)
             self.watched_lits[unassigned[-1]].add(i)
-        # If there's no possible watched literals,
-        # check if clause is true already
-        elif not any(lit in self.var_settings for lit in clause):
-            # check if the clause is unit
-            if unassigned:
-                self._unit_prop_queue.append(unassigned[0])
-            # else the clause is false
-            else:
-                self.is_unsatisfied = True
 
     def _assign_literal(self, lit):
         """Make a literal assignment.
