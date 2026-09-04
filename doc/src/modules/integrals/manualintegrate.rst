@@ -63,6 +63,7 @@ Rewriting and combination of results
 .. autoclass:: sympy.integrals.manualintegrate.AlternativeRule
 .. autoclass:: sympy.integrals.manualintegrate.DerivativeRule
 .. autoclass:: sympy.integrals.manualintegrate.DontKnowRule
+.. autoclass:: sympy.integrals.manualintegrate.PendingRule
 
 Distributions
 =============
