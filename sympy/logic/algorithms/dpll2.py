@@ -487,8 +487,8 @@ class SATSolver:
 
     def add(self, lit):
         """Add *lit* to the clause being built, or add that clause to the
-        solver when *lit* is 0. ``clause()`` adds a whole clause at once,
-        without the terminator.
+        solver when *lit* is 0.
+        clause() is a convenience method of add().
 
         The search restarts from the root level, so ``solve()`` may be called
         again, and an unsatisfiable solver stays unsatisfiable.
