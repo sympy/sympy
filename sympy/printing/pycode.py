@@ -8,7 +8,8 @@ from collections import defaultdict
 from itertools import chain
 from sympy.core import S
 from sympy.core.mod import Mod
-from .precedence import precedence
+from sympy.core.symbol import Dummy
+from .precedence import precedence, PRECEDENCE
 from .codeprinter import CodePrinter
 
 _kw = {
@@ -423,6 +424,43 @@ class AbstractPythonCodePrinter(CodePrinter):
         return "{}**{}".format(base_str, exp_str)
 
 
+def _is_atomic_code(code):
+    # Whether ``code`` is an identifier or a single call, i.e. needs no
+    # parentheses when an operator is applied to it.
+    if code.isidentifier():
+        return True
+    head, sep, rest = code.partition("(")
+    if not sep or not head.replace(".", "").isidentifier() or not rest.endswith(")"):
+        return False
+    depth = 1
+    for i, c in enumerate(rest):
+        depth += (c == "(") - (c == ")")
+        if depth == 0:
+            return i == len(rest) - 1
+    return False
+
+
+class _ElementwiseOperand(Dummy):
+    """Placeholder for the operand of an ``ArrayElementwiseApplyFunc``.
+
+    Its name is the printed code of the operand, which ``ArrayPrinter``
+    prints as it is: nothing is substituted in the printed function body,
+    so the operand cannot be confused with other symbols. Its precedence
+    is the one of the printed operand, so that it is parenthesized when
+    needed.
+    """
+    __slots__ = ('precedence',)
+
+    def __new__(cls, code, precedence):
+        obj = Dummy.__new__(cls, code)
+        obj.precedence = precedence
+        return obj
+
+    def sort_key(self, order=None):
+        # Before symbols, so that the operand leads printed sums and products.
+        return (2, 0, ''), (0, ()), S.One.sort_key(), S.One
+
+
 class ArrayPrinter:
 
     def _arrayify(self, indexed):
@@ -542,39 +580,29 @@ class ArrayPrinter:
         return self._expand_fold_binary_op(self._module + "." + self._add, expr.args)
 
     def _print_ArrayElementwiseApplyFunc(self, expr):
+        return self._print(self._elementwise_body(expr))
+
+    def _elementwise_body(self, expr):
+        # The function of ``expr`` applied to a placeholder printing as the
+        # printed operand. Scalar functions and arithmetic are elementwise
+        # in the array libraries, while applying the function to the
+        # operand symbolically would turn e.g. d**2 into a matrix power
+        # for a matrix operand.
         from sympy.core.function import Lambda
-        from sympy.core.symbol import Symbol
-        # Print the function applied to a scalar placeholder, then splice
-        # the printed operand in its place. Scalar functions and
-        # arithmetic are elementwise in the array libraries, while applying
-        # the function to the operand symbolically would turn e.g. d**2
-        # into a matrix power for a matrix operand.
-        placeholder = Symbol("_elementwise_operand")
+        from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc
+        operand = expr.expr
+        if isinstance(operand, ArrayElementwiseApplyFunc):
+            operand = self._elementwise_body(operand)
+        code = self._print(operand)
+        prec = PRECEDENCE["Atom"] if _is_atomic_code(code) else precedence(operand)
+        placeholder = _ElementwiseOperand(code, prec)
         function = expr.function
         if isinstance(function, Lambda):
-            body = function.expr.xreplace({function.variables[0]: placeholder})
-        else:
-            body = function(placeholder)
-        operand = self._print(expr.expr)
-        if not self._is_atomic_code(operand):
-            operand = "(%s)" % operand
-        return self._print(body).replace(self._print(placeholder), operand)
+            return function.expr.xreplace({function.variables[0]: placeholder})
+        return function(placeholder)
 
-    @staticmethod
-    def _is_atomic_code(code):
-        # Whether ``code`` is an identifier or a single call, i.e. needs no
-        # parentheses when an operator is applied to it.
-        if code.isidentifier():
-            return True
-        head, sep, rest = code.partition("(")
-        if not sep or not head.replace(".", "").isidentifier() or not rest.endswith(")"):
-            return False
-        depth = 1
-        for i, c in enumerate(rest):
-            depth += (c == "(") - (c == ")")
-            if depth == 0:
-                return i == len(rest) - 1
-        return False
+    def _print__ElementwiseOperand(self, expr):
+        return expr.name
 
     def _print_OneArray(self, expr):
         return "%s((%s,))" % (

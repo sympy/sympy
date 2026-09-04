@@ -472,7 +472,7 @@ def test_array_printer():
     # Elementwise function application prints as the (elementwise) NumPy
     # function or arithmetic applied to the printed operand:
     from sympy.core.function import Lambda
-    from sympy.core.symbol import Dummy
+    from sympy.core.symbol import Dummy, Symbol
     from sympy.functions.elementary.trigonometric import sin
     from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc, ArrayTensorProduct
     B = ArraySymbol('B', (3, 3))
@@ -481,6 +481,15 @@ def test_array_printer():
     assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, d**2), B)) == 'B**2'
     assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, 1/d), ArrayContraction(ArrayTensorProduct(B, B), (1, 2)))) == \
         'numpy.einsum("ab,bc->ac", B,B)**(-1.0)'
+    # Symbols in the function body are never confused with the operand:
+    s = Symbol('_elementwise_operand')
+    assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, d + s), B)) == 'B + _elementwise_operand'
+    s = Symbol('prefix_elementwise_operand_suffix')
+    assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, d + s), B)) == 'B + prefix_elementwise_operand_suffix'
+    nested = ArrayElementwiseApplyFunc(Lambda(d, d + 1), ArrayElementwiseApplyFunc(Lambda(d, d**2), B))
+    assert prntr.doprint(nested) == 'B**2 + 1'
+    assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, d**3), ArrayElementwiseApplyFunc(Lambda(d, d**2), B))) == '(B**2)**3'
+    assert prntr.doprint(ArrayElementwiseApplyFunc(sin, ArrayElementwiseApplyFunc(Lambda(d, d + 1), B))) == 'numpy.sin(B + 1)'
 
     prntr = TensorflowPrinter()
     assert prntr.doprint(ZeroArray(5)) == 'tensorflow.zeros((5,))'
