@@ -1006,15 +1006,17 @@ def _solve_trig2(f, symbol, domain):
         return ConditionSet(symbol, Eq(f_original, 0), domain)
     solns = solveset(g, y, S.Reals) - solveset(h, y, S.Reals)
 
-    if isinstance(solns, FiniteSet):
+    if isinstance(solns, FiniteSet) or solns is S.EmptySet:
         result = Union(*[invert_real(tan(symbol/mu), s, symbol)[1]
                        for s in solns])
-        dsol = invert_real(tan(symbol/mu), oo, symbol)[1]
-        if degree(h) > degree(g):                   # If degree(denom)>degree(num) then there
-            result = Union(result, dsol)            # would be another sol at Lim(denom-->oo)
+        # tan(symbol/mu) blows up at mu*(pi/2 + n*pi) so those never show up
+        # in solns. Lim(denom-->oo) == 0 isn't enough to add them though,
+        # (1 + cos(x))/sin(x) is nan at pi rather than 0.
+        if degree(h) > degree(g) and f_original.subs(symbol, mu*pi/2).is_zero:
+            n = Dummy('n')
+            dsol = imageset(Lambda(n, mu*(pi/2 + n*pi)), S.Integers)
+            result = Union(result, dsol)
         return Intersection(result, domain)
-    elif solns is S.EmptySet:
-        return S.EmptySet
     else:
         return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 

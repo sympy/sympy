@@ -1022,6 +1022,29 @@ def test_solve_trig():
         ImageSet(Lambda(n, 360*n + 30), S.Integers)))
 
 
+def test_solve_trig2_tan_poles():
+    # _solve_trig2 works in y = tan(x/mu), so roots at the poles of that
+    # tan were being dropped. See issue #30386.
+    from sympy.solvers.solveset import _solve_trig2
+
+    assert dumeq(_solve_trig2(cos(x) + 1, x, S.Reals),
+        ImageSet(Lambda(n, 2*n*pi + pi), S.Integers))
+    assert dumeq(_solve_trig2(cos(x)**3 + 1, x, S.Reals),
+        ImageSet(Lambda(n, 2*n*pi + pi), S.Integers))
+    # sin(x) vanishes at every multiple of pi, not just the even ones
+    assert dumeq(_solve_trig2(sin(x), x, S.Reals),
+        Union(ImageSet(Lambda(n, 2*n*pi), S.Integers),
+              ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)))
+
+    # pi is a critical point of cos(x)*cos(4*x) that used to be missed
+    assert pi in solveset(diff(cos(x)*cos(4*x), x), x, Interval(0, 2*pi))
+
+    # removable singularities at pi, not roots, so pi must not be added
+    assert not _solve_trig2((1 + cos(x))/sin(x), x, S.Reals).contains(pi)
+    assert not _solve_trig2(sin(x)/(1 + cos(x)), x, S.Reals).contains(pi)
+    assert not _solve_trig2((1 - cos(x))/sin(x), x, S.Reals).contains(pi)
+
+
 def test_solve_trig_hyp_by_inversion():
     n = Dummy('n')
     assert solveset_real(sin(2*x + 3) - S(1)/2, x).dummy_eq(Union(
