@@ -103,6 +103,7 @@ class SATSolver:
                 heuristic='vsids', clause_learning='none', INTERVAL=500,
                  lra_theory = None):
 
+        self.levels = []
         self.var_settings = var_settings
         self.heuristic = heuristic
         self.is_unsatisfied = False
@@ -144,7 +145,6 @@ class SATSolver:
         self.lra = lra_theory
 
         # Create the base level
-        self.levels = []
         self._create_level(0)
         self._current_level.var_settings = set(var_settings)
         if self.lra and self._current_level.var_settings:
@@ -469,13 +469,13 @@ class SATSolver:
         -2
 
         """
+        lit = self._check_lit(lit)
         self._restart()
-        self._assumptions.append(self._filter_lit(lit))
+        self._assumptions.append(lit)
 
     def add(self, lit):
         """Add *lit* to the clause being built, or add that clause to the
-        solver when *lit* is 0. ``clause()`` adds a whole clause at once,
-        without the terminator.
+        solver when *lit* is 0.
 
         The search restarts from the root level, so ``solve()`` may be called
         again, and an unsatisfiable solver stays unsatisfiable.
@@ -503,7 +503,7 @@ class SATSolver:
             # reset the buffer for future use
             self._clause_buffer = []
             return
-        self._clause_buffer.append(self._filter_lit(lit))
+        self._clause_buffer.append(self._check_lit(lit))
 
     def clause(self, *lits):
         """Add the clause made up of *lits*, given one by one or as a single
@@ -511,10 +511,11 @@ class SATSolver:
 
         Without any literal it adds the empty clause, which is false.
 
+
         """
         if len(lits) == 1 and not isinstance(lits[0], int):
             lits = lits[0]
-        self._add_clause([self._filter_lit(lit) for lit in lits])
+        self._add_clause([self._check_lit(lit) for lit in lits])
 
     def copy(self):
         """Return an independent solver with the same clauses and state, so
@@ -549,7 +550,7 @@ class SATSolver:
 
         return other
 
-    def _filter_lit(self, lit):
+    def _check_lit(self, lit):
         """
         Return lit, raise if it is not a literal of a known variable.
         TODO: In future, this method should be removed and instead handle unknown
@@ -562,12 +563,9 @@ class SATSolver:
 
     def _restart(self):
         """Undo the search back to the root level"""
-        # undo all the levels
         while len(self.levels) > 1:
             self._undo()
-        # reset the model
         self._models = None
-        # reset the status
         if self._status == IpasirStatus.SATISFIABLE:
             self._status = IpasirStatus.UNKNOWN
 
@@ -575,12 +573,9 @@ class SATSolver:
         """Register the clause made up of lits with the solver."""
         # The decisions were made without this clause, so the search restarts.
         self._restart()
-        # register the new clause on self.clauses
         self.clauses.append(lits)
-        # count the lits for the heuristic
         for lit in lits:
             self.occurrence_count[lit] += 1
-        # register watched literals for the new clause we have added
         self._watch(len(self.clauses) - 1)
         if self.is_unsatisfied:
             self._status = IpasirStatus.UNSATISFIABLE
@@ -654,24 +649,27 @@ class SATSolver:
     def _watch(self, i):
         """
         Watch two literals of the ith clause
-        NOTE: this method only works on the root level
         """
+        # this method works on root level only
+        assert len(self.levels) <= 1
         clause = self.clauses[i]
+
+        # A clause that is true at the root
+        if any(lit in self.var_settings for lit in clause):
+            return
+
         # unassigned lits from the clause
         unassigned = [lit for lit in clause if not self.variable_set[abs(lit)]]
 
-        if len(unassigned) > 1:
+        # every literal is false
+        if not unassigned:
+            self.is_unsatisfied = True
+        # the clause is unit
+        elif len(unassigned) == 1:
+            self._unit_prop_queue.append(unassigned[0])
+        else:
             self.watched_lits[unassigned[0]].add(i)
             self.watched_lits[unassigned[-1]].add(i)
-        # If there's no possible watched literals,
-        # check if clause is true already
-        elif not any(lit in self.var_settings for lit in clause):
-            # check if the clause is unit
-            if unassigned:
-                self._unit_prop_queue.append(unassigned[0])
-            # else the clause is false
-            else:
-                self.is_unsatisfied = True
 
     def _assign_literal(self, lit):
         """Make a literal assignment.
