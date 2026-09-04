@@ -42,3 +42,8 @@ required by `.github/PULL_REQUEST_TEMPLATE.md` and sympy's
 
 - Ensure all code quality checks pass before committing. Code quality checks
   can be run with `python bin/test quality` and `ruff check sympy`.
+
+- All imports should be added at the top of a file, not inside of functions.
+  The only exception to this rule is when adding an import to the top of the
+  file would cause a circular import. Imports of external packages use the
+  functionality in `sympy.external`.
