@@ -489,6 +489,8 @@ def test_gf_squarefree():
     assert gf_sqf_list([], 11, ZZ) == (0, [])
     assert gf_sqf_list([1], 11, ZZ) == (1, [])
     assert gf_sqf_list([1, 1], 11, ZZ) == (1, [([1, 1], 1)])
+    assert gf_sqf_list([], 11, ZZ, all=True) == (0, [])
+    assert gf_sqf_list([1], 11, ZZ, all=True) == (1, [])
 
     assert gf_sqf_p([], 11, ZZ) is True
     assert gf_sqf_p([1], 11, ZZ) is True
@@ -500,6 +502,8 @@ def test_gf_squarefree():
 
     assert gf_sqf_list(f, 11, ZZ) == \
         (1, [([1, 1], 11)])
+    assert gf_sqf_list(f, 11, ZZ, all=True) == \
+        (1, [([1], i) for i in range(1, 11)] + [([1, 1], 11)])
 
     f = [1, 5, 8, 4]
 
