@@ -144,7 +144,7 @@ class _GermResult(NamedTuple):
     strata on which the corresponding expression governs the germ.
     ``complete`` says whether those cases cover the whole directional germ.
 
-    P0 only constructs a single unconditional case for now, but keeping the result
+    Constructs a single unconditional case for now, but keeping the result
     structured allows germ analysis to improve in the future to return conditional 
     cases without changing its callers' basic contract.
     """
@@ -161,7 +161,7 @@ def _piecewise_germ(piecewise, x, cdir):
     richer than branch selection: ``cases`` may eventually contain 
     parameter-conditioned germs, analogous to a local Piecewise decomposition.
 
-    For P0, a germ is complete only when one unconditional branch can be
+    For now, a germ is complete only when one unconditional branch can be
     proved to govern the whole punctured neighborhood. Otherwise an
     incomplete result is returned instead of guessing from a sample point.
     """
