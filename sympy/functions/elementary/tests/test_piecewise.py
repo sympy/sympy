@@ -1678,7 +1678,7 @@ def test_piecewise_directional_germ_limits():
     assert limit(p, x, 0, '+') == 1
     assert limit(p, x, 0, '-') == 2
 
-    # Parameterised inequalities can use _intervals as a supporting fast path.
+    # Parametrised inequalities can use _intervals as a supporting fast path.
     ap = Symbol('ap', positive=True)
     an = Symbol('an', negative=True)
     assert Piecewise((1, x < ap), (2, True)).as_leading_term(x, cdir=1) == 1

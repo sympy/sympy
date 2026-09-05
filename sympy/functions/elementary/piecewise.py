@@ -20,12 +20,11 @@ Undefined = S.NaN  # Piecewise()
 
 
 def _set_contains_directional_neighborhood(s, cdir):
-    """Return whether *s* contains a punctured one-sided neighbourhood of 0.
+    """Return whether s contains a punctured one-sided neighborhood of 0.
 
     ``None`` means that the available set representation is not sufficient to
-    decide the question. Endpoint membership at 0 is intentionally ignored:
-    a limit depends on the germ of a set, not on whether the limit point itself
-    belongs to the set.
+    decide the question. Endpoint membership at 0 is ignored: a limit depends 
+    on the germ of a set, not on whether the limit point itself belongs to the set.
     """
     from sympy.sets.sets import Interval, Union, FiniteSet
 
@@ -50,7 +49,7 @@ def _set_contains_directional_neighborhood(s, cdir):
         if True in ans:
             return True
         # A finite union of intervals/finite sets cannot acquire a new local
-        # neighbourhood at 0 unless one component already contains one.
+        # neighborhood at 0 unless one component already contains one.
         if all(a is False for a in ans):
             return False
         return None
@@ -58,12 +57,11 @@ def _set_contains_directional_neighborhood(s, cdir):
 
 
 def _contains_directional_neighborhood(cond, x, cdir):
-    """Test whether ``cond`` is true on a punctured one-sided neighbourhood.
+    """Test whether ``cond`` is true on a punctured one-sided neighborhood.
 
     The limit point is 0; ``Limit.doit`` shifts finite limit points before
-    leading-term analysis. This routine is deliberately conservative: it
-    returns ``None`` rather than sampling at an arbitrary epsilon or using the
-    value at 0 when local truth cannot be proved.
+    leading-term analysis. This routine returns ``None`` rather than sampling 
+    at an arbitrary epsilon or using the value at 0 when local truth cannot be proved.
     """
     if cond is S.true:
         return True
@@ -84,7 +82,7 @@ def _contains_directional_neighborhood(cond, x, cdir):
             if ans is not None:
                 return ans
 
-    # Piecewise._intervals already knows how to solve many parameterised
+    # Piecewise._intervals already knows how to solve many parametrised
     # real inequalities for x. Use it only as a supporting fallback for
     # this single condition; the germ algorithm itself does not depend on
     # interval decomposition.
@@ -127,7 +125,7 @@ def _contains_directional_neighborhood(cond, x, cdir):
                 return False
             elif op == '!=':
                 # Removing a single point cannot destroy a punctured
-                # neighbourhood on either side of 0.
+                # neighborhood on either side of 0.
                 return True
             else:
                 return None
@@ -146,9 +144,9 @@ class _GermResult(NamedTuple):
     strata on which the corresponding expression governs the germ.
     ``complete`` says whether those cases cover the whole directional germ.
 
-    P0 only constructs a single unconditional case, but keeping the result
-    structured lets germ analysis grow to return conditional cases without
-    changing its callers' basic contract.
+    P0 only constructs a single unconditional case for now, but keeping the result
+    structured allows germ analysis to improve in the future to return conditional 
+    cases without changing its callers' basic contract.
     """
 
     cases: tuple = ()
@@ -158,14 +156,13 @@ class _GermResult(NamedTuple):
 def _piecewise_germ(piecewise, x, cdir):
     """Return a structured description of a one-sided Piecewise germ.
 
-    Conditions are converted to their *effective* Piecewise regions so that
+    Conditions are converted to their effective Piecewise regions so that
     precedence (the first true condition wins) is respected. The interface is
-    intentionally richer than branch selection: ``cases`` may eventually
-    contain parameter-conditioned germs, analogous to a local Piecewise
-    decomposition.
+    richer than branch selection: ``cases`` may eventually contain 
+    parameter-conditioned germs, analogous to a local Piecewise decomposition.
 
     For P0, a germ is complete only when one unconditional branch can be
-    proved to govern the whole punctured neighbourhood. Otherwise an
+    proved to govern the whole punctured neighborhood. Otherwise an
     incomplete result is returned instead of guessing from a sample point.
     """
     covered = S.false
