@@ -33,3 +33,4 @@ Contents
    solvers.rst
    domainmatrix.rst
    numberfields.rst
+   cad.rst
