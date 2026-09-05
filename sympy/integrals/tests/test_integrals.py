@@ -1408,9 +1408,9 @@ def test_issue_8368i():
             (
                 Integral(exp(-s*x)*cosh(x), (x, 0, oo)),
                 True))
-    assert integrate(exp(-s*x)*sinh(x), (x, 0, oo)) == \
+    assert integrate(exp(-s*x)*sinh(x), (x, 0, oo)).cancel() == \
         Piecewise(
-            (   -1/(s + 1)/2 - 1/(-s + 1)/2,
+            (   1/(s**2 - 1),
                 And(
                     Abs(s) > 1,
                     Abs(arg(s)) < pi/2,

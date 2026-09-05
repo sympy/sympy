@@ -360,8 +360,12 @@ def test_inverse_mellin_transform():
     expr = IMT(d**c*d**(s - 1)*sin(pi*c)
                          *gamma(s)*gamma(s + c)*gamma(1 - s)*gamma(1 - s - c)/pi,
                          s, x, (Max(-re(c), 0), Min(1 - re(c), 1)))
-    assert powsimp(expand_mul(expr, deep=False)).replace(exp_polar, exp).simplify() \
-        == (-d**c + x**c)/(-d + x)
+    expr = powsimp(expand_mul(expr, deep=False)).replace(exp_polar, exp)
+    # Inverse Mellin transforms assume x > 0. This allows the powers of
+    # d/x to combine without imposing assumptions on d or c.
+    positive_x = symbols('x', positive=True)
+    expected = (-d**c + x**c)/(-d + x)
+    assert simplify((expr - expected).subs(x, positive_x)) == 0
 
     assert simplify(IMT(1/sqrt(pi)*(-c/2)*gamma(s)*gamma((1 - c)/2 - s)
                         *gamma(-c/2 - s)/gamma(1 - c - s),
@@ -446,7 +450,7 @@ def test_inverse_mellin_transform():
 
     # for coverage
 
-    assert IMT(pi/cos(pi*s), s, x, (0, S.Half)) == sqrt(x)/(x + 1)
+    assert simplify(IMT(pi/cos(pi*s), s, x, (0, S.Half))) == sqrt(x)/(x + 1)
 
 
 def test_fourier_transform():
@@ -580,8 +584,7 @@ def test_cosine_transform():
         (S.Half, 0, 0), (S.Half,)), a**2*w**2/4)/(2*pi), w, t) == 1/(a + t)
 
     res = cosine_transform(1/sqrt(a**2 + t**2), t, w)
-    assert res == sqrt(2)*meijerg(((S.Half,), ()), ((0, 0), (S.Half,)), a**2*w**2*exp_polar(0)/4)/(2*sqrt(pi))
-    assert res.replace(exp_polar, exp) == sqrt(2)*meijerg(((S.Half,), ()), ((0, 0), (S.Half,)), a**2*w**2/4)/(2*sqrt(pi))
+    assert res == sqrt(2)*meijerg(((S.Half,), ()), ((0, 0), (S.Half,)), a**2*w**2/4)/(2*sqrt(pi))
 
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S.Half,), ()), ((0, 0), (S.Half,)), a**2*w**2/4)/(2*sqrt(pi)), w, t) == 1/(t*sqrt(a**2/t**2 + 1))
 
