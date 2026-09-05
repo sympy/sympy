@@ -1,5 +1,6 @@
 """Base class for all the objects in SymPy"""
 from __future__ import annotations
+from sympy.core.cache import clear_cache
 
 from collections import Counter
 from collections.abc import Mapping, Iterable
@@ -159,6 +160,47 @@ def _get_postprocessors_for_type(arg_type):
         for cls in arg_type.mro()
         if cls in Basic._constructor_postprocessor_mapping
     )
+
+
+
+class _PostprocessorMappingDict(dict):
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        clear_cache()
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+        clear_cache()
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        clear_cache()
+
+    def pop(self, *args, **kwargs):
+        result = super().pop(*args, **kwargs)
+        clear_cache()
+        return result
+
+    def popitem(self):
+        result = super().popitem()
+        clear_cache()
+        return result
+
+    def clear(self):
+        super().clear()
+        clear_cache()
+
+    def setdefault(self, key, default=None):
+        existed = key in self
+        result = super().setdefault(key, default)
+        if not existed:
+            clear_cache()
+        return result
+
+    def __ior__(self, other):
+        result = super().__ior__(other)
+        clear_cache()
+        return result
 
 
 class Basic(Printable):
@@ -2190,7 +2232,7 @@ class Basic(Printable):
     def _eval_rewrite(self, rule, args, **hints):
         return None
 
-    _constructor_postprocessor_mapping = {}  # type: ignore
+    _constructor_postprocessor_mapping = _PostprocessorMappingDict()  # type: ignore
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):

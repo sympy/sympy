@@ -342,3 +342,24 @@ def test_rewrite_abs():
     x = Symbol('x')
     assert sign(x).rewrite(abs) == sign(x).rewrite(Abs)
     assert sign(x).rewrite(abs) == Piecewise((0, Eq(x, 0)), (x / Abs(x), True))
+
+
+def test_issue_30420_postprocessor_mapping_cache():
+    from sympy.core.basic import _get_postprocessors_for_type, Basic
+    class DummyType(Basic):
+        pass
+
+    # Inicialmente no debe haber postprocesadores para este tipo
+    res1 = _get_postprocessors_for_type(DummyType)
+    
+    # Modificar el mapeo en tiempo de ejecución
+    Basic._constructor_postprocessor_mapping[DummyType] = [lambda x: x]
+    
+    # La caché debió invalidarse automáticamente, reflejando el cambio nuevo
+    res2 = _get_postprocessors_for_type(DummyType)
+    
+    # Limpiar al finalizar para no afectar otros tests
+    del Basic._constructor_postprocessor_mapping[DummyType]
+    
+    assert res1 != res2
+    assert len(res2) == 1
