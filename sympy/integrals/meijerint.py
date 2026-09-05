@@ -1733,8 +1733,9 @@ def _meijerint_indefinite_1(f, x):
             place = 0  # Assume we can expand at zero
         else:
             place = None
-        r = hyperexpand(r.subs(t, a*x**b), place=place)
-
+        xd = Dummy('x')
+        r = hyperexpand(r.subs(t, a*xd**b), place=place)
+        r = r.subs(xd, x)
         # now substitute back
         # Note: we really do want the powers of x to combine.
         res += powdenest(fac_*r, polar=True)
