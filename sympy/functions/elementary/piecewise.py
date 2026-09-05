@@ -14,8 +14,168 @@ from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
 from itertools import product
+from typing import NamedTuple
 
 Undefined = S.NaN  # Piecewise()
+
+
+def _set_contains_directional_neighborhood(s, cdir):
+    """Return whether *s* contains a punctured one-sided neighbourhood of 0.
+
+    ``None`` means that the available set representation is not sufficient to
+    decide the question. Endpoint membership at 0 is intentionally ignored:
+    a limit depends on the germ of a set, not on whether the limit point itself
+    belongs to the set.
+    """
+    from sympy.sets.sets import Interval, Union, FiniteSet
+
+    if s is S.EmptySet or isinstance(s, FiniteSet):
+        return False
+    if isinstance(s, Interval):
+        if cdir is S.One:
+            left = s.start <= 0
+            right = s.end > 0
+        elif cdir is S.NegativeOne:
+            left = s.start < 0
+            right = s.end >= 0
+        else:
+            return None
+        if left is S.true and right is S.true:
+            return True
+        if left is S.false or right is S.false:
+            return False
+        return None
+    if isinstance(s, Union):
+        ans = [_set_contains_directional_neighborhood(a, cdir) for a in s.args]
+        if True in ans:
+            return True
+        # A finite union of intervals/finite sets cannot acquire a new local
+        # neighbourhood at 0 unless one component already contains one.
+        if all(a is False for a in ans):
+            return False
+        return None
+    return None
+
+
+def _contains_directional_neighborhood(cond, x, cdir):
+    """Test whether ``cond`` is true on a punctured one-sided neighbourhood.
+
+    The limit point is 0; ``Limit.doit`` shifts finite limit points before
+    leading-term analysis. This routine is deliberately conservative: it
+    returns ``None`` rather than sampling at an arbitrary epsilon or using the
+    value at 0 when local truth cannot be proved.
+    """
+    if cond is S.true:
+        return True
+    if cond is S.false:
+        return False
+    if cdir not in (S.One, S.NegativeOne):
+        return None
+
+    # For genuinely univariate conditions, as_set gives an exact description
+    # of the effective region and handles And/Or/Ne/nonlinear inequalities.
+    if cond.free_symbols <= {x}:
+        try:
+            region = cond.as_set()
+        except (NotImplementedError, TypeError, ValueError):
+            pass
+        else:
+            ans = _set_contains_directional_neighborhood(region, cdir)
+            if ans is not None:
+                return ans
+
+    # Piecewise._intervals already knows how to solve many parameterised
+    # real inequalities for x. Use it only as a supporting fallback for
+    # this single condition; the germ algorithm itself does not depend on
+    # interval decomposition.
+    try:
+        probe = Piecewise((S.One, cond), (S.Zero, S.true), evaluate=False)
+        ok, intervals = probe._intervals(x)
+    except (NotImplementedError, TypeError, ValueError):
+        ok = False
+    if ok:
+        from sympy.sets.sets import Interval, Union
+        try:
+            regions = [Interval(a, b) for a, b, _, i in intervals if i == 0]
+            region = Union(*regions) if regions else S.EmptySet
+        except (TypeError, ValueError):
+            pass
+        else:
+            ans = _set_contains_directional_neighborhood(region, cdir)
+            if ans is not None:
+                return ans
+
+    # Parameterised relational conditions are often cheaply solvable for x.
+    # Reuse Piecewise's existing inequality solver before giving up.
+    if isinstance(cond, Relational) and x in cond.free_symbols:
+        from sympy.solvers.inequalities import _solve_inequality
+        try:
+            solved = _solve_inequality(cond, x)
+        except (NotImplementedError, TypeError, ValueError):
+            solved = cond
+        if solved != cond:
+            return _contains_directional_neighborhood(solved, x, cdir)
+
+        if solved.lhs == x and x not in solved.rhs.free_symbols:
+            a = solved.rhs
+            op = solved.rel_op
+            if op in ('<', '<='):
+                test = a > 0 if cdir is S.One else a >= 0
+            elif op in ('>', '>='):
+                test = a <= 0 if cdir is S.One else a < 0
+            elif op == '==':
+                return False
+            elif op == '!=':
+                # Removing a single point cannot destroy a punctured
+                # neighbourhood on either side of 0.
+                return True
+            else:
+                return None
+            if test is S.true:
+                return True
+            if test is S.false:
+                return False
+    return None
+
+
+class _GermResult(NamedTuple):
+    """Internal representation of a directional Piecewise germ.
+
+    ``cases`` is a tuple of ``(expr, cond)`` pairs. The conditions are
+    intended to be independent of the germ variable and describe parameter
+    strata on which the corresponding expression governs the germ.
+    ``complete`` says whether those cases cover the whole directional germ.
+
+    P0 only constructs a single unconditional case, but keeping the result
+    structured lets germ analysis grow to return conditional cases without
+    changing its callers' basic contract.
+    """
+
+    cases: tuple = ()
+    complete: bool = False
+
+
+def _piecewise_germ(piecewise, x, cdir):
+    """Return a structured description of a one-sided Piecewise germ.
+
+    Conditions are converted to their *effective* Piecewise regions so that
+    precedence (the first true condition wins) is respected. The interface is
+    intentionally richer than branch selection: ``cases`` may eventually
+    contain parameter-conditioned germs, analogous to a local Piecewise
+    decomposition.
+
+    For P0, a germ is complete only when one unconditional branch can be
+    proved to govern the whole punctured neighbourhood. Otherwise an
+    incomplete result is returned instead of guessing from a sample point.
+    """
+    covered = S.false
+    for expr, cond in piecewise.args:
+        effective = And(cond, Not(covered))
+        status = _contains_directional_neighborhood(effective, x, cdir)
+        if status is True:
+            return _GermResult(((expr, S.true),), complete=True)
+        covered = Or(covered, cond)
+    return _GermResult()
 
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
@@ -224,9 +384,20 @@ class Piecewise(DefinedFunction):
         return piecewise_simplify(self, **kwargs)
 
     def _eval_as_leading_term(self, x, logx, cdir):
+        if cdir in (S.One, S.NegativeOne):
+            germ = _piecewise_germ(self, x, cdir)
+            if germ.complete and len(germ.cases) == 1:
+                e, cond = germ.cases[0]
+                if cond is S.true:
+                    return e.as_leading_term(x, logx=logx, cdir=cdir)
+            return None
+
+        # Preserve the historical non-directional behavior. In particular,
+        # cdir == 0 is used by leading-term calls that are not one-sided
+        # limits.
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
-                return e.as_leading_term(x)
+                return e.as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])

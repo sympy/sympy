@@ -1638,3 +1638,66 @@ def test_piecewise__eval_is_meromorphic():
     assert f.is_meromorphic(x, 2) == True
     assert f.is_meromorphic(x, Symbol('a')) is None
     assert f.is_meromorphic(x, Symbol('a', real=True)) is None
+
+
+def test_piecewise_directional_germ_limits():
+    from sympy.series.limits import limit
+
+    # issue 27236
+    f = Piecewise((1, x < 0), (-1, True))
+    assert limit(f, x, 0, '-') == 1
+    assert limit(f, x, 0, '+') == -1
+    raises(ValueError, lambda: limit(f, x, 0, '+-'))
+
+    # issue 23836
+    p = Piecewise((x**3, x < 3), (-x**2, x > 3), (2, True))
+    assert limit(p, x, 3, '-') == 27
+    assert limit(p, x, 3, '+') == -9
+    raises(ValueError, lambda: limit(p, x, 3, '+-'))
+
+    # A fixed epsilon is not a valid proxy for a germ.
+    p = Piecewise((1, x < Rational(1, 10**8)), (2, True))
+    assert limit(p, x, 0, '+') == 1
+
+    # A positive Dummy is not necessarily sufficiently small.
+    p = Piecewise((1, And(x > 0, x < 1)), (2, True))
+    assert limit(p, x, 0, '+') == 1
+    assert limit(p, x, 0, '-') == 2
+
+    # Point membership is irrelevant to a punctured germ.
+    p = Piecewise((1, Ne(x, 0)), (2, True))
+    assert limit(p, x, 0, '+') == 1
+    assert limit(p, x, 0, '-') == 1
+
+    p = Piecewise((99, Eq(x, 0)), (x, True))
+    assert limit(p, x, 0, '+') == 0
+    assert limit(p, x, 0, '-') == 0
+
+    # Nonlinear conditions are handled through the set/inequality machinery.
+    p = Piecewise((1, x**2 < x), (2, True))
+    assert limit(p, x, 0, '+') == 1
+    assert limit(p, x, 0, '-') == 2
+
+    # Parameterised inequalities can use _intervals as a supporting fast path.
+    ap = Symbol('ap', positive=True)
+    an = Symbol('an', negative=True)
+    assert Piecewise((1, x < ap), (2, True)).as_leading_term(x, cdir=1) == 1
+    assert Piecewise((1, x < an), (2, True)).as_leading_term(x, cdir=1) == 2
+
+
+def test_piecewise_germ_result_structure():
+    from sympy.functions.elementary.piecewise import _piecewise_germ
+
+    # P0 produces a structured, complete one-case germ rather than returning
+    # the expression directly. This leaves room for future parameter strata.
+    p = Piecewise((1, x > 0), (2, True))
+    germ = _piecewise_germ(p, x, S.One)
+    assert germ.complete is True
+    assert germ.cases == ((S.One, S.true),)
+
+    # If no branch owns the complete germ, germ analysis stays explicitly
+    # incomplete rather than selecting a later default branch.
+    p = Piecewise((1, sin(1/x) > 0), (2, True))
+    germ = _piecewise_germ(p, x, S.One)
+    assert germ.complete is False
+    assert germ.cases == ()
