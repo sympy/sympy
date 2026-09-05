@@ -350,10 +350,12 @@ def test_maximum():
         ) is S.One
     assert maximum(cos(x)-sin(x), x, S.Reals) == sqrt(2)
     assert maximum(y, x, S.Reals) == y
+    assert maximum(log(y), x, Interval(0, 1)) == log(y)
     assert maximum(abs(a**3 + a), a, Interval(0, 2)) == 10
     assert maximum(abs(60*a**3 + 24*a), a, Interval(0, 2)) == 528
     assert maximum(abs(12*a*(5*a**2 + 2)), a, Interval(0, 2)) == 528
     assert maximum(x/sqrt(x**2+1), x, S.Reals) == 1
+    assert maximum(x**2 + exp(x), x, Interval(0, 1)) == 1 + E
 
     raises(ValueError, lambda : maximum(sin(x), x, S.EmptySet))
     raises(ValueError, lambda : maximum(log(cos(x)), x, S.EmptySet))
@@ -380,7 +382,9 @@ def test_minimum():
         ) is S.NegativeOne
     assert minimum(cos(x)-sin(x), x, S.Reals) == -sqrt(2)
     assert minimum(y, x, S.Reals) == y
+    assert minimum(log(y), x, Interval(0, 1)) == log(y)
     assert minimum(x/sqrt(x**2+1), x, S.Reals) == -1
+    assert minimum(-x**2 - exp(x), x, Interval(0, 1)) == -1 - E
 
     raises(ValueError, lambda : minimum(sin(x), x, S.EmptySet))
     raises(ValueError, lambda : minimum(log(cos(x)), x, S.EmptySet))
