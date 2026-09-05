@@ -520,4 +520,24 @@ class Order(Expr):
     def __neg__(self):
         return self
 
+    def __mul__(self, other):
+        other = sympify(other)
+        if other is S.Zero:
+            return S.Zero
+        # Multiplying two Order objects: multiply their representative
+        # expressions when they are at the same expansion point/variables.
+        if other.is_Order:
+            # Only allow multiplication for Orders that have the same
+            # variables/points. Mixing Orders at different points is
+            # not supported.
+            if self.args[1:] == other.args[1:]:
+                return Order(self.expr * other.expr, *self.args[1:])
+            raise NotImplementedError("Multiplying Orders at different points is not supported.")
+        # Multiply by a plain expression: scale the representative
+        # expression and rebuild Order with the same variables/points.
+        return Order(self.expr * other, *self.args[1:])
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
 O = Order

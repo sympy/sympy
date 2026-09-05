@@ -973,14 +973,58 @@ class Mul(Expr, AssocOp):
             plain = self.func(*plain)
             if sums:
                 deep = hints.get("deep", False)
-                terms = self.func._expandsums(sums)
-                args = []
-                for term in terms:
-                    t = self.func(plain, term)
-                    if t.is_Mul and any(a.is_Add for a in t.args) and deep:
-                        t = t._eval_expand_mul()
-                    args.append(t)
-                return Add(*args)
+                # Special-case: if exactly one of the additive factors
+                # contains an Order term, avoid distributing that Order
+                # across the other sum's terms. Instead keep Order multiplied
+                # by the whole other Add, so e.g. (1 + O((x-a)**n))*(x-a)
+                # becomes (x-a) + O((x-a)**(n+1)). This keeps the change
+                # localized and avoids large refactors in expansion logic.
+                order_sum_indices = [i for i, s in enumerate(sums)
+                                     if any(a.is_Order for a in s.args)]
+                if len(order_sum_indices) == 1:
+                    idx = order_sum_indices[0]
+                    other_sums = [s for j, s in enumerate(sums) if j != idx]
+                    # generate normal terms for combinations that do not
+                    # pick an Order from the special sum
+                    normal_sums = []
+                    for j, s in enumerate(sums):
+                        if j == idx:
+                            # create an Add without the Order args
+                            filtered = [a for a in s.args if not a.is_Order]
+                            # if nothing remains, use 1 to avoid empty Add
+                            normal_sums.append(Add(*filtered) if filtered else S.One)
+                        else:
+                            normal_sums.append(s)
+                    terms = self.func._expandsums(normal_sums)
+                    args = []
+                    for term in terms:
+                        t = self.func(plain, term)
+                        if t.is_Mul and any(a.is_Add for a in t.args) and deep:
+                            t = t._eval_expand_mul()
+                        args.append(t)
+                    # now add one term per Order in the special sum: Order * (product of other full Adds)
+                    for o in sums[idx].args:
+                        if o.is_Order:
+                            # multiply Order by the remaining sums as whole Adds
+                            if other_sums:
+                                prod = Mul(*other_sums)
+                                t = self.func(plain, Mul(o, prod, evaluate=False))
+                            else:
+                                t = self.func(plain, o)
+                            if t.is_Mul and any(a.is_Add for a in t.args) and deep:
+                                t = t._eval_expand_mul()
+                            args.append(t)
+                    return Add(*args)
+                else:
+                    deep = hints.get("deep", False)
+                    terms = self.func._expandsums(sums)
+                    args = []
+                    for term in terms:
+                        t = self.func(plain, term)
+                        if t.is_Mul and any(a.is_Add for a in t.args) and deep:
+                            t = t._eval_expand_mul()
+                        args.append(t)
+                    return Add(*args)
             else:
                 return plain
 
