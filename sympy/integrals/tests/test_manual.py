@@ -5,7 +5,7 @@ from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.core.mul import Mul
-from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.exponential import (exp, log, LambertW)
 from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
@@ -42,6 +42,12 @@ def test_find_substitutions():
                               x, u) == [(sec(x) + tan(x), 1, 1/u)]
     assert (-x**2, Rational(-1, 2), exp(u)) in find_substitutions(x * exp(-x**2), x, u)
     assert not find_substitutions(Derivative(f(x), x)**2, x, u)
+
+
+def test_manualintegrate_lambertw():
+    assert manualintegrate(1/(1 + LambertW(x)), x) == exp(LambertW(x))
+    assert manualintegrate(1/(x*(1 + LambertW(x))), x) == log(LambertW(x))
+    assert manualintegrate(LambertW(x)/(x*(LambertW(x) + 1)), x) == LambertW(x)
 
 
 def test_manualintegrate_polynomials():
