@@ -8,7 +8,7 @@ from functools import cmp_to_key
 from typing import TYPE_CHECKING, overload
 
 from .assumptions import _prepare_class_assumptions
-from .cache import cacheit
+from .cache import cacheit, clear_cache
 from .sympify import _sympify, sympify, SympifyError, _external_converter
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
@@ -159,6 +159,46 @@ def _get_postprocessors_for_type(arg_type):
         for cls in arg_type.mro()
         if cls in Basic._constructor_postprocessor_mapping
     )
+
+
+class _PostprocessorMapping(dict):
+    """Mapping of classes to constructor postprocessors.
+
+    The lookups above are cached by type only, so any change to this mapping
+    has to invalidate the cache or registrations made after an expression
+    involving the class has been built would never be seen.
+    """
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        clear_cache()
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+        clear_cache()
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        clear_cache()
+
+    def setdefault(self, key, default=None):
+        value = super().setdefault(key, default)
+        clear_cache()
+        return value
+
+    def pop(self, *args):
+        value = super().pop(*args)
+        clear_cache()
+        return value
+
+    def popitem(self):
+        item = super().popitem()
+        clear_cache()
+        return item
+
+    def clear(self):
+        super().clear()
+        clear_cache()
 
 
 class Basic(Printable):
@@ -2192,7 +2232,7 @@ class Basic(Printable):
     def _eval_rewrite(self, rule, args, **hints):
         return None
 
-    _constructor_postprocessor_mapping = {}  # type: ignore
+    _constructor_postprocessor_mapping = _PostprocessorMapping()  # type: ignore
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
