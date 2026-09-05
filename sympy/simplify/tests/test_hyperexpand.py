@@ -1104,3 +1104,12 @@ def test_issue_26525_polarify_z():
 
     g = meijerg(((S.Half,), ()), ((1,), ()), 0)
     assert hyperexpand(g) == 0
+
+
+def test_issue_26525_gamma_sign():
+    a = symbols("a")
+    g = I*meijerg(((1, a + 2), ()), ((a + S.Half,), (0,)), -1)/(2*sqrt(pi))
+    h = hyperexpand(g)
+    assert h == I*sqrt(pi)*exp(I*pi*(a + S(3)/2))*gamma(a + S.Half)/(2*gamma(a + 2))
+    assert h.subs(a, 0) == pi/2
+    assert h.subs(a, 1) == -pi/8
