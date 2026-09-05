@@ -86,3 +86,26 @@ def test_subexpression_postprocessors():
     w = SubclassSymbolRemovesOtherSymbols("w")
     assert 3*a*w**2 == 3*w**2
     assert 3*a*x**3*w**2 == 3*w**2
+
+
+def test_postprocessor_registered_after_use():
+    # Registering a postprocessor after expressions with the class have
+    # already been built must take effect right away.
+    class LateSymbol(Symbol):
+        pass
+
+    x = LateSymbol("x")
+    y = LateSymbol("y")
+    assert (3*x).args == (3, x)
+
+    Basic._constructor_postprocessor_mapping[LateSymbol] = {
+        "Mul": [lambda expr: expr.func(*[a for a in expr.args
+                                         if not a.is_Number])],
+    }
+    try:
+        assert 3*y == y
+        assert 3*x == x
+    finally:
+        del Basic._constructor_postprocessor_mapping[LateSymbol]
+
+    assert (3*y).args == (3, y)
