@@ -185,10 +185,16 @@ Elliptic integrals
 .. autoclass:: elliptic_pi
    :members:
 
-Jacobi theta functions
-----------------------
+Jacobi elliptic and theta functions
+-----------------------------------
 .. module:: sympy.functions.special.elliptic_functions
 
+.. autoclass:: jacobisn
+   :members:
+.. autoclass:: jacobicn
+   :members:
+.. autoclass:: jacobidn
+   :members:
 .. autoclass:: jtheta
    :members:
 

@@ -32,7 +32,8 @@ from sympy.functions.elementary.trigonometric import (acsc, asin, cos, cot, sin,
 from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f, elliptic_k, elliptic_pi)
-from sympy.functions.special.elliptic_functions import jtheta
+from sympy.functions.special.elliptic_functions import (
+    jacobicn, jacobidn, jacobisn, jtheta)
 from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, expint)
 from sympy.functions.special.gamma_functions import (gamma, uppergamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
@@ -719,6 +720,14 @@ def test_latex_functions():
         r"\vartheta_{n}^{(2)}\left(x, y\right)"
     assert latex(jtheta(n, x, y, 2)**3) == \
         r"\left(\vartheta_{n}^{(2)}\left(x, y\right)\right)^{3}"
+    assert latex(jacobisn(x, y)) == \
+        r"\operatorname{sn}\left(x\middle| y\right)"
+    assert latex(jacobicn(x, y)) == \
+        r"\operatorname{cn}\left(x\middle| y\right)"
+    assert latex(jacobidn(x, y)) == \
+        r"\operatorname{dn}\left(x\middle| y\right)"
+    assert latex(jacobisn(x, y)**2) == \
+        r"\operatorname{sn}^{2}\left(x\middle| y\right)"
 
     assert latex(Ei(x)) == r'\operatorname{Ei}{\left(x \right)}'
     assert latex(Ei(x)**2) == r'\operatorname{Ei}^{2}{\left(x \right)}'

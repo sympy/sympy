@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from sympy.core import S
+from sympy.core.function import Derivative
 from sympy.core.numbers import Float, I, Rational, pi
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.hyperbolic import sech, tanh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.functions.special.elliptic_functions import jtheta
+from sympy.functions.special.elliptic_functions import (
+    jacobicn, jacobidn, jacobisn, jtheta)
+from sympy.functions.special.elliptic_integrals import elliptic_k
 from sympy.series.order import O
 from sympy.testing.pytest import raises
 
@@ -19,6 +23,186 @@ d = Symbol('d', integer=True, nonnegative=True)
 
 def _assert_close(left, right, tolerance=S(10)**-25):
     assert abs((left - right).evalf(30)) < tolerance
+
+
+def test_jacobi_elliptic_definition():
+    for func in (jacobisn, jacobicn, jacobidn):
+        assert func(z, q).args == (z, q)
+
+
+def test_jacobi_elliptic_special_values():
+    # DLMF 22.5.1, 22.5.3, and 22.5.4:
+    # https://dlmf.nist.gov/22.5.T1
+    # https://dlmf.nist.gov/22.5.T3
+    # https://dlmf.nist.gov/22.5.T4
+    assert jacobisn(0, q) == 0
+    assert jacobicn(0, q) == 1
+    assert jacobidn(0, q) == 1
+
+    assert jacobisn(z, 0) == sin(z)
+    assert jacobicn(z, 0) == cos(z)
+    assert jacobidn(z, 0) == 1
+
+    assert jacobisn(z, 1) == tanh(z)
+    assert jacobicn(z, 1) == sech(z)
+    assert jacobidn(z, 1) == sech(z)
+
+
+def test_jacobi_elliptic_parity():
+    # This follows from the theta representations in DLMF 22.2.4--22.2.6
+    # and the theta-function parity in DLMF 20.2.1--20.2.4:
+    # https://dlmf.nist.gov/22.2.E4
+    # https://dlmf.nist.gov/22.2.E5
+    # https://dlmf.nist.gov/22.2.E6
+    assert jacobisn(-z, q) == -jacobisn(z, q)
+    assert jacobicn(-z, q) == jacobicn(z, q)
+    assert jacobidn(-z, q) == jacobidn(z, q)
+
+
+def test_jacobi_elliptic_diff():
+    # DLMF 22.13.1:
+    # https://dlmf.nist.gov/22.13.T1
+    assert jacobisn(z, q).diff(z) == jacobicn(z, q)*jacobidn(z, q)
+    assert jacobicn(z, q).diff(z) == -jacobisn(z, q)*jacobidn(z, q)
+    assert jacobidn(z, q).diff(z) == -q*jacobisn(z, q)*jacobicn(z, q)
+
+    assert jacobisn(z, q).diff(q) == Derivative(jacobisn(z, q), q)
+    assert jacobicn(z, q).diff(q) == Derivative(jacobicn(z, q), q)
+    assert jacobidn(z, q).diff(q) == Derivative(jacobidn(z, q), q)
+
+
+def test_jacobi_elliptic_series():
+    # DLMF 22.10.1--22.10.3, with the modulus k replaced by the parameter
+    # m = k**2 used by SymPy:
+    # https://dlmf.nist.gov/22.10.E1
+    # https://dlmf.nist.gov/22.10.E2
+    # https://dlmf.nist.gov/22.10.E3
+    assert jacobisn(z, q).series(z, 0, 6) == (
+        z + (-q/6 - S.One/6)*z**3
+        + (q**2/120 + 7*q/60 + S.One/120)*z**5 + O(z**6))
+    assert jacobicn(z, q).series(z, 0, 6) == (
+        1 - z**2/2 + (q/6 + S.One/24)*z**4 + O(z**6))
+    assert jacobidn(z, q).series(z, 0, 6) == (
+        1 - q*z**2/2 + (q**2/24 + q/6)*z**4 + O(z**6))
+
+
+def test_jacobi_elliptic_rewrite_as_jtheta():
+    # DLMF 22.2.4--22.2.6:
+    # https://dlmf.nist.gov/22.2.E4
+    # https://dlmf.nist.gov/22.2.E5
+    # https://dlmf.nist.gov/22.2.E6
+    nome = exp(-pi*elliptic_k(1 - q)/elliptic_k(q))
+    theta_argument = z/jtheta(3, 0, nome)**2
+
+    assert jacobisn(z, q).rewrite(jtheta) == (
+        jtheta(3, 0, nome)*jtheta(1, theta_argument, nome)
+        / (jtheta(2, 0, nome)*jtheta(4, theta_argument, nome)))
+    assert jacobicn(z, q).rewrite(jtheta) == (
+        jtheta(4, 0, nome)*jtheta(2, theta_argument, nome)
+        / (jtheta(2, 0, nome)*jtheta(4, theta_argument, nome)))
+    assert jacobidn(z, q).rewrite(jtheta) == (
+        jtheta(4, 0, nome)*jtheta(3, theta_argument, nome)
+        / (jtheta(3, 0, nome)*jtheta(4, theta_argument, nome)))
+
+    for func in (jacobisn, jacobicn, jacobidn):
+        value = func(Rational(1, 3), Rational(2, 5))
+        _assert_close(value, value.rewrite(jtheta))
+
+
+def test_jacobi_elliptic_evalf():
+    # Reference values from the mpmath ellipfun documentation and tests:
+    # https://mpmath.org/doc/current/functions/elliptic.html#ellipfun
+    references = (
+        (jacobisn, '0.24615967096986145833'),
+        (jacobicn, '0.96922928989378439337'),
+        (jacobidn, '0.98473484156599474563'),
+    )
+    for func, reference in references:
+        value = func(Rational(1, 4), Rational(1, 2)).evalf(25)
+        assert abs(value - Float(reference, 25)) < S(10)**-19
+
+    argument = Rational(1, 3) + I/7
+    parameter = Rational(2, 5) + I/9
+    sn = jacobisn(argument, parameter)
+    cn = jacobicn(argument, parameter)
+    dn = jacobidn(argument, parameter)
+    # DLMF 22.6.1, with m = k**2:
+    # https://dlmf.nist.gov/22.6.E1
+    _assert_close(sn**2 + cn**2, 1)
+    _assert_close(dn**2 + parameter*sn**2, 1)
+
+
+def test_jacobi_elliptic_double_argument_identities():
+    # DLMF 22.6.5--22.6.7, with the modulus k replaced by the parameter
+    # m = k**2 used by SymPy.
+    # https://dlmf.nist.gov/22.6.E5
+    # https://dlmf.nist.gov/22.6.E6
+    # https://dlmf.nist.gov/22.6.E7
+    argument = Rational(1, 3) + I/7
+    parameter = Rational(2, 5) + I/9
+    sn = jacobisn(argument, parameter)
+    cn = jacobicn(argument, parameter)
+    dn = jacobidn(argument, parameter)
+    denominator = 1 - parameter*sn**4
+
+    _assert_close(
+        jacobisn(2*argument, parameter),
+        2*sn*cn*dn/denominator,
+    )
+    _assert_close(
+        jacobicn(2*argument, parameter),
+        (cn**2 - sn**2*dn**2)/denominator,
+    )
+    _assert_close(
+        jacobidn(2*argument, parameter),
+        (dn**2 - parameter*sn**2*cn**2)/denominator,
+    )
+
+
+def test_jacobi_elliptic_half_argument_identities():
+    # DLMF 22.6.19--22.6.21. These squared forms avoid choosing branches of
+    # square roots. Here 1 - parameter is the complementary parameter k'**2.
+    # https://dlmf.nist.gov/22.6.E19
+    # https://dlmf.nist.gov/22.6.E20
+    # https://dlmf.nist.gov/22.6.E21
+    argument = Rational(1, 3) + I/7
+    parameter = Rational(2, 5) + I/9
+    cn = jacobicn(argument, parameter)
+    dn = jacobidn(argument, parameter)
+    complementary_parameter = 1 - parameter
+
+    _assert_close(
+        jacobisn(argument/2, parameter)**2,
+        (1 - cn)/(1 + dn),
+    )
+    _assert_close(
+        jacobicn(argument/2, parameter)**2,
+        (-complementary_parameter + dn + parameter*cn)
+        / (parameter*(1 + cn)),
+    )
+    _assert_close(
+        jacobidn(argument/2, parameter)**2,
+        (parameter*cn + dn + complementary_parameter)/(1 + dn),
+    )
+
+
+def test_jacobi_elliptic_periodicity():
+    # DLMF 22.4.1, with K = K(m) and K' = K(1 - m).
+    # https://dlmf.nist.gov/22.4.T1
+    argument = Rational(1, 3) + I/7
+    parameter = Rational(2, 5)
+    complete = elliptic_k(parameter)
+    complementary = elliptic_k(1 - parameter)
+
+    periods = (
+        (jacobisn, (4*complete, 2*I*complementary)),
+        (jacobicn, (4*complete, 2*complete + 2*I*complementary)),
+        (jacobidn, (2*complete, 4*I*complementary)),
+    )
+    for func, function_periods in periods:
+        value = func(argument, parameter)
+        for period in function_periods:
+            _assert_close(func(argument + period, parameter), value)
 
 
 def test_jtheta_definition():
