@@ -2208,6 +2208,21 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
     If expansions exist both at zero and at infinity, ``place``
     can be set to ``0`` or ``zoo`` for the preferred choice.
     """
+    polar_factors, ordinary_factors = [], []
+    for factor in Mul.make_args(z0):
+        (polar_factors if factor.is_polar else ordinary_factors).append(factor)
+    ordinary = Mul(*ordinary_factors)
+    if not (ordinary.is_number or ordinary.is_Symbol):
+        # Keep an ordinary composite argument intact while the expansion
+        # simplifies powers on the logarithmic surface. Substituting it
+        # before polar denesting can, for example, turn sqrt(z**2) into z.
+        # Explicit polar factors must remain visible when choosing analytic
+        # continuations; only the ordinary part is replaced by the dummy.
+        argument = Dummy('argument')
+        result = _meijergexpand(func, argument*Mul(*polar_factors), allow_hyper,
+                               rewrite=rewrite, place=place)
+        return unpolarify(result.subs(argument, ordinary))
+
     global _meijercollection
     if _meijercollection is None:
         _meijercollection = MeijerFormulaCollection()

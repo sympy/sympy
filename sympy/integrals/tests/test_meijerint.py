@@ -3,7 +3,7 @@ from sympy.core.function import expand_func
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
-from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
+from sympy.functions.elementary.complexes import Abs, arg, polar_lift, re, unpolarify
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import cosh, acosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -170,7 +170,10 @@ def test_meijerint():
     assert meijerint_definite(exp(x), x, -oo, 2) == (exp(2), True)
     # Note: causes a NaN in _check_antecedents
     assert expand(meijerint_definite(exp(x), x, 0, I)[0]) == exp(I) - 1
-    assert expand(meijerint_definite(exp(-x), x, 0, x)[0]) == \
+    result = meijerint_definite(exp(-x), x, 0, x)[0]
+    # The principal lift leaves the argument unchanged, but arg does not
+    # automatically remove polar_lift from this symbolic expression.
+    assert expand(result.xreplace({arg(polar_lift(x)): arg(x)})) == \
         1 - exp(-exp(I*arg(x))*abs(x))
 
     # Test -oo to oo
@@ -762,6 +765,35 @@ def test_pr_23583():
     # This result is wrong. Check whether new result is correct when this test fail.
     assert integrate(1/sqrt((x - I)**2-1), meijerg=True) == \
            Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+
+
+def test_meijerg_polar_argument_negative_interval():
+    # Explicit polar factors must remain visible to hyperexpand when it
+    # chooses the analytic continuation of the antiderivative.
+    result = integrate(1/sqrt(x**2 - 1), (x, -2, -1), meijerg=True)
+    assert abs((result - acosh(2)).evalf()) < 1e-12
+
+
+def test_issue_30319_acsc():
+    from sympy.functions.elementary.trigonometric import acsc
+
+    f = x**2*cos(acsc(x))
+    for kwargs in ({}, {'meijerg': True}):
+        derivative = integrate(f, x, **kwargs).diff(x)
+        # Check both real intervals outside the branch points at -1 and 1.
+        for value in (-3, -2, 2, 3):
+            assert simplify((derivative - f).subs(x, value)) == 0
+
+
+def test_issue_28485():
+    from sympy.core.symbol import symbols
+
+    a = symbols('a', negative=True)
+    # Complete the square: a*(x**2 + 2*x) = a*(x + 1)**2 - a.
+    expected = sqrt(pi)*exp(-a)/sqrt(-a)
+    for kwargs in ({}, {'meijerg': True}):
+        result = integrate(exp(a*(x**2 + 2*x)), (x, -oo, oo), **kwargs)
+        assert simplify(result - expected) == 0
 
 
 # 25786
