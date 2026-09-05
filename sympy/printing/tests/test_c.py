@@ -164,6 +164,9 @@ def test_ccode_functions2():
     assert ccode(Mod(-3, -7, evaluate=False)) == '(-3) % (-7)'
     assert ccode(-Mod(3, 7, evaluate=False)) == '-(3 % 7)'
     assert ccode(r*Mod(p1, p2)) == 'r*(p1 % p2)'
+    assert ccode(-r*Mod(p1, p2)) == '-r*(p1 % p2)'
+    assert ccode(-2*Mod(p1, p2)) == '-2*(p1 % p2)'
+    assert ccode(-p1/Mod(p1, p2)) == '-p1/(p1 % p2)'
     assert ccode(Mod(p1, p2)**s) == 'pow(p1 % p2, s)'
     n = symbols('n', integer=True, negative=True)
     assert ccode(Mod(-n, p2)) == '(-n) % p2'
