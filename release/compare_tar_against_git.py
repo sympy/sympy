@@ -55,6 +55,9 @@ git_whitelist = {
     'banner.svg',
     # GitHub Codespace
     '.devcontainer/devcontainer.json',
+    # Coding agent instructions
+    'AGENTS.md',
+    'CLAUDE.md',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide
