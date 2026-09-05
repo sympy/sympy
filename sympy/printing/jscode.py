@@ -111,8 +111,12 @@ class JavascriptCodePrinter(CodePrinter):
 
     def _print_Mod(self, expr):
         num, den = expr.args
-        PREC = precedence(expr)
-        snum, sden = [self.parenthesize(arg, PREC) for arg in expr.args]
+        # The divisor is printed to the right of "%" (and repeated in the
+        # sign-correcting form below), so it has to bind at least as tightly
+        # as a power: a Pow with a negative exponent is printed as a division
+        # ("1/y"), which has the same precedence as "%".
+        snum = self.parenthesize(num, precedence(expr))
+        sden = self.parenthesize(den, PRECEDENCE["Pow"])
         # % is remainder (same sign as numerator), not modulo (same sign as
         # denominator), in js. Hence, % only works as modulo if both numbers
         # have the same sign
