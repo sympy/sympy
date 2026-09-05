@@ -1688,8 +1688,8 @@ def test_piecewise_directional_germ_limits():
 def test_piecewise_germ_result_structure():
     from sympy.functions.elementary.piecewise import _piecewise_germ
 
-    # P0 produces a structured, complete one-case germ rather than returning
-    # the expression directly. This leaves room for future parameter strata.
+    # Produces a structured, complete one-case germ rather than returning
+    # the expression directly.
     p = Piecewise((1, x > 0), (2, True))
     germ = _piecewise_germ(p, x, S.One)
     assert germ.complete is True
