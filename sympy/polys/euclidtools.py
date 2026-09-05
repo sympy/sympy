@@ -562,6 +562,80 @@ def dmp_subresultants(f, g, u, K):
     return dmp_inner_subresultants(f, g, u, K)[0]
 
 
+def dup_psc(f, g, K):
+    r"""
+    Principal subresultant coefficients of two polynomials in `K[x]`.
+
+    Returns the list ``[psc_0, psc_1, ..., psc_m]`` where ``m`` is the
+    smaller of the degrees of ``f`` and ``g``. ``psc_j`` is the leading
+    coefficient of the `j`-th subresultant of ``f`` and ``g``, i.e. the
+    coefficient of `x^j` in `S_j`; it is zero if `S_j` is defective. In
+    particular ``psc_0`` is the resultant and ``psc_j`` vanishes for
+    `j < \deg\gcd(f, g)`.
+
+    If `\deg f < \deg g` the coefficients of `(g, f)` are computed. The
+    list is empty if one of the polynomials is zero.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
+
+    >>> R.dup_psc(x**2 + 1, x**2 - 1)
+    [4, 0, 1]
+    >>> R.dup_psc(x**3 - x, x**2 - 1)
+    [0, 0, 1]
+
+    """
+    R, S = dup_inner_subresultants(f, g, K)
+
+    if not R:
+        return []
+
+    m = min(dup_degree(f), dup_degree(g))
+    psc = [K.zero]*(m + 1)
+
+    for r, s in zip(R[1:], S[1:]):
+        psc[dup_degree(r)] = s
+
+    return psc
+
+
+def dmp_psc(f, g, u, K):
+    """
+    Principal subresultant coefficients of two polynomials in `K[X]`.
+
+    The coefficients are taken with respect to the main variable, see
+    :func:`dup_psc`.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
+
+    >>> R.dmp_psc(x**2*y + x, x + y)
+    [y**3 - y, 1]
+
+    """
+    if not u:
+        return dup_psc(f, g, K)
+
+    R, S = dmp_inner_subresultants(f, g, u, K)
+
+    if not R:
+        return []
+
+    m = min(dmp_degree(f, u), dmp_degree(g, u))
+    psc = [dmp_zero(u - 1, K)]*(m + 1)
+
+    for r, s in zip(R[1:], S[1:]):
+        psc[dmp_degree(r, u)] = s
+
+    return psc
+
+
 def dmp_prs_resultant(f, g, u, K):
     """
     Resultant algorithm in `K[X]` using subresultant PRS.

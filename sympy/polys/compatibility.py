@@ -145,6 +145,8 @@ from sympy.polys.euclidtools import dup_prs_resultant
 from sympy.polys.euclidtools import dup_resultant
 from sympy.polys.euclidtools import dmp_inner_subresultants
 from sympy.polys.euclidtools import dmp_subresultants
+from sympy.polys.euclidtools import dup_psc
+from sympy.polys.euclidtools import dmp_psc
 from sympy.polys.euclidtools import dmp_prs_resultant
 from sympy.polys.euclidtools import dmp_zz_modular_resultant
 from sympy.polys.euclidtools import dmp_zz_collins_resultant
@@ -968,6 +970,13 @@ class IPolys(Generic[Er]):
             self.to_dense(f), self.to_dense(g), self.domain
         )
         return (list(map(self.from_dense, prs)), sres)
+
+    def dup_psc(self, f, g):
+        return dup_psc(self.to_dense(f), self.to_dense(g), self.domain)
+
+    def dmp_psc(self, f, g):
+        psc = dmp_psc(self.to_dense(f), self.to_dense(g), self.ngens - 1, self.domain)
+        return list(map(self[1:].from_dense, psc))
 
     def dmp_inner_subresultants(self, f, g):
         prs, sres = dmp_inner_subresultants(
