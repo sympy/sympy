@@ -1466,6 +1466,17 @@ def test_mul_pow_derivative():
                           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) +
                           6*x*Derivative(f(x), x) - 6*f(x))
 
+def test_loggamma_integration():
+    from sympy import symbols, loggamma, log, polygamma, pi
+    from sympy.integrals.manualintegrate import manualintegrate
+    x = symbols("x")
+    
+    # Pruebas de integración (se comparan con las expresiones simplificadas reales)
+    assert manualintegrate(loggamma(x), x) == x*log(2*pi)/2 + polygamma(-2, x)
+    assert manualintegrate(loggamma(2*x), x) == x*log(2*pi)/2 + polygamma(-2, 2*x)/2
+    assert manualintegrate(loggamma(1 - x), x) == x*log(2*pi)/2 - polygamma(-2, 1 - x)
+    assert manualintegrate(loggamma(3*x + 2), x) == x*log(2*pi)/2 + polygamma(-2, 3*x + 2)/3
+
 def test_polygamma_integration():
     from sympy import symbols, polygamma, integrate, loggamma
     from sympy.integrals.manualintegrate import manualintegrate

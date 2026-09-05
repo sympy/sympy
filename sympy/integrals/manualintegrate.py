@@ -1082,6 +1082,29 @@ class FresnelSRule(AtomicRule):
 
 
 
+class LogGammaRule(Rule):
+    def __init__(self, integrand: Expr, variable: Symbol, arg: Expr) -> None:
+        self.integrand = integrand
+        self.variable = variable
+        self.arg = arg
+
+    def eval(self):
+        from sympy.functions.special.gamma_functions import polygamma
+        from sympy import log, pi
+        
+        # Antiderivada correcta: polygamma(-2, z) + z * log(2*pi) / 2
+        antideriv = polygamma(-2, self.arg) + self.arg * log(2*pi) / 2
+        
+        if self.arg == self.variable:
+            return antideriv
+        
+        p = self.arg.as_poly(self.variable)
+        a = p.LC() # Leading Coefficient
+        return antideriv / a
+
+    def contains_dont_know(self):
+        return False
+
 class PolyGammaRule(AtomicRule):
     __slots__ = ("n", "z")
     n: Expr
@@ -1512,8 +1535,20 @@ _symbol = Dummy('x')
 
 
 def poly_gamma_rule(integral):
+    from sympy import loggamma
     from sympy.functions.special.gamma_functions import polygamma
     integrand, symbol = integral
+    if isinstance(integrand, loggamma):
+        arg = integrand.args[0]
+        if arg == symbol:
+            return LogGammaRule(integrand, symbol, arg)
+        
+        p = arg.as_poly(symbol)
+        # Solo devolvemos la regla si es estrictamente un polinomio de grado 1
+        if p is not None and p.degree() == 1:
+            return LogGammaRule(integrand, symbol, arg)
+        return None
+    
     if isinstance(integrand, polygamma):
         n, z = integrand.args
         c = z.coeff(symbol)
