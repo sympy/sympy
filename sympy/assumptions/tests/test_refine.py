@@ -354,3 +354,14 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_frac():
+    from sympy.functions.elementary.integers import frac
+    assert refine(frac(x), Q.integer(x)) == 0
+    assert refine(frac(x), Q.zero(x)) == 0
+    assert refine(frac(x), Q.real(x)) == frac(x)
+    assert refine(frac(x + y), Q.integer(x)) == frac(y)
+    assert refine(frac(x + y + z), Q.integer(x) & Q.integer(y)) == frac(z)
+    assert refine(frac(x + y - z), Q.integer(x)) == frac(y - z)
+    assert refine(frac(frac(x))) == frac(x)
