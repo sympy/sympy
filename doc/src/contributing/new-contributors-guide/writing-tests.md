@@ -972,13 +972,13 @@ python bin/test quality
 and
 
 ```
-flake8 sympy
+ruff check sympy
 ```
 
-This second command requires you to install `flake8`. Make sure you have the
-latest version of flake8 and its dependencies `pycodestyle` and `pyflakes`
-installed. Sometimes newer versions of these packages will add new checks and
-if you have an older version installed you won't see the checks for them.
+This second command requires you to install [Ruff](https://docs.astral.sh/ruff/).
+Make sure you have the latest version of Ruff installed. Sometimes newer
+versions will add new checks and if you have an older version installed you
+won't see the checks for them.
 
 The `python bin/test quality` check tests for very basic code quality things. The
 most common of these that will cause the test to fail is trailing whitespace.
@@ -988,13 +988,13 @@ way to handle trailing whitespace is to configure your text editor to
 automatically strip trailing whitespace when you save. You can also use the
 `python bin/strip_whitepace` command in the SymPy repo.
 
-The `flake8` command will check the code for basic code errors like undefined
-variables. These are restricted by the configuration in `setup.cfg` to only
-check for things that are logical errors. The usual flake8 checks for cosmetic
-style errors are disabled. In rare situations, a flake8 warning will be a
-false positive. If this happens, add a `# noqa: <CODE>` comment to the
-corresponding line, where `<CODE>` is the code for the error from
-https://flake8.pycqa.org/en/latest/user/error-codes.html. For example, code
+The `ruff check` command will check the code for basic code errors like
+undefined variables. These are restricted by the configuration in
+`pyproject.toml` to only check for things that are logical errors. The usual
+checks for cosmetic style errors are disabled. In rare situations, a Ruff
+warning will be a false positive. If this happens, add a `# noqa: <CODE>`
+comment to the corresponding line, where `<CODE>` is the code for the error
+from https://docs.astral.sh/ruff/rules/. For example, code
 that uses `multipledispatch` will need to use
 
 ```py

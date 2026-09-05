@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.utilities.lambdify import lambdify
 from sympy.core.numbers import pi
 from sympy.functions import sin, cos

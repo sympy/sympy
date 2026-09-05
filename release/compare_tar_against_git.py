@@ -47,7 +47,6 @@ git_whitelist = {
     '.ci/README.rst',
     '.circleci/config.yml',
     '.editorconfig',
-    '.flake8',
     'asv.conf.actions.json',
     'codecov.yml',
     'requirements-dev.txt',

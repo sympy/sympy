@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external.importtools import import_module
 
 disabled = False
