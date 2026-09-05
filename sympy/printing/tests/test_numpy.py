@@ -55,6 +55,11 @@ def test_numpy_logaddexp():
     assert NumPyPrinter().doprint(lae2) == 'numpy.logaddexp2(a, b)'
 
 
+def test_numpy_conjugate():
+    from sympy.functions.elementary.complexes import conjugate
+    assert NumPyPrinter().doprint(conjugate(x)) == 'numpy.conjugate(x)'
+
+
 def test_sum():
     if not np:
         skip("NumPy not installed")

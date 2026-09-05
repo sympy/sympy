@@ -9,7 +9,7 @@ from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.function import Derivative
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec, log, sin, cos, tan, asin, atan, sinh, cosh, tanh, asinh, acosh, atanh
+from sympy.functions import acos, conjugate, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec, log, sin, cos, tan, asin, atan, sinh, cosh, tanh, asinh, acosh, atanh
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
@@ -74,6 +74,7 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(Min(x, y)) == "min(x, y)"
     assert prntr.doprint(Max(x, y)) == "max(x, y)"
+    assert prntr.doprint(conjugate(x)) == "(x).conjugate()"
 
 def test_PythonCodePrinter_print_Indexed():
     from sympy import Symbol
@@ -174,6 +175,7 @@ def test_NumPyPrinter():
     assert p.doprint(HadamardProduct(A, B)) == "numpy.multiply(A, B)"
     assert p.doprint(KroneckerProduct(A, B)) == "numpy.kron(A, B)"
     assert p.doprint(Adjoint(A)) == "numpy.conjugate(numpy.transpose(A))"
+    assert p.doprint(conjugate(x)) == "numpy.conjugate(x)"
     assert p.doprint(DiagonalOf(A)) == "numpy.reshape(numpy.diag(A), (-1, 1))"
     assert p.doprint(DiagMatrix(C)) == "numpy.diagflat(C)"
     assert p.doprint(DiagonalMatrix(D)) == "numpy.multiply(D, numpy.eye(3, 4))"
