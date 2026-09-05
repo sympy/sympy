@@ -346,18 +346,27 @@ def dup_inner_subresultants(f: dup[Er], g: dup[Er], K: Domain[Er]):
            ACM Transaction of Mathematical Software 4 (1978) 237-249
 
     """
+    R, S, _ = _dup_inner_subresultants(f, g, K)
+    return R, S
+
+
+def _dup_inner_subresultants(f, g, K):
     n = dup_degree(f)
     m = dup_degree(g)
 
-    if n < m:
+    swapped = n < m
+
+    if swapped:
         f, g = g, f
         n, m = m, n
 
     if not f:
-        return [], []
+        return [], [], False
 
     if not g:
-        return [f], [K.one]
+        return [f], [K.one], False
+
+    negate = swapped and (n*m) % 2
 
     R = [f, g]
     d = n - m
@@ -395,7 +404,7 @@ def dup_inner_subresultants(f: dup[Er], g: dup[Er], K: Domain[Er]):
 
         S.append(-c)
 
-    return R, S
+    return R, S, negate
 
 
 def dup_subresultants(f, g, K):
@@ -432,12 +441,17 @@ def dup_prs_resultant(f, g, K):
     if not f or not g:
         return (K.zero, [])
 
-    R, S = dup_inner_subresultants(f, g, K)
+    R, S, negate = _dup_inner_subresultants(f, g, K)
 
     if dup_degree(R[-1]) > 0:
         return (K.zero, R)
 
-    return S[-1], R
+    res = S[-1]
+
+    if negate:
+        res = -res
+
+    return res, R
 
 
 def dup_resultant(f, g, K, includePRS=False):
@@ -482,22 +496,31 @@ def dmp_inner_subresultants(f, g, u, K):
     True
 
     """
+    R, S, _ = _dmp_inner_subresultants(f, g, u, K)
+    return R, S
+
+
+def _dmp_inner_subresultants(f, g, u, K):
     if not u:
-        return dup_inner_subresultants(f, g, K)
+        return _dup_inner_subresultants(f, g, K)
 
     n = dmp_degree(f, u)
     m = dmp_degree(g, u)
 
-    if n < m:
+    swapped = n < m
+
+    if swapped:
         f, g = g, f
         n, m = m, n
 
     if dmp_zero_p(f, u):
-        return [], []
+        return [], [], False
 
     v = u - 1
     if dmp_zero_p(g, u):
-        return [f], [dmp_ground(K.one, v, K)]
+        return [f], [dmp_ground(K.one, v, K)], False
+
+    negate = swapped and (n*m) % 2
 
     R = [f, g]
     d = n - m
@@ -536,7 +559,7 @@ def dmp_inner_subresultants(f, g, u, K):
 
         S.append(dmp_neg(c, v, K))
 
-    return R, S
+    return R, S, negate
 
 
 def dmp_subresultants(f, g, u, K):
@@ -594,12 +617,17 @@ def dmp_prs_resultant(f, g, u, K):
     if dmp_zero_p(f, u) or dmp_zero_p(g, u):
         return (dmp_zero(u - 1, K), [])
 
-    R, S = dmp_inner_subresultants(f, g, u, K)
+    R, S, negate = _dmp_inner_subresultants(f, g, u, K)
 
     if dmp_degree(R[-1], u) > 0:
         return (dmp_zero(u - 1, K), R)
 
-    return S[-1], R
+    res = S[-1]
+
+    if negate:
+        res = dmp_neg(res, u - 1, K)
+
+    return res, R
 
 
 def dmp_zz_modular_resultant(f, g, p, u, K):
