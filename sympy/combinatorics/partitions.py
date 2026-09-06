@@ -574,6 +574,118 @@ class IntegerPartition(Basic):
         """
         return "\n".join([char*i for i in self.partition])
 
+    def dominates(self, other):
+        r"""
+        Return True if self dominates other in the dominance (majorization)
+        partial order on integer partitions.
+
+        Explanation
+        ===========
+
+        For two integer partitions `\lambda = (\lambda_1, \lambda_2, \dots)`
+        and `\mu = (\mu_1, \mu_2, \dots)` of the same integer `n`, `\lambda`
+        dominates `\mu` (written `\lambda \unrhd \mu`) if and only if for all
+        integers `j \ge 1`:
+
+        .. math:: \sum_{i=1}^j \lambda_i \ge \sum_{i=1}^j \mu_i
+
+        where partitions are padded with zeros as necessary.
+
+        If `self` and `other` do not partition the same integer, `False` is
+        returned.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.partitions import IntegerPartition
+        >>> p1 = IntegerPartition([4, 1, 1])
+        >>> p2 = IntegerPartition([3, 2, 1])
+        >>> p1.dominates(p2)
+        True
+        >>> p2.dominates(p1)
+        False
+
+        Dominance is a partial order, so partitions can be incomparable:
+
+        >>> p3 = IntegerPartition([3, 3])
+        >>> p1.dominates(p3)
+        False
+        >>> p3.dominates(p1)
+        False
+
+        The partition `[n]` dominates every partition of `n`:
+
+        >>> top = IntegerPartition([6])
+        >>> all(top.dominates(IntegerPartition(p)) for p in [[5, 1], [4, 2], [3, 3], [2, 2, 2]])
+        True
+
+        Duality with conjugate partitions: `\lambda \unrhd \mu \iff \mu' \unrhd \lambda'`
+
+        >>> c1 = IntegerPartition(p1.conjugate)
+        >>> c2 = IntegerPartition(p2.conjugate)
+        >>> c2.dominates(c1)
+        True
+
+        Passing a raw list or dictionary is also supported:
+
+        >>> p1.dominates([3, 2, 1])
+        True
+
+        See Also
+        ========
+
+        is_dominated_by, conjugate
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Dominance_order
+        .. [2] Stanley, R. P. Enumerative Combinatorics, Vol. 2.
+
+        """
+        if not isinstance(other, IntegerPartition):
+            other = IntegerPartition(other)
+        if self.integer != other.integer:
+            return False
+        a = self.partition
+        b = other.partition
+        sum_a = 0
+        sum_b = 0
+        len_a = len(a)
+        len_b = len(b)
+        for i in range(max(len_a, len_b)):
+            sum_a += a[i] if i < len_a else 0
+            sum_b += b[i] if i < len_b else 0
+            if sum_a < sum_b:
+                return False
+        return True
+
+    def is_dominated_by(self, other):
+        """
+        Return True if self is dominated by other in the dominance
+        (majorization) partial order.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.partitions import IntegerPartition
+        >>> p1 = IntegerPartition([3, 2, 1])
+        >>> p2 = IntegerPartition([4, 1, 1])
+        >>> p1.is_dominated_by(p2)
+        True
+        >>> p2.is_dominated_by(p1)
+        False
+
+        See Also
+        ========
+
+        dominates
+
+        """
+        if not isinstance(other, IntegerPartition):
+            other = IntegerPartition(other)
+        return other.dominates(self)
+
     def __str__(self):
         return str(list(self.partition))
 
