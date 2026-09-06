@@ -8,7 +8,7 @@ from collections import defaultdict
 from itertools import chain
 from sympy.core import S
 from sympy.core.mod import Mod
-from .precedence import precedence
+from .precedence import precedence, PRECEDENCE
 from .codeprinter import CodePrinter
 
 _kw = {
@@ -213,7 +213,17 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
-        return ('{} % {}'.format(*(self.parenthesize(x, PREC) for x in expr.args)))
+        num, den = expr.args
+        # A Pow with a negative exponent is printed as a division ("1/y",
+        # "1/sqrt(y)"), whose leading operator has the same precedence as "%"
+        # even though precedence() reports PRECEDENCE["Pow"] for it.  Printed
+        # to the right of "%" it would be reassociated, so parenthesize it.
+        if den.is_Pow and den.exp.is_negative:
+            den_prec = PRECEDENCE["Pow"]
+        else:
+            den_prec = PREC
+        return '{} % {}'.format(self.parenthesize(num, PREC),
+                                self.parenthesize(den, den_prec))
 
     def _print_Piecewise(self, expr):
         result = []

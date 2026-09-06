@@ -40,6 +40,10 @@ def test_PythonCodePrinter():
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
     assert prntr.doprint(-Mod(x, y)) == '-(x % y)'
     assert prntr.doprint(Mod(-x, y)) == '(-x) % y'
+    # a divisor that prints as a division must be parenthesized, otherwise
+    # "x % 1/y" reassociates to "(x % 1)/y"
+    assert prntr.doprint(Mod(x, 1/y)) == 'x % (1/y)'
+    assert prntr.doprint(Mod(1, 1/x)) == '1 % (1/x)'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert prntr.doprint(1/(x+y)) == '1/(x + y)'
