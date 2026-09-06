@@ -1467,11 +1467,17 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     if rational or expr.free_symbols:
         return _real_to_rational(expr, tolerance, rational_conversion)
 
-    # SymPy's default tolerance for Rationals is 15; other numbers may have
-    # lower tolerances set, so use them to pick the largest tolerance if None
-    # was given
+    # SymPy's default tolerance for Rationals is 15. Float inputs may have a
+    # lower precision, so use the least precise input to set the tolerance.
+    # Exact non-Rational expressions can be evaluated at the working precision,
+    # so let identify() derive its tolerance from that precision.
+    check_candidate = False
     if tolerance is None:
-        tolerance = 10**-min([15] + [prec_to_dps(n._prec) for n in expr.atoms(Float)])
+        float_precisions = [prec_to_dps(n._prec) for n in expr.atoms(Float)]
+        if expr.is_Rational or float_precisions:
+            tolerance = 10**-min([15] + float_precisions)
+        else:
+            check_candidate = True
     # XXX should prec be set independent of tolerance or should it be computed
     # from tolerance?
     prec = 30
@@ -1496,7 +1502,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         xv = x._to_mpmath(bprec)
         with local_workprec(prec) as ctx:
             # We'll be happy with low precision if a simple fraction
-            if not (tolerance or full):
+            if tolerance == 0 and not full:
                 ctx.dps = 15
                 rat = ctx.pslq([xv, 1])
                 if rat is not None:
@@ -1525,6 +1531,14 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         return expr
 
     rv = re + im*S.ImaginaryUnit
+    if check_candidate and rv != expr:
+        # identify() bounds a polynomial residual, which does not always bound
+        # the error in the reconstructed root. Reject candidates whose direct
+        # difference from an exact expression can be resolved as nonzero.
+        difference = (rv - expr).evalf(2*prec, maxn=4*prec, chop=False)
+        if any(part and part.is_comparable
+                for part in difference.as_real_imag()):
+            return expr
     # if there was a change or rational is explicitly not wanted
     # return the value, else return the Rational representation
     if rv != expr or rational is False:
