@@ -2503,17 +2503,16 @@ def hyperexpand(f, allow_hyper=False, rewrite='default', place=None):
             return r
 
     def do_meijer(ap, bq, z):
-        c = 1
-        if z.extract_multiplicatively(-I):
-            c *= -1
-        zp = 1
-        for zf in z.as_ordered_factors():
-            if zf.is_number:
-                zp *= polarify(zf, lift=True)
-            else:
-                zp *= zf
-        r = c*_meijergexpand(G_Function(ap[0], ap[1], bq[0], bq[1]), zp,
-                             allow_hyper, rewrite=rewrite, place=place)
+        numeric, symbolic = [], []
+        for factor in Mul.make_args(z):
+            (numeric if factor.is_number else symbolic).append(factor)
+        # Lift the complete numeric coefficient: lifting -1 and I separately
+        # would give -I an extra turn around the origin.
+        zp = Mul(*symbolic)
+        if numeric:
+            zp *= polarify(Mul(*numeric), lift=True)
+        r = _meijergexpand(G_Function(ap[0], ap[1], bq[0], bq[1]), zp,
+                          allow_hyper, rewrite=rewrite, place=place)
         if not r.has(nan, zoo, oo, -oo):
             return r
     return f.replace(hyper, do_replace).replace(meijerg, do_meijer)

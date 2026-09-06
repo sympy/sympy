@@ -1072,11 +1072,20 @@ def test_issue_26525_polarify_z():
     g = meijerg(((1, x + 2), ()), ((x + S(1)/2,), (0,)), -I*z)
     h = hyperexpand(g)
     assert h.replace(exp_polar, exp) == \
-           2*sqrt(pi)*z**(x + S.Half)*exp(3*I*pi*(x + S.Half)/2)*gamma(x + S.Half)*hyper(
+           -2*sqrt(pi)*z**(x + S.Half)*exp(-I*pi*(x + S.Half)/2)*gamma(x + S.Half)*hyper(
                (-S.Half, x + S.Half), (x + S(3)/2,), I*z)/gamma(x + S(3)/2)
     for i in [g, h]:
         assert CC.almosteq(i.subs({x: 0, z: 1}).evalf(),
                            -4.32257296433943 + 5.92192068901469*I, 1e-12)
+
+    # Integer parameters conceal an incorrect full turn in the argument.
+    for value in (S.One/3, S.Half):
+        point = {x: value, z: 1}
+        assert abs(h.subs(point).evalf() - g.subs(point).evalf()) < 1e-12
+
+    # Outside the unit circle, the wrong winding changes the continuation.
+    g = meijerg(((1, 2), ()), ((S.Half,), (0,)), -2*I)
+    assert abs(hyperexpand(g).evalf() - g.evalf()) < 1e-12
 
     g = meijerg(((1, 2), ()), ((S(1)/2,), (0,)), -I)
     h = hyperexpand(g)
@@ -1098,7 +1107,7 @@ def test_issue_26525_polarify_z():
     assert hyperexpand(g) == (S.Half - I)*exp(-I)*exp(I*pi/4)
 
     g = meijerg(((0,), ()), ((S.Half,), (1,)), -I)
-    assert factor_terms(hyperexpand(g)) == factor_terms((-S.Half - I)*exp(I)*exp(3*I*pi/4))
+    assert factor_terms(hyperexpand(g)) == factor_terms((S.Half + I)*exp(I)*exp(-I*pi/4))
 
     g = meijerg(((1,), ()), ((1,), ()), 0)
     assert hyperexpand(g) == 0
