@@ -354,3 +354,9 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_tan():
+    assert refine(tan(y*S.Pi), Q.integer(y)) == 0
+    assert refine(tan(y*S.Pi + x), Q.integer(y)) == tan(x)
+    assert refine(tan(x), Q.real(x)) == tan(x)
