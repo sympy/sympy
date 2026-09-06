@@ -224,9 +224,37 @@ class Piecewise(DefinedFunction):
         return piecewise_simplify(self, **kwargs)
 
     def _eval_as_leading_term(self, x, logx, cdir):
+        # Pick the piece that applies in the punctured neighborhood of 0 on the
+        # side given by cdir, rather than the one whose condition merely holds
+        # *at* 0.  A boundary condition such as ``x <= 0`` is true at 0 but false
+        # just to the right of it, so testing at exactly 0 selects the wrong
+        # piece for a directional limit (see issue #29835).
+        from sympy.sets.sets import Interval
+        d = cdir if cdir != 0 else 1
+        nbhd = Interval.open(0, S.Infinity) if d > 0 else Interval.open(S.NegativeInfinity, 0)
         for e, c in self.args:
-            if c == True or c.subs(x, 0) == True:
-                return e.as_leading_term(x)
+            if c == True:
+                return e.as_leading_term(x, logx=logx, cdir=cdir)
+            holds = None
+            if c.free_symbols <= {x}:
+                try:
+                    sol = c.as_set()
+                except (NotImplementedError, TypeError):
+                    sol = None
+                if sol is not None:
+                    gap = nbhd - sol
+                    if gap.is_empty:
+                        holds = True
+                    elif d > 0:
+                        holds = bool(gap.inf.is_positive)
+                    else:
+                        holds = bool(gap.sup.is_negative)
+            if holds is None:
+                # Fall back to evaluating the condition at 0 (e.g. when the
+                # condition involves other symbols and ``as_set`` can't be used).
+                holds = c.subs(x, 0) == True
+            if holds:
+                return e.as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])
