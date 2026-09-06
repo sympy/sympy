@@ -413,7 +413,7 @@ def test_m_matrixsymbol_slice2():
 def test_m_matrixsymbol_slice3():
     A = MatrixSymbol('A', 8, 7)
     B = MatrixSymbol('B', 2, 2)
-    C = MatrixSymbol('C', 4, 2)
+    C = MatrixSymbol('C', 4, 3)
     name_expr = ("test", [Equality(B, A[6:, 1::3]),
                           Equality(C, A[::2, ::3])])
     result, = codegen(name_expr, "Octave", header=False, empty=False)
