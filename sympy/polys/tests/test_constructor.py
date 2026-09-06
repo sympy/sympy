@@ -5,6 +5,7 @@ from sympy.testing.pytest import tooslow
 
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX
+from sympy import I, oo
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 
@@ -252,3 +253,6 @@ def test_issue_25337():
 
     x_algebraic = Symbol('x', algebraic=True)
     assert construct_domain(x_algebraic)[0] == ZZ[x_algebraic]
+def test_issue_30061():
+    assert construct_domain([oo*I]) == (EX, [EX(oo*I)])
+    assert construct_domain([-oo*I]) == (EX, [EX(-oo*I)])
