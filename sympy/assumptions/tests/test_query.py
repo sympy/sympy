@@ -10,7 +10,7 @@ from sympy.assumptions.ask_generated import (get_all_known_facts,
     get_known_facts_dict)
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
+from sympy.core.numbers import (E, I, Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
 from sympy.core.symbol import Str, symbols, Symbol
@@ -2000,6 +2000,8 @@ def test_positive():
     assert _ask_recursive(Q.positive(x**y),Q.zero(x)) is None
     assert _ask_recursive(Q.positive(x**y), Q.zero(x) & Q.negative(y)) is None
     assert _ask_recursive(Q.positive(x**y), Q.zero(x) & Q.even(y)) is None
+    assert _ask_recursive(Q.positive(exp(1 + I))) is False
+    assert _ask_recursive(Q.positive(Pow(E, 1 + I, evaluate=False))) is False
 
     # logarithm
     assert _ask_recursive(Q.positive(log(x)), Q.imaginary(x)) is False
