@@ -773,3 +773,22 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+def test_issue_21549():
+    from sympy import symbols, integrate, Abs, sqrt, Rational, N
+    x = symbols('x')
+    expr = x * sqrt(Abs(x))
+    
+    # Comprobación del valor analítico exacto por Meijer G en (-1, 0)
+    res = integrate(expr, (x, -1, 0), meijerg=True)
+    assert res == Rational(-2, 5)
+    
+    # Verificación de consistencia numérica en el tramo interior (-0.75, -0.25)
+    val_sub = integrate(expr, (x, -Rational(3, 4), -Rational(1, 4)), meijerg=True).evalf()
+    
+    # Antiderivada real correcta para x < 0: H(y) = 2/5 * y^(5/2) donde y = -x
+    y = symbols('y', positive=True)
+    H = Rational(2, 5) * y**(Rational(5, 2))
+    expected_val = (H.subs(y, Rational(1, 4)) - H.subs(y, Rational(3, 4))).evalf()
+    
+    assert abs(val_sub - expected_val) < 1e-10

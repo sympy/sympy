@@ -1651,6 +1651,12 @@ def _rewrite2(f, x):
 
 
 def meijerint_indefinite(f, x):
+    if x.is_negative:
+        y = Dummy('y', positive=True)
+        g = meijerint_indefinite(f.subs(x, -y), y)
+        if g is None:
+            return None
+        return (-g).subs(y, -x)
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.
 
