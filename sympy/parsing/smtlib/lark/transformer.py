@@ -71,6 +71,16 @@ class SMTLibTransformer(Transformer):
     def get_result(self):
         return self._symbols, self._assertions
 
+    def get_info(self):
+        """Attributes recorded by ``set-info``, keyed by keyword (``:status``,
+        ``:source``, ...)."""
+        return self._info
+
+    def get_logic(self):
+        """The logic given by ``set-logic``, or ``None`` if the input did not
+        set one."""
+        return self._logic
+
     def _resolve_sort(self, sort):
         # Resolve 0-ary define-sort aliases like (define-sort MyInt () Int)
         seen = set()
@@ -156,6 +166,22 @@ class SMTLibTransformer(Transformer):
 
     def list(self, args):
         return args
+
+    def attribute(self, args):
+        # An attribute is either a bare keyword or a keyword with a value
+        if len(args) == 1:
+            return (args[0], None)
+        return (args[0], args[1])
+
+    def attribute_value(self, args):
+        # spec_constant and symbol give a single value; "(" s_expr* ")" gives
+        # any number of them
+        if len(args) == 1:
+            return args[0]
+        return list(args)
+
+    # (set-option ...) takes an option, which has the same shape
+    option = attribute
 
     # Term handlers
     def term_spec_constant(self, args):
@@ -430,9 +456,11 @@ class SMTLibTransformer(Transformer):
             self._logic = str(args[0])
 
     def cmd_set_info(self, args):
-        if len(args) >= 2:
-            self._info[str(args[0])] = args[1]
+        if args:
+            key, value = args[0]
+            self._info[str(key)] = value
 
     def cmd_set_option(self, args):
-        if len(args) >= 2:
-            self._options[str(args[0])] = args[1]
+        if args:
+            key, value = args[0]
+            self._options[str(key)] = value
