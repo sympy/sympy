@@ -140,7 +140,7 @@ def _create_lookup_table(table):
         add((sqrt(a**2 + t) + sgn*a)**b/(a**2 + t)**r,
             [(1 + b)/2, 1 - 2*r + b/2], [],
             [(b - sgn*b)/2], [(b + sgn*b)/2], t/a**2,
-            a**(b - 2*r)*A1(r, sgn, b))
+            Abs(a)**(b - 2*r)*A1(r, sgn, b))
     tmpadd(0, 1)
     tmpadd(0, -1)
     tmpadd(S.Half, 1)
@@ -1693,6 +1693,30 @@ def meijerint_indefinite(f, x):
         return next(ordered(results))
 
 
+
+def _fix_parity(expr, f, x):
+    from sympy import sign
+    for sym in (f.free_symbols - {x}):
+        if sym.is_positive or sym.is_negative or not sym.is_real:
+            continue
+        if not expr.has(sym):
+            continue
+        try:
+            f_neg = f.subs(sym, -sym)
+            f_even = f_neg.equals(f)
+            f_odd = (not f_even) and f_neg.equals(-f)
+            if not (f_even or f_odd):
+                continue
+            e_neg = expr.subs(sym, -sym)
+            e_even = e_neg.equals(expr)
+            e_odd = (not e_even) and e_neg.equals(-expr)
+            if (f_even and e_odd) or (f_odd and e_even):
+                expr = sign(sym) * expr
+        except Exception:
+            pass
+    return expr
+
+
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
@@ -1775,11 +1799,11 @@ def _meijerint_indefinite_1(f, x):
     if res.is_Piecewise:
         newargs = []
         for e, c in res.args:
-            e = _my_unpolarify(_clean(e))
+            e = _fix_parity(_my_unpolarify(_clean(e)), f, x)
             newargs += [(e, c)]
         res = Piecewise(*newargs, evaluate=False)
     else:
-        res = _my_unpolarify(_clean(res))
+        res = _fix_parity(_my_unpolarify(_clean(res)), f, x)
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
 
 

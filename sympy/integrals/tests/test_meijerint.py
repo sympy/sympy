@@ -792,3 +792,26 @@ def test_issue_21549():
     expected_val = (H.subs(y, Rational(1, 4)) - H.subs(y, Rational(3, 4))).evalf()
     
     assert abs(val_sub - expected_val) < 1e-10
+
+
+def test_issue_parity_guard_f1_f2():
+    from sympy import symbols, sqrt, integrate
+    x, a = symbols('x a', real=True)
+    f1 = (a / sqrt(x**2 + a**2))**3
+    res1 = integrate(f1, x, meijerg=True)
+    assert res1.diff(x).simplify().equals(f1)
+    
+    f2 = a / sqrt(x**2 + a**2)**3
+    res2 = integrate(f2, x, meijerg=True)
+    assert res2.diff(x).simplify().equals(f2)
+
+def test_issue_parity_guard_powers():
+    from sympy import symbols, Rational, integrate, Piecewise, Eq
+    x, a = symbols('x a', real=True)
+    for p in [Rational(-3, 2), Rational(-1, 2)]:
+        f = (x**2 + a**2)**p
+        res = integrate(f, x, meijerg=True)
+        diff_res = res.diff(x).simplify()
+        if diff_res.is_Piecewise:
+            diff_res = diff_res.args[0][0] # Extraemos la rama principal o validamos con subs
+        assert (diff_res - f).simplify().subs({a: 2, x: 1}).n() < 1e-10
