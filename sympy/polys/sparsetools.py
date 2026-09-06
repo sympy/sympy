@@ -7,19 +7,20 @@ only the provided domain and number of variables.
 
 from __future__ import annotations
 
-from itertools import combinations
+from collections import defaultdict
+from itertools import chain, combinations, compress
 from typing import TYPE_CHECKING, Mapping, Sequence, TypeVar
 
 from sympy.core.intfunc import igcd
 from sympy.ntheory.multinomial import multinomial_coefficients
-from sympy.polys.monomials import MonomialOps, monom
+from sympy.polys.monomials import MonomialOps, monom, monomial_ngcd
 from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import ExactQuotientFailed
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from sympy.polys.domains.domain import Domain, Er
+    from sympy.polys.domains.domain import Domain, Er, Es
 
 _T = TypeVar("_T")
 
@@ -995,3 +996,165 @@ def smp_pow_multinomial(d: smp[Er], exp: int, domain: Domain[Er], n: int) -> smp
             del h[p_mon]
 
     return h
+
+
+def smp_active_var(f: smp[Er], n: int, domain: Domain[Er],
+ ind: list[int] | None = None)-> set[int]:
+    """
+    Examples
+    ========
+
+    >>> from sympy import ZZ, ring
+    >>> from sympy.polys.sparsetools import smp_active_var
+    >>> R, x, y = ring("x, y", ZZ)
+    >>> f = 3*x**2 + 7*x**2*y
+    >>> smp_active_var(f, 2, ZZ)
+    {0, 1}
+
+    """
+    if not ind:
+        ind = list(range(n))
+    ind.sort()
+    exponents = list(map(sum, zip(*f)))
+    # Set to keep track of variables
+    variables = set()
+
+    for i, e in zip(ind, exponents):
+        if e:
+            variables.add(i)
+
+    return variables
+
+
+def smp_main_var(f: smp[Er], n: int, domain: Domain[Er]) -> int:
+    """
+    Return the leading generator index of the generators present in the
+    polynomial.
+
+    Examples
+    ========
+
+    >>> from sympy import ZZ, ring
+    >>> from sympy.polys.sparsetools import smp_main_var
+    >>> R, x, y = ring("x, y", ZZ)
+    >>> p = y**2 + 2 - y**3 + 4*y
+    >>> smp_main_var(p, 2, ZZ)
+    1
+
+    >>> p = x*y**2 - y**3 + 4*y
+    >>> smp_main_var(p, 2, ZZ)
+    0
+
+    """
+    free_sym = smp_active_var(f, n, domain)
+    if 0 in free_sym:
+        return 0
+    if not free_sym:
+        return 0
+    return min(free_sym)
+
+
+def smp_monomial_extract(polynomials: list[smp[Er]], n: int, domain: Domain[Er]
+    ) -> tuple[list[smp[Er]], smp[Er] | None]:
+    """
+    Extracts any common monomial from the polynomials.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.sparsetools import smp_monomial_extract
+    >>> from sympy import ZZ, ring
+    >>> R, x, y = ring("x, y", ZZ)
+
+    >>> f = x + y
+    >>> g = x**2*y + x*y
+    >>> polynomials = [f, g]
+    >>> smp_monomial_extract(polynomials, 2, ZZ)
+    ([x + y, x**2*y + x*y], 1)
+
+    >>> f = x**2*y
+    >>> g = x**2*y + x*y
+    >>> polynomials = [f, g]
+    >>> smp_monomial_extract(polynomials, 2, ZZ)
+    ([x, x + 1], x*y)
+
+    """
+    zm = (0,) * n
+    monoms = chain(*polynomials)
+
+    # Check for the presence of zero_monom in any polynomial
+    if any(zm in poly for poly in polynomials):
+        return polynomials, {zm: domain.one}
+
+    monom_gcd = monomial_ngcd(list(monoms))
+
+    if monom_gcd is None: # if the polynomials have no monomials
+        return polynomials, None
+    elif monom_gcd == zm:
+        return polynomials, {zm: domain.one}
+    else:
+        d = (monom_gcd, domain.one)
+        p = [smp_quo_term(pol, d, n, domain) for pol in polynomials]
+        return p, {monom_gcd: domain.one}
+
+
+def smp_reorg_poly(f: smp[Er], syms: list[int], n: int, domain: Domain[Er]
+    ) -> dict[monom, smp[Er]]:
+    """
+    Reorganize a polynomial over multiple variables into a polynomial over a
+    subset of those variables with coefficients being polynomials over the
+    remaining variables.
+    For example, given a polynomial in ``p`` in ``K[x,y,z,t]``, ``p.
+    coeff_split([1, 3])`` converts ``p`` to an element of ``K[x, z][y, t]``.
+    """
+    syms = sorted(syms)
+    g: defaultdict[monom, smp[Er]] = defaultdict(dict)
+    rem_syms = tuple(i for i in range(n) if i not in syms)
+
+    # Iterate through the terms and coefficients of the input polynomial
+    for mon, coeff in f.items():
+        outer = tuple(mon[i] for i in syms)
+        inner = tuple(mon[i] for i in rem_syms)
+        g[outer][inner] = coeff
+
+    return g
+
+
+def smp_domain_convert(f: smp[Er], dom1: Domain[Er], dom2: Domain[Es], n: int) -> smp[Es]:
+    result: smp[Es] = {}
+    for mon, coeff in f.items():
+        new_coeff = dom2.convert(coeff, dom1)
+        if new_coeff:
+            result[mon] = new_coeff
+    return result
+
+
+def smp_unique_polys(polys: list[smp[Er]], n: int, domain: Domain[Er]
+) -> list[smp[Er]]:
+    # eliminates duplicates from a list of polynomials.
+    seen = set()
+    unique: list[smp[Er]] = []
+
+    for pol in polys:
+        key = frozenset(pol.items())
+
+        if key not in seen:
+            seen.add(key)
+            unique.append(pol)
+    return unique
+
+
+def smp_swap_var(f: smp[Er], i: int, n: int, domain: Domain[Er],
+) -> smp[Er]:
+    """Swap the main variable with the variable at index ``i``."""
+    if i == 0:
+        return f.copy()
+
+    g: smp[Er] = {}
+
+    for mon, coeff in f.items():
+        new_mon = list(mon)
+        new_mon[0], new_mon[i] = new_mon[i], new_mon[0]
+        g[tuple(new_mon)] = coeff
+
+    return g
