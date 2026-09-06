@@ -92,7 +92,7 @@ def test_reflect_entity_overrides():
     pent = RegularPolygon((1, 2), 1, 5)
     slope = S.ComplexInfinity
     while slope is S.ComplexInfinity:
-        slope = Rational(*(x._random()/2).as_real_imag())
+        slope = Rational(*(Symbol('z')._random()/2).as_real_imag())
     l = Line(pent.vertices[1], slope=slope)
     rpent = pent.reflect(l)
     assert rpent.center == pent.center.reflect(l)
