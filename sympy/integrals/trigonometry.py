@@ -61,6 +61,12 @@ def trigintegrate(f, x, conds='piecewise'):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
+    from sympy.core.symbol import Symbol
+
+    # Safety check: avoid TLE or hangs when dealing with symbolic powers of trig functions
+    if any(b.has(sin, cos) and e.has(Symbol) for b, e in f.as_powers_dict().items()):
+        return None
+
     pat, a, n, m = _pat_sincos(x)
 
     f = f.rewrite('sincos')
