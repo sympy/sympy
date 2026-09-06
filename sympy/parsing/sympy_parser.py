@@ -1122,7 +1122,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         'acosh', 'acoth', 'acsch', 'asech', 'asinh', 'atanh',
         'cos', 'cot', 'csc', 'sec', 'sin', 'tan',
         'cosh', 'coth', 'csch', 'sech', 'sinh', 'tanh',
-        'exp', 'ln', 'log', 'sqrt', 'cbrt',
+        'exp', 'ln', 'log', 'sqrt', 'cbrt', 'factorial',
     )
 
     relational_operators = {
