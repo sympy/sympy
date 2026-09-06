@@ -112,6 +112,11 @@ class Tuple(Basic):
     def _to_mpmath(self, prec):
         return tuple(a._to_mpmath(prec) for a in self.args)
 
+    def _to_mpmath_ctx(self, ctx, *, prec=None):
+        if prec is None:
+            prec = ctx.prec
+        return tuple(a._to_mpmath_ctx(ctx, prec=prec) for a in self.args)
+
     def __lt__(self, other):
         return _sympify(self.args < other.args)
 
