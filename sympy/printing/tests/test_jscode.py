@@ -74,6 +74,10 @@ def test_Mod():
     assert jscode(Mod(-3, -7, evaluate=False)) == '(-3) % (-7)'
     assert jscode(-Mod(p1, p2)) == '-(p1 % p2)'
     assert jscode(x*Mod(p1, p2)) == 'x*(p1 % p2)'
+    # a negative product must not reassociate the % (issue 30389)
+    assert jscode(-x*Mod(p1, p2)) == '-x*(p1 % p2)'
+    assert jscode(-2*Mod(p1, p2)) == '-2*(p1 % p2)'
+    assert jscode(-x/Mod(p1, p2)) == '-x/(p1 % p2)'
     # a divisor that prints as a division must be parenthesized
     assert jscode(Mod(p1, 1/p2)) == 'p1 % (1/p2)'
 
