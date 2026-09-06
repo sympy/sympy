@@ -84,7 +84,7 @@ choose python ground types even if gmpy is installed (e.g., for testing purposes
 Note that sympy ground types are not supported, and should be used
 only for experimental purposes.
 
-Note that the gmpy1 ground type is primarily intended for testing; it the
+Note that the gmpy1 ground type is primarily intended for testing; it forces the
 use of gmpy even if gmpy2 is available.
 
 This is the same as setting the environment variable
@@ -109,7 +109,7 @@ Note that for very large expressions, ORDER='none' may speed up
 printing considerably, with the tradeoff that the order of the terms
 in the printed expression will have no canonical order
 
-Example: isympy -o rev-lax
+Example: isympy -o rev-lex
 
 \fIORDER\fR must be one of 'lex', 'rev-lex', 'grlex',
 \&'rev-grlex', 'grevlex', 'rev-grevlex', 'old', or 'none'.
