@@ -300,6 +300,27 @@ class Basic(Printable):
         return obj
 
     def copy(self):
+        """
+        Return a shallow copy of the expression.
+
+        Examples
+        ========
+
+        >>> from sympy import sin
+        >>> from sympy.abc import x
+        >>> expr = sin(x) + 1
+        >>> expr.copy() == expr
+        True
+        >>> expr.copy() is expr
+        False
+        >>> expr.copy().args[0] is expr.args[0]
+        True
+
+        See Also
+        ========
+
+        Basic.func
+        """
         return self.func(*self.args)
 
     def __getnewargs__(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
