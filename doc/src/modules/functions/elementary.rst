@@ -173,6 +173,26 @@ Exponential
 .. autoclass:: sympy.functions.elementary.exponential.exp_polar
    :members:
 
+.. autoclass:: sympy.functions.elementary.exponential.EML
+   :members:
+
+The binary primitive :class:`~sympy.functions.elementary.exponential.EML`,
+defined by :math:`\operatorname{EML}(x, y) = e^{x} - \log(y)`, follows
+Odrzywolek (arXiv:2603.21852): together with the constant ``1`` and the free
+symbols, it can express every elementary (calculator) function through the
+grammar :math:`S \to 1 \mid x \mid \operatorname{EML}(S, S)`.  Use
+:func:`~sympy.functions.elementary.exponential.to_eml` to rewrite the
+elementary functions of an expression into ``EML`` form and
+:func:`~sympy.functions.elementary.exponential.from_eml` to expand them back
+to ``exp``/``log``.  Note that ``EML`` generates ``exp``, ``log`` and
+subtraction but not the addition or multiplication of independent terms, so
+the surrounding arithmetic of an expression is preserved rather than being
+folded into a single ``EML`` tree.
+
+.. autofunction:: sympy.functions.elementary.exponential.to_eml
+
+.. autofunction:: sympy.functions.elementary.exponential.from_eml
+
 
 Piecewise
 ---------
