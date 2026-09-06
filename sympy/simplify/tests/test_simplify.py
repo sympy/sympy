@@ -410,6 +410,12 @@ def test_nsimplify():
     e = x**0.0
     assert e.is_Pow and nsimplify(x**0.0) == 1
     assert nsimplify(3.333333, tolerance=0.1, rational=True) == Rational(10, 3)
+
+    # exact rationals must not be converted to a different exact value
+    # https://github.com/sympy/sympy/issues/30210
+    assert nsimplify(Rational(-9072, 12245)) == Rational(-9072, 12245)
+    assert nsimplify(S.Half) == S.Half
+    assert nsimplify(Rational(1, 3)) == Rational(1, 3)
     assert nsimplify(3.333333, tolerance=0.01, rational=True) == Rational(10, 3)
     assert nsimplify(3.666666, tolerance=0.1, rational=True) == Rational(11, 3)
     assert nsimplify(3.666666, tolerance=0.01, rational=True) == Rational(11, 3)

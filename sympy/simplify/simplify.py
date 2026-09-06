@@ -13,7 +13,7 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
-from sympy.core.numbers import Float, I, Integer, pi, Rational, equal_valued
+from sympy.core.numbers import Float, I, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sorting import default_sort_key, ordered
@@ -1456,7 +1456,9 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     """
     expr = sympify(expr)
-    if isinstance(expr, Integer):
+    # exact rationals are already exact: return them unchanged rather than
+    # risking a spurious, float-indistinguishable replacement (see gh-30210)
+    if isinstance(expr, Rational):
         return expr
     expr = expr.xreplace({
         Float('inf'): S.Infinity,
