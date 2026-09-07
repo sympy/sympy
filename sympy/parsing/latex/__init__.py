@@ -1,11 +1,12 @@
 from __future__ import annotations
+from typing import Any
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from re import compile as rcompile
 
 from sympy.parsing.latex.lark import LarkLaTeXParser, TransformToSymPyExpr, parse_latex_lark # noqa
 
-from .errors import LaTeXParsingError  # noqa
+from .errors import LaTeXParsingError # noqa
 
 
 IGNORE_L = r"\s*[{]*\s*"
@@ -73,9 +74,11 @@ END_DELIM_REPR = {fr"{END_AMS_MAT}{IGNORE_R}\\right\)": "\\end{matrix}\\right)",
                   }
 
 
-def check_matrix_delimiters(latex_str):
+def check_matrix_delimiters(latex_str: str) -> None:
     """Report mismatched, excess, or missing matrix delimiters."""
-    spans = []
+    # Using 'int | None' for modern Python standards
+    spans: list[tuple[int | None, int | None, str | None, str | None]] = []
+
     for begin_delim in MATRIX_DELIMS:
         end_delim = MATRIX_DELIMS[begin_delim]
 
@@ -87,35 +90,31 @@ def check_matrix_delimiters(latex_str):
         spans.extend([(*m.span(), m.group(),
                        end_delim) for m in q.finditer(latex_str)])
 
-    spans.sort(key=(lambda x: x[0]))
+    spans.sort(key=(lambda x: x[0] if x[0] is not None else 0))
+
     if len(spans) % 2 == 1:
-        # Odd number of delimiters; therefore something
-        # is wrong. We do not complain yet; let's see if
-        # we can pinpoint the actual error.
         spans.append((None, None, None, None))
 
-    spans = [(*x, *y) for (x, y) in zip(spans[::2], spans[1::2])]
-    for x in spans:
-        # x is supposed to be an 8-tuple of the following form:
-        #
-        # (begin_delim_span_start, begin_delim_span_end,
-        # begin_delim_match, begin_delim_regex,
-        # end_delim_span_start, end_delim_span_end,
-        # end_delim_match, end_delim_regex)
+    combined_spans = [(*x, *y) for (x, y) in zip(spans[::2], spans[1::2])]
 
+    for x in combined_spans:
         sellipsis = "..."
-        s = x[0] - 10
+        start_idx = x[0] if x[0] is not None else 0
+        s = start_idx - 10
         if s < 0:
             s = 0
             sellipsis = ""
 
         eellipsis = "..."
-        e = x[1] + 10
+        end_idx = x[1] if x[1] is not None else len(latex_str)
+        e = end_idx + 10
         if e > len(latex_str):
             e = len(latex_str)
             eellipsis = ""
 
+        # Mypy Type Guards: Use assert to narrow type from 'str | None' to 'str'
         if x[3] in END_DELIM_REPR:
+            assert isinstance(x[3], str)
             err = (f"Extra '{x[2]}' at index {x[0]} or "
                    "missing corresponding "
                    f"'{BEGIN_DELIM_REPR[MATRIX_DELIMS_INV[x[3]]]}' "
@@ -124,6 +123,7 @@ def check_matrix_delimiters(latex_str):
             raise LaTeXParsingError(err)
 
         if x[7] is None:
+            assert isinstance(x[3], str)
             err = (f"Extra '{x[2]}' at index {x[0]} or "
                    "missing corresponding "
                    f"'{END_DELIM_REPR[MATRIX_DELIMS[x[3]]]}' "
@@ -131,22 +131,26 @@ def check_matrix_delimiters(latex_str):
                    f"{eellipsis}")
             raise LaTeXParsingError(err)
 
+        assert isinstance(x[3], str)
         correct_end_regex = MATRIX_DELIMS[x[3]]
-        sellipsis = "..." if x[0] > 0 else ""
-        eellipsis = "..." if x[5] < len(latex_str) else ""
+
+        x0 = x[0] if x[0] is not None else 0
+        x5 = x[5] if x[5] is not None else len(latex_str)
+        sellipsis = "..." if x0 > 0 else ""
+        eellipsis = "..." if x5 < len(latex_str) else ""
+
         if x[7] != correct_end_regex:
             err = ("Expected "
                    f"'{END_DELIM_REPR[correct_end_regex]}' "
                    f"to close the '{x[2]}' at index {x[0]} but "
                    f"found '{x[6]}' at index {x[4]} of LaTeX "
-                   f"string instead: {sellipsis}{latex_str[x[0]:x[5]]}"
+                   f"string instead: {sellipsis}{latex_str[x0:x5]}"
                    f"{eellipsis}")
             raise LaTeXParsingError(err)
 
-def check_cases_env(latex_str):
-    """
-    Raises LaTeXParsingError if the cases environment is used.
-    """
+
+def check_cases_env(latex_str: str) -> None:
+    """Raises LaTeXParsingError if the cases environment is used."""
     if r"\begin{cases}" in latex_str:
         raise LaTeXParsingError(
             "The 'cases' environment is not currently supported by parse_latex. \n"
@@ -154,11 +158,12 @@ def check_cases_env(latex_str):
             "consider breaking them into separate parse_latex calls."
         )
 
+
 __doctest_requires__ = {('parse_latex',): ['antlr4', 'lark']}
 
 
 @doctest_depends_on(modules=('antlr4', 'lark'))
-def parse_latex(s, strict=False, backend="antlr"):
+def parse_latex(s: str, strict: bool = False, backend: str = "antlr") -> Any:
     r"""Converts the input LaTeX string ``s`` to a SymPy ``Expr``.
 
     Parameters
@@ -214,6 +219,6 @@ def parse_latex(s, strict=False, backend="antlr"):
     elif backend == "lark":
         return parse_latex_lark(s)
     else:
-        raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX" \
-                                   " parser is not supported, backend must be one of" \
-                                   " ('antlr', 'lark')")
+        raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX"
+                                  " parser is not supported, backend must be one of"
+                                  " ('antlr', 'lark')")
