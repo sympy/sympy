@@ -43,6 +43,7 @@ from .containers import Tuple, Dict
 from .decorators import _sympifyit
 from .evalf import pure_complex
 from .expr import Expr, AtomicExpr
+from .equation import Equation
 from .logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
 from .mul import Mul
 from .numbers import Rational, Float, Integer
@@ -451,8 +452,30 @@ class Function(Application, Expr):
             return cls._new_(*args, **options)  # type: ignore
 
     @classmethod
-    def _new_(cls, *args, **options) -> Expr:
+    def _new_(cls, *args, **options) -> Expr|Equation:
         n = len(args)
+        eqnloc: int
+        neqns = 0
+        newargs = []
+        for k in args:
+            newargs.append(k)
+        if (n > 0):
+            for i in range(n):
+                if isinstance(args[i], Equation):
+                    neqns += 1
+                    eqnloc = i
+            if neqns > 1:
+                raise NotImplementedError('Function calls with more than one '
+                                          'Equation as a parameter are not '
+                                          'supported. You may be able to get '
+                                          'your desired outcome using .applyrhs'
+                                          ' and .applylhs.')
+            if neqns == 1:
+                newargs[eqnloc] = args[eqnloc].lhs
+                lhs = super().__new__(cls, *newargs, **options)
+                newargs[eqnloc] = args[eqnloc].rhs
+                rhs = super().__new__(cls, *newargs, **options)
+                return Equation(lhs,rhs)
 
         if not cls._valid_nargs(n):
             # XXX: exception message must be in exactly this format to
@@ -824,7 +847,7 @@ class DefinedFunction(Function):
     """Base class for defined functions like ``sin``, ``cos``, ..."""
 
     @cacheit
-    def __new__(cls, *args, **options) -> Expr:  # type: ignore
+    def __new__(cls, *args, **options) -> Expr | Equation:  # type: ignore
         return cls._new_(*args, **options)
 
 
