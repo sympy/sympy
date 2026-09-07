@@ -2882,6 +2882,14 @@ def test_TensorProduct_printing():
     assert latex(TensorProduct(A, B)) == r"A \otimes B"
 
 
+def test_Einsum_printing():
+    from sympy.tensor.array.expressions import Einsum
+    A = MatrixSymbol("A", 3, 4)
+    B = MatrixSymbol("B", 4, 5)
+    assert latex(Einsum("ij,jk->ik", A, B)) == \
+        r"\operatorname{Einsum}\left(\texttt{ij,jk->ik}, A, B\right)"
+
+
 def test_ArrayTensorProduct_printing():
     from sympy.tensor.array.expressions import ArrayAdd, ArrayTensorProduct
     A = MatrixSymbol("A", 3, 4)
