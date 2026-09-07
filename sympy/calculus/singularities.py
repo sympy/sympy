@@ -129,6 +129,16 @@ def singularities(
             if i.exp.is_negative:
                 # XXX: exponent of varying sign not handled
                 sings += solveset(i.base, symbol, domain)
+            elif i.exp.is_negative is None and i.exp.has(symbol):
+            #handles when the exponent is negetive conditionally for real domain
+            # (x+1)**(-x) in this case the exponent becomes negative for x > 0
+            # so the singularity will be the intersection of the sets which make the base zero and the exponent negative.
+                zeros = solveset(i.base,symbol,domain)
+                if domain is S.Complexes:
+                    neg_region = S.EmptySet
+                else:
+                    neg_region = solveset(i.exp < 0, symbol, domain)
+                sings = sings.union(zeros.intersect(neg_region))
         for i in expression.atoms(log, asech, acsch):
             sings += solveset(i.args[0], symbol, domain)
         for i in expression.atoms(atanh, acoth):
