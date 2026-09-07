@@ -16,7 +16,7 @@ import os
 import subprocess
 from datetime import datetime
 
-from intersphinx_registry import get_intersphinx_mapping
+#from intersphinx_registry import get_intersphinx_mapping
 
 
 # Make sure we import sympy from git
@@ -458,9 +458,11 @@ texinfo_documents = [
 graphviz_output_format = 'svg'
 
 # Enable links to other packages
-intersphinx_mapping = get_intersphinx_mapping(
-    packages={"matplotlib", "mpmath", "scipy", "numpy"},
-)
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None),
+"numpy": ("https://numpy.org/doc/stable/", None),
+"scipy": ("https://docs.scipy.org/doc/scipy/", None),
+"matplotlib": ("https://matplotlib.org/stable/", None),
+"mpmath": ("https://mpmath.org/doc/current/", None) ,}
 # Require :external: to reference intersphinx. Prevents accidentally linking
 # to something from matplotlib.
 intersphinx_disabled_reftypes = ['*']
