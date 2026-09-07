@@ -1,16 +1,18 @@
 from __future__ import annotations
+
 from .cartan_type import Standard_Cartan
-from sympy.core.backend import eye
+from sympy.core.backend import eye, Matrix
+
 
 class TypeC(Standard_Cartan):
 
-    def __new__(cls, n):
+    def __new__(cls, n: int):
         if n < 3:
             raise ValueError("n cannot be less than 3")
         return Standard_Cartan.__new__(cls, "C", n)
 
 
-    def dimension(self):
+    def dimension(self) -> int:
         """Dimension of the vector space V underlying the Lie algebra
 
         Examples
@@ -24,7 +26,7 @@ class TypeC(Standard_Cartan):
         n = self.n
         return n
 
-    def basic_root(self, i, j):
+    def basic_root(self, i: int, j: int) -> list[int]:
         """Generate roots with 1 in ith position and a -1 in jth position
         """
         n = self.n
@@ -33,7 +35,7 @@ class TypeC(Standard_Cartan):
         root[j] = -1
         return root
 
-    def simple_root(self, i):
+    def simple_root(self, i: int) -> list[int]:
         """The ith simple root for the C series
 
         Every lie algebra has a unique root system.
@@ -70,7 +72,7 @@ class TypeC(Standard_Cartan):
             return root
 
 
-    def positive_roots(self):
+    def positive_roots(self) -> dict[int, list[int]]:
         """Generates all the positive roots of A_n
 
         This is half of all of the roots of C_n; by multiplying all the
@@ -107,7 +109,7 @@ class TypeC(Standard_Cartan):
 
         return posroots
 
-    def roots(self):
+    def roots(self) -> int:
         """
         Returns the total number of roots for C_n"
         """
@@ -115,7 +117,7 @@ class TypeC(Standard_Cartan):
         n = self.n
         return 2*(n**2)
 
-    def cartan_matrix(self):
+    def cartan_matrix(self) -> Matrix:
         """The Cartan matrix for C_n
 
         The Cartan matrix matrix for a Lie algebra is
@@ -147,7 +149,7 @@ class TypeC(Standard_Cartan):
         return m
 
 
-    def basis(self):
+    def basis(self) -> int:
         """
         Returns the number of independent generators of C_n
         """
@@ -155,7 +157,7 @@ class TypeC(Standard_Cartan):
         n = self.n
         return n*(2*n + 1)
 
-    def lie_algebra(self):
+    def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with C_n"
         """
@@ -163,7 +165,7 @@ class TypeC(Standard_Cartan):
         n = self.n
         return "sp(" + str(2*n) + ")"
 
-    def dynkin_diagram(self):
+    def dynkin_diagram(self) -> str:
         n = self.n
         diag = "---".join("0" for i in range(1, n)) + "=<=0\n"
         diag += "   ".join(str(i) for i in range(1, n+1))
