@@ -297,10 +297,10 @@ class FracField(DefaultPrinting, Generic[Er]):
                 return 1/mapping.get(1/expr)
 
             try:
-                return domain.convert(expr)
+                return self.ground_new(domain.convert(expr))
             except CoercionFailed:
                 if not domain.is_Field and domain.has_assoc_Field:
-                    return domain.get_field().convert(expr)
+                    return self.ground_new(domain.get_field().convert(expr))
                 else:
                     raise
 
