@@ -1506,8 +1506,13 @@ def _rewrite_single(f, x, recursive=True):
             if subs:
                 subs_ = {}
                 for fro, to in subs.items():
-                    subs_[fro] = unpolarify(polarify(to, lift=True),
-                                            exponents_only=True)
+                    if to.is_Pow and to.exp.is_Integer and not to.is_polar:
+                        # A matched coefficient is an ordinary value: lifting
+                        # y**2 as polar_lift(y)**2 adds a turn when y is negative.
+                        subs_[fro] = polar_lift(to)
+                    else:
+                        subs_[fro] = unpolarify(polarify(to, lift=True),
+                                                exponents_only=True)
                 subs = subs_
                 if not isinstance(hint, bool):
                     hint = hint.subs(subs)
@@ -1737,7 +1742,14 @@ def _meijerint_indefinite_1(f, x):
 
         # now substitute back
         # Note: we really do want the powers of x to combine.
-        res += powdenest(fac_*r, polar=True)
+        expr = fac_*r
+        # Denesting must not reinterpret the inside of a principal lift as
+        # polar: that would undo the whole-coefficient lifting in the lookup.
+        lifts = {p: Dummy('lift', polar=True) for p in expr.atoms(polar_lift)
+                 if not p.has(x) and p.args[0].is_Pow
+                 and p.args[0].exp.is_Integer}
+        res += powdenest(expr.xreplace(lifts), polar=True).xreplace(
+            {v: k for k, v in lifts.items()})
 
     def _clean(res):
         """This multiplies out superfluous powers of x we created, and chops off
