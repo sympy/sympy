@@ -1,6 +1,5 @@
 import sympy.physics.mechanics as _me
 import sympy as _sm
-import math as m
 import numpy as _np
 
 g, lb, w, h = _sm.symbols('g lb w h', real=True)
