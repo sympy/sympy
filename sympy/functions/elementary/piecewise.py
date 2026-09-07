@@ -1082,6 +1082,12 @@ def piecewise_fold(expr, evaluate=True):
                 args.extend(pc[c])
         else:
             args = expr.args
+
+        if expr.func.__name__ == "Sum":
+            evaluated = expr.doit(deep=False)
+            if evaluated != expr:
+                return evaluated
+
         # fold
         folded = list(map(piecewise_fold, args))
         for ec in product(*[
