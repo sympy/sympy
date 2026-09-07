@@ -1987,6 +1987,10 @@ def test_equals():
     S(13)/6)/2 - S.One/4)**2 - Rational(1, 3))
     assert z.equals(0)
 
+    # issue 29159
+    T = Function('T')
+    assert T(n*log(n)).equals(T(n)) is None
+
 
 def test_random():
     from sympy.functions.combinatorial.numbers import lucas
