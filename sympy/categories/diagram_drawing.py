@@ -79,7 +79,8 @@ therefore attempt to lay the objects out along a line.
 References
 ==========
 
-.. [Xypic] https://xy-pic.sourceforge.net/
+[Xypic] https://web.archive.org/web/20190201000000/http://xy-pic.sourceforge.net/
+
 
 """
 from __future__ import annotations
@@ -1446,7 +1447,8 @@ class ArrowStringDescription:
     References
     ==========
 
-    .. [Xypic] https://xy-pic.sourceforge.net/
+    .. [Xypic] https://web.archive.org/web/20190201000000/http://xy-pic.sourceforge.net/
+
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,
