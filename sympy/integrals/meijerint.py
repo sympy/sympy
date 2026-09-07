@@ -2015,6 +2015,13 @@ def _meijerint_definite_3(f, x):
 
 
 def _my_unpolarify(f):
+    # Whole integer-power coefficients are lifted only to keep polar
+    # denesting from exposing their bases. Once that simplification is over,
+    # project the lift while retaining the grouped ordinary power.
+    if not isinstance(f, bool):
+        lifts = {p: p.args[0] for p in f.atoms(polar_lift)
+                 if p.args[0].is_Pow and p.args[0].exp.is_Integer}
+        f = f.xreplace(lifts)
     return _eval_cond(unpolarify(f))
 
 
