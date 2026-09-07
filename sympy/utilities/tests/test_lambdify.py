@@ -2331,3 +2331,29 @@ def test_issue_28803_jointrandonsymbol_recursion():
 
     # Should not raise RecursionError
     lambdify(a, z * a)
+
+
+def test_dummify_smart():
+    from sympy import symbols, sin, Dummy
+    from sympy.utilities.lambdify import lambdify
+    import inspect
+
+    x = symbols('x')
+    d = Dummy()
+
+    # Case 1: safe identifier - should NOT be dummified
+    f = lambdify(x, sin(x), dummify=False)
+    src = inspect.getsource(f)
+    assert 'Dummy' not in src
+    assert '(x)' in src          # readable name preserved
+
+    # Case 2: explicit dummify=True - should dummify everything
+    f2 = lambdify(x, sin(x), dummify=True)
+    src2 = inspect.getsource(f2)
+    assert 'Dummy' in src2
+
+    # Case 3: mix of Dummy + safe symbol
+    # safe symbol 'x' should stay as 'x', not get dummified
+    f3 = lambdify([x, d], x + d, dummify=False)
+    src3 = inspect.getsource(f3)
+    assert '(x,' in src3         # x stays readable
