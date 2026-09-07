@@ -1071,9 +1071,10 @@ def test_issue_26525_polarify_z():
 
     g = meijerg(((1, x + 2), ()), ((x + S(1)/2,), (0,)), -I*z)
     h = hyperexpand(g)
-    assert h.replace(exp_polar, exp) == \
-           -2*sqrt(pi)*z**(x + S.Half)*exp(-I*pi*(x + S.Half)/2)*gamma(x + S.Half)*hyper(
-               (-S.Half, x + S.Half), (x + S(3)/2,), I*z)/gamma(x + S(3)/2)
+    assert h == \
+           -2*sqrt(pi)*(-I*z)**(x + S.Half)*gamma(x + S.Half)*hyper(
+               (-S.Half, x + S.Half), (x + S(3)/2,),
+               -I*z*exp_polar(I*pi))/gamma(x + S(3)/2)
     for i in [g, h]:
         assert CC.almosteq(i.subs({x: 0, z: 1}).evalf(),
                            -4.32257296433943 + 5.92192068901469*I, 1e-12)
@@ -1133,6 +1134,16 @@ def test_issue_24374():
     x = symbols("x", positive=True)
     g = meijerg(((), ()), ((S.Half,), (0,)), x**2/4)
     assert hyperexpand(g) == sin(x)/sqrt(pi)
+
+
+def test_hyperexpand_negated_unrestricted_symbol():
+    x = symbols("x")
+    g = meijerg(((-S.Half,), (0, 0, S.Half, 1)),
+                ((-S.Half, 0, 0), ()), -x)
+    h = hyperexpand(g)
+
+    for value in (-2, 2):
+        assert abs(h.subs(x, value).evalf() - g.subs(x, value).evalf()) < 1e-12
 
 
 def test_meijerg_composite_argument_branches():

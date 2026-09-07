@@ -2503,14 +2503,9 @@ def hyperexpand(f, allow_hyper=False, rewrite='default', place=None):
             return r
 
     def do_meijer(ap, bq, z):
-        numeric, symbolic = [], []
-        for factor in Mul.make_args(z):
-            (numeric if factor.is_number else symbolic).append(factor)
-        # Lift the complete numeric coefficient: lifting -1 and I separately
-        # would give -I an extra turn around the origin.
-        zp = Mul(*symbolic)
-        if numeric:
-            zp *= polarify(Mul(*numeric), lift=True)
+        # A fully numeric argument has a known principal phase.  Do not split
+        # an ordinary symbolic product: its phase can change on substitution.
+        zp = polarify(z, lift=True) if z.is_number else z
         r = _meijergexpand(G_Function(ap[0], ap[1], bq[0], bq[1]), zp,
                           allow_hyper, rewrite=rewrite, place=place)
         if not r.has(nan, zoo, oo, -oo):
