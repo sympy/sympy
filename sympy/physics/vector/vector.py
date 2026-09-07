@@ -124,7 +124,7 @@ class Vector(Printable, EvalfMixin):
     def __eq__(self, other):
         """Tests for equality.
 
-        It is very import to note that this is only as good as the SymPy
+        It is very important to note that this is only as good as the SymPy
         equality test; False does not always mean they are not equivalent
         Vectors.
         If other is 0, and self is empty, returns True.
@@ -790,6 +790,48 @@ class Vector(Printable, EvalfMixin):
             mat = mat.xreplace(rule)
             new_args.append([mat, frame])
         return Vector(new_args)
+
+    def equals(self, other):
+        """Tests for symbolic equality.
+
+        It is very important to note that this is only as good as the SymPy
+        equality test; False does not always mean they are not equivalent
+        Vectors.
+        Non-Vector objects compare false.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
+        >>> c = symbols('c')
+        >>> N = ReferenceFrame('N')
+        >>> (N.x * (c + 1)**2).equals(N.x * (c**2 + 2 * c + 1))
+        True
+        >>> (N.x - N.x).equals(Vector(0))
+        True
+
+        """
+        if not isinstance(other, Vector):
+            return False
+
+        if (self.args == []) and (other.args == []):
+            return True
+
+        if (self.args == []):
+            frame = other.args[0][1]
+        else:
+            frame = self.args[0][1]
+
+        diff = self - other
+        # Wrap in try-except so that if frames aren't connected, False is returned
+        try:
+            for v in frame:
+                if not diff.dot(v).equals(0):
+                    return False
+        except ValueError: # Frames disconnected
+            return False
+        return True
 
 
 class VectorTypeError(TypeError):
