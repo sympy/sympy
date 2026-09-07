@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload
 
-from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
+from sympy.core import S, Add, Expr, Basic, Mul, Pow
 from sympy.core.logic import fuzzy_not
 
 from sympy.assumptions import ask, Q  # type: ignore
@@ -151,15 +151,31 @@ def refine_Pow(expr, assumptions):
         if ask(Q.real(expr.base.args[0]), assumptions) and \
                 ask(Q.even(expr.exp), assumptions):
             return expr.base.args[0] ** expr.exp
+
+    if isinstance(expr.base, Pow):
+        #we simplify (z1**z2)**z3 depending on the assumptions on z1, z2, and z3.
+        # (i)   z3 is an integer            =>  z1**(z2*z3)
+        # (ii)  z1 > 0 and z2 is real       =>  z1**(z2*z3)
+        # (iii) z1 is real and z2 is an
+        #       even integer                =>  In this case, z1**z2 = |z1|**z2.
+        #So then (z1**z2)**z3 = (|z1|**z2)**z3 = |z1|**(z2*z3), where the last equality follows from case (ii).
+        inner_base, inner_exp = expr.base.base, expr.base.exp
+        outer_exp = expr.exp
+        if ask(Q.integer(outer_exp), assumptions):
+            return inner_base ** (inner_exp * outer_exp)
+        if ask(Q.positive(inner_base), assumptions) and \
+                ask(Q.real(inner_exp), assumptions):
+            return inner_base ** (inner_exp * outer_exp)
+        if ask(Q.real(inner_base), assumptions) and \
+                ask(Q.even(inner_exp), assumptions):
+            return Abs(inner_base) ** (inner_exp * outer_exp)
+
     if ask(Q.real(expr.base), assumptions):
         if expr.base.is_number:
             if ask(Q.even(expr.exp), assumptions):
                 return abs(expr.base) ** expr.exp
             if ask(Q.odd(expr.exp), assumptions):
                 return sign(expr.base) * abs(expr.base) ** expr.exp
-        if isinstance(expr.exp, Rational):
-            if isinstance(expr.base, Pow):
-                return abs(expr.base.base) ** (expr.base.exp * expr.exp)
 
         if expr.base is S.NegativeOne:
             if expr.exp.is_Add:
