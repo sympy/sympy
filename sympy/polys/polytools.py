@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload, Literal, Any, cast, Callable
+from typing import TYPE_CHECKING, overload, Literal, Any, cast, Callable, Sequence
 
 from functools import wraps, reduce
 from operator import mul
@@ -6996,7 +6996,22 @@ def factor_list(f, *gens, **args):
 
 
 @public
-def factor(f, *gens, deep=False, **args):
+def factor(
+    f: Expr,
+    *args: Expr | Sequence[Expr] | set[Expr],
+    deep: bool = False,
+    fraction: bool = True,
+    expand: bool = True,
+    extension: Expr | bool | Sequence[Expr] | None = None,
+    modulus: int | None = None,
+    gaussian: bool | None = None,
+    symmetric: bool | None = None,
+    domain: Domain | str | None = None,
+    split: bool | None = None,
+    polys: bool | None = None,
+    gens: Expr | Sequence[Expr] | set[Expr]= (),
+    
+):
     """
     Compute the factorization of expression, ``f``, into irreducibles. (To
     factor an integer into primes, use ``factorint``.)
@@ -7014,6 +7029,75 @@ def factor(f, *gens, deep=False, **args):
     over other domain, e.g. an algebraic or finite field, use appropriate
     options: ``extension``, ``modulus`` or ``domain``.
 
+    Parameters
+    ==========
+
+    f : Expr | Poly
+        Expression to be factored.
+
+    args : Expr or sequence of Expr
+        Optional generators. When omitted, symbolic factorization is used for
+        non-``Poly`` input. Supplying generators forces formal polynomial
+        factorization with respect to those generators.
+
+    deep : bool, optional
+        If ``True``, recursively factor subexpressions. If ``False`` (default),
+        factorization is applied to the top-level expression structure.
+
+    fraction : bool, optional
+        Controls whether rational expressions are combined before factoring.
+        Default is ``True``.
+
+    expand : bool, optional
+        Passed to polynomial conversion options. If ``False``, automatic
+        expansion prior to formal polynomial factoring is disabled. Default is
+        ``True``.
+
+    extension : Expr, sequence[Expr], bool, optional
+        Request factorization over an algebraic extension field.
+
+        - ``extension=<alpha>`` (or a sequence) adjoins the given algebraic
+          element(s).
+        - ``extension=True`` asks SymPy to infer a suitable algebraic
+          extension when possible.
+        - ``extension=None`` (default) leaves algebraic extension handling
+          disabled.
+
+    modulus : int, optional
+        If given, factor over the finite field GF(``modulus``).
+        If ``None`` (default), no finite-field modulus is used.
+
+    gaussian : bool, optional
+        If ``True``, factor over Gaussian rationals (equivalent to using a
+        domain containing ``I``).
+        If ``None`` (default), this option is not applied (equivalent to the
+        usual ``gaussian=False`` behavior).
+
+    symmetric : bool, optional
+        Controls symmetric representation for finite-field coefficients when
+        ``modulus`` is used.
+        If ``None`` (default), no explicit choice is made; when ``modulus`` is
+        set, the finite-field default ``symmetric=True`` is used.
+
+    domain : Domain | str, optional
+        Explicitly set the polynomial ground domain.
+        If ``None`` (default), the domain is inferred by SymPy's polynomial
+        options machinery (typically rational-domain behavior unless other
+        options force a different domain).
+
+    split : bool, optional
+        If ``True``, currently raises ``NotImplementedError``.
+        If ``None`` (default), this option is omitted.
+
+    polys : bool, optional
+        Accepted for backward compatibility only. This is a flag option that
+        is not allowed in ``factor`` and will raise ``FlagError`` when passed.
+        The default ``None`` means this compatibility flag is omitted.
+
+    gens : Expr or sequence of Expr
+        Optional generators. The same as args but this is for backward compatibility
+        allowing it to be used as a named keyword argument still.
+        
     Examples
     ========
 
@@ -7063,30 +7147,92 @@ def factor(f, *gens, deep=False, **args):
     sympy.ntheory.factor_.factorint
 
     """
+    # Backward compatibility: historically ``factor`` accepted ``gens`` as a
+    # keyword argument in addition to positional generators.
+    flat_args: list[Expr] = []
+    for arg in args:
+        if isinstance(arg, (Sequence, set)) and not isinstance(arg, str):
+            flat_args.extend(arg)
+        elif isinstance(arg, Expr):
+            flat_args.append(arg)
+        else:
+            raise TypeError(f"Generators cannot be {type(arg)}")
+            
+    if isinstance(gens, (Sequence, set)) and not isinstance(gens, str):
+        flat_args.extend(gens)
+    elif isinstance(gens, Expr):
+        flat_args.append(gens)
+    else:
+        raise TypeError(f"Generators cannot be {type(gens)}")
+
+    kwargs: dict[str, object] = {'expand': expand}
+    kwargs['fraction'] = fraction
+
+    # Only pass options that were explicitly provided so exclusions/defaults
+    # from poly options are preserved.
+    if extension is not None:
+        kwargs['extension'] = extension
+    if modulus is not None:
+        kwargs['modulus'] = modulus
+    if gaussian is not None:
+        kwargs['gaussian'] = gaussian
+    if symmetric is not None:
+        kwargs['symmetric'] = symmetric
+    if domain is not None:
+        kwargs['domain'] = domain
+    if split is not None:
+        kwargs['split'] = split
+    if polys is not None:
+        kwargs['polys'] = polys
+
     f = sympify(f)
     if deep:
         def _try_factor(expr):
             """
             Factor, but avoid changing the expression when unable to.
             """
-            fac = factor(expr, *gens, **args)
+            fac = factor(
+                expr,
+                *flat_args,
+                fraction=fraction,
+                expand=expand,
+                extension=extension,
+                modulus=modulus,
+                gaussian=gaussian,
+                symmetric=symmetric,
+                domain=domain,
+                split=split,
+                polys=polys,
+            )
             if fac.is_Mul or fac.is_Pow:
                 return fac
             return expr
 
-        f = bottom_up(f, _try_factor)
+        f_bot = cast(Basic, bottom_up(f, _try_factor))
         # clean up any subexpressions that may have been expanded
         # while factoring out a larger expression
         partials = {}
-        muladd = f.atoms(Mul, Add)
+        muladd = f_bot.atoms(Mul, Add)
         for p in muladd:
-            fac = factor(p, *gens, **args)
+            fac = factor(
+                p,
+                *flat_args,
+                fraction=fraction,
+                expand=expand,
+                extension=extension,
+                modulus=modulus,
+                gaussian=gaussian,
+                symmetric=symmetric,
+                domain=domain,
+                split=split,
+                polys=polys,
+            )
             if (fac.is_Mul or fac.is_Pow) and fac != p:
                 partials[p] = fac
-        return f.xreplace(partials)
+        return f_bot.xreplace(partials)
 
     try:
-        return _generic_factor(f, gens, args, method='factor')
+        return _generic_factor(f, flat_args, kwargs, method='factor')
     except PolynomialError:
         if not f.is_commutative:
             return factor_nc(f)
