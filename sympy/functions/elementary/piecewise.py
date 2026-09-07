@@ -224,9 +224,24 @@ class Piecewise(DefinedFunction):
         return piecewise_simplify(self, **kwargs)
 
     def _eval_as_leading_term(self, x, logx, cdir):
+        from sympy.core.numbers import Rational
+        if cdir == S.Zero or cdir == 0:
+            test_point = S.Zero
+        elif cdir > 0:
+            test_point = Rational(1, 10000)
+        else:
+            test_point = Rational(-1, 10000)
+
         for e, c in self.args:
-            if c == True or c.subs(x, 0) == True:
-                return e.as_leading_term(x)
+            if c == True:
+                return e.as_leading_term(x, logx=logx, cdir=cdir)
+            try:
+                if c.subs(x, test_point) == True:
+                    return e.as_leading_term(x, logx=logx, cdir=cdir)
+            except TypeError:
+                continue
+
+        return self.args[-1].expr.as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])
