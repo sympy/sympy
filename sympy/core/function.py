@@ -1401,6 +1401,11 @@ class Derivative(Expr):
             # expression at all. Note, this cannot check non-symbols like
             # Derivatives as those can be created by intermediate
             # derivatives.
+
+            # NaN propagates through differentiation
+            if expr.has(S.NaN):
+                return S.NaN
+
             zero = False
             free = expr.free_symbols
             from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
@@ -1428,6 +1433,7 @@ class Derivative(Expr):
                     else:
                         if not free & vfree:
                             # e.g. v is IndexedBase or Matrix
+
                             zero = True
                             break
             if zero:
