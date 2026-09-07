@@ -794,3 +794,8 @@ class FCodePrinter(CodePrinter):
             symbol=self._print(elem.name),
             idxs=', '.join((self._print(arg) for arg in elem.indices))
         )
+    def _print_Dgesv(self, expr):
+        return 'call dgesv(n, nrhs, {}, n, ipiv, {}, n)'.format(
+            self._print(expr.matrix),
+            self._print(expr.vector)
+        )
