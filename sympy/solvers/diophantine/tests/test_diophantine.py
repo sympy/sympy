@@ -979,6 +979,11 @@ def test_issue_9538():
     raises(TypeError, lambda: diophantine(eq, syms={y, x}))
 
 
+def test_issue_29269():
+    raises(ValueError, lambda: diophantine(x + y + z - 3, syms=[x, y]))
+    raises(ValueError, lambda: diophantine(x + y + z - 3, syms=[y, x]))
+
+
 def test_ternary_quadratic():
     # solution with 3 parameters
     s = diophantine(2*x**2 + y**2 - 2*z**2)
