@@ -533,6 +533,34 @@ def refine_sin_cos(expr, assumptions):
         refined_pow = refine_Pow(pow_expr, assumptions)
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
 
+def refine_log(expr, assumptions):
+    """
+    Handler for the log function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_log
+    >>> from sympy import Q, log, exp
+    >>> from sympy.abc import x
+    >>> refine_log(log(exp(x)), Q.real(x))
+    x
+    >>> refine_log(log(1), True)
+    0
+    """
+    from sympy.functions.elementary.exponential import exp
+    arg = expr.args[0]
+
+    if isinstance(arg, exp):
+        inner = arg.args[0]
+        if ask(Q.real(inner), assumptions):
+            return inner
+
+    if arg == S.One:
+        return S.Zero
+
+    return None
+
 
 def refine_Heaviside(expr, assumptions):
     """
@@ -604,6 +632,7 @@ def refine_floor_ceiling(expr, assumptions):
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
+    'log': refine_log,
     'Pow': refine_Pow,
     'atan2': refine_atan2,
     're': refine_re,
