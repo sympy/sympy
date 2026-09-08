@@ -1146,7 +1146,7 @@ def unbranched_argument(ar):
     periodic_argument
     '''
     from sympy.functions.elementary.exponential import exp_polar, log
-    if isinstance(ar , principal_branch):
+    if isinstance(ar, principal_branch):
         return periodic_argument(*ar.args)
     if ar.is_Mul:
         args = ar.args
@@ -1160,12 +1160,12 @@ def unbranched_argument(ar):
             unbranched += a.exp.as_real_imag()[1]
         elif a.is_Pow:
             re, im = a.exp.as_real_imag()
-            unbranched += re*unbranched_argument(
-                a.base) + im*log(abs(a.base))
+            base_unbranched = unbranched_argument(a.base)
+            unbranched += re*base_unbranched + im*log(abs(a.base))
         elif isinstance(a, polar_lift):
             unbranched += arg(a.args[0])
         else:
-            return None
+            return periodic_argument(ar, oo , evaluate=False)
     return unbranched
 
 class periodic_argument(DefinedFunction):
