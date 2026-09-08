@@ -139,6 +139,11 @@ def _create_lookup_table(table):
         # existing callers changes many established conditional answers.
         if not (constant.is_number and coefficient.is_number):
             return True
+        # A zero term makes this a monomial or a constant, so there are not
+        # two rays whose relative phases need to be checked. Also, arg(0) is
+        # NaN and cannot be used in the comparison below.
+        if constant.is_zero or coefficient.is_zero:
+            return True
         # Positive multiples of b and p stay within one sector of width < pi.
         # Otherwise the sum can cross its principal cut while the G-function
         # continues on the sheet selected near zero.
