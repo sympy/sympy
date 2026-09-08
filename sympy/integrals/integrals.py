@@ -33,6 +33,42 @@ from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
 
 
+def _fix_branch_cuts(expr, x, conds):
+    if not conds or expr is None:
+        return expr
+    from sympy.core.power import Pow
+    from sympy.functions.elementary.exponential import exp
+    from sympy.core.numbers import I
+    from sympy import Wild, Piecewise, pi
+
+    aw = Wild('aw', exclude=[x])
+    bw = Wild('bw', exclude=[x])
+
+    corrections = []
+    for p in expr.atoms(Pow):
+        base, e_ = p.as_base_exp()
+        if e_.is_integer or not base.has(x):
+            continue
+        M = base.match(aw*x + bw)
+        if M is None or M[aw] == 0:
+            continue
+        coeff_x, const = M[aw], M[bw]
+        if coeff_x.is_extended_real is False or const.is_extended_real is False:
+            continue
+        cond = base < 0
+        phase = exp(-2*pi*I*e_)
+        corrections.append((p, cond, phase))
+
+    if not corrections:
+        return expr
+
+    result = expr
+    for p, cond, phase in corrections:
+        result = result.subs(p, Piecewise((p*phase, cond), (p, True)))
+    return result
+
+
+
 if TYPE_CHECKING:
     from sympy.core.containers import Tuple
     SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
@@ -416,6 +452,7 @@ class Integral(AddWithLimits):
         risch = hints.get('risch', None)
         heurisch = hints.get('heurisch', None)
         manual = hints.get('manual', None)
+        fix_branch_cuts = hints.get('fix_branch_cuts', False)
         if len(list(filter(None, (manual, meijerg, risch, heurisch)))) > 1:
             raise ValueError("At most one of manual, meijerg, risch, heurisch can be True")
         elif manual:
@@ -427,7 +464,7 @@ class Integral(AddWithLimits):
         elif heurisch:
             manual = meijerg = risch = False
         eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual, "heurisch": heurisch,
-            "conds": conds}
+            "conds": conds, "fix_branch_cuts": fix_branch_cuts}
 
         if conds not in ('separate', 'piecewise', 'none'):
             raise ValueError('conds must be one of "separate", "piecewise", '
@@ -827,7 +864,7 @@ class Integral(AddWithLimits):
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
-                       heurisch=None, conds='piecewise',final=None):
+                       heurisch=None, conds='piecewise', final=None, fix_branch_cuts=False):
         """
         Calculate the anti-derivative to the function f(x).
 
@@ -936,7 +973,7 @@ class Integral(AddWithLimits):
                 pass
 
         eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual,
-            "heurisch": heurisch, "conds": conds}
+            "heurisch": heurisch, "conds": conds, "fix_branch_cuts": fix_branch_cuts}
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
@@ -1058,12 +1095,16 @@ class Integral(AddWithLimits):
                 # g(x) = Mul(trig)
                 h = trigintegrate(g, x, conds=conds)
                 if h is not None:
+                    if fix_branch_cuts:
+                        h = _fix_branch_cuts(h, x, fix_branch_cuts)
                     parts.append(coeff * h)
                     continue
 
                 # g(x) has at least a DiracDelta term
                 h = deltaintegrate(g, x)
                 if h is not None:
+                    if fix_branch_cuts:
+                        h = _fix_branch_cuts(h, x, fix_branch_cuts)
                     parts.append(coeff * h)
                     continue
 
@@ -1071,6 +1112,8 @@ class Integral(AddWithLimits):
                 # g(x) has at least a Singularity Function term
                 h = singularityintegrate(g, x)
                 if h is not None:
+                    if fix_branch_cuts:
+                        h = _fix_branch_cuts(h, x, fix_branch_cuts)
                     parts.append(coeff * h)
                     continue
 
@@ -1112,6 +1155,8 @@ class Integral(AddWithLimits):
                 except NotImplementedError:
                     _debug('NotImplementedError from meijerint_definite')
                 if h is not None:
+                    if fix_branch_cuts:
+                        h = _fix_branch_cuts(h, x, fix_branch_cuts)
                     parts.append(coeff * h)
                     continue
 
@@ -1567,13 +1612,15 @@ def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
     Integral, Integral.doit
 
     """
+    fix_branch_cuts = kwargs.pop('fix_branch_cuts', False)
     doit_flags = {
         'deep': False,
         'meijerg': meijerg,
         'conds': conds,
         'risch': risch,
         'heurisch': heurisch,
-        'manual': manual
+        'manual': manual,
+        'fix_branch_cuts': fix_branch_cuts
         }
 
     integral = Integral(function, *symbols, **kwargs)
