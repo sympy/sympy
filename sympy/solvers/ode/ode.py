@@ -2370,10 +2370,10 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) + f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
-              / 4    2    \        /     2\
-              |x    x     |        |    x |    / 6\
-    f(x) = C2*|-- - -- + 1| + C1*x*|1 - --| + O\x /
-              \24   2     /        \    6 /
+              / 4    2    \        / 4     2    \
+              |x    x     |        |x     x     |    / 6\
+    f(x) = C2*|-- - -- + 1| + C1*x*|--- - -- + 1| + O\x /
+              \24   2     /        \120   6     /
 
 
     References
@@ -2434,23 +2434,29 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
                     seriesdict[term] = S.Zero
 
     # Stripping of terms so that the sum starts with the same number.
-    teq = S.Zero
     suminit = seriesdict.values()
     rkeys = seriesdict.keys()
     req = Add(*rkeys)
+    # The recurrence relation in req only holds from n = maxval onwards. Every
+    # smaller n gives an equation of its own, made up of the terms whose
+    # summation has already started; each one pins down a coefficient of a
+    # different power of (x - x0), so they have to be collected and solved
+    # separately rather than added together.
+    teqs = []
     if any(suminit):
         maxval = max(suminit)
-        for term in seriesdict:
-            val = seriesdict[term]
-            if val != maxval:
-                for i in range(val, maxval):
-                    teq += term.subs(n, val)
+        for i in range(min(suminit), maxval):
+            teqs.append(Add(*[term.subs(n, i)
+                for term, val in seriesdict.items() if val <= i]))
 
     finaldict = {}
-    if teq:
+    for teq in teqs:
+        teq = teq.subs(finaldict)
         fargs = teq.atoms(AppliedUndef)
+        if not fargs:
+            continue
         if len(fargs) == 1:
-            finaldict[fargs.pop()] = 0
+            finaldict[fargs.pop()] = S.Zero
         else:
             maxf = max(fargs, key = lambda x: x.args[0])
             sol = solve(teq, maxf)
@@ -2471,10 +2477,17 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     if isinstance(rhs, list):
         rhs = rhs[0]
 
-    # Checking how many values are already present
-    tcounter = len([t for t in finaldict.values() if t])
-
-    for _ in range(tcounter, terms - 3):  # Assuming c0 and c1 to be arbitrary
+    # Each pass of the loop below determines one coefficient, the first being
+    # the one of (x - x0)**(startiter + shift). A series that is accurate to
+    # O((x - x0)**terms) needs every coefficient up to that of
+    # (x - x0)**(terms - 1), so that is where the iteration has to stop. The
+    # coefficients already in finaldict were stripped off the beginning of the
+    # sum and sit below startiter + shift, so they do not enter the count.
+    if maxf.args[0].is_Symbol:
+        shift = S.Zero
+    else:
+        shift = maxf.args[0].as_independent(n)[0]
+    for _ in range(terms - startiter - shift):
         check = rhs.subs(n, startiter)
         nlhs = lhs.subs(n, startiter)
         nrhs = check.subs(finaldict)
@@ -2486,6 +2499,11 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     for term in finaldict:
         if finaldict[term]:
             fact = term.args[0]
+            # anything from (x - x0)**terms on is covered by the Order term
+            # added below; collect() would otherwise hide it inside a factor
+            # where Add cannot absorb it
+            if fact >= terms:
+                continue
             series += (finaldict[term].subs([(recurr(0), C0), (recurr(1), C1)])*(
                 x - x0)**fact)
     series = collect(expand_mul(series), [C0, C1]) + Order(x**terms)
