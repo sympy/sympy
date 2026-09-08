@@ -24,7 +24,8 @@ from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import (Max, sqrt)
 from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
 from sympy.integrals.integrals import (Integral, integrate)
-from sympy.polys.polytools import factor
+from sympy.polys.polytools import Poly, factor
+from sympy.polys.polyroots import roots
 from sympy.polys.rootoftools import CRootOf
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.printing import srepr
@@ -748,3 +749,35 @@ def test_issue_28280():
     assert x > 20
     y = 20 + log(1 + S(10)**-9)
     assert y > 20
+
+
+def test_evalf_pow_branch_cut_noise():
+    # A non-integer power has a branch cut along the negative real axis, so
+    # the sign of a vanishing imaginary part of the base decides which side
+    # of the cut the result lands on. Here the radicand is exactly a negative
+    # real number, but it is built from cube roots of a complex number so its
+    # imaginary part only cancels to rounding noise. The sign of that noise
+    # must not be allowed to pick the branch, otherwise the value of the
+    # square root -- and hence of the whole expression -- flips with the
+    # working precision.
+    x = Symbol('x')
+    p = 5*x**4 + 3*x + 2
+    rts = list(roots(Poly(p, x)))
+    assert len(rts) == 4
+
+    precs = (15, 25, 30, 40, 50, 60, 80, 100)
+    values = []
+    for r in rts:
+        vs = [complex(r.evalf(n)) for n in precs]
+        # the value must not depend on the requested precision ...
+        for v in vs[1:]:
+            assert abs(v - vs[0]) < 1e-12
+        # ... and it must actually be a root of p
+        for n in precs:
+            assert abs(complex(p.subs(x, r).evalf(n))) < 1e-12
+        values.append(vs[0])
+
+    # the four roots must stay four distinct numbers
+    for i in range(4):
+        for j in range(i + 1, 4):
+            assert abs(values[i] - values[j]) > 1e-9

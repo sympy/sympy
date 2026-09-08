@@ -757,6 +757,28 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
         return re, im, acc, acc
 
 
+def _chop_insignificant_imag(result: TMP_RES) -> TMP_RES:
+    """Discard an imaginary part that carries no accurate bits.
+
+    A non-integer power has a branch cut along the negative real axis, so the
+    *sign* of a vanishing imaginary part of the base decides on which side of
+    the cut the result lands. When that imaginary part is the result of a
+    cancellation it may be pure rounding noise -- ``im_acc <= 0`` says that not
+    a single bit of it is correct -- and letting its sign pick the branch makes
+    the answer depend on the working precision.
+
+    Such an imaginary part cannot be distinguished from zero, so treat it as
+    the exact zero it may well be; the callers already implement the principal
+    branch for a base with an exactly zero imaginary part.
+    """
+    if result is S.ComplexInfinity:
+        return result
+    re, im, re_acc, im_acc = result
+    if im and isinstance(im_acc, int) and im_acc <= 0:
+        return re, None, re_acc, None
+    return result
+
+
 def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
 
     target_prec = prec
@@ -811,6 +833,10 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
                 return None, None, None, None
             return result
         raise NotImplementedError
+    # the exponent is not an integer, so the result depends on which side of
+    # the branch cut the base lies; an imaginary part that is indistinguishable
+    # from zero must not be allowed to make that call
+    result = _chop_insignificant_imag(result)
 
     # Pure square root
     if exp is S.Half:
@@ -852,7 +878,7 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
             return finalize_complex(re, im, target_prec)
         return mpf_exp(yre, target_prec), None, target_prec, None
 
-    xre, xim, _, _ = evalf(base, prec + 5, options)
+    xre, xim, _, _ = _chop_insignificant_imag(evalf(base, prec + 5, options))
     # 0**y
     if not (xre or xim):
         if yim:
