@@ -282,6 +282,22 @@ def test_latex_basic():
     assert latex(Pow(Rational(-1, 3), -1, evaluate=False)) == r'\frac{1}{- \frac{1}{3}}'
 
 
+def test_latex_underscore_symbols():
+    # Issue 14718: leading/trailing underscores must be escaped, while an
+    # underscore followed by digits must still render as a subscript.
+    assert latex(Symbol('_x')) == r"\_x"
+    assert latex(2*Symbol('_x')) == r"2 \_x"
+    assert latex(Symbol('x_')) == r"x\_"
+    assert latex(Symbol('_x_')) == r"\_x\_"
+    assert latex(Symbol('__x')) == r"\_\_x"
+    assert latex(sin(Symbol('_theta'))) == r"\sin{\left(\_theta \right)}"
+    # Subscript semantics are preserved.
+    assert latex(Symbol('x_1')) == r"x_{1}"
+    assert latex(Symbol('x_a')) == r"x_{a}"
+    # Mixed subscript plus trailing underscore keeps the correct order.
+    assert latex(Symbol('x_a_')) == r"x_{a}\_"
+
+
 def test_latex_builtins():
     assert latex(True) == r"\text{True}"
     assert latex(False) == r"\text{False}"
