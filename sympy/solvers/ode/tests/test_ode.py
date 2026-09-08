@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sympy.core.add import Add
 from sympy.core.function import (Derivative, Function, Subs, diff)
 from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Eq
@@ -771,6 +772,18 @@ def test_undetermined_coefficients_match():
         {'test': True, 'trialset': {cos(x), cos(3*x), sin(x), sin(3*x)}}
     assert _undetermined_coefficients_match(cos(x**2), x) == {'test': False}
     assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
+
+    # the trial set found for one summand must not leak into the next one:
+    # x*(x + 2) expands to an Add, and the terms collected for it used to be
+    # kept in a mutable default argument that the following summand then saw
+    eq_hom = f(x).diff(x, 2) - f(x)
+    for rhs in (x*(x + 2) + exp(-x), x*(x + 1) + exp(x),
+                (x + 1)*(x + 3) + exp(x) + exp(-x)):
+        got = _undetermined_coefficients_match(rhs, x, f(x), eq_hom)['trialset']
+        want = set().union(*[
+            _undetermined_coefficients_match(t, x, f(x), eq_hom)['trialset']
+            for t in Add.make_args(rhs)])
+        assert got == want
 
 
 def test_issue_4785_22462():
