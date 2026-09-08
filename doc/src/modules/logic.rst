@@ -192,3 +192,13 @@ sentence ``True``. If it is not satisfiable it will return ``False``.
 .. autofunction:: sympy.logic.inference::satisfiable
 
 .. TODO: write about CNF file format
+
+Modal Logic
+-----------
+
+The `sympy.logic.modal` module provides an extension to SymPy for working with modal logic, including second-order predicates, Kripke semantics, and a proof-theoretic kernel.
+
+.. toctree::
+   :maxdepth: 2
+
+   modal

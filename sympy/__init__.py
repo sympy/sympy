@@ -72,6 +72,23 @@ from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         Implies, Equivalent, ITE, POSform, SOPform, simplify_logic, bool_map,
         true, false, satisfiable)
 
+# Import second-order modal logic extension into main SymPy namespace
+from .logic.modal import (
+    Type, Universe, BoolType, FunctionType, TypedSymbol,
+    PredicateVariable, ModalPredicate, GuardedFixedPoint,
+    Box, Diamond, ProvabilityBox, AlethicBox, EpistemicBox,
+    DeonticBox, TemporalBox, ForAllPredicates, ExistsPredicates,
+    AgentBox, CommonKnowledge, Next, Until,
+    KripkeFrame, Axiom, ProofTerm, TrustedKernel, ModusPonens,
+    ProofContext, Strategy, FormalisationInterface,
+    ModalSignature, ScopeResolution, QuantifierOrder, # LLMPromptBuilder,
+    KripkeModel, SemanticEvaluator,
+    SymPyModalError, FrameViolationError, NecessitationError,
+    InvalidInferenceError, FormalisationError, NotAnAxiomError,
+    AmbiguousModalityError, ProofFailure
+)
+
+
 from .assumptions import (AppliedPredicate, Predicate, AssumptionsContext,
         assuming, Q, ask, refine)
 
@@ -289,6 +306,20 @@ __all__ = [
     'to_cnf', 'to_dnf', 'to_nnf', 'And', 'Or', 'Not', 'Xor', 'Nand', 'Nor',
     'Implies', 'Equivalent', 'ITE', 'POSform', 'SOPform', 'simplify_logic',
     'bool_map', 'true', 'false', 'satisfiable',
+
+    # sympy.logic.modal
+    'Type', 'Universe', 'BoolType', 'FunctionType', 'TypedSymbol',
+    'PredicateVariable', 'ModalPredicate', 'GuardedFixedPoint',
+    'Box', 'Diamond', 'ProvabilityBox', 'AlethicBox', 'EpistemicBox',
+    'DeonticBox', 'TemporalBox', 'ForAllPredicates', 'ExistsPredicates',
+    'AgentBox', 'CommonKnowledge', 'Next', 'Until',
+    'KripkeFrame', 'Axiom', 'ProofTerm', 'TrustedKernel', 'ModusPonens',
+    'ProofContext', 'Strategy', 'FormalisationInterface',
+    'ModalSignature', 'ScopeResolution', 'QuantifierOrder', # 'LLMPromptBuilder',
+    'KripkeModel', 'SemanticEvaluator',
+    'SymPyModalError', 'FrameViolationError', 'NecessitationError',
+    'InvalidInferenceError', 'FormalisationError', 'NotAnAxiomError',
+    'AmbiguousModalityError', 'ProofFailure',
 
     # sympy.assumptions
     'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming', 'Q',
