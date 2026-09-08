@@ -1126,6 +1126,48 @@ class polar_lift(DefinedFunction):
         return Abs(self.args[0], evaluate=True)
 
 
+def unbranched_argument(ar):
+    '''
+    Returns periodic argument of arg with period as infinity.
+
+    Examples
+    ========
+
+    >>> from sympy import exp_polar, unbranched_argument
+    >>> from sympy import I, pi
+    >>> unbranched_argument(exp_polar(15*I*pi))
+    15*pi
+    >>> unbranched_argument(exp_polar(7*I*pi))
+    7*pi
+
+    See also
+    ========
+
+    periodic_argument
+    '''
+    from sympy.functions.elementary.exponential import exp_polar, log
+    if isinstance(ar , principal_branch):
+        return periodic_argument(*ar.args)
+    if ar.is_Mul:
+        args = ar.args
+    else:
+        args = [ar]
+    unbranched = 0
+    for a in args:
+        if not a.is_polar:
+            unbranched += arg(a)
+        elif isinstance(a, exp_polar):
+            unbranched += a.exp.as_real_imag()[1]
+        elif a.is_Pow:
+            re, im = a.exp.as_real_imag()
+            unbranched += re*unbranched_argument(
+                a.base) + im*log(abs(a.base))
+        elif isinstance(a, polar_lift):
+            unbranched += arg(a.args[0])
+        else:
+            return None
+    return unbranched
+
 class periodic_argument(DefinedFunction):
     r"""
     Return the argument of a complex number modulo a given period.
@@ -1192,28 +1234,6 @@ class periodic_argument(DefinedFunction):
 
     """
 
-    @classmethod
-    def _getunbranched(cls, ar):
-        from sympy.functions.elementary.exponential import exp_polar, log
-        if ar.is_Mul:
-            args = ar.args
-        else:
-            args = [ar]
-        unbranched = 0
-        for a in args:
-            if not a.is_polar:
-                unbranched += arg(a)
-            elif isinstance(a, exp_polar):
-                unbranched += a.exp.as_real_imag()[1]
-            elif a.is_Pow:
-                re, im = a.exp.as_real_imag()
-                unbranched += re*unbranched_argument(
-                    a.base) + im*log(abs(a.base))
-            elif isinstance(a, polar_lift):
-                unbranched += arg(a.args[0])
-            else:
-                return None
-        return unbranched
 
     @classmethod
     def eval(cls, ar, period):
@@ -1231,7 +1251,7 @@ class periodic_argument(DefinedFunction):
             newargs = [x for x in ar.args if not x.is_positive]
             if len(newargs) != len(ar.args):
                 return periodic_argument(Mul(*newargs), period)
-        unbranched = cls._getunbranched(ar)
+        unbranched = unbranched_argument(ar)
         if unbranched is None:
             return None
         from sympy.functions.elementary.trigonometric import atan, atan2
@@ -1248,7 +1268,7 @@ class periodic_argument(DefinedFunction):
     def _eval_evalf(self, prec):
         z, period = self.args
         if period == oo:
-            unbranched = periodic_argument._getunbranched(z)
+            unbranched = unbranched_argument(z)
             if unbranched is None:
                 return self
             return unbranched._eval_evalf(prec)
@@ -1257,26 +1277,7 @@ class periodic_argument(DefinedFunction):
         return (ub - ceiling(ub/period - S.Half)*period)._eval_evalf(prec)
 
 
-def unbranched_argument(arg):
-    '''
-    Returns periodic argument of arg with period as infinity.
 
-    Examples
-    ========
-
-    >>> from sympy import exp_polar, unbranched_argument
-    >>> from sympy import I, pi
-    >>> unbranched_argument(exp_polar(15*I*pi))
-    15*pi
-    >>> unbranched_argument(exp_polar(7*I*pi))
-    7*pi
-
-    See also
-    ========
-
-    periodic_argument
-    '''
-    return periodic_argument(arg, oo)
 
 
 class principal_branch(DefinedFunction):
