@@ -74,15 +74,16 @@ def test_binomial_lookup_branch_condition():
     from sympy.core.symbol import symbols
 
     x = symbols('x', positive=True)
-    for b, p in [(-2 + I, -2*I), (-2 - I, 2*I)]:
-        f = (b + p*x)**(-Rational(3, 2))
+    for constant, coefficient in [(-2 + I, -2*I), (-2 - I, 2*I)]:
+        f = (constant + coefficient*x)**(-Rational(3, 2))
         assert _rewrite_single(f, x, recursive=False) is None
 
     # Safe coefficient rays and branch-independent integer powers retain
     # their rewrites. Check values on both sides of the counterexample's cut.
-    for b, p, a in [(1, 1, S(3)/2), (1 + I, -I, S(3)/2),
-                    (-2 + I, -2*I, S(2))]:
-        f = (b + p*x)**(-a)
+    for constant, coefficient, exponent in [
+            (1, 1, S(3)/2), (1 + I, -I, S(3)/2),
+            (-2 + I, -2*I, S(2))]:
+        f = (constant + coefficient*x)**(-exponent)
         terms, cond = _rewrite_single(f, x, recursive=False)
         assert cond == True
         rewritten = sum(C*x**s*g for C, s, g in terms)
@@ -90,12 +91,13 @@ def test_binomial_lookup_branch_condition():
             assert abs((rewritten.subs(x, value).evalf(20)
                         - f.subs(x, value).evalf(20))) < 1e-15
 
+
 def test_binomial_branch_rejection_fallback():
     from sympy.core.symbol import symbols
 
     x = symbols('x', positive=True)
-    for b, p in [(-2 + I, -2*I), (-2 - I, 2*I)]:
-        f = (b + p*x)**(-Rational(3, 2))
+    for constant, coefficient in [(-2 + I, -2*I), (-2 - I, 2*I)]:
+        f = (constant + coefficient*x)**(-Rational(3, 2))
         assert integrate(f, x, meijerg=True) == Integral(f, x)
         primitive = integrate(f, x)
         for value in [S(1)/4, S(3)/4]:
