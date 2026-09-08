@@ -9,16 +9,16 @@ from sympy.polys.zippel import (
     from_newt_to_poly,
     incremental_newton_interp,
     lag_basis,
-    skeleton_sorter,
+    _skeleton_sorter,
     smp_LC_wrt_last,
     smp_chinese_remainder_reconstruction_multivariate,
     smp_deg_wrt_last,
     smp_gf_gcd,
     smp_primitive_wrt_last,
     smp_trivial_gcd,
-    smp_zippel_gcd,
-    smp_zippel_gcd_mod,
-    smp_zippel_interp_mod,
+    _smp_zippel_gcd,
+    _smp_zippel_gcd_mod,
+    _smp_zippel_interp_mod,
     vandermonde_interp,
 )
 
@@ -191,7 +191,7 @@ def test_from_newt_to_poly():
 def test_skeleton_sorter():
     R, x, y, z, w = ring("x, y, z, w", ZZ)
     G = 4 * x**3 * y**2 * w - 2 * x**3 * z**5 * w**2 + 7 * x * y * z * w
-    S, h, monic, pseudomonic = skeleton_sorter(dict(G))
+    S, h, monic, pseudomonic = _skeleton_sorter(dict(G))
 
     assert S == {
         1: [((1, 1, 1, 1), [(0, 1), (1, 1), (2, 1)])],
@@ -202,7 +202,7 @@ def test_skeleton_sorter():
 
     R, x, y, z = ring("x, y, z", ZZ)
     G = 5 * x**2 * y**2 + 7 * x * y**5 * z**3 + 8 * x * z**4
-    S, h, monic, pseudomonic = skeleton_sorter(G)
+    S, h, monic, pseudomonic = _skeleton_sorter(G)
 
     assert S == {
         2: [((2, 2, 0), [(0, 2)])],
@@ -243,33 +243,33 @@ def test_smp_zippel_gcd():
     R, x, y = ring("x, y", ZZ)
     f = (x + 1) * (x + y)
     g = {}
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 2)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 2)
     assert (R(gcd), R(cff), R(cfg)) == (f, R.one, R.zero)
 
     R, x, y = ring("x, y", ZZ)
     # monic tests
     f = (x + 1) * (x + y)
     g = (x - 1) * (x + y)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 2)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 2)
     assert (R(gcd), R(cff), R(cfg)) == (x + y, x + 1, x - 1)
 
     R, x, y, z = ring("x, y, z", ZZ)
     f = (x + 1) * (x + 3 * y**2 * z + 2 * z)
     g = (x - 1) * (x + 3 * y**2 * z + 2 * z)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 3)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 3)
     assert (R(gcd), R(cff), R(cfg)) == (x + 3 * y**2 * z + 2 * z, x + 1, x - 1)
 
     # pseudomonic tests
     R, x, y = ring("x, y", ZZ)
     f = (x + 1) * (x * y + y)
     g = (x - 1) * (x * y + y)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 2)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 2)
     assert (R(gcd), R(cff), R(cfg)) == (x * y + y, x + 1, x - 1)
 
     R, x, y, z = ring("x, y, z", ZZ)
     f = (x + 1) * (x * y**2 * z + 3 * y**2 * z + 2 * z)
     g = (x - 1) * (x * y**2 * z + 3 * y**2 * z + 2 * z)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 3)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 3)
     assert (R(gcd), R(cff), R(cfg)) == (
         x * y**2 * z + 3 * y**2 * z + 2 * z,
         x + 1,
@@ -280,13 +280,13 @@ def test_smp_zippel_gcd():
     R, x, y = ring("x, y", ZZ)
     f = (x**2 + x + 1) * (x * y + y)
     g = (x**2 + 2 * x + 1) * (x * y + y)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 2)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 2)
     assert (R(gcd), R(cff), R(cfg)) == (x * y + y, x**2 + x + 1, x**2 + 2 * x + 1)
 
     R, x, y, z = ring("x, y, z", ZZ)
     f = (x + 1) * (x + 2 * x * y + 3 * y**2 * z + 2 * z)
     g = (x - 1) * (x + 2 * x * y + 3 * y**2 * z + 2 * z)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 3)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 3)
     assert (R(gcd), R(cff), R(cfg)) == (
         x + 2 * x * y + 3 * y**2 * z + 2 * z,
         x + 1,
@@ -295,7 +295,7 @@ def test_smp_zippel_gcd():
 
     f = (x**2 + 1) * (2 * x**2 * y + 3 * x**2 * z + 13 * x + 7 * y * z)
     g = (x**2 - 1) * (2 * x**2 * y + 3 * x**2 * z + 13 * x + 7 * y * z)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 3)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 3)
     assert (R(gcd), R(cff), R(cfg)) == (
         2 * x**2 * y + 3 * x**2 * z + 13 * x + 7 * y * z,
         x**2 + 1,
@@ -306,37 +306,37 @@ def test_smp_zippel_gcd():
     h = x**2 * (z**2 + z + y) + x * (y**2 + y + 2 * z) + (y * z + 2 * y + 3 * z)
     f = (x + w) * h
     g = (x - w) * h
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 4)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 4)
     assert (R(gcd), R(cff), R(cfg)) == (h, x + w, x - w)
 
     # test with first prime canceling out leading coeff
     R, x, y = ring("x, y", ZZ)
     f = (1000000007 * x + 1) * (x + y)
     g = (1000000007 * x - 1) * (x + y)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 2)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 2)
     assert (R(gcd), R(cff), R(cfg)) == (x + y, 1000000007 * x + 1, 1000000007 * x - 1)
 
     # test unlucky first prime
     R, x, y = ring("x, y", ZZ)
     f = (x + y) * (x + 1)
     g = (x + y) * (x + 1000000007 + 1)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 2)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 2)
     assert (R(gcd), R(cff), R(cfg)) == (x + y, x + 1, x + 1000000007 + 1)
 
     # test unlucky second prime
     R, x, y = ring("x, y", ZZ)
     f = (x + y) * (x + 1)
     g = (x + y) * (x + 1000000009 + 1)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 2)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 2)
     assert (R(gcd), R(cff), R(cfg)) == (x + y, x + 1, x + 1000000009 + 1)
 
-    # test unlucky sequence of evaluations in smp_zippel_gcd_mod
+    # test unlucky sequence of evaluations in _smp_zippel_gcd_mod
     R, x, y = ring("x, y", ZZ)
     q = (y - 1) * (y - 2) * (y - 3)
     f = x * q + 1
     g = x * q + y
     eval_points = _eval_point(map(ZZ, [1, 2, 3, 4, 4]))
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 2, rand_point=eval_points)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 2, rand_point=eval_points)
     assert (R(gcd), R(cff), R(cfg)) == (R.one, f, g)
 
     # unlucky first evaluation leads to wrong skeleton, that leads to inconsistent system
@@ -348,14 +348,14 @@ def test_smp_zippel_gcd():
     f = (x + 1) * h
     g = (x + 2) * h
     eval_points = _eval_point(map(ZZ, [1, 17, 23, 2, 3, 4, 5, 6, 7, 8]))
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 3, rand_point=eval_points)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 3, rand_point=eval_points)
     assert (R(gcd), R(cff), R(cfg)) == (h, x + 1, x + 2)
 
     # returned gcd's LC with positive sign
     R, x, y = ring("x, y", ZZ)
     f = (x + 1) * (-(x**2) + y)
     g = (x + y) * (-(x**2) + y)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 2)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 2)
     assert (R(gcd), R(cff), R(cfg)) == (x**2 - y, -x - 1, -x - y)
 
     R, x, y = ring("x, y", ZZ)
@@ -364,7 +364,7 @@ def test_smp_zippel_gcd():
     h = x + y
     f = ((p1 * p2 - 1) * x + 1) * h
     g = ((p1 * p2 - 1) * x - 1) * h
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 2)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 2)
     assert (R(gcd), R(cff), R(cfg)) == (h, (p1 * p2 - 1) * x + 1, (p1 * p2 - 1) * x - 1)
 
     # the first 2 primes are unlucky and lead to failing trial division
@@ -373,7 +373,7 @@ def test_smp_zippel_gcd():
     p2 = ZZ(1000000009)
     f = (x + 1) * (x**2 + x * (y * p1 * p2 + z) + y**2 + z**2)
     g = (x + y) * (x**2 + x * (y * p1 * p2 + z) + y**2 + z**2)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 3)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 3)
     assert (R(gcd), R(cff), R(cfg)) == (
         x**2 + x * (y * p1 * p2 + z) + y**2 + z**2,
         x + 1,
@@ -384,7 +384,7 @@ def test_smp_zippel_gcd():
     R, x, y, z = ring("x, y, z", ZZ)
     f = (x + 1) * (x**2 + x * z)
     g = (x + y) * (x**2 + x * z)
-    gcd, cff, cfg = smp_zippel_gcd(f, g, 3)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, 3)
     assert (R(gcd), R(cff), R(cfg)) == (x**2 + x * z, x + 1, x + y)
 
 
@@ -393,10 +393,10 @@ def test_smp_zippel_gcd_mod():
     R, x, y = ring("x, y", ZZ)
     f = x * (y + 1) + 1
     g = x * (y + 1) + y
-    assert smp_zippel_gcd_mod(f, g, ZZ(2), 2) is None
+    assert _smp_zippel_gcd_mod(f, g, ZZ(2), 2) is None
 
     # coprime inputs lead to early exit
-    gcd = smp_zippel_gcd_mod(x + y, x - y, ZZ(43), 2)
+    gcd = _smp_zippel_gcd_mod(x + y, x - y, ZZ(43), 2)
     assert R(gcd) == 1
 
     # wrong gcd is determined by recursive call due to unlucky evaluation of z
@@ -404,15 +404,15 @@ def test_smp_zippel_gcd_mod():
     f = (x + y - z) * (x**2 * y + x * (z - 3) + y * (z - 2) + (z - 5))
     g = (x + y + z) * (x**2 * y + x * (z - 3) + y * (z - 2) + (z - 5))
     eval_points = _eval_point(map(ZZ, [2, 3, 5]))
-    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
+    gcd = _smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
     assert gcd is None
 
-    # smp_zippel_gcd_mod returns None in recursive call
+    # _smp_zippel_gcd_mod returns None in recursive call
     R, x, y, z, w = ring("x, y, z, w", ZZ)
     f = (x + y - z * w) * (x**2 * y + x * (z - 3) + y * (z - 2) + (z - 5) + w)
     g = (x + y + z * w) * (x**2 * y + x * (z - 3) + y * (z - 2) + (z - 5) + w)
     eval_points = _eval_point(map(ZZ, [2, 3, 5, 2, 3, 5, 2, 3, 5]))
-    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 4, rand_point=eval_points)
+    gcd = _smp_zippel_gcd_mod(f, g, ZZ(10009), 4, rand_point=eval_points)
     assert gcd is None
 
     # y*(z - 2) incorrectly interpolated as 2*(z - 2) by repeatedly
@@ -425,7 +425,7 @@ def test_smp_zippel_gcd_mod():
     eval_tuples = _eval_tuple(
         [(ZZ(2),), (ZZ(2),), (ZZ(2),), (ZZ(2),), (ZZ(2),), (ZZ(2),)]
     )
-    gcd = smp_zippel_gcd_mod(
+    gcd = _smp_zippel_gcd_mod(
         f, g, ZZ(10009), 3, rand_point=eval_points, rand_tuple=eval_tuples
     )
     assert gcd is None
@@ -435,13 +435,13 @@ def test_smp_zippel_gcd_mod():
     f = x + 17
     g = x + y
     eval_points = _eval_point(map(ZZ, [17, 3, 4, 5, 6, 7, 8]))
-    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 2, rand_point=eval_points)
+    gcd = _smp_zippel_gcd_mod(f, g, ZZ(10009), 2, rand_point=eval_points)
     assert gcd is None
 
     f = (x + 1) * (x**2 + (y - 17) * x)
     g = (x - 1) * (x**2 + (y - 17) * x)
     eval_points = _eval_point(map(ZZ, [17, 3, 4, 5, 6, 7, 8]))
-    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 2, rand_point=eval_points)
+    gcd = _smp_zippel_gcd_mod(f, g, ZZ(10009), 2, rand_point=eval_points)
     assert gcd is None
 
     # test unlucky first evaluation
@@ -449,7 +449,7 @@ def test_smp_zippel_gcd_mod():
     f = x + y + z
     g = x + y + 17
     eval_points = _eval_point(map(ZZ, [17, 3, 4, 5, 6, 7, 8]))
-    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
+    gcd = _smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
     assert gcd is None
 
     # test repeated choice of same evaluation point
@@ -458,7 +458,7 @@ def test_smp_zippel_gcd_mod():
     g = (x - 1) * (x + y)
     init_point = _eval_point([ZZ(3)])
     eval_points = _eval_point(map(ZZ, [3, 3, 3, 5, 6, 7, 8, 9]))
-    gcd = smp_zippel_gcd_mod(
+    gcd = _smp_zippel_gcd_mod(
         f, g, ZZ(10009), 2, rand_point=init_point, rand_point_=eval_points
     )
     assert R(gcd) == x + y
@@ -468,7 +468,7 @@ def test_smp_zippel_gcd_mod():
     h = x**2 * (z**2 + y) + x * (z**2 + y) + (z**2 + y)
     f = (z - 1) * h
     g = (z + 1) * h
-    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3)
+    gcd = _smp_zippel_gcd_mod(f, g, ZZ(10009), 3)
     assert gcd is None
 
     # unlucky first evaluation leads to wrong skeleton, that leads to inconsistent system
@@ -480,7 +480,7 @@ def test_smp_zippel_gcd_mod():
     f = (x + 1) * h
     g = (x + 2) * h
     eval_points = _eval_point(map(ZZ, [1, 17, 23]))
-    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
+    gcd = _smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
     assert gcd is None
 
     # unlucky evaluation leads to content wrt x in non monic case
@@ -488,7 +488,7 @@ def test_smp_zippel_gcd_mod():
     f = (y + 1) * (x**2 * (y + z) + x * (z - 1))
     g = (y - 1) * (x**2 * (y + z) + x * (z - 1))
     eval_points = _eval_point(map(ZZ, [1, 17, 23]))
-    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
+    gcd = _smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
     assert gcd is None
 
     # unlucky evaluation leads to content wrt x in monic case
@@ -496,7 +496,7 @@ def test_smp_zippel_gcd_mod():
     f = (y + 1) * (x**2 * (y) + x * (z - 1))
     g = (y - 1) * (x**2 * (y) + x * (z - 1))
     eval_points = _eval_point(map(ZZ, [1, 17, 23]))
-    gcd = smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
+    gcd = _smp_zippel_gcd_mod(f, g, ZZ(10009), 3, rand_point=eval_points)
     assert gcd is None
 
 
@@ -506,9 +506,9 @@ def test_smp_zippel_interp_mod():
     h = x * y + x * z + 1
     f = (x + 1) * h
     g = (x + 2) * h
-    G, _, monic, pseudomonic = skeleton_sorter(h)
+    G, _, monic, pseudomonic = _skeleton_sorter(h)
     eval_tuples = _eval_tuple([(ZZ(1), ZZ(100)), (ZZ(1), ZZ(1)), (ZZ(1), ZZ(2))])
-    result = smp_zippel_interp_mod(
+    result = _smp_zippel_interp_mod(
         f, g, G, ZZ(101), monic, pseudomonic, 3, rand_tuple=eval_tuples
     )
     assert result == {(0, 0, 0): 34, (1, 1, 0): 34, (1, 0, 1): 34}
@@ -520,9 +520,9 @@ def test_smp_zippel_interp_mod():
     h = (x + 1) * P + x**2 * Q
     f = (x + 1) * h
     g = (x - 1) * h
-    G, _, monic, pseudomonic = skeleton_sorter(h)
+    G, _, monic, pseudomonic = _skeleton_sorter(h)
     eval_tuples = _eval_tuple([(ZZ(1), ZZ(2)), (ZZ(1), ZZ(5))])
-    gcd = smp_zippel_interp_mod(
+    gcd = _smp_zippel_interp_mod(
         f, g, G, ZZ(13), monic, pseudomonic, 3, rand_tuple=eval_tuples
     )
     assert R(gcd) == R(gcd).LC * h
@@ -532,9 +532,9 @@ def test_smp_zippel_interp_mod():
     h = x + 1
     f = (x + 1) * (x + 2)
     g = (x + 1) * ((y - 2) * x + 1)
-    G, _, monic, pseudomonic = skeleton_sorter(h)
+    G, _, monic, pseudomonic = _skeleton_sorter(h)
     eval_tuples = _eval_tuple([(ZZ(2),), (ZZ(3),)])
-    gcd = smp_zippel_interp_mod(
+    gcd = _smp_zippel_interp_mod(
         f, g, G, ZZ(101), monic, pseudomonic, 2, rand_tuple=eval_tuples
     )
     assert R(gcd) == h
@@ -547,6 +547,6 @@ def test_smp_zippel_interp_mod():
     h = (x + 1) * P + x**2 * Q
     f = (x + 1) * h
     g = (x - 1) * h
-    G, _, monic, pseudomonic = skeleton_sorter(h)
-    gcd = smp_zippel_interp_mod(f, g, G, p, monic, pseudomonic, 3)
+    G, _, monic, pseudomonic = _skeleton_sorter(h)
+    gcd = _smp_zippel_interp_mod(f, g, G, p, monic, pseudomonic, 3)
     assert R(gcd) == R(gcd).LC * h

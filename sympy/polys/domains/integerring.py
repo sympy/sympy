@@ -248,7 +248,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
         else:
             return h, s, t
 
-    def gcd(self, a, b):
+    def gcd(self, a: MPZ, b: MPZ) -> MPZ:
         """Compute GCD of ``a`` and ``b``. """
         return gcd(a, b)
 
