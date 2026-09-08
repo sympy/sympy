@@ -190,6 +190,19 @@ def test_sign():
     x = Symbol('x', complex=True)
     assert refine(sign(x), Q.zero(x)) == 0
 
+    # the realness/imaginariness of the argument may be supplied through the
+    # assumptions instead of the symbol itself
+    x = Symbol('x')
+    assert refine(sign(x), Q.positive(x)) == 1
+    assert refine(sign(x), Q.negative(x)) == -1
+    assert refine(sign(x), Q.real(x) & Q.positive(x)) == 1
+    assert refine(sign(x), Q.imaginary(x) & Q.positive(im(x))) == S.ImaginaryUnit
+    assert refine(sign(x), Q.imaginary(x) & Q.negative(im(x))) == -S.ImaginaryUnit
+    # nothing can be concluded when the sign may still be zero
+    assert refine(sign(x), Q.nonnegative(x)) == sign(x)
+    assert refine(sign(x), Q.real(x)) == sign(x)
+
+
 def test_arg():
     x = Symbol('x', complex = True)
     assert refine(arg(x), Q.positive(x)) == 0
