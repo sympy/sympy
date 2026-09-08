@@ -766,7 +766,7 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
     # faster, because we avoid calling evalf on the exponent, and 2) it
     # allows better handling of real/imaginary parts that are exactly zero
     if exp.is_Integer:
-        p: int = exp.p  # type: ignore
+        p: int = int(exp.p)  # type: ignore[attr-defined]
         # Exact
         if not p:
             return fone, None, prec, None
@@ -1276,7 +1276,7 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
 
         # Direct summation if geometric or faster
         if h > 0 or (h == 0 and abs(g) > 1):
-            term = (MPZ(term.p) << prec) // term.q
+            term = (MPZ(int(term.p)) << prec) // MPZ(int(term.q))
             s = term
             k = 1
             while abs(term) > 5:
@@ -1299,7 +1299,7 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
                 # might occur in the extrapolation process; we check the answer to
                 # make sure that the desired precision has been reached, too.
                 prec2 = 4*prec
-                term0 = (MPZ(term.p) << prec2) // term.q
+                term0 = (MPZ(int(term.p)) << prec2) // MPZ(int(term.q))
 
                 def summand(k, _term=[term0]):
                     if k:
@@ -1705,7 +1705,7 @@ class EvalfMixin:
         # mpmath functions accept ints as input
         errmsg = "cannot convert to mpmath number"
         if allow_ints and self.is_Integer:
-            return self.p
+            return int(self.p)
         if hasattr(self, '_as_mpf_val'):
             return make_mpf(self._as_mpf_val(prec))
         try:
@@ -1720,13 +1720,13 @@ class EvalfMixin:
             # Number + Number*I is also fine
             re, im = v.as_real_imag()
             if allow_ints and re.is_Integer:
-                re = from_int(re.p)
+                re = from_int(int(re.p))
             elif re.is_Float:
                 re = re._mpf_
             else:
                 raise ValueError(errmsg)
             if allow_ints and im.is_Integer:
-                im = from_int(im.p)
+                im = from_int(int(im.p))
             elif im.is_Float:
                 im = im._mpf_
             else:
