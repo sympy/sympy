@@ -760,16 +760,19 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
 def _chop_insignificant_imag(result: TMP_RES) -> TMP_RES:
     """Discard an imaginary part that carries no accurate bits.
 
-    A non-integer power has a branch cut along the negative real axis, so the
-    *sign* of a vanishing imaginary part of the base decides on which side of
-    the cut the result lands. When that imaginary part is the result of a
-    cancellation it may be pure rounding noise -- ``im_acc <= 0`` says that not
-    a single bit of it is correct -- and letting its sign pick the branch makes
-    the answer depend on the working precision.
+    ``log`` and a non-integer power both have a branch cut along the negative
+    real axis, so the *sign* of a vanishing imaginary part of the argument
+    decides on which side of the cut the result lands. When that imaginary part
+    is the result of a cancellation it may be pure rounding noise --
+    ``im_acc <= 0`` says that not a single bit of it is correct -- and letting
+    its sign pick the branch makes the answer depend on the working precision.
 
     Such an imaginary part cannot be distinguished from zero, so treat it as
     the exact zero it may well be; the callers already implement the principal
-    branch for a base with an exactly zero imaginary part.
+    branch for an argument whose imaginary part is exactly zero.
+
+    An imaginary part that is genuinely there, however small, comes back with
+    accurate bits and is left alone.
     """
     if result is S.ComplexInfinity:
         return result
