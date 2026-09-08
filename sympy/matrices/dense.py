@@ -843,9 +843,34 @@ def GramSchmidt(vlist, orthonormal=False):
 
     .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
-    return MutableDenseMatrix.orthogonalize(
-        *vlist, normalize=orthonormal, rankcheck=True
-    )
+    from sympy.polys.matrices import DomainMatrix
+    from sympy.sets.sets import FiniteSet
+    from sympy import simplify, radsimp, cancel
+    if isinstance(vlist, FiniteSet):
+        vlist = list(vlist)
+    if not vlist:
+        return []
+    if len(vlist) == 1:
+        if orthonormal:
+            norm = vlist[0].norm()
+            return [simplify(vlist[0] / norm) if norm != 0 else vlist[0]]
+        return [vlist[0]]
+    is_row_vector = vlist[0].shape[0] == 1
+    if is_row_vector:
+        vlist = [v.transpose() for v in vlist]
+    A = DomainMatrix.hstack(*[DomainMatrix.from_Matrix(v) for v in vlist])
+    A = A.to_field()
+    Q, _ = A.qr()
+    Q_matrix = Q.to_Matrix()
+    orthogonal_vectors = [simplify(Q_matrix.col(i)) for i in range(Q_matrix.cols)]
+    if orthonormal:
+        orthogonal_vectors = [
+            Matrix([radsimp(cancel(element / v.norm())) for element in v]) if v.norm() != 0 else v
+            for v in orthogonal_vectors
+        ]
+    if is_row_vector:
+        orthogonal_vectors = [v.transpose() for v in orthogonal_vectors]
+    return orthogonal_vectors
 
 
 def hessian(f, varlist, constraints=()):
