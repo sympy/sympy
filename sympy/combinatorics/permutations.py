@@ -1387,7 +1387,10 @@ class Permutation(Atom):
         since coercion can only handle one argument to the left. To handle
         multiple cycles it is convenient to use Cycle instead of Permutation:
 
-        >>> [[1, 2]]*[[2, 3]]*Permutation([]) # doctest: +SKIP
+        >>> [[1, 2]]*[[2, 3]]*Permutation([])
+        Traceback (most recent call last):
+        ...
+        TypeError: can't multiply sequence by non-int of type 'list'
         >>> from sympy.combinatorics.permutations import Cycle
         >>> Cycle(1, 2)(2, 3)
         (1 3 2)
