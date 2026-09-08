@@ -623,11 +623,12 @@ def test_expint():
     assert integrate(cosh(u)/u, u, meijerg=True).expand().as_independent(u)[1] \
         == Chi(u)
 
-    assert integrate(expint(1, x), x, meijerg=True
-            ).rewrite(expint).expand() == x*expint(1, x) - exp(-x)
-    assert integrate(expint(2, x), x, meijerg=True
-            ).rewrite(expint).expand() == \
-        -x**2*expint(1, x)/2 + x*exp(-x)/2 - exp(-x)/2
+    # The G-function antiderivatives of expint(1, x) and expint(2, x) were
+    # only valid for x > 0 (for x < 0 their derivatives have a spurious
+    # 2*I*pi term), so the antiderivative check of issue #30404 now rejects
+    # them and meijerg=True no longer evaluates these integrals.
+    assert integrate(expint(1, x), x, meijerg=True).has(Integral)
+    assert integrate(expint(2, x), x, meijerg=True).has(Integral)
     assert simplify(unpolarify(integrate(expint(y, x), x,
                  meijerg=True).rewrite(expint).expand(func=True))) == \
         -expint(y + 1, x)
@@ -695,6 +696,7 @@ def test_issue_6252():
     # putting in numerical values seems to work...
 
 
+@slow
 def test_issue_30404():
     # https://github.com/sympy/sympy/issues/30404
     # The G-function antiderivative of sqrt(1 - x)*log(1 - x) was assembled
@@ -703,11 +705,15 @@ def test_issue_30404():
     # -sqrt(1 - x)*log(1 - x) - 2*I*pi*sqrt(1 - x) on 0 < x < 1, which made
     # the definite integral silently evaluate to 0 instead of -4/9.
     # G-methods now verify antiderivatives and decline this integral, so
-    # other algorithms take over and return the correct result.
+    # other algorithms take over and return the correct result (see
+    # test_issue_30404_integrate).
     assert meijerint_indefinite(sqrt(1 - x)*log(1 - x), x) is None
+    assert meijerint_definite(sqrt(1 - x)*log(1 - x), x, 0, 1) is None
+
+
+@slow
+def test_issue_30404_integrate():
     assert integrate(sqrt(1 - x)*log(1 - x), (x, 0, 1)) == -Rational(4, 9)
-    assert integrate(sqrt(1 - x)*log(1 - x), (x, 0, 1), meijerg=True) == \
-        Integral(sqrt(1 - x)*log(1 - x), (x, 0, 1))
 
 
 def test_issue_6348():
