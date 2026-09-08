@@ -51,7 +51,7 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.polys.rootoftools import rootof
 
 from sympy.core import Function, Symbol
-from sympy.functions import airyai, airybi, besselj, bessely, lowergamma, Abs
+from sympy.functions import airyai, airybi, besselj, bessely, Abs
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.solvers.ode import classify_ode, dsolve
 from sympy.solvers.ode.ode import allhints, _remove_redundant_solutions
