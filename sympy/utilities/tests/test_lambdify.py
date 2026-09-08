@@ -2331,3 +2331,24 @@ def test_issue_28803_jointrandonsymbol_recursion():
 
     # Should not raise RecursionError
     lambdify(a, z * a)
+
+
+def test_lambdify_constant_broadcasting():
+    if not numpy:
+        skip("numpy not installed.")
+
+    # 1. Test scalar constant expression
+    f1 = lambdify(x, 2, 'numpy')
+    res1 = f1(numpy.array([1, 2, 3]))
+    assert isinstance(res1, numpy.ndarray)
+    assert numpy.array_equal(res1, numpy.array([2, 2, 2]))
+
+    # 2. Test tuple containing matrices (should not broadcast inhomogeneous shapes)
+    q1, q2 = symbols('q1 q2')
+    M = Matrix([[1, 2], [3, 4]])
+    F = Matrix([[q1], [q2]])
+    # tuple of matrices
+    f2 = lambdify((q1, q2), (M, F), 'numpy')
+    M_val, F_val = f2(1.0, 2.0)
+    assert numpy.array_equal(M_val, numpy.array([[1, 2], [3, 4]]))
+    assert numpy.array_equal(F_val, numpy.array([[1.0], [2.0]]))
