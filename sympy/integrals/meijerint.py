@@ -124,8 +124,28 @@ def _create_lookup_table(table):
         gamma(a)*b**(a - 1), And(b > 0))
     add(Heaviside((b/p)**(1/q) - z)*(b - t)**(a - 1), [], [a], [0], [], t/b,
         gamma(a)*b**(a - 1), And(b > 0))
+
+    def binomial_condition(subs, positive_ray):
+        exponent, constant, coefficient = (subs[v] for v in (a, b, p))
+        # This condition concerns principal ordinary powers on x > 0.
+        # Inversion has a different contour and retains its existing checks;
+        # explicit polar inputs likewise specify their own continuation.
+        if not positive_ray or constant.is_polar or coefficient.is_polar:
+            return True
+        if exponent.is_integer:
+            return True
+        # Keep symbolic lookup behavior unchanged for now. Although the
+        # condition is sufficient symbolically, propagating it through all
+        # existing callers changes many established conditional answers.
+        if not (constant.is_number and coefficient.is_number):
+            return True
+        # Positive multiples of b and p stay within one sector of width < pi.
+        # Otherwise the sum can cross its principal cut while the G-function
+        # continues on the sheet selected near zero.
+        return Abs(arg(coefficient) - arg(constant)) <= pi
+
     add((b + t)**(-a), [1 - a], [], [0], [], t/b, b**(-a)/gamma(a),
-        hint=Not(IsNonPositiveInteger(a)))
+        cond=binomial_condition, hint=Not(IsNonPositiveInteger(a)))
     add(Abs(b - t)**(-a), [1 - a], [(1 - a)/2], [0], [(1 - a)/2], t/b,
         2*sin(pi*a/2)*gamma(1 - a)*Abs(b)**(-a), re(a) < 1)
     add((t**a - b**a)/(t - b), [0, a], [], [0, a], [], t/b,
@@ -1467,7 +1487,7 @@ _lookup_table = None
 
 @cacheit
 @timeit
-def _rewrite_single(f, x, recursive=True):
+def _rewrite_single(f, x, recursive=True, positive_ray=True):
     """
     Try to rewrite f as a sum of single G functions of the form
     C*x**s*G(a*x**b), where b is a rational number and C is independent of x.
@@ -1475,6 +1495,9 @@ def _rewrite_single(f, x, recursive=True):
     or (a, ()).
     Returns a list of tuples (C, s, G) and a condition cond.
     Returns None on failure.
+    With ``positive_ray=True``, ordinary binomial rewrites include a
+    sufficient branch condition for x > 0. Inversion sets this to False:
+    a positive-ray condition does not establish validity on its contour.
     """
     from .transforms import (mellin_transform, inverse_mellin_transform,
         IntegralTransformError, MellinTransformStripError)
@@ -1504,6 +1527,10 @@ def _rewrite_single(f, x, recursive=True):
         for formula, terms, cond, hint in l:
             subs = f.match(formula, old=True)
             if subs:
+                # Branch conditions must see the original ordinary values,
+                # before coefficient lifting changes their representation.
+                if callable(cond):
+                    cond = cond(subs, positive_ray)
                 subs_ = {}
                 for fro, to in subs.items():
                     if to.is_Pow and to.exp.is_Integer and not to.is_polar:
@@ -1612,7 +1639,7 @@ def _rewrite_single(f, x, recursive=True):
     return res, True
 
 
-def _rewrite1(f, x, recursive=True):
+def _rewrite1(f, x, recursive=True, positive_ray=True):
     """
     Try to rewrite ``f`` using a (sum of) single G functions with argument a*x**b.
     Return fac, po, g such that f = fac*po*g, fac is independent of ``x``.
@@ -1621,7 +1648,7 @@ def _rewrite1(f, x, recursive=True):
     Return None on failure.
     """
     fac, po, g = _split_mul(f, x)
-    g = _rewrite_single(g, x, recursive)
+    g = _rewrite_single(g, x, recursive, positive_ray=positive_ray)
     if g:
         return fac, po, g[0], g[1]
 
@@ -1635,7 +1662,8 @@ def _rewrite2(f, x):
     Returns None on failure.
     """
     fac, po, g = _split_mul(f, x)
-    if any(_rewrite_single(expr, x, False) is None for expr in _mul_args(g)):
+    if any(_rewrite_single(expr, x, False, positive_ray=False) is None
+           for expr in _mul_args(g)):
         return None
     l = _mul_as_two_parts(g)
     if not l:
@@ -1647,8 +1675,8 @@ def _rewrite2(f, x):
                       len(_find_splitting_points(p[1], x)))]))
 
     for recursive, (fac1, fac2) in itertools.product((False, True), l):
-        g1 = _rewrite_single(fac1, x, recursive)
-        g2 = _rewrite_single(fac2, x, recursive)
+        g1 = _rewrite_single(fac1, x, recursive, positive_ray=False)
+        g2 = _rewrite_single(fac2, x, recursive, positive_ray=False)
         if g1 and g2:
             cond = And(g1[1], g2[1])
             if cond != False:
@@ -1674,7 +1702,13 @@ def meijerint_indefinite(f, x):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
         if not res:
             continue
-        res = res.subs(x, x - a)
+        try:
+            res = res.subs(x, x - a)
+        except TypeError:
+            # A conditional positive-ray rewrite can become an invalid
+            # comparison after undoing a nonreal trial shift. Try another
+            # shift or integration method instead.
+            continue
         if _has(res, hyper, meijerg):
             results.append(res)
         else:
@@ -2044,7 +2078,7 @@ def _meijerint_definite_4(f, x, only_double=False):
     _debug('Integrating', f)
     # Try single G function.
     if not only_double:
-        gs = _rewrite1(f, x, recursive=False)
+        gs = _rewrite1(f, x, recursive=False, positive_ray=False)
         if gs is not None:
             fac, po, g, cond = gs
             _debug('Could rewrite as single G function:', fac, po, g)
@@ -2182,7 +2216,7 @@ def meijerint_inversion(f, x, t):
         # cond is True or Eq
         return Piecewise((res.subs(t, t_), cond))
 
-    gs = _rewrite1(f, x)
+    gs = _rewrite1(f, x, positive_ray=False)
     if gs is not None:
         fac, po, g, cond = gs
         _debug('Could rewrite as single G function:', fac, po, g)

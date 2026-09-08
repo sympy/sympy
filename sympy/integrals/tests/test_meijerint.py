@@ -70,6 +70,47 @@ def test_rewrite1():
         (5, x**3, [(1, 0, meijerg([a], [b], [c], [d], x**2*(y + 1)))], True)
 
 
+def test_binomial_lookup_branch_condition():
+    from sympy.core.symbol import symbols
+
+    x = symbols('x', positive=True)
+    for b, p in [(-2 + I, -2*I), (-2 - I, 2*I)]:
+        f = (b + p*x)**(-Rational(3, 2))
+        assert _rewrite_single(f, x, recursive=False) is None
+
+    # Safe coefficient rays and branch-independent integer powers retain
+    # their rewrites. Check values on both sides of the counterexample's cut.
+    for b, p, a in [(1, 1, S(3)/2), (1 + I, -I, S(3)/2),
+                    (-2 + I, -2*I, S(2))]:
+        f = (b + p*x)**(-a)
+        terms, cond = _rewrite_single(f, x, recursive=False)
+        assert cond == True
+        rewritten = sum(C*x**s*g for C, s, g in terms)
+        for value in [S(1)/4, S(3)/4]:
+            assert abs((rewritten.subs(x, value).evalf(20)
+                        - f.subs(x, value).evalf(20))) < 1e-15
+
+def test_binomial_branch_rejection_fallback():
+    from sympy.core.symbol import symbols
+
+    x = symbols('x', positive=True)
+    for b, p in [(-2 + I, -2*I), (-2 - I, 2*I)]:
+        f = (b + p*x)**(-Rational(3, 2))
+        assert integrate(f, x, meijerg=True) == Integral(f, x)
+        primitive = integrate(f, x)
+        for value in [S(1)/4, S(3)/4]:
+            assert simplify((primitive.diff(x) - f).subs(x, value)) == 0
+
+
+def test_binomial_branch_condition_definite():
+    from sympy.core.symbol import symbols
+
+    x = symbols('x', positive=True)
+    assert integrate((1 + x)**(-S(3)/2), (x, 0, oo), meijerg=True) == 2
+    f = (-2 + I - 2*I*x)**(-S(3)/2)
+    assert integrate(f, (x, 0, oo), meijerg=True) == Integral(f, (x, 0, oo))
+
+
 def test_issue_5462_coefficient_lifting():
     from sympy.core.symbol import Symbol
 
