@@ -120,6 +120,12 @@ nitpick_ignore = [
     ('py:class', 'sympy.logic.boolalg.Boolean')
 ]
 
+# Private type aliases are not resolvable targets, and their names say
+# less than what they stand for.
+autodoc_type_aliases = {
+    '_Extension': "Literal['exp', 'log']",
+}
+
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 

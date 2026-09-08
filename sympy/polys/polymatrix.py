@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, overload
 from sympy.core.expr import Expr
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
@@ -45,6 +46,11 @@ class MutablePolyDenseMatrix:
     PolyMatrix([[x**2]], ring=QQ[x])
 
     """
+
+    _dm: DomainMatrix
+    ring: Domain
+    domain: Domain
+    gens: tuple[Expr, ...]
 
     def __new__(cls, *args, ring=None):
 
@@ -164,6 +170,13 @@ class MutablePolyDenseMatrix:
 
     def __len__(self):
         return self.rows * self.cols
+
+    @overload
+    def __getitem__(self, key: slice) -> list[Poly]: ...
+    @overload
+    def __getitem__(self, key: int | tuple[int, int]) -> Poly: ...
+    @overload
+    def __getitem__(self, key: tuple[int | slice, slice] | tuple[slice, int | slice]) -> MutablePolyDenseMatrix: ...
 
     def __getitem__(self, key):
 
@@ -290,4 +303,9 @@ class MutablePolyDenseMatrix:
     def rank(self):
         return self.cols - len(self.nullspace())
 
-MutablePolyMatrix = PolyMatrix = MutablePolyDenseMatrix
+if TYPE_CHECKING:
+    from typing import TypeAlias
+    from sympy.polys.domains.domain import Domain
+
+MutablePolyMatrix: TypeAlias = MutablePolyDenseMatrix
+PolyMatrix: TypeAlias = MutablePolyDenseMatrix
