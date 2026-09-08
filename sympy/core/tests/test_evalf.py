@@ -773,8 +773,8 @@ def test_evalf_pow_branch_cut_noise():
         for v in vs[1:]:
             assert abs(v - vs[0]) < 1e-12
         # ... and it must actually be a root of p
-        for n in precs:
-            assert abs(complex(p.subs(x, r).evalf(n))) < 1e-12
+        for prec in precs:
+            assert abs(complex(p.subs(x, r).evalf(prec))) < 1e-12
         values.append(vs[0])
 
     # the four roots must stay four distinct numbers
