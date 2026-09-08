@@ -989,6 +989,10 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
     result = evalf(arg, workprec, options)
     if result is S.ComplexInfinity:
         return result
+    # log has a branch cut along the negative real axis just as a non-integer
+    # power does, so an imaginary part that is indistinguishable from zero must
+    # not be allowed to decide which side of it the argument lies on
+    result = _chop_insignificant_imag(result)
     xre, xim, xacc, _ = result
 
     # evalf can return NoneTypes if chop=True
