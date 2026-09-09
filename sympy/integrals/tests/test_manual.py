@@ -1153,6 +1153,12 @@ def test_quadratic_denom():
     H = manualintegrate(h, x)
     assert (h.subs({b: 0, c: 3}) - H.subs({b: 0, c: 3}).diff(x)).cancel() == 0
     assert (h.subs({b: 0, c: 0}) - H.subs({b: 0, c: 0}).diff(x)).cancel() == 0
+    q = A*x/(a*x**2 + b*x + c)
+    Q = piecewise_fold(manualintegrate(q, x))
+    assert Q.subs({a: 0, b: 0, c: 3, A: 1}) == x**2/6
+    assert (q.subs({a: 0, b: 0, c: 3, A: 1}) - Q.subs({a: 0, b: 0, c: 3, A: 1}).diff(x)).simplify() == 0
+    assert (q.subs({a: 0, b: 2, c: 3, A: 1}) - Q.subs({a: 0, b: 2, c: 3, A: 1}).diff(x)).simplify() == 0
+    assert (q.subs({a: 1, b: 2, c: 3, A: 1}) - Q.subs({a: 1, b: 2, c: 3, A: 1}).diff(x)).simplify() == 0
 
 
 def test_issue_22757():
