@@ -146,6 +146,15 @@ def test_empty_Matrix():
     sT(ones(0, 0), "MutableDenseMatrix([])")
 
 
+def test_CharacterTable():
+    from sympy.combinatorics.named_groups import SymmetricGroup
+    tbl = SymmetricGroup(1).character_table()
+    assert srepr(tbl) == "CharacterTable(DomainMatrix([[1]], (1, 1), ZZ), [Permutation(0)])"
+
+    tbl = SymmetricGroup(2).character_table()
+    assert srepr(tbl) == "CharacterTable(DomainMatrix([[1, 1], [1, -1]], (2, 2), ZZ), [Permutation(1), Permutation(0, 1)])"
+
+
 def test_Rational():
     sT(Rational(1, 3), "Rational(1, 3)")
     sT(Rational(-1, 3), "Rational(-1, 3)")

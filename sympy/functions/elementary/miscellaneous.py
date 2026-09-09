@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from sympy.core import S, sympify, NumberKind
 from sympy.utilities.iterables import sift
 from sympy.core.add import Add
@@ -15,12 +16,15 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.sorting import ordered
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
 from sympy.core.numbers import Integer
 from sympy.logic.boolalg import And, Or
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def _minmax_as_Piecewise(op, *args):
@@ -569,41 +573,82 @@ class MinMaxBase(Expr, LatticeOp):
                 yield arg
 
     @classmethod
-    def _find_localzeros(cls, values, **options):
+    def _is_sign_constrained(cls, x: Expr) -> bool:
         """
-        Sequentially allocate values to localzeros.
-
-        When a value is identified as being more extreme than another member it
-        replaces that member; if this is never true, then the value is simply
-        appended to the localzeros.
+        check if x is guaranteed to be positive, negative, etc., which
+        implies that we need to consider it when comparing to other,
+        unrelated expressions.
         """
-        localzeros = set()
-        for v in values:
-            is_newzero = True
-            localzeros_ = list(localzeros)
-            for z in localzeros_:
-                if id(v) == id(z):
-                    is_newzero = False
-                else:
-                    con = cls._is_connected(v, z)
-                    if con:
-                        is_newzero = False
-                        if con is True or con == cls:
-                            localzeros.remove(z)
-                            localzeros.update([v])
-            if is_newzero:
-                localzeros.update([v])
-        return localzeros
+        return bool(
+            x.is_extended_positive or
+            x.is_extended_negative or
+            x.is_extended_nonnegative or
+            x.is_extended_nonpositive
+        )
 
     @classmethod
-    def _is_connected(cls, x, y):
+    def _split_values(cls, values: Iterable[Expr]) -> tuple[set[Expr], set[Expr], set[Expr]]:
+        """
+        Split an iterable of values into three sets:
+        - `comparables`: values that can be compared easily.
+        - `unconstrained_symbols`: bare symbols that are not
+          sign-constrained. We don't need to pairwise compare these.
+        - `rest`: all other values.
+        """
+        comparables: set[Expr] = set()
+        unconstrained_symbols: set[Expr] = set()
+        rest: set[Expr] = set()
+        for value in values:
+            if value.is_comparable:
+                comparables.add(value)
+            elif isinstance(value, Symbol) and not cls._is_sign_constrained(value):
+                unconstrained_symbols.add(value)
+            else:
+                rest.add(value)
+        return comparables, unconstrained_symbols, rest
+
+    @classmethod
+    def _find_localzeros(cls, values: Iterable[Expr]) -> set[Expr]:
+        comparables, unconstrained_symbols, rest = cls._split_values(values)
+        localzeros: set[Expr] = set()
+        # compare comparables first because they can be eliminated faster
+        to_compare = list(comparables) + list(rest)
+        for value in to_compare:
+            is_new_zero = True
+            if value in localzeros:
+                continue
+            for zero in list(localzeros):
+                if con := cls._is_connected(value, zero):
+                    is_new_zero = False
+                    if con is True or con == cls:
+                        localzeros.remove(zero)
+                        localzeros.add(value)
+            if is_new_zero:
+                localzeros.add(value)
+        unconstrained_symbol_zeros: set[Expr] = set()
+        for symbol in unconstrained_symbols:
+            is_new_zero = True
+            for zero in list(localzeros):
+                if con := cls._is_connected(symbol, zero):
+                    is_new_zero = False
+                    if con is True or con == cls:
+                        localzeros.remove(zero)
+                        unconstrained_symbol_zeros.add(symbol)
+            if is_new_zero:
+                unconstrained_symbol_zeros.add(symbol)
+        return localzeros | unconstrained_symbol_zeros
+
+
+    @classmethod
+    def _is_connected(cls, x: Expr, y: Expr) -> bool | type[Min] | type[Max]:
         """
         Check if x and y are connected somehow.
         """
         for i in range(2):
             if x == y:
                 return True
-            t, f = Max, Min
+            t: type[Max] | type[Min] = Max
+            f: type[Max] | type[Min] = Min
             for op in "><":
                 for j in range(2):
                     try:

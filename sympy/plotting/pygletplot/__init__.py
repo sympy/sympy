@@ -1,5 +1,6 @@
 """Plotting module that can plot 2D and 3D functions
 """
+from __future__ import annotations
 
 from sympy.utilities.decorator import doctest_depends_on
 

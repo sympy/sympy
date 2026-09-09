@@ -1,3 +1,4 @@
+from __future__ import annotations
 try:
     from ctypes import c_float, c_int, c_double
 except ImportError:

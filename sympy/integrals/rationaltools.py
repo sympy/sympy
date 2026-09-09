@@ -52,7 +52,7 @@ def ratint(f, x, **flags):
     else:
         p, q = f.as_numer_denom()
 
-    p, q = Poly(p, x, composite=False, field=True), Poly(q, x, composite=False, field=True)
+    p, q = Poly(p, x, field=True), Poly(q, x, field=True)
 
     coeff, p, q = p.cancel(q)
     poly, p = p.div(q)
@@ -229,7 +229,7 @@ def ratint_logpart(f, g, x, t=None):
     a, b = g, f - g.diff()*Poly(t, x)
 
     res, R = resultant(a, b, includePRS=True)
-    res = Poly(res, t, composite=False)
+    res = Poly(res, t)
 
     assert res, "BUG: resultant(%s, %s) cannot be zero" % (a, b)
 

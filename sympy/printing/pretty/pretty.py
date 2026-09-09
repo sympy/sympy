@@ -795,6 +795,23 @@ class PrettyPrinter(Printer):
         return self._print_seq(expr.args, None, None, wedge_symbol,
             parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
 
+    def _print_ArrayTensorProduct(self, expr):
+        from sympy.core.add import Add
+        from sympy.tensor.array.expressions.array_expressions import ArrayAdd
+        # Squared times (the LaTeX \boxtimes) is the notation for the tensor
+        # product of arrays used in the documentation; the circled times of
+        # TensorProduct denotes the Kronecker product there.
+        if self._use_unicode:
+            boxed_times = "\u22a0"
+        else:
+            boxed_times = ".*"
+        return self._print_seq(expr.args, None, None, boxed_times,
+            parenthesize=lambda x: isinstance(x, (Add, ArrayAdd)) or
+                precedence_traditional(x) <= PRECEDENCE["Mul"])
+
+    def _print_ArrayAdd(self, expr):
+        return self._print_seq(expr.args, None, None, ' + ')
+
     def _print_Trace(self, e):
         D = self._print(e.arg)
         D = prettyForm(*D.parens('(',')'))
@@ -1737,6 +1754,9 @@ class PrettyPrinter(Printer):
     def _print_fresnelc(self, e):
         return self._print_Function(e, func_name="C")
 
+    def _print_owens_t(self, e):
+        return self._print_Function(e, func_name="T")
+
     def _print_airyai(self, e):
         return self._print_Function(e, func_name="Ai")
 
@@ -1915,6 +1935,24 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pforma.left(pforma0))
         pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.left(name))
+        return pform
+
+    def _print_jtheta(self, e):
+        name = '\N{GREEK THETA SYMBOL}' if self._use_unicode else 'theta'
+        pretty_func = prettyForm(name)
+        index = self._print(e.args[0])
+        index_padding = prettyForm(" "*index.width())
+        index = prettyForm(*index_padding.below(index))
+        pretty_func = prettyForm(*pretty_func.right(index))
+        if len(e.args) == 4:
+            derivative = prettyForm(*self._print(e.args[3]).parens())
+            pretty_func = pretty_func**derivative
+        pretty_args = prettyForm(*self._print_seq(e.args[1:3]).parens())
+        pform = prettyForm(
+            binding=prettyForm.FUNC,
+            *stringPict.next(pretty_func, pretty_args))
+        pform.prettyFunc = pretty_func
+        pform.prettyArgs = pretty_args
         return pform
 
     def _print_GoldenRatio(self, expr):

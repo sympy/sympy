@@ -332,9 +332,11 @@ class NDimArray(Printable):
         kwargs.setdefault('evaluate', True)
         return ArrayDerivative(self.as_immutable(), *args, **kwargs)
 
-    def _eval_derivative(self, base):
-        # Types are (base: scalar, self: array)
-        return self.applyfunc(lambda x: base.diff(x))
+    def _eval_derivative(self, arg):
+        # Types are (arg: scalar, self: array); differentiate each
+        # element of the array with respect to arg (compare
+        # MatrixBase._eval_derivative).
+        return self.applyfunc(lambda x: x.diff(arg))
 
     def _eval_derivative_n_times(self, s, n):
         return Basic._eval_derivative_n_times(self, s, n)

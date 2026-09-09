@@ -9,7 +9,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (sech, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, cos, sin, tan)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import (Integral, integrate)
@@ -18,7 +18,7 @@ from sympy.simplify.fu import fu
 
 from sympy.testing.pytest import XFAIL, slow, tooslow
 
-from sympy.abc import x, k, c, y, b, h, a, m, z, n, t
+from sympy.abc import x, k, c, y, b, a, m, z, n, t
 
 
 @tooslow
@@ -167,13 +167,6 @@ def test_issue_14716():
 
 
 @XFAIL
-def test_issue_14709a():
-    i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
-    assert not i.has(Integral)
-    # assert i == 5*h**2*pi/16
-
-
-@XFAIL
 def test_issue_14074():
     i = integrate(log(sin(x)), (x, 0, pi/2))
     assert not i.has(Integral)
@@ -223,11 +216,6 @@ def test_issue_10584():
 @XFAIL
 def test_issue_9101():
     assert not integrate(log(x + sqrt(x**2 + y**2 + z**2)), z).has(Integral)
-
-
-@XFAIL
-def test_issue_7147():
-    assert not integrate(x/sqrt(a*x**2 + b*x + c)**3, x).has(Integral)
 
 
 @XFAIL

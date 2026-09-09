@@ -74,6 +74,7 @@ Continuous Types
 .. autofunction:: Reciprocal
 .. autofunction:: StudentT
 .. autofunction:: ShiftedGompertz
+.. autofunction:: SkewNormal
 .. autofunction:: Trapezoidal
 .. autofunction:: Triangular
 .. autofunction:: Uniform

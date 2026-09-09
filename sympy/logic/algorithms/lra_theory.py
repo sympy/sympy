@@ -184,11 +184,7 @@ class LRASolver():
 
         self.all_var = nonslack_variables + slack_variables
 
-        self.is_sat = True  # While True, all constraints asserted so far are satisfiable
-        self.result = None  # always one of: (True, assignment), (False, conflict clause), None
-
-        self.bound_history = []
-        self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+        self.bound_history = [BoundLevel()]
 
     @staticmethod
     def from_encoded_cnf(encoded_cnf, testing_mode=False):
@@ -371,9 +367,9 @@ class LRASolver():
         Resets the state of the LRASolver to before
         anything was asserted.
         """
-        self.result = None
         for var in self.all_var:
             var.initialize()
+        self.bound_history = [BoundLevel()]
 
     def assert_lit(self, literal):
         """
@@ -420,11 +416,6 @@ class LRASolver():
             if res and res[0] is False:
                 break
 
-        if self.is_sat and all(b.var in self.nonbasic for b in boundaries):
-            self.is_sat = res is None
-        else:
-            self.is_sat = False
-
         return res
 
     def _assert_bound(self, boundary, literal):
@@ -438,10 +429,6 @@ class LRASolver():
 
         This method is the combination of AssertUpper and AssertLower in [1]
         """
-        if self.result:
-            assert self.result[0] != False
-        self.result = None
-
         xi = boundary.var
         ci, upper = boundary.to_rational(is_negated=literal < 0)
 
@@ -465,10 +452,9 @@ class LRASolver():
             assert (opposing_bound.d * s >= 0) is True
             assert (ci.d * s <= 0) is True
 
-            self.result = False, [-conflicting_lit, -literal]
-            return self.result
+            return False, [-conflicting_lit, -literal]
 
-        self.bound_history.append((xi, target_bound, upper))
+        self.bound_history[-1].record(xi, upper)
 
         xi.set_bound(boundary, literal)
 
@@ -513,12 +499,6 @@ class LRASolver():
 
         explanation : set of ints
         """
-        if self.is_sat:
-            self.last_assign_snapshot = {var: var.assign for var in self.all_var}
-            return True, self.last_assign_snapshot
-        if self.result:
-            return self.result
-
         while True:
             if self.run_checks:
                 # nonbasic variables must always be within bounds
@@ -542,8 +522,7 @@ class LRASolver():
             cand = [(r, b) for r, b in enumerate(self.basic)
                     if b.assign < b.lower or b.assign > b.upper]
             if not cand:
-                self.last_assign_snapshot = {var: var.assign for var in self.all_var}
-                return True, self.last_assign_snapshot
+                return True, {v: v.assign for v in self.all_var}
             i, xi = min(cand, key=lambda t: t[1].col_idx)  # Bland's rule
 
             if xi.assign < xi.lower:
@@ -671,21 +650,26 @@ class LRASolver():
             If called when the ``bound_history`` stack is empty, indicating
             the solver's internal state is out of sync.
         """
-        if not self.bound_history:
+        if not self.bound_history[-1].updates:
             raise ValueError("Cannot backtrack, bound_history stack is empty")
 
-        xi, old_bound, upper = self.bound_history.pop()
+        self.bound_history[-1].undo()
 
-        if upper:
-            xi.upper = old_bound
-        else:
-            xi.lower = old_bound
+    def push_level(self):
+        """
+        Save the state of the LRA solver so that pop_level() can restore it.
+        Called when the SAT solver starts a new decision level.
+        """
+        self.bound_history.append(BoundLevel())
 
-        for var in self.all_var:
-            var.assign = self.last_assign_snapshot[var]
-
-        self.is_sat = True
-        self.result = None
+    def pop_level(self):
+        """
+        Restore the LRA solver to its state at the most recent push_level().
+        Called when the SAT solver backtracks a decision level.
+        """
+        while self.bound_history[-1].updates:
+            self.backtrack()
+        self.bound_history.pop()
 
 def _sep_const_coeff(expr):
     """
@@ -853,6 +837,35 @@ def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
         n = len(new_nonbasic+new_basic)
         assert A[:, n-m:] == -eye(m)
     return A, new_basic, new_nonbasic
+
+
+class BoundLevel:
+    """
+    The bound updates made while one decision level of the SAT solver was
+    current, together with enough information to undo them.
+    """
+
+    def __init__(self):
+        self.updates = []
+
+    def record(self, var, upper):
+        """
+        Save the bound on the given side of ``var`` before it is replaced.
+        The literal goes with it, since `check` builds conflict clauses from it.
+        """
+        if upper:
+            self.updates.append((var, var.upper, var.upper_literal, upper))
+        else:
+            self.updates.append((var, var.lower, var.lower_literal, upper))
+
+    def undo(self):
+        """Restore the most recent bound update."""
+        var, bound, literal, upper = self.updates.pop()
+
+        if upper:
+            var.upper, var.upper_literal = bound, literal
+        else:
+            var.lower, var.lower_literal = bound, literal
 
 
 class Boundary:

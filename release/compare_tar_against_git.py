@@ -47,7 +47,6 @@ git_whitelist = {
     '.ci/README.rst',
     '.circleci/config.yml',
     '.editorconfig',
-    '.flake8',
     'asv.conf.actions.json',
     'codecov.yml',
     'requirements-dev.txt',
@@ -55,6 +54,9 @@ git_whitelist = {
     'banner.svg',
     # GitHub Codespace
     '.devcontainer/devcontainer.json',
+    # Coding agent instructions
+    'AGENTS.md',
+    'CLAUDE.md',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide

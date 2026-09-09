@@ -1353,7 +1353,9 @@ class Basic(Printable):
 
         Trying to replace x with an expression raises an error:
 
-        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y}) # doctest: +SKIP
+        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y})
+        Traceback (most recent call last):
+        ...
         ValueError: Invalid limits given: ((2*y, 1, 4*y),)
 
         See Also

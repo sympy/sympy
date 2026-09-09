@@ -1375,6 +1375,19 @@ class Derivative(Expr):
         if len(variable_count) == 0:
             return expr
 
+        # If the expression or a variable of differentiation is a matrix or
+        # array object, delegate to ArrayDerivative so that every
+        # construction path (not just ``.diff()``, which routes through
+        # ``_derivative_dispatch``) uses the matrix/array-aware evaluation.
+        if cls is Derivative:
+            from sympy.matrices.matrixbase import MatrixBase
+            from sympy.matrices.expressions.matexpr import MatrixExpr
+            array_types = (MatrixBase, MatrixExpr, NDimArray)
+            if isinstance(expr, array_types) or any(
+                    isinstance(v, array_types) for v, _ in variable_count):
+                from sympy.tensor.array.array_derivatives import ArrayDerivative
+                return ArrayDerivative(expr, *variable_count, **kwargs)
+
         evaluate = kwargs.get('evaluate', False)
 
         if evaluate:

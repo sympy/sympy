@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pyglet.window import Window
 from pyglet.clock import Clock
 

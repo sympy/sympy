@@ -44,7 +44,7 @@ class _ConvertArrayToIndexed:
             return Sum(newexpr, *limits)
         if isinstance(expr, ArrayDiagonal):
             new_indices = [None for i in range(get_ndim(expr.expr))]
-            ind_pos = expr._push_indices_down(expr.diagonal_indices, list(range(len(indices))), get_ndim(expr))
+            ind_pos = expr._push_indices_down(expr.diagonal_indices, list(range(len(indices))), get_ndim(expr.expr))
             for i, index in zip(ind_pos, indices):
                 if isinstance(i, collections.abc.Iterable):
                     for j in i:

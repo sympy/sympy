@@ -139,18 +139,14 @@ Setup the constraints
 ---------------------
 
 The nonholonomic constraints are the velocity of the front wheel contact point
-dotted into the X, Y, and Z directions; the yaw frame is used as it is "closer"
-to the front wheel (one fewer direction cosine matrix connecting them). These
-constraints force the velocity of the front wheel contact point to be zero in
-the inertial frame; the X and Y direction constraints enforce a "no-slip"
-condition, and the Z direction constraint forces the front wheel contact point
-to not move away from the ground frame, essentially replicating the holonomic
-constraint which does not allow the frame pitch to change in an invalid
-fashion. ::
+dotted into the X and Y directions; the yaw frame is used as it is closest in
+adjacency to the front wheel (one fewer direction cosine matrix connecting
+them). These constraints force the velocity of the front wheel contact point to
+be zero in the inertial frame; the X and Y direction constraints enforce a
+"no-slip" condition. ::
 
   >>> conlist_speed = [me.dot(WF_cont.vel(N), Y.x),
-  ...                  me.dot(WF_cont.vel(N), Y.y),
-  ...                  me.dot(WF_cont.vel(N), Y.z)]
+  ...                  me.dot(WF_cont.vel(N), Y.y)]
 
 The holonomic constraint is that the position from the rear wheel contact point
 to the front wheel contact point when dotted into the normal-to-ground plane
@@ -218,7 +214,7 @@ linearization to correctly work. ::
   ...     configuration_constraints=conlist_coord,
   ...     u_ind=[u2, u3, u5],
   ...     u_dependent=[u1, u4, u6],
-  ...     velocity_constraints=conlist_speed,
+  ...     nonholonomic_constraints=conlist_speed,
   ...     kd_eqs=kd,
   ...     constraint_solver='CRAMER')
   >>> fr, frstar = kane.kanes_equations(bodies, loads=forces)
@@ -342,7 +338,7 @@ columns for lean, steer, lean rate, and steer rate.
   >>> print('v = 1')
   v = 1
   >>> print(A.subs(v, 1).eigenvals())
-  {-3.13423125066578 - 1.05503732448615e-65*I: 1, 3.52696170990069 - 0.807740275199311*I: 1, 3.52696170990069 + 0.807740275199311*I: 1, -7.11008014637441: 1}
+  {-3.13423125066578 - 7.27862159457081e-65*I: 1, 3.52696170990069 - 0.807740275199311*I: 1, 3.52696170990069 + 0.807740275199311*I: 1, -7.11008014637441: 1}
   >>> print('v = 2')
   v = 2
   >>> print(A.subs(v, 2).eigenvals())
@@ -354,11 +350,11 @@ columns for lean, steer, lean rate, and steer rate.
   >>> print('v = 4')
   v = 4
   >>> print(A.subs(v, 4).eigenvals())
-  {0.413253315211239 - 3.07910818603205*I: 1, 0.413253315211239 + 3.07910818603205*I: 1, -1.42944427361326 + 1.65070329233125e-64*I: 1, -12.1586142657644: 1}
+  {0.413253315211237 - 3.07910818603205*I: 1, 0.413253315211237 + 3.07910818603205*I: 1, -1.42944427361325 - 1.84306188338934e-64*I: 1, -12.1586142657644: 1}
   >>> print('v = 5')
   v = 5
   >>> print(A.subs(v, 5).eigenvals())
-  {-0.775341882195845 - 4.46486771378823*I: 1, -0.322866429004087 + 3.32140410564766e-64*I: 1, -0.775341882195845 + 4.46486771378823*I: 1, -14.0783896927982: 1}
+  {-0.775341882195847 - 4.46486771378823*I: 1, -0.322866429004085 - 5.80197307773222e-65*I: 1, -0.775341882195847 + 4.46486771378823*I: 1, -14.0783896927982: 1}
 
 The eigenvalues shown above match those in Table 2 on pg. 1971 of
 [Meijaard2007]_. This concludes the bicycle example.
