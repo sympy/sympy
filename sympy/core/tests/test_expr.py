@@ -1860,6 +1860,14 @@ def test_eval_interval():
     assert a._eval_interval(x, oo, -oo) == y
 
 
+def test_eval_interval_log_branch_cut():
+    # issue 30448: log(g(x)) is discontinuous where g(x) crosses the
+    # branch cut (the negative real axis) without vanishing, not just
+    # where g(x) = 0
+    F = -I*exp(I*t) + I*log(exp(-I*t)) + I*exp(-I*t)
+    assert F._eval_interval(t, S.Zero, 2*pi) == 2*pi
+
+
 def test_eval_interval_zoo():
     # Test that limit is used when zoo is returned
     assert Si(1/x)._eval_interval(x, S.Zero, S.One) == -pi/2 + Si(1)
