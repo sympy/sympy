@@ -9,7 +9,6 @@ the separate 'factorials' module.
 from __future__ import annotations
 from math import prod
 from collections import defaultdict
-from typing import Callable
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
