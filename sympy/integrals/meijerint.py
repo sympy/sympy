@@ -1737,7 +1737,8 @@ def _meijerint_indefinite_1(f, x):
 
         # now substitute back
         # Note: we really do want the powers of x to combine.
-        res += powdenest(fac_*r, polar=True)
+        from sympy import polar_lift
+        res += powdenest((fac_*r).replace(polar_lift, lambda z: z))
 
     def _clean(res):
         """This multiplies out superfluous powers of x we created, and chops off
