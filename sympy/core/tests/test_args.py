@@ -2571,19 +2571,19 @@ def test_sympy__functions__special__elliptic_functions__JacobiEllipticBase():
     assert _test_args(JacobiEllipticBase(x, y))
 
 
-def test_sympy__functions__special__elliptic_functions__jacobisn():
-    from sympy.functions.special.elliptic_functions import jacobisn
-    assert _test_args(jacobisn(x, y))
+def test_sympy__functions__special__elliptic_functions__jacobi_sn():
+    from sympy.functions.special.elliptic_functions import jacobi_sn
+    assert _test_args(jacobi_sn(x, y))
 
 
-def test_sympy__functions__special__elliptic_functions__jacobicn():
-    from sympy.functions.special.elliptic_functions import jacobicn
-    assert _test_args(jacobicn(x, y))
+def test_sympy__functions__special__elliptic_functions__jacobi_cn():
+    from sympy.functions.special.elliptic_functions import jacobi_cn
+    assert _test_args(jacobi_cn(x, y))
 
 
-def test_sympy__functions__special__elliptic_functions__jacobidn():
-    from sympy.functions.special.elliptic_functions import jacobidn
-    assert _test_args(jacobidn(x, y))
+def test_sympy__functions__special__elliptic_functions__jacobi_dn():
+    from sympy.functions.special.elliptic_functions import jacobi_dn
+    assert _test_args(jacobi_dn(x, y))
 
 
 def test_sympy__functions__special__delta_functions__DiracDelta():

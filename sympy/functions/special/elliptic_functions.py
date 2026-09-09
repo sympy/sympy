@@ -291,7 +291,10 @@ class JacobiEllipticBase(DefinedFunction):
         return self.args[1]
 
     def _eval_evalf(self, prec):
-        if all(arg.is_number for arg in self.args):
+        if any(arg is S.NaN for arg in self.args):
+            return S.NaN
+        if all(arg.is_number and arg.is_finite is not False
+                for arg in self.args):
             u = self.argument._to_mpmath(prec)
             m = self.parameter._to_mpmath(prec)
             with local_workprec(prec) as ctx:
@@ -299,14 +302,14 @@ class JacobiEllipticBase(DefinedFunction):
             return Expr._from_mpmath(result, prec)
 
 
-class jacobisn(JacobiEllipticBase):
+class jacobi_sn(JacobiEllipticBase):
     r"""
-    The Jacobi elliptic sine function ``jacobisn(u, m)``.
+    The Jacobi elliptic sine function ``jacobi_sn(u, m)``.
 
     Explanation
     ===========
 
-    ``jacobisn(u, m)`` is the Jacobi elliptic function
+    ``jacobi_sn(u, m)`` is the Jacobi elliptic function
     :math:`\operatorname{sn}(u\mathrel{|}m)`, with argument $u$ and
     parameter $m = k^2$, where $k$ is the elliptic modulus. If
     $u = F(\phi\mathrel{|}m)$, where $F$ is the incomplete elliptic
@@ -317,7 +320,7 @@ class jacobisn(JacobiEllipticBase):
 
         \operatorname{sn}(u\mathrel{|}m) = \sin(\phi).
 
-    As a function of $u$, ``jacobisn`` is doubly periodic. Writing $K(m)$
+    As a function of $u$, ``jacobi_sn`` is doubly periodic. Writing $K(m)$
     for the complete elliptic integral of the first kind, represented by
     :class:`~.elliptic_k`, a pair of periods is
 
@@ -327,7 +330,7 @@ class jacobisn(JacobiEllipticBase):
 
     The function is meromorphic in both $u$ and $m$.
 
-    Together with ``jacobicn`` and ``jacobidn``, this function belongs to a
+    Together with ``jacobi_cn`` and ``jacobi_dn``, this function belongs to a
     system closed under differentiation with respect to $u$. It can also be
     rewritten in terms of :class:`~.jtheta`. With
 
@@ -350,23 +353,24 @@ class jacobisn(JacobiEllipticBase):
     Examples
     ========
 
-    >>> from sympy import jacobisn, jtheta
-    >>> from sympy.abc import m, u
-    >>> jacobisn(0, m)
+    >>> from sympy import elliptic_k, exp, jacobi_sn, jtheta, pi
+    >>> from sympy.abc import m, q, u
+    >>> jacobi_sn(0, m)
     0
-    >>> jacobisn(u, 0)
+    >>> jacobi_sn(u, 0)
     sin(u)
-    >>> jacobisn(u, 1)
+    >>> jacobi_sn(u, 1)
     tanh(u)
-    >>> jacobisn(u, m).diff(u)
-    jacobicn(u, m)*jacobidn(u, m)
-    >>> jacobisn(u, m).rewrite(jtheta).has(jtheta)
-    True
+    >>> jacobi_sn(u, m).diff(u)
+    jacobi_cn(u, m)*jacobi_dn(u, m)
+    >>> nome = exp(-pi*elliptic_k(1 - m)/elliptic_k(m))
+    >>> jacobi_sn(u, m).rewrite(jtheta).subs(nome, q)
+    jtheta(1, u/jtheta(3, 0, q)**2, q)*jtheta(3, 0, q)/(jtheta(2, 0, q)*jtheta(4, u/jtheta(3, 0, q)**2, q))
 
     See Also
     ========
 
-    jacobicn, jacobidn, jtheta, elliptic_f, elliptic_k
+    jacobi_cn, jacobi_dn, jtheta, elliptic_f, elliptic_k
 
     References
     ==========
@@ -380,6 +384,8 @@ class jacobisn(JacobiEllipticBase):
 
     @classmethod
     def eval(cls, u, m):
+        if u is S.NaN or m is S.NaN:
+            return S.NaN
         if u.is_zero:
             return S.Zero
         if m.is_zero:
@@ -392,7 +398,7 @@ class jacobisn(JacobiEllipticBase):
     def fdiff(self, argindex=1):
         u, m = self.args
         if argindex == 1:
-            return jacobicn(u, m)*jacobidn(u, m)
+            return jacobi_cn(u, m)*jacobi_dn(u, m)
         raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_jtheta(self, u, m, **kwargs):
@@ -401,14 +407,14 @@ class jacobisn(JacobiEllipticBase):
                 / (jtheta(2, 0, q)*jtheta(4, v, q)))
 
 
-class jacobicn(JacobiEllipticBase):
+class jacobi_cn(JacobiEllipticBase):
     r"""
-    The Jacobi elliptic cosine function ``jacobicn(u, m)``.
+    The Jacobi elliptic cosine function ``jacobi_cn(u, m)``.
 
     Explanation
     ===========
 
-    ``jacobicn(u, m)`` is the Jacobi elliptic function
+    ``jacobi_cn(u, m)`` is the Jacobi elliptic function
     :math:`\operatorname{cn}(u\mathrel{|}m)`, with argument $u$ and
     parameter $m = k^2$, where $k$ is the elliptic modulus. If
     $u = F(\phi\mathrel{|}m)$, where $F$ is the incomplete elliptic
@@ -419,7 +425,7 @@ class jacobicn(JacobiEllipticBase):
 
         \operatorname{cn}(u\mathrel{|}m) = \cos(\phi).
 
-    As a function of $u$, ``jacobicn`` is doubly periodic. Writing $K(m)$
+    As a function of $u$, ``jacobi_cn`` is doubly periodic. Writing $K(m)$
     for the complete elliptic integral of the first kind, represented by
     :class:`~.elliptic_k`, a pair of periods is
 
@@ -429,7 +435,7 @@ class jacobicn(JacobiEllipticBase):
 
     The function is meromorphic in both $u$ and $m$.
 
-    Together with ``jacobisn`` and ``jacobidn``, this function belongs to a
+    Together with ``jacobi_sn`` and ``jacobi_dn``, this function belongs to a
     system closed under differentiation with respect to $u$. It can also be
     rewritten in terms of :class:`~.jtheta`. With
 
@@ -452,23 +458,24 @@ class jacobicn(JacobiEllipticBase):
     Examples
     ========
 
-    >>> from sympy import jacobicn, jtheta
-    >>> from sympy.abc import m, u
-    >>> jacobicn(0, m)
+    >>> from sympy import elliptic_k, exp, jacobi_cn, jtheta, pi
+    >>> from sympy.abc import m, q, u
+    >>> jacobi_cn(0, m)
     1
-    >>> jacobicn(u, 0)
+    >>> jacobi_cn(u, 0)
     cos(u)
-    >>> jacobicn(u, 1)
+    >>> jacobi_cn(u, 1)
     sech(u)
-    >>> jacobicn(u, m).diff(u)
-    -jacobidn(u, m)*jacobisn(u, m)
-    >>> jacobicn(u, m).rewrite(jtheta).has(jtheta)
-    True
+    >>> jacobi_cn(u, m).diff(u)
+    -jacobi_dn(u, m)*jacobi_sn(u, m)
+    >>> nome = exp(-pi*elliptic_k(1 - m)/elliptic_k(m))
+    >>> jacobi_cn(u, m).rewrite(jtheta).subs(nome, q)
+    jtheta(2, u/jtheta(3, 0, q)**2, q)*jtheta(4, 0, q)/(jtheta(2, 0, q)*jtheta(4, u/jtheta(3, 0, q)**2, q))
 
     See Also
     ========
 
-    jacobisn, jacobidn, jtheta, elliptic_f, elliptic_k
+    jacobi_sn, jacobi_dn, jtheta, elliptic_f, elliptic_k
 
     References
     ==========
@@ -482,6 +489,8 @@ class jacobicn(JacobiEllipticBase):
 
     @classmethod
     def eval(cls, u, m):
+        if u is S.NaN or m is S.NaN:
+            return S.NaN
         if u.is_zero:
             return S.One
         if m.is_zero:
@@ -494,7 +503,7 @@ class jacobicn(JacobiEllipticBase):
     def fdiff(self, argindex=1):
         u, m = self.args
         if argindex == 1:
-            return -jacobisn(u, m)*jacobidn(u, m)
+            return -jacobi_sn(u, m)*jacobi_dn(u, m)
         raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_jtheta(self, u, m, **kwargs):
@@ -503,14 +512,14 @@ class jacobicn(JacobiEllipticBase):
                 / (jtheta(2, 0, q)*jtheta(4, v, q)))
 
 
-class jacobidn(JacobiEllipticBase):
+class jacobi_dn(JacobiEllipticBase):
     r"""
-    The Jacobi delta amplitude function ``jacobidn(u, m)``.
+    The Jacobi delta amplitude function ``jacobi_dn(u, m)``.
 
     Explanation
     ===========
 
-    ``jacobidn(u, m)`` is the Jacobi elliptic function
+    ``jacobi_dn(u, m)`` is the Jacobi elliptic function
     :math:`\operatorname{dn}(u\mathrel{|}m)`, with argument $u$ and
     parameter $m = k^2$, where $k$ is the elliptic modulus. If
     $u = F(\phi\mathrel{|}m)$, where $F$ is the incomplete elliptic
@@ -522,7 +531,7 @@ class jacobidn(JacobiEllipticBase):
         \operatorname{dn}(u\mathrel{|}m)
         = \sqrt{1 - m\sin^2(\phi)}.
 
-    As a function of $u$, ``jacobidn`` is doubly periodic. Writing $K(m)$
+    As a function of $u$, ``jacobi_dn`` is doubly periodic. Writing $K(m)$
     for the complete elliptic integral of the first kind, represented by
     :class:`~.elliptic_k`, a pair of periods is
 
@@ -532,7 +541,7 @@ class jacobidn(JacobiEllipticBase):
 
     The function is meromorphic in both $u$ and $m$.
 
-    Together with ``jacobisn`` and ``jacobicn``, this function belongs to a
+    Together with ``jacobi_sn`` and ``jacobi_cn``, this function belongs to a
     system closed under differentiation with respect to $u$. It can also be
     rewritten in terms of :class:`~.jtheta`. With
 
@@ -555,23 +564,24 @@ class jacobidn(JacobiEllipticBase):
     Examples
     ========
 
-    >>> from sympy import jacobidn, jtheta
-    >>> from sympy.abc import m, u
-    >>> jacobidn(0, m)
+    >>> from sympy import elliptic_k, exp, jacobi_dn, jtheta, pi
+    >>> from sympy.abc import m, q, u
+    >>> jacobi_dn(0, m)
     1
-    >>> jacobidn(u, 0)
+    >>> jacobi_dn(u, 0)
     1
-    >>> jacobidn(u, 1)
+    >>> jacobi_dn(u, 1)
     sech(u)
-    >>> jacobidn(u, m).diff(u)
-    -m*jacobicn(u, m)*jacobisn(u, m)
-    >>> jacobidn(u, m).rewrite(jtheta).has(jtheta)
-    True
+    >>> jacobi_dn(u, m).diff(u)
+    -m*jacobi_cn(u, m)*jacobi_sn(u, m)
+    >>> nome = exp(-pi*elliptic_k(1 - m)/elliptic_k(m))
+    >>> jacobi_dn(u, m).rewrite(jtheta).subs(nome, q)
+    jtheta(3, u/jtheta(3, 0, q)**2, q)*jtheta(4, 0, q)/(jtheta(3, 0, q)*jtheta(4, u/jtheta(3, 0, q)**2, q))
 
     See Also
     ========
 
-    jacobisn, jacobicn, jtheta, elliptic_f, elliptic_k
+    jacobi_sn, jacobi_cn, jtheta, elliptic_f, elliptic_k
 
     References
     ==========
@@ -585,6 +595,8 @@ class jacobidn(JacobiEllipticBase):
 
     @classmethod
     def eval(cls, u, m):
+        if u is S.NaN or m is S.NaN:
+            return S.NaN
         if u.is_zero or m.is_zero:
             return S.One
         if m is S.One:
@@ -595,7 +607,7 @@ class jacobidn(JacobiEllipticBase):
     def fdiff(self, argindex=1):
         u, m = self.args
         if argindex == 1:
-            return -m*jacobisn(u, m)*jacobicn(u, m)
+            return -m*jacobi_sn(u, m)*jacobi_cn(u, m)
         raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_jtheta(self, u, m, **kwargs):

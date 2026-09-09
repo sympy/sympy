@@ -1945,13 +1945,13 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.parens())
         return prettyForm(*pform.left(name))
 
-    def _print_jacobisn(self, e):
+    def _print_jacobi_sn(self, e):
         return self._print_jacobi_elliptic(e, 'sn')
 
-    def _print_jacobicn(self, e):
+    def _print_jacobi_cn(self, e):
         return self._print_jacobi_elliptic(e, 'cn')
 
-    def _print_jacobidn(self, e):
+    def _print_jacobi_dn(self, e):
         return self._print_jacobi_elliptic(e, 'dn')
 
     def _print_GoldenRatio(self, expr):

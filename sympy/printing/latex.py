@@ -1276,13 +1276,13 @@ class LatexPrinter(Printer):
         return tex + r"\left(%s\middle| %s\right)" % (
             self._print(u), self._print(m))
 
-    def _print_jacobisn(self, expr, exp=None):
+    def _print_jacobi_sn(self, expr, exp=None):
         return self._print_jacobi_elliptic(expr, "sn", exp)
 
-    def _print_jacobicn(self, expr, exp=None):
+    def _print_jacobi_cn(self, expr, exp=None):
         return self._print_jacobi_elliptic(expr, "cn", exp)
 
-    def _print_jacobidn(self, expr, exp=None):
+    def _print_jacobi_dn(self, expr, exp=None):
         return self._print_jacobi_elliptic(expr, "dn", exp)
 
     def _print_beta(self, expr, exp=None):

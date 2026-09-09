@@ -4,15 +4,17 @@ from sympy.core import S
 from sympy.core.function import Derivative
 from sympy.core.numbers import Float, I, Rational, pi
 from sympy.core.symbol import Symbol
+from sympy.external import mpmath
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.hyperbolic import sech, tanh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_functions import (
-    jacobicn, jacobidn, jacobisn, jtheta)
+    jacobi_cn, jacobi_dn, jacobi_sn, jtheta)
 from sympy.functions.special.elliptic_integrals import elliptic_k
 from sympy.series.order import O
 from sympy.testing.pytest import raises
+from sympy.utilities.lambdify import lambdify
 
 
 n = Symbol('n', integer=True)
@@ -26,7 +28,7 @@ def _assert_close(left, right, tolerance=S(10)**-25):
 
 
 def test_jacobi_elliptic_definition():
-    for func in (jacobisn, jacobicn, jacobidn):
+    for func in (jacobi_sn, jacobi_cn, jacobi_dn):
         assert func(z, q).args == (z, q)
 
 
@@ -35,17 +37,23 @@ def test_jacobi_elliptic_special_values():
     # https://dlmf.nist.gov/22.5.T1
     # https://dlmf.nist.gov/22.5.T3
     # https://dlmf.nist.gov/22.5.T4
-    assert jacobisn(0, q) == 0
-    assert jacobicn(0, q) == 1
-    assert jacobidn(0, q) == 1
+    assert jacobi_sn(0, q) == 0
+    assert jacobi_cn(0, q) == 1
+    assert jacobi_dn(0, q) == 1
 
-    assert jacobisn(z, 0) == sin(z)
-    assert jacobicn(z, 0) == cos(z)
-    assert jacobidn(z, 0) == 1
+    assert jacobi_sn(z, 0) == sin(z)
+    assert jacobi_cn(z, 0) == cos(z)
+    assert jacobi_dn(z, 0) == 1
 
-    assert jacobisn(z, 1) == tanh(z)
-    assert jacobicn(z, 1) == sech(z)
-    assert jacobidn(z, 1) == sech(z)
+    assert jacobi_sn(z, 1) == tanh(z)
+    assert jacobi_cn(z, 1) == sech(z)
+    assert jacobi_dn(z, 1) == sech(z)
+
+    for func in (jacobi_sn, jacobi_cn, jacobi_dn):
+        assert func(S.NaN, q) is S.NaN
+        assert func(z, S.NaN) is S.NaN
+        assert func(S.NaN, 0) is S.NaN
+        assert func(0, S.NaN) is S.NaN
 
 
 def test_jacobi_elliptic_parity():
@@ -54,21 +62,21 @@ def test_jacobi_elliptic_parity():
     # https://dlmf.nist.gov/22.2.E4
     # https://dlmf.nist.gov/22.2.E5
     # https://dlmf.nist.gov/22.2.E6
-    assert jacobisn(-z, q) == -jacobisn(z, q)
-    assert jacobicn(-z, q) == jacobicn(z, q)
-    assert jacobidn(-z, q) == jacobidn(z, q)
+    assert jacobi_sn(-z, q) == -jacobi_sn(z, q)
+    assert jacobi_cn(-z, q) == jacobi_cn(z, q)
+    assert jacobi_dn(-z, q) == jacobi_dn(z, q)
 
 
 def test_jacobi_elliptic_diff():
     # DLMF 22.13.1:
     # https://dlmf.nist.gov/22.13.T1
-    assert jacobisn(z, q).diff(z) == jacobicn(z, q)*jacobidn(z, q)
-    assert jacobicn(z, q).diff(z) == -jacobisn(z, q)*jacobidn(z, q)
-    assert jacobidn(z, q).diff(z) == -q*jacobisn(z, q)*jacobicn(z, q)
+    assert jacobi_sn(z, q).diff(z) == jacobi_cn(z, q)*jacobi_dn(z, q)
+    assert jacobi_cn(z, q).diff(z) == -jacobi_sn(z, q)*jacobi_dn(z, q)
+    assert jacobi_dn(z, q).diff(z) == -q*jacobi_sn(z, q)*jacobi_cn(z, q)
 
-    assert jacobisn(z, q).diff(q) == Derivative(jacobisn(z, q), q)
-    assert jacobicn(z, q).diff(q) == Derivative(jacobicn(z, q), q)
-    assert jacobidn(z, q).diff(q) == Derivative(jacobidn(z, q), q)
+    assert jacobi_sn(z, q).diff(q) == Derivative(jacobi_sn(z, q), q)
+    assert jacobi_cn(z, q).diff(q) == Derivative(jacobi_cn(z, q), q)
+    assert jacobi_dn(z, q).diff(q) == Derivative(jacobi_dn(z, q), q)
 
 
 def test_jacobi_elliptic_series():
@@ -77,12 +85,12 @@ def test_jacobi_elliptic_series():
     # https://dlmf.nist.gov/22.10.E1
     # https://dlmf.nist.gov/22.10.E2
     # https://dlmf.nist.gov/22.10.E3
-    assert jacobisn(z, q).series(z, 0, 6) == (
+    assert jacobi_sn(z, q).series(z, 0, 6) == (
         z + (-q/6 - S.One/6)*z**3
         + (q**2/120 + 7*q/60 + S.One/120)*z**5 + O(z**6))
-    assert jacobicn(z, q).series(z, 0, 6) == (
+    assert jacobi_cn(z, q).series(z, 0, 6) == (
         1 - z**2/2 + (q/6 + S.One/24)*z**4 + O(z**6))
-    assert jacobidn(z, q).series(z, 0, 6) == (
+    assert jacobi_dn(z, q).series(z, 0, 6) == (
         1 - q*z**2/2 + (q**2/24 + q/6)*z**4 + O(z**6))
 
 
@@ -94,17 +102,17 @@ def test_jacobi_elliptic_rewrite_as_jtheta():
     nome = exp(-pi*elliptic_k(1 - q)/elliptic_k(q))
     theta_argument = z/jtheta(3, 0, nome)**2
 
-    assert jacobisn(z, q).rewrite(jtheta) == (
+    assert jacobi_sn(z, q).rewrite(jtheta) == (
         jtheta(3, 0, nome)*jtheta(1, theta_argument, nome)
         / (jtheta(2, 0, nome)*jtheta(4, theta_argument, nome)))
-    assert jacobicn(z, q).rewrite(jtheta) == (
+    assert jacobi_cn(z, q).rewrite(jtheta) == (
         jtheta(4, 0, nome)*jtheta(2, theta_argument, nome)
         / (jtheta(2, 0, nome)*jtheta(4, theta_argument, nome)))
-    assert jacobidn(z, q).rewrite(jtheta) == (
+    assert jacobi_dn(z, q).rewrite(jtheta) == (
         jtheta(4, 0, nome)*jtheta(3, theta_argument, nome)
         / (jtheta(3, 0, nome)*jtheta(4, theta_argument, nome)))
 
-    for func in (jacobisn, jacobicn, jacobidn):
+    for func in (jacobi_sn, jacobi_cn, jacobi_dn):
         value = func(Rational(1, 3), Rational(2, 5))
         _assert_close(value, value.rewrite(jtheta))
 
@@ -113,9 +121,9 @@ def test_jacobi_elliptic_evalf():
     # Reference values from the mpmath ellipfun documentation and tests:
     # https://mpmath.org/doc/current/functions/elliptic.html#ellipfun
     references = (
-        (jacobisn, '0.24615967096986145833'),
-        (jacobicn, '0.96922928989378439337'),
-        (jacobidn, '0.98473484156599474563'),
+        (jacobi_sn, '0.24615967096986145833'),
+        (jacobi_cn, '0.96922928989378439337'),
+        (jacobi_dn, '0.98473484156599474563'),
     )
     for func, reference in references:
         value = func(Rational(1, 4), Rational(1, 2)).evalf(25)
@@ -123,13 +131,36 @@ def test_jacobi_elliptic_evalf():
 
     argument = Rational(1, 3) + I/7
     parameter = Rational(2, 5) + I/9
-    sn = jacobisn(argument, parameter)
-    cn = jacobicn(argument, parameter)
-    dn = jacobidn(argument, parameter)
+    sn = jacobi_sn(argument, parameter)
+    cn = jacobi_cn(argument, parameter)
+    dn = jacobi_dn(argument, parameter)
     # DLMF 22.6.1, with m = k**2:
     # https://dlmf.nist.gov/22.6.E1
     _assert_close(sn**2 + cn**2, 1)
     _assert_close(dn**2 + parameter*sn**2, 1)
+
+    for func in (jacobi_sn, jacobi_cn, jacobi_dn):
+        for nonfinite in (S.Infinity, S.NegativeInfinity,
+                S.ComplexInfinity):
+            value = func(nonfinite, S.Half)
+            assert value.evalf() == value
+            value = func(S.Half, nonfinite)
+            assert value.evalf() == value
+        assert func(S.NaN, S.Half, evaluate=False).evalf() is S.NaN
+        assert func(S.Half, S.NaN, evaluate=False).evalf() is S.NaN
+
+
+def test_jacobi_elliptic_lambdify_mpmath():
+    references = (
+        (jacobi_sn, '0.24615967096986145833'),
+        (jacobi_cn, '0.96922928989378439337'),
+        (jacobi_dn, '0.98473484156599474563'),
+    )
+    with mpmath.mp.workdps(30):
+        for func, reference in references:
+            numerical = lambdify((z, q), func(z, q), 'mpmath')
+            value = numerical(mpmath.mpf(1)/4, mpmath.mpf(1)/2)
+            assert abs(value - mpmath.mpf(reference)) < mpmath.mpf('1e-19')
 
 
 def test_jacobi_elliptic_double_argument_identities():
@@ -140,21 +171,21 @@ def test_jacobi_elliptic_double_argument_identities():
     # https://dlmf.nist.gov/22.6.E7
     argument = Rational(1, 3) + I/7
     parameter = Rational(2, 5) + I/9
-    sn = jacobisn(argument, parameter)
-    cn = jacobicn(argument, parameter)
-    dn = jacobidn(argument, parameter)
+    sn = jacobi_sn(argument, parameter)
+    cn = jacobi_cn(argument, parameter)
+    dn = jacobi_dn(argument, parameter)
     denominator = 1 - parameter*sn**4
 
     _assert_close(
-        jacobisn(2*argument, parameter),
+        jacobi_sn(2*argument, parameter),
         2*sn*cn*dn/denominator,
     )
     _assert_close(
-        jacobicn(2*argument, parameter),
+        jacobi_cn(2*argument, parameter),
         (cn**2 - sn**2*dn**2)/denominator,
     )
     _assert_close(
-        jacobidn(2*argument, parameter),
+        jacobi_dn(2*argument, parameter),
         (dn**2 - parameter*sn**2*cn**2)/denominator,
     )
 
@@ -167,21 +198,21 @@ def test_jacobi_elliptic_half_argument_identities():
     # https://dlmf.nist.gov/22.6.E21
     argument = Rational(1, 3) + I/7
     parameter = Rational(2, 5) + I/9
-    cn = jacobicn(argument, parameter)
-    dn = jacobidn(argument, parameter)
+    cn = jacobi_cn(argument, parameter)
+    dn = jacobi_dn(argument, parameter)
     complementary_parameter = 1 - parameter
 
     _assert_close(
-        jacobisn(argument/2, parameter)**2,
+        jacobi_sn(argument/2, parameter)**2,
         (1 - cn)/(1 + dn),
     )
     _assert_close(
-        jacobicn(argument/2, parameter)**2,
+        jacobi_cn(argument/2, parameter)**2,
         (-complementary_parameter + dn + parameter*cn)
         / (parameter*(1 + cn)),
     )
     _assert_close(
-        jacobidn(argument/2, parameter)**2,
+        jacobi_dn(argument/2, parameter)**2,
         (parameter*cn + dn + complementary_parameter)/(1 + dn),
     )
 
@@ -195,9 +226,9 @@ def test_jacobi_elliptic_periodicity():
     complementary = elliptic_k(1 - parameter)
 
     periods = (
-        (jacobisn, (4*complete, 2*I*complementary)),
-        (jacobicn, (4*complete, 2*complete + 2*I*complementary)),
-        (jacobidn, (2*complete, 4*I*complementary)),
+        (jacobi_sn, (4*complete, 2*I*complementary)),
+        (jacobi_cn, (4*complete, 2*complete + 2*I*complementary)),
+        (jacobi_dn, (2*complete, 4*I*complementary)),
     )
     for func, function_periods in periods:
         value = func(argument, parameter)

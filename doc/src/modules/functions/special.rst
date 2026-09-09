@@ -189,11 +189,11 @@ Jacobi elliptic and theta functions
 -----------------------------------
 .. module:: sympy.functions.special.elliptic_functions
 
-.. autoclass:: jacobisn
+.. autoclass:: jacobi_sn
    :members:
-.. autoclass:: jacobicn
+.. autoclass:: jacobi_cn
    :members:
-.. autoclass:: jacobidn
+.. autoclass:: jacobi_dn
    :members:
 .. autoclass:: jtheta
    :members:
