@@ -1955,6 +1955,22 @@ class PrettyPrinter(Printer):
         pform.prettyArgs = pretty_args
         return pform
 
+    def _print_jacobi_elliptic(self, e, name):
+        argument = self._print(e.args[0])
+        parameter = self._print(e.args[1])
+        pform = self._hprint_vseparator(argument, parameter)
+        pform = prettyForm(*pform.parens())
+        return prettyForm(*pform.left(name))
+
+    def _print_jacobi_sn(self, e):
+        return self._print_jacobi_elliptic(e, 'sn')
+
+    def _print_jacobi_cn(self, e):
+        return self._print_jacobi_elliptic(e, 'cn')
+
+    def _print_jacobi_dn(self, e):
+        return self._print_jacobi_elliptic(e, 'dn')
+
     def _print_GoldenRatio(self, expr):
         if self._use_unicode:
             return prettyForm(pretty_symbol('phi'))
