@@ -112,10 +112,6 @@ class JavascriptCodePrinter(CodePrinter):
     def _print_Mod(self, expr):
         num, den = expr.args
         PREC = precedence(expr)
-        # A Pow with a negative exponent is printed as a division ("1/y"),
-        # whose leading operator has the same precedence as "%".  It is
-        # printed to the right of "%" and repeated in the sign-correcting
-        # form below, so it has to be parenthesized.
         if den.is_Pow and den.exp.is_negative:
             den_prec = PRECEDENCE["Pow"]
         else:

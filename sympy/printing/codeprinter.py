@@ -549,13 +549,6 @@ class CodePrinter(StrPrinter):
 
     def _print_Mul(self, expr):
 
-        # The sign is split off below and printed separately, so the factors
-        # are parenthesized at Mul level rather than at the precedence of the
-        # signed expression: precedence_Mul() reports PRECEDENCE["Add"] for a
-        # product that can extract a minus sign, which is the right level for
-        # the product as a whole but too low for its own factors.  A Mod
-        # factor (PRECEDENCE["Mul"]) would otherwise be left unparenthesized
-        # and "-2*Mod(x, 3)" would print as "-2*x % 3".
         prec = PRECEDENCE["Mul"]
 
         c, e = expr.as_coeff_Mul()
