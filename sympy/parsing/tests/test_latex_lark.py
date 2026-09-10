@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.testing.pytest import XFAIL, raises
 from sympy.parsing.latex.lark import parse_latex_lark
+from sympy.parsing.latex.errors import LaTeXParsingError
 from sympy.external import import_module
 
 from sympy.concrete.products import Product
@@ -25,7 +26,7 @@ from sympy import I, pi
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
-from sympy.abc import x, y, z, a, b, c, d, h, t, k, n
+from sympy.abc import x, y, z, a, b, c, d, h, t, k, n, v
 
 from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _factorial, _exp, _binomial
 
@@ -936,6 +937,17 @@ def test_function_arguments():
     for latex_str in [r"\tanh", r"\tanh^2"]:
         with raises(lark.exceptions.UnexpectedInput):
             parse_latex_lark(latex_str)
+
+
+def test_unknown_commands():
+    for latex_str in [r"\logv", r"\logv x", r"\lnx", r"\sinx", r"\tanhx", r"\arctanhx", r"\expx", r"\intx dx",
+                      r"\alphabeta", r"\thetax", r"\lefta", r"x \leqx", r"\sin\foo", r"\foo", r"\foo x", r"\foo{x}"]:
+        with raises(LaTeXParsingError):
+            parse_latex_lark(latex_str)
+
+    assert parse_latex_lark(r"\log v") == log(v)
+    assert parse_latex_lark(r"\alpha\beta") == Symbol("alpha")*Symbol("beta")
+    assert parse_latex_lark(r"\begin{pmatrix}a\\b\end{pmatrix}") == Matrix([[a], [b]])
 
 
 def test_binomial_expressions():
