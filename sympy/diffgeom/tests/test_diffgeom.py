@@ -6,8 +6,8 @@ from sympy.diffgeom import (Manifold, Patch, CoordSystem, Commutator, Differenti
         covariant_order, contravariant_order, twoform_to_matrix, metric_to_Christoffel_1st,
         metric_to_Christoffel_2nd, metric_to_Riemann_components,
         metric_to_Ricci_components, intcurve_diffequ, intcurve_series)
-from sympy.simplify import trigsimp, simplify
-from sympy.functions import sqrt, atan2, sin
+from sympy.simplify import trigsimp, simplify, radsimp
+from sympy.functions import sqrt, atan2, cos, sin
 from sympy.matrices import Matrix
 from sympy.testing.pytest import raises, nocache_fail
 from sympy.testing.pytest import warns_deprecated_sympy
@@ -319,6 +319,31 @@ def test_simplify():
     assert simplify(dx*dy) == dx*dy
     assert simplify(ex*ey) == ex*ey
     assert ((1-x)*dx)/(1-x)**2 == dx/(1-x)
+
+
+def test_inverse_transformation_picks_the_branch_the_assumptions_allow():
+    # The polar relation solves to both radial roots. A radius declared positive
+    # rules out the negative one, so the inverse is no longer ambiguous.
+    r = Symbol('r', positive=True)
+    theta, x, y = symbols('theta x y', real=True)
+    rel = {('polar', 'cart'): [(r, theta), (r*cos(theta), r*sin(theta))]}
+    R2_polar = CoordSystem('polar', R2_origin, (r, theta), rel)
+    R2_cart = CoordSystem('cart', R2_origin, (x, y), rel)
+    x, y = R2_cart.symbols
+
+    radius, angle = R2_cart.transform(R2_polar)
+    assert radius == sqrt(x**2 + y**2)
+    assert simplify(radius*cos(angle) - x) == 0
+    assert simplify(radsimp(radius*sin(angle) - y)) == 0
+
+    # Without an assumption to choose by, both branches remain and the
+    # transformation is still refused.
+    r_real, theta_real = symbols('r theta', real=True)
+    rel_real = {('polar', 'cart'): [(r_real, theta_real),
+                                    (r_real*cos(theta_real), r_real*sin(theta_real))]}
+    R2_polar_real = CoordSystem('polar', R2_origin, (r_real, theta_real), rel_real)
+    R2_cart_real = CoordSystem('cart', R2_origin, (x, y), rel_real)
+    raises(ValueError, lambda: R2_cart_real.transform(R2_polar_real))
 
 
 def test_issue_17917():
