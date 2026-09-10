@@ -265,14 +265,14 @@ class exp(ExpBase, metaclass=ExpMeta):
 
             coeff = arg.as_coefficient(pi*I)
             if coeff:
-                if ask(Q.integer(2*coeff)):
-                    if ask(Q.even(coeff)):
+                if ask(Q.integer(2*coeff), assumptions):
+                    if ask(Q.even(coeff), assumptions):
                         return S.One
-                    elif ask(Q.odd(coeff)):
+                    elif ask(Q.odd(coeff), assumptions):
                         return S.NegativeOne
-                    elif ask(Q.even(coeff + S.Half)):
+                    elif ask(Q.even(coeff + S.Half), assumptions):
                         return -I
-                    elif ask(Q.odd(coeff + S.Half)):
+                    elif ask(Q.odd(coeff + S.Half), assumptions):
                         return I
 
     @classmethod

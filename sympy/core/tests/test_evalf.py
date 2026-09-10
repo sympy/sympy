@@ -24,7 +24,8 @@ from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import (Max, sqrt)
 from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
 from sympy.integrals.integrals import (Integral, integrate)
-from sympy.polys.polytools import factor
+from sympy.polys.polytools import Poly, factor
+from sympy.polys.polyroots import roots
 from sympy.polys.rootoftools import CRootOf
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.printing import srepr
@@ -748,3 +749,59 @@ def test_issue_28280():
     assert x > 20
     y = 20 + log(1 + S(10)**-9)
     assert y > 20
+
+
+def test_evalf_pow_branch_cut_noise():
+    # A non-integer power has a branch cut along the negative real axis, so
+    # the sign of a vanishing imaginary part of the base decides which side
+    # of the cut the result lands on. Here the radicand is exactly a negative
+    # real number, but it is built from cube roots of a complex number so its
+    # imaginary part only cancels to rounding noise. The sign of that noise
+    # must not be allowed to pick the branch, otherwise the value of the
+    # square root -- and hence of the whole expression -- flips with the
+    # working precision.
+    x = Symbol('x')
+    p = 5*x**4 + 3*x + 2
+    rts = list(roots(Poly(p, x)))
+    assert len(rts) == 4
+
+    precs = (15, 25, 30, 40, 50, 60, 80, 100)
+    values = []
+    for r in rts:
+        vs = [complex(r.evalf(n)) for n in precs]
+        # the value must not depend on the requested precision ...
+        for v in vs[1:]:
+            assert abs(v - vs[0]) < 1e-12
+        # ... and it must actually be a root of p
+        for prec in precs:
+            assert abs(complex(p.subs(x, r).evalf(prec))) < 1e-12
+        values.append(vs[0])
+
+    # the four roots must stay four distinct numbers
+    for i in range(4):
+        for j in range(i + 1, 4):
+            assert abs(values[i] - values[j]) > 1e-9
+
+
+def test_evalf_log_branch_cut_noise():
+    # log has the same branch cut as a non-integer power. This argument is
+    # exactly a negative real number, but built out of cube roots of a complex
+    # number so its imaginary part only cancels down to rounding noise; the
+    # sign of that noise used to decide between +I*pi and -I*pi.
+    x = Symbol('x')
+    rts = list(roots(Poly(5*x**4 + 3*x + 2, x)))
+    r = [q for q in rts if abs(complex(q.evalf(50))
+        - (0.5842034938418327 - 0.7733392332850403j)) < 1e-9][0]
+    arg = [a for a in r.args[1].args if a.is_Pow][0].base
+    assert abs(complex(arg.evalf(30)).imag) < 1e-25
+
+    for prec in (15, 20, 25, 30, 40, 50, 60, 80):
+        v = complex(log(arg).evalf(prec))
+        # principal branch, as for any other negative real number
+        assert abs(v.imag - math.pi) < 1e-12
+        assert abs(v.real - math.log(2.3922142789515758)) < 1e-12
+
+    # an imaginary part that really is there, however small, still decides
+    assert im(log(S(-2) + Rational(1, 10)**30*I).evalf(20)) > 3
+    assert im(log(S(-2) - Rational(1, 10)**30*I).evalf(20)) < -3
+    assert im(log(S(-2)).evalf(20)) > 3

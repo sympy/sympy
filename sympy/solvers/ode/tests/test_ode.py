@@ -1,5 +1,7 @@
 from __future__ import annotations
-from sympy.core.function import (Derivative, Function, Subs, diff)
+from sympy.core.add import Add
+from sympy.core.function import (AppliedUndef, Derivative, Function, Subs,
+    diff, expand)
 from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -772,6 +774,18 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(cos(x**2), x) == {'test': False}
     assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
 
+    # the trial set found for one summand must not leak into the next one:
+    # x*(x + 2) expands to an Add, and the terms collected for it used to be
+    # kept in a mutable default argument that the following summand then saw
+    eq_hom = f(x).diff(x, 2) - f(x)
+    for rhs in (x*(x + 2) + exp(-x), x*(x + 1) + exp(x),
+                (x + 1)*(x + 3) + exp(x) + exp(-x)):
+        got = _undetermined_coefficients_match(rhs, x, f(x), eq_hom)['trialset']
+        want = set().union(*[
+            _undetermined_coefficients_match(t, x, f(x), eq_hom)['trialset']
+            for t in Add.make_args(rhs)])
+        assert got == want
+
 
 def test_issue_4785_22462():
     from sympy.abc import A
@@ -937,8 +951,9 @@ def test_2nd_power_series_ordinary():
     assert dsolve(eq, hint='2nd_power_series_ordinary') == sol
     assert checkodesol(eq, sol) == (True, 0)
 
-    sol = Eq(f(x), C2*((x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
-        + C1*(x + (x + 2)**4/12 - (x + 2)**3/3 + S(2))
+    sol = Eq(f(x), C2*(-(x + 2)**5/15 + (x + 2)**4/6 + (x + 2)**3/6
+        - (x + 2)**2 + 1)
+        + C1*(x + (x + 2)**5/30 + (x + 2)**4/12 - (x + 2)**3/3 + S(2))
         + O(x**6))
     assert dsolve(eq, hint='2nd_power_series_ordinary', x0=-2) == sol
     # FIXME: Solution should be O((x+2)**6)
@@ -958,24 +973,47 @@ def test_2nd_power_series_ordinary():
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
+    sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1)
+            + C1*x*(x**4/15 - x**2/3 + 1) + O(x**6))
     assert dsolve(eq) == sol
-    # FIXME: checkodesol fails for this solution...
-    # assert checkodesol(eq, sol) == (True, 0)
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + f(x).diff(x) - x*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    sol = Eq(f(x), C2*(-x**4/24 + x**3/6 + 1)
-            + C1*x*(x**3/24 + x**2/6 - x/2 + 1) + O(x**6))
+    sol = Eq(f(x), C2*(x**5/120 - x**4/24 + x**3/6 + 1)
+            + C1*x*(-x**4/30 + x**3/24 + x**2/6 - x/2 + 1) + O(x**6))
     assert dsolve(eq) == sol
-    # FIXME: checkodesol fails for this solution...
-    # assert checkodesol(eq, sol) == (True, 0)
+    assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*f(x)
     assert classify_ode(eq) == ('2nd_linear_airy', '2nd_linear_bessel_transform', '2nd_power_series_ordinary')
     sol = Eq(f(x), C2*(x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
     assert dsolve(eq, hint='2nd_power_series_ordinary', n=7) == sol
     assert checkodesol(eq, sol) == (True, 0)
+
+    # the series has to carry every coefficient below the order term: f'' + f
+    # is cos/sin, so the x**(n-1) coefficient must be there for every n
+    eq = f(x).diff(x, 2) + f(x)
+    for k in range(3, 9):
+        sol = dsolve(eq, hint='2nd_power_series_ordinary', n=k)
+        even = cos(x).series(x, 0, k).removeO()
+        odd = sin(x).series(x, 0, k).removeO()
+        assert expand(sol.rhs.removeO() - (C2*even + C1*odd)) == 0
+        assert sol.rhs.getO() == O(x**k)
+
+    # a recurrence that steps by four leaves a2 and a3 to be pinned down by
+    # two separate equations; both used to be collapsed into one, which let an
+    # undetermined coefficient r(3) leak into the answer
+    eq = f(x).diff(x, 2) + x**2*f(x)
+    for k in (6, 8, 10, 12):
+        sol = dsolve(eq, hint='2nd_power_series_ordinary', n=k)
+        assert not sol.rhs.atoms(AppliedUndef) - {f(x)}
+        assert checkodesol(eq, sol)[0] is True
+
+    # nothing at or beyond the order term may survive into the series
+    eq = f(x).diff(x, 2) + x**3*f(x).diff(x) + x*f(x)
+    sol = dsolve(eq, hint='2nd_power_series_ordinary', n=3)
+    assert Poly(sol.rhs.removeO(), x).degree() < 3
 
 
 def test_2nd_power_series_regular():
@@ -1073,13 +1111,19 @@ def test_issue_22523():
     sol = dsolve(eqn, hint='2nd_power_series_ordinary')
     # there is no r(2.0) in this result
     assert filldedent(sol) == filldedent(str('''
-        Eq(rho(s), C2*(1 - 4.0*s**4*sqrt(N - 1.0)/N + 0.666666666666667*s**4/N
-        - 2.66666666666667*s**3*sqrt(N - 1.0)/N - 2.0*s**2*sqrt(N - 1.0)/N +
-        9.33333333333333*s**4*sqrt(N - 1.0)/N**2 - 0.666666666666667*s**4/N**2
-        + 2.66666666666667*s**3*sqrt(N - 1.0)/N**2 -
-        5.33333333333333*s**4*sqrt(N - 1.0)/N**3) + C1*s*(1.0 -
-        1.33333333333333*s**3*sqrt(N - 1.0)/N - 0.666666666666667*s**2*sqrt(N
-        - 1.0)/N + 1.33333333333333*s**3*sqrt(N - 1.0)/N**2) + O(s**6))'''))
+        Eq(rho(s), C2*(1 - 6.4*s**5*sqrt(N - 1.0)/N + 2.13333333333333*s**5/N -
+        4.0*s**4*sqrt(N - 1.0)/N + 0.666666666666667*s**4/N -
+        2.66666666666667*s**3*sqrt(N - 1.0)/N - 2.0*s**2*sqrt(N - 1.0)/N +
+        25.6*s**5*sqrt(N - 1.0)/N**2 - 4.26666666666667*s**5/N**2 +
+        9.33333333333333*s**4*sqrt(N - 1.0)/N**2 -
+        0.666666666666667*s**4/N**2 + 2.66666666666667*s**3*sqrt(N - 1.0)/N**2
+        - 32.0*s**5*sqrt(N - 1.0)/N**3 + 2.13333333333333*s**5/N**3 -
+        5.33333333333333*s**4*sqrt(N - 1.0)/N**3 + 12.8*s**5*sqrt(N -
+        1.0)/N**4) + C1*s*(1.0 - 2.4*s**4*sqrt(N - 1.0)/N +
+        0.133333333333333*s**4/N - 1.33333333333333*s**3*sqrt(N - 1.0)/N -
+        0.666666666666667*s**2*sqrt(N - 1.0)/N + 5.6*s**4*sqrt(N - 1.0)/N**2 -
+        0.133333333333333*s**4/N**2 + 1.33333333333333*s**3*sqrt(N - 1.0)/N**2
+        - 3.2*s**4*sqrt(N - 1.0)/N**3) + O(s**6))'''))
 
 
 def test_issue_22604():

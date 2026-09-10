@@ -343,7 +343,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
             return bool(expr.exp.match(a*x + b))
         return expr.is_Symbol or bool(expr.is_number)
 
-    def _get_trial_set(expr, x, exprs=set()):
+    def _get_trial_set(expr, x, exprs=None):
         r"""
         Returns a set of trial terms for undetermined coefficients.
 
@@ -367,6 +367,12 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
             elif expr.has(x):
                 term = expr
             return term
+
+        # a mutable default would be shared by every call that does not pass
+        # exprs, and the branch below adds to it in place, so the trial terms
+        # found for one summand of the input would leak into the next one
+        if exprs is None:
+            exprs = set()
 
         expr = expand_mul(expr)
         if expr.is_Add:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.assumptions.ask import Q
+from sympy.assumptions.assume import assuming
 from sympy.assumptions.refine import refine, refine_sin_cos
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
@@ -95,6 +96,15 @@ def test_exp():
         Q.integer(x) & Q.integer(y)) == I
     assert refine(exp(pi*I*x), Q.integer(x)) == (-1)**x
 
+    # the assumptions passed to refine() must take precedence over the
+    # global assumptions; exp._eval_refine used to consult only the latter
+    raises(ValueError, lambda: refine(exp(pi*I*x), Q.even(x) & Q.odd(x)))
+    with assuming(Q.odd(x)):
+        raises(ValueError, lambda: refine(exp(pi*I*x), Q.even(x)))
+    with assuming(Q.even(x)):
+        assert refine(exp(pi*I*x), Q.even(x)) == 1
+
+
 def test_Piecewise():
     assert refine(Piecewise((1, x < 0), (3, True)), (x < 0)) == 1
     assert refine(Piecewise((1, x < 0), (3, True)), ~(x < 0)) == 3
@@ -189,6 +199,19 @@ def test_sign():
 
     x = Symbol('x', complex=True)
     assert refine(sign(x), Q.zero(x)) == 0
+
+    # the realness/imaginariness of the argument may be supplied through the
+    # assumptions instead of the symbol itself
+    x = Symbol('x')
+    assert refine(sign(x), Q.positive(x)) == 1
+    assert refine(sign(x), Q.negative(x)) == -1
+    assert refine(sign(x), Q.real(x) & Q.positive(x)) == 1
+    assert refine(sign(x), Q.imaginary(x) & Q.positive(im(x))) == S.ImaginaryUnit
+    assert refine(sign(x), Q.imaginary(x) & Q.negative(im(x))) == -S.ImaginaryUnit
+    # nothing can be concluded when the sign may still be zero
+    assert refine(sign(x), Q.nonnegative(x)) == sign(x)
+    assert refine(sign(x), Q.real(x)) == sign(x)
+
 
 def test_arg():
     x = Symbol('x', complex = True)
