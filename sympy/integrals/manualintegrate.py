@@ -2802,15 +2802,24 @@ def euler_substitution_rule(integral : IntegralInfo):
         numer, denom = rewritten.as_numer_denom()
         if numer.as_poly(x, s) is None or denom.as_poly(x, s) is None:
             return None
-        # Euler's second substitution (u = sqrt(R) + sqrt(c)*x)
         u = Dummy("u")
-        sqrt_c0 = sqrt(c0)
-        x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
-        s_u = u - sqrt_c0*x_u
-        dx_u = 2*(b0*u + sqrt_c0*(u**2 + a0))/(b0 + 2*sqrt_c0*u)**2
+        if c0.is_positive is not False or a0.is_positive is not True:
+            # Euler's first substitution (u = sqrt(R) + sqrt(c)*x)
+            sqrt_c0 = sqrt(c0)
+            x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
+            s_u = u - sqrt_c0*x_u
+            dx_u = 2*(b0*u + sqrt_c0*(u**2 + a0))/(b0 + 2*sqrt_c0*u)**2
+            u_func = sqrt(base0) + sqrt_c0*x
+        else:
+            # Euler's second substitution (u = (sqrt(R) - sqrt(a))/x)
+            sqrt_a0 = sqrt(a0)
+            x_u = (2*sqrt_a0*u - b0)/(c0 - u**2)
+            s_u = u*x_u + sqrt_a0
+            dx_u = 2*(sqrt_a0*u**2 - b0*u + c0*sqrt_a0)/(c0 - u**2)**2
+            u_func = (sqrt(base0) - sqrt_a0)/x
+
         substituted = rewritten.xreplace({x: x_u, s: s_u}) * dx_u
         substep = yield IntegralInfo(substituted, u)
-        u_func = sqrt(base0) + sqrt_c0*x
         return URule(integrand, x, u, u_func, substep)
 
     if delta_zero_cond is S.true:
