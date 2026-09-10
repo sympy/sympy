@@ -990,7 +990,7 @@ the muscle fibers relative to the direction parallel to the tendon) at which
 
 .. math::
 
-   l^M = \sqrt{\left(l^{MT} - l^T\right)^2 + \left(l^M_{opt}\right)^2}
+   l^M = l^{MT} - l^T
 
 With :math:`\tilde{l}^M = \frac{l^M}{l^M_{opt}}`, the muscle fiber velocity can
 be expressed as
