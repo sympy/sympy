@@ -1297,3 +1297,7 @@ def test_printing_stats():
     assert z2._eval_is_commutative() == False
     assert z3._eval_is_commutative() == False
     assert z4._eval_is_commutative() == False
+
+def test_issue_30343():
+    f = Function('f')
+    assert str(f(nan) + f(1)) == "f(nan) + f(1)"

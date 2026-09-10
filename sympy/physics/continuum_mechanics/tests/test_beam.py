@@ -364,9 +364,9 @@ def test_variable_moment():
     b.bc_deflection = [(0, 0)]
     b.bc_slope = [(0, 0)]
     b.solve_for_reaction_loads(R, M)
-    assert b.slope().expand() == ((-80*(-log(-E) + log(-E + x))*SingularityFunction(x, 0, 0)
-        + 80*(-log(-E + 4) + log(-E + x))*SingularityFunction(x, 4, 0) + 20*(-E*log(-E)
-        + E*log(-E + x) + x)*SingularityFunction(x, 0, 0) - 20*(-E*log(-E + 4) + E*log(-E + x)
+    assert b.slope().expand() == ((-80*(-log(E) + log(E - x))*SingularityFunction(x, 0, 0)
+        + 80*(-log(E - 4) + log(E - x))*SingularityFunction(x, 4, 0) + 20*(-E*log(E)
+        + E*log(E - x) + x)*SingularityFunction(x, 0, 0) - 20*(-E*log(E - 4) + E*log(E - x)
         + x - 4)*SingularityFunction(x, 4, 0))/I).expand()
 
 

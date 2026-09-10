@@ -415,3 +415,22 @@ def test_matrix_predicates():
         Q.lower_triangular(X) & Q.upper_triangular(X)) is True
     assert satask(Q.invertible(X), Q.fullrank(X) & Q.square(X)) is True
     assert satask(Q.singular(X), ~Q.invertible(X)) is True
+
+
+def test_satask_early_return():
+    # Propagation alone cannot see that these assumptions contradict, so the
+    # search has to run before an answer can be trusted.
+    ass = (Q.real(x) & (Q.positive(x) | Q.negative(x))
+           & Implies(Q.positive(x), Q.zero(x)) & Implies(Q.negative(x), Q.zero(x)))
+
+    raises(ValueError, lambda: satask(Q.real(x), ass))
+    raises(ValueError, lambda: satask(Q.complex(x), ass))
+    raises(ValueError, lambda: satask(Q.zero(x), ass))
+
+    assert satask(Q.real(x), ass, early_return=True) is True
+    assert satask(Q.zero(x), Q.positive(x), early_return=True) is False
+    assert satask(Q.positive(x), Q.real(x), early_return=True) is None
+    assert satask(Q.real(x) & Q.nonzero(x), Q.positive(x), early_return=True) is True
+    assert satask(Q.positive(x) | Q.negative(x), Q.real(x) & Q.nonzero(x),
+                  early_return=True) is True
+    assert satask(S.false, Q.real(x), early_return=True) is False
