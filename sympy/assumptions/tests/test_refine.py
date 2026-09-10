@@ -70,6 +70,12 @@ def test_pow2():
     assert refine(Abs(x)**3, Q.real(x)) == Abs(x)**3
     assert refine(Abs(x)**2) == Abs(x)**2
 
+    # powers of Abs for imaginary arguments
+    assert refine(Abs(x)**2, Q.imaginary(x)) == -x**2
+    assert refine(Abs(x)**4, Q.imaginary(x)) == x**4
+    assert refine(Abs(x)**6, Q.imaginary(x)) == -x**6
+    assert refine(Abs(x)**3, Q.imaginary(x)) == Abs(x)**3
+
 
 def test_exp():
     x = Symbol('x', integer=True)
