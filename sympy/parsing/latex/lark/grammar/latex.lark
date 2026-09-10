@@ -237,14 +237,23 @@ adjacent_expressions: (_one_letter_symbol | number) _expression_mul
 ?adjacent_functions: _function
     | _function adjacent_functions -> adjacent_expressions
 
-// The argument of a function command binds tighter than any operator and cannot start
-// with a product or function application led by a letter: that letter could be the end
-// of a longer command, as in \tan h x for \tanh x.
-?function_argument: _expression_core
+// The argument of a function command binds tighter than any operator, and it contains no
+// function unless it is one: \sin x \cos y is sin(x)*cos(y), \sin \cos x is sin(cos(x)).
+?function_argument: argument_product
+    | _builtin_function
+    | ADD function_argument -> add
+    | SUB function_argument -> sub
+
+?argument_product: _argument_factor
+    | _argument_factor argument_product -> adjacent_expressions
+
+_argument_factor: _expression_core
     | group_round_parentheses
+    | group_square_brackets
+    | group_curly_literal_parentheses
     | fraction
     | binomial
-    | _builtin_function
+    | function_applied
     | _integral
     | limit
     | matrix
@@ -253,10 +262,6 @@ adjacent_expressions: (_one_letter_symbol | number) _expression_mul
     | symbol_prime
     | summation
     | product
-    | (number | fraction) (_expression_power | adjacent_expressions) -> adjacent_expressions
-    | (group_round_parentheses | group_square_brackets | group_curly_literal_parentheses) (group_round_parentheses | group_square_brackets | group_curly_parentheses | group_curly_literal_parentheses | _one_letter_symbol) -> adjacent_expressions
-    | ADD function_argument -> add
-    | SUB function_argument -> sub
 
 _expression_func: _expression_core
     | group_round_parentheses

@@ -25,7 +25,7 @@ from sympy import I, pi
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
-from sympy.abc import x, y, z, a, b, c, d, t, k, n
+from sympy.abc import x, y, z, a, b, c, d, h, t, k, n
 
 from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _factorial, _exp, _binomial
 
@@ -456,9 +456,9 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\exp(x)", _exp(x)),
     (r"\lg x", _log(x, 10)),
     (r"\ln x", _log(x)),
-    (r"\ln{xy}", _log(x * y)),
+    (r"\ln xy", _log(x * y)),
     (r"\log x", _log(x)),
-    (r"\log{xy}", _log(x * y)),
+    (r"\log xy", _log(x * y)),
     (r"\log_{2} x", _log(x, 2)),
     (r"\log_{a} x", _log(x, a)),
     (r"\log_{11} x", _log(x, 11)),
@@ -490,9 +490,9 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\exp(x)", exp(x)),
     (r"\lg x", log(x, 10)),
     (r"\ln x", log(x)),
-    (r"\ln{xy}", log(x * y)),
+    (r"\ln xy", log(x * y)),
     (r"\log x", log(x)),
-    (r"\log{xy}", log(x * y)),
+    (r"\log xy", log(x * y)),
     (r"\log_{2} x", log(x, 2)),
     (r"\log_{a} x", log(x, a)),
     (r"\log_{11} x", log(x, 11)),
@@ -926,12 +926,14 @@ def test_function_arguments():
     assert parse_latex_lark(r"\sin x \cos y \tan z") == sin(x)*cos(y)*tan(z)
     assert parse_latex_lark(r"\sin 2x") == sin(2*x)
     assert parse_latex_lark(r"\sin -x") == -sin(x)
+    assert parse_latex_lark(r"\sin xy") == sin(x*y)
+    assert parse_latex_lark(r"\tan hk") == tan(h*k)
     assert parse_latex_lark(r"\tanh^2 x") == tanh(x)**2
     assert parse_latex_lark(r"\sinh^{-1} x") == asinh(x)
     assert parse_latex_lark(r"\arctanh x") == atanh(x)
     assert parse_latex_lark(r"\coth x") == coth(x)
 
-    for latex_str in [r"\tanh", r"\ln xy", r"\sin f(x)", r"\sin hk"]:
+    for latex_str in [r"\tanh", r"\tanh^2"]:
         with raises(lark.exceptions.UnexpectedInput):
             parse_latex_lark(latex_str)
 
