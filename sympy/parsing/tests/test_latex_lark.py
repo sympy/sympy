@@ -14,7 +14,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh
+from sympy.functions.elementary.hyperbolic import asinh, atanh, cosh, coth, sinh, tanh
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
@@ -926,8 +926,12 @@ def test_function_arguments():
     assert parse_latex_lark(r"\sin x \cos y \tan z") == sin(x)*cos(y)*tan(z)
     assert parse_latex_lark(r"\sin 2x") == sin(2*x)
     assert parse_latex_lark(r"\sin -x") == -sin(x)
+    assert parse_latex_lark(r"\tanh^2 x") == tanh(x)**2
+    assert parse_latex_lark(r"\sinh^{-1} x") == asinh(x)
+    assert parse_latex_lark(r"\arctanh x") == atanh(x)
+    assert parse_latex_lark(r"\coth x") == coth(x)
 
-    for latex_str in [r"\ln xy", r"\sin f(x)", r"\arctanh x"]:
+    for latex_str in [r"\tanh", r"\ln xy", r"\sin f(x)", r"\sin hk"]:
         with raises(lark.exceptions.UnexpectedInput):
             parse_latex_lark(latex_str)
 

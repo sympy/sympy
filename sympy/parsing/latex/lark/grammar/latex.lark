@@ -67,9 +67,19 @@ FUNC_ARCCOT: "\\arccot"
 FUNC_SINH: "\\sinh"
 FUNC_COSH: "\\cosh"
 FUNC_TANH: "\\tanh"
-FUNC_ARSINH: "\\arsinh"
-FUNC_ARCOSH: "\\arcosh"
-FUNC_ARTANH: "\\artanh"
+FUNC_COTH: "\\coth"
+FUNC_SECH: "\\sech"
+FUNC_CSCH: "\\csch"
+FUNC_ARSINH: "\\arsinh" | "\\arcsinh"
+FUNC_ARCOSH: "\\arcosh" | "\\arccosh"
+FUNC_ARTANH: "\\artanh" | "\\arctanh"
+
+// Commands sharing a prefix, like \tan and \tanh, are alternatives of a single terminal,
+// so that the lexer matches the longest one: \tanh is never read as \tan followed by h.
+FUNC_TRIG: FUNC_SIN | FUNC_COS | FUNC_TAN | FUNC_CSC | FUNC_SEC | FUNC_COT
+    | FUNC_ARCSIN | FUNC_ARCCOS | FUNC_ARCTAN | FUNC_ARCCSC | FUNC_ARCSEC | FUNC_ARCCOT
+    | FUNC_SINH | FUNC_COSH | FUNC_TANH | FUNC_COTH | FUNC_SECH | FUNC_CSCH
+    | FUNC_ARSINH | FUNC_ARCOSH | FUNC_ARTANH
 
 FUNC_SQRT: "\\sqrt"
 
@@ -353,9 +363,7 @@ inner_product: CMD_LANGLE _expression BAR _expression CMD_RANGLE
 _function: function_applied | _builtin_function
 
 _builtin_function: abs | floor | ceil
-    | _trigonometric_function | _inverse_trigonometric_function
-    | _trigonometric_function_power
-    | _hyperbolic_trigonometric_function | _inverse_hyperbolic_trigonometric_function
+    | trigonometric_function | trigonometric_function_power
     | exponential
     | log
     | square_root
@@ -383,44 +391,9 @@ factorial: _expression_func BANG
 conjugate: CMD_OVERLINE group_curly_parentheses
     | CMD_OVERLINE DIGIT
 
-_trigonometric_function: sin | cos | tan | csc | sec | cot
+trigonometric_function: FUNC_TRIG function_argument
 
-sin: FUNC_SIN function_argument
-cos: FUNC_COS function_argument
-tan: FUNC_TAN function_argument
-csc: FUNC_CSC function_argument
-sec: FUNC_SEC function_argument
-cot: FUNC_COT function_argument
-
-_trigonometric_function_power: sin_power | cos_power | tan_power | csc_power | sec_power | cot_power
-
-sin_power: FUNC_SIN CARET _expression_core function_argument
-cos_power: FUNC_COS CARET _expression_core function_argument
-tan_power: FUNC_TAN CARET _expression_core function_argument
-csc_power: FUNC_CSC CARET _expression_core function_argument
-sec_power: FUNC_SEC CARET _expression_core function_argument
-cot_power: FUNC_COT CARET _expression_core function_argument
-
-_hyperbolic_trigonometric_function: sinh | cosh | tanh
-
-sinh: FUNC_SINH function_argument
-cosh: FUNC_COSH function_argument
-tanh: FUNC_TANH function_argument
-
-_inverse_trigonometric_function: arcsin | arccos | arctan | arccsc | arcsec | arccot
-
-arcsin: FUNC_ARCSIN function_argument
-arccos: FUNC_ARCCOS function_argument
-arctan: FUNC_ARCTAN function_argument
-arccsc: FUNC_ARCCSC function_argument
-arcsec: FUNC_ARCSEC function_argument
-arccot: FUNC_ARCCOT function_argument
-
-_inverse_hyperbolic_trigonometric_function: asinh | acosh | atanh
-
-asinh: FUNC_ARSINH function_argument
-acosh: FUNC_ARCOSH function_argument
-atanh: FUNC_ARTANH function_argument
+trigonometric_function_power: FUNC_TRIG CARET _expression_core function_argument
 
 abs: BAR _expression BAR
 floor: L_FLOOR _expression R_FLOOR
