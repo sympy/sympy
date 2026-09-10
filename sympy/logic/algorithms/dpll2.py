@@ -97,19 +97,6 @@ class SATSolver:
     Class for representing a SAT solver capable of
      finding a model to a boolean theory in conjunctive
      normal form.
-
-    Parameters
-    ==========
-    clauses : list[set[int]]
-        cnf.data, iterable list of clauses. the CNF formula.
-    variables : range | set[int]
-        EncodedCNF.variables, set of positive numbers that describe the variables in the CNF formula. It does not contain the assignments.
-    var_settings : set[int]
-        The current partial assignment of the variables.
-    symbols : list[Boolean]
-        A way to display an output, purely cosmetic. If nothing is given it is derived by the variables.
-    heuristic : str
-        decision heuristic
     """
 
     def __init__(self, clauses, variables, var_settings, symbols=None,
