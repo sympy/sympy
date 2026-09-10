@@ -266,6 +266,9 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.real'), self._print(expr.args[0]))
 
+    def _print_conjugate(self, expr):
+        return "%s(%s)" % (self._module_format(self._module + '.conjugate'), self._print(expr.args[0]))
+
     def _print_sinc(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.sinc'), self._print(expr.args[0]/S.Pi))
 
