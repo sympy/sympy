@@ -482,8 +482,9 @@ class SATSolver:
         -2
 
         """
+        lit = self._filter_lit(lit)
         self._restart()
-        self._assumptions.append(self._filter_lit(lit))
+        self._assumptions.append(lit)
 
     def add(self, lit):
         """Add *lit* to the clause being built, or add that clause to the
