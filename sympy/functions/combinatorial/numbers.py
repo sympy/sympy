@@ -9,7 +9,6 @@ the separate 'factorials' module.
 from __future__ import annotations
 from math import prod
 from collections import defaultdict
-from typing import Callable
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
@@ -890,8 +889,61 @@ class harmonic(DefinedFunction):
 
     """
 
-    # This prevents redundant recalculations and speeds up harmonic number computations.
-    harmonic_cache: dict[Integer, Callable[[int], Rational]] = {}
+    class HarmonicTree:
+        def __init__(t, l, m):
+            t.n = 1 << (l - 1)
+            t.tree = [S.One / (2**l + 1 + 2*i)**m for i in range(t.n)]
+            t.done = -1
+
+        def __getitem__(t, i):
+            if i < 0: i += t.n
+
+            while t.done < i:
+                t.done += 1
+                j = t.done | t.done+1
+                if j < t.n:
+                    t.tree[j] += t.tree[t.done]
+
+            return t.tree[i]
+
+
+    @classmethod
+    @cacheit
+    def __eval_tree(cls, l, m): return cls.HarmonicTree(l, m)
+
+    @classmethod
+    @cacheit
+    def __eval_block(cls, l, m): # H_(2**(l+1)-1) - H_(2**l-1)
+        if l == 0: return S.One
+
+        return cls.__eval_tree(l, m)[-1] + cls.__eval_block(l - 1, m) / 2**m
+
+    @classmethod
+    @cacheit
+    def __eval_stem(cls, l, m): # H_(2**(l+1)-1)
+        if l < 0: return S.Zero
+        if l == 0: return S.One
+
+        return cls.__eval_stem(l - 1, m) + cls.__eval_block(l, m)
+
+    @classmethod
+    def __eval_tail(cls, l, r, m): # Sum_{j=0..r} 1/(2**l + j)^m, r in [0..2**l)
+        if l == 0: return S.One
+        odd = S.Zero
+        n = r+1>>1
+        tree = cls.__eval_tree(l, m)
+        while n: # sums over odd j except tree-ified
+            odd += tree[n - 1]
+            n &= n - 1
+        return odd + cls.__eval_tail(l - 1, r>>1, m) / 2**m #even
+
+    @classmethod
+    def _eval(cls, n, m=1):
+        if n == 0: return S.Zero
+
+        l = int(n).bit_length() - 1
+
+        return cls.__eval_stem(l - 1, m) + cls.__eval_tail(l, n - (1<<l), m)
 
     @classmethod
     def eval(cls, n, m=None):
@@ -918,12 +970,7 @@ class harmonic(DefinedFunction):
                 return S.ComplexInfinity if m is S.One else S.NaN
             if n.is_nonnegative:
                 if m.is_Integer:
-                    if m not in cls.harmonic_cache:
-                        @recurrence_memo([0])
-                        def f(n, prev):
-                            return prev[-1] + S.One / n**m
-                        cls.harmonic_cache[m] = f
-                    return cls.harmonic_cache[m](int(n))
+                    return cls._eval(n, m)
                 return Add(*(k**(-m) for k in range(1, int(n) + 1)))
 
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
