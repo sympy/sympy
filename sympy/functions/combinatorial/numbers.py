@@ -33,7 +33,7 @@ from sympy.ntheory.generate import _primepi
 from sympy.ntheory.partitions_ import _partition, _partition_rec
 from sympy.ntheory.primetest import isprime, is_square
 from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
-from sympy.polys.polytools import cancel
+from sympy.polys.polytools import cancel, Poly
 from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import multiset, multiset_derangements, iterable
@@ -681,14 +681,31 @@ class bell(DefinedFunction):
         return s
 
     @staticmethod
-    @recurrence_memo([S.One, _sym])
-    def _bell_poly(n, prev):
-        s = 1
-        a = 1
-        for k in range(2, n + 1):
-            a = a * (n - k + 1) // (k - 1)
-            s += a * prev[k - 1]
-        return expand_mul(_sym * s)
+    def _bell_poly(n):
+        if n==0: return S.One
+
+        L = n.bit_length()
+
+        # initially, tree[k] = x-k; at each height, tree[boundary(j)-1] is the product of the x-k's for k in [boundary(j-1)..boundary(j))
+        tree = [(-k,1) for k in reversed(range(1,n+1))]
+
+        mul=lambda a,b: [sum(a[j]*b[i-j] for j in range(max(i+1-len(b),0),min(i+1,len(a)))) for i in range(len(a)+len(b)-1)]
+        for d in range(L - 1, 0, -1):
+            for j in range(1,1<<d):
+                if (j-1)*n>>d < (m:=(2*j-1)*n>>d+1) < (b:=j*n>>d): tree[-b] = mul(tree[-b],tree[-m])
+
+        # root occupies tree[0]
+        tree[0]=[0]*(n-1)+[1]
+        def divmod(p,q):
+            r=[]
+            while len(p)>=len(q): r,p=[p[-1]]+r,p[:-len(q)]+[a-p[-1]*b for a,b in zip(p[-len(q):-1],q[:-1])]
+            return (r,p)
+        # split forwards through each branch
+        for d in range(L):
+            for j in range(1<<d,0,-1):
+                if (j-1)*n>>d < (m:=(2*j-1)*n>>d+1) < (b:=j*n>>d): tree[-b],tree[-m] = divmod(tree[-b],tree[-m])
+
+        return Poly.from_list([tree[k][0] for k in range(n)]+[0],_sym).as_expr()
 
     @staticmethod
     def _bell_incomplete_poly(n, k, symbols):
