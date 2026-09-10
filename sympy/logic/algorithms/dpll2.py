@@ -469,14 +469,13 @@ class SATSolver:
         -2
 
         """
-        lit = self._filter_lit(lit)
+        lit = self._check_lit(lit)
         self._restart()
         self._assumptions.append(lit)
 
     def add(self, lit):
         """Add *lit* to the clause being built, or add that clause to the
         solver when *lit* is 0.
-        clause() is a convenience method of add().
 
         The search restarts from the root level, so ``solve()`` may be called
         again, and an unsatisfiable solver stays unsatisfiable.
@@ -504,18 +503,20 @@ class SATSolver:
             # reset the buffer for future use
             self._clause_buffer = []
             return
-        self._clause_buffer.append(self._filter_lit(lit))
+        self._clause_buffer.append(self._check_lit(lit))
 
     def clause(self, *lits):
         """Add the clause made up of *lits*, given one by one or as a single
         iterable, which covers the ``clause`` overloads of CaDiCaL.
 
         Without any literal it adds the empty clause, which is false.
+        clause() is a convenience method of add().
+
 
         """
         if len(lits) == 1 and not isinstance(lits[0], int):
             lits = lits[0]
-        self._add_clause([self._filter_lit(lit) for lit in lits])
+        self._add_clause([self._check_lit(lit) for lit in lits])
 
     def copy(self):
         """Return an independent solver with the same clauses and state, so
@@ -550,7 +551,7 @@ class SATSolver:
 
         return other
 
-    def _filter_lit(self, lit):
+    def _check_lit(self, lit):
         """
         Return lit, raise if it is not a literal of a known variable.
         TODO: In future, this method should be removed and instead handle unknown
@@ -563,12 +564,9 @@ class SATSolver:
 
     def _restart(self):
         """Undo the search back to the root level"""
-        # undo all the levels
         while len(self.levels) > 1:
             self._undo()
-        # reset the model
         self._models = None
-        # reset the status
         if self._status == IpasirStatus.SATISFIABLE:
             self._status = IpasirStatus.UNKNOWN
 
@@ -576,12 +574,9 @@ class SATSolver:
         """Register the clause made up of lits with the solver."""
         # The decisions were made without this clause, so the search restarts.
         self._restart()
-        # register the new clause on self.clauses
         self.clauses.append(lits)
-        # count the lits for the heuristic
         for lit in lits:
             self.occurrence_count[lit] += 1
-        # register watched literals for the new clause we have added
         self._watch(len(self.clauses) - 1)
         if self.is_unsatisfied:
             self._status = IpasirStatus.UNSATISFIABLE
