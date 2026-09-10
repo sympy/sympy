@@ -220,9 +220,33 @@ div: _expression_mul DIV_SYMBOL (_expression_power | adjacent_expressions)
 
 adjacent_expressions: (_one_letter_symbol | number) _expression_mul
     | (group_round_parentheses | group_square_brackets | group_curly_literal_parentheses) (group_round_parentheses | group_square_brackets | group_curly_parentheses | group_curly_literal_parentheses | _one_letter_symbol)
-    | _function _function
+    | _function adjacent_functions
     | fraction _expression_mul
     | superscript _expression_mul
+
+?adjacent_functions: _function
+    | _function adjacent_functions -> adjacent_expressions
+
+// The argument of a function command binds tighter than any operator and cannot start
+// with a product or function application led by a letter: that letter could be the end
+// of a longer command, as in \tan h x for \tanh x.
+?function_argument: _expression_core
+    | group_round_parentheses
+    | fraction
+    | binomial
+    | _builtin_function
+    | _integral
+    | limit
+    | matrix
+    | superscript
+    | matrix_prime
+    | symbol_prime
+    | summation
+    | product
+    | (number | fraction) (_expression_power | adjacent_expressions) -> adjacent_expressions
+    | (group_round_parentheses | group_square_brackets | group_curly_literal_parentheses) (group_round_parentheses | group_square_brackets | group_curly_parentheses | group_curly_literal_parentheses | _one_letter_symbol) -> adjacent_expressions
+    | ADD function_argument -> add
+    | SUB function_argument -> sub
 
 _expression_func: _expression_core
     | group_round_parentheses
@@ -326,8 +350,9 @@ ket: BAR _expression CMD_RANGLE
 
 inner_product: CMD_LANGLE _expression BAR _expression CMD_RANGLE
 
-_function: function_applied
-    | abs | floor | ceil
+_function: function_applied | _builtin_function
+
+_builtin_function: abs | floor | ceil
     | _trigonometric_function | _inverse_trigonometric_function
     | _trigonometric_function_power
     | _hyperbolic_trigonometric_function | _inverse_hyperbolic_trigonometric_function
@@ -342,13 +367,13 @@ _function: function_applied
     | trace
     | adjugate
 
-exponential: FUNC_EXP _expression
+exponential: FUNC_EXP function_argument
 
-log: FUNC_LOG _expression
-    | FUNC_LN _expression
-    | FUNC_LG _expression
-    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) _expression
-    | FUNC_LOG UNDERSCORE group_curly_parentheses _expression
+log: FUNC_LOG function_argument
+    | FUNC_LN function_argument
+    | FUNC_LG function_argument
+    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) function_argument
+    | FUNC_LOG UNDERSCORE group_curly_parentheses function_argument
 
 square_root: FUNC_SQRT group_curly_parentheses
     | FUNC_SQRT group_square_brackets group_curly_parentheses
@@ -360,42 +385,42 @@ conjugate: CMD_OVERLINE group_curly_parentheses
 
 _trigonometric_function: sin | cos | tan | csc | sec | cot
 
-sin: FUNC_SIN _expression
-cos: FUNC_COS _expression
-tan: FUNC_TAN _expression
-csc: FUNC_CSC _expression
-sec: FUNC_SEC _expression
-cot: FUNC_COT _expression
+sin: FUNC_SIN function_argument
+cos: FUNC_COS function_argument
+tan: FUNC_TAN function_argument
+csc: FUNC_CSC function_argument
+sec: FUNC_SEC function_argument
+cot: FUNC_COT function_argument
 
 _trigonometric_function_power: sin_power | cos_power | tan_power | csc_power | sec_power | cot_power
 
-sin_power: FUNC_SIN CARET _expression_core _expression
-cos_power: FUNC_COS CARET _expression_core _expression
-tan_power: FUNC_TAN CARET _expression_core _expression
-csc_power: FUNC_CSC CARET _expression_core _expression
-sec_power: FUNC_SEC CARET _expression_core _expression
-cot_power: FUNC_COT CARET _expression_core _expression
+sin_power: FUNC_SIN CARET _expression_core function_argument
+cos_power: FUNC_COS CARET _expression_core function_argument
+tan_power: FUNC_TAN CARET _expression_core function_argument
+csc_power: FUNC_CSC CARET _expression_core function_argument
+sec_power: FUNC_SEC CARET _expression_core function_argument
+cot_power: FUNC_COT CARET _expression_core function_argument
 
 _hyperbolic_trigonometric_function: sinh | cosh | tanh
 
-sinh: FUNC_SINH _expression
-cosh: FUNC_COSH _expression
-tanh: FUNC_TANH _expression
+sinh: FUNC_SINH function_argument
+cosh: FUNC_COSH function_argument
+tanh: FUNC_TANH function_argument
 
 _inverse_trigonometric_function: arcsin | arccos | arctan | arccsc | arcsec | arccot
 
-arcsin: FUNC_ARCSIN _expression
-arccos: FUNC_ARCCOS _expression
-arctan: FUNC_ARCTAN _expression
-arccsc: FUNC_ARCCSC _expression
-arcsec: FUNC_ARCSEC _expression
-arccot: FUNC_ARCCOT _expression
+arcsin: FUNC_ARCSIN function_argument
+arccos: FUNC_ARCCOS function_argument
+arctan: FUNC_ARCTAN function_argument
+arccsc: FUNC_ARCCSC function_argument
+arcsec: FUNC_ARCSEC function_argument
+arccot: FUNC_ARCCOT function_argument
 
 _inverse_hyperbolic_trigonometric_function: asinh | acosh | atanh
 
-asinh: FUNC_ARSINH _expression
-acosh: FUNC_ARCOSH _expression
-atanh: FUNC_ARTANH _expression
+asinh: FUNC_ARSINH function_argument
+acosh: FUNC_ARCOSH function_argument
+atanh: FUNC_ARTANH function_argument
 
 abs: BAR _expression BAR
 floor: L_FLOOR _expression R_FLOOR
@@ -405,6 +430,6 @@ matrix: CMD_MATRIX_BEGIN matrix_body CMD_MATRIX_END
 matrix_body: matrix_row (MATRIX_ROW_DELIM matrix_row)* (MATRIX_ROW_DELIM)?
 matrix_row: _expression (MATRIX_COL_DELIM _expression)*
 determinant: (CMD_DETERMINANT_BEGIN matrix_body CMD_DETERMINANT_END)
-    | FUNC_DETERMINANT _expression
-trace: FUNC_MATRIX_TRACE _expression
-adjugate: FUNC_MATRIX_ADJUGATE _expression
+    | FUNC_DETERMINANT function_argument
+trace: FUNC_MATRIX_TRACE function_argument
+adjugate: FUNC_MATRIX_ADJUGATE function_argument

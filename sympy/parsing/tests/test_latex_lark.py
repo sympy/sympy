@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, raises
 from sympy.parsing.latex.lark import parse_latex_lark
 from sympy.external import import_module
 
@@ -14,6 +14,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
@@ -455,9 +456,9 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\exp(x)", _exp(x)),
     (r"\lg x", _log(x, 10)),
     (r"\ln x", _log(x)),
-    (r"\ln xy", _log(x * y)),
+    (r"\ln{xy}", _log(x * y)),
     (r"\log x", _log(x)),
-    (r"\log xy", _log(x * y)),
+    (r"\log{xy}", _log(x * y)),
     (r"\log_{2} x", _log(x, 2)),
     (r"\log_{a} x", _log(x, a)),
     (r"\log_{11} x", _log(x, 11)),
@@ -489,9 +490,9 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\exp(x)", exp(x)),
     (r"\lg x", log(x, 10)),
     (r"\ln x", log(x)),
-    (r"\ln xy", log(x * y)),
+    (r"\ln{xy}", log(x * y)),
     (r"\log x", log(x)),
-    (r"\log xy", log(x * y)),
+    (r"\log{xy}", log(x * y)),
     (r"\log_{2} x", log(x, 2)),
     (r"\log_{a} x", log(x, a)),
     (r"\log_{11} x", log(x, 11)),
@@ -824,10 +825,7 @@ def test_derivative_expressions():
 
 
 def test_trigonometric_expressions():
-    expected_failures = {3}
-    for i, (latex_str, sympy_expr) in enumerate(TRIGONOMETRIC_EXPRESSION_PAIRS):
-        if i in expected_failures:
-            continue
+    for latex_str, sympy_expr in TRIGONOMETRIC_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
@@ -914,6 +912,24 @@ def test_negthinspace_not_equal_conflict():
 
     assert parse_latex_lark(r"\negthinspace x \ne y") == Ne(x, y)
     assert parse_latex_lark(r"x \neq \negmedspace y") == Ne(x, y)
+
+
+def test_function_arguments():
+    assert parse_latex_lark(r"\tanh x") == tanh(x)
+    assert parse_latex_lark(r"\tanh(x)") == tanh(x)
+    assert parse_latex_lark(r"\sinh{x}") == sinh(x)
+    assert parse_latex_lark(r"\cosh x + 1") == cosh(x) + 1
+    assert parse_latex_lark(r"\sin x - 1") == sin(x) - 1
+    assert parse_latex_lark(r"\log x + 1") == log(x) + 1
+    assert parse_latex_lark(r"\sin x \cdot y") == sin(x)*y
+    assert parse_latex_lark(r"\sin x / 2") == sin(x)/2
+    assert parse_latex_lark(r"\sin x \cos y \tan z") == sin(x)*cos(y)*tan(z)
+    assert parse_latex_lark(r"\sin 2x") == sin(2*x)
+    assert parse_latex_lark(r"\sin -x") == -sin(x)
+
+    for latex_str in [r"\ln xy", r"\sin f(x)", r"\arctanh x"]:
+        with raises(lark.exceptions.UnexpectedInput):
+            parse_latex_lark(latex_str)
 
 
 def test_binomial_expressions():
