@@ -1329,6 +1329,21 @@ def test_manualintegrate_euler_substitution():
     assert (F1.diff(x) - f).cancel() == 0
     assert (F2.diff(x) - f.subs(c, 0)).cancel() == 0
 
+    # Negative leading coefficient, positive constant (c < 0, a > 0)
+    # Issue 30447
+    f = sqrt(1 - x**2) / (x**2 + 1)
+    F = -sqrt(2)*(2*atan(sqrt(2)*(sqrt(1 - x**2) - 1)/(4*x)) + 2*atan(7*sqrt(2)*(sqrt(1 - x**2) - 1)/(4*x) + sqrt(2)*(sqrt(1 - x**2) - 1)**3/(4*x**3)))/2 + 2*atan((sqrt(1 - x**2) - 1)/x)
+    assert manualintegrate(f, x) == F
+
+    # Issue 30443
+    A, a, b = symbols('A a b', real=True)
+    f_443 = A * x / (a * x**2 + b * x + c)
+    assert manualintegrate(f_443, x).has(Integral) is False
+
+    # Issue 30441
+    f_441 = 1/(x*sqrt(a + b*x**2)**3)
+    assert manualintegrate(f_441, x).has(Integral) is False
+
 def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of(1/sqrt((x - I)**2-1), log(2*x + 2*sqrt(x**2 - 2*I*x - 2) - 2*I))
     assert_is_integral_of(1/sqrt(3*x**2+4*x+5), sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3)
