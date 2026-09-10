@@ -108,6 +108,8 @@ See <https://docs.sympy.org/dev/install.html> for more information.
 
 ## Contributing
 
+SymPy is welcoming new contributors.
+
 We welcome contributions from anyone, even if you are new to open
 source. Please read our [Contributor Guide](https://docs.sympy.org/dev/contributing/index.html)
 page and the [SymPy Documentation Style Guide](https://docs.sympy.org/dev/documentation-style-guide.html). If you
