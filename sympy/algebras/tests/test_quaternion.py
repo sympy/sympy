@@ -173,6 +173,12 @@ def test_quaternion_functions():
                2 * sqrt(29) * E * sin(sqrt(29)) / 29,
                3 * sqrt(29) * E * sin(sqrt(29)) / 29,
                4 * sqrt(29) * E * sin(sqrt(29)) / 29)
+
+    assert Quaternion(1, 0, 0, 0).exp() == Quaternion(E, 0, 0, 0)
+    assert Quaternion(2, 0, 0, 0).exp() == Quaternion(E**2, 0, 0, 0)
+    assert Quaternion(0, 0, 0, 0).exp() == Quaternion(1, 0, 0, 0)
+
+    assert q1.log() == \
     assert q1.log() == \
     Quaternion(log(sqrt(30)),
                2 * sqrt(29) * acos(sqrt(30)/30) / 29,
@@ -457,3 +463,4 @@ def test_issue_28556():
     q3 = Quaternion(r, 0, 0, 0)
     result3 = q3.log()
     assert result3 == Quaternion(log(r), 0, 0, 0)
+    
