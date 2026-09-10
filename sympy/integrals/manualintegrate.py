@@ -2734,6 +2734,13 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
 def euler_substitution_rule(integral : IntegralInfo):
     """
     Substitute common sqrt(a + b*x + c*x**2) terms using Euler substitution.
+    
+    This rule implements two of the three Euler substitutions:
+    1. First Euler substitution (when c > 0): u = sqrt(R) + x*sqrt(c)
+    2. Second Euler substitution (when a > 0): u = (sqrt(R) - sqrt(a))/x
+    
+    The second substitution avoids introducing imaginary numbers when c < 0 
+    but a > 0.
     """
     integrand, x = integral
     base0 = None
