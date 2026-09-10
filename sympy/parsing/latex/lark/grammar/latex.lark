@@ -67,9 +67,19 @@ FUNC_ARCCOT: "\\arccot"
 FUNC_SINH: "\\sinh"
 FUNC_COSH: "\\cosh"
 FUNC_TANH: "\\tanh"
-FUNC_ARSINH: "\\arsinh"
-FUNC_ARCOSH: "\\arcosh"
-FUNC_ARTANH: "\\artanh"
+FUNC_COTH: "\\coth"
+FUNC_SECH: "\\sech"
+FUNC_CSCH: "\\csch"
+FUNC_ARSINH: "\\arsinh" | "\\arcsinh"
+FUNC_ARCOSH: "\\arcosh" | "\\arccosh"
+FUNC_ARTANH: "\\artanh" | "\\arctanh"
+
+// Commands sharing a prefix, like \tan and \tanh, are alternatives of a single terminal,
+// so that the lexer matches the longest one: \tanh is never read as \tan followed by h.
+FUNC_TRIG: FUNC_SIN | FUNC_COS | FUNC_TAN | FUNC_CSC | FUNC_SEC | FUNC_COT
+    | FUNC_ARCSIN | FUNC_ARCCOS | FUNC_ARCTAN | FUNC_ARCCSC | FUNC_ARCSEC | FUNC_ARCCOT
+    | FUNC_SINH | FUNC_COSH | FUNC_TANH | FUNC_COTH | FUNC_SECH | FUNC_CSCH
+    | FUNC_ARSINH | FUNC_ARCOSH | FUNC_ARTANH
 
 FUNC_SQRT: "\\sqrt"
 
@@ -220,9 +230,38 @@ div: _expression_mul DIV_SYMBOL (_expression_power | adjacent_expressions)
 
 adjacent_expressions: (_one_letter_symbol | number) _expression_mul
     | (group_round_parentheses | group_square_brackets | group_curly_literal_parentheses) (group_round_parentheses | group_square_brackets | group_curly_parentheses | group_curly_literal_parentheses | _one_letter_symbol)
-    | _function _function
+    | _function adjacent_functions
     | fraction _expression_mul
     | superscript _expression_mul
+
+?adjacent_functions: _function
+    | _function adjacent_functions -> adjacent_expressions
+
+// The argument of a function command binds tighter than any operator, and it contains no
+// function unless it is one: \sin x \cos y is sin(x)*cos(y), \sin \cos x is sin(cos(x)).
+?function_argument: argument_product
+    | _builtin_function
+    | ADD function_argument -> add
+    | SUB function_argument -> sub
+
+?argument_product: _argument_factor
+    | _argument_factor argument_product -> adjacent_expressions
+
+_argument_factor: _expression_core
+    | group_round_parentheses
+    | group_square_brackets
+    | group_curly_literal_parentheses
+    | fraction
+    | binomial
+    | function_applied
+    | _integral
+    | limit
+    | matrix
+    | superscript
+    | matrix_prime
+    | symbol_prime
+    | summation
+    | product
 
 _expression_func: _expression_core
     | group_round_parentheses
@@ -326,11 +365,10 @@ ket: BAR _expression CMD_RANGLE
 
 inner_product: CMD_LANGLE _expression BAR _expression CMD_RANGLE
 
-_function: function_applied
-    | abs | floor | ceil
-    | _trigonometric_function | _inverse_trigonometric_function
-    | _trigonometric_function_power
-    | _hyperbolic_trigonometric_function | _inverse_hyperbolic_trigonometric_function
+_function: function_applied | _builtin_function
+
+_builtin_function: abs | floor | ceil
+    | trigonometric_function | trigonometric_function_power
     | exponential
     | log
     | square_root
@@ -342,13 +380,13 @@ _function: function_applied
     | trace
     | adjugate
 
-exponential: FUNC_EXP _expression
+exponential: FUNC_EXP function_argument
 
-log: FUNC_LOG _expression
-    | FUNC_LN _expression
-    | FUNC_LG _expression
-    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) _expression
-    | FUNC_LOG UNDERSCORE group_curly_parentheses _expression
+log: FUNC_LOG function_argument
+    | FUNC_LN function_argument
+    | FUNC_LG function_argument
+    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) function_argument
+    | FUNC_LOG UNDERSCORE group_curly_parentheses function_argument
 
 square_root: FUNC_SQRT group_curly_parentheses
     | FUNC_SQRT group_square_brackets group_curly_parentheses
@@ -358,44 +396,9 @@ factorial: _expression_func BANG
 conjugate: CMD_OVERLINE group_curly_parentheses
     | CMD_OVERLINE DIGIT
 
-_trigonometric_function: sin | cos | tan | csc | sec | cot
+trigonometric_function: FUNC_TRIG function_argument
 
-sin: FUNC_SIN _expression
-cos: FUNC_COS _expression
-tan: FUNC_TAN _expression
-csc: FUNC_CSC _expression
-sec: FUNC_SEC _expression
-cot: FUNC_COT _expression
-
-_trigonometric_function_power: sin_power | cos_power | tan_power | csc_power | sec_power | cot_power
-
-sin_power: FUNC_SIN CARET _expression_core _expression
-cos_power: FUNC_COS CARET _expression_core _expression
-tan_power: FUNC_TAN CARET _expression_core _expression
-csc_power: FUNC_CSC CARET _expression_core _expression
-sec_power: FUNC_SEC CARET _expression_core _expression
-cot_power: FUNC_COT CARET _expression_core _expression
-
-_hyperbolic_trigonometric_function: sinh | cosh | tanh
-
-sinh: FUNC_SINH _expression
-cosh: FUNC_COSH _expression
-tanh: FUNC_TANH _expression
-
-_inverse_trigonometric_function: arcsin | arccos | arctan | arccsc | arcsec | arccot
-
-arcsin: FUNC_ARCSIN _expression
-arccos: FUNC_ARCCOS _expression
-arctan: FUNC_ARCTAN _expression
-arccsc: FUNC_ARCCSC _expression
-arcsec: FUNC_ARCSEC _expression
-arccot: FUNC_ARCCOT _expression
-
-_inverse_hyperbolic_trigonometric_function: asinh | acosh | atanh
-
-asinh: FUNC_ARSINH _expression
-acosh: FUNC_ARCOSH _expression
-atanh: FUNC_ARTANH _expression
+trigonometric_function_power: FUNC_TRIG CARET _expression_core function_argument
 
 abs: BAR _expression BAR
 floor: L_FLOOR _expression R_FLOOR
@@ -405,6 +408,6 @@ matrix: CMD_MATRIX_BEGIN matrix_body CMD_MATRIX_END
 matrix_body: matrix_row (MATRIX_ROW_DELIM matrix_row)* (MATRIX_ROW_DELIM)?
 matrix_row: _expression (MATRIX_COL_DELIM _expression)*
 determinant: (CMD_DETERMINANT_BEGIN matrix_body CMD_DETERMINANT_END)
-    | FUNC_DETERMINANT _expression
-trace: FUNC_MATRIX_TRACE _expression
-adjugate: FUNC_MATRIX_ADJUGATE _expression
+    | FUNC_DETERMINANT function_argument
+trace: FUNC_MATRIX_TRACE function_argument
+adjugate: FUNC_MATRIX_ADJUGATE function_argument
