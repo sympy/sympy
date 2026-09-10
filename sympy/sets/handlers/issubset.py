@@ -67,6 +67,22 @@ def _(a_interval, b_u):
                     ])
             if all(no_overlap(s, a_interval) for s in intervals):
                 return False
+        has_single_span = any(
+            fuzzy_bool(s.contains(a_interval.start)) is not False and
+            fuzzy_bool(s.contains(a_interval.end)) is not False
+            for s in intervals
+        )
+        if not has_single_span:
+            start_covered = any(
+                fuzzy_bool(s.contains(a_interval.start)) is not False
+                for s in intervals
+            )
+            end_covered = any(
+                fuzzy_bool(s.contains(a_interval.end)) is not False
+                for s in intervals
+            )
+            if start_covered or end_covered:
+                return False
 
 @is_subset_sets.register(Range, Range)
 def _(a, b):
