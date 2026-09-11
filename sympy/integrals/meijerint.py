@@ -1860,6 +1860,8 @@ def meijerint_definite(f, x, a, b):
 
     elif a is S.Infinity:
         res = meijerint_definite(f, x, b, S.Infinity)
+        if res is None:
+            return None
         return -res[0], res[1]
 
     elif (a, b) == (S.Zero, S.Infinity):
