@@ -564,72 +564,61 @@ class Integral(AddWithLimits):
             if (function.has(Piecewise) and
                 not isinstance(function, Piecewise)):
                     function = piecewise_fold(function)
-            # There are a number of tradeoffs in using the
-            # Meijer G method. It can sometimes be a lot faster
-            # than other methods, and sometimes slower. And
-            # there are certain types of integrals for which it
-            # is more likely to work than others. These
-            # heuristics are incorporated in deciding what
-            # integration methods to try, in what order. See the
-            # integrate() docstring for details.
             def try_meijerg(function, xab):
-                ret = None
-                if len(xab) == 3 and meijerg is not False:
-                    x, a, b = xab
-                    try:
-                        res = meijerint_definite(function, x, a, b)
-                    except NotImplementedError:
-                        _debug('NotImplementedError '
-                            'from meijerint_definite')
-                        res = None
-                    if res is not None:
-                        f, cond = res
-                        if conds == 'piecewise':
-                            u = self.func(function, (x, a, b))
-                            # if Piecewise modifies cond too
-                            # much it may not be recognized by
-                            # _condsimp pattern matching so just
-                            # turn off all evaluation
-                            return Piecewise((f, cond), (u, True),
-                                evaluate=False)
-                        elif conds == 'separate':
-                            if len(self.limits) != 1:
-                                raise ValueError(filldedent('''
-                                    conds=separate not supported in
-                                    multiple integrals'''))
-                            ret = f, cond
-                        else:
-                            ret = f
-                return ret
+                x, a, b = xab
+                try:
+                    res = meijerint_definite(function, x, a, b)
+                except NotImplementedError:
+                    _debug('NotImplementedError '
+                        'from meijerint_definite')
+                    return None
+                if res is None:
+                    return None
+                f, cond = res
+                if conds == 'piecewise':
+                    u = self.func(function, (x, a, b))
+                    # if Piecewise modifies cond too
+                    # much it may not be recognized by
+                    # _condsimp pattern matching so just
+                    # turn off all evaluation
+                    return Piecewise((f, cond), (u, True),
+                        evaluate=False)
+                elif conds == 'separate':
+                    if len(self.limits) != 1:
+                        raise ValueError(filldedent('''
+                            conds=separate not supported in
+                            multiple integrals'''))
+                    return f, cond
+                else:
+                    return f
 
-            meijerg1 = meijerg
-            if (meijerg is not False and
-                    len(xab) == 3 and xab[1].is_extended_real and xab[2].is_extended_real
-                    and not function.is_Poly and
-                    (xab[1].has(oo, -oo) or xab[2].has(oo, -oo))):
+            # The Meijer G-function algorithm for definite integrals is
+            # the method of choice when a limit is infinite. If it does
+            # not succeed, an antiderivative found by the Meijer
+            # G-function algorithm for indefinite integrals is not
+            # trusted either, since evaluating it at the limits gives
+            # wrong answers for divergent integrals. When meijerg=True,
+            # a definite integral is only computed by the definite
+            # algorithm.
+            improper = (len(xab) == 3 and
+                        xab[1].is_extended_real and xab[2].is_extended_real
+                        and not function.is_Poly and
+                        (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)))
+            if len(xab) == 3 and (meijerg is True or
+                                   (meijerg is None and improper)):
                 ret = try_meijerg(function, xab)
                 if ret is not None:
                     function = ret
                     continue
-                meijerg1 = False
-            # If the special meijerg code did not succeed in
-            # finding a definite integral, then the code using
-            # meijerint_indefinite will not either (it might
-            # find an antiderivative, but the answer is likely
-            # to be nonsensical). Thus if we are requested to
-            # only use Meijer G-function methods, we give up at
-            # this stage. Otherwise we just disable G-function
-            # methods.
-            if meijerg1 is False and meijerg is True:
-                antideriv = None
+                if meijerg is True:
+                    antideriv = None
+                else:
+                    antideriv = self._integrate_dispatch(
+                        function, xab[0], definite=True,
+                        **{**eval_kwargs, 'meijerg': False})
             else:
                 antideriv = self._integrate_dispatch(
                     function, xab[0], definite=len(xab) > 1, **eval_kwargs)
-                if antideriv is None and meijerg is True:
-                    ret = try_meijerg(function, xab)
-                    if ret is not None:
-                        function = ret
-                        continue
 
             final = hints.get('final', True)
             # doit may be iterated but floor terms making atan and acot
@@ -1510,20 +1499,19 @@ def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
 
     - If computing a definite integral, and both limits are real,
       and at least one limit is +- oo, try the G-function method of
-      definite integration first.
+      definite integration first. If it fails, the G-function method of
+      indefinite integration is not used for this integral either.
 
     - Try to find an antiderivative, using all available methods, ordered
       by performance (that is try fastest method first, slowest last; in
       particular polynomial integration is tried first, Meijer
       G-functions second to last, and heuristic Risch last).
 
-    - If still not successful, try G-functions irrespective of the
-      limits.
-
     The option meijerg=True, False, None can be used to, respectively:
     always use G-function methods and no others, never use G-function
     methods, or use all available methods (in order as described above).
-    It defaults to None.
+    It defaults to None. With meijerg=True, a definite integral is only
+    computed with the G-function method of definite integration.
 
     Examples
     ========

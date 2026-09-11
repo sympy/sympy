@@ -755,10 +755,8 @@ def test_gamma():
     assert characteristic_function(X)(x) == ((-I*theta*x + 1)**(-k))
 
     assert density(X)(x) == x**(k - 1)*theta**(-k)*exp(-x/theta)/gamma(k)
-    assert cdf(X, meijerg=True)(z) == Piecewise(
-            (-k*lowergamma(k, 0)/gamma(k + 1) +
-                k*lowergamma(k, z/theta)/gamma(k + 1), z >= 0),
-            (0, True))
+    assert cdf(X)(z) == Piecewise(
+            (lowergamma(k, z/theta)/gamma(k), z > 0), (0, True))
 
     # assert simplify(variance(X)) == k*theta**2  # handled numerically below
     assert E(X) == moment(X, 1)

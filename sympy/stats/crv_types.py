@@ -1899,15 +1899,15 @@ def Gamma(name, k, theta):
     ---------------------
            Gamma(k)
 
-    >>> C = cdf(X, meijerg=True)(z)
+    >>> C = cdf(X)(z)
     >>> pprint(C, use_unicode=False)
-    /            /     z  \
-    |k*lowergamma|k, -----|
-    |            \   theta/
-    <----------------------  for z >= 0
-    |     Gamma(k + 1)
+    /          /     z  \
+    |lowergamma|k, -----|
+    |          \   theta/
+    <--------------------  for z > 0
+    |      Gamma(k)
     |
-    \          0             otherwise
+    \         0            otherwise
 
     >>> E(X)
     k*theta

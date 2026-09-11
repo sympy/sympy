@@ -5,6 +5,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.special.bessel import besselj
 from sympy.functions.elementary.hyperbolic import cosh, acosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
@@ -236,7 +237,7 @@ def test_meijerint():
 
 
 def test_bessel():
-    from sympy.functions.special.bessel import (besseli, besselj)
+    from sympy.functions.special.bessel import besseli
     assert simplify(integrate(besselj(a, z)*besselj(b, z)/z, (z, 0, oo),
                      meijerg=True, conds='none')) == \
         2*sin(pi*(a/2 - b/2))/(pi*(a - b)*(a + b))
@@ -467,16 +468,16 @@ def test_probability():
         /(beta - 2)/(beta - 1)**2
 
     # Beta distribution
-    # NOTE: this is evaluated using antiderivatives. It also tests that
-    #       meijerint_indefinite returns the simplest possible answer.
     a, b = symbols('a b', positive=True)
     betadist = x**(a - 1)*(-x + 1)**(b - 1)*gamma(a + b)/(gamma(a)*gamma(b))
-    assert simplify(integrate(betadist, (x, 0, 1), meijerg=True)) == 1
-    assert simplify(integrate(x*betadist, (x, 0, 1), meijerg=True)) == \
-        a/(a + b)
+    assert simplify(integrate(betadist, (x, 0, 1), meijerg=True,
+                              conds='none')) == 1
+    assert simplify(integrate(x*betadist, (x, 0, 1), meijerg=True,
+                              conds='none')) == a/(a + b)
     assert simplify(integrate(x**2*betadist, (x, 0, 1), meijerg=True)) == \
         a*(a + 1)/(a + b)/(a + b + 1)
-    assert simplify(integrate(x**y*betadist, (x, 0, 1), meijerg=True)) == \
+    assert simplify(integrate(x**y*betadist, (x, 0, 1), meijerg=True,
+                              conds='none')) == \
         gamma(a + b)*gamma(a + y)/gamma(a)/gamma(a + b + y)
 
     # Chi distribution
@@ -609,8 +610,8 @@ def test_expint():
     assert integrate(-cos(x)/x, (x, t, oo), meijerg=True).expand() == Ci(t)
     assert integrate(-sin(x)/x, (x, t, oo), meijerg=True).expand() == \
         Si(t) - pi/2
-    assert integrate(sin(x)/x, (x, 0, z), meijerg=True) == Si(z)
-    assert integrate(sinh(x)/x, (x, 0, z), meijerg=True) == Shi(z)
+    assert integrate(sin(x)/x, x, meijerg=True) == Si(x)
+    assert integrate(sinh(x)/x, x, meijerg=True) == Shi(x)
     assert integrate(exp(-x)/x, x, meijerg=True).expand().rewrite(expint) == \
         I*pi - expint(1, x)
     assert integrate(exp(-x)/x**2, x, meijerg=True).rewrite(expint).expand() \
@@ -766,10 +767,25 @@ def test_pr_23583():
 
 # 25786
 def test_integrate_function_of_square_over_negatives():
-    assert integrate(exp(-x**2), (x,-5,0), meijerg=True) == sqrt(pi)/2 * erf(5)
+    assert integrate(exp(-x**2), x, meijerg=True) == sqrt(pi)/2 * erf(x)
+    assert integrate(exp(-x**2), (x, -5, 0)) == sqrt(pi)/2 * erf(5)
 
 
 def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
-    assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+    assert integrate(cosh(y*(x + 1)), x, meijerg=True) == sinh(y*(x + 1))/y
+    assert integrate(cosh(y*(x + 1)), (x, -1, -0.25)) == sinh(0.75*y)/y
+
+
+def test_meijerg_definite_only():
+    for f, lim in [(1/sqrt(Abs(x)), (x, -1, 1)), (Abs(x)**Rational(-1, 3),
+                   (x, -1, 1)), (log(Abs(x)), (x, -1, 2)), (1/x, (x, -1, 2))]:
+        assert isinstance(integrate(f, lim, meijerg=True), Integral)
+    assert integrate(1/sqrt(Abs(x)), (x, -1, 1)) == 4
+    assert integrate(Abs(x)**Rational(-1, 3), (x, -1, 1)) == 3
+    assert integrate(exp(-x**2), (x, 0, 1), meijerg=True) == sqrt(pi)*erf(1)/2
+
+
+def test_no_meijerint_indefinite_for_improper_integrals():
+    assert isinstance(integrate(besselj(0, x)**2, (x, 0, oo)), Integral)
