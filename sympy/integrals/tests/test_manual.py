@@ -48,6 +48,9 @@ def test_manualintegrate_lambertw():
     assert manualintegrate(1/(1 + LambertW(x)), x) == exp(LambertW(x))
     assert manualintegrate(1/(x*(1 + LambertW(x))), x) == log(LambertW(x))
     assert manualintegrate(LambertW(x)/(x*(LambertW(x) + 1)), x) == LambertW(x)
+    f = LambertW(3*x+1)
+    F = exp(LambertW(3*x + 1))*LambertW(3*x + 1)**2/3 - exp(LambertW(3*x + 1))*LambertW(3*x + 1)/3 + exp(LambertW(3*x + 1))/3
+    assert manualintegrate(f, x) == F
 
 
 def test_manualintegrate_polynomials():

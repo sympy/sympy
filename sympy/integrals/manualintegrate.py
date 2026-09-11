@@ -1222,10 +1222,6 @@ def manual_subs(expr, *args):
             expr = expr.replace(lambda x: x.is_Pow and x.base == x0,
                 lambda x: exp(x.exp*new))
             new_subs.append((x0, exp(new)))
-        elif isinstance(old, LambertW):
-            # LambertW(x) = y => x = y*exp(y)
-            x0 = old.args[0]
-            new_subs.append((x0, new*exp(new)))
 
     return expr.subs(list(sequence) + new_subs)
 
@@ -1260,6 +1256,17 @@ def find_substitutions(integrand, symbol, u_var):
             # when a = 0
             if b != 0 and a != 0:
                 substituted = manual_subs(substituted, symbol, symbol_of_u).cancel()
+
+        # if u = LambertW(z) with z linear, then z = u*exp(u), so the symbol
+        # can be expressed in terms of u_var
+        if isinstance(u, LambertW) and substituted.has_free(symbol):
+            z = u.args[0]
+            if z.is_polynomial(symbol) and degree(z, symbol) == 1:
+                a = z.coeff(symbol)
+                b = z.subs(symbol, 0)
+                symbol_of_u = (u_var*exp(u_var) - b)/a
+                substituted = substituted.subs(symbol, symbol_of_u).cancel()
+
         if substituted.has_free(symbol):
             return False
         # avoid increasing the degree of a rational function
