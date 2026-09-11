@@ -39,7 +39,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.testing.pytest import XFAIL, raises, slow, warns_deprecated_sympy, warns
+from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
@@ -1099,10 +1099,16 @@ def test_eval_Integral():
     assert integrate(F(x) + x, x) == x**2/2 + 3*x
 
 
-@XFAIL
-def test_issue_5167_nested():
+def test_integrate_nested_integral():
     f = Function('f')
-    assert Integral(f(x), y, x, y, x).doit() == y**2*Integral(f(x), x, x)/2
+    assert Integral(f(x), y, x, y, x).doit() == Integral(y**2*f(x)/2, x, x)
+    assert integrate(Integral(y*f(x), x), (y, 0, 2)) == Integral(2*f(x), x)
+    assert integrate(Integral(f(x, y), (x, 0, y)), y) == \
+        Integral(f(x, y), (x, 0, y), y)
+    # the free x in the limit must not be captured by the bound x
+    res = Integral(Integral(w*f(x), (x, 1, 2)), (w, 1, x)).doit()
+    d = res.variables[0]
+    assert d != x and res == Integral(x**2*f(d)/2 - f(d)/2, (d, 1, 2))
 
 
 def test_issue_4890():
