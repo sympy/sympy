@@ -30,6 +30,8 @@ from typing import Callable, TYPE_CHECKING
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
     from sympy.core.symbol import Symbol
+    from sympy.core.basic import Basic
+    from collections.abc import Iterable
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
 
@@ -95,11 +97,14 @@ def verify_numerically(f: Expr, g: Expr, z: Symbol | None = None, tol: float = 1
     from sympy.core.sympify import sympify
     from sympy.core.numbers import comp
     f, g = (sympify(i) for i in (f, g))
+    symbols: Iterable[Basic]
     if z is None:
-        z = f.free_symbols | g.free_symbols
+        symbols = f.free_symbols | g.free_symbols
     elif isinstance(z, Symbol):
-        z = [z]
-    reps = list(zip(z, [random_complex_number(a, b, c, d) for _ in z]))
+        symbols = [z]
+    else:
+        symbols = z
+    reps = list(zip(symbols, [random_complex_number(a, b, c, d) for _ in symbols]))
     z1 = f.subs(reps).n()
     z2 = g.subs(reps).n()
     return comp(z1, z2, tol)
