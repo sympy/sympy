@@ -1223,9 +1223,13 @@ def manual_subs(expr, *args):
                 lambda x: exp(x.exp*new))
             new_subs.append((x0, exp(new)))
         elif isinstance(old, LambertW):
-            # LambertW(x) = y => x = y*exp(y)
-            x0 = old.args[0]
-            new_subs.append((x0, new*exp(new)))
+            z = old.args[0]
+            z_symbol = z.free_symbols.pop()
+            if z.is_polynomial(z_symbol) and degree(z, z_symbol) == 1:
+                a = z.coeff(z_symbol)
+                b = z.subs(z_symbol, 0)
+                if a != 0:
+                    new_subs.append((z_symbol, (new*exp(new) - b)/a))
 
     return expr.subs(list(sequence) + new_subs)
 
