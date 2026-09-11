@@ -38,6 +38,44 @@ if TYPE_CHECKING:
     SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
 
 
+def _add_atan_floor_terms(antideriv):
+    """
+    Make an antiderivative containing ``atan(c*tan(a))`` or ``atan(c*cot(a))``
+    continuous by adding the appropriate multiple of ``pi*floor(...)``.
+
+    Examples
+    ========
+
+    >>> from sympy import atan, tan, pi, floor
+    >>> from sympy.abc import x
+    >>> from sympy.integrals.integrals import _add_atan_floor_terms
+    >>> _add_atan_floor_terms(2*atan(3*tan(x/2)))
+    2*atan(3*tan(x/2)) + 2*pi*floor((x/2 - pi/2)/pi)
+    """
+    for atan_term in antideriv.atoms(atan):
+        atan_arg = atan_term.args[0]
+        # Checking `atan_arg` to be linear combination of `tan` or `cot`
+        for tan_part in atan_arg.atoms(tan):
+            x1 = Dummy('x1')
+            tan_exp1 = atan_arg.subs(tan_part, x1)
+            # The coefficient of `tan` should be constant
+            coeff = tan_exp1.diff(x1)
+            if x1 not in coeff.free_symbols:
+                a = tan_part.args[0]
+                antideriv = antideriv.subs(atan_term, Add(atan_term,
+                    sign(coeff)*pi*floor((a-pi/2)/pi)))
+        for cot_part in atan_arg.atoms(cot):
+            x1 = Dummy('x1')
+            cot_exp1 = atan_arg.subs(cot_part, x1)
+            # The coefficient of `cot` should be constant
+            coeff = cot_exp1.diff(x1)
+            if x1 not in coeff.free_symbols:
+                a = cot_part.args[0]
+                antideriv = antideriv.subs(atan_term, Add(atan_term,
+                    sign(coeff)*pi*floor((a)/pi)))
+    return antideriv
+
+
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
@@ -594,31 +632,11 @@ class Integral(AddWithLimits):
                         continue
 
             final = hints.get('final', True)
-            # dotit may be iterated but floor terms making atan and acot
+            # doit may be iterated but floor terms making atan and acot
             # continuous should only be added in the final round
             if (final and not isinstance(antideriv, Integral) and
                 antideriv is not None):
-                for atan_term in antideriv.atoms(atan):
-                    atan_arg = atan_term.args[0]
-                    # Checking `atan_arg` to be linear combination of `tan` or `cot`
-                    for tan_part in atan_arg.atoms(tan):
-                        x1 = Dummy('x1')
-                        tan_exp1 = atan_arg.subs(tan_part, x1)
-                        # The coefficient of `tan` should be constant
-                        coeff = tan_exp1.diff(x1)
-                        if x1 not in coeff.free_symbols:
-                            a = tan_part.args[0]
-                            antideriv = antideriv.subs(atan_term, Add(atan_term,
-                                sign(coeff)*pi*floor((a-pi/2)/pi)))
-                    for cot_part in atan_arg.atoms(cot):
-                        x1 = Dummy('x1')
-                        cot_exp1 = atan_arg.subs(cot_part, x1)
-                        # The coefficient of `cot` should be constant
-                        coeff = cot_exp1.diff(x1)
-                        if x1 not in coeff.free_symbols:
-                            a = cot_part.args[0]
-                            antideriv = antideriv.subs(atan_term, Add(atan_term,
-                                sign(coeff)*pi*floor((a)/pi)))
+                antideriv = _add_atan_floor_terms(antideriv)
 
             if antideriv is None:
                 function = self.func(function, xab)
