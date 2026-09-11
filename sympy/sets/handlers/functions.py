@@ -15,6 +15,7 @@ from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
 from sympy.sets.sets import EmptySet, is_function_invertible_in_set
 from sympy.sets.fancysets import Integers, Naturals, Reals
 from sympy.functions.elementary.exponential import match_real_imag
+from sympy.calculus.util import periodicity, function_range
 
 
 _x, _y = symbols("x y")
@@ -68,6 +69,21 @@ def _(f, x):
             if domain_set is S.EmptySet:
                 break
         return result
+
+    period = periodicity(expr, var)
+    if period is not None and (x.is_infinite or (isinstance(x, Interval) and x.measure >= period)):
+        # case 1 - function has singularities in one period
+        period_interval = Interval(0, period, right_open=True)
+        sing_ = singularities(expr, var, period_interval)
+        if sing_ != S.EmptySet:
+            return S.Reals
+        # case 2 - if no singularities compute actual range over one period
+        try:
+            one_period_image = function_range(expr, var, period_interval)
+            if one_period_image != S.EmptySet:
+                return one_period_image.closure
+        except NotImplementedError:
+            pass # fall through to existing logic if range cannot be determined
 
     if not x.start.is_comparable or not x.end.is_comparable:
         return
