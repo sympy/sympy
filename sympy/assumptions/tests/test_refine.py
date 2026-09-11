@@ -6,7 +6,8 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
+from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im,
+    re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
@@ -194,6 +195,24 @@ def test_arg():
     x = Symbol('x', complex = True)
     assert refine(arg(x), Q.positive(x)) == 0
     assert refine(arg(x), Q.negative(x)) == pi
+
+
+def test_conjugate():
+    assert refine(conjugate(x), Q.real(x)) == x
+    assert refine(conjugate(x), Q.positive(x)) == x
+    assert refine(conjugate(x), Q.negative(x)) == x
+    assert refine(conjugate(x), Q.zero(x)) == x
+    assert refine(conjugate(x), Q.imaginary(x)) == -x
+    assert refine(conjugate(x), Q.complex(x)) == conjugate(x)
+    assert refine(conjugate(x)) == conjugate(x)
+    assert refine(conjugate(x) + conjugate(y),
+        Q.real(x) & Q.imaginary(y)) == x - y
+    assert refine(conjugate(x)**2, Q.imaginary(x)) == x**2
+
+    y1 = Symbol('y1', real = True)
+    assert refine(conjugate(y1)) == y1
+    assert refine(conjugate(y1**2)) == y1**2
+
 
 def test_func_args():
     class MyClass(Expr):
