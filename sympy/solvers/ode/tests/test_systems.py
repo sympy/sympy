@@ -1495,13 +1495,13 @@ def test_sysode_linear_neq_order1_type4():
             + h(x))*log(x) + sin(x)), Eq(Derivative(h(x), x), (f(x) + g(x) + h(x))*log(x) + sin(x))]
     sol7 = [Eq(f(x), -C1/3 - C2/3 + 2*C3/3 + (C1/3 + C2/3 +
                 C3/3)*exp(x*(3*log(x) - 3)) + exp(x*(3*log(x) -
-                    3))*Integral(exp(3*x)*exp(-3*x*log(x))*sin(x), x)),
+                    3))*Integral(exp(-3*x*log(x) + 3*x)*sin(x), x)),
             Eq(g(x), 2*C1/3 - C2/3 - C3/3 + (C1/3 + C2/3 +
                 C3/3)*exp(x*(3*log(x) - 3)) + exp(x*(3*log(x) -
-                    3))*Integral(exp(3*x)*exp(-3*x*log(x))*sin(x), x)),
+                    3))*Integral(exp(-3*x*log(x) + 3*x)*sin(x), x)),
             Eq(h(x), -C1/3 + 2*C2/3 - C3/3 + (C1/3 + C2/3 +
                 C3/3)*exp(x*(3*log(x) - 3)) + exp(x*(3*log(x) -
-                    3))*Integral(exp(3*x)*exp(-3*x*log(x))*sin(x), x))]
+                    3))*Integral(exp(-3*x*log(x) + 3*x)*sin(x), x))]
     with dotprodsimp(True):
         assert dsolve(eqs7, simplify=False, doit=False) == sol7
     assert checksysodesol(eqs7, sol7) == (True, [0, 0, 0])
@@ -1511,16 +1511,16 @@ def test_sysode_linear_neq_order1_type4():
             sin(x)), Eq(Derivative(k(x), x), (f(x) + g(x) + h(x) + k(x))*log(x) + sin(x))]
     sol8 = [Eq(f(x), -C1/4 - C2/4 - C3/4 + 3*C4/4 + (C1/4 + C2/4 + C3/4 +
                 C4/4)*exp(x*(4*log(x) - 4)) + exp(x*(4*log(x) -
-                    4))*Integral(exp(4*x)*exp(-4*x*log(x))*sin(x), x)),
+                    4))*Integral(exp(-4*x*log(x) + 4*x)*sin(x), x)),
             Eq(g(x), 3*C1/4 - C2/4 - C3/4 - C4/4 + (C1/4 + C2/4 + C3/4 +
                 C4/4)*exp(x*(4*log(x) - 4)) + exp(x*(4*log(x) -
-                    4))*Integral(exp(4*x)*exp(-4*x*log(x))*sin(x), x)),
+                    4))*Integral(exp(-4*x*log(x) + 4*x)*sin(x), x)),
             Eq(h(x), -C1/4 + 3*C2/4 - C3/4 - C4/4 + (C1/4 + C2/4 + C3/4 +
                 C4/4)*exp(x*(4*log(x) - 4)) + exp(x*(4*log(x) -
-                    4))*Integral(exp(4*x)*exp(-4*x*log(x))*sin(x), x)),
+                    4))*Integral(exp(-4*x*log(x) + 4*x)*sin(x), x)),
             Eq(k(x), -C1/4 - C2/4 + 3*C3/4 - C4/4 + (C1/4 + C2/4 + C3/4 +
                 C4/4)*exp(x*(4*log(x) - 4)) + exp(x*(4*log(x) -
-                    4))*Integral(exp(4*x)*exp(-4*x*log(x))*sin(x), x))]
+                    4))*Integral(exp(-4*x*log(x) + 4*x)*sin(x), x))]
     with dotprodsimp(True):
         assert dsolve(eqs8) == sol8
     assert checksysodesol(eqs8, sol8) == (True, [0, 0, 0, 0])

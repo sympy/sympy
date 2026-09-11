@@ -545,7 +545,7 @@ def test_separable():
 
 @slow
 def test_factorable():
-    assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
+    assert integrate(-asin(f(2*x)+pi), x) == Integral(-asin(pi + f(2*x)), x)
     _ode_solver_test(_get_examples_ode_sol_factorable)
 
 
@@ -1136,7 +1136,7 @@ def _get_examples_ode_sol_liouville():
 
     'liouville_08': {
         'eq': x**2*diff(f(x),x) + (n*f(x) + f(x)**2)*diff(f(x),x)**2 + diff(f(x), (x, 2)),
-        'sol': [Eq(C1 + C2*lowergamma(Rational(1,3), x**3/3) + NonElementaryIntegral(exp(_y**3/3)*exp(_y**2*n/2), (_y, f(x))), 0)],
+        'sol': [Eq(C1 + C2*lowergamma(Rational(1,3), x**3/3) + NonElementaryIntegral(exp(_y**2*(2*_y + 3*n)/6), (_y, f(x))), 0)],
     },
     }
     }
@@ -2197,8 +2197,8 @@ def _get_examples_ode_sol_2nd_nonlinear_autonomous_conserved():
     '2nd_nonlinear_autonomous_conserved_02': {
         'eq': f(x).diff(x, 2) + cbrt(f(x)) + 1/f(x),
         'sol': [
-            Eq(sqrt(2)*Integral(1/sqrt(2*C1 - 3*_u**Rational(4, 3) - 4*log(_u)), (_u, f(x))), C2 + x),
-            Eq(sqrt(2)*Integral(1/sqrt(2*C1 - 3*_u**Rational(4, 3) - 4*log(_u)), (_u, f(x))), C2 - x)
+            Eq(Integral(1/sqrt(C1 - 3*_u**Rational(4, 3)/2 - 2*log(_u)), (_u, f(x))), C2 + x),
+            Eq(Integral(1/sqrt(C1 - 3*_u**Rational(4, 3)/2 - 2*log(_u)), (_u, f(x))), C2 - x)
         ],
         'simplify_flag': False,
     },
@@ -2420,7 +2420,7 @@ def _get_examples_ode_sol_lie_group():
 
     'lie_group_13': {
         'eq': diff(f(x),x) + f(x)*cos(x) - exp(2*x),
-        'sol': [Eq(f(x), exp(-sin(x))*(C1 + Integral(exp(2*x)*exp(sin(x)), x)))],
+        'sol': [Eq(f(x), exp(-sin(x))*(C1 + Integral(exp(2*x + sin(x)), x)))],
     },
 
     'lie_group_14': {
