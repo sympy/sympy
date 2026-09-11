@@ -85,11 +85,6 @@ class Integral(AddWithLimits):
 
         """
 
-        #This will help other classes define their own definitions
-        #of behaviour with Integral.
-        if hasattr(function, '_eval_Integral'):
-            return function._eval_Integral(*symbols, **assumptions)
-
         if isinstance(function, Poly):
             sympy_deprecation_warning(
                 """
@@ -531,80 +526,72 @@ class Integral(AddWithLimits):
             if (function.has(Piecewise) and
                 not isinstance(function, Piecewise)):
                     function = piecewise_fold(function)
-            if isinstance(function, Piecewise):
-                if len(xab) == 1:
-                    antideriv = function._eval_integral(xab[0],
-                        **eval_kwargs)
-                else:
-                    antideriv = self._integrate_dispatch(
-                        function, xab[0], **eval_kwargs)
-            else:
-                # There are a number of tradeoffs in using the
-                # Meijer G method. It can sometimes be a lot faster
-                # than other methods, and sometimes slower. And
-                # there are certain types of integrals for which it
-                # is more likely to work than others. These
-                # heuristics are incorporated in deciding what
-                # integration methods to try, in what order. See the
-                # integrate() docstring for details.
-                def try_meijerg(function, xab):
-                    ret = None
-                    if len(xab) == 3 and meijerg is not False:
-                        x, a, b = xab
-                        try:
-                            res = meijerint_definite(function, x, a, b)
-                        except NotImplementedError:
-                            _debug('NotImplementedError '
-                                'from meijerint_definite')
-                            res = None
-                        if res is not None:
-                            f, cond = res
-                            if conds == 'piecewise':
-                                u = self.func(function, (x, a, b))
-                                # if Piecewise modifies cond too
-                                # much it may not be recognized by
-                                # _condsimp pattern matching so just
-                                # turn off all evaluation
-                                return Piecewise((f, cond), (u, True),
-                                    evaluate=False)
-                            elif conds == 'separate':
-                                if len(self.limits) != 1:
-                                    raise ValueError(filldedent('''
-                                        conds=separate not supported in
-                                        multiple integrals'''))
-                                ret = f, cond
-                            else:
-                                ret = f
-                    return ret
+            # There are a number of tradeoffs in using the
+            # Meijer G method. It can sometimes be a lot faster
+            # than other methods, and sometimes slower. And
+            # there are certain types of integrals for which it
+            # is more likely to work than others. These
+            # heuristics are incorporated in deciding what
+            # integration methods to try, in what order. See the
+            # integrate() docstring for details.
+            def try_meijerg(function, xab):
+                ret = None
+                if len(xab) == 3 and meijerg is not False:
+                    x, a, b = xab
+                    try:
+                        res = meijerint_definite(function, x, a, b)
+                    except NotImplementedError:
+                        _debug('NotImplementedError '
+                            'from meijerint_definite')
+                        res = None
+                    if res is not None:
+                        f, cond = res
+                        if conds == 'piecewise':
+                            u = self.func(function, (x, a, b))
+                            # if Piecewise modifies cond too
+                            # much it may not be recognized by
+                            # _condsimp pattern matching so just
+                            # turn off all evaluation
+                            return Piecewise((f, cond), (u, True),
+                                evaluate=False)
+                        elif conds == 'separate':
+                            if len(self.limits) != 1:
+                                raise ValueError(filldedent('''
+                                    conds=separate not supported in
+                                    multiple integrals'''))
+                            ret = f, cond
+                        else:
+                            ret = f
+                return ret
 
-                meijerg1 = meijerg
-                if (meijerg is not False and
-                        len(xab) == 3 and xab[1].is_extended_real and xab[2].is_extended_real
-                        and not function.is_Poly and
-                        (xab[1].has(oo, -oo) or xab[2].has(oo, -oo))):
+            meijerg1 = meijerg
+            if (meijerg is not False and
+                    len(xab) == 3 and xab[1].is_extended_real and xab[2].is_extended_real
+                    and not function.is_Poly and
+                    (xab[1].has(oo, -oo) or xab[2].has(oo, -oo))):
+                ret = try_meijerg(function, xab)
+                if ret is not None:
+                    function = ret
+                    continue
+                meijerg1 = False
+            # If the special meijerg code did not succeed in
+            # finding a definite integral, then the code using
+            # meijerint_indefinite will not either (it might
+            # find an antiderivative, but the answer is likely
+            # to be nonsensical). Thus if we are requested to
+            # only use Meijer G-function methods, we give up at
+            # this stage. Otherwise we just disable G-function
+            # methods.
+            if meijerg1 is False and meijerg is True:
+                antideriv = None
+            else:
+                antideriv = self._integrate_dispatch(
+                    function, xab[0], definite=len(xab) > 1, **eval_kwargs)
+                if antideriv is None and meijerg is True:
                     ret = try_meijerg(function, xab)
                     if ret is not None:
                         function = ret
                         continue
-                    meijerg1 = False
-                # If the special meijerg code did not succeed in
-                # finding a definite integral, then the code using
-                # meijerint_indefinite will not either (it might
-                # find an antiderivative, but the answer is likely
-                # to be nonsensical). Thus if we are requested to
-                # only use Meijer G-function methods, we give up at
-                # this stage. Otherwise we just disable G-function
-                # methods.
-                if meijerg1 is False and meijerg is True:
-                    antideriv = None
-                else:
-                    antideriv = self._integrate_dispatch(
-                        function, xab[0], **eval_kwargs)
-                    if antideriv is None and meijerg is True:
-                        ret = try_meijerg(function, xab)
-                        if ret is not None:
-                            function = ret
-                            continue
 
             final = hints.get('final', True)
             # dotit may be iterated but floor terms making atan and acot
@@ -694,7 +681,7 @@ class Integral(AddWithLimits):
                         try:
                             evalued = Add(*others)._eval_interval(x, a, b)
                             evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
-                            function = uneval + evalued + evalued_pw
+                            function = Add(uneval, evalued, evalued_pw)
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed
@@ -795,12 +782,22 @@ class Integral(AddWithLimits):
         return rv
 
     def _integrate_dispatch(self, f, x, meijerg=None, risch=None, manual=None,
-                       heurisch=None, conds='piecewise',final=None):
+                       heurisch=None, conds='piecewise', final=None,
+                       definite=False):
         """
         Calculate the anti-derivative to the function f(x).
 
         Explanation
         ===========
+
+        An object can define a method ``_eval_Integral(x, **hints)`` that
+        returns its antiderivative with respect to ``x``, or ``None`` to fall
+        back to the algorithms below. It can also return an unevaluated
+        Integral when none of those algorithms would do better. Piecewise,
+        Integral (for nested integrals), quaternions and vectors do this. The hint
+        ``definite=True`` means that the antiderivative will be evaluated over
+        an interval with ``_eval_interval``, so it only needs to be correct up
+        to a constant on each interval where it is continuous.
 
         The following algorithms are applied (roughly in this order):
 
@@ -917,9 +914,12 @@ class Integral(AddWithLimits):
             # issued in the Integral constructor.
             return f.integrate(x)
 
-        # Piecewise antiderivatives need to call special integrate.
-        if isinstance(f, Piecewise):
-            return f.piecewise_integrate(x, **eval_kwargs)
+        # f(x) knows how to integrate itself
+        eval_Integral = getattr(f, '_eval_Integral', None)
+        if eval_Integral is not None:
+            h = eval_Integral(x, definite=definite, **eval_kwargs)
+            if h is not None:
+                return h
 
         # let's cut it short if `f` does not depend on `x`; if
         # x is only a dummy, that will be handled below
@@ -973,6 +973,14 @@ class Integral(AddWithLimits):
             if g is S.One and not meijerg:
                 parts.append(coeff*x)
                 continue
+
+            # g(x) knows how to integrate itself
+            eval_Integral = getattr(g, '_eval_Integral', None)
+            if eval_Integral is not None and g is not f:
+                h = eval_Integral(x, definite=definite, **eval_kwargs)
+                if h is not None:
+                    parts.append(coeff*h)
+                    continue
 
             # g(x) = expr + O(x**n)
             order_term = g.getO()

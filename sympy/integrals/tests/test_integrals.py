@@ -1089,6 +1089,16 @@ def test_issue_5167():
     assert (res - expected).expand() == 0
 
 
+def test_eval_Integral():
+    class F(Expr):
+        def _eval_Integral(self, x, **hints):
+            return 3*x
+
+    assert integrate(2*F(x), x) == 6*x
+    assert integrate(F(x), (x, 0, 1)) == 3
+    assert integrate(F(x) + x, x) == x**2/2 + 3*x
+
+
 @XFAIL
 def test_issue_5167_nested():
     f = Function('f')

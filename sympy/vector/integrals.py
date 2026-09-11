@@ -183,8 +183,6 @@ def vector_integrate(field, *region):
     >>> vector_integrate(C.x**2*C.z, C.x)
     C.x**3*C.z/3
     >>> vector_integrate(C.x*C.i - C.y*C.k, C.x)
-    (Integral(C.x, C.x))*C.i + (Integral(-C.y, C.x))*C.k
-    >>> _.doit()
     C.x**2/2*C.i + (-C.x*C.y)*C.k
 
     """
