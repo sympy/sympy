@@ -1290,8 +1290,10 @@ def find_substitutions(integrand, symbol, u_var):
     def possible_subterms(term):
         if isinstance(term, (TrigonometricFunction, HyperbolicFunction,
                              *inverse_trig_functions,
-                             exp, log, LambertW, Heaviside)):
+                             exp, log, Heaviside)):
             return [term.args[0]]
+        elif isinstance(term, LambertW):
+            return [term, term.args[0]]
         elif isinstance(term, (chebyshevt, chebyshevu,
                         legendre, hermite, laguerre)):
             return [term.args[1]]
