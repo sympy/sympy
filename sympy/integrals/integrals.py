@@ -781,6 +781,20 @@ class Integral(AddWithLimits):
                 rv += self.func(arg, (x, a, b))
         return rv
 
+    def _eval_Integral(self, x, **hints):
+        """
+        Integrate this Integral with respect to ``x`` by integrating its
+        integrand, which is valid when ``x`` is not one of the integration
+        variables and does not appear in any of the limits.
+        """
+        if (x not in self.function.free_symbols or x in self.variables or
+                any(x in l.free_symbols for l in self.limits)):
+            return None
+        h = self._integrate_dispatch(self.function, x, **hints)
+        if h is None:
+            return None
+        return self.func(h, *self.limits)
+
     def _integrate_dispatch(self, f, x, meijerg=None, risch=None, manual=None,
                        heurisch=None, conds='piecewise', final=None,
                        definite=False):
