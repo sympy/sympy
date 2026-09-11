@@ -238,4 +238,3 @@ def _randint(seed: int | None | list[int] = None) -> Callable[[int, int], int]:
         return give
     else:
         raise ValueError('_randint got an unexpected seed')
-    
