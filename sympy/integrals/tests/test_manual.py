@@ -1258,7 +1258,7 @@ def test_manualintegrate_chebyshev_substitution():
     integrand = 1/(x*sqrt(a + b*x**2)**3)
     antiderivative = piecewise_fold(manualintegrate(integrand, x))
     assert (antiderivative.diff(x) - integrand).subs({a: 1, b: 2, x: 3}).simplify() == 0
-    branches = dict((cond, expr) for expr, cond in antiderivative.args)
+    branches = {cond: expr for expr, cond in antiderivative.args}
     assert branches[Eq(a, 0)].diff(x) == integrand.subs(a, 0)
     assert (integrand.subs({a: 0, b: 1, x: 4})
             - antiderivative.diff(x).subs({a: 0, b: 1, x: 4})) == 0
