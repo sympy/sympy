@@ -517,31 +517,7 @@ class Integral(AddWithLimits):
             return did
 
         # continue with existing assumptions
-        undone_limits = []
-        # ulj = free symbols of any undone limits' upper and lower limits
-        ulj = set()
         for xab in self.limits:
-            # compute uli, the free symbols in the
-            # Upper and Lower limits of limit I
-            if len(xab) == 1:
-                uli = set(xab[:1])
-            elif len(xab) == 2:
-                uli = xab[1].free_symbols
-            elif len(xab) == 3:
-                uli = xab[1].free_symbols.union(xab[2].free_symbols)
-            # this integral can be done as long as there is no blocking
-            # limit that has been undone. An undone limit is blocking if
-            # it contains an integration variable that is in this limit's
-            # upper or lower free symbols or vice versa
-            if xab[0] in ulj or any(v[0] in uli for v in undone_limits):
-                undone_limits.append(xab)
-                ulj.update(uli)
-                function = self.func(*([function] + [xab]))
-                factored_function = function.factor()
-                if not isinstance(factored_function, Integral):
-                    function = factored_function
-                continue
-
             if function.has(Abs, sign) and (
                 (len(xab) < 3 and all(x.is_extended_real for x in xab)) or
                 (len(xab) == 3 and all(x.is_extended_real and not x.is_infinite for
@@ -658,11 +634,7 @@ class Integral(AddWithLimits):
                                 sign(coeff)*pi*floor((a)/pi)))
 
             if antideriv is None:
-                undone_limits.append(xab)
-                function = self.func(*([function] + [xab])).factor()
-                factored_function = function.factor()
-                if not isinstance(factored_function, Integral):
-                    function = factored_function
+                function = self.func(function, xab)
                 continue
             else:
                 if len(xab) == 1:
@@ -726,11 +698,7 @@ class Integral(AddWithLimits):
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed
-                            undone_limits.append(xab)
-                            function = self.func(*([function] + [xab]))
-                            factored_function = function.factor()
-                            if not isinstance(factored_function, Integral):
-                                function = factored_function
+                            function = self.func(function, xab)
         return function
 
     def _eval_derivative(self, sym):

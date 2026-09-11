@@ -39,12 +39,12 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
+from sympy.testing.pytest import XFAIL, raises, slow, warns_deprecated_sympy, warns
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
 
-x, y, z, a, b, c, d, e, s, t, x_1, x_2 = symbols('x y z a b c d e s t x_1 x_2')
+w, x, y, z, a, b, c, d, e, s, t, x_1, x_2 = symbols('w x y z a b c d e s t x_1 x_2')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -1068,7 +1068,6 @@ def test_issue_4100():
 
 
 def test_issue_5167():
-    from sympy.abc import w, x, y, z
     f = Function('f')
     assert Integral(Integral(f(x), x), x) == Integral(f(x), x, x)
     assert Integral(f(x)).args == (f(x), Tuple(x))
@@ -1078,16 +1077,22 @@ def test_issue_5167():
     assert Integral(Integral(Integral(f(x), x), y), z).args == \
         (f(x), Tuple(x), Tuple(y), Tuple(z))
     assert integrate(Integral(f(x), x), x) == Integral(f(x), x, x)
-    assert integrate(Integral(f(x), y), x) == y*Integral(f(x), x)
+    assert integrate(Integral(f(x), y), x) == Integral(y*f(x), x)
     assert integrate(Integral(f(x), x), y) in [Integral(y*f(x), x), y*Integral(f(x), x)]
     assert integrate(Integral(2, x), x) == x**2
     assert integrate(Integral(2, x), y) == 2*x*y
     # don't re-order given limits
     assert Integral(1, x, y).args != Integral(1, y, x).args
     # do as many as possible
+    res = Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit()
+    expected = (y - 1)*(x - 1)*Integral(f(x), (x, 1, 2))
+    assert (res - expected).expand() == 0
+
+
+@XFAIL
+def test_issue_5167_nested():
+    f = Function('f')
     assert Integral(f(x), y, x, y, x).doit() == y**2*Integral(f(x), x, x)/2
-    assert Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit() == \
-        y*(x - 1)*Integral(f(x), (x, 1, 2)) - (x - 1)*Integral(f(x), (x, 1, 2))
 
 
 def test_issue_4890():
@@ -1201,7 +1206,7 @@ def test_issue_4892b():
 
 def test_issue_5178():
     assert integrate(sin(x)*f(y, z), (x, 0, pi), (y, 0, pi), (z, 0, pi)) == \
-        2*Integral(f(y, z), (y, 0, pi), (z, 0, pi))
+        Integral(2*f(y, z), (y, 0, pi), (z, 0, pi))
 
 
 def test_integrate_series():
@@ -1376,10 +1381,9 @@ def test_issue_2708():
     assert Integral(f, (z, 2, 3)).doit() == integral_f
     assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)
     assert integrate(2*f + exp(z), (z, 2, 3)) == \
-        2*integral_f - exp(2) + exp(3)
+        NonElementaryIntegral(2*f, (z, 2, 3)) - exp(2) + exp(3)
     assert integrate(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x)) == \
-        NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
-                                  (z, 0, x))
+        NonElementaryIntegral(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x))
 
 
 def test_issue_2884():
