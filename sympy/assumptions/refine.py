@@ -418,6 +418,84 @@ def refine_sign(expr, assumptions):
     return expr
 
 
+def refine_Min_Max(expr, assumptions):
+    """
+    Handler for minimum and maximum functions.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Q, Min, Max, refine
+    >>> from sympy.abc import x, y, z
+    >>> refine(Min(x, y), Q.lt(x, y))
+    x
+    >>> refine(Min(x, y), Q.gt(x, y))
+    y
+    >>> refine(Max(x, y), Q.lt(x, y))
+    y
+    >>> refine(Max(x, y), Q.gt(x, y))
+    x
+    >>> refine(Min(x, y), Q.le(x, y))
+    x
+    >>> refine(Min(x, y), Q.le(y, x))
+    y
+    >>> refine(Min(x, y, z), Q.le(x, y) & Q.le(x, z))
+    x
+    >>> refine(Max(x, y, z), Q.gt(x, y) & Q.gt(x, z))
+    x
+    >>> n = Symbol('n', integer=True)
+    >>> refine(Min(n, n + 1), Q.integer(n))
+    n
+    >>> refine(Max(n, n + 1), Q.integer(n))
+    n + 1
+    """
+    from sympy.functions.elementary.miscellaneous import Min, Max
+
+    if isinstance(expr, Min):
+        return _min_max_min(expr, assumptions)
+    elif isinstance(expr, Max):
+        return _min_max_max(expr, assumptions)
+    raise TypeError("refine_Min_Max expects a Min or Max function.")
+
+
+def _min_max_min(expr, assumptions):
+    """
+    Helper function for refine_Min_Max to compute the minimum of the expression.
+
+    Explanation
+    ===========
+    Finds the argument that is less than or equal to all of the others under
+    the given assumptions and returns it, ``None`` otherwise.
+
+    """
+    for i, ai in enumerate(expr.args):
+        if all(_refine_min_max_le(ai, aj, assumptions)
+               for j, aj in enumerate(expr.args) if i != j):
+            return ai
+
+
+def _min_max_max(expr, assumptions):
+    """
+    Helper function for refine_Min_Max to compute the maximum of the expression.
+
+    Explanation
+    ===========
+    Finds the argument that is greater than or equal to all of the others
+    under the given assumptions and returns it, ``None`` otherwise.
+
+    """
+    for i, ai in enumerate(expr.args):
+        if all(_refine_min_max_le(aj, ai, assumptions)
+               for j, aj in enumerate(expr.args) if i != j):
+            return ai
+
+
+def _refine_min_max_le(a, b, assumptions):
+    # Return True if a <= b is known to hold under the assumptions.
+    return ask(Q.le(a, b), assumptions) is True or \
+        ask(Q.lt(a, b), assumptions) is True
+
+
 def refine_matrixelement(expr, assumptions):
     """
     Handler for symmetric part.
@@ -611,6 +689,8 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'arg': refine_arg,
     'sign': refine_sign,
     'MatrixElement': refine_matrixelement,
+    'Min': refine_Min_Max,
+    'Max': refine_Min_Max,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
     'exp': refine_exp,

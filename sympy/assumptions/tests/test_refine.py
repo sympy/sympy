@@ -8,7 +8,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
@@ -354,3 +354,31 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_Min_Max():
+    assert refine(Min(x, y), Q.lt(x, y)) == x
+    assert refine(Min(x, y), Q.gt(x, y)) == y
+    assert refine(Max(x, y), Q.lt(x, y)) == y
+    assert refine(Max(x, y), Q.gt(x, y)) == x
+
+    assert refine(Min(x, y), Q.le(x, y)) == x
+    assert refine(Min(x, y), Q.le(y, x)) == y
+    assert refine(Max(x, y), Q.le(y, x)) == x
+    assert refine(Max(x, y), Q.ge(y, x)) == y
+
+    assert refine(Min(x, y, z), Q.le(x, y) & Q.le(x, z)) == x
+    assert refine(Max(x, y, z), Q.gt(x, y) & Q.gt(x, z)) == x
+    assert refine(Min(x, y, z), Q.gt(z, x) & Q.lt(x, y)) == x
+    assert refine(Max(x, y, z), Q.gt(x, y) & Q.gt(z, y)) == Max(x, y, z)
+
+    n = Symbol('n', integer=True)
+    assert refine(Min(n, n + 1), Q.integer(n)) == n
+    assert refine(Max(n, n + 1), Q.integer(n)) == n + 1
+
+    # nothing can be determined
+    assert refine(Min(x, y), True) == Min(x, y)
+    assert refine(Max(x, y), True) == Max(x, y)
+    assert refine(Min(x, y, z), Q.le(x, y)) == Min(x, y, z)
+    assert refine(Min(x, y), x < y) == x
+    assert refine(Max(x, y), x < y) == y
