@@ -6,7 +6,8 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
+from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re,
+    sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
@@ -161,6 +162,17 @@ def test_im():
     assert refine(im(1/x), Q.imaginary(x)) == -I/x
     assert refine(im(x*y*z), Q.imaginary(x) & Q.imaginary(y)
         & Q.imaginary(z)) == -I*x*y*z
+
+
+def test_conjugate():
+    assert refine(conjugate(x), Q.real(x)) == x
+    assert refine(conjugate(x), Q.imaginary(x)) == -x
+    assert refine(conjugate(x), Q.positive(x)) == x
+    assert refine(conjugate(x), Q.negative(x)) == x
+    assert refine(conjugate(x*y), Q.real(x) & Q.real(y)) == x*y
+    assert refine(conjugate(x*y), Q.imaginary(x) & Q.real(y)) == -x*y
+    assert refine(conjugate(x), Q.complex(x)) == conjugate(x)
+    assert refine(conjugate(x), True) == conjugate(x)
 
 
 def test_complex():
