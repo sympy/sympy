@@ -536,7 +536,7 @@ class Integral(AddWithLimits):
                     antideriv = function._eval_integral(xab[0],
                         **eval_kwargs)
                 else:
-                    antideriv = self._eval_integral(
+                    antideriv = self._integrate_dispatch(
                         function, xab[0], **eval_kwargs)
             else:
                 # There are a number of tradeoffs in using the
@@ -598,7 +598,7 @@ class Integral(AddWithLimits):
                 if meijerg1 is False and meijerg is True:
                     antideriv = None
                 else:
-                    antideriv = self._eval_integral(
+                    antideriv = self._integrate_dispatch(
                         function, xab[0], **eval_kwargs)
                     if antideriv is None and meijerg is True:
                         ret = try_meijerg(function, xab)
@@ -794,7 +794,7 @@ class Integral(AddWithLimits):
                 rv += self.func(arg, (x, a, b))
         return rv
 
-    def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
+    def _integrate_dispatch(self, f, x, meijerg=None, risch=None, manual=None,
                        heurisch=None, conds='piecewise',final=None):
         """
         Calculate the anti-derivative to the function f(x).
@@ -978,10 +978,10 @@ class Integral(AddWithLimits):
             order_term = g.getO()
 
             if order_term is not None:
-                h = self._eval_integral(g.removeO(), x, **eval_kwargs)
+                h = self._integrate_dispatch(g.removeO(), x, **eval_kwargs)
 
                 if h is not None:
-                    h_order_expr = self._eval_integral(order_term.expr, x, **eval_kwargs)
+                    h_order_expr = self._integrate_dispatch(order_term.expr, x, **eval_kwargs)
 
                     if h_order_expr is not None:
                         h_order_term = order_term.func(
@@ -1128,7 +1128,7 @@ class Integral(AddWithLimits):
                     # Note: risch will be identical on the expanded
                     # expression, but maybe it will be able to pick out parts,
                     # like x*(exp(x) + erf(x)).
-                    return self._eval_integral(f, x, **eval_kwargs)
+                    return self._integrate_dispatch(f, x, **eval_kwargs)
 
             if h is not None:
                 parts.append(coeff * h)
@@ -1429,7 +1429,7 @@ def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
     exist.  There is also a (very successful, albeit somewhat slow) general
     implementation of the heuristic Risch algorithm.  This algorithm will
     eventually be phased out as more of the full Risch algorithm is
-    implemented. See the docstring of Integral._eval_integral() for more
+    implemented. See the docstring of Integral._integrate_dispatch() for more
     details on computing the antiderivative using algebraic methods.
 
     The option risch=True can be used to use only the (full) Risch algorithm.
