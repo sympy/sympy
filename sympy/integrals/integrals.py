@@ -1093,7 +1093,7 @@ class Integral(AddWithLimits):
                             # unless we were asked to use manual only.
                             # Keep the rest of eval_kwargs in case another
                             # method was set to False already
-                            new_eval_kwargs = eval_kwargs
+                            new_eval_kwargs = dict(eval_kwargs)
                             new_eval_kwargs["manual"] = False
                             new_eval_kwargs["final"] = False
                             result = result.func(*[
