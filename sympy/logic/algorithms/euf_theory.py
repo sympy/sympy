@@ -154,6 +154,7 @@ class EUFCongruenceClosure:
             for arg in term.args:
                 const = self._apply(const, self._flatten(arg))
         else:
+            # an atom, which the engine only ever uses as a dict key
             const = self._new_const()
 
         self._term_to_const[term] = const
@@ -163,6 +164,8 @@ class EUFCongruenceClosure:
         """
         Record the application EUFApp(func, (arg,)) in the related data structures,
         and return a new constant d that replaced it in _flatten i.e f(a) = d.
+        Asking twice gives the same d back, so an application shared by several
+        terms is a single constant.
         """
         app = EUFApp(func, (arg,))
         if app in self._app_to_const:
@@ -214,19 +217,18 @@ class EUFCongruenceClosure:
             self.representative[c] = rep_b
             self.classlist[rep_b].add(c)
         del self.classlist[rep_a]
-        # For each equation (func, args, term) in UseList(rep_a)
+        # For each equation EUFApp(func, (arg,)) = term in UseList(rep_a)
         # i.e all the equation that includes rep_a:
         for eq in self.use_list.pop(rep_a, []):
-            func, arg_ids, term = eq
-            rep_args = tuple(self._find_repr(arg) for arg in arg_ids)
-            key = (func, rep_args)
+            (func, (arg,)), term = eq
+            key = EUFApp(self._find_repr(func), (self._find_repr(arg),))
             # if there's a constant other = key
             if key in self.lookup_table:
                 other_eq = self.lookup_table[key]
                 # if they are not yet in the same class, add into pending for them to be in the
                 # same class
-                if self._find_repr(other_eq[2]) != self._find_repr(term):
-                    self.pending.append((term, other_eq[2], (eq, other_eq)))
+                if self._find_repr(other_eq.rhs) != self._find_repr(term):
+                    self.pending.append((term, other_eq.rhs, EUFCongruence(eq, other_eq)))
             else:
                 # if there's no such key in lookup_table, add it to the register these for future
                 self.lookup_table[key] = eq
@@ -246,16 +248,14 @@ class EUFCongruenceClosure:
 
         Examples
         --------
-        >>> from sympy import symbols
-        >>> from sympy.assumptions.ask import Q
-        >>> from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
-        >>> a, b, x, y = symbols('a b x y')
-        >>> cc = EUFCongruenceClosure([Q.eq(a, x), Q.eq(b, y)])
-        >>> cc.merge(a, b)
-        >>> cc.are_congruent(x, y)
+        >>> from sympy.logic.algorithms.euf_theory import (EUFCongruenceClosure,
+        ...     EUFEquation)
+        >>> cc = EUFCongruenceClosure([EUFEquation('a', 'x'), EUFEquation('b', 'y')])
+        >>> cc.merge('a', 'b')
+        >>> cc.are_congruent('x', 'y')
         True
         """
-        eq = Q.eq(lhs, rhs)
+        eq = EUFEquation(lhs, rhs)
         self._asserted.append(eq)
         self.pending.append((self._flatten(lhs), self._flatten(rhs), eq))
         self._process_pending_unions()
@@ -266,17 +266,15 @@ class EUFCongruenceClosure:
 
         Examples
         --------
-        >>> from sympy import symbols, Function
-        >>> from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
-        >>> from sympy.assumptions.ask import Q
-        >>> f = Function('f')
-        >>> x, y = symbols('x y')
-        >>> cc = EUFCongruenceClosure([Q.eq(x, y), Q.eq(f(x), f(y))])
-        >>> cc.are_congruent(x, y)
+        >>> from sympy.logic.algorithms.euf_theory import (EUFApp,
+        ...     EUFCongruenceClosure, EUFEquation)
+        >>> fx, fy = EUFApp('f', ('x',)), EUFApp('f', ('y',))
+        >>> cc = EUFCongruenceClosure([EUFEquation('x', 'y')])
+        >>> cc.are_congruent('x', 'y')
         True
-        >>> cc.are_congruent(f(x), f(y))
+        >>> cc.are_congruent(fx, fy)
         True
-        >>> cc.are_congruent(x, f(x))
+        >>> cc.are_congruent('x', fx)
         False
         """
         lhs_id = self._flatten(lhs)
@@ -306,7 +304,7 @@ class EUFCongruenceClosure:
         # add edge a -> b
         self.pf_parent[a] = b
         # label (justification) is symmetric so reversing path
-        # does not affect it. (label is in the form of Q.eq)
+        # does not affect it.
         self.pf_label[a] = label
 
     def _highest_node(self, a):
@@ -353,15 +351,16 @@ class EUFCongruenceClosure:
         while a != c:
             b = self.pf_parent[a]
             label = self.pf_label[a]
-            # If label is Q.eq(a,b)
-            if isinstance(label, AppliedPredicate):
-                output.add(label)
-            # if label is Q.eq(f(args),a) and Q.eq(g(args),b)
-            elif label is not None:
-                (_, args1, _), (_, args2, _) = label
-                for x, y in zip(args1, args2):
+            # if label is the congruence of f(x) = a and g(y) = b
+            if type(label) is EUFCongruence:
+                (func1, (arg1,)), _ = label.lhs
+                (func2, (arg2,)), _ = label.rhs
+                for x, y in ((func1, func2), (arg1, arg2)):
                     if x != y:
                         pending_proofs.append((x, y))
+            # if label is the equation the caller asserted
+            elif label is not None:
+                output.add(label)
             self._aux_parent[a] = self._highest_node(b)
             a = self._highest_node(a)
 
@@ -399,7 +398,7 @@ class EUFCongruenceClosure:
         derive it again from self._asserted.
         """
         consts = list(self.representative)          # in registration order
-        apps = list(self._const_to_app.items())
+        apps = list(self._app_to_const.items())
         asserted = self._asserted
 
         self.pending = deque()
@@ -413,8 +412,8 @@ class EUFCongruenceClosure:
 
         for const in consts:
             self._register(const)
-        for d, (func, arg_ids) in apps:
-            self._index_app(func, arg_ids, d)
+        for app, d in apps:
+            self._index_app(app, d)
         for eq in asserted:
             self.pending.append((self._flatten(eq.lhs), self._flatten(eq.rhs), eq))
             self._process_pending_unions()
@@ -429,18 +428,16 @@ class EUFCongruenceClosure:
 
         Examples
         --------
-        >>> from sympy import symbols
-        >>> from sympy.assumptions.ask import Q
-        >>> from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
-        >>> a, b, c = symbols('a b c')
-        >>> cc = EUFCongruenceClosure([Q.eq(a, b)])
-        >>> cc.merge(b, c)
-        >>> cc.are_congruent(a, c)
+        >>> from sympy.logic.algorithms.euf_theory import (EUFCongruenceClosure,
+        ...     EUFEquation)
+        >>> cc = EUFCongruenceClosure([EUFEquation('a', 'b')])
+        >>> cc.merge('b', 'c')
+        >>> cc.are_congruent('a', 'c')
         True
         >>> cc.backtrack(1)
-        >>> cc.are_congruent(a, c)
+        >>> cc.are_congruent('a', 'c')
         False
-        >>> cc.are_congruent(a, b)
+        >>> cc.are_congruent('a', 'b')
         True
         """
         if n == 0:

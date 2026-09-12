@@ -1,22 +1,24 @@
 from __future__ import annotations
-from sympy.core.symbol import symbols, Symbol, Dummy
-from sympy.assumptions.ask import Q
-from sympy.core.numbers import Integer
-from sympy.core.function import Function, Lambda
-from sympy.core.relational import Eq
-from sympy.logic.algorithms.euf_theory import (EUFCongruenceClosure,
-    EUFUnhandledInput)
+from sympy.logic.algorithms.euf_theory import (EUFApp, EUFCongruenceClosure,
+    EUFEquation)
 from sympy.testing.pytest import raises
 from sympy.core.random import choice, randint, sample, shuffle
 from collections import defaultdict
 import random
 
-f, g, h = symbols('f g h', cls=Function)
-x, y, z, w, a, b, c, d = symbols('x y z w a b c d')
+
+def fn(name):
+    """Return a builder for applications of the uninterpreted function ``name``."""
+    return lambda *args: EUFApp(name, args)
+
+
+f, g, h = fn('f'), fn('g'), fn('h')
+add, mul = fn('+'), fn('*')
+x, y, z, w, a, b, c, d = 'x y z w a b c d'.split()
 
 
 def test_basic_and_chain_equality():
-    cc = EUFCongruenceClosure([Q.eq(x, y), Q.eq(y, z)])
+    cc = EUFCongruenceClosure([EUFEquation(x, y), EUFEquation(y, z)])
     assert cc.are_congruent(x, y)
     assert cc.are_congruent(y, z)
     assert cc.are_congruent(x, z)
@@ -42,123 +44,168 @@ def test_binary_congruence_and_propagation():
     assert cc.are_congruent(g(b, d), x)  # g(a,c) = x; a=b, c=d -> g(b,d)=x
 
 
-def test_lambda_curry_and_equivalent_application():
-    lam = Lambda((x, y), x + 2*y)
-    cc = EUFCongruenceClosure([
-        Q.eq(lam(x,y), lam(y,x)),
-        Q.eq(x, y)
-    ])
-    assert cc.are_congruent(lam(x,y), lam(y,x))
+def test_currying_shares_partial_applications():
+    # f(a, b) is stored as EUFApp(EUFApp(f, (a,)), (b,)), so the two spellings
+    # are the same term and the partial application is a single constant.
+    cc = EUFCongruenceClosure([])
+    assert cc._flatten(g(a, b)) == cc._flatten(EUFApp(g(a), (b,)))
+    assert cc._flatten(g(a)) == cc._flatten(EUFApp('g', (a,)))
+
+
+def test_equal_functions_are_congruent():
+    # currying puts the head in an argument position, so heads can be merged
+    cc = EUFCongruenceClosure([EUFEquation('f', 'g')])
+    assert cc.are_congruent(f(a), g(a))
+    assert not cc.are_congruent(f(a), g(b))
+    cc.merge(a, b)
+    assert cc.are_congruent(f(a), g(b))
+
+
+def test_equal_functions_propagate_to_every_arity():
+    cc = EUFCongruenceClosure([EUFEquation('f', 'g')])
+    assert cc.are_congruent(f(a), g(a))
+    assert cc.are_congruent(f(a, b), g(a, b))
+    assert cc.are_congruent(f(f(a)), g(g(a)))
+    assert not cc.are_congruent(f(a), g(b))
+
+
+def test_equal_functions_are_not_extensional():
+    # f(t) = g(t) for every t in play does NOT give f = g back
+    cc = EUFCongruenceClosure([EUFEquation(f(a), g(a)), EUFEquation(f(b), g(b))])
+    assert not cc.are_congruent('f', 'g')
+
+
+def test_partial_application_used_as_a_function():
+    # g(a) is an ordinary term, so it can be equated to a head and applied
+    cc = EUFCongruenceClosure([EUFEquation(g(a), 'f')])
+    assert cc.are_congruent(g(a, b), f(b))
+
+
+def test_explain_walks_the_function_side():
+    # the congruence edge here holds because the heads are equal, so the proof
+    # has to recurse into the function half of the application, not the argument
+    eqs = [EUFEquation('f', 'g'), EUFEquation(f(a), x), EUFEquation(g(a), y)]
+    cc = EUFCongruenceClosure(eqs)
+    expl = _check_explanation(cc, eqs, x, y)
+    assert EUFEquation('f', 'g') in expl
+
+
+def test_backtrack_retracts_function_equality():
+    cc = EUFCongruenceClosure([])
+    cc.merge('f', 'g')
+    assert cc.are_congruent(f(a), g(a))
+    cc.backtrack(1)
+    assert not cc.are_congruent(f(a), g(a))
+    assert not cc.are_congruent(f(a, b), g(a, b))
+
+
+def test_congruence_is_not_injectivity():
+    cc = EUFCongruenceClosure([EUFEquation(h(x, y), h(y, x))])
+    assert cc.are_congruent(h(x, y), h(y, x))
+    assert not cc.are_congruent(x, y)
 
 
 def test_permuted_arguments_no_commutativity():
-    lam_h = Lambda((x, y), h(x, y))
-
     cc = EUFCongruenceClosure([
-        Q.eq(lam_h(x, y), lam_h(y, x)),     # h(x,y) = h(y,x)
-        Q.eq(x, y)                          # x = y
+        EUFEquation(h(x, y), h(y, x)),     # h(x,y) = h(y,x)
+        EUFEquation(x, y)                  # x = y
     ])
     # Even without commutativity, if x=y, h(x,y)=h(y,x) by congruence
-    assert cc.are_congruent(lam_h(x, y), lam_h(y, x))  # h(x,y) = h(y,x)
-
-
-def test_nested_lambdas_chain():
-    lam = Lambda((x, y), x + y).curry()
-    cc = EUFCongruenceClosure([
-        Q.eq(lam(x)(y), lam(y)(x)),
-        Q.eq(x, y)
-    ])
-    assert cc.are_congruent(lam(x)(y), lam(y)(x))
+    assert cc.are_congruent(h(x, y), h(y, x))
 
 
 def test_add_equality_registers_and_merges():
     cc = EUFCongruenceClosure([])
 
-    a, b = Symbol('a'), Symbol('b')
-    f = Function('f')
-
     fa = cc._flatten(f(a))
     fb = cc._flatten(f(b))
 
     cc.merge(a, b)
-    assert cc._find_repr(a) == cc._find_repr(b)
+    assert cc._find_repr(cc._flatten(a)) == cc._find_repr(cc._flatten(b))
     assert cc._find_repr(fa) == cc._find_repr(fb)
 
 
-def test_mixed_lambdas_flatten_unique():
+def test_distinct_heads_flatten_unique():
     cc = EUFCongruenceClosure([])
-    lam1 = Lambda(x, x + 1).curry()
-    lam2 = Lambda(x, x + 2).curry()
-    d1 = cc._flatten(lam1(x))
-    d2 = cc._flatten(lam2(x))
-    assert d1 != d2
+    assert cc._flatten(f(x)) != cc._flatten(g(x))
 
 
 def test_flatten_application_and_cache():
     cc = EUFCongruenceClosure([])
-    testf = Function('testf')
+    testf = fn('testf')
     ax = cc._flatten(testf(x))
     bx = cc._flatten(testf(x))
     assert ax == bx
 
 
-def test_find_of_transformed_symbols():
+def test_flatten_shares_partial_applications():
     cc = EUFCongruenceClosure([])
-    t = Symbol('t')
-    assert cc._find_repr(cc._flatten(t)) == t
-    t2 = Dummy('t2')
-    assert cc._find_repr(cc._flatten(t2)) == t2
+    cc._flatten(g(a, b))
+    cc._flatten(g(a, c))
+    # both terms went through one constant for g(a), so only three exist:
+    # g(a), g(a)(b) and g(a)(c)
+    assert cc._flatten(g(a)) == cc._flatten(EUFApp('g', (a,)))
+    assert len(cc._app_to_const) == 3
+
+
+def test_flatten_nested_spellings_agree():
+    cc = EUFCongruenceClosure([])
+    nary = cc._flatten(h(a, b, c))
+    assert nary == cc._flatten(EUFApp(EUFApp(EUFApp('h', (a,)), (b,)), (c,)))
+    assert nary == cc._flatten(EUFApp(h(a, b), (c,)))
+
+
+def test_flatten_head_is_a_term_too():
+    cc = EUFCongruenceClosure([])
+    fx = cc._flatten(f(x))
+    assert cc._app_to_const[EUFApp(cc._flatten('f'), (cc._flatten(x),))] == fx
+
+
+def test_flatten_atom_and_application_never_collide():
+    cc = EUFCongruenceClosure([])
+    assert cc._flatten('f') != cc._flatten(f(a))
+    assert cc._flatten(f(a)) != cc._flatten(a)
+
+
+def test_flatten_is_stable():
+    cc = EUFCongruenceClosure([])
+    t = 't'
+    assert cc._find_repr(cc._flatten(t)) == cc._flatten(t)
+    assert cc._flatten(f(t)) == cc._flatten(f(t))
 
 
 def test_process_pending_chain_merges():
     cc = EUFCongruenceClosure([])
-    f1 = Function('alsof')
-    x1, y1, z1 = symbols('x1 y1 z1')
-    cc._register(x1)
-    cc._register(y1)
-    cc._register(z1)
-    fx = cc._flatten(f1(x1))
-    fy = cc._flatten(f1(y1))
-    fz = cc._flatten(f1(z1))
-    cc.use_list[x1].append((f1, (x1,), fx))
-    cc.use_list[y1].append((f1, (y1,), fy))
-    cc.use_list[z1].append((f1, (z1,), fz))
-    cc.lookup_table[(f1, (x1,))] = (f1, (x1,), fx)
-    cc.lookup_table[(f1, (y1,))] = (f1, (y1,), fy)
-    cc.lookup_table[(f1, (z1,))] = (f1, (z1,), fz)
-    cc.pending.append((x1, y1, Q.eq(x1, y1)))
-    cc.pending.append((y1, z1, Q.eq(y1, z1)))
-    cc.pending.append((fx, fy, Q.eq(f1(x1), f1(y1))))
-    cc.pending.append((fy, fz, Q.eq(f1(y1), f1(z1))))
+    f1 = fn('alsof')
+    x1, y1, z1 = 'x1', 'y1', 'z1'
+    fx, fy, fz = (cc._flatten(f1(t)) for t in (x1, y1, z1))
+    for p, q in ((x1, y1), (y1, z1)):
+        cc.pending.append((cc._flatten(p), cc._flatten(q), EUFEquation(p, q)))
     cc._process_pending_unions()
-    assert cc._find_repr(x1) == cc._find_repr(y1) == cc._find_repr(z1)
+    assert cc._find_repr(cc._flatten(x1)) == cc._find_repr(cc._flatten(y1)) \
+        == cc._find_repr(cc._flatten(z1))
     assert cc._find_repr(fx) == cc._find_repr(fy) == cc._find_repr(fz)
 
 
-def test_flatten_lambda_consistency_and_cache():
+def test_flatten_atoms_are_opaque():
     cc = EUFCongruenceClosure([])
-    t = Symbol('t')
-    f1 = Function('ccf')
-    lam = Lambda(t, f1(t))
-    flat1 = cc._flatten(lam)
-    flat2 = cc._flatten(lam)
-    assert flat1 == flat2
-    flat_app1 = cc._flatten(lam(t))
-    flat_app2 = cc._flatten(lam(t))
-    assert flat_app1 == flat_app2
+
+    # the same atom always maps to the same constant
+    assert cc._flatten('a') == cc._flatten('a')
+    # distinct atoms map to distinct constants, whatever they are
+    assert cc._flatten('a') != cc._flatten('b')
+    assert cc._flatten(1) != cc._flatten('a')
+    assert cc._flatten(1) == cc._flatten(1)
 
 
 def test_use_list_merging_under_union():
     cc = EUFCongruenceClosure([])
-    a1, b1, c1 = Symbol('a1'), Symbol('b1'), Symbol('c1')
-    f1 = Function('f1')
-    # Register variables and applications before any merging
+    a1, b1, c1 = 'a1', 'b1', 'c1'
+    f1 = fn('f1')
+    # Register applications before any merging
     apps = [cc._flatten(f1(t)) for t in (a1, b1, c1)]
-    # Union a1 and b1
-    cc._union(a1, b1)
-    # Now add equality b1 = c1, so all three are merged
-    cc._union(b1, c1)
-    cc._process_pending_unions()
+    cc.merge(a1, b1)
+    cc.merge(b1, c1)
     # Test: all applications f1(x) for all class members x are congruent
     app_reps = {cc._find_repr(app) for app in apps}
     assert len(app_reps) == 1
@@ -193,17 +240,15 @@ def test_complex_deep_chaining():
 
 
 def test_long_chain_variables():
-    vars = symbols('a0:20')
-    eqs = [Q.eq(vars[i], vars[i+1]) for i in range(len(vars)-1)]
+    names = ['a%s' % i for i in range(20)]
+    eqs = [EUFEquation(names[i], names[i+1]) for i in range(len(names)-1)]
     cc = EUFCongruenceClosure(eqs)
-    for i in range(len(vars)):
-        for j in range(len(vars)):
-            assert cc.are_congruent(vars[i], vars[j])
+    for i in range(len(names)):
+        for j in range(len(names)):
+            assert cc.are_congruent(names[i], names[j])
 
 
 def test_composed_functions():
-    f, g, h = symbols('f g h', cls=Function)
-    a, b, c = symbols('a b c')
     cc = EUFCongruenceClosure([])
     for t in (f(a), f(b), g(c), h(b), g(f(b))):
         cc._flatten(t)
@@ -215,89 +260,53 @@ def test_composed_functions():
     # g(c) = h(b) and c = f(a) = f(b)
     assert cc.are_congruent(g(f(b)), h(b))
 
+
 def test_example_1():
-    lam_f = Lambda(symbols('x'), f('x'))
-    lam_g = Lambda(symbols('x'), g('x'))
-    lam_h = Lambda(x, Lambda(y, h(x, y)))
-    eq1 = Q.eq(lam_f(a), lam_g(b))                   # f(a) = g(b)
-    eq2 = Q.eq(lam_g(c), lam_h(lam_f(c))(lam_g(a)))  # g(c) = h(f(c), g(a))
-    eq3 = Q.eq(b, c)                                 # b = c
-    eq4 = Q.eq(lam_f(c), lam_g(a))                   # f(c) = g(a)
-    eq5 = Q.eq(lam_h(d)(d), lam_g(b))                # h(d, d) = g(b)
-    eq6 = Q.eq(lam_g(a), d)                          # g(a) = d
+    eq1 = EUFEquation(f(a), g(b))                  # f(a) = g(b)
+    eq2 = EUFEquation(g(c), h(f(c), g(a)))         # g(c) = h(f(c), g(a))
+    eq3 = EUFEquation(b, c)                        # b = c
+    eq4 = EUFEquation(f(c), g(a))                  # f(c) = g(a)
+    eq5 = EUFEquation(h(d, d), g(b))               # h(d, d) = g(b)
+    eq6 = EUFEquation(g(a), d)                     # g(a) = d
 
     cc = EUFCongruenceClosure([eq1, eq2, eq3, eq4, eq5, eq6])
 
     # Assertions checking congruence closure identifies equalities properly
-    assert cc.are_congruent(b, c)                      # b = c
-    assert cc.are_congruent(lam_g(a), d)               # g(a) = d
-    assert cc.are_congruent(lam_g(b), lam_g(c))        # g(b) = g(c)
-    assert cc.are_congruent(lam_f(a), lam_g(c))        # f(a) = g(c)
+    assert cc.are_congruent(b, c)                  # b = c
+    assert cc.are_congruent(g(a), d)               # g(a) = d
+    assert cc.are_congruent(g(b), g(c))            # g(b) = g(c)
+    assert cc.are_congruent(f(a), g(c))            # f(a) = g(c)
 
 
 def test_example_2():
-    lam_f = Lambda(x, f(x))
-    lam_g = Lambda(x, g(x))
-    lam_h = Lambda(x, h(x))
     eqs = [
-        Q.eq(lam_f(a), lam_g(b)),                    # f(a) = g(b)
-        Q.eq(lam_g(b), lam_h(c)),                    # g(b) = h(c)
-        Q.eq(lam_h(c), lam_f(d)),                    # h(c) = f(d)
-        Q.eq(a, b),                                  # a = b
-        Q.eq(b, c),                                  # b = c
-        Q.eq(c, d)                                   # c = d
+        EUFEquation(f(a), g(b)),                   # f(a) = g(b)
+        EUFEquation(g(b), h(c)),                   # g(b) = h(c)
+        EUFEquation(h(c), f(d)),                   # h(c) = f(d)
+        EUFEquation(a, b),                         # a = b
+        EUFEquation(b, c),                         # b = c
+        EUFEquation(c, d)                          # c = d
     ]
     cc = EUFCongruenceClosure(eqs)
-    assert cc.are_congruent(lam_g(b), lam_h(c))        # g(a) = h(c)
-    assert cc.are_congruent(lam_f(a), lam_h(c))        # f(a) = h(c)
-    assert cc.are_congruent(a, d)                      # a = d
-
-
-def test_flatten_simple_atoms_and_numbers():
-    cc = EUFCongruenceClosure([])
-
-    a = Symbol('a')
-    d = Dummy('d')
-    n1 = Integer(1)
-    n2 = Integer(2)
-
-    # Symbols flatten to themselves
-    assert cc._flatten(a) == a
-
-    # Dummy flatten to themselves
-    assert cc._flatten(d) == d
-
-    # Same number always maps to same Dummy
-    flat_n1_1 = cc._flatten(n1)
-    flat_n1_2 = cc._flatten(Integer(1))
-    flat_n2 = cc._flatten(n2)
-    assert flat_n1_1 == flat_n1_2
-    assert flat_n1_1 != flat_n2
-
-    # Different atoms (non-symbol) map to distinct Dummies
-    from sympy.logic.boolalg import BooleanTrue
-    btrue = BooleanTrue()
-    flat_btrue1 = cc._flatten(btrue)
-    flat_btrue2 = cc._flatten(btrue)
-    assert flat_btrue1 == flat_btrue2
-    assert flat_btrue1 != d  # Different from other dummies
+    assert cc.are_congruent(g(b), h(c))            # g(a) = h(c)
+    assert cc.are_congruent(f(a), h(c))            # f(a) = h(c)
+    assert cc.are_congruent(a, d)                  # a = d
 
 
 def test_compound_expression_propagation():
-    x, y, z, w = symbols('x y z w')
-    # x = y => x*w + z = y*w + z (Mul/Add treated as uninterpreted)
+    # x = y => x*w + z = y*w + z (the caller decided + and * are uninterpreted)
     cc = EUFCongruenceClosure([])
-    for t in (x*w + z, y*w + z):
+    for t in (add(mul(x, w), z), add(mul(y, w), z)):
         cc._flatten(t)
     cc.merge(x, y)
-    assert cc.are_congruent(x*w + z, y*w + z)
+    assert cc.are_congruent(add(mul(x, w), z), add(mul(y, w), z))
 
 
 def test_compound_double_layer():
-    x, y, z, w, v = symbols('x y z w v')
+    v = 'v'
     cc = EUFCongruenceClosure([])
-    expr1 = x*v + z
-    expr2 = y*v + w
+    expr1 = add(mul(x, v), z)
+    expr2 = add(mul(y, v), w)
     for t in (expr1, expr2):
         cc._flatten(t)
     cc.merge(x, y)
@@ -305,26 +314,21 @@ def test_compound_double_layer():
     assert cc.are_congruent(expr1, expr2)
 
 
-def test_mixed_equality_disequality():
-    x, y, z = symbols('x y z')
-    cc = EUFCongruenceClosure([])
-    # x = y, so x*z + y = y*z + y (uninterpreted congruence)
-    for t in (x*z + y, y*z + y):
-        cc._flatten(t)
-    cc.merge(x, y)
-    assert cc.are_congruent(x*z + y, y*z + y)
-
-
 def test_compound_in_function_application():
-    from sympy import Function
-    x, y, z, w = symbols('x y z w')
-    f = Function('f')
-    cc = EUFCongruenceClosure([])
     # Congruence: x*w + z = y*w + z => f(x*w + z) = f(y*w + z)
-    for t in (f(x*w + z), f(y*w + z)):
+    cc = EUFCongruenceClosure([])
+    for t in (f(add(mul(x, w), z)), f(add(mul(y, w), z))):
         cc._flatten(t)
     cc.merge(x, y)
-    assert cc.are_congruent(f(x*w + z), f(y*w + z))
+    assert cc.are_congruent(f(add(mul(x, w), z)), f(add(mul(y, w), z)))
+
+
+def test_are_congruent_on_unseen_terms():
+    cc = EUFCongruenceClosure([EUFEquation(a, b)])
+    assert not cc.are_congruent(h(z), h(w))
+    assert cc.are_congruent(f(a), f(b))
+    cc.merge(z, w)
+    assert cc.are_congruent(h(z), h(w))
 
 
 # ---------------------------------------------------------------------------
@@ -345,7 +349,7 @@ def _check_explanation(cc, inputs, lhs, rhs):
 def test_explain_congruence_edge():
     # x = f(a) = f(b) = y needs the congruence edge f(a)-f(b), which must
     # recurse into the argument proof a = b.
-    eqs = [Q.eq(a, b), Q.eq(f(a), x), Q.eq(f(b), y)]
+    eqs = [EUFEquation(a, b), EUFEquation(f(a), x), EUFEquation(f(b), y)]
     cc = EUFCongruenceClosure(eqs)
     expl = _check_explanation(cc, eqs, x, y)
     assert expl == set(eqs)
@@ -353,18 +357,18 @@ def test_explain_congruence_edge():
 
 def test_explain_nested_congruence():
     # Two levels of congruence: a = b -> f(a) = f(b) -> g(f(a)) = g(f(b)).
-    eqs = [Q.eq(a, b), Q.eq(g(f(a)), x), Q.eq(g(f(b)), y)]
+    eqs = [EUFEquation(a, b), EUFEquation(g(f(a)), x), EUFEquation(g(f(b)), y)]
     cc = EUFCongruenceClosure(eqs)
     expl = _check_explanation(cc, eqs, x, y)
-    assert Q.eq(a, b) in expl
+    assert EUFEquation(a, b) in expl
 
 
 def test_explain_ignores_irrelevant_inputs():
     # The z = w component is disjoint and must never leak into explanations.
-    eqs = [Q.eq(a, b), Q.eq(b, c), Q.eq(z, w)]
+    eqs = [EUFEquation(a, b), EUFEquation(b, c), EUFEquation(z, w)]
     cc = EUFCongruenceClosure(eqs)
     expl = _check_explanation(cc, eqs, a, c)
-    assert expl == {Q.eq(a, b), Q.eq(b, c)}
+    assert expl == {EUFEquation(a, b), EUFEquation(b, c)}
 
 
 def test_explain_incremental_merges():
@@ -373,81 +377,66 @@ def test_explain_incremental_merges():
     cc.merge(a, b)
     assert cc.explain(a, c) is None
     cc.merge(b, c)
-    expl = _check_explanation(cc, [Q.eq(a, b), Q.eq(b, c)], a, c)
-    assert expl == {Q.eq(a, b), Q.eq(b, c)}
+    expl = _check_explanation(cc, [EUFEquation(a, b), EUFEquation(b, c)], a, c)
+    assert expl == {EUFEquation(a, b), EUFEquation(b, c)}
     # A later query must not be affected by the earlier explain() call
     # (the auxiliary union-find is per-call state).
-    assert cc.explain(a, b) == {Q.eq(a, b)}
+    assert cc.explain(a, b) == {EUFEquation(a, b)}
 
 
 def test_explain_may_be_redundant_but_sound():
     # Example 10 of Nieuwenhuis & Oliveras (RTA'05): the proof forest can
     # yield a redundant explanation; it must still be sound and within inputs.
-    a1, b1, c1 = symbols('a1 b1 c1')
-    eqs = [Q.eq(a1, b1), Q.eq(a1, c1),
-           Q.eq(f(a1), a), Q.eq(f(b1), b), Q.eq(f(c1), c)]
+    a1, b1, c1 = 'a1', 'b1', 'c1'
+    eqs = [EUFEquation(a1, b1), EUFEquation(a1, c1),
+           EUFEquation(f(a1), a), EUFEquation(f(b1), b), EUFEquation(f(c1), c)]
     cc = EUFCongruenceClosure(eqs)
     _check_explanation(cc, eqs, a, c)
 
 
-def test_rejects_non_equality_input():
-    raises(EUFUnhandledInput, lambda: EUFCongruenceClosure([Q.positive(x)]))
-    raises(EUFUnhandledInput, lambda: EUFCongruenceClosure([Q.ne(x, y)]))
-    raises(EUFUnhandledInput, lambda: EUFCongruenceClosure([Eq(x, y)]))
-    raises(EUFUnhandledInput,
-           lambda: EUFCongruenceClosure([Q.eq(x, y), Q.positive(z)]))
-
-
-def test_are_congruent_on_unseen_terms():
-    cc = EUFCongruenceClosure([Q.eq(a, b)])
-    assert not cc.are_congruent(h(z), h(w))
-    assert cc.are_congruent(f(a), f(b))
-    cc.merge(z, w)
-    assert cc.are_congruent(h(z), h(w))
-
-
 def test_explain_reflexive_and_disconnected():
-    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    cc = EUFCongruenceClosure([EUFEquation(a, b)])
     assert cc.explain(a, a) == set()
     assert cc.explain(f(a), f(a)) == set()
     assert cc.explain(a, z) is None
 
 
 def test_explain_shortcut_is_level_bounded():
-    v = symbols('n0:11')
-    shortcut = Q.eq(v[0], v[10])
-    eqs = [Q.eq(v[i], v[i + 1]) for i in range(10)] + [shortcut]
+    v = ['n%s' % i for i in range(11)]
+    shortcut = EUFEquation(v[0], v[10])
+    eqs = [EUFEquation(v[i], v[i + 1]) for i in range(10)] + [shortcut]
     cc = EUFCongruenceClosure(eqs)
     assert _check_explanation(cc, eqs, v[0], v[10]) == set(eqs) - {shortcut}
 
 
 def test_explain_is_stable_across_calls():
-    eqs = [Q.eq(a, b), Q.eq(f(a), x), Q.eq(f(b), y), Q.eq(z, w)]
+    eqs = [EUFEquation(a, b), EUFEquation(f(a), x), EUFEquation(f(b), y),
+           EUFEquation(z, w)]
     cc = EUFCongruenceClosure(eqs)
     first = _check_explanation(cc, eqs, x, y)
     assert cc.explain(x, y) == first
     assert _check_explanation(cc, eqs, y, x) is not None
-    assert cc.explain(z, w) == {Q.eq(z, w)}
+    assert cc.explain(z, w) == {EUFEquation(z, w)}
 
 
 def test_explain_after_incremental_merges():
-    eqs = [Q.eq(f(a), x), Q.eq(f(b), y), Q.eq(a, b)]
+    eqs = [EUFEquation(f(a), x), EUFEquation(f(b), y), EUFEquation(a, b)]
     cc = EUFCongruenceClosure([])
     for eq in eqs:
-        cc.merge(eq.lhs, eq.rhs)
+        cc.merge(*eq)
     assert _check_explanation(cc, eqs, x, y) == set(eqs)
 
 
 def test_explain_soundness_stress():
     rng = random.Random(20250821)
-    s = symbols('s0:12')
+    s = ['s%s' % i for i in range(12)]
     eqs = []
     for _ in range(18):
         i, j = rng.sample(range(12), 2)
         if rng.random() < 0.3:
-            eqs.append(Q.eq(f(s[i]), f(s[j])))
+            eqs.append(EUFEquation(f(s[i]), f(s[j])))
         else:
-            eqs.append(Q.eq(s[i], s[j]))
+            eqs.append(EUFEquation(s[i], s[j]))
     cc = EUFCongruenceClosure(eqs)
     for i in range(12):
         for j in range(i + 1, 12):
@@ -457,17 +446,19 @@ def test_explain_soundness_stress():
                 assert cc.explain(s[i], s[j]) is None
 
 
-def test_predicate_terms_are_uninterpreted_functions():
-    eqs = [Q.eq(a, b), Q.eq(Q.positive(a), x)]
+def test_any_head_is_an_uninterpreted_function():
+    positive, negative = fn('positive'), fn('negative')
+    eqs = [EUFEquation(a, b), EUFEquation(positive(a), x)]
     cc = EUFCongruenceClosure(eqs)
-    assert cc.are_congruent(Q.positive(a), Q.positive(b))
-    assert cc.are_congruent(Q.positive(b), x)
-    assert not cc.are_congruent(Q.negative(a), x)
-    _check_explanation(cc, eqs, Q.positive(b), x)
+    assert cc.are_congruent(positive(a), positive(b))
+    assert cc.are_congruent(positive(b), x)
+    assert not cc.are_congruent(negative(a), x)
+    _check_explanation(cc, eqs, positive(b), x)
 
 
 def test_trivial_and_duplicate_equalities():
-    eqs = [Q.eq(a, a), Q.eq(a, b), Q.eq(a, b), Q.eq(b, a)]
+    eqs = [EUFEquation(a, a), EUFEquation(a, b), EUFEquation(a, b),
+           EUFEquation(b, a)]
     cc = EUFCongruenceClosure(eqs)
     cc.merge(a, a)
     cc.merge(f(a), f(a))
@@ -487,7 +478,7 @@ def _snapshot(cc):
 
 
 def test_backtrack_retracts_congruence():
-    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    cc = EUFCongruenceClosure([EUFEquation(a, b)])
     cc.merge(b, c)
     cc.merge(c, d)
     assert cc.are_congruent(a, d)
@@ -539,7 +530,7 @@ def test_backtrack_is_deterministic():
 
 
 def test_backtrack_counts_every_asserted_equation():
-    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    cc = EUFCongruenceClosure([EUFEquation(a, b)])
     cc.merge(b, c)
     cc.merge(a, c)
     assert len(cc._asserted) == 3
@@ -554,7 +545,7 @@ def test_backtrack_counts_every_asserted_equation():
 
 
 def test_backtrack_argument_validation():
-    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    cc = EUFCongruenceClosure([EUFEquation(a, b)])
     cc.backtrack(0)
     assert cc.are_congruent(a, b)
     raises(ValueError, lambda: cc.backtrack(2))
@@ -585,14 +576,13 @@ def test_backtrack_handles_application_merged_on_registration():
     assert not cc.are_congruent(f(b), c)
 
 
-def test_backtrack_splits_collapsed_lambdas():
-    l1, l2 = Lambda(x, f(a)), Lambda(x, f(b))
+def test_backtrack_splits_collapsed_applications():
     cc = EUFCongruenceClosure([])
     cc.merge(a, b)
-    assert cc.are_congruent(l1, l2)
+    assert cc.are_congruent(g(f(a)), g(f(b)))
     cc.backtrack(1)
     assert not cc.are_congruent(a, b)
-    assert not cc.are_congruent(l1, l2)
+    assert not cc.are_congruent(g(f(a)), g(f(b)))
 
 
 def test_backtrack_then_remerge():
@@ -609,23 +599,23 @@ def test_backtrack_then_remerge():
 
 
 def test_explain_after_backtrack_uses_only_live_equations():
-    v = symbols('p0:8')
-    base = [Q.eq(v[i], v[i + 1]) for i in range(4)]
+    v = ['p%s' % i for i in range(8)]
+    base = [EUFEquation(v[i], v[i + 1]) for i in range(4)]
     cc = EUFCongruenceClosure(base)
     cc.explain(v[0], v[4])
-    for eq in (Q.eq(v[4], v[5]), Q.eq(v[0], v[5])):
-        cc.merge(eq.lhs, eq.rhs)
+    for eq in (EUFEquation(v[4], v[5]), EUFEquation(v[0], v[5])):
+        cc.merge(*eq)
     cc.explain(v[0], v[5])
     cc.backtrack(2)
     assert not cc.are_congruent(v[0], v[5])
-    live = base + [Q.eq(v[4], v[6])]
+    live = base + [EUFEquation(v[4], v[6])]
     cc.merge(v[4], v[6])
     _check_explanation(cc, live, v[0], v[6])
 
 
 def test_backtrack_random_differential():
     rng = random.Random(31337)
-    s = symbols('q0:9')
+    s = ['q%s' % i for i in range(9)]
     cc = EUFCongruenceClosure([])
     live = []
     for _ in range(70):
@@ -639,7 +629,7 @@ def test_backtrack_random_differential():
             if cc.are_congruent(lhs, rhs):
                 continue
             cc.merge(lhs, rhs)
-            live.append(Q.eq(lhs, rhs))
+            live.append(EUFEquation(lhs, rhs))
         assert len(cc._asserted) == len(live)
         _check_invariants(cc)
         ref = EUFCongruenceClosure(live)
@@ -659,7 +649,7 @@ def test_backtrack_random_differential():
 
 def test_self_applied_function():
     # g(a, b) = a  |-  g(g(a, b), b) = a
-    cc = EUFCongruenceClosure([Q.eq(g(a, b), a)])
+    cc = EUFCongruenceClosure([EUFEquation(g(a, b), a)])
     assert cc.are_congruent(g(g(a, b), b), a)
     assert cc.are_congruent(g(g(g(a, b), b), b), a)
 
@@ -669,7 +659,7 @@ def test_iterated_function_cycles():
     powers = [a]
     for _ in range(5):
         powers.append(f(powers[-1]))
-    eqs = [Q.eq(powers[3], a), Q.eq(powers[5], a)]
+    eqs = [EUFEquation(powers[3], a), EUFEquation(powers[5], a)]
     cc = EUFCongruenceClosure(eqs)
     assert cc.are_congruent(f(a), a)
     assert cc.are_congruent(powers[2], a)
@@ -681,21 +671,23 @@ def test_iterated_function_cycle_is_not_entailed():
     powers = [a]
     for _ in range(4):
         powers.append(f(powers[-1]))
-    cc = EUFCongruenceClosure([Q.eq(powers[4], a)])
+    cc = EUFCongruenceClosure([EUFEquation(powers[4], a)])
     assert not cc.are_congruent(f(a), a)
     assert cc.are_congruent(f(powers[4]), f(a))
 
 
 def test_arity_is_part_of_the_signature():
-    # f(a) and f(a, b) share a head but must never be congruent.
-    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    # f(a) and f(a, b) share a head but must never be congruent.  Currying
+    # makes f(a) the partial application inside f(a, b), which is why the
+    # caller has to give each head a single arity.
+    cc = EUFCongruenceClosure([EUFEquation(a, b)])
     assert not cc.are_congruent(f(a), f(a, b))
     assert not cc.are_congruent(f(a, b), f(b))
     assert cc.are_congruent(f(a, b), f(b, a))
 
 
 def test_distinct_heads_never_merge():
-    cc = EUFCongruenceClosure([Q.eq(a, b)])
+    cc = EUFCongruenceClosure([EUFEquation(a, b)])
     assert not cc.are_congruent(f(a), g(b))
     assert cc.explain(f(a), g(b)) is None
 
@@ -706,12 +698,12 @@ def test_diamond_explanation_stays_linear():
     # the endpoints has to pick one route per diamond rather than explore the
     # 2**n combinations.
     n = 8
-    v = symbols('dm0:%s' % (3*n + 1))
+    v = ['dm%s' % i for i in range(3*n + 1)]
     eqs = []
     for i in range(n):
         lower, upper = v[3*i], v[3*(i + 1)]
-        eqs += [Q.eq(lower, v[3*i + 1]), Q.eq(v[3*i + 1], upper),
-                Q.eq(lower, v[3*i + 2]), Q.eq(v[3*i + 2], upper)]
+        eqs += [EUFEquation(lower, v[3*i + 1]), EUFEquation(v[3*i + 1], upper),
+                EUFEquation(lower, v[3*i + 2]), EUFEquation(v[3*i + 2], upper)]
     cc = EUFCongruenceClosure(eqs)
     assert len(_check_explanation(cc, eqs, v[0], v[3*n])) == 2*n
     _check_invariants(cc)
@@ -721,13 +713,17 @@ def test_diamond_explanation_stays_linear():
 # Differential testing against a naive reference, plus internal invariants.
 # The reference shares no code with the engine: it just saturates the merge
 # rule over every subterm until nothing changes, so agreeing with it is real
-# evidence and not the engine confirming itself.
+# evidence and not the engine confirming itself.  It stays first-order, with
+# no currying at all, which is only sound because every head in the pools
+# below is used at a single arity.
 # ---------------------------------------------------------------------------
 
-def _subterms(expr, acc):
-    acc.add(expr)
-    for arg in expr.args:
-        _subterms(arg, acc)
+def _subterms(term, acc):
+    acc.add(term)
+    if isinstance(term, EUFApp):
+        _subterms(term.func, acc)
+        for arg in term.args:
+            _subterms(arg, acc)
     return acc
 
 
@@ -756,7 +752,7 @@ def _reference_congruent(eqs, terms):
 
     for eq in eqs:
         union(eq.lhs, eq.rhs)
-    apps = [t for t in universe if t.args]
+    apps = [t for t in universe if isinstance(t, EUFApp)]
     changed = True
     while changed:
         changed = False
@@ -778,10 +774,11 @@ def _check_invariants(cc):
     assert sum(len(m) for m in cc.classlist.values()) == len(cc.representative)
 
     # every application is still reachable through the signature it has now
-    for const, (func, arg_ids) in cc._const_to_app.items():
-        key = (func, tuple(cc._find_repr(arg) for arg in arg_ids))
+    for app, const in cc._app_to_const.items():
+        func, (arg,) = app
+        key = EUFApp(cc._find_repr(func), (cc._find_repr(arg),))
         assert key in cc.lookup_table
-        assert cc._find_repr(cc.lookup_table[key][2]) == cc._find_repr(const)
+        assert cc._find_repr(cc.lookup_table[key].rhs) == cc._find_repr(const)
 
     # use_list is filed under live representatives only
     for rep, eqs in cc.use_list.items():
@@ -806,7 +803,7 @@ def _check_invariants(cc):
 
 
 def _random_equations(pool, count):
-    return [Q.eq(*sample(pool, 2)) for _ in range(count)]
+    return [EUFEquation(*sample(pool, 2)) for _ in range(count)]
 
 
 def _partition(cc, pool):
@@ -818,7 +815,7 @@ def _partition(cc, pool):
 
 
 def test_random_closure_matches_reference():
-    s = symbols('r0:6')
+    s = ['r%s' % i for i in range(6)]
     pool = list(s) + [f(t) for t in s] + [g(t, u) for t, u in zip(s, s[1:])]
     pool += [f(f(s[0])), f(g(s[0], s[1])), h(s[0], s[1], s[2])]
     for _ in range(15):
@@ -832,7 +829,7 @@ def test_random_closure_matches_reference():
 
 
 def test_random_explanations_are_sound():
-    s = symbols('e0:6')
+    s = ['e%s' % i for i in range(6)]
     pool = list(s) + [f(t) for t in s] + [g(t, t) for t in s]
     for _ in range(10):
         eqs = _random_equations(pool, 8)
@@ -849,7 +846,7 @@ def test_random_explanations_are_sound():
 def test_explain_interleaved_with_merge_and_backtrack():
     # explain() is not read-only: it grows the c-graph with extra edges.  The
     # closure reported afterwards must still match a freshly built engine.
-    s = symbols('i0:6')
+    s = ['i%s' % i for i in range(6)]
     pool = list(s) + [f(t) for t in s] + [g(t, t) for t in s]
     cc = EUFCongruenceClosure([])
     live = []
@@ -870,7 +867,7 @@ def test_explain_interleaved_with_merge_and_backtrack():
         else:
             p, q = sample(pool, 2)
             cc.merge(p, q)
-            live.append(Q.eq(p, q))
+            live.append(EUFEquation(p, q))
         _check_invariants(cc)
         assert _partition(cc, pool) == _partition(EUFCongruenceClosure(live), pool)
 
@@ -878,7 +875,7 @@ def test_explain_interleaved_with_merge_and_backtrack():
 def test_closure_is_order_independent():
     # The closure is a fixpoint, so the order the equations arrive in cannot
     # change which terms end up congruent.
-    s = symbols('o0:6')
+    s = ['o%s' % i for i in range(6)]
     pool = list(s) + [f(t) for t in s] + [g(t, t) for t in s]
     eqs = _random_equations(pool, 9)
     reference = _partition(EUFCongruenceClosure(eqs), pool)
