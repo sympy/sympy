@@ -1658,6 +1658,8 @@ class Mul(Expr, AssocOp):
             elif t.is_extended_nonnegative:
                 saw_NON = True
             else:
+                pos: bool | None
+                neg: bool | None
                 if extended and t.is_finite is not True:
                     pos, neg = t.is_extended_positive, t.is_extended_negative
                 else:
