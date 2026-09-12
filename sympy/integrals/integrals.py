@@ -10,13 +10,13 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo, pi
+from sympy.core.numbers import I, oo, pi
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import exp_polar, log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -629,6 +629,27 @@ class Integral(AddWithLimits):
                         if ret is not None:
                             function = ret
                             continue
+                    # If the antiderivative contains exp_polar(I*pi), the
+                    # meijerint machinery chose a branch that does not cancel
+                    # correctly when limits are substituted on a finite real
+                    # interval, yielding a wrong sign.  Fall back to
+                    # meijerint_definite, which handles the branch cut at the
+                    # Meijer G level.  Only trigger when: the bounds are finite
+                    # and extended-real (meijerint_definite requires a real
+                    # interval), and exp_polar(I*pi) was absent from the
+                    # original integrand (so user-supplied exp_polar is left
+                    # alone).
+                    if (antideriv is not None and
+                            meijerg is not False and
+                            len(xab) == 3 and
+                            xab[1].is_extended_real and xab[2].is_extended_real and
+                            not (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)) and
+                            not function.has(exp_polar)):
+                        if antideriv.has(exp_polar(I*pi)):
+                            ret = try_meijerg(function, xab)
+                            if ret is not None:
+                                function = ret
+                                continue
 
             final = hints.get('final', True)
             # dotit may be iterated but floor terms making atan and acot
