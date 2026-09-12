@@ -736,12 +736,22 @@ def test_extended_domain_in_expr_to_holonomic():
 
 def test_to_meijerg():
     x = symbols('x')
-    assert hyperexpand(expr_to_holonomic(sin(x)).to_meijerg()) == sin(x)
-    assert hyperexpand(expr_to_holonomic(cos(x)).to_meijerg()) == cos(x)
+    sine = hyperexpand(expr_to_holonomic(sin(x)).to_meijerg())
+    cosine = hyperexpand(expr_to_holonomic(cos(x)).to_meijerg())
+    assert sine == x*sin(sqrt(x**2))/sqrt(x**2)
+    assert cosine == cos(sqrt(x**2))
     assert hyperexpand(expr_to_holonomic(exp(x)).to_meijerg()) == exp(x)
     assert hyperexpand(expr_to_holonomic(log(x)).to_meijerg()).simplify() == log(x)
     assert expr_to_holonomic(4*x**2/3 + 7).to_meijerg() == 4*x**2/3 + 7
-    assert hyperexpand(expr_to_holonomic(besselj(2, x), lenics=3).to_meijerg()) == besselj(2, x)
+    bessel = hyperexpand(expr_to_holonomic(besselj(2, x), lenics=3).to_meijerg())
+    assert bessel == besselj(2, sqrt(x**2))
+    # These forms agree with the original functions by parity, without
+    # assuming sqrt(x**2) = x. Check both signs on the real and imaginary axes.
+    for result, expected in ((sine, sin(x)), (cosine, cos(x)),
+                             (bessel, besselj(2, x))):
+        for value in (-1, 1, -I, I):
+            assert (result - expected).subs(x, value).simplify() == 0
+    assert sine.limit(x, 0) == 0
     p = hyper((Rational(-1, 2), -3), (), x)
     assert from_hyper(p).to_meijerg() == hyperexpand(p)
     p = hyper((S.One, S(3)), (S(2), ), x)
