@@ -38,19 +38,20 @@ Classes
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from sympy.core import Atom, sympify
-from sympy.core.symbol import Symbol
-from sympy.core.function import Lambda
-from sympy.core.symbol import Dummy
-from sympy.utilities.iterables import numbered_symbols
-from sympy.assumptions.assume import AppliedPredicate
-from sympy.assumptions.ask import Q
+from typing import Any, NamedTuple
 
 
-class EUFUnhandledInput(Exception):
-    """
-    Raised while creating an EUFCongruenceClosure if unhandled input is present.
-    """
+class EUFApp(NamedTuple):
+    func: Any
+    args: tuple
+
+class EUFEquation(NamedTuple):
+    lhs: Any
+    rhs: Any
+
+class EUFCongruence(NamedTuple):
+    lhs: EUFEquation
+    rhs: EUFEquation
 
 
 class EUFCongruenceClosure:
