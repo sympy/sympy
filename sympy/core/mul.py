@@ -1607,9 +1607,41 @@ class Mul(Expr, AssocOp):
             pos * neg * nonpositive -> pos or zero -> None is returned
             pos * neg * nonnegative -> neg or zero -> False is returned
         """
-        return self._eval_pos_neg(1)
+        return self._eval_pos_neg(1, extended=True)
 
-    def _eval_pos_neg(self, sign):
+    def _eval_is_positive(self) -> bool | None:
+        return self._eval_pos_neg(1, extended=False)
+
+    def _eval_is_negative(self) -> bool | None:
+        return self._eval_pos_neg(-1, extended=False)
+
+    def _eval_is_nonnegative(self) -> bool | None:
+        return self._eval_nonneg_nonpos(1)
+
+    def _eval_is_nonpositive(self) -> bool | None:
+        return self._eval_nonneg_nonpos(-1)
+
+    def _eval_nonneg_nonpos(self, sign: int) -> bool | None:
+        unsigned = None
+        for t in self.args:
+            if t.is_positive:
+                continue
+            if t.is_negative:
+                sign = -sign
+                continue
+            if unsigned is not None:
+                return None
+            unsigned = t
+        if unsigned is None:
+            return None
+        if sign == 1:
+            if unsigned.is_nonnegative is False:
+                return False
+        elif unsigned.is_nonpositive is False:
+            return False
+        return None
+
+    def _eval_pos_neg(self, sign: int, extended: bool) -> bool | None:
         saw_NON = saw_NOT = False
         for t in self.args:
             if t.is_extended_positive:
@@ -1619,33 +1651,34 @@ class Mul(Expr, AssocOp):
             elif t.is_zero:
                 if all(a.is_finite for a in self.args):
                     return False
-                return
+                return None
             elif t.is_extended_nonpositive:
                 sign = -sign
                 saw_NON = True
             elif t.is_extended_nonnegative:
                 saw_NON = True
-            # FIXME: is_positive/is_negative is False doesn't take account of
-            # Symbol('x', infinite=True, extended_real=True) which has
-            # e.g. is_positive is False but has uncertain sign.
-            elif t.is_positive is False:
-                sign = -sign
-                if saw_NOT:
-                    return
-                saw_NOT = True
-            elif t.is_negative is False:
-                if saw_NOT:
-                    return
-                saw_NOT = True
             else:
-                return
-        if sign == 1 and saw_NON is False and saw_NOT is False:
-            return True
+                pos: bool | None
+                neg: bool | None
+                if extended and t.is_finite is not True:
+                    pos, neg = t.is_extended_positive, t.is_extended_negative
+                else:
+                    pos, neg = t.is_positive, t.is_negative
+                if pos is not False and neg is not False:
+                    return None
+                if saw_NOT:
+                    return None
+                saw_NOT = True
+                if pos is False:
+                    sign = -sign
         if sign < 0:
             return False
+        if extended and not (saw_NON or saw_NOT):
+            return True
+        return None
 
     def _eval_is_extended_negative(self):
-        return self._eval_pos_neg(-1)
+        return self._eval_pos_neg(-1, extended=True)
 
     def _eval_is_odd(self):
         is_integer = self._eval_is_integer()
