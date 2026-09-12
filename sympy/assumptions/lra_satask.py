@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.assumptions.cnf import CNF, EncodedCNF
-from sympy.assumptions.ask import Q
+from sympy.assumptions.ask import Q, _ask_recursive
 from sympy.logic.inference import satisfiable
 from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED
 from sympy.matrices.kind import MatrixKind
@@ -23,10 +23,11 @@ def lra_satask(proposition, assumptions=True):
     _props = CNF.from_prop(~proposition)
 
     cnf = CNF.from_prop(assumptions)
-    assumptions = EncodedCNF()
-    assumptions.from_cnf(cnf)
+    encoded_assumptions = EncodedCNF()
+    encoded_assumptions.from_cnf(cnf)
 
-    return check_satisfiability(props, _props, assumptions)
+    return check_satisfiability(
+        props, _props, encoded_assumptions, assumptions)
 
 # Some predicates such as Q.prime can't be handled by lra_satask.
 # For example, (x > 0) & (x < 1) & Q.prime(x) is unsat but lra_satask would think it was sat.
@@ -37,7 +38,7 @@ WHITE_LIST = ALLOWED_PRED.keys() | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q
                                     Q.positive_infinite}
 
 
-def check_satisfiability(prop, _prop, factbase):
+def check_satisfiability(prop, _prop, factbase, assumptions=True):
     sat_true = factbase.copy()
     sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
@@ -56,7 +57,7 @@ def check_satisfiability(prop, _prop, factbase):
 
     # convert old assumptions into predicates and add them to sat_true and sat_false
     # also check for unhandled predicates
-    for assm in extract_pred_from_old_assum(all_exprs):
+    for assm in extract_pred_from_old_assum(all_exprs, assumptions):
         n = len(sat_true.encoding)
         if assm not in sat_true.encoding:
             sat_true.encoding[assm] = n+1
@@ -217,10 +218,13 @@ def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
 
     return all_pred, all_exprs
 
-def extract_pred_from_old_assum(all_exprs):
+def extract_pred_from_old_assum(all_exprs, assumptions=True):
     """
     Returns a list of relevant new assumption predicate
     based on any old assumptions.
+
+    The optional assumptions are also used to establish that expressions
+    are real when this is not known from the old assumptions.
 
     Raises an UnhandledInput exception if any of the assumptions are
     unhandled.
@@ -251,10 +255,21 @@ def extract_pred_from_old_assum(all_exprs):
         if len(expr.free_symbols) == 0:
             continue
 
-        if expr.is_real is not True:
+        if expr.is_real is False:
+            raise UnhandledInput(f"LRASolver: {expr} must be real")
+        if (expr.is_real is None
+                and (assumptions is True or assumptions is S.true
+                    or _ask_recursive(Q.real(expr), assumptions) is not True)):
             raise UnhandledInput(f"LRASolver: {expr} must be real")
         # test for I times imaginary variable; such expressions are considered real
-        if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
+        if isinstance(expr, Mul) and any(
+                arg.is_real is False
+                or (
+                    arg.is_real is None
+                    and (assumptions is True or assumptions is S.true
+                        or _ask_recursive(Q.real(arg), assumptions) is not True)
+                )
+                for arg in expr.args):
             raise UnhandledInput(f"LRASolver: {expr} must be real")
 
         if expr.is_integer == True and expr.is_zero != True:
