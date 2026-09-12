@@ -1607,17 +1607,19 @@ class Mul(Expr, AssocOp):
             pos * neg * nonpositive -> pos or zero -> None is returned
             pos * neg * nonnegative -> neg or zero -> False is returned
         """
-        return self._eval_pos_neg(1)
+        return self._eval_pos_neg(1, extended=True)
 
     def _eval_is_positive(self) -> bool | None:
         if self._eval_pos_neg(1, extended=False) is False:
             return False
+        return None
 
     def _eval_is_negative(self) -> bool | None:
         if self._eval_pos_neg(-1, extended=False) is False:
             return False
+        return None
 
-    def _eval_pos_neg(self, sign: int, extended: bool=True) -> bool | None:
+    def _eval_pos_neg(self, sign: int, extended: bool) -> bool | None:
         saw_NON = saw_NOT = False
         for t in self.args:
             if t.is_extended_positive:
@@ -1627,32 +1629,33 @@ class Mul(Expr, AssocOp):
             elif t.is_zero:
                 if all(a.is_finite for a in self.args):
                     return False
-                return
+                return None
             elif t.is_extended_nonpositive:
                 sign = -sign
                 saw_NON = True
             elif t.is_extended_nonnegative:
                 saw_NON = True
             elif extended and t.is_finite is not True:
-                return
+                return None
             elif t.is_positive is False:
                 sign = -sign
                 if saw_NOT:
-                    return
+                    return None
                 saw_NOT = True
             elif t.is_negative is False:
                 if saw_NOT:
-                    return
+                    return None
                 saw_NOT = True
             else:
-                return
+                return None
         if sign == 1 and saw_NON is False and saw_NOT is False:
             return True
         if sign < 0:
             return False
+        return None
 
     def _eval_is_extended_negative(self):
-        return self._eval_pos_neg(-1)
+        return self._eval_pos_neg(-1, extended=True)
 
     def _eval_is_odd(self):
         is_integer = self._eval_is_integer()
