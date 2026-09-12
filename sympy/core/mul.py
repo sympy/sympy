@@ -1609,7 +1609,15 @@ class Mul(Expr, AssocOp):
         """
         return self._eval_pos_neg(1)
 
-    def _eval_pos_neg(self, sign):
+    def _eval_is_positive(self) -> bool | None:
+        if self._eval_pos_neg(1, extended=False) is False:
+            return False
+
+    def _eval_is_negative(self) -> bool | None:
+        if self._eval_pos_neg(-1, extended=False) is False:
+            return False
+
+    def _eval_pos_neg(self, sign: int, extended: bool=True) -> bool | None:
         saw_NON = saw_NOT = False
         for t in self.args:
             if t.is_extended_positive:
@@ -1625,9 +1633,8 @@ class Mul(Expr, AssocOp):
                 saw_NON = True
             elif t.is_extended_nonnegative:
                 saw_NON = True
-            # FIXME: is_positive/is_negative is False doesn't take account of
-            # Symbol('x', infinite=True, extended_real=True) which has
-            # e.g. is_positive is False but has uncertain sign.
+            elif extended and t.is_finite is not True:
+                return
             elif t.is_positive is False:
                 sign = -sign
                 if saw_NOT:

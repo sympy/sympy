@@ -479,10 +479,38 @@ def test_symbol_falsepositive_mul():
     assert x.is_nonzero is None
 
 
-@XFAIL
 def test_symbol_infinitereal_mul():
     ix = Symbol('ix', infinite=True, extended_real=True)
+    x = Symbol('x')
+
+    assert ix.is_extended_positive is None
+    assert ix.is_extended_negative is None
+
     assert (-ix).is_extended_positive is None
+    assert (-ix).is_extended_negative is None
+
+    assert (2*ix).is_extended_positive is None
+    assert (2*ix).is_extended_negative is None
+
+    assert (x - ix).is_extended_positive is None
+    assert (x - ix).is_extended_negative is None
+
+
+def test_symbol_falsepositive_unknown_finite_mul():
+    x = Symbol('x', positive=False)
+    assert x.is_finite is None
+
+    assert (-x).is_negative is False
+    assert (-x).is_extended_positive is None
+    assert (-x).is_extended_negative is None
+
+    assert (2*x).is_positive is False
+    assert (2*x).is_extended_positive is None
+    assert (2*x).is_extended_negative is None
+
+    y = Symbol('y', positive=False, finite=True)
+    assert (-y).is_extended_negative is False
+    assert (2*y).is_extended_positive is False
 
 
 def test_neg_symbol_falsepositive():
