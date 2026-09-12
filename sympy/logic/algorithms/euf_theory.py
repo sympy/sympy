@@ -135,7 +135,8 @@ class EUFCongruenceClosure:
 
     def _flatten(self, expr):
         """
-        flatten the expression. This method, in parallel, registers.
+        flatten the expression. This method will also register terms in the
+        necessary data structures e.g creating a class as the said term being its repr.
         This method should be called before any merging.
 
         TODO: there are small problems about currying functions here, should not
