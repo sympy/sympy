@@ -512,6 +512,12 @@ def test_symbol_falsepositive_unknown_finite_mul():
     assert (-y).is_extended_negative is False
     assert (2*y).is_extended_positive is False
 
+    z = Symbol('z', extended_positive=False)
+    assert z.is_finite is None
+    assert (-z).is_extended_negative is False
+    assert (2*z).is_extended_positive is False
+    assert (2*z).is_positive is False
+
 
 def test_neg_symbol_falsepositive():
     x = -Symbol('x', positive=False)
@@ -565,15 +571,14 @@ def test_symbol_falsenonnegative():
     assert x.is_nonzero is None
 
 
-@XFAIL
 def test_neg_symbol_falsenonnegative():
     x = -Symbol('x', nonnegative=False)
     assert x.is_positive is None
-    assert x.is_nonpositive is False  # this currently returns None
-    assert x.is_negative is False  # this currently returns None
+    assert x.is_nonpositive is False
+    assert x.is_negative is False
     assert x.is_nonnegative is None
-    assert x.is_zero is False  # this currently returns None
-    assert x.is_nonzero is True  # this currently returns None
+    assert x.is_zero is False
+    assert x.is_nonzero is None
 
 
 def test_symbol_falsenonnegative_real():

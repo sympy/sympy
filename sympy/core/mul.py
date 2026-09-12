@@ -1610,12 +1610,34 @@ class Mul(Expr, AssocOp):
         return self._eval_pos_neg(1, extended=True)
 
     def _eval_is_positive(self) -> bool | None:
-        if self._eval_pos_neg(1, extended=False) is False:
-            return False
-        return None
+        return self._eval_pos_neg(1, extended=False)
 
     def _eval_is_negative(self) -> bool | None:
-        if self._eval_pos_neg(-1, extended=False) is False:
+        return self._eval_pos_neg(-1, extended=False)
+
+    def _eval_is_nonnegative(self) -> bool | None:
+        return self._eval_nonneg_nonpos(1)
+
+    def _eval_is_nonpositive(self) -> bool | None:
+        return self._eval_nonneg_nonpos(-1)
+
+    def _eval_nonneg_nonpos(self, sign: int) -> bool | None:
+        unsigned = None
+        for t in self.args:
+            if t.is_positive:
+                continue
+            if t.is_negative:
+                sign = -sign
+                continue
+            if unsigned is not None:
+                return None
+            unsigned = t
+        if unsigned is None:
+            return None
+        if sign == 1:
+            if unsigned.is_nonnegative is False:
+                return False
+        elif unsigned.is_nonpositive is False:
             return False
         return None
 
@@ -1635,23 +1657,22 @@ class Mul(Expr, AssocOp):
                 saw_NON = True
             elif t.is_extended_nonnegative:
                 saw_NON = True
-            elif extended and t.is_finite is not True:
-                return None
-            elif t.is_positive is False:
-                sign = -sign
-                if saw_NOT:
-                    return None
-                saw_NOT = True
-            elif t.is_negative is False:
-                if saw_NOT:
-                    return None
-                saw_NOT = True
             else:
-                return None
-        if sign == 1 and saw_NON is False and saw_NOT is False:
-            return True
+                if extended and t.is_finite is not True:
+                    pos, neg = t.is_extended_positive, t.is_extended_negative
+                else:
+                    pos, neg = t.is_positive, t.is_negative
+                if pos is not False and neg is not False:
+                    return None
+                if saw_NOT:
+                    return None
+                saw_NOT = True
+                if pos is False:
+                    sign = -sign
         if sign < 0:
             return False
+        if extended and not (saw_NON or saw_NOT):
+            return True
         return None
 
     def _eval_is_extended_negative(self):
