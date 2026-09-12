@@ -2774,6 +2774,20 @@ def test_issue_11064():
         Interval.Lopen(sqrt(5), oo)
 
 
+def test_sqrt_inequality():
+    u = symbols('u')
+    epsilon_1 = (u + 1) / (2 * (2 * u + 1)) * (5 * u + 2 - sqrt(u * (17 * u + 8)))
+    epsilon_2 = (u + 1) / (2 * (2 * u + 1)) * (5 * u + 2 + sqrt(u * (17 * u + 8)))
+
+    assert solveset(epsilon_1 > 0, u, S.Reals) == \
+        Union(Interval.open(-1, -S.Half), Interval(0, oo))
+    assert solveset(epsilon_1 > 1, u, S.Reals) == \
+        Union(Interval.open(1 - sqrt(3), -S.Half),
+              Interval.open(1 + sqrt(3), oo))
+    assert solveset(epsilon_2 > 1, u, S.Reals) == \
+        Interval.open(0, oo)
+
+
 def test_issue_12478():
     eq = sqrt(x - 2) + 2
     soln = solveset_real(eq, x)
