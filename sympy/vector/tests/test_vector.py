@@ -316,8 +316,9 @@ def test_vector_diff_integrate():
                                           a**2*C.j + (-1)*C.k, a)
     assert (diff(v, a) == v.diff(a) == Derivative(v, a).doit() ==
             (Derivative(f(a), a))*C.i + 2*a*C.j)
-    assert (Integral(v, a) == (Integral(f(a), a))*C.i +
-            (Integral(a**2, a))*C.j + (Integral(-1, a))*C.k)
+    assert Integral(v, a) == Integral((f(a))*C.i + a**2*C.j + (-1)*C.k, a)
+    assert (Integral(v, a).doit() == (Integral(f(a), a))*C.i +
+            a**3/3*C.j + (-a)*C.k)
 
 
 def test_vector_args():

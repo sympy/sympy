@@ -183,7 +183,7 @@ Piecewise
 .. autoclass:: sympy.functions.elementary.piecewise.Piecewise
    :members:
 
-   .. automethod:: sympy.functions.elementary.piecewise.Piecewise._eval_integral
+   .. automethod:: sympy.functions.elementary.piecewise.Piecewise._eval_Integral
 
 .. autofunction:: sympy.functions.elementary.piecewise.piecewise_exclusive
 
