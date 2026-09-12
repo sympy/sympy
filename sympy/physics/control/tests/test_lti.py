@@ -3314,6 +3314,22 @@ def test_StateSpace_construction():
     raises(TypeError, lambda: StateSpace(Matrix([2, 0.5]), Matrix([-1]),
                                          Matrix([1]), 0))
 
+
+def test_discrete_state_space_repr():
+    from sympy import Matrix
+    from sympy.physics.control import DiscreteStateSpace
+
+    A = Matrix([[1]])
+    B = Matrix([[1]])
+    C = Matrix([[1]])
+    D = Matrix([[0]])
+
+    ss = DiscreteStateSpace(A, B, C, D, 1)
+
+    rep = repr(ss)
+
+    assert "DiscreteStateSpace" in rep
+
 def test_StateSpace_add_mul():
     A1 = Matrix([[4, 1],[2, -3]])
     B1 = Matrix([[5, 2],[-3, -3]])
