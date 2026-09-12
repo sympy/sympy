@@ -128,77 +128,70 @@ class EUFCongruenceClosure:
             self.representative[const] = const
             self.classlist[const].add(const)
 
-    def _new_dummy(self):
-        d = next(self._dummies)
+    def _new_const(self):
+        d = self._next_const
+        self._next_const += 1
         self._register(d)
         return d
 
-    def _flatten(self, expr):
+    def _flatten(self, term):
         """
-        flatten the expression. This method will also register terms in the
+        flatten the term. This method will also register terms in the
         necessary data structures e.g creating a class as the said term being its repr.
         This method should be called before any merging.
 
-        TODO: there are small problems about currying functions here, should not
-        be a problem in the grand scheme of the things
-
         Returns
         -------
-        Symbol/Dummy : the new and unique constant that replaced the term.
+        int : the new and unique constant that replaced the term.
         """
-        expr = sympify(expr)
+        # check if term is flattened already
+        if term in self._term_to_const:
+            return self._term_to_const[term]
 
-        # check if expr is flattened already
-        if expr in self._term_to_const:
-            return self._term_to_const[expr]
-
-        # symbols are (should be) already proper constants so register them only
-        if isinstance(expr, Symbol):
-            self._register(expr)
-            const = expr
-        elif isinstance(expr, Atom):
-            const = self._new_dummy()
-        elif isinstance(expr, Lambda):
-            # lambda-like, should be also currified
-            lam = expr.curry()
-            const = self._record_app((Lambda, lam.variables[0]),
-                                     (self._flatten(lam.expr),))
+        # application-like f(a, b) = d, currified into EUFApp(EUFApp(f, (a,)), (b,)) = d
+        if isinstance(term, EUFApp):
+            const = self._flatten(term.func)
+            for arg in term.args:
+                const = self._apply(const, self._flatten(arg))
         else:
-            # function-like f(args) = const
-            arg_ids = tuple(self._flatten(arg) for arg in expr.args)
-            const = self._record_app(expr.func, arg_ids)
+            const = self._new_const()
 
-        self._term_to_const[expr] = const
+        self._term_to_const[term] = const
         return const
 
-    def _record_app(self, func, arg_ids):
+    def _apply(self, func, arg):
         """
-        Record the application f(a) in the related data structures, and
-        return a new dummy d that replaced it in _flatten i.e f(a) = d
+        Record the application EUFApp(func, (arg,)) in the related data structures,
+        and return a new constant d that replaced it in _flatten i.e f(a) = d.
         """
-        d = self._new_dummy()
-        self._const_to_app[d] = (func, arg_ids)
-        self._index_app(func, arg_ids, d)
+        app = EUFApp(func, (arg,))
+        if app in self._app_to_const:
+            return self._app_to_const[app]
+
+        d = self._new_const()
+        self._app_to_const[app] = d
+        self._index_app(app, d)
         return d
 
-    def _index_app(self, func, arg_ids, d):
+    def _index_app(self, app, d):
         """
-        Put the application f(a) = d into lookup_table and use_list under the
-        representatives the classes have right now
+        Put the application EUFApp(func, (arg,)) = d into lookup_table and use_list
+        under the representatives the classes have right now
         """
-        rep_args = tuple(self._find_repr(arg) for arg in arg_ids)
-        key = (func, rep_args)
-        eq = (func, arg_ids, d)
+        func, (arg,) = app
+        rep_func, rep_arg = self._find_repr(func), self._find_repr(arg)
+        key = EUFApp(rep_func, (rep_arg,))
+        eq = EUFEquation(app, d)
         # check if there's another equation that are congruent
         if key in self.lookup_table:
             other_eq = self.lookup_table[key]
-            self.pending.append((d, other_eq[2], (eq, other_eq)))
+            self.pending.append((d, other_eq.rhs, EUFCongruence(eq, other_eq)))
             self._process_pending_unions()
         else:
             # otherwise, add its own registry in lookup_table for future checks
             self.lookup_table[key] = eq
-            for arg_id in set(rep_args):
-                self.use_list[arg_id].append(eq)
+            for rep in {rep_func, rep_arg}:
+                self.use_list[rep].append(eq)
 
     def _find_repr(self, const):
         return self.representative[const]
