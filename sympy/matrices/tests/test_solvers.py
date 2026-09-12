@@ -161,6 +161,11 @@ def test_QRsolve():
     soln = A.QRsolve(b)
     assert soln == x
 
+    A = Matrix([[1, 2], [2, 4]])
+    b = Matrix([1, 2])
+    raises(NonInvertibleMatrixError, lambda: A.QRsolve(b))
+
+
 def test_errors():
     raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
 
@@ -608,9 +613,31 @@ def test_cramer_solve_errors(det_method, error):
     raises(error, lambda: A.cramer_solve(b, det_method=det_method))
 
 
+def test_cramer_solve_singular():
+    A = Matrix([[1, 2], [2, 4]])
+    b = Matrix([1, 2])
+    raises(NonInvertibleMatrixError, lambda: A.cramer_solve(b))
+
+    # a callable det_method may return a plain Python int
+    A = Matrix([[0]])
+    b = Matrix([0])
+    raises(NonInvertibleMatrixError,
+           lambda: A.cramer_solve(b, det_method=lambda M: 0))
+
+
 def test_solve():
     A = Matrix([[1,2], [2,4]])
     b = Matrix([[3], [4]])
     raises(ValueError, lambda: A.solve(b)) #no solution
     b = Matrix([[ 4], [8]])
     raises(ValueError, lambda: A.solve(b)) #infinite solution
+
+
+def test_issue_21493():
+    A = Matrix([[1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9],
+                [10, 11, 12]])
+    b = Matrix([1, 2, 3, 4])
+    raises(NonInvertibleMatrixError,
+           lambda: A.solve_least_squares(b, method='QR'))

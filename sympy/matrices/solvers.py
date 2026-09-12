@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, overload
 
 from sympy.core.function import expand_mul
 from sympy.core.symbol import Dummy, uniquely_named_symbol, symbols
+from sympy.core.sympify import sympify
 from sympy.utilities.iterables import numbered_symbols
 
 from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
@@ -406,6 +407,12 @@ def _QRsolve(M, b):
     This is mainly for educational purposes and symbolic matrices, for real
     (or complex) matrices use mpmath.qr_solve.
 
+    Raises
+    ======
+
+    NonInvertibleMatrixError
+        If the coefficient matrix is rank deficient.
+
     See Also
     ========
 
@@ -423,6 +430,8 @@ def _QRsolve(M, b):
 
     dps  = _get_intermediate_simp(expand_mul, expand_mul)
     Q, R = M.QRdecomposition()
+    if Q.cols < M.cols:
+        raise NonInvertibleMatrixError("Matrix is rank deficient.")
     y    = Q.T * b
 
     # back substitution to solve R*x = y:
@@ -767,6 +776,12 @@ def _cramer_solve(M, rhs, det_method="laplace"):
         The matrix that will satisfy ``Ax = B``.  Will have as many rows as
         matrix A has columns, and as many columns as matrix B.
 
+    Raises
+    ======
+
+    NonInvertibleMatrixError
+        If the coefficient matrix is singular.
+
     Examples
     ========
 
@@ -801,7 +816,9 @@ def _cramer_solve(M, rhs, det_method="laplace"):
         det = lambda matrix: matrix.det(method=det_method)
     else:
         det = det_method
-    det_M = det(M)
+    det_M = sympify(det(M))
+    if _iszero(det_M):
+        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
     x = zeros(*rhs.shape)
     for sol in range(rhs.shape[1]):
         for col in range(rhs.shape[0]):
