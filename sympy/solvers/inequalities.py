@@ -196,6 +196,7 @@ def solve_rational_inequalities(eqs):
 
 def reduce_rational_inequalities(exprs, gen, relational=True):
     """Reduce a system of rational inequalities with rational coefficients.
+    expr is a list of lists. The inner list is ANDed together and the outer lists are ORed together.
 
     Examples
     ========
@@ -215,6 +216,14 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     >>> reduce_rational_inequalities([[x + 2]], x)
     Eq(x, -2)
 
+    condition in which two same inner lists are ANDed together:
+    >>> reduce_rational_inequalities([[x > 0 , x > 1]], x)
+    1 < x
+
+    condition in which two different inner lists are ORed together:
+    >>> reduce_rational_inequalities([[x > 0] , [x > 1]], x)
+    0 < x
+
     This function find the non-infinite solution set so if the unknown symbol
     is declared as extended real rather than real then the result may include
     finiteness conditions:
@@ -224,6 +233,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     (-2 < y) & (y < oo)
     """
     exact = True
+    eqs = []
     solution = S.EmptySet  # add pieces for each group
     for _exprs in exprs:
         if not _exprs:
@@ -269,6 +279,9 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
 
         if _eqs:
             _sol &= solve_rational_inequalities([_eqs])
+            exclude = solve_rational_inequalities([[((d, d.one), '==')
+                for i in eqs for ((n, d), _) in i if d.has(gen)]])
+            _sol -= exclude
 
         solution |= _sol
 
