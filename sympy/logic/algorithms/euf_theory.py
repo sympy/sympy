@@ -63,8 +63,8 @@ class EUFCongruenceClosure:
         """
         Parameters
         ----------
-        equations : list of Q.eq or SymPy expressions
-            The ground equalities to be saturated. Ground equalities are equalities with no variable args (see the header file)
+        equations : list of EUFEquation
+            The ground equalities to be saturated. Ground equalities are equalities with no variable args (see the header file).
         """
 
         """
@@ -90,9 +90,9 @@ class EUFCongruenceClosure:
         self.use_list = defaultdict(list)
 
         # _flatten caches/stuff
-        self._dummies = numbered_symbols('c', Dummy)
-        self._term_to_const = {}                 # _term_to_const[expr] -> const. USED for not doing _flatten twice
-        self._const_to_app = {}                  # const -> (func, arg consts). USED for Greedy algorithm
+        self._next_const = 1                     # constants are ints handed out in order
+        self._term_to_const = {}                 # _term_to_const[atom] -> const. USED for not doing _flatten twice
+        self._app_to_const = {}                  # EUFApp(fn, (arg,)) -> const.
 
         """
         Part 2) of the engine
@@ -115,10 +115,9 @@ class EUFCongruenceClosure:
 
         # Transform every term of the input equations first, then merge.
         for eq in equations:
-            if not (isinstance(eq, AppliedPredicate) and eq.function == Q.eq):
-                raise EUFUnhandledInput
-            left_id = self._flatten(eq.lhs)
-            right_id = self._flatten(eq.rhs)
+            lhs, rhs = eq
+            left_id = self._flatten(lhs)
+            right_id = self._flatten(rhs)
             self.pending.append((left_id, right_id, eq))
             self._asserted.append(eq)
         self._process_pending_unions()
