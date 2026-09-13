@@ -299,7 +299,7 @@ class Basic(Printable):
         obj._args = args  # all items in args must be Basic objects
         return obj
 
-    def copy(self):
+    def copy(self) -> Self:
         return self.func(*self.args)
 
     def __getnewargs__(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
