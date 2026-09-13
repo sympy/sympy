@@ -51,7 +51,7 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.polys.rootoftools import rootof
 
 from sympy.core import Function, Symbol
-from sympy.functions import airyai, airybi, besselj, bessely, lowergamma, Abs
+from sympy.functions import airyai, airybi, besselj, bessely, Abs
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.solvers.ode import classify_ode, dsolve
 from sympy.solvers.ode.ode import allhints, _remove_redundant_solutions
@@ -1136,7 +1136,10 @@ def _get_examples_ode_sol_liouville():
 
     'liouville_08': {
         'eq': x**2*diff(f(x),x) + (n*f(x) + f(x)**2)*diff(f(x),x)**2 + diff(f(x), (x, 2)),
-        'sol': [Eq(C1 + C2*lowergamma(Rational(1,3), x**3/3) + NonElementaryIntegral(exp(_y**3/3)*exp(_y**2*n/2), (_y, f(x))), 0)],
+        # The antiderivative of exp(-x**3/3) previously returned by
+        # meijerint was only valid for x > 0 (see issue #30404), so it is
+        # now left unevaluated here.
+        'sol': [Eq(C1 + C2*NonElementaryIntegral(exp(-x**3/3), x) + NonElementaryIntegral(exp(_y**3/3)*exp(_y**2*n/2), (_y, f(x))), 0)],
     },
     }
     }
@@ -2930,7 +2933,16 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
 
     '1st_homogeneous_coeff_best_08': {
         'eq': f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x),
-        'sol': [Eq(f(x), -C1*sqrt(-x/(x - 2*C1))), Eq(f(x), C1*sqrt(-x/(x - 2*C1)))],
+        # dsolve now produces these explicit forms (the previous explicit
+        # form relied on an meijerint antiderivative that was only valid
+        # for x > 0, see issue #30404).  Two of the four branches are
+        # spurious (they come from a squaring step); this example has
+        # checkodesol_XFAIL set because solutions are only valid in a
+        # range.
+        'sol': [Eq(f(x), -sqrt(x)*sqrt((x - 2*I*exp(C1))*exp(2*C1))/sqrt(x**2 + 4*exp(2*C1))),
+                Eq(f(x), sqrt(x)*sqrt((x - 2*I*exp(C1))*exp(2*C1))/sqrt(x**2 + 4*exp(2*C1))),
+                Eq(f(x), -sqrt(x)*sqrt((x + 2*I*exp(C1))*exp(2*C1))/sqrt(x**2 + 4*exp(2*C1))),
+                Eq(f(x), sqrt(x)*sqrt((x + 2*I*exp(C1))*exp(2*C1))/sqrt(x**2 + 4*exp(2*C1)))],
         'checkodesol_XFAIL': True  # solutions are valid in a range
     },
     }
