@@ -1118,18 +1118,21 @@ def _jordan_form(
         calc_transform: Literal[False],
         *,
         chop: bool = False,
+        lazy: bool = False,
     ) -> Tmat: ...
 @overload
 def _jordan_form(M: Tmat,
          calc_transform: bool = True,
          *,
-         chop: bool = False
+         chop: bool = False,
+         lazy: bool = False,
      ) -> tuple[Tmat, Tmat] | Tmat: ...
 
 def _jordan_form(M: Tmat,
          calc_transform: bool = True,
          *,
-         chop: bool = False
+         chop: bool = False,
+         lazy: bool = False,
      ) -> tuple[Tmat, Tmat] | Tmat:
     """Return $(P, J)$ where $J$ is a Jordan block
     matrix and $P$ is a matrix such that $M = P J P^{-1}$
@@ -1145,6 +1148,11 @@ def _jordan_form(M: Tmat,
         eigenvalues and eigenvectors.  As a result, there may be
         approximation errors.  If ``chop==True``, these errors
         will be truncated.
+
+    lazy : bool, optional
+        If ``True``, the returned Jordan form matrix $J$ will be represented
+        lazily as a :class:`~.BlockDiagMatrix` composed of individual Jordan blocks
+        rather than evaluated into an explicit dense matrix. Default is ``False``.
 
     Examples
     ========
@@ -1267,10 +1275,10 @@ def _jordan_form(M: Tmat,
 
     if has_rationals:
         if calc_transform:
-            P, J = _jordan_form_rational_matrix(mat, calc_transform=True)
+            P, J = _jordan_form_rational_matrix(mat, calc_transform=True, lazy=lazy)
             return restore_floats2(P, J)
         else:
-            J = _jordan_form_rational_matrix(mat, calc_transform=False)
+            J = _jordan_form_rational_matrix(mat, calc_transform=False, lazy=lazy)
             return restore_floats1(J)
 
     # first calculate the jordan block structure
@@ -1288,7 +1296,11 @@ def _jordan_form(M: Tmat,
     # do extra work!
     if len(eigs.keys()) == mat.cols:
         blocks     = sorted(eigs.keys(), key=default_sort_key)
-        jordan_mat = mat.diag(*blocks)
+        if lazy:
+            from sympy.matrices.expressions import BlockDiagMatrix
+            jordan_mat = BlockDiagMatrix(*[mat.diag(b) for b in blocks])
+        else:
+            jordan_mat = mat.diag(*blocks)
 
         if not calc_transform:
             return restore_floats1(jordan_mat)
@@ -1325,8 +1337,12 @@ def _jordan_form(M: Tmat,
             "SymPy had encountered an inconsistent result while "
             "computing Jordan block. : {}".format(M))
 
-    blocks2     = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
-    jordan_mat = mat.diag(*blocks2)
+    blocks2     = [mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure]
+    if lazy:
+        from sympy.matrices.expressions import BlockDiagMatrix
+        jordan_mat = BlockDiagMatrix(*blocks2)
+    else:
+        jordan_mat = mat.diag(*blocks2)
 
     if not calc_transform:
         return restore_floats1(jordan_mat)
@@ -1368,7 +1384,7 @@ def _jordan_form(M: Tmat,
 
     return restore_floats2(basis_mat, jordan_mat)
 
-def _jordan_form_rational_matrix(M, calc_transform):
+def _jordan_form_rational_matrix(M, calc_transform, lazy=False):
     dM = DomainMatrix.from_Matrix(M, field=True)
 
     def char_mat(algebraic_num):
@@ -1471,13 +1487,17 @@ def _jordan_form_rational_matrix(M, calc_transform):
 
     assert jordan_form_size == M.rows
 
-    blocks2 = (
+    blocks2 = [
         M.jordan_block(size=size, eigenvalue=eig)
         for eig, sizes in block_structure.items()
         for size in sizes
-    )
+    ]
 
-    jordan_mat = M.diag(*blocks2)
+    if lazy:
+        from sympy.matrices.expressions import BlockDiagMatrix
+        jordan_mat = BlockDiagMatrix(*blocks2)
+    else:
+        jordan_mat = M.diag(*blocks2)
 
     if not calc_transform:
         return jordan_mat
