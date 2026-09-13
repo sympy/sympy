@@ -103,6 +103,7 @@ class SATSolver:
                 heuristic='vsids', clause_learning='none', INTERVAL=500,
                  lra_theory = None):
 
+        self.levels = []
         self.var_settings = var_settings
         self.heuristic = heuristic
         self.is_unsatisfied = False
@@ -144,7 +145,6 @@ class SATSolver:
         self.lra = lra_theory
 
         # Create the base level
-        self.levels = []
         self._create_level(0)
         self._current_level.var_settings = set(var_settings)
         if self.lra and self._current_level.var_settings:
@@ -166,7 +166,7 @@ class SATSolver:
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
-        self.sentinels = defaultdict(set)
+        self.watched_lits = defaultdict(set)
         self.occurrence_count = defaultdict(int)
         self.variable_set = [False] * (len(variables) + 1)
 
@@ -175,7 +175,7 @@ class SATSolver:
 
         For each clause, the following changes are made:
         - Unit clauses are queued for propagation right away.
-        - Non-unit clauses have their first and last literals set as sentinels.
+        - Non-unit clauses have their first and last literals set as watched literals.
         - The number of clauses a literal appears in is computed.
         """
         self.clauses = [list(clause) for clause in clauses]
@@ -187,11 +187,10 @@ class SATSolver:
                 self._unit_prop_queue.append(clause[0])
                 continue
 
-            self.sentinels[clause[0]].add(i)
-            self.sentinels[clause[-1]].add(i)
-
             for lit in clause:
                 self.occurrence_count[lit] += 1
+            # watched literals for ith clause
+            self._watch(i)
 
     def _find_model(self):
         """
@@ -470,17 +469,8 @@ class SATSolver:
         -2
 
         """
-        if lit == 0 or abs(lit) >= len(self.variable_set):
-            raise ValueError(f"{lit} is not a literal of one of the variables "
-                "the solver was created with.")
-
-        while len(self.levels) > 1:
-            self._undo()
-
-        self._models = None
-        if self._status == IpasirStatus.SATISFIABLE:
-            self._status = IpasirStatus.UNKNOWN
-
+        lit = self._check_lit(lit)
+        self._restart()
         self._assumptions.append(lit)
 
     def add(self, lit):
@@ -508,64 +498,25 @@ class SATSolver:
         -1
 
         """
-        if lit != 0:
-            if abs(lit) >= len(self.variable_set):
-                raise ValueError("%s is not a literal of one of the variables "
-                    "the solver was created with." % lit)
-
-            self._clause_buffer.append(lit)
+        if lit == 0:  # The end of clause marker of IPASIR.
+            self._add_clause(self._clause_buffer)
+            # reset the buffer for future use
+            self._clause_buffer = []
             return
-
-        clause_to_add = self._clause_buffer
-        self._clause_buffer = []
-
-        # The decisions were made without this clause, so the search restarts.
-        while len(self.levels) > 1:
-            self._undo()
-
-        self._models = None
-        if self._status == IpasirStatus.SATISFIABLE:
-            self._status = IpasirStatus.UNKNOWN
-
-        clause_num = len(self.clauses)
-        self.clauses.append(clause_to_add)
-
-        for clause_lit in clause_to_add:
-            self.occurrence_count[clause_lit] += 1
-
-        # Only a literal that is not already false can be a sentinel. With
-        # fewer than two of those the clause is satisfied, unit, or false, and
-        # none of those needs to be watched.
-        unassigned = [clause_lit for clause_lit in clause_to_add
-                      if not self.variable_set[abs(clause_lit)]]
-
-        if len(unassigned) > 1:
-            self.sentinels[unassigned[0]].add(clause_num)
-            self.sentinels[unassigned[-1]].add(clause_num)
-        elif not any(clause_lit in self.var_settings
-                     for clause_lit in clause_to_add):
-            if unassigned:
-                self._unit_prop_queue.append(unassigned[0])
-            else:
-                self.is_unsatisfied = True
-                self._status = IpasirStatus.UNSATISFIABLE
+        self._clause_buffer.append(self._check_lit(lit))
 
     def clause(self, *lits):
         """Add the clause made up of *lits*, given one by one or as a single
         iterable, which covers the ``clause`` overloads of CaDiCaL.
 
         Without any literal it adds the empty clause, which is false.
+        clause() is a convenience method of add().
+
 
         """
         if len(lits) == 1 and not isinstance(lits[0], int):
             lits = lits[0]
-
-        for lit in lits:
-            self.add(lit)
-
-        # Zero is never a literal, which is why IPASIR uses it to mark the
-        # end of a clause rather than passing a length around.
-        self.add(0)
+        self._add_clause([self._check_lit(lit) for lit in lits])
 
     def copy(self):
         """Return an independent solver with the same clauses and state, so
@@ -599,6 +550,36 @@ class SATSolver:
         other.symbols = symbols
 
         return other
+
+    def _check_lit(self, lit):
+        """
+        Return lit, raise if it is not a literal of a known variable.
+        TODO: In future, this method should be removed and instead handle unknown
+        variables.
+        """
+        if lit == 0 or abs(lit) >= len(self.variable_set):
+            raise ValueError(f"{lit} is not a literal of one of the variables "
+                "the solver was created with.")
+        return lit
+
+    def _restart(self):
+        """Undo the search back to the root level"""
+        while len(self.levels) > 1:
+            self._undo()
+        self._models = None
+        if self._status == IpasirStatus.SATISFIABLE:
+            self._status = IpasirStatus.UNKNOWN
+
+    def _add_clause(self, lits):
+        """Register the clause made up of lits with the solver."""
+        # The decisions were made without this clause, so the search restarts.
+        self._restart()
+        self.clauses.append(lits)
+        for lit in lits:
+            self.occurrence_count[lit] += 1
+        self._watch(len(self.clauses) - 1)
+        if self.is_unsatisfied:
+            self._status = IpasirStatus.UNSATISFIABLE
 
     ########################
     #    Helper Methods    #
@@ -668,8 +649,8 @@ class SATSolver:
                 return True
         return False
 
-    def _is_sentinel(self, lit, cls):
-        """Check if a literal is a sentinel of a given clause.
+    def _is_watched_lit(self, lit, cls):
+        """Check if a literal is a watched literal of a given clause.
 
         Examples
         ========
@@ -679,22 +660,47 @@ class SATSolver:
         ... {3, -2}], {1, 2, 3}, set())
         >>> next(l._find_model())
         {1: True, 2: False, 3: False}
-        >>> l._is_sentinel(2, 3)
+        >>> l._is_watched_lit(2, 3)
         True
-        >>> l._is_sentinel(-3, 1)
+        >>> l._is_watched_lit(-3, 1)
         False
 
         """
-        return cls in self.sentinels[lit]
+        return cls in self.watched_lits[lit]
+
+    def _watch(self, i):
+        """
+        Watch two literals of the ith clause
+        """
+        # this method works on root level only
+        assert len(self.levels) <= 1
+        clause = self.clauses[i]
+
+        # A clause that is true at the root
+        if any(lit in self.var_settings for lit in clause):
+            return
+
+        # unassigned lits from the clause
+        unassigned = [lit for lit in clause if not self.variable_set[abs(lit)]]
+
+        # every literal is false
+        if not unassigned:
+            self.is_unsatisfied = True
+        # the clause is unit
+        elif len(unassigned) == 1:
+            self._unit_prop_queue.append(unassigned[0])
+        else:
+            self.watched_lits[unassigned[0]].add(i)
+            self.watched_lits[unassigned[-1]].add(i)
 
     def _assign_literal(self, lit):
         """Make a literal assignment.
 
         The literal assignment must be recorded as part of the current
         decision level. Additionally, if the literal is marked as a
-        sentinel of any clause, then a new sentinel must be chosen. If
-        this is not possible, then unit propagation is triggered and
-        another literal is added to the queue to be set in the future.
+        watched literal of any clause, then a new watched literal must be
+        chosen. If this is not possible, then unit propagation is triggered
+        and another literal is added to the queue to be set in the future.
 
         Examples
         ========
@@ -729,24 +735,24 @@ class SATSolver:
             if res and res[0] is False:
                 conflict = res[1]
 
-        sentinel_list = list(self.sentinels[-lit])
+        watched_list = list(self.watched_lits[-lit])
 
-        for cls in sentinel_list:
+        for cls in watched_list:
             if not self._clause_sat(cls):
-                other_sentinel = None
+                other_watched_lit = None
                 for newlit in self.clauses[cls]:
                     if newlit != -lit:
-                        if self._is_sentinel(newlit, cls):
-                            other_sentinel = newlit
+                        if self._is_watched_lit(newlit, cls):
+                            other_watched_lit = newlit
                         elif not self.variable_set[abs(newlit)]:
-                            self.sentinels[-lit].remove(cls)
-                            self.sentinels[newlit].add(cls)
-                            other_sentinel = None
+                            self.watched_lits[-lit].remove(cls)
+                            self.watched_lits[newlit].add(cls)
+                            other_watched_lit = None
                             break
 
-                # Check if no sentinel update exists
-                if other_sentinel:
-                    self._unit_prop_queue.append(other_sentinel)
+                # Check if no watched literal update exists
+                if other_watched_lit:
+                    self._unit_prop_queue.append(other_watched_lit)
 
         return conflict
 
@@ -817,14 +823,14 @@ class SATSolver:
         ... {3, -2}], {1, 2, 3}, set())
         >>> l.variable_set
         [False, False, False, False]
-        >>> l.sentinels
+        >>> l.watched_lits
         {-3: {0, 2}, -2: {3, 4}, 2: {0, 3}, 3: {2, 4}}
 
         >>> l._simplify()
 
         >>> l.variable_set
         [False, True, False, False]
-        >>> l.sentinels
+        >>> l.watched_lits
         {-3: {0, 2}, -2: {3, 4}, -1: set(), 2: {0, 3},
         ...3: {2, 4}}
 
@@ -999,14 +1005,14 @@ class SATSolver:
         0
         >>> l.clauses
         [[2, -3], [1], [3, -3], [2, -2], [3, -2]]
-        >>> l.sentinels
+        >>> l.watched_lits
         {-3: {0, 2}, -2: {3, 4}, 2: {0, 3}, 3: {2, 4}}
 
         >>> l._simple_add_learned_clause([3])
 
         >>> l.clauses
         [[2, -3], [1], [3, -3], [2, -2], [3, -2], [3]]
-        >>> l.sentinels
+        >>> l.watched_lits
         {-3: {0, 2}, -2: {3, 4}, 2: {0, 3}, 3: {2, 4, 5}}
 
         """
@@ -1016,8 +1022,8 @@ class SATSolver:
         for lit in cls:
             self.occurrence_count[lit] += 1
 
-        self.sentinels[cls[0]].add(cls_num)
-        self.sentinels[cls[-1]].add(cls_num)
+        self.watched_lits[cls[0]].add(cls_num)
+        self.watched_lits[cls[-1]].add(cls_num)
 
         self.heur_clause_added(cls)
 
