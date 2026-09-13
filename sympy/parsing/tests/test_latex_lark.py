@@ -14,6 +14,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
@@ -455,9 +456,7 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\exp(x)", _exp(x)),
     (r"\lg x", _log(x, 10)),
     (r"\ln x", _log(x)),
-    (r"\ln xy", _log(x * y)),
     (r"\log x", _log(x)),
-    (r"\log xy", _log(x * y)),
     (r"\log_{2} x", _log(x, 2)),
     (r"\log_{a} x", _log(x, a)),
     (r"\log_{11} x", _log(x, 11)),
@@ -489,9 +488,7 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\exp(x)", exp(x)),
     (r"\lg x", log(x, 10)),
     (r"\ln x", log(x)),
-    (r"\ln xy", log(x * y)),
     (r"\log x", log(x)),
-    (r"\log xy", log(x * y)),
     (r"\log_{2} x", log(x, 2)),
     (r"\log_{a} x", log(x, a)),
     (r"\log_{11} x", log(x, 11)),
@@ -888,6 +885,40 @@ def test_common_function_expressions():
 
     for latex_str, sympy_expr in EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_ambiguous_implicit_multiplication():
+    # https://github.com/sympy/sympy/issues/30485
+    # expressions like `\sin xyz` are ambiguous: either multiplication binds
+    # tighter than the function, or the function binds tighter than
+    # multiplication. Both interpretations are returned, and no others; in
+    # particular the mixed reading `\sin(x*y)*z`, where the function swallows
+    # part of the product but not all of it, is not derivable.
+    result = parse_latex_lark(r"\sin xyz")
+    assert getattr(result, "data", None) == "_ambig"
+    assert set(result.children) == {sin(x*y*z), sin(x)*y*z}
+
+    result = parse_latex_lark(r"\sin xy")
+    assert set(result.children) == {sin(x*y), sin(x)*y}
+
+    result = parse_latex_lark(r"\ln xy")
+    assert set(result.children) == {log(x*y), log(x)*y}
+
+    result = parse_latex_lark(r"\log xy")
+    assert set(result.children) == {log(x*y), log(x)*y}
+
+    result = parse_latex_lark(r"\sinh xy")
+    assert set(result.children) == {sinh(x*y), sinh(x)*y}
+
+    result = parse_latex_lark(r"\sin x \cos y")
+    assert set(result.children) == {sin(x*cos(y)), sin(x)*cos(y)}
+
+    result = parse_latex_lark(r"\sin xy \cos y")
+    assert set(result.children) == {sin(x*y*cos(y)), sin(x)*y*cos(y)}
+
+    # the argument of `\sin(x)` is delimited, so `\sin(x)yz` has a single
+    # interpretation
+    assert parse_latex_lark(r"\sin(x)yz") == sin(x)*y*z
 
 
 def test_spacing():

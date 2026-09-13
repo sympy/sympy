@@ -48,9 +48,11 @@ FUNC_MIN: "\\min"
 FUNC_MAX: "\\max"
 
 // trigonometric functions
-FUNC_SIN:  "\\sin"
-FUNC_COS:  "\\cos"
-FUNC_TAN:  "\\tan"
+// the negative lookaheads stop "\sin", "\cos", and "\tan" from matching as
+// prefixes of "\sinh", "\cosh", and "\tanh"
+FUNC_SIN:  /\\sin(?![a-zA-Z])/
+FUNC_COS:  /\\cos(?![a-zA-Z])/
+FUNC_TAN:  /\\tan(?![a-zA-Z])/
 FUNC_CSC:  "\\csc"
 FUNC_SEC:  "\\sec"
 FUNC_COT:  "\\cot"
@@ -220,7 +222,8 @@ div: _expression_mul DIV_SYMBOL (_expression_power | adjacent_expressions)
 
 adjacent_expressions: (_one_letter_symbol | number) _expression_mul
     | (group_round_parentheses | group_square_brackets | group_curly_literal_parentheses) (group_round_parentheses | group_square_brackets | group_curly_parentheses | group_curly_literal_parentheses | _one_letter_symbol)
-    | _function _function
+    | _delimited_function _expression_mul
+    | function_with_atomic_argument _expression_mul
     | fraction _expression_mul
     | superscript _expression_mul
 
@@ -338,9 +341,38 @@ _function: function_applied
     | conjugate
     | max | min
     | bra | ket | inner_product
+    | delimited_determinant
     | determinant
     | trace
     | adjugate
+
+// A function whose argument is delimited by brackets, bars, and so on, is a single
+// factor, so implicit multiplication may continue right after it. This alternative
+// replaces the former `_function _function` rule, which required the right operand
+// to be a function as well.
+_delimited_function: function_applied
+    | abs | floor | ceil
+    | square_root
+    | factorial
+    | conjugate
+    | max | min
+    | bra | ket | inner_product
+    | delimited_determinant
+
+// A function applied to a single factor. Together with the rule above, this
+// limits the ambiguity of expressions like `\sin x y z` to two interpretations,
+// \sin(x y z) and (\sin x) y z: either multiplication binds tighter than the
+// function, or the function binds tighter than multiplication. The mixed
+// interpretation \sin(x y) z, where the function swallows part of the product
+// but not all of it, cannot be derived.
+function_with_atomic_argument: (FUNC_EXP | FUNC_LOG | FUNC_LN | FUNC_LG
+    | FUNC_SIN | FUNC_COS | FUNC_TAN | FUNC_CSC | FUNC_SEC | FUNC_COT
+    | FUNC_ARCSIN | FUNC_ARCCOS | FUNC_ARCTAN | FUNC_ARCCSC | FUNC_ARCSEC | FUNC_ARCCOT
+    | FUNC_SINH | FUNC_COSH | FUNC_TANH | FUNC_ARSINH | FUNC_ARCOSH | FUNC_ARTANH
+    | FUNC_DETERMINANT | FUNC_MATRIX_TRACE | FUNC_MATRIX_ADJUGATE) _expression_power
+    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) _expression_power
+    | FUNC_LOG UNDERSCORE group_curly_parentheses _expression_power
+    | (FUNC_SIN | FUNC_COS | FUNC_TAN | FUNC_CSC | FUNC_SEC | FUNC_COT) CARET _expression_core _expression_power
 
 exponential: FUNC_EXP _expression
 
@@ -404,7 +436,7 @@ ceil: L_CEIL _expression R_CEIL
 matrix: CMD_MATRIX_BEGIN matrix_body CMD_MATRIX_END
 matrix_body: matrix_row (MATRIX_ROW_DELIM matrix_row)* (MATRIX_ROW_DELIM)?
 matrix_row: _expression (MATRIX_COL_DELIM _expression)*
-determinant: (CMD_DETERMINANT_BEGIN matrix_body CMD_DETERMINANT_END)
-    | FUNC_DETERMINANT _expression
+determinant: FUNC_DETERMINANT _expression
+delimited_determinant: CMD_DETERMINANT_BEGIN matrix_body CMD_DETERMINANT_END
 trace: FUNC_MATRIX_TRACE _expression
 adjugate: FUNC_MATRIX_ADJUGATE _expression
