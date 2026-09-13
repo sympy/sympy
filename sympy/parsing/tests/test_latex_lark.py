@@ -822,6 +822,9 @@ def test_derivative_expressions():
             continue
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+def test_differential_fraction_derivative():
+    assert parse_latex_lark(r"\frac{dy}{dx}") == Derivative(y, x)
+    assert parse_latex_lark(r"\frac{d y}{d x}") == Derivative(y, x)
 
 def test_trigonometric_expressions():
     expected_failures = {3}
