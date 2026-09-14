@@ -934,7 +934,7 @@ def test_function_arguments():
     assert parse_latex_lark(r"\sin x \cdot y") == sin(x)*y
     assert parse_latex_lark(r"\sin x / 2") == sin(x)/2
     assert parse_latex_lark(r"\sin x \cos y \tan z") == sin(x)*cos(y)*tan(z)
-    assert _readings(r"\sin 2x") == {sin(2*x), x*sin(2)}
+    assert parse_latex_lark(r"\sin 2x") == sin(2*x)
     assert parse_latex_lark(r"\sin -x") == -sin(x)
     assert _readings(r"\sin xy") == {sin(x*y), y*sin(x)}
     assert _readings(r"\tan hk") == {tan(h*k), k*tan(h)}
@@ -952,6 +952,9 @@ def test_a_function_applies_to_all_the_factors_or_to_the_first():
     # the product binds either tighter than the function or not at all
     assert _readings(r"\sin xyz") == {sin(x*y*z), y*z*sin(x)}
     assert _readings(r"\ln xy") == {log(x*y), y*log(x)}
+    # a product starting with a number is the argument: 2*sin(x) would be written 2\sin x
+    assert parse_latex_lark(r"\sin 2xy") == sin(2*x*y)
+    assert parse_latex_lark(r"\ln 2x") == log(2*x)
     # an argument in parentheses ends there
     assert parse_latex_lark(r"\sin(x) y") == y*sin(x)
     assert parse_latex_lark(r"\sin (x) (y+1)") == (y + 1)*sin(x)

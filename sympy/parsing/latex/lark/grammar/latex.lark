@@ -258,10 +258,11 @@ _delimited: group_round_parentheses | group_square_brackets | group_curly_parent
 // The argument of a function command binds tighter than any operator, and it contains no
 // function unless it is one: \sin x \cos y is sin(x)*cos(y), \sin \cos x is sin(cos(x)).
 // Followed by more factors, the function applies either to all of them or to the first one
-// alone: \sin xyz is sin(x*y*z) or sin(x)*y*z. An argument in parentheses ends there.
+// alone: \sin xyz is sin(x*y*z) or sin(x)*y*z. A product starting with a number is the
+// argument: \sin 2x is sin(2*x). An argument in parentheses ends there.
 ?function_argument: _argument_factor
     | _argument_head argument_factors -> adjacent_expressions
-    | _argument_factor argument_factors -> factors_after_argument
+    | (_unnumbered_head | group_round_parentheses) argument_factors -> factors_after_argument
     | _builtin_function
     | ADD function_argument -> add
     | SUB function_argument -> sub
@@ -271,7 +272,11 @@ _delimited: group_round_parentheses | group_square_brackets | group_curly_parent
 
 _argument_factor: _argument_head | group_round_parentheses
 
-_argument_head: _expression_core
+_argument_head: number | CMD_INFTY | EULER_NUMBER | _unnumbered_head
+
+_unnumbered_head: _one_letter_symbol
+    | multi_letter_symbol
+    | group_curly_parentheses
     | group_square_brackets
     | group_curly_literal_parentheses
     | fraction
