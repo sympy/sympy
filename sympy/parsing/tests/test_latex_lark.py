@@ -23,6 +23,7 @@ from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
 from sympy import I, pi
+from sympy import And, Contains, Float, Not, S
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
@@ -457,9 +458,9 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\exp(x)", _exp(x)),
     (r"\lg x", _log(x, 10)),
     (r"\ln x", _log(x)),
-    (r"\ln xy", _log(x * y)),
+    (r"\ln(xy)", _log(x * y)),
     (r"\log x", _log(x)),
-    (r"\log xy", _log(x * y)),
+    (r"\log(xy)", _log(x * y)),
     (r"\log_{2} x", _log(x, 2)),
     (r"\log_{a} x", _log(x, a)),
     (r"\log_{11} x", _log(x, 11)),
@@ -491,9 +492,9 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\exp(x)", exp(x)),
     (r"\lg x", log(x, 10)),
     (r"\ln x", log(x)),
-    (r"\ln xy", log(x * y)),
+    (r"\ln(xy)", log(x * y)),
     (r"\log x", log(x)),
-    (r"\log xy", log(x * y)),
+    (r"\log(xy)", log(x * y)),
     (r"\log_{2} x", log(x, 2)),
     (r"\log_{a} x", log(x, a)),
     (r"\log_{11} x", log(x, 11)),
@@ -915,6 +916,14 @@ def test_negthinspace_not_equal_conflict():
     assert parse_latex_lark(r"x \neq \negmedspace y") == Ne(x, y)
 
 
+def _readings(latex_str):
+    """The expressions an input may mean: several when it is ambiguous."""
+    result = parse_latex_lark(latex_str)
+    if isinstance(result, lark.Tree) and result.data == "_ambig":
+        return set(result.children)
+    return {result}
+
+
 def test_function_arguments():
     assert parse_latex_lark(r"\tanh x") == tanh(x)
     assert parse_latex_lark(r"\tanh(x)") == tanh(x)
@@ -925,10 +934,10 @@ def test_function_arguments():
     assert parse_latex_lark(r"\sin x \cdot y") == sin(x)*y
     assert parse_latex_lark(r"\sin x / 2") == sin(x)/2
     assert parse_latex_lark(r"\sin x \cos y \tan z") == sin(x)*cos(y)*tan(z)
-    assert parse_latex_lark(r"\sin 2x") == sin(2*x)
+    assert _readings(r"\sin 2x") == {sin(2*x), x*sin(2)}
     assert parse_latex_lark(r"\sin -x") == -sin(x)
-    assert parse_latex_lark(r"\sin xy") == sin(x*y)
-    assert parse_latex_lark(r"\tan hk") == tan(h*k)
+    assert _readings(r"\sin xy") == {sin(x*y), y*sin(x)}
+    assert _readings(r"\tan hk") == {tan(h*k), k*tan(h)}
     assert parse_latex_lark(r"\tanh^2 x") == tanh(x)**2
     assert parse_latex_lark(r"\sinh^{-1} x") == asinh(x)
     assert parse_latex_lark(r"\arctanh x") == atanh(x)
@@ -937,6 +946,76 @@ def test_function_arguments():
     for latex_str in [r"\tanh", r"\tanh^2"]:
         with raises(lark.exceptions.UnexpectedInput):
             parse_latex_lark(latex_str)
+
+
+def test_a_function_applies_to_all_the_factors_or_to_the_first():
+    # the product binds either tighter than the function or not at all
+    assert _readings(r"\sin xyz") == {sin(x*y*z), y*z*sin(x)}
+    assert _readings(r"\ln xy") == {log(x*y), y*log(x)}
+    # an argument in parentheses ends there
+    assert parse_latex_lark(r"\sin(x) y") == y*sin(x)
+    assert parse_latex_lark(r"\sin (x) (y+1)") == (y + 1)*sin(x)
+    assert parse_latex_lark(r"\ln\left(x\right) y") == y*log(x)
+
+
+def test_readings_giving_the_same_expression_are_one():
+    assert parse_latex_lark(r"2x \cdot y") == 2*x*y
+
+
+def test_implicit_multiplication_after_a_delimited_factor():
+    assert parse_latex_lark(r"{\sin x} y") == y*sin(x)
+    assert parse_latex_lark(r"\sqrt{2} x") == sqrt(2)*x
+    assert parse_latex_lark(r"|x| y") == y*Abs(x)
+    assert parse_latex_lark(r"x!y") == y*factorial(x)
+    assert parse_latex_lark(r"(a+b)\sin x") == (a + b)*sin(x)
+    assert parse_latex_lark(r"(a+b)x^2") == x**2*(a + b)
+    assert parse_latex_lark(r"x [y]") == x*y
+    assert parse_latex_lark(r"[x]") == x
+    assert parse_latex_lark(r"\{x\}") == x
+    product = parse_latex_lark(r"\begin{pmatrix}1&2\\3&4\end{pmatrix}\begin{pmatrix}1\\2\end{pmatrix}")
+    assert product.doit() == Matrix([[5], [11]])
+
+
+def test_differentials():
+    assert parse_latex_lark(r"b d e") == b*d*Symbol("e")
+    assert parse_latex_lark(r"\frac{dy}{dx}") == Derivative(y, x)
+    assert parse_latex_lark(r"\frac{d^2}{dx^2} x^3") == Derivative(x**3, (x, 2))
+    with raises(LaTeXParsingError):
+        parse_latex_lark(r"\frac{d}{dx}")
+
+
+def test_symbols_and_constants():
+    assert parse_latex_lark(r"x_{10}") == Symbol("x_{10}")
+    assert parse_latex_lark(r"x_{i,j}") == Symbol("x_{i,j}")
+    assert parse_latex_lark(r"a_{n+1}") == Symbol("a_{n+1}")
+    assert parse_latex_lark(r"x^2_1") == Symbol("x_{1}")**2
+    assert parse_latex_lark(r"\sigma \iota") == Symbol("sigma")*Symbol("iota")
+    assert parse_latex_lark(r"2\pi r") == 2*Symbol("pi")*Symbol("r")
+    assert parse_latex_lark(r"\Gamma") == Symbol("Gamma")
+    assert parse_latex_lark(r".5") == Float("0.5")
+    assert parse_latex_lark(r"\mathrm{e}^x") == exp(x)
+
+
+def test_operators_and_relations():
+    assert parse_latex_lark(r"a+-b") == a - b
+    assert parse_latex_lark(r"a - -b") == a + b
+    assert parse_latex_lark(r"a = b = c") == And(Eq(a, b), Eq(b, c))
+    assert parse_latex_lark(r"x < y \le z") == And(Lt(x, y), Le(y, z))
+    assert parse_latex_lark(r"x \in \mathbb{R}") == Contains(x, S.Reals)
+    assert parse_latex_lark(r"n \notin \mathbb{N}") == Not(Contains(n, S.Naturals))
+    with raises(LaTeXParsingError):
+        parse_latex_lark(r"x \in \mathbb{P}")
+
+
+def test_arguments_without_braces_and_powers_of_functions():
+    assert parse_latex_lark(r"\sqrt x") == sqrt(x)
+    assert parse_latex_lark(r"\sqrt2") == sqrt(2)
+    assert parse_latex_lark(r"\binom nk") == binomial(n, k)
+    assert parse_latex_lark(r"\ln^2 x") == log(x)**2
+    assert parse_latex_lark(r"\log^2 x") == log(x)**2
+    i = Symbol("i")
+    assert parse_latex_lark(r"\sum_{i=-1}^{1} i") == Sum(i, (i, -1, 1))
+    assert _readings(r"f^{-1}(x)") == {Function("f^{-1}")(x), x/Symbol("f")}
 
 
 def test_unknown_commands():

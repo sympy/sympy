@@ -98,7 +98,13 @@ class LarkLaTeXParser:
             # print the `parse_tree` variable
             _lark.logger.debug(parse_tree.pretty())
 
-        sympy_expression = self.transformer.transform(parse_tree)
+        try:
+            sympy_expression = self.transformer.transform(parse_tree)
+        except _lark.exceptions.VisitError as error:
+            # a parsing error found while building the expression is reported as itself
+            if isinstance(error.orig_exc, LaTeXParsingError):
+                raise error.orig_exc from error
+            raise
 
         if self.print_debug_output:
             _lark.logger.debug("SymPy expression = %s", sympy_expression)

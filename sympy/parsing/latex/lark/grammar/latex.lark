@@ -94,6 +94,10 @@ CMD_LANGLE: "\\langle"
 CMD_RANGLE: "\\rangle"
 
 CMD_MATHIT: "\\mathit"
+CMD_MATHBB: "\\mathbb"
+CMD_IN: "\\in"
+CMD_NOTIN: "\\notin"
+EULER_NUMBER: "\\mathrm{e}"
 
 CMD_INFTY: "\\infty"
 CMD_CIRC: "\\circ"
@@ -125,12 +129,14 @@ DIFFERENTIAL_SYMBOL: "d" | UPRIGHT_DIFFERENTIAL_SYMBOL
 // disallow "d" as a variable name because we want to parse "d" as a differential symbol.
 SYMBOL: /[a-zA-Z]'*/
 GREEK_SYMBOL_WITH_PRIMES: GREEK_SYMBOL "'"*
-LATIN_SYMBOL_WITH_LATIN_SUBSCRIPT: /([a-zA-Z]'*)_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+'*)\})/
+LATIN_SYMBOL_WITH_LATIN_SUBSCRIPT: /([a-zA-Z]'*)_(([A-Za-z0-9]|[a-zA-Z]+)|\{[A-Za-z0-9,+\- ]+'*\})/
 LATIN_SYMBOL_WITH_GREEK_SUBSCRIPT: /([a-zA-Z]'*)_/ GREEK_SYMBOL | /([a-zA-Z]'*)_/ L_BRACE GREEK_SYMBOL_WITH_PRIMES R_BRACE
 // best to define the variant with braces like that instead of shoving it all into one case like in
 // /([a-zA-Z])_/ L_BRACE? GREEK_SYMBOL R_BRACE? because then we can easily error out on input like
 // r"h_{\theta"
-GREEK_SYMBOL_WITH_LATIN_SUBSCRIPT: GREEK_SYMBOL_WITH_PRIMES /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+'*)\})/
+GREEK_SYMBOL_WITH_LATIN_SUBSCRIPT: GREEK_SYMBOL_WITH_PRIMES /_(([A-Za-z0-9]|[a-zA-Z]+)|\{[A-Za-z0-9,+\- ]+'*\})/
+// a subscript after a power, as in x^2_1
+SUBSCRIPT: /_([A-Za-z0-9]|\{[A-Za-z0-9,+\- ]+\})/
 GREEK_SYMBOL_WITH_GREEK_SUBSCRIPT: GREEK_SYMBOL_WITH_PRIMES /_/ (GREEK_SYMBOL | L_BRACE GREEK_SYMBOL_WITH_PRIMES R_BRACE)
 MULTI_LETTER_SYMBOL: /[a-zA-Z]+(\s+[a-zA-Z]+)*'*/
 
@@ -186,7 +192,7 @@ FUNC_DETERMINANT: "\\det"
 
 //////////////////// grammar //////////////////////
 
-latex_string: _relation | _expression
+latex_string: _relation | _expression | relation_chain | membership
 
 _one_letter_symbol: SYMBOL
     | LATIN_SYMBOL_WITH_LATIN_SUBSCRIPT
@@ -198,12 +204,13 @@ _one_letter_symbol: SYMBOL
 // seem to be the same on the surface. We allow both styles.
 multi_letter_symbol: CMD_MATHIT L_BRACE MULTI_LETTER_SYMBOL R_BRACE
     | CMD_MATHIT L_BRACE MULTI_LETTER_SYMBOL R_BRACE /'+/
-number: /\d+(\.\d*)?/ | CMD_IMAGINARY_UNIT
+number: /\d+(\.\d*)?|\.\d+/ | CMD_IMAGINARY_UNIT
 
 _atomic_expr: _one_letter_symbol
     | multi_letter_symbol
     | number
     | CMD_INFTY
+    | EULER_NUMBER
 
 group_round_parentheses: L_PAREN _expression R_PAREN
 group_square_brackets: L_BRACKET _expression R_BRACKET
@@ -219,36 +226,52 @@ lte: _expression LTE _expression
 gt: _expression GT _expression
 gte: _expression GTE _expression
 
+relation_chain: _expression _relation_symbol _expression (_relation_symbol _expression)+
+_relation_symbol: EQUAL | NOT_EQUAL | LT | LTE | GT | GTE
+
+membership: _expression (CMD_IN | CMD_NOTIN) number_set
+number_set: CMD_MATHBB L_BRACE SYMBOL R_BRACE
+
 _expression_core: _atomic_expr | group_curly_parentheses
 
-add: _expression ADD _expression_mul
+add: _expression ADD (_expression_mul | unary_sign)
     | ADD _expression_mul
-sub: _expression SUB _expression_mul
+sub: _expression SUB (_expression_mul | unary_sign)
     | SUB _expression_mul
+unary_sign: (ADD | SUB) _expression_mul
 mul: _expression_mul MUL_SYMBOL (_expression_power | adjacent_expressions)
 div: _expression_mul DIV_SYMBOL (_expression_power | adjacent_expressions)
 
-adjacent_expressions: (_one_letter_symbol | number) _expression_mul
-    | (group_round_parentheses | group_square_brackets | group_curly_literal_parentheses) (group_round_parentheses | group_square_brackets | group_curly_parentheses | group_curly_literal_parentheses | _one_letter_symbol)
+adjacent_expressions: (_one_letter_symbol | number | _delimited) _expression_mul
     | _function adjacent_functions
     | fraction _expression_mul
     | superscript _expression_mul
+
+// an expression whose end is marked, so that what follows can only be another factor
+_delimited: group_round_parentheses | group_square_brackets | group_curly_parentheses
+    | group_curly_literal_parentheses | square_root | abs | floor | ceil | factorial | binomial
+    | matrix
 
 ?adjacent_functions: _function
     | _function adjacent_functions -> adjacent_expressions
 
 // The argument of a function command binds tighter than any operator, and it contains no
 // function unless it is one: \sin x \cos y is sin(x)*cos(y), \sin \cos x is sin(cos(x)).
-?function_argument: argument_product
+// Followed by more factors, the function applies either to all of them or to the first one
+// alone: \sin xyz is sin(x*y*z) or sin(x)*y*z. An argument in parentheses ends there.
+?function_argument: _argument_factor
+    | _argument_head argument_factors -> adjacent_expressions
+    | _argument_factor argument_factors -> factors_after_argument
     | _builtin_function
     | ADD function_argument -> add
     | SUB function_argument -> sub
 
-?argument_product: _argument_factor
-    | _argument_factor argument_product -> adjacent_expressions
+?argument_factors: _argument_factor
+    | _argument_factor argument_factors -> adjacent_expressions
 
-_argument_factor: _expression_core
-    | group_round_parentheses
+_argument_factor: _argument_head | group_round_parentheses
+
+_argument_head: _expression_core
     | group_square_brackets
     | group_curly_literal_parentheses
     | fraction
@@ -265,6 +288,8 @@ _argument_factor: _expression_core
 
 _expression_func: _expression_core
     | group_round_parentheses
+    | group_square_brackets
+    | group_curly_literal_parentheses
     | fraction
     | binomial
     | _function
@@ -272,7 +297,7 @@ _expression_func: _expression_core
     | limit
     | matrix
 
-_expression_power: _expression_func | superscript | matrix_prime | symbol_prime
+_expression_power: _expression_func | superscript | matrix_prime | symbol_prime | power_with_subscript
 
 _expression_mul: _expression_power
     | mul | div | adjacent_expressions
@@ -308,8 +333,8 @@ integral_with_special_fraction: FUNC_INT special_fraction
     | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? special_fraction
     | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? special_fraction
 
-group_curly_parentheses_special: UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE CARET _expression_core
-    | CARET _expression_core UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE
+group_curly_parentheses_special: UNDERSCORE L_BRACE _atomic_expr EQUAL _expression R_BRACE CARET _expression_core
+    | CARET _expression_core UNDERSCORE L_BRACE _atomic_expr EQUAL _expression R_BRACE
 
 summation: FUNC_SUM group_curly_parentheses_special _expression
     | FUNC_SUM group_curly_parentheses_special _expression
@@ -322,6 +347,8 @@ superscript: _expression_func CARET (_expression_power | CMD_PRIME | CMD_ASTERIS
     | _expression_func CARET L_BRACE CMD_CIRC R_BRACE -> degree
     | _expression_func CARET CMD_CIRC -> degree
 
+power_with_subscript: (SYMBOL | GREEK_SYMBOL_WITH_PRIMES) CARET _expression_core SUBSCRIPT
+
 matrix_prime: (matrix | group_round_parentheses) PRIMES
 
 symbol_prime: (LATIN_SYMBOL_WITH_LATIN_SUBSCRIPT
@@ -333,9 +360,9 @@ fraction: _basic_fraction
     | _simple_fraction
     | _general_fraction
 
-_basic_fraction: CMD_FRAC DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
+_basic_fraction: CMD_FRAC (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES) (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
 
-_simple_fraction: CMD_FRAC DIGIT group_curly_parentheses
+_simple_fraction: CMD_FRAC (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES) group_curly_parentheses
     | CMD_FRAC group_curly_parentheses (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
 
 _general_fraction: CMD_FRAC group_curly_parentheses group_curly_parentheses
@@ -344,9 +371,9 @@ binomial: _basic_binomial
     | _simple_binomial
     | _general_binomial
 
-_basic_binomial: CMD_BINOM DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
+_basic_binomial: CMD_BINOM (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES) (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
 
-_simple_binomial: CMD_BINOM DIGIT group_curly_parentheses
+_simple_binomial: CMD_BINOM (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES) group_curly_parentheses
     | CMD_BINOM group_curly_parentheses (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
 
 _general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
@@ -354,6 +381,8 @@ _general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
 list_of_expressions: _expression ("," _expression)*
 
 function_applied: _one_letter_symbol L_PAREN list_of_expressions R_PAREN
+
+inverse_function_applied: _one_letter_symbol CARET L_BRACE SUB "1" R_BRACE L_PAREN list_of_expressions R_PAREN
 
 min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
 
@@ -365,11 +394,12 @@ ket: BAR _expression CMD_RANGLE
 
 inner_product: CMD_LANGLE _expression BAR _expression CMD_RANGLE
 
-_function: function_applied | _builtin_function
+_function: function_applied | inverse_function_applied | _builtin_function
 
 _builtin_function: abs | floor | ceil
     | trigonometric_function | trigonometric_function_power
     | exponential
+    | function_power
     | log
     | square_root
     | factorial
@@ -382,6 +412,8 @@ _builtin_function: abs | floor | ceil
 
 exponential: FUNC_EXP function_argument
 
+function_power: (FUNC_EXP | FUNC_LOG | FUNC_LN | FUNC_LG) CARET _expression_core function_argument
+
 log: FUNC_LOG function_argument
     | FUNC_LN function_argument
     | FUNC_LG function_argument
@@ -390,6 +422,7 @@ log: FUNC_LOG function_argument
 
 square_root: FUNC_SQRT group_curly_parentheses
     | FUNC_SQRT group_square_brackets group_curly_parentheses
+    | FUNC_SQRT (DIGIT | SYMBOL | GREEK_SYMBOL_WITH_PRIMES)
 
 factorial: _expression_func BANG
 
