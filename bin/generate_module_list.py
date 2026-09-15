@@ -31,7 +31,7 @@ from __future__ import print_function
 from glob import glob
 
 
-def get_paths(level=15):
+def get_paths(level: int = 15) -> list[str]:
     """
     Generates a set of paths for modules searching.
 
@@ -52,7 +52,7 @@ def get_paths(level=15):
     p = ["sympy" + x + "__init__.py" for x in wildcards]
     return p
 
-def generate_module_list():
+def generate_module_list()-> list[str]:
     g = []
     for x in get_paths():
         g.extend(glob(x))
