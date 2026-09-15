@@ -315,6 +315,10 @@ def test_collect_order():
         sin(a)*cos(b).series(b, 0, 10).removeO() + \
         cos(a)*sin(b).series(b, 0, 10).removeO() + O(b**10)
 
+    # issue 29808
+    assert collect(y*x**3 + S.Pi*y*x**3, [y*x**3, y*x**2]) == x**3*y*(1 + S.Pi)
+
+
 
 def test_rcollect():
     assert rcollect((x**2*y + x*y + x + y)/(x + y), y) == \
