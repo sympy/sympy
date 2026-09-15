@@ -1722,8 +1722,12 @@ def gf_sqf_list(
         else:
             break
 
-    if all:
-        raise ValueError("'all=True' is not supported yet")
+    if all and factors:
+        factors_by_exp = {k: f for f, k in factors}
+        factors = [
+            (factors_by_exp.get(k, [K.one]), k)
+            for k in range(1, max(factors_by_exp) + 1)
+        ]
 
     return lc, factors
 

@@ -301,6 +301,19 @@ def test_DMP_functionality():
     raises(ValueError, lambda: f.sturm())
 
 
+def test_DUP_sqf_list_QQ():
+    f1 = DMP([QQ(1), QQ(-1, 2)], QQ)
+    f2 = DMP([QQ(1), QQ(2, 3)], QQ)
+    f = f1.pow(2).mul(f2.pow(5)).mul_ground(QQ(2, 15))
+
+    assert f.sqf_list() == (QQ(2, 15), [(f1, 2), (f2, 5)])
+    assert f.sqf_list(all=True) == (
+        QQ(2, 15),
+        [(f.one(0, QQ), 1), (f1, 2), (f.one(0, QQ), 3),
+         (f.one(0, QQ), 4), (f2, 5)],
+    )
+
+
 def test_DMP_exclude():
     f = [[[[[[[[[[[[[[[[[[[[[[[[[[ZZ(1)]], [[]]]]]]]]]]]]]]]]]]]]]]]]]]
     J = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
