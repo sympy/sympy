@@ -32,6 +32,7 @@ from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
 
 from sympy.polys import quo, gcd, lcm, factor_list, cancel, PolynomialError
+from sympy.polys import GeneratorsNeeded
 from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
 
@@ -392,6 +393,24 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         indep, f = f.as_independent(x)
     else:
         indep = S.One
+
+    # Put polynomial exp exponents into expanded normal form so that exp
+    # generators are shape-independent: this lets the exp-quadratic hint
+    # below recognize exp(x*(-x + I)) identically to exp(-x**2 + I*x). A
+    # Poly normal form (rather than a bare expand) keeps the exponent as a
+    # single term per monomial, e.g. (-3/50 - 2*I/25)*x**2, which avoids
+    # spuriously splitting complex coefficients.
+    if f.has(exp):
+        def _normalize_exp(e):
+            try:
+                p = e.args[0].as_poly(x)
+            except (PolynomialError, GeneratorsNeeded):
+                p = None
+            if p is None or p.is_zero or p.degree() < 2:
+                return e
+            return exp(p.as_expr())
+
+        f = f.replace(lambda e: isinstance(e, exp), _normalize_exp)
 
     rewritables = {
         (sin, cos, cot): tan,
