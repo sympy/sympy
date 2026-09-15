@@ -1722,3 +1722,41 @@ class Quaternion(Expr):
         """
 
         return ln(self.norm())
+
+    def exp(self) -> Quaternion:
+    """Returns the exponential of $q$, given by $e^q$.
+
+    Returns
+    =======
+
+    Quaternion
+        The exponential of the quaternion.
+
+    Examples
+    ========
+
+    >>> from sympy import Quaternion
+    >>> q = Quaternion(1, 2, 3, 4)
+    >>> q.exp()
+    E*cos(sqrt(29))
+    + 2*sqrt(29)*E*sin(sqrt(29))/29*i
+    + 3*sqrt(29)*E*sin(sqrt(29))/29*j
+    + 4*sqrt(29)*E*sin(sqrt(29))/29*k
+
+    """
+    # exp(q) = e^a(cos(||v||) + v/||v|| * sin(||v||))
+    q = self
+    vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
+
+    # Handle purely real quaternions to avoid division by zero
+    if vector_norm.is_zero:
+        return Quaternion(exp(q.a), 0, 0, 0)
+
+    a = exp(q.a) * cos(vector_norm)
+    b = exp(q.a) * sin(vector_norm) * q.b / vector_norm
+    c = exp(q.a) * sin(vector_norm) * q.c / vector_norm
+    d = exp(q.a) * sin(vector_norm) * q.d / vector_norm
+
+    return Quaternion(a, b, c, d)
+
+
