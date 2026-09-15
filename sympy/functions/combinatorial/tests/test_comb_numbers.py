@@ -20,7 +20,8 @@ from sympy.functions import (
     jacobi_symbol, kronecker_symbol, mobius,
     primenu, primeomega, totient, reduced_totient, primepi,
     motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
-    trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
+    trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta,
+    delannoy, lobb)
 from sympy.functions.combinatorial.numbers import _nT, nP
 from sympy.ntheory.factor_ import factorint
 
@@ -1253,3 +1254,130 @@ def test_deprecated_ntheory_symbolic_functions():
 
 def test_issue_29117():
     raises(ValueError, lambda: nP(3, -1))
+
+
+def test_delannoy():
+    # Central Delannoy numbers (OEIS A001850)
+    central = [1, 3, 13, 63, 321, 1683, 8989]
+    for i, c in enumerate(central):
+        assert delannoy(i, i) == c
+
+    # Delannoy triangle D(m, n) (OEIS A008288)
+    assert delannoy(0, 0) == 1
+    assert delannoy(1, 0) == 1
+    assert delannoy(0, 1) == 1
+    assert delannoy(1, 1) == 3
+    assert delannoy(2, 1) == 5
+    assert delannoy(1, 2) == 5
+    assert delannoy(2, 2) == 13
+    assert delannoy(3, 3) == 63
+    assert delannoy(3, 0) == 1
+    assert delannoy(0, 5) == 1
+
+    # Row D(3, n) for n = 0..4
+    assert [delannoy(3, n) for n in range(5)] == [1, 7, 25, 63, 129]
+
+    # Symmetry: D(m, n) == D(n, m)
+    for m_val in range(6):
+        for n_val in range(6):
+            assert delannoy(m_val, n_val) == delannoy(n_val, m_val)
+
+    # Recurrence: D(m, n) = D(m-1, n) + D(m, n-1) + D(m-1, n-1)
+    for m_val in range(1, 6):
+        for n_val in range(1, 6):
+            assert delannoy(m_val, n_val) == (
+                delannoy(m_val - 1, n_val) +
+                delannoy(m_val, n_val - 1) +
+                delannoy(m_val - 1, n_val - 1)
+            )
+
+    # Negative arguments
+    assert delannoy(-1, 3) == 0
+    assert delannoy(3, -1) == 0
+    assert delannoy(-2, -2) == 0
+
+    # Symbolic arguments stay unevaluated
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True)
+    assert unchanged(delannoy, m, n)
+
+    # Type errors for non-integer arguments
+    raises(TypeError, lambda: delannoy(S.Half, 3))
+    raises(TypeError, lambda: delannoy(3, S.Half))
+
+    # Rewrite as Sum
+    from sympy.concrete.summations import Sum
+    assert isinstance(delannoy(m, n).rewrite(Sum), Sum)
+    # Verify rewrite evaluates correctly for concrete values
+    assert delannoy(m, n).rewrite(Sum).subs({m: 3, n: 3}).doit() == 63
+
+    # Assumptions
+    k = Symbol('k', integer=True, nonnegative=True)
+    j = Symbol('j', integer=True, nonnegative=True)
+    assert delannoy(k, j).is_integer is True
+    assert delannoy(k, j).is_positive is True
+
+
+def test_lobb():
+    # L(m, 0) == Catalan(m) (OEIS A000108)
+    catalans = [1, 1, 2, 5, 14, 42, 132, 429, 1430, 4862]
+    for m_val, c in enumerate(catalans):
+        assert lobb(m_val, 0) == c
+        assert lobb(m_val, 0) == catalan(m_val)
+
+    # Lobb triangle values
+    # m=0: [1]
+    assert lobb(0, 0) == 1
+    # m=1: [1, 1]
+    assert lobb(1, 0) == 1
+    assert lobb(1, 1) == 1
+    # m=2: [2, 3, 1]
+    assert lobb(2, 0) == 2
+    assert lobb(2, 1) == 3
+    assert lobb(2, 2) == 1
+    # m=3: [5, 9, 5, 1]
+    assert lobb(3, 0) == 5
+    assert lobb(3, 1) == 9
+    assert lobb(3, 2) == 5
+    assert lobb(3, 3) == 1
+    # m=4: [14, 28, 20, 7, 1]
+    assert lobb(4, 0) == 14
+    assert lobb(4, 1) == 28
+    assert lobb(4, 2) == 20
+    assert lobb(4, 3) == 7
+    assert lobb(4, 4) == 1
+
+    # L(m, m) == 1 for all m >= 0
+    for m_val in range(15):
+        assert lobb(m_val, m_val) == 1
+
+    # Row sum identity: sum_{n=0}^{m} L(m, n) == C(2m, m)
+    for m_val in range(8):
+        assert sum(lobb(m_val, n_val) for n_val in range(m_val + 1)) == binomial(2 * m_val, m_val)
+
+    # Boundary: m < n => 0
+    assert lobb(2, 5) == 0
+    assert lobb(0, 1) == 0
+    assert lobb(3, 4) == 0
+
+    # Negative arguments
+    assert lobb(-1, 0) == 0
+    assert lobb(3, -1) == 0
+
+    # Symbolic arguments stay unevaluated
+    m = Symbol('m', integer=True)
+    n = Symbol('n', integer=True)
+    assert unchanged(lobb, m, n)
+
+    # Type errors for non-integer arguments
+    raises(TypeError, lambda: lobb(S.Half, 3))
+    raises(TypeError, lambda: lobb(3, S.Half))
+
+    # Rewrite as binomial
+    assert lobb(m, n).rewrite(binomial) == (2*n + 1) * binomial(2*m, m - n) / (m + n + 1)
+
+    # Assumptions
+    k = Symbol('k', integer=True, nonnegative=True)
+    j = Symbol('j', integer=True, nonnegative=True)
+    assert lobb(k, j).is_integer is True
+    assert lobb(k, j).is_nonnegative is True
