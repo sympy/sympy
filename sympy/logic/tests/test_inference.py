@@ -1,8 +1,12 @@
 """For more tests on satisfiability, see test_dimacs"""
+from __future__ import annotations
 
-from sympy import symbols, Q
-from sympy.core.compatibility import range
-from sympy.logic.boolalg import And, Implies, Equivalent, true, false
+from itertools import product
+
+from sympy.assumptions.ask import Q
+from sympy.core.symbol import symbols
+from sympy.core.relational import Ne, Eq, Unequality
+from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false, Not
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
@@ -10,7 +14,19 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
-from sympy.utilities.pytest import raises
+from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
+
+from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
+from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.logic.algorithms.lra_theory import LRASolver
+from sympy.logic.tests.test_lra_theory import make_random_problem
+from sympy.core.random import randint, choice
+
+from sympy.testing.pytest import raises, skip
+from sympy.external import import_module
+
+from sympy.core.function import Function
+
 
 
 def test_literal():
@@ -33,17 +49,17 @@ def test_find_pure_symbol():
 
 
 def test_find_pure_symbol_int_repr():
-    assert find_pure_symbol_int_repr([1], [set([1])]) == (1, True)
+    assert find_pure_symbol_int_repr([1], [{1}]) == (1, True)
     assert find_pure_symbol_int_repr([1, 2],
-                [set([-1, 2]), set([-2, 1])]) == (None, None)
+                [{-1, 2}, {-2, 1}]) == (None, None)
     assert find_pure_symbol_int_repr([1, 2, 3],
-                [set([1, -2]), set([-2, -3]), set([3, 1])]) == (1, True)
+                [{1, -2}, {-2, -3}, {3, 1}]) == (1, True)
     assert find_pure_symbol_int_repr([1, 2, 3],
-                [set([-1, 2]), set([2, -3]), set([3, 1])]) == (2, True)
+                [{-1, 2}, {2, -3}, {3, 1}]) == (2, True)
     assert find_pure_symbol_int_repr([1, 2, 3],
-                [set([-1, -2]), set([-2, -3]), set([3, 1])]) == (2, False)
+                [{-1, -2}, {-2, -3}, {3, 1}]) == (2, False)
     assert find_pure_symbol_int_repr([1, 2, 3],
-                [set([-1, 2]), set([-2, -3]), set([3, 1])]) == (None, None)
+                [{-1, 2}, {-2, -3}, {3, 1}]) == (None, None)
 
 
 def test_unit_clause():
@@ -61,8 +77,8 @@ def test_unit_clause():
 def test_unit_clause_int_repr():
     assert find_unit_clause_int_repr(map(set, [[1]]), {}) == (1, True)
     assert find_unit_clause_int_repr(map(set, [[1], [-1]]), {}) == (1, True)
-    assert find_unit_clause_int_repr([set([1, 2])], {1: True}) == (2, True)
-    assert find_unit_clause_int_repr([set([1, 2])], {2: True}) == (1, True)
+    assert find_unit_clause_int_repr([{1, 2}], {1: True}) == (2, True)
+    assert find_unit_clause_int_repr([{1, 2}], {2: True}) == (1, True)
     assert find_unit_clause_int_repr(map(set,
         [[1, 2, 3], [2, -3], [1, -2]]), {1: True}) == (2, False)
     assert find_unit_clause_int_repr(map(set,
@@ -79,9 +95,9 @@ def test_unit_propagate():
 
 
 def test_unit_propagate_int_repr():
-    assert unit_propagate_int_repr([set([1, 2])], 1) == []
+    assert unit_propagate_int_repr([{1, 2}], 1) == []
     assert unit_propagate_int_repr(map(set,
-        [[1, 2], [-1, 3], [-3, 2], [1]]), 1) == [set([3]), set([-3, 2])]
+        [[1, 2], [-1, 3], [-3, 2], [1]]), 1) == [{3}, {-3, 2}]
 
 
 def test_dpll():
@@ -122,6 +138,345 @@ def test_dpll2_satisfiable():
     assert dpll2_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
     assert dpll2_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
 
+
+def test_satsolver_propagate():
+    # Propagating {1} through {-1, 2} implies 2, which in turn implies 3.
+    s = SATSolver([{1}, {-1, 2}, {-2, 3}, {4, -4}], {1, 2, 3, 4}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert (s.fixed(1), s.fixed(2), s.fixed(3)) == (1, 1, 1)
+    assert (s.fixed(-1), s.fixed(-2), s.fixed(-3)) == (-1, -1, -1)
+
+    # Nothing is implied when there is no unit clause to propagate from.
+    s = SATSolver([{1, 2}, {-1, 2}], {1, 2}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert (s.fixed(1), s.fixed(2)) == (0, 0)
+
+    # Propagation is sound but not complete: 2 is implied by these clauses,
+    # yet finding that out needs a case split rather than propagation.
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(2) == 2
+
+    # A conflict while propagating means the clauses are unsatisfiable.
+    s = SATSolver([{1}, {-1}], {1}, set())
+    assert s.propagate() == IpasirStatus.UNSATISFIABLE
+
+    # Propagation leaving no variable unassigned is a model, so no decision
+    # has to be made and the clauses are satisfiable.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    assert s.propagate() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+
+    # The bounds are asserted into the LRA theory as the literals are
+    # propagated, so a conflict the theory finds is a conflict like any other.
+    x = symbols('x')
+    enc = EncodedCNF()
+    enc.from_cnf(CNF.from_prop((x > 1) & (x < 0)))
+    lra, conflicts = LRASolver.from_encoded_cnf(enc)
+    s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols,
+                  lra_theory=lra)
+    assert s.propagate() == IpasirStatus.UNSATISFIABLE
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # An assignment of every variable is only a model if it holds in the LRA
+    # theory as well, so propagating on its own cannot report satisfiable.
+    enc = EncodedCNF()
+    enc.from_cnf(CNF.from_prop((x > 1) & (x < 5)))
+    lra, conflicts = LRASolver.from_encoded_cnf(enc)
+    s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols,
+                  lra_theory=lra)
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.solve() == IpasirStatus.SATISFIABLE
+
+    # Propagating is idempotent.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.fixed(2) == 1
+
+
+def test_satsolver_solve_after_propagate():
+    # The three steps needed by the assumptions system: propagate at the root
+    # level, inspect what that implied, then run the full search.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.fixed(2) == 1
+    assert s.fixed(3) == 0
+
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    # The literals fixed at the root level still hold in the model.
+    assert s.val(1) == 1
+    assert s.val(2) == 2
+    assert s.val(3) in (3, -3)
+
+    # Solving without propagating first gives the same answer.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+
+    # Unsatisfiable at the root level, both with and without propagating.
+    for propagate_first in (True, False):
+        s = SATSolver([{1}, {-1, 2}, {-2}], {1, 2}, set())
+        if propagate_first:
+            assert s.propagate() == IpasirStatus.UNSATISFIABLE
+        assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # Unsatisfiable, but only the full search can show it.
+    s = SATSolver([{1, 2}, {1, -2}, {-1, 2}, {-1, -2}], {1, 2}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+
+def test_satsolver_assume():
+    # The same solver answers both questions, one assumption at a time.
+    s = SATSolver([{1, 2}, {-1, -2}], {1, 2}, set())
+    s.assume(1)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, -2)
+    s.assume(-1)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (-1, 2)
+
+    # Assumptions constrain one search only, so dropping them makes the
+    # solver answer about the clauses on their own again.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.assume(-1)
+    s.assume(-2)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+    assert s.solve() == IpasirStatus.SATISFIABLE
+
+    # Assuming a literal the clauses contradict fails, and assuming one they
+    # imply changes nothing.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    s.assume(-1)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+    s.assume(2)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(2) == 2
+
+    # Assumptions that contradict each other cannot be satisfied either.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.assume(1)
+    s.assume(-1)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # Selector variables, which is what assumptions are for: 3 guards the
+    # clause {1} and 4 guards {-1}, and assuming one activates it.
+    s = SATSolver([{1, -3}, {-1, -4}], {1, 2, 3, 4}, set())
+    s.assume(3)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(1) == 1
+    s.assume(4)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(1) == -1
+    s.assume(3)
+    s.assume(4)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # Assumptions are not clauses, so the root level knows nothing of them.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.assume(1)
+    assert s.fixed(1) == 0
+    assert s.propagate() == IpasirStatus.UNKNOWN
+
+    # Only a literal of an existing variable can be assumed.
+    raises(ValueError, lambda: s.assume(0))
+    raises(ValueError, lambda: s.assume(9))
+
+
+def test_satsolver_interface_errors():
+    # val() needs a model to read from.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    raises(ValueError, lambda: s.val(1))
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    raises(ValueError, lambda: s.solve())
+
+    s = SATSolver([{1}, {-1}], {1}, set())
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+    raises(ValueError, lambda: s.val(1))
+
+    # Away from the root level an assignment is a guess rather than something
+    # the clauses imply, so fixed() and propagate() are not meaningful.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert len(s.levels) > 1
+    raises(ValueError, lambda: s.fixed(1))
+    raises(ValueError, lambda: s.propagate())
+
+    # A variable the solver does not have cannot be introduced.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    raises(ValueError, lambda: s.add(3))
+    raises(ValueError, lambda: s.clause(-1, 3))
+
+
+def test_satsolver_add_clause():
+    # A clause is built one literal at a time and added by a final 0.
+    s = SATSolver([{1}], {1, 2}, set())
+    s.add(-1)
+    s.add(2)
+    s.add(0)
+    assert s.propagate() == IpasirStatus.SATISFIABLE
+    assert (s.fixed(1), s.fixed(2)) == (1, 1)
+
+    # clause() takes the literals one by one or as a single iterable.
+    s = SATSolver([{1}], {1, 2}, set())
+    s.clause(-1, 2)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+
+    s = SATSolver([{1}], {1, 2}, set())
+    s.clause({-1, 2})
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, 2)
+
+    # A solver that already searched can be given clauses and search again.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    s.clause(-1)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(1) == -1
+    assert s.val(2) == 2
+
+    # An unsatisfiable solver stays unsatisfiable.
+    s.clause(-2)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+    s.clause(1, 2)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # A clause falsified by the literals fixed at the root level conflicts,
+    # and one with a single literal left over propagates it.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    assert s.propagate() == IpasirStatus.SATISFIABLE
+    s.clause(-2)
+    assert s.propagate() == IpasirStatus.UNSATISFIABLE
+
+    s = SATSolver([{1}], {1, 2, 3}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    s.clause(-1, -2, 3)
+    s.clause(2)
+    assert s.propagate() == IpasirStatus.SATISFIABLE
+    assert s.fixed(3) == 1
+
+    # The empty clause is false.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.clause()
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+
+def test_satsolver_copy():
+    # The copy has the state of the original without sharing it.
+    s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
+    assert s.propagate() == IpasirStatus.UNKNOWN
+
+    temporary = s.copy()
+    assert (temporary.fixed(1), temporary.fixed(2)) == (1, 1)
+
+    # Clauses added to the copy say nothing about the original.
+    temporary.clause(-2)
+    assert temporary.solve() == IpasirStatus.UNSATISFIABLE
+    assert s.fixed(2) == 1
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(2) == 2
+
+    # The copy of a solved solver searches again, the original keeps its model.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    model = (s.val(1), s.val(2))
+
+    temporary = s.copy()
+    temporary.clause(-1)
+    temporary.clause(-2)
+    assert temporary.solve() == IpasirStatus.UNSATISFIABLE
+    assert (s.val(1), s.val(2)) == model
+
+    # The clauses of the original are left alone too.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    temporary = s.copy()
+    temporary.clause(-1, -2)
+    assert temporary.solve() == IpasirStatus.SATISFIABLE
+    assert s.clauses == [[1, 2]]
+    assert s.solve() == IpasirStatus.SATISFIABLE
+
+
+def test_satsolver_add_clause_random():
+    # Adding clauses to a solver that has already searched and then searching
+    # again has to agree with checking every assignment by hand.
+    for _ in range(150):
+        num_vars = randint(2, 6)
+        variables = set(range(1, num_vars + 1))
+        clauses = [{randint(1, num_vars) * choice([-1, 1])
+                    for _ in range(randint(1, 3))}
+                   for _ in range(randint(1, 3))]
+
+        solver = SATSolver(clauses, variables, set())
+
+        for _ in range(12):
+            satisfiable = any(
+                all(any((lit > 0) == assignment[abs(lit) - 1] for lit in clause)
+                    for clause in clauses)
+                for assignment in product([False, True], repeat=num_vars))
+
+            assert (solver.solve() == IpasirStatus.SATISFIABLE) == satisfiable
+
+            if satisfiable:
+                # The model has to assign every variable and satisfy every
+                # clause the solver has been given so far.
+                for var in variables:
+                    assert solver.val(var) in (var, -var)
+                for clause in clauses:
+                    assert any(solver.val(lit) == lit for lit in clause)
+
+            new_clause = {randint(1, num_vars) * choice([-1, 1])
+                          for _ in range(randint(1, 3))}
+            clauses.append(new_clause)
+            solver.clause(new_clause)
+
+
+def test_minisat22_satisfiable():
+    A, B, C = symbols('A,B,C')
+    minisat22_satisfiable = lambda expr: satisfiable(expr, algorithm="minisat22")
+    assert minisat22_satisfiable( A & ~A ) is False
+    assert minisat22_satisfiable( A & ~B ) == {A: True, B: False}
+    assert minisat22_satisfiable(
+        A | B ) in ({A: True}, {B: False}, {A: False, B: True}, {A: True, B: True}, {A: True, B: False})
+    assert minisat22_satisfiable(
+        (~A | B) & (~B | A) ) in ({A: True, B: True}, {A: False, B: False})
+    assert minisat22_satisfiable( (A | B) & (~B | C) ) in ({A: True, B: False, C: True},
+        {A: True, B: True, C: True}, {A: False, B: True, C: True}, {A: True, B: False, C: False})
+    assert minisat22_satisfiable( A & B & C  ) == {A: True, B: True, C: True}
+    assert minisat22_satisfiable( (A | B) & (A >> B) ) in ({B: True, A: False},
+        {B: True, A: True})
+    assert minisat22_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
+    assert minisat22_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
+
+
+def test_minisat22_minimal_satisfiable():
+    A, B, C = symbols('A,B,C')
+    minisat22_satisfiable = lambda expr, minimal=True: satisfiable(expr, algorithm="minisat22", minimal=True)
+    assert minisat22_satisfiable( A & ~A ) is False
+    assert minisat22_satisfiable( A & ~B ) == {A: True, B: False}
+    assert minisat22_satisfiable(
+        A | B ) in ({A: True}, {B: False}, {A: False, B: True}, {A: True, B: True}, {A: True, B: False})
+    assert minisat22_satisfiable(
+        (~A | B) & (~B | A) ) in ({A: True, B: True}, {A: False, B: False})
+    assert minisat22_satisfiable( (A | B) & (~B | C) ) in ({A: True, B: False, C: True},
+        {A: True, B: True, C: True}, {A: False, B: True, C: True}, {A: True, B: False, C: False})
+    assert minisat22_satisfiable( A & B & C  ) == {A: True, B: True, C: True}
+    assert minisat22_satisfiable( (A | B) & (A >> B) ) in ({B: True, A: False},
+        {B: True, A: True})
+    assert minisat22_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
+    assert minisat22_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
+    g = satisfiable((A | B | C),algorithm="minisat22",minimal=True,all_models=True)
+    sol = next(g)
+    first_solution = {key for key, value in sol.items() if value}
+    sol=next(g)
+    second_solution = {key for key, value in sol.items() if value}
+    sol=next(g)
+    third_solution = {key for key, value in sol.items() if value}
+    assert not first_solution <= second_solution
+    assert not second_solution <= third_solution
+    assert not first_solution <= third_solution
 
 def test_satisfiable():
     A, B, C = symbols('A,B,C')
@@ -171,7 +526,7 @@ def test_pl_true():
 
 
 def test_pl_true_wrong_input():
-    from sympy import pi
+    from sympy.core.numbers import pi
     raises(ValueError, lambda: pl_true('John Cleese'))
     raises(ValueError, lambda: pl_true(42 + pi + pi ** 2))
     raises(ValueError, lambda: pl_true(42))
@@ -214,6 +569,7 @@ def test_propKB_tolerant():
     A, B, C = symbols('A,B,C')
     assert kb.ask(B) is False
 
+
 def test_satisfiable_non_symbols():
     x, y = symbols('x y')
     assumptions = Q.zero(x*y)
@@ -230,6 +586,7 @@ def test_satisfiable_non_symbols():
     assert not satisfiable(And(assumptions, facts, query), algorithm='dpll2')
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
 
+
 def test_satisfiable_bool():
     from sympy.core.singleton import S
     assert satisfiable(true) == {true: true}
@@ -241,7 +598,7 @@ def test_satisfiable_bool():
 def test_satisfiable_all_models():
     from sympy.abc import A, B
     assert next(satisfiable(False, all_models=True)) is False
-    assert list(satisfiable((A >> ~A) & A , all_models=True)) == [False]
+    assert list(satisfiable((A >> ~A) & A, all_models=True)) == [False]
     assert list(satisfiable(True, all_models=True)) == [{true: true}]
 
     models = [{A: True, B: False}, {A: False, B: True}]
@@ -262,10 +619,145 @@ def test_satisfiable_all_models():
     # This is a santiy test to check that only the required number
     # of solutions are generated. The expr below has 2**100 - 1 models
     # which would time out the test if all are generated at once.
-    from sympy import numbered_symbols
+    from sympy.utilities.iterables import numbered_symbols
     from sympy.logic.boolalg import Or
     sym = numbered_symbols()
     X = [next(sym) for i in range(100)]
     result = satisfiable(Or(*X), all_models=True)
     for i in range(10):
         assert next(result)
+
+
+def test_z3():
+    z3 = import_module("z3")
+
+    if not z3:
+        skip("z3 not installed.")
+    A, B, C = symbols('A,B,C')
+    x, y, z = symbols('x,y,z')
+    assert z3_satisfiable((x >= 2) & (x < 1)) is False
+    assert z3_satisfiable( A & ~A ) is False
+
+    model = z3_satisfiable(A & (~A | B | C))
+    assert bool(model) is True
+    assert model[A] is True
+
+    # test nonlinear function
+    assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False
+
+    f = symbols('f1', cls=Function)
+    model = z3_satisfiable(f(A))
+    assert bool(model) is True
+
+    f,h = symbols('f h', cls=Function)
+    x,y,c2 = symbols('x y c2')
+
+    assert z3_satisfiable(Eq(h(x, y), h(y, x))) == {Q.eq(h(x, y), h(y, x)): True}
+
+    expr = And(
+        Ne(x, y),
+        Eq(f(x), f(y)),
+        Ne(h(f(x)), h(f(y)))
+    )
+    assert z3_satisfiable(expr) is False
+
+    expr = And(
+        Eq(x, y),
+        Ne(f(x), f(y))
+    )
+    assert z3_satisfiable(expr) is False
+
+
+def test_z3_predicate_equivalence():
+    # https://github.com/sympy/sympy/issues/29851
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("Z3 is not installed")
+    x = symbols('x')
+    expr = Not(Implies(Q.eq(x, 0),Q.ge(x, 0)))
+    assert z3_satisfiable(expr) is False
+
+
+def test_z3_vs_lra_dpll2():
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+
+    def boolean_formula_to_encoded_cnf(bf):
+        cnf = CNF.from_prop(bf)
+        enc = EncodedCNF()
+        enc.from_cnf(cnf)
+        return enc
+
+    def make_random_cnf(num_clauses=5, num_constraints=10, num_var=2):
+        assert num_clauses <= num_constraints
+        constraints = make_random_problem(num_variables=num_var, num_constraints=num_constraints, rational=False)
+        clauses = [[cons] for cons in constraints[:num_clauses]]
+        for cons in constraints[num_clauses:]:
+            if isinstance(cons, Unequality):
+                cons = ~cons
+            i = randint(0, num_clauses-1)
+            clauses[i].append(cons)
+
+        clauses = [Or(*clause) for clause in clauses]
+        cnf = And(*clauses)
+        return boolean_formula_to_encoded_cnf(cnf)
+
+    lra_dpll2_satisfiable = lambda x: dpll2_satisfiable(x, use_lra_theory=True)
+
+    for _ in range(50):
+        cnf = make_random_cnf(num_clauses=10, num_constraints=15, num_var=2)
+
+        try:
+            z3_sat = z3_satisfiable(cnf)
+        except z3.z3types.Z3Exception:
+            continue
+
+        lra_dpll2_sat = lra_dpll2_satisfiable(cnf)
+
+        # z3 and dpll2 may find differend models so we shouldn't
+        # test the models directly for equality
+        assert lra_dpll2_sat is not None
+        assert z3_sat is not None
+        lra_dpll2_is_sat = lra_dpll2_sat is not False
+        z3_is_sat = z3_sat is not False
+
+        assert z3_is_sat == lra_dpll2_is_sat
+
+
+def test_issue_27733():
+    # original regression
+    x, y = symbols('x,y')
+    clauses = [[1, -3, -2], [5, 7, -8, -6, -4], [-10, -9, 10, 11, -4], [-12, 13, 14], [-10, 9, -6, 11, -4],
+               [16, -15, 18, -19, -17], [11, -6, 10, -9], [9, 11, -10, -9], [2, -3, -1], [-13, 12], [-15, 3, -17],
+               [-16, -15, 19, -17], [-6, -9, 10, 11, -4], [20, -1, -2], [-23, -22, -21], [10, 11, -10, -9],
+               [9, 11, -4, -10], [24, -6, -4], [-14, 12], [-10, -9, 9, -6, 11], [25, -27, -26], [-15, 19, -18, -17],
+               [5, 8, -7, -6, -4], [-30, -29, 28], [12], [14]]
+
+    encoding = {Q.gt(y, i): i for i in range(1, 31) if i != 11 and i != 12}
+    encoding[Q.gt(x, 0)] = 11
+    encoding[Q.lt(x, 0)] = 12
+
+    cnf = EncodedCNF(clauses, encoding)
+    assert satisfiable(cnf, use_lra_theory=True) is False
+
+
+def test_issue_27733_second_fix():
+    # regression for flawed initial fix of issue 27733
+    x0, x1 = symbols('x0 x1')
+    clauses = [[1, 2], [-3, -4]]
+    encoding = {Q.gt(x0, x1): 1, Q.lt(x1, x0): 2, Q.le(x1, x0): 3, Q.ge(x0, x1): 4}
+    cnf = EncodedCNF(clauses, encoding)
+    assert satisfiable(cnf, use_lra_theory=True) is False
+
+
+def test_satisfiable_all_models_lra():
+    x = symbols('x')
+    clauses = [[1, 2]]
+    encoding = {Q.gt(x, 0): 1, Q.lt(x, 0): 2}
+    cnf = EncodedCNF(clauses, encoding)
+
+    models = list(satisfiable(cnf, all_models=True, use_lra_theory=True))
+    assert len(models) == 2
+    assert {Q.gt(x, 0): True, Q.lt(x, 0): False} in models
+    assert {Q.lt(x, 0): True, Q.gt(x, 0): False} in models

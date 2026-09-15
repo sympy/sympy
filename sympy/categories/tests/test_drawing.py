@@ -1,7 +1,8 @@
+from __future__ import annotations
 from sympy.categories.diagram_drawing import _GrowableGrid, ArrowStringDescription
 from sympy.categories import (DiagramGrid, Object, NamedMorphism,
                               Diagram, XypicDiagramDrawer, xypic_draw_diagram)
-from sympy import FiniteSet
+from sympy.sets.sets import FiniteSet
 
 
 def test_GrowableGrid():
@@ -11,7 +12,7 @@ def test_GrowableGrid():
     assert grid.width == 1
     assert grid.height == 2
 
-    # Check initialisation of elements.
+    # Check initialization of elements.
     assert grid[0, 0] is None
     assert grid[1, 0] is None
 
@@ -555,9 +556,22 @@ def test_DiagramGrid():
     assert grid[0, 0] == A
     assert grid[0, 1] == B
 
+
+def test_DiagramGrid_pseudopod():
     # Test a diagram in which even growing a pseudopod does not
     # eventually help.
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    D = Object("D")
+    E = Object("E")
     F = Object("F")
+    A_ = Object("A'")
+    B_ = Object("B'")
+    C_ = Object("C'")
+    D_ = Object("D'")
+    E_ = Object("E'")
+
     f1 = NamedMorphism(A, B, "f1")
     f2 = NamedMorphism(A, C, "f2")
     f3 = NamedMorphism(A, D, "f3")

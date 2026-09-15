@@ -1,5 +1,4 @@
-from __future__ import print_function, division
-
+from __future__ import annotations
 from sympy.core import Symbol, Integer
 
 x = Symbol('x')

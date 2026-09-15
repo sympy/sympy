@@ -4,26 +4,21 @@
 Utilities
 =========
 
-.. TODO: add  benchmarking.rst
-
 .. automodule:: sympy.utilities
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    autowrap.rst
    codegen.rst
    decorator.rst
    enumerative.rst
+   exceptions.rst
    iterables.rst
    lambdify.rst
    memoization.rst
    misc.rst
-   pkgdata.rst
-   pytest.rst
-   randtest.rst
-   runtests.rst
    source.rst
    timeutils.rst

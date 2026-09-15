@@ -4,14 +4,14 @@ Matrix, ImmutableMatrix, MatrixExpr
 
 Here we test the extent to which they cooperate
 """
+from __future__ import annotations
 
-from sympy import symbols
+from sympy.core.symbol import symbols
 from sympy.matrices import (Matrix, MatrixSymbol, eye, Identity,
         ImmutableMatrix)
-from sympy.core.compatibility import range
 from sympy.matrices.expressions import MatrixExpr, MatAdd
-from sympy.matrices.matrices import classof
-from sympy.utilities.pytest import raises
+from sympy.matrices.matrixbase import classof
+from sympy.testing.pytest import raises
 
 SM = MatrixSymbol('X', 3, 3)
 SV = MatrixSymbol('v', 3, 1)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external.importtools import import_module
 
 disabled = False
@@ -9,12 +10,10 @@ if not pyglet_gl or not pyglet_window:
     disabled = True
 
 
-from sympy import symbols, sin, cos
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import (cos, sin)
 x, y, z = symbols('x, y, z')
-
-
-def test_import():
-    from sympy.plotting.pygletplot import PygletPlot
 
 
 def test_plot_2d():
@@ -85,6 +84,16 @@ def _test_plot_log():
 def test_plot_integral():
     # Make sure it doesn't treat x as an independent variable
     from sympy.plotting.pygletplot import PygletPlot
-    from sympy import Integral
+    from sympy.integrals.integrals import Integral
     p = PygletPlot(Integral(z*x, (x, 1, z), (z, 1, y)), visible=False)
     p.wait_for_calculations()
+
+
+def test_plot_iter():
+    # regression: __iter__ used the Python 2 dict.itervalues()
+    from sympy.plotting.pygletplot import PygletPlot
+    p = PygletPlot(x, [x, -5, 5, 4], visible=False)
+    p.wait_for_calculations()
+    funcs = list(p)
+    assert len(funcs) == len(p) == 1
+    assert all(f is p[i] for i, f in enumerate(funcs))

@@ -1,9 +1,11 @@
 """Tests for low-level linear systems solver. """
+from __future__ import annotations
 
-from sympy.polys.rings import ring
-from sympy.polys.fields import field
+from sympy.matrices import Matrix
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.solvers import solve_lin_sys
+from sympy.polys.fields import field
+from sympy.polys.rings import ring
+from sympy.polys.solvers import solve_lin_sys, eqs_to_matrix
 
 
 def test_solve_lin_sys_2x2_one():
@@ -12,7 +14,7 @@ def test_solve_lin_sys_2x2_one():
            2*x1 - x2]
     sol = {x1: QQ(5, 3), x2: QQ(10, 3)}
     _sol = solve_lin_sys(eqs, domain)
-    assert _sol == sol and all(isinstance(s, domain.dtype) for s in _sol)
+    assert _sol == sol and all(s.ring == domain for s in _sol)
 
 def test_solve_lin_sys_2x4_none():
     domain, x1,x2 = ring("x1,x2", QQ)
@@ -20,7 +22,8 @@ def test_solve_lin_sys_2x4_none():
            x1 - x2,
            x1 - 2*x2,
            x2 - 1]
-    assert solve_lin_sys(eqs, domain) == None
+    assert solve_lin_sys(eqs, domain) is None
+
 
 def test_solve_lin_sys_3x4_one():
     domain, x1,x2,x3 = ring("x1,x2,x3", QQ)
@@ -44,7 +47,8 @@ def test_solve_lin_sys_3x4_none():
     eqs = [2*x1 + x2 + 7*x3 - 7*x4 - 2,
            -3*x1 + 4*x2 - 5*x3 - 6*x4 - 3,
            x1 + x2 + 4*x3 - 5*x4 - 2]
-    assert solve_lin_sys(eqs, domain) == None
+    assert solve_lin_sys(eqs, domain) is None
+
 
 def test_solve_lin_sys_4x7_inf():
     domain, x1,x2,x3,x4,x5,x6,x7 = ring("x1,x2,x3,x4,x5,x6,x7", QQ)
@@ -100,3 +104,10 @@ def test_solve_lin_sys_6x6_2():
     }
 
     assert solve_lin_sys(eqs, domain) == sol
+
+def test_eqs_to_matrix():
+    domain, x1,x2 = ring("x1,x2", QQ)
+    eqs_coeff = [{x1: QQ(1), x2: QQ(1)}, {x1: QQ(2), x2: QQ(-1)}]
+    eqs_rhs = [QQ(-5), QQ(0)]
+    M = eqs_to_matrix(eqs_coeff, eqs_rhs, [x1, x2], QQ)
+    assert M.to_Matrix() == Matrix([[1, 1, 5], [2, -1, 0]])

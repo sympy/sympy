@@ -12,5 +12,5 @@ SparseMatrix Class Reference
 
 ImmutableSparseMatrix Class Reference
 -------------------------------------
-.. autoclass:: sympy.matrices.immutable.ImmutableSparseMatrix
+.. autoclass:: sympy.matrices.immutable::ImmutableSparseMatrix
    :members:

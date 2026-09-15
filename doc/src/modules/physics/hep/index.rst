@@ -1,5 +1,7 @@
+.. _physics_high_energy_physics:
+
 ===================
-High energy physics
+High Energy Physics
 ===================
 
 .. topic:: Abstract
@@ -9,7 +11,5 @@ High energy physics
 Gamma matrices
 ==============
 
-.. toctree::
-    :maxdepth: 3
-
-    gamma_matrices.rst
+.. automodule:: sympy.physics.hep.gamma_matrices
+    :members:

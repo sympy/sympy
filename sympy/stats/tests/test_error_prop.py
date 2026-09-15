@@ -1,7 +1,10 @@
-from sympy import symbols, exp, Function
+from __future__ import annotations
+from sympy.core.function import Function
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
+from sympy.stats.error_prop import variance_prop
 from sympy.stats.symbolic_probability import (RandomSymbol, Variance,
         Covariance)
-from sympy.stats.error_prop import variance_prop
 
 
 def test_variance_prop():

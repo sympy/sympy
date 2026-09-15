@@ -1,26 +1,95 @@
-from __future__ import print_function, division
-
-from sympy.core import Basic, Integer, Tuple, Dict, S, sympify
-from sympy.core.sympify import converter as sympify_converter
-
-from sympy.matrices.matrices import MatrixBase
+from __future__ import annotations
+from sympy.core import Basic, Dict, Tuple
+from sympy.core.numbers import Integer
+from sympy.core.cache import cacheit
+from sympy.core.sympify import _sympy_converter as sympify_converter, _sympify
+from sympy.external.mpmath import _matrix
 from sympy.matrices.dense import DenseMatrix
-from sympy.matrices.sparse import SparseMatrix, MutableSparseMatrix
 from sympy.matrices.expressions import MatrixExpr
+from sympy.matrices.matrixbase import MatrixBase
+from sympy.matrices.repmatrix import RepMatrix
+from sympy.matrices.sparse import SparseRepMatrix
+from sympy.multipledispatch import dispatch
 
 
 def sympify_matrix(arg):
     return arg.as_immutable()
+
+
 sympify_converter[MatrixBase] = sympify_matrix
 
-class ImmutableMatrix(MatrixExpr, DenseMatrix):
+
+def sympify_mpmath_matrix(arg):
+    mat = [_sympify(x) for x in arg]
+    return ImmutableDenseMatrix(arg.rows, arg.cols, mat)
+
+
+sympify_converter[_matrix] = sympify_mpmath_matrix
+
+
+class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
+    """Immutable matrix based on RepMatrix
+
+    Uses DomainMAtrix as the internal representation.
+    """
+
+    #
+    # This is a subclass of RepMatrix that adds/overrides some methods to make
+    # the instances Basic and immutable. ImmutableRepMatrix is a superclass for
+    # both ImmutableDenseMatrix and ImmutableSparseMatrix.
+    #
+
+    _cols: int
+    _rows: int
+
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
+    def __hash__(self):
+        return MatrixExpr.__hash__(self)
+
+    def copy(self):
+        return self
+
+    @property
+    def cols(self):
+        return self._cols
+
+    @property
+    def rows(self):
+        return self._rows
+
+    @property
+    def shape(self):
+        return self._rows, self._cols
+
+    def as_immutable(self):
+        return self
+
+    def _entry(self, i, j, **kwargs):
+        return self[i, j]
+
+    def __setitem__(self, *args):
+        raise TypeError("Cannot set values of {}".format(self.__class__))
+
+    def is_diagonalizable(self, reals_only=False, **kwargs):
+        return super().is_diagonalizable(
+            reals_only=reals_only, **kwargs)
+
+    is_diagonalizable.__doc__ = SparseRepMatrix.is_diagonalizable.__doc__
+    is_diagonalizable = cacheit(is_diagonalizable)
+
+    def analytic_func(self, f, x):
+        return self.as_mutable().analytic_func(f, x).as_immutable()
+
+
+class ImmutableDenseMatrix(DenseMatrix, ImmutableRepMatrix):  # type: ignore
     """Create an immutable version of a matrix.
 
     Examples
     ========
 
-    >>> from sympy import eye
-    >>> from sympy.matrices import ImmutableMatrix
+    >>> from sympy import eye, ImmutableMatrix
     >>> ImmutableMatrix(eye(3))
     Matrix([
     [1, 0, 0],
@@ -35,99 +104,50 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     # MatrixExpr is set as NotIterable, but we want explicit matrices to be
     # iterable
     _iterable = True
-
     _class_priority = 8
+    _op_priority = 10.001
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], ImmutableMatrix):
+        if len(args) == 1 and isinstance(args[0], ImmutableDenseMatrix):
             return args[0]
-        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
-        rows = Integer(rows)
-        cols = Integer(cols)
-        mat = Tuple(*flat_list)
-        return Basic.__new__(cls, rows, cols, mat)
+        if kwargs.get('copy', True) is False:
+            if len(args) != 3:
+                raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
+            rows, cols, flat_list = args
+        else:
+            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+            flat_list = list(flat_list) # create a shallow copy
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
+        rep = cls._flat_list_to_DomainMatrix(rows, cols, flat_list)
 
-    @property
-    def shape(self):
-        return tuple([int(i) for i in self.args[:2]])
+        return cls._fromrep(rep)
 
-    @property
-    def _mat(self):
-        return list(self.args[2])
-
-    def _entry(self, i, j):
-        return DenseMatrix.__getitem__(self, (i, j))
-
-    __getitem__ = DenseMatrix.__getitem__
-
-    def __setitem__(self, *args):
-        raise TypeError("Cannot set values of ImmutableMatrix")
-
-    def _eval_Eq(self, other):
-        """Helper method for Equality with matrices.
-
-        Relational automatically converts matrices to ImmutableMatrix
-        instances, so this method only applies here.  Returns True if the
-        matrices are definitively the same, False if they are definitively
-        different, and None if undetermined (e.g. if they contain Symbols).
-        Returning None triggers default handling of Equalities.
-
-        """
-        if not hasattr(other, 'shape') or self.shape != other.shape:
-            return S.false
-        if isinstance(other, MatrixExpr) and not isinstance(
-                other, ImmutableMatrix):
-            return None
-        diff = self - other
-        return sympify(diff.is_zero)
-
-    adjoint = MatrixBase.adjoint
-    conjugate = MatrixBase.conjugate
-    # C and T are defined in MatrixExpr...I don't know why C alone
-    # needs to be defined here
-    C = MatrixBase.C
-
-    as_mutable = DenseMatrix.as_mutable
-    _eval_trace = DenseMatrix._eval_trace
-    _eval_transpose = DenseMatrix._eval_transpose
-    _eval_conjugate = DenseMatrix._eval_conjugate
-    _eval_adjoint = DenseMatrix._eval_adjoint
-    _eval_inverse = DenseMatrix._eval_inverse
-    _eval_simplify = DenseMatrix._eval_simplify
-    _eval_diff = DenseMatrix._eval_diff
-
-    equals = DenseMatrix.equals
-    is_Identity = DenseMatrix.is_Identity
-
-    __add__ = MatrixBase.__add__
-    __radd__ = MatrixBase.__radd__
-    __mul__ = MatrixBase.__mul__
-    __matmul__ = MatrixBase.__matmul__
-    __rmul__ = MatrixBase.__rmul__
-    __rmatmul__ = MatrixBase.__rmatmul__
-    __pow__ = MatrixBase.__pow__
-    __sub__ = MatrixBase.__sub__
-    __rsub__ = MatrixBase.__rsub__
-    __neg__ = MatrixBase.__neg__
-    __div__ = MatrixBase.__div__
-    __truediv__ = MatrixBase.__truediv__
-# This is included after the class definition as a workaround for issue 7213.
-# See https://github.com/sympy/sympy/issues/7213
-ImmutableMatrix.is_zero = DenseMatrix.is_zero
+    @classmethod
+    def _fromrep(cls, rep):
+        rows, cols = rep.shape
+        flat_list = rep.to_sympy().to_list_flat()
+        obj = Basic.__new__(cls,
+            Integer(rows),
+            Integer(cols),
+            Tuple(*flat_list, sympify=False))
+        obj._rows = rows
+        obj._cols = cols
+        obj._rep = rep
+        return obj
 
 
-class ImmutableSparseMatrix(Basic, SparseMatrix):
+# make sure ImmutableDenseMatrix is aliased as ImmutableMatrix
+ImmutableMatrix = ImmutableDenseMatrix
+
+
+class ImmutableSparseMatrix(SparseRepMatrix, ImmutableRepMatrix):  # type:ignore
     """Create an immutable version of a sparse matrix.
 
     Examples
     ========
 
-    >>> from sympy import eye
-    >>> from sympy.matrices.immutable import ImmutableSparseMatrix
+    >>> from sympy import eye, ImmutableSparseMatrix
     >>> ImmutableSparseMatrix(1, 1, {})
     Matrix([[0]])
     >>> ImmutableSparseMatrix(eye(3))
@@ -142,32 +162,39 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
     >>> _.shape
     (3, 3)
     """
-
+    is_Matrix = True
     _class_priority = 9
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        s = MutableSparseMatrix(*args)
-        rows = Integer(s.rows)
-        cols = Integer(s.cols)
-        mat = Dict(s._smat)
-        obj = Basic.__new__(cls, rows, cols, mat)
-        obj.rows = s.rows
-        obj.cols = s.cols
-        obj._smat = s._smat
+        rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
+
+        rep = cls._smat_to_DomainMatrix(rows, cols, smat)
+
+        return cls._fromrep(rep)
+
+    @classmethod
+    def _fromrep(cls, rep):
+        rows, cols = rep.shape
+        smat = rep.to_sympy().to_dok()
+        obj = Basic.__new__(cls, Integer(rows), Integer(cols), Dict(smat))
+        obj._rows = rows
+        obj._cols = cols
+        obj._rep = rep
         return obj
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
 
-    def __setitem__(self, *args):
-        raise TypeError("Cannot set values of ImmutableSparseMatrix")
+@dispatch(ImmutableDenseMatrix, ImmutableDenseMatrix)
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    """Helper method for Equality with matrices.sympy.
 
-    subs = MatrixBase.subs
+    Relational automatically converts matrices to ImmutableDenseMatrix
+    instances, so this method only applies here.  Returns True if the
+    matrices are definitively the same, False if they are definitively
+    different, and None if undetermined (e.g. if they contain Symbols).
+    Returning None triggers default handling of Equalities.
 
-    xreplace = MatrixBase.xreplace
-
-    def __hash__(self):
-        return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
-
-    _eval_Eq = ImmutableMatrix._eval_Eq
+    """
+    if lhs.shape != rhs.shape:
+        return False
+    return (lhs - rhs).is_zero_matrix

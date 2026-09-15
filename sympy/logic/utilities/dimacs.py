@@ -3,12 +3,12 @@
 www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 
 """
-
-from __future__ import print_function, division
+from __future__ import annotations
 
 from sympy.core import Symbol
 from sympy.logic.boolalg import And, Or
 import re
+from pathlib import Path
 
 
 def load(s):
@@ -21,18 +21,18 @@ def load(s):
     >>> load('1')
     cnf_1
     >>> load('1 2')
-    Or(cnf_1, cnf_2)
+    cnf_1 | cnf_2
     >>> load('1 \\n 2')
-    And(cnf_1, cnf_2)
+    cnf_1 & cnf_2
     >>> load('1 2 \\n 3')
-    And(Or(cnf_1, cnf_2), cnf_3)
+    cnf_3 & (cnf_1 | cnf_2)
     """
     clauses = []
 
     lines = s.split('\n')
 
-    pComment = re.compile('c.*')
-    pStats = re.compile('p\s*cnf\s*(\d*)\s*(\d*)')
+    pComment = re.compile(r'c.*')
+    pStats = re.compile(r'p\s*cnf\s*(\d*)\s*(\d*)')
 
     while len(lines) > 0:
         line = lines.pop(0)
@@ -66,7 +66,5 @@ def load(s):
 
 def load_file(location):
     """Loads a boolean expression from a file."""
-    with open(location) as f:
-        s = f.read()
-
+    s = Path(location).read_text()
     return load(s)

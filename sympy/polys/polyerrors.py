@@ -1,6 +1,6 @@
 """Definitions of common exceptions for `polys` module. """
+from __future__ import annotations
 
-from __future__ import print_function, division
 
 from sympy.utilities import public
 
@@ -10,6 +10,14 @@ class BasePolynomialError(Exception):
 
     def new(self, *args):
         raise NotImplementedError("abstract base class")
+
+    def __eq__(self, other):
+        if type(self) is not type(other):
+            return NotImplemented
+        return self.args == other.args
+
+    def __hash__(self):
+        return hash((type(self), self.args))
 
 @public
 class ExactQuotientFailed(BasePolynomialError):
@@ -121,6 +129,12 @@ class UnificationFailed(BasePolynomialError):
     pass
 
 @public
+class UnsolvableFactorError(BasePolynomialError):
+    """Raised if ``roots`` is called with strict=True and a polynomial
+     having a factor whose solutions are not expressible in radicals
+     is encountered."""
+
+@public
 class GeneratorsError(BasePolynomialError):
     pass
 
@@ -165,9 +179,9 @@ class PolificationFailed(PolynomialError):
 
     def __str__(self):  # pragma: no cover
         if not self.seq:
-            return "can't construct a polynomial from %s" % str(self.orig)
+            return "Cannot construct a polynomial from %s" % str(self.orig)
         else:
-            return "can't construct polynomials from %s" % ', '.join(map(str, self.origs))
+            return "Cannot construct polynomials from %s" % ', '.join(map(str, self.origs))
 
 @public
 class OptionError(BasePolynomialError):

@@ -2,148 +2,1315 @@
 
 This module also provides functionality to get the steps used to evaluate a
 particular integral, in the ``integral_steps`` function. This will return
-nested namedtuples representing the integration rules used. The
-``manualintegrate`` function computes the integral using those steps given
-an integrand; given the steps, ``_manualintegrate`` will evaluate them.
+nested ``Rule`` s representing the integration rules used.
+
+Each ``Rule`` class represents a (maybe parametrized) integration rule, e.g.
+``SinRule`` for integrating ``sin(x)`` and ``ReciprocalSqrtQuadraticRule``
+for integrating ``1/sqrt(a+b*x+c*x**2)``. The ``eval`` method returns the
+integration result.
+
+The ``manualintegrate`` function computes the integral by calling ``eval``
+on the rule returned by ``integral_steps``.
 
 The integrator can be extended with new heuristics and evaluation
-techniques. To do so, write a function that accepts an ``IntegralInfo``
-object and returns either a namedtuple representing a rule or
-``None``. Then, write another function that accepts the namedtuple's fields
-and returns the antiderivative, and decorate it with
-``@evaluates(namedtuple_type)``.  If the new technique requires a new
-match, add the key and call to the antiderivative function to integral_steps.
-To enable simple substitutions, add the match to find_substitutions.
+techniques. To do so, extend the ``Rule`` class, implement ``eval`` method,
+then write a function that accepts an ``IntegralInfo`` object and returns
+either a ``Rule`` instance or ``None``. If the rule needs subproblems
+solved, write it as a generator function that yields the ``IntegralInfo``
+of each subproblem and receives the resulting ``Rule`` back at the yield
+expression; the ``IntegrationSolver`` driving the rule performs the
+recursive calls. If the new technique requires a new match, add the key
+and call to the antiderivative function to the rule strategy in
+``IntegrationSolver``. To enable simple substitutions, add the match to
+find_substitutions.
 
 """
-from __future__ import print_function, division
 
-from collections import namedtuple
+from __future__ import annotations
+from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
+from abc import ABC, abstractmethod
+from collections import defaultdict
+from collections.abc import Mapping
+from functools import wraps
+from inspect import signature
+from types import GeneratorType
 
-import sympy
-
-from sympy.core.compatibility import reduce
+from sympy import SYMPY_DEBUG
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.containers import Dict
+from sympy.core.function import Derivative, expand, expand_mul, expand_trig
 from sympy.core.logic import fuzzy_not
-from sympy.functions.elementary.trigonometric import TrigonometricFunction
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer, Number, E, Rational
+from sympy.core.power import Pow
+from sympy.core.relational import Eq, Ne
+from sympy.core.singleton import S
+from sympy.core.sorting import ordered
+from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import WildFunction, count_ops
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
+    cosh, coth, sech, sinh, tanh, asinh)
+from sympy.functions.elementary.integers import ceiling, floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
+from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
+    cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
+from sympy.functions.special.delta_functions import Heaviside, DiracDelta
+from sympy.functions.special.error_functions import (erf, erfc, erfi, fresnelc,
+    fresnels, Ci, Chi, Si, Shi, Ei, li, owens_t)
+from sympy.functions.special.gamma_functions import uppergamma
+from sympy.functions.special.elliptic_integrals import elliptic_e, elliptic_f
+from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
+    legendre, hermite, laguerre, assoc_laguerre, gegenbauer, jacobi,
+    OrthogonalPolynomial)
+from sympy.functions.special.zeta_functions import polylog
+from .integrals import Integral
+from .rationaltools import ratint
+from sympy.logic.boolalg import And, Boolean
+from sympy.ntheory.factor_ import primefactors
+from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
+from sympy.simplify.simplify import simplify
+from sympy.simplify.fu import sincos_to_sum
+from sympy.simplify.powsimp import powsimp
 from sympy.strategies.core import switch, do_one, null_safe, condition
+from sympy.utilities.iterables import iterable
+from sympy.utilities.misc import debug
 
-def Rule(name, props=""):
-    # GOTCHA: namedtuple class name not considered!
-    def __eq__(self, other):
-        return self.__class__ == other.__class__ and tuple.__eq__(self, other)
-    __neq__ = lambda self, other: not __eq__(self, other)
-    cls = namedtuple(name, props + " context symbol")
-    cls.__eq__ = __eq__
-    cls.__ne__ = __neq__
-    return cls
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
-ConstantRule = Rule("ConstantRule", "constant")
-ConstantTimesRule = Rule("ConstantTimesRule", "constant other substep")
-PowerRule = Rule("PowerRule", "base exp")
-AddRule = Rule("AddRule", "substeps")
-URule = Rule("URule", "u_var u_func constant substep")
-PartsRule = Rule("PartsRule", "u dv v_step second_step")
-CyclicPartsRule = Rule("CyclicPartsRule", "parts_rules coefficient")
-TrigRule = Rule("TrigRule", "func arg")
-ExpRule = Rule("ExpRule", "base exp")
-ReciprocalRule = Rule("ReciprocalRule", "func")
-ArcsinRule = Rule("ArcsinRule")
-InverseHyperbolicRule = Rule("InverseHyperbolicRule", "func")
-AlternativeRule = Rule("AlternativeRule", "alternatives")
-DontKnowRule = Rule("DontKnowRule")
-DerivativeRule = Rule("DerivativeRule")
-RewriteRule = Rule("RewriteRule", "rewritten substep")
-PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
-HeavisideRule = Rule("HeavisideRule", "harg ibnd substep")
-TrigSubstitutionRule = Rule("TrigSubstitutionRule",
-                            "theta func rewritten substep restriction")
-ArctanRule = Rule("ArctanRule", "a b c")
-ArccothRule = Rule("ArccothRule", "a b c")
-ArctanhRule = Rule("ArctanhRule", "a b c")
+def _if_zero_implies_zero(P, Q):
+    """
+    Check if expression P = 0 implies Q = 0.
 
-IntegralInfo = namedtuple('IntegralInfo', 'integrand symbol')
-
-evaluators = {}
-def evaluates(rule):
-    def _evaluates(func):
-        func.rule = rule
-        evaluators[rule] = func
-        return func
-    return _evaluates
-
-def contains_dont_know(rule):
-    if isinstance(rule, DontKnowRule):
+    Returns True if P is not zero or if substituting every irreducible
+    factor of the numerator of P in the numerator of Q makes Q = 0.
+    """
+    P = P.expand()
+    Q = Q.expand()
+    if P.is_zero is False:
         return True
-    else:
-        for val in rule:
-            if isinstance(val, tuple):
-                if contains_dont_know(val):
-                    return True
-            elif isinstance(val, list):
-                if any(contains_dont_know(i) for i in val):
-                    return True
-    return False
+    if P.is_zero is True:
+        return Q.is_zero
+    num_p, _ = P.as_numer_denom()
+    num_q, _ = Q.as_numer_denom()
+    factors_P = {f for f, p in factor_list(num_p)[1]}
+    # use factor() to help find substitutions (eg. (a**2 - 1) is zero if (a + 1) = 0)
+    factored_num_q = num_q.factor()
+    for factor in factors_P:
+        if factored_num_q.subs(factor, 0) != 0:
+            return False
+    return True
+
+class Rule(ABC):
+
+    __slots__ = ('integrand', 'variable')
+
+    integrand: Expr
+    variable: Symbol
+
+    def __init__(self, integrand: Expr, variable: Symbol):
+        self.integrand = integrand
+        self.variable = variable
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return all(
+            getattr(self, attr) == getattr(other, attr) for attr in self._get_slots()
+        )
+
+    def __repr__(self) -> str:
+        parts = [f"{self.__class__.__name__}("]
+        for i, name in enumerate(self._get_slots()):
+            if i:
+                parts.append(", ")
+            parts.append(f"{name}={getattr(self, name)!r}")
+        parts.append(")")
+        return "".join(parts)
+
+    def _get_slots(self):
+        seen = {()}
+        slots = []
+        for cls in self.__class__.__mro__[::-1]:
+            key = tuple(getattr(cls, "__slots__", ()))
+            if key not in seen:
+                seen.add(key)
+                slots.extend(key)
+        return slots
+
+    @abstractmethod
+    def eval(self) -> Expr:
+        pass
+
+    @abstractmethod
+    def contains_dont_know(self) -> bool:
+        pass
+
+
+class AtomicRule(Rule, ABC):
+    """A simple rule that does not depend on other rules"""
+
+    __slots__ = ()
+
+    if SYMPY_DEBUG:
+        def __init_subclass__(cls, **kwargs):
+            super().__init_subclass__(**kwargs)
+            if "eval" not in cls.__dict__:
+                return
+            original_eval = cls.eval
+
+            @wraps(original_eval)
+            def wrapped_eval(self, *args, **kwargs):
+                sig = signature(type(self).__init__)
+                params = ', '.join(
+                    f"{name}={getattr(self, name)!r}"
+                    for name in sig.parameters
+                    if name != 'self' and hasattr(self, name)
+                )
+                debug(f"Rule calling {type(self).__name__}({params})")
+                return original_eval(self, *args, **kwargs)
+            cls.eval = wrapped_eval
+
+    def contains_dont_know(self) -> bool:
+        return False
+
+
+class ConstantRule(AtomicRule):
+    """integrate(a, x)  ->  a*x"""
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        return self.integrand * self.variable
+
+
+class ConstantTimesRule(Rule):
+    """integrate(a*f(x), x)  ->  a*integrate(f(x), x)"""
+
+    __slots__ = ('constant', 'other', 'substep')
+
+    constant: Expr
+    other: Expr
+    substep: Rule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        constant: Expr,
+        other: Expr,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.constant = constant
+        self.other = other
+        self.substep = substep
+
+    def eval(self) -> Expr:
+        return self.constant * self.substep.eval()
+
+    def contains_dont_know(self) -> bool:
+        return self.substep.contains_dont_know()
+
+
+class PowerRule(AtomicRule):
+    """integrate(x**a, x)"""
+
+    __slots__ = ("base", "exp")
+
+    base: Expr
+    exp: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, base: Expr, exp: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
+        self.exp = exp
+
+    def eval(self) -> Expr:
+        return Piecewise(
+            ((self.base**(self.exp + 1))/(self.exp + 1), Ne(self.exp, -1)),
+            (log(self.base), True),
+        )
+
+
+class NestedPowRule(AtomicRule):
+    """integrate((x**a)**b, x)"""
+
+    __slots__ = ("base", "exp")
+
+    base: Expr
+    exp: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, base: Expr, exp: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
+        self.exp = exp
+
+    def eval(self) -> Expr:
+        m = self.base * self.integrand
+        return Piecewise((m / (self.exp + 1), Ne(self.exp, -1)),
+                         (m * log(self.base), True))
+
+
+class AddRule(Rule):
+    """integrate(f(x) + g(x), x) -> integrate(f(x), x) + integrate(g(x), x)"""
+
+    __slots__ = ("substeps",)
+
+    substeps: list[Rule]
+
+    def __init__(self, integrand: Expr, variable: Symbol, substeps: list[Rule]) -> None:
+        super().__init__(integrand, variable)
+        self.substeps = substeps
+
+    def eval(self) -> Expr:
+        return Add(*(substep.eval() for substep in self.substeps))
+
+    def contains_dont_know(self) -> bool:
+        return any(substep.contains_dont_know() for substep in self.substeps)
+
+
+class URule(Rule):
+    """integrate(f(g(x))*g'(x), x) -> integrate(f(u), u), u = g(x)"""
+
+    __slots__ = ("u_var", "u_func", "substep")
+
+    u_var: Symbol
+    u_func: Expr
+    substep: Rule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        u_var: Symbol,
+        u_func: Expr,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.u_var = u_var
+        self.u_func = u_func
+        self.substep = substep
+
+    def eval(self) -> Expr:
+        result = self.substep.eval()
+        if self.u_func.is_Pow:
+            base, exp_ = self.u_func.as_base_exp()
+            if exp_ == -1:
+                # avoid needless -log(1/x) from substitution
+                result = result.subs(log(self.u_var), -log(base))
+        return result.subs(self.u_var, self.u_func)
+
+    def contains_dont_know(self) -> bool:
+        return self.substep.contains_dont_know()
+
+
+class ReparameterizationRule(Rule):
+    """Restore auxiliary parameters after evaluating a substep."""
+
+    __slots__ = ("replacements", "substep")
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        replacements: dict,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.replacements = replacements
+        self.substep = substep
+
+    def eval(self) -> Expr:
+        return self.substep.eval().xreplace(self.replacements)
+
+    def contains_dont_know(self) -> bool:
+        return self.substep.contains_dont_know()
+
+
+class PartsRule(Rule):
+    """integrate(u(x)*v'(x), x) -> u(x)*v(x) - integrate(u'(x)*v(x), x)"""
+
+    __slots__ = ("u", "dv", "v_step", "second_step")
+
+    u: Symbol
+    dv: Expr
+    v_step: Rule
+    second_step: Rule | None  # None when is a substep of CyclicPartsRule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        u: Symbol,
+        dv: Expr,
+        v_step: Rule,
+        second_step: Rule | None = None,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.u = u
+        self.dv = dv
+        self.v_step = v_step
+        self.second_step = second_step
+
+    def eval(self) -> Expr:
+        assert self.second_step is not None
+        v = self.v_step.eval()
+        return self.u * v - self.second_step.eval()
+
+    def contains_dont_know(self) -> bool:
+        return self.v_step.contains_dont_know() or (
+            self.second_step is not None and self.second_step.contains_dont_know())
+
+
+class CyclicPartsRule(Rule):
+    """Apply PartsRule multiple times to integrate exp(x)*sin(x)"""
+
+    __slots__ = ("parts_rules", "coefficient")
+
+    parts_rules: list[PartsRule]
+    coefficient: Expr
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        parts_rules: list[PartsRule],
+        coefficient: Expr,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.parts_rules = parts_rules
+        self.coefficient = coefficient
+
+    def eval(self) -> Expr:
+        result = []
+        sign = 1
+        for rule in self.parts_rules:
+            result.append(sign * rule.u * rule.v_step.eval())
+            sign *= -1
+        return Add(*result) / (1 - self.coefficient)
+
+    def contains_dont_know(self) -> bool:
+        return any(substep.contains_dont_know() for substep in self.parts_rules)
+
+
+class TrigRule(AtomicRule, ABC):
+    __slots__ = ()
+
+
+class SinRule(TrigRule):
+    """integrate(sin(x), x) -> -cos(x)"""
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        return -cos(self.variable)
+
+
+class CosRule(TrigRule):
+    """integrate(cos(x), x) -> sin(x)"""
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        return sin(self.variable)
+
+
+class HyperbolicRule(AtomicRule, ABC):
+    __slots__ = ()
+
+
+class SinhRule(HyperbolicRule):
+    """integrate(sinh(x), x) -> cosh(x)"""
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        return cosh(self.variable)
+
+
+class CoshRule(HyperbolicRule):
+    """integrate(cosh(x), x) -> sinh(x)"""
+
+    __slots__ = ()
+
+    def eval(self):
+        return sinh(self.variable)
+
+
+class ExpRule(AtomicRule):
+    """integrate(a**x, x) -> a**x/ln(a)"""
+
+    __slots__ = ("base", "exp")
+
+    base: Expr
+    exp: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, base: Expr, exp: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
+        self.exp = exp
+
+    def eval(self) -> Expr:
+        return self.integrand / log(self.base)
+
+
+class ReciprocalRule(AtomicRule):
+    """integrate(1/x, x) -> ln(x)"""
+
+    __slots__ = ("base",)
+
+    base: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, base: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
+
+    def eval(self) -> Expr:
+        return log(self.base)
+
+
+class ArcsinRule(AtomicRule):
+    """integrate(1/sqrt(1-x**2), x) -> asin(x)"""
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        return asin(self.variable)
+
+
+class ArcsinhRule(AtomicRule):
+    """integrate(1/sqrt(1+x**2), x) -> asin(x)"""
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        return asinh(self.variable)
+
+
+class ReciprocalSqrtQuadraticRule(AtomicRule):
+    """integrate(1/sqrt(a+b*x+c*x**2), x) -> log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)"""
+
+    __slots__ = ("a", "b", "c")
+
+    a: Expr
+    b: Expr
+    c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+
+    def eval(self) -> Expr:
+        a, b, c, x = self.a, self.b, self.c, self.variable
+        return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
+
+
+def _sqrt_quadratic_denom_reduce(
+    coeffs: list[Expr], a: Expr, b: Expr, c: Expr
+) -> tuple[list[Expr], Expr, Expr]:
+    # Integrate poly/sqrt(a+b*x+c*x**2) using recursion.
+    # coeffs are coefficients of the polynomial.
+    # Let I_n = x**n/sqrt(a+b*x+c*x**2), then
+    # I_n = A * x**(n-1)*sqrt(a+b*x+c*x**2) - B * I_{n-1} - C * I_{n-2}
+    # where A = 1/(n*c), B = (2*n-1)*b/(2*n*c), C = (n-1)*a/(n*c)
+    # See https://github.com/sympy/sympy/pull/23608 for proof.
+    coeffs = coeffs.copy()
+    result_coeffs = []
+    for i in range(len(coeffs)-2):
+        n = len(coeffs)-1-i
+        coeff = coeffs[i]/(c*n)
+        result_coeffs.append(coeff)
+        coeffs[i+1] -= (2*n-1)*b/2*coeff
+        coeffs[i+2] -= (n-1)*a*coeff
+    d, e = coeffs[-1], coeffs[-2]
+    constant = d-b*e/(2*c)
+    return result_coeffs, e, constant
+
+
+class SqrtQuadraticDenomRule(AtomicRule):
+    """integrate(poly(x)/sqrt(a+b*x+c*x**2), x)"""
+
+    __slots__ = ("a", "b", "c", "coeffs", "i0_step")
+
+    a: Expr
+    b: Expr
+    c: Expr
+    coeffs: list[Expr]
+    i0_step: Rule | None
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        a: Expr,
+        b: Expr,
+        c: Expr,
+        coeffs: list[Expr],
+        i0_step: Rule | None,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+        self.coeffs = coeffs
+        # Rule for I0 = integrate(1/sqrt(a+b*x+c*x**2), x), solved ahead of
+        # time (through the same recursion budget as the rest of the search)
+        # rather than at eval() time, so it isn't exempt from max_depth.
+        self.i0_step = i0_step
+
+    def eval(self) -> Expr:
+        a, b, c, x = self.a, self.b, self.c, self.variable
+        result_coeffs, e, constant = _sqrt_quadratic_denom_reduce(self.coeffs, a, b, c)
+        s = sqrt(a+b*x+c*x**2)
+        I0 = constant*self.i0_step.eval() if self.i0_step is not None else 0
+        n_coeffs = len(self.coeffs)
+        return Add(*(result_coeffs[i]*x**(n_coeffs-2-i)
+                     for i in range(len(result_coeffs))), e/c)*s + I0
+
+
+class SqrtQuadraticRule(Rule):
+    """integrate(sqrt(a+b*x+c*x**2), x)"""
+
+    __slots__ = ("a", "b", "c", "substep")
+
+    a: Expr
+    b: Expr
+    c: Expr
+    substep: Rule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        a: Expr,
+        b: Expr,
+        c: Expr,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+        # substep is solved ahead of time through sqrt_quadratic_rule, sharing
+        # the driving solver's recursion budget rather than spinning up a
+        # fresh, max_depth-exempt solver at eval() time.
+        self.substep = substep
+
+    def eval(self) -> Expr:
+        return self.substep.eval()
+
+    def contains_dont_know(self) -> bool:
+        return self.substep.contains_dont_know()
+
+
+class RatintRule(AtomicRule):
+    """Integrate a rational function using ``ratint`` as a fallback."""
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        return ratint(self.integrand, self.variable)
+
+
+class AlternativeRule(Rule):
+    """Multiple ways to do integration."""
+
+    __slots__ = ("alternatives",)
+
+    alternatives: list[Rule]
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, alternatives: list[Rule]
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.alternatives = alternatives
+
+    def eval(self) -> Expr:
+        return self.alternatives[0].eval()
+
+    def contains_dont_know(self) -> bool:
+        return any(substep.contains_dont_know() for substep in self.alternatives)
+
+
+class DontKnowRule(Rule):
+    """Leave the integral as is."""
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        return Integral(self.integrand, self.variable)
+
+    def contains_dont_know(self) -> bool:
+        return True
+
+
+class DerivativeRule(AtomicRule):
+    """integrate(f'(x), x) -> f(x)"""
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        assert isinstance(self.integrand, Derivative)
+        variable_count = list(self.integrand.variable_count)
+        for i, (var, count) in enumerate(variable_count):
+            if var == self.variable:
+                variable_count[i] = (var, count - 1)
+                break
+        return Derivative(self.integrand.expr, *variable_count)
+
+
+class RewriteRule(Rule):
+    """Rewrite integrand to another form that is easier to handle."""
+
+    __slots__ = ("rewritten", "substep")
+
+    rewritten: Expr
+    substep: Rule
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, rewritten: Expr, substep: Rule
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.rewritten = rewritten
+        self.substep = substep
+
+    def eval(self) -> Expr:
+        return self.substep.eval()
+
+    def contains_dont_know(self) -> bool:
+        return self.substep.contains_dont_know()
+
+
+class CompleteSquareRule(RewriteRule):
+    """Rewrite a+b*x+c*x**2 to a-b**2/(4*c) + c*(x+b/(2*c))**2"""
+    __slots__ = ()
+
+
+class PiecewiseRule(Rule):
+
+    __slots__ = ("subfunctions",)
+
+    subfunctions: Sequence[tuple[Rule, bool | Boolean]]
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        subfunctions: Sequence[tuple[Rule, bool | Boolean]],
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.subfunctions = subfunctions
+
+    def eval(self) -> Expr:
+        piecewise = Piecewise(*[(substep.eval(), cond) for substep, cond in
+            self.subfunctions])
+        return piecewise_fold(piecewise)
+
+    def contains_dont_know(self) -> bool:
+        return any(substep.contains_dont_know() for substep, _ in self.subfunctions)
+
+
+class HeavisideRule(Rule):
+
+    __slots__ = ("harg", "ibnd", "substep")
+
+    harg: Expr
+    ibnd: Expr
+    substep: Rule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        harg: Expr,
+        ibnd: Expr,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.harg = harg
+        self.ibnd = ibnd
+        self.substep = substep
+
+    def eval(self) -> Expr:
+        # If we are integrating over x and the integrand has the form
+        #       Heaviside(m*x+b)*g(x) == Heaviside(harg)*g(symbol)
+        # then there needs to be continuity at -b/m == ibnd,
+        # so we subtract the appropriate term.
+        result = self.substep.eval()
+        return Heaviside(self.harg) * (result - result.subs(self.variable, self.ibnd))
+
+    def contains_dont_know(self) -> bool:
+        return self.substep.contains_dont_know()
+
+
+class DiracDeltaRule(AtomicRule):
+
+    __slots__ = ("n", "a", "b")
+
+    n: Expr
+    a: Expr
+    b: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, n: Expr, a: Expr, b: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.n = n
+        self.a = a
+        self.b = b
+
+    def eval(self) -> Expr:
+        n, a, b, x = self.n, self.a, self.b, self.variable
+        if n == 0:
+            return Heaviside(a+b*x)/b
+        return DiracDelta(a+b*x, n-1)/b
+
+
+class ArctanRule(AtomicRule):
+    """integrate(a/(b*x**2+c), x) -> a/b / sqrt(c/b) * atan(x/sqrt(c/b))"""
+
+    __slots__ = ("a", "b", "c")
+
+    a: Expr
+    b: Expr
+    c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+
+    def eval(self) -> Expr:
+        a, b, c, x = self.a, self.b, self.c, self.variable
+        return a/b / sqrt(c/b) * atan(x/sqrt(c/b))
+
+
+class OrthogonalPolyRule(AtomicRule, ABC):
+
+    __slots__ = ("n",)
+
+    n: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.n = n
+
+
+class JacobiRule(OrthogonalPolyRule):
+
+    __slots__ = ("a", "b")
+
+    a: Expr
+    b: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, n: Expr, a: Expr, b: Expr
+    ) -> None:
+        super().__init__(integrand, variable, n)
+        self.a = a
+        self.b = b
+
+    def eval(self) -> Expr:
+        n, a, b, x = self.n, self.a, self.b, self.variable
+        return Piecewise(
+            (2*jacobi(n + 1, a - 1, b - 1, x)/(n + a + b), Ne(n + a + b, 0)),
+            (x, Eq(n, 0)),
+            ((a + b + 2)*x**2/4 + (a - b)*x/2, Eq(n, 1)))
+
+
+class GegenbauerRule(OrthogonalPolyRule):
+
+    __slots__ = ("a",)
+
+    a: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr, a: Expr) -> None:
+        super().__init__(integrand, variable, n)
+        self.a = a
+
+    def eval(self) -> Expr:
+        n, a, x = self.n, self.a, self.variable
+        return Piecewise(
+            (gegenbauer(n + 1, a - 1, x)/(2*(a - 1)), Ne(a, 1)),
+            (chebyshevt(n + 1, x)/(n + 1), Ne(n, -1)),
+            (S.Zero, True))
+
+
+class ChebyshevTRule(OrthogonalPolyRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        n, x = self.n, self.variable
+        return Piecewise(
+            ((chebyshevt(n + 1, x)/(n + 1) -
+              chebyshevt(n - 1, x)/(n - 1))/2, Ne(Abs(n), 1)),
+            (x**2/2, True))
+
+
+class ChebyshevURule(OrthogonalPolyRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        n, x = self.n, self.variable
+        return Piecewise(
+            (chebyshevt(n + 1, x)/(n + 1), Ne(n, -1)),
+            (S.Zero, True))
+
+
+class LegendreRule(OrthogonalPolyRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        n, x = self.n, self.variable
+        return(legendre(n + 1, x) - legendre(n - 1, x))/(2*n + 1)
+
+
+class HermiteRule(OrthogonalPolyRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        n, x = self.n, self.variable
+        return hermite(n + 1, x)/(2*(n + 1))
+
+
+class LaguerreRule(OrthogonalPolyRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        n, x = self.n, self.variable
+        return laguerre(n, x) - laguerre(n + 1, x)
+
+
+class AssocLaguerreRule(OrthogonalPolyRule):
+
+    __slots__ = ("a",)
+
+    a: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr, a: Expr) -> None:
+        super().__init__(integrand, variable, n)
+        self.a = a
+
+    def eval(self) -> Expr:
+        return -assoc_laguerre(self.n + 1, self.a - 1, self.variable)
+
+
+class IRule(AtomicRule, ABC):
+
+    __slots__ = ("a", "b")
+
+    a: Expr
+    b: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+
+
+class CiRule(IRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        a, b, x = self.a, self.b, self.variable
+        return cos(b)*Ci(a*x) - sin(b)*Si(a*x)
+
+
+class ChiRule(IRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        a, b, x = self.a, self.b, self.variable
+        return cosh(b)*Chi(a*x) + sinh(b)*Shi(a*x)
+
+
+class EiRule(IRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        a, b, x = self.a, self.b, self.variable
+        return exp(b)*Ei(a*x)
+
+
+class SiRule(IRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        a, b, x = self.a, self.b, self.variable
+        return sin(b)*Ci(a*x) + cos(b)*Si(a*x)
+
+
+class ShiRule(IRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        a, b, x = self.a, self.b, self.variable
+        return sinh(b)*Chi(a*x) + cosh(b)*Shi(a*x)
+
+
+class LiRule(IRule):
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        a, b, x = self.a, self.b, self.variable
+        return li(a*x + b)/a
+
+
+class ErfRule(AtomicRule):
+
+    __slots__ = ("a", "b", "c")
+
+    a: Expr
+    b: Expr
+    c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+
+    def eval(self) -> Expr:
+        a, b, c, x = self.a, self.b, self.c, self.variable
+        if a.is_extended_real:
+            return Piecewise(
+                (sqrt(S.Pi)/sqrt(-a)/2 * exp(c - b**2/(4*a)) *
+                    erf((-2*a*x - b)/(2*sqrt(-a))), a < 0),
+                (sqrt(S.Pi)/sqrt(a)/2 * exp(c - b**2/(4*a)) *
+                    erfi((2*a*x + b)/(2*sqrt(a))), True))
+        return sqrt(S.Pi)/sqrt(a)/2 * exp(c - b**2/(4*a)) * \
+                erfi((2*a*x + b)/(2*sqrt(a)))
+
+
+class OwensTRule(AtomicRule):
+
+    __slots__ = ("a", "b", "y")
+
+    a: Expr
+    b: Expr
+    y: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, y: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.y = y
+
+    def eval(self) -> Expr:
+        a, b, y, x = self.a, self.b, self.y, self.variable
+        return - 2*sqrt(S.Pi)/a * owens_t(sqrt(2)*(a*x+b), y)
+
+class FresnelCRule(AtomicRule):
+
+    __slots__ = ("a", "b", "c")
+
+    a: Expr
+    b: Expr
+    c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+
+    def eval(self) -> Expr:
+        a, b, c, x = self.a, self.b, self.c, self.variable
+        return sqrt(S.Pi)/sqrt(2*a) * (
+            cos(b**2/(4*a) - c)*fresnelc((2*a*x + b)/sqrt(2*a*S.Pi)) +
+            sin(b**2/(4*a) - c)*fresnels((2*a*x + b)/sqrt(2*a*S.Pi)))
+
+
+class FresnelSRule(AtomicRule):
+
+    __slots__ = ("a", "b", "c")
+
+    a: Expr
+    b: Expr
+    c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+
+    def eval(self) -> Expr:
+        a, b, c, x = self.a, self.b, self.c, self.variable
+        return sqrt(S.Pi)/sqrt(2*a) * (
+            cos(b**2/(4*a) - c)*fresnels((2*a*x + b)/sqrt(2*a*S.Pi)) -
+            sin(b**2/(4*a) - c)*fresnelc((2*a*x + b)/sqrt(2*a*S.Pi)))
+
+
+class PolylogRule(AtomicRule):
+
+    __slots__ = ("a", "b")
+
+    a: Expr
+    b: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+
+    def eval(self) -> Expr:
+        return polylog(self.b + 1, self.a * self.variable)
+
+
+class UpperGammaRule(AtomicRule):
+
+    __slots__ = ("a", "e")
+
+    a: Expr
+    e: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, e: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.e = e
+
+    def eval(self) -> Expr:
+        a, e, x = self.a, self.e, self.variable
+        return x**e * (-a*x)**(-e) * uppergamma(e + 1, -a*x)/a
+
+
+class EllipticFRule(AtomicRule):
+
+    __slots__ = ("a", "d")
+
+    a: Expr
+    d: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, d: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.d = d
+
+    def eval(self) -> Expr:
+        return elliptic_f(self.variable, self.d/self.a)/sqrt(self.a)
+
+
+class EllipticERule(AtomicRule):
+
+    __slots__ = ("a", "d")
+
+    a: Expr
+    d: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, d: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.d = d
+
+    def eval(self) -> Expr:
+        return elliptic_e(self.variable, self.d/self.a)*sqrt(self.a)
+
+
+class IntegralInfo(NamedTuple):
+    integrand: Expr
+    symbol: Symbol
+
+
+class PartsUCheck(NamedTuple):
+    """Request, yielded by a generator rule, that the solver record one more
+    use of ``u`` as the part to be differentiated in integration by parts
+    and report whether picking it once more is still allowed.
+
+    ``u_key`` is the chosen ``u`` with the integration variable replaced by
+    a common dummy, so that uses are counted across subproblems.
+    """
+    u_key: Expr
+
+
+class BranchQuery(NamedTuple):
+    """Request, yielded by a generator rule, for the value of the solver's
+    ``branch`` option: ``True`` if the rule should collect every applicable
+    alternative into an :class:`AlternativeRule`, ``False`` if the first
+    workable candidate is enough.
+    """
+
 
 def manual_diff(f, symbol):
     """Derivative of f in form expected by find_substitutions
 
-    SymPy's derivatives for some trig functions (like cot) aren't in a form
+    SymPy's derivatives for some trig functions (like cot) are not in a form
     that works well with finding substitutions; this replaces the
     derivatives for those particular forms with something that works better.
 
     """
     if f.args:
         arg = f.args[0]
-        if isinstance(f, sympy.tan):
-            return arg.diff(symbol) * sympy.sec(arg)**2
-        elif isinstance(f, sympy.cot):
-            return -arg.diff(symbol) * sympy.csc(arg)**2
-        elif isinstance(f, sympy.sec):
-            return arg.diff(symbol) * sympy.sec(arg) * sympy.tan(arg)
-        elif isinstance(f, sympy.csc):
-            return -arg.diff(symbol) * sympy.csc(arg) * sympy.cot(arg)
-        elif isinstance(f, sympy.Add):
-            return sum([manual_diff(arg, symbol) for arg in f.args])
-        elif isinstance(f, sympy.Mul):
-            if len(f.args) == 2 and isinstance(f.args[0], sympy.Number):
+        if isinstance(f, tan):
+            return arg.diff(symbol) * sec(arg)**2
+        elif isinstance(f, cot):
+            return -arg.diff(symbol) * csc(arg)**2
+        elif isinstance(f, sec):
+            return arg.diff(symbol) * sec(arg) * tan(arg)
+        elif isinstance(f, csc):
+            return -arg.diff(symbol) * csc(arg) * cot(arg)
+        elif isinstance(f, Add):
+            return sum(manual_diff(arg, symbol) for arg in f.args)
+        elif isinstance(f, Mul):
+            if len(f.args) == 2 and isinstance(f.args[0], Number):
                 return f.args[0] * manual_diff(f.args[1], symbol)
     return f.diff(symbol)
 
+def manual_subs(expr, *args):
+    """
+    A wrapper for `expr.subs(*args)` with additional logic for substitution
+    of invertible functions.
+    """
+    if len(args) == 1:
+        sequence = args[0]
+        if isinstance(sequence, (Dict, Mapping)):
+            sequence = sequence.items()
+        elif not iterable(sequence):
+            raise ValueError("Expected an iterable of (old, new) pairs")
+    elif len(args) == 2:
+        sequence = [args]
+    else:
+        raise ValueError("subs accepts either 1 or 2 arguments")
+
+    new_subs = []
+    for old, new in sequence:
+        if isinstance(old, log):
+            # If log(x) = y, then exp(a*log(x)) = exp(a*y)
+            # that is, x**a = exp(a*y). Replace nontrivial powers of x
+            # before subs turns them into `exp(y)**a`, but
+            # do not replace x itself yet, to avoid `log(exp(y))`.
+            x0 = old.args[0]
+            expr = expr.replace(lambda x: x.is_Pow and x.base == x0,
+                lambda x: exp(x.exp*new))
+            new_subs.append((x0, exp(new)))
+
+    return expr.subs(list(sequence) + new_subs)
+
 # Method based on that on SIN, described in "Symbolic Integration: The
 # Stormy Decade"
+
+inverse_trig_functions = (atan, asin, acos, acot, acsc, asec)
+
 
 def find_substitutions(integrand, symbol, u_var):
     results = []
 
     def test_subterm(u, u_diff):
-        substituted = integrand / u_diff
-        if symbol not in substituted.free_symbols:
-            # replaced everything already
+        if u_diff == 0:
             return False
+        substituted = integrand / u_diff
+        debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
+        substituted = manual_subs(substituted, u, u_var).cancel()
 
-        substituted = substituted.subs(u, u_var).cancel()
-        if symbol not in substituted.free_symbols:
-            return substituted.as_independent(u_var, as_Add=False)
+        # if the term is linear, then we can solve for u in terms of the symbol
+        # and substitute that in this is useful for cases like exp(x)/(x+1)
+        if (
+            substituted.has_free(symbol) and
+            # avoid redundant rational function shift
+            not integrand.is_rational_function(symbol) and
+            u.is_polynomial(symbol) and degree(u, symbol) == 1
+        ):
+            a = u.coeff(symbol)
+            b = u.subs(symbol, 0)
+            symbol_of_u = (u_var - b)/a
+            # avoid infinite recursion when b = 0, and avoid division by zero
+            # when a = 0
+            if b != 0 and a != 0:
+                substituted = manual_subs(substituted, symbol, symbol_of_u).cancel()
+        if substituted.has_free(symbol):
+            return False
+        # avoid increasing the degree of a rational function
+        if integrand.is_rational_function(symbol) and substituted.is_rational_function(u_var):
+            deg_before = max(degree(t, symbol) for t in integrand.as_numer_denom())
+            deg_after = max(degree(t, u_var) for t in substituted.as_numer_denom())
+            if deg_after > deg_before:
+                return False
+        return substituted.as_independent(u_var, as_Add=False)
 
-        return False
+    def exp_subterms(term: Expr):
+        linear_coeffs = []
+        terms = []
+        n = Wild('n', properties=[lambda n: n.is_Integer])
+        for exp_ in term.find(exp):
+            arg = exp_.args[0]
+            if symbol not in arg.free_symbols:
+                continue
+            match = arg.match(n*symbol)
+            if match:
+                linear_coeffs.append(match[n])
+            else:
+                terms.append(exp_)
+        if linear_coeffs:
+            terms.append(exp(gcd_list(linear_coeffs)*symbol))
+        return terms
 
     def possible_subterms(term):
-        if isinstance(term, (TrigonometricFunction,
-                             sympy.asin, sympy.acos, sympy.atan,
-                             sympy.exp, sympy.log, sympy.Heaviside)):
+        if isinstance(term, (TrigonometricFunction, HyperbolicFunction,
+                             *inverse_trig_functions,
+                             exp, log, Heaviside)):
             return [term.args[0]]
-        elif isinstance(term, sympy.Mul):
+        elif isinstance(term, (chebyshevt, chebyshevu,
+                        legendre, hermite, laguerre)):
+            return [term.args[1]]
+        elif isinstance(term, (gegenbauer, assoc_laguerre)):
+            return [term.args[2]]
+        elif isinstance(term, jacobi):
+            return [term.args[3]]
+        elif isinstance(term, Mul):
             r = []
             for u in term.args:
                 r.append(u)
                 r.extend(possible_subterms(u))
             return r
-        elif isinstance(term, sympy.Pow):
-            if term.args[1].is_constant(symbol):
-                return [term.args[0]]
-            elif term.args[0].is_constant(symbol):
-                return [term.args[1]]
-        elif isinstance(term, sympy.Add):
+        elif isinstance(term, Pow):
+            r = [arg for arg in term.args if arg.has(symbol)]
+            if term.exp.is_Integer:
+                r.extend([term.base**d for d in primefactors(term.exp)
+                    if 1 < d < abs(term.args[1])])
+                if term.base.is_Add:
+                    r.extend([t for t in possible_subterms(term.base)
+                        if t.is_Pow])
+            return r
+        elif isinstance(term, Add):
             r = []
             for arg in term.args:
                 r.append(arg)
@@ -151,32 +1318,33 @@ def find_substitutions(integrand, symbol, u_var):
             return r
         return []
 
-    for u in possible_subterms(integrand):
+    for u in list(dict.fromkeys(possible_subterms(integrand) + exp_subterms(integrand))):
         if u == symbol:
             continue
         u_diff = manual_diff(u, symbol)
         new_integrand = test_subterm(u, u_diff)
         if new_integrand is not False:
             constant, new_integrand = new_integrand
+            if new_integrand == integrand.subs(symbol, u_var):
+                continue
             substitution = (u, constant, new_integrand)
             if substitution not in results:
                 results.append(substitution)
 
+    results.sort(key=lambda sub: count_ops(sub[2]))
     return results
 
 def rewriter(condition, rewrite):
     """Strategy that rewrites an integrand."""
     def _rewriter(integral):
         integrand, symbol = integral
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewrite, symbol))
         if condition(*integral):
             rewritten = rewrite(*integral)
             if rewritten != integrand:
-                substep = integral_steps(rewritten, symbol)
+                substep = yield IntegralInfo(rewritten, symbol)
                 if not isinstance(substep, DontKnowRule) and substep:
-                    return RewriteRule(
-                        rewritten,
-                        substep,
-                        integrand, symbol)
+                    return RewriteRule(integrand, symbol, rewritten, substep)
     return _rewriter
 
 def proxy_rewriter(condition, rewrite):
@@ -184,193 +1352,438 @@ def proxy_rewriter(condition, rewrite):
     def _proxy_rewriter(criteria):
         criteria, integral = criteria
         integrand, symbol = integral
+        debug("Integral: {} is rewritten with {} on symbol: {} and criteria: {}".format(integrand, rewrite, symbol, criteria))
         args = criteria + list(integral)
         if condition(*args):
             rewritten = rewrite(*args)
             if rewritten != integrand:
-                return RewriteRule(
-                    rewritten,
-                    integral_steps(rewritten, symbol),
-                    integrand, symbol)
+                substep = yield IntegralInfo(rewritten, symbol)
+                return RewriteRule(integrand, symbol, rewritten, substep)
     return _proxy_rewriter
 
-def multiplexer(conditions):
-    """Apply the rule that matches the condition, else None"""
-    def multiplexer_rl(expr):
-        for key, rule in conditions.items():
-            if key(expr):
-                return rule(expr)
-    return multiplexer_rl
+def alternatives(*rules, branch=False):
+    """Strategy that makes an AlternativeRule out of multiple possible results.
 
-def alternatives(*rules):
-    """Strategy that makes an AlternativeRule out of multiple possible results."""
+    With ``branch=False`` no ``AlternativeRule`` is built: the first rule
+    whose result is free of ``DontKnowRule`` is returned directly, falling
+    back to the first partial result if no rule solves the integral
+    completely.
+    """
     def _alternatives(integral):
         alts = []
+        first_partial = None
+        count = 0
+        if branch:
+            debug("List of Alternative Rules")
         for rule in rules:
+            count = count + 1
+            if branch:
+                debug("Rule {}: {}".format(count, rule))
+
             result = rule(integral)
-            if (result and not isinstance(result, DontKnowRule) and
-                result != integral and result not in alts):
+            if (not result or isinstance(result, DontKnowRule) or
+                    result == integral):
+                continue
+
+            if not branch:
+                if not result.contains_dont_know():
+                    return result
+                if first_partial is None:
+                    first_partial = result
+                continue
+
+            if result not in alts:
                 alts.append(result)
+
+        if not branch:
+            return first_partial
+
         if len(alts) == 1:
             return alts[0]
         elif alts:
-            doable = [rule for rule in alts if not contains_dont_know(rule)]
+            doable = [rule for rule in alts if not rule.contains_dont_know()]
             if doable:
-                return AlternativeRule(doable, *integral)
+                return AlternativeRule(*integral, doable)
             else:
-                return AlternativeRule(alts, *integral)
+                return AlternativeRule(*integral, alts)
     return _alternatives
 
 def constant_rule(integral):
-    integrand, symbol = integral
-    return ConstantRule(integral.integrand, *integral)
+    return ConstantRule(*integral)
 
 def power_rule(integral):
     integrand, symbol = integral
-    base, exp = integrand.as_base_exp()
+    base, expt = integrand.as_base_exp()
 
-    if symbol not in exp.free_symbols and isinstance(base, sympy.Symbol):
-        if sympy.simplify(exp + 1) == 0:
-            return ReciprocalRule(base, integrand, symbol)
-        return PowerRule(base, exp, integrand, symbol)
-    elif symbol not in base.free_symbols and isinstance(exp, sympy.Symbol):
-        rule = ExpRule(base, exp, integrand, symbol)
+    if symbol not in expt.free_symbols and isinstance(base, Symbol):
+        if simplify(expt + 1) == 0:
+            return ReciprocalRule(integrand, symbol, base)
+        return PowerRule(integrand, symbol, base, expt)
+    elif symbol not in base.free_symbols and isinstance(expt, Symbol):
+        rule = ExpRule(integrand, symbol, base, expt)
 
-        if fuzzy_not(sympy.log(base).is_zero):
+        if fuzzy_not(log(base).is_zero):
             return rule
-        elif sympy.log(base).is_zero:
-            return ConstantRule(1, 1, symbol)
+        elif log(base).is_zero:
+            return ConstantRule(1, symbol)
 
-        return PiecewiseRule([
-            (ConstantRule(1, 1, symbol), sympy.Eq(sympy.log(base), 0)),
-            (rule, True)
-        ], integrand, symbol)
+        return PiecewiseRule(integrand, symbol, [
+            (rule, Ne(log(base), 0)),
+            (ConstantRule(1, symbol), True)
+        ])
 
 def exp_rule(integral):
     integrand, symbol = integral
-    if isinstance(integrand.args[0], sympy.Symbol):
-        return ExpRule(sympy.E, integrand.args[0], integrand, symbol)
+    if isinstance(integrand.args[0], Symbol):
+        return ExpRule(integrand, symbol, E, integrand.args[0])
 
-def inverse_trig_rule(integral):
+
+def combine_power_rule(integral):
+    """
+    Strategy that simplifies the exponent of a power.
+    exp(a*x**2) * exp(b*x) -> exp((a*x**2 + b*x))
+    For example, this is useful for the ErfRule.
+    """
     integrand, symbol = integral
-    base, exp = integrand.as_base_exp()
-    a = sympy.Wild('a', exclude=[symbol])
-    b = sympy.Wild('b', exclude=[symbol])
-    match = base.match(a + b*symbol**2)
+    a = Wild('a', exclude=[symbol, 0])
+    b = Wild('b', exclude=[symbol])
+    k = Wild('k', exclude=[symbol])
+    rest = Wild('rest')
+
+    match = integrand.match(rest * k**(a*symbol**2) * k**(b*symbol))
 
     if not match:
         return
 
-    def negative(x):
-        return x.is_negative or x.could_extract_minus_sign()
+    simplified = powsimp(integrand, combine='exp')
 
-    def ArcsinhRule(integrand, symbol):
-        return InverseHyperbolicRule(sympy.asinh, integrand, symbol)
+    if simplified != integrand:
+        steps = yield IntegralInfo(simplified, symbol)
+        return RewriteRule(integrand, symbol, simplified, steps)
 
-    def ArccoshRule(integrand, symbol):
-        return InverseHyperbolicRule(sympy.acosh, integrand, symbol)
 
-    def make_inverse_trig(RuleClass, base_exp, a, sign_a, b, sign_b):
-        u_var = sympy.Dummy("u")
-        current_base = base
-        current_symbol = symbol
-        constant = u_func = u_constant = substep = None
-        factored = integrand
-        if a != 1:
-            constant = a**base_exp
-            current_base = sign_a + sign_b * (b/a) * current_symbol**2
-            factored = current_base ** base_exp
-        if (b/a) != 1:
-            u_func = sympy.sqrt(b/a) * symbol
-            u_constant = sympy.sqrt(a/b)
-            current_symbol = u_var
-            current_base = sign_a + sign_b * current_symbol**2
+def orthogonal_poly_rule(integral):
+    orthogonal_poly_classes = {
+        jacobi: JacobiRule,
+        gegenbauer: GegenbauerRule,
+        chebyshevt: ChebyshevTRule,
+        chebyshevu: ChebyshevURule,
+        legendre: LegendreRule,
+        hermite: HermiteRule,
+        laguerre: LaguerreRule,
+        assoc_laguerre: AssocLaguerreRule
+        }
+    orthogonal_poly_var_index = {
+        jacobi: 3,
+        gegenbauer: 2,
+        assoc_laguerre: 2
+        }
+    integrand, symbol = integral
+    for klass in orthogonal_poly_classes:
+        if isinstance(integrand, klass):
+            var_index = orthogonal_poly_var_index.get(klass, 1)
+            if (integrand.args[var_index] is symbol and not
+                any(v.has(symbol) for v in integrand.args[:var_index])):
+                    return orthogonal_poly_classes[klass](integrand, symbol, *integrand.args[:var_index])
 
-        substep = RuleClass(current_base ** base_exp, current_symbol)
+
+_special_function_patterns: list[tuple[type, Expr, Callable | None, tuple]] = []
+_wilds: list[Wild] = []
+_symbol = Dummy('x')
+
+
+def special_function_rule(integral):
+    integrand, symbol = integral
+    if not _special_function_patterns:
+        # Wild cards set to non-zero should only be used when the result is not
+        # valid e.g. Integral * 1/a
+        a_nonzero = Wild('a', exclude=[_symbol], properties=[lambda x: not x.is_zero])
+        b = Wild('b', exclude=[_symbol])
+        c = Wild('c', exclude=[_symbol])
+        d_nonzero = Wild('d', exclude=[_symbol], properties=[lambda x: not x.is_zero])
+        e_nonnegative_integer = Wild('e', exclude=[_symbol], properties=[
+            lambda x: not (x.is_nonnegative and x.is_integer)])
+        y = Wild('y', exclude=[_symbol])
+        _wilds.extend((a_nonzero, b, c, d_nonzero, e_nonnegative_integer, y))
+        # patterns consist of a SymPy class, a wildcard expr, an optional
+        # condition coded as a lambda (when Wild properties are not enough),
+        # followed by an applicable rule
+        linear_pattern = a_nonzero*_symbol + b
+        quadratic_pattern = a_nonzero*_symbol**2 + b*_symbol + c
+        _special_function_patterns.extend((
+            (Mul, exp(linear_pattern, evaluate=False)/_symbol, None, EiRule),
+            (Mul, cos(linear_pattern, evaluate=False)/_symbol, None, CiRule),
+            (Mul, cosh(linear_pattern, evaluate=False)/_symbol, None, ChiRule),
+            (Mul, sin(linear_pattern, evaluate=False)/_symbol, None, SiRule),
+            (Mul, sinh(linear_pattern, evaluate=False)/_symbol, None, ShiRule),
+            (Pow, 1/log(linear_pattern, evaluate=False), None, LiRule),
+            (exp, exp(quadratic_pattern, evaluate=False), None, ErfRule),
+            (Mul, exp(-(linear_pattern)**2, evaluate=False) * erf(y*(linear_pattern)),
+                lambda a, b, y: y != 1 and y != -1, OwensTRule),
+            (sin, sin(quadratic_pattern, evaluate=False), None, FresnelSRule),
+            (cos, cos(quadratic_pattern, evaluate=False), None, FresnelCRule),
+            (Mul, _symbol**e_nonnegative_integer*exp(a_nonzero*_symbol, evaluate=False), None, UpperGammaRule),
+            (Mul, polylog(b, a_nonzero*_symbol, evaluate=False)/_symbol, None, PolylogRule),
+            (Pow, 1/sqrt(a_nonzero - d_nonzero*sin(_symbol, evaluate=False)**2),
+                lambda a, d: a != d, EllipticFRule),
+            (Pow, sqrt(a_nonzero - d_nonzero*sin(_symbol, evaluate=False)**2),
+                lambda a, d: a != d, EllipticERule),
+        ))
+    a_wild, _, _, d_wild, _, _ = _wilds
+    _integrand = integrand.subs(symbol, _symbol)
+    for type_, pattern, constraint, rule in _special_function_patterns:
+        if isinstance(_integrand, type_):
+            match = _integrand.match(pattern)
+            if match:
+                wild_vals = tuple(match.get(w) for w in _wilds
+                                  if match.get(w) is not None)
+                if constraint is None or constraint(*wild_vals):
+                    step = rule(integrand, symbol, *wild_vals)
+                    for w in (a_wild, d_wild):
+                        val = match.get(w)
+                        if val and val.is_zero is not False:
+                            degenerate_integrand = integrand.subs(val, 0)
+                            degenerate_step = yield IntegralInfo(degenerate_integrand, symbol)
+                            step = _add_degenerate_step(Ne(val, 0), step, degenerate_step)
+                    if rule in (EllipticFRule, EllipticERule):
+                        a_val, d_val = match.get(a_wild), match.get(d_wild)
+                        if a_val and d_val and (a_val - d_val).is_zero is not False:
+                            degenerate_integrand = integrand.subs(d_val, a_val)
+                            degenerate_step = yield IntegralInfo(degenerate_integrand, symbol)
+                            step = _add_degenerate_step(Ne(a_val, d_val), step, degenerate_step)
+                    return step
+
+
+def _add_degenerate_step(generic_cond, generic_step: Rule, degenerate_step: Rule | None) -> Rule:
+    if degenerate_step is None:
+        return generic_step
+    if isinstance(generic_step, PiecewiseRule):
+        subfunctions = [(substep, (cond & generic_cond).simplify())
+                        for substep, cond in generic_step.subfunctions]
+    else:
+        subfunctions = [(generic_step, generic_cond)]
+    if isinstance(degenerate_step, PiecewiseRule):
+        subfunctions += degenerate_step.subfunctions
+    else:
+        subfunctions.append((degenerate_step, S.true))
+    return PiecewiseRule(generic_step.integrand, generic_step.variable, subfunctions)
+
+
+def nested_pow_rule(integral: IntegralInfo):
+    # nested (c*(a+b*x)**d)**e
+    integrand, x = integral
+
+    a_ = Wild('a', exclude=[x])
+    b_ = Wild('b', exclude=[x, 0])
+    pattern = a_+b_*x
+    generic_cond: Boolean = S.true
+
+    class NoMatch(Exception):
+        pass
+
+    def _get_base_exp(expr: Expr) -> tuple[Expr, Expr]:
+        if not expr.has_free(x):
+            return S.One, S.Zero
+        if expr.is_Mul:
+            _, terms = expr.as_coeff_mul()
+            if not terms:
+                return S.One, S.Zero
+            results = [_get_base_exp(term) for term in terms]
+            bases = {b for b, _ in results}
+            bases.discard(S.One)
+            if len(bases) == 1:
+                return bases.pop(), Add(*(e for _, e in results))
+            raise NoMatch
+        if expr.is_Pow:
+            b, e = expr.base, expr.exp  # type: ignore
+            if e.has_free(x):
+                raise NoMatch
+            base_, sub_exp = _get_base_exp(b)
+            return base_, sub_exp * e
+        match = expr.match(pattern)
+        if match:
+            a, b = match[a_], match[b_]
+            base_ = x + a/b
+            nonlocal generic_cond
+            generic_cond = Ne(b, 0)
+            return base_, S.One
+        raise NoMatch
+
+    try:
+        base, exp_ = _get_base_exp(integrand)
+    except NoMatch:
+        return
+    if generic_cond is S.true:
+        degenerate_step = None
+    else:
+        # equivalent with subs(b, 0) but no need to find b
+        degenerate_step = ConstantRule(integrand.subs(x, 0), x)
+    generic_step = NestedPowRule(integrand, x, base, exp_)
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+
+
+def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
+    """
+    Set degenerate=False on recursive call where coefficient of quadratic term
+    is assumed non-zero.
+    """
+    integrand, symbol = integral
+    base, exp = integrand.as_base_exp()
+    a = Wild('a', exclude=[symbol])
+    b = Wild('b', exclude=[symbol])
+    c = Wild('c', exclude=[symbol, 0])
+    match = base.match(a + b*symbol + c*symbol**2)
+
+    if not match:
+        return
+
+    def make_inverse_trig(RuleClass, a, sign_a, c, sign_c, h) -> Rule:
+        u_var = Dummy("u")
+        rewritten = 1/sqrt(sign_a*a + sign_c*c*(symbol-h)**2)  # a>0, c>0
+        quadratic_base = sqrt(c/a)*(symbol-h)
+        constant = 1/sqrt(c)
+        u_func = None
+        if quadratic_base is not symbol:
+            u_func = quadratic_base
+            quadratic_base = u_var
+        standard_form = 1/sqrt(sign_a + sign_c*quadratic_base**2)
+        substep = RuleClass(standard_form, quadratic_base)
+        if constant != 1:
+            substep = ConstantTimesRule(constant*standard_form, symbol, constant, standard_form, substep)
         if u_func is not None:
-            if u_constant != 1 and substep is not None:
-                substep = ConstantTimesRule(
-                    u_constant, current_base ** base_exp, substep,
-                    u_constant * current_base ** base_exp, symbol)
-            substep = URule(u_var, u_func, u_constant, substep, factored, symbol)
-        if constant is not None and substep is not None:
-            substep = ConstantTimesRule(constant, factored, substep, integrand, symbol)
+            substep = URule(rewritten, symbol, u_var, u_func, substep)
+        if h != 0:
+            substep = CompleteSquareRule(integrand, symbol, rewritten, substep)
         return substep
 
-    a, b = match[a], match[b]
+    a, b, c = [match.get(i, S.Zero) for i in (a, b, c)]
+    generic_cond = Ne(c, 0)
+    if not degenerate or generic_cond is S.true:
+        degenerate_step = None
+    elif b.is_zero:
+        degenerate_step = ConstantRule(a ** exp, symbol)
+    else:
+        degenerate_step = yield from sqrt_fractional_linear_rule(IntegralInfo((a + b * symbol) ** exp, symbol))
 
-    # list of (rule, base_exp, a, sign_a, b, sign_b, condition)
-    possibilities = []
+    if simplify(2*exp + 1) == 0:
+        h, k = -b/(2*c), a - b**2/(4*c)  # rewrite base to k + c*(symbol-h)**2
+        non_square_cond = Ne(k, 0)
+        square_step = None
+        if non_square_cond is not S.true:
+            square_step = NestedPowRule(1/sqrt(c*(symbol-h)**2), symbol, symbol-h, S.NegativeOne)
+        if non_square_cond is S.false:
+            return square_step
+        generic_step = ReciprocalSqrtQuadraticRule(integrand, symbol, a, b, c)
+        step = _add_degenerate_step(non_square_cond, generic_step, square_step)
+        if k.is_real and c.is_real:
+            # list of ((rule, base_exp, a, sign_a, b, sign_b), condition)
+            rules: list[tuple[Rule, Boolean]] = []
+            for args, cond in (  # don't apply ArccoshRule to x**2-1
+                ((ArcsinRule, k, 1, -c, -1, h), And(k > 0, c < 0)),  # 1-x**2
+                ((ArcsinhRule, k, 1, c, 1, h), And(k > 0, c > 0)),  # 1+x**2
+            ):
+                if cond is S.true:
+                    return make_inverse_trig(*args)
+                if cond is not S.false:
+                    rules.append((make_inverse_trig(*args), cond))
+            if rules:
+                if not k.is_positive:  # conditions are not thorough, need fall back rule
+                    rules.append((generic_step, S.true))
+                step = PiecewiseRule(integrand, symbol, rules)
+            else:
+                step = generic_step
+        return _add_degenerate_step(generic_cond, step, degenerate_step)
+    if exp == S.Half:
+        substep = yield from sqrt_quadratic_rule(IntegralInfo(integrand, symbol), degenerate=False)
+        step = SqrtQuadraticRule(integrand, symbol, a, b, c, substep)
+        return _add_degenerate_step(generic_cond, step, degenerate_step)
 
-    if sympy.simplify(2*exp + 1) == 0:
-        possibilities.append((ArcsinRule, exp, a, 1, -b, -1, sympy.And(a > 0, b < 0)))
-        possibilities.append((ArcsinhRule, exp, a, 1, b, 1, sympy.And(a > 0, b > 0)))
-        possibilities.append((ArccoshRule, exp, -a, -1, b, 1, sympy.And(a < 0, b > 0)))
-
-    possibilities = [p for p in possibilities if p[-1] is not sympy.false]
-    if a.is_number and b.is_number:
-        possibility = [p for p in possibilities if p[-1] is sympy.true]
-        if len(possibility) == 1:
-            return make_inverse_trig(*possibility[0][:-1])
-    elif possibilities:
-        return PiecewiseRule(
-            [(make_inverse_trig(*p[:-1]), p[-1]) for p in possibilities],
-            integrand, symbol)
 
 def add_rule(integral):
     integrand, symbol = integral
-    return AddRule(
-        [integral_steps(g, symbol)
-         for g in integrand.as_ordered_terms()],
-        integrand, symbol)
+    results = []
+    for g in integrand.as_ordered_terms():
+        results.append((yield IntegralInfo(g, symbol)))
+    return None if None in results else AddRule(integrand, symbol, results)
 
-def mul_rule(integral):
+
+def mul_rule(integral: IntegralInfo):
     integrand, symbol = integral
-    args = integrand.args
 
     # Constant times function case
     coeff, f = integrand.as_independent(symbol)
-    next_step = integral_steps(f, symbol)
+    if coeff != 1:
+        next_step = yield IntegralInfo(f, symbol)
+        if next_step is not None:
+            return ConstantTimesRule(integrand, symbol, coeff, f, next_step)
 
-    if coeff != 1 and next_step is not None:
-        return ConstantTimesRule(
-            coeff, f,
-            next_step,
-            integrand, symbol)
 
-def _parts_rule(integrand, symbol):
+special_error_functions = (erf, erfc, erfi, fresnelc, fresnels, Ci, Chi, Si, Shi, Ei, li, owens_t)
+
+
+def _parts_rule_gen(integrand, symbol):
     # LIATE rule:
     # log, inverse trig, algebraic, trigonometric, exponential
     def pull_out_algebraic(integrand):
         integrand = integrand.cancel().together()
-        algebraic = [arg for arg in integrand.args if arg.is_algebraic_expr(symbol)]
+        # iterating over Piecewise args would not work here
+        algebraic = ([] if isinstance(integrand, Piecewise) or not integrand.is_Mul
+            else [arg for arg in integrand.args if arg.is_algebraic_expr(symbol)])
         if algebraic:
-            u = sympy.Mul(*algebraic)
+            u = Mul(*algebraic)
             dv = (integrand / u).cancel()
-            if not u.is_polynomial() and isinstance(dv, sympy.exp):
-                return
             return u, dv
 
-    def pull_out_u(*functions):
-        def pull_out_u_rl(integrand):
-            if any([integrand.has(f) for f in functions]):
+    def pull_out_u(*functions) -> Callable[[Expr], tuple[Expr, Expr] | None]:
+        def pull_out_u_rl(integrand: Expr) -> tuple[Expr, Expr] | None:
+            if any(integrand.has(f) for f in functions):
                 args = [arg for arg in integrand.args
                         if any(isinstance(arg, cls) for cls in functions)]
                 if args:
-                    u = reduce(lambda a,b: a*b, args)
+                    u = Mul(*args) # type: ignore
                     dv = integrand / u
                     return u, dv
+            return None
 
         return pull_out_u_rl
 
-    liate_rules = [pull_out_u(sympy.log), pull_out_u(sympy.atan, sympy.asin, sympy.acos),
-                   pull_out_algebraic, pull_out_u(sympy.sin, sympy.cos),
-                   pull_out_u(sympy.exp)]
+    def pull_out_dv(*functions) -> Callable[[Expr], tuple[Expr, Expr] | None]:
+        # Prefer forms that are easier to integrate using special functions
+        # x*exp(-x**2) instead of exp(-x**2) -> erf
+        # x*sin(x**2) instead of sin(x**2) -> Fresnel
+        def pull_out_dv_rl(integrand: Expr) -> tuple[Expr, Expr] | None:
+            power = integrand.as_powers_dict().get(symbol)
+            if (
+                isinstance(power, Integer) and power >= 2 and
+                integrand.has(*functions)
+            ):
+                for target in integrand.args:
+                    if not any(isinstance(target, cls) for cls in functions):
+                        continue
+                    inner = target.args[0]
+                    if (
+                        inner.is_polynomial(symbol) and  # type: ignore
+                        degree(inner, symbol) == 2
+                    ):
+                        dv = target * symbol
+                        u = integrand / dv
+                        if u.is_polynomial(symbol):
+                            return u, dv
+            return None
+
+        return pull_out_dv_rl
+
+    liate_rules = [pull_out_dv(exp), pull_out_dv(sin, cos),
+                   pull_out_u(*special_error_functions), pull_out_u(log),
+                   pull_out_u(*inverse_trig_functions), pull_out_algebraic,
+                   pull_out_u(sin, cos), pull_out_u(sinh, cosh),
+                   pull_out_u(exp)]
 
 
-    dummy = sympy.Dummy("temporary")
-    # we can integrate log(x) and atan(x) by setting dv = 1
-    if isinstance(integrand, (sympy.log, sympy.atan, sympy.asin, sympy.acos)):
+    dummy = Dummy("temporary")
+    # we can integrate log(x), atan(x), and erf by setting dv = 1
+    if isinstance(integrand, (log, *inverse_trig_functions,
+                              *special_error_functions)):
         integrand = dummy * integrand
 
     for index, rule in enumerate(liate_rules):
@@ -381,411 +1794,1783 @@ def _parts_rule(integrand, symbol):
 
             # Don't pick u to be a constant if possible
             if symbol not in u.free_symbols and not u.has(dummy):
-                return
+                return None
 
             u = u.subs(dummy, 1)
             dv = dv.subs(dummy, 1)
 
-            for rule in liate_rules[index + 1:]:
-                r = rule(integrand)
-                # make sure dv is amenable to integration
-                if r and sympy.simplify(r[0].subs(dummy, 1)) == sympy.simplify(dv):
-                    du = u.diff(symbol)
-                    v_step = integral_steps(sympy.simplify(dv), symbol)
-                    v = _manualintegrate(v_step)
+            # Don't pick a non-polynomial algebraic to be differentiated
+            if rule == pull_out_algebraic and not u.is_polynomial(symbol):
+                return None
+            # Don't trade one logarithm or special error function for another
+            if isinstance(u, (log, *special_error_functions)):
+                rec_dv = 1/dv
+                if (rec_dv.is_polynomial(symbol) and
+                    degree(rec_dv, symbol) == 1):
+                    return None
 
+            # Can integrate a polynomial times OrthogonalPolynomial
+            if rule == pull_out_algebraic:
+                if dv.is_Derivative or dv.has(TrigonometricFunction, HyperbolicFunction) or \
+                        isinstance(dv, OrthogonalPolynomial):
+                    v_step = yield IntegralInfo(dv, symbol)
+                    if v_step.contains_dont_know():
+                        return None
+                    else:
+                        du = u.diff(symbol)
+                        v = v_step.eval()
+                        return u, dv, v, du, v_step
+
+            # make sure dv is amenable to integration
+            accept = False
+            cutoff = liate_rules.index(pull_out_algebraic)  # log and inverse trig are usually worth trying
+            if index < cutoff:
+                accept = True
+            elif (rule == pull_out_algebraic and dv.args and
+                all(isinstance(a, (sin, cos, exp))
+                for a in dv.args)):
+                    accept = True
+            else:
+                for lrule in liate_rules[index + 1:]:
+                    r = lrule(integrand)
+                    if r and r[0].subs(dummy, 1).equals(dv):
+                        accept = True
+                        break
+
+            if accept:
+                du = u.diff(symbol)
+                v_step = yield IntegralInfo(simplify(dv), symbol)
+                if not v_step.contains_dont_know():
+                    v = v_step.eval()
                     return u, dv, v, du, v_step
+    return None
+
+
+def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None:
+    """Standalone form of the LIATE search: drive :func:`_parts_rule_gen`
+    with a fresh solver."""
+    return IntegrationSolver().run_generator(_parts_rule_gen(integrand, symbol))
+
 
 def parts_rule(integral):
     integrand, symbol = integral
     constant, integrand = integrand.as_coeff_Mul()
 
-    result = _parts_rule(integrand, symbol)
+    result = yield from _parts_rule_gen(integrand, symbol)
 
     steps = []
     if result:
         u, dv, v, du, v_step = result
+        debug("u : {}, dv : {}, v : {}, du : {}, v_step: {}".format(u, dv, v, du, v_step))
         steps.append(result)
 
-        if isinstance(v, sympy.Integral):
+        if isinstance(v, Integral):
             return
 
-        while True:
-            if (integrand / (v * du)).cancel() == 1:
+        # Set a limit on the number of times u can be used
+        if isinstance(u, (sin, cos, exp, sinh, cosh)):
+            cachekey = u.xreplace({symbol: _cache_dummy})
+            if not (yield PartsUCheck(cachekey)):
+                return
+
+        # Try cyclic integration by parts a few times
+        for _ in range(4):
+            if dv == 1:
                 break
-            if symbol not in (integrand / (v * du)).cancel().free_symbols:
-                coefficient = ((v * du) / integrand).cancel()
-                rule = CyclicPartsRule(
-                    [PartsRule(u, dv, v_step, None, None, None)
+            debug("Cyclic integration {} with v: {}, du: {}, integrand: {}".format(_, v, du, integrand))
+            coefficient = ((v * du) / integrand).cancel()
+            if coefficient == 1:
+                break
+            if symbol not in coefficient.free_symbols:
+                rule = CyclicPartsRule(integrand, symbol,
+                    [PartsRule(None, None, u, dv, v_step, None)
                      for (u, dv, v, du, v_step) in steps],
-                    (-1) ** len(steps) * coefficient,
-                    integrand, symbol
-                )
+                    (-1) ** len(steps) * coefficient)
                 if (constant != 1) and rule:
-                    rule = ConstantTimesRule(constant, integrand, rule,
-                                             constant * integrand, symbol)
+                    rule = ConstantTimesRule(constant * integrand, symbol, constant, integrand, rule)
                 return rule
 
-            result = _parts_rule(v * du, symbol)
+            # _parts_rule is sensitive to constants, factor it out
+            next_constant, next_integrand = (v * du).as_coeff_Mul()
+            result = yield from _parts_rule_gen(next_integrand, symbol)
 
             if result:
                 u, dv, v, du, v_step = result
-                steps.append(result)
+                u *= next_constant
+                du *= next_constant
+                steps.append((u, dv, v, du, v_step))
             else:
                 break
 
     def make_second_step(steps, integrand):
         if steps:
             u, dv, v, du, v_step = steps[0]
-            return PartsRule(u, dv, v_step,
-                             make_second_step(steps[1:], v * du),
-                             integrand, symbol)
-        else:
-            steps = integral_steps(integrand, symbol)
-            if steps:
-                return steps
-            else:
-                return DontKnowRule(integrand, symbol)
+            substep = yield from make_second_step(steps[1:], v * du)
+            return PartsRule(integrand, symbol, u, dv, v_step, substep)
+        return (yield IntegralInfo(integrand, symbol))
 
     if steps:
         u, dv, v, du, v_step = steps[0]
-        rule = PartsRule(u, dv, v_step,
-                         make_second_step(steps[1:], v * du),
-                         integrand, symbol)
+        second_step = yield from make_second_step(steps[1:], v * du)
+        rule = PartsRule(integrand, symbol, u, dv, v_step, second_step)
         if (constant != 1) and rule:
-            rule = ConstantTimesRule(constant, integrand, rule,
-                                     constant * integrand, symbol)
+            rule = ConstantTimesRule(constant * integrand, symbol, constant, integrand, rule)
         return rule
+
+
+def _trig_base_rule(integral):
+    original_integrand, symbol = integral
+    integrand = original_integrand
+    base, power = integrand.as_base_exp()
+    reciprocal_functions = {
+        sin: csc, cos: sec, tan: cot,
+        cot: tan, sec: cos, csc: sin,
+    }
+    if power == -1 and base.func in reciprocal_functions:
+        integrand = reciprocal_functions[base.func](symbol)
+
+    if integrand == sin(symbol):
+        step = SinRule(integrand, symbol)
+    elif integrand == cos(symbol):
+        step = CosRule(integrand, symbol)
+    else:
+        u_var = Dummy("u")
+        if integrand == tan(symbol):
+            rewritten = sin(symbol) / cos(symbol)
+            u_func = cos(symbol)
+            substituted = -1/u_var
+        elif integrand == cot(symbol):
+            rewritten = cos(symbol) / sin(symbol)
+            u_func = sin(symbol)
+            substituted = 1/u_var
+        elif integrand == sec(symbol):
+            rewritten = ((sec(symbol)**2 + tan(symbol) * sec(symbol)) /
+                         (sec(symbol) + tan(symbol)))
+            u_func = sec(symbol) + tan(symbol)
+            substituted = 1/u_var
+        elif integrand == csc(symbol):
+            rewritten = ((csc(symbol)**2 + cot(symbol) * csc(symbol)) /
+                         (csc(symbol) + cot(symbol)))
+            u_func = csc(symbol) + cot(symbol)
+            substituted = -1/u_var
+        else:
+            return
+
+        step = _trig_substitution_rule(
+            IntegralInfo(integrand, symbol), rewritten, S.One,
+            u_var, u_func, substituted)
+
+    if isinstance(step, GeneratorType):
+        step = yield from step
+    if integrand != original_integrand:
+        return RewriteRule(
+            original_integrand, symbol, integrand, step)
+    return step
 
 
 def trig_rule(integral):
     integrand, symbol = integral
-    if isinstance(integrand, sympy.sin) or isinstance(integrand, sympy.cos):
-        arg = integrand.args[0]
-
-        if not isinstance(arg, sympy.Symbol):
-            return  # perhaps a substitution can deal with it
-
-        if isinstance(integrand, sympy.sin):
-            func = 'sin'
-        else:
-            func = 'cos'
-
-        return TrigRule(func, arg, integrand, symbol)
-
-    if integrand == sympy.sec(symbol)**2:
-        return TrigRule('sec**2', symbol, integrand, symbol)
-    elif integrand == sympy.csc(symbol)**2:
-        return TrigRule('csc**2', symbol, integrand, symbol)
-
-    if isinstance(integrand, sympy.tan):
-        rewritten = sympy.sin(*integrand.args) / sympy.cos(*integrand.args)
-    elif isinstance(integrand, sympy.cot):
-        rewritten = sympy.cos(*integrand.args) / sympy.sin(*integrand.args)
-    elif isinstance(integrand, sympy.sec):
-        arg = integrand.args[0]
-        rewritten = ((sympy.sec(arg)**2 + sympy.tan(arg) * sympy.sec(arg)) /
-                     (sympy.sec(arg) + sympy.tan(arg)))
-    elif isinstance(integrand, sympy.csc):
-        arg = integrand.args[0]
-        rewritten = ((sympy.csc(arg)**2 + sympy.cot(arg) * sympy.csc(arg)) /
-                     (sympy.csc(arg) + sympy.cot(arg)))
+    base, power = integrand.as_base_exp()
+    if isinstance(integrand, (sin, cos, tan, cot, sec, csc)):
+        argument = integrand.args[0]
+    elif (power == -1 and
+            isinstance(base, (sin, cos, tan, cot, sec, csc))):
+        argument = base.args[0]
     else:
         return
 
-    return RewriteRule(
-        rewritten,
-        integral_steps(rewritten, symbol),
-        integrand, symbol
-    )
+    polynomial = argument.as_poly(symbol)
+    if polynomial is None or polynomial.degree() != 1:
+        return
 
-def trig_product_rule(integral):
+    if argument == symbol:
+        result = _trig_base_rule(integral)
+        if isinstance(result, GeneratorType):
+            result = yield from result
+        return result
+
+    coefficient = polynomial.nth(1)
+    u_var = Dummy("u")
+    standard_integrand = integrand.xreplace({argument: u_var})
+    substep = _trig_base_rule(IntegralInfo(standard_integrand, u_var))
+    if isinstance(substep, GeneratorType):
+        substep = yield from substep
+    if coefficient != 1:
+        constant = 1/coefficient
+        scaled_integrand = constant*standard_integrand
+        substep = ConstantTimesRule(
+            scaled_integrand, u_var, constant, standard_integrand, substep)
+    generic_step = URule(
+        integrand, symbol, u_var, argument, substep)
+    return _add_trig_degenerate_step(integral, coefficient, generic_step)
+
+primary_trighyper_functions = (sin, cos, sinh, cosh)
+
+
+def trig_cmplx_exp_rule(integral: IntegralInfo):
+    """
+    Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
+    Useful for integration techniques that handle exponentials better.
+    Applies only when the integrand belongs to a class that benefits from exponential rewriting,
+    such as combinations involving Gaussian exponentials.
+
+    sin(x)  -> (exp(i*x) - exp(-i*x)) / (2*i)
+    cos(x)  -> (exp(i*x) + exp(-i*x)) / 2
+    sinh(x) -> (exp(x) - exp(-x)) / 2
+    cosh(x) -> (exp(x) + exp(-x)) / 2
+    """
     integrand, symbol = integral
 
-    sectan = sympy.sec(symbol) * sympy.tan(symbol)
-    q = integrand / sectan
+    factors = Mul.make_args(integrand)
 
-    if symbol not in q.free_symbols:
-        rule = TrigRule('sec*tan', symbol, sectan, symbol)
-        if q != 1 and rule:
-            rule = ConstantTimesRule(q, sectan, rule, integrand, symbol)
+    if not any(isinstance(t, exp) and t.args[0].is_polynomial(symbol) for t in factors):
+        return
 
-        return rule
+    a = Wild('a', exclude=[symbol, 0])
+    b = Wild('b', exclude=[symbol])
+    c = Wild('c', exclude=[symbol])
+    f = WildFunction('f')
 
-    csccot = -sympy.csc(symbol) * sympy.cot(symbol)
-    q = integrand / csccot
+    quadratic_pattern = a * symbol**2 + b * symbol + c
+    linear_pattern = a * symbol + b
 
-    if symbol not in q.free_symbols:
-        rule = TrigRule('csc*cot', symbol, csccot, symbol)
-        if q != 1 and rule:
-            rule = ConstantTimesRule(q, csccot, rule, integrand, symbol)
+    def trig_arg(term):
+        if isinstance(term, primary_trighyper_functions):
+            return term.args[0]
+        if isinstance(term, Pow) and isinstance(term.base, primary_trighyper_functions):
+            return term.base.args[0]
+        return None
 
-        return rule
+    quadratic_phase = any(
+        (arg := trig_arg(term)) is not None and arg.match(quadratic_pattern)
+        for term in factors
+    )
+    gaussian_pattern = exp(quadratic_pattern)
+    trigexp_over_x_pattern = f*exp(linear_pattern)/symbol
+    trigexp_over_x_match = integrand.match(trigexp_over_x_pattern)
+    if not (
+        any(term.match(gaussian_pattern) for term in factors if isinstance(term, exp))
+        or trigexp_over_x_match
+        or quadratic_phase
+    ):
+        return
+
+    # Replace trig and hyperbolic functions with their exponential forms
+    rewritten = integrand.rewrite(primary_trighyper_functions, exp)
+
+    if rewritten != integrand:
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+        steps = yield IntegralInfo(rewritten, symbol)
+        return RewriteRule(integrand, symbol, rewritten, steps)
+
 
 def quadratic_denom_rule(integral):
     integrand, symbol = integral
-    a = sympy.Wild('a', exclude=[symbol])
-    b = sympy.Wild('b', exclude=[symbol])
-    c = sympy.Wild('c', exclude=[symbol])
-    match = integrand.match(a / (b * symbol ** 2 + c))
+    if not integrand.is_rational_function(symbol):
+        return None
+    num, den = integrand.as_numer_denom()
+    if den == 1:
+        return None
+    # Prevents things like c*(c*x + d)**n from hiding the power
+    den_const, den_x = den.as_independent(symbol, as_Add=False)
+    if den_const != 1:
+        num = num / den_const
+    den = den_x
+    if den.is_Pow:
+        q = den.base
+        n = den.exp
+    else:
+        q = den
+        n = S.One
+    den_poly = Poly(q, symbol)
+    num_poly = Poly(num, symbol)
+    deg_den = den_poly.degree()
+    deg_num = num_poly.degree()
+    # TODO: may add n = 1 here and do a general manual rational integration rule
+    # instead of letting general substitution rule find the pattern
+    if deg_den != 2:
+        return None
+    if deg_num >= deg_den:
+        return None
 
-    if not match:
-        return
+    def _arctan_match(B, a, c, symbol, degenerate=True):
+        # integrates B / a*x**2 + c
+        integrand = B / (a*symbol**2 + c)
+        pieces = []
+        # skips degenerate case if a != 0 or if a = 0 would cause null denominator
+        if degenerate and not _if_zero_implies_zero(a, c):
+            substituted = integrand.subs(a, 0)
+            substep = yield IntegralInfo(substituted, symbol)
+            pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
+        if degenerate and not _if_zero_implies_zero(c, a):
+            substituted = integrand.subs(c, 0)
+            substep = yield IntegralInfo(substituted, symbol)
+            pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(c, 0)))
+        if a.is_extended_real and c.is_extended_real:
+            positive_cond = c/a > 0
+            if positive_cond is not S.true:
+                coeff = B/(2*sqrt(-c)*sqrt(a))
+                constant = sqrt(-c/a)
+                r1 = 1/(symbol-constant)
+                r2 = 1/(symbol+constant)
+                log_steps = [ReciprocalRule(r1, symbol, symbol-constant),
+                            ConstantTimesRule(-r2, symbol, -1, r2, ReciprocalRule(r2, symbol, symbol+constant))]
+                rewritten = sub = r1 - r2
+                negative_step = AddRule(sub, symbol, log_steps)
+                if coeff != 1:
+                    rewritten = Mul(coeff, sub, evaluate=False)
+                    negative_step = ConstantTimesRule(rewritten, symbol, coeff, sub, negative_step)
+                negative_step = RewriteRule(integrand, symbol, rewritten, negative_step)
+                if positive_cond is S.false:
+                    pieces.append((negative_step, S.true))
+                    return PiecewiseRule(integrand, symbol, pieces)
+                else:
+                    pieces.append((negative_step, c / a < 0))
+        general_rule = ArctanRule(integrand, symbol, B, a, c)
+        if pieces:
+            pieces.append((general_rule, S.true))
+            return PiecewiseRule(integrand, symbol, pieces)
+        return general_rule
 
-    a, b, c = match[a], match[b], match[c]
-    return PiecewiseRule([(ArctanRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
-                          (ArccothRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
-                          (ArctanhRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
-    ], integrand, symbol)
 
-def root_mul_rule(integral):
+    def _complete_square(B, a, b, c, n, symbol, degenerate_a=True, degenerate_discriminant=True):
+        # integrates B / (a*x**2 + b*x + c)**n
+        pieces = []
+        discriminant = (4*a*c - b**2).expand()
+        denominator = a*symbol**2 + b*symbol + c
+        integrand = B / denominator**n
+        # degenerate flags avoid recalculating Piecewise branches recursively
+        if degenerate_a and not _if_zero_implies_zero(a, denominator):
+            if discriminant.is_zero is True:
+                # If a = 0 and 4*a*c - b**2 = 0 identically, then b = 0 too.
+                substituted = integrand.subs({a: 0, b: 0}, simultaneous=True)
+            else:
+                substituted = integrand.subs(a, 0)
+            substep = yield IntegralInfo(substituted, symbol)
+            pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
+        if degenerate_discriminant and not _if_zero_implies_zero(discriminant, denominator):
+            u = Dummy("u")
+            # we divide by a, Piecewise condition above
+            u_func = symbol + b/(2*a)
+            rewritten = (B/a**n) * u_func**(-2*n)
+            subexpr = (B/a**n) * u**(-2*n)
+            substep = yield IntegralInfo(subexpr, u)
+            rule = RewriteRule(integrand, symbol, rewritten, URule(rewritten, symbol, u, u_func, substep))
+            if discriminant.is_zero:
+                if pieces:
+                    pieces.append((rule, S.true))
+                    return PiecewiseRule(integrand, symbol, pieces)
+                return rule
+            pieces.append((rule, Eq(discriminant, 0)))
+        if n == 1:
+            # base case, B / (a*x**2 + b*x + c), solve by substitution with _arctan_match
+            u = Dummy("u")
+            u_func = symbol + b/(2*a)
+            # we put degenerate = False since after substitution, the integrand becomes B/(a*u**2 + discriminant/(4*a)),
+            # then the _arctan_match conditions (a != 0 and discriminant !=0) are already computed
+            substep = yield from _arctan_match(B, a, discriminant/(4*a), u, degenerate=False)
+            general_step = URule(integrand, symbol, u, u_func, substep)
+        else:
+            # reduction step for B/q**n
+            # Differentiate B*T/((n - 1)*discriminant*q**(n - 1)), with T = q'(x), using T**2 = 4*a*q - discriminant,
+            # this derivative equals B/q**n - coeff*B/q**(n - 1), so the remaining integral has power n - 1
+            T = 2*a*symbol + b
+            # we divide by discriminant, Piecewise condition above
+            F = B*T / ((n - 1)*discriminant*denominator**(n - 1))
+            derivative = Derivative(F, symbol, evaluate=False)
+            coeff = 2*a*(2*n - 3) / ((n - 1)*discriminant)
+            remainder = B / denominator**(n - 1)
+            scaled_remainder = coeff * remainder
+            rewritten = derivative + scaled_remainder
+            derivative_step = DerivativeRule(derivative, symbol)
+            remainder_step = yield from _complete_square(B, a, b, c, n - 1, symbol, degenerate_a=False, degenerate_discriminant=False)
+            scaled_step = ConstantTimesRule(scaled_remainder, symbol, coeff, remainder, remainder_step)
+            add_step = AddRule(rewritten, symbol, [derivative_step, scaled_step])
+            general_step = RewriteRule(integrand, symbol, rewritten, add_step)
+        if pieces:
+            pieces.append((general_step, S.true))
+            return PiecewiseRule(integrand, symbol, pieces)
+        return general_step
+
+    def _split_sum(A, B, a, b, c, n, symbol):
+        # integrates (A*x + B) / (a*x**2 + b*x + c)**n. Split A*x + B as alpha*q'(x) + beta,
+        # then integrate the two terms separately (first by substitution, second with _complete_square)
+        pieces = []
+        denominator = (a*symbol**2 + b*symbol + c)
+        integrand = (A*symbol + B) / denominator**n
+        discriminant = (4*a*c - b**2).expand()
+        if not _if_zero_implies_zero(a, denominator):
+            if discriminant.is_zero is True:
+                # If a = 0 and 4*a*c - b**2 = 0 identically, then b = 0 too.
+                substituted = integrand.subs({a: 0, b: 0}, simultaneous=True)
+            else:
+                substituted = integrand.subs(a, 0)
+            substep = yield IntegralInfo(substituted, symbol)
+            pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
+        # we divide by a, Piecewise condition above
+        const =  A/(2*a)
+        numer1 =  (2*a*symbol + b)
+        numer2 = - const*b + B
+        qprime_part = numer1 / denominator**n
+        u = Dummy('u')
+        u_substep = yield IntegralInfo(u**(-n), u)
+        step1 = URule(qprime_part, symbol, u, denominator, u_substep)
+        if const != 1:
+            step1 = ConstantTimesRule(const*qprime_part, symbol, const, qprime_part, step1)
+        if numer2.is_zero:
+            rewritten = const*qprime_part
+            general_step = RewriteRule(integrand, symbol, rewritten, step1)
+        else:
+            # since degenerate a condition is already computed, degenerate_a = False
+            step2 = yield from _complete_square(numer2, a, b, c, n, symbol, degenerate_a=False)
+            rewritten = const*qprime_part + numer2/denominator**n
+            substeps = AddRule(rewritten, symbol, [step1, step2])
+            general_step = RewriteRule(integrand, symbol, rewritten, substeps)
+        if pieces:
+            pieces.append((general_step, S.true))
+            return PiecewiseRule(integrand, symbol, pieces)
+        return general_step
+
+    B = num_poly.nth(0)
+    a = den_poly.nth(2)
+    b = den_poly.nth(1)
+    c = den_poly.nth(0)
+
+    normalized_num = num_poly.as_expr()
+    normalized_den = den_poly.as_expr()
+    normalized_integrand = normalized_num / normalized_den**n
+
+    if b == 0 and deg_num == 0 and n == 1:
+        step = yield from _arctan_match(B, a, c, symbol)
+    elif deg_num == 1:
+        A = num_poly.nth(1)
+        step = yield from _split_sum(A, B, a, b, c, n, symbol)
+    else:
+        step = yield from _complete_square(B, a, b, c, n, symbol)
+
+    if normalized_integrand != integrand:
+        step = RewriteRule(integrand, symbol, normalized_integrand, step)
+
+    return step
+
+
+def bioche_substitution(integral):
+    # Apply Bioche's rules to rational functions of trigonometric functions
+    # https://en.wikipedia.org/wiki/Bioche%27s_rules
+
+    integrand, x = integral
+    TRIG = (sin, cos, tan, cot, sec, csc)
+    trig_atoms = tuple(ordered(integrand.atoms(*TRIG)))
+
+    if not trig_atoms:
+        return None
+    # Pure sin/cos polynomial expressions, e.g. (sin(x) + cos(x))**2, are better handled termwise after expansion
+    if all(atom.func in (sin, cos) for atom in trig_atoms) and integrand.is_polynomial(*trig_atoms):
+        return None
+    if integrand.is_rational_function(*trig_atoms) is not True:
+        return None
+    masked = integrand.xreplace({atom: Dummy() for atom in trig_atoms})
+    # Exclude explicit dependence on x outside trigonometric functions
+    if masked.has(x):
+        return None
+
+    trig_data = []
+    for atom in trig_atoms:
+        argument = atom.args[0].as_poly(x)
+        # Trigonometric arguments must be affine
+        if argument is None or argument.degree() > 1:
+            return None
+        trig_data.append((atom, argument.nth(1), argument.nth(0)))
+
+    # At least one trigonometric argument must depend on x
+    reference = next(((coeff, phase_i) for _, coeff, phase_i in trig_data if coeff != 0), None)
+    if reference is None:
+        return None
+
+    coeff0, phase0 = reference
+    ratios = []
+    phase_residuals = []
+    for _, coeff, phase_i in trig_data:
+        ratio = (coeff/coeff0).cancel()
+        # All frequencies must be rationally proportional
+        if not isinstance(ratio, Rational):
+            return None
+        ratios.append(ratio)
+        phase_residuals.append((phase_i - ratio*phase0).cancel())
+    denominator_lcm = lcm_list([ratio.q for ratio in ratios])
+    # Choose the largest common frequency
+    omega = (coeff0/denominator_lcm).cancel()
+    harmonics = [ratio*denominator_lcm for ratio in ratios]
+
+    # Absorb the reference phase into u
+    phase_shift = (phase0/denominator_lcm).cancel()
+    phase_base = next((residual for residual in phase_residuals if residual.is_zero is not True), None)
+    if phase_base is None:
+        # All phases can be absorbed into u
+        phase_multiples = [S.Zero]*len(trig_data)
+    else:
+        phase_ratios = [(residual/phase_base).cancel() for residual in phase_residuals]
+        # Residual phases must have rational rank at most one
+        if not all(isinstance(ratio, Rational) for ratio in phase_ratios):
+            return None
+        # Write every residual phase as an integer multiple of phase
+        phase_lcm = lcm_list([ratio.q for ratio in phase_ratios])
+        phase = (phase_base/phase_lcm).cancel()
+        phase_multiples = [ratio*phase_lcm for ratio in phase_ratios]
+        # Minimize max(abs(m_i - n_i*k)); candidates occur where two terms are equal up to sign
+        candidates = {S.Zero}
+        for i, (m_i, n_i) in enumerate(zip(phase_multiples, harmonics)):
+            for j in range(i):
+                m_j = phase_multiples[j]
+                n_j = harmonics[j]
+                for numerator, denominator in ((m_i - m_j, n_i - n_j), (m_i + m_j, n_i + n_j)):
+                    if denominator:
+                        value = numerator/denominator
+                        candidates.update((floor(value), ceiling(value)))
+        best_k = min(ordered(candidates), key=lambda k: (
+            tuple(sorted((abs(m - n*k)
+                for m, n in zip(phase_multiples, harmonics)), reverse=True)),
+            abs(k)))
+        phase_shift = (phase_shift + best_k*phase).cancel()
+        phase_multiples = [m - n*best_k for m, n in zip(phase_multiples, harmonics)]
+
+    u_func = omega*x + phase_shift
+    u = Dummy("u")
+    v = Dummy("v")
+    s = Dummy("s")
+    c = Dummy("c")
+    replacements = {atom: atom.func(harmonic*u + phase_multiple*v)
+                for (atom, _, _), harmonic, phase_multiple in zip(trig_data, harmonics, phase_multiples)}
+    expr_u = integrand.xreplace(replacements)
+    # Rewrite multiple angles before applying Bioche's substitutions
+    expr_u = expand_trig(expr_u).cancel()
+
+    def trig_replacements(angle, s_value, c_value):
+        return {sin(angle): s_value, cos(angle): c_value, tan(angle): s_value/c_value,
+                cot(angle): c_value/s_value, sec(angle): 1/c_value, csc(angle): 1/s_value}
+
+    def rewrite_even(expr, squares, replacements):
+        numerator, denominator = expr.cancel().as_numer_denom()
+        polynomials = [part.as_poly(*squares) for part in (numerator, denominator)]
+        power_replacements = dict(replacements)
+
+        for polynomial in polynomials:
+            for powers in polynomial.monoms():
+                if any(power % 2 for power in powers):
+                    return None
+                for variable, power in zip(squares, powers):
+                    if power:
+                        power_replacements[variable**power] = squares[variable]**(power // 2)
+
+        numerator, denominator = [polynomial.as_expr().xreplace(power_replacements) for polynomial in polynomials]
+        return (numerator/denominator).cancel()
+
+    # Avoid Bioche when expansion already gives an easier termwise integral
+    # (e.g. cos(3*x)/cos(x) or cos(x + a)/(sin(x) + 2)).
+    expanded = expand_mul(expr_u)
+    expanded_trig_atoms = tuple(ordered(expanded.atoms(*TRIG)))
+    polynomial = all(atom.func in (sin, cos) for atom in expanded_trig_atoms) and (
+        not expanded_trig_atoms or expanded.is_polynomial(*expanded_trig_atoms))
+    separable = phase_base is not None and all(
+        not term.as_independent(u, as_Add=False)[1].has(v)
+        for term in Add.make_args(expanded))
+    if phase_base is not None:
+        expanded = expanded.xreplace({v: phase})
+    termwise = polynomial or separable
+
+    def parametrize_phase(expr_u):
+        # Parametrize the single residual phase as cheaply as possible.
+        # No recursion is needed here, so this stays a plain function callable
+        # both up front (below) and, if the termwise shortcut turns out to
+        # not pan out, again from the generator continuation.
+        if phase_base is None:
+            return expr_u, {}, S.false, None
+
+        # Parametrizing this keeps the coefficient domain structured and makes ratint significantly faster
+        z = Dummy("z")
+        expr_sc = expr_u.xreplace(trig_replacements(v, s, c))
+        phase_methods = (
+            (expr_sc, {s: (1 - z)/2, c: (1 + z)/2}, {}, cos(2*phase), S.false),
+            (expr_sc, {c: 1 - z**2}, {s: z}, sin(phase), S.false),
+            (expr_sc, {s: 1 - z**2}, {c: z}, cos(phase), S.false),
+            (expr_sc.xreplace({s: z*c}), {c: (1 + z**2)**-1}, {}, tan(phase), Eq(cos(phase), 0)),
+        )
+
+        for candidate, squares, replacements, phase_value, phase_condition in phase_methods:
+            transformed = rewrite_even(candidate, squares, replacements)
+            if transformed is not None:
+                expr_u = transformed
+                phase_substitution = {z: phase_value}
+                singular_condition = phase_condition
+                break
+        else:
+            # Fall back to the universal tangent half-angle parametrization
+            expr_u = expr_sc.xreplace({s: 2*z/(1 + z**2), c: (1 - z**2)/(1 + z**2)}).cancel()
+            phase_substitution = {z: tan(phase/2)}
+            singular_condition = Eq(cos(phase/2), 0)
+
+        singular_expr_u = None
+        if singular_condition is not S.false:
+            # Use the reciprocal chart when the tangent parametrization may be singular
+            w = Dummy("w")
+            singular_expr_u = expr_u.xreplace({z: 1/w}).cancel().xreplace({w: S.Zero})
+            if singular_expr_u.has(S.ComplexInfinity, S.NaN):
+                return None
+        if singular_condition is S.true:
+            # Avoid constructing the invalid tangent-chart branch.
+            expr_u, phase_substitution, singular_expr_u = singular_expr_u, {}, None
+        return expr_u, phase_substitution, singular_condition, singular_expr_u
+
+    phase_substitution, singular_condition, singular_expr_u = {}, S.false, None
+    if not termwise:
+        parametrized = parametrize_phase(expr_u)
+        # Every guard above (and this one) returns a plain None synchronously
+        # (no generator involved), so that calling bioche_substitution()
+        # directly on an out-of-scope integral - as opposed to driving it
+        # through IntegrationSolver - reports "no rule" immediately.
+        if parametrized is None:
+            return None
+        expr_u, phase_substitution, singular_condition, singular_expr_u = parametrized
+
+    def substitute():
+        if termwise:
+            if (u_func - x).cancel().is_zero is True:
+                expanded_x = expanded.xreplace({u: x})
+                expanded_substep = yield IntegralInfo(expanded_x, x)
+                generic_step = RewriteRule(integrand, x, expanded_x, expanded_substep)
+            else:
+                expanded_substep = yield IntegralInfo(expanded/omega, u)
+                generic_step = URule(integrand, x, u, u_func, expanded_substep)
+
+        else:
+            t = Dummy("t")
+            expr_sc = expr_u.xreplace(trig_replacements(u, s, c))
+
+            methods = (
+                # Try t = cos(2*u_func) when both sine and cosine powers are even
+                (-expr_sc/(4*omega*s*c), {s: (1 - t)/2, c: (1 + t)/2}, {}, cos(2*u_func)),
+                # Try t = sin(u_func) when only even powers of cosine remain
+                (expr_sc/(omega*c), {c: 1 - t**2}, {s: t}, sin(u_func)),
+                # Try t = cos(u_func) when only even powers of sine remain
+                (-expr_sc/(omega*s), {s: 1 - t**2}, {c: t}, cos(u_func)),
+                # Try t = tan(u_func) before the higher-degree half-angle substitution
+                ((expr_sc*c**2/omega).xreplace({s: t*c}), {c: (1 + t**2)**-1}, {}, tan(u_func)),
+            )
+
+            generic_step = None
+            for transformed, squares, replacements, substitution in methods:
+                transformed = rewrite_even(transformed, squares, replacements)
+                if transformed is None:
+                    continue
+                substep = yield IntegralInfo(transformed, t)
+                step = URule(integrand, x, t, substitution, substep)
+                if not step.contains_dont_know():
+                    generic_step = step
+                    break
+            else:
+                # Fall back to the universal Weierstrass substitution
+                transformed = expr_sc.xreplace({s: 2*t/(1 + t**2), c: (1 - t**2)/(1 + t**2)})
+                transformed = (transformed * 2/(omega*(1 + t**2))).cancel()
+                substep = yield IntegralInfo(transformed, t)
+                generic_step = URule(integrand, x, t, tan(u_func/2), substep)
+
+            if singular_expr_u is not None:
+                singular_substep = yield IntegralInfo((singular_expr_u/omega).cancel(), u)
+                singular_step = URule(integrand, x, u, u_func, singular_substep)
+                generic_step = PiecewiseRule(integrand, x,
+                    [(singular_step, singular_condition), (generic_step, S.true)])
+
+            if phase_substitution:
+                generic_step = ReparameterizationRule(
+                    integrand, x, phase_substitution, generic_step)
+
+        if omega.is_zero is False:
+            return generic_step
+        zero_replacements = {atom: atom.func(phase_i) for atom, _, phase_i in trig_data}
+        zero_integrand = integrand.xreplace(zero_replacements)
+        zero_substep = yield IntegralInfo(zero_integrand, x)
+        zero_step = RewriteRule(integrand, x, zero_integrand, zero_substep)
+        return PiecewiseRule(integrand, x, [(zero_step, Eq(omega, 0)), (generic_step, S.true)])
+
+    # Only once a substitution is actually attempted do we need
+    # IntegrationSolver to drive subproblems, so that part lives in a
+    # separate generator.
+    return substitute()
+
+
+def chebyshev_substitution_rule(integral):
+    """
+    Integrate c*x**m*(a + b*x**n)**p if one of
+    p, (m + 1)/n, or (m + 1)/n + p is an integer.
+    """
+    integrand, x = integral
+    # Avoid intercepting rational functions generated by the substitution
+    if integrand.is_rational_function(x):
+        return None
+
+    c = S.One
+    m = S.Zero
+    reference_base = None
+    p = S.Zero
+
+    for factor in Mul.make_args(integrand):
+        if not factor.has(x):
+            c *= factor
+            continue
+
+        base, exponent = factor.as_base_exp()
+        if not exponent.is_Rational: # exclude x**pi
+            return None
+
+        if base == x:
+            m += exponent
+            continue
+
+        if not base.is_Add:
+            return None
+
+        matched_a, xterm = base.as_independent(x, as_Add=True)
+        if matched_a.is_zero is True or xterm.is_Add:
+            return None
+
+        matched_b, xpower = xterm.as_independent(x, as_Add=False)
+        xbase, matched_n = xpower.as_base_exp()
+        if xbase != x or not matched_n.is_Rational or matched_n.is_zero:
+            return None
+
+        if reference_base is None:
+            reference_base = base
+            aa, bb, nn = matched_a, matched_b, matched_n
+            p = exponent
+            continue
+
+        # cannot collect both (1 + x**2)**p and (1 + x**3)**q
+        if matched_n != nn:
+            return None
+
+        reference_power = Pow(reference_base, exponent)
+        ratio = (powsimp(factor/reference_power, force=False)).cancel()
+        if ratio.has(x):
+            return None
+
+        c *= ratio
+        p += exponent
+
+    if reference_base is None:
+        return None
+
+    # The collector has proved that the original integrand is equivalent to
+    # c*x**m*(aa + bb*x**nn)**p.
+    # see issue #30148 for further explanation of the cases below
+
+    canonical_integrand = c*x**m*Pow(reference_base, p)
+    _, denominator_c = c.as_numer_denom()
+
+    # Case 1a: p is a nonnegative integer
+    if p.is_Integer is True and p.is_nonnegative is True:
+        rewritten = canonical_integrand.expand()
+        if rewritten == integrand:
+            return None
+        substep = yield IntegralInfo(rewritten, x)
+        return RewriteRule(integrand, x, rewritten, substep)
+    if p.is_Integer is True:
+        L = lcm_list([m.q, nn.q])
+        # If L == 1, the canonical form is already rational after collection
+        # Rewrite instead of performing the identity substitution u = x
+        if L == 1:
+            substep = yield IntegralInfo(canonical_integrand, x)
+            return RewriteRule(integrand, x, canonical_integrand, substep)
+        u = Dummy("u")
+        u_func = Pow(x, S.One/L)
+        transformed = (c*L * u**(L*(m + 1) - 1) * Pow(aa + bb*u**(L*nn), p))
+        substep = yield IntegralInfo(transformed, u)
+        return URule(integrand, x, u, u_func, substep)
+
+    P = p.p
+    q = p.q
+    r = (m + 1)/nn
+
+    # Case 2: (m + 1)/n is an integer
+    if r.is_Integer is True:
+
+        u = Dummy("u")
+        u_func = Pow(reference_base, S.One/q)
+        transformed = c*S(q)/(bb*nn)*u**(P + q - 1)*Pow((u**q - aa)/bb, r - 1)
+        substep = yield IntegralInfo(transformed, u)
+        general_step = URule(integrand, x, u, u_func, substep)
+
+        if _if_zero_implies_zero(bb, denominator_c) or (p.is_negative and _if_zero_implies_zero(bb, reference_base)):
+            return general_step
+
+        # The substitution is degenerate when b = 0 (occurs in the denominator above)
+        degenerate_integrand = canonical_integrand.subs(bb, 0)
+        degenerate_substep = yield IntegralInfo(degenerate_integrand, x)
+        degenerate_step = RewriteRule(integrand, x, degenerate_integrand, degenerate_substep)
+        return PiecewiseRule(integrand, x, [(degenerate_step, Eq(bb, 0)), (general_step, S.true)])
+
+    s = r + p
+
+    # Case 3: (m + 1)/n + p is an integer
+    if s.is_Integer is True:
+
+        u = Dummy("u")
+        u_func = reference_base**(S.One/q)*x**(-nn/S(q))
+        transformed = -c*S(q)/(aa*nn)*u**(P + q - 1)*Pow(aa/(u**q - bb), s + 1)
+        substep = yield IntegralInfo(transformed, u)
+
+        general_step = URule(integrand, x, u, u_func, substep)
+
+        # The substitution is degenerate when a = 0 (occurs in the denominator above)
+        if _if_zero_implies_zero(aa, denominator_c) or (p.is_negative and _if_zero_implies_zero(aa, reference_base)):
+            return general_step
+        degenerate_integrand = canonical_integrand.subs(aa, 0)
+        degenerate_substep = yield IntegralInfo(degenerate_integrand, x)
+        degenerate_step = RewriteRule(integrand, x, degenerate_integrand, degenerate_substep)
+        return PiecewiseRule(integrand, x, [(degenerate_step, Eq(aa, 0)), (general_step, S.true)])
+
+    return None
+
+
+def sqrt_fractional_linear_rule(integral : IntegralInfo):
+    """
+    Substitute common ((a*x + b)/(c*x + d))**(1/n)
+    """
+    integrand, x = integral
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    c = Wild('c', exclude=[x])
+    d = Wild('d', exclude=[x])
+    base0 = None
+    powers, exps, ratios = [], [], []
+    constant_bases_subs = {}
+    # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x), then cbrt(2x), x chosen)
+    for pow_ in ordered(integrand.find((Pow))): # collect all ((a*x + b)/(c*x + d))**(p/q)
+        base, exp_ = pow_.base, pow_.exp
+        if exp_.is_Integer or x not in base.free_symbols: # skip 1/x and sqrt(2)
+            continue
+        if not exp_.is_Rational: # exclude x**pi
+            return None
+        num, den = base.as_numer_denom()
+        match_num = num.match(a*x + b)
+        match_den = den.match(c*x + d)
+        if not match_num or not match_den:
+            continue
+        aa, bb = match_num[a], match_num[b]
+        cc, dd = match_den[c], match_den[d]
+        if cc.is_zero and dd.is_zero:
+            return None
+        det = aa*dd - bb*cc
+        if det.is_zero: # constant value as sqrt((5*x + 10)/(2*x +  4))
+            const_val = (S(aa) / cc) if not cc.is_zero else (S(bb) / dd)
+            constant_bases_subs[base] = const_val
+            continue
+        if base0 is None:
+            base0 = base
+            a0, b0, c0, d0 = aa, bb, cc, dd
+            powers.append(pow_)
+            exps.append(exp_)
+            ratios.append(S.One)
+        else:
+            power_ratio = powsimp(pow_ / Pow(base0, exp_), force=False).cancel()
+            if power_ratio.has(x):
+                return None
+            powers.append(pow_)
+            exps.append(exp_)
+            ratios.append(power_ratio)
+    if base0 is None and not constant_bases_subs:
+        return None
+    if constant_bases_subs:
+        integrand = integrand.xreplace(constant_bases_subs)
+    if base0 is None:
+        substep = yield IntegralInfo(integrand, x)
+        if not substep.contains_dont_know():
+            debug("Integral: {} is rewritten with {} on symbol: {}".format(integral.integrand, integrand, x))
+            return RewriteRule(integral.integrand, x, integrand, substep)
+        return None
+    q0: Integer = lcm_list([exp_i.q for exp_i in exps])
+    u = Dummy("u")
+    u_x = base0**(S.One/q0)
+    u_pow = u**q0
+    x_u = (b0 - d0*u_pow)/(c0*u_pow - a0)
+    dx_u = (q0*(a0*d0 - b0*c0)*u**(q0 - 1))/(c0*u_pow - a0)**2
+    subs_dict = {pow_i: ratio_i * u**(q0*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+    substituted = integrand.xreplace(subs_dict).xreplace({x: x_u}) * dx_u
+    substep = yield IntegralInfo(substituted, u)
+    if not substep.contains_dont_know():
+        pieces: list[tuple[Rule, Boolean]] = []
+        det = a0*d0 - b0*c0
+        _, base0_denom = base0.as_numer_denom()
+        # skips bases where constant value (degenerate case) is not possible (det != 0 or det = 0 implies den = 0)
+        # (eg. (3*x + 2)/(4*x + 3), (3x + b)/(d), (4*x + 3)/(c*x + c))
+        if not (_if_zero_implies_zero(det, base0_denom)):
+            d0_implies_c0 = _if_zero_implies_zero(d0, c0)
+            c0_implies_d0 = _if_zero_implies_zero(c0, d0)
+            # skips constant value a/c if d != 0 or d = 0 implies c = 0 (eg. (3*x + 2)/(c*d*x + d), (3*x + 2)/(c*x + 4))
+            # takes a/c if they both imply each other (eg. (a*x + b)/3*x + 4)) (taking b/d would be the same)
+            if not d0_implies_c0 or (c0_implies_d0 and d0_implies_c0):
+                const_val = a0 / c0
+                subs_a = {pow_i: ratio_i * Pow(const_val, exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+                simplified_a = integrand.xreplace(subs_a)
+                degenerate_step_a = yield IntegralInfo(simplified_a, x)
+                pieces.append((degenerate_step_a, (And(Eq(det, 0), Ne(c0, 0)))))
+            if not c0_implies_d0:
+                const_val = b0 / d0
+                subs_b = {pow_i: ratio_i * Pow(const_val, exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+                simplified_b = integrand.xreplace(subs_b)
+                simplified_b = simplified_b.subs({a0: 0, c0: 0}) # if det = 0, c = 0 and d != 0, a must be 0
+                degenerate_step_b = yield IntegralInfo(simplified_b, x)
+                pieces.append((degenerate_step_b, (And(Eq(det, 0), Eq(c0, 0)))))
+        step: Rule = URule(integrand, x, u, u_x, substep)
+        if pieces:
+            pieces.append((step, S.true))
+            step = PiecewiseRule(integrand, x, pieces)
+        if constant_bases_subs:
+            debug("Integral: {} is rewritten with {} on symbol: {}".format(integral.integrand, integrand, x))
+            return RewriteRule(integral.integrand, x, integrand, step)
+        return step
+    return None
+
+
+def euler_substitution_rule(integral : IntegralInfo):
+    """
+    Substitute common sqrt(a + b*x + c*x**2) terms using Euler substitution.
+    """
+    integrand, x = integral
+    base0 = None
+    powers, exps, ratios = [], [], []
+    # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x**2 + 1), then sqrt(2*x**2 + 2), x**2 + 1 chosen)
+    for pow_ in ordered(integrand.find(Pow)): # collect all (a + b*x + c*x**2)**(p/2)
+        base, exp_ = pow_.base, pow_.exp
+        if exp_.is_Integer or x not in base.free_symbols: # skip 1/x and sqrt(2)
+            continue
+        if not exp_.is_Rational: # exclude (x**2 + 1)**pi
+            return None
+        if exp_.q != 2:
+            return None
+        base_poly = base.as_poly(x)
+        if base_poly is None or base_poly.degree() != 2: # exclude cube polynomial roots and other radicals
+            return None
+        aa = base_poly.nth(0)
+        bb = base_poly.nth(1)
+        cc = base_poly.nth(2)
+        R = base_poly.as_expr()
+        if base0 is None:
+            base0 = R
+            a0, b0, c0 = aa, bb, cc
+            powers.append(pow_)
+            exps.append(exp_)
+            ratios.append(S.One)
+        else:
+            power_ratio = (powsimp(Pow(R, exp_) / Pow(base0, exp_), force=False)).cancel()
+            if power_ratio.has(x):
+                return None
+            powers.append(pow_)
+            exps.append(exp_)
+            ratios.append(power_ratio)
+    if base0 is None:
+        return None
+
+    pieces: list[tuple[Rule, Boolean]] = []
+    delta = 4*a0*c0 - b0**2
+    # substitution not valid for c0 = 0 and delta = 0
+    c_zero_cond = Eq(c0, 0)
+    delta_zero_cond = Eq(delta, 0)
+
+    def _delta_zero_step():
+        shift = x + b0/(2*c0)
+        rewritten_base = c0*shift**2
+        subs_dict = {pow_i: ratio_i*(rewritten_base)**exp_i for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+        rewritten = integrand.xreplace(subs_dict)
+        step = yield IntegralInfo(rewritten, x)
+        return RewriteRule(integrand, x, rewritten, step)
+
+    def _c_zero_step():
+        degenerate_integrand = integrand.subs(c0, 0)
+        if b0.is_zero:
+            step = yield IntegralInfo(degenerate_integrand, x)
+        else:
+            step = yield from sqrt_fractional_linear_rule(IntegralInfo(degenerate_integrand, x))
+            if step is None:
+                # since calling directly sqrt_fractional_linear_rule could return None we create a DontKnowRule
+                step = DontKnowRule(degenerate_integrand, x)
+        return step
+
+    def _general_euler_step():
+        s = Dummy("s")
+        subs_dict = { pow_i: ratio_i * s**(2*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+        rewritten = integrand.xreplace(subs_dict)
+        numer, denom = rewritten.as_numer_denom()
+        if numer.as_poly(x, s) is None or denom.as_poly(x, s) is None:
+            return None
+        # Euler's second substitution (u = sqrt(R) + sqrt(c)*x)
+        u = Dummy("u")
+        sqrt_c0 = sqrt(c0)
+        x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
+        s_u = u - sqrt_c0*x_u
+        dx_u = 2*(b0*u + sqrt_c0*(u**2 + a0))/(b0 + 2*sqrt_c0*u)**2
+        substituted = rewritten.xreplace({x: x_u, s: s_u}) * dx_u
+        substep = yield IntegralInfo(substituted, u)
+        u_func = sqrt(base0) + sqrt_c0*x
+        return URule(integrand, x, u, u_func, substep)
+
+    if delta_zero_cond is S.true:
+        general_step = yield from _delta_zero_step()
+        if general_step.contains_dont_know():
+            return None
+    else:
+        general_step = yield from _general_euler_step()
+        if general_step is None or general_step.contains_dont_know():
+            return None
+    if c0.is_zero is None:
+        pieces.append(((yield from _c_zero_step()), c_zero_cond))
+    if delta.is_zero is None:
+        pieces.append(((yield from _delta_zero_step()), delta_zero_cond))
+    if pieces:
+        pieces.append((general_step, S.true))
+        general_step = PiecewiseRule(integrand, x, pieces)
+    return general_step
+
+
+def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
+    # integrate f(x) * (a + b*x + c*x**2)**(n/2),
+    # where f(x) is a polynomial and n is an odd integer
+    starting_integrand, x = integral
+
+    f = S.One
+    root_base = None
+    root_exp: Expr = S.Zero
+
+    # collect radicals
+    for factor in Mul.make_args(starting_integrand):
+        if not factor.has(x):
+            f *= factor
+            continue
+        base, exp = factor.as_base_exp()
+        if exp.is_Integer is True:
+            f *= factor
+            continue
+        # exclude x**pi
+        if exp.is_Rational is not True:
+            return None
+        base_poly = base.as_poly(x)
+        # exclude sqrt(log(x))
+        if base_poly is None or base_poly.degree() != 2:
+            return None
+        base = base_poly.as_expr()
+        if root_base is None:
+            root_base = base
+            root_exp = exp
+            continue
+        reference_power = Pow(root_base, exp)
+        ratio = powsimp(factor/reference_power, force=False).cancel()
+        if ratio.has(x):
+            return None
+        f *= ratio
+        root_exp += exp
+
+    if root_base is None:
+        return None
+    f_poly = f.as_poly(x)
+    if f_poly is None:
+        return None
+    n = 2*root_exp
+    if n.is_Integer is not True or n.is_odd is not True:
+        return None
+    root_poly = root_base.as_poly(x)
+    a = root_poly.nth(0)
+    b = root_poly.nth(1)
+    c = root_poly.nth(2)
+    root_base = a + b*x + c*x**2
+    integrand = f*Pow(root_base, n/2)
+
+    generic_cond = Ne(c, 0)
+    if not degenerate or generic_cond is S.true:
+        degenerate_step = None
+    elif b.is_zero:
+        degenerate_step = yield IntegralInfo(f*sqrt(a)**n, x)
+    else:
+        degenerate_integrand = f*sqrt(a + b*x)**n
+        degenerate_step = yield from sqrt_fractional_linear_rule(IntegralInfo(degenerate_integrand, x))
+        if degenerate_step is None:
+            # since  sqrt_fractional_linear_rule does not guarantee a solution
+            # we create a DontKnowRule so that _add_degenerate_step adds the degenerate condition
+            degenerate_step = DontKnowRule(degenerate_integrand, x)
+
+    def sqrt_quadratic_denom_rule(numer_poly: Poly, integrand: Expr):
+        denom = sqrt(a+b*x+c*x**2)
+        deg = numer_poly.degree()
+        if deg <= 1:
+            # integrand == (d+e*x)/sqrt(a+b*x+c*x**2)
+            e, d = numer_poly.all_coeffs() if deg == 1 else (S.Zero, numer_poly.as_expr())
+            # rewrite numerator to A*(2*c*x+b) + B
+            A = e/(2*c)
+            B = d-A*b
+            pre_substitute = (2*c*x+b)/denom
+            constant_step: Rule | None = None
+            linear_step: Rule | None = None
+            if A != 0:
+                u = Dummy("u")
+                pow_rule = PowerRule(1/sqrt(u), u, u, -S.Half)
+                linear_step = URule(pre_substitute, x, u, a+b*x+c*x**2, pow_rule)
+                if A != 1:
+                    linear_step = ConstantTimesRule(A*pre_substitute, x, A, pre_substitute, linear_step)
+            if B != 0:
+                constant_step = yield from inverse_trig_rule(IntegralInfo(1/denom, x), degenerate=False)
+                if B != 1:
+                    constant_step = ConstantTimesRule(B/denom, x, B, 1/denom, constant_step)  # type: ignore
+            if linear_step and constant_step:
+                add = Add(A*pre_substitute, B/denom, evaluate=False)
+                step: Rule | None = RewriteRule(integrand, x, add, AddRule(add, x, [linear_step, constant_step]))
+            else:
+                step = linear_step or constant_step
+        else:
+            coeffs = numer_poly.all_coeffs()
+            _, _, constant = _sqrt_quadratic_denom_reduce(coeffs, a, b, c)
+            i0_step: Rule | None = None
+            if constant != 0:
+                i0_step = yield from inverse_trig_rule(IntegralInfo(1/denom, x), degenerate=False)
+            step = SqrtQuadraticDenomRule(integrand, x, a, b, c, coeffs, i0_step)
+        return step
+
+    def sqrt_quadratic_reduction_rule(integrand: Expr, n: Expr, const: Expr):
+        # Implementation of Gradshteyn & Ryzhik 2.263.3
+        k = (-n - 1) // 2
+        delta = 4*a*c - b**2
+        R = c*x**2 + b*x + a
+
+        def double_root_step():
+            square_base = sqrt(c)*x + b/(2*sqrt(c))
+            nested = Pow(Pow(square_base, 2, evaluate=False), S(n)/2, evaluate=False)
+            rewritten = const*nested
+            substep = nested_pow_rule(IntegralInfo(rewritten, x))
+            return RewriteRule(integrand, x, rewritten, substep)
+
+        if delta.is_zero is True:
+            return double_root_step()
+
+        # we divide by delta, then delta  has to be != 0
+        term_denom = (2*k - 1) * delta * (R**(S(2*k - 1)/2))
+        constant_term = const*2*(2*c*x+b) / term_denom
+        coeff = (8*c*(k-1))/((2*k-1) * delta)
+        expr = const * R**(S(1)/2 - k)
+
+        rewrite_expr = Derivative(constant_term, x) + coeff * expr
+        derive_expr = Derivative(constant_term, x)
+        derive_step = yield IntegralInfo(derive_expr, x)
+
+        if coeff == 0:
+            substep = derive_step
+        else:
+            next_step = yield IntegralInfo(expr, x)
+            if not next_step:
+                next_step = DontKnowRule(expr, x)
+
+            substep = AddRule(
+                rewrite_expr,
+                x,
+                [
+                    derive_step,
+                    ConstantTimesRule(
+                        coeff * expr,
+                        x,
+                        coeff,
+                        expr,
+                        next_step
+                    )
+                ]
+            )
+
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewrite_expr, x))
+        nondegenerate_step = RewriteRule(integrand, x, rewrite_expr, substep)
+        if delta.is_zero is None:
+            return _add_degenerate_step(
+                Ne(delta, 0),
+                nondegenerate_step,
+                double_root_step(),
+            )
+        return nondegenerate_step
+
+    def sqrt_quadratic_polynomial_reduction_rule():
+        # reduce non-constant polynomial numerators by writing f = q*R + r,
+        # then split the linear remainder into a multiple of R' and a constant.
+        terms = []
+        steps = []
+        root_base = c*x**2 + b*x + a
+        root_poly = Poly(root_base, x)
+        quotient, rest = f_poly.div(root_poly)
+        if not quotient.is_zero:
+            # n is increasing by 2 at each step, we will fall in one of the cases above
+            quotient_integrand = quotient.as_expr() * sqrt(root_base)**(n + 2)
+            quotient_step = yield from sqrt_quadratic_rule(IntegralInfo(quotient_integrand, x), degenerate=False)
+            terms.append(quotient_integrand)
+            steps.append(quotient_step)
+        if not rest.is_zero:
+            # split the linear remainder as A*R' + B, where R' = 2*c*x + b.
+            e = rest.nth(1)
+            d = rest.nth(0)
+            A = e/(2*c)
+            B = d - A*b
+            if A != 0:
+                u = Dummy("u")
+                # solved by substitution
+                base = (2*c*x + b) * sqrt(root_base)**n
+                term = A * base
+                pow_rule = PowerRule(u**(S(n)/2), u, u, S(n)/2)
+                u_step = URule(base, x, u, root_base, pow_rule)
+                if A != 1:
+                    u_step = ConstantTimesRule(term, x, A, base, u_step)
+                terms.append(term)
+                steps.append(u_step)
+            if B != 0:
+                term = B * sqrt(root_base)**n
+                # constant case already managed
+                const_step = yield from sqrt_quadratic_reduction_rule(term, n, B)
+                terms.append(term)
+                steps.append(const_step)
+        rewritten = Add(*terms, evaluate=False)
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, x))
+        if len(steps) == 1:
+            substep = steps[0]
+        else:
+            substep = AddRule(rewritten, x, steps)
+        return RewriteRule(integrand, x, rewritten, substep)
+
+    if n > 0:  # rewrite poly * sqrt(s)**(2*k-1) to poly*s**k / sqrt(s)
+        numer_poly = f_poly * (a+b*x+c*x**2)**((n+1)/2)
+        rewritten = numer_poly.as_expr()/sqrt(a+b*x+c*x**2)
+        substep = yield from sqrt_quadratic_denom_rule(numer_poly, rewritten)
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, x))
+        generic_step = RewriteRule(integrand, x, rewritten, substep)
+    elif n == -1:
+        generic_step = yield from sqrt_quadratic_denom_rule(f_poly, integrand)
+    elif f_poly.degree() == 0:
+        # The numerator must be a const, the formula assumes this
+        generic_step = yield from sqrt_quadratic_reduction_rule(integrand, n, f)
+    else:
+        generic_step = yield from sqrt_quadratic_polynomial_reduction_rule()
+    step = _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+    if integrand != starting_integrand:
+        return RewriteRule(starting_integrand, x, integrand, step)
+    return step
+
+
+def trig_poly_mul_rule(integral: IntegralInfo):
+    """
+    Integrate poly(x) * sin(a*x**2+b*x+c) or poly(x) * cos(a*x**2+b*x+c).
+
+    * If the quadratic has a nonzero linear term, complete the square and
+      shift to u = x + b/(2a), expand the trig function of (a*u**2 + k)
+      with the angle-sum identities, and recurse: the result is a sum of
+      terms poly(u) * sin(a*u**2) and poly(u) * cos(a*u**2).
+    """
     integrand, symbol = integral
-    a = sympy.Wild('a', exclude=[symbol])
-    b = sympy.Wild('b', exclude=[symbol])
-    c = sympy.Wild('c')
-    match = integrand.match(sympy.sqrt(a * symbol + b) * c)
+    if not integrand.is_Mul:
+        return
+
+    a_ = Wild('a', exclude=[symbol, 0])
+    b_ = Wild('b', exclude=[symbol, 0])
+    c_ = Wild('c', exclude=[symbol])
+    quadratic_pattern = a_*symbol**2 + b_*symbol + c_
+
+    is_sin = None
+    match = None
+    rest = []
+    for factor in integrand.args:
+        if not match and isinstance(factor, (sin, cos)):
+            match = factor.args[0].match(quadratic_pattern)
+            if match:
+                is_sin = isinstance(factor, sin)
+                continue
+            else:
+                match = None
+        rest.append(factor)
 
     if not match:
         return
 
-    a, b, c = match[a], match[b], match[c]
-    d = sympy.Wild('d', exclude=[symbol])
-    e = sympy.Wild('e', exclude=[symbol])
-    f = sympy.Wild('f')
-    recursion_test = c.match(sympy.sqrt(d * symbol + e) * f)
-    if recursion_test:
+    poly = Mul(*rest)  # type: ignore
+    if (symbol not in poly.free_symbols
+            or not poly.is_polynomial(symbol)):
         return
 
-    u = sympy.Dummy('u')
-    u_func = sympy.sqrt(a * symbol + b)
-    integrand = integrand.subs(u_func, u)
-    integrand = integrand.subs(symbol, (u**2 - b) / a)
-    integrand = integrand * 2 * u / a
-    next_step = integral_steps(integrand, u)
-    if next_step:
-        return URule(u, u_func, None, next_step, integrand, symbol)
+    a = match[a_]
+    b = match[b_]
+    c = match[c_]
 
-@sympy.cacheit
-def make_wilds(symbol):
-    a = sympy.Wild('a', exclude=[symbol])
-    b = sympy.Wild('b', exclude=[symbol])
-    m = sympy.Wild('m', exclude=[symbol], properties=[lambda n: isinstance(n, sympy.Integer)])
-    n = sympy.Wild('n', exclude=[symbol], properties=[lambda n: isinstance(n, sympy.Integer)])
+    generic_cond = Ne(a, 0)
+    degenerate_step = None
+    if generic_cond is not S.true:
+        degenerate_trig = sin(b*symbol + c) if is_sin else cos(b*symbol + c)
+        degenerate_step = yield IntegralInfo(poly * degenerate_trig, symbol)
 
-    return a, b, m, n
+    # Complete the square and shift.
+    h = -b / (2*a)
+    k = c - b**2 / (4*a)
 
-@sympy.cacheit
-def sincos_pattern(symbol):
-    a, b, m, n = make_wilds(symbol)
-    pattern = sympy.sin(a*symbol)**m * sympy.cos(b*symbol)**n
+    u = Dummy('u')
+    u_func = symbol - h  # u = x - h => x = u + h
 
-    return pattern, a, b, m, n
+    poly_u = poly.subs(symbol, u + h).expand()
 
-@sympy.cacheit
-def tansec_pattern(symbol):
-    a, b, m, n = make_wilds(symbol)
-    pattern = sympy.tan(a*symbol)**m * sympy.sec(b*symbol)**n
+    if is_sin:
+        expanded_trig = sin(a*u**2)*cos(k) + cos(a*u**2)*sin(k)
+    else:
+        expanded_trig = cos(a*u**2)*cos(k) - sin(a*u**2)*sin(k)
 
-    return pattern, a, b, m, n
+    new_integrand = expand(poly_u * expanded_trig)
+    rewritten = new_integrand.subs(u, u_func)
 
-@sympy.cacheit
-def cotcsc_pattern(symbol):
-    a, b, m, n = make_wilds(symbol)
-    pattern = sympy.cot(a*symbol)**m * sympy.csc(b*symbol)**n
+    substep = yield IntegralInfo(new_integrand, u)
+    if substep.contains_dont_know():
+        return
+    substep = URule(rewritten, symbol, u, u_func, substep)
+    generic_step = CompleteSquareRule(integrand, symbol, rewritten, substep)
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
-    return pattern, a, b, m, n
 
-@sympy.cacheit
+def trig_product_to_sum_rule(integral: IntegralInfo):
+    """
+    Rewrite a product of two sin/cos factors with different arguments using the
+    product-to-sum identities, e.g.
+
+        sin(x**2)*cos(x) -> (sin(x**2+x) + sin(x**2-x)) / 2
+
+    This is useful when at least one of the arguments is not linear in the
+    integration variable.
+    """
+    integrand, symbol = integral
+    if not integrand.is_Mul:
+        return
+
+    trig_factors = []
+    rest = []
+    for f in integrand.args:
+        if isinstance(f, (sin, cos)):
+            trig_factors.append(f)
+        else:
+            rest.append(f)
+
+    if len(trig_factors) != 2:
+        return
+
+    f1, f2 = trig_factors[0], trig_factors[1]
+    A, B = f1.args[0], f2.args[0]
+    if not (A.has(symbol) and B.has(symbol)):
+        return
+
+    def _is_linear(expr):
+        return expr.is_polynomial(symbol) and Poly(expr, symbol).degree() <= 1
+
+    if _is_linear(A) and _is_linear(B):
+        # Both arguments are linear in symbol; other, cheaper rules already
+        # handle this case, so don't pay for the recursive rewrite below.
+        return
+
+    replacement = sincos_to_sum(f1*f2)
+    rewritten = expand(Mul(*rest) * replacement)  # type: ignore
+
+    substep = yield IntegralInfo(rewritten, symbol)
+    if substep.contains_dont_know():
+        return
+
+    return RewriteRule(integrand, symbol, rewritten, substep)
+
+
+def hyperbolic_rule(integral: tuple[Expr, Symbol]):
+    integrand, symbol = integral
+    if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
+        if integrand.func == sinh:
+            return SinhRule(integrand, symbol)
+        if integrand.func == cosh:
+            return CoshRule(integrand, symbol)
+        u = Dummy('u')
+        if integrand.func == tanh:
+            rewritten = sinh(symbol)/cosh(symbol)
+            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+            return RewriteRule(integrand, symbol, rewritten,
+                   URule(rewritten, symbol, u, cosh(symbol), ReciprocalRule(1/u, u, u)))
+        if integrand.func == coth:
+            rewritten = cosh(symbol)/sinh(symbol)
+            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+            return RewriteRule(integrand, symbol, rewritten,
+                   URule(rewritten, symbol, u, sinh(symbol), ReciprocalRule(1/u, u, u)))
+        else:
+            rewritten = integrand.rewrite(tanh)
+            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+            if integrand.func == sech:
+                return RewriteRule(integrand, symbol, rewritten,
+                       URule(rewritten, symbol, u, tanh(symbol/2),
+                       ArctanRule(2/(u**2 + 1), u, S(2), S.One, S.One)))
+            if integrand.func == csch:
+                debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+                return RewriteRule(integrand, symbol, rewritten,
+                       URule(rewritten, symbol, u, tanh(symbol/2),
+                       ReciprocalRule(1/u, u, u)))
+
+@cacheit
 def heaviside_pattern(symbol):
-    m = sympy.Wild('m', exclude=[symbol])
-    b = sympy.Wild('b', exclude=[symbol])
-    g = sympy.Wild('g')
-    pattern = sympy.Heaviside(m*symbol + b) * g
+    m = Wild('m', exclude=[symbol])
+    b = Wild('b', exclude=[symbol])
+    g = Wild('g')
+    pattern = Heaviside(m*symbol + b) * g
 
     return pattern, m, b, g
 
-def uncurry(func):
-    def uncurry_rl(args):
-        return func(*args)
-    return uncurry_rl
+def _collect_trig_powers(integrand, symbol, functions):
+    powers = {function: {} for function in functions}
+    coefficients = {}
 
-def trig_rewriter(rewrite):
-    def trig_rewriter_rl(args):
-        a, b, m, n, integrand, symbol = args
-        rewritten = rewrite(a, b, m, n, integrand, symbol)
-        if rewritten != integrand:
-            return RewriteRule(
-                rewritten,
-                integral_steps(rewritten, symbol),
-                integrand, symbol)
-    return trig_rewriter_rl
+    for factor in Mul.make_args(integrand):
+        base, power = factor.as_base_exp()
+        if base.func not in functions:
+            return
+        if power.has_free(symbol):
+            return
 
-sincos_botheven_condition = uncurry(
-    lambda a, b, m, n, i, s: m.is_even and n.is_even and
-    m.is_nonnegative and n.is_nonnegative)
+        argument = base.args[0]
+        polynomial = argument.as_poly(symbol)
+        if polynomial is None or polynomial.degree() != 1:
+            return
 
-sincos_botheven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (((1 - sympy.cos(2*a*symbol)) / 2) ** (m / 2)) *
-                                    (((1 + sympy.cos(2*b*symbol)) / 2) ** (n / 2)) ))
+        coefficients[argument] = polynomial.nth(1)
+        function_powers = powers[base.func]
+        function_powers[argument] = function_powers.get(argument, S.Zero) + power
 
-sincos_sinodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd and m >= 3)
+    return powers, coefficients
 
-sincos_sinodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 - sympy.cos(a*symbol)**2)**((m - 1) / 2) *
-                                    sympy.sin(a*symbol) *
-                                    sympy.cos(b*symbol) ** n))
 
-sincos_cosodd_condition = uncurry(lambda a, b, m, n, i, s: n.is_odd and n >= 3)
+def _add_trig_degenerate_step(integral, coefficient, generic_step):
+    integrand, symbol = integral
+    generic_cond = Ne(coefficient, 0)
+    if generic_cond is S.true:
+        return generic_step
 
-sincos_cosodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 - sympy.sin(b*symbol)**2)**((n - 1) / 2) *
-                                    sympy.cos(b*symbol) *
-                                    sympy.sin(a*symbol) ** m))
+    degenerate_integrand = integrand.subs(symbol, 0).subs(coefficient, 0)
+    if degenerate_integrand.has(
+            S.ComplexInfinity, S.Infinity, S.NegativeInfinity, S.NaN):
+        return generic_step
+    degenerate_step = RewriteRule(
+        integrand, symbol, degenerate_integrand,
+        ConstantRule(degenerate_integrand, symbol))
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
-tansec_seceven_condition = uncurry(lambda a, b, m, n, i, s: n.is_even and n >= 4)
-tansec_seceven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 + sympy.tan(b*symbol)**2) ** (n/2 - 1) *
-                                    sympy.sec(b*symbol)**2 *
-                                    sympy.tan(a*symbol) ** m ))
 
-tansec_tanodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd)
-tansec_tanodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (sympy.sec(a*symbol)**2 - 1) ** ((m - 1) / 2) *
-                                     sympy.tan(a*symbol) *
-                                     sympy.sec(b*symbol) ** n ))
+def _trig_substitution_rule(integral, rewritten, coefficient, u_var, u_func,
+                            substituted):
+    integrand, symbol = integral
+    substep = yield IntegralInfo(substituted, u_var)
+    generic_step = URule(rewritten, symbol, u_var, u_func, substep)
+    if rewritten != integrand:
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(
+            integrand, rewritten, symbol))
+        generic_step = RewriteRule(
+            integrand, symbol, rewritten, generic_step)
+    return _add_trig_degenerate_step(integral, coefficient, generic_step)
 
-tan_tansquared_condition = uncurry(lambda a, b, m, n, i, s: m == 2 and n == 0)
-tan_tansquared = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( sympy.sec(a*symbol)**2 - 1))
 
-cotcsc_csceven_condition = uncurry(lambda a, b, m, n, i, s: n.is_even and n >= 4)
-cotcsc_csceven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 + sympy.cot(b*symbol)**2) ** (n/2 - 1) *
-                                    sympy.csc(b*symbol)**2 *
-                                    sympy.cot(a*symbol) ** m ))
+def _rewrite_to_reciprocal(integrand, function, reciprocal):
+    def rewrite_factor(factor):
+        base, power = factor.as_base_exp()
+        # Positive powers may be better handled in their original family.
+        if (base.func == function and power.is_integer is True
+                and power.is_negative is True):
+            return reciprocal(base.args[0])**(-power)
+        return factor
+    return Mul(*(rewrite_factor(factor) for factor in Mul.make_args(integrand)))
 
-cotcsc_cotodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd)
-cotcsc_cotodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (sympy.csc(a*symbol)**2 - 1) ** ((m - 1) / 2) *
-                                    sympy.cot(a*symbol) *
-                                    sympy.csc(b*symbol) ** n ))
+def sincos_sinodd(integral, argument, coefficient, m, n):
+    rewritten = ((1 - cos(argument)**2)**((m - 1) / 2) *
+                 sin(argument) * cos(argument)**n)
+    u_var = Dummy("u")
+    substituted = (-(1 - u_var**2)**((m - 1) / 2) * u_var**n /
+                   coefficient)
+    return _trig_substitution_rule(
+        integral, rewritten, coefficient, u_var, cos(argument), substituted)
+
+
+def sincos_cosodd(integral, argument, coefficient, m, n):
+    rewritten = ((1 - sin(argument)**2)**((n - 1) / 2) *
+                 cos(argument) * sin(argument)**m)
+    u_var = Dummy("u")
+    substituted = ((1 - u_var**2)**((n - 1) / 2) * u_var**m /
+                   coefficient)
+    return _trig_substitution_rule(
+        integral, rewritten, coefficient, u_var, sin(argument), substituted)
+
+
+def sincos_product_to_sum(integral):
+    integrand, symbol = integral
+    rewritten = sincos_to_sum(integrand)
+    if rewritten != integrand:
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(
+            integrand, rewritten, symbol))
+        substep = yield IntegralInfo(rewritten, symbol)
+        return RewriteRule(integrand, symbol, rewritten, substep)
+
+
+def tansec_tanodd(integral, argument, coefficient, m, n):
+    rewritten = ((sec(argument)**2 - 1)**((m - 1) / 2) *
+                 tan(argument) * sec(argument)**n)
+    u_var = Dummy("u")
+    substituted = ((u_var**2 - 1)**((m - 1) / 2) *
+                   u_var**(n - 1) / coefficient)
+    return _trig_substitution_rule(
+        integral, rewritten, coefficient, u_var, sec(argument), substituted)
+
+
+def tansec_seceven(integral, argument, coefficient, m, n):
+    rewritten = ((1 + tan(argument)**2)**((n - 2) / 2) *
+                 sec(argument)**2 * tan(argument)**m)
+    u_var = Dummy("u")
+    substituted = ((1 + u_var**2)**((n - 2) / 2) *
+                   u_var**m / coefficient)
+    return _trig_substitution_rule(
+        integral, rewritten, coefficient, u_var, tan(argument), substituted)
+
+
+def tansec_tan_reduction(integral, argument, coefficient, m,
+                         degenerate=True):
+    integrand, symbol = integral
+    reduced = tan(argument)**(m - 2)
+    substitution_integrand = reduced*sec(argument)**2
+    rewritten = substitution_integrand - reduced
+
+    u_var = Dummy("u")
+    substituted = u_var**(m - 2) / coefficient
+    substep = yield IntegralInfo(substituted, u_var)
+    substitution_step = URule(
+        substitution_integrand, symbol, u_var, tan(argument), substep)
+
+    if m == 2:
+        reduction_step = ConstantRule(S.One, symbol)
+    else:
+        reduction_step = trig_tansec_rule(
+            IntegralInfo(reduced, symbol), degenerate=False)
+        if isinstance(reduction_step, GeneratorType):
+            reduction_step = yield from reduction_step
+    negative_reduced = -reduced
+    reduction_step = ConstantTimesRule(
+        negative_reduced, symbol, S.NegativeOne, reduced, reduction_step)
+    generic_step = RewriteRule(
+        integrand, symbol, rewritten,
+        AddRule(rewritten, symbol, [substitution_step, reduction_step]))
+    if not degenerate:
+        return generic_step
+    return _add_trig_degenerate_step(integral, coefficient, generic_step)
+
+def cotcsc_cotodd(integral, argument, coefficient, m, n):
+    rewritten = ((csc(argument)**2 - 1)**((m - 1) / 2) *
+                 cot(argument) * csc(argument)**n)
+    u_var = Dummy("u")
+    substituted = (-(u_var**2 - 1)**((m - 1) / 2) *
+                   u_var**(n - 1) / coefficient)
+    return _trig_substitution_rule(
+        integral, rewritten, coefficient, u_var, csc(argument), substituted)
+
+
+def cotcsc_csceven(integral, argument, coefficient, m, n):
+    rewritten = ((1 + cot(argument)**2)**((n - 2) / 2) *
+                 csc(argument)**2 * cot(argument)**m)
+    u_var = Dummy("u")
+    substituted = (-(1 + u_var**2)**((n - 2) / 2) *
+                   u_var**m / coefficient)
+    return _trig_substitution_rule(
+        integral, rewritten, coefficient, u_var, cot(argument), substituted)
+
+
+def cotcsc_cot_reduction(integral, argument, coefficient, m,
+                         degenerate=True):
+    integrand, symbol = integral
+    reduced = cot(argument)**(m - 2)
+    substitution_integrand = reduced*csc(argument)**2
+    rewritten = substitution_integrand - reduced
+
+    u_var = Dummy("u")
+    substituted = -u_var**(m - 2) / coefficient
+    substep = yield IntegralInfo(substituted, u_var)
+    substitution_step = URule(
+        substitution_integrand, symbol, u_var, cot(argument), substep)
+
+    if m == 2:
+        reduction_step = ConstantRule(S.One, symbol)
+    else:
+        reduction_step = trig_cotcsc_rule(
+            IntegralInfo(reduced, symbol), degenerate=False)
+        if isinstance(reduction_step, GeneratorType):
+            reduction_step = yield from reduction_step
+    negative_reduced = -reduced
+    reduction_step = ConstantTimesRule(
+        negative_reduced, symbol, S.NegativeOne, reduced, reduction_step)
+    generic_step = RewriteRule(
+        integrand, symbol, rewritten,
+        AddRule(rewritten, symbol, [substitution_step, reduction_step]))
+    if not degenerate:
+        return generic_step
+    return _add_trig_degenerate_step(integral, coefficient, generic_step)
 
 def trig_sincos_rule(integral):
     integrand, symbol = integral
+    collected = _collect_trig_powers(integrand, symbol, (sin, cos))
+    if collected is None:
+        return
+    powers, coefficients = collected
 
-    if any(integrand.has(f) for f in (sympy.sin, sympy.cos)):
-        pattern, a, b, m, n = sincos_pattern(symbol)
-        match = integrand.match(pattern)
+    arguments = set(powers[sin]) | set(powers[cos])
+    if len(arguments) == 1:
+        argument = arguments.pop()
+        coefficient = coefficients[argument]
+        sin_power = powers[sin].get(argument, S.Zero)
+        cos_power = powers[cos].get(argument, S.Zero)
 
-        if match:
-            a, b, m, n = match.get(a, 0), match.get(b, 0), match.get(m, 0), match.get(n, 0)
-            return multiplexer({
-                sincos_botheven_condition: sincos_botheven,
-                sincos_sinodd_condition: sincos_sinodd,
-                sincos_cosodd_condition: sincos_cosodd
-            })((a, b, m, n, integrand, symbol))
+        # TODO: Sec/csc reductions could give cleaner negative-odd results.
+        if sin_power.is_odd:
+            result = sincos_sinodd(integral, argument, coefficient,
+                                   sin_power, cos_power)
+            if isinstance(result, GeneratorType):
+                result = yield from result
+            return result
+        if cos_power.is_odd:
+            result = sincos_cosodd(integral, argument, coefficient,
+                                   sin_power, cos_power)
+            if isinstance(result, GeneratorType):
+                result = yield from result
+            return result
 
-def trig_tansec_rule(integral):
-    integrand, symbol = integral
+        # Move negative even powers to a reciprocal trig family.
+        if (sin_power.is_even and cos_power.is_even and
+                (sin_power.is_negative or cos_power.is_negative)):
+            reciprocal_power = -(sin_power + cos_power)
+            if sin_power.is_negative:
+                rewritten = cot(argument)**cos_power * csc(argument)**reciprocal_power
+                rule = trig_cotcsc_rule
+            else:
+                rewritten = tan(argument)**sin_power * sec(argument)**reciprocal_power
+                rule = trig_tansec_rule
+            substep = rule(IntegralInfo(rewritten, symbol))
+            if isinstance(substep, GeneratorType):
+                substep = yield from substep
+            # Symbolic powers may make the delegated rule undecidable.
+            if substep is not None:
+                return RewriteRule(integrand, symbol, rewritten, substep)
 
-    integrand = integrand.subs({
-        1 / sympy.cos(symbol): sympy.sec(symbol)
-    })
+    # Linearize products not handled by a direct substitution.
+    if all(isinstance(power, Integer) and power >= 0
+           for function_powers in powers.values()
+           for power in function_powers.values()):
+        result = sincos_product_to_sum(integral)
+        if isinstance(result, GeneratorType):
+            result = yield from result
+        return result
 
-    if any(integrand.has(f) for f in (sympy.tan, sympy.sec)):
-        pattern, a, b, m, n = tansec_pattern(symbol)
-        match = integrand.match(pattern)
+def trig_tansec_rule(integral, degenerate=True):
+    original_integrand, symbol = integral
+    integrand = _rewrite_to_reciprocal(original_integrand, cos, sec)
+    integrand = _rewrite_to_reciprocal(integrand, cot, tan)
+    collected = _collect_trig_powers(integrand, symbol, (tan, sec))
+    if collected is None:
+        return
+    powers, coefficients = collected
 
-        if match:
-            a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
-            return multiplexer({
-                tansec_tanodd_condition: tansec_tanodd,
-                tansec_seceven_condition: tansec_seceven,
-                tan_tansquared_condition: tan_tansquared
-            })((a, b, m, n, integrand, symbol))
+    arguments = set(powers[tan]) | set(powers[sec])
+    if len(arguments) != 1:
+        return
 
-def trig_cotcsc_rule(integral):
-    integrand, symbol = integral
-    integrand = integrand.subs({
-        1 / sympy.sin(symbol): sympy.csc(symbol),
-        1 / sympy.tan(symbol): sympy.cot(symbol),
-        sympy.cos(symbol) / sympy.tan(symbol): sympy.cot(symbol)
-    })
+    argument = arguments.pop()
+    coefficient = coefficients[argument]
+    tan_power = powers[tan].get(argument, S.Zero)
+    sec_power = powers[sec].get(argument, S.Zero)
 
-    if any(integrand.has(f) for f in (sympy.cot, sympy.csc)):
-        pattern, a, b, m, n = cotcsc_pattern(symbol)
-        match = integrand.match(pattern)
+    # Delegate negative tangent powers to the cotangent rule.
+    if tan_power.is_negative and sec_power.is_zero:
+        return
+    integral = IntegralInfo(integrand, symbol)
+    if (sec_power.is_integer and sec_power.is_negative and
+            tan_power.is_zero):
+        rewritten = _rewrite_to_reciprocal(integrand, sec, cos)
+        substep = trig_sincos_rule(IntegralInfo(rewritten, symbol))
+        if isinstance(substep, GeneratorType):
+            substep = yield from substep
+        if substep is None:
+            return
+        step = RewriteRule(integrand, symbol, rewritten, substep)
+    elif tan_power.is_odd:
+        step = tansec_tanodd(
+            integral, argument, coefficient, tan_power, sec_power)
+    elif sec_power.is_even and sec_power.is_nonzero:
+        step = tansec_seceven(
+            integral, argument, coefficient, tan_power, sec_power)
+    elif (sec_power.is_zero and isinstance(tan_power, Integer) and
+            tan_power >= 2):
+        step = tansec_tan_reduction(
+            integral, argument, coefficient, tan_power, degenerate)
+    else:
+        return
+    if isinstance(step, GeneratorType):
+        step = yield from step
+    if integrand != original_integrand:
+        return RewriteRule(
+            original_integrand, symbol, integrand, step)
+    return step
 
-        if match:
-            a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
-            return multiplexer({
-                cotcsc_cotodd_condition: cotcsc_cotodd,
-                cotcsc_csceven_condition: cotcsc_csceven
-            })((a, b, m, n, integrand, symbol))
+def trig_cotcsc_rule(integral, degenerate=True):
+    original_integrand, symbol = integral
+    integrand = _rewrite_to_reciprocal(original_integrand, sin, csc)
+    integrand = _rewrite_to_reciprocal(integrand, tan, cot)
+
+    collected = _collect_trig_powers(integrand, symbol, (cot, csc))
+    if collected is None:
+        return
+    powers, coefficients = collected
+
+    arguments = set(powers[cot]) | set(powers[csc])
+    if len(arguments) != 1:
+        return
+
+    argument = arguments.pop()
+    coefficient = coefficients[argument]
+    cot_power = powers[cot].get(argument, S.Zero)
+    csc_power = powers[csc].get(argument, S.Zero)
+
+    integral = IntegralInfo(integrand, symbol)
+    if (csc_power.is_integer and csc_power.is_negative and
+            cot_power.is_zero):
+        rewritten = _rewrite_to_reciprocal(integrand, csc, sin)
+        substep = trig_sincos_rule(IntegralInfo(rewritten, symbol))
+        if isinstance(substep, GeneratorType):
+            substep = yield from substep
+        if substep is None:
+            return
+        step = RewriteRule(integrand, symbol, rewritten, substep)
+    elif cot_power.is_odd:
+        step = cotcsc_cotodd(
+            integral, argument, coefficient, cot_power, csc_power)
+    elif csc_power.is_even and csc_power.is_nonzero:
+        step = cotcsc_csceven(
+            integral, argument, coefficient, cot_power, csc_power)
+    elif (csc_power.is_zero and isinstance(cot_power, Integer) and
+            cot_power >= 2):
+        step = cotcsc_cot_reduction(
+            integral, argument, coefficient, cot_power, degenerate)
+    else:
+        return
+    if isinstance(step, GeneratorType):
+        step = yield from step
+    if integrand != original_integrand:
+        return RewriteRule(
+            original_integrand, symbol, integrand, step)
+    return step
+
 
 def trig_powers_products_rule(integral):
-    return do_one(null_safe(trig_sincos_rule),
-                  null_safe(trig_tansec_rule),
-                  null_safe(trig_cotcsc_rule))(integral)
-
-def trig_substitution_rule(integral):
-    integrand, symbol = integral
-    a = sympy.Wild('a', exclude=[0, symbol])
-    b = sympy.Wild('b', exclude=[0, symbol])
-    theta = sympy.Dummy("theta")
-
-    matches = integrand.find(a + b*symbol**2)
-    if matches:
-        for expr in matches:
-            match = expr.match(a + b*symbol**2)
-            a = match[a]
-            b = match[b]
-
-            a_positive = ((a.is_number and a > 0) or a.is_positive)
-            b_positive = ((b.is_number and b > 0) or b.is_positive)
-            x_func = None
-            if a_positive and b_positive:
-                # a**2 + b*x**2. Assume sec(theta) > 0, -pi/2 < theta < pi/2
-                x_func = (sympy.sqrt(a)/sympy.sqrt(b)) * sympy.tan(theta)
-                # Do not restrict the domain: tan(theta) takes on any real
-                # value on the interval -pi/2 < theta < pi/2 so x takes on
-                # any value
-                restriction = True
-            elif a_positive and not b_positive:
-                # a**2 - b*x**2. Assume cos(theta) > 0, -pi/2 < theta < pi/2
-                constant = sympy.sqrt(a)/sympy.sqrt(-b)
-                x_func = constant * sympy.sin(theta)
-                restriction = sympy.And(symbol > -constant, symbol < constant)
-            elif not a_positive and b_positive:
-                # b*x**2 - a**2. Assume sin(theta) > 0, 0 < theta < pi
-                constant = sympy.sqrt(-a)/sympy.sqrt(b)
-                x_func = constant * sympy.sec(theta)
-                restriction = sympy.And(symbol > -constant, symbol < constant)
-            if x_func:
-                # Manually simplify sqrt(trig(theta)**2) to trig(theta)
-                # Valid due to assumed domain restriction
-                substitutions = {}
-                for f in [sympy.sin, sympy.cos, sympy.tan,
-                          sympy.sec, sympy.csc, sympy.cot]:
-                    substitutions[sympy.sqrt(f(theta)**2)] = f(theta)
-                    substitutions[sympy.sqrt(f(theta)**(-2))] = 1/f(theta)
-
-                replaced = integrand.subs(symbol, x_func).trigsimp()
-                replaced = replaced.subs(substitutions)
-                if not replaced.has(symbol):
-                    replaced *= manual_diff(x_func, theta)
-                    replaced = replaced.trigsimp()
-                    secants = replaced.find(1/sympy.cos(theta))
-                    if secants:
-                        replaced = replaced.xreplace({
-                            1/sympy.cos(theta): sympy.sec(theta)
-                        })
-
-                    substep = integral_steps(replaced, theta)
-                    if not contains_dont_know(substep):
-                        return TrigSubstitutionRule(
-                            theta, x_func, replaced, substep, restriction,
-                            integrand, symbol)
+    # The subrules may return a generator; delegate to it so its requests
+    # reach the solver, and fall through to the next subrule if it
+    # produced no result.
+    for rule in (trig_sincos_rule, trig_tansec_rule, trig_cotcsc_rule):
+        result = rule(integral)
+        if isinstance(result, GeneratorType):
+            result = yield from result
+        if result is not None:
+            return result
 
 def heaviside_rule(integral):
     integrand, symbol = integral
@@ -793,108 +3578,425 @@ def heaviside_rule(integral):
     match = integrand.match(pattern)
     if match and 0 != match[g]:
         # f = Heaviside(m*x + b)*g
-        v_step = integral_steps(match[g], symbol)
-        result = _manualintegrate(v_step)
+        substep = yield IntegralInfo(match[g], symbol)
         m, b = match[m], match[b]
-        return HeavisideRule(m*symbol + b, -b/m, result, integrand, symbol)
+        return HeavisideRule(integrand, symbol, m*symbol + b, -b/m, substep)
+
+
+def dirac_delta_rule(integral: IntegralInfo):
+    integrand, x = integral
+    if len(integrand.args) == 1:
+        n = S.Zero
+    else:
+        n = integrand.args[1] # type: ignore
+    if not n.is_Integer or n < 0:
+        return
+    a, b = Wild('a', exclude=[x]), Wild('b', exclude=[x, 0])
+    match = integrand.args[0].match(a+b*x)
+    if not match:
+        return
+    a, b = match[a], match[b]
+    generic_cond = Ne(b, 0)
+    if generic_cond is S.true:
+        degenerate_step = None
+    else:
+        degenerate_step = ConstantRule(DiracDelta(a, n), x)
+    generic_step = DiracDeltaRule(integrand, x, n, a, b)
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+
 
 def substitution_rule(integral):
     integrand, symbol = integral
 
-    u_var = sympy.Dummy("u")
+    u_var = Dummy("u")
     substitutions = find_substitutions(integrand, symbol, u_var)
+    count = 0
     if substitutions:
+        # Ask the solver whether all alternative substitutions should be
+        # collected or only the first workable one is wanted.
+        branch = yield BranchQuery()
+        if branch:
+            debug("List of Substitution Rules")
         ways = []
+        factored_integrand = integrand.factor()
+        _, denom_integrand = factored_integrand.as_numer_denom()
         for u_func, c, substituted in substitutions:
-            subrule = integral_steps(substituted, u_var)
-            if contains_dont_know(subrule):
+            subrule = yield IntegralInfo(substituted, u_var)
+            count = count + 1
+            if branch:
+                debug("Rule {}: {}".format(count, subrule))
+
+            if subrule.contains_dont_know():
                 continue
 
-            if sympy.simplify(c - 1) != 0:
-                _, denom = c.as_numer_denom()
+            if simplify(c - 1) != 0:
+                _, denom_c = c.as_numer_denom()
                 if subrule:
-                    subrule = ConstantTimesRule(c, substituted, subrule, substituted, u_var)
+                    subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
 
-                if denom.free_symbols:
-                    piecewise = []
-                    could_be_zero = []
-
-                    if isinstance(denom, sympy.Mul):
-                        could_be_zero = denom.args
-                    else:
-                        could_be_zero.append(denom)
-
-                    for expr in could_be_zero:
-                        if not fuzzy_not(expr.is_zero):
-                            substep = integral_steps(integrand.subs(expr, 0), symbol)
+                if denom_c.free_symbols:
+                    pieces = []
+                    factors_denom_c = factor_list(denom_c)[1]
+                    for pole, _ in factors_denom_c:
+                        # only substitute poles introduced by the constant c if they were not already poles of the original integrand
+                        if not _if_zero_implies_zero(pole, denom_integrand):
+                            rewritten_integral = manual_subs(factored_integrand, pole, 0)
+                            # additional check not to replace a if it is not valid (for example ln(a*x))
+                            if rewritten_integral.has(S.ComplexInfinity, S.Infinity, S.NegativeInfinity, S.NaN):
+                                continue
+                            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten_integral, symbol))
+                            substep = yield IntegralInfo(rewritten_integral, symbol)
 
                             if substep:
-                                piecewise.append((
+                                substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
+                                pieces.append((
                                     substep,
-                                    sympy.Eq(expr, 0)
+                                    Eq(pole, 0)
                                 ))
-                    piecewise.append((subrule, True))
-                    subrule = PiecewiseRule(piecewise, substituted, symbol)
+                    if pieces:
+                        pieces.append((subrule, True))
+                        subrule = PiecewiseRule(substituted, symbol, pieces)
 
-            ways.append(URule(u_var, u_func, c,
-                              subrule,
-                              integrand, symbol))
+            rule = URule(integrand, symbol, u_var, u_func, subrule)
+            if not branch:
+                return rule
+            ways.append(rule)
 
         if len(ways) > 1:
-            return AlternativeRule(ways, integrand, symbol)
+            return AlternativeRule(integrand, symbol, ways)
         elif ways:
             return ways[0]
 
-    elif integrand.has(sympy.exp):
-        u_func = sympy.exp(symbol)
-        c = 1
-        substituted = integrand / u_func.diff(symbol)
-        substituted = substituted.subs(u_func, u_var)
 
-        if symbol not in substituted.free_symbols:
-            return URule(u_var, u_func, c,
-                         integral_steps(substituted, u_var),
-                         integrand, symbol)
+def partial_fractions_rule(integral):
+    integrand, symbol = integral
+    if not integrand.is_rational_function(symbol):
+        return
 
-partial_fractions_rule = rewriter(
-    lambda integrand, symbol: integrand.is_rational_function(),
-    lambda integrand, symbol: integrand.apart(symbol))
+    rewritten = integrand.apart(symbol)
+    if rewritten == integrand:
+        # If apart cannot decompose the rational function any further,
+        # use ratint as the final fallback for rational integration.
+        return RatintRule(integrand, symbol)
+
+    substep = yield IntegralInfo(rewritten, symbol)
+    if not isinstance(substep, DontKnowRule):
+        return RewriteRule(integrand, symbol, rewritten, substep)
 
 cancel_rule = rewriter(
     # lambda integrand, symbol: integrand.is_algebraic_expr(),
-    # lambda integrand, symbol: isinstance(integrand, sympy.Mul),
-    lambda integrand, symbol: True,
+    # lambda integrand, symbol: isinstance(integrand, Mul),
+    lambda integrand, symbol: not integrand.is_rational_function(symbol),
     lambda integrand, symbol: integrand.cancel())
 
 distribute_expand_rule = rewriter(
     lambda integrand, symbol: (
-        all(arg.is_Pow or arg.is_polynomial(symbol) for arg in integrand.args)
-        or isinstance(integrand, sympy.Pow)
-        or isinstance(integrand, sympy.Mul)),
-    lambda integrand, symbol: integrand.expand())
+        (isinstance(integrand, (Pow, Mul))
+         or all(arg.is_Pow or arg.is_polynomial(symbol) for arg in integrand.args))
+        and not integrand.is_rational_function(symbol)
+    ),
+    lambda integrand, symbol: integrand.expand()
+)
+
+trig_expand_rule = rewriter(
+    # If there are trig functions with different arguments, expand them
+    lambda integrand, symbol: (
+        len({a.args[0] for a in integrand.atoms(TrigonometricFunction)}) > 1),
+    lambda integrand, symbol: integrand.expand(trig=True))
 
 def derivative_rule(integral):
-    variables = integral[0].args[1:]
+    integrand = integral[0]
+    diff_variables = integrand.variables
+    undifferentiated_function = integrand.expr
+    integrand_variables = undifferentiated_function.free_symbols
 
-    if variables[-1] == integral.symbol:
-        return DerivativeRule(*integral)
+    if integral.symbol in integrand_variables:
+        if integral.symbol in diff_variables:
+            return DerivativeRule(*integral)
+        else:
+            return DontKnowRule(integrand, integral.symbol)
     else:
-        return ConstantRule(integral.integrand, *integral)
+        return ConstantRule(*integral)
 
 def rewrites_rule(integral):
     integrand, symbol = integral
 
-    if integrand.match(1/sympy.cos(symbol)):
-        rewritten = integrand.subs(1/sympy.cos(symbol), sympy.sec(symbol))
-        return RewriteRule(rewritten, integral_steps(rewritten, symbol), integrand, symbol)
+    if integrand.match(1/cos(symbol)):
+        rewritten = integrand.subs(1/cos(symbol), sec(symbol))
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+        substep = yield IntegralInfo(rewritten, symbol)
+        return RewriteRule(integrand, symbol, rewritten, substep)
 
 def fallback_rule(integral):
     return DontKnowRule(*integral)
 
-# Cache is used to break cyclic integrals
-_integral_cache = {}
+
+# Subproblems are compared with the same dummy variable in place of the
+# integration variable for them to match (used for loop detection and for
+# counting "u" choices of integration by parts).
+_cache_dummy = Dummy("z")
+
+
+def _integral_key(integral):
+    integrand, symbol = integral
+
+    if symbol not in integrand.free_symbols:
+        return Number
+    for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
+        if isinstance(integrand, cls):
+            return cls
+    return type(integrand)
+
+
+def _integral_is_subclass(*klasses):
+    def _check(integral):
+        k = _integral_key(integral)
+        return k and issubclass(k, klasses)
+    return _check
+
+
+def _rule_xreplace(rule, rule_map):
+    """:meth:`~.Basic.xreplace`-alike that also recurses through a
+    :class:`Rule` tree.
+
+    ``Rule`` is a plain slotted class, not a :class:`~.Basic` subclass, so
+    it has no ``xreplace`` of its own. This walks a rule's fields (which are
+    themselves ``Rule``, ``Basic``, ``list``/``tuple``, or plain values such
+    as the ``bool`` in ``PiecewiseRule.subfunctions``) and substitutes
+    ``rule_map`` inside every ``Basic`` it finds along the way. It does not
+    recurse into ``dict``-valued fields (e.g. ``ReparameterizationRule
+    .replacements``); those are only safe to leave untouched as long as
+    their values never depend on the integration variable.
+    """
+    if isinstance(rule, Rule):
+        # Build via __new__ + setattr rather than calling __init__(*fields):
+        # a subclass's __init__ isn't guaranteed to accept every slot as a
+        # positional parameter in _get_slots() order (some may be set only
+        # after construction), so calling it with the collected fields isn't
+        # safe in general.
+        new_rule = object.__new__(rule.__class__)
+        for slot in rule._get_slots():
+            setattr(new_rule, slot, _rule_xreplace(getattr(rule, slot), rule_map))
+        return new_rule
+    if isinstance(rule, Basic):
+        return rule.xreplace(rule_map)
+    if isinstance(rule, (list, tuple)):
+        return type(rule)(_rule_xreplace(item, rule_map) for item in rule)
+    return rule
+
+
+class IntegrationSolver:
+    """Performs the recursive calls on behalf of the integration rules and
+    owns all the state of a single integration run.
+
+    A rule function either returns a :class:`Rule` (or ``None``) directly,
+    or is a generator. A generator rule does not recurse itself: whenever
+    it needs a subproblem solved, it yields an :class:`IntegralInfo` with
+    the parameters of the recursive call, and the solver sends the
+    resulting :class:`Rule` back into the generator at the yield
+    expression. Since a generator may yield any number of times, a rule can
+    propose further subproblems after seeing the result of a previous one;
+    the assembled :class:`Rule` is the generator's return value. Rules may
+    also yield other requests that read or update per-run solver state (see
+    :class:`PartsUCheck` and :class:`BranchQuery`).
+
+    Everything that influences how the nested rules are applied (the
+    loop-detection set, the integration-by-parts ``u`` counter and the
+    options passed to :func:`integral_steps`) is stored on the solver
+    instance instead of in module-global variables.
+    """
+
+    def __init__(self, max_depth: int | None = 100, branch: bool = False,
+                 **options):
+        # Hard limit on the depth of nested subproblems (None = unlimited):
+        # ``max_depth=1`` allows only rules that need no subintegrals.
+        self.max_depth = max_depth
+        # Whether to collect all applicable rules into AlternativeRule
+        # nodes (True) or to keep only the first workable rule (False).
+        self.branch = branch
+        self.options = options
+        # Subproblems on the current recursion path, to break cyclic integrals.
+        self._active: set[Expr] = set()
+        # Uses of each "u" by integration by parts, to avoid infinite repetition.
+        self._parts_u_count: dict[Expr, int] = defaultdict(int)
+        # Rules already computed for a subproblem, keyed the same way as
+        # ``_active``, so that a subintegral reached again through a
+        # different search path is served from here instead of being solved
+        # from scratch. Only populated for a subtree whose computation never
+        # hit the max_depth budget (see ``_starved`` below): a result that
+        # did would be a possible depth artifact rather than the true
+        # answer, and could be wrong to reuse for the same subproblem
+        # reached elsewhere with more budget left. Lives only as long as
+        # this solver, i.e. one top-level integral_steps() call, so it can
+        # never leak stale steps into an unrelated integration request.
+        self._solved: dict[Expr, Rule] = {}
+        # Whether the subproblem currently being solved (or any of its
+        # descendants) has bottomed out on the max_depth budget.
+        self._starved = False
+        self._strategy: Callable[[IntegralInfo], Rule] | None = None
+
+    def solve(self, integrand, symbol) -> Rule:
+        """Solve a (sub)integral by dispatching the rules on it.
+
+        This replaces the recursive calls to ``integral_steps`` that the
+        rules used to perform themselves.
+        """
+        cachekey = integrand.xreplace({symbol: _cache_dummy})
+        if cachekey in self._solved:
+            # A cached result is always budget-independent (see below), so
+            # it can be served regardless of how much budget is left here.
+            return _rule_xreplace(self._solved[cachekey], {_cache_dummy: symbol})
+        # Every ancestor on the recursion path holds exactly one entry in
+        # ``_active``, so its size is the current depth.
+        if self.max_depth is not None and len(self._active) >= self.max_depth:
+            # Recursion budget exhausted: report the subproblem as
+            # unsolvable, so that callers fall back to shallower candidates.
+            self._starved = True
+            return DontKnowRule(integrand, symbol)
+        if cachekey in self._active:
+            # Stop this attempt, because it leads around in a loop
+            return DontKnowRule(integrand, symbol)
+        had_ancestor = bool(self._active)
+        self._active.add(cachekey)
+        # Track whether this subtree's own computation bottoms out on the
+        # depth budget, independently of whatever an ancestor already
+        # accumulated (or of a stale flag left by an unrelated, already
+        # finished top-level call on this same solver).
+        outer_starved, self._starved = (self._starved if had_ancestor else False), False
+        try:
+            if self._strategy is None:
+                self._strategy = self._build_strategy()
+            result = self._strategy(IntegralInfo(integrand, symbol))
+            if not self._starved:
+                # Only memoize a result whose computation never hit the
+                # depth budget anywhere in its own subtree: such a result
+                # would be a possible artifact of running out of budget at
+                # this particular point in the tree, rather than a genuine
+                # answer - reusing it for the same subproblem reached with
+                # a different amount of budget left would be wrong.
+                self._solved[cachekey] = _rule_xreplace(result, {symbol: _cache_dummy})
+        finally:
+            self._active.discard(cachekey)
+            self._starved = outer_starved or self._starved
+        return result
+
+    def run(self, rule, integral):
+        """Apply a single rule to ``integral``, driving it if it is a
+        generator, and return its result."""
+        result = rule(integral)
+        if isinstance(result, GeneratorType):
+            result = self.run_generator(result)
+        return result
+
+    def run_generator(self, gen):
+        """Iterate over the requests yielded by a generator rule, perform
+        the recursive calls on its behalf, and return the rule's result."""
+        response = None
+        while True:
+            try:
+                request = gen.send(response)
+            except StopIteration as e:
+                return e.value
+            if isinstance(request, IntegralInfo):
+                response = self.solve(request.integrand, request.symbol)
+            elif isinstance(request, PartsUCheck):
+                response = self._check_parts_u(request.u_key)
+            elif isinstance(request, BranchQuery):
+                response = self.branch
+            else:
+                raise ValueError(
+                    "unknown request from integration rule: %s" % (request,))
+
+    def _check_parts_u(self, u_key) -> bool:
+        # Set a limit on the number of times u can be used
+        if self._parts_u_count[u_key] > 2:
+            return False
+        self._parts_u_count[u_key] += 1
+        return True
+
+    def _build_strategy(self):
+        # Each leaf rule is wrapped with ``run`` so that, by the time the
+        # combinators from sympy.strategies see a result, any generator has
+        # already been driven to completion and only a Rule or None remains.
+        def w(rule):
+            @wraps(rule)
+            def rule_runner(integral):
+                return self.run(rule, integral)
+            return rule_runner
+
+        # TODO: Prefer substitution_rule once alternatives() supports lazy exit;
+        # otherwise Bioche is eager or unreachable. For sec(x)*tan(x)/(sec(x) + 1),
+        # substitution gives log(sec(x) + 1), while Bioche gives
+        # log(cos(x) + 1) - log(cos(x)).
+        return do_one(
+            null_safe(w(special_function_rule)),
+            null_safe(switch(_integral_key, {
+                Pow: do_one(null_safe(w(power_rule)),
+                            null_safe(w(trig_rule)),
+                            null_safe(w(trig_powers_products_rule)),
+                            null_safe(w(inverse_trig_rule)),
+                            null_safe(w(quadratic_denom_rule)),
+                            null_safe(w(sqrt_quadratic_rule)),
+                            null_safe(w(sqrt_fractional_linear_rule)),
+                            null_safe(w(chebyshev_substitution_rule)),
+                            null_safe(w(euler_substitution_rule)),
+                            null_safe(w(bioche_substitution))),
+                Symbol: w(power_rule),
+                exp: w(exp_rule),
+                Add: w(add_rule),
+                Mul: do_one(null_safe(w(mul_rule)),
+                            null_safe(w(trig_powers_products_rule)),
+                            null_safe(w(heaviside_rule)), null_safe(w(quadratic_denom_rule)),
+                            null_safe(w(sqrt_quadratic_rule)),
+                            null_safe(w(sqrt_fractional_linear_rule)),
+                            null_safe(w(chebyshev_substitution_rule)),
+                            null_safe(w(euler_substitution_rule)),
+                            null_safe(w(trig_cmplx_exp_rule)),
+                            null_safe(w(trig_product_to_sum_rule)),
+                            null_safe(w(trig_poly_mul_rule)),
+                            null_safe(w(bioche_substitution))),
+                Derivative: w(derivative_rule),
+                TrigonometricFunction: w(trig_rule),
+                Heaviside: w(heaviside_rule),
+                DiracDelta: w(dirac_delta_rule),
+                OrthogonalPolynomial: w(orthogonal_poly_rule),
+                Number: w(constant_rule)
+            })),
+            do_one(
+                null_safe(w(hyperbolic_rule)),
+                null_safe(alternatives(
+                    w(rewrites_rule),
+                    w(substitution_rule),
+                    condition(
+                        _integral_is_subclass(Mul, Pow),
+                        w(partial_fractions_rule)),
+                    condition(
+                        _integral_is_subclass(Mul, Pow),
+                        w(cancel_rule)),
+                    condition(
+                        _integral_is_subclass(Mul),
+                        w(combine_power_rule)),
+                    condition(
+                        _integral_is_subclass(Mul, log,
+                                              *inverse_trig_functions,
+                                              *special_error_functions),
+                        w(parts_rule)),
+                    condition(
+                        _integral_is_subclass(Mul, Pow),
+                        w(distribute_expand_rule)),
+                    w(trig_expand_rule),
+                    branch=self.branch
+                )),
+                null_safe(condition(_integral_is_subclass(Mul, Pow), w(nested_pow_rule))),
+            ),
+            w(fallback_rule))
+
+
 def integral_steps(integrand, symbol, **options):
     """Returns the steps needed to compute an integral.
+
+    Explanation
+    ===========
 
     This function attempts to mirror what a student would do by hand as
     closely as possible.
@@ -904,280 +4006,70 @@ def integral_steps(integrand, symbol, **options):
     found at
     https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py.
 
+    By default, only the first rule that successfully applies at each step
+    is kept, even if multiple rules are applicable. Passing ``branch=True``
+    causes all applicable rules to be retained and combined into an
+    ``AlternativeRule``, so that alternative solution paths are preserved
+    rather than discarded.
+
     Examples
     ========
 
-    >>> from sympy import exp, sin, cos
+    >>> from sympy import exp, sin
     >>> from sympy.integrals.manualintegrate import integral_steps
     >>> from sympy.abc import x
     >>> print(repr(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \
     # doctest: +NORMALIZE_WHITESPACE
-    URule(u_var=_u, u_func=exp(x), constant=1,
-    substep=PiecewiseRule(subfunctions=[(ArctanRule(a=1, b=1, c=1, context=1/(_u**2 + 1), symbol=_u), True),
-        (ArccothRule(a=1, b=1, c=1, context=1/(_u**2 + 1), symbol=_u), False),
-        (ArctanhRule(a=1, b=1, c=1, context=1/(_u**2 + 1), symbol=_u), False)],
-    context=1/(_u**2 + 1), symbol=_u), context=exp(x)/(exp(2*x) + 1), symbol=x)
+    URule(integrand=exp(x)/(exp(2*x) + 1), variable=x, u_var=_u, u_func=exp(x),
+    substep=ArctanRule(integrand=1/(_u**2 + 1), variable=_u, a=1, b=1, c=1))
     >>> print(repr(integral_steps(sin(x), x))) \
     # doctest: +NORMALIZE_WHITESPACE
-    TrigRule(func='sin', arg=x, context=sin(x), symbol=x)
-    >>> print(repr(integral_steps((x**2 + 3)**2 , x))) \
+    SinRule(integrand=sin(x), variable=x)
+    >>> print(repr(integral_steps((x**2 + 3)**2, x))) \
     # doctest: +NORMALIZE_WHITESPACE
-    RewriteRule(rewritten=x**4 + 6*x**2 + 9,
-    substep=AddRule(substeps=[PowerRule(base=x, exp=4, context=x**4, symbol=x),
-        ConstantTimesRule(constant=6, other=x**2,
-            substep=PowerRule(base=x, exp=2, context=x**2, symbol=x),
-                context=6*x**2, symbol=x),
-        ConstantRule(constant=9, context=9, symbol=x)],
-    context=x**4 + 6*x**2 + 9, symbol=x), context=(x**2 + 3)**2, symbol=x)
+    RewriteRule(integrand=(x**2 + 3)**2, variable=x, rewritten=x**4 + 6*x**2 + 9,
+    substep=AddRule(integrand=x**4 + 6*x**2 + 9, variable=x,
+    substeps=[PowerRule(integrand=x**4, variable=x, base=x, exp=4),
+    ConstantTimesRule(integrand=6*x**2, variable=x, constant=6, other=x**2,
+    substep=PowerRule(integrand=x**2, variable=x, base=x, exp=2)),
+    ConstantRule(integrand=9, variable=x)]))
 
+    Parameters
+    ==========
+
+    integrand : Expr
+        The expression to integrate.
+    symbol : Symbol
+        The variable of integration.
+    branch : bool, optional
+        If True, collect all applicable rules into an ``AlternativeRule``
+        instead of returning only the first workable one. Defaults to False.
+    max_depth : int, optional
+        Hard limit on the depth of nested subproblems; deeper subproblems
+        are reported as ``DontKnowRule``. Defaults to None (unlimited).
 
     Returns
     =======
-    rule : namedtuple
+
+    rule : Rule
         The first step; most rules have substeps that must also be
         considered. These substeps can be evaluated using ``manualintegrate``
         to obtain a result.
 
     """
-    cachekey = (integrand, symbol)
-    if cachekey in _integral_cache:
-        if _integral_cache[cachekey] is None:
-            # cyclic integral! null_safe will eliminate that path
-            return None
-        else:
-            return _integral_cache[cachekey]
-    else:
-        _integral_cache[cachekey] = None
+    return IntegrationSolver(**options).solve(integrand, symbol)
 
-    integral = IntegralInfo(integrand, symbol)
-
-    def key(integral):
-        integrand = integral.integrand
-
-        if isinstance(integrand, TrigonometricFunction):
-            return TrigonometricFunction
-        elif isinstance(integrand, sympy.Derivative):
-            return sympy.Derivative
-        elif symbol not in integrand.free_symbols:
-            return sympy.Number
-        else:
-            for cls in (sympy.Pow, sympy.Symbol, sympy.exp, sympy.log,
-                        sympy.Add, sympy.Mul, sympy.atan, sympy.asin, sympy.acos, sympy.Heaviside):
-                if isinstance(integrand, cls):
-                    return cls
-
-    def integral_is_subclass(*klasses):
-        def _integral_is_subclass(integral):
-            k = key(integral)
-            return k and issubclass(k, klasses)
-        return _integral_is_subclass
-
-    result = do_one(
-        null_safe(switch(key, {
-            sympy.Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule), \
-                              null_safe(quadratic_denom_rule)),
-            sympy.Symbol: power_rule,
-            sympy.exp: exp_rule,
-            sympy.Add: add_rule,
-            sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule), \
-                              null_safe(heaviside_rule), null_safe(quadratic_denom_rule), \
-                              null_safe(root_mul_rule)),
-            sympy.Derivative: derivative_rule,
-            TrigonometricFunction: trig_rule,
-            sympy.Heaviside: heaviside_rule,
-            sympy.Number: constant_rule
-        })),
-        do_one(
-            null_safe(trig_rule),
-            null_safe(alternatives(
-                rewrites_rule,
-                substitution_rule,
-                condition(
-                    integral_is_subclass(sympy.Mul, sympy.Pow),
-                    partial_fractions_rule),
-                condition(
-                    integral_is_subclass(sympy.Mul, sympy.Pow),
-                    cancel_rule),
-                condition(
-                    integral_is_subclass(sympy.Mul, sympy.log, sympy.atan, sympy.asin, sympy.acos),
-                    parts_rule),
-                condition(
-                    integral_is_subclass(sympy.Mul, sympy.Pow),
-                    distribute_expand_rule),
-                trig_powers_products_rule
-            )),
-            null_safe(trig_substitution_rule)
-        ),
-        fallback_rule)(integral)
-    del _integral_cache[cachekey]
-    return result
-
-@evaluates(ConstantRule)
-def eval_constant(constant, integrand, symbol):
-    return constant * symbol
-
-@evaluates(ConstantTimesRule)
-def eval_constanttimes(constant, other, substep, integrand, symbol):
-    return constant * _manualintegrate(substep)
-
-@evaluates(PowerRule)
-def eval_power(base, exp, integrand, symbol):
-    return (base ** (exp + 1)) / (exp + 1)
-
-@evaluates(ExpRule)
-def eval_exp(base, exp, integrand, symbol):
-    return integrand / sympy.ln(base)
-
-@evaluates(AddRule)
-def eval_add(substeps, integrand, symbol):
-    return sum(map(_manualintegrate, substeps))
-
-@evaluates(URule)
-def eval_u(u_var, u_func, constant, substep, integrand, symbol):
-    result = _manualintegrate(substep)
-    return result.subs(u_var, u_func)
-
-@evaluates(PartsRule)
-def eval_parts(u, dv, v_step, second_step, integrand, symbol):
-    v = _manualintegrate(v_step)
-
-    return u * v - _manualintegrate(second_step)
-
-@evaluates(CyclicPartsRule)
-def eval_cyclicparts(parts_rules, coefficient, integrand, symbol):
-    coefficient = 1 - coefficient
-    result = []
-
-    sign = 1
-    for rule in parts_rules:
-        result.append(sign * rule.u * _manualintegrate(rule.v_step))
-        sign *= -1
-
-    return sympy.Add(*result) / coefficient
-
-@evaluates(TrigRule)
-def eval_trig(func, arg, integrand, symbol):
-    if func == 'sin':
-        return -sympy.cos(arg)
-    elif func == 'cos':
-        return sympy.sin(arg)
-    elif func == 'sec*tan':
-        return sympy.sec(arg)
-    elif func == 'csc*cot':
-        return sympy.csc(arg)
-    elif func == 'sec**2':
-        return sympy.tan(arg)
-    elif func == 'csc**2':
-        return -sympy.cot(arg)
-
-@evaluates(ArctanRule)
-def eval_arctan(a, b, c, integrand, symbol):
-    return a / b * 1 / sympy.sqrt(c / b) * sympy.atan(symbol / sympy.sqrt(c / b))
-
-@evaluates(ArccothRule)
-def eval_arccoth(a, b, c, integrand, symbol):
-    return - a / b * 1 / sympy.sqrt(-c / b) * sympy.acoth(symbol / sympy.sqrt(-c / b))
-
-@evaluates(ArctanhRule)
-def eval_arctanh(a, b, c, integrand, symbol):
-    return - a / b * 1 / sympy.sqrt(-c / b) * sympy.atanh(symbol / sympy.sqrt(-c / b))
-
-@evaluates(ReciprocalRule)
-def eval_reciprocal(func, integrand, symbol):
-    return sympy.ln(func)
-
-@evaluates(ArcsinRule)
-def eval_arcsin(integrand, symbol):
-    return sympy.asin(symbol)
-
-@evaluates(InverseHyperbolicRule)
-def eval_inversehyperbolic(func, integrand, symbol):
-    return func(symbol)
-
-@evaluates(AlternativeRule)
-def eval_alternative(alternatives, integrand, symbol):
-    return _manualintegrate(alternatives[0])
-
-@evaluates(RewriteRule)
-def eval_rewrite(rewritten, substep, integrand, symbol):
-    return _manualintegrate(substep)
-
-@evaluates(PiecewiseRule)
-def eval_piecewise(substeps, integrand, symbol):
-    return sympy.Piecewise(*[(_manualintegrate(substep), cond)
-                             for substep, cond in substeps])
-
-@evaluates(TrigSubstitutionRule)
-def eval_trigsubstitution(theta, func, rewritten, substep, restriction, integrand, symbol):
-    func = func.subs(sympy.sec(theta), 1/sympy.cos(theta))
-
-    trig_function = list(func.find(TrigonometricFunction))
-    assert len(trig_function) == 1
-    trig_function = trig_function[0]
-    relation = sympy.solve(symbol - func, trig_function)
-    assert len(relation) == 1
-    numer, denom = sympy.fraction(relation[0])
-
-    if isinstance(trig_function, sympy.sin):
-        opposite = numer
-        hypotenuse = denom
-        adjacent = sympy.sqrt(denom**2 - numer**2)
-        inverse = sympy.asin(relation[0])
-    elif isinstance(trig_function, sympy.cos):
-        adjacent = numer
-        hypotenuse = denom
-        opposite = sympy.sqrt(denom**2 - numer**2)
-        inverse = sympy.acos(relation[0])
-    elif isinstance(trig_function, sympy.tan):
-        opposite = numer
-        adjacent = denom
-        hypotenuse = sympy.sqrt(denom**2 + numer**2)
-        inverse = sympy.atan(relation[0])
-
-    substitution = [
-        (sympy.sin(theta), opposite/hypotenuse),
-        (sympy.cos(theta), adjacent/hypotenuse),
-        (sympy.tan(theta), opposite/adjacent),
-        (theta, inverse)
-    ]
-    return sympy.Piecewise(
-        (_manualintegrate(substep).subs(substitution).trigsimp(), restriction)
-    )
-
-@evaluates(DerivativeRule)
-def eval_derivativerule(integrand, symbol):
-    # isinstance(integrand, Derivative) should be True
-    if len(integrand.args) == 2:
-        return integrand.args[0]
-    else:
-        return sympy.Derivative(integrand.args[0], *integrand.args[1:-1])
-
-@evaluates(HeavisideRule)
-def eval_heaviside(harg, ibnd, substep, integrand, symbol):
-    # If we are integrating over x and the integrand has the form
-    #       Heaviside(m*x+b)*g(x) == Heaviside(harg)*g(symbol)
-    # then there needs to be continuity at -b/m == ibnd,
-    # so we subtract the appropriate term.
-    return sympy.Heaviside(harg)*(substep - substep.subs(symbol, ibnd))
-
-@evaluates(DontKnowRule)
-def eval_dontknowrule(integrand, symbol):
-    return sympy.Integral(integrand, symbol)
-
-def _manualintegrate(rule):
-    evaluator = evaluators.get(rule.__class__)
-    if not evaluator:
-
-        raise ValueError("Cannot evaluate rule %s" % repr(rule))
-    return evaluator(*rule)
 
 def manualintegrate(f, var):
     """manualintegrate(f, var)
 
+    Explanation
+    ===========
+
     Compute indefinite integral of a single variable using an algorithm that
     resembles what a student would do by hand.
 
-    Unlike ``integrate``, var can only be a single symbol.
+    Unlike :func:`~.integrate`, var can only be a single symbol.
 
     Examples
     ========
@@ -1196,7 +4088,7 @@ def manualintegrate(f, var):
     >>> manualintegrate(exp(x) / (1 + exp(2 * x)), x)
     atan(exp(x))
     >>> integrate(exp(x) / (1 + exp(2 * x)))
-    RootSum(4*_z**2 + 1, Lambda(_i, _i*log(2*_i + exp(x))))
+    RootSum(4*w**2 + 1, Lambda(w, w*log(2*w + exp(x))))
     >>> manualintegrate(cos(x)**4 * sin(x), x)
     -cos(x)**5/5
     >>> integrate(cos(x)**4 * sin(x), x)
@@ -1208,7 +4100,7 @@ def manualintegrate(f, var):
     >>> manualintegrate(tan(x), x)
     -log(cos(x))
     >>> integrate(tan(x), x)
-    -log(sin(x)**2 - 1)/2
+    -log(cos(x))
 
     See Also
     ========
@@ -1217,4 +4109,38 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
-    return _manualintegrate(integral_steps(f, var))
+    result = integral_steps(f, var).eval()
+    # If we got Piecewise with two parts, put generic first
+    if isinstance(result, Piecewise) and len(result.args) == 2:
+        cond = result.args[0][1]
+        if isinstance(cond, Eq) and result.args[1][1] == True:
+            result = result.func(
+                (result.args[1][0], Ne(*cond.args)),
+                (result.args[0][0], True))
+
+    # Factor terms like erf(x)*sin(x) that may have been expanded
+    def _has_erf_trig_mul(expr):
+        for sub in expr.find(Mul):
+            if sub.has(erf, erfc, erfi) and sub.has(sin, cos, sinh, cosh):
+                return True
+        return False
+    if _has_erf_trig_mul(f) and _has_erf_trig_mul(result):
+        result = factor_terms(result)
+
+    # Remove additive constants from the result if the integrand does not
+    # contain a derivative.
+    def _remove_additive_constants(expr, var):
+        if not expr.has(var):
+            return S.Zero
+        if expr.is_Add:
+            args = [_remove_additive_constants(arg, var) for arg in expr.args]
+            return Add(*args)
+        if expr.is_Mul:
+            indep, dep = expr.as_independent(var)
+            if dep.is_Add:
+                return indep * _remove_additive_constants(dep, var)
+            return expr
+        return expr
+    if not f.has(Derivative):
+        result = _remove_additive_constants(result, var)
+    return result

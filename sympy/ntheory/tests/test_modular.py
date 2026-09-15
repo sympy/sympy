@@ -1,7 +1,6 @@
-from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from __future__ import annotations
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_crt():

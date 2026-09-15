@@ -1,0 +1,1118 @@
+from __future__ import annotations
+from sympy import Lambda, S, Dummy, KroneckerProduct, Array, Matrix, exp
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.matrices.expressions.hadamard import HadamardProduct, HadamardPower
+from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
+from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.array.expressions.from_array_to_matrix import _support_function_tp1_recognize, \
+    _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix, \
+    _combine_removed, identify_removable_identity_matrices, _array_contraction_to_diagonal_multiple_identity, \
+    remove_identity_matrices
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.combinatorics import Permutation
+from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
+from sympy.matrices import Trace, MatMul, Transpose
+from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, \
+    ArrayElement, ArraySymbol, ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
+    _array_diagonal, _permute_dims, PermuteDims, ArrayAdd, ArrayDiagonal, ArrayContraction, ArrayTensorProduct, ArraySum, \
+    _array_add
+from sympy.testing.pytest import raises
+
+
+i, j, k, l, m, n = symbols("i j k l m n")
+
+I = Identity(k)
+I1 = Identity(1)
+
+M = MatrixSymbol("M", k, k)
+N = MatrixSymbol("N", k, k)
+P = MatrixSymbol("P", k, k)
+Q = MatrixSymbol("Q", k, k)
+
+A = MatrixSymbol("A", k, k)
+B = MatrixSymbol("B", k, k)
+C = MatrixSymbol("C", k, k)
+D = MatrixSymbol("D", k, k)
+
+X = MatrixSymbol("X", k, k)
+Y = MatrixSymbol("Y", k, k)
+
+a = MatrixSymbol("a", k, 1)
+b = MatrixSymbol("b", k, 1)
+c = MatrixSymbol("c", k, 1)
+d = MatrixSymbol("d", k, 1)
+
+x = MatrixSymbol("x", k, 1)
+y = MatrixSymbol("y", k, 1)
+
+X1 = MatrixSymbol("X1", 1, 1)
+X4 = MatrixSymbol("X4", 4, 1)
+
+
+def test_arrayexpr_convert_array_to_matrix():
+
+    cg = _array_contraction(_array_tensor_product(M), (0, 1))
+    assert convert_array_to_matrix(cg) == Trace(M)
+
+    cg = _array_contraction(_array_tensor_product(M, N), (0, 1), (2, 3))
+    assert convert_array_to_matrix(cg) == Trace(M) * Trace(N)
+
+    cg = _array_contraction(_array_tensor_product(M, N), (0, 3), (1, 2))
+    assert convert_array_to_matrix(cg) == Trace(M * N)
+
+    cg = _array_contraction(_array_tensor_product(M, N), (0, 2), (1, 3))
+    assert convert_array_to_matrix(cg) == Trace(M * N.T)
+
+    cg = convert_matrix_to_array(M * N * P)
+    assert convert_array_to_matrix(cg) == M * N * P
+
+    cg = convert_matrix_to_array(M * N.T * P)
+    assert convert_array_to_matrix(cg) == M * N.T * P
+
+    cg = _array_contraction(_array_tensor_product(M,N,P,Q), (1, 2), (5, 6))
+    assert convert_array_to_matrix(cg) == _array_tensor_product(M * N, P * Q)
+
+    cg = _array_contraction(_array_tensor_product(-2, M, N), (1, 2))
+    assert convert_array_to_matrix(cg) == -2 * M * N
+
+    a = MatrixSymbol("a", k, 1)
+    b = MatrixSymbol("b", k, 1)
+    c = MatrixSymbol("c", k, 1)
+    cg = PermuteDims(
+        _array_contraction(
+            _array_tensor_product(
+                a,
+                ArrayAdd(
+                    _array_tensor_product(b, c),
+                    _array_tensor_product(c, b),
+                )
+            ), (2, 4)), [0, 1, 3, 2])
+    assert convert_array_to_matrix(cg) == a * (b.T * c + c.T * b)
+
+    za = ZeroArray(m, n)
+    assert convert_array_to_matrix(za) == ZeroMatrix(m, n)
+
+    cg = _array_tensor_product(3, M)
+    assert convert_array_to_matrix(cg) == 3 * M
+
+    # Partial conversion to matrix multiplication:
+    expr = _array_contraction(_array_tensor_product(M, N, P, Q), (0, 2), (1, 4, 6))
+    assert convert_array_to_matrix(expr) == _array_contraction(_array_tensor_product(M.T*N, P, Q), (0, 2, 4))
+
+    x = MatrixSymbol("x", k, 1)
+    cg = PermuteDims(
+        _array_contraction(_array_tensor_product(OneArray(1), x, OneArray(1), DiagMatrix(Identity(1))),
+                                (0, 5)), Permutation(1, 2, 3))
+    assert convert_array_to_matrix(cg) == x
+
+    expr = ArrayAdd(M, PermuteDims(M, [1, 0]))
+    assert convert_array_to_matrix(expr) == M + Transpose(M)
+
+
+def test_arrayexpr_convert_array_to_matrix2():
+    cg = _array_contraction(_array_tensor_product(M, N), (1, 3))
+    assert convert_array_to_matrix(cg) == M * N.T
+
+    cg = PermuteDims(_array_tensor_product(M, N), Permutation([0, 1, 3, 2]))
+    assert convert_array_to_matrix(cg) == _array_tensor_product(M, N.T)
+
+    cg = _array_tensor_product(M, PermuteDims(N, Permutation([1, 0])))
+    assert convert_array_to_matrix(cg) == _array_tensor_product(M, N.T)
+
+    cg = _array_contraction(
+        PermuteDims(
+            _array_tensor_product(M, N, P, Q), Permutation([0, 2, 3, 1, 4, 5, 7, 6])),
+        (1, 2), (3, 5)
+    )
+    assert convert_array_to_matrix(cg) == _array_tensor_product(M * P.T * Trace(N), Q.T)
+
+    cg = _array_contraction(
+        _array_tensor_product(M, N, P, PermuteDims(Q, Permutation([1, 0]))),
+        (1, 5), (2, 3)
+    )
+    assert convert_array_to_matrix(cg) == _array_tensor_product(M * P.T * Trace(N), Q.T)
+
+    cg = _array_tensor_product(M, PermuteDims(N, [1, 0]))
+    assert convert_array_to_matrix(cg) == _array_tensor_product(M, N.T)
+
+    cg = _array_tensor_product(PermuteDims(M, [1, 0]), PermuteDims(N, [1, 0]))
+    assert convert_array_to_matrix(cg) == _array_tensor_product(M.T, N.T)
+
+    cg = _array_tensor_product(PermuteDims(N, [1, 0]), PermuteDims(M, [1, 0]))
+    assert convert_array_to_matrix(cg) == _array_tensor_product(N.T, M.T)
+
+    cg = _array_contraction(M, (0,), (1,))
+    assert convert_array_to_matrix(cg) == OneMatrix(1, k)*M*OneMatrix(k, 1)
+
+    cg = _array_contraction(x, (0,), (1,))
+    assert convert_array_to_matrix(cg) == OneMatrix(1, k)*x
+
+    Xm = MatrixSymbol("Xm", m, n)
+    cg = _array_contraction(Xm, (0,), (1,))
+    assert convert_array_to_matrix(cg) == OneMatrix(1, m)*Xm*OneMatrix(n, 1)
+
+
+def test_arrayexpr_convert_array_to_diagonalized_vector():
+
+    # Check matrix recognition over trivial dimensions:
+
+    cg = _array_tensor_product(a, b)
+    assert convert_array_to_matrix(cg) == a * b.T
+
+    cg = _array_tensor_product(I1, a, b)
+    assert convert_array_to_matrix(cg) == a * b.T
+
+    # Recognize trace inside a tensor product:
+
+    cg = _array_contraction(_array_tensor_product(A, B, C), (0, 3), (1, 2))
+    assert convert_array_to_matrix(cg) == Trace(A * B) * C
+
+    # Transform diagonal operator to contraction:
+
+    cg = _array_diagonal(_array_tensor_product(A, a), (1, 2))
+    assert _array_diag2contr_diagmatrix(cg) == _array_contraction(_array_tensor_product(A, OneArray(1), DiagMatrix(a)), (1, 3))
+    assert convert_array_to_matrix(cg) == A * DiagMatrix(a)
+
+    cg = _array_diagonal(_array_tensor_product(a, b), (0, 2))
+    assert _array_diag2contr_diagmatrix(cg) == _permute_dims(
+        _array_contraction(_array_tensor_product(DiagMatrix(a), OneArray(1), b), (0, 3)), [1, 2, 0]
+    )
+    assert convert_array_to_matrix(cg) == b.T * DiagMatrix(a)
+
+    cg = _array_diagonal(_array_tensor_product(A, a), (0, 2))
+    assert _array_diag2contr_diagmatrix(cg) == _array_contraction(_array_tensor_product(A, OneArray(1), DiagMatrix(a)), (0, 3))
+    assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a)
+
+    cg = _array_diagonal(_array_tensor_product(I, x, I1), (0, 2), (3, 5))
+    # The second diagonal group (3, 5) involves only size-1 axes but must be
+    # kept: dropping it used to change the rank of the expression from 4 to 5:
+    assert _array_diag2contr_diagmatrix(cg) == _array_diagonal(
+        _array_contraction(_array_tensor_product(I, OneArray(1), I1, DiagMatrix(x)), (0, 5)), (1, 3))
+    assert convert_array_to_matrix(cg) == DiagMatrix(x)
+
+    cg = _array_diagonal(_array_tensor_product(I, x, A, B), (1, 2), (5, 6))
+    # The surviving diagonal indices have to be remapped to the new layout
+    # after "x" has been replaced by OneArray(1) (axes shift by one) and the
+    # contracted axes have been removed:
+    assert _array_diag2contr_diagmatrix(cg) == _array_diagonal(_array_contraction(_array_tensor_product(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (3, 4))
+    assert convert_array_to_matrix(cg) == _permute_dims(_array_diagonal(_array_tensor_product(DiagMatrix(x), A, B), (3, 4)), [0, 2, 3, 1, 4])
+
+    cg = _array_diagonal(_array_tensor_product(I1, a, b), (1, 3, 5))
+    assert convert_array_to_matrix(cg) == a*b.T
+
+    cg = _array_diagonal(_array_tensor_product(I1, a, b), (1, 3))
+    assert _array_diag2contr_diagmatrix(cg) == _array_contraction(_array_tensor_product(OneArray(1), a, b, I1), (2, 6))
+    assert convert_array_to_matrix(cg) == a*b.T
+
+    cg = _array_diagonal(_array_tensor_product(x, I1), (1, 2))
+    assert isinstance(cg, ArrayDiagonal)
+    assert cg.diagonal_indices == ((1, 2),)
+    assert convert_array_to_matrix(cg) == x
+
+    cg = _array_diagonal(_array_tensor_product(x, I), (0, 2))
+    assert _array_diag2contr_diagmatrix(cg) == _array_contraction(_array_tensor_product(OneArray(1), I, DiagMatrix(x)), (1, 3))
+    assert convert_array_to_matrix(cg).doit() == DiagMatrix(x)
+
+    raises(ValueError, lambda: _array_diagonal(x, (1,)))
+
+    # Ignore identity matrices with contractions:
+
+    cg = _array_contraction(_array_tensor_product(I, A, I, I), (0, 2), (1, 3), (5, 7))
+    assert cg.split_multiple_contractions() == cg
+    assert convert_array_to_matrix(cg) == Trace(A) * I
+
+    cg = _array_contraction(_array_tensor_product(Trace(A) * I, I, I), (1, 5), (3, 4))
+    assert cg.split_multiple_contractions() == cg
+    assert convert_array_to_matrix(cg).doit() == Trace(A) * I
+
+    # Add DiagMatrix when required:
+
+    cg = _array_contraction(_array_tensor_product(A, a), (1, 2))
+    assert cg.split_multiple_contractions() == cg
+    assert convert_array_to_matrix(cg) == A * a
+
+    cg = _array_contraction(_array_tensor_product(A, a, B), (1, 2, 4))
+    assert cg.split_multiple_contractions() == _array_contraction(_array_tensor_product(A, DiagMatrix(a), OneArray(1), B), (1, 2), (3, 5))
+    assert convert_array_to_matrix(cg) == A * DiagMatrix(a) * B
+
+    cg = _array_contraction(_array_tensor_product(A, a, B), (0, 2, 4))
+    assert cg.split_multiple_contractions() == _array_contraction(_array_tensor_product(A, DiagMatrix(a), OneArray(1), B), (0, 2), (3, 5))
+    assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a) * B
+
+    cg = _array_contraction(_array_tensor_product(A, a, b, a.T, B), (0, 2, 4, 7, 9))
+    assert cg.split_multiple_contractions() == _array_contraction(_array_tensor_product(A, DiagMatrix(a), OneArray(1),
+                                                DiagMatrix(b), OneArray(1), DiagMatrix(a), OneArray(1), B),
+                                               (0, 2), (3, 5), (6, 9), (8, 12))
+    assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a) * DiagMatrix(b) * DiagMatrix(a) * B.T
+
+    cg = _array_contraction(_array_tensor_product(I1, I1, I1), (1, 2, 4))
+    assert cg.split_multiple_contractions() == _array_contraction(_array_tensor_product(I1, I1, OneArray(1), I1), (1, 2), (3, 5))
+    assert convert_array_to_matrix(cg) == 1
+
+    cg = _array_contraction(_array_tensor_product(I, I, I, I, A), (1, 2, 8), (5, 6, 9))
+    # ``cg`` has shape (k, k, k, k): its element (a, b, c, d) is
+    # A[a, c]*delta_{ab}*delta_{cd}, the conversion must NOT drop the
+    # duplicated diagonal axes (it used to return the (k, k) matrix ``A``):
+    ret = convert_array_to_matrix(cg.split_multiple_contractions()).doit()
+    assert ret.shape == (k, k, k, k)
+    assert ret == _permute_dims(_array_diagonal(_array_tensor_product(A, I, I), (0, 2), (1, 4)), Permutation(0, 2, 3, 1))
+
+    cg = _array_contraction(_array_tensor_product(A, a, C, a, B), (1, 2, 4), (5, 6, 8))
+    expected = _array_contraction(_array_tensor_product(A, DiagMatrix(a), OneArray(1), C, DiagMatrix(a), OneArray(1), B), (1, 3), (2, 5), (6, 7), (8, 10))
+    assert cg.split_multiple_contractions() == expected
+    assert convert_array_to_matrix(cg) == A * DiagMatrix(a) * C * DiagMatrix(a) * B
+
+    cg = _array_contraction(_array_tensor_product(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
+    expected = _array_contraction(_array_tensor_product(a, I1, OneArray(1), b, I1, OneArray(1), (a.T*b).applyfunc(cos)),
+                                (1, 3), (2, 10), (6, 8), (7, 11))
+    assert cg.split_multiple_contractions().dummy_eq(expected)
+    assert convert_array_to_matrix(cg).doit().dummy_eq(MatMul(a, (a.T * b).applyfunc(cos), b.T))
+
+
+def test_arrayexpr_convert_array_contraction_tp_additions():
+    a = ArrayAdd(
+        _array_tensor_product(M, N),
+        _array_tensor_product(N, M)
+    )
+    tp = _array_tensor_product(P, a, Q)
+    expr = _array_contraction(tp, (3, 4))
+    expected = _array_tensor_product(
+        P,
+        ArrayAdd(
+            _array_contraction(_array_tensor_product(M, N), (1, 2)),
+            _array_contraction(_array_tensor_product(N, M), (1, 2)),
+        ),
+        Q
+    )
+    assert expr == expected
+    assert convert_array_to_matrix(expr) == _array_tensor_product(P, M * N + N * M, Q)
+
+    expr = _array_contraction(tp, (1, 2), (3, 4), (5, 6))
+    result = _array_contraction(
+        _array_tensor_product(
+            P,
+            ArrayAdd(
+                _array_contraction(_array_tensor_product(M, N), (1, 2)),
+                _array_contraction(_array_tensor_product(N, M), (1, 2)),
+            ),
+            Q
+        ), (1, 2), (3, 4))
+    assert expr == result
+    assert convert_array_to_matrix(expr) == P * (M * N + N * M) * Q
+
+
+def test_arrayexpr_convert_array_to_implicit_matmul():
+    # Trivial dimensions are suppressed, so the result can be expressed in matrix form:
+
+    cg = _array_tensor_product(a, b)
+    assert convert_array_to_matrix(cg) == a * b.T
+
+    cg = _array_tensor_product(a, b, I)
+    assert convert_array_to_matrix(cg) == _array_tensor_product(a*b.T, I)
+
+    cg = _array_tensor_product(I, a, b)
+    assert convert_array_to_matrix(cg) == _array_tensor_product(I, a*b.T)
+
+    cg = _array_tensor_product(a, I, b)
+    assert convert_array_to_matrix(cg) == _array_tensor_product(a, I, b)
+
+    cg = _array_contraction(_array_tensor_product(I, I), (1, 2))
+    assert convert_array_to_matrix(cg) == I
+
+    cg = PermuteDims(_array_tensor_product(I, Identity(1)), [0, 2, 1, 3])
+    assert convert_array_to_matrix(cg) == I
+
+
+def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
+
+    # Tensor Product:
+    assert _remove_trivial_dims(_array_tensor_product(a, b)) == (a * b.T, [1, 3])
+    assert _remove_trivial_dims(_array_tensor_product(a.T, b)) == (a * b.T, [0, 3])
+    assert _remove_trivial_dims(_array_tensor_product(a, b.T)) == (a * b.T, [1, 2])
+    assert _remove_trivial_dims(_array_tensor_product(a.T, b.T)) == (a * b.T, [0, 2])
+
+    assert _remove_trivial_dims(_array_tensor_product(I, a.T, b.T)) == (_array_tensor_product(I, a * b.T), [2, 4])
+    assert _remove_trivial_dims(_array_tensor_product(a.T, I, b.T)) == (_array_tensor_product(a.T, I, b.T), [])
+
+    assert _remove_trivial_dims(_array_tensor_product(a, I)) == (_array_tensor_product(a, I), [])
+    assert _remove_trivial_dims(_array_tensor_product(I, a)) == (_array_tensor_product(I, a), [])
+
+    assert _remove_trivial_dims(_array_tensor_product(a.T, b.T, c, d)) == (
+        _array_tensor_product(a * b.T, c * d.T), [0, 2, 5, 7])
+    assert _remove_trivial_dims(_array_tensor_product(a.T, I, b.T, c, d, I)) == (
+        _array_tensor_product(a.T, I, b*c.T, d, I), [4, 7])
+
+    # Addition:
+
+    cg = ArrayAdd(_array_tensor_product(a, b), _array_tensor_product(c, d))
+    assert _remove_trivial_dims(cg) == (a * b.T + c * d.T, [1, 3])
+
+    # Permute Dims:
+
+    cg = PermuteDims(_array_tensor_product(a, b), Permutation(3)(1, 2))
+    assert _remove_trivial_dims(cg) == (a * b.T, [2, 3])
+
+    cg = PermuteDims(_array_tensor_product(a, I, b), Permutation(5)(1, 2, 3, 4))
+    assert _remove_trivial_dims(cg) == (cg, [])
+
+    cg = PermuteDims(_array_tensor_product(I, b, a), Permutation(5)(1, 2, 4, 5, 3))
+    assert _remove_trivial_dims(cg) == (PermuteDims(_array_tensor_product(I, b * a.T), [0, 2, 3, 1]), [4, 5])
+
+    # Diagonal:
+
+    cg = _array_diagonal(_array_tensor_product(M, a), (1, 2))
+    assert _remove_trivial_dims(cg) == (cg, [])
+
+    # Contraction:
+
+    cg = _array_contraction(_array_tensor_product(M, a), (1, 2))
+    assert _remove_trivial_dims(cg) == (cg, [])
+
+    # A few more cases to test the removal and shift of nested removed axes
+    # with array contractions and array diagonals:
+    tp = _array_tensor_product(
+        OneMatrix(1, 1),
+        M,
+        x,
+        OneMatrix(1, 1),
+        Identity(1),
+    )
+
+    expr = _array_contraction(tp, (1, 8))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [0, 5, 6, 7]
+
+    expr = _array_contraction(tp, (1, 8), (3, 4))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [0, 3, 4, 5]
+
+    expr = _array_diagonal(tp, (1, 8))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [0, 5, 6, 7, 8]
+
+    expr = _array_diagonal(tp, (1, 8), (3, 4))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [0, 3, 4, 5, 6]
+
+    expr = _array_diagonal(_array_contraction(_array_tensor_product(A, x, I, I1), (1, 2, 5)), (1, 4))
+    rexpr, removed = _remove_trivial_dims(expr)
+    assert removed == [2, 3]
+
+    cg = _array_diagonal(_array_tensor_product(PermuteDims(_array_tensor_product(x, I1), Permutation(1, 2, 3)), (x.T*x).applyfunc(sqrt)), (2, 4), (3, 5))
+    rexpr, removed = _remove_trivial_dims(cg)
+    assert removed == [1, 2]
+
+    # Contractions with identity matrices need to be followed by a permutation
+    # in order
+    cg = _array_contraction(_array_tensor_product(A, B, C, M, I), (1, 8))
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == PermuteDims(_array_tensor_product(A, B, C, M), [0, 2, 3, 4, 5, 6, 7, 1])
+    assert removed == []
+
+    cg = _array_contraction(_array_tensor_product(A, B, C, M, I), (1, 8), (3, 4))
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == PermuteDims(_array_contraction(_array_tensor_product(A, B, C, M), (3, 4)), [0, 2, 3, 4, 5, 1])
+    assert removed == []
+
+    # Trivial matrices are sometimes inserted into MatMul expressions:
+
+    cg = _array_tensor_product(b*b.T, a.T*a)
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == b*a.T*a*b.T
+    assert removed == [2, 3]
+
+    Xs = ArraySymbol("X", (3, 2, k))
+    cg = _array_tensor_product(M, Xs, b.T*c, a*a.T, b*b.T, c.T*d)
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == _array_tensor_product(M, Xs, a*b.T*c*c.T*d*a.T, b*b.T)
+    assert removed == [5, 6, 11, 12]
+
+    cg = _array_diagonal(_array_tensor_product(I, I1, x), (1, 4), (3, 5))
+    assert _remove_trivial_dims(cg) == (PermuteDims(_array_diagonal(_array_tensor_product(I, x), (1, 2)), Permutation(1, 2)), [1])
+
+    expr = _array_diagonal(_array_tensor_product(x, I, y), (0, 2))
+    assert _remove_trivial_dims(expr) == (PermuteDims(_array_tensor_product(DiagMatrix(x), y), [1, 2, 3, 0]), [0])
+
+    expr = _array_diagonal(_array_tensor_product(x, I, y), (0, 2), (3, 4))
+    assert _remove_trivial_dims(expr) == (expr, [])
+
+    expr = ArrayTensorProduct(X1, X4)
+    assert _remove_trivial_dims(expr) == (X4*X1, [0, 1])
+
+    expr = ArrayTensorProduct(X4, X1)
+    assert _remove_trivial_dims(expr) == (X4*X1, [2, 3])
+
+    expr = ArrayTensorProduct(X1, X4.T)
+    assert _remove_trivial_dims(expr) == (X1*X4.T, [0, 1])
+
+    expr = ArrayTensorProduct(X4.T, X1)
+    assert _remove_trivial_dims(expr) == (X1*X4.T, [2, 3])
+
+    expr = ArrayTensorProduct(X1, X4, X1)
+    assert _remove_trivial_dims(expr) == (X4*X1**2, [0, 1, 4, 5])
+
+    expr = ArrayTensorProduct(X1, X4, X4)
+    assert _remove_trivial_dims(expr) == (X4*X1*X4.T, [0, 1, 3, 5])
+
+    expr = ArrayTensorProduct(X1, X4, X4, X1)
+    assert _remove_trivial_dims(expr) == (X4*X1**2*X4.T, [0, 1, 3, 5, 6, 7])
+
+    expr = ArrayTensorProduct(X4, ArrayAdd(ArrayTensorProduct(X4, I1), PermuteDims(ArrayTensorProduct(I1, X4), [2, 3, 0, 1])))
+    assert _remove_trivial_dims(expr) == (2*X4*X4.T, [1, 3, 4, 5])
+
+    expr = ArrayDiagonal(ArrayTensorProduct(X1.applyfunc(exp), X1, X4, X1), (0, 2, 6), (1, 3, 7))
+    assert _remove_trivial_dims(expr) == (exp(X1[0, 0])*X4*X1**2, [2, 3])
+
+
+def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():
+    cg = _array_diagonal(_array_tensor_product(M, a), (1, 2))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res.shape == cg.shape
+    assert res == _array_contraction(_array_tensor_product(M, OneArray(1), DiagMatrix(a)), (1, 3))
+
+    raises(ValueError, lambda: _array_diagonal(_array_tensor_product(a, M), (1, 2)))
+
+    cg = _array_diagonal(_array_tensor_product(a.T, M), (1, 2))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res.shape == cg.shape
+    assert res == _array_contraction(_array_tensor_product(OneArray(1), M, DiagMatrix(a.T)), (1, 4))
+
+    cg = _array_diagonal(_array_tensor_product(a.T, M, N, b.T), (1, 2), (4, 7))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res.shape == cg.shape
+    assert res == _array_contraction(
+        _array_tensor_product(OneArray(1), M, N, OneArray(1), DiagMatrix(a.T), DiagMatrix(b.T)), (1, 7), (3, 9))
+
+    cg = _array_diagonal(_array_tensor_product(a, M, N, b.T), (0, 2), (4, 7))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res.shape == cg.shape
+    assert res == _array_contraction(
+        _array_tensor_product(OneArray(1), M, N, OneArray(1), DiagMatrix(a), DiagMatrix(b.T)), (1, 6), (3, 9))
+
+    cg = _array_diagonal(_array_tensor_product(a, M, N, b.T), (0, 4), (3, 7))
+    res = _array_diag2contr_diagmatrix(cg)
+    assert res.shape == cg.shape
+    assert res == _array_contraction(
+        _array_tensor_product(OneArray(1), M, N, OneArray(1), DiagMatrix(a), DiagMatrix(b.T)), (3, 6), (2, 9))
+
+    I1 = Identity(1)
+    x = MatrixSymbol("x", k, 1)
+    A = MatrixSymbol("A", k, k)
+    cg = _array_diagonal(_array_tensor_product(x, A.T, I1), (0, 2))
+    assert _array_diag2contr_diagmatrix(cg).shape == cg.shape
+    assert _array2matrix(cg).shape == cg.shape
+
+
+def test_arrayexpr_convert_array_to_matrix_support_function():
+
+    assert _support_function_tp1_recognize([], [2 * k]) == 2 * k
+
+    assert _support_function_tp1_recognize([(1, 2)], [A, 2 * k, B, 3]) == 6 * k * A * B
+
+    assert _support_function_tp1_recognize([(0, 3), (1, 2)], [A, B]) == Trace(A * B)
+
+    assert _support_function_tp1_recognize([(1, 2)], [A, B]) == A * B
+    assert _support_function_tp1_recognize([(0, 2)], [A, B]) == A.T * B
+    assert _support_function_tp1_recognize([(1, 3)], [A, B]) == A * B.T
+    assert _support_function_tp1_recognize([(0, 3)], [A, B]) == A.T * B.T
+
+    assert _support_function_tp1_recognize([(1, 2), (5, 6)], [A, B, C, D]) == _array_tensor_product(A * B, C * D)
+    assert _support_function_tp1_recognize([(1, 4), (3, 6)], [A, B, C, D]) == PermuteDims(
+        _array_tensor_product(A * C, B * D), [0, 2, 1, 3])
+
+    assert _support_function_tp1_recognize([(0, 3), (1, 4)], [A, B, C]) == B * A * C
+
+    assert _support_function_tp1_recognize([(9, 10), (1, 2), (5, 6), (3, 4), (7, 8)],
+                                           [X, Y, A, B, C, D]) == X * Y * A * B * C * D
+
+    assert _support_function_tp1_recognize([(9, 10), (1, 2), (5, 6), (3, 4)],
+                                           [X, Y, A, B, C, D]) == _array_tensor_product(X * Y * A * B, C * D)
+
+    assert _support_function_tp1_recognize([(1, 7), (3, 8), (4, 11)], [X, Y, A, B, C, D]) == PermuteDims(
+        _array_tensor_product(X * B.T, Y * C, A.T * D.T), [0, 2, 4, 1, 3, 5]
+    )
+
+    assert _support_function_tp1_recognize([(0, 1), (3, 6), (5, 8)], [X, A, B, C, D]) == PermuteDims(
+        _array_tensor_product(Trace(X) * A * C, B * D), [0, 2, 1, 3])
+
+    assert _support_function_tp1_recognize([(1, 2), (3, 4), (5, 6), (7, 8)], [A, A, B, C, D]) == A ** 2 * B * C * D
+    assert _support_function_tp1_recognize([(1, 2), (3, 4), (5, 6), (7, 8)], [X, A, B, C, D]) == X * A * B * C * D
+
+    assert _support_function_tp1_recognize([(1, 6), (3, 8), (5, 10)], [X, Y, A, B, C, D]) == PermuteDims(
+        _array_tensor_product(X * B, Y * C, A * D), [0, 2, 4, 1, 3, 5]
+    )
+
+    assert _support_function_tp1_recognize([(1, 4), (3, 6)], [A, B, C, D]) == PermuteDims(
+        _array_tensor_product(A * C, B * D), [0, 2, 1, 3])
+
+    assert _support_function_tp1_recognize([(0, 4), (1, 7), (2, 5), (3, 8)], [X, A, B, C, D]) == C*X.T*B*A*D
+
+    assert _support_function_tp1_recognize([(0, 4), (1, 7), (2, 5), (3, 8)], [X, A, B, C, D]) == C*X.T*B*A*D
+
+
+def test_convert_array_to_hadamard_products():
+
+    expr = HadamardProduct(M, N)
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == expr
+
+    expr = HadamardProduct(M, N)*P
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == expr
+
+    expr = Q*HadamardProduct(M, N)*P
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == expr
+
+    expr = Q*HadamardProduct(M, N.T)*P
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == expr
+
+    expr = HadamardProduct(M, N)*HadamardProduct(Q, P)
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert expr == ret
+
+    expr = P.T*HadamardProduct(M, N)*HadamardProduct(Q, P)
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert expr == ret
+
+    # ArrayDiagonal should be converted
+    cg = _array_diagonal(_array_tensor_product(M, N, Q), (1, 3), (0, 2, 4))
+    ret = convert_array_to_matrix(cg)
+    expected = PermuteDims(_array_diagonal(_array_tensor_product(HadamardProduct(M.T, N.T), Q), (1, 2)), [1, 0, 2])
+    assert expected == ret
+
+    # Special case that should return the same expression:
+    cg = _array_diagonal(_array_tensor_product(HadamardProduct(M, N), Q), (0, 2))
+    ret = convert_array_to_matrix(cg)
+    assert ret == cg
+
+    # Hadamard products with traces:
+
+    expr = Trace(HadamardProduct(M, N))
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == Trace(HadamardProduct(M.T, N.T))
+
+    expr = Trace(A*HadamardProduct(M, N))
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == Trace(HadamardProduct(M, N)*A)
+
+    expr = Trace(HadamardProduct(A, M)*N)
+    cg = convert_matrix_to_array(expr)
+    ret = convert_array_to_matrix(cg)
+    assert ret == Trace(HadamardProduct(M.T, N)*A)
+
+    # These should not be converted into Hadamard products:
+
+    cg = _array_diagonal(_array_tensor_product(M, N), (0, 1, 2, 3))
+    ret = convert_array_to_matrix(cg)
+    assert ret == cg
+
+    cg = _array_diagonal(_array_tensor_product(A), (0, 1))
+    ret = convert_array_to_matrix(cg)
+    assert ret == cg
+
+    cg = _array_diagonal(_array_tensor_product(M, N, P), (0, 2, 4), (1, 3, 5))
+    assert convert_array_to_matrix(cg) == HadamardProduct(M, N, P)
+
+    cg = _array_diagonal(_array_tensor_product(M, N, P), (0, 3, 4), (1, 2, 5))
+    assert convert_array_to_matrix(cg) == HadamardProduct(M, P, N.T)
+
+    cg = _array_diagonal(_array_tensor_product(I, I1, x), (1, 4), (3, 5))
+    assert convert_array_to_matrix(cg) == DiagMatrix(x)
+
+    cg = _array_tensor_product(X1, X4)
+    assert convert_array_to_matrix(cg) == X4*X1
+
+    cg = ArrayTensorProduct(X4, ArrayAdd(ArrayTensorProduct(X4, I1), PermuteDims(ArrayTensorProduct(I1, X4), [2, 3, 0, 1])))
+    assert convert_array_to_matrix(cg) == 2*X4*X4.T
+
+    cg = ArrayDiagonal(ArrayTensorProduct(X1.applyfunc(exp), X1, X4, X1), (0, 2, 6), (1, 3, 7))
+    assert convert_array_to_matrix(cg).dummy_eq(X4*X1.applyfunc(exp)*X1**2)
+
+
+def test_identify_removable_identity_matrices():
+
+    D = DiagonalMatrix(MatrixSymbol("D", k, k))
+
+    cg = _array_contraction(_array_tensor_product(A, B, I), (1, 2, 4, 5))
+    expected = _array_contraction(_array_tensor_product(A, B), (1, 2))
+    assert identify_removable_identity_matrices(cg) == expected
+
+    cg = _array_contraction(_array_tensor_product(A, B, C, I), (1, 3, 5, 6, 7))
+    expected = _array_contraction(_array_tensor_product(A, B, C), (1, 3, 5))
+    assert identify_removable_identity_matrices(cg) == expected
+
+    # Tests with diagonal matrices:
+
+    cg = _array_contraction(_array_tensor_product(A, B, D), (1, 2, 4, 5))
+    ret = identify_removable_identity_matrices(cg)
+    expected = _array_contraction(_array_tensor_product(A, B, D), (1, 4), (2, 5))
+    assert ret == expected
+
+    cg = _array_contraction(_array_tensor_product(A, B, D, M, N), (1, 2, 4, 5, 6, 8))
+    ret = identify_removable_identity_matrices(cg)
+    assert ret == cg
+
+
+def test_combine_removed():
+
+    assert _combine_removed(6, [0, 1, 2], [0, 1, 2]) == [0, 1, 2, 3, 4, 5]
+    assert _combine_removed(8, [2, 5], [1, 3, 4]) == [1, 2, 4, 5, 6]
+    assert _combine_removed(8, [7], []) == [7]
+
+
+def test_array_contraction_to_diagonal_multiple_identities():
+
+    expr = _array_contraction(_array_tensor_product(A, B, I, C), (1, 2, 4), (5, 6))
+    assert _array_contraction_to_diagonal_multiple_identity(expr) == (expr, [])
+    assert convert_array_to_matrix(expr) == _array_contraction(_array_tensor_product(A, B, C), (1, 2, 4))
+
+    # The result must keep the duplicated diagonal axis: expr has shape
+    # (k, k, k) with element (a, b, c) equal to A[a, b]*delta_{bc}; it used
+    # to be converted to the (k, k) matrix ``A``, silently changing shape:
+    expr = _array_contraction(_array_tensor_product(A, I, I), (1, 2, 4))
+    expected = _permute_dims(_array_diagonal(_array_tensor_product(A, I), (1, 2)), Permutation(1, 2))
+    assert _array_contraction_to_diagonal_multiple_identity(expr) == (expected, [])
+    assert convert_array_to_matrix(expr) == expected
+    assert expected.shape == (k, k, k)
+
+    expr = _array_contraction(_array_tensor_product(A, I, I, B), (1, 2, 4), (3, 6))
+    assert _array_contraction_to_diagonal_multiple_identity(expr) == (expr, [])
+
+    expr = _array_contraction(_array_tensor_product(A, I, I, B), (1, 2, 3, 4, 6))
+    assert _array_contraction_to_diagonal_multiple_identity(expr) == (expr, [])
+
+
+def test_convert_array_element_to_matrix():
+
+    expr = ArrayElement(M, (i, j))
+    assert convert_array_to_matrix(expr) == MatrixElement(M, i, j)
+
+    expr = ArrayElement(_array_contraction(_array_tensor_product(M, N), (1, 3)), (i, j))
+    assert convert_array_to_matrix(expr) == MatrixElement(M*N.T, i, j)
+
+    expr = ArrayElement(_array_tensor_product(M, N), (i, j, m, n))
+    assert convert_array_to_matrix(expr) == expr
+
+
+def test_convert_array_elementwise_function_to_matrix():
+
+    d = Dummy("d")
+
+    expr = ArrayElementwiseApplyFunc(Lambda(d, sin(d)), x.T*y)
+    assert convert_array_to_matrix(expr) == sin(MatrixElement(x.T*y, 0, 0))
+
+    expr = ArrayElementwiseApplyFunc(Lambda(d, d**2), x.T*y)
+    assert convert_array_to_matrix(expr) == (x.T*y)**2
+
+    expr = ArrayElementwiseApplyFunc(Lambda(d, sin(d)), x)
+    assert convert_array_to_matrix(expr).dummy_eq(x.applyfunc(sin))
+
+    expr = ArrayElementwiseApplyFunc(Lambda(d, 1 / (2 * sqrt(d))), x)
+    assert convert_array_to_matrix(expr) == S.Half * HadamardPower(x, -S.Half)
+
+    # Related to issue 23931
+    expr = ArrayElementwiseApplyFunc(Lambda(d, sin(d)), Trace(X))
+    assert convert_array_to_matrix(expr) == sin(Trace(X))
+
+
+def test_array2matrix():
+    # See issue https://github.com/sympy/sympy/pull/22877
+    expr = PermuteDims(ArrayContraction(ArrayTensorProduct(x, I, I1, x), (0, 3), (1, 7)), Permutation(2, 3))
+    expected = PermuteDims(ArrayTensorProduct(x*x.T, I1), Permutation(3)(1, 2))
+    assert _array2matrix(expr) == expected
+
+    # Related to issue https://github.com/sympy/sympy/issues/15651
+    expr = ArrayTensorProduct(Array(
+        [[[[1, 0, 0], [0, 0, 0], [0, 0, 0]], [[0, 1, 0], [0, 0, 0], [0, 0, 0]], [[0, 0, 1], [0, 0, 0], [0, 0, 0]]],
+         [[[0, 0, 0], [1, 0, 0], [0, 0, 0]], [[0, 0, 0], [0, 1, 0], [0, 0, 0]], [[0, 0, 0], [0, 0, 1], [0, 0, 0]]],
+         [[[0, 0, 0], [0, 0, 0], [1, 0, 0]], [[0, 0, 0], [0, 0, 0], [0, 1, 0]], [[0, 0, 0], [0, 0, 0], [0, 0, 1]]]]), X)
+
+    assert _array2matrix(expr) == expr
+
+
+def test_recognize_broadcasting():
+    expr = ArrayTensorProduct(x.T*x, A)
+    assert _remove_trivial_dims(expr) == (KroneckerProduct(x.T*x, A), [0, 1])
+
+    expr = ArrayTensorProduct(A, x.T*x)
+    assert _remove_trivial_dims(expr) == (KroneckerProduct(A, x.T*x), [2, 3])
+
+    expr = ArrayTensorProduct(A, B, x.T*x, C)
+    assert _remove_trivial_dims(expr) == (ArrayTensorProduct(A, KroneckerProduct(B, x.T*x), C), [4, 5])
+
+    # Always prefer matrix multiplication to Kronecker product, if possible:
+    expr = ArrayTensorProduct(a, b, x.T*x)
+    assert _remove_trivial_dims(expr) == (a*x.T*x*b.T, [1, 3, 4, 5])
+
+
+def test_array_sum_conversion():
+    expr = ArraySum(ArrayTensorProduct(X, Y), (k, 0, 10))
+    assert convert_array_to_matrix(expr) == expr
+
+    expr = ArraySum(X, (i, 1, 10))
+    assert convert_array_to_matrix(expr) == 10*X
+
+
+def test_remove_identity_matrices_contraction():
+    # Contracting an Identity with another matrix must reproduce that matrix
+    # (transposed/permuted as required), for the identity in any position.  The
+    # permutation that remove_identity_matrices rebuilds used to mix a
+    # free-axis offset with a raw index position, giving a permutation that was
+    # either out of range (IndexError) or valid-but-wrong (silently incorrect).
+    from sympy import Matrix
+    n = 3
+    M1 = MatrixSymbol("M1", n, n)
+    M2 = MatrixSymbol("M2", n, n)
+    In = Identity(n)
+    subs = {M1: Matrix([[1, 2, 0], [0, 1, 3], [2, 0, 1]]),
+            M2: Matrix([[1, 0, 1], [1, 1, 0], [0, 2, 1]])}
+
+    def numeric_equal(ae):
+        conv = convert_array_to_matrix(ae)
+        lhs = Array(ae.as_explicit()).applyfunc(lambda e: e.subs(subs).doit())
+        rhs = Array(conv.as_explicit()).applyfunc(lambda e: e.subs(subs).doit())
+        return lhs == rhs
+
+    # identity in every position of a plain contraction:
+    assert numeric_equal(_array_contraction(_array_tensor_product(In, M1, M2), (0, 3)))
+    assert numeric_equal(_array_contraction(_array_tensor_product(M1, In, M2), (3, 5)))
+    assert numeric_equal(_array_contraction(_array_tensor_product(M1, M2, In), (1, 4)))
+    assert numeric_equal(_array_contraction(_array_tensor_product(M1, In), (1, 2)))
+
+    # several identities removed in one contraction: two separate
+    # identity/matrix pairs.  This is where the per-pair bookkeeping matters --
+    # the freed-axis position of the second matrix depends on the first pair
+    # having already been removed, which a single global offset gets wrong.
+    assert numeric_equal(_array_contraction(
+        _array_tensor_product(In, M1, In, M2), (0, 3), (4, 7)))
+    assert numeric_equal(_array_contraction(
+        _array_tensor_product(M1, In, M2, In), (1, 2), (5, 6)))
+    assert numeric_equal(_array_contraction(
+        _array_tensor_product(In, In, M1, M2), (0, 4), (2, 6)))
+    assert numeric_equal(_array_contraction(
+        _array_tensor_product(M1, In, In, M2), (1, 2), (5, 6)))
+
+    # nested in ArrayDiagonal / PermuteDims: this exact expression previously
+    # converted to a numerically wrong matrix, and a sibling of it crashed with
+    # an IndexError inside remove_identity_matrices:
+    assert numeric_equal(PermuteDims(ArrayDiagonal(_array_contraction(
+        _array_tensor_product(In, M1, M2), (0, 3)), (1, 2)), Permutation([0, 2, 1])))
+    assert numeric_equal(PermuteDims(ArrayDiagonal(_array_contraction(
+        _array_tensor_product(M1, In, M2), (3, 5)), (2, 3)), Permutation([1, 0, 2])))
+
+    # a couple of clean symbolic forms, over symbolic dimension k:
+    assert convert_array_to_matrix(_array_contraction(
+        _array_tensor_product(I, M, N), (0, 3))) == _array_tensor_product(M.T, N)
+    assert convert_array_to_matrix(_array_contraction(
+        _array_tensor_product(M, I, N), (3, 5))) == _array_tensor_product(M, N.T)
+
+    # the returned permutation must be a genuine permutation (this used to
+    # raise IndexError in _af_invert):
+    _result, removed = remove_identity_matrices(
+        _array_contraction(_array_tensor_product(M, I, N), (3, 5)))
+    assert removed == []
+
+
+def test_convert_array_to_matrix_diagonal_of_contraction_with_identity():
+    # ArrayDiagonal whose inner ArrayContraction converts to a PermuteDims used
+    # to reach identify_hadamard_products, which raised NotImplementedError when
+    # building the editor.  It must convert without error now.
+    n = 3
+    M1 = MatrixSymbol("M1", n, n)
+    In = Identity(n)
+    conv = convert_array_to_matrix(ArrayDiagonal(_array_contraction(
+        _array_tensor_product(In, In, M1), (0, 4)), (0, 2)))
+    assert conv is not None
+
+
+def _explicit_equal_squeezed(expr, conv, subs):
+    # Compare the explicit forms of ``expr`` and ``conv`` after substituting
+    # the matrix symbols numerically, ignoring size-1 axes (which
+    # convert_array_to_matrix is allowed to drop or add).
+    import itertools as _it
+    from sympy import ImmutableDenseNDimArray
+
+    def _squeezed(e):
+        e = e.xreplace(subs).doit()
+        e = e.as_explicit() if hasattr(e, "as_explicit") else e
+        if not hasattr(e, "shape") or e.shape == ():
+            return [S(e)], ()
+        e = ImmutableDenseNDimArray(e)
+        flat = [e[ix] for ix in _it.product(*[range(s) for s in e.shape])]
+        return flat, tuple(s for s in e.shape if s != 1)
+
+    return _squeezed(expr) == _squeezed(conv)
+
+
+def test_convert_array_to_matrix_diag2contraction_stale_indices():
+    # _array_diag2contr_diagmatrix replaces a vector argument by OneArray and
+    # appends a DiagMatrix at the end of the tensor product: the surviving
+    # diagonal indices used to keep the old axis numbering, giving numerically
+    # wrong results (or a ValueError):
+    from sympy import Matrix
+    n = 2
+    A1 = MatrixSymbol("A1", n, n)
+    B1 = MatrixSymbol("B1", n, n)
+    a1 = MatrixSymbol("a1", n, 1)
+    subs = {A1: Matrix([[2, 7], [11, 13]]), B1: Matrix([[17, 19], [23, 29]]),
+            a1: Matrix([[3], [5]])}
+
+    cg = _array_diagonal(_array_tensor_product(a1, A1, B1), (0, 2), (3, 4))
+    assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+    # This variant used to raise ValueError("diagonalizing indices of
+    # different dimensions"):
+    cg = _array_diagonal(_array_tensor_product(A1, a1, B1), (0, 2), (1, 4))
+    assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+
+def test_convert_array_to_matrix_remove_trivial_dims_pending():
+    # In the ArrayTensorProduct handler of _remove_trivial_dims, merging a
+    # (1, 1) matrix into the previous argument used to reset the
+    # pending/prev_i bookkeeping, so the following vector argument was
+    # multiplied with the wrong ordering/transposition and the "removed" list
+    # went out of sync with the returned expression:
+    from sympy import Matrix
+    from sympy.tensor.array.expressions.array_expressions import get_shape
+    n = 2
+    A1 = MatrixSymbol("A1", n, n)
+    a1 = MatrixSymbol("a1", n, 1)
+    b1 = MatrixSymbol("b1", n, 1)
+    r1 = MatrixSymbol("r1", 1, 3)
+    x1 = MatrixSymbol("x1", 1, 1)
+    subs = {A1: Matrix([[2, 7], [11, 13]]), a1: Matrix([[3], [5]]),
+            b1: Matrix([[31], [37]]), r1: Matrix([[41, 43, 47]]),
+            x1: Matrix([[53]])}
+
+    for cg in [
+        _array_tensor_product(r1, x1, b1),
+        _array_tensor_product(b1, x1, a1, A1),
+        _array_tensor_product(r1, x1, r1),
+        _array_tensor_product(x1, b1),
+    ]:
+        # Contract of _remove_trivial_dims: "removed" must list exactly the
+        # original axes that were dropped:
+        newexpr, removed = _remove_trivial_dims(cg)
+        kept = [i for i in range(len(cg.shape)) if i not in removed]
+        assert get_shape(newexpr) == tuple(cg.shape[i] for i in kept)
+        assert _explicit_equal_squeezed(cg, newexpr, subs)
+        assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+    # This wrapper expression used to raise ShapeError because of the broken
+    # "removed" bookkeeping:
+    cg = _array_diagonal(_array_tensor_product(b1, x1, a1, A1), (6, 7), (2, 3), (0, 4))
+    assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+
+def test_convert_array_to_matrix_identity_contractions():
+    # identify_removable_identity_matrices used to insert a raw OneArray into
+    # the editor instead of an _ArgE wrapper, raising AttributeError:
+    cg = _array_contraction(_array_tensor_product(I, I), (0, 1, 2))
+    assert convert_array_to_matrix(cg) == OneArray(k)
+
+    # remove_identity_matrices used to raise an AssertionError when the
+    # non-identity argument carries the contraction index on both of its axes
+    # (this expression is the diagonal of M, of shape (k,)):
+    from sympy import Matrix
+    cg = _array_contraction(_array_tensor_product(M, I), (0, 1, 2))
+    convert_array_to_matrix(cg)  # must not raise
+    n = 2
+    M1 = MatrixSymbol("M1", n, n)
+    In = Identity(n)
+    cgn = _array_contraction(_array_tensor_product(M1, In), (0, 1, 2))
+    subs = {M1: Matrix([[2, 7], [11, 13]])}
+    assert _explicit_equal_squeezed(cgn, convert_array_to_matrix(cgn), subs)
+
+
+def test_convert_array_to_matrix_single_axis_sum():
+    # Single-axis contractions (row/column sums) of a generic matrix used to
+    # fail with an AssertionError, only vectors were special-cased:
+    Xm = MatrixSymbol("Xm", m, n)
+    assert convert_array_to_matrix(_array_contraction(Xm, (0,))) == OneMatrix(1, m) * Xm
+    assert convert_array_to_matrix(_array_contraction(Xm, (1,))) == Xm * OneMatrix(n, 1)
+    assert convert_array_to_matrix(_array_contraction(M, (0,))) == OneMatrix(1, k) * M
+
+    from sympy import Matrix
+    D1 = MatrixSymbol("D1", 3, 2)
+    subs = {D1: Matrix([[2, 7], [11, 13], [17, 19]])}
+    for cg in [_array_contraction(D1, (0,)), _array_contraction(D1, (1,))]:
+        assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+
+def test_convert_array_to_matrix_scalar_addends():
+    # _a2m_add used to build a MatAdd even when all the addends had been
+    # converted to scalars (traces), raising a TypeError:
+    cg = ArrayAdd(_array_contraction(_array_tensor_product(A, B), (0, 2), (1, 3)),
+                  _array_contraction(_array_tensor_product(A, B), (0, 3), (1, 2)))
+    assert convert_array_to_matrix(cg) == Trace(A * B) + Trace(A * B.T)
+
+
+def test_convert_array_to_matrix_scalar_times_array():
+    # _a2m_tensor_product used to multiply a scalar into an _ArrayExpr
+    # element (e.g. OneArray) in place, creating a shapeless Mul and crashing
+    # the conversion later on:
+    from sympy import Matrix
+    n = 2
+    A1 = MatrixSymbol("A1", n, n)
+    b1 = MatrixSymbol("b1", n, 1)
+    subs = {A1: Matrix([[2, 7], [11, 13]]), b1: Matrix([[3], [5]])}
+    cg = _array_contraction(_array_tensor_product(A1, b1), (0, 1, 2))
+    # Expected value: Sum(A1[i, i]*b1[i, 0]):
+    assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+
+
+def test_convert_array_to_matrix_multi_slot_contraction_group_no_trace():
+    # A contraction group with three or more axis slots (left over by
+    # split_multiple_contractions) used to be partially consumed by the
+    # pairwise matrix-multiplication/trace recognition, e.g. the x-derivative
+    # of Trace(x.T*HadamardProduct(a, x)) came back as the constant vector
+    # 2*Trace(a*x.T)*[1, 1] instead of [2*a[0]*x[0], 2*a[1]*x[1]]:
+    from sympy import Matrix
+    a1 = MatrixSymbol("a1", 2, 1)
+    x1 = MatrixSymbol("x1", 2, 1)
+    I2 = Identity(2)
+    cg = _array_contraction(_array_tensor_product(a1, x1, I2, I1), (0, 2, 5), (1, 3, 7))
+    ret = convert_array_to_matrix(cg)
+    assert not ret.has(Trace)
+    subs = {a1: Matrix([[3], [5]]), x1: Matrix([[7], [11]])}
+    # Expected (squeezed) value: [a1[0]*x1[0], a1[1]*x1[1]]:
+    assert _explicit_equal_squeezed(cg, ret, subs)
+
+
+def test_convert_array_to_matrix_diag2contraction_surviving_group_permutation():
+    # When _array_diag2contr_diagmatrix turns a diagonal group into a
+    # contraction (DiagMatrix replacement), the output axis of a surviving
+    # diagonal group changes its relative position: a compensating
+    # permutation must be added.  The x-derivative of
+    # HadamardProduct(x*x.T, A) used to have its last two axes transposed:
+    from sympy import Matrix
+    n = 2
+    A1 = MatrixSymbol("A1", n, n)
+    x1 = MatrixSymbol("x1", n, 1)
+    I2 = Identity(n)
+    cg = _array_diagonal(_array_tensor_product(I2, x1.T, A1), (1, 4), (3, 5))
+    ret = _array_diag2contr_diagmatrix(cg)
+    assert ret.shape == cg.shape
+    assert ret == _permute_dims(_array_diagonal(_array_contraction(
+        _array_tensor_product(I2, OneArray(1), A1, DiagMatrix(x1.T)), (4, 6)), (1, 3)), Permutation(2, 3))
+    subs = {A1: Matrix([[2, 7], [11, 13]]), x1: Matrix([[3], [5]])}
+    assert _explicit_equal_squeezed(cg, ret, subs)
+    assert _explicit_equal_squeezed(cg, convert_array_to_matrix(cg), subs)
+    # With the diagonal groups in the opposite order no permutation is needed:
+    cg2 = _array_diagonal(_array_tensor_product(I2, x1.T, A1), (3, 5), (1, 4))
+    ret2 = _array_diag2contr_diagmatrix(cg2)
+    assert ret2.shape == cg2.shape
+    assert _explicit_equal_squeezed(cg2, ret2, subs)
+
+
+def test_convert_array_to_matrix_duplicated_diagonal_axis_kept():
+    # ArrayContraction(ArrayTensorProduct(A, I, I), (0, 1, 3, 5)) is the
+    # matrix diag(A[0, 0], ..., A[k, k]) (this is the X-derivative of
+    # Trace(HadamardProduct(A, X))): it used to convert to the rank-1
+    # ArrayDiagonal(A, (0, 1)), silently dropping a non-trivial axis:
+    from sympy import Matrix
+    cg = _array_contraction(_array_tensor_product(A, I, I), (0, 1, 3, 5))
+    ret = convert_array_to_matrix(cg)
+    assert ret == HadamardProduct(I, A.T)
+    assert ret.shape == (k, k)
+    n = 2
+    A1 = MatrixSymbol("A1", n, n)
+    I2 = Identity(n)
+    cg1 = _array_contraction(_array_tensor_product(A1, I2, I2), (0, 1, 3, 5))
+    subs = {A1: Matrix([[2, 7], [11, 13]])}
+    assert _explicit_equal_squeezed(cg1, convert_array_to_matrix(cg1), subs)
+
+
+def test_convert_array_to_matrix_mixed_rank_addends():
+    # The two addends of this ArrayAdd (the x-derivative of
+    # HadamardProduct(a, x) + B*x) have shape (2, 1, 2, 1); the conversion of
+    # the ArrayDiagonal addend used to change its rank, making the final
+    # ArrayAdd/MatAdd reconstruction crash with
+    # "summing arrays of different number of dims":
+    from sympy import Matrix
+    n = 2
+    B1 = MatrixSymbol("B1", n, n)
+    a1 = MatrixSymbol("a1", n, 1)
+    I2 = Identity(n)
+    cg = ArrayAdd(
+        _permute_dims(_array_contraction(_array_tensor_product(I2, I1, B1), (1, 5)), Permutation(2, 3)),
+        _array_diagonal(_array_tensor_product(I2, I1, a1), (1, 4), (3, 5)))
+    ret = convert_array_to_matrix(cg)
+    assert ret == DiagMatrix(a1) + B1.T
+    subs = {B1: Matrix([[2, 7], [11, 13]]), a1: Matrix([[3], [5]])}
+    assert _explicit_equal_squeezed(cg, ret, subs)
+
+
+def test_convert_array_to_matrix_rank0_applyfunc_to_scalar():
+    # A rank-0 ArrayElementwiseApplyFunc whose operand converts to a scalar
+    # must be converted to a plain scalar; it used to survive as a
+    # noncommutative "scalar" factor, crashing MatMul (e.g. the X-derivative
+    # of 1/(2*Trace(X))):
+    from sympy import Lambda, Rational, S, Symbol
+    d = Symbol("_d")
+    cg = _array_contraction(_array_tensor_product(
+        S.Half,
+        ArrayElementwiseApplyFunc(Lambda(d, -1/d**2), _array_contraction(X, (0, 1))),
+        I, I), (1, 3))
+    ret = convert_array_to_matrix(cg)
+    assert ret == -Rational(1, 2)*Trace(X)**(-2)*I
+
+
+def test_convert_array_to_matrix_contraction_group_with_identities_is_not_a_trace():
+    # The single contraction group involves both axes of two matrices and
+    # one axis of each of two identity matrices: the result is the
+    # Hadamard product of the matrices embedded on the diagonal, not a
+    # trace multiplied by an identity matrix.
+    expr = ArrayContraction(ArrayTensorProduct(3*M, M, I, I), (0, 1, 2, 3, 5, 7))
+    ret = convert_array_to_matrix(expr)
+    assert ret.shape == (k, k)
+    M2 = MatrixSymbol("M", 2, 2)
+    expr2 = expr.subs(k, 2).subs(M, M2)
+    ret2 = convert_array_to_matrix(expr2)
+    assert ret2.as_explicit() == Matrix([[3*M2[0, 0]**2, 0], [0, 3*M2[1, 1]**2]])
+
+
+def test_arrayexpr_convert_array_to_matrix_scalar_coefficients():
+    # Scalar coefficients of matrix arguments are extracted by the
+    # canonicalization of ArrayTensorProduct into a leading rank-0 argument
+    # (see issue #30387); the matrix recognition has to absorb them back.
+    x, y = symbols("x y")
+
+    cg = _array_contraction(_array_tensor_product(2*M, N), (1, 2))
+    assert cg == _array_contraction(_array_tensor_product(2, M, N), (1, 2))
+    assert convert_array_to_matrix(cg) == 2*M*N
+
+    cg = _array_contraction(_array_tensor_product(x*M, y*N, P), (1, 2), (3, 4))
+    assert convert_array_to_matrix(cg) == x*y*M*N*P
+
+    cg = _array_contraction(_array_tensor_product(3*M), (0, 1))
+    assert convert_array_to_matrix(cg) == 3*Trace(M)
+
+    assert convert_array_to_matrix(_array_tensor_product(2*M, 3*N)) == ArrayTensorProduct(6, M, N)
+    assert convert_array_to_matrix(_array_add(_array_tensor_product(2*M, N), _array_tensor_product(M, 3*N))) == \
+        ArrayTensorProduct(5, M, N)
+
+    # Permutations act on the matrix axes only, the coefficient has none:
+    cg = PermuteDims(_array_tensor_product(2*M, N), Permutation([2, 3, 0, 1]))
+    assert convert_array_to_matrix(cg) == ArrayTensorProduct(2, N, M)
+
+    cg = PermuteDims(_array_contraction(_array_tensor_product(3*M, N, P), (1, 2)), Permutation([1, 0, 3, 2]))
+    assert convert_array_to_matrix(cg) == ArrayTensorProduct(3, N.T*M.T, P.T)
+
+    cg = PermuteDims(_array_contraction(_array_tensor_product(3*M, N, P), (1, 2)), Permutation([2, 3, 0, 1]))
+    assert convert_array_to_matrix(cg) == ArrayTensorProduct(3, P, M*N)
+
+    assert _support_function_tp1_recognize([(1, 2)], [2*M, N]) == 2*M*N

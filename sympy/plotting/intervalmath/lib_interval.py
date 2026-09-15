@@ -1,10 +1,9 @@
-from __future__ import print_function, division
+""" The module contains implemented functions for interval arithmetic."""
+from __future__ import annotations
+from functools import reduce
 
 from sympy.plotting.intervalmath import interval
 from sympy.external import import_module
-from sympy.core.compatibility import reduce
-""" The module contains implemented functions for interval arithmetic."""
-
 
 
 def Abs(x):
@@ -16,7 +15,7 @@ def Abs(x):
         else:
             return interval(abs(x.start), abs(x.end))
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Abs for {type(x)}")
 
 #Monotonic
 
@@ -29,7 +28,7 @@ def exp(x):
     elif isinstance(x, interval):
         return interval(np.exp(x.start), np.exp(x.end), is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"exp for {type(x)}")
 
 
 #Monotonic
@@ -51,7 +50,7 @@ def log(x):
 
         return interval(np.log(x.start), np.log(x.end))
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"log for {type(x)}")
 
 
 #Monotonic
@@ -72,7 +71,7 @@ def log10(x):
             return interval(-np.inf, np.inf, is_valid=None)
         return interval(np.log10(x.start), np.log10(x.end))
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"log10 for {type(x)}")
 
 
 #Monotonic
@@ -86,7 +85,7 @@ def atan(x):
         end = np.arctan(x.end)
         return interval(start, end, is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"atan for {type(x)}")
 
 
 #periodic
@@ -115,7 +114,7 @@ def sin(x):
                 start = -1
             return interval(start, end)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"sin for {type(x)}")
 
 
 #periodic
@@ -146,7 +145,7 @@ def cos(x):
                 start = -1
             return interval(start, end, is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"cos for {type(x)}")
 
 
 def tan(x):
@@ -174,14 +173,14 @@ def sqrt(x):
             return interval(np.sqrt(x.start), np.sqrt(x.end),
                     is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"sqrt for {type(x)}")
 
 
 def imin(*args):
     """Evaluates the minimum of a list of intervals"""
     np = import_module('numpy')
     if not all(isinstance(arg, (int, float, interval)) for arg in args):
-        return NotImplementedError
+        raise NotImplementedError(f"imin for argument types {[type(arg) for arg in args]}")
     else:
         new_args = [a for a in args if isinstance(a, (int, float))
                     or a.is_valid]
@@ -202,7 +201,7 @@ def imax(*args):
     """Evaluates the maximum of a list of intervals"""
     np = import_module('numpy')
     if not all(isinstance(arg, (int, float, interval)) for arg in args):
-        return NotImplementedError
+        raise NotImplementedError(f"imax for argument types {[type(arg) for arg in args]}")
     else:
         new_args = [a for a in args if isinstance(a, (int, float))
                     or a.is_valid]
@@ -229,7 +228,7 @@ def sinh(x):
     elif isinstance(x, interval):
         return interval(np.sinh(x.start), np.sinh(x.end), is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"sinh for {type(x)}")
 
 
 def cosh(x):
@@ -248,7 +247,7 @@ def cosh(x):
             end = np.cosh(x.end)
             return interval(start, end, is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"cosh for {type(x)}")
 
 
 #Monotonic
@@ -260,7 +259,7 @@ def tanh(x):
     elif isinstance(x, interval):
         return interval(np.tanh(x.start), np.tanh(x.end), is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"tanh for {type(x)}")
 
 
 def asin(x):
@@ -283,6 +282,8 @@ def asin(x):
             start = np.arcsin(x.start)
             end = np.arcsin(x.end)
             return interval(start, end, is_valid=x.is_valid)
+    else:
+        raise NotImplementedError(f"asin for {type(x)}")
 
 
 def acos(x):
@@ -305,6 +306,8 @@ def acos(x):
             start = np.arccos(x.start)
             end = np.arccos(x.end)
             return interval(start, end, is_valid=x.is_valid)
+    else:
+        raise NotImplementedError(f"acos for {type(x)}")
 
 
 def ceil(x):
@@ -325,7 +328,7 @@ def ceil(x):
                 #Not continuous over the interval
                 return interval(start, end, is_valid=None)
     else:
-        return NotImplementedError
+        raise NotImplementedError(f"ceil for {type(x)}")
 
 
 def floor(x):
@@ -346,7 +349,7 @@ def floor(x):
                 #not continuous over the interval
                 return interval(start, end, is_valid=None)
     else:
-        return NotImplementedError
+        raise NotImplementedError(f"floor for {type(x)}")
 
 
 def acosh(x):
@@ -370,7 +373,7 @@ def acosh(x):
             end = np.arccosh(x.end)
             return interval(start, end, is_valid=x.is_valid)
     else:
-        return NotImplementedError
+        raise NotImplementedError(f"acosh for {type(x)}")
 
 
 #Monotonic
@@ -384,7 +387,7 @@ def asinh(x):
         end = np.arcsinh(x.end)
         return interval(start, end, is_valid=x.is_valid)
     else:
-        return NotImplementedError
+        raise NotImplementedError(f"asinh for {type(x)}")
 
 
 def atanh(x):
@@ -408,7 +411,7 @@ def atanh(x):
             end = np.arctanh(x.end)
             return interval(start, end, is_valid=x.is_valid)
     else:
-        return NotImplementedError
+        raise NotImplementedError(f"atanh for {type(x)}")
 
 
 #Three valued logic for interval plotting.

@@ -1,6 +1,4 @@
-from __future__ import print_function, division
-
-from pyglet.gl import *
+from __future__ import annotations
 from pyglet.window import Window
 from pyglet.clock import Clock
 
@@ -16,10 +14,10 @@ class ManagedWindow(Window):
     which overrides setup, update, and/or draw.
     """
     fps_limit = 30
-    default_win_args = dict(width=600,
-                            height=500,
-                            vsync=False,
-                            resizable=True)
+    default_win_args = {"width": 600,
+                            "height": 500,
+                            "vsync": False,
+                            "resizable": True}
 
     def __init__(self, **win_args):
         """
@@ -44,7 +42,7 @@ class ManagedWindow(Window):
         gl_lock.acquire()
         try:
             try:
-                super(ManagedWindow, self).__init__(**self.win_args)
+                super().__init__(**self.win_args)
                 self.switch_to()
                 self.setup()
             except Exception as e:
@@ -54,7 +52,7 @@ class ManagedWindow(Window):
             gl_lock.release()
 
         clock = Clock()
-        clock.set_fps_limit(self.fps_limit)
+        clock.fps_limit = self.fps_limit
         while not self.has_exit:
             dt = clock.tick()
             gl_lock.acquire()
@@ -71,7 +69,7 @@ class ManagedWindow(Window):
                     self.has_exit = True
             finally:
                 gl_lock.release()
-        super(ManagedWindow, self).close()
+        super().close()
 
     def close(self):
         """

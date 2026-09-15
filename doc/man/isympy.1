@@ -28,7 +28,7 @@ isympy \- interactive shell for SymPy
 'in \n(.iu+\nxu
 [
 {\fB-h\fR | \fB--help\fR}
-| 
+|
 {\fB-v\fR | \fB--version\fR}
 ]
 'in \n(.iu-\nxu
@@ -54,7 +54,7 @@ experimentation with SymPy. For more complicated programs, it is recommended
 to write a script and import things explicitly (using the "from sympy
 import sin, log, Symbol, ..." idiom).
 .SH OPTIONS
-.TP 
+.TP
 \*(T<\fB\-c \fR\*(T>\fISHELL\fR, \*(T<\fB\-\-console=\fR\*(T>\fISHELL\fR
 Use the specified shell (python or ipython) as
 console backend instead of the default one (ipython
@@ -64,7 +64,7 @@ Example: isympy -c python
 
 \fISHELL\fR could be either
 \&'ipython' or 'python'
-.TP 
+.TP
 \*(T<\fB\-p \fR\*(T>\fIENCODING\fR, \*(T<\fB\-\-pretty=\fR\*(T>\fIENCODING\fR
 Setup pretty printing in SymPy. By default, the most pretty, unicode
 printing is enabled (if the terminal supports it). You can use less
@@ -74,7 +74,7 @@ Example: isympy -p no
 
 \fIENCODING\fR must be one of 'unicode',
 \&'ascii' or 'no'.
-.TP 
+.TP
 \*(T<\fB\-t \fR\*(T>\fITYPE\fR, \*(T<\fB\-\-types=\fR\*(T>\fITYPE\fR
 Setup the ground types for the polys. By default, gmpy ground types
 are used if gmpy2 or gmpy is installed, otherwise it falls back to python
@@ -98,7 +98,7 @@ Example: isympy -t python
 
 \fITYPE\fR must be one of 'gmpy',
 \&'gmpy1' or 'python'.
-.TP 
+.TP
 \*(T<\fB\-o \fR\*(T>\fIORDER\fR, \*(T<\fB\-\-order=\fR\*(T>\fIORDER\fR
 Setup the ordering of terms for printing. The default is lex, which
 orders terms lexicographically (e.g., x**2 + x + 1). You can choose
@@ -113,14 +113,14 @@ Example: isympy -o rev-lax
 
 \fIORDER\fR must be one of 'lex', 'rev-lex', 'grlex',
 \&'rev-grlex', 'grevlex', 'rev-grevlex', 'old', or 'none'.
-.TP 
+.TP
 \*(T<\fB\-q\fR\*(T>, \*(T<\fB\-\-quiet\fR\*(T>
 Print only Python's and SymPy's versions to stdout at startup, and nothing else.
-.TP 
+.TP
 \*(T<\fB\-d\fR\*(T>, \*(T<\fB\-\-doctest\fR\*(T>
 Use the same format that should be used for doctests. This is
 equivalent to '\fIisympy -c python -p no\fR'.
-.TP 
+.TP
 \*(T<\fB\-C\fR\*(T>, \*(T<\fB\-\-no\-cache\fR\*(T>
 Disable the caching mechanism. Disabling the cache may slow certain
 operations down considerably. This is useful for testing the cache,
@@ -128,7 +128,7 @@ or for benchmarking, as the cache can result in deceptive benchmark timings.
 
 This is the same as setting the environment variable SYMPY_USE_CACHE
 to 'no'.
-.TP 
+.TP
 \*(T<\fB\-a\fR\*(T>, \*(T<\fB\-\-auto\fR\*(T>
 Automatically create missing symbols. Normally, typing a name of a
 Symbol that has not been instantiated first would raise NameError,
@@ -153,12 +153,12 @@ using symbols() or var().
 Finally, this only works in the top level namespace. So, for
 example, if you define a function in isympy with an undefined
 Symbol, it will not work.
-.TP 
+.TP
 \*(T<\fB\-D\fR\*(T>, \*(T<\fB\-\-debug\fR\*(T>
 Enable debugging output. This is the same as setting the
 environment variable SYMPY_DEBUG to 'True'. The debug status is set
 in the variable SYMPY_DEBUG within isympy.
-.TP 
+.TP
 -- \fIPYTHONOPTIONS\fR
 These options will be passed on to \fIipython (1)\fR shell.
 Only supported when ipython is being used (standard python shell not supported).
@@ -169,14 +169,14 @@ from the other isympy options.
 For example, to run iSymPy without startup banner and colors:
 
 isympy -q -c ipython -- --colors=NoColor
-.TP 
+.TP
 \*(T<\fB\-h\fR\*(T>, \*(T<\fB\-\-help\fR\*(T>
 Print help output and exit.
-.TP 
+.TP
 \*(T<\fB\-v\fR\*(T>, \*(T<\fB\-\-version\fR\*(T>
 Print isympy version information and exit.
 .SH FILES
-.TP 
+.TP
 \*(T<\fI${HOME}/.sympy\-history\fR\*(T>
 Saves the history of commands when using the python
 shell as backend.

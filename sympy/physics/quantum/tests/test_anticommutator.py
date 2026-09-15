@@ -1,4 +1,6 @@
-from sympy import symbols, Integer
+from __future__ import annotations
+from sympy.core.numbers import Integer
+from sympy.core.symbol import symbols
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.anticommutator import AntiCommutator as AComm

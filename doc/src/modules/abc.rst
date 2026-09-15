@@ -1,0 +1,5 @@
+=====
+ abc
+=====
+
+.. automodule:: sympy.abc

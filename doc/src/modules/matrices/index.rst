@@ -9,10 +9,13 @@ Matrices
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    matrices.rst
+   kind.rst
    dense.rst
    sparse.rst
+   sparsetools.rst
    immutablematrices.rst
    expressions.rst
+   normalforms.rst

@@ -1,32 +1,27 @@
-=============================================
-Essential Classes in sympy.vector (doctrings)
-=============================================
+==============================================
+Essential Classes in sympy.vector (docstrings)
+==============================================
 
-CoordSysCartesian
-=================
 
-.. autoclass:: sympy.vector.coordsysrect.CoordSysCartesian
+.. autoclass:: sympy.vector.coordsysrect.CoordSys3D
    :members:
 
-   .. automethod:: sympy.vector.coordsysrect.CoordSysCartesian.__init__
-
-
-Vector
-======
+   .. automethod:: sympy.vector.coordsysrect.CoordSys3D.__init__
 
 .. autoclass:: sympy.vector.vector.Vector
    :members:
 
-
-Dyadic
-======
-
 .. autoclass:: sympy.vector.dyadic.Dyadic
    :members:
 
-
-Del
-===
-
 .. autoclass:: sympy.vector.deloperator.Del
+   :members:
+
+.. autoclass:: sympy.vector.parametricregion.ParametricRegion
+   :members:
+
+.. autoclass:: sympy.vector.implicitregion.ImplicitRegion
+   :members:
+
+.. autoclass:: sympy.vector.integrals.ParametricIntegral
    :members:

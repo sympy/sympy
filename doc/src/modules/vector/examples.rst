@@ -23,8 +23,8 @@ and basic operations on ``Vector``.
 
 Define a coordinate system
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> Sys = CoordSysCartesian('Sys')
+  >>> from sympy.vector import CoordSys3D
+  >>> Sys = CoordSys3D('Sys')
 
 Define point O to be Sys' origin. We can do this without
 loss of generality
@@ -75,7 +75,7 @@ Third product rule for Del operator
 See
 ---
 
-.. [WikiDel] http://en.wikipedia.org/wiki/Del
+.. [WikiDel] https://en.wikipedia.org/wiki/Del
 
 The Problem
 -----------
@@ -88,16 +88,17 @@ Solution
 
 Start with a coordinate system
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
+  >>> from sympy.vector import CoordSys3D, Del
+  >>> delop = Del()
+  >>> C = CoordSys3D('C')
 
 The scalar field :math:`f` and the measure numbers of the vector field
 :math:`\vec v` are all functions of the coordinate variables of the
 coordinate system in general.
 Hence, define SymPy functions that way.
 
-  >>> from sympy import symbols
-  >>> v1, v2, v3, f = symbols('v1 v2 v3 f', type="Function")
+  >>> from sympy import symbols, Function
+  >>> v1, v2, v3, f = symbols('v1 v2 v3 f', cls=Function)
 
 ``v1``, ``v2`` and ``v3`` are the :math:`X`, :math:`Y` and :math:`Z`
 components of the vector field respectively.
@@ -107,13 +108,13 @@ Define the vector field as ``vfield`` and the scalar field as ``sfield``.
   >>> vfield = v1(C.x, C.y, C.z)*C.i + v2(C.x, C.y, C.z)*C.j + v3(C.x, C.y, C.z)*C.k
   >>> ffield = f(C.x, C.y, C.z)
 
-Construct the expression for the LHS of the equation using ``C.delop``.
+Construct the expression for the LHS of the equation using ``Del()``.
 
-  >>> lhs = (C.delop.dot(ffield * vfield)).doit()
+  >>> lhs = (delop.dot(ffield * vfield)).doit()
 
 Similarly, the RHS would be defined.
 
-  >>> rhs = ((vfield.dot(C.delop(ffield))) + (ffield * (C.delop.dot(vfield)))).doit()
+  >>> rhs = ((vfield.dot(delop(ffield))) + (ffield * (delop.dot(vfield)))).doit()
 
 Now, to prove the product rule, we would just need to equate the expanded and
 simplified versions of the lhs and the rhs, so that the SymPy expressions match.

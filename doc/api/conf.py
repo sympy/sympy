@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # SymPy documentation build configuration file, created by
 # sphinx-quickstart.py on Sat Mar 22 19:34:32 2008.
@@ -11,11 +10,11 @@
 # All configuration values have a default value; values that are commented out
 # serve to show the default value.
 
-import sys
 import sympy
 
 # If your extensions are in another directory, add it here.
-#sys.path.append('some/directory')
+# import sys
+# sys.path.append('some/directory')
 
 # General configuration
 # ---------------------
