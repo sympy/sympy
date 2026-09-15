@@ -228,25 +228,28 @@ class SATSolver:
         if self.is_unsatisfied:
             return
 
-        # The assumptions are decisions the search cannot take back. Failing
-        # one rules out models, not the clauses themselves.
+        # Each assumption is a decision the search may not backtrack past.
         for assumed_lit in self._assumptions:
+            # Propagation or an earlier assumption already made it true.
             if assumed_lit in self.var_settings:
                 continue
 
+            # Not settled yet, so decide it and propagate.
             if -assumed_lit not in self.var_settings:
                 self.levels.append(Level(assumed_lit))
                 self._assign_literal(assumed_lit)
                 self._simplify()
                 if not self.is_unsatisfied:
                     continue
+                # Only this search failed, not the solver.
                 self.is_unsatisfied = False
 
+            # No model has every assumption; yielding none is UNSATISFIABLE.
             while len(self.levels) > 1:
                 self._undo()
             return
 
-        # Undoing an assumption would answer a different question.
+        # The search treats this as its root, never undoing an assumption.
         assumption_level = len(self.levels)
 
         # While the theory still has clauses remaining
@@ -430,11 +433,14 @@ class SATSolver:
             self._status = IpasirStatus.SATISFIABLE
 
         # Asking again without them is a different question, not a restart.
+        status = self._status
         if assumed:
             self._assumptions = []
             self._models = None
+            if status == IpasirStatus.UNSATISFIABLE:
+                self._status = IpasirStatus.UNKNOWN
 
-        return self._status
+        return status
 
     def val(self, lit):
         """Return *lit* if it is true in the model found by ``solve()``,
