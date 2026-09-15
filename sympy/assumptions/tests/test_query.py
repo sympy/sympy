@@ -1677,6 +1677,13 @@ def test_imaginary():
     assert _ask_recursive(Q.imaginary(Pow(x, Rational(1, 4))), Q.real(x) & Q.negative(x)) is False
 
 
+def test_issue_27449():
+    z = I*oo
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.imaginary(3*I)) is True
+    assert ask(Q.imaginary(oo)) is False
+
+
 def test_integer():
     assert _ask_recursive(Q.integer(x)) is None
     assert _ask_recursive(Q.integer(x), Q.integer(x)) is True

@@ -531,6 +531,9 @@ def _(expr, assumptions):
 # ImaginaryPredicate
 
 def _Imaginary_number(expr, assumptions):
+    # imaginary numbers are necessarily finite
+    if expr.is_finite is False:
+        return False
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
     r = expr.as_real_imag()[0].evalf(2)
