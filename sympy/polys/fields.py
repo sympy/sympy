@@ -540,7 +540,18 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         if not f or not g:
             return field.zero
         elif field.is_element(g):
-            return f.new(f.numer*g.numer, f.denom*g.denom)
+            gcd1 = f.numer.gcd(g.denom)
+            gcd2 = f.denom.gcd(g.numer)
+            numer = (f.numer // gcd1) * (g.numer // gcd2)
+            denom = (f.denom // gcd2) * (g.denom // gcd1)
+
+            K = field.domain
+            unit = K.canonical_unit(denom.LC)
+            if not K.is_one(unit):
+                numer *= unit
+                denom *= unit
+
+            return f.raw_new(numer, denom)
         elif field.ring.is_element(g):
             return f.new(f.numer*g, f.denom)
         else:
@@ -579,7 +590,18 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         if not g:
             raise ZeroDivisionError
         elif field.is_element(g):
-            return f.new(f.numer*g.denom, f.denom*g.numer)
+            gcd_numer = f.numer.gcd(g.numer)
+            gcd_denom = f.denom.gcd(g.denom)
+            numer = (f.numer // gcd_numer) * (g.denom // gcd_denom)
+            denom = (f.denom // gcd_denom) * (g.numer // gcd_numer)
+
+            K = field.domain
+            unit = K.canonical_unit(denom.LC)
+            if not K.is_one(unit):
+                numer *= unit
+                denom *= unit
+
+            return f.raw_new(numer, denom)
         elif field.ring.is_element(g):
             return f.new(f.numer, f.denom*g)
         else:
