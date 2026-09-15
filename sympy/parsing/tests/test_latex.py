@@ -286,6 +286,14 @@ GOOD_PAIRS = [
     (r"3x - 1", _Add(_Mul(3, x), -1))
 ]
 
+def test_deepnesting():
+    # Error is due to teh nesting limit of python
+    import sys
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    depth = sys.getrecursionlimit()
+    latex_string = "(" * depth + "x" + ")" * depth
+    with raises(LaTeXParsingError):
+        parse_latex(latex_string, backend = "antlr")
 
 def test_parseable():
     from sympy.parsing.latex import parse_latex
