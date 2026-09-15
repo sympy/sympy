@@ -163,6 +163,14 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
     if expr.is_Atom or not expr.has(Prefix, Quantity):
         return expr
 
+    # replace Pow(unit, Float(1.0)) with just the unit (e.g. um**1.0 -> um)
+    from sympy.core.power import Pow
+    expr = expr.xreplace({
+        p: p.base
+        for p in expr.atoms(Pow)
+        if p.exp.__class__.__name__ == "Float" and p.exp == 1.0
+    })
+
     # replace all prefixes with numerical values
     p = expr.atoms(Prefix)
     expr = expr.xreplace({p: p.scale_factor for p in p})
