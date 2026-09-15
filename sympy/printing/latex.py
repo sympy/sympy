@@ -1695,6 +1695,10 @@ class LatexPrinter(Printer):
             name, supers, subs = (name.replace('_', '\\_').replace('^', '\\^'), [], [])
         else:
             name, supers, subs = split_super_sub(name)
+            # A leading underscore is a literal part of the symbol name (there
+            # is no preceding name to attach a subscript to), so escape it
+            # instead of emitting it raw as an (empty) subscript.
+            name = name.replace('_', '\\_')
         name = translate(name)
         supers = [translate(sup) for sup in supers]
         subs = [translate(sub) for sub in subs]
@@ -1711,7 +1715,13 @@ class LatexPrinter(Printer):
         if supers:
             name += "^{%s}" % " ".join(supers)
         if subs:
-            name += "_{%s}" % " ".join(subs)
+            # A trailing underscore is split into an empty subscript. Render it
+            # as a literal escaped underscore after the real subscripts instead
+            # of an empty subscript group (e.g. ``x_`` -> ``x\_``, not ``x_{}``).
+            real_subs = [sub for sub in subs if sub]
+            if real_subs:
+                name += "_{%s}" % " ".join(real_subs)
+            name += "\\_" * (len(subs) - len(real_subs))
 
         return name
 
