@@ -43,7 +43,7 @@ from sympy.core.containers import Dict
 from sympy.core.function import Derivative, expand, expand_mul, expand_trig
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Number, E, Rational
+from sympy.core.numbers import Integer, Number, E, Rational, I, pi
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
@@ -64,6 +64,7 @@ from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.error_functions import (erf, erfc, erfi, fresnelc,
     fresnels, Ci, Chi, Si, Shi, Ei, li, owens_t)
 from sympy.functions.special.gamma_functions import uppergamma
+from sympy.functions.special.hyper import hyper
 from sympy.functions.special.elliptic_integrals import elliptic_e, elliptic_f
 from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
     legendre, hermite, laguerre, assoc_laguerre, gegenbauer, jacobi,
@@ -424,6 +425,59 @@ class CosRule(TrigRule):
 
     def eval(self) -> Expr:
         return sin(self.variable)
+
+
+class SinCosHyperRule(AtomicRule):
+    r"""integrate(sin(a*x+b)**n*cos(a*x+b)**m, x) for symbolic n, m
+
+    Used when the exponents cannot be resolved to a parity (odd/even) or a
+    concrete nonnegative integer, so the antiderivative is expressed through
+    the Gauss hypergeometric function:
+
+    .. math::
+
+        \int \sin^n(x)\cos^m(x)\,dx =
+        \frac{\sin^{n+1}(x)\cos^{m-1}(x)\left(\cos^2(x)\right)^{\frac{1-m}{2}}}
+        {n+1}\,_2F_1\!\left(\frac{1-m}{2}, \frac{n+1}{2}; \frac{n+3}{2};
+        \sin^2(x)\right)
+    """
+
+    __slots__ = ("n", "m", "a", "b")
+
+    n: Expr
+    m: Expr
+    a: Expr
+    b: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr, m: Expr,
+                 a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.n = n
+        self.m = m
+        self.a = a
+        self.b = b
+
+    def eval(self) -> Expr:
+        n, m, a, b = self.n, self.m, self.a, self.b
+        argument = a*self.variable + b
+        # cos(argument)**(m - 1) * (cos(argument)**2)**((1 - m)/2) is 1 when
+        # cos(argument) > 0. For t = cos(argument) < 0, using the principal
+        # branch (arg(t) = pi) gives t**(m - 1) = |t|**(m - 1)*exp(I*pi*(m - 1))
+        # while (t**2)**((1 - m)/2) = |t|**(1 - m), so the product collapses to
+        # the constant exp(I*pi*(m - 1)) for every such t, with no leftover
+        # |t| dependence. Writing the two cases as an explicit Piecewise
+        # (rather than folding them into a single power expression) avoids an
+        # indeterminate 0**a*0**b form when cos(argument) = 0 is an interval
+        # endpoint, and lets Piecewise._eval_interval split a definite
+        # integral at cos(argument) = 0 instead of evaluating the
+        # antiderivative straight across that discontinuity.
+        branch_factor = Piecewise(
+            (S.One, cos(argument) >= 0),
+            (exp(I*pi*(m - 1)), True))
+        prefactor = sin(argument)**(n + 1) * branch_factor
+        antiderivative = prefactor * hyper(
+            ((1 - m)/2, (n + 1)/2), ((n + 3)/2,), sin(argument)**2) / ((n + 1)*a)
+        return piecewise_fold(antiderivative)
 
 
 class HyperbolicRule(AtomicRule, ABC):
@@ -3298,6 +3352,13 @@ def sincos_cosodd(integral, argument, coefficient, m, n):
         integral, rewritten, coefficient, u_var, sin(argument), substituted)
 
 
+def sincos_hyper(integral, argument, coefficient, n, m):
+    integrand, symbol = integral
+    b = argument - coefficient*symbol
+    rule = SinCosHyperRule(integrand, symbol, n, m, coefficient, b)
+    return _add_trig_degenerate_step(integral, coefficient, rule)
+
+
 def sincos_product_to_sum(integral):
     integrand, symbol = integral
     rewritten = sincos_to_sum(integrand)
@@ -3452,6 +3513,11 @@ def trig_sincos_rule(integral):
             # Symbolic powers may make the delegated rule undecidable.
             if substep is not None:
                 return RewriteRule(integrand, symbol, rewritten, substep)
+
+        if not (sin_power.is_integer and sin_power.is_nonnegative and
+                cos_power.is_integer and cos_power.is_nonnegative):
+            return sincos_hyper(integral, argument, coefficient,
+                                 sin_power, cos_power)
 
     # Linearize products not handled by a direct substitution.
     if all(isinstance(power, Integer) and power >= 0
