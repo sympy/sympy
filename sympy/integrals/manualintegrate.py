@@ -2734,6 +2734,13 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
 def euler_substitution_rule(integral : IntegralInfo):
     """
     Substitute common sqrt(a + b*x + c*x**2) terms using Euler substitution.
+    
+    This rule implements two of the three Euler substitutions:
+    1. First Euler substitution (when c > 0): u = sqrt(R) + x*sqrt(c)
+    2. Second Euler substitution (when a > 0): u = (sqrt(R) - sqrt(a))/x
+    
+    The second substitution avoids introducing imaginary numbers when c < 0 
+    but a > 0.
     """
     integrand, x = integral
     base0 = None
@@ -2802,15 +2809,24 @@ def euler_substitution_rule(integral : IntegralInfo):
         numer, denom = rewritten.as_numer_denom()
         if numer.as_poly(x, s) is None or denom.as_poly(x, s) is None:
             return None
-        # Euler's second substitution (u = sqrt(R) + sqrt(c)*x)
         u = Dummy("u")
-        sqrt_c0 = sqrt(c0)
-        x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
-        s_u = u - sqrt_c0*x_u
-        dx_u = 2*(b0*u + sqrt_c0*(u**2 + a0))/(b0 + 2*sqrt_c0*u)**2
+        if c0.is_positive is not False or a0.is_positive is not True:
+            # Euler's first substitution (u = sqrt(R) + sqrt(c)*x)
+            sqrt_c0 = sqrt(c0)
+            x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
+            s_u = u - sqrt_c0*x_u
+            dx_u = 2*(b0*u + sqrt_c0*(u**2 + a0))/(b0 + 2*sqrt_c0*u)**2
+            u_func = sqrt(base0) + sqrt_c0*x
+        else:
+            # Euler's second substitution (u = (sqrt(R) - sqrt(a))/x)
+            sqrt_a0 = sqrt(a0)
+            x_u = (2*sqrt_a0*u - b0)/(c0 - u**2)
+            s_u = u*x_u + sqrt_a0
+            dx_u = 2*(sqrt_a0*u**2 - b0*u + c0*sqrt_a0)/(c0 - u**2)**2
+            u_func = (sqrt(base0) - sqrt_a0)/x
+
         substituted = rewritten.xreplace({x: x_u, s: s_u}) * dx_u
         substep = yield IntegralInfo(substituted, u)
-        u_func = sqrt(base0) + sqrt_c0*x
         return URule(integrand, x, u, u_func, substep)
 
     if delta_zero_cond is S.true:
