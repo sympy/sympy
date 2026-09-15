@@ -352,3 +352,13 @@ def test_FracField_index():
     raises(ValueError, lambda: F.index(1))
     raises(ValueError, lambda: F.index(a))
     pass
+
+
+def test_FracField_from_sympy_EXRAW():
+    from sympy import EXRAW, symbols, sympify
+    s = symbols("s")
+    field = EXRAW.frac_field(s)
+    expr = sympify(1)
+    frac_elem = field.from_sympy(expr)
+    assert frac_elem == field(1)
+
