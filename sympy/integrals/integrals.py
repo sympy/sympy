@@ -555,6 +555,14 @@ class Integral(AddWithLimits):
             if (function.has(Piecewise) and
                 not isinstance(function, Piecewise)):
                     function = piecewise_fold(function)
+            if (len(xab) == 3 and not function.is_Poly
+                    and not any((manual, meijerg, risch, heurisch))):
+                ret = trigintegrate_definite(function, *xab, conds=conds)
+                if ret is not None:
+                    if conds == 'separate' and len(self.limits) != 1:
+                        raise ValueError('conds=separate not supported in multiple integrals')
+                    function = ret
+                    continue
             if isinstance(function, Piecewise):
                 if len(xab) == 1:
                     antideriv = function._eval_integral(xab[0],
@@ -1644,4 +1652,4 @@ def _(expr):
 # Delayed imports
 from .deltafunctions import deltaintegrate
 from .meijerint import meijerint_definite, meijerint_indefinite, _debug
-from .trigonometry import trigintegrate
+from .trigonometry import trigintegrate, trigintegrate_definite

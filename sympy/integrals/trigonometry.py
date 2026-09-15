@@ -1,6 +1,8 @@
 from __future__ import annotations
-from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
-from sympy.functions import binomial, sin, cos, Piecewise, Abs
+from sympy.core import cacheit, Dummy, Eq, Ne, Integer, Rational, S, Wild
+from sympy.core.numbers import pi
+from sympy.functions import binomial, sin, cos, Piecewise, Abs, sign, sqrt
+from sympy.logic.boolalg import And
 from .integrals import integrate
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
@@ -25,6 +27,69 @@ def _pat_sincos(x):
     return pat, a, n, m
 
 _u = Dummy('u')
+
+
+def trigintegrate_definite(f, x, a, b, conds='piecewise'):
+    """Integrate a reciprocal affine sine/cosine over whole periods.
+
+    Recognize ``d/(A + B*cos(k*x + p) + C*sin(k*x + p))`` with real
+    coefficients, nonzero real ``k``, and finite real limits spanning a
+    nonzero integer number of periods. Return None for other integrands.
+
+    Writing ``B*cos(t) + C*sin(t)`` as a shifted cosine shows that the
+    denominator has constant sign precisely when ``A**2 > B**2 + C**2``.
+    In that case the tangent half-angle substitution on each half-period
+    gives the mean ``sign(A)/sqrt(A**2 - B**2 - C**2)``. Evaluating a
+    logarithmic antiderivative only at the endpoints can lose its branch
+    jump, incorrectly giving zero (issue #20370).
+
+    At equality, with nonzero ``A``, the denominator has a double zero
+    and the integral has a signed infinite limit. Inside that boundary there are simple poles:
+    the ordinary improper integral is undefined, even when its Cauchy
+    principal value exists. ``conds`` follows integrate's convention:
+    'separate' returns the finite value and its convergence condition;
+    'none' omits that condition.
+    """
+    if not f.has(sin, cos) or not all(v.is_real for v in (a, b)):
+        return None
+    numerator, denominator = f.as_numer_denom()
+    if numerator.has(x) or numerator.is_real is not True:
+        return None
+    trig = [t for t in denominator.atoms(sin, cos) if t.has(x)]
+    if not trig:
+        return None
+    argument = trig[0].args[0]
+    if any(t.args[0] != argument for t in trig):
+        return None
+    k = argument.diff(x)
+    phase = argument - k*x
+    if (k.has(x) or phase.has(x) or k.is_real is not True
+            or k.is_zero is not False or phase.is_real is not True):
+        return None
+    periods = (k*(b - a)/(2*pi)).cancel()
+    if periods.is_integer is not True or periods.is_zero is not False:
+        return None
+
+    c, s = Dummy('c'), Dummy('s')
+    polynomial = denominator.xreplace({cos(argument): c, sin(argument): s}).as_poly(c, s)
+    if polynomial is None or polynomial.total_degree() != 1:
+        return None
+    A, B, C = [polynomial.coeff_monomial(m) for m in (1, c, s)]
+    if any(v.has(x) or v.is_real is not True for v in (A, B, C)):
+        return None
+
+    discriminant = A**2 - B**2 - C**2
+    condition = discriminant > 0
+    value = numerator*(b - a)*sign(A)/sqrt(discriminant)
+    if conds == 'separate':
+        return value, condition
+    if conds == 'none':
+        return value
+    return Piecewise(
+        (S.Zero, Eq(numerator, 0)),
+        (value, condition),
+        (S.Infinity*sign(numerator*A*(b - a)), And(Eq(discriminant, 0), Ne(A, 0))),
+        (S.NaN, True))
 
 
 def trigintegrate(f, x, conds='piecewise'):
