@@ -1,10 +1,13 @@
 from __future__ import annotations
 from itertools import combinations
+from typing import Iterator, TypeVar, Generic
 
 from sympy.combinatorics.graycode import GrayCode
 
+T = TypeVar('T')
 
-class Subset():
+
+class Subset(Generic[T]):
     """
     Represents a basic subset object.
 
@@ -28,13 +31,13 @@ class Subset():
     ['c']
     """
 
-    _rank_binary = None
-    _rank_lex = None
-    _rank_graycode = None
-    _subset = None
-    _superset = None
+    _rank_binary: int | None = None
+    _rank_lex: int | None = None
+    _rank_graycode: int | None = None
+    _subset: list[T]
+    _superset: list[T]
 
-    def __new__(cls, subset, superset):
+    def __new__(cls, subset: list[T], superset: list[T]) -> Subset[T]:
         """
         Default constructor.
 
@@ -64,7 +67,7 @@ class Subset():
         obj._superset = superset
         return obj
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Return a boolean indicating whether a == b on the basis of
         whether both objects are of the class Subset and if the values
         of the subset and superset attributes are the same.
@@ -73,7 +76,7 @@ class Subset():
             return NotImplemented
         return self.subset == other.subset and self.superset == other.superset
 
-    def iterate_binary(self, k):
+    def iterate_binary(self, k: int) -> Subset[T]:
         """
         This is a helper function. It iterates over the
         binary subsets by ``k`` steps. This variable can be
@@ -95,12 +98,12 @@ class Subset():
 
         next_binary, prev_binary
         """
-        bin_list = Subset.bitlist_from_subset(self.subset, self.superset)
+        bin_list = self.bitlist_from_subset(self.subset, self.superset)
         n = (int(''.join(bin_list), 2) + k) % 2**self.superset_size
         bits = f'{n:b}'.rjust(self.superset_size, '0')
-        return Subset.subset_from_bitlist(self.superset, bits)
+        return self.subset_from_bitlist(self.superset, bits)
 
-    def next_binary(self):
+    def next_binary(self) -> Subset[T]:
         """
         Generates the next binary ordered subset.
 
@@ -122,7 +125,7 @@ class Subset():
         """
         return self.iterate_binary(1)
 
-    def prev_binary(self):
+    def prev_binary(self) -> Subset[T]:
         """
         Generates the previous binary ordered subset.
 
@@ -144,7 +147,7 @@ class Subset():
         """
         return self.iterate_binary(-1)
 
-    def next_lexicographic(self):
+    def next_lexicographic(self) -> Subset[T]:
         """
         Generates the next lexicographically ordered subset.
 
@@ -165,7 +168,7 @@ class Subset():
         prev_lexicographic
         """
         i = self.superset_size - 1
-        indices = Subset.subset_indices(self.subset, self.superset)
+        indices = self.subset_indices(self.subset, self.superset)
 
         if i in indices:
             if i - 1 in indices:
@@ -183,13 +186,13 @@ class Subset():
                 i = i - 1
             indices.append(i + 1)
 
-        ret_set = []
+        ret_set: list[T] = []
         super_set = self.superset
         for i in indices:
             ret_set.append(super_set[i])
         return Subset(ret_set, super_set)
 
-    def prev_lexicographic(self):
+    def prev_lexicographic(self) -> Subset[T]:
         """
         Generates the previous lexicographically ordered subset.
 
@@ -210,7 +213,7 @@ class Subset():
         next_lexicographic
         """
         i = self.superset_size - 1
-        indices = Subset.subset_indices(self.subset, self.superset)
+        indices = self.subset_indices(self.subset, self.superset)
 
         while i >= 0 and i not in indices:
             i = i - 1
@@ -223,13 +226,13 @@ class Subset():
                 indices.append(i - 1)
             indices.append(self.superset_size - 1)
 
-        ret_set = []
+        ret_set: list[T] = []
         super_set = self.superset
         for i in indices:
             ret_set.append(super_set[i])
         return Subset(ret_set, super_set)
 
-    def iterate_graycode(self, k):
+    def iterate_graycode(self, k: int) -> Subset[T]:
         """
         Helper function used for prev_gray and next_gray.
         It performs ``k`` step overs to get the respective Gray codes.
@@ -251,10 +254,9 @@ class Subset():
         """
         unranked_code = GrayCode.unrank(self.superset_size,
                                        (self.rank_gray + k) % self.cardinality)
-        return Subset.subset_from_bitlist(self.superset,
-                                          unranked_code)
+        return self.subset_from_bitlist(self.superset, unranked_code)
 
-    def next_gray(self):
+    def next_gray(self) -> Subset[T]:
         """
         Generates the next Gray code ordered subset.
 
@@ -273,7 +275,7 @@ class Subset():
         """
         return self.iterate_graycode(1)
 
-    def prev_gray(self):
+    def prev_gray(self) -> Subset[T]:
         """
         Generates the previous Gray code ordered subset.
 
@@ -293,7 +295,7 @@ class Subset():
         return self.iterate_graycode(-1)
 
     @property
-    def rank_binary(self):
+    def rank_binary(self) -> int:
         """
         Computes the binary ordered rank.
 
@@ -315,12 +317,11 @@ class Subset():
         """
         if self._rank_binary is None:
             self._rank_binary = int("".join(
-                Subset.bitlist_from_subset(self.subset,
-                                           self.superset)), 2)
+                self.bitlist_from_subset(self.subset, self.superset)), 2)
         return self._rank_binary
 
     @property
-    def rank_lexicographic(self):
+    def rank_lexicographic(self) -> int:
         """
         Computes the lexicographic ranking of the subset.
 
@@ -336,19 +337,24 @@ class Subset():
         43
         """
         if self._rank_lex is None:
-            def _ranklex(self, subset_index, i, n):
+
+            def _ranklex(
+                self: Subset[T], subset_index: list[int], i: int, n: int
+            ) -> int:
                 if subset_index == [] or i > n:
                     return 0
                 if i in subset_index:
                     subset_index.remove(i)
                     return 1 + _ranklex(self, subset_index, i + 1, n)
                 return 2**(n - i - 1) + _ranklex(self, subset_index, i + 1, n)
-            indices = Subset.subset_indices(self.subset, self.superset)
+
+            indices = self.subset_indices(self.subset, self.superset)
             self._rank_lex = _ranklex(self, indices, 0, self.superset_size)
+
         return self._rank_lex
 
     @property
-    def rank_gray(self):
+    def rank_gray(self) -> int:
         """
         Computes the Gray code ranking of the subset.
 
@@ -369,12 +375,12 @@ class Subset():
         iterate_graycode, unrank_gray
         """
         if self._rank_graycode is None:
-            bits = Subset.bitlist_from_subset(self.subset, self.superset)
+            bits = self.bitlist_from_subset(self.subset, self.superset)
             self._rank_graycode = GrayCode(len(bits), start=bits).rank
         return self._rank_graycode
 
     @property
-    def subset(self):
+    def subset(self) -> list[T]:
         """
         Gets the subset represented by the current instance.
 
@@ -394,7 +400,7 @@ class Subset():
         return self._subset[:]
 
     @property
-    def size(self):
+    def size(self) -> int:
         """
         Gets the size of the subset.
 
@@ -414,7 +420,7 @@ class Subset():
         return len(self.subset)
 
     @property
-    def superset(self):
+    def superset(self) -> list[T]:
         """
         Gets the superset of the subset.
 
@@ -434,7 +440,7 @@ class Subset():
         return self._superset[:]
 
     @property
-    def superset_size(self):
+    def superset_size(self) -> int:
         """
         Returns the size of the superset.
 
@@ -454,7 +460,7 @@ class Subset():
         return len(self.superset)
 
     @property
-    def cardinality(self):
+    def cardinality(self) -> int:
         """
         Returns the number of all possible subsets.
 
@@ -474,7 +480,7 @@ class Subset():
         return 2**(self.superset_size)
 
     @classmethod
-    def subset_from_bitlist(self, super_set, bitlist):
+    def subset_from_bitlist(cls, super_set: list[T], bitlist: str) -> Subset[T]:
         """
         Gets the subset defined by the bitlist.
 
@@ -492,14 +498,14 @@ class Subset():
         """
         if len(super_set) != len(bitlist):
             raise ValueError("The sizes of the lists are not equal")
-        ret_set = []
+        ret_set: list[T] = []
         for i in range(len(bitlist)):
             if bitlist[i] == '1':
                 ret_set.append(super_set[i])
         return Subset(ret_set, super_set)
 
     @classmethod
-    def bitlist_from_subset(self, subset, superset):
+    def bitlist_from_subset(cls, subset: list[T] | Subset[T], superset: list[T]) -> str:
         """
         Gets the bitlist corresponding to a subset.
 
@@ -518,12 +524,12 @@ class Subset():
         bitlist = ['0'] * len(superset)
         if isinstance(subset, Subset):
             subset = subset.subset
-        for i in Subset.subset_indices(subset, superset):
+        for i in cls.subset_indices(subset, superset):
             bitlist[i] = '1'
         return ''.join(bitlist)
 
     @classmethod
-    def unrank_binary(self, rank, superset):
+    def unrank_binary(cls, rank: int, superset: list[T]) -> Subset[T]:
         """
         Gets the binary ordered subset of the specified rank.
 
@@ -540,10 +546,10 @@ class Subset():
         iterate_binary, rank_binary
         """
         bits = f'{rank:b}'.rjust(len(superset), '0')
-        return Subset.subset_from_bitlist(superset, bits)
+        return cls.subset_from_bitlist(superset, bits)
 
     @classmethod
-    def unrank_gray(self, rank, superset):
+    def unrank_gray(cls, rank: int, superset: list[T]) -> Subset[T]:
         """
         Gets the Gray code ordered subset of the specified rank.
 
@@ -562,10 +568,10 @@ class Subset():
         iterate_graycode, rank_gray
         """
         graycode_bitlist = GrayCode.unrank(len(superset), rank)
-        return Subset.subset_from_bitlist(superset, graycode_bitlist)
+        return cls.subset_from_bitlist(superset, graycode_bitlist)
 
     @classmethod
-    def subset_indices(self, subset, superset):
+    def subset_indices(cls, subset: list[T], superset: list[T]) -> list[int]:
         """Return indices of subset in superset in a list; the list is empty
         if all elements of ``subset`` are not in ``superset``.
 
@@ -596,7 +602,7 @@ class Subset():
         return [d[bi] for bi in b]
 
 
-def ksubsets(superset, k):
+def ksubsets(superset: list[T], k: int) -> Iterator[tuple[T, ...]]:
     """
     Finds the subsets of size ``k`` in lexicographic order.
 
