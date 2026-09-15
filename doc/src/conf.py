@@ -117,7 +117,8 @@ copybutton_prompt_is_regexp = True
 nitpicky = True
 
 nitpick_ignore = [
-    ('py:class', 'sympy.logic.boolalg.Boolean')
+    ('py:class', 'sympy.logic.boolalg.Boolean'),
+    ('py:class', 'sympy.core.function.AppliedUndef'),
 ]
 
 # To stop docstrings inheritance.
