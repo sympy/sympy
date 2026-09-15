@@ -90,7 +90,7 @@ if SymPy is installed.
 
 To install SymPy using PyPI, run the following command:
 
-    $ pip install sympy
+      pip install sympy
 
 To install SymPy using Anaconda, run the following command:
 
