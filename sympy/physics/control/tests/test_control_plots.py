@@ -1,5 +1,6 @@
 from __future__ import annotations
 from math import isclose
+import pytest
 from sympy.core.numbers import I, all_close
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.complexes import (Abs, arg)
@@ -155,6 +156,21 @@ def test_bode():
     assert test_bode_data(tf3)
     assert test_bode_data(tf4)
     assert test_bode_data(tf5)
+
+
+def test_bode_plot_no_xlabel():
+    pytest.importorskip("matplotlib")
+
+    from sympy.abc import s
+    from sympy.physics.control import TransferFunction
+    from sympy.physics.control.control_plots import bode_plot
+
+    tf = TransferFunction(1, s + 1, s)
+
+    # Just ensure it runs without error
+    bode_plot(tf, show=False)
+
+    assert True
 
 
 def check_point_accuracy(a, b):
