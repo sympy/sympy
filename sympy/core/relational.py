@@ -464,8 +464,14 @@ class Relational(Boolean, EvalfMixin):
                             r = r.func(-b / m, x)
                         else:
                             r = r.func(x, -b / m)
+                    elif m.is_zero is True:
+                         r = r.func(b, S.Zero)
                     else:
-                        r = r.func(b, S.Zero)
+    # m.is_zero is None - uncertain if m is zero
+    # For Equalities, always try the simplification
+    # For inequalities, only if we can't prove m is non-zero
+                        if isinstance(r, Equality) or m.equals(0) is not False:
+                            r = r.func(b, S.Zero)
                 except ValueError:
                     # maybe not a linear function, try polynomial
                     from sympy.polys.polyerrors import PolynomialError
@@ -727,11 +733,20 @@ class Equality(Relational):
                     Add(e.lhs, -e.rhs, evaluate=False), x)
                 if m.is_zero is False:
                     enew = e.func(x, -b / m)
-                else:
+                    measure = kwargs['measure']
+                    if measure(enew) <= kwargs['ratio'] * measure(e):
+                        e = enew
+                elif m.is_zero is True:
                     enew = e.func(m * x, -b)
-                measure = kwargs['measure']
-                if measure(enew) <= kwargs['ratio'] * measure(e):
-                    e = enew
+                    measure = kwargs['measure']
+                    if measure(enew) <= kwargs['ratio'] * measure(e):
+                        e = enew
+                else:
+                    # When is_zero is None, try the zero form
+                    enew = e.func(m * x, -b)
+                    measure = kwargs['measure']
+                    if measure(enew) <= kwargs['ratio'] * measure(e):
+                        e = enew
             except ValueError:
                 pass
         return e.canonical
