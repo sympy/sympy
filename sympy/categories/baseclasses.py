@@ -887,6 +887,7 @@ class Diagram(Basic):
 
         See Also
         ========
+
         Object, Morphism
         """
         premises = EmptySet
