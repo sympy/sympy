@@ -1124,3 +1124,17 @@ def test_issue_14269():
     root = (sqrt(2) - 1)**Rational(1, 3) - (sqrt(2) + 1)**Rational(1, 3)
     expr = (x**3 + 3*x + 2).subs(x, root)
     assert simplify(expr) == 0
+
+
+def test_issue_29560():
+    v = -sqrt(15)/4 + 7*sqrt(3)/8
+    assert nsimplify(v) == v
+    assert nsimplify(v, full=True) == v
+
+    almost_one = sqrt(2) + 1 - Rational(1414213562373095, 10**15)
+    assert nsimplify(almost_one) == almost_one
+
+
+def test_nsimplify_rational_approximation():
+    approximation = Rational(1414213562373095, 10**15)
+    assert nsimplify(approximation) == sqrt(2)
