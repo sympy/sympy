@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.assumptions.ask import Q
-from sympy.assumptions.refine import refine, refine_sin_cos
+from sympy.assumptions.refine import refine, refine_sin_cos, refine_sinh_cosh_tanh
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
@@ -10,6 +10,7 @@ from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
+from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -320,6 +321,20 @@ def test_sin_cos():
     raises(TypeError, lambda: refine_sin_cos(tan(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(exp(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(x, Q.real(x)))
+
+
+def test_sinh_cosh_tanh():
+    assert refine(sinh(x), Q.zero(x)) == 0
+    assert refine(cosh(x), Q.zero(x)) == 1
+    assert refine(tanh(x), Q.zero(x)) == 0
+
+    assert refine(sinh(x), Q.real(x)) == sinh(x)
+    assert refine(cosh(x), Q.real(x)) == cosh(x)
+    assert refine(tanh(x), Q.real(x)) == tanh(x)
+
+    raises(TypeError, lambda: refine_sinh_cosh_tanh(sin(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sinh_cosh_tanh(exp(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sinh_cosh_tanh(x, Q.real(x)))
 
 
 def test_floor_ceiling():

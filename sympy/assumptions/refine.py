@@ -602,6 +602,42 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_sinh_cosh_tanh(expr, assumptions):
+    """
+    Handler for sinh, cosh, tanh.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_sinh_cosh_tanh
+    >>> from sympy import Q, sinh, cosh, tanh
+    >>> from sympy.abc import x
+    >>> refine_sinh_cosh_tanh(sinh(x), Q.zero(x))
+    0
+    >>> refine_sinh_cosh_tanh(cosh(x), Q.zero(x))
+    1
+    >>> refine_sinh_cosh_tanh(tanh(x), Q.zero(x))
+    0
+    >>> refine_sinh_cosh_tanh(sinh(x), Q.real(x))
+
+    """
+    from sympy.functions.elementary.hyperbolic import sinh, cosh, tanh
+
+    if not isinstance(expr, (sinh, cosh, tanh)):
+        raise TypeError(
+            "refine_sinh_cosh_tanh expects a sinh, cosh or tanh function."
+        )
+
+    arg = expr.args[0]
+
+    if ask(Q.zero(arg), assumptions):
+        if isinstance(expr, (sinh, tanh)):
+            return S.Zero
+        return S.One
+
+    return None
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -613,6 +649,9 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'sinh': refine_sinh_cosh_tanh,
+    'cosh': refine_sinh_cosh_tanh,
+    'tanh': refine_sinh_cosh_tanh,
     'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
