@@ -351,6 +351,13 @@ class FCodePrinter(CodePrinter):
                     return 'sqrt(dble(%s))' % self._print(expr.base)
             else:
                 return 'sqrt(%s)' % self._print(expr.base)
+        # The Fortran printer can fold constant functions to a negative literal.
+        # Check the rendered base as well as the expression precedence: unary minus
+        # binds less tightly than exponentiation in Fortran.
+        printed_base = self._print(expr.base)
+        if printed_base.startswith('-'):
+            printed_exp = self.parenthesize(expr.exp, PREC, strict=False)
+            return '(%s)**%s' % (printed_base, printed_exp)
         else:
             return CodePrinter._print_Pow(self, expr)
 
