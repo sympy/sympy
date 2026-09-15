@@ -6,7 +6,7 @@ from sympy.utilities.iterables import uniq
 _af_new = Permutation._af_new
 
 
-def DirectProduct(*groups):
+def DirectProduct(*groups: PermutationGroup) -> PermutationGroup:
     """
     Returns the direct product of several groups as a permutation group.
 
