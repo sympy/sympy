@@ -43,6 +43,9 @@ def _corem(eq, c):  # helper for extract_additively
     return Add(*co), Add(*non)
 
 
+
+
+
 @sympify_method_args
 class Expr(Basic, EvalfMixin):
     """
@@ -532,6 +535,23 @@ class Expr(Basic, EvalfMixin):
         else:
             return n._prec != 1
 
+    def _satisfies_assumptions(self, val):
+        """Check if a numerical value val satisfies the assumptions of self."""
+        from sympy.core.assumptions import _assume_defined
+        try:
+            val = S(val)
+            for key in _assume_defined:
+                if key == 'commutative':
+                    continue
+                self_ass = getattr(self, f"is_{key}", None)
+                if self_ass is not None:
+                    val_ass = getattr(val, f"is_{key}", None)
+                    if val_ass is not None and val_ass != self_ass:
+                        return False
+            return True
+        except (TypeError, ValueError, AttributeError):
+            return False
+
     def _random(self, n=None, re_min=-1, im_min=-1, re_max=1, im_max=1):
         """Return self evaluated, if possible, replacing free symbols with
         random complex values, if necessary.
@@ -571,10 +591,12 @@ class Expr(Basic, EvalfMixin):
         free = self.free_symbols
         prec = 1
         if free:
-            from sympy.core.random import random_complex_number
-            a, c, b, d = re_min, re_max, im_min, im_max
-            reps = dict(list(zip(free, [random_complex_number(a, b, c, d, rational=True)
-                           for zi in free])))
+            reps = {}
+            for zi in free:
+                if hasattr(zi, '_pick_random_value'):
+                    reps[zi] = zi._pick_random_value(re_min, im_min, re_max, im_max)
+                else:
+                    reps[zi] = S.Zero
             try:
                 nmag = abs(self.evalf(2, subs=reps))
             except (ValueError, TypeError):
@@ -717,24 +739,43 @@ class Expr(Basic, EvalfMixin):
         # try numerical evaluation to see if we get two different values
         failing_number = None
         if wrt_number == free:
-            # try 0 (for a) and 1 (for b)
+            def get_trial_value(seed):
+                subs = {}
+                for sym in free:
+                    if hasattr(sym, '_get_val_satisfying_assumptions'):
+                        val = sym._get_val_satisfying_assumptions(seed)
+                    else:
+                        val = S.Zero if seed == 0 else S.One
+                    if not sym._satisfies_assumptions(val):
+                        raise ValueError
+                    subs[sym] = val
+                return subs, expr.subs(subs, simultaneous=True)
+
+            a = None
             try:
-                a = expr.subs(list(zip(free, [0]*len(free))),
-                    simultaneous=True)
+                subs_a, a = get_trial_value(0)
                 if a is S.NaN:
-                    # evaluation may succeed when substitution fails
-                    a = expr._random(None, 0, 0, 0, 0)
-            except ZeroDivisionError:
-                a = None
+                    if all(sym.is_zero or (not sym.is_positive and not sym.is_negative) for sym in free):
+                        a = expr._random(None, 0, 0, 0, 0)
+                    else:
+                        a = expr._random()
+            except (ValueError, TypeError, ZeroDivisionError):
+                a = expr._random()
+
             if a is not None and a is not S.NaN:
+                b = None
                 try:
-                    b = expr.subs(list(zip(free, [1]*len(free))),
-                        simultaneous=True)
+                    subs_b, b = get_trial_value(1)
+                    if subs_a == subs_b:
+                        raise ValueError
                     if b is S.NaN:
-                        # evaluation may succeed when substitution fails
-                        b = expr._random(None, 1, 0, 1, 0)
-                except ZeroDivisionError:
-                    b = None
+                        if all(not sym.is_zero and not sym.is_negative for sym in free):
+                            b = expr._random(None, 1, 0, 1, 0)
+                        else:
+                            b = expr._random()
+                except (ValueError, TypeError, ZeroDivisionError):
+                    b = expr._random()
+
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False
                 # try random real
