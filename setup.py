@@ -317,7 +317,8 @@ if __name__ == '__main__':
           long_description_content_type='text/markdown',
           author='SymPy development team',
           author_email='sympy@googlegroups.com',
-          license='BSD',
+          license_expression='BSD-3-Clause AND MIT',
+          license_files=['LICENSE', 'LICENSES_BUNDLED.txt'],
           keywords="Math CAS",
           url='https://sympy.org',
           project_urls={
@@ -352,7 +353,6 @@ if __name__ == '__main__':
           # Keep in sync with version check above and sympy/__init__.py
           python_requires='>=3.10',
           classifiers=[
-            'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
             'Topic :: Scientific/Engineering',
