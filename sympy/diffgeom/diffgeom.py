@@ -428,6 +428,17 @@ That is, replace {s} with Symbol({s!r}, real=True).
             [t[0] - t[1] for t in zip(sym2, exprs)],
             list(sym1), dict=True)
 
+        if len(ret) > 1:
+            # Solving a chart relation typically yields one solution per branch of
+            # the coordinate, e.g. both radial roots for polar coordinates. The
+            # assumptions of the coordinate symbols single out the intended branch.
+            # The branches are simplified first, both to make the sign visible to
+            # the assumptions and because the surviving one is what gets returned.
+            simplified = [{sym: simplify(radsimp(val)) for sym, val in sol.items()}
+                          for sol in ret]
+            ret = [sol for sol in simplified
+                   if not _contradicts_assumptions(sol)]
+
         if len(ret) == 0:
             temp = "Cannot solve inverse relation from {} to {}."
             raise NotImplementedError(temp.format(sys1_name, sys2_name))
@@ -1117,6 +1128,27 @@ class BaseVectorField(Expr):
         result = d_result.subs(list(zip(d_funcs, base_scalars)))
         result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
         return result.doit()
+
+
+def _contradicts_assumptions(solution):
+    """
+    Return whether a solution branch violates the assumptions it was solved for.
+
+    ``solve`` reports every branch of a coordinate relation, including the ones a
+    coordinate cannot take: solving ``x = r*cos(theta), y = r*sin(theta)`` for a
+    ``Symbol('r', positive=True)`` yields both ``sqrt(x**2 + y**2)`` and its negative.
+    Only sign assumptions are considered, which is what coordinates carry in practice.
+    """
+    for symbol, value in solution.items():
+        if symbol.is_positive and value.is_nonpositive:
+            return True
+        if symbol.is_negative and value.is_nonnegative:
+            return True
+        if symbol.is_nonnegative and value.is_negative:
+            return True
+        if symbol.is_nonpositive and value.is_positive:
+            return True
+    return False
 
 
 def _find_coords(expr):
@@ -2267,4 +2299,5 @@ class _deprecated_dict(_deprecated_container, dict):
 
 
 # Import at end to avoid cyclic imports
+from sympy.simplify.radsimp import radsimp
 from sympy.simplify.simplify import simplify
