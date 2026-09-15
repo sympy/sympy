@@ -20,3 +20,4 @@ Each example includes clear explanations, mathematical formulations, and code to
    bicycle_example.rst
    atwoods_machine_example.rst
    muscle_model_example.rst
+   elastic_pendulum_cone_model.rst
