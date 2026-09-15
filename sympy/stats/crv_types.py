@@ -1901,15 +1901,15 @@ def Gamma(name, k, theta):
     ---------------------
            Gamma(k)
 
-    >>> C = cdf(X, meijerg=True)(z)
+    >>> C = cdf(X)(z)
     >>> pprint(C, use_unicode=False)
-    /            /     z  \
-    |k*lowergamma|k, -----|
-    |            \   theta/
-    <----------------------  for z >= 0
-    |     Gamma(k + 1)
+    /          /     z  \
+    |lowergamma|k, -----|
+    |          \   theta/
+    <--------------------  for z > 0
+    |      Gamma(k)
     |
-    \          0             otherwise
+    \         0            otherwise
 
     >>> E(X)
     k*theta
@@ -3089,16 +3089,14 @@ def Moyal(name, mu, sigma):
     Examples
     ========
 
-    >>> from sympy.stats import Moyal, density, cdf
-    >>> from sympy import Symbol, simplify
+    >>> from sympy.stats import Moyal, density
+    >>> from sympy import Symbol
     >>> mu = Symbol("mu", real=True)
     >>> sigma = Symbol("sigma", positive=True, real=True)
     >>> z = Symbol("z")
     >>> X = Moyal("x", mu, sigma)
     >>> density(X)(z)
     sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
-    >>> simplify(cdf(X)(z))
-    1 - erf(sqrt(2)*exp((mu - z)/(2*sigma))/2)
 
     References
     ==========

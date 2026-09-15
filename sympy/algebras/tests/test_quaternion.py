@@ -9,7 +9,7 @@ from sympy.functions.elementary.complexes import (Abs, conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
-from sympy.integrals.integrals import integrate
+from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices.dense import Matrix
 from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
@@ -191,6 +191,12 @@ def test_quaternion_functions():
 
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
+
+    q2 = Quaternion(x, x**2, sin(x), 1)
+    assert isinstance(Integral(q2, x), Integral)
+    assert Integral(q2, x).doit() == Quaternion(x**2/2, x**3/3, -cos(x), x)
+    assert Integral(q2, (x, 0, 1)).doit() == \
+        Quaternion(S.Half, Rational(1, 3), 1 - cos(1), 1)
 
     assert Quaternion(1, x, x**2, x**3).integrate(x) == \
     Quaternion(x, x**2/2, x**3/3, x**4/4)
