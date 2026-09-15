@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import random
 
@@ -187,7 +187,7 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
 ###########
 
 
-def rot_givens(i, j, theta, dim=3):
+def rot_givens(i: int, j: int, theta: Any, dim: int = 3) -> MutableDenseMatrix:
     r"""Returns a a Givens rotation matrix, a a rotation in the
     plane spanned by two coordinates axes.
 
@@ -306,7 +306,7 @@ def rot_givens(i, j, theta, dim=3):
     return M
 
 
-def rot_axis3(theta):
+def rot_axis3(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 3-axis.
 
@@ -361,7 +361,7 @@ def rot_axis3(theta):
     return rot_givens(0, 1, theta, dim=3)
 
 
-def rot_axis2(theta):
+def rot_axis2(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 2-axis.
 
@@ -416,7 +416,7 @@ def rot_axis2(theta):
     return rot_givens(2, 0, theta, dim=3)
 
 
-def rot_axis1(theta):
+def rot_axis1(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 1-axis.
 
@@ -471,7 +471,7 @@ def rot_axis1(theta):
     return rot_givens(1, 2, theta, dim=3)
 
 
-def rot_ccw_axis3(theta):
+def rot_ccw_axis3(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 3-axis.
 
@@ -526,7 +526,7 @@ def rot_ccw_axis3(theta):
     return rot_givens(1, 0, theta, dim=3)
 
 
-def rot_ccw_axis2(theta):
+def rot_ccw_axis2(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 2-axis.
 
@@ -581,7 +581,7 @@ def rot_ccw_axis2(theta):
     return rot_givens(0, 2, theta, dim=3)
 
 
-def rot_ccw_axis1(theta):
+def rot_ccw_axis1(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 1-axis.
 
@@ -723,12 +723,12 @@ def casoratian(seqs, n, zero=True):
 
        Casoratian is defined by k x k determinant::
 
-                  +  a(n)     b(n)     . . . z(n)     +
-                  |  a(n+1)   b(n+1)   . . . z(n+1)   |
-                  |    .         .     .        .     |
-                  |    .         .       .      .     |
-                  |    .         .         .    .     |
-                  +  a(n+k-1) b(n+k-1) . . . z(n+k-1) +
+                 +  a(n)     b(n)     . . . z(n)     +
+                 |  a(n+1)   b(n+1)   . . . z(n+1)   |
+                 |    .        .     .        .      |
+                 |    .        .       .      .      |
+                 |    .        .         .    .      |
+                 +  a(n+k-1) b(n+k-1) . . . z(n+k-1) +
 
        It proves very useful in rsolve_hyper() where it is applied
        to a generating set of a recurrence to factor out linearly
@@ -862,23 +862,23 @@ def hessian(f, varlist, constraints=()):
     >>> g1 = Function('g')(x, y)
     >>> g2 = x**2 + 3*y
     >>> pprint(hessian(f, (x, y), [g1, g2]))
-    [                   d               d            ]
-    [     0        0    --(g(x, y))     --(g(x, y))  ]
-    [                   dx              dy           ]
-    [                                                ]
-    [     0        0        2*x              3       ]
-    [                                                ]
-    [                     2               2          ]
-    [d                   d               d           ]
-    [--(g(x, y))  2*x   ---(f(x, y))   -----(f(x, y))]
-    [dx                   2            dy dx         ]
-    [                   dx                           ]
-    [                                                ]
-    [                     2               2          ]
-    [d                   d               d           ]
-    [--(g(x, y))   3   -----(f(x, y))   ---(f(x, y)) ]
-    [dy                dy dx              2          ]
-    [                                   dy           ]
+    [                  d               d            ]
+    [    0        0    --(g(x, y))     --(g(x, y))  ]
+    [                  dx              dy           ]
+    [                                               ]
+    [    0        0        2*x              3       ]
+    [                                               ]
+    [                    2               2          ]
+    [d                  d               d           ]
+    [--(g(x, y))  2*x   ---(f(x, y))  -----(f(x, y))]
+    [dx                  2            dy dx         ]
+    [                  dx                           ]
+    [                                               ]
+    [                    2               2          ]
+    [d                  d               d           ]
+    [--(g(x, y))   3  -----(f(x, y))   ---(f(x, y)) ]
+    [dy               dy dx             2           ]
+    [                                 dy            ]
 
     References
     ==========
