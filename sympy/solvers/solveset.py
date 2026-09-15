@@ -49,7 +49,7 @@ from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor, lcm, gcd)
-from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsNeeded
 from sympy.polys.polytools import invert, groebner, poly
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
@@ -1039,7 +1039,12 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             else:
                 result = ConditionSet(symbol, Eq(f, 0), domain)
     else:
-        poly = Poly(f)
+        try:
+            poly = Poly(f)
+        except (GeneratorsNeeded, PolynomialError):
+            if f.is_zero or f.simplify() == 0:
+                return domain
+            return S.EmptySet
         if poly is None:
             result = ConditionSet(symbol, Eq(f, 0), domain)
         gens = [g for g in poly.gens if g.has(symbol)]
@@ -3582,7 +3587,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                 for sym in unsolved_syms:
                     not_solvable = False
                     try:
-                        soln = solver(eq2, sym)
+                        try:
+                            soln = solver(eq2, sym)
+                        except Exception as ex:
+                            print("ERROR inside solver:", ex, "eq2:", eq2, "sym:", sym, "res:", res)
+                            raise ex
                         total_solvest_call += 1
                         soln_new = S.EmptySet
                         if isinstance(soln, Complement):
@@ -3604,6 +3613,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
                                 soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
+
+                        if soln in (S.Reals, S.Complexes):
+                            soln = S.EmptySet
 
                         if not isinstance(soln, (FiniteSet, ImageSet, ConditionSet, Union)) and soln is not S.EmptySet:
                             raise NotImplementedError(
@@ -3634,6 +3646,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         sol, soln_imageset = _extract_main_soln(
                             sym, sol, soln_imageset)
                         sol = set(sol).pop()  # XXX what if there are more solutions?
+                        if isinstance(sol, Set):
+                            continue
                         free = sol.free_symbols
                         if got_symbol and any(
                             ss in free for ss in got_symbol
