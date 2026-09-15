@@ -45,6 +45,7 @@ from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
+from sympy.functions.elementary.exponential import LambertW
 
 from sympy.external.mpmath import (
     prec_to_dps,
@@ -717,6 +718,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
+    if expr.has(LambertW):
+        expr = lambertwsimp(expr)
+
     if expr.has(TrigonometricFunction, HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
 
@@ -1223,6 +1227,39 @@ def kroneckersimp(expr):
         newexpr = expr.replace(lambda e: isinstance(e, Mul), cancel_kronecker_mul)
 
     return expr
+
+def lambertwsimp(expr):
+    def f(rv):
+        if not rv.is_Mul:
+            return rv
+
+        lw_indices = {}
+        exp_lw_indices = {}
+        args = list(rv.args)
+
+        for i, a in enumerate(args):
+            if isinstance(a, LambertW):
+                lw_indices[a] = i
+            elif isinstance(a, exp) and isinstance(a.args[0], LambertW):
+                exp_lw_indices[a.args[0]] = i
+            elif a.is_Pow and a.base is S.Exp1 and isinstance(a.exp, LambertW):
+                exp_lw_indices[a.exp] = i
+
+        for lw, lw_idx in lw_indices.items():
+            if lw in exp_lw_indices:
+                exp_idx = exp_lw_indices[lw]
+                new_args = []
+                for j, a in enumerate(args):
+                    if j == lw_idx:
+                        new_args.append(lw.args[0])
+                    elif j == exp_idx:
+                        continue
+                    else:
+                        new_args.append(a)
+                return Mul(*new_args)
+        return rv
+
+    return _bottom_up(expr, f)
 
 
 def besselsimp(expr):
