@@ -58,7 +58,8 @@ class ReasoningEngine:
         #
         # Thus, if the model found by the solver sets the selector to true,
         # then prop is true in that model (and vice versa). After finding the
-        # initial model, the solver
+        # initial model, the solver looks for a model with the opposing polarity.
+        # Once it does that, it knows the satisfiability of both prop and _prop.
 
         selector_value: int = self._solver.val(selector)
         self._solver.assume(-selector_value)
@@ -72,7 +73,6 @@ class ReasoningEngine:
 
 def _encode_with_selector(prop: CNF, encoded: EncodedCNF,
                           activation_literal: int) -> None:
-    """Add activation_literal => prop using an already reserved variable."""
     encoded.data.extend(
         (encoded.encode(clause) - {0}) | {-activation_literal}
         for clause in prop.clauses
