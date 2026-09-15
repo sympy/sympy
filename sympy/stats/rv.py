@@ -653,6 +653,11 @@ def pspace(expr):
     for rv in rvs:
         if isinstance(rv.pspace, (CompoundPSpace, StochasticPSpace)):
             return rv.pspace
+    # If any rv has a bare PSpace (no concrete distribution), no joint
+    # product space can be formed; return PSpace() so callers fall back
+    # to symbolic forms (see Variance, Probability, Expectation guards).
+    if any(rv.pspace == PSpace() for rv in rvs):
+        return PSpace()
     # Otherwise make a product space
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 

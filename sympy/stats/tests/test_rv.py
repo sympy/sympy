@@ -425,6 +425,13 @@ def test_issue_12283():
     assert covariance(X, Y) == Covariance(X, Y)
     assert covariance(W, Z) == Covariance(W, Z)
 
+def test_issue_27349():
+    A = RandomSymbol(Symbol('A'))
+    B = Normal('R', 1, 1)
+    assert variance(A + B) == Variance(A + B)
+    assert P(A + B > 0) == Probability(A + B > 0)
+    assert E(A * B) == Expectation(A * B)
+
 def test_issue_6810():
     X = Die('X', 6)
     Y = Normal('Y', 0, 1)
