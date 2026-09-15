@@ -1890,7 +1890,7 @@ class Poly(Basic):
                 raise PolynomialError(
                     "a valid generator expected, got %s" % gen)
 
-    def degree(f, gen: int = 0) -> int | NegativeInfinity:
+    def degree(f, gen: int | Expr = 0) -> int | NegativeInfinity:
         """
         Returns degree of ``f`` in ``x_j``.
 
@@ -3644,6 +3644,15 @@ class Poly(Basic):
         """
         return sympy.polys.rootoftools.rootof(f, index, radicals=radicals)
 
+    @overload
+    def real_roots(
+        f, multiple: Literal[True] = True, radicals: bool = True
+    ) -> list[Expr]: ...
+    @overload
+    def real_roots(
+        f, multiple: Literal[False], *, radicals: bool = True
+    ) -> list[tuple[Expr, int]]: ...
+
     def real_roots(f, multiple=True, radicals=True):
         """
         Return a list of real roots with multiplicities.
@@ -4055,6 +4064,11 @@ class Poly(Basic):
         # |ev(a) - ev(b)| < eps, hence |a - b| < 3*eps = delta.
         A, B = ev(a), ev(b)
         return (A.real - B.real)**2 + (A.imag - B.imag)**2 < eps_sq
+
+    @overload
+    def cancel(f, g, include: Literal[False] = False) -> tuple[Expr, Poly, Poly]: ...
+    @overload
+    def cancel(f, g, include: Literal[True]) -> tuple[Poly, Poly]: ...
 
     def cancel(f, g, include=False):
         """
@@ -5975,6 +5989,19 @@ def gcd_list(seq, *gens, **args):
         return result
 
 
+@overload
+def gcd(f, g=None, *gens, polys: Literal[True], **args) -> Poly: ...
+@overload
+def gcd(f, g=None, *gens, polys: Literal[False], **args) -> Expr: ...
+@overload
+def gcd(f: Poly, g: Poly | Expr | complex, *gens, **args) -> Poly: ...
+@overload
+def gcd(f: Expr | complex, g: Poly, *gens, **args) -> Poly: ...
+@overload
+def gcd(f: Expr | complex, g: Expr | complex, *gens, **args) -> Expr: ...
+@overload
+def gcd(f, g=None, *gens, **args) -> Poly | Expr: ...
+
 @public
 def gcd(f, g=None, *gens, **args):
     """
@@ -7379,6 +7406,13 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
 
     return F.all_roots(multiple=multiple, radicals=radicals)
 
+
+@overload
+def real_roots(f, multiple: Literal[True] = True, radicals: bool = True,
+    extension: bool = False) -> list[Expr]: ...
+@overload
+def real_roots(f, multiple: Literal[False], radicals: bool = True,
+    extension: bool = False) -> list[tuple[Expr, int]]: ...
 
 @public
 def real_roots(f, multiple=True, radicals=True, extension=False):
