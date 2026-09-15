@@ -8,6 +8,8 @@ import json
 import sys
 import warnings
 import pytest
+from collections.abc import Mapping, Sequence
+from itertools import chain
 from sympy.testing.runtests import setup_pprint, _get_doctest_blacklist
 
 durations_path = os.path.join(os.path.dirname(__file__), '.ci', 'durations.json')
@@ -22,7 +24,7 @@ sys.__displayhook__ = sys.displayhook
 #pprint_use_unicode(False)
 
 
-def _mk_group(group_dict):
+def _mk_group(group_dict: Mapping[str, Sequence[str]]) -> list[str]:
     return list(chain(*[[k+'::'+v for v in files] for k, files in group_dict.items()]))
 
 if os.path.exists(durations_path):
@@ -42,21 +44,21 @@ else:
     blacklist_group = []
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption("--quickcheck", dest="runquick", action="store_true",
                      help="Skip very slow tests (see ./ci/parse_durations_log.py)")
     parser.addoption("--veryquickcheck", dest="runveryquick", action="store_true",
                      help="Skip slow & very slow (see ./ci/parse_durations_log.py)")
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     # register an additional marker
     config.addinivalue_line("markers", "slow: manually marked test as slow (use .ci/durations.json instead)")
     config.addinivalue_line("markers", "quickcheck: skip very slow tests")
     config.addinivalue_line("markers", "veryquickcheck: skip slow & very slow tests")
 
 
-def pytest_runtest_setup(item):
+def pytest_runtest_setup(item:pytest.Item) -> None:
     if isinstance(item, pytest.Function):
         if item.nodeid in veryslow_group and (item.config.getvalue("runquick") or
                                               item.config.getvalue("runveryquick")):
