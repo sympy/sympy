@@ -11,29 +11,27 @@ from sympy.testing.pytest import raises
 x, y, z = symbols('x y z', real=True)
 
 
+def _ask_lra(proposition, assumptions=S.true):
+    factbase = EncodedCNF()
+    factbase.add_prop(assumptions)
+    engine = ReasoningEngine(factbase, use_lra_theory=True)
+    query = engine.create_query(CNF.from_prop(proposition),
+                                CNF.from_prop(~proposition))
+    return engine.ask_query(query)
+
+
 def test_reasoning_engine_lra():
-    for proposition, assumptions, expected in [
-        (Q.gt(x, z), Q.gt(x, y) & Q.gt(y, z), True),
-        (Q.le(x, z), Q.gt(x, y) & Q.gt(y, z), False),
-        (Q.gt(x, y), S.true, None),
-        (Q.gt(2, 1), S.true, True),
-        (Q.lt(2, 1), S.true, False),
-        (S.true, Q.gt(x, 0), True),
-        (S.false, Q.gt(x, 0), False),
-    ]:
-        factbase = EncodedCNF()
-        factbase.add_prop(assumptions)
-        engine = ReasoningEngine(factbase, use_lra_theory=True)
-        query = engine.create_query(CNF.from_prop(proposition),
-                                    CNF.from_prop(~proposition))
-        assert engine.ask_query(query) is expected
+    assumptions = Q.gt(x, y) & Q.gt(y, z)
+    assert _ask_lra(Q.gt(x, z), assumptions) is True
+    assert _ask_lra(Q.le(x, z), assumptions) is False
+    assert _ask_lra(Q.gt(x, y)) is None
+    assert _ask_lra(Q.gt(2, 1)) is True
+    assert _ask_lra(Q.lt(2, 1)) is False
+    assert _ask_lra(S.true, Q.gt(x, 0)) is True
+    assert _ask_lra(S.false, Q.gt(x, 0)) is False
 
 
 def test_reasoning_engine_lra_inconsistent():
-    factbase = EncodedCNF()
-    factbase.add_prop(Q.gt(x, y) & Q.gt(y, z) & Q.gt(z, x))
-    engine = ReasoningEngine(factbase, use_lra_theory=True)
+    assumptions = Q.gt(x, y) & Q.gt(y, z) & Q.gt(z, x)
     with raises(ValueError, match='Inconsistent assumptions'):
-        query = engine.create_query(CNF.from_prop(Q.gt(x, 0)),
-                                    CNF.from_prop(Q.le(x, 0)))
-        engine.ask_query(query)
+        _ask_lra(Q.gt(x, 0), assumptions)
