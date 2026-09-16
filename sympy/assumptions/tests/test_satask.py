@@ -434,3 +434,20 @@ def test_satask_early_return():
     assert satask(Q.positive(x) | Q.negative(x), Q.real(x) & Q.nonzero(x),
                   early_return=True) is True
     assert satask(S.false, Q.real(x), early_return=True) is False
+
+
+def test_satask_lra_fallback():
+    assumptions = (x > y) & (y > z) & Q.real(x) & Q.real(y) & Q.real(z)
+    assert satask(x > z, assumptions) is True
+    assert satask(x <= z, assumptions) is False
+    assert satask(x > z, assumptions, early_return=True) is True
+    assert satask(x - y > 0, Q.nonnegative(x) & Q.negative(y)) is True
+    assert satask(x > 0, (Q.gt(x, 1) | Q.gt(x, 2)) & Q.real(x)) is True
+
+    a, b, c = symbols('a b c', real=True)
+    assert satask(a > c, (a > b) & (b > c)) is True
+    assert satask(x > z, (x > y) & (y > z)) is None
+    assert satask(x > y, Q.real(x) & Q.real(y)) is None
+    assert satask(x > 0, Q.real(x) | Q.real(y)) is None
+    assert satask(x**2 > 1, (x > 1) & Q.real(x)) is None
+    raises(ValueError, lambda: satask(x > z, assumptions & (z > x)))
