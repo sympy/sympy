@@ -283,3 +283,30 @@ def test_convert_indexed_to_array_multiarg_function():
     # arguments after the first one:
     f = Function("f")
     raises(NotImplementedError, lambda: convert_indexed_to_array(f(M[i, j], N[i, j])))
+
+
+def test_convert_indexed_to_array_scalars_stay_scalars():
+    # An expression without array axes is a scalar and stays as it is
+    # (issue #30395: converting it to ArrayAdd/ArrayElementwiseApplyFunc
+    # made the array printers print scalar assignments as array code):
+    from sympy import sin, sqrt
+    x, y, z = symbols("x y z")
+    for expr in [x + y + z, x*z, x**2, sin(x), x**2 + sqrt(y) - sin(x*z),
+                 sin(x)*x**2 + 1/z]:
+        assert convert_indexed_to_array(expr) == expr
+
+    # Rank-0 array expressions (here the trace) are still converted, also
+    # as base of a power or argument of a function:
+    tr = Sum(M[i, i], (i, 0, k - 1))
+    trace = ArrayContraction(M, (0, 1))
+    assert convert_indexed_to_array(tr) == trace
+    assert convert_indexed_to_array(tr + x) == ArrayAdd(x, trace)
+    assert convert_indexed_to_array(tr**2) == \
+        ArrayContraction(ArrayTensorProduct(M, M), (0, 1), (2, 3))
+    d = Dummy("d")
+    assert convert_indexed_to_array(1/tr).dummy_eq(
+        ArrayElementwiseApplyFunc(Lambda(d, 1/d), trace))
+    assert convert_indexed_to_array(sqrt(tr)).dummy_eq(
+        ArrayElementwiseApplyFunc(Lambda(d, sqrt(d)), trace))
+    assert convert_indexed_to_array(sin(tr)).dummy_eq(
+        ArrayElementwiseApplyFunc(Lambda(d, sin(d)), trace))
