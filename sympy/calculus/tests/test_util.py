@@ -407,3 +407,7 @@ def test_issue_18747():
 
 def test_issue_25942():
     assert (acos(x) > pi/3).as_set() == Interval.Ropen(-1, S(1)/2)
+
+
+def test_function_range_acot():
+    assert function_range(acot(x), x, S.Reals) == Union(Interval.Lopen(0, pi/2), Interval.open(-pi/2, 0))
