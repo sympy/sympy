@@ -24,7 +24,7 @@ from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify, Abs, sign
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
-from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold,
                                                   piecewise_simplify)
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -719,6 +719,13 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     if expr.has(TrigonometricFunction, HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
+
+    if expr.has(floor, ceiling):
+        # ceiling(x) == -floor(-x) exactly, so rewriting to a single function
+        # lets Add/Mul collect terms that cancel, e.g.
+        # floor(x) + ceiling(-x) -> 0. `shorter` keeps the rewrite only when
+        # it is actually simpler, so lone ceilings are left alone.
+        expr = shorter(expr, expr.rewrite(floor))
 
     if expr.has(log):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
