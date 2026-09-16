@@ -2602,11 +2602,21 @@ def chebyshev_substitution_rule(integral):
         if _if_zero_implies_zero(bb, denominator_c) or (p.is_negative and _if_zero_implies_zero(bb, reference_base)):
             return general_step
 
-        # The substitution is degenerate when b = 0 (occurs in the denominator above)
+        # The substitution is degenerate when a = 0 (aa appears in the
+        # denominator of the transformed integrand) or when b = 0
+        pieces = []
+        if r - 1 < 0:
+            if not (_if_zero_implies_zero(aa, denominator_c) or (p.is_negative and _if_zero_implies_zero(aa, reference_base))):
+                degenerate_integrand = canonical_integrand.subs(aa, 0)
+                degenerate_substep = yield IntegralInfo(degenerate_integrand, x)
+                degenerate_step = RewriteRule(integrand, x, degenerate_integrand, degenerate_substep)
+                pieces.append((degenerate_step, Eq(aa, 0)))
         degenerate_integrand = canonical_integrand.subs(bb, 0)
         degenerate_substep = yield IntegralInfo(degenerate_integrand, x)
         degenerate_step = RewriteRule(integrand, x, degenerate_integrand, degenerate_substep)
-        return PiecewiseRule(integrand, x, [(degenerate_step, Eq(bb, 0)), (general_step, S.true)])
+        pieces.append((degenerate_step, Eq(bb, 0)))
+        pieces.append((general_step, S.true))
+        return PiecewiseRule(integrand, x, pieces)
 
     s = r + p
 
