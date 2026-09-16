@@ -28,7 +28,7 @@ from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold,
                                                   piecewise_exclusive)
 from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
         erfinv, erfcinv, erf2inv, Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
-        fresnels, fresnelc)
+        fresnels, fresnelc, owens_t)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma,
         uppergamma, polygamma, loggamma, digamma, trigamma, multigamma)
 from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,
@@ -47,6 +47,7 @@ from sympy.functions.special.polynomials import (legendre, assoc_legendre,
 from sympy.functions.special.spherical_harmonics import Ynm, Ynm_c, Znm
 from sympy.functions.special.elliptic_integrals import (elliptic_k,
         elliptic_f, elliptic_e, elliptic_pi)
+from sympy.functions.special.elliptic_functions import jtheta
 from sympy.functions.special.beta_functions import beta, betainc, betainc_regularized
 from sympy.functions.special.mathieu_functions import (mathieus, mathieuc,
         mathieusprime, mathieucprime)
@@ -81,7 +82,7 @@ __all__ = [
 
     'erf', 'erfc', 'erfi', 'erf2', 'erfinv', 'erfcinv', 'erf2inv', 'Ei',
     'expint', 'E1', 'li', 'Li', 'Si', 'Ci', 'Shi', 'Chi', 'fresnels',
-    'fresnelc',
+    'fresnelc', 'owens_t',
 
     'gamma', 'lowergamma', 'uppergamma', 'polygamma', 'loggamma', 'digamma',
     'trigamma', 'multigamma',
@@ -109,6 +110,8 @@ __all__ = [
     'Ynm', 'Ynm_c', 'Znm',
 
     'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi',
+
+    'jtheta',
 
     'beta', 'betainc', 'betainc_regularized',
 

@@ -3,7 +3,6 @@ from collections import Counter
 
 from sympy.core import Mul, sympify
 from sympy.core.add import Add
-from sympy.core.expr import ExprBuilder
 from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.exponential import log
 from sympy.matrices.expressions.matexpr import MatrixExpr
@@ -120,47 +119,6 @@ class HadamardProduct(MatrixExpr):
             factors = args[:i] + [args[i].diff(x)] + args[i+1:]
             terms.append(hadamard_product(*factors))
         return Add.fromiter(terms)
-
-    def _eval_derivative_matrix_lines(self, x):
-        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
-        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
-        from sympy.matrices.expressions.matexpr import _make_matrix
-
-        with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
-        lines = []
-        for ind in with_x_ind:
-            left_args = self.args[:ind]
-            right_args = self.args[ind+1:]
-
-            d = self.args[ind]._eval_derivative_matrix_lines(x)
-            hadam = hadamard_product(*(right_args + left_args))
-            diagonal = [(0, 2), (3, 4)]
-            diagonal = [e for j, e in enumerate(diagonal) if self.shape[j] != 1]
-            for i in d:
-                l1 = i._lines[i._first_line_index]
-                l2 = i._lines[i._second_line_index]
-                subexpr = ExprBuilder(
-                    ArrayDiagonal,
-                    [
-                        ExprBuilder(
-                            ArrayTensorProduct,
-                            [
-                                ExprBuilder(_make_matrix, [l1]),
-                                hadam,
-                                ExprBuilder(_make_matrix, [l2]),
-                            ]
-                        ),
-                    *diagonal],
-
-                )
-                i._first_pointer_parent = subexpr.args[0].args[0].args
-                i._first_pointer_index = 0
-                i._second_pointer_parent = subexpr.args[0].args[2].args
-                i._second_pointer_index = 0
-                i._lines = [subexpr]
-                lines.append(i)
-
-        return lines
 
 
 # TODO Implement algorithm for rewriting Hadamard product as diagonal matrix
@@ -429,37 +387,3 @@ class HadamardPower(MatrixExpr):
             dexp*logbase + self.exp*dlbase,
             self
         )
-
-    def _eval_derivative_matrix_lines(self, x):
-        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
-        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
-        from sympy.matrices.expressions.matexpr import _make_matrix
-
-        lr = self.base._eval_derivative_matrix_lines(x)
-        for i in lr:
-            diagonal = [(1, 2), (3, 4)]
-            diagonal = [e for j, e in enumerate(diagonal) if self.base.shape[j] != 1]
-            l1 = i._lines[i._first_line_index]
-            l2 = i._lines[i._second_line_index]
-            subexpr = ExprBuilder(
-                ArrayDiagonal,
-                [
-                    ExprBuilder(
-                        ArrayTensorProduct,
-                        [
-                            ExprBuilder(_make_matrix, [l1]),
-                            self.exp*hadamard_power(self.base, self.exp-1),
-                            ExprBuilder(_make_matrix, [l2]),
-                        ]
-                    ),
-                *diagonal],
-                validator=ArrayDiagonal._validate
-            )
-            i._first_pointer_parent = subexpr.args[0].args[0].args
-            i._first_pointer_index = 0
-            i._first_line_index = 0
-            i._second_pointer_parent = subexpr.args[0].args[2].args
-            i._second_pointer_index = 0
-            i._second_line_index = 0
-            i._lines = [subexpr]
-        return lr

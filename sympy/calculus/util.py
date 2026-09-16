@@ -184,13 +184,13 @@ def function_range(f, symbol, domain, loc=False):
     >>> function_range(sin(x), x, Interval(0, 2*pi))
     Interval(-1, 1)
     >>> function_range(tan(x), x, Interval(-pi/2, pi/2))
-    Interval(-oo, oo)
+    Reals
     >>> function_range(1/x, x, S.Reals)
     Union(Interval.open(-oo, 0), Interval.open(0, oo))
     >>> function_range(exp(x), x, S.Reals)
     Interval.open(0, oo)
     >>> function_range(log(x), x, S.Reals)
-    Interval(-oo, oo)
+    Reals
     >>> function_range(sqrt(x), x, Interval(-5, 9))
     Interval(0, 3)
 
@@ -266,6 +266,10 @@ def function_range(f, symbol, domain, loc=False):
                         vals_map[value] = FiniteSet(limit_point)
                     else:
                         vals_map[value] = Union(vals_map[value], FiniteSet(limit_point))
+
+            if vals.inf == S.NegativeInfinity and vals.sup == S.Infinity:
+                range_int += S.Reals
+                continue
 
             critical_points = solveset(f.diff(symbol), symbol, interval)
 

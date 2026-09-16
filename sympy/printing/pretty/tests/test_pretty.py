@@ -17,7 +17,7 @@ from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.special.bessel import (airyai, airyaiprime, airybi, airybiprime)
 from sympy.functions.special.delta_functions import Heaviside
-from sympy.functions.special.error_functions import (fresnelc, fresnels)
+from sympy.functions.special.error_functions import (fresnelc, fresnels, owens_t)
 from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import dirichlet_eta
 from sympy.geometry.line import (Ray, Segment)
@@ -50,11 +50,11 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi, polylog,
-    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta, bell,
+    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, jtheta, DiracDelta, bell,
     bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
     mathieusprime, mathieucprime)
 
-from sympy.matrices import (Adjoint, Inverse, MatrixSymbol, Transpose,
+from sympy.matrices import (Adjoint, Inverse, MatAdd, MatrixSymbol, Transpose,
                             KroneckerProduct, BlockMatrix, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions import hadamard_power
 
@@ -3795,6 +3795,19 @@ def test_tensor_TensorProduct():
     assert upretty(TensorProduct(A, B, A)) == "A\u2297B\u2297A"
 
 
+def test_tensor_ArrayTensorProduct():
+    from sympy.tensor.array.expressions import ArrayAdd, ArrayTensorProduct
+    A = MatrixSymbol("A", 3, 4)
+    B = MatrixSymbol("B", 4, 5)
+    C = MatrixSymbol("C", 3, 4)
+    assert upretty(ArrayTensorProduct(A, B)) == "A\u22a0B"
+    assert pretty(ArrayTensorProduct(A, B)) == "A.*B"
+    assert upretty(ArrayAdd(ArrayTensorProduct(A, B), ArrayTensorProduct(C, B))) == \
+        "A\u22a0B + C\u22a0B"
+    assert upretty(ArrayTensorProduct(ArrayAdd(A, C), B)) == "(A + C)\u22a0B"
+    assert upretty(ArrayTensorProduct(A + C, B)) == "(A + C)\u22a0B"
+
+
 def test_diffgeom_print_WedgeProduct():
     from sympy.diffgeom.rn import R2
     from sympy.diffgeom import WedgeProduct
@@ -6588,6 +6601,14 @@ Pi|3; -|6|\n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = jtheta(1, z, y)
+    assert pretty(expr) == "theta (z, y)\n     1      "
+    assert upretty(expr) == "\u03d1 (z, y)\n 1      "
+
+    expr = jtheta(1, z, y, 2)
+    assert pretty(expr) == "      (2)      \ntheta    (z, y)\n     1         "
+    assert upretty(expr) == "  (2)      \n\u03d1    (z, y)\n 1         "
+
 
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
@@ -8033,6 +8054,8 @@ def test_pretty_misc_functions():
     assert upretty(fresnelc(x)) == 'C(x)'
     assert pretty(fresnels(x)) == 'S(x)'
     assert upretty(fresnels(x)) == 'S(x)'
+    assert pretty(owens_t(x, y)) == 'T(x, y)'
+    assert upretty(owens_t(x, y)) == 'T(x, y)'
     assert pretty(Heaviside(x)) == 'Heaviside(x)'
     assert upretty(Heaviside(x)) == 'θ(x)'
     assert pretty(Heaviside(x, y)) == 'Heaviside(x, y)'
@@ -8263,3 +8286,38 @@ def test_center():
     assert center('1', 3) == ' 1 '
     assert center('1', 3, '-') == '-1-'
     assert center('1', 5, '-') == '--1--'
+
+
+def test_issue_2747():
+    # the = and + operators should be vertically centered
+    y = MatrixSymbol('y', 5, 1)
+    x = MatrixSymbol('x', 5, 2)
+    b = MatrixSymbol('b', 2, 1)
+    e = MatrixSymbol('epsilon', 5, 1)
+    expr = Eq(y.as_explicit(), MatAdd((x*b).as_explicit(), e.as_explicit()))
+    ascii_str = \
+"""\
+[y_00]   [b_00*x_00 + b_10*x_01]   [epsilon_00]\n\
+[    ]   [                     ]   [          ]\n\
+[y_10]   [b_00*x_10 + b_10*x_11]   [epsilon_10]\n\
+[    ]   [                     ]   [          ]\n\
+[y_20] = [b_00*x_20 + b_10*x_21] + [epsilon_20]\n\
+[    ]   [                     ]   [          ]\n\
+[y_30]   [b_00*x_30 + b_10*x_31]   [epsilon_30]\n\
+[    ]   [                     ]   [          ]\n\
+[y_40]   [b_00*x_40 + b_10*x_41]   [epsilon_40]\
+"""
+    ucode_str = \
+"""\
+⎡y₀₀⎤   ⎡b₀₀⋅x₀₀ + b₁₀⋅x₀₁⎤   ⎡ε₀₀⎤\n\
+⎢   ⎥   ⎢                 ⎥   ⎢   ⎥\n\
+⎢y₁₀⎥   ⎢b₀₀⋅x₁₀ + b₁₀⋅x₁₁⎥   ⎢ε₁₀⎥\n\
+⎢   ⎥   ⎢                 ⎥   ⎢   ⎥\n\
+⎢y₂₀⎥ = ⎢b₀₀⋅x₂₀ + b₁₀⋅x₂₁⎥ + ⎢ε₂₀⎥\n\
+⎢   ⎥   ⎢                 ⎥   ⎢   ⎥\n\
+⎢y₃₀⎥   ⎢b₀₀⋅x₃₀ + b₁₀⋅x₃₁⎥   ⎢ε₃₀⎥\n\
+⎢   ⎥   ⎢                 ⎥   ⎢   ⎥\n\
+⎣y₄₀⎦   ⎣b₀₀⋅x₄₀ + b₁₀⋅x₄₁⎦   ⎣ε₄₀⎦\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str

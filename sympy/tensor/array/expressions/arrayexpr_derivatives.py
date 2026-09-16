@@ -6,10 +6,12 @@ from sympy.core.singleton import S
 from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, MatPow, Dummy, Pow, Mul
 from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
+from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices.expressions.hadamard import HadamardProduct
 from sympy.matrices.expressions.inverse import Inverse
+from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol, MatrixElement)
-from sympy.matrices.expressions.special import Identity, OneMatrix, MatrixUnit
+from sympy.matrices.expressions.special import Identity, OneMatrix, MatrixUnit, ZeroMatrix
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
@@ -32,8 +34,16 @@ def array_derive(expr, x):
 @array_derive.register(Expr)
 def _(expr: Expr, x: _ArrayExpr):
     if expr.free_symbols & x.free_symbols:
-        if isinstance(expr, MatrixElement) and isinstance(x, MatrixSymbol):
-            return MatrixUnit(x.shape[0], x.shape[1], expr.i, expr.j)
+        if isinstance(expr, MatrixElement):
+            if expr.parent == x and isinstance(x, MatrixSymbol):
+                return MatrixUnit(x.shape[0], x.shape[1], expr.i, expr.j)
+            # Differentiate the parent matrix and extract the (i, j) element
+            # by contracting the two matrix axes with a matrix unit:
+            dparent = array_derive(expr.parent, x)
+            rank_x = len(get_shape(x))
+            m, n = expr.parent.shape
+            tp = _array_tensor_product(dparent, MatrixUnit(m, n, expr.i, expr.j))
+            return _array_contraction(tp, (rank_x, rank_x + 2), (rank_x + 1, rank_x + 3))
         raise NotImplementedError("algorithm not implemented for this case")
     return ZeroArray(*x.shape)
 
@@ -54,10 +64,32 @@ def _(expr: Pow, x: _ArrayExpr):
 
 @array_derive.register(Function)
 def _(expr: Function, x: _ArrayExpr):
-    if len(expr.args) != 1:
-        raise NotImplementedError("only 1-parameter functions are supported")
-    dexpr = array_derive(expr.args[0], x)
-    return _array_tensor_product(expr.fdiff(), dexpr)
+    # Chain rule: d(f(g_1, ..., g_n))/dx = Sum_i (df/dg_i) * d(g_i)/dx.
+    # The arguments have to be scalars (e.g. traces of matrix expressions),
+    # so every addend is the array derivative of the argument scaled by the
+    # scalar partial derivative of the function:
+    addends = []
+    for i, arg in enumerate(expr.args):
+        if not arg.free_symbols & x.free_symbols:
+            continue
+        if get_shape(arg) != ():
+            raise NotImplementedError(
+                "derivative of a function of a non-scalar argument is not supported")
+        darg = array_derive(arg, x)
+        if isinstance(darg, ZeroArray) or (darg == 0) == True:
+            continue
+        addends.append(_array_tensor_product(expr.fdiff(i + 1), darg))
+    if not addends:
+        return ZeroArray(*get_shape(x))
+    return _array_add(*addends)
+
+
+@array_derive.register(Trace)
+def _(expr: Trace, x: _ArrayExpr):
+    # ``Trace`` is an ``Expr`` (not a ``MatrixExpr``), so it does not reach
+    # the generic ``MatrixExpr`` conversion rule and has to be converted to
+    # an array contraction explicitly:
+    return array_derive(convert_matrix_to_array(expr), x)
 
 
 @array_derive.register(ArrayTensorProduct)
@@ -116,8 +148,11 @@ def _(expr: Determinant, x: Expr):
     arg = expr.arg
     arg_inverse = arg.inv()
     darg = array_derive(arg, x)
+    rank_x = len(get_shape(x))
     tp = _array_tensor_product(expr, arg_inverse, darg)
-    tc = _array_contraction(tp, (0, 5), (1, 4))
+    # axes: (0, 1) = arg_inverse, (2, ..., rank_x + 1) = x,
+    # (rank_x + 2, rank_x + 3) = matrix axes of darg
+    tc = _array_contraction(tp, (0, rank_x + 3), (1, rank_x + 2))
     return tc
 
 
@@ -131,21 +166,36 @@ def _(expr: OneMatrix, x: _ArrayExpr):
     return ZeroArray(*(x.shape + expr.shape))
 
 
+@array_derive.register(ZeroMatrix)
+def _(expr: ZeroMatrix, x: _ArrayExpr):
+    return ZeroArray(*(x.shape + expr.shape))
+
+
+@array_derive.register(ZeroArray)
+def _(expr: ZeroArray, x: _ArrayExpr):
+    return ZeroArray(*(get_shape(x) + expr.shape))
+
+
 @array_derive.register(Transpose)
 def _(expr: Transpose, x: Expr):
     # D(A.T, A) ==> (m,n,i,j) ==> D(A_ji, A_mn) = d_mj d_ni
     # D(B.T, A) ==> (m,n,i,j) ==> D(B_ji, A_mn)
     fd = array_derive(expr.arg, x)
-    return _permute_dims(fd, [0, 1, 3, 2])
+    # swap the two matrix axes that follow the ``rank_x`` axes of ``x``:
+    rank_x = len(get_shape(x))
+    return _permute_dims(fd, list(range(rank_x)) + [rank_x + 1, rank_x])
 
 
 @array_derive.register(Inverse)
 def _(expr: Inverse, x: Expr):
     mat = expr.I
     dexpr = array_derive(mat, x)
+    rank_x = len(get_shape(x))
     tp = _array_tensor_product(-expr, dexpr, expr)
-    mp = _array_contraction(tp, (1, 4), (5, 6))
-    pp = _permute_dims(mp, [1, 2, 0, 3])
+    # axes: (0, 1) = -expr, (2, ..., rank_x + 1) = x,
+    # (rank_x + 2, rank_x + 3) = matrix axes of dexpr, last two = expr
+    mp = _array_contraction(tp, (1, rank_x + 2), (rank_x + 3, rank_x + 4))
+    pp = _permute_dims(mp, list(range(1, rank_x + 1)) + [0, rank_x + 1])
     return pp
 
 
@@ -193,15 +243,66 @@ def _(expr: MatrixExpr, x: Expr):
 def _(expr: MatPow, x: Expr):
     base = expr.base
     exponent = expr.exp
-    dbase = array_derive(base, x)
     dexponent = array_derive(exponent, x)
     if not isinstance(dexponent, ZeroArray) or (dexponent == 0) == True:
         raise NotImplementedError()
+    if (exponent == 0) == True:
+        # ``base**0`` is the identity matrix, a constant:
+        return ZeroArray(*(get_shape(x) + get_shape(expr)))
+    if exponent.is_Integer and exponent < 0:
+        # The summation formula below has an empty (hence zero) summation
+        # range for negative exponents: rewrite the negative power as the
+        # inverse of the positive power instead.
+        return array_derive(Inverse(MatPow(base, -exponent).doit()), x)
+    dbase = array_derive(base, x)
     d = Dummy("d")
+    rank_x = len(get_shape(x))
     tp = _array_tensor_product(base**d, dbase, base**(exponent-d-1))
-    tc = _array_contraction(tp, (1, 4), (5, 6))
-    pd = _permute_dims(tc, [1, 2, 0, 3])
+    tc = _array_contraction(tp, (1, rank_x + 2), (rank_x + 3, rank_x + 4))
+    pd = _permute_dims(tc, list(range(1, rank_x + 1)) + [0, rank_x + 1])
+    if isinstance(pd, ZeroArray):
+        # a sum of zero arrays is zero:
+        return pd
     return ArraySum(pd,(d, 0, exponent-1))
+
+
+@array_derive.register(DiagMatrix)
+def _(expr: DiagMatrix, x: Expr):
+    # ``DiagMatrix(v)[i, j] = v[i]*KroneckerDelta(i, j)``: the derivative of
+    # the vector gets embedded on the diagonal of the two matrix axes of the
+    # result.
+    vector = expr.args[0]
+    darg = array_derive(vector, x)
+    rank_x = len(get_shape(x))
+    if isinstance(darg, ZeroArray):
+        return ZeroArray(*(get_shape(x) + get_shape(expr)))
+    n = expr.shape[0]
+    # position of the size-``n`` axis of the vector inside ``darg`` (the
+    # vector may be either a column or a row):
+    vec_axis = rank_x if get_shape(vector)[0] != 1 else rank_x + 1
+    tp = _array_tensor_product(darg, Identity(n))
+    td = _array_diagonal(tp, (vec_axis, rank_x + 2))
+    # ``td`` has shape ``x.shape + (1, n, n)``, with the trivial size-1 axis
+    # of the vector left over right before the matrix axes: flatten it away.
+    return Reshape(td, get_shape(x) + get_shape(expr))
+
+
+@array_derive.register(DiagonalMatrix)
+def _(expr: DiagonalMatrix, x: Expr):
+    # ``DiagonalMatrix(M)[i, j] = M[i, j]*KroneckerDelta(i, j)``: the
+    # derivative is the derivative of ``M`` with its two matrix axes
+    # diagonalized together with a new identity matrix axis.
+    r, c = expr.shape
+    if r != c:
+        # Non-square arguments zero out the elements beyond the diagonal
+        # length, which cannot be expressed by the diagonalization below:
+        raise NotImplementedError("derivative of a non-square DiagonalMatrix")
+    darg = array_derive(expr.arg, x)
+    rank_x = len(get_shape(x))
+    if isinstance(darg, ZeroArray):
+        return ZeroArray(*(get_shape(x) + get_shape(expr)))
+    tp = _array_tensor_product(darg, Identity(r))
+    return _array_diagonal(tp, (rank_x, rank_x + 1, rank_x + 2))
 
 
 @array_derive.register(HadamardProduct)
@@ -234,7 +335,11 @@ def _(expr: ArrayAdd, x: Expr):
 @array_derive.register(PermuteDims)
 def _(expr: PermuteDims, x: Expr):
     de = array_derive(expr.expr, x)
-    perm = [0, 1] + [i + 2 for i in expr.permutation.array_form]
+    # Differentiating prepends the ``rank_x`` axes of ``x`` to the result, so
+    # those must be left in place and the original permutation shifted past
+    # them.  (This used to assume ``x`` was always a matrix, i.e. ``rank_x == 2``.)
+    rank_x = len(get_shape(x))
+    perm = list(range(rank_x)) + [i + rank_x for i in expr.permutation.array_form]
     return _permute_dims(de, perm)
 
 
@@ -257,7 +362,13 @@ def _(expr: MatrixBase, x):
 
 @array_derive.register(NDimArray)
 def _(expr: NDimArray, x):
-    derive_by_array(expr, x)
+    # the abstract ``NDimArray`` does not declare ``free_symbols`` (concrete
+    # array classes inherit it from ``Basic``):
+    if not set.intersection(getattr(expr, "free_symbols", set()), x.free_symbols):
+        return ZeroArray(*get_shape(x), *expr.shape)
+    if isinstance(x, (MatrixExpr, ArraySymbol)) and all(isinstance(i, (int, Integer)) for i in get_shape(x)):
+        x = x.as_explicit()
+    return derive_by_array(expr, x)
 
 
 def matrix_derive(expr, x):
