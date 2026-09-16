@@ -124,6 +124,18 @@ class Sieve:
         self.sieve_interval = sieve_interval
         assert all(len(i) == self._n for i in (self._list, self._tlist, self._mlist))
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Sieve):
+            return NotImplemented
+        return (self.sieve_interval == other.sieve_interval
+                and self._n == other._n
+                and self._list == other._list
+                and self._tlist == other._tlist
+                and self._mlist == other._mlist)
+
+    def __hash__(self) -> int:
+        return hash((type(self), self.sieve_interval, self._n))
+
     def __repr__(self) -> str:
         return ("<%s sieve (%i): %i, %i, %i, ... %i, %i\n"
              "%s sieve (%i): %i, %i, %i, ... %i, %i\n"

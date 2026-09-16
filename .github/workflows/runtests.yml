@@ -41,9 +41,6 @@ jobs:
       - name: Run Ruff on the sympy package
         run: ruff check sympy
 
-      - name: Run flake8 on the sympy package
-        run: flake8 sympy
-
       - name: Detect invalid escapes like '\e'
         run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
 

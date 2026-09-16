@@ -11,9 +11,9 @@ from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
-from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
+from sympy.assumptions.reasoning_engine import ReasoningEngine
 
 
 def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo,
@@ -80,95 +80,22 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo,
         use_known_facts=use_known_facts, iterations=iterations)
     sat.add_from_cnf(assumptions)
 
-    return check_satisfiability(props, _props, sat, early_return, assumptions)
+    engine = ReasoningEngine(sat)
+    query_literal = engine.create_query(props, _props)
 
-
-def check_satisfiability(prop, _prop, factbase, early_return=False,
-                         assumptions=None):
-    """Decide *prop* against *factbase*, which has to contain *assumptions*.
-
-    When *assumptions* is given, an undecided proposition is passed on to the
-    LRA theory solver, which is skipped otherwise.
-    """
-    if {0} in factbase.data:
-        raise ValueError("Inconsistent assumptions")
-
-    true_false_guarded, selector = _encode_with_selector(prop, _prop, factbase)
-
-    # Run `propogate()` on the assumptions
-    solver = SATSolver(true_false_guarded.data, range(1, selector + 1), set(),
-                       true_false_guarded.symbols + [selector])
-    if solver.propagate() == IpasirStatus.UNSATISFIABLE:
-        raise ValueError("Inconsistent assumptions")
-
-    # Check whether proposition is entailed by any of the assigned literals.
     if early_return:
-        entailed = solver._is_entailed(prop.clauses, true_false_guarded.encoding)
-        if entailed is not None:
-            return entailed
+        res = engine.fixed(query_literal)
+        if res is not None:
+            return res
 
-        entailed = solver._is_entailed(_prop.clauses, true_false_guarded.encoding)
-        if entailed is not None:
-            return not entailed
+    # Read root-level facts before ask_query lets the solver make decisions.
+    exprs = _predicate_exprs(props, _props, assumptions)
+    root_real = _root_real_exprs(exprs, engine)
 
-    # Only the root level answers `fixed()`, so what it says about the
-    # expressions the theory solver would see has to be read before `solve()`
-    # decides anything. Their old assumptions are not asked for here, since
-    # that costs far more than a lookup and does not need the solver.
-    if assumptions is None:
-        exprs = root_real = None
-    else:
-        exprs = _predicate_exprs(prop, _prop, assumptions)
-        root_real = _root_real_exprs(exprs, solver, true_false_guarded.encoding)
-
-    # Continue on the propogated solver, just call solve() on it.
-    if solver.solve() == IpasirStatus.UNSATISFIABLE:
-        raise ValueError("Inconsistent assumptions")
-
-    # The model settles the side it activated, so ask about the other one.
-    witnessed = solver.val(selector)
-    solver.assume(-witnessed)
-    other = solver.solve() == IpasirStatus.SATISFIABLE
-
-    can_be_true = witnessed > 0 or other
-    can_be_false = witnessed < 0 or other
-
-    if can_be_true and can_be_false:
-        if exprs is not None:
-            return _lra_satask(prop, _prop, assumptions, exprs, root_real)
-        return None
-
-    if can_be_true and not can_be_false:
-        return True
-
-    if not can_be_true and can_be_false:
-        return False
-
-    if not can_be_true and not can_be_false:
-        # TODO: Run additional checks to see which combination of the
-        # assumptions, global_assumptions, and relevant_facts are
-        # inconsistent.
-        raise ValueError("Inconsistent assumptions")
-
-
-def _encode_with_selector(prop, _prop, factbase):
-    """Return *factbase* with the clauses of prop and _prop added to it, and
-    the selector variable that activates prop when true and _prop when false.
-    """
-    true_false_guarded = factbase.copy()
-    sides = [[true_false_guarded.encode(clause) for clause in side.clauses]
-             for side in (prop, _prop)]
-
-    # One past the last predicate, so the selector is a variable of its own.
-    selector = len(true_false_guarded.encoding) + 1
-
-    for clauses, guard in zip(sides, (-selector, selector)):
-        # Dropping the 0 that encodes False leaves a side nothing can satisfy
-        # as the unit {guard}.
-        true_false_guarded.data += [(clause - {0}) | {guard}
-                                    for clause in clauses]
-
-    return true_false_guarded, selector
+    res = engine.ask_query(query_literal)
+    if res is not None:
+        return res
+    return _lra_satask(props, _props, assumptions, exprs, root_real)
 
 
 def _predicate_exprs(*cnfs):
@@ -181,17 +108,9 @@ def _predicate_exprs(*cnfs):
     return exprs
 
 
-def _root_real_exprs(exprs, solver, encoding):
-    """Return the expressions of *exprs* that the root level of *solver* fixed
-    ``Q.real`` for, which is what the new assumptions and the facts propagated
-    from them settle. *encoding* numbers the predicates as *solver* does.
-    """
-    real = set()
-    for expr in exprs:
-        lit = encoding.get(Q.real(expr))
-        if lit is not None and solver.fixed(lit) == 1:
-            real.add(expr)
-    return real
+def _root_real_exprs(exprs, engine):
+    """Return expressions whose ``Q.real`` predicate is fixed true at the root."""
+    return {expr for expr in exprs if engine.lookup(Q.real(expr)) is True}
 
 
 def _lra_satask(prop, _prop, assumptions, exprs, root_real):

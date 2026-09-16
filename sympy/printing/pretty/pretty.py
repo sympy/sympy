@@ -795,6 +795,23 @@ class PrettyPrinter(Printer):
         return self._print_seq(expr.args, None, None, wedge_symbol,
             parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
 
+    def _print_ArrayTensorProduct(self, expr):
+        from sympy.core.add import Add
+        from sympy.tensor.array.expressions.array_expressions import ArrayAdd
+        # Squared times (the LaTeX \boxtimes) is the notation for the tensor
+        # product of arrays used in the documentation; the circled times of
+        # TensorProduct denotes the Kronecker product there.
+        if self._use_unicode:
+            boxed_times = "\u22a0"
+        else:
+            boxed_times = ".*"
+        return self._print_seq(expr.args, None, None, boxed_times,
+            parenthesize=lambda x: isinstance(x, (Add, ArrayAdd)) or
+                precedence_traditional(x) <= PRECEDENCE["Mul"])
+
+    def _print_ArrayAdd(self, expr):
+        return self._print_seq(expr.args, None, None, ' + ')
+
     def _print_Trace(self, e):
         D = self._print(e.arg)
         D = prettyForm(*D.parens('(',')'))

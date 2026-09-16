@@ -1643,6 +1643,10 @@ def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
     from sympy.stats.crv_types import ShiftedGompertzDistribution
     assert _test_args(ShiftedGompertzDistribution(1, 1))
 
+def test_sympy__stats__crv_types__SkewNormalDistribution():
+    from sympy.stats.crv_types import SkewNormalDistribution
+    assert _test_args(SkewNormalDistribution(0, 1, 1))
+
 def test_sympy__stats__crv_types__StudentTDistribution():
     from sympy.stats.crv_types import StudentTDistribution
     assert _test_args(StudentTDistribution(1))
