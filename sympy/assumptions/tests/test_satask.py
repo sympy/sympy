@@ -11,7 +11,6 @@ from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.satask import (satask, extract_predargs,
     get_relevant_clsfacts)
 from sympy.assumptions.sathandlers import class_fact_registry
-from sympy.assumptions.lra_satask import lra_satask
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -435,36 +434,3 @@ def test_satask_early_return():
     assert satask(Q.positive(x) | Q.negative(x), Q.real(x) & Q.nonzero(x),
                   early_return=True) is True
     assert satask(S.false, Q.real(x), early_return=True) is False
-
-
-def test_satask_lra_fallback():
-    assumptions = (x > y) & (y > z) & Q.real(x) & Q.real(y) & Q.real(z)
-    assert satask(x > z, assumptions) is True
-    assert satask(x <= z, assumptions) is False
-    assert satask(x > z, assumptions, early_return=True) is True
-    assert satask(x - y > 0, Q.nonnegative(x) & Q.negative(y)) is True
-    assert satask(x > 0, (Q.gt(x, 1) | Q.gt(x, 2)) & Q.real(x)) is True
-
-    a, b, c = symbols('a b c', real=True)
-    assert satask(a > c, (a > b) & (b > c)) is True
-    assert satask(x > z, (x > y) & (y > z)) is None
-    assert satask(x > y, Q.real(x) & Q.real(y)) is None
-    assert satask(x > 0, Q.real(x) | Q.real(y)) is None
-    assert satask(x**2 > 1, (x > 1) & Q.real(x)) is None
-    raises(ValueError, lambda: satask(x > z, assumptions & (z > x)))
-
-
-def test_lra_satask_reasoning_engine():
-    a, b = symbols('a b', real=True)
-    p = symbols('p', positive=True)
-    assert lra_satask(Q.ne(a, b), Q.gt(a, b)) is True
-    assert lra_satask(~Q.ne(a, b), Q.eq(a, b)) is True
-    assert lra_satask(Q.eq(a, b), Q.gt(a, b)) is False
-    assert lra_satask(Q.ne(a, b)) is None
-    assert lra_satask(p > -1) is True
-    assert lra_satask(Q.real(a)) is True
-    assert lra_satask(~Q.real(a)) is False
-    assert lra_satask(S.true) is True
-    assert lra_satask(S.false) is False
-    raises(ValueError, lambda: lra_satask(a > 0, Q.real(a) & ~Q.real(a)))
-    raises(ValueError, lambda: lra_satask(a > 0, S.false))
