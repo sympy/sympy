@@ -33,7 +33,7 @@ from sympy.ntheory.generate import _primepi
 from sympy.ntheory.partitions_ import _partition, _partition_rec
 from sympy.ntheory.primetest import isprime, is_square
 from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
-from sympy.polys.polytools import cancel
+from sympy.polys.polytools import cancel, Poly
 from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import multiset, multiset_derangements, iterable
@@ -681,14 +681,19 @@ class bell(DefinedFunction):
         return s
 
     @staticmethod
-    @recurrence_memo([S.One, _sym])
-    def _bell_poly(n, prev):
-        s = 1
+    @recurrence_memo([[1]])
+    def _bell_poly_coeffs(n, prev):
+        s = [0]*(n-1) + [1,0]
         a = 1
-        for k in range(2, n + 1):
-            a = a * (n - k + 1) // (k - 1)
-            s += a * prev[k - 1]
-        return expand_mul(_sym * s)
+        for k in range(1, n):
+            a = a * (n - k) // k
+            for i in range(k):
+                s[n-k-1+i] += a * prev[k][i]
+        return s
+
+    @classmethod
+    def _bell_poly(cls, n):
+        return Poly(cls._bell_poly_coeffs(n), _sym).as_expr()
 
     @staticmethod
     def _bell_incomplete_poly(n, k, symbols):

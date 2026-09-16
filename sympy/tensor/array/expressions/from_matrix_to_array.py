@@ -65,15 +65,21 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
         return _array_tensor_product(*[convert_matrix_to_array(i) for i in expr.args])
     elif isinstance(expr, Pow):
         base = convert_matrix_to_array(expr.base)
-        if (expr.exp > 0) == True:
-            base_conv = convert_matrix_to_array(base)
-            if get_shape(base_conv) == ():
-                return _array_elementwise_apply_func(lambda x: x**expr.exp, base_conv)
-            else:
-                return _array_tensor_product(*[base_conv for i in range(expr.exp)])
-        elif get_shape(base) == ():
+        if get_shape(base) == ():
+            if not isinstance(base, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
+                # Plain scalar base: return a plain scalar power.
+                return base**expr.exp
+            if isinstance(expr.exp, (int, Integer)) and expr.exp > 0:
+                # Positive integer power of a rank-0 array expression (e.g. a
+                # power of a trace): expand it into a rank-0 tensor product,
+                # which supports both explicit evaluation and derivation. An
+                # elementwise application of the power function over a
+                # zero-dimensional array would fail to evaluate explicitly.
+                return _array_tensor_product(*[base for i in range(expr.exp)])
             d = Dummy("d")
             return _array_elementwise_apply_func(Lambda(d, d**expr.exp), base)
+        if (expr.exp > 0) == True:
+            return _array_tensor_product(*[base for i in range(expr.exp)])
         else:
             return expr
     elif isinstance(expr, MatPow):
@@ -81,10 +87,14 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
         if expr.exp.is_Integer != True:
             if get_shape(expr) == (1, 1):
                 b = symbols("b", cls=Dummy)
-                return _array_elementwise_apply_func(Lambda(b, b ** expr.exp), convert_matrix_to_array(base))
+                return _array_elementwise_apply_func(Lambda(b, b ** expr.exp), base)
             return expr
         elif (expr.exp > 0) == True:
-            return convert_matrix_to_array(MatMul.fromiter(base for i in range(expr.exp)))
+            # Use the unconverted base: converting the base first and
+            # multiplying the converted copies with MatMul would lose the
+            # matrix-multiplication contraction for composite bases such as
+            # Transpose or HadamardProduct.
+            return convert_matrix_to_array(MatMul.fromiter(expr.base for i in range(expr.exp)))
         else:
             return expr
     elif isinstance(expr, HadamardProduct):
