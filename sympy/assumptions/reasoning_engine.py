@@ -15,7 +15,7 @@ class ReasoningEngine:
             raise ValueError("Inconsistent assumptions")
 
         self._factbase = factbase
-        self._solver = None # TODO: Initialize sat solver here instead of in `create_query`.
+        self._solver: SATSolver | None = None # TODO: Initialize sat solver here instead of in `create_query`.
 
     def create_query(self, prop: CNF, _prop: CNF) -> int:
         if self._solver is not None:
