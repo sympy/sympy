@@ -11,6 +11,7 @@ from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.satask import (satask, extract_predargs,
     get_relevant_clsfacts)
 from sympy.assumptions.sathandlers import class_fact_registry
+from sympy.assumptions.lra_satask import lra_satask
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -451,3 +452,19 @@ def test_satask_lra_fallback():
     assert satask(x > 0, Q.real(x) | Q.real(y)) is None
     assert satask(x**2 > 1, (x > 1) & Q.real(x)) is None
     raises(ValueError, lambda: satask(x > z, assumptions & (z > x)))
+
+
+def test_lra_satask_reasoning_engine():
+    a, b = symbols('a b', real=True)
+    p = symbols('p', positive=True)
+    assert lra_satask(Q.ne(a, b), Q.gt(a, b)) is True
+    assert lra_satask(~Q.ne(a, b), Q.eq(a, b)) is True
+    assert lra_satask(Q.eq(a, b), Q.gt(a, b)) is False
+    assert lra_satask(Q.ne(a, b)) is None
+    assert lra_satask(p > -1) is True
+    assert lra_satask(Q.real(a)) is True
+    assert lra_satask(~Q.real(a)) is False
+    assert lra_satask(S.true) is True
+    assert lra_satask(S.false) is False
+    raises(ValueError, lambda: lra_satask(a > 0, Q.real(a) & ~Q.real(a)))
+    raises(ValueError, lambda: lra_satask(a > 0, S.false))
