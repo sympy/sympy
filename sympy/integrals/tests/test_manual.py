@@ -309,6 +309,15 @@ def test_manualintegrate_bioche_phase_parametrization():
     assert bioche_substitution((f, x)) is None
     assert not manualintegrate(f, x).has(S.ComplexInfinity, S.NaN)
 
+    # gh-30442: a numeric residual phase must not leave a degenerate
+    # antiderivative (a ratint RootSum collapsing at the phase value).
+    f = -1/(cot(x + pi/4)*cot(2*x + pi/4) - 1)
+    F = manualintegrate(f, x)
+    assert not F.has(S.ComplexInfinity, S.NaN)
+    for value in (S(1)/10, S(3)/10, S(1)/2):
+        assert abs((F.diff(x) - f).subs(x, value).evalf()) < 1e-10
+    assert abs(integrate(f, (x, pi/6, pi/4), manual=True).evalf(8) - 0.24642) < 1e-5
+
 
 @slow
 def test_manualintegrate_trigpowers():
