@@ -10,7 +10,6 @@ from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
-from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
 from sympy.assumptions.reasoning_engine import ReasoningEngine
