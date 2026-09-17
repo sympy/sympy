@@ -233,18 +233,18 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
         for expr in _exprs:
             if isinstance(expr, tuple):
                 expr, rel = expr
+                numer, denom = expr.as_numer_denom()
+            elif expr.is_Relational:
+                rel = expr.rel_op
+                numer, denom = (expr.lhs - expr.rhs).as_numer_denom()
             else:
-                if expr.is_Relational:
-                    expr, rel = expr.lhs - expr.rhs, expr.rel_op
+                rel = '=='
+                if expr is S.true:
+                    numer, denom = S.Zero, S.One
+                elif expr is S.false:
+                    numer, denom = S.One, S.One
                 else:
-                    rel = '=='
-
-            if expr is S.true:
-                numer, denom, rel = S.Zero, S.One, '=='
-            elif expr is S.false:
-                numer, denom, rel = S.One, S.One, '=='
-            else:
-                numer, denom = expr.together().as_numer_denom()
+                    numer, denom = expr.as_numer_denom()
 
             try:
                 (numer, denom), opt = parallel_poly_from_expr(
@@ -302,7 +302,7 @@ def reduce_abs_inequality(expr, rel, gen):
     reduce_abs_inequalities
     """
     if gen.is_extended_real is False:
-        raise TypeError(filldedent('''
+        raise TypeError(fillededent('''
             Cannot solve inequalities with absolute values containing
             non-real variables.
             '''))
@@ -331,7 +331,7 @@ def reduce_abs_inequality(expr, rel, gen):
             _exprs = _bottom_up_scan(expr.args[0])
 
             for expr, conds in _exprs:
-                exprs.append(( expr, conds + [Ge(expr, 0)]))
+                exprs.append((expr, conds + [Ge(expr, 0)]))
                 exprs.append((-expr, conds + [Lt(expr, 0)]))
         else:
             exprs = [(expr, [])]
@@ -787,6 +787,8 @@ def _solve_inequality(ie, s, linear=False):
     if ie.lhs == s and s not in ie.rhs.free_symbols:
         return ie
 
+    beginning_denoms = denoms(ie.lhs) | denoms(ie.rhs)
+
     def classify(ie, s, i):
         # return True or False if ie evaluates when substituting s with
         # i else None (if unevaluated) or NaN (when there is an error
@@ -859,20 +861,19 @@ def _solve_inequality(ie, s, linear=False):
         else:
             rv = ie.reversed.func(e, rhs)
 
-        # return conditions under which the value is
-        # valid, too.
-        beginning_denoms = denoms(ie.lhs) | denoms(ie.rhs)
-        current_denoms = denoms(rv)
-        for d in beginning_denoms - current_denoms:
-            c = _solve_inequality(Eq(d, 0), s, linear=linear)
-            if isinstance(c, Eq) and c.lhs == s:
-                if classify(rv, s, c.rhs) is S.true:
-                    # rv is permitting this value but it shouldn't
-                    conds.append(~c)
         for i in (-oo, oo):
             if (classify(rv, s, i) is S.true and
                     classify(ie, s, i) is not S.true):
                 conds.append(s < i if i is oo else i < s)
+
+    # return conditions under which the value is valid, too.
+    current_denoms = denoms(rv)
+    for d in beginning_denoms - current_denoms:
+        c = _solve_inequality(Eq(d, 0), s, linear=linear)
+        if isinstance(c, Eq) and c.lhs == s:
+            if classify(rv, s, c.rhs) is S.true:
+                # rv is permitting this value but it shouldn't
+                conds.append(~c)
 
     conds.append(rv)
     return And(*conds)
@@ -880,31 +881,38 @@ def _solve_inequality(ie, s, linear=False):
 
 def _reduce_inequalities(inequalities, symbols):
     # helper for reduce_inequalities
+    from sympy.solvers.solvers import denoms
 
     poly_part, abs_part = {}, {}
     other = []
 
     for inequality in inequalities:
 
-        expr, rel = inequality.lhs, inequality.rel_op  # rhs is 0
+        expr, rel = inequality.lhs - inequality.rhs, inequality.rel_op
 
         # check for gens using atoms which is more strict than free_symbols to
         # guard against EX domain which won't be handled by
         # reduce_rational_inequalities
-        gens = expr.atoms(Symbol)
+        gens = inequality.atoms(Symbol)
 
         if len(gens) == 1:
             gen = gens.pop()
         else:
-            common = expr.free_symbols & symbols
+            common = inequality.free_symbols & symbols
             if len(common) == 1:
                 gen = common.pop()
-                other.append(_solve_inequality(Relational(expr, 0, rel), gen))
+                other.append(_solve_inequality(inequality, gen))
                 continue
             else:
                 raise NotImplementedError(filldedent('''
                     inequality has more than one symbol of interest.
                     '''))
+
+        beginning_denoms = (
+            denoms(inequality.lhs, gen) | denoms(inequality.rhs, gen))
+        if beginning_denoms - denoms(expr, gen):
+            other.append(_solve_inequality(inequality, gen))
+            continue
 
         if expr.is_polynomial(gen):
             poly_part.setdefault(gen, []).append((expr, rel))
@@ -915,7 +923,7 @@ def _reduce_inequalities(inequalities, symbols):
             if components and all(isinstance(i, Abs) for i in components):
                 abs_part.setdefault(gen, []).append((expr, rel))
             else:
-                other.append(_solve_inequality(Relational(expr, 0, rel), gen))
+                other.append(_solve_inequality(inequality, gen))
 
     poly_reduced = [reduce_rational_inequalities([exprs], gen) for gen, exprs in poly_part.items()]
     abs_reduced = [reduce_abs_inequalities(exprs, gen) for gen, exprs in abs_part.items()]
@@ -961,15 +969,13 @@ def reduce_inequalities(inequalities, symbols=[]):
     # prefilter
     keep = []
     for i in inequalities:
-        if isinstance(i, Relational):
-            i = i.func(i.lhs.as_expr() - i.rhs.as_expr(), 0)
-        elif i not in (True, False):
+        if not isinstance(i, Relational) and i not in (True, False):
             i = Eq(i, 0)
         if i == True:
             continue
         elif i == False:
             return S.false
-        if i.lhs.is_number:
+        if not i.free_symbols and (i.lhs - i.rhs).is_number:
             raise NotImplementedError(
                 "could not determine truth value of %s" % i)
         keep.append(i)
