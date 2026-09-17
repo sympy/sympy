@@ -129,11 +129,8 @@ def _lra_satask(prop, _prop, assumptions, exprs, root_real):
     from sympy.assumptions.lra_satask import check_satisfiability
     from sympy.logic.algorithms.lra_theory import UnhandledInput
 
-    encoded_assumptions = EncodedCNF()
-    encoded_assumptions.from_cnf(assumptions)
-
     try:
-        return check_satisfiability(prop, _prop, encoded_assumptions,
+        return check_satisfiability(prop, _prop, assumptions,
                                     known_real=known_real)
     except UnhandledInput:
         return None
