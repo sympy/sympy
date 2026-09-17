@@ -200,7 +200,8 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(Abs)
 def _(expr, assumptions):
-    return _ask_recursive(Q.nonzero(expr.args[0]), assumptions)
+    arg = expr.args[0]
+    return _ask_recursive(Q.complex(arg) & ~Q.zero(arg), assumptions)
 
 @NonZeroPredicate.register(NaN)
 def _(expr, assumptions):
