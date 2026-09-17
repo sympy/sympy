@@ -302,7 +302,7 @@ def reduce_abs_inequality(expr, rel, gen):
     reduce_abs_inequalities
     """
     if gen.is_extended_real is False:
-        raise TypeError(fillededent('''
+        raise TypeError(filldedent('''
             Cannot solve inequalities with absolute values containing
             non-real variables.
             '''))
