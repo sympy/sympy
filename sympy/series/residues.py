@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.utilities.timeutils import timethis
 
@@ -56,27 +57,55 @@ def residue(expr: Expr | complex, x: Symbol, x0: Expr | complex) -> Expr:
     # For the definition of a resultant, see section 1.4 (and any
     # previous sections for more review).
 
+    from sympy.series.gruntz import PoleError
     from sympy.series.order import Order
     from sympy.simplify.radsimp import collect
 
     _expr = sympify(expr)
     if x0 != 0:
         _expr = _expr.subs(x, x + x0)
-    for n in (0, 1, 2, 4, 8, 16, 32):
-        s = _expr.nseries(x, n=n)
-        if not s.has(Order) or s.getn() >= 0:
-            break
+
+    t = Dummy("t")
+
+    def _laurent_residue() -> Expr:
+        # ``nseries`` cannot produce a Laurent expansion around an
+        # essential singularity.  Substituting ``x -> 1/t`` turns the
+        # residue (the coefficient of ``1/x``) into the coefficient of
+        # ``t``, which an ordinary Taylor expansion can compute.
+        return _expr.subs(x, 1 / t).series(t, 0, 2).coeff(t)
+
+    try:
+        for n in (0, 1, 2, 4, 8, 16, 32):
+            s = _expr.nseries(x, n=n)
+            # A pure Order result (e.g. ``O(1)``) means nseries dropped
+            # every term; keep increasing the precision before giving up,
+            # since analytic functions may just need a higher order.
+            if not s.has(Order) or (s.getn() >= 0 and s.removeO() != 0):
+                break
+    except PoleError:
+        return _laurent_residue()
+    if s.has(Order) and s.removeO() == 0:
+        # nseries dropped every term at every precision (e.g.
+        # ``exp(-1/x)`` -> ``O(1)``): the singularity is essential.
+        # Use the Laurent expansion via ``x -> 1/t`` instead.
+        return _laurent_residue()
     s = collect(s.removeO(), x)
     if s.is_Add:
         args = s.args
     else:
         args = [s]
     res: Expr = S.Zero
-    for arg in args:
-        c, m = arg.as_coeff_mul(x)
-        m = Mul(*m)
-        if not (m in (S.One, x) or (isinstance(m, Pow) and m.exp.is_Integer)):
-            raise NotImplementedError("term of unexpected form: %s" % m)
-        if m == 1 / x:
-            res += c
+    try:
+        for arg in args:
+            c, m = arg.as_coeff_mul(x)
+            m = Mul(*m)
+            if not (m in (S.One, x) or (isinstance(m, Pow) and m.exp.is_Integer)):
+                raise NotImplementedError("term of unexpected form: %s" % m)
+            if m == 1 / x:
+                res += c
+    except NotImplementedError as e:
+        try:
+            return _laurent_residue()
+        except (NotImplementedError, PoleError):
+            raise e
     return res
