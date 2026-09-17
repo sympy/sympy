@@ -810,7 +810,7 @@ def test_issue_25949():
 
 def test_issue_30236():
     from sympy.core.symbol import symbols
-    from sympy import diff, N, sqrt, Piecewise
+    from sympy import diff, N, sqrt
     x, a = symbols('x a')
     a_pos = symbols('a', positive=True, real=True)
 
