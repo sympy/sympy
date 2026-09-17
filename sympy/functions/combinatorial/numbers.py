@@ -379,11 +379,27 @@ class tribonacci(DefinedFunction):
     def __trib(cls,n:int):
         if n<2: return [0,1,0] if n else [1,0,0]
         def mul(a,b):
-            a0,a1,a2=a
-            b0,b1,b2=b
-            c=a1*b2+a2*b1
-            d=a2*b2
-            return [a0*b0+c+d,a0*b1+a1*b0+c+2*d,a0*b2+a1*b1+a2*b0+c+2*d]
+            #the polynomial multiplication, if expanded out naïvely, takes 9 bigint muls
+            if n.bit_length()<15: #we can use Karatsuba's method thrice to reduce it to 6
+                a0,a1,a2=a
+                b0,b1,b2=b
+                c0=a0*b0;            c1=a1*b1;            c2=a2*b2
+                c01=(a0+a1)*(b0+b1); c12=(a1+a2)*(b1+b2); c02=(a0+a2)*(b0+b2)
+                return [c0+c12-c1,c01-c0+c12-2*c1+c2,c02-c0+c12]
+            else: #for large n, mul is much more expensive than add so this is about 5/6ths the time
+                a0,a1,a2=a
+                b0,b1,b2=b
+                #this is the same idea as the Toom-Cook algorithm
+                #we want to compute c(x) = a(x)*b(x), so we compute it at 4 points
+                c0 = a0           * b0            #c( 0)
+                c1 =(a0+  a1+  a2)*(b0+  b1+  b2) #c( 1)
+                cm1=(a0-  a1+  a2)*(b0-  b1+  b2) #c(-1)
+                c2 =(a0+2*a1+4*a2)*(b0+2*b1+4*b2) #c( 2)
+                cl=            a2 *           b2 #leading coeff
+
+                #c(x) - cl*x**4 is cubic, so its coeffs can be obtained from these 4 points by Lagrange interpolation
+                return [(3*c0-c1+(c2-cm1)//3 >> 1) - cl, (c1-cm1>>1) + 2*cl, ((c2+2*cm1)//3-c0 >> 1) - cl]
+
         return mul(cls.__trib(p:=1<<n.bit_length()-1),cls.__trib(n-p)) if n&n-1 else mul(t:=cls.__trib(n>>1),t)
     @classmethod
     def _trib(cls,n): return cls.__trib(int(n)+2)[0]
