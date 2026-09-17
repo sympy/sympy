@@ -82,6 +82,15 @@ class ReasoningEngine:
 
 def _encode_with_selector(prop: CNF, encoded: EncodedCNF,
                           activation_literal: int) -> None:
+    """
+    Add each clause in prop to encoded with an additional literal: the
+    negated `activation_literal`.
+
+    Each resulting clause encodes `activation_literal => c`, where `c`
+    is an original clause. When `activation_literal` is True, the original
+    clauses must hold; when False, the added literal satisfies every clause,
+    deactivating them.
+    """
     encoded.data.extend(
         (encoded.encode(clause) - {0}) | {-activation_literal}
         for clause in prop.clauses
