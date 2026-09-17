@@ -354,3 +354,8 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_refine_issue_30324():
+    assumptions = Q.nonnegative(x) & Q.negative(y)
+    assert refine(x - y > 0, assumptions) is S.true
