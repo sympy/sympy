@@ -1119,7 +1119,11 @@ def logcombine(expr, force=False):
         for k in ordered(list(log1.keys())):
             if k not in log1:  # already popped as -k
                 continue
-            if -k in log1:
+            # ``zoo`` and ``nan`` are their own negation, so ``-k`` can be
+            # ``k`` itself; only take the divide branch for distinct keys,
+            # otherwise ``num`` and ``den`` below are the same key and the
+            # second ``log1.pop`` raises ``KeyError``.
+            if -k in log1 and k != -k:
                 # figure out which has the minus sign; the one with
                 # more op counts should be the one
                 num, den = k, -k
