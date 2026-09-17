@@ -820,6 +820,11 @@ class MpmathPrinter(PythonCodePrinter):
         return '{}({})'.format(
             self._module_format('mpmath.log1p'), self._print(e.args[0]))
 
+    def _print_JacobiEllipticBase(self, e):
+        return "{}({!r}, {}, {})".format(
+            self._module_format('mpmath.ellipfun'), e._kind,
+            self._print(e.args[0]), self._print(e.args[1]))
+
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='mpmath.sqrt')
 

@@ -2,9 +2,14 @@
 from __future__ import annotations
 
 from sympy.core import Add, S
+from sympy.core.expr import Expr
 from sympy.core.function import ArgumentIndexError, DefinedFunction
 from sympy.core.numbers import pi
+from sympy.external.mpmath import local_workprec
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.hyperbolic import sech, tanh
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.special.elliptic_integrals import elliptic_k
 
 
 class jtheta(DefinedFunction):
@@ -261,3 +266,351 @@ class jtheta(DefinedFunction):
         # Expand the finite nome series in x because q and z can depend on x.
         # The explicit Order accounts for the omitted theta-series terms.
         return series._eval_nseries(x, n, logx, cdir) + Order(x**n, x)
+
+
+def _jacobi_theta_parameters(u, m):
+    """Return the nome and theta argument for Jacobi elliptic functions."""
+    q = exp(-pi*elliptic_k(1 - m)/elliptic_k(m))
+    return q, u/jtheta(3, 0, q)**2
+
+
+class JacobiEllipticBase(DefinedFunction):
+    """Base class for the Jacobi elliptic functions."""
+
+    nargs = 2
+    _kind = ''
+
+    @property
+    def argument(self):
+        """The argument of the Jacobi elliptic function."""
+        return self.args[0]
+
+    @property
+    def parameter(self):
+        """The parameter of the Jacobi elliptic function."""
+        return self.args[1]
+
+    def _eval_evalf(self, prec):
+        if any(arg is S.NaN for arg in self.args):
+            return S.NaN
+        if all(arg.is_number and arg.is_finite is not False
+                for arg in self.args):
+            u = self.argument._to_mpmath(prec)
+            m = self.parameter._to_mpmath(prec)
+            with local_workprec(prec) as ctx:
+                result = ctx.ellipfun(self._kind, u, m)
+            return Expr._from_mpmath(result, prec)
+
+
+class jacobi_sn(JacobiEllipticBase):
+    r"""
+    The Jacobi elliptic sine function ``jacobi_sn(u, m)``.
+
+    Explanation
+    ===========
+
+    ``jacobi_sn(u, m)`` is the Jacobi elliptic function
+    :math:`\operatorname{sn}(u\mathrel{|}m)`, with argument $u$ and
+    parameter $m = k^2$, where $k$ is the elliptic modulus. If
+    $u = F(\phi\mathrel{|}m)$, where $F$ is the incomplete elliptic
+    integral of the first kind represented in SymPy by
+    :class:`~.elliptic_f`, then
+
+    .. math::
+
+        \operatorname{sn}(u\mathrel{|}m) = \sin(\phi).
+
+    As a function of $u$, ``jacobi_sn`` is doubly periodic. Writing $K(m)$
+    for the complete elliptic integral of the first kind, represented by
+    :class:`~.elliptic_k`, a pair of periods is
+
+    .. math::
+
+        4K(m), \qquad 2iK(1-m).
+
+    The function is meromorphic in both $u$ and $m$.
+
+    Together with ``jacobi_cn`` and ``jacobi_dn``, this function belongs to a
+    system closed under differentiation with respect to $u$. It can also be
+    rewritten in terms of :class:`~.jtheta`. With
+
+    .. math::
+
+        q = \exp\left(-\pi\frac{K(1-m)}{K(m)}\right), \qquad
+        v = \frac{u}{\vartheta_3(0,q)^2},
+
+    the relation is
+
+    .. math::
+
+        \operatorname{sn}(u\mathrel{|}m)
+        = \frac{\vartheta_3(0,q)\vartheta_1(v,q)}
+        {\vartheta_2(0,q)\vartheta_4(v,q)}.
+
+    The parameter convention agrees with :class:`~.elliptic_k`,
+    :class:`~.elliptic_f`, and mpmath's ``ellipfun``.
+
+    Examples
+    ========
+
+    >>> from sympy import elliptic_k, exp, jacobi_sn, jtheta, pi
+    >>> from sympy.abc import m, q, u
+    >>> jacobi_sn(0, m)
+    0
+    >>> jacobi_sn(u, 0)
+    sin(u)
+    >>> jacobi_sn(u, 1)
+    tanh(u)
+    >>> jacobi_sn(u, m).diff(u)
+    jacobi_cn(u, m)*jacobi_dn(u, m)
+    >>> nome = exp(-pi*elliptic_k(1 - m)/elliptic_k(m))
+    >>> jacobi_sn(u, m).rewrite(jtheta).subs(nome, q)
+    jtheta(1, u/jtheta(3, 0, q)**2, q)*jtheta(3, 0, q)/(jtheta(2, 0, q)*jtheta(4, u/jtheta(3, 0, q)**2, q))
+
+    See Also
+    ========
+
+    jacobi_cn, jacobi_dn, jtheta, elliptic_f, elliptic_k
+
+    References
+    ==========
+
+    .. [1] https://dlmf.nist.gov/22
+    .. [2] https://mpmath.org/doc/current/functions/elliptic.html#ellipfun
+
+    """
+
+    _kind = 'sn'
+
+    @classmethod
+    def eval(cls, u, m):
+        if u is S.NaN or m is S.NaN:
+            return S.NaN
+        if u.is_zero:
+            return S.Zero
+        if m.is_zero:
+            return sin(u)
+        if m is S.One:
+            return tanh(u)
+        if u.could_extract_minus_sign():
+            return -cls(-u, m)
+
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return jacobi_cn(u, m)*jacobi_dn(u, m)
+        raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_jtheta(self, u, m, **kwargs):
+        q, v = _jacobi_theta_parameters(u, m)
+        return (jtheta(3, 0, q)*jtheta(1, v, q)
+                / (jtheta(2, 0, q)*jtheta(4, v, q)))
+
+
+class jacobi_cn(JacobiEllipticBase):
+    r"""
+    The Jacobi elliptic cosine function ``jacobi_cn(u, m)``.
+
+    Explanation
+    ===========
+
+    ``jacobi_cn(u, m)`` is the Jacobi elliptic function
+    :math:`\operatorname{cn}(u\mathrel{|}m)`, with argument $u$ and
+    parameter $m = k^2$, where $k$ is the elliptic modulus. If
+    $u = F(\phi\mathrel{|}m)$, where $F$ is the incomplete elliptic
+    integral of the first kind represented in SymPy by
+    :class:`~.elliptic_f`, then
+
+    .. math::
+
+        \operatorname{cn}(u\mathrel{|}m) = \cos(\phi).
+
+    As a function of $u$, ``jacobi_cn`` is doubly periodic. Writing $K(m)$
+    for the complete elliptic integral of the first kind, represented by
+    :class:`~.elliptic_k`, a pair of periods is
+
+    .. math::
+
+        4K(m), \qquad 2K(m) + 2iK(1-m).
+
+    The function is meromorphic in both $u$ and $m$.
+
+    Together with ``jacobi_sn`` and ``jacobi_dn``, this function belongs to a
+    system closed under differentiation with respect to $u$. It can also be
+    rewritten in terms of :class:`~.jtheta`. With
+
+    .. math::
+
+        q = \exp\left(-\pi\frac{K(1-m)}{K(m)}\right), \qquad
+        v = \frac{u}{\vartheta_3(0,q)^2},
+
+    the relation is
+
+    .. math::
+
+        \operatorname{cn}(u\mathrel{|}m)
+        = \frac{\vartheta_4(0,q)\vartheta_2(v,q)}
+        {\vartheta_2(0,q)\vartheta_4(v,q)}.
+
+    The parameter convention agrees with :class:`~.elliptic_k`,
+    :class:`~.elliptic_f`, and mpmath's ``ellipfun``.
+
+    Examples
+    ========
+
+    >>> from sympy import elliptic_k, exp, jacobi_cn, jtheta, pi
+    >>> from sympy.abc import m, q, u
+    >>> jacobi_cn(0, m)
+    1
+    >>> jacobi_cn(u, 0)
+    cos(u)
+    >>> jacobi_cn(u, 1)
+    sech(u)
+    >>> jacobi_cn(u, m).diff(u)
+    -jacobi_dn(u, m)*jacobi_sn(u, m)
+    >>> nome = exp(-pi*elliptic_k(1 - m)/elliptic_k(m))
+    >>> jacobi_cn(u, m).rewrite(jtheta).subs(nome, q)
+    jtheta(2, u/jtheta(3, 0, q)**2, q)*jtheta(4, 0, q)/(jtheta(2, 0, q)*jtheta(4, u/jtheta(3, 0, q)**2, q))
+
+    See Also
+    ========
+
+    jacobi_sn, jacobi_dn, jtheta, elliptic_f, elliptic_k
+
+    References
+    ==========
+
+    .. [1] https://dlmf.nist.gov/22
+    .. [2] https://mpmath.org/doc/current/functions/elliptic.html#ellipfun
+
+    """
+
+    _kind = 'cn'
+
+    @classmethod
+    def eval(cls, u, m):
+        if u is S.NaN or m is S.NaN:
+            return S.NaN
+        if u.is_zero:
+            return S.One
+        if m.is_zero:
+            return cos(u)
+        if m is S.One:
+            return sech(u)
+        if u.could_extract_minus_sign():
+            return cls(-u, m)
+
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return -jacobi_sn(u, m)*jacobi_dn(u, m)
+        raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_jtheta(self, u, m, **kwargs):
+        q, v = _jacobi_theta_parameters(u, m)
+        return (jtheta(4, 0, q)*jtheta(2, v, q)
+                / (jtheta(2, 0, q)*jtheta(4, v, q)))
+
+
+class jacobi_dn(JacobiEllipticBase):
+    r"""
+    The Jacobi delta amplitude function ``jacobi_dn(u, m)``.
+
+    Explanation
+    ===========
+
+    ``jacobi_dn(u, m)`` is the Jacobi elliptic function
+    :math:`\operatorname{dn}(u\mathrel{|}m)`, with argument $u$ and
+    parameter $m = k^2$, where $k$ is the elliptic modulus. If
+    $u = F(\phi\mathrel{|}m)$, where $F$ is the incomplete elliptic
+    integral of the first kind represented in SymPy by
+    :class:`~.elliptic_f`, then
+
+    .. math::
+
+        \operatorname{dn}(u\mathrel{|}m)
+        = \sqrt{1 - m\sin^2(\phi)}.
+
+    As a function of $u$, ``jacobi_dn`` is doubly periodic. Writing $K(m)$
+    for the complete elliptic integral of the first kind, represented by
+    :class:`~.elliptic_k`, a pair of periods is
+
+    .. math::
+
+        2K(m), \qquad 4iK(1-m).
+
+    The function is meromorphic in both $u$ and $m$.
+
+    Together with ``jacobi_sn`` and ``jacobi_cn``, this function belongs to a
+    system closed under differentiation with respect to $u$. It can also be
+    rewritten in terms of :class:`~.jtheta`. With
+
+    .. math::
+
+        q = \exp\left(-\pi\frac{K(1-m)}{K(m)}\right), \qquad
+        v = \frac{u}{\vartheta_3(0,q)^2},
+
+    the relation is
+
+    .. math::
+
+        \operatorname{dn}(u\mathrel{|}m)
+        = \frac{\vartheta_4(0,q)\vartheta_3(v,q)}
+        {\vartheta_3(0,q)\vartheta_4(v,q)}.
+
+    The parameter convention agrees with :class:`~.elliptic_k`,
+    :class:`~.elliptic_f`, and mpmath's ``ellipfun``.
+
+    Examples
+    ========
+
+    >>> from sympy import elliptic_k, exp, jacobi_dn, jtheta, pi
+    >>> from sympy.abc import m, q, u
+    >>> jacobi_dn(0, m)
+    1
+    >>> jacobi_dn(u, 0)
+    1
+    >>> jacobi_dn(u, 1)
+    sech(u)
+    >>> jacobi_dn(u, m).diff(u)
+    -m*jacobi_cn(u, m)*jacobi_sn(u, m)
+    >>> nome = exp(-pi*elliptic_k(1 - m)/elliptic_k(m))
+    >>> jacobi_dn(u, m).rewrite(jtheta).subs(nome, q)
+    jtheta(3, u/jtheta(3, 0, q)**2, q)*jtheta(4, 0, q)/(jtheta(3, 0, q)*jtheta(4, u/jtheta(3, 0, q)**2, q))
+
+    See Also
+    ========
+
+    jacobi_sn, jacobi_cn, jtheta, elliptic_f, elliptic_k
+
+    References
+    ==========
+
+    .. [1] https://dlmf.nist.gov/22
+    .. [2] https://mpmath.org/doc/current/functions/elliptic.html#ellipfun
+
+    """
+
+    _kind = 'dn'
+
+    @classmethod
+    def eval(cls, u, m):
+        if u is S.NaN or m is S.NaN:
+            return S.NaN
+        if u.is_zero or m.is_zero:
+            return S.One
+        if m is S.One:
+            return sech(u)
+        if u.could_extract_minus_sign():
+            return cls(-u, m)
+
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return -m*jacobi_sn(u, m)*jacobi_cn(u, m)
+        raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_jtheta(self, u, m, **kwargs):
+        q, v = _jacobi_theta_parameters(u, m)
+        return (jtheta(4, 0, q)*jtheta(3, v, q)
+                / (jtheta(3, 0, q)*jtheta(4, v, q)))
