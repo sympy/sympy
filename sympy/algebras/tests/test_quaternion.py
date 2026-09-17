@@ -6,7 +6,7 @@ from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, conjugate, im, re, sign)
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
 from sympy.integrals.integrals import integrate
@@ -173,6 +173,11 @@ def test_quaternion_functions():
                2 * sqrt(29) * E * sin(sqrt(29)) / 29,
                3 * sqrt(29) * E * sin(sqrt(29)) / 29,
                4 * sqrt(29) * E * sin(sqrt(29)) / 29)
+    # exp of a purely real quaternion must not divide by a zero vector norm
+    assert q0.exp() == Quaternion(1, 0, 0, 0)
+    assert Quaternion(2, 0, 0, 0).exp() == Quaternion(exp(2), 0, 0, 0)
+    assert Quaternion(x, 0, 0, 0).exp() == Quaternion(exp(x), 0, 0, 0)
+
     assert q1.log() == \
     Quaternion(log(sqrt(30)),
                2 * sqrt(29) * acos(sqrt(30)/30) / 29,
