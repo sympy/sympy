@@ -44,7 +44,7 @@ def continuous_domain(f, symbol, domain):
         The concerned function.
     symbol : :py:class:`~.Symbol`
         The variable for which the intervals are to be determined.
-    domain : :py:class:`~.Interval`
+    domain : :py:class:`~.Set`
         The domain over which the continuity of the symbol has to be checked.
 
     Examples
@@ -65,7 +65,7 @@ def continuous_domain(f, symbol, domain):
     Returns
     =======
 
-    :py:class:`~.Interval`
+    :py:class:`~.Set`
         Union of all intervals where the function is continuous.
 
     Raises
@@ -172,7 +172,7 @@ def function_range(f, symbol, domain):
         The concerned function.
     symbol : :py:class:`~.Symbol`
         The variable for which the range of function is to be determined.
-    domain : :py:class:`~.Interval`
+    domain : :py:class:`~.Set`
         The domain under which the range of the function has to be found.
 
     Examples
@@ -197,7 +197,7 @@ def function_range(f, symbol, domain):
     Returns
     =======
 
-    :py:class:`~.Interval`
+    :py:class:`~.Set`
         Union of all ranges for all intervals under domain where function is
         continuous.
 
