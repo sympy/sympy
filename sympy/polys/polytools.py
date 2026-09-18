@@ -60,7 +60,7 @@ from sympy.utilities.iterables import iterable, sift
 
 # Required to avoid errors
 import sympy.polys
-from sympy.external.mpmath import local_workdps, NoConvergence
+from sympy.external.mpmath import local_workdps, mpmath, NoConvergence
 
 
 if TYPE_CHECKING:
@@ -3761,7 +3761,7 @@ class Poly(Basic):
         # mpmath 1.4 deprecates calling polyroots without the 'asc' argument
         # and apparently prefers asc=True which reverses the order compared to
         # default behaviour for mpmath < 1.4.
-        from mpmath import __version__ as mpver
+        mpver = mpmath.__version__
         if not any(mpver.startswith(prefix) for prefix in ('0.', '1.0.', '1.1.', '1.2.', '1.3.')):
             # This should be the code when mpmath 1.4.0 is the minimum version:
             opts['asc'] = True

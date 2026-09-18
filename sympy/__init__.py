@@ -20,13 +20,15 @@ if sys.version_info < (3, 9):
 del sys
 
 
-try:
-    import mpmath
-except ImportError:
+from sympy.external import import_module
+
+mpmath = import_module('mpmath')
+if mpmath is None:
     raise ImportError("SymPy now depends on mpmath as an external library. "
     "See https://docs.sympy.org/latest/install.html#mpmath for more information.")
 
 del mpmath
+del import_module
 
 from sympy.release import __version__
 from sympy.core.cache import lazy_function
