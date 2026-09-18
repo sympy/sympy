@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy import ZZ, Matrix
+from sympy import QQ, ZZ, Matrix
 from sympy.polys.matrices import DM, DomainMatrix
 from sympy.polys.matrices.dense import ddm_iinv
 from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
@@ -98,6 +98,23 @@ def test_dm_inv_den(name, A, A_inv, den):
         assert A_inv_f.cancel_denom(den_f) == A_inv.cancel_denom(den)
     else:
         raises(DMNonInvertibleMatrixError, lambda: A.inv_den())
+
+
+def test_dm_inv_scc():
+    A = DM([
+        [2, 1, 0, 0, 0],
+        [1, 3, 0, 0, 0],
+        [4, 0, 5, 1, 0],
+        [0, 2, 1, 7, 0],
+        [3, 0, 2, 0, 11],
+    ], QQ)
+    Ainv = A.from_rep(A.rep.inv())
+    assert A.scc() == [[0, 1], [2, 3], [4]]
+
+    for A_format in (A, A.to_sparse()):
+        Ainv_scc = A_format.inv()
+        assert Ainv_scc.rep.fmt == A_format.rep.fmt
+        assert Ainv_scc.to_dense() == Ainv
 
 
 @pytest.mark.parametrize('name, A, A_inv, den', INVERSE_EXAMPLES)
