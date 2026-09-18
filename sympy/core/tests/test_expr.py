@@ -1786,6 +1786,8 @@ def test_expr_sorting():
     a, b = exprs = [Dummy('x'), Dummy('x')]
     assert sorted([b, a], key=default_sort_key) == exprs
 
+    exprs = [f(nan), f(-1), f(1)]
+    assert sorted(exprs, key=default_sort_key) == exprs
 
 def test_as_ordered_factors():
 
@@ -2289,6 +2291,21 @@ def test_ExprBuilder():
     eb = ExprBuilder(Mul)
     eb.args.extend([x, x])
     assert eb.build() == x**2
+
+    # append_argument should call the validator without raising a TypeError:
+    validated = []
+    eb = ExprBuilder(Mul, [x], validator=lambda *args: validated.append(args))
+    eb.append_argument(x)
+    assert eb.args == [x, x]
+    assert validated[-1] == (x, x)
+    assert eb.build() == x**2
+
+    # search_element should recurse into nested ExprBuilder arguments:
+    inner = ExprBuilder(Mul, [y])
+    outer = ExprBuilder(Mul, [x, inner])
+    assert outer.search_element(x) == (0,)
+    assert outer.search_element(y) == (1, 0)
+    assert outer.search_element(z) is None
 
 
 def test_issue_22020():
