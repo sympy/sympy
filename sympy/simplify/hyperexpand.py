@@ -79,6 +79,7 @@ from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
 from sympy.matrices import Matrix, eye, zeros
 from sympy.polys import apart, poly, Poly
 from sympy.series import residue
+from sympy.series.limits import Limit
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
 
@@ -1971,6 +1972,8 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     from sympy.simplify.simplify import simplify
 
     z = polarify(z, subs=False)
+    convergent_at_one = (z == exp_polar(0) and
+                        hyper(func.ap, func.bq, 1).convergence_statement is S.true)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'
 
@@ -1984,7 +1987,20 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
         if premult == 1:
             C = C.applyfunc(make_simp(z0))
         r = reduce(lambda s,m: s+m[0]*m[1], zip(C, f.B.subs(f.z, z0)), S.Zero)*premult
-        res = r.subs(z0, z)
+        # Polar substitution can cancel divergent terms before their finite
+        # remainder is evaluated. A convergent series has its radial limit.
+        if (convergent_at_one and
+                r.subs(z0, 1).rewrite('nonrepsmall').has(nan, zoo, oo, -oo)):
+            finite, singular = [], []
+            for term in Add.make_args(r.rewrite('nonrepsmall')):
+                value = term.subs(z0, 1)
+                if value.is_finite is True:
+                    finite.append(value)
+                else:
+                    singular.append(term)
+            res = Add(*finite) + Add(*singular).limit(z0, 1, dir='-')
+        else:
+            res = r.subs(z0, z)
         if rewrite:
             res = res.rewrite(rewrite)
         return res
@@ -2482,7 +2498,7 @@ def hyperexpand(f, allow_hyper=False, rewrite='default', place=None):
 
     def do_replace(ap, bq, z):
         r = _hyperexpand(Hyper_Function(ap, bq), z, rewrite=rewrite)
-        if r is None:
+        if r is None or r.has(Limit):
             return hyper(ap, bq, z)
         else:
             return r
