@@ -1,10 +1,19 @@
 """Inference in propositional logic"""
 from __future__ import annotations
 
-from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction
+from typing import TYPE_CHECKING, cast
+
+from sympy.logic.boolalg import And, Boolean, Not, conjuncts, to_cnf, BooleanFunction
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from sympy.core.basic import Basic
+
+    Model = dict[Basic | bool, bool]
 
 
 def literal_symbol(literal):
@@ -118,7 +127,7 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
     raise NotImplementedError
 
 
-def valid(expr):
+def valid(expr: Boolean | bool) -> bool:
     """
     Check validity of a propositional sentence.
     A valid propositional sentence is True under every assignment.
@@ -142,7 +151,8 @@ def valid(expr):
     return not satisfiable(Not(expr))
 
 
-def pl_true(expr, model=None, deep=False):
+def pl_true(expr: Boolean | bool, model: Model | None = None,
+            deep: bool = False) -> Boolean | bool | None:
     """
     Returns whether the given assignment is a model or not.
 
@@ -186,7 +196,7 @@ def pl_true(expr, model=None, deep=False):
 
     boolean = (True, False)
 
-    def _validate(expr):
+    def _validate(expr: Basic | bool) -> bool:
         if isinstance(expr, Symbol) or expr in boolean:
             return True
         if not isinstance(expr, BooleanFunction):
@@ -195,18 +205,18 @@ def pl_true(expr, model=None, deep=False):
 
     if expr in boolean:
         return expr
-    expr = sympify(expr)
-    if not _validate(expr):
-        raise ValueError("%s is not a valid boolean expression" % expr)
+    sexpr = sympify(expr)
+    if not _validate(sexpr):
+        raise ValueError("%s is not a valid boolean expression" % sexpr)
     if not model:
         model = {}
     model = {k: v for k, v in model.items() if v in boolean}
-    result = expr.subs(model)
+    result = cast(Boolean, sexpr.subs(model))
     if result in boolean:
         return bool(result)
     if deep:
-        model = dict.fromkeys(result.atoms(), True)
-        if pl_true(result, model):
+        deep_model: Model = dict.fromkeys(result.atoms(), True)
+        if pl_true(result, deep_model):
             if valid(result):
                 return True
         else:
@@ -215,7 +225,7 @@ def pl_true(expr, model=None, deep=False):
     return None
 
 
-def entails(expr, formula_set=None):
+def entails(expr: Boolean | bool, formula_set: Iterable[Boolean] | None = None) -> bool:
     """
     Check whether the given expr_set entail an expr.
     If formula_set is empty then it returns the validity of expr.
