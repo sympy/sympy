@@ -2222,42 +2222,37 @@ class TensExpr(Expr, ABC):
         return permutedims(array, permu)
 
     @staticmethod
-    def _match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict):
-        from .array import permutedims
-
+    def _match_indices_variance(array, free_ind1, free_ind2, replacement_dict):
+        """
+        Given an array whose axes correspond to the indices given in free_ind2,
+        raise/lower indices to match the co/contra-variance of the indices in
+        free_ind1. Unlike _match_indices_with_other_tensor, this does not attempt
+        to match the index labels.
+        """
         index_types1 = [i.tensor_index_type for i in free_ind1]
 
-        # Check if variance of indices needs to be fixed:
+        if len(free_ind1) > 0:
+            if len(free_ind1) != len(free_ind2):
+                raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
+
+        try:
+            ndim = array.ndim
+        except AttributeError:
+            ndim = 0
+
+        if len(free_ind2) != ndim:
+            raise ValueError(f"indices ({free_ind2}) do not match dimensionality of the given array ({ndim})")
+
+        # Check if indices need to be raised or lowered:
         pos2up = []
         pos2down = []
-        free2remaining = free_ind2[:]
-        for pos1, index1 in enumerate(free_ind1):
-            if index1 in free2remaining:
-                pos2 = free2remaining.index(index1)
-                free2remaining[pos2] = None
-                continue
-            if -index1 in free2remaining:
-                pos2 = free2remaining.index(-index1)
-                free2remaining[pos2] = None
-                free_ind2[pos2] = index1
+        for pos, index1, index2 in zip(range(len(free_ind2)), free_ind1, free_ind2):
+            if index1.is_up ^ index2.is_up:
                 if index1.is_up:
-                    pos2up.append(pos2)
+                    pos2up.append(pos)
                 else:
-                    pos2down.append(pos2)
-            else:
-                index2 = free2remaining[pos1]
-                if index2 is None:
-                    raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
-                free2remaining[pos1] = None
-                free_ind2[pos1] = index1
-                if index1.is_up ^ index2.is_up:
-                    if index1.is_up:
-                        pos2up.append(pos1)
-                    else:
-                        pos2down.append(pos1)
+                    pos2down.append(pos)
 
-        if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
-            raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
         # Raise indices:
         for pos in pos2up:
             index_type_pos = index_types1[pos]
@@ -2266,6 +2261,7 @@ class TensExpr(Expr, ABC):
             metric = replacement_dict[index_type_pos]
             metric_inverse = _TensorDataLazyEvaluator.inverse_matrix(metric)
             array = TensExpr._contract_and_permute_with_metric(metric_inverse, array, pos, len(free_ind1))
+
         # Lower indices:
         for pos in pos2down:
             index_type_pos = index_types1[pos]
@@ -2275,13 +2271,46 @@ class TensExpr(Expr, ABC):
             array = TensExpr._contract_and_permute_with_metric(metric, array, pos, len(free_ind1))
 
         if free_ind1:
-            permutation = TensExpr._get_indices_permutation(free_ind2, free_ind1)
-            array = permutedims(array, permutation)
+            inds = free_ind1
+        else:
+            inds = free_ind2
 
         if hasattr(array, "ndim") and array.ndim == 0:
             array = array[()]
 
-        return free_ind2, array
+        return inds, array
+
+    @staticmethod
+    def _match_indices_permutation(array, free_ind1, free_ind2):
+        """
+        Given an array whose axes correspond to the indices given in free_ind2, change the order of the axes to correspond to the indices in free_ind1 (ignoring co/contra-variance)
+        """
+        from .array import permutedims
+
+        free_ind1_igv = [i if i.is_up else -i for i in free_ind1]
+        free_ind2_igv = [i if i.is_up else -i for i in free_ind2]
+
+        if free_ind1:
+            if set(free_ind2_igv) != set(free_ind1_igv):
+                raise ValueError(f"incompatible indices: {free_ind2} and {free_ind1}")
+
+            permutation = TensExpr._get_indices_permutation(free_ind2_igv, free_ind1_igv)
+            array = permutedims(array, permutation)
+            inds = [free_ind2[i] for i in permutation]
+        else:
+            inds = free_ind2
+
+        if hasattr(array, "ndim") and array.ndim == 0:
+            array = array[()]
+
+        return inds, array
+
+    def _match_indices_with_other_tensor(self, array, free_ind1, free_ind2, replacement_dict):
+        """
+        Given an array whose axes correspond to the indices given in free_ind2, change the order of the axes to correspond to the indices in free_ind1 (raising/lowering indices if required)
+        """
+        permuted_indices, array = self._match_indices_permutation(array, free_ind1, free_ind2)
+        return self._match_indices_variance(array, free_ind1, permuted_indices, replacement_dict)
 
     def replace_with_arrays(self, replacement_dict, indices=None):
         """
@@ -2320,6 +2349,13 @@ class TensExpr(Expr, ABC):
         >>> expr = A(i)*A(j)
         >>> expr.replace_with_arrays({A(i): [1, 2]})
         [[1, 2], [2, 4]]
+
+        Note that the labels used for the indices of the keys of
+        ``replacement_dict`` are not significant; only the position of the index
+        and its co/contra-variance are considered while making the replacement.
+
+        >>> A(i).replace_with_arrays({A(j): [1, 2]})
+        [1, 2]
 
         For contractions, specify the metric of the ``TensorIndexType``, which
         in this case is ``L``, in its covariant form:
@@ -3245,6 +3281,8 @@ class Tensor(TensExpr):
                     raise NotImplementedError(f"{other} with contractions is not implemented")
             # Remove elements in `dum2` from `dum1`:
             dum1 = [pair for pair in dum1 if pair not in dum2]
+
+        #For each pair of dummy indices in self, contract the corresponding (i.e. same position) indices in other.
         if len(dum1) > 0:
             indices1 = self.get_indices()
             indices2 = other.get_indices()
@@ -3263,7 +3301,7 @@ class Tensor(TensExpr):
         free_ind1 = self.get_free_indices()
         free_ind2 = other.get_free_indices()
 
-        return self._match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict)
+        return self._match_indices_variance(array, free_ind1, free_ind2, replacement_dict)
 
     @property
     def data(self):
