@@ -120,6 +120,12 @@ def test_is_monotonic():
     raises(NotImplementedError, lambda: is_monotonic(x**2 + y + 1))
 
 
+def test_issue_28571():
+    assert is_monotonic(x**3, S.Reals)
+    assert is_monotonic(1, S.Reals)
+    assert not is_monotonic(x**4, S.Reals)
+
+
 def test_issue_23401():
     x = Symbol('x')
     expr = (x + 1)/(-1.0e-3*x**2 + 0.1*x + 0.1)
