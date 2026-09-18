@@ -17,6 +17,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda)
 from sympy.core.mul import Mul
+from sympy.core.add import Add
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import (Dummy, Symbol)
@@ -305,6 +306,22 @@ def _split_scalar_coefficient(arg):
     return S.One, arg
 
 
+def _is_plain_scalar(arg):
+    """Return True for ordinary scalar expressions that can leave the
+    array-expression domain.
+
+    MatrixElement and Indexed stay inside ArrayAdd because downstream
+    matrix/array derivative dispatch relies on them.
+    """
+    return (
+        get_shape(arg) == ()
+        and not isinstance(
+            arg,
+            (_ArrayExpr, _CodegenArrayAbstract, MatrixElement, Indexed),
+        )
+    )
+
+
 class ArrayTensorProduct(_CodegenArrayAbstract):
     r"""
     Class to represent the tensor product of array-like objects.
@@ -358,12 +375,6 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
         # ArrayTensorProduct(2*M, N) with M a MatrixSymbol) are extracted
         # as well; the matrix recognition in from_array_to_matrix absorbs
         # the leading coefficient back into its matrix result.
-        def _is_plain_scalar(arg):
-            # Rank-0 array expressions (e.g. full contractions) are not
-            # merged: the branches below lift them into the expression.
-            return (get_shape(arg) == () and
-                    not isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract)))
-
         # Extract the scalar coefficients of matrix arguments, e.g.
         # ArrayTensorProduct(2*M, N) becomes ArrayTensorProduct(2, M, N):
         split_args = []
@@ -595,6 +606,8 @@ class ArrayAdd(_CodegenArrayAbstract):
             return ZeroArray(*shapes[0])
         elif len(args) == 1:
             return args[0]
+        elif all(_is_plain_scalar(arg) for arg in args):
+            return Add(*args)
         return self.func(*args, canonicalize=False)
 
     @classmethod
