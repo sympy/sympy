@@ -3,7 +3,7 @@ from sympy.core.function import expand, expand_func
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
-from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
+from sympy.functions.elementary.complexes import Abs, arg, polar_lift, re, unpolarify
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import cosh, acosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -69,6 +69,82 @@ def test_rewrite_single():
 def test_rewrite1():
     assert _rewrite1(x**3*meijerg([a], [b], [c], [d], x**2 + y*x**2)*5, x) == \
         (5, x**3, [(1, 0, meijerg([a], [b], [c], [d], x**2*(y + 1)))], True)
+
+
+def test_binomial_lookup_branch_condition():
+    from sympy.core.symbol import symbols
+
+    x = symbols('x', positive=True)
+    for constant, coefficient in [(-2 + I, -2*I), (-2 - I, 2*I)]:
+        f = (constant + coefficient*x)**(-Rational(3, 2))
+        assert _rewrite_single(f, x, recursive=False) is None
+
+    # Safe coefficient rays and branch-independent integer powers retain
+    # their rewrites. Check values on both sides of the counterexample's cut.
+    for constant, coefficient, exponent in [
+            (1, 1, S(3)/2), (1 + I, -I, S(3)/2),
+            (-2 + I, -2*I, S(2))]:
+        f = (constant + coefficient*x)**(-exponent)
+        terms, cond = _rewrite_single(f, x, recursive=False)
+        assert cond == True
+        rewritten = sum(C*x**s*g for C, s, g in terms)
+        for value in [S(1)/4, S(3)/4]:
+            assert abs((rewritten.subs(x, value).evalf(20)
+                        - f.subs(x, value).evalf(20))) < 1e-15
+
+
+def test_binomial_branch_rejection_fallback():
+    from sympy.core.symbol import symbols
+
+    x = symbols('x', positive=True)
+    for constant, coefficient in [(-2 + I, -2*I), (-2 - I, 2*I)]:
+        f = (constant + coefficient*x)**(-Rational(3, 2))
+        assert integrate(f, x, meijerg=True) == Integral(f, x)
+        primitive = integrate(f, x)
+        for value in [S(1)/4, S(3)/4]:
+            assert simplify((primitive.diff(x) - f).subs(x, value)) == 0
+
+
+def test_binomial_branch_condition_definite():
+    from sympy.core.symbol import symbols
+
+    x = symbols('x', positive=True)
+    assert integrate((1 + x)**(-S(3)/2), (x, 0, oo), meijerg=True) == 2
+    f = (-2 + I - 2*I*x)**(-S(3)/2)
+    assert integrate(f, (x, 0, oo), meijerg=True) == Integral(f, (x, 0, oo))
+
+
+def test_issue_5462_coefficient_lifting():
+    from sympy.core.symbol import Symbol
+
+    f = (x**2 + y**2)**(-Rational(3, 2))
+    terms, cond = _rewrite_single(f, x, recursive=False)
+    assert cond is True
+    rewritten = sum(C*x**s*g for C, s, g in terms)
+    # Specialize before expanding to test the lookup independently of
+    # hyperexpand and the final antiderivative simplification.
+    assert unpolarify(hyperexpand(rewritten.subs({x: 0, y: -1}))) == 1
+
+    for assumptions in ({}, {'real': True}, {'negative': True},
+                        {'positive': True}):
+        parameter = Symbol('y', **assumptions)
+        integrand = f.subs(y, parameter)
+        for primitive in (meijerint_indefinite(integrand, x),
+                          integrate(integrand, x, meijerg=True)):
+            values = ([1] if parameter.is_positive else
+                      [-1] if parameter.is_negative else [-1, 1])
+            for value in values:
+                for point in [0, 1, 2]:
+                    error = (primitive.diff(x) - integrand).subs(
+                        {x: point, parameter: value})
+                    assert simplify(unpolarify(error)) == 0
+
+    # A coefficient already on the logarithmic surface must retain its turn.
+    coefficient = exp_polar(2*pi*I)
+    terms, _ = _rewrite_single((x**2 + coefficient)**(-Rational(3, 2)),
+                               x, recursive=False)
+    rewritten = sum(C*x**s*g for C, s, g in terms)
+    assert unpolarify(hyperexpand(rewritten.subs(x, 0))) == -1
 
 
 def test_meijerint_indefinite_numerically():
@@ -171,7 +247,10 @@ def test_meijerint():
     assert meijerint_definite(exp(x), x, -oo, 2) == (exp(2), True)
     # Note: causes a NaN in _check_antecedents
     assert expand(meijerint_definite(exp(x), x, 0, I)[0]) == exp(I) - 1
-    assert expand(meijerint_definite(exp(-x), x, 0, x)[0]) == \
+    result = meijerint_definite(exp(-x), x, 0, x)[0]
+    # The principal lift leaves the argument unchanged, but arg does not
+    # automatically remove polar_lift from this symbolic expression.
+    assert expand(result.xreplace({arg(polar_lift(x)): arg(x)})) == \
         1 - exp(-exp(I*arg(x))*abs(x))
 
     # Test -oo to oo
@@ -741,8 +820,34 @@ def test_issue_8368():
 
 def test_issue_10211():
     from sympy.abc import h, w
-    assert integrate((1/sqrt((y-x)**2 + h**2)**3), (x,0,w), (y,0,w)) == \
-        2*sqrt(1 + w**2/h**2)/h - 2/h
+    result = integrate(1/sqrt((y-x)**2 + h**2)**3,
+                       (x, 0, w), (y, 0, w))
+    expected = 2*(sqrt(h**2 + w**2) - sqrt(h**2))/h**2
+    for height in [-1, 1]:
+        assert simplify(unpolarify(
+            (result - expected).subs({h: height, w: 1}))) == 0
+
+
+def test_issue_2537():
+    integrand = (a/sqrt(x**2 + a**2))**3
+    scaled_integrand = a/sqrt(x**2 + a**2)**3
+
+    for force_meijerg in [False, True]:
+        kwargs = {'meijerg': True} if force_meijerg else {}
+        result = integrate(integrand, x, **kwargs)
+        scaled_result = integrate(scaled_integrand, x, **kwargs)
+        symmetric_result = integrate(integrand, (x, -b, b), **kwargs)
+        for parameter in [-2, 2]:
+            substitutions = {a: parameter, x: 1}
+            assert simplify(unpolarify(
+                (result.diff(x) - integrand).subs(
+                    substitutions))) == 0
+            assert simplify(unpolarify(
+                (scaled_result.diff(x) - scaled_integrand).subs(
+                    substitutions))) == 0
+            assert simplify(unpolarify(
+                (symmetric_result - 2*a*b/sqrt(a**2 + b**2)).subs(
+                    {a: parameter, b: 1}))) == 0
 
 
 def test_issue_11806():
@@ -752,8 +857,10 @@ def test_issue_11806():
         2*L/(y**2*sqrt(L**2 + y**2))
 
 def test_issue_10681():
+    from sympy.core.symbol import Symbol
     from sympy.polys.domains.realfield import RR
-    from sympy.abc import R, r
+    from sympy.abc import r
+    R = Symbol('R', positive=True)
     f = integrate(r**2*(R**2-r**2)**0.5, r, meijerg=True)
     g = (1.0/3)*R**1.0*r**3*hyper((-0.5, Rational(3, 2)), (Rational(5, 2),),
                                   r**2*exp_polar(2*I*pi)/R**2)
@@ -791,6 +898,35 @@ def test_pr_23583():
     # This result is wrong. Check whether new result is correct when this test fail.
     assert integrate(1/sqrt((x - I)**2-1), meijerg=True) == \
            Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+
+
+def test_meijerg_polar_argument_negative_interval():
+    # Explicit polar factors must remain visible to hyperexpand when it
+    # chooses the analytic continuation of the antiderivative.
+    result = integrate(1/sqrt(x**2 - 1), (x, -2, -1), meijerg=True)
+    assert abs((result - acosh(2)).evalf()) < 1e-12
+
+
+def test_issue_30319_acsc():
+    from sympy.functions.elementary.trigonometric import acsc
+
+    f = x**2*cos(acsc(x))
+    for kwargs in ({}, {'meijerg': True}):
+        derivative = integrate(f, x, **kwargs).diff(x)
+        # Check both real intervals outside the branch points at -1 and 1.
+        for value in (-3, -2, 2, 3):
+            assert simplify((derivative - f).subs(x, value)) == 0
+
+
+def test_issue_28485():
+    from sympy.core.symbol import symbols
+
+    a = symbols('a', negative=True)
+    # Complete the square: a*(x**2 + 2*x) = a*(x + 1)**2 - a.
+    expected = sqrt(pi)*exp(-a)/sqrt(-a)
+    for kwargs in ({}, {'meijerg': True}):
+        result = integrate(exp(a*(x**2 + 2*x)), (x, -oo, oo), **kwargs)
+        assert simplify(result - expected) == 0
 
 
 # 25786
