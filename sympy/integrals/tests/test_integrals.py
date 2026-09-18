@@ -2,6 +2,7 @@ from __future__ import annotations
 import math
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, Lambda, diff)
@@ -13,7 +14,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import (Abs, im, polar_lift, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
-from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csch, sinh, tanh, sech)
+from sympy.functions.elementary.hyperbolic import (asinh, cosh, coth, csch, sinh, tanh, sech)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan, sec)
@@ -1360,12 +1361,13 @@ def test_issue_4234():
 
 
 def test_issue_4492():
+    # The previous result (a G-function Piecewise, see issue #30404) had an
+    # outer branch whose derivative did not match the integrand for
+    # x < -sqrt(5); it is now replaced by the correct antiderivative.
     assert simplify(integrate(x**2 * sqrt(5 - x**2), x)).factor(
-        deep=True) == Piecewise(
-        (I*(2*x**5 - 15*x**3 + 25*x - 25*sqrt(x**2 - 5)*acosh(sqrt(5)*x/5)) /
-            (8*sqrt(x**2 - 5)), (x > sqrt(5)) | (x < -sqrt(5))),
-        ((2*x**5 - 15*x**3 + 25*x - 25*sqrt(5 - x**2)*asin(sqrt(5)*x/5)) /
-            (-8*sqrt(-x**2 + 5)), True))
+        deep=True) == Mul(Rational(1, 8),
+        2*x**3*sqrt(5 - x**2) - 5*x*sqrt(5 - x**2) +
+        25*asin(sqrt(5)*x/5), evaluate=False)
 
 
 def test_issue_2708():
@@ -1963,8 +1965,11 @@ def test_issue_23566():
 
 
 def test_pr_23583():
-    # This result from meijerg is wrong. Check whether new result is correct when this test fail.
-    assert integrate(1/sqrt((x - I)**2-1)) == Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+    # The old result from meijerg was wrong (its derivative does not match
+    # the integrand on part of the domain, see issue #30404); the correct
+    # antiderivative is now returned by the default integration path.
+    assert integrate(1/sqrt((x - I)**2-1)) == \
+           log(2*x + 2*sqrt(x**2 - 2*I*x - 2) - 2*I)
 
 
 def test_issue_7264():
