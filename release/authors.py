@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 from pathlib import Path
 from subprocess import check_output
@@ -38,15 +39,15 @@ Thanks to everyone who contributed to this release!
     print(authors_text)
 
 
-def blue(text):
+def blue(text: str) -> str:
     return "\033[34m%s\033[0m" % text
 
 
-def red(text):
+def red(text: str) -> str:
     return "\033[31m%s\033[0m" % text
 
 
-def get_authors(version, prevversion):
+def get_authors(version: str, prevversion: str) -> tuple[list[str], int, int]:
     """
     Get the list of authors since the previous release
 
