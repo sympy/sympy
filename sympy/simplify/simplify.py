@@ -1133,6 +1133,15 @@ def logcombine(expr, force=False):
 
         return Add(*other)
 
+    def distribute_rational(expr):
+        if not expr.is_Mul:
+            return expr
+        coefficient, rest = expr.as_coeff_Mul()
+        if coefficient.is_Rational and coefficient.q != 1 and rest.is_Add and rest.has(log):
+            return expand_mul(expr, deep=False)
+        return expr
+
+    expr = _bottom_up(expr, distribute_rational)
     return _bottom_up(expr, f)
 
 

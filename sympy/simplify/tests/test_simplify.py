@@ -1124,3 +1124,20 @@ def test_issue_14269():
     root = (sqrt(2) - 1)**Rational(1, 3) - (sqrt(2) + 1)**Rational(1, 3)
     expr = (x**3 + 3*x + 2).subs(x, root)
     assert simplify(expr) == 0
+
+
+def test_logcombine_distributes_rational_before_combining():
+    numerator = 1 + 2*log(2) + log(3)
+    expected = Rational(1, 3) + log(2**Rational(2, 3)*3**Rational(1, 3))
+    for multiplier in [1, -1]:
+        expr = Mul(Rational(multiplier, 3), numerator, evaluate=False)
+        assert logcombine(expr) == multiplier*expected
+    assert logcombine(log(2) + log(3)) == log(6)
+
+
+def test_logcombine_rational_keeps_unrelated_products():
+    A, B, C = symbols('A B C', commutative=False)
+    expr = Mul(Rational(1, 2), A*(B + C) + log(x), evaluate=False)
+    assert logcombine(expr) == A*(B + C)/2 + log(x)/2
+    expr = Mul(Rational(1, 2), (x + y)*(x + z) + log(x), evaluate=False)
+    assert logcombine(expr) == (x + y)*(x + z)/2 + log(x)/2
