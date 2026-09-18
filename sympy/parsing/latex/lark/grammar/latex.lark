@@ -221,6 +221,7 @@ div: _expression_mul DIV_SYMBOL (_expression_power | adjacent_expressions)
 adjacent_expressions: (_one_letter_symbol | number) _expression_mul
     | (group_round_parentheses | group_square_brackets | group_curly_literal_parentheses) (group_round_parentheses | group_square_brackets | group_curly_parentheses | group_curly_literal_parentheses | _one_letter_symbol)
     | _function _function
+    | square_root _expression_mul
     | fraction _expression_mul
     | superscript _expression_mul
 

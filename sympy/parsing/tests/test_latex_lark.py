@@ -847,6 +847,11 @@ def test_square_root_expressions():
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
+def test_implicit_multiplication_after_square_root():
+    assert parse_latex_lark(r"\sqrt{2} x") == sqrt(2)*x
+    assert parse_latex_lark(r"\sqrt{2}\,x") == sqrt(2)*x
+
+
 def test_factorial_expressions():
     for latex_str, sympy_expr in UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS:
         with evaluate(False):
