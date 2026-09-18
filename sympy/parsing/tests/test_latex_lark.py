@@ -808,7 +808,6 @@ def test_integral_expressions():
             continue
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
-
 def test_derivative_expressions():
     expected_failures = {3, 4}
     for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
@@ -821,6 +820,11 @@ def test_derivative_expressions():
         if i in expected_failures:
             continue
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_implicit_multiplication_after_square_root():
+    assert parse_latex_lark(r"\sqrt{2} x") == sqrt(2)*x
+    assert parse_latex_lark(r"\sqrt{2}\,x") == sqrt(2)*x
 
 
 def test_trigonometric_expressions():
