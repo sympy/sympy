@@ -1126,18 +1126,22 @@ def test_issue_14269():
     assert simplify(expr) == 0
 
 
-def test_logcombine_distributes_rational_before_combining():
-    numerator = 1 + 2*log(2) + log(3)
-    expected = Rational(1, 3) + log(2**Rational(2, 3)*3**Rational(1, 3))
+def test_logcombine_affine_rational_log():
     for multiplier in [1, -1]:
-        expr = Mul(Rational(multiplier, 3), numerator, evaluate=False)
-        assert logcombine(expr) == multiplier*expected
-    assert logcombine(log(2) + log(3)) == log(6)
+        expr = Mul(Rational(multiplier, 3), 1 + 2*log(2), evaluate=False)
+        expected = multiplier*(Rational(1, 3) + log(2**Rational(2, 3)))
+        assert logcombine(expr) == expected
+    expr = Mul(Rational(1, 3), 1 - 2*log(2), evaluate=False)
+    assert logcombine(expr) == Rational(1, 3) - log(2**Rational(2, 3))
 
 
-def test_logcombine_rational_keeps_unrelated_products():
+def test_logcombine_preserves_grouping():
+    numerator = tan(x/2) + 1
+    denominator = tan(x/2) + 7
+    expr = Mul(Rational(1, 3), log(numerator) - log(denominator), evaluate=False)
+    assert logcombine(expr, force=True) == log((numerator/denominator)**Rational(1, 3))
+    expr = Mul(Rational(1, 3), 1 + 2*log(2) + log(3), evaluate=False)
+    assert logcombine(expr) == Rational(1, 3) + log(12**Rational(1, 3))
     A, B, C = symbols('A B C', commutative=False)
     expr = Mul(Rational(1, 2), A*(B + C) + log(x), evaluate=False)
-    assert logcombine(expr) == A*(B + C)/2 + log(x)/2
-    expr = Mul(Rational(1, 2), (x + y)*(x + z) + log(x), evaluate=False)
-    assert logcombine(expr) == (x + y)*(x + z)/2 + log(x)/2
+    assert logcombine(expr) == expr
