@@ -1138,7 +1138,7 @@ def logcombine(expr, force=False):
         if coefficient.is_Rational and coefficient.q != 1 and rest.is_Add:
             constant, term = rest.as_coeff_Add()
             scale, logarithm = term.as_coeff_Mul()
-            if (constant.is_Rational and scale.is_Rational and logarithm.func is log
+            if (constant.is_Rational and scale.is_Rational and logarithm.func == log
                     and logarithm.args[0].is_Rational and logarithm.args[0] > 0):
                 expr = expr.func(*expr.args)
 
