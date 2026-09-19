@@ -7,6 +7,7 @@ only the provided domain and number of variables.
 
 from __future__ import annotations
 
+from collections import defaultdict
 from itertools import combinations
 from typing import TYPE_CHECKING, Mapping, Sequence, TypeVar
 
@@ -19,7 +20,7 @@ from sympy.polys.polyerrors import ExactQuotientFailed
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from sympy.polys.domains.domain import Domain, Er
+    from sympy.polys.domains.domain import Domain, Er, Es
 
 _T = TypeVar("_T")
 
@@ -995,3 +996,57 @@ def smp_pow_multinomial(d: smp[Er], exp: int, domain: Domain[Er], n: int) -> smp
             del h[p_mon]
 
     return h
+
+
+def smp_swap_var(
+    f: smp[Er],
+    i: int,
+    n: int,
+    domain: Domain[Er],
+) -> smp[Er]:
+    """Swap the main variable with the variable at index ``i``."""
+    if i == 0:
+        return f.copy()
+
+    g: smp[Er] = {}
+
+    for mon, coeff in f.items():
+        new_mon = list(mon)
+        new_mon[0], new_mon[i] = new_mon[i], new_mon[0]
+        g[tuple(new_mon)] = coeff
+
+    return g
+
+
+def smp_reorg_poly(
+    f: smp[Er], syms: list[int], n: int, domain: Domain[Er]
+) -> dict[monom, smp[Er]]:
+    """
+    Reorganize a polynomial over multiple variables into a polynomial over a
+    subset of those variables with coefficients being polynomials over the
+    remaining variables.
+    For example, given a polynomial in ``p`` in ``K[x,y,z,t]``, ``p.
+    smp_reorg_poly([1, 3])`` converts ``p`` to an element of ``K[x, z][y, t]``.
+    """
+    syms = sorted(syms)
+    g: defaultdict[monom, smp[Er]] = defaultdict(dict)
+    rem_syms = tuple(i for i in range(n) if i not in syms)
+
+    # Iterate through the terms and coefficients of the input polynomial
+    for mon, coeff in f.items():
+        outer = tuple(mon[i] for i in syms)
+        inner = tuple(mon[i] for i in rem_syms)
+        g[outer][inner] = coeff
+
+    return g
+
+
+def smp_domain_convert(
+    f: smp[Er], dom1: Domain[Er], dom2: Domain[Es], n: int
+) -> smp[Es]:
+    result: smp[Es] = {}
+    for mon, coeff in f.items():
+        new_coeff = dom2.convert(coeff, dom1)
+        if new_coeff:
+            result[mon] = new_coeff
+    return result
