@@ -113,6 +113,7 @@ References
        https://link.springer.com/chapter/10.1007/11817963_11
 """
 from __future__ import annotations
+from typing import TYPE_CHECKING, Any
 from sympy.matrices.dense import eye, zeros
 from sympy.assumptions import Predicate
 from sympy.assumptions.assume import AppliedPredicate
@@ -120,6 +121,7 @@ from sympy.assumptions.ask import Q
 from sympy.core import Dummy
 from sympy.core.mul import Mul
 from sympy.core.add import Add
+from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ge, Gt, Le, Lt
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
@@ -127,6 +129,10 @@ from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
 from sympy.utilities.iterables import sift
 import math
+
+if TYPE_CHECKING:
+    from sympy.assumptions.cnf import EncodedCNF
+    from sympy.logic.boolalg import Boolean
 
 
 class UnhandledInput(Exception):
@@ -580,7 +586,13 @@ def _sep_const_terms(expr):
     return Add(*var), Add(*const)
 
 
-def _evaluate_trivial_predicate(prop):
+# A constraint is (terms, constant, strict, equality), where terms is
+# a tuple of (variable, coefficient) pairs.
+_LRATerms = tuple[tuple[Expr, Expr], ...]
+_LRAConstraint = tuple[_LRATerms, Expr, bool, bool]
+
+
+def _evaluate_trivial_predicate(prop: Boolean) -> bool | None:
     """
     Return True or False if ``prop`` is a constant predicate, else None.
 
@@ -596,14 +608,16 @@ def _evaluate_trivial_predicate(prop):
         raise ValueError(f"Unhandled Predicate: {prop}")
 
     assert prop.function in ALLOWED_PRED
-    if prop.lhs == S.NaN or prop.rhs == S.NaN:
+    # lhs and rhs are only defined on applied binary relations
+    apred: Any = prop
+    if apred.lhs == S.NaN or apred.rhs == S.NaN:
         raise ValueError(f"{prop} contains nan")
-    if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
+    if apred.lhs.is_imaginary or apred.rhs.is_imaginary:
         raise UnhandledInput(f"{prop} contains an imaginary component")
-    if prop.lhs == oo or prop.rhs == oo:
+    if apred.lhs == oo or apred.rhs == oo:
         raise UnhandledInput(f"{prop} contains infinity")
 
-    expr = prop.lhs - prop.rhs
+    expr = apred.lhs - apred.rhs
     pred = ALLOWED_PRED[prop.function](expr, S.Zero)
     if pred == True:
         return True
@@ -614,7 +628,7 @@ def _evaluate_trivial_predicate(prop):
     return None
 
 
-def _constraint_from_predicate(prop):
+def _constraint_from_predicate(prop: AppliedPredicate) -> _LRAConstraint:
     """
     Extract a linear constraint from a non-trivial applied predicate.
 
@@ -622,7 +636,9 @@ def _constraint_from_predicate(prop):
     tuple of ``(variable, coefficient)`` pairs, with ``>=``/``>``
     normalized to ``<=``/``<`` by negating the whole expression.
     """
-    expr = prop.lhs - prop.rhs
+    # lhs and rhs are only defined on applied binary relations
+    apred: Any = prop
+    expr = apred.lhs - apred.rhs
     if prop.function in [Q.ge, Q.gt]:
         expr = -expr
 
@@ -636,7 +652,9 @@ def _constraint_from_predicate(prop):
     return terms, constant, prop.function in [Q.gt, Q.lt], prop.function == Q.eq
 
 
-def _preprocess_lra_constraints(encoded_cnf, testing_mode=False):
+def _preprocess_lra_constraints(
+    encoded_cnf: EncodedCNF, testing_mode: bool = False
+) -> tuple[dict[int, _LRAConstraint], list[list[int]]]:
     """
     Convert an EncodedCNF into LRA constraints and unit conflict clauses.
 
@@ -657,7 +675,7 @@ def _preprocess_lra_constraints(encoded_cnf, testing_mode=False):
 
     constraints = {}
     conflicts = []
-    variables = set()
+    variables: set[Expr] = set()
     empty_var = Dummy()
     for prop, atom_id in encoded_cnf_items:
         if isinstance(prop, Predicate):
@@ -681,7 +699,9 @@ def _preprocess_lra_constraints(encoded_cnf, testing_mode=False):
     return constraints, conflicts
 
 
-def _build_lra_solver(constraints, testing_mode=False):
+def _build_lra_solver(
+    constraints: dict[int, _LRAConstraint], testing_mode: bool = False
+) -> LRASolver:
     """
     Build an LRASolver from a mapping of positive SAT literal to constraint.
 
@@ -693,7 +713,7 @@ def _build_lra_solver(constraints, testing_mode=False):
     atom_id_to_boundaries = {}
     slack_rows = []  # (terms, slack) pairs, one per distinct multi-term expression
     slack_of = {}  # terms tuple -> slack dummy
-    basic = []
+    basic: list[Expr] = []
     s_count = 0
     nonbasic = []
     atom_vars = set()
@@ -741,16 +761,18 @@ def _build_lra_solver(constraints, testing_mode=False):
     # these removed variables will be replaced by linear equation of existing variables.
     nonatom_vars = {i for i in nonbasic if i not in atom_vars}
     A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode)
-    nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
-    basic = [var_to_lra_var[b] for b in basic]
-    for idx, var in enumerate(nonbasic + basic):
+    nonbasic_vars = [var_to_lra_var[nb] for nb in nonbasic]
+    basic_vars = [var_to_lra_var[b] for b in basic]
+    for idx, var in enumerate(nonbasic_vars + basic_vars):
         var.col_idx = idx
 
-    return LRASolver(A, basic, nonbasic, atom_id_to_boundaries,
+    return LRASolver(A, basic_vars, nonbasic_vars, atom_id_to_boundaries,
                      slack_rows, testing_mode)
 
 
-def _build_tableau(rows, variables):
+def _build_tableau(
+    rows: list[tuple[_LRATerms, Dummy]], variables: list[Expr]
+) -> Matrix:
     """
     Build the tableau rows defining the slack variables.
 
