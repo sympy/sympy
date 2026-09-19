@@ -579,24 +579,30 @@ def _split_constant(expr, operation):
     return operation(*variable_args), operation(*constant_args)
 
 
+# SAT clause
+# TODO: Make this type hint something the whole logic / assumptions modules use
 _Clause = list[int]
 
 
-# A constraint is (terms, constant, strict, equality), where terms is
-# a tuple of (variable, coefficient) pairs. It represents
+# (variable, coefficient) pairs forming a linear combination.
+_LinearTerms = tuple[tuple[Expr, Expr], ...]
+
+# _LRAConstraint stores (terms, constant, strict, equality), representing
 #
-#     sum(coeff*var for var, coeff in terms) + constant <= 0
+#     sum(coefficient*variable for variable, coefficient in terms) + constant
 #
-# with <= replaced by < when strict is True and by == when equality is
-# True. >= and > are normalized to <= and < by negating the expression.
+# compared with zero using:
+#
+#     <=  when strict=False and equality=False
+#     <   when strict=True and equality=False
+#     ==  when strict=False and equality=True
 #
 # Examples:
 #
 #     2*x + 3*y <= 5  ->  (((x, 2), (y, 3)), -5, False, False)
 #     x > 1           ->  (((x, -1),), 1, True, False)
 #     x == 3          ->  (((x, 1),), -3, False, True)
-_LRATerms = tuple[tuple[Expr, Expr], ...]
-_LRAConstraint = tuple[_LRATerms, Expr, bool, bool]
+_LRAConstraint = tuple[_LinearTerms, Expr, bool, bool]
 
 
 def _evaluate_trivial_predicate(prop: Boolean) -> bool | None:
@@ -756,7 +762,7 @@ def _build_lra_solver(
 
 
 def _build_tableau(
-    rows: list[tuple[_LRATerms, Dummy]], variables: list[Expr]
+    rows: list[tuple[_LinearTerms, Dummy]], variables: list[Expr]
 ) -> Matrix:
     """
     Build the tableau in which each row encodes
