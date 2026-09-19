@@ -678,10 +678,7 @@ def _preprocess_lra_constraints(
     constraints = {}
     conflicts = []
     variables: set[Expr] = set()
-    empty_var = Dummy()
     for prop, atom_id in encoded_cnf_items:
-        if isinstance(prop, Predicate):
-            prop = prop(empty_var)
         value = _evaluate_trivial_predicate(prop)
         if value is not None:
             conflicts.append([atom_id if value else -atom_id])
