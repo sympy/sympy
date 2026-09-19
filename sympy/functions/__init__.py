@@ -41,7 +41,7 @@ from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set, i
 from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,
         hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai, airybi, airyaiprime, airybiprime, marcumq)
 from sympy.functions.special.hyper import hyper, meijerg, appellf1
-from sympy.functions.special.polynomials import (legendre, assoc_legendre,
+from sympy.functions.special.polynomials import (legendre, assoc_legendre, legendre_q,
         hermite, hermite_prob, chebyshevt, chebyshevu, chebyshevu_root,
         chebyshevt_root, laguerre, assoc_laguerre, gegenbauer, jacobi, jacobi_normalized)
 from sympy.functions.special.spherical_harmonics import Ynm, Ynm_c, Znm
