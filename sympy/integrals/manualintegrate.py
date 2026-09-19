@@ -52,7 +52,7 @@ from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import WildFunction, count_ops
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.exponential import exp, log, LambertW
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
     cosh, coth, sech, sinh, tanh, asinh)
 from sympy.functions.elementary.integers import ceiling, floor
@@ -1222,6 +1222,14 @@ def manual_subs(expr, *args):
             expr = expr.replace(lambda x: x.is_Pow and x.base == x0,
                 lambda x: exp(x.exp*new))
             new_subs.append((x0, exp(new)))
+        elif isinstance(old, LambertW):
+            z = old.args[0]
+            z_symbol = z.free_symbols.pop()
+            if z.is_polynomial(z_symbol) and degree(z, z_symbol) == 1:
+                a = z.coeff(z_symbol)
+                b = z.subs(z_symbol, 0)
+                if a != 0:
+                    new_subs.append((z_symbol, (new*exp(new) - b)/a))
 
     return expr.subs(list(sequence) + new_subs)
 
@@ -1288,6 +1296,8 @@ def find_substitutions(integrand, symbol, u_var):
                              *inverse_trig_functions,
                              exp, log, Heaviside)):
             return [term.args[0]]
+        elif isinstance(term, LambertW):
+            return [term, term.args[0]]
         elif isinstance(term, (chebyshevt, chebyshevu,
                         legendre, hermite, laguerre)):
             return [term.args[1]]
@@ -1308,7 +1318,7 @@ def find_substitutions(integrand, symbol, u_var):
                     if 1 < d < abs(term.args[1])])
                 if term.base.is_Add:
                     r.extend([t for t in possible_subterms(term.base)
-                        if t.is_Pow])
+                        if t.is_Pow or isinstance(t, LambertW)])
             return r
         elif isinstance(term, Add):
             r = []
