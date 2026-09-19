@@ -1844,6 +1844,7 @@ def test_nonlinsolve_basic():
             (ImageSet(Lambda(n, 2*n*pi), S.Integers), 1))
     assert dumeq(nonlinsolve([sin(x), y - 1], [x, y]), FiniteSet(*soln))
     assert nonlinsolve([x**2 - 1], [x]) == FiniteSet((-1,), (1,))
+    assert nonlinsolve([(x*y - x)/(x - 1) - y, y - 1], [x, y]) == S.EmptySet
 
     soln = FiniteSet((y, y))
     assert nonlinsolve([x - y, 0], x, y) == soln
