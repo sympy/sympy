@@ -223,6 +223,16 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     >>> reduce_rational_inequalities([[y + 2 > 0]], y)
     (-2 < y) & (y < oo)
     """
+    def _ndpoly_opt(numer, denom, gen):
+        try:
+            return parallel_poly_from_expr(
+                (numer, denom), gen)
+        except PolynomialError:
+            raise PolynomialError(filldedent('''
+                only polynomials and rational functions are
+                supported in this context.
+                '''))
+
     exact = True
     solution = S.EmptySet  # add pieces for each group
     for _exprs in exprs:
@@ -231,12 +241,19 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
         _eqs = []
         _sol = S.Reals
         for expr in _exprs:
+            rel = None
             if isinstance(expr, tuple):
                 expr, rel = expr
                 numer, denom = expr.as_numer_denom()
             elif expr.is_Relational:
-                rel = expr.rel_op
-                numer, denom = (expr.lhs - expr.rhs).as_numer_denom()
+                # validate that both sides are rational functions in gen
+                for side in (expr.lhs, expr.rhs):
+                    _ndpoly_opt(*side.as_numer_denom(), gen)
+                # take solution, watching for singularities
+                if expr.has_free(gen):
+                    _sol &= _reduce_inequalities([expr], {gen}).as_set()
+                    continue
+                raise ValueError(f'expecting Relational in {gen}')
             else:
                 rel = '=='
                 if expr is S.true:
@@ -246,14 +263,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
                 else:
                     numer, denom = expr.as_numer_denom()
 
-            try:
-                (numer, denom), opt = parallel_poly_from_expr(
-                    (numer, denom), gen)
-            except PolynomialError:
-                raise PolynomialError(filldedent('''
-                    only polynomials and rational functions are
-                    supported in this context.
-                    '''))
+            (numer, denom), opt = _ndpoly_opt(numer, denom, gen)
 
             if not opt.domain.is_Exact:
                 numer, denom, exact = numer.to_exact(), denom.to_exact(), False
@@ -331,8 +341,8 @@ def reduce_abs_inequality(expr, rel, gen):
             _exprs = _bottom_up_scan(expr.args[0])
 
             for expr, conds in _exprs:
-                exprs.append((expr, conds + [Ge(expr, 0)]))
-                exprs.append((-expr, conds + [Lt(expr, 0)]))
+                exprs.append((expr, conds + [(expr, '>=')]))  # expr >= 0
+                exprs.append((-expr, conds + [(expr, '<')]))  # expr < 0
         else:
             exprs = [(expr, [])]
 
@@ -342,10 +352,10 @@ def reduce_abs_inequality(expr, rel, gen):
     inequalities = []
 
     for expr, conds in _bottom_up_scan(expr):
-        if rel not in mapping.keys():
-            expr = Relational( expr, 0, rel)
+        if rel not in mapping:
+            expr = (expr, rel)
         else:
-            expr = Relational(-expr, 0, mapping[rel])
+            expr = (-expr, mapping[rel])
 
         inequalities.append([expr] + conds)
 
@@ -816,7 +826,7 @@ def _solve_inequality(ie, s, linear=False):
     except (PolynomialError, NotImplementedError):
         if not linear:
             try:
-                rv = reduce_rational_inequalities([[ie]], s)
+                rv = reduce_rational_inequalities([[(expr, ie.rel_op)]], s)
             except PolynomialError:
                 rv = solve_univariate_inequality(ie, s)
             # remove restrictions wrt +/-oo that may have been
@@ -897,6 +907,8 @@ def _reduce_inequalities(inequalities, symbols):
 
         if len(gens) == 1:
             gen = gens.pop()
+            if gen not in symbols:
+                other.append(inequality)
         else:
             common = inequality.free_symbols & symbols
             if len(common) == 1:
