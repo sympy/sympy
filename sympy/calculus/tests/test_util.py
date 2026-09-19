@@ -56,6 +56,8 @@ def test_function_range():
         ) == Union(Interval(-sin(3), 1), FiniteSet(sin(4)))
     assert function_range(cos(x), x, Interval(-oo, -4)
         ) == Interval(-1, 1)
+    assert function_range(sin(exp(x)), x, S.Reals
+        ) == Interval(-1, 1)
     assert function_range(cos(x), x, S.EmptySet) == S.EmptySet
     assert function_range(x/sqrt(x**2+1), x, S.Reals) == Interval.open(-1,1)
     assert function_range(sin(x) + x, x, S.Reals) == S.Reals  # issue 13273

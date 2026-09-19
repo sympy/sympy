@@ -213,7 +213,21 @@ def function_range(f, symbol, domain):
     if domain is S.EmptySet:
         return S.EmptySet
 
+    from sympy.solvers.decompogen import decompogen
+
+    if f.is_Function and len(f.args) == 1 and f.args[0] != symbol:
+        decomposition = decompogen(f, symbol)
+
+        if len(decomposition) > 1:
+            range_int = function_range(decomposition[-1], symbol, domain)
+
+            for func in reversed(decomposition[:-1]):
+                range_int = function_range(func, symbol, range_int)
+
+            return range_int
+
     period = periodicity(f, symbol)
+
     if period == S.Zero:
         # the expression is constant wrt symbol
         return FiniteSet(f.expand())
