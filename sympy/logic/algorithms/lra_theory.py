@@ -113,8 +113,7 @@ References
        https://link.springer.com/chapter/10.1007/11817963_11
 """
 from __future__ import annotations
-from sympy.solvers.solveset import linear_eq_to_matrix
-from sympy.matrices.dense import eye
+from sympy.matrices.dense import eye, zeros
 from sympy.assumptions import Predicate
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
@@ -156,12 +155,12 @@ class LRASolver():
     """
 
     def __init__(self, A, slack_variables, nonslack_variables,
-                 atom_id_to_boundaries, s_subs, testing_mode):
+                 atom_id_to_boundaries, slack_rows, testing_mode):
         """
         Use the "from_encoded_cnf" method to create a new LRASolver.
         """
         self.run_checks = testing_mode
-        self.s_subs = s_subs  # used only for test_lra_theory.test_random_problems
+        self.slack_rows = slack_rows  # used only by test_lra_theory
 
         if any(not isinstance(a, Rational) for a in A):
             raise UnhandledInput("Non-rational numbers are not handled")
@@ -692,10 +691,10 @@ def _build_lra_solver(constraints, testing_mode=False):
     ``equality`` changes it to ==.
     """
     atom_id_to_boundaries = {}
-    A = []
+    slack_rows = []  # (terms, slack) pairs, one per distinct multi-term expression
+    slack_of = {}  # terms tuple -> slack dummy
     basic = []
     s_count = 0
-    s_subs = {}
     nonbasic = []
     atom_vars = set()
     var_to_lra_var = {}
@@ -709,16 +708,15 @@ def _build_lra_solver(constraints, testing_mode=False):
         if len(terms) == 1:
             variable, coefficient = terms[0]
         else:
-            # Example: -x + y <- terms ((x, -1), (y, 1))
-            vars = Add(*(coefficient*variable for variable, coefficient in terms))
-            if vars not in s_subs:
+            # constraints with equal terms share one slack variable
+            if terms not in slack_of:
                 s_count += 1
                 d = Dummy(f"s{s_count}")
                 var_to_lra_var[d] = LRAVariable(d)
                 basic.append(d)
-                s_subs[vars] = d
-                A.append(vars - d)
-            variable = s_subs[vars]
+                slack_of[terms] = d
+                slack_rows.append((terms, d))
+            variable = slack_of[terms]
             coefficient = S.One
 
         atom_vars.add(variable)
@@ -736,7 +734,8 @@ def _build_lra_solver(constraints, testing_mode=False):
             b = Boundary(var, bound, upper, strict)
             atom_id_to_boundaries[literal] = [b]
 
-    A, _ = linear_eq_to_matrix(A, nonbasic + basic)
+    A = _build_tableau(slack_rows, nonbasic + basic)
+
     # matrix A is guaranteed to able to be simplified
     # by removing the non-basic (e.g original or nonslack) non-atom variables from it
     # these removed variables will be replaced by linear equation of existing variables.
@@ -748,7 +747,25 @@ def _build_lra_solver(constraints, testing_mode=False):
         var.col_idx = idx
 
     return LRASolver(A, basic, nonbasic, atom_id_to_boundaries,
-                     s_subs, testing_mode)
+                     slack_rows, testing_mode)
+
+
+def _build_tableau(rows, variables):
+    """
+    Build the tableau rows defining the slack variables.
+
+    ``rows`` is a list of ``(terms, slack)`` pairs, each defining a slack
+    variable as the linear expression over its ``terms``. The returned
+    matrix has one column per variable in ``variables``; row ``r``
+    encodes ``sum(coefficient*variable) - slack = 0``.
+    """
+    A = zeros(len(rows), len(variables))
+    col = {v: i for i, v in enumerate(variables)}
+    for r, (terms, slack) in enumerate(rows):
+        for variable, coefficient in terms:
+            A[r, col[variable]] += coefficient
+        A[r, col[slack]] = -S.One
+    return A
 
 
 def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
