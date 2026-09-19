@@ -20,7 +20,7 @@ from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
     ArrayTensorProduct, OneArray, get_ndim, _get_sub_ndim, ZeroArray, ArrayContraction, \
-    ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE, \
+    ArrayAdd, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE, \
     ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims, ArraySum, \
     _get_sub_ndim_list, _array_term_as_coeff_arrays
 from sympy.tensor.array.expressions.utils import _get_mapping_from_sub_ndim_list
@@ -304,7 +304,7 @@ def _(expr: ArrayContraction):
         assert isinstance(newexpr, ArrayContraction)
         ret = _support_function_tp1_recognize(contraction_indices, list(newexpr.expr.args))
         return ret
-    elif not isinstance(subexpr, _CodegenArrayAbstract):
+    elif not isinstance(subexpr, _ArrayExpr):
         ret = _array2matrix(subexpr)
         if isinstance(ret, MatrixExpr) and expr.contraction_indices == ((0, 1),):
             return _a2m_trace(ret)
@@ -840,7 +840,7 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
 
 
 def _a2m_mul(*args):
-    if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
+    if not any(isinstance(i, _ArrayExpr) for i in args):
         from sympy.matrices.expressions.matmul import MatMul
         return MatMul(*args).doit()
     else:
@@ -859,7 +859,7 @@ def _a2m_tensor_product(*args):
             # (e.g. the derivative of ``1/Trace(X)``): convert it, it must
             # not be treated as a noncommutative scalar factor:
             arg = _array2matrix(arg)
-        if isinstance(arg, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
+        if isinstance(arg, (MatrixExpr, _ArrayExpr)):
             arrays.append(arg)
         elif isinstance(arg, (NDimArray, MatrixBase)):
             # This fixes issue 15651
@@ -870,7 +870,7 @@ def _a2m_tensor_product(*args):
     if len(arrays) == 0:
         return scalar
     if scalar != 1:
-        if isinstance(arrays[0], (_CodegenArrayAbstract, _ArrayExpr)) or \
+        if isinstance(arrays[0], _ArrayExpr) or \
                 scalar.is_commutative is False:
             # An in-place multiplication would create a shapeless ``Mul``
             # object (or a ``MatMul`` with a structurally noncommutative
@@ -889,7 +889,7 @@ def _a2m_tensor_product(*args):
 
 
 def _a2m_add(*args):
-    if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
+    if not any(isinstance(i, _ArrayExpr) for i in args):
         if not any(isinstance(i, MatrixExpr) for i in args):
             # All addends are scalars (e.g. traces):
             from sympy.core.add import Add
@@ -901,7 +901,7 @@ def _a2m_add(*args):
 
 
 def _a2m_trace(arg):
-    if isinstance(arg, _CodegenArrayAbstract):
+    if isinstance(arg, _ArrayExpr):
         return _array_contraction(arg, (0, 1))
     else:
         from sympy.matrices.expressions.trace import Trace
@@ -909,7 +909,7 @@ def _a2m_trace(arg):
 
 
 def _a2m_transpose(arg):
-    if isinstance(arg, _CodegenArrayAbstract):
+    if isinstance(arg, _ArrayExpr):
         return _permute_dims(arg, [1, 0])
     else:
         from sympy.matrices.expressions.transpose import Transpose

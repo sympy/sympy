@@ -58,8 +58,6 @@ class _ConvertArrayToIndexed:
             return self.do_convert(expr.expr, permuted_indices)
         if isinstance(expr, ArrayAdd):
             return Add.fromiter(self.do_convert(arg, indices) for arg in expr.args)
-        if isinstance(expr, _ArrayExpr):
-            return expr.__getitem__(tuple(indices))
         if isinstance(expr, ArrayElementwiseApplyFunc):
             return expr.function(self.do_convert(expr.expr, indices))
         if isinstance(expr, Reshape):
@@ -82,4 +80,6 @@ class _ConvertArrayToIndexed:
                 c *= e
             dest_indices.reverse()
             return self.do_convert(expr.expr, dest_indices)
+        if isinstance(expr, _ArrayExpr):
+            return expr.__getitem__(tuple(indices))
         return _get_array_element_or_slice(expr, indices)

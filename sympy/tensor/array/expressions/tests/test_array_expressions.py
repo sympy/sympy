@@ -14,7 +14,7 @@ from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
     ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE, _array_tensor_product, \
     _array_contraction, _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum, _split_scalar_coefficient, \
-    get_shape, get_ndim
+    get_shape, get_ndim, _ArrayExpr, _CodegenArrayAbstract
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -1150,3 +1150,14 @@ def test_get_ndim_matrix_element():
     expr = _array_tensor_product(A[0, 1], _array_contraction(A, (0, 1)))
     assert expr == _array_contraction(_array_tensor_product(A[0, 1], A), (0, 1))
     assert get_shape(expr) == ()
+
+
+def test_array_expr_inheritance():
+    assert issubclass(_CodegenArrayAbstract, _ArrayExpr)
+    assert isinstance(ArrayAdd(X, Y), _ArrayExpr)
+    assert isinstance(ArrayTensorProduct(X, Y), _ArrayExpr)
+    assert isinstance(PermuteDims(X, [1, 0]), _ArrayExpr)
+    assert isinstance(ArrayDiagonal(X, (0, 1)), _ArrayExpr)
+    assert isinstance(ArrayElementwiseApplyFunc(sin, X), _ArrayExpr)
+    assert isinstance(ArrayContraction(X, (0, 1)), _ArrayExpr)
+    assert isinstance(Reshape(X, (k*k,)), _ArrayExpr)
