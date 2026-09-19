@@ -37,8 +37,13 @@ def _construct_simple(coeffs, opt):
         else:
             is_complex = pure_complex(coeff)
             if is_complex:
-                complexes = True
                 x, y = is_complex
+                if not (x.is_finite and y.is_finite):
+                    # e.g. oo*I. There is no simple domain that can hold a
+                    # non-finite value, so fall through to EX like the real
+                    # infinities do.
+                    return None
+                complexes = True
                 if x.is_Rational and y.is_Rational:
                     if not (x.is_Integer and y.is_Integer):
                         rationals = True
