@@ -113,14 +113,16 @@ References
        https://link.springer.com/chapter/10.1007/11817963_11
 """
 from __future__ import annotations
-from sympy.solvers.solveset import linear_eq_to_matrix
-from sympy.matrices.dense import eye
+from typing import TYPE_CHECKING
+from sympy.matrices.dense import eye, zeros
 from sympy.assumptions import Predicate
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
+from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.core import Dummy
 from sympy.core.mul import Mul
 from sympy.core.add import Add
+from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ge, Gt, Le, Lt
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
@@ -128,6 +130,10 @@ from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
 from sympy.utilities.iterables import sift
 import math
+
+if TYPE_CHECKING:
+    from sympy.assumptions.cnf import EncodedCNF
+    from sympy.logic.boolalg import Boolean
 
 
 class UnhandledInput(Exception):
@@ -156,12 +162,12 @@ class LRASolver():
     """
 
     def __init__(self, A, slack_variables, nonslack_variables,
-                 atom_id_to_boundaries, s_subs, testing_mode):
+                 atom_id_to_boundaries, slack_rows, testing_mode):
         """
         Use the "from_encoded_cnf" method to create a new LRASolver.
         """
         self.run_checks = testing_mode
-        self.s_subs = s_subs  # used only for test_lra_theory.test_random_problems
+        self.slack_rows = slack_rows  # used only by test_lra_theory
 
         if any(not isinstance(a, Rational) for a in A):
             raise UnhandledInput("Non-rational numbers are not handled")
@@ -233,134 +239,8 @@ class LRASolver():
         >>> conflicts #doctest: +SKIP
         [[4]]
         """
-        # This function has three main jobs:
-        # - raise errors if the input formula is not handled
-        # - preprocesses the formula into a matrix and single variable constraints
-        # - create one-literal conflict clauses from predicates that are always True
-        #   or always False such as Q.gt(3, 2)
-        #
-        # See the preprocessing section of "A Fast Linear-Arithmetic Solver for DPLL(T)"
-        # for an explanation of how the formula is converted into a matrix
-        # and a set of single variable constraints.
-
-        atom_id_to_boundaries = {}
-        A = []
-
-        basic = []
-        s_count = 0
-        s_subs = {}
-        nonbasic = []
-        atom_vars = set()
-
-        if testing_mode:
-            # sort to reduce nondeterminism
-            encoded_cnf_items = sorted(encoded_cnf.encoding.items(),
-                                       key=lambda x: str(x))
-        else:
-            encoded_cnf_items = encoded_cnf.encoding.items()
-
-        empty_var = Dummy()
-        var_to_lra_var = {}
-        conflicts = []
-
-        for prop, atom_id in encoded_cnf_items:
-            if isinstance(prop, Predicate):
-                prop = prop(empty_var)
-            if not isinstance(prop, AppliedPredicate):
-                if prop == True:
-                    conflicts.append([atom_id])
-                    continue
-                if prop == False:
-                    conflicts.append([-atom_id])
-                    continue
-
-                raise ValueError(f"Unhandled Predicate: {prop}")
-
-            assert prop.function in ALLOWED_PRED
-            if prop.lhs == S.NaN or prop.rhs == S.NaN:
-                raise ValueError(f"{prop} contains nan")
-            if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
-                raise UnhandledInput(f"{prop} contains an imaginary component")
-            if prop.lhs == oo or prop.rhs == oo:
-                raise UnhandledInput(f"{prop} contains infinity")
-
-            expr = prop.lhs - prop.rhs
-            pred = ALLOWED_PRED[prop.function](expr, S.Zero)
-            if pred == True:
-                conflicts.append([atom_id])
-                continue
-            if pred == False:
-                conflicts.append([-atom_id])
-                continue
-            if not expr.free_symbols:
-                raise UnhandledInput(f"{prop} could not be simplified")
-
-            if prop.function in [Q.ge, Q.gt]:
-                expr = -expr
-
-            # Example: 2x + 3y, 2 <- _sep_const_terms(2x + 3y + 2)
-            vars, const = _sep_const_terms(expr)
-            # Examples:
-            # x, 2 <- _sep_const_coeff(2x)
-            # 2x + 3y, 1 <- _sep_const_coeff(2x + 3y + 2)
-            vars, var_coeff = _sep_const_coeff(vars)
-            const = const / var_coeff
-            # Example: [2x, 3y] <- Add.make_args(2x + 3y)
-            terms = Add.make_args(vars)
-            for term in terms:
-                term, _ = _sep_const_coeff(term)
-                assert len(term.free_symbols) > 0
-                if term not in var_to_lra_var:
-                    var_to_lra_var[term] = LRAVariable(term)
-                    nonbasic.append(term)
-
-            if len(terms) > 1:
-                if vars not in s_subs:
-                    s_count += 1
-                    d = Dummy(f"s{s_count}")
-                    var_to_lra_var[d] = LRAVariable(d)
-                    basic.append(d)
-                    s_subs[vars] = d
-                    A.append(vars - d)
-                var = s_subs[vars]
-            else:
-                var = terms[0]
-
-            atom_vars.add(var)
-
-            assert var_coeff != 0
-
-            equality = prop.function == Q.eq
-            strict = prop.function in [Q.gt, Q.lt]
-            if equality:
-                b1 = Boundary(var_to_lra_var[var], -const, True, False)  # x <= c
-                b2 = Boundary(var_to_lra_var[var], -const, False, False) # x >= c
-                atom_id_to_boundaries[atom_id] = [b1, b2]
-            else:
-                upper = var_coeff > 0
-                b = Boundary(var_to_lra_var[var], -const, upper, strict)
-                atom_id_to_boundaries[atom_id] = [b]
-
-        fs = [v.free_symbols for v in nonbasic + basic]
-        assert all(len(syms) > 0 for syms in fs)
-        fs_count = sum(len(syms) for syms in fs)
-        if len(fs) > 0 and  len(set.union(*fs)) < fs_count:
-            raise UnhandledInput("Nonlinearity is not handled")
-
-        A, _ = linear_eq_to_matrix(A, nonbasic + basic)
-        # matrix A is guaranteed to able to be simplified
-        # by removing the non-basic (e.g original or nonslack) non-atom variables from it
-        # these removed variables will be replaced by linear equation of existing variables.
-        nonatom_vars = {i for i in nonbasic if i not in atom_vars}
-        A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode)
-        nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
-        basic = [var_to_lra_var[b] for b in basic]
-        for idx, var in enumerate(nonbasic + basic):
-            var.col_idx = idx
-
-        solver = LRASolver(A, basic, nonbasic, atom_id_to_boundaries,
-                           s_subs, testing_mode)
-        return solver, conflicts
+        constraints, conflicts = _preprocess_lra_constraints(encoded_cnf, testing_mode)
+        return _build_lra_solver(constraints, testing_mode), conflicts
 
     def reset(self):
         """
@@ -705,6 +585,200 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
+
+
+_Clause = list[int]
+
+
+# A constraint is (terms, constant, strict, equality), where terms is
+# a tuple of (variable, coefficient) pairs. It represents
+#
+#     sum(coeff*var for var, coeff in terms) + constant <= 0
+#
+# with <= replaced by < when strict is True and by == when equality is
+# True. >= and > are normalized to <= and < by negating the expression.
+#
+# Examples:
+#
+#     2*x + 3*y <= 5  ->  (((x, 2), (y, 3)), -5, False, False)
+#     x > 1           ->  (((x, -1),), 1, True, False)
+#     x == 3          ->  (((x, 1),), -3, False, True)
+_LRATerms = tuple[tuple[Expr, Expr], ...]
+_LRAConstraint = tuple[_LRATerms, Expr, bool, bool]
+
+
+def _evaluate_trivial_predicate(prop: Boolean) -> bool | None:
+    if not isinstance(prop, AppliedPredicate):
+        if prop == True:
+            return True
+        if prop == False:
+            return False
+
+        raise ValueError(f"Unhandled Predicate: {prop}")
+
+    assert prop.function in ALLOWED_PRED
+    # ALLOWED_PRED are all BinaryRelations, so prop is an
+    # AppliedBinaryRelation, the class that defines lhs and rhs
+    assert isinstance(prop, AppliedBinaryRelation)
+    if prop.lhs == S.NaN or prop.rhs == S.NaN:
+        raise ValueError(f"{prop} contains nan")
+    if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
+        raise UnhandledInput(f"{prop} contains an imaginary component")
+    if prop.lhs == oo or prop.rhs == oo:
+        raise UnhandledInput(f"{prop} contains infinity")
+
+    expr = prop.lhs - prop.rhs
+    pred = ALLOWED_PRED[prop.function](expr, S.Zero)
+    if pred == True:
+        return True
+    if pred == False:
+        return False
+    if not expr.free_symbols:
+        raise UnhandledInput(f"{prop} could not be simplified")
+    return None
+
+
+def _constraint_from_predicate(prop: AppliedBinaryRelation) -> _LRAConstraint:
+    """
+    Extract a constraint from a non-trivial applied predicate.
+
+    ``>=`` and ``>`` are normalized to ``<=`` and ``<`` by negating the
+    expression, so constraints only ever use ``<=``, ``<`` or ``==``.
+    """
+    expr = prop.lhs - prop.rhs
+    if prop.function in [Q.ge, Q.gt]:
+        expr = -expr
+
+    # Example: 2x + 3y, 2 <- _sep_const_terms(2x + 3y + 2)
+    variable_part, constant = _sep_const_terms(expr)
+    # Example: [(x, 2), (y, 3)] from _sep_const_coeff of each Add argument
+    terms = tuple(_sep_const_coeff(term) for term in Add.make_args(variable_part))
+    for term, _ in terms:
+        assert len(term.free_symbols) > 0
+
+    return terms, constant, prop.function in [Q.gt, Q.lt], prop.function == Q.eq
+
+
+def _preprocess_lra_constraints(
+    encoded_cnf: EncodedCNF, testing_mode: bool = False
+) -> tuple[dict[int, _LRAConstraint], list[_Clause]]:
+    """
+    Convert an EncodedCNF into LRA constraints keyed by their associated
+    SAT variable. Also produces unit conflict clauses.
+
+    Raises ``ValueError`` and ``UnhandledInput`` for unsupported formulas.
+    """
+    if testing_mode:
+        # sort to reduce nondeterminism
+        encoded_cnf_items = sorted(encoded_cnf.encoding.items(),
+                                   key=lambda x: str(x))
+    else:
+        encoded_cnf_items = encoded_cnf.encoding.items()
+
+    constraints = {}
+    conflicts = []
+    variables: set[Expr] = set()
+    for prop, atom_id in encoded_cnf_items:
+        value = _evaluate_trivial_predicate(prop)
+        if value is not None:
+            conflicts.append([atom_id if value else -atom_id])
+            continue
+        constraint = _constraint_from_predicate(prop)
+        variables.update(variable for variable, _ in constraint[0])
+        constraints[atom_id] = constraint
+
+    # Nonlinearity such as ``x*y`` shows up as a free symbol
+    # shared by more than one term.
+    fs = [variable.free_symbols for variable in variables]
+    assert all(len(syms) > 0 for syms in fs)
+    fs_count = sum(len(syms) for syms in fs)
+    if len(fs) > 0 and len(set.union(*fs)) < fs_count:
+        raise UnhandledInput("Nonlinearity is not handled")
+
+    return constraints, conflicts
+
+
+def _build_lra_solver(
+    constraints: dict[int, _LRAConstraint], testing_mode: bool = False
+) -> LRASolver:
+    """
+    See the preprocessing section of "A Fast Linear-Arithmetic Solver for
+    DPLL(T)" for an explanation of the slack variables and the tableau.
+    """
+    atom_id_to_boundaries = {}
+    slack_rows = []  # (terms, slack) pairs, one per distinct multi-term expression
+    slack_of = {}  # terms tuple -> slack dummy
+    basic: list[Expr] = []
+    s_count = 0
+    nonbasic = []
+    atom_vars = set()
+    var_to_lra_var = {}
+
+    for literal, (terms, constant, strict, equality) in constraints.items():
+        for variable, _ in terms:
+            if variable not in var_to_lra_var:
+                var_to_lra_var[variable] = LRAVariable(variable)
+                nonbasic.append(variable)
+
+        if len(terms) == 1:
+            variable, coefficient = terms[0]
+        else:
+            # constraints with equal terms share one slack variable
+            if terms not in slack_of:
+                s_count += 1
+                d = Dummy(f"s{s_count}")
+                var_to_lra_var[d] = LRAVariable(d)
+                basic.append(d)
+                slack_of[terms] = d
+                slack_rows.append((terms, d))
+            variable = slack_of[terms]
+            coefficient = S.One
+
+        atom_vars.add(variable)
+
+        assert coefficient != 0
+
+        bound = -S.One * constant / coefficient
+        var = var_to_lra_var[variable]
+        if equality:
+            b1 = Boundary(var, bound, True, False)  # x <= c
+            b2 = Boundary(var, bound, False, False) # x >= c
+            atom_id_to_boundaries[literal] = [b1, b2]
+        else:
+            upper = coefficient > 0
+            b = Boundary(var, bound, upper, strict)
+            atom_id_to_boundaries[literal] = [b]
+
+    A = _build_tableau(slack_rows, nonbasic + basic)
+
+    # matrix A is guaranteed to able to be simplified
+    # by removing the non-basic (e.g original or nonslack) non-atom variables from it
+    # these removed variables will be replaced by linear equation of existing variables.
+    nonatom_vars = {i for i in nonbasic if i not in atom_vars}
+    A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode)
+    nonbasic_vars = [var_to_lra_var[nb] for nb in nonbasic]
+    basic_vars = [var_to_lra_var[b] for b in basic]
+    for idx, var in enumerate(nonbasic_vars + basic_vars):
+        var.col_idx = idx
+
+    return LRASolver(A, basic_vars, nonbasic_vars, atom_id_to_boundaries,
+                     slack_rows, testing_mode)
+
+
+def _build_tableau(
+    rows: list[tuple[_LRATerms, Dummy]], variables: list[Expr]
+) -> Matrix:
+    """
+    Build the tableau in which each row encodes
+    ``sum(coefficient*variable) - slack = 0`` for its ``(terms, slack)`` pair.
+    """
+    A = zeros(len(rows), len(variables))
+    col = {v: i for i, v in enumerate(variables)}
+    for r, (terms, slack) in enumerate(rows):
+        for variable, coefficient in terms:
+            A[r, col[variable]] += coefficient
+        A[r, col[slack]] = -S.One
+    return A
 
 
 def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
