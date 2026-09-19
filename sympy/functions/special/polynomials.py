@@ -8,6 +8,7 @@ combinatorial polynomials.
 from __future__ import annotations
 
 from sympy.core import Rational
+from sympy.functions.elementary.hyperbolic import atanh
 from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
@@ -22,6 +23,7 @@ from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import (chebyshevt_poly, chebyshevu_poly,
                                     gegenbauer_poly, hermite_poly, hermite_prob_poly,
                                     jacobi_poly, laguerre_poly, legendre_poly)
+import mpmath
 
 _x = Dummy('x')
 
@@ -886,6 +888,91 @@ class legendre(OrthogonalPolynomial):
         # but should not be used
         return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
+
+class legendre_q(DefinedFunction):
+    r"""
+    A Class for evaluating Legendre functions of second kind Q_n(x) for integer n and real x in range (-1 , 1). The evaluation is based on the repetitive formula:
+    .. math::
+        Q_0(x) = \tanh^{-1}(x)
+        Q_1(x) = x Q_0(x) - 1
+        Q_{n+1}(x) = \frac{(2n + 1)x Q_n(x) - n Q_{n-1}(x)}{n + 1}
+
+    Explanation
+    ===========
+
+    The Legendre functions of the second kind are solutions to the
+    Legendre differential equation
+        (1 - x**2) y'' - 2*x*y' + n*(n + 1)*y = 0
+    For integer degree n, they can be defined by the recurrence relation
+        (n + 1) Q_{n + 1}(x) = (2 n + 1) x Q_n(x) - n Q_{n - 1}(x)
+
+    with:
+    Q_0(x) = atanh(x)
+    Q_1(x) = x*atanh(x) - 1.
+
+    Example
+    =================
+    >>> from sympy import S
+    >>> from sympy import legendre_q
+    >>> from sympy.abc import x , n
+    >>> legendre_q(S(0), S(0.5))
+    0.549306144334055
+    >>> legendre_q(S(1), S(0.5))
+    -0.725346927832972
+    >>> legendre_q(S(2), S(0.5))
+    -0.818663268041757
+    >>> legendre_q(S(2.2), S(0.1)).evalf()
+    0.0298369238092866
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre,
+    hermite, hermite_prob,
+    laguerre, assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.hermite_prob_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    Reference
+    =================
+    - https://en.wikipedia.org/wiki/Legendre_function
+    - https://mathworld.wolfram.com/LegendreFunctionoftheSecondKind.html
+    """
+
+    @classmethod
+    def eval_at_order(cls , n , x):
+        n = int(n)
+        if n == 0:
+            return atanh(x)
+        q_0 = atanh(x)
+        q_1 = x * q_0 - 1
+        if n == 1:
+            return q_1
+        for k in range(1 , n):
+            q_2 = ((2 * k + 1) * x * q_1 - k * q_0) / (k + 1)
+            q_0 = q_1
+            q_1 = q_2
+        return q_1
+
+    @classmethod
+    def eval(cls , n , x):
+        if n.is_integer and n.is_nonnegative:
+            return cls.eval_at_order(n , x)
+        else:
+            return None
+    def _eval_mpmath(self):
+        n , x = self.args
+        func = mpmath.legenq
+        args = (n , S.Zero , x)
+        return func , args
 
 class assoc_legendre(DefinedFunction):
     r"""
