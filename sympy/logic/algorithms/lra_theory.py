@@ -113,11 +113,12 @@ References
        https://link.springer.com/chapter/10.1007/11817963_11
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from sympy.matrices.dense import eye, zeros
 from sympy.assumptions import Predicate
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
+from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.core import Dummy
 from sympy.core.mul import Mul
 from sympy.core.add import Add
@@ -613,16 +614,17 @@ def _evaluate_trivial_predicate(prop: Boolean) -> bool | None:
         raise ValueError(f"Unhandled Predicate: {prop}")
 
     assert prop.function in ALLOWED_PRED
-    # lhs and rhs are only defined on applied binary relations
-    apred: Any = prop
-    if apred.lhs == S.NaN or apred.rhs == S.NaN:
+    # ALLOWED_PRED are all BinaryRelations, so prop is an
+    # AppliedBinaryRelation, the class that defines lhs and rhs
+    assert isinstance(prop, AppliedBinaryRelation)
+    if prop.lhs == S.NaN or prop.rhs == S.NaN:
         raise ValueError(f"{prop} contains nan")
-    if apred.lhs.is_imaginary or apred.rhs.is_imaginary:
+    if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
         raise UnhandledInput(f"{prop} contains an imaginary component")
-    if apred.lhs == oo or apred.rhs == oo:
+    if prop.lhs == oo or prop.rhs == oo:
         raise UnhandledInput(f"{prop} contains infinity")
 
-    expr = apred.lhs - apred.rhs
+    expr = prop.lhs - prop.rhs
     pred = ALLOWED_PRED[prop.function](expr, S.Zero)
     if pred == True:
         return True
@@ -633,16 +635,14 @@ def _evaluate_trivial_predicate(prop: Boolean) -> bool | None:
     return None
 
 
-def _constraint_from_predicate(prop: AppliedPredicate) -> _LRAConstraint:
+def _constraint_from_predicate(prop: AppliedBinaryRelation) -> _LRAConstraint:
     """
     Extract a constraint from a non-trivial applied predicate.
 
     ``>=`` and ``>`` are normalized to ``<=`` and ``<`` by negating the
     expression, so constraints only ever use ``<=``, ``<`` or ``==``.
     """
-    # lhs and rhs are only defined on applied binary relations
-    apred: Any = prop
-    expr = apred.lhs - apred.rhs
+    expr = prop.lhs - prop.rhs
     if prop.function in [Q.ge, Q.gt]:
         expr = -expr
 
