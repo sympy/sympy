@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import sympify, Symbol
 
 x = Symbol('x')
