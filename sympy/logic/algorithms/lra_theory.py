@@ -636,25 +636,6 @@ def _evaluate_trivial_predicate(prop: Boolean) -> bool | None:
     return None
 
 
-def _constraint_from_predicate(prop: AppliedBinaryRelation) -> _LRAConstraint:
-    """
-    Extract a constraint from a non-trivial applied predicate.
-
-    ``>=`` and ``>`` are normalized to ``<=`` and ``<`` by negating the
-    expression, so constraints only ever use ``<=``, ``<`` or ``==``.
-    """
-    expr = prop.lhs - prop.rhs
-    if prop.function in [Q.ge, Q.gt]:
-        expr = -expr
-
-    variable_part, constant = _split_constant(expr, Add)
-    terms = tuple(_split_constant(term, Mul) for term in Add.make_args(variable_part))
-    for term, _ in terms:
-        assert len(term.free_symbols) > 0
-
-    return terms, constant, prop.function in [Q.gt, Q.lt], prop.function == Q.eq
-
-
 def _preprocess_lra_constraints(
     encoded_cnf: EncodedCNF, testing_mode: bool = False
 ) -> tuple[dict[int, _LRAConstraint], list[_Clause]]:
@@ -671,25 +652,37 @@ def _preprocess_lra_constraints(
     else:
         encoded_cnf_items = encoded_cnf.encoding.items()
 
-    constraints = {}
-    conflicts = []
-    variables: set[Expr] = set()
+    constraints: dict[int, _LRAConstraint] = {}
+    conflicts: list[_Clause] = []
+    free_symbols_by_term: dict[Expr, set[Expr]] = {}
     for prop, atom_id in encoded_cnf_items:
-        value = _evaluate_trivial_predicate(prop)
+        value: bool | None = _evaluate_trivial_predicate(prop)
         if value is not None:
             conflicts.append([atom_id if value else -atom_id])
             continue
-        constraint = _constraint_from_predicate(prop)
-        variables.update(variable for variable, _ in constraint[0])
+        expr: Expr = prop.lhs - prop.rhs
+        # Normalize >= and > to <= and < by negating the expression.
+        if prop.function in [Q.ge, Q.gt]:
+            expr = -expr
+
+        variable_part, constant = _split_constant(expr, Add)
+        terms: _LinearTerms = tuple(
+            _split_constant(term, Mul)
+            for term in Add.make_args(variable_part)
+        )
+        for term, _ in terms:
+            free_symbols_by_term[term] = term.free_symbols
+
+        strict: bool = prop.function in [Q.gt, Q.lt]
+        equality: bool = prop.function == Q.eq
+        constraint: _LRAConstraint = terms, constant, strict, equality
         constraints[atom_id] = constraint
 
-    # Nonlinearity such as ``x*y`` shows up as a free symbol
-    # shared by more than one term.
-    fs = [variable.free_symbols for variable in variables]
-    assert all(len(syms) > 0 for syms in fs)
-    fs_count = sum(len(syms) for syms in fs)
-    if len(fs) > 0 and len(set.union(*fs)) < fs_count:
-        raise UnhandledInput("Nonlinearity is not handled")
+    seen_symbols: set[Expr] = set()
+    for symbols in free_symbols_by_term.values():
+        if seen_symbols.intersection(symbols):
+            raise UnhandledInput("Nonlinearity is not handled")
+        seen_symbols.update(symbols)
 
     return constraints, conflicts
 
