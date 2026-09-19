@@ -551,40 +551,33 @@ class LRASolver():
             self.backtrack()
         self.bound_history.pop()
 
-def _sep_const_coeff(expr):
+def _split_constant(expr, operation):
     """
-    Example
-    =======
+    Return the symbol-dependent and symbol-free parts of expr.
 
-    >>> from sympy.logic.algorithms.lra_theory import _sep_const_coeff
+    ``operation`` is Add or Mul, selecting additive terms or
+    multiplicative factors respectively.
+
+    Examples
+    ========
+
+    >>> from sympy import Add, Mul
+    >>> from sympy.logic.algorithms.lra_theory import _split_constant
     >>> from sympy.abc import x, y
-    >>> _sep_const_coeff(2*x)
+    >>> _split_constant(2*x, Mul)
     (x, 2)
-    >>> _sep_const_coeff(2*x + 3*y)
+    >>> _split_constant(2*x + 3*y, Mul)
     (2*x + 3*y, 1)
-    """
-    if isinstance(expr, Add):
-        return expr, sympify(1)
-    const, var = sift(Mul.make_args(expr),
-                      lambda c: len(sympify(c).free_symbols) == 0,
-                      binary=True)
-    return Mul(*var), Mul(*const)
-
-
-def _sep_const_terms(expr):
-    """
-    Example
-    =======
-
-    >>> from sympy.logic.algorithms.lra_theory import _sep_const_terms
-    >>> from sympy.abc import x, y
-    >>> _sep_const_terms(2*x + 3*y + 2)
+    >>> _split_constant(2*x + 3*y + 2, Add)
     (2*x + 3*y, 2)
     """
-    const, var = sift(Add.make_args(expr),
-                      lambda t: len(t.free_symbols) == 0,
-                      binary=True)
-    return Add(*var), Add(*const)
+    expr = sympify(expr)
+    constant_args, variable_args = sift(
+        operation.make_args(expr),
+        lambda arg: not arg.free_symbols,
+        binary=True,
+    )
+    return operation(*variable_args), operation(*constant_args)
 
 
 _Clause = list[int]
@@ -649,10 +642,8 @@ def _constraint_from_predicate(prop: AppliedBinaryRelation) -> _LRAConstraint:
     if prop.function in [Q.ge, Q.gt]:
         expr = -expr
 
-    # Example: 2x + 3y, 2 <- _sep_const_terms(2x + 3y + 2)
-    variable_part, constant = _sep_const_terms(expr)
-    # Example: [(x, 2), (y, 3)] from _sep_const_coeff of each Add argument
-    terms = tuple(_sep_const_coeff(term) for term in Add.make_args(variable_part))
+    variable_part, constant = _split_constant(expr, Add)
+    terms = tuple(_split_constant(term, Mul) for term in Add.make_args(variable_part))
     for term, _ in terms:
         assert len(term.free_symbols) > 0
 

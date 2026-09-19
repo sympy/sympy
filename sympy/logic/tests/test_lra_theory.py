@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, I, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
@@ -14,7 +15,7 @@ from sympy.functions.elementary.trigonometric import cos
 from sympy.external import import_module
 
 from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledInput, LRARational, HANDLE_NEGATION, \
-    _sep_const_terms, _sep_const_coeff
+    _split_constant
 from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
@@ -90,8 +91,8 @@ def substitute_slack(cons, s_subs):
     Phi = x >= 0 & x+y >= 1 -> Phi' := (x >= 0 & s1 >= 1)
     """
     expr = cons.lhs - cons.rhs
-    var, const = _sep_const_terms(expr)
-    var, coeff = _sep_const_coeff(var)
+    var, const = _split_constant(expr, Add)
+    var, coeff = _split_constant(var, Mul)
     if var in s_subs:
         return cons.func(coeff*s_subs[var] + const, 0)
     if -var in s_subs:
