@@ -3174,12 +3174,69 @@ def linsolve(system, *symbols):
 ##############################################################################
 
 
-def _return_conditionset(eqs, symbols):
+def _return_conditionset(eqs, symbols, exclude=()):
     # return conditionset
     eqs = (Eq(lhs, 0) for lhs in eqs)
     condition_set = ConditionSet(
-        Tuple(*symbols), And(*eqs), S.Complexes**len(symbols))
+        Tuple(*symbols), And(*eqs, *(Ne(d, 0) for d in exclude)),
+        S.Complexes**len(symbols))
     return condition_set
+
+
+def _process_exclusions_for_branch(branch, exclude, symbols):
+    """Return branch-local complements and conditions, or None if invalid."""
+    complements = {}
+    conditions = []
+    # Set-valued assignments must remain membership conditions, not operands
+    # in the algebraic denominator expression.
+    scalar_branch = {s: v for s, v in branch.items() if isinstance(v, Expr)}
+    non_scalar_symbols = set(branch) - set(scalar_branch)
+    for denominator in exclude:
+        transformed = denominator.subs(scalar_branch).cancel()
+        if transformed.is_zero is True:
+            return None
+        if transformed.is_zero is False:
+            continue
+        unresolved = transformed.free_symbols & set(symbols)
+        if (len(unresolved) == 1 and
+                not transformed.free_symbols & non_scalar_symbols):
+            parameter = next(iter(unresolved))
+            if branch.get(parameter, parameter) == parameter:
+                solver = solveset_real if parameter.is_real else solveset_complex
+                forbidden = solver(transformed, parameter)
+                if not forbidden.has(ConditionSet):
+                    complements[parameter] = Union(
+                        complements.get(parameter, S.EmptySet), forbidden)
+                    continue
+        conditions.append(Ne(transformed, 0))
+    return complements, conditions
+
+
+def _branch_as_conditionset(branch, symbols, intersections, complements, conditions):
+    """Represent branch assignments and restrictions as a set of points."""
+    relations = list(conditions)
+    values = []
+    for symbol in symbols:
+        value = branch.get(symbol, symbol)
+        values.append(value)
+        if isinstance(value, Set):
+            relations.append(Contains(symbol, value))
+            restricted_value = symbol
+        else:
+            if value != symbol:
+                relations.append(Eq(symbol, value))
+            restricted_value = value
+        if symbol in intersections:
+            relations.append(intersections[symbol].contains(restricted_value))
+        if symbol in complements:
+            relations.append(~complements[symbol].contains(restricted_value))
+    domain = ProductSet(*(S.Reals if s.is_real else S.Complexes for s in symbols))
+    condition = And(*relations)
+    if all(isinstance(v, Expr) and v.is_number for v in values):
+        # Concrete branches retain exact point-set semantics during normalization.
+        domain = Intersection(domain, FiniteSet(Tuple(*values)))
+        condition = condition.subs(dict(zip(symbols, values)), simultaneous=True)
+    return ConditionSet(Tuple(*symbols), condition, domain)
 
 
 def substitution(system, symbols, result=[{}], known_symbols=[],
@@ -3326,7 +3383,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # for any symbol, it will be added in the final solution.
         final_result = []
         for res in result:
-            res_copy = res
+            res_copy = res.copy()
             for key_res, value_res in res.items():
                 intersect_set, complement_set = None, None
                 for key_sym, value_sym in intersection_dict.items():
@@ -3686,7 +3743,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     total_solveset_call += (solve_call1 + solve_call2)
 
     if total_conditionset == total_solveset_call and total_solveset_call != -1:
-        return _return_conditionset(eqs_in_better_order, all_symbols)
+        return _return_conditionset(eqs_in_better_order, all_symbols, exclude)
 
     # don't keep duplicate solutions
     filtered_complex = []
@@ -3726,16 +3783,27 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # eg : [{x: -1, y : 1}, {x : -y, y: y}] then
         # return [{x : -y, y : y}]
         result_all_variables = result_infinite
-    if intersections or complements:
-        result_all_variables = add_intersection_complement(
-            result_all_variables, intersections, complements)
+    processed_branches = []
+    for res in result_all_variables:
+        processed = _process_exclusions_for_branch(res, exclude, all_symbols)
+        if processed is None:
+            continue
+        branch_complements, conditions = processed
+        for symbol, forbidden in complements.items():
+            branch_complements[symbol] = Union(
+                branch_complements.get(symbol, S.EmptySet), forbidden)
+        restricted = add_intersection_complement(
+            [res], intersections, branch_complements)
+        for branch in restricted:
+            processed_branches.append((res, branch_complements, conditions, branch))
 
-    # convert to ordered tuple
-    result = S.EmptySet
-    for r in result_all_variables:
-        temp = [r[symb] for symb in all_symbols]
-        result += FiniteSet(tuple(temp))
-    return result
+    # Symbolic-family tuples cannot be mixed with actual point sets in a Union.
+    if any(conditions for _, _, conditions, _ in processed_branches):
+        return Union(*(_branch_as_conditionset(
+            res, all_symbols, intersections, branch_complements, conditions)
+            for res, branch_complements, conditions, _ in processed_branches))
+    return FiniteSet(*(tuple(branch[s] for s in all_symbols)
+                       for _, _, _, branch in processed_branches))
 
 
 def _solveset_work(system, symbols):
@@ -3927,20 +3995,14 @@ def nonlinsolve(system, *symbols):
     Returns
     =======
 
-    A :class:`~.FiniteSet` of ordered tuple of values of `symbols` for which the `system`
-    has solution. Order of values in the tuple is same as symbols present in
-    the parameter `symbols`.
+    A :class:`~.Set` representing the ordered values of `symbols` for which
+    the `system` has a solution. Results are typically returned as a
+    :class:`~.FiniteSet` of ordered tuples. Unresolved denominator restrictions
+    may require a :class:`~.ConditionSet`, and multiple set-valued branches
+    may form a :class:`~.Union`.
 
-    Please note that general :class:`~.FiniteSet` is unordered, the solution
-    returned here is not simply a :class:`~.FiniteSet` of solutions, rather it
-    is a :class:`~.FiniteSet` of ordered tuple, i.e. the first and only
-    argument to :class:`~.FiniteSet` is a tuple of solutions, which is
-    ordered, and, hence ,the returned solution is ordered.
-
-    Also note that solution could also have been returned as an ordered tuple,
-    FiniteSet is just a wrapper ``{}`` around the tuple. It has no other
-    significance except for the fact it is just used to maintain a consistent
-    output format throughout the solveset.
+    A :class:`~.FiniteSet` is unordered, but the values in each solution tuple
+    follow the order of the parameter `symbols`.
 
     For the given set of equations, the respective input types
     are given below:
@@ -4083,7 +4145,7 @@ def nonlinsolve(system, *symbols):
     system, symbols, swap = recast_to_symbols(system, symbols)
     if swap:
         soln = nonlinsolve(system, symbols)
-        return FiniteSet(*[tuple(i.xreplace(swap) for i in s) for s in soln])
+        return soln.subs(swap, simultaneous=True)
 
     if len(system) == 1 and len(symbols) == 1:
         return _solveset_work(system, symbols)
@@ -4115,8 +4177,11 @@ def nonlinsolve(system, *symbols):
     to_tuple = lambda sol: tuple(sol.get(s, s) for s in symbols)
 
     if not remaining:
-        # If there is nothing left to solve then return the solution from
-        # solve_poly_system directly.
+        # Validate denominators even when there is nothing left to solve.
+        if denominators:
+            branches = [{s: sol.get(s, s) for s in symbols} for sol in poly_sol]
+            return substitution([S.Zero], symbols, result=branches,
+                                exclude=denominators)
         return FiniteSet(*map(to_tuple, poly_sol))
     else:
         # Here we handle:
