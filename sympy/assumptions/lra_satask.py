@@ -1,7 +1,7 @@
 from __future__ import annotations
-from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.assumptions.ask import Q
-from sympy.logic.inference import satisfiable
+from sympy.assumptions.reasoning_engine import ReasoningEngine
 from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED
 from sympy.matrices.kind import MatrixKind
 from sympy.core.kind import NumberKind
@@ -39,9 +39,7 @@ WHITE_LIST = ALLOWED_PRED.keys() | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q
 
 def check_satisfiability(prop, _prop, factbase):
     sat_true = factbase.copy()
-    sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
-    sat_false.add_from_cnf(_prop)
 
     all_pred, all_exprs = get_all_pred_and_expr_from_enc_cnf(sat_true)
 
@@ -54,37 +52,20 @@ def check_satisfiability(prop, _prop, factbase):
         if expr == S.NaN:
             raise UnhandledInput("LRASolver: nan")
 
-    # convert old assumptions into predicates and add them to sat_true and sat_false
+    # convert old assumptions into predicates and add them to the factbase
+    # shared by both polarities of the query
     # also check for unhandled predicates
+    factbase = factbase.copy()
     for assm in extract_pred_from_old_assum(all_exprs):
-        n = len(sat_true.encoding)
-        if assm not in sat_true.encoding:
-            sat_true.encoding[assm] = n+1
-        sat_true.data.append([sat_true.encoding[assm]])
+        n = len(factbase.encoding)
+        if assm not in factbase.encoding:
+            factbase.encoding[assm] = n+1
+        factbase.data.append([factbase.encoding[assm]])
 
-        n = len(sat_false.encoding)
-        if assm not in sat_false.encoding:
-            sat_false.encoding[assm] = n+1
-        sat_false.data.append([sat_false.encoding[assm]])
-
-
-    sat_true = _preprocess(sat_true)
-    sat_false = _preprocess(sat_false)
-
-    can_be_true = satisfiable(sat_true, use_lra_theory=True) is not False
-    can_be_false = satisfiable(sat_false, use_lra_theory=True) is not False
-
-    if can_be_true and can_be_false:
-        return None
-
-    if can_be_true and not can_be_false:
-        return True
-
-    if not can_be_true and can_be_false:
-        return False
-
-    if not can_be_true and not can_be_false:
-        raise ValueError("Inconsistent assumptions")
+    engine = ReasoningEngine(_preprocess(factbase), use_lra_theory=True)
+    query = engine.create_query(_preprocess_query(prop, factbase),
+                                _preprocess_query(_prop, factbase))
+    return engine.ask_query(query)
 
 
 def _preprocess(enc_cnf):
@@ -170,6 +151,44 @@ def _preprocess(enc_cnf):
 
     enc_cnf = EncodedCNF(new_data, new_encoding)
     return enc_cnf
+
+
+def _preprocess_query(prop, factbase):
+    """
+    Return *prop* as a preprocessed CNF of LRA relation literals.
+
+    This gives the clauses that *prop* contributes on top of *factbase*
+    after ``_preprocess``, decoded back into a ``CNF`` so that
+    ``ReasoningEngine.create_query`` can encode them behind a query
+    selector.
+    """
+    enc = factbase.copy()
+    n_base = len(enc.data)
+    enc.add_from_cnf(prop)
+    enc = _preprocess(enc)
+    rev_encoding = {value: key for key, value in enc.encoding.items()}
+
+    clauses = set()
+    for clause in enc.data[n_base:]:
+        new_clause = []
+        for lit in clause:
+            # Literal 0 is a False clause literal; dropping it does not
+            # change the clause. A clause made up of only literals 0
+            # becomes the empty clause, i.e. an unsatisfiable branch.
+            if lit == 0:
+                continue
+            key = rev_encoding[abs(lit)]
+            if key is False:
+                # Q.negative_infinite and Q.positive_infinite are
+                # preprocessed into a constantly False atom, which cannot
+                # round-trip as a literal. Q.gt(1, 2) is an equivalent
+                # constantly False relation: the theory solver prunes both
+                # with the same one-literal conflict clause.
+                key = Q.gt(1, 2)
+            new_clause.append(Literal(key, lit < 0))
+        clauses.add(frozenset(new_clause))
+
+    return CNF(clauses)
 
 
 def _pred_to_binrel(pred):
