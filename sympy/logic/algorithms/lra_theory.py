@@ -115,7 +115,6 @@ References
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from sympy.matrices.dense import eye, zeros
-from sympy.assumptions import Predicate
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
