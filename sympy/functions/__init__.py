@@ -102,7 +102,7 @@ __all__ = [
 
     'hyper', 'meijerg', 'appellf1',
 
-    'legendre', 'assoc_legendre', 'hermite', 'hermite_prob', 'chebyshevt',
+    'legendre', 'assoc_legendre', 'legendre_q', 'hermite', 'hermite_prob', 'chebyshevt',
     'chebyshevu', 'chebyshevu_root', 'chebyshevt_root', 'laguerre',
     'assoc_laguerre', 'gegenbauer', 'jacobi', 'jacobi_normalized',
 
