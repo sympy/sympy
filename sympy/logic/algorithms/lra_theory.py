@@ -233,134 +233,8 @@ class LRASolver():
         >>> conflicts #doctest: +SKIP
         [[4]]
         """
-        # This function has three main jobs:
-        # - raise errors if the input formula is not handled
-        # - preprocesses the formula into a matrix and single variable constraints
-        # - create one-literal conflict clauses from predicates that are always True
-        #   or always False such as Q.gt(3, 2)
-        #
-        # See the preprocessing section of "A Fast Linear-Arithmetic Solver for DPLL(T)"
-        # for an explanation of how the formula is converted into a matrix
-        # and a set of single variable constraints.
-
-        atom_id_to_boundaries = {}
-        A = []
-
-        basic = []
-        s_count = 0
-        s_subs = {}
-        nonbasic = []
-        atom_vars = set()
-
-        if testing_mode:
-            # sort to reduce nondeterminism
-            encoded_cnf_items = sorted(encoded_cnf.encoding.items(),
-                                       key=lambda x: str(x))
-        else:
-            encoded_cnf_items = encoded_cnf.encoding.items()
-
-        empty_var = Dummy()
-        var_to_lra_var = {}
-        conflicts = []
-
-        for prop, atom_id in encoded_cnf_items:
-            if isinstance(prop, Predicate):
-                prop = prop(empty_var)
-            if not isinstance(prop, AppliedPredicate):
-                if prop == True:
-                    conflicts.append([atom_id])
-                    continue
-                if prop == False:
-                    conflicts.append([-atom_id])
-                    continue
-
-                raise ValueError(f"Unhandled Predicate: {prop}")
-
-            assert prop.function in ALLOWED_PRED
-            if prop.lhs == S.NaN or prop.rhs == S.NaN:
-                raise ValueError(f"{prop} contains nan")
-            if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
-                raise UnhandledInput(f"{prop} contains an imaginary component")
-            if prop.lhs == oo or prop.rhs == oo:
-                raise UnhandledInput(f"{prop} contains infinity")
-
-            expr = prop.lhs - prop.rhs
-            pred = ALLOWED_PRED[prop.function](expr, S.Zero)
-            if pred == True:
-                conflicts.append([atom_id])
-                continue
-            if pred == False:
-                conflicts.append([-atom_id])
-                continue
-            if not expr.free_symbols:
-                raise UnhandledInput(f"{prop} could not be simplified")
-
-            if prop.function in [Q.ge, Q.gt]:
-                expr = -expr
-
-            # Example: 2x + 3y, 2 <- _sep_const_terms(2x + 3y + 2)
-            vars, const = _sep_const_terms(expr)
-            # Examples:
-            # x, 2 <- _sep_const_coeff(2x)
-            # 2x + 3y, 1 <- _sep_const_coeff(2x + 3y + 2)
-            vars, var_coeff = _sep_const_coeff(vars)
-            const = const / var_coeff
-            # Example: [2x, 3y] <- Add.make_args(2x + 3y)
-            terms = Add.make_args(vars)
-            for term in terms:
-                term, _ = _sep_const_coeff(term)
-                assert len(term.free_symbols) > 0
-                if term not in var_to_lra_var:
-                    var_to_lra_var[term] = LRAVariable(term)
-                    nonbasic.append(term)
-
-            if len(terms) > 1:
-                if vars not in s_subs:
-                    s_count += 1
-                    d = Dummy(f"s{s_count}")
-                    var_to_lra_var[d] = LRAVariable(d)
-                    basic.append(d)
-                    s_subs[vars] = d
-                    A.append(vars - d)
-                var = s_subs[vars]
-            else:
-                var = terms[0]
-
-            atom_vars.add(var)
-
-            assert var_coeff != 0
-
-            equality = prop.function == Q.eq
-            strict = prop.function in [Q.gt, Q.lt]
-            if equality:
-                b1 = Boundary(var_to_lra_var[var], -const, True, False)  # x <= c
-                b2 = Boundary(var_to_lra_var[var], -const, False, False) # x >= c
-                atom_id_to_boundaries[atom_id] = [b1, b2]
-            else:
-                upper = var_coeff > 0
-                b = Boundary(var_to_lra_var[var], -const, upper, strict)
-                atom_id_to_boundaries[atom_id] = [b]
-
-        fs = [v.free_symbols for v in nonbasic + basic]
-        assert all(len(syms) > 0 for syms in fs)
-        fs_count = sum(len(syms) for syms in fs)
-        if len(fs) > 0 and  len(set.union(*fs)) < fs_count:
-            raise UnhandledInput("Nonlinearity is not handled")
-
-        A, _ = linear_eq_to_matrix(A, nonbasic + basic)
-        # matrix A is guaranteed to able to be simplified
-        # by removing the non-basic (e.g original or nonslack) non-atom variables from it
-        # these removed variables will be replaced by linear equation of existing variables.
-        nonatom_vars = {i for i in nonbasic if i not in atom_vars}
-        A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode)
-        nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
-        basic = [var_to_lra_var[b] for b in basic]
-        for idx, var in enumerate(nonbasic + basic):
-            var.col_idx = idx
-
-        solver = LRASolver(A, basic, nonbasic, atom_id_to_boundaries,
-                           s_subs, testing_mode)
-        return solver, conflicts
+        constraints, conflicts = _preprocess_lra_constraints(encoded_cnf, testing_mode)
+        return _build_lra_solver(constraints, testing_mode), conflicts
 
     def reset(self):
         """
@@ -705,6 +579,176 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
+
+
+def _evaluate_trivial_predicate(prop):
+    """
+    Return True or False if ``prop`` is a constant predicate, else None.
+
+    Raises ``ValueError`` for predicates LRA cannot handle and
+    ``UnhandledInput`` for predicates that cannot be simplified.
+    """
+    if not isinstance(prop, AppliedPredicate):
+        if prop == True:
+            return True
+        if prop == False:
+            return False
+
+        raise ValueError(f"Unhandled Predicate: {prop}")
+
+    assert prop.function in ALLOWED_PRED
+    if prop.lhs == S.NaN or prop.rhs == S.NaN:
+        raise ValueError(f"{prop} contains nan")
+    if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
+        raise UnhandledInput(f"{prop} contains an imaginary component")
+    if prop.lhs == oo or prop.rhs == oo:
+        raise UnhandledInput(f"{prop} contains infinity")
+
+    expr = prop.lhs - prop.rhs
+    pred = ALLOWED_PRED[prop.function](expr, S.Zero)
+    if pred == True:
+        return True
+    if pred == False:
+        return False
+    if not expr.free_symbols:
+        raise UnhandledInput(f"{prop} could not be simplified")
+    return None
+
+
+def _constraint_from_predicate(prop):
+    """
+    Extract a linear constraint from a non-trivial applied predicate.
+
+    Returns ``(terms, constant, strict, equality)`` where ``terms`` is a
+    tuple of ``(variable, coefficient)`` pairs, with ``>=``/``>``
+    normalized to ``<=``/``<`` by negating the whole expression.
+    """
+    expr = prop.lhs - prop.rhs
+    if prop.function in [Q.ge, Q.gt]:
+        expr = -expr
+
+    # Example: 2x + 3y, 2 <- _sep_const_terms(2x + 3y + 2)
+    variable_part, constant = _sep_const_terms(expr)
+    # Example: [(x, 2), (y, 3)] from _sep_const_coeff of each Add argument
+    terms = tuple(_sep_const_coeff(term) for term in Add.make_args(variable_part))
+    for term, _ in terms:
+        assert len(term.free_symbols) > 0
+
+    return terms, constant, prop.function in [Q.gt, Q.lt], prop.function == Q.eq
+
+
+def _preprocess_lra_constraints(encoded_cnf, testing_mode=False):
+    """
+    Convert an EncodedCNF into LRA constraints and unit conflict clauses.
+
+    Returns a mapping from positive literal to ``(terms, constant, strict,
+    equality)`` and a list of one-literal clauses for predicates that are
+    always true or always false. Raises ``UnhandledInput`` for unsupported
+    formulas.
+
+    See the preprocessing section of "A Fast Linear-Arithmetic Solver for DPLL(T)"
+    for an explanation of how the formula is converted into constraints.
+    """
+    if testing_mode:
+        # sort to reduce nondeterminism
+        encoded_cnf_items = sorted(encoded_cnf.encoding.items(),
+                                   key=lambda x: str(x))
+    else:
+        encoded_cnf_items = encoded_cnf.encoding.items()
+
+    constraints = {}
+    conflicts = []
+    variables = set()
+    empty_var = Dummy()
+    for prop, atom_id in encoded_cnf_items:
+        if isinstance(prop, Predicate):
+            prop = prop(empty_var)
+        value = _evaluate_trivial_predicate(prop)
+        if value is not None:
+            conflicts.append([atom_id if value else -atom_id])
+            continue
+        constraint = _constraint_from_predicate(prop)
+        variables.update(variable for variable, _ in constraint[0])
+        constraints[atom_id] = constraint
+
+    # Nonlinearity such as ``x*y`` shows up as a free symbol
+    # shared by more than one term.
+    fs = [variable.free_symbols for variable in variables]
+    assert all(len(syms) > 0 for syms in fs)
+    fs_count = sum(len(syms) for syms in fs)
+    if len(fs) > 0 and len(set.union(*fs)) < fs_count:
+        raise UnhandledInput("Nonlinearity is not handled")
+
+    return constraints, conflicts
+
+
+def _build_lra_solver(constraints, testing_mode=False):
+    """
+    Build an LRASolver from a mapping of positive SAT literal to constraint.
+
+    The tuple for each literal is ``(terms, constant, strict, equality)``,
+    where ``terms`` is a sequence of (variable, rational coefficient) pairs
+    and ``constant`` is rational. ``strict`` changes <= to <;
+    ``equality`` changes it to ==.
+    """
+    atom_id_to_boundaries = {}
+    A = []
+    basic = []
+    s_count = 0
+    s_subs = {}
+    nonbasic = []
+    atom_vars = set()
+    var_to_lra_var = {}
+
+    for literal, (terms, constant, strict, equality) in constraints.items():
+        for variable, _ in terms:
+            if variable not in var_to_lra_var:
+                var_to_lra_var[variable] = LRAVariable(variable)
+                nonbasic.append(variable)
+
+        if len(terms) == 1:
+            variable, coefficient = terms[0]
+        else:
+            # Example: -x + y <- terms ((x, -1), (y, 1))
+            vars = Add(*(coefficient*variable for variable, coefficient in terms))
+            if vars not in s_subs:
+                s_count += 1
+                d = Dummy(f"s{s_count}")
+                var_to_lra_var[d] = LRAVariable(d)
+                basic.append(d)
+                s_subs[vars] = d
+                A.append(vars - d)
+            variable = s_subs[vars]
+            coefficient = S.One
+
+        atom_vars.add(variable)
+
+        assert coefficient != 0
+
+        bound = -S.One * constant / coefficient
+        var = var_to_lra_var[variable]
+        if equality:
+            b1 = Boundary(var, bound, True, False)  # x <= c
+            b2 = Boundary(var, bound, False, False) # x >= c
+            atom_id_to_boundaries[literal] = [b1, b2]
+        else:
+            upper = coefficient > 0
+            b = Boundary(var, bound, upper, strict)
+            atom_id_to_boundaries[literal] = [b]
+
+    A, _ = linear_eq_to_matrix(A, nonbasic + basic)
+    # matrix A is guaranteed to able to be simplified
+    # by removing the non-basic (e.g original or nonslack) non-atom variables from it
+    # these removed variables will be replaced by linear equation of existing variables.
+    nonatom_vars = {i for i in nonbasic if i not in atom_vars}
+    A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode)
+    nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
+    basic = [var_to_lra_var[b] for b in basic]
+    for idx, var in enumerate(nonbasic + basic):
+        var.col_idx = idx
+
+    return LRASolver(A, basic, nonbasic, atom_id_to_boundaries,
+                     s_subs, testing_mode)
 
 
 def _reduce_matrix(A, basic, nonbasic, nonatom_vars, testing_mode):
