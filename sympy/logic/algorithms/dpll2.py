@@ -16,11 +16,18 @@ from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
 from heapq import heappush, heappop
+from typing import Any, Protocol
 
 from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
-
 from sympy.logic.algorithms.lra_theory import LRASolver
+
+
+class TheorySolver(Protocol):
+    def assert_lit(self, literal: int) -> tuple[bool, list[int]] | None: ...
+    def check(self) -> tuple[bool, Any] | None: ...
+    def push_level(self) -> None: ...
+    def pop_level(self) -> None: ...
 
 
 class IpasirStatus(Enum):
@@ -64,7 +71,13 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
     else:
         lra = None
         immediate_conflicts = []
-    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra)
+    solver = SATSolver(expr.data, expr.variables, set(), expr.symbols)
+    if lra is not None:
+        for clause in immediate_conflicts:
+            for literal in clause:
+                solver.add(literal)
+            solver.add(0)
+        solver.register_theory_solver(lra)
     models = solver._find_model()
 
     if all_models:
@@ -100,8 +113,7 @@ class SATSolver:
     """
 
     def __init__(self, clauses, variables, var_settings, symbols=None,
-                heuristic='vsids', clause_learning='none', INTERVAL=500,
-                 lra_theory = None):
+                heuristic='vsids', clause_learning='none', INTERVAL=500):
 
         self.var_settings = var_settings
         self.heuristic = heuristic
@@ -141,28 +153,32 @@ class SATSolver:
         else:
             raise NotImplementedError
 
-        self.lra = lra_theory
+        self.theory_solvers: list[TheorySolver] = []
 
         # Create the base level
         self.levels = []
         self._create_level(0)
         self._current_level.var_settings = set(var_settings)
-        if self.lra and self._current_level.var_settings:
-            raise NotImplementedError("A non-empty var_settings is not "
-                                      "supported when using the LRA theory.")
 
         # Keep stats
         self.num_decisions = 0
         self.num_learned_clauses = 0
         self.original_num_clauses = len(self.clauses)
 
-        self.lra = lra_theory
-
         # State of the IPASIR style interface
         self._status = IpasirStatus.UNKNOWN
         self._models = None
         self._clause_buffer = []
         self._assumptions = []
+
+    def register_theory_solver(self, solver: TheorySolver) -> None:
+        if self.var_settings or len(self.levels) != 1 or self._models is not None:
+            raise ValueError("Register theory solvers before assigning literals")
+        if any(theory is solver for theory in self.theory_solvers):
+            raise ValueError("Theory solver already registered")
+        solver.push_level()
+        self.theory_solvers.append(solver)
+        self._status = IpasirStatus.UNKNOWN
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -235,9 +251,14 @@ class SATSolver:
                 continue
 
             if -assumed_lit not in self.var_settings:
-                self.levels.append(Level(assumed_lit))
-                self._assign_literal(assumed_lit)
-                self._simplify()
+                self._create_level(assumed_lit)
+                conflict = self._assign_literal(assumed_lit)
+                if conflict is not None:
+                    self.is_unsatisfied = True
+                    self._simple_add_learned_clause(conflict)
+                    self._unit_prop_queue = []
+                else:
+                    self._simplify()
                 if not self.is_unsatisfied:
                     continue
                 self.is_unsatisfied = False
@@ -269,8 +290,10 @@ class SATSolver:
                 # Stopping condition for a satisfying theory
                 if 0 == lit:
                     res = None
-                    if self.lra:
-                        res = self.lra.check()
+                    for theory in self.theory_solvers:
+                        res = theory.check()
+                        if res is not None and not res[0]:
+                            break
                     if res is None or res[0]:
                         yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
@@ -363,7 +386,7 @@ class SATSolver:
         Returns ``UNSATISFIABLE`` on a conflict, ``SATISFIABLE`` if it leaves
         no variable unassigned, and ``UNKNOWN`` otherwise.
 
-        A conflict the LRA theory finds is reported too, but never a model.
+        A conflict a registered theory finds is reported too, but never a model.
 
         TODO: IPASIR propagates at any decision level, while this is limited
         to the root.
@@ -385,7 +408,7 @@ class SATSolver:
         self._simplify()
         if self.is_unsatisfied:
             self._status = IpasirStatus.UNSATISFIABLE
-        elif self.lra is None and all(self.variable_set[1:]):
+        elif not self.theory_solvers and all(self.variable_set[1:]):
             # Nothing is left to decide on, so the assignments are a model.
             self._status = IpasirStatus.SATISFIABLE
 
@@ -703,8 +726,8 @@ class SATSolver:
         self.heur_lit_assigned(lit)
 
         conflict = None
-        if self.lra:
-            res = self.lra.assert_lit(lit)
+        for theory in self.theory_solvers:
+            res = theory.assert_lit(lit)
             if res and res[0] is False:
                 conflict = res[1]
 
@@ -737,8 +760,8 @@ class SATSolver:
         so that the bounds asserted while this level is current can all be
         undone together when `_undo` pops the level.
         """
-        if self.lra:
-            self.lra.push_level()
+        for theory in self.theory_solvers:
+            theory.push_level()
         self.levels.append(Level(lit, flipped=flipped))
 
     def _undo(self):
@@ -771,8 +794,8 @@ class SATSolver:
             self.heur_lit_unset(lit)
             self.variable_set[abs(lit)] = False
 
-        if self.lra:
-            self.lra.pop_level()
+        for theory in self.theory_solvers:
+            theory.pop_level()
 
         # Pop the level off the stack
         self.levels.pop()

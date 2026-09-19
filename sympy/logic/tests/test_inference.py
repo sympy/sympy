@@ -173,8 +173,8 @@ def test_satsolver_propagate():
     enc = EncodedCNF()
     enc.from_cnf(CNF.from_prop((x > 1) & (x < 0)))
     lra, conflicts = LRASolver.from_encoded_cnf(enc)
-    s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols,
-                  lra_theory=lra)
+    s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols)
+    s.register_theory_solver(lra)
     assert s.propagate() == IpasirStatus.UNSATISFIABLE
     assert s.solve() == IpasirStatus.UNSATISFIABLE
 
@@ -183,8 +183,8 @@ def test_satsolver_propagate():
     enc = EncodedCNF()
     enc.from_cnf(CNF.from_prop((x > 1) & (x < 5)))
     lra, conflicts = LRASolver.from_encoded_cnf(enc)
-    s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols,
-                  lra_theory=lra)
+    s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols)
+    s.register_theory_solver(lra)
     assert s.propagate() == IpasirStatus.UNKNOWN
     assert s.solve() == IpasirStatus.SATISFIABLE
 
@@ -761,3 +761,31 @@ def test_satisfiable_all_models_lra():
     assert len(models) == 2
     assert {Q.gt(x, 0): True, Q.lt(x, 0): False} in models
     assert {Q.lt(x, 0): True, Q.gt(x, 0): False} in models
+
+
+def test_register_other_theories():
+    class ExcludeLiteral:
+        def __init__(self, excluded):
+            self.excluded = excluded
+            self.levels = []
+
+        def push_level(self):
+            self.levels.append(set())
+
+        def pop_level(self):
+            self.levels.pop()
+
+        def assert_lit(self, literal):
+            self.levels[-1].add(literal)
+
+        def check(self):
+            if any(self.excluded in level for level in self.levels):
+                return False, [-self.excluded]
+            return True, {}
+
+    solver = SATSolver([{1, -1}, {2, -2}, {3, -3}], {1, 2, 3}, set())
+    theories = [ExcludeLiteral(i) for i in (1, 2, 3)]
+    for theory in theories:
+        solver.register_theory_solver(theory)
+    assert list(solver._find_model()) == [{1: False, 2: False, 3: False}]
+    assert all(len(theory.levels) == 1 for theory in theories)
