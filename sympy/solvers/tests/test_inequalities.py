@@ -499,3 +499,14 @@ def test_issue_25738():
 
 def test_issue_25983():
     assert(reduce_inequalities(pi/Abs(x) <= 1) == ((pi <= x) & (x < oo)) | ((-oo < x) & (x <= -pi)))
+
+
+def test_issue_30529():  # do not allow singularity cancellation
+    assert reduce_inequalities(1/x <= 1/x, x) == Ne(x, 0)
+
+    e = x/(x - 1) + 1/x <= x + 1/x
+    rv = reduce_inequalities(e, x)
+    assert rv.subs(x, 0) is S.false
+    assert rv.subs(x, S.Half) is S.true
+    assert rv.subs(x, 1) is S.false
+    assert rv.subs(x, 2) is S.true
