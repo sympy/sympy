@@ -10,12 +10,13 @@ from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
-from sympy.logic.inference import satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
+from sympy.assumptions.reasoning_engine import ReasoningEngine
 
 
-def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
+def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo,
+           early_return=False):
     """
     Function to evaluate the proposition with assumptions using SAT algorithm.
 
@@ -45,6 +46,10 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
         Number of times that relevant facts are recursively extracted.
         Default is infinite times until no new fact is found.
 
+    early_return : bool, optional.
+        If ``True``, answer from the propagated facts alone, trusting
+        *assumptions* to be consistent. Default is ``False``.
+
     Returns
     =======
 
@@ -69,31 +74,15 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
         use_known_facts=use_known_facts, iterations=iterations)
     sat.add_from_cnf(assumptions)
 
-    return check_satisfiability(props, _props, sat)
+    engine = ReasoningEngine(sat)
+    query_literal = engine.create_query(props, _props)
 
+    if early_return:
+        res = engine.fixed(query_literal)
+        if res is not None:
+            return res
 
-def check_satisfiability(prop, _prop, factbase):
-    sat_true = factbase.copy()
-    sat_false = factbase.copy()
-    sat_true.add_from_cnf(prop)
-    sat_false.add_from_cnf(_prop)
-    can_be_true = satisfiable(sat_true)
-    can_be_false = satisfiable(sat_false)
-
-    if can_be_true and can_be_false:
-        return None
-
-    if can_be_true and not can_be_false:
-        return True
-
-    if not can_be_true and can_be_false:
-        return False
-
-    if not can_be_true and not can_be_false:
-        # TODO: Run additional checks to see which combination of the
-        # assumptions, global_assumptions, and relevant_facts are
-        # inconsistent.
-        raise ValueError("Inconsistent assumptions")
+    return engine.ask_query(query_literal)
 
 
 def extract_predargs(proposition, assumptions=None):

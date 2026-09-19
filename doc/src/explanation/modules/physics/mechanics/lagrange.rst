@@ -159,7 +159,7 @@ The Lagrange multipliers :math:`\mathbf{\lambda}` are accessed with::
   >>> lm.lam_vec
   Matrix([[lam1]])
 
-The :math:`-\mathbf{\Lambda}` matrix is accessed with::
+The :math:`-\mathbf{\Lambda}^T` matrix is accessed with::
 
   >>> lm.lam_coeffs
   Matrix([[-1, 1]])

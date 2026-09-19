@@ -118,9 +118,45 @@ def test_KroneckerProduct_combine_add():
 def test_KroneckerProduct_combine_mul():
     X = MatrixSymbol('X', m, n)
     Y = MatrixSymbol('Y', m, n)
+    # A sum of Kronecker products is a single Kronecker product only when
+    # the factors coincide in all slots except at most one; merging every
+    # slot at once used to produce the wrong result (A + B) x (X + Y):
     kp1 = kronecker_product(A, X)
     kp2 = kronecker_product(B, Y)
-    assert combine_kronecker(kp1+kp2) == kronecker_product(A+B, X+Y)
+    assert combine_kronecker(kp1 + kp2) == kp1 + kp2
+
+    # One differing slot merges by linearity:
+    assert combine_kronecker(kronecker_product(A, X) + kronecker_product(B, X)) == \
+        kronecker_product(A + B, X)
+    assert combine_kronecker(kronecker_product(A, X) + kronecker_product(A, Y)) == \
+        kronecker_product(A, X + Y)
+
+    # Scalar multiples of Kronecker products are merged as well:
+    assert combine_kronecker(2*kronecker_product(A, X) + 3*kronecker_product(B, X)) == \
+        kronecker_product(2*A + 3*B, X)
+    assert combine_kronecker(2*kronecker_product(A, X) + 3*kronecker_product(A, X)) == \
+        5*kronecker_product(A, X)
+
+    # More than two addends:
+    assert combine_kronecker(kronecker_product(A, X) + kronecker_product(B, X)
+                             + kronecker_product(A, Y)) in [
+        kronecker_product(A + B, X) + kronecker_product(A, Y),
+        kronecker_product(A, X + Y) + kronecker_product(B, X)]
+
+
+def test_KroneckerProduct_combine_add_numeric():
+    # Numeric check that combine_kronecker preserves the value of sums:
+    m1 = Matrix([[1, 2], [3, 4]])
+    m2 = Matrix([[0, 1], [1, 0]])
+    m3 = Matrix([[2, 0], [0, 2]])
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    W2 = MatrixSymbol('W2', 2, 2)
+    expr = KroneckerProduct(X, Y) + KroneckerProduct(W2, Y)
+    combined = combine_kronecker(expr)
+    reps = {X: m1, Y: m2, W2: m3}
+    assert expr.subs(reps).doit().as_explicit() == \
+        combined.subs(reps).doit().as_explicit()
 
 
 def test_KroneckerProduct_combine_pow():
