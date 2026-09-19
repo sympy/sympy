@@ -968,6 +968,7 @@ class legendre_q(DefinedFunction):
             return cls.eval_at_order(n , x)
         else:
             return None
+
     def _eval_mpmath(self):
         n , x = self.args
         func = mpmath.legenq
