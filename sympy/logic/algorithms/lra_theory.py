@@ -587,6 +587,9 @@ def _sep_const_terms(expr):
     return Add(*var), Add(*const)
 
 
+_Clause = list[int]
+
+
 # A constraint is (terms, constant, strict, equality), where terms is
 # a tuple of (variable, coefficient) pairs. It represents
 #
@@ -658,7 +661,7 @@ def _constraint_from_predicate(prop: AppliedBinaryRelation) -> _LRAConstraint:
 
 def _preprocess_lra_constraints(
     encoded_cnf: EncodedCNF, testing_mode: bool = False
-) -> tuple[dict[int, _LRAConstraint], list[list[int]]]:
+) -> tuple[dict[int, _LRAConstraint], list[_Clause]]:
     """
     Convert an EncodedCNF into LRA constraints keyed by their associated
     SAT variable. Also produces unit conflict clauses.
