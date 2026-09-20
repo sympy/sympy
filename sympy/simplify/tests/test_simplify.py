@@ -1140,8 +1140,17 @@ def test_logcombine_preserves_grouping():
     denominator = tan(x/2) + 7
     expr = Mul(Rational(1, 3), log(numerator) - log(denominator), evaluate=False)
     assert logcombine(expr, force=True) == log((numerator/denominator)**Rational(1, 3))
-    expr = Mul(Rational(1, 3), 1 + 2*log(2) + log(3), evaluate=False)
-    assert logcombine(expr) == Rational(1, 3) + log(12**Rational(1, 3))
     A, B, C = symbols('A B C', commutative=False)
     expr = Mul(Rational(1, 2), A*(B + C) + log(x), evaluate=False)
     assert logcombine(expr) == expr
+
+
+def test_logcombine_rational_log_factors():
+    for coefficient in [Rational(1, 3), Rational(-2, 3)]:
+        for other in [1, x, symbols('A', commutative=False)]:
+            expr = Mul(coefficient, other, 1 + 2*log(2) + log(3), evaluate=False)
+            result = logcombine(expr)
+            expected = other*(coefficient + logcombine(
+                2*coefficient*log(2) + coefficient*log(3)))
+            assert result == expected
+            assert result.expand(log=True).expand() == expr.expand()

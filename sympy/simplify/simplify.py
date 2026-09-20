@@ -13,6 +13,7 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
+from sympy.core.mul import _unevaluated_Mul, _keep_coeff
 from sympy.core.numbers import Float, I, Integer, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
@@ -1134,13 +1135,23 @@ def logcombine(expr, force=False):
         return Add(*other)
 
     if isinstance(expr, Mul):
-        coefficient, rest = expr.as_coeff_Mul()
-        if coefficient.is_Rational and coefficient.q != 1 and rest.is_Add:
-            constant, term = rest.as_coeff_Add()
-            scale, logarithm = term.as_coeff_Mul()
-            if (constant.is_Rational and scale.is_Rational and logarithm.func == log
-                    and logarithm.args[0].is_Rational and logarithm.args[0] > 0):
-                expr = expr.func(*expr.args)
+        # Push the rational coefficient onto an Add factor with rational logs.
+        coefficient, rest = _unevaluated_Mul(*expr.args).as_coeff_Mul()
+        if coefficient.is_Rational and coefficient.q != 1:
+            factors = list(Mul.make_args(rest))
+            for i, term in enumerate(factors):
+                if not term.is_Add:
+                    continue
+                terms = term.as_coefficients_dict()
+                constant = terms.pop(S.One, S.Zero)
+                if (constant.is_Rational and terms and
+                        all(v.is_Rational for v in terms.values()) and
+                        all(isinstance(k, log) and k.args[0].is_Rational
+                            and k.args[0] > 0 for k in terms)):
+                    factors[i] = Add(coefficient*constant,
+                        *[_keep_coeff(coefficient*v, k) for k, v in terms.items()])
+                    expr = _unevaluated_Mul(*factors)
+                    break
 
     return _bottom_up(expr, f)
 
