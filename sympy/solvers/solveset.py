@@ -4118,7 +4118,7 @@ def nonlinsolve(system, *symbols):
         # If there is nothing left to solve then return the solution from
         # solve_poly_system directly.
         poly_sol = [sol for sol in poly_sol if not any(
-            d.subs(sol).simplify().is_zero is True for d in denominators)]
+            checksol(d, sol) for d in denominators)]
         return FiniteSet(*map(to_tuple, poly_sol))
     else:
         # Here we handle:
