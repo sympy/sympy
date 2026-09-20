@@ -48,6 +48,29 @@ def test_pow1():
     assert refine(sqrt(1/x), Q.real(x)) != 1/sqrt(x)
     assert refine(sqrt(1/x), Q.positive(x)) == 1/sqrt(x)
 
+    # issue 29684: (x**a)**b must not be rewritten to Abs(x)**(a*b)
+    # under Q.real(x) alone -- e.g. at x=-2 the two sides disagree.
+    assert refine((x**3)**Rational(1, 2), Q.real(x)) != Abs(x)**Rational(3, 2)
+    assert refine((x**3)**Rational(1, 3), Q.real(x)) != Abs(x)
+    # The rewrite is still applied when conditions actually hold.
+    assert refine((x**3)**Rational(1, 2), Q.positive(x)) == x**Rational(3, 2)
+    assert refine(sqrt(x**4), Q.real(x)) == x**2
+
+    # (z_1**z_2)**z_3 casework.
+    # Case (i): integer outer exponent -> z_1**(z_2*z_3) unconditionally.
+    n = Symbol('n', integer=True)
+    assert refine((x**y)**n) == x**(n*y)
+    assert refine((x**y)**z, Q.integer(z)) == x**(y*z)
+    # Case (ii): positive base, real inner exp -> z_1**(z_2*z_3) for any z_3.
+    assert refine((x**y)**z, Q.positive(x) & Q.real(y)) == x**(y*z)
+    assert refine((x**Rational(1, 2))**y, Q.positive(x)) == x**(y/2)
+    # Case (iii): real base, even integer inner exp -> Abs(z_1)**(z_2*z_3).
+    assert refine((x**y)**z, Q.real(x) & Q.even(y)) == Abs(x)**(y*z)
+    # Counterexamples: none of the three cases hold, so no rewrite.
+    assert refine((x**y)**z) == (x**y)**z
+    assert refine((x**y)**z, Q.real(x) & Q.real(y)) == (x**y)**z
+    assert refine((x**y)**z, Q.real(x) & Q.odd(y)) == (x**y)**z
+
     # powers of (-1)
     assert refine((-1)**(x + y), Q.even(x)) == (-1)**y
     assert refine((-1)**(x + y + z), Q.odd(x) & Q.odd(z)) == (-1)**y
