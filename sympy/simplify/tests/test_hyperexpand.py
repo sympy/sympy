@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from importlib import import_module
 from unittest.mock import patch
 from sympy.core.random import randrange
 
@@ -1090,6 +1091,7 @@ def test_hyperexpand_at_one_with_finite_polylogs():
 def test_hyperexpand_preserves_hyper_when_limit_is_unevaluated():
     expr = hyper([1, 1, 1], [2, 3], 1)
     unevaluated = Limit(log(1 - z), z, 1, dir='-')
-    with patch('sympy.simplify.hyperexpand._hyperexpand', return_value=unevaluated):
+    with patch.object(import_module('sympy.simplify.hyperexpand'),
+                      '_hyperexpand', return_value=unevaluated):
         result = hyperexpand(expr)
     assert result == expr
