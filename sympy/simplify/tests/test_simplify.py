@@ -1154,3 +1154,14 @@ def test_logcombine_rational_log_factors():
                 2*coefficient*log(2) + coefficient*log(3)))
             assert result == expected
             assert result.expand(log=True).expand() == expr.expand()
+
+
+def test_logcombine_numeric_log_factors():
+    # Float terms must not prevent rational exponents from combining first.
+    expr = Mul(Rational(1, 3), Float('0.5') + 2*log(2) +
+               Float('0.75')*log(3), evaluate=False)
+    result = logcombine(expr)
+    assert result == Float('0.5')/3 + log(2**Rational(2, 3)*3**Float('0.25'))
+    for base in [sqrt(2), pi]:
+        expr = Mul(Rational(1, 3), 1 + 2*log(base, evaluate=False), evaluate=False)
+        assert logcombine(expr) == Rational(1, 3) + log(base**Rational(2, 3))

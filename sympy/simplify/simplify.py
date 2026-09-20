@@ -1135,7 +1135,7 @@ def logcombine(expr, force=False):
         return Add(*other)
 
     if isinstance(expr, Mul):
-        # Push the rational coefficient onto an Add factor with rational logs.
+        # Push the rational coefficient onto an Add factor with positive numeric log arguments.
         coefficient, rest = _unevaluated_Mul(*expr.args).as_coeff_Mul()
         if coefficient.is_Rational and coefficient.q != 1:
             factors = list(Mul.make_args(rest))
@@ -1144,10 +1144,9 @@ def logcombine(expr, force=False):
                     continue
                 terms = term.as_coefficients_dict()
                 constant = terms.pop(S.One, S.Zero)
-                if (constant.is_Rational and terms and
-                        all(v.is_Rational for v in terms.values()) and
-                        all(isinstance(k, log) and k.args[0].is_Rational
-                            and k.args[0] > 0 for k in terms)):
+                if (terms and
+                        all(isinstance(k, log) and k.args[0].is_number
+                            and k.args[0].is_positive is True for k in terms)):
                     factors[i] = Add(coefficient*constant,
                         *[_keep_coeff(coefficient*v, k) for k, v in terms.items()])
                     expr = _unevaluated_Mul(*factors)
