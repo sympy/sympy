@@ -7,8 +7,8 @@ from sympy.printing.latex import latex as default_latex
 from sympy.printing.preview import preview
 from sympy.utilities.misc import debug
 from sympy.printing.defaults import Printable
+from sympy.core.function import FunctionClass
 from sympy.external import import_module
-
 
 def _init_python_printing(stringify_func, **settings):
     """Setup printing in Python interactive session. """
@@ -152,7 +152,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 return all(_can_print(i) and _can_print(o[i]) for i in o)
             elif isinstance(o, bool):
                 return False
-            elif isinstance(o, Printable):
+            elif isinstance(o, (Printable, FunctionClass)):
                 # types known to SymPy
                 return True
             elif any(hasattr(o, hook) for hook in printing_hooks):
@@ -222,7 +222,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     # the approach required by builtin types. This allows downstream
     # packages to override the methods in their own subclasses of Printable,
     # which avoids the effects of gh-16002.
-    printable_types = [float, tuple, list, set, frozenset, dict, int]
+    printable_types = [float, tuple, list, set, frozenset, dict, int, FunctionClass]
 
     plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
