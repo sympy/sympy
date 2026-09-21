@@ -21,6 +21,7 @@ from sympy.solvers.inequalities import (reduce_inequalities,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality,
+                                        solve_univariate_inequality,
                                         _solve_inequality)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
@@ -499,3 +500,41 @@ def test_issue_25738():
 
 def test_issue_25983():
     assert(reduce_inequalities(pi/Abs(x) <= 1) == ((pi <= x) & (x < oo)) | ((-oo < x) & (x <= -pi)))
+
+
+def test_issue_30529():  # do not allow singularity cancellation
+    assert reduce_inequalities(1/x <= 1/x, x) == Ne(x, 0)
+    assert reduce_inequalities([1/sin(x) <= 1/sin(x)], x) == Ne(sin(x), 0)
+    assert reduce_rational_inequalities([[1/x <= 1/x]], x) == (x > -oo) & (x < oo) & Ne(x, 0)
+
+    e = x/(x - 1) + 1/x <= x + 1/x
+    rv = reduce_inequalities(e, x)
+    assert rv.subs(x, 0) is S.false
+    assert rv.subs(x, S.Half) is S.true
+    assert rv.subs(x, 1) is S.false
+    assert rv.subs(x, 2) is S.true
+
+    # multiple lost poles
+    assert reduce_rational_inequalities(
+        [[1/x + 1/(x - 1) + x < 1/x + 1/(x - 1) + 2]], x) == (
+            (-oo < x) & (x < 0)) | ((S(0) < x) & (x < 1)) | ((S(1) < x) & (x < 2))
+    # inexact lost pole -- tests exact=False bookkeeping
+    assert reduce_rational_inequalities(
+        [[1/x + 1/(x - .1) + x < 1/x + 1/(x - .1) + 2]], x) == (
+            (S(0.1) < x) & (x < 2.0)) | ((x < 0.1) & (S(0) < x)) | ((-oo < x) & (x < 0))
+
+    # denominator multiplicity decreases, but the pole is not lost
+    assert reduce_rational_inequalities(
+        [[1/x**2 < (x + 1)/x**2]], x) == (S(0) < x) & (x < oo)
+    # common denominator, but no cancellation of the pole
+    assert reduce_rational_inequalities([[1/x < 2/x]], x) == (S(0) < x) & (x < oo)
+
+
+def test_solve_univariate_inequality_random_symbol():
+    from sympy.stats import Normal
+
+    Z = Normal('Z', 0, 1)
+    expected = Interval.open(1, oo)
+
+    assert solve_univariate_inequality(Z > 1, Z, relational=False) == expected
+    assert (Z > 1).as_set() == expected
