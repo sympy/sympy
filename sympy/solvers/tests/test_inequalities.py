@@ -504,7 +504,7 @@ def test_issue_25983():
 
 def test_issue_30529():  # do not allow singularity cancellation
     assert reduce_inequalities(1/x <= 1/x, x) == Ne(x, 0)
-    assert reduce_inequalities([1/sin(x) <= 1/sin(x)], x) == Ne(sin(x), 0)
+    assert reduce_inequalities([1/sin(x) <= 1/sin(x)], x) == (-oo < x) & (x < oo) & Ne(sin(x), 0)
     assert reduce_rational_inequalities([[1/x <= 1/x]], x) == (x > -oo) & (x < oo) & Ne(x, 0)
 
     e = x/(x - 1) + 1/x <= x + 1/x
