@@ -2117,6 +2117,10 @@ class sinc(DefinedFunction):
         x = self.args[0]
         return (sin(x)/x)._eval_nseries(x, n, logx)
 
+    def _eval_as_leading_term(self, x, logx, cdir):
+        arg = self.args[0]
+        return (sin(arg)/arg).as_leading_term(x, logx=logx, cdir=cdir)
+
     def _eval_rewrite_as_jn(self, arg, **kwargs):
         from sympy.functions.special.bessel import jn
         return jn(0, arg)
