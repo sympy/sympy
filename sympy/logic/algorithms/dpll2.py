@@ -114,10 +114,10 @@ class SATSolver:
                 heuristic='vsids', clause_learning='none', INTERVAL=500, *,
                 theory_solvers: list[TheorySolver] | None = None):
 
-        self.var_settings = set()
+        self.var_settings: set[int] = set()
         self.heuristic = heuristic
         self.is_unsatisfied = False
-        self._unit_prop_queue = []
+        self._unit_prop_queue: list[int] = []
         self.update_functions = []
         self.INTERVAL = INTERVAL
 
@@ -153,11 +153,10 @@ class SATSolver:
             raise NotImplementedError
 
         self.theory_solvers = list(theory_solvers) if theory_solvers is not None else []
-        if len({id(theory) for theory in self.theory_solvers}) != len(self.theory_solvers):
             raise ValueError("Duplicate theory solver")
 
         # Create the base level
-        self.levels = []
+        self.levels: list[Level] = []
         self._create_level(0)
 
         # Keep stats
@@ -168,8 +167,8 @@ class SATSolver:
         # State of the IPASIR style interface
         self._status = IpasirStatus.UNKNOWN
         self._models = None
-        self._clause_buffer = []
-        self._assumptions = []
+        self._clause_buffer: list[int] = []
+        self._assumptions: list[int] = []
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
