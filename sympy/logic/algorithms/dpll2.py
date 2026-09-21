@@ -74,9 +74,7 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
     solver = SATSolver(expr.data, expr.variables, set(), expr.symbols)
     if lra is not None:
         for clause in immediate_conflicts:
-            for literal in clause:
-                solver.add(literal)
-            solver.add(0)
+            solver.clause(clause)
         solver.register_theory_solver(lra)
     models = solver._find_model()
 
