@@ -3465,29 +3465,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             sol = FiniteSet(sol)
         return sol, soln_imageset
 
-    def _check_exclude(rnew, imgset_yes):
-        rnew_ = rnew
-        if imgset_yes:
-            # replace all dummy variables (Imageset lambda variables)
-            # with zero before `checksol`. Considering fundamental soln
-            # for `checksol`.
-            rnew_copy = rnew.copy()
-            dummy_n = imgset_yes[0]
-            for key_res, value_res in rnew_copy.items():
-                rnew_copy[key_res] = value_res.subs(dummy_n, 0)
-            rnew_ = rnew_copy
-        # satisfy_exclude == true if it satisfies the expr of `exclude` list.
-        try:
-            # something like : `Mod(-log(3), 2*I*pi)` can't be
-            # simplified right now, so `checksol` returns `TypeError`.
-            # when this issue is fixed this try block should be
-            # removed. Mod(-log(3), 2*I*pi) == -log(3)
-            satisfy_exclude = any(
-                checksol(d, rnew_) for d in exclude)
-        except TypeError:
-            satisfy_exclude = None
-        return satisfy_exclude
-
     def _restore_imgset(rnew, original_imageset, newresult):
         restore_sym = set(rnew.keys()) & \
             set(original_imageset.keys())
@@ -3518,45 +3495,39 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
          of imageset expr and imageset from this result.
         `soln_imageset` dict of imageset expr and imageset of new soln.
         """
-        satisfy_exclude = _check_exclude(rnew, imgset_yes)
         delete_soln = False
-        # soln should not satisfy expr present in `exclude` list.
-        if not satisfy_exclude:
-            local_n = None
-            # if it is imageset
-            if imgset_yes:
-                local_n = imgset_yes[0]
-                base = imgset_yes[1]
-                if sym and sol:
-                    # when `sym` and `sol` is `None` means no new
-                    # soln. In that case we will append rnew directly after
-                    # substituting original imagesets in rnew values if present
-                    # (second last line of this function using _restore_imgset)
-                    dummy_list = list(sol.atoms(Dummy))
-                    # use one dummy `n` which is in
-                    # previous imageset
-                    local_n_list = [
-                        local_n for i in range(
-                            0, len(dummy_list))]
+        local_n = None
+        # if it is imageset
+        if imgset_yes:
+            local_n = imgset_yes[0]
+            base = imgset_yes[1]
+            if sym and sol:
+                # when `sym` and `sol` is `None` means no new
+                # soln. In that case we will append rnew directly after
+                # substituting original imagesets in rnew values if present
+                # (second last line of this function using _restore_imgset)
+                dummy_list = list(sol.atoms(Dummy))
+                # use one dummy `n` which is in
+                # previous imageset
+                local_n_list = [
+                    local_n for i in range(
+                        0, len(dummy_list))]
 
-                    dummy_zip = zip(dummy_list, local_n_list)
-                    lam = Lambda(local_n, sol.subs(dummy_zip))
-                    rnew[sym] = ImageSet(lam, base)
-                if eq is not None:
-                    newresult, rnew, delete_soln = _append_eq(
-                        eq, newresult, rnew, delete_soln, local_n)
-            elif eq is not None:
+                dummy_zip = zip(dummy_list, local_n_list)
+                lam = Lambda(local_n, sol.subs(dummy_zip))
+                rnew[sym] = ImageSet(lam, base)
+            if eq is not None:
                 newresult, rnew, delete_soln = _append_eq(
-                    eq, newresult, rnew, delete_soln)
-            elif sol in soln_imageset.keys():
-                rnew[sym] = soln_imageset[sol]
-                # restore original imageset
-                _restore_imgset(rnew, original_imageset, newresult)
-            else:
-                newresult.append(rnew)
-        elif satisfy_exclude:
-            delete_soln = True
-            rnew = {}
+                    eq, newresult, rnew, delete_soln, local_n)
+        elif eq is not None:
+            newresult, rnew, delete_soln = _append_eq(
+                eq, newresult, rnew, delete_soln)
+        elif sol in soln_imageset.keys():
+            rnew[sym] = soln_imageset[sol]
+            # restore original imageset
+            _restore_imgset(rnew, original_imageset, newresult)
+        else:
+            newresult.append(rnew)
         _restore_imgset(rnew, original_imageset, newresult)
         return newresult, delete_soln
 
@@ -3622,10 +3593,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             res, None, None, imgset_yes, soln_imageset,
                             original_imageset, newresult, eq2)
                         if delete_res:
-                            # `delete_res` is true, means substituting `res` in
-                            # eq2 doesn't return `zero` or deleting the `res`
-                            # (a soln) since it satisfies expr of `exclude`
-                            # list.
                             result.remove(res)
                     continue  # skip as it's independent of desired symbols
                 depen1, depen2 = eq2.as_independent(*unsolved_syms)
@@ -3720,8 +3687,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             rnew, sym, sol, imgset_yes, soln_imageset,
                             original_imageset, newresult)
                         if delete_res:
-                            # deleting the `res` (a soln) since it satisfies
-                            # eq of `exclude` list
                             result.remove(res)
                     # solution got for sym
                     if not not_solvable:

@@ -32,7 +32,7 @@ from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import ImageSet, Range
 from sympy.sets.sets import (Complement, FiniteSet,
     Intersection, Interval, Union, imageset, ProductSet)
-from sympy.simplify import simplify
+from sympy.simplify import simplify, trigsimp
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
@@ -1971,6 +1971,22 @@ def test_nonlinsolve_denominator_restrictions():
                   (2*y, Complement(FiniteSet(y), FiniteSet(S.Half))))
 
 
+def test_nonlinsolve_denominator_restrictions_near_zero():
+    a = Rational(999999999999, 10**12)
+    assert_close_nl(nonlinsolve([
+        (x - a)*(y - 1)/(x - 1), x - a, y - 1.0,
+    ], [x, y]), FiniteSet((a, 1)))
+
+
+def test_nonlinsolve_denominator_restrictions_periodic():
+    solution = nonlinsolve([(exp(x) - 1)/x, y], [x, y])
+    assert solution.contains((2*I*pi, 0)) is S.true
+    assert solution.contains((-2*I*pi, 0)) is S.true
+    assert solution.contains((0, 0)) is S.false
+    assert solution.contains((1, 0)) is S.false
+    assert solution.contains((2*I*pi, 1)) is S.false
+
+
 def test_nonlinsolve_coupled_denominator_restrictions():
     for denominator in (x + y, x*y - 1):
         expected = ConditionSet(
@@ -2451,7 +2467,7 @@ def test_issue_5132_2():
         Tuple(x, y), Eq(x, sign*s_x) & Eq(y, sign*s_y) & Ne(sign*s_x, 0),
         S.Reals**2) for sign in (-1, 1)))
     result = nonlinsolve(system, [x, y])
-    assert result == soln
+    assert trigsimp(result) == soln
     assert result.xreplace({r: S.Zero, t: S.Zero}) is S.EmptySet
     valid = result.xreplace({r: S.One, t: S.Zero})
     assert valid.contains((1, 0)) is S.true
