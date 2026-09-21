@@ -40,7 +40,7 @@ from sympy.utilities.decorator import deprecated
 
 
 class _ArrayExpr(Expr):
-    shape: tuple[Expr, ...]
+    _shape: tuple[Expr, ...]
 
     is_Atom = True
     _iterable = False
