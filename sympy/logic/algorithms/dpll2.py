@@ -71,11 +71,11 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
     else:
         lra = None
         immediate_conflicts = []
-    solver = SATSolver(expr.data, expr.variables, expr.symbols)
+    solver = SATSolver(expr.data, expr.variables, expr.symbols,
+                       theory_solvers=[lra] if lra is not None else None)
     if lra is not None:
         for clause in immediate_conflicts:
             solver.clause(clause)
-        solver.register_theory_solver(lra)
     models = solver._find_model()
 
     if all_models:
@@ -111,7 +111,8 @@ class SATSolver:
     """
 
     def __init__(self, clauses, variables, symbols=None,
-                heuristic='vsids', clause_learning='none', INTERVAL=500):
+                heuristic='vsids', clause_learning='none', INTERVAL=500, *,
+                theory_solvers: list[TheorySolver] | None = None):
 
         self.var_settings = set()
         self.heuristic = heuristic
@@ -151,7 +152,9 @@ class SATSolver:
         else:
             raise NotImplementedError
 
-        self.theory_solvers: list[TheorySolver] = []
+        self.theory_solvers = list(theory_solvers) if theory_solvers is not None else []
+        if len({id(theory) for theory in self.theory_solvers}) != len(self.theory_solvers):
+            raise ValueError("Duplicate theory solver")
 
         # Create the base level
         self.levels = []
@@ -167,15 +170,6 @@ class SATSolver:
         self._models = None
         self._clause_buffer = []
         self._assumptions = []
-
-    def register_theory_solver(self, solver: TheorySolver) -> None:
-        if self.var_settings or len(self.levels) != 1 or self._models is not None:
-            raise ValueError("Register theory solvers before assigning literals")
-        if any(theory is solver for theory in self.theory_solvers):
-            raise ValueError("Theory solver already registered")
-        solver.push_level()
-        self.theory_solvers.append(solver)
-        self._status = IpasirStatus.UNKNOWN
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
