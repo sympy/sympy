@@ -132,6 +132,7 @@ import math
 
 if TYPE_CHECKING:
     from sympy.assumptions.cnf import EncodedCNF
+    from sympy.core.basic import Basic
     from sympy.logic.boolalg import Boolean
 
 
@@ -654,7 +655,7 @@ def _preprocess_lra_constraints(
 
     constraints: dict[int, _LRAConstraint] = {}
     conflicts: list[_Clause] = []
-    free_symbols_by_term: dict[Expr, set[Expr]] = {}
+    free_symbols_by_term: dict[Expr, set[Basic]] = {}
     for prop, atom_id in encoded_cnf_items:
         value: bool | None = _evaluate_trivial_predicate(prop)
         if value is not None:
@@ -678,7 +679,7 @@ def _preprocess_lra_constraints(
         constraint: _LRAConstraint = terms, constant, strict, equality
         constraints[atom_id] = constraint
 
-    seen_symbols: set[Expr] = set()
+    seen_symbols: set[Basic] = set()
     for symbols in free_symbols_by_term.values():
         if seen_symbols.intersection(symbols):
             raise UnhandledInput("Nonlinearity is not handled")
