@@ -216,6 +216,7 @@ The following example shows the recursive nature of the algorithm nicely:
 >>> a, b, c = symbols('a, b, c', real=True)
 >>> laplace_transform(cos(a*t)*sinh(b*t)*sinh(c*t), t, s)
 ((-s**3/2 + s*(-a**2/2 + (-b + c)**2/2))/(a**4 + 2*a**2*(-b + c)**2 + s**4 + s**2*(2*a**2 - 2*(-b + c)**2) + (-b + c)**4) + (s**3/2 + s*(a**2/2 - (-b - c)**2/2))/(a**4 + 2*a**2*(-b - c)**2 + s**4 + s**2*(2*a**2 - 2*(-b - c)**2) + (-b - c)**4), Max(Abs(b - c), Abs(b + c)), True)
+>>> sympy.SYMPY_DEBUG = False
 ```
 
 The debugging output shows how many functions attempt to solve it, and `_laplace_rule_trig` finally succeeds.
