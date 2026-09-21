@@ -71,7 +71,7 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
     else:
         lra = None
         immediate_conflicts = []
-    solver = SATSolver(expr.data, expr.variables, set(), expr.symbols)
+    solver = SATSolver(expr.data, expr.variables, expr.symbols)
     if lra is not None:
         for clause in immediate_conflicts:
             solver.clause(clause)
@@ -110,10 +110,10 @@ class SATSolver:
      normal form.
     """
 
-    def __init__(self, clauses, variables, var_settings, symbols=None,
+    def __init__(self, clauses, variables, symbols=None,
                 heuristic='vsids', clause_learning='none', INTERVAL=500):
 
-        self.var_settings = var_settings
+        self.var_settings = set()
         self.heuristic = heuristic
         self.is_unsatisfied = False
         self._unit_prop_queue = []
@@ -156,7 +156,6 @@ class SATSolver:
         # Create the base level
         self.levels = []
         self._create_level(0)
-        self._current_level.var_settings = set(var_settings)
 
         # Keep stats
         self.num_decisions = 0
@@ -221,13 +220,13 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
         >>> list(l._find_model())
         [{1: True, 2: False, 3: False}, {1: True, 2: True, 3: True}]
 
         >>> from sympy.abc import A, B, C
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set(), [A, B, C])
+        ... {3, -2}], {1, 2, 3}, [A, B, C])
         >>> list(l._find_model())
         [{A: True, B: False, C: False}, {A: True, B: True, C: True}]
 
@@ -391,7 +390,7 @@ class SATSolver:
         ========
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+        >>> l = SATSolver([{1}, {-1, 2}], {1, 2})
         >>> l.propagate() == IpasirStatus.SATISFIABLE
         True
         >>> l.fixed(2)
@@ -481,7 +480,7 @@ class SATSolver:
         ========
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-        >>> l = SATSolver([{1, 2}, {-1, -2}], {1, 2}, set())
+        >>> l = SATSolver([{1, 2}, {-1, -2}], {1, 2})
         >>> l.assume(1)
         >>> l.solve() == IpasirStatus.SATISFIABLE
         True
@@ -516,7 +515,7 @@ class SATSolver:
         ========
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-        >>> l = SATSolver([{1, 2}], {1, 2}, set())
+        >>> l = SATSolver([{1, 2}], {1, 2})
         >>> l.solve() == IpasirStatus.SATISFIABLE
         True
         >>> l.add(-1)
@@ -597,7 +596,7 @@ class SATSolver:
         ========
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-        >>> l = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+        >>> l = SATSolver([{1}, {-1, 2}], {1, 2})
         >>> temporary = l.copy()
         >>> temporary.clause(-2)
         >>> temporary.solve() == IpasirStatus.UNSATISFIABLE
@@ -630,7 +629,7 @@ class SATSolver:
         ========
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{1}, {2}], {1, 2}, set())
+        >>> l = SATSolver([{1}, {2}], {1, 2})
         >>> next(l._find_model())
         {1: True, 2: True}
         >>> l._current_level.decision
@@ -650,7 +649,7 @@ class SATSolver:
         ========
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{1}, {-1}], {1}, set())
+        >>> l = SATSolver([{1}, {-1}], {1})
         >>> try:
         ...     next(l._find_model())
         ... except StopIteration:
@@ -674,7 +673,7 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
         >>> next(l._find_model())
         {1: True, 2: False, 3: False}
         >>> l._is_sentinel(2, 3)
@@ -699,14 +698,14 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
         >>> next(l._find_model())
         {1: True, 2: False, 3: False}
         >>> l.var_settings
         {-3, -2, 1}
 
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
         >>> l._assign_literal(-1)
         >>> try:
         ...     next(l._find_model())
@@ -769,7 +768,7 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
         >>> next(l._find_model())
         {1: True, 2: False, 3: False}
         >>> level = l._current_level
@@ -812,7 +811,7 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
         >>> l.variable_set
         [False, False, False, False]
         >>> l.sentinels
@@ -878,7 +877,7 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
 
         >>> l.lit_scores
         {-3: -2.0, -2: -2.0, -1: 0.0, 1: 0.0, 2: -2.0, 3: -2.0}
@@ -903,7 +902,7 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
 
         >>> l.lit_heap
         [(-2.0, -3), (-2.0, 2), (-2.0, -2), (0.0, 1), (-2.0, 3), (0.0, -1)]
@@ -938,7 +937,7 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
         >>> l.lit_heap
         [(-2.0, -3), (-2.0, 2), (-2.0, -2), (0.0, 1), (-2.0, 3), (0.0, -1)]
 
@@ -961,7 +960,7 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
 
         >>> l.num_learned_clauses
         0
@@ -991,7 +990,7 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
 
         >>> l.num_learned_clauses
         0
@@ -1028,7 +1027,7 @@ class SATSolver:
 
         >>> from sympy.logic.algorithms.dpll2 import SATSolver
         >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
-        ... {3, -2}], {1, 2, 3}, set())
+        ... {3, -2}], {1, 2, 3})
         >>> next(l._find_model())
         {1: True, 2: False, 3: False}
         >>> l._simple_compute_conflict()
