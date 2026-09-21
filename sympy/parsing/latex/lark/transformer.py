@@ -645,7 +645,10 @@ class TransformToSymPyExpr(Transformer):
         return sympy.ceiling(tokens[1])
 
     def factorial(self, tokens):
-        return sympy.factorial(tokens[0])
+        expr, bangs = tokens
+        if len(bangs) == 2:
+            return sympy.factorial2(expr)
+        return sympy.factorial(expr)
 
     def conjugate(self, tokens):
         return sympy.conjugate(tokens[1])

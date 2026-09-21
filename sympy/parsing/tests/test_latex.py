@@ -11,7 +11,7 @@ from sympy.core.numbers import (E, oo)
 from sympy.core.power import Pow
 from sympy.core.relational import (GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality)
 from sympy.core.symbol import Symbol
-from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.combinatorial.factorials import (binomial, factorial, factorial2)
 from sympy.functions.elementary.complexes import (Abs, conjugate)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
@@ -60,6 +60,10 @@ def _Abs(a):
 
 def _factorial(a):
     return factorial(a, evaluate=False)
+
+
+def _factorial2(a):
+    return factorial2(a, evaluate=False)
 
 
 def _exp(a):
@@ -213,6 +217,19 @@ GOOD_PAIRS = [
     (r"a_{2n}", Symbol('a_{2*n}')),
     (r"a_{n^2}", Symbol('a_{n**2}')),
     (r"x!", _factorial(x)),
+    (r"x!!", _factorial2(x)),
+    (r"3!!", _factorial2(3)),
+    (r"(x + 1)!!", _factorial2(_Add(x, 1))),
+    (r"(x!!)!!", _factorial2(_factorial2(x))),
+    (r"(x!)!!", _factorial2(_factorial(x))),
+    (r"x! !", _factorial(_factorial(x))),
+    (r"x!\,!", _factorial(_factorial(x))),
+    (r"x\!!!", _factorial2(x)),
+    (r"x!! !", _factorial(_factorial2(x))),
+    (r"x! !!", _factorial2(_factorial(x))),
+    (r"(x!!)^{2}", _Pow(_factorial2(x), 2)),
+    (r"x!!!!", _factorial(_factorial(_factorial(_factorial(x))))),
+    (r"\frac{3!!}{4!!}", _Mul(_factorial2(3), _Pow(_factorial2(4), -1))),
     (r"100!", _factorial(100)),
     (r"\theta!", _factorial(theta)),
     (r"(x + 1)!", _factorial(_Add(x, 1))),
