@@ -384,8 +384,6 @@ class SATSolver:
         Returns ``UNSATISFIABLE`` on a conflict, ``SATISFIABLE`` if it leaves
         no variable unassigned, and ``UNKNOWN`` otherwise.
 
-        A conflict a registered theory finds is reported too, but never a model.
-
         TODO: IPASIR propagates at any decision level, while this is limited
         to the root.
 
