@@ -376,7 +376,7 @@ def _charpoly(M, x: str | Expr = 'lambda',
     Examples
     ========
 
-    >>> from sympy import Matrix, Symbol
+    >>> from sympy import Matrix
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
@@ -388,8 +388,7 @@ def _charpoly(M, x: str | Expr = 'lambda',
     expression in a particular symbol, instantiate the polynomial with that
     symbol:
 
-    >>> lamda = Symbol('lambda')
-    >>> M.charpoly()(lamda)
+    >>> M.charpoly()('lambda')
     lambda**2 - lambda - 6
 
     The anonymous generator is chosen canonically so that it does not clash
