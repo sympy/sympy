@@ -8,6 +8,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
 from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
 from sympy.functions.combinatorial.numbers import nC
@@ -436,7 +437,7 @@ def _charpoly(M, x: str | Expr = 'lambda',
     K = dM.domain
 
     cp = dM.charpoly()
-    x = cp.gens[0]
+    x = Dummy()  # needed to create the PurePoly (which cp is not)
 
     if K.is_EXRAW or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the
