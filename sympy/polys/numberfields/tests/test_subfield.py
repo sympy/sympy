@@ -265,7 +265,7 @@ def test_primitive_element():
         (Poly(x**4 - 10*x**2 + 1, domain='QQ'), [1, 1], [[Q(1, 2), 0, -Q(9, 2),
          0], [-Q(1, 2), 0, Q(11, 2), 0]])
 
-    assert primitive_element([sqrt(2)], polys=True) == (Poly(x**2 - 2), [1])
+    assert primitive_element([sqrt(2)], polys=True) == (PurePoly(x**2 - 2, x, domain='QQ'), [1])
 
     raises(ValueError, lambda: primitive_element([], x, ex=False))
     raises(ValueError, lambda: primitive_element([], x, ex=True))
