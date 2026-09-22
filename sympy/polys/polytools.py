@@ -4754,20 +4754,12 @@ class PurePoly(Poly):
             if isinstance(s, Symbol)
         }
 
-        if self.ngens == 1:
-            for name in ('x', 'w'):
-                if name not in used:
-                    return (Symbol(name),)
-
-        gens = []
         index = 0
-        while len(gens) < self.ngens:
-            name = 'x_%d' % index
+        while any('_%d' % (index + i) in used for i in range(self.ngens)):
             index += 1
-            if name not in used:
-                gens.append(Symbol(name))
 
-        return tuple(gens)
+        return tuple(Symbol('_%d' % (index + i))
+                     for i in range(self.ngens))
 
     def __new__(cls, rep, *gens, **args):
         # A PurePoly is structurally independent of the names of its
