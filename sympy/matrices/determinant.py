@@ -398,7 +398,7 @@ def _charpoly(M, x: str | Expr = 'lambda',
     >>> M.charpoly()
     PurePoly(_0**2 - _0 - 2*x, _0, domain=ZZ.poly_ring(x))
     >>> M.charpoly()('t')
-    -2*x + t**2 - t
+    t**2 - t - 2*x
 
     Notes
     =====
