@@ -640,17 +640,17 @@ def test_PurePoly_args():
 
 
 def test_PurePoly_canonical_gens_and_instantiation():
-    x0 = Symbol('x_0')
-    x1 = Symbol('x_1')
-    x2 = Symbol('x_2')
+    _0 = Symbol('_0')
+    _1 = Symbol('_1')
+    _2 = Symbol('_2')
+    _3 = Symbol('_3')
 
-    # Input generator names are discarded. Canonical placeholders are
-    # generated from the polynomial arity and coefficient free symbols.
-    assert PurePoly(y**2 - 1, y).gens == (x,)
-    assert PurePoly(y**2 + x, y).gens == (w,)
-    assert PurePoly(y**2 + x + w + x0, y).gens == (x1,)
-    assert PurePoly(a*b + 1, a, b).gens == (x0, x1)
-    assert PurePoly(a*b + x1, a, b).gens == (x0, x2)
+    # Input generator names are discarded. Canonical placeholders are the
+    # first contiguous block of _i symbols not used by coefficient symbols.
+    assert PurePoly(y**2 - 1, y).gens == (_0,)
+    assert PurePoly(y**2 + _0, y).gens == (_1,)
+    assert PurePoly(a*b + 1, a, b).gens == (_0, _1)
+    assert PurePoly(a*b + _1, a, b).gens == (_2, _3)
 
     p = PurePoly(a*b + 1, a, b)
     assert p(a, b) == a*b + 1
@@ -671,12 +671,12 @@ def test_PurePoly_generator_cache_independence():
     q = PurePoly(v**2 - 1, v)
 
     assert p == q
-    assert p.gens == q.gens == (x,)
+    assert p.gens == q.gens == (Symbol('_0'),)
 
     # _subs is cached, so equal PurePoly instances must not carry different
     # generator state into cached results.
-    assert p.subs(u, v).gens == (x,)
-    assert q.subs(u, v).gens == (x,)
+    assert p.subs(u, v).gens == (Symbol('_0'),)
+    assert q.subs(u, v).gens == (Symbol('_0'),)
     assert p.subs(u, v) == q.subs(u, v) == p
 
 
@@ -686,12 +686,12 @@ def test_PurePoly_composite_domain_printing():
     p = PurePoly(x**2 - beta, x)
     assert p.domain == ZZ.poly_ring(beta)
     assert str(p) == (
-        "PurePoly(x**2 - beta, x, domain=ZZ.poly_ring(beta))")
+        "PurePoly(_0**2 - beta, _0, domain=ZZ.poly_ring(beta))")
 
     K = ZZ.poly_ring(beta).frac_field(y)
     p = PurePoly(x**2 + (beta + 1)/(y + 1), x, domain=K)
     assert str(p) == (
-        "PurePoly(x**2 + (beta + 1)/(y + 1), x, "
+        "PurePoly(_0**2 + (beta + 1)/(y + 1), _0, "
         "domain=ZZ.poly_ring(beta).frac_field(y))")
 
 
@@ -705,7 +705,7 @@ def test_PurePoly_fraction_field_args():
     assert p.free_symbols == {beta}
     assert p.subs(x, z) == p
     assert str(p) == (
-        "PurePoly(x**2 - 4*beta, x, domain=ZZ.frac_field(beta))")
+        "PurePoly(_0**2 - 4*beta, _0, domain=ZZ.frac_field(beta))")
 
     q = p.subs(beta, z)
     assert q.domain == ZZ.frac_field(z)
@@ -743,14 +743,14 @@ def test_PurePoly_abstract_generator_subs():
     assert q.xreplace({x: z}) == PurePoly(x**2 + z, x)
     assert q(z) == z**2 + x
 
-    assert str(p) == "PurePoly(x**2 + y, x, domain=ZZ.poly_ring(y))"
-    assert str(q) == "PurePoly(w**2 + x, w, domain=ZZ.poly_ring(x))"
+    assert str(p) == "PurePoly(_0**2 + y, _0, domain=ZZ.poly_ring(y))"
+    assert str(q) == "PurePoly(_0**2 + x, _0, domain=ZZ.poly_ring(x))"
 
     r = PurePoly(x**2 + w, x)
-    assert str(r) == "PurePoly(x**2 + w, x, domain=ZZ.poly_ring(w))"
+    assert str(r) == "PurePoly(_0**2 + w, _0, domain=ZZ.poly_ring(w))"
 
     r = PurePoly(x**2 + w, x).subs(w, x)
-    assert str(r) == "PurePoly(w**2 + x, w, domain=ZZ.poly_ring(x))"
+    assert str(r) == "PurePoly(_0**2 + x, _0, domain=ZZ.poly_ring(x))"
 
 
 def test_Poly__eq__():
