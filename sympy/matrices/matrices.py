@@ -70,7 +70,7 @@ class MatrixDeterminant(MatrixCommon):
     def adjugate(self, method="berkowitz"):
         return _adjugate(self, method=method)
 
-    def charpoly(self, x='lambda', simplify=_simplify):
+    def charpoly(self, x=None, simplify=_simplify):
         return _charpoly(self, x=x, simplify=simplify)
 
     def cofactor(self, i, j, method="berkowitz"):
