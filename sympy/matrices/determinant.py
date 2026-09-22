@@ -8,7 +8,6 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy
 from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
 from sympy.functions.combinatorial.numbers import nC
@@ -437,10 +436,7 @@ def _charpoly(M, x: str | Expr = 'lambda',
     K = dM.domain
 
     cp = dM.charpoly()
-
-    # The characteristic polynomial generator is formal. Use a temporary
-    # generator only for construction; PurePoly does not retain its identity.
-    gen = Dummy('_x')
+    x = cp.gens[0]
 
     if K.is_EXRAW or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the
@@ -450,11 +446,11 @@ def _charpoly(M, x: str | Expr = 'lambda',
         # will put everything into canonical form anyway.
         berk_vector = [K.to_sympy(c) for c in cp]
         berk_vector = [simplify(a) for a in berk_vector]
-        p = PurePoly(berk_vector, gen)
+        p = PurePoly(berk_vector, x)
 
     else:
         # Convert from the list of domain elements directly to Poly.
-        p = PurePoly(cp, gen, domain=K)
+        p = PurePoly(cp, x, domain=K)
 
     return p
 
