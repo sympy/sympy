@@ -153,6 +153,7 @@ class SATSolver:
             raise NotImplementedError
 
         self.theory_solvers = list(theory_solvers) if theory_solvers is not None else []
+        if len({id(theory) for theory in self.theory_solvers}) != len(self.theory_solvers):
             raise ValueError("Duplicate theory solver")
 
         # Create the base level
