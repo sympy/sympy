@@ -376,35 +376,30 @@ def _charpoly(M, x: str | Expr = 'lambda',
     Examples
     ========
 
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, Symbol
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
-    PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
+    PurePoly(_0**2 - _0 - 6, _0, domain='ZZ')
     >>> M.charpoly(x) == M.charpoly(y)
     True
 
-    Specifying ``x`` is optional; a symbol named ``lambda`` is used by
-    default (which looks good when pretty-printed in unicode):
+    The generator of the returned ``PurePoly`` is anonymous. To obtain an
+    expression in a particular symbol, instantiate the polynomial with that
+    symbol:
 
-    >>> M.charpoly().as_expr()
+    >>> lamda = Symbol('lambda')
+    >>> M.charpoly()(lamda)
     lambda**2 - lambda - 6
 
-    And if ``x`` clashes with an existing symbol, underscores will
-    be prepended to the name to make it unique:
+    The anonymous generator is chosen canonically so that it does not clash
+    with symbols in the coefficient domain:
 
     >>> M = Matrix([[1, 2], [x, 0]])
-    >>> M.charpoly(x).as_expr()
-    _x**2 - _x - 2*x
-
-    Whether you pass a symbol or not, the generator can be obtained
-    with the gen attribute since it may not be the same as the symbol
-    that was passed:
-
-    >>> M.charpoly(x).gen
-    _x
-    >>> M.charpoly(x).gen == x
-    False
+    >>> M.charpoly().as_expr()
+    _0**2 - _0 - 2*x
+    >>> M.charpoly().gen
+    _0
 
     Notes
     =====
