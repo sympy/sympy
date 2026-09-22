@@ -8530,6 +8530,8 @@ def named_poly(n, f, K, name, x, polys):
     poly = DMP(f(int(n), *tail, K), K)
     if head is None:
         poly = PurePoly.new(poly, Dummy('x'))
+        if not polys:
+            return poly(Dummy('x'))
     else:
         poly = Poly.new(poly, head)
     return poly if polys else poly.as_expr()
