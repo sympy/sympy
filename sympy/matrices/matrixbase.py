@@ -3345,7 +3345,7 @@ class MatrixBase(Printable):
     def adjugate(self, method: str="berkowitz") -> Self:
         return _adjugate(self, method=method)
 
-    def charpoly(self, x: str | Expr = 'lambda', simplify=_utilities_simplify) -> Poly:
+    def charpoly(self, x: str | Expr | None = None, simplify=_utilities_simplify) -> Poly:
         return _charpoly(self, x=x, simplify=simplify)
 
     def cofactor(self, i, j, method: str="berkowitz") -> Expr:
