@@ -2185,7 +2185,7 @@ def sdm_berk(M, n, K):
     >>> sdm_berk(M, 2, ZZ)
     {0: 1, 1: -5, 2: -2}
     >>> Matrix([[1, 2], [3, 4]]).charpoly()
-    PurePoly(lambda**2 - 5*lambda - 2, lambda, domain='ZZ')
+    PurePoly(_0**2 - 5*_0 - 2, _0, domain='ZZ')
 
     See Also
     ========
