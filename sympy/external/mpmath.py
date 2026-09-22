@@ -12,6 +12,8 @@ from functools import update_wrapper as _update_wrapper
 
 import mpmath
 
+__version__ = mpmath.__version__
+
 from mpmath import (
     MPContext,
     MPIntervalContext,
@@ -218,6 +220,7 @@ __all__ = [
     "_constant",
     "_mpc",
     "_mpf",
+    "__version__",
     "mpmath",
 ]
 

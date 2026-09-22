@@ -1,6 +1,6 @@
 from __future__ import annotations
-from sympy.external.mpmath import (PythonMPContext, _constant, _mpc, _mpf,
-    mpmath, mpnumeric, repr_dps)
+from sympy.external.mpmath import (PythonMPContext, __version__, _constant,
+    _mpc, _mpf, mpmath, mpnumeric, repr_dps)
 
 
 def test_repr_dps_is_stable():
@@ -12,6 +12,7 @@ def test_repr_dps_is_stable():
 
 def test_mpmath_module_reexported():
     assert mpmath is __import__('mpmath')
+    assert __version__ == mpmath.__version__
 
 
 def test_ctx_mp_python_names_reexported():
