@@ -143,7 +143,7 @@ https://github.com/sympy/sympy
 
 You will now have a fork at `https://github.com/<your-user-name>/sympy`.
 
-Then, on your machine browse to where you would like to store SymPy, and clone (download) the latest code from SymPy's original repository (about 77 MiB):
+Then, on your machine browse to where you would like to store SymPy, and clone (download) the latest code from SymPy's original repository:
 
 ```bash
 $ git clone https://github.com/sympy/sympy
@@ -166,8 +166,8 @@ After the configuration, your setup should be similar to this:
 $ git remote -v
 origin   https://github.com/sympy/sympy (fetch)
 origin   https://github.com/sympy/sympy (push)
-github https://github.com/<your-github-username>/sympy (fetch)
-github https://github.com/<your-github-username>/sympy (push)
+github git@github.com:<your-github-username>/sympy.git (fetch)
+github git@github.com:<your-github-username>/sympy.git (push)
 ```
 
 ## Virtual Environment Setup
