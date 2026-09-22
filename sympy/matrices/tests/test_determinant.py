@@ -5,7 +5,7 @@ from sympy.core.numbers import I
 from sympy.core.numbers import Rational
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.polys.polytools import Poly, PurePoly
+from sympy.polys.polytools import PurePoly
 from sympy.matrices import Matrix, eye, ones
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
@@ -276,8 +276,8 @@ def test_charpoly():
 
     m = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
-    assert eye_Determinant(3).charpoly(x) == Poly((x - 1)**3, x)
-    assert eye_Determinant(3).charpoly(y) == Poly((y - 1)**3, y)
+    assert eye_Determinant(3).charpoly(x) == PurePoly((x - 1)**3, x)
+    assert eye_Determinant(3).charpoly(y) == PurePoly((y - 1)**3, y)
     assert m.charpoly() == PurePoly(x**3 - 15*x**2 - 18*x, x)
     raises(NonSquareMatrixError, lambda: Matrix([[1], [2]]).charpoly())
     n = Matrix(4, 4, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
