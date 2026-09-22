@@ -654,8 +654,12 @@ def test_PurePoly_canonical_gens_and_instantiation():
 
     p = PurePoly(a*b + 1, a, b)
     assert p(a, b) == a*b + 1
+    assert p('alpha', 'beta') == Symbol('alpha')*Symbol('beta') + 1
     assert p.as_expr(a, b) == a*b + 1
+    assert p.as_expr('alpha', 'beta') == Symbol('alpha')*Symbol('beta') + 1
     assert p.as_poly(a, b) == Poly(a*b + 1, a, b)
+    assert p.as_poly('alpha', 'beta') == Poly(
+        Symbol('alpha')*Symbol('beta') + 1, Symbol('alpha'), Symbol('beta'))
     assert p.func(p(*p.gens), *p.gens) == p
 
     raises(GeneratorsError, lambda: p(a))
