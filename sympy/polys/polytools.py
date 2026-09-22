@@ -4812,12 +4812,17 @@ class PurePoly(Poly):
             raise GeneratorsError(
                 "expected %d generators, got %d" % (self.ngens, len(gens)))
 
+    def _normalize_gens(self, gens):
+        self._check_gens(gens)
+        return tuple(Symbol(gen) if isinstance(gen, str) else gen
+                     for gen in gens)
+
     def as_expr(self, *gens):
         """Instantiate the anonymous generators in an expression."""
         if not gens:
             gens = self.gens
         else:
-            self._check_gens(gens)
+            gens = self._normalize_gens(gens)
         return basic_from_dict(self.rep.to_sympy_dict(), *gens)
 
     def as_poly(self, *gens, **args):
@@ -4825,7 +4830,7 @@ class PurePoly(Poly):
         if not gens:
             gens = self.gens
         else:
-            self._check_gens(gens)
+            gens = self._normalize_gens(gens)
 
         if args:
             return Poly(self.as_expr(*gens), *gens, **args)
@@ -4833,7 +4838,7 @@ class PurePoly(Poly):
 
     def __call__(self, *values):
         """Instantiate all anonymous generators with values."""
-        self._check_gens(values)
+        values = self._normalize_gens(values)
         return basic_from_dict(self.rep.to_sympy_dict(), *values)
 
     def _eval_subs(self, old, new):
