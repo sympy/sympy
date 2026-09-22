@@ -249,9 +249,9 @@ def test_primitive_element():
     assert primitive_element(
         [sqrt(2), sqrt(3)], x) == (x**4 - 10*x**2 + 1, [1, 1])
 
-    assert primitive_element([sqrt(2)], x, polys=True) == (Poly(x**2 - 2, x, domain='QQ'), [1])
+    assert primitive_element([sqrt(2)], x, polys=True) == (Poly(x**2 - 2, domain='QQ'), [1])
     assert primitive_element([sqrt(
-        2), sqrt(3)], x, polys=True) == (Poly(x**4 - 10*x**2 + 1, x, domain='QQ'), [1, 1])
+        2), sqrt(3)], x, polys=True) == (Poly(x**4 - 10*x**2 + 1, domain='QQ'), [1, 1])
 
     assert primitive_element(
         [sqrt(2)], x, ex=True) == (x**2 - 2, [1], [[1, 0]])
