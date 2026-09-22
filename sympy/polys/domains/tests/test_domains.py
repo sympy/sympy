@@ -870,12 +870,12 @@ def test_Domain_alg_field_from_poly():
 def test_Domain_cyclotomic_field():
     K = ZZ.cyclotomic_field(12)
     assert K.is_Cyclotomic and K.is_CyclotomicField
-    assert K.ext.minpoly == PurePoly(cyclotomic_poly(12), x, domain=QQ)
+    assert K.ext.minpoly == PurePoly(cyclotomic_poly(12, x), x, domain=QQ)
     assert K.dom == QQ
     assert K.zeta_order == 12
 
     F = QQ.cyclotomic_field(3)
-    assert F.ext.minpoly == PurePoly(cyclotomic_poly(3), x, domain=QQ)
+    assert F.ext.minpoly == PurePoly(cyclotomic_poly(3, x), x, domain=QQ)
     assert F.dom == QQ
     assert F.zeta_order == 3
 
