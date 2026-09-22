@@ -12,6 +12,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
+from sympy.simplify.simplify import simplify
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.expr import Expr
@@ -924,9 +925,8 @@ class Quaternion(Expr):
         """Returns the norm of the quaternion."""
         if self._norm is None:  # check if norm is pre-defined
             q = self
-            # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
-            # arise when from_axis_angle is used).
-            return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+            # simplify is used for trigonometric expressions from from_axis_angle.
+            return sqrt(simplify(q.a**2 + q.b**2 + q.c**2 + q.d**2))
 
         return self._norm
 
