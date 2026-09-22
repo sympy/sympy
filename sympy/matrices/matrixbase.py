@@ -31,7 +31,6 @@ from sympy.functions.combinatorial.factorials import binomial, factorial
 from collections.abc import Callable
 from sympy.utilities.iterables import reshape
 from sympy.core.power import Pow
-from sympy.core.symbol import uniquely_named_symbol
 
 from .utilities import _dotprodsimp, _simplify as _utilities_simplify
 from sympy.polys.polytools import Poly, PurePoly
@@ -5110,7 +5109,7 @@ class MatrixBase(Printable):
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
-        x = uniquely_named_symbol('x', self, modify=lambda s: '_' + s)
+        x = Dummy()
         p = self.charpoly()
         if p(x) == x ** self.rows:
             return True
