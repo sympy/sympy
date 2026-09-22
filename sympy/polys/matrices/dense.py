@@ -772,7 +772,7 @@ def ddm_berk(M, K):
     >>> ddm_berk(M, ZZ)
     [[1], [-5], [-2]]
     >>> Matrix(M).charpoly()('lambda')
-    PurePoly(lambda**2 - 5*lambda - 2, lambda, domain='ZZ')
+    lambda**2 - 5*lambda - 2
 
     See Also
     ========
