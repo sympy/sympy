@@ -8,9 +8,9 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, uniquely_named_symbol
+from sympy.core.symbol import Dummy
 from sympy.core.mul import Mul
-from sympy.polys import Poly, PurePoly, cancel
+from sympy.polys import PurePoly, cancel
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.matrices.ddm import DDM
@@ -355,21 +355,20 @@ def _adjugate(M, method="berkowitz"):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _charpoly(M, x: str | Expr | None = None,
-              simplify: Callable[[Expr], Expr] = _simplify) -> Poly:
+def _charpoly(M, x: str | Expr = 'lambda',
+              simplify: Callable[[Expr], Expr] = _simplify) -> PurePoly:
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
 
-    If no generator is supplied then an anonymous ``PurePoly`` is returned.
-    If a generator is supplied then a named ``Poly`` is returned:
+    The characteristic polynomial is returned as a ``PurePoly`` because its
+    polynomial generator is formal and has no intrinsic name.
 
     Parameters
     ==========
 
     x : string or expression, optional
-        Generator for the characteristic polynomial. If omitted, an anonymous
-        ``PurePoly`` is returned. If supplied, a ``Poly`` with that generator
-        is returned.
+        Retained for backwards compatibility. The returned ``PurePoly`` has
+        an anonymous generator independent of this argument.
 
     simplify : function, optional
         Simplification function to use on the characteristic polynomial
@@ -383,20 +382,23 @@ def _charpoly(M, x: str | Expr | None = None,
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
     PurePoly(_0**2 - _0 - 6, _0, domain='ZZ')
-    >>> M.charpoly(x)
-    Poly(x**2 - x - 6, x, domain='ZZ')
 
-    The anonymous result can be instantiated in any desired symbol:
+    Instantiate the formal generator only when a named expression or ``Poly``
+    is wanted:
 
     >>> M.charpoly()('lambda')
     lambda**2 - lambda - 6
+    >>> M.charpoly().as_poly('lambda')
+    Poly(lambda**2 - lambda - 6, lambda, domain='ZZ')
 
-    If an explicit generator clashes with a symbol in the matrix then a unique
-    generator is chosen, as before:
+    Symbols occurring in the matrix remain coefficient symbols and are
+    distinct from the anonymous polynomial generator:
 
     >>> M = Matrix([[1, 2], [x, 0]])
-    >>> M.charpoly(x).as_expr()
-    _x**2 - _x - 2*x
+    >>> M.charpoly()
+    PurePoly(_0**2 - _0 - 2*x, _0, domain=ZZ.poly_ring(x))
+    >>> M.charpoly()('t')
+    -2*x + t**2 - t
 
     Notes
     =====
@@ -436,12 +438,9 @@ def _charpoly(M, x: str | Expr | None = None,
 
     cp = dM.charpoly()
 
-    pure = x is None
-    if pure:
-        x = Dummy('_x')
-    else:
-        x = uniquely_named_symbol(x, [M], modify=lambda s: '_' + s)
-    poly_cls = PurePoly if pure else Poly
+    # The characteristic polynomial generator is formal. Use a temporary
+    # generator only for construction; PurePoly does not retain its identity.
+    gen = Dummy('_x')
 
     if K.is_EXRAW or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the
@@ -451,11 +450,11 @@ def _charpoly(M, x: str | Expr | None = None,
         # will put everything into canonical form anyway.
         berk_vector = [K.to_sympy(c) for c in cp]
         berk_vector = [simplify(a) for a in berk_vector]
-        p = poly_cls(berk_vector, x)
+        p = PurePoly(berk_vector, gen)
 
     else:
         # Convert from the list of domain elements directly to Poly.
-        p = poly_cls(cp, x, domain=K)
+        p = PurePoly(cp, gen, domain=K)
 
     return p
 
