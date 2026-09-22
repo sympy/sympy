@@ -21,7 +21,7 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
 from sympy.core.relational import Relational, Equality
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Str, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
@@ -4661,9 +4661,152 @@ class Poly(Basic):
         return isinstance(g, f.__class__) and f.gens == g.gens and f.rep.eq(g.rep, strict=True)
 
 
+class _PurePolyDomain(Basic):
+    """Basic wrapper for a polys domain used in PurePoly.args.
+
+    Most domains contain no free symbols and can be treated atomically.
+    Composite polynomial and fraction-field domains expose their generators
+    structurally so substitution and xreplace can update e.g. ZZ[y] to
+    ZZ[x] along with the coefficients of a PurePoly.
+    """
+
+    __slots__ = ('domain',)
+
+    def __new__(cls, domain, *args):
+        if isinstance(domain, Str):
+            kind = domain.name
+            if kind not in ('poly', 'frac') or len(args) != 3:
+                raise ValueError("invalid PurePoly domain descriptor")
+            base, symbols, order = args
+            if not isinstance(base, _PurePolyDomain):
+                raise ValueError("invalid PurePoly ground domain")
+            symbols = tuple(symbols)
+            order = order.name
+            if kind == 'poly':
+                domain = base.domain.poly_ring(*symbols, order=order)
+            else:
+                domain = base.domain.frac_field(*symbols, order=order)
+        else:
+            domain = options.Domain.preprocess(domain)
+
+        if domain.is_PolynomialRing:
+            obj = Basic.__new__(
+                cls, Str('poly'), cls(domain.dom), Tuple(*domain.symbols),
+                Str(str(domain.order)))
+        elif domain.is_FractionField:
+            obj = Basic.__new__(
+                cls, Str('frac'), cls(domain.dom), Tuple(*domain.symbols),
+                Str(str(domain.order)))
+        else:
+            obj = Basic.__new__(cls)
+
+        obj.domain = domain
+        return obj
+
+    def _hashable_content(self):
+        return (self.domain,)
+
+    def __getnewargs__(self):
+        return self.args or (self.domain,)
+
+    def _sympystr(self, printer):
+        return str(self.domain)
+
+
 @public
 class PurePoly(Poly):
     """Class for representing pure polynomials. """
+
+    __slots__ = ()
+
+    # __getitem__ denotes indexed roots, not sequence access. Without an
+    # explicit non-iterable marker Python would use the old sequence protocol
+    # and attempt to iterate over roots.
+    __iter__ = None
+
+    @classmethod
+    def new(cls, rep, *gens):
+        """Construct a PurePoly from a raw representation.
+
+        gens are accepted to retain compatibility with the Poly construction
+        machinery, but their identities are not stored.
+        """
+        if not isinstance(rep, DMP):
+            raise PolynomialError(
+                "invalid polynomial representation: %s" % rep)
+        elif rep.lev != len(gens) - 1:
+            raise PolynomialError("invalid arguments: %s, %s" % (rep, gens))
+
+        obj = Basic.__new__(cls)
+        obj.rep = rep
+        return obj
+
+    @property
+    def ngens(self):
+        """Number of anonymous polynomial generators."""
+        return self.rep.lev + 1
+
+    @property
+    def gens(self):
+        """Canonical placeholders for the anonymous generators."""
+        used = {
+            s.name for s in self.free_symbols_in_domain
+            if isinstance(s, Symbol)
+        }
+
+        if self.ngens == 1:
+            for name in ('x', 'w'):
+                if name not in used:
+                    return (Symbol(name),)
+
+        gens = []
+        index = 0
+        while len(gens) < self.ngens:
+            name = 'x_%d' % index
+            index += 1
+            if name not in used:
+                gens.append(Symbol(name))
+
+        return tuple(gens)
+
+    def __new__(cls, rep, *gens, **args):
+        # A PurePoly is structurally independent of the names of its
+        # generators. Its args therefore use a canonical sparse term
+        # representation together with the coefficient domain, rather than an
+        # expression together with named generators. Temporary generators are
+        # used only to pass the arity through the Poly construction machinery.
+        if (len(gens) == 1 and isinstance(gens[0], _PurePolyDomain)
+                and isinstance(rep, Tuple) and rep):
+            domain = gens[0].domain
+            try:
+                first_monom, _ = rep[0]
+                if not isinstance(first_monom, Tuple):
+                    raise ValueError
+                ngens = len(first_monom)
+                if not ngens:
+                    raise ValueError
+                rep_dict = {}
+                for term in rep:
+                    monom, coeff = term
+                    if not isinstance(monom, Tuple) or len(monom) != ngens:
+                        raise ValueError
+                    monom_int = tuple(int(exp) for exp in monom)
+                    if any(exp < 0 for exp in monom_int):
+                        raise ValueError
+                    rep_dict[monom_int] = coeff
+            except (TypeError, ValueError):
+                pass
+            else:
+                gens = tuple(Dummy(f'_x{i}') for i in range(ngens))
+                return cls.from_dict(rep_dict, *gens, domain=domain, **args)
+
+        return super().__new__(cls, rep, *gens, **args)
+
+    @property
+    def args(self):
+        terms = Tuple(*(Tuple(Tuple(*monom), coeff)
+                        for monom, coeff in self.terms()))
+        return (terms, _PurePolyDomain(self.domain))
 
     def _hashable_content(self):
         """Allow SymPy to hash Poly instances. """
@@ -4671,6 +4814,59 @@ class PurePoly(Poly):
 
     def __hash__(self):
         return super().__hash__()
+
+    def _check_gens(self, gens):
+        if len(gens) != self.ngens:
+            raise GeneratorsError(
+                "expected %d generators, got %d" % (self.ngens, len(gens)))
+
+    def as_expr(self, *gens):
+        """Instantiate the anonymous generators in an expression."""
+        if not gens:
+            gens = self.gens
+        else:
+            self._check_gens(gens)
+        return basic_from_dict(self.rep.to_sympy_dict(), *gens)
+
+    def as_poly(self, *gens, **args):
+        """Instantiate the anonymous generators in a Poly."""
+        if not gens:
+            gens = self.gens
+        else:
+            self._check_gens(gens)
+
+        if args:
+            return Poly(self.as_expr(*gens), *gens, **args)
+        return Poly.new(self.rep, *gens)
+
+    def __call__(self, *values):
+        """Instantiate all anonymous generators with values."""
+        self._check_gens(values)
+        return basic_from_dict(self.rep.to_sympy_dict(), *values)
+
+    def _eval_subs(self, old, new):
+        # The generators of a PurePoly are abstract and are not free symbols.
+        # Let Basic perform substitution through args so that only symbols
+        # appearing in coefficients are affected.
+        return None
+
+    def __getitem__(self, index):
+        """Return the indexed root of a univariate PurePoly.
+
+        The generators of a PurePoly are anonymous, so indexing selects
+        a root without requiring a generator to be named.
+        """
+        if not self.is_univariate:
+            raise MultivariatePolynomialError(
+                "indexed roots are only defined for univariate PurePoly")
+
+        from sympy.polys.rootoftools import CRootOf
+
+        # CRootOf currently works with an expression and a Symbol generator.
+        # Instantiate the anonymous generator with a fresh Dummy only at this
+        # boundary; it is not part of the PurePoly identity.
+        gen = Dummy('_x')
+        return CRootOf(self(gen), gen, index)
 
     @property
     def free_symbols(self):
@@ -4697,23 +4893,18 @@ class PurePoly(Poly):
     def __eq__(self, other):
         f, g = self, other
 
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, f.gens, domain=f.get_domain())
-            except (PolynomialError, DomainError, CoercionFailed):
-                return False
+        # PurePoly represents a polynomial over a particular domain with
+        # anonymous generators. It therefore compares only with another
+        # PurePoly having the same number of generators and the same domain.
+        # Generator names themselves are intentionally ignored.
+        if not isinstance(g, PurePoly):
+            return False
 
-        if len(f.gens) != len(g.gens):
+        if f.rep.lev != g.rep.lev:
             return False
 
         if f.rep.dom != g.rep.dom:
-            try:
-                dom = f.rep.dom.unify(g.rep.dom, f.gens)
-            except UnificationFailed:
-                return False
-
-            f = f.set_domain(dom)
-            g = g.set_domain(dom)
+            return False
 
         return f.rep == g.rep
 
@@ -4729,7 +4920,7 @@ class PurePoly(Poly):
             except CoercionFailed:
                 raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
-        if len(f.gens) != len(g.gens):
+        if f.rep.lev != g.rep.lev:
             raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         if not (isinstance(f.rep, DMP) and isinstance(g.rep, DMP)):

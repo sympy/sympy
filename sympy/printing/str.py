@@ -542,9 +542,32 @@ class StrPrinter(Printer):
             denom = self.parenthesize(frac.denom, PRECEDENCE["Atom"], strict=True)
             return numer + "/" + denom
 
-    def _print_Poly(self, expr):
+    def _print_PurePoly(self, expr):
+        domain = expr.get_domain()
+
+        def composite_domain_str(domain):
+            if not (domain.is_PolynomialRing or domain.is_FractionField):
+                return str(domain)
+
+            base = composite_domain_str(domain.domain)
+            symbols = ", ".join(self._print(s) for s in domain.symbols)
+            method = "poly_ring" if domain.is_PolynomialRing else "frac_field"
+            result = "%s.%s(%s" % (base, method, symbols)
+            if not domain.order.is_default:
+                result += ", order='%s'" % domain.order
+            return result + ")"
+
+        domain_str = (composite_domain_str(domain)
+            if domain.is_PolynomialRing or domain.is_FractionField else None)
+
+        return self._print_Poly(expr, expr.gens, domain_str)
+
+    def _print_Poly(self, expr, gen_symbols=None, domain_str=None):
         ATOM_PREC = PRECEDENCE["Atom"] - 1
-        terms, gens = [], [ self.parenthesize(s, ATOM_PREC) for s in expr.gens ]
+        if gen_symbols is None:
+            gen_symbols = expr.gens
+        terms, gens = [], [
+            self.parenthesize(s, ATOM_PREC) for s in gen_symbols]
 
         for monom, coeff in expr.terms():
             s_monom = []
@@ -598,7 +621,10 @@ class StrPrinter(Printer):
         try:
             format += ", modulus=%s" % expr.get_modulus()
         except PolynomialError:
-            format += ", domain='%s'" % expr.get_domain()
+            if domain_str is None:
+                format += ", domain='%s'" % expr.get_domain()
+            else:
+                format += ", domain=%s" % domain_str
 
         format += ")"
 
