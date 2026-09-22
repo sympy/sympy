@@ -214,8 +214,8 @@ The following example shows the recursive nature of the algorithm nicely:
 >>> t = symbols('t', real=True)
 >>> a, b, c = symbols('a, b, c', real=True)
 >>> sympy.SYMPY_DEBUG = True
->>> laplace_transform(cos(a*t)*sinh(b*t)*sinh(c*t), t, s)
-((-s**3/2 + s*(-a**2/2 + (-b + c)**2/2))/(a**4 + 2*a**2*(-b + c)**2 + s**4 + s**2*(2*a**2 - 2*(-b + c)**2) + (-b + c)**4) + (s**3/2 + s*(a**2/2 - (-b - c)**2/2))/(a**4 + 2*a**2*(-b - c)**2 + s**4 + s**2*(2*a**2 - 2*(-b - c)**2) + (-b - c)**4), Max(Abs(b - c), Abs(b + c)), True) # doctest:+SKIP
+>>> laplace_transform(cos(a*t)*sinh(b*t)*sinh(c*t), t, s) # doctest:+SKIP
+((-s**3/2 + s*(-a**2/2 + (-b + c)**2/2))/(a**4 + 2*a**2*(-b + c)**2 + s**4 + s**2*(2*a**2 - 2*(-b + c)**2) + (-b + c)**4) + (s**3/2 + s*(a**2/2 - (-b - c)**2/2))/(a**4 + 2*a**2*(-b - c)**2 + s**4 + s**2*(2*a**2 - 2*(-b - c)**2) + (-b - c)**4), Max(Abs(b - c), Abs(b + c)), True)
 >>> sympy.SYMPY_DEBUG = False
 ```
 
@@ -399,8 +399,8 @@ The inverse Laplace transform also gives debugging output, for example
 >>> t = symbols('t', real=True)
 >>> a, b = symbols('a, b', positive=True)
 >>> sympy.SYMPY_DEBUG = True
->>> inverse_laplace_transform((a - b)*sqrt(s)/(sqrt(s) + sqrt(a))/(s - b), s, t)
-(sqrt(a)*sqrt(b)*exp(b*t)*erfc(sqrt(b)*sqrt(t)) + a*exp(a*t)*erfc(sqrt(a)*sqrt(t)) - b*exp(b*t))*Heaviside(t) # doctest:+SKIP
+>>> inverse_laplace_transform((a - b)*sqrt(s)/(sqrt(s) + sqrt(a))/(s - b), s, t) # doctest:+SKIP
+(sqrt(a)*sqrt(b)*exp(b*t)*erfc(sqrt(b)*sqrt(t)) + a*exp(a*t)*erfc(sqrt(a)*sqrt(t)) - b*exp(b*t))*Heaviside(t)
 >>> sympy.SYMPY_DEBUG = False
 ```
 
