@@ -258,7 +258,7 @@ class DomainMatrix:
 
         >>> from sympy.polys.matrices import DomainMatrix
         >>> from sympy.polys.matrices.sdm import SDM
-        >>> from sympy import ZZ
+        >>> from sympy import ZZ, Symbol
         >>> drep = SDM({0:{1:ZZ(1)},1:{0:ZZ(2)}}, (2, 2), ZZ)
         >>> dM = DomainMatrix.from_rep(drep)
         >>> dM
@@ -3553,9 +3553,10 @@ class DomainMatrix:
 
         The same calculations with ``Matrix``:
 
-        >>> M.to_Matrix().charpoly().as_expr()
+        >>> lamda = Symbol('lambda')
+        >>> M.to_Matrix().charpoly()(lamda)
         lambda**4 - 25*lambda**3 + 203*lambda**2 - 495*lambda - 324
-        >>> M.to_Matrix().charpoly().as_expr().factor()
+        >>> M.to_Matrix().charpoly()(lamda).factor()
         (lambda - 9)**2*(lambda**2 - 7*lambda - 4)
 
         Returns
