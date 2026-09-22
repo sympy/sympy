@@ -9,7 +9,7 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, PurePoly
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
@@ -837,15 +837,15 @@ def test_Domain___eq__():
 
 def test_Domain__algebraic_field():
     alg = ZZ.algebraic_field(sqrt(2))
-    assert alg.ext.minpoly == Poly(x**2 - 2)
+    assert alg.ext.minpoly == PurePoly(x**2 - 2, x, domain=QQ)
     assert alg.dom == QQ
 
     alg = QQ.algebraic_field(sqrt(2))
-    assert alg.ext.minpoly == Poly(x**2 - 2)
+    assert alg.ext.minpoly == PurePoly(x**2 - 2, x, domain=QQ)
     assert alg.dom == QQ
 
     alg = alg.algebraic_field(sqrt(3))
-    assert alg.ext.minpoly == Poly(x**4 - 10*x**2 + 1)
+    assert alg.ext.minpoly == PurePoly(x**4 - 10*x**2 + 1, x, domain=QQ)
     assert alg.dom == QQ
 
 
@@ -855,27 +855,27 @@ def test_Domain_alg_field_from_poly():
     h = Poly(x**4 - 10*x**2 + 1)
 
     alg = ZZ.alg_field_from_poly(f)
-    assert alg.ext.minpoly == f
+    assert alg.ext.minpoly == PurePoly(f.as_expr(), *f.gens, domain=QQ)
     assert alg.dom == QQ
 
     alg = QQ.alg_field_from_poly(f)
-    assert alg.ext.minpoly == f
+    assert alg.ext.minpoly == PurePoly(f.as_expr(), *f.gens, domain=QQ)
     assert alg.dom == QQ
 
     alg = alg.alg_field_from_poly(g)
-    assert alg.ext.minpoly == h
+    assert alg.ext.minpoly == PurePoly(h.as_expr(), *h.gens, domain=QQ)
     assert alg.dom == QQ
 
 
 def test_Domain_cyclotomic_field():
     K = ZZ.cyclotomic_field(12)
     assert K.is_Cyclotomic and K.is_CyclotomicField
-    assert K.ext.minpoly == Poly(cyclotomic_poly(12))
+    assert K.ext.minpoly == PurePoly(cyclotomic_poly(12), x, domain=QQ)
     assert K.dom == QQ
     assert K.zeta_order == 12
 
     F = QQ.cyclotomic_field(3)
-    assert F.ext.minpoly == Poly(cyclotomic_poly(3))
+    assert F.ext.minpoly == PurePoly(cyclotomic_poly(3), x, domain=QQ)
     assert F.dom == QQ
     assert F.zeta_order == 3
 
