@@ -15,7 +15,7 @@ from sympy.polys.numberfields.subfield import (
 )
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import IsomorphismFailed
-from sympy.polys.polytools import Poly, PurePoly
+from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import CRootOf
 from sympy.testing.pytest import raises
 
