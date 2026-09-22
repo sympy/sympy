@@ -34,7 +34,7 @@ from sympy.core.power import Pow
 from sympy.core.symbol import uniquely_named_symbol
 
 from .utilities import _dotprodsimp, _simplify as _utilities_simplify
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, PurePoly
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 from sympy.core.decorators import call_highest_priority
