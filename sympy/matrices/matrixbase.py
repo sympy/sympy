@@ -5111,8 +5111,8 @@ class MatrixBase(Printable):
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
         x = uniquely_named_symbol('x', self, modify=lambda s: '_' + s)
-        p = self.charpoly(x)
-        if p.args[0] == x ** self.rows:
+        p = self.charpoly()
+        if p(x) == x ** self.rows:
             return True
         return False
 
