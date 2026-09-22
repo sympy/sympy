@@ -24,7 +24,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.expressions.transpose import transpose
 from sympy.physics.quantum.operator import HermitianOperator, Operator, Dagger
-from sympy.polys.polytools import (Poly, PurePoly)
+from sympy.polys.polytools import PurePoly
 from sympy.polys.rootoftools import RootOf
 from sympy.printing.str import sstr
 from sympy.sets.sets import FiniteSet
