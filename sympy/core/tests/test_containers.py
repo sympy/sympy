@@ -214,5 +214,5 @@ def test_issue_5788():
         if o != Tuple:
             assert o(*args) == o(*reversed(args))
         pair = [o(*args), o(*reversed(args))]
-        sorted(pair)  # doesn't fail
+        assert sorted(pair) == sorted(pair[::-1])
         assert set(o(*args))  # doesn't fail
