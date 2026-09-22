@@ -5109,8 +5109,8 @@ class MatrixBase(Printable):
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
-        x = Dummy()
         p = self.charpoly()
+        x = p.gens[0]
         if p(x) == x ** self.rows:
             return True
         return False
