@@ -209,11 +209,24 @@ def function_range(f, symbol, domain):
         is continuous are not finite or real,
         OR if the critical points of the function on the domain cannot be found.
     """
+    from sympy.solvers.decompogen import decompogen
 
     if domain is S.EmptySet:
         return S.EmptySet
 
+    if f.is_Function and len(f.args) == 1 and f.args[0] != symbol:
+        decomposition = decompogen(f, symbol)
+
+        if len(decomposition) > 1:
+            current_range = function_range(decomposition[-1], symbol, domain)
+
+            for func in reversed(decomposition[:-1]):
+                current_range = function_range(func, symbol, current_range)
+
+            return current_range
+
     period = periodicity(f, symbol)
+
     if period == S.Zero:
         # the expression is constant wrt symbol
         return FiniteSet(f.expand())
