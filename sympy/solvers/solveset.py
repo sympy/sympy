@@ -3200,7 +3200,7 @@ def _process_exclusions_for_branch(branch, exclude, symbols):
             continue
         unresolved = transformed.free_symbols & set(symbols)
         if (len(unresolved) == 1 and
-                not transformed.free_symbols & non_scalar_symbols):
+                not transformed.free_symbols & set_valued_symbols):
             parameter = next(iter(unresolved))
             if branch.get(parameter, parameter) == parameter:
                 solver = solveset_real if parameter.is_real else solveset_complex
