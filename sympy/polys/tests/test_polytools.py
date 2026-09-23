@@ -4320,3 +4320,60 @@ def test_groebner_reduce_scalar():
     B = groebner([t**2], t, order="lex")
     assert B.reduce(7) == ([0], 7)
     assert B.reduce(Integer(7)) == ([0], Integer(7))
+def test_Poly_sparse_rep_basic():
+    from sympy.polys.polyclasses import SMP
+
+    f = Poly.new(SMP.from_dict({
+        (20,): ZZ.one,
+        (1,): ZZ.one,
+        (0,): ZZ.one,
+    }, 0, ZZ), x)
+
+    g = Poly.new(SMP.from_dict({
+        (19,): ZZ.one,
+        (2,): ZZ.one,
+        (0,): ZZ.one,
+    }, 0, ZZ), x)
+
+    assert isinstance(f.rep, SMP)
+    assert f.as_dict() == {(20,): 1, (1,): 1, (0,): 1}
+
+    h = f*g
+
+    assert isinstance(h.rep, SMP)
+    assert h.as_dict() == {
+        (39,): 1,
+        (22,): 1,
+        (20,): 2,
+        (19,): 1,
+        (3,): 1,
+        (2,): 1,
+        (1,): 1,
+        (0,): 1,
+    }
+
+    assert isinstance((f + g).rep, SMP)
+    assert isinstance((f - g).rep, SMP)
+    assert isinstance((f**2).rep, SMP)
+    assert isinstance(f.diff().rep, SMP)
+
+    assert f.degree() == 20
+    assert f.LC() == 1
+    assert f.TC() == 1
+    assert hash(f) == hash(Poly.new(SMP.from_dict(
+        {(20,): ZZ.one, (1,): ZZ.one, (0,): ZZ.one}, 0, ZZ), x))
+
+    fdmp = Poly.from_dict({
+        (20,): ZZ.one,
+        (1,): ZZ.one,
+        (0,): ZZ.one,
+    }, x, domain=ZZ)
+
+    assert isinstance((f + 1).rep, SMP)
+    assert isinstance((1 + f).rep, SMP)
+    assert isinstance((f * 2).rep, SMP)
+    assert isinstance((2 * f).rep, SMP)
+    assert isinstance((f + fdmp).rep, SMP)
+    assert isinstance((fdmp + f).rep, SMP)
+    assert isinstance((f * fdmp).rep, SMP)
+    assert isinstance((fdmp * f).rep, SMP)

@@ -161,6 +161,302 @@ from sympy.polys.polyerrors import (
     UnificationFailed,
     PolynomialError)
 
+from sympy.polys.sparsetools import (
+    smp_add,
+    smp_add_ground,
+    smp_degree,
+    smp_degrees,
+    smp_diff,
+    smp_is_ground,
+    smp_is_linear,
+    smp_is_monic,
+    smp_is_one,
+    smp_is_primitive,
+    smp_is_quadratic,
+    smp_is_zero,
+    smp_LC,
+    smp_mul,
+    smp_mul_ground,
+    smp_neg,
+    smp_pow_generic,
+    smp_square,
+    smp_sub,
+    smp_sub_ground,
+)
+
+
+class SMP(CantSympify, Generic[Er]):
+    """Sparse multivariate polynomials over ``K``.
+
+    ``SMP`` is an immutable-at-the-interface wrapper around the raw sparse
+    dictionary representation used by :mod:`sympy.polys.sparsetools`.
+
+    The dictionary maps exponent tuples to nonzero ground coefficients.
+    """
+
+    __slots__ = ('_rep', 'dom', 'lev')
+
+    _rep: dict[monom, Er]
+    dom: Domain[Er]
+    lev: int
+
+    def __new__(
+        cls,
+        rep: dict[monom, Er],
+        dom: Domain[Er],
+        lev: int | None = None,
+    ):
+        if lev is None:
+            if not rep:
+                raise ValueError("lev is required for a zero sparse polynomial")
+            lev = len(next(iter(rep))) - 1
+        return cls.from_dict(rep, lev, dom)
+
+    @classmethod
+    def new(cls, rep: dict[monom, Er], dom: Domain[Er], lev: int):
+        # Like DMP.new(), this is the fast internal constructor.  Callers
+        # must supply a normalized dictionary over ``dom``.
+        obj = object.__new__(cls)
+        obj._rep = rep
+        obj.dom = dom
+        obj.lev = lev
+        return obj
+
+    @classmethod
+    def from_dict(
+        cls, rep: dict[monom, Er], lev: int, dom: Domain[Er]
+    ) -> SMP[Er]:
+        n = lev + 1
+        result = {}
+
+        for mon, coeff in rep.items():
+            if len(mon) != n:
+                raise PolynomialError(
+                    "invalid monomial %s for %s generators" % (mon, n))
+            coeff = dom.convert(coeff)
+            if coeff:
+                result[tuple(mon)] = coeff
+
+        return cls.new(result, dom, lev)
+
+    @classmethod
+    def zero(cls, lev: int, dom: Domain[Er]) -> SMP[Er]:
+        return cls.new({}, dom, lev)
+
+    @classmethod
+    def one(cls, lev: int, dom: Domain[Er]) -> SMP[Er]:
+        return cls.new({(0,)*(lev + 1): dom.one}, dom, lev)
+
+    def ground_new(f, coeff: Er) -> SMP[Er]:
+        coeff = f.dom.convert(coeff)
+        rep = {(0,)*(f.lev + 1): coeff} if coeff else {}
+        return f.new(rep, f.dom, f.lev)
+
+    def convert(f, dom: Domain[Es]) -> SMP[Es]:
+        if f.dom == dom:
+            return f  # type: ignore
+        rep = {mon: dom.convert(coeff, f.dom) for mon, coeff in f._rep.items()}
+        return SMP.new(rep, dom, f.lev)
+
+    def to_dict(f, zero: bool = False) -> dict[monom, Er]:
+        if zero and not f._rep:
+            return {(0,)*(f.lev + 1): f.dom.zero}
+        return f._rep.copy()
+
+    def to_sympy_dict(f, zero: bool = False) -> dict[monom, Expr]:
+        to_sympy = f.dom.to_sympy
+        return {m: to_sympy(c) for m, c in f.to_dict(zero=zero).items()}
+
+    def to_list(f) -> dmp[Er]:
+        return dmp_from_dict(f._rep, f.lev, f.dom)
+
+    def to_tuple(f) -> dmp_tup[Er]:
+        return dmp_to_tuple(f.to_list(), f.lev)
+
+    def __repr__(f) -> str:
+        return "%s(%s, %s, %s)" % (
+            f.__class__.__name__, f._rep, f.dom, f.lev)
+
+    def __hash__(f) -> int:
+        return hash((
+            f.__class__.__name__,
+            tuple(sorted(f._rep.items())),
+            f.lev,
+            f.dom,
+        ))
+
+    def __bool__(f) -> bool:
+        return bool(f._rep)
+
+    def _strict_eq(f, g: SMP[Er]) -> bool:
+        return (
+            type(f) is type(g)
+            and f.lev == g.lev
+            and f.dom == g.dom
+            and f._rep == g._rep
+        )
+
+    def __eq__(f, g: object) -> bool:
+        if f is g:
+            return True
+        if not isinstance(g, SMP) or f.lev != g.lev:
+            return False
+        if f.dom == g.dom:
+            return f._rep == g._rep
+        try:
+            F, G = f.unify_SMP(g)
+        except UnificationFailed:
+            return False
+        return F._rep == G._rep
+
+    def eq(f, g: SMP[Er], strict: bool = False) -> bool:
+        return f._strict_eq(g) if strict else f == g
+
+    def unify_SMP(f, g: SMP[Es]) -> tuple[SMP[Et], SMP[Et]]:
+        if not isinstance(g, SMP) or f.lev != g.lev:
+            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+        if f.dom == g.dom:
+            return f, g  # type: ignore
+        dom: Domain[Et] = f.dom.unify(g.dom)
+        return f.convert(dom), g.convert(dom)
+
+    def add_ground(f, c: Er, /) -> SMP[Er]:
+        c = f.dom.convert(c)
+        return f.new(
+            smp_add_ground(f._rep, c, f.lev + 1, f.dom),
+            f.dom, f.lev)
+
+    def sub_ground(f, c: Er, /) -> SMP[Er]:
+        c = f.dom.convert(c)
+        return f.new(
+            smp_sub_ground(f._rep, c, f.lev + 1, f.dom),
+            f.dom, f.lev)
+
+    def mul_ground(f, c: Er, /) -> SMP[Er]:
+        c = f.dom.convert(c)
+        return f.new(
+            smp_mul_ground(f._rep, c, f.lev + 1, f.dom),
+            f.dom, f.lev)
+
+    def neg(f) -> SMP[Er]:
+        return f.new(
+            smp_neg(f._rep, f.lev + 1, f.dom),
+            f.dom, f.lev)
+
+    def add(f, g: SMP[Er], /) -> SMP[Er]:
+        F, G = f.unify_SMP(g)
+        return F.new(
+            smp_add(F._rep, G._rep, F.dom, F.lev + 1),
+            F.dom, F.lev)
+
+    def sub(f, g: SMP[Er], /) -> SMP[Er]:
+        F, G = f.unify_SMP(g)
+        return F.new(
+            smp_sub(F._rep, G._rep, F.dom, F.lev + 1),
+            F.dom, F.lev)
+
+    def mul(f, g: SMP[Er], /) -> SMP[Er]:
+        F, G = f.unify_SMP(g)
+        return F.new(
+            smp_mul(F._rep, G._rep, F.dom, F.lev + 1),
+            F.dom, F.lev)
+
+    def sqr(f) -> SMP[Er]:
+        return f.new(
+            smp_square(f._rep, f.dom, f.lev + 1),
+            f.dom, f.lev)
+
+    def pow(f, n: int, /) -> SMP[Er]:
+        if not isinstance(n, int):
+            raise TypeError("``int`` expected, got %s" % type(n))
+        if n < 0:
+            raise ValueError("a non-negative exponent is required")
+        return f.new(
+            smp_pow_generic(f._rep, n, f.dom, f.lev + 1),
+            f.dom, f.lev)
+
+    def coeffs(f, order=None) -> list[Er]:
+        return [c for _, c in f.terms(order=order)]
+
+    def monoms(f, order=None) -> list[monom]:
+        return [m for m, _ in f.terms(order=order)]
+
+    def terms(f, order=None) -> list[tuple[monom, Er]]:
+        if not f._rep:
+            return [((0,)*(f.lev + 1), f.dom.zero)]
+        if order is None:
+            return sorted(f._rep.items(), reverse=True)
+        return sorted(
+            f._rep.items(),
+            key=lambda item: order(item[0]),
+            reverse=True,
+        )
+
+    def degree(f, j: int = 0) -> int:
+        if not isinstance(j, int):
+            raise TypeError("``int`` expected, got %s" % type(j))
+        return smp_degree(f._rep, j, f.lev + 1, f.dom)
+
+    def degree_list(f) -> tuple[int, ...]:
+        return smp_degrees(f._rep, f.lev + 1, f.dom)
+
+    def total_degree(f) -> int:
+        if not f._rep:
+            return -1
+        return max(map(sum, f._rep))
+
+    def LC(f) -> Er:
+        return smp_LC(f._rep, f.lev + 1, f.dom)
+
+    def TC(f) -> Er:
+        return f._rep.get((0,)*(f.lev + 1), f.dom.zero)
+
+    def nth(f, *N: int) -> Er:
+        if not all(isinstance(n, int) for n in N):
+            raise TypeError("a sequence of integers expected")
+        return f._rep.get(tuple(N), f.dom.zero)
+
+    def diff(f, m: int = 1, j: int = 0) -> SMP[Er]:
+        if not isinstance(m, int):
+            raise TypeError("``int`` expected, got %s" % type(m))
+        rep = f._rep
+        for _ in range(m):
+            rep = smp_diff(rep, j, f.lev + 1, f.dom)
+        return f.new(rep, f.dom, f.lev)
+
+    @property
+    def is_zero(f) -> bool:
+        return smp_is_zero(f._rep, f.lev + 1, f.dom)
+
+    @property
+    def is_one(f) -> bool:
+        return smp_is_one(f._rep, f.lev + 1, f.dom)
+
+    @property
+    def is_ground(f) -> bool:
+        return smp_is_ground(f._rep, f.lev + 1, f.dom)
+
+    @property
+    def is_monic(f) -> bool:
+        return smp_is_monic(f._rep, f.lev + 1, f.dom)
+
+    @property
+    def is_primitive(f) -> bool:
+        return smp_is_primitive(f._rep, f.lev + 1, f.dom)
+
+    @property
+    def is_linear(f) -> bool:
+        return smp_is_linear(f._rep, f.lev + 1, f.dom)
+
+    @property
+    def is_quadratic(f) -> bool:
+        return smp_is_quadratic(f._rep, f.lev + 1, f.dom)
+
+    @property
+    def is_monomial(f) -> bool:
+        # DMP semantics: zero or one term, regardless of its coefficient.
+        return len(f._rep) <= 1
+
 
 def _supported_flint_domain_flint(D: Domain) -> bool:
     return D.is_ZZ or D.is_QQ or D.is_FF and D._is_flint # type: ignore
