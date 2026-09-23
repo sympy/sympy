@@ -38,16 +38,20 @@ Classes
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from typing import Any, NamedTuple
+from collections.abc import Hashable
+from typing import NamedTuple
 
+# internally everything will be recorded as integers,
+# the inputs are only need to be hashable
+_Term = Hashable
 
 class EUFApp(NamedTuple):
-    func: Any
-    args: tuple
+    func: _Term
+    args: tuple[_Term, ...]
 
 class EUFEquation(NamedTuple):
-    lhs: Any
-    rhs: Any
+    lhs: _Term
+    rhs: _Term
 
 class EUFCongruence(NamedTuple):
     lhs: EUFEquation
@@ -154,7 +158,6 @@ class EUFCongruenceClosure:
             for arg in term.args:
                 const = self._apply(const, self._flatten(arg))
         else:
-            # an atom, which the engine only ever uses as a dict key
             const = self._new_const()
 
         self._term_to_const[term] = const
@@ -164,8 +167,6 @@ class EUFCongruenceClosure:
         """
         Record the application EUFApp(func, (arg,)) in the related data structures,
         and return a new constant d that replaced it in _flatten i.e f(a) = d.
-        Asking twice gives the same d back, so an application shared by several
-        terms is a single constant.
         """
         app = EUFApp(func, (arg,))
         if app in self._app_to_const:
