@@ -951,6 +951,10 @@ def test_function_arguments():
 def test_a_function_applies_to_all_the_factors_or_to_the_first():
     # the product binds either tighter than the function or not at all
     assert _readings(r"\sin xyz") == {sin(x*y*z), y*z*sin(x)}
+    assert _readings(r"\sin x y z") == {sin(x*y*z), y*z*sin(x)}
+    assert _readings(r"\sin xyza") == {sin(a*x*y*z), a*y*z*sin(x)}
+    assert _readings(r"\sin^2 xyz") == {sin(x*y*z)**2, y*z*sin(x)**2}
+    assert _readings(r"\sin xyz \cos t") == {sin(x*y*z)*cos(t), y*z*sin(x)*cos(t)}
     assert _readings(r"\ln xy") == {log(x*y), y*log(x)}
     # a product starting with a number is the argument: 2*sin(x) would be written 2\sin x
     assert parse_latex_lark(r"\sin 2xy") == sin(2*x*y)
