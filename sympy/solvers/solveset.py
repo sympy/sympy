@@ -3187,12 +3187,13 @@ def _process_exclusions_for_branch(branch, exclude, symbols):
     """Return branch-local complements and conditions, or None if invalid."""
     complements = {}
     conditions = []
-    # Set-valued assignments must remain membership conditions, not operands
-    # in the algebraic denominator expression.
-    scalar_branch = {s: v for s, v in branch.items() if isinstance(v, Expr)}
-    non_scalar_symbols = set(branch) - set(scalar_branch)
+    # Only scalar expressions can be substituted into the denominator.
+    # Set-valued branch entries represent possible values of a symbol,
+    # so they must remain unresolved here.
+    expr_branch = {s: v for s, v in branch.items() if isinstance(v, Expr)}
+    set_valued_symbols = set(branch) - set(expr_branch)
     for denominator in exclude:
-        transformed = denominator.subs(scalar_branch).cancel()
+        transformed = denominator.subs(expr_branch).cancel()
         if transformed.is_zero is True:
             return None
         if transformed.is_zero is False:
