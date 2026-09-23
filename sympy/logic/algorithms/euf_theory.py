@@ -119,9 +119,9 @@ class EUFCongruenceClosure:
 
         # Transform every term of the input equations first, then merge.
         for eq in equations:
-            lhs, rhs = eq
-            left_id = self._flatten(lhs)
-            right_id = self._flatten(rhs)
+            eq = EUFEquation(*eq)
+            left_id = self._flatten(eq.lhs)
+            right_id = self._flatten(eq.rhs)
             self.pending.append((left_id, right_id, eq))
             self._asserted.append(eq)
         self._process_pending_unions()
@@ -143,6 +143,10 @@ class EUFCongruenceClosure:
         flatten the term. This method will also register terms in the
         necessary data structures e.g creating a class as the said term being its repr.
         This method should be called before any merging.
+
+        TODO: the way currifying works, if there is an input like f(a) = e, e = f(c) and wanted to explain
+        f(a,x) = f(c,x), the engine would output something, but f is not mathematically
+        a proper function at that point. Practically this should never happen though.
 
         Returns
         -------

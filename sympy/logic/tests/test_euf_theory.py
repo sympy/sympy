@@ -544,6 +544,14 @@ def test_backtrack_counts_every_asserted_equation():
     assert len(cc._asserted) == 0
 
 
+def test_backtrack_after_plain_tuple_input():
+    cc = EUFCongruenceClosure([(a, b), (b, c)])
+    assert cc.are_congruent(a, c)
+    cc.backtrack(1)
+    assert cc.are_congruent(a, b)
+    assert not cc.are_congruent(a, c)
+
+
 def test_backtrack_argument_validation():
     cc = EUFCongruenceClosure([EUFEquation(a, b)])
     cc.backtrack(0)
