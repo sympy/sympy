@@ -143,7 +143,7 @@ conda install mpmath
 or using your operating system package manager, for example on Debian based systems:
 
 ```
-apt install python-mpmath
+apt install python3-mpmath
 ```
 
 to ensure that it is installed.
