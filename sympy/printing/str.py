@@ -560,14 +560,12 @@ class StrPrinter(Printer):
         domain_str = (composite_domain_str(domain)
             if domain.is_PolynomialRing or domain.is_FractionField else None)
 
-        return self._print_Poly(expr, expr.gens, domain_str)
+        return self._print_Poly(expr, domain_str=domain_str)
 
-    def _print_Poly(self, expr, gen_symbols=None, domain_str=None):
+    def _print_Poly(self, expr, domain_str=None):
         ATOM_PREC = PRECEDENCE["Atom"] - 1
-        if gen_symbols is None:
-            gen_symbols = expr.gens
         terms, gens = [], [
-            self.parenthesize(s, ATOM_PREC) for s in gen_symbols]
+            self.parenthesize(s, ATOM_PREC) for s in expr.gens]
 
         for monom, coeff in expr.terms():
             s_monom = []
