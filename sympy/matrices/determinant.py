@@ -437,7 +437,7 @@ def _charpoly(M, x: str | Expr = 'lambda',
     K = dM.domain
 
     cp = dM.charpoly()
-    x = Dummy()  # needed to create the PurePoly (which cp is not)
+    x = Dummy()  # temporary construction generator, not retained by PurePoly
 
     if K.is_EXRAW or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the
