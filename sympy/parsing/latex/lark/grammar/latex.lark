@@ -254,6 +254,7 @@ _argument_factor: _expression_core
     | fraction
     | binomial
     | function_applied
+    | _builtin_function
     | _integral
     | limit
     | matrix
@@ -402,13 +403,10 @@ _delimited_function: function_applied
 // but not all of it, cannot be derived.
 function_with_atomic_argument: (FUNC_EXP | FUNC_LOG | FUNC_LN | FUNC_LG
     | FUNC_TRIG
-    | FUNC_SIN | FUNC_COS | FUNC_TAN | FUNC_CSC | FUNC_SEC | FUNC_COT
-    | FUNC_ARCSIN | FUNC_ARCCOS | FUNC_ARCTAN | FUNC_ARCCSC | FUNC_ARCSEC | FUNC_ARCCOT
-    | FUNC_SINH | FUNC_COSH | FUNC_TANH | FUNC_ARSINH | FUNC_ARCOSH | FUNC_ARTANH
     | FUNC_DETERMINANT | FUNC_MATRIX_TRACE | FUNC_MATRIX_ADJUGATE) _expression_power
     | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) _expression_power
     | FUNC_LOG UNDERSCORE group_curly_parentheses _expression_power
-    | (FUNC_TRIG | FUNC_SIN | FUNC_COS | FUNC_TAN | FUNC_CSC | FUNC_SEC | FUNC_COT) CARET _expression_core _expression_power
+    | FUNC_TRIG CARET _expression_core _expression_power
 
 exponential: FUNC_EXP function_argument
 
