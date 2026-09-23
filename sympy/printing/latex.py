@@ -22,7 +22,8 @@ from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
-from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.conventions import split_super_sub, requires_partial, \
+    elementwise_function
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 from sympy.utilities.iterables import has_variety, sift
@@ -40,7 +41,7 @@ if TYPE_CHECKING:
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                             'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
                             'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
-                            'arg',
+                            'arg', 'exp',
                             ]
 
 tex_greek_dictionary = {
@@ -1039,9 +1040,11 @@ class LatexPrinter(Printer):
 
     def _print_ElementwiseApplyFunction(self, expr):
         return r"{%s}_{\circ}\left({%s}\right)" % (
-            self._print(expr.function),
+            self._print(elementwise_function(expr.function)),
             self._print(expr.expr),
         )
+
+    _print_ArrayElementwiseApplyFunc = _print_ElementwiseApplyFunction
 
     @property
     def _special_function_classes(self):
