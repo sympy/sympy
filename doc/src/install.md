@@ -53,7 +53,7 @@ Many Linux distributions package SymPy, for example on Debian based systems
 SymPy can be installed with apt:
 
 ```
-apt install python-sympy
+sudo apt install python3-sympy
 ```
 
 or on Fedora based systems, dnf can be used:
@@ -143,7 +143,7 @@ conda install mpmath
 or using your operating system package manager, for example on Debian based systems:
 
 ```
-apt install python3-mpmath
+sudo apt install python3-mpmath
 ```
 
 to ensure that it is installed.
