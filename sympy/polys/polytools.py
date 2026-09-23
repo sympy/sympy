@@ -4842,8 +4842,11 @@ class PurePoly(Poly):
         return basic_from_dict(self.rep.to_sympy_dict(), *values)
 
     def _eval_subs(self, old, new):
-        # The anonymous polynomial structure is not substitutable. Apply
-        # substitutions only to coefficients and the coefficient domain.
+        # The anonymous polynomial structure is not substitutable. Only
+        # expressions involving free symbols from the coefficient domain are.
+        if not (old.free_symbols & self.free_symbols):
+            return self
+
         terms, domain = self.args
         terms = Tuple(*(Tuple(monom, coeff._subs(old, new))
                         for monom, coeff in terms))
