@@ -3808,6 +3808,16 @@ def test_tensor_ArrayTensorProduct():
     assert upretty(ArrayTensorProduct(A + C, B)) == "(A + C)\u22a0B"
 
 
+def test_tensor_ArrayElementwiseApplyFunc():
+    from sympy.tensor.array.expressions import ArraySymbol, ArrayTensorProduct
+    from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc
+    A = ArraySymbol("A", (2, 3))
+    assert upretty(ArrayElementwiseApplyFunc(exp, A)) == "exp\u02f3(A)"
+    assert pretty(ArrayElementwiseApplyFunc(exp, A)) == "exp.(A)"
+    assert upretty(ArrayElementwiseApplyFunc(sin, ArrayTensorProduct(A, A))) == \
+        "sin\u02f3(A\u22a0A)"
+
+
 def test_diffgeom_print_WedgeProduct():
     from sympy.diffgeom.rn import R2
     from sympy.diffgeom import WedgeProduct
@@ -4016,12 +4026,12 @@ def test_MatrixExpressions():
     expr = (X.T*X).applyfunc(sin)
 
     ascii_str = """\
-              / T  \\\n\
-(d -> sin(d)).\\X *X/\
+    / T  \\\n\
+sin.\\X *X/\
 """
     ucode_str = """\
-             ⎛ T  ⎞\n\
-(d ↦ sin(d))˳⎝X ⋅X⎠\
+    ⎛ T  ⎞\n\
+sin˳⎝X ⋅X⎠\
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
