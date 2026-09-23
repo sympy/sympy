@@ -4842,10 +4842,13 @@ class PurePoly(Poly):
         return basic_from_dict(self.rep.to_sympy_dict(), *values)
 
     def _eval_subs(self, old, new):
-        # The generators of a PurePoly are abstract and are not free symbols.
-        # Let Basic perform substitution through args so that only symbols
-        # appearing in coefficients are affected.
-        return None
+        # The anonymous polynomial structure is not substitutable. Apply
+        # substitutions only to coefficients and the coefficient domain.
+        terms, domain = self.args
+        terms = Tuple(*(Tuple(monom, coeff._subs(old, new))
+                        for monom, coeff in terms))
+        domain = domain._subs(old, new)
+        return self.func(terms, domain)
 
     def __getitem__(self, index):
         """Return the indexed root of a univariate PurePoly.
