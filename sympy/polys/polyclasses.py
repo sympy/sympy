@@ -164,6 +164,8 @@ from sympy.polys.polyerrors import (
 from sympy.polys.sparsetools import (
     smp_add,
     smp_add_ground,
+    smp_clear_denoms,
+    smp_content,
     smp_degree,
     smp_degrees,
     smp_diff,
@@ -179,9 +181,12 @@ from sympy.polys.sparsetools import (
     smp_mul_ground,
     smp_neg,
     smp_pow_generic,
+    smp_primitive,
     smp_square,
     smp_sub,
     smp_sub_ground,
+    smp_subs_drop,
+    smp_trunc_ground,
 )
 
 
@@ -257,6 +262,15 @@ class SMP(CantSympify, Generic[Er]):
             return f  # type: ignore
         rep = {mon: dom.convert(coeff, f.dom) for mon, coeff in f._rep.items()}
         return SMP.new(rep, dom, f.lev)
+
+    def to_ring(f) -> SMP:
+        return f.convert(f.dom.get_ring())
+
+    def to_field(f) -> SMP:
+        return f.convert(f.dom.get_field())
+
+    def to_exact(f) -> SMP:
+        return f.convert(f.dom.get_exact())
 
     def to_dict(f, zero: bool = False) -> dict[monom, Er]:
         if zero and not f._rep:
@@ -392,6 +406,33 @@ class SMP(CantSympify, Generic[Er]):
             reverse=True,
         )
 
+    def all_coeffs(f) -> list[Er]:
+        if f.lev:
+            raise PolynomialError('multivariate polynomials not supported')
+
+        degree = f.degree()
+
+        if degree < 0:
+            return [f.dom.zero]
+
+        get = f._rep.get
+        zero = f.dom.zero
+        return [get((i,), zero) for i in range(degree, -1, -1)]
+
+    def all_monoms(f) -> list[monom]:
+        if f.lev:
+            raise PolynomialError('multivariate polynomials not supported')
+
+        degree = f.degree()
+
+        if degree < 0:
+            return [(0,)]
+
+        return [(i,) for i in range(degree, -1, -1)]
+
+    def all_terms(f) -> list[tuple[monom, Er]]:
+        return list(zip(f.all_monoms(), f.all_coeffs()))
+
     def degree(f, j: int = 0) -> int:
         if not isinstance(j, int):
             raise TypeError("``int`` expected, got %s" % type(j))
@@ -416,12 +457,256 @@ class SMP(CantSympify, Generic[Er]):
             raise TypeError("a sequence of integers expected")
         return f._rep.get(tuple(N), f.dom.zero)
 
+    def clear_denoms(f) -> tuple[Er, SMP[Er]]:
+        common, rep = smp_clear_denoms(f._rep, f.lev + 1, f.dom)
+        return common, f.new(rep, f.dom, f.lev)
+
+    def content(f) -> Er:
+        return smp_content(f._rep, f.lev + 1, f.dom)
+
+    def primitive(f) -> tuple[Er, SMP[Er]]:
+        cont, rep = smp_primitive(f._rep, f.lev + 1, f.dom)
+        return cont, f.new(rep, f.dom, f.lev)
+
+    def cofactors(f, g: SMP[Er]):
+        F, G = f.unify_SMP(g)
+        dom = F.dom
+        n = F.lev + 1
+
+        if dom.is_ZZ:
+            from sympy.polys.heuristicgcd import smp_heugcd
+            from sympy.polys.polyerrors import HeuristicGCDFailed
+            from sympy.polys.zippel import smp_trivial_gcd, smp_zippel_gcd
+
+            result = smp_trivial_gcd(F._rep, G._rep, n, dom)
+
+            if result is None:
+                try:
+                    result = smp_heugcd(F._rep, G._rep, n)
+                except HeuristicGCDFailed:
+                    result = smp_zippel_gcd(F._rep, G._rep, n)
+
+            h, cff, cfg = result
+            return (
+                F.new(h, dom, F.lev),
+                F.new(cff, dom, F.lev),
+                F.new(cfg, dom, F.lev),
+            )
+
+        if dom.is_QQ:
+            cf, F0 = F.clear_denoms()
+            cg, G0 = G.clear_denoms()
+
+            Fz = F0.convert(ZZ)
+            Gz = G0.convert(ZZ)
+            hz, cffz, cfgz = Fz.cofactors(Gz)
+
+            h = hz.convert(dom)
+            cff = cffz.convert(dom)
+            cfg = cfgz.convert(dom)
+
+            if not h:
+                return h, cff, cfg
+
+            c = h.LC()
+            h = h.monic()
+            cff = cff.mul_ground(dom.quo(c, dom.convert(cf)))
+            cfg = cfg.mul_ground(dom.quo(c, dom.convert(cg)))
+            return h, cff, cfg
+
+        raise DomainError(
+            "sparse polynomial GCD is currently supported only over ZZ and QQ")
+
+    def gcd(f, g: SMP[Er]) -> SMP[Er]:
+        return f.cofactors(g)[0]
+
+    def lcm(f, g: SMP[Er]) -> SMP[Er]:
+        F, G = f.unify_SMP(g)
+
+        if not F or not G:
+            return F.zero(F.lev, F.dom)
+
+        _, cff, _ = F.cofactors(G)
+        h = cff.mul(G)
+
+        if h.dom.is_Field:
+            return h.monic()
+
+        unit = h.dom.canonical_unit(h.LC())
+        return h.mul_ground(unit)
+
+    def subresultants(f, g: SMP[Er]) -> list[SMP[Er]]:
+        from sympy.polys.sparseprs import smp_subresultants
+
+        F, G = f.unify_SMP(g)
+        reps = smp_subresultants(F._rep, G._rep, 0, F.lev + 1, F.dom)
+        return [F.new(rep, F.dom, F.lev) for rep in reps]
+
+    def resultant(f, g: SMP[Er], includePRS: bool = False):
+        from sympy.polys.sparseprs import smp_prs_resultant
+
+        F, G = f.unify_SMP(g)
+        result, reps = smp_prs_resultant(
+            F._rep, G._rep, 0, F.lev + 1, F.dom)
+
+        if F.lev == 0:
+            value = result.get((0,), F.dom.zero)
+        else:
+            dropped = {
+                mon[1:]: coeff
+                for mon, coeff in result.items()
+            }
+            value = F.new(dropped, F.dom, F.lev - 1)
+
+        if includePRS:
+            prs = [F.new(rep, F.dom, F.lev) for rep in reps]
+            return value, prs
+
+        return value
+
+    def discriminant(f):
+        from sympy.polys.sparsetools import smp_coeff_wrt, smp_div_list
+
+        d = f.degree(0)
+
+        if d <= 0:
+            if f.lev == 0:
+                return f.dom.zero
+            return f.zero(f.lev - 1, f.dom)
+
+        s = f.dom((-1) ** ((d * (d - 1)) // 2))
+        r = f.resultant(f.diff())
+
+        lc = smp_coeff_wrt(f._rep, 0, d, f.lev + 1, f.dom)
+
+        if f.lev == 0:
+            c = lc.get((0,), f.dom.zero)
+            return f.dom.quo(r, c * s)
+
+        lc = {
+            mon[1:]: coeff * s
+            for mon, coeff in lc.items()
+        }
+
+        [q], rem = smp_div_list(
+            r._rep, [lc], f.lev, f.dom)
+
+        if rem:
+            raise ExactQuotientFailed(r, lc)
+
+        return f.new(q, f.dom, f.lev - 1)
+
+    def sqf_list(f, all: bool = False):
+        # Yun's algorithm is naturally sparse in the univariate ZZ/QQ cases.
+        # For the remaining cases, use the existing dense implementation until
+        # there is a corresponding sparse algorithm.
+        if f.lev or not (f.dom.is_ZZ or f.dom.is_QQ):
+            F = DMP.from_dict(f._rep, f.lev, f.dom)
+            coeff, factors = F.sqf_list(all)
+            return coeff, [
+                (f.new(g.to_dict(), f.dom, f.lev), k)
+                for g, k in factors
+            ]
+
+        F = f
+        dom = F.dom
+
+        if dom.is_Field:
+            coeff = F.LC()
+            F = F.monic()
+        else:
+            coeff, F = F.primitive()
+
+            if F._rep and dom.is_negative(F.LC()):
+                F = F.neg()
+                coeff = -coeff
+
+        if F.degree() <= 0:
+            return coeff, []
+
+        result = []
+        i = 1
+
+        h = F.diff()
+        _, p, q = F.cofactors(h)
+
+        while True:
+            d = p.diff()
+            h = q.sub(d)
+
+            if h.is_zero:
+                result.append((p, i))
+                break
+
+            g, p, q = p.cofactors(h)
+
+            if all or g.degree() > 0:
+                result.append((g, i))
+
+            i += 1
+
+        return coeff, result
+
+    def factor_list(f):
+        # Current SymPy factorization is dense even for PolyElement, so keep
+        # the representation conversion local to this operation.
+        F = DMP.from_dict(f._rep, f.lev, f.dom)
+        coeff, factors = F.factor_list()
+        return coeff, [
+            (f.new(g.to_dict(), f.dom, f.lev), k)
+            for g, k in factors
+        ]
+
+    def monic(f) -> SMP[Er]:
+        if not f._rep:
+            return f
+
+        lc = f.LC()
+        rep = {
+            mon: f.dom.quo(coeff, lc)
+            for mon, coeff in f._rep.items()
+        }
+        return f.new(rep, f.dom, f.lev)
+
+    def integrate(f, m: int = 1, j: int = 0) -> SMP[Er]:
+        if not isinstance(m, int):
+            raise TypeError("``int`` expected, got %s" % type(m))
+
+        rep = f._rep
+
+        for _ in range(m):
+            result = {}
+
+            for mon, coeff in rep.items():
+                exp = mon[j] + 1
+                new_mon = mon[:j] + (exp,) + mon[j + 1:]
+                result[new_mon] = f.dom.quo(coeff, f.dom.convert(exp))
+
+            rep = result
+
+        return f.new(rep, f.dom, f.lev)
+
     def diff(f, m: int = 1, j: int = 0) -> SMP[Er]:
         if not isinstance(m, int):
             raise TypeError("``int`` expected, got %s" % type(m))
         rep = f._rep
         for _ in range(m):
             rep = smp_diff(rep, j, f.lev + 1, f.dom)
+        return f.new(rep, f.dom, f.lev)
+
+    def eval(f, a, j: int = 0):
+        a = f.dom.convert(a)
+        rep = smp_subs_drop(
+            f._rep, {j: a}, f.lev + 1, f.dom)
+
+        if f.lev == 0:
+            return rep.get((), f.dom.zero)
+
+        return f.new(rep, f.dom, f.lev - 1)
+
+    def trunc(f, p: Er) -> SMP[Er]:
+        p = f.dom.convert(p)
+        rep = smp_trunc_ground(f._rep, p, f.lev + 1, f.dom)
         return f.new(rep, f.dom, f.lev)
 
     @property

@@ -4377,3 +4377,27 @@ def test_Poly_sparse_rep_basic():
     assert isinstance((fdmp + f).rep, SMP)
     assert isinstance((f * fdmp).rep, SMP)
     assert isinstance((fdmp * f).rep, SMP)
+
+
+def test_Poly_sparse_rep_equality_hash():
+    from sympy import Poly, symbols
+    from sympy.polys.domains import ZZ, QQ
+    from sympy.polys.polyclasses import SMP
+
+    x, y = symbols('x y')
+    rep = {(1000,): ZZ.one, (1,): ZZ.one, (0,): ZZ.one}
+
+    fdmp = Poly.from_dict(rep, x, domain=ZZ)
+    fsmp = Poly.new(SMP.from_dict(rep, 0, ZZ), x)
+
+    assert fdmp == fsmp
+    assert fsmp == fdmp
+    assert hash(fdmp) == hash(fsmp)
+    assert {fdmp: 1}[fsmp] == 1
+
+    # Domain and generators remain part of Poly equality.
+    assert fdmp != Poly.from_dict(rep, x, domain=QQ)
+    assert fdmp != Poly.from_dict(
+        {(1000, 0): ZZ.one, (1, 0): ZZ.one, (0, 0): ZZ.one},
+        x, y, domain=ZZ,
+    )

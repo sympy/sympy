@@ -225,7 +225,9 @@ class Poly(Basic):
         return (self.expr,) + self.gens
 
     def _hashable_content(self):
-        return (self.rep,) + self.gens
+        rep = self.rep
+        terms = frozenset(rep.to_dict().items())
+        return (rep.dom, rep.lev, terms) + self.gens
 
     @classmethod
     def from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], *gens, **args):
@@ -4651,7 +4653,10 @@ class Poly(Basic):
         if f.rep.dom != g.rep.dom:
             return False
 
-        return f.rep == g.rep
+        if f.rep == g.rep:
+            return True
+
+        return f.rep.to_dict() == g.rep.to_dict()
 
     @_sympifyit('g', NotImplemented)
     def __ne__(f, g):
