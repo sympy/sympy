@@ -287,6 +287,16 @@ def function_range(f, symbol, domain):
         else:
             raise NotImplementedError("Unable to find range for the given domain.")
 
+    excluded = domain - intervals
+    if isinstance(excluded, FiniteSet):
+        for pt in excluded:
+            try:
+                val = f.subs(symbol, pt)
+                if val.is_real:
+                    range_int += FiniteSet(val)
+            except (ValueError, TypeError, ZeroDivisionError):
+                pass
+
     return range_int
 
 
