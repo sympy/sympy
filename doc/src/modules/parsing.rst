@@ -157,7 +157,8 @@ Here is a list of the things which are supported:
 * Expressions with `+`, `-`, `*`, `/`, and alternative operators like ``\cdot``,
   ``\times``, ``\div``, etc. If two expressions are next to each other, like `xy`
   or `(\sin x)(\cos t)`, then it is treated as implicit multiplication.
-* Relations with `<`, `>`, `\le`, `\ge`, `=`, and `\ne`.
+* Relations with `<`, `>`, `\le`, `\ge`, `=`, and `\ne`, including chains like
+  `a < b \le c`, and membership in a number set like `x \in \mathbb{R}`.
 * Commonly used functions like
 
     * Square roots,
@@ -177,14 +178,16 @@ Here is a list of the things which are supported:
   `\tanh`) and their inverses. As mentioned in the previous point, powers like
   ``\tanh^2`` are also supported, and `-1` is interpreted as the inverse function
   (i.e., ``\tanh^{-1} x`` is interpreted as ``\arctanh x``).
-* ``AppliedFunctions``, like `f(x, y, z)`.
+* ``AppliedFunctions``, like `f(x, y, z)`, and functions named with
+  ``\operatorname``: `\operatorname{sin} x` is the sine, while
+  `\operatorname{erf}(x)` is an undefined function called ``erf``.
 * All types of fractions (``\frac``, ``\tfrac``, ``\dfrac``, ``\nicefrac``) and
   binomials (``\binom``, ``\tbinom``, ``\dbinom``) are supported.
 * Integrals, both definite and indefinite. When the integrand is a fraction,
   having the differential in the numerator is allowed. The differential is
   allowed to be ``d``, ``\text{d}``, or ``\mathrm{d}``.
-* Derivatives in one variable. I.e., things like `\dfrac{d}{dx} (\sin x)`.
-  Higher order derivatives and partial derivatives are not supported yet.
+* Derivatives in one variable, like `\dfrac{d}{dx} (\sin x)`, `\dfrac{dy}{dx}`
+  and `\dfrac{d^2}{dx^2} x^3`. Partial derivatives are not supported yet.
 * Limits in one variable. E.g., `\lim\limits_{t\to 3^{+}} \sin t`.
 * Sums and products with simple conditions. For example, `\sum\limits_{k=0}^n k^2`
   is allowed because the condition on `k` is simple. An expression like
@@ -203,7 +206,7 @@ may be added in the future:
   ``matrix``, ``bmatrix``, ``pmatrix``, ``smallmatrix``, and ``array``.
 * Matrix operations like matrix-matrix addition, scalar-matrix multiplication,
   matrix-matrix multiplication.
-* Higher order derivatives and partial derivatives.
+* Partial derivatives.
 * Double and triple integrals.
 
 

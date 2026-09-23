@@ -46,6 +46,8 @@ FUNC_LN:   "\\ln"
 FUNC_LG:   "\\lg"
 FUNC_MIN: "\\min"
 FUNC_MAX: "\\max"
+// \operatorname{name}: a builtin function when the name is one, an undefined function otherwise
+FUNC_OPERATORNAME: /\\operatorname\s*\{\s*[a-zA-Z]+\s*\}/
 
 // trigonometric functions
 FUNC_SIN:  "\\sin"
@@ -403,6 +405,7 @@ _function: function_applied | inverse_function_applied | _builtin_function
 
 _builtin_function: abs | floor | ceil
     | trigonometric_function | trigonometric_function_power
+    | named_function
     | exponential
     | function_power
     | log
@@ -437,6 +440,10 @@ conjugate: CMD_OVERLINE group_curly_parentheses
 trigonometric_function: FUNC_TRIG function_argument
 
 trigonometric_function_power: FUNC_TRIG CARET _expression_core function_argument
+
+named_function: FUNC_OPERATORNAME function_argument
+    | FUNC_OPERATORNAME CARET _expression_core function_argument
+    | FUNC_OPERATORNAME L_PAREN _expression ("," _expression)+ R_PAREN
 
 abs: BAR _expression BAR
 floor: L_FLOOR _expression R_FLOOR

@@ -654,6 +654,37 @@ class TransformToSymPyExpr(Transformer):
             return self._apply(self._inverse_trigonometric_functions[function], tokens[-1])
         return self._apply(lambda argument: sympy.Pow(function(argument), exponent), tokens[-1])
 
+    _named_functions = {
+        "exp": sympy.exp, "ln": sympy.log, "log": sympy.log, "min": sympy.Min, "max": sympy.Max,
+    }
+
+    def _named_function(self, name):
+        if name in self._named_functions:
+            return self._named_functions[name]
+        if "\\" + name in self._trigonometric_functions:
+            return self._trigonometric_functions["\\" + name]
+        if name == "lg":
+            return lambda argument: sympy.log(argument, 10)
+        if name == "det":
+            return self._determinant
+        if name in ("tr", "trace"):
+            return self._trace
+        if name in ("adj", "adjugate"):
+            return self._adjugate
+        return sympy.Function(name)
+
+    def named_function(self, tokens):
+        name = re.match(r"\\operatorname\s*\{\s*([a-zA-Z]+)\s*\}", tokens[0]).group(1)
+        function = self._named_function(name)
+        if len(tokens) == 2:
+            return self._apply(function, tokens[1])
+        if tokens[1].type == "CARET":
+            exponent = tokens[2]
+            if exponent == -1 and function in self._inverse_trigonometric_functions:
+                return self._apply(self._inverse_trigonometric_functions[function], tokens[3])
+            return self._apply(lambda argument: sympy.Pow(function(argument), exponent), tokens[3])
+        return function(*tokens[2:-1:2])
+
     def abs(self, tokens):
         return sympy.Abs(tokens[1])
 

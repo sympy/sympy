@@ -1021,6 +1021,26 @@ def test_arguments_without_braces_and_powers_of_functions():
     assert _readings(r"f^{-1}(x)") == {Function("f^{-1}")(x), x/Symbol("f")}
 
 
+def test_operatorname():
+    assert parse_latex_lark(r"\operatorname{sin} x") == sin(x)
+    assert parse_latex_lark(r"\operatorname{sin}^2 x") == sin(x)**2
+    assert parse_latex_lark(r"\operatorname{sin}^{-1} x") == asin(x)
+    assert parse_latex_lark(r"\operatorname{arcsinh} x") == asinh(x)
+    assert parse_latex_lark(r"\operatorname{exp}(x) y") == y*exp(x)
+    assert parse_latex_lark(r"\operatorname{ln} x") == log(x)
+    assert parse_latex_lark(r"\operatorname{lg} x") == log(x, 10)
+    assert parse_latex_lark(r"\operatorname{min}(a, b)") == Min(a, b)
+    assert parse_latex_lark(r"\operatorname{ max } x") == x
+    assert parse_latex_lark(r"\operatorname{sin} x \operatorname{cos} y") == sin(x)*cos(y)
+    assert parse_latex_lark(r"\operatorname{tr}\begin{pmatrix}1&2\\3&4\end{pmatrix}") == Trace(Matrix([[1, 2], [3, 4]]))
+    assert parse_latex_lark(r"2\operatorname{erf}(x) + 1") == 2*Function("erf")(x) + 1
+    assert parse_latex_lark(r"\operatorname{f}(x, y)") == Function("f")(x, y)
+    assert parse_latex_lark(r"\operatorname{f}^2(x)") == Function("f")(x)**2
+    assert _readings(r"\operatorname{f} x y") == {Function("f")(x*y), y*Function("f")(x)}
+    with raises(LaTeXParsingError):
+        parse_latex_lark(r"\operatorname{det} A")
+
+
 def test_unknown_commands():
     for latex_str in [r"\logv", r"\logv x", r"\lnx", r"\sinx", r"\tanhx", r"\arctanhx", r"\expx", r"\intx dx",
                       r"\alphabeta", r"\thetax", r"\lefta", r"x \leqx", r"\sin\foo", r"\foo", r"\foo x", r"\foo{x}"]:
