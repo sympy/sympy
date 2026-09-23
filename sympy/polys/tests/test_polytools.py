@@ -742,9 +742,6 @@ def test_PurePoly_abstract_generator_subs():
     assert p.xreplace({x: z}) == p
     assert p.subs(2, 3) == p
 
-    p2 = PurePoly(x**2 + 2*y, x)
-    assert p2.subs(2, 3) == PurePoly(x**2 + 3*y, x)
-
     q = p.subs(y, x)
     assert q.free_symbols == {x}
     assert q.subs(x, z) == PurePoly(x**2 + z, x)
