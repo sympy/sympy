@@ -306,19 +306,10 @@ def test_satsolver_interface_errors():
 
     # A variable the solver does not have cannot be introduced.
     s = SATSolver([{1, 2}], {1, 2}, set())
-    raises(ValueError, lambda: s.add(3))
     raises(ValueError, lambda: s.clause(-1, 3))
 
 
 def test_satsolver_add_clause():
-    # A clause is built one literal at a time and added by a final 0.
-    s = SATSolver([{1}], {1, 2}, set())
-    s.add(-1)
-    s.add(2)
-    s.add(0)
-    assert s.propagate() == IpasirStatus.SATISFIABLE
-    assert (s.fixed(1), s.fixed(2)) == (1, 1)
-
     # clause() takes the literals one by one or as a single iterable.
     s = SATSolver([{1}], {1, 2}, set())
     s.clause(-1, 2)

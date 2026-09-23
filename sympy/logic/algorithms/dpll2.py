@@ -473,38 +473,6 @@ class SATSolver:
         self._restart()
         self._assumptions.append(lit)
 
-    def add(self, lit):
-        """Add *lit* to the clause being built, or add that clause to the
-        solver when *lit* is 0.
-
-        The search restarts from the root level, so ``solve()`` may be called
-        again, and an unsatisfiable solver stays unsatisfiable.
-
-        TODO: only literals of the variables the solver was created with can
-        be added, as there is no way to introduce a new variable yet.
-
-        Examples
-        ========
-
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
-        >>> l = SATSolver([{1, 2}], {1, 2}, set())
-        >>> l.solve() == IpasirStatus.SATISFIABLE
-        True
-        >>> l.add(-1)
-        >>> l.add(0)
-        >>> l.solve() == IpasirStatus.SATISFIABLE
-        True
-        >>> l.val(1)
-        -1
-
-        """
-        if lit == 0:  # The end of clause marker of IPASIR.
-            self._add_clause(self._clause_buffer)
-            # reset the buffer for future use
-            self._clause_buffer = []
-            return
-        self._clause_buffer.append(self._check_lit(lit))
-
     def clause(self, *lits):
         """Add the clause made up of *lits*, given one by one or as a single
         iterable, which covers the ``clause`` overloads of CaDiCaL.
