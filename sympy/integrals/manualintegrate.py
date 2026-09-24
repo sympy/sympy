@@ -73,7 +73,8 @@ from .integrals import Integral
 from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
-from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
+from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly, sqf_list
+from sympy.polys.rationaltools import together
 from sympy.simplify.simplify import simplify
 from sympy.simplify.fu import sincos_to_sum
 from sympy.simplify.powsimp import powsimp
@@ -3176,6 +3177,55 @@ def trig_product_to_sum_rule(integral: IntegralInfo):
     return RewriteRule(integrand, symbol, rewritten, substep)
 
 
+def perfect_square_radicand_rule(integral: IntegralInfo):
+    r"""
+    Rewrite an integral containing a square-root denominator by extracting
+    perfect-square factors from its radicand. Useful for integrals in the
+    complex domain of the form
+
+    integral H(z)/sqrt(c*G(z)) dz = (F(z)*sqrt(c*R(z)))/sqrt(c*G(z)) * integral H(z)/(F(z)*sqrt(c*R(z))) dz
+    """
+    integrand, symbol = integral
+    if symbol.is_real:
+        return
+    if not isinstance(integrand, Mul) and not isinstance(integrand, Pow):
+        return
+
+    H_ = Wild('H', exclude=[0])
+    G_ = Wild('G')
+    pattern = H_/sqrt(G_)
+    match = integrand.match(pattern)
+    if not match:
+        return
+    H, G = match[H_], match[G_]
+
+    if not G.has(symbol):
+        return
+
+    _, denom = together(G).as_numer_denom()
+    if denom.has(symbol):
+        return
+
+    # Do not use `symbol` to be able to target functions e.g. G = sin(x)**2.
+    # Use `frac=True` to be able to target fractional constants e.g. G = x**4/z
+    # + x**2, without comprimising on functions targeting
+    coeff, numer_factors, denom_factors = sqf_list(G, frac=True)
+    c = coeff / Mul(*[f**e for f, e in denom_factors])
+    reducible = {r[0]**(Integer(r[1])/2) for r in numer_factors if r[1] % 2 == 0}
+    irreducible = {r[0]**r[1] for r in numer_factors if r[1] % 2 != 0}
+
+    if not reducible:
+        return
+
+    F = Mul(*reducible)
+    R = Mul(*irreducible)
+    factor = (F*sqrt(c*R))/sqrt(G)
+    rewritten = H/(F*sqrt(c*R))
+
+    substep = yield IntegralInfo(rewritten, symbol)
+    return ConstantTimesRule(integrand, symbol, factor, rewritten, substep)
+
+
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
     integrand, symbol = integral
     if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
@@ -3988,6 +4038,7 @@ class IntegrationSolver:
                     branch=self.branch
                 )),
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(nested_pow_rule))),
+                null_safe(w(perfect_square_radicand_rule)),
             ),
             w(fallback_rule))
 
