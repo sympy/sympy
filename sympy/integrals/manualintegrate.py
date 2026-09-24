@@ -2444,45 +2444,54 @@ def bioche_substitution(integral):
 
         else:
             t = Dummy("t")
-            expr_sc = expr_u.xreplace(trig_replacements(u, s, c))
 
-            methods = (
-                # Try t = cos(2*u_func) when both sine and cosine powers are even
-                (-expr_sc/(4*omega*s*c), {s: (1 - t)/2, c: (1 + t)/2}, {}, cos(2*u_func)),
-                # Try t = sin(u_func) when only even powers of cosine remain
-                (expr_sc/(omega*c), {c: 1 - t**2}, {s: t}, sin(u_func)),
-                # Try t = cos(u_func) when only even powers of sine remain
-                (-expr_sc/(omega*s), {s: 1 - t**2}, {c: t}, cos(u_func)),
-                # Try t = tan(u_func) before the higher-degree half-angle substitution
-                ((expr_sc*c**2/omega).xreplace({s: t*c}), {c: (1 + t**2)**-1}, {}, tan(u_func)),
-            )
+            def trig_method(expr_to_integrate):
+                expr_sc = expr_to_integrate.xreplace(trig_replacements(u, s, c))
 
-            generic_step = None
-            for transformed, squares, replacements, substitution in methods:
-                transformed = rewrite_even(transformed, squares, replacements)
-                if transformed is None:
-                    continue
-                substep = yield IntegralInfo(transformed, t)
-                step = URule(integrand, x, t, substitution, substep)
-                if not step.contains_dont_know():
-                    generic_step = step
-                    break
-            else:
+                methods = (
+                    # Try t = cos(2*u_func) when both sine and cosine powers are even
+                    (-expr_sc/(4*omega*s*c), {s: (1 - t)/2, c: (1 + t)/2}, {}, cos(2*u_func)),
+                    # Try t = sin(u_func) when only even powers of cosine remain
+                    (expr_sc/(omega*c), {c: 1 - t**2}, {s: t}, sin(u_func)),
+                    # Try t = cos(u_func) when only even powers of sine remain
+                    (-expr_sc/(omega*s), {s: 1 - t**2}, {c: t}, cos(u_func)),
+                    # Try t = tan(u_func) before the higher-degree half-angle substitution
+                    ((expr_sc*c**2/omega).xreplace({s: t*c}), {c: (1 + t**2)**-1}, {}, tan(u_func)),
+                )
+
+                for transformed, squares, replacements, substitution in methods:
+                    transformed = rewrite_even(transformed, squares, replacements)
+                    if transformed is None:
+                        continue
+                    substep = yield IntegralInfo(transformed, t)
+                    step = URule(integrand, x, t, substitution, substep)
+                    if not step.contains_dont_know():
+                        return step
                 # Fall back to the universal Weierstrass substitution
                 transformed = expr_sc.xreplace({s: 2*t/(1 + t**2), c: (1 - t**2)/(1 + t**2)})
                 transformed = (transformed * 2/(omega*(1 + t**2))).cancel()
                 substep = yield IntegralInfo(transformed, t)
-                generic_step = URule(integrand, x, t, tan(u_func/2), substep)
+                return URule(integrand, x, t, tan(u_func/2), substep)
 
-            if singular_expr_u is not None:
-                singular_substep = yield IntegralInfo((singular_expr_u/omega).cancel(), u)
-                singular_step = URule(integrand, x, u, u_func, singular_substep)
-                generic_step = PiecewiseRule(integrand, x,
-                    [(singular_step, singular_condition), (generic_step, S.true)])
+            generic_step = yield from trig_method(expr_u)
 
             if phase_substitution:
-                generic_step = ReparameterizationRule(
+                if singular_expr_u is not None:
+                    singular_substep = yield IntegralInfo((singular_expr_u/omega).cancel(), u)
+                    singular_step = URule(integrand, x, u, u_func, singular_substep)
+                    generic_step = PiecewiseRule(integrand, x,
+                        [(singular_step, singular_condition), (generic_step, S.true)])
+
+                reparam_step = ReparameterizationRule(
                     integrand, x, phase_substitution, generic_step)
+                phase_value = phase_substitution[next(iter(phase_substitution))]
+                if phase_value.is_number and reparam_step.eval().has(S.ComplexInfinity, S.NaN):
+                    # The parametrized antiderivative (typically a ratint
+                    # RootSum) collapses at the actual phase value, so retry
+                    # with the phase substituted in before integrating.
+                    generic_step = yield from trig_method(expr_u.xreplace(phase_substitution))
+                else:
+                    generic_step = reparam_step
 
         if omega.is_zero is False:
             return generic_step
