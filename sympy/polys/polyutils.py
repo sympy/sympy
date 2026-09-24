@@ -12,7 +12,6 @@ from sympy.core.exprtools import decompose_power, decompose_power_rat
 from sympy.core.numbers import _illegal
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
-from sympy.simplify.simplify import _mexpand
 
 import re
 
@@ -221,6 +220,8 @@ def _not_a_coeff(expr):
 
 
 def _sparse_dict_from_expr(expr, *gens):
+    from sympy.simplify.simplify import _mexpand
+
     indices = {g: i for i, g in enumerate(gens)}
     poly = {}
 
