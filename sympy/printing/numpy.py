@@ -369,7 +369,7 @@ class SciPyPrinter(NumPyPrinter):
             data.append(v)
 
         return "{name}(({data}, ({i}, {j})), shape={shape})".format(
-            name=self._module_format('scipy.sparse.coo_matrix'),
+            name=self._module_format('scipy.sparse.coo_array'),
             data=data, i=i, j=j, shape=expr.shape
         )
 
@@ -421,6 +421,12 @@ class SciPyPrinter(NumPyPrinter):
         return "{}({})[1]".format(
                 self._module_format("scipy.special.fresnel"),
                 self._print(expr.args[0]))
+
+    def _print_owens_t(self, expr):
+        return "{}({}, {})".format(
+                self._module_format("scipy.special.owens_t"),
+                self._print(expr.args[0]),
+                self._print(expr.args[1]))
 
     def _print_airyai(self, expr):
         return "{}({})[0]".format(

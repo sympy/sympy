@@ -296,6 +296,16 @@ class FCodePrinter(CodePrinter):
         else:
             return CodePrinter._print_Add(self, expr)
 
+    def _eval_function(self, expr):
+        prec = self._settings['precision']
+        args = [N(a, prec) for a in expr.args]
+        return expr.func(*args)
+
+    def parenthesize(self, item, level, strict=False):
+        if isinstance(item, Function):
+            item = self._eval_function(item)
+        return super().parenthesize(item, level, strict)
+
     def _print_Function(self, expr):
         # Args are folded to floats unless they are integer-valued symbolic
         # expressions, which stay integers for integer-argument intrinsics.
@@ -303,10 +313,11 @@ class FCodePrinter(CodePrinter):
         args = [a if (a.is_integer and not a.is_number) else N(a, prec)
                 for a in expr.args]
         eval_expr = expr.func(*args)
+
         if not isinstance(eval_expr, Function):
             return self._print(eval_expr)
         else:
-            return CodePrinter._print_Function(self, expr.func(*args))
+            return CodePrinter._print_Function(self, eval_expr)
 
     def _print_Mod(self, expr):
         # NOTE : Fortran has the functions mod() and modulo(). modulo() behaves

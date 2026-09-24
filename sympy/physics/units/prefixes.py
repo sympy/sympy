@@ -6,6 +6,7 @@ BIN_PREFIXES.
 """
 from __future__ import annotations
 from sympy.core.expr import Expr
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 
@@ -34,7 +35,13 @@ class Prefix(Expr):
     def __new__(cls, name, abbrev, exponent, base=sympify(10), latex_repr=None):
 
         name = sympify(name)
-        abbrev = sympify(abbrev)
+        # An abbreviation is a name, so keep it a Symbol; sympifying the string
+        # would turn e.g. "Ei" into the exponential-integral function and "E"
+        # into Euler's number.
+        if isinstance(abbrev, str):
+            abbrev = Symbol(abbrev)
+        else:
+            abbrev = sympify(abbrev)
         exponent = sympify(exponent)
         base = sympify(base)
 
@@ -71,6 +78,17 @@ class Prefix(Expr):
     def __str__(self):
         return str(self._abbrev)
 
+    @staticmethod
+    def _prefix_with_scale_factor(fact):
+        """Return the decimal or binary prefix whose scale factor is ``fact``,
+        or ``None``.  Both ``PREFIXES`` and ``BIN_PREFIXES`` are searched so that
+        e.g. ``kibi*kibi`` simplifies to ``mebi``, mirroring ``kilo*kilo``."""
+        for prefixes in (PREFIXES, BIN_PREFIXES):
+            for prefix in prefixes.values():
+                if prefix.scale_factor == fact:
+                    return prefix
+        return None
+
     def __mul__(self, other):
         from sympy.physics.units import Quantity
         if not isinstance(other, (Quantity, Prefix)):
@@ -82,9 +100,9 @@ class Prefix(Expr):
             if fact == 1:
                 return S.One
             # simplify prefix
-            for p in PREFIXES:
-                if PREFIXES[p].scale_factor == fact:
-                    return PREFIXES[p]
+            prefix = self._prefix_with_scale_factor(fact)
+            if prefix is not None:
+                return prefix
             return fact
 
         return self.scale_factor * other
@@ -98,18 +116,18 @@ class Prefix(Expr):
         if fact == 1:
             return S.One
         elif isinstance(other, Prefix):
-            for p in PREFIXES:
-                if PREFIXES[p].scale_factor == fact:
-                    return PREFIXES[p]
+            prefix = self._prefix_with_scale_factor(fact)
+            if prefix is not None:
+                return prefix
             return fact
 
         return self.scale_factor / other
 
     def __rtruediv__(self, other):
         if other == 1:
-            for p in PREFIXES:
-                if PREFIXES[p].scale_factor == 1 / self.scale_factor:
-                    return PREFIXES[p]
+            prefix = self._prefix_with_scale_factor(1 / self.scale_factor)
+            if prefix is not None:
+                return prefix
         return other / self.scale_factor
 
 
@@ -193,12 +211,12 @@ PREFIXES = {
 }
 
 
-kibi = Prefix('kibi', 'Y', 10, 2)
-mebi = Prefix('mebi', 'Y', 20, 2)
-gibi = Prefix('gibi', 'Y', 30, 2)
-tebi = Prefix('tebi', 'Y', 40, 2)
-pebi = Prefix('pebi', 'Y', 50, 2)
-exbi = Prefix('exbi', 'Y', 60, 2)
+kibi = Prefix('kibi', 'Ki', 10, 2)
+mebi = Prefix('mebi', 'Mi', 20, 2)
+gibi = Prefix('gibi', 'Gi', 30, 2)
+tebi = Prefix('tebi', 'Ti', 40, 2)
+pebi = Prefix('pebi', 'Pi', 50, 2)
+exbi = Prefix('exbi', 'Ei', 60, 2)
 
 
 # https://physics.nist.gov/cuu/Units/binary.html

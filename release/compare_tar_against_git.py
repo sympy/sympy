@@ -32,11 +32,11 @@ git_whitelist = {
     # CI
     '.github/PULL_REQUEST_TEMPLATE.md',
     '.github/CODEOWNERS',
+    '.github/circleci-artifacts.yml',
     '.github/dependabot.yml',
     '.github/workflows/runtests.yml',
     '.github/workflows/emscripten.yml',
     '.github/workflows/release.yml',
-    '.github/workflows/docs-preview.yml',
     '.github/workflows/checkconflict.yml',
     '.github/workflows/nightly-wheels.yml',
     '.github/workflows/zizmor.yml',
@@ -47,7 +47,6 @@ git_whitelist = {
     '.ci/README.rst',
     '.circleci/config.yml',
     '.editorconfig',
-    '.flake8',
     'asv.conf.actions.json',
     'codecov.yml',
     'requirements-dev.txt',
@@ -55,6 +54,9 @@ git_whitelist = {
     'banner.svg',
     # GitHub Codespace
     '.devcontainer/devcontainer.json',
+    # Coding agent instructions
+    'AGENTS.md',
+    'CLAUDE.md',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide

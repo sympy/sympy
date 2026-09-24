@@ -2807,7 +2807,8 @@ def test_17522_scipy():
     except ImportError:
         skip('SciPy must be available to test indexing matrixified SciPy sparse matrices')
 
-    m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
+    with ignore_warnings(DeprecationWarning):
+        m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 

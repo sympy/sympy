@@ -722,13 +722,13 @@ def test_numpy_old_matrix():
         assert isinstance(f(1, 2, 3), numpy.matrix)
 
 
-def test_scipy_sparse_matrix():
+def test_scipy_sparse_array():
     if not scipy:
         skip("scipy not installed.")
     A = SparseMatrix([[x, 0], [0, y]])
     f = lambdify((x, y), A, modules="scipy")
     B = f(1, 2)
-    assert isinstance(B, scipy.sparse.coo_matrix)
+    assert isinstance(B, scipy.sparse.coo_array)
 
 
 

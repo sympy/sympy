@@ -539,101 +539,33 @@ class TransformToSymPyExpr(Transformer):
         from sympy.physics.quantum import Bra, Ket, InnerProduct
         return InnerProduct(Bra(tokens[1]), Ket(tokens[3]))
 
-    def sin(self, tokens):
-        return sympy.sin(tokens[1])
+    _trigonometric_functions = {
+        "\\sin": sympy.sin, "\\cos": sympy.cos, "\\tan": sympy.tan,
+        "\\csc": sympy.csc, "\\sec": sympy.sec, "\\cot": sympy.cot,
+        "\\arcsin": sympy.asin, "\\arccos": sympy.acos, "\\arctan": sympy.atan,
+        "\\arccsc": sympy.acsc, "\\arcsec": sympy.asec, "\\arccot": sympy.acot,
+        "\\sinh": sympy.sinh, "\\cosh": sympy.cosh, "\\tanh": sympy.tanh,
+        "\\coth": sympy.coth, "\\sech": sympy.sech, "\\csch": sympy.csch,
+        "\\arsinh": sympy.asinh, "\\arcosh": sympy.acosh, "\\artanh": sympy.atanh,
+        "\\arcsinh": sympy.asinh, "\\arccosh": sympy.acosh, "\\arctanh": sympy.atanh,
+    }
 
-    def cos(self, tokens):
-        return sympy.cos(tokens[1])
+    _inverse_trigonometric_functions = {
+        sympy.sin: sympy.asin, sympy.cos: sympy.acos, sympy.tan: sympy.atan,
+        sympy.csc: sympy.acsc, sympy.sec: sympy.asec, sympy.cot: sympy.acot,
+        sympy.sinh: sympy.asinh, sympy.cosh: sympy.acosh, sympy.tanh: sympy.atanh,
+        sympy.coth: sympy.acoth, sympy.sech: sympy.asech, sympy.csch: sympy.acsch,
+    }
 
-    def tan(self, tokens):
-        return sympy.tan(tokens[1])
+    def trigonometric_function(self, tokens):
+        return self._trigonometric_functions[tokens[0]](tokens[1])
 
-    def csc(self, tokens):
-        return sympy.csc(tokens[1])
-
-    def sec(self, tokens):
-        return sympy.sec(tokens[1])
-
-    def cot(self, tokens):
-        return sympy.cot(tokens[1])
-
-    def sin_power(self, tokens):
+    def trigonometric_function_power(self, tokens):
+        function = self._trigonometric_functions[tokens[0]]
         exponent = tokens[2]
-        if exponent == -1:
-            return sympy.asin(tokens[-1])
-        else:
-            return sympy.Pow(sympy.sin(tokens[-1]), exponent)
-
-    def cos_power(self, tokens):
-        exponent = tokens[2]
-        if exponent == -1:
-            return sympy.acos(tokens[-1])
-        else:
-            return sympy.Pow(sympy.cos(tokens[-1]), exponent)
-
-    def tan_power(self, tokens):
-        exponent = tokens[2]
-        if exponent == -1:
-            return sympy.atan(tokens[-1])
-        else:
-            return sympy.Pow(sympy.tan(tokens[-1]), exponent)
-
-    def csc_power(self, tokens):
-        exponent = tokens[2]
-        if exponent == -1:
-            return sympy.acsc(tokens[-1])
-        else:
-            return sympy.Pow(sympy.csc(tokens[-1]), exponent)
-
-    def sec_power(self, tokens):
-        exponent = tokens[2]
-        if exponent == -1:
-            return sympy.asec(tokens[-1])
-        else:
-            return sympy.Pow(sympy.sec(tokens[-1]), exponent)
-
-    def cot_power(self, tokens):
-        exponent = tokens[2]
-        if exponent == -1:
-            return sympy.acot(tokens[-1])
-        else:
-            return sympy.Pow(sympy.cot(tokens[-1]), exponent)
-
-    def arcsin(self, tokens):
-        return sympy.asin(tokens[1])
-
-    def arccos(self, tokens):
-        return sympy.acos(tokens[1])
-
-    def arctan(self, tokens):
-        return sympy.atan(tokens[1])
-
-    def arccsc(self, tokens):
-        return sympy.acsc(tokens[1])
-
-    def arcsec(self, tokens):
-        return sympy.asec(tokens[1])
-
-    def arccot(self, tokens):
-        return sympy.acot(tokens[1])
-
-    def sinh(self, tokens):
-        return sympy.sinh(tokens[1])
-
-    def cosh(self, tokens):
-        return sympy.cosh(tokens[1])
-
-    def tanh(self, tokens):
-        return sympy.tanh(tokens[1])
-
-    def asinh(self, tokens):
-        return sympy.asinh(tokens[1])
-
-    def acosh(self, tokens):
-        return sympy.acosh(tokens[1])
-
-    def atanh(self, tokens):
-        return sympy.atanh(tokens[1])
+        if exponent == -1 and function in self._inverse_trigonometric_functions:
+            return self._inverse_trigonometric_functions[function](tokens[-1])
+        return sympy.Pow(function(tokens[-1]), exponent)
 
     def abs(self, tokens):
         return sympy.Abs(tokens[1])

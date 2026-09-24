@@ -113,8 +113,8 @@ def test_from_encoded_cnf():
     enc = boolean_formula_to_encoded_cnf(phi)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert lra.A.shape == (0, 3)
-    assert str(lra.slack) == '[]'
-    assert str(lra.nonslack) == '[x, _s1, _s2]'
+    assert str(lra.basic) == '[]'
+    assert {str(v) for v in lra.nonbasic} == {'x', '_s1', '_s2'}
     assert lra.A == Matrix(0,3, [])
     actual = {tuple(sorted((str(b.var), b.bound, b.upper, b.strict) for b in bs)) for bs in lra.atom_id_to_boundaries.values()}
     expected = {
@@ -213,11 +213,12 @@ def test_random_problems():
         bounds = sorted(bounds, key=lambda x: (str(x[0][0].var), x[0][0].bound, str(x[0][0].upper))) # to remove nondeterminism
 
         for b, l in bounds:
-            if lra.result and lra.result[0] == False:
+            res = lra.assert_lit(l)
+            if res and res[0] == False:
+                feasible = res
                 break
-            lra.assert_lit(l)
-
-        feasible = lra.check()
+        else:
+            feasible = lra.check()
 
         if feasible[0] == True:
             feasible_count += 1
@@ -342,50 +343,69 @@ def test_negation():
     bf = Q.gt(x, 1) & ~Q.gt(x, 0)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    conflict = None
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            res = lra.assert_lit(lit)
+            if res is not None:
+                conflict = res[1]
     assert len(lra.atom_id_to_boundaries) == 2
-    assert lra.check()[0] == False
-    assert sorted(lra.check()[1]) in [[-1, 2], [-2, 1]]
+    assert conflict is not None
+    assert sorted(conflict) in [[-1, 2], [-2, 1]]
 
     bf = ~Q.gt(x, 1) & ~Q.lt(x, 0)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            if lra.assert_lit(lit) is not None:
+                conflict_found = True
+                break
     assert len(lra.atom_id_to_boundaries) == 2
-    assert lra.check()[0] == True
+    assert conflict_found is False
+    assert lra.check()[0] is True
 
     bf = ~Q.gt(x, 0) & ~Q.lt(x, 1)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            if lra.assert_lit(lit) is not None:
+                conflict_found = True
+                break
     assert len(lra.atom_id_to_boundaries) == 2
-    assert lra.check()[0] == False
+    assert conflict_found is True
 
     bf = ~Q.gt(x, 0) & ~Q.le(x, 0)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            if lra.assert_lit(lit) is not None:
+                conflict_found = True
+                break
+
     assert len(lra.atom_id_to_boundaries) == 2
-    assert lra.check()[0] == False
+    assert conflict_found is True
 
     bf = ~Q.le(x+y, 2) & ~Q.ge(x-y, 2) & ~Q.ge(y, 0)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            if lra.assert_lit(lit) is not None:
+                conflict_found = True
+                break
+    assert conflict_found is False
     assert len(lra.atom_id_to_boundaries) == 3
-    assert lra.check()[0] == False
-    assert len(lra.check()[1]) == 3
-    assert all(i > 0 for i in lra.check()[1])
+    is_sat, conflict = lra.check()
+    assert is_sat is False
+    assert len(conflict) == 3
+    assert all(i > 0 for i in conflict)
 
 
 def test_unhandled_input():
@@ -442,25 +462,40 @@ def test_pivot():
         for _ in range(5):
             i, j = randint(0, 4), randint(0, 4)
             if m[i, j] != 0:
-                assert LRASolver._pivot(m, i, j).rref() == rref
+                lra = LRASolver.__new__(LRASolver)
+                lra.A = m.copy()
+                lra._pivot(i, j)
+                assert lra.A.rref() == rref
 
 
-def test_reset_bounds():
+def test_reset():
     """
-    Tests that reset_bounds properly resets all state variables to their default values.
+    Tests that reset properly resets all state variables to their default values.
     """
     # Test solver behavior after reset
     bf = Q.ge(x, 1) & Q.lt(x, 1)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
+    conflict_found = False
     for clause in enc.data:
         for lit in clause:
-            lra.assert_lit(lit)
+            if lra.assert_lit(lit) is not None:
+                conflict_found = True
+                break
 
-    assert lra.check()[0] == False
-    lra.reset_bounds()
-    assert lra.check()[0] == True
+    assert conflict_found is True
+    lra.reset()
+    assert lra.check()[0] is True
+
+    # reset also drops the bound history, so nothing is left to undo
+    lra.push_level()
+    lra.assert_lit(1)
+    assert len(lra.bound_history) == 2
+    assert lra.bound_history[-1].updates != []
+    lra.reset()
+    assert len(lra.bound_history) == 1
+    assert lra.bound_history[0].updates == []
 
     # Test individual state variable resets
     bf = Q.ge(x, 0) & Q.le(x, 1)
@@ -479,7 +514,7 @@ def test_reset_bounds():
         for var in lra.all_var:
             setattr(var, attr_name, test_value)
 
-        lra.reset_bounds()
+        lra.reset()
 
         for var in lra.all_var:
             actual_value = getattr(var, attr_name)
@@ -514,8 +549,8 @@ def test_example_from_paper():
     # Extracts the variables stored in the solver
     var_x = next(v for v in lra.all_var if str(v.var) == 'x')
     # var_y has been removed from A after the simplification
-    # var_s1 is a slack variable which corresponds for -x + y <= 1
-    # var_s2 is a slack variable which corresponds for -x - y <= 3
+    # var_s1 is a basic variable which corresponds for -x + y <= 1
+    # var_s2 is a basic variable which corresponds for -x - y <= 3
     _s1 = lra.s_subs[-x + y]
     _s2 = lra.s_subs[-x - y]
     var_s1 = next(v for v in lra.all_var if v.var == _s1)
@@ -580,8 +615,8 @@ def test_example_from_paper():
     assert var_x.lower == LRARational(-8, 0)
     assert var_x.upper == LRARational(-4, 0)
     assert var_x.assign == LRARational(-4, 0)
-    assert var_s1.assign == LRARational(0, 0)
-    assert var_s2.assign == LRARational(8, 0)
+    assert var_s1.assign == LRARational(1, 0)
+    assert var_s2.assign == LRARational(7, 0)
 
 
 def test_backtracking_single_variable():

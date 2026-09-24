@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from math import factorial as _factorial, log, prod
 from itertools import chain, product
 
@@ -19,6 +20,10 @@ from sympy.ntheory import primefactors, sieve
 from sympy.ntheory.factor_ import (factorint, multiplicity)
 from sympy.ntheory.primetest import isprime
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
+
+if TYPE_CHECKING:
+    from sympy.combinatorics.character_table import CharacterTable
+
 
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
@@ -121,6 +126,7 @@ class PermutationGroup(Basic):
 
     """
     is_group = True
+    _order: int | None
 
     def __new__(cls, *args, dups=True, **kwargs):
         """The default constructor. Accepts Cycle and Permutation forms.
@@ -2995,7 +3001,7 @@ class PermutationGroup(Basic):
         """
         return _orbits(self._degree, self._generators)
 
-    def order(self):
+    def order(self) -> int:
         """Return the order of the group: the number of permutations that
         can be generated from elements of the group.
 
@@ -3035,11 +3041,11 @@ class PermutationGroup(Basic):
             return self._order
         if self._is_sym:
             n = self._degree
-            self._order = factorial(n)
+            self._order = _factorial(n)
             return self._order
         if self._is_alt:
             n = self._degree
-            self._order = factorial(n)/2
+            self._order = _factorial(n)//2
             return self._order
 
         m = prod([len(x) for x in self.basic_transversals])
@@ -4553,7 +4559,7 @@ class PermutationGroup(Basic):
             m = G.order()
             n = 0
             while m % p == 0:
-                m = m/p
+                m = m // p
                 n += 1
                 if m == 1:
                     return True, n
@@ -5141,6 +5147,26 @@ class PermutationGroup(Basic):
             gen.append(Permutation(p))
 
         return PermutationGroup(gen)
+
+    def character_table(self) -> CharacterTable:
+        """
+        Computes the character table of the permutation group.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics import AlternatingGroup
+
+        >>> M = AlternatingGroup(4).character_table()
+        >>> M.as_matrix()
+        Matrix([
+         [1,          1,          1,  1],
+         [1, -1 - zeta3,      zeta3,  1],
+         [1,      zeta3, -1 - zeta3,  1],
+         [3,          0,          0, -1]])
+
+        """
+        from sympy.combinatorics.character_table import CharacterTable
+        return CharacterTable.from_perm_group(self)
 
 
 def _orbit(degree, generators, alpha, action='tuples'):

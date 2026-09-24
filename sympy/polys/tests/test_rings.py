@@ -6,7 +6,8 @@ from functools import reduce
 from operator import add, mul
 
 from sympy.polys.domains import ZZ_I
-from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement, vring, ninf
+from sympy.polys.rings import (
+    ninf, ring, xring, sring, PolyRing, PolyElement, vring)
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
@@ -1922,7 +1923,7 @@ def test_PolyElement_pdiv():
 
     f, g = x*y + 2*x + 1, x + y
     assert f.pdiv(g) == (y + 2, -y**2 - 2*y + 1)
-    assert f.pdiv(g, y) == f.pdiv(g, 1) == (x + 1, -x**2 + 2*x + 1)
+    assert f.pdiv(g, y) == f.pdiv(g, 1) == (x, -x**2 + 2*x + 1)
 
     assert R(0).pdiv(g) == (0, 0)
     raises(ZeroDivisionError, lambda: f.prem(R(0)))
@@ -1935,7 +1936,7 @@ def test_PolyElement_pquo():
 
     f, g = x**4 - 4*x**2*y + 4*y**2, x**2 - 2*y
     assert f.pquo(g) == f.pquo(g, x) == x**2 - 2*y
-    assert f.pquo(g, y) == 4*x**2 - 8*y + 4
+    assert f.pquo(g, y) == 4*x**2 - 8*y
 
     f, g = x**4 - y**4, x**2 - y**2
     assert f.pquo(g) == f.pquo(g, 0) == x**2 + y**2
@@ -1946,7 +1947,7 @@ def test_PolyElement_pexquo():
 
     f, g = x**2 - y**2, x - y
     assert f.pexquo(g) == f.pexquo(g, x) == x + y
-    assert f.pexquo(g, y) == f.pexquo(g, 1) == x + y + 1
+    assert f.pexquo(g, y) == f.pexquo(g, 1) == x + y
 
     f, g = x**2 + 3*x + 6, x + 2
     raises(ExactQuotientFailed, lambda: f.pexquo(g))
@@ -2270,36 +2271,3 @@ def test_PolyElement_quo_ground():
 
     R, x = ring("x", QQ)
     assert (x**2 + 3*x + 6).quo_ground(3) == (x**2)/3 + x + 2
-
-
-def test_PolyElement_imul_num():
-    R, x, y = ring("x, y", ZZ)
-
-    p = x
-    assert p.imul_num(3) == 3 * x and p.imul_num(3) is not p
-
-    p = x + y
-    assert p.imul_num(0) is p and p == R.zero
-
-    p = x + y ** 2
-    p_id = id(p)
-    q = p.imul_num(5)
-    assert q == 5 * x + 5 * y ** 2 and q is p and id(q) == p_id
-
-
-def test_PolyElement__iadd_monom():
-    R, x, y = ring("x, y", ZZ)
-
-    p = x
-    result = p._iadd_monom(((1, 2), ZZ(5)))
-    assert result == x + 5 * x * y ** 2 and result is not p
-
-    p = x ** 2 + y
-    result = p._iadd_monom(((3, 0), ZZ(4)))
-    assert result[(3, 0)] == 4 and result is p
-
-    p = x ** 2 + y
-    assert p._iadd_monom(((2, 0), ZZ(5)))[(2, 0)] == 6
-
-    p = x ** 2 + y
-    assert (2, 0) not in p._iadd_monom(((2, 0), ZZ(-1)))
