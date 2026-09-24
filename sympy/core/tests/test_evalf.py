@@ -748,3 +748,15 @@ def test_issue_28280():
     assert x > 20
     y = 20 + log(1 + S(10)**-9)
     assert y > 20
+
+
+def test_issue_30297():
+    from sympy import log, floor, Integer
+    from sympy.abc import x
+
+    # This test shows evalf working for floor(log(x, 2)) with chop = True
+    expr = floor(log(x, 5))
+    result1 = expr.evalf(chop=True, subs={x: Integer(5)})
+    result2 = expr.evalf(subs={x: Integer(5)})
+    assert result1 == 1.
+    assert result2 == 1.
