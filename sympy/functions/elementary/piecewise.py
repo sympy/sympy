@@ -224,8 +224,56 @@ class Piecewise(DefinedFunction):
         return piecewise_simplify(self, **kwargs)
 
     def _eval_as_leading_term(self, x, logx, cdir):
+        """Return the leading term of the Piecewise expression as ``x -> 0``.
+
+        The condition of each piece is evaluated from the correct side of
+        the limit point by substituting a small positive dummy ``d`` scaled
+        by the approach direction ``cdir``:
+
+        * ``cdir > 0`` (right, ``x -> 0+``): substitute ``x = d``
+        * ``cdir < 0`` (left,  ``x -> 0-``): substitute ``x = -d``
+        * ``cdir = 0`` (no direction): substitute ``x = 0``
+
+        This ensures that boundary conditions such as ``x >= 0`` are
+        resolved correctly for each direction instead of being evaluated
+        at the boundary point itself. If the direction-aware substitution
+        is inconclusive (e.g. ``x <= 0.5`` gives ``d <= 0.5`` which cannot
+        be resolved for an unbounded Dummy), the condition falls back to
+        being evaluated at ``x = 0``.
+
+        Examples
+        ========
+
+        >>> from sympy import Piecewise, Symbol, S
+        >>> x = Symbol('x')
+        >>> p = Piecewise((1, x < 0), (-1, x >= 0))
+        >>> p._eval_as_leading_term(x, None, S.One)
+        -1
+        >>> p._eval_as_leading_term(x, None, S.NegativeOne)
+        1
+        """
+        from sympy.core.sympify import sympify
+        cdir = sympify(cdir)
         for e, c in self.args:
-            if c == True or c.subs(x, 0) == True:
+            if c == True:
+                return e.as_leading_term(x)
+            # Evaluate the condition from the correct side of x=0.
+            # A positive Dummy d scaled by cdir represents a small value
+            # approaching 0 from the direction indicated by cdir:
+            #   cdir > 0  =>  x = +d  (right approach)
+            #   cdir < 0  =>  x = -d  (left approach)
+            # If the substitution is inconclusive (the condition involves a
+            # constant that 0 is strictly interior to, e.g. x <= 0.5 gives
+            # d <= 0.5 which cannot be resolved for an unbounded Dummy), fall
+            # back to evaluating at the limit point x=0 itself.
+            if cdir.is_positive or cdir.is_negative:
+                d = Dummy('d', positive=True)
+                cval = c.subs(x, cdir * d)
+                if cval not in (S.true, S.false):
+                    cval = c.subs(x, S.Zero)
+            else:
+                cval = c.subs(x, S.Zero)
+            if cval == True:
                 return e.as_leading_term(x)
 
     def _eval_adjoint(self):
