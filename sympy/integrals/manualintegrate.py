@@ -29,6 +29,7 @@ find_substitutions.
 from __future__ import annotations
 from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
 from abc import ABC, abstractmethod
+import sys
 from collections import defaultdict
 from collections.abc import Mapping
 from functools import wraps
@@ -73,7 +74,8 @@ from .integrals import Integral
 from .rationaltools import ratint
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
-from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
+from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly, sqf_list
+from sympy.polys.rationaltools import together
 from sympy.simplify.simplify import simplify
 from sympy.simplify.fu import sincos_to_sum
 from sympy.simplify.powsimp import powsimp
@@ -82,6 +84,7 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
 if TYPE_CHECKING:
+    from types import FrameType
     from sympy.core.expr import Expr
 
 def _if_zero_implies_zero(P, Q):
@@ -280,6 +283,25 @@ class AddRule(Rule):
         return any(substep.contains_dont_know() for substep in self.substeps)
 
 
+def _drop_additive_constant(expr: Expr, var: Symbol) -> Expr:
+    """Remove the terms of ``expr`` that do not depend on ``var``, also
+    inside a constant factor and in the branches of a Piecewise."""
+    if expr.is_Add:
+        return Add(*[term for term in expr.args if term.has(var)])  # type: ignore
+    if expr.is_Mul:
+        indep, dep = expr.as_independent(var)
+        if indep != 1 and (dep.is_Add or isinstance(dep, Piecewise)):
+            return indep*_drop_additive_constant(dep, var)
+        return expr
+    if isinstance(expr, Piecewise):
+        branches = []
+        for branch in expr.args:
+            e, c = branch.args
+            branches.append((_drop_additive_constant(e, var), c))  # type: ignore
+        return Piecewise(*branches)
+    return expr
+
+
 class URule(Rule):
     """integrate(f(g(x))*g'(x), x) -> integrate(f(u), u), u = g(x)"""
 
@@ -309,7 +331,13 @@ class URule(Rule):
             if exp_ == -1:
                 # avoid needless -log(1/x) from substitution
                 result = result.subs(log(self.u_var), -log(base))
-        return result.subs(self.u_var, self.u_func)
+        result = result.subs(self.u_var, self.u_func)
+        # Substituting u = a*x + b back into a term of the substep's
+        # antiderivative that is a polynomial in u (u itself, for a
+        # ConstantRule) leaves an additive constant behind: an arbitrary
+        # constant of integration, dropped so that results do not depend
+        # on which substitution was chosen.
+        return _drop_additive_constant(result, self.variable)
 
     def contains_dont_know(self) -> bool:
         return self.substep.contains_dont_know()
@@ -2041,8 +2069,14 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
             return term.base.args[0]
         return None
 
+    def is_quadratic(arg):
+        # Cheaper than matching quadratic_pattern, which is slow to fail on
+        # the common linear argument.
+        poly = arg.as_poly(symbol)
+        return poly is not None and poly.degree() == 2
+
     quadratic_phase = any(
-        (arg := trig_arg(term)) is not None and arg.match(quadratic_pattern)
+        (arg := trig_arg(term)) is not None and is_quadratic(arg)
         for term in factors
     )
     gaussian_pattern = exp(quadratic_pattern)
@@ -3176,6 +3210,58 @@ def trig_product_to_sum_rule(integral: IntegralInfo):
     return RewriteRule(integrand, symbol, rewritten, substep)
 
 
+def perfect_square_radicand_rule(integral: IntegralInfo):
+    r"""
+    Rewrite an integral containing a square-root denominator by extracting
+    perfect-square factors from its radicand. Useful for integrals in the
+    complex domain of the form
+
+    integral H(z)/sqrt(c*G(z)) dz = (F(z)*sqrt(c*R(z)))/sqrt(c*G(z)) * integral H(z)/(F(z)*sqrt(c*R(z))) dz
+    """
+    integrand, symbol = integral
+    if symbol.is_real:
+        return
+    if not isinstance(integrand, (Mul, Pow)):
+        return
+
+    # Look for the square-root denominator among the factors of the
+    # integrand, i.e. a factor G**(-1/2) whose base depends on the symbol.
+    for factor in Mul.make_args(integrand):
+        if (isinstance(factor, Pow) and factor.exp == -S.Half and
+                factor.base.has(symbol)):
+            G = factor.base
+            H = integrand / factor
+            break
+    else:
+        return
+
+    _, denom = together(G).as_numer_denom()
+    if denom.has(symbol):
+        return
+
+    # Give sqf_list the generator explicitly when G is a polynomial in the
+    # symbol, so that a symbolic constant such as 1/a in a coefficient is
+    # treated as a coefficient and not as a (non-polynomial) generator.
+    if G.is_polynomial(symbol):
+        square_free = sqf_list(G, symbol)
+    else:
+        square_free = sqf_list(G)
+    c = square_free[0]
+    reducible = {r[0]**(Integer(r[1])/2) for r in square_free[1] if r[1] % 2 == 0}
+    irreducible = {r[0]**r[1] for r in square_free[1] if r[1] % 2 != 0}
+
+    if not reducible:
+        return
+
+    F = Mul(*reducible)
+    R = Mul(*irreducible)
+    factor = (F*sqrt(c*R))/sqrt(G)
+    rewritten = H/(F*sqrt(c*R))
+
+    substep = yield IntegralInfo(rewritten, symbol)
+    return ConstantTimesRule(integrand, symbol, factor, rewritten, substep)
+
+
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
     integrand, symbol = integral
     if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
@@ -3737,6 +3823,16 @@ def fallback_rule(integral):
 _cache_dummy = Dummy("z")
 
 
+def _frame_depth() -> int:
+    """Number of Python frames currently on the stack."""
+    depth = 0
+    frame: FrameType | None = sys._getframe()
+    while frame is not None:
+        depth += 1
+        frame = frame.f_back
+    return depth
+
+
 def _integral_key(integral):
     integrand, symbol = integral
 
@@ -3806,34 +3902,56 @@ class IntegrationSolver:
     instance instead of in module-global variables.
     """
 
-    def __init__(self, max_depth: int | None = 100, branch: bool = False,
-                 **options):
-        # Hard limit on the depth of nested subproblems (None = unlimited):
+    # Python frames that one level of nested subproblems occupies on the
+    # way from ``solve`` to the next ``solve`` (through the strategy
+    # combinators, ``run`` and ``run_generator``), and the frames kept free
+    # for the work the rules do at the deepest level.
+    _FRAMES_PER_LEVEL = 10
+    _FRAMES_MARGIN = 150
+
+    def __init__(self, max_depth: int | None = 100, branch: bool = False):
+        # Limit on the depth of nested subproblems (None = unlimited):
         # ``max_depth=1`` allows only rules that need no subintegrals.
         self.max_depth = max_depth
         # Whether to collect all applicable rules into AlternativeRule
         # nodes (True) or to keep only the first workable rule (False).
         self.branch = branch
-        self.options = options
         # Subproblems on the current recursion path, to break cyclic integrals.
         self._active: set[Expr] = set()
-        # Uses of each "u" by integration by parts, to avoid infinite repetition.
+        # Uses of each "u" by integration by parts, to avoid infinite
+        # repetition. Reset at the start of every top-level call.
         self._parts_u_count: dict[Expr, int] = defaultdict(int)
         # Rules already computed for a subproblem, keyed the same way as
         # ``_active``, so that a subintegral reached again through a
         # different search path is served from here instead of being solved
-        # from scratch. Only populated for a subtree whose computation never
-        # hit the max_depth budget (see ``_starved`` below): a result that
-        # did would be a possible depth artifact rather than the true
-        # answer, and could be wrong to reuse for the same subproblem
-        # reached elsewhere with more budget left. Lives only as long as
-        # this solver, i.e. one top-level integral_steps() call, so it can
-        # never leak stale steps into an unrelated integration request.
+        # from scratch. Only holds results that do not depend on how much
+        # of the max_depth budget was left when they were computed (see
+        # ``solve``), so it stays valid across top-level calls on the same
+        # solver.
         self._solved: dict[Expr, Rule] = {}
         # Whether the subproblem currently being solved (or any of its
-        # descendants) has bottomed out on the max_depth budget.
+        # descendants) has bottomed out on the depth budget.
         self._starved = False
+        # Depth limit in force for the current top-level call: ``max_depth``,
+        # lowered if the interpreter's recursion limit would be reached
+        # first (see ``_start_run``).
+        self._depth_limit = max_depth
         self._strategy: Callable[[IntegralInfo], Rule] | None = None
+
+    def _start_run(self) -> None:
+        """Reset the per-run state at the start of a top-level call."""
+        self._parts_u_count.clear()
+        self._starved = False
+        self._depth_limit = self.max_depth
+        if self.max_depth is not None:
+            # Make sure the depth limit is reached before Python's recursion
+            # limit is, so that a too deep subproblem is reported as
+            # unsolvable instead of raising RecursionError, wherever the
+            # top-level call comes from.
+            headroom = (sys.getrecursionlimit() - _frame_depth()
+                        - self._FRAMES_MARGIN)
+            self._depth_limit = max(
+                min(self.max_depth, headroom // self._FRAMES_PER_LEVEL), 1)
 
     def solve(self, integrand, symbol) -> Rule:
         """Solve a (sub)integral by dispatching the rules on it.
@@ -3841,39 +3959,39 @@ class IntegrationSolver:
         This replaces the recursive calls to ``integral_steps`` that the
         rules used to perform themselves.
         """
-        cachekey = integrand.xreplace({symbol: _cache_dummy})
-        if cachekey in self._solved:
-            # A cached result is always budget-independent (see below), so
-            # it can be served regardless of how much budget is left here.
-            return _rule_xreplace(self._solved[cachekey], {_cache_dummy: symbol})
+        if not self._active:
+            self._start_run()
         # Every ancestor on the recursion path holds exactly one entry in
-        # ``_active``, so its size is the current depth.
-        if self.max_depth is not None and len(self._active) >= self.max_depth:
+        # ``_active``, so its size is the current depth. Checked before the
+        # memo, so that whether a subproblem at the limit is solved does
+        # not depend on whether it happens to have been seen before.
+        if self._depth_limit is not None and len(self._active) >= self._depth_limit:
             # Recursion budget exhausted: report the subproblem as
             # unsolvable, so that callers fall back to shallower candidates.
             self._starved = True
             return DontKnowRule(integrand, symbol)
+        cachekey = integrand.xreplace({symbol: _cache_dummy})
+        if cachekey in self._solved:
+            return _rule_xreplace(self._solved[cachekey], {_cache_dummy: symbol})
         if cachekey in self._active:
             # Stop this attempt, because it leads around in a loop
             return DontKnowRule(integrand, symbol)
-        had_ancestor = bool(self._active)
         self._active.add(cachekey)
         # Track whether this subtree's own computation bottoms out on the
         # depth budget, independently of whatever an ancestor already
-        # accumulated (or of a stale flag left by an unrelated, already
-        # finished top-level call on this same solver).
-        outer_starved, self._starved = (self._starved if had_ancestor else False), False
+        # accumulated.
+        outer_starved, self._starved = self._starved, False
         try:
             if self._strategy is None:
                 self._strategy = self._build_strategy()
             result = self._strategy(IntegralInfo(integrand, symbol))
-            if not self._starved:
-                # Only memoize a result whose computation never hit the
-                # depth budget anywhere in its own subtree: such a result
-                # would be a possible artifact of running out of budget at
-                # this particular point in the tree, rather than a genuine
-                # answer - reusing it for the same subproblem reached with
-                # a different amount of budget left would be wrong.
+            if not self._starved or not result.contains_dont_know():
+                # A complete rule tree is a valid answer whatever the
+                # budget was. An incomplete one computed while running out
+                # of budget somewhere in its subtree is not memoized: it may
+                # be an artifact of the budget left at this particular point
+                # of the search, and reusing it for the same subproblem
+                # reached with more budget left would be wrong.
                 self._solved[cachekey] = _rule_xreplace(result, {symbol: _cache_dummy})
         finally:
             self._active.discard(cachekey)
@@ -3988,6 +4106,7 @@ class IntegrationSolver:
                     branch=self.branch
                 )),
                 null_safe(condition(_integral_is_subclass(Mul, Pow), w(nested_pow_rule))),
+                null_safe(w(perfect_square_radicand_rule)),
             ),
             w(fallback_rule))
 
@@ -4044,9 +4163,10 @@ def integral_steps(integrand, symbol, **options):
     branch : bool, optional
         If True, collect all applicable rules into an ``AlternativeRule``
         instead of returning only the first workable one. Defaults to False.
-    max_depth : int, optional
-        Hard limit on the depth of nested subproblems; deeper subproblems
-        are reported as ``DontKnowRule``. Defaults to None (unlimited).
+    max_depth : int or None, optional
+        Limit on the depth of nested subproblems; deeper subproblems are
+        reported as ``DontKnowRule``. Defaults to 100; ``None`` means
+        unlimited.
 
     Returns
     =======
@@ -4126,21 +4246,4 @@ def manualintegrate(f, var):
         return False
     if _has_erf_trig_mul(f) and _has_erf_trig_mul(result):
         result = factor_terms(result)
-
-    # Remove additive constants from the result if the integrand does not
-    # contain a derivative.
-    def _remove_additive_constants(expr, var):
-        if not expr.has(var):
-            return S.Zero
-        if expr.is_Add:
-            args = [_remove_additive_constants(arg, var) for arg in expr.args]
-            return Add(*args)
-        if expr.is_Mul:
-            indep, dep = expr.as_independent(var)
-            if dep.is_Add:
-                return indep * _remove_additive_constants(dep, var)
-            return expr
-        return expr
-    if not f.has(Derivative):
-        result = _remove_additive_constants(result, var)
     return result
