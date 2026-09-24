@@ -14,10 +14,12 @@ from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
 from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfc, erfi, fresnelc, fresnels, li, owens_t)
 from sympy.functions.special.gamma_functions import uppergamma
+from sympy.functions.special.hyper import hyper
 from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
 from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
+from sympy.simplify.simplify import simplify
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, bioche_substitution, integral_steps, manual_subs, IntegrationSolver)
 from sympy.testing.pytest import raises, slow
@@ -371,6 +373,54 @@ def test_manualintegrate_trigpowers():
     f, F = cot(2*x)**-4, tan(2*x)**3/6 - tan(2*x)/2 + x
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).rewrite(exp).cancel() == 0
+
+
+def test_manualintegrate_trigpowers_symbolic():
+    n, m = symbols('n m')
+
+    assert manualintegrate(sin(x)**n, x) == \
+        Piecewise(
+            (sin(x)**(n + 1)*hyper((S.Half, n/2 + S.Half),
+                (n/2 + Rational(3, 2),), sin(x)**2)/(n + 1), cos(x) >= 0),
+            (-sin(x)**(n + 1)*hyper((S.Half, n/2 + S.Half),
+                (n/2 + Rational(3, 2),), sin(x)**2)/(n + 1), True))
+
+    assert manualintegrate(sin(x)**n * cos(x)**m, x) == \
+        Piecewise(
+            (sin(x)**(n + 1)*hyper((S.Half - m/2, n/2 + S.Half),
+                (n/2 + Rational(3, 2),), sin(x)**2)/(n + 1), cos(x) >= 0),
+            (exp(I*pi*(m - 1))*sin(x)**(n + 1)*hyper((S.Half - m/2, n/2 + S.Half),
+                (n/2 + Rational(3, 2),), sin(x)**2)/(n + 1), True))
+
+    assert manualintegrate(sin(x)**2 * cos(x)**m, x) == \
+        Piecewise(
+            (sin(x)**3*hyper((Rational(3, 2), S.Half - m/2),
+                (Rational(5, 2),), sin(x)**2)/3, cos(x) >= 0),
+            (exp(I*pi*(m - 1))*sin(x)**3*hyper((Rational(3, 2), S.Half - m/2),
+                (Rational(5, 2),), sin(x)**2)/3, True))
+
+    argument = a*x + b
+    f = sin(argument)**n * cos(argument)**m
+    generic_pos_F = sin(argument)**(n + 1)*hyper((S.Half - m/2, n/2 + S.Half),
+        (n/2 + Rational(3, 2),), sin(argument)**2)/(a*(n + 1))
+    generic_neg_F = exp(I*pi*(m - 1))*sin(argument)**(n + 1) * \
+        hyper((S.Half - m/2, n/2 + S.Half),
+            (n/2 + Rational(3, 2),), sin(argument)**2)/(a*(n + 1))
+    degenerate_F = x*sin(b)**n*cos(b)**m
+    assert manualintegrate(f, x) == Piecewise(
+        (generic_pos_F, Ne(a, 0) & (cos(argument) >= 0)),
+        (generic_neg_F, Ne(a, 0)),
+        (degenerate_F, True))
+
+
+def test_manualintegrate_trigpowers_symbolic_definite():
+    n, m = symbols('n m')
+
+    assert simplify(integrate(cos(x)**n, (x, 0, pi)).subs(n, 2)) == pi/2
+    assert simplify(integrate(cos(x)**n, (x, 0, 2*pi)).subs(n, 2)) == pi
+
+    assert simplify(integrate(cos(x)**m, (x, 0, pi/2)).subs(m, 2)) == pi/4
+    assert simplify(integrate(sin(x)**m, (x, 0, pi/2)).subs(m, 2)) == pi/4
 
 
 @slow
