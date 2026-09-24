@@ -12,6 +12,7 @@ from sympy.core.exprtools import decompose_power, decompose_power_rat
 from sympy.core.numbers import _illegal
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
+from sympy.simplify.simplify import _mexpand
 
 import re
 
@@ -217,6 +218,57 @@ def _not_a_coeff(expr):
     if isinstance(expr, float) and float(expr) != expr:
         return True  # nan
     return  # could be
+
+
+def _sparse_dict_from_expr(expr, *gens):
+    indices = {g: i for i, g in enumerate(gens)}
+    poly = {}
+
+    terms = list(Add.make_args(expr))
+
+    while terms:
+        term = terms.pop()
+
+        if term.atoms(Add):
+            term = _mexpand(term)
+
+            if term.is_Add:
+                terms.extend(Add.make_args(term))
+                continue
+
+        coeff = []
+        monom = {}
+
+        for factor in Mul.make_args(term):
+            if not _not_a_coeff(factor) and factor.is_Number:
+                coeff.append(factor)
+                continue
+
+            base, exp = decompose_power(factor)
+
+            if exp < 0:
+                exp, base = -exp, Pow(base, -S.One)
+
+            try:
+                i = indices[base]
+            except KeyError:
+                if not factor.has_free(*gens):
+                    coeff.append(factor)
+                    continue
+
+                raise PolynomialError(
+                    "%s contains an element of the set of generators."
+                    % factor
+                )
+
+            monom[i] = monom.get(i, 0) + exp
+
+        monom = tuple(sorted(monom.items()))
+        coeff = Mul(*coeff)
+
+        poly[monom] = poly.get(monom, S.Zero) + coeff
+
+    return poly
 
 
 def _parallel_dict_from_expr_if_gens(exprs, opt):
