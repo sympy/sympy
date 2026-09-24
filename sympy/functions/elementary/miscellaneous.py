@@ -69,7 +69,7 @@ Id = S.IdentityFunction
 ###############################################################################
 
 
-def sqrt(arg, evaluate=None):
+def sqrt(arg: Expr | complex, evaluate: bool | None = None) -> Expr:
     """Returns the principal square root.
 
     Parameters
@@ -157,7 +157,7 @@ def sqrt(arg, evaluate=None):
     return Pow(arg, S.Half, evaluate=evaluate)
 
 
-def cbrt(arg, evaluate=None):
+def cbrt(arg: Expr | complex, evaluate: bool | None = None) -> Expr:
     """Returns the principal cube root.
 
     Parameters
@@ -214,7 +214,7 @@ def cbrt(arg, evaluate=None):
     return Pow(arg, Rational(1, 3), evaluate=evaluate)
 
 
-def root(arg, n, k=0, evaluate=None):
+def root(arg: Expr | complex, n: Expr | complex, k: Expr | complex = 0, evaluate: bool | None = None) -> Expr:
     r"""Returns the *k*-th *n*-th root of ``arg``.
 
     Parameters
@@ -310,11 +310,11 @@ def root(arg, n, k=0, evaluate=None):
     """
     n = sympify(n)
     if k:
-        return Mul(Pow(arg, S.One/n, evaluate=evaluate), S.NegativeOne**(2*k/n), evaluate=evaluate)
+        return Mul(Pow(arg, S.One/n, evaluate=evaluate), S.NegativeOne**(2*k/n), evaluate=evaluate)  # type: ignore[arg-type]
     return Pow(arg, 1/n, evaluate=evaluate)
 
 
-def real_root(arg, n=None, evaluate=None):
+def real_root(arg: Expr | complex, n: Expr | complex | None = None, evaluate: bool | None = None) -> Expr:
     r"""Return the real *n*'th-root of *arg* if possible.
 
     Parameters
@@ -364,7 +364,7 @@ def real_root(arg, n=None, evaluate=None):
     if n is not None:
         return Piecewise(
             (root(arg, n, evaluate=evaluate), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
-            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate),
+            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate),  # type: ignore[arg-type]
             And(Eq(im(arg), S.Zero), Eq(Mod(n, 2), S.One))),
             (root(arg, n, evaluate=evaluate), True))
     rv = sympify(arg)
