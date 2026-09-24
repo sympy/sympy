@@ -12,7 +12,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
-from sympy.integrals.integrals import integrate
+from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify, _sympify
@@ -725,8 +725,8 @@ class Quaternion(Expr):
     def __rtruediv__(self, other: SExpr) -> Quaternion:
         return sympify(other) * self**-1
 
-    def _eval_Integral(self, *args) -> Quaternion:
-        return self.integrate(*args)
+    def _eval_Integral(self, x, **hints) -> Quaternion:
+        return Quaternion(*[Integral(arg, x).doit(**hints) for arg in self.args])
 
     def diff(self, *symbols, **kwargs):
         kwargs.setdefault('evaluate', True)
