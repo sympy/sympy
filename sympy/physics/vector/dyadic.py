@@ -204,51 +204,46 @@ class Dyadic(Printable, EvalfMixin):
         return outstr
 
     def _pretty(self, printer):
-        e = self
 
-        class Fake:
-            baseline = 0
+        ar = self.args
+        if len(ar) == 0:
+            return prettyForm(str(0))
 
-            def render(self, *args, **kwargs):
-                mpp = printer
-                if len(e.args) == 0:
-                    return mpp._print(0)
+        bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
 
-                outstr = None
-                bar = prettyForm(u"\N{CIRCLED TIMES}" if mpp._use_unicode else "|")
-                for i, v in enumerate(e.args):
-                    p_v1 = mpp._print(v[1])
-                    p_v2 = mpp._print(v[2])
-                    p_dyad = prettyForm(*p_v1.right(bar, p_v2))
+        terms = []  # output list
 
-                    c = v[0]
-                    if i == 0:
-                        sign = ""
-                    else:
-                        sign = " + "
+        def juxtapose(coeff, v1, v2):
+            pc = printer._print(coeff)
+            pv1 = printer._print(v1)
+            pv2 = printer._print(v2)
+            if coeff.is_Add:
+                pc = prettyForm(*pc.parens())
+            bar_form = prettyForm(bar)
+            return printer._print_seq([pc, pv1, bar_form, pv2], delimiter=' ')
 
-                    coeff, rest = c.as_coeff_Mul()
-                    if coeff < 0:
-                        if i == 0:
-                            sign = "- "
-                        else:
-                            sign = " - "
-                        c = -c
+        for coeff, vec1, vec2 in ar:
 
-                    if c == 1:
-                        p_term = p_dyad
-                    else:
-                        p_c = mpp._print(c)
-                        if isinstance(c, Add):
-                            p_c = prettyForm(*p_c.parens())
-                        p_term = prettyForm(*p_c.right(" ", p_dyad))
+            pv1 = printer._print(vec1)
+            pv2 = printer._print(vec2)
+            bar_form = prettyForm(bar)
 
-                    if outstr is None:
-                        outstr = prettyForm(*p_term.left(sign))
-                    else:
-                        outstr = prettyForm(*outstr.right(sign, p_term))
-                return outstr.__str__()
-        return Fake()
+            if coeff == 1:
+                term = printer._print_seq([pv1, bar_form, pv2], delimiter=' ')
+            elif coeff == -1:
+                minus = prettyForm('-')
+                term = printer._print_seq([minus, pv1, bar_form, pv2], delimiter=' ')
+            else:
+                term = juxtapose(coeff, vec1, vec2)
+
+            terms.append(term)
+
+        if terms:
+            result = prettyForm.__add__(*terms)
+        else:
+            result = prettyForm("0")
+
+        return result
 
     def __rsub__(self, other):
         return (-1 * self) + other
