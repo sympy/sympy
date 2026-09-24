@@ -973,6 +973,37 @@ class Mul(Expr, AssocOp):
             plain = self.func(*plain)
             if sums:
                 deep = hints.get("deep", False)
+                order_idx = [i for i, s in enumerate(sums)
+                             if any(a.is_Order and any(p != 0 for p in a.point) for a in s.args)]
+                if len(order_idx) == 1:
+                    i = order_idx[0]
+                    osum = sums[i]
+                    other = [s.args[0] if type(s) is Basic else s for j, s in enumerate(sums) if j != i]
+
+                    non_order = [a for a in osum.args if not a.is_Order]
+                    normal_sums = list(sums)
+                    if non_order:
+                        rem = Add(*non_order)
+                        normal_sums[i] = rem if rem.is_Add else Basic(rem)
+                    else:
+                        normal_sums.pop(i)
+
+                    args = []
+                    if normal_sums:
+                        for term in self.func._expandsums(normal_sums):
+                            t = self.func(plain, term)
+                            if t.is_Mul and any(a.is_Add for a in t.args) and deep:
+                                t = t._eval_expand_mul()
+                            args.append(t)
+
+                    for o in osum.args:
+                        if o.is_Order:
+                            t = self.func(plain, Mul(o, Mul(*other), evaluate=False) if other else o)
+                            if t.is_Mul and any(a.is_Add for a in t.args) and deep:
+                                t = t._eval_expand_mul()
+                            args.append(t)
+                    return Add(*args)
+
                 terms = self.func._expandsums(sums)
                 args = []
                 for term in terms:
