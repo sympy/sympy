@@ -128,6 +128,24 @@ Usage::
 LLVM JIT Code Printing
 ----------------------
 
+LLVM JIT code printing uses llvmlite to compile SymPy expressions into
+executable machine code through LLVM. This can significantly speed up
+repeated numerical evaluation of expressions compared with evaluating them
+symbolically or through ordinary Python code.
+
+The main entry point is ``llvm_callable()``, which takes a list of input
+symbols and a SymPy expression and returns a compiled function that can be
+called with numerical values.
+
+Usage::
+
+    >>> from sympy.printing.llvmjitcode import llvm_callable
+    >>> from sympy.abc import x
+    >>> expr = x**2 + x + 1
+    >>> f = llvm_callable([x], expr)
+    >>> f(2.0)
+    7.0
+
 .. automodule:: sympy.printing.llvmjitcode
    :members:
 
