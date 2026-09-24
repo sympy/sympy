@@ -130,7 +130,15 @@ CARET: '^';
 COLON: ':';
 
 fragment WS_CHAR: [ \t\r\n];
-DIFFERENTIAL: 'd' WS_CHAR*? ([a-zA-Z] | '\\' [a-zA-Z]+);
+fragment UPRIGHT_DIFF_CMD: '\\mathrm' | '\\text' | '\\textrm';
+// For plain 'd', WS_CHAR*? absorbs any space so 'd x' becomes one token.
+// For upright forms the variable is optional (?), allowing '\mathrm{d}' alone
+// in derivative numerators (e.g. \frac{\mathrm{d}}{\mathrm{d}x} f).
+// Consequence: '\mathrm{d} x' with whitespace before the variable is NOT
+// absorbed into a single token; use '\mathrm{d}x' without the space.
+DIFFERENTIAL:
+	'd' WS_CHAR*? ([a-zA-Z] | '\\' [a-zA-Z]+)
+	| UPRIGHT_DIFF_CMD WS_CHAR* '{' WS_CHAR* 'd' WS_CHAR* '}' WS_CHAR*? ([a-zA-Z] | '\\' [a-zA-Z]+)?;
 
 LETTER: [a-zA-Z];
 DIGIT: [0-9];
