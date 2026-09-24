@@ -66,3 +66,7 @@ def test_comapre_not_instance():
 def test_is_successort():
     w = Ordinal(OmegaPower(5, 1))
     assert not w.is_successor_ordinal
+
+def test_atomic_classes():
+    raises(TypeError, lambda: type(ord0)(1))
+    raises(TypeError, lambda: type(omega)(1))
