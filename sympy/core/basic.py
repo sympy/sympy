@@ -288,8 +288,19 @@ class Basic(Printable):
     is_real: bool | None
     is_zero: bool | None
     is_even: bool | None
+    #kind is throwing a type checker error if defined as ClassVar
+    #so we define it as a property
+    #
+    #with reference to error: #28806
+    @property
+    def kind(self) -> Kind:
+        """The kind of mathematical object this is.
 
-    kind: Kind = UndefinedKind
+        By default, UndefinedKind is returned. Subclasses should
+        override this property to return a more specific Kind.
+        """
+        return UndefinedKind
+
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
