@@ -5,7 +5,7 @@ from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
-    _canonical, _canonical_coeff)
+    _Inequality, _canonical, _canonical_coeff)
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
@@ -29,6 +29,11 @@ class ExprCondPair(Tuple):
         elif isinstance(cond, Basic) and cond.has(Piecewise):
             cond = piecewise_fold(cond)
             if isinstance(cond, Piecewise):
+                # Replace Undefined branches with False: an undefined
+                # condition means the branch is not taken.
+                cond = cond.func(*[
+                    (false, c) if e is Undefined else (e, c)
+                    for e, c in cond.args])
                 cond = cond.rewrite(ITE)
 
         if not isinstance(cond, Boolean):
@@ -1088,7 +1093,10 @@ def piecewise_fold(expr, evaluate=True):
                 (i.args if isinstance(i, Piecewise) else
                  [(i, true)]) for i in folded]):
             e, c = zip(*ec)
-            new_args.append((expr.func(*e), And(*c)))
+            if isinstance(expr, _Inequality) and S.NaN in e:
+                new_args.append((Undefined, And(*c)))
+            else:
+                new_args.append((expr.func(*e), And(*c)))
 
     if evaluate is None:
         # don't return duplicate conditions, otherwise don't evaluate
