@@ -359,6 +359,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if kwargs.get('deep', True):
             function = function.simplify(**kwargs)
 
+        if isinstance(function, Piecewise):
+            simplified_sum = self.func(function, *self.limits)
+            evaluated = simplified_sum.doit(deep=False)
+            if evaluated != simplified_sum:
+                return evaluated
+
         # split the function into adds
         terms = Add.make_args(expand(function))
         s_t = [] # Sum Terms
