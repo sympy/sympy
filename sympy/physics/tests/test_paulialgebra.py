@@ -2,7 +2,6 @@ from __future__ import annotations
 from sympy.core.numbers import I
 from sympy.core.symbol import symbols
 from sympy.physics.paulialgebra import Pauli
-from sympy.testing.pytest import XFAIL
 from sympy.physics.quantum import TensorProduct
 
 sigma1 = Pauli(1)
@@ -53,6 +52,14 @@ def test_evaluate_pauli_product():
     ) == 1 -I + I*sigma3*tau1*sigma2 - 1 - sigma3 - I*TensorProduct(1,1)
 
 
-@XFAIL
 def test_Pauli_should_work():
     assert sigma1*sigma3*sigma1 == -sigma3
+
+
+def test_Pauli_left_mul():
+    # Products where a scalar/imaginary prefactor appears to the left of Pauli
+    # matrices are now automatically evaluated via the Mul postprocessor.
+    assert I*sigma2*sigma3 == -sigma1
+    assert -I*sigma2*sigma3 == sigma1
+    assert I*sigma1*sigma2*sigma3 == -1
+    assert -I*sigma1*sigma2 == sigma3
