@@ -2814,7 +2814,7 @@ def find_first_n_carmichaels(n):
     return carmichaels
 
 
-def dra(n, b):
+def dra(n: SupportsIndex, b: SupportsIndex) -> int:
     """
     Returns the additive digital root of a natural number ``n`` in base ``b``
     which is a single digit value obtained by an iterative process of summing
@@ -2846,7 +2846,7 @@ def dra(n, b):
     return (1 + (num - 1) % (b - 1))
 
 
-def drm(n, b):
+def drm(n: SupportsIndex, b: SupportsIndex) -> int:
     """
     Returns the multiplicative digital root of a natural number ``n`` in a given
     base ``b`` which is a single digit value obtained by an iterative process of
