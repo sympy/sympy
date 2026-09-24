@@ -488,7 +488,10 @@ class StdFactKB(FactKB):
             self.deduce_all_facts(facts)
 
     def copy(self):
-        return self.__class__(self)
+        copied = self.__class__()
+        copied.update(self)
+        copied._generator = self.generator
+        return copied
 
     @property
     def generator(self):
@@ -504,18 +507,17 @@ def make_property(fact):
     """Create the automagic property corresponding to a fact."""
 
     def getit(self):
+        assumptions = self._assumptions
         try:
-            return self._assumptions[fact]
+            return assumptions[fact]
         except KeyError:
-            if self._assumptions is self.default_assumptions:
-                self._assumptions = self.default_assumptions.copy()
-            return _ask(fact, self)
+            return _ask(fact, self, assumptions)
 
     getit.func_name = as_property(fact)
     return property(getit)
 
 
-def _ask(fact, obj):
+def _ask(fact, obj, base):
     """
     Find the truth value for a property of an object.
 
@@ -540,7 +542,7 @@ def _ask(fact, obj):
     deduced, and the result is cached in ._assumptions.
     """
     # FactKB which is dict-like and maps facts to their known values:
-    assumptions = obj._assumptions
+    assumptions = base.copy()
 
     # A dict that maps facts to their handlers:
     handler_map = obj._prop_handler
@@ -552,12 +554,8 @@ def _ask(fact, obj):
     # Loop over the queue as it extends
     for fact_i in facts_to_check:
 
-        # If fact_i has already been determined then we don't need to rerun the
-        # handler. There is a potential race condition for multithreaded code
-        # though because it's possible that fact_i was checked in another
-        # thread. The main logic of the loop below would potentially skip
-        # checking assumptions[fact] in this case so we check it once after the
-        # loop to be sure.
+        # Published snapshots contain complete implication closures, so a
+        # known fact does not need its handler to be run again.
         if fact_i in assumptions:
             continue
 
@@ -574,16 +572,10 @@ def _ask(fact, obj):
         if fact_i_value is not None:
             assumptions.deduce_all_facts(((fact_i, fact_i_value),))
 
-        # Usually if assumptions[fact] is now not None then that is because of
-        # the call to deduce_all_facts above. The handler for fact_i returned
-        # True or False and knowing fact_i (which is equal to fact in the first
-        # iteration) implies knowing a value for fact. It is also possible
-        # though that independent code e.g. called indirectly by the handler or
-        # called in another thread in a multithreaded context might have
-        # resulted in assumptions[fact] being set. Either way we return it.
+        # Stop once deduction determines the requested fact.
         fact_value = assumptions.get(fact)
         if fact_value is not None:
-            return fact_value
+            break
 
         # Extend the queue with other facts that might determine fact_i. Here
         # we randomise the order of the facts that are checked. This should not
@@ -597,27 +589,11 @@ def _ask(fact, obj):
         facts_to_check.extend(new_facts_to_check)
         facts_queued.update(new_facts_to_check)
 
-    # The above loop should be able to handle everything fine in a
-    # single-threaded context but in multithreaded code it is possible that
-    # this thread skipped computing a particular fact that was computed in
-    # another thread (due to the continue). In that case it is possible that
-    # fact was inferred and is now stored in the assumptions dict but it wasn't
-    # checked for in the body of the loop. This is an obscure case but to make
-    # sure we catch it we check once here at the end of the loop.
-    if fact in assumptions:
-        return assumptions[fact]
-
-    # This query can not be answered. It's possible that e.g. another thread
-    # has already stored None for fact but assumptions._tell does not mind if
-    # we call _tell twice setting the same value. If this raises
-    # InconsistentAssumptions then it probably means that another thread
-    # attempted to compute this and got a value of True or False rather than
-    # None. In that case there must be a bug in at least one of the handlers.
-    # If the handlers are all deterministic and are consistent with the
-    # inference rules then the same value should be computed for fact in all
-    # threads.
-    assumptions._tell(fact, None)
-    return None
+    assumptions.setdefault(fact, None)
+    # Publish the complete snapshot atomically. Concurrent publications use
+    # last-writer-wins semantics and can only discard cached facts.
+    obj._assumptions = assumptions
+    return assumptions[fact]
 
 
 def _prepare_class_assumptions(cls):
