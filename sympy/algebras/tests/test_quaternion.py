@@ -6,7 +6,7 @@ from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, conjugate, im, re, sign)
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
 from sympy.integrals.integrals import integrate
@@ -457,3 +457,27 @@ def test_issue_28556():
     q3 = Quaternion(r, 0, 0, 0)
     result3 = q3.log()
     assert result3 == Quaternion(log(r), 0, 0, 0)
+
+
+def test_issue_21576():
+    """Test that Quaternion.exp handles purely real quaternions correctly.
+
+    Previously, Quaternion(a, 0, 0, 0).exp() produced NaN in the vector
+    part because the formula divides by the vector norm, which is zero
+    for purely real quaternions. See issue 21576.
+    """
+    # Test positive real quaternion
+    q1 = Quaternion(1, 0, 0, 0)
+    result1 = q1.exp()
+    assert result1 == Quaternion(E, 0, 0, 0)  # exp(1) = E
+
+    # Test the zero quaternion
+    q2 = Quaternion(0, 0, 0, 0)
+    result2 = q2.exp()
+    assert result2 == Quaternion(1, 0, 0, 0)  # exp(0) = 1
+
+    # Test symbolic real quaternion
+    r = Symbol('r', real=True)
+    q3 = Quaternion(r, 0, 0, 0)
+    result3 = q3.exp()
+    assert result3 == Quaternion(exp(r), 0, 0, 0)
