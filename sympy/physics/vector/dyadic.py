@@ -407,8 +407,8 @@ class Dyadic(Printable, EvalfMixin):
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
-        return sum([Dyadic([(v[0].doit(**hints), v[1], v[2])])
-                    for v in self.args], Dyadic(0))
+        return Dyadic([(v[0].doit(**hints), v[1], v[2])
+                       for v in self.args])
 
     def dt(self, frame):
         """Take the time derivative of this Dyadic in a frame.
@@ -440,10 +440,10 @@ class Dyadic(Printable, EvalfMixin):
 
     def simplify(self):
         """Returns a simplified Dyadic."""
-        out = Dyadic(0)
-        for v in self.args:
-            out += Dyadic([(v[0].simplify(), v[1], v[2])])
-        return out
+        return Dyadic([
+            (v[0].simplify(), v[1], v[2])
+            for v in self.args
+        ])
 
     def subs(self, *args, **kwargs):
         """Substitution on the Dyadic.
@@ -461,18 +461,18 @@ class Dyadic(Printable, EvalfMixin):
 
         """
 
-        return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
-                    for v in self.args], Dyadic(0))
+        return Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])
+                       for v in self.args])
 
     def applyfunc(self, f):
         """Apply a function to each component of a Dyadic."""
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = Dyadic(0)
-        for a, b, c in self.args:
-            out += f(a) * (b.outer(c))
-        return out
+        return Dyadic([
+            (f(a), b, c)
+            for a, b, c in self.args
+        ])
 
     def _eval_evalf(self, prec):
         if not self.args:
