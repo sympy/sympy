@@ -384,14 +384,14 @@ class SciPyPrinter(NumPyPrinter):
             self._print(expr.args[2]))
 
     def _print_lowergamma(self, expr):
-        return "{0}({2})*{1}({2}, {3})".format(
+        return "({0}({2})*{1}({2}, {3}))".format(
             self._module_format('scipy.special.gamma'),
             self._module_format('scipy.special.gammainc'),
             self._print(expr.args[0]),
             self._print(expr.args[1]))
 
     def _print_uppergamma(self, expr):
-        return "{0}({2})*{1}({2}, {3})".format(
+        return "({0}({2})*{1}({2}, {3}))".format(
             self._module_format('scipy.special.gamma'),
             self._module_format('scipy.special.gammaincc'),
             self._print(expr.args[0]),
@@ -401,11 +401,11 @@ class SciPyPrinter(NumPyPrinter):
         betainc = self._module_format('scipy.special.betainc')
         beta = self._module_format('scipy.special.beta')
         args = [self._print(arg) for arg in expr.args]
-        return f"({betainc}({args[0]}, {args[1]}, {args[3]}) - {betainc}({args[0]}, {args[1]}, {args[2]})) \
-            * {beta}({args[0]}, {args[1]})"
+        return f"(({betainc}({args[0]}, {args[1]}, {args[3]}) - {betainc}({args[0]}, {args[1]}, {args[2]})) \
+            * {beta}({args[0]}, {args[1]}))"
 
     def _print_betainc_regularized(self, expr):
-        return "{0}({1}, {2}, {4}) - {0}({1}, {2}, {3})".format(
+        return "({0}({1}, {2}, {4}) - {0}({1}, {2}, {3}))".format(
             self._module_format('scipy.special.betainc'),
             self._print(expr.args[0]),
             self._print(expr.args[1]),
