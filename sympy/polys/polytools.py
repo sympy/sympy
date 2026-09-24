@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload, Literal, Any, cast, Callable
+from typing import TYPE_CHECKING, overload, Literal, Any, cast
 
 from functools import wraps, reduce
 from operator import mul
@@ -64,7 +64,6 @@ from sympy.external.mpmath import local_workdps, NoConvergence
 
 
 if TYPE_CHECKING:
-    from sympy.polys.domains.domain import Domain
     from collections.abc import Iterator
     from typing import Self
 

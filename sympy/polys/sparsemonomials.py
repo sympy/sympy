@@ -13,9 +13,10 @@ existing dense-exponent sparse-polynomial algorithms can remain unchanged.
 
 from __future__ import annotations
 
-from typing import Mapping, TypeVar
+from typing import TYPE_CHECKING, Mapping, TypeVar
 
-from sympy.polys.monomials import monom
+if TYPE_CHECKING:
+    from sympy.polys.monomials import monom
 
 _T = TypeVar("_T")
 

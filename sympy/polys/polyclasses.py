@@ -161,34 +161,6 @@ from sympy.polys.polyerrors import (
     UnificationFailed,
     PolynomialError)
 
-from sympy.polys.sparsetools import (
-    smp_add,
-    smp_add_ground,
-    smp_clear_denoms,
-    smp_content,
-    smp_degree,
-    smp_degrees,
-    smp_diff,
-    smp_is_ground,
-    smp_is_linear,
-    smp_is_monic,
-    smp_is_one,
-    smp_is_primitive,
-    smp_is_quadratic,
-    smp_is_zero,
-    smp_LC,
-    smp_mul,
-    smp_mul_ground,
-    smp_neg,
-    smp_pow_generic,
-    smp_primitive,
-    smp_square,
-    smp_sub,
-    smp_sub_ground,
-    smp_subs_drop,
-    smp_trunc_ground,
-)
-
 
 from sympy.polys import sparsemonomials as smm
 
