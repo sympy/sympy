@@ -10,7 +10,7 @@ from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csol
 from .primetest import isprime
 from .generate import primerange
 from .factor_ import factorint, _perfect_power
-from .modular import crt
+from .modular import crt, solve_congruence
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
@@ -1334,10 +1334,8 @@ def _discrete_log_trial_mul(n, a, b, order=None):
     """
     a %= n
     b %= n
-    if order is None:
-        order = n
     x = 1
-    for i in range(order):
+    for i in range((order or n) + 1):
         if x == a:
             return i
         x = x * b % n
@@ -1689,55 +1687,73 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     if n == 1:
         return 0
 
-    if order is None:
-        # Compute the order and its factoring in one pass
-        # order = totient(n), factors = factorint(order)
-        factors = {}
-        for px, kx in factorint(n).items():
-            if kx > 1:
-                if px in factors:
-                    factors[px] += kx - 1
+    continuous = 0
+    unique = None
+    cyclic_dlog = []
+    for p, e in factorint(n).items():
+        pe = p**e
+        reduced_a = a % pe
+        reduced_b = b % pe
+        if reduced_b % p != 0:
+            order = n_order(reduced_b, pe)
+            if order < 1000:
+                res = _discrete_log_trial_mul(pe, reduced_a, reduced_b, order)
+                cyclic_dlog.append((res, order))
+                continue
+            if prime_order:
+                # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
+                # we compare the expected running times to determine the algorithm which is expected to be faster
+                # the number 10 was determined experimentally
+                if 4 * sqrt(log(n) * log(log(n))) < log(order) - 10:
+                    res = _discrete_log_index_calculus(pe, reduced_a, reduced_b, order)
+                elif order < 1000000000000:
+                    # Shanks seems typically faster, but uses O(sqrt(order)) memory
+                    res = _discrete_log_shanks_steps(pe, reduced_a, reduced_b, order)
                 else:
-                    factors[px] = kx - 1
-            for py, ky in factorint(px - 1).items():
-                if py in factors:
-                    factors[py] += ky
+                    res = _discrete_log_pollard_rho(pe, reduced_a, reduced_b, order)
+            else:
+                res = _discrete_log_pohlig_hellman(pe, reduced_a, reduced_b, order)
+            cyclic_dlog.append((res, order))
+
+        else:
+            # Worth noting that for k = 0,1,2,... the sequence pow(reduced_b, k, pe)
+            # results in x0, x1, x2, ..., xs, 0, 0, ...
+            # we can see that if `reduced_a` is zero, is it sufficient to determine the
+            # first position where the sequence becomes zero. On the other hand,
+            # if `reduced_a` is nonzero, a solution (if it exists) must lie between
+            # between x0 and xs. In either case, a naive search is sufficient
+            k = _discrete_log_trial_mul(pe, reduced_a, reduced_b, e)
+            if reduced_a:
+                if unique is not None and unique != k:
+                    raise ValueError("Log does not exist")
                 else:
-                    factors[py] = ky
-        order = 1
-        for px, kx in factors.items():
-            order *= px**kx
-        # Now the `order` is the order of the group and factors = factorint(order)
-        # The order of `b` divides the order of the group.
-        order_factors = {}
-        for p, e in factors.items():
-            i = 0
-            for _ in range(e):
-                if pow(b, order // p, n) == 1:
-                    order //= p
-                    i += 1
-                else:
-                    break
-            if i < e:
-                order_factors[p] = e - i
+                    unique = k
+            else:
+                continuous = max(continuous, k)
 
-    if prime_order is None:
-        prime_order = isprime(order)
+    result = None
+    cycle_size = 1
+    if cyclic_dlog:
+        res = solve_congruence(*cyclic_dlog)
+        if res:
+            result = as_int(ZZ.to_sympy(res[0]))
+            cycle_size = res[1]
+        else:
+            raise ValueError("Log does not exist")
 
-    if order < 1000:
-        return _discrete_log_trial_mul(n, a, b, order)
-    elif prime_order:
-        # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
-        # we compare the expected running times to determine the algorithm which is expected to be faster
-        if 4*sqrt(log(n)*log(log(n))) < log(order) - 10:  # the number 10 was determined experimental
-            return _discrete_log_index_calculus(n, a, b, order)
-        elif order < 1000000000000:
-            # Shanks seems typically faster, but uses O(sqrt(order)) memory
-            return _discrete_log_shanks_steps(n, a, b, order)
-        return _discrete_log_pollard_rho(n, a, b, order)
+    if result is None:
+        result = continuous
+    elif continuous > result:
+        k = (cycle_size - 1 + continuous - result) // cycle_size
+        result += k * cycle_size
 
-    return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
+    if unique is not None:
+        if (unique < result) or ((unique - result) % cycle_size != 0):
+            raise ValueError("Log does not exist")
 
+        result = unique
+
+    return result
 
 
 def quadratic_congruence(a, b, c, n):
