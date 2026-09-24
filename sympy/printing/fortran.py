@@ -307,8 +307,13 @@ class FCodePrinter(CodePrinter):
         return super().parenthesize(item, level, strict)
 
     def _print_Function(self, expr):
-        # All constant function args are evaluated as floats
-        eval_expr = self._eval_function(expr)
+        # Args are folded to floats unless they are integer-valued symbolic
+        # expressions, which stay integers for integer-argument intrinsics.
+        prec =  self._settings['precision']
+        args = [a if (a.is_integer and not a.is_number) else N(a, prec)
+                for a in expr.args]
+        eval_expr = expr.func(*args)
+
         if not isinstance(eval_expr, Function):
             return self._print(eval_expr)
         else:
