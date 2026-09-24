@@ -178,12 +178,37 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         x.atoms(Wild))
     _, nonsyms = sift(syms, cond, binary=True)
     if nonsyms:
-        reps = dict(zip(nonsyms, [Dummy(**assumptions(i)) for i in nonsyms]))
-        syms = [reps.get(s, s) for s in syms]
+        from functools import cmp_to_key
+        from sympy.core.sorting import _nodes
+        dummy_test = Dummy()
+        def compare_reps(item1, item2):
+            a, _ = item1
+            b, _ = item2
+            a_contains_b = (a.subs(b, dummy_test) != a)
+            b_contains_a = (b.subs(a, dummy_test) != b)
+            if a_contains_b and not b_contains_a:
+                return -1
+            if b_contains_a and not a_contains_b:
+                return 1
+            na = _nodes(a)
+            nb = _nodes(b)
+            if na != nb:
+                return -1 if na > nb else 1
+            sa = default_sort_key(a)
+            sb = default_sort_key(b)
+            if sa < sb:
+                return -1
+            elif sa > sb:
+                return 1
+            return 0
+        reps = [(i, Dummy(**assumptions(i))) for i in nonsyms]
+        reps.sort(key=cmp_to_key(compare_reps))
+        reps_dict = dict(reps)
+        syms = [reps_dict.get(s, s) for s in syms]
         rv = collect(expr.subs(reps), syms,
             func=func, evaluate=evaluate, exact=exact,
             distribute_order_term=distribute_order_term)
-        urep = {v: k for k, v in reps.items()}
+        urep = {v: k for k, v in reps}
         if not isinstance(rv, dict):
             return rv.xreplace(urep)
         else:
