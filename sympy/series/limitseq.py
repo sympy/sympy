@@ -1,12 +1,14 @@
 """Limits of sequences"""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sympy.calculus.accumulationbounds import AccumulationBounds
 from sympy.core.add import Add
 from sympy.core.function import PoleError
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.combinatorial.factorials import factorial, subfactorial
@@ -16,8 +18,11 @@ from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.series.limits import Limit
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
-def difference_delta(expr, n=None, step=1):
+
+def difference_delta(expr: Expr, n: Symbol | None = None, step: int | Expr = 1) -> Expr:
     """Difference Operator.
 
     Explanation
@@ -46,7 +51,11 @@ def difference_delta(expr, n=None, step=1):
     if n is None:
         f = expr.free_symbols
         if len(f) == 1:
-            n = f.pop()
+            sym = f.pop()
+            if not isinstance(sym, Symbol):
+                raise ValueError("A variable must be supplied to take the"
+                                 " difference of %s" % expr)
+            n = sym
         elif len(f) == 0:
             return S.Zero
         else:
@@ -65,7 +74,7 @@ def difference_delta(expr, n=None, step=1):
     return expr.subs(n, n + step) - expr
 
 
-def dominant(expr, n):
+def dominant(expr: Expr, n: Symbol) -> Expr | None:
     """Finds the dominant term in a sum, that is a term that dominates
     every other term.
 
@@ -115,14 +124,14 @@ def dominant(expr, n):
     return term0
 
 
-def _limit_inf(expr, n):
+def _limit_inf(expr: Expr, n: Symbol) -> Expr | None:
     try:
         return Limit(expr, n, S.Infinity).doit(deep=False)
     except (NotImplementedError, PoleError):
         return None
 
 
-def _limit_seq(expr, n, trials):
+def _limit_seq(expr: Expr, n: Symbol, trials: int) -> Expr | None:
     from sympy.concrete.summations import Sum
 
     for i in range(trials):
@@ -148,18 +157,20 @@ def _limit_seq(expr, n, trials):
 
         num, den = expr.as_numer_denom()
 
-        num = dominant(num, n)
-        if num is None:
+        num_dom = dominant(num, n)
+        if num_dom is None:
             return None
 
-        den = dominant(den, n)
-        if den is None:
+        den_dom = dominant(den, n)
+        if den_dom is None:
             return None
 
-        expr = (num / den).gammasimp()
+        expr = (num_dom / den_dom).gammasimp()
+
+    return None
 
 
-def limit_seq(expr, n=None, trials=5):
+def limit_seq(expr: Expr, n: Symbol | None = None, trials: int = 5) -> Expr | None:
     """Finds the limit of a sequence as index ``n`` tends to infinity.
 
     Parameters
@@ -211,7 +222,11 @@ def limit_seq(expr, n=None, trials=5):
     if n is None:
         free = expr.free_symbols
         if len(free) == 1:
-            n = free.pop()
+            sym = free.pop()
+            if not isinstance(sym, Symbol):
+                raise ValueError("A variable must be specified to compute the"
+                                 " limit of %s" % expr)
+            n = sym
         elif not free:
             return expr
         else:
@@ -235,7 +250,7 @@ def limit_seq(expr, n=None, trials=5):
         if L1 is not None:
             L2 = _limit_seq(expr.xreplace({n: n2}), n2, trials)
             if L1 != L2:
-                if L1.is_comparable and L2.is_comparable:
+                if L2 is not None and L1.is_comparable and L2.is_comparable:
                     return AccumulationBounds(Min(L1, L2), Max(L1, L2))
                 else:
                     return None
@@ -245,14 +260,18 @@ def limit_seq(expr, n=None, trials=5):
         return L1
     else:
         if expr.is_Add:
-            limits = [limit_seq(term, n, trials) for term in expr.args]
-            if any(result is None for result in limits):
-                return None
-            else:
-                return Add(*limits)
+            limits: list[Expr] = []
+            for term in Add.make_args(expr):
+                result = limit_seq(term, n, trials)
+                if result is None:
+                    return None
+                limits.append(result)
+            return Add(*limits)
         # Maybe the absolute value is easier to deal with (though not if
         # it has a Sum). If it tends to 0, the limit is 0.
         elif not expr.has(Sum):
             lim = _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials)
             if lim is not None and lim.is_zero:
                 return S.Zero
+
+    return None
