@@ -119,6 +119,10 @@ def smp_primitive_wrt_last(
         dense_coeff = gf_from_dict(coeff_dict, p, dom)
         dense_coeffs[mon] = dense_coeff
         cont = gf_gcd(cont, dense_coeff, p, dom)
+        if cont == [dom.one]:
+            primitive = f.copy()
+            _smp_itrunc_ground(primitive, p, n, dom)
+            return cont, primitive
 
     prim: smp[MPZ] = {}
     for mon, dense_coeff in dense_coeffs.items():
@@ -403,7 +407,7 @@ def from_newt_to_poly(x: list[MPZ], v: list[MPZ], p: MPZ) -> dup[MPZ]:
     return pol
 
 
-def skeleton_sorter(
+def _skeleton_sorter(
     G: dict[monom, MPZ],
 ) -> tuple[
     dict[int, list[tuple[monom, list[tuple[int, int]]]]], list[list[MPZ]], bool, bool
@@ -425,7 +429,7 @@ def skeleton_sorter(
 
     If we take the sparse polynomial
     `G = 5x^2y^2 + 7xy^5z^3 + 8xz^4` in `\mathbb{Z}[x, y, z]`,
-    ``skeleton_sorter(G)`` returns the following outputs:
+    ``_skeleton_sorter(G)`` returns the following outputs:
 
     .. code-block:: python
 
@@ -548,7 +552,7 @@ def _validate_eval_tuple(
     return all_vand_basis
 
 
-def smp_zippel_gcd(
+def _smp_zippel_gcd(
     f: smp[MPZ],
     g: smp[MPZ],
     n: int,
@@ -564,7 +568,7 @@ def smp_zippel_gcd(
     `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]` for suitable primes `p` and then
     reconstructing the coefficients with the Chinese Remainder Theorem. To
     compute the multivariate GCD over `\mathbb{Z}_p` the recursive
-    subroutine :func:`smp_zippel_gcd_mod` is used. To verify the result in
+    subroutine :func:`_smp_zippel_gcd_mod` is used. To verify the result in
     `\mathbb{Z}[x_0, \ldots, x_{k-1}]`, trial division is done, but only for
     candidates which are very likely the desired GCD.
 
@@ -589,7 +593,7 @@ def smp_zippel_gcd(
     Examples
     ========
 
-    >>> from sympy.polys.zippel import smp_zippel_gcd
+    >>> from sympy.polys.zippel import _smp_zippel_gcd
     >>> from sympy.polys import ring, ZZ
 
     >>> R, x, y = ring("x, y", ZZ)
@@ -597,7 +601,7 @@ def smp_zippel_gcd(
     >>> f = x**2 - y**2
     >>> g = x**2 + 2*x*y + y**2
 
-    >>> h, cff, cfg = smp_zippel_gcd(f, g, 2)
+    >>> h, cff, cfg = _smp_zippel_gcd(f, g, 2)
     >>> R.from_dict(h), R.from_dict(cff), R.from_dict(cfg)
     (x + y, x - y, x + y)
 
@@ -606,7 +610,7 @@ def smp_zippel_gcd(
     >>> f = x*z**2 - y*z**2
     >>> g = x**2*z + z
 
-    >>> h, cff, cfg = smp_zippel_gcd(f, g, 3)
+    >>> h, cff, cfg = _smp_zippel_gcd(f, g, 3)
     >>> R.from_dict(h), R.from_dict(cff), R.from_dict(cfg)
     (z, x*z - y*z, x**2 + 1)
 
@@ -619,7 +623,7 @@ def smp_zippel_gcd(
     See also
     ========
 
-    smp_zippel_gcd_mod
+    _smp_zippel_gcd_mod
 
     """
 
@@ -631,6 +635,15 @@ def smp_zippel_gcd(
     cf, f = smp_primitive(f, n, ZZ)
     cg, g = smp_primitive(g, n, ZZ)
     ch = ZZ.gcd(cf, cg)
+    if f == g:
+        if smp_LC(f, n, ZZ) < 0:
+            ch = -ch
+        h = smp_mul_ground(f, ch, n, ZZ)
+
+        zm = (0,) * n
+        cff: smp[MPZ] = {zm: cf // ch}
+        cfg: smp[MPZ] = {zm: cg // ch}
+        return h, cff, cfg
 
     gamma = ZZ.gcd(smp_LC(f, n, ZZ), smp_LC(g, n, ZZ))
 
@@ -655,10 +668,18 @@ def smp_zippel_gcd(
         fp = smp_trunc_ground(f, p, n, ZZ)
         gp = smp_trunc_ground(g, p, n, ZZ)
 
-        hp = smp_zippel_gcd_mod(
+        hp = _smp_zippel_gcd_mod(
             fp, gp, p, n, rand_point=rand_point, rand_tuple=rand_tuple
         )
+
         if hp is not None:
+            # quick exit
+            if smp_is_one(hp, n, ZZ):
+                h = smp_mul_ground(hp, ch, n, ZZ)
+                cff = smp_mul_ground(f, cf // ch, n, ZZ)
+                cfg = smp_mul_ground(g, cg // ch, n, ZZ)
+                return h, cff, cfg
+
             if hlastm != {}:
                 if smp_degrees(hp, n, ZZ) > smp_degrees(hlastm, n, ZZ):
                     continue
@@ -674,17 +695,25 @@ def smp_zippel_gcd(
 
         hp = smp_mul_ground(hp, gamma, n, ZZ)
         hp = smp_trunc_ground(hp, p, n, ZZ)
+
         if m == 1:
+            _, h = smp_primitive(hp, n, ZZ)
+            fquo, frem = smp_div_list(f, [h], n, ZZ)
+            gquo, grem = smp_div_list(g, [h], n, ZZ)
+            if not frem and not grem:
+                if smp_LC(h, n, ZZ) < 0:
+                    ch = -ch
+                h = smp_mul_ground(h, ch, n, ZZ)
+
+                cff = smp_mul_ground(fquo[0], cf // ch, n, ZZ)
+                cfg = smp_mul_ground(gquo[0], cg // ch, n, ZZ)
+                return h, cff, cfg
             m = p
             hlastm = hp
             continue
 
         hm = smp_chinese_remainder_reconstruction_multivariate(hp, hlastm, p, m, ZZ, n)
         m *= p
-
-        if not hm == hlastm:
-            hlastm = hm
-            continue
 
         _, h = smp_primitive(hm, n, ZZ)
         fquo, frem = smp_div_list(f, [h], n, ZZ)
@@ -698,8 +727,10 @@ def smp_zippel_gcd(
             cfg = smp_mul_ground(gquo[0], cg // ch, n, ZZ)
             return h, cff, cfg
 
+        hlastm = hm
 
-def smp_zippel_gcd_mod(
+
+def _smp_zippel_gcd_mod(
     A: smp[MPZ],
     B: smp[MPZ],
     p: MPZ,
@@ -716,6 +747,10 @@ def smp_zippel_gcd_mod(
     performed recursively by evaluating the last variable, computing lower
     dimensional GCDs, and recovering the missing variable by Newton
     interpolation.
+
+    This function can be used only if p is large enough, or it could run out of evaluation points.
+    What matters the most is that p is considerably bigger than the highest degree of one variable
+    of the gcd.
 
     Parameters
     ==========
@@ -774,7 +809,7 @@ def smp_zippel_gcd_mod(
 
         B_ = smp_subs_drop(B, {n - 1: t}, n, ZZ)
         _smp_itrunc_ground(B_, p, n - 1, ZZ)
-        G_ = smp_zippel_gcd_mod(A_, B_, p, n - 1, rand_point, rand_point_, rand_tuple)
+        G_ = _smp_zippel_gcd_mod(A_, B_, p, n - 1, rand_point, rand_point_, rand_tuple)
         if G_ is None:
             M = []
             h = []
@@ -796,7 +831,7 @@ def smp_zippel_gcd_mod(
                 G[mon] = (G[mon] * G_k) * gk
             G = smp_trunc_ground(G, p, n - 1, ZZ)
 
-            G_s, h, monic, pseudomonic = skeleton_sorter(G)
+            G_s, h, monic, pseudomonic = _skeleton_sorter(G)
             initial_M = M.copy()
             initial_h = [coeffs.copy() for coeffs in h]
         skeleton_chances = 0
@@ -810,7 +845,7 @@ def smp_zippel_gcd_mod(
             B_ = smp_subs_drop(B, {n - 1: t}, n, ZZ)
             _smp_itrunc_ground(A_, p, n - 1, ZZ)
             _smp_itrunc_ground(B_, p, n - 1, ZZ)
-            G_ = smp_zippel_interp_mod(
+            G_ = _smp_zippel_interp_mod(
                 A_, B_, G_s, p, monic, pseudomonic, n - 1, rand_tuple
             )
             if G_ is None:
@@ -849,15 +884,16 @@ def smp_zippel_gcd_mod(
                 _, gcd = smp_primitive_wrt_last(gcd, n, ZZ, p)
 
                 # modular conversion to perform test divisions
-                A_mod = {mon: FF(p)(coeff) for mon, coeff in A.items()}
+                K = FF(p)
+                A_mod = {mon: K(coeff) for mon, coeff in A.items()}
 
-                B_mod = {mon: FF(p)(coeff) for mon, coeff in B.items()}
+                B_mod = {mon: K(coeff) for mon, coeff in B.items()}
 
-                gcd_mod = {mon: FF(p)(coeff) for mon, coeff in gcd.items()}
+                gcd_mod = {mon: K(coeff) for mon, coeff in gcd.items()}
 
                 if (
-                    smp_rem_list(A_mod, [gcd_mod], n, FF(p)) == {}
-                    and smp_rem_list(B_mod, [gcd_mod], n, FF(p)) == {}
+                    smp_rem_list(A_mod, [gcd_mod], n, K) == {}
+                    and smp_rem_list(B_mod, [gcd_mod], n, K) == {}
                 ):
                     gcd = smp_mul(gcd, c, ZZ, n)
                     _smp_itrunc_ground(gcd, p, n, ZZ)
@@ -872,7 +908,7 @@ def smp_zippel_gcd_mod(
                         return None
 
 
-def smp_zippel_interp_mod(
+def _smp_zippel_interp_mod(
     A: smp[MPZ],
     B: smp[MPZ],
     G: dict[int, list[tuple[monom, list[tuple[int, int]]]]],
@@ -1049,6 +1085,7 @@ def smp_zippel_interp_mod(
                 mat: list[list[MPZ]] = []
                 zeros = [ZZ.zero] * (z_ - 1)
                 b: list[list[MPZ]] = []
+                K = FF(p)
                 for j, evalp in enumerate(eval_points.values()):
                     for r in range(len(mat)):
                         mat[r] = (
@@ -1073,8 +1110,8 @@ def smp_zippel_interp_mod(
                     if j == 0:
                         continue
 
-                    A_m = DomainMatrix.from_list(mat, FF(p))
-                    B_m = DomainMatrix.from_list(b, FF(p))
+                    A_m = DomainMatrix.from_list(mat, K)
+                    B_m = DomainMatrix.from_list(b, K)
 
                     data = _solve_scaling_system(A_m, B_m)
                     if data is None:
@@ -1101,7 +1138,7 @@ def smp_zippel_interp_mod(
                                 _freedom_deg = freedom_deg
                                 break
                         continue
-                    xden_inv = ZZ.invert(ZZ.convert(xden, FF(p)), p)
+                    xden_inv = ZZ.invert(ZZ.convert(xden, K), p)
                     already_sol = j
                     sol = [(int(el) * xden_inv) % p for el in xnum.to_list_flat()]
                     scal_coeffs = [1] + sol[-(z_ - 1) :]
