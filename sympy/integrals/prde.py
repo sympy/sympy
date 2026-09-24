@@ -16,6 +16,7 @@ each function for more information.
 """
 from __future__ import annotations
 import itertools
+from typing import TYPE_CHECKING
 from functools import reduce
 
 from sympy.core.intfunc import ilcm, igcd
@@ -27,6 +28,9 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
 from sympy.polys import Poly, lcm, cancel, sqf_list
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 from sympy.solvers import solve
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 zeros = Matrix.zeros
 eye = Matrix.eye
@@ -83,14 +87,14 @@ def real_imag(ba, bd, gen):
     ba = ba.as_poly(gen).as_dict()
     denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
     denom_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in bd.items()]
-    bd_real = sum(r for r in denom_real)
-    bd_imag = sum(r for r in denom_imag)
+    bd_real = sum(denom_real, S.Zero)
+    bd_imag = sum(denom_imag, S.Zero)
     num_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in ba.items()]
     num_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in ba.items()]
-    ba_real = sum(r for r in num_real)
-    ba_imag = sum(r for r in num_imag)
-    ba = ((ba_real*bd_real + ba_imag*bd_imag).as_poly(gen), (ba_imag*bd_real - ba_real*bd_imag).as_poly(gen))
-    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
+    ba_real = sum(num_real, S.Zero)
+    ba_imag = sum(num_imag, S.Zero)
+    ba = (Poly(ba_real*bd_real + ba_imag*bd_imag, gen), Poly(ba_imag*bd_real - ba_real*bd_imag, gen))
+    bd = Poly(bd_real*bd_real + bd_imag*bd_imag, gen)
     return (ba[0], ba[1], bd)
 
 
@@ -160,7 +164,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     return (A, B, G, h)
 
 
-def prde_linear_constraints(a, b, G, DE):
+def prde_linear_constraints(a, b, G, DE) -> tuple[tuple[Poly, ...], Matrix]:
     """
     Parametric Risch Differential Equation - Generate linear constraints on the constants.
 
@@ -195,7 +199,7 @@ def prde_linear_constraints(a, b, G, DE):
     qs, _ = list(zip(*Q))
     return (qs, M)
 
-def poly_linear_constraints(p, d):
+def poly_linear_constraints(p, d) -> tuple[tuple[Poly, ...], Matrix]:
     """
     Given p = [p1, ..., pm] in k[t]^m and d in k[t], return
     q = [q1, ..., qm] in k[t]^m and a matrix M with entries in k such
@@ -217,7 +221,7 @@ def poly_linear_constraints(p, d):
 
     return q, M
 
-def constant_system(A, u, DE):
+def constant_system(A: Matrix, u: Matrix, DE) -> tuple[Matrix, Matrix]:
     """
     Generate a system for the constant solutions.
 
@@ -477,7 +481,7 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     for i in range(n, -1, -1):
         if DE.case == 'exp': # this re-checking can be avoided
             with DecrementLevel(DE):
-                ba, bd = frac_in(b + (i*(derivation(DE.t, DE)/DE.t)).as_poly(b.gens),
+                ba, bd = frac_in(b + (i*(derivation(Poly(DE.t, DE.t), DE)/DE.t)).as_poly(b.gens),
                                 DE.t, field=True)
         with DecrementLevel(DE):
             Qy = [frac_in(q.nth(i), DE.t, field=True) for q in Q]
@@ -871,8 +875,8 @@ def limited_integrate(fa, fd, G, DE):
         r = len(h)
         m = len(v) - r - 1
         C = list(v[1: m + 1])
-        y = -sum(v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr() \
-                for i in range(r))
+        y = -sum((v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr()
+                for i in range(r)), S.Zero)
         y_num, y_den = y.as_numer_denom()
         Ya, Yd = Poly(y_num, DE.t), Poly(y_den, DE.t)
         Y = Ya*Poly(1/Yd.LC(), DE.t), Yd.monic()
@@ -934,7 +938,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     p, a = fa.div(fd)
     q, b = wa.div(wd)
 
-    B = max(0, derivation(DE.t, DE).degree(DE.t) - 1)
+    B = max(0, derivation(Poly(DE.t, DE.t), DE).degree(DE.t) - 1)
     C = max(p.degree(DE.t), q.degree(DE.t))
 
     if q.degree(DE.t) > B:
@@ -1134,7 +1138,7 @@ def is_deriv_k(fa, fd, DE):
     dfa, dfd = dfa.cancel(dfd, include=True)
 
     # Our assumption here is that each monomial is recursively transcendental
-    if len(DE.exts) != len(DE.D):
+    if len(DE.exts) != len(DE.D) - 1:
         if [i for i in DE.cases if i == 'tan'] or \
                 ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
                         set(DE.indices('log'))):
@@ -1169,12 +1173,12 @@ def is_deriv_k(fa, fd, DE):
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
-            terms = ([DE.extargs[i] for i in DE.indices('exp')] +
+            terms = ([DE.extargs[i - 1] for i in DE.indices('exp')] +
                     [DE.T[i] for i in DE.indices('log')])
             ans = list(zip(terms, u))
             result = Add(*[Mul(i, j) for i, j in ans])
             argterms = ([DE.T[i] for i in DE.indices('exp')] +
-                    [DE.extargs[i] for i in DE.indices('log')])
+                    [DE.extargs[i - 1] for i in DE.indices('log')])
             l = []
             ld = []
             for i, j in zip(argterms, u):
@@ -1261,7 +1265,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         dfa, dfd = fa, fd
 
     # Our assumption here is that each monomial is recursively transcendental
-    if len(DE.exts) != len(DE.D):
+    if len(DE.exts) != len(DE.D) - 1:
         if [i for i in DE.cases if i == 'tan'] or \
                 ({i for i, case in enumerate(DE.cases) if case == 'primitive'} -
                         set(DE.indices('log'))):
@@ -1302,13 +1306,13 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u])
             u *= n
             terms = ([DE.T[i] for i in DE.indices('exp')] +
-                    [DE.extargs[i] for i in DE.indices('log')])
-            ans = list(zip(terms, u))
+                    [DE.extargs[i - 1] for i in DE.indices('log')])
+            ans: list[tuple[Expr, Expr]] = list(zip(terms, u))
             result = Mul(*[Pow(i, j) for i, j in ans])
 
             # exp(f) will be the same as result up to a multiplicative
             # constant.  We now find the log of that constant.
-            argterms = ([DE.extargs[i] for i in DE.indices('exp')] +
+            argterms = ([DE.extargs[i - 1] for i in DE.indices('exp')] +
                     [DE.T[i] for i in DE.indices('log')])
             const = cancel(fa.as_expr()/fd.as_expr() -
                 Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
