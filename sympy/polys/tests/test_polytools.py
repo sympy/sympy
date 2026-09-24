@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pickle
 
+
 from sympy.polys.polytools import (
     Poly, PurePoly, poly,
     parallel_poly_from_expr,
@@ -48,7 +49,7 @@ from sympy.polys.polyerrors import (
     OptionError,
     FlagError)
 
-from sympy.polys.polyclasses import DMP
+from sympy.polys.polyclasses import DMP, SMP
 
 from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX, EXRAW
@@ -4320,9 +4321,9 @@ def test_groebner_reduce_scalar():
     B = groebner([t**2], t, order="lex")
     assert B.reduce(7) == ([0], 7)
     assert B.reduce(Integer(7)) == ([0], Integer(7))
-def test_Poly_sparse_rep_basic():
-    from sympy.polys.polyclasses import SMP
 
+
+def test_Poly_sparse_rep_basic():
     f = Poly.new(SMP.from_dict({
         (20,): ZZ.one,
         (1,): ZZ.one,
@@ -4379,11 +4380,17 @@ def test_Poly_sparse_rep_basic():
     assert isinstance((fdmp * f).rep, SMP)
 
 
-def test_Poly_sparse_rep_equality_hash():
-    from sympy import Poly, symbols
-    from sympy.polys.domains import ZZ, QQ
-    from sympy.polys.polyclasses import SMP
+def test_Poly_rep_independent_hashable_content():
+    f = Poly(x**5 + x**2 - 1, x, domain=ZZ)
+    g = Poly(x**3 + x**2 - 1, x, domain=ZZ)
 
+    assert f.compare(g) != 0
+
+    fqq = Poly(x**5 + x**2 - 1, x, domain=QQ)
+    assert f.compare(fqq) != 0
+
+
+def test_Poly_sparse_rep_equality_hash():
     x, y = symbols('x y')
     rep = {(1000,): ZZ.one, (1,): ZZ.one, (0,): ZZ.one}
 

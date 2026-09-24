@@ -21,7 +21,7 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
 from sympy.core.relational import Relational, Equality
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol, Str
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
@@ -226,8 +226,18 @@ class Poly(Basic):
 
     def _hashable_content(self):
         rep = self.rep
-        terms = frozenset(rep.to_dict().items())
-        return (rep.dom, rep.lev, terms) + self.gens
+
+        domain = Tuple(
+            Str(rep.dom.__class__.__name__),
+            Str(str(rep.dom)),
+        )
+
+        terms = Tuple(*(
+            Tuple(Tuple(*monom), rep.dom.to_sympy(coeff))
+            for monom, coeff in sorted(rep.to_dict().items())
+        ))
+
+        return (domain, terms) + self.gens
 
     @classmethod
     def from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], *gens, **args):
