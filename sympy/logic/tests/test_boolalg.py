@@ -1584,43 +1584,7 @@ def test_espresso():
         res = SOPform([x, y], [], algorithm="espresso")
         assert res == false
 
-        cs, cl, cr1, cr0, s, l, n_sym, r, v, a = symbols(
-            'cs cl cr1 cr0 s l n r v a'
-        )
-        minterms_10 = [0, 1, 2, 6, 3, 7, 8, 16, 20, 32]
-        variables_10 = [s, l, n_sym, r, v, a]
-        expr_10 = SOPform(variables_10, minterms_10)
 
-        coarse = expr_10 & (
-            (~r | ~cr1 | cr0) &
-            (~s | cs) &
-            (~l | cl) &
-            (~r | cr0) &
-            (~(~s & ~l & ~n_sym & r & v) | (cr1 & cr0)) &
-            (~(~s & l & ~n_sym & r & ~v & ~a) | (~cr1 & cr0))
-        )
-        invalid_all = Not(coarse)
-
-        res = simplify_logic(
-            invalid_all, force=True, algorithm="espresso"
-        )
-
-        from sympy.core.sorting import default_sort_key
-        from sympy.logic.boolalg import truth_table
-
-        free_syms = sorted(
-            invalid_all.free_symbols,
-            key=default_sort_key
-        )
-
-        orig_tt = [
-            val for _, val in truth_table(invalid_all, free_syms)
-        ]
-        res_tt = [
-            val for _, val in truth_table(res, free_syms)
-        ]
-
-        assert orig_tt == res_tt
 
         raises(
             ValueError,
@@ -1643,3 +1607,43 @@ def test_espresso_missing():
                 [symbols('x')], [[1]], algorithm="espresso"
             )
         )
+
+
+def test_espresso_large_expression():
+    import pytest
+    pytest.importorskip("pyeda.inter")
+
+    cs, cl, cr1, cr0, s, l, n_sym, r, v, a = symbols(
+        'cs cl cr1 cr0 s l n r v a'
+    )
+    minterms_10 = [0, 1, 2, 6, 3, 7, 8, 16, 20, 32]
+    variables_10 = [s, l, n_sym, r, v, a]
+    expr_10 = SOPform(variables_10, minterms_10)
+
+    coarse = expr_10 & (
+        (~r | ~cr1 | cr0) &
+        (~s | cs) &
+        (~l | cl) &
+        (~r | cr0) &
+        (~(~s & ~l & ~n_sym & r & v) | (cr1 & cr0)) &
+        (~(~s & l & ~n_sym & r & ~v & ~a) | (~cr1 & cr0))
+    )
+    invalid_all = Not(coarse)
+
+    res = simplify_logic(
+        invalid_all, force=True, algorithm="espresso"
+    )
+
+    from sympy.core.sorting import default_sort_key
+    from sympy.logic.boolalg import truth_table
+
+    free_syms = sorted(
+        invalid_all.free_symbols,
+        key=default_sort_key
+    )
+
+    assert [
+        val for _, val in truth_table(invalid_all, free_syms)
+    ] == [
+        val for _, val in truth_table(res, free_syms)
+    ]
