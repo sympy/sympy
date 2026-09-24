@@ -244,6 +244,7 @@ def test_satsolver_assume():
     s.assume(-1)
     s.assume(-2)
     assert s.solve() == IpasirStatus.UNSATISFIABLE
+    assert s.propagate() == IpasirStatus.UNKNOWN
     assert s.solve() == IpasirStatus.SATISFIABLE
 
     # Assuming a literal the clauses contradict fails, and assuming one they
