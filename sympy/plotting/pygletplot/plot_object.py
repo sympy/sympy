@@ -1,3 +1,4 @@
+from __future__ import annotations
 class PlotObject:
     """
     Base class for objects which can be displayed in

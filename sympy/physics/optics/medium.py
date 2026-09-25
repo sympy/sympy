@@ -3,6 +3,7 @@
 
 * Medium
 """
+from __future__ import annotations
 from sympy.physics.units import second, meter, kilogram, ampere
 
 __all__ = ['Medium']

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import pi
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.vector.coordsysrect import CoordSys3D

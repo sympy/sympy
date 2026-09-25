@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import (oo, pi)
 from sympy.core.relational import Eq
@@ -18,7 +19,7 @@ from sympy.stats.compound_rv import CompoundDistribution, CompoundPSpace
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.frv_types import BernoulliDistribution
-from sympy.testing.pytest import raises, ignore_warnings
+from sympy.testing.pytest import raises, ignore_warnings, slow
 from sympy.stats.joint_rv_types import MultivariateNormalDistribution
 
 from sympy.abc import x
@@ -32,6 +33,7 @@ assert streq(x, 'x')
 assert not streq(x, x + 1)
 
 
+@slow
 def test_normal_CompoundDist():
     X = Normal('X', 1, 2)
     Y = Normal('X', X, 4)

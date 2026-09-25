@@ -1,4 +1,5 @@
 """Hermitian conjugation."""
+from __future__ import annotations
 
 from sympy.core import Expr, sympify
 from sympy.functions.elementary.complexes import adjoint

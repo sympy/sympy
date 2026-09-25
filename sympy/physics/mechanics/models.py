@@ -3,6 +3,7 @@
 examples."""
 
 # Internal imports
+from __future__ import annotations
 from sympy.core import backend as sm
 import sympy.physics.mechanics as me
 

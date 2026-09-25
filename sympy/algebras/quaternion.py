@@ -940,7 +940,7 @@ class Quaternion(Expr):
         q = self
         if not q.norm():
             raise ValueError("Cannot compute inverse for a quaternion with zero norm")
-        return conjugate(q) * (1/q.norm()**2)
+        return q._eval_conjugate() * (1/q.norm()**2)
 
     def pow(self, p: int) -> Quaternion:
         """Finds the pth power of the quaternion.

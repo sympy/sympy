@@ -5,6 +5,7 @@
 # This entire test module and the corresponding sympy/matrices/common.py
 # module will be removed in a future release.
 #
+from __future__ import annotations
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.assumptions import Q

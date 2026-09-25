@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices.expressions import MatrixSymbol, Adjoint, trace, Transpose
 from sympy.matrices import eye, Matrix

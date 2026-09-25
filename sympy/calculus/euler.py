@@ -2,6 +2,7 @@
 This module implements a method to find
 Euler-Lagrange Equations for given Lagrangian.
 """
+from __future__ import annotations
 from itertools import combinations_with_replacement
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.relational import Eq

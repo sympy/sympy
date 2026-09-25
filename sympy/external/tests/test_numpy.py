@@ -4,6 +4,7 @@
 # Always write regular SymPy tests for anything, that can be tested in pure
 # Python (without numpy). Here we test everything, that a user may need when
 # using SymPy with NumPy
+from __future__ import annotations
 from sympy.external.importtools import version_tuple
 from sympy.external import import_module
 

@@ -5,6 +5,7 @@
    :mod:`sympy.core.random`.
 
 """
+from __future__ import annotations
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 sympy_deprecation_warning("The sympy.testing.randtest submodule is deprecated. Use sympy.core.random instead.",

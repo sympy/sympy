@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import cached_property
-from sympy.core.expr import Expr
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Er, Domain
@@ -13,6 +12,7 @@ from sympy.polys.series.ring import (
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
+    from sympy.core.expr import Expr
     import sys
     if sys.version_info >= (3, 13):
         from typing import TypeIs

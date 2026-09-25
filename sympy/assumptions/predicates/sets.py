@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions import Predicate
 from sympy.multipledispatch import Dispatcher
 

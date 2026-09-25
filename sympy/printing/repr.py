@@ -184,6 +184,10 @@ class ReprPrinter(Printer):
                 l[-1].append(expr[i, j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
+    def _print_CharacterTable(self, expr):
+        return "CharacterTable(%s, %s)" % (
+            self._print(expr._rep), self._print(expr._conjugacy_class_reps))
+
     def _print_BooleanTrue(self, expr):
         return "true"
 
@@ -253,6 +257,9 @@ class ReprPrinter(Printer):
 
     def _print_Predicate(self, expr):
         return "Q.%s" % expr.name
+
+    def _print_Prefix(self, expr):
+        return str(expr.name)
 
     def _print_AppliedPredicate(self, expr):
         # will be changed to just expr.args when args overriding is removed

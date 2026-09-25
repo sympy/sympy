@@ -1,4 +1,5 @@
 """A cache for storing small matrices in multiple formats."""
+from __future__ import annotations
 
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.power import Pow
@@ -15,8 +16,8 @@ class MatrixCache:
 
     This class takes small matrices in the standard ``sympy.Matrix`` format,
     and then converts these to both ``numpy.matrix`` and
-    ``scipy.sparse.csr_matrix`` matrices. These matrices are then stored for
-    future recovery.
+    ``scipy.sparse.csr_array`` arrays. These representations are then stored
+    for future recovery.
     """
 
     def __init__(self, dtype='complex'):

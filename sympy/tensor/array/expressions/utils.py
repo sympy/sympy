@@ -1,23 +1,27 @@
+from __future__ import annotations
 import bisect
 from collections import defaultdict
 
-from sympy.combinatorics import Permutation
 from sympy.core.containers import Tuple
 from sympy.core.numbers import Integer
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.combinatorics import Permutation
 
 
-def _get_mapping_from_subranks(subranks):
+def _get_mapping_from_sub_ndim_list(sub_ndim_list):
     mapping = {}
     counter = 0
-    for i, rank in enumerate(subranks):
+    for i, rank in enumerate(sub_ndim_list):
         for j in range(rank):
             mapping[counter] = (i, j)
             counter += 1
     return mapping
 
 
-def _get_contraction_links(args, subranks, *contraction_indices):
-    mapping = _get_mapping_from_subranks(subranks)
+def _get_contraction_links(args, sub_ndim_list, *contraction_indices):
+    mapping = _get_mapping_from_sub_ndim_list(sub_ndim_list)
     contraction_tuples = [[mapping[j] for j in i] for i in contraction_indices]
     dlinks = defaultdict(dict)
     for links in contraction_tuples:
@@ -26,6 +30,11 @@ def _get_contraction_links(args, subranks, *contraction_indices):
             dlinks[arg1][pos1] = (arg2, pos2)
             dlinks[arg2][pos2] = (arg1, pos1)
             continue
+        # A group with three or more contracted axes cannot be expressed as
+        # a pairwise link; silently dropping it would misrepresent the
+        # contraction structure:
+        raise ValueError("contraction group %s involves more than two axes, "
+                         "it cannot be expressed as pairwise links" % (links,))
 
     return args, dict(dlinks)
 
@@ -64,10 +73,14 @@ def _get_argindex(subindices, ind):
 
 
 def _apply_recursively_over_nested_lists(func, arr):
-    if isinstance(arr, (tuple, list, Tuple)):
-        return tuple(_apply_recursively_over_nested_lists(func, i) for i in arr)
-    elif isinstance(arr, Tuple):
+    # Check ``Tuple`` first: it is a subtype of neither ``tuple`` nor ``list``,
+    # and a nested ``Tuple`` should stay a ``Tuple`` rather than being rebuilt
+    # as a plain ``tuple`` (which is what happened when this branch sat,
+    # unreachable, after ``(tuple, list, Tuple)``).
+    if isinstance(arr, Tuple):
         return Tuple.fromiter(_apply_recursively_over_nested_lists(func, i) for i in arr)
+    elif isinstance(arr, (tuple, list)):
+        return tuple(_apply_recursively_over_nested_lists(func, i) for i in arr)
     else:
         return func(arr)
 

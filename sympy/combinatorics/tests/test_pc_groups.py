@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup, DihedralGroup
 from sympy.matrices import Matrix

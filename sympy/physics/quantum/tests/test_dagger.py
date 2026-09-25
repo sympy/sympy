@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Integer)
@@ -79,7 +80,7 @@ def test_scipy_sparse_dagger():
     else:
         sparse = scipy.sparse
 
-    a = sparse.csr_matrix([[1.0 + 0.0j, 2.0j], [-1.0j, 2.0 + 0.0j]])
+    a = sparse.csr_array([[1.0 + 0.0j, 2.0j], [-1.0j, 2.0 + 0.0j]])
     adag = a.copy().transpose().conjugate()
     assert np.linalg.norm((Dagger(a) - adag).todense()) == 0.0
 

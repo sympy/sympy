@@ -1,4 +1,5 @@
 """Implementation of :class:`SimpleDomain` class. """
+from __future__ import annotations
 
 
 from sympy.polys.domains.domain import Domain, Er

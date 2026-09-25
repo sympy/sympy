@@ -10,6 +10,7 @@ The main entry point for users is the llvm_callable function.
 
 This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
+from __future__ import annotations
 
 import ctypes
 
@@ -149,10 +150,10 @@ class LLVMJitCallbackPrinter(LLVMJitPrinter):
 
 # ensure lifetime of the execution engine persists (else call to compiled
 #   function will seg fault)
-exe_engines = []
+exe_engines: list[object] = []
 
 # ensure names for generated functions are unique
-link_names = set()
+link_names: set[str] = set()
 current_link_suffix = 0
 
 
@@ -284,8 +285,7 @@ class LLVMJitCode:
             pmb.populate(pass_manager)
             pass_manager.run(llmod)
         else:
-            pto = llvm.create_pipeline_tuning_options(speed_level=2,
-                                                      size_level=0)
+            pto = llvm.create_pipeline_tuning_options(speed_level=2)
             pto.loop_vectorization = True
             pass_builder = llvm.create_pass_builder(target_machine, pto)
             pass_manager = pass_builder.getModulePassManager()

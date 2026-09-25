@@ -2,15 +2,17 @@
     be displayed in the sphinx documentation. """
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from sympy.integrals.meijerint import _create_lookup_table
 from sympy.core.add import Add
-from sympy.core.basic import Basic
-from sympy.core.expr import Expr
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.printing.latex import latex
+
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
+    from sympy.core.expr import Expr
 
 t: dict[tuple[type[Basic], ...], list[Any]] = {}
 _create_lookup_table(t)

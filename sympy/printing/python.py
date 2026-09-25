@@ -1,3 +1,4 @@
+from __future__ import annotations
 import keyword as kw
 import sympy
 from .repr import ReprPrinter

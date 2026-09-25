@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from sympy.core.add import Add
 from sympy.core.assumptions import check_assumptions
@@ -32,6 +33,8 @@ from sympy.utilities.misc import as_int, filldedent
 from sympy.utilities.iterables import (is_sequence, subsets, permute_signs,
                                        signed_permutations, ordered_partitions)
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 # these are imported with 'from sympy.solvers.diophantine import *
 __all__ = ['diophantine', 'classify_diop']
@@ -191,14 +194,14 @@ class DiophantineEquationType:
         self.dimension = len(self.free_symbols)
         self._parameters = None
 
-    def matches(self):
+    def matches(self) -> bool:
         """
         Determine whether the given equation can be matched to the particular equation type.
         """
         return False
 
     @property
-    def n_parameters(self):
+    def n_parameters(self) -> int:
         return self.dimension
 
     @property
@@ -284,7 +287,7 @@ class Linear(DiophantineEquationType):
     def matches(self):
         return self.total_degree == 1
 
-    def solve(self, parameters=None, limit=None):
+    def solve(self, parameters=None, limit=None) -> DiophantineSolutionSet:
         self.pre_solve(parameters)
 
         coeff = self.coeff
@@ -418,6 +421,8 @@ class Linear(DiophantineEquationType):
             tot_x, tot_y = [], []
 
             for arg in Add.make_args(c):
+                k: Expr
+                p: Expr
                 if arg.is_Integer:
                     # example: 5 -> k = 5
                     k, p = arg, S.One
@@ -485,7 +490,7 @@ class BinaryQuadratic(DiophantineEquationType):
 
     name = 'binary_quadratic'
 
-    def matches(self):
+    def matches(self) -> bool:
         return self.total_degree == 2 and self.dimension == 2
 
     def solve(self, parameters=None, limit=None) -> DiophantineSolutionSet:
@@ -684,7 +689,7 @@ class InhomogeneousTernaryQuadratic(DiophantineEquationType):
 
     name = 'inhomogeneous_ternary_quadratic'
 
-    def matches(self):
+    def matches(self) -> bool:
         if not (self.total_degree == 2 and self.dimension == 3):
             return False
         if not self.homogeneous:
@@ -708,7 +713,7 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
 
     name = 'homogeneous_ternary_quadratic_normal'
 
-    def matches(self):
+    def matches(self) -> bool:
         if not (self.total_degree == 2 and self.dimension == 3):
             return False
         if not self.homogeneous:
@@ -797,7 +802,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
 
     name = 'homogeneous_ternary_quadratic'
 
-    def matches(self):
+    def matches(self) -> bool:
         if not (self.total_degree == 2 and self.dimension == 3):
             return False
         if not self.homogeneous:
@@ -808,7 +813,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
         nonzero = [k for k in self.coeff if self.coeff[k]]
         return not (len(nonzero) == 3 and all(i**2 in nonzero for i in self.free_symbols))
 
-    def solve(self, parameters=None, limit=None):
+    def solve(self, parameters=None, limit=None) -> DiophantineSolutionSet:
         self.pre_solve(parameters)
 
         _var = self.free_symbols
@@ -926,7 +931,7 @@ class InhomogeneousGeneralQuadratic(DiophantineEquationType):
 
     name = 'inhomogeneous_general_quadratic'
 
-    def matches(self):
+    def matches(self) -> bool:
         if not (self.total_degree == 2 and self.dimension >= 3):
             return False
         if not self.homogeneous_order:
@@ -946,7 +951,7 @@ class HomogeneousGeneralQuadratic(DiophantineEquationType):
 
     name = 'homogeneous_general_quadratic'
 
-    def matches(self):
+    def matches(self) -> bool:
         if not (self.total_degree == 2 and self.dimension >= 3):
             return False
         if not self.homogeneous_order:
@@ -990,7 +995,7 @@ class GeneralSumOfSquares(DiophantineEquationType):
 
     name = 'general_sum_of_squares'
 
-    def matches(self):
+    def matches(self) -> bool:
         if not (self.total_degree == 2 and self.dimension >= 3):
             return False
         if not self.homogeneous_order:
@@ -999,7 +1004,7 @@ class GeneralSumOfSquares(DiophantineEquationType):
             return False
         return all(self.coeff[k] == 1 for k in self.coeff if k != 1)
 
-    def solve(self, parameters=None, limit=1):
+    def solve(self, parameters=None, limit=1) -> DiophantineSolutionSet:
         self.pre_solve(parameters)
 
         var = self.free_symbols
@@ -1042,7 +1047,7 @@ class GeneralPythagorean(DiophantineEquationType):
 
     name = 'general_pythagorean'
 
-    def matches(self):
+    def matches(self) -> bool:
         if not (self.total_degree == 2 and self.dimension >= 3):
             return False
         if not self.homogeneous_order:
@@ -1061,7 +1066,7 @@ class GeneralPythagorean(DiophantineEquationType):
     def n_parameters(self):
         return self.dimension - 1
 
-    def solve(self, parameters=None, limit=1):
+    def solve(self, parameters=None, limit=1) -> DiophantineSolutionSet:
         self.pre_solve(parameters)
 
         coeff = self.coeff
@@ -1125,7 +1130,7 @@ class CubicThue(DiophantineEquationType):
 
     name = 'cubic_thue'
 
-    def matches(self):
+    def matches(self) -> bool:
         return self.total_degree == 3 and self.dimension == 2
 
 
@@ -1149,7 +1154,7 @@ class GeneralSumOfEvenPowers(DiophantineEquationType):
 
     name = 'general_sum_of_even_powers'
 
-    def matches(self):
+    def matches(self) -> bool:
         if not self.total_degree > 3:
             return False
         if self.total_degree % 2 != 0:
@@ -1158,7 +1163,7 @@ class GeneralSumOfEvenPowers(DiophantineEquationType):
             return False
         return all(self.coeff[k] == 1 for k in self.coeff if k != 1)
 
-    def solve(self, parameters=None, limit=1):
+    def solve(self, parameters=None, limit=1) -> DiophantineSolutionSet:
         self.pre_solve(parameters)
 
         var = self.free_symbols
@@ -1535,10 +1540,11 @@ def merge_solution(var, var_t, solution):
     return tuple(sol)
 
 
-def _diop_solve(eq, params=None):
+def _diop_solve(eq, params=None) -> DiophantineSolutionSet | None:
     for diop_type in all_diop_classes:
         if diop_type(eq).matches():
             return diop_type(eq).solve(parameters=params)
+    return None
 
 
 def diop_solve(eq, param=symbols("t", integer=True)):
@@ -1845,7 +1851,7 @@ def diop_univariate(eq):
             eq, var[0]).intersect(S.Integers)}
 
 
-def divisible(a, b):
+def divisible(a, b) -> bool:
     """
     Returns `True` if ``a`` is divisible by ``b`` and `False` otherwise.
     """
@@ -3943,7 +3949,7 @@ def sum_of_squares(n, k, zeros=False):
     yield from power_representation(n, 2, k, zeros)
 
 
-def _can_do_sum_of_squares(n, k):
+def _can_do_sum_of_squares(n: int, k: int) -> bool | int:
     """Return True if n can be written as the sum of k squares,
     False if it cannot, or 1 if ``k == 2`` and ``n`` is prime (in which
     case it *can* be written as a sum of two squares). A False

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.group_numbers import (is_nilpotent_number,
     is_abelian_number, is_cyclic_number, _holder_formula, groups_count)
 from sympy.ntheory.factor_ import factorint

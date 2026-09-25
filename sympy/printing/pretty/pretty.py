@@ -1,6 +1,7 @@
+from __future__ import annotations
 import itertools
 
-from sympy.core import S
+from sympy.core import S, UnevaluatedExpr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Function
@@ -10,7 +11,7 @@ from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
-from sympy.printing.conventions import requires_partial
+from sympy.printing.conventions import requires_partial, elementwise_function
 from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
 from sympy.printing.printer import Printer, print_function
 from sympy.printing.str import sstr
@@ -794,6 +795,23 @@ class PrettyPrinter(Printer):
         return self._print_seq(expr.args, None, None, wedge_symbol,
             parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
 
+    def _print_ArrayTensorProduct(self, expr):
+        from sympy.core.add import Add
+        from sympy.tensor.array.expressions.array_expressions import ArrayAdd
+        # Squared times (the LaTeX \boxtimes) is the notation for the tensor
+        # product of arrays used in the documentation; the circled times of
+        # TensorProduct denotes the Kronecker product there.
+        if self._use_unicode:
+            boxed_times = "\u22a0"
+        else:
+            boxed_times = ".*"
+        return self._print_seq(expr.args, None, None, boxed_times,
+            parenthesize=lambda x: isinstance(x, (Add, ArrayAdd)) or
+                precedence_traditional(x) <= PRECEDENCE["Mul"])
+
+    def _print_ArrayAdd(self, expr):
+        return self._print_seq(expr.args, None, None, ' + ')
+
     def _print_Trace(self, e):
         D = self._print(e.arg)
         D = prettyForm(*D.parens('(',')'))
@@ -1256,17 +1274,17 @@ class PrettyPrinter(Printer):
     def _print_NDimArray(self, expr):
         from sympy.matrices.immutable import ImmutableMatrix
 
-        if expr.rank() == 0:
+        if expr.ndim == 0:
             return self._print(expr[()])
 
-        level_str = [[]] + [[] for i in range(expr.rank())]
+        level_str = [[]] + [[] for i in range(expr.ndim)]
         shape_ranges = [list(range(i)) for i in expr.shape]
         # leave eventual matrix elements unflattened
         mat = lambda x: ImmutableMatrix(x, evaluate=False)
         for outer_i in itertools.product(*shape_ranges):
             level_str[-1].append(expr[outer_i])
             even = True
-            for back_outer_i in range(expr.rank()-1, -1, -1):
+            for back_outer_i in range(expr.ndim-1, -1, -1):
                 if len(level_str[back_outer_i+1]) < expr.shape[back_outer_i]:
                     break
                 if even:
@@ -1281,7 +1299,7 @@ class PrettyPrinter(Printer):
                 level_str[back_outer_i+1] = []
 
         out_expr = level_str[0][0]
-        if expr.rank() % 2 == 1:
+        if expr.ndim % 2 == 1:
             out_expr = mat([out_expr])
 
         return self._print(out_expr)
@@ -1672,10 +1690,12 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_ElementwiseApplyFunction(self, e):
-        func = e.function
+        func = elementwise_function(e.function)
         arg = e.expr
         args = [arg]
         return self._helper_print_function(func, args, delimiter="", elementwise=True)
+
+    _print_ArrayElementwiseApplyFunc = _print_ElementwiseApplyFunction
 
     @property
     def _special_function_classes(self):
@@ -1735,6 +1755,9 @@ class PrettyPrinter(Printer):
 
     def _print_fresnelc(self, e):
         return self._print_Function(e, func_name="C")
+
+    def _print_owens_t(self, e):
+        return self._print_Function(e, func_name="T")
 
     def _print_airyai(self, e):
         return self._print_Function(e, func_name="Ai")
@@ -1916,6 +1939,24 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left(name))
         return pform
 
+    def _print_jtheta(self, e):
+        name = '\N{GREEK THETA SYMBOL}' if self._use_unicode else 'theta'
+        pretty_func = prettyForm(name)
+        index = self._print(e.args[0])
+        index_padding = prettyForm(" "*index.width())
+        index = prettyForm(*index_padding.below(index))
+        pretty_func = prettyForm(*pretty_func.right(index))
+        if len(e.args) == 4:
+            derivative = prettyForm(*self._print(e.args[3]).parens())
+            pretty_func = pretty_func**derivative
+        pretty_args = prettyForm(*self._print_seq(e.args[1:3]).parens())
+        pform = prettyForm(
+            binding=prettyForm.FUNC,
+            *stringPict.next(pretty_func, pretty_args))
+        pform.prettyFunc = pretty_func
+        pform.prettyArgs = pretty_args
+        return pform
+
     def _print_GoldenRatio(self, expr):
         if self._use_unicode:
             return prettyForm(pretty_symbol('phi'))
@@ -1978,7 +2019,10 @@ class PrettyPrinter(Printer):
             elif term.is_Number and term < 0:
                 pform = self._print(-term)
                 pforms.append(pretty_negative(pform, i))
-            elif term.is_Relational:
+            elif (
+                term.is_Relational
+                or (isinstance(term, UnevaluatedExpr) and term.args[0].is_Add)
+            ):
                 pforms.append(prettyForm(*self._print(term).parens()))
             else:
                 pforms.append(self._print(term))
@@ -2058,9 +2102,20 @@ class PrettyPrinter(Printer):
             else:
                 a.append(item)
 
-        # Convert to pretty forms. Parentheses are added by `__mul__`.
-        a = [self._print(ai) for ai in a]
-        b = [self._print(bi) for bi in b]
+        # TODO: this should probably be moved into prettyForm.__mul__
+        def add_parens(expr):
+            if isinstance(expr, UnevaluatedExpr):
+                c, e = expr.args[0].as_coeff_Mul()
+                if c < 0:
+                    return True
+            return False
+
+        # Convert to pretty forms.
+        # Parentheses are added by `__mul__`, except for UnevaluatedExpr
+        a = [prettyForm(*self._print(ai).parens()) if add_parens(ai)
+            else self._print(ai) for ai in a]
+        b = [prettyForm(*self._print(bi).parens()) if add_parens(bi)
+            else self._print(bi) for bi in b]
 
         # Construct a pretty form
         if len(b) == 0:

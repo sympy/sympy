@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.liealgebras.dynkin_diagram import DynkinDiagram
 
 def test_DynkinDiagram():

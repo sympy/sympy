@@ -1,4 +1,5 @@
 """Test groups defined by the galois module. """
+from __future__ import annotations
 
 from sympy.combinatorics.galois import (
     S4TransitiveSubgroups, S5TransitiveSubgroups, S6TransitiveSubgroups,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Literal, overload
 from collections import defaultdict
 from functools import reduce
 from operator import attrgetter
@@ -187,7 +187,21 @@ class Add(Expr, AssocOp):
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Expr | complex, evaluate: bool=True) -> Expr: # type: ignore
+        @overload
+        def __new__(
+            cls,
+            arg1: Expr | complex,
+            arg2: Expr | complex,
+            *args: Expr | complex,
+            evaluate: Literal[False],
+        ) -> Add:  # type: ignore
+            ...
+
+        @overload
+        def __new__(cls, *args: Expr | complex, evaluate: bool = True) -> Expr:  # type: ignore
+            ...
+
+        def __new__(cls, *args: Expr | complex, evaluate: bool = True) -> Expr:  # type: ignore
             ...
 
         @property

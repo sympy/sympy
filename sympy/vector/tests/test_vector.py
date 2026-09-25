@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Rational, S, Add, Mul, Pow, I
 from sympy.simplify import simplify, trigsimp
 from sympy.core.function import (Derivative, Function, diff)

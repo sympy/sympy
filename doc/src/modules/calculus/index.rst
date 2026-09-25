@@ -17,3 +17,6 @@ Calculus
 
 .. automodule:: sympy.calculus.util
     :members:
+
+.. automodule:: sympy.calculus.accumulationbounds
+    :members:

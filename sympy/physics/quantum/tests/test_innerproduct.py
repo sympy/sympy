@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (I, Integer)
 
 from sympy.physics.quantum.innerproduct import InnerProduct

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pyglet.gl as pgl
 from pyglet import font
 
@@ -34,7 +35,7 @@ class PlotAxes(PlotObject):
             self._render_object = PlotAxesOrdinate(self)
         elif style in ['frame', 'box']:
             self._render_object = PlotAxesFrame(self)
-        elif style in ['none']:
+        elif style == 'none':
             self._render_object = None
         else:
             raise ValueError(("Unrecognized axes style %s.") % (style))

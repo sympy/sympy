@@ -1,9 +1,10 @@
+from __future__ import annotations
 import shutil
 import os
 import subprocess
 import tempfile
 from sympy.external import import_module
-from sympy.testing.pytest import skip, skip_under_pyodide
+from sympy.testing.pytest import skip, skip_under_pyodide, slow
 
 from sympy.utilities._compilation.compilation import compile_link_import_py_ext, compile_link_import_strings, compile_sources, get_abspath
 
@@ -65,6 +66,7 @@ def test_compile_link_import_strings():
             shutil.rmtree(info['build_dir'])
 
 
+@slow
 @skip_under_pyodide("Emscripten does not support subprocesses")
 def test_compile_sources():
     tmpdir = tempfile.mkdtemp()

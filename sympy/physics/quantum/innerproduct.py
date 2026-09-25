@@ -1,4 +1,5 @@
 """Symbolic inner product."""
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.kind import NumberKind

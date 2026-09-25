@@ -180,7 +180,7 @@ The linear momentum of a particle P is defined as:
   L_P = m\mathbf{v}
 
 where :math:`m` is the mass of the particle P and :math:`\mathbf{v}` is the
-velocity of the particle in the inertial frame.[Likins1973]_.
+velocity of the particle in the inertial frame.
 
 Similarly the linear momentum of a rigid body is defined as:
 

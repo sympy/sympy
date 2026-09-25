@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.tensor import Indexed
 from sympy.core.containers import Tuple
 from sympy.core.symbol import Dummy

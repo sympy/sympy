@@ -13,10 +13,11 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
+from sympy.core.mul import _unevaluated_Mul, _keep_coeff
 from sympy.core.numbers import Float, I, Integer, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
-from sympy.core.sorting import ordered
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import bottom_up as _bottom_up, walk as _walk
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
@@ -32,12 +33,10 @@ from sympy.functions.special.bessel import (BesselBase, besselj, besseli,
                                             besselk, bessely, jn)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import Boolean
 from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                             MatPow, MatrixSymbol)
 from sympy.polys import together, cancel, factor
 from sympy.polys.numberfields.minpoly import _is_sum_surds, _minimal_polynomial_sq
-from sympy.sets.sets import Set
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
@@ -57,6 +56,8 @@ from sympy.external.mpmath import (
 
 
 if TYPE_CHECKING:
+    from sympy.logic.boolalg import Boolean
+    from sympy.sets.sets import Set
     from typing import Literal
 
 
@@ -1133,6 +1134,24 @@ def logcombine(expr, force=False):
 
         return Add(*other)
 
+    if isinstance(expr, Mul):
+        # Push the rational coefficient onto an Add factor with positive numeric log arguments.
+        coefficient, rest = _unevaluated_Mul(*expr.args).as_coeff_Mul()
+        if coefficient.is_Rational and coefficient.q != 1:
+            factors = list(Mul.make_args(rest))
+            for i, term in enumerate(factors):
+                if not term.is_Add:
+                    continue
+                terms = term.as_coefficients_dict()
+                constant = terms.pop(S.One, S.Zero)
+                if (terms and
+                        all(isinstance(k, log) and k.args[0].is_number
+                            and k.args[0].is_positive is True for k in terms)):
+                    factors[i] = Add(coefficient*constant,
+                        *[_keep_coeff(coefficient*v, k) for k, v in terms.items()])
+                    expr = _unevaluated_Mul(*factors)
+                    break
+
     return _bottom_up(expr, f)
 
 
@@ -1313,20 +1332,21 @@ def besselsimp(expr):
     def _bessel_simp_recursion(expr):
 
         def _use_recursion(bessel, expr):
+            def _order_key(b):
+               c, base = re(b.args[0]).as_coeff_Add()
+               return (default_sort_key(base), c)
             while True:
                 bessels = expr.find(lambda x: isinstance(x, bessel))
-                try:
-                    for ba in sorted(bessels, key=lambda x: re(x.args[0])):
-                        a, x = ba.args
-                        bap1 = bessel(a+1, x)
-                        bap2 = bessel(a+2, x)
-                        if expr.has(bap1) and expr.has(bap2):
-                            expr = expr.subs(ba, 2*(a+1)/x*bap1 - bap2)
-                            break
-                    else:
-                        return expr
-                except (ValueError, TypeError):
+                for ba in sorted(bessels, key=_order_key):
+                    a, x = ba.args
+                    bap1 = bessel(a+1, x)
+                    bap2 = bessel(a+2, x)
+                    if expr.has(bap1) and expr.has(bap2):
+                        expr = expr.subs(ba, 2*(a+1)/x*bap1 - bap2)
+                        break
+                else:
                     return expr
+
         if expr.has(besselj):
             expr = _use_recursion(besselj, expr)
         if expr.has(bessely):

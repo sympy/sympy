@@ -1,3 +1,4 @@
+from __future__ import annotations
 import concurrent.futures
 import random
 from collections.abc import Hashable
@@ -2042,7 +2043,7 @@ def test_issue_3950():
     a = Matrix([1, 2, 3])
     b = Matrix([2, 2, 3])
     assert not (m in [])
-    assert not (m in [1])
+    assert not (m == 1)
     assert m != 1
     assert m == a
     assert m != b
@@ -3511,11 +3512,16 @@ def test_17522_mpmath():
 def test_17522_scipy():
     from sympy.matrices.common import _matrixify
     try:
-        from scipy.sparse import csr_matrix
+        from scipy.sparse import csr_array, csr_matrix
     except ImportError:
-        skip('SciPy must be available to test indexing matrixified SciPy sparse matrices')
+        skip('SciPy must be available to test indexing matrixified SciPy sparse arrays and matrices')
 
-    m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
+    m = _matrixify(csr_array([[1, 2], [3, 4]]))
+    assert m[3] == 4
+    assert list(m) == [1, 2, 3, 4]
+
+    with ignore_warnings(DeprecationWarning):
+        m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 

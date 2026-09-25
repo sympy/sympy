@@ -1,4 +1,5 @@
 """Tests for simple tools for timing functions' execution. """
+from __future__ import annotations
 
 from sympy.utilities.timeutils import timed
 

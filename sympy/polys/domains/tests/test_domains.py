@@ -1,4 +1,5 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
+from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 
@@ -868,16 +869,21 @@ def test_Domain_alg_field_from_poly():
 
 def test_Domain_cyclotomic_field():
     K = ZZ.cyclotomic_field(12)
+    assert K.is_Cyclotomic and K.is_CyclotomicField
     assert K.ext.minpoly == Poly(cyclotomic_poly(12))
     assert K.dom == QQ
+    assert K.zeta_order == 12
 
     F = QQ.cyclotomic_field(3)
     assert F.ext.minpoly == Poly(cyclotomic_poly(3))
     assert F.dom == QQ
+    assert F.zeta_order == 3
 
     E = F.cyclotomic_field(4)
+    assert E.is_Cyclotomic and E.is_CyclotomicField
     assert field_isomorphism(E.ext, K.ext) is not None
     assert E.dom == QQ
+    assert E.zeta_order == 12
 
 
 def test_PolynomialRing_from_FractionField():
@@ -1162,6 +1168,7 @@ def test_gaussian_domains():
         assert 2*i + r == q
         i, r = divmod(2, q)
         assert q*i + r == G(2, 0)
+        assert G.conjugate(q) == G(3, -4)
 
         a, b = G(2, 0), G(1, -1)
         c, d, g = G.gcdex(a, b)
@@ -1432,3 +1439,59 @@ def test_exsqrt():
     assert F7.exsqrt(F7(3)) is None
     assert F7.is_square(F7(0)) is True
     assert F7.exsqrt(F7(0)) == F7(0)
+
+
+def test_Domain_conjugate():
+    domains = [ZZ, QQ, RR, CC, ZZ_I, QQ_I, EX, EXRAW]
+    for domain in domains:
+        a = domain(7)
+        assert domain.is_ConjugateDomain
+        assert domain.of_type(domain.conjugate(a))
+        assert domain.conjugate(a) == a
+
+        if domain.is_Field:
+            b = domain(-5)
+            assert domain.of_type(domain.conjugate(a / b))
+            assert domain.conjugate(a / b) == domain(a / b)
+
+    domains = [CC, ZZ_I, QQ_I, EX, EXRAW]
+    for domain in domains:
+        a = domain.from_sympy(7 + 3*I)
+        b = domain.from_sympy(7 - 3*I)
+        assert domain.of_type(domain.conjugate(a))
+        assert domain.conjugate(a) == b
+        assert domain.conjugate(b) == a
+
+    domains = [
+        FF(2), FF(11), ZZ[x], QQ[x], QQ[x, y], RR[z], CC[z],
+        ZZ_I[x], QQ_I[x, y], QQ_I.frac_field(x, y), EXRAW[z],
+    ]
+    for domain in domains:
+        assert not domain.is_ConjugateDomain
+
+    # algebraic fields
+    K = QQ.algebraic_field(sqrt(2))
+    a = K.from_sympy(sqrt(2) + 1)
+    assert K.is_ConjugateDomain
+    assert K.conjugate(a) == a
+
+    K = QQ.algebraic_field((-1 + sqrt(5)*I)/4)
+    a = K.from_sympy((-7 + 3*sqrt(5)*I)/2)
+    b = K.from_sympy((-7 - 3*sqrt(5)*I)/2)
+    assert K.conjugate(a) == b
+
+    a = Poly(x**3 - x + 1, x, domain=ZZ).all_roots()[-1]
+    K = QQ.algebraic_field(a)
+    assert not K.is_ConjugateDomain
+    raises(DomainError, lambda: K.conjugate(K.from_sympy(a)))
+
+    # cyclotomic fields
+    K = QQ.cyclotomic_field(7)
+    a = K.dtype([0, 1, 2, 3, 4, 5, 6], K.mod.to_list(), QQ)
+    b = K.dtype([5, 4, 3, 2, 1, 0, 6], K.mod.to_list(), QQ)
+    assert K.conjugate(a) == b
+
+    K = QQ.cyclotomic_field(12)
+    a = K.convert(2*exp(2*pi*I/12) + 3*exp(10*pi*I/12) - 4*exp(14*pi*I/12))
+    b = K.convert(2*exp(-2*pi*I/12) + 3*exp(-10*pi*I/12) - 4*exp(-14*pi*I/12))
+    assert K.conjugate(a) == b

@@ -5,6 +5,7 @@ http://www.math.unm.edu/~wester/cas/book/Wester.pdf
 See also http://math.unm.edu/~wester/cas_review.html for detailed output of
 each tested system.
 """
+from __future__ import annotations
 
 from sympy.assumptions.ask import Q, ask
 from sympy.assumptions.refine import refine
@@ -2422,6 +2423,7 @@ def test_V15():
     assert simplify(r1 - (x*y + (x**2 + y**2)*acot(x/y))/2) == 0
 
 
+@slow
 @XFAIL
 def test_V16():
     # Integral not calculated

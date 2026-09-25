@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 from sympy.sets.sets import Interval
 from sympy.calculus.singularities import is_increasing, is_decreasing

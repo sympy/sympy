@@ -8,10 +8,9 @@ this stuff for general purpose.
 """
 
 from __future__ import annotations
-from typing import Optional
 
 # Type of a fuzzy bool
-FuzzyBool = Optional[bool]
+FuzzyBool = bool | None
 
 
 def _torf(args):
@@ -148,7 +147,7 @@ def fuzzy_and(args):
     return rv
 
 
-def fuzzy_not(v):
+def fuzzy_not(v: bool | None) -> bool | None:
     """
     Not in fuzzy logic
 

@@ -1,4 +1,5 @@
 """Implementation of :class:`PythonRationalField` class. """
+from __future__ import annotations
 
 
 from sympy.polys.domains.groundtypes import PythonInteger, PythonRational, SymPyRational

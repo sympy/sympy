@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import pytest
+
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import clear_cache
@@ -259,7 +263,7 @@ def test_Lambda():
     eq = Lambda(x, 2*x) + Lambda(y, 2*y)
     assert eq != 2*Lambda(x, 2*x)
     assert eq.as_dummy() == 2*Lambda(x, 2*x).as_dummy()
-    assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
+    assert Lambda(x, 2*x) != Lambda(x, x)
     raises(BadSignatureError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
 
@@ -332,6 +336,24 @@ def test_Lambda_equality():
     # interchanged else what is the point of allowing for different
     # variable names?
     assert Lambda(x, 2*x) != Lambda(y, 2*y)
+
+
+def test_Lambda_curry():
+    assert Lambda((x, y), x + y).curry() == Lambda(x, Lambda(y, x + y))
+    assert Lambda((x, y, z), x*y + z).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, x*y + z)))
+    assert Lambda(x, x**2).curry() == Lambda(x, x**2)
+    assert Lambda(((x,),), x**2).curry() == Lambda(x, x**2)
+    assert Lambda((x,), x**2).curry() == Lambda(x, x**2)
+    assert Lambda(x, Lambda(y, x + y)).curry() == Lambda(x, Lambda(y, x + y))
+    assert Lambda((x, (y, z)), x*y*z).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, x*y*z)))
+    assert Lambda(((x, y), z), x + y + z).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, x + y + z)))
+    assert Lambda((x), 1).curry() == Lambda(x, 1)
+    assert Lambda((x, (y, (z, t))), 1).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, Lambda(t, 1))))
+    assert Lambda((), 1).curry() == Lambda((), 1)
 
 
 def test_Subs():
@@ -550,6 +572,9 @@ def test_function_complex():
     assert log(xzf).is_complex is True
 
 
+# XXX: Concurrent execution has a severe CPU-scaling issue that needs to be
+# investigated.
+@pytest.mark.thread_unsafe(reason="has severe CPU scaling under concurrent execution")
 def test_function__eval_nseries():
     n = Symbol('n')
 
@@ -1160,6 +1185,11 @@ def test_Derivative_as_finite_difference():
     assert (d2fdxdy.as_finite_difference() - ref2).simplify() == 0
 
 
+# XXX: The expression cache is shared between threads but does not include the
+# thread-local exp_is_pow setting in its cache keys.
+@pytest.mark.thread_unsafe(
+    reason="changes exp_is_pow while using the shared expression cache"
+)
 def test_issue_11159():
     # Tests Application._eval_subs
     with _exp_is_pow(False):
@@ -1364,6 +1394,29 @@ def test_noncommutative_issue_15131():
     eq = fx * A * ft
     eqdt = eq.diff(t)
     assert eqdt.args[-1] == ft.diff(t)
+
+
+def test_noncommutative_derivative():
+    t = symbols('t')
+    S = Function('S', commutative=False)(t)
+    T = Function('T', commutative=False)(t)
+
+    dS = Derivative(S, t)
+    dT = Derivative(T, t)
+
+    assert diff(S**2, t) == Derivative(S**2, t)
+    assert diff(S**3, t) == Derivative(S**3, t)
+    assert diff(S**-1, t) == Derivative(S**-1, t)
+    assert diff(S**-2, t) == Derivative(S**-2, t)
+
+    assert diff(S*T, t) == dS*T + S*dT
+
+    U = Function('U')(t)
+    dU = Derivative(U, t)
+    assert diff(U**2, t) == 2*U*dU
+
+    n = symbols('n')
+    assert diff(S**n, t) == Derivative(S**n, t)
 
 
 def test_Subs_Derivative():

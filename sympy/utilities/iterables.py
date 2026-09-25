@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
-
+from typing import TYPE_CHECKING, overload, cast
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
@@ -21,8 +20,13 @@ from sympy.utilities.decorator import deprecated
 
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Iterable, Callable, Literal, Sequence
-    T = TypeVar('T')
+    from typing import (
+        Any, Iterable, Callable, Literal, Sequence, Iterator, TypeVar,
+    )
+    from typing_extensions import TypeIs
+    T = TypeVar("T")
+    T1 = TypeVar("T1")
+    T2 = TypeVar("T2")
 
 
 def is_palindromic(s: Sequence[T], i: int = 0, j: int | None = None) -> bool:
@@ -231,20 +235,23 @@ def group(
     return [(k, len(list(g))) for k, g in groupby(seq)]
 
 
-def _iproduct2(iterable1, iterable2):
+def _iproduct2(
+    iterable1: Iterable[T1],
+    iterable2: Iterable[T2],
+) -> Iterator[tuple[T1, T2]]:
     '''Cartesian product of two possibly infinite iterables'''
 
     it1 = iter(iterable1)
     it2 = iter(iterable2)
 
-    elems1 = []
-    elems2 = []
+    elems1: list[T1] = []
+    elems2: list[T2] = []
 
     sentinel = object()
-    def append(it, elems):
+    def append(it: Iterator[T], elems: list[T]) -> None:
         e = next(it, sentinel)
         if e is not sentinel:
-            elems.append(e)
+            elems.append(cast("T", e))
 
     n = 0
     append(it1, elems1)
@@ -320,9 +327,44 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
     return dict(Counter(seq).items())
 
 
+@overload
+def ibin(
+    n: int,
+    bits: int | None,
+    str: Literal[False],
+ ) -> list[int]: ...
 
+@overload
+def ibin(
+    n: int,
+    bits: int,
+    str: Literal[True],
+) -> str: ...
 
-def ibin(n, bits=None, str=False):
+@overload
+def ibin(
+    n: int,
+    bits: None = None,
+    str: Literal[False]=False,
+) -> Iterator[tuple[int, ...]]: ...
+
+@overload
+def ibin(
+    n: int,
+    bits: None,
+    str: Literal[True],
+) -> Iterator[str]: ...
+
+def ibin(
+    n: int,
+    bits: int | None = None,
+    str: bool = False,
+) ->(
+    list[int]
+    | str
+    | Iterator[tuple[int, ...]]
+    | Iterator[str]
+):
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -394,7 +436,11 @@ def ibin(n, bits=None, str=False):
             return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
 
 
-def variations(seq, n, repetition=False):
+def variations(
+    seq: Sequence[T],
+    n: int,
+    repetition: bool = False,
+) -> Iterator[tuple[T,...]]:
     r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
@@ -441,7 +487,11 @@ def variations(seq, n, repetition=False):
             return product(seq, repeat=n)
 
 
-def subsets(seq, k=None, repetition=False):
+def subsets(
+    seq: Sequence[T],
+    k: int | None = None,
+    repetition: bool = False,
+) -> Iterator[tuple[T,...]]:
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
     A `k`-subset of an `n`-element set is any subset of length exactly `k`. The
@@ -3107,7 +3157,24 @@ def iterable(i, exclude=(str, dict, NotIterable)):
     return True
 
 
-def is_sequence(i, include=None):
+@overload
+def is_sequence(
+    i: Sequence[T] | Iterable[T],
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[T]]: ...
+
+
+@overload
+def is_sequence(
+    i: object,
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[Any]]: ...
+
+
+def is_sequence(
+    i: object,
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[Any]]:
     """
     Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
@@ -3141,10 +3208,10 @@ def is_sequence(i, include=None):
     True
 
     """
-    return (hasattr(i, '__getitem__') and
-            iterable(i) or
-            bool(include) and
-            isinstance(i, include))
+    return (
+        (hasattr(i, '__getitem__') and iterable(i))
+        or (include is not None and isinstance(i, include))
+    )
 
 
 @deprecated(

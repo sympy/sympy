@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import namedtuple
 from hashlib import sha256
 import os

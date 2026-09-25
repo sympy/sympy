@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics import Permutation
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix

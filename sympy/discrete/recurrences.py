@@ -1,6 +1,7 @@
 """
 Recurrences
 """
+from __future__ import annotations
 
 from sympy.core import S, sympify
 from sympy.utilities.iterables import iterable

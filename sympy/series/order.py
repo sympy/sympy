@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, sympify, Expr, Dummy, Add, Mul
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple

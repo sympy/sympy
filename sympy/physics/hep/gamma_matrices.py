@@ -25,6 +25,7 @@
     metric(LorentzIndex,LorentzIndex)
 
 """
+from __future__ import annotations
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.matrices.dense import eye

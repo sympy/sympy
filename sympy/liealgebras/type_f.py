@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import Matrix, Rational
 

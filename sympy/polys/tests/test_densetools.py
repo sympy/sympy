@@ -1,4 +1,5 @@
 """Tests for dense recursive polynomials' tools. """
+from __future__ import annotations
 
 from sympy.polys.densebasic import (
     dup_normal, dmp_normal,

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
 from sympy.core.function import (Lambda, diff)
@@ -260,6 +261,12 @@ def test_sin_AccumBounds():
 def test_sin_fdiff():
     assert sin(x).fdiff() == cos(x)
     raises(ArgumentIndexError, lambda: sin(x).fdiff(2))
+    assert sin(x).diff((x, 0)) == sin(x)
+    assert sin(x).diff((x, 1)) == cos(x)
+    assert sin(x).diff((x, 2)) == -sin(x)
+    assert sin(x).diff((x, 3)) == -cos(x)
+    t = Symbol('t', integer=True, nonnegative=True)
+    assert sin(x).diff((x, t)) == sin(x + t*pi/2)
 
 
 def test_trig_symmetry():
@@ -478,6 +485,12 @@ def test_cos_AccumBounds():
 def test_cos_fdiff():
     assert cos(x).fdiff() == -sin(x)
     raises(ArgumentIndexError, lambda: cos(x).fdiff(2))
+    assert cos(x).diff((x, 0)) == cos(x)
+    assert cos(x).diff((x, 1)) == -sin(x)
+    assert cos(x).diff((x, 2)) == -cos(x)
+    assert cos(x).diff((x, 3)) == sin(x)
+    t = Symbol('t', integer=True, nonnegative=True)
+    assert cos(x).diff((x, t)) == cos(x + t*pi/2)
 
 
 def test_tan():
@@ -879,6 +892,7 @@ def test_sinc():
     # assert sinc(x).diff(x).subs(x, 0) is S.Zero
 
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
+    assert sinc(x**2).series(x, 0, 6) == 1 - x**4/6 + O(x**6)
 
     assert sinc(x).rewrite(jn) == jn(0, x)
     assert sinc(x).rewrite(sin) == Piecewise((sin(x)/x, Ne(x, 0)), (1, True))
@@ -1696,6 +1710,16 @@ def test_sec():
     assert sec(x).is_finite is None
     assert sec(pi/2, evaluate=False).is_finite == False
 
+    assert sec(z).is_zero is False
+    assert sec(z).is_positive is None
+    assert sec(z).is_negative is None
+    assert sec(pi/4, evaluate=False).is_positive is True
+    assert sec(pi/4, evaluate=False).is_nonnegative is True
+    assert sec(pi/4, evaluate=False).is_nonpositive is False
+    assert sec(pi*Rational(3, 4), evaluate=False).is_negative is True
+    assert sec(pi*Rational(3, 4), evaluate=False).is_nonpositive is True
+    assert sec(pi*Rational(3, 4), evaluate=False).is_extended_negative is True
+
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
 
     # https://github.com/sympy/sympy/issues/7166
@@ -1788,6 +1812,14 @@ def test_csc():
     assert csc(x).is_finite is None
     assert csc(pi/2, evaluate=False).is_finite == True
 
+    assert csc(z).is_zero is False
+    assert csc(z).is_positive is None
+    assert csc(z).is_negative is None
+    assert csc(pi/4, evaluate=False).is_positive is True
+    assert csc(pi/4, evaluate=False).is_extended_positive is True
+    assert csc(-pi/4, evaluate=False).is_negative is True
+    assert csc(-pi/4, evaluate=False).is_extended_negative is True
+
     assert series(csc(x), x, x0=pi/2, n=6) == \
         1 + (x - pi/2)**2/2 + 5*(x - pi/2)**4/24 + O((x - pi/2)**6, (x, pi/2))
     assert series(csc(x), x, x0=0, n=6) == \
@@ -1819,6 +1851,7 @@ def test_asec():
     assert asec(sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(3, 10)
     assert asec(-sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(7, 10)
     assert asec(sqrt(2) - sqrt(6)) == pi*Rational(11, 12)
+    assert asec(-csc(S.One)) == pi/2 + 1
 
     for d in [3, 4, 6]:
         for num in range(d):

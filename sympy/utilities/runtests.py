@@ -3,6 +3,7 @@
 
    sympy.utilities.runtests has been renamed to sympy.testing.runtests.
 """
+from __future__ import annotations
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 

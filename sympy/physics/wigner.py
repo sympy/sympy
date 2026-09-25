@@ -63,6 +63,7 @@ Authors
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 
 """
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.function import Function
