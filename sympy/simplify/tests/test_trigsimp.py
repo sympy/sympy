@@ -471,6 +471,10 @@ def test_issue_21594():
     assert simplify(exp(Rational(1,2)) + exp(Rational(-1,2))) == cosh(S.Half)*2
 
 
+def test_issue_17778():
+    assert trigsimp(1/(sin(x)*cos(x)) - cot(x)) == tan(x)
+
+
 def test_trigsimp_old():
     x, y = symbols('x,y')
 
