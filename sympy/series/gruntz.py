@@ -686,7 +686,7 @@ def gruntz(e, z, z0, dir="+"):
     from sympy.functions.elementary.miscellaneous import Min, Max
     if e.has(Min, Max):
         from sympy.functions.elementary.complexes import Abs
-        e = e.rewrite(Abs)
+        e = e.replace(lambda x: isinstance(x, (Min, Max)), lambda x: x.rewrite(Abs))
 
     # convert all limits to the limit z->oo; sign of z is handled in limitinf
     r = None
