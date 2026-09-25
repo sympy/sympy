@@ -10,6 +10,7 @@ from sympy.core.mul import Mul
 from sympy.core.symbol import Wild, Dummy, Symbol
 from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
+from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -24,6 +25,7 @@ from sympy.functions.elementary.complexes import Abs, re, im, sign, arg
 from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 
 from sympy.simplify.radsimp import collect
@@ -392,6 +394,14 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         indep, f = f.as_independent(x)
     else:
         indep = S.One
+
+    numer, denom = f.as_numer_denom()
+    if denom.has(Add) and not numer.has(TrigonometricFunction):
+        for pow_expr in denom.find(Pow):
+            pow_base, pow_exp = pow_expr.as_base_exp()
+            if isinstance(pow_base, TrigonometricFunction) and pow_exp.is_number and pow_exp >= 4:
+                raise NotImplementedError(
+                    "High degree (n>=4) trigonometric sum in denominator is not supported without trig numerator.")
 
     rewritables = {
         (sin, cos, cot): tan,
