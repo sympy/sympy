@@ -561,7 +561,7 @@ def trigsimp(expr, inverse=False, **opts):
         'old': lambda x: trigsimp_old(x, **opts),
                    }[method]
 
-    expr_simplified = trigsimpfunc(expr)
+    expr_simplified = trigsimpfunc(expr.together())
     if inverse:
         expr_simplified = _trigsimp_inverse(expr_simplified)
 
