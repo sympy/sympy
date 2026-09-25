@@ -345,7 +345,9 @@ TRIGONOMETRIC_EXPRESSION_PAIRS = [
     (r"\sin \theta", sin(theta)),
     (r"\sin(\theta)", sin(theta)),
     (r"\sin^{-1} a", asin(a)),
-    (r"\sin a \cos b", _Mul(sin(a), cos(b))),
+    # NB: \sin a \cos b is ambiguous (see test_ambiguous_implicit_multiplication
+    # and https://github.com/sympy/sympy/issues/30485), so it is not a single
+    # expectation here.
     (r"\sin \cos \theta", sin(cos(theta))),
     (r"\sin(\cos \theta)", sin(cos(theta))),
     (r"(\csc x)(\sec y)", csc(x) * sec(y)),
@@ -457,9 +459,7 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\exp(x)", _exp(x)),
     (r"\lg x", _log(x, 10)),
     (r"\ln x", _log(x)),
-    (r"\ln xy", _log(x * y)),
     (r"\log x", _log(x)),
-    (r"\log xy", _log(x * y)),
     (r"\log_{2} x", _log(x, 2)),
     (r"\log_{a} x", _log(x, a)),
     (r"\log_{11} x", _log(x, 11)),
@@ -491,9 +491,7 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\exp(x)", exp(x)),
     (r"\lg x", log(x, 10)),
     (r"\ln x", log(x)),
-    (r"\ln xy", log(x * y)),
     (r"\log x", log(x)),
-    (r"\log xy", log(x * y)),
     (r"\log_{2} x", log(x, 2)),
     (r"\log_{a} x", log(x, a)),
     (r"\log_{11} x", log(x, 11)),
@@ -828,7 +826,14 @@ def test_derivative_expressions():
 def test_trigonometric_expressions():
     for latex_str, sympy_expr in TRIGONOMETRIC_EXPRESSION_PAIRS:
         with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+            result = parse_latex_lark(latex_str)
+            # Duplicate derivations (e.g. \sin \cos \theta via both the
+            # whole-product and the single-factor rules) collapse to a single
+            # unique reading.
+            if getattr(result, "data", None) == "_ambig":
+                assert set(result.children) == {sympy_expr}, latex_str
+            else:
+                assert result == sympy_expr, latex_str
 
 
 def test_limit_expressions():
@@ -889,6 +894,42 @@ def test_common_function_expressions():
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
+def test_ambiguous_implicit_multiplication():
+    # https://github.com/sympy/sympy/issues/30485
+    # expressions like `\sin xyz` are ambiguous: either multiplication binds
+    # tighter than the function, or the function binds tighter than
+    # multiplication. Both interpretations are returned, and no others; in
+    # particular the mixed reading `\sin(x*y)*z`, where the function swallows
+    # part of the product but not all of it, is not derivable.
+    result = parse_latex_lark(r"\sin xyz")
+    assert getattr(result, "data", None) == "_ambig"
+    assert set(result.children) == {sin(x*y*z), sin(x)*y*z}
+
+    result = parse_latex_lark(r"\sin xy")
+    assert set(result.children) == {sin(x*y), sin(x)*y}
+
+    result = parse_latex_lark(r"\ln xy")
+    assert set(result.children) == {log(x*y), log(x)*y}
+
+    result = parse_latex_lark(r"\log xy")
+    assert set(result.children) == {log(x*y), log(x)*y}
+
+    result = parse_latex_lark(r"\sinh xy")
+    assert set(result.children) == {sinh(x*y), sinh(x)*y}
+
+    result = parse_latex_lark(r"\sin x \cos y")
+    assert set(result.children) == {sin(x*cos(y)), sin(x)*cos(y)}
+
+    result = parse_latex_lark(r"\sin xy \cos y")
+    assert set(result.children) == {sin(x*y*cos(y)), sin(x)*y*cos(y)}
+
+    # Even a delimited argument like `\sin(x)` is ambiguous when followed by
+    # an implicit product: either the function takes the whole product
+    # (x*y*z) or just the delimited factor (x). Both readings are returned.
+    result = parse_latex_lark(r"\sin(x)yz")
+    assert set(result.children) == {sin(x*y*z), sin(x)*y*z}
+
+
 def test_spacing():
     for latex_str, sympy_expr in SPACING_RELATED_EXPRESSION_PAIRS:
         with evaluate(False):
@@ -924,11 +965,20 @@ def test_function_arguments():
     assert parse_latex_lark(r"\log x + 1") == log(x) + 1
     assert parse_latex_lark(r"\sin x \cdot y") == sin(x)*y
     assert parse_latex_lark(r"\sin x / 2") == sin(x)/2
-    assert parse_latex_lark(r"\sin x \cos y \tan z") == sin(x)*cos(y)*tan(z)
-    assert parse_latex_lark(r"\sin 2x") == sin(2*x)
+    # Implicit products after a function are ambiguous per
+    # https://github.com/sympy/sympy/issues/30485 (see also
+    # test_ambiguous_implicit_multiplication): both the whole-product and the
+    # single-factor readings are returned.
+    result = parse_latex_lark(r"\sin x \cos y \tan z")
+    assert set(result.children) == {sin(x*cos(y*tan(z))), sin(x*cos(y)*tan(z)),
+                                    sin(x)*cos(y*tan(z)), sin(x)*cos(y)*tan(z)}
+    result = parse_latex_lark(r"\sin 2x")
+    assert set(result.children) == {sin(2*x), x*sin(2)}
     assert parse_latex_lark(r"\sin -x") == -sin(x)
-    assert parse_latex_lark(r"\sin xy") == sin(x*y)
-    assert parse_latex_lark(r"\tan hk") == tan(h*k)
+    result = parse_latex_lark(r"\sin xy")
+    assert set(result.children) == {sin(x*y), y*sin(x)}
+    result = parse_latex_lark(r"\tan hk")
+    assert set(result.children) == {tan(h*k), k*tan(h)}
     assert parse_latex_lark(r"\tanh^2 x") == tanh(x)**2
     assert parse_latex_lark(r"\sinh^{-1} x") == asinh(x)
     assert parse_latex_lark(r"\arctanh x") == atanh(x)
