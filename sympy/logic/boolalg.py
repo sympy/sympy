@@ -2430,7 +2430,6 @@ def SOPform(variables, minterms, dontcares=None, *, algorithm="qm"):
         The algorithm to use for minimization.
         - ``"qm"`` (default): Use Quine-McCluskey.
         - ``"espresso"``: Use PyEDA Espresso (requires PyEDA).
-        Missing PyEDA must raise ImportError. Unsupported algorithm must raise ValueError.
 
     Examples
     ========
