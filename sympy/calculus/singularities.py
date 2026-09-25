@@ -206,7 +206,7 @@ def monotonicity_helper(
             if interior_sings != S.EmptySet:
                 return False
 
-    derivative = expression.diff(variable)
+    derivative = expression.diff(variable).simplify()
     predicate_interval = solveset(predicate(derivative), variable, S.Reals)
     return interval.is_subset(predicate_interval)
 

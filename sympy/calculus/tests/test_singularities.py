@@ -141,3 +141,9 @@ def test_monotonicity_with_interior_singularities():
     assert is_decreasing(1/x, Interval(-1, Rational(-1, 10)), x) is True
     assert not is_decreasing(1/x, Interval(-1, 1), x)
     assert not is_increasing(1/x, Interval(-1, 1), x)
+
+
+def test_issue_30582():
+    x, y = Symbol('x', real=True), Symbol('y', real=True)
+    f = x * ((y + 1)**2 - y*(y + 2))
+    assert is_strictly_increasing(f, S.Reals, x)
