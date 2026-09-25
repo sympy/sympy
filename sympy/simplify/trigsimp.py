@@ -464,15 +464,14 @@ def _trigsimp_inverse(rv):
 def trigsimp(expr, inverse=False, **opts):
     """Returns a reduced expression by using known trig identities.
 
-    While `trigsimp` primarily simplifies trigonometric and hyperbolic
+    While ``trigsimp`` primarily simplifies trigonometric and hyperbolic
     expressions, it also performs general algebraic simplifications on
     non-trigonometric parts. This can lead to broader simplification
     beyond just trigonometric identities, including factoring and term
-    cancellation, which may make its output resemble `simplify`.
+    cancellation, which may make its output resemble ``simplify``.
 
     For targeted trigonometric simplifications that leave other algebraic
-    components untouched, consider using functions from the `sympy.simplify.fu`
-    module for more granular control. Refer to its documentation for details: https://docs.sympy.org/latest/modules/simplify/fu.html
+    components untouched, consider using :func:`~sympy.simplify.fu.fu`.
 
     Parameters
     ==========
@@ -547,6 +546,10 @@ def trigsimp(expr, inverse=False, **opts):
     >>> trigsimp(t)
     tanh(x)**7
 
+    See Also
+    ========
+
+    sympy.simplify.fu.fu: pure trigonometric transformations.
     """
     from sympy.simplify.fu import fu
 
