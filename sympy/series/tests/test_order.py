@@ -502,3 +502,11 @@ def test_issue_22836():
     assert O(2**x + factorial(x), (x, oo)) == O(factorial(x), (x, oo))
     assert O(2**x + factorial(x) + x**x, (x, oo)) == O(exp(x*log(x)), (x, oo))
     assert O(x + factorial(x), (x, oo)) == O(factorial(x), (x, oo))
+
+
+def test_issue_29832():
+    # Order scaling when expanding expressions containing Order at x0 != 0
+    assert ((1 + O((x - 5)**3, (x, 5))) * (x - 5)).expand() == -5 + x + O((x - 5)**4, (x, 5))
+    assert ((1 + O((x + 4)**2, (x, -4))) * (x + 4)).expand() == 4 + x + O((x + 4)**3, (x, -4))
+    assert ((1 + O((x - 5)**3, (x, 5))) * (x + 2)).expand() == 2 + x + O((x - 5)**3, (x, 5))
+    assert ((1 + O((x - 5)**2, (x, 5))) * (x - 5)**3).expand() == ((x - 5)**3).expand() + O((x - 5)**5, (x, 5))
