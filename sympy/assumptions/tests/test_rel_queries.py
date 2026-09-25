@@ -85,6 +85,28 @@ def test_rel_queries():
     assert ask(x > z, (x > y) & (y > z)) is True
 
 
+
+def test_lra_satask_finite_sign_assumptions():
+    u, v = symbols("u v")
+    assumptions = Q.nonnegative(u) & Q.negative(v)
+    assert lra_satask(u - v > 0, assumptions) is True
+
+    boundary_assumptions = Q.nonnegative(u) & Q.nonpositive(v)
+    assert lra_satask(u - v >= 0, boundary_assumptions) is True
+    assert lra_satask(u - v > 0, boundary_assumptions) is None
+
+    assert lra_satask(2*u > 0, Q.positive(u)) is True
+
+    nonreal = Symbol("nonreal", real=False)
+    raises(UnhandledInput, lambda: lra_satask(Q.gt(nonreal, 0), Q.positive(nonreal)))
+
+    extended_assumptions = Q.extended_positive(u) & Q.extended_positive(v)
+    raises(
+        UnhandledInput,
+        lambda: lra_satask(u + v > u, extended_assumptions),
+    )
+
+
 def test_unhandled_queries():
     X = MatrixSymbol("X", 2, 2)
     assert ask(Q.lt(X, 2) & Q.gt(X, 3)) is None
