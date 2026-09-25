@@ -925,7 +925,7 @@ class Quaternion(Expr):
         if self._norm is None:  # check if norm is pre-defined
             q = self
             # target trig and hyperbolics that arise when using from_axis_angle.
-            return sqrt(trigsimp((q.a**2 + q.b**2 + q.c**2 + q.d**2).together()))
+            return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
 
         return self._norm
 
