@@ -494,8 +494,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         be determined.
     """
     from sympy.assumptions.satask import satask
-    from sympy.assumptions.lra_satask import lra_satask
-    from sympy.logic.algorithms.lra_theory import UnhandledInput
 
     assumptions = And(assumptions, *context)
 
@@ -544,16 +542,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return bool(res)
 
     # using satask (still costly)
-    res = satask(proposition, assumptions=assumptions)
-    if res is not None:
-        return res
-
-    try:
-        res = lra_satask(proposition, assumptions=assumptions)
-    except UnhandledInput:
-        return None
-
-    return res
+    return satask(proposition, assumptions=assumptions)
 
 
 def _ask_single_fact(key, local_facts):

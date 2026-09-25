@@ -80,6 +80,13 @@ def get_number_facts(x = None):
         Equivalent(Q.extended_nonnegative(x), Q.zero(x) | Q.positive(x) | Q.positive_infinite(x)),
         Equivalent(Q.complex(x), Q.algebraic(x) | Q.transcendental(x)),
 
+        # These follow from the definitions above, but only by resolving a
+        # composite predicate against the disjunction that defines Q.real,
+        # which takes a case split. Stating them directly puts Q.real one
+        # implication away, so that unit propagation alone can reach it.
+        Implies(Q.nonnegative(x) | Q.nonpositive(x) | Q.nonzero(x)
+                | Q.integer(x), Q.real(x)),
+
         # primitive predicates for extended real exclude each other.
         Exclusive(Q.negative_infinite(x), Q.negative(x), Q.zero(x),
             Q.positive(x), Q.positive_infinite(x)),

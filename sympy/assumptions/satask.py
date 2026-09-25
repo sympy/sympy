@@ -6,6 +6,7 @@ from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.kind import NumberKind, UndefinedKind
+from sympy.assumptions.ask import Q
 from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_known_number_facts
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
@@ -28,6 +29,11 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo,
 
     Proposition is evaluated to ``True`` or ``False`` if the truth value can be
     determined. If not, ``None`` is returned.
+
+    What the SAT solver leaves undecided is handed over to the Linear Real
+    Arithmetic theory solver of ``lra_satask``, which is what answers the
+    inequalities. That only happens for input it can handle, which above all
+    means that every expression has to be known to be real.
 
     Parameters
     ==========
@@ -82,7 +88,52 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo,
         if res is not None:
             return res
 
-    return engine.ask_query(query_literal)
+    # Read root-level facts before ask_query lets the solver make decisions.
+    exprs = _predicate_exprs(props, _props, assumptions)
+    root_real = _root_real_exprs(exprs, engine)
+
+    res = engine.ask_query(query_literal)
+    if res is not None:
+        return res
+    return _lra_satask(props, _props, assumptions, exprs, root_real)
+
+
+def _predicate_exprs(*cnfs):
+    """Return every expression a predicate of *cnfs* is applied to."""
+    exprs = set()
+    for cnf in cnfs:
+        for pred in cnf.all_predicates():
+            if isinstance(pred, AppliedPredicate):
+                exprs.update(pred.arguments)
+    return exprs
+
+
+def _root_real_exprs(exprs, engine):
+    """Return expressions whose ``Q.real`` predicate is fixed true at the root."""
+    return {expr for expr in exprs if engine.lookup(Q.real(expr)) is True}
+
+
+def _lra_satask(prop, _prop, assumptions, exprs, root_real):
+    """Decide *prop* with the LRA theory solver, or return ``None`` if the
+    input turns out to be one that it cannot handle after all.
+
+    The theory solver is only sound on real expressions, so every expression
+    of *exprs* has to be real. What the root level left open in *root_real*
+    is asked of the old assumptions here, where the answer is needed.
+    """
+    known_real = root_real | {expr for expr in exprs if expr not in root_real
+                              and getattr(expr, "is_real", None) is True}
+    if known_real != exprs:
+        return None
+
+    from sympy.assumptions.lra_satask import check_satisfiability
+    from sympy.logic.algorithms.lra_theory import UnhandledInput
+
+    try:
+        return check_satisfiability(prop, _prop, assumptions,
+                                    known_real=known_real)
+    except UnhandledInput:
+        return None
 
 
 def extract_predargs(proposition, assumptions=None):
