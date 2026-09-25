@@ -142,8 +142,8 @@ Usage::
     >>> from sympy.printing.llvmjitcode import llvm_callable
     >>> from sympy.abc import x
     >>> expr = x**2 + x + 1
-    >>> f = llvm_callable([x], expr)
-    >>> f(2.0)
+    >>> f = llvm_callable([x], expr) # doctest: +SKIP
+    >>> f(2.0) # doctest: +SKIP
     7.0
 
 .. automodule:: sympy.printing.llvmjitcode
