@@ -120,9 +120,9 @@ def smp_pexquo(f: smp[Er], g: smp[Er], i: int, n: int, dom: Domain[Er]) -> smp[E
         raise ExactQuotientFailed(f, g)
 
 
-def smp_subresultants(
+def smp_inner_subresultants(
     f: smp[Er], g: smp[Er], i: int, n: int, dom: Domain[Er]
-) -> list[smp[Er]]:
+) -> tuple[list[smp[Er]], list[smp[Er]]]:
 
     l = smp_degree(f, i, n, dom)
     m = smp_degree(g, i, n, dom)
@@ -132,48 +132,84 @@ def smp_subresultants(
         l, m = m, l
 
     if not f:
-        return [{}, {}]
+        return [], []
+
+    zm = (0,) * n
+    one: smp[Er] = {zm: dom.one}
 
     if not g:
-        zm = (0,) * n
-        return [f, {zm: dom.one}]
+        return [f], [one]
 
     R = [f, g]
 
     d = l - m
     v = dom((-1) ** (d + 1))
 
-    # Compute the pseudo-remainder for f and g
+    # Compute the pseudo-remainder for f and g.
     h = smp_prem(f, g, i, n, dom)
-
     _smp_imul_ground(h, v, n, dom)
 
-    # Compute the coefficient of g with respect to x**m
+    # Compute the coefficient of g with respect to x**m.
     lc = smp_coeff_wrt(g, i, m, n, dom)
-
     c = smp_pow_generic(lc, d, dom, n)
 
+    S = [one, c]
     c = smp_neg(c, n, dom)
+
     while h:
         k = smp_degree(h, i, n, dom)
 
         R.append(h)
         f, g, m, d = g, h, k, m - k
 
-        b = smp_mul(smp_neg(lc, n, dom), smp_pow_generic(c, d, dom, n), dom, n)
+        b = smp_mul(
+            smp_neg(lc, n, dom),
+            smp_pow_generic(c, d, dom, n),
+            dom,
+            n,
+        )
 
         h = smp_prem(f, g, i, n, dom)
-
         [h], _ = smp_div_list(h, [b], n, dom)
+
         lc = smp_coeff_wrt(g, i, k, n, dom)
 
         if d > 1:
             p = smp_pow_generic(smp_neg(lc, n, dom), d, dom, n)
-
-            q = smp_pow_generic(c, (d - 1), dom, n)
-
+            q = smp_pow_generic(c, d - 1, dom, n)
             [c], _ = smp_div_list(p, [q], n, dom)
         else:
             c = smp_neg(lc, n, dom)
 
-    return R
+        S.append(smp_neg(c, n, dom))
+
+    return R, S
+
+
+def smp_subresultants(
+    f: smp[Er], g: smp[Er], i: int, n: int, dom: Domain[Er]
+) -> list[smp[Er]]:
+    # Preserve the existing sparse PRS zero-case conventions.
+    if not f and not g:
+        return [{}, {}]
+
+    if not f or not g:
+        h = g if not f else f
+        zm = (0,) * n
+        return [h, {zm: dom.one}]
+
+    return smp_inner_subresultants(f, g, i, n, dom)[0]
+
+
+def smp_prs_resultant(
+    f: smp[Er], g: smp[Er], i: int, n: int, dom: Domain[Er]
+) -> tuple[smp[Er], list[smp[Er]]]:
+    if not f or not g:
+        return {}, []
+
+    R, S = smp_inner_subresultants(f, g, i, n, dom)
+
+    if smp_degree(R[-1], i, n, dom) > 0:
+        return {}, R
+
+    return S[-1], R

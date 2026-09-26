@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pickle
 
+
 from sympy.polys.polytools import (
     Poly, PurePoly, poly,
     parallel_poly_from_expr,
@@ -48,7 +49,7 @@ from sympy.polys.polyerrors import (
     OptionError,
     FlagError)
 
-from sympy.polys.polyclasses import DMP
+from sympy.polys.polyclasses import DMP, SMP
 
 from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX, EXRAW
@@ -4320,3 +4321,90 @@ def test_groebner_reduce_scalar():
     B = groebner([t**2], t, order="lex")
     assert B.reduce(7) == ([0], 7)
     assert B.reduce(Integer(7)) == ([0], Integer(7))
+
+
+def test_Poly_sparse_rep_basic():
+    f = Poly.new(SMP.from_dict({
+        (20,): ZZ.one,
+        (1,): ZZ.one,
+        (0,): ZZ.one,
+    }, 0, ZZ), x)
+
+    g = Poly.new(SMP.from_dict({
+        (19,): ZZ.one,
+        (2,): ZZ.one,
+        (0,): ZZ.one,
+    }, 0, ZZ), x)
+
+    assert isinstance(f.rep, SMP)
+    assert f.as_dict() == {(20,): 1, (1,): 1, (0,): 1}
+
+    h = f*g
+
+    assert isinstance(h.rep, SMP)
+    assert h.as_dict() == {
+        (39,): 1,
+        (22,): 1,
+        (20,): 2,
+        (19,): 1,
+        (3,): 1,
+        (2,): 1,
+        (1,): 1,
+        (0,): 1,
+    }
+
+    assert isinstance((f + g).rep, SMP)
+    assert isinstance((f - g).rep, SMP)
+    assert isinstance((f**2).rep, SMP)
+    assert isinstance(f.diff().rep, SMP)
+
+    assert f.degree() == 20
+    assert f.LC() == 1
+    assert f.TC() == 1
+    assert hash(f) == hash(Poly.new(SMP.from_dict(
+        {(20,): ZZ.one, (1,): ZZ.one, (0,): ZZ.one}, 0, ZZ), x))
+
+    fdmp = Poly.from_dict({
+        (20,): ZZ.one,
+        (1,): ZZ.one,
+        (0,): ZZ.one,
+    }, x, domain=ZZ)
+
+    assert isinstance((f + 1).rep, SMP)
+    assert isinstance((1 + f).rep, SMP)
+    assert isinstance((f * 2).rep, SMP)
+    assert isinstance((2 * f).rep, SMP)
+    assert isinstance((f + fdmp).rep, SMP)
+    assert isinstance((fdmp + f).rep, SMP)
+    assert isinstance((f * fdmp).rep, SMP)
+    assert isinstance((fdmp * f).rep, SMP)
+
+
+def test_Poly_rep_independent_hashable_content():
+    f = Poly(x**5 + x**2 - 1, x, domain=ZZ)
+    g = Poly(x**3 + x**2 - 1, x, domain=ZZ)
+
+    assert f.compare(g) != 0
+
+    fqq = Poly(x**5 + x**2 - 1, x, domain=QQ)
+    assert f.compare(fqq) != 0
+
+
+def test_Poly_sparse_rep_equality_hash():
+    x, y = symbols('x y')
+    rep = {(1000,): ZZ.one, (1,): ZZ.one, (0,): ZZ.one}
+
+    fdmp = Poly.from_dict(rep, x, domain=ZZ)
+    fsmp = Poly.new(SMP.from_dict(rep, 0, ZZ), x)
+
+    assert fdmp == fsmp
+    assert fsmp == fdmp
+    assert hash(fdmp) == hash(fsmp)
+    assert {fdmp: 1}[fsmp] == 1
+
+    # Domain and generators remain part of Poly equality.
+    assert fdmp != Poly.from_dict(rep, x, domain=QQ)
+    assert fdmp != Poly.from_dict(
+        {(1000, 0): ZZ.one, (1, 0): ZZ.one, (0, 0): ZZ.one},
+        x, y, domain=ZZ,
+    )

@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING
 
 from sympy.external.gmpy import GROUND_TYPES
 
-from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
-    expand_mul, expand_multinomial)
+from sympy.core import S, Add, Mul, Pow, Eq, Expr
 from sympy.core.exprtools import decompose_power, decompose_power_rat
 from sympy.core.numbers import _illegal
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
@@ -219,6 +218,59 @@ def _not_a_coeff(expr):
     return  # could be
 
 
+def _sparse_dict_from_expr(expr, *gens):
+    from sympy.simplify.simplify import _mexpand
+
+    indices = {g: i for i, g in enumerate(gens)}
+    poly = {}
+
+    terms = list(Add.make_args(expr))
+
+    while terms:
+        term = terms.pop()
+
+        if term.atoms(Add):
+            term = _mexpand(term)
+
+            if term.is_Add:
+                terms.extend(Add.make_args(term))
+                continue
+
+        coeff = []
+        monom = {}
+
+        for factor in Mul.make_args(term):
+            if not _not_a_coeff(factor) and factor.is_Number:
+                coeff.append(factor)
+                continue
+
+            base, exp = decompose_power(factor)
+
+            if exp < 0:
+                exp, base = -exp, Pow(base, -S.One)
+
+            try:
+                i = indices[base]
+            except KeyError:
+                if not factor.has_free(*gens):
+                    coeff.append(factor)
+                    continue
+
+                raise PolynomialError(
+                    "%s contains an element of the set of generators."
+                    % factor
+                )
+
+            monom[i] = monom.get(i, 0) + exp
+
+        monom = tuple(sorted(monom.items()))
+        coeff = Mul(*coeff)
+
+        poly[monom] = poly.get(monom, S.Zero) + coeff
+
+    return poly
+
+
 def _parallel_dict_from_expr_if_gens(exprs, opt):
     """Transform expressions into a multinomial form given generators. """
     k, indices = len(opt.gens), {}
@@ -389,22 +441,10 @@ def _dict_from_expr(expr, opt):
     if expr.is_commutative is False:
         raise PolynomialError('non-commutative expressions are not supported')
 
-    def _is_expandable_pow(expr):
-        return (expr.is_Pow and expr.exp.is_positive and expr.exp.is_Integer
-                and expr.base.is_Add)
-
     if opt.expand is not False:
         if not isinstance(expr, (Expr, Eq)):
             raise PolynomialError('expression must be of type Expr')
         expr = expr.expand()
-        # TODO: Integrate this into expand() itself
-        while any(_is_expandable_pow(i) or i.is_Mul and
-            any(_is_expandable_pow(j) for j in i.args) for i in
-                Add.make_args(expr)):
-
-            expr = expand_multinomial(expr)
-        while any(i.is_Mul and any(j.is_Add for j in i.args) for i in Add.make_args(expr)):
-            expr = expand_mul(expr)
 
     if opt.gens:
         rep, gens = _dict_from_expr_if_gens(expr, opt)
