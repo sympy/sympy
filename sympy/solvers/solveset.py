@@ -1253,6 +1253,14 @@ def _solveset(f, symbol, domain, _check=False):
         return domain
 
     orig_f = f
+    if f.is_Relational and not f.has(symbol):
+        f = f.simplify()
+        if f is S.true:
+            return domain
+        elif f is S.false:
+            return S.EmptySet
+        return ConditionSet(symbol, f, domain)
+
     if f.is_Mul:
         coeff, f = f.as_independent(symbol, as_Add=False)
         if coeff in {S.ComplexInfinity, S.NegativeInfinity, S.Infinity}:
