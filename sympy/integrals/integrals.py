@@ -13,6 +13,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
@@ -36,6 +37,158 @@ from sympy.utilities.misc import filldedent
 if TYPE_CHECKING:
     from sympy.core.containers import Tuple
     SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
+
+
+def _add_atan_floor_terms(antideriv, x):
+    """
+    Make an antiderivative with respect to ``x`` containing
+    ``atan(c*tan(a) + d)`` or ``atan(c*cot(a) + d)`` continuous at the
+    poles of ``tan(a)`` and ``cot(a)`` by adding the appropriate multiple
+    of ``pi*floor(...)``.
+
+    Explanation
+    ===========
+
+    When ``a`` increases through a pole of ``tan(a)``, ``atan(c*tan(a) + d)``
+    jumps by ``-sign(c)*pi``, and at a pole of ``cot(a)``,
+    ``atan(c*cot(a) + d)`` jumps by ``sign(c)*pi``. These jumps are
+    canceled by ``sign(c)*pi*floor((a + pi/2)/pi)`` and
+    ``-sign(c)*pi*floor(a/pi)``, respectively. Both terms vanish on the
+    principal branch of the tangent, ``-pi/2 < a < pi/2`` and ``0 < a < pi``,
+    so that the antiderivative is unchanged there. See [1]_, eq. (3).
+
+    The coefficient ``c`` may depend on ``x`` if its sign does not change
+    for real ``x``. ``d`` may depend on ``x``, and is assumed to be finite
+    at the poles.
+
+    The argument of the ``atan`` may also be a linear combination of several
+    ``tan`` and ``cot`` of linear functions of ``x``, with coefficients that
+    do not depend on ``x``. Those with the same poles are corrected by a
+    single term, and there is another term for the poles that two of them
+    with different periods have in common, where the jump is determined by
+    the sum of the two poles. The ``atan`` is left as it is if it cannot be
+    determined which poles are in common, or if there are poles in common
+    among more than two.
+
+    An ``atan`` that is left as it is remains discontinuous at the poles, so
+    a definite integral computed from the antiderivative is wrong if there
+    is a pole between the limits. Integral.doit() does not check for
+    discontinuities of the antiderivative between the limits in general.
+
+    Examples
+    ========
+
+    >>> from sympy import atan, tan, cot
+    >>> from sympy.abc import x
+    >>> from sympy.integrals.integrals import _add_atan_floor_terms
+    >>> _add_atan_floor_terms(2*atan(3*tan(x/2)), x)
+    2*atan(3*tan(x/2)) + 2*pi*floor((x/2 + pi/2)/pi)
+    >>> _add_atan_floor_terms(atan(cot(x) + x), x)
+    atan(x + cot(x)) - pi*floor(x/pi)
+    >>> _add_atan_floor_terms(atan(tan(x) + tan(3*x)), x)
+    atan(tan(x) + tan(3*x)) + pi*floor((3*x + pi/2)/pi)
+    >>> _add_atan_floor_terms(atan(x*tan(x)), x)
+    atan(x*tan(x))
+
+    References
+    ==========
+
+    .. [1] D. J. Jeffrey and A. D. Rich, The evaluation of trigonometric
+           integrals avoiding spurious discontinuities, ACM Trans. Math.
+           Software 20 (1994), 124-135.
+    """
+    reps = {}
+    for atan_term in antideriv.atoms(atan):
+        correction = _atan_floor_correction(atan_term.args[0], x)
+        if correction:
+            reps[atan_term] = atan_term + correction
+    return antideriv.xreplace(reps)
+
+
+def _atan_floor_correction(atan_arg, x):
+    # The floor terms for atan(atan_arg) (see _add_atan_floor_terms()), or
+    # None if they cannot be determined.
+    parts = [i for i in ordered(atan_arg.atoms(tan, cot)) if i.has(x)]
+    if not parts:
+        return None
+    poly = atan_arg.as_poly(*parts)
+    if poly is None or poly.total_degree() > 1:
+        return None
+    # Each part has its poles where phi is an integer. As phi increases
+    # through a pole, coeff*part goes from sign(coeff)*oo to -sign(coeff)*oo.
+    terms = []
+    for part in parts:
+        coeff = poly.coeff_monomial(part)
+        a = part.args[0]
+        if isinstance(part, tan):
+            terms.append((coeff, (a + pi/2)/pi))
+        else:
+            terms.append((-coeff, a/pi))
+    if len(terms) == 1:
+        coeff, phi = terms[0]
+        if coeff.has(x):
+            # The sign of the coefficient must not change
+            xreal = Dummy('x', real=True)
+            coeff = coeff.subs(x, xreal)
+            if sign(coeff).has(xreal):
+                return None
+        if coeff.is_extended_real is False:
+            return None
+        return sign(coeff)*pi*floor(phi)
+
+    # With phi = m*x + b, the poles are the lattice -b/m + Z/m. Parts with
+    # the same lattice are grouped. Two groups may have poles in common if
+    # neither of them has poles in common with a third.
+    groups = []
+    overlaps = []
+    for coeff, phi in terms:
+        m = phi.diff(x)
+        if coeff.has(x) or m.has(x) or m.is_zero is not False:
+            return None
+        if coeff.is_extended_real is False:
+            return None
+        x0, period = -phi.subs(x, 0)/m, 1/m
+        new = {'coeff': coeff, 'phi': phi, 'x0': x0, 'period': period}
+        new_overlaps = []
+        for group in groups:
+            ratio = group['period']/period
+            if not ratio.is_Rational:
+                return None
+            # The two lattices have a point in common iff the x0 differ by
+            # an integer multiple of common
+            common = period/ratio.q
+            shift = ((x0 - group['x0'])/common).expand()
+            if shift.is_integer is None:
+                return None
+            if not shift.is_integer:
+                continue
+            if abs(ratio) == 1:
+                group['coeff'] += ratio*coeff
+                break
+            # The common poles are where group['phi'] is k mod ratio.q
+            if ratio.q == 1:
+                k = 0
+            elif shift.is_Integer:
+                k = int(shift)*pow(ratio.p, -1, ratio.q) % ratio.q
+            else:
+                return None
+            new_overlaps.append((group, new, ratio, k))
+        else:
+            groups.append(new)
+            overlaps.extend(new_overlaps)
+    result = [sign(group['coeff'])*pi*floor(group['phi'])
+        for group in groups if group['coeff'].is_zero is not True]
+    seen = []
+    for g, h, ratio, k in overlaps:
+        if any(i is g or i is h for i in seen):
+            return None
+        seen.extend([g, h])
+        # At a common pole, the poles of the two groups add up to a pole
+        # with coefficient g['coeff'] + h['coeff']/ratio in terms of g['phi']
+        cg, ch = g['coeff'], h['coeff']/ratio
+        result.append((sign(cg + ch) - sign(cg) - sign(ch))*pi*floor(
+            (g['phi'] - k)/ratio.q))
+    return Add(*result)
 
 
 class Integral(AddWithLimits):
@@ -635,27 +788,7 @@ class Integral(AddWithLimits):
             # continuous should only be added in the final round
             if (final and not isinstance(antideriv, Integral) and
                 antideriv is not None):
-                for atan_term in antideriv.atoms(atan):
-                    atan_arg = atan_term.args[0]
-                    # Checking `atan_arg` to be linear combination of `tan` or `cot`
-                    for tan_part in atan_arg.atoms(tan):
-                        x1 = Dummy('x1')
-                        tan_exp1 = atan_arg.subs(tan_part, x1)
-                        # The coefficient of `tan` should be constant
-                        coeff = tan_exp1.diff(x1)
-                        if x1 not in coeff.free_symbols:
-                            a = tan_part.args[0]
-                            antideriv = antideriv.subs(atan_term, Add(atan_term,
-                                sign(coeff)*pi*floor((a-pi/2)/pi)))
-                    for cot_part in atan_arg.atoms(cot):
-                        x1 = Dummy('x1')
-                        cot_exp1 = atan_arg.subs(cot_part, x1)
-                        # The coefficient of `cot` should be constant
-                        coeff = cot_exp1.diff(x1)
-                        if x1 not in coeff.free_symbols:
-                            a = cot_part.args[0]
-                            antideriv = antideriv.subs(atan_term, Add(atan_term,
-                                sign(coeff)*pi*floor((a)/pi)))
+                antideriv = _add_atan_floor_terms(antideriv, xab[0])
 
             if antideriv is None:
                 undone_limits.append(xab)
