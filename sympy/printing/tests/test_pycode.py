@@ -24,6 +24,8 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
+from sympy.functions.special.elliptic_functions import (
+    jacobi_cn, jacobi_dn, jacobi_sn)
 
 
 
@@ -141,6 +143,9 @@ def test_MpmathPrinter():
     assert p.doprint(S.Infinity) == 'mpmath.inf'
     assert p.doprint(S.NegativeInfinity) == 'mpmath.ninf'
     assert p.doprint(loggamma(x)) == 'mpmath.loggamma(x)'
+    assert p.doprint(jacobi_sn(x, y)) == "mpmath.ellipfun('sn', x, y)"
+    assert p.doprint(jacobi_cn(x, y)) == "mpmath.ellipfun('cn', x, y)"
+    assert p.doprint(jacobi_dn(x, y)) == "mpmath.ellipfun('dn', x, y)"
 
 
 def test_NumPyPrinter():
