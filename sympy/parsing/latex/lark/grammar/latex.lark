@@ -98,7 +98,8 @@ CMD_MATHIT: "\\mathit"
 CMD_INFTY: "\\infty"
 CMD_CIRC: "\\circ"
 
-BANG: "!"
+// Match exactly two factorial marks, allowing a preceding \! spacing command.
+BANG: /(?:(?<!!)|(?<=\\!))!!(?!!)|!/
 BAR: "|"
 CARET: "^"
 COLON: ":"

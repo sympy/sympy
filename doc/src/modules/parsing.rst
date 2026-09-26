@@ -65,6 +65,12 @@ API might change in the future. Unlike some of the other parsers, `\mathrm{\LaTe
 designed as a *type-setting* language, not a *computer algebra system* and so
 can contain typographical conventions that might be interpreted multiple ways.
 
+Both backends interpret adjacent ``!!`` as a double factorial. Use
+``(x!)!`` for a nested factorial; separated exclamation marks (``x! !``)
+also retain this interpretation. Runs of three or more exclamation marks
+retain their nested-factorial interpretation, rather than denoting
+multifactorials.
+
 `\mathrm{\LaTeX}` Parsing Functions Reference
 ---------------------------------------------
 
