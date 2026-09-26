@@ -748,3 +748,21 @@ def test_issue_28280():
     assert x > 20
     y = 20 + log(1 + S(10)**-9)
     assert y > 20
+
+
+def test_issue_13365():
+    # The quotient between successive terms of a hypergeometric series need not
+    # have integral numerator and denominator. For 1.9**n/factorial(n) the ratio
+    # is 1.9/(n + 1), and truncating 1.9 to an integer before applying the ratio
+    # turned the series into the one for exp(1), so evalf returned e instead of
+    # exp(1.9). See https://github.com/sympy/sympy/issues/13365
+    x = Symbol('x', integer=True, positive=True)
+    s = Sum(1.9**x/factorial(x), (x, 0, oo))
+    assert abs((s - exp(Rational(19, 10))).evalf()) < 1e-12
+
+    # The same truncation happened in both hypsum branches, so exercise the
+    # direct-summation branch too: the ratio of the series for exp(1.9*x**2) is
+    # 1.9*(2*n + 1)/(n + 1), whose numerator is non-integral.
+    t = Symbol('t', integer=True, nonnegative=True)
+    s2 = Sum(1.9**t * t / factorial(t), (t, 0, oo))
+    assert abs((s2 - 19*exp(Rational(19, 10))/10).evalf()) < 1e-12
