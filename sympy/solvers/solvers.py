@@ -54,9 +54,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debugf
 from sympy.utilities.iterables import (connected_components,
     generate_bell, uniq, iterable, is_sequence, subsets, flatten, sift)
-from sympy.utilities.decorator import conserve_mpmath_dps
-
-from mpmath import findroot
+from sympy.external.mpmath import conserve_mpmath_dps, findroot
 
 from sympy.solvers.polysys import solve_poly_system
 
@@ -357,6 +355,24 @@ def checksol(f, symbol, sol=None, **flags):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
+
+
+def _reject_by_denominator(d, sol, **flags):
+    """Return True if a solution makes a captured denominator invalid.
+
+    Explanation
+    ===========
+
+    A candidate solution must be rejected if it makes any denominator in the
+    expression affirmatively zero or non-finite (e.g. ``log(0)`` evaluates to
+    ``zoo``). ``checksol`` only catches the zero case, so the value of the
+    denominator at ``sol`` is checked for finiteness as well. When a definite
+    conclusion cannot be reached, the candidate is kept.
+    """
+    if checksol(d, sol, **flags):
+        return True
+    val = d.subs(sol)
+    return bool(val.is_number and val.is_finite is False)
 
 
 def solve(f, *symbols, **flags):
@@ -1397,10 +1413,10 @@ def _solve(f, *symbols, **flags):
         if check:
             # all solutions have been checked but now we must
             # check that the solutions do not set denominators
-            # in any factor to zero
+            # in any factor to zero or to a non-finite value
             dens = flags.get('_denominators', _simple_dens(f, symbols))
             result = [s for s in result if
-                not any(checksol(den, s, **flags) for den in
+                not any(_reject_by_denominator(den, s, **flags) for den in
                         dens)]
         # set flags for quick exit at end; solutions for each
         # factor were already checked and simplified
@@ -1734,11 +1750,11 @@ def _solve(f, *symbols, **flags):
         flags['simplify'] = False
 
     if checkdens:
-        # reject any result that makes any denom. affirmatively 0;
-        # if in doubt, keep it
+        # reject any result that makes any denom. affirmatively 0 or
+        # non-finite; if in doubt, keep it
         dens = _simple_dens(f, symbols)
         result = [r for r in result if
-                  not any(checksol(d, r, **flags)
+                  not any(_reject_by_denominator(d, r, **flags)
                           for d in dens)]
     if check:
         # keep only results if the check is not False
@@ -2137,6 +2153,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     solution.)
 
     """
+    lhs, rhs = _sympify(lhs), _sympify(rhs)
     if isinstance(lhs, Eq):
         if rhs:
             raise ValueError(filldedent('''
@@ -3022,6 +3039,8 @@ def nsolve(*args, dict=False, **kwargs):
             "solver".'''))
 
     if 'prec' in kwargs:
+        # XXX: This should use local_workprec instead of changing the global
+        # precision.
         import mpmath
         mpmath.mp.dps = kwargs.pop('prec')
 

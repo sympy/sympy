@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.random import randint
 
 from sympy.core.numbers import Integer
@@ -5,11 +6,11 @@ from sympy.matrices.dense import (Matrix, ones, zeros)
 
 from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse, matrix_tensor_product,
-    matrix_to_zero, matrix_zeros, numpy_ndarray, scipy_sparse_matrix
+    matrix_to_zero, matrix_zeros, numpy_ndarray
 )
 
 from sympy.external import import_module
-from sympy.testing.pytest import skip
+from sympy.testing.pytest import ignore_warnings, skip
 
 m = Matrix([[1, 2], [3, 4]])
 
@@ -109,8 +110,15 @@ def test_to_scipy_sparse():
     else:
         sparse = scipy.sparse
 
-    result = sparse.csr_matrix([[1, 2], [3, 4]], dtype='complex')
-    assert np.linalg.norm((to_scipy_sparse(m) - result).todense()) == 0.0
+    result = sparse.csr_array([[1, 2], [3, 4]], dtype='complex')
+    converted = to_scipy_sparse(m)
+    assert isinstance(converted, sparse.csr_array)
+    assert np.linalg.norm((converted - result).todense()) == 0.0
+
+    # Legacy sparse matrices remain accepted as inputs.
+    with ignore_warnings(DeprecationWarning):
+        legacy = sparse.csr_matrix([[1, 2], [3, 4]], dtype='complex')
+    assert to_scipy_sparse(legacy) is legacy
 
 epsilon = .000001
 
@@ -133,4 +141,4 @@ def test_matrix_zeros_scipy():
         skip("scipy not installed.")
 
     sci = matrix_zeros(4, 4, format='scipy.sparse')
-    assert isinstance(sci, scipy_sparse_matrix)
+    assert isinstance(sci, scipy.sparse.csr_array)

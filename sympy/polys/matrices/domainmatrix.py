@@ -11,7 +11,7 @@ as unifying matrices with different domains.
 """
 from __future__ import annotations
 
-from typing import overload
+from typing import overload, TYPE_CHECKING
 
 from collections import Counter
 from functools import reduce
@@ -21,7 +21,6 @@ from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.core.sympify import _sympify
 
-from ..domains import Domain
 
 from ..constructor import construct_domain
 
@@ -39,11 +38,10 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
-from sympy.polys.densearith import dup_mul
+from sympy.polys.densearith import dup_mul, dup_exquo_ground
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import (
     dup_mul_ground,
-    dup_quo_ground,
     dup_content,
     dup_clear_denoms,
     dup_primitive,
@@ -59,6 +57,9 @@ from .sdm import SDM
 from .dfm import DFM
 
 from .rref import _dm_rref, _dm_rref_den
+
+if TYPE_CHECKING:
+    from ..domains import Domain
 
 
 if GROUND_TYPES != 'flint':
@@ -1179,6 +1180,14 @@ class DomainMatrix:
         """Matrix transpose of ``self``"""
         return self.from_rep(self.rep.transpose())
 
+    def conjugate(self):
+        """Entrywise conjugate of ``self``"""
+        return self.from_rep(self.rep.conjugate())
+
+    def adjoint(self):
+        """Matrix adjoint of ``self``"""
+        return self.from_rep(self.rep.adjoint())
+
     def flat(self):
         rows, cols = self.shape
         return [self[i,j].element for i in range(rows) for j in range(cols)]
@@ -2014,7 +2023,7 @@ class DomainMatrix:
             common = K.gcd(content, denom)
 
             if not K.is_one(common):
-                elements = dup_quo_ground(elements, common, K)
+                elements = dup_exquo_ground(elements, common, K)
                 denom = K.quo(denom, common)
 
         if not K.is_one(u):
@@ -3760,6 +3769,56 @@ class DomainMatrix:
         sympy.polys.matrices.sdm.sdm_berk
         """
         return self.rep.charpoly()
+
+    def ground_eigenvals(self):
+        """
+        Return the eigenvalues in the ground domain together with their
+        algebraic multiplicities.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import QQ
+        >>> M = DM([[6, -1, 0, 0],
+        ...         [9, 12, 0, 0],
+        ...         [0,  0, 1, 2],
+        ...         [0,  0, 5, 6]], QQ)
+        >>> M.ground_eigenvals()
+        {9: 2}
+        """
+        p = self.charpoly()
+        _, factors = dup_factor_list(p, self.domain)
+        eigs = {}
+        for base, exp in factors:
+            if len(base) == 2:
+                v = -base[1]/base[0]
+                eigs[v] = exp
+        return eigs
+
+    def ground_eigenvects(self):
+        """
+        Return the eigenvalues in the ground domain together with
+        their algebraic multiplicites and eigenvectors.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import QQ
+        >>> M = DM([[6, -1, 0, 0],
+        ...         [9, 12, 0, 0],
+        ...         [0,  0, 1, 2],
+        ...         [0,  0, 5, 6]], QQ)
+        >>> M.ground_eigenvects()
+        [(9, 2, DomainMatrix([[-1/3], [1], [0], [0]], (4, 1), QQ))]
+        """
+        eigs = self.ground_eigenvals()
+        result = []
+        for v, m in eigs.items():
+            B = self - self.diag([v]*self.shape[0], self.domain)
+            result.append((v, m, B.nullspace(divide_last=False).transpose()))
+        return result
 
     @classmethod
     def eye(cls, shape, domain):

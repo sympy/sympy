@@ -152,6 +152,7 @@ Verify that the derivative corresponds to the form computed with explicit matric
 [[[[1, 0, 0], [0, 0, 0], [0, 0, 0]], [[0, 1, 0], [0, 0, 0], [0, 0, 0]], [[0, 0, 1], [0, 0, 0], [0, 0, 0]]], [[[0, 0, 0], [1, 0, 0], [0, 0, 0]], [[0, 0, 0], [0, 1, 0], [0, 0, 0]], [[0, 0, 0], [0, 0, 1], [0, 0, 0]]], [[[0, 0, 0], [0, 0, 0], [1, 0, 0]], [[0, 0, 0], [0, 0, 0], [0, 1, 0]], [[0, 0, 0], [0, 0, 0], [0, 0, 1]]]]
 
 """
+from __future__ import annotations
 
 __all__ = [
     "ArraySymbol", "ArrayElement", "ZeroArray", "OneArray",
@@ -167,11 +168,13 @@ __all__ = [
     "convert_array_to_indexed",
     "convert_indexed_to_array",
     "array_derive",
+    "collect_tensor_products",
 ]
 
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, PermuteDims, ArrayDiagonal, \
     ArrayContraction, Reshape, ArraySymbol, ArrayElement, ZeroArray, OneArray, ArrayElementwiseApplyFunc
 from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
+from sympy.tensor.array.expressions.simplification import collect_tensor_products
 from sympy.tensor.array.expressions.from_array_to_indexed import convert_array_to_indexed
 from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
 from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array

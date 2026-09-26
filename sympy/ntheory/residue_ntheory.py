@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal, SupportsIndex, cast, overload
+from typing import Literal, SupportsIndex, cast, overload, TYPE_CHECKING
 
 from sympy.external.gmpy import (MPZ, gcd, lcm, invert, sqrt, jacobi,
                                  bit_scan1, remove)
-from sympy.core.expr import Expr
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -16,9 +15,12 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 from sympy.utilities.iterables import iproduct
-from sympy.core.random import _randint, randint
+from sympy.core.random import _randint
 
 from itertools import product
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def n_order(a, n):
@@ -462,17 +464,18 @@ def _sqrt_mod_tonelli_shanks(a, p):
     s = bit_scan1(p - 1)
     t = p >> s
     # find a non-quadratic residue
-    if p % 12 == 5:
-        # Legendre symbol (3/p) == -1 if p % 12 in [5, 7]
+    # Noting that we are assuming p=1 (mod 8), we have (d/p) = (p/d)
+    # for any odd prime d. Here, (d/p) denotes the Legendre symbol.
+    if p % 3 == 2:
         d = 3
     elif p % 5 in [2, 3]:
-        # Legendre symbol (5/p) == -1 if p % 5 in [2, 3]
         d = 5
     else:
-        while 1:
-            d = randint(6, p - 1)
-            if jacobi(d, p) == -1:
+        for d in primerange(7, p):
+            if jacobi(p, d) == -1:
                 break
+        else:
+            assert False
     #assert legendre_symbol(d, p) == -1
     A = pow(a, t, p)
     D = pow(d, t, p)

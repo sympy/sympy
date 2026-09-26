@@ -12,6 +12,7 @@ Skellam
 YuleSimon
 Zeta
 """
+from __future__ import annotations
 
 
 
@@ -653,7 +654,7 @@ def Skellam(name, mu1, mu2):
     The density of the Skellam distribution is given by
 
     .. math::
-        f(k) := e^{-(\mu_1+\mu_2)}(\frac{\mu_1}{\mu_2})^{k/2}I_k(2\sqrt{\mu_1\mu_2})
+        f(k) := e^{-(\mu_1+\mu_2)}\left(\frac{\mu_1}{\mu_2}\right)^{k/2}I_k(2\sqrt{\mu_1\mu_2})
 
     Parameters
     ==========

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import gcd
 
 from sympy.ntheory.generate import Sieve, sieve

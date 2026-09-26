@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external.importtools import import_module
 
 disabled = False
@@ -86,3 +87,13 @@ def test_plot_integral():
     from sympy.integrals.integrals import Integral
     p = PygletPlot(Integral(z*x, (x, 1, z), (z, 1, y)), visible=False)
     p.wait_for_calculations()
+
+
+def test_plot_iter():
+    # regression: __iter__ used the Python 2 dict.itervalues()
+    from sympy.plotting.pygletplot import PygletPlot
+    p = PygletPlot(x, [x, -5, 5, 4], visible=False)
+    p.wait_for_calculations()
+    funcs = list(p)
+    assert len(funcs) == len(p) == 1
+    assert all(f is p[i] for i, f in enumerate(funcs))

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
@@ -228,7 +229,7 @@ def test_precomputed_characteristic_functions():
         # second function is the Fourier transform of the density function
         f = lambdify([x, t], pdf(x)*exp(I*x*t), 'mpmath')
         cf2 = lambda t: mpmath.nsum(lambda x: f(x, t), [
-            support_lower_limit, support_upper_limit], maxdegree=10)
+            support_lower_limit, support_upper_limit])
 
         # compare the two functions at various points
         for test_point in [2, 5, 8, 11]:

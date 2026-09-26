@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external import import_module
 from sympy.plotting.intervalmath import (
     Abs, acos, acosh, And, asin, asinh, atan, atanh, ceil, cos, cosh,

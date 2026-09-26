@@ -463,10 +463,10 @@ def ddm_idet(a, K):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Bareiss_algorithm
-    .. [2] https://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
+    .. [2] https://aquila.usm.edu/cgi/viewcontent.cgi?article=1001&context=masters_theses
     """
     # Bareiss algorithm
-    # https://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
+    # https://aquila.usm.edu/cgi/viewcontent.cgi?article=1001&context=masters_theses
 
     # a is (m x n)
     m = len(a)

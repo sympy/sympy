@@ -1,4 +1,5 @@
 """Tests for Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
+from __future__ import annotations
 
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ, RR

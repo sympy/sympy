@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import slow
 from sympy.core.function import diff
 from sympy.core.function import expand
@@ -177,6 +178,8 @@ def test_quaternion_functions():
                2 * sqrt(29) * acos(sqrt(30)/30) / 29,
                3 * sqrt(29) * acos(sqrt(30)/30) / 29,
                4 * sqrt(29) * acos(sqrt(30)/30) / 29)
+    raises(ValueError, lambda: q0.log())
+
 
     assert q1.pow_cos_sin(2) == \
     Quaternion(30 * cos(2 * acos(sqrt(30)/30)),
@@ -435,3 +438,43 @@ def test_to_euler_options():
                     q = Quaternion(e1, e2, e3, e4)
                     if not q.is_zero_quaternion():
                         test_one_case(q)
+
+
+def test_issue_28556():
+    """Test that Quaternion.log handles purely real quaternions correctly."""
+    # Test positive real quaternion
+    q1 = Quaternion(1, 0, 0, 0)
+    result1 = q1.log()
+    assert result1 == Quaternion(0, 0, 0, 0)  # log(1) = 0
+
+    # Test another positive real quaternion
+    q2 = Quaternion(E, 0, 0, 0)
+    result2 = q2.log()
+    assert result2 == Quaternion(1, 0, 0, 0)  # log(e) = 1
+
+    # Test symbolic real quaternion
+    r = Symbol('r', positive=True)
+    q3 = Quaternion(r, 0, 0, 0)
+    result3 = q3.log()
+    assert result3 == Quaternion(log(r), 0, 0, 0)
+
+
+def test_issue_30560():
+    from sympy import sqrt, Rational, cosh, tanh, Symbol, I, S
+    from sympy.algebras.quaternion import Quaternion
+    t = Symbol("t", real=True)
+    tq = Rational(3,4)
+
+    q = Quaternion(
+        2**tq*sqrt(sqrt(2) + 2)*sqrt(cosh(t) + 1)/(4*sqrt(cosh(t))),
+        2**tq*sqrt(sqrt(2) + 2)*sqrt(cosh(t))*tanh(t)/(4*sqrt(cosh(t) + 1)),
+        2**tq*sqrt(2 - sqrt(2))*sqrt(cosh(t) + 1)/(4*sqrt(cosh(t))),
+        (-2**tq*sqrt(2 - sqrt(2))*sqrt(cosh(t))*tanh(t)/(4*sqrt(cosh(t) + 1)))
+    )
+
+    # Norm should be purely real (evaluates exactly to 2**(1/4))
+    assert q.norm() == 2**(S(1)/4)
+
+    # Inverse components should be purely real
+    inv = q.inverse()
+    assert not inv.has(I)

@@ -7,6 +7,7 @@ Maple expressions, using the functions defined in the Maple objects where possib
 
 FIXME: This module is still under actively developed. Some functions may be not completed.
 """
+from __future__ import annotations
 
 from sympy.core import S
 from sympy.core.numbers import Integer, IntegerConstant, equal_valued

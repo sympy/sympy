@@ -16,7 +16,11 @@ from sympy.utilities.iterables import is_sequence
 
 
 if TYPE_CHECKING:
-    from typing import TypeIs
+    import sys
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
     from sympy.polys.polytools import Poly
     from sympy.polys.domains.ring import Ring
     from sympy.polys.domains.field import Field
@@ -454,6 +458,12 @@ class Domain(Generic[Er]):
     is_Algebraic: bool = False
     """Alias for :py:attr:`~.Domain.is_AlgebraicField`."""
 
+    is_CyclotomicField: bool = False
+    """Boolean flag indicating if the domain is a :py:class:`~.CyclotomicField`."""
+
+    is_Cyclotomic: bool = False
+    """Alias for :py:attr:`~.Domain.is_CyclotomicField`."""
+
     is_PolynomialRing: bool = False
     """Boolean flag indicating if the domain is a :py:class:`~.PolynomialRing`."""
 
@@ -490,6 +500,9 @@ class Domain(Generic[Er]):
 
     is_Simple: bool = False
     """Boolean flag indicating if the domain is a simple domain."""
+
+    is_ConjugateDomain: bool = False
+    """Boolean flag indicating if the domain supports conjugation."""
 
     is_Composite: bool = False
     """Boolean flag indicating if the domain is a composite domain."""
@@ -1131,9 +1144,13 @@ class Domain(Generic[Er]):
         alpha = AlgebraicNumber(root, alias=alias)
         return self.algebraic_field(alpha, alias=alias)
 
-    def cyclotomic_field(self, n: int, ss: bool = False, alias: str = "zeta",
-                         gen: Expr | None = None, root_index: int = -1
-                         ) -> AlgebraicField:
+    def cyclotomic_field(
+        self,
+        n: int,
+        ss: bool = True,
+        alias: str = "zeta",
+        root_index: int = -1,
+    ) -> AlgebraicField:
         r"""
         Convenience method to construct a cyclotomic field.
 
@@ -1142,13 +1159,10 @@ class Domain(Generic[Er]):
 
         n : int
             Construct the nth cyclotomic field.
-        ss : boolean, optional (default=False)
+        ss : boolean, optional (default=True)
             If True, append *n* as a subscript on the alias string.
         alias : str, optional (default="zeta")
             Symbol name for the generator.
-        gen : :py:class:`~.Symbol`, optional (default=None)
-            Desired variable for the cyclotomic polynomial that defines the
-            field. If ``None``, a dummy variable will be used.
         root_index : int, optional (default=-1)
             Specifies which root of the polynomial is desired. The ordering is
             as defined by the :py:class:`~.ComplexRootOf` class. The default of
@@ -1157,22 +1171,17 @@ class Domain(Generic[Er]):
         Examples
         ========
 
-        >>> from sympy import QQ, latex
+        >>> from sympy import QQ
         >>> K = QQ.cyclotomic_field(5)
         >>> K.to_sympy(K([-1, 1]))
-        1 - zeta
-        >>> L = QQ.cyclotomic_field(7, True)
-        >>> a = L.to_sympy(L([-1, 1]))
-        >>> print(a)
-        1 - zeta7
-        >>> print(latex(a))
-        1 - \zeta_{7}
-
+        1 - zeta5
+        >>> K.zeta_order
+        5
         """
         from sympy.polys.specialpolys import cyclotomic_poly
         if ss:
             alias += str(n)
-        return self.alg_field_from_poly(cyclotomic_poly(n, gen), alias=alias,
+        return self.alg_field_from_poly(cyclotomic_poly(n), alias=alias,
                                         root_index=root_index)
 
     def inject(self, *symbols) -> PolynomialRing:

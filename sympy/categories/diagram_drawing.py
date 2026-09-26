@@ -82,6 +82,7 @@ References
 .. [Xypic] https://xy-pic.sourceforge.net/
 
 """
+from __future__ import annotations
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
 from sympy.core import Dict, Symbol, default_sort_key

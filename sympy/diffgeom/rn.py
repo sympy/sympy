@@ -7,6 +7,7 @@ Coordinate functions can be accessed as attributes of the manifold (eg `R2.x`),
 as attributes of the coordinate systems (eg `R2_r.x` and `R2_p.theta`), or by
 using the usual `coord_sys.coord_function(index, name)` interface.
 """
+from __future__ import annotations
 
 from typing import Any
 import warnings

@@ -151,15 +151,14 @@ def _is_echelon(M, iszerofunc=_iszero):
     zeros are at the bottom, and below each leading non-zero in a row are
     exclusively zeros."""
 
-    if M.rows <= 0 or M.cols <= 0:
-        return True
-
-    zeros_below = all(iszerofunc(t) for t in M[1:, 0])
-
-    if iszerofunc(M[0, 0]):
-        return zeros_below and _is_echelon(M[:, 1:], iszerofunc)
-
-    return zeros_below and _is_echelon(M[1:, 1:], iszerofunc)
+    r, c = 0, 0
+    while r < M.rows and c < M.cols:
+        if not all(iszerofunc(M[i, c]) for i in range(r + 1, M.rows)):
+            return False
+        if not iszerofunc(M[r, c]):
+            r += 1
+        c += 1
+    return True
 
 
 @overload

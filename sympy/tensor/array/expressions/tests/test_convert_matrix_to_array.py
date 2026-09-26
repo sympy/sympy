@@ -1,8 +1,10 @@
-from sympy import Lambda, KroneckerProduct
+from __future__ import annotations
+from sympy import Lambda, KroneckerProduct, sqrt, sin, Matrix, Rational
 from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct)
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.special import Identity
 from sympy.matrices.expressions.trace import Trace
@@ -135,3 +137,69 @@ def test_arrayexpr_convert_matrix_to_array():
     expr = 1/Trace(A)
     cg = convert_matrix_to_array(expr)
     assert cg.dummy_eq(ArrayElementwiseApplyFunc(Lambda(m, 1/m), ArrayContraction(A, (0, 1))))
+
+    # Fixes issue https://github.com/sympy/sympy/issues/28615
+    expr = sqrt(Trace(X.T*X))
+    cg = convert_matrix_to_array(expr)
+    assert cg.dummy_eq(ArrayElementwiseApplyFunc(sqrt, ArrayContraction(ArrayTensorProduct(X, X), (0, 2), (1, 3))))
+
+    expr = i**3
+    assert convert_matrix_to_array(expr) == expr
+
+    expr = i**j
+    assert convert_matrix_to_array(expr) == expr
+
+    expr = X ** sin(i)
+    assert convert_matrix_to_array(expr) == expr
+
+    expr = X ** sin(1)
+    assert convert_matrix_to_array(expr) == expr
+
+
+def test_convert_matrix_to_array_matpow_composite_base():
+    # MatPow with a composite base (e.g. Transpose, MatMul, HadamardProduct)
+    # used to convert the base first and then tensor-multiply the copies,
+    # losing the matrix-multiplication contraction:
+    expr = MatPow(Transpose(M), 2)
+    assert convert_matrix_to_array(expr) == ArrayContraction(ArrayTensorProduct(M, M), (0, 3))
+
+    expr = MatPow(MatMul(M, N), 2)
+    assert convert_matrix_to_array(expr) == ArrayContraction(
+        ArrayTensorProduct(M, N, M, N), (0, 3), (1, 6), (2, 5))
+
+    # Numeric verification on explicit 2x2 matrices:
+    A2 = MatrixSymbol("A2", 2, 2)
+    B2 = MatrixSymbol("B2", 2, 2)
+    for expr, truth in [
+            (MatPow(Transpose(A2), 2), A2.as_explicit().T**2),
+            (MatPow(MatMul(A2, B2), 2), (A2.as_explicit()*B2.as_explicit())**2),
+            (MatPow(HadamardProduct(A2, B2), 2),
+             HadamardProduct(A2.as_explicit(), B2.as_explicit()).doit()**2),
+    ]:
+        conv = convert_matrix_to_array(expr)
+        res = conv.as_explicit().tomatrix()
+        assert (res - truth).expand() == Matrix.zeros(2, 2)
+
+
+def test_convert_matrix_to_array_pow_of_scalar_array_expression():
+    # A positive integer power of a rank-0 array expression (e.g. a power of
+    # a trace) must be expanded into a rank-0 tensor product: an elementwise
+    # application of the power function over a zero-dimensional array used to
+    # crash on as_explicit():
+    assert convert_matrix_to_array(Trace(M)**2) == ArrayContraction(
+        ArrayTensorProduct(M, M), (0, 1), (2, 3))
+
+    # Numeric verification on an explicit 2x2 matrix:
+    A2 = MatrixSymbol("A2", 2, 2)
+    A2m = Matrix([[1, 2], [3, 5]])
+    conv = convert_matrix_to_array(Trace(A2)**2)
+    assert conv.as_explicit().subs(A2, A2m) == 36
+
+    # Non-integer or negative exponents keep the elementwise form, which can
+    # still be derived by the array derivative algorithm:
+    d0 = Dummy("d0")
+    conv = convert_matrix_to_array(Trace(M)**(-1))
+    assert conv.dummy_eq(
+        ArrayElementwiseApplyFunc(Lambda(d0, 1/d0), ArrayContraction(M, (0, 1))))
+    conv = convert_matrix_to_array(Trace(A2)**(-1))
+    assert conv.function(conv.expr.subs(A2, A2m).as_explicit()) == Rational(1, 6)

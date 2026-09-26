@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from functools import reduce
 
@@ -56,8 +57,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     A number is used to indicate that the search space should be increased.
     A function is used to indicate that said function is likely to occur in a
     simplified expression.
-    An iterable is used indicate that func(var1 + var2 + ...) is likely to
-    occur in a simplified .
+    An iterable is used to indicate that func(var1 + var2 + ...) is likely to
+    occur in a simplified expression.
     An additional generator also indicates that it is likely to occur.
     (See examples below).
 
@@ -179,7 +180,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     # or tan(n*x), with n an integer. Suppose first there are no tan terms.
     # The ideal [sin(x)**2 + cos(x)**2 - 1] is geometrically prime, since
     # X**2 + Y**2 - 1 is irreducible over CC.
-    # Now, if we have a generator sin(n*x), than we can, using trig identities,
+    # Now, if we have a generator sin(n*x), then we can, using trig identities,
     # express sin(n*x) as a polynomial in sin(x) and cos(x). We can add this
     # relation to the ideal, preserving geometric primality, since the quotient
     # ring is unchanged.
@@ -285,7 +286,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         res = [] # the ideal
 
         for key, val in trigdict.items():
-            # We have now assembeled a dictionary. Its keys are common
+            # We have now assembled a dictionary. Its keys are common
             # arguments in trigonometric expressions, and values are lists of
             # pairs (fn, coeff). x0, (fn, coeff) in trigdict means that we
             # need to deal with fn(coeff*x0). We take the rational gcd of the
@@ -463,6 +464,15 @@ def _trigsimp_inverse(rv):
 def trigsimp(expr, inverse=False, **opts):
     """Returns a reduced expression by using known trig identities.
 
+    While ``trigsimp`` primarily simplifies trigonometric and hyperbolic
+    expressions, it also performs general algebraic simplifications on
+    non-trigonometric parts. This can lead to broader simplification
+    beyond just trigonometric identities, including factoring and term
+    cancellation, which may make its output resemble ``simplify``.
+
+    For targeted trigonometric simplifications that leave other algebraic
+    components untouched, consider using :func:`~sympy.simplify.fu.fu`.
+
     Parameters
     ==========
 
@@ -471,7 +481,6 @@ def trigsimp(expr, inverse=False, **opts):
         functions, such as sin and asin, can be cancelled in any order.
         For example, ``asin(sin(x))`` will yield ``x`` without checking whether
         x belongs to the set where this relation is true. The default is False.
-        Default : True
 
     method : string, optional
         Specifies the method to use. Valid choices are:
@@ -485,11 +494,10 @@ def trigsimp(expr, inverse=False, **opts):
         If ``'matching'``, simplify the expression recursively by targeting
         common patterns. If ``'groebner'``, apply an experimental groebner
         basis algorithm. In this case further options are forwarded to
-        ``trigsimp_groebner``, please refer to
-        its docstring. If ``'combined'``, it first runs the groebner basis
-        algorithm with small default parameters, then runs the ``'matching'``
-        algorithm. If ``'fu'``, run the collection of trigonometric
-        transformations described by Fu, et al. (see the
+        ``trigsimp_groebner``, please refer to its docstring. If ``'combined'``,
+        it first runs the groebner basis algorithm with small default parameters,
+        then runs the ``'matching'`` algorithm. If ``'fu'``, run the collection
+        of trigonometric transformations described by Fu, et al. (see the
         :py:func:`~sympy.simplify.fu.fu` docstring). If ``'old'``, the original
         SymPy trig simplification function is run.
     opts :
@@ -499,7 +507,7 @@ def trigsimp(expr, inverse=False, **opts):
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log
+    >>> from sympy import trigsimp, sin, cos, log, Symbol
     >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
@@ -509,6 +517,22 @@ def trigsimp(expr, inverse=False, **opts):
 
     >>> trigsimp(log(e))
     log(2)
+
+    Note that `trigsimp` also performs general algebraic simplifications on
+    non-trigonometric parts of the expression:
+
+    >>> x = Symbol('x')
+    >>> expr = (x**2 - 1)/(x - 1) + sin(x)**2 + cos(x)**2
+    >>> trigsimp(expr)
+    x + 2
+
+    For a more targeted trigonometric simplification, such as only simplifying
+    `sin(x)**2 + cos(x)**2` to `1` without affecting `(x**2 - 1)/(x - 1)`,
+    you can use functions from the `sympy.simplify.fu` module:
+
+    >>> from sympy.simplify.fu import TR5
+    >>> TR5(expr)
+    1 + (x**2 - 1)/(x - 1)
 
     Using ``method='groebner'`` (or ``method='combined'``) might lead to
     greater simplification.
@@ -522,6 +546,10 @@ def trigsimp(expr, inverse=False, **opts):
     >>> trigsimp(t)
     tanh(x)**7
 
+    See Also
+    ========
+
+    sympy.simplify.fu.fu: pure trigonometric transformations.
     """
     from sympy.simplify.fu import fu
 
@@ -561,6 +589,8 @@ def trigsimp(expr, inverse=False, **opts):
         'old': lambda x: trigsimp_old(x, **opts),
                    }[method]
 
+    # TODO issue 17778 and others can be solved by using expr.together()
+    # but this leads to other failure; investigate
     expr_simplified = trigsimpfunc(expr)
     if inverse:
         expr_simplified = _trigsimp_inverse(expr_simplified)
@@ -1133,7 +1163,7 @@ def __trigsimp(expr, deep=False):
 def futrig(e, *, hyper=True, **kwargs):
     """Return simplified ``e`` using Fu-like transformations.
     This is not the "Fu" algorithm. This is called by default
-    from ``trigsimp``. By default, hyperbolics subexpressions
+    from ``trigsimp``. By default, hyperbolic subexpressions
     will be simplified, but this can be disabled by setting
     ``hyper=False``.
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import Float
 from sympy.core.singleton import S
 from sympy.functions.combinatorial.factorials import factorial

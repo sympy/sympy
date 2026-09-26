@@ -1,4 +1,5 @@
 """Implementation of :class:`FractionField` class. """
+from __future__ import annotations
 
 
 from sympy.polys.domains.field import Field

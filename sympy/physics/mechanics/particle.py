@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import S
 from sympy.physics.vector import cross, dot
 from sympy.physics.mechanics.body_base import BodyBase

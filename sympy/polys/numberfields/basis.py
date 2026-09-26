@@ -1,4 +1,5 @@
 """Computing integral bases for number fields. """
+from __future__ import annotations
 
 from sympy.polys.polytools import Poly
 from sympy.polys.domains.algebraicfield import AlgebraicField

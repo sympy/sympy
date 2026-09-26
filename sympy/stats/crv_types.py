@@ -46,6 +46,7 @@ RaisedCosine
 Rayleigh
 Reciprocal
 ShiftedGompertz
+SkewNormal
 StudentT
 Trapezoidal
 Triangular
@@ -56,6 +57,7 @@ Wald
 Weibull
 WignerSemicircle
 """
+from __future__ import annotations
 
 
 
@@ -79,7 +81,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import asin
-from sympy.functions.special.error_functions import (erf, erfc, erfi, erfinv, expint)
+from sympy.functions.special.error_functions import (erf, erfc, erfi, erfinv, expint, owens_t)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma, uppergamma)
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.hyper import hyper
@@ -136,6 +138,7 @@ __all__ = ['ContinuousRV',
 'RaisedCosine',
 'Rayleigh',
 'Reciprocal',
+'SkewNormal',
 'StudentT',
 'ShiftedGompertz',
 'Trapezoidal',
@@ -1312,7 +1315,7 @@ def ExGaussian(name, mean, std, rate):
 
     .. math::
         f(x) := \frac{\lambda}{2}e^{\frac{\lambda}{2}(2\mu+\lambda\sigma^2-2x)}
-            \text{erfc}(\frac{\mu + \lambda\sigma^2 - x}{\sqrt{2}\sigma})
+            \text{erfc}\left(\frac{\mu + \lambda\sigma^2 - x}{\sqrt{2}\sigma}\right)
 
     with $x > 0$. Note that the expected value is `1/\lambda`.
 
@@ -2404,7 +2407,8 @@ def Levy(name, mu, c):
     The density of the Levy distribution is given by
 
     .. math::
-        f(x) := \sqrt(\frac{c}{2 \pi}) \frac{\exp -\frac{c}{2 (x - \mu)}}{(x - \mu)^{3/2}}
+        f(x) := \sqrt{\frac{c}{2 \pi}} \frac{\exp\left(-\frac{c}{2 (x - \mu)}\right)}
+                                            {(x - \mu)^{3/2}}
 
     Parameters
     ==========
@@ -3064,7 +3068,8 @@ def Moyal(name, mu, sigma):
     The density of the Moyal distribution is given by
 
     .. math::
-        f(x) := \frac{\exp-\frac{1}{2}\exp-\frac{x-\mu}{\sigma}-\frac{x-\mu}{2\sigma}}{\sqrt{2\pi}\sigma}
+        f(x) := \frac{\exp\left(-\frac{1}{2}\left(\frac{x-\mu}{\sigma}+\exp\left(\frac{x-\mu}{\sigma}\right)\right)\right)}
+                     {\sqrt{2\pi}\sigma}
 
     with :math:`x \in \mathbb{R}`.
 
@@ -3958,7 +3963,7 @@ def ShiftedGompertz(name, b, eta):
     The density of the Shifted Gompertz distribution is given by
 
     .. math::
-        f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^(-bx)) \right]
+        f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^{-bx}) \right]
 
     with :math:`x \in [0, \infty)`.
 
@@ -3994,6 +3999,93 @@ def ShiftedGompertz(name, b, eta):
 
     """
     return rv(name, ShiftedGompertzDistribution, (b, eta))
+
+#-------------------------------------------------------------------------------
+# SkewNormal distribution -------------------------------------------------------
+
+
+class SkewNormalDistribution(SingleContinuousDistribution):
+    _argnames = ('xi', 'omega', 'alpha')
+
+    @staticmethod
+    def check(xi, omega, alpha):
+        _value_check(omega > 0, "Scale parameter must be positive")
+        _value_check(alpha.is_real != False, "Shape parameter alpha must be real.")
+
+    def pdf(self, x):
+        xi, omega, alpha = self.xi, self.omega, self.alpha
+        z = (x - xi)/omega
+        return exp(-z**2/2)*(1 + erf(alpha*z/sqrt(2)))/(sqrt(2*pi)*omega)
+
+    def _cdf(self, x):
+        xi, omega, alpha = self.xi, self.omega, self.alpha
+        z = (x - xi)/omega
+        return erf(sqrt(2)*z/2)/2 + S.Half - 2*owens_t(z, alpha)
+
+
+def SkewNormal(name, xi, omega, alpha):
+    r"""
+    Create a continuous random variable with a Skew Normal distribution.
+
+    Explanation
+    ===========
+
+    The density of the Skew Normal distribution is given by
+
+    .. math::
+        f(x) := \frac{2}{\omega} \phi\left(\frac{x-\xi}{\omega}\right)
+                \Phi\left(\alpha\frac{x-\xi}{\omega}\right)
+
+    where $\phi$ and $\Phi$ are the standard normal PDF and CDF,
+    respectively.
+
+    Parameters
+    ==========
+
+    xi : Real number, the location
+    omega : Real number, `\omega > 0`, a scale
+    alpha : Real number, the shape parameter
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import SkewNormal, density, cdf
+    >>> from sympy import Symbol
+
+    >>> xi = Symbol("xi")
+    >>> omega = Symbol("omega", positive=True)
+    >>> alpha = Symbol("alpha")
+    >>> x = Symbol("x")
+
+    >>> X = SkewNormal("x", xi, omega, alpha)
+
+    >>> density(X)(x)
+    sqrt(2)*(erf(sqrt(2)*alpha*(x - xi)/(2*omega)) + 1)*exp(-(x - xi)**2/(2*omega**2))/(2*sqrt(pi)*omega)
+
+    >>> cdf(X)(x)
+    erf(sqrt(2)*(x - xi)/(2*omega))/2 - 2*owens_t((x - xi)/omega, alpha) + 1/2
+
+    Setting :math:`\alpha = 0` reduces to a Normal distribution:
+
+    >>> from sympy.stats import Normal
+    >>> density(SkewNormal("x", xi, omega, 0))(x) == density(Normal("x", xi, omega))(x)
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Skew_normal_distribution
+    .. [2] Azzalini, A. (1985). A class of distributions which includes
+           the normal ones. Scandinavian Journal of Statistics, 171-178.
+
+    """
+
+    return rv(name, SkewNormalDistribution, (xi, omega, alpha))
 
 #-------------------------------------------------------------------------------
 # StudentT distribution --------------------------------------------------------

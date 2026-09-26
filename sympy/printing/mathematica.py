@@ -3,13 +3,15 @@ Mathematica code printer
 """
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from sympy.core import Basic, Expr, Float
 from sympy.core.sorting import default_sort_key
 
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
+
+if TYPE_CHECKING:
+    from sympy.core import Basic, Expr, Float
 
 # Used in MCodePrinter._print_Function(self)
 known_functions = {
@@ -104,7 +106,7 @@ known_functions = {
     "airyaiprime": [(lambda x: True, "AiryAiPrime")],
     "airybiprime": [(lambda x: True, "AiryBiPrime")],
     "polylog": [(lambda *x: True, "PolyLog")],
-    "lerchphi": [(lambda *x: True, "LerchPhi")],
+    "lerchphi": [(lambda *x: True, "HurwitzLerchPhi")],
     "gcd": [(lambda *x: True, "GCD")],
     "lcm": [(lambda *x: True, "LCM")],
     "jn": [(lambda *x: True, "SphericalBesselJ")],

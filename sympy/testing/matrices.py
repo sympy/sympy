@@ -1,3 +1,4 @@
+from __future__ import annotations
 def allclose(A, B, rtol=1e-05, atol=1e-08):
     if len(A) != len(B):
         return False

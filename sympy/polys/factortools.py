@@ -1,4 +1,9 @@
 """Polynomial factorization routines in characteristic zero. """
+from __future__ import annotations
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sympy.external.gmpy import GROUND_TYPES
 
@@ -45,7 +50,7 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground)
+    dup_exquo_ground, dmp_quo_ground, dmp_exquo_ground)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -79,8 +84,13 @@ from sympy.utilities import subsets
 from math import ceil as _ceil, log as _log, log2 as _log2
 
 
+if TYPE_CHECKING:
+    from flint import fmpz_poly as FLINT_FMPZ_POLY
+
+fmpz_poly: type[FLINT_FMPZ_POLY] | None
 if GROUND_TYPES == 'flint':
-    from flint import fmpz_poly
+    from flint import fmpz_poly as _fmpz_poly
+    fmpz_poly = _fmpz_poly
 else:
     fmpz_poly = None
 
@@ -683,6 +693,7 @@ def dup_zz_factor(f, K):
 
     """
     if GROUND_TYPES == 'flint':
+        assert fmpz_poly is not None
         f_flint = fmpz_poly(f[::-1])
         cont, factors = f_flint.factor()
         factors = [(fac.coeffs()[::-1], exp) for fac, exp in factors]
@@ -1506,7 +1517,7 @@ def dup_factor_list(f, K0):
             if K0_inexact:
                 for i, (f, k) in enumerate(factors):
                     max_norm = dup_max_norm(f, K0)
-                    f = dup_quo_ground(f, max_norm, K0)
+                    f = dup_exquo_ground(f, max_norm, K0)
                     f = dup_convert(f, K0, K0_inexact)
                     factors[i] = (f, k)
                     coeff = K0.mul(coeff, K0.pow(max_norm, k))
@@ -1590,7 +1601,7 @@ def dmp_factor_list(f, u, K0):
             if K0_inexact:
                 for i, (f, k) in enumerate(factors):
                     max_norm = dmp_max_norm(f, u, K0)
-                    f = dmp_quo_ground(f, max_norm, u, K0)
+                    f = dmp_exquo_ground(f, max_norm, u, K0)
                     f = dmp_convert(f, u, K0, K0_inexact)
                     factors[i] = (f, k)
                     coeff = K0.mul(coeff, K0.pow(max_norm, k))

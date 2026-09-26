@@ -1,4 +1,5 @@
 """Tests for the subfield problem and allied problems. """
+from __future__ import annotations
 
 from sympy.core.numbers import (AlgebraicNumber, I, pi, Rational)
 from sympy.core.singleton import S

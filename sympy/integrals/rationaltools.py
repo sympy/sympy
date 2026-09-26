@@ -1,4 +1,5 @@
 """This module implements tools for integrating rational functions. """
+from __future__ import annotations
 
 from sympy.core.function import Lambda
 from sympy.core.numbers import I
@@ -51,7 +52,7 @@ def ratint(f, x, **flags):
     else:
         p, q = f.as_numer_denom()
 
-    p, q = Poly(p, x, composite=False, field=True), Poly(q, x, composite=False, field=True)
+    p, q = Poly(p, x, field=True), Poly(q, x, field=True)
 
     coeff, p, q = p.cancel(q)
     poly, p = p.div(q)
@@ -228,7 +229,7 @@ def ratint_logpart(f, g, x, t=None):
     a, b = g, f - g.diff()*Poly(t, x)
 
     res, R = resultant(a, b, includePRS=True)
-    res = Poly(res, t, composite=False)
+    res = Poly(res, t)
 
     assert res, "BUG: resultant(%s, %s) cannot be zero" % (a, b)
 
@@ -340,16 +341,20 @@ def _roots_real_complex(poly):
     reals = {}
     complexes = {}
 
-    for r, m in list(rs.items()):
+    remaining = list(rs)
+
+    while remaining:
+        r = remaining.pop()
         r_c = r.conjugate()
         if r != r_c and r_c in rs:
-            assert rs.pop(r_c) == m
+            assert rs[r_c] == rs[r]
+            remaining.remove(r_c)
             r_re, r_im = r.as_real_imag()
             _, r_im = ordered([r_im, -r_im])
-            complexes[(r_re, r_im)] = m
+            complexes[(r_re, r_im)] = rs[r]
         else:
             # If we didn't find a conjugate just treat as real
-            reals[r] = m
+            reals[r] = rs[r]
 
     return reals, complexes
 

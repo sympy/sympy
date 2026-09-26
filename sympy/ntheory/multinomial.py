@@ -1,7 +1,11 @@
+from __future__ import annotations
+
+from typing import SupportsIndex, Iterable
+
 from sympy.utilities.misc import as_int
 
 
-def binomial_coefficients(n):
+def binomial_coefficients(n: SupportsIndex) -> dict[tuple[int, ...], int]:
     """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
     :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`.
 
@@ -19,7 +23,7 @@ def binomial_coefficients(n):
     binomial_coefficients_list, multinomial_coefficients
     """
     n = as_int(n)
-    d = {(0, n): 1, (n, 0): 1}
+    d: dict[tuple[int, ...], int] = {(0, n): 1, (n, 0): 1}
     a = 1
     for k in range(1, n//2 + 1):
         a = (a * (n - k + 1))//k
@@ -27,7 +31,7 @@ def binomial_coefficients(n):
     return d
 
 
-def binomial_coefficients_list(n):
+def binomial_coefficients_list(n: SupportsIndex) -> list[int]:
     """ Return a list of binomial coefficients as rows of the Pascal's
     triangle.
 
@@ -52,7 +56,7 @@ def binomial_coefficients_list(n):
     return d
 
 
-def multinomial_coefficients(m, n):
+def multinomial_coefficients(m: SupportsIndex, n: SupportsIndex) -> dict[tuple[int, ...], int]:
     r"""Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
     where ``C_kn`` are multinomial coefficients such that
     ``n=k1+k2+..+km``.
@@ -126,7 +130,9 @@ def multinomial_coefficients(m, n):
     return r
 
 
-def multinomial_coefficients_iterator(m, n, _tuple=tuple):
+def multinomial_coefficients_iterator(
+    m: SupportsIndex, n: SupportsIndex, _tuple: type[tuple] = tuple
+) -> Iterable[tuple[tuple[int, ...], int]]:
     """multinomial coefficient iterator
 
     This routine has been optimized for `m` large with respect to `n` by taking

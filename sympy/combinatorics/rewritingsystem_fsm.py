@@ -1,3 +1,4 @@
+from __future__ import annotations
 class State:
     '''
     A representation of a state managed by a ``StateMachine``.

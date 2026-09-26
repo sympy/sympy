@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
 
-from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.polys.polytools import lcm
 from sympy.utilities import public
 from sympy import Poly
 from sympy.polys.polytools import gcdex_steps
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from collections.abc import Iterator
 
 @public
 def approximants(l, X=Symbol('x'), simplify=False):

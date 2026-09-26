@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sympy.codegen
 import sympy.codegen.cfunctions
 from sympy.external.importtools import version_tuple

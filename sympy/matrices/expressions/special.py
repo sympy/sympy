@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import ask, Q
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -328,7 +329,7 @@ class OneMatrix(MatrixExpr):
 
 class MatrixUnit(MatrixExpr):
     """
-    Matrix with only one nonzero entry with value 1.
+    Matrix with only one nonzero entry with value 1. Also called single-entry matrix.
 
     https://en.wikipedia.org/wiki/Matrix_unit
 

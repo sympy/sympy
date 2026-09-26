@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import product
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -63,7 +64,7 @@ def test_minimum_maximum():
 def test_amin_amax():
     for am in [amin, amax]:
         assert am(x).array == x
-        assert am(x).axis == None
+        assert am(x).axis == None  # noqa: E711
         assert am(x, axis=3).axis == 3
         with raises(ValueError):
             am(x, y, z)

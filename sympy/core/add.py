@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Literal, overload
 from collections import defaultdict
 from functools import reduce
 from operator import attrgetter
@@ -187,7 +187,21 @@ class Add(Expr, AssocOp):
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Expr | complex, evaluate: bool=True) -> Expr: # type: ignore
+        @overload
+        def __new__(
+            cls,
+            arg1: Expr | complex,
+            arg2: Expr | complex,
+            *args: Expr | complex,
+            evaluate: Literal[False],
+        ) -> Add:  # type: ignore
+            ...
+
+        @overload
+        def __new__(cls, *args: Expr | complex, evaluate: bool = True) -> Expr:  # type: ignore
+            ...
+
+        def __new__(cls, *args: Expr | complex, evaluate: bool = True) -> Expr:  # type: ignore
             ...
 
         @property
@@ -215,18 +229,16 @@ class Add(Expr, AssocOp):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         from sympy.tensor.tensor import TensExpr, TensAdd
-        rv = None
+
         if len(seq) == 2:
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
-            if a.is_Rational:
-                if b.is_Mul:
-                    rv = [a, b], [], None
-            if rv:
-                if all(s.is_commutative for s in rv[0]):
-                    return rv
-                return [], rv[0], None
+            if a.is_Rational and b.is_Mul:
+                if a.is_commutative and b.is_commutative:
+                    return [a, b], [], None
+                else:
+                    return [], [a, b], None
 
         # term -> coeff
         # e.g. x**2 -> 5   for ... + 5*x**2 + ...

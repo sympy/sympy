@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sympy.plotting.backends.base_backend as base_backend
 from sympy.plotting.series import LineOver1DRangeSeries
 from sympy.plotting.textplot import textplot

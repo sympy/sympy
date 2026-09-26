@@ -7,6 +7,7 @@ Convolutions - ``convolution``, ``convolution_fft``, ``convolution_ntt``,
             ``convolution_fwht``, ``convolution_subset``,
             ``covering_product``, ``intersecting_product``
 """
+from __future__ import annotations
 
 from .transforms import (fft, ifft, ntt, intt, fwht, ifwht,
     mobius_transform, inverse_mobius_transform)

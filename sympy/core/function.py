@@ -61,7 +61,8 @@ from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
 from sympy.utilities.misc import as_int, filldedent, func_name
 
 import mpmath
-from mpmath.libmp.libmpf import prec_to_dps
+from sympy.external.mpmath import (prec_to_dps, mpf, mpc, mp, workprec, diff as
+                                   mpmath_diff)
 
 import inspect
 from collections import Counter
@@ -570,7 +571,6 @@ class Function(Application, Expr):
         try:
             args = [arg._to_mpmath(prec + 5) for arg in args]
             def bad(m):
-                from mpmath import mpf, mpc
                 # the precision of an mpf value is the last element
                 # if that is 1 (and m[1] is not 1 which would indicate a
                 # power of 2), then the eval failed; so check that none of
@@ -605,7 +605,12 @@ class Function(Application, Expr):
                 return self.func(*new_args)
             return  # Not all args are Expr (might be tuples, etc.), so just return from here.
 
-        with mpmath.workprec(prec):
+        # XXX: This should really use local_workprec rather than
+        # mpmath.workprec to avoid messing with mpmath's global precision. That
+        # would be incompatible with any class that uses _eval_mpmath though
+        # since those would have to use the global precision.
+
+        with workprec(prec):
             v = func(*args)
 
         return Expr._from_mpmath(v, prec)
@@ -1383,6 +1388,19 @@ class Derivative(Expr):
         if len(variable_count) == 0:
             return expr
 
+        # If the expression or a variable of differentiation is a matrix or
+        # array object, delegate to ArrayDerivative so that every
+        # construction path (not just ``.diff()``, which routes through
+        # ``_derivative_dispatch``) uses the matrix/array-aware evaluation.
+        if cls is Derivative:
+            from sympy.matrices.matrixbase import MatrixBase
+            from sympy.matrices.expressions.matexpr import MatrixExpr
+            array_types = (MatrixBase, MatrixExpr, NDimArray)
+            if isinstance(expr, array_types) or any(
+                    isinstance(v, array_types) for v, _ in variable_count):
+                from sympy.tensor.array.array_derivatives import ArrayDerivative
+                return ArrayDerivative(expr, *variable_count, **kwargs)
+
         evaluate = kwargs.get('evaluate', False)
 
         if evaluate:
@@ -1666,13 +1684,17 @@ class Derivative(Expr):
             raise NotImplementedError('partials and higher order derivatives')
         z = list(self.free_symbols)[0]
 
+        # XXX: This should not depend on the precision that is set in mp.
+        # The precision should be a parameter.
+
         def eval(x):
-            f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mpmath.mp.prec))
-            f0 = f0.evalf(prec_to_dps(mpmath.mp.prec))
-            return f0._to_mpmath(mpmath.mp.prec)
-        return Expr._from_mpmath(mpmath.diff(eval,
-                                             z0._to_mpmath(mpmath.mp.prec)),
-                                 mpmath.mp.prec)
+            f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mp.prec))
+            f0 = f0.evalf(prec_to_dps(mp.prec))
+            return f0._to_mpmath(mp.prec)
+
+        fp = mpmath_diff(eval, z0._to_mpmath(mp.prec))
+
+        return Expr._from_mpmath(fp, mp.prec)
 
     @property
     def expr(self):
@@ -2109,6 +2131,43 @@ class Lambda(Expr):
     def is_identity(self):
         """Return ``True`` if this ``Lambda`` is an identity function. """
         return self.signature == self.expr
+
+    def curry(self):
+        """
+        Return a curried Lambda: any multi-variable Lambda becomes a
+        nest of single-argument Lambdas, e.g ``f(x,y)`` is rewritten as ``f(x)(y)``.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x, y, z
+        >>> Lambda((x, y), x + y).curry()
+        Lambda(x, Lambda(y, x + y))
+        >>> Lambda((x, y, z), x*y + z).curry()
+        Lambda(x, Lambda(y, Lambda(z, x*y + z)))
+        >>> Lambda(x, x**2).curry()
+        Lambda(x, x**2)
+
+        Nested tuples in the signature are flattened into their component
+        variables:
+
+        >>> Lambda(((x, y), z), x + y + z).curry()
+        Lambda(x, Lambda(y, Lambda(z, x + y + z)))
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Currying
+        """
+        variables = self.variables
+        if len(variables) <= 1 and self.signature == variables:
+            return self
+        expr = self.expr
+        for v in reversed(variables):
+            expr = Lambda(v, expr)
+        return expr
 
     def _eval_evalf(self, prec):
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.sorting import default_sort_key

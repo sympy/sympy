@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.dense import Matrix, eye
 from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.expressions.matadd import MatAdd

@@ -1,5 +1,6 @@
 """A module that handles series: find a limit, order the series etc.
 """
+from __future__ import annotations
 from .order import Order
 from .limits import limit, Limit
 from .gruntz import gruntz

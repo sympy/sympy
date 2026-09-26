@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.physics.vector import Vector, ReferenceFrame, Dyadic
 from sympy.testing.pytest import raises

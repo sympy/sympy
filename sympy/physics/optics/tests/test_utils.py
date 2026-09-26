@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import comp, Rational
 from sympy.physics.optics.utils import (refraction_angle, fresnel_coefficients,
         deviation, brewster_angle, critical_angle, lens_makers_formula,

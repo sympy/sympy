@@ -1,4 +1,5 @@
 """Efficient functions for generating orthogonal polynomials."""
+from __future__ import annotations
 from sympy.core.symbol import Dummy
 from sympy.polys.densearith import (dup_mul, dup_mul_ground,
     dup_lshift, dup_sub, dup_add, dup_sub_term, dup_sub_ground, dup_sqr)

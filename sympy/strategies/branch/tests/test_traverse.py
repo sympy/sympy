@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.core.numbers import Integer
 from sympy.core.singleton import S

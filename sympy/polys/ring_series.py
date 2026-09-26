@@ -40,6 +40,7 @@ To make a function work with rs_series you need to do two things::
 Look at rs_sin and rs_series for further reference.
 
 """
+from __future__ import annotations
 
 from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import PolyElement, ring, sring
@@ -47,14 +48,14 @@ from sympy.polys.puiseux import PuiseuxPoly
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
-from mpmath.libmp.libintmath import ifac
+from sympy.external.gmpy import factorial as ifac
+from sympy.external.mpmath import giant_steps
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational
 from sympy.core.intfunc import igcd
 from sympy.functions import (sin, cos, tan, atan, exp, atanh, asinh, tanh, log,
                              ceiling, sinh, cosh)
 from sympy.utilities.misc import as_int
-from mpmath.libmp.libintmath import giant_steps
 import math
 
 
@@ -915,6 +916,8 @@ def _nth_root1(p, n, x, prec):
         p1 += p1/n - tmp/n
     if sign:
         return p1
+    elif n == 2:
+        return rs_mul(p1, p, x, precx)
     else:
         return _series_inversion1(p1, x, prec)
 
@@ -1500,7 +1503,7 @@ def rs_cos_sin(p, x, prec):
         return rs_puiseux(rs_cos_sin, p, x, prec)
     R = p.ring
     if not p:
-        return R(0), R(0)
+        return R(1), R(0)
     c = _get_constant_term(p, x)
     if c:
         try:
@@ -1706,8 +1709,6 @@ def rs_cosh(p, x, prec):
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cosh, p, x, prec)
     R = p.ring
-    if not p:
-        return R(1)
     c = _get_constant_term(p, x)
     if c:
         try:
@@ -1756,7 +1757,7 @@ def rs_cosh_sinh(p, x, prec):
         return rs_puiseux(rs_cosh_sinh, p, x, prec)
     R = p.ring
     if not p:
-        return R(0), R(0)
+        return R(1), R(0)
     c = _get_constant_term(p, x)
     if c:
         try:

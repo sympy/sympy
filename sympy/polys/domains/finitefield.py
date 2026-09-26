@@ -1,4 +1,5 @@
 """Implementation of :class:`FiniteField` class. """
+from __future__ import annotations
 
 import operator
 
@@ -14,17 +15,25 @@ from sympy.polys.galoistools import gf_zassenhaus, gf_irred_p_rabin
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 from sympy.polys.domains.groundtypes import SymPyInteger
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from types import ModuleType
+    from sympy.external.gmpy import MPZ
 
 
 if GROUND_TYPES == 'flint':
     __doctest_skip__ = ['FiniteField']
 
 
+flint: ModuleType | None
+
 if GROUND_TYPES == 'flint':
-    import flint
+    import flint as _flint
+    flint = _flint
     # Don't use python-flint < 0.5.0 because nmod was missing some features in
     # previous versions of python-flint and fmpz_mod was not yet added.
-    _major, _minor, *_ = flint.__version__.split('.')
+    _major, _minor, *_ = _flint.__version__.split('.')
     if (int(_major), int(_minor)) < (0, 5):
         flint = None
 else:
@@ -206,7 +215,7 @@ class FiniteField(Field, SimpleDomain):
     has_assoc_Field = True
 
     dom = None
-    mod = None
+    mod: MPZ
 
     def __init__(self, mod, symmetric=True):
         from sympy.polys.domains import ZZ

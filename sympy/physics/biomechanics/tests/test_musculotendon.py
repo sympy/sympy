@@ -1,4 +1,5 @@
 """Tests for the ``sympy.physics.biomechanics.musculotendon.py`` module."""
+from __future__ import annotations
 
 import abc
 

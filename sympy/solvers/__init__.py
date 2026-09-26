@@ -8,6 +8,7 @@
     >>> solve(((x + 1)**5).expand(), x)
     [-1]
 """
+from __future__ import annotations
 from sympy.core.assumptions import check_assumptions, failing_assumptions
 
 from .solvers import solve, solve_linear_system, solve_linear_system_LU, \

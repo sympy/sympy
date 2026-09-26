@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import sin, cos
 from sympy.testing.pytest import raises
 

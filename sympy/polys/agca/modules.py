@@ -16,6 +16,7 @@ a few non-implemented methods. The concrete base classes supply only these
 non-implemented methods. They may also supply new implementations of the
 convenience methods, for example if there are faster algorithms available.
 """
+from __future__ import annotations
 
 
 from copy import copy

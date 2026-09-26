@@ -87,3 +87,4 @@ Guide to Mechanics
    actuator.rst
    wrapping_geometry.rst
    deprecated_classes.rst
+   method.rst

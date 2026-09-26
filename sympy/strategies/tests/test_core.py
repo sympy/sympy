@@ -1,10 +1,13 @@
 from __future__ import annotations
 from sympy.core.singleton import S
-from sympy.core.basic import Basic
 from sympy.strategies.core import (
     null_safe, exhaust, memoize, condition,
     chain, tryit, do_one, debug, switch, minimize)
 from io import StringIO
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
 
 
 def posdec(x: int) -> int:

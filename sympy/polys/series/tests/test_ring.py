@@ -1,7 +1,7 @@
+from __future__ import annotations
 from sympy.core.symbol import symbols
 from sympy.series.order import O
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
 from sympy.polys.series.ring import (
     PowerSeriesElement,
     PowerSeriesRingRing,
@@ -31,6 +31,10 @@ from sympy.polys.ring_series import (
     rs_cosh,
 )
 from sympy.polys.densebasic import dup_random
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
 
 # Rings
 Ring_ZZ: list[type[PowerSeriesRingProto]] = [PythonPowerSeriesRingZZ]
@@ -112,8 +116,8 @@ def test_basics(ring_int):
     assert R0.equal_repr(R0.multiply(R0.gen, R0.gen), R0([], 0))
     assert R.equal_repr(R.add(R([2, 4, 5], 3), R([5], 2)), R([7, 4], 2))
 
-    assert R.series_prec(R([1, 2, 3])) == None
-    assert R.series_prec(R([1, 2, 3], None)) == None
+    assert R.series_prec(R([1, 2, 3])) is None
+    assert R.series_prec(R([1, 2, 3], None)) is None
     assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7])) == 6
     assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7], 10)) == 10
 

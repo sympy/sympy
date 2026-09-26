@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external.gmpy import invert
 from sympy.ntheory.ecm import ecm, Point
 from sympy.testing.pytest import slow

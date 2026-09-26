@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.abc import x, y, z, s, t

@@ -1,4 +1,5 @@
 """Finite extensions of ring domains."""
+from __future__ import annotations
 
 from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement

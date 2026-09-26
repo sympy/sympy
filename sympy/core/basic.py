@@ -21,12 +21,20 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar, TypeVar, Any, Hashable
+    from typing import ClassVar, Any, Hashable, TypeVar, Protocol
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
 
     Tbasic = TypeVar("Tbasic", bound='Basic')
+
+
+    _K_co = TypeVar("_K_co", covariant=True)
+    _V_co = TypeVar("_V_co", covariant=True)
+
+    class _SupportsItems(Protocol[_K_co, _V_co]):
+        def items(self) -> Iterable[tuple[_K_co, _V_co]]:
+            ...
 
 
 def as_Basic(expr):
@@ -86,10 +94,10 @@ ordering_of_classes = [
 ]
 
 def _cmp_name(x: type, y: type) -> int:
-    """return -1, 0, 1 if the name of x is before that of y.
+    """Return -1, 0, 1 if the name of x is before that of y.
     A string comparison is done if either name does not appear
     in `ordering_of_classes`. This is the helper for
-    ``Basic.compare``
+    ``Basic.compare``.
 
     Examples
     ========
@@ -134,7 +142,7 @@ def _cmp_name(x: type, y: type) -> int:
 
 @cacheit
 def _get_postprocessors(clsname, arg_type):
-    # Since only Add, Mul, Pow can be clsname, this cache
+    # Since only Add, Mul, and Pow can be clsname, this cache
     # is not quadratic.
     postprocessors = set()
     mappings = _get_postprocessors_for_type(arg_type)
@@ -184,7 +192,7 @@ class Basic(Printable):
     (x,)
 
 
-    3)  By "SymPy object" we mean something that can be returned by
+    3)  By "SymPy object", we mean something that can be returned by
         ``sympify``.  But not all objects one encounters using SymPy are
         subclasses of Basic.  For example, mutable objects are not:
 
@@ -212,7 +220,7 @@ class Basic(Printable):
     def __init_subclass__(cls):
         # Initialize the default_assumptions FactKB and also any assumptions
         # property methods. This method will only be called for subclasses of
-        # Basic but not for Basic itself so we call
+        # Basic but not for Basic itself, so we call
         # _prepare_class_assumptions(Basic) below the class definition.
         super().__init_subclass__()
         _prepare_class_assumptions(cls)
@@ -954,13 +962,13 @@ class Basic(Printable):
         return S.One, self
 
     @overload
-    def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
-    @overload
-    def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+    def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
+            | Iterable[tuple[Basic | complex, Basic | complex]],
+              arg2: None=None, **kwargs: Any) -> Basic: ...
     @overload
     def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
 
-    def subs(self, arg1: Mapping[Basic | complex, Basic | complex]
+    def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
             | Iterable[tuple[Basic | complex, Basic | complex]] | Basic | complex,
              arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
         """
@@ -1345,7 +1353,9 @@ class Basic(Printable):
 
         Trying to replace x with an expression raises an error:
 
-        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y}) # doctest: +SKIP
+        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y})
+        Traceback (most recent call last):
+        ...
         ValueError: Invalid limits given: ((2*y, 1, 4*y),)
 
         See Also
@@ -1794,7 +1804,53 @@ class Basic(Printable):
         return (rv, mapping) if map else rv # type: ignore
 
     def find(self, query, group=False):
-        """Find all subexpressions matching a query."""
+        """
+        Find all unique subexpressions matching a query.
+
+        query : type, Basic, or callable
+            The pattern used to test each node of the expression tree.
+            A type matches subexpressions of that type, a ``Basic``
+            expression is treated as a pattern that subexpressions are
+            matched against (with ``Wild`` symbols acting as wildcards),
+            and a callable matches when it returns ``True``.
+
+        group : bool, optional
+            If ``True``, return a dict mapping each match to the number
+            of times it appears instead of a set of unique matches.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Wild
+        >>> from sympy.abc import x, y
+
+        >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
+        >>> expr.find(sin)
+        {sin(x), sin(y)}
+        >>> expr.find(sin, group=True)
+        {sin(x): 2, sin(y): 1}
+
+        >>> w = Wild('w')
+        >>> expr.find(sin(w))
+        {sin(x), sin(y)}
+
+        >>> expr.find(lambda e: e.is_Symbol)
+        {x, y}
+
+        See Also
+        ========
+
+        count : count the number of matching subexpressions
+        has : test whether any matching subexpression exists
+        match : pattern-match the whole expression
+
+        Notes
+        =====
+
+        The search visits every node of the expression tree, including the
+        expression itself, so ``expr.find(type(expr))`` will include
+        ``expr`` in the result.
+        """
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 
@@ -1803,7 +1859,35 @@ class Basic(Printable):
         return dict(Counter(results))
 
     def count(self, query):
-        """Count the number of matching subexpressions."""
+        """
+        Count the number of matching subexpressions.
+
+        query : type, Basic, or callable
+            Same semantics as in ``find()``.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Wild
+        >>> from sympy.abc import x, y
+
+        >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
+        >>> expr.count(sin)
+        3
+
+        >>> w = Wild('w')
+        >>> expr.count(sin(w))
+        3
+
+        >>> expr.count(lambda e: e.is_Symbol)
+        5
+
+        See Also
+        ========
+
+        find : return matching subexpressions instead of a count
+        has : test whether any match exists
+        """
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 

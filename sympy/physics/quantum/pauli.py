@@ -1,4 +1,5 @@
 """Pauli operators and states"""
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.mul import Mul

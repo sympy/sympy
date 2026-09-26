@@ -1,4 +1,5 @@
 """Tests for cartesian.py"""
+from __future__ import annotations
 
 from sympy.core.numbers import (I, pi)
 from sympy.core.singleton import S

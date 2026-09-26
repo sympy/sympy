@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -369,6 +370,7 @@ def test_hypersimp():
     assert hypersimp(term, k) == (k - n)/(k + 1)**2
 
 
+@slow
 def test_nsimplify():
     x = Symbol("x")
     assert nsimplify(0) == 0
@@ -435,6 +437,23 @@ def test_nsimplify():
 
     # Make sure nsimplify on expressions uses full precision
     assert nsimplify(pi.evalf(100)*x, rational_conversion='exact').evalf(100) == pi.evalf(100)*x
+
+    # issue 23822 make sure simple integer strings don't result in complicated, fractional outputs
+    assert nsimplify("4678") == 4678
+    assert str(nsimplify("4678")) == "4678"
+    assert all(str(nsimplify(a)) == a for a in map(str, range(-10000,10000)))
+    assert all(nsimplify(f"{a}/10", rational=True) == Rational(a,10) for a in range(-10000,10000))
+    # still behaves the same for different input precisions
+    for expr_str, expr_decimal, expected in [
+        ["1/3", 1/3, "1/3"],
+        [".3333", .3333, "3333/10000"],
+        [".33333333", .33333333, "1/3"],
+        [str(pi.evalf(15)), pi.evalf(15), "314159265358979/100000000000000"],  # precision cutoff at 15
+        [str(pi.evalf(16)), pi.evalf(16), "3141592653589793/1000000000000000"],
+    ]:
+        a = nsimplify(expr_str)
+        b = nsimplify(expr_decimal)
+        assert str(a) == str(b) == str(expected)
 
 
 def test_issue_9448():
@@ -664,6 +683,10 @@ def test_besselsimp():
 
     assert besselsimp(x**2* besselj(a,x) + x**3*besselj(a+1, x) + besselj(a+2, x)) == \
     2*a*x*besselj(a + 1, x) + x**3*besselj(a + 1, x) - x**2*besselj(a + 2, x) + 2*x*besselj(a + 1, x) + besselj(a + 2, x)
+
+    assert besselsimp(besselj(a, x) + besselj(a+1, x) + besselj(a+2, x) + besselj(
+    b, x) + besselj(b+1, x) + besselj(b+2, x)) == (2*a*besselj(a+1,x) + 2*b*besselj(b+1,x) + \
+        x*besselj(a+1,x) + x*besselj(b+1,x) + 2*besselj(a+1,x) + 2*besselj(b+1,x))/x
 
 def test_Piecewise():
     e1 = x*(x + y) - y*(x + y)
@@ -1095,3 +1118,51 @@ def test_nc_recursion_coeff():
     X = symbols("X", commutative = False)
     assert (2 * cos(pi/3) * X).simplify() == X
     assert (2.0 * cos(pi/3) * X).simplify() == X
+
+
+def test_issue_14269():
+    x = symbols('x')
+    root = (sqrt(2) - 1)**Rational(1, 3) - (sqrt(2) + 1)**Rational(1, 3)
+    expr = (x**3 + 3*x + 2).subs(x, root)
+    assert simplify(expr) == 0
+
+
+def test_logcombine_affine_rational_log():
+    for multiplier in [1, -1]:
+        expr = Mul(Rational(multiplier, 3), 1 + 2*log(2), evaluate=False)
+        expected = multiplier*(Rational(1, 3) + log(2**Rational(2, 3)))
+        assert logcombine(expr) == expected
+    expr = Mul(Rational(1, 3), 1 - 2*log(2), evaluate=False)
+    assert logcombine(expr) == Rational(1, 3) - log(2**Rational(2, 3))
+
+
+def test_logcombine_preserves_grouping():
+    numerator = tan(x/2) + 1
+    denominator = tan(x/2) + 7
+    expr = Mul(Rational(1, 3), log(numerator) - log(denominator), evaluate=False)
+    assert logcombine(expr, force=True) == log((numerator/denominator)**Rational(1, 3))
+    A, B, C = symbols('A B C', commutative=False)
+    expr = Mul(Rational(1, 2), A*(B + C) + log(x), evaluate=False)
+    assert logcombine(expr) == expr
+
+
+def test_logcombine_rational_log_factors():
+    for coefficient in [Rational(1, 3), Rational(-2, 3)]:
+        for other in [1, x, symbols('A', commutative=False)]:
+            expr = Mul(coefficient, other, 1 + 2*log(2) + log(3), evaluate=False)
+            result = logcombine(expr)
+            expected = other*(coefficient + logcombine(
+                2*coefficient*log(2) + coefficient*log(3)))
+            assert result == expected
+            assert result.expand(log=True).expand() == expr.expand()
+
+
+def test_logcombine_numeric_log_factors():
+    # Float terms must not prevent rational exponents from combining first.
+    expr = Mul(Rational(1, 3), Float('0.5') + 2*log(2) +
+               Float('0.75')*log(3), evaluate=False)
+    result = logcombine(expr)
+    assert result == Float('0.5')/3 + log(2**Rational(2, 3)*3**Float('0.25'))
+    for base in [sqrt(2), pi]:
+        expr = Mul(Rational(1, 3), 1 + 2*log(base, evaluate=False), evaluate=False)
+        assert logcombine(expr) == Rational(1, 3) + log(base**Rational(2, 3))

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.plotting.series import BaseSeries, GenericDataSeries
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence

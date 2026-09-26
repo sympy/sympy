@@ -1,5 +1,9 @@
+from __future__ import annotations
 import numbers as nums
 import decimal
+
+import pytest
+
 from sympy.concrete.summations import Sum
 from sympy.core import (EulerGamma, Catalan, TribonacciConstant,
     GoldenRatio)
@@ -29,14 +33,14 @@ from sympy.printing.latex import latex
 from sympy.printing.repr import srepr
 from sympy.simplify import simplify
 from sympy.polys.domains.groundtypes import PythonRational
-from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
-from sympy.testing.pytest import (XFAIL, raises, _both_exp_pow,
+from sympy.testing.pytest import (raises, _both_exp_pow,
                                   warns_deprecated_sympy)
 from sympy import Add
 
 from mpmath import mpf
 import mpmath
+from sympy.external.mpmath import finf, fninf, conserve_mpmath_dps
 from sympy.core import numbers
 t = Symbol('t', real=False)
 
@@ -49,6 +53,7 @@ def same_and_same_prec(a, b):
     return a == b and a._prec == b._prec
 
 
+@pytest.mark.thread_unsafe(reason="mutates process-global division error state")
 def test_seterr():
     seterr(divide=True)
     raises(ValueError, lambda: S.Zero/S.Zero)
@@ -322,6 +327,9 @@ def test_Integer_new():
     assert Integer(Rational('1.' + '9'*20)) == 1
 
 
+@pytest.mark.thread_unsafe(
+    reason="expects warning side effects from cached constructors"
+)
 def test_Rational_new():
     """"
     Test for Rational constructor
@@ -1832,22 +1840,6 @@ def test_rounding_issue_4172():
         734833795660954410469466
 
 
-@XFAIL
-def test_mpmath_issues():
-    from mpmath.libmp.libmpf import _normalize
-    import mpmath.libmp as mlib
-    rnd = mlib.round_nearest
-    mpf = (0, int(0), -123, -1, 53, rnd)  # nan
-    assert _normalize(mpf, 53) != (0, int(0), 0, 0)
-    mpf = (0, int(0), -456, -2, 53, rnd)  # +inf
-    assert _normalize(mpf, 53) != (0, int(0), 0, 0)
-    mpf = (1, int(0), -789, -3, 53, rnd)  # -inf
-    assert _normalize(mpf, 53) != (0, int(0), 0, 0)
-
-    from mpmath.libmp.libmpf import fnan
-    assert mlib.mpf_eq(fnan, fnan)
-
-
 def test_Catalan_EulerGamma_prec():
     n = GoldenRatio
     f = Float(n.n(), 5)
@@ -1921,7 +1913,6 @@ def test_Float_eq():
 
 
 def test_issue_6640():
-    from mpmath.libmp.libmpf import finf, fninf
     # fnan is not included because Float no longer returns fnan,
     # but otherwise, the same sort of test could apply
     assert Float(finf).is_zero is False
@@ -2333,3 +2324,21 @@ def test_all_close():
     assert not all_close(x + exp(2.*x)*y, 1.*x + 2*exp(2*x)*y)
     assert not all_close(x + exp(2.*x)*y, 1.*x + exp(3*x)*y)
     assert not all_close(x + 2.*y, 1.*x + 3*y)
+
+
+def test_issue_28222():
+    from sympy import I, pi, Mod, exp, S
+    # These cases previously raised TypeError due to invalid comparison of complex numbers
+    assert Mod(I, 200) == Mod(I, 200)
+    assert Mod(I, pi**(2*pi)) == Mod(I, pi**(2*pi))
+    assert Mod(-I, 5) == Mod(-I, 5)
+    assert Mod(2 + 3*I, 10) == Mod(2 + 3*I, 10)
+    assert Mod(I, exp(1)) == Mod(I, exp(1))
+    assert Mod(I, S(1.5)) == Mod(I, S(1.5))
+
+def test_issue_19988_Float_pickle_precision():
+    import pickle
+    from sympy import Float, pi
+    original = Float(pi, dps=100)
+    unpickled = pickle.loads(pickle.dumps(original))
+    assert original._prec == unpickled._prec

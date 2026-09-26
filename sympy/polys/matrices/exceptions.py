@@ -8,6 +8,7 @@ here and not e.g. imported from matrices. Also ideally generic exceptions like
 ValueError/TypeError would not be raised anywhere.
 
 """
+from __future__ import annotations
 
 
 class DMError(Exception):

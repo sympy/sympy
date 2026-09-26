@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.printing.dot import (purestr, styleof, attrprint, dotnode,
         dotedges, dotprint)
 from sympy.core.basic import Basic

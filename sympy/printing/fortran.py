@@ -296,15 +296,23 @@ class FCodePrinter(CodePrinter):
         else:
             return CodePrinter._print_Add(self, expr)
 
+    def _eval_function(self, expr):
+        prec = self._settings['precision']
+        args = [N(a, prec) for a in expr.args]
+        return expr.func(*args)
+
+    def parenthesize(self, item, level, strict=False):
+        if isinstance(item, Function):
+            item = self._eval_function(item)
+        return super().parenthesize(item, level, strict)
+
     def _print_Function(self, expr):
         # All constant function args are evaluated as floats
-        prec =  self._settings['precision']
-        args = [N(a, prec) for a in expr.args]
-        eval_expr = expr.func(*args)
+        eval_expr = self._eval_function(expr)
         if not isinstance(eval_expr, Function):
             return self._print(eval_expr)
         else:
-            return CodePrinter._print_Function(self, expr.func(*args))
+            return CodePrinter._print_Function(self, eval_expr)
 
     def _print_Mod(self, expr):
         # NOTE : Fortran has the functions mod() and modulo(). modulo() behaves
@@ -384,9 +392,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_sum_(self, sm):
         params = self._print(sm.array)
-        if sm.dim != None: # Must use '!= None', cannot use 'is not None'
+        # Must use '!= None', cannot use 'is not None'
+        if sm.dim != None:  # noqa: E711
             params += ', ' + self._print(sm.dim)
-        if sm.mask != None: # Must use '!= None', cannot use 'is not None'
+
+        # Must use '!= None', cannot use 'is not None'
+        if sm.mask != None:  # noqa: E711
             params += ', mask=' + self._print(sm.mask)
         return '%s(%s)' % (sm.__class__.__name__.rstrip('_'), params)
 
@@ -469,7 +480,8 @@ class FCodePrinter(CodePrinter):
                 alloc=', allocatable' if allocatable in var.attrs else '',
                 s=self._print(var.symbol)
             )
-            if val != None: # Must be "!= None", cannot be "is not None"
+            # Must be "!= None", cannot be "is not None"
+            if val != None:  # noqa: E711
                 result += ' = %s' % self._print(val)
         else:
             if value_const in var.attrs or val:
@@ -756,9 +768,11 @@ class FCodePrinter(CodePrinter):
 
     def _print_use(self, use):
         result = 'use %s' % self._print(use.namespace)
-        if use.rename != None: # Must be '!= None', cannot be 'is not None'
+        # Must be '!= None', cannot be 'is not None'
+        if use.rename != None:  # noqa: E711
             result += ', ' + ', '.join([self._print(rnm) for rnm in use.rename])
-        if use.only != None: # Must be '!= None', cannot be 'is not None'
+        # Must be '!= None', cannot be 'is not None'
+        if use.only != None:  # noqa: E711
             result += ', only: ' + ', '.join([self._print(nly) for nly in use.only])
         return result
 

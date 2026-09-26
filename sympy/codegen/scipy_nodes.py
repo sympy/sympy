@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import Add, ArgumentIndexError, Function
 from sympy.core.power import Pow
 from sympy.core.singleton import S

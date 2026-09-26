@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.containers import Tuple
 from sympy.core.numbers import pi
 from sympy.core.power import Pow
@@ -191,3 +192,8 @@ def test_check_dimensions():
     raises(ValueError, lambda: check_dimensions(2 * meter + 3 * second))
     raises(ValueError, lambda: check_dimensions(1 / second + 1 / meter))
     raises(ValueError, lambda: check_dimensions(2 * meter*(mile + centimeter) + km))
+
+def test_check_dimensions_error_message():
+    with raises(ValueError) as excinfo:
+        check_dimensions(meter + second)
+    assert str(excinfo.value) == "addends have incompatible dimensions: (((Dimension(length, L), 1),), ((Dimension(time, T), 1),))"
