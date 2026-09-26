@@ -646,7 +646,7 @@ class TransformToSymPyExpr(Transformer):
 
     def factorial(self, tokens):
         expr, bangs = tokens
-        if len(bangs) == 2:
+        if bangs.count("!") == 2:
             return sympy.factorial2(expr)
         return sympy.factorial(expr)
 

@@ -65,11 +65,12 @@ API might change in the future. Unlike some of the other parsers, `\mathrm{\LaTe
 designed as a *type-setting* language, not a *computer algebra system* and so
 can contain typographical conventions that might be interpreted multiple ways.
 
-Both backends interpret adjacent ``!!`` as a double factorial. Use
-``(x!)!`` for a nested factorial; separated exclamation marks (``x! !``)
-also retain this interpretation. Runs of three or more exclamation marks
-retain their nested-factorial interpretation, rather than denoting
-multifactorials.
+The Lark backend interprets two consecutive factorial marks as a double
+factorial, ignoring ordinary whitespace: both ``x!!`` and ``x! !`` mean
+``factorial2(x)``. Use ``(x!)!`` for a nested factorial. Runs of three or
+more marks retain their nested-factorial interpretation, rather than
+denoting multifactorials. Explicit spacing commands such as ``x!\,!``
+continue to separate factorial operators.
 
 `\mathrm{\LaTeX}` Parsing Functions Reference
 ---------------------------------------------
