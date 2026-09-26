@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from importlib import import_module
+from unittest.mock import patch
 from sympy.core.random import randrange
 
 from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
@@ -24,6 +27,7 @@ from sympy.testing.pytest import XFAIL, raises, slow, tooslow
 from sympy.core.random import verify_numerically as tn
 
 from sympy.core.numbers import (Rational, pi)
+from sympy.series.limits import Limit
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import atanh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -1062,3 +1066,32 @@ def test_omgissue_203():
     assert hyperexpand(h) == Rational(1, 30)
     h = hyper((-6, -7, -5), (-6, -6), 1)
     assert hyperexpand(h) == Rational(-1, 6)
+
+
+def test_hyperexpand_convergent_at_one():
+    assert hyperexpand(hyper([1, 1, S.Half], [2, Rational(3, 2)], 1)) == 2*log(2)
+    for shift, expected in [(Rational(2, 3), 3*log(3) - pi/sqrt(3)),
+                        (Rational(3, 4), 9*log(2) - 3*pi/2)]:
+        result = hyperexpand(hyper([1, 1, shift], [2, shift + 1], 1))
+        # These values use the principal branch at z=1.
+        result = result.replace(exp_polar, exp).expand(complex=True)
+        assert (result - expected).simplify() == 0
+
+
+def test_hyperexpand_at_one_with_finite_polylogs():
+    for ap, bq, expected in [
+            ([1, 1, 1], [2, 3], pi**2/3 - 2),
+            ([1, 1, 1], [3, 3], 4*pi**2/3 - 12),
+            ([2, 2, 2], [3, 4], 24 - 2*pi**2)]:
+        result = hyperexpand(hyper(ap, bq, 1))
+        assert result == expected
+    assert abs(float(result) - float(hyper(ap, bq, 1))) < 1e-12
+
+
+def test_hyperexpand_preserves_hyper_when_limit_is_unevaluated():
+    expr = hyper([1, 1, 1], [2, 3], 1)
+    unevaluated = Limit(log(1 - z), z, 1, dir='-')
+    with patch.object(import_module('sympy.simplify.hyperexpand'),
+                      '_hyperexpand', return_value=unevaluated):
+        result = hyperexpand(expr)
+    assert result == expr
