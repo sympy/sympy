@@ -771,8 +771,8 @@ def ddm_berk(M, K):
     >>> M = [[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]]
     >>> ddm_berk(M, ZZ)
     [[1], [-5], [-2]]
-    >>> Matrix(M).charpoly()
-    PurePoly(lambda**2 - 5*lambda - 2, lambda, domain='ZZ')
+    >>> Matrix(M).charpoly()('lambda')
+    lambda**2 - 5*lambda - 2
 
     See Also
     ========

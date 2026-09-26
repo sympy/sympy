@@ -76,7 +76,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.polys.rootoftools import rootof
+from sympy.polys.rootoftools import CRootOf, rootof
 from sympy.simplify.simplify import signsimp
 from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -608,6 +608,156 @@ def test_PurePoly_free_symbols():
     assert PurePoly(x**2 + sin(y*z), x, domain=EX).free_symbols == {y, z}
 
 
+def test_PurePoly_args():
+    px = PurePoly(x**2 + 2*x + 3, x)
+    py = PurePoly(y**2 + 2*y + 3, y)
+
+    assert px.args[0] == Tuple(
+        ((2,), 1), ((1,), 2), ((0,), 3))
+    assert px.args == py.args
+    assert px.args[1].domain == ZZ
+    assert px.func(*px.args)._strict_eq(px)
+    assert x not in px.args[0].free_symbols
+    assert y not in py.args[0].free_symbols
+
+    p = PurePoly(x**2 + y, x)
+    assert p.args[0].free_symbols == {y}
+    assert p.func(*p.args)._strict_eq(p)
+    assert p(z) == z**2 + y
+
+    p = PurePoly(x*y + 1, x, y)
+    assert p.func(*p.args)._strict_eq(p)
+
+    # The domain is structural as well as the anonymous polynomial terms.
+    p = PurePoly(x**2 + 1, x, domain=QQ)
+    assert p.args[1].domain == QQ
+    assert p.func(*p.args)._strict_eq(p)
+
+    K = RealField(100)
+    p = PurePoly(x**2 + 1, x, domain=K)
+    assert p.args[1].domain == K
+    assert p.func(*p.args)._strict_eq(p)
+
+
+def test_PurePoly_canonical_gens_and_instantiation():
+    _0 = Symbol('_0')
+    _1 = Symbol('_1')
+    _2 = Symbol('_2')
+    _3 = Symbol('_3')
+
+    # Input generator names are discarded. Canonical placeholders are the
+    # first contiguous block of _i symbols not used by coefficient symbols.
+    assert PurePoly(y**2 - 1, y).gens == (_0,)
+    assert PurePoly(y**2 + _0, y).gens == (_1,)
+    assert PurePoly(a*b + 1, a, b).gens == (_0, _1)
+    assert PurePoly(a*b + _1, a, b).gens == (_2, _3)
+
+    p = PurePoly(a*b + 1, a, b)
+    assert p(a, b) == a*b + 1
+    assert p('alpha', 'beta') == Symbol('alpha')*Symbol('beta') + 1
+    assert p.as_expr(a, b) == a*b + 1
+    assert p.as_expr('alpha', 'beta') == Symbol('alpha')*Symbol('beta') + 1
+    assert p.as_poly(a, b) == Poly(a*b + 1, a, b)
+    assert p.as_poly('alpha', 'beta') == Poly(
+        Symbol('alpha')*Symbol('beta') + 1, Symbol('alpha'), Symbol('beta'))
+    assert p.func(p(*p.gens), *p.gens) == p
+
+    raises(GeneratorsError, lambda: p(a))
+    raises(GeneratorsError, lambda: p(a, b, x))
+    raises(GeneratorsError, lambda: p.as_expr(a))
+    raises(GeneratorsError, lambda: p.as_poly(a))
+
+
+def test_PurePoly_generator_cache_independence():
+    u = Symbol('pure_u')
+    v = Symbol('pure_v')
+    p = PurePoly(u**2 - 1, u)
+    q = PurePoly(v**2 - 1, v)
+
+    assert p == q
+    assert p.gens == q.gens == (Symbol('_0'),)
+
+    # _subs is cached, so equal PurePoly instances must not carry different
+    # generator state into cached results.
+    assert p.subs(u, v).gens == (Symbol('_0'),)
+    assert q.subs(u, v).gens == (Symbol('_0'),)
+    assert p.subs(u, v) == q.subs(u, v) == p
+
+
+def test_PurePoly_composite_domain_printing():
+    beta = Symbol('beta')
+
+    p = PurePoly(x**2 - beta, x)
+    assert p.domain == ZZ.poly_ring(beta)
+    assert str(p) == (
+        "PurePoly(_0**2 - beta, _0, domain=ZZ.poly_ring(beta))")
+
+    K = ZZ.poly_ring(beta).frac_field(y)
+    p = PurePoly(x**2 + (beta + 1)/(y + 1), x, domain=K)
+    assert str(p) == (
+        "PurePoly(_0**2 + (beta + 1)/(y + 1), _0, "
+        "domain=ZZ.poly_ring(beta).frac_field(y))")
+
+
+def test_PurePoly_fraction_field_args():
+    beta = Symbol('beta')
+    K = ZZ.frac_field(beta)
+    p = PurePoly(x**2 - 4*beta, x, domain=K)
+
+    assert p.args[1].domain == K
+    assert p.func(*p.args)._strict_eq(p)
+    assert p.free_symbols == {beta}
+    assert p.subs(x, z) == p
+    assert str(p) == (
+        "PurePoly(_0**2 - 4*beta, _0, domain=ZZ.frac_field(beta))")
+
+    q = p.subs(beta, z)
+    assert q.domain == ZZ.frac_field(z)
+    assert q(z) == z**2 - 4*z
+
+
+def test_PurePoly_getitem():
+    p = PurePoly(x**5 - x + 1, x)
+    assert p[0] == CRootOf(x**5 - x + 1, 0)
+    assert p[-1] == CRootOf(x**5 - x + 1, -1)
+
+    # Indexing has CRootOf semantics: rational roots can simplify, but
+    # radicals are not introduced by default.
+    assert PurePoly(x**2 - 4, x)[0] == -2
+    assert PurePoly(x**2 - 3, x)[0] == CRootOf(x**2 - 3, 0)
+
+    # The original generator is irrelevant, even when it was not a Symbol.
+    assert PurePoly(exp(x) + 1)[0] == -1
+
+    raises(MultivariatePolynomialError,
+        lambda: PurePoly(x*y + 1, x, y)[0])
+    raises(ValueError, lambda: p[Rational(1, 2)])
+    raises(IndexError, lambda: p[5])
+
+
+def test_PurePoly_abstract_generator_subs():
+    p = PurePoly(x**2 + y, x)
+
+    assert p.subs(x, z) == p
+    assert p.xreplace({x: z}) == p
+    assert p.subs(2, 3) == p
+
+    q = p.subs(y, x)
+    assert q.free_symbols == {x}
+    assert q.subs(x, z) == PurePoly(x**2 + z, x)
+    assert q.xreplace({x: z}) == PurePoly(x**2 + z, x)
+    assert q(z) == z**2 + x
+
+    assert str(p) == "PurePoly(_0**2 + y, _0, domain=ZZ.poly_ring(y))"
+    assert str(q) == "PurePoly(_0**2 + x, _0, domain=ZZ.poly_ring(x))"
+
+    r = PurePoly(x**2 + w, x)
+    assert str(r) == "PurePoly(_0**2 + w, _0, domain=ZZ.poly_ring(w))"
+
+    r = PurePoly(x**2 + w, x).subs(w, x)
+    assert str(r) == "PurePoly(_0**2 + x, _0, domain=ZZ.poly_ring(x))"
+
+
 def test_Poly__eq__():
     assert (Poly(x, x) == Poly(x, x)) is True
     assert (Poly(x, x, domain=QQ) == Poly(x, x)) is False
@@ -643,25 +793,27 @@ def test_Poly__eq__():
 
 def test_PurePoly__eq__():
     assert (PurePoly(x, x) == PurePoly(x, x)) is True
-    assert (PurePoly(x, x, domain=QQ) == PurePoly(x, x)) is True
-    assert (PurePoly(x, x) == PurePoly(x, x, domain=QQ)) is True
+    assert (PurePoly(x, x, domain=QQ) == PurePoly(x, x)) is False
+    assert (PurePoly(x, x) == PurePoly(x, x, domain=QQ)) is False
 
-    assert (PurePoly(x, x, domain=ZZ[a]) == PurePoly(x, x)) is True
-    assert (PurePoly(x, x) == PurePoly(x, x, domain=ZZ[a])) is True
+    assert (PurePoly(x, x, domain=ZZ[a]) == PurePoly(x, x)) is False
+    assert (PurePoly(x, x) == PurePoly(x, x, domain=ZZ[a])) is False
 
     assert (PurePoly(x*y, x, y) == PurePoly(x, x)) is False
 
     assert (PurePoly(x, x, y) == PurePoly(x, x)) is False
     assert (PurePoly(x, x) == PurePoly(x, x, y)) is False
 
+    # Generator names are not part of PurePoly identity.
     assert (PurePoly(x**2 + 1, x) == PurePoly(y**2 + 1, y)) is True
     assert (PurePoly(y**2 + 1, y) == PurePoly(x**2 + 1, x)) is True
 
+    # The coefficient domain is part of PurePoly identity.
     f = PurePoly(x, x, domain=ZZ)
     g = PurePoly(x, x, domain=QQ)
 
-    assert f.eq(g) is True
-    assert f.ne(g) is False
+    assert f.eq(g) is False
+    assert f.ne(g) is True
 
     assert f.eq(g, strict=True) is False
     assert f.ne(g, strict=True) is True
@@ -669,11 +821,15 @@ def test_PurePoly__eq__():
     f = PurePoly(x, x, domain=ZZ)
     g = PurePoly(y, y, domain=QQ)
 
-    assert f.eq(g) is True
-    assert f.ne(g) is False
+    assert f.eq(g) is False
+    assert f.ne(g) is True
 
     assert f.eq(g, strict=True) is False
     assert f.ne(g, strict=True) is True
+
+    # PurePoly and Poly represent different kinds of polynomial objects.
+    assert (PurePoly(x, x) == Poly(x, x)) is False
+    assert (Poly(x, x) == PurePoly(x, x)) is False
 
 
 def test_PurePoly_Poly():

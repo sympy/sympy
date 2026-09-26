@@ -31,10 +31,9 @@ from sympy.functions.combinatorial.factorials import binomial, factorial
 from collections.abc import Callable
 from sympy.utilities.iterables import reshape
 from sympy.core.power import Pow
-from sympy.core.symbol import uniquely_named_symbol
 
 from .utilities import _dotprodsimp, _simplify as _utilities_simplify
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, PurePoly
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 from sympy.core.decorators import call_highest_priority
@@ -3345,7 +3344,7 @@ class MatrixBase(Printable):
     def adjugate(self, method: str="berkowitz") -> Self:
         return _adjugate(self, method=method)
 
-    def charpoly(self, x: str | Expr = 'lambda', simplify=_utilities_simplify) -> Poly:
+    def charpoly(self, x: str | Expr = 'lambda', simplify=_utilities_simplify) -> PurePoly:
         return _charpoly(self, x=x, simplify=simplify)
 
     def cofactor(self, i, j, method: str="berkowitz") -> Expr:
@@ -5110,9 +5109,9 @@ class MatrixBase(Printable):
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
-        x = uniquely_named_symbol('x', self, modify=lambda s: '_' + s)
-        p = self.charpoly(x)
-        if p.args[0] == x ** self.rows:
+        p = self.charpoly()
+        x = p.gen
+        if p(x) == x ** self.rows:
             return True
         return False
 

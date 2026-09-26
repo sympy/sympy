@@ -24,7 +24,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.expressions.transpose import transpose
 from sympy.physics.quantum.operator import HermitianOperator, Operator, Dagger
-from sympy.polys.polytools import (Poly, PurePoly)
+from sympy.polys.polytools import PurePoly
 from sympy.polys.rootoftools import RootOf
 from sympy.printing.str import sstr
 from sympy.sets.sets import FiniteSet
@@ -448,7 +448,7 @@ def test_issue_17247_expression_blowup_4():
 def test_issue_17247_expression_blowup_5():
     M = Matrix(6, 6, lambda i, j: 1 + (-1)**(i+j)*I)
     with dotprodsimp(True):
-        assert M.charpoly('x') == PurePoly(x**6 + (-6 - 6*I)*x**5 + 36*I*x**4, x, domain='EX')
+        assert M.charpoly() == PurePoly(x**6 + (-6 - 6*I)*x**5 + 36*I*x**4, x, domain='ZZ_I')
 
 def test_issue_17247_expression_blowup_6():
     M = Matrix(8, 8, [x+i for i in range (64)])
@@ -1781,21 +1781,20 @@ def test_Matrix_berkowitz_charpoly():
     A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
 
-    charpoly = A.charpoly(x)
+    charpoly = A.charpoly()
 
     assert charpoly == \
-        Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x +
+        PurePoly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x +
         K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
 
     assert type(charpoly) is PurePoly
 
     A = Matrix([[1, 3], [2, 0]])
-    assert A.charpoly() == A.charpoly(x) == PurePoly(x**2 - x - 6)
+    assert A.charpoly() == PurePoly(x**2 - x - 6)
 
     A = Matrix([[1, 2], [x, 0]])
-    p = A.charpoly(x)
-    assert p.gen != x
-    assert p.as_expr().subs(p.gen, x) == x**2 - 3*x
+    p = A.charpoly()
+    assert p(x) == x**2 - 3*x
 
 
 def test_exp_jordan_block():
