@@ -1703,3 +1703,13 @@ def test_issue_23952():
     expr = Sum(abs(k1 - k2)*p**k1 *(1 - q)**(n - k2),
         (k1, 0, n), (k2, 0, n))
     assert expr.subs(p,0).subs(q,1).subs(n, 3).doit() == 3
+
+
+def test_issue_30593():
+    n, k = symbols('n k', integer=True, nonnegative=True)
+    res = Sum((-1)**k * binomial(n, k), (k, 0, n)).doit()
+    assert res == Piecewise((1, Eq(n, 0)), (0, True))
+    assert res.subs(n, 0) == 1
+    assert res.subs(n, 1) == 0
+    assert res.subs(n, 2) == 0
+
