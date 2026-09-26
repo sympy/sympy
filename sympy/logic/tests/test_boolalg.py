@@ -1467,3 +1467,183 @@ def test_simplify_logic_dontcare_issue_28369():
 
    # Test 2: Fast path form check
    assert simplify_logic(A | B, dontcare=A, form='dnf') == B
+
+
+def test_espresso():
+    from unittest.mock import patch
+
+    class MockPyedaInter:
+        last_tt_str = None
+
+        @staticmethod
+        def ttvars(name, n):
+            return [f"{name}{i}" for i in range(n)]
+
+        @classmethod
+        def truthtable(cls, vars, tt_str):
+            cls.last_tt_str = tt_str
+            return {"vars": vars, "tt_str": tt_str}
+
+        @staticmethod
+        def espresso_tts(tt):
+            tt_str = tt["tt_str"]
+            n = len(tt["vars"])
+
+            class FakeAST:
+                def __init__(self, ast):
+                    self.ast = ast
+
+                def to_ast(self):
+                    return self.ast
+
+            if tt_str == "00000100":
+                ast = ('and', ('lit', 1), ('lit', -2), ('lit', 3))
+                return (FakeAST(ast),)
+
+            if tt_str == "0010":
+                ast = ('and', ('lit', -1), ('lit', 2))
+                return (FakeAST(ast),)
+
+            if tt_str == "0111":
+                ast = ('or', ('lit', 1), ('lit', 2))
+                return (FakeAST(ast),)
+
+            if tt_str == "1111":
+                return (FakeAST(('const', 1)),)
+
+            if tt_str == "010-":
+                return (FakeAST(('lit', 1)),)
+
+            if tt_str == "10001000":
+                ast = ('and', ('lit', -1), ('lit', -2))
+                return (FakeAST(ast),)
+
+            or_args = []
+            for i, bit in enumerate(tt_str):
+                if bit == '1':
+                    and_args = []
+                    for v in range(n):
+                        lit_val = (v + 1) if (i & (1 << v)) else -(v + 1)
+                        and_args.append(('lit', lit_val))
+
+                    if len(and_args) == 1:
+                        or_args.append(and_args[0])
+                    else:
+                        or_args.append(('and',) + tuple(and_args))
+
+            if not or_args:
+                return (FakeAST(('const', 0)),)
+
+            if len(or_args) == 1:
+                return (FakeAST(or_args[0]),)
+
+            return (FakeAST(('or',) + tuple(or_args)),)
+
+    with patch(
+        'sympy.external.importtools.import_module',
+        return_value=MockPyedaInter()
+    ):
+        x, y, z = symbols('x y z')
+
+        res = SOPform(
+            [x, y, z], [[1, 0, 1]], algorithm="espresso"
+        )
+        assert res == x & ~y & z
+
+        res = POSform(
+            [x, y], [[1, 1], [0, 0], [1, 0]],
+            algorithm="espresso"
+        )
+        assert res == x | ~y
+
+        res = SOPform(
+            [x, y], [[1, 0], [0, 1], [1, 1]],
+            algorithm="espresso"
+        )
+        assert res == x | y
+
+        res = SOPform(
+            [x, y], [[1, 0]],
+            dontcares=[[1, 1]],
+            algorithm="espresso"
+        )
+        assert MockPyedaInter.last_tt_str == "010-"
+        assert res == x
+
+        expr = (~x & ~y & ~z) | (~x & ~y & z)
+        res = simplify_logic(expr, algorithm="espresso")
+        assert Equivalent(res, ~x & ~y)
+
+        res = SOPform(
+            [x, y],
+            [[0, 0], [0, 1], [1, 0], [1, 1]],
+            algorithm="espresso"
+        )
+        assert res == true
+
+        res = SOPform([x, y], [], algorithm="espresso")
+        assert res == false
+
+
+
+        raises(
+            ValueError,
+            lambda: SOPform(
+                [x, y], [[1, 0]], algorithm="invalid"
+            )
+        )
+
+
+def test_espresso_missing():
+    from unittest.mock import patch
+
+    with patch(
+        'sympy.external.importtools.import_module',
+        return_value=None
+    ):
+        raises(
+            ImportError,
+            lambda: SOPform(
+                [symbols('x')], [[1]], algorithm="espresso"
+            )
+        )
+
+
+def test_espresso_large_expression():
+    import pytest
+    pytest.importorskip("pyeda.inter")
+
+    cs, cl, cr1, cr0, s, l, n_sym, r, v, a = symbols(
+        'cs cl cr1 cr0 s l n r v a'
+    )
+    minterms_10 = [0, 1, 2, 6, 3, 7, 8, 16, 20, 32]
+    variables_10 = [s, l, n_sym, r, v, a]
+    expr_10 = SOPform(variables_10, minterms_10)
+
+    coarse = expr_10 & (
+        (~r | ~cr1 | cr0) &
+        (~s | cs) &
+        (~l | cl) &
+        (~r | cr0) &
+        (~(~s & ~l & ~n_sym & r & v) | (cr1 & cr0)) &
+        (~(~s & l & ~n_sym & r & ~v & ~a) | (~cr1 & cr0))
+    )
+    invalid_all = Not(coarse)
+
+    res = simplify_logic(
+        invalid_all, force=True, algorithm="espresso"
+    )
+
+    from sympy.core.sorting import default_sort_key
+    from sympy.logic.boolalg import truth_table
+
+    free_syms = sorted(
+        invalid_all.free_symbols,
+        key=default_sort_key
+    )
+
+    assert [
+        val for _, val in truth_table(invalid_all, free_syms)
+    ] == [
+        val for _, val in truth_table(res, free_syms)
+    ]

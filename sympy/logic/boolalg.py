@@ -2405,7 +2405,7 @@ def _input_to_binlist(inputlist, variables):
     return binlist
 
 
-def SOPform(variables, minterms, dontcares=None):
+def SOPform(variables, minterms, dontcares=None, *, algorithm="qm"):
     """
     The SOPform function uses simplified_pairs and a redundant group-
     eliminating algorithm to convert the list of all input combos that
@@ -2419,6 +2419,17 @@ def SOPform(variables, minterms, dontcares=None):
 
     The result will be one of the (perhaps many) functions that satisfy
     the conditions.
+
+    Parameters
+    ==========
+
+    variables : list of variables
+    minterms : list of minterms
+    dontcares : list of don't-cares
+    algorithm : string
+        The algorithm to use for minimization.
+        - ``"qm"`` (default): Use Quine-McCluskey.
+        - ``"espresso"``: Use PyEDA Espresso (requires PyEDA).
 
     Examples
     ========
@@ -2477,16 +2488,77 @@ def SOPform(variables, minterms, dontcares=None):
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
 
-    return _sop_form(variables, minterms, dontcares)
+    return _sop_form(variables, minterms, dontcares, algorithm=algorithm)
 
 
-def _sop_form(variables, minterms, dontcares):
-    new = _simplified_pairs(minterms + dontcares)
-    essential = _rem_redundancy(new, minterms)
-    return Or(*[_convert_to_varsSOP(x, variables) for x in essential])
+def _sop_form(variables, minterms, dontcares, algorithm="qm", invert=False):
+    if algorithm == "qm":
+        new = _simplified_pairs(minterms + dontcares)
+        essential = _rem_redundancy(new, minterms)
+        return Or(*[_convert_to_varsSOP(x, variables) for x in essential])
+    elif algorithm == "espresso":
+        from sympy.external.importtools import import_module
+        pyeda_inter = import_module(
+            'pyeda.inter',
+            import_kwargs={'fromlist': ['inter']}
+        )
+        if pyeda_inter is None:
+            raise ImportError(
+                "The 'pyeda' package is required for Espresso minimization."
+            )
+
+        n = len(variables)
+        if n == 0:
+            if not minterms:
+                return false if not invert else true
+            return true if not invert else false
+
+        tt_str = ['0'] * (2**n)
+        for m in minterms:
+            idx = sum(val << i for i, val in enumerate(m))
+            tt_str[idx] = '1'
+        for d in dontcares:
+            idx = sum(val << i for i, val in enumerate(d))
+            tt_str[idx] = '-'
+
+        if all(c != '1' for c in tt_str):
+            return false if not invert else true
+
+        ttvars = pyeda_inter.ttvars('x', n)
+        tt = pyeda_inter.truthtable(ttvars, "".join(tt_str))
+        fm, = pyeda_inter.espresso_tts(tt)
+
+        def _pyeda_to_sympy(ast, variables, invert=False):
+            from sympy.logic.boolalg import Or, And, Not
+            if ast[0] == 'const':
+                val = ast[1]
+                if invert:
+                    val = not val
+                return true if val else false
+            elif ast[0] == 'lit':
+                lit = ast[1]
+                var = variables[abs(lit) - 1]
+                is_neg = (lit < 0)
+                if invert:
+                    is_neg = not is_neg
+                return Not(var) if is_neg else var
+            elif ast[0] == 'or':
+                args = [_pyeda_to_sympy(arg, variables, invert)
+                        for arg in ast[1:]]
+                return And(*args) if invert else Or(*args)
+            elif ast[0] == 'and':
+                args = [_pyeda_to_sympy(arg, variables, invert)
+                        for arg in ast[1:]]
+                return Or(*args) if invert else And(*args)
+            else:
+                raise ValueError("Unknown PyEDA AST node: %s" % str(ast))
+
+        return _pyeda_to_sympy(fm.to_ast(), variables, invert)
+    else:
+        raise ValueError("algorithm must be 'qm' or 'espresso'")
 
 
-def POSform(variables, minterms, dontcares=None):
+def POSform(variables, minterms, dontcares=None, *, algorithm="qm"):
     """
     The POSform function uses simplified_pairs and a redundant-group
     eliminating algorithm to convert the list of all input combinations
@@ -2500,6 +2572,18 @@ def POSform(variables, minterms, dontcares=None):
 
     The result will be one of the (perhaps many) functions that satisfy
     the conditions.
+
+    Parameters
+    ==========
+
+    variables : list of variables
+    minterms : list of minterms
+    dontcares : list of don't-cares
+    algorithm : string
+        The algorithm to use for minimization.
+        - ``"qm"`` (default): Use Quine-McCluskey.
+        - ``"espresso"``: Use PyEDA Espresso (requires PyEDA).
+        Missing PyEDA must raise ImportError. Unsupported algorithm must raise ValueError.
 
     Examples
     ========
@@ -2562,9 +2646,17 @@ def POSform(variables, minterms, dontcares=None):
         if (t not in minterms) and (t not in dontcares):
             maxterms.append(t)
 
-    new = _simplified_pairs(maxterms + dontcares)
-    essential = _rem_redundancy(new, maxterms)
-    return And(*[_convert_to_varsPOS(x, variables) for x in essential])
+    if algorithm == "qm":
+        new = _simplified_pairs(maxterms + dontcares)
+        essential = _rem_redundancy(new, maxterms)
+        return And(*[_convert_to_varsPOS(x, variables) for x in essential])
+    elif algorithm == "espresso":
+        return _sop_form(
+            variables, maxterms, dontcares,
+            algorithm="espresso", invert=True
+        )
+    else:
+        raise ValueError("algorithm must be 'qm' or 'espresso'")
 
 
 def ANFform(variables, truthvalues):
@@ -2809,7 +2901,7 @@ def _find_predicates(expr):
     return set().union(*(map(_find_predicates, expr.args)))
 
 
-def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
+def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None, *, algorithm="qm"):
     """
     This function simplifies a boolean function to its simplified version
     in SOP or POS form. The return type is an :py:class:`~.Or` or
@@ -2844,6 +2936,12 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         are converted by previous conditions. For example, if a previous
         condition is ``And(A, B)``, the simplification of expr can be made
         with don't cares for ``And(A, B)``.
+
+    algorithm : string
+        The algorithm to use for minimization.
+        - ``"qm"`` (default): Use Quine-McCluskey.
+        - ``"espresso"``: Use PyEDA Espresso (requires PyEDA).
+        Missing PyEDA must raise ImportError. Unsupported algorithm must raise ValueError.
 
     Examples
     ========
@@ -2936,8 +3034,8 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         dctruthtable = []
     big = len(truthtable) >= (2 ** (len(variables) - 1))
     if form == 'dnf' or form is None and big:
-        return _sop_form(variables, truthtable, dctruthtable).xreplace(undo)
-    return POSform(variables, truthtable, dctruthtable).xreplace(undo)
+        return _sop_form(variables, truthtable, dctruthtable, algorithm=algorithm).xreplace(undo)
+    return POSform(variables, truthtable, dctruthtable, algorithm=algorithm).xreplace(undo)
 
 
 def _get_truthtable(variables, expr, const):
