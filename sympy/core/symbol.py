@@ -20,7 +20,7 @@ from sympy.utilities.misc import filldedent
 import string
 import re as _re
 import random
-from itertools import product
+from itertools import count, product
 
 
 if TYPE_CHECKING:
@@ -502,7 +502,12 @@ class Dummy(Symbol):
     # If a new session is started between `srepr` and `eval`, there is a very
     # small chance that `d2` will be equal to a previously-created Dummy.
 
-    _count = 0
+    # next() on an itertools.count is atomic, so concurrent Dummy() calls each
+    # get their own value.  Reading an int attribute and incrementing it was
+    # not, and because dummy_index is part of _hashable_content two Dummy
+    # objects that collided on it compared equal -- defeating the whole point
+    # of a Dummy.
+    _count = count()
     _prng = random.Random()
     _base_dummy_index = _prng.randint(10**6, 9*10**6)
 
@@ -516,12 +521,17 @@ class Dummy(Symbol):
         if dummy_index is not None:
             assert name is not None, "If you specify a dummy_index, you must also provide a name"
 
-        if name is None:
-            name = "Dummy_" + str(Dummy._count)
-
         if dummy_index is None:
-            dummy_index = Dummy._base_dummy_index + Dummy._count
-            Dummy._count += 1
+            # A caller that supplies dummy_index must also supply name (see the
+            # assert above), so this branch covers every case that consumes the
+            # counter.  Taking a single value also guarantees the generated
+            # name and the index come from the same count.
+            index = next(Dummy._count)
+
+            if name is None:
+                name = "Dummy_" + str(index)
+
+            dummy_index = Dummy._base_dummy_index + index
 
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
