@@ -7,7 +7,6 @@ from .expr_with_intlimits import ExprWithIntLimits
 from .expr_with_limits import AddWithLimits
 from .gosper import gosper_sum
 from sympy.core.add import Add
-from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand, expand_mul
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float, _illegal
@@ -1299,7 +1298,7 @@ def eval_sum_symbolic(f, limits):
                                 r_subs = r.subs(*m.args)
                                 if r_subs == val or (r_subs - val).is_zero:
                                     continue
-                            except Exception:
+                            except (TypeError, ValueError, AttributeError):
                                 pass
                             args.append((val, m))
                             added_for_fac = True
