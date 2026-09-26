@@ -1360,12 +1360,21 @@ def test_issue_4234():
 
 
 def test_issue_4492():
-    assert simplify(integrate(x**2 * sqrt(5 - x**2), x)).factor(
-        deep=True) == Piecewise(
-        (I*(2*x**5 - 15*x**3 + 25*x - 25*sqrt(x**2 - 5)*acosh(sqrt(5)*x/5)) /
-            (8*sqrt(x**2 - 5)), (x > sqrt(5)) | (x < -sqrt(5))),
-        ((2*x**5 - 15*x**3 + 25*x - 25*sqrt(5 - x**2)*asin(sqrt(5)*x/5)) /
-            (-8*sqrt(-x**2 + 5)), True))
+    from sympy import N
+
+    f = x**2 * sqrt(5 - x**2)
+    F = simplify(integrate(f, x)).factor(deep=True)
+    assert F.is_Piecewise
+    assert F.args[0][1] == (x > 0) & (Abs(x**2) > 5)
+    acosh_expr = I*(2*x**5 - 15*x**3 + 25*x - 25*sqrt(x**2 - 5)*acosh(sqrt(5)*x/5)) / (
+        8*sqrt(x**2 - 5))
+    asin_expr = (-2*x**5 + 15*x**3 - 25*x + 25*sqrt(5 - x**2)*asin(sqrt(5)*x/5)) / (
+        8*sqrt(5 - x**2))
+    assert simplify(F.args[0][0] - acosh_expr) == 0
+    assert simplify(F.args[1][0] - asin_expr) == 0
+    assert F.args[1][1] is S.true
+    for xv in (-4, -3, 3, 4):
+        assert abs(N((f - diff(F, x)).subs(x, xv))) < 1e-5
 
 
 def test_issue_2708():
