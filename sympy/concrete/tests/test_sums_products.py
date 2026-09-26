@@ -1712,4 +1712,3 @@ def test_issue_30593():
     assert res.subs(n, 0) == 1
     assert res.subs(n, 1) == 0
     assert res.subs(n, 2) == 0
-
