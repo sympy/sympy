@@ -429,92 +429,307 @@ class Relational(Boolean, EvalfMixin):
     def _eval_simplify(self, **kwargs):
         from .add import Add
         from .expr import Expr
-        r = self
-        r = r.func(*[i.simplify(**kwargs) for i in r.args])
-        if r.is_Relational:
-            if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
-                return r
-            dif = r.lhs - r.rhs
-            # replace dif with a valid Number that will
-            # allow a definitive comparison with 0
+        from .exprtools import _decompose_exprs
+        from .function import expand_mul
+        from .mul import Mul
+        from .rules import Transform
+        from .symbol import Dummy
+        from .coreerrors import NonCommutativeExpression
+        from sympy.simplify.simplify import factor_terms, simplify
+
+        hollow_mul = Transform(
+            lambda x: Mul(*x.args),
+            lambda x: x.is_Mul and len(x.args) == 2 and
+                x.args[0].is_Number and x.args[1].is_Add and
+                x.is_commutative)
+
+        def simplify_mul(rel):
+            blocked = False
+            if rel.lhs == 0 and rel.rhs != 0:
+                rel = rel.reversed
+            L, R = rel.args
+
+            d = Dummy()
+            factored = factor_terms(L - d*R)
+            if factored.has(d):
+                common, core = factored.as_independent(d, as_Add=False)
+                zero_rhs = False
+            else:
+                # If the dummy vanished, the rhs is zero and every
+                # exposed factor on the lhs is a cancellation candidate.
+                common, core = factored, S.One
+                zero_rhs = True
+            if common == 1:
+                return rel, blocked
+
+            keep = []
+            neg = False
+            changed = False
+            for factor in Mul.make_args(common):
+                if not factor.is_commutative:
+                    keep.append(factor)
+                    if not zero_rhs:
+                        blocked = True
+                    continue
+                if rel.func in (Eq, Ne):
+                    cancel = (factor.is_finite is True and
+                        factor.is_zero is False)
+                else:
+                    cancel = (factor.is_finite is True and
+                        (factor.is_positive is True or
+                         factor.is_negative is True))
+                if cancel:
+                    changed = True
+                    if factor.is_negative is True:
+                        neg = not neg
+                else:
+                    keep.append(factor)
+                    if not zero_rhs:
+                        blocked = True
+
+            if not changed:
+                return rel, blocked
+
+            keep = Mul(*keep)
+            L = (keep*core.subs(d, 0)).xreplace(hollow_mul)
+            R = (-keep*core.coeff(d)).xreplace(hollow_mul)
+            func = rel.func
+            if func not in (Eq, Ne) and neg:
+                func = rel.reversed.func
+            return func(L, R, evaluate=False), blocked
+
+        def simplify_add(rel):
+            blocked = False
+            blocked_keys = set()
+            changed = False
+            if rel.lhs.is_number and not rel.rhs.is_number:
+                rel = rel.reversed
+                changed = True
+
+            syms = tuple(rel.free_symbols)
+            L = rel.lhs.as_coefficients_dict(*syms)
+            R = rel.rhs.as_coefficients_dict(*syms)
+
+            for terms in (L, R):
+                for k, c in list(terms.items()):
+                    zero = c.is_zero
+                    if zero is None and not c.free_symbols:
+                        zero = c.equals(0)
+                    if zero is True:
+                        terms.pop(k)
+                        changed = True
+
+            for k in list(L):
+                if k not in R:
+                    continue
+                lc, rc = L[k], R[k]
+                d = lc - rc
+                zero = d.is_zero
+                if zero is None and not d.free_symbols:
+                    zero = d.equals(0)
+
+                if zero is True:
+                    term = lc if k is S.One else k
+                    safe = (term.is_finite is True and
+                        (rel.func in (Eq, Ne) or term.is_real is True))
+                    if not safe:
+                        blocked = True
+                        blocked_keys.add(k)
+                        continue
+
+                L[k] = d
+                R.pop(k)
+                if zero is True:
+                    L.pop(k)
+                changed = True
+
+            # Moving a constant is useful when it is not merely rearranging
+            # a relation whose common term could not safely be cancelled.
+            if (not blocked_keys and S.One in L and S.One not in R):
+                c = L.pop(S.One)
+                if c:
+                    R[S.One] = -c
+                changed = True
+
+            l = Add(*[k*v for k, v in L.items()])
+            r = Add(*[k*v for k, v in R.items()])
+
+            # Expose only a top-level rational factor; unlike
+            # as_content_primitive, factor_terms leaves the internal
+            # additive structure alone when there is no such factor.
+            factored = factor_terms(l)
+            c, primitive = factored.as_coeff_Mul()
+            func = rel.func
+            if c.is_Rational and c not in (0, 1):
+                l = primitive
+                r /= c
+                if func not in (Eq, Ne) and c.is_negative:
+                    func = rel.reversed.func
+                changed = True
+
+            if not changed:
+                return rel, blocked
+            return func(l, r, evaluate=False), blocked
+
+        def simplify_relational(r):
+            blocked = False
+            if isinstance(r.lhs, Expr) and isinstance(r.rhs, Expr):
+                while r.is_Relational:
+                    old = r
+                    r, b = simplify_mul(r)
+                    blocked |= b
+                    if not r.is_Relational:
+                        break
+                    if r.lhs.is_number and r.rhs.is_number:
+                        r = r.func(r.lhs, r.rhs)
+                        break
+                    r, b = simplify_add(r)
+                    blocked |= b
+                    if not r.is_Relational:
+                        break
+                    if r.lhs.is_number and r.rhs.is_number:
+                        r = r.func(r.lhs, r.rhs)
+                        break
+                    if r == old:
+                        break
+            return r, blocked
+
+        def masked_difference(rel):
+            """Return a simplified difference without unsafe cancellation.
+
+            Multiplication is expanded so additive terms hidden by products
+            are visible, but powers are not expanded. Structural term data
+            from _decompose_exprs is used to identify terms which would
+            cancel completely. Unsafe cancellations are represented by
+            distinct Dummies on the two sides while the difference is
+            simplified.
+            """
+            L, R = map(expand_mul, rel.args)
+            try:
+                (ldata, rdata), _ = _decompose_exprs((L, R))
+            except NonCommutativeExpression:
+                return rel, True, None
+
+            def grouped_terms(expr, data):
+                grouped = {}
+                for term, (coeff_factors, powers) in zip(
+                        Add.make_args(expr), data):
+                    key = frozenset(powers.items())
+                    coeff = Mul(*coeff_factors)
+                    if key in grouped:
+                        c, t = grouped[key]
+                        grouped[key] = (c + coeff, t + term)
+                    else:
+                        grouped[key] = (coeff, term)
+                return grouped
+
+            lg = grouped_terms(L, ldata)
+            rg = grouped_terms(R, rdata)
+            masks = {}
+            lreplace = {}
+            rreplace = {}
+
+            for key in set(lg).intersection(rg):
+                lc, lterm = lg[key]
+                rc, rterm = rg[key]
+                d = lc - rc
+                zero = d.is_zero
+                if zero is None and not d.free_symbols:
+                    zero = d.equals(0)
+                if zero is not True:
+                    continue
+
+                safe = (lterm.is_finite is True and
+                    (rel.func in (Eq, Ne) or lterm.is_real is True))
+                if safe:
+                    continue
+
+                dl, dr = Dummy(), Dummy()
+                masks[dl] = (lterm, True)
+                masks[dr] = (rterm, False)
+                lreplace[lterm] = dl
+                rreplace[rterm] = dr
+
+            lm = L.xreplace(lreplace)
+            rm = R.xreplace(rreplace)
+            sdif = simplify(lm - rm, **kwargs)
+
+            if not masks:
+                return rel.func(sdif, S.Zero, evaluate=False), False, sdif
+
+            # Expand multiplication only so terms containing distinct left
+            # and right masks can be restored to opposite sides.
+            sdif = expand_mul(sdif)
+            left = []
+            right = []
+            core = []
+            dummies = set(masks)
+
+            for term in Add.make_args(sdif):
+                hit = term.free_symbols & dummies
+                if not hit:
+                    core.append(term)
+                    continue
+                if len(hit) != 1:
+                    return rel, True, None
+
+                d = hit.pop()
+                original, on_left = masks[d]
+                restored = term.xreplace({d: original})
+                if on_left:
+                    left.append(restored)
+                else:
+                    right.append(-restored)
+
+            lhs = Add(*(core + left))
+            rhs = Add(*right)
+            return rel.func(lhs, rhs, evaluate=False), True, None
+
+        measure = kwargs['measure']
+
+        # Keep simplify's established behavior of simplifying each side first.
+        r = self.func(*[simplify(i, **kwargs) for i in self.args])
+        if not r.is_Relational:
+            return r
+        if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
+            return r
+
+        # Prefer simplifying the two-sided relation first. This preserves a
+        # simpler relational form when common terms can be removed directly.
+        rr, blocked = simplify_relational(r)
+        primary = (rr.canonical if rr.is_Relational and not blocked else rr)
+
+        # A single difference simplification is attempted from the simplified
+        # two-sided relation. Unsafe additive cancellation is masked.
+        if rr.is_Relational:
+            dr, masked, sdif = masked_difference(rr)
+            if dr.is_Relational:
+                dr, dblocked = simplify_relational(dr)
+                if not dblocked and not masked:
+                    dr = dr.canonical
+        else:
+            dr, masked, sdif = rr, False, None
+
+        choices = [primary, dr]
+        result = min(choices, key=measure)
+
+        # Preserve the old numerical determination step when the difference
+        # was formed without masking.
+        if not masked and sdif is not None:
             v = None
-            if dif.is_comparable:
-                v = dif.n(2)
+            if sdif.is_comparable:
+                v = sdif.n(2)
                 if any(i._prec == 1 for i in v.as_real_imag()):
-                    rv, iv = [i.n(2) for i in dif.as_real_imag()]
+                    rv, iv = [i.n(2) for i in sdif.as_real_imag()]
                     v = rv + S.ImaginaryUnit*iv
-            elif dif.equals(0):  # XXX this is expensive
+            elif sdif.equals(0):  # XXX this is expensive
                 v = S.Zero
             if v is not None:
-                r = r.func._eval_relation(v, S.Zero)
-            r = r.canonical
-            # If there is only one symbol in the expression,
-            # try to write it on a simplified form
-            free = list(filter(lambda x: x.is_real is not False, r.free_symbols))
-            if len(free) == 1:
-                try:
-                    from sympy.solvers.solveset import linear_coeffs
-                    x = free.pop()
-                    dif = r.lhs - r.rhs
-                    m, b = linear_coeffs(dif, x)
-                    if m.is_zero is False:
-                        if m.is_negative:
-                            # Dividing with a negative number, so change order of arguments
-                            # canonical will put the symbol back on the lhs later
-                            r = r.func(-b / m, x)
-                        else:
-                            r = r.func(x, -b / m)
-                    else:
-                        r = r.func(b, S.Zero)
-                except ValueError:
-                    # maybe not a linear function, try polynomial
-                    from sympy.polys.polyerrors import PolynomialError
-                    from sympy.polys.polytools import gcd, Poly, poly
-                    try:
-                        p = poly(dif, x)
-                        c = p.all_coeffs()
-                        constant = c[-1]
-                        c[-1] = 0
-                        scale = gcd(c)
-                        c = [ctmp / scale for ctmp in c]
-                        r = r.func(Poly.from_list(c, x).as_expr(), -constant / scale)
-                    except PolynomialError:
-                        pass
-            elif len(free) >= 2:
-                try:
-                    from sympy.solvers.solveset import linear_coeffs
-                    from sympy.polys.polytools import gcd
-                    free = list(ordered(free))
-                    dif = r.lhs - r.rhs
-                    m = linear_coeffs(dif, *free)
-                    constant = m[-1]
-                    del m[-1]
-                    scale = gcd(m)
-                    m = [mtmp / scale for mtmp in m]
-                    nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
-                    if scale.is_zero is False:
-                        if constant != 0:
-                            # lhs: expression, rhs: constant
-                            newexpr = Add(*[i * j for i, j in nzm])
-                            r = r.func(newexpr, -constant / scale)
-                        else:
-                            # keep first term on lhs
-                            lhsterm = nzm[0][0] * nzm[0][1]
-                            del nzm[0]
-                            newexpr = Add(*[i * j for i, j in nzm])
-                            r = r.func(lhsterm, -newexpr)
+                result = r.func._eval_relation(v, S.Zero)
 
-                    else:
-                        r = r.func(constant, S.Zero)
-                except ValueError:
-                    pass
-        # Did we get a simplified result?
-        r = r.canonical
-        measure = kwargs['measure']
-        if measure(r) < kwargs['ratio'] * measure(self):
-            return r
-        else:
-            return self
+        if measure(result) < kwargs['ratio'] * measure(self):
+            return result
+        return self
 
     def _eval_trigsimp(self, **opts):
         from sympy.simplify.trigsimp import trigsimp
@@ -709,33 +924,6 @@ class Equality(Relational):
                 return {self.rhs}
         return set()
 
-    def _eval_simplify(self, **kwargs):
-        # standard simplify
-        e = super()._eval_simplify(**kwargs)
-        if not isinstance(e, Equality):
-            return e
-        from .expr import Expr
-        if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
-            return e
-        free = self.free_symbols
-        if len(free) == 1:
-            try:
-                from .add import Add
-                from sympy.solvers.solveset import linear_coeffs
-                x = free.pop()
-                m, b = linear_coeffs(
-                    Add(e.lhs, -e.rhs, evaluate=False), x)
-                if m.is_zero is False:
-                    enew = e.func(x, -b / m)
-                else:
-                    enew = e.func(m * x, -b)
-                measure = kwargs['measure']
-                if measure(enew) <= kwargs['ratio'] * measure(e):
-                    e = enew
-            except ValueError:
-                pass
-        return e.canonical
-
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""
         from sympy.integrals.integrals import integrate
@@ -829,13 +1017,7 @@ class Unequality(Relational):
                 return {self.rhs}
         return set()
 
-    def _eval_simplify(self, **kwargs):
-        # simplify as an equality
-        eq = Equality(*self.args)._eval_simplify(**kwargs)
-        if isinstance(eq, Equality):
-            # send back Ne with the new args
-            return self.func(*eq.args)
-        return eq.negated  # result of Ne is the negated Eq
+
 
 
 Ne = Unequality
@@ -1600,6 +1782,17 @@ def is_eq(lhs: Basic, rhs: Basic, assumptions=None) -> bool | None:
             return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
 
     if isinstance(lhs, Expr) and isinstance(rhs, Expr):
+        # Do not form a difference if it would completely cancel a
+        # term which is not known to be finite.
+        if not (_lhs.is_finite is True and _rhs.is_finite is True):
+            L = lhs.as_coefficients_dict()
+            R = rhs.as_coefficients_dict()
+            for term in set(L).intersection(R):
+                if term is S.One or L[term] != R[term]:
+                    continue
+                if AssumptionsWrapper(term, assumptions).is_finite is not True:
+                    return None
+
         # see if the difference evaluates
         dif = lhs - rhs
         _dif = AssumptionsWrapper(dif, assumptions)

@@ -415,7 +415,7 @@ def test_Range_symbolic():
     raises(ValueError, lambda: sr.size)
     # bool
     assert bool(Range(0)) == False
-    assert bool(xr)
+    assert bool(Range(x, x + 4, 5))
     assert bool(ir)
     assert bool(ipr)
     assert bool(inr)

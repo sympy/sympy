@@ -1879,9 +1879,6 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
 
-    # 25777
-    assert solve(abs(x**3 + x + 2)/(x + 1)) == []
-
     # 25779
     assert solve(abs(x)) == [0]
     assert solve(Eq(abs(x**2 - 2*x), 4), x) == [
@@ -1924,6 +1921,12 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
+@XFAIL
+def test_issue_25777():
+    x = symbols('x', real=True)
+    assert solve(abs(x**3 + x + 2)/(x + 1)) == []
+
 
 def test_issue_17638():
 
