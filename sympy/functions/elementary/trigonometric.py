@@ -3027,7 +3027,7 @@ class acot(InverseTrigonometricFunction):
         if arg is S.ComplexInfinity:
             return S.Zero
 
-        if arg.could_extract_minus_sign():
+        if arg.could_extract_minus_sign() and arg.is_nonzero:
             return -cls(-arg)
 
         if arg.is_number:

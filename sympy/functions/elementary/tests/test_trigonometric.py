@@ -1291,6 +1291,15 @@ def test_acot():
     assert acot(cot(Rational(1, 4))) == Rational(1, 4)
     assert acot(tan(Rational(-1, 4))) == Rational(1, 4) - pi/2
 
+    # acot(-z) -> -acot(z) is only valid away from z = 0, where acot(0) =
+    # pi/2 but -acot(0) = -pi/2.  So the minus sign is only extracted when
+    # the argument is known to be nonzero.
+    assert acot(-nz) == -acot(nz)
+    assert acot(-n) == -acot(n)
+    assert unchanged(acot, -x)
+    assert acot(-x).subs(x, 0) == acot(0)
+    assert acot(-x).subs(x, 1) == acot(-1) == -pi/4
+
 
 def test_acot_rewrite():
     assert acot(x).rewrite(log) == I*(log(1 - I/x)-log(1 + I/x))/2
@@ -1361,7 +1370,10 @@ def test_evenodd_rewrite():
     a = cos(2)  # negative
     b = sin(1)  # positive
     even = [cos]
-    odd = [sin, tan, cot, asin, atan, acot]
+    # acot is not listed here: it is odd only away from its branch point at
+    # 0, so it is not odd on a symbol that may vanish there.  It is checked
+    # separately below.
+    odd = [sin, tan, cot, asin, atan]
     with_minus = [-1, -2**1024 * E, -pi/105, -x*y, -x - y]
     for func in even:
         for expr in with_minus:
@@ -1375,6 +1387,13 @@ def test_evenodd_rewrite():
         assert _check_no_rewrite(func, a*b)
         assert func(
             x - y) == -func(y - x)  # it doesn't matter which form is canonical
+    # acot extracts the minus sign only for arguments that are known to be
+    # nonzero, so the three numeric cases of with_minus still rewrite.
+    for expr in with_minus[:3]:
+        assert _check_odd_rewrite(acot, expr)
+    assert _check_no_rewrite(acot, a*b)
+    assert acot(x - y) == acot(x - y)  # not odd at a possible branch point
+    assert acot(-p) == -acot(p)  # ... but odd away from the branch point
 
 
 def test_as_leading_term_issue_5272():

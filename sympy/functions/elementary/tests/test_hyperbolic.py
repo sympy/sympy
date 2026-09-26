@@ -1209,7 +1209,14 @@ def test_acoth():
     assert acoth(zoo) == 0
 
     #properties
-    assert acoth(-x) == -acoth(x)
+    # acoth(-z) -> -acoth(z) is only valid away from z = 0, where acoth(0) =
+    # I*pi/2 but -acoth(0) = -I*pi/2.  So the minus sign is only extracted
+    # when the argument is known to be nonzero.
+    nz = Symbol('n', nonzero=True)
+    assert acoth(-nz) == -acoth(nz)
+    assert unchanged(acoth, -x)
+    assert acoth(-x).subs(x, 0) == acoth(0)
+    assert acoth(-x).subs(x, 1) == acoth(-1) == -oo
 
     assert acoth(I/sqrt(3)) == -I*pi/3
     assert acoth(-I/sqrt(3)) == I*pi/3
