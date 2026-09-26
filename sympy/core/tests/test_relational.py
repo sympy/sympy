@@ -719,15 +719,23 @@ def test_issue_8449():
     assert Le(oo, -p) is S.false
 
 
+def test_issue_19245():
+    v = Symbol('v')
+    assert Eq(v, v + 1).is_Equality
+    vf = Symbol('vf', finite=True)
+    assert Eq(vf, vf + 1) is S.false
+    assert Eq(2*v, v + 1).simplify() == Eq(v, 1)
+
+
 def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
     assert simplify(x*(y + 1) - x*y - x - 1 < x) == (x > -1)
     assert simplify(x < x*(y + 1) - x*y - x + 1) == (x < 1)
     q, r = symbols("q r")
-    assert (((-q + r) - (q - r)) <= 0).simplify() == (q >= r)
+    assert (((-q + r) - (q - r)) <= 0).simplify() == (q - r >= 0)
     root2 = sqrt(2)
     equation = ((root2 * (-q + r) - root2 * (q - r)) <= 0).simplify()
-    assert equation == (q >= r)
+    assert equation == (q - r >= 0)
     r = S.One < x
     # canonical operations are not the same as simplification,
     # so if there is no simplification, canonicalization will
@@ -743,7 +751,8 @@ def test_simplify_relational():
     # canonical at least
     assert Eq(y, x).simplify() == Eq(x, y)
     assert Eq(x - 1, 0).simplify() == Eq(x, 1)
-    assert Eq(x - 1, x).simplify() == S.false
+    eq = Eq(x - 1, x)
+    assert eq.simplify() == eq
     assert Eq(2*x - 1, x).simplify() == Eq(x, 1)
     assert Eq(2*x, 4).simplify() == Eq(x, 2)
     z = cos(1)**2 + sin(1)**2 - 1  # z.is_zero is None
@@ -751,7 +760,8 @@ def test_simplify_relational():
 
     assert Ne(y, x).simplify() == Ne(x, y)
     assert Ne(x - 1, 0).simplify() == Ne(x, 1)
-    assert Ne(x - 1, x).simplify() == S.true
+    ne = Ne(x - 1, x)
+    assert ne.simplify() == ne
     assert Ne(2*x - 1, x).simplify() == Ne(x, 1)
     assert Ne(2*x, 4).simplify() == Ne(x, 2)
     assert Ne(z*x, 0).simplify() == S.false
@@ -759,7 +769,8 @@ def test_simplify_relational():
     # No real-valued assumptions
     assert Ge(y, x).simplify() == Le(x, y)
     assert Ge(x - 1, 0).simplify() == Ge(x, 1)
-    assert Ge(x - 1, x).simplify() == S.false
+    ge = Ge(x - 1, x)
+    assert ge.simplify() == ge
     assert Ge(2*x - 1, x).simplify() == Ge(x, 1)
     assert Ge(2*x, 4).simplify() == Ge(x, 2)
     assert Ge(z*x, 0).simplify() == S.true
@@ -770,7 +781,8 @@ def test_simplify_relational():
 
     assert Le(y, x).simplify() == Ge(x, y)
     assert Le(x - 1, 0).simplify() == Le(x, 1)
-    assert Le(x - 1, x).simplify() == S.true
+    le = Le(x - 1, x)
+    assert le.simplify() == le
     assert Le(2*x - 1, x).simplify() == Le(x, 1)
     assert Le(2*x, 4).simplify() == Le(x, 2)
     assert Le(z*x, 0).simplify() == S.true
@@ -781,7 +793,8 @@ def test_simplify_relational():
 
     assert Gt(y, x).simplify() == Lt(x, y)
     assert Gt(x - 1, 0).simplify() == Gt(x, 1)
-    assert Gt(x - 1, x).simplify() == S.false
+    gt = Gt(x - 1, x)
+    assert gt.simplify() == gt
     assert Gt(2*x - 1, x).simplify() == Gt(x, 1)
     assert Gt(2*x, 4).simplify() == Gt(x, 2)
     assert Gt(z*x, 0).simplify() == S.false
@@ -792,7 +805,8 @@ def test_simplify_relational():
 
     assert Lt(y, x).simplify() == Gt(x, y)
     assert Lt(x - 1, 0).simplify() == Lt(x, 1)
-    assert Lt(x - 1, x).simplify() == S.true
+    lt = Lt(x - 1, x)
+    assert lt.simplify() == lt
     assert Lt(2*x - 1, x).simplify() == Lt(x, 1)
     assert Lt(2*x, 4).simplify() == Lt(x, 2)
     assert Lt(z*x, 0).simplify() == S.false
@@ -803,10 +817,48 @@ def test_simplify_relational():
 
     # Test particular branches of _eval_simplify
     m = exp(1) - exp_polar(1)
-    assert simplify(m*x > 1) is S.false
+    assert simplify(m*x > 1) == (m*x > 1)
     # These two test the same branch
     assert simplify(m*x + 2*m*y > 1) is S.false
-    assert simplify(m*x + y > 1 + y) is S.false
+    assert simplify(m*x + y > 1 + y).has(y)
+    yr = Symbol('yr', real=True)
+    assert simplify(m*x + yr > 1 + yr) is S.false
+
+
+def test_issue_28666():
+    assert Eq(x**2 + 1, y**2 + 1).simplify() == Eq(x**2, y**2)
+    assert Eq(91*sin(x) + 40, 91*sin(y) + 40).simplify() == Eq(sin(x), sin(y))
+    assert Lt(-2*sin(x), -2*sin(y)).simplify() == Gt(sin(x), sin(y))
+
+    r = Symbol('r', real=True)
+    assert Lt(x + sin(r), y + sin(r)).simplify() == Lt(x, y)
+
+    expr = Lt(x + sin(z), y + sin(z))
+    assert expr.simplify() == expr
+    assert Lt(2*x + y, x).simplify() == Lt(x + y, 0).simplify()
+    assert Lt(x + y, x).simplify().has(x)
+
+    xr, zr = symbols('xr zr', real=True, zero=False)
+    assert Eq(zr*xr, zr*y).simplify() == Eq(xr, y)
+    assert Eq(zr*xr, zr*(xr + 1)).simplify() is S.false
+
+    a = Symbol('a', finite=True, zero=False)
+    assert Eq(a*x + a*y + 1, 1).simplify() == Eq(x + y, 0)
+
+    # Older relational simplification regressions
+    f = Function('f')
+    eq = Eq(f(1), x*f(0))
+    assert eq.simplify() == eq
+
+    p = Symbol('p', positive=True)
+    assert Lt(p, p*x).simplify() == Gt(x, 1)
+
+    n = Symbol('n', negative=True)
+    assert Lt(2*x/n, 0).simplify() == Gt(x, 0)
+    assert Lt(-2*x/n, 0).simplify() == Lt(x, 0)
+
+    r = Symbol('r', real=True)
+    assert Lt(r, r + r**2).simplify() == Gt(r**2, 0)
 
 
 def test_equals():
@@ -1138,12 +1190,17 @@ def test_trigsimp():
 
 
 def test_polynomial_relation_simplification():
-    assert Ge(3*x*(x + 1) + 4, 3*x).simplify() in [Ge(x**2, -Rational(4,3)), Le(-x**2, Rational(4, 3))]
-    assert Le(-(3*x*(x + 1) + 4), -3*x).simplify() in [Ge(x**2, -Rational(4,3)), Le(-x**2, Rational(4, 3))]
-    assert ((x**2+3)*(x**2-1)+3*x >= 2*x**2).simplify() in [(x**4 + 3*x >= 3), (-x**4 - 3*x <= -3)]
+    xr = Symbol('xr', real=True)
+    assert Ge(3*xr*(xr + 1) + 4, 3*xr).simplify() in [
+        Ge(xr**2, -Rational(4, 3)), Le(-xr**2, Rational(4, 3))]
+    assert Le(-(3*xr*(xr + 1) + 4), -3*xr).simplify() in [
+        Ge(xr**2, -Rational(4, 3)), Le(-xr**2, Rational(4, 3))]
+    assert ((xr**2 + 3)*(xr**2 - 1) + 3*xr >= 2*xr**2).simplify() in [
+        xr**4 + 3*xr >= 3, -xr**4 - 3*xr <= -3]
 
 
 def test_multivariate_linear_function_simplification():
+    x, y = symbols('x y', real=True)
     assert Ge(x + y, x - y).simplify() == Ge(y, 0)
     assert Le(-x + y, -x - y).simplify() == Le(y, 0)
     assert Eq(2*x + y, 2*x + y - 3).simplify() == False
@@ -1151,7 +1208,8 @@ def test_multivariate_linear_function_simplification():
     assert (2*x + y < 2*x + y - 3).simplify() == False
     assert (2*x + y < 2*x + y + 3).simplify() == True
     a, b, c, d, e, f, g = symbols('a b c d e f g')
-    assert Lt(a + b + c + 2*d, 3*d - f + g). simplify() == Lt(a, -b - c + d - f + g)
+    assert Lt(a + b + c + 2*d, 3*d - f + g).simplify() == \
+        Lt(f - g, -a - b - c + d)
 
 
 def test_nonpolymonial_relations():
@@ -1185,6 +1243,11 @@ def test_EvalEq():
 
 
 def test_is_eq():
+    # generic symbols are not assumed finite
+    assert is_eq(x, x + 1) is None
+    xr = Symbol('xr', real=True)
+    assert is_eq(xr, xr + 1) is False
+
     # test assumptions
     assert is_eq(x, y, Q.infinite(x) & Q.finite(y)) is False
     assert is_eq(x, y, Q.infinite(x) & Q.infinite(y) & Q.extended_real(x) & ~Q.extended_real(y)) is False
