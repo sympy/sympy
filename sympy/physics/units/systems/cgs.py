@@ -39,7 +39,8 @@ cgs_gauss = UnitSystem(
     base_units=[centimeter, gram, second],
     units=[],
     name="cgs_gauss",
-    dimension_system=dimsys_cgs)
+    dimension_system=dimsys_cgs,
+    defining_constants={coulomb_constant: One})
 
 
 cgs_gauss.set_quantity_scale_factor(coulombs_constant, 1)

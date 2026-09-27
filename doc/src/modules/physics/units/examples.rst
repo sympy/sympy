@@ -119,3 +119,54 @@ astrophysical system, but we wanted to show how to create a unit that one needs.
 We can see in this example that intermediate dimensions can be ill-defined,
 such as sqrt(G), but one should check that the final result - when all
 dimensions are combined - is well defined.
+
+
+Natural units
+=============
+
+In natural units some physical constants are equal to one. The unit systems
+are defined in ``sympy.physics.units.systems``. In the natural units of
+particle physics lengths and times are inverse energies:
+
+    >>> from sympy.physics.units import convert_to, meter, second, electronvolt
+    >>> from sympy.physics.units import speed_of_light, hbar
+    >>> from sympy.physics.units.systems import natural
+    >>> convert_to(speed_of_light, 1, natural)
+    1
+    >>> convert_to(hbar, 1, natural)
+    1
+    >>> convert_to(1/meter, electronvolt, natural).n(6)
+    1.97327e-7*electronvolt
+    >>> convert_to(1/second, electronvolt, natural).n(6)
+    6.58212e-16*electronvolt
+
+In Hartree atomic units all mechanical and electromagnetic quantities are
+dimensionless, the speed of light is the inverse of the fine-structure
+constant:
+
+    >>> from sympy.physics.units.systems import hartree_atomic_units
+    >>> convert_to(speed_of_light, 1, hartree_atomic_units).n(6)
+    137.036
+
+A unit system where other constants are equal to one is created with the
+``contract`` method:
+
+    >>> from sympy.physics.units import boltzmann_constant, kelvin
+    >>> unit_system = natural.contract([boltzmann_constant])
+    >>> convert_to(kelvin, electronvolt, unit_system).n(6)
+    8.61733e-5*electronvolt
+
+The equations can be converted between unit systems with
+``convert_unit_system``, provided that the dimensions of the symbols are
+specified:
+
+    >>> from sympy import symbols, Eq
+    >>> from sympy.physics.units import convert_unit_system, energy, mass, temperature
+    >>> from sympy.physics.units.systems import SI
+    >>> E, m, T = symbols("E m T")
+    >>> dims = {E: energy, m: mass, T: temperature}
+    >>> eq = Eq(E, m*speed_of_light**2 + boltzmann_constant*T)
+    >>> convert_unit_system(eq, dims, SI, unit_system)
+    Eq(E, T + m)
+    >>> convert_unit_system(Eq(E, T + m), dims, unit_system, SI)
+    Eq(E, boltzmann_constant*T + speed_of_light**2*m)

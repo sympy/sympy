@@ -25,6 +25,7 @@ from sympy.physics.units.definitions import (
     katal, gray, becquerel, inch, liter, julian_year, gravitational_constant,
     speed_of_light, elementary_charge, planck, hbar, electronvolt,
     avogadro_number, avogadro_constant, boltzmann_constant, electron_rest_mass,
+    proton_rest_mass,
     stefan_boltzmann_constant, Da, atomic_mass_constant, molar_gas_constant,
     faraday_constant, josephson_constant, von_klitzing_constant,
     acceleration_due_to_gravity, magnetic_constant, vacuum_permittivity,
@@ -200,6 +201,11 @@ SI.set_quantity_scale_factor(acceleration_due_to_gravity, 9.80665*meter/second**
 SI.set_quantity_dimension(electron_rest_mass, mass)
 SI.set_quantity_scale_factor(electron_rest_mass, 9.1093837015e-31*kilogram)
 
+# Proton rest mass
+# REF: NIST SP 959 (June 2019)
+SI.set_quantity_dimension(proton_rest_mass, mass)
+SI.set_quantity_scale_factor(proton_rest_mass, 1.67262192369e-27*kilogram)
+
 SI.set_quantity_dimension(psi, pressure)
 SI.set_quantity_scale_factor(psi, pound * gee / inch ** 2)
 
@@ -338,6 +344,7 @@ __all__ = [
     'dHg0', 'von_klitzing_constant', 'planck_length', 'avogadro_number',
     'mole', 'acceleration', 'information', 'planck_energy_density',
     'mebibyte', 's', 'acceleration_due_to_gravity', 'electron_rest_mass',
+    'proton_rest_mass',
     'planck_temperature', 'units', 'mass', 'dimsys_MKSA', 'kelvin', 'kPa',
     'boltzmann', 'milli_mass_unit', 'planck_impedance', 'electric_constant',
     'derived_dims', 'kg', 'coulomb', 'siemens', 'byte', 'magnetic_flux',

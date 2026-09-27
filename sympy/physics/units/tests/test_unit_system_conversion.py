@@ -5,21 +5,26 @@ from sympy.core.numbers import I, pi
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.integrals.integrals import Integral
 from sympy.matrices.dense import Matrix
 from sympy.physics.units import (
     DimensionSystem, UnitSystem, convert_to, convert_unit_system)
 from sympy.physics.units.definitions import (
-    ampere, boltzmann_constant, coulomb, coulomb_constant, electronvolt,
-    elementary_charge, hbar, kilogram, magnetic_constant, meter, newton,
+    ampere, boltzmann_constant, coulomb, coulomb_constant, electron_rest_mass,
+    electronvolt, elementary_charge, gravitational_constant, hbar, joule,
+    kelvin, kilogram, magnetic_constant, meter, newton, proton_rest_mass,
     second, speed_of_light, tesla, vacuum_impedance, vacuum_permittivity,
     volt)
 from sympy.physics.units.definitions.dimension_definitions import (
     capacitance, charge, current, energy, force, impedance, inductance,
     length, magnetic_density, mass, momentum, temperature, time, velocity,
     voltage, volume)
-from sympy.physics.units.systems import MKS, MKSA, SI, natural
+from sympy.physics.units.systems import (
+    MKS, MKSA, SI, natural, planck_units, stoney_units, schroedinger_units,
+    geometrized_units, hartree_atomic_units, rydberg_atomic_units,
+    strong_units)
 from sympy.physics.units.systems.cgs import cgs_gauss
 from sympy.testing.pytest import raises
 
@@ -161,9 +166,7 @@ def test_si_gauss_numerical_values():
 
 def test_equivalent_unit_systems():
     eq = Eq(W, exp(-q*U/(boltzmann_constant*T)) + m*c**2 + e0*E(x, t)**2*r**3)
-    for source, target in [
-            (SI, MKSA), (MKSA, SI), (SI, MKS), (MKS, SI), (MKS, natural),
-            (natural, SI)]:
+    for source, target in [(SI, MKSA), (MKSA, SI), (SI, MKS), (MKS, SI)]:
         assert convert_unit_system(eq, dims, source, target) == eq
 
 
@@ -183,7 +186,7 @@ def test_dimensionless_constants():
         unit_system.set_quantity_dimension(constant, 1)
         unit_system.set_quantity_scale_factor(constant, 1)
 
-    for other in [MKS, SI, cgs_gauss, natural]:
+    for other in [MKS, SI, cgs_gauss]:
         for eq1, eq2 in [
                 (Eq(W**2, p**2*c**2 + m**2*c**4), Eq(W**2, p**2 + m**2)),
                 (Eq(W, hbar*omega), Eq(W, omega)),
@@ -209,6 +212,122 @@ def test_unrelated_unit_systems():
     assert convert_unit_system(Eq(x, c*t), dims, SI, unit_system) == Eq(x, t)
     assert convert_unit_system(Eq(x, t), dims, unit_system, SI) == Eq(x, c*t)
     raises(NotImplementedError, lambda: convert_unit_system(Eq(x, c*t), dims, cgs_gauss, unit_system))
+
+
+def test_natural_unit_systems():
+    G = gravitational_constant
+    e = elementary_charge
+    me = electron_rest_mass
+    kB = boltzmann_constant
+    M, n = symbols("M n")
+    psi = Function("psi")
+    dims2 = {**dims, M: mass, n: 1, psi: 1/sqrt(volume)}
+
+    energy_momentum = Eq(W**2, p**2*c**2 + m**2*c**4)
+    gravity = Eq(W, G*m*M/r + q**2/(4*pi*e0*r) + hbar*omega)
+    hawking = Eq(T, hbar*c**3/(8*pi*G*M*kB))
+    schroedinger = Eq(
+        W*psi(r), -hbar**2/(2*me)*psi(r).diff(r, 2) - e**2/(4*pi*e0*r)*psi(r))
+    schroedinger_back = Eq(
+        W*psi(r), -hbar**2/(2*me)*psi(r).diff(r, 2) - k_e*e**2/r*psi(r))
+    levels = Eq(W, -me*e**4/(2*(4*pi*e0)**2*hbar**2*n**2))
+    levels_back = Eq(W, -me*k_e**2*e**4/(2*hbar**2*n**2))
+    alpha = e**2/(4*pi*e0*hbar*c)
+
+    for unit_system, eq_si, eq, eq_back in [
+            (natural, energy_momentum, Eq(W**2, p**2 + m**2), None),
+            (natural, alpha, e**2/(4*pi), None),
+            (natural, Eq(W, kB*T), Eq(W, kB*T), None),
+            (natural, Eq(F, q*(E(x, t) + v*B(x, t))), Eq(F, q*(E(x, t) + v*B(x, t))), None),
+            (planck_units, energy_momentum, Eq(W**2, p**2 + m**2), None),
+            (planck_units, hawking, Eq(T, 1/(8*pi*M)), None),
+            (planck_units, alpha, e**2, k_e*e**2/(hbar*c)),
+            (stoney_units, gravity, Eq(W, m*M/r + q**2/r + hbar*omega),
+             Eq(W, G*m*M/r + k_e*q**2/r + hbar*omega)),
+            (stoney_units, alpha, 1/hbar, k_e*e**2/(hbar*c)),
+            (schroedinger_units, gravity, Eq(W, m*M/r + q**2/r + omega),
+             Eq(W, G*m*M/r + k_e*q**2/r + hbar*omega)),
+            (schroedinger_units, alpha, 1/c, k_e*e**2/(hbar*c)),
+            (geometrized_units, Eq(r, 2*G*M/c**2), Eq(r, 2*M), None),
+            (geometrized_units, energy_momentum, Eq(W**2, p**2 + m**2), None),
+            (hartree_atomic_units, schroedinger,
+             Eq(W*psi(r), -psi(r).diff(r, 2)/2 - psi(r)/r), schroedinger_back),
+            (hartree_atomic_units, levels, Eq(W, -1/(2*n**2)), levels_back),
+            (hartree_atomic_units, Eq(W, m*c**2), Eq(W, m*c**2), None),
+            (hartree_atomic_units, alpha, 1/c, k_e*e**2/(hbar*c)),
+            (rydberg_atomic_units, schroedinger,
+             Eq(W*psi(r), -psi(r).diff(r, 2) - 2*psi(r)/r), schroedinger_back),
+            (rydberg_atomic_units, levels, Eq(W, -1/n**2), levels_back),
+            (rydberg_atomic_units, alpha, 2/c, k_e*e**2/(hbar*c)),
+            (strong_units, Eq(W, proton_rest_mass*c**2 + hbar*omega), Eq(W, 1 + omega), None),
+            ]:
+        if eq_back is None:
+            eq_back = eq_si
+        assert convert_unit_system(eq_si, dims2, SI, unit_system) == eq
+        assert convert_unit_system(eq, dims2, unit_system, SI) == eq_back
+
+    assert convert_unit_system(
+        Eq(r, 4*pi*e0*hbar**2/(me*e**2)), dims2, SI, hartree_atomic_units) == Eq(r, 1)
+    assert convert_unit_system(Eq(r, 1), dims2, hartree_atomic_units, SI) == \
+        Eq(r, hbar**2/(k_e*me*e**2))
+
+
+def test_natural_unit_systems_numerical_values():
+    G = gravitational_constant
+    M = symbols("M")
+    dims2 = {**dims, M: mass}
+    values = {
+        m: 3*kilogram, M: 5*kilogram, r: 2*meter, q: 7*coulomb,
+        omega: 11/second, i: 13*ampere, T: 17*kelvin}
+    for unit_system in [
+            cgs_gauss, natural, planck_units, stoney_units, schroedinger_units,
+            geometrized_units, hartree_atomic_units, rydberg_atomic_units,
+            strong_units]:
+        for expr in [
+                G*m*M/r, q**2/(4*pi*e0*r), hbar*omega, m*c**2, u0*i**2*r,
+                boltzmann_constant*T]:
+            if unit_system == cgs_gauss and expr.has(T):
+                continue
+            converted = convert_unit_system(expr, dims2, SI, unit_system)
+            value = convert_to(converted.subs(values), joule, unit_system)/joule
+            expected = convert_to(expr.subs(values), joule, SI)/joule
+            assert abs(value/expected - 1) < 1e-12
+
+
+def test_natural_unit_systems_intermediate():
+    G = gravitational_constant
+    M = symbols("M")
+    dims2 = {**dims, M: mass}
+
+    eq = Eq(W, G*m*M/r + q**2/r + hbar*omega + m*c**2)
+    assert convert_unit_system(eq, dims2, cgs_gauss, planck_units) == \
+        Eq(W, m*M/r + q**2/r + omega + m)
+    assert convert_unit_system(eq, dims2, cgs_gauss, natural) == \
+        Eq(W, G*m*M/r + q**2/(4*pi*r) + omega + m)
+    assert convert_unit_system(eq, dims2, cgs_gauss, hartree_atomic_units) == \
+        Eq(W, G*m*M/r + q**2/r + omega + m*c**2)
+    assert convert_unit_system(eq, dims2, cgs_gauss, geometrized_units) == \
+        Eq(W, m*M/r + k_e*q**2/r + hbar*omega + m)
+
+    eq = Eq(W, m*M/r + q**2/r + omega + m)
+    assert convert_unit_system(eq, dims2, planck_units, cgs_gauss) == \
+        Eq(W, G*m*M/r + q**2/r + hbar*omega + m*c**2)
+    assert convert_unit_system(eq, dims2, planck_units, natural) == \
+        Eq(W, G*m*M/r + q**2/(4*pi*r) + omega + m)
+    assert convert_unit_system(eq, dims2, planck_units, stoney_units) == \
+        Eq(W, m*M/r + q**2/r + hbar*omega + m)
+    assert convert_unit_system(eq, dims2, planck_units, hartree_atomic_units) == \
+        Eq(W, G*m*M/r + q**2/r + omega + m*c**2)
+    assert convert_unit_system(eq, dims2, planck_units, rydberg_atomic_units) == \
+        Eq(W, G*m*M/r + q**2/r + omega + m*c**2)
+
+    eq = Eq(W, -1/(2*symbols("n")**2))
+    assert convert_unit_system(eq, {**dims, symbols("n"): 1}, hartree_atomic_units, rydberg_atomic_units) == \
+        Eq(W, -1/symbols("n")**2)
+
+    raises(NotImplementedError, lambda: convert_unit_system(
+        eq, {**dims, symbols("n"): 1}, hartree_atomic_units, rydberg_atomic_units,
+        constants=[hbar]))
 
 
 def test_missing_dimensions():

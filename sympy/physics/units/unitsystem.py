@@ -6,11 +6,14 @@ from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.function import (Application, Derivative, Function)
 from sympy.core.mul import Mul
+from sympy.core.numbers import Float
 from sympy.core.power import Pow
 from sympy.core.singleton import S
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import Matrix
 from sympy.physics.units.dimensions import _QuantityMapper
 
-from .dimensions import Dimension
+from .dimensions import Dimension, DimensionSystem
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -30,7 +33,8 @@ class UnitSystem(_QuantityMapper):
 
     _unit_systems: dict[str, UnitSystem] = {}
 
-    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: dict[Dimension, Expr]={}):
+    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: dict[Dimension, Expr]={},
+                 defining_constants: dict[Quantity, Expr]={}):
 
         UnitSystem._unit_systems[name] = self
 
@@ -42,6 +46,9 @@ class UnitSystem(_QuantityMapper):
         self._units = tuple(set(base_units) | set(units))
         self._base_units = tuple(base_units)
         self._derived_units = derived_units
+        self._defining_constants = dict(defining_constants)
+        self._parent: UnitSystem | None = None
+        self._contraction: tuple | None = None
 
         super().__init__()
 
@@ -73,9 +80,139 @@ class UnitSystem(_QuantityMapper):
         base = self._base_units + tuple(base)
         units = self._units + tuple(units)
 
-        return UnitSystem(base, units, name, description, dimension_system, {**self._derived_units, **derived_units})
+        return UnitSystem(base, units, name, description, dimension_system, {**self._derived_units, **derived_units},
+                          self._defining_constants)
+
+    def contract(self, constants, base_units=(), units=(), name="", description="", derived_units: dict[Dimension, Expr]={}):
+        """
+        Create the unit system in which the given physical constants are
+        pure numbers.
+
+        Explanation
+        ===========
+
+        Every constant that becomes a pure number removes a base dimension.
+        The dimensions and the scale factors of all quantities of the current
+        unit system are expressed in terms of the remaining base dimensions.
+
+        Parameters
+        ==========
+
+        constants : dict, list
+            The physical constants and their values in the new unit system.
+            If a list is given, the constants are set to one.
+        base_units : list, optional
+            Units whose dimensions are base dimensions of the new unit system.
+            If they are not enough, the missing ones are picked from the base
+            dimensions of the current unit system.
+        units : list, optional
+            Further units of the new unit system.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.units import speed_of_light, second, meter
+        >>> from sympy.physics.units import convert_to, time, length
+        >>> from sympy.physics.units.systems import SI
+        >>> unit_system = SI.contract([speed_of_light], [meter])
+        >>> unit_system.defining_constants
+        {speed_of_light: 1}
+        >>> dimsys = unit_system.get_dimension_system()
+        >>> dimsys.equivalent_dims(time, length)
+        True
+        >>> convert_to(second, meter, unit_system)
+        299792458*meter
+        >>> convert_to(speed_of_light, 1, unit_system)
+        1
+
+        """
+        if not isinstance(constants, dict):
+            constants = dict.fromkeys(constants, S.One)
+        constants = {constant: sympify(value) for constant, value in constants.items()}
+
+        dimsys = self.get_dimension_system()
+        old_base_dims = list(dimsys.base_dims)
+
+        base_dims = []
+        for unit in base_units:
+            dimension = self.get_quantity_dimension(unit)
+            if not dimension.name.is_Symbol:
+                raise ValueError("the dimension of %s is not a single dimension" % unit)
+            base_dims.append(dimension)
+
+        columns = []
+        for dimension in [*map(self.get_quantity_dimension, constants), *base_dims]:
+            dependencies = dimsys.get_dimensional_dependencies(dimension)
+            if not set(dependencies).issubset(old_base_dims):
+                raise ValueError("%s is not defined in the unit system" % dimension)
+            columns.append([dependencies.get(dim, 0) for dim in old_base_dims])
+        number = len(columns)
+        columns.extend(
+            [int(i == j) for j in range(len(old_base_dims))] for i in range(len(old_base_dims)))
+        _, pivots = Matrix(columns).T.rref()
+        if pivots[:number] != tuple(range(number)):
+            raise ValueError("the dimensions of constants and base units are not independent")
+        base_dims.extend(old_base_dims[i - number] for i in pivots[number:])
+
+        base_units = list(base_units)
+        for unit in self._base_units:
+            if unit not in base_units and self.get_quantity_dimension(unit) in base_dims:
+                base_units.append(unit)
+        unit_system = UnitSystem(
+            base_units, self._units + tuple(constants) + tuple(units), name, description,
+            None, derived_units, {**self._defining_constants, **constants})
+        unit_system._parent = self
+        unit_system._contraction = (constants, base_dims, [columns[i] for i in pivots])
+        return unit_system
+
+    def _contract_dimension_system(self, constants, base_dims, columns):
+        """
+        Dimension system of the unit system created by ``contract``, it
+        contains the dimensions and the scale factors of the quantities.
+        """
+        dimsys = self.get_dimension_system()
+        old_base_dims = list(dimsys.base_dims)
+        inverse = Matrix(columns).T.inv().tolist()
+        number = len(constants)
+
+        def exponents(dimension):
+            dependencies = dimsys.get_dimensional_dependencies(dimension)
+            if not set(dependencies).issubset(old_base_dims):
+                return None
+            vector = [dependencies.get(dim, 0) for dim in old_base_dims]
+            return [sum(i*j for i, j in zip(row, vector) if j != 0) for row in inverse]
+
+        dependencies = {}
+        for dimension in dimsys.dimensional_dependencies:
+            if dimension not in base_dims:
+                dependencies[dimension] = {
+                    dim: exponent for dim, exponent in zip(base_dims, exponents(dimension)[number:])
+                    if exponent != 0}
+        dimension_system = DimensionSystem(base_dims, dimensional_dependencies=dependencies)
+
+        dimension_system._quantity_dimension_map.update(dimsys._quantity_dimension_map)
+        dimension_system._quantity_dimension_map.update(self._quantity_dimension_map)
+        ratios = [value/self.get_quantity_scale_factor(constant) for constant, value in constants.items()]
+        factors: dict[Dimension, Expr | None] = {}
+        for quantity in [*dimsys._quantity_scale_factors, *self._quantity_scale_factors]:
+            dimension = self.get_quantity_dimension(quantity)
+            if dimension not in factors:
+                powers = exponents(dimension)
+                factors[dimension] = None if powers is None else Mul(*[
+                    ratio**power for ratio, power in zip(ratios, powers)])
+            factor = factors[dimension]
+            if factor is None:
+                continue
+            scale_factor = self.get_quantity_scale_factor(quantity)*factor
+            if scale_factor.has(Float):
+                scale_factor = scale_factor.evalf()
+            dimension_system._quantity_scale_factors[quantity] = scale_factor
+        dimension_system._quantity_scale_factors.update(constants)
+        return dimension_system
 
     def get_dimension_system(self):
+        if self._dimension_system is None and self._contraction is not None:
+            self._dimension_system = self._parent._contract_dimension_system(*self._contraction)
         return self._dimension_system
 
     def get_quantity_dimension(self, unit):
@@ -129,6 +266,14 @@ class UnitSystem(_QuantityMapper):
     @property
     def derived_units(self) -> dict[Dimension, Expr]:
         return self._derived_units
+
+    @property
+    def defining_constants(self) -> dict[Quantity, Expr]:
+        """
+        The physical constants that are pure numbers in the unit system,
+        with their values.
+        """
+        return self._defining_constants
 
     def get_dimensional_expr(self, expr):
         from sympy.physics.units import Quantity

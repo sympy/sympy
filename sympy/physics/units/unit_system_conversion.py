@@ -45,6 +45,7 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.function import AppliedUndef, Derivative, UndefinedFunction
 from sympy.core.mul import Mul
+from sympy.core.numbers import Float
 from sympy.core.power import Pow
 from sympy.core.relational import Relational
 from sympy.core.singleton import S
@@ -130,6 +131,31 @@ def _is_contained(inner, outer):
         if _map_dependencies(dependencies, inner) != {dim: 1}:
             return False
     return True
+
+
+def _full_and_reduced(source, target):
+    """
+    Return the unit system with more independent dimensions followed by the
+    other one, or ``None`` if the unit systems cannot be compared.
+    """
+    for full, reduced in [(source, target), (target, source)]:
+        dimsys_full = full.get_dimension_system()
+        if not _is_contained(reduced.get_dimension_system(), dimsys_full):
+            continue
+        for constant, value in reduced.defining_constants.items():
+            dimension = full.get_quantity_dimension(constant)
+            if (dimsys_full.is_dimensionless(dimension) and
+                    full.get_quantity_scale_factor(constant) != value):
+                break
+        else:
+            return full, reduced
+    return None
+
+
+def _ancestors(unit_system):
+    while unit_system._parent is not None:
+        unit_system = unit_system._parent
+        yield unit_system
 
 
 def _solve_exponents(vectors, target):
@@ -280,19 +306,8 @@ class _UnitSystemConverter:
     def __init__(self, source, target, dimensions, constants):
         self.source = source
         self.target = target
-        self.dimsys_source = source.get_dimension_system()
-        self.dimsys_target = target.get_dimension_system()
-
-        if _is_contained(self.dimsys_target, self.dimsys_source):
-            self.contracting = True
-            self.full, self.reduced = source, target
-        elif _is_contained(self.dimsys_source, self.dimsys_target):
-            self.contracting = False
-            self.full, self.reduced = target, source
-        else:
-            raise NotImplementedError(
-                "cannot convert from %s to %s: neither of the unit systems "
-                "contains the base dimensions of the other one" % (source, target))
+        self.full, self.reduced = _full_and_reduced(source, target)
+        self.contracting = self.full is source
         self.dimsys_full = self.full.get_dimension_system()
         self.dimsys_reduced = self.reduced.get_dimension_system()
 
@@ -411,13 +426,14 @@ class _UnitSystemConverter:
         the same dimension in both unit systems.
         """
         if constants is None:
-            unit_constants = []
-            for constant in self._known_constants():
-                deps_full, deps_reduced = self._quantity_dependencies(constant)
-                if deps_full and not deps_reduced and self._has_scale_factor(constant):
-                    unit_constants.append(constant)
-            unit_constants.sort(key=lambda q: (
-                self.reduced.get_quantity_scale_factor(q) != 1, default_sort_key(q)))
+            unit_constants = list(self.reduced.defining_constants)
+            if not unit_constants:
+                for constant in self._known_constants():
+                    deps_full, deps_reduced = self._quantity_dependencies(constant)
+                    if deps_full and not deps_reduced and self._has_scale_factor(constant):
+                        unit_constants.append(constant)
+                unit_constants.sort(key=lambda q: (
+                    self.reduced.get_quantity_scale_factor(q) != 1, default_sort_key(q)))
             constants = unit_constants + [speed_of_light]
             skip_dependent = True
         else:
@@ -545,7 +561,8 @@ class _UnitSystemConverter:
         `4 \pi/c^2`. They are replaced by their value. ``None`` is returned
         for the other constants, which are handled like symbols.
         """
-        if not isinstance(expr, PhysicalConstant) or not self._has_scale_factor(expr):
+        defining = expr in self.reduced.defining_constants
+        if not defining and not (isinstance(expr, PhysicalConstant) and self._has_scale_factor(expr)):
             return None
         deps_full, deps_reduced = self._quantity_dependencies(expr)
         if not self._mismatch(deps_full, deps_reduced):
@@ -556,6 +573,8 @@ class _UnitSystemConverter:
         value = self.reduced.get_quantity_scale_factor(expr)
         for constant, exponent in zip(self.common_constants, exponents):
             value *= (constant/self.reduced.get_quantity_scale_factor(constant))**exponent
+        if value.has(Float) and not defining:
+            return None
         return value
 
     def _split(self, expr):
@@ -805,6 +824,27 @@ def convert_unit_system(expr, dimensions, source, target, dimension=None, consta
     >>> convert_unit_system(expr, dims, SI, cgs_gauss, dimension=magnetic_density)
     2*I/(speed_of_light*r)
 
+    Natural units:
+
+    >>> from sympy.physics.units import energy, mass, momentum, hbar
+    >>> from sympy.physics.units import elementary_charge, electron_rest_mass
+    >>> from sympy.physics.units.systems import natural, hartree_atomic_units
+    >>> W, p, m, n = symbols("W p m n")
+    >>> dims = {W: energy, p: momentum, m: mass, n: 1}
+    >>> eq = Eq(W**2, p**2*speed_of_light**2 + m**2*speed_of_light**4)
+    >>> convert_unit_system(eq, dims, SI, natural)
+    Eq(W**2, m**2 + p**2)
+    >>> eq = Eq(W, -1/(2*n**2))
+    >>> convert_unit_system(eq, dims, hartree_atomic_units, SI)
+    Eq(W, -coulomb_constant**2*elementary_charge**4*electron_rest_mass/(2*hbar**2*n**2))
+
+    If none of the two unit systems is obtained from the other one by turning
+    physical constants into numbers, the conversion passes through a unit
+    system they are both derived from:
+
+    >>> convert_unit_system(eq, dims, hartree_atomic_units, natural)
+    Eq(W, -elementary_charge**4*electron_rest_mass/(32*pi**2*n**2))
+
     Notes
     =====
 
@@ -822,9 +862,25 @@ def convert_unit_system(expr, dimensions, source, target, dimension=None, consta
     """
     source = UnitSystem.get_unit_system(source)
     target = UnitSystem.get_unit_system(target)
-    converter = _UnitSystemConverter(source, target, dimensions, constants)
     if dimension is not None:
         dimension = sympify(dimension)
         if dimension == 1:
             dimension = Dimension(1)
-    return _apply(lambda i: converter.convert(i, dimension), expr)
+
+    if _full_and_reduced(source, target) is not None:
+        steps = [(source, target)]
+    else:
+        for intermediate in [*_ancestors(source), *_ancestors(target)]:
+            steps = [(source, intermediate), (intermediate, target)]
+            if constants is None and all(_full_and_reduced(*step) is not None for step in steps):
+                break
+        else:
+            raise NotImplementedError(
+                "cannot convert from %s to %s: neither of the unit systems "
+                "is obtained from the other one by turning physical constants "
+                "into numbers" % (source, target))
+
+    for step_source, step_target in steps:
+        converter = _UnitSystemConverter(step_source, step_target, dimensions, constants)
+        expr = _apply(lambda i: converter.convert(i, dimension), expr)
+    return expr
