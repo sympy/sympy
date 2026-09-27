@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from sympy.polys.domains.domain import Domain, Er, Eg, Ef, Eeuclid
-from sympy.polys.domains.field import Field
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
     dup_lshift, dup_rshift,
@@ -44,6 +42,8 @@ from math import ceil as _ceil, log2 as _log2, sqrt
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sympy.polys.domains.field import Field
+    from sympy.polys.domains.domain import Domain, Er, Eg, Ef, Eeuclid
     from sympy.external.gmpy import MPQ
     from sympy.polys.domains.ringextension import RingExtension
     from sympy.polys.domains.algebraicfield import AlgebraicField, Alg

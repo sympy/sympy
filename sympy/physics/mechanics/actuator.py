@@ -1,4 +1,5 @@
 """Implementations of actuators for linked force and torque application."""
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 

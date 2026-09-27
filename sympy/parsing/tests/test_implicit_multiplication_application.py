@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sympy
 from sympy.parsing.sympy_parser import (
     parse_expr,

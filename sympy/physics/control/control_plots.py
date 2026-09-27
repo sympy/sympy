@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import I, pi
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.polys.partfrac import apart
@@ -747,7 +748,16 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit
         repl = I*_w
     w_expr = expr.subs({system.var: repl})
 
+    # NOTE: instead of Abs(w_expr), another way would be
+    # sqrt(re(w_expr)**2 + im(w_expr)**2)
+    # but re(), im() are going to evaluate the symbolic expression, potentially
+    # adding a significant overhead for longer transfer functions.
     mag = 20*log(Abs(w_expr), 10)
+
+    # We are computing the magnitude, which must return real data.
+    # However, numerical computation might introduce imaginary parts.
+    # Let's request the data series to discard any imaginary part.
+    kwargs["return"] = "real"
 
     x, y = LineOver1DRangeSeries(mag,
         (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()

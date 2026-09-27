@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.utilities.source import get_mod_func, get_class
 
 

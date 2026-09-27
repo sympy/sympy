@@ -1,5 +1,6 @@
 """This tests sympy/core/basic.py with (ideally) no reference to subclasses
 of Basic or Atom."""
+from __future__ import annotations
 import collections
 from typing import TypeVar, Generic
 

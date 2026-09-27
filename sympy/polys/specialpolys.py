@@ -1,4 +1,5 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
+from __future__ import annotations
 
 
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import prod
 
 from sympy.core import S, Integer

@@ -20,6 +20,7 @@ match the existing API while thinly wrapping pytest.
 These two key functions are `test` and `doctest`.
 
 """
+from __future__ import annotations
 
 import functools
 import importlib.util
@@ -27,7 +28,6 @@ import os
 import pathlib
 import re
 from fnmatch import fnmatch
-from typing import List, Optional, Tuple
 
 try:
     import pytest
@@ -95,10 +95,10 @@ def sympy_dir() -> pathlib.Path:
 
 
 def update_args_with_paths(
-    paths: List[str],
-    keywords: Optional[Tuple[str]],
-    args: List[str],
-) -> List[str]:
+    paths: list[str],
+    keywords: tuple[str] | None,
+    args: list[str],
+) -> list[str]:
     """Appends valid paths and flags to the args `list` passed to `pytest.main`.
 
     The are three different types of "path" that a user may pass to the `paths`
@@ -137,17 +137,23 @@ def update_args_with_paths(
             else:
                 partial_path_file_patterns.append(f'test*{partial_path}*.py')
         matches = []
-        for testpath in valid_testpaths_default:
-            for path, dirs, files in os.walk(testpath, topdown=True):
-                zipped = zip(partial_paths, partial_path_file_patterns)
-                for (partial_path, partial_path_file) in zipped:
+        zipped = zip(partial_paths, partial_path_file_patterns)
+        for partial_path, partial_path_file in zipped:
+            did_match_partial_path = False
+            for testpath in valid_testpaths_default:
+                for path, dirs, files in os.walk(testpath, topdown=True):
                     if fnmatch(path, f'*{partial_path}*'):
                         matches.append(str(pathlib.Path(path)))
+                        did_match_partial_path = True
                         dirs[:] = []
                     else:
                         for file in files:
                             if fnmatch(file, partial_path_file):
                                 matches.append(str(pathlib.Path(path, file)))
+                                did_match_partial_path = True
+            if not did_match_partial_path:
+                msg = f'No test paths matched: {partial_path!r}'
+                raise FileNotFoundError(msg)
         return matches
 
     def is_tests_file(filepath: str) -> bool:

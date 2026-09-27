@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, overload
 
 from .basic import Atom, Basic
 from .coreerrors import LazyExceptionMessage
@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from typing import ClassVar
     from typing_extensions import Self
     from sympy.logic.boolalg import BooleanTrue, BooleanFalse
+    from sympy.sets.sets import Set
 
 
 __all__ = (
@@ -530,7 +531,7 @@ class Relational(Boolean, EvalfMixin):
             )
         )
 
-    def _eval_as_set(self):
+    def _eval_as_set(self) -> Set:
         # self is univariate and periodicity(self, x) in (0, None)
         from sympy.solvers.inequalities import solve_univariate_inequality
         from sympy.sets.conditionset import ConditionSet
@@ -793,6 +794,14 @@ class Unequality(Relational):
     rel_op = '!='
 
     __slots__ = ()
+
+    @overload
+    def __new__(cls, lhs, rhs, *, evaluate: Literal[False], **options) -> Unequality:
+        ...
+
+    @overload
+    def __new__(cls, lhs, rhs, **options) -> Unequality | BooleanFalse | BooleanTrue: # type: ignore
+        ...
 
     def __new__(cls, lhs, rhs, **options) -> Unequality | BooleanFalse | BooleanTrue: # type: ignore
         lhs = _sympify(lhs)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, pi, Rational
 from sympy.functions import assoc_laguerre, sqrt, exp, factorial, factorial2
 

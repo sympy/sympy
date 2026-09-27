@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.cnf import EncodedCNF
 
 

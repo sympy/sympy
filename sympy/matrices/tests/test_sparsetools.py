@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.sparsetools import _doktocsr, _csrtodok, banded
 from sympy.matrices.dense import (Matrix, eye, ones, zeros)
 from sympy.matrices import SparseMatrix

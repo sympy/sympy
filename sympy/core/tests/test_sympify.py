@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda)
@@ -436,12 +437,16 @@ def test_evaluate_false():
         '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
         '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
         '2 - 3 * 5': Add(2, Mul(-1, Mul(3, 5,evaluate=False), evaluate=False), evaluate=False),
-        '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False),
+        '1 / 3': Pow(3, -1, evaluate=False),
         'True | False': Or(True, False, evaluate=False),
         '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
         '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),
         '2 - 8 / 4': Add(2, Mul(-1, Mul(8, Pow(4, -1, evaluate=False), evaluate=False), evaluate=False), evaluate=False),
         '2 - 2**2': Add(2, Mul(-1, Pow(2, 2, evaluate=False), evaluate=False), evaluate=False),
+        '-(2*3)': Mul(Integer(-1), Mul(Integer(2), Integer(3), evaluate=False), evaluate=False),
+        '-(x + 2)': Mul(Integer(-1), Add(Symbol('x'), Integer(2), evaluate=False), evaluate=False),
+        '-(2 - x)': Mul(Integer(-1), Add(Integer(2), Mul(Integer(-1), Symbol('x'), evaluate=False), evaluate=False), evaluate=False),
+        '-(2*3/3)': Mul(Integer(-1), Mul(Integer(2), Integer(3), Pow(Integer(3), Integer(-1), evaluate=False), evaluate=False), evaluate=False)
     }
     for case, result in cases.items():
         assert sympify(case, evaluate=False) == result

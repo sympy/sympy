@@ -1,4 +1,5 @@
 """Real and complex root isolation and refinement algorithms. """
+from __future__ import annotations
 
 
 from sympy.polys.densearith import (

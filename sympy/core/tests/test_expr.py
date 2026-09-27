@@ -47,7 +47,7 @@ from sympy.physics.units import meter
 
 import pytest
 import sys
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, slow, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
@@ -1786,6 +1786,8 @@ def test_expr_sorting():
     a, b = exprs = [Dummy('x'), Dummy('x')]
     assert sorted([b, a], key=default_sort_key) == exprs
 
+    exprs = [f(nan), f(-1), f(1)]
+    assert sorted(exprs, key=default_sort_key) == exprs
 
 def test_as_ordered_factors():
 
@@ -1996,6 +1998,7 @@ def test_random():
     assert Piecewise((Max(x, y), z))._random() is None
 
 
+@slow
 def test_round():
     assert str(Float('0.1249999').round(2)) == '0.12'
     d20 = 12345678901234567890
@@ -2288,6 +2291,21 @@ def test_ExprBuilder():
     eb = ExprBuilder(Mul)
     eb.args.extend([x, x])
     assert eb.build() == x**2
+
+    # append_argument should call the validator without raising a TypeError:
+    validated = []
+    eb = ExprBuilder(Mul, [x], validator=lambda *args: validated.append(args))
+    eb.append_argument(x)
+    assert eb.args == [x, x]
+    assert validated[-1] == (x, x)
+    assert eb.build() == x**2
+
+    # search_element should recurse into nested ExprBuilder arguments:
+    inner = ExprBuilder(Mul, [y])
+    outer = ExprBuilder(Mul, [x, inner])
+    assert outer.search_element(x) == (0,)
+    assert outer.search_element(y) == (1, 0)
+    assert outer.search_element(z) is None
 
 
 def test_issue_22020():

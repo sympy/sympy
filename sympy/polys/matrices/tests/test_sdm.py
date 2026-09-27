@@ -1,6 +1,7 @@
 """
 Tests for the basic functionality of the SDM class.
 """
+from __future__ import annotations
 
 from itertools import product
 

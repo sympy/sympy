@@ -15,6 +15,7 @@ Rademacher
 IdealSoliton
 RobustSoliton
 """
+from __future__ import annotations
 
 
 from sympy.core.cache import cacheit

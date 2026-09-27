@@ -84,11 +84,19 @@ def _eigenvals_mpmath(M, multiple=False):
 def _eigenvects_mpmath(M):
     from sympy import ImmutableMatrix
     E, ER = _eigenvals_eigenvects_mpmath(M)
+    grouped_eigenvects = {}
     result = []
     for i in range(M.rows):
         eigenval = _sympify(E[i])
         eigenvect = ImmutableMatrix(ER[i])
-        result.append((eigenval, 1, [eigenvect]))
+
+        if eigenval in grouped_eigenvects:
+            grouped_eigenvects[eigenval].append(eigenvect)
+        else:
+            grouped_eigenvects[eigenval] = [eigenvect]
+
+    for eigenval, eigenvects in grouped_eigenvects.items():
+        result.append((eigenval, len(eigenvects), eigenvects))
 
     return result
 
@@ -207,15 +215,15 @@ def _eigenvals(M,
     if not M.is_square:
         raise NonSquareMatrixError("{} must be a square matrix.".format(M))
 
-    if M._rep.domain not in (ZZ, QQ):
-        # Skip this check for ZZ/QQ because it can be slow
-        if all(x.is_number for x in M) and M.has(Float):
-            return _eigenvals_mpmath(M, multiple=multiple)
-
     if rational:
         from sympy.simplify import nsimplify
         M = M.applyfunc(
             lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
+
+    if M._rep.domain not in (ZZ, QQ):
+        # Skip this check for ZZ/QQ because it can be slow
+        if all(x.is_number for x in M) and M.has(Float):
+            return _eigenvals_mpmath(M, multiple=multiple)
 
     if multiple:
         return _eigenvals_list(

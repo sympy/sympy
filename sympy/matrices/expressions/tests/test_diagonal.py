@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.matrices.expressions.diagonal import DiagonalMatrix, DiagonalOf, DiagMatrix, diagonalize_vector
 from sympy.assumptions.ask import (Q, ask)

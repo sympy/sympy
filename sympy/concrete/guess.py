@@ -1,4 +1,5 @@
 """Various algorithms for helping identifying numbers and sequences."""
+from __future__ import annotations
 
 
 from sympy.concrete.products import (Product, product)

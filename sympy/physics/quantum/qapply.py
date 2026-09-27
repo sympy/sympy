@@ -3,6 +3,7 @@
 Todo:
 * Sometimes the final result needs to be expanded, we should do this by hand.
 """
+from __future__ import annotations
 
 from sympy.concrete import Sum
 from sympy.core.add import Add

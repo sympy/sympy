@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.rules import Transform
 
 from sympy.testing.pytest import raises

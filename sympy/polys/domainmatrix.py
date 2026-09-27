@@ -6,6 +6,7 @@ sympy.polys.matrices package. It should now be imported as:
 
 This module might be removed in future.
 """
+from __future__ import annotations
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 

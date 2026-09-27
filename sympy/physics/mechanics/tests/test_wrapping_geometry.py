@@ -1,4 +1,5 @@
 """Tests for the ``sympy.physics.mechanics.wrapping_geometry.py`` module."""
+from __future__ import annotations
 
 import pytest
 
@@ -30,6 +31,7 @@ from sympy.physics.mechanics import (
 )
 from sympy.simplify.simplify import simplify
 from sympy.polys.polytools import cancel
+from sympy.testing.pytest import slow
 
 
 r = Symbol('r', positive=True)
@@ -479,6 +481,7 @@ class TestWrappingCone:
             cone.geodesic_end_vectors(p1, p1)
 
 
+@slow
 class TestElasticConeModel:
     """
     A test class to verify the Lagrangian mechanics model of a particle

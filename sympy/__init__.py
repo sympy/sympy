@@ -1,3 +1,4 @@
+# noqa: I002
 """
 SymPy is a Python library for symbolic mathematics. It aims to become a
 full-featured computer algebra system (CAS) while keeping the code as simple
@@ -14,8 +15,8 @@ See the webpage for more information and documentation:
 
 # Keep this in sync with setup.py/pyproject.toml
 import sys
-if sys.version_info < (3, 9):
-    raise ImportError("Python version 3.9 or above is required for SymPy.")
+if sys.version_info < (3, 10):
+    raise ImportError("Python version 3.10 or above is required for SymPy.")
 del sys
 
 
@@ -72,7 +73,7 @@ from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         true, false, satisfiable)
 
 from .assumptions import (AppliedPredicate, Predicate, AssumptionsContext,
-        assuming, Q, ask, register_handler, remove_handler, refine)
+        assuming, Q, ask, refine)
 
 from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         degree, total_degree, degree_list, LC, LM, LT, pdiv, prem, pquo,
@@ -100,9 +101,9 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         ComplexRootOf, RootSum, roots, Domain, FiniteField, IntegerRing,
         RationalField, RealField, ComplexField, PythonFiniteField,
         GMPYFiniteField, PythonIntegerRing, GMPYIntegerRing, PythonRational,
-        GMPYRationalField, AlgebraicField, PolynomialRing, FractionField,
-        ExpressionDomain, FF_python, FF_gmpy, ZZ_python, ZZ_gmpy, QQ_python,
-        QQ_gmpy, GF, FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, EXRAW,
+        GMPYRationalField, AlgebraicField, CyclotomicField, PolynomialRing,
+        FractionField, ExpressionDomain, FF_python, FF_gmpy, ZZ_python, ZZ_gmpy,
+        QQ_python, QQ_gmpy, GF, FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, EXRAW,
         construct_domain, swinnerton_dyer_poly, cyclotomic_poly,
         symmetric_poly, random_poly, interpolating_poly, jacobi_poly,
         chebyshevt_poly, chebyshevu_poly, hermite_poly, hermite_prob_poly,
@@ -126,18 +127,18 @@ from .functions import (factorial, factorial2, rf, ff, binomial,
         LambertW, sinh, cosh, tanh, coth, sech, csch, asinh, acosh, atanh,
         acoth, asech, acsch, floor, ceiling, frac, Piecewise, piecewise_fold,
         piecewise_exclusive, erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
-        Ei, expint, E1, li, Li, Si, Ci, Shi, Chi, fresnels, fresnelc, gamma,
-        lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma,
+        Ei, expint, E1, li, Li, Si, Ci, Shi, Chi, fresnels, fresnelc, owens_t,
+        gamma, lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma,
         multigamma, dirichlet_eta, zeta, lerchphi, polylog, stieltjes, Eijk,
         LeviCivita, KroneckerDelta, SingularityFunction, DiracDelta, Heaviside,
-        bspline_basis, bspline_basis_set, interpolating_spline, besselj,
-        bessely, besseli, besselk, hankel1, hankel2, jn, yn, jn_zeros, hn1,
-        hn2, airyai, airybi, airyaiprime, airybiprime, marcumq, hyper,
-        meijerg, appellf1, legendre, assoc_legendre, hermite, hermite_prob,
-        chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root, laguerre,
-        assoc_laguerre, gegenbauer, jacobi, jacobi_normalized, Ynm, Ynm_c,
-        Znm, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, beta, mathieus,
-        mathieuc, mathieusprime, mathieucprime, riemann_xi, betainc, betainc_regularized)
+        bspline_basis, bspline_basis_set, interpolating_spline, besselj, bessely,
+        besseli, besselk, hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai,
+        airybi, airyaiprime, airybiprime, marcumq, hyper, meijerg, appellf1,
+        legendre, assoc_legendre, hermite, hermite_prob, chebyshevt, chebyshevu,
+        chebyshevu_root, chebyshevt_root, laguerre, assoc_laguerre, gegenbauer,
+        jacobi, jacobi_normalized, Ynm, Ynm_c, Znm, elliptic_k, elliptic_f,
+        elliptic_e, elliptic_pi, jtheta, beta, mathieus, mathieuc, mathieusprime,
+        mathieucprime, riemann_xi, betainc, betainc_regularized)
 
 from .ntheory import (nextprime, prevprime, prime, primerange,
         randprime, Sieve, sieve, primorial, cycle_length, composite,
@@ -291,7 +292,7 @@ __all__ = [
 
     # sympy.assumptions
     'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming', 'Q',
-    'ask', 'register_handler', 'remove_handler', 'refine',
+    'ask',  'refine',
 
     # sympy.polys
     'Poly', 'PurePoly', 'poly_from_expr', 'parallel_poly_from_expr', 'degree',
@@ -320,8 +321,8 @@ __all__ = [
     'CRootOf', 'rootof', 'RootOf', 'ComplexRootOf', 'RootSum', 'roots',
     'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
     'ComplexField', 'PythonFiniteField', 'GMPYFiniteField', 'PythonIntegerRing',
-    'GMPYIntegerRing', 'PythonRational', 'GMPYRationalField',
-    'AlgebraicField', 'PolynomialRing', 'FractionField', 'ExpressionDomain',
+    'GMPYIntegerRing', 'PythonRational', 'GMPYRationalField', 'AlgebraicField',
+    'CyclotomicField', 'PolynomialRing', 'FractionField', 'ExpressionDomain',
     'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
     'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX', 'EXRAW',
     'construct_domain', 'swinnerton_dyer_poly', 'cyclotomic_poly',
@@ -353,20 +354,20 @@ __all__ = [
     'acoth', 'asech', 'acsch', 'floor', 'ceiling', 'frac', 'Piecewise',
     'piecewise_fold', 'piecewise_exclusive', 'erf', 'erfc', 'erfi', 'erf2',
     'erfinv', 'erfcinv', 'erf2inv', 'Ei', 'expint', 'E1', 'li', 'Li', 'Si',
-    'Ci', 'Shi', 'Chi', 'fresnels', 'fresnelc', 'gamma', 'lowergamma',
-    'uppergamma', 'polygamma', 'loggamma', 'digamma', 'trigamma', 'multigamma',
-    'dirichlet_eta', 'zeta', 'lerchphi', 'polylog', 'stieltjes', 'Eijk', 'LeviCivita',
-    'KroneckerDelta', 'SingularityFunction', 'DiracDelta', 'Heaviside',
-    'bspline_basis', 'bspline_basis_set', 'interpolating_spline', 'besselj',
-    'bessely', 'besseli', 'besselk', 'hankel1', 'hankel2', 'jn', 'yn',
-    'jn_zeros', 'hn1', 'hn2', 'airyai', 'airybi', 'airyaiprime',
-    'airybiprime', 'marcumq', 'hyper', 'meijerg', 'appellf1', 'legendre',
-    'assoc_legendre', 'hermite', 'hermite_prob', 'chebyshevt', 'chebyshevu',
-    'chebyshevu_root', 'chebyshevt_root', 'laguerre', 'assoc_laguerre',
-    'gegenbauer', 'jacobi', 'jacobi_normalized', 'Ynm', 'Ynm_c', 'Znm',
-    'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi', 'beta',
-    'mathieus', 'mathieuc', 'mathieusprime', 'mathieucprime', 'riemann_xi','betainc',
-    'betainc_regularized',
+    'Ci', 'Shi', 'Chi', 'fresnels', 'fresnelc', 'owens_t', 'gamma',
+    'lowergamma', 'uppergamma', 'polygamma', 'loggamma', 'digamma', 'trigamma',
+    'multigamma', 'dirichlet_eta', 'zeta', 'lerchphi', 'polylog', 'stieltjes',
+    'Eijk', 'LeviCivita', 'KroneckerDelta', 'SingularityFunction',
+    'DiracDelta', 'Heaviside', 'bspline_basis', 'bspline_basis_set',
+    'interpolating_spline', 'besselj', 'bessely', 'besseli', 'besselk',
+    'hankel1', 'hankel2', 'jn', 'yn', 'jn_zeros', 'hn1', 'hn2', 'airyai',
+    'airybi', 'airyaiprime', 'airybiprime', 'marcumq', 'hyper', 'meijerg',
+    'appellf1', 'legendre', 'assoc_legendre', 'hermite', 'hermite_prob',
+    'chebyshevt', 'chebyshevu', 'chebyshevu_root', 'chebyshevt_root',
+    'laguerre', 'assoc_laguerre', 'gegenbauer', 'jacobi', 'jacobi_normalized',
+    'Ynm', 'Ynm_c', 'Znm', 'elliptic_k', 'elliptic_f', 'elliptic_e',
+    'elliptic_pi', 'jtheta', 'beta', 'mathieus', 'mathieuc', 'mathieusprime',
+    'mathieucprime', 'riemann_xi','betainc', 'betainc_regularized',
 
     # sympy.ntheory
     'nextprime', 'prevprime', 'prime', 'primerange', 'randprime',

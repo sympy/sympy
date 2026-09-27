@@ -1,4 +1,5 @@
 """Computational algebraic field theory. """
+from __future__ import annotations
 
 __all__ = [
     'minpoly', 'minimal_polynomial',

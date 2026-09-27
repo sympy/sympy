@@ -79,6 +79,7 @@ When is this module NOT the best approach?
        do not need the binaries for another project.
 
 """
+from __future__ import annotations
 
 import sys
 import os

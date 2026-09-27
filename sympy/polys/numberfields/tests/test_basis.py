@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.abc import x
 from sympy.core import S
 from sympy.core.numbers import AlgebraicNumber

@@ -1,4 +1,5 @@
 """Tests for PythonRational type. """
+from __future__ import annotations
 
 from sympy.polys.domains import PythonRational as QQ
 from sympy.testing.pytest import raises

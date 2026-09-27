@@ -1,4 +1,5 @@
 # Test Matrix/DomainMatrix interaction.
+from __future__ import annotations
 
 
 from sympy import GF, ZZ, QQ, EXRAW

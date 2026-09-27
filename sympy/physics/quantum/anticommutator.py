@@ -1,4 +1,5 @@
 """The anti-commutator: ``{A,B} = A*B + B*A``."""
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.kind import KindDispatcher

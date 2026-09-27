@@ -19,4 +19,5 @@ debug.rst
 docstring.rst
 documentation-style-guide.rst
 deprecations.md
+ai-generated-code-policy.rst
 ```

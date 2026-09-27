@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import EulerGamma
 from sympy.core.function import Function
 from sympy.core.numbers import (E, I, Integer, Rational, oo, pi)

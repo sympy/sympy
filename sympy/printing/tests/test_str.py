@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import MatAdd
 from sympy.algebras.quaternion import Quaternion
 from sympy.assumptions.ask import Q
@@ -647,9 +648,9 @@ def test_RootSum():
     f = x**5 + 2*x - 1
 
     assert str(
-        RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
+        RootSum(f, Lambda(z, z), auto=False)) == "RootSum(w**5 + 2*w - 1)"
     assert str(RootSum(f, Lambda(
-        z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(z, z**2))"
+        z, z**2), auto=False)) == "RootSum(w**5 + 2*w - 1, Lambda(w, w**2))"
 
 
 def test_GroebnerBasis():
@@ -1036,6 +1037,16 @@ def test_MatrixSlice():
     assert str(X[0:1:2, 0:1:2]) == 'X[:1:2, :1:2]'
     assert str((Y + Z)[2:, 2:]) == '(Y + Z)[2:, 2:]'
 
+
+def test_CharacterTable_str():
+    from sympy.combinatorics.named_groups import SymmetricGroup
+    tbl = SymmetricGroup(1).character_table()
+    assert str(tbl) == sstr(tbl) == 'CharacterTable(DomainMatrix([[1]], (1, 1), ZZ), [(0)])'
+
+    tbl = SymmetricGroup(2).character_table()
+    assert str(tbl) == sstr(tbl) == 'CharacterTable(DomainMatrix([[1, 1], [1, -1]], (2, 2), ZZ), [(1), (0 1)])'
+
+
 def test_true_false():
     assert str(true) == repr(true) == sstr(true) == "True"
     assert str(false) == repr(false) == sstr(false) == "False"
@@ -1058,6 +1069,88 @@ def test_UnevaluatedExpr():
     a, b = symbols("a b")
     expr1 = 2*UnevaluatedExpr(a+b)
     assert str(expr1) == "2*(a + b)"
+
+    x = symbols("x")
+    ue1 = UnevaluatedExpr(-2*x**2 - 9*x + 5)
+    assert str(1 + ue1) == "1 + (-2*x**2 - 9*x + 5)"
+    assert str(1 - ue1) == "1 - (-2*x**2 - 9*x + 5)"
+
+    ue2 = UnevaluatedExpr(-2*x**2 + 3*x + 2)
+    ue3 = UnevaluatedExpr(-5*x**2 + 6*x - 7)
+    assert str(ue2 + ue3) == "(-5*x**2 + 6*x - 7) + (-2*x**2 + 3*x + 2)"
+    assert str(ue2 - ue3) == "-(-5*x**2 + 6*x - 7) + (-2*x**2 + 3*x + 2)"
+
+    u = UnevaluatedExpr(2)
+    assert str(u) == "2"
+    assert str(-u) == "-2"
+    assert str(2 * u) == "2*2"
+    assert str(-2 * u) == "-2*2"
+    assert str(x**2 * u) == "x**2*2"
+    assert str(-x**2 * u) == "-x**2*2"
+
+    u = UnevaluatedExpr(-2)
+    assert str(u) == "-2"
+    assert str(-u) == "-(-2)"
+    assert str(2 * u) == "2*(-2)"
+    assert str(-2 * u) == "-2*(-2)"
+    assert str(x**2 * u) == "x**2*(-2)"
+    assert str(-x**2 * u) == "-x**2*(-2)"
+
+    u = UnevaluatedExpr(x)
+    assert str(u) == "x"
+    assert str(-u) == "-x"
+    assert str(2 * u) == "2*x"
+    assert str(-2 * u) == "-2*x"
+    assert str(x**2 * u) == "x**2*x"
+    assert str(-x**2 * u) == "-x**2*x"
+
+    u = UnevaluatedExpr(-x)
+    assert str(u) == "-x"
+    assert str(-u) == "-(-x)"
+    assert str(2 * u) == "2*(-x)"
+    assert str(-2 * u) == "-2*(-x)"
+    assert str(x**2 * u) == "x**2*(-x)"
+    assert str(-x**2 * u) == "-x**2*(-x)"
+
+    u = UnevaluatedExpr(x**2)
+    assert str(u) == "x**2"
+    assert str(-u) == "-x**2"
+    assert str(2 * u) == "2*x**2"
+    assert str(-2 * u) == "-2*x**2"
+    assert str(x**2 * u) == "x**2*x**2"
+    assert str(-x**2 * u) == "-x**2*x**2"
+
+    u = UnevaluatedExpr(-x**2)
+    assert str(u) == "-x**2"
+    assert str(-u) == "-(-x**2)"
+    assert str(2 * u) == "2*(-x**2)"
+    assert str(-2 * u) == "-2*(-x**2)"
+    assert str(x**2 * u) == "x**2*(-x**2)"
+    assert str(-x**2 * u) == "-x**2*(-x**2)"
+
+    u = UnevaluatedExpr(x * (x + 2))
+    assert str(u) == "x*(x + 2)"
+    assert str(-u) == "-(x*(x + 2))"
+    assert str(2 * u) == "2*(x*(x + 2))"
+    assert str(-2 * u) == "-2*(x*(x + 2))"
+    assert str(x**2 * u) == "x**2*(x*(x + 2))"
+    assert str(-x**2 * u) == "-x**2*(x*(x + 2))"
+
+    u = UnevaluatedExpr(-x * (x + 2))
+    assert str(u) == "-x*(x + 2)"
+    assert str(-u) == "-(-x*(x + 2))"
+    assert str(2 * u) == "2*(-x*(x + 2))"
+    assert str(-2 * u) == "-2*(-x*(x + 2))"
+    assert str(x**2 * u) == "x**2*(-x*(x + 2))"
+    assert str(-x**2 * u) == "-x**2*(-x*(x + 2))"
+
+    u = UnevaluatedExpr(x + 2)
+    assert str(u) == "x + 2"
+    assert str(-1 * u) == "-(x + 2)"
+    assert str(3 * u) == "3*(x + 2)"
+    assert str(-3 * u) == "-3*(x + 2)"
+    assert str(x**2 * u) == "x**2*(x + 2)"
+    assert str(-x**2 * u) == "-x**2*(x + 2)"
 
 
 def test_MatrixElement_printing():
@@ -1204,3 +1297,7 @@ def test_printing_stats():
     assert z2._eval_is_commutative() == False
     assert z3._eval_is_commutative() == False
     assert z4._eval_is_commutative() == False
+
+def test_issue_30343():
+    f = Function('f')
+    assert str(f(nan) + f(1)) == "f(nan) + f(1)"

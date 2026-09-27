@@ -1,4 +1,5 @@
 """Known matrices related to physics"""
+from __future__ import annotations
 
 from sympy.core.numbers import I
 from sympy.matrices.dense import MutableDenseMatrix as Matrix

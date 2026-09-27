@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 from collections import defaultdict
 from collections.abc import Iterable
@@ -12,7 +13,7 @@ from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.printing.repr import srepr
-from sympy.utilities.iterables import (flatten, has_variety, minlex,
+from sympy.utilities.iterables import (flatten, has_variety,
     has_dups, runs, is_sequence)
 from sympy.utilities.misc import as_int
 from sympy.external.gmpy import factorial
@@ -631,7 +632,7 @@ class Permutation(Atom):
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):
     ...
-    IndexError: list index out of range
+    TypeError: 3 should be an integer between 0 and 2
 
     This is ok: only the call to an out of range singleton is prohibited;
     otherwise the permutation autosizes:
@@ -1144,7 +1145,7 @@ class Permutation(Atom):
         array_form, full_cyclic_form
         """
         if self._cyclic_form is not None:
-            return list(self._cyclic_form)
+            return [cycle[:] for cycle in self._cyclic_form]
         array_form = self.array_form
         unchecked = [True] * len(array_form)
         cyclic_form = []
@@ -1160,9 +1161,7 @@ class Permutation(Atom):
                     unchecked[j] = False
                 if len(cycle) > 1:
                     cyclic_form.append(cycle)
-                    assert cycle == list(minlex(cycle))
-        cyclic_form.sort()
-        self._cyclic_form = cyclic_form.copy()
+        self._cyclic_form = [cycle[:] for cycle in cyclic_form]
         return cyclic_form
 
     @property
@@ -1296,6 +1295,28 @@ class Permutation(Atom):
         for i in range(1, len(args)):
             rv = args[i]*rv
         return rv
+
+    @classmethod
+    def prod(cls, perms: Iterable["Permutation"]) -> "Permutation":
+        """
+        Return the product of an iterable of permutations in multiplication
+        order.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> a = Permutation([1, 0, 2])
+        >>> b = Permutation([0, 2, 1])
+        >>> Permutation.prod([a, b]) == a*b
+        True
+        >>> Permutation.prod([])
+        ()
+        """
+        perms = list(perms)
+        if not perms:
+            return cls([])
+        return cls.rmul(*reversed(perms))
 
     @classmethod
     def rmul_with_af(cls, *args):
@@ -1653,7 +1674,7 @@ class Permutation(Atom):
             i = i[0]
             if not isinstance(i, Iterable):
                 i = as_int(i)
-                if i < 0 or i > self.size:
+                if i < 0 or i >= self.size:
                     raise TypeError(
                         "{} should be an integer between 0 and {}"
                         .format(i, self.size-1))

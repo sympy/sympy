@@ -14,6 +14,7 @@ Computational Mechanics 56.6 (2015): 967-981
 
 PDF link : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
 """
+from __future__ import annotations
 
 from functools import cmp_to_key
 

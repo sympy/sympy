@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify

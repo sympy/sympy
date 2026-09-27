@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import (
     latex, exp, symbols, I, pi, sin, cos, tan, log, sqrt,
     re, im, arg, frac, Sum, S, Abs, lambdify,

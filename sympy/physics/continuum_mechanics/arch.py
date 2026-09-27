@@ -1,6 +1,7 @@
 """
 This module can be used to solve probelsm related to 2D parabolic arches
 """
+from __future__ import annotations
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol, symbols
 from sympy import diff, sqrt, cos, sin, atan, rad, Min

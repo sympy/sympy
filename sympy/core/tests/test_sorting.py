@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.testing.pytest import raises
 

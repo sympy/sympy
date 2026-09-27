@@ -38,6 +38,7 @@
 # Add more methods to python-flint to expose more of Flint's functionality
 # and also to make some of the above methods simpler or more efficient e.g.
 # slicing, fancy indexing etc.
+from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.external.importtools import import_module
@@ -467,6 +468,21 @@ class DFM:
     def transpose(self):
         """Transpose a DFM matrix."""
         return self._new(self.rep.transpose(), (self.cols, self.rows), self.domain)
+
+    def conjugate(self):
+        """Return the conjugate of a DFM matrix."""
+        dom = self.domain
+        if not dom.is_ConjugateDomain:
+            raise DMDomainError("%s does not support conjugation" % dom)
+
+        if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+            return self.copy()
+        else:
+            return self.applyfunc(dom.conjugate, dom)
+
+    def adjoint(self):
+        """Return the adjoint of a DFM matrix."""
+        return self.conjugate().transpose()
 
     def hstack(self, *others):
         """Horizontally stack matrices."""

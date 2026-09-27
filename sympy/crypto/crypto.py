@@ -11,6 +11,7 @@ and the Diffie-Hellman key exchange.
    <https://cryptography.io/en/latest/>`_ module.
 
 """
+from __future__ import annotations
 
 from string import whitespace, ascii_uppercase as uppercase, printable
 from functools import reduce

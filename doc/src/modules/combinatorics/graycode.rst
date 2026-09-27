@@ -17,3 +17,5 @@ Gray Code
 .. automethod:: sympy.combinatorics.graycode.get_subset_from_bitstring
 
 .. automethod:: sympy.combinatorics.graycode.graycode_subsets
+
+.. autodata:: sympy.combinatorics.graycode.T

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .accumulationbounds import AccumBounds, AccumulationBounds # noqa: F401
 from .singularities import singularities
 from sympy.core import Pow, S
@@ -43,7 +44,7 @@ def continuous_domain(f, symbol, domain):
         The concerned function.
     symbol : :py:class:`~.Symbol`
         The variable for which the intervals are to be determined.
-    domain : :py:class:`~.Interval`
+    domain : :py:class:`~.Set`
         The domain over which the continuity of the symbol has to be checked.
 
     Examples
@@ -64,7 +65,7 @@ def continuous_domain(f, symbol, domain):
     Returns
     =======
 
-    :py:class:`~.Interval`
+    :py:class:`~.Set`
         Union of all intervals where the function is continuous.
 
     Raises
@@ -171,7 +172,7 @@ def function_range(f, symbol, domain):
         The concerned function.
     symbol : :py:class:`~.Symbol`
         The variable for which the range of function is to be determined.
-    domain : :py:class:`~.Interval`
+    domain : :py:class:`~.Set`
         The domain under which the range of the function has to be found.
 
     Examples
@@ -183,20 +184,20 @@ def function_range(f, symbol, domain):
     >>> function_range(sin(x), x, Interval(0, 2*pi))
     Interval(-1, 1)
     >>> function_range(tan(x), x, Interval(-pi/2, pi/2))
-    Interval(-oo, oo)
+    Reals
     >>> function_range(1/x, x, S.Reals)
     Union(Interval.open(-oo, 0), Interval.open(0, oo))
     >>> function_range(exp(x), x, S.Reals)
     Interval.open(0, oo)
     >>> function_range(log(x), x, S.Reals)
-    Interval(-oo, oo)
+    Reals
     >>> function_range(sqrt(x), x, Interval(-5, 9))
     Interval(0, 3)
 
     Returns
     =======
 
-    :py:class:`~.Interval`
+    :py:class:`~.Set`
         Union of all ranges for all intervals under domain where function is
         continuous.
 
@@ -208,11 +209,24 @@ def function_range(f, symbol, domain):
         is continuous are not finite or real,
         OR if the critical points of the function on the domain cannot be found.
     """
+    from sympy.solvers.decompogen import decompogen
 
     if domain is S.EmptySet:
         return S.EmptySet
 
+    if f.is_Function and len(f.args) == 1 and f.args[0] != symbol:
+        decomposition = decompogen(f, symbol)
+
+        if len(decomposition) > 1:
+            current_range = function_range(decomposition[-1], symbol, domain)
+
+            for func in reversed(decomposition[:-1]):
+                current_range = function_range(func, symbol, current_range)
+
+            return current_range
+
     period = periodicity(f, symbol)
+
     if period == S.Zero:
         # the expression is constant wrt symbol
         return FiniteSet(f.expand())
@@ -257,6 +271,10 @@ def function_range(f, symbol, domain):
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
 
+            if vals.inf == S.NegativeInfinity and vals.sup == S.Infinity:
+                range_int += S.Reals
+                continue
+
             critical_points = solveset(f.diff(symbol), symbol, interval)
 
             if not iterable(critical_points):
@@ -281,6 +299,16 @@ def function_range(f, symbol, domain):
             range_int += Interval(vals.inf, vals.sup, left_open, right_open)
         else:
             raise NotImplementedError("Unable to find range for the given domain.")
+
+    excluded = domain - intervals
+    if isinstance(excluded, FiniteSet):
+        for pt in excluded:
+            try:
+                val = f.subs(symbol, pt)
+                if val.is_real:
+                    range_int += FiniteSet(val)
+            except (ValueError, TypeError, ZeroDivisionError):
+                pass
 
     return range_int
 

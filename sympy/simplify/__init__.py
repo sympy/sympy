@@ -4,6 +4,7 @@ for example:
 the expression E**(pi*I) will be converted into -1
 the expression (x+x)**2 will be converted into 4*x**2
 """
+from __future__ import annotations
 from .simplify import (simplify, hypersimp, hypersimilar,
     logcombine, separatevars, posify, besselsimp, kroneckersimp,
     signsimp, nsimplify)

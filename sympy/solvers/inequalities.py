@@ -1,11 +1,12 @@
 """Tools for solving inequalities and systems of inequalities. """
+from __future__ import annotations
 import itertools
 
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Lt, Ge, Eq
+from sympy.core.relational import Relational, Eq, Ne
 from sympy.core.symbol import Symbol, Dummy
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
@@ -111,7 +112,10 @@ def solve_poly_inequality(poly, rel):
 
 
 def solve_poly_inequalities(polys):
-    """Solve polynomial inequalities with rational coefficients.
+    """Solve polynomial inequalities with rational coefficients,
+    returning the union of the intervals on which each inequality
+    is true. An element like ``(Poly(x + 1, x), "<")`` represents
+    ``x + 1 < 0``.
 
     Examples
     ========
@@ -128,7 +132,13 @@ def solve_poly_inequalities(polys):
 
 
 def solve_rational_inequalities(eqs):
-    """Solve a system of rational inequalities with rational coefficients.
+    """Solve a system of rational inequalities with rational
+    coefficients. ``eqs`` is a list of lists where the contents
+    of each inner list are joined with ``And`` and the resulting
+    conjunctions are joined with ``Or``. The contents of the
+    inner lists are given as ``((n, d), op)``, with ``n`` and ``d``
+    being Poly instances, e.g. ``((Poly(x - 1, x), Poly(1, x)), ">")``
+    for ``x - 1 > 0``.
 
     Examples
     ========
@@ -193,8 +203,41 @@ def solve_rational_inequalities(eqs):
     return result
 
 
+def _lost_poly_factors_when_subtracting(a, b, gen):
+    """For a and b, raise ValueError if either is not polynomial,
+    else a Poly of the factor in common between the denominators
+    (and Poly(1, gen) when there is no factor in common)."""
+    ln, ld = a.as_numer_denom()
+    rn, rd = b.as_numer_denom()
+
+    try:
+        (ln, ld, rn, rd), _ = parallel_poly_from_expr(
+            (ln, ld, rn, rd), gen)
+    except PolynomialError:
+        raise PolynomialError(filldedent('''
+            only polynomials and rational functions are
+            supported in this context.
+            '''))
+
+    if not ld.has_free(gen) or not rd.has_free(gen):
+        return Poly(1, gen)
+
+    common = ld.gcd(rd).sqf_part()
+    if common.is_one:
+        return Poly(1, gen)
+
+    _, dd = (a - b).as_numer_denom()
+    (_, dd), _ = parallel_poly_from_expr((S.One, dd), gen)
+    remaining = dd.sqf_part()
+
+    return common.exquo(common.gcd(remaining))
+
+
 def reduce_rational_inequalities(exprs, gen, relational=True):
-    """Reduce a system of rational inequalities with rational coefficients.
+    """Reduce a system of rational inequalities with rational
+    coefficients. ``exprs`` is a list of lists where the contents
+    of each inner list are joined with ``And`` and the resulting
+    conjunctions are joined with ``Or``.
 
     Examples
     ========
@@ -214,16 +257,36 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     >>> reduce_rational_inequalities([[x + 2]], x)
     Eq(x, -2)
 
-    This function find the non-infinite solution set so if the unknown symbol
-    is declared as extended real rather than real then the result may include
-    finiteness conditions:
+    The contents of each inner list are joined with ``And``.
+    For example, ``And(x > 0, x > 1)`` is passed as follows:
+
+    >>> reduce_rational_inequalities([[x > 0, x > 1]], x)
+    1 < x
+
+    The resulting conjunctions are joined with ``Or``. Thus,
+    ``Or(And(x > 1, x < 3), x > 0)`` is passed as follows:
+
+    >>> reduce_rational_inequalities([[x > 1, x < 3], [x > 0]], x)
+    0 < x
+
+    The result may include finiteness conditions even if the symbol is
+    identified as being an extended real:
 
     >>> y = Symbol('y', extended_real=True)
     >>> reduce_rational_inequalities([[y + 2 > 0]], y)
     (-2 < y) & (y < oo)
     """
+    def _ndpoly_opt(numer, denom, gen):
+        try:
+            return parallel_poly_from_expr(
+                (numer, denom), gen)
+        except PolynomialError:
+            raise PolynomialError(filldedent('''
+                only polynomials and rational functions are
+                supported in this context.
+                '''))
+
     exact = True
-    eqs = []
     solution = S.EmptySet  # add pieces for each group
     for _exprs in exprs:
         if not _exprs:
@@ -231,29 +294,32 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
         _eqs = []
         _sol = S.Reals
         for expr in _exprs:
+            rel = None
             if isinstance(expr, tuple):
                 expr, rel = expr
-            else:
-                if expr.is_Relational:
-                    expr, rel = expr.lhs - expr.rhs, expr.rel_op
+                numer, denom = expr.as_numer_denom()
+            elif expr.is_Relational:
+                # check to see what denominators in gen might be lost
+                # when subtracting so those can be excluded from the
+                # result
+                lost = _lost_poly_factors_when_subtracting(*expr.args, gen)
+                if not lost.is_one:
+                    if not lost.domain.is_Exact:
+                        lost = lost.to_exact()
+                        exact = False
+                    _eqs.append(((lost, lost.one), '!='))
+                rel = expr.rel_op
+                numer, denom = (expr.lhs - expr.rhs).as_numer_denom()
+            if rel is None:
+                rel = '=='
+                if expr is S.true:
+                    numer, denom = S.Zero, S.One
+                elif expr is S.false:
+                    numer, denom = S.One, S.One
                 else:
-                    rel = '=='
+                    numer, denom = expr.as_numer_denom()
 
-            if expr is S.true:
-                numer, denom, rel = S.Zero, S.One, '=='
-            elif expr is S.false:
-                numer, denom, rel = S.One, S.One, '=='
-            else:
-                numer, denom = expr.together().as_numer_denom()
-
-            try:
-                (numer, denom), opt = parallel_poly_from_expr(
-                    (numer, denom), gen)
-            except PolynomialError:
-                raise PolynomialError(filldedent('''
-                    only polynomials and rational functions are
-                    supported in this context.
-                    '''))
+            (numer, denom), opt = _ndpoly_opt(numer, denom, gen)
 
             if not opt.domain.is_Exact:
                 numer, denom, exact = numer.to_exact(), denom.to_exact(), False
@@ -269,9 +335,6 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
 
         if _eqs:
             _sol &= solve_rational_inequalities([_eqs])
-            exclude = solve_rational_inequalities([[((d, d.one), '==')
-                for i in eqs for ((n, d), _) in i if d.has(gen)]])
-            _sol -= exclude
 
         solution |= _sol
 
@@ -334,8 +397,8 @@ def reduce_abs_inequality(expr, rel, gen):
             _exprs = _bottom_up_scan(expr.args[0])
 
             for expr, conds in _exprs:
-                exprs.append(( expr, conds + [Ge(expr, 0)]))
-                exprs.append((-expr, conds + [Lt(expr, 0)]))
+                exprs.append((expr, conds + [(expr, '>=')]))  # expr >= 0
+                exprs.append((-expr, conds + [(expr, '<')]))  # expr < 0
         else:
             exprs = [(expr, [])]
 
@@ -345,10 +408,10 @@ def reduce_abs_inequality(expr, rel, gen):
     inequalities = []
 
     for expr, conds in _bottom_up_scan(expr):
-        if rel not in mapping.keys():
-            expr = Relational( expr, 0, rel)
+        if rel not in mapping:
+            expr = (expr, rel)
         else:
-            expr = Relational(-expr, 0, mapping[rel])
+            expr = (-expr, mapping[rel])
 
         inequalities.append([expr] + conds)
 
@@ -356,7 +419,10 @@ def reduce_abs_inequality(expr, rel, gen):
 
 
 def reduce_abs_inequalities(exprs, gen):
-    """Reduce a system of inequalities with nested absolute values.
+    """Reduce a system of inequalities with nested absolute values,
+    returning an expression describing where all the inequalities
+    are true. An element like ``(Abs(x) - 1, "<")`` represents
+    ``Abs(x) - 1 < 0``.
 
     Examples
     ========
@@ -461,7 +527,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     if gen.is_extended_real is False:
         rv = S.EmptySet
         return rv if not relational else rv.as_relational(_gen)
-    elif gen.is_extended_real is None:
+    if gen.is_extended_real is None or not isinstance(gen, Symbol):  # e.g. gen could be RandomSymbol
         gen = Dummy('gen', extended_real=True)
         try:
             expr = expr.xreplace({_gen: gen})
@@ -790,6 +856,8 @@ def _solve_inequality(ie, s, linear=False):
     if ie.lhs == s and s not in ie.rhs.free_symbols:
         return ie
 
+    beginning_denoms = denoms(ie.lhs) | denoms(ie.rhs)
+
     def classify(ie, s, i):
         # return True or False if ie evaluates when substituting s with
         # i else None (if unevaluated) or NaN (when there is an error
@@ -817,7 +885,7 @@ def _solve_inequality(ie, s, linear=False):
     except (PolynomialError, NotImplementedError):
         if not linear:
             try:
-                rv = reduce_rational_inequalities([[ie]], s)
+                rv = reduce_rational_inequalities([[(expr, ie.rel_op)]], s)
             except PolynomialError:
                 rv = solve_univariate_inequality(ie, s)
             # remove restrictions wrt +/-oo that may have been
@@ -862,20 +930,21 @@ def _solve_inequality(ie, s, linear=False):
         else:
             rv = ie.reversed.func(e, rhs)
 
-        # return conditions under which the value is
-        # valid, too.
-        beginning_denoms = denoms(ie.lhs) | denoms(ie.rhs)
-        current_denoms = denoms(rv)
-        for d in beginning_denoms - current_denoms:
-            c = _solve_inequality(Eq(d, 0), s, linear=linear)
-            if isinstance(c, Eq) and c.lhs == s:
-                if classify(rv, s, c.rhs) is S.true:
-                    # rv is permitting this value but it shouldn't
-                    conds.append(~c)
         for i in (-oo, oo):
             if (classify(rv, s, i) is S.true and
                     classify(ie, s, i) is not S.true):
                 conds.append(s < i if i is oo else i < s)
+
+    # return conditions under which the value is valid, too.
+    current_denoms = denoms(rv)
+    for d in beginning_denoms - current_denoms:
+        c = _solve_inequality(Eq(d, 0), s, linear=linear)
+        if isinstance(c, Eq) and c.lhs == s:
+            if classify(rv, s, c.rhs) is S.true:
+                # rv is permitting this value but it shouldn't
+                conds.append(~c)
+        else:
+            conds.append(Ne(d, 0))
 
     conds.append(rv)
     return And(*conds)
@@ -883,31 +952,38 @@ def _solve_inequality(ie, s, linear=False):
 
 def _reduce_inequalities(inequalities, symbols):
     # helper for reduce_inequalities
+    from sympy.solvers.solvers import denoms
 
     poly_part, abs_part = {}, {}
     other = []
 
     for inequality in inequalities:
 
-        expr, rel = inequality.lhs, inequality.rel_op  # rhs is 0
+        expr, rel = inequality.lhs - inequality.rhs, inequality.rel_op
 
         # check for gens using atoms which is more strict than free_symbols to
         # guard against EX domain which won't be handled by
         # reduce_rational_inequalities
-        gens = expr.atoms(Symbol)
+        gens = inequality.atoms(Symbol)
 
         if len(gens) == 1:
             gen = gens.pop()
         else:
-            common = expr.free_symbols & symbols
+            common = inequality.free_symbols & symbols
             if len(common) == 1:
                 gen = common.pop()
-                other.append(_solve_inequality(Relational(expr, 0, rel), gen))
+                other.append(_solve_inequality(inequality, gen))
                 continue
             else:
                 raise NotImplementedError(filldedent('''
                     inequality has more than one symbol of interest.
                     '''))
+
+        beginning_denoms = (
+            denoms(inequality.lhs, gen) | denoms(inequality.rhs, gen))
+        if beginning_denoms - denoms(expr, gen):
+            other.append(_solve_inequality(inequality, gen))
+            continue
 
         if expr.is_polynomial(gen):
             poly_part.setdefault(gen, []).append((expr, rel))
@@ -918,7 +994,7 @@ def _reduce_inequalities(inequalities, symbols):
             if components and all(isinstance(i, Abs) for i in components):
                 abs_part.setdefault(gen, []).append((expr, rel))
             else:
-                other.append(_solve_inequality(Relational(expr, 0, rel), gen))
+                other.append(_solve_inequality(inequality, gen))
 
     poly_reduced = [reduce_rational_inequalities([exprs], gen) for gen, exprs in poly_part.items()]
     abs_reduced = [reduce_abs_inequalities(exprs, gen) for gen, exprs in abs_part.items()]
@@ -964,15 +1040,13 @@ def reduce_inequalities(inequalities, symbols=[]):
     # prefilter
     keep = []
     for i in inequalities:
-        if isinstance(i, Relational):
-            i = i.func(i.lhs.as_expr() - i.rhs.as_expr(), 0)
-        elif i not in (True, False):
+        if not isinstance(i, Relational) and i not in (True, False):
             i = Eq(i, 0)
         if i == True:
             continue
         elif i == False:
             return S.false
-        if i.lhs.is_number:
+        if not i.free_symbols and (i.lhs - i.rhs).is_number:
             raise NotImplementedError(
                 "could not determine truth value of %s" % i)
         keep.append(i)

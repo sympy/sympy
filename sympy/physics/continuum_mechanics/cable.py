@@ -2,6 +2,7 @@
 This module can be used to solve problems related
 to 2D Cables.
 """
+from __future__ import annotations
 
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol, symbols

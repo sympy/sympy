@@ -1,4 +1,5 @@
 """Tests for the ``sympy.simplify._cse_diff.py`` module."""
+from __future__ import annotations
 
 import pytest
 

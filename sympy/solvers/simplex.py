@@ -60,6 +60,7 @@ Here is a simple 1-D system: minimize `x` given that ``x >= 1``.
     sympy.solvers.simplex.InfeasibleLPError:
     Inconsistent/False constraint
 """
+from __future__ import annotations
 
 from sympy.core import sympify
 from sympy.core.exprtools import factor_terms
@@ -558,9 +559,9 @@ def _primal_dual(M, factor=True):
 def _rel_as_nonpos(constr, syms):
     """return `(np, d, aux)` where `np` is a list of nonpositive
     expressions that represent the given constraints (possibly
-    rewritten in terms of auxilliary variables) expressible with
+    rewritten in terms of auxiliary variables) expressible with
     nonnegative symbols, and `d` is a dictionary mapping a given
-    symbols to an expression with an auxilliary variable. In some
+    symbols to an expression with an auxiliary variable. In some
     cases a symbol will be used as part of the change of variables,
     e.g. x: x - z1 instead of x: z1 - z2.
 
@@ -589,8 +590,8 @@ def _rel_as_nonpos(constr, syms):
     """
     r = {}  # replacements to handle change of variables
     np = []  # nonpositive expressions
-    aux = []  # auxilliary symbols added
-    ui = numbered_symbols("z", start=1, cls=Dummy)  # auxilliary symbols
+    aux = []  # auxiliary symbols added
+    ui = numbered_symbols("z", start=1, cls=Dummy)  # auxiliary symbols
     univariate = {}  # {x: interval} for univariate constraints
     unbound = []  # symbols designated as unbound
     syms = set(syms)  # the expected syms of the system
@@ -628,7 +629,7 @@ def _rel_as_nonpos(constr, syms):
                 only equalities like Eq(x, y) or non-strict
                 inequalities like x >= y are allowed in lp, not %s""" % i))
 
-    # introduce auxilliary variables as needed for univariate
+    # introduce auxiliary variables as needed for univariate
     # inequalities
     for x in syms:
         i = univariate.get(x, True)
@@ -672,7 +673,7 @@ def _rel_as_nonpos(constr, syms):
 def _lp_matrices(objective, constraints):
     """return A, B, C, D, r, x+X, X for maximizing
     objective = Cx - D with constraints Ax <= B, introducing
-    introducing auxilliary variables, X, as necessary to make
+    introducing auxiliary variables, X, as necessary to make
     replacements of symbols as given in r, {xi: expression with Xj},
     so all variables in x+X will take on nonnegative values.
 
@@ -768,7 +769,7 @@ def _lp(min_max, f, constr):
 
     # restore original variables and remove aux from p
     p = dict(zip(xx, p))
-    if r:  # p has original symbols and auxilliary symbols
+    if r:  # p has original symbols and auxiliary symbols
         # if r has x: x - z1 use values from p to update
         r = {k: v.xreplace(p) for k, v in r.items()}
         # then use the actual value of x (= x - z1) in p
@@ -964,7 +965,7 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             raise ValueError("A and b must both be given")
         # the governing equations will be simple constraints
         # on variables
-        A, b = zeros(0, C.cols), zeros(C.cols, 1)
+        A, b = zeros(0, C.cols), zeros(0, 1)
     else:
         A, b = [Matrix(i) for i in (A, b)]
 
@@ -975,8 +976,11 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     if A_eq is None:
         if b_eq is not None:
             raise ValueError("A_eq and b_eq must both be given")
+            A_eq = zeros(0, C.cols)
+            b_eq = zeros(0, 1)
     else:
-        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
+        A_eq = Matrix(A_eq)
+        b_eq = Matrix(b_eq)
         # if x == y then x <= y and x >= y (-x <= -y)
         A = A.col_join(A_eq)
         A = A.col_join(-A_eq)
@@ -1018,57 +1022,64 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
 def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     from sympy import symbols
-    ## the objective
+
+    # the objective function
     C = Matrix(c)
     if C.rows != 1 and C.cols == 1:
         C = C.T
     if C.rows != 1:
         raise ValueError("C must be a single row.")
 
-    ## the inequalities
+    # the inequalities
     if not A:
         if b:
             raise ValueError("A and b must both be given")
-        # the governing equations will be simple constraints
-        # on variables
-        A, b = zeros(0, C.cols), zeros(C.cols, 1)
+        A, b = zeros(0, C.cols), zeros(0, 1)
     else:
+        if not b:
+            raise ValueError("A and b must both be given")
         A, b = [Matrix(i) for i in (A, b)]
 
     if A.cols != C.cols:
         raise ValueError("number of columns in A and C must match")
 
-    ## the equalities
+    # the equalities
     if A_eq is None:
         if b_eq is not None:
             raise ValueError("A_eq and b_eq must both be given")
+        A_eq = zeros(0, C.cols)
+        b_eq = zeros(0, 1)
     else:
-        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
+        A_eq = Matrix(A_eq)
+        b_eq = Matrix(b_eq)
 
-    if not (bounds is None or bounds == {} or bounds == (0, None)):
-        ## the bounds are interpreted
+    # bounds handling
+    if bounds is None or bounds == {} or bounds == (0, None):
+        bounds = [(0, None)] * C.cols
+    else:
         if type(bounds) is tuple and len(bounds) == 2:
             bounds = [bounds] * A.cols
         elif len(bounds) == A.cols and all(
                 type(i) is tuple and len(i) == 2 for i in bounds):
-            pass # individual bounds
+            pass
         elif type(bounds) is dict and all(
                 type(i) is tuple and len(i) == 2
                 for i in bounds.values()):
-            # sparse bounds
             db = bounds
             bounds = [(0, None)] * A.cols
             while db:
                 i, j = db.popitem()
-                bounds[i] = j  # IndexError if out-of-bounds indices
+                bounds[i] = j
         else:
             raise ValueError("unexpected bounds %s" % bounds)
 
     x = Matrix(symbols('x1:%s' % (A.cols+1)))
-    f,c = (C*x)[0], [i<=j for i,j in zip(A*x, b)] + [Eq(i,j) for i,j in zip(A_eq*x,b_eq)]
+    f, c = (C*x)[0], [i <= j for i, j in zip(A*x, b)] + [Eq(i, j) for i, j in zip(A_eq*x, b_eq)]
+
     for i, (lo, hi) in enumerate(bounds):
         if lo is not None:
-            c.append(x[i]>=lo)
+            c.append(x[i] >= lo)
         if hi is not None:
-            c.append(x[i]<=hi)
-    return f,c
+            c.append(x[i] <= hi)
+
+    return f, c

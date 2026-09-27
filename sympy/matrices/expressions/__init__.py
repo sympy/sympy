@@ -1,4 +1,5 @@
 """ A module which handles Matrix Expressions """
+from __future__ import annotations
 
 from .slice import MatrixSlice
 from .blockmatrix import BlockMatrix, BlockDiagMatrix, block_collapse, blockcut

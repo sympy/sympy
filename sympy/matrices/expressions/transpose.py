@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.matrices.expressions.matexpr import MatrixExpr
 
@@ -70,10 +71,6 @@ class Transpose(MatrixExpr):
     def _eval_derivative(self, x):
         # x is a scalar:
         return self.arg._eval_derivative(x)
-
-    def _eval_derivative_matrix_lines(self, x):
-        lines = self.args[0]._eval_derivative_matrix_lines(x)
-        return [i.transpose() for i in lines]
 
 
 def transpose(expr):

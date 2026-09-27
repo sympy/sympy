@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sympy.physics.mechanics.models as models
 from sympy import (cos, sin, Matrix, symbols, zeros)
 from sympy.simplify.simplify import simplify

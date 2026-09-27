@@ -1,5 +1,9 @@
+from __future__ import annotations
 import numbers as nums
 import decimal
+
+import pytest
+
 from sympy.concrete.summations import Sum
 from sympy.core import (EulerGamma, Catalan, TribonacciConstant,
     GoldenRatio)
@@ -49,6 +53,7 @@ def same_and_same_prec(a, b):
     return a == b and a._prec == b._prec
 
 
+@pytest.mark.thread_unsafe(reason="mutates process-global division error state")
 def test_seterr():
     seterr(divide=True)
     raises(ValueError, lambda: S.Zero/S.Zero)
@@ -322,6 +327,9 @@ def test_Integer_new():
     assert Integer(Rational('1.' + '9'*20)) == 1
 
 
+@pytest.mark.thread_unsafe(
+    reason="expects warning side effects from cached constructors"
+)
 def test_Rational_new():
     """"
     Test for Rational constructor
@@ -2316,3 +2324,21 @@ def test_all_close():
     assert not all_close(x + exp(2.*x)*y, 1.*x + 2*exp(2*x)*y)
     assert not all_close(x + exp(2.*x)*y, 1.*x + exp(3*x)*y)
     assert not all_close(x + 2.*y, 1.*x + 3*y)
+
+
+def test_issue_28222():
+    from sympy import I, pi, Mod, exp, S
+    # These cases previously raised TypeError due to invalid comparison of complex numbers
+    assert Mod(I, 200) == Mod(I, 200)
+    assert Mod(I, pi**(2*pi)) == Mod(I, pi**(2*pi))
+    assert Mod(-I, 5) == Mod(-I, 5)
+    assert Mod(2 + 3*I, 10) == Mod(2 + 3*I, 10)
+    assert Mod(I, exp(1)) == Mod(I, exp(1))
+    assert Mod(I, S(1.5)) == Mod(I, S(1.5))
+
+def test_issue_19988_Float_pickle_precision():
+    import pickle
+    from sympy import Float, pi
+    original = Float(pi, dps=100)
+    unpickled = pickle.loads(pickle.dumps(original))
+    assert original._prec == unpickled._prec

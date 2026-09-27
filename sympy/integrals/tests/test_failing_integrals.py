@@ -1,4 +1,5 @@
 # A collection of failing integrals from the issues.
+from __future__ import annotations
 
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
@@ -8,7 +9,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (sech, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, cos, sin, tan)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import (Integral, integrate)
@@ -17,7 +18,7 @@ from sympy.simplify.fu import fu
 
 from sympy.testing.pytest import XFAIL, slow, tooslow
 
-from sympy.abc import x, k, c, y, b, h, a, m, z, n, t
+from sympy.abc import x, k, c, y, b, a, m, z, n, t
 
 
 @tooslow
@@ -134,6 +135,7 @@ def test_issue_15925a():
     assert not integrate(sqrt((1+sin(x))**2+(cos(x))**2), (x, -pi/2, pi/2)).has(Integral)
 
 
+@slow
 def test_issue_15925b():
     f = sqrt((-12*cos(x)**2*sin(x))**2+(12*cos(x)*sin(x)**2)**2)
     assert integrate(f, (x, 0, pi/6)) == Rational(3, 2)
@@ -162,13 +164,6 @@ def test_issue_14716():
     # integrate(log(x + 5)*cos(pi*x),(x, S.Half, 1)).transform(x, y - 5).doit()
     # works
     # assert i == -log(Rational(11, 2))/pi - Si(pi*Rational(11, 2))/pi + Si(6*pi)/pi
-
-
-@XFAIL
-def test_issue_14709a():
-    i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
-    assert not i.has(Integral)
-    # assert i == 5*h**2*pi/16
 
 
 @XFAIL
@@ -221,11 +216,6 @@ def test_issue_10584():
 @XFAIL
 def test_issue_9101():
     assert not integrate(log(x + sqrt(x**2 + y**2 + z**2)), z).has(Integral)
-
-
-@XFAIL
-def test_issue_7147():
-    assert not integrate(x/sqrt(a*x**2 + b*x + c)**3, x).has(Integral)
 
 
 @XFAIL

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import expand
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
@@ -94,6 +95,11 @@ def test_complete_simple_double_pendulum():
 
     with warns_deprecated_sympy():
         method = JointsMethod(C, J1, J2)
+    assert method.holonomic_constraints == Matrix()
+    assert method.nonholonomic_constraints == Matrix()
+    assert method.velocity_constraints == Matrix()
+    assert method.acceleration_constraints == Matrix()
+    assert method.constraints_jacobian == Matrix(0, 2, [])
     method.form_eoms()
 
     assert expand(method.mass_matrix_full) == Matrix([[1, 0, 0, 0],

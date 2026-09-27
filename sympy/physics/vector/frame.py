@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import (diff, expand, sin, cos, sympify, eye, zeros,
                                 ImmutableMatrix as Matrix, MatrixBase)
 from sympy.core.symbol import Symbol

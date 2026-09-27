@@ -15,6 +15,10 @@ the following function types in the given ``Interval``:
 
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -26,7 +30,19 @@ from sympy.functions.elementary.hyperbolic import (
 from sympy.utilities.misc import filldedent
 
 
-def singularities(expression, symbol, domain=None):
+if TYPE_CHECKING:
+    from typing import Callable
+    from sympy.core.expr import Expr
+    from sympy.sets.sets import Set
+    from sympy.core.basic import Basic
+    from sympy.logic.boolalg import Boolean
+
+
+def singularities(
+    expression: Expr | complex,
+    symbol: Symbol | Basic,
+    domain: Set | None = None,
+) -> set[Symbol]:
     """
     Find singularities of a given function.
 
@@ -92,6 +108,8 @@ def singularities(expression, symbol, domain=None):
     from sympy.solvers.solveset import solveset
     from sympy.sets.sets import Interval
 
+    expression = sympify(expression)
+
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
     try:
@@ -128,7 +146,12 @@ def singularities(expression, symbol, domain=None):
 ###########################################################################
 
 
-def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
+def monotonicity_helper(
+    expression: Expr | complex,
+    predicate: Callable[[Expr], Boolean],
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Helper function for functions checking function monotonicity.
 
@@ -175,19 +198,24 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
 
     try:
         sings = singularities(expression, variable, interval)
+    except NotImplementedError:
+        pass
+    else:
         if interval.is_subset(S.Reals):
             interior_sings = interval.interior.intersection(sings)
             if interior_sings != S.EmptySet:
                 return False
-    except (NotImplementedError, AttributeError):
-        pass
 
     derivative = expression.diff(variable)
     predicate_interval = solveset(predicate(derivative), variable, S.Reals)
     return interval.is_subset(predicate_interval)
 
 
-def is_increasing(expression, interval=S.Reals, symbol=None):
+def is_increasing(
+    expression: Expr | complex,
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Return whether the function is increasing in the given interval.
 
@@ -230,7 +258,11 @@ def is_increasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x >= 0, interval, symbol)
 
 
-def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
+def is_strictly_increasing(
+    expression: Expr | complex,
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Return whether the function is strictly increasing in the given interval.
 
@@ -273,7 +305,11 @@ def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x > 0, interval, symbol)
 
 
-def is_decreasing(expression, interval=S.Reals, symbol=None):
+def is_decreasing(
+    expression: Expr | complex,
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Return whether the function is decreasing in the given interval.
 
@@ -320,7 +356,11 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x <= 0, interval, symbol)
 
 
-def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
+def is_strictly_decreasing(
+    expression: Expr | complex,
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Return whether the function is strictly decreasing in the given interval.
 
@@ -363,7 +403,11 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x < 0, interval, symbol)
 
 
-def is_monotonic(expression, interval=S.Reals, symbol=None):
+def is_monotonic(
+    expression: Expr | complex,
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Return whether the function is monotonic in the given interval.
 
@@ -482,12 +526,13 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
 
     try:
         sings = singularities(expression, variable, interval)
+    except NotImplementedError:
+        pass
+    else:
         if interval.is_subset(S.Reals):
             interior_sings = interval.interior.intersection(sings)
             if interior_sings != S.EmptySet:
                 return False
-    except (NotImplementedError, AttributeError):
-        pass
 
     turning_points = solveset(expression.diff(variable), variable, interval)
     return interval.intersection(turning_points) is S.EmptySet

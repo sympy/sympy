@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Lambda, S, symbols
 from sympy.concrete import Sum
 from sympy.functions import adjoint, conjugate, transpose

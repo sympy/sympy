@@ -25,7 +25,7 @@ _default_config = {
     'GROEBNER':                   'buchberger',
 }
 
-_current_config = {}
+_current_config: dict[str, bool | int | str] = {}
 
 @contextmanager
 def using(**kwargs):

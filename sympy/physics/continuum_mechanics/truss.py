@@ -2,6 +2,7 @@
 This module can be used to solve problems related
 to 2D Trusses.
 """
+from __future__ import annotations
 
 
 from cmath import atan, inf

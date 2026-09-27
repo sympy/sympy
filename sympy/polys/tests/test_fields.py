@@ -1,4 +1,5 @@
 """Test sparse rational functions. """
+from __future__ import annotations
 
 from sympy.polys.fields import field, sfield, FracField, FracElement
 from sympy.polys.rings import ring

@@ -1,4 +1,5 @@
 """Tools for setting up interactive sessions. """
+from __future__ import annotations
 import enum
 from code import InteractiveConsole
 

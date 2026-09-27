@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia, Inertia
 from sympy.physics.mechanics import inertia_of_point_mass

@@ -2,6 +2,7 @@
 If the arbitrary constant class from issue 4435 is ever implemented, this
 should serve as a set of test cases.
 """
+from __future__ import annotations
 
 from sympy.core.function import Function
 from sympy.core.numbers import I

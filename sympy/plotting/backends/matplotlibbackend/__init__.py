@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.plotting.backends.matplotlibbackend.matplotlib import (
     MatplotlibBackend, _matplotlib_list
 )

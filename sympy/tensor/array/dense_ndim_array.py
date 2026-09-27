@@ -1,5 +1,5 @@
+from __future__ import annotations
 import functools
-from typing import List
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -12,7 +12,7 @@ from sympy.utilities.iterables import flatten
 
 class DenseNDimArray(NDimArray):
 
-    _array: List[Basic]
+    _array: list[Basic]
 
     def __new__(self, *args, **kwargs):
         return ImmutableDenseNDimArray(*args, **kwargs)
@@ -93,7 +93,7 @@ class DenseNDimArray(NDimArray):
         """
         from sympy.matrices import Matrix
 
-        if self.rank() != 2:
+        if self.ndim != 2:
             raise ValueError('Dimensions must be of size of 2')
 
         return Matrix(self.shape[0], self.shape[1], self._array)
@@ -136,13 +136,17 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignor
     def _new(cls, iterable, shape, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
+        # ``flat_list`` may be a one-shot iterator (e.g. the ``map`` object that
+        # ``applyfunc`` builds); materialize it so ``_check_special_bounds`` can
+        # take its length and the ``flatten`` below still sees the elements.
+        flat_list = list(flat_list)
         cls._check_special_bounds(flat_list, shape)
         flat_list = flatten(flat_list)
         flat_list = Tuple(*flat_list)
         self = Basic.__new__(cls, flat_list, shape, **kwargs)
         self._shape = shape
         self._array = list(flat_list)
-        self._rank = len(shape)
+        self._ndim = len(shape)
         self._loop_size = functools.reduce(lambda x,y: x*y, shape, 1)
         return self
 
@@ -168,7 +172,7 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         self = object.__new__(cls)
         self._shape = shape
         self._array = list(flat_list)
-        self._rank = len(shape)
+        self._ndim = len(shape)
         self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
         return self
 

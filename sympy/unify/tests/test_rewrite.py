@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.unify.rewrite import rewriterule
 from sympy.core.basic import Basic
 from sympy.core.singleton import S

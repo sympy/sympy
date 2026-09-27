@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.integrals.transforms import (
     mellin_transform, inverse_mellin_transform,
     fourier_transform, inverse_fourier_transform,

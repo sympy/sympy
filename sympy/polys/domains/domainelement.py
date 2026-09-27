@@ -1,4 +1,5 @@
 """Trait for implementing domain elements. """
+from __future__ import annotations
 
 
 from sympy.utilities import public

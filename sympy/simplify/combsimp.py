@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Mul
 from sympy.core.function import count_ops
 from sympy.core.traversal import preorder_traversal, bottom_up

@@ -10,6 +10,7 @@ normalized activation level, can be modeled by the models present in this
 module.
 
 """
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from functools import cached_property

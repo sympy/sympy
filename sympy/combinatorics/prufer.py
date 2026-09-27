@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Basic
 from sympy.core.containers import Tuple
 from sympy.tensor.array import Array
@@ -54,7 +55,7 @@ class Prufer(Basic):
         """
         if self._prufer_repr is None:
             self._prufer_repr = self.to_prufer(self._tree_repr[:], self.nodes)
-        return self._prufer_repr
+        return self._prufer_repr[:]
 
     @property
     def tree_repr(self):
@@ -77,7 +78,7 @@ class Prufer(Basic):
         """
         if self._tree_repr is None:
             self._tree_repr = self.to_tree(self._prufer_repr[:])
-        return self._tree_repr
+        return [edge[:] for edge in self._tree_repr]
 
     @property
     def nodes(self):

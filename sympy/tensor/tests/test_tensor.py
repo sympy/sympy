@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.function import expand
 from sympy.core.numbers import Integer
@@ -623,6 +624,13 @@ def test_add1():
     #Test whether TensAdd.doit chokes on subterms that are zero.
     assert TensAdd(p(a), TensMul(0, p(a)) ).doit() == p(a)
 
+    #If none of the arguments of a TensAdd are TensExpr, it should be converted to an add by doit
+    f = Function("f")
+    x = Symbol("x")
+
+    expr = TensAdd(3, f(x))
+    assert isinstance(expr.doit(), Add)
+
 def test_special_eq_ne():
     # test special equality cases:
     Lorentz = TensorIndexType('Lorentz', dummy_name='L')
@@ -1197,6 +1205,13 @@ def test_TensorManager():
     nh = TensorManager.comm_symbols2i(GHsymbol)
     assert TensorManager.comm_i2symbol(nh) == GHsymbol
     assert GHsymbol in TensorManager._comm_symbols2i
+
+
+def test_TensorManager_comm_aliasing():
+    TensorManager.clear()
+    comm = TensorManager.comm
+    comm[1][2] = 1
+    assert TensorManager.get_comm(1, 2) is None
 
 
 def test_hash():
@@ -1793,6 +1808,15 @@ def test_TensMul_data():
 
         # Test the deleter
         del g.data
+
+def test_TensMul_doit():
+    R3 = TensorIndexType("R3", dim=3)
+    i,j = symbols("i j", cls=TensorIndex, tensor_index_type=R3)
+    K = TensorHead("K", index_types=[R3])
+
+    expr = TensMul(K(j), TensAdd(2, -2, 2*K(i)*K(-i)))
+
+    assert expr.doit() == 2*K(j)*K(i)*K(-i)
 
 def test_issue_11020_TensAdd_data():
     with warns_deprecated_sympy():

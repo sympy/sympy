@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.tensor.functions import TensorProduct
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol

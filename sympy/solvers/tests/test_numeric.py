@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import nfloat
 from sympy.core.numbers import (Float, I, Rational, pi)
 from sympy.core.relational import Eq

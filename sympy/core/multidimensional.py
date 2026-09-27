@@ -3,6 +3,7 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
+from __future__ import annotations
 
 from functools import wraps
 
@@ -89,6 +90,14 @@ class vectorize:
             if not isinstance(a, (int, str)):
                 raise TypeError("a is of invalid type")
         self.mdargs = mdargs
+
+    def __eq__(self, other):
+        if not isinstance(other, vectorize):
+            return NotImplemented
+        return self.mdargs == other.mdargs
+
+    def __hash__(self):
+        return hash((type(self), self.mdargs))
 
     def __call__(self, f):
         """

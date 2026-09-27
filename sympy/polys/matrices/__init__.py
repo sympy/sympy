@@ -8,6 +8,7 @@ implementation is typically a lot faster than SymPy's standard Matrix class
 but is a work in progress and is still experimental.
 
 """
+from __future__ import annotations
 from .domainmatrix import DomainMatrix, DM
 
 __all__ = [

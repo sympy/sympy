@@ -924,9 +924,8 @@ class Quaternion(Expr):
         """Returns the norm of the quaternion."""
         if self._norm is None:  # check if norm is pre-defined
             q = self
-            # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
-            # arise when from_axis_angle is used).
-            return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+            # target trig and hyperbolics that arise when using from_axis_angle.
+            return sqrt(trigsimp((q.a**2 + q.b**2 + q.c**2 + q.d**2).together()))
 
         return self._norm
 
@@ -940,7 +939,7 @@ class Quaternion(Expr):
         q = self
         if not q.norm():
             raise ValueError("Cannot compute inverse for a quaternion with zero norm")
-        return conjugate(q) * (1/q.norm()**2)
+        return q._eval_conjugate() * (1/q.norm()**2)
 
     def pow(self, p: int) -> Quaternion:
         """Finds the pth power of the quaternion.

@@ -17,6 +17,7 @@ ODE Patterns, pp. 7 - pp. 12
 - `bivariate` from Lie Groups and Differential Equations pp. 327 - pp. 329
 
 """
+from __future__ import annotations
 from itertools import islice
 
 from sympy.core import Add, S, Mul, Pow

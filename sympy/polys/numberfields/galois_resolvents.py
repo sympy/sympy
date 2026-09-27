@@ -18,6 +18,7 @@ The tables for polynomials $T$ of degrees 4 through 6, produced by this code,
 are recorded in the resolvent_lookup.py module.
 
 """
+from __future__ import annotations
 
 from sympy.core.evalf import (
     evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath,

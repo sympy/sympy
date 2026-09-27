@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.sets import FiniteSet
 from sympy.core.numbers import Rational
 from sympy.core.relational import Eq

@@ -5,6 +5,7 @@
 # This entire test module and the corresponding sympy/matrices/matrices.py
 # module will be removed in a future release.
 #
+from __future__ import annotations
 import random
 import concurrent.futures
 from collections.abc import Hashable
@@ -1241,7 +1242,7 @@ def test_issue_3950():
     a = Matrix([1, 2, 3])
     b = Matrix([2, 2, 3])
     assert not (m in [])
-    assert not (m in [1])
+    assert not (m == 1)
     assert m != 1
     assert m == a
     assert m != b
@@ -2806,7 +2807,8 @@ def test_17522_scipy():
     except ImportError:
         skip('SciPy must be available to test indexing matrixified SciPy sparse matrices')
 
-    m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
+    with ignore_warnings(DeprecationWarning):
+        m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 

@@ -24,6 +24,7 @@ This module defines basic kinds for core objects. Other kinds such as
        This approach is experimental, and can be replaced or deleted in the future.
        See https://github.com/sympy/sympy/pull/20549.
 """
+from __future__ import annotations
 
 from collections import defaultdict
 
@@ -73,11 +74,10 @@ class Kind(object, metaclass=KindMeta):
 
     """
     def __new__(cls, *args):
-        if args in cls._inst:
-            inst = cls._inst[args]
-        else:
-            inst = super().__new__(cls)
-            cls._inst[args] = inst
+        inst = cls._inst.get(args)
+        if inst is None:
+            candidate = super().__new__(cls)
+            inst = cls._inst.setdefault(args, candidate)
         return inst
 
 

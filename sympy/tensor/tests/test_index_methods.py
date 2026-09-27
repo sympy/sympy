@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import symbols, S, Pow, Function
 from sympy.functions import exp
 from sympy.testing.pytest import raises

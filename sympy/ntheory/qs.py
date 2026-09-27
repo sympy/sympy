@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import exp, log
 from sympy.core.random import _randint
 from sympy.external.gmpy import bit_scan1, gcd, invert, jacobi, sqrt as isqrt

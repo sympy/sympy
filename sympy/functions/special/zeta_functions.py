@@ -1,4 +1,5 @@
 """ Riemann zeta and related function. """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit

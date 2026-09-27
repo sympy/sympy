@@ -1,4 +1,5 @@
 """Groebner bases algorithms. """
+from __future__ import annotations
 
 
 from sympy.core.symbol import Dummy

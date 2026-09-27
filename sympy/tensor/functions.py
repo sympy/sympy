@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections.abc import Iterable
 from functools import singledispatch
 

@@ -210,7 +210,7 @@ an expression when customizing a printer. Mistakes include:
 
 from __future__ import annotations
 import sys
-from typing import Any, Type
+from typing import Any
 import inspect
 from contextlib import contextmanager
 from functools import cmp_to_key, update_wrapper
@@ -273,6 +273,18 @@ class Printer:
         # _print_level is the number of times self._print() was recursively
         # called. See StrPrinter._print_Float() for an example of usage
         self._print_level = 0
+
+    def __eq__(self, other):
+        # Two printers are equal if they are of the same type and configured
+        # with the same settings. ``_context`` and ``_print_level`` are
+        # transient printing state and are deliberately not compared, so that
+        # an idle printer compares equal to itself after a pickle round-trip.
+        if type(self) is not type(other):
+            return NotImplemented
+        return self._settings == other._settings
+
+    def __hash__(self):
+        return hash((type(self), frozenset(self._settings)))
 
     @classmethod
     def set_global_settings(cls, **settings):
@@ -389,7 +401,7 @@ class _PrintFunction:
     """
     Function wrapper to replace ``**settings`` in the signature with printer defaults
     """
-    def __init__(self, f, print_cls: Type[Printer]):
+    def __init__(self, f, print_cls: type[Printer]):
         # find all the non-setting arguments
         params = list(inspect.signature(f).parameters.values())
         assert params.pop(-1).kind == inspect.Parameter.VAR_KEYWORD

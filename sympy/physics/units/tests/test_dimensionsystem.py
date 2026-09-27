@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import symbols
 from sympy.matrices.dense import (Matrix, eye)
 from sympy.physics.units.definitions.dimension_definitions import (

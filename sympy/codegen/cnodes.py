@@ -1,6 +1,7 @@
 """
 AST nodes specific to the C family of languages
 """
+from __future__ import annotations
 
 from sympy.codegen.ast import (
     Attribute, Declaration, Node, String, Token, Type, none,
