@@ -746,6 +746,27 @@ def test_array_expressions_no_canonicalization():
     assert str(expr) == "ArrayAdd(M, ZeroArray(k, k), N)"
     assert expr.doit() == ArrayAdd(M, N)
 
+    # Scalars are not allowed in ArrayAdd:
+
+    M3 = MatrixSymbol("M3", 3, 3)
+    trace = ArrayContraction(M, (0, 1))
+    raises(TypeError, lambda: ArrayAdd(i, j))
+    raises(TypeError, lambda: ArrayAdd(2*i, j + 1))
+    raises(TypeError, lambda: ArrayAdd(M3[0, 0], M3[1, 1]))
+    raises(TypeError, lambda: ArrayAdd(M, i))
+    raises(TypeError, lambda: ArrayAdd(trace, i))
+
+    assert _array_add(i, j) == i + j
+    assert _array_add(M3[0, 0], M3[1, 1]) == M3[0, 0] + M3[1, 1]
+    assert _array_add(trace, i) == trace + i
+    raises(TypeError, lambda: _array_add(M, i))
+
+    expr = ArrayAdd(trace, ArrayContraction(N, (0, 1)))
+    assert expr.doit() == expr
+    expr = ArrayAdd(ArrayTensorProduct(i, j), trace)
+    assert expr.doit() == i*j + trace
+    assert expr.doit(deep=False) == i*j + trace
+
     # PermuteDims:
 
     expr = PermuteDims(PermuteDims(M, [1, 0]), [1, 0])

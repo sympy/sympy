@@ -4,9 +4,10 @@ import operator
 from itertools import accumulate
 
 from sympy import Mul, Sum, Dummy, Add
+from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.tensor.array.expressions import PermuteDims, ArrayAdd, ArrayElementwiseApplyFunc, Reshape
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, get_ndim, ArrayContraction, \
-    ArrayDiagonal, get_shape, _get_array_element_or_slice, _ArrayExpr
+    ArrayDiagonal, get_shape, _get_array_element_or_slice, _ArrayExpr, _is_plain_scalar
 from sympy.tensor.array.expressions.utils import _apply_permutation_to_list
 
 
@@ -58,6 +59,10 @@ class _ConvertArrayToIndexed:
             return self.do_convert(expr.expr, permuted_indices)
         if isinstance(expr, ArrayAdd):
             return Add.fromiter(self.do_convert(arg, indices) for arg in expr.args)
+        if isinstance(expr, Add) and not isinstance(expr, MatrixExpr):
+            return Add.fromiter(
+                arg if _is_plain_scalar(arg) else self.do_convert(arg, indices)
+                for arg in expr.args)
         if isinstance(expr, _ArrayExpr):
             return expr.__getitem__(tuple(indices))
         if isinstance(expr, ArrayElementwiseApplyFunc):
