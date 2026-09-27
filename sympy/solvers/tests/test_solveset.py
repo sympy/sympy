@@ -3779,6 +3779,22 @@ def test_solveset_symbol_independent_relational():
     assert solveset(y, x, S.Reals) is S.EmptySet
 
 
+def test_solveset_symbol_independent_relational_after_expansion():
+    x, y = symbols('x y')
+    relation = (x + y)**2 - x**2 - 2*x*y
+
+    assert solveset(Eq(relation, 0), x, S.Reals) == \
+        ConditionSet(x, Eq(y**2, 0), S.Reals)
+    assert solveset(relation > 0, x, S.Reals) == \
+        ConditionSet(x, y**2 > 0, S.Reals)
+    assert solveset(relation >= y**2, x, S.Reals) == S.Reals
+    assert solveset(relation > y**2, x, S.Reals) is S.EmptySet
+
+    relation = (x + 1)**2 - x*(x + 2)
+    assert solveset(relation > 0, x, S.Reals) == S.Reals
+    assert solveset(relation < 0, x, S.Reals) is S.EmptySet
+
+
 def test_issue_26077():
     _n = Symbol('_n')
     function = x*cot(5*x)
