@@ -151,7 +151,7 @@ Here is a list of the things which are supported:
 
 * Symbols which consist of one letter, e.g., ``a``, ``b``, ``x``, etc.
   Greek symbols and symbols with subscripts are also supported. Numbers are also
-  supported, as is ``\infty``.
+  supported, as is ``\infty``. `\pi` and `\mathrm{e}` are the constants.
 * Symbols with multiple letters are supported, as long as they are wrapped in
   ``\mathit``.
 * Expressions with `+`, `-`, `*`, `/`, and alternative operators like ``\cdot``,
@@ -179,15 +179,21 @@ Here is a list of the things which are supported:
   ``\tanh^2`` are also supported, and `-1` is interpreted as the inverse function
   (i.e., ``\tanh^{-1} x`` is interpreted as ``\arctanh x``).
 * ``AppliedFunctions``, like `f(x, y, z)`, and functions named with
-  ``\operatorname``: `\operatorname{sin} x` is the sine, while
-  `\operatorname{erf}(x)` is an undefined function called ``erf``.
+  ``\operatorname``: `\operatorname{sin} x` is the sine and
+  `\operatorname{erf}(x)` the error function, while a name that is not known,
+  as in `\operatorname{f}(x)`, gives an undefined function.
+* Other readings of the constants and of the functions can be chosen with the
+  ``overrides`` argument of ``parse_latex_lark``: with
+  ``overrides={r"\pi": Symbol("pi")}`` the command `\pi` is a symbol and not
+  the constant.
 * All types of fractions (``\frac``, ``\tfrac``, ``\dfrac``, ``\nicefrac``) and
   binomials (``\binom``, ``\tbinom``, ``\dbinom``) are supported.
 * Integrals, both definite and indefinite. When the integrand is a fraction,
   having the differential in the numerator is allowed. The differential is
   allowed to be ``d``, ``\text{d}``, or ``\mathrm{d}``.
 * Derivatives in one variable, like `\dfrac{d}{dx} (\sin x)`, `\dfrac{dy}{dx}`
-  and `\dfrac{d^2}{dx^2} x^3`. Partial derivatives are not supported yet.
+  and `\dfrac{d^2}{dx^2} x^3`. The differential has to be a plain ``d``.
+  Partial derivatives are not supported yet.
 * Limits in one variable. E.g., `\lim\limits_{t\to 3^{+}} \sin t`.
 * Sums and products with simple conditions. For example, `\sum\limits_{k=0}^n k^2`
   is allowed because the condition on `k` is simple. An expression like

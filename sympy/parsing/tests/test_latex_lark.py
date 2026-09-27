@@ -24,6 +24,7 @@ from sympy.series.limits import Limit
 from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
 from sympy import I, pi
 from sympy import And, Contains, Float, Not, S
+from sympy import erf, re, sign, sinc
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
@@ -916,9 +917,9 @@ def test_negthinspace_not_equal_conflict():
     assert parse_latex_lark(r"x \neq \negmedspace y") == Ne(x, y)
 
 
-def _readings(latex_str):
+def _readings(latex_str, **kwargs):
     """The expressions an input may mean: several when it is ambiguous."""
-    result = parse_latex_lark(latex_str)
+    result = parse_latex_lark(latex_str, **kwargs)
     if isinstance(result, lark.Tree) and result.data == "_ambig":
         return set(result.children)
     return {result}
@@ -979,6 +980,8 @@ def test_implicit_multiplication_after_a_delimited_factor():
     assert parse_latex_lark(r"x [y]") == x*y
     assert parse_latex_lark(r"[x]") == x
     assert parse_latex_lark(r"\{x\}") == x
+    assert parse_latex_lark(r"x^2_1 y") == Symbol("x_{1}")**2*y
+    assert parse_latex_lark(r"\infty x") == oo*x
     product = parse_latex_lark(r"\begin{pmatrix}1&2\\3&4\end{pmatrix}\begin{pmatrix}1\\2\end{pmatrix}")
     assert product.doit() == Matrix([[5], [11]])
 
@@ -987,8 +990,16 @@ def test_differentials():
     assert parse_latex_lark(r"b d e") == b*d*Symbol("e")
     assert parse_latex_lark(r"\frac{dy}{dx}") == Derivative(y, x)
     assert parse_latex_lark(r"\frac{d^2}{dx^2} x^3") == Derivative(x**3, (x, 2))
-    with raises(LaTeXParsingError):
-        parse_latex_lark(r"\frac{d}{dx}")
+    assert parse_latex_lark(r"\frac{d^2 y}{dx^2}") == Derivative(y, (x, 2))
+    assert parse_latex_lark(r"\frac{d^n}{dx^n} x^3") == Derivative(x**3, (x, n))
+    # d is the first factor of a derivative
+    assert parse_latex_lark(r"\frac{a d}{d x}") == a/x
+    assert parse_latex_lark(r"\frac{d y}{x d}") == y/x
+    assert parse_latex_lark(r"\frac{d^2 y}{dx^3}") == d*y/x**3
+    for latex_str in [r"\frac{d}{dx}", r"\frac{d}{dx} + 1", r"2 \frac{d}{dx}", r"\frac{d}{dx} = 1",
+                      r"\sin \frac{d}{dx}"]:
+        with raises(LaTeXParsingError):
+            parse_latex_lark(latex_str)
 
 
 def test_symbols_and_constants():
@@ -997,10 +1008,46 @@ def test_symbols_and_constants():
     assert parse_latex_lark(r"a_{n+1}") == Symbol("a_{n+1}")
     assert parse_latex_lark(r"x^2_1") == Symbol("x_{1}")**2
     assert parse_latex_lark(r"\sigma \iota") == Symbol("sigma")*Symbol("iota")
-    assert parse_latex_lark(r"2\pi r") == 2*Symbol("pi")*Symbol("r")
     assert parse_latex_lark(r"\Gamma") == Symbol("Gamma")
     assert parse_latex_lark(r".5") == Float("0.5")
+    assert parse_latex_lark(r"x + .5") == x + Float("0.5")
+    for latex_str in [r"1.5.5", r"1..5"]:
+        with raises(lark.exceptions.UnexpectedCharacters):
+            parse_latex_lark(latex_str)
+
+
+def test_pi_and_e():
+    assert parse_latex_lark(r"\pi") == pi
+    assert parse_latex_lark(r"2\pi r") == 2*pi*Symbol("r")
+    assert parse_latex_lark(r"\sin \pi x") == sin(pi*x)
+    assert parse_latex_lark(r"\frac\pi2") == pi/2
+    assert parse_latex_lark(r"\sqrt\pi") == sqrt(pi)
+    assert parse_latex_lark(r"\pi_1") == Symbol("pi_{1}")
+    assert parse_latex_lark(r"\pi'") == Symbol("pi'")
+    assert parse_latex_lark(r"x_\pi") == Symbol("x_{pi}")
+    assert parse_latex_lark(r"\varpi") == Symbol("varpi")
+    assert parse_latex_lark(r"\mathrm{e}") == E
     assert parse_latex_lark(r"\mathrm{e}^x") == exp(x)
+    assert parse_latex_lark(r"\mathrm{e} x") == E*x
+    assert parse_latex_lark(r"\sin \mathrm{e} x") == sin(E*x)
+
+
+def test_overrides():
+    p, e = Symbol("pi"), Symbol("e")
+    assert parse_latex_lark(r"2\pi r", overrides={r"\pi": p}) == 2*p*Symbol("r")
+    assert parse_latex_lark(r"\mathrm{e}^{\pi}", overrides={r"\mathrm{e}": e}) == e**pi
+    assert parse_latex_lark(r"\imaginaryunit x", overrides={r"\imaginaryunit": Symbol("j")}) == Symbol("j")*x
+    g = Function("g")
+    assert parse_latex_lark(r"\sin x + \cos x", overrides={r"\sin": g}) == g(x) + cos(x)
+    assert parse_latex_lark(r"\sin^2 x", overrides={r"\sin": g}) == g(x)**2
+    assert _readings(r"\ln x y", overrides={r"\ln": g}) == {g(x*y), y*g(x)}
+    assert parse_latex_lark(r"\log_2 x", overrides={r"\log": g}) == g(x, 2)
+    assert parse_latex_lark(r"\operatorname{erf}(x)", overrides={r"\operatorname{erf}": g}) == g(x)
+    assert parse_latex_lark(r"\operatorname{sin}(x, y)", overrides={r"\operatorname{sin}": g}) == g(x, y)
+    assert parse_latex_lark(r"\operatorname{sin} x + \sin x", overrides={r"\operatorname{sin}": g}) == g(x) + sin(x)
+    assert parse_latex_lark(r"2\pi r") == 2*pi*Symbol("r")
+    with raises(ValueError):
+        parse_latex_lark(r"\sqrt{x}", overrides={r"\sqrt": g})
 
 
 def test_operators_and_relations():
@@ -1037,12 +1084,18 @@ def test_operatorname():
     assert parse_latex_lark(r"\operatorname{ max } x") == x
     assert parse_latex_lark(r"\operatorname{sin} x \operatorname{cos} y") == sin(x)*cos(y)
     assert parse_latex_lark(r"\operatorname{tr}\begin{pmatrix}1&2\\3&4\end{pmatrix}") == Trace(Matrix([[1, 2], [3, 4]]))
-    assert parse_latex_lark(r"2\operatorname{erf}(x) + 1") == 2*Function("erf")(x) + 1
+    assert parse_latex_lark(r"2\operatorname{erf}(x) + 1") == 2*erf(x) + 1
+    assert parse_latex_lark(r"\operatorname{sinc} x") == sinc(x)
+    assert parse_latex_lark(r"\operatorname{sgn}(x)") == sign(x)
+    assert parse_latex_lark(r"\operatorname{Re}(z)") == re(z)
+    assert parse_latex_lark(r"\operatorname{abs}(x)") == Abs(x)
+    assert parse_latex_lark(r"\operatorname{gcd}(a, b)") == Function("gcd")(a, b)
     assert parse_latex_lark(r"\operatorname{f}(x, y)") == Function("f")(x, y)
     assert parse_latex_lark(r"\operatorname{f}^2(x)") == Function("f")(x)**2
     assert _readings(r"\operatorname{f} x y") == {Function("f")(x*y), y*Function("f")(x)}
-    with raises(LaTeXParsingError):
-        parse_latex_lark(r"\operatorname{det} A")
+    for latex_str in [r"\operatorname{det} A", r"\operatorname{sin}(x, y)"]:
+        with raises(LaTeXParsingError):
+            parse_latex_lark(latex_str)
 
 
 def test_unknown_commands():

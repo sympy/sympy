@@ -10,6 +10,8 @@ from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 
 _lark = import_module("lark")
 
+__doctest_requires__ = {('parse_latex_lark',): ['lark']}
+
 
 class LarkLaTeXParser:
     r"""Class for converting input `\mathrm{\LaTeX}` strings into SymPy Expressions.
@@ -75,7 +77,7 @@ class LarkLaTeXParser:
         else:
             self.transformer = transformer()
 
-    def doparse(self, s: str):
+    def doparse(self, s: str, overrides=None):
         if self.print_debug_output:
             _lark.logger.setLevel(logging.DEBUG)
 
@@ -98,8 +100,12 @@ class LarkLaTeXParser:
             # print the `parse_tree` variable
             _lark.logger.debug(parse_tree.pretty())
 
+        transformer = self.transformer
+        if overrides:
+            transformer = transformer.with_overrides(overrides)
+
         try:
-            sympy_expression = self.transformer.transform(parse_tree)
+            sympy_expression = transformer.transform(parse_tree)
         except _lark.exceptions.VisitError as error:
             # a parsing error found while building the expression is reported as itself
             if isinstance(error.orig_exc, LaTeXParsingError):
@@ -116,16 +122,45 @@ if _lark is not None:
     _lark_latex_parser = LarkLaTeXParser()
 
 
-def parse_latex_lark(s: str):
-    """
+def parse_latex_lark(s: str, overrides=None):
+    r"""
     Experimental LaTeX parser using Lark.
 
     This function is still under development and its API may change with the
     next releases of SymPy.
+
+    Parameters
+    ==========
+
+    s : str
+        The `\mathrm{\LaTeX}` string to parse.
+
+    overrides : dict, optional
+        The readings of constants and functions to use instead of the default
+        ones. The keys are the commands as they are written in ``s``: the
+        constants ``\pi``, ``\mathrm{e}``, ``\infty`` and ``\imaginaryunit``,
+        the trigonometric and hyperbolic functions like ``\sin``, the functions
+        ``\exp``, ``\ln``, ``\log`` and ``\lg``, and any function written as
+        ``\operatorname{name}``. The value is an expression for a constant,
+        and for a function it is what is called with the arguments.
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.latex.lark import parse_latex_lark
+    >>> from sympy import Function, Symbol, pi
+    >>> parse_latex_lark(r"2\pi").has(pi)
+    True
+    >>> parse_latex_lark(r"2\pi", overrides={r"\pi": Symbol("pi")}).has(pi)
+    False
+    >>> f = Function("erf")
+    >>> parse_latex_lark(r"\operatorname{erf}(x)", overrides={r"\operatorname{erf}": f}).func == f
+    True
+
     """
     if _lark is None:
         raise ImportError("Lark is probably not installed")
-    return _lark_latex_parser.doparse(s)
+    return _lark_latex_parser.doparse(s, overrides=overrides)
 
 
 def _pretty_print_lark_trees(tree, indent=0, show_expr=True):

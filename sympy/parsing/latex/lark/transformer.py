@@ -1,5 +1,6 @@
 from __future__ import annotations
 import re
+from copy import copy
 
 import sympy
 from sympy.external import import_module
@@ -42,6 +43,9 @@ class _DerivativeOperator:
     def __call__(self, expression):
         return sympy.Derivative(expression, (self.variable, self.order))
 
+    def _sympy_(self):
+        raise LaTeXParsingError("A derivative must be applied to an expression.")
+
 
 # noinspection PyPep8Naming,PyMethodMayBeStatic
 class TransformToSymPyExpr(Transformer):
@@ -71,18 +75,36 @@ class TransformToSymPyExpr(Transformer):
     SYMBOL = sympy.Symbol
     DIGIT = sympy.core.numbers.Integer
 
-    def CMD_INFTY(self, tokens):
-        return sympy.oo
+    overrides: dict = {}
 
-    def EULER_NUMBER(self, tokens):
-        return sympy.E
+    def with_overrides(self, overrides):
+        """Returns a copy of the transformer that reads the commands in ``overrides``
+        as the objects given there. See :py:func:`~.parse_latex_lark`."""
+        for command in overrides:
+            if not (command in self._constants or command in self._trigonometric_functions
+                    or command in self._exponential_functions
+                    or re.fullmatch(r"\\operatorname\{[a-zA-Z]+\}", command)):
+                raise ValueError("The reading of %s cannot be overridden." % command)
+        transformer = copy(self)
+        transformer.overrides = dict(overrides)
+        return transformer
+
+    _constants = {"\\pi": sympy.pi, "\\mathrm{e}": sympy.E, "\\infty": sympy.oo,
+                  "\\imaginaryunit": sympy.I}
+
+    def _constant(self, token):
+        return self.overrides.get(str(token), self._constants[str(token)])
+
+    CMD_PI = EULER_NUMBER = CMD_INFTY = _constant
 
     def GREEK_SYMBOL_WITH_PRIMES(self, tokens):
         # we omit the first character because it is a backslash. Also, if the variable name has "var" in it,
         # like "varphi" or "varepsilon", we remove that too
-        variable_name = re.sub("var", "", tokens[1:])
+        variable_name = re.sub("var(?!pi)", "", tokens[1:])
 
         return sympy.Symbol(variable_name)
+
+    SUBSCRIPTED_GREEK_SYMBOL = GREEK_SYMBOL_WITH_PRIMES
 
     def LATIN_SYMBOL_WITH_LATIN_SUBSCRIPT(self, tokens):
         base, sub = tokens.value.split("_")
@@ -93,7 +115,7 @@ class TransformToSymPyExpr(Transformer):
 
     def GREEK_SYMBOL_WITH_LATIN_SUBSCRIPT(self, tokens):
         base, sub = tokens.value.split("_")
-        greek_letter = re.sub("var", "", base[1:])
+        greek_letter = re.sub("var(?!pi)", "", base[1:])
 
         if sub.startswith("{"):
             return sympy.Symbol("%s_{%s}" % (greek_letter, sub[1:-1].replace(" ", "")))
@@ -107,20 +129,20 @@ class TransformToSymPyExpr(Transformer):
         else:
             greek_letter = sub[1:]
 
-        greek_letter = re.sub("var", "", greek_letter)
+        greek_letter = re.sub("var(?!pi)", "", greek_letter)
         return sympy.Symbol("%s_{%s}" % (base, greek_letter))
 
 
     def GREEK_SYMBOL_WITH_GREEK_SUBSCRIPT(self, tokens):
         base, sub = tokens.value.split("_")
-        greek_base = re.sub("var", "", base[1:])
+        greek_base = re.sub("var(?!pi)", "", base[1:])
 
         if sub.startswith("{"):
             greek_sub = sub[2:-1]
         else:
             greek_sub = sub[1:]
 
-        greek_sub = re.sub("var", "", greek_sub)
+        greek_sub = re.sub("var(?!pi)", "", greek_sub)
         return sympy.Symbol("%s_{%s}" % (greek_base, greek_sub))
 
     def multi_letter_symbol(self, tokens):
@@ -131,12 +153,48 @@ class TransformToSymPyExpr(Transformer):
 
     def number(self, tokens):
         if tokens[0].type == "CMD_IMAGINARY_UNIT":
-            return sympy.I
+            return self._constant(tokens[0])
 
         if "." in tokens[0]:
             return sympy.core.numbers.Float(tokens[0])
         else:
             return sympy.core.numbers.Integer(tokens[0])
+
+    def transform(self, tree):
+        for fraction in tree.find_data("fraction"):
+            self._mark_leibniz_notation(fraction)
+        return super().transform(tree)
+
+    def _mark_leibniz_notation(self, fraction):
+        # A fraction written as \frac{d^n f}{d x^n}, with d the first factor of the numerator
+        # and of the denominator, becomes a node on its own. The factors are told apart
+        # here because a product does not remember their order.
+        def content(argument):
+            if isinstance(argument, Tree) and argument.data == "group_curly_parentheses":
+                return argument.children[1]
+            return argument
+
+        def is_d(node):
+            return isinstance(node, Token) and node.type == "SYMBOL" and node == "d"
+
+        def is_power_of_d(node):
+            return is_d(node) or (isinstance(node, Tree) and node.data == "superscript"
+                                  and is_d(node.children[0]))
+
+        def is_product(node):
+            return isinstance(node, Tree) and node.data == "adjacent_expressions"
+
+        numerator, denominator = [content(argument) for argument in fraction.children[1:]]
+        if not (is_product(denominator) and is_d(denominator.children[0])):
+            return
+        if is_power_of_d(numerator):
+            factors = [numerator]
+        elif is_product(numerator) and is_power_of_d(numerator.children[0]):
+            factors = list(numerator.children)
+        else:
+            return
+        fraction.data = "leibniz_fraction"
+        fraction.children = factors + [denominator.children[1]]
 
     def latex_string(self, tokens):
         if isinstance(tokens[0], _DerivativeOperator):
@@ -359,29 +417,21 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Symbol(f"{base.name}{primes}")
 
     def fraction(self, tokens):
-        numerator, denominator = tokens[1], tokens[2]
-        derivative = self._leibniz_derivative(numerator, denominator)
-        if derivative is not None:
-            return derivative
-        return self._handle_division(numerator, denominator)
+        return self._handle_division(tokens[1], tokens[2])
 
-    def _leibniz_derivative(self, numerator, denominator):
+    def leibniz_fraction(self, tokens):
         # \frac{d}{dx}, \frac{d^2}{dx^2}: an operator; \frac{dy}{dx}, \frac{d^2 y}{dx^2}: a derivative
         d = sympy.Symbol("d")
-        if not isinstance(denominator, sympy.Mul) or len(denominator.args) != 2 or d not in denominator.args:
-            return None
-        variable, order = [a for a in denominator.args if a != d][0].as_base_exp()
-        if not isinstance(variable, sympy.Symbol) or not (order.is_Integer and order.is_positive):
-            return None
-        # evaluated explicitly, so that it is d and not d**1 under evaluate(False)
-        power = sympy.Pow(d, order, evaluate=True)
-        if numerator == power:
-            return _DerivativeOperator(variable, order)
-        if isinstance(numerator, sympy.Mul) and power in numerator.args:
-            factors = list(numerator.args)
-            factors.remove(power)
-            return sympy.Derivative(sympy.Mul(*factors), (variable, order))
-        return None
+        power_of_d, function, power_of_variable = tokens[0], tokens[1:-1], tokens[-1]
+        if isinstance(power_of_variable, sympy.Expr):
+            base, order = power_of_d.as_base_exp()
+            variable, order_of_variable = power_of_variable.as_base_exp()
+            if (base == d and isinstance(variable, sympy.Symbol) and order == order_of_variable
+                    and (order.is_Integer and order.is_positive or order.is_Symbol)):
+                operator = _DerivativeOperator(variable, order)
+                return operator(*function) if function else operator
+        numerator = self._multiply(power_of_d, *function) if function else power_of_d
+        return self._handle_division(numerator, self._multiply(d, power_of_variable))
 
     def binomial(self, tokens):
         return sympy.binomial(tokens[1], tokens[2])
@@ -644,11 +694,25 @@ class TransformToSymPyExpr(Transformer):
         sympy.coth: sympy.acoth, sympy.sech: sympy.asech, sympy.csch: sympy.acsch,
     }
 
+    # TODO: ANTLR refers to ISO 80000-2:2019. should we keep base 10 or base 2 for \lg?
+    _exponential_functions = {
+        "\\exp": sympy.exp, "\\ln": sympy.log, "\\log": sympy.log,
+        "\\lg": lambda argument: sympy.log(argument, 10),
+    }
+
+    def _function(self, command):
+        command = str(command)
+        if command in self.overrides:
+            return self.overrides[command]
+        if command in self._trigonometric_functions:
+            return self._trigonometric_functions[command]
+        return self._exponential_functions[command]
+
     def trigonometric_function(self, tokens):
-        return self._apply(self._trigonometric_functions[tokens[0]], tokens[1])
+        return self._apply(self._function(tokens[0]), tokens[1])
 
     def trigonometric_function_power(self, tokens):
-        function = self._trigonometric_functions[tokens[0]]
+        function = self._function(tokens[0])
         exponent = tokens[2]
         if exponent == -1 and function in self._inverse_trigonometric_functions:
             return self._apply(self._inverse_trigonometric_functions[function], tokens[-1])
@@ -656,15 +720,20 @@ class TransformToSymPyExpr(Transformer):
 
     _named_functions = {
         "exp": sympy.exp, "ln": sympy.log, "log": sympy.log, "min": sympy.Min, "max": sympy.Max,
+        "sqrt": sympy.sqrt, "abs": sympy.Abs, "sign": sympy.sign, "sgn": sympy.sign,
+        "Re": sympy.re, "Im": sympy.im, "arg": sympy.arg,
+        "erf": sympy.erf, "erfc": sympy.erfc, "sinc": sympy.sinc,
     }
 
     def _named_function(self, name):
+        if "\\operatorname{%s}" % name in self.overrides:
+            return self.overrides["\\operatorname{%s}" % name]
         if name in self._named_functions:
             return self._named_functions[name]
         if "\\" + name in self._trigonometric_functions:
             return self._trigonometric_functions["\\" + name]
         if name == "lg":
-            return lambda argument: sympy.log(argument, 10)
+            return self._exponential_functions["\\lg"]
         if name == "det":
             return self._determinant
         if name in ("tr", "trace"):
@@ -683,6 +752,9 @@ class TransformToSymPyExpr(Transformer):
             if exponent == -1 and function in self._inverse_trigonometric_functions:
                 return self._apply(self._inverse_trigonometric_functions[function], tokens[3])
             return self._apply(lambda argument: sympy.Pow(function(argument), exponent), tokens[3])
+        if not (function in (sympy.Min, sympy.Max) or "\\operatorname{%s}" % name in self.overrides
+                or isinstance(function, sympy.core.function.UndefinedFunction)):
+            raise LaTeXParsingError("\\operatorname{%s} takes one argument." % name)
         return function(*tokens[2:-1:2])
 
     def abs(self, tokens):
@@ -709,31 +781,18 @@ class TransformToSymPyExpr(Transformer):
             return sympy.root(tokens[2], tokens[1])
 
     def exponential(self, tokens):
-        return self._apply(sympy.exp, tokens[1])
-
-    _powered_functions = {"FUNC_EXP": sympy.exp, "FUNC_LOG": sympy.log, "FUNC_LN": sympy.log,
-                          "FUNC_LG": lambda argument: sympy.log(argument, 10)}
+        return self._apply(self._function(tokens[0]), tokens[1])
 
     def function_power(self, tokens):
-        function = self._powered_functions[tokens[0].type]
+        function = self._function(tokens[0])
         return self._apply(lambda argument: sympy.Pow(function(argument), tokens[2]), tokens[3])
 
     def log(self, tokens):
-        if tokens[0].type == "FUNC_LG":
-            # we don't need to check if there's an underscore or not because having one
-            # in this case would be meaningless
-            # TODO: ANTLR refers to ISO 80000-2:2019. should we keep base 10 or base 2?
-            return self._apply(lambda argument: sympy.log(argument, 10), tokens[1])
-        elif tokens[0].type == "FUNC_LN":
-            return self._apply(sympy.log, tokens[1])
-        elif tokens[0].type == "FUNC_LOG":
-            # we check if a base was specified or not
-            if "_" in tokens:
-                # then a base was specified
-                return self._apply(lambda argument: sympy.log(argument, tokens[2]), tokens[3])
-            else:
-                # a base was not specified
-                return self._apply(sympy.log, tokens[1])
+        function = self._function(tokens[0])
+        # only \log takes a base
+        if "_" in tokens:
+            return self._apply(lambda argument: function(argument, tokens[2]), tokens[3])
+        return self._apply(function, tokens[1])
 
     def _extract_differential_symbol(self, s: str):
         differential_symbols = {"d", r"\text{d}", r"\mathrm{d}"}
