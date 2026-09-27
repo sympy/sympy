@@ -3,6 +3,7 @@ from __future__ import annotations
 from math import prod
 
 from sympy.core import Mul, S, sympify
+from sympy.core.traversal import preorder_traversal
 from sympy.functions import adjoint
 from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
@@ -354,16 +355,23 @@ def explicit_kronecker_product(kron):
     return matrix_kronecker_product(*kron.args)
 
 
+def _has_commutative_entries(matrix):
+    return not any(node.is_commutative is False and not node.is_Matrix
+                   for node in preorder_traversal(matrix))
+
+
 def kronecker_product_extract_singleton_matrices(kron: KroneckerProduct):
+    # The Kronecker product by a matrix of shape (1, 1) is the multiplication
+    # by its entry, which can be moved if it commutes with the other entries.
     singleton_matrices = []
     args = []
     for arg in kron.args:
-        if isinstance(arg, MatrixExpr) and arg.shape == (1, 1):
+        if isinstance(arg, MatrixExpr) and arg.shape == (1, 1) and _has_commutative_entries(arg):
             singleton_matrices.append(arg)
         else:
             args.append(arg)
     if len(singleton_matrices) > 1:
-        args.append(MatMul(*singleton_matrices))
+        args.append(MatMul(*singleton_matrices).doit())
         return KroneckerProduct(*args)
     else:
         return kron
