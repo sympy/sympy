@@ -2655,7 +2655,7 @@ def POSform(variables, minterms, dontcares=None, *, algorithm="qm"):
             algorithm="espresso", invert=True
         )
     else:
-        raise ValueError("algorithm must be 'qm' or 'espresso'")
+        raise ValueError("algorithm not recognized")
 
 
 def ANFform(variables, truthvalues):
