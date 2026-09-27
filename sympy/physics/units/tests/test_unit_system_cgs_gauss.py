@@ -1,11 +1,15 @@
 from __future__ import annotations
 from sympy.concrete.tests.test_sums_products import NS
 
+from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import convert_to, coulomb_constant, elementary_charge, gravitational_constant, planck
+from sympy.physics.units.definitions.dimension_definitions import capacitance, charge, current, energy, impedance, \
+    inductance, time, voltage
 from sympy.physics.units.definitions.unit_definitions import angstrom, statcoulomb, coulomb, second, gram, centimeter, erg, \
-    newton, joule, dyne, speed_of_light, meter, farad, henry, statvolt, volt, ohm
+    newton, joule, dyne, speed_of_light, meter, farad, henry, statvolt, volt, ohm, siemens, ampere, vacuum_impedance, \
+    vacuum_permittivity, magnetic_constant
 from sympy.physics.units.systems import SI
 from sympy.physics.units.systems.cgs import cgs_gauss
 
@@ -54,3 +58,22 @@ def test_cgs_gauss_convert_constants():
     assert convert_to(henry, second**2/centimeter, cgs_gauss) == spc*second
     assert convert_to(volt, statvolt, cgs_gauss) == 10**6*statvolt/299792458
     assert convert_to(farad, centimeter, cgs_gauss) == 299792458**2*centimeter/10**5
+    assert convert_to(siemens, 1/ohm, cgs_gauss) == 1/ohm
+    assert convert_to(volt/ohm, ampere, cgs_gauss) == ampere
+    assert convert_to(farad*volt, coulomb, cgs_gauss) == coulomb
+    assert convert_to(henry*ampere/second, volt, cgs_gauss) == volt
+    assert convert_to(statvolt, [centimeter, gram, second], cgs_gauss) == sqrt(centimeter)*sqrt(gram)/second
+
+    assert convert_to(vacuum_permittivity, 1, cgs_gauss) == 1/(4*pi)
+    assert convert_to(vacuum_permittivity, farad/meter, cgs_gauss) == convert_to(vacuum_permittivity, farad/meter, SI)
+    assert convert_to(magnetic_constant, henry/meter, cgs_gauss) == convert_to(magnetic_constant, henry/meter, SI)
+    assert convert_to(vacuum_impedance, ohm, cgs_gauss) == convert_to(vacuum_impedance, ohm, SI)
+    assert NS(convert_to(elementary_charge, statcoulomb, cgs_gauss)) == '4.80320471257026e-10*statcoulomb'
+
+
+def test_cgs_gauss_dimensions():
+    dimsys = cgs_gauss.get_dimension_system()
+    assert dimsys.equivalent_dims(voltage, energy/charge)
+    assert dimsys.equivalent_dims(impedance, voltage/current)
+    assert dimsys.equivalent_dims(capacitance, charge/voltage)
+    assert dimsys.equivalent_dims(inductance, voltage*time/current)
