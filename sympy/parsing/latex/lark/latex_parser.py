@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 from sympy.external import import_module
+from sympy.utilities.decorator import doctest_depends_on
 from sympy.parsing.latex.errors import LaTeXParsingError
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 
@@ -122,6 +123,7 @@ if _lark is not None:
     _lark_latex_parser = LarkLaTeXParser()
 
 
+@doctest_depends_on(modules=('lark',))
 def parse_latex_lark(s: str, overrides=None):
     r"""
     Experimental LaTeX parser using Lark.
