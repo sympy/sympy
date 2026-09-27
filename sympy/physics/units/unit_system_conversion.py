@@ -1,5 +1,41 @@
-"""
+r"""
 Conversion of expressions and equations between unit systems.
+
+Explanation
+===========
+
+The symbols of a formula represent physical quantities, but the relations
+among the quantities depend on the unit system. The function
+:func:`convert_unit_system` rewrites a formula valid in a unit system into the
+corresponding formula of another unit system. This is different from
+:func:`~sympy.physics.units.util.convert_to`, which expresses a quantity with
+other units of the same unit system.
+
+The conversion is based on the dimension systems of the two unit systems. The
+unit system with more independent dimensions is called *full*, the other one
+*reduced*. For example, the SI is full with respect to Gaussian units, as in
+Gaussian units the current is not a base dimension.
+
+A quantity is represented by `X_f` in the full unit system and by `X_r` in
+the reduced one. They are related by
+
+.. math::
+    X_f = K X_r, \qquad K = \prod_i \left( \frac{C_i}{c_i} \right)^{p_i}
+    \prod_j G_j^{q_j}
+
+where
+
+- `C_i` are physical constants of the full unit system that are pure numbers
+  in the reduced one, `c_i` being their values,
+- `G_j` are physical constants that have the same dimension in both unit
+  systems,
+- the exponents are the solution of a linear system, which states that the
+  dimension of `K` in the full unit system is the ratio of the dimensions of
+  `X_f` and `X_r`.
+
+Passing from the full to the reduced unit system, the constants `C_i` are
+replaced by their values. In the opposite direction the symbols are divided
+by `K`.
 """
 from __future__ import annotations
 
@@ -31,6 +67,31 @@ def _map_dependencies(dependencies, dimension_system):
     """
     Express the dimensional dependencies in terms of the base dimensions of
     ``dimension_system``.
+
+    Parameters
+    ==========
+
+    dependencies : dict
+        Dimensions and their exponents. The dimensions need not be base
+        dimensions of ``dimension_system``.
+    dimension_system : DimensionSystem
+
+    Returns
+    =======
+
+    dict
+        Base dimensions of ``dimension_system`` and their exponents.
+        Dimensions unknown to ``dimension_system`` are left unchanged.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.units import current, length
+    >>> from sympy.physics.units.systems.cgs import dimsys_cgs
+    >>> from sympy.physics.units.unit_system_conversion import _map_dependencies
+    >>> _map_dependencies({current: 2, length: -3}, dimsys_cgs)
+    {Dimension(mass): 1, Dimension(time): -4}
+
     """
     result = defaultdict(int)
     for dim, exponent in dependencies.items():
@@ -43,6 +104,26 @@ def _is_contained(inner, outer):
     """
     Check that the base dimensions of the dimension system ``inner`` are
     independent dimensions in the dimension system ``outer``.
+
+    Explanation
+    ===========
+
+    Every base dimension of ``inner`` is expressed with the base dimensions of
+    ``outer``, the result is expressed again with the base dimensions of
+    ``inner``. If ``outer`` does not merge dimensions that are distinguished
+    by ``inner``, the initial dimension is recovered.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.units.systems.si import dimsys_SI
+    >>> from sympy.physics.units.systems.cgs import dimsys_cgs
+    >>> from sympy.physics.units.unit_system_conversion import _is_contained
+    >>> _is_contained(dimsys_cgs, dimsys_SI)
+    True
+    >>> _is_contained(dimsys_SI, dimsys_cgs)
+    False
+
     """
     for dim in inner.base_dims:
         dependencies = outer.get_dimensional_dependencies(dim)
@@ -54,7 +135,36 @@ def _is_contained(inner, outer):
 def _solve_exponents(vectors, target):
     """
     Find the exponents ``p`` such that the sum of ``p[i]*vectors[i]`` is equal
-    to ``target``. Return ``None`` if there is no solution.
+    to ``target``.
+
+    Parameters
+    ==========
+
+    vectors : list of dict
+        Dimensional dependencies of some quantities, they have to be linearly
+        independent.
+    target : dict
+        Dimensional dependencies to be obtained as a product of powers of the
+        quantities.
+
+    Returns
+    =======
+
+    list or None
+        The exponents of the quantities, or ``None`` if there is no solution.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.units import length, mass, time
+    >>> from sympy.physics.units.unit_system_conversion import _solve_exponents
+    >>> velocity = {length: 1, time: -1}
+    >>> action = {mass: 1, length: 2, time: -1}
+    >>> _solve_exponents([velocity, action], {mass: 1, length: 3, time: -2})
+    [1, 1]
+    >>> _solve_exponents([velocity, action], {mass: 1}) is None
+    True
+
     """
     if not target:
         return [S.Zero]*len(vectors)
@@ -70,18 +180,35 @@ def _solve_exponents(vectors, target):
 
 
 def _independent(vectors):
+    """
+    Check that the dimensional dependencies contained in the list ``vectors``
+    are linearly independent.
+    """
     dims = sorted(set().union(*vectors), key=default_sort_key)
     matrix = Matrix([[vector.get(dim, 0) for vector in vectors] for dim in dims])
     return matrix.rank() == len(vectors)
 
 
 def _is_defined(dimension, quantity):
+    """
+    Check that ``dimension`` is the dimension given to ``quantity`` by a unit
+    system. If the unit system does not know the quantity, it returns a
+    dimension with the name of the quantity.
+    """
     return dimension.name != quantity.name
 
 
 def _simplest(factors):
     """
     Return the factor with the lowest powers of the constants.
+
+    Explanation
+    ===========
+
+    The addends of a sum may have different conversion factors. One of them
+    is collected, the remaining part of the other ones is left inside the
+    sum. The simplest factor is chosen in order to get the form which is
+    commonly used, e.g. `E + v B/c` instead of `(c E + v B)/c`.
     """
     def weight(factor):
         return sum(abs(exponent) for base, exponent in factor.as_powers_dict().items()
@@ -90,6 +217,10 @@ def _simplest(factors):
 
 
 def _distribute(expr, factor):
+    """
+    Multiply ``expr`` by ``factor``. If ``expr`` is a sum, every addend is
+    multiplied, so that the constants contained in ``factor`` can cancel.
+    """
     if factor == 1:
         return expr
     if isinstance(expr, Add):
@@ -99,7 +230,8 @@ def _distribute(expr, factor):
 
 class _UnitSystemConverter:
     """
-    Helper for :func:`convert_unit_system`.
+    Conversion of expressions between two unit systems, see
+    :func:`convert_unit_system`.
 
     Explanation
     ===========
@@ -113,6 +245,36 @@ class _UnitSystemConverter:
     comparing the dimensions of the quantity in the two unit systems. The
     constants contained in `K` are either dimensionless in the reduced unit
     system, or they have the same dimension in both unit systems.
+
+    The expression is visited recursively by :meth:`_split`, which returns the
+    conversion factor of every subexpression separated from the converted
+    subexpression. In this way the factors of the terms of products and sums
+    are combined before they are multiplied by the expression.
+
+    Parameters
+    ==========
+
+    source : UnitSystem
+        The unit system of the expressions to be converted.
+    target : UnitSystem
+        The unit system of the results.
+    dimensions : dict
+        The dimensions of symbols and undefined functions.
+    constants : list or None
+        The physical constants contained in the conversion factors. If
+        ``None``, they are determined by :meth:`_set_constants`.
+
+    Attributes
+    ==========
+
+    full, reduced : UnitSystem
+        The two unit systems, sorted by number of independent dimensions.
+    contracting : bool
+        Whether the conversion is from the full to the reduced unit system.
+    unit_constants : list
+        The constants that are pure numbers in the reduced unit system.
+    common_constants : list
+        The constants with the same dimension in both unit systems.
     """
 
     def __init__(self, source, target, dimensions, constants):
@@ -154,6 +316,9 @@ class _UnitSystemConverter:
         """
         Dimensional dependencies of the quantity in the full and in the
         reduced unit system.
+
+        If one of the unit systems does not define the dimension of the
+        quantity, the dimension defined by the other one is used.
         """
         dim_full = self.full.get_quantity_dimension(quantity)
         dim_reduced = self.reduced.get_quantity_dimension(quantity)
@@ -168,6 +333,28 @@ class _UnitSystemConverter:
         """
         Dimensional dependencies in the full unit system of the factor
         relating the representations of a quantity in the two unit systems.
+
+        Explanation
+        ===========
+
+        The dimensional dependencies in the reduced unit system are expressed
+        with the base dimensions of the full unit system and subtracted from
+        the ones in the full unit system. The result is empty if the quantity
+        has the same meaning in both unit systems.
+
+        Dimensions that are not known to one of the unit systems are
+        expressed with the definition of the other one. An error is raised if
+        the reduced unit system does not define a dimension that depends on
+        the base dimensions it does not have.
+
+        Parameters
+        ==========
+
+        deps_full : dict
+            Dimensional dependencies of the quantity in the full unit system.
+        deps_reduced : dict
+            Dimensional dependencies of the quantity in the reduced unit
+            system.
         """
         for dim in deps_reduced:
             if dim in self.dimsys_reduced.base_dims:
@@ -190,15 +377,39 @@ class _UnitSystemConverter:
         return {dim: exponent for dim, exponent in mismatch.items() if exponent != 0}
 
     def _known_constants(self):
+        """
+        Physical constants whose dimension is defined by the reduced unit
+        system.
+        """
         quantities = set(self.reduced._quantity_dimension_map)
         quantities.update(self.dimsys_reduced._quantity_dimension_map)
         return [q for q in quantities if isinstance(q, PhysicalConstant)]
 
     def _has_scale_factor(self, quantity):
+        """
+        Check that the scale factor of the quantity is defined by the reduced
+        unit system.
+        """
         return (quantity in self.reduced._quantity_scale_factors or
                 quantity in self.dimsys_reduced._quantity_scale_factors)
 
     def _set_constants(self, constants):
+        """
+        Set the physical constants contained in the conversion factors.
+
+        Explanation
+        ===========
+
+        If ``constants`` is ``None``, the constants are the ones that are
+        dimensionless in the reduced unit system and not in the full one,
+        followed by the speed of light. The constants equal to one are
+        preferred. The constants whose dimension is a combination of the
+        dimensions of the previous ones are skipped.
+
+        The constants given by the user are required to be independent. They
+        have to be either dimensionless in the reduced unit system, or have
+        the same dimension in both unit systems.
+        """
         if constants is None:
             unit_constants = []
             for constant in self._known_constants():
@@ -245,6 +456,20 @@ class _UnitSystemConverter:
         self._common_vectors_reduced = [self._quantity_dependencies(c)[1] for c in self.common_constants]
 
     def _factor_from_dependencies(self, deps_full, deps_reduced):
+        """
+        Factor multiplying a quantity with the given dimensional dependencies
+        when the unit system is changed.
+
+        Explanation
+        ===========
+
+        The exponents of the constants are determined by the mismatch of the
+        dimensions, see :meth:`_mismatch`. Converting to the reduced unit
+        system, the constants that are pure numbers are dropped, as the
+        symbols are supposed to absorb them. Converting to the full unit
+        system, the factor is the inverse of the product of the constants,
+        divided by their values in the reduced unit system.
+        """
         mismatch = self._mismatch(deps_full, deps_reduced)
         if not mismatch:
             return S.One
@@ -272,12 +497,34 @@ class _UnitSystemConverter:
         """
         Factor multiplying a symbol of given dimension when the unit system
         is changed.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.units import charge, magnetic_density, energy
+        >>> from sympy.physics.units.systems.si import SI
+        >>> from sympy.physics.units.systems.cgs import cgs_gauss
+        >>> from sympy.physics.units.unit_system_conversion import _UnitSystemConverter
+        >>> converter = _UnitSystemConverter(SI, cgs_gauss, {}, None)
+        >>> converter.factor(magnetic_density)
+        1/speed_of_light
+        >>> converter.factor(energy)
+        1
+        >>> converter = _UnitSystemConverter(cgs_gauss, SI, {}, None)
+        >>> converter.factor(charge)
+        sqrt(coulomb_constant)
+        >>> converter.factor(magnetic_density)
+        speed_of_light/sqrt(coulomb_constant)
+
         """
         deps_full = self.dimsys_full.get_dimensional_dependencies(dimension)
         deps_reduced = self.dimsys_reduced.get_dimensional_dependencies(dimension)
         return self._factor_from_dependencies(deps_full, deps_reduced)
 
     def _declared_dimension(self, expr):
+        """
+        Dimension given by the user to ``expr``, or ``None``.
+        """
         if expr in self.dimensions:
             return self.dimensions[expr]
         if isinstance(expr, AppliedUndef) and expr.func in self.function_dimensions:
@@ -285,9 +532,18 @@ class _UnitSystemConverter:
         return None
 
     def _constant_value(self, expr):
-        """
+        r"""
         Value of a physical constant that is a multiple of the common
         constants in the reduced unit system.
+
+        Explanation
+        ===========
+
+        Some constants of the full unit system are fixed by the conventions
+        of the reduced unit system, for example in Gaussian units the vacuum
+        permittivity is `1/(4 \pi)` and the magnetic constant is
+        `4 \pi/c^2`. They are replaced by their value. ``None`` is returned
+        for the other constants, which are handled like symbols.
         """
         if not isinstance(expr, PhysicalConstant) or not self._has_scale_factor(expr):
             return None
@@ -306,6 +562,38 @@ class _UnitSystemConverter:
         """
         Return the conversion factor of the quantity represented by ``expr``
         and the expression of the quantity in the target unit system.
+
+        Explanation
+        ===========
+
+        The product of the two returned values is the converted expression.
+        The rules are:
+
+        - symbols and functions get the factor of their dimension, the
+          arguments of the functions are the quantities of the target unit
+          system;
+        - the factor of a product is the product of the factors;
+        - the simplest factor of the terms of a sum is collected, see
+          :func:`_simplest`;
+        - both sides of an equation are divided by the factor of the left
+          hand side;
+        - derivatives are divided by the factors of the variables, integrals
+          are multiplied by them;
+        - the arguments of the other functions are converted.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.units import charge, length
+        >>> from sympy.physics.units.systems.si import SI
+        >>> from sympy.physics.units.systems.cgs import cgs_gauss
+        >>> from sympy.physics.units.unit_system_conversion import _UnitSystemConverter
+        >>> q, r = symbols("q r")
+        >>> converter = _UnitSystemConverter(cgs_gauss, SI, {q: charge, r: length}, None)
+        >>> converter._split(q**2/r)
+        (coulomb_constant, q**2/r)
+
         """
         dim = self._declared_dimension(expr)
         if dim is not None:
@@ -364,13 +652,25 @@ class _UnitSystemConverter:
         return S.One, expr.func(*[self._convert(arg) for arg in expr.args])
 
     def _convert(self, expr):
+        """
+        Convert ``expr`` to the target unit system.
+        """
         factor, expr = self._split(expr)
         return _distribute(expr, factor)
 
     def convert(self, expr, dimension=None):
         """
-        Convert ``expr`` to the target unit system. If ``dimension`` is
-        given, the result is the expression of a quantity of that dimension.
+        Convert ``expr`` to the target unit system, after checking that the
+        dimensions of all its symbols are known.
+
+        Parameters
+        ==========
+
+        expr : Expr, Relational
+        dimension : Dimension, optional
+            The dimension of the quantity represented by ``expr``. If given,
+            the result is divided by the conversion factor of this dimension.
+            It is ignored if ``expr`` is an equation.
         """
         declared = {key: Dummy() for key in self.dimensions if not isinstance(key, Symbol)}
         missing = expr.xreplace(declared).free_symbols - set(self.dimensions) - set(declared.values())
@@ -385,6 +685,10 @@ class _UnitSystemConverter:
 
 
 def _apply(func, expr):
+    """
+    Apply ``func`` to ``expr``, or to its elements if it is a matrix, a list
+    or a tuple.
+    """
     if isinstance(expr, MatrixBase):
         return expr.applyfunc(func)
     if isinstance(expr, (list, tuple)):

@@ -1,3 +1,10 @@
+"""
+CGS-Gaussian unit system.
+
+The base units are centimeter, gram and second. The Coulomb constant is equal
+to one, so that the electromagnetic quantities are expressed in terms of
+length, mass and time.
+"""
 from __future__ import annotations
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
