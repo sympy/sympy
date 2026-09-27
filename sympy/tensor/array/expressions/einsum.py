@@ -512,13 +512,13 @@ def _(expr: PermuteDims) -> _EinsumBuilder:
 @_convert_array_to_einsum.register(ArrayTensorProduct)
 def _(expr: ArrayTensorProduct) -> _EinsumBuilder:
     einsum_builder = _EinsumBuilder([], [])
-    cumul_dim = 0
+    offset = 0
     for arg in expr.args:
         arg_ei: _EinsumBuilder = _convert_array_to_einsum(arg)
-        einsum_builder.path_src.extend([[j + cumul_dim for j in i] for i in arg_ei.path_src])
-        einsum_builder.path_dst.extend([i + cumul_dim for i in arg_ei.path_dst])
+        einsum_builder.path_src.extend([[j + offset for j in i] for i in arg_ei.path_src])
+        einsum_builder.path_dst.extend([i + offset for i in arg_ei.path_dst])
         einsum_builder.args.extend(arg_ei.args)
-        cumul_dim += get_ndim(arg)
+        offset += 1 + max((j for i in arg_ei.path_src for j in i), default=-1)
     return einsum_builder
 
 

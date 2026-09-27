@@ -318,6 +318,26 @@ def test_convert_array_to_einsum_positions():
     assert ei.as_explicit() == expr.as_explicit()
 
 
+def test_convert_array_to_einsum_nested_contractions():
+    A = Array([[1, 2], [3, 4]])
+    B = Array([[5, 6], [7, 8]])
+
+    expr = ArrayTensorProduct(ArrayContraction(A, (0, 1)), B)
+    ei = convert_array_to_einsum(expr)
+    assert ei == Einsum("aa,bc->bc", A, B)
+    assert ei.as_explicit() == expr.as_explicit()
+
+    expr = ArrayTensorProduct(ArrayContraction(A, (0, 1)), ArrayContraction(B, (0, 1)))
+    ei = convert_array_to_einsum(expr)
+    assert ei == Einsum("aa,bb->", A, B)
+    assert ei.as_explicit() == expr.as_explicit()
+
+    expr = ArrayTensorProduct(ArrayContraction(ArrayTensorProduct(A, B), (1, 2)), A)
+    ei = convert_array_to_einsum(expr)
+    assert ei == Einsum("ab,bc,de->acde", A, B, A)
+    assert ei.as_explicit() == expr.as_explicit()
+
+
 def test_convert_array_to_einsum_leaves():
     A = ArraySymbol("A", (2, 2))
 
