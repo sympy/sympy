@@ -86,18 +86,13 @@ lint.ignore = [
     "FURB187",  # Use of assignment of `reversed` on list `{name}`
 ]
 
-# Exclude paths currently excluded in the flake8 configuration
+# Generated code and test inputs
 exclude = [
     "sympy/assumptions/*generated.py",
     "sympy/core/*_generated.py",
-    "sympy/core/benchmarks/",
     "sympy/parsing/latex/_antlr/*",
     "sympy/parsing/autolev/_antlr/*",
     "sympy/parsing/autolev/test-examples/*",
-    "sympy/plotting/pygletplot/*",
-    "sympy/parsing/latex/_parse_latex_antlr.py",
-    "sympy/parsing/autolev/_listener_autolev_antlr.py",
-    "sympy/integrals/rubi/*",
 ]
 
 # Black default, although irrelevant with E501 ignored
@@ -109,9 +104,12 @@ lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Add to all files
 lint.isort.required-imports = ["from __future__ import annotations"]
 
-# Per-file ignores currently specified in the flake8 configuration
 [tool.ruff.lint.per-file-ignores]
 "sympy/interactive/session.py" = ["F821"]
+"sympy/core/benchmarks/*" = ["B015"]
+"sympy/plotting/pygletplot/*" = ["BLE001"]
+"sympy/parsing/latex/_parse_latex_antlr.py" = ["BLE001"]
+"sympy/parsing/autolev/_listener_autolev_antlr.py" = ["BLE001"]
 
 # Global mypy settings:
 [tool.mypy]

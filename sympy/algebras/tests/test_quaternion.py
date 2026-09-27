@@ -457,3 +457,24 @@ def test_issue_28556():
     q3 = Quaternion(r, 0, 0, 0)
     result3 = q3.log()
     assert result3 == Quaternion(log(r), 0, 0, 0)
+
+
+def test_issue_30560():
+    from sympy import sqrt, Rational, cosh, tanh, Symbol, I, S
+    from sympy.algebras.quaternion import Quaternion
+    t = Symbol("t", real=True)
+    tq = Rational(3,4)
+
+    q = Quaternion(
+        2**tq*sqrt(sqrt(2) + 2)*sqrt(cosh(t) + 1)/(4*sqrt(cosh(t))),
+        2**tq*sqrt(sqrt(2) + 2)*sqrt(cosh(t))*tanh(t)/(4*sqrt(cosh(t) + 1)),
+        2**tq*sqrt(2 - sqrt(2))*sqrt(cosh(t) + 1)/(4*sqrt(cosh(t))),
+        (-2**tq*sqrt(2 - sqrt(2))*sqrt(cosh(t))*tanh(t)/(4*sqrt(cosh(t) + 1)))
+    )
+
+    # Norm should be purely real (evaluates exactly to 2**(1/4))
+    assert q.norm() == 2**(S(1)/4)
+
+    # Inverse components should be purely real
+    inv = q.inverse()
+    assert not inv.has(I)

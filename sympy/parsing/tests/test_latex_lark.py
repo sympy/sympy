@@ -1,6 +1,7 @@
 from __future__ import annotations
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, raises
 from sympy.parsing.latex.lark import parse_latex_lark
+from sympy.parsing.latex.errors import LaTeXParsingError
 from sympy.external import import_module
 
 from sympy.concrete.products import Product
@@ -14,6 +15,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.hyperbolic import asinh, atanh, cosh, coth, sinh, tanh
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
@@ -24,7 +26,7 @@ from sympy import I, pi
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
-from sympy.abc import x, y, z, a, b, c, d, t, k, n
+from sympy.abc import x, y, z, a, b, c, d, h, t, k, n, v
 
 from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _factorial, _exp, _binomial
 
@@ -824,10 +826,7 @@ def test_derivative_expressions():
 
 
 def test_trigonometric_expressions():
-    expected_failures = {3}
-    for i, (latex_str, sympy_expr) in enumerate(TRIGONOMETRIC_EXPRESSION_PAIRS):
-        if i in expected_failures:
-            continue
+    for latex_str, sympy_expr in TRIGONOMETRIC_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
@@ -914,6 +913,41 @@ def test_negthinspace_not_equal_conflict():
 
     assert parse_latex_lark(r"\negthinspace x \ne y") == Ne(x, y)
     assert parse_latex_lark(r"x \neq \negmedspace y") == Ne(x, y)
+
+
+def test_function_arguments():
+    assert parse_latex_lark(r"\tanh x") == tanh(x)
+    assert parse_latex_lark(r"\tanh(x)") == tanh(x)
+    assert parse_latex_lark(r"\sinh{x}") == sinh(x)
+    assert parse_latex_lark(r"\cosh x + 1") == cosh(x) + 1
+    assert parse_latex_lark(r"\sin x - 1") == sin(x) - 1
+    assert parse_latex_lark(r"\log x + 1") == log(x) + 1
+    assert parse_latex_lark(r"\sin x \cdot y") == sin(x)*y
+    assert parse_latex_lark(r"\sin x / 2") == sin(x)/2
+    assert parse_latex_lark(r"\sin x \cos y \tan z") == sin(x)*cos(y)*tan(z)
+    assert parse_latex_lark(r"\sin 2x") == sin(2*x)
+    assert parse_latex_lark(r"\sin -x") == -sin(x)
+    assert parse_latex_lark(r"\sin xy") == sin(x*y)
+    assert parse_latex_lark(r"\tan hk") == tan(h*k)
+    assert parse_latex_lark(r"\tanh^2 x") == tanh(x)**2
+    assert parse_latex_lark(r"\sinh^{-1} x") == asinh(x)
+    assert parse_latex_lark(r"\arctanh x") == atanh(x)
+    assert parse_latex_lark(r"\coth x") == coth(x)
+
+    for latex_str in [r"\tanh", r"\tanh^2"]:
+        with raises(lark.exceptions.UnexpectedInput):
+            parse_latex_lark(latex_str)
+
+
+def test_unknown_commands():
+    for latex_str in [r"\logv", r"\logv x", r"\lnx", r"\sinx", r"\tanhx", r"\arctanhx", r"\expx", r"\intx dx",
+                      r"\alphabeta", r"\thetax", r"\lefta", r"x \leqx", r"\sin\foo", r"\foo", r"\foo x", r"\foo{x}"]:
+        with raises(LaTeXParsingError):
+            parse_latex_lark(latex_str)
+
+    assert parse_latex_lark(r"\log v") == log(v)
+    assert parse_latex_lark(r"\alpha\beta") == Symbol("alpha")*Symbol("beta")
+    assert parse_latex_lark(r"\begin{pmatrix}a\\b\end{pmatrix}") == Matrix([[a], [b]])
 
 
 def test_binomial_expressions():

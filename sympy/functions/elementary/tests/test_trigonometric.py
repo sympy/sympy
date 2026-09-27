@@ -892,6 +892,7 @@ def test_sinc():
     # assert sinc(x).diff(x).subs(x, 0) is S.Zero
 
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
+    assert sinc(x**2).series(x, 0, 6) == 1 - x**4/6 + O(x**6)
 
     assert sinc(x).rewrite(jn) == jn(0, x)
     assert sinc(x).rewrite(sin) == Piecewise((sin(x)/x, Ne(x, 0)), (1, True))

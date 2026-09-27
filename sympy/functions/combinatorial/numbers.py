@@ -33,7 +33,7 @@ from sympy.ntheory.generate import _primepi
 from sympy.ntheory.partitions_ import _partition, _partition_rec
 from sympy.ntheory.primetest import isprime, is_square
 from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
-from sympy.polys.polytools import cancel
+from sympy.polys.polytools import cancel, Poly
 from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import multiset, multiset_derangements, iterable
@@ -231,10 +231,20 @@ class fibonacci(DefinedFunction):
     def _fib(n):
         return _ifib(n)
 
-    @staticmethod
-    @recurrence_memo([None, S.One, _sym])
-    def _fibpoly(n, prev):
-        return (prev[-2] + _sym*prev[-1]).expand()
+    @classmethod
+    @cacheit
+    def __fibpoly(cls,n:int):
+        if n<2:
+            z=Poly(S.Zero,_sym);o=Poly(S.One,_sym)
+            return [z,o] if n else [o,z]
+        def mul(a,b):
+            a0,a1=a
+            b0,b1=b
+            c=a1*b1
+            return [a0*b0+c,a0*b1+a1*b0+_sym*c]
+        return mul(cls.__fibpoly(p:=1<<n.bit_length()-1),cls.__fibpoly(n-p)) if n&n-1 else mul(t:=cls.__fibpoly(n>>1),t)
+    @classmethod
+    def _fibpoly(cls,n:int): return cls.__fibpoly(int(n)+1)[0].as_expr()
 
     @classmethod
     def eval(cls, n, sym=None):
@@ -364,15 +374,39 @@ class tribonacci(DefinedFunction):
 
     """
 
-    @staticmethod
-    @recurrence_memo([S.Zero, S.One, S.One])
-    def _trib(n, prev):
-        return (prev[-3] + prev[-2] + prev[-1])
+    @classmethod
+    @cacheit
+    def __trib(cls,n:int):
+        if n<2: return [0,1,0] if n else [1,0,0]
+        def mul(a,b):
+            a0,a1,a2=a
+            b0,b1,b2=b
+            c=a1*b2+a2*b1
+            d=a2*b2
+            return [a0*b0+c+d,a0*b1+a1*b0+c+2*d,a0*b2+a1*b1+a2*b0+c+2*d]
+        return mul(cls.__trib(p:=1<<n.bit_length()-1),cls.__trib(n-p)) if n&n-1 else mul(t:=cls.__trib(n>>1),t)
+    @classmethod
+    def _trib(cls,n): return cls.__trib(int(n)+2)[0]
 
-    @staticmethod
-    @recurrence_memo([S.Zero, S.One, _sym**2])
-    def _tribpoly(n, prev):
-        return (prev[-3] + _sym*prev[-2] + _sym**2*prev[-1]).expand()
+    @classmethod
+    @cacheit
+    def __tribpoly(cls,n:int):
+        z=Poly(S.Zero,_sym);o=Poly(S.One,_sym)
+        if n<2: return [z,o,z] if n else [o,z,z]
+
+        def mul(a,b):
+            x=_sym
+            a0,a1,a2=a
+            b0,b1,b2=b
+
+            c=a1*b2+a2*b1
+            d=a2*b2
+
+            return [a0*b0+c+x**2*d,a0*b1+a1*b0+x*c+(1+x**3)*d,a0*b2+a1*b1+a2*b0+x**2*c+(x+x**4)*d]
+
+        return mul(cls.__tribpoly(p:=1<<n.bit_length()-1),cls.__tribpoly(n-p)) if n&n-1 else mul(t:=cls.__tribpoly(n>>1),t)
+    @classmethod
+    def _tribpoly(cls,n): return cls.__tribpoly(int(n)+2)[0].as_expr()
 
     @classmethod
     def eval(cls, n, sym=None):
@@ -681,14 +715,19 @@ class bell(DefinedFunction):
         return s
 
     @staticmethod
-    @recurrence_memo([S.One, _sym])
-    def _bell_poly(n, prev):
-        s = 1
+    @recurrence_memo([[1]])
+    def _bell_poly_coeffs(n, prev):
+        s = [0]*(n-1) + [1,0]
         a = 1
-        for k in range(2, n + 1):
-            a = a * (n - k + 1) // (k - 1)
-            s += a * prev[k - 1]
-        return expand_mul(_sym * s)
+        for k in range(1, n):
+            a = a * (n - k) // k
+            for i in range(k):
+                s[n-k-1+i] += a * prev[k][i]
+        return s
+
+    @classmethod
+    def _bell_poly(cls, n):
+        return Poly(cls._bell_poly_coeffs(n), _sym).as_expr()
 
     @staticmethod
     def _bell_incomplete_poly(n, k, symbols):

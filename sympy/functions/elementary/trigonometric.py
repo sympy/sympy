@@ -2114,8 +2114,8 @@ class sinc(DefinedFunction):
                 return S.NegativeOne**(pi_coeff - S.Half)/arg
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        x = self.args[0]
-        return (sin(x)/x)._eval_nseries(x, n, logx)
+        arg = self.args[0]
+        return (sin(arg)/arg)._eval_nseries(x, n, logx)
 
     def _eval_rewrite_as_jn(self, arg, **kwargs):
         from sympy.functions.special.bessel import jn

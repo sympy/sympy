@@ -19,7 +19,7 @@ from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, bioche_substitution, integral_steps, manual_subs)
+    _parts_rule, bioche_substitution, integral_steps, manual_subs, IntegrationSolver)
 from sympy.testing.pytest import raises, slow
 from typing import TYPE_CHECKING
 
@@ -106,7 +106,7 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
     assert manualintegrate(cos(3*x)*sec(x), x) == -x + sin(2*x)
     assert manualintegrate(sin(3*x)*sec(x), x) == \
-        log(-2*cos(2*x) - 2)/2 - cos(2*x) - 1
+        log(-2*cos(2*x) - 2)/2 - cos(2*x)
 
     assert_is_integral_of(sinh(2*x), cosh(2*x)/2)
     assert_is_integral_of(x*cosh(x**2), sinh(x**2)/2)
@@ -478,6 +478,34 @@ def test_manualintegrate_inversetrig():
                   (x/sqrt(ra), True))
 
 
+def test_manualintegrate_trig_product_to_sum():
+    f = sin(x**2)*cos(x)
+    F = sqrt(2)*sqrt(pi)*(-sin(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + cos(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 + sqrt(2)*sqrt(pi)*(-sin(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + cos(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
+    assert_is_integral_of(f, F)
+
+    f = cos(x**2)*sin(x)
+    F = -sqrt(2)*sqrt(pi)*(-sin(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + cos(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 + sqrt(2)*sqrt(pi)*(-sin(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + cos(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
+    assert_is_integral_of(f, F)
+
+    f = sin(x**2)*sin(x)
+    F = sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 - sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
+    assert_is_integral_of(f, F)
+
+    f = cos(x**2)*cos(x)
+    F = sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x - 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x - 1)/(2*sqrt(pi))))/4 + sqrt(2)*sqrt(pi)*(cos(S.One/4)*fresnelc(sqrt(2)*(2*x + 1)/(2*sqrt(pi))) + sin(S.One/4)*fresnels(sqrt(2)*(2*x + 1)/(2*sqrt(pi))))/4
+    assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_trig_poly_product():
+    f = x*cos(x**2+x)
+    F = sin((x + S.One/2)**2)*cos(S.One/4)/2 - sin(S.One/4)*cos((x + S.One/2)**2)/2 - sqrt(2)*sqrt(pi)*cos(S.One/4)*fresnelc(sqrt(2)*(x + S.One/2)/sqrt(pi))/4 - sqrt(2)*sqrt(pi)*sin(S.One/4)*fresnels(sqrt(2)*( x + S.One/2)/sqrt(pi))/4
+    assert_is_integral_of(f, F)
+
+    f = x*sin(x**2+x)
+    F = -sin(S.One/4)*sin((x + S.One/2)**2)/2 - cos(S.One/4)*cos((x + S.One/2)**2)/2 + sqrt(2)*sqrt(pi)*sin(S.One/4)*fresnelc(sqrt(2)*(x + S.One/2)/sqrt(pi))/4 - sqrt(2)*sqrt(pi)*cos(S.One/4)*fresnels(sqrt(2)*(x + S.One/2)/sqrt(pi))/4
+    assert_is_integral_of(f, F)
+
+
 def test_manualintegrate_trivial_substitution():
     assert manualintegrate((exp(x) - exp(-x))/x, x) == -Ei(-x) + Ei(x)
     f = Function('f')
@@ -613,49 +641,169 @@ def test_manualintegrate_special_slow():
 
 
 @slow
-def test_manualintegrate_parts_special():
+def test_manualintegrate_parts_fresnel():
     f = fresnelc(x)*log(x)
-    F = ((x*log(x) - x)*fresnelc(x) - (log(x) - 1)*sin(pi*x**2/2)/pi +
+    F = ((x*log(x) - x)*fresnelc(x) -
+        (log(x) - 1)*sin(pi*x**2/2)/pi +
         Si(pi*x**2/2)/(2*pi))
     assert_is_integral_of(f, F)
+
     f = fresnels(x)*log(x)
-    F = ((x*log(x) - x)*fresnels(x) + (log(x) - 1)*cos(pi*x**2/2)/pi -
+    F = ((x*log(x) - x)*fresnels(x) +
+        (log(x) - 1)*cos(pi*x**2/2)/pi -
         Ci(pi*x**2/2)/(2*pi))
     assert_is_integral_of(f, F)
+
+
+@slow
+def test_manualintegrate_parts_trig_integrals():
     f = Ci(x)*log(x)
     F = (x*log(x) - x)*Ci(x) - (log(x) - 1)*sin(x) + Si(x)
     assert_is_integral_of(f, F)
+
     f = Si(x)*log(x)
     F = (x*log(x) - x)*Si(x) + (log(x) - 1)*cos(x) - Ci(x)
     assert_is_integral_of(f, F)
-    f = Chi(x)*log(x)
-    F = (x*log(x) - x)*Chi(x) - (log(x) - 1)*sinh(x) + Shi(x)
-    assert_is_integral_of(f, F)
-    f = Shi(x)*log(x)
-    F = (x*log(x) - x)*Shi(x) - (log(x) - 1)*cosh(x) + Chi(x)
-    assert_is_integral_of(f, F)
-    f = Ei(x)*log(x)
-    F = (x*log(x) - x)*Ei(x) - (log(x) - 1)*exp(x) + Ei(x)
-    assert_is_integral_of(f, F)
-    f = li(x)*log(x)
-    F = -x**2/2 + (x*log(x) - x)*li(x) + Ei(2*log(x))
-    assert_is_integral_of(f, F)
+
     f = Ci(x)*Si(x)
     F = (x*Ci(x)*Si(x) - sin(x)*Si(x) + cos(x)*Ci(x) +
         Integral(sin(x)**2/x, x) - Integral(cos(x)**2/x, x))
     assert_is_integral_of(f, F)
+
+
+@slow
+def test_manualintegrate_parts_hyperbolic_integrals():
+    f = Chi(x)*log(x)
+    F = (x*log(x) - x)*Chi(x) - (log(x) - 1)*sinh(x) + Shi(x)
+    assert_is_integral_of(f, F)
+
+    f = Shi(x)*log(x)
+    F = (x*log(x) - x)*Shi(x) - (log(x) - 1)*cosh(x) + Chi(x)
+    assert_is_integral_of(f, F)
+
     f = Chi(x)*Shi(x)
     F = (x*Chi(x)*Shi(x) - sinh(x)*Shi(x) - cosh(x)*Chi(x) +
         Integral(sinh(x)**2/x, x) + Integral(cosh(x)**2/x, x))
     assert_is_integral_of(f, F)
+
+
+@slow
+def test_manualintegrate_parts_ei_li():
+    f = Ei(x)*log(x)
+    F = (x*log(x) - x)*Ei(x) - (log(x) - 1)*exp(x) + Ei(x)
+    assert_is_integral_of(f, F)
+
+    f = li(x)*log(x)
+    F = -x**2/2 + (x*log(x) - x)*li(x) + Ei(2*log(x))
+    assert_is_integral_of(f, F)
+
     f = Ei(x)*Si(x)
-    F = (x*Ei(x)*Si(x) - I*(-Ei(x*(1 - I)) + Ei(x*(1 + I)))/2 -
-        exp(x)*Si(x) + cos(x)*Ei (x) - Ei(x*(1 - I))/2 - Ei(x*(1 +
-            I))/2)
+    F = (x*Ei(x)*Si(x) -
+        I*(-Ei(x*(1 - I)) + Ei(x*(1 + I)))/2 -
+        exp(x)*Si(x) + cos(x)*Ei(x) -
+        Ei(x*(1 - I))/2 - Ei(x*(1 + I))/2)
     assert_is_integral_of(f, F)
+
     f = Ei(x)*Shi(x)
-    F = x*Ei(x)*Shi(x) - exp(x)*Shi(x) - cosh(x)*Ei(x) + Ei(2*x)
+    F = (x*Ei(x)*Shi(x) - exp(x)*Shi(x) -
+        cosh(x)*Ei(x) + Ei(2*x))
     assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_exp_trig():
+    f = exp(x)*cos(x**2)
+    F = I**(Rational(3, 2))*sqrt(pi)*exp(I/4)*erfi(I**(Rational(3, 2))*(2*I*x + 1)/2)/4 + sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(4*sqrt(-I))
+    # Didn't use assert_is_integral_of because the derivative of F.diff(x) is
+    # too complicated to simplify to f.
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*sin(x**2)
+    F = -I*(I**(Rational(3, 2))*sqrt(pi)*exp(I/4)*erfi(I**(Rational(3, 2))*(2*I*x + 1)/2)/2 - sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(2*sqrt(-I)))/2
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*cosh(x**2)
+    F = sqrt(pi)*exp(S.One/4)*erf(x - S.One/2)/4 + sqrt(pi)*exp(-S.One/4)*erfi(x + S.One/2)/4
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*sinh(x**2)
+    F = -sqrt(pi)*exp(S.One/4)*erf(x - S.One/2)/4 + sqrt(pi)*exp(-S.One/4)*erfi(x + S.One/2)/4
+    assert manualintegrate(f, x) == F
+
+
+@slow
+def test_manualintegrate_exp_trig_pow():
+    f = exp(x)*cos(x**2)**2
+    F = exp(x)/2 + sqrt(pi)*(1 - I)*exp(I/8)*erfi((2 - 2*I)*(4*I*x + 1)/8)/16 + sqrt(pi)*(1 + I)*exp(-I/8)*erfi((2 + 2*I)*(-4*I*x + 1)/8)/16
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*sin(x**2)**3
+    F = I*(-3*I**(Rational(3, 2))*sqrt(pi)*exp(I/4)*erfi(I**(Rational(3, 2))*(2*I*x + 1)/2)/2 + 3*sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(2*sqrt(-I)) + sqrt(3)*I**(Rational(3, 2))*sqrt(pi)*exp(I/12)*erfi(sqrt(3)*I**(Rational(3, 2))*(6*I*x + 1)/6)/6 - sqrt(3)*sqrt(pi)*exp(-I/12)*erfi(sqrt(3)*(-6*I*x + 1)/(6*sqrt(-I)))/(6*sqrt(-I)))/8
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*cosh(x**2)**4
+    F = 3*exp(x)/8 + sqrt(2)*sqrt(pi)*exp(Rational(1, 8))*erf(sqrt(2)*(4*x - 1)/4)/16 + sqrt(pi)*exp(Rational(1, 16))*erf(2*x - Rational(1, 4))/64 + sqrt(2)*sqrt(pi)*exp(-Rational(1, 8))*erfi(sqrt(2)*(4*x + 1)/4)/16 + sqrt(pi)*exp(-Rational(1, 16))*erfi(2*x + Rational(1, 4))/64
+    assert manualintegrate(f, x) == F
+
+    f = exp(x)*sinh(x**2)**5
+    F = 5*sqrt(3)*sqrt(pi)*exp(Rational(1, 12))*erf(sqrt(3)*(6*x - 1)/6)/192 - sqrt(5)*sqrt(pi)*exp(Rational(1, 20))*erf(sqrt(5)*(10*x - 1)/10)/320 - 5*sqrt(pi)*exp(Rational(1, 4))*erf(x - Rational(1, 2))/32 - 5*sqrt(3)*sqrt(pi)*exp(-Rational(1, 12))*erfi(sqrt(3)*(6*x + 1)/6)/192 + sqrt(5)*sqrt(pi)*exp(-Rational(1, 20))*erfi(sqrt(5)*(10*x + 1)/10)/320 + 5*sqrt(pi)*exp(-Rational(1, 4))*erfi(x + Rational(1, 2))/32
+    assert manualintegrate(f, x) == F
+
+
+@slow
+def test_manualintegrate_exp_trig_nested():
+    f, F = exp(cos(x**2))*sin(x**2)*x, -exp(cos(x**2))/2
+    assert_is_integral_of(f, F)
+
+    f, F = exp(sin(x**2))*cos(x**2)*x, exp(sin(x**2))/2
+    assert_is_integral_of(f, F)
+
+    f, F = exp(cosh(x**2))*sinh(x**2)*x, exp(cosh(x**2))/2
+    assert_is_integral_of(f, F)
+
+    f, F = exp(sinh(x**2))*cosh(x**2)*x, exp(sinh(x**2))/2
+    assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_special_alternatives():
+    f = (x + 1)*Ei(x)
+    F = -(x/2 + 1)*exp(x) + (x**2/2 + x)*Ei(x) + exp(x)/2
+    # Because -(x/2 + 1) != (-x/2 - 1) we are using expand
+    assert manualintegrate(f, x).expand() == F.expand()
+    assert F.diff().expand() == f.expand()
+
+
+def test_integral_steps_branch():
+    from sympy.integrals.manualintegrate import AlternativeRule
+    # By default only the first workable rule is kept at each step, so no
+    # AlternativeRule node appears in the tree.
+    f = x*exp(x**2)
+    rule = f, x
+    assert not any(isinstance(r, AlternativeRule)
+                   for r in _rules_in_tree(integral_steps(*rule)))
+    # With branch=True all applicable alternatives are preserved.
+    branched = integral_steps(*rule, branch=True)
+    assert any(isinstance(r, AlternativeRule)
+               for r in _rules_in_tree(branched))
+    # Both trees evaluate to a correct antiderivative.
+    assert integral_steps(*rule).eval().diff(x).equals(f)
+    assert branched.eval().diff(x).equals(f)
+    # The branch flag reaches recursive subproblems without any global
+    # state, so concurrent solvers with different settings cannot clash.
+    assert not any(isinstance(r, AlternativeRule)
+                   for r in _rules_in_tree(integral_steps(*rule)))
+
+
+def _rules_in_tree(rule):
+    from sympy.integrals.manualintegrate import Rule
+    yield rule
+    for name in rule._get_slots():
+        stack = [getattr(rule, name)]
+        while stack:
+            v = stack.pop()
+            if isinstance(v, Rule):
+                yield from _rules_in_tree(v)
+            elif isinstance(v, (list, tuple)):
+                stack.extend(v)
 
 
 def test_manualintegrate_owent():
@@ -1043,6 +1191,12 @@ def test_issue_25093():
         (x*cos(b), True))
 
 
+def test_issue_29999():
+    f = exp(x) / (3 * x + 2)
+    F = exp(-Rational(2, 3)) * Ei(x + Rational(2, 3)) * S.One / 3
+    assert_is_integral_of(f, F)
+
+
 
 def test_nested_pow():
     assert_is_integral_of(sqrt(x**2), x*sqrt(x**2)/2)
@@ -1282,6 +1436,28 @@ def test_manualintegrate_sqrt_quadratic_polynomial_reduction_rule():
     assert (result.args[0][0].diff(x) - f).cancel() == 0
     # case delta = 0
     assert (result.args[1][0].subs(c, b**2/12).diff(x) - f.subs(c, b**2/12)).cancel() == 0
+
+
+def test_manualintegrate_solver_cache_with_max_depth():
+    # A subtree whose computation completes within the depth budget is
+    # cached, same as with unbounded recursion.
+    solver = IntegrationSolver(max_depth=50)
+    result = solver.solve(exp(x)*sin(x), x)
+    assert solver._solved
+    assert not result.contains_dont_know()
+
+    # A subtree that has to give up because it runs out of depth budget
+    # is never cached.
+    starved_solver = IntegrationSolver(max_depth=1)
+    starved_result = starved_solver.solve(exp(x)*sin(x), x)
+    assert not starved_solver._solved
+    assert starved_result.contains_dont_know()
+
+    # Unbounded recursion still caches exactly as before.
+    unbounded_solver = IntegrationSolver(max_depth=None)
+    unbounded_solver.solve(exp(x)*sin(x), x)
+    assert len(unbounded_solver._solved) == len(solver._solved)
+
 
 def test_mul_pow_derivative():
     assert_is_integral_of(x*sec(x)*tan(x), x*sec(x) - log(tan(x) + sec(x)))

@@ -1284,7 +1284,13 @@ class Pow(Expr):
                 # when the operation is not allowed
                 return False
 
-        if self.base.is_zero or _is_one(self.base):
+        if self.base.is_zero:
+            if self.exp.is_extended_negative:
+                return False
+            if self.exp.is_extended_nonnegative:
+                return True
+            return None
+        if _is_one(self.base):
             return True
         elif self.base is S.Exp1:
             s = self.func(*self.args)
