@@ -14,7 +14,7 @@ from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
     ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE, _array_tensor_product, \
     _array_contraction, _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum, _split_scalar_coefficient, \
-    get_shape, get_ndim
+    get_shape, get_ndim, _ArrayExpr
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -1150,3 +1150,30 @@ def test_get_ndim_matrix_element():
     expr = _array_tensor_product(A[0, 1], _array_contraction(A, (0, 1)))
     assert expr == _array_contraction(_array_tensor_product(A[0, 1], A), (0, 1))
     assert get_shape(expr) == ()
+
+
+def test_array_expressions_base_class():
+    A3 = ArraySymbol("A3", (3, 3))
+    B3 = ArraySymbol("B3", (3, 3))
+    for expr in [A3, ZeroArray(3, 3), OneArray(3, 3)]:
+        assert isinstance(expr, _ArrayExpr)
+        assert expr.doit() == expr
+
+    exprs = [
+        ArrayTensorProduct(A3, B3),
+        ArrayAdd(A3, B3),
+        PermuteDims(A3, [1, 0]),
+        ArrayDiagonal(A3, (0, 1)),
+        ArrayContraction(ArrayTensorProduct(A3, B3), (1, 2)),
+        ArrayElementwiseApplyFunc(sin, A3),
+        Reshape(A3, (9,)),
+    ]
+    for expr in exprs:
+        assert isinstance(expr, _ArrayExpr)
+        assert expr.doit() == expr
+        indices = (0,)*len(expr.shape)
+        assert expr[indices] == ArrayElement(expr, indices)
+
+    expr = ArrayAdd(A3, B3)
+    assert expr[i, j] == ArrayElement(expr, (i, j))
+    raises(IndexError, lambda: expr[i])
