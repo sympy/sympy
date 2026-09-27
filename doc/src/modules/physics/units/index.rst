@@ -95,4 +95,5 @@ Ideas about future developments can be found on the `Github wiki
    prefixes.rst
    unitsystem.rst
    quantities.rst
+   natural_units.rst
    unit_system_conversion.rst

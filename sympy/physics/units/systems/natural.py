@@ -18,6 +18,15 @@ The following unit systems are defined:
 ``strong_units``         `c = \hbar = m_p = 1`
 ======================== ======================================================
 
+They are derived from the SI. The quantities that are not related to the
+constants keep their dimension, for example the temperature is a base
+dimension in all unit systems but Planck units.
+
+In the natural unit system the electronvolt is the unit of energy, and the
+electromagnetic quantities are the ones of Heaviside-Lorentz units. In Planck
+units the Coulomb constant is equal to one, in order to have the Planck charge
+as unit of charge.
+
 Other ones can be created with
 :meth:`~sympy.physics.units.unitsystem.UnitSystem.contract`.
 """

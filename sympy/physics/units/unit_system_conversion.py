@@ -36,6 +36,14 @@ where
 Passing from the full to the reduced unit system, the constants `C_i` are
 replaced by their values. In the opposite direction the symbols are divided
 by `K`.
+
+The constants `C_i` are the defining constants of the reduced unit system,
+see :attr:`~sympy.physics.units.unitsystem.UnitSystem.defining_constants`.
+Unit systems like Hartree and Planck units have the same independent
+dimensions, but their defining constants are not the same. In this case the
+conversion is composed of two steps, passing through a unit system that both
+of them have been derived from with
+:meth:`~sympy.physics.units.unitsystem.UnitSystem.contract`.
 """
 from __future__ import annotations
 
@@ -134,9 +142,35 @@ def _is_contained(inner, outer):
 
 
 def _full_and_reduced(source, target):
-    """
+    r"""
     Return the unit system with more independent dimensions followed by the
     other one, or ``None`` if the unit systems cannot be compared.
+
+    Explanation
+    ===========
+
+    The unit system ``reduced`` is required to satisfy two conditions:
+
+    - its base dimensions are independent dimensions of ``full``, see
+      :func:`_is_contained`;
+    - its defining constants that are dimensionless in ``full`` have the same
+      value in ``full``.
+
+    The second condition excludes unit systems based on different
+    conventions, like Hartree and Rydberg atomic units, where the elementary
+    charge is `1` and `\sqrt{2}`.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.units.systems import SI, natural
+    >>> from sympy.physics.units.systems import hartree_atomic_units, rydberg_atomic_units
+    >>> from sympy.physics.units.unit_system_conversion import _full_and_reduced
+    >>> _full_and_reduced(natural, SI)
+    (SI, Natural system)
+    >>> _full_and_reduced(hartree_atomic_units, rydberg_atomic_units) is None
+    True
+
     """
     for full, reduced in [(source, target), (target, source)]:
         dimsys_full = full.get_dimension_system()
@@ -153,6 +187,22 @@ def _full_and_reduced(source, target):
 
 
 def _ancestors(unit_system):
+    """
+    Generator of the unit systems that ``unit_system`` has been derived from
+    with :meth:`~sympy.physics.units.unitsystem.UnitSystem.contract`,
+    starting from the closest one.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.units import boltzmann_constant
+    >>> from sympy.physics.units.systems import natural
+    >>> from sympy.physics.units.unit_system_conversion import _ancestors
+    >>> unit_system = natural.contract([boltzmann_constant])
+    >>> [str(i) for i in _ancestors(unit_system)]
+    ['Natural system', 'SI']
+
+    """
     while unit_system._parent is not None:
         unit_system = unit_system._parent
         yield unit_system
@@ -271,6 +321,9 @@ class _UnitSystemConverter:
     comparing the dimensions of the quantity in the two unit systems. The
     constants contained in `K` are either dimensionless in the reduced unit
     system, or they have the same dimension in both unit systems.
+
+    The unit systems have to be related directly, see
+    :func:`_full_and_reduced`.
 
     The expression is visited recursively by :meth:`_split`, which returns the
     conversion factor of every subexpression separated from the converted
@@ -415,11 +468,13 @@ class _UnitSystemConverter:
         Explanation
         ===========
 
-        If ``constants`` is ``None``, the constants are the ones that are
-        dimensionless in the reduced unit system and not in the full one,
-        followed by the speed of light. The constants equal to one are
-        preferred. The constants whose dimension is a combination of the
-        dimensions of the previous ones are skipped.
+        If ``constants`` is ``None``, the constants are the defining
+        constants of the reduced unit system, followed by the speed of light.
+        If the reduced unit system does not declare its defining constants,
+        they are replaced by the constants that are dimensionless in the
+        reduced unit system and not in the full one, the ones equal to one
+        being preferred. The constants whose dimension is a combination of
+        the dimensions of the previous ones are skipped.
 
         The constants given by the user are required to be independent. They
         have to be either dimensionless in the reduced unit system, or have
@@ -560,6 +615,12 @@ class _UnitSystemConverter:
         permittivity is `1/(4 \pi)` and the magnetic constant is
         `4 \pi/c^2`. They are replaced by their value. ``None`` is returned
         for the other constants, which are handled like symbols.
+
+        The defining constants of the reduced unit system are always replaced
+        by their value. The value of the other constants is required to be
+        exact. For example, in Hartree atomic units the speed of light is the
+        inverse of the fine-structure constant, which is known as a floating
+        point number: the speed of light is not replaced.
         """
         defining = expr in self.reduced.defining_constants
         if not defining and not (isinstance(expr, PhysicalConstant) and self._has_scale_factor(expr)):

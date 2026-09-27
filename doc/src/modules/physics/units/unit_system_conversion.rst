@@ -160,6 +160,40 @@ with the symbol divided by `K`.
 The equations are divided by the factor of the left hand side. If the terms
 of a sum have different factors, the simplest one is collected.
 
+Defining constants
+------------------
+
+The constants that are pure numbers in a unit system are its defining
+constants. They are the constants restored by the conversion to a unit system
+with more independent dimensions:
+
+    >>> cgs_gauss.defining_constants
+    {coulomb_constant: 1}
+
+The constants of the full unit system are replaced by their value in the
+reduced unit system if they are defining constants, or if their value is
+exact. The other constants are left in the expression.
+
+Intermediate unit systems
+-------------------------
+
+Two unit systems may have defining constants which are not compatible. For
+example, Gaussian units are defined by `k_e = 1`, while the natural units of
+particle physics are defined by `c = \hbar = \epsilon_0 = 1`, that is
+`k_e = 1/(4 \pi)`. In this case the expression is converted to the unit
+system that one of them has been derived from, then to the target unit
+system:
+
+    >>> from sympy.physics.units import energy
+    >>> from sympy.physics.units.systems import natural
+    >>> W = symbols("W")
+    >>> dims = {W: energy, q1: charge, q2: charge, r: length}
+    >>> convert_unit_system(Eq(W, q1*q2/r), dims, cgs_gauss, natural)
+    Eq(W, q1*q2/(4*pi*r))
+
+The parameter ``constants`` is not supported by conversions of this kind.
+See :doc:`natural_units` for the available natural unit systems.
+
 Limitations
 ===========
 
@@ -169,7 +203,8 @@ Limitations
   with respect to the ones of the SI. These factors have to be added
   manually.
 - The base dimensions of one of the unit systems have to be independent
-  dimensions in the other one.
+  dimensions in the other one, or both unit systems have to be derived from
+  a unit system with this property.
 - There is no check of the dimensional consistency of the expression.
 
 Reference

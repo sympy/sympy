@@ -29,6 +29,30 @@ class UnitSystem(_QuantityMapper):
     of the methods are defined in the same way.
 
     It is much better if all base units have a symbol.
+
+    Parameters
+    ==========
+
+    base_units : list
+        The units of the base dimensions.
+    units : list, optional
+        The other units of the unit system.
+    name : str, optional
+        The name of the unit system, it is used by :meth:`get_unit_system`.
+    descr : str, optional
+        A description of the unit system.
+    dimension_system : DimensionSystem
+        The dimension system defining the relations among the dimensions.
+    derived_units : dict, optional
+        The units of the derived dimensions.
+    defining_constants : dict, optional
+        The physical constants that are pure numbers in the unit system, and
+        their values.
+
+    See Also
+    ========
+
+    contract
     """
 
     _unit_systems: dict[str, UnitSystem] = {}
@@ -84,7 +108,7 @@ class UnitSystem(_QuantityMapper):
                           self._defining_constants)
 
     def contract(self, constants, base_units=(), units=(), name="", description="", derived_units: dict[Dimension, Expr]={}):
-        """
+        r"""
         Create the unit system in which the given physical constants are
         pure numbers.
 
@@ -94,6 +118,37 @@ class UnitSystem(_QuantityMapper):
         Every constant that becomes a pure number removes a base dimension.
         The dimensions and the scale factors of all quantities of the current
         unit system are expressed in terms of the remaining base dimensions.
+        This is the way natural units are defined.
+
+        Let `d_1, \ldots, d_n` be the base dimensions of the current unit
+        system, and `C_1, \ldots, C_k` the constants. The dimensions of the
+        constants, together with `n - k` further dimensions
+        `b_1, \ldots, b_{n-k}`, are a basis of the space of the dimensions.
+        The dimension of every quantity `Q` has a unique expression
+
+        .. math::
+            [Q] = \prod_i [C_i]^{p_i} \prod_j b_j^{q_j}
+
+        In the new unit system the base dimensions are `b_j`, the dimension
+        of the quantity is
+
+        .. math::
+            [Q] = \prod_j b_j^{q_j}
+
+        and its scale factor is multiplied by
+
+        .. math::
+            \prod_i \left( \frac{c_i}{s_i} \right)^{p_i}
+
+        where `s_i` is the scale factor of `C_i` in the current unit system
+        and `c_i` is its value in the new one.
+
+        The dimensions `b_j` are the dimensions of ``base_units``, followed by
+        the base dimensions of the current unit system that are independent
+        of the previous ones.
+
+        The dimension system of the new unit system is created when it is
+        used the first time.
 
         Parameters
         ==========
@@ -107,6 +162,26 @@ class UnitSystem(_QuantityMapper):
             dimensions of the current unit system.
         units : list, optional
             Further units of the new unit system.
+        name : str, optional
+            The name of the new unit system.
+        description : str, optional
+            A description of the new unit system.
+        derived_units : dict, optional
+            The units of the derived dimensions of the new unit system.
+
+        Returns
+        =======
+
+        UnitSystem
+            The new unit system. Its defining constants are the ones of the
+            current unit system and ``constants``.
+
+        Raises
+        ======
+
+        ValueError
+            If the dimensions of the constants and of the base units are not
+            independent, or they are not defined in the current unit system.
 
         Examples
         ========
@@ -124,6 +199,23 @@ class UnitSystem(_QuantityMapper):
         299792458*meter
         >>> convert_to(speed_of_light, 1, unit_system)
         1
+
+        The constants may have a value different from one. In reduced Planck
+        units `8 \pi G = 1`:
+
+        >>> from sympy import pi
+        >>> from sympy.physics.units import gravitational_constant, hbar
+        >>> from sympy.physics.units import boltzmann_constant
+        >>> unit_system = SI.contract({speed_of_light: 1, hbar: 1,
+        ...     boltzmann_constant: 1, gravitational_constant: 1/(8*pi)})
+        >>> convert_to(gravitational_constant, 1, unit_system)
+        1/(8*pi)
+
+        See Also
+        ========
+
+        defining_constants
+        sympy.physics.units.unit_system_conversion.convert_unit_system
 
         """
         if not isinstance(constants, dict):
@@ -167,8 +259,34 @@ class UnitSystem(_QuantityMapper):
 
     def _contract_dimension_system(self, constants, base_dims, columns):
         """
-        Dimension system of the unit system created by ``contract``, it
+        Dimension system of the unit system created by :meth:`contract`, it
         contains the dimensions and the scale factors of the quantities.
+
+        Explanation
+        ===========
+
+        The columns of the matrix are the dimensions of the constants and the
+        base dimensions of the new unit system, expressed with the base
+        dimensions of the current one. The inverse matrix gives the exponents
+        of constants and new base dimensions for every dimension of the
+        current unit system. The exponents of the base dimensions are the new
+        dimensional dependencies, the exponents of the constants determine
+        the change of the scale factors.
+
+        Only the quantities whose scale factor is set in the current unit
+        system are considered. The scale factors of the other quantities are
+        relative to them.
+
+        Parameters
+        ==========
+
+        constants : dict
+            The constants and their values.
+        base_dims : list
+            The base dimensions of the new unit system.
+        columns : list
+            The exponents of the base dimensions of the current unit system,
+            for every constant and every dimension of ``base_dims``.
         """
         dimsys = self.get_dimension_system()
         old_base_dims = list(dimsys.base_dims)
@@ -211,6 +329,9 @@ class UnitSystem(_QuantityMapper):
         return dimension_system
 
     def get_dimension_system(self):
+        """
+        Return the dimension system of the unit system.
+        """
         if self._dimension_system is None and self._contraction is not None:
             self._dimension_system = self._parent._contract_dimension_system(*self._contraction)
         return self._dimension_system
@@ -272,6 +393,20 @@ class UnitSystem(_QuantityMapper):
         """
         The physical constants that are pure numbers in the unit system,
         with their values.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.units.systems import SI, hartree_atomic_units
+        >>> SI.defining_constants
+        {}
+        >>> hartree_atomic_units.defining_constants
+        {coulomb_constant: 1, elementary_charge: 1, hbar: 1, electron_rest_mass: 1}
+
+        See Also
+        ========
+
+        contract
         """
         return self._defining_constants
 
