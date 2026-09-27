@@ -16,7 +16,7 @@ from sympy.tensor.array.expressions import ArrayElementwiseApplyFunc
 from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, _ArrayExpr, _CodegenArrayAbstract, \
+from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, _ArrayExpr, \
     get_shape, ArrayElement, _array_tensor_product, _array_diagonal, _array_contraction, _array_add, \
     _permute_dims, OneArray, ArrayAdd
 from sympy.tensor.array.expressions.utils import _get_argindex, _get_diagonal_indices
@@ -112,7 +112,7 @@ def _is_array_expression(expr):
     # Whether a converted (sub)expression is an array expression, as opposed
     # to a plain scalar. Rank-0 array expressions (e.g. a full contraction)
     # have no indices but still have to be combined with array operators.
-    return isinstance(expr, (_ArrayExpr, _CodegenArrayAbstract))
+    return isinstance(expr, _ArrayExpr)
 
 
 def _convert_indexed_to_array(expr):

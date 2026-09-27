@@ -54,7 +54,7 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
     mathieusprime, mathieucprime)
 
-from sympy.matrices import (Adjoint, Inverse, MatAdd, MatrixSymbol, Transpose,
+from sympy.matrices import (Adjoint, Inverse, MatAdd, MatMul, MatrixSymbol, Transpose,
                             KroneckerProduct, BlockMatrix, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions import hadamard_power
 
@@ -7918,7 +7918,7 @@ H    \n\
 
 def test_issue_15560():
     a = MatrixSymbol('a', 1, 1)
-    e = pretty(a*(KroneckerProduct(a, a)))
+    e = pretty(MatMul(a, KroneckerProduct(a, a)))
     result = 'a*(a x a)'
     assert e == result
 

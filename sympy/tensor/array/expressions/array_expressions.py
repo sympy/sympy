@@ -41,7 +41,34 @@ from sympy.utilities.decorator import deprecated
 
 
 class _ArrayExpr(Expr):
-    shape: tuple[Expr, ...]
+
+    is_Atom = True
+
+    _iterable = False
+
+    @property
+    @deprecated("DO NOT USE",
+                deprecated_since_version="1.15", active_deprecations_target="ndim-array-rank")
+    def subranks(self):
+        return self._sub_ndim_list[:]
+
+    @deprecated("DO NOT USE", deprecated_since_version="1.15", active_deprecations_target="ndim-array-rank")
+    def subrank(self):
+        return sum(self._sub_ndim_list)
+
+    @property
+    def shape(self):
+        return self._shape
+
+    def _canonicalize(self):
+        return self
+
+    def doit(self, **hints):
+        deep = hints.get("deep", True)
+        if deep:
+            return self.func(*[arg.doit(**hints) for arg in self.args])._canonicalize()
+        else:
+            return self._canonicalize()
 
     def __getitem__(self, item):
         if not isinstance(item, collections.abc.Iterable):
@@ -57,8 +84,6 @@ class ArraySymbol(_ArrayExpr):
     """
     Symbol representing an array expression
     """
-
-    _iterable = False
 
     def __new__(cls, symbol, shape: typing.Iterable) -> "ArraySymbol":
         if isinstance(symbol, str):
@@ -247,40 +272,13 @@ class OneArray(_ArrayExpr):
         return S.One
 
 
-class _CodegenArrayAbstract(Expr):
-
-    is_Atom = True
-
-    @property
-    @deprecated("DO NOT USE",
-                deprecated_since_version="1.15", active_deprecations_target="ndim-array-rank")
-    def subranks(self):
-        return self._sub_ndim_list[:]
-
-    @deprecated("DO NOT USE", deprecated_since_version="1.15", active_deprecations_target="ndim-array-rank")
-    def subrank(self):
-        return sum(self._sub_ndim_list)
-
-    @property
-    def shape(self):
-        return self._shape
-
-    def doit(self, **hints):
-        deep = hints.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**hints) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
-
-
 def _is_plain_scalar(arg):
     """Return True if *arg* is a scalar that is not an array expression.
 
     Rank-0 array expressions (e.g. full contractions) are not plain
     scalars.
     """
-    return (get_shape(arg) == () and
-            not isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract)))
+    return get_shape(arg) == () and not isinstance(arg, _ArrayExpr)
 
 
 def _split_scalar_coefficient(arg):
@@ -291,7 +289,7 @@ def _split_scalar_coefficient(arg):
     scalar factors are extracted from ``MatMul`` objects and from ``Mul``
     objects containing a single array-shaped factor.
     """
-    if isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract)):
+    if isinstance(arg, _ArrayExpr):
         # Array expressions are kept whole, even when they have rank 0
         # (e.g. a full contraction):
         return S.One, arg
@@ -316,7 +314,7 @@ def _split_scalar_coefficient(arg):
     return S.One, arg
 
 
-class ArrayTensorProduct(_CodegenArrayAbstract):
+class ArrayTensorProduct(_ArrayExpr):
     r"""
     Class to represent the tensor product of array-like objects.
     """
@@ -537,7 +535,7 @@ def _array_term_from_coeff_arrays(coeff, arrays):
     return _array_tensor_product(coeff, *arrays)
 
 
-class ArrayAdd(_CodegenArrayAbstract):
+class ArrayAdd(_ArrayExpr):
     r"""
     Class for elementwise array additions.
 
@@ -664,7 +662,7 @@ class ArrayAdd(_CodegenArrayAbstract):
         return reduce(operator.add, terms)
 
 
-class PermuteDims(_CodegenArrayAbstract):
+class PermuteDims(_ArrayExpr):
     r"""
     Class to represent permutation of axes of arrays.
 
@@ -938,7 +936,7 @@ class PermuteDims(_CodegenArrayAbstract):
         return permutation
 
 
-class ArrayDiagonal(_CodegenArrayAbstract):
+class ArrayDiagonal(_ArrayExpr):
     r"""
     Class to represent the diagonal operator.
 
@@ -1165,7 +1163,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         return tensordiagonal(expr, *self.diagonal_indices)
 
 
-class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
+class ArrayElementwiseApplyFunc(_ArrayExpr):
 
     def __new__(cls, function, element):
 
@@ -1173,7 +1171,7 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
             d = Dummy('d')
             function = Lambda(d, function(d))
 
-        obj = _CodegenArrayAbstract.__new__(cls, function, element)
+        obj = _ArrayExpr.__new__(cls, function, element)
         obj._sub_ndim_list = _get_sub_ndim_list(element)
         return obj
 
@@ -1215,7 +1213,7 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
         return self
 
 
-class ArrayContraction(_CodegenArrayAbstract):
+class ArrayContraction(_ArrayExpr):
     r"""
     Contraction operation of array axes.
 
@@ -1816,7 +1814,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         return tensorcontraction(expr, *self.contraction_indices)
 
 
-class Reshape(_CodegenArrayAbstract):
+class Reshape(_ArrayExpr):
     """
     Reshape the dimensions of an array expression.
 
@@ -2223,8 +2221,6 @@ def get_ndim(expr):
     if isinstance(expr, MatrixElement):
         # a matrix element is a scalar (consistently with ``get_shape``):
         return 0
-    if isinstance(expr, _CodegenArrayAbstract):
-        return len(expr.shape)
     if isinstance(expr, NDimArray):
         return expr.ndim
     if isinstance(expr, Indexed):
@@ -2246,9 +2242,7 @@ def get_rank(expr):
 
 
 def _get_sub_ndim(expr):
-    if isinstance(expr, _CodegenArrayAbstract):
-        return sum(expr._sub_ndim_list)
-    return get_ndim(expr)
+    return sum(_get_sub_ndim_list(expr))
 
 
 def _get_sub_ndim_list(expr):
@@ -2277,10 +2271,10 @@ def _get_sub_ndim_list(expr):
     >>> _get_sub_ndim_list(co)
     [2, 2, 2]
     """
-    if isinstance(expr, _CodegenArrayAbstract):
-        return expr._sub_ndim_list
-    else:
+    sub_ndim_list = getattr(expr, "_sub_ndim_list", None)
+    if sub_ndim_list is None:
         return [get_ndim(expr)]
+    return sub_ndim_list
 
 
 def get_shape(expr):
