@@ -3783,6 +3783,7 @@ def test_solveset_symbol_independent_relational_after_expansion():
     x, y = symbols('x y')
     relation = (x + y)**2 - x**2 - 2*x*y
 
+    assert solveset(relation, x, S.Reals) is S.EmptySet
     assert solveset(Eq(relation, 0), x, S.Reals) == \
         ConditionSet(x, Eq(y**2, 0), S.Reals)
     assert solveset(relation > 0, x, S.Reals) == \
