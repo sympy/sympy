@@ -415,6 +415,21 @@ class UnitSystem(_QuantityMapper):
 
     @staticmethod
     def get_unit_system(unit_system):
+        """
+        Return the unit system with the given name. Unit systems are
+        returned unchanged.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.units import UnitSystem
+        >>> from sympy.physics.units.systems.si import SI
+        >>> UnitSystem.get_unit_system("SI") is SI
+        True
+        >>> UnitSystem.get_unit_system(SI) is SI
+        True
+
+        """
         if isinstance(unit_system, UnitSystem):
             return unit_system
 
