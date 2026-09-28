@@ -258,6 +258,7 @@ class Vector(Printable, EvalfMixin):
     def _pretty(self, printer):
         """Pretty Printing method. """
         from sympy.printing.pretty.stringpict import prettyForm
+        from sympy.core.symbol import Symbol  # <--- NUOVA IMPORTAZIONE
 
         terms = []
 
@@ -273,11 +274,12 @@ class Vector(Printable, EvalfMixin):
                 if M[i] == 0:
                     continue
                 elif M[i] == 1:
-                    terms.append(prettyForm(N.pretty_vecs[i]))
+                    # Chiediamo al printer di stampare un Simbolo, attivando la magia Unicode!
+                    terms.append(printer._print(Symbol(N.pretty_vecs[i])))
                 elif M[i] == -1:
-                    terms.append(prettyForm("-1") * prettyForm(N.pretty_vecs[i]))
+                    terms.append(prettyForm("-1") * printer._print(Symbol(N.pretty_vecs[i])))
                 else:
-                    terms.append(juxtapose(M[i], N.pretty_vecs[i]))
+                    terms.append(juxtapose(M[i], Symbol(N.pretty_vecs[i])))
 
         if terms:
             pretty_result = prettyForm.__add__(*terms)
