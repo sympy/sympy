@@ -11,8 +11,6 @@ from sympy.external.gmpy import GROUND_TYPES, MPZ, MPQ
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.polys.polyerrors import NotReversible
 
-_require_flint_version = False
-
 if TYPE_CHECKING:
     from flint import ctx
     from flint.utils.flint_exceptions import DomainError
@@ -25,37 +23,11 @@ if TYPE_CHECKING:
 elif GROUND_TYPES == "flint":
     from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
     from flint.utils.flint_exceptions import DomainError
-
-    # Required in specific cases where the 0.8 implementation provides faster
-    # performance for working with Flint series methods.
-    # This can be removed when python-flint 0.8 becomes the minimum supported version.
-    import flint
-
-    _major, _minor, *_ = flint.__version__.split(".")
-    if (int(_major), int(_minor)) >= (0, 8):
-        _require_flint_version = True
     ZZSeries = fmpz_series | fmpz_poly
     QQSeries = fmpq_series | fmpq_poly
 else:
     fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = ctx = None
     ZZSeries = QQSeries = None
-
-
-def _get_series_precision(s: fmpz_series | fmpq_series) -> int:
-    """Helper function to get the precision of a series. By using the
-    representation of the ring"""
-
-    prec = getattr(s, "prec", None)
-    if prec is not None:
-        return prec
-
-    # XXX: This approach is inefficient, but for python-flint <= 0.7.1, there is
-    # no alternative method to extract the precision from a series element.
-    # This function could be removed when python-flint 0.8 becomes the
-    # minimum supported version.
-    rep = s.repr()
-    prec = int(rep.split("prec=")[1].split(")")[0].strip())
-    return prec
 
 
 @contextmanager
@@ -231,11 +203,8 @@ class FlintPowerSeriesRingZZ:
                 return fmpz_series(s, prec=ring_prec)
             return s
 
-        prec = min(_get_series_precision(s), ring_prec)
-        if _require_flint_version:
-            return fmpz_series(s, prec=prec)
-        else:
-            return fmpz_series(s.coeffs(), prec=prec)
+        prec = min(s.prec, ring_prec)
+        return fmpz_series(s, prec=prec)
 
     def to_list(self, s: ZZSeries) -> list[MPZ]:
         """Returns the list of series coefficients."""
@@ -249,7 +218,7 @@ class FlintPowerSeriesRingZZ:
         """Return the precision of the series."""
         if isinstance(s, fmpz_poly):
             return None
-        return _get_series_precision(s)
+        return s.prec
 
     def equal(self, s1: ZZSeries, s2: ZZSeries) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
@@ -260,7 +229,7 @@ class FlintPowerSeriesRingZZ:
         elif isinstance(s2, fmpz_poly):
             min_prec = self.series_prec(s1)
         else:
-            min_prec = min(_get_series_precision(s1), _get_series_precision(s2))
+            min_prec = min(s1.prec, s2.prec)
 
         coeffs1 = s1.coeffs()[:min_prec]
         coeffs2 = s2.coeffs()[:min_prec]
@@ -297,10 +266,7 @@ class FlintPowerSeriesRingZZ:
                 return fmpz_series(s, prec=ring_prec)
             return s
 
-        # XXX: This shold simply be: fmpz_series(s, prec=ring_prec)
-        # https://github.com/flintlib/python-flint/issues/304
-        prec = min(_get_series_precision(s), ring_prec)
-        return fmpz_series(s.coeffs(), prec=prec)
+        return fmpz_series(s, prec=ring_prec)
 
     def negative(self, s: ZZSeries) -> ZZSeries:
         """Return the unary negative of a power series."""
@@ -505,10 +471,7 @@ class FlintPowerSeriesRingZZ:
         if len(s) <= n:
             return s
 
-        # XXX: This should simply be: return fmpz_series(s, prec=n)
-        # https://github.com/flintlib/python-flint/issues/304
-        coeffs = s.coeffs()[:n]
-        return fmpz_series(coeffs, prec=n)
+        return fmpz_series(s, prec=n)
 
     def differentiate(self, s: ZZSeries) -> ZZSeries:
         """Compute the derivative of a power series."""
@@ -520,7 +483,7 @@ class FlintPowerSeriesRingZZ:
 
         poly = fmpz_poly(s.coeffs())
         derivative = poly.derivative()
-        prec = min(_get_series_precision(s) - 1, self._prec)
+        prec = min(s.prec - 1, self._prec)
         return fmpz_series(derivative, prec=prec)
 
 
@@ -690,11 +653,8 @@ class FlintPowerSeriesRingQQ:
                 return fmpq_series(s, prec=ring_prec)
             return s
 
-        prec = min(_get_series_precision(s), ring_prec)
-        if _require_flint_version:
-            return fmpq_series(s, prec=prec)
-        else:
-            return fmpq_series(s.coeffs(), prec=prec)
+        prec = min(s.prec, ring_prec)
+        return fmpq_series(s, prec=prec)
 
     def to_list(self, s: QQSeries) -> list[MPQ]:
         """Returns the list of series coefficients."""
@@ -708,7 +668,7 @@ class FlintPowerSeriesRingQQ:
         """Return the precision of the series."""
         if isinstance(s, fmpq_poly):
             return None
-        return _get_series_precision(s)
+        return s.prec
 
     def equal(self, s1: QQSeries, s2: QQSeries) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
@@ -719,7 +679,7 @@ class FlintPowerSeriesRingQQ:
         elif isinstance(s2, fmpq_poly):
             min_prec = self.series_prec(s1)
         else:
-            min_prec = min(_get_series_precision(s1), _get_series_precision(s2))
+            min_prec = min(s1.prec, s2.prec)
 
         coeffs1 = s1.coeffs()[:min_prec]
         coeffs2 = s2.coeffs()[:min_prec]
@@ -756,10 +716,7 @@ class FlintPowerSeriesRingQQ:
                 return fmpq_series(s, prec=ring_prec)
             return s
 
-        # XXX: This should simply be: fmpq_series(s, prec=ring_prec)
-        # https://github.com/flintlib/python-flint/issues/304
-        prec = min(_get_series_precision(s), ring_prec)
-        return fmpq_series(s.coeffs(), prec=prec)
+        return fmpq_series(s, prec=ring_prec)
 
     def negative(self, s: QQSeries) -> QQSeries:
         """Return the unary negative of a power series."""
@@ -978,10 +935,7 @@ class FlintPowerSeriesRingQQ:
         if len(s) <= n:
             return s
 
-        # XXX: This should simply be: return fmpq_series(s, prec=n)
-        # https://github.com/flintlib/python-flint/issues/304
-        coeffs = s.coeffs()[:n]
-        return fmpq_series(coeffs, prec=n)
+        return fmpq_series(s, prec=n)
 
     def differentiate(self, s: QQSeries) -> QQSeries:
         """Compute the derivative of a power series."""
@@ -993,7 +947,7 @@ class FlintPowerSeriesRingQQ:
 
         poly = fmpq_poly(s.coeffs())
         derivative = poly.derivative()
-        prec = min(_get_series_precision(s) - 1, self._prec)
+        prec = min(s.prec - 1, self._prec)
         return fmpq_series(derivative, prec=prec)
 
     def integrate(self, s: QQSeries) -> QQSeries:
@@ -1004,7 +958,7 @@ class FlintPowerSeriesRingQQ:
                 return poly
             return fmpq_series(poly, prec=self._prec)
         else:
-            s_prec = _get_series_precision(s)
+            s_prec = s.prec
             if s_prec >= self._prec:
                 s = fmpq_series(s, prec=self._prec - 1)
 
