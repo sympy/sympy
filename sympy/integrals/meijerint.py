@@ -1687,6 +1687,37 @@ def meijerint_indefinite(f, x):
         return next(ordered(results))
 
 
+def _has_full_turn_winding(expr):
+    """
+    Return True if a G-function argument in ``expr`` has a full-turn winding.
+
+    ``exp_polar(2*pi*I*k)`` with a nonzero integer ``k`` projects to 1: it does
+    not change *where* a G-function is evaluated, only *on which sheet*.  A
+    G-function argument carrying such a factor therefore denotes an analytic
+    continuation around the origin rather than a value at a point.
+
+    Such a continuation must not be used as an antiderivative (issue 30484):
+    the rewrite ``_rewrite_single`` builds reproduces the real part of the
+    integrand while its imaginary part comes from the continuation, so
+    differentiating it does not give the integrand back and a definite integral
+    assembled from it is complex instead of real.
+
+    Half turns such as ``exp_polar(I*pi)`` are *not* affected -- they change
+    the projection of the argument to its negative and encode a genuine sign,
+    which the (correct) lookup table entries rely on.  Neither are windings
+    inside other functions, e.g. the ``hyper`` and ``polylog`` arguments that
+    ``hyperexpand`` produces when it succeeds.
+    """
+    from sympy.functions.elementary.exponential import exp_polar
+
+    for g in expr.atoms(meijerg):
+        for arg in g.argument.atoms(exp_polar):
+            k = arg.args[0]/(2*S.Pi*S.ImaginaryUnit)
+            if k.is_integer and k != 0:
+                return True
+    return False
+
+
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
@@ -1774,6 +1805,9 @@ def _meijerint_indefinite_1(f, x):
         res = Piecewise(*newargs, evaluate=False)
     else:
         res = _my_unpolarify(_clean(res))
+    if _has_full_turn_winding(res):
+        _debug('Antiderivative uses a full-turn polar continuation; rejecting.')
+        return None
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
 
 

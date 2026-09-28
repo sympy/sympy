@@ -3,9 +3,9 @@ from sympy.core.function import expand, expand_func
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
-from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
+from sympy.functions.elementary.complexes import Abs, arg, im, re, unpolarify
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
-from sympy.functions.elementary.hyperbolic import cosh, acosh, sinh
+from sympy.functions.elementary.hyperbolic import (atanh, cosh, acosh, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (cos, sin, sinc, asin)
@@ -802,3 +802,30 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+
+def test_issue_30484():
+    # _rewrite_single may return a G-function argument carrying a full turn
+    # exp_polar(-2*pi*I).  That is an analytic continuation around the origin,
+    # not a value at a point: it reproduces the real part of the integrand
+    # while its imaginary part is an artefact of the continuation, so
+    # differentiating it does not give the integrand back and a definite
+    # integral built from it is complex.  Such a candidate must be rejected.
+    f = 1/(x*sqrt(1 - x)*sqrt(1 + x))
+    assert meijerint_indefinite(f, x) is None
+
+    # antiderivative of -f is atanh(sqrt(1 - x**2))
+    expected = atanh(sqrt(Rational(3, 4))) - atanh(sqrt(Rational(24, 25)))
+    assert expected.is_real
+    res = integrate(-f, (x, Rational(1, 5), Rational(1, 2)), meijerg=True).evalf(30)
+    assert abs(im(res)) < 1e-25
+    assert abs(re(res) - expected) < 1e-25
+
+    from sympy.integrals.meijerint import _has_full_turn_winding
+
+    assert _has_full_turn_winding(
+        meijerg((), (), (0,), (), exp_polar(-2*I*pi)*x))
+    # a half turn changes the projection of the argument, it is legitimate
+    assert not _has_full_turn_winding(
+        meijerg((), (), (0,), (), exp_polar(I*pi)*x))
+    assert not _has_full_turn_winding(hyper((1,), (2,), x*exp_polar(2*I*pi)))
