@@ -6,7 +6,7 @@ from sympy.core.function import Function
 from sympy.core.numbers import I, Rational, oo, pi
 from sympy.core.relational import Eq, Ge, Gt, Le, Lt, Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import root, sqrt
@@ -499,3 +499,16 @@ def test_issue_25738():
 
 def test_issue_25983():
     assert(reduce_inequalities(pi/Abs(x) <= 1) == ((pi <= x) & (x < oo)) | ((-oo < x) & (x <= -pi)))
+
+
+def test_issue_30598():
+    z = Symbol('z')
+    a, b, c = symbols('a b c', real=True)
+    # a term that may be infinite must not be moved to the other side of
+    # the relation on its own since that turns an indeterminate oo - oo
+    # into a definite result
+    assert reduce_inequalities(a*(-y - 2*z + 1) < b - 2*c - x, y) == \
+        (-a*(y + 2*z) < -a + b - 2*c - x)
+    # terms that are known to be finite can still be moved
+    u, v, r, s = symbols('u v r s', real=True)
+    assert reduce_inequalities(r*u + s*v < 1, u) == (r*u < -s*v + 1)

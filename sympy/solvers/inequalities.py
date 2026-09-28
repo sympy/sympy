@@ -4,7 +4,7 @@ import itertools
 
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
-from sympy.core import sympify
+from sympy.core import Add, sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Lt, Ge, Eq
 from sympy.core.symbol import Symbol, Dummy
@@ -714,6 +714,39 @@ def _pt(start, end):
     return pt
 
 
+def _may_be_indeterminate(terms):
+    # Return True if the sum of terms whose finiteness is unknown can be
+    # an indeterminate oo - oo, i.e. if terms that may be infinite are
+    # able to have opposite signs.
+    pos = neg = False
+    for t in terms:
+        if t.is_extended_nonnegative is True:
+            pos = True
+        elif t.is_extended_nonpositive is True:
+            neg = True
+        else:
+            return True
+    return pos and neg
+
+
+def _protected_additive_terms(ie, s):
+    # Return the additive terms of ie that must not be separated from
+    # the terms containing s. Terms that may be infinite can sum to an
+    # indeterminate oo - oo so the terms of such a group can only be
+    # rearranged together; the group that contains s is rearranged with
+    # s since s is the term being isolated.
+    keep = set()
+    for side in (ie.lhs, ie.rhs):
+        # the expression that is rearranged is the expanded form of
+        # side so the group is recognized at that granularity
+        args = Add.make_args(expand_mul(side))
+        terms = [a for a in args if a.is_finite is not True]
+        if (len(terms) > 1 and _may_be_indeterminate(terms)
+                and any(a.has(s) for a in terms)):
+            keep.update(terms)
+    return keep
+
+
 def _solve_inequality(ie, s, linear=False):
     """Return the inequality with s isolated on the left, if possible.
     If the relationship is non-linear, a solution involving And or Or
@@ -731,9 +764,9 @@ def _solve_inequality(ie, s, linear=False):
     Examples
     ========
 
-    >>> from sympy import Eq, Symbol
+    >>> from sympy import Eq, Symbol, symbols
     >>> from sympy.solvers.inequalities import _solve_inequality as f
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x, y, z
 
     For linear expressions, the symbol can be isolated:
 
@@ -780,6 +813,14 @@ def _solve_inequality(ie, s, linear=False):
     >>> p = Symbol('p', positive=True)
     >>> f(x*p <= 1, x)
     x <= 1/p
+
+    When the divisor is not a constant the target is not isolated and
+    an additive group of terms that may be infinite is kept intact so
+    that the rearrangement does not introduce an oo - oo:
+
+    >>> a, b, c = symbols('a b c', real=True)
+    >>> f(a*(-y - 2*z + 1) < b - 2*c - x, y)
+    -a*(y + 2*z) < -a + b - 2*c - x
 
     When there are denominators in the original expression that
     are removed by expansion, conditions for them will be returned
@@ -860,7 +901,16 @@ def _solve_inequality(ie, s, linear=False):
                 a.is_negative ==
                 a.is_positive is None and  # if sign is not known then
                 ie.rel_op not in ('!=', '==')): # reject if not Eq/Ne
-            e = ef
+            # s is left in a nontrivial expression so moving terms across
+            # the relational does not isolate it; an additive group that
+            # can be an indeterminate oo - oo is then kept intact since
+            # splitting it would lose the indeterminacy
+            m = S.Zero
+            if any(t.is_finite is not True for t in Add.make_args(b)):
+                keep = _protected_additive_terms(ie, s)
+                m = Add(*[t for t in Add.make_args(b) if t in keep])
+            e = ef if m == 0 else factor_terms(ef + m)
+            rhs += m
             a = S.One
         rhs /= a
         if a.is_positive:
@@ -895,7 +945,8 @@ def _reduce_inequalities(inequalities, symbols):
 
     for inequality in inequalities:
 
-        expr, rel = inequality.lhs, inequality.rel_op  # rhs is 0
+        expr = inequality.lhs - inequality.rhs  # rhs is 0
+        rel = inequality.rel_op
 
         # check for gens using atoms which is more strict than free_symbols to
         # guard against EX domain which won't be handled by
@@ -908,7 +959,7 @@ def _reduce_inequalities(inequalities, symbols):
             common = expr.free_symbols & symbols
             if len(common) == 1:
                 gen = common.pop()
-                other.append(_solve_inequality(Relational(expr, 0, rel), gen))
+                other.append(_solve_inequality(inequality, gen))
                 continue
             else:
                 raise NotImplementedError(filldedent('''
@@ -924,7 +975,7 @@ def _reduce_inequalities(inequalities, symbols):
             if components and all(isinstance(i, Abs) for i in components):
                 abs_part.setdefault(gen, []).append((expr, rel))
             else:
-                other.append(_solve_inequality(Relational(expr, 0, rel), gen))
+                other.append(_solve_inequality(inequality, gen))
 
     poly_reduced = [reduce_rational_inequalities([exprs], gen) for gen, exprs in poly_part.items()]
     abs_reduced = [reduce_abs_inequalities(exprs, gen) for gen, exprs in abs_part.items()]
@@ -970,17 +1021,22 @@ def reduce_inequalities(inequalities, symbols=[]):
     # prefilter
     keep = []
     for i in inequalities:
+        # the difference is only used to detect relations whose truth
+        # value can be decided; the sides are retained so that terms
+        # which can be indeterminate at infinity are not merged
         if isinstance(i, Relational):
-            i = i.func(i.lhs.as_expr() - i.rhs.as_expr(), 0)
-        elif i not in (True, False):
-            i = Eq(i, 0)
-        if i == True:
+            j = i.func(i.lhs.as_expr() - i.rhs.as_expr(), 0)
+        elif i in (True, False):
+            j = i
+        else:
+            i = j = Eq(i, 0)
+        if j == True:
             continue
-        elif i == False:
+        elif j == False:
             return S.false
-        if i.lhs.is_number:
+        if j.lhs.is_number:
             raise NotImplementedError(
-                "could not determine truth value of %s" % i)
+                "could not determine truth value of %s" % j)
         keep.append(i)
     inequalities = keep
     del keep
