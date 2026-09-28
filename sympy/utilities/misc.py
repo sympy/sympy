@@ -250,8 +250,7 @@ def debug(*args):
     if SYMPY_DEBUG:
         print(*args, file=sys.stderr)
 
-
-def debugf(string, args):
+def debugf(string: str, args: Any) -> None:
     """
     Print ``string%args`` if SYMPY_DEBUG is True, else do nothing. This is
     intended for debug messages using formatted strings.
