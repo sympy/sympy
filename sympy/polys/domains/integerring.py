@@ -75,7 +75,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
     def from_sympy(self, a):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
-            return MPZ(a.p)
+            return a._val
         elif int_valued(a):
             return MPZ(int(a))
         else:
