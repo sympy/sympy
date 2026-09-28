@@ -30,6 +30,25 @@ class UnitSystem(_QuantityMapper):
 
     It is much better if all base units have a symbol.
 
+    Explanation
+    ===========
+
+    Every unit system has one dimension system, returned by
+    :meth:`get_dimension_system`. The dimension system defines which
+    dimensions are independent and how the other ones are related to them.
+    The unit system adds the units: the base units, and the scale factors
+    relating the quantities of the same dimension.
+
+    Units and physical constants are represented by quantities, which are
+    shared by all unit systems. Dimension and scale factor of a quantity
+    depend on the unit system, they are returned by
+    :meth:`get_quantity_dimension` and :meth:`get_quantity_scale_factor`.
+    They are looked for in the dimension system, then in the unit system,
+    then in the definitions that are valid in all unit systems.
+
+    A unit system can be derived from another one by adding base units with
+    :meth:`extend`, or by removing base dimensions with :meth:`contract`.
+
     Parameters
     ==========
 
@@ -145,7 +164,10 @@ class UnitSystem(_QuantityMapper):
 
         The dimensions `b_j` are the dimensions of ``base_units``, followed by
         the base dimensions of the current unit system that are independent
-        of the previous ones.
+        of the previous ones. The base dimensions are considered in the order
+        of the base units of the current unit system, so that the last ones
+        are removed. For example, if the Coulomb constant of the SI is set to
+        one, the base dimension which disappears is the current.
 
         The dimension system of the new unit system is created when it is
         used the first time.
@@ -239,12 +261,14 @@ class UnitSystem(_QuantityMapper):
                 raise ValueError("%s is not defined in the unit system" % dimension)
             columns.append([dependencies.get(dim, 0) for dim in old_base_dims])
         number = len(columns)
-        columns.extend(
-            [int(i == j) for j in range(len(old_base_dims))] for i in range(len(old_base_dims)))
+        candidates = [self.get_quantity_dimension(unit) for unit in self._base_units]
+        candidates = [dim for dim in candidates if dim in old_base_dims]
+        candidates.extend(dim for dim in old_base_dims if dim not in candidates)
+        columns.extend([int(dim == candidate) for dim in old_base_dims] for candidate in candidates)
         _, pivots = Matrix(columns).T.rref()
         if pivots[:number] != tuple(range(number)):
             raise ValueError("the dimensions of constants and base units are not independent")
-        base_dims.extend(old_base_dims[i - number] for i in pivots[number:])
+        base_dims.extend(candidates[i - number] for i in pivots[number:])
 
         base_units = list(base_units)
         for unit in self._base_units:
@@ -331,18 +355,59 @@ class UnitSystem(_QuantityMapper):
     def get_dimension_system(self):
         """
         Return the dimension system of the unit system.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.units.systems.si import SI, dimsys_SI
+        >>> SI.get_dimension_system() is dimsys_SI
+        True
+
         """
         if self._dimension_system is None and self._contraction is not None:
             self._dimension_system = self._parent._contract_dimension_system(*self._contraction)
         return self._dimension_system
 
     def get_quantity_dimension(self, unit):
+        """
+        Return the dimension of the quantity in the unit system.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.units import coulomb_constant
+        >>> from sympy.physics.units.systems.si import SI
+        >>> from sympy.physics.units.systems.cgs import cgs_gauss
+        >>> SI.get_quantity_dimension(coulomb_constant)
+        Dimension(force*length**2/charge**2)
+        >>> cgs_gauss.get_quantity_dimension(coulomb_constant)
+        Dimension(1)
+
+        """
         qdm = self.get_dimension_system()._quantity_dimension_map
         if unit in qdm:
             return qdm[unit]
         return super().get_quantity_dimension(unit)
 
     def get_quantity_scale_factor(self, unit):
+        """
+        Return the scale factor of the quantity in the unit system.
+
+        The scale factors are relative to a reference depending on the unit
+        system. Only the ratio of the scale factors of two quantities with
+        the same dimension is meaningful.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.units import kilogram, gram
+        >>> from sympy.physics.units.systems.si import SI
+        >>> SI.get_quantity_scale_factor(kilogram)
+        1000
+        >>> SI.get_quantity_scale_factor(gram)
+        1
+
+        """
         qsfm = self.get_dimension_system()._quantity_scale_factors
         if unit in qsfm:
             return qsfm[unit]

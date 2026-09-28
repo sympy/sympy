@@ -137,6 +137,16 @@ def test_contract():
     assert convert_to(second, meter, unit_system2) == 299792458*meter
     assert abs(convert_to(1/meter, electronvolt, unit_system2)/electronvolt - 9.86634902296511e-8) < 1e-20
 
+    dimsys = MKSA.contract([coulomb_constant]).get_dimension_system()
+    assert list(dimsys.base_dims) == [length, mass, time]
+    assert dimsys.get_dimensional_dependencies(charge) == {mass: S.Half, length: S(3)/2, time: -1}
+    dimsys = SI.contract([speed_of_light]).get_dimension_system()
+    assert length in dimsys.base_dims
+    assert time not in dimsys.base_dims
+    dimsys = SI.contract([speed_of_light], [s]).get_dimension_system()
+    assert time in dimsys.base_dims
+    assert length not in dimsys.base_dims
+
     raises(ValueError, lambda: SI.contract([vacuum_permittivity, coulomb_constant]))
     raises(ValueError, lambda: SI.contract([speed_of_light, hbar], [meter, second]))
     raises(ValueError, lambda: SI.contract([speed_of_light], [speed_of_light]))

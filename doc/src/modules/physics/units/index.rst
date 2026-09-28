@@ -90,6 +90,7 @@ Ideas about future developments can be found on the `Github wiki
    :titlesonly:
 
    philosophy.rst
+   systems.rst
    examples.rst
    dimensions.rst
    prefixes.rst

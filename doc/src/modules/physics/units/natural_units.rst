@@ -58,6 +58,9 @@ Coulomb constant `k_e = 1/(4 \pi \epsilon_0)`, the vacuum permittivity
      - `c = \hbar = m_p = 1`
      - Nuclear physics.
 
+The relation of these unit systems with the other ones is described in
+:doc:`systems`.
+
 All of them are derived from the SI. The dimensions that are not related to
 the defining constants are not modified: the temperature is a base dimension
 in all these unit systems but Planck units, the current is a base dimension

@@ -109,8 +109,9 @@ converting to the same unit with ``convert_to``:
 How it works
 ============
 
-The unit system with more independent dimensions is called *full*, the other
-one *reduced*. A quantity is represented by `X_f` in the full unit system and
+The independent dimensions of a unit system are defined by its dimension
+system, see :doc:`systems`. The unit system with more independent dimensions
+is called *full*, the other one *reduced*. A quantity is represented by `X_f` in the full unit system and
 by `X_r` in the reduced one, with
 
 .. math::
