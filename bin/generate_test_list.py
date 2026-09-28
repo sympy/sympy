@@ -30,42 +30,32 @@ tests = [
 
 from __future__ import print_function
 
-from glob import glob
+import os
 
-
-def get_paths(level=15):
-    """
-    Generates a set of paths for testfiles searching.
-
-    Examples
-    ========
-
-    >>> get_paths(2)
-    ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py']
-    >>> get_paths(6)
-    ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py',
-    'sympy/*/*/*/test_*.py', 'sympy/*/*/*/*/test_*.py',
-    'sympy/*/*/*/*/*/test_*.py', 'sympy/*/*/*/*/*/*/test_*.py']
-
-    """
-    wildcards = ["/"]
-    for i in range(level):
-        wildcards.append(wildcards[-1] + "*/")
-    p = ["sympy" + x + "test_*.py" for x in wildcards]
-    return p
 
 def generate_test_list():
+    """Generate the list of test package paths under the `sympy` tree.
+
+    This uses os.walk so it works on Windows and POSIX. Any directory
+    containing files named `test_*.py` is included as a dotted package
+    (e.g. 'sympy.core.tests' or 'sympy').
+    """
     g = []
-    for x in get_paths():
-        g.extend(glob(x))
-    g = [".".join(x.split("/")[:-1]) for x in g]
+    for root, dirs, files in os.walk('sympy'):
+        for f in files:
+            if f.startswith('test_') and f.endswith('.py'):
+                pkg = root.replace(os.path.sep, '.')
+                g.append(pkg)
+                break
+
     g = list(set(g))
     g.sort()
     return g
 
+
 if __name__ == '__main__':
     g = generate_test_list()
-    print("tests = [")
+    print('tests = [')
     for x in g:
         print("    '%s'," % x)
-    print("]")
+    print(']')

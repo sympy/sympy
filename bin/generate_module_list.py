@@ -28,44 +28,36 @@ modules = [
 
 from __future__ import print_function
 
-from glob import glob
+import os
 
-
-def get_paths(level=15):
-    """
-    Generates a set of paths for modules searching.
-
-    Examples
-    ========
-
-    >>> get_paths(2)
-    ['sympy/__init__.py', 'sympy/*/__init__.py', 'sympy/*/*/__init__.py']
-    >>> get_paths(6)
-    ['sympy/__init__.py', 'sympy/*/__init__.py', 'sympy/*/*/__init__.py',
-    'sympy/*/*/*/__init__.py', 'sympy/*/*/*/*/__init__.py',
-    'sympy/*/*/*/*/*/__init__.py', 'sympy/*/*/*/*/*/*/__init__.py']
-
-    """
-    wildcards = ["/"]
-    for i in range(level):
-        wildcards.append(wildcards[-1] + "*/")
-    p = ["sympy" + x + "__init__.py" for x in wildcards]
-    return p
 
 def generate_module_list():
+    """Generate the list of package modules under the `sympy` tree.
+
+    This implementation uses os.walk so it works consistently on Windows
+    and POSIX systems. It returns a sorted list of dotted package paths
+    (e.g. 'sympy.core', 'sympy.geometry'). The top-level 'sympy' package
+    itself is excluded.
+    """
     g = []
-    for x in get_paths():
-        g.extend(glob(x))
-    g = [".".join(x.split("/")[:-1]) for x in g]
+    for root, dirs, files in os.walk('sympy'):
+        if '__init__.py' in files:
+            # convert filesystem path to dotted module path
+            pkg = root.replace(os.path.sep, '.')
+            g.append(pkg)
+
+    # remove the top-level package entry if present
     g = [i for i in g if not i.endswith('.tests')]
-    g.remove('sympy')
+    if 'sympy' in g:
+        g.remove('sympy')
     g = list(set(g))
     g.sort()
     return g
 
+
 if __name__ == '__main__':
     g = generate_module_list()
-    print("modules = [")
+    print('modules = [')
     for x in g:
         print("    '%s'," % x)
-    print("]")
+    print(']')
