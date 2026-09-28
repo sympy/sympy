@@ -8,6 +8,7 @@ from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, cos, sin)
 from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.error_functions import erf
 from sympy.integrals.integrals import Integral, integrate
 from sympy.series.order import O
 from sympy.series.series import series
@@ -420,3 +421,9 @@ def test_issue_24266():
 
 def test_issue_26856():
     raises(ValueError, lambda: (2**x).series(x, oo, -1))
+
+
+def test_issue_27109():
+    x = symbols('x', positive=True)
+    s = series(2*erf(x), x, oo, 3)
+    assert s.has(exp(-x**2)/x)
