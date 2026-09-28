@@ -3,6 +3,8 @@ from sympy.core.numbers import Rational
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.exponential import exp
 
+from sympy import SeqFormula
+
 
 def test_equal():
     b = Symbol("b")
@@ -88,3 +90,6 @@ def test_dummy_eq():
 
     assert (u**2 + y).dummy_eq(x**2 + y, x) is True
     assert (u**2 + y).dummy_eq(x**2 + y, y) is False
+
+    assert SeqFormula(0).dummy_eq(SeqFormula(0)) is True
+    assert (SeqFormula(0) == SeqFormula(0)) is False
