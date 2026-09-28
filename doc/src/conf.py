@@ -37,7 +37,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'sphinx_reredirects', 'sphinx_copybutton',
               'sphinx.ext.graphviz', 'sphinxcontrib.jquery',
               'matplotlib.sphinxext.plot_directive', 'myst_parser',
-              'convert-svg-to-pdf', 'sphinx.ext.intersphinx', ]
+              'convert-svg-to-pdf', 'sphinx.ext.intersphinx', 'sphinx.ext.autosummary', ]
 
 # Add redirects here. This should be done whenever a page that is in the
 # existing release docs is moved somewhere else so that the URLs don't break.
