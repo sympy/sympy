@@ -1696,11 +1696,12 @@ def _has_full_turn_winding(expr):
     G-function argument carrying such a factor therefore denotes an analytic
     continuation around the origin rather than a value at a point.
 
-    Such a continuation must not be used as an antiderivative (issue 30484):
+    Such a continuation must not be used as an antiderivative (issue #30484):
     the rewrite ``_rewrite_single`` builds reproduces the real part of the
     integrand while its imaginary part comes from the continuation, so
-    differentiating it does not give the integrand back and a definite integral
-    assembled from it is complex instead of real.
+    differentiating it does not give the integrand back.  The fundamental
+    theorem of calculus fails for it, and a definite integral assembled from it
+    is complex instead of real.
 
     Half turns such as ``exp_polar(I*pi)`` are *not* affected -- they change
     the projection of the argument to its negative and encode a genuine sign,
@@ -1708,11 +1709,9 @@ def _has_full_turn_winding(expr):
     inside other functions, e.g. the ``hyper`` and ``polylog`` arguments that
     ``hyperexpand`` produces when it succeeds.
     """
-    from sympy.functions.elementary.exponential import exp_polar
-
     for g in expr.atoms(meijerg):
-        for arg in g.argument.atoms(exp_polar):
-            k = arg.args[0]/(2*S.Pi*S.ImaginaryUnit)
+        for p in g.argument.atoms(exp_polar):
+            k = p.args[0]/(2*pi*S.ImaginaryUnit)
             if k.is_integer and k != 0:
                 return True
     return False

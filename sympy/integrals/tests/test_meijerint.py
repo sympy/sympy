@@ -9,16 +9,17 @@ from sympy.functions.elementary.hyperbolic import (atanh, cosh, acosh, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (cos, sin, sinc, asin)
-from sympy.functions.special.error_functions import (erf, erfc)
+from sympy.functions.special.error_functions import (erf, erfc, Si)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.polys.polytools import cancel
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.simplify import simplify
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
     meijerint_indefinite, _inflate_g, _create_lookup_table,
-    meijerint_definite, meijerint_inversion)
+    meijerint_definite, meijerint_inversion, _has_full_turn_winding)
 from sympy.testing.pytest import slow
 from sympy.core.random import (verify_numerically,
         random_complex_number as randcplx)
@@ -813,19 +814,77 @@ def test_issue_30484():
     # integral built from it is complex.  Such a candidate must be rejected.
     f = 1/(x*sqrt(1 - x)*sqrt(1 + x))
     assert meijerint_indefinite(f, x) is None
+    assert integrate(f, x, meijerg=True) == Integral(f, x)
 
-    # antiderivative of -f is atanh(sqrt(1 - x**2))
+    # an antiderivative of -f is atanh(sqrt(1 - x**2))
     expected = atanh(sqrt(Rational(3, 4))) - atanh(sqrt(Rational(24, 25)))
     assert expected.is_real
     res = integrate(-f, (x, Rational(1, 5), Rational(1, 2)), meijerg=True).evalf(30)
     assert abs(im(res)) < 1e-25
     assert abs(re(res) - expected) < 1e-25
 
-    from sympy.integrals.meijerint import _has_full_turn_winding
 
-    assert _has_full_turn_winding(
-        meijerg((), (), (0,), (), exp_polar(-2*I*pi)*x))
-    # a half turn changes the projection of the argument, it is legitimate
+def test_issue_30484_sibling_forms():
+    # the same continuation turns up for other integrands whose algebraic form
+    # has no entry in the lookup table
+    a, b = Rational(1, 5), Rational(1, 2)
+
+    # an antiderivative of 1/(x**2*sqrt(1 - x**2)) is -sqrt(1 - x**2)/x
+    f = 1/(x**2*sqrt(1 - x)*sqrt(1 + x))
+    expected = sqrt(1 - a**2)/a - sqrt(1 - b**2)/b
+    res = integrate(f, (x, a, b), meijerg=True).evalf(30)
+    assert abs(im(res)) < 1e-25
+    assert abs(re(res) - expected) < 1e-25
+
+    # an antiderivative of 1/(x*sqrt(4 - x**2)) is -atanh(sqrt(4 - x**2)/2)/2
+    f = 1/(x*sqrt(2 - x)*sqrt(2 + x))
+    expected = (atanh(sqrt(4 - a**2)/2) - atanh(sqrt(4 - b**2)/2))/2
+    res = integrate(f, (x, a, b), meijerg=True).evalf(30)
+    assert abs(im(res)) < 1e-25
+    assert abs(re(res) - expected) < 1e-25
+
+
+def test_has_full_turn_winding():
+    # a full turn exp_polar(2*pi*I*k), k a nonzero integer, projects to 1: it is
+    # invisible in the projection of the argument, but it does move the
+    # G-function to another sheet
+    for k in (1, -1, 2, -2):
+        assert _has_full_turn_winding(
+            meijerg((), (), (0,), (), exp_polar(2*pi*I*k)*x))
+    # a half turn changes the projection of the argument to its negative and
+    # encodes a genuine sign that correct table entries rely on
     assert not _has_full_turn_winding(
         meijerg((), (), (0,), (), exp_polar(I*pi)*x))
+    # fractional turns are not full turns either
+    assert not _has_full_turn_winding(
+        meijerg((), (), (0,), (), exp_polar(I*pi/2)*x))
+    assert not _has_full_turn_winding(
+        meijerg((), (), (0,), (), exp_polar(2*pi*I/3)*x))
+    # windings outside a G-function argument, e.g. the ones hyperexpand leaves
+    # in hyper and polylog, are not affected
     assert not _has_full_turn_winding(hyper((1,), (2,), x*exp_polar(2*I*pi)))
+    assert not _has_full_turn_winding(polylog(2, x*exp_polar(2*I*pi)))
+    assert not _has_full_turn_winding(exp(x*exp_polar(2*I*pi)))
+    # no G-function at all
+    assert not _has_full_turn_winding(1/(x*sqrt(1 - x)))
+    # a winding in any one of several G-functions is enough
+    assert _has_full_turn_winding(
+        meijerg((), (), (0,), (), x)
+        + meijerg((), (), (1,), (), exp_polar(2*I*pi)*x))
+    assert not _has_full_turn_winding(
+        meijerg((), (), (0,), (), x)
+        + meijerg((), (), (1,), (), exp_polar(I*pi)*x))
+
+
+def test_issue_30484_keeps_legitimate_polar_factors():
+    # hyperexpand leaves a polar factor inside polylog in this correct
+    # antiderivative, and it has to be kept
+    assert integrate(log(1 - x)/x, x) == -polylog(2, x*exp_polar(2*I*pi))
+    # table entries that use polar factors stay available
+    assert integrate(1/sqrt(1 - x**2), x, meijerg=True) == \
+        Piecewise((-I*acosh(x), Abs(x**2) > 1), (asin(x), True))
+    assert integrate(exp(-x**2), x, meijerg=True) == sqrt(pi)*erf(x)/2
+    assert integrate(sin(x)/x, x, meijerg=True) == Si(x)
+    assert integrate(sqrt(1 - x), x, meijerg=True) == \
+        Piecewise((2*I*x*sqrt(x - 1)/3 - 2*I*sqrt(x - 1)/3, Abs(x) > 1),
+                  (2*x*sqrt(1 - x)/3 - 2*sqrt(1 - x)/3, True))
