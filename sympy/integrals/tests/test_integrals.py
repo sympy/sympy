@@ -411,13 +411,12 @@ def test_issue_7450():
 
 def test_issue_8623():
     assert integrate((1 + cos(2*x)) / (3 - 2*cos(2*x)), (x, 0, pi)) == -pi/2 + sqrt(5)*pi/2
-    assert integrate((1 + cos(2*x))/(3 - 2*cos(2*x))) == -x/2 + sqrt(5)*(atan(sqrt(5)*tan(x)) + \
-        pi*floor((x + pi/2)/pi))/2
+    assert integrate((1 + cos(2*x))/(3 - 2*cos(2*x))) == -x/2 + sqrt(5)*atan(sqrt(5)*tan(x))/2
 
 
 def test_issue_9569():
     assert integrate(1 / (2 - cos(x)), (x, 0, pi)) == pi/sqrt(3)
-    assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)) + pi*floor((x/2 + pi/2)/pi))/3
+    assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2))/3
 
 
 def test_issue_13733():
@@ -430,73 +429,95 @@ def test_issue_13733():
 
 def test_issue_13749():
     assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == pi/sqrt(3)
-    assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 + pi/2)/pi))/3
+    assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
 
 
 def test_atan_floor_terms():
-    # The jump of atan(c*cot(x)) has the opposite sign from atan(c*tan(x))
-    f = diff(atan(2*cot(x)), x)
-    assert integrate(f, x) == atan(2*cot(x)) - pi*floor(x/pi)
-    assert integrate(f, (x, -1, 1)) == 2*atan(2*cot(1)) - pi
-    assert integrate(diff(atan(1 - 3*cot(2*x)), x), x) == \
-        -atan(3*cot(2*x) - 1) + pi*floor(2*x/pi)
+    # The floor terms are only added to evaluate definite integrals
+    assert integrate(1/(2 + cos(x)), (x, 0, 2*pi)) == 2*sqrt(3)*pi/3
+    a, b = symbols('a b', real=True)
+    F = 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3 + 2*sqrt(3)*pi*floor((x/2 + pi/2)/pi)/3
+    assert integrate(1/(2 + cos(x)), (x, a, b)) == F.subs(x, b) - F.subs(x, a)
+    # and only when the antiderivative is linear in the atan (issue 20898)
+    assert integrate(atan(tan(x)), (x, 1, 2)) == (2 - pi)**2/2 - S.Half
+    assert integrate(atan(tan(x))**2, (x, 1, 2)) == (2 - pi)**3/3 - S(1)/3
 
-    # A coefficient that depends on x must not change sign
-    f = diff(atan(x*tan(x)), x)
-    assert integrate(f, x) == atan(x*tan(x))
-    assert integrate(f, (x, -1, 1)) == 0
-    assert integrate(diff(atan(exp(x)*tan(x)), x), x) == \
-        atan(exp(x)*tan(x)) + pi*floor((x + pi/2)/pi)
-    assert _add_atan_floor_terms(atan((x**2 + 1)*cot(x)), x) == \
-        atan((x**2 + 1)*cot(x)) - pi*floor(x/pi)
-    assert integrate(diff(atan(x + tan(x)), x), x) == \
-        atan(x + tan(x)) + pi*floor((x + pi/2)/pi)
+    r = Symbol('r', real=True)
+    A = _add_atan_floor_terms
+    assert A(2*atan(3*tan(r/2)), r) == \
+        2*atan(3*tan(r/2)) + 2*pi*floor((r/2 + pi/2)/pi)
+    assert A(atan(tan(r)) + log(r)*atan(2*tan(r)), r) == \
+        atan(tan(r)) + log(r)*atan(2*tan(r)) + pi*floor((r + pi/2)/pi)
+    assert A(r*atan(tan(r)), r) == r*atan(tan(r))
+    # The coefficient of the atan may need cancellation (issue 13112)
+    F = (5*r*tan(r/2)**2 - 6*tan(r/2)**2*atan(3*tan(r/2)) -
+        6*atan(3*tan(r/2)))/(16*tan(r/2)**2 + 16)
+    assert A(F, r) == F - 3*pi*floor((r/2 + pi/2)/pi)/8
+    # r and the argument of the tan must be real
+    assert A(atan(tan(y)), y) == atan(tan(y))
+    assert A(atan(tan(I*r + 1)), r) == atan(tan(I*r + 1))
 
-    # tan and cot that do not depend on x are not corrected
-    assert integrate(atan(tan(y)), x) == x*atan(tan(y))
-    assert integrate(1/(1 + (x + 2*tan(1))**2), x) == atan(x + 2*tan(1))
+    # The jump of atan(c*cot(r)) has the opposite sign from atan(c*tan(r))
+    f = diff(atan(2*cot(r)), r)
+    assert integrate(f, (r, -1, 1)) == 2*atan(2*cot(1)) - pi
+    assert A(atan(1 - 3*cot(2*r)), r) == \
+        -atan(3*cot(2*r) - 1) + pi*floor(2*r/pi)
+
+    # A coefficient that depends on r must not change sign
+    f = diff(atan(r*tan(r)), r)
+    assert A(atan(r*tan(r)), r) == atan(r*tan(r))
+    assert integrate(f, (r, -1, 1)) == 0
+    assert A(atan(exp(r)*tan(r)), r) == \
+        atan(exp(r)*tan(r)) + pi*floor((r + pi/2)/pi)
+    assert A(atan((r**2 + 1)*cot(r)), r) == \
+        atan((r**2 + 1)*cot(r)) - pi*floor(r/pi)
+    assert A(atan(r + tan(r)), r) == atan(r + tan(r)) + pi*floor((r + pi/2)/pi)
+
+    # tan and cot that do not depend on r are not corrected
+    assert A(r*atan(tan(y)), r) == r*atan(tan(y))
+    assert A(atan(r + 2*tan(1)), r) == atan(r + 2*tan(1))
 
     # Several tan and cot with disjoint poles
-    assert integrate(diff(atan(tan(x) + tan(2*x)), x), x) == \
-        atan(tan(x) + tan(2*x)) + pi*floor((x + pi/2)/pi) + \
-        pi*floor((2*x + pi/2)/pi)
-    assert integrate(diff(atan(tan(x) - cot(x)), x), x) == \
-        atan(tan(x) - cot(x)) + pi*floor((x + pi/2)/pi) + pi*floor(x/pi)
+    assert A(atan(tan(r) + tan(2*r)), r) == \
+        atan(tan(r) + tan(2*r)) + pi*floor((r + pi/2)/pi) + \
+        pi*floor((2*r + pi/2)/pi)
+    assert A(atan(tan(r) - cot(r)), r) == \
+        atan(tan(r) - cot(r)) + pi*floor((r + pi/2)/pi) + pi*floor(r/pi)
     # with some poles in common
-    f = diff(atan(tan(x) + tan(3*x)), x)
-    assert integrate(f, x) == atan(tan(x) + tan(3*x)) + \
-        pi*floor((3*x + pi/2)/pi)
-    assert integrate(f, (x, 1, 2)) == \
+    f = diff(atan(tan(r) + tan(3*r)), r)
+    assert A(atan(tan(r) + tan(3*r)), r) == atan(tan(r) + tan(3*r)) + \
+        pi*floor((3*r + pi/2)/pi)
+    assert integrate(f, (r, 1, 2)) == \
         atan(tan(2) + tan(6)) - atan(tan(1) + tan(3)) + pi
-    assert _add_atan_floor_terms(atan(2*tan(x) - tan(3*x)), x) == \
-        atan(2*tan(x) - tan(3*x)) + 2*pi*floor((x + pi/2)/pi) - \
-        pi*floor((3*x + pi/2)/pi)
+    assert A(atan(2*tan(r) - tan(3*r)), r) == \
+        atan(2*tan(r) - tan(3*r)) + 2*pi*floor((r + pi/2)/pi) - \
+        pi*floor((3*r + pi/2)/pi)
     # where they cancel
-    assert _add_atan_floor_terms(atan(tan(x) - 3*tan(3*x)), x) == \
-        atan(tan(x) - 3*tan(3*x)) + pi*floor((x + pi/2)/pi) - \
-        pi*floor((3*x + pi/2)/pi)
-    assert _add_atan_floor_terms(atan(tan(x/2) + cot(x/3)), x) == \
-        atan(tan(x/2) + cot(x/3)) + pi*floor((x/2 + pi/2)/pi) - \
-        pi*floor(x/(3*pi)) - pi*floor((x/2 + pi/2)/(3*pi) - Rational(2, 3))
+    assert A(atan(tan(r) - 3*tan(3*r)), r) == \
+        atan(tan(r) - 3*tan(3*r)) + pi*floor((r + pi/2)/pi) - \
+        pi*floor((3*r + pi/2)/pi)
+    assert A(atan(tan(r/2) + cot(r/3)), r) == \
+        atan(tan(r/2) + cot(r/3)) + pi*floor((r/2 + pi/2)/pi) - \
+        pi*floor(r/(3*pi)) - pi*floor((r/2 + pi/2)/(3*pi) - Rational(2, 3))
     # No correction in the cases that are not handled
-    for arg in [tan(x) + tan(3*x) + tan(5*x), tan(x) + tan(sqrt(2)*x),
-            tan(x) + tan(x + y), tan(x)*tan(3*x), tan(x) + x*tan(2*x),
-            tan(x) + tan(x**2), (1 + I)*tan(x), (1 + I)*exp(x)*cot(x),
-            tan(x) + I*tan(2*x)]:
-        assert _add_atan_floor_terms(atan(arg), x) == atan(arg)
+    for arg in [tan(r) + tan(3*r) + tan(5*r), tan(r) + tan(sqrt(2)*r),
+            tan(r) + tan(r + y), tan(r)*tan(3*r), tan(r) + r*tan(2*r),
+            tan(r) + tan(r**2), (1 + I)*tan(r), (1 + I)*exp(r)*cot(r),
+            tan(r) + I*tan(2*r), y*tan(r)]:
+        assert A(atan(arg), r) == atan(arg)
     # and a single correction when they are the same
-    t = tan(x + pi, evaluate=False)
-    assert _add_atan_floor_terms(atan(3*tan(x) + t), x) == \
-        atan(3*tan(x) + t) + pi*floor((x + pi/2)/pi)
-    assert _add_atan_floor_terms(atan(tan(x) - 3*t), x) == \
-        atan(tan(x) - 3*t) - pi*floor((x + pi/2)/pi)
-    assert _add_atan_floor_terms(atan(tan(x) - t), x) == atan(tan(x) - t)
-    t = tan(pi - x, evaluate=False)
-    assert _add_atan_floor_terms(atan(tan(x) + 2*t), x) == \
-        atan(tan(x) + 2*t) - pi*floor((x + pi/2)/pi)
-    t = cot(x - pi/2, evaluate=False)
-    assert _add_atan_floor_terms(atan(tan(x) + 2*t), x) == \
-        atan(tan(x) + 2*t) - pi*floor((x + pi/2)/pi)
+    t = tan(r + pi, evaluate=False)
+    assert A(atan(3*tan(r) + t), r) == \
+        atan(3*tan(r) + t) + pi*floor((r + pi/2)/pi)
+    assert A(atan(tan(r) - 3*t), r) == \
+        atan(tan(r) - 3*t) - pi*floor((r + pi/2)/pi)
+    assert A(atan(tan(r) - t), r) == atan(tan(r) - t)
+    t = tan(pi - r, evaluate=False)
+    assert A(atan(tan(r) + 2*t), r) == \
+        atan(tan(r) + 2*t) - pi*floor((r + pi/2)/pi)
+    t = cot(r - pi/2, evaluate=False)
+    assert A(atan(tan(r) + 2*t), r) == \
+        atan(tan(r) + 2*t) - pi*floor((r + pi/2)/pi)
 
 
 def test_issue_18133():

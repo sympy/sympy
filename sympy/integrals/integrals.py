@@ -24,7 +24,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
 from sympy.matrices import MatrixBase
-from sympy.polys import Poly, PolynomialError
+from sympy.polys import Poly, PolynomialError, cancel
 from sympy.series.formal import FormalPowerSeries
 from sympy.series.limits import limit
 from sympy.series.order import Order
@@ -41,10 +41,9 @@ if TYPE_CHECKING:
 
 def _add_atan_floor_terms(antideriv, x):
     """
-    Make an antiderivative with respect to ``x`` containing
-    ``atan(c*tan(a) + d)`` or ``atan(c*cot(a) + d)`` continuous at the
-    poles of ``tan(a)`` and ``cot(a)`` by adding the appropriate multiple
-    of ``pi*floor(...)``.
+    Make an antiderivative with respect to the real variable ``x`` continuous
+    at the poles of the ``tan`` and ``cot`` in its ``atan`` terms by adding
+    multiples of ``pi*floor(...)``.
 
     Explanation
     ===========
@@ -53,34 +52,27 @@ def _add_atan_floor_terms(antideriv, x):
     jumps by ``-sign(c)*pi``, and at a pole of ``cot(a)``,
     ``atan(c*cot(a) + d)`` jumps by ``sign(c)*pi``. These jumps are
     canceled by ``sign(c)*pi*floor((a + pi/2)/pi)`` and
-    ``-sign(c)*pi*floor(a/pi)``, respectively. Both terms vanish on the
-    principal branch of the tangent, ``-pi/2 < a < pi/2`` and ``0 < a < pi``,
-    so that the antiderivative is unchanged there. See [1]_, eq. (3).
+    ``-sign(c)*pi*floor(a/pi)``, respectively, which vanish on the principal
+    branch of the tangent (see [1]_, eq. (3)). The argument of the ``atan``
+    may also be a linear combination of several ``tan`` and ``cot`` of linear
+    functions of ``x``, whose poles in common are corrected by a single term.
 
-    The coefficient ``c`` may depend on ``x`` if its sign does not change
-    for real ``x``. ``d`` may depend on ``x``, and is assumed to be finite
-    at the poles.
-
-    The argument of the ``atan`` may also be a linear combination of several
-    ``tan`` and ``cot`` of linear functions of ``x``, with coefficients that
-    do not depend on ``x``. Those with the same poles are corrected by a
-    single term, and there is another term for the poles that two of them
-    with different periods have in common, where the jump is determined by
-    the sum of the two poles. The ``atan`` is left as it is if it cannot be
-    determined which poles are in common, or if there are poles in common
-    among more than two.
-
-    An ``atan`` that is left as it is remains discontinuous at the poles, so
-    a definite integral computed from the antiderivative is wrong if there
-    is a pole between the limits. Integral.doit() does not check for
-    discontinuities of the antiderivative between the limits in general.
+    An ``atan`` is only corrected if ``antideriv`` is linear in it with a
+    coefficient not depending on ``x``, so that its jumps are those of the
+    ``atan``, and if the floor terms can be determined: ``c`` must be real, with a sign that does not change with
+    ``x``, and if several ``tan`` and ``cot`` are present, it must be
+    possible to tell which poles they have in common. Otherwise the ``atan``
+    remains discontinuous at its poles, and a definite integral computed
+    from the antiderivative is wrong if there is a pole between the limits:
+    Integral.doit() does not check for discontinuities of the
+    antiderivative between the limits in general. See [2]_.
 
     Examples
     ========
 
-    >>> from sympy import atan, tan, cot
-    >>> from sympy.abc import x
+    >>> from sympy import atan, tan, cot, Symbol
     >>> from sympy.integrals.integrals import _add_atan_floor_terms
+    >>> x = Symbol('x', real=True)
     >>> _add_atan_floor_terms(2*atan(3*tan(x/2)), x)
     2*atan(3*tan(x/2)) + 2*pi*floor((x/2 + pi/2)/pi)
     >>> _add_atan_floor_terms(atan(cot(x) + x), x)
@@ -96,13 +88,25 @@ def _add_atan_floor_terms(antideriv, x):
     .. [1] D. J. Jeffrey and A. D. Rich, The evaluation of trigonometric
            integrals avoiding spurious discontinuities, ACM Trans. Math.
            Software 20 (1994), 124-135.
+    .. [2] https://github.com/sympy/sympy/pull/30558
     """
-    reps = {}
+    if not isinstance(antideriv, Expr) or not x.is_extended_real:
+        return antideriv
+    K = Dummy('K')
     for atan_term in antideriv.atoms(atan):
         correction = _atan_floor_correction(atan_term.args[0], x)
-        if correction:
-            reps[atan_term] = atan_term + correction
-    return antideriv.xreplace(reps)
+        if correction is None:
+            continue
+        # The antiderivative must be linear in the atan with a constant
+        # coefficient, so that its jumps are those of the atan
+        shifted = antideriv.xreplace({atan_term: atan_term + K})
+        poly = cancel(shifted - antideriv).as_poly(K)
+        if poly is None or poly.degree() != 1 or poly.nth(0) != 0:
+            continue
+        c = poly.LC()
+        if not c.has(x):
+            antideriv += c*correction
+    return antideriv
 
 
 def _atan_floor_correction(atan_arg, x):
@@ -120,19 +124,16 @@ def _atan_floor_correction(atan_arg, x):
     for part in parts:
         coeff = poly.coeff_monomial(part)
         a = part.args[0]
+        if coeff.is_extended_real is not True or a.is_extended_real is not True:
+            return None
         if isinstance(part, tan):
             terms.append((coeff, (a + pi/2)/pi))
         else:
             terms.append((-coeff, a/pi))
     if len(terms) == 1:
         coeff, phi = terms[0]
-        if coeff.has(x):
-            # The sign of the coefficient must not change
-            xreal = Dummy('x', real=True)
-            coeff = coeff.subs(x, xreal)
-            if sign(coeff).has(xreal):
-                return None
-        if coeff.is_extended_real is False:
+        # The sign of the coefficient must not change
+        if sign(coeff).has(x):
             return None
         return sign(coeff)*pi*floor(phi)
 
@@ -144,8 +145,6 @@ def _atan_floor_correction(atan_arg, x):
     for coeff, phi in terms:
         m = phi.diff(x)
         if coeff.has(x) or m.has(x) or m.is_zero is not False:
-            return None
-        if coeff.is_extended_real is False:
             return None
         x0, period = -phi.subs(x, 0)/m, 1/m
         new = {'coeff': coeff, 'phi': phi, 'x0': x0, 'period': period}
@@ -783,11 +782,13 @@ class Integral(AddWithLimits):
                             function = ret
                             continue
 
-            final = hints.get('final', True)
-            # dotit may be iterated but floor terms making atan and acot
-            # continuous should only be added in the final round
-            if (final and not isinstance(antideriv, Integral) and
-                antideriv is not None):
+            # The floor terms making atan and acot continuous are only
+            # needed to evaluate the antiderivative between limits, and
+            # doit may be iterated but they should only be added in the
+            # final round
+            if (len(xab) == 3 and hints.get('final', True) and
+                    not isinstance(antideriv, Integral) and
+                    antideriv is not None):
                 antideriv = _add_atan_floor_terms(antideriv, xab[0])
 
             if antideriv is None:
