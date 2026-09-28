@@ -493,67 +493,74 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         Proposition is not reduced to ``None`` if the truth value cannot
         be determined.
     """
-    from sympy.assumptions.satask import satask
-    from sympy.assumptions.lra_satask import lra_satask
-    from sympy.logic.algorithms.lra_theory import UnhandledInput
-
-    assumptions = And(assumptions, *context)
-
-    proposition = sympify(proposition)
-    assumptions = sympify(assumptions)
-
-    if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
-        raise TypeError("proposition must be a valid logical expression")
-
-    if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
-        raise TypeError("assumptions must be a valid logical expression")
-
-    # Normalize both proposition and assumptions
-    proposition = _normalize_expr(proposition)
-    assumptions = _normalize_expr(assumptions)
-
-    if isinstance(proposition, AppliedPredicate):
-        key, args = proposition.function, proposition.arguments
-    else:
-        key, args = Q.is_true, (proposition,)
-
-    # convert local and global assumptions to CNF
-    assump_cnf = CNF.from_prop(assumptions)
-
-    # extract the relevant facts from assumptions with respect to args
-    local_facts = _extract_all_facts(assump_cnf, args)
-
-    # convert default facts and assumed facts to encoded CNF
-    known_facts_cnf = get_all_known_facts()
-    enc_cnf = EncodedCNF()
-    enc_cnf.from_cnf(CNF(known_facts_cnf))
-    enc_cnf.add_from_cnf(local_facts)
-
-    # check the satisfiability of given assumptions
-    if local_facts.clauses and satisfiable(enc_cnf) is False:
-        raise ValueError(f"inconsistent assumptions {assumptions}")
-
-    # quick computation for single fact
-    res = _ask_single_fact(key, local_facts)
-    if res is not None:
-        return res
-
-    # direct resolution method, no logic
-    res = key(*args)._eval_ask(assumptions)
-    if res is not None:
-        return bool(res)
-
-    # using satask (still costly)
-    res = satask(proposition, assumptions=assumptions)
-    if res is not None:
-        return res
-
+    from sympy.core.assumptions import _asking_local
+    if not hasattr(_asking_local, 'asking'):
+        _asking_local.asking = 0
+    _asking_local.asking += 1
     try:
-        res = lra_satask(proposition, assumptions=assumptions)
-    except UnhandledInput:
-        return None
+        from sympy.assumptions.satask import satask
+        from sympy.assumptions.lra_satask import lra_satask
+        from sympy.logic.algorithms.lra_theory import UnhandledInput
 
-    return res
+        assumptions = And(assumptions, *context)
+
+        proposition = sympify(proposition)
+        assumptions = sympify(assumptions)
+
+        if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
+            raise TypeError("proposition must be a valid logical expression")
+
+        if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
+            raise TypeError("assumptions must be a valid logical expression")
+
+        # Normalize both proposition and assumptions
+        proposition = _normalize_expr(proposition)
+        assumptions = _normalize_expr(assumptions)
+
+        if isinstance(proposition, AppliedPredicate):
+            key, args = proposition.function, proposition.arguments
+        else:
+            key, args = Q.is_true, (proposition,)
+
+        # convert local and global assumptions to CNF
+        assump_cnf = CNF.from_prop(assumptions)
+
+        # extract the relevant facts from assumptions with respect to args
+        local_facts = _extract_all_facts(assump_cnf, args)
+
+        # convert default facts and assumed facts to encoded CNF
+        known_facts_cnf = get_all_known_facts()
+        enc_cnf = EncodedCNF()
+        enc_cnf.from_cnf(CNF(known_facts_cnf))
+        enc_cnf.add_from_cnf(local_facts)
+
+        # check the satisfiability of given assumptions
+        if local_facts.clauses and satisfiable(enc_cnf) is False:
+            raise ValueError(f"inconsistent assumptions {assumptions}")
+
+        # quick computation for single fact
+        res = _ask_single_fact(key, local_facts)
+        if res is not None:
+            return res
+
+        # direct resolution method, no logic
+        res = key(*args)._eval_ask(assumptions)
+        if res is not None:
+            return bool(res)
+
+        # using satask (still costly)
+        res = satask(proposition, assumptions=assumptions)
+        if res is not None:
+            return res
+
+        try:
+            res = lra_satask(proposition, assumptions=assumptions)
+        except UnhandledInput:
+            return None
+
+        return res
+    finally:
+        _asking_local.asking -= 1
 
 
 def _ask_single_fact(key, local_facts):
