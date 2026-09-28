@@ -2204,6 +2204,11 @@ def quadratic_denom_rule(integral):
                 # If a = 0 and 4*a*c - b**2 = 0 identically, then b = 0 too.
                 substituted = integrand.subs({a: 0, b: 0}, simultaneous=True)
             else:
+                if not _if_zero_implies_zero(b, b*symbol + c):
+                    double_substituted = integrand.subs({a: 0, b: 0}, simultaneous=True)
+                    double_substep = yield IntegralInfo(double_substituted, symbol)
+                    pieces.append((RewriteRule(integrand, symbol, double_substituted, double_substep),
+                        Eq(a, 0) & Eq(b, 0)))
                 substituted = integrand.subs(a, 0)
             substep = yield IntegralInfo(substituted, symbol)
             pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(a, 0)))
