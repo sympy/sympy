@@ -259,7 +259,8 @@ class OrdinalZero(Ordinal):
 
     OrdinalZero can be imported as ``ord0``.
     """
-    pass
+    def __new__(cls):
+        return Ordinal.__new__(cls)
 
 
 class OrdinalOmega(Ordinal):
