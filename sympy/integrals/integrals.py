@@ -57,9 +57,10 @@ def _add_atan_floor_terms(antideriv, x):
     may also be a linear combination of several ``tan`` and ``cot`` of linear
     functions of ``x``, whose poles in common are corrected by a single term.
 
-    An ``atan`` is only corrected if ``antideriv`` is linear in it with a
-    coefficient not depending on ``x``, so that its jumps are those of the
-    ``atan``, and if the floor terms can be determined: ``c`` must be real, with a sign that does not change with
+    An ``atan`` is only corrected if ``antideriv`` is a polynomial in it
+    with coefficients not depending on ``x``, so that its jumps are constant
+    multiples of those of the ``atan``, and if the floor terms can be
+    determined: ``c`` must be real, with a sign that does not change with
     ``x``, and if several ``tan`` and ``cot`` are present, it must be
     possible to tell which poles they have in common. Otherwise the ``atan``
     remains discontinuous at its poles, and a definite integral computed
@@ -90,22 +91,30 @@ def _add_atan_floor_terms(antideriv, x):
            Software 20 (1994), 124-135.
     .. [2] https://github.com/sympy/sympy/pull/30558
     """
+    if isinstance(antideriv, Piecewise):
+        return antideriv.func(*[(_add_atan_floor_terms(e, x), c)
+            for e, c in antideriv.args])
     if not isinstance(antideriv, Expr) or not x.is_extended_real:
         return antideriv
-    K = Dummy('K')
+    A = Dummy('A')
     for atan_term in antideriv.atoms(atan):
         correction = _atan_floor_correction(atan_term.args[0], x)
         if correction is None:
             continue
-        # The antiderivative must be linear in the atan with a constant
-        # coefficient, so that its jumps are those of the atan
-        shifted = antideriv.xreplace({atan_term: atan_term + K})
-        poly = cancel(shifted - antideriv).as_poly(K)
-        if poly is None or poly.degree() != 1 or poly.nth(0) != 0:
+        # The antiderivative must be a polynomial in the atan with constant
+        # coefficients, so that its jump at each pole, where the atan goes
+        # from pi/2 to -pi/2 or back, is a constant multiple of that of the
+        # atan
+        poly = antideriv.xreplace({atan_term: A}).as_poly(A)
+        if poly is None:
             continue
-        c = poly.LC()
-        if not c.has(x):
-            antideriv += c*correction
+        coeffs = [cancel(c) for c in poly.all_coeffs()[:-1]]
+        if any(c.has(x) for c in coeffs):
+            continue
+        jump = Add(*[c*((pi/2)**k - (-pi/2)**k)
+            for k, c in enumerate(reversed(coeffs), 1)])/pi
+        if jump:
+            antideriv += jump*correction
     return antideriv
 
 

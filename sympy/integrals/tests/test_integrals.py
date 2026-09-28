@@ -438,9 +438,13 @@ def test_atan_floor_terms():
     a, b = symbols('a b', real=True)
     F = 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3 + 2*sqrt(3)*pi*floor((x/2 + pi/2)/pi)/3
     assert integrate(1/(2 + cos(x)), (x, a, b)) == F.subs(x, b) - F.subs(x, a)
-    # and only when the antiderivative is linear in the atan (issue 20898)
+    # and with the jump of the antiderivative, a polynomial in the atan
+    # (issue 20898)
     assert integrate(atan(tan(x)), (x, 1, 2)) == (2 - pi)**2/2 - S.Half
-    assert integrate(atan(tan(x))**2, (x, 1, 2)) == (2 - pi)**3/3 - S(1)/3
+    assert integrate(atan(tan(x))**2, (x, 1, 2)) == \
+        (2 - pi)**3/3 - S(1)/3 + pi**3/12
+    p = integrate(Piecewise((1/(2 + cos(x)), y > 0), (0, True)), (x, 0, 2*pi))
+    assert p.subs(y, 1) == 2*sqrt(3)*pi/3 and p.subs(y, -1) == 0
 
     r = Symbol('r', real=True)
     A = _add_atan_floor_terms
@@ -449,6 +453,10 @@ def test_atan_floor_terms():
     assert A(atan(tan(r)) + log(r)*atan(2*tan(r)), r) == \
         atan(tan(r)) + log(r)*atan(2*tan(r)) + pi*floor((r + pi/2)/pi)
     assert A(r*atan(tan(r)), r) == r*atan(tan(r))
+    assert A(atan(tan(r))**2, r) == atan(tan(r))**2
+    assert A(atan(tan(r))**3/3 + r, r) == \
+        atan(tan(r))**3/3 + r + pi**3*floor((r + pi/2)/pi)/12
+    assert A(exp(atan(tan(r))), r) == exp(atan(tan(r)))
     # The coefficient of the atan may need cancellation (issue 13112)
     F = (5*r*tan(r/2)**2 - 6*tan(r/2)**2*atan(3*tan(r/2)) -
         6*atan(3*tan(r/2)))/(16*tan(r/2)**2 + 16)
