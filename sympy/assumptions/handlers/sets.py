@@ -399,9 +399,17 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-@ExtendedRealPredicate.register_many(Add, Mul, Pow) # type:ignore
+@ExtendedRealPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.extended_real)
+
+@ExtendedRealPredicate.register(Pow) # type:ignore
+def _(expr, assumptions):
+    return _ask_recursive(
+        Q.real(expr)
+        | Q.positive_infinite(expr)
+        | Q.negative_infinite(expr),
+        assumptions)
 
 
 # HermitianPredicate
