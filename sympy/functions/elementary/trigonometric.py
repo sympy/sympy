@@ -2949,7 +2949,7 @@ class acot(InverseTrigonometricFunction):
     A purely imaginary argument will lead to an ``acoth`` expression.
 
     ``acot(x)`` has a branch cut along $(-i, i)$, hence it is discontinuous
-    at 0. Its range for real $x$ is $(-\frac{\pi}{2}, \frac{\pi}{2}]$.
+    at 0. Its range for real $x$ is $(-\frac{\pi}{2}, 0) \cup (0, \frac{\pi}{2}]$.
 
     Examples
     ========
