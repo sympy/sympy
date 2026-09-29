@@ -6,7 +6,8 @@ from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Add, sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Eq, Ne
+from sympy.core.relational import (Relational, Eq, Ne,
+    _may_be_indeterminate)
 from sympy.core.symbol import Symbol, Dummy
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
@@ -774,21 +775,6 @@ def _pt(start, end):
     return pt
 
 
-def _may_be_indeterminate(terms):
-    # Return True if the sum of terms whose finiteness is unknown can be
-    # an indeterminate oo - oo, i.e. if terms that may be infinite are
-    # able to have opposite signs.
-    pos = neg = False
-    for t in terms:
-        if t.is_extended_nonnegative is True:
-            pos = True
-        elif t.is_extended_nonpositive is True:
-            neg = True
-        else:
-            return True
-    return pos and neg
-
-
 def _protected_additive_terms(ie, s):
     # Return the additive terms of ie that must not be separated from
     # the terms containing s. Terms that may be infinite can sum to an
@@ -1009,8 +995,7 @@ def _reduce_inequalities(inequalities, symbols):
 
     for inequality in inequalities:
 
-        expr = inequality.lhs - inequality.rhs  # rhs is 0
-        rel = inequality.rel_op
+        expr, rel = inequality.lhs - inequality.rhs, inequality.rel_op
 
         # check for gens using atoms which is more strict than free_symbols to
         # guard against EX domain which won't be handled by
@@ -1091,22 +1076,15 @@ def reduce_inequalities(inequalities, symbols=[]):
     # prefilter
     keep = []
     for i in inequalities:
-        # the difference is only used to detect relations whose truth
-        # value can be decided; the sides are retained so that terms
-        # which can be indeterminate at infinity are not merged
-        if isinstance(i, Relational):
-            j = i.func(i.lhs.as_expr() - i.rhs.as_expr(), 0)
-        elif i in (True, False):
-            j = i
-        else:
-            i = j = Eq(i, 0)
-        if j == True:
+        if not isinstance(i, Relational) and i not in (True, False):
+            i = Eq(i, 0)
+        if i == True:
             continue
-        elif j == False:
+        elif i == False:
             return S.false
-        if j.lhs.is_number:
+        if not i.free_symbols and (i.lhs - i.rhs).is_number:
             raise NotImplementedError(
-                "could not determine truth value of %s" % j)
+                "could not determine truth value of %s" % i)
         keep.append(i)
     inequalities = keep
     del keep

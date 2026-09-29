@@ -26,7 +26,8 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
-                                   Gt, Ge, Ne, is_le, is_gt, is_ge, is_lt, is_eq, is_neq)
+                                   Gt, Ge, Ne, is_le, is_gt, is_ge, is_lt, is_eq, is_neq,
+                                   _may_be_indeterminate)
 from sympy.sets.sets import Interval, FiniteSet
 
 from itertools import combinations
@@ -1270,3 +1271,15 @@ def test_rewrite_Add():
     from sympy.testing.pytest import warns_deprecated_sympy
     with warns_deprecated_sympy():
         assert Eq(x, y).rewrite(Add) == x - y
+
+
+def test_may_be_indeterminate():
+    assert _may_be_indeterminate([x, y]) is True
+    assert _may_be_indeterminate([x, S.One]) is False
+    assert _may_be_indeterminate([S.One, S(2)]) is False
+    assert _may_be_indeterminate([oo, -oo]) is True
+    assert _may_be_indeterminate([oo, oo]) is False
+    assert _may_be_indeterminate([oo, S.One]) is False
+    assert _may_be_indeterminate([-oo, -oo]) is False
+    assert _may_be_indeterminate([oo]) is False
+    assert _may_be_indeterminate([oo, nan]) is True
