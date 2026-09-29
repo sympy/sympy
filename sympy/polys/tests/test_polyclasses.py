@@ -1,9 +1,11 @@
 """Tests for OO layer of several polynomial representations. """
 from __future__ import annotations
 
+from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.polyclasses import DMP, DMF, ANP
+from sympy.polys.polyclasses import DMP, SMP, DMF, ANP
+from sympy.polys.polytools import Poly
 from sympy.polys.polyerrors import (CoercionFailed, ExactQuotientFailed,
                                     NotInvertible)
 from sympy.polys.specialpolys import f_polys
@@ -604,3 +606,61 @@ def test_zero_poly():
     assert cont_old == 0
     assert prim_old == zero_poly_old
     assert prim_old.is_primitive is False
+
+
+
+
+def test_SMP_constructors():
+    f = SMP({(2, 0): 1, (0, 1): 2}, ZZ)
+
+    assert f.dom == ZZ
+    assert f.lev == 1
+    assert f.to_dict() == {(2, 0): 1, (0, 1): 2}
+
+    f = SMP.from_dict({(2, 0): 1, (0, 1): 2}, 1, ZZ)
+
+    assert f.dom == ZZ
+    assert f.lev == 1
+    assert f.to_dict() == {(2, 0): 1, (0, 1): 2}
+
+    assert SMP.zero(1, ZZ).to_dict() == {}
+    assert SMP.one(1, ZZ).to_dict() == {(0, 0): 1}
+
+    raises(ValueError, lambda: SMP({}, ZZ))
+
+
+def test_SMP_from_poly():
+    x, y = symbols('x y')
+
+    p = Poly(x**2 + y, x, y)
+    f = SMP.from_poly(p)
+
+    assert f.dom == p.domain
+    assert f.lev == p.rep.lev
+    assert f.to_dict() == p.rep.to_dict()
+
+    p = Poly.new(f, x, y)
+    assert SMP.from_poly(p) is f
+
+
+def test_SMP_from_expr():
+    x, y, z = symbols('x y z')
+
+    expr = x**2 + 2*x - 5*y - 7*y**3*x**3 + 3
+    f, gens = SMP.from_expr(expr)
+
+    assert gens == (x, y)
+    assert f.dom == ZZ
+    assert f.to_dict() == {
+        (3, 3): -7,
+        (2, 0): 1,
+        (1, 0): 2,
+        (0, 1): -5,
+        (0, 0): 3,
+    }
+
+    f, gens = SMP.from_expr(x + y, x)
+
+    assert gens == (x,)
+    assert f.to_sympy_dict() == {(1,): 1, (0,): y}
+    assert str(f.dom) == 'ZZ[y]'

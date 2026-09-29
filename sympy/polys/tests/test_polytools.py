@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pickle
 
+
 from sympy.polys.polytools import (
     Poly, PurePoly, poly,
     parallel_poly_from_expr,
@@ -48,7 +49,7 @@ from sympy.polys.polyerrors import (
     OptionError,
     FlagError)
 
-from sympy.polys.polyclasses import DMP
+from sympy.polys.polyclasses import DMP, SMP
 
 from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX, EXRAW
@@ -2521,13 +2522,47 @@ def test_compose():
     assert compose(x**2 - y**2, x - y, x, y) == x**2 - 2*x*y
     assert compose(x**2 - y**2, x - y, y, x) == -y**2 + 2*x*y
 
+    f = Poly(x**3 + 2*x - 3, x)
+    g = Poly(2*x**2 - x + 6, x)
+    F = Poly.new(SMP.from_dict(f.as_dict(), 0, ZZ), x)
+    G = Poly.new(SMP.from_dict(g.as_dict(), 0, ZZ), x)
+
+    expected = f.compose(g)
+
+    assert F.compose(G) == expected
+    assert F.compose(g) == expected
+    assert f.compose(G) == expected
+
+    assert isinstance(F.compose(G).rep, SMP)
+    assert isinstance(F.compose(g).rep, SMP)
+    assert isinstance(f.compose(G).rep, SMP)
+
 
 def test_shift():
     assert Poly(x**2 - 2*x + 1, x).shift(2) == Poly(x**2 + 2*x + 1, x)
 
+    f = Poly(x**3 + 2*x - 3, x)
+    F = Poly.new(SMP.from_dict(f.as_dict(), 0, ZZ), x)
+
+    result = F.shift(2)
+
+    assert result == f.shift(2)
+    assert isinstance(result.rep, SMP)
+    assert F.shift(0) == F
+
 
 def test_shift_list():
     assert Poly(x*y, [x,y]).shift_list([1,2]) == Poly((x+1)*(y+2), [x,y])
+
+    f = Poly(x*y + 3, x, y)
+    F = Poly.new(SMP.from_dict(f.as_dict(), 1, ZZ), x, y)
+
+    result = F.shift_list([1, 2])
+
+    assert result == f.shift_list([1, 2])
+    assert isinstance(result.rep, SMP)
+    assert F.shift_list([0, 0]) == F
+    assert F.shift_list([-2, 3]) == f.shift_list([-2, 3])
 
 
 def test_transform():
@@ -4320,3 +4355,90 @@ def test_groebner_reduce_scalar():
     B = groebner([t**2], t, order="lex")
     assert B.reduce(7) == ([0], 7)
     assert B.reduce(Integer(7)) == ([0], Integer(7))
+
+
+def test_Poly_sparse_rep_basic():
+    f = Poly.new(SMP.from_dict({
+        (20,): ZZ.one,
+        (1,): ZZ.one,
+        (0,): ZZ.one,
+    }, 0, ZZ), x)
+
+    g = Poly.new(SMP.from_dict({
+        (19,): ZZ.one,
+        (2,): ZZ.one,
+        (0,): ZZ.one,
+    }, 0, ZZ), x)
+
+    assert isinstance(f.rep, SMP)
+    assert f.as_dict() == {(20,): 1, (1,): 1, (0,): 1}
+
+    h = f*g
+
+    assert isinstance(h.rep, SMP)
+    assert h.as_dict() == {
+        (39,): 1,
+        (22,): 1,
+        (20,): 2,
+        (19,): 1,
+        (3,): 1,
+        (2,): 1,
+        (1,): 1,
+        (0,): 1,
+    }
+
+    assert isinstance((f + g).rep, SMP)
+    assert isinstance((f - g).rep, SMP)
+    assert isinstance((f**2).rep, SMP)
+    assert isinstance(f.diff().rep, SMP)
+
+    assert f.degree() == 20
+    assert f.LC() == 1
+    assert f.TC() == 1
+    assert hash(f) == hash(Poly.new(SMP.from_dict(
+        {(20,): ZZ.one, (1,): ZZ.one, (0,): ZZ.one}, 0, ZZ), x))
+
+    fdmp = Poly.from_dict({
+        (20,): ZZ.one,
+        (1,): ZZ.one,
+        (0,): ZZ.one,
+    }, x, domain=ZZ)
+
+    assert isinstance((f + 1).rep, SMP)
+    assert isinstance((1 + f).rep, SMP)
+    assert isinstance((f * 2).rep, SMP)
+    assert isinstance((2 * f).rep, SMP)
+    assert isinstance((f + fdmp).rep, SMP)
+    assert isinstance((fdmp + f).rep, SMP)
+    assert isinstance((f * fdmp).rep, SMP)
+    assert isinstance((fdmp * f).rep, SMP)
+
+
+def test_Poly_rep_independent_hashable_content():
+    f = Poly(x**5 + x**2 - 1, x, domain=ZZ)
+    g = Poly(x**3 + x**2 - 1, x, domain=ZZ)
+
+    assert f.compare(g) != 0
+
+    fqq = Poly(x**5 + x**2 - 1, x, domain=QQ)
+    assert f.compare(fqq) != 0
+
+
+def test_Poly_sparse_rep_equality_hash():
+    x, y = symbols('x y')
+    rep = {(1000,): ZZ.one, (1,): ZZ.one, (0,): ZZ.one}
+
+    fdmp = Poly.from_dict(rep, x, domain=ZZ)
+    fsmp = Poly.new(SMP.from_dict(rep, 0, ZZ), x)
+
+    assert fdmp == fsmp
+    assert fsmp == fdmp
+    assert hash(fdmp) == hash(fsmp)
+    assert {fdmp: 1}[fsmp] == 1
+
+    # Domain and generators remain part of Poly equality.
+    assert fdmp != Poly.from_dict(rep, x, domain=QQ)
+    assert fdmp != Poly.from_dict(
+        {(1000, 0): ZZ.one, (1, 0): ZZ.one, (0, 0): ZZ.one},
+        x, y, domain=ZZ,
+    )
