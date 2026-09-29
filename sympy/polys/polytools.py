@@ -2656,8 +2656,12 @@ class Poly(Basic):
             F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'invert'):
+            result: DMP | SMP
             if isinstance(F, DMP):
                 assert isinstance(G, DMP)
+                result = F.invert(G)
+            elif isinstance(F, SMP):
+                assert isinstance(G, SMP)
                 result = F.invert(G)
             else:
                 raise OperationNotSupported(f, 'invert')
@@ -3215,9 +3219,14 @@ class Poly(Basic):
         F, P = f.unify(P)
         F, Q = F.unify(Q)
 
+        result: DMP | SMP
         if isinstance(F.rep, DMP):
             assert isinstance(P.rep, DMP)
             assert isinstance(Q.rep, DMP)
+            result = F.rep.transform(P.rep, Q.rep)
+        elif isinstance(F.rep, SMP):
+            assert isinstance(P.rep, SMP)
+            assert isinstance(Q.rep, SMP)
             result = F.rep.transform(P.rep, Q.rep)
         else:
             raise OperationNotSupported(F, 'transform')
