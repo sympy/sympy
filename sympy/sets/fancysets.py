@@ -2,6 +2,7 @@ from __future__ import annotations
 from functools import reduce
 from itertools import product
 
+from sympy.assumptions import Q
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -805,7 +806,11 @@ class Range(Set):
         # this only distinguishes between definite null range
         # and non-null/unknown null; getting True doesn't mean
         # that it actually is not null
-        b = is_eq(self.start, self.stop)
+        assumptions = [
+            Q.finite(a) for a in (self.start, self.stop)
+            if a.is_infinite is not True]
+        assumptions = And(*assumptions) if assumptions else None
+        b = is_eq(self.start, self.stop, assumptions=assumptions)
         if b is None:
             raise ValueError('cannot tell if Range is null or not')
         return not bool(b)
