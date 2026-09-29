@@ -586,7 +586,6 @@ class CodeGen:
         OutputArgument and InOutArguments.
 
         """
-
         if self.cse:
             from sympy.simplify.cse_main import cse
 
@@ -2127,7 +2126,8 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     else:
         if code_gen is not None:
             raise ValueError("You cannot specify both language and code_gen.")
-        code_gen = get_code_generator(language, project, standard, printer)
+        else:
+            code_gen = get_code_generator(language, project, standard, printer)
 
     if isinstance(name_expr[0], str):
         # single tuple is given, turn it into a singleton list with a tuple.
