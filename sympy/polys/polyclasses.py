@@ -568,6 +568,19 @@ class SMP(CantSympify, Generic[Er]):
         raise DomainError(
             "sparse polynomial GCD is currently supported only over ZZ and QQ")
 
+    def invert(f, g: SMP[Er]) -> SMP[Er]:
+        """Invert ``f`` modulo ``g``, if possible."""
+        F, G = f.unify_SMP(g)
+
+        if F.lev:
+            raise ValueError('univariate polynomial expected')
+
+        Fd = DMP.from_dict(F.to_dict(), F.lev, F.dom)
+        Gd = DMP.from_dict(G.to_dict(), G.lev, G.dom)
+        h = Fd.invert(Gd)
+
+        return SMP.from_dict(h.to_dict(), h.lev, h.dom)
+
     def gcd(f, g: SMP[Er]) -> SMP[Er]:
         return f.cofactors(g)[0]
 
@@ -767,6 +780,37 @@ class SMP(CantSympify, Generic[Er]):
     def compose(f, g: SMP[Er]) -> SMP[Er]:
         F, G = f.unify_SMP(g)
         rep = smm.compose(F._rep, {0: G._rep}, F.dom)
+        return F.new(rep, F.dom, F.lev)
+
+    def transform(f, p: SMP[Er], q: SMP[Er]) -> SMP[Er]:
+        """Evaluate functional transformation ``q**n * f(p/q)``."""
+        if f.lev:
+            raise ValueError('univariate polynomial expected')
+
+        P, Q = p.unify_SMP(q)
+        F, P = f.unify_SMP(P)
+        F, Q = F.unify_SMP(Q)
+
+        if not F._rep:
+            return F
+
+        n = F.degree()
+        one: dict[smm.smonom, Er] = {(): F.dom.one}
+        p_powers: list[dict[smm.smonom, Er]] = [one]
+        q_powers: list[dict[smm.smonom, Er]] = [one]
+
+        for _ in range(n):
+            p_powers.append(smm.mul(p_powers[-1], P._rep, F.dom))
+            q_powers.append(smm.mul(q_powers[-1], Q._rep, F.dom))
+
+        rep: dict[smm.smonom, Er] = {}
+
+        for mon, coeff in F._rep.items():
+            i = smm.degree(mon, 0)
+            term = smm.mul(p_powers[i], q_powers[n - i], F.dom)
+            term = smm.mul_ground(term, coeff)
+            rep = smm.add(rep, term, F.dom)
+
         return F.new(rep, F.dom, F.lev)
 
     def shift(f, a: Er) -> SMP[Er]:

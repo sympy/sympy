@@ -46,6 +46,7 @@ from sympy.polys.polyerrors import (
     PolynomialError,
     CoercionFailed,
     DomainError,
+    NotInvertible,
     OptionError,
     FlagError)
 
@@ -2077,6 +2078,13 @@ def test_gcdex():
     assert F.gcdex(G) == (S, T, H)
     assert F.invert(G) == S
 
+    Fs = Poly.new(SMP.from_poly(F), x)
+    Gs = Poly.new(SMP.from_poly(G), x)
+    result = Fs.invert(Gs)
+
+    assert result == S
+    assert isinstance(result.rep, SMP)
+
     assert half_gcdex(f, g) == (s, h)
     assert gcdex(f, g) == (s, t, h)
     assert invert(f, g) == s
@@ -2108,6 +2116,14 @@ def test_gcdex():
     raises(DomainError, lambda: half_gcdex(x + 1, 2*x + 1, auto=False))
     raises(DomainError, lambda: gcdex(x + 1, 2*x + 1, auto=False))
     raises(DomainError, lambda: invert(x + 1, 2*x + 1, auto=False))
+
+    Fs = Poly.new(SMP.from_poly(Poly(x**2 - 1, x)), x)
+    Gs = Poly.new(SMP.from_poly(Poly(x - 1, x)), x)
+    raises(NotInvertible, lambda: Fs.invert(Gs))
+
+    Fm = Poly.new(SMP.from_poly(Poly(x*y + 1, x, y, domain=QQ)), x, y)
+    Gm = Poly.new(SMP.from_poly(Poly(x + y, x, y, domain=QQ)), x, y)
+    raises(ValueError, lambda: Fm.invert(Gm))
 
 
 def test_revert():
@@ -2593,6 +2609,60 @@ def test_transform():
     raises(ValueError, lambda: Poly(x).transform(Poly(x + 1), Poly(y - 1)))
     raises(ValueError, lambda: Poly(x).transform(Poly(x*y + 1), Poly(x - 1)))
     raises(ValueError, lambda: Poly(x).transform(Poly(x + 1), Poly(x*y - 1)))
+
+    # Sparse representation agrees with DMP for edge cases.
+    cases = [
+        (
+            Poly(x**3 + 2*x - 1, x),
+            Poly(x + 1, x),
+            Poly(x - 1, x),
+        ),
+        (
+            Poly(0, x),
+            Poly(x + 1, x),
+            Poly(x - 1, x),
+        ),
+        (
+            Poly(7, x),
+            Poly(x + 1, x),
+            Poly(x - 1, x),
+        ),
+        (
+            Poly(x**3 + 2*x + 1, x),
+            Poly(x + 2, x),
+            Poly(1, x),
+        ),
+        (
+            Poly(x**2 + x + 1, x),
+            Poly(2, x),
+            Poly(x + 1, x),
+        ),
+        (
+            Poly(x**2 + x + 1, x),
+            Poly(x + 1, x),
+            Poly(0, x),
+        ),
+        (
+            Poly(x**2 - 1, x),
+            Poly(x + 1, x),
+            Poly(x + 1, x),
+        ),
+        (
+            Poly(x**2 + 2*x + 1, x, domain=ZZ),
+            Poly(x/2 + 1, x, domain=QQ),
+            Poly(x - 1, x, domain=ZZ),
+        ),
+    ]
+
+    for f, p1, q1 in cases:
+        F = Poly.new(SMP.from_poly(f), *f.gens)
+        P = Poly.new(SMP.from_poly(p1), *p1.gens)
+        Q = Poly.new(SMP.from_poly(q1), *q1.gens)
+
+        result = F.transform(P, Q)
+
+        assert result == f.transform(p1, q1)
+        assert isinstance(result.rep, SMP)
 
 
 def test_sturm():
