@@ -860,9 +860,10 @@ def _solve_inequality(ie, s, linear=False):
     >>> f(x*p <= 1, x)
     x <= 1/p
 
-    When the divisor is not a constant the target is not isolated and
-    an additive group of terms that may be infinite is kept intact so
-    that the rearrangement does not introduce an oo - oo:
+    In the following, we cannot divide by ``a`` because the sign is not
+    known. Nor can we separate ``z`` from ``y`` because the pair must
+    stay together to enforce that they must be of the same sign if
+    their values are infinite else a difference of infinities is introduced.
 
     >>> a, b, c = symbols('a b c', real=True)
     >>> f(a*(-y - 2*z + 1) < b - 2*c - x, y)
