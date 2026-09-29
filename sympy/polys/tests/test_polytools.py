@@ -2068,6 +2068,22 @@ def test_gcdex_steps():
     assert gcdex(a, b) == (s, t, r)
 
 
+def test_Poly_sparse_gcd_lcm():
+    f = Poly(x**3 - x, x)
+    g = Poly(x**2 - 1, x)
+
+    F = Poly.new(SMP.from_poly(f), x)
+    G = Poly.new(SMP.from_poly(g), x)
+
+    h = F.gcd(G)
+    m = F.lcm(G)
+
+    assert h == f.gcd(g)
+    assert m == f.lcm(g)
+    assert isinstance(h.rep, SMP)
+    assert isinstance(m.rep, SMP)
+
+
 def test_gcdex():
     f, g = 2*x, x**2 - 16
     s, t, h = x/32, Rational(-1, 16), 1
