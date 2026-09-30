@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Add, Mul, S
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms

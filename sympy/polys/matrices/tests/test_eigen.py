@@ -1,6 +1,7 @@
 """
 Tests for the sympy.polys.matrices.eigen module
 """
+from __future__ import annotations
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt

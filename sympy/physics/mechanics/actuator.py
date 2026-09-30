@@ -1,4 +1,5 @@
 """Implementations of actuators for linked force and torque application."""
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
@@ -651,7 +652,7 @@ class TorqueActuator(ActuatorBase):
 
     @classmethod
     def at_pin_joint(cls, torque, pin_joint):
-        """Alternate construtor to instantiate from a ``PinJoint`` instance.
+        """Alternate constructor to instantiate from a ``PinJoint`` instance.
 
         Examples
         ========

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.polys.rings import ring
 from sympy.polys.fields import field
 from sympy.polys.domains import ZZ, QQ

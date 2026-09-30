@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy import Integer, Rational, S, sqrt, Matrix, symbols
@@ -390,6 +391,27 @@ def test_DomainMatrix_transpose():
     assert A.transpose() == AT
 
 
+def test_DomainMatrix_conjugate():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.conjugate() == A
+
+    A = DomainMatrix([[QQ_I(2, 3)/4, QQ_I(-3, 1)]], (1, 2), QQ_I)
+    B = DomainMatrix([[QQ_I(2, -3)/4, QQ_I(-3, -1)]], (1, 2), QQ_I)
+    assert A.conjugate() == B
+    assert B.conjugate() == A
+
+
+def test_DomainMatrix_adjoint():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    AT = DomainMatrix([[ZZ(1), ZZ(3)], [ZZ(2), ZZ(4)]], (2, 2), ZZ)
+    assert A.adjoint() == AT
+
+    A = DomainMatrix([[QQ_I(2, 3)/4, QQ_I(-3, 1)]], (1, 2), QQ_I)
+    B = DomainMatrix([[QQ_I(2, -3)/4], [QQ_I(-3, -1)]], (2, 1), QQ_I)
+    assert A.adjoint() == B
+    assert B.adjoint() == A
+
+
 def test_DomainMatrix_is_zero_matrix():
     A = DomainMatrix([[ZZ(1)]], (1, 1), ZZ)
     B = DomainMatrix([[ZZ(0)]], (1, 1), ZZ)
@@ -477,6 +499,8 @@ def test_DomainMatrix_add():
 
 
 def test_DomainMatrix_sub():
+    from sympy import Abs, EX, I
+
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     B = DomainMatrix([[ZZ(0), ZZ(0)], [ZZ(0), ZZ(0)]], (2, 2), ZZ)
     assert A - A == A.sub(A) == B
@@ -511,6 +535,22 @@ def test_DomainMatrix_sub():
     assert Asd == -Ads
     assert Asd.rep == -Ads.rep
 
+    # https://github.com/sympy/sympy/issues/28097
+    X = DomainMatrix({0: {0: EX(-3), 1: EX(1), 2: EX(2)}, 1: {0: EX(1), 1: EX(-1)},
+                      2: {0: EX(1), 2: EX(-2)}}, (3, 3), EX)
+    Y = DomainMatrix({0: {0: EX(-2 - (27 + 3*sqrt(111)*I)**(1/3)/3 - 4/(27 + 3*sqrt(111)*I)**(1/3))},
+                      1: {1: EX(-2 - (27 + 3*sqrt(111)*I)**(1/3)/3 - 4/(27 + 3*sqrt(111)*I)**(1/3))},
+                      2: {2: EX(-2 - (27 + 3*sqrt(111)*I)**(1/3)/3 - 4/(27 + 3*sqrt(111)*I)**(1/3))}}, (3, 3), EX)
+    P = (9 + sqrt(111)*I)**0.333333333333333
+    Q = 2.77344509740254 / P
+    R = 0.480749856769136 * P
+    expected = DomainMatrix({
+        0: {0: EX(-1.0 + Q + R), 1: EX(1), 2: EX(2)},
+        1: {0: EX(1), 1: EX(1.0 + Q + R)},
+        2: {0: EX(1), 2: EX(Q + R)},
+    }, (3, 3), EX)
+    diff = X.sub(Y).to_Matrix() - expected.to_Matrix()
+    assert all(Abs(e.evalf()) < 1e-12 for e in diff)
 
 def test_DomainMatrix_neg():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
@@ -789,6 +829,12 @@ def test_DomainMatrix_inv():
 
     Aninv = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(6)]], (2, 2), QQ)
     raises(DMNonInvertibleMatrixError, lambda: Aninv.inv())
+
+    Z3 = FF(3)
+    assert DM([[1, 2], [3, 4]], Z3).inv() == DM([[1, 1], [0, 1]], Z3)
+
+    Z6 = FF(6)
+    raises(DMNotAField, lambda: DM([[1, 2], [3, 4]], Z6).inv())
 
 
 def test_DomainMatrix_det():
@@ -1150,6 +1196,75 @@ def test_DomainMatrix_charpoly_factor_list():
     ]
 
 
+def test_DomainMatrix_ground_eigenvals():
+    A = DomainMatrix([], (0, 0), ZZ)
+    assert A.ground_eigenvals() == {}
+    assert A.to_sparse().ground_eigenvals() == {}
+
+    A = DomainMatrix.zeros((3, 3), QQ)
+    assert A.ground_eigenvals() == {QQ(0): 3}
+    assert A.to_sparse().ground_eigenvals() == {QQ(0): 3}
+
+    A = DM([[0, 1], [1, 0]], ZZ)
+    assert A.ground_eigenvals() == {ZZ(1): 1, ZZ(-1): 1}
+    assert A.to_sparse().ground_eigenvals() == {ZZ(1): 1, ZZ(-1): 1}
+
+    A = DM([[0, 1], [-1, 0]], QQ)
+    assert A.ground_eigenvals() == {}
+    assert A.to_sparse().ground_eigenvals() == {}
+
+    A = DM([[0, 1], [-1, 0]], QQ_I)
+    assert A.ground_eigenvals() == {QQ_I(0, 1): 1, QQ_I(0, -1): 1}
+
+    A = DM([[4, 1, 0, 0],
+            [-3, QQ(1, 2), 0, 0],
+            [0, 0, 2, QQ(3, 2)],
+            [0, 0, 0, 2]], QQ)
+    assert A.ground_eigenvals() == {QQ(2): 3, QQ(5, 2): 1}
+
+    A = DM([[1, 2]], QQ)
+    raises(DMNonSquareMatrixError, lambda: A.ground_eigenvals())
+
+
+def test_DomainMatrix_ground_eigenvects():
+    A = DomainMatrix([], (0, 0), ZZ)
+    assert A.ground_eigenvects() == []
+    assert A.to_sparse().ground_eigenvects() == []
+
+    A = DomainMatrix.zeros((3, 3), QQ)
+    assert A.ground_eigenvects() == [(QQ(0), 3, DomainMatrix.eye(3, QQ))]
+
+    A = DM([[0, 1], [1, 0]], ZZ)
+    assert A.ground_eigenvects() == [
+        (1, 1, DM([[1], [1]], ZZ)),
+        (-1, 1, DM([[-1], [1]], ZZ)),
+    ]
+    assert A.to_sparse().ground_eigenvects() == [
+        (1, 1, DM([[1], [1]], ZZ).to_sparse()),
+        (-1, 1, DM([[-1], [1]], ZZ).to_sparse()),
+    ]
+
+    A = DM([[0, 1], [-1, 0]], QQ)
+    assert A.ground_eigenvects() == []
+    assert A.to_sparse().ground_eigenvects() == []
+
+    A = DM([[4, 1, 0, 0],
+            [-3, QQ(1, 2), 0, 0],
+            [0, 0, 2, QQ(3, 2)],
+            [0, 0, 0, 2]], QQ)
+    assert A.ground_eigenvects() == [
+        (QQ(5, 2), 1, DM([[-QQ(2, 3)], [1], [0], [0]], QQ)),
+        (QQ(2), 3, DM([[-QQ(1, 2), 0], [1, 0], [0, 1], [0, 0]], QQ)),
+    ]
+    assert A.to_sparse().ground_eigenvects() == [
+        (QQ(5, 2), 1, DM([[-QQ(2, 3)], [1], [0], [0]], QQ).to_sparse()),
+        (QQ(2), 3, DM([[-QQ(1, 2), 0], [1, 0], [0, 1], [0, 0]], QQ).to_sparse()),
+    ]
+
+    A = DM([[1, 2]], QQ)
+    raises(DMNonSquareMatrixError, lambda: A.ground_eigenvects())
+
+
 def test_DomainMatrix_eye():
     A = DomainMatrix.eye(3, QQ)
     assert A.rep == SDM.eye((3, 3), QQ)
@@ -1360,3 +1475,18 @@ def test_DomainMatrix_pickling():
     assert pickle.loads(pickle.dumps(dM)) == dM
     dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     assert pickle.loads(pickle.dumps(dM)) == dM
+
+
+def test_DomainMatrix_fflu():
+    A = DM([[1, 2], [3, 4]], ZZ)
+    P, L, D, U = A.fflu()
+    assert P.shape == A.shape
+    assert L.shape == A.shape
+    assert D.shape == A.shape
+    assert U.shape == A.shape
+    assert P == DM([[1, 0], [0, 1]], ZZ)
+    assert L == DM([[1, 0], [3, -2]], ZZ)
+    assert D == DM([[1, 0], [0, -2]], ZZ)
+    assert U == DM([[1, 2], [0, -2]], ZZ)
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)

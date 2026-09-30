@@ -28,6 +28,12 @@ basic
 -----
 .. module:: sympy.core.basic
 
+.. py:class:: collections.abc.Mapping
+
+.. py:class:: collections.abc.Iterable
+
+.. py:class:: _SupportsItems
+
 .. autoclass:: Basic
    :members:
 

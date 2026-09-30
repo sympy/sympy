@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 from sympy.sets.sets import Interval
 from sympy.calculus.singularities import is_increasing, is_decreasing
@@ -5,7 +6,7 @@ from sympy.codegen.rewriting import Optimization
 from sympy.core.function import UndefinedFunction
 
 """
-This module collects classes useful for approimate rewriting of expressions.
+This module collects classes useful for approximate rewriting of expressions.
 This can be beneficial when generating numeric code for which performance is
 of greater importance than precision (e.g. for preconditioners used in iterative
 methods).

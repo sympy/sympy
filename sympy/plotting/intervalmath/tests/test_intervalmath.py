@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.plotting.intervalmath import interval
 from sympy.testing.pytest import raises
 

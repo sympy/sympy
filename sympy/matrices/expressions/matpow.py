@@ -1,16 +1,15 @@
+from __future__ import annotations
 from .matexpr import MatrixExpr
 from .special import Identity
 from sympy.core import S
-from sympy.core.expr import ExprBuilder
 from sympy.core.cache import cacheit
-from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
 from sympy.matrices.exceptions import NonSquareMatrixError
 
 
 class MatPow(MatrixExpr):
-    def __new__(cls, base, exp, evaluate=False, **options):
+    def __new__(cls, base, exp, evaluate=False, **options) -> MatrixExpr: # type: ignore
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("MatPow base should be a matrix")
@@ -100,51 +99,19 @@ class MatPow(MatrixExpr):
         return MatPow(base.conjugate(), exp)
 
     def _eval_derivative(self, x):
-        return Pow._eval_derivative(self, x)
-
-    def _eval_derivative_matrix_lines(self, x):
-        from sympy.tensor.array.expressions.array_expressions import ArrayContraction
-        from ...tensor.array.expressions.array_expressions import ArrayTensorProduct
-        from .matmul import MatMul
-        from .inverse import Inverse
-        exp = self.exp
-        if self.base.shape == (1, 1) and not exp.has(x):
-            lr = self.base._eval_derivative_matrix_lines(x)
-            for i in lr:
-                subexpr = ExprBuilder(
-                    ArrayContraction,
-                    [
-                        ExprBuilder(
-                            ArrayTensorProduct,
-                            [
-                                Identity(1),
-                                i._lines[0],
-                                exp*self.base**(exp-1),
-                                i._lines[1],
-                                Identity(1),
-                            ]
-                        ),
-                        (0, 3, 4), (5, 7, 8)
-                    ],
-                    validator=ArrayContraction._validate
-                )
-                i._first_pointer_parent = subexpr.args[0].args
-                i._first_pointer_index = 0
-                i._second_pointer_parent = subexpr.args[0].args
-                i._second_pointer_index = 4
-                i._lines = [subexpr]
-            return lr
-        if (exp > 0) == True:
-            newexpr = MatMul.fromiter([self.base for i in range(exp)])
-        elif (exp == -1) == True:
-            return Inverse(self.base)._eval_derivative_matrix_lines(x)
-        elif (exp < 0) == True:
-            newexpr = MatMul.fromiter([Inverse(self.base) for i in range(-exp)])
-        elif (exp == 0) == True:
-            return self.doit()._eval_derivative_matrix_lines(x)
-        else:
-            raise NotImplementedError("cannot evaluate %s derived by %s" % (self, x))
-        return newexpr._eval_derivative_matrix_lines(x)
+        assert not hasattr(x, "shape")
+        # dbase = self.base.diff(x)
+        dexp = self.exp.diff(x)
+        if dexp != 0:
+            return None
+        if self.exp.is_Integer:
+            if self.exp > 0:
+                from sympy import MatMul
+                return MatMul.fromiter(self.base for _ in range(self.exp))._eval_derivative(x)
+            elif self.exp == 0:
+                from .special import ZeroMatrix
+                return ZeroMatrix(*self.base.shape)
+        return None
 
     def _eval_inverse(self):
         return MatPow(self.base, -self.exp)

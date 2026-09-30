@@ -1,4 +1,7 @@
 """Implementation of :class:`IntegerRing` class. """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sympy.external.gmpy import MPZ, GROUND_TYPES
 
@@ -12,13 +15,17 @@ from sympy.polys.domains.groundtypes import (
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 import math
 
+if TYPE_CHECKING:
+    from sympy.polys.domains.cyclotomicfield import CyclotomicField
+
 @public
-class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
+class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
     r"""The domain ``ZZ`` representing the integers `\mathbb{Z}`.
 
     The :py:class:`IntegerRing` class represents the ring of integers as a
@@ -39,7 +46,6 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     zero = dtype(0)
     one = dtype(1)
     tp = type(one)
-
 
     is_IntegerRing = is_ZZ = True
     is_Numerical = True
@@ -124,6 +130,16 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         QQ<sqrt(2)>
         """
         return self.get_field().algebraic_field(*extension, alias=alias)
+
+    def cyclotomic_field(
+        self,
+        n: int,
+        ss: bool = True,
+        alias: str = "zeta",
+        root_index: int = -1,
+    ) -> CyclotomicField:
+        from sympy.polys.domains.cyclotomicfield import CyclotomicField
+        return CyclotomicField(n, ss=ss, alias=alias, root_index=root_index)
 
     def from_AlgebraicField(K1, a, K0):
         """Convert a :py:class:`~.ANP` object to :ref:`ZZ`.
@@ -223,7 +239,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         if a.is_Integer:
             return K1.from_sympy(a)
 
-    def gcdex(self, a, b):
+    def gcdex(self, a: MPZ, b: MPZ) -> tuple[MPZ, MPZ, MPZ]:
         """Compute extended GCD of ``a`` and ``b``. """
         h, s, t = gcdex(a, b)
         # XXX: This conditional logic should be handled somewhere else.
@@ -271,6 +287,10 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     def factorial(self, a):
         """Compute factorial of ``a``. """
         return factorial(a)
+
+    def conjugate(self, a: MPZ) -> MPZ:
+        """Returns the complex conjugate of ``a``."""
+        return a
 
 
 ZZ = IntegerRing()

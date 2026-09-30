@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.tensor.array.expressions import from_array_to_indexed
 from sympy.utilities.decorator import deprecated
 

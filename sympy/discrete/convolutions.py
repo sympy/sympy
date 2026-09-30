@@ -2,6 +2,7 @@
 Convolution (using **FFT**, **NTT**, **FWHT**), Subset Convolution,
 Covering Product, Intersecting Product
 """
+from __future__ import annotations
 
 from sympy.core import S, sympify, Rational
 from sympy.core.function import expand_mul

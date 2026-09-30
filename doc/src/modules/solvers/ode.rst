@@ -81,6 +81,9 @@ the various ODE solving methods. For this reason, they are documented here.
 .. autoclass:: sympy.solvers.ode.single::SecondLinearBessel
    :members:
 
+.. autoclass:: sympy.solvers.ode.single::SecondLinearBesselTransform
+   :members:
+
 .. autoclass:: sympy.solvers.ode.single::Bernoulli
    :members:
 
@@ -165,7 +168,7 @@ algorithms implemented for the various heuristics.
 Rational Riccati Solver
 -----------------------
 These functions are intended for internal use to solve a first order Riccati
-differential equation with atleast one rational particular solution.
+differential equation with at least one rational particular solution.
 
 .. autofunction:: sympy.solvers.ode.riccati::riccati_normal
 

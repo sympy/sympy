@@ -20,7 +20,7 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  AppliedUndef, UndefinedFunction, nfloat,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.core.numbers import Float, Rational, _illegal
 from sympy.core.intfunc import integer_log, ilcm
 from sympy.core.power import Pow
@@ -31,7 +31,7 @@ from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, BooleanAtom
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
-                             Abs, re, im, arg, sqrt, atan2)
+                             Abs, re, im, arg, sqrt, atan2, Max, Min)
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
@@ -54,9 +54,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debugf
 from sympy.utilities.iterables import (connected_components,
     generate_bell, uniq, iterable, is_sequence, subsets, flatten, sift)
-from sympy.utilities.decorator import conserve_mpmath_dps
-
-from mpmath import findroot
+from sympy.external.mpmath import conserve_mpmath_dps, findroot
 
 from sympy.solvers.polysys import solve_poly_system
 
@@ -247,15 +245,7 @@ def checksol(f, symbol, sol=None, **flags):
     if iterable(f):
         if not f:
             raise ValueError('no functions to check')
-        rv = True
-        for fi in f:
-            check = checksol(fi, sol, **flags)
-            if check:
-                continue
-            if check is False:
-                return False
-            rv = None  # don't return, wait to see if there's a False
-        return rv
+        return fuzzy_and(checksol(fi, sol, **flags) for fi in f)
 
     f = _sympify(f)
 
@@ -365,6 +355,24 @@ def checksol(f, symbol, sol=None, **flags):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
+
+
+def _reject_by_denominator(d, sol, **flags):
+    """Return True if a solution makes a captured denominator invalid.
+
+    Explanation
+    ===========
+
+    A candidate solution must be rejected if it makes any denominator in the
+    expression affirmatively zero or non-finite (e.g. ``log(0)`` evaluates to
+    ``zoo``). ``checksol`` only catches the zero case, so the value of the
+    denominator at ``sol`` is checked for finiteness as well. When a definite
+    conclusion cannot be reached, the candidate is kept.
+    """
+    if checksol(d, sol, **flags):
+        return True
+    val = d.subs(sol)
+    return bool(val.is_number and val.is_finite is False)
 
 
 def solve(f, *symbols, **flags):
@@ -805,7 +813,7 @@ def solve(f, *symbols, **flags):
             Allows ``solve`` to return a solution for a pattern in terms of
             other functions that contain that pattern; this is only
             needed if the pattern is inside of some invertible function
-            like cos, exp, ect.
+            like cos, exp, etc.
         particular=True (default is False)
             Instructs ``solve`` to try to find a particular solution to
             a linear system with as many zeros as possible; this is very
@@ -972,6 +980,12 @@ def solve(f, *symbols, **flags):
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
+            try:
+                f[i] = f[i].as_explicit()
+            except ValueError:
+                raise ValueError(
+                    "solve cannot handle matrices with symbolic shape."
+                )
             bare_f = False
             f.extend(list(f[i]))
             f[i] = S.Zero
@@ -994,17 +1008,19 @@ def solve(f, *symbols, **flags):
             return [], set()
         return []
 
+    repl_funcs = (Abs, Min, Max)
     for i, fi in enumerate(f):
-        # Abs
+        # Abs / Max / Min
+        # Rewrites as piecewise functions prior to solving
         while True:
             was = fi
-            fi = fi.replace(Abs, lambda arg:
-                separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
-                else Abs(arg))
+            fi = fi.replace(lambda ex: type(ex) in repl_funcs,
+                       lambda ex: separatevars(ex).rewrite(Piecewise) if any(
+                           arg.has(*symbols) for arg in ex.args) else ex)
             if was == fi:
                 break
 
-        for e in fi.find(Abs):
+        for e in fi.find(lambda ex: type(ex) in repl_funcs):
             if e.has(*symbols):
                 raise NotImplementedError('solving %s when the argument '
                     'is not real or imaginary.' % e)
@@ -1241,18 +1257,13 @@ def solve(f, *symbols, **flags):
         got_None = []  # solutions for which one or more symbols gave None
         no_False = []  # solutions for which no symbols gave False
         for sol in solution:
-            a_None = False
-            for symb, val in sol.items():
-                test = check_assumptions(val, **symb.assumptions0)
-                if test:
-                    continue
-                if test is False:
-                    break
-                a_None = True
-            else:
-                no_False.append(sol)
-                if a_None:
-                    got_None.append(sol)
+            v = fuzzy_and(check_assumptions(val, **symb.assumptions0)
+                          for symb, val in sol.items())
+            if v is False:
+                continue
+            no_False.append(sol)
+            if v is None:
+                got_None.append(sol)
 
         solution = no_False
         if warn and got_None:
@@ -1402,10 +1413,10 @@ def _solve(f, *symbols, **flags):
         if check:
             # all solutions have been checked but now we must
             # check that the solutions do not set denominators
-            # in any factor to zero
+            # in any factor to zero or to a non-finite value
             dens = flags.get('_denominators', _simple_dens(f, symbols))
             result = [s for s in result if
-                not any(checksol(den, s, **flags) for den in
+                not any(_reject_by_denominator(den, s, **flags) for den in
                         dens)]
         # set flags for quick exit at end; solutions for each
         # factor were already checked and simplified
@@ -1739,11 +1750,11 @@ def _solve(f, *symbols, **flags):
         flags['simplify'] = False
 
     if checkdens:
-        # reject any result that makes any denom. affirmatively 0;
-        # if in doubt, keep it
+        # reject any result that makes any denom. affirmatively 0 or
+        # non-finite; if in doubt, keep it
         dens = _simple_dens(f, symbols)
         result = [r for r in result if
-                  not any(checksol(d, r, **flags)
+                  not any(_reject_by_denominator(d, r, **flags)
                           for d in dens)]
     if check:
         # keep only results if the check is not False
@@ -1804,7 +1815,7 @@ def _solve_system(exprs, symbols, **flags):
                 if not isinstance(subsol, list):
                     subsol = [subsol]
                 subsols.append(subsol)
-            # Full solution is cartesion product of subsystems
+            # Full solution is cartesian product of subsystems
             sols = []
             for soldicts in product(*subsols):
                 sols.append(dict(item for sd in soldicts
@@ -2142,6 +2153,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     solution.)
 
     """
+    lhs, rhs = _sympify(lhs), _sympify(rhs)
     if isinstance(lhs, Eq):
         if rhs:
             raise ValueError(filldedent('''
@@ -3027,6 +3039,8 @@ def nsolve(*args, dict=False, **kwargs):
             "solver".'''))
 
     if 'prec' in kwargs:
+        # XXX: This should use local_workprec instead of changing the global
+        # precision.
         import mpmath
         mpmath.mp.dps = kwargs.pop('prec')
 

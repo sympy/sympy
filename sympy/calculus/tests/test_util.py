@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import Lambda
 from sympy.core.numbers import (E, I, Rational, oo, pi)
 from sympy.core.relational import Eq
@@ -24,6 +25,7 @@ from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow, slow
 from sympy.abc import x, y
+from sympy.calculus.util import AccumBounds
 
 a = Symbol('a', real=True)
 
@@ -54,12 +56,14 @@ def test_function_range():
         ) == Union(Interval(-sin(3), 1), FiniteSet(sin(4)))
     assert function_range(cos(x), x, Interval(-oo, -4)
         ) == Interval(-1, 1)
+    assert function_range(sin(exp(x)), x, S.Reals
+        ) == Interval(-1, 1)
     assert function_range(cos(x), x, S.EmptySet) == S.EmptySet
     assert function_range(x/sqrt(x**2+1), x, S.Reals) == Interval.open(-1,1)
+    assert function_range(sin(x) + x, x, S.Reals) == S.Reals  # issue 13273
+    assert function_range(x + 1/(x**2 + 1), x, S.Reals) == S.Reals
     raises(NotImplementedError, lambda : function_range(
         exp(x)*(sin(x) - cos(x))/2 - x, x, S.Reals))
-    raises(NotImplementedError, lambda : function_range(
-        sin(x) + x, x, S.Reals)) # issue 13273
     raises(NotImplementedError, lambda : function_range(
         log(x), x, S.Integers))
     raises(NotImplementedError, lambda : function_range(
@@ -133,7 +137,21 @@ def test_continuous_domain():
     raises(NotImplementedError, lambda : continuous_domain(
         gamma(x), x, Interval(-5,0)))
     assert continuous_domain(x + gamma(pi), x, S.Reals) == S.Reals
+    assert continuous_domain(0**x, x, S.Reals) == Interval(0, oo)
+    assert continuous_domain(0**(x+1), x, S.Reals) == Interval(-1, oo)
+    assert continuous_domain(0**(x+1)/(x-2), x, S.Reals) == Union(
+        Interval.Ropen(-1, 2), Interval.open(2, oo))
 
+def test_accumbounds_union():
+    a = AccumBounds(1, 5)
+    b = AccumBounds(3, 8)
+    assert a.union(b) == AccumBounds(1, 8)
+    a = AccumBounds(1, 3)
+    b = AccumBounds(5, 8)
+    assert a.union(b) == AccumBounds(1, 8)
+    a = AccumBounds(1, 5)
+    b = AccumBounds(5, 8)
+    assert a.union(b) == AccumBounds(1, 8)
 
 @XFAIL
 def test_continuous_domain_acot():
@@ -182,6 +200,7 @@ def test_not_empty_in():
            lambda: not_empty_in(FiniteSet(x).intersect(S.Reals), x, a))
 
 
+@slow
 @_both_exp_pow
 def test_periodicity():
     assert periodicity(sin(2*x), x) == pi
@@ -390,3 +409,7 @@ def test_issue_18747():
 
 def test_issue_25942():
     assert (acos(x) > pi/3).as_set() == Interval.Ropen(-1, S(1)/2)
+
+
+def test_function_range_acot():
+    assert function_range(acot(x), x, S.Reals) == Union(Interval.Lopen(0, pi/2), Interval.open(-pi/2, 0))

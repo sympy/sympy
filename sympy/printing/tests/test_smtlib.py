@@ -1,3 +1,4 @@
+from __future__ import annotations
 import contextlib
 import itertools
 import re
@@ -19,14 +20,14 @@ x, y, z = symbols('x,y,z')
 
 
 class _W(Enum):
-    DEFAULTING_TO_FLOAT = re.compile("Could not infer type of `.+`. Defaulting to float.", re.I)
-    WILL_NOT_DECLARE = re.compile("Non-Symbol/Function `.+` will not be declared.", re.I)
-    WILL_NOT_ASSERT = re.compile("Non-Boolean expression `.+` will not be asserted. Converting to SMTLib verbatim.", re.I)
+    DEFAULTING_TO_FLOAT = re.compile("Could not infer type of `.+`. Defaulting to float.", re.IGNORECASE)
+    WILL_NOT_DECLARE = re.compile("Non-Symbol/Function `.+` will not be declared.", re.IGNORECASE)
+    WILL_NOT_ASSERT = re.compile("Non-Boolean expression `.+` will not be asserted. Converting to SMTLib verbatim.", re.IGNORECASE)
 
 
 @contextlib.contextmanager
 def _check_warns(expected: typing.Iterable[_W]):
-    warns: typing.List[str] = []
+    warns: list[str] = []
     log_warn = warns.append
     yield log_warn
 
@@ -82,6 +83,12 @@ def test_AppliedBinaryRelation():
         assert smtlib_code(Q.le(x, y), auto_declare=False, log_warn=w) == "(assert (<= x y))"
         assert smtlib_code(Q.gt(x, y), auto_declare=False, log_warn=w) == "(assert (> x y))"
         assert smtlib_code(Q.ge(x, y), auto_declare=False, log_warn=w) == "(assert (>= x y))"
+
+    with _check_warns([]) as w:
+        assert smtlib_code(Q.ne(1, 1), auto_declare=False, log_warn=w) == \
+            "(assert (not (= 1 1)))"
+        assert smtlib_code(Q.ne(1, 2), auto_declare=False, log_warn=w) == \
+            "(assert (not (= 1 2)))"
 
     raises(ValueError, lambda: smtlib_code(Q.complex(x), log_warn=w))
 

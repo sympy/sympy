@@ -1,6 +1,7 @@
 """
 Number theory module (primes, etc)
 """
+from __future__ import annotations
 
 from .generate import nextprime, prevprime, prime, primepi, primerange, \
     randprime, Sieve, sieve, primorial, cycle_length, composite, compositepi
@@ -26,7 +27,7 @@ from .continued_fraction import continued_fraction_periodic, \
 from .digits import count_digits, digits, is_palindromic
 from .egyptian_fraction import egyptian_fraction
 from .ecm import ecm
-from .qs import qs
+from .qs import qs, qs_factor
 __all__ = [
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
@@ -63,5 +64,5 @@ __all__ = [
 
     'ecm',
 
-    'qs',
+    'qs', 'qs_factor',
 ]

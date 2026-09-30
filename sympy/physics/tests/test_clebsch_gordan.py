@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (I, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -8,7 +9,7 @@ from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import Matrix
 from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
         real_gaunt, racah, dot_rot_grad_Ynm, wigner_3j, wigner_d_small, wigner_d)
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises, skip, slow
 
 # for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
 
@@ -18,9 +19,33 @@ def test_clebsch_gordan_docs():
     assert clebsch_gordan(Rational(3, 2), S.Half, 1, Rational(-1, 2), S.Half, 0) == -sqrt(2)/2
 
 
+def test_trival_zero():
+    x = 0.5
+    assert clebsch_gordan(x, x, 1, x, x, -1) == 0
+    assert clebsch_gordan(x, x, x, x, x, x) == 0
+    assert clebsch_gordan(1, 2, 10, 0, 0, 0) == 0
+    assert clebsch_gordan(-1, 2, 3, 0, 0, 0) == 0
+    assert clebsch_gordan(x, x, 1, 1.5, x, 2) == 0
+    assert clebsch_gordan(1, 2, 3, x, x, 1) == 0
+    assert clebsch_gordan(2, 3, 4, 0, 0, 0) == 0
+
+    assert wigner_6j(x, x, x, x, x, x) == 0
+    assert wigner_6j(x, x, 1, x, x, x) == 0
+    assert wigner_6j(x, x, 1, -1, x, 1) == 0
+    assert wigner_6j(1, 1, 2, x, x, x) == 0
+
+    assert wigner_9j(x, x, x, x, x, x, x, x, x) == 0
+    assert wigner_9j(x, x, 1, x, x, x, x, x, x) == 0
+    assert wigner_9j(x, x, 1, x, x, 1, x, x, x) == 0
+    assert wigner_9j(x, x, 1, x, x, 1, x, x, 1) == 0
+    assert wigner_9j(x, x, 1, x, x, 1, 1, x, x) == 0
+    assert wigner_9j(x, x, 1, x, x, 0, 1, 1, 2) == 0
+
+
 def test_clebsch_gordan():
     # Argument order: (j_1, j_2, j, m_1, m_2, m)
-
+    def tn(a, b):
+        return (a - b).n(64) < S('1e-64')
     h = S.One
     k = S.Half
     l = Rational(3, 2)
@@ -53,6 +78,7 @@ def test_clebsch_gordan():
     assert clebsch_gordan(p, h, n, p, 1, n) == 1
     assert clebsch_gordan(p, h, p, p, 0, p) == sqrt(5)/sqrt(7)
     assert clebsch_gordan(p, h, l, k, 1, l) == 1/sqrt(15)
+    assert tn(clebsch_gordan(5, 5, 5, -1, 3, 2, prec=64), sqrt(195)/39)
 
 
 def test_clebsch_gordan_numpy():
@@ -77,6 +103,7 @@ def test_wigner():
     assert wigner_9j(3, 3, 2, 3, 3, 2, 3, 3, 2) == 3221*sqrt(
         70)/(246960*sqrt(105)) - 365/(3528*sqrt(70)*sqrt(105))
     assert wigner_6j(5, 5, 5, 5, 5, 5) == Rational(1, 52)
+    assert wigner_6j(2, 2, 2, 1.5, 1.5, 1.5) == 0
     assert tn(wigner_6j(8, 8, 8, 8, 8, 8, prec=64), Rational(-12219, 965770))
     assert wigner_6j(1, 1, 1, 1.0, np.float64(1.0), 1) == Rational(1, 6)
     assert wigner_6j(3.0, np.float32(3), 3.0, 3, 3, 3) == Rational(-1, 14)
@@ -105,6 +132,7 @@ def test_wigner():
             == -4*sqrt(70)/11025)
 
 
+@slow
 def test_gaunt():
     def tn(a, b):
         return (a - b).n(64) < S('1e-64')
@@ -174,6 +202,7 @@ def test_realgaunt():
 
 
 def test_racah():
+    assert racah(2,2,2,2,1,3) == 0
     assert racah(3,3,3,3,3,3) == Rational(-1,14)
     assert racah(2,2,2,2,2,2) == Rational(-3,70)
     assert racah(7,8,7,1,7,7, prec=4).is_Float

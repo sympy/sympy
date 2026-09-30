@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
 from sympy.core.function import (Lambda, diff)
@@ -260,6 +261,12 @@ def test_sin_AccumBounds():
 def test_sin_fdiff():
     assert sin(x).fdiff() == cos(x)
     raises(ArgumentIndexError, lambda: sin(x).fdiff(2))
+    assert sin(x).diff((x, 0)) == sin(x)
+    assert sin(x).diff((x, 1)) == cos(x)
+    assert sin(x).diff((x, 2)) == -sin(x)
+    assert sin(x).diff((x, 3)) == -cos(x)
+    t = Symbol('t', integer=True, nonnegative=True)
+    assert sin(x).diff((x, t)) == sin(x + t*pi/2)
 
 
 def test_trig_symmetry():
@@ -478,6 +485,12 @@ def test_cos_AccumBounds():
 def test_cos_fdiff():
     assert cos(x).fdiff() == -sin(x)
     raises(ArgumentIndexError, lambda: cos(x).fdiff(2))
+    assert cos(x).diff((x, 0)) == cos(x)
+    assert cos(x).diff((x, 1)) == -sin(x)
+    assert cos(x).diff((x, 2)) == -cos(x)
+    assert cos(x).diff((x, 3)) == sin(x)
+    t = Symbol('t', integer=True, nonnegative=True)
+    assert cos(x).diff((x, t)) == cos(x + t*pi/2)
 
 
 def test_tan():
@@ -879,6 +892,7 @@ def test_sinc():
     # assert sinc(x).diff(x).subs(x, 0) is S.Zero
 
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
+    assert sinc(x**2).series(x, 0, 6) == 1 - x**4/6 + O(x**6)
 
     assert sinc(x).rewrite(jn) == jn(0, x)
     assert sinc(x).rewrite(sin) == Piecewise((sin(x)/x, Ne(x, 0)), (1, True))
@@ -1080,7 +1094,7 @@ def test_atan():
     assert atan.nargs == FiniteSet(1)
     assert atan(oo) == pi/2
     assert atan(-oo) == -pi/2
-    assert atan(zoo) == AccumBounds(-pi/2, pi/2)
+    assert unchanged(atan, zoo)
 
     assert atan(0) == 0
     assert atan(1) == pi/4
@@ -1277,6 +1291,15 @@ def test_acot():
     assert acot(cot(Rational(1, 4))) == Rational(1, 4)
     assert acot(tan(Rational(-1, 4))) == Rational(1, 4) - pi/2
 
+    # acot(-z) -> -acot(z) is only valid away from z = 0, where acot(0) =
+    # pi/2 but -acot(0) = -pi/2.  So the minus sign is only extracted when
+    # the argument is known to be nonzero.
+    assert acot(-nz) == -acot(nz)
+    assert acot(-n) == -acot(n)
+    assert unchanged(acot, -x)
+    assert acot(-x).subs(x, 0) == acot(0)
+    assert acot(-x).subs(x, 1) == acot(-1) == -pi/4
+
 
 def test_acot_rewrite():
     assert acot(x).rewrite(log) == I*(log(1 - I/x)-log(1 + I/x))/2
@@ -1347,7 +1370,10 @@ def test_evenodd_rewrite():
     a = cos(2)  # negative
     b = sin(1)  # positive
     even = [cos]
-    odd = [sin, tan, cot, asin, atan, acot]
+    # acot is not listed here: it is odd only away from its branch point at
+    # 0, so it is not odd on a symbol that may vanish there.  It is checked
+    # separately below.
+    odd = [sin, tan, cot, asin, atan]
     with_minus = [-1, -2**1024 * E, -pi/105, -x*y, -x - y]
     for func in even:
         for expr in with_minus:
@@ -1361,6 +1387,13 @@ def test_evenodd_rewrite():
         assert _check_no_rewrite(func, a*b)
         assert func(
             x - y) == -func(y - x)  # it doesn't matter which form is canonical
+    # acot extracts the minus sign only for arguments that are known to be
+    # nonzero, so the three numeric cases of with_minus still rewrite.
+    for expr in with_minus[:3]:
+        assert _check_odd_rewrite(acot, expr)
+    assert _check_no_rewrite(acot, a*b)
+    assert acot(x - y) == acot(x - y)  # not odd at a possible branch point
+    assert acot(-p) == -acot(p)  # ... but odd away from the branch point
 
 
 def test_as_leading_term_issue_5272():
@@ -1547,14 +1580,6 @@ def test_real_imag():
         assert cot(a).as_real_imag(deep=deep) == (cot(a), 0)
 
 
-@XFAIL
-def test_sin_cos_with_infinity():
-    # Test for issue 5196
-    # https://github.com/sympy/sympy/issues/5196
-    assert sin(oo) is S.NaN
-    assert cos(oo) is S.NaN
-
-
 @slow
 def test_sincos_rewrite_sqrt():
     # equivalent to testing rewrite(pow)
@@ -1693,7 +1718,7 @@ def test_sec():
     assert sec(2*x).expand(trig=True) == 1/(2*cos(x)**2 - 1)
 
     assert sec(x).is_extended_real == True
-    assert sec(z).is_real == None
+    assert sec(z).is_real is None
 
     assert sec(a).is_algebraic is None
     assert sec(na).is_algebraic is False
@@ -1701,8 +1726,18 @@ def test_sec():
     assert sec(x).as_leading_term() == sec(x)
 
     assert sec(0, evaluate=False).is_finite == True
-    assert sec(x).is_finite == None
+    assert sec(x).is_finite is None
     assert sec(pi/2, evaluate=False).is_finite == False
+
+    assert sec(z).is_zero is False
+    assert sec(z).is_positive is None
+    assert sec(z).is_negative is None
+    assert sec(pi/4, evaluate=False).is_positive is True
+    assert sec(pi/4, evaluate=False).is_nonnegative is True
+    assert sec(pi/4, evaluate=False).is_nonpositive is False
+    assert sec(pi*Rational(3, 4), evaluate=False).is_negative is True
+    assert sec(pi*Rational(3, 4), evaluate=False).is_nonpositive is True
+    assert sec(pi*Rational(3, 4), evaluate=False).is_extended_negative is True
 
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
 
@@ -1785,7 +1820,7 @@ def test_csc():
     assert csc(2*x).expand(trig=True) == 1/(2*sin(x)*cos(x))
 
     assert csc(x).is_extended_real == True
-    assert csc(z).is_real == None
+    assert csc(z).is_real is None
 
     assert csc(a).is_algebraic is None
     assert csc(na).is_algebraic is False
@@ -1793,8 +1828,16 @@ def test_csc():
     assert csc(x).as_leading_term() == csc(x)
 
     assert csc(0, evaluate=False).is_finite == False
-    assert csc(x).is_finite == None
+    assert csc(x).is_finite is None
     assert csc(pi/2, evaluate=False).is_finite == True
+
+    assert csc(z).is_zero is False
+    assert csc(z).is_positive is None
+    assert csc(z).is_negative is None
+    assert csc(pi/4, evaluate=False).is_positive is True
+    assert csc(pi/4, evaluate=False).is_extended_positive is True
+    assert csc(-pi/4, evaluate=False).is_negative is True
+    assert csc(-pi/4, evaluate=False).is_extended_negative is True
 
     assert series(csc(x), x, x0=pi/2, n=6) == \
         1 + (x - pi/2)**2/2 + 5*(x - pi/2)**4/24 + O((x - pi/2)**6, (x, pi/2))
@@ -1827,6 +1870,7 @@ def test_asec():
     assert asec(sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(3, 10)
     assert asec(-sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(7, 10)
     assert asec(sqrt(2) - sqrt(6)) == pi*Rational(11, 12)
+    assert asec(-csc(S.One)) == pi/2 + 1
 
     for d in [3, 4, 6]:
         for num in range(d):

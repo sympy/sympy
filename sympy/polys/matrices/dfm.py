@@ -4,6 +4,7 @@ sympy.polys.matrices.dfm
 Provides the :class:`DFM` class if ``GROUND_TYPES=flint'``. Otherwise, ``DFM``
 is a placeholder class that raises NotImplementedError when instantiated.
 """
+from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 

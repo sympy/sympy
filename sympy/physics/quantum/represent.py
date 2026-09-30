@@ -5,6 +5,7 @@ TODO:
 * Get represent working with continuous hilbert spaces.
 * Document default basis functionality.
 """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -18,11 +19,14 @@ from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
-from sympy.physics.quantum.matrixutils import flatten_scalar
+from sympy.physics.quantum.matrixutils import (
+    flatten_scalar, matrix_eye, scipy_sparse_matrix,
+)
 from sympy.physics.quantum.state import KetBase, BraBase, StateBase
 from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
+
 
 __all__ = [
     'represent',
@@ -43,13 +47,28 @@ def _sympy_to_scalar(e):
     if isinstance(e, Expr):
         if e.is_Integer:
             return int(e)
-        elif e.is_Float:
-            return float(e)
-        elif e.is_Rational:
+        elif e.is_Float or e.is_Rational:
             return float(e)
         elif e.is_Number or e.is_NumberSymbol or e == I:
             return complex(e)
     raise TypeError('Expected number, got: %r' % e)
+
+
+try:
+    from scipy.sparse.linalg import matrix_power as _scipy_sparse_matrix_power
+except ImportError:
+    # Compatibility fallback for SciPy < 1.12, which does not provide
+    # scipy.sparse.linalg.matrix_power.
+    def _scipy_sparse_matrix_power(base, exp):
+        """Raise a SciPy sparse array to a nonnegative integer power."""
+        result = matrix_eye(base.shape[0], format='scipy.sparse')
+        while exp:
+            if exp % 2:
+                result = result @ base
+            exp //= 2
+            if exp:
+                base = base @ base
+        return result
 
 
 def represent(expr, **options):
@@ -133,9 +152,6 @@ def represent(expr, **options):
     >>> y = XBra('y')
     >>> represent(X*x)
     x*DiracDelta(x - x_2)
-    >>> represent(X*x*y)
-    x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
-
     """
 
     format = options.get('format', 'sympy')
@@ -185,6 +201,8 @@ def represent(expr, **options):
             base = inv(base.tocsc()).tocsr()
         if format == 'numpy':
             return np.linalg.matrix_power(base, exp)
+        if format == 'scipy.sparse':
+            return _scipy_sparse_matrix_power(base, exp)
         return base ** exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
@@ -199,15 +217,15 @@ def represent(expr, **options):
         A = expr.args[0]
         B = expr.args[1]
         return represent(Mul(A, B) + Mul(B, A), **options)
-    elif isinstance(expr, InnerProduct):
-        return represent(Mul(expr.bra, expr.ket), **options)
-    elif not isinstance(expr, (Mul, OuterProduct)):
+    elif not isinstance(expr, (Mul, OuterProduct, InnerProduct)):
+        # We have removed special handling of inner products that used to be
+        # required (before automatic transforms).
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format in ('numpy', 'scipy.sparse'):
             return _sympy_to_scalar(expr)
         return expr
 
-    if not isinstance(expr, (Mul, OuterProduct)):
+    if not isinstance(expr, (Mul, OuterProduct, InnerProduct)):
         raise TypeError('Mul expected, got: %r' % expr)
 
     if "index" in options:
@@ -234,8 +252,12 @@ def represent(expr, **options):
 
         next_arg = represent(arg, **options)
         if format == 'numpy' and isinstance(next_arg, np.ndarray):
-            # Must use np.matmult to "matrix multiply" two np.ndarray
+            # Must use np.matmul to matrix multiply two NumPy arrays.
             result = np.matmul(next_arg, result)
+        elif (format == 'scipy.sparse' and
+              isinstance(next_arg, scipy_sparse_matrix) and
+              isinstance(result, scipy_sparse_matrix)):
+            result = next_arg @ result
         else:
             result = next_arg*result
         last_arg = arg
@@ -302,7 +324,8 @@ def rep_innerproduct(expr, **options):
     result = prod.doit()
 
     format = options.get('format', 'sympy')
-    return expr._format_represent(result, format)
+    result = expr._format_represent(result, format)
+    return result
 
 
 def rep_expectation(expr, **options):
@@ -345,7 +368,8 @@ def rep_expectation(expr, **options):
     bra = basis_kets[1].dual
     ket = basis_kets[0]
 
-    return qapply(bra*expr*ket)
+    result = qapply(bra*expr*ket)
+    return result
 
 
 def integrate_result(orig_expr, result, **options):

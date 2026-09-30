@@ -3,12 +3,13 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import KroneckerProduct
+from __future__ import annotations
+from sympy import KroneckerProduct, Matrix, diag, diff, eye, Array, MatPow
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
@@ -18,14 +19,14 @@ from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct, hadamard_product)
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.matrices.expressions.special import OneMatrix
-from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.special import OneMatrix, MatrixUnit
+from sympy.matrices.expressions.trace import Trace, trace
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.special import (Identity, ZeroMatrix)
 from sympy.tensor.array.array_derivatives import ArrayDerivative
 from sympy.matrices.expressions import hadamard_power
-from sympy.tensor.array.expressions.array_expressions import ArrayAdd, ArrayTensorProduct, PermuteDims
+from sympy.tensor.array.expressions.array_expressions import ArrayAdd, ArrayTensorProduct, PermuteDims, ArrayContraction
 
 i, j, k = symbols("i j k")
 m, n = symbols("m n")
@@ -95,8 +96,9 @@ def test_matrix_derivative_non_matrix_result():
     AdA = PermuteDims(ArrayTensorProduct(I, I), Permutation(3)(1, 2))
     assert A.diff(A) == AdA
     assert A.T.diff(A) == PermuteDims(ArrayTensorProduct(I, I), Permutation(3)(1, 2, 3))
-    assert (2*A).diff(A) == PermuteDims(ArrayTensorProduct(2*I, I), Permutation(3)(1, 2))
-    assert MatAdd(A, A).diff(A) == ArrayAdd(AdA, AdA)
+    assert (2*A).diff(A) == PermuteDims(ArrayTensorProduct(2, I, I), Permutation(3)(1, 2))
+    # The two identical addend derivatives are collected:
+    assert MatAdd(A, A).diff(A) == PermuteDims(ArrayTensorProduct(2, I, I), Permutation(3)(1, 2))
     assert (A + B).diff(A) == AdA
 
 
@@ -104,6 +106,62 @@ def test_matrix_derivative_trivial_cases():
     # Cookbook example 33:
     # TODO: find a way to represent a four-dimensional zero-array:
     assert X.diff(A) == ArrayDerivative(X, A)
+
+
+def test_matrix_derivative_of_determinant():
+
+    # Cookbook example 49:
+    expr = Determinant(X)
+    assert expr.diff(X) == Determinant(X)*X.T.inv()
+
+    # Cookbook example 51:
+    expr = Determinant(A*X*B)
+    assert expr.diff(X) == Determinant(A*X*B)*X.T.inv()
+
+    # Cookbook example 52:
+    expr = Determinant(X.T*A*X)
+    # assert expr.diff(X) == 2*Determinant(X.T*A*X)*X.T.inv()  # equivalent to:
+    assert expr.diff(X) == 2*Determinant(X)**2*Determinant(A)*X.T.inv()
+
+    # Cookbook example 54 (and 53...):
+    Z = MatrixSymbol("Z", k, j)
+    expr = Determinant(Z.T*A*Z)
+    assert expr.diff(Z) == (Determinant(Z.T*A*Z)*(A*Z*(Z.T*A*Z).inv() + A.T*Z*(Z.T*A.T*Z).inv())).expand()
+
+    # Cookbook example 55:
+    expr = log(Determinant(X.T*X))
+    assert expr.diff(X) == 2*X.T.inv()  # can be pseudo-inverse
+
+    # Cookbook example 57:
+    expr = log(Determinant(X))
+    assert expr.diff(X) == X.T.inv()
+
+    # Cookbook example 58:
+    expr = Determinant(X**j)
+    assert expr.diff(X).doit() == j*Determinant(X**j)*X.inv().T
+    expr = Determinant(X**5)
+    assert expr.diff(X) == 5*Determinant(X**5)*X.inv().T
+
+
+def test_issue_28708():
+    # This is a variant of cookbook example 58 with null exponent:
+    expr = Determinant((X**j).subs(j, 0))
+    assert expr.diff(X) == ZeroMatrix(k, k)
+
+    expr = Determinant((X**j).subs(j, -1))
+    assert expr.diff(X) == - X.T.inv()/Determinant(X)
+
+
+def test_issue_28838_det_in_non_matrix_expr():
+
+    expr = k * Determinant(X)
+    assert expr.diff(X) == k * Determinant(X) * X.T ** (-1)
+
+    expr = 1 / Determinant(X)
+    assert expr.diff(X) == -1 / Determinant(X) * X.T ** (-1)
+
+    expr = k / Determinant(X)
+    assert expr.diff(X) == -k / Determinant(X) * X.T ** (-1)
 
 
 def test_matrix_derivative_with_inverse():
@@ -114,8 +172,7 @@ def test_matrix_derivative_with_inverse():
 
     # Cookbook example 62:
     expr = Determinant(Inverse(X))
-    # Not implemented yet:
-    # assert expr.diff(X) == -Determinant(X.inv())*(X.inv()).T
+    assert expr.diff(X) == -Determinant(X.inv())*(X.inv()).T
 
     # Cookbook example 63:
     expr = Trace(A*Inverse(X)*B)
@@ -186,7 +243,7 @@ def test_matrix_derivatives_of_traces():
 
     expr = Trace(A)*A
     I = Identity(k)
-    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A)*I, I), Permutation(3)(1, 2)))
+    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A), I, I), Permutation(3)(1, 2)))
     assert expr[i, j].diff(A[m, n]).doit() == (
         KDelta(i, m)*KDelta(j, n)*Trace(A) +
         KDelta(m, n)*A[i, j]
@@ -350,7 +407,7 @@ def test_mixed_deriv_mixed_expressions():
 
     expr = Trace(A)*A
     I = Identity(k)
-    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A)*I, I), Permutation(3)(1, 2)))
+    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A), I, I), Permutation(3)(1, 2)))
 
     expr = Trace(Trace(A)*A)
     assert expr.diff(A) == (2*Trace(A))*Identity(k)
@@ -381,7 +438,11 @@ def test_derivatives_matrix_norms():
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
 
     expr = d.T*x*(a.T*X*b)**S.Half*y.T*c
-    assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*x.T*d*y.T*c*b.T
+    assert expr.diff(X) == a*x.T*d*y.T*c/(2*sqrt(b.T*X.T*a))*b.T
+
+    # Fixes issue https://github.com/sympy/sympy/issues/28615
+    expr = sqrt(Trace(X.T*X))
+    assert expr.diff(X) == X / sqrt(Trace(X*X.T))
 
 
 def test_derivatives_elementwise_applyfunc():
@@ -475,3 +536,349 @@ def test_derivatives_of_hadamard_expressions():
 
     expr = hadamard_power(a.T*X*b, S.Half)
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
+
+
+def test_fix_issue_24021():
+    E = MatrixSymbol('E', 3, 3)
+    expr = Trace(E)**2 + Trace(E*E.T)
+    assert expr.diff(E) == 2*Trace(E)*Identity(3) + 2*E
+
+
+def test_fix_issue_on_stackoverflow():
+    # https://stackoverflow.com/questions/69874089/calculating-the-gradient-and-hessian-of-a-symbolic-function-containing-matrices/69876854#69876854
+    x = MatrixSymbol('x', 2, 1)
+    m1 = Matrix([[1, 2], [4, 7]])
+    m3 = Matrix([3, 5])
+    fx = x.T * MatMul(m1, x) + x.T * Matrix(m3) + 6*Identity(1)
+    assert fx.diff(x) == m1*x + m1.T*x + m3
+
+
+def test_issue_25118():
+    # https://github.com/sympy/sympy/issues/25118
+    F = MatrixSymbol('F', 3, 3)
+
+    assert (trace(F) - 1).diff(F) == Identity(3)
+
+    C = F.T * F
+    I1 = Trace(C)
+    phi = I1 - 3
+    P = phi.diff(F)
+    assert P == 2*F
+
+
+def test_issue_24725():
+    # https://github.com/sympy/sympy/issues/24725
+
+    N = Symbol("N")
+
+    x = MatrixSymbol("x", N, 1)
+    one = OneMatrix(N, 1)
+    m = Symbol("m", commutative=True)
+    d = x - m * one
+    assert diff(Trace(d.T @ d), m) == -Trace(((-m) * one.T + x.T) * one) - Trace(one.T * ((-m) * one + x))
+
+    w = MatrixSymbol("w", N, 1)
+    b = symbols("b")
+    assert diff(Trace(x.T @ w) + b, w) == x
+
+    assert w[0, 0].diff(w) == MatrixUnit(w.shape[0], w.shape[1], 0, 0)
+
+
+def test_issue_23492():
+    # https://github.com/sympy/sympy/issues/23492
+    A = MatrixSymbol('A', 3, 3)
+    assert trace(A).diff(A) == Identity(3)
+    assert trace(A).as_explicit().diff(A) == MatrixUnit(3, 3, 0, 0) + MatrixUnit(3, 3, 1, 1) + MatrixUnit(3, 3, 2, 2)
+    assert trace(A).diff(A.as_explicit()) == eye(3)
+
+    assert (trace(A) + trace(A**2)).diff(A) == Identity(3) + 2 * A.T
+
+
+def test_issue_23364():
+    # https://github.com/sympy/sympy/issues/23364
+
+    x = symbols('x')
+    F = MatrixSymbol('F', 3, 3)
+    assert ((x * F) ** 2).diff(x) == (2*x) * F**2
+
+
+def test_issue_21597():
+    # https://github.com/sympy/sympy/issues/21597
+    b = MatrixSymbol('b', 3, 1)
+    c = MatrixSymbol('c', 3, 1)
+    F = MatrixSymbol('F', 3, 3)
+    assert diff(b - F * c, b) == Identity(3)
+
+
+def test_issue_23931():
+    # https://github.com/sympy/sympy/issues/23931
+    F = MatrixSymbol('F', 3, 3)
+    I3 = Identity(3)
+
+    expr = 1/trace(F)
+    result = (-1/Trace(F)**2)*I3
+    assert expr.diff(F) == result
+
+    d = symbols('d', integer=True, positive=True)
+    x = MatrixSymbol('x', d, 1)
+
+    expr = x / trace(x.T @ x)
+    result = (-2/Trace(x*x.T)**2)*x*x.T + 1/Trace(x*x.T)*Identity(d)
+    assert expr.diff(x) == result
+
+
+def test_issue_17229():
+    # https://github.com/sympy/sympy/issues/17229#issuecomment-591863771
+
+    M = MatrixSymbol('M', 3, 3)
+
+    # MatrixSymbol and MatrixElement:
+    assert M[1, 2].diff(M) == MatrixUnit(3, 3, 1, 2)
+    assert M[1, 2].diff(M.as_explicit()) == Matrix([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
+    assert M.diff(M[1, 1]) == MatrixUnit(3, 3,1, 1)
+    assert M.as_explicit().diff(M[1, 2]) == Matrix([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
+
+    # MatrixSymbol and component-explicit matrix:
+    assert M.diff(M.as_explicit()) == Array([[MatrixUnit(3, 3, i, j) for j in range(3)] for i in range(3)])
+    assert M.as_explicit().diff(M) == Matrix([[MatrixUnit(3, 3, i, j) for j in range(3)] for i in range(3)])
+
+
+def test_issue_15651():
+    # https://github.com/sympy/sympy/issues/15651
+
+    X = MatrixSymbol("X", 3, 3)
+
+    I3 = Identity(3)
+
+    expr = X.as_explicit()*X
+    expected = ArrayAdd(
+        ArrayContraction(
+            ArrayTensorProduct(
+                Array([[[[1, 0, 0], [0, 0, 0], [0, 0, 0]], [[0, 1, 0], [0, 0, 0], [0, 0, 0]], [[0, 0, 1], [0, 0, 0], [0, 0, 0]]], [[[0, 0, 0], [1, 0, 0], [0, 0, 0]], [[0, 0, 0], [0, 1, 0], [0, 0, 0]], [[0, 0, 0], [0, 0, 1], [0, 0, 0]]], [[[0, 0, 0], [0, 0, 0], [1, 0, 0]], [[0, 0, 0], [0, 0, 0], [0, 1, 0]], [[0, 0, 0], [0, 0, 0], [0, 0, 1]]]]),
+                X),
+            (3, 4)),
+        PermuteDims(
+            ArrayTensorProduct(Matrix([
+                    [X[0, 0], X[1, 0], X[2, 0]],
+                    [X[0, 1], X[1, 1], X[2, 1]],
+                    [X[0, 2], X[1, 2], X[2, 2]]
+                ]),
+                I3),
+            Permutation(3)(1, 2)))
+    assert expr.diff(X) == expected
+
+
+def test_issue_15667():
+    # https://github.com/sympy/sympy/issues/15667
+    expr = Trace(A) * A
+    I = Identity(k)
+    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A), I, I), Permutation(3)(1, 2)))
+
+
+def test_matpow_derivative():
+    M = MatPow(Matrix([[m, 0], [0, m]]), 2)
+    assert M.diff(m) == Matrix([[2*m, 0], [0, 2*m]])
+
+    base = Matrix([[0, m], [n, 0]])
+    M = MatPow(base, 3)
+    assert M.diff(m) == Matrix([[0, 2*m*n], [n**2, 0]])
+
+    M = MatPow(base, 0)
+    assert M.diff(m) == ZeroMatrix(2, 2)
+
+    M = MatPow(base, -1)
+    assert M.diff(m) == ArrayDerivative(M, m)
+
+    M = MatPow(base, i)
+    assert M.diff(m) == ArrayDerivative(M, m)
+
+
+def test_matexpr_derivative_by_matrix_element():
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    Z = MatrixSymbol("Z", 2, 2)
+
+    a = symbols("a")
+
+    assert (X + Y).diff(Y[0, 0]).doit() == MatrixUnit(2, 2, 0, 0)
+    assert (X + a*Y).diff(X[a, 0]) == MatrixUnit(2, 2, a, 0)
+    assert (X + a*Y).diff(Y[a, 0]) == a*MatrixUnit(2, 2, a, 0)
+    assert (X + a*Y).diff(Z[a, 0]) ==  ZeroMatrix(2, 2)
+    assert (X + a*Y).diff(a) == Y + ZeroMatrix(2, 2)
+
+    A = MatrixSymbol(a, a, a)
+    assert A.diff(Y[a,a]) == ZeroMatrix(a, a)
+
+
+def test_matrixexpr_eval_derivative_unhandled_returns_none():
+    # MatrixExpr._eval_derivative used to raise AttributeError when no
+    # class in the MRO provided an implementation; it should return None
+    # so that Derivative stays unevaluated.
+    from sympy.core.function import Derivative
+    from sympy.core.sympify import _sympify
+    from sympy.matrices.expressions.matexpr import MatrixExpr
+
+    class CustomMatExpr(MatrixExpr):
+        shape = (2, 2)
+
+        def __new__(cls, arg):
+            return super().__new__(cls, _sympify(arg))
+
+    t = symbols("t")
+    m = CustomMatExpr(t)
+    assert m._eval_derivative(t) is None
+    assert Derivative(m, t).doit() == Derivative(m, t)
+
+
+def test_matrix_element_derivative_by_matrix_symbol():
+    # Differentiating a MatrixElement by a MatrixSymbol used to raise a
+    # TypeError (higher-rank array derivatives are not 2-subscriptable):
+    from sympy.matrices.expressions.matexpr import MatrixElement
+
+    X = MatrixSymbol("X", 3, 3)
+    Y = MatrixSymbol("Y", 3, 3)
+
+    assert X[0, 1].diff(X) == MatrixUnit(3, 3, 0, 1)
+    assert X[0, 1]._eval_derivative(X) == MatrixUnit(3, 3, 0, 1)
+
+    # If the parent's derivative is not a 2-dimensional matrix expression,
+    # return None (cannot evaluate) instead of crashing:
+    assert X[0, 1]._eval_derivative(Y) is None
+    assert MatrixElement(X*Y, 0, 1)._eval_derivative(Y) is None
+
+    # Scalar differentiation of matrix elements is unaffected:
+    t = symbols("t")
+    assert (t*X)[0, 1].diff(t) == X[0, 1]
+
+    # A matrix element multiplying a matrix expression used to raise an
+    # IndexError (the element was treated as a rank-2 object):
+    d = (X[0, 1]*Trace(X)).diff(X)
+    assert d == X[0, 1]*Identity(3) + Trace(X)*MatrixUnit(3, 3, 0, 1)
+    assert d.as_explicit() == Matrix([
+        [X[0, 1], Trace(X), 0], [0, X[0, 1], 0], [0, 0, X[0, 1]]])
+
+
+def _explicit_numeric(expr, subs_map):
+    # Evaluate an expression to an explicit Array at a numeric point given by
+    # ``subs_map`` (MatrixSymbol -> Matrix of rationals). The expression is
+    # made explicit entrywise first, so that matrix functions of numeric
+    # matrices (e.g. the inverse) are computed on the scalar entries.
+    from sympy import Array, sympify, ImmutableMatrix
+    e = sympify(expr)
+    if hasattr(e, "as_explicit"):
+        e = e.as_explicit()
+    e = Array(e)
+    mat_subs = {s: ImmutableMatrix(v) for s, v in subs_map.items()}
+    return Array([sympify(x).subs(mat_subs).doit() for x in e], e.shape)
+
+
+def test_derivatives_of_scalar_functions_of_traces():
+    # sin/exp/log wrapping a Trace used to raise NotImplementedError:
+    A2 = MatrixSymbol("A", 2, 2)
+    B2 = MatrixSymbol("B", 2, 2)
+    nA = Matrix([[1, 2], [3, 5]])
+    nB = Matrix([[7, 1], [2, 4]])
+    assert sin(Trace(A2)).diff(A2) == cos(Trace(A2))*Identity(2)
+    d = exp(Trace(A2*B2)).diff(A2)
+    assert d.shape == (2, 2)
+    assert _explicit_numeric(d, {A2: nA, B2: nB}) == \
+        _explicit_numeric(exp(Trace(nA*nB))*nB.T, {})
+    # a scalar coefficient on an inverted trace used to crash:
+    d2 = (1/(2*Trace(A2))).diff(A2)
+    assert _explicit_numeric(d2, {A2: nA}) == \
+        _explicit_numeric(-Rational(1, 2)/Trace(nA)**2*eye(2), {})
+
+
+def test_derivative_negative_matrix_power():
+    # MatPow with a negative exponent used to silently differentiate to zero:
+    A2 = MatrixSymbol("A", 2, 2)
+    B2 = MatrixSymbol("B", 2, 2)
+    nA = Matrix([[1, 2], [3, 5]])
+    assert MatPow(A2, -1).diff(A2).as_explicit() == \
+        Inverse(A2).diff(A2).as_explicit()
+    from sympy import derive_by_array, Array
+    d = MatPow(A2, -2).diff(A2)
+    got = _explicit_numeric(d, {A2: nA})
+    truth = Array(derive_by_array(
+        Matrix(2, 2, lambda i, j: A2[i, j]).inv()**2,
+        Matrix(2, 2, lambda i, j: A2[i, j])))
+    assert got == _explicit_numeric(truth, {A2: nA})
+    # Trace of a negative power gives a shaped, closed-form matrix:
+    td = Trace(B2*MatPow(A2, -2)).diff(A2)
+    assert td.shape == (2, 2)
+
+
+def test_derivative_trace_of_hadamard_shape():
+    # used to return a (k,)-shaped diagonal vector instead of a (k, k) matrix:
+    A2 = MatrixSymbol("A", 2, 2)
+    X2 = MatrixSymbol("X", 2, 2)
+    d = Trace(HadamardProduct(A2, X2)).diff(X2)
+    assert d.shape == (2, 2)
+    assert d.as_explicit() == Matrix([[A2[0, 0], 0], [0, A2[1, 1]]])
+    d2 = Trace(HadamardPower(X2, 2)).diff(X2)
+    assert d2.shape == (2, 2)
+    assert d2.as_explicit() == Matrix([[2*X2[0, 0], 0], [0, 2*X2[1, 1]]])
+    # a contraction group shared by two fully contracted matrices and the
+    # axes of two identity matrices used to be misread as a trace:
+    d3 = Trace(HadamardPower(X2, 3)).diff(X2)
+    assert d3.shape == (2, 2)
+    assert d3.as_explicit() == Matrix([[3*X2[0, 0]**2, 0], [0, 3*X2[1, 1]**2]])
+
+
+def test_derivative_trace_of_vector_hadamard():
+    # a >=3-slot contraction group used to be misread as a trace, giving a
+    # constant vector replicated instead of the entrywise result:
+    a2 = MatrixSymbol("a", 2, 1)
+    x2 = MatrixSymbol("x", 2, 1)
+    d = Trace(x2.T*HadamardProduct(a2, x2)).diff(x2)
+    na = Matrix([[2], [3]])
+    nx = Matrix([[5], [7]])
+    got = _explicit_numeric(d, {a2: na, x2: nx})
+    assert list(got.reshape(2)) == [2*2*5, 2*3*7]
+
+
+def test_derivative_diag_matrix():
+    # DiagMatrix used to be non-differentiable, which also blocked second
+    # derivatives of elementwise-applied functions:
+    from sympy import derive_by_array
+    x2 = MatrixSymbol("x", 2, 1)
+    xs = Matrix(2, 1, lambda i, j: x2[i, 0])
+    d = DiagMatrix(x2).diff(x2)
+    assert d.shape == (2, 1, 2, 2)
+    # d[k, 0, i, j] = delta(k, i)*delta(i, j):
+    assert d.as_explicit() == derive_by_array(diag(*xs), xs)
+    dd = x2.applyfunc(sin).diff(x2).diff(x2)
+    assert dd.shape == (2, 1, 2, 2)
+    # dd[k, 0, i, j] = -sin(x[i, 0])*delta(k, i)*delta(i, j):
+    assert dd.as_explicit() == derive_by_array(diag(*xs.applyfunc(cos)), xs)
+
+
+def test_derivative_hadamard_of_outer_product():
+    # the DiagMatrix rewrite used to transpose the last two axes of the
+    # result, and mixed-rank ArrayAdd addends used to crash:
+    from sympy import derive_by_array, Array
+    x2 = MatrixSymbol("x", 2, 1)
+    a2 = MatrixSymbol("a", 2, 1)
+    A2 = MatrixSymbol("A", 2, 2)
+    B2 = MatrixSymbol("B", 2, 2)
+    nx = Matrix([[5], [7]])
+    nA = Matrix([[1, 2], [3, 5]])
+    d = HadamardProduct(x2*x2.T, A2).diff(x2)
+    got = _explicit_numeric(d, {x2: nx, A2: nA})
+    xs = Matrix(2, 1, lambda i, j: x2[i, 0])
+    truth = Array(derive_by_array(
+        Matrix(2, 2, lambda i, j: xs[i, 0]*xs[j, 0]*A2[i, j]), xs))
+    truth_n = _explicit_numeric(truth, {x2: nx, A2: nA})
+    assert list(got) == list(truth_n)
+    assert (HadamardProduct(a2, x2) + B2*x2).diff(x2).shape == (2, 2)
+
+
+def test_derivative_object_routing():
+    # a directly constructed Derivative used to bypass the matrix-aware
+    # dispatch on doit(), crashing or giving wrong results:
+    from sympy.core.function import Derivative
+    A2 = MatrixSymbol("A", 2, 2)
+    X2 = MatrixSymbol("X", 2, 2)
+    assert Derivative(Trace(A2*X2), X2).doit() == A2.T
+    assert Derivative(Trace(X2*X2), X2, 2).doit() == \
+        Trace(X2*X2).diff(X2).diff(X2)

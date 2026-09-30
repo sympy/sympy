@@ -8,6 +8,7 @@ ode_order
 _desolve
 
 """
+from __future__ import annotations
 from sympy.core import Pow
 from sympy.core.function import Derivative, AppliedUndef
 from sympy.core.relational import Equality
@@ -249,7 +250,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=Tru
         if hint == 'all_Integral':
             for i in hints:
                 if i.endswith('_Integral'):
-                    gethints.remove(i[:-len('_Integral')])
+                    gethints.remove(i.removesuffix('_Integral'))
             # special cases
             for k in ["1st_homogeneous_coeff_best", "1st_power_series",
                 "lie_group", "2nd_power_series_ordinary", "2nd_power_series_regular"]:

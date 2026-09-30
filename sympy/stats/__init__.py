@@ -99,6 +99,7 @@ exp(-x)
 >>> dist.pmf(x)
 Lambda(x, Piecewise((1/3, Eq(x, 1)), (1/6, Eq(x, 2)), (1/4, Eq(x, 3) | Eq(x, 4)), (0, True)))
 """
+from __future__ import annotations
 
 __all__ = [
     'P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf','median',
@@ -118,7 +119,7 @@ __all__ = [
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
     'Kumaraswamy', 'Laplace', 'Levy', 'Logistic','LogCauchy', 'LogLogistic', 'LogitNormal', 'LogNormal', 'Lomax',
     'Moyal', 'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
-    'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
+    'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'SkewNormal', 'StudentT', 'ShiftedGompertz',
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle', 'ContinuousDistributionHandmade',
 
@@ -168,7 +169,7 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
         LogLogistic, LogitNormal, LogNormal, Lomax, Maxwell, Moyal, Nakagami,
         Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal,
-        StudentT, PowerFunction, ShiftedGompertz, Trapezoidal, Triangular,
+        SkewNormal, StudentT, PowerFunction, ShiftedGompertz, Trapezoidal, Triangular,
         Uniform, UniformSum, VonMises, Wald, Weibull, WignerSemicircle,
         ContinuousDistributionHandmade)
 

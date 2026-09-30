@@ -15,5 +15,9 @@ Quaternion Reference
 
 This section lists the classes implemented by the Algebras module.
 
+.. class:: SExpr
+.. class:: Matrix
+.. class:: SymbolLimits
+
 .. autoclass:: Quaternion
    :members:

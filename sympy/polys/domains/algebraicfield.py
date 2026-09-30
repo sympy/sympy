@@ -1,19 +1,39 @@
 """Implementation of :class:`AlgebraicField` class. """
 
+from __future__ import annotations
 
+from functools import cached_property
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, symbols
+from sympy.external.gmpy import MPQ
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.polyclasses import ANP
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
+from sympy.polys.domains.ringextension import RingExtension
+from sympy.polys.polyclasses import ANP, DMP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 from sympy.utilities import public
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Domain
+    from sympy.core.expr import Expr
+
+
+Alg = ANP[MPQ]
+
 
 @public
-class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
+class AlgebraicField(
+    Field[Alg],
+    CharacteristicZero,
+    SimpleDomain[Alg],
+    ConjugateDomain[Alg],
+    RingExtension[Alg, MPQ]
+):
     r"""Algebraic number field :ref:`QQ(a)`
 
     A :ref:`QQ(a)` domain represents an `algebraic number field`_
@@ -242,7 +262,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     .. _primitive element: https://en.wikipedia.org/wiki/Primitive_element_theorem
     """
 
-    dtype = ANP
+    dtype: type[Alg] = ANP
 
     is_AlgebraicField = is_Algebraic = True
     is_Numerical = True
@@ -250,7 +270,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     has_assoc_Ring = False
     has_assoc_Field = True
 
-    def __init__(self, dom, *ext, alias=None):
+    dom: Domain[MPQ]
+    mod: DMP[MPQ]
+
+    def __init__(self, dom: Domain[MPQ], *ext: Expr, alias: str | None = None) -> None:
         r"""
         Parameters
         ==========
@@ -322,7 +345,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
         self._maximal_order = None
         self._discriminant = None
-        self._nilradicals_mod_p = {}
+        self._nilradicals_mod_p: dict = {}
 
     def new(self, element):
         return self.dtype(element, self.mod.to_list(), self.dom)
@@ -343,6 +366,9 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
         return AlgebraicField(self.dom, *((self.ext,) + extension), alias=alias)
+
+    def to_dict(self, element: Alg) -> dict[tuple[int, ...], MPQ]:
+        return element.to_dict()
 
     def to_alg_num(self, a):
         """Convert ``a`` of ``dtype`` to an :py:class:`~.AlgebraicNumber`. """
@@ -532,6 +558,36 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         dK = self.discriminant()
         rad = self._nilradicals_mod_p.get(p)
         return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
+
+    @cached_property
+    def is_ConjugateDomain(self):
+        try:
+            _ = self.conjugate
+        except DomainError:
+            return False
+        return True
+
+    @cached_property
+    def conjugate(self):
+        """Returns the complex conjugate of ``a``. """
+        try:
+            # the conjugate of ext has the same minpoly as ext
+            z = self.ext.func((self.ext.minpoly, self.ext.conjugate()))
+            conj = self.from_sympy(z)
+        except CoercionFailed:
+            raise DomainError("the algebraic field is not closed under conjugation")
+
+        if conj.rep == [1, 0]:
+            # conj == ext implies ext is real
+            return lambda a: a
+
+        def conjugate(a):
+            v = self.zero
+            for c in a.rep:
+                v = v * conj + c
+            return v
+
+        return conjugate
 
     def galois_group(self, by_name=False, max_tries=30, randomize=False):
         """

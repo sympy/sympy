@@ -13,8 +13,9 @@ Contents
 .. toctree::
    :titlesonly:
 
-   series.rst
-   sequences.rst
-   fourier.rst
+   approximants.rst
    formal.rst
+   fourier.rst
    limitseq.rst
+   sequences.rst
+   series.rst

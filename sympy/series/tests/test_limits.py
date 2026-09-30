@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import product
 
 from sympy.concrete.summations import Sum
@@ -13,7 +14,7 @@ from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (atanh, asinh, acosh, acoth, acsch, asech, tanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
-from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
+from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt, Min, Max)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
                                                       atan, cos, cot, csc, sec, sin, tan)
@@ -30,7 +31,7 @@ from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, slow
 
 from sympy import elliptic_e, elliptic_k
 
@@ -276,6 +277,8 @@ def test_atan():
     x = Symbol("x", real=True)
     assert limit(atan(x)*sin(1/x), x, 0) == 0
     assert limit(atan(x) + sqrt(x + 1) - sqrt(x), x, oo) == pi/2
+    # https://github.com/sympy/sympy/issues/28360
+    assert limit(tan(k*atan(x) - pi*(k - 1)/2)/x, x, oo) == 1/k
 
 
 def test_set_signs():
@@ -506,18 +509,6 @@ def test_issue_3934():
     assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
 
 
-def test_calculate_series():
-    # NOTE
-    # The calculate_series method is being deprecated and is no longer responsible
-    # for result being returned. The mrv_leadterm function now uses simple leadterm
-    # calls rather than calculate_series.
-
-    # needs gruntz calculate_series to go to n = 32
-    assert limit(x**Rational(77, 3)/(1 + x**Rational(77, 3)), x, oo) == 1
-    # needs gruntz calculate_series to go to n = 128
-    assert limit(x**101.1/(1 + x**101.1), x, oo) == 1
-
-
 def test_issue_5955():
     assert limit((x**16)/(1 + x**16), x, oo) == 1
     assert limit((x**100)/(1 + x**100), x, oo) == 1
@@ -556,6 +547,8 @@ def test_Limit_dir():
 def test_polynomial():
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, oo) == 1
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, -oo) == 1
+    assert limit(x ** Rational(77, 3) / (1 + x ** Rational(77, 3)), x, oo) == 1
+    assert limit(x ** 101.1 / (1 + x ** 101.1), x, oo) == 1
 
 
 def test_rational():
@@ -691,6 +684,11 @@ def test_issue_6052():
 def test_issue_7224():
     expr = sqrt(x)*besseli(1,sqrt(8*x))
     assert limit(x*diff(expr, x, x)/expr, x, 0) == 2
+
+
+@slow
+def test_issue_7224_at_one():
+    expr = sqrt(x)*besseli(1,sqrt(8*x))
     assert limit(x*diff(expr, x, x)/expr, x, 1).evalf() == 2.0
 
 
@@ -759,6 +757,7 @@ def test_issue_9558():
     assert limit(sin(x)**15, x, 0, '-') == 0
 
 
+@slow
 def test_issue_10801():
     # make sure limits work with binomial
     assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
@@ -1002,6 +1001,7 @@ def test_issue_16714():
     assert limit(((x**(x + 1) + (x + 1)**x) / x**(x + 1))**x, x, oo) == exp(exp(1))
 
 
+@slow
 def test_issue_16722():
     z = symbols('z', positive=True)
     assert limit(binomial(n + z, n)*n**-z, n, oo) == 1/gamma(z + 1)
@@ -1328,6 +1328,7 @@ def test_issue_24276():
     assert fx.rewrite(sin).limit(x, oo) == 2
     assert fx.rewrite(sin).simplify().limit(x, oo) == 2
 
+
 def test_issue_25230():
     a = Symbol('a', real = True)
     b = Symbol('b', positive = True)
@@ -1445,6 +1446,52 @@ def test_issue_22982_15323():
 def test_issue_26991():
     assert limit(x/((x - 6)*sinh(tanh(0.03*x)) + tanh(x) - 0.5), x, oo) == 1/sinh(1)
 
+
 def test_issue_27278():
     expr = (1/(x*log((x + 3)/x)))**x*((x + 1)*log((x + 4)/(x + 1)))**(x + 1)/3
     assert limit(expr, x, oo) == 1
+
+
+def test_issue_28130():
+    #https://github.com/sympy/sympy/issues/28130
+    x = symbols('x')
+    assert limit(2**x, x, -oo) == 0
+    assert limit(3**x, x, -oo) == 0
+    assert limit(E**x, x, -oo) == 0
+    assert limit((0.3)**x, x, -oo) == oo
+
+
+def test_issue_28558():
+    # https://github.com/sympy/sympy/issues/28558
+    # Test that Limit.doit() doesn't raise TypeError about missing 'cdir' parameter
+    # The original issue was: Limit(log(x)*cos(x), x, oo, dir='-').doit()
+    # raised TypeError: Expr._eval_nseries() missing 1 required positional argument: 'cdir'
+    # This was fixed by adding cdir=0 parameter in gruntz.py
+
+    # These limits should not raise TypeError about missing 'cdir'
+    assert limit(log(x), x, oo, dir='-') is oo
+    assert limit(exp(x), x, oo, dir='-') is oo
+    assert limit(x**2, x, oo, dir='-') is oo
+
+    # The original problematic case now raises NotImplementedError instead of TypeError
+    # This confirms the fix - the TypeError about missing 'cdir' is resolved
+    raises(NotImplementedError, lambda: limit(log(x)*cos(x), x, oo, dir='-'))
+
+
+def test_issue_28975():
+    assert limit(2**(1/x), x, 0, dir='-') == 0
+    assert limit(2**(1/x), x, 0, dir='+') == oo
+    assert limit((1/2)**(1/x), x, 0, dir='-') == oo
+    assert limit((1/2)**(1/x), x, 0, dir='+') == 0
+    assert limit(3**(1/(x-1)), x, 1, dir='-') == 0
+    assert limit(3**(1/(x-1)), x, 1, dir='+') == oo
+    assert limit(3**(tan(x)), x, pi/2, dir='-') == oo
+    assert limit(3**(tan(x)), x, pi/2, dir='+') == 0
+
+
+def test_issue_30568():
+    x = Symbol('x', real=True)
+    assert limit(Min(x, x**2), x, 0) == 0
+    assert limit(Max(x, sin(x)), x, 0) == 0
+    assert limit(Min(exp(x), exp(2*x)), x, oo) == oo
+    assert limit(Max(1/x, 1/x**2), x, oo) == 0

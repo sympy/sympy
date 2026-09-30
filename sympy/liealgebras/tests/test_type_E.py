@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.liealgebras.cartan_type import CartanType
 from sympy.matrices import Matrix
 from sympy.core.backend import Rational

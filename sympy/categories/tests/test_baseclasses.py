@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.categories import (Object, Morphism, IdentityMorphism,
                               NamedMorphism, CompositeMorphism,
                               Diagram, Category)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import collections
 import warnings
 
@@ -293,7 +294,7 @@ def processVariables(self, ctx):
             self.var_list.append(name + strfunc(i))
 
     elif "{" in ctx.getText():
-        # Process variables of the type: Variales x{3}, y{2}
+        # Process variables of the type: Variables x{3}, y{2}
 
         if "'" in ctx.getText():
             dash_count = ctx.getText().count("'")

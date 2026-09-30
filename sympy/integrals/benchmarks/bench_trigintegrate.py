@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.trigonometric import sin
 from sympy.integrals.trigonometry import trigintegrate

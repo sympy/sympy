@@ -1,7 +1,8 @@
 """Base class for all the objects in SymPy"""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections import Counter
+from collections.abc import Mapping, Iterable
 from itertools import zip_longest
 from functools import cmp_to_key
 from typing import TYPE_CHECKING, overload
@@ -20,11 +21,20 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar
+    from typing import ClassVar, Any, Hashable, TypeVar, Protocol
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
-    from .expr import Expr
+
+    Tbasic = TypeVar("Tbasic", bound='Basic')
+
+
+    _K_co = TypeVar("_K_co", covariant=True)
+    _V_co = TypeVar("_V_co", covariant=True)
+
+    class _SupportsItems(Protocol[_K_co, _V_co]):
+        def items(self) -> Iterable[tuple[_K_co, _V_co]]:
+            ...
 
 
 def as_Basic(expr):
@@ -84,10 +94,10 @@ ordering_of_classes = [
 ]
 
 def _cmp_name(x: type, y: type) -> int:
-    """return -1, 0, 1 if the name of x is before that of y.
+    """Return -1, 0, 1 if the name of x is before that of y.
     A string comparison is done if either name does not appear
     in `ordering_of_classes`. This is the helper for
-    ``Basic.compare``
+    ``Basic.compare``.
 
     Examples
     ========
@@ -132,7 +142,7 @@ def _cmp_name(x: type, y: type) -> int:
 
 @cacheit
 def _get_postprocessors(clsname, arg_type):
-    # Since only Add, Mul, Pow can be clsname, this cache
+    # Since only Add, Mul, and Pow can be clsname, this cache
     # is not quadratic.
     postprocessors = set()
     mappings = _get_postprocessors_for_type(arg_type)
@@ -182,7 +192,7 @@ class Basic(Printable):
     (x,)
 
 
-    3)  By "SymPy object" we mean something that can be returned by
+    3)  By "SymPy object", we mean something that can be returned by
         ``sympify``.  But not all objects one encounters using SymPy are
         subclasses of Basic.  For example, mutable objects are not:
 
@@ -210,7 +220,7 @@ class Basic(Printable):
     def __init_subclass__(cls):
         # Initialize the default_assumptions FactKB and also any assumptions
         # property methods. This method will only be called for subclasses of
-        # Basic but not for Basic itself so we call
+        # Basic but not for Basic itself, so we call
         # _prepare_class_assumptions(Basic) below the class definition.
         super().__init_subclass__()
         _prepare_class_assumptions(cls)
@@ -260,7 +270,6 @@ class Basic(Printable):
     is_rational: bool | None
     is_extended_nonnegative: bool | None
     is_infinite: bool | None
-    is_antihermitian: bool | None
     is_extended_negative: bool | None
     is_extended_real: bool | None
     is_finite: bool | None
@@ -275,7 +284,6 @@ class Basic(Printable):
     is_commutative: bool | None
     is_nonnegative: bool | None
     is_nonpositive: bool | None
-    is_hermitian: bool | None
     is_irrational: bool | None
     is_real: bool | None
     is_zero: bool | None
@@ -294,7 +302,7 @@ class Basic(Printable):
     def copy(self):
         return self.func(*self.args)
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
         return self.args
 
     def __getstate__(self):
@@ -319,7 +327,7 @@ class Basic(Printable):
             self._mhash = h
         return h
 
-    def _hashable_content(self):
+    def _hashable_content(self) -> tuple[Hashable, ...]:
         """Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
         like ``name`` in Symbol, then this method should be updated
@@ -354,7 +362,7 @@ class Basic(Printable):
         {'commutative': True, 'complex': True, 'extended_negative': False,
          'extended_nonnegative': True, 'extended_nonpositive': False,
          'extended_nonzero': True, 'extended_positive': True, 'extended_real':
-         True, 'finite': True, 'hermitian': True, 'imaginary': False,
+         True, 'finite': True, 'imaginary': False,
          'infinite': False, 'negative': False, 'nonnegative': True,
          'nonpositive': False, 'nonzero': True, 'positive': True, 'real':
          True, 'zero': False}
@@ -389,7 +397,7 @@ class Basic(Printable):
         1
 
         """
-        # all redefinitions of __cmp__ method should start with the
+        # all redefinitions of compare method should start with the
         # following lines:
         if self is other:
             return 0
@@ -591,7 +599,12 @@ class Basic(Printable):
 
         return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
 
-    def atoms(self, *types):
+    @overload
+    def atoms(self) -> set[Basic]: ...
+    @overload
+    def atoms(self, *types: Tbasic | type[Tbasic]) -> set[Tbasic]: ...
+
+    def atoms(self, *types: Tbasic | type[Tbasic]) -> set[Basic] | set[Tbasic]:
         """Returns the atoms that form the current object.
 
         By default, only objects that are truly atomic and cannot
@@ -660,15 +673,12 @@ class Basic(Printable):
         {I*pi, 2*sin(y + I*pi)}
 
         """
-        if types:
-            types = tuple(
-                [t if isinstance(t, type) else type(t) for t in types])
         nodes = _preorder_traversal(self)
         if types:
-            result = {node for node in nodes if isinstance(node, types)}
+            types2 = tuple([t if isinstance(t, type) else type(t) for t in types])
+            return {node for node in nodes if isinstance(node, types2)}
         else:
-            result = {node for node in nodes if not node.args}
-        return result
+            return {node for node in nodes if not node.args}
 
     @property
     def free_symbols(self) -> set[Basic]:
@@ -952,15 +962,15 @@ class Basic(Printable):
         return S.One, self
 
     @overload
-    def subs(self: Expr, arg1: dict[Expr, Expr | int], arg2: None=None) -> Expr: ... # type: ignore
+    def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
+            | Iterable[tuple[Basic | complex, Basic | complex]],
+              arg2: None=None, **kwargs: Any) -> Basic: ...
     @overload
-    def subs(self: Expr, arg1: Expr, arg2: Expr | int) -> Expr: ... # type: ignore
-    @overload
-    def subs(self: Basic, arg1: dict[Basic, Basic], arg2: None=None) -> Basic: ...
-    @overload
-    def subs(self: Basic, arg1: Basic, arg2: Basic) -> Basic: ...
+    def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
 
-    def subs(self, *args, **kwargs):
+    def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
+            | Iterable[tuple[Basic | complex, Basic | complex]] | Basic | complex,
+             arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
         """
         Substitutes old for new in an expression after sympifying args.
 
@@ -1077,26 +1087,28 @@ class Basic(Printable):
         from .symbol import Dummy, Symbol
         from .numbers import _illegal
 
-        unordered = False
-        if len(args) == 1:
+        items: Iterable[tuple[Basic | complex, Basic | complex]]
 
-            sequence = args[0]
-            if isinstance(sequence, set):
+        unordered = False
+        if arg2 is None:
+
+            if isinstance(arg1, set):
+                items = arg1
                 unordered = True
-            elif isinstance(sequence, (Dict, Mapping)):
+            elif isinstance(arg1, (Dict, Mapping)):
                 unordered = True
-                sequence = sequence.items()
-            elif not iterable(sequence):
+                items = arg1.items() # type: ignore
+            elif not iterable(arg1):
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
                    it should be a dictionary of old: new pairs or an iterable
                    of (old, new) tuples."""))
-        elif len(args) == 2:
-            sequence = [args]
+            else:
+                items = arg1 # type: ignore
         else:
-            raise ValueError("subs accepts either 1 or 2 arguments")
+            items = [(arg1, arg2)] # type: ignore
 
-        def sympify_old(old):
+        def sympify_old(old) -> Basic:
             if isinstance(old, str):
                 # Use Symbol rather than parse_expr for old
                 return Symbol(old)
@@ -1106,14 +1118,14 @@ class Basic(Printable):
             else:
                 return sympify(old, strict=True)
 
-        def sympify_new(new):
+        def sympify_new(new) -> Basic:
             if isinstance(new, (str, type)):
                 # Allow a type or parse a string input
                 return sympify(new, strict=False)
             else:
                 return sympify(new, strict=True)
 
-        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in sequence]
+        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in items]
 
         # skip if there is no change
         sequence = [(s1, s2) for s1, s2 in sequence if not _aresame(s1, s2)]
@@ -1122,18 +1134,18 @@ class Basic(Printable):
 
         if unordered:
             from .sorting import _nodes, default_sort_key
-            sequence = dict(sequence)
+            sequence_dict = dict(sequence)
             # order so more complex items are first and items
             # of identical complexity are ordered so
             # f(x) < f(y) < x < y
             # \___ 2 __/    \_1_/  <- number of nodes
             #
             # For more complex ordering use an unordered sequence.
-            k = list(ordered(sequence, default=False, keys=(
+            k = list(ordered(sequence_dict, default=False, keys=(
                 lambda x: -_nodes(x),
                 default_sort_key,
                 )))
-            sequence = [(k, sequence[k]) for k in k]
+            sequence = [(k, sequence_dict[k]) for k in k]
             # do infinities first
             if not simultaneous:
                 redo = [i for i, seq in enumerate(sequence) if seq[1] in _illegal]
@@ -1279,7 +1291,7 @@ class Basic(Printable):
             rv = fallback(self, old, new)
         return rv
 
-    def _eval_subs(self, old, new) -> Basic | None:
+    def _eval_subs(self, old: Basic, new: Basic) -> Basic | None:
         """Override this stub if you want to do anything more than
         attempt a replacement of old with new in the arguments of self.
 
@@ -1341,7 +1353,9 @@ class Basic(Printable):
 
         Trying to replace x with an expression raises an error:
 
-        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y}) # doctest: +SKIP
+        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y})
+        Traceback (most recent call last):
+        ...
         ValueError: Invalid limits given: ((2*y, 1, 4*y),)
 
         See Also
@@ -1707,9 +1721,7 @@ class Basic(Printable):
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
 
-            if isinstance(value, type):
-                _value = lambda expr, result: value(*expr.args)
-            elif callable(value):
+            if isinstance(value, type) or callable(value):
                 _value = lambda expr, result: value(*expr.args)
             else:
                 raise TypeError(
@@ -1792,25 +1804,90 @@ class Basic(Printable):
         return (rv, mapping) if map else rv # type: ignore
 
     def find(self, query, group=False):
-        """Find all subexpressions matching a query."""
+        """
+        Find all unique subexpressions matching a query.
+
+        query : type, Basic, or callable
+            The pattern used to test each node of the expression tree.
+            A type matches subexpressions of that type, a ``Basic``
+            expression is treated as a pattern that subexpressions are
+            matched against (with ``Wild`` symbols acting as wildcards),
+            and a callable matches when it returns ``True``.
+
+        group : bool, optional
+            If ``True``, return a dict mapping each match to the number
+            of times it appears instead of a set of unique matches.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Wild
+        >>> from sympy.abc import x, y
+
+        >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
+        >>> expr.find(sin)
+        {sin(x), sin(y)}
+        >>> expr.find(sin, group=True)
+        {sin(x): 2, sin(y): 1}
+
+        >>> w = Wild('w')
+        >>> expr.find(sin(w))
+        {sin(x), sin(y)}
+
+        >>> expr.find(lambda e: e.is_Symbol)
+        {x, y}
+
+        See Also
+        ========
+
+        count : count the number of matching subexpressions
+        has : test whether any matching subexpression exists
+        match : pattern-match the whole expression
+
+        Notes
+        =====
+
+        The search visits every node of the expression tree, including the
+        expression itself, so ``expr.find(type(expr))`` will include
+        ``expr`` in the result.
+        """
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 
         if not group:
             return set(results)
-        else:
-            groups = {}
-
-            for result in results:
-                if result in groups:
-                    groups[result] += 1
-                else:
-                    groups[result] = 1
-
-            return groups
+        return dict(Counter(results))
 
     def count(self, query):
-        """Count the number of matching subexpressions."""
+        """
+        Count the number of matching subexpressions.
+
+        query : type, Basic, or callable
+            Same semantics as in ``find()``.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Wild
+        >>> from sympy.abc import x, y
+
+        >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
+        >>> expr.count(sin)
+        3
+
+        >>> w = Wild('w')
+        >>> expr.count(sin(w))
+        3
+
+        >>> expr.count(lambda e: e.is_Symbol)
+        5
+
+        See Also
+        ========
+
+        find : return matching subexpressions instead of a count
+        has : test whether any match exists
+        """
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
@@ -1953,12 +2030,7 @@ class Basic(Printable):
         else:
             return self
 
-    @overload
-    def simplify(self: Expr, **kwargs) -> Expr: ... # type: ignore
-    @overload
-    def simplify(self: Basic, **kwargs) -> Basic: ...
-
-    def simplify(self, **kwargs):
+    def simplify(self, **kwargs) -> Basic:
         """See the simplify function in sympy.simplify"""
         from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
@@ -2071,6 +2143,11 @@ class Basic(Printable):
         pattern = args[:-1]
         rule = args[-1]
 
+        # Special case: map `abs` to `Abs`
+        if rule is abs:
+            from sympy.functions.elementary.complexes import Abs
+            rule = Abs
+
         # support old design by _eval_rewrite_as_[...] method
         if isinstance(rule, str):
             method = "_eval_rewrite_as_%s" % rule
@@ -2128,11 +2205,8 @@ class Basic(Printable):
         # functions for matching expression node names.
 
         clsname = obj.__class__.__name__
-        postprocessors = set()
-        for i in obj.args:
-            for f in _get_postprocessors(clsname, type(i)):
-                postprocessors.add(f)
-
+        postprocessors = {f for i in obj.args
+                            for f in _get_postprocessors(clsname, type(i))}
         for f in postprocessors:
             obj = f(obj)
 

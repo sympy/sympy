@@ -5,6 +5,7 @@ Todo:
 * Update docstrings.
 * Update tests.
 """
+from __future__ import annotations
 
 
 import math
@@ -29,7 +30,6 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix
 )
-from mpmath.libmp.libintmath import bitcount
 
 __all__ = [
     'Qubit',
@@ -212,7 +212,7 @@ class Qubit(QubitState, Ket):
             return np.array(result, dtype='complex').transpose()
         elif _format == 'scipy.sparse':
             from scipy import sparse
-            return sparse.csr_matrix(result, dtype='complex').transpose()
+            return sparse.csr_array(result, dtype='complex').transpose()
 
     def _eval_trace(self, bra, **kwargs):
         indices = kwargs.get('indices', [])
@@ -307,7 +307,7 @@ class IntQubitState(QubitState):
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
             #rvalues is the minimum number of bits needed to express the number
-            rvalues = reversed(range(bitcount(abs(args[0]))))
+            rvalues = reversed(range(int(args[0]).bit_length()))
             qubit_values = [(args[0] >> i) & 1 for i in rvalues]
             return QubitState._eval_args(qubit_values)
         # For two numbers, the second number is the number of bits
@@ -319,7 +319,7 @@ class IntQubitState(QubitState):
 
     @classmethod
     def _eval_args_with_nqubits(cls, number, nqubits):
-        need = bitcount(abs(number))
+        need = int(number).bit_length()
         if nqubits < need:
             raise ValueError(
                 'cannot represent %s with %s bits' % (number, nqubits))

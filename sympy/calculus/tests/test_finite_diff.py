@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import product
 
 from sympy.core.function import (Function, diff)

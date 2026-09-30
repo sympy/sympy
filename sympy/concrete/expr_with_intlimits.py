@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.expr_with_limits import ExprWithLimits
 from sympy.core.singleton import S
 from sympy.core.relational import Eq

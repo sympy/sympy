@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy.core.basic import Basic
@@ -213,5 +214,6 @@ def test_issue_5788():
         if o != Tuple:
             assert o(*args) == o(*reversed(args))
         pair = [o(*args), o(*reversed(args))]
-        assert sorted(pair) == sorted(pair)
+        pair_rev = pair[::-1]
+        assert sorted(pair) == sorted(pair_rev)
         assert set(o(*args))  # doesn't fail

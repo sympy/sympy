@@ -59,9 +59,8 @@ This is where the meat of code generation is; the translation of SymPy
 actually more like a lightweight version of codegen for Python, and
 Python (:py:func:`sympy.printing.pycode.pycode`), and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
-(like NumPy), and Aesara
-(:py:func:`sympy.printing.aesaracode.aesara_function`). The code printers are
-special cases of the other prints in SymPy (str printer, pretty printer, etc.).
+(like NumPy). The code printers are special cases of the other prints
+in SymPy (str printer, pretty printer, etc.).
 
 An important distinction is that the code printer has to deal with assignments
 (using the :class:`sympy.codegen.ast.Assignment` object). This serves as

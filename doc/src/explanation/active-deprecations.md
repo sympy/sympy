@@ -74,9 +74,78 @@ will need to either add a `warnings` filter as above or use pytest to filter
 SymPy deprecation warnings.
 ```
 
+## Version 1.15
+
+(deprecated-mechanics-bodyforcelist)=
+### Use .loads instead of .forcelist and .bodies instead of .bodylist
+
+All methods classes in SymPy Physics Mechanics now use the same set of
+attribute names for shared features. ``.bodylist`` and ``.forcelist`` are now
+``.bodies`` and ``.loads``, respectively.
+
+(ndim-array-rank)=
+### Use .ndim instead of .rank for the number of dimensions of arrays.
+
+N-dimensional arrays have used to method `rank` to return the number of
+dimensions.  Unfortunately this not the proper term and it can be confused with
+the concept of matrix rank.  From now on, please use `.ndim` property or the
+`get_ndim(...)` function instead.
+
 ## Version 1.14
 
-There are no deprecations yet for SymPy 1.14.
+(deprecated-rational-gcd)=
+### The gcd parameter to Rational
+
+The ``gcd`` parameter to the ``Rational`` constructor can be used to create an
+unevaluated Rational like ``Rational(2, 4, gcd=1)`` in which the numerator and
+denominator are not reduced. This is now deprecated and unevaluated rationals
+will be removed entirely in a future version of SymPy. This is needed so that
+more efficient implementations of rational numbers can be used internally.
+Instead use something like ``Mul(2, Rational(1, 4), evaluate=False)`` or
+``Symbol('2')/Symbol('4')`` depending on what exactly is wanted.
+
+(deprecated-tensorproduct-simp)=
+### Deprecated tensor_product_simp from physics.quantum
+
+The ``tensor_product_simp`` function in the ``sympy.physics.quantum``
+module has been deprecated along with two helper functions,
+``tensor_product_simp_Mul`` and ``tensor_product_simp_Pow``. The
+transformations performed by these functions are now applied
+automatically to all quantum expressions in the new
+``sympy.physics.quantum.transforms`` module.
+
+If you are using these functions in your code, you can remove them as
+they are now redundant.
+
+Their current implementations have been replaced by a simple
+pass-through as all quantum expressions will already be in the form
+originally produced by these functions. These pass throughs will
+remain, along with its tests for at least one year after the 1.14 release.
+
+(deprecated-operator-identity)=
+### Deprecated IdentityOperator from physics.quantum
+
+The ``IdentityOperator`` in the ``sympy.physics.quantum`` module has been
+deprecated. Originally, we thought that it would be helpful to have a
+multiplicative identity for quantum operators and states. However, at this
+time, it is unused in `sympy.physics.quantum` for anything other than tests
+of its own behavior. In addition, users were finding inconsistencies in
+the behavior of ``IdentityOperator`` compared to what is expected by a
+multiplicative identity.
+
+Moving forward, we recommend that users use the scalar `S.One` as the
+multiplicative identity for all operators and states in the quantum
+module. The code in ``sympy.physics.quantum`` currently does not ever
+return an ``IdentityOperator`` so the only place users will encounter
+its usage is in their own code.
+
+The existing implementation will remain, along with its tests for at least
+one year after the 1.14 release.
+
+(deprecated-aesaraprinter)=
+### Deprecated aesaracode from printing
+sympy's aesaracode module is deprecated because aesara itself
+is umaintained and cannot be installed on Python 3.13.
 
 ## Version 1.13
 
@@ -124,15 +193,15 @@ motion.
 >>> from sympy.physics.mechanics import (
 ...   Body, JointsMethod, PinJoint, PrismaticJoint)
 >>> g, l = symbols("g l")
->>> wall = Body("wall")
->>> cart = Body("cart")
->>> pendulum = Body("Pendulum")
->>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x)
+>>> wall = Body("wall") # doctest: +SKIP
+>>> cart = Body("cart") # doctest: +SKIP
+>>> pendulum = Body("Pendulum") # doctest: +SKIP
+>>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x) # doctest: +SKIP
 >>> pin = PinJoint("j", cart, pendulum, joint_axis=cart.z,
-...                child_point=l * pendulum.y)
->>> pendulum.masscenter.set_vel(pendulum.frame, 0)
->>> cart.apply_force(-g * cart.mass * wall.y)
->>> pendulum.apply_force(-g * pendulum.mass * wall.y)
+...                child_point=l * pendulum.y) # doctest: +SKIP
+>>> pendulum.masscenter.set_vel(pendulum.frame, 0) # doctest: +SKIP
+>>> cart.apply_force(-g * cart.mass * wall.y) # doctest: +SKIP
+>>> pendulum.apply_force(-g * pendulum.mass * wall.y) # doctest: +SKIP
 >>> method = JointsMethod(wall, slider, pin)  # doctest: +SKIP
 >>> method.form_eoms()  # doctest: +SKIP
 Matrix([
@@ -449,7 +518,7 @@ integers modulo ``n`` and can be used like:
 >>> from sympy import GF
 >>> K = GF(5)
 >>> a = K(7)
->>> a
+>>> a # doctest: +SKIP
 2 mod 5
 ```
 
@@ -557,7 +626,7 @@ If you are using these functions, change from
 
 ```py
 >>> from sympy import carmichael
->>> carmichael.is_carmichael(561)
+>>> carmichael.is_carmichael(561) # doctest: +SKIP
 True
 ```
 
@@ -618,8 +687,8 @@ the ``parent.z`` axis and ``-child.z`` axis. The previous way to specify this
 joint was:
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child')
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_axis=parent.z,
 ...                child_axis=-child.z)   # doctest: +SKIP
 >>> parent.dcm(child)   # doctest: +SKIP
@@ -636,13 +705,13 @@ this exact rotation:
 
 ```py
 >>> from sympy import pi
->>> from sympy.physics.mechanics import Body, PinJoint, ReferenceFrame
->>> parent, child, = Body('parent'), Body('child')
+>>> from sympy.physics.mechanics import PinJoint, ReferenceFrame, RigidBody
+>>> parent, child, = RigidBody('parent'), RigidBody('child')
 >>> int_frame = ReferenceFrame('int_frame')
 >>> int_frame.orient_axis(child.frame, child.y, pi)
 >>> pin = PinJoint('pin', parent, child, joint_axis=parent.z,
 ...                child_interframe=int_frame)
->>> parent.dcm(child)
+>>> parent.frame.dcm(child.frame)
 Matrix([
 [-cos(q_pin(t)), -sin(q_pin(t)),  0],
 [-sin(q_pin(t)),  cos(q_pin(t)),  0],
@@ -656,11 +725,11 @@ that the joint axis expressed in the intermediate frame is aligned with the
 given vector:
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child')
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_interframe=parent.z,
 ...                child_interframe=-child.z)
->>> parent.dcm(child)
+>>> parent.frame.dcm(child.frame)
 Matrix([
 [-cos(q_pin(t)), -sin(q_pin(t)),  0],
 [-sin(q_pin(t)),  cos(q_pin(t)),  0],
@@ -681,8 +750,8 @@ For example, suppose you want a ``PinJoint`` in the parent to be positioned at
 ``-child.frame.x``. The previous way to specify this was:
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child')
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_joint_pos=parent.frame.x,
 ...                child_joint_pos=-child.frame.x)   # doctest: +SKIP
 >>> pin.parent_point.pos_from(parent.masscenter)   # doctest: +SKIP
@@ -694,8 +763,8 @@ parent_frame.x
 Now you can do the same with either
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child')
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_point=parent.frame.x,
 ...                child_point=-child.frame.x)
 >>> pin.parent_point.pos_from(parent.masscenter)
@@ -707,8 +776,8 @@ parent_frame.x
 Or
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint, Point
->>> parent, child = Body('parent'), Body('child')
+>>> from sympy.physics.mechanics import PinJoint, Point, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> parent_point = parent.masscenter.locatenew('parent_point', parent.frame.x)
 >>> child_point = child.masscenter.locatenew('child_point', -child.frame.x)
 >>> pin = PinJoint('pin', parent, child, parent_point=parent_point,
@@ -960,21 +1029,6 @@ However, this new behavior was considered confusing, as discussed in issue
 Now, `sample_iter` should be used if a iterator is needed. Consequently, the
 `numsamples` parameter is no longer needed for `sample()`.
 
-(deprecated-rawmatrix)=
-### `sympy.polys.solvers.RawMatrix`
-
-The `RawMatrix` class is deprecated. The `RawMatrix` class was a subclass
-of `Matrix` that used domain elements instead of `Expr` as the elements of
-the matrix. This breaks a key internal invariant of `Matrix` and this kind
-of subclassing limits improvements to the `Matrix` class.
-
-The only part of SymPy that documented the use of the `RawMatrix` class was
-the Smith normal form code, and that has now been changed to use
-`DomainMatrix` instead. It is recommended that anyone using `RawMatrix` with
-the previous Smith Normal Form code should switch to using `DomainMatrix` as
-shown in issue [#21402](https://github.com/sympy/sympy/pull/21402). A better
-API for the Smith normal form will be added later.
-
 (deprecated-non-expr-in-matrix)=
 ### Non-`Expr` objects in a Matrix
 
@@ -999,7 +1053,7 @@ The main reason for making this possible was that there were a number of
 `Matrix` subclasses in the SymPy codebase that wanted to work with objects
 from the polys module, e.g.
 
-1. `RawMatrix` (see [above](deprecated-rawmatrix)) was used in `solve_lin_sys`
+1. `RawMatrix` was used in `solve_lin_sys`
    which was part of `heurisch` and was also used by `smith_normal_form`. The
    `NewMatrix` class used domain elements as the elements of the Matrix rather
    than `Expr`.
@@ -1169,43 +1223,6 @@ into a new project called [Aesara](https://github.com/aesara-devs/aesara). The
 {mod}`sympy.printing.aesaracode`, and all the corresponding functions have
 been renamed (e.g., `theano_code` has been renamed to {func}`~.aesara_code`,
 `TheanoPrinter` has been renamed to {class}`~.AesaraPrinter`, and so on).
-
-(deprecated-askhandler)=
-### `sympy.assumptions.handlers.AskHandler` and related methods
-
-`Predicate` has experienced a big design change. Previously, its handler was a
-list of `AskHandler` classes and registration was done by `add_handler()` and
-`remove_handler()` functions. Now, its handler is a multipledispatch instance
-and registration is done by `register()` or `register_many()` methods. Users
-must define a predicate class to introduce a new one.
-
-Previously, handlers were defined and registered this way:
-
-```python
-class AskPrimeHandler(AskHandler):
-    @staticmethod
-    def Integer(expr, assumptions):
-        return expr.is_prime
-
-register_handler('prime', AskPrimeHandler)
-```
-
-It should be changed to this:
-
-```python
-# Predicate definition.
-# Not needed if you are registering the handler to existing predicate.
-class PrimePredicate(Predicate):
-    name = 'prime'
-Q.prime = PrimePredicate()
-
-# Handler registration
-@Q.prime.register(Integer)
-def _(expr, assumptions):
-    return expr.is_prime
-```
-
-See GitHub issue [#20209](https://github.com/sympy/sympy/issues/20209).
 
 ## Version 1.7.1
 

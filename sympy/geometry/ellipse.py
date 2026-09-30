@@ -5,6 +5,7 @@ Contains
 * Circle
 
 """
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq
@@ -15,6 +16,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
+from sympy.external.mpmath import prec_to_dps
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
@@ -31,8 +33,9 @@ from sympy.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
 
-from mpmath.libmp.libmpf import prec_to_dps
 
+# XXX: This should use sympy.core.random rather than using the stdlib random
+# module directly.
 import random
 
 x, y = [Dummy('ellipse_dummy', real=True) for i in range(2)]
@@ -1475,7 +1478,7 @@ class Ellipse(GeometrySet):
 
 
 class Circle(Ellipse):
-    """A circle in space.
+    r"""A circle in space.
 
     Constructed simply from a center and a radius, from three
     non-collinear points, or the equation of a circle.
@@ -1526,7 +1529,7 @@ class Circle(Ellipse):
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point2D(1/2, 1/2))
 
     A circle can be constructed from an equation in the form
-    `a*x**2 + by**2 + gx + hy + c = 0`, too:
+    `ax^2 + by^2 + gx + hy + c = 0`, too:
 
     >>> Circle(x**2 + y**2 - 25)
     Circle(Point2D(0, 0), 5)

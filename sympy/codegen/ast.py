@@ -202,7 +202,7 @@ class Token(CodegenAST):
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
         # arg may be ``NoneToken()``, so comparison is done using == instead of ``is`` operator
-        if arg == None:
+        if arg == None:  # noqa: E711
             return cls.defaults.get(attr, none)
         else:
             if isinstance(arg, Dummy):  # SymPy's replace uses Dummy instances
@@ -511,7 +511,7 @@ class AugmentedAssignment(AssignmentBase):
        Symbol for binary operation being applied in the assignment, such as "+",
        "*", etc.
     """
-    binop = None  # type: str
+    binop: str | None
 
     @property
     def op(self):
@@ -604,7 +604,7 @@ class CodeBlock(CodegenAST):
 
     ``left_hand_sides``:
         Tuple of left-hand sides of assignments, in order.
-    ``left_hand_sides``:
+    ``right_hand_sides``:
         Tuple of right-hand sides of assignments, in order.
     ``free_symbols``: Free symbols of the expressions in the right-hand sides
         which do not appear in the left-hand side of an assignment.
@@ -1890,6 +1890,41 @@ class FunctionCall(Token, Expr):
 
     _construct_name = String
     _construct_function_args = staticmethod(lambda args: Tuple(*args))
+
+
+class KeywordFunctionCall(FunctionCall):
+    """ Represents a call to a function with keyword arguments in the code.
+
+    Parameters
+    ==========
+
+    name : str
+    function_args : Tuple
+    keyword_args : dict
+        Dictionary mapping parameter names to their values
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import KeywordFunctionCall, String
+    >>> from sympy.core.containers import Tuple
+    >>> from sympy import fcode
+    >>> fcall = KeywordFunctionCall(String('reshape'), Tuple(String('array'), String('shape')), {'order': String('order_array')})
+    >>> print(fcode(fcall, source_format='free'))
+    reshape(array, shape, order=order_array)
+
+    """
+    __slots__ = ('keyword_args',)
+    _fields = ('name', 'function_args', 'keyword_args')  # type: ignore
+
+    defaults = {'keyword_args': {}}
+
+    @staticmethod
+    def _construct_keyword_args(kwargs):
+        from sympy.core.containers import Dict
+        if kwargs is None:
+            return Dict({})
+        return Dict(kwargs)
 
 
 class Raise(Token):

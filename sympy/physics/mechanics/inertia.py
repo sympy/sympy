@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import sympify
 from sympy.physics.vector import Point, Dyadic, ReferenceFrame, outer
 from collections import namedtuple
@@ -120,6 +121,8 @@ class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
     ((N.x|N.x) + (N.y|N.y) + (N.z|N.z), Po)
 
     """
+    __slots__ = ()
+
     def __new__(cls, dyadic, point):
         # Switch order if given in the wrong order
         if isinstance(dyadic, Point) and isinstance(point, Dyadic):
@@ -138,7 +141,7 @@ class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
         Explanation
         ===========
 
-        This class method uses the :func`~.inertia` to create the Dyadic based
+        This class method uses the :func:`~.inertia` to create the Dyadic based
         on the tensor values.
 
         Parameters

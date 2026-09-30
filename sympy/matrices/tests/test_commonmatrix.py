@@ -5,6 +5,7 @@
 # This entire test module and the corresponding sympy/matrices/common.py
 # module will be removed in a future release.
 #
+from __future__ import annotations
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.assumptions import Q
@@ -520,7 +521,7 @@ def test_is_zero():
     assert PropertiesOnlyMatrix([[0, 0], [0, 0]]).is_zero_matrix
     assert PropertiesOnlyMatrix(zeros(3, 4)).is_zero_matrix
     assert not PropertiesOnlyMatrix(eye(3)).is_zero_matrix
-    assert PropertiesOnlyMatrix([[x, 0], [0, 0]]).is_zero_matrix == None
+    assert PropertiesOnlyMatrix([[x, 0], [0, 0]]).is_zero_matrix is None
     assert PropertiesOnlyMatrix([[x, 1], [0, 0]]).is_zero_matrix == False
     a = Symbol('a', nonzero=True)
     assert PropertiesOnlyMatrix([[a, 0], [0, 0]]).is_zero_matrix == False
@@ -1065,8 +1066,8 @@ def test_diagonal():
     s = SparseMatrix(3, 3, {(1, 1): 1})
     assert type(s.diagonal()) == type(s)
     assert type(m) != type(s)
-    raises(ValueError, lambda: m.diagonal(3))
-    raises(ValueError, lambda: m.diagonal(-3))
+    assert m.diagonal(3)  == Matrix(1, 0, [])
+    assert m.diagonal(-3) == Matrix(1, 0, [])
     raises(ValueError, lambda: m.diagonal(pi))
     M = ones(2, 3)
     assert banded({i: list(M.diagonal(i))

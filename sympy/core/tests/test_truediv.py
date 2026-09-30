@@ -1,4 +1,5 @@
 #this module tests that SymPy works with true division turned on
+from __future__ import annotations
 
 from sympy.core.numbers import (Float, Rational)
 from sympy.core.symbol import Symbol

@@ -1,4 +1,5 @@
 """Tests for options manager for :class:`Poly` and public API functions. """
+from __future__ import annotations
 
 from sympy.polys.polyoptions import (
     Options, Expand, Gens, Wrt, Sort, Order, Field, Greedy, Domain,

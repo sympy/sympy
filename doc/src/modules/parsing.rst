@@ -102,15 +102,15 @@ Lark `\mathrm{\LaTeX}` Parser Features
 """"""""""""""""""""""""""""""""""""""
 
 One thing to note is that the Lark backend does not support ill-formed expressions,
-and it does not try to fix any sort of common mistakes that may have occured. For
+and it does not try to fix any sort of common mistakes that may have occurred. For
 example, as mentioned in :ref:`the earlier section <ANTLR parser caveats>`, the
 ANTLR-based parser would simply find ``x`` if we run::
 
-    parse_latex(r'x -', backend='ANTLR')
+    parse_latex(r'x -', backend='antlr')
 
 However, running::
 
-    parse_latex(r'x -', backend='Lark')
+    parse_latex(r'x -', backend='lark')
 
 will raise an ``lark.exceptions.UnexpectedEOF`` exception.
 
@@ -223,6 +223,35 @@ Lark `\mathrm{\LaTeX}` Parser Classes
 ----------------------------------------------
 
 .. autoclass:: sympy.parsing.latex.LaTeXParsingError
+   :members:
+
+Experimental SMT-LIB Parsing
+----------------------------
+
+.. warning::
+
+   The SMT-LIB parser is still under heavy development. The ``parse_smtlib``
+   function is entirely experimental, and its API may change in future
+   versions of SymPy.
+
+The SMT-LIB parser is based on `Lark <https://lark-parser.readthedocs.io/en/latest/>`_,
+so the ``lark`` Python package needs to be installed in order to use it.
+
+SMT-LIB Parsing Functions Reference
+-----------------------------------
+
+.. autofunction:: sympy.parsing.smtlib.parse_smtlib
+
+SMT-LIB Parsing Exceptions Reference
+------------------------------------
+
+.. autoclass:: sympy.parsing.smtlib.SMTLibSyntaxError
+   :members:
+
+.. autoclass:: sympy.parsing.smtlib.UnknownSMTLibCommandError
+   :members:
+
+.. autoclass:: sympy.parsing.smtlib.UnknownSMTLibOperatorError
    :members:
 
 SymPy Expression Reference

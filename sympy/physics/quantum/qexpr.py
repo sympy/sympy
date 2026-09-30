@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -96,10 +97,6 @@ class QExpr(Expr):
 
     # The separator used in printing the label.
     _label_separator = ''
-
-    @property
-    def free_symbols(self):
-        return {self}
 
     def __new__(cls, *args, **kwargs):
         """Construct a new quantum object.

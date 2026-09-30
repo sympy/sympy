@@ -3,6 +3,7 @@
 Module for the SDM class.
 
 """
+from __future__ import annotations
 
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict
@@ -746,6 +747,50 @@ class SDM(dict):
         MT = sdm_transpose(M)
         return M.new(MT, M.shape[::-1], M.domain)
 
+    def conjugate(M):
+        """
+        Returns the conjugate of a :py:class:`~.SDM` matrix
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ_I
+        >>> A = SDM({0:{1:QQ_I(2, -3)}, 1:{}}, (2, 2), QQ_I)
+        >>> A.conjugate()
+        {0: {1: (2 + 3*I)}, 1: {}}
+        """
+        dom = M.domain
+        if not dom.is_ConjugateDomain:
+            raise DMDomainError("%s does not support conjugation" % dom)
+
+        if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+            return M.copy()
+        else:
+            return M.applyfunc(dom.conjugate, dom)
+
+    def adjoint(M):
+        """
+        Returns the adjoint of a :py:class:`~.SDM` matrix
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ_I
+        >>> A = SDM({0:{1:QQ_I(2, -3)}, 1:{}}, (2, 2), QQ_I)
+        >>> A.adjoint()
+        {1: {0: (2 + 3*I)}}
+        """
+        dom = M.domain
+        if not (dom.is_EXRAW or dom.is_EX):
+            return M.conjugate().transpose()
+        elif dom.is_EXRAW:
+            # handle noncommutative elements
+            return M.applyfunc(lambda x: x.adjoint(), dom).transpose()
+        else:
+            return M.applyfunc(lambda x: dom.dtype(x.ex.adjoint()), dom).transpose()
+
     def __add__(A, B):
         if not isinstance(B, SDM):
             return NotImplemented
@@ -834,11 +879,11 @@ class SDM(dict):
         {0: {1: 6}, 1: {0: 3}}
 
         """
-        Csdm = unop_dict(A, lambda aij: aij*b)
+        Csdm = sdm_scalar_mul(A, b, lambda x, y: x * y, A.domain)
         return A.new(Csdm, A.shape, A.domain)
 
     def rmul(A, b):
-        Csdm = unop_dict(A, lambda aij: b*aij)
+        Csdm = sdm_scalar_mul(A, b, lambda x, y: y * x, A.domain)
         return A.new(Csdm, A.shape, A.domain)
 
     def mul_elementwise(A, B):
@@ -846,9 +891,17 @@ class SDM(dict):
             raise DMDomainError
         if A.shape != B.shape:
             raise DMShapeError
-        zero = A.domain.zero
-        fzero = lambda e: zero
-        Csdm = binop_dict(A, B, mul, fzero, fzero)
+
+        K = A.domain
+        zero = K.zero
+        if K.is_EXRAW:
+            fmul_zero_a = lambda e: e * zero
+            fmul_zero_b = lambda e: zero * e
+            Csdm = binop_dict(A, B, mul, fmul_zero_a, fmul_zero_b)
+        else:
+            fzero = lambda e: zero
+            Csdm = binop_dict(A, B, mul, fzero, fzero)
+
         return A.new(Csdm, A.shape, A.domain)
 
     def add(A, B):
@@ -1065,6 +1118,19 @@ class SDM(dict):
         L, U, swaps = A.to_ddm().lu()
         return A.from_ddm(L), A.from_ddm(U), swaps
 
+    def qr(self):
+        """
+        QR decomposition for SDM (Sparse Domain Matrix).
+
+        Returns:
+            - Q: Orthogonal matrix as a SDM.
+            - R: Upper triangular matrix as a SDM.
+        """
+        ddm_q, ddm_r = self.to_ddm().qr()
+        Q = ddm_q.to_sdm()
+        R = ddm_r.to_sdm()
+        return Q, R
+
     def lu_solve(A, b):
         """
 
@@ -1082,6 +1148,24 @@ class SDM(dict):
 
         """
         return A.from_ddm(A.to_ddm().lu_solve(b.to_ddm()))
+
+    def fflu(self):
+        """
+        Fraction free LU decomposition of SDM.
+
+        Uses DDM implementation.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.ddm.DDM.fflu
+        """
+        ddm_p, ddm_l, ddm_d, ddm_u = self.to_dfm_or_ddm().fflu()
+        P = ddm_p.to_sdm()
+        L = ddm_l.to_sdm()
+        D = ddm_d.to_sdm()
+        U = ddm_u.to_sdm()
+        return P, L, D, U
 
     def nullspace(A):
         """
@@ -1498,7 +1582,7 @@ def sdm_matmul_exraw(A, B, K, m, o):
     #
     # Like sdm_matmul above except that:
     #
-    # - Handles cases like 0*oo -> nan (sdm_matmul skips multipication by zero)
+    # - Handles cases like 0*oo -> nan (sdm_matmul skips multiplication by zero)
     # - Uses K.sum (Add(*items)) for efficient addition of Expr
     #
     zero = K.zero
@@ -1556,6 +1640,36 @@ def sdm_matmul_exraw(A, B, K, m, o):
                                 C.pop(i, None)
 
     return C
+
+
+def sdm_scalar_mul(A, b, op, K):
+    """
+    Handles special cases like 0 * oo -> nan by creating a dense result
+    when necessary. For all other cases, it uses the fast sparse approach.
+    """
+
+    zero = K.zero
+    if K.is_EXRAW and op(zero, b) != zero:
+        Csdm = sdm_scalar_mul_exraw(A, b, op, K)
+    else:
+        Csdm = unop_dict(A, lambda aij: op(aij, b))
+    return Csdm
+
+
+def sdm_scalar_mul_exraw(A, b, op, K):
+    zero = K.zero
+    zero_prod = op(zero, b)
+    m, n = A.shape
+    Csdm = {i: dict.fromkeys(range(n), zero_prod) for i in range(m)}
+    for i, Ai in A.items():
+        Ci = Csdm[i]
+        for j, Aij in Ai.items():
+            Cij = op(Aij, b)
+            if Cij == zero:
+                del Ci[j]
+            else:
+                Ci[j] = Cij
+    return Csdm
 
 
 def sdm_irref(A):

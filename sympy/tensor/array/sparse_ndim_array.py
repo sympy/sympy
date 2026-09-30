@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.singleton import S
@@ -85,7 +86,7 @@ class SparseNDimArray(NDimArray):
         [1, 1, 1]])
         """
         from sympy.matrices import SparseMatrix
-        if self.rank() != 2:
+        if self.ndim != 2:
             raise ValueError('Dimensions must be of size of 2')
 
         mat_sparse = {}
@@ -106,6 +107,10 @@ class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ign
     def __new__(cls, iterable=None, shape=None, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
+        # A non-dict ``flat_list`` may be a one-shot iterator; materialize it so
+        # the length checks below (and the reuse further down) work.
+        if not isinstance(flat_list, (dict, Dict)):
+            flat_list = list(flat_list)
         cls._check_special_bounds(flat_list, shape)
         loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
 
@@ -122,7 +127,7 @@ class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ign
 
         self = Basic.__new__(cls, sparse_array, shape, **kwargs)
         self._shape = shape
-        self._rank = len(shape)
+        self._ndim = len(shape)
         self._loop_size = loop_size
         self._sparse_array = sparse_array
 
@@ -139,9 +144,14 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
 
     def __new__(cls, iterable=None, shape=None, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
+        # A non-dict ``flat_list`` may be a one-shot iterator (e.g. from
+        # ``applyfunc``); materialize it so the length below and the reuse
+        # further down both work.
+        if not isinstance(flat_list, (dict, Dict)):
+            flat_list = list(flat_list)
         self = object.__new__(cls)
         self._shape = shape
-        self._rank = len(shape)
+        self._ndim = len(shape)
         self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
 
         # Sparse array:

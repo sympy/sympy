@@ -1,4 +1,5 @@
 """Tests for the ``sympy.physics.mechanics.actuator.py`` module."""
+from __future__ import annotations
 
 import pytest
 
@@ -674,7 +675,7 @@ class NonSympifyable:
 
 class TestDuffingSpring:
     @pytest.fixture(autouse=True)
-    # Set up common vairables that will be used in multiple tests
+    # Set up common variables that will be used in multiple tests
     def _duffing_spring_fixture(self):
         self.linear_stiffness = Symbol('beta')
         self.nonlinear_stiffness = Symbol('alpha')
@@ -743,7 +744,7 @@ class TestDuffingSpring:
         ]
     )
 
-    # Check if DuffingSpring correctly inializes its attributes
+    # Check if DuffingSpring correctly initializes its attributes
     # It tests various combinations of linear & nonlinear stiffness, equilibriun length, and the resulting force expression
     def test_valid_constructor(
         self,

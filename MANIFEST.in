@@ -2,6 +2,7 @@ recursive-include data *
 recursive-include doc *
 prune doc/_build
 prune doc/ext/__pycache__
+prune doc/src/_pygments/__pycache__
 exclude doc/src/modules/physics/mechanics/examples/*.pdf
 exclude doc/src/modules/physics/vector/*.pdf
 exclude doc/src/modules/vector/*.pdf
@@ -11,6 +12,7 @@ include sympy/utilities/mathml/data/*.xsl
 
 recursive-include sympy/parsing/latex *.g4 *.txt
 recursive-include sympy/parsing/autolev *.g4 *.al
+recursive-include sympy/parsing/smtlib *.lark
 
 include LICENSE
 include TODO

@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+
+import subprocess
+import sys
+
+
+EXCLUDE_MODULES = r"""
+(
+    sympy.parsing.autolev._antlr.*
+    |sympy.parsing.latex._antlr.*
+    |sympy.galgebra
+    |sympy.plotting.pygletplot.*
+    |sympy.parsing.latex._parse_latex_antlr
+    |sympy.utilities.(tmpfiles|runtests|randtest|pytest)
+    |sympy.testing.randtest
+    |sympy.core.(trace|compatibility)
+    |sympy.this
+)
+"""
+
+
+def main():
+    return subprocess.call([
+        sys.executable,
+        "-m",
+        "slotscheck",
+        "--no-strict-imports",
+        "--exclude-modules",
+        EXCLUDE_MODULES,
+        "--exclude-classes",
+        "sympy.polys.domains.mpelements:(ComplexElement|RealElement)",
+        "sympy",
+    ])
+
+
+if __name__ == "__main__":
+    sys.exit(main())

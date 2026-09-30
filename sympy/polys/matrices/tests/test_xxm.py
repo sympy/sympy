@@ -4,7 +4,7 @@
 # These three types are supposed to be interchangeable, so we should use the
 # same tests for all of them for the most part.
 #
-# The tests here cover the basic part of the inerface that the three types
+# The tests here cover the basic part of the interface that the three types
 # should expose and that DomainMatrix should mostly rely on.
 #
 # More in-depth tests of the heavier algorithms like rref etc should go in
@@ -13,10 +13,11 @@
 # Any new methods added to the DDM, SDM or DFM classes should be tested here
 # and added to all classes.
 #
+from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 
-from sympy import ZZ, QQ, GF, ZZ_I, symbols
+from sympy import ZZ, QQ, GF, ZZ_I, symbols, sqrt
 
 from sympy.polys.matrices.exceptions import (
     DMBadInputError,
@@ -657,6 +658,58 @@ def test_XXM_transpose(DM):
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_conjugate_real(DM):
+    A = DM([[1, 2, 3], [4, 5, 6]])
+    assert A.conjugate() == A
+
+
+def test_XXM_conjugate_complex():
+    A = DDM([[ZZ_I(1, 2), ZZ_I(3, 4)], [ZZ_I(0, 0), ZZ_I(7, 8)]], (2, 2), ZZ_I)
+    B = DDM([[ZZ_I(1, -2), ZZ_I(3, -4)], [ZZ_I(0, 0), ZZ_I(7, -8)]], (2, 2), ZZ_I)
+    assert A.conjugate() == B
+    assert B.conjugate() == A
+    assert A.to_sdm().conjugate() == B.to_sdm()
+    assert B.to_sdm().conjugate() == A.to_sdm()
+
+    K = QQ.algebraic_field(4 + sqrt(-2))
+    A = DDM([[K.convert((-1 + sqrt(-2))/4)], [K.convert(3 + 5*sqrt(-2))]], (2, 1), K)
+    B = DDM([[K.convert((-1 - sqrt(-2))/4)], [K.convert(3 - 5*sqrt(-2))]], (2, 1), K)
+    assert A.conjugate() == B
+    assert B.conjugate() == A
+    assert A.to_sdm().conjugate() == B.to_sdm()
+    assert B.to_sdm().conjugate() == A.to_sdm()
+
+    A = DDM([[1, 2, 3], [4, 5, 6]], (2, 3), GF(7))
+    raises(DMDomainError, lambda: A.conjugate())
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_adjoint_real(DM):
+    A = DM([[1, 2, 3], [4, 5, 6]])
+    assert A.adjoint() == DM([[1, 4], [2, 5], [3, 6]])
+
+
+def test_XXM_adjoint_complex():
+    A = DDM([[ZZ_I(1, 2), ZZ_I(3, 4)], [ZZ_I(0, 0), ZZ_I(7, 8)]], (2, 2), ZZ_I)
+    B = DDM([[ZZ_I(1, -2), ZZ_I(0, 0)], [ZZ_I(3, -4), ZZ_I(7, -8)]], (2, 2), ZZ_I)
+    assert A.adjoint() == B
+    assert B.adjoint() == A
+    assert A.to_sdm().adjoint() == B.to_sdm()
+    assert B.to_sdm().adjoint() == A.to_sdm()
+
+    K = QQ.algebraic_field(4 + sqrt(-2))
+    A = DDM([[K.convert((-1 + sqrt(-2))/4)], [K.convert(3 + 5*sqrt(-2))]], (2, 1), K)
+    B = DDM([[K.convert((-1 - sqrt(-2))/4), K.convert(3 - 5*sqrt(-2))]], (1, 2), K)
+    assert A.adjoint() == B
+    assert B.adjoint() == A
+    assert A.to_sdm().adjoint() == B.to_sdm()
+    assert B.to_sdm().adjoint() == A.to_sdm()
+
+    A = DDM([[1, 2, 3], [4, 5, 6]], (2, 3), GF(7))
+    raises(DMDomainError, lambda: A.adjoint())
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
 def test_XXM_add(DM):
     A = DM([[1, 2, 3], [4, 5, 6]])
     B = DM([[1, 2, 3], [4, 5, 6]])
@@ -755,6 +808,8 @@ def test_XXM_applyfunc(DM):
 def test_XXM_is_upper(DM):
     assert DM([[1, 2, 3], [0, 5, 6]]).is_upper() is True
     assert DM([[1, 2, 3], [4, 5, 6]]).is_upper() is False
+    assert DM([]).is_upper() is True
+    assert DM([[], []]).is_upper() is True
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
@@ -862,3 +917,160 @@ def test_XXM_lll(DM):
     assert M.lll() == M_lll
     assert M.lll_transform() == (M_lll, T)
     assert T.matmul(M) == M_lll
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_mixed_signs(DM):
+    lol = [[QQ(1), QQ(-2)], [QQ(-3), QQ(4)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.matmul(R) == A
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_large_matrix(DM):
+    lol = [[QQ(i + j) for j in range(10)] for i in range(10)]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.matmul(R) == A
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_identity_matrix(DM):
+    T = type(DM([[0]]))
+    A = T.eye(3, QQ)
+    Q, R = A.qr()
+    assert Q == A
+    assert R == A
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+    assert Q.shape == (3, 3)
+    assert R.shape == (3, 3)
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_square_matrix(DM):
+    lol = [[QQ(3), QQ(1)], [QQ(4), QQ(3)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.matmul(R) == A
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_matrix_with_zero_columns(DM):
+    lol = [[QQ(3), QQ(0)], [QQ(4), QQ(0)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.matmul(R) == A
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_linearly_dependent_columns(DM):
+    lol = [[QQ(1), QQ(2)], [QQ(2), QQ(4)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.matmul(R) == A
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_qr_non_field(DM):
+    lol = [[ZZ(3), ZZ(1)], [ZZ(4), ZZ(3)]]
+    A = DM(lol)
+    with pytest.raises(DMDomainError):
+        A.qr()
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_field(DM):
+    lol = [[QQ(3), QQ(1)], [QQ(4), QQ(3)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.matmul(R) == A
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_tall_matrix(DM):
+    lol = [[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(5), QQ(6)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.matmul(R) == A
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_wide_matrix(DM):
+    lol = [[QQ(1), QQ(2), QQ(3)], [QQ(4), QQ(5), QQ(6)]]
+    A = DM(lol)
+    Q, R = A.qr()
+    assert Q.matmul(R) == A
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_empty_matrix_0x0(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((0, 0), QQ)
+    Q, R = A.qr()
+    assert Q.matmul(R).shape == A.shape
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+    assert Q.shape == (0, 0)
+    assert R.shape == (0, 0)
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_empty_matrix_2x0(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((2, 0), QQ)
+    Q, R = A.qr()
+    assert Q.matmul(R).shape == A.shape
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+    assert Q.shape == (2, 0)
+    assert R.shape == (0, 0)
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_qr_empty_matrix_0x2(DM):
+    T = type(DM([[0]]))
+    A = T.zeros((0, 2), QQ)
+    Q, R = A.qr()
+    assert Q.matmul(R).shape == A.shape
+    assert (Q.transpose().matmul(Q)).is_diagonal
+    assert R.is_upper
+    assert Q.shape == (0, 0)
+    assert R.shape == (0, 2)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_fflu(DM):
+    A = DM([[1, 2], [3, 4]])
+    P, L, D, U = A.fflu()
+    A_field = A.convert_to(QQ)
+    P_field = P.convert_to(QQ)
+    L_field = L.convert_to(QQ)
+    D_field = D.convert_to(QQ)
+    U_field = U.convert_to(QQ)
+    assert P.shape == A.shape
+    assert L.shape == A.shape
+    assert D.shape == A.shape
+    assert U.shape == A.shape
+    assert P == DM([[1, 0], [0, 1]])
+    assert L == DM([[1, 0], [3, -2]])
+    assert D == DM([[1, 0], [0, -2]])
+    assert U == DM([[1, 2], [0, -2]])
+    assert L_field.matmul(D_field.inv()).matmul(U_field) == P_field.matmul(A_field)

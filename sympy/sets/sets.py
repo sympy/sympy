@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, TYPE_CHECKING, overload
 from functools import reduce
 from collections import defaultdict
+from itertools import pairwise
 import inspect
 
 from sympy.core.kind import Kind, UndefinedKind, NumberKind
@@ -22,21 +23,21 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, _sympy_converter
+from sympy.external.mpmath import prec_to_dps, mpf, mpi
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import And, Or, Not, Xor, true, false
+from sympy.logic.boolalg import And, Or, Not, Xor, true, false, Boolean
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
                                        subsets)
 from sympy.utilities.misc import func_name, filldedent
 
-from mpmath import mpi, mpf
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Iterable
 
-from mpmath.libmp.libmpf import prec_to_dps
 
-
-tfn = defaultdict(lambda: None, {
+tfn: dict[bool | Boolean | None, Boolean | None] = defaultdict(lambda: None, {
     True: S.true,
     S.true: S.true,
     False: S.false,
@@ -88,6 +89,38 @@ class Set(Basic, EvalfMixin):
     )
     def is_EmptySet(self):
         return None
+
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Basic | complex) -> Set:
+            ...
+
+        @overload # type: ignore
+        def subs(self, arg1: Mapping[Basic | complex, Set | complex], arg2: None=None) -> Set: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Set | complex]], arg2: None=None, **kwargs: Any) -> Set: ...
+        @overload
+        def subs(self, arg1: Set | complex, arg2: Set | complex) -> Set: ...
+        @overload
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
+
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
+                 arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
+            ...
+
+        def simplify(self, **kwargs) -> Set:
+            assert False
+
+        def evalf(self, n: int = 15, subs: dict[Basic, Basic | float] | None = None,
+                  maxn: int = 100, chop: bool = False, strict: bool  = False,
+                  quad: str | None = None, verbose: bool = False) -> Set:
+            ...
+
+        n = evalf
 
     @staticmethod
     def _infimum_key(expr):
@@ -425,13 +458,6 @@ class Set(Basic, EvalfMixin):
         if ret is not None:
             return ret
 
-        # Fall back on computing the intersection
-        # XXX: We shouldn't do this. A query like this should be handled
-        # without evaluating new Set objects. It should be the other way round
-        # so that the intersect method uses is_subset for evaluation.
-        if self.intersect(other) == self:
-            return True
-
     def _eval_is_subset(self, other):
         '''Returns a fuzzy bool for whether self is a subset of other.'''
         return None
@@ -462,7 +488,10 @@ class Set(Basic, EvalfMixin):
 
         """
         if isinstance(other, Set):
-            return self != other and self.is_subset(other)
+            return fuzzy_and([
+                self.is_subset(other),
+                fuzzy_not(other.is_subset(self)),
+            ])
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
@@ -507,7 +536,7 @@ class Set(Basic, EvalfMixin):
 
         """
         if isinstance(other, Set):
-            return self != other and self.is_superset(other)
+            return other.is_proper_subset(self)
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
@@ -816,6 +845,10 @@ class Set(Basic, EvalfMixin):
             # result with Set use y.contains(x)
             raise TypeError('did not evaluate to a bool: %r' % c)
         return b
+
+    def as_relational(self, symbol):
+        """Rewrites the set as a relational."""
+        raise NotImplementedError("as_relational is not implemented for this set type.")
 
 
 class ProductSet(Set):
@@ -1287,6 +1320,15 @@ class Union(Set, LatticeOp):
     """
     Represents a union of sets as a :class:`Set`.
 
+    Parameters
+    ==========
+    args : iterable[Set]
+        The input sets to be united.
+
+    evaluate : bool, optional
+        If True (default from sympy.core.parameters.global_parameters.evaluate),
+        the constructor simplifies the union.
+
     Examples
     ========
 
@@ -1432,8 +1474,12 @@ class Union(Set, LatticeOp):
     def _contains(self, other):
         return Or(*[s.contains(other) for s in self.args])
 
-    def is_subset(self, other):
-        return fuzzy_and(s.is_subset(other) for s in self.args)
+    def _eval_is_subset(self, other):
+        return fuzzy_and(arg.is_subset(other) for arg in self.args)
+
+    def _eval_is_superset(self, other):
+        if fuzzy_or(arg.is_superset(other) for arg in self.args):
+            return True
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
@@ -1463,6 +1509,15 @@ class Union(Set, LatticeOp):
 class Intersection(Set, LatticeOp):
     """
     Represents an intersection of sets as a :class:`Set`.
+
+    Parameters
+    ==========
+    args : iterable[Set]
+        The input sets to be intersected.
+
+    evaluate : bool, optional
+        If True (default from sympy.core.parameters.global_parameters.evaluate),
+        the constructor simplifies the intersection.
 
     Examples
     ========
@@ -1747,6 +1802,11 @@ class Complement(Set):
         B = self.args[1]
         return And(A.contains(other), Not(B.contains(other)))
 
+    def _eval_is_subset(self, other):
+        A, B = self.args
+        if A.is_subset(other):
+            return True
+
     def as_relational(self, symbol):
         """Rewrite a complement in terms of equalities and logic
         operators"""
@@ -1994,7 +2054,7 @@ class FiniteSet(Set):
                 nums.sort()
                 intervals = []  # Build up a list of intervals between the elements
                 intervals += [Interval(S.NegativeInfinity, nums[0], True, True)]
-                for a, b in zip(nums[:-1], nums[1:]):
+                for a, b in pairwise(nums):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
                 if syms != []:
@@ -2088,9 +2148,6 @@ class FiniteSet(Set):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
         return Or(*[Eq(symbol, elem) for elem in self])
 
-    def compare(self, other):
-        return (hash(self) - hash(other))
-
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)
         return FiniteSet(*[elem.evalf(n=dps) for elem in self])
@@ -2125,24 +2182,24 @@ class FiniteSet(Set):
                 return None
         return PowerSet(biggest)
 
-    def __ge__(self, other):
+    def __ge__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return other.is_subset(self)
 
-    def __gt__(self, other):
+    def __gt__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return self.is_proper_superset(other)
 
-    def __le__(self, other):
+    def __le__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return self.is_subset(other)
 
-    def __lt__(self, other):
+    def __lt__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return self.is_proper_subset(other)
 
     def __eq__(self, other):
@@ -2150,7 +2207,9 @@ class FiniteSet(Set):
             return self._args_set == other
         return super().__eq__(other)
 
-    __hash__ : Callable[[Basic], Any] = Basic.__hash__
+    def __hash__(self):
+        return Basic.__hash__(self)
+
 
 _sympy_converter[set] = lambda x: FiniteSet(*x)
 _sympy_converter[frozenset] = lambda x: FiniteSet(*x)

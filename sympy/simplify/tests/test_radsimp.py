@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
@@ -443,6 +444,9 @@ def test_fraction():
     assert fraction(m) == (1, 4)
     assert fraction(m, exact=True) == \
             (Mul(1, 1, evaluate=False), Mul(2, 2, 1, evaluate=False))
+
+    u = Pow(2, -2, evaluate=False)
+    assert fraction(u, exact=True) == (1, Pow(2, 2, evaluate=False))
 
 
 def test_issue_5615():

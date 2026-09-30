@@ -17,8 +17,8 @@ control systems using state variables, inputs, and outputs in matrix form. This
 representation is particularly useful for time-domain analysis and handling complex
 MIMO systems.
 
-This tutorial contains a breif guide on how to solve Control Problems using
-`TransferFunction` and `StateSpace`.
+This tutorial contains a brief guide on how to solve Control Problems using
+``TransferFunction``, ``DiscreteTransferFunction`` and ``StateSpace``.
 
 .. toctree::
    :maxdepth: 1

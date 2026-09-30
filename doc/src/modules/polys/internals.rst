@@ -64,6 +64,19 @@ may be slightly more efficient.)
 
 .. currentmodule:: sympy.polys.densebasic
 
+.. py:class:: dup
+.. py:class:: dmp
+.. py:class:: idmp
+.. py:class:: dmp_tup
+.. py:class:: monom
+
+The ``dup`` representation is a list of coefficients that are themselves domain
+elements. The ``dmp`` type represents dense, multivariate polynomials
+recursively as a list of lists. See :ref:`polys-domainsintro` for an
+introductory explanation of the domain system and the ``dup`` and ``dmp``
+representations. Many functions are available to manipulate polynomials in the
+``dup`` and ``dmp`` representations. This section lists some of them.
+
 .. autofunction:: dmp_LC
 .. autofunction:: dmp_TC
 .. autofunction:: dmp_ground_LC
@@ -108,8 +121,13 @@ may be slightly more efficient.)
 .. autofunction:: dmp_terms_gcd
 .. autofunction:: dmp_list_terms
 .. autofunction:: dmp_apply_pairs
+.. autofunction:: dup_slice
 .. autofunction:: dmp_slice
+.. autofunction:: dup_truncate
 .. autofunction:: dup_random
+.. autofunction:: dup_from_list
+.. autofunction:: dup_pretty
+.. autofunction:: dup_print
 
 **Arithmetic operations:**
 
@@ -131,9 +149,14 @@ may be slightly more efficient.)
 .. autofunction:: dmp_sub
 .. autofunction:: dmp_add_mul
 .. autofunction:: dmp_sub_mul
+.. autofunction:: dup_mul
 .. autofunction:: dmp_mul
+.. autofunction:: dup_series_mul
+.. autofunction:: dup_sqr
 .. autofunction:: dmp_sqr
+.. autofunction:: dup_series_sqr
 .. autofunction:: dmp_pow
+.. autofunction:: dup_series_pow
 .. autofunction:: dmp_pdiv
 .. autofunction:: dmp_prem
 .. autofunction:: dmp_pquo
@@ -175,12 +198,16 @@ may be slightly more efficient.)
 .. autofunction:: dup_scale
 .. autofunction:: dup_shift
 .. autofunction:: dup_transform
+.. autofunction:: dup_compose
 .. autofunction:: dmp_compose
+.. autofunction:: dup_series_compose
 .. autofunction:: dup_decompose
 .. autofunction:: dmp_lift
 .. autofunction:: dup_sign_variations
 .. autofunction:: dmp_clear_denoms
+.. autofunction:: dup_revert
 .. autofunction:: dmp_revert
+.. autofunction:: dup_series_reversion
 
 Manipulation of dense, univariate polynomials with finite field coefficients
 ****************************************************************************
@@ -723,6 +750,31 @@ Modular GCD
 .. autofunction:: modgcd_multivariate
 .. autofunction:: _modgcd_multivariate_p
 .. autofunction:: func_field_modgcd
+
+Sparse representation
+*********************
+
+.. currentmodule:: sympy.polys.sparsetools
+
+.. py:class:: smp
+
+The ``smp`` type alias represents sparse multivariate polynomials as
+dictionaries mapping monomial exponent tuples to coefficients.
+
+Zippel algorithm
+****************
+
+.. currentmodule:: sympy.polys.zippel
+
+.. autofunction:: lag_basis
+.. autofunction:: vandermonde_interp
+.. autofunction:: from_newt_to_poly
+.. autofunction:: incremental_newton_interp
+.. autofunction:: skeleton_sorter
+.. autofunction:: smp_zippel_gcd
+.. autofunction:: smp_zippel_gcd_mod
+.. autofunction:: smp_zippel_interp_mod
+
 
 Undocumented
 ============

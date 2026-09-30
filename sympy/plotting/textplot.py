@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import Float
 from sympy.core.symbol import Dummy
 from sympy.utilities.lambdify import lambdify

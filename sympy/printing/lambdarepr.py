@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .pycode import (
     PythonCodePrinter,
     MpmathPrinter,
@@ -9,9 +10,9 @@ from sympy.core.sorting import default_sort_key
 __all__ = [
     'PythonCodePrinter',
     'MpmathPrinter',  # MpmathPrinter is published for backward compatibility
+    'NumExprPrinter',
     'NumPyPrinter',
     'LambdaPrinter',
-    'NumPyPrinter',
     'IntervalPrinter',
     'lambdarepr',
 ]

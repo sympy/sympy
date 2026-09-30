@@ -1,4 +1,5 @@
 """Polynomial manipulation algorithms and algebraic objects. """
+from __future__ import annotations
 
 __all__ = [
     'Poly', 'PurePoly', 'poly_from_expr', 'parallel_poly_from_expr', 'degree',
@@ -10,7 +11,8 @@ __all__ = [
     'sqf_norm', 'sqf_part', 'sqf_list', 'sqf', 'factor_list', 'factor',
     'intervals', 'refine_root', 'count_roots', 'all_roots', 'real_roots',
     'nroots', 'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced',
-    'groebner', 'is_zero_dimensional', 'GroebnerBasis', 'poly',
+    'groebner', 'hurwitz_conditions', 'schur_conditions', 'is_zero_dimensional',
+    'GroebnerBasis', 'poly',
 
     'symmetrize', 'horner', 'interpolate', 'rational_interpolate', 'viete',
 
@@ -40,9 +42,10 @@ __all__ = [
     'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
     'ComplexField', 'PythonFiniteField', 'GMPYFiniteField',
     'PythonIntegerRing', 'GMPYIntegerRing', 'PythonRational',
-    'GMPYRationalField', 'AlgebraicField', 'PolynomialRing', 'FractionField',
-    'ExpressionDomain', 'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy',
-    'QQ_python', 'QQ_gmpy', 'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR',
+    'GMPYRationalField', 'AlgebraicField', 'CyclotomicField',
+    'PolynomialRing', 'FractionField', 'ExpressionDomain',
+    'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
+    'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR',
     'CC', 'EX', 'EXRAW',
 
     'construct_domain',
@@ -74,7 +77,7 @@ from .polytools import (Poly, PurePoly, poly_from_expr,
         sqf_list, sqf, factor_list, factor, intervals, refine_root,
         count_roots, all_roots, real_roots, nroots, ground_roots,
         nth_power_roots_poly, cancel, reduced, groebner, is_zero_dimensional,
-        GroebnerBasis, poly)
+        hurwitz_conditions, schur_conditions, GroebnerBasis, poly)
 
 from .polyfuncs import (symmetrize, horner, interpolate,
         rational_interpolate, viete)
@@ -106,7 +109,7 @@ from .polyroots import roots
 from .domains import (Domain, FiniteField, IntegerRing, RationalField,
         RealField, ComplexField, PythonFiniteField, GMPYFiniteField,
         PythonIntegerRing, GMPYIntegerRing, PythonRational, GMPYRationalField,
-        AlgebraicField, PolynomialRing, FractionField, ExpressionDomain,
+        AlgebraicField, CyclotomicField, PolynomialRing, FractionField, ExpressionDomain,
         FF_python, FF_gmpy, ZZ_python, ZZ_gmpy, QQ_python, QQ_gmpy, GF, FF,
         ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, EXRAW)
 

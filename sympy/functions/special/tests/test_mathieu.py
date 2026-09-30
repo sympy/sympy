@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import diff
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.miscellaneous import sqrt

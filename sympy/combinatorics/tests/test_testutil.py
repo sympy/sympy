@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup,\
     CyclicGroup
 from sympy.combinatorics.testutil import _verify_bsgs, _cmp_perm_lists,\
@@ -11,7 +12,7 @@ from sympy.core.random import shuffle
 def test_cmp_perm_lists():
     S = SymmetricGroup(4)
     els = list(S.generate_dimino())
-    other = els[:]
+    other = els.copy()
     shuffle(other)
     assert _cmp_perm_lists(els, other) is True
 

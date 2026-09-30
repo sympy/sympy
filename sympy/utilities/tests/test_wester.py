@@ -5,6 +5,7 @@ http://www.math.unm.edu/~wester/cas/book/Wester.pdf
 See also http://math.unm.edu/~wester/cas_review.html for detailed output of
 each tested system.
 """
+from __future__ import annotations
 
 from sympy.assumptions.ask import Q, ask
 from sympy.assumptions.refine import refine
@@ -1031,7 +1032,9 @@ def test_M23():
     x = symbols('x', complex=True)
     # TODO: Replace solve with solveset, as of now test fails for solveset
     assert solve(x - 1/sqrt(1 + x**2)) == [
-        -I*sqrt(S.Half + sqrt(5)/2), sqrt(Rational(-1, 2) + sqrt(5)/2)]
+        sqrt(2)*sqrt(-1 + sqrt(5))/2,
+        -sqrt(2)*I*sqrt(1 + sqrt(5))/2,
+    ]
 
 
 def test_M24():
@@ -1238,7 +1241,6 @@ def test_N6():
     assert ask(k*x**n > k*y**n, (x > y) & (y > 0) & (k > 0) & (n > 0)) is True
 
 
-@XFAIL
 def test_N7():
     x, y = symbols('x y', real=True)
     assert ask(y > 0, (x > 1) & (y >= x - 1)) is True
@@ -2421,6 +2423,7 @@ def test_V15():
     assert simplify(r1 - (x*y + (x**2 + y**2)*acot(x/y))/2) == 0
 
 
+@slow
 @XFAIL
 def test_V16():
     # Integral not calculated
@@ -2509,6 +2512,7 @@ def test_W9():
 
 
 @XFAIL
+@tooslow
 def test_W10():
     # integrate(1/[1 + x + x^2 + ... + x^(2 n)], x = -infinity..infinity) =
     #        2 pi/(2 n + 1) [1 + cos(pi/[2 n + 1])] csc(2 pi/[2 n + 1])

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .sets import (Set, Interval, Union, FiniteSet, ProductSet,
         Intersection, imageset, Complement, SymmetricDifference,
         DisjointUnion)

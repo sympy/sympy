@@ -1,5 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
+from __future__ import annotations
+
 from .add import Add
 from .mul import Mul, _keep_coeff
 from .power import Pow
@@ -19,7 +21,6 @@ from sympy.utilities.iterables import (common_prefix, common_suffix,
         variations, iterable, is_sequence)
 
 from collections import defaultdict
-from typing import Tuple as tTuple
 
 
 _eps = Dummy(positive=True)
@@ -214,7 +215,7 @@ def _monotonic_sign(self):
             return rv.subs(_eps, 0)
 
 
-def decompose_power(expr: Expr) -> tTuple[Expr, int]:
+def decompose_power(expr: Expr) -> tuple[Expr, int]:
     """
     Decompose power into symbolic base and integer exponent.
 
@@ -248,17 +249,15 @@ def decompose_power(expr: Expr) -> tTuple[Expr, int]:
         if exp is S.NegativeOne:
             base, e = Pow(base, tail), -1
         elif exp is not S.One:
-            # todo: after dropping python 3.7 support, use overload and Literal
-            #  in as_coeff_Mul to make exp Rational, and remove these 2 ignores
-            tail = _keep_coeff(Rational(1, exp.q), tail)  # type: ignore
-            base, e = Pow(base, tail), exp.p  # type: ignore
+            tail = _keep_coeff(Rational(1, exp.q), tail)
+            base, e = Pow(base, tail), exp.p
         else:
             base, e = expr, 1
 
     return base, e
 
 
-def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
+def decompose_power_rat(expr: Expr) -> tuple[Expr, Rational]:
     """
     Decompose power into symbolic base and rational exponent;
     if the exponent is not a Rational, then separate only the
@@ -282,6 +281,81 @@ def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
         base, exp_i = decompose_power(expr)
         exp = Integer(exp_i)
     return base, exp # type: ignore
+
+
+def _decompose_exprs(
+        exprs, is_coeff=None, decompose=decompose_power):
+    """Identify bases and factor information in commutative expressions.
+
+    The expressions are analyzed as given: no expansion, simplification,
+    or reordering is performed. The order of first appearance of factors is
+    preserved, although repeated appearances of the same factor within a term
+    are collected by summing their positive and negative exponents separately.
+
+    ``is_coeff`` determines whether a factor is treated as a coefficient and
+    defaults to identifying numerical expressions as coefficients. Remaining
+    factors are decomposed into base and exponent using ``decompose``.
+
+    Returns ``(exprs_data, bases)``, where ``exprs_data`` contains one
+    list for each expression. Each such list contains a tuple for each term,
+    consisting of a list of coefficient factors and a dictionary mapping each
+    remaining base to a tuple giving the sums of its positive and negative
+    exponents in that term. ``bases`` is the set of all bases identified.
+
+    Examples
+    ========
+
+    >>> from sympy import Mul, symbols, pi
+    >>> from sympy.core.exprtools import _decompose_exprs
+    >>> x, y, z = symbols('x y z')
+    >>> f = Mul(x**2, y, x**-1, x, evaluate=False)
+    >>> exprs_data, bases = _decompose_exprs((f, x*z))
+    >>> exprs_data
+    [[([], {x: (3, -1), y: (1, 0)})],
+     [([], {x: (1, 0), z: (1, 0)})]]
+    >>> bases == {x, y, z}
+    True
+    >>> _decompose_exprs([x**(2*y) + 4*pi*x**3])
+    ([[([], {x**y: (2, 0)}), ([4, pi], {x: (3, 0)})]], {x, x**y})
+
+    """
+    if any(e.is_commutative is False for e in exprs):
+        raise NonCommutativeExpression('commutative expressions expected')
+
+    if is_coeff is None:
+        is_coeff = lambda factor: factor.is_number
+
+    exprs_data, bases = [], set()
+
+    for expr in exprs:
+        term_data = []
+
+        if expr.is_Equality:  # only a convenience, not an enforcement of Eq logic
+            expr = expr.lhs - expr.rhs
+
+        for term in Add.make_args(expr):
+            coeff_factors, powers = [], {}
+
+            for factor in Mul.make_args(term):
+                if is_coeff(factor):
+                    coeff_factors.append(factor)
+                else:
+                    base, exp = decompose(factor)
+                    pos, neg = powers.setdefault(base, (0, 0))
+
+                    if exp < 0:
+                        neg += exp
+                    else:
+                        pos += exp
+
+                    powers[base] = (pos, neg)
+
+            bases.update(powers)
+            term_data.append((coeff_factors, powers))
+
+        exprs_data.append(term_data)
+
+    return exprs_data, bases
 
 
 class Factors:
@@ -1156,7 +1230,7 @@ def _factor_sum_int(expr, **kwargs):
         return i * expr.func(d, *limits)
 
 
-def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
+def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=False, sign=True) -> Expr:
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
@@ -1266,8 +1340,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
                 *[do(a) for a in p.args])
         rv = _keep_coeff(cont, p, clear=clear, sign=sign)
         return rv
-    expr = sympify(expr)
-    return do(expr)
+    expr2 = sympify(expr)
+    return do(expr2)
 
 
 def _mask_nc(eq, name=None):
@@ -1362,7 +1436,7 @@ def _mask_nc(eq, name=None):
     nc_obj = set()
     nc_syms = set()
     pot = preorder_traversal(expr, keys=default_sort_key)
-    for i, a in enumerate(pot):
+    for a in pot:
         if any(a == r[0] for r in rep):
             pot.skip()
         elif not a.is_commutative:

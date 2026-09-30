@@ -1,4 +1,5 @@
 """Fermionic quantum operators."""
+from __future__ import annotations
 
 from sympy.core.numbers import Integer
 from sympy.core.singleton import S

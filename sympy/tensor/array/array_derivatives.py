@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from sympy.core.expr import Expr
 from sympy.core.function import Derivative
 from sympy.core.numbers import Integer
 from sympy.matrices.matrixbase import MatrixBase
@@ -9,6 +8,10 @@ from .arrayop import derive_by_array
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.matrices.expressions.matexpr import _matrix_derivative
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class ArrayDerivative(Derivative):
@@ -46,7 +49,7 @@ class ArrayDerivative(Derivative):
 
     @staticmethod
     def _call_derive_scalar_by_matrix(expr: Expr, v: MatrixBase) -> Expr:
-        return v.applyfunc(lambda x: expr.diff(x))
+        return v.applyfunc(lambda x: expr.diff(x)) # type: ignore
 
     @staticmethod
     def _call_derive_scalar_by_matexpr(expr: Expr, v: MatrixExpr) -> Expr:
@@ -112,7 +115,11 @@ class ArrayDerivative(Derivative):
                 return None
         else:
             # Both `expr` and `v` are some array/matrix type:
-            if isinstance(expr, MatrixBase) or isinstance(v, MatrixBase):
+            if isinstance(expr, MatrixBase) and isinstance(v, MatrixBase):
+                result = derive_by_array(expr, v)
+            elif isinstance(expr, MatrixBase) and isinstance(v, MatrixExpr):
+                result = expr.applyfunc(lambda x: x.diff(v))
+            elif isinstance(expr, MatrixBase) or isinstance(v, MatrixBase):
                 result = derive_by_array(expr, v)
             elif isinstance(expr, MatrixExpr) and isinstance(v, MatrixExpr):
                 result = cls._call_derive_default(expr, v)

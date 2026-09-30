@@ -1,4 +1,6 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
@@ -11,6 +13,12 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+    from sympy.algebras.quaternion import Quaternion
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -59,17 +67,26 @@ class re(DefinedFunction):
     im
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
     _singularities = True  # non-holomorphic
 
+    if TYPE_CHECKING:
+
+        @overload
+        def __new__(cls, arg: Tmat, evaluate: bool = True) -> Tmat: ... # type: ignore
+        @overload
+        def __new__(cls, arg: Expr, evaluate: bool = True) -> Expr: ... # type: ignore
+
+        def __new__(cls, arg: MatrixBase | Expr, evaluate: bool = True # type: ignore
+                    ) -> MatrixBase | Expr:
+            ...
+
     @classmethod
     def eval(cls, arg):
-        if arg is S.NaN:
-            return S.NaN
-        elif arg is S.ComplexInfinity:
+        if arg is S.NaN or arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_extended_real:
             return arg
@@ -181,7 +198,7 @@ class im(DefinedFunction):
     re
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
@@ -189,9 +206,7 @@ class im(DefinedFunction):
 
     @classmethod
     def eval(cls, arg):
-        if arg is S.NaN:
-            return S.NaN
-        elif arg is S.ComplexInfinity:
+        if arg is S.NaN or arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_extended_real:
             return S.Zero
@@ -501,7 +516,7 @@ class Abs(DefinedFunction):
     sign, conjugate
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     is_extended_negative = False
@@ -863,6 +878,15 @@ class conjugate(DefinedFunction):
     """
     _singularities = True  # non-holomorphic
 
+    if TYPE_CHECKING:
+
+        @overload
+        def __new__(cls, arg: Quaternion) -> Quaternion: ... # type: ignore
+        @overload
+        def __new__(cls, arg: Expr) -> Expr: ... # type: ignore
+
+        def __new__(cls, arg: Basic) -> Basic: ... # type: ignore
+
     @classmethod
     def eval(cls, arg):
         obj = arg._eval_conjugate()
@@ -1104,43 +1128,68 @@ class polar_lift(DefinedFunction):
 
 class periodic_argument(DefinedFunction):
     r"""
-    Represent the argument on a quotient of the Riemann surface of the
-    logarithm. That is, given a period $P$, always return a value in
-    $(-P/2, P/2]$, by using $\exp(PI) = 1$.
+    Return the argument of a complex number modulo a given period.
 
-    Examples
-    ========
+    This represents the argument (angle) of a complex number on a quotient of
+    the Riemann surface of the logarithm. Given a period :math:`P`, the value
+    returned is always in the interval :math:`(-P/2, P/2]`.
 
-    >>> from sympy import exp_polar, periodic_argument
-    >>> from sympy import I, pi
-    >>> periodic_argument(exp_polar(10*I*pi), 2*pi)
-    0
-    >>> periodic_argument(exp_polar(5*I*pi), 4*pi)
-    pi
-    >>> from sympy import exp_polar, periodic_argument
-    >>> from sympy import I, pi
-    >>> periodic_argument(exp_polar(5*I*pi), 2*pi)
-    pi
-    >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
-    -pi
-    >>> periodic_argument(exp_polar(5*I*pi), pi)
-    0
+    Formally, for a complex number :math:`z` and period :math:`P`:
+
+    .. math::
+
+        \operatorname{periodic\_argument}(z, P) = \arg(z) \bmod P,
+        \text{ mapped to } (-P/2, P/2].
 
     Parameters
     ==========
 
     ar : Expr
-        A polar number.
+        A polar number (complex number in polar form).
 
     period : Expr
-        The period $P$.
+        The period :math:`P`. Typically a positive real expression or
+        :math:`\infty` for the unbranched argument. Behaviour for
+        non-positive or non-real periods is undefined.
+
+    Notes
+    =====
+
+    - :math:`\arg(z)` is the usual argument (angle) of a complex number.
+    - When :math:`P = \infty` this gives the unbranched argument.
+    - Example of the "wrapping" behavior:
+
+      .. code-block:: python
+
+          >>> from sympy import exp_polar, I, pi
+          >>> from sympy.functions.elementary.complexes import periodic_argument
+          >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
+          -pi
+
+      because :math:`5\pi \bmod 3\pi = 2\pi`, which lies outside
+      :math:`(-3\pi/2, 3\pi/2]`, and subtracting :math:`3\pi` maps it to
+      :math:`-\pi`.
+
+    Examples
+    ========
+
+    >>> from sympy import exp_polar, I, pi
+    >>> from sympy.functions.elementary.complexes import periodic_argument
+    >>> periodic_argument(exp_polar(10*I*pi), 2*pi)
+    0
+    >>> periodic_argument(exp_polar(5*I*pi), 4*pi)
+    pi
+    >>> periodic_argument(exp_polar(5*I*pi), 2*pi)
+    pi
+    >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
+    -pi
 
     See Also
     ========
 
-    sympy.functions.elementary.exponential.exp_polar
     polar_lift : Lift argument to the Riemann surface of the logarithm
-    principal_branch
+    principal_branch : Return the principal branch of a function
+
     """
 
     @classmethod

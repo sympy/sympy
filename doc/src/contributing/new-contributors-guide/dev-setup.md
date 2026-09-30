@@ -31,13 +31,13 @@ of Git for your operating system to start development.
 
 Install git via your native package management system:
 
-```
+```bash
 yum install git
 ```
 
 or:
 
-```
+```bash
 sudo apt-get install git
 ```
 
@@ -61,7 +61,7 @@ In addition, we use this info to associate your commits with your GitHub account
 
 To set these, enter the code below, replacing the name and email with your own (`--global` is optional).:
 
-```
+```bash
 git config --global user.name "Firstname Lastname"
 git config --global user.email "your_email@youremail.com"
 ```
@@ -93,7 +93,7 @@ shortcuts:
 
 ```
 
-See <https://git-scm.com/book/sv/v2/Customizing-Git-Git-Configuration> for
+See [Customizing Git - Git Configuration](https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration) for
 some more common git configuration options.
 
 ## Setup GitHub
@@ -107,18 +107,17 @@ to do them again.
 ### Create a GitHub Account
 
 A [GitHub](https://github.com) account is required to contribute to SymPy. If
-you have not one yet then sign up at <https://github.com/join>. Your
+you have not one yet then [sign up for GitHub](https://github.com/signup). Your
 GitHub account is your presence in the open source world, so we recommend
 choosing a professional username.
 
 ### Setup SSH Keys
 
 To establish a secure connection between your computer and GitHub see detailed
-instructions in <https://docs.github.com/get-started/getting-started-with-git/set-up-git> or at
-<https://docs.github.com/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account>.
+instructions at [Set up Git](https://docs.github.com/get-started/getting-started-with-git/set-up-git) or at [Adding a new SSH key to your GitHub account](https://docs.github.com/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
 If you have any problems with SSH access to GitHub, read the troubleshooting
-instructions at <https://docs.github.com/authentication/troubleshooting-ssh>, or
+instructions at [Troubleshooting SSH](https://docs.github.com/authentication/troubleshooting-ssh), or
 ask us on the [mailing list](https://groups.google.com/g/sympy).
 
 ### Fork SymPy
@@ -143,30 +142,74 @@ https://github.com/sympy/sympy
 
 You will now have a fork at `https://github.com/<your-user-name>/sympy`.
 
-Then, on your machine browse to where you would like to store SymPy, and clone (download) the latest code from SymPy's original repository (about 77 MiB):
+*Note: Replace `<your-github-username>` with your GitHub username.*
+
+Then, on your machine, browse to where you would like to store SymPy, and clone (download) the latest code from SymPy's original repository:
 
 ```bash
-$ git clone https://github.com/sympy/sympy
+git clone https://github.com/sympy/sympy
 ```
 
-Then assign your read-and-write repo to a remote called "github" (replace
-`<your-github-username>` with your GitHub username):
+For more information about GitHub forking and tuning see: [Fork a Repository](https://docs.github.com/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) and [Pull Requests](https://docs.github.com/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
+
+### Setup Remote Connection
+
+Remote is a name that git uses locally to store the URL of your forked repository. It makes it easier to collaborate and share your own work without disturbing the original repository. The remote setup can be done in two different ways: via **SSH** or via **HTTPS**.
+
+SSH and HTTPS remote connections are simply two ways of connecting to the forked repository, and are virtually identical to each other. See [Remote Repository](https://docs.github.com/en/get-started/git-basics/about-remote-repositories) for further details.
+
+Move to the cloned sympy repo on your local machine, using the command below:
 
 ```
+cd sympy
+```
+
+### Setup Remote via SSH
+
+After cloning the sympy repository, set up a remote called `github` that points to your forked repository at `git@github.com:<your-github-username>/sympy.git`. To set up the remote using **SSH**, enter the code below:
+
+```bash
 git remote add github git@github.com:<your-github-username>/sympy.git
 ```
 
-For more information about GitHub forking and tuning see:
-<https://docs.github.com/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests>, <https://docs.github.com/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>, and <https://docs.github.com/get-started/quickstart/set-up-git>
+*Note: Remote setup via SSH is **only possible** if you have already set up **SSH keys** in your GitHub account. See [Setup SSH Keys](#setup-ssh-keys) to configure them in your GitHub account.*
 
-After the configuration, your setup should be similar to this:
+Then check your remote configuration using the command:
 
 ```bash
-$ git remote -v
+git remote -v
+```
+
+Your setup should be similar to this:
+
+```bash
 origin   https://github.com/sympy/sympy (fetch)
 origin   https://github.com/sympy/sympy (push)
-github https://github.com/<your-github-username>/sympy (fetch)
-github https://github.com/<your-github-username>/sympy (push)
+github git@github.com:<your-github-username>/sympy.git (fetch)
+github git@github.com:<your-github-username>/sympy.git (push)
+```
+
+### Setup Remote via HTTPS
+
+After cloning the sympy repository, set up a remote called `github` that points to your forked repository at `https://github.com/<your-github-username>/sympy`. To set up the remote using **HTTPS**, enter the code below:
+
+```bash
+git remote add github https://github.com/<your-github-username>/sympy.git
+```
+
+Then check your remote configuration using the command:
+
+```bash
+git remote -v
+```
+
+Your setup should be similar to this:
+
+```bash
+origin   https://github.com/sympy/sympy (fetch)
+origin   https://github.com/sympy/sympy (push)
+github https://github.com/<your-github-username>/sympy.git (fetch)
+github https://github.com/<your-github-username>/sympy.git (push)
 ```
 
 ## Virtual Environment Setup
@@ -182,7 +225,6 @@ $ conda create -n sympy-dev -c conda-forge --file requirements-dev.txt
 If you prefer to use `pip` and `venv`, you can use something like
 
 ```bash
-cd sympy
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -1335,6 +1336,17 @@ def test_Piecewise_rewrite_as_ITE():
     raises(ValueError, lambda: _ITE((a, x < 2), (b, x > 3)))
 
 
+def test_Piecewise_replace_relational_27538():
+    x, y = symbols('x, y')
+    p1 = Piecewise(
+        (0, Eq(x, True)),
+        (1, True),
+    )
+    p2 = p1.xreplace({x: y < 1})
+    assert p2.subs(y, 0) == 0
+    assert p2.subs(y, 1) == 1
+
+
 def test_issue_14052():
     assert integrate(abs(sin(x)), (x, 0, 2*pi)) == 4
 
@@ -1621,8 +1633,8 @@ def test_piecewise__eval_is_meromorphic():
     f = Piecewise((1, x < 0), (sqrt(1 - x), True))
     assert f.is_meromorphic(x, I) is None
     assert f.is_meromorphic(x, -1) == True
-    assert f.is_meromorphic(x, 0) == None
+    assert f.is_meromorphic(x, 0) is None
     assert f.is_meromorphic(x, 1) == False
     assert f.is_meromorphic(x, 2) == True
-    assert f.is_meromorphic(x, Symbol('a')) == None
-    assert f.is_meromorphic(x, Symbol('a', real=True)) == None
+    assert f.is_meromorphic(x, Symbol('a')) is None
+    assert f.is_meromorphic(x, Symbol('a', real=True)) is None

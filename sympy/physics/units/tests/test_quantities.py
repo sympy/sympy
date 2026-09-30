@@ -1,3 +1,4 @@
+from __future__ import annotations
 import warnings
 
 from sympy.core.add import Add
@@ -573,3 +574,78 @@ def test_physics_constant():
 
     assert not meter.is_physical_constant
     assert not joule.is_physical_constant
+
+
+def test_josephson_von_klitzing_constants():
+    # Regression test for two wrong physical constants:
+    #   von_klitzing_constant used hbar/e**2 (too small by 2*pi) instead of h/e**2
+    #   josephson_constant used h/(2e) (the flux quantum, the reciprocal) instead
+    #   of 2e/h -- and its scale factor's dimension was the inverse of the
+    #   declared frequency/voltage.
+    from sympy.physics.units import (von_klitzing_constant, josephson_constant,
+        hertz, planck, hbar)
+    # R_K = h/e**2 exactly, and definitely not hbar/e**2:
+    assert convert_to(von_klitzing_constant, ohm) == \
+        convert_to(planck/elementary_charge**2, ohm)
+    assert convert_to(von_klitzing_constant, ohm) != \
+        convert_to(hbar/elementary_charge**2, ohm)
+    # K_J = 2e/h exactly:
+    assert convert_to(josephson_constant, hertz/volt) == \
+        convert_to(2*elementary_charge/planck, hertz/volt)
+    # sanity on the numeric values (CODATA):
+    assert abs(float(convert_to(von_klitzing_constant, ohm)/ohm) - 25812.807) < 1e-2
+    assert abs(float(convert_to(josephson_constant, hertz/volt)/(hertz/volt))
+               - 4.835978e14) < 1e9
+    # the Josephson scale factor now has the declared dimension:
+    from sympy.physics.units.definitions.dimension_definitions import (
+        frequency, voltage)
+    factor, dim = SI._collect_factor_and_dimension(josephson_constant)
+    assert SI.get_dimension_system().equivalent_dims(dim, frequency/voltage)
+
+
+def test_collect_factor_and_dimension_multiarg_function():
+    # A multi-argument Function used to make _collect_factor_and_dimension return
+    # a malformed (1 + n_args)-tuple, which crashed with "too many values to
+    # unpack" as soon as the function appeared inside a larger expression.
+    from sympy import besselj, atan2
+    # dimensionless arguments -> dimensionless result, no crash:
+    assert SI._collect_factor_and_dimension(besselj(1, 2)) == \
+        (besselj(1, 2), Dimension(1))
+    assert SI._collect_factor_and_dimension(2*besselj(1, 2)) == \
+        (2*besselj(1, 2), Dimension(1))
+    assert SI._collect_factor_and_dimension(atan2(1, 2)) == \
+        (atan2(1, 2), Dimension(1))
+    # arguments sharing a dimension carry it through (use an undefined function
+    # so the arguments do not simplify/cancel):
+    f = Function("f")
+    factor, dim = SI._collect_factor_and_dimension(f(meter, 2*meter))
+    assert SI.get_dimension_system().equivalent_dims(dim, length)
+    # a function argument with an inconsistent dimension is rejected:
+    raises(ValueError,
+           lambda: SI._collect_factor_and_dimension(besselj(1, meter)))
+
+
+def test_collect_factor_and_dimension_min_max():
+    # Min/Max are Application instances but not Function subclasses; their
+    # arguments must share a dimension, which is the dimension of the result.
+    # Previously they fell through to the 'else' branch and were treated as
+    # dimensionless, so a valid sum like meter + Min(meter, km) raised.
+    from sympy import Min, Max
+    assert SI._collect_factor_and_dimension(Min(meter, km)) == (1, length)
+    assert SI._collect_factor_and_dimension(Max(meter, km)) == (1000, length)
+    assert SI._collect_factor_and_dimension(meter + Min(meter, km)) == (2, length)
+    raises(ValueError,
+           lambda: SI._collect_factor_and_dimension(Min(meter, second)))
+
+
+def test_si_scale_factor_dimension_check_uses_instance_method():
+    # The scale-factor/dimension consistency check in systems/si.py must call
+    # ``equivalent_dims`` on the dimension-system instance.  It used to call it
+    # unbound (``DimensionSystem.equivalent_dims(a, b)``), which is a TypeError
+    # (a missing positional argument), so the check could never actually run.
+    from sympy.physics.units.dimensions import DimensionSystem, Dimension
+    ds = SI.get_dimension_system()
+    assert ds.equivalent_dims(Dimension('voltage'), Dimension('voltage')) is True
+    assert ds.equivalent_dims(Dimension('voltage'), Dimension('current')) is False
+    raises(TypeError, lambda: DimensionSystem.equivalent_dims(
+        Dimension('voltage'), Dimension('current')))

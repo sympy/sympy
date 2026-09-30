@@ -20,6 +20,7 @@
 # and all the generated C code should be ANSI C, which facilitates the
 # incorporation in various projects. The tests below assume that the binary cc
 # is somewhere in the path and that it can compile ANSI C code.
+from __future__ import annotations
 
 from sympy.abc import x, y, z
 from sympy.testing.pytest import IS_WASM, skip
@@ -28,6 +29,7 @@ import sys
 import os
 import tempfile
 import subprocess
+from pathlib import Path
 
 
 # templates for the main program that will test the generated code.
@@ -182,9 +184,8 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         raise NotImplementedError(
             "FIXME: filename extension unknown for language: %s" % language)
 
-    with open(f_name, "w") as f:
-        f.write(
-            main_template[language] % {'statements': "".join(test_strings)})
+    Path(f_name).write_text(
+        main_template[language] % {'statements': "".join(test_strings)})
 
     # 4) Compile and link
     compiled = try_run(commands)

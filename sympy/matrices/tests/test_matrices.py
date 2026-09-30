@@ -5,6 +5,7 @@
 # This entire test module and the corresponding sympy/matrices/matrices.py
 # module will be removed in a future release.
 #
+from __future__ import annotations
 import random
 import concurrent.futures
 from collections.abc import Hashable
@@ -21,6 +22,8 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.integrals.integrals import integrate
+from sympy.matrices.expressions.transpose import transpose
+from sympy.physics.quantum.operator import HermitianOperator, Operator, Dagger
 from sympy.polys.polytools import (Poly, PurePoly)
 from sympy.polys.rootoftools import RootOf
 from sympy.printing.str import sstr
@@ -324,10 +327,6 @@ def test_power():
     A = Matrix([[2]])
     assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(S(10)) == \
         A._eval_pow_by_recursion(10)
-
-    # testing a matrix that cannot be jordan blocked issue 11766
-    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
-    raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(S(10)))
 
     # test issue 11964
     raises(MatrixError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(S(-10)))
@@ -1243,7 +1242,7 @@ def test_issue_3950():
     a = Matrix([1, 2, 3])
     b = Matrix([2, 2, 3])
     assert not (m in [])
-    assert not (m in [1])
+    assert not (m == 1)
     assert m != 1
     assert m == a
     assert m != b
@@ -1683,7 +1682,7 @@ def test_jordan_form():
 
     # complexity: two of eigenvalues are zero
     m = Matrix(3, 3, [4, -5, 2, 5, -7, 3, 6, -9, 4])
-    Jmust = Matrix(3, 3, [0, 1, 0, 0, 0, 0, 0, 0, 1])
+    Jmust = Matrix(3, 3, [1, 0, 0, 0, 0, 1, 0, 0, 0])
     P, J = m.jordan_form()
     assert Jmust == J
 
@@ -1708,7 +1707,7 @@ def test_jordan_form():
 
     m = Matrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
     assert not m.is_diagonalizable()
-    Jmust = Matrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
+    Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
     P, J = m.jordan_form()
     assert Jmust == J
 
@@ -1765,10 +1764,11 @@ def test_jordan_form_issue_15858():
         [0, 0, 2, 1]])
     (P, J) = A.jordan_form()
     assert P.expand() == Matrix([
-        [    -I,          -I/2,      I,           I/2],
-        [-1 + I,             0, -1 - I,             0],
-        [     0, -S(1)/2 - I/2,      0, -S(1)/2 + I/2],
-        [     0,             1,      0,             1]])
+        [   -8,      -4,     -8,      -4],
+        [8 + 8*I,      0, 8 - 8*I,      0],
+        [    0, -4 + 4*I,     0, -4 - 4*I],
+        [    0,    -8*I,     0,     8*I]
+    ])
     assert J == Matrix([
         [-I, 1, 0, 0],
         [0, -I, 0, 0],
@@ -1939,9 +1939,7 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
     raises(ValueError, lambda: Matrix([1, 2]).inv(method='not a method'))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_GE())
-    raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inverse_GE())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_ADJ())
-    raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inverse_ADJ())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_LU())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).is_nilpotent())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).det())
@@ -2325,10 +2323,10 @@ def test_is_zero():
     assert Matrix([[0, 0], [0, 0]]).is_zero_matrix
     assert zeros(3, 4).is_zero_matrix
     assert not eye(3).is_zero_matrix
-    assert Matrix([[x, 0], [0, 0]]).is_zero_matrix == None
-    assert SparseMatrix([[x, 0], [0, 0]]).is_zero_matrix == None
-    assert ImmutableMatrix([[x, 0], [0, 0]]).is_zero_matrix == None
-    assert ImmutableSparseMatrix([[x, 0], [0, 0]]).is_zero_matrix == None
+    assert Matrix([[x, 0], [0, 0]]).is_zero_matrix is None
+    assert SparseMatrix([[x, 0], [0, 0]]).is_zero_matrix is None
+    assert ImmutableMatrix([[x, 0], [0, 0]]).is_zero_matrix is None
+    assert ImmutableSparseMatrix([[x, 0], [0, 0]]).is_zero_matrix is None
     assert Matrix([[x, 1], [0, 0]]).is_zero_matrix == False
     a = Symbol('a', nonzero=True)
     assert Matrix([[a, 0], [0, 0]]).is_zero_matrix == False
@@ -2465,9 +2463,6 @@ def test_invertible_check():
     # matrix will be returned even though m is not invertible
     assert m.rref()[0] != eye(3)
     assert m.rref(simplify=signsimp)[0] != eye(3)
-    raises(ValueError, lambda: m.inv(method="ADJ"))
-    raises(ValueError, lambda: m.inv(method="GE"))
-    raises(ValueError, lambda: m.inv(method="LU"))
 
 
 def test_issue_3959():
@@ -2639,6 +2634,18 @@ def test_adjoint():
     for cls in classes:
         assert ans == cls(dat).adjoint()
 
+
+def test_adjoint_with_operator():
+    # Regression test for issue 25130: adjoint() should propagate to operators
+    import sympy.physics.quantum
+    a = sympy.physics.quantum.operator.Operator('a')
+    a_dag = sympy.physics.quantum.Dagger(a)
+    dat = [[0, I * a], [0, a_dag]]
+    ans = Matrix([[0, 0], [-I * a_dag, a]])
+    for cls in classes:
+        assert ans == cls(dat).adjoint()
+
+
 def test_simplify_immutable():
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])
@@ -2800,7 +2807,8 @@ def test_17522_scipy():
     except ImportError:
         skip('SciPy must be available to test indexing matrixified SciPy sparse matrices')
 
-    m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
+    with ignore_warnings(DeprecationWarning):
+        m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 
@@ -2813,6 +2821,12 @@ def test_hermitian():
     assert a.is_hermitian is None
     a[0, 1] = a[1, 0]*I
     assert a.is_hermitian is False
+    b = HermitianOperator("b")
+    c = Operator("c")
+    assert Matrix([[b]]).is_hermitian is True
+    assert Matrix([[b, c], [Dagger(c), b]]).is_hermitian is True
+    assert Matrix([[b, c], [c, b]]).is_hermitian is False
+    assert Matrix([[b, c], [transpose(c), b]]).is_hermitian is False
 
 def test_doit():
     a = Matrix([[Add(x,x, evaluate=False)]])
@@ -3063,7 +3077,7 @@ def test_func():
 def test_issue_19809():
 
     def f():
-        assert _dotprodsimp_state.state == None
+        assert _dotprodsimp_state.state is None
         m = Matrix([[1]])
         m = m * m
         return True

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Tuple as tTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar, Literal, overload
 from collections import defaultdict
 from functools import reduce
 from operator import attrgetter
@@ -179,11 +179,34 @@ class Add(Expr, AssocOp):
 
     __slots__ = ()
 
-    args: tTuple[Expr, ...] # type: ignore
-
     is_Add = True
 
     _args_type = Expr
+
+    identity: ClassVar[Expr]
+
+    if TYPE_CHECKING:
+
+        @overload
+        def __new__(
+            cls,
+            arg1: Expr | complex,
+            arg2: Expr | complex,
+            *args: Expr | complex,
+            evaluate: Literal[False],
+        ) -> Add:  # type: ignore
+            ...
+
+        @overload
+        def __new__(cls, *args: Expr | complex, evaluate: bool = True) -> Expr:  # type: ignore
+            ...
+
+        def __new__(cls, *args: Expr | complex, evaluate: bool = True) -> Expr:  # type: ignore
+            ...
+
+        @property
+        def args(self) -> tuple[Expr, ...]:
+            ...
 
     @classmethod
     def flatten(cls, seq: list[Expr]) -> tuple[list[Expr], list[Expr], None]:
@@ -206,18 +229,16 @@ class Add(Expr, AssocOp):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         from sympy.tensor.tensor import TensExpr, TensAdd
-        rv = None
+
         if len(seq) == 2:
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
-            if a.is_Rational:
-                if b.is_Mul:
-                    rv = [a, b], [], None
-            if rv:
-                if all(s.is_commutative for s in rv[0]):
-                    return rv
-                return [], rv[0], None
+            if a.is_Rational and b.is_Mul:
+                if a.is_commutative and b.is_commutative:
+                    return [a, b], [], None
+                else:
+                    return [], [a, b], None
 
         # term -> coeff
         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
@@ -592,14 +613,10 @@ class Add(Expr, AssocOp):
                 *[_keep_coeff(ncon, ni) for ni in n]), _keep_coeff(dcon, d)
 
         # sum up the terms having a common denominator
-        for d, n in nd.items():
-            if len(n) == 1:
-                nd[d] = n[0]
-            else:
-                nd[d] = self.func(*n)
+        nd2 = {d: self.func(*n) if len(n) > 1 else n[0] for d, n in nd.items()}
 
         # assemble single numerator and denominator
-        denoms, numers = [list(i) for i in zip(*iter(nd.items()))]
+        denoms, numers = [list(i) for i in zip(*iter(nd2.items()))]
         n, d = self.func(*[Mul(*(denoms[:i] + [numers[i]] + denoms[i + 1:]))
                    for i in range(len(numers))]), Mul(*denoms)
 
@@ -805,9 +822,7 @@ class Add(Expr, AssocOp):
             return saw_INF.pop()
         elif unknown_sign:
             return
-        elif not nonpos and not nonneg and pos:
-            return True
-        elif not nonpos and pos:
+        elif pos and not nonpos:
             return True
         elif not pos and not nonneg:
             return False
@@ -889,9 +904,7 @@ class Add(Expr, AssocOp):
             return saw_INF.pop()
         elif unknown_sign:
             return
-        elif not nonneg and not nonpos and neg:
-            return True
-        elif not nonneg and neg:
+        elif neg and not nonneg:
             return True
         elif not neg and not nonpos:
             return False

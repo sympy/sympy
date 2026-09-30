@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.relational import Eq, is_eq
 from sympy.core.basic import Basic
 from sympy.core.logic import fuzzy_and, fuzzy_bool

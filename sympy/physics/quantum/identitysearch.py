@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import deque
 from sympy.core.random import randint
 
@@ -70,7 +71,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         # See parameter for default value.
 
         # Get the ndarray version of the dense matrix
-        dense_matrix = matrix.todense().getA()
+        dense_matrix = matrix.toarray()
         # Since complex values can't be compared, must split
         # the matrix into real and imaginary components
         # Find the real values in between -eps and eps

@@ -54,7 +54,7 @@
 #
 ###############################################################################
 
-FROM python:3.8.12-slim-buster
+FROM python:3.13.3-slim-bookworm
 
 RUN apt-get update
 RUN apt-get install -y make librsvg2-bin imagemagick graphviz git
@@ -66,10 +66,10 @@ RUN pip install -r /tmp/requirements.txt
 RUN echo '#!/bin/bash \n\
 case $1 in \n\
   live) \n\
-    cd /sympy/doc; make livehtml LIVEHOST=0.0.0.0 LIVEPORT=80 \n\
+    cd /sympy/doc; make logo && make livehtml LIVEHOST=0.0.0.0 LIVEPORT=80 \n\
     ;; \n\
   *) \n\
-    cd /sympy/doc; make html \n\
+    cd /sympy/doc; make logo && make html \n\
     ;; \n\
 esac \n\
 ' > /usr/local/bin/makehtml.sh

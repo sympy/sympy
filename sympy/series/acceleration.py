@@ -8,13 +8,20 @@ Scientists and Engineers: Asymptotic Methods and Perturbation Theory",
 Springer 1999. (Shanks transformation: pp. 368-375, Richardson
 extrapolation: pp. 375-377.)
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sympy.core.numbers import Integer
 from sympy.core.singleton import S
 from sympy.functions.combinatorial.factorials import factorial
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.core.symbol import Symbol
 
-def richardson(A, k, n, N):
+
+def richardson(A: Expr, k: Symbol, n: int, N: int) -> Expr:
     """
     Calculate an approximation for lim k->oo A(k) using Richardson
     extrapolation with the terms A(n), A(n+1), ..., A(n+N+1).
@@ -68,7 +75,7 @@ def richardson(A, k, n, N):
     return s
 
 
-def shanks(A, k, n, m=1):
+def shanks(A: Expr, k: Symbol, n: int, m: int = 1) -> Expr:
     """
     Calculate an approximation for lim k->oo A(k) using the n-term Shanks
     transformation S(A)(n). With m > 1, calculate the m-fold recursive
@@ -91,11 +98,11 @@ def shanks(A, k, n, m=1):
     The correct value is 0.6931471805599453094172321215.
     """
     table = [A.subs(k, Integer(j)).doit() for j in range(n + m + 2)]
-    table2 = table[:]
+    table2 = table.copy()
 
     for i in range(1, m + 1):
         for j in range(i, n + m + 1):
             x, y, z = table[j - 1], table[j], table[j + 1]
             table2[j] = (z*x - y**2) / (z + x - 2*y)
-        table = table2[:]
+        table = table2.copy()
     return table[n]

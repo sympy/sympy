@@ -1,4 +1,5 @@
 """Tests for OO layer of several polynomial representations. """
+from __future__ import annotations
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.domains import ZZ, QQ
@@ -485,6 +486,10 @@ def test_ANP___init__():
 
     raises(CoercionFailed, lambda: ANP([sqrt(2)], mod, QQ))
 
+    # https://github.com/sympy/sympy/issues/28182
+    f = ANP({(0,): -2, (2,): 1}, [1, 0, -2], QQ)
+    assert f.to_list() == []
+
 
 def test_ANP___eq__():
     a = ANP([QQ(1), QQ(1)], [QQ(1), QQ(0), QQ(1)], QQ)
@@ -586,3 +591,16 @@ def test_ANP_unify():
     assert b.unify_ANP(a)[-1] == QQ
     assert a.unify_ANP(a)[-1] == QQ
     assert b.unify_ANP(b)[-1] == ZZ
+
+
+def test_zero_poly():
+    from sympy import Symbol
+    x = Symbol('x')
+
+    R_old = ZZ.old_poly_ring(x)
+    zero_poly_old = R_old(0)
+    cont_old, prim_old = zero_poly_old.primitive()
+
+    assert cont_old == 0
+    assert prim_old == zero_poly_old
+    assert prim_old.is_primitive is False

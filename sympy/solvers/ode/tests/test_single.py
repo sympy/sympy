@@ -32,6 +32,7 @@ Functions that are for internal use:
    ODEs which raises exception.
 
 """
+from __future__ import annotations
 from sympy.core.function import (Derivative, diff)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (E, I, Rational, pi)
@@ -50,7 +51,7 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.polys.rootoftools import rootof
 
 from sympy.core import Function, Symbol
-from sympy.functions import airyai, airybi, besselj, bessely, lowergamma
+from sympy.functions import airyai, airybi, besselj, bessely, lowergamma, Abs
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.solvers.ode import classify_ode, dsolve
 from sympy.solvers.ode.ode import allhints, _remove_redundant_solutions
@@ -464,6 +465,7 @@ def test_slow_examples_nth_linear_constant_coeff_var_of_parameters():
     _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters, run_slow_test=True)
 
 
+@slow
 def test_nth_linear_constant_coeff_var_of_parameters():
     _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters)
 
@@ -569,6 +571,7 @@ def test_1st_linear():
     _ode_solver_test(_get_examples_ode_sol_1st_linear)
 
 
+@slow
 def test_almost_linear():
     _ode_solver_test(_get_examples_ode_sol_almost_linear)
 
@@ -588,6 +591,7 @@ def test_Liouville_ODE():
     _ode_solver_test(_get_examples_ode_sol_liouville)
 
 
+@slow
 def test_nth_order_linear_euler_eq_homogeneous():
     x, t, a, b, c = symbols('x t a b c')
     y = Function('y')
@@ -602,6 +606,7 @@ def test_nth_order_linear_euler_eq_homogeneous():
     _ode_solver_test(_get_examples_ode_sol_euler_homogeneous)
 
 
+@slow
 def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     x, t = symbols('x t')
     a, b, c, d = symbols('a b c d', integer=True)
@@ -629,6 +634,30 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     assert our_hint in classify_ode(eq, f(x))
 
     _ode_solver_test(_get_examples_ode_sol_euler_var_para)
+
+
+def test_2nd_linear_bessel_transform():
+    """Test cases for the second order linear Bessel equation solver with symbolic parameters"""
+    _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel_transform)
+
+
+def test_2nd_linear_bessel_transform_rejects_nonhomogeneous():
+    """Verify that non-homogeneous equations are rejected."""
+    # Non-homogeneous equation: y'' - x^3*y = 10
+    # Should NOT be matched. (homogeneous only)
+    eq = f(x).diff(x, 2) - x**3*f(x) - 10
+    hints = classify_ode(eq, f(x))
+
+    assert '2nd_linear_bessel_transform' not in hints
+
+
+def test_2nd_linear_bessel_transform_rejects_euler_case():
+    """Verify that k=-2 case is rejected."""
+    # k=-2 should NOT be matched - it's an Euler equation
+    eq = x**(-2)*f(x) + f(x).diff(x, 2)
+    hints = classify_ode(eq, f(x))
+
+    assert '2nd_linear_bessel_transform' not in hints
 
 
 @_add_example_keys
@@ -846,32 +875,31 @@ def _get_examples_ode_sol_1st_rational_riccati():
     # One pole of multiplicity 2
     "rational_riccati_05": {
         "eq": x**2 - (2*x + 1/x)*f(x) + f(x)**2 + Derivative(f(x), x),
-        "sol": [Eq(f(x), x*(C1 + x**2 + 1)/(C1 + x**2 - 1))]
+        "sol": [Eq(f(x), x*(C1 + x**2 + 2)/(C1 + x**2))]
     },
     # One pole of multiplicity 2
     "rational_riccati_06": {
         "eq": x**4*Derivative(f(x), x) + x**2 - x*(2*f(x)**2 + Derivative(f(x), x)) + f(x),
-        "sol": [Eq(f(x), x*(C1*x - x + 1)/(C1 + x**2 - 1))]
+        "sol": [Eq(f(x), x*(C1*x + 1)/(C1 + x**2))]
     },
     # Multiple poles of multiplicity 2
     "rational_riccati_07": {
         "eq": -f(x)**2 + Derivative(f(x), x) + (15*x**2 - 20*x + 7)/((x - 1)**2*(2*x \
             - 1)**2),
         "sol": [Eq(f(x), (9*C1*x - 6*C1 - 15*x**5 + 60*x**4 - 94*x**3 + 72*x**2 - \
-            33*x + 8)/(6*C1*x**2 - 9*C1*x + 3*C1 + 6*x**6 - 29*x**5 + 57*x**4 - \
-            58*x**3 + 28*x**2 - 3*x - 1))]
+            30*x + 6)/(6*C1*x**2 - 9*C1*x + 3*C1 + 6*x**6 - 29*x**5 + 57*x**4 - \
+            58*x**3 + 30*x**2 - 6*x))]
     },
     # Imaginary poles
     "rational_riccati_08": {
         "eq": Derivative(f(x), x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
             - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
-        "sol": [Eq(f(x), (-C1 - x**3 + x**2 - 2*x + 1)/(C1*x - C1 + x**4 - x**3 + x**2 - \
-            2*x + 1))],
+        "sol": [Eq(f(x), (-C1 - x**3 + x**2 - 2*x)/(C1*x - C1 + x**4 - x**3 + x**2 - x))],
     },
     # Imaginary coefficients in equation
     "rational_riccati_09": {
         "eq": Derivative(f(x), x) - 2*I*(f(x)**2 + 1)/x,
-        "sol": [Eq(f(x), (-I*C1 + I*x**4 + I)/(C1 + x**4 - 1))]
+        "sol": [Eq(f(x), (-I*C1 + I*x**4)/(C1 + x**4))]
     },
     # Regression: linsolve returning empty solution
     # Large value of m (> 10)
@@ -886,6 +914,10 @@ def _get_examples_ode_sol_1st_rational_riccati():
             + 103950*C1*x**8 + 415800*C1*x**7 + 1455300*C1*x**6 + 4365900*C1*x**5 + \
             10914750*C1*x**4 + 21829500*C1*x**3 + 32744250*C1*x**2 + 32744250*C1*x + \
             16372125*C1 - exp(2*x))))]
+    },
+    "rational_riccati_11": {
+        "eq": f(x).diff(x) - (x**2 + 3*x*f(x) + f(x)**2)/x**2,
+        "sol": [Eq(f(x), x*(-C1 - log(x) - 1)/(C1 + log(x)))]
     }
     }
     }
@@ -913,8 +945,6 @@ def _get_examples_ode_sol_factorable():
     which could be found by Factorable hint. Fact_01 raise exception for
     nth_linear_constant_coeff_undetermined_coefficients"""
 
-    y = Dummy('y')
-    a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
     return {
             'hint': "factorable",
             'func': f(x),
@@ -1006,51 +1036,9 @@ def _get_examples_ode_sol_factorable():
     },
 
     #Below examples were added for the issue: https://github.com/sympy/sympy/issues/15889
-    'fact_12': {
-        'eq': exp(f(x).diff(x))-f(x)**2,
-        'sol': [Eq(NonElementaryIntegral(1/log(y**2), (y, f(x))), C1 + x)],
-        'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
-    },
-
-    'fact_13': {
-        'eq': f(x).diff(x)**2 - f(x)**3,
-        'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))],
-        'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
-    },
-
-    'fact_14': {
-        'eq': f(x).diff(x)**2 - f(x),
-        'sol': [Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)]
-    },
-
     'fact_15': {
         'eq': f(x).diff(x)**2 - f(x)**2,
         'sol': [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
-    },
-
-    'fact_16': {
-        'eq': f(x).diff(x)**2 - f(x)**3,
-        'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))],
-    },
-
-    # kamke ode 1.1
-    'fact_17': {
-        'eq': f(x).diff(x)-(a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-1/2),
-        'sol': [Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))],
-        'slow': True
-    },
-
-    # This is from issue: https://github.com/sympy/sympy/issues/9446
-    'fact_18':{
-        'eq': Eq(f(2 * x), sin(Derivative(f(x)))),
-        'sol': [Eq(f(x), C1 + Integral(pi - asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))],
-        'checkodesol_XFAIL':True
-    },
-
-    # This is from issue: https://github.com/sympy/sympy/issues/7093
-    'fact_19': {
-        'eq': Derivative(f(x), x)**2 - x**3,
-        'sol': [Eq(f(x), C1 - 2*x**Rational(5,2)/5), Eq(f(x), C1 + 2*x**Rational(5,2)/5)],
     },
 
     'fact_20': {
@@ -1162,6 +1150,7 @@ def _get_examples_ode_sol_nth_algebraic():
     M, m, r, t = symbols('M m r t')
     phi = Function('phi')
     k = Symbol('k')
+    a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
     # This one needs a substitution f' = g.
     # 'algeb_12': {
     #     'eq': -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x,
@@ -1305,6 +1294,24 @@ def _get_examples_ode_sol_nth_algebraic():
         'eq': f(x).diff(x) - 3*C1 - 3*x**2,
         'sol': [Eq(f(x), C2 + 3*C1*x + x**3)],
     },
+
+    # kamke ode 1.1
+    'algeb_24': {
+        'eq': f(x).diff(x)-(a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-1/2),
+        'sol': [Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))],
+        'slow': True
+    },
+
+    # This is from issue: https://github.com/sympy/sympy/issues/9446
+    # This ODE should probably be rejected by dsolve.
+    # The solution is sort of correct but it is not particularly useful as an
+    # implicit solution.
+    'algeb_25':{
+        'eq': Eq(f(2 * x), sin(Derivative(f(x)))),
+        'sol': [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))],
+        'checkodesol_XFAIL': True,
+    },
+
     }
     }
 
@@ -2033,8 +2040,8 @@ def _get_examples_ode_sol_nth_linear_var_of_parameters():
     # https://github.com/sympy/sympy/issues/14395
     'var_of_parameters_15': {
         'eq': Derivative(f(x), x, x) + 9*f(x) - sec(x),
-        'sol': [Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))
-        - 2*log(cos(x)**2)/3 + 2*cos(x)**2/3)*cos(3*x))],
+        'sol': [Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x)
+        + (C2 - log(-4*cos(x)**2)/6 + cos(2*x)/3)*cos(3*x))],
         'slow': True,
     },
     }
@@ -2107,6 +2114,39 @@ def _get_examples_ode_sol_2nd_linear_bessel():
         'sol': [Eq(f(x), C1*besselj(sqrt(b**2), x*sqrt(a**2/c**2)) + C2*bessely(sqrt(b**2), x*sqrt(a**2/c**2)))],
     },
     }
+    }
+
+
+@_add_example_keys
+def _get_examples_ode_sol_2nd_linear_bessel_transform():
+    k = Symbol('k')
+    A = Symbol('A', positive=True)
+    return {
+        'hint': "2nd_linear_bessel_transform",
+        'func': f(x),
+        'examples': {
+            # Basic case with symbolic k
+            '2nd_bessel_transform_01': {
+                'eq': x**k*f(x) + f(x).diff(x, 2),
+                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) +
+                                        C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))],
+                'checkodesol_XFAIL': True,  # checkodesol cannot handle symbolic k
+            },
+
+            # Case with symbolic coefficient A
+            '2nd_bessel_transform_02': {
+                'eq': A*x**k*f(x) + f(x).diff(x, 2),
+                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*sqrt(Abs(A))*x**(k/2 + 1)/(k + 2)) +
+                                        C2*bessely(1/(k + 2), 2*sqrt(Abs(A))*x**(k/2 + 1)/(k + 2))))],
+                'checkodesol_XFAIL': True,  # checkodesol cannot handle symbolic A and k
+            },
+
+            # Case k = -4
+            '2nd_bessel_transform_03': {
+                'eq': x**(-4)*f(x) + f(x).diff(x, 2),
+                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(-S(1)/2, -1/x) + C2*bessely(-S(1)/2, -1/x)))],
+            },
+        }
     }
 
 
@@ -2420,6 +2460,35 @@ def _get_examples_ode_sol_lie_group():
         'eq': f(x).diff(x)*(f(x).diff(x)+f(x)),
         'sol': [Eq(f(x), C1), Eq(f(x), C1*exp(-x))],
     },
+
+    # https://github.com/sympy/sympy/issues/15889
+    'lie_group_21': {
+        'eq': exp(f(x).diff(x))-f(x)**2,
+        'sol': [Eq(NonElementaryIntegral(1/log(y**2), (y, f(x))), C1 + x)],
+        'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
+    },
+
+    'lie_group_22': {
+        'eq': f(x).diff(x)**2 - f(x)**3,
+        'sol': [Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))],
+    },
+
+    'lie_group_23': {
+        'eq': f(x).diff(x)**2 - f(x),
+        'sol': [Eq(f(x), (C1 - x)**2/4)],
+    },
+
+    'lie_group_24': {
+        'eq': f(x).diff(x)**2 - f(x)**3,
+        'sol': [Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))],
+    },
+
+    # This is from issue: https://github.com/sympy/sympy/issues/7093
+    'lie_group_25': {
+        'eq': Derivative(f(x), x)**2 - x**3,
+        'sol': [Eq(f(x), C1 - 2*x*sqrt(x**3)/5), Eq(f(x), C1 + 2*x*sqrt(x**3)/5)]
+    },
+
     }
     }
 
@@ -2889,6 +2958,7 @@ def _get_all_examples():
     _get_examples_ode_sol_1st_rational_riccati + \
     _get_examples_ode_sol_nth_linear_var_of_parameters + \
     _get_examples_ode_sol_2nd_linear_bessel + \
+    _get_examples_ode_sol_2nd_linear_bessel_transform + \
     _get_examples_ode_sol_2nd_2F1_hypergeometric + \
     _get_examples_ode_sol_2nd_nonlinear_autonomous_conserved + \
     _get_examples_ode_sol_separable_reduced + \

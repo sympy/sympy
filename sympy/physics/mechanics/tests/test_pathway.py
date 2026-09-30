@@ -1,4 +1,5 @@
 """Tests for the ``sympy.physics.mechanics.pathway.py`` module."""
+from __future__ import annotations
 
 import pytest
 

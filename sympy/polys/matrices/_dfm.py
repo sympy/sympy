@@ -38,6 +38,7 @@
 # Add more methods to python-flint to expose more of Flint's functionality
 # and also to make some of the above methods simpler or more efficient e.g.
 # slicing, fancy indexing etc.
+from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.external.importtools import import_module
@@ -288,7 +289,7 @@ class DFM:
         return DDM.from_dok(dok, shape, domain).to_dfm()
 
     def iter_values(self):
-        """Iterater over the non-zero values of the matrix."""
+        """Iterate over the non-zero values of the matrix."""
         m, n = self.shape
         rep = self.rep
         for i in range(m):
@@ -468,6 +469,21 @@ class DFM:
         """Transpose a DFM matrix."""
         return self._new(self.rep.transpose(), (self.cols, self.rows), self.domain)
 
+    def conjugate(self):
+        """Return the conjugate of a DFM matrix."""
+        dom = self.domain
+        if not dom.is_ConjugateDomain:
+            raise DMDomainError("%s does not support conjugation" % dom)
+
+        if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+            return self.copy()
+        else:
+            return self.applyfunc(dom.conjugate, dom)
+
+    def adjoint(self):
+        """Return the adjoint of a DFM matrix."""
+        return self.conjugate().transpose()
+
     def hstack(self, *others):
         """Horizontally stack matrices."""
         return self.to_ddm().hstack(*[o.to_ddm() for o in others]).to_dfm()
@@ -486,7 +502,7 @@ class DFM:
         """Return ``True`` if the matrix is upper triangular."""
         M = self.rep
         for i in range(self.rows):
-            for j in range(i):
+            for j in range(min(i, self.cols)):
                 if M[i, j]:
                     return False
         return True
@@ -694,10 +710,15 @@ class DFM:
         L, U, swaps = self.to_ddm().lu()
         return L.to_dfm(), U.to_dfm(), swaps
 
+    def qr(self):
+        """Return the QR decomposition of the matrix."""
+        Q, R = self.to_ddm().qr()
+        return Q.to_dfm(), R.to_dfm()
+
     # XXX: The lu_solve function should be renamed to solve. Whether or not it
     # uses an LU decomposition is an implementation detail. A method called
     # lu_solve would make sense for a situation in which an LU decomposition is
-    # reused several times to solve iwth different rhs but that would imply a
+    # reused several times to solve with different rhs but that would imply a
     # different call signature.
     #
     # The underlying python-flint method has an algorithm= argument so we could
@@ -779,6 +800,39 @@ class DFM:
             raise DMNonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
         return self._new(sol, sol_shape, self.domain)
+
+    def fflu(self):
+        """
+        Fraction-free LU decomposition of DFM.
+
+        Explanation
+        ===========
+
+        Uses `python-flint` if possible for a matrix of
+        integers otherwise uses the DDM method.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.ddm.DDM.fflu
+        """
+        if self.domain == ZZ:
+            fflu = getattr(self.rep, 'fflu', None)
+            if fflu is not None:
+                P, L, D, U = self.rep.fflu()
+                m, n = self.shape
+                return (
+                    self._new(P, (m, m), self.domain),
+                    self._new(L, (m, m), self.domain),
+                    self._new(D, (m, m), self.domain),
+                    self._new(U, self.shape, self.domain)
+                )
+        ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
+        P = ddm_p.to_dfm()
+        L = ddm_l.to_dfm()
+        D = ddm_d.to_dfm()
+        U = ddm_u.to_dfm()
+        return P, L, D, U
 
     def nullspace(self):
         """Return a basis for the nullspace of the matrix."""

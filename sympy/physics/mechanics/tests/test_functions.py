@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import sin, cos, tan, pi, symbols, Matrix, S, Function
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody)

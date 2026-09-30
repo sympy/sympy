@@ -171,7 +171,7 @@ class factorial(CombinatorialFunction):
                         result = _gmpy.fac(n)
 
                     else:
-                        bits = bin(n).count('1')
+                        bits = n.bit_count()
                         result = cls._recursive(n)*2**(n - bits)
 
                     return Integer(result)
@@ -512,7 +512,7 @@ class RisingFactorial(CombinatorialFunction):
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit https://mathworld.wolfram.com/RisingFactorial.html page.
 
-    When `x` is a `~.Poly` instance of degree $\ge 1$ with a single variable,
+    When `x` is a :class:`~.Poly` instance of degree $\ge 1$ with a single variable,
     `(x)^k = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
     variable of `x`. This is as described in [2]_.
 
@@ -598,9 +598,7 @@ class RisingFactorial(CombinatorialFunction):
                                           range(int(k)), 1)
 
                 else:
-                    if x is S.Infinity:
-                        return S.Infinity
-                    elif x is S.NegativeInfinity:
+                    if x is S.Infinity or x is S.NegativeInfinity:
                         return S.Infinity
                     else:
                         if isinstance(x, Poly):
@@ -673,7 +671,7 @@ class FallingFactorial(CombinatorialFunction):
     more information check "Concrete mathematics" by Graham, pp. 66
     or [1]_.
 
-    When `x` is a `~.Poly` instance of degree $\ge 1$ with single variable,
+    When `x` is a :class:`~.Poly` instance of degree $\ge 1$ with single variable,
     `(x)_k = x(y) \cdot x(y-1) \cdots x(y-k+1)`, where `y` is the
     variable of `x`. This is as described in
 
@@ -759,9 +757,7 @@ class FallingFactorial(CombinatorialFunction):
                             return reduce(lambda r, i: r*(x - i),
                                           range(int(k)), 1)
                 else:
-                    if x is S.Infinity:
-                        return S.Infinity
-                    elif x is S.NegativeInfinity:
+                    if x is S.Infinity or x is S.NegativeInfinity:
                         return S.Infinity
                     else:
                         if isinstance(x, Poly):

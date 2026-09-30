@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.sets import FiniteSet
 from sympy.core.numbers import Rational
 from sympy.core.relational import Eq
@@ -104,7 +105,7 @@ std = standard_deviation
 
 def entropy(expr, condition=None, **kwargs):
     """
-    Calculuates entropy of a probability distribution.
+    Calculates entropy of a probability distribution.
 
     Parameters
     ==========
@@ -390,7 +391,7 @@ def factorial_moment(X, n, condition=None, **kwargs):
 
 def median(X, evaluate=True, **kwargs):
     r"""
-    Calculuates the median of the probability distribution.
+    Calculates the median of the probability distribution.
 
     Explanation
     ===========

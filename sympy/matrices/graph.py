@@ -1,9 +1,19 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sympy.utilities.iterables import \
     flatten, connected_components, strongly_connected_components
 from .exceptions import NonSquareMatrixError
 
 
-def _connected_components(M):
+if TYPE_CHECKING:
+    from sympy.matrices.matrixbase import MatrixBase
+    from sympy.matrices.expressions.permutation import PermutationMatrix
+    from sympy.matrices.expressions.blockmatrix import BlockDiagMatrix, BlockMatrix
+
+
+def _connected_components(M: MatrixBase) -> list[list[int]]:
     """Returns the list of connected vertices of the graph when
     a square matrix is viewed as a weighted graph.
 
@@ -40,7 +50,7 @@ def _connected_components(M):
     return connected_components((V, E))
 
 
-def _strongly_connected_components(M):
+def _strongly_connected_components(M) -> list[list[int]]:
     """Returns the list of strongly connected vertices of the graph when
     a square matrix is viewed as a weighted graph.
 
@@ -74,7 +84,8 @@ def _strongly_connected_components(M):
     return strongly_connected_components((V, E))
 
 
-def _connected_components_decomposition(M):
+def _connected_components_decomposition(M: MatrixBase
+                            ) -> tuple[PermutationMatrix, BlockDiagMatrix]:
     """Decomposes a square matrix into block diagonal form only
     using the permutations.
 
@@ -160,7 +171,8 @@ def _connected_components_decomposition(M):
     return P, B
 
 
-def _strongly_connected_components_decomposition(M, lower=True):
+def _strongly_connected_components_decomposition(M, lower: bool = True,
+                            ) -> tuple[PermutationMatrix, BlockMatrix]:
     """Decomposes a square matrix into block triangular form only
     using the permutations.
 

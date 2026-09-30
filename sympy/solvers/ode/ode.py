@@ -227,13 +227,13 @@ code is tested extensively in ``test_ode.py``, so if anything is broken, one
 of those tests will surely fail.
 
 """
+from __future__ import annotations
 
 from sympy.core import Add, S, Mul, Pow, oo
 from sympy.core.containers import Tuple
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
-from sympy.core.multidimensional import vectorize
 from sympy.core.numbers import nan, zoo, Number
 from sympy.core.relational import Equality, Eq
 from sympy.core.sorting import default_sort_key, ordered
@@ -300,6 +300,7 @@ allhints = (
     "Liouville",
     "2nd_linear_airy",
     "2nd_linear_bessel",
+    "2nd_linear_bessel_transform",
     "2nd_hypergeometric",
     "2nd_hypergeometric_Integral",
     "nth_order_reducible",
@@ -654,10 +655,8 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
 
     if isinstance(match, SingleODESolver):
         solvefunc = match
-    elif hint.endswith('_Integral'):
-        solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
-        solvefunc = globals()['ode_' + hint]
+        solvefunc = globals()['ode_' + hint.removesuffix('_Integral')]
 
     free = eq.free_symbols
     cons = lambda s: s.free_symbols.difference(free)
@@ -699,20 +698,24 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         if len(rv) == 1:
             rv = rv[0]
     if ics and 'power_series' not in hint:
-        if isinstance(rv, (Expr, Eq)):
-            solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
-            rv = rv.subs(solved_constants)
-        else:
-            rv1 = []
-            for s in rv:
-                try:
-                    solved_constants = solve_ics([s], [r['func']], cons(s), ics)
-                except ValueError:
-                    continue
-                rv1.append(s.subs(solved_constants))
-            if len(rv1) == 1:
-                return rv1[0]
-            rv = rv1
+        rv1 = []
+        if not isinstance(rv, list):
+            rv = [rv]
+        for s in rv:
+            try:
+                solved_constants = solve_ics([s], [func], cons(s), ics)
+            except ValueError:
+                continue
+            rv1.append(s.subs(solved_constants))
+
+        if rv_c := _get_constant_solutions(eq, func, ics):
+            rv1 = [s for s in rv1 if s != False]
+            for s in rv_c:
+                if s not in rv1:
+                    rv1.append(s)
+        if len(rv1) == 1:
+            return rv1[0]
+        rv = rv1
     return rv
 
 
@@ -817,6 +820,65 @@ def solve_ics(sols, funcs, constants, ics):
         raise NotImplementedError("Initial conditions produced too many solutions for constants")
 
     return solved_constants[0]
+
+
+def _get_constant_solutions(eq, func, ics):
+    """
+    Return constant solutions
+
+    If any solver misses them, this function catches them.
+
+    Example
+    =======
+
+    >>> from sympy import symbols, Function, Eq, Derivative, log
+    >>> from sympy.solvers.ode.ode import _get_constant_solutions
+    >>> x = symbols("x")
+    >>> y = Function("y")
+    >>> ode = Eq(Derivative(y(x), x), log(y(x)))
+    >>> _get_constant_solutions(ode, func=y(x), ics={y(1): 1})
+    [Eq(y(x), 1)]
+
+    """
+    x = func.args[0]
+    const_val = None
+    if ics:
+        for funcarg, value in ics.items():
+            if isinstance(funcarg, Subs):
+                funcarg = funcarg.doit()
+                if isinstance(funcarg, Subs):
+                    funcarg = funcarg.args[0]
+            if isinstance(funcarg, AppliedUndef):
+                if func.func != funcarg.func:
+                    continue
+                if const_val is None:
+                    const_val = value
+                elif const_val != value:
+                    return []
+            elif isinstance(funcarg, Derivative):
+                if func.func != funcarg.args[0].func:
+                    continue
+                if value != S.Zero:
+                    return []
+            else:
+                raise NotImplementedError("Unrecognized initial condition")
+
+    eq = eq.lhs - eq.rhs if isinstance(eq, Equality) else eq
+    eq = eq.replace(lambda e: isinstance(e, Derivative) and e.expr == func,
+                    lambda e: S.Zero)
+    if eq is S.Zero:
+        # e.g., y' = 0
+        if const_val is None:
+            C1 = get_numbered_constants(eq, num=1)
+            return [Eq(func, C1)]
+        else:
+            return [Eq(func, const_val)]
+    result = []
+    for sol in solve(eq, func):
+        if not sol.has(x) and (const_val is None or sol == const_val):
+            result.append(Eq(func, sol))
+    return result
+
 
 def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta=None, n=None, **kwargs):
     r"""
@@ -940,7 +1002,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
-    ('factorable', 'nth_linear_constant_coeff_undetermined_coefficients',
+    ('nth_linear_constant_coeff_undetermined_coefficients',
     'nth_linear_constant_coeff_variation_of_parameters',
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
@@ -1029,8 +1091,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     # Used when dsolve is called without an explicit hint.
     # We exit early to return the first valid match
     early_exit = (user_hint=='default')
-    if user_hint.endswith('_Integral'):
-        user_hint = user_hint[:-len('_Integral')]
+    user_hint = user_hint.removesuffix('_Integral')
     user_map = solver_map
     # An explicit hint has been given to dsolve
     # Skip matching code for other hints
@@ -1569,7 +1630,6 @@ def check_nonlinear_3eq_order2(eq, func, func_coef):
     return None
 
 
-@vectorize(0)
 def odesimp(ode, eq, func, hint):
     r"""
     Simplifies solutions of ODEs, including trying to solve for ``func`` and
@@ -1925,7 +1985,7 @@ def __remove_linear_redundancies(expr, Cs):
     else:
         return _recursive_walk(expr)
 
-@vectorize(0)
+
 def constantsimp(expr, constants):
     r"""
     Simplifies an expression with arbitrary constants in it.
@@ -2635,7 +2695,7 @@ def _remove_redundant_solutions(eq, solns, order, var):
 
     unique_solns = []
     for soln1 in solns:
-        for soln2 in unique_solns[:]:
+        for soln2 in unique_solns.copy():
             if is_special_case_of(soln1, soln2):
                 break
             elif is_special_case_of(soln2, soln1):
