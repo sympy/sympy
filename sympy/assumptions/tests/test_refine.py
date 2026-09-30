@@ -16,6 +16,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.error_functions import erf, erfc
 
 from sympy.testing.pytest import raises, slow
 
@@ -359,3 +360,16 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_erf():
+    assert refine(erf(x), Q.zero(x)) == 0
+    assert refine(erf(x), Q.positive_infinite(x)) == 1
+    assert refine(erf(x), Q.negative_infinite(x)) == -1
+    assert refine(erf(x), Q.real(x)) == erf(x)
+
+    assert refine(erfc(x), Q.zero(x)) == 1
+    assert refine(erfc(x), Q.positive_infinite(x)) == 0
+    assert refine(erfc(x), Q.negative_infinite(x)) == 2
+    assert refine(erfc(x), Q.real(x)) == erfc(x)
+

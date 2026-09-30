@@ -605,6 +605,49 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_erf(expr, assumptions):
+    """
+    Handler for the error functions erf and erfc.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_erf
+    >>> from sympy import Q, erf, erfc, Symbol
+    >>> x = Symbol('x')
+    >>> refine_erf(erf(x), Q.zero(x))
+    0
+    >>> refine_erf(erf(x), Q.positive_infinite(x))
+    1
+    >>> refine_erf(erf(x), Q.negative_infinite(x))
+    -1
+    >>> refine_erf(erfc(x), Q.zero(x))
+    1
+    >>> refine_erf(erfc(x), Q.positive_infinite(x))
+    0
+    >>> refine_erf(erfc(x), Q.negative_infinite(x))
+    2
+
+    """
+    from sympy.functions.special.error_functions import erf, erfc
+    arg = expr.args[0]
+    if isinstance(expr, erf):
+        if ask(Q.zero(arg), assumptions):
+            return S.Zero
+        if ask(Q.positive_infinite(arg), assumptions):
+            return S.One
+        if ask(Q.negative_infinite(arg), assumptions):
+            return S.NegativeOne
+    elif isinstance(expr, erfc):
+        if ask(Q.zero(arg), assumptions):
+            return S.One
+        if ask(Q.positive_infinite(arg), assumptions):
+            return S.Zero
+        if ask(Q.negative_infinite(arg), assumptions):
+            return S(2)
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +663,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'erf': refine_erf,
+    'erfc': refine_erf,
 }
+
