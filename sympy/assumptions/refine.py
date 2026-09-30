@@ -659,4 +659,3 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'RisingFactorial': refine_rf_ff,
     'FallingFactorial': refine_rf_ff,
 }
-

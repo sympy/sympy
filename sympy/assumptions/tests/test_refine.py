@@ -376,4 +376,3 @@ def test_rf_ff():
 
     assert refine(RisingFactorial(Abs(x), n), Q.positive(x)) == RisingFactorial(x, n)
     assert refine(FallingFactorial(Abs(x), n), Q.positive(x)) == FallingFactorial(x, n)
-
