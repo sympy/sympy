@@ -605,6 +605,46 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_Mod(expr, assumptions):
+    """
+    Handler for the Mod function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_Mod
+    >>> from sympy import Q, Mod, Symbol
+    >>> p = Symbol('p')
+    >>> refine_Mod(Mod(p, 2), Q.even(p))
+    0
+    >>> refine_Mod(Mod(p, 2), Q.odd(p))
+    1
+    >>> refine_Mod(Mod(p, 1), Q.integer(p))
+    0
+    >>> refine_Mod(Mod(p, 5), Q.zero(p))
+    0
+
+    """
+    p, q = expr.args
+    if ask(Q.zero(p), assumptions) and ask(Q.nonzero(q), assumptions):
+        return S.Zero
+    if ask(Q.zero(p - q), assumptions) or ask(Q.zero(p + q), assumptions):
+        if ask(Q.nonzero(q), assumptions):
+            return S.Zero
+    if q == 1 and ask(Q.integer(p), assumptions):
+        return S.Zero
+    if q == 2:
+        if ask(Q.even(p), assumptions):
+            return S.Zero
+        elif ask(Q.odd(p), assumptions):
+            return S.One
+    if ask(Q.integer(p / q), assumptions):
+        return S.Zero
+    if ask(Q.nonnegative(p), assumptions) and ask(Q.positive(q - p), assumptions) and ask(Q.positive(q), assumptions):
+        return p
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +660,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'Mod': refine_Mod,
 }
+
