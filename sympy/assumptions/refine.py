@@ -605,6 +605,43 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_gamma(expr, assumptions):
+    """
+    Handler for the gamma function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_gamma
+    >>> from sympy import Q, gamma, Symbol
+    >>> n = Symbol('n')
+    >>> refine_gamma(gamma(n), Q.zero(n - 1))
+    1
+    >>> refine_gamma(gamma(n), Q.zero(n - 2))
+    1
+    >>> refine_gamma(gamma(n), Q.integer(n) & Q.negative(n))
+    zoo
+    >>> refine_gamma(gamma(n), Q.zero(n))
+    zoo
+    >>> refine_gamma(gamma(n), Q.positive_infinite(n))
+    oo
+    >>> refine_gamma(gamma(n), Q.integer(n) & Q.positive(n))
+    factorial(n - 1)
+
+    """
+    from sympy.functions.combinatorial.factorials import factorial
+    arg = expr.args[0]
+    if ask(Q.zero(arg - 1), assumptions) or ask(Q.zero(arg - 2), assumptions):
+        return S.One
+    if ask(Q.integer(arg) & (Q.negative(arg) | Q.zero(arg)), assumptions):
+        return S.ComplexInfinity
+    if ask(Q.positive_infinite(arg), assumptions):
+        return S.Infinity
+    if ask(Q.integer(arg) & Q.positive(arg), assumptions):
+        return factorial(arg - 1)
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +657,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'gamma': refine_gamma,
 }
+

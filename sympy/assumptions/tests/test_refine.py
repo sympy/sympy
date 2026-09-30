@@ -16,6 +16,8 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.combinatorial.factorials import factorial
 
 from sympy.testing.pytest import raises, slow
 
@@ -359,3 +361,15 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_gamma():
+    n = Symbol('n')
+    assert refine(gamma(n), Q.zero(n - 1)) == 1
+    assert refine(gamma(n), Q.zero(n - 2)) == 1
+    assert refine(gamma(n), Q.integer(n) & Q.negative(n)) is S.ComplexInfinity
+    assert refine(gamma(n), Q.zero(n)) is S.ComplexInfinity
+    assert refine(gamma(n), Q.positive_infinite(n)) is S.Infinity
+    assert refine(gamma(n), Q.integer(n) & Q.positive(n)) == factorial(n - 1)
+    assert refine(gamma(n), Q.positive(n)) == gamma(n)
+
