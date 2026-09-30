@@ -605,6 +605,45 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_frac(expr, assumptions):
+    """
+    Handler for the frac function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_frac
+    >>> from sympy import Q, frac, Symbol
+    >>> x, n = Symbol('x'), Symbol('n')
+    >>> refine_frac(frac(n), Q.integer(n))
+    0
+    >>> refine_frac(frac(x + n), Q.integer(n))
+    frac(x)
+    >>> refine_frac(frac(frac(x)), True)
+    frac(x)
+
+    """
+    from sympy.functions.elementary.integers import floor, ceiling, frac
+    arg = expr.args[0]
+    if ask(Q.integer(arg), assumptions):
+        return S.Zero
+    if isinstance(arg, frac):
+        return arg
+    if isinstance(arg, Add):
+        non_integer_terms = []
+        has_integer = False
+        for term in arg.args:
+            if ask(Q.integer(term), assumptions) or isinstance(term, (floor, ceiling)):
+                has_integer = True
+            else:
+                non_integer_terms.append(term)
+        if has_integer:
+            if not non_integer_terms:
+                return S.Zero
+            return frac(Add(*non_integer_terms))
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +659,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'frac': refine_frac,
 }
+
