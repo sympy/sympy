@@ -376,4 +376,3 @@ def test_harmonic():
 
     assert refine(harmonic(Abs(n)), Q.positive(n)) == harmonic(n)
     assert refine(harmonic(Abs(n), m), Q.positive(n)) == harmonic(n, m)
-
