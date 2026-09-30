@@ -371,4 +371,3 @@ def test_binomial():
     assert refine(binomial(n, k), Q.integer(k) & Q.negative(k)) == 0
     assert refine(binomial(n, k), Q.integer(n) & Q.nonnegative(n) & Q.integer(k) & Q.negative(n - k)) == 0
     assert refine(binomial(n, k), Q.positive(n)) == binomial(n, k)
-
