@@ -160,7 +160,9 @@ def get_matrix_facts(x = None):
         Implies(Q.invertible(x), Q.square(x)),
         Implies(Q.symmetric(x), Q.square(x)),
         Implies(Q.fullrank(x) & Q.square(x), Q.invertible(x)),
-        Equivalent(Q.invertible(x), ~Q.singular(x)),
+        Implies(Q.singular(x), Q.square(x)),
+        Implies(Q.invertible(x), ~Q.singular(x)),
+        Implies(Q.square(x) & ~Q.invertible(x), Q.singular(x)),
         Implies(Q.integer_elements(x), Q.real_elements(x)),
         Implies(Q.real_elements(x), Q.complex_elements(x)),
     )
