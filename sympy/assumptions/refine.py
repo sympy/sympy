@@ -605,6 +605,36 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_factorial(expr, assumptions):
+    """
+    Handler for the factorial function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_factorial
+    >>> from sympy import Q, factorial, Symbol
+    >>> n = Symbol('n')
+    >>> refine_factorial(factorial(n), Q.zero(n))
+    1
+    >>> refine_factorial(factorial(n), Q.zero(n - 1))
+    1
+    >>> refine_factorial(factorial(n), Q.integer(n) & Q.negative(n))
+    zoo
+    >>> refine_factorial(factorial(n), Q.positive_infinite(n))
+    oo
+
+    """
+    arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions) or ask(Q.zero(arg - 1), assumptions):
+        return S.One
+    if ask(Q.integer(arg) & Q.negative(arg), assumptions):
+        return S.ComplexInfinity
+    if ask(Q.positive_infinite(arg), assumptions):
+        return S.Infinity
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +650,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'factorial': refine_factorial,
 }
+
