@@ -405,6 +405,14 @@ def _(expr, assumptions):
 
 @ExtendedRealPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
+    if _ask_recursive(Q.extended_real(expr.base), assumptions):
+        if _ask_recursive(Q.integer(expr.exp), assumptions):
+            # 0**negative is zoo, which is not extended real.
+            if (_ask_recursive(Q.zero(expr.base), assumptions) and
+                    _ask_recursive(Q.negative(expr.exp), assumptions)):
+                return False
+            return True
+
     return _ask_recursive(
         Q.real(expr)
         | Q.positive_infinite(expr)
