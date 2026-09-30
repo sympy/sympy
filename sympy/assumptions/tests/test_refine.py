@@ -16,6 +16,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial)
 
 from sympy.testing.pytest import raises, slow
 
@@ -359,3 +360,20 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_rf_ff():
+    n = Symbol('n')
+    assert refine(RisingFactorial(x, n), Q.zero(n)) == 1
+    assert refine(RisingFactorial(x, n), Q.zero(n - 1)) == x
+    assert refine(RisingFactorial(x, n), Q.zero(x) & Q.positive(n)) == 0
+    assert refine(RisingFactorial(x, n), True) == RisingFactorial(x, n)
+
+    assert refine(FallingFactorial(x, n), Q.zero(n)) == 1
+    assert refine(FallingFactorial(x, n), Q.zero(n - 1)) == x
+    assert refine(FallingFactorial(x, n), Q.zero(x) & Q.positive(n)) == 0
+    assert refine(FallingFactorial(x, n), True) == FallingFactorial(x, n)
+
+    assert refine(RisingFactorial(Abs(x), n), Q.positive(x)) == RisingFactorial(x, n)
+    assert refine(FallingFactorial(Abs(x), n), Q.positive(x)) == FallingFactorial(x, n)
+

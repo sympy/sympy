@@ -605,6 +605,42 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_rf_ff(expr, assumptions):
+    """
+    Handler for RisingFactorial and FallingFactorial.
+
+    Examples
+    ========
+
+    >>> from sympy import RisingFactorial, FallingFactorial, Q, refine, Symbol
+    >>> from sympy.assumptions.refine import refine_rf_ff
+    >>> x = Symbol('x')
+    >>> n = Symbol('n')
+    >>> refine_rf_ff(RisingFactorial(x, n), Q.zero(n))
+    1
+    >>> refine_rf_ff(RisingFactorial(x, n), Q.zero(n - 1))
+    x
+    >>> refine_rf_ff(FallingFactorial(x, n), Q.zero(n))
+    1
+    >>> refine_rf_ff(FallingFactorial(x, n), Q.zero(n - 1))
+    x
+    >>> refine(RisingFactorial(x, n), Q.zero(n))
+    1
+    >>> refine(FallingFactorial(x, n), Q.zero(n))
+    1
+    """
+    x, k = [refine(arg, assumptions) for arg in expr.args]
+    if ask(Q.zero(k), assumptions):
+        return S.One
+    if ask(Q.zero(k - 1), assumptions):
+        return x
+    if ask(Q.zero(x), assumptions) and ask(Q.positive(k), assumptions):
+        return S.Zero
+    if (x, k) != expr.args:
+        return expr.func(x, k)
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +656,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'RisingFactorial': refine_rf_ff,
+    'FallingFactorial': refine_rf_ff,
 }
+
