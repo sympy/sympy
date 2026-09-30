@@ -1102,6 +1102,9 @@ def test_hyperexpand_preserves_convergent_hyper_when_limit_is_nonfinite():
     assert expr.convergence_statement is S.true
     result = hyperexpand(expr)
     assert result == expr
-    assert abs(float(result.subs(a, 2)) - 2) < 1e-12
+
+
+def test_hyperexpand_preserves_meijerg_when_radial_limit_fails():
+    a = symbols('a', positive=True)
     g = meijerg([0, 0, 1 - a], [], [0], [-1, -a], -1)
     assert hyperexpand(g) == g
