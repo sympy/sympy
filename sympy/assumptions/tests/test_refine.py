@@ -16,6 +16,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.combinatorial.factorials import binomial
 
 from sympy.testing.pytest import raises, slow
 
@@ -359,3 +360,15 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_binomial():
+    n = Symbol('n')
+    k = Symbol('k')
+    assert refine(binomial(n, k), Q.zero(k)) == 1
+    assert refine(binomial(n, k), Q.zero(k - 1)) == n
+    assert refine(binomial(n, k), Q.zero(n - k) & Q.nonnegative(n) & Q.integer(n)) == 1
+    assert refine(binomial(n, k), Q.integer(k) & Q.negative(k)) == 0
+    assert refine(binomial(n, k), Q.integer(n) & Q.nonnegative(n) & Q.integer(k) & Q.negative(n - k)) == 0
+    assert refine(binomial(n, k), Q.positive(n)) == binomial(n, k)
+

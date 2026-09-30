@@ -605,6 +605,44 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_binomial(expr, assumptions):
+    """
+    Handler for the binomial function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_binomial
+    >>> from sympy import Q, binomial, Symbol
+    >>> n, k = Symbol('n'), Symbol('k')
+    >>> refine_binomial(binomial(n, k), Q.zero(k))
+    1
+    >>> refine_binomial(binomial(n, k), Q.zero(k - 1))
+    n
+    >>> refine_binomial(binomial(n, k), Q.zero(n - k) & Q.nonnegative(n) & Q.integer(n))
+    1
+    >>> refine_binomial(binomial(n, k), Q.integer(k) & Q.negative(k))
+    0
+    >>> refine_binomial(binomial(n, k), Q.integer(n) & Q.nonnegative(n) & Q.integer(k) & Q.negative(n - k))
+    0
+
+    """
+    n, k = expr.args
+    d = n - k
+    n_nonneg = ask(Q.nonnegative(n), assumptions)
+    n_isint = ask(Q.integer(n), assumptions)
+    k_isint = ask(Q.integer(k), assumptions)
+
+    if ask(Q.zero(k), assumptions) or ((n_nonneg or n_isint is False) and ask(Q.zero(d), assumptions)):
+        return S.One
+    if ask(Q.zero(k - 1), assumptions) or ((n_nonneg or n_isint is False) and ask(Q.zero(d - 1), assumptions)):
+        return n
+    if k_isint:
+        if ask(Q.negative(k), assumptions) or (n_nonneg and n_isint and ask(Q.negative(d), assumptions)):
+            return S.Zero
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +658,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'binomial': refine_binomial,
 }
+
