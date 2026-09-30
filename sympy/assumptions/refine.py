@@ -605,6 +605,48 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_harmonic(expr, assumptions):
+    """
+    Handler for harmonic numbers.
+
+    Examples
+    ========
+
+    >>> from sympy import harmonic, Q, refine, Symbol
+    >>> from sympy.assumptions.refine import refine_harmonic
+    >>> n = Symbol('n')
+    >>> m = Symbol('m')
+    >>> refine_harmonic(harmonic(n), Q.zero(n))
+    0
+    >>> refine_harmonic(harmonic(n), Q.zero(n - 1))
+    1
+    >>> refine_harmonic(harmonic(n, m), Q.zero(n))
+    0
+    >>> refine_harmonic(harmonic(n, m), Q.zero(n - 1))
+    1
+    >>> refine_harmonic(harmonic(n, m), Q.zero(m - 1))
+    harmonic(n)
+    >>> refine(harmonic(n), Q.zero(n))
+    0
+    >>> refine(harmonic(n, m), Q.zero(n))
+    0
+    """
+    from sympy.functions.combinatorial.numbers import harmonic
+    args = [refine(arg, assumptions) for arg in expr.args]
+    n = args[0]
+    if ask(Q.zero(n), assumptions):
+        return S.Zero
+    if ask(Q.zero(n - 1), assumptions):
+        return S.One
+    if len(args) == 2:
+        m = args[1]
+        if ask(Q.zero(m - 1), assumptions):
+            return harmonic(n)
+    if args != list(expr.args):
+        return harmonic(*args)
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +662,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'harmonic': refine_harmonic,
 }
+

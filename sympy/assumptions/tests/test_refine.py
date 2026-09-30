@@ -16,6 +16,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.combinatorial.numbers import harmonic
 
 from sympy.testing.pytest import raises, slow
 
@@ -359,3 +360,20 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_harmonic():
+    n = Symbol('n')
+    m = Symbol('m')
+    assert refine(harmonic(n), Q.zero(n)) == 0
+    assert refine(harmonic(n), Q.zero(n - 1)) == 1
+    assert refine(harmonic(n), True) == harmonic(n)
+
+    assert refine(harmonic(n, m), Q.zero(n)) == 0
+    assert refine(harmonic(n, m), Q.zero(n - 1)) == 1
+    assert refine(harmonic(n, m), Q.zero(m - 1)) == harmonic(n)
+    assert refine(harmonic(n, m), True) == harmonic(n, m)
+
+    assert refine(harmonic(Abs(n)), Q.positive(n)) == harmonic(n)
+    assert refine(harmonic(Abs(n), m), Q.positive(n)) == harmonic(n, m)
+
