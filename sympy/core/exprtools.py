@@ -39,9 +39,8 @@ def _monotonic_sign(self):
     or negative or b) self is not in one of the following forms:
 
     - L(x, y, ...) + A: a function linear in all symbols x, y, ... with an
-      additive constant; if A is zero then the function can be a monomial whose
-      sign is monotonic over the range of the variables, e.g. (x + 1)**3 if x is
-      nonnegative.
+      additive constant; if A is zero then a same-signed additive group can also
+      be handled.
     - A/L(x, y, ...) + B: the inverse of a function linear in all symbols x, y, ...
       that does not have a sign change from positive to negative for any set
       of values for the variables.
@@ -196,9 +195,18 @@ def _monotonic_sign(self):
                     if reps[x] is None:
                         return
                 v *= ai.subs(reps)
-    elif c:
+    elif not any(p for p in a.atoms(Pow) if not p.is_number):
         # signed linear expression
-        if not any(p for p in a.atoms(Pow) if not p.is_number) and (a.is_nonpositive or a.is_nonnegative):
+        if c:
+            signed = a.is_nonpositive or a.is_nonnegative
+        elif a.is_Add:
+            terms = Add.make_args(a)
+            signed = (
+                all(t.is_nonnegative for t in terms) or
+                all(t.is_nonpositive for t in terms))
+        else:
+            signed = False
+        if signed:
             free = list(a.free_symbols)
             p = {}
             for i in free:
@@ -209,10 +217,18 @@ def _monotonic_sign(self):
             v = a.xreplace(p)
     if v is not None:
         rv = v + c
-        if v.is_nonnegative and rv.is_positive:
-            return rv.subs(_eps, 0)
-        if v.is_nonpositive and rv.is_negative:
-            return rv.subs(_eps, 0)
+        if v.is_nonnegative:
+            if rv.is_positive:
+                rv = rv.subs(_eps, 0)
+                return rv if rv else Dummy('pos', positive=True)
+            if rv.is_zero:
+                return Dummy('nneg', nonnegative=True)
+        if v.is_nonpositive:
+            if rv.is_negative:
+                rv = rv.subs(_eps, 0)
+                return rv if rv else Dummy('neg', negative=True)
+            if rv.is_zero:
+                return Dummy('npos', nonpositive=True)
 
 
 def decompose_power(expr: Expr) -> tuple[Expr, int]:
