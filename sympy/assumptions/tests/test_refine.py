@@ -372,4 +372,3 @@ def test_LeviCivita():
     assert refine(LeviCivita(i, j, k), True) == LeviCivita(i, j, k)
     assert refine(LeviCivita(Abs(i), j, k), Q.positive(i)) == LeviCivita(i, j, k)
     assert refine(LeviCivita(i, j, i)) == 0
-
