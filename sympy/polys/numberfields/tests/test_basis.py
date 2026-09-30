@@ -87,7 +87,7 @@ def test_AlgebraicField_integral_basis():
 
 def test_round_two_hnf_modulus_issue_30613():
     from sympy import QQ, sqrt, cos, pi
-    
+
     # K5 discriminant crashed previously
     K5 = QQ.algebraic_field(sqrt(2), sqrt(5))
     assert K5.discriminant() == 1600
