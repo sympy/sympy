@@ -377,4 +377,3 @@ def test_KroneckerDelta():
     # With refined subarguments:
     assert refine(KroneckerDelta(Abs(i), 0), Q.positive(i)) == 0
     assert refine(KroneckerDelta(Abs(i), j), Q.positive(i)) == KroneckerDelta(i, j)
-
