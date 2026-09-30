@@ -369,4 +369,3 @@ def test_factorial():
     assert refine(factorial(n), Q.integer(n) & Q.negative(n)) is S.ComplexInfinity
     assert refine(factorial(n), Q.positive_infinite(n)) is S.Infinity
     assert refine(factorial(n), Q.positive(n)) == factorial(n)
-
