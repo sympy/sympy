@@ -605,6 +605,37 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_LeviCivita(expr, assumptions):
+    """
+    Handler for LeviCivita.
+
+    Examples
+    ========
+
+    >>> from sympy import LeviCivita, Q, refine, Symbol
+    >>> from sympy.assumptions.refine import refine_LeviCivita
+    >>> i = Symbol('i')
+    >>> j = Symbol('j')
+    >>> k = Symbol('k')
+    >>> refine_LeviCivita(LeviCivita(i, j, k), Q.zero(i - j))
+    0
+    >>> refine_LeviCivita(LeviCivita(i, j, k), Q.zero(j - k))
+    0
+    >>> refine(LeviCivita(i, j, k), Q.zero(i - k))
+    0
+    """
+    from sympy.functions.special.tensor_functions import LeviCivita
+    args = [refine(arg, assumptions) for arg in expr.args]
+    n = len(args)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if ask(Q.zero(args[i] - args[j]), assumptions):
+                return S.Zero
+    if args != list(expr.args):
+        return LeviCivita(*args)
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +651,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'LeviCivita': refine_LeviCivita,
 }
+

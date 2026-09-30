@@ -16,6 +16,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.tensor_functions import LeviCivita
 
 from sympy.testing.pytest import raises, slow
 
@@ -359,3 +360,16 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_LeviCivita():
+    i = Symbol('i')
+    j = Symbol('j')
+    k = Symbol('k')
+    assert refine(LeviCivita(i, j, k), Q.zero(i - j)) == 0
+    assert refine(LeviCivita(i, j, k), Q.zero(j - k)) == 0
+    assert refine(LeviCivita(i, j, k), Q.zero(i - k)) == 0
+    assert refine(LeviCivita(i, j, k), True) == LeviCivita(i, j, k)
+    assert refine(LeviCivita(Abs(i), j, k), Q.positive(i)) == LeviCivita(i, j, k)
+    assert refine(LeviCivita(i, j, i)) == 0
+
