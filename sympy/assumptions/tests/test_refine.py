@@ -9,8 +9,8 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
-from sympy.abc import w, x, y, z
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan, sinc)
+from sympy.abc import k, n, w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -359,3 +359,14 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_sinc():
+    assert refine(sinc(x), Q.zero(x)) == 1
+    assert refine(sinc(x), Q.infinite(x) & Q.extended_real(x)) == 0
+    assert refine(sinc(x), Q.infinite(x)) == sinc(x)
+    assert refine(sinc(n*pi), Q.integer(n) & Q.nonzero(n)) == 0
+    assert refine(sinc(2*k*pi), Q.integer(k) & Q.nonzero(k)) == 0
+    assert refine(sinc(n*pi), Q.integer(n)) == sinc(n*pi)
+    assert refine(sinc(x), Q.positive(x)) == sinc(x)
+

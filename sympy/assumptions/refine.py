@@ -605,6 +605,39 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_sinc(expr, assumptions):
+    """
+    Handler for sinc function.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Q, refine, sinc, pi
+    >>> from sympy.abc import x, n, k
+    >>> refine(sinc(x), Q.zero(x))
+    1
+    >>> refine(sinc(x), Q.infinite(x) & Q.extended_real(x))
+    0
+    >>> refine(sinc(n*pi), Q.integer(n) & Q.nonzero(n))
+    0
+    >>> refine(sinc(2*k*pi), Q.integer(k) & Q.nonzero(k))
+    0
+    """
+    from sympy.functions.elementary.trigonometric import sin
+    arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return S.One
+    if ask(Q.infinite(arg), assumptions) and ask(Q.extended_real(arg), assumptions):
+        return S.Zero
+    if ask(Q.nonzero(arg), assumptions):
+        if ask(Q.integer(arg / S.Pi), assumptions):
+            return S.Zero
+        sin_refined = refine(sin(arg), assumptions)
+        if sin_refined == 0:
+            return S.Zero
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +653,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'sinc': refine_sinc,
 }
