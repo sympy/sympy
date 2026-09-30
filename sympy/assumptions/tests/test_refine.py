@@ -369,4 +369,3 @@ def test_frac():
     assert refine(frac(floor(x) + ceiling(y)), True) == 0
     assert refine(frac(frac(x)), True) == frac(x)
     assert refine(frac(x), Q.real(x)) == frac(x)
-
