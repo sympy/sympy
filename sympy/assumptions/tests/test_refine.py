@@ -16,6 +16,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.tensor_functions import KroneckerDelta
 
 from sympy.testing.pytest import raises, slow
 
@@ -359,3 +360,21 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_KroneckerDelta():
+    i = Symbol('i')
+    j = Symbol('j')
+    assert refine(KroneckerDelta(i, j), Q.zero(i - j)) == 1
+    assert refine(KroneckerDelta(i, j), Q.positive(i - j)) == 0
+    assert refine(KroneckerDelta(i, j), Q.negative(i - j)) == 0
+    assert refine(KroneckerDelta(i, j), Q.nonzero(i - j)) == 0
+    assert refine(KroneckerDelta(i, 0), Q.positive(i)) == 0
+    assert refine(KroneckerDelta(i, 0), Q.negative(i)) == 0
+    assert refine(KroneckerDelta(i, 0), Q.nonzero(i)) == 0
+    assert refine(KroneckerDelta(i, 0), Q.zero(i)) == 1
+    assert refine(KroneckerDelta(i, j), True) == KroneckerDelta(i, j)
+    # With refined subarguments:
+    assert refine(KroneckerDelta(Abs(i), 0), Q.positive(i)) == 0
+    assert refine(KroneckerDelta(Abs(i), j), Q.positive(i)) == KroneckerDelta(i, j)
+

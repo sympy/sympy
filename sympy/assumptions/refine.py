@@ -605,6 +605,46 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_KroneckerDelta(expr, assumptions):
+    """
+    Handler for KroneckerDelta.
+
+    Examples
+    ========
+
+    >>> from sympy import KroneckerDelta, Q, refine, Symbol
+    >>> from sympy.assumptions.refine import refine_KroneckerDelta
+    >>> i = Symbol('i')
+    >>> j = Symbol('j')
+    >>> refine_KroneckerDelta(KroneckerDelta(i, j), Q.zero(i - j))
+    1
+    >>> refine_KroneckerDelta(KroneckerDelta(i, j), Q.positive(i - j))
+    0
+    >>> refine_KroneckerDelta(KroneckerDelta(i, 0), Q.nonzero(i))
+    0
+    >>> refine_KroneckerDelta(KroneckerDelta(i, j), Q.negative(i - j))
+    0
+    >>> refine(KroneckerDelta(i, j), Q.zero(i - j))
+    1
+    >>> refine(KroneckerDelta(i, j), Q.nonzero(i - j))
+    0
+    """
+    from sympy.functions.special.tensor_functions import KroneckerDelta
+    args = [refine(arg, assumptions) for arg in expr.args]
+    diff = args[0] - args[1]
+    if ask(Q.zero(diff), assumptions):
+        return S.One
+    if (
+        ask(Q.nonzero(diff), assumptions)
+        or ask(Q.positive(diff), assumptions)
+        or ask(Q.negative(diff), assumptions)
+    ):
+        return S.Zero
+    if args != list(expr.args):
+        return KroneckerDelta(*args)
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -620,4 +660,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'KroneckerDelta': refine_KroneckerDelta,
 }
+
