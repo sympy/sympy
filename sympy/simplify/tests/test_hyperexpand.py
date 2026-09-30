@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from importlib import import_module
 from unittest.mock import patch
 from sympy.core.random import randrange
 
@@ -1088,10 +1087,21 @@ def test_hyperexpand_at_one_with_finite_polylogs():
     assert abs(float(result) - float(hyper(ap, bq, 1))) < 1e-12
 
 
-def test_hyperexpand_preserves_hyper_when_limit_is_unevaluated():
+def test_hyperexpand_preserves_hyper_when_radial_limit_fails():
     expr = hyper([1, 1, 1], [2, 3], 1)
     unevaluated = Limit(log(1 - z), z, 1, dir='-')
-    with patch.object(import_module('sympy.simplify.hyperexpand'),
-                      '_hyperexpand', return_value=unevaluated):
-        result = hyperexpand(expr)
+    for failed_limit in (unevaluated, S.NaN, S.ComplexInfinity, S.Infinity,
+                         S.NegativeInfinity):
+        with patch.object(Expr, 'limit', return_value=failed_limit):
+            assert hyperexpand(expr) == expr
+
+
+def test_hyperexpand_preserves_convergent_hyper_when_limit_is_nonfinite():
+    a = symbols('a', positive=True)
+    expr = hyper([1, 1, a], [2, a + 1], 1)
+    assert expr.convergence_statement is S.true
+    result = hyperexpand(expr)
     assert result == expr
+    assert abs(float(result.subs(a, 2)) - 2) < 1e-12
+    g = meijerg([0, 0, 1 - a], [], [0], [-1, -a], -1)
+    assert hyperexpand(g) == g
