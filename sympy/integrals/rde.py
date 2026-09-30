@@ -118,34 +118,49 @@ def weak_normalizer(a, d, DE, z=None):
     z = z or Dummy('z')
     dn, ds = splitfactor(d, DE)
 
-    # Compute d1, where dn == d1*d2**2*...*dn**n is a square-free
-    # factorization of d.
     g = gcd(dn, dn.diff(DE.t))
     d_sqf_part = dn.quo(g)
     d1 = d_sqf_part.quo(gcd(d_sqf_part, g))
 
-    a1, b = gcdex_diophantine(d.quo(d1).as_poly(DE.t), d1.as_poly(DE.t),
-        a.as_poly(DE.t))
-    r = (a - Poly(z, DE.t)*derivation(d1, DE)).as_poly(DE.t).resultant(
-        d1.as_poly(DE.t))
+    a1, b = gcdex_diophantine(
+        d.quo(d1).as_poly(DE.t),
+        d1.as_poly(DE.t),
+        a.as_poly(DE.t)
+    )
+
+    r = (
+        a - Poly(z, DE.t) * derivation(d1, DE)
+    ).as_poly(DE.t).resultant(
+        d1.as_poly(DE.t)
+    )
+
     r = Poly(r, z)
 
     if not r.expr.has(z):
         return (Poly(1, DE.t), (a, d))
 
-    N = [i for i in r.real_roots() if i in ZZ and i > 0]
-
-    q = reduce(mul, [gcd(a - Poly(n, DE.t)*derivation(d1, DE), d1) for n in N],
-        Poly(1, DE.t))
-
+    N = set(
+        i for i in r.ground_roots()
+        if i in ZZ and i > 0
+    )
+    q = reduce(
+        mul,
+        [
+            gcd(
+                a - Poly(int(n), DE.t) * derivation(d1, DE),
+                d1
+            ) ** int(n)
+            for n in N
+        ],
+        Poly(1, DE.t)
+    )
     dq = derivation(q, DE)
-    sn = q*a - d*dq
-    sd = q*d
+    sn = q * a - d * dq
+    sd = q * d
     sn, sd = sn.cancel(sd, include=True)
 
     return (q, (sn, sd))
-
-
+    
 def normal_denom(fa, fd, ga, gd, DE):
     """
     Normal part of the denominator.
