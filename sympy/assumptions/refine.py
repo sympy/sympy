@@ -666,4 +666,3 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'erf': refine_erf,
     'erfc': refine_erf,
 }
-

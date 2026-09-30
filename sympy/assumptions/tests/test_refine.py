@@ -372,4 +372,3 @@ def test_erf():
     assert refine(erfc(x), Q.positive_infinite(x)) == 0
     assert refine(erfc(x), Q.negative_infinite(x)) == 2
     assert refine(erfc(x), Q.real(x)) == erfc(x)
-
