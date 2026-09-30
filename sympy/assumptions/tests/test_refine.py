@@ -372,4 +372,3 @@ def test_gamma():
     assert refine(gamma(n), Q.positive_infinite(n)) is S.Infinity
     assert refine(gamma(n), Q.integer(n) & Q.positive(n)) == factorial(n - 1)
     assert refine(gamma(n), Q.positive(n)) == gamma(n)
-
