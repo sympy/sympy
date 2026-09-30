@@ -372,4 +372,3 @@ def test_Mod():
     assert refine(Mod(p, q), Q.integer(p / q)) == 0
     assert refine(Mod(p, q), Q.nonnegative(p) & Q.positive(q - p) & Q.positive(q)) == p
     assert refine(Mod(p, q), Q.positive(p)) == Mod(p, q)
-

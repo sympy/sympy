@@ -662,4 +662,3 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'ceiling' : refine_floor_ceiling,
     'Mod': refine_Mod,
 }
-
