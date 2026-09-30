@@ -369,4 +369,3 @@ def test_sinc():
     assert refine(sinc(2*k*pi), Q.integer(k) & Q.nonzero(k)) == 0
     assert refine(sinc(n*pi), Q.integer(n)) == sinc(n*pi)
     assert refine(sinc(x), Q.positive(x)) == sinc(x)
-
