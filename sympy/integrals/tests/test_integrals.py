@@ -16,7 +16,7 @@ from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, lo
 from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csch, sinh, tanh, sech)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan, sec)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, cot, sin, sinc, tan, sec)
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li, expint)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
@@ -36,7 +36,7 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.tensor.indexed import (Idx, IndexedBase)
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.integers import floor
-from sympy.integrals.integrals import Integral
+from sympy.integrals.integrals import Integral, _add_atan_floor_terms
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
@@ -411,13 +411,12 @@ def test_issue_7450():
 
 def test_issue_8623():
     assert integrate((1 + cos(2*x)) / (3 - 2*cos(2*x)), (x, 0, pi)) == -pi/2 + sqrt(5)*pi/2
-    assert integrate((1 + cos(2*x))/(3 - 2*cos(2*x))) == -x/2 + sqrt(5)*(atan(sqrt(5)*tan(x)) + \
-        pi*floor((x - pi/2)/pi))/2
+    assert integrate((1 + cos(2*x))/(3 - 2*cos(2*x))) == -x/2 + sqrt(5)*atan(sqrt(5)*tan(x))/2
 
 
 def test_issue_9569():
     assert integrate(1 / (2 - cos(x)), (x, 0, pi)) == pi/sqrt(3)
-    assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)) + pi*floor((x/2 - pi/2)/pi))/3
+    assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2))/3
 
 
 def test_issue_13733():
@@ -430,7 +429,103 @@ def test_issue_13733():
 
 def test_issue_13749():
     assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == pi/sqrt(3)
-    assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3
+    assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
+
+
+def test_atan_floor_terms():
+    # The floor terms are only added to evaluate definite integrals
+    assert integrate(1/(2 + cos(x)), (x, 0, 2*pi)) == 2*sqrt(3)*pi/3
+    a, b = symbols('a b', real=True)
+    F = 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3 + 2*sqrt(3)*pi*floor((x/2 + pi/2)/pi)/3
+    assert integrate(1/(2 + cos(x)), (x, a, b)) == F.subs(x, b) - F.subs(x, a)
+    # and with the jump of the antiderivative, a polynomial in the atan
+    # (issue 20898)
+    assert integrate(atan(tan(x)), (x, 1, 2)) == (2 - pi)**2/2 - S.Half
+    assert integrate(atan(tan(x))**2, (x, 1, 2)) == \
+        (2 - pi)**3/3 - S(1)/3 + pi**3/12
+    p = integrate(Piecewise((1/(2 + cos(x)), y > 0), (0, True)), (x, 0, 2*pi))
+    assert p.subs(y, 1) == 2*sqrt(3)*pi/3 and p.subs(y, -1) == 0
+
+    r = Symbol('r', real=True)
+    A = _add_atan_floor_terms
+    assert A(2*atan(3*tan(r/2)), r) == \
+        2*atan(3*tan(r/2)) + 2*pi*floor((r/2 + pi/2)/pi)
+    assert A(atan(tan(r)) + log(r)*atan(2*tan(r)), r) == \
+        atan(tan(r)) + log(r)*atan(2*tan(r)) + pi*floor((r + pi/2)/pi)
+    assert A(r*atan(tan(r)), r) == r*atan(tan(r))
+    assert A(atan(tan(r))**2, r) == atan(tan(r))**2
+    assert A(atan(tan(r))**3/3 + r, r) == \
+        atan(tan(r))**3/3 + r + pi**3*floor((r + pi/2)/pi)/12
+    assert A(exp(atan(tan(r))), r) == exp(atan(tan(r)))
+    # The coefficient of the atan may need cancellation (issue 13112)
+    F = (5*r*tan(r/2)**2 - 6*tan(r/2)**2*atan(3*tan(r/2)) -
+        6*atan(3*tan(r/2)))/(16*tan(r/2)**2 + 16)
+    assert A(F, r) == F - 3*pi*floor((r/2 + pi/2)/pi)/8
+    # r and the argument of the tan must be real
+    assert A(atan(tan(y)), y) == atan(tan(y))
+    assert A(atan(tan(I*r + 1)), r) == atan(tan(I*r + 1))
+
+    # The jump of atan(c*cot(r)) has the opposite sign from atan(c*tan(r))
+    f = diff(atan(2*cot(r)), r)
+    assert integrate(f, (r, -1, 1)) == 2*atan(2*cot(1)) - pi
+    assert A(atan(1 - 3*cot(2*r)), r) == \
+        -atan(3*cot(2*r) - 1) + pi*floor(2*r/pi)
+
+    # A coefficient that depends on r must not change sign
+    f = diff(atan(r*tan(r)), r)
+    assert A(atan(r*tan(r)), r) == atan(r*tan(r))
+    assert integrate(f, (r, -1, 1)) == 0
+    assert A(atan(exp(r)*tan(r)), r) == \
+        atan(exp(r)*tan(r)) + pi*floor((r + pi/2)/pi)
+    assert A(atan((r**2 + 1)*cot(r)), r) == \
+        atan((r**2 + 1)*cot(r)) - pi*floor(r/pi)
+    assert A(atan(r + tan(r)), r) == atan(r + tan(r)) + pi*floor((r + pi/2)/pi)
+
+    # tan and cot that do not depend on r are not corrected
+    assert A(r*atan(tan(y)), r) == r*atan(tan(y))
+    assert A(atan(r + 2*tan(1)), r) == atan(r + 2*tan(1))
+
+    # Several tan and cot with disjoint poles
+    assert A(atan(tan(r) + tan(2*r)), r) == \
+        atan(tan(r) + tan(2*r)) + pi*floor((r + pi/2)/pi) + \
+        pi*floor((2*r + pi/2)/pi)
+    assert A(atan(tan(r) - cot(r)), r) == \
+        atan(tan(r) - cot(r)) + pi*floor((r + pi/2)/pi) + pi*floor(r/pi)
+    # with some poles in common
+    f = diff(atan(tan(r) + tan(3*r)), r)
+    assert A(atan(tan(r) + tan(3*r)), r) == atan(tan(r) + tan(3*r)) + \
+        pi*floor((3*r + pi/2)/pi)
+    assert integrate(f, (r, 1, 2)) == \
+        atan(tan(2) + tan(6)) - atan(tan(1) + tan(3)) + pi
+    assert A(atan(2*tan(r) - tan(3*r)), r) == \
+        atan(2*tan(r) - tan(3*r)) + 2*pi*floor((r + pi/2)/pi) - \
+        pi*floor((3*r + pi/2)/pi)
+    # where they cancel
+    assert A(atan(tan(r) - 3*tan(3*r)), r) == \
+        atan(tan(r) - 3*tan(3*r)) + pi*floor((r + pi/2)/pi) - \
+        pi*floor((3*r + pi/2)/pi)
+    assert A(atan(tan(r/2) + cot(r/3)), r) == \
+        atan(tan(r/2) + cot(r/3)) + pi*floor((r/2 + pi/2)/pi) - \
+        pi*floor(r/(3*pi)) - pi*floor((r/2 + pi/2)/(3*pi) - Rational(2, 3))
+    # No correction in the cases that are not handled
+    for arg in [tan(r) + tan(3*r) + tan(5*r), tan(r) + tan(sqrt(2)*r),
+            tan(r) + tan(r + y), tan(r)*tan(3*r), tan(r) + r*tan(2*r),
+            tan(r) + tan(r**2), (1 + I)*tan(r), (1 + I)*exp(r)*cot(r),
+            tan(r) + I*tan(2*r), y*tan(r)]:
+        assert A(atan(arg), r) == atan(arg)
+    # and a single correction when they are the same
+    t = tan(r + pi, evaluate=False)
+    assert A(atan(3*tan(r) + t), r) == \
+        atan(3*tan(r) + t) + pi*floor((r + pi/2)/pi)
+    assert A(atan(tan(r) - 3*t), r) == \
+        atan(tan(r) - 3*t) - pi*floor((r + pi/2)/pi)
+    assert A(atan(tan(r) - t), r) == atan(tan(r) - t)
+    t = tan(pi - r, evaluate=False)
+    assert A(atan(tan(r) + 2*t), r) == \
+        atan(tan(r) + 2*t) - pi*floor((r + pi/2)/pi)
+    t = cot(r - pi/2, evaluate=False)
+    assert A(atan(tan(r) + 2*t), r) == \
+        atan(tan(r) + 2*t) - pi*floor((r + pi/2)/pi)
 
 
 def test_issue_18133():

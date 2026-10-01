@@ -13,6 +13,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
@@ -23,7 +24,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
 from sympy.matrices import MatrixBase
-from sympy.polys import Poly, PolynomialError
+from sympy.polys import Poly, PolynomialError, cancel
 from sympy.series.formal import FormalPowerSeries
 from sympy.series.limits import limit
 from sympy.series.order import Order
@@ -36,6 +37,166 @@ from sympy.utilities.misc import filldedent
 if TYPE_CHECKING:
     from sympy.core.containers import Tuple
     SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
+
+
+def _add_atan_floor_terms(antideriv, x):
+    """
+    Make an antiderivative with respect to the real variable ``x`` continuous
+    at the poles of the ``tan`` and ``cot`` in its ``atan`` terms by adding
+    multiples of ``pi*floor(...)``.
+
+    Explanation
+    ===========
+
+    When ``a`` increases through a pole of ``tan(a)``, ``atan(c*tan(a) + d)``
+    jumps by ``-sign(c)*pi``, and at a pole of ``cot(a)``,
+    ``atan(c*cot(a) + d)`` jumps by ``sign(c)*pi``. These jumps are
+    canceled by ``sign(c)*pi*floor((a + pi/2)/pi)`` and
+    ``-sign(c)*pi*floor(a/pi)``, respectively, which vanish on the principal
+    branch of the tangent (see [1]_, eq. (3)). The argument of the ``atan``
+    may also be a linear combination of several ``tan`` and ``cot`` of linear
+    functions of ``x``, whose poles in common are corrected by a single term.
+
+    An ``atan`` is only corrected if ``antideriv`` is a polynomial in it
+    with coefficients not depending on ``x``, so that its jumps are constant
+    multiples of those of the ``atan``, and if the floor terms can be
+    determined: ``c`` must be real, with a sign that does not change with
+    ``x``, and if several ``tan`` and ``cot`` are present, it must be
+    possible to tell which poles they have in common. Otherwise the ``atan``
+    remains discontinuous at its poles, and a definite integral computed
+    from the antiderivative is wrong if there is a pole between the limits:
+    Integral.doit() does not check for discontinuities of the
+    antiderivative between the limits in general. See [2]_.
+
+    Examples
+    ========
+
+    >>> from sympy import atan, tan, cot, Symbol
+    >>> from sympy.integrals.integrals import _add_atan_floor_terms
+    >>> x = Symbol('x', real=True)
+    >>> _add_atan_floor_terms(2*atan(3*tan(x/2)), x)
+    2*atan(3*tan(x/2)) + 2*pi*floor((x/2 + pi/2)/pi)
+    >>> _add_atan_floor_terms(atan(cot(x) + x), x)
+    atan(x + cot(x)) - pi*floor(x/pi)
+    >>> _add_atan_floor_terms(atan(tan(x) + tan(3*x)), x)
+    atan(tan(x) + tan(3*x)) + pi*floor((3*x + pi/2)/pi)
+    >>> _add_atan_floor_terms(atan(x*tan(x)), x)
+    atan(x*tan(x))
+
+    References
+    ==========
+
+    .. [1] D. J. Jeffrey and A. D. Rich, The evaluation of trigonometric
+           integrals avoiding spurious discontinuities, ACM Trans. Math.
+           Software 20 (1994), 124-135.
+    .. [2] https://github.com/sympy/sympy/pull/30558
+    """
+    if isinstance(antideriv, Piecewise):
+        return antideriv.func(*[(_add_atan_floor_terms(e, x), c)
+            for e, c in antideriv.args])
+    if not isinstance(antideriv, Expr) or not x.is_extended_real:
+        return antideriv
+    A = Dummy('A')
+    for atan_term in antideriv.atoms(atan):
+        correction = _atan_floor_correction(atan_term.args[0], x)
+        if correction is None:
+            continue
+        # The antiderivative must be a polynomial in the atan with constant
+        # coefficients, so that its jump at each pole, where the atan goes
+        # from pi/2 to -pi/2 or back, is a constant multiple of that of the
+        # atan
+        poly = antideriv.xreplace({atan_term: A}).as_poly(A)
+        if poly is None:
+            continue
+        coeffs = [cancel(c) for c in poly.all_coeffs()[:-1]]
+        if any(c.has(x) for c in coeffs):
+            continue
+        jump = Add(*[c*((pi/2)**k - (-pi/2)**k)
+            for k, c in enumerate(reversed(coeffs), 1)])/pi
+        if jump:
+            antideriv += jump*correction
+    return antideriv
+
+
+def _atan_floor_correction(atan_arg, x):
+    # The floor terms for atan(atan_arg) (see _add_atan_floor_terms()), or
+    # None if they cannot be determined.
+    parts = [i for i in ordered(atan_arg.atoms(tan, cot)) if i.has(x)]
+    if not parts:
+        return None
+    poly = atan_arg.as_poly(*parts)
+    if poly is None or poly.total_degree() > 1:
+        return None
+    # Each part has its poles where phi is an integer. As phi increases
+    # through a pole, coeff*part goes from sign(coeff)*oo to -sign(coeff)*oo.
+    terms = []
+    for part in parts:
+        coeff = poly.coeff_monomial(part)
+        a = part.args[0]
+        if coeff.is_extended_real is not True or a.is_extended_real is not True:
+            return None
+        if isinstance(part, tan):
+            terms.append((coeff, (a + pi/2)/pi))
+        else:
+            terms.append((-coeff, a/pi))
+    if len(terms) == 1:
+        coeff, phi = terms[0]
+        # The sign of the coefficient must not change
+        if sign(coeff).has(x):
+            return None
+        return sign(coeff)*pi*floor(phi)
+
+    # With phi = m*x + b, the poles are the lattice -b/m + Z/m. Parts with
+    # the same lattice are grouped. Two groups may have poles in common if
+    # neither of them has poles in common with a third.
+    groups = []
+    overlaps = []
+    for coeff, phi in terms:
+        m = phi.diff(x)
+        if coeff.has(x) or m.has(x) or m.is_zero is not False:
+            return None
+        x0, period = -phi.subs(x, 0)/m, 1/m
+        new = {'coeff': coeff, 'phi': phi, 'x0': x0, 'period': period}
+        new_overlaps = []
+        for group in groups:
+            ratio = group['period']/period
+            if not ratio.is_Rational:
+                return None
+            # The two lattices have a point in common iff the x0 differ by
+            # an integer multiple of common
+            common = period/ratio.q
+            shift = ((x0 - group['x0'])/common).expand()
+            if shift.is_integer is None:
+                return None
+            if not shift.is_integer:
+                continue
+            if abs(ratio) == 1:
+                group['coeff'] += ratio*coeff
+                break
+            # The common poles are where group['phi'] is k mod ratio.q
+            if ratio.q == 1:
+                k = 0
+            elif shift.is_Integer:
+                k = int(shift)*pow(ratio.p, -1, ratio.q) % ratio.q
+            else:
+                return None
+            new_overlaps.append((group, new, ratio, k))
+        else:
+            groups.append(new)
+            overlaps.extend(new_overlaps)
+    result = [sign(group['coeff'])*pi*floor(group['phi'])
+        for group in groups if group['coeff'].is_zero is not True]
+    seen = []
+    for g, h, ratio, k in overlaps:
+        if any(i is g or i is h for i in seen):
+            return None
+        seen.extend([g, h])
+        # At a common pole, the poles of the two groups add up to a pole
+        # with coefficient g['coeff'] + h['coeff']/ratio in terms of g['phi']
+        cg, ch = g['coeff'], h['coeff']/ratio
+        result.append((sign(cg + ch) - sign(cg) - sign(ch))*pi*floor(
+            (g['phi'] - k)/ratio.q))
+    return Add(*result)
 
 
 class Integral(AddWithLimits):
@@ -630,32 +791,14 @@ class Integral(AddWithLimits):
                             function = ret
                             continue
 
-            final = hints.get('final', True)
-            # dotit may be iterated but floor terms making atan and acot
-            # continuous should only be added in the final round
-            if (final and not isinstance(antideriv, Integral) and
-                antideriv is not None):
-                for atan_term in antideriv.atoms(atan):
-                    atan_arg = atan_term.args[0]
-                    # Checking `atan_arg` to be linear combination of `tan` or `cot`
-                    for tan_part in atan_arg.atoms(tan):
-                        x1 = Dummy('x1')
-                        tan_exp1 = atan_arg.subs(tan_part, x1)
-                        # The coefficient of `tan` should be constant
-                        coeff = tan_exp1.diff(x1)
-                        if x1 not in coeff.free_symbols:
-                            a = tan_part.args[0]
-                            antideriv = antideriv.subs(atan_term, Add(atan_term,
-                                sign(coeff)*pi*floor((a-pi/2)/pi)))
-                    for cot_part in atan_arg.atoms(cot):
-                        x1 = Dummy('x1')
-                        cot_exp1 = atan_arg.subs(cot_part, x1)
-                        # The coefficient of `cot` should be constant
-                        coeff = cot_exp1.diff(x1)
-                        if x1 not in coeff.free_symbols:
-                            a = cot_part.args[0]
-                            antideriv = antideriv.subs(atan_term, Add(atan_term,
-                                sign(coeff)*pi*floor((a)/pi)))
+            # The floor terms making atan and acot continuous are only
+            # needed to evaluate the antiderivative between limits, and
+            # doit may be iterated but they should only be added in the
+            # final round
+            if (len(xab) == 3 and hints.get('final', True) and
+                    not isinstance(antideriv, Integral) and
+                    antideriv is not None):
+                antideriv = _add_atan_floor_terms(antideriv, xab[0])
 
             if antideriv is None:
                 undone_limits.append(xab)
