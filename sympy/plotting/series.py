@@ -1235,10 +1235,10 @@ class Line2DBaseSeries(BaseSeries):
         m = len(x)
         if m < 2:
             return []
-        fracs = [(i + 1) / (n + 1) for i in range(n)]
+        fac = (m - 1)/(n + 1)
         segments = []
-        for fraction in fracs:
-            idx = min(int(fraction * (m - 1)), m - 2)
+        for i in range(n):
+            idx = min(int(fac*(i + 1)), m - 2)
             segments.append((x[idx], y[idx], x[idx + 1], y[idx + 1]))
         return segments
 
