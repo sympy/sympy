@@ -5081,22 +5081,8 @@ def degree(f, gen=0):
     # lowest power, which leadterm can find without expanding large Pows.
     coeff, expo = f.subs(gen, 1/gen).leadterm(gen)
 
-    if coeff.is_zero is True:
+    if coeff == 0:
         return S.NegativeInfinity
-
-    if coeff.is_zero is None and coeff.equals(0) is True:
-        # Give multiplication expansion one chance to expose cancellation,
-        # but do not expand polynomial powers.
-        flat = expand_mul(f)
-
-        if flat != f:
-            if flat.is_zero is True:
-                return S.NegativeInfinity
-
-            coeff, expo = flat.subs(gen, 1/gen).leadterm(gen)
-
-            if coeff.is_zero is True:
-                return S.NegativeInfinity
 
     return _degree(-expo)
 
