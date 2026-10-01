@@ -10,9 +10,9 @@ from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
-from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
+from sympy.assumptions.reasoning_engine import ReasoningEngine
 
 
 def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo,
@@ -74,77 +74,15 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo,
         use_known_facts=use_known_facts, iterations=iterations)
     sat.add_from_cnf(assumptions)
 
-    return check_satisfiability(props, _props, sat, early_return)
+    engine = ReasoningEngine(sat)
+    query_literal = engine.create_query(props, _props)
 
-
-def check_satisfiability(prop, _prop, factbase, early_return=False):
-    if {0} in factbase.data:
-        raise ValueError("Inconsistent assumptions")
-
-    true_false_guarded, selector = _encode_with_selector(prop, _prop, factbase)
-
-    # Run `propogate()` on the assumptions
-    solver = SATSolver(true_false_guarded.data, range(1, selector + 1), set(),
-                       true_false_guarded.symbols + [selector])
-    if solver.propagate() == IpasirStatus.UNSATISFIABLE:
-        raise ValueError("Inconsistent assumptions")
-
-    # Check whether proposition is entailed by any of the assigned literals.
     if early_return:
-        entailed = solver._is_entailed(prop.clauses, true_false_guarded.encoding)
-        if entailed is not None:
-            return entailed
+        res = engine.fixed(query_literal)
+        if res is not None:
+            return res
 
-        entailed = solver._is_entailed(_prop.clauses, true_false_guarded.encoding)
-        if entailed is not None:
-            return not entailed
-
-    # Continue on the propogated solver, just call solve() on it.
-    if solver.solve() == IpasirStatus.UNSATISFIABLE:
-        raise ValueError("Inconsistent assumptions")
-
-    # The model settles the side it activated, so ask about the other one.
-    witnessed = solver.val(selector)
-    solver.assume(-witnessed)
-    other = solver.solve() == IpasirStatus.SATISFIABLE
-
-    can_be_true = witnessed > 0 or other
-    can_be_false = witnessed < 0 or other
-
-    if can_be_true and can_be_false:
-        return None
-
-    if can_be_true and not can_be_false:
-        return True
-
-    if not can_be_true and can_be_false:
-        return False
-
-    if not can_be_true and not can_be_false:
-        # TODO: Run additional checks to see which combination of the
-        # assumptions, global_assumptions, and relevant_facts are
-        # inconsistent.
-        raise ValueError("Inconsistent assumptions")
-
-
-def _encode_with_selector(prop, _prop, factbase):
-    """Return *factbase* with the clauses of prop and _prop added to it, and
-    the selector variable that activates prop when true and _prop when false.
-    """
-    true_false_guarded = factbase.copy()
-    sides = [[true_false_guarded.encode(clause) for clause in side.clauses]
-             for side in (prop, _prop)]
-
-    # One past the last predicate, so the selector is a variable of its own.
-    selector = len(true_false_guarded.encoding) + 1
-
-    for clauses, guard in zip(sides, (-selector, selector)):
-        # Dropping the 0 that encodes False leaves a side nothing can satisfy
-        # as the unit {guard}.
-        true_false_guarded.data += [(clause - {0}) | {guard}
-                                    for clause in clauses]
-
-    return true_false_guarded, selector
+    return engine.ask_query(query_literal)
 
 
 def extract_predargs(proposition, assumptions=None):

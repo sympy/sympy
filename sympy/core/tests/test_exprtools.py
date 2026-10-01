@@ -18,14 +18,30 @@ from sympy.series.order import O
 from sympy.sets.sets import Interval
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import simplify
-from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
-                                  gcd_terms, factor_terms, factor_nc, _mask_nc,
-                                  _monotonic_sign)
+from sympy.core.exprtools import (_decompose_exprs, decompose_power, Factors,
+                                  Term, _gcd_terms, gcd_terms, factor_terms,
+                                  factor_nc, _mask_nc, _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
 from sympy.testing.pytest import raises
+from sympy.core.coreerrors import NonCommutativeExpression
 
 from sympy.abc import a, b, t, x, y, z
+
+
+def test__decompose_exprs():
+    A, B = symbols('A B', commutative=False)
+    f = Mul(x**2, y, x**-1, x, evaluate=False)
+    factor_data, gens = _decompose_exprs((f, x*z))
+
+    assert factor_data == [
+        [([], {x: (3, -1), y: (1, 0)})],
+        [([], {x: (1, 0), z: (1, 0)})],
+    ]
+    assert gens == {x, y, z}
+
+    raises(NonCommutativeExpression, lambda:
+        _decompose_exprs((A*B,)))
 
 
 def test_decompose_power():

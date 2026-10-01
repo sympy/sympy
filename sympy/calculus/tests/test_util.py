@@ -56,6 +56,8 @@ def test_function_range():
         ) == Union(Interval(-sin(3), 1), FiniteSet(sin(4)))
     assert function_range(cos(x), x, Interval(-oo, -4)
         ) == Interval(-1, 1)
+    assert function_range(sin(exp(x)), x, S.Reals
+        ) == Interval(-1, 1)
     assert function_range(cos(x), x, S.EmptySet) == S.EmptySet
     assert function_range(x/sqrt(x**2+1), x, S.Reals) == Interval.open(-1,1)
     assert function_range(x**3 - x, x, Interval(-1, 1), loc=True) == {0: {-1, 1}, 2*sqrt(3)/9: {-sqrt(3)/3}, -2*sqrt(3)/9: {sqrt(3)/3}}
@@ -410,3 +412,7 @@ def test_issue_18747():
 
 def test_issue_25942():
     assert (acos(x) > pi/3).as_set() == Interval.Ropen(-1, S(1)/2)
+
+
+def test_function_range_acot():
+    assert function_range(acot(x), x, S.Reals) == Union(Interval.Lopen(0, pi/2), Interval.open(-pi/2, 0))

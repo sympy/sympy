@@ -3,7 +3,7 @@ import operator
 from functools import reduce, singledispatch
 
 from sympy.core.singleton import S
-from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, MatPow, Dummy, Pow, Mul
+from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, MatPow, Dummy, Pow, Mul, Add
 from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
@@ -46,6 +46,11 @@ def _(expr: Expr, x: _ArrayExpr):
             return _array_contraction(tp, (rank_x, rank_x + 2), (rank_x + 1, rank_x + 3))
         raise NotImplementedError("algorithm not implemented for this case")
     return ZeroArray(*x.shape)
+
+
+@array_derive.register(Add)
+def _(expr: Add, x: _ArrayExpr):
+    return _array_add(*[array_derive(arg, x) for arg in expr.args])
 
 
 @array_derive.register(Mul)
