@@ -93,8 +93,4 @@ def test_round_two_hnf_modulus_issue_30613():
     #Complex extension gave 0 previously
     K_cos = QQ.algebraic_field(sqrt(2), 2*cos(2*pi/7))
     assert K_cos.discriminant() == 1229312
-<<<<<<< HEAD
-=======
-
     
->>>>>>> c99413aaa0 (Remove trailing whitespace in test_basis.py)
