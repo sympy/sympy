@@ -19,7 +19,7 @@ from sympy.core.evalf import (
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
+from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity, NumberSymbol
 from sympy.core.relational import Relational, Equality
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
@@ -4962,35 +4962,144 @@ def degree(f, gen=0):
     sympy.polys.polytools.Poly.total_degree
     degree_list
     """
+    from sympy.core.function import expand_mul
+    from sympy.core.power import Pow
+    from sympy.functions.elementary.exponential import exp
+    from sympy.core.numbers import NumberSymbol
+    from sympy.polys.polyutils import decompose_power
 
     _degree = lambda x: Integer(x) if type(x) is int else x
 
-    f = sympify(f, strict=True)
-    if type(gen) is int:
-        if isinstance(f, Poly):
-            return _degree(f.degree(gen))
-        if f.is_Number:
-            return S.NegativeInfinity if f.is_zero else S.Zero
-        try:
-            p = Poly(f, expand=False)
-        except GeneratorsNeeded:  # e.g. f = (1+I)**2/2
-            gens = ()  # do not guess what the user intended
-        else:
-            gens = p.gens
-        free = f.free_symbols
-        if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
-                gen := next(iter(gens))) and # <-- assigns gen
-                gen.is_Atom):  # e.g. x or pi
-            raise TypeError(filldedent('''
-                To avoid ambiguity, this expression requires either
-                a symbol (not int) generator or a Poly (which identifies
-                the generators).'''))
-        return p.degree(gen)
+    def _ambiguous():
+        return TypeError(filldedent('''
+            To avoid ambiguity, this expression requires either
+            a symbol (not int) generator or a Poly (which identifies
+            the generators).'''))
 
-    gen = sympify(gen, strict=True)
-    if not isinstance(f, Poly) or gen not in f.gens:
-        f = poly_from_expr(f, gen)[0]
-    return _degree(f.degree(gen))
+    def _dummy_form(expr, generator):
+        """Replace nonnegative powers of generator with powers of a Dummy."""
+        gbase, gexp = decompose_power(generator)
+        if not gexp:
+            raise PolynomialError(
+                "a valid generator expected, got %s" % generator)
+        d = Dummy()
+        if gbase.func == exp:
+            A = generator.args[0]
+            pows = {i:d**e for i in expr.atoms(exp) if (e:=i.args[0]/A).is_Integer and e >= 1}
+        else:
+            pows = {i:d**e for i in expr.atoms(Pow) if i.base == gbase and (e:=i.exp/gexp).is_Integer and e >= 0}
+
+        # first replace recognized powers of the formal generator
+        fd = expr.xreplace(pows)
+
+        # then handle a bare base only when the generator itself is first power
+        if gexp == 1:
+            fd = fd.replace(lambda x: x == gbase, lambda x: d)
+        return fd, d
+
+    def _poly_form(expr, generator, implicit=False):
+        """Return expr and a Symbol generator without expanding powers."""
+        if generator.is_Symbol:
+            if expr.is_polynomial(generator):
+                return expr, generator
+
+            flat = expand_mul(expr)
+            if flat != expr and flat.is_polynomial(generator):
+                return flat, generator
+
+        else:
+            exprd, d = _dummy_form(expr, generator)
+            if exprd.is_polynomial(d):
+                return exprd, d
+
+            flat = expand_mul(expr)
+
+            if flat != expr:
+                exprd, d = _dummy_form(flat, generator)
+
+                if exprd.is_polynomial(d):
+                    return exprd, d
+
+        if implicit:
+            raise _ambiguous()
+
+        raise PolynomialError(
+            "%s contains an element of the set of generators." % expr)
+
+    f = sympify(f, strict=True)
+
+    # A Poly already identifies its generators, so retain its native degree
+    # operation. If another explicit generator is supplied, continue with the
+    # underlying expression rather than constructing another Poly.
+    if isinstance(f, Poly):
+        if type(gen) is int:
+            return _degree(f.degree(gen))
+
+        gen = sympify(gen, strict=True)
+
+        if gen in f.gens:
+            return _degree(f.degree(gen))
+
+        return degree(f.as_expr(), gen)
+
+    if f.is_Number:
+        return S.NegativeInfinity if f.is_zero else S.Zero
+
+    implicit = type(gen) is int
+
+    if implicit:
+        # Integer generator indexing only makes sense for Poly instances.
+        if gen != 0:
+            raise _ambiguous()
+
+        free = f.free_symbols
+
+        if len(free) == 1:
+            gen = next(iter(free))
+
+        elif free:
+            raise _ambiguous()
+
+        else:
+            # Preserve implicit generators such as pi while refusing to
+            # choose between multiple symbolic numerical constants.
+            gens = f.atoms(NumberSymbol)
+
+            if len(gens) != 1:
+                raise _ambiguous()
+
+            gen = next(iter(gens))
+
+    else:
+        gen = sympify(gen, strict=True)
+
+    f, gen = _poly_form(f, gen, implicit)
+
+    if f.is_zero is True:
+        return S.NegativeInfinity
+
+    # Inverting the generator turns the highest polynomial power into the
+    # lowest power, which leadterm can find without expanding large Pows.
+    coeff, exp = f.subs(gen, 1/gen).leadterm(gen)
+
+    if coeff.is_zero is True:
+        return S.NegativeInfinity
+
+    if coeff.is_zero is None and coeff.equals(0) is True:
+        # Give multiplication expansion one chance to expose cancellation,
+        # but do not expand polynomial powers.
+        flat = expand_mul(f)
+
+        if flat != f:
+            if flat.is_zero is True:
+                return S.NegativeInfinity
+
+            coeff, exp = flat.subs(gen, 1/gen).leadterm(gen)
+
+            if coeff.is_zero is True:
+                return S.NegativeInfinity
+
+    return _degree(-exp)
 
 
 @public
