@@ -193,6 +193,10 @@ class Limit(Expr):
                 return exp(res)
         if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
             return S.ComplexInfinity
+        if ex_lim.is_zero and (base_lim.is_zero or
+                base_lim in (S.Infinity, S.NegativeInfinity)):
+            res = limit(e1*log(b1), z, z0, dir=dir)
+            return exp(res)
 
 
     def doit(self, **hints):
@@ -384,6 +388,10 @@ class Limit(Expr):
         except (PoleError, ValueError):
             if l is not None:
                 raise
+            if e.is_Pow:
+                r = self.pow_heuristics(e, z, z0, dir)
+                if r is not None:
+                    return r
             r = heuristics(e, z, z0, dir)
             if r is None:
                 return self
