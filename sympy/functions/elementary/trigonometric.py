@@ -51,6 +51,13 @@ class TrigonometricFunction(DefinedFunction):
     unbranched = True
     _singularities = (S.ComplexInfinity,)
 
+    def _eval_rewrite_as_EML(self, *args, **kwargs):
+        from sympy.functions.elementary.exponential import EML
+        r = self._eval_rewrite_as_exp(*args, **kwargs)
+        if r is None:
+            return None
+        return r.rewrite(EML)
+
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
@@ -2148,6 +2155,13 @@ class sinc(DefinedFunction):
 class InverseTrigonometricFunction(DefinedFunction):
     """Base class for inverse trigonometric functions."""
     _singularities: tuple[Expr, ...] = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)
+
+    def _eval_rewrite_as_EML(self, *args, **kwargs):
+        from sympy.functions.elementary.exponential import EML
+        r = self._eval_rewrite_as_log(*args, **kwargs)
+        if r is None:
+            return None
+        return r.rewrite(EML)
 
     @staticmethod
     @cacheit

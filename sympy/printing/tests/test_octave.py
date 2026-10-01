@@ -9,7 +9,7 @@ from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
                              laguerre, LambertW, log, Max, Min, Piecewise,
                              polylog, re, RisingFactorial, sign, sinc, sqrt,
                              zeta, binomial, legendre, dirichlet_eta,
-                             riemann_xi)
+                             riemann_xi, EML)
 from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
                              atan, asec, acsc, sinh, cosh, tanh, coth, csch,
                              sech, asinh, acosh, atanh, acoth, asech, acsch)
@@ -69,6 +69,11 @@ def test_Function():
     assert mcode(bernoulli(x)) == "bernoulli(x)"
     assert mcode(bernoulli(x, y)) == "bernoulli(x, y)"
     assert mcode(legendre(x, y)) == "legendre(x, y)"
+
+
+def test_octave_EML():
+    # EML(x, y) is printed via its exp/log rewrite.
+    assert octave_code(EML(x, y)) == '(exp(x) - log(y))'
 
 
 def test_Function_change_name():
