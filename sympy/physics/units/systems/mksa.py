@@ -1,15 +1,21 @@
 """
-MKS unit system.
+MKSA unit system.
 
-MKS stands for "meter, kilogram, second, ampere".
+MKSA stands for "meter, kilogram, second, ampere".
 """
 
 from __future__ import annotations
 
-from sympy.physics.units.definitions import Z0, ampere, coulomb, farad, henry, siemens, tesla, volt, weber, ohm
+from sympy.core.numbers import pi
+from sympy.core.singleton import S
+from sympy.physics.units.definitions import (
+    Z0, ampere, coulomb, farad, henry, siemens, tesla, volt, weber, ohm,
+    joule, meter, newton, second, speed_of_light, elementary_charge,
+    magnetic_constant, vacuum_permittivity, vacuum_impedance,
+    coulomb_constant)
 from sympy.physics.units.definitions.dimension_definitions import (
-    capacitance, charge, conductance, current, impedance, inductance,
-    magnetic_density, magnetic_flux, voltage)
+    capacitance, charge, conductance, current, force, impedance, inductance,
+    length, magnetic_density, magnetic_flux, voltage)
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 from sympy.physics.units.systems.mks import MKS, dimsys_length_weight_time
 from typing import TYPE_CHECKING
@@ -43,6 +49,54 @@ dimsys_MKSA = dimsys_length_weight_time.extend([
     "magnetic_density": {"mass": 1, "current": -1, "time": -2},
     "magnetic_flux": {"length": 2, "mass": 1, "current": -1, "time": -2},
 })
+
+One = S.One
+
+dimsys_MKSA.set_quantity_scale_factor(ampere, One)
+
+# derived units
+
+dimsys_MKSA.set_quantity_scale_factor(coulomb, One)
+
+dimsys_MKSA.set_quantity_scale_factor(volt, joule/coulomb)
+
+dimsys_MKSA.set_quantity_scale_factor(ohm, volt/ampere)
+
+dimsys_MKSA.set_quantity_scale_factor(siemens, ampere/volt)
+
+dimsys_MKSA.set_quantity_scale_factor(farad, coulomb/volt)
+
+dimsys_MKSA.set_quantity_scale_factor(henry, volt*second/ampere)
+
+dimsys_MKSA.set_quantity_scale_factor(tesla, volt*second/meter**2)
+
+dimsys_MKSA.set_quantity_scale_factor(weber, joule/ampere)
+
+# elementary charge
+# REF: NIST SP 959 (June 2019)
+
+dimsys_MKSA.set_quantity_dimension(elementary_charge, charge)
+dimsys_MKSA.set_quantity_scale_factor(elementary_charge, 1.602176634e-19*coulomb)
+
+# magnetic constant:
+
+dimsys_MKSA.set_quantity_dimension(magnetic_constant, force / current ** 2)
+dimsys_MKSA.set_quantity_scale_factor(magnetic_constant, 4*pi/10**7 * newton/ampere**2)
+
+# electric constant:
+
+dimsys_MKSA.set_quantity_dimension(vacuum_permittivity, capacitance / length)
+dimsys_MKSA.set_quantity_scale_factor(vacuum_permittivity, 1/(magnetic_constant * speed_of_light**2))
+
+# vacuum impedance:
+
+dimsys_MKSA.set_quantity_dimension(vacuum_impedance, impedance)
+dimsys_MKSA.set_quantity_scale_factor(vacuum_impedance, magnetic_constant * speed_of_light)
+
+# Coulomb's constant:
+
+dimsys_MKSA.set_quantity_dimension(coulomb_constant, force * length ** 2 / charge ** 2)
+dimsys_MKSA.set_quantity_scale_factor(coulomb_constant, 1/(4*pi*vacuum_permittivity))
 
 MKSA = MKS.extend(base=(ampere,), units=all_units, name='MKSA', dimension_system=dimsys_MKSA, derived_units={
     magnetic_flux: weber,
