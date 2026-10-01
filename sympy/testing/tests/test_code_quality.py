@@ -40,6 +40,8 @@ message_duplicate_test = "This is a duplicate test function: %s, line %s"
 message_self_assignments = "File contains assignments to self/cls: %s, line %s."
 message_func_is = "File contains '.func is': %s, line %s."
 message_bare_expr = "File contains bare expression: %s, line %s."
+message_mpmath_import = ("File imports mpmath directly (mpmath must only be "
+    "imported in sympy/external/mpmath.py): %s, line %s.")
 
 implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
@@ -51,6 +53,8 @@ test_suite_def_re = re.compile(r'^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
 test_ok_def_re = re.compile(r'^def\s+test_.*:$')
 test_file_re = re.compile(r'.*[/\\]test_.*\.py$')
 func_is_re = re.compile(r'\.\s*func\s+is')
+mpmath_import_re = re.compile(r'^\s*(import mpmath\b|from mpmath\b)')
+mpmath_wrapper_path = abspath(join(SYMPY_PATH, 'external', 'mpmath.py'))
 
 
 def tab_in_leading(s):
@@ -249,6 +253,13 @@ def test_files():
                 assert False, message_implicit % (fname, idx + 1)
             if func_is_re.search(line) and not test_file_re.search(fname):
                 assert False, message_func_is % (fname, idx + 1)
+            if (mpmath_import_re.search(line) and
+                    not test_file_re.search(fname) and
+                    fname != mpmath_wrapper_path):
+                # mpmath should only be imported in sympy/external/mpmath.py;
+                # everything else should import it from there. Test files are
+                # exempt for now because several of them exercise mpmath itself:
+                assert False, message_mpmath_import % (fname, idx + 1)
 
             result = old_raise_re.search(line)
 
@@ -417,6 +428,31 @@ def test_implicit_imports_regular_expression():
         assert implicit_test_re.search(_with_space(c)) is None, c
     for c in candidates_fail:
         assert implicit_test_re.search(_with_space(c)) is not None, c
+
+
+def test_mpmath_imports_regular_expression():
+    candidates_ok = [
+        "from sympy.external.mpmath import mpf",
+        "from sympy import external",
+        "import sympy.external.mpmath",
+        "# import mpmath",
+        "some text # from mpmath import mpf",
+        ">>> import mpmath",  # allowed in docstrings
+        ">>> from mpmath import mpf",
+        # test files are exempt
+    ]
+    candidates_fail = [
+        "import mpmath",
+        "import mpmath.libmp",
+        "from mpmath import mpf",
+        "from mpmath import (mpf, mpc)",
+        "from mpmath.libmp import MPZ",
+        "from mpmath.ctx_mp_python import mpnumeric",
+    ]
+    for c in candidates_ok:
+        assert mpmath_import_re.search(_with_space(c)) is None, c
+    for c in candidates_fail:
+        assert mpmath_import_re.search(_with_space(c)) is not None, c
 
 
 def test_test_suite_defs():
