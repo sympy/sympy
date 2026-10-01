@@ -968,13 +968,28 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.calculus.accumulationbounds import AccumBounds
+        from sympy.functions.elementary.complexes import im, re
         from sympy.functions.elementary.exponential import log
         from sympy.series.limits import limit, Limit
-        from sympy.sets.sets import Interval
+        from sympy.sets.sets import FiniteSet, Interval
         from sympy.solvers.solveset import solveset
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
+
+        def _may_be_nonreal(g):
+            # cheap filter: only worth reasoning about log's branch cut
+            # for arguments that can actually leave the real axis
+            return g.has(S.ImaginaryUnit) or g.is_extended_real is False
+
+        def _on_branch_cut(c):
+            # does any log(g(x)) atom in self land exactly on the
+            # negative real axis (log's branch cut) when x = c?
+            for logterm in self.atoms(log):
+                g = logterm.args[0]
+                if _may_be_nonreal(g) and g.subs(x, c).is_extended_negative:
+                    return True
+            return False
 
         def _eval_endpoint(left):
             c = a if left else b
@@ -982,8 +997,11 @@ class Expr(Basic, EvalfMixin):
                 return S.Zero
             else:
                 C = self.subs(x, c)
-                if C.has(S.NaN, S.Infinity, S.NegativeInfinity,
-                         S.ComplexInfinity, AccumBounds):
+                needs_limit = C.has(S.NaN, S.Infinity, S.NegativeInfinity,
+                         S.ComplexInfinity, AccumBounds)
+                if not needs_limit:
+                    needs_limit = _on_branch_cut(c)
+                if needs_limit:
                     if (a < b) != False:
                         C = limit(self, x, c, "+" if left else "-")
                     else:
@@ -1012,13 +1030,29 @@ class Expr(Basic, EvalfMixin):
                 domain = Interval(a, b)
             else:
                 domain = Interval(b, a)
+
+            def _discrete_solutions(expr):
+                # solveset can return non-discrete sets (e.g. an Interval,
+                # when expr is identically zero on the domain); only keep
+                # results that are safe to iterate over pointwise
+                try:
+                    sol = solveset(expr, x, domain=domain)
+                except (TypeError, NotImplementedError):
+                    return S.EmptySet
+                return sol if isinstance(sol, FiniteSet) else S.EmptySet
+
             # check the singularities of self within the interval
-            # if singularities is a ConditionSet (not iterable), catch the exception and pass
-            singularities = solveset(self.cancel().as_numer_denom()[1], x,
-                domain=domain)
+            singularities = _discrete_solutions(self.cancel().as_numer_denom()[1])
             for logterm in self.atoms(log):
-                singularities = singularities | solveset(logterm.args[0], x,
-                    domain=domain)
+                g = logterm.args[0]
+                singularities |= _discrete_solutions(g)
+                if _may_be_nonreal(g):
+                    # log(g(x)) is also discontinuous where g(x)
+                    # transversally crosses the branch cut without
+                    # vanishing
+                    for s in _discrete_solutions(im(g)):
+                        if re(g.subs(x, s)).is_negative:
+                            singularities |= FiniteSet(s)
             try:
                 for s in singularities:
                     if value is S.NaN:
