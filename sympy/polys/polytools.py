@@ -5080,7 +5080,7 @@ def degree(f, gen=0):
 
     # Inverting the generator turns the highest polynomial power into the
     # lowest power, which leadterm can find without expanding large Pows.
-    coeff, exp = f.subs(gen, 1/gen).leadterm(gen)
+    coeff, expo = f.subs(gen, 1/gen).leadterm(gen)
 
     if coeff.is_zero is True:
         return S.NegativeInfinity
@@ -5094,12 +5094,12 @@ def degree(f, gen=0):
             if flat.is_zero is True:
                 return S.NegativeInfinity
 
-            coeff, exp = flat.subs(gen, 1/gen).leadterm(gen)
+            coeff, expo = flat.subs(gen, 1/gen).leadterm(gen)
 
             if coeff.is_zero is True:
                 return S.NegativeInfinity
 
-    return _degree(-exp)
+    return _degree(-expo)
 
 
 @public
