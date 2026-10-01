@@ -38,6 +38,44 @@ if TYPE_CHECKING:
     SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
 
 
+def _add_atan_floor_terms(antideriv):
+    """
+    Make an antiderivative containing ``atan(c*tan(a))`` or ``atan(c*cot(a))``
+    continuous by adding the appropriate multiple of ``pi*floor(...)``.
+
+    Examples
+    ========
+
+    >>> from sympy import atan, tan, pi, floor
+    >>> from sympy.abc import x
+    >>> from sympy.integrals.integrals import _add_atan_floor_terms
+    >>> _add_atan_floor_terms(2*atan(3*tan(x/2)))
+    2*atan(3*tan(x/2)) + 2*pi*floor((x/2 - pi/2)/pi)
+    """
+    for atan_term in antideriv.atoms(atan):
+        atan_arg = atan_term.args[0]
+        # Checking `atan_arg` to be linear combination of `tan` or `cot`
+        for tan_part in atan_arg.atoms(tan):
+            x1 = Dummy('x1')
+            tan_exp1 = atan_arg.subs(tan_part, x1)
+            # The coefficient of `tan` should be constant
+            coeff = tan_exp1.diff(x1)
+            if x1 not in coeff.free_symbols:
+                a = tan_part.args[0]
+                antideriv = antideriv.subs(atan_term, Add(atan_term,
+                    sign(coeff)*pi*floor((a-pi/2)/pi)))
+        for cot_part in atan_arg.atoms(cot):
+            x1 = Dummy('x1')
+            cot_exp1 = atan_arg.subs(cot_part, x1)
+            # The coefficient of `cot` should be constant
+            coeff = cot_exp1.diff(x1)
+            if x1 not in coeff.free_symbols:
+                a = cot_part.args[0]
+                antideriv = antideriv.subs(atan_term, Add(atan_term,
+                    sign(coeff)*pi*floor((a)/pi)))
+    return antideriv
+
+
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
@@ -84,11 +122,6 @@ class Integral(AddWithLimits):
         Integral(_0, (_0, x))
 
         """
-
-        #This will help other classes define their own definitions
-        #of behaviour with Integral.
-        if hasattr(function, '_eval_Integral'):
-            return function._eval_Integral(*symbols, **assumptions)
 
         if isinstance(function, Poly):
             sympy_deprecation_warning(
@@ -517,31 +550,7 @@ class Integral(AddWithLimits):
             return did
 
         # continue with existing assumptions
-        undone_limits = []
-        # ulj = free symbols of any undone limits' upper and lower limits
-        ulj = set()
         for xab in self.limits:
-            # compute uli, the free symbols in the
-            # Upper and Lower limits of limit I
-            if len(xab) == 1:
-                uli = set(xab[:1])
-            elif len(xab) == 2:
-                uli = xab[1].free_symbols
-            elif len(xab) == 3:
-                uli = xab[1].free_symbols.union(xab[2].free_symbols)
-            # this integral can be done as long as there is no blocking
-            # limit that has been undone. An undone limit is blocking if
-            # it contains an integration variable that is in this limit's
-            # upper or lower free symbols or vice versa
-            if xab[0] in ulj or any(v[0] in uli for v in undone_limits):
-                undone_limits.append(xab)
-                ulj.update(uli)
-                function = self.func(*([function] + [xab]))
-                factored_function = function.factor()
-                if not isinstance(factored_function, Integral):
-                    function = factored_function
-                continue
-
             if function.has(Abs, sign) and (
                 (len(xab) < 3 and all(x.is_extended_real for x in xab)) or
                 (len(xab) == 3 and all(x.is_extended_real and not x.is_infinite for
@@ -555,114 +564,71 @@ class Integral(AddWithLimits):
             if (function.has(Piecewise) and
                 not isinstance(function, Piecewise)):
                     function = piecewise_fold(function)
-            if isinstance(function, Piecewise):
-                if len(xab) == 1:
-                    antideriv = function._eval_integral(xab[0],
-                        **eval_kwargs)
+            def try_meijerg(function, xab):
+                x, a, b = xab
+                try:
+                    res = meijerint_definite(function, x, a, b)
+                except NotImplementedError:
+                    _debug('NotImplementedError '
+                        'from meijerint_definite')
+                    return None
+                if res is None:
+                    return None
+                f, cond = res
+                if conds == 'piecewise':
+                    u = self.func(function, (x, a, b))
+                    # if Piecewise modifies cond too
+                    # much it may not be recognized by
+                    # _condsimp pattern matching so just
+                    # turn off all evaluation
+                    return Piecewise((f, cond), (u, True),
+                        evaluate=False)
+                elif conds == 'separate':
+                    if len(self.limits) != 1:
+                        raise ValueError(filldedent('''
+                            conds=separate not supported in
+                            multiple integrals'''))
+                    return f, cond
                 else:
-                    antideriv = self._eval_integral(
-                        function, xab[0], **eval_kwargs)
-            else:
-                # There are a number of tradeoffs in using the
-                # Meijer G method. It can sometimes be a lot faster
-                # than other methods, and sometimes slower. And
-                # there are certain types of integrals for which it
-                # is more likely to work than others. These
-                # heuristics are incorporated in deciding what
-                # integration methods to try, in what order. See the
-                # integrate() docstring for details.
-                def try_meijerg(function, xab):
-                    ret = None
-                    if len(xab) == 3 and meijerg is not False:
-                        x, a, b = xab
-                        try:
-                            res = meijerint_definite(function, x, a, b)
-                        except NotImplementedError:
-                            _debug('NotImplementedError '
-                                'from meijerint_definite')
-                            res = None
-                        if res is not None:
-                            f, cond = res
-                            if conds == 'piecewise':
-                                u = self.func(function, (x, a, b))
-                                # if Piecewise modifies cond too
-                                # much it may not be recognized by
-                                # _condsimp pattern matching so just
-                                # turn off all evaluation
-                                return Piecewise((f, cond), (u, True),
-                                    evaluate=False)
-                            elif conds == 'separate':
-                                if len(self.limits) != 1:
-                                    raise ValueError(filldedent('''
-                                        conds=separate not supported in
-                                        multiple integrals'''))
-                                ret = f, cond
-                            else:
-                                ret = f
-                    return ret
+                    return f
 
-                meijerg1 = meijerg
-                if (meijerg is not False and
-                        len(xab) == 3 and xab[1].is_extended_real and xab[2].is_extended_real
+            # The Meijer G-function algorithm for definite integrals is
+            # the method of choice when a limit is infinite. If it does
+            # not succeed, an antiderivative found by the Meijer
+            # G-function algorithm for indefinite integrals is not
+            # trusted either, since evaluating it at the limits gives
+            # wrong answers for divergent integrals. When meijerg=True,
+            # a definite integral is only computed by the definite
+            # algorithm.
+            improper = (len(xab) == 3 and
+                        xab[1].is_extended_real and xab[2].is_extended_real
                         and not function.is_Poly and
-                        (xab[1].has(oo, -oo) or xab[2].has(oo, -oo))):
-                    ret = try_meijerg(function, xab)
-                    if ret is not None:
-                        function = ret
-                        continue
-                    meijerg1 = False
-                # If the special meijerg code did not succeed in
-                # finding a definite integral, then the code using
-                # meijerint_indefinite will not either (it might
-                # find an antiderivative, but the answer is likely
-                # to be nonsensical). Thus if we are requested to
-                # only use Meijer G-function methods, we give up at
-                # this stage. Otherwise we just disable G-function
-                # methods.
-                if meijerg1 is False and meijerg is True:
+                        (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)))
+            if len(xab) == 3 and (meijerg is True or
+                                   (meijerg is None and improper)):
+                ret = try_meijerg(function, xab)
+                if ret is not None:
+                    function = ret
+                    continue
+                if meijerg is True:
                     antideriv = None
                 else:
-                    antideriv = self._eval_integral(
-                        function, xab[0], **eval_kwargs)
-                    if antideriv is None and meijerg is True:
-                        ret = try_meijerg(function, xab)
-                        if ret is not None:
-                            function = ret
-                            continue
+                    antideriv = self._integrate_dispatch(
+                        function, xab[0], definite=True,
+                        **{**eval_kwargs, 'meijerg': False})
+            else:
+                antideriv = self._integrate_dispatch(
+                    function, xab[0], definite=len(xab) > 1, **eval_kwargs)
 
             final = hints.get('final', True)
-            # dotit may be iterated but floor terms making atan and acot
+            # doit may be iterated but floor terms making atan and acot
             # continuous should only be added in the final round
             if (final and not isinstance(antideriv, Integral) and
                 antideriv is not None):
-                for atan_term in antideriv.atoms(atan):
-                    atan_arg = atan_term.args[0]
-                    # Checking `atan_arg` to be linear combination of `tan` or `cot`
-                    for tan_part in atan_arg.atoms(tan):
-                        x1 = Dummy('x1')
-                        tan_exp1 = atan_arg.subs(tan_part, x1)
-                        # The coefficient of `tan` should be constant
-                        coeff = tan_exp1.diff(x1)
-                        if x1 not in coeff.free_symbols:
-                            a = tan_part.args[0]
-                            antideriv = antideriv.subs(atan_term, Add(atan_term,
-                                sign(coeff)*pi*floor((a-pi/2)/pi)))
-                    for cot_part in atan_arg.atoms(cot):
-                        x1 = Dummy('x1')
-                        cot_exp1 = atan_arg.subs(cot_part, x1)
-                        # The coefficient of `cot` should be constant
-                        coeff = cot_exp1.diff(x1)
-                        if x1 not in coeff.free_symbols:
-                            a = cot_part.args[0]
-                            antideriv = antideriv.subs(atan_term, Add(atan_term,
-                                sign(coeff)*pi*floor((a)/pi)))
+                antideriv = _add_atan_floor_terms(antideriv)
 
             if antideriv is None:
-                undone_limits.append(xab)
-                function = self.func(*([function] + [xab])).factor()
-                factored_function = function.factor()
-                if not isinstance(factored_function, Integral):
-                    function = factored_function
+                function = self.func(function, xab)
                 continue
             else:
                 if len(xab) == 1:
@@ -722,15 +688,11 @@ class Integral(AddWithLimits):
                         try:
                             evalued = Add(*others)._eval_interval(x, a, b)
                             evalued_pw = piecewise_fold(Add(*piecewises))._eval_interval(x, a, b)
-                            function = uneval + evalued + evalued_pw
+                            function = Add(uneval, evalued, evalued_pw)
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed
-                            undone_limits.append(xab)
-                            function = self.func(*([function] + [xab]))
-                            factored_function = function.factor()
-                            if not isinstance(factored_function, Integral):
-                                function = factored_function
+                            function = self.func(function, xab)
         return function
 
     def _eval_derivative(self, sym):
@@ -826,13 +788,37 @@ class Integral(AddWithLimits):
                 rv += self.func(arg, (x, a, b))
         return rv
 
-    def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
-                       heurisch=None, conds='piecewise',final=None):
+    def _eval_Integral(self, x, **hints):
+        """
+        Integrate this Integral with respect to ``x`` by integrating its
+        integrand, which is valid when ``x`` is not one of the integration
+        variables and does not appear in any of the limits.
+        """
+        if (x not in self.function.free_symbols or x in self.variables or
+                any(x in l.free_symbols for l in self.limits)):
+            return None
+        h = self._integrate_dispatch(self.function, x, **hints)
+        if h is None:
+            return None
+        return self.func(h, *self.limits)
+
+    def _integrate_dispatch(self, f, x, meijerg=None, risch=None, manual=None,
+                       heurisch=None, conds='piecewise', final=None,
+                       definite=False):
         """
         Calculate the anti-derivative to the function f(x).
 
         Explanation
         ===========
+
+        An object can define a method ``_eval_Integral(x, **hints)`` that
+        returns its antiderivative with respect to ``x``, or ``None`` to fall
+        back to the algorithms below. It can also return an unevaluated
+        Integral when none of those algorithms would do better. Piecewise,
+        Integral (for nested integrals), quaternions and vectors do this. The hint
+        ``definite=True`` means that the antiderivative will be evaluated over
+        an interval with ``_eval_interval``, so it only needs to be correct up
+        to a constant on each interval where it is continuous.
 
         The following algorithms are applied (roughly in this order):
 
@@ -949,9 +935,12 @@ class Integral(AddWithLimits):
             # issued in the Integral constructor.
             return f.integrate(x)
 
-        # Piecewise antiderivatives need to call special integrate.
-        if isinstance(f, Piecewise):
-            return f.piecewise_integrate(x, **eval_kwargs)
+        # f(x) knows how to integrate itself
+        eval_Integral = getattr(f, '_eval_Integral', None)
+        if eval_Integral is not None:
+            h = eval_Integral(x, definite=definite, **eval_kwargs)
+            if h is not None:
+                return h
 
         # let's cut it short if `f` does not depend on `x`; if
         # x is only a dummy, that will be handled below
@@ -1006,14 +995,22 @@ class Integral(AddWithLimits):
                 parts.append(coeff*x)
                 continue
 
+            # g(x) knows how to integrate itself
+            eval_Integral = getattr(g, '_eval_Integral', None)
+            if eval_Integral is not None and g is not f:
+                h = eval_Integral(x, definite=definite, **eval_kwargs)
+                if h is not None:
+                    parts.append(coeff*h)
+                    continue
+
             # g(x) = expr + O(x**n)
             order_term = g.getO()
 
             if order_term is not None:
-                h = self._eval_integral(g.removeO(), x, **eval_kwargs)
+                h = self._integrate_dispatch(g.removeO(), x, **eval_kwargs)
 
                 if h is not None:
-                    h_order_expr = self._eval_integral(order_term.expr, x, **eval_kwargs)
+                    h_order_expr = self._integrate_dispatch(order_term.expr, x, **eval_kwargs)
 
                     if h_order_expr is not None:
                         h_order_term = order_term.func(
@@ -1125,7 +1122,7 @@ class Integral(AddWithLimits):
                             # unless we were asked to use manual only.
                             # Keep the rest of eval_kwargs in case another
                             # method was set to False already
-                            new_eval_kwargs = eval_kwargs
+                            new_eval_kwargs = dict(eval_kwargs)
                             new_eval_kwargs["manual"] = False
                             new_eval_kwargs["final"] = False
                             result = result.func(*[
@@ -1160,7 +1157,7 @@ class Integral(AddWithLimits):
                     # Note: risch will be identical on the expanded
                     # expression, but maybe it will be able to pick out parts,
                     # like x*(exp(x) + erf(x)).
-                    return self._eval_integral(f, x, **eval_kwargs)
+                    return self._integrate_dispatch(f, x, **eval_kwargs)
 
             if h is not None:
                 parts.append(coeff * h)
@@ -1461,7 +1458,7 @@ def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
     exist.  There is also a (very successful, albeit somewhat slow) general
     implementation of the heuristic Risch algorithm.  This algorithm will
     eventually be phased out as more of the full Risch algorithm is
-    implemented. See the docstring of Integral._eval_integral() for more
+    implemented. See the docstring of Integral._integrate_dispatch() for more
     details on computing the antiderivative using algebraic methods.
 
     The option risch=True can be used to use only the (full) Risch algorithm.
@@ -1502,20 +1499,19 @@ def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
 
     - If computing a definite integral, and both limits are real,
       and at least one limit is +- oo, try the G-function method of
-      definite integration first.
+      definite integration first. If it fails, the G-function method of
+      indefinite integration is not used for this integral either.
 
     - Try to find an antiderivative, using all available methods, ordered
       by performance (that is try fastest method first, slowest last; in
       particular polynomial integration is tried first, Meijer
       G-functions second to last, and heuristic Risch last).
 
-    - If still not successful, try G-functions irrespective of the
-      limits.
-
     The option meijerg=True, False, None can be used to, respectively:
     always use G-function methods and no others, never use G-function
     methods, or use all available methods (in order as described above).
-    It defaults to None.
+    It defaults to None. With meijerg=True, a definite integral is only
+    computed with the G-function method of definite integration.
 
     Examples
     ========

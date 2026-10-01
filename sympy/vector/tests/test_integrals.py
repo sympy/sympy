@@ -5,6 +5,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.testing.pytest import raises
 from sympy.vector.coordsysrect import CoordSys3D
+from sympy.integrals.integrals import Integral, integrate
 from sympy.vector.integrals import ParametricIntegral, vector_integrate
 from sympy.vector.parametricregion import ParametricRegion
 from sympy.vector.implicitregion import ImplicitRegion
@@ -105,3 +106,10 @@ def test_vector_integrate():
 
     pl = Plane(Point(1, 1, 1), Point(2, 3, 4), Point(2, 2, 2))
     raises(ValueError, lambda: vector_integrate(C.x*C.z*C.i + C.k, pl))
+
+
+def test_integrate_vector():
+    v = C.x*C.i - C.y*C.k
+    assert isinstance(Integral(v, C.x), Integral)
+    assert Integral(v, C.x).doit() == C.x**2/2*C.i - C.x*C.y*C.k
+    assert integrate(v, (C.x, 0, 1)) == C.i/2 - C.y*C.k
