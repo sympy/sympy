@@ -10,7 +10,6 @@ from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
 from sympy.geometry.entity import rotate, scale, translate, GeometryEntity
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import subsets, permutations, cartes
-from sympy.utilities.misc import Undecidable
 from sympy.testing.pytest import raises, warns
 
 
@@ -106,7 +105,7 @@ def test_point():
     assert Point.is_scalar_multiple(Point(1, 1), (-1, -1))
     assert Point.is_scalar_multiple(Point(0, 0), (0, -1))
     # test when is_scalar_multiple can't be determined
-    raises(Undecidable, lambda: Point.is_scalar_multiple(Point(sympify("x1%y1"), sympify("x2%y2")), Point(0, 1)))
+    assert Point.is_scalar_multiple(Point(sympify("x1%y1"), sympify("x2%y2")), Point(0, 1)) is False
 
     assert Point(0, 1).orthogonal_direction == Point(1, 0)
     assert Point(1, 0).orthogonal_direction == Point(0, 1)
