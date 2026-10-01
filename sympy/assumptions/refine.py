@@ -148,9 +148,12 @@ def refine_Pow(expr, assumptions):
     from sympy.functions import sign
 
     if isinstance(expr.base, Abs):
-        if ask(Q.real(expr.base.args[0]), assumptions) and \
-                ask(Q.even(expr.exp), assumptions):
-            return expr.base.args[0] ** expr.exp
+        arg = expr.base.args[0]
+        if ask(Q.even(expr.exp), assumptions):
+            if ask(Q.real(arg), assumptions):
+                return arg ** expr.exp
+            if ask(Q.imaginary(arg), assumptions):
+                return (-S.One) ** (expr.exp / S(2)) * (arg ** expr.exp)
     if ask(Q.real(expr.base), assumptions):
         if expr.base.is_number:
             if ask(Q.even(expr.exp), assumptions):

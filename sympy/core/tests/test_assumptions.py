@@ -842,7 +842,13 @@ def test_Pow_is_algebraic():
     e = Symbol('e', algebraic=True)
 
     assert Pow(1, e, evaluate=False).is_algebraic
-    assert Pow(0, e, evaluate=False).is_algebraic
+    assert Pow(0, e, evaluate=False).is_algebraic is None
+
+    for exponent in [-1, -S.Half, -oo, Symbol('n', negative=True)]:
+        assert Pow(0, exponent, evaluate=False).is_algebraic is False
+    for exponent in [0, 1, S.Half, oo, Symbol('p', nonnegative=True)]:
+        assert Pow(0, exponent, evaluate=False).is_algebraic is True
+    assert Pow(0, -1, evaluate=False).is_finite is False
 
     a = Symbol('a', algebraic=True)
     azf = Symbol('azf', algebraic=True, zero=False)

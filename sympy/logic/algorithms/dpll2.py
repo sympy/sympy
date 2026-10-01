@@ -624,27 +624,6 @@ class SATSolver:
         """
         return self.levels[-1]
 
-    def _is_entailed(self, clauses, encoding):
-        """Return True if the literals fixed so far make the CNF *clauses*
-        true, False if they make it false, and None if they leave it
-        undecided. *encoding* numbers their predicates as this solver does.
-        """
-        entailed = True
-        for clause in clauses:
-            # fixed() takes an int in this solver's numbering, not a Literal,
-            # and a predicate it never encoded cannot have been fixed.
-            values = [self.fixed(-var if lit.is_Not else var)
-                      if (var := encoding.get(lit.lit)) else 0
-                      for lit in clause]
-
-            # One false clause makes the whole CNF false. An undecided one
-            # only rules out entailment, so keep looking for a false clause.
-            if all(value == -1 for value in values):
-                return False
-            entailed = entailed and 1 in values
-
-        return entailed or None
-
     def _clause_sat(self, cls):
         """Check if a clause is satisfied by the current variable setting.
 

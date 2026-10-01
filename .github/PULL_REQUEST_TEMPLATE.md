@@ -18,8 +18,11 @@ It is important not to waste reviewer's time by skipping this section.
 If this pull request fixes an issue, write "Fixes #NNNN" in that exact format,
 e.g. "Fixes #1234" (see https://tinyurl.com/auto-closing for more information).
 
-If this does not completely fix the issue, then write "See #NNNN" or "partially
-fixes #NNNN", e.g. "See #1234" or "partially fixes #1234". -->
+If this pull request does not completely fix the issue, write "See #NNNN", e.g.
+"See #1234". Do not write "partially fixes #NNNN" or use "fix", "resolve"/"resolves",
+"close"/"closes" (or any form of these words) ahead of the issue number, since
+GitHub's auto-close parser matches those keywords next to a number and will close
+the issue regardless of what precedes or follows them. -->
 
 
 #### Brief description of what is fixed or changed

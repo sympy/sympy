@@ -289,3 +289,12 @@ def test_array_derive_ndimarray_returns_result():
     x = symbols("x")
     arr = Array([x, x**2, x**3])
     assert array_derive(arr, x) == derive_by_array(arr, x) == Array([1, 2*x, 3*x**2])
+
+
+def test_array_derive_scalar_sums():
+    M3 = MatrixSymbol("M3", 3, 3)
+    assert array_derive(k + 1, M3) == ZeroArray(3, 3)
+    assert array_derive(M3[0, 0] + k, M3) == MatrixUnit(3, 3, 0, 0)
+    assert array_derive(M3[0, 0] + 2*M3[1, 2], M3).as_explicit() == \
+        Matrix([[1, 0, 0], [0, 0, 2], [0, 0, 0]])
+    assert (Trace(M3) + k).diff(M3) == Identity(3)

@@ -31,6 +31,7 @@ from sympy.core.parameters import _exp_is_pow
 from sympy.core.sympify import sympify, SympifyError
 from sympy.matrices import MutableMatrix, ImmutableMatrix
 from sympy.sets.sets import FiniteSet
+from sympy.sets.fancysets import Range
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import subsets, variations
@@ -224,6 +225,38 @@ def test_arity():
     assert arity(f) == (2, 3)
     assert arity(lambda *x: x) is None
     assert arity(log) == (1, 2)
+
+
+def test_nargs_varargs():
+    # issue 23487
+    class f(Function):
+        @classmethod
+        def eval(cls, x, *args):
+            return None
+
+    assert f.nargs == S.Naturals
+    assert f._valid_nargs(1) is True
+    assert f(1).nargs == S.Naturals
+    assert f(1, 2, 3).nargs == S.Naturals
+    raises(TypeError, lambda: f())
+
+    class g(Function):
+        @classmethod
+        def eval(cls, x, y, z, *args):
+            return None
+
+    assert g.nargs == Range(3, oo)
+    assert g(1, 2, 3).nargs == Range(3, oo)
+    raises(TypeError, lambda: g(1))
+    raises(TypeError, lambda: g(1, 2))
+
+    class h(Function):
+        @classmethod
+        def eval(cls, *args):
+            return None
+
+    assert h.nargs == S.Naturals0
+    assert h().nargs == S.Naturals0
 
 
 def test_Lambda():

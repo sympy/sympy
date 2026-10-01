@@ -10,6 +10,7 @@ from sympy.printing.defaults import Printable
 from sympy.core.function import FunctionClass
 from sympy.external import import_module
 
+
 def _init_python_printing(stringify_func, **settings):
     """Setup printing in Python interactive session. """
     import sys
