@@ -403,9 +403,8 @@ If all you want is the characteristic polynomial, use ``charpoly``.  This is
 more efficient than ``eigenvals``, because sometimes symbolic roots can be
 expensive to calculate.
 
-    >>> lamda = symbols('lamda')
-    >>> p = M.charpoly(lamda)
-    >>> factor(p.as_expr())
+    >>> p = M.charpoly()
+    >>> factor(p('lambda'))
            2
     (λ - 5) ⋅(λ - 3)⋅(λ + 2)
 

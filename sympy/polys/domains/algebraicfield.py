@@ -234,7 +234,7 @@ class AlgebraicField(
     >>> K
     QQ<exp(2*I*pi/7)>
     >>> K.primes_above(11)
-    [(11, _x**3 + 5*_x**2 + 4*_x - 1), (11, _x**3 - 4*_x**2 - 5*_x - 1)]
+    [(11, _0**3 + 5*_0**2 + 4*_0 - 1), (11, _0**3 - 4*_0**2 - 5*_0 - 1)]
 
     The Galois group of the Galois closure of the field can be computed (when
     the minimal polynomial of the field is of sufficiently small degree).
