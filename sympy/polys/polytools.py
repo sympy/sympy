@@ -4965,7 +4965,6 @@ def degree(f, gen=0):
     from sympy.core.function import expand_mul
     from sympy.core.power import Pow
     from sympy.functions.elementary.exponential import exp
-    from sympy.core.numbers import NumberSymbol
     from sympy.polys.polyutils import decompose_power
 
     _degree = lambda x: Integer(x) if type(x) is int else x
