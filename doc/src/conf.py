@@ -120,6 +120,14 @@ nitpick_ignore = [
     ('py:class', 'sympy.logic.boolalg.Boolean')
 ]
 
+# Some Sphinx/autodoc runs can generate spurious class references from repr-like
+# strings (e.g. default values containing dicts/quotes). Ignore those.
+nitpick_ignore_regex = [
+    # Match targets like "'black'}))" / "'ellipse'})" that sometimes appear
+    # from repr-like strings in doc output. The `)` must be escaped in regex.
+    ('py:class', r"^'.*'}\)+$"),
+]
+
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 
