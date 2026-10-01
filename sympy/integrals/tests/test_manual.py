@@ -19,7 +19,8 @@ from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, bioche_substitution, integral_steps, manual_subs, IntegrationSolver)
+    _parts_rule, bioche_substitution, integral_steps, manual_subs,
+    IntegralInfo, IntegrationSolver, perfect_square_radicand_rule)
 from sympy.testing.pytest import raises, slow
 from typing import TYPE_CHECKING
 
@@ -1438,6 +1439,59 @@ def test_manualintegrate_sqrt_quadratic_polynomial_reduction_rule():
     assert (result.args[1][0].subs(c, b**2/12).diff(x) - f.subs(c, b**2/12)).cancel() == 0
 
 
+def test_manualintegrate_perfect_square_radicand_rule():
+    f = 1/sqrt(-z*sin(x)**2)
+    F = -log(cot(x) + csc(x))*sin(x)/sqrt(-z*sin(x)**2)
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(z*x**4)
+    F = -x/sqrt(z*x**4)
+    assert_is_integral_of(f, F)
+
+    f = x**3/sqrt(z*x**4)
+    F = sqrt(z*x**4)/(2*z)
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(-z*x**2)
+    F = x*log(x)/sqrt(-z*x**2)
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(z*exp(2*x))
+    F = -1/sqrt(z*exp(2*x))
+    assert_is_integral_of(f, F)
+
+    f = 1/sqrt(z*log(x)**2)
+    F = log(x)*li(x)/sqrt(z*log(x)**2)
+    assert_is_integral_of(f, F)
+
+    f = x/sqrt(z*exp(2*x))
+    F = (-x*exp(-x) - exp(-x))*exp(x)/sqrt(z*exp(2*x))
+    assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_perfect_square_radicand_rule_polynomial():
+    # A radicand containing the literal 1 used to be rejected by the rule
+    f = 1/(x*sqrt(x**2 + 2*x + 1))
+    F = (x + 1)*(log(x) - log(x + 1))/sqrt((x + 1)**2)
+    assert_is_integral_of(f, F)
+
+    # A symbolic constant in a denominator of the radicand used to raise
+    # PolynomialError from sqf_list
+    f = 1/sqrt(x**2*(x + 1)**2/a)
+    F = (x**2 + x)*(log(x) - log(x + 1))/sqrt(x**4/a + 2*x**3/a + x**2/a)
+    assert_is_integral_of(f, F)
+
+
+def test_manualintegrate_perfect_square_radicand_rule_real_symbol():
+    t = symbols('t', real=True)
+    integral = IntegralInfo(1/sqrt(z*t**4), t)
+    assert IntegrationSolver().run(perfect_square_radicand_rule, integral) is None
+
+    f = 1/sqrt(z*t**4)
+    F = -1/(t*sqrt(z))
+    assert manualintegrate(f, t) == F
+
+
 def test_manualintegrate_solver_cache_with_max_depth():
     # A subtree whose computation completes within the depth budget is
     # cached, same as with unbounded recursion.
@@ -1457,6 +1511,62 @@ def test_manualintegrate_solver_cache_with_max_depth():
     unbounded_solver = IntegrationSolver(max_depth=None)
     unbounded_solver.solve(exp(x)*sin(x), x)
     assert len(unbounded_solver._solved) == len(solver._solved)
+
+
+def test_manualintegrate_solver_depth_limit():
+    # The depth limit applies before the memo is consulted, so the result
+    # does not depend on whether a subproblem at the limit was cached by an
+    # earlier sibling: the two integrands only differ by the name of the
+    # parameter, which changes the order in which the terms are visited.
+    f1 = x*exp(x)*sin(x) + a*exp(x)*cos(x)
+    f2 = f1.subs(a, y)
+    assert (integral_steps(f1, x, max_depth=4).contains_dont_know() ==
+            integral_steps(f2, x, max_depth=4).contains_dont_know())
+
+    # A complete result is memoized even when a discarded attempt on a
+    # sibling candidate ran out of budget.
+    solver = IntegrationSolver(max_depth=6)
+    assert not solver.solve(csc(x)**3, x).contains_dont_know()
+    assert solver._solved
+
+    # The limit is lowered so that Python's recursion limit is not reached
+    # from a deeply nested caller: the result is partial, not an exception.
+    def nest(n, fn):
+        return fn() if n == 0 else nest(n - 1, fn)
+    result = nest(300, lambda: manualintegrate(log(x)**250, x))
+    assert result.has(Integral)
+
+    # Unknown options are rejected instead of being silently ignored
+    raises(TypeError, lambda: integral_steps(x, x, max_dept=5))
+
+
+def test_manualintegrate_solver_reuse():
+    # The integration-by-parts u counter is reset for every top-level call
+    solver = IntegrationSolver()
+    results = [solver.solve(exp(k*x)*sin(x), x) for k in range(1, 6)]
+    assert not any(result.contains_dont_know() for result in results)
+
+
+def test_manualintegrate_parts_polynomial_u():
+    # Integration by parts with dv = x*cos(x**2 + x) is only tried with a
+    # polynomial u; with u = x*sin(x**2 + x) the search did not terminate.
+    f = x**2*sin(x**2 + x)*cos(x**2 + x)
+    assert not manualintegrate(f, x).has(Integral)
+    assert not manualintegrate(x**2*cos(x**2 + x), x).has(Integral)
+
+
+def test_manualintegrate_substitution_constant():
+    # The additive constant produced by substituting back u = 2*t + 2 is
+    # dropped by the URule itself, so that the steps and manualintegrate
+    # agree
+    f = sin(3*x)*sec(x)
+    F = log(-2*cos(2*x) - 2)/2 - cos(2*x)
+    assert manualintegrate(f, x) == F
+    assert integral_steps(f, x).eval() == F
+
+    # Also inside a constant factor and the branches of a Piecewise
+    assert manualintegrate(2*a**(2*x + 2), x) == Piecewise(
+        (a**(2*x + 2)/log(a), Ne(log(a), 0)), (2*x, True))
 
 
 def test_mul_pow_derivative():
