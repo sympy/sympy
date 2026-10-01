@@ -11,7 +11,7 @@ from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.complexes import (Abs, im, polar_lift, re, sign)
+from sympy.functions.elementary.complexes import (Abs, im, polar_lift, re, sign, unpolarify)
 from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csch, sinh, tanh, sech)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
@@ -1408,9 +1408,9 @@ def test_issue_8368i():
             (
                 Integral(exp(-s*x)*cosh(x), (x, 0, oo)),
                 True))
-    assert integrate(exp(-s*x)*sinh(x), (x, 0, oo)) == \
+    assert integrate(exp(-s*x)*sinh(x), (x, 0, oo)).cancel() == \
         Piecewise(
-            (   -1/(s + 1)/2 - 1/(-s + 1)/2,
+            (   1/(s**2 - 1),
                 And(
                     Abs(s) > 1,
                     Abs(arg(s)) < pi/2,
@@ -2150,7 +2150,9 @@ def test_old_issues():
     assert I1 == sin(log(x**2))/2
     # https://github.com/sympy/sympy/issues/5462
     I2 = integrate(1/(x**2+y**2)**(Rational(3,2)),x)
-    assert I2 == x/(y**3*sqrt(x**2/y**2 + 1))
+    for value in [-1, 1]:
+        error = I2.diff(x).subs(y, value) - (x**2 + 1)**(-Rational(3, 2))
+        assert simplify(unpolarify(error)) == 0
     # https://github.com/sympy/sympy/issues/6278
     I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
     assert I3 == 2*sqrt(3)*pi/3
