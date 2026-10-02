@@ -285,10 +285,12 @@ class SMP(CantSympify, Generic[Er]):
         if f.dom == dom:
             return f  # type: ignore
 
-        rep = {
-            mon: dom.convert(coeff, f.dom)
-            for mon, coeff in f._rep.items()
-        }
+        rep: dict[smm.smonom, Es] = {}
+        for mon, coeff in f._rep.items():
+            new_coeff = dom.convert(coeff, f.dom)
+            if new_coeff:
+                rep[mon] = new_coeff
+
         return SMP.new(rep, dom, f.lev)
 
     def to_ring(f) -> SMP:
@@ -734,8 +736,11 @@ class SMP(CantSympify, Generic[Er]):
             return f
 
         lc = f.LC()
+        if f.dom.is_one(lc):
+            return f
+
         rep = {
-            mon: f.dom.quo(coeff, lc)
+            mon: f.dom.exquo(coeff, lc)
             for mon, coeff in f._rep.items()
         }
         return f.new(rep, f.dom, f.lev)

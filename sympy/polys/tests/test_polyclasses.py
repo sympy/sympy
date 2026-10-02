@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ, GF
 from sympy.polys.polyclasses import DMP, SMP, DMF, ANP
 from sympy.polys.polytools import Poly
 from sympy.polys.polyerrors import (CoercionFailed, ExactQuotientFailed,
@@ -759,6 +759,26 @@ def test_SMP_degrees_coefficients_and_conversion():
     cont, prim = SMP.from_dict({(1,): 6, (0,): 9}, 0, ZZ).primitive()
     assert cont == ZZ(3)
     assert prim.to_dict() == {(1,): 2, (0,): 3}
+
+    f = SMP.from_dict({(1,): 5, (0,): 1}, 0, ZZ)
+    g = f.convert(GF(5))
+    assert g == SMP.one(0, GF(5))
+    assert g.degree() == 0
+    assert g.is_ground
+
+
+def test_SMP_monic():
+    f = SMP.from_dict({(1,): 2, (0,): 4}, 0, ZZ)
+    assert f.monic().to_dict() == {(1,): 1, (0,): 2}
+
+    f = SMP.from_dict({(1,): 2, (0,): 1}, 0, ZZ)
+    raises(ExactQuotientFailed, f.monic)
+
+    f = SMP.from_dict({(1,): QQ(2), (0,): QQ(1)}, 0, QQ)
+    assert f.monic().to_dict() == {(1,): QQ.one, (0,): QQ(1, 2)}
+
+    f = SMP.from_dict({(1,): 1, (0,): 2}, 0, ZZ)
+    assert f.monic() is f
 
 
 def test_SMP_calculus_eval_and_trunc():
