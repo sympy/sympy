@@ -268,10 +268,8 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                 xieta = []
                 for heuristic in lie_heuristics:
                     function = globals()['lie_heuristic_' + heuristic]
-                    try:
-                        inflist = function(match, comp=True)
-                    except (TypeError, KeyError, UnboundLocalError, ValueError, NotImplementedError):
-                        continue
+                    inflist = function(match, comp=True)
+                    
                     if inflist:
                         xieta.extend([inf for inf in inflist if inf not in xieta])
                 if xieta:
