@@ -1577,9 +1577,13 @@ def is_eq(lhs: Basic, rhs: Basic, assumptions=None) -> bool | None:
                 return fuzzy_xor([_lhs.is_extended_positive, fuzzy_not(_rhs.is_extended_positive)])
 
             # If one side is infinite and the other's finiteness is unknown:
-            # they both have opposite sign => return False
-            # they have same sign or unknown sign => their equality cannot be decided => return None
-            if ((_lhs.is_extended_positive and _rhs.is_extended_negative) or (_lhs.is_extended_negative and _rhs.is_extended_positive)):
+            # one side is strictly positive/negative and the other is <= 0 / >= 0
+            # (incompatible signs) => return False
+            # for any other case the equality cannot be decided => return None
+            if ((_lhs.is_extended_positive and _rhs.is_extended_nonpositive) or
+                (_lhs.is_extended_negative and _rhs.is_extended_nonnegative) or
+                (_lhs.is_extended_nonpositive and _rhs.is_extended_positive) or
+                (_lhs.is_extended_nonnegative and _rhs.is_extended_negative)):
                 return False
             return None
 

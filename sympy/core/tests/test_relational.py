@@ -1192,8 +1192,11 @@ def test_is_eq():
 
     assert is_eq(x, y, Q.negative_infinite(x) & Q.extended_nonpositive(y)) is None
     assert is_eq(x, y, Q.positive_infinite(x) & Q.extended_positive(y)) is None
-    assert is_eq(x, y, Q.negative_infinite(x) & Q.extended_positive(y)) is False
-    assert is_eq(x, y, Q.positive_infinite(x) & Q.extended_negative(y)) is False
+
+    assert is_eq(x, y, Q.positive_infinite(x) & Q.extended_nonpositive(y)) is False
+    assert is_eq(x, y, Q.negative_infinite(x) & Q.extended_nonnegative(y)) is False
+    assert is_eq(x, y, Q.extended_nonpositive(x) & Q.positive_infinite(y)) is False
+    assert is_eq(x, y, Q.extended_nonnegative(x) & Q.negative_infinite(y)) is False
 
     assert is_eq(x+I, y+I, Q.infinite(x) & Q.finite(y)) is False
     assert is_eq(1+x*I, 1+y*I, Q.infinite(x) & Q.finite(y)) is False
