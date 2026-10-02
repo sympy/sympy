@@ -164,4 +164,3 @@ def test_issue_30644():
 
     res3 = infinitesimals(f(x).diff(x)**2 + a*x*f(x).diff(x) - b*x**2 - c, f(x), hint='all')
     assert isinstance(res3, list)
-    
