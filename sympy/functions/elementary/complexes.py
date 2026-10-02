@@ -1277,7 +1277,30 @@ class periodic_argument(DefinedFunction):
         return (ub - ceiling(ub/period - S.Half)*period)._eval_evalf(prec)
 
 
+def unbranched_argument(arg):
+    """
+    Return the unbranched argument of a polar number.
 
+    This is the argument on the full Riemann surface of the logarithm, without
+    reducing it to a finite branch interval. Equivalently, this returns
+    ``periodic_argument(arg, oo)``.
+
+    Examples
+    ========
+
+    >>> from sympy import exp_polar, unbranched_argument
+    >>> from sympy import I, pi
+    >>> unbranched_argument(exp_polar(15*I*pi))
+    15*pi
+    >>> unbranched_argument(exp_polar(7*I*pi))
+    7*pi
+
+    See Also
+    ========
+
+    periodic_argument
+    """
+    return periodic_argument(arg, oo)
 
 
 class principal_branch(DefinedFunction):

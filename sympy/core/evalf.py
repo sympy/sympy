@@ -1280,11 +1280,15 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
             s = term
             k = 1
             while abs(term) > 5:
-                term *= MPZ(func1(k - 1))
-                term //= MPZ(func2(k - 1))
+                # The ratio must be applied before it is truncated to an integer:
+                # the numerator and denominator of the quotient between successive
+                # terms need not be integral (the ratio for 1.9**n/factorial(n) is
+                # 1.9/(n + 1), and MPZ(1.9) is 1). ctx.mpf keeps the division in
+                # arbitrary precision instead of falling back to a float.
+                term *= ctx.mpf(func1(k - 1)) / ctx.mpf(func2(k - 1))
                 s += term
                 k += 1
-            return from_man_exp(s, -prec)
+            return from_man_exp(MPZ(s), -prec)
         else:
             alt = g < 0
             if abs(g) < 1:
@@ -1304,8 +1308,21 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
                 def summand(k, _term=[term0]):
                     if k:
                         k = int(k)
-                        _term[0] *= MPZ(func1(k - 1))
-                        _term[0] //= MPZ(func2(k - 1))
+                        # The ratio must be applied before it is truncated to an
+                        # integer, since the numerator and denominator of the
+                        # quotient between successive terms need not be integral
+                        # (the ratio for 1.9**n/factorial(n) is 1.9/(n + 1), and
+                        # MPZ(1.9) is 1). The ratio is held as a fixed-point
+                        # integer with prec2 extra bits so that the accumulator
+                        # keeps the accuracy the extrapolation relies on, and
+                        # ctx.mpf keeps the division from falling back to a float.
+                        with local_workprec(prec2 + 20):
+                            ratio = MPZ(
+                                ctx.mpf(func1(k - 1))
+                                / ctx.mpf(func2(k - 1))
+                                * (1 << prec2)
+                            )
+                        _term[0] = _term[0] * ratio >> prec2
                     return ctx.make_mpf(from_man_exp(_term[0], -prec2))
 
                 ctx.prec = prec

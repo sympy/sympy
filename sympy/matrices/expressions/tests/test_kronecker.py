@@ -4,6 +4,7 @@ from sympy.core.numbers import I
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.integers import floor
 from sympy.matrices.dense import (Matrix, eye)
+from sympy.matrices.immutable import ImmutableMatrix
 from sympy.matrices import MatrixSymbol, Identity
 from sympy.matrices.expressions import det, trace
 
@@ -185,3 +186,27 @@ def test_KroneckerProduct_entry():
     B = MatrixSymbol('B', o, p)
 
     assert KroneckerProduct(A, B)._entry(i, j) == A[Mod(floor(i/o), n), Mod(floor(j/p), m)]*B[Mod(i, o), Mod(j, p)]
+
+
+def test_KroneckerProduct_singletons():
+    A = MatrixSymbol('A', 3, 3)
+    A1 = MatrixSymbol('A1', 1, 1)
+    B = MatrixSymbol('B', 3, 3)
+    B1 = MatrixSymbol('B1', 1, 1)
+
+    assert KroneckerProduct(A, A1, B, B1).doit() == KroneckerProduct(A, B, A1*B1)
+    assert KroneckerProduct(A1, A, B1).doit() == KroneckerProduct(A, A1*B1)
+    assert KroneckerProduct(A1, B1).doit() == A1*B1
+    assert KroneckerProduct(A1, A).doit() == KroneckerProduct(A1, A)
+    assert KroneckerProduct(Identity(1), A, A1).doit() == KroneckerProduct(A, A1)
+    assert KroneckerProduct(2*A1, A, 3*B1).doit() == 6*KroneckerProduct(A, A1*B1)
+
+    expr = KroneckerProduct(A, A1, B, B1)
+    assert expr.doit().as_explicit() == expr.as_explicit()
+
+    p, q = symbols('p, q', commutative=False)
+    P = ImmutableMatrix([[p]])
+    Q = ImmutableMatrix([[q]])
+    assert KroneckerProduct(A, P, B, Q).doit() == KroneckerProduct(A, P, B, Q)
+    assert KroneckerProduct(A, P, B, A1).doit() == KroneckerProduct(A, P, B, A1)
+    assert KroneckerProduct(P, A1, A, B1).doit() == KroneckerProduct(P, A, A1*B1)
