@@ -25,8 +25,13 @@ Examples
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.core.symbol import Symbol
+    from sympy.core.basic import Basic
+    from collections.abc import Iterable
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
 
@@ -46,12 +51,12 @@ _assumptions_rng = _random.Random()
 _assumptions_shuffle = _assumptions_rng.shuffle
 
 
-def seed(a=None, version=2):
+def seed(a: int | str | bytes | None = None, version: int = 2) -> None:
     rng.seed(a=a, version=version)
     _assumptions_rng.seed(a=a, version=version)
 
 
-def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
+def random_complex_number(a: float = 2, b: float = -1, c: float = 3, d: float = 1, rational: bool = False, tolerance: float | None = None) -> Expr:
     """
     Return a random complex number.
 
@@ -70,7 +75,7 @@ def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
         I*nsimplify(B, rational=True, tolerance=tolerance))
 
 
-def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
+def verify_numerically(f: Expr, g: Expr, z: Symbol | None = None, tol: float = 1.0e-6, a: float = 2, b: float = -1, c: float = 3, d: float = 1) -> bool:
     """
     Test numerically that f and g agree when evaluated in the argument z.
 
@@ -92,17 +97,20 @@ def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     from sympy.core.sympify import sympify
     from sympy.core.numbers import comp
     f, g = (sympify(i) for i in (f, g))
+    symbols: Iterable[Basic]
     if z is None:
-        z = f.free_symbols | g.free_symbols
+        symbols = f.free_symbols | g.free_symbols
     elif isinstance(z, Symbol):
-        z = [z]
-    reps = list(zip(z, [random_complex_number(a, b, c, d) for _ in z]))
+        symbols = [z]
+    else:
+        symbols = z
+    reps = list(zip(symbols, [random_complex_number(a, b, c, d) for _ in symbols]))
     z1 = f.subs(reps).n()
     z2 = g.subs(reps).n()
     return comp(z1, z2, tol)
 
 
-def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
+def test_derivative_numerically(f: Expr, z: Symbol, tol: float = 1.0e-6, a: float = 2, b: float = -1, c: float = 3, d: float = 1) -> bool:
     """
     Test numerically that the symbolically computed derivative of f
     with respect to z is correct.
@@ -128,7 +136,7 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     return comp(f1.n(), f2.n(), tol)
 
 
-def _randrange(seed=None):
+def _randrange(seed: int | None | list[int] = None) -> Callable[..., int]:
     """Return a randrange generator.
 
     ``seed`` can be
