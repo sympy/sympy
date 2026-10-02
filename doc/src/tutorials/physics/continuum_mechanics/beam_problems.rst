@@ -55,24 +55,21 @@ applied downward from the fixed end over a 5 meter distance. A counterclockwise
 moment of 50 kN-m is applied 5 meters from the fixed end. Lastly, a downward
 point load of 12 kN is applied at the free end of the beam.
 
-::
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: False
 
-       y
-       ^
-       |
-   \\\\|
-   \\\\|    8 kN/m
-   \\\\|_________________
-   \\\\|| | | | | | | | |             12 kN
-   \\\\|V V V V V V V V V               |
-   \\\\|________________|_______________V
-   \\\\|                |               |
-   \\\\o - - - - - - - -↺ 50 kN-m - - - | - - -> x
-   \\\\|________________|_______________|
-   \\\\|                                :
-   \\\\|----------------|---------------|
-              5.0 m            4.0 m
-
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols
+   >>> E, I = symbols('E, I')
+   >>> b = Beam(9, E, I)
+   >>> b.apply_support(0, "fixed")
+   >>> b.apply_load(12, 9, -1)
+   >>> b.apply_load(50, 5, -2)
+   >>> b.apply_load(8, 0, 0, end=5)
+   >>> p = b.draw()
+   >>> p.show()
 .. note::
 
     The user is free to choose their own sign convention. In this case the
@@ -82,7 +79,7 @@ The beam must be initialized with the length, modulus of elasticity, and the
 second moment of area. These quantities can be symbols or numbers.
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -98,7 +95,7 @@ The 12 kN point load is in the negative direction, at the location of 9 meters,
 and the polynomial order is specified as -1:
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -108,7 +105,7 @@ The ``load`` attribute can then be used to access the loading function in
 singularity function form:
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -119,7 +116,7 @@ singularity function form:
 Similarly, the positive moment can be applied with a polynomial order -2:
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -128,7 +125,7 @@ Similarly, the positive moment can be applied with a polynomial order -2:
 The distributed load is of order 0 and spans x=0 to x=5:
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -139,7 +136,7 @@ no rotation. These are specified by appending tuples of x values and the
 corresponding deflection or slope values:
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -150,7 +147,7 @@ These boundary conditions introduce an unknown reaction force and moment which
 need to be applied to the beam to maintain static equilibrium:
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -165,7 +162,7 @@ These two variables can be solved for in terms of the applied loads and the
 final loading can be displayed:
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -180,7 +177,7 @@ At this point, the beam is fully defined and the internal shear and bending
 moments are calculated:
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -195,7 +192,7 @@ moments are calculated:
 These can be visualized by calling the respective plot methods:
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -255,15 +252,21 @@ point. There are two simple supports below the beam. One at the end
 and another one at a distance of 10 meters from the start. The
 deflection is restricted at both the supports.
 
-::
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: False
 
-  || 8 N                                       ↺ 120 Nm
-  \/______________________________________________|
-  |_______________________________________________|
-              /\                                 /\
-  |------------|---------------------------------|
-      10 m                  20 m
-
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols
+   >>> E, I = symbols('E, I')
+   >>> b = Beam(30, E, I)
+   >>> b.apply_load(8, 0, -1)
+   >>> b.apply_support(10, "pin")
+   >>> b.apply_support(30, "roller")
+   >>> b.apply_load(120, 30, -2)
+   >>> p = b.draw()
+   >>> p.show()
 .. note::
 
     Using the sign convention of downward forces and counterclockwise moment
@@ -314,18 +317,22 @@ support at the end. A counterclockwise moment of 1.5 kN-m is applied at the mid
 of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m/m is
 applied from the mid till the end of the beam.
 
-::
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: False
 
-                              ramp load = 1 KN/m/m
-                            constant load = 3 KN/m
-                         |------------------------|
-                       ↺ 1.5 KN-m
-   ______________________|________________________
-  |_______________________________________________|
-  o                      |                       /\
-  |----------------------|-----------------------|
-          3.0 m                     3.0 m
-
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols, S
+   >>> E, I = symbols('E, I')
+   >>> b = Beam(6, E, I)
+   >>> b.apply_support(0, "roller")
+   >>> b.apply_support(6, "pin")
+   >>> b.apply_load(-S(3)/2, 3, -2)
+   >>> b.apply_load(3, 3, 0)
+   >>> b.apply_load(1, 3, 1)
+   >>> p = b.draw()
+   >>> p.show()
 .. note::
 
     Using the sign convention of downward forces and counterclockwise moment
@@ -359,7 +366,7 @@ applied from the mid till the end of the beam.
             4            2                                     4
 
 .. plot::
-   :context:
+   :context: close-figs
    :format: doctest
    :include-source: True
 
@@ -407,21 +414,22 @@ to a distributed constant load of 10 KN/m from the starting point till
 2 meters away from it. Two point loads of 20KN and 8KN are applied at
 5 meters and 7.5 meters away from the starting point respectively.
 
-::
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: False
 
-                                        ---> x
-                                        |
-                                        v y
-    10 KN/m
-  _____________                 20 KN         8 KN
-  | | | | | | |                  |             |
-  V V V V V V V                  V             V
-   _______________________________________________
-  |_______________________________________________|
-        /\                                  O
-  |-----|------|-----------------|----------|--|--|
-     1m    1m          3m              2m   .5m .5m
-
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols
+   >>> E, I = symbols('E, I')
+   >>> b = Beam(8, E, I)
+   >>> b.apply_support(1, "pin")
+   >>> b.apply_support(7, "roller")
+   >>> b.apply_load(10, 0, 0, end=2)
+   >>> b.apply_load(20, 5, -1)
+   >>> b.apply_load(8, 7.5, -1)
+   >>> p = b.draw()
+   >>> p.show()
 .. code:: pycon
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -475,23 +483,21 @@ from it. A ramp load of 1 kN/m/m applied from the mid till the end of
 the beam. A point load of 12KN is also applied in same direction 4 meters
 away from start.
 
-::
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: False
 
-    ---> x                             .
-    |                                . |
-    v y                    12 KN   . | |
-                             |   . | | |
-                             V . | | | |
-  \\\\|   4 KN/m             . | | | | |
-  \\\\|___________         . 1 KN/m/m| |
-  \\\\|| | | | | |       . V V V V V V V
-  \\\\|V V V V V V     |---------------|
-  \\\\|________________________________
-  \\\\|________________________________|
-  \\\\|          :          :          :
-  \\\\|----------|-----|----|----------|
-          2.0 m     1m   1m      2.0 m
-
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols
+   >>> E, I = symbols('E, I')
+   >>> b = Beam(6, E, I)
+   >>> b.apply_support(0, "fixed")
+   >>> b.apply_load(4, 0, 0, end=2)
+   >>> b.apply_load(12, 4, -1)
+   >>> b.apply_load(1, 3, 1, end=6)
+   >>> p = b.draw()
+   >>> p.show()
 .. code:: pycon
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -547,18 +553,21 @@ from it. It is pinned at the starting point and is resting over a roller 8 meter
 away from that end. Also a counterclockwise moment of 5 KN-m is applied at the
 overhanging end.
 
-::
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: False
 
-                 2 KN/m                         ---> x
-             _________________                  |
-             | | | | | | | | |                  v y
-             V V V V V V V V V                        ↺ 5 KN-m
-    ____________________________________________________|
-   O____________________________________________________|
-  / \                                   /\
-   |--------|----------------|----------|---------------|
-       2m           4m            2m            3m
-
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols
+   >>> E, I = symbols('E, I')
+   >>> b = Beam(11, E, I)
+   >>> b.apply_support(0, "pin")
+   >>> b.apply_support(8, "roller")
+   >>> b.apply_load(2, 2, 0, end=6)
+   >>> b.apply_load(5, 11, -2)
+   >>> p = b.draw()
+   >>> p.show()
 .. code:: pycon
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -611,21 +620,21 @@ There is a beam of length ``l``, fixed at both ends. A concentrated point load
 of magnitude ``F`` is applied in downward direction at mid-point of the
 beam.
 
-::
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: False
 
-                                        ^ y
-                                        |
-                                        ---> x
-  \\\\|                  F                  |\\\\
-  \\\\|                  |                  |\\\\
-  \\\\|                  V                  |\\\\
-  \\\\|_____________________________________|\\\\
-  \\\\|_____________________________________|\\\\
-  \\\\|                  :                  |\\\\
-  \\\\|                  :                  |\\\\
-  \\\\|------------------|------------------|\\\\
-               l/2                l/2
-
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols
+   >>> E, I, F = symbols('E, I, F')
+   >>> l = symbols('l', positive=True)
+   >>> b = Beam(l, E, I)
+   >>> b.apply_support(0, "fixed")
+   >>> b.apply_support(l, "fixed")
+   >>> b.apply_load(F, l/2, -1)
+   >>> p = b.draw()
+   >>> p.show()
 .. code:: pycon
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -695,19 +704,24 @@ is having a fixed support at the start and also has two rollers at a distance
 of ``l`` and ``4*l`` from the starting point. A concentrated point load ``P`` is also
 applied at a distance of ``3*l`` from the starting point.
 
-::
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: False
 
-                                                     ---> x
-  \\\\|                                 P            |
-  \\\\|                                 |            v y
-  \\\\|                                 V
-  \\\\|_____________________ _______________________
-  \\\\|_____________________O_______________________|
-  \\\\|          /\                     :          /\
-  \\\\|         oooo                    :         oooo
-  \\\\|----------|-----------|----------|-----------|
-           l           l          l            l
-
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols
+   >>> E, I, P = symbols('E, I, P')
+   >>> l = symbols('l', positive=True)
+   >>> b1 = Beam(2*l, E, I)
+   >>> b2 = Beam(2*l, E, I)
+   >>> b = b1.join(b2, "hinge")
+   >>> b.apply_support(0, "fixed")
+   >>> b.apply_support(l, "roller")
+   >>> b.apply_support(4*l, "roller")
+   >>> b.apply_load(P, 3*l, -1)
+   >>> p = b.draw()
+   >>> p.show()
 .. code:: pycon
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -771,19 +785,21 @@ There is a cantilever beam of length 4 meters. For first 2 meters
 its moment of inertia is ``1.5*I`` and ``I`` for the rest.
 A pointload of magnitude 20 N is applied from the top at its free end.
 
-::
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: False
 
-                                             ---> x
-  \\\\|                                      |
-  \\\\|                               20 N   v y
-  \\\\|________________                |
-  \\\\|                |_______________V
-  \\\\|      1.5*I      _______I_______|
-  \\\\|________________|
-  \\\\|                                :
-  \\\\|----------------|---------------|
-             2.0 m            2.0 m
-
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols
+   >>> E, I = symbols('E, I')
+   >>> b1 = Beam(2, E, 1.5*I)
+   >>> b2 = Beam(2, E, I)
+   >>> b = b1.join(b2, "fixed")
+   >>> b.apply_support(0, "fixed")
+   >>> b.apply_load(20, 4, -1)
+   >>> p = b.draw()
+   >>> p.show()
 .. code:: pycon
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -824,20 +840,22 @@ a Beam of length ``2*l`` to the right of another Beam of length ``l``. The whole
 is fixed at both of its ends. A point load of magnitude ``P`` is also applied
 from the top at a distance of ``2*l`` from starting point.
 
-::
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: False
 
-                                        ---> x
-                                        |
-  \\\\|                         P       v y |\\\\
-  \\\\|                         |           |\\\\
-  \\\\|                         V           |\\\\
-  \\\\|____________ ________________________|\\\\
-  \\\\|____________O________________________|\\\\
-  \\\\|            :            :           |\\\\
-  \\\\|            :            :           |\\\\
-  \\\\|------------|------------|-----------|\\\\
-           l            l            l
-
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols
+   >>> E, I, P = symbols('E, I, P')
+   >>> l = symbols('l', positive=True)
+   >>> b = Beam(3*l, E, I)
+   >>> b.apply_support(0, type='fixed')
+   >>> b.apply_support(3*l, type='fixed')
+   >>> b.apply_rotation_hinge(l)
+   >>> b.apply_load(P, 2*l, -1)
+   >>> p = b.draw()
+   >>> p.show()
 .. code:: pycon
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam
