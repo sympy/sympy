@@ -11,7 +11,7 @@ from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
-from sympy.printing.conventions import requires_partial
+from sympy.printing.conventions import requires_partial, elementwise_function
 from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
 from sympy.printing.printer import Printer, print_function
 from sympy.printing.str import sstr
@@ -1690,10 +1690,12 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_ElementwiseApplyFunction(self, e):
-        func = e.function
+        func = elementwise_function(e.function)
         arg = e.expr
         args = [arg]
         return self._helper_print_function(func, args, delimiter="", elementwise=True)
+
+    _print_ArrayElementwiseApplyFunc = _print_ElementwiseApplyFunction
 
     @property
     def _special_function_classes(self):

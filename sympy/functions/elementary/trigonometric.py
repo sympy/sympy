@@ -2114,8 +2114,8 @@ class sinc(DefinedFunction):
                 return S.NegativeOne**(pi_coeff - S.Half)/arg
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        x = self.args[0]
-        return (sin(x)/x)._eval_nseries(x, n, logx)
+        arg = self.args[0]
+        return (sin(arg)/arg)._eval_nseries(x, n, logx)
 
     def _eval_rewrite_as_jn(self, arg, **kwargs):
         from sympy.functions.special.bessel import jn
@@ -2949,7 +2949,7 @@ class acot(InverseTrigonometricFunction):
     A purely imaginary argument will lead to an ``acoth`` expression.
 
     ``acot(x)`` has a branch cut along $(-i, i)$, hence it is discontinuous
-    at 0. Its range for real $x$ is $(-\frac{\pi}{2}, \frac{\pi}{2}]$.
+    at 0. Its range for real $x$ is $(-\frac{\pi}{2}, 0) \cup (0, \frac{\pi}{2}]$.
 
     Examples
     ========
@@ -3027,7 +3027,7 @@ class acot(InverseTrigonometricFunction):
         if arg is S.ComplexInfinity:
             return S.Zero
 
-        if arg.could_extract_minus_sign():
+        if arg.is_nonzero and arg.could_extract_minus_sign():
             return -cls(-arg)
 
         if arg.is_number:

@@ -894,10 +894,10 @@ def test_asech_nseries():
     17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
     assert asech(-I*x + 3)._eval_nseries(x, 4, None) == asech(3) + sqrt(2)*x/12 + \
     17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
-    assert asech(I*x - 3)._eval_nseries(x, 4, None) == -asech(-3) - sqrt(2)*x/12 - \
-    17*sqrt(2)*I*x**2/576 + 443*sqrt(2)*x**3/41472 + O(x**4)
-    assert asech(-I*x - 3)._eval_nseries(x, 4, None) == asech(-3) - sqrt(2)*x/12 + \
-    17*sqrt(2)*I*x**2/576 + 443*sqrt(2)*x**3/41472 + O(x**4)
+    assert asech(I*x - 3)._eval_nseries(x, 4, None) == -asech(-3) + sqrt(2)*x/12 + \
+    17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
+    assert asech(-I*x - 3)._eval_nseries(x, 4, None) == asech(-3) + sqrt(2)*x/12 - \
+    17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
     # Tests concerning im(ndir) == 0
     assert asech(-I*x**2 + x - 2)._eval_nseries(x, 3, None) == 2*I*pi/3 + \
     x*(-sqrt(3) + 3*I)/(6*sqrt(3) + 6*I) + x**2*(36 + sqrt(3)*(7 - 12*I) + 21*I)/(72*sqrt(3) - \
@@ -1209,7 +1209,14 @@ def test_acoth():
     assert acoth(zoo) == 0
 
     #properties
-    assert acoth(-x) == -acoth(x)
+    # acoth(-z) -> -acoth(z) is only valid away from z = 0, where acoth(0) =
+    # I*pi/2 but -acoth(0) = -I*pi/2.  So the minus sign is only extracted
+    # when the argument is known to be nonzero.
+    nz = Symbol('n', nonzero=True)
+    assert acoth(-nz) == -acoth(nz)
+    assert unchanged(acoth, -x)
+    assert acoth(-x).subs(x, 0) == acoth(0)
+    assert acoth(-x).subs(x, 1) == acoth(-1) == -oo
 
     assert acoth(I/sqrt(3)) == -I*pi/3
     assert acoth(-I/sqrt(3)) == I*pi/3
@@ -1471,7 +1478,7 @@ def test_derivs():
     assert acosh(x).diff(x) == 1/(sqrt(x - 1)*sqrt(x + 1))
     assert acosh(x).diff(x) == acosh(x).rewrite(log).diff(x).together()
     assert atanh(x).diff(x) == 1/(-x**2 + 1)
-    assert asech(x).diff(x) == -1/(x*sqrt(1 - x**2))
+    assert asech(x).diff(x) == -sqrt(1/(x + 1))/(x*sqrt(1 - x))
     assert acsch(x).diff(x) == -1/(x**2*sqrt(1 + x**(-2)))
 
 

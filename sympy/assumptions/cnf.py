@@ -418,6 +418,13 @@ class EncodedCNF:
         clauses = [self.encode(clause) for clause in cnf.clauses]
         self.data += clauses
 
+    def new_auxiliary_variable(self):
+        token = object()
+        value = len(self._symbols) + 1
+        self._symbols.append(token)
+        self.encoding[token] = value
+        return value
+
     def encode_arg(self, arg):
         literal = arg.lit
         value = self.encoding.get(literal, None)

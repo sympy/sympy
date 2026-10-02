@@ -32,7 +32,7 @@ from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import ImageSet, Range
 from sympy.sets.sets import (Complement, FiniteSet,
     Intersection, Interval, Union, imageset, ProductSet)
-from sympy.simplify import simplify
+from sympy.simplify import simplify, trigsimp
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
@@ -1947,6 +1947,144 @@ def test_nonlinsolve_positive_dimensional():
            {(0, 1/z, z)}
 
 
+def test_nonlinsolve_issue_30522():
+    x, y = symbols('x y', real=True)
+    assert nonlinsolve([(x**2 - 1)/(x - 1) - x - 1, y - 1], [x, y]) == \
+        FiniteSet((Complement(FiniteSet(x), FiniteSet(1)), 1))
+    assert nonlinsolve([(x**2 - 4)/(x - 2) - x - 2, y - 3], [x, y]) == \
+        FiniteSet((Complement(FiniteSet(x), FiniteSet(2)), 3))
+
+
+def test_nonlinsolve_issue_30521():
+    x, y = symbols('x y', real=True)
+    assert nonlinsolve([(x*y - x)/(x - 1) - y], [x, y]) == \
+        FiniteSet((y, Complement(FiniteSet(y), FiniteSet(1))))
+
+
+def test_nonlinsolve_denominator_restrictions():
+    assert nonlinsolve([(x - y)/(x**2 + 1)], [x, y]) == \
+        FiniteSet((y, Complement(FiniteSet(y), FiniteSet(-I, I))))
+    assert nonlinsolve([(x - y)/((x - 2)*(y - 3))], [x, y]) == \
+        FiniteSet((y, Complement(FiniteSet(y), FiniteSet(2, 3))))
+    assert nonlinsolve([(x - y)*(x - 2*y)/(x - 1)], [x, y]) == \
+        FiniteSet((y, Complement(FiniteSet(y), FiniteSet(1))),
+                  (2*y, Complement(FiniteSet(y), FiniteSet(S.Half))))
+
+
+def test_nonlinsolve_denominator_restrictions_near_zero():
+    a = Rational(999999999999, 10**12)
+    assert_close_nl(nonlinsolve([
+        (x - a)*(y - 1)/(x - 1), x - a, y - 1.0,
+    ], [x, y]), FiniteSet((a, 1)))
+
+
+def test_nonlinsolve_denominator_restrictions_periodic():
+    solution = nonlinsolve([(exp(x) - 1)/x, y], [x, y])
+    assert solution.contains((2*I*pi, 0)) is S.true
+    assert solution.contains((-2*I*pi, 0)) is S.true
+    assert solution.contains((0, 0)) is S.false
+    assert solution.contains((1, 0)) is S.false
+    assert solution.contains((2*I*pi, 1)) is S.false
+
+
+def test_nonlinsolve_coupled_denominator_restrictions():
+    for denominator in (x + y, x*y - 1):
+        expected = ConditionSet(
+            Tuple(x, y, z), Eq(z, 0) & Ne(denominator, 0), S.Complexes**3)
+        assert nonlinsolve([z/denominator], [x, y, z]) == expected
+    solution = nonlinsolve([z/(x + y)], [x, y, z])
+    assert solution.contains((1, -1, 0)) is S.false
+    assert solution.contains((1, 1, 0)) is S.true
+    assert solution.contains((1, 1, 1)) is S.false
+
+    solution = nonlinsolve([z/(x*y - 1)], [x, y, z])
+    assert solution.contains((1, 2, 0)) is S.true
+    assert solution.contains((1, 1, 0)) is S.false
+    assert solution.contains((1, 2, 1)) is S.false
+
+    solution = nonlinsolve([z/(sin(x) + y)], [sin(x), y, z])
+    assert solution.contains((1, -1, 0)) is S.false
+    assert solution.contains((1, 1, 0)) is S.true
+
+    xr, yr, zr = symbols('xr yr zr', real=True)
+    assert nonlinsolve([zr/(xr + yr)], [xr, yr, zr]) == ConditionSet(
+        Tuple(xr, yr, zr), Eq(zr, 0) & Ne(xr + yr, 0), S.Reals**3)
+
+    solution = nonlinsolve([(x - y)*(x - z)/(x + y)], [x, y, z])
+    assert solution == Union(
+        ConditionSet(Tuple(x, y, z), Eq(x, y) & Ne(0, y), S.Complexes**3),
+        ConditionSet(Tuple(x, y, z), Eq(x, z) & Ne(y + z, 0), S.Complexes**3))
+    assert solution.contains((1, 1, 2)) is S.true
+    assert solution.contains((1, 2, 1)) is S.true
+    assert solution.contains((0, 0, 2)) is S.false
+    assert solution.contains((1, 2, 3)) is S.false
+
+    solution = nonlinsolve([z/(x*(x + y))], [x, y, z])
+    assert solution.contains((0, 1, 0)) is S.false
+    assert solution.contains((1, -1, 0)) is S.false
+    assert solution.contains((1, 1, 0)) is S.true
+
+
+def test_nonlinsolve_denominator_restrictions_recast():
+    f = Function('f')
+    assert nonlinsolve([(f(x) - y)/(f(x) - 1)], [f(x), y]) == \
+        FiniteSet((y, Complement(FiniteSet(y), FiniteSet(1))))
+
+    solution = nonlinsolve([z/(f(x) + y)], [f(x), y, z])
+    assert isinstance(solution, ConditionSet)
+    assert solution.free_symbols == set()
+    assert solution.contains((1, 1, 0)) is S.true
+    assert solution.contains((1, -1, 0)) is S.false
+    assert solution.contains((1, 1, 1)) is S.false
+
+    n = Dummy('n')
+    periodic = ImageSet(Lambda(n, 2*n*I*pi), S.Integers)
+    solution = nonlinsolve([exp(f(x)) - 1, y - 1], [f(x), y])
+    assert dumeq(solution, FiniteSet((periodic, 1)))
+
+    solution = nonlinsolve([z/(f(x) + y), exp(f(x)) - 1], [f(x), y, z])
+    assert isinstance(solution, ConditionSet)
+    assert solution.free_symbols == set()
+    assert solution.contains((0, 1, 0)) is S.true
+    assert solution.contains((2*I*pi, 1, 0)) is S.true
+    assert solution.contains((0, 0, 0)) is S.false
+    assert solution.contains((1, 1, 0)) is S.false
+    assert solution.contains((0, 1, 1)) is S.false
+
+
+def test_substitution_denominator_restrictions_normalization():
+    solution = substitution([S.Zero], [x, y, z],
+        result=[{x: S.One, y: S.One, z: S.One}, {x: x, y: S.Zero, z: z}],
+        exclude=[x + z])
+    assert solution == Union(FiniteSet((1, 1, 1)), ConditionSet(
+        Tuple(x, y, z), Eq(y, 0) & Ne(x + z, 0), S.Complexes**3))
+    assert solution.contains((1, 1, 1)) is S.true
+    assert solution.contains((1, 0, 2)) is S.true
+    assert solution.contains((1, 0, -1)) is S.false
+    assert solution.contains((1, 2, 3)) is S.false
+
+
+def test_nonlinsolve_denominator_restrictions_fallback():
+    f = Function('f')
+    assert nonlinsolve([(x - y)/f(x)], [x, y]) == ConditionSet(
+        Tuple(x, y), Eq(x, y) & Ne(f(y), 0), S.Complexes**2)
+    assert nonlinsolve([f(x)/(x + y)], [x, y]) == ConditionSet(
+        Tuple(x, y), Eq(f(x), 0) & Ne(x + y, 0), S.Complexes**2)
+
+    solution = nonlinsolve([z/(x + y), exp(x) - 1], [x, y, z])
+    assert isinstance(solution, ConditionSet)
+    assert solution.contains((0, 0, 0)) is S.false
+    assert solution.contains((0, 1, 0)) is S.true
+    assert solution.contains((1, 1, 0)) is S.false
+
+
+def test_nonlinsolve_denominator_restrictions_polynomial():
+    assert nonlinsolve([(x*y - x)/(x - 1) - y, y - 1], [x, y]) is S.EmptySet
+    assert nonlinsolve([(x - y)/(x - 1), y - 2], [x, y]) == FiniteSet((2, 2))
+    assert nonlinsolve([(x**2 - 1)/(x - 1) - x - 1], [x, y]) == \
+        FiniteSet((Complement(FiniteSet(x), FiniteSet(1)), y))
+
+
 def test_nonlinsolve_polysys():
     x, y, z = symbols('x, y, z', real=True)
     assert nonlinsolve([x**2 + y - 2, x**2 + y], [x, y]) == S.EmptySet
@@ -2323,10 +2461,17 @@ def test_issue_5132_2():
     assert dumeq(nonlinsolve(eqs, [x, z]), soln)
 
     system = [r - x**2 - y**2, tan(t) - y/x]
-    s_x = sqrt(r/(tan(t)**2 + 1))
-    s_y = sqrt(r/(tan(t)**2 + 1))*tan(t)
-    soln = FiniteSet((s_x, s_y), (-s_x, -s_y))
-    assert nonlinsolve(system, [x, y]) == soln
+    s_x = sqrt(r*cos(t)**2)
+    s_y = s_x*tan(t)
+    soln = Union(*(ConditionSet(
+        Tuple(x, y), Eq(x, sign*s_x) & Eq(y, sign*s_y) & Ne(sign*s_x, 0),
+        S.Reals**2) for sign in (-1, 1)))
+    result = nonlinsolve(system, [x, y])
+    assert trigsimp(result) == soln
+    assert result.xreplace({r: S.Zero, t: S.Zero}) is S.EmptySet
+    valid = result.xreplace({r: S.One, t: S.Zero})
+    assert valid.contains((1, 0)) is S.true
+    assert valid.contains((-1, 0)) is S.true
 
 
 def test_issue_6752():
@@ -2772,6 +2917,20 @@ def test_issue_11064():
         Interval(-oo, -sqrt(5))
     assert solveset(eq > sqrt(5), x, S.Reals) == \
         Interval.Lopen(sqrt(5), oo)
+
+
+def test_sqrt_inequality():
+    u = symbols('u')
+    epsilon_1 = (u + 1) / (2 * (2 * u + 1)) * (5 * u + 2 - sqrt(u * (17 * u + 8)))
+    epsilon_2 = (u + 1) / (2 * (2 * u + 1)) * (5 * u + 2 + sqrt(u * (17 * u + 8)))
+
+    assert solveset(epsilon_1 > 0, u, S.Reals) == \
+        Union(Interval.open(-1, -S.Half), Interval(0, oo))
+    assert solveset(epsilon_1 > 1, u, S.Reals) == \
+        Union(Interval.open(1 - sqrt(3), -S.Half),
+              Interval.open(1 + sqrt(3), oo))
+    assert solveset(epsilon_2 > 1, u, S.Reals) == \
+        Interval.open(0, oo)
 
 
 def test_issue_12478():
@@ -3600,6 +3759,41 @@ def test_issue_22628():
 
 def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
+
+
+def test_issue_30584():
+    x, y = symbols('x y')
+    relation = (y + 1)**2 - y*(y + 2)
+
+    assert solveset(relation > 0, x, S.Reals) == S.Reals
+    assert solveset(relation < 0, x, S.Reals) is S.EmptySet
+
+
+def test_solveset_symbol_independent_relational():
+    x, y = symbols('x y')
+
+    assert solveset(y > 0, x, S.Reals) == \
+        ConditionSet(x, y > 0, S.Reals)
+    assert solveset(Eq(y, 0), x, S.Reals) == \
+        ConditionSet(x, Eq(y, 0), S.Reals)
+    assert solveset(y, x, S.Reals) is S.EmptySet
+
+
+def test_solveset_symbol_independent_relational_after_expansion():
+    x, y = symbols('x y')
+    relation = (x + y)**2 - x**2 - 2*x*y
+
+    assert solveset(relation, x, S.Reals) is S.EmptySet
+    assert solveset(Eq(relation, 0), x, S.Reals) == \
+        ConditionSet(x, Eq(y**2, 0), S.Reals)
+    assert solveset(relation > 0, x, S.Reals) == \
+        ConditionSet(x, y**2 > 0, S.Reals)
+    assert solveset(relation >= y**2, x, S.Reals) == S.Reals
+    assert solveset(relation > y**2, x, S.Reals) is S.EmptySet
+
+    relation = (x + 1)**2 - x*(x + 2)
+    assert solveset(relation > 0, x, S.Reals) == S.Reals
+    assert solveset(relation < 0, x, S.Reals) is S.EmptySet
 
 
 def test_issue_26077():

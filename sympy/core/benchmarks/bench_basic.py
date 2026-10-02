@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import symbols, S
 
 x, y = symbols('x,y')
