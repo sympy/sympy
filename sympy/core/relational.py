@@ -1572,7 +1572,20 @@ def is_eq(lhs: Basic, rhs: Basic, assumptions=None) -> bool | None:
         if fuzzy_xor([_lhs.is_extended_real, _rhs.is_extended_real]):
             return False
         if fuzzy_and([_lhs.is_extended_real, _rhs.is_extended_real]):
-            return fuzzy_xor([_lhs.is_extended_positive, fuzzy_not(_rhs.is_extended_positive)])
+            # Comparing signs is only valid if both LHS and RHS are infinite
+            if fuzzy_and([_lhs.is_infinite, _rhs.is_infinite]):
+                return fuzzy_xor([_lhs.is_extended_positive, fuzzy_not(_rhs.is_extended_positive)])
+
+            # If one side is infinite and the other's finiteness is unknown:
+            # one side is strictly positive/negative and the other is <= 0 / >= 0
+            # (incompatible signs) => return False
+            # for any other case the equality cannot be decided => return None
+            if ((_lhs.is_extended_positive and _rhs.is_extended_nonpositive) or
+                (_lhs.is_extended_negative and _rhs.is_extended_nonnegative) or
+                (_lhs.is_extended_nonpositive and _rhs.is_extended_positive) or
+                (_lhs.is_extended_nonnegative and _rhs.is_extended_negative)):
+                return False
+            return None
 
         # Try to split real/imaginary parts and equate them
         I = S.ImaginaryUnit
