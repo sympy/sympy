@@ -293,7 +293,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                 raise NotImplementedError("Infinitesimals could not be found for"
                     " the given ODE")
 
-            elif hint not in lie_heurigistics:
+            elif hint not in lie_heuristics:
                 raise ValueError("Heuristic not recognized: " + hint)
 
             else:
