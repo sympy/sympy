@@ -1264,7 +1264,10 @@ def find_substitutions(integrand, symbol, u_var):
             deg_after = max(degree(t, u_var) for t in substituted.as_numer_denom())
             if deg_after > deg_before:
                 return False
-        return substituted.as_independent(u_var, as_Add=False)
+        _, D = substituted.as_numer_denom()
+        m, _ = D.factor().as_independent(u_var, as_Add=False)
+        k, h = (substituted * m).cancel().as_independent(u_var, as_Add=False)
+        return k/m, h
 
     def exp_subterms(term: Expr):
         linear_coeffs = []
@@ -3618,7 +3621,7 @@ def substitution_rule(integral):
         if branch:
             debug("List of Substitution Rules")
         ways = []
-        factored_integrand = integrand.factor()
+        factored_integrand = integrand.factor(deep=True, expand=False)
         _, denom_integrand = factored_integrand.as_numer_denom()
         for u_func, c, substituted in substitutions:
             subrule = yield IntegralInfo(substituted, u_var)
