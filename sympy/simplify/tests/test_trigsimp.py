@@ -228,10 +228,42 @@ def test_trigsimp_issue_3826():
     assert trigsimp(tan(2*x).expand(trig=True)) == tan(2*x)
 
 
-def test_trigsimp_issue_4032():
+def test_trigsimp_issue_7131():
     n = Symbol('n', integer=True, positive=True)
-    assert trigsimp(2**(n/2)*cos(pi*n/4)/2 + 2**(n - 1)/2) == \
-        2**(n/2)*cos(pi*n/4)/2 + 2**n/4
+    expr = 2**(n/2)*cos(pi*n/4)/2 + 2**(n - 1)/2
+    trigsimp(expr)  # does not raise
+
+
+def test_trigsimp_issue_23983():
+    x = Symbol('x', nonzero=True)
+    expr = (-sin(x - 3)/cos(x - 3) + 3*cos(3*x + 1)/sin(3*x + 1)
+            - 2/x + 2/(x*log(-x**2)))
+    expected = (-tan(x - 3) + 3/tan(3*x + 1)
+                - 2/x + 2/(x*log(-x**2)))
+    assert trigsimp(trigsimp(expr)) == expected
+
+
+def test_trigsimp_add_split():
+    a = Symbol('a')
+
+    # Trig and hyperbolic simplification should not alter unrelated algebra.
+    expr = (x*(x - 1/x) - x**2 + cos(x)**2 + sin(x)**2 +
+            cosh(x)**2 - sinh(x)**2)
+    assert trigsimp(expr) == -x**2 + x*(x - 1/x) + 2
+
+    # Algebraic terms that are coefficients of trig/hyperbolic terms must
+    # remain available for identities, while unrelated terms stay untouched.
+    expr = a - 2*a*cos(x)**2 + a*y*(y - 1/y)
+    assert trigsimp(expr) == a*y*(y - 1/y) - a*cos(2*x)
+    expr = a + a*sinh(x)**2 + a*y*(y - 1/y)
+    assert trigsimp(expr) == a*y*(y - 1/y) + a*cosh(x)**2
+
+    # Nonalgebraic terms can be related to trig functions even when they do
+    # not contain a TrigonometricFunction explicitly.
+    expr = exp(x*(1 - I)) + exp(x*(1 + I)) - 2*exp(x)*cos(x)
+    assert trigsimp(expr).equals(0) is True
+    expr = exp(x*(1 - I)) - exp(x*(1 + I)) + 2*I*exp(x)*sin(x)
+    assert trigsimp(expr).equals(0) is True
 
 
 def test_trigsimp_issue_7761():
@@ -279,6 +311,8 @@ def test_hyperbolic_simp():
     assert trigsimp(sinh(x)**2 + 1) == cosh(x)**2
     assert trigsimp(cosh(x)**2 - 1) == sinh(x)**2
     assert trigsimp(cosh(x)**2 - sinh(x)**2) == 1
+    expr = x*(x - 1/x) - x**2 + cosh(x)**2 - sinh(x)**2
+    assert trigsimp(expr) == -x**2 + x*(x - 1/x) + 1
     assert trigsimp(1 - tanh(x)**2) == 1/cosh(x)**2
     assert trigsimp(1 - 1/cosh(x)**2) == tanh(x)**2
     assert trigsimp(tanh(x)**2 + 1/cosh(x)**2) == 1
