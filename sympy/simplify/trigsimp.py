@@ -461,6 +461,15 @@ def _trigsimp_inverse(rv):
     return bottom_up(rv, f)
 
 
+def _trigsimp_matching(expr):
+    has_imaginary_exponential = any(
+        term.args[0].has(I) for term in expr.atoms(exp)
+    )
+    if has_imaginary_exponential:
+        expr = exptrigsimp(expr)
+    return futrig(expr)
+
+
 def trigsimp(expr, inverse=False, **opts):
     """Returns a reduced expression by using known trig identities.
 
@@ -582,7 +591,7 @@ def trigsimp(expr, inverse=False, **opts):
 
     trigsimpfunc = {
         'fu': (lambda x: fu(x, **opts)),
-        'matching': (lambda x: futrig(x)),
+        'matching': _trigsimp_matching,
         'groebner': (lambda x: groebnersimp(x, **opts)),
         'combined': (lambda x: futrig(groebnersimp(x,
                                polynomial=True, hints=[2, tan]))),
