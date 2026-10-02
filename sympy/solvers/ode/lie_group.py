@@ -770,7 +770,7 @@ def lie_heuristic_abaco2_similar(match, comp=False):
         B = Wild('B', exclude=[y])
         C = Wild('C', exclude=[x, y])
         match = h.match(A + B*exp(y/C))
-        if match:  # <--- Check if match succeeded!
+        if match and A in match and B in match and C in match and match[B] != 0 and match[C] != 0:
             try:
                 tau = exp(-integrate(match[A]/match[C], x))/match[B]
             except NotImplementedError:
@@ -799,7 +799,7 @@ def lie_heuristic_abaco2_similar(match, comp=False):
         B = Wild('B', exclude=[y])
         C = Wild('C', exclude=[x, y])
         match = h.match(A + B*exp(y/C))
-        if match:  # <--- Check if match succeeded!
+        if match and A in match and B in match and C in match and match[B] != 0 and match[C] != 0:
             try:
                 tau = exp(-integrate(match[A]/match[C], x))/match[B]
             except NotImplementedError:
