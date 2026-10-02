@@ -4,18 +4,196 @@ from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
-from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
-    _canonical, _canonical_coeff)
+from sympy.core.relational import (
+    Lt,
+    Gt,
+    Eq,
+    Ne,
+    Relational,
+    _canonical,
+    _canonical_coeff,
+)
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
-    true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
+from sympy.logic.boolalg import (
+    And,
+    Boolean,
+    distribute_and_over_or,
+    Not,
+    true,
+    false,
+    Or,
+    ITE,
+    simplify_logic,
+    to_cnf,
+    distribute_or_over_and,
+)
 from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
 from itertools import product
+from typing import NamedTuple
 
 Undefined = S.NaN  # Piecewise()
+
+
+def _set_contains_directional_neighborhood(s, cdir):
+    """Return whether s contains a punctured one-sided neighborhood of 0.
+
+    ``None`` means that the available set representation is not sufficient to
+    decide the question. Endpoint membership at 0 is ignored: a limit depends
+    on the germ of a set, not on whether the limit point itself belongs to the set.
+    """
+    from sympy.sets.sets import Interval, Union, FiniteSet
+
+    if s is S.EmptySet or isinstance(s, FiniteSet):
+        return False
+    if isinstance(s, Interval):
+        if cdir is S.One:
+            left = s.start <= 0
+            right = s.end > 0
+        elif cdir is S.NegativeOne:
+            left = s.start < 0
+            right = s.end >= 0
+        else:
+            return None
+        if left is S.true and right is S.true:
+            return True
+        if left is S.false or right is S.false:
+            return False
+        return None
+    if isinstance(s, Union):
+        ans = [_set_contains_directional_neighborhood(a, cdir) for a in s.args]
+        if True in ans:
+            return True
+        # A finite union of intervals/finite sets cannot acquire a new local
+        # neighborhood at 0 unless one component already contains one.
+        if all(a is False for a in ans):
+            return False
+        return None
+    return None
+
+
+def _contains_directional_neighborhood(cond, x, cdir):
+    """Test whether ``cond`` is true on a punctured one-sided neighborhood.
+
+    The limit point is 0; ``Limit.doit`` shifts finite limit points before
+    leading-term analysis. This routine returns ``None`` rather than sampling
+    at an arbitrary epsilon or using the value at 0 when local truth cannot be proved.
+    """
+    if cond is S.true:
+        return True
+    if cond is S.false:
+        return False
+    if cdir not in (S.One, S.NegativeOne):
+        return None
+
+    # For genuinely univariate conditions, as_set gives an exact description
+    # of the effective region and handles And/Or/Ne/nonlinear inequalities.
+    if cond.free_symbols <= {x}:
+        try:
+            region = cond.as_set()
+        except (NotImplementedError, TypeError, ValueError):
+            pass
+        else:
+            ans = _set_contains_directional_neighborhood(region, cdir)
+            if ans is not None:
+                return ans
+
+    # Piecewise._intervals already knows how to solve many parametrised
+    # real inequalities for x. Use it only as a supporting fallback for
+    # this single condition; the germ algorithm itself does not depend on
+    # interval decomposition.
+    try:
+        probe = Piecewise((S.One, cond), (S.Zero, S.true), evaluate=False)
+        ok, intervals = probe._intervals(x)
+    except (NotImplementedError, TypeError, ValueError):
+        ok = False
+    if ok:
+        from sympy.sets.sets import Interval, Union
+
+        try:
+            regions = [Interval(a, b) for a, b, _, i in intervals if i == 0]
+            region = Union(*regions) if regions else S.EmptySet
+        except (TypeError, ValueError):
+            pass
+        else:
+            ans = _set_contains_directional_neighborhood(region, cdir)
+            if ans is not None:
+                return ans
+
+    # Parameterised relational conditions are often cheaply solvable for x.
+    # Reuse Piecewise's existing inequality solver before giving up.
+    if isinstance(cond, Relational) and x in cond.free_symbols:
+        from sympy.solvers.inequalities import _solve_inequality
+
+        try:
+            solved = _solve_inequality(cond, x)
+        except (NotImplementedError, TypeError, ValueError):
+            solved = cond
+        if solved != cond:
+            return _contains_directional_neighborhood(solved, x, cdir)
+
+        if solved.lhs == x and x not in solved.rhs.free_symbols:
+            a = solved.rhs
+            op = solved.rel_op
+            if op in ("<", "<="):
+                test = a > 0 if cdir is S.One else a >= 0
+            elif op in (">", ">="):
+                test = a <= 0 if cdir is S.One else a < 0
+            elif op == "==":
+                return False
+            elif op == "!=":
+                # Removing a single point cannot destroy a punctured
+                # neighborhood on either side of 0.
+                return True
+            else:
+                return None
+            if test is S.true:
+                return True
+            if test is S.false:
+                return False
+    return None
+
+
+class _GermResult(NamedTuple):
+    """Internal representation of a directional Piecewise germ.
+
+    ``cases`` is a tuple of ``(expr, cond)`` pairs. The conditions are
+    intended to be independent of the germ variable and describe parameter
+    strata on which the corresponding expression governs the germ.
+    ``complete`` says whether those cases cover the whole directional germ.
+
+    Constructs a single unconditional case for now, but keeping the result
+    structured allows germ analysis to improve in the future to return conditional
+    cases without changing its callers' basic contract.
+    """
+
+    cases: tuple = ()
+    complete: bool = False
+
+
+def _piecewise_germ(piecewise, x, cdir):
+    """Return a structured description of a one-sided Piecewise germ.
+
+    Conditions are converted to their effective Piecewise regions so that
+    precedence (the first true condition wins) is respected. The interface is
+    richer than branch selection: ``cases`` may eventually contain
+    parameter-conditioned germs, analogous to a local Piecewise decomposition.
+
+    For now, a germ is complete only when one unconditional branch can be
+    proved to govern the whole punctured neighborhood. Otherwise an
+    incomplete result is returned instead of guessing from a sample point.
+    """
+    covered = S.false
+    for expr, cond in piecewise.args:
+        effective = And(cond, Not(covered))
+        status = _contains_directional_neighborhood(effective, x, cdir)
+        if status is True:
+            return _GermResult(((expr, S.true),), complete=True)
+        covered = Or(covered, cond)
+    return _GermResult()
+
 
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
@@ -32,9 +210,14 @@ class ExprCondPair(Tuple):
                 cond = cond.rewrite(ITE)
 
         if not isinstance(cond, Boolean):
-            raise TypeError(filldedent('''
+            raise TypeError(
+                filldedent(
+                    """
                 Second argument must be a Boolean,
-                not `%s`''' % func_name(cond)))
+                not `%s`"""
+                    % func_name(cond)
+                )
+            )
         return Tuple.__new__(cls, expr, cond)
 
     @property
@@ -136,7 +319,7 @@ class Piecewise(DefinedFunction):
         newargs = []
         for ec in args:
             # ec could be a ExprCondPair or a tuple
-            pair = ExprCondPair(*getattr(ec, 'args', ec))
+            pair = ExprCondPair(*getattr(ec, "args", ec))
             cond = pair.cond
             if cond is false:
                 continue
@@ -144,7 +327,7 @@ class Piecewise(DefinedFunction):
             if cond is true:
                 break
 
-        eval = options.pop('evaluate', global_parameters.evaluate)
+        eval = options.pop("evaluate", global_parameters.evaluate)
         if eval:
             r = cls.eval(*newargs)
             if r is not None:
@@ -197,10 +380,12 @@ class Piecewise(DefinedFunction):
         # if either change happened we return the expr with the
         # updated args
         if not newargs:
-            raise ValueError(filldedent('''
+            raise ValueError(
+                filldedent("""
                 There are no conditions (or none that
                 are not trivially false) to define an
-                expression.'''))
+                expression.""")
+            )
         if missing or not same:
             return cls(*newargs)
 
@@ -210,7 +395,7 @@ class Piecewise(DefinedFunction):
         """
         newargs = []
         for e, c in self.args:
-            if hints.get('deep', True):
+            if hints.get("deep", True):
                 if isinstance(e, Basic):
                     newe = e.doit(**hints)
                     if newe != self:
@@ -224,9 +409,20 @@ class Piecewise(DefinedFunction):
         return piecewise_simplify(self, **kwargs)
 
     def _eval_as_leading_term(self, x, logx, cdir):
+        if cdir in (S.One, S.NegativeOne):
+            germ = _piecewise_germ(self, x, cdir)
+            if germ.complete and len(germ.cases) == 1:
+                e, cond = germ.cases[0]
+                if cond is S.true:
+                    return e.as_leading_term(x, logx=logx, cdir=cdir)
+            return None
+
+        # Preserve the historical non-directional behavior. In particular,
+        # cdir == 0 is used by leading-term calls that are not one-sided
+        # limits.
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
-                return e.as_leading_term(x)
+                return e.as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])
@@ -294,6 +490,7 @@ class Piecewise(DefinedFunction):
         Piecewise._eval_integral
         """
         from sympy.integrals import integrate
+
         return self.func(*[(integrate(e, x, **kwargs), c) for e, c in self.args])
 
     def _handle_irel(self, x, handler):
@@ -309,8 +506,15 @@ class Piecewise(DefinedFunction):
         """
         # identify governing relationals
         rel = self.atoms(Relational)
-        irel = list(ordered([r for r in rel if x not in r.free_symbols
-            and r not in (S.true, S.false)]))
+        irel = list(
+            ordered(
+                [
+                    r
+                    for r in rel
+                    if x not in r.free_symbols and r not in (S.true, S.false)
+                ]
+            )
+        )
         if irel:
             args = {}
             exprinorder = []
@@ -325,16 +529,22 @@ class Piecewise(DefinedFunction):
                     free = list(andargs.free_symbols)
                     if len(free) == 1:
                         from sympy.solvers.inequalities import (
-                            reduce_inequalities, _solve_inequality)
+                            reduce_inequalities,
+                            _solve_inequality,
+                        )
+
                         try:
                             t = reduce_inequalities(andargs, free[0])
                             # ValueError when there are potentially
                             # nonvanishing imaginary parts
                         except (ValueError, NotImplementedError):
                             # at least isolate free symbol on left
-                            t = And(*[_solve_inequality(
-                                a, free[0], linear=True)
-                                for a in andargs])
+                            t = And(
+                                *[
+                                    _solve_inequality(a, free[0], linear=True)
+                                    for a in andargs
+                                ]
+                            )
                     else:
                         t = And(*andargs)
                     if t is S.false:
@@ -389,11 +599,13 @@ class Piecewise(DefinedFunction):
         from sympy.integrals.integrals import integrate
 
         if _first:
+
             def handler(ipw):
                 if isinstance(ipw, self.func):
                     return ipw._eval_integral(x, _first=False, **kwargs)
                 else:
                     return ipw.integrate(x, **kwargs)
+
             irv = self._handle_irel(x, handler)
             if irv is not None:
                 return irv
@@ -403,6 +615,7 @@ class Piecewise(DefinedFunction):
         ok, abei = self._intervals(x)
         if not ok:
             from sympy.integrals.integrals import Integral
+
             return Integral(self, x)  # unevaluated
 
         pieces = [(a, b) for a, b, _, _ in abei]
@@ -419,7 +632,7 @@ class Piecewise(DefinedFunction):
             for j, (a, b, i) in enumerate(reversed(done)):
                 if i == -1:
                     j = N - j
-                    done[j: j + 1] = _clip(p, (a, b), k)
+                    done[j : j + 1] = _clip(p, (a, b), k)
         done = [(a, b, i) for a, b, i in done if a != b]
 
         # append an arg if there is a hole so a reference to
@@ -446,9 +659,9 @@ class Piecewise(DefinedFunction):
             if b is S.Infinity:
                 cond = True
             elif self.args[abei[i][-1]].cond.subs(x, b) == False:
-                cond = (x < b)
+                cond = x < b
             else:
-                cond = (x <= b)
+                cond = x <= b
             args.append((sum, cond))
         return Piecewise(*args)
 
@@ -467,17 +680,18 @@ class Piecewise(DefinedFunction):
             x, lo, hi = map(as_Basic, (sym, a, b))
 
         if _first:  # get only x-dependent relationals
+
             def handler(ipw):
                 if isinstance(ipw, self.func):
                     return ipw._eval_interval(x, lo, hi, _first=None)
                 else:
                     return ipw._eval_interval(x, lo, hi)
+
             irv = self._handle_irel(x, handler)
             if irv is not None:
                 return irv
 
-            if (lo < hi) is S.false or (
-                    lo is S.Infinity or hi is S.NegativeInfinity):
+            if (lo < hi) is S.false or (lo is S.Infinity or hi is S.NegativeInfinity):
                 rv = self._eval_interval(x, hi, lo, _first=False)
                 if isinstance(rv, Piecewise):
                     rv = Piecewise(*[(-e, c) for e, c in rv.args])
@@ -485,29 +699,32 @@ class Piecewise(DefinedFunction):
                     rv = -rv
                 return rv
 
-            if (lo < hi) is S.true or (
-                    hi is S.Infinity or lo is S.NegativeInfinity):
+            if (lo < hi) is S.true or (hi is S.Infinity or lo is S.NegativeInfinity):
                 pass
             else:
-                _a = Dummy('lo')
-                _b = Dummy('hi')
+                _a = Dummy("lo")
+                _b = Dummy("hi")
                 a = lo if lo.is_comparable else _a
                 b = hi if hi.is_comparable else _b
                 pos = self._eval_interval(x, a, b, _first=False)
                 if a == _a and b == _b:
                     # it's purely symbolic so just swap lo and hi and
                     # change the sign to get the value for when lo > hi
-                    neg, pos = (-pos.xreplace({_a: hi, _b: lo}),
-                        pos.xreplace({_a: lo, _b: hi}))
+                    neg, pos = (
+                        -pos.xreplace({_a: hi, _b: lo}),
+                        pos.xreplace({_a: lo, _b: hi}),
+                    )
                 else:
                     # at least one of the bounds was comparable, so allow
                     # _eval_interval to use that information when computing
                     # the interval with lo and hi reversed
-                    neg, pos = (-self._eval_interval(x, hi, lo, _first=False),
-                        pos.xreplace({_a: lo, _b: hi}))
+                    neg, pos = (
+                        -self._eval_interval(x, hi, lo, _first=False),
+                        pos.xreplace({_a: lo, _b: hi}),
+                    )
 
                 # allow simplification based on ordering of lo and hi
-                p = Dummy('', positive=True)
+                p = Dummy("", positive=True)
                 if lo.is_Symbol:
                     pos = pos.xreplace({lo: hi - p}).xreplace({p: hi - lo})
                     neg = neg.xreplace({lo: hi + p}).xreplace({p: lo - hi})
@@ -516,25 +733,17 @@ class Piecewise(DefinedFunction):
                     neg = neg.xreplace({hi: lo - p}).xreplace({p: lo - hi})
                 # evaluate limits that may have unevaluate Min/Max
                 touch = lambda _: _.replace(
-                    lambda x: isinstance(x, (Min, Max)),
-                    lambda x: x.func(*x.args))
+                    lambda x: isinstance(x, (Min, Max)), lambda x: x.func(*x.args)
+                )
                 neg = touch(neg)
                 pos = touch(pos)
                 # assemble return expression; make the first condition be Lt
                 # b/c then the first expression will look the same whether
                 # the lo or hi limit is symbolic
                 if a == _a:  # the lower limit was symbolic
-                    rv = Piecewise(
-                        (pos,
-                            lo < hi),
-                        (neg,
-                            True))
+                    rv = Piecewise((pos, lo < hi), (neg, True))
                 else:
-                    rv = Piecewise(
-                        (neg,
-                            hi < lo),
-                        (pos,
-                            True))
+                    rv = Piecewise((neg, hi < lo), (pos, True))
 
                 if rv == Undefined:
                     raise ValueError("Can't integrate across undefined region.")
@@ -547,6 +756,7 @@ class Piecewise(DefinedFunction):
         ok, abei = self._intervals(x)
         if not ok:
             from sympy.integrals.integrals import Integral
+
             # not being able to do the interval of f(x) can
             # be stated as not being able to do the integral
             # of f'(x) over the same range
@@ -566,7 +776,7 @@ class Piecewise(DefinedFunction):
             for j, (a, b, i) in enumerate(reversed(done)):
                 if i == -1:
                     j = N - j
-                    done[j: j + 1] = _clip(p, (a, b), k)
+                    done[j : j + 1] = _clip(p, (a, b), k)
         done = [(a, b, i) for a, b, i in done if a != b]
 
         # return the sum of the intervals
@@ -609,9 +819,12 @@ class Piecewise(DefinedFunction):
         assert isinstance(self, Piecewise)
 
         def nonsymfail(cond):
-            return False, filldedent('''
+            return False, filldedent(
+                """
                 A condition not involving
-                %s appeared: %s''' % (sym, cond))
+                %s appeared: %s"""
+                % (sym, cond)
+            )
 
         def _solve_relational(r):
             if sym not in r.free_symbols:
@@ -619,19 +832,19 @@ class Piecewise(DefinedFunction):
             try:
                 rv = _solve_inequality(r, sym)
             except NotImplementedError:
-                return False, 'Unable to solve relational %s for %s.' % (r, sym)
+                return False, "Unable to solve relational %s for %s." % (r, sym)
             if isinstance(rv, Relational):
                 free = rv.args[1].free_symbols
                 if rv.args[0] != sym or sym in free:
-                    return False, 'Unable to solve relational %s for %s.' % (r, sym)
-                if rv.rel_op == '==':
+                    return False, "Unable to solve relational %s for %s." % (r, sym)
+                if rv.rel_op == "==":
                     # this equality has been affirmed to have the form
                     # Eq(sym, rhs) where rhs is sym-free; it represents
                     # a zero-width interval which will be ignored
                     # whether it is an isolated condition or contained
                     # within an And or an Or
                     rv = S.false
-                elif rv.rel_op == '!=':
+                elif rv.rel_op == "!=":
                     try:
                         rv = Or(sym < rv.rhs, sym > rv.rhs)
                     except TypeError:
@@ -668,7 +881,7 @@ class Piecewise(DefinedFunction):
                 # unanticipated condition, but it is here in case a
                 # replacement caused an Eq to appear
                 if err_on_Eq:
-                    return False, 'encountered Eq condition: %s' % cond
+                    return False, "encountered Eq condition: %s" % cond
                 continue  # zero width interval
 
             cond = to_cnf(cond)
@@ -677,8 +890,8 @@ class Piecewise(DefinedFunction):
 
             if isinstance(cond, Or):
                 expr_cond.extend(
-                    [(i, expr, o) for o in cond.args
-                    if not isinstance(o, Eq)])
+                    [(i, expr, o) for o in cond.args if not isinstance(o, Eq)]
+                )
             elif cond is not S.false:
                 expr_cond.append((i, expr, cond))
             elif cond is S.true:
@@ -695,11 +908,11 @@ class Piecewise(DefinedFunction):
                 exclude = []
                 for cond2 in cond.args:
                     if not isinstance(cond2, Relational):
-                        return False, 'expecting only Relationals'
+                        return False, "expecting only Relationals"
                     if isinstance(cond2, Eq):
                         lower = upper  # ignore
                         if err_on_Eq:
-                            return False, 'encountered secondary Eq condition'
+                            return False, "encountered secondary Eq condition"
                         break
                     elif isinstance(cond2, Ne):
                         l, r = cond2.args
@@ -727,28 +940,29 @@ class Piecewise(DefinedFunction):
                         newcond.append((newcond[-1][1], e))
                     newcond.append((newcond[-1][1], upper))
                     newcond.pop(0)  # remove the primer
-                    expr_cond.extend([(iarg, expr, And(i[0] < sym, sym < i[1])) for i in newcond])
+                    expr_cond.extend(
+                        [(iarg, expr, And(i[0] < sym, sym < i[1])) for i in newcond]
+                    )
                     continue
-            elif isinstance(cond, Relational) and cond.rel_op != '!=':
+            elif isinstance(cond, Relational) and cond.rel_op != "!=":
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
-                if cond.lts == sym:                # part 1a: expand the side ...
-                    lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
-                elif cond.gts == sym:            # part 1a: ... that can be expanded
-                    upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
+                if cond.lts == sym:  # part 1a: expand the side ...
+                    lower = S.NegativeInfinity  # e.g. x <= 0 ---> -oo <= 0
+                elif cond.gts == sym:  # part 1a: ... that can be expanded
+                    upper = S.Infinity  # e.g. x >= 0 --->  oo >= 0
                 else:
                     return nonsymfail(cond)
             else:
-                return False, 'unrecognized condition: %s' % cond
+                return False, "unrecognized condition: %s" % cond
 
             upper = Max(lower, upper)
             if err_on_Eq and lower == upper:
-                return False, 'encountered Eq condition'
+                return False, "encountered Eq condition"
             if (lower >= upper) is not S.true:
                 int_expr.append((lower, upper, expr, iarg))
 
         if default is not None:
-            int_expr.append(
-                (S.NegativeInfinity, S.Infinity, default, idefault))
+            int_expr.append((S.NegativeInfinity, S.Infinity, default, idefault))
 
         return True, list(uniq(int_expr))
 
@@ -794,40 +1008,39 @@ class Piecewise(DefinedFunction):
                 return
         return b
 
-    _eval_is_finite = lambda self: self._eval_template_is_attr(
-        'is_finite')
-    _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex')
-    _eval_is_even = lambda self: self._eval_template_is_attr('is_even')
-    _eval_is_imaginary = lambda self: self._eval_template_is_attr(
-        'is_imaginary')
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
-    _eval_is_irrational = lambda self: self._eval_template_is_attr(
-        'is_irrational')
-    _eval_is_negative = lambda self: self._eval_template_is_attr('is_negative')
-    _eval_is_nonnegative = lambda self: self._eval_template_is_attr(
-        'is_nonnegative')
-    _eval_is_nonpositive = lambda self: self._eval_template_is_attr(
-        'is_nonpositive')
-    _eval_is_nonzero = lambda self: self._eval_template_is_attr(
-        'is_nonzero')
-    _eval_is_odd = lambda self: self._eval_template_is_attr('is_odd')
-    _eval_is_polar = lambda self: self._eval_template_is_attr('is_polar')
-    _eval_is_positive = lambda self: self._eval_template_is_attr('is_positive')
+    _eval_is_finite = lambda self: self._eval_template_is_attr("is_finite")
+    _eval_is_complex = lambda self: self._eval_template_is_attr("is_complex")
+    _eval_is_even = lambda self: self._eval_template_is_attr("is_even")
+    _eval_is_imaginary = lambda self: self._eval_template_is_attr("is_imaginary")
+    _eval_is_integer = lambda self: self._eval_template_is_attr("is_integer")
+    _eval_is_irrational = lambda self: self._eval_template_is_attr("is_irrational")
+    _eval_is_negative = lambda self: self._eval_template_is_attr("is_negative")
+    _eval_is_nonnegative = lambda self: self._eval_template_is_attr("is_nonnegative")
+    _eval_is_nonpositive = lambda self: self._eval_template_is_attr("is_nonpositive")
+    _eval_is_nonzero = lambda self: self._eval_template_is_attr("is_nonzero")
+    _eval_is_odd = lambda self: self._eval_template_is_attr("is_odd")
+    _eval_is_polar = lambda self: self._eval_template_is_attr("is_polar")
+    _eval_is_positive = lambda self: self._eval_template_is_attr("is_positive")
     _eval_is_extended_real = lambda self: self._eval_template_is_attr(
-            'is_extended_real')
-    _eval_is_extended_positive = lambda self: self._eval_template_is_attr( # type: ignore
-            'is_extended_positive')
-    _eval_is_extended_negative = lambda self: self._eval_template_is_attr( # type: ignore
-            'is_extended_negative')
+        "is_extended_real"
+    )
+    _eval_is_extended_positive = lambda self: self._eval_template_is_attr(  # type: ignore
+        "is_extended_positive"
+    )
+    _eval_is_extended_negative = lambda self: self._eval_template_is_attr(  # type: ignore
+        "is_extended_negative"
+    )
     _eval_is_extended_nonzero = lambda self: self._eval_template_is_attr(
-            'is_extended_nonzero')
+        "is_extended_nonzero"
+    )
     _eval_is_extended_nonpositive = lambda self: self._eval_template_is_attr(
-            'is_extended_nonpositive')
+        "is_extended_nonpositive"
+    )
     _eval_is_extended_nonnegative = lambda self: self._eval_template_is_attr(
-            'is_extended_nonnegative')
-    _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
-    _eval_is_zero = lambda self: self._eval_template_is_attr(
-        'is_zero')
+        "is_extended_nonnegative"
+    )
+    _eval_is_real = lambda self: self._eval_template_is_attr("is_real")
+    _eval_is_zero = lambda self: self._eval_template_is_attr("is_zero")
 
     @classmethod
     def __eval_cond(cls, cond):
@@ -876,15 +1089,19 @@ class Piecewise(DefinedFunction):
         for expr, cond in self.args:
             cond_free |= cond.free_symbols
             if len(cond_free) > 1:
-                raise NotImplementedError(filldedent('''
-                    multivariate conditions are not handled.'''))
+                raise NotImplementedError(
+                    filldedent("""
+                    multivariate conditions are not handled.""")
+                )
             if complex:
                 for i in cond.atoms(Relational):
                     if not isinstance(i, (Eq, Ne)):
-                        raise ValueError(filldedent('''
+                        raise ValueError(
+                            filldedent("""
                             Inequalities in the complex domain are
                             not supported. Try the real domain by
-                            setting domain=S.Reals'''))
+                            setting domain=S.Reals""")
+                        )
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int
             if cond_int != S.EmptySet:
@@ -897,9 +1114,14 @@ class Piecewise(DefinedFunction):
         default = any(c == True for b, c in args)
         for i, (b, c) in enumerate(args):
             if not isinstance(b, Boolean) and b != True:
-                raise TypeError(filldedent('''
+                raise TypeError(
+                    filldedent(
+                        """
                     Expecting Boolean or bool but got `%s`
-                    ''' % func_name(b)))
+                    """
+                        % func_name(b)
+                    )
+                )
             if c == True:
                 break
             # loop over independent conditions for this b
@@ -907,18 +1129,22 @@ class Piecewise(DefinedFunction):
                 free = c.free_symbols
                 x = free.pop()
                 try:
-                    byfree[x] = byfree.setdefault(
-                        x, S.EmptySet).union(c.as_set())
+                    byfree[x] = byfree.setdefault(x, S.EmptySet).union(c.as_set())
                 except NotImplementedError:
                     if not default:
-                        raise NotImplementedError(filldedent('''
+                        raise NotImplementedError(
+                            filldedent(
+                                """
                             A method to determine whether a multivariate
                             conditional is consistent with a complete coverage
                             of all variables has not been implemented so the
                             rewrite is being stopped after encountering `%s`.
                             This error would not occur if a default expression
                             like `(foo, True)` were given.
-                            ''' % c))
+                            """
+                                % c
+                            )
+                        )
                 if byfree[x] in (S.UniversalSet, S.Reals):
                     # collapse the ith condition to True and break
                     args[i] = list(args[i])
@@ -927,10 +1153,12 @@ class Piecewise(DefinedFunction):
             if c == True:
                 break
         if c != True:
-            raise ValueError(filldedent('''
+            raise ValueError(
+                filldedent("""
                 Conditions must cover all reals or a final default
                 condition `(foo, True)` must be given.
-                '''))
+                """)
+            )
         last, _ = args[i]  # ignore all past ith arg
         for a, c in reversed(args[:i]):
             last = ITE(c, a, last)
@@ -944,7 +1172,7 @@ class Piecewise(DefinedFunction):
             Or: [True, True],
             Not: [True, False],
             Eq: [None, None],
-            Ne: [None, None]
+            Ne: [None, None],
         }
 
         class UnrecognizedCondition(Exception):
@@ -961,7 +1189,11 @@ class Piecewise(DefinedFunction):
                 raise UnrecognizedCondition(cls)
 
             b1, b2 = rules[cls]
-            k = Mul(*[1 - rewrite(c) for c in args]) if b1 else Mul(*[rewrite(c) for c in args])
+            k = (
+                Mul(*[1 - rewrite(c) for c in args])
+                if b1
+                else Mul(*[rewrite(c) for c in args])
+            )
 
             if b2:
                 return 1 - k
@@ -1031,10 +1263,9 @@ def piecewise_fold(expr, evaluate=True):
             assert not c.has(Piecewise)  # pragma: no cover
             if isinstance(c, ITE):
                 c = c.to_nnf()
-                c = simplify_logic(c, form='cnf')
+                c = simplify_logic(c, form="cnf")
             if isinstance(e, Piecewise):
-                new_args.extend([(piecewise_fold(ei), And(ci, c))
-                    for ei, ci in e.args])
+                new_args.extend([(piecewise_fold(ei), And(ci, c)) for ei, ci in e.args])
             else:
                 new_args.append((e, c))
     else:
@@ -1053,19 +1284,18 @@ def piecewise_fold(expr, evaluate=True):
         # (and the expression is commutative).
         if expr.is_Add or expr.is_Mul and expr.is_commutative:
             p, args = sift(expr.args, lambda x: x.is_Piecewise, binary=True)
-            pc = sift(p, lambda x: tuple([c for e,c in x.args]))
+            pc = sift(p, lambda x: tuple([c for e, c in x.args]))
             for c in list(ordered(pc)):
                 if len(pc[c]) > 1:
                     pargs = [list(i.args) for i in pc[c]]
                     # the first one is the same; there may be more
-                    com = common_prefix(*[
-                        [i.cond for i in j] for j in pargs])
+                    com = common_prefix(*[[i.cond for i in j] for j in pargs])
                     n = len(com)
                     collected = []
                     for i in range(n):
-                        collected.append((
-                            expr.func(*[ai[i].expr for ai in pargs]),
-                            com[i]))
+                        collected.append(
+                            (expr.func(*[ai[i].expr for ai in pargs]), com[i])
+                        )
                     remains = []
                     for a in pargs:
                         if n == len(a):  # no more args
@@ -1073,8 +1303,7 @@ def piecewise_fold(expr, evaluate=True):
                         if a[n].cond == True:  # no longer Piecewise
                             remains.append(a[n].expr)
                         else:  # restore the remaining Piecewise
-                            remains.append(
-                                Piecewise(*a[n:], evaluate=False))
+                            remains.append(Piecewise(*a[n:], evaluate=False))
                     if remains:
                         collected.append((expr.func(*remains), True))
                     args.append(Piecewise(*collected, evaluate=False))
@@ -1084,16 +1313,17 @@ def piecewise_fold(expr, evaluate=True):
             args = expr.args
         # fold
         folded = list(map(piecewise_fold, args))
-        for ec in product(*[
-                (i.args if isinstance(i, Piecewise) else
-                 [(i, true)]) for i in folded]):
+        for ec in product(
+            *[(i.args if isinstance(i, Piecewise) else [(i, true)]) for i in folded]
+        ):
             e, c = zip(*ec)
             new_args.append((expr.func(*e), And(*c)))
 
     if evaluate is None:
         # don't return duplicate conditions, otherwise don't evaluate
-        new_args = list(reversed([(e, c) for c, e in {
-            c: e for e, c in reversed(new_args)}.items()]))
+        new_args = list(
+            reversed([(e, c) for c, e in {c: e for e, c in reversed(new_args)}.items()])
+        )
     rv = Piecewise(*new_args, evaluate=evaluate)
     if evaluate is None and len(rv.args) == 1 and rv.args[0].cond == True:
         return rv.args[0].expr
@@ -1160,16 +1390,19 @@ def piecewise_simplify_arguments(expr, **kwargs):
         # and it won't handle symbols treated as
         # booleans
         ok, abe_ = expr._intervals(x, err_on_Eq=True)
+
         def include(c, x, a):
             "return True if c.subs(x, a) is True, else False"
             try:
                 return c.subs(x, a) == True
             except TypeError:
                 return False
+
         if ok:
             args = []
             covered = S.EmptySet
             from sympy.sets.sets import Interval
+
             for a, b, e, i in abe_:
                 c = expr.args[i].cond
                 incl_a = include(c, x, a)
@@ -1181,7 +1414,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
                 try:
                     a = cset.inf
                 except NotImplementedError:
-                    pass # continue with the given `a`
+                    pass  # continue with the given `a`
                 else:
                     incl_a = include(c, x, a)
                 if incl_a and incl_b:
@@ -1190,26 +1423,26 @@ def piecewise_simplify_arguments(expr, **kwargs):
                     elif b.is_infinite:
                         c = (x > a) if a in covered else (x >= a)
                     elif a.is_infinite:
-                        c = (x <= b)
+                        c = x <= b
                     elif a in covered:
                         c = And(a < x, x <= b)
                     else:
                         c = And(a <= x, x <= b)
                 elif incl_a:
                     if a.is_infinite:
-                        c = (x < b)
+                        c = x < b
                     elif a in covered:
                         c = And(a < x, x < b)
                     else:
                         c = And(a <= x, x < b)
                 elif incl_b:
                     if b.is_infinite:
-                        c = (x > a)
+                        c = x > a
                     else:
                         c = And(a < x, x <= b)
                 else:
                     if a in covered:
-                        c = (x < b)
+                        c = x < b
                     else:
                         c = And(a < x, x < b)
                 covered |= iv
@@ -1223,15 +1456,15 @@ def piecewise_simplify_arguments(expr, **kwargs):
     if args is None:
         args = list(expr.args)
         for i in range(len(args)):
-            e, c  = args[i]
+            e, c = args[i]
             if isinstance(c, Basic):
                 c = simplify(c, **kwargs)
             args[i] = (e, c)
 
     # simplify expressions
-    doit = kwargs.pop('doit', None)
+    doit = kwargs.pop("doit", None)
     for i in range(len(args)):
-        e, c  = args[i]
+        e, c = args[i]
         if isinstance(e, Basic):
             # Skip doit to avoid growth at every call for some integrals
             # and sums, see sympy/sympy#17165
@@ -1242,7 +1475,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
 
     # restore kwargs flag
     if doit is not None:
-        kwargs['doit'] = doit
+        kwargs["doit"] = doit
 
     return Piecewise(*args)
 
@@ -1251,8 +1484,7 @@ def _piecewise_collapse_arguments(_args):
     newargs = []  # the unevaluated conditions
     current_cond = set()  # the conditions up to a given e, c pair
     for expr, cond in _args:
-        cond = cond.replace(
-            lambda _: _.is_Relational, _canonical_coeff)
+        cond = cond.replace(lambda _: _.is_Relational, _canonical_coeff)
         # Check here if expr is a Piecewise and collapse if one of
         # the conds in expr matches cond. This allows the collapsing
         # of Piecewise((Piecewise((x,x<0)),x<0)) to Piecewise((x,x<0)).
@@ -1274,8 +1506,7 @@ def _piecewise_collapse_arguments(_args):
                         # that didn't match a previous condition
                         # could possibly trigger
                         if unmatching:
-                            expr = Piecewise(*(
-                                unmatching + [(e, c)]))
+                            expr = Piecewise(*(unmatching + [(e, c)]))
                         else:
                             expr = e
                     break
@@ -1290,9 +1521,7 @@ def _piecewise_collapse_arguments(_args):
         #    then the And will be False and if the previous
         #    condition is True then then we wouldn't get to
         #    this point. In either case, we can skip this condition.
-        for i in ([cond] +
-                  (list(cond.args) if isinstance(cond, And) else
-                  [])):
+        for i in [cond] + (list(cond.args) if isinstance(cond, And) else []):
             if i in current_cond:
                 got = True
                 break
@@ -1314,8 +1543,7 @@ def _piecewise_collapse_arguments(_args):
                     # if a strict inequality appears after
                     # a non-strict one, then the condition is
                     # redundant
-                    if isinstance(c, (Lt, Gt)) and (
-                        c.weak in current_cond):
+                    if isinstance(c, (Lt, Gt)) and (c.weak in current_cond):
                         cond = False
                         break
                 nonredundant.append(c)
@@ -1341,9 +1569,12 @@ def _piecewise_collapse_arguments(_args):
     return newargs
 
 
-_blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
-    getattr(e.rhs, '_diff_wrt', None) or
-    isinstance(e.rhs, (Rational, NumberSymbol)))
+_blessed = lambda e: (
+    getattr(e.lhs, "_diff_wrt", False)
+    and (
+        getattr(e.rhs, "_diff_wrt", None) or isinstance(e.rhs, (Rational, NumberSymbol))
+    )
+)
 
 
 def piecewise_simplify(expr, **kwargs):
@@ -1367,8 +1598,7 @@ def _piecewise_simplify_equal_to_next_segment(args):
     for i, (expr, cond) in reversed(list(enumerate(args))):
         if prevexpr is not None:
             if isinstance(cond, And):
-                eqs, other = sift(cond.args,
-                                  lambda i: isinstance(i, Eq), binary=True)
+                eqs, other = sift(cond.args, lambda i: isinstance(i, Eq), binary=True)
             elif isinstance(cond, Eq):
                 eqs, other = [cond], []
             else:
@@ -1407,8 +1637,7 @@ def _piecewise_simplify_eq_and(args):
     """
     for i, (expr, cond) in enumerate(args):
         if isinstance(cond, And):
-            eqs, other = sift(cond.args,
-                              lambda i: isinstance(i, Eq), binary=True)
+            eqs, other = sift(cond.args, lambda i: isinstance(i, Eq), binary=True)
         elif isinstance(cond, Eq):
             eqs, other = [cond], []
         else:
@@ -1420,7 +1649,7 @@ def _piecewise_simplify_eq_and(args):
                 # and the rhs are simple replacements for the "symbols"
                 if _blessed(e):
                     expr = expr.subs(*e.args)
-                    eqs[j + 1:] = [ei.subs(*e.args) for ei in eqs[j + 1:]]
+                    eqs[j + 1 :] = [ei.subs(*e.args) for ei in eqs[j + 1 :]]
                     other = [ei.subs(*e.args) for ei in other]
             cond = And(*(eqs + other))
             args[i] = args[i].func(expr, cond)
