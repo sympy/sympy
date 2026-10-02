@@ -195,17 +195,15 @@ def _monotonic_sign(self):
                     if reps[x] is None:
                         return
                 v *= ai.subs(reps)
-    elif not any(p for p in a.atoms(Pow) if not p.is_number):
-        # signed linear expression
-        if c:
-            signed = a.is_nonpositive or a.is_nonnegative
-        elif a.is_Add:
-            terms = Add.make_args(a)
-            signed = (
-                all(t.is_nonnegative for t in terms) or
-                all(t.is_nonpositive for t in terms))
-        else:
-            signed = False
+        elif (c or a.is_Add) and not any(
+                p for p in a.atoms(Pow) if not p.is_number):
+            if c:
+                signed = a.is_nonpositive or a.is_nonnegative
+            else:
+                terms = Add.make_args(a)
+                signed = (
+                    all(t.is_nonnegative for t in terms) or
+                    all(t.is_nonpositive for t in terms))
         if signed:
             free = list(a.free_symbols)
             p = {}
