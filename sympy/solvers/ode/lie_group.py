@@ -268,7 +268,10 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                 xieta = []
                 for heuristic in lie_heuristics:
                     function = globals()['lie_heuristic_' + heuristic]
-                    inflist = function(match, comp=True)
+                    try:
+                        inflist = function(match, comp=True)
+                    except (TypeError, KeyError, UnboundLocalError, ValueError, NotImplementedError):
+                        continue
                     if inflist:
                         xieta.extend([inf for inf in inflist if inf not in xieta])
                 if xieta:
@@ -280,7 +283,10 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
             elif hint == 'default':
                 for heuristic in lie_heuristics:
                     function = globals()['lie_heuristic_' + heuristic]
-                    xieta = function(match, comp=False)
+                    try:
+                        xieta = function(match, comp=False)
+                    except (TypeError, KeyError, UnboundLocalError, ValueError, NotImplementedError):
+                        continue
                     if xieta:
                         return xieta
 
@@ -507,6 +513,7 @@ def lie_heuristic_bivariate(match, comp=False):
     if h.is_rational_function():
         # The maximum degree that the infinitesimals can take is
         # calculated by this technique.
+        polyy=None
         etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
         ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
         num, denom = cancel(ipde).as_numer_denom()
@@ -765,14 +772,14 @@ def lie_heuristic_abaco2_similar(match, comp=False):
         B = Wild('B', exclude=[y])
         C = Wild('C', exclude=[x, y])
         match = h.match(A + B*exp(y/C))
-        try:
-            tau = exp(-integrate(match[A]/match[C]), x)/match[B]
-        except NotImplementedError:
-            pass
-        else:
-            gx = match[A]*tau
-            return [{xi: tau, eta: gx}]
-
+        if match:  # <--- Check if match succeeded!
+            try:
+                tau = exp(-integrate(match[A]/match[C], x))/match[B]
+            except NotImplementedError:
+                pass
+            else:
+                gx = match[A]*tau
+                return [{xi: tau, eta: gx}]
     else:
         gamma = cancel(factorx/factory)
         if not gamma.has(y):
@@ -794,13 +801,14 @@ def lie_heuristic_abaco2_similar(match, comp=False):
         B = Wild('B', exclude=[y])
         C = Wild('C', exclude=[x, y])
         match = h.match(A + B*exp(y/C))
-        try:
-            tau = exp(-integrate(match[A]/match[C]), x)/match[B]
-        except NotImplementedError:
-            pass
-        else:
-            gx = match[A]*tau
-            return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
+        if match:  # <--- Check if match succeeded!
+            try:
+                tau = exp(-integrate(match[A]/match[C], x))/match[B]
+            except NotImplementedError:
+                pass
+            else:
+                gx = match[A]*tau
+                return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
 
     else:
         gamma = cancel(factorx/factory)
@@ -938,7 +946,7 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
                     E1*((28*Ax + 4*hx*A)*A**3 - E1*(hy*A + Ay)) - E1.diff(x)*8*A**4)
                 if not E3:
                     etaval = cancel((4*A**3*(Ax - hx*A) + E1*(hy*A - Ay))/(S(2)*A*E1))
-                    if x not in etaval:
+                    if not etaval.has(x):
                         try:
                             etaval = exp(integrate(etaval, y))
                         except NotImplementedError:

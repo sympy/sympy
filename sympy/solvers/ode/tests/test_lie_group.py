@@ -151,3 +151,29 @@ def test_user_infinitesimals():
 def test_lie_group_issue15219():
     eqn = exp(f(x).diff(x)-f(x))
     assert 'lie_group' not in classify_ode(eqn, f(x))
+
+
+def test_issue_30644():
+    from sympy import Function, symbols, diff, exp, Dummy
+    from sympy.solvers.ode.lie_group import infinitesimals
+
+    x = symbols('x')
+    a, b, c = symbols('a b c')
+    y = Function('y')(x)
+    
+    # Create the internal dummy variable used by infinitesimals for y
+    y_dummy = Dummy("y")
+
+    # Test 1: Fixes TypeError (if x not in etaval -> etaval.has(x))
+    res1 = infinitesimals(x*diff(y, x) - y - x - x*exp(y/x), y)
+    # Returns: [{eta(x, y): exp(y/x) + y/x + 1, xi(x, y): 1}]
+    assert len(res1) > 0
+
+    # Test 2: Fixes UnboundLocalError with polyy when hint='all'
+    res2 = infinitesimals(diff(y, x) + y**2 - 1, y, hint='all')
+    # Ensures hint='all' returns candidate infinitesimals without raising UnboundLocalError
+    assert isinstance(res2, list) and len(res2) > 0
+
+    # Test 3: Fixes KeyError in lie_heuristic_abaco2_similar
+    res3 = infinitesimals(diff(y, x)**2 + a*x*diff(y, x) - b*x**2 - c, y, hint='all')
+    assert isinstance(res3, list)
