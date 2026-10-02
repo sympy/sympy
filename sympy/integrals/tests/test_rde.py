@@ -64,21 +64,21 @@ def test_weak_normalizer():
     assert weak_normalizer(
         r[1][0], r[1][1], DE
     ) == (Poly(1, t), r[1])
-    
+
     r = weak_normalizer(
-        Poly(1 + t**2),
+        Poly(2, t),
         Poly(t**2 - 1, t),
         DE,
         z
     )
     assert r == (
-        Poly(t**4 - 2*t**2 + 1, t),
-        (Poly(-3*t**2 + 1, t), Poly(t**2 - 1, t))
+        Poly(t**2 - 1, t),
+        (Poly(-2, t), Poly(1, t))
     )
     assert weak_normalizer(
         r[1][0], r[1][1], DE, z
     ) == (Poly(1, t), r[1])
-    
+
     DE = DifferentialExtension(
         extension={'D': [Poly(1, x), Poly(1 + t**2)]}
     )
@@ -95,7 +95,7 @@ def test_weak_normalizer():
     assert weak_normalizer(
         r[1][0], r[1][1], DE, z
     ) == (Poly(1, t), r[1])
-    
+
     DE = DifferentialExtension(
         extension={'D': [Poly(1, x), Poly(t, t)]}
     )
@@ -107,7 +107,7 @@ def test_weak_normalizer():
         Poly(t - 1, t),
         (Poly(-1, t), Poly(1, t))
     )
-    
+
     a = Poly(2, t)
     d = Poly(t - 1, t)
     assert weak_normalizer(
@@ -116,7 +116,7 @@ def test_weak_normalizer():
         Poly(t**2 - 2*t + 1, t),
         (Poly(-2, t), Poly(1, t))
     )
-    
+
     a = Poly(-1, t)
     d = Poly(t + 1, t)
     assert weak_normalizer(
@@ -125,7 +125,7 @@ def test_weak_normalizer():
         Poly(t + 1, t),
         (Poly(-1, t), Poly(1, t))
     )
-    
+
     a = Poly(2, t)
     d = Poly(t**2 - 1, t)
     assert weak_normalizer(
@@ -134,7 +134,7 @@ def test_weak_normalizer():
         Poly(t**2 - 1, t),
         (Poly(-2, t), Poly(1, t))
     )
-    
+
 def test_normal_denom():
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
     raises(NonElementaryIntegralException, lambda: normal_denom(Poly(1, x), Poly(1, x),

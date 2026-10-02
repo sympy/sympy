@@ -139,10 +139,10 @@ def weak_normalizer(a, d, DE, z=None):
     if not r.expr.has(z):
         return (Poly(1, DE.t), (a, d))
 
-    N = set(
+    N = {
         i for i in r.ground_roots()
         if i in ZZ and i > 0
-    )
+    }
     q = reduce(
         mul,
         [
@@ -160,7 +160,7 @@ def weak_normalizer(a, d, DE, z=None):
     sn, sd = sn.cancel(sd, include=True)
 
     return (q, (sn, sd))
-    
+
 def normal_denom(fa, fd, ga, gd, DE):
     """
     Normal part of the denominator.
