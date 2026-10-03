@@ -24,7 +24,7 @@ from sympy.functions.elementary.trigonometric import sin
 
 from sympy.testing.pytest import SKIP, warns_deprecated_sympy
 
-a, b, c, x, y, z, s = symbols('a,b,c,x,y,z,s')
+a, b, c, x, y, z, s, n = symbols('a,b,c,x,y,z,s,n')
 
 
 whitelist = [
@@ -2203,6 +2203,9 @@ def test_sympy__functions__elementary__complexes__periodic_argument():
     from sympy.functions.elementary.complexes import periodic_argument
     assert _test_args(periodic_argument(x, y))
 
+def test_sympy__functions__special__polynomials__legendre_q():
+    from sympy.functions.special.polynomials import legendre_q
+    assert _test_args(legendre_q(n, x))
 
 def test_sympy__functions__elementary__complexes__principal_branch():
     from sympy.functions.elementary.complexes import principal_branch
