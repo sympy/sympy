@@ -505,6 +505,17 @@ def test_monotonic_sign():
     assert F((p - 1)*q + 1).is_positive
     assert F(-(p - 1)*q - 1).is_negative
 
+    nn1, nn2 = Dummy(nonnegative=True), Dummy(nonnegative=True)
+
+    r = F(nn1 + nn2)
+    assert r.is_nonnegative is True
+    assert r.is_positive is None
+
+    r = F(-nn1 - nn2)
+    assert r.is_nonpositive is True
+    assert r.is_negative is None
+
+
 def test_issue_17256():
     from sympy.sets.fancysets import Range
     x = Symbol('x')
