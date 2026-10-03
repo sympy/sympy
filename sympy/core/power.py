@@ -513,9 +513,13 @@ class Pow(Expr):
         if real_e is None:
             return
         if real_b and real_e:
-            if self.base.is_extended_positive:
+            # base**exp is nan when base is 1 and exp is infinite, so a
+            # nonnegative base -- and 1 is both nonnegative and positive --
+            # only settles extended_real for a definitely finite exponent.
+            finite_exp = self.exp.is_infinite is False
+            if finite_exp and self.base.is_extended_positive:
                 return True
-            elif self.base.is_extended_nonnegative and self.exp.is_extended_nonnegative:
+            elif finite_exp and self.base.is_extended_nonnegative and self.exp.is_extended_nonnegative:
                 return True
             elif self.exp.is_integer and self.base.is_extended_nonzero:
                 return True
