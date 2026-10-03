@@ -269,7 +269,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                 for heuristic in lie_heuristics:
                     function = globals()['lie_heuristic_' + heuristic]
                     inflist = function(match, comp=True)
-                    
+
                     if inflist:
                         xieta.extend([inf for inf in inflist if inf not in xieta])
                 if xieta:
@@ -281,10 +281,8 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
             elif hint == 'default':
                 for heuristic in lie_heuristics:
                     function = globals()['lie_heuristic_' + heuristic]
-                    try:
-                        xieta = function(match, comp=False)
-                    except (TypeError, KeyError, UnboundLocalError, ValueError, NotImplementedError):
-                        continue
+                    xieta = function(match, comp=False)
+
                     if xieta:
                         return xieta
 
@@ -511,7 +509,7 @@ def lie_heuristic_bivariate(match, comp=False):
     if h.is_rational_function():
         # The maximum degree that the infinitesimals can take is
         # calculated by this technique.
-        polyy=None
+        
         etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
         ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
         num, denom = cancel(ipde).as_numer_denom()
@@ -524,6 +522,7 @@ def lie_heuristic_bivariate(match, comp=False):
         etaeq = Symbol("eta0")
 
         for i in range(deg + 1):
+            polyy=None
             if i:
                 xieq += Add(*[
                     Symbol("xi_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
