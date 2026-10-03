@@ -15,6 +15,10 @@ from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
+def _smp_poly(p):
+    return Poly.new(SMP.from_poly(p), *p.gens)
+
+
 def test_DMP___init__():
     f = DMP([[ZZ(0)], [], [ZZ(0), ZZ(1), ZZ(2)], [ZZ(3)]], ZZ)
 
@@ -643,8 +647,10 @@ def test_SMP_from_poly():
     assert f.lev == p.rep.lev
     assert f.to_dict() == p.rep.to_dict()
 
-    p = Poly.new(f, x, y)
-    assert SMP.from_poly(p) is f
+    q = _smp_poly(p)
+    assert q == p
+    assert isinstance(q.rep, SMP)
+    assert SMP.from_poly(q) is q.rep
 
 
 def test_SMP_from_expr():
@@ -668,6 +674,16 @@ def test_SMP_from_expr():
     assert gens == (x,)
     assert f.to_sympy_dict() == {(1,): 1, (0,): y}
     assert str(f.dom) == 'ZZ[y]'
+
+    f, gens = SMP.from_expr(2*x + 1, x, modulus=2)
+    assert gens == (x,)
+    assert f == SMP.one(0, GF(2))
+    assert all(f._rep.values())
+
+    f, gens = SMP.from_expr(2*x, x, domain=GF(2))
+    assert gens == (x,)
+    assert f.is_zero
+    assert not f._rep
 
 
 def test_SMP_constructor_errors_and_domain():
@@ -726,6 +742,8 @@ def test_SMP_arithmetic_and_terms():
     assert z.all_coeffs() == [ZZ.zero]
     assert z.all_monoms() == [(0,)]
     assert z.all_terms() == [((0,), ZZ.zero)]
+    x = symbols('x')
+    assert Poly.new(z, x)**0 == Poly(1, x)
 
     h = SMP.from_dict({(2, 1): 1}, 1, ZZ)
     raises(PolynomialError, lambda: h.all_coeffs())
@@ -768,11 +786,14 @@ def test_SMP_degrees_coefficients_and_conversion():
     assert g == SMP.one(0, GF(5))
     assert g.degree() == 0
     assert g.is_ground
+    assert all(g._rep.values())
 
 
 def test_SMP_monic():
     f = SMP.from_dict({(1,): 2, (0,): 4}, 0, ZZ)
-    assert f.monic().to_dict() == {(1,): 1, (0,): 2}
+    g = f.monic()
+    assert g.to_dict() == {(1,): 1, (0,): 2}
+    assert all(g._rep.values())
 
     f = SMP.from_dict({(1,): 2, (0,): 1}, 0, ZZ)
     raises(ExactQuotientFailed, f.monic)
@@ -807,6 +828,13 @@ def test_SMP_gcd_lcm_and_polynomial_algorithms():
     g = Poly(x**2 - 1, x)
     F = SMP.from_poly(f)
     G = SMP.from_poly(g)
+
+    f_smp = _smp_poly(f)
+    g_smp = _smp_poly(g)
+    assert f_smp == f
+    assert g_smp == g
+    assert f_smp.gcd(g_smp) == f.gcd(g)
+    assert f_smp.lcm(g_smp) == f.lcm(g)
 
     assert F.gcd(G).to_dict() == f.rep.gcd(g.rep).to_dict()
     assert F.lcm(G).to_dict() == f.rep.lcm(g.rep).to_dict()
