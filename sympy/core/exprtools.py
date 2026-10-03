@@ -218,22 +218,20 @@ def _monotonic_sign(self):
 
     if v is not None:
         rv = v + c
-        if v is not None:
-            rv = v + c
 
-            if a.is_nonnegative:
-                if rv.is_positive:
-                    rv = rv.subs(_eps, 0)
-                    return rv if rv else Dummy('pos', positive=True)
-                if rv.is_zero:
-                    return Dummy('nneg', nonnegative=True)
+        if a.is_nonnegative:
+            if rv.is_positive:
+                rv = rv.subs(_eps, 0)
+                return rv if rv else Dummy('pos', positive=True)
+            if rv.is_zero:
+                return Dummy('nneg', nonnegative=True)
 
-            if a.is_nonpositive:
-                if rv.is_negative:
-                    rv = rv.subs(_eps, 0)
-                    return rv if rv else Dummy('neg', negative=True)
-                if rv.is_zero:
-                    return Dummy('npos', nonpositive=True)
+        if a.is_nonpositive:
+            if rv.is_negative:
+                rv = rv.subs(_eps, 0)
+                return rv if rv else Dummy('neg', negative=True)
+            if rv.is_zero:
+                return Dummy('npos', nonpositive=True)
 
 def decompose_power(expr: Expr) -> tuple[Expr, int]:
     """
