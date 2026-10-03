@@ -21,7 +21,7 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
 from sympy.core.relational import Relational, Equality
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol, Str
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
@@ -33,7 +33,7 @@ from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.monomials import Monomial
 from sympy.polys.orderings import monomial_key
-from sympy.polys.polyclasses import DMP, DMF, ANP
+from sympy.polys.polyclasses import DMP, SMP, DMF, ANP
 from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
@@ -167,7 +167,7 @@ class Poly(Basic):
     is_Poly = True
     _op_priority = 10.001
 
-    rep: DMP
+    rep: DMP | SMP
     gens: tuple[Expr, ...]
 
     def __new__(cls, rep, *gens, **args) -> Self:
@@ -204,7 +204,7 @@ class Poly(Basic):
     @classmethod
     def new(cls, rep, *gens):
         """Construct :class:`Poly` instance from raw representation. """
-        if not isinstance(rep, DMP):
+        if not isinstance(rep, (DMP, SMP)):
             raise PolynomialError(
                 "invalid polynomial representation: %s" % rep)
         elif rep.lev != len(gens) - 1:
@@ -225,7 +225,19 @@ class Poly(Basic):
         return (self.expr,) + self.gens
 
     def _hashable_content(self):
-        return (self.rep,) + self.gens
+        rep = self.rep
+
+        domain = Tuple(
+            Str(rep.dom.__class__.__name__),
+            Str(str(rep.dom)),
+        )
+
+        terms = Tuple(*(
+            Tuple(Tuple(*monom), rep.dom.to_sympy(coeff))
+            for monom, coeff in sorted(rep.to_dict().items())
+        ))
+
+        return (domain, terms) + self.gens
 
     @classmethod
     def from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], *gens, **args):
@@ -484,7 +496,7 @@ class Poly(Basic):
         _, per, F, G = f._unify(g)
         return per(F), per(G)
 
-    def _unify(f, g: Poly | Expr | complex) -> tuple[Domain, Callable[[DMP], Poly], DMP, DMP]:
+    def _unify(f, g: Poly | Expr | complex) -> tuple[Domain, Callable[[DMP | SMP], Poly], DMP | SMP, DMP | SMP]:
         gs = cast('Poly | Expr', sympify(g))
 
         if not isinstance(gs, Poly):
@@ -495,32 +507,44 @@ class Poly(Basic):
             else:
                 return f.rep.dom, f.per, f.rep, f.rep.ground_new(g_coeff)
 
-        if isinstance(f.rep, DMP) and isinstance(gs.rep, DMP):
+        if isinstance(f.rep, (DMP, SMP)) and isinstance(gs.rep, (DMP, SMP)):
             gens = _unify_gens(f.gens, gs.gens)
 
             dom, lev = f.rep.dom.unify(gs.rep.dom, gens), len(gens) - 1
 
-            if f.gens != gens:
-                f_monoms, f_coeffs = _dict_reorder(
-                    f.rep.to_dict(), f.gens, gens)
+            rep_cls = (
+                SMP
+                if isinstance(f.rep, SMP) or isinstance(gs.rep, SMP)
+                else DMP
+            )
 
-                if f.rep.dom != dom:
-                    f_coeffs = [dom.convert(c, f.rep.dom) for c in f_coeffs]
+            def convert(poly):
+                rep = poly.rep
 
-                F = DMP.from_dict(dict(list(zip(f_monoms, f_coeffs))), lev, dom)
-            else:
-                F = f.rep.convert(dom)
+                if poly.gens != gens:
+                    monoms, coeffs = _dict_reorder(
+                        rep.to_dict(), poly.gens, gens)
 
-            if gs.gens != gens:
-                g_monoms, g_coeffs = _dict_reorder(
-                    gs.rep.to_dict(), gs.gens, gens)
+                    if rep.dom != dom:
+                        coeffs = [dom.convert(c, rep.dom) for c in coeffs]
 
-                if gs.rep.dom != dom:
-                    g_coeffs = [dom.convert(c, gs.rep.dom) for c in g_coeffs]
+                    return rep_cls.from_dict(dict(zip(monoms, coeffs)), lev, dom)
 
-                G = DMP.from_dict(dict(list(zip(g_monoms, g_coeffs))), lev, dom)
-            else:
-                G = gs.rep.convert(dom)
+                if isinstance(rep, rep_cls):
+                    return rep.convert(dom)
+
+                rep_dict = rep.to_dict()
+
+                if rep.dom != dom:
+                    rep_dict = {
+                        monom: dom.convert(coeff, rep.dom)
+                        for monom, coeff in rep_dict.items()
+                    }
+
+                return rep_cls.from_dict(rep_dict, lev, dom)
+
+            F = convert(f)
+            G = convert(gs)
         else:
             raise UnificationFailed("Cannot unify %s with %s" % (f, gs))
 
@@ -539,15 +563,15 @@ class Poly(Basic):
 
     @overload
     def per(
-        f, rep: DMP, gens: tuple[Expr, ...] | None = None, *, remove: int
+        f, rep: DMP | SMP, gens: tuple[Expr, ...] | None = None, *, remove: int
     ) -> Poly | Expr: ...
     @overload
     def per(
-        f, rep: DMP, gens: tuple[Expr, ...] | None = None, remove: None = None
+        f, rep: DMP | SMP, gens: tuple[Expr, ...] | None = None, remove: None = None
     ) -> Poly: ...
 
     def per(
-        f, rep: DMP, gens: tuple[Expr, ...] | None = None, remove: int | None = None
+        f, rep: DMP | SMP, gens: tuple[Expr, ...] | None = None, remove: int | None = None
     ) -> Poly | Expr:
         """
         Create a Poly out of the given representation.
@@ -719,7 +743,7 @@ class Poly(Basic):
 
         rep = dict(list(zip(*_dict_reorder(f.rep.to_dict(), f.gens, gens))))
 
-        return f.per(DMP.from_dict(rep, len(gens) - 1, f.rep.dom), gens=gens)
+        return f.per(type(f.rep).from_dict(rep, len(gens) - 1, f.rep.dom), gens=gens)
 
     def ltrim(f, gen):
         """
@@ -755,7 +779,7 @@ class Poly(Basic):
 
         gens = f.gens[j:]
 
-        return f.new(DMP.from_dict(terms, len(gens) - 1, f.rep.dom), *gens)
+        return f.new(type(f.rep).from_dict(terms, len(gens) - 1, f.rep.dom), *gens)
 
     def has_only_gens(f, *gens):
         """
@@ -2628,7 +2652,15 @@ class Poly(Basic):
             F, G = F.to_field(), G.to_field()
 
         if hasattr(f.rep, 'invert'):
-            result = F.invert(G)
+            result: DMP | SMP
+            if isinstance(F, DMP):
+                assert isinstance(G, DMP)
+                result = F.invert(G)
+            elif isinstance(F, SMP):
+                assert isinstance(G, SMP)
+                result = F.invert(G)
+            else:
+                raise OperationNotSupported(f, 'invert')
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'invert')
 
@@ -2947,11 +2979,15 @@ class Poly(Basic):
         _, per, F, G = f._unify(g)
 
         if hasattr(f.rep, 'gcd'):
-            result = F.gcd(G)
+            if isinstance(F, SMP):
+                assert isinstance(G, SMP)
+                return per(F.gcd(G))
+
+            assert isinstance(F, DMP)
+            assert isinstance(G, DMP)
+            return per(F.gcd(G))
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'gcd')
-
-        return per(result)
 
     def lcm(f, g: Poly | Expr | complex) -> Poly:
         """
@@ -2970,11 +3006,15 @@ class Poly(Basic):
         _, per, F, G = f._unify(g)
 
         if hasattr(f.rep, 'lcm'):
-            result = F.lcm(G)
+            if isinstance(F, SMP):
+                assert isinstance(G, SMP)
+                return per(F.lcm(G))
+
+            assert isinstance(F, DMP)
+            assert isinstance(G, DMP)
+            return per(F.lcm(G))
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'lcm')
-
-        return per(result)
 
     def trunc(f, p: Expr | int) -> Poly:
         """
@@ -3086,12 +3126,13 @@ class Poly(Basic):
         """
         _, per, F, G = f._unify(g)
 
-        if hasattr(f.rep, 'compose'):
-            result = F.compose(G)
-        else:  # pragma: no cover
-            raise OperationNotSupported(f, 'compose')
+        if isinstance(F, SMP):
+            assert isinstance(G, SMP)
+            return per(F.compose(G))
 
-        return per(result)
+        assert isinstance(F, DMP)
+        assert isinstance(G, DMP)
+        return per(F.compose(G))
 
     def decompose(f) -> list[Poly]:
         """
@@ -3174,9 +3215,16 @@ class Poly(Basic):
         F, P = f.unify(P)
         F, Q = F.unify(Q)
 
-        if hasattr(F.rep, 'transform'):
+        result: DMP | SMP
+        if isinstance(F.rep, DMP):
+            assert isinstance(P.rep, DMP)
+            assert isinstance(Q.rep, DMP)
             result = F.rep.transform(P.rep, Q.rep)
-        else:  # pragma: no cover
+        elif isinstance(F.rep, SMP):
+            assert isinstance(P.rep, SMP)
+            assert isinstance(Q.rep, SMP)
+            result = F.rep.transform(P.rep, Q.rep)
+        else:
             raise OperationNotSupported(F, 'transform')
 
         return F.per(result)
@@ -4639,7 +4687,10 @@ class Poly(Basic):
         if f.rep.dom != g.rep.dom:
             return False
 
-        return f.rep == g.rep
+        if f.rep == g.rep:
+            return True
+
+        return f.rep.to_dict() == g.rep.to_dict()
 
     @_sympifyit('g', NotImplemented)
     def __ne__(f, g):
