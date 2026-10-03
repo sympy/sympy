@@ -7,6 +7,7 @@ from typing import (
     Any,
     Sequence,
     Generic,
+    Iterable,
     Literal,
     overload,
     Callable,
@@ -162,6 +163,7 @@ from sympy.polys.polyerrors import (
     UnificationFailed,
     PolynomialError)
 
+from sympy.polys.orderings import monomial_key
 
 from sympy.polys import sparsemonomials as smm
 
@@ -204,7 +206,12 @@ class SMP(CantSympify, Generic[Er]):
         return obj
 
     @classmethod
-    def _from_sparse_items(cls, items, dom, lev):
+    def _from_sparse_items(
+        cls,
+        items: Iterable[tuple[smm.smonom, Er]],
+        dom: Domain[Er],
+        lev: int,
+    ) -> SMP[Er]:
         """Construct an ``SMP``, discarding zero coefficients."""
         return cls.new({mon: coeff for mon, coeff in items if coeff}, dom, lev)
 
@@ -447,6 +454,7 @@ class SMP(CantSympify, Generic[Er]):
         if order is None:
             return sorted(terms, reverse=True)
 
+        order = monomial_key(order)
         return sorted(
             terms,
             key=lambda item: order(item[0]),
@@ -516,6 +524,10 @@ class SMP(CantSympify, Generic[Er]):
         if len(N) != f.lev + 1:
             raise ValueError(
                 "%s indices expected, got %s" % (f.lev + 1, len(N)))
+
+        for n in N:
+            if n < 0:
+                raise IndexError("`n` must be non-negative, got %i" % n)
 
         return f._rep.get(smm.from_dense(tuple(N)), f.dom.zero)
 
@@ -857,15 +869,10 @@ class SMP(CantSympify, Generic[Er]):
 
     def shift_list(f, a: list[Any]) -> SMP[Er]:
         """Efficiently compute Taylor shift ``f(X + A)``. """
-        if len(a) != f.lev + 1:
-            raise ValueError(
-                "%s shifts expected, got %s" % (f.lev + 1, len(a)))
-
         a = [f.dom.convert(ai) for ai in a]
         reps: dict[int, dict[smm.smonom, Er]] = {}
 
-        for i in range(f.lev + 1):
-            ai = a[i]
+        for i, ai in enumerate(a[:f.lev + 1]):
 
             if ai:
                 reps[i] = {

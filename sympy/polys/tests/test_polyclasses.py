@@ -736,6 +736,12 @@ def test_SMP_arithmetic_and_terms():
     assert f.coeffs() == [ZZ.one, ZZ.one]
     assert f.monoms() == [(2,), (0,)]
     assert f.terms() == [((2,), ZZ.one), ((0,), ZZ.one)]
+    assert f.terms(order='grlex') == [((2,), ZZ.one), ((0,), ZZ.one)]
+
+    x, y = symbols('x y')
+    p = _smp_poly(Poly(x**3*y + x*y**2 + x, x, y))
+    assert p.terms(order='grlex') == [
+        ((3, 1), 1), ((1, 2), 1), ((1, 0), 1)]
 
     z = SMP.zero(0, ZZ)
     assert z.terms() == [((0,), ZZ.zero)]
@@ -768,6 +774,7 @@ def test_SMP_degrees_coefficients_and_conversion():
     raises(TypeError, lambda: f.nth(1, QQ.one))
     raises(ValueError, lambda: f.nth(1))
     raises(ValueError, lambda: f.nth(1, 0, 0))
+    raises(IndexError, lambda: f.nth(-1, 0))
 
     assert f.to_list() == DMP.from_dict(f.to_dict(), f.lev, f.dom).to_list()
     assert f.to_tuple() == DMP.from_dict(f.to_dict(), f.lev, f.dom).to_tuple()
@@ -830,8 +837,11 @@ def test_SMP_calculus_eval_and_trunc():
     raises(IndexError, lambda: g.integrate(1, 2))
     raises(ValueError, lambda: g.eval(1, -1))
     raises(ValueError, lambda: g.eval(1, 2))
-    raises(ValueError, lambda: g.shift_list([1]))
-    raises(ValueError, lambda: g.shift_list([1, 2, 3]))
+
+    d = DMP.from_dict(g.to_dict(), g.lev, g.dom)
+    assert g.shift_list([1]).to_dict() == d.shift_list([1]).to_dict()
+    assert g.shift_list([1, 2]).to_dict() == d.shift_list([1, 2]).to_dict()
+    assert g.shift_list([1, 2, 3]).to_dict() == d.shift_list([1, 2, 3]).to_dict()
 
 
 def test_SMP_gcd_lcm_and_polynomial_algorithms():
