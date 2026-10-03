@@ -679,6 +679,10 @@ class Abs(DefinedFunction):
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
         return (sign(direction)*s).expand()
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0]
+        return Abs(arg.as_leading_term(x, logx=logx, cdir=cdir))
+
     def _eval_derivative(self, x):
         if self.args[0].is_extended_real or self.args[0].is_imaginary:
             return Derivative(self.args[0], x, evaluate=True) \
