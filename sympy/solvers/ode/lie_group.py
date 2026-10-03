@@ -509,7 +509,7 @@ def lie_heuristic_bivariate(match, comp=False):
     if h.is_rational_function():
         # The maximum degree that the infinitesimals can take is
         # calculated by this technique.
-        
+
         etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
         ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
         num, denom = cancel(ipde).as_numer_denom()
@@ -942,7 +942,10 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
                 E3 = simplify(
                     E1*((28*Ax + 4*hx*A)*A**3 - E1*(hy*A + Ay)) - E1.diff(x)*8*A**4)
                 if not E3:
-                    etaval = cancel((4*A**3*(Ax - hx*A) + E1*(hy*A - Ay))/(S(2)*A*E1))
+                    try:
+                        etaval = cancel((4*A**3*(Ax - hx*A) + E1*(hy*A - Ay))/(S(2)*A*E1))
+                    except (ZeroDivisionError, TypeError, ValueError):
+                        return
                     if not etaval.has(x):
                         try:
                             etaval = exp(integrate(etaval, y))
@@ -950,7 +953,7 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
                             pass
                         else:
                             xival = -4*A**3*etaval/E1
-                            if y not in xival:
+                            if not xival.has(y):
                                 return [{xi: xival, eta: etaval.subs(y, func)}]
 
     else:
@@ -963,15 +966,18 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
                    -(A*D)*E1.diff(y) + ((E1.diff(x) - hy*D)*A + 3*Ay*D +
                     (A*hx - 3*Ax)*E1)*E1)
                 if not E3:
-                    etaval = cancel(((A*hx - Ax)*E1 - (Ay + A*hy)*D)/(S(2)*A*D))
-                    if x not in etaval:
+                    try:
+                        etaval = cancel(((A*hx - Ax)*E1 - (Ay + A*hy)*D)/(S(2)*A*D))
+                    except (ZeroDivisionError, TypeError, ValueError):
+                        return
+                    if not etaval.has(x):
                         try:
                             etaval = exp(integrate(etaval, y))
                         except NotImplementedError:
                             pass
                         else:
                             xival = -E1*etaval/D
-                            if y not in xival:
+                            if not xival.has(y):
                                 return [{xi: xival, eta: etaval.subs(y, func)}]
 
 
