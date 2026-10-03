@@ -151,3 +151,16 @@ def test_user_infinitesimals():
 def test_lie_group_issue15219():
     eqn = exp(f(x).diff(x)-f(x))
     assert 'lie_group' not in classify_ode(eqn, f(x))
+
+
+def test_issue_30644():
+    a, b, c = symbols("a b c")
+
+    res1 = infinitesimals(x*f(x).diff(x) - f(x) - x - x*exp(f(x)/x), f(x))
+    assert len(res1) > 0
+
+    res2 = infinitesimals(f(x).diff(x) + f(x)**2 - 1, f(x), hint='all')
+    assert isinstance(res2, list) and len(res2) > 0
+
+    res3 = infinitesimals(f(x).diff(x)**2 + a*x*f(x).diff(x) - b*x**2 - c, f(x), hint='all')
+    assert isinstance(res3, list)
