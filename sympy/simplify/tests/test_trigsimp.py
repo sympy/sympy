@@ -432,6 +432,16 @@ def test_exptrigsimp():
         assert s == exptrigsimp(e)
         assert valid(s, 2*sinh(a))
 
+
+def test_trigsimp_complex_exponential():
+    theta1, theta2 = symbols('theta_1 theta_2')
+    pair = exp(I * theta1) / 2 + exp(-I * theta1) / 2
+    expr = pair * cos(theta2) + cos(theta1)
+
+    assert trigsimp(pair) == cos(theta1)
+    assert trigsimp(expr) == (cos(theta2) + 1)*cos(theta1)
+
+
 def test_exptrigsimp_noncommutative():
     a,b = symbols('a b', commutative=False)
     x = Symbol('x', commutative=True)
