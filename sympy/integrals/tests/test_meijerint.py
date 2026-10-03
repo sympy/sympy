@@ -805,6 +805,7 @@ def test_issue_25949():
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
 
 
+@slow
 def test_issue_30484():
     # _rewrite_single may return a G-function argument carrying a full turn
     # exp_polar(-2*pi*I).  That is an analytic continuation around the origin,
@@ -824,6 +825,7 @@ def test_issue_30484():
     assert abs(re(res) - expected) < 1e-25
 
 
+@slow
 def test_issue_30484_sibling_forms():
     # the same continuation turns up for other integrands whose algebraic form
     # has no entry in the lookup table
