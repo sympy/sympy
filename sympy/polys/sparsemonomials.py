@@ -150,7 +150,7 @@ def sub(f: ssmp[_T], g: ssmp[_T], domain) -> ssmp[_T]:
 
 
 def neg(f: ssmp[Er]) -> ssmp[Er]:
-    return {mon: -coeff for mon, coeff in f.items() if coeff}
+    return {mon: -coeff for mon, coeff in f.items()}
 
 
 def add_ground(d: ssmp[Er], c, domain) -> ssmp[Er]:
@@ -264,8 +264,6 @@ def pow_generic(d: ssmp[Er], exp: int, domain) -> ssmp[Er]:
 def poly_degree(d: ssmp[_T], i_gen: int) -> int:
     if not d:
         return -1
-    elif i_gen < 0:
-        return 0
 
     return max(degree(mon, i_gen) for mon in d)
 

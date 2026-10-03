@@ -87,7 +87,6 @@ def test_sparse_polynomial_degrees_and_calculus():
 
     assert smm.poly_degree(d, 0) == 3
     assert smm.poly_degree(d, 1) == 4
-    assert smm.poly_degree(d, -1) == 0
     assert smm.poly_degree({}, 0) == -1
     assert smm.poly_degrees(d, 3) == (3, 4, 1)
     assert smm.poly_degrees({}, 3) == (-1, -1, -1)
