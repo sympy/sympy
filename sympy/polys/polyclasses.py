@@ -204,6 +204,11 @@ class SMP(CantSympify, Generic[Er]):
         return obj
 
     @classmethod
+    def _from_sparse_items(cls, items, dom, lev):
+        """Construct an ``SMP``, discarding zero coefficients."""
+        return cls.new({mon: coeff for mon, coeff in items if coeff}, dom, lev)
+
+    @classmethod
     def from_expr(cls, expr, *gens, **args):
         """Construct an ``SMP`` from an expression."""
         from sympy.core.sympify import sympify
@@ -238,9 +243,9 @@ class SMP(CantSympify, Generic[Er]):
             domain = opt.domain
             coeffs = [domain.from_sympy(coeff) for coeff in coeffs]
 
-        rep = dict(zip(monoms, coeffs))
-
-        return cls.new(rep, domain, len(gens) - 1), gens
+        result = cls._from_sparse_items(
+            zip(monoms, coeffs), domain, len(gens) - 1)
+        return result, gens
 
     @classmethod
     def from_poly(cls, poly):
@@ -285,13 +290,11 @@ class SMP(CantSympify, Generic[Er]):
         if f.dom == dom:
             return f  # type: ignore
 
-        rep: dict[smm.smonom, Es] = {}
-        for mon, coeff in f._rep.items():
-            new_coeff = dom.convert(coeff, f.dom)
-            if new_coeff:
-                rep[mon] = new_coeff
-
-        return SMP.new(rep, dom, f.lev)
+        items = (
+            (mon, dom.convert(coeff, f.dom))
+            for mon, coeff in f._rep.items()
+        )
+        return SMP._from_sparse_items(items, dom, f.lev)
 
     def to_ring(f) -> SMP:
         return f.convert(f.dom.get_ring())
@@ -739,11 +742,11 @@ class SMP(CantSympify, Generic[Er]):
         if f.dom.is_one(lc):
             return f
 
-        rep = {
-            mon: f.dom.exquo(coeff, lc)
+        items = (
+            (mon, f.dom.exquo(coeff, lc))
             for mon, coeff in f._rep.items()
-        }
-        return f.new(rep, f.dom, f.lev)
+        )
+        return f._from_sparse_items(items, f.dom, f.lev)
 
     def integrate(f, m: int = 1, j: int = 0) -> SMP[Er]:
         if not isinstance(m, int):

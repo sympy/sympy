@@ -238,8 +238,6 @@ def square(d: ssmp[Er], domain) -> ssmp[Er]:
 
 def pow_generic(d: ssmp[Er], exp: int, domain) -> ssmp[Er]:
     if exp == 0:
-        if not d:
-            raise ValueError("0**0")
         return {(): domain.one}
     elif exp < 0:
         raise ValueError(f"exponent must be a non-negative integer, got {exp}")

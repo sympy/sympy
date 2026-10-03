@@ -70,7 +70,7 @@ def test_sparse_polynomial_arithmetic():
     }
 
     assert smm.pow_generic({}, 2, ZZ) == {}
-    raises(ValueError, lambda: smm.pow_generic({}, 0, ZZ))
+    assert smm.pow_generic({}, 0, ZZ) == {(): ZZ.one}
     raises(ValueError, lambda: smm.pow_generic(h, -1, ZZ))
 
     # In characteristic 2 the cross term in a square vanishes.
