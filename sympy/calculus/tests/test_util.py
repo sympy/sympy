@@ -413,3 +413,9 @@ def test_issue_25942():
 
 def test_function_range_acot():
     assert function_range(acot(x), x, S.Reals) == Union(Interval.Lopen(0, pi/2), Interval.open(-pi/2, 0))
+
+def test_issue_30386():
+    x = Symbol('x')
+    rng = function_range(cos(4*x)*cos(x), x, S.Reals)
+    assert rng.inf == -1
+    assert rng.sup == 1

@@ -409,6 +409,14 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
                 imageset(n, acsch(n), g_ys_dom), symbol)
 
     elif isinstance(f, TrigonometricFunction) and isinstance(g_ys, FiniteSet):
+        def _contains_with_oo(range, value):
+            #  only needs to work for the ranges used in _trig_inverses
+            if value == oo:
+                return range.sup == oo
+            elif value == -oo:
+                return range.inf == -oo
+            else:
+                return range.contains(value)
         def _get_trig_inverses(func):
             global _trig_inverses
             if _trig_inverses is None:
@@ -431,7 +439,7 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
                 imageset(n, period*n + inv(g), S.Integers) for inv in invs])
             inv_f, inv_g_ys = _invert_real(f.args[0], invsimg, symbol)
             if inv_f == symbol:     # inversion successful
-                conds = rng.contains(g)
+                conds = _contains_with_oo(rng, g)
                 return ConditionSet(symbol, conds, inv_g_ys)
             else:
                 return ConditionSet(symbol, Eq(f, g), S.Reals)

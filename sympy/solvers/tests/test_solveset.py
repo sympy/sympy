@@ -3809,3 +3809,15 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+def test_issue_30386():
+    x = Symbol('x')
+    _n = Symbol('_n')
+    assert(dumeq(invert_real(tan(x), oo, x)[1], ImageSet(Lambda(_n, _n*pi + pi/2), S.Integers)))
+    assert(dumeq(invert_real(tan(x), -oo, x)[1], ImageSet(Lambda(_n, _n*pi + pi/2), S.Integers)))
+    assert(dumeq(invert_real(cot(x), oo, x)[1], ImageSet(Lambda(_n, _n*pi), S.Integers)))
+    assert(dumeq(invert_real(cot(x), -oo, x)[1], ImageSet(Lambda(_n, _n*pi), S.Integers)))
+    assert(dumeq(invert_real(sec(x), oo, x)[1], Union(ImageSet(Lambda(_n, 2*_n*pi+pi/2), S.Integers), ImageSet(Lambda(_n, 2*_n*pi+3*pi/2), S.Integers))))
+    assert(dumeq(invert_real(sec(x), -oo, x)[1], Union(ImageSet(Lambda(_n, 2*_n*pi+pi/2), S.Integers), ImageSet(Lambda(_n, 2*_n*pi+3*pi/2), S.Integers))))
+    assert(dumeq(invert_real(csc(x), oo, x)[1], Union(ImageSet(Lambda(_n, 2*_n*pi), S.Integers), ImageSet(Lambda(_n, 2*_n*pi+pi), S.Integers))))
+    assert(dumeq(invert_real(csc(x), -oo, x)[1], Union(ImageSet(Lambda(_n, 2*_n*pi), S.Integers), ImageSet(Lambda(_n, 2*_n*pi+pi), S.Integers))))
