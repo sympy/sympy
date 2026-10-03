@@ -961,6 +961,25 @@ or tuple for the function arguments.
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
 
+    import ast
+    try:
+        tree = ast.parse(funcstr)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name):
+                name_id = node.id
+                if (name_id in ('Derivative', 'Subs')
+                        and name_id not in namespace
+                        and name_id not in names):
+                    raise NameError(
+                        f"The SymPy object '{name_id}' does not have an equivalent "
+                        f"numerical implementation in the supplied modules. You can "
+                        f"either supply your own function, add a module that has an "
+                        f"implementation (e.g. 'mpmath'), or use doit() to evaluate "
+                        f"the expression before calling lambdify."
+                    )
+    except SyntaxError:
+        pass
+
     funclocals = {}
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
