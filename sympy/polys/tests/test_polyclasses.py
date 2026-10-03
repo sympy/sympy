@@ -760,7 +760,11 @@ def test_SMP_degrees_coefficients_and_conversion():
     assert f.nth(1, 1) == ZZ.zero
 
     raises(TypeError, lambda: f.degree(QQ.one))
+    raises(IndexError, lambda: f.degree(-1))
+    raises(IndexError, lambda: f.degree(2))
     raises(TypeError, lambda: f.nth(1, QQ.one))
+    raises(ValueError, lambda: f.nth(1))
+    raises(ValueError, lambda: f.nth(1, 0, 0))
 
     assert f.to_list() == DMP.from_dict(f.to_dict(), f.lev, f.dom).to_list()
     assert f.to_tuple() == DMP.from_dict(f.to_dict(), f.lev, f.dom).to_tuple()
@@ -816,6 +820,15 @@ def test_SMP_calculus_eval_and_trunc():
 
     h = SMP.from_dict({(2,): 7, (1,): -6, (0,): 10}, 0, ZZ)
     assert h.trunc(5).to_dict() == {(2,): 2, (1,): -1}
+
+    raises(IndexError, lambda: g.diff(1, -1))
+    raises(IndexError, lambda: g.diff(1, 2))
+    raises(IndexError, lambda: g.integrate(1, -1))
+    raises(IndexError, lambda: g.integrate(1, 2))
+    raises(ValueError, lambda: g.eval(1, -1))
+    raises(ValueError, lambda: g.eval(1, 2))
+    raises(ValueError, lambda: g.shift_list([1]))
+    raises(ValueError, lambda: g.shift_list([1, 2, 3]))
 
 
 def test_SMP_gcd_lcm_and_polynomial_algorithms():

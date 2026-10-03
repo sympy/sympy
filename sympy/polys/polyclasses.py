@@ -484,9 +484,16 @@ class SMP(CantSympify, Generic[Er]):
     def all_terms(f) -> list[tuple[monom, Er]]:
         return list(zip(f.all_monoms(), f.all_coeffs()))
 
-    def degree(f, j: int = 0) -> int:
+    def _check_index(f, j: int) -> None:
         if not isinstance(j, int):
             raise TypeError("``int`` expected, got %s" % type(j))
+
+        if j < 0 or j > f.lev:
+            raise IndexError(
+                "0 <= j <= %s expected, got %s" % (f.lev, j))
+
+    def degree(f, j: int = 0) -> int:
+        f._check_index(j)
 
         return smm.poly_degree(f._rep, j)
 
@@ -505,6 +512,10 @@ class SMP(CantSympify, Generic[Er]):
     def nth(f, *N: int) -> Er:
         if not all(isinstance(n, int) for n in N):
             raise TypeError("a sequence of integers expected")
+
+        if len(N) != f.lev + 1:
+            raise ValueError(
+                "%s indices expected, got %s" % (f.lev + 1, len(N)))
 
         return f._rep.get(smm.from_dense(tuple(N)), f.dom.zero)
 
@@ -752,6 +763,8 @@ class SMP(CantSympify, Generic[Er]):
         if not isinstance(m, int):
             raise TypeError("``int`` expected, got %s" % type(m))
 
+        f._check_index(j)
+
         rep = f._rep
 
         for _ in range(m):
@@ -763,6 +776,8 @@ class SMP(CantSympify, Generic[Er]):
         if not isinstance(m, int):
             raise TypeError("``int`` expected, got %s" % type(m))
 
+        f._check_index(j)
+
         rep = f._rep
 
         for _ in range(m):
@@ -771,6 +786,11 @@ class SMP(CantSympify, Generic[Er]):
         return f.new(rep, f.dom, f.lev)
 
     def eval(f, a, j: int = 0):
+        if not isinstance(j, int):
+            raise TypeError("``int`` expected, got %s" % type(j))
+        elif not (0 <= j <= f.lev):
+            raise ValueError("invalid variable index %s" % j)
+
         a = f.dom.convert(a)
         rep = smm.subs_drop(
             f._rep, {j: a}, f.lev + 1, f.dom)
@@ -837,6 +857,10 @@ class SMP(CantSympify, Generic[Er]):
 
     def shift_list(f, a: list[Any]) -> SMP[Er]:
         """Efficiently compute Taylor shift ``f(X + A)``. """
+        if len(a) != f.lev + 1:
+            raise ValueError(
+                "%s shifts expected, got %s" % (f.lev + 1, len(a)))
+
         a = [f.dom.convert(ai) for ai in a]
         reps: dict[int, dict[smm.smonom, Er]] = {}
 
