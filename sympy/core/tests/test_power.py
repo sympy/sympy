@@ -671,6 +671,30 @@ def test_issue_26546():
     assert Pow(x+I, Rational(2,3)).is_extended_real is None
 
 
+def test_issue_30619():
+    # 1**oo is nan, so a positive base and an extended_real exponent do not
+    # settle extended_real: the same assumptions give oo (a=2), 0 (a=1/2) and
+    # nan (a=1).
+    p = Symbol('p', positive=True)
+    e = Symbol('e', extended_real=True)
+
+    assert (p**e).is_extended_real is None
+    assert (p**e).is_extended_nonnegative is None
+    assert (p**oo).is_extended_real is None
+    assert (Symbol('n', nonnegative=True)**oo).is_extended_real is None
+
+    # The counterexample that makes True unsound.
+    assert (p**e).subs({p: 1, e: oo}) is nan
+    assert nan.is_extended_real is None
+
+    # A definitely finite exponent still settles it, and so does a concrete
+    # base with an infinite exponent.
+    assert (p**Rational(1, 2)).is_extended_real is True
+    assert (p**3).is_extended_real is True
+    assert (S(2)**oo).is_extended_real is True
+    assert (Rational(1, 2)**oo).is_extended_real is True
+
+
 def test_issue_25165():
     e1 = (1/sqrt(( - x + 1)**2 + (x - 0.23)**4)).series(x, 0, 2)
     e2 = 0.998603724830355 + 1.02004923189934*x + O(x**2)
