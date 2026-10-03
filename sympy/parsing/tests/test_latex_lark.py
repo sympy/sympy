@@ -12,7 +12,7 @@ from sympy.core.power import Pow
 from sympy.core.parameters import evaluate
 from sympy.core.relational import GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality
 from sympy.core.symbol import Symbol
-from sympy.functions.combinatorial.factorials import binomial, factorial
+from sympy.functions.combinatorial.factorials import binomial, factorial, factorial2
 from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import asinh, atanh, cosh, coth, sinh, tanh
@@ -36,6 +36,10 @@ lark = import_module("lark")
 disabled = lark is None
 
 # shorthand definitions that are only needed for the Lark LaTeX parser
+def _factorial2(a):
+    return factorial2(a, evaluate=False)
+
+
 def _Min(*args):
     return Min(*args, evaluate=False)
 
@@ -391,6 +395,24 @@ EVALUATED_SQRT_EXPRESSION_PAIRS = [
 
 UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
     (r"x!", _factorial(x)),
+    (r"x!!", _factorial2(x)),
+    (r"3!!", _factorial2(3)),
+    (r"(x + 1)!!", _factorial2(_Add(x, 1))),
+    (r"(x!!)!!", _factorial2(_factorial2(x))),
+    (r"(x!)!!", _factorial2(_factorial(x))),
+    (r"x! !", _factorial2(x)),
+    (r"x !!", _factorial2(x)),
+    (r"x !", _factorial(x)),
+    ("x \t! \n!", _factorial2(x)),
+    (r"x! ! !", _factorial(_factorial(_factorial(x)))),
+    (r"x ! ! ! !", _factorial(_factorial(_factorial(_factorial(x))))),
+    (r"x!\,!", _factorial(_factorial(x))),
+    (r"x\!!!", _factorial2(x)),
+    (r"x!! !", _factorial(_factorial(_factorial(x)))),
+    (r"x! !!", _factorial(_factorial(_factorial(x)))),
+    (r"(x!!)^{2}", _Pow(_factorial2(x), 2)),
+    (r"x!!!!", _factorial(_factorial(_factorial(_factorial(x))))),
+    (r"\frac{3!!}{4!!}", _Mul(_factorial2(3), _Pow(_factorial2(4), -1))),
     (r"100!", _factorial(100)),
     (r"\theta!", _factorial(theta)),
     (r"(x + 1)!", _factorial(_Add(x, 1))),
@@ -400,6 +422,11 @@ UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
 ]
 
 EVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
+    (r"3!!", 3),
+    (r"x!!", factorial2(x)),
+    (r"(3!)!", 720),
+    (r"3! !", 3),
+    (r"\frac{3!!}{4!!}", Rational(3, 8)),
     (r"x!", factorial(x)),
     (r"100!", factorial(100)),
     (r"\theta!", factorial(theta)),
@@ -853,6 +880,19 @@ def test_factorial_expressions():
 
     for latex_str, sympy_expr in EVALUATED_FACTORIAL_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_factorial_ambiguity():
+    for latex_str in (r"\sin x!!!", r"\sin x! ! !"):
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result.data == "_ambig"
+            assert set(result.children) == {
+                sin(factorial(factorial(factorial(x)))),
+                factorial(sin(factorial(factorial(x)))),
+                factorial(factorial(sin(factorial(x)))),
+                factorial(factorial(factorial(sin(x)))),
+            }
 
 
 def test_sum_expressions():
