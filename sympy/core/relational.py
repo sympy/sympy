@@ -44,6 +44,15 @@ explains, for example, why ``Eq(x - y, 0)`` cannot in general simplify to
 ``x = y = oo`` the former contains the indeterminate difference
 ``oo - oo``, while the latter is true.
 
+Moving a term from one side of a relation to the other is subject to
+the same restriction. Such a rearrangement is not merely a change in
+presentation if potentially non-finite terms are involved: it can create
+or remove a possible indeterminate sum. Thus an additive group should
+not be split merely to obtain a more isolated form unless the assumptions
+justify that rearrangement. Terms known to satisfy the conditions above
+may be moved normally, and potentially non-finite terms may be regrouped
+when their possible infinity directions cannot oppose one another.
+
 For example, cancelling an additive term that is not known to be finite
 can change the truth value:
 

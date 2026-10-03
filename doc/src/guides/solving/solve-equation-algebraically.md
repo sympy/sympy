@@ -124,6 +124,26 @@ on the API consuming the `Eq`:
 | `Poly(Eq(...))` and `linear_eq_to_matrix(Eq(...))` | Equation input representing `lhs - rhs = 0`. |
 | Ordered relations such as `<`, `<=`, `>`, and `>=` passed to solvers | Relations whose ordering semantics must be preserved. |
 
+This equation-oriented interpretation *does not* change the semantics of the `Equality`
+as a symbolic relation. Consider the following:
+
+```py
+>>> solve(Eq(x - y, 0), x)
+[y]
+```
+
+The equation solver has interpreted this as asking for solutions of the
+formal equation `x - y = 0`, but this does not mean that `Eq(x - y, 0)`
+and `Eq(x, y)` must have the same truth value for non-finite values:
+
+```py
+>>> from sympy import oo
+>>> Eq(oo, oo)
+True
+>>> Eq(oo - oo, 0)
+False
+```
+
 An `Eq` can evaluate to `True` or `False` when it is constructed, before
 an equation-oriented API receives it. When an API needs an unevaluated
 `Equality` as equation syntax, `Eq(..., evaluate=False)` can be used
