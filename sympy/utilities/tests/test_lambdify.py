@@ -2331,3 +2331,11 @@ def test_issue_28803_jointrandonsymbol_recursion():
 
     # Should not raise RecursionError
     lambdify(a, z * a)
+
+
+def test_lambdify_Sum():
+    f_finite = lambdify((), Sum(x**2, (x, 1, 5)))
+    assert f_finite() == 55
+
+    s_infinite = Sum(1/x**2, (x, 1, oo))
+    raises(NotImplementedError, lambda: lambdify(x, s_infinite))
