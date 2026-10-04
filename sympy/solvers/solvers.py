@@ -1451,10 +1451,8 @@ def _solve(f, *symbols, **flags):
                     continue
                 try:
                     v = cond.subs(symbol, candidate)
-                    _eval_simplify = getattr(v, '_eval_simplify', None)
-                    if _eval_simplify is not None:
-                        # unconditionally take the simplification of v
-                        v = _eval_simplify(ratio=2, measure=lambda x: 1)
+                    if hasattr(v, '_eval_simplify'):
+                        v = simplify(v, ratio=2)
                 except TypeError:
                     # incompatible type with condition(s)
                     continue

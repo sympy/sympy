@@ -39,9 +39,8 @@ def _monotonic_sign(self):
     or negative or b) self is not in one of the following forms:
 
     - L(x, y, ...) + A: a function linear in all symbols x, y, ... with an
-      additive constant; if A is zero then the function can be a monomial whose
-      sign is monotonic over the range of the variables, e.g. (x + 1)**3 if x is
-      nonnegative.
+      additive constant; if A is zero then a same-signed additive group can also
+      be handled.
     - A/L(x, y, ...) + B: the inverse of a function linear in all symbols x, y, ...
       that does not have a sign change from positive to negative for any set
       of values for the variables.
@@ -175,16 +174,17 @@ def _monotonic_sign(self):
     # multivariate
     c, a = self.as_coeff_Add()
     v = None
+
     if not a.is_polynomial():
         # F/A or A/F where A is a number and F is a signed, rational monomial
         n, d = a.as_numer_denom()
         if not (n.is_number or d.is_number):
             return
         if (
-                a.is_Mul or a.is_Pow) and \
-                a.is_rational and \
-                all(p.exp.is_Integer for p in a.atoms(Pow) if p.is_Pow) and \
-                (a.is_positive or a.is_negative):
+                (a.is_Mul or a.is_Pow) and
+                a.is_rational and
+                all(p.exp.is_Integer for p in a.atoms(Pow) if p.is_Pow) and
+                (a.is_positive or a.is_negative)):
             v = S.One
             for ai in Mul.make_args(a):
                 if ai.is_number:
@@ -196,24 +196,42 @@ def _monotonic_sign(self):
                     if reps[x] is None:
                         return
                 v *= ai.subs(reps)
-    elif c:
-        # signed linear expression
-        if not any(p for p in a.atoms(Pow) if not p.is_number) and (a.is_nonpositive or a.is_nonnegative):
-            free = list(a.free_symbols)
+
+    elif (c or a.is_Add) and not any(
+            p for p in a.atoms(Pow) if not p.is_number):
+        if c:
+            signed = a.is_nonpositive or a.is_nonnegative
+        else:
+            terms = Add.make_args(a)
+            signed = (
+                all(t.is_nonnegative for t in terms) or
+                all(t.is_nonpositive for t in terms))
+
+        if signed:
             p = {}
-            for i in free:
+            for i in a.free_symbols:
                 v = _monotonic_sign(i)
                 if v is None:
                     return
-                p[i] = v or (_eps if i.is_nonnegative else -_eps)
+                p[i] = v
             v = a.xreplace(p)
+
     if v is not None:
         rv = v + c
-        if v.is_nonnegative and rv.is_positive:
-            return rv.subs(_eps, 0)
-        if v.is_nonpositive and rv.is_negative:
-            return rv.subs(_eps, 0)
 
+        if a.is_nonnegative:
+            if rv.is_positive:
+                rv = rv.subs(_eps, 0)
+                return rv if rv else Dummy('pos', positive=True)
+            if rv.is_zero:
+                return Dummy('nneg', nonnegative=True)
+
+        if a.is_nonpositive:
+            if rv.is_negative:
+                rv = rv.subs(_eps, 0)
+                return rv if rv else Dummy('neg', negative=True)
+            if rv.is_zero:
+                return Dummy('npos', nonpositive=True)
 
 def decompose_power(expr: Expr) -> tuple[Expr, int]:
     """
