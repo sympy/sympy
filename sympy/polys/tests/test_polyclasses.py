@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.domains import ZZ, QQ, GF, RR
 from sympy.polys.polyclasses import DMP, SMP, DMF, ANP
@@ -612,9 +611,6 @@ def test_ANP_unify():
 
 
 def test_zero_poly():
-    from sympy import Symbol
-    x = Symbol('x')
-
     R_old = ZZ.old_poly_ring(x)
     zero_poly_old = R_old(0)
     cont_old, prim_old = zero_poly_old.primitive()
@@ -646,8 +642,6 @@ def test_SMP_constructors():
 
 
 def test_SMP_from_poly():
-    x, y = symbols('x y')
-
     p = Poly(x**2 + y, x, y)
     f = SMP.from_poly(p)
 
@@ -662,8 +656,6 @@ def test_SMP_from_poly():
 
 
 def test_SMP_from_expr():
-    x, y, z = symbols('x y z')
-
     expr = x**2 + 2*x - 5*y - 7*y**3*x**3 + 3
     f, gens = SMP.from_expr(expr)
 
@@ -695,8 +687,6 @@ def test_SMP_from_expr():
 
 
 def test_SMP_constructor_errors_and_domain():
-    x = symbols('x')
-
     raises(PolynomialError, lambda: SMP.from_dict({(1, 0): 1}, 0, ZZ))
     raises(PolynomialError, lambda: SMP.from_expr(1))
 
@@ -760,18 +750,17 @@ def test_SMP_arithmetic_and_terms():
     assert f.terms() == [((2,), ZZ.one), ((0,), ZZ.one)]
     assert f.terms(order='grlex') == [((2,), ZZ.one), ((0,), ZZ.one)]
 
-    x, y = symbols('x y')
     p = _smp_poly(Poly(x**3*y + x*y**2 + x, x, y))
     assert p.terms(order='grlex') == [
         ((3, 1), 1), ((1, 2), 1), ((1, 0), 1)]
 
-    z = SMP.zero(0, ZZ)
-    assert z.terms() == [((0,), ZZ.zero)]
-    assert z.all_coeffs() == [ZZ.zero]
-    assert z.all_monoms() == [(0,)]
-    assert z.all_terms() == [((0,), ZZ.zero)]
-    x = symbols('x')
-    assert Poly.new(z, x)**0 == Poly(1, x)
+    z0 = SMP.zero(0, ZZ)
+    assert z0.terms() == [((0,), ZZ.zero)]
+    assert z0.all_coeffs() == [ZZ.zero]
+    assert z0.all_monoms() == [(0,)]
+    assert z0.all_terms() == [((0,), ZZ.zero)]
+
+    assert Poly.new(z0, x)**0 == Poly(1, x)
 
     h = SMP.from_dict({(2, 1): 1}, 1, ZZ)
     raises(PolynomialError, lambda: h.all_coeffs())
@@ -808,8 +797,8 @@ def test_SMP_degrees_coefficients_and_conversion():
     assert f.to_tuple() == DMP.from_dict(f.to_dict(), f.lev, f.dom).to_tuple()
     assert f.to_dict(zero=True) == f.to_dict()
 
-    z = SMP.zero(1, ZZ)
-    assert z.to_dict(zero=True) == {(0, 0): ZZ.zero}
+    z0 = SMP.zero(1, ZZ)
+    assert z0.to_dict(zero=True) == {(0, 0): ZZ.zero}
 
     q = SMP.from_dict({(1,): QQ(1, 2), (0,): QQ(1, 3)}, 0, QQ)
     c, q0 = q.clear_denoms()
@@ -845,8 +834,8 @@ def test_SMP_monic():
     f = SMP.from_dict({(1,): 1, (0,): 2}, 0, ZZ)
     assert f.monic() is f
 
-    z = SMP.zero(0, ZZ)
-    assert z.monic() is z
+    z0 = SMP.zero(0, ZZ)
+    assert z0.monic() is z0
 
 
 def test_SMP_calculus_eval_and_trunc():
@@ -882,9 +871,8 @@ def test_SMP_calculus_eval_and_trunc():
     f, fs = _ds(0, x, y, domain='ZZ')
     assert f.shift_list([]) == fs.shift_list([])
 
-def test_SMP_gcd_lcm_and_polynomial_algorithms():
-    x, y = symbols('x y')
 
+def test_SMP_gcd_lcm_and_polynomial_algorithms():
     f = Poly(x**3 - x, x)
     g = Poly(x**2 - 1, x)
     F = SMP.from_poly(f)
@@ -1003,13 +991,13 @@ def test_SMP_gcd_lcm_and_polynomial_algorithms():
 
 
 def test_SMP_properties():
-    z = SMP.zero(0, ZZ)
+    z0 = SMP.zero(0, ZZ)
     one = SMP.one(0, ZZ)
     f = SMP.from_dict({(1,): 1, (0,): 2}, 0, ZZ)
     g = SMP.from_dict({(2,): 1, (0,): 1}, 0, ZZ)
     h = SMP.from_dict({(1,): 2, (0,): 4}, 0, ZZ)
 
-    assert z.is_zero
+    assert z0.is_zero
     assert not f.is_zero
     assert one.is_one
     assert not f.is_one
