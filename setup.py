@@ -48,7 +48,7 @@ extra_kwargs = {
 
 # Keep in sync with sympy/__init__.py and python_requires below
 if sys.version_info < (3, 10):
-    print("SymPy requires Python 3.9 or newer. Python %d.%d detected"
+    print("SymPy requires Python 3.10 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
@@ -359,7 +359,7 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Mathematics',
             'Topic :: Scientific/Engineering :: Physics',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.9',
+
             'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
             'Programming Language :: Python :: 3.12',
