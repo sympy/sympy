@@ -6,6 +6,7 @@ from itertools import accumulate
 
 from sympy import MatMul, Basic, Wild, KroneckerProduct, NDimArray
 from sympy.assumptions.ask import (Q, ask)
+from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.matrices.expressions.diagonal import DiagMatrix
@@ -382,6 +383,14 @@ def _(expr: PermuteDims):
 
 @_array2matrix.register(ArrayAdd)
 def _(expr: ArrayAdd):
+    addends = [_array2matrix(arg) for arg in expr.args]
+    return _a2m_add(*addends)
+
+
+@_array2matrix.register(Add)
+def _(expr: Add):
+    if isinstance(expr, MatrixExpr):
+        return expr
     addends = [_array2matrix(arg) for arg in expr.args]
     return _a2m_add(*addends)
 
@@ -892,7 +901,6 @@ def _a2m_add(*args):
     if not any(isinstance(i, _ArrayExpr) for i in args):
         if not any(isinstance(i, MatrixExpr) for i in args):
             # All addends are scalars (e.g. traces):
-            from sympy.core.add import Add
             return Add(*args)
         from sympy.matrices.expressions.matadd import MatAdd
         return MatAdd(*args).doit()

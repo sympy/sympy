@@ -475,6 +475,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Notes
     =====
 
+    The input is treated as a relation whose truth set is being determined,
+    not merely as an equation container. Transformations that form
+    ``lhs - rhs`` internally must still preserve the semantics of the original
+    relation.
+
     Currently, we cannot solve all the inequalities due to limitations in
     :func:`sympy.solvers.solveset.solvify`. Also, the solution returned for trigonometric inequalities
     are restricted in its periodic interval.
@@ -794,25 +799,30 @@ def _protected_additive_terms(ie, s):
 
 
 def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
-    """Return the inequality with s isolated on the left, if possible.
-    If the relationship is non-linear, a solution involving And or Or
+    """Return the inequality with ``s`` isolated on the left, if possible.
+    If the relationship is non-linear, a solution involving ``And`` or ``Or``
     may be returned. False or True are returned if the relationship
     is never True or always True, respectively.
 
-    If `linear` is True (default is False) an `s`-dependent expression
+    If ``linear`` is True (default is False) an ``s``-dependent expression
     will be isolated on the left, if possible
-    but it will not be solved for `s` unless the expression is linear
-    in `s`. Furthermore, only "safe" operations which do not change the
+    but it will not be solved for ``s`` unless the expression is linear
+    in ``s``. Furthermore, only "safe" operations which do not change the
     sense of the relationship are applied: no division by an unsigned
-    value is attempted unless the relationship involves Eq or Ne and
+    value is attempted unless the relationship involves ``Eq`` or ``Ne`` and
     no division by a value not known to be nonzero is ever attempted.
 
-    If `protect_indeterminate` is True, a group of additive terms that
-    can be indefinite is not split off from `s`: since such a group
+    If ``protect_indeterminate`` is True, a group of additive terms that
+    can be indefinite is not split off from ``s``: since such a group
     could form an indeterminate ``oo - oo`` when it is moved to the
-    other side of the relational, it is left with `s` even when `s`
+    other side of the relational, it is left with ``s`` even when ``s``
     could be isolated. The default is False, in which case such a
-    group is only left with `s` when isolating it is not possible.
+    group is only left with ``s`` when isolating it is not possible.
+    Unlike equation-oriented APIs such as ``solve``, this routine operates on
+    the ``Relational`` itself. ``Eq`` and ``Ne`` therefore retain their logical
+    relational semantics rather than serving merely as containers for
+    ``lhs - rhs = 0``. Operations performed here must preserve the meaning of
+    the original relation, including at non-finite values.
 
     Examples
     ========

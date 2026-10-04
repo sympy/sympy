@@ -300,7 +300,7 @@ def test_convert_indexed_to_array_scalars_stay_scalars():
     tr = Sum(M[i, i], (i, 0, k - 1))
     trace = ArrayContraction(M, (0, 1))
     assert convert_indexed_to_array(tr) == trace
-    assert convert_indexed_to_array(tr + x) == ArrayAdd(x, trace)
+    assert convert_indexed_to_array(tr + x) == x + trace
     assert convert_indexed_to_array(tr**2) == \
         ArrayContraction(ArrayTensorProduct(M, M), (0, 1), (2, 3))
     d = Dummy("d")

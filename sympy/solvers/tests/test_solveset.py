@@ -1547,6 +1547,11 @@ def test_conditionset_equality():
 
 
 def test_solveset_domain():
+    # For equations, a real domain constrains the solved symbol only;
+    # otherwise generic parameters remain generic.
+    assert solveset(Eq(x + y, I + 2*y), x, S.Reals) == \
+        Intersection(S.Reals, FiniteSet(y + I))
+
     assert solveset(x**2 - x - 6, x, Interval(0, oo)) == FiniteSet(3)
     assert solveset(x**2 - 1, x, Interval(0, oo)) == FiniteSet(1)
     assert solveset(x**4 - 16, x, Interval(0, 10)) == FiniteSet(2)
@@ -1631,7 +1636,9 @@ def test_linear_eq_to_matrix():
     # 4) Eq being used to represent equations autoevaluates
     # (use unevaluated Eq instead)
     raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x), x))
-    raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x + 1), x))
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(1, 2), x))
+    assert linear_eq_to_matrix(Eq(1, 2, evaluate=False), x) == (
+        Matrix([[0]]), Matrix([[1]]))
 
 
     # if non-symbols are passed, the user is responsible for interpreting
@@ -3788,8 +3795,12 @@ def test_solveset_symbol_independent_relational_after_expansion():
         ConditionSet(x, Eq(y**2, 0), S.Reals)
     assert solveset(relation > 0, x, S.Reals) == \
         ConditionSet(x, y**2 > 0, S.Reals)
-    assert solveset(relation >= y**2, x, S.Reals) == S.Reals
-    assert solveset(relation > y**2, x, S.Reals) is S.EmptySet
+    # The real domain constrains x, not the otherwise generic parameter y,
+    # so these comparisons remain conditional unless y**2 is known real.
+    assert solveset(relation >= y**2, x, S.Reals) == \
+        ConditionSet(x, y**2 >= y**2, S.Reals)
+    assert solveset(relation > y**2, x, S.Reals) == \
+        ConditionSet(x, y**2 > y**2, S.Reals)
 
     relation = (x + 1)**2 - x*(x + 2)
     assert solveset(relation > 0, x, S.Reals) == S.Reals

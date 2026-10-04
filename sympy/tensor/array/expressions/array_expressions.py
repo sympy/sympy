@@ -12,6 +12,7 @@ from sympy import Sum
 from sympy.core.numbers import Integer
 from sympy.core.relational import Equality
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -271,6 +272,15 @@ class OneArray(_ArrayExpr):
         return S.One
 
 
+def _is_plain_scalar(arg):
+    """Return True if *arg* is a scalar that is not an array expression.
+
+    Rank-0 array expressions (e.g. full contractions) are not plain
+    scalars.
+    """
+    return get_shape(arg) == () and not isinstance(arg, _ArrayExpr)
+
+
 def _split_scalar_coefficient(arg):
     """Split *arg* into a scalar coefficient and its array part.
 
@@ -357,12 +367,6 @@ class ArrayTensorProduct(_ArrayExpr):
         # ArrayTensorProduct(2*M, N) with M a MatrixSymbol) are extracted
         # as well; the matrix recognition in from_array_to_matrix absorbs
         # the leading coefficient back into its matrix result.
-        def _is_plain_scalar(arg):
-            # Rank-0 array expressions (e.g. full contractions) are not
-            # merged: the branches below lift them into the expression.
-            return (get_shape(arg) == () and
-                    not isinstance(arg, _ArrayExpr))
-
         # Extract the scalar coefficients of matrix arguments, e.g.
         # ArrayTensorProduct(2*M, N) becomes ArrayTensorProduct(2, M, N):
         split_args = []
@@ -534,6 +538,9 @@ def _array_term_from_coeff_arrays(coeff, arrays):
 class ArrayAdd(_ArrayExpr):
     r"""
     Class for elementwise array additions.
+
+    The addends have to be arrays or array expressions, scalars are not
+    allowed.
     """
 
     def __new__(cls, *args, **kwargs):
@@ -552,6 +559,9 @@ class ArrayAdd(_ArrayExpr):
                     continue
             normalized_args.append(arg)
         args = normalized_args
+
+        if any(_is_plain_scalar(arg) for arg in args):
+            raise TypeError("scalar arguments are not allowed in ArrayAdd")
 
         ndims = [get_ndim(arg) for arg in args]
         ndims = list(set(ndims))
@@ -594,7 +604,14 @@ class ArrayAdd(_ArrayExpr):
             return ZeroArray(*shapes[0])
         elif len(args) == 1:
             return args[0]
+        if any(_is_plain_scalar(arg) for arg in args):
+            return Add.fromiter(args)
         return self.func(*args, canonicalize=False)
+
+    def doit(self, **hints):
+        if hints.get("deep", True):
+            return _array_add(*[arg.doit(**hints) for arg in self.args])
+        return self._canonicalize()
 
     @classmethod
     def _collect_scalar_coefficients(cls, args):
@@ -606,21 +623,15 @@ class ArrayAdd(_ArrayExpr):
         summed coefficient is zero are dropped.
         """
         coeff_map: dict[tuple, Expr] = {}
-        scalar_terms = []
         for arg in args:
             coeff, arrays = _array_term_as_coeff_arrays(arg)
-            if not arrays:
-                # Rank-0 scalar addends are kept untouched, so that a sum
-                # of scalars remains an ArrayAdd:
-                scalar_terms.append(arg)
-                continue
             if arrays in coeff_map:
                 coeff_map[arrays] = coeff_map[arrays] + coeff
             else:
                 coeff_map[arrays] = coeff
 
         if all(coeff is S.One for coeff in coeff_map.values()) and \
-                len(coeff_map) + len(scalar_terms) == len(args):
+                len(coeff_map) == len(args):
             # Nothing to merge:
             return args
 
@@ -629,7 +640,7 @@ class ArrayAdd(_ArrayExpr):
             if coeff.is_zero is True:
                 continue
             new_args.append(_array_term_from_coeff_arrays(coeff, arrays))
-        return new_args + scalar_terms
+        return new_args
 
     @classmethod
     def _flatten_args(cls, args):
@@ -2280,7 +2291,7 @@ def nest_permutation(expr):
 
 
 def _array_tensor_product(*args, **kwargs):
-    if all(not isinstance(i, _ArrayExpr) and get_shape(i) == () for i in args):
+    if all(_is_plain_scalar(i) for i in args):
         return Mul.fromiter(args)
     return ArrayTensorProduct(*args, canonicalize=True, **kwargs)
 
@@ -2298,6 +2309,8 @@ def _permute_dims(expr, permutation, **kwargs):
 
 
 def _array_add(*args, **kwargs):
+    if any(_is_plain_scalar(i) for i in args) and all(get_ndim(i) == 0 for i in args):
+        return Add.fromiter(args)
     return ArrayAdd(*args, canonicalize=True, **kwargs)
 
 
