@@ -434,12 +434,20 @@ def test_exptrigsimp():
 
 
 def test_trigsimp_complex_exponential():
-    theta1, theta2 = symbols('theta_1 theta_2')
+    a, theta1, theta2 = symbols('a theta_1 theta_2')
     pair = exp(I * theta1) / 2 + exp(-I * theta1) / 2
+    shared_coefficient_pair = a*exp(I * theta1) + a*exp(-I * theta1)
     expr = pair * cos(theta2) + cos(theta1)
+    common_factor_pair = exp(theta2)*(exp(I * theta1) + exp(-I * theta1))
+    real_exp_pair = exp(theta1) + exp(-theta1)
 
     assert trigsimp(pair) == cos(theta1)
+    assert trigsimp(shared_coefficient_pair) == 2*a*cos(theta1)
     assert trigsimp(expr) == (cos(theta2) + 1)*cos(theta1)
+    assert trigsimp(exp(I * theta1) - exp(-I * theta1)) == 2*I*sin(theta1)
+    assert trigsimp(common_factor_pair) == 2*exp(theta2)*cos(theta1)
+    assert trigsimp(real_exp_pair) == real_exp_pair
+    assert exptrigsimp(real_exp_pair) == 2*cosh(theta1)
 
 
 def test_exptrigsimp_noncommutative():

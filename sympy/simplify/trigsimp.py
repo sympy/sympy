@@ -461,13 +461,20 @@ def _trigsimp_inverse(rv):
     return bottom_up(rv, f)
 
 
+def _trigsimp_exp_pairs(expr):
+    coefficient = Wild('coefficient')
+    argument = Wild(
+        'argument', properties=[lambda arg: arg.as_coefficient(I) is None])
+    sign = Wild('sign', properties=[lambda sign: sign in (S.One, -S.One)])
+    pattern = (coefficient*exp(I*argument) +
+               sign*coefficient*exp(-I*argument))
+    return expr.replace(
+        pattern, lambda coefficient, argument, sign:
+        2*coefficient*(cos(argument) if sign == 1 else I*sin(argument)))
+
+
 def _trigsimp_matching(expr):
-    has_imaginary_exponential = any(
-        term.args[0].has(I) for term in expr.atoms(exp)
-    )
-    if has_imaginary_exponential:
-        expr = exptrigsimp(expr)
-    return futrig(expr)
+    return futrig(_trigsimp_exp_pairs(expr))
 
 
 def trigsimp(expr, inverse=False, **opts):
