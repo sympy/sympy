@@ -409,14 +409,6 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
                 imageset(n, acsch(n), g_ys_dom), symbol)
 
     elif isinstance(f, TrigonometricFunction) and isinstance(g_ys, FiniteSet):
-        def _contains_with_oo(range, value):
-            #  only needs to work for the ranges used in _trig_inverses
-            if value == oo:
-                return range.sup == oo
-            elif value == -oo:
-                return range.inf == -oo
-            else:
-                return range.contains(value)
         def _get_trig_inverses(func):
             global _trig_inverses
             if _trig_inverses is None:
@@ -439,7 +431,7 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
                 imageset(n, period*n + inv(g), S.Integers) for inv in invs])
             inv_f, inv_g_ys = _invert_real(f.args[0], invsimg, symbol)
             if inv_f == symbol:     # inversion successful
-                conds = _contains_with_oo(rng, g)
+                conds = rng.contains(g)
                 return ConditionSet(symbol, conds, inv_g_ys)
             else:
                 return ConditionSet(symbol, Eq(f, g), S.Reals)
@@ -1017,9 +1009,15 @@ def _solve_trig2(f, symbol, domain):
     if isinstance(solns, FiniteSet):
         result = Union(*[invert_real(tan(symbol/mu), s, symbol)[1]
                        for s in solns])
-        dsol = invert_real(tan(symbol/mu), oo, symbol)[1]
-        if degree(h) > degree(g):                   # If degree(denom)>degree(num) then there
-            result = Union(result, dsol)            # would be another sol at Lim(denom-->oo)
+        # When degree(denom)>degree(num) there is a sol at Lim(denom)-->oo
+        if degree(h) > degree(g):
+            # Do not use invert_real to solve tan(symbol/mu) = oo, since it
+            # correctly returns EmptySet. There are no real solutions for the
+            # equation. Instead, directly construct the set of values for
+            # which Lim(denom)-->oo
+            n = Dummy('n', real=True)
+            dsol = imageset(n, mu*pi*n + mu*pi/2, S.Integers)
+            result = Union(result, dsol)
         return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet

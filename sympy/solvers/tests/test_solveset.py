@@ -3813,11 +3813,15 @@ def test_issue_26077():
 def test_issue_30386():
     x = Symbol('x')
     _n = Symbol('_n')
-    assert(dumeq(invert_real(tan(x), oo, x)[1], ImageSet(Lambda(_n, _n*pi + pi/2), S.Integers)))
-    assert(dumeq(invert_real(tan(x), -oo, x)[1], ImageSet(Lambda(_n, _n*pi + pi/2), S.Integers)))
-    assert(dumeq(invert_real(cot(x), oo, x)[1], ImageSet(Lambda(_n, _n*pi), S.Integers)))
-    assert(dumeq(invert_real(cot(x), -oo, x)[1], ImageSet(Lambda(_n, _n*pi), S.Integers)))
-    assert(dumeq(invert_real(sec(x), oo, x)[1], Union(ImageSet(Lambda(_n, 2*_n*pi+pi/2), S.Integers), ImageSet(Lambda(_n, 2*_n*pi+3*pi/2), S.Integers))))
-    assert(dumeq(invert_real(sec(x), -oo, x)[1], Union(ImageSet(Lambda(_n, 2*_n*pi+pi/2), S.Integers), ImageSet(Lambda(_n, 2*_n*pi+3*pi/2), S.Integers))))
-    assert(dumeq(invert_real(csc(x), oo, x)[1], Union(ImageSet(Lambda(_n, 2*_n*pi), S.Integers), ImageSet(Lambda(_n, 2*_n*pi+pi), S.Integers))))
-    assert(dumeq(invert_real(csc(x), -oo, x)[1], Union(ImageSet(Lambda(_n, 2*_n*pi), S.Integers), ImageSet(Lambda(_n, 2*_n*pi+pi), S.Integers))))
+    # Preserve the public interface of invert_real
+    # trigonometric functions are not defined at their asymptotes
+    assert(invert_real(tan(x), oo, x)[1] == S.EmptySet)
+    assert(invert_real(tan(x), -oo, x)[1] == S.EmptySet)
+    assert(invert_real(cot(x), oo, x)[1] == S.EmptySet)
+    assert(invert_real(cot(x), -oo, x)[1] == S.EmptySet)
+    assert(invert_real(sec(x), oo, x)[1] == S.EmptySet)
+    assert(invert_real(sec(x), -oo, x)[1] == S.EmptySet)
+    assert(invert_real(csc(x), oo, x)[1] == S.EmptySet)
+    assert(invert_real(csc(x), -oo, x)[1] == S.EmptySet)
+    # ensure solutions are not missed when rewriting with tangent
+    assert(pi in solveset(-sin(x)*cos(4*x)-4*sin(4*x)*cos(x), x, Interval(0, 2*pi)))
