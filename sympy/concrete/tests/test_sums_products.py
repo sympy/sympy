@@ -340,7 +340,7 @@ def test_geometric_sums():
         exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)
     )
     assert result.simplify() == Piecewise(
-            (1, Eq(exp(-2*I*pi*(k - q)/n), 1)), (0, True)
+            (1, Eq(exp(2*I*pi*(-k + q)/n), 1)), (0, True)
     )
 
     #Issue 23491
@@ -1553,7 +1553,7 @@ def test_issue_28721():
     assert expr.simplify() == ZeroMatrix(3, 3)
     assert isinstance(expr.simplify(), ZeroMatrix)
 
-@XFAIL
+
 def test_matrixsymbol_summation_symbolic_limits():
     N = Symbol('N', integer=True, positive=True)
 

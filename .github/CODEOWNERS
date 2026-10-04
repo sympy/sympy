@@ -12,7 +12,4 @@
 /.github/CODEOWNERS @oscarbenjamin @asmeurer
 /.github/workflows/ @oscarbenjamin @asmeurer
 /.circleci/ @oscarbenjamin @asmeurer
-/sympy/physics/biomechanics/ @moorepants
-/sympy/physics/mechanics/ @moorepants
-/sympy/physics/vector/ @moorepants
 /sympy/*laplace* @hanspi42

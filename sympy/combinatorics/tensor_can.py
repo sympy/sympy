@@ -951,14 +951,14 @@ def get_symmetric_group_sgs(n, antisym=False):
     ([0, 1], [(4)(0 1), (4)(1 2)])
     """
     if n == 1:
-        return [], [_af_new(list(range(3)))]
+        return [], [Permutation(list(range(3)))]
     gens = [Permutation(n - 1)(i, i + 1)._array_form for i in range(n - 1)]
     if antisym == 0:
         gens = [x + [n, n + 1] for x in gens]
     else:
         gens = [x + [n + 1, n] for x in gens]
     base = list(range(n - 1))
-    return base, [_af_new(h) for h in gens]
+    return base, [Permutation(h) for h in gens]
 
 riemann_bsgs = [0, 2], [Permutation(0, 1)(4, 5), Permutation(2, 3)(4, 5),
                         Permutation(5)(0, 2)(1, 3)]

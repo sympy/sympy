@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pyglet.gl as pgl
 
 from sympy.core import S

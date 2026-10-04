@@ -4,9 +4,10 @@ import operator
 from itertools import accumulate
 
 from sympy import Mul, Sum, Dummy, Add
+from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.tensor.array.expressions import PermuteDims, ArrayAdd, ArrayElementwiseApplyFunc, Reshape
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, get_ndim, ArrayContraction, \
-    ArrayDiagonal, get_shape, _get_array_element_or_slice, _ArrayExpr
+    ArrayDiagonal, get_shape, _get_array_element_or_slice, _ArrayExpr, _is_plain_scalar
 from sympy.tensor.array.expressions.utils import _apply_permutation_to_list
 
 
@@ -44,7 +45,7 @@ class _ConvertArrayToIndexed:
             return Sum(newexpr, *limits)
         if isinstance(expr, ArrayDiagonal):
             new_indices = [None for i in range(get_ndim(expr.expr))]
-            ind_pos = expr._push_indices_down(expr.diagonal_indices, list(range(len(indices))), get_ndim(expr))
+            ind_pos = expr._push_indices_down(expr.diagonal_indices, list(range(len(indices))), get_ndim(expr.expr))
             for i, index in zip(ind_pos, indices):
                 if isinstance(i, collections.abc.Iterable):
                     for j in i:
@@ -58,8 +59,10 @@ class _ConvertArrayToIndexed:
             return self.do_convert(expr.expr, permuted_indices)
         if isinstance(expr, ArrayAdd):
             return Add.fromiter(self.do_convert(arg, indices) for arg in expr.args)
-        if isinstance(expr, _ArrayExpr):
-            return expr.__getitem__(tuple(indices))
+        if isinstance(expr, Add) and not isinstance(expr, MatrixExpr):
+            return Add.fromiter(
+                arg if _is_plain_scalar(arg) else self.do_convert(arg, indices)
+                for arg in expr.args)
         if isinstance(expr, ArrayElementwiseApplyFunc):
             return expr.function(self.do_convert(expr.expr, indices))
         if isinstance(expr, Reshape):
@@ -82,4 +85,6 @@ class _ConvertArrayToIndexed:
                 c *= e
             dest_indices.reverse()
             return self.do_convert(expr.expr, dest_indices)
+        if isinstance(expr, _ArrayExpr):
+            return expr.__getitem__(tuple(indices))
         return _get_array_element_or_slice(expr, indices)

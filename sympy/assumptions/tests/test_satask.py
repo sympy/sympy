@@ -5,7 +5,7 @@ from sympy.core.relational import (Eq, Gt)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Dummy
 from sympy.functions.elementary.complexes import Abs
-from sympy.logic.boolalg import Implies
+from sympy.logic.boolalg import Equivalent, Implies, Xor
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.satask import (satask, extract_predargs,
@@ -57,6 +57,8 @@ def test_zero():
     assert satask(Q.zero(x) | Q.zero(y), Q.nonzero(x*y)) is False
 
     assert satask(Q.zero(x), Q.zero(x**2)) is True
+    assert satask(Q.zero(x), Q.negative(x) | Q.positive(x)) is False
+    assert satask(Q.zero(x), Q.nonnegative(x) & Q.nonpositive(x)) is True
 
 
 def test_zero_positive():
@@ -213,6 +215,7 @@ def test_integer():
 
     assert satask(Q.integer(x + y), Q.integer(x) & Q.integer(y)) is True
     assert satask(Q.integer(x + y), Q.integer(x)) is None
+    assert satask(Q.integer(x), Q.even(x) | Q.odd(x)) is True
 
     assert satask(Q.integer(x + y), Q.integer(x) & ~Q.integer(y)) is False
     assert satask(Q.integer(x + y + z), Q.integer(x) & Q.integer(y) &
@@ -277,6 +280,11 @@ def test_pos_neg():
     assert satask(Q.negative(x + y), Q.negative(x) & Q.negative(y)) is True
     assert satask(Q.positive(x + y), Q.negative(x) & Q.negative(y)) is False
     assert satask(Q.negative(x + y), Q.positive(x) & Q.positive(y)) is False
+    assert satask(Q.nonzero(x), Q.negative(x) | Q.positive(x)) is True
+    assert satask(Q.negative(x), Q.real(x) >> Q.positive(x)) is False
+    assert satask(Q.negative(x), Equivalent(Q.real(x), Q.positive(x))) is False
+    assert satask(Q.negative(x), Xor(Q.real(x), Q.negative(x))) is False
+    assert satask(Q.positive(x**y), Q.zero(x) & Q.positive(y)) is False
 
 
 def test_pow_pos_neg():
@@ -389,3 +397,40 @@ def test_issue_29433():
     assert satask(Q.even(x + y*(3**0.5)), Q.zero(y)) is None
     assert satask(Q.odd(x + y*(3**0.5)), Q.zero(y)) is None
     assert satask(Q.positive(x + y*pi), Q.zero(y)) is None
+
+
+# https://github.com/sympy/sympy/pull/30175
+def test_composite_proposition():
+    assert satask(Q.negative(x) & Q.integer(x),
+        assumptions=Q.real(x) >> Q.positive(x)) is False
+    assert satask(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
+    assert satask(Q.real(x) | ~Q.real(x)) is True
+    assert satask(Q.real(x) & ~Q.real(x)) is False
+
+
+# https://github.com/sympy/sympy/pull/30175
+def test_matrix_predicates():
+    X = MatrixSymbol('X', 2, 2)
+    assert satask(Q.diagonal(X),
+        Q.lower_triangular(X) & Q.upper_triangular(X)) is True
+    assert satask(Q.invertible(X), Q.fullrank(X) & Q.square(X)) is True
+    assert satask(Q.singular(X), ~Q.invertible(X)) is True
+
+
+def test_satask_early_return():
+    # Propagation alone cannot see that these assumptions contradict, so the
+    # search has to run before an answer can be trusted.
+    ass = (Q.real(x) & (Q.positive(x) | Q.negative(x))
+           & Implies(Q.positive(x), Q.zero(x)) & Implies(Q.negative(x), Q.zero(x)))
+
+    raises(ValueError, lambda: satask(Q.real(x), ass))
+    raises(ValueError, lambda: satask(Q.complex(x), ass))
+    raises(ValueError, lambda: satask(Q.zero(x), ass))
+
+    assert satask(Q.real(x), ass, early_return=True) is True
+    assert satask(Q.zero(x), Q.positive(x), early_return=True) is False
+    assert satask(Q.positive(x), Q.real(x), early_return=True) is None
+    assert satask(Q.real(x) & Q.nonzero(x), Q.positive(x), early_return=True) is True
+    assert satask(Q.positive(x) | Q.negative(x), Q.real(x) & Q.nonzero(x),
+                  early_return=True) is True
+    assert satask(S.false, Q.real(x), early_return=True) is False

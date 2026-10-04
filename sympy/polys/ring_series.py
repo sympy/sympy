@@ -916,6 +916,8 @@ def _nth_root1(p, n, x, prec):
         p1 += p1/n - tmp/n
     if sign:
         return p1
+    elif n == 2:
+        return rs_mul(p1, p, x, precx)
     else:
         return _series_inversion1(p1, x, prec)
 

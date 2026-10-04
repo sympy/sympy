@@ -751,6 +751,31 @@ Modular GCD
 .. autofunction:: _modgcd_multivariate_p
 .. autofunction:: func_field_modgcd
 
+Sparse representation
+*********************
+
+.. currentmodule:: sympy.polys.sparsetools
+
+.. py:class:: smp
+
+The ``smp`` type alias represents sparse multivariate polynomials as
+dictionaries mapping monomial exponent tuples to coefficients.
+
+Zippel algorithm
+****************
+
+.. currentmodule:: sympy.polys.zippel
+
+.. autofunction:: lag_basis
+.. autofunction:: vandermonde_interp
+.. autofunction:: from_newt_to_poly
+.. autofunction:: incremental_newton_interp
+.. autofunction:: skeleton_sorter
+.. autofunction:: smp_zippel_gcd
+.. autofunction:: smp_zippel_gcd_mod
+.. autofunction:: smp_zippel_interp_mod
+
+
 Undocumented
 ============
 

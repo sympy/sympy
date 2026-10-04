@@ -117,6 +117,14 @@ def test_guess_transcendental():
     assert guess_solve_strategy(a*x**b - y, x)  # == GS_TRANSCENDENTAL
 
 
+def test_solve_rejects_nonfinite_denominator():
+    # 7870: x = 0 is outside the domain of 1/log(x)
+    assert solve(x/log(x), x) == []
+    assert solve(x**2/log(x)**2, x) == []
+    # a solution that does not singularize any denominator is kept
+    assert solve(x/(x - 2), x) == [0]
+
+
 @slow
 def test_solve_args():
     # equation container, issue 5113
@@ -1916,6 +1924,7 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
 
 def test_issue_17638():
 

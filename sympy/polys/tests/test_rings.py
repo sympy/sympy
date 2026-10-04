@@ -1923,7 +1923,7 @@ def test_PolyElement_pdiv():
 
     f, g = x*y + 2*x + 1, x + y
     assert f.pdiv(g) == (y + 2, -y**2 - 2*y + 1)
-    assert f.pdiv(g, y) == f.pdiv(g, 1) == (x + 1, -x**2 + 2*x + 1)
+    assert f.pdiv(g, y) == f.pdiv(g, 1) == (x, -x**2 + 2*x + 1)
 
     assert R(0).pdiv(g) == (0, 0)
     raises(ZeroDivisionError, lambda: f.prem(R(0)))
@@ -1936,7 +1936,7 @@ def test_PolyElement_pquo():
 
     f, g = x**4 - 4*x**2*y + 4*y**2, x**2 - 2*y
     assert f.pquo(g) == f.pquo(g, x) == x**2 - 2*y
-    assert f.pquo(g, y) == 4*x**2 - 8*y + 4
+    assert f.pquo(g, y) == 4*x**2 - 8*y
 
     f, g = x**4 - y**4, x**2 - y**2
     assert f.pquo(g) == f.pquo(g, 0) == x**2 + y**2
@@ -1947,7 +1947,7 @@ def test_PolyElement_pexquo():
 
     f, g = x**2 - y**2, x - y
     assert f.pexquo(g) == f.pexquo(g, x) == x + y
-    assert f.pexquo(g, y) == f.pexquo(g, 1) == x + y + 1
+    assert f.pexquo(g, y) == f.pexquo(g, 1) == x + y
 
     f, g = x**2 + 3*x + 6, x + 2
     raises(ExactQuotientFailed, lambda: f.pexquo(g))

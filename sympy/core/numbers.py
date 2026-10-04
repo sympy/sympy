@@ -3452,6 +3452,10 @@ class NaN(Number, metaclass=Singleton):
     def __truediv__(self, other):
         return self
 
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (0, ()), (), S.NegativeInfinity
+
     def floor(self):
         return self
 

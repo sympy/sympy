@@ -346,3 +346,30 @@ def test_subresultants_vv_2():
     p = x**3 - 7*x + 7
     q = 3*x**2 - 7
     assert subresultants_vv_2(p, q, x) == euclid_amv(p, q, x)
+
+
+def test_subresultants_pg_common_factor():
+    # a zero pseudo-remainder must terminate the sequence instead of
+    # producing NaN in the Pell-Gordon variables
+    x = Symbol("x")
+
+    p = 4*x**3 + 3*x**2 + x + 2
+    q = x + 1
+
+    assert subresultants_pg(p, q, x) == [p, q]
+    assert modified_subresultants_pg(p, q, x) == [p, q]
+
+    p = 4*x**3 + 3*x**2 + x + 2
+    q = 2*x + 2
+
+    assert subresultants_pg(p, q, x) == subresultants(p, q, x)
+    assert modified_subresultants_pg(p, q, x) == subresultants(p, q, x)
+
+    p = x**3 - x
+    q = x**2 - x
+
+    r = [p, q]
+
+    assert subresultants_pg(p, q, x) == r
+    assert modified_subresultants_pg(p, q, x) == r
+    assert subresultants_pg(x**4 - 1, x**2 - 1, x) == [x**4 - 1, x**2 - 1]

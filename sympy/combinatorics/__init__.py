@@ -14,6 +14,7 @@ from sympy.combinatorics.named_groups import (SymmetricGroup, DihedralGroup,
     CyclicGroup, AlternatingGroup, AbelianGroup, RubikGroup)
 from sympy.combinatorics.pc_groups import PolycyclicGroup, Collector
 from sympy.combinatorics.free_groups import free_group
+from sympy.combinatorics.character_table import CharacterTable
 
 __all__ = [
     'Permutation', 'Cycle',
@@ -41,4 +42,6 @@ __all__ = [
     'PolycyclicGroup', 'Collector',
 
     'free_group',
+
+    'CharacterTable',
 ]

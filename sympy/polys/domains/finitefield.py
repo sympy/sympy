@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from types import ModuleType
+    from sympy.external.gmpy import MPZ
 
 
 if GROUND_TYPES == 'flint':
@@ -214,7 +215,7 @@ class FiniteField(Field, SimpleDomain):
     has_assoc_Field = True
 
     dom = None
-    mod = None
+    mod: MPZ
 
     def __init__(self, mod, symmetric=True):
         from sympy.polys.domains import ZZ
