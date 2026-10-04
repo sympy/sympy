@@ -81,6 +81,7 @@ from sympy.polys import apart, poly, Poly
 from sympy.series import residue
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
+from sympy.utilities.decorator import _relational_opaque
 
 # function to define "buckets"
 def _mod1(x):
@@ -2453,6 +2454,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
     return func0(z0)
 
 
+@_relational_opaque
 def hyperexpand(f, allow_hyper=False, rewrite='default', place=None):
     """
     Expand hypergeometric functions. If allow_hyper is True, allow partial

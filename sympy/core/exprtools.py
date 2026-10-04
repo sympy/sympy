@@ -17,6 +17,7 @@ from .traversal import preorder_traversal
 from .coreerrors import NonCommutativeExpression
 from .containers import Tuple, Dict
 from sympy.external.gmpy import SYMPY_INTS
+from sympy.utilities.decorator import _rebuild_opaque
 from sympy.utilities.iterables import (common_prefix, common_suffix,
         variations, iterable, is_sequence)
 
@@ -1096,6 +1097,9 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         When True (default), will put the expression over a common
         denominator.
 
+    Relational expressions are left unchanged. Factoring their sides can
+    change their truth value or remove an indeterminate expression.
+
     Examples
     ========
 
@@ -1177,7 +1181,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     if not isinstance(terms, Basic):
         return terms
 
-    if terms.is_Atom:
+    if terms.is_Atom or terms.is_Relational:
         return terms
 
     if terms.is_Mul:
@@ -1189,15 +1193,15 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         # don't treat internal args like terms of an Add
         if not isinstance(a, Expr):
             if isinstance(a, Basic):
-                if not a.args:
+                if not a.args or a.is_Relational:
                     return a
-                return a.func(*[handle(i) for i in a.args])
+                return _rebuild_opaque(a, [handle(i) for i in a.args])
             return type(a)([handle(i) for i in a])
         return gcd_terms(a, isprimitive, clear, fraction)
 
     if isinstance(terms, Dict):
         return Dict(*[(k, handle(v)) for k, v in terms.args])
-    return terms.func(*[handle(i) for i in terms.args])
+    return _rebuild_opaque(terms, [handle(i) for i in terms.args])
 
 
 def _factor_sum_int(expr, **kwargs):
@@ -1252,6 +1256,10 @@ def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=Fals
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
+
+    Relational expressions are left unchanged, including when they occur
+    inside another expression. Algebraic identities on their sides need
+    not preserve their truth value or definedness at infinity.
 
     Parameters
     ==========
@@ -1314,7 +1322,7 @@ def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=Fals
         from sympy.integrals.integrals import Integral
         is_iterable = iterable(expr)
 
-        if not isinstance(expr, Basic) or expr.is_Atom:
+        if not isinstance(expr, Basic) or expr.is_Atom or expr.is_Relational:
             if is_iterable:
                 return type(expr)([do(i) for i in expr])
             return expr
@@ -1325,7 +1333,7 @@ def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=Fals
             newargs = tuple([do(i) for i in args])
             if newargs == args:
                 return expr
-            return expr.func(*newargs)
+            return _rebuild_opaque(expr, newargs)
 
         if isinstance(expr, (Sum, Integral)):
             return _factor_sum_int(expr,
@@ -1354,8 +1362,7 @@ def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=Fals
                 clear=clear,
                 fraction=fraction).xreplace(special)
         elif p.args:
-            p = p.func(
-                *[do(a) for a in p.args])
+            p = _rebuild_opaque(p, [do(a) for a in p.args])
         rv = _keep_coeff(cont, p, clear=clear, sign=sign)
         return rv
     expr2 = sympify(expr)

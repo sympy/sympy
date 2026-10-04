@@ -44,7 +44,7 @@ from sympy.simplify.powsimp import powsimp
 from sympy.simplify.radsimp import radsimp, fraction, collect_abs
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
-from sympy.utilities.decorator import deprecated
+from sympy.utilities.decorator import _relational_opaque, deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
 
 from sympy.external.mpmath import (
@@ -135,6 +135,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
         return _separatevars(expr, force)
 
 
+@_relational_opaque
 def _separatevars(expr, force):
     if isinstance(expr, Abs):
         arg = expr.args[0]
@@ -361,6 +362,7 @@ def hypersimilar(f, g, k):
     return h.is_rational_function(k)
 
 
+@_relational_opaque
 def signsimp(expr, evaluate=None):
     """Make all Add sub-expressions canonical wrt sign.
 
@@ -1244,6 +1246,7 @@ def kroneckersimp(expr):
     return expr
 
 
+@_relational_opaque
 def besselsimp(expr):
     """
     Simplify bessel-type functions.

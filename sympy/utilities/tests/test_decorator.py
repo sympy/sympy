@@ -1,10 +1,11 @@
 from __future__ import annotations
 from functools import wraps
 
-from sympy.utilities.decorator import threaded, xthreaded, memoize_property, deprecated
-from sympy.testing.pytest import warns_deprecated_sympy
+from sympy.utilities.decorator import _relational_opaque, threaded, xthreaded, memoize_property, deprecated
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
 from sympy.core.relational import Eq
 from sympy.matrices.dense import Matrix
 
@@ -19,7 +20,8 @@ def test_threaded():
     assert function(Matrix([[x, y], [1, x]]), 1, 2) == \
         Matrix([[2*x + 3, 2*y + 3], [5, 2*x + 3]])
 
-    assert function(Eq(x, y), 1, 2) == Eq(2*x + 3, 2*y + 3)
+    assert function(Eq(x, y), 1, 2) == Eq(x, y)
+    assert function([x, Eq(x, y)], 1, 2) == [2*x + 3, Eq(x, y)]
 
     assert function([x, y], 1, 2) == [2*x + 3, 2*y + 3]
     assert function((x, y), 1, 2) == (2*x + 3, 2*y + 3)
@@ -40,6 +42,67 @@ def test_xthreaded():
         return expr**n
 
     assert function(x + y, 2) == (x + y)**2
+    assert function(Eq(x, y), 2) == Eq(x, y)
+    assert function((x, Eq(x, y)), 2) == (x**2, Eq(x, y))
+
+
+def test_threaded_relational_opaque():
+    for decorator in (threaded, xthreaded):
+        visited = []
+
+        @decorator
+        def function(expr, **kwargs):
+            visited.append(expr)
+            return expr
+
+        rel = Eq(x + y, x*y, evaluate=False)
+        assert function(rel, flag=True) is rel
+        assert visited == []
+        assert function([rel, x], flag=True) == [rel, x]
+        assert visited == [x]
+
+        @decorator
+        def required(expr, n):
+            return expr**n
+
+        raises(TypeError, lambda: required(rel))
+        raises(TypeError, lambda: required(rel, 2, 3))
+        raises(TypeError, lambda: required(rel, 2, expr=x))
+        raises(TypeError, lambda: required(rel, 2, unknown=True))
+        assert required(rel, 2) is rel
+
+
+def test_relational_opaque():
+    visited = []
+
+    @_relational_opaque
+    def function(value, n=1):
+        visited.append(value)
+        return value*n
+
+    rel = Eq(x + y, 1, evaluate=False)
+    assert function(value=rel, n=2) is rel
+    assert visited == []
+    assert function(Tuple(rel, x), 2) == Tuple(rel, 2*x)
+    assert visited == [x]
+    raises(TypeError, lambda: function())
+    raises(TypeError, lambda: function(rel, value=x))
+    raises(TypeError, lambda: function(rel, 2, 3))
+    raises(TypeError, lambda: function(value=rel, unknown=True))
+
+    @_relational_opaque
+    def required(value, n):
+        return value*n
+
+    raises(TypeError, lambda: required(rel))
+    raises(TypeError, lambda: required(value=rel))
+    assert required(value=rel, n=2) is rel
+
+    @_relational_opaque(allow_relational=True)
+    def reverse(expr):
+        return expr.reversed if expr.is_Relational else expr
+
+    assert reverse(Tuple(rel, x)) == Tuple(rel.reversed, x)
 
 
 def test_wraps():

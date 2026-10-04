@@ -24,6 +24,7 @@ from sympy.simplify.cse_main import cse
 from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
 from sympy.utilities.iterables import iterable
+from sympy.utilities.decorator import _relational_opaque
 from sympy.utilities.misc import debug
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
@@ -461,6 +462,7 @@ def _trigsimp_inverse(rv):
     return bottom_up(rv, f)
 
 
+@_relational_opaque(allow_relational=True)
 def trigsimp(expr, inverse=False, **opts):
     """Returns a reduced expression by using known trig identities.
 

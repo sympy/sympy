@@ -2400,10 +2400,10 @@ def test_terms_gcd():
         sin(x*(y + 1))
 
     eq = Eq(2*x, 2*y + 2*z*y)
-    assert terms_gcd(eq) == Eq(2*x, 2*y*(z + 1))
-    assert terms_gcd(eq, deep=True) == Eq(2*x, 2*y*(z + 1))
+    assert terms_gcd(eq) == eq
+    assert terms_gcd(eq, deep=True) == eq
 
-    raises(TypeError, lambda: terms_gcd(x < 2))
+    assert terms_gcd(x < 2) == (x < 2)
 
 
 def test_trunc():
@@ -2835,7 +2835,7 @@ def test_factor():
     assert factor(g) == y*(sin(x) + 1)/(pi + 1)**2
 
     assert factor(Eq(
-        x**2 + 2*x + 1, x**3 + 1)) == Eq((x + 1)**2, (x + 1)*(x**2 - x + 1))
+        x**2 + 2*x + 1, x**3 + 1)) == Eq(x**2 + 2*x + 1, x**3 + 1)
 
     f = (x**2 - 1)/(x**2 + 4*x + 4)
 
@@ -2856,7 +2856,7 @@ def test_factor():
     raises(FlagError, lambda: factor(x**2 - 1, polys=True))
 
     assert factor([x, Eq(x**2 - y**2, Tuple(x**2 - z**2, 1/x + 1/y))]) == \
-        [x, Eq((x - y)*(x + y), Tuple((x - z)*(x + z), (x + y)/x/y))]
+        [x, Eq(x**2 - y**2, Tuple(x**2 - z**2, 1/x + 1/y))]
 
     assert not isinstance(
         Poly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) is True
