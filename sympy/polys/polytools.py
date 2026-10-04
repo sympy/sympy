@@ -57,6 +57,7 @@ from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
+from sympy.utilities.misc import as_int
 
 # Required to avoid errors
 import sympy.polys
@@ -2150,7 +2151,13 @@ class Poly(Basic):
         if hasattr(f.rep, 'nth'):
             if len(N) != len(f.gens):
                 raise ValueError('exponent of each generator must be specified')
-            result = f.rep.nth(*list(map(int, N)))
+            exponents = []
+            for n in N:
+                ni = as_int(n)
+                if ni < 0:
+                    raise IndexError("`n` must be non-negative, got %i" % ni)
+                exponents.append(ni)
+            result = f.rep.nth(*exponents)
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'nth')
 

@@ -279,6 +279,8 @@ def test_dmp_ground_nth():
     assert dmp_ground_nth([[1], [2], [3]], (3, 0), 1, ZZ) == 0
 
     raises(IndexError, lambda: dmp_ground_nth([[3], [4], [5]], (2, -1), 1, ZZ))
+    raises(IndexError, lambda: dmp_ground_nth([[1], [2], [3]], (0, -1), 1, ZZ))
+    raises(IndexError, lambda: dmp_ground_nth([[1], [2], [3]], (9, -1), 1, ZZ))
 
 
 def test_dmp_zero_p():

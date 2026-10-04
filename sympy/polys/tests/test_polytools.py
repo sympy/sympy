@@ -1512,6 +1512,14 @@ def test_Poly_nth():
 
     raises(ValueError, lambda: Poly(x*y + 1, x, y).nth(1))
 
+    p = Poly(x*y, x, y, z)
+    raises(IndexError, lambda: p.nth(1, 1, -1))
+    raises(IndexError, lambda: p.nth(0, 1, -1))
+    raises(ValueError, lambda: p.nth(0, 1, Rational(1, 2)))
+    raises(ValueError, lambda: p.nth(0, 1, pi))
+    raises(ValueError, lambda: p.nth(1, 1, Rational(1, 2)))
+    raises(ValueError, lambda: p.nth(1, 1, pi))
+
 
 def test_Poly_LM():
     assert Poly(0, x).LM() == (0,)
