@@ -981,6 +981,21 @@ def test_SMP_gcd_lcm_and_polynomial_algorithms():
     assert [(h.to_dict(), k) for h, k in factors] == [
         (h.to_dict(), k) for h, k in dfactors]
 
+    # sign normalization issue
+    f, fs = _ds(1, x, domain='ZZ')
+    g, gs = _ds(-1, x, domain='ZZ')
+    assert f.lcm(g) == fs.lcm(gs)
+
+    # parity in raised errors
+    f = Poly(0, x, domain=QQ)
+    fs = _smp_poly(f)
+    raises(ZeroDivisionError, lambda: f.lcm(f))
+    raises(ZeroDivisionError, lambda: fs.lcm(fs))
+
+    f, fs = _ds(0, x, y, domain=ZZ)
+    raises(ZeroDivisionError, lambda: f.lcm(f))
+    raises(ZeroDivisionError, lambda: fs.lcm(fs))
+
 
 def test_SMP_properties():
     z = SMP.zero(0, ZZ)

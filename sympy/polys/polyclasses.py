@@ -618,6 +618,8 @@ class SMP(CantSympify, Generic[Er]):
         F, G = f.unify_SMP(g)
 
         if not F or not G:
+            if not F and not G and (F.dom.is_Field or F.lev):
+                raise ZeroDivisionError("polynomial division")
             return F.zero(F.lev, F.dom)
 
         _, cff, _ = F.cofactors(G)
@@ -626,8 +628,14 @@ class SMP(CantSympify, Generic[Er]):
         if h.dom.is_Field:
             return h.monic()
 
-        unit = h.dom.canonical_unit(h.LC())
-        return h.mul_ground(unit)
+        if not h.lev:
+            unit = h.dom.canonical_unit(h.LC())
+            return h.mul_ground(unit)
+
+        # XXX dup_rr_lcm normalizes with a unit but dmp_rr_lcm does
+        # not. That may not have been intentional, but for now
+        # we match dmp_rr_lcm and do not normalize the sign.
+        return h
 
     def subresultants(f, g: SMP[Er]) -> list[SMP[Er]]:
         from sympy.polys.sparseprs import smp_subresultants
