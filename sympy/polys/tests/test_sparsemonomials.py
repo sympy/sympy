@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from sympy.polys import sparsemonomials as smm
-from sympy.polys.domains import GF, QQ, ZZ
+from sympy.polys.domains import GF, QQ, ZZ, ZZ_I
 from sympy.testing.pytest import raises
 
 
@@ -127,6 +127,11 @@ def test_sparse_polynomial_truncation():
     assert smm.trunc_ground({x: ZZ(7), (): ZZ(-6)}, ZZ(5), ZZ) == {
         x: ZZ(2), (): ZZ(-1)}
     assert smm.trunc_ground({x: ZZ(5), (): ZZ(10)}, ZZ(5), ZZ) == {}
+
+    p = ZZ_I(2)
+    assert smm.trunc_ground(
+        {x: ZZ_I(3, 4), (): ZZ_I(2, 4)}, p, ZZ_I) == {
+            x: ZZ_I(-1)}
 
 
 def test_sparse_polynomial_substitution_and_composition():

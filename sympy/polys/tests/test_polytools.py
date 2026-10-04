@@ -120,6 +120,18 @@ def test_Poly_mixed_operations():
         p - exp(x)
 
 
+def test_Poly_mixed_DMP_SMP_domain_conversion():
+    f = Poly.new(
+        SMP.from_dict({(1,): QQ.one, (0,): QQ(1, 2)}, 0, QQ), x)
+    g = Poly(x + 1, x, domain=ZZ)
+
+    h = f + g
+
+    assert isinstance(h.rep, SMP)
+    assert h.domain == QQ
+    assert h == Poly(2*x + QQ(3, 2), x, domain=QQ)
+
+
 def test_Poly_from_dict():
     K = FF(3)
 

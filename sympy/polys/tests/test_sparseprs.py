@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from sympy.polys.domains import ZZ
-from sympy.polys.sparseprs import smp_prs_resultant, smp_subresultants
+from sympy.polys.sparseprs import (
+    smp_inner_subresultants, smp_prs_resultant, smp_subresultants)
 
 
 def test_smp_subresultants_zero_cases():
@@ -11,6 +12,9 @@ def test_smp_subresultants_zero_cases():
     assert smp_subresultants({}, {}, 0, 1, ZZ) == [{}, {}]
     assert smp_subresultants(f, {}, 0, 1, ZZ) == [f, one]
     assert smp_subresultants({}, f, 0, 1, ZZ) == [f, one]
+
+    assert smp_inner_subresultants({}, {}, 0, 1, ZZ) == ([], [])
+    assert smp_inner_subresultants(f, {}, 0, 1, ZZ) == ([f], [one])
 
 
 def test_smp_prs_resultant_zero_and_common_factor():

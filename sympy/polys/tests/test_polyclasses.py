@@ -4,7 +4,7 @@ from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.polys.domains import ZZ, QQ, GF
+from sympy.polys.domains import ZZ, QQ, GF, RR
 from sympy.polys.polyclasses import DMP, SMP, DMF, ANP
 from sympy.polys.polytools import Poly
 from sympy.polys.polyerrors import (CoercionFailed, ExactQuotientFailed,
@@ -697,6 +697,20 @@ def test_SMP_constructor_errors_and_domain():
     assert f.dom == QQ
     assert f.to_dict() == {(1,): QQ(1, 2), (0,): QQ.one}
 
+    g = f.ground_new(QQ(3))
+    assert g.to_dict() == {(0,): QQ(3)}
+    assert f.ground_new(QQ.zero).is_zero
+
+    g = SMP.from_dict({(1,): QQ(2), (0,): QQ(3)}, 0, QQ)
+    h = g.to_ring()
+    assert h.dom == ZZ
+    assert h.to_dict() == {(1,): ZZ(2), (0,): ZZ(3)}
+
+    g = SMP.from_dict({(1,): RR(1.5), (0,): RR(1)}, 0, RR)
+    h = g.to_exact()
+    assert h.dom == QQ
+    assert h.to_dict() == {(1,): QQ(3, 2), (0,): QQ.one}
+
 
 def test_SMP_equality_and_unification():
     f = SMP.from_dict({(1,): 1, (0,): 2}, 0, ZZ)
@@ -755,6 +769,10 @@ def test_SMP_arithmetic_and_terms():
     raises(PolynomialError, lambda: h.all_coeffs())
     raises(PolynomialError, lambda: h.all_monoms())
 
+    h = SMP.from_dict({(2,): 3, (0,): 1}, 0, ZZ)
+    assert h.all_coeffs() == [ZZ(3), ZZ.zero, ZZ.one]
+    assert h.all_monoms() == [(2,), (1,), (0,)]
+
 
 def test_SMP_degrees_coefficients_and_conversion():
     f = SMP.from_dict({(3, 1): 2, (0, 4): 3, (0, 0): 6}, 1, ZZ)
@@ -788,7 +806,9 @@ def test_SMP_degrees_coefficients_and_conversion():
     assert c == ZZ(6)
     assert q0.to_dict() == {(1,): QQ(3), (0,): QQ(2)}
 
-    cont, prim = SMP.from_dict({(1,): 6, (0,): 9}, 0, ZZ).primitive()
+    p = SMP.from_dict({(1,): 6, (0,): 9}, 0, ZZ)
+    assert p.content() == ZZ(3)
+    cont, prim = p.primitive()
     assert cont == ZZ(3)
     assert prim.to_dict() == {(1,): 2, (0,): 3}
 
@@ -814,6 +834,9 @@ def test_SMP_monic():
 
     f = SMP.from_dict({(1,): 1, (0,): 2}, 0, ZZ)
     assert f.monic() is f
+
+    z = SMP.zero(0, ZZ)
+    assert z.monic() is z
 
 
 def test_SMP_calculus_eval_and_trunc():
@@ -868,6 +891,12 @@ def test_SMP_gcd_lcm_and_polynomial_algorithms():
     assert Fq.lcm(Gq).to_dict() == f.rep.convert(QQ).lcm(
         g.rep.convert(QQ)).to_dict()
 
+    zq = SMP.zero(0, QQ)
+    h, cff, cfg = zq.cofactors(zq)
+    assert h.is_zero
+    assert cff.is_zero
+    assert cfg.is_zero
+
     assert [h.to_dict() for h in F.subresultants(G)] == [
         h.to_dict() for h in f.rep.subresultants(g.rep)]
 
@@ -888,9 +917,43 @@ def test_SMP_gcd_lcm_and_polynomial_algorithms():
     d = SMP.from_poly(Poly(x**3 - 2*x + 1, x))
     assert d.discriminant() == Poly(x**3 - 2*x + 1, x).rep.discriminant()
 
+    d0 = SMP.from_poly(Poly(3, x))
+    assert d0.discriminant() == ZZ.zero
+
+    dm0 = SMP.from_poly(Poly(y + 1, x, y))
+    disc0 = dm0.discriminant()
+    assert disc0.is_zero
+    assert disc0.lev == 0
+
+    fm = Poly(x**2 + y*x + 1, x, y)
+    Fm = SMP.from_poly(fm)
+    assert Fm.discriminant().to_dict() == fm.rep.discriminant().to_dict()
+
+    sf0 = SMP.from_poly(Poly(-3, x))
+    coeff, factors = sf0.sqf_list()
+    assert coeff == ZZ(-3)
+    assert factors == []
+
     sf = SMP.from_poly(Poly((x - 1)**2*(x + 2)**3, x))
     coeff, factors = sf.sqf_list()
     dcoeff, dfactors = Poly((x - 1)**2*(x + 2)**3, x).rep.sqf_list()
+    assert coeff == dcoeff
+    assert [(h.to_dict(), k) for h, k in factors] == [
+        (h.to_dict(), k) for h, k in dfactors]
+
+    sfq = SMP.from_poly(
+        Poly((x - 1)**2*(x + 2)**3, x, domain=QQ))
+    coeff, factors = sfq.sqf_list()
+    dcoeff, dfactors = Poly(
+        (x - 1)**2*(x + 2)**3, x, domain=QQ).rep.sqf_list()
+    assert coeff == dcoeff
+    assert [(h.to_dict(), k) for h, k in factors] == [
+        (h.to_dict(), k) for h, k in dfactors]
+
+    sfn = SMP.from_poly(Poly(-(x - 1)**2*(x + 2)**3, x))
+    coeff, factors = sfn.sqf_list()
+    dcoeff, dfactors = Poly(
+        -(x - 1)**2*(x + 2)**3, x).rep.sqf_list()
     assert coeff == dcoeff
     assert [(h.to_dict(), k) for h, k in factors] == [
         (h.to_dict(), k) for h, k in dfactors]
