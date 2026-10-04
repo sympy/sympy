@@ -12,11 +12,19 @@ from sympy.polys.polyerrors import (CoercionFailed, ExactQuotientFailed,
                                     UnificationFailed)
 from sympy.polys.specialpolys import f_polys
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.abc import x, y
+
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
+
 def _smp_poly(p):
     return Poly.new(SMP.from_poly(p), *p.gens)
+
+
+def _ds(e, *g, **d):
+    f = Poly(e, g, **d)
+    return f, _smp_poly(f)
 
 
 def test_DMP___init__():
@@ -785,6 +793,8 @@ def test_SMP_degrees_coefficients_and_conversion():
     assert f.TC() == ZZ(6)
     assert f.nth(3, 1) == ZZ(2)
     assert f.nth(1, 1) == ZZ.zero
+
+    assert _smp_poly(Poly(0, x)).total_degree() == Poly(0, x).total_degree()
 
     raises(TypeError, lambda: f.degree(QQ.one))
     raises(IndexError, lambda: f.degree(-1))

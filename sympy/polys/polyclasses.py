@@ -509,6 +509,8 @@ class SMP(CantSympify, Generic[Er]):
         return smm.poly_degrees(f._rep, f.lev + 1)
 
     def total_degree(f) -> int:
+        if not f._rep:
+            return 0
         return smm.total_degree(f._rep)
 
     def LC(f) -> Er:
