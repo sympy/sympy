@@ -2610,3 +2610,9 @@ def test_queries_require_satask():
     assert _ask_recursive(Q.real(x) | ~Q.real(x)) is True
     assert _ask_recursive(Q.real(x) & ~Q.real(x)) is False
     assert _ask_recursive(Q.positive(x**y), Q.zero(x) & Q.positive(y)) is False
+
+
+def test_issue_30619_extended_real_pow():
+    #https://github.com/sympy/sympy/issues/30619
+    assert ask(Q.extended_real(x**y), Q.positive(x) & Q.extended_real(y)) is None
+    assert ask(Q.extended_real(x**y), Q.positive(x) & Q.real(y)) is True

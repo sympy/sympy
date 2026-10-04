@@ -513,10 +513,13 @@ class Pow(Expr):
         if real_e is None:
             return
         if real_b and real_e:
+            # 1**oo is nan, so a possibly-infinite exponent is not safe
             if self.base.is_extended_positive:
-                return True
+                if self.exp.is_finite:
+                    return True
             elif self.base.is_extended_nonnegative and self.exp.is_extended_nonnegative:
-                return True
+                if self.exp.is_finite:
+                    return True
             elif self.exp.is_integer and self.base.is_extended_nonzero:
                 return True
             elif self.exp.is_integer and self.exp.is_nonnegative:
