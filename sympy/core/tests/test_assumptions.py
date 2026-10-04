@@ -15,6 +15,7 @@ from sympy.core.assumptions import (assumptions, check_assumptions,
     _load_pre_generated_assumption_rules)
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.random import seed
+from sympy.core.symbol import symbols
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
 
@@ -1223,6 +1224,17 @@ def test_issue_16579():
     # Now infinite == !finite
     nf = Symbol('nf', finite=False)
     assert nf.is_infinite is True
+
+
+def test_add_signed_group_assumptions():
+    a, b, c = symbols('a b c', positive=True, integer=True)
+
+    assert (a + b + c - 2).is_positive is True
+    assert (a + b + c - 3).is_nonnegative is True
+    assert (a + b + c - 3).is_positive is None
+    assert (a + b - c - 2).is_positive is None
+    assert (-a - b - c + 2).is_negative is True
+    assert (-a - b - c + 3).is_nonpositive is True
 
 
 def test_issue_17556():
