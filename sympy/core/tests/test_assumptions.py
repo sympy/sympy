@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from sympy.core.mod import Mod
-from sympy.core.numbers import (I, oo, pi)
+from sympy.core.numbers import (I, oo, pi, zoo)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -849,6 +849,15 @@ def test_Pow_is_algebraic():
     for exponent in [0, 1, S.Half, oo, Symbol('p', nonnegative=True)]:
         assert Pow(0, exponent, evaluate=False).is_algebraic is True
     assert Pow(0, -1, evaluate=False).is_finite is False
+
+    # issue 30665
+    for exponent in [-1, -S.Half, -Integer(2)]:
+        assert Pow(zoo, exponent, evaluate=False).is_algebraic is True
+    for exponent in [1, S.Half, Integer(2)]:
+        assert Pow(zoo, exponent, evaluate=False).is_algebraic is False
+    assert Pow(zoo, 0, evaluate=False).is_algebraic is True
+    one_over_zero = Pow(0, -1, evaluate=False)
+    assert Pow(one_over_zero, -1, evaluate=False).is_algebraic is True
 
     a = Symbol('a', algebraic=True)
     azf = Symbol('azf', algebraic=True, zero=False)
