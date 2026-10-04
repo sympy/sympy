@@ -149,10 +149,25 @@ the constraints on $y$.
 >>> from sympy import reduce_inequalities, symbols
 >>> x, y = symbols("x y")
 >>> reduce_inequalities([x + y > 1, y > 0], x)
-(0 < y) & (y < oo) & (x > 1 - y)
+(0 < y) & (y < oo) & (x + y > 1)
 ```
 
 (`oo` is {class}`~.Infinity`.)
+
+Note that $x$ is not isolated in the first inequality. The symbols were not
+declared real, so SymPy cannot know that they are finite. Separating $x$ and $y$
+would be valid only if both are finite or if they are infinite with the same
+sign; otherwise the difference could be an indeterminate $\infty - \infty$.
+SymPy therefore leaves the terms together rather than return a result that is
+only valid under an assumption that was not made. Declaring the symbols real
+makes the isolated form possible:
+
+```py
+>>> from sympy import reduce_inequalities, symbols
+>>> x, y = symbols("x y", real=True)
+>>> reduce_inequalities([x + y > 1, y > 0], x)
+(0 < y) & (x > 1 - y)
+```
 
 If each inequality contains only one symbol to be reduced for, SymPy can reduce
 the set of inequalities for multiple symbols:
