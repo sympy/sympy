@@ -879,6 +879,11 @@ class SMP(CantSympify, Generic[Er]):
 
     def shift_list(f, a: list[Any]) -> SMP[Er]:
         """Efficiently compute Taylor shift ``f(X + A)``. """
+        if not a:
+            if f.lev and not f:
+                return f
+            raise IndexError("list index out of range")
+
         a = [f.dom.convert(ai) for ai in a]
         reps: dict[int, dict[smm.smonom, Er]] = {}
 

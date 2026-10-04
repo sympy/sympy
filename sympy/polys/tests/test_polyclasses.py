@@ -876,6 +876,11 @@ def test_SMP_calculus_eval_and_trunc():
     assert g.shift_list([1, 2]).to_dict() == d.shift_list([1, 2]).to_dict()
     assert g.shift_list([1, 2, 3]).to_dict() == d.shift_list([1, 2, 3]).to_dict()
 
+    f, fs = _ds(1, x, y, domain='ZZ')
+    raises(IndexError, lambda: f.shift_list([]))
+    raises(IndexError, lambda: fs.shift_list([]))
+    f, fs = _ds(0, x, y, domain='ZZ')
+    assert f.shift_list([]) == fs.shift_list([])
 
 def test_SMP_gcd_lcm_and_polynomial_algorithms():
     x, y = symbols('x y')
