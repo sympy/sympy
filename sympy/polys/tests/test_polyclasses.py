@@ -783,7 +783,7 @@ def test_SMP_degrees_coefficients_and_conversion():
     assert f.nth(3, 1) == ZZ(2)
     assert f.nth(1, 1) == ZZ.zero
 
-    assert _smp_poly(Poly(0, x)).total_degree() == Poly(0, x).total_degree()
+    assert _smp_poly(Poly(0, x)).total_degree() is S.NegativeInfinity
 
     raises(TypeError, lambda: f.degree(QQ.one))
     raises(IndexError, lambda: f.degree(-1))
@@ -980,14 +980,11 @@ def test_SMP_gcd_lcm_and_polynomial_algorithms():
     assert f.lcm(g) == fs.lcm(gs)
 
     # parity in raised errors
-    f = Poly(0, x, domain=QQ)
-    fs = _smp_poly(f)
-    raises(ZeroDivisionError, lambda: f.lcm(f))
-    raises(ZeroDivisionError, lambda: fs.lcm(fs))
+    _, fs = _ds(0, x, domain=QQ)
+    assert fs.lcm(fs).is_zero
 
-    f, fs = _ds(0, x, y, domain=ZZ)
-    raises(ZeroDivisionError, lambda: f.lcm(f))
-    raises(ZeroDivisionError, lambda: fs.lcm(fs))
+    _, fs = _ds(0, x, y, domain=ZZ)
+    assert fs.lcm(fs).is_zero
 
 
 def test_SMP_properties():

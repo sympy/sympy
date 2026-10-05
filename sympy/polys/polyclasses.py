@@ -509,8 +509,6 @@ class SMP(CantSympify, Generic[Er]):
         return smm.poly_degrees(f._rep, f.lev + 1)
 
     def total_degree(f) -> int:
-        if not f._rep:
-            return 0
         return smm.total_degree(f._rep)
 
     def LC(f) -> Er:
@@ -617,8 +615,6 @@ class SMP(CantSympify, Generic[Er]):
         F, G = f.unify_SMP(g)
 
         if not F or not G:
-            if not F and not G and (F.dom.is_Field or F.lev):
-                raise ZeroDivisionError("polynomial division")
             return F.zero(F.lev, F.dom)
 
         _, cff, _ = F.cofactors(G)
