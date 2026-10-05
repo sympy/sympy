@@ -520,16 +520,15 @@ class SMP(CantSympify, Generic[Er]):
         return f._rep.get((), f.dom.zero)
 
     def nth(f, *N: int) -> Er:
-        if not all(isinstance(n, int) for n in N):
-            raise TypeError("a sequence of integers expected")
-
         if len(N) != f.lev + 1:
             raise ValueError(
-                "%s indices expected, got %s" % (f.lev + 1, len(N)))
+                "%s exponents expected, got %s" % (f.lev + 1, len(N)))
 
         for n in N:
+            if not isinstance(n, int):
+                raise TypeError('expecting integer exponent, got %s' % n)
             if n < 0:
-                raise IndexError("`n` must be non-negative, got %i" % n)
+                raise IndexError("exponent `n` must be non-negative, got %i" % n)
 
         return f._rep.get(smm.from_dense(tuple(N)), f.dom.zero)
 
