@@ -1510,7 +1510,11 @@ def test_Poly_nth():
     assert Poly(3*x*y**2 + 1, x, y).nth(0, 0) == 1
     assert Poly(3*x*y**2 + 1, x, y).nth(1, 2) == 3
 
+    # wrong length
     raises(ValueError, lambda: Poly(x*y + 1, x, y).nth(1))
+    # wrong type -- must be int
+    raises(TypeError, lambda: Poly(x, x).nth(.5))
+    raises(TypeError, lambda: Poly(x, x).nth(S.One))
 
 
 def test_Poly_LM():

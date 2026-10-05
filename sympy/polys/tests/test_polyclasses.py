@@ -1,6 +1,7 @@
 """Tests for OO layer of several polynomial representations. """
 from __future__ import annotations
 
+from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polyclasses import DMP, DMF, ANP
@@ -202,6 +203,8 @@ def test_DMP_functionality():
     assert f.nth(1, 1) == ZZ(2)
 
     raises(TypeError, lambda: f.nth(0, 'x'))
+    raises(TypeError, lambda: f.nth(0, .5))
+    raises(TypeError, lambda: f.nth(0, S(1)))
 
     assert f.max_norm() == 2
     assert f.l1_norm() == 4
