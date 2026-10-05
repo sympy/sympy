@@ -71,6 +71,13 @@ def test_implicit_algebraic_transforms():
     raises(TypeError, lambda: factor_terms(rel).subs(reps))
     assert (factor_terms(lhs) < 1).subs(reps) is S.false
 
+    finite = Symbol('finite', finite=True)
+    lhs = 1/(finite + sqrt(finite))
+    rel = lhs > 0
+    assert radsimp(rel) == rel
+    assert rel.subs(finite, 1) is S.true
+    assert radsimp(lhs).subs(finite, 1) is nan
+
 
 def test_implicit_algebraic_transforms_nested():
     a = Symbol('a')

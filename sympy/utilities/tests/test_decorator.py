@@ -7,6 +7,8 @@ from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.relational import Eq
+from sympy.polys import partfrac, polytools
+from sympy.utilities import decorator as decorator_module
 from sympy.matrices.dense import Matrix
 
 from sympy.abc import x, y
@@ -103,6 +105,12 @@ def test_relational_opaque():
         return expr.reversed if expr.is_Relational else expr
 
     assert reverse(Tuple(rel, x)) == Tuple(rel.reversed, x)
+
+
+def test_relational_opaque_public_exports():
+    assert 'apart' in partfrac.__all__
+    assert 'cancel' in polytools.__all__
+    assert not hasattr(decorator_module, '__all__')
 
 
 def test_wraps():

@@ -7687,8 +7687,8 @@ def nth_power_roots_poly(f, n, *gens, **args):
         return result
 
 
-@public
 @_relational_opaque
+@public
 def cancel(f, *gens, _signsimp=True, **args):
     """
     Cancel common factors in a rational function ``f``.

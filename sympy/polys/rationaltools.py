@@ -27,10 +27,8 @@ def together(expr: Expr, deep: bool = False, fraction: bool = True) -> Expr:
     expression in the output (no expansion is performed).
 
     A wide variety of objects can be put together including lists,
-    tuples, sets, integrals and others. Relational expressions are left
-    unchanged because combining their sides can change their truth value
-    or definedness. It is
-    also possible to transform interior of function applications,
+    tuples, sets, integrals and others. It is also possible to transform
+    interior of function applications,
     by setting ``deep`` flag to ``True``.
 
     By definition, :func:`~.together` is a complement to :func:`~.apart`,
@@ -38,6 +36,9 @@ def together(expr: Expr, deep: bool = False, fraction: bool = True) -> Expr:
     however, that :func:`~.together` uses only symbolic methods, so
     it might be necessary to use :func:`~.cancel` to perform algebraic
     simplification and minimize degree of the numerator and denominator.
+
+    Relational expressions are left unchanged because combining their
+    sides can change their truth value or definedness.
 
     Examples
     ========

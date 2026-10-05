@@ -13,8 +13,8 @@ from sympy.utilities.decorator import _relational_opaque
 
 
 @xthreaded
-@public
 @_relational_opaque
+@public
 def apart(f, x=None, full=False, **options):
     """
     Compute partial fraction decomposition of a rational function.

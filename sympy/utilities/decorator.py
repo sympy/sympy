@@ -39,8 +39,11 @@ def _relational_opaque(func=None, *, allow_relational=False):
     This is for transformations that would otherwise use structural APIs
     such as ``rewrite``, ``replace`` or ``xreplace`` to alter relational
     operands. It preserves relations while transforming surrounding arguments.
-    With ``allow_relational=True``, the function receives a whole relation
-    so that it can dispatch to its existing relational implementation.
+    ``allow_relational=True`` requires the decorated function to implement
+    explicit semantics for a whole ``Relational``. The decorator passes
+    the complete object to that implementation; the flag does not assert
+    that transforming its two sides independently is safe. The function
+    is responsible for the truth value and definedness of its result.
     In that mode, an existing ``_eval_<function name>`` hook also receives
     the whole object.
     Consecutive arithmetic arguments without relations are transformed
