@@ -210,6 +210,9 @@ class GeometricDistribution(SingleDiscreteDistribution):
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
 
+    def __call__(self, k):
+        return Piecewise((self.pdf(k), self.set.as_relational(k)), (0, True))
+
     def _characteristic_function(self, t):
         p = self.p
         return p * exp(I*t) / (1 - (1 - p)*exp(I*t))
@@ -248,7 +251,7 @@ def Geometric(name, p):
     >>> from sympy import Symbol, S
 
     >>> p = S.One / 5
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", integer=True, positive=True)
 
     >>> X = Geometric("x", p)
 
