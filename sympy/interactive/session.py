@@ -95,8 +95,9 @@ def int_to_Integer(s):
     """
     Wrap integer literals with Integer.
 
-    This is based on the decistmt example from
-    https://docs.python.org/3/library/tokenize.html.
+    This uses the tokenize module, as in the decistmt example from
+    https://docs.python.org/3/library/tokenize.html, but rewrites the
+    original source in place so that whitespace is preserved.
 
     Only integer literals are converted.  Float literals are left alone.
 
@@ -107,16 +108,16 @@ def int_to_Integer(s):
     >>> from sympy.interactive.session import int_to_Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'
     >>> int_to_Integer(s)
-    '1.2 +Integer (1 )/Integer (2 )-Integer (0x12 )+a1 '
+    '1.2 + Integer(1)/Integer(2) - Integer(0x12) + a1'
     >>> s = 'print (1/2)'
     >>> int_to_Integer(s)
-    'print (Integer (1 )/Integer (2 ))'
+    'print (Integer(1)/Integer(2))'
     >>> exec(s)
     0.5
     >>> exec(int_to_Integer(s))
     1/2
     """
-    from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
+    from tokenize import generate_tokens, NUMBER
     from io import StringIO
 
     def _is_int(num):
@@ -128,19 +129,17 @@ def int_to_Integer(s):
             return False
         return True
 
-    result = []
-    g = generate_tokens(StringIO(s).readline)  # tokenize the string
-    for toknum, tokval, _, _, _ in g:
-        if toknum == NUMBER and _is_int(tokval):  # replace NUMBER tokens
-            result.extend([
-                (NAME, 'Integer'),
-                (OP, '('),
-                (NUMBER, tokval),
-                (OP, ')')
-            ])
-        else:
-            result.append((toknum, tokval))
-    return untokenize(result)
+    lines = StringIO(s).readlines()
+    # Columns shift as the line is edited, so collect the spans first and
+    # apply them from the end of each line backwards.
+    spans = []
+    for toknum, tokval, (srow, scol), (_, ecol), _ in generate_tokens(StringIO(s).readline):
+        if toknum == NUMBER and _is_int(tokval):
+            spans.append((srow, scol, ecol))
+    for srow, scol, ecol in reversed(spans):
+        line = lines[srow - 1]
+        lines[srow - 1] = line[:scol] + 'Integer(' + line[scol:ecol] + ')' + line[ecol:]
+    return ''.join(lines)
 
 
 def enable_automatic_int_sympification(shell):
@@ -148,9 +147,8 @@ def enable_automatic_int_sympification(shell):
     Allow IPython to automatically convert integer literals to Integer.
     """
     import ast
-    old_run_cell = shell.run_cell
 
-    def my_run_cell(cell, *args, **kwargs):
+    def _transform(cell):
         try:
             # Check the cell for syntax errors.  This way, the syntax error
             # will show the original input, not the transformed input.  The
@@ -159,10 +157,23 @@ def enable_automatic_int_sympification(shell):
             # that doesn't expect transformed input will continue to work).
             ast.parse(cell)
         except SyntaxError:
-            pass
-        else:
-            cell = int_to_Integer(cell)
-        return old_run_cell(cell, *args, **kwargs)
+            return cell
+        return int_to_Integer(cell)
+
+    if hasattr(shell, 'input_transformers_post'):
+        # Registering an input transformer keeps the original input in the
+        # history, so that the up arrow recalls what was typed rather than
+        # the transformed code.
+        def int_to_Integer_transformer(lines):
+            return _transform(''.join(lines)).splitlines(keepends=True)
+
+        shell.input_transformers_post.append(int_to_Integer_transformer)
+        return
+
+    old_run_cell = shell.run_cell
+
+    def my_run_cell(cell, *args, **kwargs):
+        return old_run_cell(_transform(cell), *args, **kwargs)
 
     shell.run_cell = my_run_cell
 
