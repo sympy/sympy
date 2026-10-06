@@ -1737,6 +1737,9 @@ def dup_lcm(f, g, K):
     x**3 - 2*x**2 - x + 2
 
     """
+    if not f or not g:
+        return dmp_zero(0, K)
+
     if K.is_Field:
         return dup_ff_lcm(f, g, K)
     else:
@@ -1811,6 +1814,9 @@ def dmp_lcm(f, g, u, K):
     x**3 + 2*x**2*y + x*y**2
 
     """
+    if dmp_zero_p(f, u) or dmp_zero_p(g, u):
+        return dmp_zero(u, K)
+
     if not u:
         return dup_lcm(f, g, K)
 
