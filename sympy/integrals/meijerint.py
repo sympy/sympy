@@ -137,10 +137,15 @@ def _create_lookup_table(table):
 
     def tmpadd(r, sgn):
         # XXX the a**2 is bad for matching
+        # The cond a > 0 is needed because the match is purely syntactic:
+        # (sqrt(a**2 + t) - a)**b with a < 0 is the same expression as
+        # (sqrt(a**2 + t) + |a|)**b, but the G function below does not
+        # analytically continue to that case (it yields the value for
+        # (sqrt(a**2 + t) - |a|)**b instead).
         add((sqrt(a**2 + t) + sgn*a)**b/(a**2 + t)**r,
             [(1 + b)/2, 1 - 2*r + b/2], [],
             [(b - sgn*b)/2], [(b + sgn*b)/2], t/a**2,
-            a**(b - 2*r)*A1(r, sgn, b))
+            a**(b - 2*r)*A1(r, sgn, b), cond=a > 0)
     tmpadd(0, 1)
     tmpadd(0, -1)
     tmpadd(S.Half, 1)

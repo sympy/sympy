@@ -802,3 +802,18 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+
+def test_issue_30685():
+    # (1 + sqrt(1 - x**2))**3 must not be rewritten with the
+    # (sqrt(a**2 + t) - a)**b lookup formula at a = -1: that formula does
+    # not continue to negative a and returns the integral of
+    # (1 - sqrt(1 - x**2))**3 instead.
+    assert integrate((1 + sqrt(1 - x**2))**3, (x, -1, 1), meijerg=True) == \
+        6 + 15*pi/8
+    assert integrate((1 - sqrt(1 - x**2))**3, (x, -1, 1), meijerg=True) == \
+        6 - 15*pi/8
+    assert integrate((1 + sqrt(1 - x**2))**2, (x, -1, 1), meijerg=True) == \
+        Rational(10, 3) + pi
+    F = integrate((1 + sqrt(1 - x**2))**3, x)
+    assert simplify(F.diff(x) - (1 + sqrt(1 - x**2))**3) == 0
