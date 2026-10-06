@@ -2254,10 +2254,13 @@ def test_PolyElement_lcm():
     R, x = ring("x", QQ)
     assert (x + 1).lcm(x**2 - 1) == x**2 - 1
     assert R.zero.lcm(x + 1) == 0
+    assert (x + 1).lcm(R.zero) == 0
+    assert R.zero.lcm(R.zero) == 0
     assert (x + 2).lcm(x + 2) == x + 2
     assert (x + 1).lcm(x - 1) == (x - 1).lcm(x + 1)  # symmetry
 
     R, x = ring("x", ZZ)
+    assert R.zero.lcm(R.zero) == 0
     assert (2*x + 2).lcm(3*x + 3) == 6*x + 6
     assert (4*x**2 + 8*x + 4).lcm(2*x + 2) == 4*x**2 + 8*x + 4
 
