@@ -1009,13 +1009,12 @@ def _solve_trig2(f, symbol, domain):
     if isinstance(solns, FiniteSet):
         result = Union(*[invert_real(tan(symbol/mu), s, symbol)[1]
                        for s in solns])
-        # When degree(denom)>degree(num) there is a sol at Lim(denom)-->oo
         if degree(h) > degree(g):
             # Do not use invert_real to solve tan(symbol/mu) = oo, since it
             # correctly returns EmptySet. There are no real solutions for the
             # equation. Instead, directly construct the set of values for
-            # which Lim(denom)-->oo
-            n = Dummy('n', real=True)
+            # which Lim(h)-->oo
+            n = Dummy('n', integer=True)
             dsol = imageset(n, mu*pi*n + mu*pi/2, S.Integers)
             result = Union(result, dsol)
         return Intersection(result, domain)

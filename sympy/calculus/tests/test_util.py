@@ -417,5 +417,4 @@ def test_function_range_acot():
 def test_issue_30386():
     x = Symbol('x')
     rng = function_range(cos(4*x)*cos(x), x, S.Reals)
-    assert rng.inf == -1
-    assert rng.sup == 1
+    assert rng == Interval(-1, 1)
