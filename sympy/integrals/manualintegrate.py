@@ -1238,14 +1238,6 @@ def find_substitutions(integrand, symbol, u_var):
         if u_diff == 0:
             return False
         substituted = integrand / u_diff
-        if u.has(TrigonometricFunction) and (integrand.has(log) or integrand.has(TrigonometricFunction)):
-            # If u is non-polynomial in symbol (e.g. u = cos(x) or u = 1 + cos(x)/2)
-            # and substituting u into 'substituted' still leaves 'symbol' free,
-            # reject immediately before doing heavy simplification or triggering re-evaluations.
-            if not u.is_polynomial(symbol):
-                res_test = manual_subs(substituted, u, u_var)
-                if res_test.has_free(symbol):
-                    return False
         debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
