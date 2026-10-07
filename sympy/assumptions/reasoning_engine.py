@@ -26,7 +26,7 @@ class ReasoningEngine:
         _encode_with_selector(_prop, guarded, -selector)
         self._encoding = guarded.encoding
         self._solver = SATSolver(guarded.data, guarded.variables,
-                                 set(), guarded.symbols)
+                                 guarded.symbols)
 
         if self._solver.propagate() == IpasirStatus.UNSATISFIABLE:
             raise ValueError("Inconsistent assumptions")
