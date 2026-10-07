@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from sympy.testing.pytest import tooslow
 
+from sympy.core.cache import clear_cache
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX
 from sympy.polys.domains.realfield import RealField
@@ -172,6 +173,17 @@ def test_complex_exponential():
          alg.convert(w),
          alg.convert(1)]
     )
+
+
+def test_construct_domain_non_finite():
+    # A non-finite complex value such as oo*I cannot be an RR/CC coefficient
+    # and must fall back to EX instead of raising, matching a bare oo
+    # (issue #30061). clear_cache() ensures the cold state where the bug
+    # manifests, independent of other tests.
+    clear_cache()
+    assert construct_domain([S.Infinity * I]) == (EX, [EX.convert(S.Infinity * I)])
+    assert construct_domain([-S.Infinity * I]) == (EX, [EX.convert(-S.Infinity * I)])
+    assert construct_domain([S.Infinity * I, S.One])[0] == EX
 
 
 def test_rootof():
