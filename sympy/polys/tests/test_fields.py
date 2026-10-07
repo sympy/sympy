@@ -352,3 +352,7 @@ def test_FracField_index():
     raises(ValueError, lambda: F.index(1))
     raises(ValueError, lambda: F.index(a))
     pass
+
+def test_negative_power_normalization():
+    F, x = field("x", QQ)
+    assert (-x)**-1 == -1/x
