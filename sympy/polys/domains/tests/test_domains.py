@@ -1495,3 +1495,8 @@ def test_Domain_conjugate():
     a = K.convert(2*exp(2*pi*I/12) + 3*exp(10*pi*I/12) - 4*exp(14*pi*I/12))
     b = K.convert(2*exp(-2*pi*I/12) + 3*exp(-10*pi*I/12) - 4*exp(-14*pi*I/12))
     assert K.conjugate(a) == b
+
+
+def test_Domain_gcdn():
+    coeff_lst = [ZZ(6), ZZ(8), ZZ(4)]
+    assert ZZ.gcdn(coeff_lst) == 2
