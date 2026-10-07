@@ -930,6 +930,9 @@ or tuple for the function arguments.
     funcname = '_lambdifygenerated'
     if _module_present('tensorflow', namespaces):
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
+    elif (_module_present('numpy', namespaces)
+          or _module_present('scipy', namespaces)):
+        funcprinter = _NumPyEvaluatorPrinter(printer, dummify)
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
@@ -959,7 +962,8 @@ or tuple for the function arguments.
                 imp_mod_lines.append(ln)
 
     # Provide lambda expression with builtins, and compatible implementation of range
-    namespace.update({'builtins':builtins, 'range':range})
+    namespace.update({'builtins':builtins, 'range':range,
+                      '_numpy_broadcast_result': _numpy_broadcast_result})
 
     funclocals = {}
     global _lambdify_generated_counter
@@ -1203,15 +1207,16 @@ class _EvaluatorPrinter:
         if not iterable(args):
             args = [args]
 
+        _dummies_dict = {}
         if cses:
             cses = list(cses)
             subvars, subexprs = zip(*cses)
             exprs = [expr] + list(subexprs)
-            argstrs, exprs = self._preprocess(args, exprs, cses=cses)
+            argstrs, exprs = self._preprocess(args, exprs, cses=cses, _dummies_dict=_dummies_dict)
             expr, subexprs = exprs[0], exprs[1:]
             cses = zip(subvars, subexprs)
         else:
-            argstrs, expr = self._preprocess(args, expr)
+            argstrs, expr = self._preprocess(args, expr, _dummies_dict=_dummies_dict)
 
         # Generate argument unpacking and final argument list
         funcargs = []
@@ -1243,11 +1248,24 @@ class _EvaluatorPrinter:
         for lhs, rhs in subs_assignments:
             funcbody.append('{} = {}'.format(self._exprrepr(lhs), self._exprrepr(rhs)))
 
+        from sympy.core.symbol import Symbol
+        from sympy.core.expr import Expr
+
+        broadcast_argstrs = []
+        if isinstance(expr, (Expr, int, float, complex)):
+            symbol_argstrs = [astr for a, astr in zip(args, argstrs)
+                              if isinstance(a, Symbol) and not iterable(astr)]
+            free = getattr(expr, 'free_symbols', set())
+            missing = any(_dummies_dict.get(a, a) not in free for a, astr in zip(args, argstrs)
+                          if isinstance(a, Symbol) and not iterable(astr))
+            if missing and symbol_argstrs:
+                broadcast_argstrs = symbol_argstrs
+
         str_expr = _recursive_to_string(self._exprrepr, expr)
 
         if '\n' in str_expr:
             str_expr = '({})'.format(str_expr)
-        funcbody.append('return {}'.format(str_expr))
+        funcbody.append(self._print_return(broadcast_argstrs, expr, str_expr))
 
         funclines = [funcsig]
         funclines.extend(['    ' + line for line in funcbody])
@@ -1344,6 +1362,9 @@ class _EvaluatorPrinter:
         """
         return []
 
+    def _print_return(self, broadcast_argstrs, expr, str_expr):
+        return 'return {}'.format(str_expr)
+
     def _print_unpacking(self, unpackto, arg):
         """Generate argument unpacking code.
 
@@ -1398,6 +1419,35 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
                                 for ind in flat_indexes(lvalues))
 
         return ['[{}] = [{}]'.format(', '.join(flatten(lvalues)), indexed)]
+
+
+class _NumPyEvaluatorPrinter(_EvaluatorPrinter):
+
+    def _print_return(self, broadcast_argstrs, expr, str_expr):
+        if not broadcast_argstrs:
+            return 'return {}'.format(str_expr)
+        return 'return _numpy_broadcast_result({}, {})'.format(
+            str_expr, ', '.join(broadcast_argstrs))
+
+
+def _numpy_broadcast_result(result, *args):
+    shapes = []
+    for a in args:
+        if hasattr(a, 'shape'):
+            shapes.append(a.shape)
+        elif iterable(a):
+            import numpy
+            shapes.append(numpy.shape(a))
+    if not shapes:
+        return result
+    import numpy
+    try:
+        shape = numpy.broadcast_shapes(getattr(result, 'shape', ()), *shapes)
+    except (ValueError, TypeError):
+        return result
+    if shape and getattr(result, 'shape', ()) != shape:
+        return numpy.broadcast_to(result, shape).copy()
+    return result
 
 def _imp_namespace(expr, namespace=None):
     """ Return namespace dict with function implementations
