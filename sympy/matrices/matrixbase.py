@@ -16,6 +16,7 @@ from sympy.core.mod import Mod
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.function import diff
+from sympy.core.intfunc import integer_nthroot
 from sympy.external.mpmath import _matrix as _mpmath_matrix
 from sympy.polys import cancel
 from sympy.functions.elementary.complexes import Abs, re, im
@@ -4474,13 +4475,29 @@ class MatrixBase(Printable):
 
     def hat(self) -> Self:
         r"""
-        Return the skew-symmetric matrix representing the cross product,
-        so that ``self.hat() * b`` is equivalent to  ``self.cross(b)``.
+        Return the skew-symmetric matrix associated with a vector.
+
+        If ``self`` has ``m`` entries, the result is the ``n x n``
+        skew-symmetric matrix ``M`` where ``n`` is the unique integer
+        such that ``m = n*(n-1)/2``. The entry at position ``k``
+        (``k = 0, 1, ...``) of the vector corresponds to the pair of
+        indices ``(i, j)`` with ``i < j``, taken in the order of
+        decreasing ``j`` and, for fixed ``j``, decreasing ``i``, i.e.
+        ``(n-2, n-1), (n-3, n-1), ..., (0, n-1), (n-3, n-2), ..., (0, 1)``,
+        and determines ``M`` through
+
+        .. math::
+            M_{ij} = (-1)^{i + j} v_k, \qquad M_{ji} = -M_{ij},
+            \qquad M_{ii} = 0.
+
+        In particular, for ``n = 3``, the result is the matrix of the
+        cross product, so that ``self.hat() * b`` is equivalent to
+        ``self.cross(b)``.
 
         Examples
         ========
 
-        Calling ``hat`` creates a skew-symmetric 3x3 Matrix from a 3x1 Matrix:
+        Calling ``hat`` creates a skew-symmetric matrix from a vector:
 
         >>> from sympy import Matrix
         >>> a = Matrix([1, 2, 3])
@@ -4507,6 +4524,24 @@ class MatrixBase(Printable):
         [ 8],
         [-4]])
 
+        For a vector with 6 entries, the result is a 4x4 skew-symmetric
+        matrix:
+
+        >>> v = Matrix([1, 2, 3, 4, 5, 6])
+        >>> v.hat()
+        Matrix([
+        [ 0, -6,  5, -3],
+        [ 6,  0, -4,  2],
+        [-5,  4,  0, -1],
+        [ 3, -2,  1,  0]])
+
+        Raises
+        ======
+
+        ShapeError
+            If the number of entries of the vector is not of the form
+            ``n*(n-1)/2`` for an integer ``n >= 2``.
+
         See Also
         ========
 
@@ -4516,21 +4551,45 @@ class MatrixBase(Printable):
         multiply
         multiply_elementwise
         """
-
-        if self.shape != (3, 1):
-            raise ShapeError("Dimensions incorrect, expected (3, 1), got " +
-                             str(self.shape))
-        else:
-            x, y, z = self.flat()
-            return self._new(3, 3, (
-                 0, -z,  y,
-                 z,  0, -x,
-                -y,  x,  0))
+        if None in self.shape or min(self.shape) != 1:
+            raise ShapeError("Dimensions incorrect, expected (n, 1) or (1, n), got "
+                             + str(self.shape))
+        m = max(self.shape)
+        # m must be a triangular number, m = n*(n - 1)/2, with n >= 2
+        r, exact = integer_nthroot(1 + 8*m, 2)
+        n = (1 + r) // 2
+        if not exact or n < 2 or n*(n - 1)//2 != m:
+            raise ShapeError("Dimensions incorrect, expected a vector with "
+                             "n*(n-1)/2 = 1, 3, 6, 10, ... entries, got "
+                             + str(m))
+        data = [0]*(n*n)
+        k = 0
+        for j in range(n - 1, 0, -1):
+            for i in range(j - 1, -1, -1):
+                s = 1 if (i + j) % 2 == 0 else -1
+                data[i*n + j] = s*self[k]
+                data[j*n + i] = -s*self[k]
+                k += 1
+        return self._new(n, n, data)
 
     def vee(self) -> Self:
         r"""
-        Return a 3x1 vector from a skew-symmetric matrix representing the cross product,
-        so that ``self * b`` is equivalent to  ``self.vee().cross(b)``.
+        Return the vector associated with a skew-symmetric matrix.
+
+        If ``self`` is an ``n x n`` skew-symmetric matrix ``M``, the
+        result is the vector ``v`` with ``n*(n-1)/2`` entries. The
+        entry at position ``k`` (``k = 0, 1, ...``) of ``v`` equals
+        ``(-1)**(i + j) * M[i, j]``, where ``(i, j)`` is the ``k``-th
+        pair of indices with ``i < j``, taken in the order of
+        decreasing ``j`` and, for fixed ``j``, decreasing ``i``, i.e.
+        ``(n-2, n-1), (n-3, n-1), ..., (0, n-1), (n-3, n-2), ..., (0, 1)``.
+        The ``hat`` method is the inverse of ``vee``, so that
+        ``self.hat().vee() == self`` for vectors and
+        ``M.vee().hat() == M`` for skew-symmetric matrices.
+
+        In particular, for ``n = 3``, the result is the vector whose
+        cross product matrix is ``self``, so that ``self * b`` is
+        equivalent to ``self.vee().cross(b)``.
 
         Examples
         ========
@@ -4561,6 +4620,19 @@ class MatrixBase(Printable):
         [-4],
         [ 8],
         [-4]])
+
+        For a 4x4 skew-symmetric matrix, the result is a 6x1 vector:
+
+        >>> B = Matrix([[0, -6, 5, -3], [6, 0, -4, 2],
+        ...             [-5, 4, 0, -1], [3, -2, 1, 0]])
+        >>> B.vee()
+        Matrix([
+        [1],
+        [2],
+        [3],
+        [4],
+        [5],
+        [6]])
 
         ``vee`` can also be used to retrieve angular velocity expressions.
         Defining a rotation matrix:
@@ -4595,16 +4667,21 @@ class MatrixBase(Printable):
         multiply_elementwise
         """
 
-        if self.shape != (3, 3):
-            raise ShapeError("Dimensions incorrect, expected (3, 3), got " +
+        if None in self.shape or self.shape[0] != self.shape[1]:
+            raise ShapeError("Dimensions incorrect, expected (n, n), got " +
                              str(self.shape))
-        elif not self.is_anti_symmetric():
+        n = self.shape[0]
+        if n < 2:
+            raise ShapeError("Dimensions incorrect, expected (n, n) with "
+                             "n >= 2, got " + str(self.shape))
+        if not self.is_anti_symmetric():
             raise ValueError("Matrix is not skew-symmetric")
-        else:
-            return self._new(3, 1, (
-                 self[2, 1],
-                 self[0, 2],
-                 self[1, 0]))
+        data = []
+        for j in range(n - 1, 0, -1):
+            for i in range(j - 1, -1, -1):
+                s = 1 if (i + j) % 2 == 0 else -1
+                data.append(s*self[i, j])
+        return self._new(n*(n - 1)//2, 1, data)
 
     @property
     def D(self) -> Self:
