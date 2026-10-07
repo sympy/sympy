@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from sympy.logic.algorithms.dpll2 import SATSolver, IpasirStatus
+from sympy.logic.algorithms.lra_theory import LRASolver
 
 if TYPE_CHECKING:
     from sympy.assumptions.assume import AppliedPredicate
@@ -10,11 +11,12 @@ if TYPE_CHECKING:
 
 
 class ReasoningEngine:
-    def __init__(self, factbase: EncodedCNF) -> None:
+    def __init__(self, factbase: EncodedCNF, use_lra_theory: bool = False) -> None:
         if {0} in factbase.data:
             raise ValueError("Inconsistent assumptions")
 
         self._factbase = factbase
+        self._use_lra_theory = use_lra_theory
         self._solver: SATSolver | None = None # TODO: Initialize sat solver here instead of in `create_query`.
 
     def create_query(self, prop: CNF, _prop: CNF) -> int:
@@ -25,8 +27,15 @@ class ReasoningEngine:
         _encode_with_selector(prop, guarded, selector)
         _encode_with_selector(_prop, guarded, -selector)
         self._encoding = guarded.encoding
-        self._solver = SATSolver(guarded.data, guarded.variables,
-                                 set(), guarded.symbols)
+        lra = None
+        conflicts = []
+        if self._use_lra_theory:
+            theory_facts = guarded.copy()
+            # The query selector is a Boolean auxiliary, not an LRA predicate.
+            del theory_facts.encoding[guarded.symbols[selector - 1]]
+            lra, conflicts = LRASolver.from_encoded_cnf(theory_facts)
+        self._solver = SATSolver(guarded.data + conflicts, guarded.variables,
+                                 set(), guarded.symbols, lra_theory=lra)
 
         if self._solver.propagate() == IpasirStatus.UNSATISFIABLE:
             raise ValueError("Inconsistent assumptions")
