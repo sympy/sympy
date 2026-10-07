@@ -334,7 +334,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         If not specified, *modules* defaults to:
 
-        - ``["scipy", "numpy"]`` if SciPy is installed
+        - ``["numpy", "scipy"]`` if SciPy is installed
         - ``["numpy"]`` if only NumPy is installed
         - ``["math","cmath", "mpmath", "sympy"]`` if neither is installed.
 
@@ -815,6 +815,42 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     (say, NumPy arrays).** Remember that by default, if the ``module``
     argument is not provided, ``lambdify`` creates functions using the NumPy
     and SciPy namespaces.
+
+    Supported Expressions and Limitations
+    =====================================
+
+    ``lambdify`` translates SymPy expressions into functions in the specified
+    numerical library (such as NumPy, SciPy, or standard library ``math``).
+    Because ``lambdify`` generates code targeting external numeric libraries,
+    it is designed for expressions that have direct numerical representations
+    in those target libraries:
+
+    - **Supported:** Closed-form arithmetic, polynomials, elementary and
+      transcendental functions (e.g., trigonometric, exponential, logarithmic),
+      supported special functions (e.g., Bessel, error functions, gamma),
+      finite sums and products with known integer bounds, and array/matrix expressions.
+
+    - **Unsupported:** Purely symbolic or infinite constructs that require SymPy's
+      internal evaluation engine. For instance, infinite sums (such as
+      ``Sum(1/x**2, (x, 1, oo))``), unevaluated limits (``Limit``), or abstract
+      symbolic functions without numerical implementations cannot be translated
+      by ``lambdify``.
+
+    When an expression cannot be converted to code by ``lambdify``, consider
+    using ``expr.evalf(subs={...})`` instead as a slower fallback. While ``lambdify``
+    is optimized for high-speed numerical evaluation (especially across arrays),
+    ``evalf`` performs arbitrary-precision analytical and numerical evaluation
+    directly within SymPy:
+
+    >>> from sympy import Sum, oo, symbols
+    >>> x = symbols('x')
+    >>> expr = Sum(1/x**2, (x, 1, oo))
+    >>> expr.evalf()
+    1.64493406684823
+
+    Alternatively, for unsupported functions that have external numeric equivalents,
+    you can provide custom implementations using the ``modules`` dictionary argument
+    or ``implemented_function``.
     """
     from sympy.core.symbol import Symbol
     from sympy.core.expr import Expr

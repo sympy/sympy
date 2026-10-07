@@ -258,6 +258,12 @@ class AbstractPythonCodePrinter(CodePrinter):
         return self._print(expr.rewrite(Piecewise))
 
     def _print_Sum(self, expr):
+        for _, a, b in expr.limits:
+            if any(getattr(lim, 'is_infinite', False) or lim in (S.Infinity, S.NegativeInfinity) for lim in (a, b)):
+                raise NotImplementedError(
+                    "lambdify does not support infinite summation. "
+                    "Consider using 'expr.subs(...).evalf()' as a slower fallback."
+                )
         loops = (
             'for {i} in range({a}, {b}+1)'.format(
                 i=self._print(i),

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy import Not
+from sympy.concrete.summations import Sum
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.codegen.cfunctions import expm1, log1p
@@ -547,3 +548,13 @@ def test_piecewise_assign_to():
 
     assert pyprint == 'x = ((a + b) if c else (0))'
     assert symprint == 'x = ((a + b) if c else (0))'
+
+
+def test_Sum():
+    pyprinter = PythonCodePrinter()
+    s_finite = Sum(x**2, (x, 1, 10))
+    assert pyprinter.doprint(s_finite) == '(builtins.sum(x**2 for x in range(1, 10+1)))'
+
+    s_infinite = Sum(1/x**2, (x, 1, oo))
+    raises(NotImplementedError, lambda: pyprinter.doprint(s_infinite))
+

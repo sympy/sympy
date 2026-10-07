@@ -72,6 +72,13 @@ If you have array-based data this can confer a considerable speedup, on the
 order of 10 nano-seconds per element. Unfortunately numpy incurs some start-up
 time and introduces an overhead of a few microseconds.
 
+.. note::
+   ``lambdify`` translates SymPy expressions into numerical functions in the target
+   library, so it is limited to expressions that have direct equivalents in that library.
+   Purely symbolic or infinite constructs that require SymPy's analytical engine (such
+   as infinite sums or unevaluated limits) cannot be lambdified; use ``.subs(...).evalf()``
+   as a slower fallback for those cases.
+
 CuPy is a NumPy-compatible array library that mainly runs on CUDA, but has
 increasing support for other GPU manufacturers. It can in many cases be used as
 a drop-in replacement for numpy.
