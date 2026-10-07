@@ -38,7 +38,7 @@ def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
     return '\n' + fill(dedent(str(s)).strip('\n'), width=w, **kwargs)
 
 
-def strlines(s, c=64, short=False):
+def strlines(s: str, c: int = 64, short: bool = False) -> str:
     """Return a cut-and-pastable string that, when printed, is
     equivalent to the input.  The lines will be surrounded by
     parentheses and no line will be longer than c (default 64)
@@ -71,15 +71,16 @@ def strlines(s, c=64, short=False):
         raise ValueError('expecting string input')
     if '\n' in s:
         return rawlines(s)
-    q = '"' if repr(s).startswith('"') else "'"
-    q = (q,)*2
+    q = "'" if repr(s).startswith("'") else '"'
+    qq = (q, q)
+
     if '\\' in s:  # use r-string
-        m = '(\nr%s%%s%s\n)' % q
-        j = '%s\nr%s' % q
+        m = '(\nr%s%%s%s\n)' % qq
+        j = '%s\nr%s' % qq
         c -= 3
     else:
-        m = '(\n%s%%s%s\n)' % q
-        j = '%s\n%s' % q
+        m = '(\n%s%%s%s\n)' % qq
+        j = '%s\n%s' % qq
         c -= 2
     out = []
     while s:
