@@ -243,6 +243,14 @@ def test_plane():
     assert str([i.n(2) for i in p2.intersection(l2)]) == \
            '[Point3D(4.0, -0.89, 2.3)]'
 
+    # when plane/line have symbolic (non-numeric) coordinates
+    x = symbols('x')
+    sym_plane = Plane(Point3D(0, 0, x), normal_vector=(0, 0, 1))
+    sym_line = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 1))
+    sym_inter = sym_plane.intersection(sym_line)
+    assert len(sym_inter) == 1
+    assert sym_inter[0] in sym_plane
+
 
 def test_dimension_normalization():
     A = Plane(Point3D(1, 1, 2), normal_vector=(1, 1, 1))
