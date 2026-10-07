@@ -1,8 +1,21 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from sympy.core.sympify import sympify
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
-def series(expr, x=None, x0=0, n=6, dir="+"):
+    from sympy.core import Expr, Symbol
+
+
+def series(
+    expr: Expr,
+    x: Symbol | None = None,
+    x0: Expr | int | float = 0,
+    n: int = 6,
+    dir: str = "+",
+) -> Expr | Iterator[Expr]:
     """Series expansion of expr around point `x = x0`.
 
     Parameters

@@ -4,6 +4,8 @@ Euler-Lagrange Equations for given Lagrangian.
 """
 from __future__ import annotations
 from itertools import combinations_with_replacement
+from typing import TYPE_CHECKING
+
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -11,8 +13,17 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.utilities.iterables import iterable
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
-def euler_equations(L, funcs=(), vars=()):
+    from sympy.core.expr import Expr
+
+
+def euler_equations(
+    L: Expr,
+    funcs: Function | Iterable[Function] = (),
+    vars: Symbol | Iterable[Symbol] = (),
+) -> list[Eq]:
     r"""
     Find the Euler-Lagrange equations [1]_ for a given Lagrangian.
 
@@ -70,37 +81,37 @@ def euler_equations(L, funcs=(), vars=()):
 
     """
 
-    funcs = tuple(funcs) if iterable(funcs) else (funcs,)
+    funcs_tuple: tuple[Function, ...] = tuple(funcs) if iterable(funcs) else (funcs,)  # type: ignore[arg-type, assignment]
 
-    if not funcs:
-        funcs = tuple(L.atoms(Function))
+    if not funcs_tuple:
+        funcs_tuple = tuple(L.atoms(Function))
     else:
-        for f in funcs:
+        for f in funcs_tuple:
             if not isinstance(f, Function):
                 raise TypeError('Function expected, got: %s' % f)
 
-    vars = tuple(vars) if iterable(vars) else (vars,)
+    vars_tuple: tuple[Symbol, ...] = tuple(vars) if iterable(vars) else (vars,)  # type: ignore[arg-type, assignment]
 
-    if not vars:
-        vars = funcs[0].args
+    if not vars_tuple:
+        vars_tuple = funcs_tuple[0].args  # type: ignore[assignment]
     else:
-        vars = tuple(sympify(var) for var in vars)
+        vars_tuple = tuple(sympify(var) for var in vars_tuple)  # type: ignore[misc]
 
-    if not all(isinstance(v, Symbol) for v in vars):
-        raise TypeError('Variables are not symbols, got %s' % vars)
+    if not all(isinstance(v, Symbol) for v in vars_tuple):
+        raise TypeError('Variables are not symbols, got %s' % vars_tuple)
 
-    for f in funcs:
-        if not vars == f.args:
-            raise ValueError("Variables %s do not match args: %s" % (vars, f))
+    for f in funcs_tuple:
+        if not vars_tuple == f.args:
+            raise ValueError("Variables %s do not match args: %s" % (vars_tuple, f))
 
     order = max([len(d.variables) for d in L.atoms(Derivative)
-                        if d.expr in funcs] + [0])
+                        if d.expr in funcs_tuple] + [0])
 
-    eqns = []
-    for f in funcs:
+    eqns: list[Eq] = []
+    for f in funcs_tuple:
         eq = diff(L, f)
         for i in range(1, order + 1):
-            for p in combinations_with_replacement(vars, i):
+            for p in combinations_with_replacement(vars_tuple, i):
                 eq = eq + S.NegativeOne**i*diff(L, diff(f, *p), *p)
         new_eq = Eq(eq, 0)
         if isinstance(new_eq, Eq):
