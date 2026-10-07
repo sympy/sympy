@@ -565,6 +565,36 @@ def refine_Heaviside(expr, assumptions):
     return expr
 
 
+def refine_DiracDelta(expr, assumptions):
+    """
+    Handler for the DiracDelta function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_DiracDelta
+    >>> from sympy import Q, DiracDelta
+    >>> from sympy.abc import x
+    >>> refine_DiracDelta(DiracDelta(x), Q.positive(x))
+    0
+    >>> refine_DiracDelta(DiracDelta(x), Q.negative(x))
+    0
+    >>> refine_DiracDelta(DiracDelta(x), Q.nonzero(x))
+    0
+
+    """
+    arg = expr.args[0]
+    if (
+        ask(Q.nonzero(arg), assumptions)
+        or ask(Q.positive(arg), assumptions)
+        or ask(Q.negative(arg), assumptions)
+    ):
+        return S.Zero
+    if ask(Q.zero(arg), assumptions):
+        return expr.func(S.Zero, *expr.args[1:])
+    return expr
+
+
 def refine_floor_ceiling(expr, assumptions):
     """
     Handler for the floor and ceiling functions
@@ -618,6 +648,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'sin': refine_sin_cos,
     'exp': refine_exp,
     'Heaviside': refine_Heaviside,
+    'DiracDelta': refine_DiracDelta,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
 }
