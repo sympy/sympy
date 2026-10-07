@@ -119,6 +119,13 @@ class HyperbolicFunction(DefinedFunction):
 
     unbranched = True
 
+    def _eval_rewrite_as_EML(self, *args, **kwargs):
+        from sympy.functions.elementary.exponential import EML
+        r = self._eval_rewrite_as_exp(*args, **kwargs)
+        if r is None:
+            return None
+        return r.rewrite(EML)
+
 
 def _peeloff_ipi(arg):
     r"""
@@ -1239,7 +1246,12 @@ class sech(ReciprocalHyperbolicFunction):
 class InverseHyperbolicFunction(DefinedFunction):
     """Base class for inverse hyperbolic functions."""
 
-    pass
+    def _eval_rewrite_as_EML(self, *args, **kwargs):
+        from sympy.functions.elementary.exponential import EML
+        r = self._eval_rewrite_as_log(*args, **kwargs)
+        if r is None:
+            return None
+        return r.rewrite(EML)
 
 
 class asinh(InverseHyperbolicFunction):
