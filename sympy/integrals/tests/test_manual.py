@@ -1298,6 +1298,12 @@ def test_manualintegrate_sqrt_fractional_linear():
     assert_is_integral_of(f, F)
 
 
+def test_issue_30438():
+    f = sqrt((a*x + b)/(c*x + d))
+    F = manualintegrate(f, x)
+    assert F.subs({a: 1, b: 0, c: 0, d: 1}) == 2*x**(S(3)/2)/3
+
+
 def test_manualintegrate_euler_substitution():
     # General quadratic, with the radical nested inside a Pow
     f = 1/(x + sqrt(x**2 + 2*x + 2))
