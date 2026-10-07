@@ -38,7 +38,7 @@ def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
     return '\n' + fill(dedent(str(s)).strip('\n'), width=w, **kwargs)
 
 
-def strlines(s, c=64, short=False):
+def strlines(s: str, c: int = 64, short: bool = False) -> str:
     """Return a cut-and-pastable string that, when printed, is
     equivalent to the input.  The lines will be surrounded by
     parentheses and no line will be longer than c (default 64)
@@ -72,14 +72,14 @@ def strlines(s, c=64, short=False):
     if '\n' in s:
         return rawlines(s)
     q = '"' if repr(s).startswith('"') else "'"
-    q = (q,)*2
+    qq = (q,)*2
     if '\\' in s:  # use r-string
-        m = '(\nr%s%%s%s\n)' % q
-        j = '%s\nr%s' % q
+        m = '(\nr%s%%s%s\n)' % qq
+        j = '%s\nr%s' % qq
         c -= 3
     else:
-        m = '(\n%s%%s%s\n)' % q
-        j = '%s\n%s' % q
+        m = '(\n%s%%s%s\n)' % qq
+        j = '%s\n%s' % qq
         c -= 2
     out = []
     while s:
@@ -90,7 +90,7 @@ def strlines(s, c=64, short=False):
     return m % j.join(out)
 
 
-def rawlines(s):
+def rawlines(s: str) -> str:
     """Return a cut-and-pastable string that, when printed, is equivalent
     to the input. Use this when there is more than one line in the
     string. The string returned is formatted so it can be indented
@@ -166,11 +166,11 @@ def rawlines(s):
                 rv.append(repr(li))
         return '(\n    %s\n)' % '\n    '.join(rv)
     else:
-        rv = '\n    '.join(lines)
+        rv_str = '\n    '.join(lines)
         if triple[0]:
-            return 'dedent("""\\\n    %s""")' % rv
+            return 'dedent("""\\\n    %s""")' % rv_str
         else:
-            return "dedent('''\\\n    %s''')" % rv
+            return "dedent('''\\\n    %s''')" % rv_str
 
 ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
@@ -190,14 +190,14 @@ def debug_decorator(func: _CallableT) -> _CallableT:
     if not SYMPY_DEBUG:
         return func
 
-    def maketree(f, *args, **kw):
+    def maketree(f: Callable[..., Any], *args: Any, **kw: Any) -> Any:
         global _debug_tmp, _debug_iter
         oldtmp = _debug_tmp
         _debug_tmp = []
         _debug_iter += 1
 
-        def tree(subtrees):
-            def indent(s, variant=1):
+        def tree(subtrees: list[str]) -> str:
+            def indent(s: str, variant: int = 1) -> str:
                 x = s.split("\n")
                 r = "+-%s\n" % x[0]
                 for a in x[1:]:
@@ -236,13 +236,13 @@ def debug_decorator(func: _CallableT) -> _CallableT:
             _debug_tmp = []
         return r
 
-    def decorated(*args, **kwargs):
+    def decorated(*args: Any, **kwargs: Any) -> Any:
         return maketree(func, *args, **kwargs)
 
     return decorated  # type: ignore
 
 
-def debug(*args):
+def debug(*args: Any) -> None:
     """
     Print ``*args`` if SYMPY_DEBUG is True, else do nothing.
     """
@@ -251,7 +251,7 @@ def debug(*args):
         print(*args, file=sys.stderr)
 
 
-def debugf(string, args):
+def debugf(string: str, args: Any) -> None:
     """
     Print ``string%args`` if SYMPY_DEBUG is True, else do nothing. This is
     intended for debug messages using formatted strings.
@@ -261,7 +261,7 @@ def debugf(string, args):
         print(string%args, file=sys.stderr)
 
 
-def find_executable(executable, path=None):
+def find_executable(executable: str, path: str | None = None) -> str | None:
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
     os.environ['PATH']).  Returns the complete filename or None if not
@@ -343,7 +343,7 @@ def func_name(x: Any, short: bool = False) -> str:
     return rv
 
 
-def _replace(reps):
+def _replace(reps: dict[str, str]) -> Callable[[str], str]:
     """Return a function that can make the replacements, given in
     ``reps``, on a string. The replacements should be given as mapping.
 
@@ -366,7 +366,7 @@ def _replace(reps):
     return lambda string: pattern.sub(D, string)
 
 
-def replace(string, *reps):
+def replace(string: str, *reps: Any) -> str:
     """Return ``string`` with all keys in ``reps`` replaced with
     their corresponding values, longer strings first, irrespective
     of the order they are given.  ``reps`` may be passed as tuples
@@ -400,15 +400,15 @@ def replace(string, *reps):
     if len(reps) == 1:
         kv = reps[0]
         if isinstance(kv, dict):
-            reps = kv
+            reps_dict = kv
         else:
             return string.replace(*kv)
     else:
-        reps = dict(reps)
-    return _replace(reps)(string)
+        reps_dict = dict(reps)
+    return _replace(reps_dict)(string)
 
 
-def translate(s, a, b=None, c=None):
+def translate(s: str, a: Any, b: Any = None, c: Any = None) -> str:
     """Return ``s`` where characters have been replaced or deleted.
 
     SYNTAX
