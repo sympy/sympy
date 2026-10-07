@@ -1700,7 +1700,7 @@ class PolyElement(
         f = self
         domain = f.ring.domain
 
-        if not f or not g:
+        if (not f or not g) and f.ring == g.ring:
             return f.ring.zero
 
         if not domain.is_Field:
