@@ -5,6 +5,7 @@ from .sets import (Set, Interval, Union, FiniteSet, ProductSet,
 
 from .fancysets import ImageSet, Range, ComplexRegion
 from .contains import Contains
+from .subset import Subset
 from .conditionset import ConditionSet
 from .ordinals import Ordinal, OmegaPower, ord0
 from .powerset import PowerSet
@@ -26,6 +27,8 @@ __all__ = [
     'ImageSet', 'Range', 'ComplexRegion', 'Reals',
 
     'Contains',
+
+    'Subset',
 
     'ConditionSet',
 
