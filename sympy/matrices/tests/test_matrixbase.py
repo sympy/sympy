@@ -18,7 +18,7 @@ from sympy.abc import a, b, c, d, t, x, y, z
 from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.matrices.determinant import _find_reasonable_pivot_naive
 from sympy.matrices.exceptions import (
-    MatrixError, NonSquareMatrixError, ShapeError)
+    MatrixError, NonInvertibleMatrixError, NonSquareMatrixError, ShapeError)
 from sympy.matrices.kind import MatrixKind
 from sympy.matrices.utilities import _dotprodsimp_state, _simplify, dotprodsimp
 from sympy.tensor.array.array_derivatives import ArrayDerivative
@@ -2265,6 +2265,42 @@ def test_inv_block():
     assert A.inv(try_block_diag=True, method="ADJ") == diag(
         a.inv(method="ADJ"), a.inv(method="ADJ"), b.inv(method="ADJ"),
         a.inv(method="ADJ"), c.inv(method="ADJ"), a.inv(method="ADJ"))
+
+
+def test_sparse_diagonal_inv():
+    for cls in SparseMatrix, ImmutableSparseMatrix:
+        for values in ((), (2,), (2, Rational(-3, 5)),
+                       (x + 1, 2 - I, Rational(7, 3), -5)):
+            M = cls(len(values), len(values), {(i, i): value
+                                                for i, value in enumerate(values)})
+            result = M.inv()
+            assert type(result) is cls
+            assert result == cls(len(values), len(values),
+                                 {(i, i): simplify(S.One/value) for i, value in enumerate(values)})
+            assert (result - M.to_DM().to_field().inv().to_Matrix()).applyfunc(
+                simplify) == zeros(len(values))
+
+        singular = cls(3, 3, {(0, 0): 1, (1, 1): 0, (2, 2): x + 1})
+        raises(NonInvertibleMatrixError, lambda: singular.inv())
+        M = cls(2, 2, {(0, 0): x, (1, 1): y})
+        calls = []
+        result = M.inv(method="GE", iszerofunc=lambda value: calls.append(value) or value.is_zero)
+        assert calls and result == diag(1/x, 1/y)
+        assert M.inv(method="DM") == diag(1/x, 1/y)
+        assert M.inv(try_block_diag=True) == diag(1/x, 1/y)
+
+    large = SparseMatrix(1001, 1001, {(i, i): x + i + 1 for i in range(1001)})
+    result = large.inv()
+    assert type(result) is SparseMatrix
+    assert result[0, 0] == 1/(x + 1)
+    assert result[1000, 1000] == 1/(x + 1001)
+
+
+def test_sparse_diagonal_inv_DMNC():
+    M = SparseMatrix.diag(x**2 + x, x)
+    den = x**3 + x**2
+    assert M.inv(method="DMNC") == SparseMatrix.diag(
+        x/den, (x**2 + x)/den)
 
 
 def test_creation_args():
