@@ -480,6 +480,20 @@ def test_atan_floor_terms():
     assert A(atan((r**2 + 1)*cot(r)), r) == \
         atan((r**2 + 1)*cot(r)) - pi*floor(r/pi)
     assert A(atan(r + tan(r)), r) == atan(r + tan(r)) + pi*floor((r + pi/2)/pi)
+    # and the rest of the argument must be finite at the poles
+    assert A(atan(tan(r) - sec(r)), r) == atan(tan(r) - sec(r))
+    assert A(atan(sin(r) + tan(r) + sec(r)**2), r) == \
+        atan(sin(r) + tan(r) + sec(r)**2)
+    assert A(atan(2*cot(r) + 1/r), r) == atan(2*cot(r) + 1/r)
+    assert A(atan(cot(r) + 1/(r - pi)**2), r) == atan(cot(r) + 1/(r - pi)**2)
+    assert A(atan(tan(r) + 1/(r**2 + 1)), r) == \
+        atan(tan(r) + 1/(r**2 + 1)) + pi*floor((r + pi/2)/pi)
+    assert A(atan(r + tan(r**2)), r) == \
+        atan(r + tan(r**2)) + pi*floor((r**2 + pi/2)/pi)
+    f = (cos(x) + tan(x)**2 + 2*tan(x)*sec(x)**2 + 1)/(
+        (sin(x) + tan(x) + sec(x)**2)**2 + 1)
+    i = integrate(f, (x, 1, 2))
+    assert not i.has(floor) and abs(i.evalf() - Integral(f, (x, 1, 2)).evalf()) < 1e-12
 
     # tan and cot that do not depend on r are not corrected
     assert A(r*atan(tan(y)), r) == r*atan(tan(y))

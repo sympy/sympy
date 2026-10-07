@@ -61,8 +61,9 @@ def _add_atan_floor_terms(antideriv, x):
     with coefficients not depending on ``x``, so that its jumps are constant
     multiples of those of the ``atan``, and if the floor terms can be
     determined: ``c`` must be real, with a sign that does not change with
-    ``x``, and if several ``tan`` and ``cot`` are present, it must be
-    possible to tell which poles they have in common. Otherwise the ``atan``
+    ``x``, the rest of the argument must be finite at the poles, and if
+    several ``tan`` and ``cot`` are present, it must be possible to tell
+    which poles they have in common. Otherwise the ``atan``
     remains discontinuous at its poles, and a definite integral computed
     from the antiderivative is wrong if there is a pole between the limits:
     Integral.doit() does not check for discontinuities of the
@@ -129,12 +130,24 @@ def _atan_floor_correction(atan_arg, x):
         return None
     # Each part has its poles where phi is an integer. As phi increases
     # through a pole, coeff*part goes from sign(coeff)*oo to -sign(coeff)*oo.
+    d = poly.coeff_monomial(1)
+    n = Dummy('n', integer=True)
     terms = []
     for part in parts:
         coeff = poly.coeff_monomial(part)
         a = part.args[0]
         if coeff.is_extended_real is not True or a.is_extended_real is not True:
             return None
+        if d.has(x) and d.is_finite is not True:
+            # The rest of the argument must be finite at the poles of part
+            m = a.diff(x)
+            if m.has(x) or m.is_zero is not False:
+                return None
+            poles = (n*pi - a.subs(x, 0))/m
+            if isinstance(part, tan):
+                poles += pi/(2*m)
+            if d.subs(x, poles).is_finite is not True:
+                return None
         if isinstance(part, tan):
             terms.append((coeff, (a + pi/2)/pi))
         else:
