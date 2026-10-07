@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.
 addopts = "-m 'not slow and not tooslow'"

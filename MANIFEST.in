@@ -15,6 +15,7 @@ recursive-include sympy/parsing/autolev *.g4 *.al
 recursive-include sympy/parsing/smtlib *.lark
 
 include LICENSE
+include LICENSES_BUNDLED.txt
 include TODO
 include AUTHORS
 include README.md
