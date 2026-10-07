@@ -8,7 +8,7 @@ from sympy.core.symbol import symbols
 from sympy.core.relational import Ne, Eq, Unequality
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false, Not
 from sympy.logic.inference import literal_symbol, \
-     pl_true, satisfiable, valid, entails, PropKB
+     pl_true, satisfiable, valid, entails, KB, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
@@ -35,6 +35,9 @@ def test_literal():
     assert literal_symbol(False) is False
     assert literal_symbol(A) is A
     assert literal_symbol(~A) is A
+    raises(ValueError, lambda: literal_symbol(A & B))
+    raises(ValueError, lambda: literal_symbol(A | B))
+    raises(ValueError, lambda: literal_symbol(~(A & B)))
 
 
 def test_find_pure_symbol():
@@ -483,6 +486,20 @@ def test_satisfiable():
     assert satisfiable(A & (A >> B) & ~B) is False
 
 
+def test_satisfiable_unknown_algorithm():
+    A, B = symbols('A,B')
+    raises(NotImplementedError,
+           lambda: satisfiable(A & B, algorithm='nonexistent'))
+
+
+def test_satisfiable_lra_theory_requires_dpll2():
+    A, B = symbols('A,B')
+    raises(ValueError, lambda: satisfiable(A & B, algorithm='dpll',
+                                           use_lra_theory=True))
+    raises(ValueError, lambda: satisfiable(A & B, algorithm='minisat22',
+                                           use_lra_theory=True))
+
+
 def test_valid():
     A, B, C = symbols('A,B,C')
     assert valid(A >> (B >> A)) is True
@@ -532,12 +549,29 @@ def test_pl_true_wrong_input():
     raises(ValueError, lambda: pl_true(42))
 
 
+def test_pl_true_no_model():
+    A, B = symbols('A,B')
+    assert pl_true(A) is None
+    assert pl_true(A & B) is None
+    assert pl_true(A, {}) is None
+
+
 def test_entails():
     A, B, C = symbols('A, B, C')
     assert entails(A, [A >> B, ~B]) is False
     assert entails(B, [Equivalent(A, B), A]) is True
     assert entails((A >> B) >> (~A >> ~B)) is False
     assert entails((A >> B) >> (~B >> ~A)) is True
+
+
+def test_KB():
+    A, B = symbols('A,B')
+    kb = KB()
+    assert kb.clauses == []
+    raises(NotImplementedError, lambda: kb.tell(A & B))
+    raises(NotImplementedError, lambda: kb.ask(A))
+    raises(NotImplementedError, lambda: kb.retract(A))
+    raises(NotImplementedError, lambda: KB(A))
 
 
 def test_PropKB():
