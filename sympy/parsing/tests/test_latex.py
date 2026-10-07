@@ -178,6 +178,18 @@ GOOD_PAIRS = [
     (r"||x||y||", _Abs(_Abs(x)*_Abs(y))),
     (r"\pi^{|xy|}", Symbol('pi')**_Abs(x*y)),
     (r"\int x dx", Integral(x, x)),
+    (r"\int x \mathrm{d}x", Integral(x, x)),
+    (r"\int x \text{d}x", Integral(x, x)),
+    (r"\int_a^b x^2\, \mathrm{d}x", Integral(x**2, (x, a, b))),
+    (r"\int_a^b x^2\, \text{d}x", Integral(x**2, (x, a, b))),
+    (r"\frac{\mathrm{d}}{\mathrm{d}x} x", Derivative(x, x)),
+    (r"\frac{\text{d}}{\text{d}x} x", Derivative(x, x)),
+    (r"\frac{\mathrm{d}}{\mathrm{d}x} x^2", Derivative(x**2, x)),
+    (r"\int x \textrm{d}x", Integral(x, x)),
+    (r"\int_a^b x^2\, \textrm{d}x", Integral(x**2, (x, a, b))),
+    (r"\frac{\textrm{d}}{\textrm{d}x} x", Derivative(x, x)),
+    (r"\frac{\textrm{d}}{\textrm{d}x} x^2", Derivative(x**2, x)),
+    (r"\int x \mathrm{d}\theta", Integral(x, theta)),
     (r"\int x d\theta", Integral(x, theta)),
     (r"\int (x^2 - y)dx", Integral(x**2 - y, x)),
     (r"\int x + a dx", Integral(_Add(x, a), x)),
@@ -360,6 +372,13 @@ def test_failing_not_parseable():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str)
+
+@XFAIL
+def test_upright_differential_space_before_variable():
+    # \mathrm{d} x with whitespace before the variable is not absorbed into a
+    # single DIFFERENTIAL token; see comment in LaTeX.g4.
+    from sympy.parsing.latex import parse_latex
+    assert parse_latex(r"\int x \mathrm{d} x") == Integral(x, x)
 
 # In strict mode, FAILING_BAD_STRINGS would fail
 def test_strict_mode():
