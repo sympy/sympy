@@ -122,6 +122,16 @@ def test_dup_subresultants():
 
     assert R.dup_resultant(f, g) == 0
 
+    # Res(f, g) == (-1)**(deg(f)*deg(g))*Res(g, f), see #10666
+    assert R.dup_resultant(x + 2, x**3) == -8
+    assert R.dup_resultant(x**3, x + 2) == 8
+
+    f = 3*x + 3
+    g = 5*x**3 - 5*x**2 + 4*x + 5
+
+    assert R.dup_resultant(f, g) == -243
+    assert R.dup_resultant(g, f) == 243
+
     f = 3*x**3 - x
     g = 5*x**2 + 1
 
@@ -198,6 +208,24 @@ def test_dmp_subresultants():
     assert R.dmp_prs_resultant(f, g)[0] == r
     assert R.dmp_zz_collins_resultant(f, g) == r
     assert R.dmp_qq_collins_resultant(f, g) == r
+
+    # Res(f, g) == (-1)**(deg(f)*deg(g))*Res(g, f), see #10666 (degrees
+    # are taken with respect to the generator being eliminated)
+    f = x + y
+    g = x**3 + y
+
+    ye = y.as_expr()
+
+    assert R.dmp_resultant(f, g).as_expr() == ye - ye**3
+    assert R.dmp_resultant(g, f).as_expr() == ye**3 - ye
+    assert R.dmp_prs_resultant(f, g)[0].as_expr() == ye - ye**3
+    assert R.dmp_prs_resultant(g, f)[0].as_expr() == ye**3 - ye
+    assert R.dmp_zz_modular_resultant(f, g, 5).as_expr() == ye - ye**3
+    assert R.dmp_zz_modular_resultant(g, f, 5).as_expr() == ye**3 - ye
+    assert R.dmp_zz_collins_resultant(f, g).as_expr() == ye - ye**3
+    assert R.dmp_zz_collins_resultant(g, f).as_expr() == ye**3 - ye
+    assert R.dmp_qq_collins_resultant(f, g).as_expr() == ye - ye**3
+    assert R.dmp_qq_collins_resultant(g, f).as_expr() == ye**3 - ye
 
     R, x, y, z, u, v = ring("x,y,z,u,v", ZZ)
 
