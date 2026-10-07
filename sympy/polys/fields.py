@@ -265,6 +265,8 @@ class FracField(DefaultPrinting, Generic[Er]):
         elif isinstance(element, str):
             raise NotImplementedError("parsing")
         elif isinstance(element, Expr):
+            if not any(sym in element.free_symbols for sym in self.symbols):
+                return self.ground_new(element)
             return self.from_expr(element)
         else:
             return self.ground_new(element)
