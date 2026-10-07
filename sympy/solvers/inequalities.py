@@ -4,9 +4,10 @@ import itertools
 
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
-from sympy.core import sympify
+from sympy.core import Add, sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Eq, Ne
+from sympy.core.relational import (Relational, Eq, Ne,
+    _may_be_indeterminate)
 from sympy.core.symbol import Symbol, Dummy
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
@@ -779,20 +780,86 @@ def _pt(start, end):
     return pt
 
 
-def _solve_inequality(ie, s, linear=False):
-    """Return the inequality with s isolated on the left, if possible.
-    If the relationship is non-linear, a solution involving And or Or
+def _guard_indeterminate_group(ie, s):
+    """Protect an additive group before forming ``lhs - rhs``.
+
+    Potentially nonfinite terms are inspected as they would occur in
+    ``lhs - rhs`` without actually constructing that difference. This is
+    important because constructing it can already cancel a term whose
+    presence is needed to preserve a possible ``oo - oo`` indeterminacy.
+
+    If the target symbol occurs in exactly one potentially indeterminate
+    additive group, that whole group is replaced by a tracker and
+    ``(guarded_relation, tracker, group)`` is returned.
+
+    If the target occurs in protected groups on both sides, ``S.NaN`` is
+    returned as the tracker to indicate that there is no single group that
+    can safely be isolated.
+    """
+    sides = []
+    virtual = []
+
+    for side, negate in ((ie.lhs, False), (ie.rhs, True)):
+        args = Add.make_args(expand_mul(side))
+        nonfinite = [a for a in args if a.is_finite is not True]
+        finite = [a for a in args if a.is_finite is True]
+        sides.append((finite, nonfinite))
+        virtual.extend(-a if negate else a for a in nonfinite)
+
+    if not _may_be_indeterminate(virtual):
+        return ie, None, None
+
+    # Indeterminacy involving only terms that depend on the target is handled
+    # by the ordinary solver machinery: denominator restrictions protect finite
+    # singularities and _solve_inequality checks the relation at +/-oo.
+    # Protection is needed when a potentially nonfinite term is independent
+    # of the target.
+    if all(t.has_free(s) for t in virtual):
+        return ie, None, None
+
+    hits = [
+        i for i, (_, terms) in enumerate(sides)
+        if any(t.has(s) for t in terms)
+    ]
+    if not hits:
+        return ie, None, None
+    if len(hits) != 1:
+        return ie, S.NaN, None
+
+    i = hits[0]
+    finite, nonfinite = sides[i]
+    group = Add(*nonfinite)
+    tracker = Dummy()
+    guarded = Add(*finite, tracker)
+
+    if i == 0:
+        ie = ie.func(guarded, ie.rhs, evaluate=False)
+    else:
+        ie = ie.func(ie.lhs, guarded, evaluate=False)
+
+    return ie, tracker, group
+
+
+def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
+    """Return the inequality with ``s`` isolated on the left, if possible.
+    If the relationship is non-linear, a solution involving ``And`` or ``Or``
     may be returned. False or True are returned if the relationship
     is never True or always True, respectively.
 
-    If `linear` is True (default is False) an `s`-dependent expression
+    If ``linear`` is True (default is False) an ``s``-dependent expression
     will be isolated on the left, if possible
-    but it will not be solved for `s` unless the expression is linear
-    in `s`. Furthermore, only "safe" operations which do not change the
+    but it will not be solved for ``s`` unless the expression is linear
+    in ``s``. Furthermore, only "safe" operations which do not change the
     sense of the relationship are applied: no division by an unsigned
-    value is attempted unless the relationship involves Eq or Ne and
+    value is attempted unless the relationship involves ``Eq`` or ``Ne`` and
     no division by a value not known to be nonzero is ever attempted.
 
+    If ``protect_indeterminate`` is True, a group of additive terms that
+    can be indefinite is not split off from ``s``: since such a group
+    could form an indeterminate ``oo - oo`` when it is moved to the
+    other side of the relational, it is left with ``s`` even when ``s``
+    could be isolated. The default is False, in which case such a
+    group is only left with ``s`` when isolating it is not possible.
     Unlike equation-oriented APIs such as ``solve``, this routine operates on
     the ``Relational`` itself. ``Eq`` and ``Ne`` therefore retain their logical
     relational semantics rather than serving merely as containers for
@@ -802,9 +869,9 @@ def _solve_inequality(ie, s, linear=False):
     Examples
     ========
 
-    >>> from sympy import Eq, Symbol
+    >>> from sympy import Eq, Symbol, symbols
     >>> from sympy.solvers.inequalities import _solve_inequality as f
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x, y, z
 
     For linear expressions, the symbol can be isolated:
 
@@ -852,6 +919,15 @@ def _solve_inequality(ie, s, linear=False):
     >>> f(x*p <= 1, x)
     x <= 1/p
 
+    In the following, we cannot divide by ``a`` because the sign is not
+    known. Nor can we move ``z`` to the other side because it must stay
+    with ``y``: if their values are infinite they must be of the same sign
+    else a difference of infinities is introduced.
+
+    >>> a, b, c = symbols('a b c', real=True)
+    >>> f(a*(-y - 2*z + 1) < b - 2*c - x, y)
+    -a*y < 2*a*z - a + b - 2*c - x
+
     When there are denominators in the original expression that
     are removed by expansion, conditions for them will be returned
     as part of the result:
@@ -868,6 +944,19 @@ def _solve_inequality(ie, s, linear=False):
         return ie
 
     beginning_denoms = denoms(ie.lhs) | denoms(ie.rhs)
+
+    if protect_indeterminate:
+        guarded, tracker, group = _guard_indeterminate_group(ie, s)
+        if tracker is S.NaN:
+            # The target belongs to potentially indeterminate groups on
+            # both sides, so there is no single additive object to isolate.
+            return And(*[Ne(d, 0) for d in beginning_denoms], ie)
+        if tracker is not None:
+            rv = _solve_inequality(
+                guarded, tracker, linear=linear,
+                protect_indeterminate=False)
+            rv = rv.xreplace({tracker: group})
+            return And(*[Ne(d, 0) for d in beginning_denoms], rv)
 
     def classify(ie, s, i):
         # return True or False if ie evaluates when substituting s with
@@ -923,16 +1012,19 @@ def _solve_inequality(ie, s, linear=False):
         # to the rhs and dividing by a nonzero factor if
         # the relational is Eq/Ne; for other relationals
         # the sign must also be positive or negative
-        rhs = 0
         b, ax = e.as_independent(s, as_Add=True)
-        e -= b
-        rhs -= b
+        e = ax
+        rhs = -b
         ef = factor_terms(e)
         a, e = ef.as_independent(s, as_Add=False)
-        if (a.is_zero != False or  # don't divide by potential 0
-                a.is_negative ==
-                a.is_positive is None and  # if sign is not known then
-                ie.rel_op not in ('!=', '==')): # reject if not Eq/Ne
+        if ie.rel_op in ('!=', '=='):
+            can_divide = a.is_finite is True and a.is_zero is False
+        else:
+            can_divide = (
+                a.is_positive is True or
+                a.is_negative is True
+            )
+        if not can_divide:
             e = ef
             a = S.One
         rhs /= a
@@ -949,7 +1041,8 @@ def _solve_inequality(ie, s, linear=False):
     # return conditions under which the value is valid, too.
     current_denoms = denoms(rv)
     for d in beginning_denoms - current_denoms:
-        c = _solve_inequality(Eq(d, 0), s, linear=linear)
+        c = _solve_inequality(Eq(d, 0), s, linear=linear,
+            protect_indeterminate=protect_indeterminate)
         if isinstance(c, Eq) and c.lhs == s:
             if classify(rv, s, c.rhs) is S.true:
                 # rv is permitting this value but it shouldn't
@@ -983,7 +1076,8 @@ def _reduce_inequalities(inequalities, symbols):
             common = inequality.free_symbols & symbols
             if len(common) == 1:
                 gen = common.pop()
-                other.append(_solve_inequality(inequality, gen))
+                other.append(_solve_inequality(inequality, gen,
+                    protect_indeterminate=True))
                 continue
             else:
                 raise NotImplementedError(filldedent('''
@@ -993,7 +1087,8 @@ def _reduce_inequalities(inequalities, symbols):
         beginning_denoms = (
             denoms(inequality.lhs, gen) | denoms(inequality.rhs, gen))
         if beginning_denoms - denoms(expr, gen):
-            other.append(_solve_inequality(inequality, gen))
+            other.append(_solve_inequality(inequality, gen,
+                protect_indeterminate=True))
             continue
 
         if expr.is_polynomial(gen):
@@ -1005,7 +1100,8 @@ def _reduce_inequalities(inequalities, symbols):
             if components and all(isinstance(i, Abs) for i in components):
                 abs_part.setdefault(gen, []).append((expr, rel))
             else:
-                other.append(_solve_inequality(inequality, gen))
+                other.append(_solve_inequality(inequality, gen,
+                    protect_indeterminate=True))
 
     poly_reduced = [reduce_rational_inequalities([exprs], gen) for gen, exprs in poly_part.items()]
     abs_reduced = [reduce_abs_inequalities(exprs, gen) for gen, exprs in abs_part.items()]
@@ -1026,7 +1122,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     (-3 <= x) & (x < oo)
 
     >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
-    (x < oo) & (x >= 1 - 2*y)
+    x + 2*y >= 1
     """
     if not iterable(inequalities):
         inequalities = [inequalities]

@@ -6,7 +6,7 @@ from sympy.core.function import Function
 from sympy.core.numbers import I, Rational, oo, pi
 from sympy.core.relational import Eq, Ge, Gt, Le, Lt, Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import root, sqrt
@@ -235,10 +235,27 @@ def test_reduce_inequalities_errors():
 
 
 def test__solve_inequalities():
-    assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
-    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x < oo) & (x >= -y + 1)
-    assert reduce_inequalities(Eq(0, x - y), symbols=[x]) == Eq(x, y)
-    assert reduce_inequalities(Ne(0, x - y), symbols=[x]) == Ne(x, y)
+    yf = Symbol('yf', finite=True)
+    yr = Symbol('yr', real=True)
+
+    assert reduce_inequalities(x + y < 1, symbols=[x]) == (x + y < 1)
+    eq = x + yf < 1
+    assert reduce_inequalities(eq, symbols=[x]) == (x + yf < 1)
+    assert reduce_inequalities(eq.subs(yf, yr), symbols=[x]) == (x < 1 - yr)
+    assert eq.subs({x: I, yf: -I}) == True
+    assert raises(TypeError, lambda: (x < 1 - yf).subs({x: I, yf: -I}))
+
+    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x + y >= 1)
+    assert reduce_inequalities(x + yr >= 1, symbols=[x]) == \
+        (x >= 1 - yr)
+
+    assert reduce_inequalities(Eq(0, x - y), symbols=[x]) == Eq(x - y, 0)
+    assert reduce_inequalities(Eq(0, x - yf), symbols=[x]) == Eq(x - yf, 0)
+    assert reduce_inequalities(Eq(0, x - yr), symbols=[x]) == Eq(x, yr)
+
+    assert reduce_inequalities(Ne(0, x - y), symbols=[x]) == Ne(x - y, 0)
+    assert reduce_inequalities(Ne(0, x - yf), symbols=[x]) == Ne(x - yf, 0)
+    assert reduce_inequalities(Ne(0, x - yr), symbols=[x]) == Ne(x, yr)
 
 
 def test_issue_6343():
@@ -269,11 +286,11 @@ def test_issue_8235():
 def test_issue_5526():
     assert reduce_inequalities(0 <=
         x + Integral(y**2, (y, 1, 3)) - 1, [x]) == \
-        (x >= -Integral(y**2, (y, 1, 3)) + 1)
+        (x + Integral(y**2, (y, 1, 3)) >= 1)
     f = Function('f')
     e = Sum(f(x), (x, 1, 3))
     assert reduce_inequalities(0 <= x + e + y**2, [x]) == \
-        (x >= -y**2 - Sum(f(x), (x, 1, 3)))
+        (x + y**2 + Sum(f(x), (x, 1, 3)) >= 0)
 
 
 def test_solve_univariate_inequality():
@@ -502,6 +519,46 @@ def test_issue_25983():
     assert(reduce_inequalities(pi/Abs(x) <= 1) == ((pi <= x) & (x < oo)) | ((-oo < x) & (x <= -pi)))
 
 
+def test_issue_30598():
+    z = Symbol('z')
+    a, b, c = symbols('a b c', real=True)
+    # a term that may be infinite must not be moved to the other side of
+    # the relation on its own since that turns an indeterminate oo - oo
+    # into a definite result
+    assert reduce_inequalities(a*(-y - 2*z + 1) < b - 2*c - x, y) == \
+        (-a*y - 2*a*z < -a + b - 2*c - x)
+
+    # any factoring must preserve the possibility of indeterminacy
+    a = Symbol('a')
+    e = a*x + a*y < 1
+    rv = reduce_inequalities(e, x)
+    reps = {a: oo, x: 2, y: -1}
+    assert rv == e
+    assert raises(TypeError, lambda: e.subs(reps))
+    assert (a*(x + y) < 1).subs(reps) is S.false
+
+    # terms that are known to be finite can still be moved
+    u, v, r, s = symbols('u v r s', real=True)
+    assert reduce_inequalities(r*u + s*v < 1, u) == (r*u < -s*v + 1)
+    # the terms must not be split even when the target could be isolated
+    assert reduce_inequalities(y + z < 1, y) == (y + z < 1)
+
+    # target-only indeterminacy is handled by endpoint/domain bookkeeping
+    assert reduce_inequalities(x/(x - 1) - 2/(x - 1) < 0, x) == (
+        S(1) < x) & (x < 2)
+
+    # Do not actually form lhs - rhs before protecting potentially
+    # nonfinite additive terms: doing so would cancel y here and
+    # incorrectly reduce the relation to x < 1, cancelling indeterminacy
+    assert reduce_inequalities(x + y < y + 1, x) == \
+        (x + y < y + 1)
+
+    # a coefficient is only divided out when its sign is known, so a
+    # divisor of unknown sign is left in the factored group
+    assert reduce_inequalities(Ge(x**2*y + y, 1), y) == \
+        (y*(x**2 + 1) >= 1)
+
+
 def test_issue_30529():  # do not allow singularity cancellation
     assert reduce_inequalities(1/x <= 1/x, x) == Ne(x, 0)
     assert reduce_inequalities([1/sin(x) <= 1/sin(x)], x) == (-oo < x) & (x < oo) & Ne(sin(x), 0)
@@ -509,6 +566,8 @@ def test_issue_30529():  # do not allow singularity cancellation
 
     e = x/(x - 1) + 1/x <= x + 1/x
     rv = reduce_inequalities(e, x)
+    assert rv == Ne(x, 0) & (
+        (((S(0) <= x) & (x < 1)) | ((S(2) <= x) & (x < oo))))
     assert rv.subs(x, 0) is S.false
     assert rv.subs(x, S.Half) is S.true
     assert rv.subs(x, 1) is S.false
@@ -538,3 +597,14 @@ def test_solve_univariate_inequality_random_symbol():
 
     assert solve_univariate_inequality(Z > 1, Z, relational=False) == expected
     assert (Z > 1).as_set() == expected
+
+
+def test_issue_30688():
+    ep = Symbol('ep', extended_positive=True)
+    assert _solve_inequality(ep*x < 1, x) == (ep*x < 1)
+
+    assert _solve_inequality(Eq(oo*x, 1), x) == Eq(oo*x, 1)
+    assert _solve_inequality(Ne(oo*x, 1), x) == Ne(oo*x, 1)
+
+    assert reduce_inequalities(x**2*y + y >= 1, y) == \
+        (y*(x**2 + 1) >= 1)
