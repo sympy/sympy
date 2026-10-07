@@ -157,6 +157,12 @@ class PolynomialRing(
         if a is not None:
             return K1.new(a)
 
+    def from_MonogenicFiniteExtension(K1, a, K0):
+        """Convert a finite-extension element to ``dtype``. """
+        if K1.domain == K0:
+            return K1.new(a)
+        return Domain.from_MonogenicFiniteExtension(K1, a, K0)
+
     def from_PolynomialRing(K1, a, K0):
         """Convert a polynomial to ``dtype``. """
         try:
