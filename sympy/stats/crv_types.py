@@ -909,7 +909,7 @@ def ChiNoncentral(name, k, l):
 
     k : A positive Integer, $k > 0$
         The number of degrees of freedom.
-    lambda : Real number, `\lambda > 0`
+    l : Real number, `\lambda > 0`
         Shift parameter.
 
     Returns
@@ -1322,7 +1322,6 @@ def ExGaussian(name, mean, std, rate):
     Parameters
     ==========
 
-    name : A string giving a name for this distribution
     mean : A Real number, the mean of Gaussian component
     std : A positive Real number,
         :math: `\sigma^2 > 0` the variance of Gaussian component
@@ -2086,8 +2085,8 @@ def Gumbel(name, beta, mu, minimum=False):
     Parameters
     ==========
 
-    mu : Real number, `\mu`, a location
     beta : Real number, `\beta > 0`, a scale
+    mu : Real number, `\mu`, a location
     minimum : Boolean, by default ``False``, set to ``True`` for enabling minimum distribution
 
     Returns
@@ -2491,7 +2490,6 @@ def LogCauchy(name, mu, sigma):
     ==========
 
     mu : Real number, the location
-
     sigma : Real number, `\sigma > 0`, a scale
 
     Returns
@@ -2834,9 +2832,9 @@ def LogNormal(name, mean, std):
     Parameters
     ==========
 
-    mu : Real number
+    mean : Real number
         The log-scale.
-    sigma : Real number
+    std : Real number
         A shape. ($\sigma^2 > 0$)
 
     Returns
@@ -3252,8 +3250,8 @@ def Normal(name, mean, std):
     Parameters
     ==========
 
-    mu : Real number or a list representing the mean or the mean vector
-    sigma : Real number or a positive definite square matrix,
+    mean : Real number or a list representing the mean or the mean vector
+    std : Real number or a positive definite square matrix,
          :math:`\sigma^2 > 0`, the variance
 
     Returns
@@ -3386,9 +3384,9 @@ def GaussianInverse(name, mean, shape):
     Parameters
     ==========
 
-    mu :
+    mean :
         Positive number representing the mean.
-    lambda :
+    shape :
         Positive number representing the shape parameter.
 
     Returns
@@ -4444,8 +4442,8 @@ def Uniform(name, left, right):
     Parameters
     ==========
 
-    a : Real number, :math:`-\infty < a`, the left boundary
-    b : Real number, :math:`a < b < \infty`, the right boundary
+    left : Real number, :math:`-\infty < a`, the left boundary
+    right : Real number, :math:`a < b < \infty`, the right boundary
 
     Returns
     =======
@@ -4706,8 +4704,8 @@ def Weibull(name, alpha, beta):
     Parameters
     ==========
 
-    lambda : Real number, $\lambda > 0$, a scale
-    k : Real number, $k > 0$, a shape
+    alpha : Real number, $\lambda > 0$, a scale
+    beta : Real number, $k > 0$, a shape
 
     Returns
     =======
