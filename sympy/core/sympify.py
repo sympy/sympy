@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, overload, TYPE_CHECKING, TypeVar
+from typing import Any, Callable, overload, TYPE_CHECKING, TypeVar , Type
 
 from sympy.external.mpmath import from_rational
 
@@ -409,8 +409,15 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if isinstance(a, CantSympify):
         raise SympifyError(a)
 
-    cls = getattr(a, "__class__", None)
+    #XXX:cls may be None in some cases but to give it a safe and a clear guarantee that getmro receives a type
+    # we are adding a runtime guard here
+    #with reference to issue #28806
 
+    cls = getattr(a, "__class__", None)
+    if cls is None or not isinstance(cls, type):
+        #fallback: no class info; trat like strict failure
+        raise SympifyError(a)
+    #cls is a real type
     #Check if there exists a converter for any of the types in the mro
     for superclass in getmro(cls):
         #First check for user defined converters
@@ -567,6 +574,10 @@ def kernS(s):
     XXX This hack should not be necessary once issue 4596 has been resolved.
     """
     hit = False
+    #initialising olds and expr to s for fixing possible unbound variable warning
+    olds = s
+    expr = sympify(s)
+    kern = '_'
     quoted = '"' in s or "'" in s
     if '(' in s and not quoted:
         if s.count('(') != s.count(")"):
@@ -607,7 +618,6 @@ def kernS(s):
             i = j + 2  # the first char after 2nd )
         if ' ' in s:
             # get a unique kern
-            kern = '_'
             while kern in s:
                 kern += choice(string.ascii_letters + string.digits)
             s = s.replace(' ', kern)
