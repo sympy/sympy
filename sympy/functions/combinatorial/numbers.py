@@ -2680,12 +2680,22 @@ def _eval_stirling1(n, k):
     return _stirling1(n, k)
 
 
+
 @cacheit
 def _stirling1(n, k):
-    row = [0, 1]+[0]*(k-1) # for n = 1
-    for i in range(2, n+1):
-        for j in range(min(k,i), 0, -1):
-            row[j] = (i-1) * row[j] + row[j-1]
+    if n < k:
+        return 0
+    if not k:
+        return int(n == 0)
+
+    d = n-k
+    row = [1]*(k+1)
+    row[0] = 0
+
+    for h in range(1, d+1):
+        for j in range(1, k+1):
+            row[j] = (h+j-1)*row[j] + row[j-1] #row[j] = stirling1(h+j,j)
+
     return Integer(row[k])
 
 
@@ -2707,13 +2717,21 @@ def _eval_stirling2(n, k):
 
     return _stirling2(n, k)
 
-
 @cacheit
 def _stirling2(n, k):
-    row = [0, 1]+[0]*(k-1) # for n = 1
-    for i in range(2, n+1):
-        for j in range(min(k,i), 0, -1):
-            row[j] = j * row[j] + row[j-1]
+    if n < k:
+        return 0
+    if not k:
+        return int(n == 0)
+
+    d = n-k
+    row = [1]*(k+1)
+    row[0] = 0
+
+    for h in range(1, d+1):
+        for j in range(1, k+1):
+            row[j] = j*row[j] + row[j-1] #row[j] = stirling2(h+j,j)
+
     return Integer(row[k])
 
 
