@@ -385,6 +385,13 @@ def test_kid_rsa_private_key():
     assert kid_rsa_private_key(1, 2, 1, 2) == (7, 4)
 
 
+def test_kid_rsa_degenerate():
+    # a*b == 1 makes M = a*b - 1 == 0; reject it with ValueError instead of
+    # raising a bare ZeroDivisionError from the (e*d - 1)//M division.
+    raises(ValueError, lambda: kid_rsa_public_key(1, 1, 5, 6))
+    raises(ValueError, lambda: kid_rsa_private_key(1, 1, 5, 6))
+
+
 def test_encipher_kid_rsa():
     assert encipher_kid_rsa(1, (5, 2)) == 2
     assert encipher_kid_rsa(1, (8, 3)) == 3
