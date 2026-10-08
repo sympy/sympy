@@ -6,7 +6,7 @@ from sympy.sets.sets import SetKind
 from sympy.core.function import (Function, Lambda)
 from sympy.core.mod import Mod
 from sympy.core.kind import NumberKind
-from sympy.core.numbers import (oo, pi)
+from sympy.core.numbers import (I, oo, pi)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -193,6 +193,68 @@ def test_subs_CondSet():
     assert (0, 1) in ConditionSet((x, y), x + y < 3, S.Integers**2)
 
     raises(TypeError, lambda: ConditionSet(n, n < -10, Interval(0, 10)))
+
+
+def test_subs_CondSet_free_symbol():
+    a, b = symbols('a b')
+    cs = ConditionSet(x, Eq(a, 0), S.Complexes)
+    for simultaneous in (False, True):
+        assert cs.subs({a: 0}, simultaneous=simultaneous) is S.Complexes
+        assert cs.subs({a: 2}, simultaneous=simultaneous) is S.EmptySet
+
+        unresolved = ConditionSet(x, Eq(x + a, 0), S.Complexes)
+        for value in (2, S.Half, pi, I):
+            assert unresolved.subs({a: value}, simultaneous=simultaneous) == \
+                ConditionSet(x, Eq(x + value, 0), S.Complexes)
+
+        pair = ConditionSet((x, y), Eq(x + y + a, 0), S.Complexes**2)
+        assert pair.subs({a: 2}, simultaneous=simultaneous) == \
+            ConditionSet((x, y), Eq(x + y + 2, 0), S.Complexes**2)
+        assert pair.subs({x: 2}, simultaneous=simultaneous) == pair
+
+        base = ConditionSet(x, x < a, Interval(x, b))
+        assert base.subs({x: 2}, simultaneous=simultaneous) == \
+            ConditionSet(x, x < a, Interval(2, b))
+
+        function_bound = ConditionSet(f(x), Eq(f(x) + a, 0), S.Complexes)
+        assert function_bound.subs({a: 2}, simultaneous=simultaneous) == \
+            ConditionSet(f(x), Eq(f(x) + 2, 0), S.Complexes)
+        assert function_bound.subs({x: 2},
+            simultaneous=simultaneous) == function_bound
+
+
+def test_subs_CondSet_nested_lambda():
+    a = Symbol('a')
+    bound_only = ConditionSet(x,
+        Eq(Lambda(y, y + a), Lambda(y, y + 1), evaluate=False), S.Complexes)
+    mixed = ConditionSet(x, Eq(Lambda(y, y + a), y, evaluate=False),
+        S.Complexes)
+    for simultaneous in (False, True):
+        assert bound_only.subs({a: 2}, simultaneous=simultaneous) == \
+            ConditionSet(x,
+                Eq(Lambda(y, y + 2), Lambda(y, y + 1), evaluate=False),
+                S.Complexes)
+        for value in (2, z):
+            assert bound_only.subs({y: value},
+                simultaneous=simultaneous) == bound_only
+        assert mixed.subs({y: 2}, simultaneous=simultaneous) == \
+            ConditionSet(x, Eq(Lambda(y, y + a), 2, evaluate=False),
+                S.Complexes)
+    assert mixed.subs(y, z) == ConditionSet(
+        x, Eq(Lambda(z, z + a), z, evaluate=False), S.Complexes)
+    assert mixed.subs({y: z}, simultaneous=True) == ConditionSet(
+        x, Eq(Lambda(y, y + a), z, evaluate=False), S.Complexes)
+
+
+def test_subs_CondSet_nested_conditionset():
+    a = Symbol('a')
+    inner = ConditionSet(y, Eq(y + a, 0), S.Complexes)
+    outer = ConditionSet(x, Contains(z, inner, evaluate=False), S.Complexes)
+    expected = ConditionSet(x, Contains(z,
+        ConditionSet(y, Eq(y + 2, 0), S.Complexes), evaluate=False),
+        S.Complexes)
+    for simultaneous in (False, True):
+        assert outer.subs({a: 2}, simultaneous=simultaneous) == expected
 
 
 def test_subs_CondSet_tebr():
