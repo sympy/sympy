@@ -252,3 +252,12 @@ def test_issue_25337():
 
     x_algebraic = Symbol('x', algebraic=True)
     assert construct_domain(x_algebraic)[0] == ZZ[x_algebraic]
+
+
+def test_issue_30061():
+    assert construct_domain([I*S.Infinity]) == (EX, [EX(I*S.Infinity)])
+    assert construct_domain([I*S.NegativeInfinity]) == (EX, [EX(I*S.NegativeInfinity)])
+    assert construct_domain([1 + I*S.Infinity]) == (EX, [EX(1 + I*S.Infinity)])
+    assert construct_domain([S.Infinity + I]) == (EX, [EX(S.Infinity + I)])
+
+    assert construct_domain(I*S.Infinity) == (EX, EX(I*S.Infinity))
