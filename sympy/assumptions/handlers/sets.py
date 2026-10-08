@@ -353,6 +353,9 @@ def _(expr, assumptions):
         if _ask_recursive(Q.real(expr.exp), assumptions):
             if (expr.exp.is_Rational and
                     _ask_recursive(Q.even(expr.exp.q), assumptions)):
+                if expr.exp.is_negative:
+                    # A zero base gives complex infinity, which is not real
+                    return _ask_recursive(Q.positive(expr.base), assumptions)
                 return _ask_recursive(Q.nonnegative(expr.base), assumptions)
             base_is_zero = _ask_recursive(Q.zero(expr.base), assumptions)
             if base_is_zero or _ask_recursive(Q.integer(expr.exp), assumptions):
@@ -517,6 +520,11 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if expr.base == E:
         return True
+    if (_ask_recursive(Q.zero(expr.base), assumptions) and
+            _ask_recursive(Q.negative(expr.exp), assumptions)):
+        # A zero base with a negative exponent gives complex infinity,
+        # which is not complex
+        return False
     return test_closed_group(expr, assumptions, Q.complex)
 
 @ComplexPredicate.register_many(Determinant, MatrixElement, Trace) # type:ignore
