@@ -205,7 +205,7 @@ def test_meijerint():
     assert meijerint_definite(meijerg([], [], [a/2], [-a/2], x/4)
                   *meijerg([], [], [b/2], [-b/2], x/4)*x**(s - 1), x, 0, oo
         ) == (
-        (4*2**(2*s - 2)*gamma(-2*s + 1)*gamma(a/2 + b/2 + s)
+        (4*(S(1)/4)**(1 - s)*gamma(1 - 2*s)*gamma(a/2 + b/2 + s)
          /(gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1)
            *gamma(a/2 + b/2 - s + 1)),
             (re(s) < 1) & (re(s) < S(1)/2) & (re(a)/2 + re(b)/2 + re(s) > 0)))
