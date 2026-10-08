@@ -967,8 +967,12 @@ def rs_nth_root(p, n, x, prec):
     R = p.ring
     index = R.gens.index(x)
     m = min(p, key=lambda k: k[index])[index]
-    p = mul_xin(p, index, -m)
-    prec -= m
+    if m:
+        shift = QQ(m) / n
+        p = mul_xin(p, index, -m)
+        prec = prec - shift
+    else:
+        shift = 0
 
     if _has_constant_term(p - 1, x):
         zm = R.zero_monom
@@ -989,9 +993,8 @@ def rs_nth_root(p, n, x, prec):
         res = rs_nth_root(p/c, n, x, prec)*const
     else:
         res = _nth_root1(p, n, x, prec)
-    if m:
-        m = QQ(m) / n
-        res = mul_xin(res, index, m)
+    if shift:
+        res = mul_xin(res, index, shift)
     return res
 
 def rs_log(p, x, prec):
