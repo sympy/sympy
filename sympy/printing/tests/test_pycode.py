@@ -334,8 +334,8 @@ def test_issue_16535_16536():
     expr2 = uppergamma(a, x)
 
     prntr = SciPyPrinter()
-    assert prntr.doprint(expr1) == 'scipy.special.gamma(a)*scipy.special.gammainc(a, x)'
-    assert prntr.doprint(expr2) == 'scipy.special.gamma(a)*scipy.special.gammaincc(a, x)'
+    assert prntr.doprint(expr1) == '(scipy.special.gamma(a)*scipy.special.gammainc(a, x))'
+    assert prntr.doprint(expr2) == '(scipy.special.gamma(a)*scipy.special.gammaincc(a, x))'
 
     p_numpy = NumPyPrinter()
     p_pycode = PythonCodePrinter({'strict': False})
