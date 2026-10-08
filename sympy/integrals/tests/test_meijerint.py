@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core.function import expand, expand_func
+from sympy.core.function import expand, expand_func, expand_mul
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
@@ -390,7 +390,6 @@ def test_linear_subs():
 @slow
 def test_probability():
     # various integrals from probability theory
-    from sympy.core.function import expand_mul
     from sympy.core.symbol import (Symbol, symbols)
     from sympy.simplify.gammasimp import gammasimp
     from sympy.simplify.powsimp import powsimp
@@ -494,8 +493,9 @@ def test_probability():
     assert simplify(integrate(x*chisquared, (x, 0, oo), meijerg=True)) == k
     assert simplify(integrate(x**2*chisquared, (x, 0, oo), meijerg=True)) == \
         k*(k + 2)
-    assert gammasimp(integrate(((x - k)/sqrt(2*k))**3*chisquared, (x, 0, oo),
-                    meijerg=True)) == 2*sqrt(2)/sqrt(k)
+    assert expand_mul(gammasimp(integrate(
+        ((x - k)/sqrt(2*k))**3*chisquared, (x, 0, oo), meijerg=True)
+        )) == 2*sqrt(2)/sqrt(k)
 
     # Dagum distribution
     a, b, p = symbols('a b p', positive=True)
