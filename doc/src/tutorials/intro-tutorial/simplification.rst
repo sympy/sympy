@@ -249,7 +249,7 @@ Trigonometric Simplification
 .. note::
 
    SymPy follows Python's naming conventions for inverse trigonometric
-   functions, which is to append an ``a`` to the front of the function's
+   functions, which is to prepend an ``a`` to the front of the function's
    name.  For example, the inverse cosine, or arc cosine, is called
    :func:`~sympy.functions.elementary.trigonometric.acos`.
 
@@ -807,7 +807,7 @@ numbered symbols.  ``symbols('a0:5')`` will create the symbols ``a0``, ``a1``,
                    a₃ + ──
                         a₄
 
-This form is useful for understanding continued fractions, but lets put it
+This form is useful for understanding continued fractions, but let's put it
 into standard rational function form using
 :func:`~sympy.polys.polytools.cancel`.
 
