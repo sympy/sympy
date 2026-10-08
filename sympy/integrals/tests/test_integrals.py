@@ -490,10 +490,8 @@ def test_atan_floor_terms():
         atan(tan(r) + 1/(r**2 + 1)) + pi*floor((r + pi/2)/pi)
     assert A(atan(r + tan(r**2)), r) == \
         atan(r + tan(r**2)) + pi*floor((r**2 + pi/2)/pi)
-    f = (cos(x) + tan(x)**2 + 2*tan(x)*sec(x)**2 + 1)/(
-        (sin(x) + tan(x) + sec(x)**2)**2 + 1)
-    i = integrate(f, (x, 1, 2))
-    assert not i.has(floor) and abs(i.evalf() - Integral(f, (x, 1, 2)).evalf()) < 1e-12
+    assert integrate(diff(atan(tan(x) - sec(x)), x), (x, 1, 2)) == \
+        atan(tan(2) - sec(2)) - atan(tan(1) - sec(1))
 
     # tan and cot that do not depend on r are not corrected
     assert A(r*atan(tan(y)), r) == r*atan(tan(y))
