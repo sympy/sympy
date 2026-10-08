@@ -1306,9 +1306,11 @@ class Pow(Expr):
                 return s.is_algebraic
         elif self.exp.is_rational:
             if self.base.is_infinite:
-                s = self.func(*self.args)
-                if s.func != self.func:
-                    return s.is_algebraic
+                if self.exp.is_positive:
+                    return False
+                if self.exp.is_nonpositive:
+                    return True
+                return None
             if self.base.is_algebraic is False:
                 return self.exp.is_zero
             if self.base.is_zero is False:

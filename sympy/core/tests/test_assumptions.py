@@ -859,6 +859,16 @@ def test_Pow_is_algebraic():
     one_over_zero = Pow(0, -1, evaluate=False)
     assert Pow(one_over_zero, -1, evaluate=False).is_algebraic is True
 
+    inf = Symbol('inf', infinite=True)
+    for exponent in [-1, -S.Half]:
+        p = Pow(inf, exponent, evaluate=False)
+        assert p.is_algebraic is True
+        assert p.is_zero is True
+    assert Pow(inf, 0, evaluate=False).is_algebraic is True
+    assert Pow(inf, 2, evaluate=False).is_algebraic is False
+    r = Symbol('r', rational=True)
+    assert Pow(inf, r, evaluate=False).is_algebraic is None
+
     a = Symbol('a', algebraic=True)
     azf = Symbol('azf', algebraic=True, zero=False)
     na = Symbol('na', algebraic=False)
