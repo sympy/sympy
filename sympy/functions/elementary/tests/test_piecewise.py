@@ -1007,7 +1007,7 @@ def test_holes():
     assert Piecewise((1, And(x > 0, x < 4))).integrate((x, 1, 3)) == 2
 
     # this also tests that the integrate method is used on non-Piecwise
-    # arguments in _eval_integral
+    # arguments in _eval_Integral
     A, B = symbols("A B")
     a, b = symbols('a b', real=True)
     assert Piecewise((A, And(x < 0, a < 1)), (B, Or(x < 1, a > 2))

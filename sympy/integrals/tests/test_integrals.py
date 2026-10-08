@@ -44,7 +44,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
 
-x, y, z, a, b, c, d, e, s, t, x_1, x_2 = symbols('x y z a b c d e s t x_1 x_2')
+w, x, y, z, a, b, c, d, e, s, t, x_1, x_2 = symbols('w x y z a b c d e s t x_1 x_2')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -1068,7 +1068,6 @@ def test_issue_4100():
 
 
 def test_issue_5167():
-    from sympy.abc import w, x, y, z
     f = Function('f')
     assert Integral(Integral(f(x), x), x) == Integral(f(x), x, x)
     assert Integral(f(x)).args == (f(x), Tuple(x))
@@ -1078,16 +1077,38 @@ def test_issue_5167():
     assert Integral(Integral(Integral(f(x), x), y), z).args == \
         (f(x), Tuple(x), Tuple(y), Tuple(z))
     assert integrate(Integral(f(x), x), x) == Integral(f(x), x, x)
-    assert integrate(Integral(f(x), y), x) == y*Integral(f(x), x)
+    assert integrate(Integral(f(x), y), x) == Integral(y*f(x), x)
     assert integrate(Integral(f(x), x), y) in [Integral(y*f(x), x), y*Integral(f(x), x)]
     assert integrate(Integral(2, x), x) == x**2
     assert integrate(Integral(2, x), y) == 2*x*y
     # don't re-order given limits
     assert Integral(1, x, y).args != Integral(1, y, x).args
     # do as many as possible
-    assert Integral(f(x), y, x, y, x).doit() == y**2*Integral(f(x), x, x)/2
-    assert Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit() == \
-        y*(x - 1)*Integral(f(x), (x, 1, 2)) - (x - 1)*Integral(f(x), (x, 1, 2))
+    res = Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit()
+    expected = (y - 1)*(x - 1)*Integral(f(x), (x, 1, 2))
+    assert (res - expected).expand() == 0
+
+
+def test_eval_Integral():
+    class F(Expr):
+        def _eval_Integral(self, x, **hints):
+            return 3*x
+
+    assert integrate(2*F(x), x) == 6*x
+    assert integrate(F(x), (x, 0, 1)) == 3
+    assert integrate(F(x) + x, x) == x**2/2 + 3*x
+
+
+def test_integrate_nested_integral():
+    f = Function('f')
+    assert Integral(f(x), y, x, y, x).doit() == Integral(y**2*f(x)/2, x, x)
+    assert integrate(Integral(y*f(x), x), (y, 0, 2)) == Integral(2*f(x), x)
+    assert integrate(Integral(f(x, y), (x, 0, y)), y) == \
+        Integral(f(x, y), (x, 0, y), y)
+    # the free x in the limit must not be captured by the bound x
+    res = Integral(Integral(w*f(x), (x, 1, 2)), (w, 1, x)).doit()
+    d = res.variables[0]
+    assert d != x and res == Integral(x**2*f(d)/2 - f(d)/2, (d, 1, 2))
 
 
 def test_issue_4890():
@@ -1201,7 +1222,7 @@ def test_issue_4892b():
 
 def test_issue_5178():
     assert integrate(sin(x)*f(y, z), (x, 0, pi), (y, 0, pi), (z, 0, pi)) == \
-        2*Integral(f(y, z), (y, 0, pi), (z, 0, pi))
+        Integral(2*f(y, z), (y, 0, pi), (z, 0, pi))
 
 
 def test_integrate_series():
@@ -1376,10 +1397,9 @@ def test_issue_2708():
     assert Integral(f, (z, 2, 3)).doit() == integral_f
     assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)
     assert integrate(2*f + exp(z), (z, 2, 3)) == \
-        2*integral_f - exp(2) + exp(3)
+        NonElementaryIntegral(2*f, (z, 2, 3)) - exp(2) + exp(3)
     assert integrate(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x)) == \
-        NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
-                                  (z, 0, x))
+        NonElementaryIntegral(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x))
 
 
 def test_issue_2884():
