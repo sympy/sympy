@@ -1114,6 +1114,24 @@ def test_restore_sincos():
         log(sin(x))*sin(x) - sin(x)
     assert risch_integrate(exp(x)*sin(exp(x)), x) == -cos(exp(x))
     assert risch_integrate(sin(sin(x))*cos(x), x) == -cos(sin(x))
+    # Nested tangents: the tower is [tan(x/2), tan((sin(x) - x)/2)], and
+    # the coupled systems over Q(x)(tan(x/2)) become Risch differential
+    # equations over a field containing sqrt(-1), where tan(x/2) has
+    # the special polynomials t +- sqrt(-1).  The first equals
+    # 2*sin(sin(x))*cos(x) and integrates to -2*cos(sin(x)); the second
+    # was an ExactQuotientFailed crash.
+    g = risch_integrate(sin(x + sin(x)) - sin(x - sin(x)), x)
+    assert g == 2*cos(x) + (4*tan(x/2)**2 - 8*tan(x/2)*tan(x/2 - sin(x)/2)
+        - 4)/(tan(x/2)**2 + 1 + 2*tan(x/2 - sin(x)/2)**2/(cos(x) + 1))
+    # ... which is -2*cos(sin(x)): with t0 == tan(x/2) and
+    # t1 == tan((sin(x) - x)/2), cos(sin(x)) == cos(x + 2*u) for
+    # u == (sin(x) - x)/2
+    cx, sx = (1 - t0**2)/(1 + t0**2), 2*t0/(1 + t0**2)
+    c2u, s2u = (1 - t1**2)/(1 + t1**2), 2*t1/(1 + t1**2)
+    assert cancel(g.subs(tan(x/2 - sin(x)/2), -t1).subs({tan(x/2): t0,
+        cos(x): cx, sin(x): sx}) + 2*(cx*c2u - sx*s2u)) == 0
+    assert risch_integrate(sin(x)*sin(sin(x))*sin(cos(x)) +
+        cos(x)*cos(sin(x))*cos(cos(x)), x) == sin(sin(x))*cos(cos(x))
     # The record survives the exponential restart
     assert risch_integrate(sin(x) + exp(x) + exp(x/2 + 1), x) == \
         2*E*exp(x/2) + exp(x) - cos(x)

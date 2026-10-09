@@ -22,7 +22,8 @@ from sympy.core.intfunc import ilcm, igcd
 from sympy.core import Dummy, Add, Mul, Pow, S
 from sympy.core.numbers import I, oo
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
-    bound_degree, _special_denom_cancel_bound, _no_cancel_equal_applies)
+    bound_degree, _special_denom_cancel_bound, _special_polys,
+    _no_cancel_equal_applies)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     residue_reduce, splitfactor, residue_reduce_derivation, DecrementLevel)
 from sympy.polys import Poly, lcm, cancel, sqf_list
@@ -106,7 +107,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     hypertangent, and primitive cases, respectively.  For the hyperexponential
     (resp. hypertangent) case, given a derivation D on k[t] and a in k[t],
     b in k<t>, and g1, ..., gm in k(t) with Dt/t in k (resp. Dt/(t**2 + 1) in
-    k, sqrt(-1) not in k), a != 0, and gcd(a, t) == 1 (resp.
+    k), a != 0, and gcd(a, t) == 1 (resp.
     gcd(a, t**2 + 1) == 1), return the tuple (A, B, GG, h) such that A, B, h in
     k[t], GG = [gg1, ..., ggm] in k(t)^m, and for any solution c1, ..., cm in
     Const(k) and q in k<t> of a*Dq + b*q == Sum(ci*gi, (i, 1, m)), r == q*h in
@@ -116,7 +117,9 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     case.
 
     This is ``ParamRdeSpecialDenomExp`` and ``ParamRdeSpecialDenomTan``
-    from Section 7.1 of Bronstein's book.
+    from Section 7.1 of Bronstein's book.  As in special_denom(), the
+    hypertangent case with sqrt(-1) in k uses the special polynomials
+    t - sqrt(-1) and t + sqrt(-1).
     """
     # The cancellation-case bound is shared with special_denom() in rde.py
     # via _special_denom_cancel_bound().  Note that N below is
@@ -127,10 +130,9 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     if case == 'auto':
         case = DE.case
 
-    if case == 'exp':
-        p = Poly(DE.t, DE.t)
-    elif case == 'tan':
-        p = Poly(DE.t**2 + 1, DE.t)
+    if case in ('exp', 'tan'):
+        specials = _special_polys(case, DE, a, ba, bd,
+            *[g for Gi in G for g in Gi])
     elif case in ('primitive', 'base'):
         B = ba.quo(bd)
         return (a, B, G, Poly(1, DE.t))
@@ -141,19 +143,26 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
             "'base', 'other_linear', 'other_nonlinear'}, not %s." % case)
 
-    nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
-    nc = min(order_at(Ga, p, DE.t) - order_at(Gd, p, DE.t) for Ga, Gd in G)
-    n = min(0, nc - min(0, nb))
-    if not nb:
-        # Possible cancellation.
-        n = _special_denom_cancel_bound(a, ba, bd, n, DE, case)
+    # pN == Product(p**N), pn == Product(p**-n) == 1/h and
+    # dlog == Sum(n*Dp/p) over the special polynomials p, each with its
+    # own n and N.
+    pN, pn, dlog = Poly(1, DE.t), Poly(1, DE.t), Poly(0, DE.t)
+    for p in specials:
+        nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
+        nc = min(order_at(Ga, p, DE.t) - order_at(Gd, p, DE.t)
+            for Ga, Gd in G)
+        n = min(0, nc - min(0, nb))
+        if not nb:
+            # Possible cancellation.
+            n = _special_denom_cancel_bound(a, ba, bd, n, DE, case, p)
 
-    N = max(0, -nb)
-    pN = p**N
-    pn = p**-n  # This is 1/h
+        N = max(0, -nb)
+        pN *= p**N
+        pn *= p**-n
+        dlog += Poly(n, DE.t)*derivation(p, DE).quo(p)
 
     A = a*pN
-    B = ba*pN.quo(bd) + Poly(n, DE.t)*a*derivation(p, DE).quo(p)*pN
+    B = ba*pN.quo(bd) + a*dlog*pN
     G = [(Ga*pN*pn).cancel(Gd, include=True) for Ga, Gd in G]
     h = pn
 
@@ -646,7 +655,8 @@ def prde_cancel_tan(b0, Q, n, DE):
 
     Given a derivation D on k[t], an integer ``n >= 0``, ``b0`` in k
     (a Poly in DE.t of degree 0), and Q = [q1, ..., qm] in k[t]^m,
-    with Dt/(t**2 + 1) == eta in k and sqrt(-1) not in k(t), return
+    with Dt/(t**2 + 1) == eta in k (sqrt(-1) may be in k, as in
+    cancel_tan()), return
     H = [h1, ..., hr] in k[t]^r and a matrix A with m + r columns and
     constant entries such that Dq + (b0 - n*eta*t)*q ==
     Sum(ci*qi, (i, 1, m)) has a solution q of degree at most n in

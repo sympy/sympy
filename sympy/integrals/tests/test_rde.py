@@ -138,7 +138,22 @@ def test_special_denom():
     # hypertangent cases enter the helper with n already at -1, which
     # cannot detect a broken adjustment).
     assert _special_denom_cancel_bound(Poly(1, t), Poly(2*t, t),
-        Poly(1, t), 0, DE, 'tan') == -1
+        Poly(1, t), 0, DE, 'tan', Poly(t**2 + 1, t)) == -1
+
+    # With sqrt(-1) in k (t == tan(x/2) and the equation from the
+    # coupled system of integrating sin(x + sin(x)) - sin(x - sin(x))),
+    # the special polynomials are t - I and t + I: the solution
+    # q == 4*I*(t - I)/(t + I) of Dq + b*q == c has a special
+    # denominator invisible to nu_{t**2 + 1} (Exercise 6.1).
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly((t**2 + 1)/2, t)]})
+    A, B, C, h = special_denom(Poly(1, t), Poly(-2*I*t**2, t),
+        Poly(t**2 + 1, t), Poly(4*t**2 - 4, t), Poly(t**2 + 2*I*t - 1, t), DE)
+    assert [p.as_expr() for p in (A, B, C, h)] == [t**2 + 1,
+        -t**3/2 - 3*I*t**2/2 - t/2 + I/2, 4*t**3 - 4*I*t**2 - 4*t + 4*I,
+        t + I]
+    r = Poly(4*I*(t - I), t)  # q*h
+    assert (A*derivation(r, DE) + B*r - C).is_zero
 
 def test_bound_degree_fail():
     # Primitive

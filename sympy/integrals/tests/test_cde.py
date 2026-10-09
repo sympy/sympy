@@ -45,6 +45,21 @@ def test_coupled_DE_system():
         (Poly(4 - 4*x, x), one), DE)
     assert cancel(y1a.as_expr()/y1d.as_expr()) == -1
     assert cancel(y2a.as_expr()/y2d.as_expr()) == 2*x + 1
+    # The outer system (8.11) of Example 8.4.1 over k(t), t == tan(x):
+    # the equivalent Risch differential equation (8.13) is over
+    # k(sqrt(-1))(t), where the special polynomials of t are
+    # t +- sqrt(-1) and the coupled systems it generates over
+    # k(sqrt(-1)) are not the real and imaginary parts of a single
+    # equation.  The solution is ((t - 1)/(t**2 + 1), 2*x/(t**2 + 1)).
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(t**2 + 1, t)]})
+    one = Poly(1, t)
+    p = Poly(t**2 + 1, t)
+    (y1a, y1d), (y2a, y2d) = coupled_DE_system((Poly(0, t), one),
+        (Poly(4*x, t), one), (Poly(-(t**2 - 2*t + 8*x**2 - 1), t), p),
+        (Poly(2*(1 - 2*x), t), p), DE)
+    assert cancel(y1a.as_expr()/y1d.as_expr()) == (t - 1)/(t**2 + 1)
+    assert cancel(y2a.as_expr()/y2d.as_expr()) == 2*x/(t**2 + 1)
 
 
 def test_param_coupled_DE_system():
