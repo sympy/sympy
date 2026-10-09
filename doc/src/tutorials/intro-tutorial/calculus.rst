@@ -380,7 +380,7 @@ closed form representation, or for which we don't know the functional
 values for yet. One approach would be to use a finite difference
 approach.
 
-The simplest way the differentiate using finite differences is to use
+The simplest way to differentiate using finite differences is to use
 the :func:`~sympy.calculus.finite_diff.differentiate_finite` function:
 
     >>> f, g = symbols('f g', cls=Function)
