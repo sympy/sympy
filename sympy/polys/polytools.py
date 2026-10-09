@@ -20,7 +20,7 @@ from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
-from sympy.core.relational import Relational, Equality
+from sympy.core.relational import Relational
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
@@ -55,6 +55,7 @@ from sympy.polys.polyutils import (
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
+from sympy.utilities.decorator import _rebuild_opaque, _relational_opaque
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
 
@@ -6229,16 +6230,14 @@ def terms_gcd(f, *gens, **args):
 
     orig = sympify(f)
 
-    if isinstance(f, Equality):
-        return Equality(*(terms_gcd(s, *gens, **args) for s in [f.lhs, f.rhs]))
-    elif isinstance(f, Relational):
-        raise TypeError("Inequalities cannot be used with terms_gcd. Found: %s" %(f,))
+    if isinstance(orig, Relational):
+        return orig
 
     if not isinstance(f, Expr) or f.is_Atom:
         return orig
 
     if args.get('deep', False):
-        new = f.func(*[terms_gcd(a, *gens, **args) for a in f.args])
+        new = _rebuild_opaque(f, [terms_gcd(a, *gens, **args) for a in f.args])
         args.pop('deep')
         args['expand'] = False
         return terms_gcd(new, *gens, **args)
@@ -6708,13 +6707,15 @@ def _symbolic_factor_list(expr, opt, method):
 
 def _symbolic_factor(expr, opt, method):
     """Helper function for :func:`_factor`. """
-    if isinstance(expr, Expr):
+    if getattr(expr, 'is_Relational', False):
+        return expr
+    elif isinstance(expr, Expr):
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
         coeff, factors = _symbolic_factor_list(together(expr, fraction=opt['fraction']), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
-        return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
+        return _rebuild_opaque(expr, [_symbolic_factor(arg, opt, method) for arg in expr.args])
     elif hasattr(expr, '__iter__'):
         return expr.__class__([_symbolic_factor(arg, opt, method) for arg in expr])
     else:
@@ -7014,6 +7015,9 @@ def factor(f, *gens, deep=False, **args):
     of :class:`~.Add` is encountered (in this case formal factorization is
     used). This way :func:`factor` can handle large or symbolic exponents.
 
+    Relational expressions are left unchanged, including with ``deep=True``.
+    Factoring their sides can change their truth value or definedness.
+
     By default, the factorization is computed over the rationals. To factor
     over other domain, e.g. an algebraic or finite field, use appropriate
     options: ``extension``, ``modulus`` or ``domain``.
@@ -7082,11 +7086,19 @@ def factor(f, *gens, deep=False, **args):
         # clean up any subexpressions that may have been expanded
         # while factoring out a larger expression
         partials = {}
-        muladd = f.atoms(Mul, Add)
+        muladd = set()
+        traversal = preorder_traversal(f)
+        for p in traversal:
+            if getattr(p, 'is_Relational', False):
+                traversal.skip()
+            elif isinstance(p, (Mul, Add)):
+                muladd.add(p)
         for p in muladd:
             fac = factor(p, *gens, **args)
             if (fac.is_Mul or fac.is_Pow) and fac != p:
                 partials[p] = fac
+        if f.has(Relational):
+            return bottom_up(f, lambda p: partials.get(p, p))
         return f.xreplace(partials)
 
     try:
@@ -7679,6 +7691,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
         return result
 
 
+@_relational_opaque
 @public
 def cancel(f, *gens, _signsimp=True, **args):
     """

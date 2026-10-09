@@ -6,8 +6,10 @@ from sympy.core.symbol import Dummy
 from sympy.functions import gamma, sqrt, sin
 from sympy.polys import factor, cancel
 from sympy.utilities.iterables import sift, uniq
+from sympy.utilities.decorator import _relational_opaque
 
 
+@_relational_opaque
 def gammasimp(expr):
     r"""
     Simplify expressions with gamma functions.

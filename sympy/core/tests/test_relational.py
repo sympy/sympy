@@ -6,7 +6,9 @@ from sympy.testing.pytest import XFAIL, raises
 from sympy.assumptions.ask import Q
 from sympy.core.add import Add
 from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
 from sympy.core.expr import Expr, unchanged
+from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
@@ -19,9 +21,24 @@ from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.hyperbolic import cosh
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.special.bessel import besseli
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import hyper
 from sympy.logic.boolalg import (And, Implies, Not, Or, Xor)
+from sympy.polys.partfrac import apart
+from sympy.polys.polytools import cancel, factor, sqf, terms_gcd
+from sympy.polys.rationaltools import together
 from sympy.sets import Reals
-from sympy.simplify.simplify import simplify
+from sympy.simplify.simplify import besselsimp, logcombine, separatevars, signsimp, simplify
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.fu import fu
+from sympy.simplify.gammasimp import gammasimp
+from sympy.simplify.hyperexpand import hyperexpand
+from sympy.simplify.powsimp import powsimp, powdenest
+from sympy.simplify.radsimp import collect_abs, radsimp, rcollect
+from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -32,6 +49,109 @@ from sympy.sets.sets import Interval, FiniteSet
 from itertools import combinations
 
 x, y, z, t = symbols('x,y,z,t')
+
+
+def test_implicit_algebraic_transforms():
+    a = Symbol('a')
+    transforms = (factor_terms, gcd_terms, together, factor, sqf, cancel, apart, terms_gcd)
+    reps = {a: oo, x: 2, y: -1}
+    lhs = a*x + a*y
+    for R in (Eq, Ne, Lt, Le, Gt, Ge):
+        rel = R(lhs, oo, evaluate=False)
+        for transform in transforms:
+            result = transform(rel)
+            assert result == rel
+            if R in (Eq, Ne):
+                assert result.subs(reps) is (S.false if R is Eq else S.true)
+            else:
+                raises(TypeError, lambda: result.subs(reps))
+
+    rel = lhs < 1
+    assert factor_terms(rel) == rel
+    raises(TypeError, lambda: factor_terms(rel).subs(reps))
+    assert (factor_terms(lhs) < 1).subs(reps) is S.false
+
+    finite = Symbol('finite', finite=True)
+    lhs = 1/(finite + sqrt(finite))
+    rel = lhs > 0
+    assert radsimp(rel) == rel
+    assert rel.subs(finite, 1) is S.true
+    assert radsimp(lhs).subs(finite, 1) is nan
+
+
+def test_implicit_algebraic_transforms_nested():
+    a = Symbol('a')
+    lhs = a*x + a*y
+    rel = lhs < 1
+    for transform in (factor_terms, gcd_terms, together, factor, sqf):
+        expected = lhs if transform is sqf else a*(x + y)
+        assert transform(Tuple(lhs, rel)) == Tuple(expected, rel)
+        assert transform(And(rel, z > 0)) == And(rel, z > 0)
+        assert transform(Piecewise((lhs, rel), (0, True))).args[0].cond == rel
+    assert factor([lhs, rel]) == [a*(x + y), rel]
+    assert factor_terms([lhs, rel]) == [a*(x + y), rel]
+    assert together([lhs, rel]) == [a*(x + y), rel]
+    assert factor(rel, deep=True) == rel
+    assert together(rel, deep=True) == rel
+    assert factor(Tuple(lhs, rel), deep=True) == Tuple(a*(x + y), rel)
+    assert factor(Piecewise((lhs, rel), (0, True)), deep=True) == \
+        Piecewise((a*(x + y), rel), (0, True))
+    assert together(Piecewise((lhs, rel), (0, True)), deep=True) == \
+        Piecewise((a*(x + y), rel), (0, True))
+
+    rational = (x**2 - 1)/(x - 1)
+    rel = Eq(rational, y, evaluate=False)
+    expr = Piecewise((rational, rel), (0, True))
+    expected = Piecewise((x + 1, rel), (0, True))
+    assert cancel(expr) == expected
+    assert cancel(rational*expr) == (x + 1)*expected
+    assert apart(expr, x) == expected
+    assert factor(expr, deep=True) == expected
+
+    expr = Piecewise(((z**2 - 1)/(z - 1), a*x + a*y < 1), (z + 1, True))
+    for transform in (cancel, apart, lambda e: factor(e, deep=True)):
+        result = transform(expr)
+        assert result == expr
+        raises(TypeError, lambda: result.subs({a: oo, x: 2, y: -1}))
+
+    expr = Piecewise((lhs, a*x + a*y < 1), (a*(x + y), True))
+    for transform in (factor_terms, gcd_terms, together):
+        assert transform(expr) == expr
+
+
+def test_implicit_simplification_relational():
+    cases = (
+        (powsimp, exp(x)*exp(y), exp(x + y), {'deep': True}),
+        (powdenest, exp(3*x*log(2)), 2**(3*x), {}),
+        (radsimp, 1/(sqrt(x) + 1), (sqrt(x) - 1)/(x - 1), {}),
+        (gammasimp, gamma(x + 1)/gamma(x), x, {}),
+        (combsimp, factorial(x)/factorial(x - 1), x, {}),
+        (fu, sin(x)**2 + cos(x)**2, S.One, {}),
+        (sqrtdenest, sqrt(5 + 2*sqrt(6)), sqrt(2) + sqrt(3), {}),
+        (signsimp, x*(-x + 1) + x*(x - 1), S.Zero, {}),
+        (collect_abs, Abs(x)*Abs(y), Abs(x*y), {}),
+        (logcombine, log(x) + log(y), log(x*y), {'force': True}),
+        (separatevars, x*y + x*z, x*(y + z), {}),
+        (besselsimp, besseli(-S.Half, x), sqrt(2)*cosh(x)/(sqrt(pi)*sqrt(x)), {}),
+        (hyperexpand, hyper([], [], x), exp(x), {}),
+    )
+    for transform, lhs, expected, options in cases:
+        rel = Eq(lhs, z, evaluate=False)
+        assert transform(lhs, **options) == expected
+        assert transform(rel, **options) is rel
+        fallback = Symbol('fallback')
+        assert transform(Piecewise((lhs, rel), (fallback, True)), **options) == \
+            Piecewise((expected, rel), (fallback, True))
+        expr = Piecewise((lhs, rel), (expected, True))
+        assert transform(expr, **options) == expr
+
+    rel = 1/(sqrt(x) + 1) < 1
+    assert radsimp(rel).subs(x, 1) is S.true
+    assert powdenest(eq=rel, force=True) is rel
+    a = Symbol('a')
+    rel = a*x + a*y < 1
+    assert rcollect(rel, a) is rel
+    raises(TypeError, lambda: rcollect(rel, a).subs({a: oo, x: 2, y: -1}))
 
 
 def rel_check(a, b):

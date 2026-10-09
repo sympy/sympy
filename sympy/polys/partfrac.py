@@ -9,9 +9,11 @@ from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyoptions import allowed_flags, set_defaults
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.utilities import numbered_symbols, take, xthreaded, public
+from sympy.utilities.decorator import _relational_opaque
 
 
 @xthreaded
+@_relational_opaque
 @public
 def apart(f, x=None, full=False, **options):
     """
