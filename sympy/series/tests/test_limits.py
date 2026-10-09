@@ -1495,3 +1495,8 @@ def test_issue_30568():
     assert limit(Max(x, sin(x)), x, 0) == 0
     assert limit(Min(exp(x), exp(2*x)), x, oo) == oo
     assert limit(Max(1/x, 1/x**2), x, oo) == 0
+
+
+def test_issue_30580():
+    x = Symbol('x')
+    assert limit((1/(x*log(log(x))))**(log(log(x))/log(x)), x, oo) == 0
