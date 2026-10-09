@@ -1004,14 +1004,19 @@ def _solve_trig2(f, symbol, domain):
 
     if g.has(x) or h.has(x):
         return ConditionSet(symbol, Eq(f_original, 0), domain)
+
     solns = solveset(g, y, S.Reals) - solveset(h, y, S.Reals)
 
     if isinstance(solns, FiniteSet):
         result = Union(*[invert_real(tan(symbol/mu), s, symbol)[1]
                        for s in solns])
-        dsol = invert_real(tan(symbol/mu), oo, symbol)[1]
-        if degree(h) > degree(g):                   # If degree(denom)>degree(num) then there
-            result = Union(result, dsol)            # would be another sol at Lim(denom-->oo)
+        if degree(h) > degree(g):
+            _n = Dummy('n', integer=True)
+            dsol = ImageSet(
+                Lambda(_n, (2*_n + 1)*pi*mu/2),
+                S.Integers
+            )
+            result = Union(result, dsol)
         return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet
