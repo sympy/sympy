@@ -530,12 +530,13 @@ def test_issue_30598():
 
     # any factoring must preserve the possibility of indeterminacy
     a = Symbol('a')
-    e = a*x + a*y < 1
+    e = a*(x + y) < 1
     rv = reduce_inequalities(e, x)
     reps = {a: oo, x: 2, y: -1}
     assert rv == e
-    assert raises(TypeError, lambda: e.subs(reps))
-    assert (a*(x + y) < 1).subs(reps) is S.false
+    assert e.subs(reps) is S.false
+    assert raises(TypeError, lambda: (a*x + a*y < 1).subs(reps))
+    assert reduce_inequalities(a*x + a*y < 1, x) == (a*x + a*y < 1)
 
     # terms that are known to be finite can still be moved
     u, v, r, s = symbols('u v r s', real=True)

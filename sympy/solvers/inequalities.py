@@ -796,15 +796,30 @@ def _guard_indeterminate_group(ie, s):
     returned as the tracker to indicate that there is no single group that
     can safely be isolated.
     """
+    def expansion_is_safe(expr):
+        # Distributing a factor over a sum preserves the value of the
+        # relation at infinity only when the factor is known to be finite.
+        for term in Add.make_args(expr):
+            if term.is_Mul and any(
+                    f.is_finite is not True
+                    for f in term.args if not f.is_Add):
+                return False
+        return True
+
     sides = []
     virtual = []
 
     for side, negate in ((ie.lhs, False), (ie.rhs, True)):
-        args = Add.make_args(expand_mul(side))
-        nonfinite = [a for a in args if a.is_finite is not True]
+        expanded = Add.make_args(expand_mul(side))
+        virtual.extend(-a if negate else a
+            for a in expanded if a.is_finite is not True)
+        # Expansion is used to detect interactions that do not already
+        # appear as separate additive terms, but the expanded pieces may
+        # only become the protected group when the expansion is safe.
+        args = expanded if expansion_is_safe(side) else Add.make_args(side)
         finite = [a for a in args if a.is_finite is True]
+        nonfinite = [a for a in args if a.is_finite is not True]
         sides.append((finite, nonfinite))
-        virtual.extend(-a if negate else a for a in nonfinite)
 
     if not _may_be_indeterminate(virtual):
         return ie, None, None
