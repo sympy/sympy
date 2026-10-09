@@ -243,7 +243,7 @@ def test_str():
     # Without alias:
     k = QQ.alg_field_from_poly(Poly(x**2 + 7))
     frp = k.primes_above(2)[0]
-    assert str(frp) == '(2, 3*_x/2 + 1/2)'
+    assert str(frp) == '(2, 3*_0/2 + 1/2)'
 
     frp = k.primes_above(3)[0]
     assert str(frp) == '(3)'

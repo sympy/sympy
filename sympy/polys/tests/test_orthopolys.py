@@ -4,7 +4,7 @@ from __future__ import annotations
 from sympy.core.numbers import Rational as Q
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, PurePoly
 from sympy.testing.pytest import raises
 
 from sympy.polys.orthopolys import (
@@ -35,7 +35,7 @@ def test_jacobi_poly():
                                              b*Q(7, 8) + Q(3, 2)) + x*(a**2/4 +
                                             a*Q(3, 4) - b**2/4 - b*Q(3, 4)) - S.Half)
 
-    assert jacobi_poly(1, a, b, polys=True) == Poly(
+    assert jacobi_poly(1, a, b, polys=True) == PurePoly(
         (a/2 + b/2 + 1)*x + a/2 - b/2, x, domain='ZZ(a,b)')
 
 
@@ -52,7 +52,7 @@ def test_gegenbauer_poly():
         3, a, x) == x**3*(4*a**3/3 + 4*a**2 + a*Q(8, 3)) + x*(-2*a**2 - 2*a)
 
     assert gegenbauer_poly(1, S.Half).dummy_eq(x)
-    assert gegenbauer_poly(1, a, polys=True) == Poly(2*a*x, x, domain='ZZ(a)')
+    assert gegenbauer_poly(1, a, polys=True) == PurePoly(2*a*x, x, domain='ZZ(a)')
 
 
 def test_chebyshevt_poly():
@@ -71,7 +71,7 @@ def test_chebyshevt_poly():
     assert chebyshevt_poly(100, x) == (2*chebyshevt_poly(50, x)**2 - 1).expand()
 
     assert chebyshevt_poly(1).dummy_eq(x)
-    assert chebyshevt_poly(1, polys=True) == Poly(x)
+    assert chebyshevt_poly(1, polys=True) == PurePoly(x, x)
 
 
 def test_chebyshevu_poly():
@@ -88,7 +88,7 @@ def test_chebyshevu_poly():
     assert chebyshevu_poly(6, x) == 64*x**6 - 80*x**4 + 24*x**2 - 1
 
     assert chebyshevu_poly(1).dummy_eq(2*x)
-    assert chebyshevu_poly(1, polys=True) == Poly(2*x)
+    assert chebyshevu_poly(1, polys=True) == PurePoly(2*x, x)
 
 
 def test_hermite_poly():
@@ -105,7 +105,7 @@ def test_hermite_poly():
     assert hermite_poly(6, x) == 64*x**6 - 480*x**4 + 720*x**2 - 120
 
     assert hermite_poly(1).dummy_eq(2*x)
-    assert hermite_poly(1, polys=True) == Poly(2*x)
+    assert hermite_poly(1, polys=True) == PurePoly(2*x, x)
 
 
 def test_hermite_prob_poly():
@@ -122,7 +122,7 @@ def test_hermite_prob_poly():
     assert hermite_prob_poly(6, x) == x**6 - 15*x**4 + 45*x**2 - 15
 
     assert hermite_prob_poly(1).dummy_eq(x)
-    assert hermite_prob_poly(1, polys=True) == Poly(x)
+    assert hermite_prob_poly(1, polys=True) == PurePoly(x, x)
 
 
 def test_legendre_poly():
@@ -140,7 +140,7 @@ def test_legendre_poly():
         231, 16)*x**6 - Q(315, 16)*x**4 + Q(105, 16)*x**2 - Q(5, 16)
 
     assert legendre_poly(1).dummy_eq(x)
-    assert legendre_poly(1, polys=True) == Poly(x)
+    assert legendre_poly(1, polys=True) == PurePoly(x, x, domain='QQ')
 
 
 def test_laguerre_poly():
@@ -165,7 +165,7 @@ def test_laguerre_poly():
         3)/2)*x**2 + (-a**2/2 - a*Q(5, 2) - 3)*x + a**3/6 + a**2 + a*Q(11, 6) + 1
 
     assert laguerre_poly(1).dummy_eq(-x + 1)
-    assert laguerre_poly(1, polys=True) == Poly(-x + 1)
+    assert laguerre_poly(1, polys=True) == PurePoly(-x + 1, x, domain='QQ')
 
 
 def test_spherical_bessel_fn():
