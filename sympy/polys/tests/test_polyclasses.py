@@ -3,14 +3,28 @@ from __future__ import annotations
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.polys.domains import ZZ, QQ
-from sympy.polys.polyclasses import DMP, DMF, ANP
+from sympy.polys.domains import ZZ, QQ, GF, RR
+from sympy.polys.polyclasses import DMP, SMP, DMF, ANP
+from sympy.polys.polytools import Poly
 from sympy.polys.polyerrors import (CoercionFailed, ExactQuotientFailed,
-                                    NotInvertible)
+                                    NotInvertible, PolynomialError,
+                                    UnificationFailed)
 from sympy.polys.specialpolys import f_polys
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.abc import x, y
+
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
+
+
+def _smp_poly(p):
+    return Poly.new(SMP.from_poly(p), *p.gens)
+
+
+def _ds(e, *g, **d):
+    f = Poly(e, g, **d)
+    return f, _smp_poly(f)
+
 
 def test_DMP___init__():
     f = DMP([[ZZ(0)], [], [ZZ(0), ZZ(1), ZZ(2)], [ZZ(3)]], ZZ)
@@ -597,9 +611,6 @@ def test_ANP_unify():
 
 
 def test_zero_poly():
-    from sympy import Symbol
-    x = Symbol('x')
-
     R_old = ZZ.old_poly_ring(x)
     zero_poly_old = R_old(0)
     cont_old, prim_old = zero_poly_old.primitive()
@@ -607,3 +618,393 @@ def test_zero_poly():
     assert cont_old == 0
     assert prim_old == zero_poly_old
     assert prim_old.is_primitive is False
+
+
+
+
+def test_SMP_constructors():
+    f = SMP({(2, 0): 1, (0, 1): 2}, ZZ)
+
+    assert f.dom == ZZ
+    assert f.lev == 1
+    assert f.to_dict() == {(2, 0): 1, (0, 1): 2}
+
+    f = SMP.from_dict({(2, 0): 1, (0, 1): 2}, 1, ZZ)
+
+    assert f.dom == ZZ
+    assert f.lev == 1
+    assert f.to_dict() == {(2, 0): 1, (0, 1): 2}
+
+    assert SMP.zero(1, ZZ).to_dict() == {}
+    assert SMP.one(1, ZZ).to_dict() == {(0, 0): 1}
+
+    raises(ValueError, lambda: SMP({}, ZZ))
+
+
+def test_SMP_from_poly():
+    p = Poly(x**2 + y, x, y)
+    f = SMP.from_poly(p)
+
+    assert f.dom == p.domain
+    assert f.lev == p.rep.lev
+    assert f.to_dict() == p.rep.to_dict()
+
+    q = _smp_poly(p)
+    assert q == p
+    assert isinstance(q.rep, SMP)
+    assert SMP.from_poly(q) is q.rep
+
+
+def test_SMP_from_expr():
+    expr = x**2 + 2*x - 5*y - 7*y**3*x**3 + 3
+    f, gens = SMP.from_expr(expr)
+
+    assert gens == (x, y)
+    assert f.dom == ZZ
+    assert f.to_dict() == {
+        (3, 3): -7,
+        (2, 0): 1,
+        (1, 0): 2,
+        (0, 1): -5,
+        (0, 0): 3,
+    }
+
+    f, gens = SMP.from_expr(x + y, x)
+
+    assert gens == (x,)
+    assert f.to_sympy_dict() == {(1,): 1, (0,): y}
+    assert str(f.dom) == 'ZZ[y]'
+
+    f, gens = SMP.from_expr(2*x + 1, x, modulus=2)
+    assert gens == (x,)
+    assert f == SMP.one(0, GF(2))
+    assert all(f._rep.values())
+
+    f, gens = SMP.from_expr(2*x, x, domain=GF(2))
+    assert gens == (x,)
+    assert f.is_zero
+    assert not f._rep
+
+
+def test_SMP_constructor_errors_and_domain():
+    raises(PolynomialError, lambda: SMP.from_dict({(1, 0): 1}, 0, ZZ))
+    raises(PolynomialError, lambda: SMP.from_expr(1))
+
+    f, gens = SMP.from_expr(x/2 + 1, x, domain=QQ)
+    assert gens == (x,)
+    assert f.dom == QQ
+    assert f.to_dict() == {(1,): QQ(1, 2), (0,): QQ.one}
+
+    g = f.ground_new(QQ(3))
+    assert g.to_dict() == {(0,): QQ(3)}
+    assert f.ground_new(QQ.zero).is_zero
+
+    g = SMP.from_dict({(1,): QQ(2), (0,): QQ(3)}, 0, QQ)
+    h = g.to_ring()
+    assert h.dom == ZZ
+    assert h.to_dict() == {(1,): ZZ(2), (0,): ZZ(3)}
+
+    g = SMP.from_dict({(1,): RR(1.5), (0,): RR(1)}, 0, RR)
+    h = g.to_exact()
+    assert h.dom == QQ
+    assert h.to_dict() == {(1,): QQ(3, 2), (0,): QQ.one}
+
+
+def test_SMP_equality_and_unification():
+    f = SMP.from_dict({(1,): 1, (0,): 2}, 0, ZZ)
+    g = SMP.from_dict({(1,): QQ.one, (0,): QQ(2)}, 0, QQ)
+
+    assert f == g
+    assert f.eq(g)
+    assert not f.eq(g, strict=True)
+
+    F, G = f.unify_SMP(g)
+    assert F.dom == G.dom == QQ
+    assert F.to_dict() == G.to_dict()
+
+    h = SMP.from_dict({(1, 0): 1}, 1, ZZ)
+    assert f != h
+    raises(UnificationFailed, lambda: f.unify_SMP(h))
+
+
+def test_SMP_arithmetic_and_terms():
+    f = SMP.from_dict({(2,): 1, (0,): 1}, 0, ZZ)
+    g = SMP.from_dict({(1,): 1, (0,): -1}, 0, ZZ)
+
+    assert f.add_ground(2).to_dict() == {(2,): 1, (0,): 3}
+    assert f.sub_ground(1).to_dict() == {(2,): 1}
+    assert f.mul_ground(3).to_dict() == {(2,): 3, (0,): 3}
+    assert f.neg().to_dict() == {(2,): -1, (0,): -1}
+
+    assert f.add(g).to_dict() == {(2,): 1, (1,): 1}
+    assert f.sub(g).to_dict() == {(2,): 1, (1,): -1, (0,): 2}
+    assert f.mul(g).to_dict() == {(3,): 1, (2,): -1, (1,): 1, (0,): -1}
+    assert g.sqr().to_dict() == {(2,): 1, (1,): -2, (0,): 1}
+    assert g.pow(3).to_dict() == {(3,): 1, (2,): -3, (1,): 3, (0,): -1}
+
+    raises(TypeError, lambda: g.pow(QQ(2)))
+    raises(ValueError, lambda: g.pow(-1))
+
+    assert f.coeffs() == [ZZ.one, ZZ.one]
+    assert f.monoms() == [(2,), (0,)]
+    assert f.terms() == [((2,), ZZ.one), ((0,), ZZ.one)]
+    assert f.terms(order='grlex') == [((2,), ZZ.one), ((0,), ZZ.one)]
+
+    p = _smp_poly(Poly(x**3*y + x*y**2 + x, x, y))
+    assert p.terms(order='grlex') == [
+        ((3, 1), 1), ((1, 2), 1), ((1, 0), 1)]
+
+    z0 = SMP.zero(0, ZZ)
+    assert z0.terms() == [((0,), ZZ.zero)]
+    assert z0.all_coeffs() == [ZZ.zero]
+    assert z0.all_monoms() == [(0,)]
+    assert z0.all_terms() == [((0,), ZZ.zero)]
+
+    assert Poly.new(z0, x)**0 == Poly(1, x)
+
+    h = SMP.from_dict({(2, 1): 1}, 1, ZZ)
+    raises(PolynomialError, lambda: h.all_coeffs())
+    raises(PolynomialError, lambda: h.all_monoms())
+
+    h = SMP.from_dict({(2,): 3, (0,): 1}, 0, ZZ)
+    assert h.all_coeffs() == [ZZ(3), ZZ.zero, ZZ.one]
+    assert h.all_monoms() == [(2,), (1,), (0,)]
+
+
+def test_SMP_degrees_coefficients_and_conversion():
+    f = SMP.from_dict({(3, 1): 2, (0, 4): 3, (0, 0): 6}, 1, ZZ)
+
+    assert f.degree(0) == 3
+    assert f.degree(1) == 4
+    assert f.degree_list() == (3, 4)
+    assert f.total_degree() == 4
+    assert f.LC() == ZZ(2)
+    assert f.TC() == ZZ(6)
+    assert f.nth(3, 1) == ZZ(2)
+    assert f.nth(1, 1) == ZZ.zero
+
+    assert _smp_poly(Poly(0, x)).total_degree() is S.NegativeInfinity
+
+    raises(TypeError, lambda: f.degree(QQ.one))
+    raises(IndexError, lambda: f.degree(-1))
+    raises(IndexError, lambda: f.degree(2))
+    raises(TypeError, lambda: f.nth(1, QQ.one))
+    raises(ValueError, lambda: f.nth(1))
+    raises(ValueError, lambda: f.nth(1, 0, 0))
+    raises(IndexError, lambda: f.nth(-1, 0))
+
+    assert f.to_list() == DMP.from_dict(f.to_dict(), f.lev, f.dom).to_list()
+    assert f.to_tuple() == DMP.from_dict(f.to_dict(), f.lev, f.dom).to_tuple()
+    assert f.to_dict(zero=True) == f.to_dict()
+
+    z0 = SMP.zero(1, ZZ)
+    assert z0.to_dict(zero=True) == {(0, 0): ZZ.zero}
+
+    q = SMP.from_dict({(1,): QQ(1, 2), (0,): QQ(1, 3)}, 0, QQ)
+    c, q0 = q.clear_denoms()
+    assert c == ZZ(6)
+    assert q0.to_dict() == {(1,): QQ(3), (0,): QQ(2)}
+
+    p = SMP.from_dict({(1,): 6, (0,): 9}, 0, ZZ)
+    assert p.content() == ZZ(3)
+    cont, prim = p.primitive()
+    assert cont == ZZ(3)
+    assert prim.to_dict() == {(1,): 2, (0,): 3}
+
+    f = SMP.from_dict({(1,): 5, (0,): 1}, 0, ZZ)
+    g = f.convert(GF(5))
+    assert g == SMP.one(0, GF(5))
+    assert g.degree() == 0
+    assert g.is_ground
+    assert all(g._rep.values())
+
+
+def test_SMP_monic():
+    f = SMP.from_dict({(1,): 2, (0,): 4}, 0, ZZ)
+    g = f.monic()
+    assert g.to_dict() == {(1,): 1, (0,): 2}
+    assert all(g._rep.values())
+
+    f = SMP.from_dict({(1,): 2, (0,): 1}, 0, ZZ)
+    raises(ExactQuotientFailed, f.monic)
+
+    f = SMP.from_dict({(1,): QQ(2), (0,): QQ(1)}, 0, QQ)
+    assert f.monic().to_dict() == {(1,): QQ.one, (0,): QQ(1, 2)}
+
+    f = SMP.from_dict({(1,): 1, (0,): 2}, 0, ZZ)
+    assert f.monic() is f
+
+    z0 = SMP.zero(0, ZZ)
+    assert z0.monic() is z0
+
+
+def test_SMP_calculus_eval_and_trunc():
+    f = SMP.from_dict({(3,): QQ(2), (1,): QQ(5), (0,): QQ(7)}, 0, QQ)
+
+    assert f.diff().to_dict() == {(2,): QQ(6), (0,): QQ(5)}
+    assert f.integrate().to_dict() == {
+        (4,): QQ(1, 2), (2,): QQ(5, 2), (1,): QQ(7)}
+
+    assert f.eval(QQ(2)) == QQ(33)
+
+    g = SMP.from_dict({(1, 1): 2, (0, 1): 3, (0, 0): 1}, 1, ZZ)
+    assert g.eval(2, 0).to_dict() == {(1,): 7, (0,): 1}
+
+    h = SMP.from_dict({(2,): 7, (1,): -6, (0,): 10}, 0, ZZ)
+    assert h.trunc(5).to_dict() == {(2,): 2, (1,): -1}
+
+    raises(IndexError, lambda: g.diff(1, -1))
+    raises(IndexError, lambda: g.diff(1, 2))
+    raises(IndexError, lambda: g.integrate(1, -1))
+    raises(IndexError, lambda: g.integrate(1, 2))
+    raises(ValueError, lambda: g.eval(1, -1))
+    raises(ValueError, lambda: g.eval(1, 2))
+
+    d = DMP.from_dict(g.to_dict(), g.lev, g.dom)
+    assert g.shift_list([1]).to_dict() == d.shift_list([1]).to_dict()
+    assert g.shift_list([1, 2]).to_dict() == d.shift_list([1, 2]).to_dict()
+    assert g.shift_list([1, 2, 3]).to_dict() == d.shift_list([1, 2, 3]).to_dict()
+
+    f, fs = _ds(1, x, y, domain='ZZ')
+    raises(IndexError, lambda: f.shift_list([]))
+    raises(IndexError, lambda: fs.shift_list([]))
+    f, fs = _ds(0, x, y, domain='ZZ')
+    assert f.shift_list([]) == fs.shift_list([])
+
+
+def test_SMP_gcd_lcm_and_polynomial_algorithms():
+    f = Poly(x**3 - x, x)
+    g = Poly(x**2 - 1, x)
+    F = SMP.from_poly(f)
+    G = SMP.from_poly(g)
+
+    f_smp = _smp_poly(f)
+    g_smp = _smp_poly(g)
+    assert f_smp == f
+    assert g_smp == g
+    assert f_smp.gcd(g_smp) == f.gcd(g)
+    assert f_smp.lcm(g_smp) == f.lcm(g)
+
+    assert F.gcd(G).to_dict() == f.rep.gcd(g.rep).to_dict()
+    assert F.lcm(G).to_dict() == f.rep.lcm(g.rep).to_dict()
+    assert F.lcm(SMP.zero(0, ZZ)).is_zero
+
+    Fq = F.convert(QQ)
+    Gq = G.convert(QQ)
+    assert Fq.lcm(Gq).to_dict() == f.rep.convert(QQ).lcm(
+        g.rep.convert(QQ)).to_dict()
+
+    zq = SMP.zero(0, QQ)
+    h, cff, cfg = zq.cofactors(zq)
+    assert h.is_zero
+    assert cff.is_zero
+    assert cfg.is_zero
+
+    assert [h.to_dict() for h in F.subresultants(G)] == [
+        h.to_dict() for h in f.rep.subresultants(g.rep)]
+
+    r = F.resultant(G)
+    assert r == f.rep.resultant(g.rep)
+
+    r, prs = F.resultant(G, includePRS=True)
+    dr, dprs = f.rep.resultant(g.rep, includePRS=True)
+    assert r == dr
+    assert [h.to_dict() for h in prs] == [h.to_dict() for h in dprs]
+
+    fm = Poly(x**2 + y*x + 1, x, y)
+    gm = Poly(x + y, x, y)
+    Fm = SMP.from_poly(fm)
+    Gm = SMP.from_poly(gm)
+    assert Fm.resultant(Gm).to_dict() == fm.rep.resultant(gm.rep).to_dict()
+
+    d = SMP.from_poly(Poly(x**3 - 2*x + 1, x))
+    assert d.discriminant() == Poly(x**3 - 2*x + 1, x).rep.discriminant()
+
+    d0 = SMP.from_poly(Poly(3, x))
+    assert d0.discriminant() == ZZ.zero
+
+    dm0 = SMP.from_poly(Poly(y + 1, x, y))
+    disc0 = dm0.discriminant()
+    assert disc0.is_zero
+    assert disc0.lev == 0
+
+    fm = Poly(x**2 + y*x + 1, x, y)
+    Fm = SMP.from_poly(fm)
+    assert Fm.discriminant().to_dict() == fm.rep.discriminant().to_dict()
+
+    sf0 = SMP.from_poly(Poly(-3, x))
+    coeff, factors = sf0.sqf_list()
+    assert coeff == ZZ(-3)
+    assert factors == []
+
+    sf = SMP.from_poly(Poly((x - 1)**2*(x + 2)**3, x))
+    coeff, factors = sf.sqf_list()
+    dcoeff, dfactors = Poly((x - 1)**2*(x + 2)**3, x).rep.sqf_list()
+    assert coeff == dcoeff
+    assert [(h.to_dict(), k) for h, k in factors] == [
+        (h.to_dict(), k) for h, k in dfactors]
+
+    sfq = SMP.from_poly(
+        Poly((x - 1)**2*(x + 2)**3, x, domain=QQ))
+    coeff, factors = sfq.sqf_list()
+    dcoeff, dfactors = Poly(
+        (x - 1)**2*(x + 2)**3, x, domain=QQ).rep.sqf_list()
+    assert coeff == dcoeff
+    assert [(h.to_dict(), k) for h, k in factors] == [
+        (h.to_dict(), k) for h, k in dfactors]
+
+    sfn = SMP.from_poly(Poly(-(x - 1)**2*(x + 2)**3, x))
+    coeff, factors = sfn.sqf_list()
+    dcoeff, dfactors = Poly(
+        -(x - 1)**2*(x + 2)**3, x).rep.sqf_list()
+    assert coeff == dcoeff
+    assert [(h.to_dict(), k) for h, k in factors] == [
+        (h.to_dict(), k) for h, k in dfactors]
+
+    sfm = SMP.from_poly(Poly((x + y)**2*(x - y), x, y))
+    coeff, factors = sfm.sqf_list()
+    dcoeff, dfactors = Poly((x + y)**2*(x - y), x, y).rep.sqf_list()
+    assert coeff == dcoeff
+    assert [(h.to_dict(), k) for h, k in factors] == [
+        (h.to_dict(), k) for h, k in dfactors]
+
+    coeff, factors = sf.factor_list()
+    dcoeff, dfactors = Poly((x - 1)**2*(x + 2)**3, x).rep.factor_list()
+    assert coeff == dcoeff
+    assert [(h.to_dict(), k) for h, k in factors] == [
+        (h.to_dict(), k) for h, k in dfactors]
+
+    # sign normalization issue
+    f, fs = _ds(1, x, domain='ZZ')
+    g, gs = _ds(-1, x, domain='ZZ')
+    assert f.lcm(g) == fs.lcm(gs)
+
+    # parity in raised errors
+    _, fs = _ds(0, x, domain=QQ)
+    assert fs.lcm(fs).is_zero
+
+    _, fs = _ds(0, x, y, domain=ZZ)
+    assert fs.lcm(fs).is_zero
+
+
+def test_SMP_properties():
+    z0 = SMP.zero(0, ZZ)
+    one = SMP.one(0, ZZ)
+    f = SMP.from_dict({(1,): 1, (0,): 2}, 0, ZZ)
+    g = SMP.from_dict({(2,): 1, (0,): 1}, 0, ZZ)
+    h = SMP.from_dict({(1,): 2, (0,): 4}, 0, ZZ)
+
+    assert z0.is_zero
+    assert not f.is_zero
+    assert one.is_one
+    assert not f.is_one
+    assert one.is_ground
+    assert not f.is_ground
+    assert f.is_monic
+    assert f.is_primitive
+    assert not h.is_primitive
+    assert f.is_linear
+    assert not g.is_linear
+    assert g.is_quadratic
+    assert f.is_monomial is False
+    assert SMP.from_dict({(3,): 2}, 0, ZZ).is_monomial

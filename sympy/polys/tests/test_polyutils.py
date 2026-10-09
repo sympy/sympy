@@ -20,6 +20,8 @@ from sympy.polys.polyutils import (
     _sort_factors,
     _parallel_dict_from_expr,
     _parallel_dict_from_expr_no_gens,
+    _sparse_dict_from_expr,
+    _sparse_dict_from_expr_no_gens,
     _dict_from_expr,
     _dict_from_expr_no_gens,
     parallel_dict_from_expr,
@@ -274,6 +276,42 @@ def test__dict_from_expr_no_gens():
 
     assert dict_from_expr(f) == ({(0, 1, 0, 1): 1, (0, 1, 1, 0): 1,
         (1, 0, 0, 1): 1, (1, 0, 1, 0): 1}, (cos(x), cos(y), sin(x), sin(y)))
+
+
+def test__sparse_dict_from_expr():
+    opt = build_options({'gens': (x, y)})
+    expr = x*y + 2*x*z + 3*y*z
+
+    sparse = _sparse_dict_from_expr(expr, opt)
+    dense, _ = _dict_from_expr(expr, opt)
+
+    assert sparse == {
+        tuple((i, exp) for i, exp in enumerate(monom) if exp): coeff
+        for monom, coeff in dense.items()
+    }
+
+    opt = build_options({'gens': (x,)})
+    assert _sparse_dict_from_expr(2**y*x, opt) == {((0, 1),): 2**y}
+
+    opt = build_options({'gens': (x, y)})
+    raises(PolynomialError, lambda: _sparse_dict_from_expr(2**y*x, opt))
+
+
+def test__sparse_dict_from_expr_no_gens():
+    for expr, args in [
+        (x*y + 2*z + 3, {}),
+        (x + x**-1, {}),
+        (3*sqrt(2)*pi*x*y, {'extension': True}),
+    ]:
+        opt = build_options(args)
+        sparse, sparse_gens = _sparse_dict_from_expr_no_gens(expr, opt)
+        dense, dense_gens = _dict_from_expr_no_gens(expr, opt)
+
+        assert sparse_gens == dense_gens
+        assert sparse == {
+            tuple((i, exp) for i, exp in enumerate(monom) if exp): coeff
+            for monom, coeff in dense.items()
+        }
 
 
 def test__parallel_dict_from_expr_if_gens():
