@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import annotations
 
-from sympy.core.numbers import oo
+from sympy.core.numbers import I, oo
 from sympy.core.singleton import S
 from sympy.polys.polytools import Poly, cancel
 from sympy.simplify.simplify import simplify
@@ -83,6 +83,24 @@ def test_param_coupled_DE_system():
         if c1 == 1 and (u, w) == (-1, 2*x + 1):
             found = True
     assert found
+    # With sqrt(-1) in k: Du + u == c1*(1 + x) + c2, Dv + v == c1*I*(1 + x)
+    # has the solutions c1*(x, I*x) + c2*(1, 0) (and no homogeneous
+    # ones), from the pair of equations Dy + y == c1*(1 + x)*(1 + I) + c2
+    # (y == u + I*v) and Dz + z == c1*(1 + x)*(1 - I) + c2 (z == u - I*v)
+    H, A = param_coupled_DE_system((one, one), (Poly(0, x), one),
+        [((Poly(1 + x, x), one), (Poly(I*(1 + x), x), one)),
+        ((one, one), (Poly(0, x), one))], DE)
+    found = set()
+    for v in A.nullspace():
+        c1, c2 = v[0].as_expr(), v[1].as_expr()
+        u = cancel(sum((v[2 + j]*H[j][0][0]).as_expr()/H[j][0][1].as_expr()
+            for j in range(len(H))))
+        w = cancel(sum((v[2 + j]*H[j][1][0]).as_expr()/H[j][1][1].as_expr()
+            for j in range(len(H))))
+        assert cancel(u.diff(x) + u - c1*(1 + x) - c2) == 0
+        assert cancel(w.diff(x) + w - c1*I*(1 + x)) == 0
+        found.add((c1, c2, u, w))
+    assert found == {(1, 0, x, I*x), (0, 1, 1, 0)}
 
 
 def test_coupled_DE_cancel_prim():
