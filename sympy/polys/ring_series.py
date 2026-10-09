@@ -337,14 +337,20 @@ def rs_pow(p1, n, x, prec):
         else:
             raise ValueError('0**0 is undefined')
 
+    if not p1:
+        if n > 0:
+            return R.zero
+        else:
+            raise ZeroDivisionError
+
     index = R.gens.index(x)
-    m = min(p1, key=lambda k: k[index])[index] if p1 else 0
+    m = min(p1, key=lambda k: k[index])[index]
+    shift = m * n
     if m:
-        shift = m * n
         p1 = mul_xin(p1, index, -m)
-        prec = prec - shift
-    else:
-        shift = 0
+    prec = prec - shift
+    if prec <= 0:
+        return R.zero
 
     if n < 0:
         res = rs_pow(p1, -n, x, prec)

@@ -254,6 +254,16 @@ def test_nth_root():
     r = rs_nth_root(8*x + x**2*y + x**3, 3, x, 4)
     assert r == 5*x**QQ(10,3)*y**3/20736 - x**QQ(10,3)*y/144 - x**QQ(7,3)*y**2/288 + x**QQ(7,3)/12 + x**QQ(4,3)*y/12 + 2*x**QQ(1,3)
 
+    # Constant term in series
+    a = symbols('a')
+    R, x, y = puiseux_ring('x, y', EX)
+    assert rs_nth_root(x + EX(a), 3, x, 4) == EX(5/(81*a**QQ(8, 3)))*x**3 - \
+        EX(1/(9*a**QQ(5, 3)))*x**2 + EX(1/(3*a**QQ(2, 3)))*x + EX(a**QQ(1, 3))
+    assert rs_nth_root(x**QQ(2, 3) + x**2*y + 5, 2, x, 3) == -EX(sqrt(5)/100)*\
+        x**QQ(8, 3)*y - EX(sqrt(5)/16000)*x**QQ(8, 3) + EX(sqrt(5)/10)*x**2*y + \
+        EX(sqrt(5)/2000)*x**2 - EX(sqrt(5)/200)*x**QQ(4, 3) + \
+        EX(sqrt(5)/10)*x**QQ(2, 3) + EX(sqrt(5))
+
 
 def test_issue_30698():
     R, x = puiseux_ring('x', QQ)
@@ -273,16 +283,15 @@ def test_issue_30705():
     p2 = x**2 + x**3
     assert rs_pow(p2, -2, x, 3) == 7*x**2 - 6*x + 5 - 4*x**(-1) + 3*x**(-2) - 2*x**(-3) + x**(-4)
 
+    # Negative valuation
+    p3 = x**-5 + x**-4
+    assert rs_pow(p3, -1, x, 3) == 0
+    assert rs_pow(p3, -1, x, 7) == -x**6 + x**5
 
-    # Constant term in series
-    a = symbols('a')
-    R, x, y = puiseux_ring('x, y', EX)
-    assert rs_nth_root(x + EX(a), 3, x, 4) == EX(5/(81*a**QQ(8, 3)))*x**3 - \
-        EX(1/(9*a**QQ(5, 3)))*x**2 + EX(1/(3*a**QQ(2, 3)))*x + EX(a**QQ(1, 3))
-    assert rs_nth_root(x**QQ(2, 3) + x**2*y + 5, 2, x, 3) == -EX(sqrt(5)/100)*\
-        x**QQ(8, 3)*y - EX(sqrt(5)/16000)*x**QQ(8, 3) + EX(sqrt(5)/10)*x**2*y + \
-        EX(sqrt(5)/2000)*x**2 - EX(sqrt(5)/200)*x**QQ(4, 3) + \
-        EX(sqrt(5)/10)*x**QQ(2, 3) + EX(sqrt(5))
+    # Ordinary polynomial ring
+    R2, x2 = ring('x', QQ)
+    p4 = x2 + x2**2
+    assert rs_pow(p4, -2, x2, 3) == rs_series_inversion(p4**2, x2, 3)
 
 
 def test_atan():
