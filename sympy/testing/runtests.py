@@ -791,6 +791,7 @@ def _doctest(*paths, **kwargs):
     split  = kwargs.get('split', None)
 
     blacklist.extend(_get_doctest_blacklist())
+    blacklist = convert_to_native_paths(blacklist)
 
     # Use a non-windowed backend, so that the tests work on CI
     if import_module('matplotlib') is not None:
