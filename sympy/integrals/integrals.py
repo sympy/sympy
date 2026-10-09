@@ -131,6 +131,11 @@ class Integral(AddWithLimits):
         """
         return super().free_symbols
 
+    @property
+    def is_number(self):
+        from sympy.core.function import AppliedUndef
+        return not self.free_symbols and not self.atoms(AppliedUndef)
+
     def _eval_is_zero(self):
         # This is a very naive and quick test, not intended to do the integral to
         # answer whether it is zero or not, e.g. Integral(sin(x), (x, 0, 2*pi))
