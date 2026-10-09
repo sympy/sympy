@@ -154,6 +154,20 @@ def test_special_denom():
         t + I]
     r = Poly(4*I*(t - I), t)  # q*h
     assert (A*derivation(r, DE) + B*r - C).is_zero
+    # The cancellation sharpening at a linear special: Dq - 2*I*q == -1
+    # over Dt == t**2 + 1 has nu(b) == nu(c) == 0 at both t - I and
+    # t + I, and the solution q == 1/(t + I), so the bound at t + I
+    # (where -b/a == 2*I == m*2*(-I)*eta + Dz/z with m == -1) must drop
+    # to -1 while the one at t - I (m == 1) stays at 0.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x),
+        Poly(t**2 + 1, t)]})
+    A, B, C, h = special_denom(Poly(1, t), Poly(-2*I, t), Poly(1, t),
+        Poly(-1, t), Poly(1, t), DE)
+    assert [p.as_expr() for p in (A, B, C, h)] == [1, -t - I, -t - I, t + I]
+    # (rischDE() returns the constant solution -I/2, which differs from
+    # 1/(t + I) by the homogeneous solution (t - I)/(2*(t + I)))
+    ya, yd = rischDE(Poly(-2*I, t), Poly(1, t), Poly(-1, t), Poly(1, t), DE)
+    assert cancel(ya.as_expr()/yd.as_expr()) == -I/2
 
 def test_bound_degree_fail():
     # Primitive
