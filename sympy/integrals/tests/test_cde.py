@@ -85,8 +85,8 @@ def test_param_coupled_DE_system():
     assert found
     # With sqrt(-1) in k: Du + u == c1*(1 + x) + c2, Dv + v == c1*I*(1 + x)
     # has the solutions c1*(x, I*x) + c2*(1, 0) (and no homogeneous
-    # ones), from the pair of equations Dy + y == c1*(1 + x)*(1 + I) + c2
-    # (y == u + I*v) and Dz + z == c1*(1 + x)*(1 - I) + c2 (z == u - I*v)
+    # ones), from the pair of equations Dy + y == c2 (y == u + I*v) and
+    # Dz + z == 2*c1*(1 + x) + c2 (z == u - I*v)
     H, A = param_coupled_DE_system((one, one), (Poly(0, x), one),
         [((Poly(1 + x, x), one), (Poly(I*(1 + x), x), one)),
         ((one, one), (Poly(0, x), one))], DE)
