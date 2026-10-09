@@ -294,6 +294,15 @@ def test_pow_as_base_exp():
     assert p.base, p.exp == (S(2)/3, x)
     # issue 8344:
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
+    # For a Pow, as_base_exp returns the stored arguments, without
+    # changing a reciprocal rational base into a negative exponent.
+    for base, exponent in [
+        (S.Half, x), (S.Half, -x), (S(2)/3, x),
+        (S(3)/2, -x), (S.Half, S(2)),
+    ]:
+        p = Pow(base, exponent, evaluate=False)
+        assert p.as_base_exp() == p.args == (base, exponent)
+        assert Pow(*p.as_base_exp(), evaluate=False) == p
 
 
 def test_nseries():
