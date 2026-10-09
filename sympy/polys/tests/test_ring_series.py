@@ -278,6 +278,26 @@ def test_issue_30698():
     assert rs_nth_root(x**4 + x**5, 2, x, 4) == x**3/2 + x**2
 
 
+def test_issue_30705():
+    R, x = puiseux_ring('x', QQ)
+    p1 = x + x**2
+    assert rs_pow(p1, -2, x, 3) == 5*x**2 - 4*x + 3 - 2*x**(-1) + x**(-2)
+    assert rs_series_inversion(p1**2, x, 3) == 5*x**2 - 4*x + 3 - 2*x**(-1) + x**(-2)
+
+    p2 = x**2 + x**3
+    assert rs_pow(p2, -2, x, 3) == 7*x**2 - 6*x + 5 - 4*x**(-1) + 3*x**(-2) - 2*x**(-3) + x**(-4)
+
+    # Negative valuation
+    p3 = x**-5 + x**-4
+    assert rs_pow(p3, -1, x, 3) == 0
+    assert rs_pow(p3, -1, x, 7) == -x**6 + x**5
+
+    # Ordinary polynomial ring
+    R2, x2 = ring('x', QQ)
+    p4 = x2 + x2**2
+    assert rs_pow(p4, -2, x2, 3) == rs_series_inversion(p4**2, x2, 3)
+
+
 def test_atan():
     R, x, y = ring('x, y', QQ)
     assert rs_atan(x, x, 9) == -x**7/7 + x**5/5 - x**3/3 + x

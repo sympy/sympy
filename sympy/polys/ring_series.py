@@ -336,26 +336,47 @@ def rs_pow(p1, n, x, prec):
             return R(1)
         else:
             raise ValueError('0**0 is undefined')
+
+    if not p1:
+        if n > 0:
+            return R.zero
+        else:
+            raise ZeroDivisionError
+
+    index = R.gens.index(x)
+    m = min(p1, key=lambda k: k[index])[index]
+    shift = m * n
+    if m:
+        p1 = mul_xin(p1, index, -m)
+    prec = prec - shift
+    if prec <= 0:
+        return R.zero
+
     if n < 0:
-        p1 = rs_pow(p1, -n, x, prec)
-        return rs_series_inversion(p1, x, prec)
-    if n == 1:
-        return rs_trunc(p1, x, prec)
-    if n == 2:
-        return rs_square(p1, x, prec)
-    if n == 3:
+        res = rs_pow(p1, -n, x, prec)
+        res = rs_series_inversion(res, x, prec)
+    elif n == 1:
+        res = rs_trunc(p1, x, prec)
+    elif n == 2:
+        res = rs_square(p1, x, prec)
+    elif n == 3:
         p2 = rs_square(p1, x, prec)
-        return rs_mul(p1, p2, x, prec)
-    p = R(1)
-    while 1:
-        if n & 1:
-            p = rs_mul(p1, p, x, prec)
-            n -= 1
-            if not n:
-                break
-        p1 = rs_square(p1, x, prec)
-        n = n // 2
-    return p
+        res = rs_mul(p1, p2, x, prec)
+    else:
+        p = R(1)
+        while 1:
+            if n & 1:
+                p = rs_mul(p1, p, x, prec)
+                n -= 1
+                if not n:
+                    break
+            p1 = rs_square(p1, x, prec)
+            n = n // 2
+        res = p
+
+    if shift:
+        res = mul_xin(res, index, shift)
+    return res
 
 def rs_subs(p, rules, x, prec):
     """
