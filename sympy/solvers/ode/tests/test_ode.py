@@ -1052,6 +1052,17 @@ def test_dsolve_remove_redundant_solutions():
     assert dsolve(eq) == sol
 
 
+def test_dsolve_ics_redundant_constant_solution():
+    t = symbols('t')
+    y = Function('y')(t)
+    C2 = symbols('C2')
+
+    eq = y.diff(t, 2) + 2*y.diff(t) + y
+    ics = {y.subs(t, 0): 0}
+
+    assert dsolve(eq, y, ics=ics) == Eq(y, C2*t*exp(-t))
+
+
 def test_issue_13060():
     A, B = symbols("A B", cls=Function)
     t = Symbol("t")
