@@ -159,7 +159,7 @@ def continuous_domain(f, symbol, domain):
     return cont_domain - singularities(f, symbol, domain)
 
 
-def function_range(f, symbol, domain):
+def function_range(f, symbol, domain, loc=False):
     """
     Finds the range of a function in a given domain.
     This method is limited by the ability to determine the singularities and
@@ -229,6 +229,8 @@ def function_range(f, symbol, domain):
 
     if period == S.Zero:
         # the expression is constant wrt symbol
+        if loc:
+            return {f.expand(): domain}
         return FiniteSet(f.expand())
 
     from sympy.series.limits import limit
@@ -252,12 +254,19 @@ def function_range(f, symbol, domain):
         interval_iter = intervals.args
     else:
         raise NotImplementedError("Unable to find range for the given domain.")
-
+    vals_map = {}
     for interval in interval_iter:
         if isinstance(interval, FiniteSet):
             for singleton in interval:
                 if singleton in domain:
-                    range_int += FiniteSet(f.subs(symbol, singleton))
+                    value = f.subs(symbol, singleton)
+                    if not vals_map.get(value) and vals_map.get(value) != 0:
+                        vals_map[value] = [(singleton, 'attain', None)]
+                    else:
+                        vals_map[value].append((singleton, 'attain', None))
+
+                    range_int += FiniteSet(value)
+
         elif isinstance(interval, Interval):
             vals = S.EmptySet
             critical_values = S.EmptySet
@@ -266,10 +275,21 @@ def function_range(f, symbol, domain):
 
             for is_open, limit_point, direction in bounds:
                 if is_open:
-                    critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
+                    limiting_value = limit(f, symbol, limit_point, direction)
+                    critical_values += FiniteSet(limiting_value)
                     vals += critical_values
+                    if not vals_map.get(limiting_value) and vals_map.get(limiting_value) != 0:
+                        vals_map[limiting_value] = [(limit_point, 'approach', direction)]
+                    else:
+                        vals_map[limiting_value].append((limit_point, 'approach', direction))
+
                 else:
-                    vals += FiniteSet(f.subs(symbol, limit_point))
+                    value = f.subs(symbol, limit_point)
+                    vals += FiniteSet(value)
+                    if not vals_map.get(value) and vals_map.get(value) != 0:
+                        vals_map[value] = [(limit_point, 'attain', None)]
+                    else:
+                        vals_map[value].append((limit_point, 'attain', None))
 
             if vals.inf == S.NegativeInfinity and vals.sup == S.Infinity:
                 range_int += S.Reals
@@ -285,7 +305,12 @@ def function_range(f, symbol, domain):
                         'Infinite number of critical points for {}'.format(f))
 
             for critical_point in critical_points:
-                vals += FiniteSet(f.subs(symbol, critical_point))
+                value = f.subs(symbol, critical_point)
+                vals += FiniteSet(value)
+                if not vals_map.get(value) and vals_map.get(value) != 0:
+                    vals_map[value] = [(critical_point, 'attain', None)]
+                else:
+                    vals_map[value].append((critical_point, 'attain', None))
 
             left_open, right_open = False, False
 
@@ -307,8 +332,15 @@ def function_range(f, symbol, domain):
                 val = f.subs(symbol, pt)
                 if val.is_real:
                     range_int += FiniteSet(val)
+                    if not vals_map.get(val) and vals_map.get(val) != 0:
+                        vals_map[val] = [(pt, 'attain', None)]
+                    else:
+                        vals_map[val].append((pt, 'attain', None))
+
             except (ValueError, TypeError, ZeroDivisionError):
                 pass
+    if loc:
+        return vals_map
 
     return range_int
 
@@ -829,7 +861,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     return set
 
 
-def maximum(f, symbol, domain=S.Reals):
+def maximum(f, symbol, domain=S.Reals, loc=False):
     """
     Returns the maximum value of a function in the given domain.
 
@@ -871,12 +903,18 @@ def maximum(f, symbol, domain=S.Reals):
         if domain is S.EmptySet:
             raise ValueError("Maximum value not defined for empty domain.")
 
+        if loc:
+            vals_map = function_range(f, symbol, domain, loc)
+            max_val = FiniteSet(*vals_map.keys()).sup
+            max_loc = vals_map[max_val]
+            return max_loc, max_val
+
         return function_range(f, symbol, domain).sup
     else:
         raise ValueError("%s is not a valid symbol." % symbol)
 
 
-def minimum(f, symbol, domain=S.Reals):
+def minimum(f, symbol, domain=S.Reals, loc=False):
     """
     Returns the minimum value of a function in the given domain.
 
@@ -917,6 +955,12 @@ def minimum(f, symbol, domain=S.Reals):
     if isinstance(symbol, Symbol):
         if domain is S.EmptySet:
             raise ValueError("Minimum value not defined for empty domain.")
+
+        if loc:
+            vals_map = function_range(f, symbol, domain, loc)
+            min_val = FiniteSet(*vals_map.keys()).inf
+            min_loc = vals_map[min_val]
+            return min_loc, min_val
 
         return function_range(f, symbol, domain).inf
     else:
