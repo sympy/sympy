@@ -418,7 +418,7 @@ def Logarithmic(name, p):
     >>> X = Logarithmic("x", p)
 
     >>> density(X)(z)
-    -1/(5**z*z*log(4/5))
+    -(1/5)**z/(z*log(4/5))
 
     >>> E(X)
     -1/(-4*log(5) + 8*log(2))

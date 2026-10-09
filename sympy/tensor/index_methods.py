@@ -230,11 +230,12 @@ def get_indices(expr):
 
     :Exceptions:
 
-    An IndexConformanceException means that the terms ar not compatible, e.g.
+    An IndexConformanceException means that the terms are not compatible, e.g.
 
-    >>> get_indices(x[i] + y[j])                #doctest: +SKIP
-            (...)
-    IndexConformanceException: Indices are not consistent: x(i) + y(j)
+    >>> get_indices(x[i] + y[j])
+    Traceback (most recent call last):
+    ...
+    IndexConformanceException: Indices are not consistent: x[i] + y[j]
 
     .. warning::
        The concept of *outer* indices applies recursively, starting on the deepest

@@ -795,14 +795,7 @@ class Pow(Expr):
                 return result
 
     def as_base_exp(self):
-        """Return base and exp of self.
-
-        Explanation
-        ===========
-
-        If base a Rational less than 1, then return 1/Rational, -exp.
-        If this extra processing is not needed, the base and exp
-        properties will give the raw arguments.
+        """Return a tuple of the arguments of self.
 
         Examples
         ========
@@ -810,17 +803,14 @@ class Pow(Expr):
         >>> from sympy import Pow, S
         >>> p = Pow(S.Half, 2, evaluate=False)
         >>> p.as_base_exp()
-        (2, -2)
+        (1/2, 2)
         >>> p.args
         (1/2, 2)
         >>> p.base, p.exp
         (1/2, 2)
 
         """
-        b, e = self.args
-        if b.is_Rational and b.p == 1 and b.q != 1:
-            return Integer(b.q), -e
-        return b, e
+        return self.args
 
     def _eval_adjoint(self):
         from sympy.functions.elementary.complexes import adjoint
@@ -1305,6 +1295,12 @@ class Pow(Expr):
             else:
                 return s.is_algebraic
         elif self.exp.is_rational:
+            if self.base.is_infinite:
+                if self.exp.is_positive:
+                    return False
+                if self.exp.is_nonpositive:
+                    return True
+                return None
             if self.base.is_algebraic is False:
                 return self.exp.is_zero
             if self.base.is_zero is False:

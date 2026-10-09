@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from sympy.core.mod import Mod
-from sympy.core.numbers import (I, oo, pi)
+from sympy.core.numbers import (I, oo, pi, zoo)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -15,6 +15,7 @@ from sympy.core.assumptions import (assumptions, check_assumptions,
     _load_pre_generated_assumption_rules)
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.random import seed
+from sympy.core.symbol import symbols
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
 
@@ -850,6 +851,25 @@ def test_Pow_is_algebraic():
         assert Pow(0, exponent, evaluate=False).is_algebraic is True
     assert Pow(0, -1, evaluate=False).is_finite is False
 
+    # issue 30665
+    for exponent in [-1, -S.Half, -Integer(2)]:
+        assert Pow(zoo, exponent, evaluate=False).is_algebraic is True
+    for exponent in [1, S.Half, Integer(2)]:
+        assert Pow(zoo, exponent, evaluate=False).is_algebraic is False
+    assert Pow(zoo, 0, evaluate=False).is_algebraic is True
+    one_over_zero = Pow(0, -1, evaluate=False)
+    assert Pow(one_over_zero, -1, evaluate=False).is_algebraic is True
+
+    inf = Symbol('inf', infinite=True)
+    for exponent in [-1, -S.Half]:
+        p = Pow(inf, exponent, evaluate=False)
+        assert p.is_algebraic is True
+        assert p.is_zero is True
+    assert Pow(inf, 0, evaluate=False).is_algebraic is True
+    assert Pow(inf, 2, evaluate=False).is_algebraic is False
+    r = Symbol('r', rational=True)
+    assert Pow(inf, r, evaluate=False).is_algebraic is None
+
     a = Symbol('a', algebraic=True)
     azf = Symbol('azf', algebraic=True, zero=False)
     na = Symbol('na', algebraic=False)
@@ -1223,6 +1243,17 @@ def test_issue_16579():
     # Now infinite == !finite
     nf = Symbol('nf', finite=False)
     assert nf.is_infinite is True
+
+
+def test_add_signed_group_assumptions():
+    a, b, c = symbols('a b c', positive=True, integer=True)
+
+    assert (a + b + c - 2).is_positive is True
+    assert (a + b + c - 3).is_nonnegative is True
+    assert (a + b + c - 3).is_positive is None
+    assert (a + b - c - 2).is_positive is None
+    assert (-a - b - c + 2).is_negative is True
+    assert (-a - b - c + 3).is_nonpositive is True
 
 
 def test_issue_17556():

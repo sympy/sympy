@@ -54,7 +54,7 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
     mathieusprime, mathieucprime)
 
-from sympy.matrices import (Adjoint, Inverse, MatAdd, MatrixSymbol, Transpose,
+from sympy.matrices import (Adjoint, Inverse, MatAdd, MatMul, MatrixSymbol, Transpose,
                             KroneckerProduct, BlockMatrix, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions import hadamard_power
 
@@ -3808,6 +3808,16 @@ def test_tensor_ArrayTensorProduct():
     assert upretty(ArrayTensorProduct(A + C, B)) == "(A + C)\u22a0B"
 
 
+def test_tensor_ArrayElementwiseApplyFunc():
+    from sympy.tensor.array.expressions import ArraySymbol, ArrayTensorProduct
+    from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc
+    A = ArraySymbol("A", (2, 3))
+    assert upretty(ArrayElementwiseApplyFunc(exp, A)) == "exp\u02f3(A)"
+    assert pretty(ArrayElementwiseApplyFunc(exp, A)) == "exp.(A)"
+    assert upretty(ArrayElementwiseApplyFunc(sin, ArrayTensorProduct(A, A))) == \
+        "sin\u02f3(A\u22a0A)"
+
+
 def test_diffgeom_print_WedgeProduct():
     from sympy.diffgeom.rn import R2
     from sympy.diffgeom import WedgeProduct
@@ -4016,12 +4026,12 @@ def test_MatrixExpressions():
     expr = (X.T*X).applyfunc(sin)
 
     ascii_str = """\
-              / T  \\\n\
-(d -> sin(d)).\\X *X/\
+    / T  \\\n\
+sin.\\X *X/\
 """
     ucode_str = """\
-             ⎛ T  ⎞\n\
-(d ↦ sin(d))˳⎝X ⋅X⎠\
+    ⎛ T  ⎞\n\
+sin˳⎝X ⋅X⎠\
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -7908,7 +7918,7 @@ H    \n\
 
 def test_issue_15560():
     a = MatrixSymbol('a', 1, 1)
-    e = pretty(a*(KroneckerProduct(a, a)))
+    e = pretty(MatMul(a, KroneckerProduct(a, a)))
     result = 'a*(a x a)'
     assert e == result
 

@@ -580,6 +580,24 @@ def test_dup_lcm():
     assert R.dup_lcm(2*x**2 + x, x) == 2*x**2 + x
     assert R.dup_lcm(2*x**2 + x, 2*x) == 4*x**2 + 2*x
 
+    assert R.dup_lcm(0, 0) == 0
+    assert R.dup_lcm(0, x) == 0
+    assert R.dup_lcm(x, 0) == 0
+
+    assert R.dup_rr_lcm(0, 0) == 0
+    assert R.dup_rr_lcm(0, x) == 0
+    assert R.dup_rr_lcm(x, 0) == 0
+
+    R, x = ring("x", QQ)
+
+    assert R.dup_lcm(0, 0) == 0
+    assert R.dup_lcm(0, x) == 0
+    assert R.dup_lcm(x, 0) == 0
+
+    assert R.dup_ff_lcm(0, 0) == 0
+    assert R.dup_ff_lcm(0, x) == 0
+    assert R.dup_ff_lcm(x, 0) == 0
+
 
 def test_dmp_lcm():
     R, x, y = ring("x,y", ZZ)
@@ -603,6 +621,22 @@ def test_dmp_lcm():
     h = x**5 + x**4*y - 18*x**3*y**2 - 50*x**2*y**3 - 47*x*y**4 - 15*y**5
 
     assert R.dmp_lcm(f, g) == h
+
+    assert R.dmp_lcm(0, 0) == 0
+    assert R.dmp_lcm(0, x*y) == 0
+
+    assert R.dmp_rr_lcm(0, 0) == 0
+    assert R.dmp_rr_lcm(0, x*y) == 0
+    assert R.dmp_rr_lcm(x*y, 0) == 0
+
+    R, x, y = ring("x,y", QQ)
+
+    assert R.dmp_lcm(0, 0) == 0
+    assert R.dmp_lcm(0, x*y) == 0
+
+    assert R.dmp_ff_lcm(0, 0) == 0
+    assert R.dmp_ff_lcm(0, x*y) == 0
+    assert R.dmp_ff_lcm(x*y, 0) == 0
 
 
 def test_dmp_content():

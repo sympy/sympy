@@ -1867,6 +1867,16 @@ def parts_rule(integral):
         if isinstance(v, Integral):
             return
 
+        # If integration by parts produces a v * du term with multiple or nested
+        # logarithmic factors, IBPR will increase complexity and cycle endlessly.
+        v_du = v * du
+        if integrand.has(TrigonometricFunction) and integrand.has(log) and v_du.has(log):
+            # Count log occurrences before and after
+            log_count_before = integrand.count(log)
+            log_count_after = v_du.count(log)
+            if log_count_after > log_count_before:
+                return
+
         # Set a limit on the number of times u can be used
         if isinstance(u, (sin, cos, exp, sinh, cosh)):
             cachekey = u.xreplace({symbol: _cache_dummy})

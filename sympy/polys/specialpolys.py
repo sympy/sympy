@@ -31,7 +31,7 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         `n` decides the order of polynomial
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
+        Returns a Poly object when ``polys=True``, otherwise
         (default) returns an expression.
     """
     if n <= 0:
@@ -73,7 +73,7 @@ def cyclotomic_poly(n, x=None, polys=False):
         `n` decides the order of polynomial
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
+        Returns a Poly object when ``polys=True``, otherwise
         (default) returns an expression.
     """
     if n <= 0:
@@ -133,7 +133,7 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
          Decides what ring the coefficients are supposed
          to belong. Default is set to Integers.
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
+        Returns a Poly object when ``polys=True``, otherwise
         (default) returns an expression.
     """
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)

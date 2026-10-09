@@ -18,14 +18,30 @@ from sympy.series.order import O
 from sympy.sets.sets import Interval
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import simplify
-from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
-                                  gcd_terms, factor_terms, factor_nc, _mask_nc,
-                                  _monotonic_sign)
+from sympy.core.exprtools import (_decompose_exprs, decompose_power, Factors,
+                                  Term, _gcd_terms, gcd_terms, factor_terms,
+                                  factor_nc, _mask_nc, _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
 from sympy.testing.pytest import raises
+from sympy.core.coreerrors import NonCommutativeExpression
 
 from sympy.abc import a, b, t, x, y, z
+
+
+def test__decompose_exprs():
+    A, B = symbols('A B', commutative=False)
+    f = Mul(x**2, y, x**-1, x, evaluate=False)
+    factor_data, gens = _decompose_exprs((f, x*z))
+
+    assert factor_data == [
+        [([], {x: (3, -1), y: (1, 0)})],
+        [([], {x: (1, 0), z: (1, 0)})],
+    ]
+    assert gens == {x, y, z}
+
+    raises(NonCommutativeExpression, lambda:
+        _decompose_exprs((A*B,)))
 
 
 def test_decompose_power():
@@ -435,6 +451,24 @@ def test_monotonic_sign():
     assert F(Dummy(nonnegative=True)) == 0
     assert F(Dummy(nonpositive=True)) == 0
 
+    pi = Dummy(positive=True, integer=True)
+    qi = Dummy(positive=True, integer=True)
+    ri = Dummy(positive=True, integer=True)
+    assert F(pi + qi + ri) == 3
+    assert F(pi - qi) is None
+    assert F(-pi - qi) == -2
+    assert F(pi + qi + ri - 3).is_nonnegative
+    assert F(-pi - qi + 2).is_nonpositive
+
+    p1 = Dummy(positive=True)
+    p2 = Dummy(positive=True)
+    assert F(p1 + p2).is_positive
+    assert F(-p1 - p2).is_negative
+
+    nn1 = Dummy(nonnegative=True)
+    nn2 = Dummy(nonnegative=True)
+    assert F(nn1 + nn2).is_nonnegative
+
     assert F(Dummy(positive=True) + 1).is_positive
     assert F(Dummy(positive=True, integer=True) - 1).is_nonnegative
     assert F(Dummy(positive=True) - 1) is None
@@ -470,6 +504,17 @@ def test_monotonic_sign():
 
     assert F((p - 1)*q + 1).is_positive
     assert F(-(p - 1)*q - 1).is_negative
+
+    nn1, nn2 = Dummy(nonnegative=True), Dummy(nonnegative=True)
+
+    r = F(nn1 + nn2)
+    assert r.is_nonnegative is True
+    assert r.is_positive is None
+
+    r = F(-nn1 - nn2)
+    assert r.is_nonpositive is True
+    assert r.is_negative is None
+
 
 def test_issue_17256():
     from sympy.sets.fancysets import Range

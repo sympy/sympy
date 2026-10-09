@@ -973,6 +973,19 @@ class Mul(Expr, AssocOp):
             plain = self.func(*plain)
             if sums:
                 deep = hints.get("deep", False)
+                for i, s in enumerate(sums):
+                    if not s.is_Add:
+                        continue
+                    o = s.getO()
+                    if o is not None and any(p != 0 for p in o.point):
+                        other = sums[:i] + sums[i + 1:]
+                        # Undo any Basic wrapper used by _expandsums for nc factors.
+                        other = [a.args[0] if type(a) is Basic else a for a in other]
+                        regular = self.func(plain, s.removeO(), *other)
+                        if regular.is_Mul and any(a.is_Add for a in regular.args):
+                            regular = regular._eval_expand_mul(**hints)
+                        return regular + self.func(plain, o, *other)
+
                 terms = self.func._expandsums(sums)
                 args = []
                 for term in terms:
@@ -1262,21 +1275,6 @@ class Mul(Expr, AssocOp):
         # been separated from each other
         numers, denoms = list(zip(*[f.as_numer_denom() for f in self.args]))
         return self.func(*numers), self.func(*denoms)
-
-    def as_base_exp(self):
-        e1 = None
-        bases = []
-        nc = 0
-        for m in self.args:
-            b, e = m.as_base_exp()
-            if not b.is_commutative:
-                nc += 1
-            if e1 is None:
-                e1 = e
-            elif e != e1 or nc > 1 or not e.is_Integer:
-                return self, S.One
-            bases.append(b)
-        return self.func(*bases), e1
 
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)

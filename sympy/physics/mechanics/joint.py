@@ -1303,9 +1303,9 @@ class CylindricalJoint(Joint):
     [u1_C1(t)]])
     >>> flag.masscenter.vel(floor.frame).to_matrix(tube.frame).simplify()
     Matrix([
-    [-l*u0_C2(t)*cos(q0_C2(t)) - r*u0_C1(t) - w*u0_C1(t) - q1_C2(t)*u0_C1(t)],
-    [                    -l*u0_C1(t)*sin(q0_C2(t)) + Derivative(q1_C2(t), t)],
-    [                                    l*u0_C2(t)*sin(q0_C2(t)) + u1_C1(t)]])
+    [-l*u0_C2(t)*cos(q0_C2(t)) - w*u0_C1(t) - (r + q1_C2(t))*u0_C1(t)],
+    [             -l*u0_C1(t)*sin(q0_C2(t)) + Derivative(q1_C2(t), t)],
+    [                             l*u0_C2(t)*sin(q0_C2(t)) + u1_C1(t)]])
 
     """
 

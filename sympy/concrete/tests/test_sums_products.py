@@ -340,7 +340,7 @@ def test_geometric_sums():
         exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)
     )
     assert result.simplify() == Piecewise(
-            (1, Eq(exp(-2*I*pi*(k - q)/n), 1)), (0, True)
+            (1, Eq(exp(2*I*pi*(-k + q)/n), 1)), (0, True)
     )
 
     #Issue 23491

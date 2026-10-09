@@ -129,8 +129,8 @@ doctest_list = [
 try:
     import matplotlib # noqa: F401
     doctest_list.extend([
-        'doc/src/tutorials/biomechanics/biomechanical-model-example.rst',
-        'doc/src/tutorials/biomechanics/biomechanics.rst',
+        'doc/src/explanation/modules/physics/biomechanics/biomechanics.rst',
+        'doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst',
     ])
 except ImportError:
     pass

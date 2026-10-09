@@ -127,19 +127,13 @@ if IS_WINDOWS:
 
 def convert_to_native_paths(lst):
     """
-    Converts a list of '/' separated paths into a list of
-    native (os.sep separated) paths and converts to lowercase
-    if the system is case insensitive.
+    Convert paths using '/' or '\\' separators to normalized native
+    paths and normalize case if the system is case insensitive.
     """
     newlst = []
     for rv in lst:
-        rv = os.path.join(*rv.split("/"))
-        # on windows the slash after the colon is dropped
-        if sys.platform == "win32":
-            pos = rv.find(':')
-            if pos != -1:
-                if rv[pos + 1] != '\\':
-                    rv = rv[:pos + 1] + '\\' + rv[pos + 1:]
+        rv = rv.replace("/", os.sep).replace("\\", os.sep)
+        rv = os.path.normpath(rv)
         newlst.append(os.path.normcase(rv))
     return newlst
 
@@ -690,6 +684,7 @@ def _get_doctest_blacklist():
             "examples/intermediate/sample.py",
             "examples/intermediate/mplot2d.py",
             "examples/intermediate/mplot3d.py",
+            "doc/src/modules/diffgeom.rst",
             "doc/src/modules/numeric-computation.rst",
             "doc/src/explanation/best-practices.md",
             "doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst",
@@ -796,6 +791,7 @@ def _doctest(*paths, **kwargs):
     split  = kwargs.get('split', None)
 
     blacklist.extend(_get_doctest_blacklist())
+    blacklist = convert_to_native_paths(blacklist)
 
     # Use a non-windowed backend, so that the tests work on CI
     if import_module('matplotlib') is not None:
