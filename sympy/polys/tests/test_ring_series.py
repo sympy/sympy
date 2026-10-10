@@ -298,6 +298,23 @@ def test_issue_30705():
     assert rs_pow(p4, -2, x2, 3) == rs_series_inversion(p4**2, x2, 3)
 
 
+def test_issue_30710():
+    R, x = puiseux_ring('x', QQ)
+    
+    # Positive valuation, negative fractional power
+    assert rs_pow(x + x**2, Rational(-1, 2), x, 3) == \
+        -QQ(5, 16)*x**QQ(5, 2) + QQ(3, 8)*x**QQ(3, 2) - QQ(1, 2)*x**QQ(1, 2) + x**QQ(-1, 2)
+
+    # Negative valuation, positive fractional power
+    assert rs_pow(x**-3 + x**-2, Rational(2, 3), x, 1) == \
+        -QQ(1, 9) + QQ(2, 3)*x**(-1) + x**(-2)
+
+    # Negative valuation, negative fractional power
+    assert rs_pow(x**2 + x**3, Rational(-1, 2), x, 1) == \
+        -QQ(1, 2) + x**(-1)
+
+
+
 def test_atan():
     R, x, y = ring('x, y', QQ)
     assert rs_atan(x, x, 9) == -x**7/7 + x**5/5 - x**3/3 + x
