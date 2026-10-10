@@ -810,3 +810,16 @@ def test_issue_30714():
     expr = ~a & ~c & ~ITE(c, a, True)
     assert satisfiable(expr, algorithm='dpll2') is False
     assert satisfiable(to_cnf(expr), algorithm='dpll2') is False
+
+def test_satisfiable_true_minisat22():
+    import pytest
+    pytest.importorskip('pysat')
+    from sympy.logic.inference import satisfiable
+    assert satisfiable(True, algorithm='minisat22') == {True: True}
+    assert list(satisfiable(True, algorithm='minisat22', all_models=True)) == [{True: True}]
+
+def test_satisfiable_true_z3():
+    import pytest
+    pytest.importorskip('z3')
+    from sympy.logic.inference import satisfiable
+    assert satisfiable(True, algorithm='z3') == {True: True}
