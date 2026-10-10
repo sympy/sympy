@@ -805,6 +805,41 @@ class ArctanRule(AtomicRule):
         return a/b / sqrt(c/b) * atan(x/sqrt(c/b))
 
 
+class SqrtFractionalLinearRule(AtomicRule):
+    """integrate(sqrt((a*x+b)/(c*x+d)), x)"""
+
+    __slots__ = ("a", "b", "c", "d")
+
+    a: Expr
+    b: Expr
+    c: Expr
+    d: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr, d: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+
+    def eval(self) -> Expr:
+        a, b, c, d, x = self.a, self.b, self.c, self.d, self.variable
+        det = a*d - b*c
+        u = sqrt((a*x + b)/(c*x + d))
+        # See https://github.com/11350613/mobius-transformation/blob/main/derivation.md
+        # for the derivation.
+        return Piecewise(
+            (x*sqrt(a/c), And(Eq(det, 0), Ne(c, 0))),
+            (x*sqrt(b/d), And(Eq(det, 0), Eq(c, 0))),
+            (2*d*((a*x + b)/d)**(S(3)/2)/(3*a), And(Eq(c, 0), Ne(det, 0))),
+            (2*b/(c*sqrt(b/(c*x + d))), And(Eq(a, 0), Ne(c, 0), Ne(det, 0))),
+            ((c*x + d)/c*u
+             + (b*c - a*d)/(2*c*sqrt(a*c))
+             *log((sqrt(a*c) + c*u)/(sqrt(a*c) - c*u)), S.true))
+
+
 class OrthogonalPolyRule(AtomicRule, ABC):
 
     __slots__ = ("n",)
@@ -2650,6 +2685,11 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     b = Wild('b', exclude=[x])
     c = Wild('c', exclude=[x])
     d = Wild('d', exclude=[x])
+    match = integrand.match(sqrt((a*x + b)/(c*x + d)))
+    if match:
+        aa, bb, cc, dd = match[a], match[b], match[c], match[d]
+        if not (cc.is_zero and dd.is_zero):
+            return SqrtFractionalLinearRule(integrand, x, aa, bb, cc, dd)
     base0 = None
     powers, exps, ratios = [], [], []
     constant_bases_subs = {}
