@@ -1467,3 +1467,53 @@ def test_simplify_logic_dontcare_issue_28369():
 
    # Test 2: Fast path form check
    assert simplify_logic(A | B, dontcare=A, form='dnf') == B
+
+
+def test_espresso():
+    from unittest.mock import Mock, patch
+
+    x = symbols('x')
+
+    pyeda = Mock()
+    fm = Mock()
+    fm.to_ast.return_value = ('lit', 1)
+    pyeda.espresso_tts.return_value = (fm,)
+
+    with patch(
+        'sympy.external.importtools.import_module',
+        return_value=pyeda,
+    ):
+        assert SOPform([x], [[1]], algorithm='espresso') == x
+
+    pyeda.ttvars.assert_called_once_with('x', 1)
+    pyeda.truthtable.assert_called_once_with(
+        pyeda.ttvars.return_value, '01')
+    pyeda.espresso_tts.assert_called_once_with(
+        pyeda.truthtable.return_value)
+
+
+def test_espresso_missing():
+    from unittest.mock import patch
+
+    with patch(
+        'sympy.external.importtools.import_module',
+        return_value=None
+    ):
+        raises(
+            ImportError,
+            lambda: SOPform(
+                [symbols('x')], [[1]], algorithm="espresso"
+            )
+        )
+
+
+def test_espresso_pyeda():
+    import pytest
+    pytest.importorskip('pyeda.inter')
+
+    x, y = symbols('x y')
+    expr = (x & y) | (x & ~y)
+
+    assert simplify_logic(
+        expr, algorithm='espresso'
+    ) == x
