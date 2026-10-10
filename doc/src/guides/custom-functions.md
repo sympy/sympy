@@ -399,8 +399,8 @@ avoided.
   Let's consider an example. Using the identity $\cos(x + y) = \cos(x)\cos(y) - \sin(x)\sin(y)$, we can derive the identity
 
   $$\operatorname{versin}(x + y) =
-  \operatorname{versin}(x)\operatorname{versin}(y) -
-  \operatorname{versin}(x) - \operatorname{versin}(y) - \sin(x)\sin(y) + 1.$$
+  \operatorname{versin}(x) + \operatorname{versin}(y) -
+  \operatorname{versin}(x)\operatorname{versin}(y) + \sin(x)\sin(y).$$
 
   Suppose we decided to automatically expand this in `eval()`:
 
@@ -412,8 +412,8 @@ avoided.
   ...         # !! Not actually a good eval() method !!
   ...         if isinstance(x, Add):
   ...             a, b = x.as_two_terms()
-  ...             return (versin(a)*versin(b) - versin(a) - versin(b)
-  ...                     - sin(a)*sin(b) + 1)
+  ...             return (versin(a) + versin(b) - versin(a)*versin(b)
+  ...                     + sin(a)*sin(b))
   ```
 
   This method recursively splits `Add` terms into two parts and applies the
@@ -422,7 +422,7 @@ avoided.
   ```
   >>> x, y, z = symbols('x y z')
   >>> versin(x + y)
-  -sin(x)*sin(y) + versin(x)*versin(y) - versin(x) - versin(y) + 1
+  sin(x)*sin(y) - versin(x)*versin(y) + versin(x) + versin(y)
   ```
 
   But now it's impossible to represent `versin(x + y)` without it expanding.
@@ -436,8 +436,8 @@ avoided.
   ...         # !! Not actually a good eval() method !!
   ...         if isinstance(x, Add):
   ...             a, b = x.as_two_terms()
-  ...             return (versin(a)*versin(b) - versin(a) - versin(b)
-  ...                     - sin(a)*sin(b) + 1)
+  ...             return (versin(a) + versin(b) - versin(a)*versin(b)
+  ...                     + sin(a)*sin(b))
   ...
   ...     def fdiff(self, argindex=1):
   ...         return sin(self.args[0])
@@ -451,15 +451,15 @@ avoided.
 
   ```
   >>> versin(x + y).diff(x)
-  sin(x)*versin(y) - sin(x) - sin(y)*cos(x)
+  -sin(x)*versin(y) + sin(x) + sin(y)*cos(x)
   ```
 
   And things are even worse than that. Let's try an `Add` with three terms:
 
   ```
   >>> versin(x + y + z)
-  (-sin(y)*sin(z) + versin(y)*versin(z) - versin(y) - versin(z) +
-  1)*versin(x) - sin(x)*sin(y + z) + sin(y)*sin(z) - versin(x) -
+  -(sin(y)*sin(z) - versin(y)*versin(z) + versin(y) +
+  versin(z))*versin(x) + sin(x)*sin(y + z) + sin(y)*sin(z) + versin(x) -
   versin(y)*versin(z) + versin(y) + versin(z)
   ```
 
