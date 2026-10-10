@@ -829,8 +829,22 @@ def _guard_indeterminate_group(ie, s):
     # singularities and _solve_inequality checks the relation at +/-oo.
     # Protection is needed when a potentially nonfinite term is independent
     # of the target.
+    #
+    # The exception is an expression that is linear in the target. For those,
+    # _solve_inequality isolates the target by factoring its coefficient out
+    # of the additive group, and distributing a term that may be infinite
+    # over a sum is not equivalent for extended values. For example, solving
+    # ``a*x + a*y < 1`` for ``a`` would turn the indeterminate
+    # ``a*x + a*y`` into ``a*(x + y)``. Nonlinear and rational expressions
+    # instead go through endpoint/domain bookkeeping, which is safe.
     if all(t.has_free(s) for t in virtual):
-        return ie, None, None
+        expr = expand_mul(ie.lhs - ie.rhs)
+        p = expr.as_poly(s)
+        if p is None or p.degree() != 1:
+            return ie, None, None
+        _, ax = expr.as_independent(s, as_Add=True)
+        if factor_terms(ax) == ax:
+            return ie, None, None
 
     hits = [
         i for i, (_, terms) in enumerate(sides)

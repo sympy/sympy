@@ -538,6 +538,14 @@ def test_issue_30598():
     assert raises(TypeError, lambda: (a*x + a*y < 1).subs(reps))
     assert reduce_inequalities(a*x + a*y < 1, x) == (a*x + a*y < 1)
 
+    # an infinite term must not be factored out of a group even when that
+    # term is the target itself
+    assert reduce_inequalities(a*x + a*y < 1, a) == (a*x + a*y < 1)
+    assert reduce_inequalities(a*(x + y) < 1, a) == (a*(x + y) < 1)
+    assert reduce_inequalities(Ge(x**2*y + y, 1), y) == (x**2*y + y >= 1)
+    c = Symbol('c', real=True)
+    assert reduce_inequalities(c*y + y < 1, y) == (c*y + y < 1)
+
     # terms that are known to be finite can still be moved
     u, v, r, s = symbols('u v r s', real=True)
     assert reduce_inequalities(r*u + s*v < 1, u) == (r*u < -s*v + 1)
@@ -553,11 +561,6 @@ def test_issue_30598():
     # incorrectly reduce the relation to x < 1, cancelling indeterminacy
     assert reduce_inequalities(x + y < y + 1, x) == \
         (x + y < y + 1)
-
-    # a coefficient is only divided out when its sign is known, so a
-    # divisor of unknown sign is left in the factored group
-    assert reduce_inequalities(Ge(x**2*y + y, 1), y) == \
-        (y*(x**2 + 1) >= 1)
 
 
 def test_issue_30529():  # do not allow singularity cancellation
@@ -607,5 +610,4 @@ def test_issue_30688():
     assert _solve_inequality(Eq(oo*x, 1), x) == Eq(oo*x, 1)
     assert _solve_inequality(Ne(oo*x, 1), x) == Ne(oo*x, 1)
 
-    assert reduce_inequalities(x**2*y + y >= 1, y) == \
-        (y*(x**2 + 1) >= 1)
+    assert reduce_inequalities(x**2*y + y >= 1, y) == (x**2*y + y >= 1)
