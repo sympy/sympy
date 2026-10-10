@@ -377,6 +377,7 @@ def rs_pow(p1, n, x, prec):
                 n = n // 2
             res = p
 
+    res = rs_trunc(res, x, prec)
     if shift:
         res = mul_xin(res, index, shift)
     return res

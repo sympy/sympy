@@ -313,6 +313,8 @@ def test_issue_30710():
     assert rs_pow(x**2 + x**3, Rational(-1, 2), x, 1) == \
         -QQ(1, 2) + x**(-1)
 
+    # Low precision test (truncation check)
+    assert rs_pow(x + x**2, Rational(1, 2), x, 1) == x**QQ(1, 2)
 
 
 def test_atan():
