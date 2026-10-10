@@ -300,7 +300,7 @@ def test_issue_30705():
 
 def test_issue_30710():
     R, x = puiseux_ring('x', QQ)
-    
+
     # Positive valuation, negative fractional power
     assert rs_pow(x + x**2, Rational(-1, 2), x, 3) == \
         -QQ(5, 16)*x**QQ(5, 2) + QQ(3, 8)*x**QQ(3, 2) - QQ(1, 2)*x**QQ(1, 2) + x**QQ(-1, 2)
