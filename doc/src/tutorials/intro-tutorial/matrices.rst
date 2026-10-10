@@ -421,7 +421,7 @@ If your matrix operations are failing or returning wrong answers,
 the common reasons would likely be from zero testing.
 If there is an expression not properly zero-tested,
 it can possibly bring issues in finding pivots for gaussian elimination,
-or deciding whether the matrix is inversible,
+or deciding whether the matrix is invertible,
 or any high level functions which relies on the prior procedures.
 
 Currently, the SymPy's default method of zero testing ``_iszero`` is only
