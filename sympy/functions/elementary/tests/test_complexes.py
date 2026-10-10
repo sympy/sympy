@@ -1024,3 +1024,8 @@ def test_issue_15893():
     x = Symbol('x', real=True)
     eq = Derivative(Abs(f(x)), f(x))
     assert eq.doit() == sign(f(x))
+
+
+def test_issue_30586():
+    x = Symbol('x', real=True)
+    assert Abs(x**2 - Abs(x)).as_leading_term(x) == Abs(x)
