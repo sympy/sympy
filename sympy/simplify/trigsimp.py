@@ -461,6 +461,22 @@ def _trigsimp_inverse(rv):
     return bottom_up(rv, f)
 
 
+def _trigsimp_exp_pairs(expr):
+    coefficient = Wild('coefficient')
+    argument = Wild(
+        'argument', properties=[lambda arg: arg.as_coefficient(I) is None])
+    sign = Wild('sign', properties=[lambda sign: sign in (S.One, -S.One)])
+    pattern = (coefficient*exp(I*argument) +
+               sign*coefficient*exp(-I*argument))
+    return expr.replace(
+        pattern, lambda coefficient, argument, sign:
+        2*coefficient*(cos(argument) if sign == 1 else I*sin(argument)))
+
+
+def _trigsimp_matching(expr):
+    return futrig(_trigsimp_exp_pairs(expr))
+
+
 def trigsimp(expr, inverse=False, **opts):
     """Returns a reduced expression by using known trig identities.
 
@@ -592,7 +608,7 @@ def trigsimp(expr, inverse=False, **opts):
 
     trigsimpfunc = {
         'fu': (lambda x: fu(x, **opts)),
-        'matching': (lambda x: futrig(x)),
+        'matching': _trigsimp_matching,
         'groebner': (lambda x: groebnersimp(x, **opts)),
         'combined': (lambda x: futrig(groebnersimp(x,
                                polynomial=True, hints=[2, tan]))),
