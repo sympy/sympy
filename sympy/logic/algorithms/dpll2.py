@@ -16,6 +16,7 @@ from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
 from heapq import heappush, heappop
+
 from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
