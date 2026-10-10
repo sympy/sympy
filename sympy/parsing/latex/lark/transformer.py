@@ -635,8 +635,9 @@ class TransformToSymPyExpr(Transformer):
 
             return tokens[1].det()
 
-        if len(tokens) == 3: # | A |
-            return self.matrix(tokens).det()
+    def delimited_determinant(self, tokens):
+        # | A | and \begin{vmatrix} ... \end{vmatrix}
+        return self.matrix(tokens).det()
 
     def trace(self, tokens):
         if not self._obj_is_sympy_Matrix(tokens[1]):
@@ -650,6 +651,41 @@ class TransformToSymPyExpr(Transformer):
 
         # need .doit() since MatAdd does not support .adjugate() method
         return tokens[1].doit().adjugate()
+
+    def function_with_atomic_argument(self, tokens):
+        # handles functions applied to a single factor, like the `\sin x` in
+        # `\sin x y`. Such a function is transformed exactly like the same
+        # function with an unrestricted argument, so the handling is delegated
+        # to the corresponding method below.
+        func_type = tokens[0].type
+
+        if isinstance(tokens[1], Token) and tokens[1].type == "CARET":
+            # a trigonometric function raised to a power, like `\sin^2 x`
+            # upstream lexes \sin as FUNC_TRIG (or FUNC_SIN on older grammar),
+            # both delegate to trigonometric_function_power.
+            if func_type in ("FUNC_TRIG", "FUNC_SIN", "FUNC_COS", "FUNC_TAN",
+                             "FUNC_CSC", "FUNC_SEC", "FUNC_COT"):
+                return self.trigonometric_function_power(tokens)
+            power_handlers = {}
+
+            return power_handlers[func_type](tokens)
+
+        # trig (plain or FUNC_TRIG from upstream lexer) goes through the
+        # consolidated handler; others use their specific methods.
+        if func_type == "FUNC_TRIG" or tokens[0] in self._trigonometric_functions:
+            return self.trigonometric_function(tokens)
+
+        handlers = {
+            "FUNC_EXP": self.exponential,
+            "FUNC_LOG": self.log,
+            "FUNC_LN": self.log,
+            "FUNC_LG": self.log,
+            "FUNC_DETERMINANT": self.determinant,
+            "FUNC_MATRIX_TRACE": self.trace,
+            "FUNC_MATRIX_ADJUGATE": self.adjugate,
+        }
+
+        return handlers[func_type](tokens)
 
     def _obj_is_sympy_Matrix(self, obj):
         if hasattr(obj, "is_Matrix"):
