@@ -83,6 +83,7 @@ from __future__ import annotations
 
 import sys
 import os
+import locale
 import shutil
 import tempfile
 from pathlib import Path
@@ -183,9 +184,16 @@ class CodeWrapper:
         try:
             retoutput = check_output(command, stderr=STDOUT)
         except CalledProcessError as e:
+            try:
+                output = e.output.decode('utf-8')
+            except UnicodeDecodeError:
+                # localized toolchains may emit non-UTF-8 bytes
+                # (e.g. GBK on Windows); decode with the locale encoding
+                output = e.output.decode(
+                    locale.getpreferredencoding(False), errors='replace')
             raise CodeWrapError(
                 "Error while executing command: %s. Command output is:\n%s" % (
-                    " ".join(command), e.output.decode('utf-8')))
+                    " ".join(command), output))
         if not self.quiet:
             print(retoutput)
 

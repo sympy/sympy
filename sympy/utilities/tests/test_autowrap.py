@@ -266,6 +266,33 @@ def test_binary_function():
     assert f._imp_() == str(x + y)
 
 
+def test_process_files_non_utf8_command_output():
+    # On Windows with a localized toolchain, compiler error output may not be
+    # UTF-8 decodable (e.g. GBK bytes). The failure should still surface as a
+    # CodeWrapError instead of a UnicodeDecodeError.
+    from subprocess import CalledProcessError
+    import sympy.utilities.autowrap as autowrap_mod
+    from sympy.utilities.autowrap import CodeWrapError
+
+    class FailingWrapper(CodeWrapper):
+        @property
+        def command(self):
+            return ['compiler']
+
+    def fake_check_output(*args, **kwargs):
+        raise CalledProcessError(1, args[0], output=b'\xd5\xe2\xca\xc7\xb2\xe2\xca\xd4')
+
+    orig_check_output = autowrap_mod.check_output
+    autowrap_mod.check_output = fake_check_output
+    try:
+        x = symbols('x')
+        wrapper = FailingWrapper(C99CodeGen("test"))
+        routine = make_routine("test", x)
+        raises(CodeWrapError, lambda: wrapper._process_files(routine))
+    finally:
+        autowrap_mod.check_output = orig_check_output
+
+
 def test_ufuncify_source():
     x, y, z = symbols('x,y,z')
     code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"))
