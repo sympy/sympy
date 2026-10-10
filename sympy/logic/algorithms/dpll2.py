@@ -16,9 +16,7 @@ from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
 from heapq import heappush, heappop
-
 from sympy.core.sorting import ordered
-from sympy.core.singleton import S
 from sympy.assumptions.cnf import EncodedCNF
 
 from sympy.logic.algorithms.lra_theory import LRASolver

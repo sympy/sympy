@@ -795,3 +795,18 @@ def test_satisfiable_all_models_lra():
     assert len(models) == 2
     assert {Q.gt(x, 0): True, Q.lt(x, 0): False} in models
     assert {Q.lt(x, 0): True, Q.gt(x, 0): False} in models
+
+def test_satisfiable_true_pycosat():
+    import pytest
+    pytest.importorskip('pycosat')
+    from sympy.logic.inference import satisfiable
+    assert satisfiable(True, algorithm='pycosat') == {True: True}
+    assert list(satisfiable(True, algorithm='pycosat', all_models=True)) == [{True: True}]
+
+def test_issue_30714():
+    from sympy import ITE, symbols, to_cnf
+    from sympy.logic.inference import satisfiable
+    a, c = symbols('a c')
+    expr = ~a & ~c & ~ITE(c, a, True)
+    assert satisfiable(expr, algorithm='dpll2') is False
+    assert satisfiable(to_cnf(expr), algorithm='dpll2') is False

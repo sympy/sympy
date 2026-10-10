@@ -174,8 +174,10 @@ def to_NNF(expr, composite_map=None):
         composite_map = {}
 
     if expr == S.true:
+        # Use sympy.assumptions.cnf.AND() because an empty conjunction represents True
         return AND()
     if expr == S.false:
+        # Use sympy.assumptions.cnf.OR() because an empty disjunction represents False
         return OR()
 
 
