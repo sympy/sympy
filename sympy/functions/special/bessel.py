@@ -2170,7 +2170,7 @@ class _besseli(DefinedFunction):
         return exp(-z)*besseli(nu, z)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        x0 = self.args[0].limit(x, 0)
+        x0 = self.args[1].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
             return f._eval_nseries(x, n, logx)
@@ -2201,7 +2201,7 @@ class _besselk(DefinedFunction):
         return exp(z)*besselk(nu, z)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        x0 = self.args[0].limit(x, 0)
+        x0 = self.args[1].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
             return f._eval_nseries(x, n, logx)

@@ -2038,7 +2038,7 @@ class HolonomicFunction:
         >>> from sympy import sin, cos, hyperexpand, log, symbols
         >>> x = symbols('x')
         >>> hyperexpand(expr_to_holonomic(cos(x) + sin(x)).to_meijerg())
-        sin(x) + cos(x)
+        x*sin(sqrt(x**2))/sqrt(x**2) + cos(sqrt(x**2))
         >>> hyperexpand(expr_to_holonomic(log(x)).to_meijerg()).simplify()
         log(x)
 
@@ -2138,7 +2138,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     >>> from sympy import symbols, meijerg, S
     >>> x = symbols('x')
     >>> from_meijerg(meijerg(([], []), ([S(1)/2], [0]), x**2/4))
-    HolonomicFunction((1) + (1)*Dx**2, x, 0, [0, 1/sqrt(pi)])
+    HolonomicFunction((1) + (1)*Dx**2, x, 1, [sin(1)/sqrt(pi), cos(1)/sqrt(pi)])
     """
 
     a = func.ap
