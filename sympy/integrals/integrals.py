@@ -15,7 +15,7 @@ from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
-from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
+from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan , sin , cos , beta
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
@@ -130,7 +130,27 @@ class Integral(AddWithLimits):
         sympy.concrete.expr_with_limits.ExprWithLimits.variables
         """
         return super().free_symbols
+    
+    @staticmethod
+    def eval_beta_integral(function, x):
+        powers = function.as_powers_dict()
 
+        sin_power = powers.get(sin(x), 0)
+        cos_power = powers.get(cos(x), 0)
+
+        if function != sin(x)**sin_power * cos(x)**cos_power:
+            return None
+
+        if not (sin_power + 1).is_positive:
+            return None
+
+        if not (cos_power + 1).is_positive:
+            return None
+
+        return beta(
+            (sin_power + 1) / 2,
+            (cos_power + 1) / 2
+        ) / 2
     def _eval_is_zero(self):
         # This is a very naive and quick test, not intended to do the integral to
         # answer whether it is zero or not, e.g. Integral(sin(x), (x, 0, 2*pi))
@@ -555,6 +575,14 @@ class Integral(AddWithLimits):
             if (function.has(Piecewise) and
                 not isinstance(function, Piecewise)):
                     function = piecewise_fold(function)
+                # beta try 
+        
+            if (len(xab) == 3 and xab[1] == 0 and xab[2] == pi/2 and not manual and not risch and not heurisch and not meijerg):
+                beta_result = Integral.eval_beta_integral(function, xab[0]) 
+                if beta_result is not None:
+                    function = beta_result
+                    continue
+                
             if isinstance(function, Piecewise):
                 if len(xab) == 1:
                     antideriv = function._eval_integral(xab[0],
