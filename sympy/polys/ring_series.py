@@ -335,7 +335,10 @@ def rs_pow(p1, n, x, prec):
     index = R.gens.index(x)
     m = min(p1, key=lambda k: k[index])[index]
     if isinstance(n, Rational):
-        shift = QQ(m) * QQ(n.p, n.q)
+        if hasattr(m, 'p') and hasattr(m, 'q'):
+            shift = QQ(m.p, m.q) * QQ(n.p, n.q)
+        else:
+            shift = QQ(m) * QQ(n.p, n.q)
     else:
         shift = m * n
     if m:
