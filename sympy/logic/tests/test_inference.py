@@ -823,3 +823,12 @@ def test_satisfiable_true_z3():
     pytest.importorskip('z3')
     from sympy.logic.inference import satisfiable
     assert satisfiable(True, algorithm='z3') == {True: True}
+
+def test_cnf_not_true_false():
+    from sympy.assumptions.cnf import CNF
+    from sympy import S
+    c_true = CNF.from_prop(S.true)
+    assert c_true.clauses == set()
+    c_false = c_true._not()
+    assert c_false.clauses == {frozenset()}
+    assert c_false._not().clauses == set()
