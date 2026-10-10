@@ -319,18 +319,7 @@ def rs_pow(p1, n, x, prec):
     6*x**2 + 4*x + 1
     """
     R = p1.ring
-    if isinstance(n, Rational):
-        np = int(n.p)
-        nq = int(n.q)
-        if nq != 1:
-            res = rs_nth_root(p1, nq, x, prec)
-            if np != 1:
-                res = rs_pow(res, np, x, prec)
-        else:
-            res = rs_pow(p1, np, x, prec)
-        return res
 
-    n = as_int(n)
     if n == 0:
         if p1:
             return R(1)
@@ -345,35 +334,53 @@ def rs_pow(p1, n, x, prec):
 
     index = R.gens.index(x)
     m = min(p1, key=lambda k: k[index])[index]
-    shift = m * n
+    if isinstance(n, Rational):
+        if hasattr(m, 'p') and hasattr(m, 'q'):
+            shift = QQ(m.p, m.q) * QQ(n.p, n.q)
+        else:
+            shift = QQ(m) * QQ(n.p, n.q)
+    else:
+        shift = m * n
     if m:
         p1 = mul_xin(p1, index, -m)
     prec = prec - shift
     if prec <= 0:
         return R.zero
 
-    if n < 0:
-        res = rs_pow(p1, -n, x, prec)
-        res = rs_series_inversion(res, x, prec)
-    elif n == 1:
-        res = rs_trunc(p1, x, prec)
-    elif n == 2:
-        res = rs_square(p1, x, prec)
-    elif n == 3:
-        p2 = rs_square(p1, x, prec)
-        res = rs_mul(p1, p2, x, prec)
+    if isinstance(n, Rational):
+        np = int(n.p)
+        nq = int(n.q)
+        if nq != 1:
+            res = rs_nth_root(p1, nq, x, prec)
+            if np != 1:
+                res = rs_pow(res, np, x, prec)
+        else:
+            res = rs_pow(p1, np, x, prec)
     else:
-        p = R(1)
-        while 1:
-            if n & 1:
-                p = rs_mul(p1, p, x, prec)
-                n -= 1
-                if not n:
-                    break
-            p1 = rs_square(p1, x, prec)
-            n = n // 2
-        res = p
+        n = as_int(n)
+        if n < 0:
+            res = rs_pow(p1, -n, x, prec)
+            res = rs_series_inversion(res, x, prec)
+        elif n == 1:
+            res = rs_trunc(p1, x, prec)
+        elif n == 2:
+            res = rs_square(p1, x, prec)
+        elif n == 3:
+            p2 = rs_square(p1, x, prec)
+            res = rs_mul(p1, p2, x, prec)
+        else:
+            p = R(1)
+            while 1:
+                if n & 1:
+                    p = rs_mul(p1, p, x, prec)
+                    n -= 1
+                    if not n:
+                        break
+                p1 = rs_square(p1, x, prec)
+                n = n // 2
+            res = p
 
+    res = rs_trunc(res, x, prec)
     if shift:
         res = mul_xin(res, index, shift)
     return res
