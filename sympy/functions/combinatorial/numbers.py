@@ -8,6 +8,7 @@ the separate 'factorials' module.
 """
 from __future__ import annotations
 from math import prod
+from itertools import pairwise
 from collections import defaultdict
 from typing import Callable
 
@@ -717,13 +718,8 @@ class bell(DefinedFunction):
     @staticmethod
     @recurrence_memo([[1]])
     def _bell_poly_coeffs(n, prev):
-        s = [0]*(n-1) + [1,0]
-        a = 1
-        for k in range(1, n):
-            a = a * (n - k) // k
-            for i in range(k):
-                s[n-k-1+i] += a * prev[k][i]
-        return s
+        i=n
+        return [1]+[a*(i:=i-1)+b for a,b in pairwise(prev[-1])]+[0]
 
     @classmethod
     def _bell_poly(cls, n):
