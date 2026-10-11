@@ -815,8 +815,22 @@ def test_satisfiable_true_minisat22():
     import pytest
     pytest.importorskip('pysat')
     from sympy.logic.inference import satisfiable
+    from sympy import symbols
+
     assert satisfiable(True, algorithm='minisat22') == {True: True}
     assert list(satisfiable(True, algorithm='minisat22', all_models=True)) == [{True: True}]
+
+    assert satisfiable(False, algorithm='minisat22') is False
+    assert list(satisfiable(False, algorithm='minisat22', all_models=True)) == [False]
+
+    a, b = symbols('a b')
+    sat_res = satisfiable(a | b, algorithm='minisat22')
+    assert sat_res in [{a: True, b: False}, {a: True, b: True}, {a: False, b: True}]
+    all_sat = list(satisfiable(a | b, algorithm='minisat22', all_models=True))
+    assert len(all_sat) == 3
+    assert {a: True, b: False} in all_sat
+    assert {a: True, b: True} in all_sat
+    assert {a: False, b: True} in all_sat
 
 def test_minisat22_unsat_all_models():
     import pytest
@@ -828,6 +842,7 @@ def test_minisat22_unsat_all_models():
     a, b = symbols('a b')
     expr = (a | b) & ~a & ~b
 
+    assert satisfiable(expr, algorithm='minisat22') is False
     assert list(satisfiable(
         expr, algorithm='minisat22', all_models=True)) == [False]
 
@@ -839,9 +854,14 @@ def test_satisfiable_true_z3():
 
 def test_cnf_not_true_false():
     from sympy.assumptions.cnf import CNF
-    from sympy import S
+    from sympy import S, Symbol
     c_true = CNF.from_prop(S.true)
     assert c_true.clauses == set()
     c_false = c_true._not()
     assert c_false.clauses == {frozenset()}
     assert c_false._not().clauses == set()
+
+    x = Symbol('x')
+    c_prop = CNF.from_prop(x)
+    c_mixed = CNF({frozenset(), *c_prop.clauses})
+    assert c_mixed._not().clauses == set()
