@@ -9,14 +9,6 @@ work in any circumstances. See "sympy.doctest?" for documentation.
 
 from __future__ import print_function
 
-# files listed here can be in unix forward slash format with paths
-# listed relative to sympy (which contains bin, etc...)
-blacklist = [
-    'doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst',
-    'doc/src/explanation/modules/physics/biomechanics/biomechanics.rst',
-    'doc/src/explanation/modules/physics/mechanics/autolev_parser.rst',
-]
-
 import sys
 import os
 from argparse import ArgumentParser
@@ -25,6 +17,11 @@ import re
 from get_sympy import path_hack
 path_hack()
 
+from sympy.testing.doctest_config import regular_doctest_blacklist
+
+# files listed here can be in unix forward slash format with paths
+# listed relative to sympy (which contains bin, etc...)
+blacklist = regular_doctest_blacklist()
 
 epilog = """
 "options" are any of the options above.
