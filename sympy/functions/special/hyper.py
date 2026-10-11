@@ -343,8 +343,8 @@ class hyper(TupleParametersBase):
 
         """
         if any(a.is_integer and (a <= 0) == True for a in self.ap + self.bq):
-            aints = [a for a in self.ap if a.is_Integer and (a <= 0) == True]
-            bints = [a for a in self.bq if a.is_Integer and (a <= 0) == True]
+            aints = [a for a in self.ap if a.is_integer and (a <= 0) == True]
+            bints = [a for a in self.bq if a.is_integer and (a <= 0) == True]
             if len(aints) < len(bints):
                 return S.Zero
             popped = False
