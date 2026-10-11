@@ -2180,6 +2180,93 @@ class primeomega(DefinedFunction):
             return S(sum(factorint(n).values()))
 
 
+def _jacobsthal_gap(n):
+    # g(n) only sees the distinct primes of n, so everything can be done
+    # modulo their product. The corresponding residues are periodic.
+    primes = list(factorint(n))
+    rad = prod(primes)
+    if rad == 1:
+        return 1
+
+    blocked = bytearray(rad)
+    for p in primes:
+        blocked[0::p] = b'\x01' * ((rad - 1)//p + 1)
+
+    # Two passes are enough. A run of blocked residues can cross the period
+    # boundary, and walking over the wrap once avoids handling it separately.
+    longest = run = 0
+    for i in range(2*rad):
+        if blocked[i % rad]:
+            run += 1
+            if run > longest:
+                longest = run
+        else:
+            run = 0
+
+    return longest + 1
+
+
+class jacobsthal(DefinedFunction):
+    r"""
+    Calculate the Jacobsthal function `g(n)` of a positive integer n.
+
+    ``jacobsthal(n)`` or `g(n)` is the smallest `m` such that every `m`
+    consecutive integers contain at least one integer relatively prime to n.
+    Equivalently, it is one more than the longest run of consecutive
+    integers that all share a factor with n.
+
+    Since only the distinct primes of n matter,
+    `g(n) = g(\operatorname{rad}(n))`. In particular `g(1) = 1` and
+    `g(p^a) = 2` for a prime power. Iwaniec proved `g(n) \ll (\log n)^2`,
+    while the uniform quadratic bound `g(n) \le C \omega(n)^2` holds for an
+    absolute constant `C`.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import jacobsthal
+    >>> jacobsthal(1)
+    1
+    >>> jacobsthal(6)
+    4
+    >>> jacobsthal(30)
+    6
+    >>> jacobsthal(105)
+    5
+
+    See Also
+    ========
+
+    totient, primenu
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Jacobsthal_function
+    .. [2] https://oeis.org/A048669
+    .. [3] H. Iwaniec, "On the problem of Jacobsthal",
+       Demonstratio Math. 11 (1978)
+    .. [4] "A quadratic bound for Jacobsthal's function",
+       https://github.com/openai/math
+
+    """
+    is_integer = True
+    is_positive = True
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if n is S.One:
+            return S.One
+        if n.is_prime is True:
+            return S(2)
+        if n.is_Integer is True:
+            return S(_jacobsthal_gap(n))
+
+
 class totient(DefinedFunction):
     r"""
     Calculate the Euler totient function phi(n)
