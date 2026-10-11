@@ -818,6 +818,19 @@ def test_satisfiable_true_minisat22():
     assert satisfiable(True, algorithm='minisat22') == {True: True}
     assert list(satisfiable(True, algorithm='minisat22', all_models=True)) == [{True: True}]
 
+def test_minisat22_unsat_all_models():
+    import pytest
+    pytest.importorskip('pysat')
+
+    from sympy import symbols
+    from sympy.logic.inference import satisfiable
+
+    a, b = symbols('a b')
+    expr = (a | b) & ~a & ~b
+
+    assert list(satisfiable(
+        expr, algorithm='minisat22', all_models=True)) == [False]
+
 def test_satisfiable_true_z3():
     import pytest
     pytest.importorskip('z3')
