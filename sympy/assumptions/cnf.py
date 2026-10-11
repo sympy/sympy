@@ -340,6 +340,11 @@ class CNF:
         return CNF(clauses)
 
     def _not(self):
+        if not self.clauses:
+            return CNF({frozenset()})
+        if frozenset() in self.clauses:
+            return CNF(set())
+
         clss = list(self.clauses)
         ll = {frozenset((~x,)) for x in clss[-1]}
         ll = CNF(ll)
