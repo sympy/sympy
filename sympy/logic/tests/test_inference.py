@@ -823,3 +823,35 @@ def test_satisfiable_true_z3():
     pytest.importorskip('z3')
     from sympy.logic.inference import satisfiable
     assert satisfiable(True, algorithm='z3') == {True: True}
+
+
+def test_satisfiable_missing_z3():
+    from unittest.mock import patch
+    import sympy.logic.inference as inference
+    from sympy.logic.inference import satisfiable
+    from sympy.core.symbol import Symbol
+    from sympy.assumptions.ask import Q
+
+    A, B = symbols('A B')
+    x = Symbol("x", real=True)
+    issue_expr = Q.gt(x, 0) & Q.lt(x, 0)
+    orig_import_module = inference.import_module
+
+    def mock_import_module(name, *args, **kwargs):
+        if name == 'z3':
+            return None
+        return orig_import_module(name, *args, **kwargs)
+
+    with patch('sympy.logic.inference.import_module', side_effect=mock_import_module):
+        # Ordinary calls raise ImportError when z3 is requested but missing
+        raises(ImportError, lambda: satisfiable(issue_expr, algorithm='z3'))
+        raises(ImportError, lambda: satisfiable(A | B, algorithm='z3'))
+
+        # all_models=True raises ImportError
+        raises(ImportError, lambda: satisfiable(issue_expr, algorithm='z3', all_models=True))
+        raises(ImportError, lambda: satisfiable(A | B, algorithm='z3', all_models=True))
+
+        # Default backend selection still works and returns a model satisfying A | B
+        res = satisfiable(A | B)
+        assert isinstance(res, dict)
+        assert res.get(A, False) or res.get(B, False)
