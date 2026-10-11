@@ -12,6 +12,8 @@ import pytest
 from get_sympy import path_hack
 path_hack()
 
+from sympy.testing.doctest_config import optional_doctest_files
+
 
 class TestsFailedError(Exception):
     pass
@@ -124,16 +126,10 @@ doctest_list = [
 ]
 
 
-# This is just needed for the numpy nightly job which does not have matplotlib
-# Otherwise these could be added to doctest_list above
-try:
-    import matplotlib # noqa: F401
-    doctest_list.extend([
-        'doc/src/explanation/modules/physics/biomechanics/biomechanics.rst',
-        'doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst',
-    ])
-except ImportError:
-    pass
+# Documentation that needs optional dependencies. Only the documents whose
+# dependencies are actually installed are added, e.g. the biomechanics
+# documents are left out of the numpy nightly job, which has no matplotlib.
+doctest_list.extend(optional_doctest_files())
 
 
 print('Testing optional dependencies')
