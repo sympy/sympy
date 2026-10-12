@@ -1546,8 +1546,12 @@ def test_as_base_exp():
     assert (x*y*z).as_base_exp() == (x*y*z, S.One)
     assert (x + y + z).as_base_exp() == (x + y + z, S.One)
     assert ((x + y)**z).as_base_exp() == (x + y, z)
-    assert (x**2*y**2).as_base_exp() == (x*y, 2)
     assert (x**z*y**z).as_base_exp() == (x**z*y**z, S.One)
+    # Recovering a common power (e.g. x**4*y**12 -> (x*y**3)**4)
+    # requires deciding how to handle rational exponents, coefficients,
+    # and perfect powers for coefficients. That belongs in a dedicated
+    # algebraic routine, not in the structural as_base_exp interface.
+    assert (x**2*y**2).as_base_exp() == (x**2*y**2, S.One)
 
 
 def test_issue_4963():

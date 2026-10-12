@@ -79,7 +79,7 @@ exp(-x)
 >>> from sympy import Lambda
 >>> dist = DiscreteDistributionHandmade(Lambda(x, pdf), set=S.Naturals)
 >>> dist.pdf(x)
-2**(1 - x)/2
+(1/2)**(x - 1)/2
 
 3. If you want to create a Finite Random Variable:
 

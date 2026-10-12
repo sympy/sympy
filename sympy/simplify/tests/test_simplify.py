@@ -624,7 +624,7 @@ def test_as_content_primitive():
     assert (S.Infinity).as_content_primitive() == (1, oo)
     eq = x**(2 + y)
     assert (eq).as_content_primitive() == (1, eq)
-    assert (S.Half**(2 + x)).as_content_primitive() == (Rational(1, 4), 2**-x)
+    assert (S.Half**(2 + x)).as_content_primitive() == (Rational(1, 4), S.Half**x)
     assert (Rational(-1, 2)**(2 + x)).as_content_primitive() == \
            (Rational(1, 4), (Rational(-1, 2))**x)
     assert (Rational(-1, 2)**(2 + x)).as_content_primitive() == \

@@ -1700,6 +1700,12 @@ class PolyElement(
         f = self
         domain = f.ring.domain
 
+        if (not f or not g) and f.ring == g.ring:
+            return f.ring.zero
+
+        if not f or not g:
+            raise ValueError("self and f must have the same ring")
+
         if not domain.is_Field:
             fc, f = f.primitive()
             gc, g = g.primitive()

@@ -1276,21 +1276,6 @@ class Mul(Expr, AssocOp):
         numers, denoms = list(zip(*[f.as_numer_denom() for f in self.args]))
         return self.func(*numers), self.func(*denoms)
 
-    def as_base_exp(self):
-        e1 = None
-        bases = []
-        nc = 0
-        for m in self.args:
-            b, e = m.as_base_exp()
-            if not b.is_commutative:
-                nc += 1
-            if e1 is None:
-                e1 = e
-            elif e != e1 or nc > 1 or not e.is_Integer:
-                return self, S.One
-            bases.append(b)
-        return self.func(*bases), e1
-
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
 

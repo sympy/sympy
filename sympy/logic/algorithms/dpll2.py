@@ -53,8 +53,8 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
         exprs.add_prop(expr)
         expr = exprs
 
-    # Return UNSAT when False (encoded as 0) is present in the CNF
-    if {0} in expr.data:
+    # Return UNSAT when False (encoded as 0) or empty clause is present in the CNF
+    if {0} in expr.data or set() in expr.data:
         if all_models:
             return (f for f in [False])
         return False
@@ -71,7 +71,8 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
         return _all_models(models)
 
     try:
-        return next(models)
+        res = next(models)
+        return {True: True} if res == {} else res
     except StopIteration:
         return False
 
@@ -85,7 +86,8 @@ def _all_models(models):
     satisfiable = False
     try:
         while True:
-            yield next(models)
+            res = next(models)
+            yield {True: True} if res == {} else res
             satisfiable = True
     except StopIteration:
         if not satisfiable:

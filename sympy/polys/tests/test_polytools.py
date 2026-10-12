@@ -2346,6 +2346,13 @@ def test_gcd():
     assert pfz.lcm(pfz) == pfz
     assert pfq.gcd(pfq) == pfq.monic()
     assert pfq.lcm(pfq) == pfq.monic()
+
+    pzz = Poly(0, x, domain=ZZ)
+    pqz = Poly(0, x, domain=QQ)
+    assert pzz.lcm(pzz) == pzz
+    assert pqz.lcm(pqz) == pqz
+    assert pzz.lcm(pfz) == pzz
+    assert pfq.lcm(pqz) == pqz
     assert gcd(f, f) == f
     assert lcm(f, f) == f
     assert gcd(f, f, domain=QQ) == monic(f)

@@ -44,7 +44,7 @@ except ImportError:
             msg = 'pytest must be installed to run tests via this function'
             raise NoPytestError(msg)
 
-from sympy.testing.runtests import test as test_sympy
+from sympy.testing.runtests import convert_to_native_paths, test as test_sympy
 
 
 TESTPATHS_DEFAULT = (
@@ -115,6 +115,8 @@ def update_args_with_paths(
         matches be appended to the arguments list.
 
     """
+
+    paths = convert_to_native_paths(paths)
 
     def find_paths_matching_partial(partial_paths):
         partial_path_file_patterns = []
@@ -233,6 +235,8 @@ def make_absolute_path(partial_path: str) -> str:
     begin with the explicit `sympy` directory, i.e. `sympy/...`.
 
     """
+
+    partial_path = convert_to_native_paths([partial_path])[0]
 
     def is_valid_partial_path(partial_path: str) -> bool:
         """Assumption that partial paths are defined from the `sympy` root."""
