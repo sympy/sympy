@@ -1118,6 +1118,11 @@ def test_Pow_is_rational():
     assert (ir**(-2)).is_rational is None
     assert (ir**2).is_prime is None
 
+    # but a specific irrational number raised to a nonzero integer
+    # power is irrational
+    assert ((1 - 2*sqrt(2))**(-1)).is_rational is False
+    assert (pi**(-2)).is_rational is False
+
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)

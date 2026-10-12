@@ -1265,6 +1265,13 @@ class Pow(Expr):
             elif b.is_irrational:
                 if e.is_zero:
                     return True
+                if not (b.free_symbols or e.free_symbols):
+                    # A specific irrational number raised to a nonzero
+                    # integer power is irrational: any case that would
+                    # give a rational result is evaluated when the Pow
+                    # is constructed (e.g. sqrt(2)**2 -> 2), so a Pow
+                    # that survives in this form is never rational.
+                    return False
         if b is S.Exp1:
             if e.is_rational and e.is_nonzero:
                 return False
