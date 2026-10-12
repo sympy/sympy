@@ -9,14 +9,14 @@ from operator import mul
 from collections import Counter, defaultdict
 
 from sympy.core import (
-    S, Expr, Add, Tuple
+    S, Expr, Add, Pow, Tuple
 )
 from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
-from sympy.core.exprtools import Factors, factor_nc, factor_terms
+from sympy.core.exprtools import Factors, decompose_power, factor_nc, factor_terms
 from sympy.core.evalf import (
     pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, Function
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
@@ -6645,6 +6645,38 @@ def _factors_product(factors):
     return Mul(*[f.as_expr()**k for f, k in factors])
 
 
+def _replace_constant_powers(expr):
+    """
+    Replace powers of constants in ``expr`` with dummy symbols.
+
+    A power of a constant like ``exp(-10)`` is decomposed by the polys
+    into a power of a simpler constant like ``exp(-1)``, so the simpler
+    constant becomes a generator and the power is factored as if the
+    constant was an indeterminate. Replacing such powers with dummy
+    symbols means that they are treated as atoms during factoring. The
+    dummies can be substituted back into the factored expression with
+    ``xreplace``.
+
+    Returns the substituted expression and a dictionary mapping the
+    dummy symbols to the powers that they replaced.
+    """
+    subs = {}
+    powers = expr.atoms(Pow, Function)
+    bases = expr.atoms() | powers
+    for power in powers:
+        if power.is_Number:
+            continue
+        if power.is_Pow and not power.base.is_Atom:
+            continue
+        base, exponent = decompose_power(power)
+        if exponent != 1 and base != power and base.is_number \
+                and base not in bases:
+            subs[Dummy()] = power
+    if subs:
+        expr = expr.xreplace({power: dummy for dummy, power in subs.items()})
+    return expr, subs
+
+
 def _symbolic_factor_list(expr, opt, method):
     """Helper function for :func:`_symbolic_factor`. """
     coeff, factors = S.One, []
@@ -6711,8 +6743,16 @@ def _symbolic_factor(expr, opt, method):
     if isinstance(expr, Expr):
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
+        if not opt.gens and not opt.extension and not opt.gaussian \
+                and opt.domain is None and opt.modulus is None:
+            expr, subs = _replace_constant_powers(expr)
+        else:
+            subs = {}
         coeff, factors = _symbolic_factor_list(together(expr, fraction=opt['fraction']), opt, method)
-        return _keep_coeff(coeff, _factors_product(factors))
+        factored = _keep_coeff(coeff, _factors_product(factors))
+        if subs:
+            factored = factored.xreplace(subs)
+        return factored
     elif hasattr(expr, 'args'):
         return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
     elif hasattr(expr, '__iter__'):
@@ -6729,6 +6769,13 @@ def _generic_factor_list(expr, gens, args, method):
     expr = sympify(expr)
 
     if isinstance(expr, (Expr, Poly)):
+        orig_expr, subs = expr, {}
+        if not isinstance(expr, Poly) and not opt.gens \
+                and not opt.extension and not opt.gaussian \
+                and opt.domain is None and opt.modulus is None \
+                and not opt.polys:
+            expr, subs = _replace_constant_powers(expr)
+
         if isinstance(expr, Poly):
             numer, denom = expr, 1
         else:
@@ -6738,7 +6785,7 @@ def _generic_factor_list(expr, gens, args, method):
         cq, fq = _symbolic_factor_list(denom, opt, method)
 
         if fq and not opt.frac:
-            raise PolynomialError("a polynomial expected, got %s" % expr)
+            raise PolynomialError("a polynomial expected, got %s" % orig_expr)
 
         _opt = opt.clone({"expand": True})
 
@@ -6756,6 +6803,11 @@ def _generic_factor_list(expr, gens, args, method):
             fq = [(f.as_expr(), k) for f, k in fq]
 
         coeff = cp/cq
+
+        if subs:
+            coeff = coeff.xreplace(subs)
+            fp = [(f.xreplace(subs), k) for f, k in fp]
+            fq = [(f.xreplace(subs), k) for f, k in fq]
 
         if not opt.frac:
             return coeff, fp

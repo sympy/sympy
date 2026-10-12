@@ -2845,6 +2845,12 @@ def test_factor():
     assert factor(f) == x*(sin(x) + 1)/pi
     assert factor(g) == y*(sin(x) + 1)/(pi + 1)**2
 
+    assert factor(x - x*exp(-10)) == -x*(exp(-10) - 1)
+    assert factor(1 - exp(-10)) == 1 - exp(-10)
+    assert factor(-1 + exp(10)) == -1 + exp(10)
+    assert factor_list(x - x*exp(-10)) == (-1, [(exp(-10) - 1, 1), (x, 1)])
+    assert factor(exp(2*x) + 2*exp(x) + 1) == (exp(x) + 1)**2
+
     assert factor(Eq(
         x**2 + 2*x + 1, x**3 + 1)) == Eq((x + 1)**2, (x + 1)*(x**2 - x + 1))
 
