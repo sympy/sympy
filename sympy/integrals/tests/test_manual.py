@@ -1471,3 +1471,11 @@ def test_manualintegrate_trig_log_hang():
     expr = log((cos(x)/2 + 1) / (1 - cos(x)/2)) / cos(x)
     res = manualintegrate(expr, x)
     assert res is not None
+
+
+def test_issue_30447():
+    f = sqrt(1 - x**2)/(x**2 + 1)
+    result = integrate(f, (x, -S.Half, S.Half), manual=True)
+    exact = Integral(f, (x, -S.Half, S.Half)).evalf()
+    assert abs(result.evalf() - exact) < 1e-10
+    assert not manualintegrate(f, x).has(I)
