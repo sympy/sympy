@@ -2294,7 +2294,7 @@ class asin(InverseTrigonometricFunction):
                 return False
         else:
             return s.is_rational
-    
+
     def _eval_is_positive(self):
         return self._eval_is_extended_real() and self.args[0].is_positive
 
@@ -2540,7 +2540,7 @@ class acos(InverseTrigonometricFunction):
                 return False
         else:
             return s.is_rational
-        
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
