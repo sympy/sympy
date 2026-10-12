@@ -2288,11 +2288,13 @@ class asin(InverseTrigonometricFunction):
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if s.args[0].is_rational:
+            if s.args[0].is_zero:
+                return True
+            if s.args[0].is_rational and fuzzy_not(s.args[0].is_zero):
                 return False
         else:
             return s.is_rational
-
+    
     def _eval_is_positive(self):
         return self._eval_is_extended_real() and self.args[0].is_positive
 
@@ -2532,11 +2534,13 @@ class acos(InverseTrigonometricFunction):
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if s.args[0].is_rational:
+            if s.args[0] == 1 or (s.args[0] - 1).is_zero:
+                return True
+            if s.args[0].is_rational and fuzzy_not(s.args[0].is_zero):
                 return False
         else:
             return s.is_rational
-
+        
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -2772,7 +2776,9 @@ class atan(InverseTrigonometricFunction):
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
-            if s.args[0].is_rational:
+            if s.args[0].is_zero:
+                return True
+            if s.args[0].is_rational and fuzzy_not(s.args[0].is_zero):
                 return False
         else:
             return s.is_rational

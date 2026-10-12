@@ -2286,3 +2286,8 @@ def test_issue_23843():
     assert acot(x + I).series(x, -oo) == 16/(5*x**5) + 2*I/x**4 - 4/(3*x**3) - I/x**2 + 1/x + O(x**(-6), (x, -oo))
     assert acot(x - I).series(x, oo) == 16/(5*x**5) - 2*I/x**4 - 4/(3*x**3) + I/x**2 + 1/x + O(x**(-6), (x, oo))
     assert acot(x - I).series(x, -oo) == 16/(5*x**5) - 2*I/x**4 - 4/(3*x**3) + I/x**2 + 1/x + O(x**(-6), (x, -oo))
+
+def test_trig_is_rational_zero():
+    assert asin(0).is_rational is True
+    assert acos(1).is_rational is True
+    assert atan(0).is_rational is True
