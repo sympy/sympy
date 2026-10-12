@@ -2806,8 +2806,8 @@ def euler_substitution_rule(integral : IntegralInfo):
         return step
 
     def _general_euler_step():
-        # Euler's second substitution uses sqrt(c0), which is not real for c0 < 0
-        if c0.is_negative:
+        # Avoid branch issues when sqrt(c0) is imaginary
+        if c0.is_nonpositive:
             return None
         s = Dummy("s")
         subs_dict = { pow_i: ratio_i * s**(2*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
