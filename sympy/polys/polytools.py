@@ -8535,7 +8535,8 @@ def named_poly(n, f, K, name, x, polys):
         K, tail = construct_domain(tail, field=True)
     poly = DMP(f(int(n), *tail, K), K)
     if head is None:
-        poly = PurePoly.new(poly, Dummy('x'))
+        head = Dummy('x')
+        poly = PurePoly.new(poly, head)
     else:
         poly = Poly.new(poly, head)
-    return poly if polys else poly.as_expr()
+    return poly if polys else poly.as_expr(head)

@@ -10,7 +10,7 @@ from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.ntheory.generate import nextprime
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.rootoftools import CRootOf
 from sympy.solvers.solveset import nonlinsolve
 from sympy.geometry import Circle, intersection
@@ -85,7 +85,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(sqrt(2)).dummy_eq(x**2 - 2)
     assert minimal_polynomial(sqrt(2), x) == x**2 - 2
 
-    assert minimal_polynomial(sqrt(2), polys=True) == Poly(x**2 - 2)
+    assert minimal_polynomial(sqrt(2), polys=True) == PurePoly(x**2 - 2, x, domain='QQ')
     assert minimal_polynomial(sqrt(2), x, polys=True) == Poly(x**2 - 2, domain='QQ')
     assert minimal_polynomial(sqrt(2), x, polys=True, compose=False) == Poly(x**2 - 2, domain='QQ')
 

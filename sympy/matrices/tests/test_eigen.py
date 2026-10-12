@@ -789,7 +789,7 @@ def test_issue_28793():
         + z*(1919*sqrt(2)*I*pi**7/32 + 1357*I*pi**7/16)
         + 309*sqrt(2)*pi**8/32 + 437*pi**8/32
     )
-    assert A.charpoly(z).as_expr().collect(z, expand) == expected
+    assert A.charpoly()(z).collect(z, expand) == expected
 
     vals = A.eigenvals()
     assert sorted(vals.values()) == [1, 1, 1, 1, 1, 1, 2]

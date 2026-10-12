@@ -6,7 +6,7 @@ from sympy.core.numbers import (AlgebraicNumber, I, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.numberfields.subfield import to_number_field
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
@@ -132,7 +132,7 @@ def test_AlgebraicNumber():
 
     p = a.as_poly()
 
-    assert p == Poly(2*p.gen + 3)
+    assert p == PurePoly(2*x + 3, x, domain='QQ')
 
     assert a.as_poly(x) == Poly(2*x + 3, domain='QQ')
     assert b.as_poly() == Poly(2*y + 3, domain='QQ')

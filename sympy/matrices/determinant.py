@@ -8,7 +8,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import uniquely_named_symbol
+from sympy.core.symbol import Dummy
 from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
 from sympy.functions.combinatorial.numbers import nC
@@ -360,14 +360,15 @@ def _charpoly(M, x: str | Expr = 'lambda',
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
 
-    A PurePoly is returned, so using different variables for ``x`` does
-    not affect the comparison or the polynomials:
+    The characteristic polynomial is returned as a ``PurePoly`` because its
+    polynomial generator is formal and has no intrinsic name.
 
     Parameters
     ==========
 
-    x : string, optional
-        Name for the "lambda" variable, defaults to "lambda".
+    x : string or expression, optional
+        Retained for backwards compatibility. The returned ``PurePoly`` has
+        an anonymous generator independent of this argument.
 
     simplify : function, optional
         Simplification function to use on the characteristic polynomial
@@ -380,31 +381,24 @@ def _charpoly(M, x: str | Expr = 'lambda',
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
-    PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
-    >>> M.charpoly(x) == M.charpoly(y)
-    True
+    PurePoly(_0**2 - _0 - 6, _0, domain='ZZ')
 
-    Specifying ``x`` is optional; a symbol named ``lambda`` is used by
-    default (which looks good when pretty-printed in unicode):
+    Instantiate the formal generator only when a named expression or ``Poly``
+    is wanted:
 
-    >>> M.charpoly().as_expr()
+    >>> M.charpoly()('lambda')
     lambda**2 - lambda - 6
+    >>> M.charpoly().as_poly('lambda')
+    Poly(lambda**2 - lambda - 6, lambda, domain='ZZ')
 
-    And if ``x`` clashes with an existing symbol, underscores will
-    be prepended to the name to make it unique:
+    Symbols occurring in the matrix remain coefficient symbols and are
+    distinct from the anonymous polynomial generator:
 
     >>> M = Matrix([[1, 2], [x, 0]])
-    >>> M.charpoly(x).as_expr()
-    _x**2 - _x - 2*x
-
-    Whether you pass a symbol or not, the generator can be obtained
-    with the gen attribute since it may not be the same as the symbol
-    that was passed:
-
-    >>> M.charpoly(x).gen
-    _x
-    >>> M.charpoly(x).gen == x
-    False
+    >>> M.charpoly()
+    PurePoly(_0**2 - _0 - 2*x, _0, domain=ZZ.poly_ring(x))
+    >>> M.charpoly()('t')
+    t**2 - t - 2*x
 
     Notes
     =====
@@ -443,8 +437,7 @@ def _charpoly(M, x: str | Expr = 'lambda',
     K = dM.domain
 
     cp = dM.charpoly()
-
-    x = uniquely_named_symbol(x, [M], modify=lambda s: '_' + s)
+    x = Dummy()  # temporary construction generator, not retained by PurePoly
 
     if K.is_EXRAW or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the
