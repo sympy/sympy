@@ -20,7 +20,7 @@ from sympy.polys.polyfuncs import symmetrize, viete
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
     preprocess_roots, roots)
-from sympy.polys.polytools import Poly, factor
+from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
@@ -57,28 +57,26 @@ class _pure_key_dict:
     >>> P[x] = 1
     >>> P[PurePoly(x - y, x)] = 2
 
-    3) retrieval based on Poly key comparison
+    3) retrieval is independent of the polynomial generator name
 
     >>> P[x]
     1
+    >>> P[y]
+    1
 
-    4) KeyError when trying to retrieve with different symbol or nonexisting key
+    4) KeyError when trying to retrieve a different polynomial
 
-    >>> P[y]  # Different symbol, not found
-    Traceback (most recent call last):
-    ...
-    KeyError: Poly(y, y, domain='ZZ')
     >>> P[y + 1]
     Traceback (most recent call last):
     ...
-    KeyError: Poly(y + 1, y, domain='ZZ')
+    KeyError: PurePoly(_0 + 1, _0, domain='ZZ')
 
     5) ability to query with ``in``
 
     >>> x in P
     True
-    >>> y in P  # Different symbol
-    False
+    >>> y in P
+    True
     >>> x + 1 in P
     False
 
@@ -90,21 +88,24 @@ class _pure_key_dict:
     def __init__(self):
         self._dict = {}
 
-    def __getitem__(self, k):
-        if not isinstance(k, Poly):
+    @staticmethod
+    def _key(k):
+        if not isinstance(k, PurePoly):
             try:
-                k = Poly(k, expand=False)
+                k = PurePoly(k, expand=False)
             except (GeneratorsNeeded, PolynomialError):
                 raise KeyError
-        return self._dict[k]
+        return k
+
+    def __getitem__(self, k):
+        return self._dict[self._key(k)]
 
     def __setitem__(self, k, v):
-        if not isinstance(k, Poly):
-            try:
-                k = Poly(k, expand=False)
-            except (GeneratorsNeeded, PolynomialError):
-                raise ValueError('expecting univariate expression')
-        self._dict[k] = v
+        try:
+            key = self._key(k)
+        except KeyError:
+            raise ValueError('expecting univariate expression') from None
+        self._dict[key] = v
 
     def __contains__(self, k):
         try:
@@ -115,13 +116,13 @@ class _pure_key_dict:
 
 _reals_cache = _pure_key_dict()
 _complexes_cache = _pure_key_dict()
-_rootof_dummy = Dummy('x')
 _rootsum_dummy = Dummy('w')
 
 
 def _pure_factors(poly):
     _, factors = poly.factor_list()
-    return [(Poly(f, expand=False).retract(), m) for f, m in factors]
+    cls = PurePoly if isinstance(poly, PurePoly) else Poly
+    return [(cls(f, expand=False).retract(), m) for f, m in factors]
 
 
 def _imag_count_of_factor(f):
@@ -332,7 +333,10 @@ class ComplexRootOf(RootOf):
         else:
             raise ValueError("expected an integer root index, got %s" % index)
 
-        poly = Poly(f, x, greedy=False, expand=expand)
+        # Preserve formal generators when an anonymous polynomial is supplied.
+        # For an expression, still reject nonsymbol generators below.
+        poly = (f if isinstance(f, PurePoly) and x is None
+                else Poly(f, x, greedy=False, expand=expand))
 
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
@@ -369,8 +373,7 @@ class ComplexRootOf(RootOf):
         if not dom.is_ZZ:
             raise NotImplementedError("CRootOf is not supported over %s" % dom)
 
-        poly = Poly(poly.replace(poly.gen, _rootof_dummy))
-        root = cls._indexed_root(poly, index, lazy=True)
+        root = cls._indexed_root(PurePoly(poly), index, lazy=True)
         return coeff * cls._postprocess_root(root, radicals)
 
     @classmethod
@@ -378,15 +381,8 @@ class ComplexRootOf(RootOf):
         """Construct new ``CRootOf`` object from raw data. """
         obj = Expr.__new__(cls)
 
-        poly = poly.replace(poly.gen, _rootof_dummy)
-        obj.poly = Poly(poly)
+        obj.poly = PurePoly(poly)
         obj.index = index
-
-        try:
-            _reals_cache[obj.poly] = _reals_cache[poly]
-            _complexes_cache[obj.poly] = _complexes_cache[poly]
-        except KeyError:
-            pass
 
         return obj
 
@@ -395,11 +391,13 @@ class ComplexRootOf(RootOf):
 
     @property
     def expr(self):
-        return self.poly.as_expr()
+        # A named expression is for display only, not the root's identity.
+        return self.poly.as_expr(symbols('x'))
 
     @property
     def args(self):
-        return (self.expr, Integer(self.index))
+        # A formal generator must not occur in the symbolic argument tree.
+        return (self.poly, Integer(self.index))
 
     @property
     def free_symbols(self):
@@ -925,16 +923,10 @@ class ComplexRootOf(RootOf):
         prec = dps_to_prec(n)
         with local_workprec(prec) as mp:
             g = self.poly.gen
-            if not g.is_Symbol:
-                d = Dummy('x')
-                if self.is_imaginary:
-                    d *= I
-                func = lambdify(d, self.expr.subs(g, d), modules=mp)
-            else:
-                expr = self.expr
-                if self.is_imaginary:
-                    expr = self.expr.subs(g, I*g)
-                func = lambdify(g, expr, modules=mp)
+            expr = self.poly.as_expr()
+            if self.is_imaginary:
+                expr = expr.subs(g, I*g)
+            func = lambdify(g, expr, modules=mp)
 
             interval = self._get_interval()
             while True:

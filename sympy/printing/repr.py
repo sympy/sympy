@@ -97,6 +97,12 @@ class ReprPrinter(Printer):
                 use = trim
             return 'Permutation(%s)' % use
 
+    def _print_ComplexRootOf(self, expr):
+        # The underlying polynomial is anonymous. Reconstruct it using a
+        # named expression rather than its internal PurePoly domain wrapper.
+        return "ComplexRootOf(%s, %s)" % (
+            self._print(expr.expr), self._print(expr.args[1]))
+
     def _print_Function(self, expr):
         r = self._print(expr.func)
         r += '(%s)' % ', '.join([self._print(a) for a in expr.args])

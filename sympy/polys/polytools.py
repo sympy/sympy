@@ -4865,11 +4865,7 @@ class PurePoly(Poly):
 
         from sympy.polys.rootoftools import CRootOf
 
-        # CRootOf currently works with an expression and a Symbol generator.
-        # Instantiate the anonymous generator with a fresh Dummy only at this
-        # boundary; it is not part of the PurePoly identity.
-        gen = Dummy('_x')
-        return CRootOf(self(gen), gen, index)
+        return CRootOf(self, index)
 
     @property
     def free_symbols(self):
