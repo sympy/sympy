@@ -7,7 +7,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory.generate import prime
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.numberfields.minpoly import minimal_polynomial
-from sympy.polys.polytools import Poly, PurePoly
+from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import permute_signs
 from sympy.testing.pytest import raises
 
