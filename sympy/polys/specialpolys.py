@@ -63,10 +63,10 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
             ex = x**2 - 2
         elif n == 2:
             ex = x**4 - 10*x**2 + 1
-    return poly_cls(ex, x) if polys else ex
+        elif n == 3:
             ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
 
-    return PurePoly(ex, x) if polys else ex
+    return poly_cls(ex, x) if polys else ex
 
 
 @public
