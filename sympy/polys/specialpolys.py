@@ -49,7 +49,13 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         x = Dummy('x')
         poly_cls = PurePoly
 
-    if n > 3:
+    if n == 1:
+        ex = x**2 - 2
+    elif n == 2:
+        ex = x**4 - 10*x**2 + 1
+    elif n == 3:
+        ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
+    else:
         from sympy.functions.elementary.miscellaneous import sqrt
         from .numberfields import minimal_polynomial
         p = 2
@@ -58,13 +64,6 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
             p = nextprime(p)
             a.append(sqrt(p))
         ex = minimal_polynomial(Add(*a), x)
-    else:
-        if n == 1:
-            ex = x**2 - 2
-        elif n == 2:
-            ex = x**4 - 10*x**2 + 1
-        elif n == 3:
-            ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
 
     return poly_cls(ex, x) if polys else ex
 
