@@ -185,6 +185,12 @@ def multiplicity(p, n):
     >>> _ == multiplicity_in_factorial(p, n)
     True
 
+    Concrete unevaluated binomial coefficients also avoid materialization:
+
+    >>> from sympy import binomial
+    >>> multiplicity(3, binomial(4, 2, evaluate=False))
+    1
+
     See Also
     ========
 
@@ -194,7 +200,7 @@ def multiplicity(p, n):
     try:
         p, n = as_int(p), as_int(n)
     except ValueError:
-        from sympy.functions.combinatorial.factorials import factorial
+        from sympy.functions.combinatorial.factorials import binomial, factorial
         if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
             p = Rational(p)
             n = Rational(n)
@@ -217,6 +223,23 @@ def multiplicity(p, n):
                 isinstance(n.args[0], Integer) and
                 n.args[0] >= 0):
             return multiplicity_in_factorial(p, n.args[0])
+        elif (isinstance(p, (SYMPY_INTS, Integer)) and
+                isinstance(n, binomial) and
+                all(isinstance(i, Integer) for i in n.args)):
+            upper, lower = n.args
+            if lower < 0 or (upper >= 0 and lower > upper):
+                raise ValueError(
+                    "no such integer exists: multiplicity of 0 is not-defined")
+            if upper < 0:
+                upper = -upper + lower - 1
+            p = as_int(p)
+            if p <= 1:
+                raise ValueError("factor must be > 1")
+            return min((
+                multiplicity_in_factorial(q, upper) -
+                multiplicity_in_factorial(q, lower) -
+                multiplicity_in_factorial(q, upper - lower)
+                ) // exponent for q, exponent in factorint(p).items())
         raise ValueError(f"expecting ints or fractions, got {p} and {n}")
 
     if n == 0:
