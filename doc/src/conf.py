@@ -552,3 +552,11 @@ def resolve_type_aliases(app, env, node, contnode):
 
 def setup(app):
     app.connect("missing-reference", resolve_type_aliases)
+    # Options for warning suppression
+# -------------------------------
+nitpick_ignore = [
+    ('py:class', 'sympy.core.containers._T'),
+    ('py:class', 'sympy.core.containers.T'),
+    ('py:class', 'type | tuple[type]'),
+    ('py:class', 'type | tuple[type'),
+]
