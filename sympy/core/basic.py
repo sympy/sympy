@@ -161,6 +161,50 @@ def _get_postprocessors_for_type(arg_type):
     )
 
 
+class _PostprocessorMapping(dict):
+    """
+    A dictionary for Basic._constructor_postprocessor_mapping that automatically
+    invalidates the @cacheit caches for _get_postprocessors and
+    _get_postprocessors_for_type when entries are added, modified, or removed.
+    """
+
+    @staticmethod
+    def _clear_cache():
+        _get_postprocessors.cache_clear()
+        _get_postprocessors_for_type.cache_clear()
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        self._clear_cache()
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+        self._clear_cache()
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        self._clear_cache()
+
+    def clear(self):
+        super().clear()
+        self._clear_cache()
+
+    def pop(self, *args, **kwargs):
+        res = super().pop(*args, **kwargs)
+        self._clear_cache()
+        return res
+
+    def popitem(self):
+        res = super().popitem()
+        self._clear_cache()
+        return res
+
+    def setdefault(self, key, default=None):
+        if key not in self:
+            self._clear_cache()
+        return super().setdefault(key, default)
+
+
 class Basic(Printable):
     """
     Base class for all SymPy objects.
@@ -2192,7 +2236,7 @@ class Basic(Printable):
     def _eval_rewrite(self, rule, args, **hints):
         return None
 
-    _constructor_postprocessor_mapping = {}  # type: ignore
+    _constructor_postprocessor_mapping = _PostprocessorMapping()  # type: ignore
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
