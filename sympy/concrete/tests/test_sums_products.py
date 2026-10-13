@@ -1703,3 +1703,8 @@ def test_issue_23952():
     expr = Sum(abs(k1 - k2)*p**k1 *(1 - q)**(n - k2),
         (k1, 0, n), (k2, 0, n))
     assert expr.subs(p,0).subs(q,1).subs(n, 3).doit() == 3
+
+
+def test_issue_13133():
+    n = Symbol('n', integer=True, positive=True)
+    assert Sum(1/(n*(n + 1)*(2*n + 1)), (n, 1, oo)).doit() == 3 - 4*log(2)
