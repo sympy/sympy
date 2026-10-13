@@ -2610,6 +2610,30 @@ def test_hat_vee():
     assert v1.hat() * v2 == v1.cross(v2)
     assert v1.hat().is_anti_symmetric()
     assert v1.hat().vee() == v1
+    assert v1.hat().shape == (3, 3)
+    # row vectors are accepted as well
+    assert v1.T.hat() == v1.hat()
+    # arbitrary dimensions (n x n skew-symmetric matrices)
+    assert Matrix([x]).hat() == Matrix([[0, -x], [x, 0]])
+    assert Matrix([x]).hat().vee() == Matrix([x])
+    v4 = Matrix([1, 2, 3, 4, 5, 6])
+    assert v4.hat() == Matrix([[0, -6, 5, -3], [6, 0, -4, 2],
+                               [-5, 4, 0, -1], [3, -2, 1, 0]])
+    assert v4.hat().vee() == v4
+    assert Matrix([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).hat().vee() == \
+        Matrix([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    w4 = Matrix([x, y, z, a, b, c])
+    assert w4.hat().is_anti_symmetric()
+    assert w4.hat().vee() == w4
+    assert Matrix([[0, -z, y], [z, 0, -x], [-y, x, 0]]).vee() == Matrix([x, y, z])
+    raises(ShapeError, lambda: Matrix([1, 2]).hat())
+    raises(ShapeError, lambda: Matrix([1, 2, 3, 4, 5]).hat())
+    raises(ShapeError, lambda: Matrix(2, 2, [1, 2, 3, 4]).hat())
+    raises(ShapeError, lambda: Matrix([1, 2]).vee())
+    raises(ShapeError, lambda: Matrix(2, 3, [1, 2, 3, 4, 5, 6]).vee())
+    raises(ShapeError, lambda: Matrix(1, 1, [0]).vee())
+    raises(ValueError, lambda: Matrix([[0, 1], [2, 0]]).vee())
+    raises(ValueError, lambda: Matrix([[1, 0], [0, -1]]).vee())
 
 def test_hash():
     for cls in classes[-2:]:
