@@ -1751,6 +1751,27 @@ def test_issue_16536():
     assert abs(uppergamma(1, 3) - F(1, 3)) <= 1e-10
 
 
+def test_issue_30199_scipy_composite_printer_parentheses():
+    if not scipy:
+        skip("scipy not installed")
+
+    a, b, t, lo, hi = symbols("a b t lo hi", positive=True)
+    substitutions = {a: 2.5, b: 3.0, t: 0.4, lo: 0.1, hi: 0.4}
+    expressions = [
+        1 / lowergamma(a, t),
+        uppergamma(a, t)**2,
+        1 / betainc(a, b, lo, hi),
+        betainc_regularized(a, b, lo, hi)**2,
+    ]
+
+    for expr in expressions:
+        args = tuple(sorted(expr.free_symbols, key=lambda symbol: symbol.name))
+        generated = lambdify(args, expr, modules="scipy")
+        values = [substitutions[arg] for arg in args]
+        expected = float(expr.subs(substitutions).evalf(50))
+        assert abs(generated(*values) - expected) <= 1e-10 * max(1, abs(expected))
+
+
 def test_issue_22726():
     if not numpy:
         skip("numpy not installed")
