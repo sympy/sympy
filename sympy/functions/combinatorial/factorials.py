@@ -148,7 +148,7 @@ class factorial(CombinatorialFunction):
                 if n.is_negative:
                     return S.ComplexInfinity
                 else:
-                    n = n.p
+                    n = int(n.p)
 
                     if n < 20:
                         if not cls._small_factorials:

@@ -22,6 +22,7 @@ from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify, sympify
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.polys.compatibility import IPolys
 from sympy.polys.constructor import construct_domain
 from sympy.polys.densebasic import dup, dmp, dmp_to_dict, dup_from_dict, dmp_from_dict
@@ -1123,9 +1124,10 @@ class PolyElement(
         x**3 + 3*x**2*y**2 + 3*x*y**4 + y**6
 
         """
-        if not isinstance(n, int):
+        if not isinstance(n, SYMPY_INTS):
             raise TypeError("exponent must be an integer, got %s" % n)
-        elif n < 0:
+        n = int(n)
+        if n < 0:
             raise ValueError("exponent must be a non-negative integer, got %s" % n)
 
         if not n:
