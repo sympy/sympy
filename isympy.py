@@ -29,7 +29,7 @@ COMMAND LINE OPTIONS
 
         $isympy -c python
 
-    CONSOLE must be one of 'ipython' or 'python'
+    CONSOLE must be one of 'ipython', 'python', or 'bpython'
 
 -p PRETTY, --pretty PRETTY
 
@@ -201,7 +201,7 @@ def main() -> None:
         choices=['ipython', 'python', 'bpython'],
         metavar='CONSOLE',
         help='select type of interactive session: ipython | python; defaults '
-        'to ipython if IPython is installed, otherwise python')
+        'to ipython if IPython is installed, otherwise python; bpython is also supported')
 
     parser.add_argument(
         '-p', '--pretty',
