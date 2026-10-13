@@ -19,6 +19,7 @@ from sympy.polys.polyclasses import DMP
 from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyutils import _analyze_gens
 from sympy.utilities import subsets, public, filldedent
+from sympy.utilities.misc import as_int
 
 
 @public
@@ -31,15 +32,17 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         `n` decides the order of polynomial
     x : optional
     polys : bool, optional
-        Returns a Poly object when ``polys=True``, otherwise
+        ``polys=True`` returns a PurePoly, otherwise
         (default) returns an expression.
     """
+    n = as_int(n)
+
     if n <= 0:
         raise ValueError(
             "Cannot generate Swinnerton-Dyer polynomial of order %s" % n)
 
     if x is not None:
-        sympify(x)
+        x = sympify(x)
     else:
         x = Dummy('x')
 
@@ -51,14 +54,14 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         for i in range(2, n + 1):
             p = nextprime(p)
             a.append(sqrt(p))
-        return minimal_polynomial(Add(*a), x, polys=polys)
-
-    if n == 1:
-        ex = x**2 - 2
-    elif n == 2:
-        ex = x**4 - 10*x**2 + 1
-    elif n == 3:
-        ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
+        ex = minimal_polynomial(Add(*a), x)
+    else:
+        if n == 1:
+            ex = x**2 - 2
+        elif n == 2:
+            ex = x**4 - 10*x**2 + 1
+        elif n == 3:
+            ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
 
     return PurePoly(ex, x) if polys else ex
 

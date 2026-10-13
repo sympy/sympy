@@ -6,7 +6,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory.generate import prime
 from sympy.polys.domains.integerring import ZZ
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, PurePoly
 from sympy.utilities.iterables import permute_signs
 from sympy.testing.pytest import raises
 
@@ -39,9 +39,12 @@ def test_swinnerton_dyer_poly():
     # we only need to check that the polys arg works but
     # we may as well test that the roots are correct
     p = [sqrt(prime(i)) for i in range(1, 5)]
+    p4 = swinnerton_dyer_poly(4, polys=True)
+    assert isinstance(p4, PurePoly)
     assert str([i.n(3) for i in
-        swinnerton_dyer_poly(4, polys=True).all_roots()]
+        p4.all_roots()]
         ) == str(sorted([Add(*i).n(3) for i in permute_signs(p)]))
+    raises(ValueError, lambda: swinnerton_dyer_poly(1.2, x))
 
 
 def test_cyclotomic_poly():
