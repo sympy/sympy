@@ -32,10 +32,9 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         `n` decides the order of polynomial
     x : optional
     polys : bool, optional
-        when ``polys=True`` a Poly is returned if x is not None
-        else a PurePoly; when False (default) an Expr is returned
-        with a canonical variable when x is None else using the
-        value of x provided.
+        If True, return a ``Poly`` when ``x`` is specified, or a
+        ``PurePoly`` otherwise. If False (default), return an expression
+        using ``x`` when specified, or the default generator otherwise.
     """
     n = as_int(n)
 
@@ -45,12 +44,18 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
 
     if x is not None:
         x = sympify(x)
-        pfunc = Poly
+        poly_cls = Poly
     else:
-        x = PurePoly('_').gen
-        pfunc = PurePoly
+        x = Dummy('x')
+        poly_cls = PurePoly
 
-    if n > 3:
+    if n == 1:
+        ex = x**2 - 2
+    elif n == 2:
+        ex = x**4 - 10*x**2 + 1
+    elif n == 3:
+        ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
+    else:
         from sympy.functions.elementary.miscellaneous import sqrt
         from .numberfields import minimal_polynomial
         p = 2
@@ -59,15 +64,8 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
             p = nextprime(p)
             a.append(sqrt(p))
         ex = minimal_polynomial(Add(*a), x)
-    else:
-        if n == 1:
-            ex = x**2 - 2
-        elif n == 2:
-            ex = x**4 - 10*x**2 + 1
-        elif n == 3:
-            ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
 
-    return pfunc(ex, x) if polys else ex
+    return poly_cls(ex, x) if polys else ex
 
 
 @public
