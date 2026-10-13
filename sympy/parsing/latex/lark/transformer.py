@@ -289,6 +289,10 @@ class TransformToSymPyExpr(Transformer):
 
     def fraction(self, tokens):
         numerator = tokens[1]
+        if isinstance(numerator, tuple) and isinstance(tokens[2], tuple):
+            _, function = numerator
+            _, variable = tokens[2]
+            return sympy.Derivative(function, variable)
         if isinstance(tokens[2], tuple):
             # we only need the variable w.r.t. which we are differentiating
             _, variable = tokens[2]
