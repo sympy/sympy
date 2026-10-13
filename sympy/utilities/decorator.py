@@ -1,7 +1,7 @@
 """Useful utility decorators. """
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import TypeVar, Callable
 import sys
 import types
 import inspect
@@ -17,7 +17,7 @@ T = TypeVar('T')
 """A generic type"""
 
 
-def threaded_factory(func, use_add):
+def threaded_factory(func: Callable, use_add: bool) -> Callable:
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify
     from sympy.matrices import MatrixBase
@@ -46,7 +46,7 @@ def threaded_factory(func, use_add):
     return threaded_func
 
 
-def threaded(func):
+def threaded(func: Callable) -> Callable:
     """Apply ``func`` to sub--elements of an object, including :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
@@ -66,7 +66,7 @@ def threaded(func):
     return threaded_factory(func, True)
 
 
-def xthreaded(func):
+def xthreaded(func: Callable) -> Callable:
     """Apply ``func`` to sub--elements of an object, excluding :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
