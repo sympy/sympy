@@ -880,6 +880,7 @@ def test_sinc():
     assert sinc(x).diff(x) == (sin(x)/x).diff(x)
     assert sinc(x).diff(x, x) == (-sin(x) - 2*cos(x)/x + 2*sin(x)/x**2)/x
     assert sinc(x).diff(x, x) == (sin(x)/x).diff(x, x)
+    assert limit(sinc(x), x, 0) == 1
     assert limit(sinc(x).diff(x), x, 0) == 0
     assert limit(sinc(x).diff(x, x), x, 0) == -S(1)/3
 
