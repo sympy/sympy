@@ -1,8 +1,8 @@
 """Gosper's algorithm for hypergeometric summation. """
 from __future__ import annotations
 
-from sympy.core import S, Dummy, symbols
-from sympy.polys import Poly, parallel_poly_from_expr, factor
+from sympy.core import S, Dummy, Mul, symbols, sympify
+from sympy.polys import Poly, parallel_poly_from_expr, factor, factor_list
 from sympy.utilities.iterables import is_sequence
 
 
@@ -156,6 +156,92 @@ def gosper_term(f, n):
         return B.as_expr()*x/C.as_expr()
 
 
+def _denominator_factors(expr):
+    """Return the irreducible factors of the denominator of ``expr``."""
+    from sympy.polys.rationaltools import together
+
+    den = together(expr).as_numer_denom()[1]
+    if den is S.One:
+        return set()
+    if not den.is_polynomial(*den.free_symbols):
+        # A denominator that is not a polynomial in its symbols (it
+        # can e.g. contain a Piecewise) is not factored; its
+        # multiplicative parts are used as they are.
+        return set(Mul.make_args(den))
+    return {fac for fac, _exp in factor_list(den)[1]}
+
+
+def _sum_at_degenerate_value(f, k, a, b):
+    """Evaluate a definite sum whose parameters were specialised.
+
+    The sum is evaluated directly when the specialised bounds are
+    concrete integers, and with ``gosper_sum`` otherwise. ``None`` is
+    returned when neither gives a value.
+    """
+    if a.is_Integer and b.is_Integer and 0 <= b - a <= 100:
+        total = S.Zero
+        for j in range(int(a), int(b) + 1):
+            term = f.subs(k, j)
+            if term.has(S.NaN, S.Infinity, -S.Infinity, S.ComplexInfinity):
+                return None
+            total += term
+        return total
+    try:
+        return gosper_sum(f, (k, a, b))
+    except Exception:
+        return None
+
+
+def _check_degenerate_parameters(f, g, result, k, a, b):
+    """Check a definite Gosper sum at the poles of its certificate.
+
+    The certificate ``g`` computed by Gosper's algorithm is derived
+    under the assumption that the parameters of ``f`` avoid the zeros
+    of the denominator of ``g``. If such a factor is still present in
+    the denominator of ``result`` then the result makes no claim at
+    the pole and is returned unchanged. If the factor has cancelled
+    out of ``result`` then the result can silently be wrong at the
+    pole (see issue 29731), so the sum is recomputed with the
+    parameter replaced by each root of the factor that can be found.
+    If any of those values disagrees with ``result`` then ``None``
+    is returned instead of the incorrect closed form.
+    """
+    from sympy.simplify import simplify
+    from sympy.solvers.solvers import solve
+
+    params = sympify(f).free_symbols - {k}
+    if not params:
+        return result
+
+    poles = {fac for fac in _denominator_factors(g)
+             if fac.free_symbols & params}
+    poles -= _denominator_factors(result)
+    if not poles:
+        return result
+
+    for pole in poles:
+        for param in pole.free_symbols & params:
+            if not pole.is_polynomial(param):
+                continue
+            for solution in solve(pole, param, dict=True):
+                root = solution[param]
+                if param in root.free_symbols:
+                    continue
+                subs = {param: root}
+                value = _sum_at_degenerate_value(
+                    f.subs(subs), k, sympify(a).subs(subs),
+                    sympify(b).subs(subs))
+                if value is None:
+                    continue
+                claimed = result.subs(subs)
+                if claimed.has(S.NaN, S.Infinity, -S.Infinity,
+                               S.ComplexInfinity):
+                    continue
+                if simplify(value - claimed) != 0:
+                    return None
+    return result
+
+
 def gosper_sum(f, k):
     r"""
     Gosper's hypergeometric summation algorithm.
@@ -218,5 +304,11 @@ def gosper_sum(f, k):
                 result = (f*(g + 1)).limit(k, b) - (f*g).limit(k, a)
             except NotImplementedError:
                 result = None
+
+        if result is not None:
+            result = _check_degenerate_parameters(f, g, result, k, a, b)
+
+    if result is None:
+        return None
 
     return factor(result)

@@ -45,7 +45,7 @@ def test_gosper_sum():
     assert gosper_sum(
         k*factorial(k), (k, 0, n)) == n*factorial(n) + factorial(n) - 1
 
-    assert gosper_sum((-1)**k*binomial(n, k), (k, 0, n)) == 0
+    assert gosper_sum((-1)**k*binomial(n, k), (k, 0, n)) is None
     assert gosper_sum((
         -1)**k*binomial(n, k), (k, 0, m)) == -(-1)**m*(m - n)*binomial(n, m)/n
 
@@ -58,6 +58,26 @@ def test_gosper_sum():
         (n, 0, m)).simplify() == -exp(m*log(a) + m*log(b))*gamma(a + 1) \
         *gamma(b + 1)/(gamma(a)*gamma(b)*gamma(a + m + 1)*gamma(b + m + 1)) \
         + 1/(gamma(a)*gamma(b))
+
+
+def test_gosper_sum_degenerate_parameters():
+    # Issue 29731: the Gosper certificate of this term is
+    # -(k - 1)/(n - 1), which is only valid for n != 1. The sum to n
+    # was returned as 0, which is wrong at n = 1 where the sum is 1,
+    # so no closed form is returned for it. With the fixed upper
+    # limit 1 the same certificate gives a result that also holds at
+    # n = 1, and that result is returned:
+    f = (-1)**(n - k)*k*binomial(n, k)
+    assert gosper_sum(f, (k, 0, n)) is None
+    assert gosper_sum(f, (k, 0, 1)) == (-1)**(n - 1)*n
+
+    # The sum of (-1)**k*binomial(n, k) to n is 1 at n = 0 rather
+    # than 0 (see the assertion in test_gosper_sum):
+    assert gosper_sum((-1)**k*binomial(n, k), (k, 0, n)) is None
+
+    # A result whose denominator still contains the pole of the
+    # certificate is returned unchanged:
+    assert gosper_sum(x**k, (k, 0, n)) == (x*x**n - 1)/(x - 1)
 
 
 def test_gosper_sum_indefinite():
