@@ -40,7 +40,10 @@ def test_swinnerton_dyer_poly():
     # we may as well test that the roots are correct
     p = [sqrt(prime(i)) for i in range(1, 5)]
     p4 = swinnerton_dyer_poly(4, polys=True)
-    assert isinstance(p4, PurePoly)
+    assert type(swinnerton_dyer_poly(1, polys=True)) is PurePoly
+    assert type(swinnerton_dyer_poly(1, x, polys=True)) is Poly
+    assert type(swinnerton_dyer_poly(4, polys=True)) is PurePoly
+    assert type(swinnerton_dyer_poly(4, x, polys=True)) is Poly
     assert str([i.n(3) for i in
         p4.all_roots()]
         ) == str(sorted([Add(*i).n(3) for i in permute_signs(p)]))

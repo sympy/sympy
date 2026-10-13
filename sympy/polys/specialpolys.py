@@ -32,8 +32,9 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         `n` decides the order of polynomial
     x : optional
     polys : bool, optional
-        ``polys=True`` returns a PurePoly, otherwise
-        (default) returns an expression.
+        If True, return a ``Poly`` when ``x`` is specified, or a
+        ``PurePoly`` otherwise. If False (default), return an expression
+        using ``x`` when specified, or the default generator otherwise.
     """
     n = as_int(n)
 
@@ -43,8 +44,10 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
 
     if x is not None:
         x = sympify(x)
+        poly_cls = Poly
     else:
         x = Dummy('x')
+        poly_cls = PurePoly
 
     if n > 3:
         from sympy.functions.elementary.miscellaneous import sqrt
