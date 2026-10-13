@@ -645,6 +645,21 @@ def test_lambertw():
     assert LambertW(n).is_zero is False
 
 
+def test_lambertw_finiteness():
+    finite = Symbol('finite', finite=True)
+    nonzero = Symbol('nonzero', finite=True, nonzero=True)
+    branch = Symbol('branch', integer=True)
+
+    assert LambertW(finite).is_finite is True
+    assert LambertW(finite, 0, evaluate=False).is_finite is True
+    assert LambertW(finite, -1).is_finite is None
+    assert LambertW(finite, 1).is_finite is None
+    assert LambertW(finite, branch).is_finite is None
+    assert LambertW(nonzero, -1).is_finite is True
+    assert LambertW(0, -1, evaluate=False).is_finite is False
+    assert LambertW(0, branch, evaluate=False).is_finite is None
+
+
 def test_issue_5673():
     e = LambertW(-1)
     assert e.is_comparable is False

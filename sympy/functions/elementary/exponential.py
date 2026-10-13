@@ -1219,7 +1219,15 @@ class LambertW(DefinedFunction):
                 return False
 
     def _eval_is_finite(self):
-        return self.args[0].is_finite
+        x = self.args[0]
+        if len(self.args) > 1:
+            k = self.args[1]
+            if k.is_zero is not True:
+                if x.is_zero:
+                    return False if k.is_zero is False else None
+                if x.is_zero is None and x.is_finite:
+                    return None
+        return x.is_finite
 
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
