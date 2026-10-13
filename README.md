@@ -1,6 +1,6 @@
 # SymPy
 
-[![pypi version](https://img.shields.io/pypi/v/sympy.svg)](https://pypi.python.org/pypi/sympy)
+[![pypi version](https://img.shields.io/pypi/v/sympy.svg)](https://pypi.org/project/sympy/).
 [![Join the chat at https://gitter.im/sympy/sympy](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Zenodo Badge](https://zenodo.org/badge/18918/sympy/sympy.svg)](https://zenodo.org/badge/latestdoi/18918/sympy/sympy)
 [![Downloads](https://pepy.tech/badge/sympy/month)](https://pepy.tech/project/sympy)
@@ -122,7 +122,7 @@ by its terms. See [CODE\_OF\_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 To execute all tests, run:
 
-    $./setup.py test
+    $ ./setup.py test
 
 in the current directory.
 
