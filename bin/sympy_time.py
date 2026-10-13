@@ -1,4 +1,8 @@
-from __future__ import print_function
+from __future__ import print_function, annotations
+
+from collections.abc import Mapping, Sequence
+from types import ModuleType
+from typing import Any
 
 import time
 from get_sympy import path_hack
@@ -12,7 +16,13 @@ parent = None
 children = {}
 
 
-def new_import(name, globals={}, locals={}, fromlist=[]):
+def new_import(
+    name: str,
+    globals: Mapping[str, Any] | None = None,
+    locals: Mapping[str, Any] | None = None,
+    fromlist=[]: Sequence[str] = ()
+)-> ModuleType:
+
     global level, parent
     if name in seen:
         return old_import(name, globals, locals, fromlist)
