@@ -627,7 +627,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         elif not f:
             raise ZeroDivisionError
         else:
-            return f.raw_new(f.denom**-n, f.numer**-n)
+            return f.new(f.denom**-n, f.numer**-n)
 
     def diff(f, x):
         """Computes partial derivative in ``x``.
