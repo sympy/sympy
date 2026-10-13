@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import Generic, TYPE_CHECKING
 
-from sympy.polys.domains.domain import Er
+from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.field import Field
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
@@ -16,7 +16,6 @@ if TYPE_CHECKING:
         from typing import TypeIs
     else:
         from typing_extensions import TypeIs
-    from sympy.polys.domains.domain import Domain
     from sympy.polys.fields import FracField, FracElement
 
 
@@ -138,6 +137,12 @@ class FractionField(Field, CompositeDomain, Generic[Er]):
             a = K1.domain.convert_from(a, K0)
         if a is not None:
             return K1.new(a)
+
+    def from_MonogenicFiniteExtension(K1, a, K0):
+        """Convert a finite-extension element to ``dtype``. """
+        if K1.domain == K0:
+            return K1.new(a)
+        return Domain.from_MonogenicFiniteExtension(K1, a, K0)
 
     def from_PolynomialRing(K1, a, K0):
         """Convert a polynomial to ``dtype``. """
