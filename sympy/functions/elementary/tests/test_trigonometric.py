@@ -2291,4 +2291,4 @@ def test_trig_is_rational_zero():
     assert asin(0).is_rational is True
     assert acos(1).is_rational is True
     assert atan(0).is_rational is True
-    
+
