@@ -1390,6 +1390,9 @@ def test_Poly_degree():
     coeff = Mul(*(yi + 1 for yi in ys))
     assert degree(coeff, x) == 0
 
+    p = (((((((x + 1)**3 + 1)**3 + 1)**3 + 1)**3 + 1)**3 + 1)**3 + 1)**3
+    assert degree(p, x) == 3**7
+
     big = 1000
 
     assert degree((x + 1)**big, x) == big  # Large power (fast-path, no expansion)

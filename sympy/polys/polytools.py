@@ -5097,6 +5097,8 @@ def degree(f, gen=0):
         not isinstance(f, Poly)
         and gen.is_commutative
         and f.is_commutative
+        # Avoid costly introspection of wide Adds when
+        # fallback may still require full polynomial expansion
         and not (f.is_Add and len(f.args) >= 17)
     ):
         result = _obvious_leading(f, gen)
