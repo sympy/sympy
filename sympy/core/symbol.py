@@ -471,6 +471,213 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     def as_set(self):
         return S.UniversalSet
 
+    def _get_val_satisfying_assumptions(self, seed):
+        """Return a candidate test value for self satisfying its assumptions."""
+        from sympy.core.numbers import oo, I
+        a0 = self.assumptions0
+        is_zero = a0.get('zero', None)
+        is_real = a0.get('real', None)
+        is_complex = a0.get('complex', None)
+        is_finite = a0.get('finite', None)
+        is_infinite = a0.get('infinite', None)
+        is_imaginary = a0.get('imaginary', None)
+        is_hermitian = a0.get('hermitian', None)
+        
+        if is_zero is True:
+            return S.Zero
+        if is_real is not False and (a0.get('nonzero', None) is False or a0.get('extended_nonzero', None) is False):
+            return S.Zero
+
+        # Infinite/finite assumptions
+        if is_infinite is True or is_complex is False or is_finite is False:
+            return S(oo if seed == 0 else -oo)
+
+        # Complex/real/imaginary assumptions
+        if is_imaginary is True:
+            return S(I if seed == 0 else 2*I)
+
+        # Rational/irrational/transcendental/algebraic assumptions
+        is_irrational = (a0.get('rational', None) is False) or a0.get('irrational', None) is True
+        is_transcendental = a0.get('transcendental', None) is True or (a0.get('algebraic', None) is False)
+
+        # Define checks including extended and negative-logical assumptions
+        is_positive = (a0.get('positive', None) is True or a0.get('extended_positive', None) is True or 
+                       (a0.get('nonpositive', None) is False) or (a0.get('extended_nonpositive', None) is False))
+        is_negative = (a0.get('negative', None) is True or a0.get('extended_negative', None) is True or 
+                       (a0.get('nonnegative', None) is False) or (a0.get('extended_nonnegative', None) is False))
+        is_nonnegative = (a0.get('nonnegative', None) is True or a0.get('extended_nonnegative', None) is True or 
+                          (a0.get('negative', None) is False) or (a0.get('extended_negative', None) is False) or 
+                          is_positive)
+        is_nonpositive = (a0.get('nonpositive', None) is True or a0.get('extended_nonpositive', None) is True or 
+                          (a0.get('positive', None) is False) or (a0.get('extended_positive', None) is False) or 
+                          is_negative)
+        is_nonzero = (a0.get('nonzero', None) is True or (a0.get('zero', None) is False) or a0.get('extended_nonzero', None) is True or 
+                      is_positive or is_negative)
+
+        # Define adjust_real_value helpers outside to avoid capturing
+        if is_transcendental:
+            from sympy import pi, E
+            if is_negative:
+                def adjust_real_value_non_integer(seed_val):
+                    return S(-pi if seed_val == 0 else -E)
+                def adjust_real_value_general(seed_val):
+                    return S(-pi if seed_val == 0 else -E)
+            else:
+                def adjust_real_value_non_integer(seed_val):
+                    return S(pi if seed_val == 0 else E)
+                def adjust_real_value_general(seed_val):
+                    return S(pi if seed_val == 0 else E)
+        elif is_irrational:
+            from sympy import sqrt
+            if is_negative:
+                def adjust_real_value_non_integer(seed_val):
+                    return S(-sqrt(2) if seed_val == 0 else -sqrt(3))
+                def adjust_real_value_general(seed_val):
+                    return S(-sqrt(2) if seed_val == 0 else -sqrt(3))
+            else:
+                def adjust_real_value_non_integer(seed_val):
+                    return S(sqrt(2) if seed_val == 0 else sqrt(3))
+                def adjust_real_value_general(seed_val):
+                    return S(sqrt(2) if seed_val == 0 else sqrt(3))
+        else:
+            if is_negative:
+                def adjust_real_value_non_integer(seed_val):
+                    return S(-1.5 if seed_val == 0 else -2.5)
+                def adjust_real_value_general(seed_val):
+                    return S(-1 if seed_val == 0 else -2)
+            elif is_positive:
+                def adjust_real_value_non_integer(seed_val):
+                    return S(1.5 if seed_val == 0 else 2.5)
+                def adjust_real_value_general(seed_val):
+                    return S(1 if seed_val == 0 else 2)
+            elif is_nonpositive:
+                def adjust_real_value_non_integer(seed_val):
+                    return S(-0.5 if seed_val == 0 else -1.5)
+                def adjust_real_value_general(seed_val):
+                    return S((0 if seed_val == 0 else -1) if not is_nonzero else (-1 if seed_val == 0 else -2))
+            elif is_nonnegative:
+                def adjust_real_value_non_integer(seed_val):
+                    return S(0.5 if seed_val == 0 else 1.5)
+                def adjust_real_value_general(seed_val):
+                    return S((0 if seed_val == 0 else 1) if not is_nonzero else (1 if seed_val == 0 else 2))
+            else:
+                def adjust_real_value_non_integer(seed_val):
+                    return S(0.5 if seed_val == 0 else 1.5)
+                def adjust_real_value_general(seed_val):
+                    return S((0 if seed_val == 0 else 1) if not is_nonzero else (1 if seed_val == 0 else -1))
+
+        # Non-real complex check
+        if is_real is False or is_hermitian is False:
+            # Must be complex with non-zero imaginary part
+            r = 0 if is_imaginary is True else (1 if seed == 0 else 2)
+            return S(r + I if seed == 0 else r + 2*I)
+
+        # Now handle integer / non-integer check
+        is_integer = a0.get('integer', None)
+        if is_integer is False or a0.get('noninteger', None) is True:
+            return adjust_real_value_non_integer(seed)
+
+        # Integer assumptions
+        if is_integer is True:
+            if a0.get('prime', None) is True:
+                return S(2 if seed == 0 else 3)
+            if a0.get('composite', None) is True:
+                return S(4 if seed == 0 else 6)
+            if a0.get('even', None) is True:
+                return S(2 if seed == 0 else 4)
+            if a0.get('odd', None) is True:
+                return S(1 if seed == 0 else 3)
+                
+            if is_positive:
+                return S(1 if seed == 0 else 2)
+            if is_negative:
+                return S(-1 if seed == 0 else -2)
+            if is_nonnegative:
+                return S((1 if seed == 0 else 2) if is_nonzero else (0 if seed == 0 else 1))
+            if is_nonpositive:
+                return S((-1 if seed == 0 else -2) if is_nonzero else (0 if seed == 0 else -1))
+            return S((1 if seed == 0 else -1) if is_nonzero else (0 if seed == 0 else 1))
+
+        # General real number
+        return adjust_real_value_general(seed)
+
+    def _pick_random_value(self, re_min=-1, im_min=-1, re_max=1, im_max=1):
+        """Return a random value satisfying assumptions."""
+        from sympy.core.random import random_complex_number, randint
+        if self.is_zero:
+            return S.Zero
+        elif self.is_integer:
+            # Choose a random integer satisfying assumptions
+            if self.is_prime:
+                # Pick a random prime
+                primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+                val = random.choice(primes)
+            elif self.is_composite:
+                # Pick a random composite
+                composites = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18]
+                val = random.choice(composites)
+            elif self.is_even:
+                if self.is_positive:
+                    val = 2 * randint(1, 5)
+                elif self.is_negative:
+                    val = 2 * randint(-5, -1)
+                elif self.is_nonnegative:
+                    val = 2 * randint(0, 5)
+                elif self.is_nonpositive:
+                    val = 2 * randint(-5, 0)
+                else:
+                    val = 2 * randint(-3, 3)
+            elif self.is_odd:
+                if self.is_positive:
+                    val = 2 * randint(0, 4) + 1
+                elif self.is_negative:
+                    val = 2 * randint(-5, -1) + 1
+                elif self.is_nonnegative:
+                    val = 2 * randint(0, 4) + 1
+                elif self.is_nonpositive:
+                    val = 2 * randint(-5, -1) + 1
+                else:
+                    val = 2 * randint(-3, 3) + 1
+            elif self.is_positive:
+                val = randint(max(1, int(re_min)), max(5, int(re_max)))
+            elif self.is_negative:
+                val = randint(min(-5, int(re_min)), min(-1, int(re_max)))
+            elif self.is_nonnegative:
+                val = randint(max(0, int(re_min)), max(5, int(re_max)))
+            elif self.is_nonpositive:
+                val = randint(min(-5, int(re_min)), min(0, int(re_max)))
+            else:
+                val = randint(min(-5, int(re_min)), max(5, int(re_max)))
+            return S(val)
+        else:
+            # Choose a random real/complex number satisfying assumptions
+            a, c, b, d = re_min, re_max, im_min, im_max
+            if self.is_real or self.is_positive or self.is_negative or self.is_nonnegative or self.is_nonpositive:
+                b = 0
+                d = 0
+                if self.is_positive:
+                    a = max(a, 0)
+                    if a == 0:
+                        a = 0.1
+                    c = max(c, a + 1)
+                elif self.is_negative:
+                    c = min(c, 0)
+                    if c == 0:
+                        c = -0.1
+                    a = min(a, c - 1)
+                elif self.is_nonnegative:
+                    a = max(a, 0)
+                    c = max(c, a + 1)
+                elif self.is_nonpositive:
+                    c = min(c, 0)
+                    a = min(a, c - 1)
+            elif self.is_imaginary:
+                a = 0
+                c = 0
+            return random_complex_number(a, b, c, d, rational=True)
+
+
+
 
 class Dummy(Symbol):
     """Dummy symbols are each unique, even if they have the same name:
