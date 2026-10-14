@@ -690,3 +690,15 @@ def test_issue_28219():
     assert Pow(S.Zero, -1, evaluate=False).as_real_imag() == (S.NaN, S.NaN)
     x = Symbol('x', real=True)
     assert Pow(x, -1, evaluate=False).as_real_imag() == (1/x, S.Zero)
+
+
+def test_issue_30619():
+    #https://github.com/sympy/sympy/issues/30619
+    a = Symbol('a', positive=True)
+    b = Symbol('b', extended_real=True)
+    r = Symbol('r', real=True)
+    assert S.One**oo is nan
+    assert (a**b).is_extended_real is None
+    assert (a**b).is_extended_nonnegative is None
+    assert (a**oo).is_extended_real is None
+    assert (a**r).is_extended_real is True
