@@ -4931,8 +4931,23 @@ def _obvious_leading(expr, gen):
         return S.One, S.One
 
     if not expr.has(gen):
-        expr = expand_mul(expr)
-        if expr is S.Zero:
+        if expr.is_Mul:
+            for arg in expr.args:
+                result = _obvious_leading(arg, gen)
+                if result is not None and result[0] is S.NegativeInfinity:
+                    return S.NegativeInfinity, S.Zero
+            return S.Zero, expr
+
+        if expr.is_Pow:
+            base, exp = expr.as_base_exp()
+            if exp.is_Integer and exp > 0:
+                result = _obvious_leading(base, gen)
+                if result is not None and result[0] is S.NegativeInfinity:
+                    return S.NegativeInfinity, S.Zero
+            return S.Zero, expr
+
+        expanded = expand_mul(expr)
+        if expanded is S.Zero:
             return S.NegativeInfinity, S.Zero
         return S.Zero, expr
 

@@ -1299,6 +1299,33 @@ def test_Poly__gen_to_level():
     raises(PolynomialError, lambda: Poly(1, x, y)._gen_to_level('z'))
 
 
+def test_obvious_leading():
+    y, z = symbols('y z')
+
+    assert _obvious_leading(pi**3 + 2*pi, pi) == (3, 1)
+    assert _obvious_leading(S.Zero, x) == (-oo, 0)
+    assert _obvious_leading(x, x) == (1, 1)
+    assert _obvious_leading(3*x**4, x) == (4, 3)
+    assert _obvious_leading((2*x**3 + 1)**10, x) == (30, 2**10)
+
+    assert _obvious_leading(y + z, x) == (0, y + z)
+    assert _obvious_leading((y + z)*x**3, x) == (3, y + z)
+    assert _obvious_leading(y*x**2 + z*(1 + x)**2, x) == (2, y + z)
+
+    assert _obvious_leading(
+        (x + 1)**100 + 7*(x**2 + 1)**3, x
+    ) == (100, 1)
+
+    assert _obvious_leading(
+        (x + 1)**40 + (1 - x)**40, x
+    ) == (40, 2)
+
+    # Equal top-degree coefficients cancel, so give up.
+    assert _obvious_leading(
+        (x + 1)**40 - (x - 1)**40, x
+    ) is None
+
+
 def test_Poly_degree():
     assert Poly(0, x).degree() is -oo
     assert Poly(1, x).degree() == 0
@@ -1358,6 +1385,11 @@ def test_Poly_degree():
 
 
     # optimization
+
+    ys = symbols('y:20')
+    coeff = Mul(*(yi + 1 for yi in ys))
+    assert degree(coeff, x) == 0
+
     big = 1000
 
     assert degree((x + 1)**big, x) == big  # Large power (fast-path, no expansion)
@@ -4334,30 +4366,3 @@ def test_groebner_reduce_scalar():
     B = groebner([t**2], t, order="lex")
     assert B.reduce(7) == ([0], 7)
     assert B.reduce(Integer(7)) == ([0], Integer(7))
-
-
-def test_obvious_leading():
-    y, z = symbols('y z')
-
-    assert _obvious_leading(pi**3 + 2*pi, pi) == (3, 1)
-    assert _obvious_leading(S.Zero, x) == (-oo, 0)
-    assert _obvious_leading(x, x) == (1, 1)
-    assert _obvious_leading(3*x**4, x) == (4, 3)
-    assert _obvious_leading((2*x**3 + 1)**10, x) == (30, 2**10)
-
-    assert _obvious_leading(y + z, x) == (0, y + z)
-    assert _obvious_leading((y + z)*x**3, x) == (3, y + z)
-    assert _obvious_leading(y*x**2 + z*(1 + x)**2, x) == (2, y + z)
-
-    assert _obvious_leading(
-        (x + 1)**100 + 7*(x**2 + 1)**3, x
-    ) == (100, 1)
-
-    assert _obvious_leading(
-        (x + 1)**40 + (1 - x)**40, x
-    ) == (40, 2)
-
-    # Equal top-degree coefficients cancel, so give up.
-    assert _obvious_leading(
-        (x + 1)**40 - (x - 1)**40, x
-    ) is None
