@@ -4390,7 +4390,7 @@ def test_PurePoly_canonical_instantiation_and_coefficients():
         Symbol('_1')*y + Symbol('_1') + 1, y)
     assert p(Symbol('_1'), Symbol('_0')) == (
         Symbol('_0')*Symbol('_1') + Symbol('_1') + 1)
-    assert PurePoly(x**2 - x - 6, x)(Symbol('lambda')) == (
+    assert PurePoly(x**2 - x - 6, x)('lamda') == (
         Symbol('lambda')**2 - Symbol('lambda') - 6)
     assert PurePoly(x**2 + 1, x)('2') == 5
     assert PurePoly(x**2 + 1, x)('pi') == pi**2 + 1

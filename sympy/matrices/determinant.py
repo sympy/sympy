@@ -377,7 +377,7 @@ def _charpoly(M, x: str | Expr | None = None,
     Examples
     ========
 
-    >>> from sympy import Matrix, Symbol
+    >>> from sympy import Matrix
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
