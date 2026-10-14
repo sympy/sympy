@@ -4724,8 +4724,7 @@ class PurePoly(Poly):
             raise ValueError("too many values provided")
         if not values:
             return self
-        values = tuple(Symbol(v) if isinstance(v, str) else sympify(v)
-                       for v in values)
+        values = tuple(sympify(v) for v in values)
         if len(values) == len(gens):
             return self.as_expr().xreplace(dict(zip(gens, values)))
 
@@ -4743,7 +4742,7 @@ class PurePoly(Poly):
             gens = self.gens
         if len(gens) != len(self.gens):
             raise GeneratorsError("expected %d generators" % len(self.gens))
-        gens = tuple(Symbol(g) if isinstance(g, str) else g for g in gens)
+        gens = options.Gens.preprocess(gens)
         if args:
             return Poly(self.as_expr(*gens), *gens, **args)
         return Poly.new(self.rep, *gens)

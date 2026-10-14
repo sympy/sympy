@@ -377,7 +377,7 @@ def _charpoly(M, x: str | Expr | None = None,
     Examples
     ========
 
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, Symbol
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
@@ -386,7 +386,7 @@ def _charpoly(M, x: str | Expr | None = None,
     Poly(x**2 - x - 6, x, domain='ZZ')
     >>> M.charpoly(x) == M.charpoly().as_poly(x)
     True
-    >>> M.charpoly()('lambda')
+    >>> M.charpoly()(Symbol('lambda'))
     lambda**2 - lambda - 6
 
     If the requested generator conflicts with a coefficient symbol,

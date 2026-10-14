@@ -4378,6 +4378,7 @@ def test_PurePoly_dummy_eq():
 def test_PurePoly_canonical_instantiation_and_coefficients():
     p = PurePoly(x*y + x + 1, x, y)
     assert p.as_poly(a, b) == Poly(a*b + a + 1, a, b)
+    raises(AttributeError, lambda: p.as_poly('a', b))
     assert p('a', 'b') == a*b + a + 1
     assert p(a, b) == a*b + a + 1
     assert p(2, 3) == 9
@@ -4389,8 +4390,10 @@ def test_PurePoly_canonical_instantiation_and_coefficients():
         Symbol('_1')*y + Symbol('_1') + 1, y)
     assert p(Symbol('_1'), Symbol('_0')) == (
         Symbol('_0')*Symbol('_1') + Symbol('_1') + 1)
-    assert PurePoly(x**2 - x - 6, x)('lambda') == (
+    assert PurePoly(x**2 - x - 6, x)(Symbol('lambda')) == (
         Symbol('lambda')**2 - Symbol('lambda') - 6)
+    assert PurePoly(x**2 + 1, x)('2') == 5
+    assert PurePoly(x**2 + 1, x)('pi') == pi**2 + 1
     q = PurePoly(x**2 + y, x)
     assert q.subs(x, z) == q
     assert q.subs(y, z) == PurePoly(x**2 + z, x)
