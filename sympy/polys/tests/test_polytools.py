@@ -1489,6 +1489,31 @@ def test_Poly_LC():
     assert LC(x*y**7 + 2*x**2*y**3, order='grlex') == 1
 
 
+
+def test_obvious_leading_queries():
+    big = 1000
+    f = y*(x + 1)**big + 1
+
+    assert LC(f, x) == y
+    assert LM(f, x) == x**big
+    assert LT(f, x) == y*x**big
+
+    assert LC(0, x) == 0
+    assert LM(0, x) == 1
+    assert LT(0, x) == 0
+
+    # NumberSymbol generator.
+    f = (pi + 1)**big
+    assert LC(f, pi) == 1
+    assert LM(f, pi) == pi**big
+    assert LT(f, pi) == pi**big
+
+    # Leading terms cancel, so structural analysis falls back to Poly.
+    f = (x + 1)**2 - x**2
+    assert LC(f, x) == 2
+    assert LM(f, x) == x
+    assert LT(f, x) == 2*x
+
 def test_Poly_TC():
     assert Poly(0, x).TC() == 0
     assert Poly(1, x).TC() == 1
