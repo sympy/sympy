@@ -98,7 +98,12 @@ CMD_MATHIT: "\\mathit"
 CMD_INFTY: "\\infty"
 CMD_CIRC: "\\circ"
 
-BANG: "!"
+// Include leading whitespace to avoid splitting a pair or matching a run's suffix.
+BANG: /(?:(?<![! \t\n\r])|(?<=\\!))[ \t\n\r]*!
+       (?:[ \t\n\r]*!(?![ \t\n\r]*!)          # exactly two marks
+         |(?![ \t\n\r]*!(?![ \t\n\r]*!)))    # first of one or at least three
+       |(?<!\\!)(?<=!)[ \t\n\r]*!             # remaining marks in a longer run
+       /x
 BAR: "|"
 CARET: "^"
 COLON: ":"
