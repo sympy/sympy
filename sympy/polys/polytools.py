@@ -5017,6 +5017,32 @@ def _obvious_leading(expr, gen):
     return None
 
 
+def _obvious_leading_query(expr, gen):
+    """Try structural leading-term analysis when it is likely to be cheap."""
+    if (
+        not isinstance(expr, Poly)
+        and gen.is_commutative
+        and expr.is_commutative
+        # Avoid costly introspection of wide Adds when
+        # fallback may still require full polynomial expansion.
+        and not (expr.is_Add and len(expr.args) >= 17)
+    ):
+        return _obvious_leading(expr, gen)
+
+
+def _obvious_leading_data(f, gens, args):
+    """Return (gen, (degree, LC)) for a simple univariate query."""
+    if len(gens) != 1 or args:
+        return None
+
+    expr = sympify(f)
+    gen = sympify(gens[0])
+    result = _obvious_leading_query(expr, gen)
+
+    if result is not None:
+        return gen, result
+
+
 @public
 def degree(f, gen=0):
     """
@@ -5093,17 +5119,10 @@ def degree(f, gen=0):
 
     gen = sympify(gen, strict=True)
 
-    if (
-        not isinstance(f, Poly)
-        and gen.is_commutative
-        and f.is_commutative
-        # Avoid costly introspection of wide Adds when
-        # fallback may still require full polynomial expansion
-        and not (f.is_Add and len(f.args) >= 17)
-    ):
-        result = _obvious_leading(f, gen)
-        if result is not None:
-            return _degree(result[0])
+    result = _obvious_leading_query(f, gen)
+    if result is not None:
+        return _degree(result[0])
+
     if not isinstance(f, Poly) or gen not in f.gens:
         f = poly_from_expr(f, gen)[0]
     return _degree(f.degree(gen))
@@ -5206,6 +5225,11 @@ def LC(f, *gens, **args):
     """
     options.allowed_flags(args, ['polys'])
 
+    obvious = _obvious_leading_data(f, gens, args)
+    if obvious is not None:
+        _, (_, lc) = obvious
+        return lc
+
     try:
         F, opt = poly_from_expr(f, *gens, **args)
     except PolificationFailed as exc:
@@ -5230,6 +5254,13 @@ def LM(f, *gens, **args):
 
     """
     options.allowed_flags(args, ['polys'])
+
+    obvious = _obvious_leading_data(f, gens, args)
+    if obvious is not None:
+        gen, (degree, _) = obvious
+        if degree is S.NegativeInfinity:
+            return S.One
+        return gen**degree
 
     try:
         F, opt = poly_from_expr(f, *gens, **args)
@@ -5256,6 +5287,13 @@ def LT(f, *gens, **args):
 
     """
     options.allowed_flags(args, ['polys'])
+
+    obvious = _obvious_leading_data(f, gens, args)
+    if obvious is not None:
+        gen, (degree, lc) = obvious
+        if degree is S.NegativeInfinity:
+            return S.Zero
+        return lc*gen**degree
 
     try:
         F, opt = poly_from_expr(f, *gens, **args)
