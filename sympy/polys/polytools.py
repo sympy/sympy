@@ -16,7 +16,7 @@ from sympy.core.decorators import _sympifyit
 from sympy.core.exprtools import Factors, factor_nc, factor_terms
 from sympy.core.evalf import (
     pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, expand_mul
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
@@ -103,7 +103,6 @@ def _polifyit(func):
         else:
             return NotImplemented
     return wrapper
-
 
 
 @public
@@ -4917,6 +4916,92 @@ def _update_args(args, key, value):
     return args
 
 
+def _obvious_leading(expr, gen):
+    """Return (degree, LC) when structurally obvious, else None."""
+    if not gen.is_Symbol:
+        if gen.is_NumberSymbol:
+            x = Dummy()
+            return _obvious_leading(expr.xreplace({gen: x}), x)
+        return None
+
+    if expr is S.Zero:
+        return S.NegativeInfinity, S.Zero
+
+    if expr == gen:
+        return S.One, S.One
+
+    if not expr.has(gen):
+        expr = expand_mul(expr)
+        if expr is S.Zero:
+            return S.NegativeInfinity, S.Zero
+        return S.Zero, expr
+
+    if expr.is_Pow:
+        base, exp = expr.as_base_exp()
+
+        if exp.is_Integer and exp >= 0:
+            if exp == 0:
+                return S.Zero, S.One
+
+            result = _obvious_leading(base, gen)
+
+            if result is None:
+                expanded = expand_mul(base)
+                if expanded != base:
+                    result = _obvious_leading(expanded, gen)
+
+            if result is None:
+                return None
+
+            degree, lc = result
+            if degree is S.NegativeInfinity:
+                return degree, S.Zero
+
+            return exp*degree, lc**exp
+
+        return None
+
+    if expr.is_Mul:
+        degree = S.Zero
+        lc = S.One
+
+        for arg in expr.args:
+            result = _obvious_leading(arg, gen)
+            if result is None:
+                return None
+
+            d, c = result
+            if d is S.NegativeInfinity:
+                return d, S.Zero
+
+            degree += d
+            lc *= c
+
+        return degree, lc
+
+    if expr.is_Add:
+        best = None
+
+        for arg in expr.args:
+            result = _obvious_leading(arg, gen)
+            if result is None:
+                return None
+
+            degree, lc = result
+
+            if best is None or degree > best[0]:
+                best = degree, lc
+            elif degree == best[0]:
+                lc += best[1]
+                if lc is S.Zero:
+                    return None
+                best = degree, lc
+
+        return best
+
+    return None
+
+
 @public
 def degree(f, gen=0):
     """
@@ -4992,6 +5077,16 @@ def degree(f, gen=0):
         return p.degree(gen)
 
     gen = sympify(gen, strict=True)
+
+    if (
+        not isinstance(f, Poly)
+        and gen.is_commutative
+        and f.is_commutative
+        and not (f.is_Add and len(f.args) >= 17)
+    ):
+        result = _obvious_leading(f, gen)
+        if result is not None:
+            return _degree(result[0])
     if not isinstance(f, Poly) or gen not in f.gens:
         f = poly_from_expr(f, gen)[0]
     return _degree(f.degree(gen))

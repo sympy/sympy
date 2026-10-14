@@ -31,7 +31,7 @@ from sympy.polys.polytools import (
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
     to_rational_coeffs,
-    gcdex_steps)
+    gcdex_steps, _obvious_leading)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -1345,6 +1345,9 @@ def test_Poly_degree():
     raises(TypeError, lambda: degree(y**2 + x**3))
     raises(TypeError, lambda: degree(y**2 + x**3, 1))
     raises(PolynomialError, lambda: degree(x**2/(x**3 + 1), x))
+    A = Symbol('A', commutative=False)
+    raises(PolynomialError, lambda: degree(A*x, x))
+    raises(GeneratorsError, lambda: degree(x, A))
 
     assert degree(Poly(0,x),z) is -oo
     assert degree(Poly(1,x),z) == 0
@@ -1355,7 +1358,7 @@ def test_Poly_degree():
 
 
     # optimization
-    big = 2  # make this number 1000 when full expansion can be avoided
+    big = 1000
 
     assert degree((x + 1)**big, x) == big  # Large power (fast-path, no expansion)
     assert degree((x + 1)**big + x**(big-1), x) == big  # Addition without cancellation
@@ -4331,3 +4334,30 @@ def test_groebner_reduce_scalar():
     B = groebner([t**2], t, order="lex")
     assert B.reduce(7) == ([0], 7)
     assert B.reduce(Integer(7)) == ([0], Integer(7))
+
+
+def test_obvious_leading():
+    y, z = symbols('y z')
+
+    assert _obvious_leading(pi**3 + 2*pi, pi) == (3, 1)
+    assert _obvious_leading(S.Zero, x) == (-oo, 0)
+    assert _obvious_leading(x, x) == (1, 1)
+    assert _obvious_leading(3*x**4, x) == (4, 3)
+    assert _obvious_leading((2*x**3 + 1)**10, x) == (30, 2**10)
+
+    assert _obvious_leading(y + z, x) == (0, y + z)
+    assert _obvious_leading((y + z)*x**3, x) == (3, y + z)
+    assert _obvious_leading(y*x**2 + z*(1 + x)**2, x) == (2, y + z)
+
+    assert _obvious_leading(
+        (x + 1)**100 + 7*(x**2 + 1)**3, x
+    ) == (100, 1)
+
+    assert _obvious_leading(
+        (x + 1)**40 + (1 - x)**40, x
+    ) == (40, 2)
+
+    # Equal top-degree coefficients cancel, so give up.
+    assert _obvious_leading(
+        (x + 1)**40 - (x - 1)**40, x
+    ) is None
