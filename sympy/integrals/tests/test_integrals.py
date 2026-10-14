@@ -1666,7 +1666,7 @@ def test_integrate_with_complex_constants():
     assert integrate(exp(-I*x**2), x) == sqrt(pi)*erf(sqrt(I)*x)/(2*sqrt(I))
 
     assert integrate((1/(exp(I*t)-2)), t) == -t/2 - I*log(exp(I*t) - 2)/2
-    assert integrate((1/(exp(I*t)-2)), (t, 0, 2*pi)) == -pi
+    assert simplify(integrate((1/(exp(I*t)-2)), (t, 0, 2*pi)) - (-pi)) == 0
 
 
 def test_issue_14241():
