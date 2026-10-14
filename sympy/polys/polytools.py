@@ -4690,6 +4690,11 @@ class PurePoly(Poly):
         return obj
 
     @property
+    def args(self):
+        # Carry the coefficient domain through Basic reconstruction.
+        return (self.as_poly(),)
+
+    @property
     def gens(self):
         """Canonical generator placeholders, distinct from coefficient symbols."""
         names = {s.name for s in self.free_symbols_in_domain
