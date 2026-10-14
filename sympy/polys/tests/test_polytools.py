@@ -4354,6 +4354,14 @@ def test_PurePoly_canonical_generator_structure():
     assert r.has_free(placeholder) is True
     assert r.func(*r.args) == r
 
+    # Basic reconstruction must preserve the exact coefficient domain.
+    for domain in (ZZ, QQ, EXRAW, ZZ[y]):
+        p = PurePoly(x**2 + 1, x, domain=domain)
+        assert p.func(*p.args) == p
+        assert p.func(*p.args).domain == domain
+    p = PurePoly(x*y + 1, x, y, domain=QQ)
+    assert p.func(*p.args) == p
+
     assert PurePoly(x**2 + 1, x, domain=ZZ) != PurePoly(
         x**2 + 1, x, domain=QQ)
     assert PurePoly(x**2 + 1, x) != Poly(x**2 + 1, x)
