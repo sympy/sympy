@@ -342,20 +342,18 @@ class hyper(TupleParametersBase):
         oo
 
         """
-        if (
-            any(
-                a.is_integer is True and a.is_nonpositive is True
-                for a in self.ap
-            )
-            and all(
-                b.is_integer is False or b.is_nonpositive is False
-                for b in self.bq
-            )
+        ap_nonpos = [a for a in self.ap
+                     if a.is_integer is True and a.is_nonpositive is True]
+        aints = [a for a in ap_nonpos if a.is_Integer]
+        bints = [b for b in self.bq
+                 if b.is_Integer and b.is_nonpositive]
+
+        if ap_nonpos and all(
+            b.is_integer is False or b.is_nonpositive is False
+            for b in self.bq
         ):
-            return S.Infinity
-        if any(a.is_Integer and (a <= 0) == True for a in self.ap + self.bq):
-            aints = [a for a in self.ap if a.is_Integer and (a <= 0) == True]
-            bints = [a for a in self.bq if a.is_Integer and (a <= 0) == True]
+            return oo
+        if aints or bints:
             if len(aints) < len(bints):
                 return S.Zero
             popped = False
