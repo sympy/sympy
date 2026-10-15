@@ -71,6 +71,10 @@ def test_manualintegrate_exponentials():
         ((-log(exp(n*x) + 1) + log(exp(n*x)))/n, Ne(n, 0)),
         (x/2, True))
 
+    f = 1/(1 + exp(b*x/(a - b)))
+    F = manualintegrate(f, x)
+    assert (F.diff(x) - f).simplify() == 0
+
     assert_is_integral_of(x**x*(log(x)+1), x**x)
 
 

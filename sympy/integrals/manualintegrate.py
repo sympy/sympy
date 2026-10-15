@@ -3633,7 +3633,7 @@ def substitution_rule(integral):
                 continue
 
             if simplify(c - 1) != 0:
-                _, denom_c = c.as_numer_denom()
+                numer_c, denom_c = c.as_numer_denom()
                 if subrule:
                     subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
 
@@ -3654,7 +3654,7 @@ def substitution_rule(integral):
                                 substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
                                 pieces.append((
                                     substep,
-                                    Eq(pole, 0)
+                                    Eq(pole, 0) & Ne(numer_c, 0)
                                 ))
                     if pieces:
                         pieces.append((subrule, True))
