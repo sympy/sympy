@@ -1393,6 +1393,9 @@ def test_Poly_degree():
     p = (((((((x + 1)**3 + 1)**3 + 1)**3 + 1)**3 + 1)**3 + 1)**3 + 1)**3
     assert degree(p, x) == 3**7
 
+    # issue 6322
+    assert degree((x + 1)**10000) == 10000
+
     big = 1000
 
     assert degree((x + 1)**big, x) == big  # Large power (fast-path, no expansion)
