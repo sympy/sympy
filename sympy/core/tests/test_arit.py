@@ -47,6 +47,12 @@ def test_bug1():
     assert re(x) != x
 
 
+def test_Add_is_real_numerical():
+    e = (3 - I)**2/2 + I
+    assert e.is_number
+    assert e.is_real is False
+
+
 def test_Symbol():
     e = a*b
     assert e == a*b
