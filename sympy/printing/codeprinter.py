@@ -76,6 +76,7 @@ class CodePrinter(StrPrinter):
     # may be supported
     # function_to_rewrite : (function_to_rewrite_to, iterable_with_other_functions_required)
     _rewriteable_functions = {
+            'EML': ('exp', ['log']),
             'cot': ('tan', []),
             'csc': ('sin', []),
             'sec': ('cos', []),

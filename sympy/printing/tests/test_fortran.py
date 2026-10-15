@@ -10,7 +10,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (conjugate, sign)
-from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.exponential import (exp, log, EML)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (atan2, cos, sin)
@@ -62,6 +62,12 @@ def test_fcode_sign():  #issue 12267
     assert fcode(sign(y), standard=95, source_format='free') == "merge(0, isign(1, y), y == 0)"
     assert fcode(sign(z), standard=95, source_format='free') == "merge(cmplx(0d0, 0d0), z/abs(z), abs(z) == 0d0)"
     raises(NotImplementedError, lambda: fcode(sign(x)))
+
+
+def test_fcode_EML():
+    x, y = symbols('x,y')
+    # EML(x, y) is printed via its exp/log rewrite.
+    assert fcode(EML(x, y)).strip() == '(exp(x) - log(y))'
 
 
 def test_fcode_Pow():
