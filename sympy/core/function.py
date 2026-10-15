@@ -2118,6 +2118,11 @@ class Lambda(Expr):
 
     bound_symbols = variables
 
+    def _eval_subs(self, old, new):
+        if old.is_Symbol and old in self.bound_symbols and not new.is_symbol:
+            return self
+        return None
+
     @property
     def free_symbols(self):
         return self.expr.free_symbols - set(self.variables)

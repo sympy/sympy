@@ -345,6 +345,25 @@ def test_Lambda_symbols():
     assert Lambda((), x*y).free_symbols == {x,y}
 
 
+def test_Lambda_subs_bound_symbols():
+    a = Symbol('a')
+    expressions = (
+        (Lambda(y, y + a), Lambda(w, w + a)),
+        (Lambda((x, y), x + y + a), Lambda((x, w), x + w + a)),
+        (Lambda(((x, y), z), x + y + z + a),
+            Lambda(((x, w), z), x + w + z + a)),
+        (Lambda(x, Lambda(y, x + y + a)),
+            Lambda(x, Lambda(w, x + w + a))),
+    )
+    for expr, renamed in expressions:
+        assert expr.subs(y, 2) == expr
+        assert expr.subs({y: 2}, simultaneous=True) == expr
+        assert expr.subs(y, w) == renamed
+        assert expr.subs({y: w}, simultaneous=True) == expr
+        assert expr.subs(a, 2) == expr.xreplace({a: 2})
+        assert expr.subs({a: 2}, simultaneous=True) == expr.xreplace({a: 2})
+
+
 def test_functionclas_symbols():
     assert f.free_symbols == set()
 
