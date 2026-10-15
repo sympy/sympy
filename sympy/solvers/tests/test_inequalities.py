@@ -542,6 +542,14 @@ def test_issue_30598():
     # term is the target itself
     assert reduce_inequalities(a*x + a*y < 1, a) == (a*x + a*y < 1)
     assert reduce_inequalities(a*(x + y) < 1, a) == (a*(x + y) < 1)
+    e = a*x + a*y < a*y
+    rv = reduce_inequalities(e, a)
+    reps = {a: oo, x: 1, y: -1}
+    assert rv == e
+    assert raises(TypeError, lambda: e.subs(reps))
+    assert (a*x < 0).subs(reps) is S.false
+    e = x + 1/x < x + 1/x + 1
+    assert reduce_inequalities(e, x) == Ne(x, 0) & e
     assert reduce_inequalities(Ge(x**2*y + y, 1), y) == (x**2*y + y >= 1)
     c = Symbol('c', real=True)
     assert reduce_inequalities(c*y + y < 1, y) == (c*y + y < 1)

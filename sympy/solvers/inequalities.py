@@ -806,6 +806,13 @@ def _guard_indeterminate_group(ie, s):
                 return False
         return True
 
+    def bounded_rational_term(term):
+        if term.free_symbols - {s}:
+            return False
+        num, den = term.as_numer_denom()
+        num, den = num.as_poly(s), den.as_poly(s)
+        return num is not None and den is not None and num.degree() <= den.degree()
+
     sides = []
     virtual = []
 
@@ -823,6 +830,25 @@ def _guard_indeterminate_group(ie, s):
 
     if not _may_be_indeterminate(virtual):
         return ie, None, None
+    if (ie.lhs == ie.rhs and
+            not any(_may_be_indeterminate(terms) for _, terms in sides)):
+        return ie, None, None
+
+    hits = [
+        i for i, (_, terms) in enumerate(sides)
+        if any(t.has(s) for t in terms)
+    ]
+    if not hits:
+        return ie, None, None
+    if len(hits) != 1:
+        common = set(sides[0][1]) & set(sides[1][1])
+        if common and all(bounded_rational_term(t) for t in common):
+            return ie, None, None
+        return ie, S.NaN, None
+
+    i = hits[0]
+    finite, nonfinite = sides[i]
+    group = Add(*nonfinite)
 
     # Indeterminacy involving only terms that depend on the target is handled
     # by the ordinary solver machinery: denominator restrictions protect finite
@@ -838,26 +864,13 @@ def _guard_indeterminate_group(ie, s):
     # ``a*x + a*y`` into ``a*(x + y)``. Nonlinear and rational expressions
     # instead go through endpoint/domain bookkeeping, which is safe.
     if all(t.has_free(s) for t in virtual):
-        expr = expand_mul(ie.lhs - ie.rhs)
-        p = expr.as_poly(s)
+        p = group.as_poly(s)
         if p is None or p.degree() != 1:
             return ie, None, None
-        _, ax = expr.as_independent(s, as_Add=True)
+        _, ax = group.as_independent(s, as_Add=True)
         if factor_terms(ax) == ax:
             return ie, None, None
 
-    hits = [
-        i for i, (_, terms) in enumerate(sides)
-        if any(t.has(s) for t in terms)
-    ]
-    if not hits:
-        return ie, None, None
-    if len(hits) != 1:
-        return ie, S.NaN, None
-
-    i = hits[0]
-    finite, nonfinite = sides[i]
-    group = Add(*nonfinite)
     tracker = Dummy()
     guarded = Add(*finite, tracker)
 
