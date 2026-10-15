@@ -11,7 +11,7 @@ from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 
 _lark = import_module("lark")
 
-__doctest_requires__ = {('parse_latex_lark',): ['lark']}
+__doctest_requires__ = {('parse_latex_lark', 'parse_latex_lark_all'): ['lark']}
 
 
 class LarkLaTeXParser:
@@ -82,11 +82,7 @@ class LarkLaTeXParser:
         if self.print_debug_output:
             _lark.logger.setLevel(logging.DEBUG)
 
-        for match in re.finditer(r"\\(?:\\|([a-zA-Z]+)|.)", s):
-            if match.group(1) and match.group(1) not in self.control_words:
-                raise LaTeXParsingError("Unknown command %s" % match.group(0))
-
-        parse_tree = self.parser.parse(s)
+        parse_tree = self._parse(s)
 
         if not self.transform_expr:
             # exit early and return the parse tree
@@ -101,22 +97,136 @@ class LarkLaTeXParser:
             # print the `parse_tree` variable
             _lark.logger.debug(parse_tree.pretty())
 
+        sympy_expression = self._transform(parse_tree, overrides)
+
+        if self.print_debug_output:
+            _lark.logger.debug("SymPy expression = %s", sympy_expression)
+
+        return sympy_expression
+
+    def doparse_all(self, s: str, overrides=None):
+        """The list of the readings of ``s``, see :func:`parse_latex_lark_all`.
+
+        When ``transform`` is ``False``, the list holds the parse trees of the
+        readings instead of the expressions.
+        """
+        trees = _lark.visitors.CollapseAmbiguities().transform(self._parse(s))
+        trees = _parallel_readings(trees)
+
+        if not self.transform_expr:
+            return trees
+
+        expressions = []
+        for tree in trees:
+            expression = self._transform(tree, overrides)
+            if expression not in expressions:
+                expressions.append(expression)
+        return expressions
+
+    def _parse(self, s):
+        for match in re.finditer(r"\\(?:\\|([a-zA-Z]+)|.)", s):
+            if match.group(1) and match.group(1) not in self.control_words:
+                raise LaTeXParsingError("Unknown command %s" % match.group(0))
+
+        return self.parser.parse(s)
+
+    def _transform(self, parse_tree, overrides):
         transformer = self.transformer
         if overrides:
             transformer = transformer.with_overrides(overrides)
 
         try:
-            sympy_expression = transformer.transform(parse_tree)
+            return transformer.transform(parse_tree)
         except _lark.exceptions.VisitError as error:
             # a parsing error found while building the expression is reported as itself
             if isinstance(error.orig_exc, LaTeXParsingError):
                 raise error.orig_exc from error
             raise
 
-        if self.print_debug_output:
-            _lark.logger.debug("SymPy expression = %s", sympy_expression)
 
-        return sympy_expression
+def _node_spans(tree):
+    """The span of the input covered by each node of ``tree``, and the outermost
+    node covering each span."""
+    span_of = {}
+    node_at = {}
+
+    def visit(node):
+        if isinstance(node, _lark.Token):
+            span = (node.start_pos, node.end_pos)
+        else:
+            spans = [visit(child) for child in node.children]
+            span = (spans[0][0], spans[-1][1])
+        span_of[id(node)] = span
+        node_at[span] = node
+        return span
+
+    visit(tree)
+    return span_of, node_at
+
+
+def _signature(node, span_of, sites):
+    """The shape of ``node``, where the nodes covering one of ``sites`` count as
+    equal whatever they hold."""
+    if isinstance(node, _lark.Token):
+        return (node.type, node.value)
+    span = span_of[id(node)]
+    return (node.data, tuple(
+        None if span_of[id(child)] != span and span_of[id(child)] in sites
+        else _signature(child, span_of, sites)
+        for child in node.children))
+
+
+def _choice(node, span_of):
+    """The rules applied to the span of ``node``, from the outermost one."""
+    span = span_of[id(node)]
+    labels = []
+    while isinstance(node, _lark.Tree):
+        labels.append(node.data)
+        inner = [child for child in node.children if span_of[id(child)] == span]
+        if not inner:
+            return tuple(labels)
+        node = inner[0]
+    labels.append(node.type)
+    return tuple(labels)
+
+
+def _parallel_readings(trees):
+    """The parse trees among ``trees`` choosing the same way at every place
+    where the input is ambiguous in the same way.
+
+    A site of ambiguity is a span of the input covered in every tree by a node
+    whose shape is not the same in every tree, apart from the sites it holds.
+    Two sites are of the same kind when the rules they may be read with are the
+    same, and the choice at a site is the rule it is read with. If no tree makes
+    the same choice at the sites of each kind, all the trees are returned.
+    """
+    if len(trees) < 2:
+        return trees
+
+    spans = [_node_spans(tree) for tree in trees]
+    common = set.intersection(*(set(node_at) for _, node_at in spans))
+
+    sites = {}
+    for span in sorted(common, key=lambda span: span[1] - span[0]):
+        nodes = [node_at[span] for _, node_at in spans]
+        signatures = {_signature(node, span_of, sites)
+                      for node, (span_of, _) in zip(nodes, spans)}
+        if len(signatures) > 1:
+            choices = [_choice(node, span_of) for node, (span_of, _) in zip(nodes, spans)]
+            prefix = os.path.commonprefix(choices)
+            choices = [choice[len(prefix):] for choice in choices]
+            # without a rule telling the readings apart, the site is a kind of its own
+            kind = frozenset(choices) if len(set(choices)) == len(signatures) else span
+            sites[span] = (kind, choices)
+
+    kinds = {}
+    for kind, choices in sites.values():
+        kinds.setdefault(kind, []).append(choices)
+
+    parallel = [tree for i, tree in enumerate(trees)
+                if all(len({choices[i] for choices in same_kind}) == 1
+                       for same_kind in kinds.values())]
+    return parallel or trees
 
 
 if _lark is not None:
@@ -163,6 +273,38 @@ def parse_latex_lark(s: str, overrides=None):
     if _lark is None:
         raise ImportError("Lark is probably not installed")
     return _lark_latex_parser.doparse(s, overrides=overrides)
+
+
+@doctest_depends_on(modules=('lark',))
+def parse_latex_lark_all(s: str, overrides=None):
+    r"""
+    Experimental LaTeX parser using Lark, returning all the readings of an
+    ambiguous input.
+
+    This function is still under development and its API may change with the
+    next releases of SymPy.
+
+    It takes the same arguments as :func:`parse_latex_lark` and returns a list
+    of the expressions ``s`` may mean, with a single element when ``s`` is not
+    ambiguous. When the same ambiguity occurs several times, the readings choose
+    the same way at every place where it occurs, instead of giving all the
+    combinations of the choices.
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.latex.lark import parse_latex_lark_all
+    >>> parse_latex_lark_all(r"x + y")
+    [x + y]
+    >>> parse_latex_lark_all(r"\sin xy")
+    [sin(x*y), y*sin(x)]
+    >>> parse_latex_lark_all(r"\cos ab + \sin xy")
+    [sin(x*y) + cos(a*b), b*cos(a) + y*sin(x)]
+
+    """
+    if _lark is None:
+        raise ImportError("Lark is probably not installed")
+    return _lark_latex_parser.doparse_all(s, overrides=overrides)
 
 
 def _pretty_print_lark_trees(tree, indent=0, show_expr=True):

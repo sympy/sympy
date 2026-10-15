@@ -221,6 +221,8 @@ Lark `\mathrm{\LaTeX}` Parser Functions
 
 .. autofunction:: sympy.parsing.latex.parse_latex_lark
 
+.. autofunction:: sympy.parsing.latex.parse_latex_lark_all
+
 Lark `\mathrm{\LaTeX}` Parser Classes
 """""""""""""""""""""""""""""""""""""
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.testing.pytest import XFAIL, raises
-from sympy.parsing.latex.lark import parse_latex_lark
+from sympy.parsing.latex.lark import parse_latex_lark, parse_latex_lark_all
 from sympy.parsing.latex.errors import LaTeXParsingError
 from sympy.external import import_module
 
@@ -968,6 +968,28 @@ def test_a_function_applies_to_all_the_factors_or_to_the_first():
 
 def test_readings_giving_the_same_expression_are_one():
     assert parse_latex_lark(r"2x \cdot y") == 2*x*y
+
+
+def test_parse_latex_lark_all():
+    assert parse_latex_lark_all(r"x + y") == [x + y]
+    assert parse_latex_lark_all(r"2x \cdot y") == [2*x*y]
+    assert parse_latex_lark_all(r"\sin xy") == [sin(x*y), y*sin(x)]
+    assert parse_latex_lark_all(r"f^{-1}(x)") == [Function("f^{-1}")(x), x/Symbol("f")]
+    g = Function("g")
+    assert parse_latex_lark_all(r"\ln x y", overrides={r"\ln": g}) == [g(x*y), y*g(x)]
+
+
+def test_parse_latex_lark_all_chooses_the_same_way_for_the_same_ambiguity():
+    assert parse_latex_lark_all(r"\cos ab + \sin xy") == [cos(a*b) + sin(x*y), b*cos(a) + y*sin(x)]
+    assert parse_latex_lark_all(r"\cos ab + \sin xyz") == [cos(a*b) + sin(x*y*z), b*cos(a) + y*z*sin(x)]
+    assert parse_latex_lark_all(r"\sin xy \cos ab") == [sin(x*y)*cos(a*b), b*y*sin(x)*cos(a)]
+    assert parse_latex_lark_all(r"\ln xy + \sin^2 ab") == [log(x*y) + sin(a*b)**2, y*log(x) + b*sin(a)**2]
+    assert parse_latex_lark_all(r"\sin xy = \cos ab") == [Eq(sin(x*y), cos(a*b)), Eq(y*sin(x), b*cos(a))]
+    F, G = Function("f^{-1}"), Function("g^{-1}")
+    assert parse_latex_lark_all(r"f^{-1}(x) + g^{-1}(y)") == [F(x) + G(y), x/Symbol("f") + y/Symbol("g")]
+    # different ambiguities give all the combinations
+    assert set(parse_latex_lark_all(r"\sin xy + f^{-1}(x)")) == {
+        sin(x*y) + F(x), sin(x*y) + x/Symbol("f"), y*sin(x) + F(x), y*sin(x) + x/Symbol("f")}
 
 
 def test_implicit_multiplication_after_a_delimited_factor():
