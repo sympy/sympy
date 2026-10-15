@@ -75,25 +75,25 @@ class TransformToSymPyExpr(Transformer):
     SYMBOL = sympy.Symbol
     DIGIT = sympy.core.numbers.Integer
 
-    overrides: dict = {}
+    locals: dict = {}
 
-    def with_overrides(self, overrides):
-        """Returns a copy of the transformer that reads the commands in ``overrides``
+    def with_locals(self, locals):
+        """Returns a copy of the transformer that reads the commands in ``locals``
         as the objects given there. See :py:func:`~.parse_latex_lark`."""
-        for command in overrides:
+        for command in locals:
             if not (command in self._constants or command in self._trigonometric_functions
                     or command in self._exponential_functions
                     or re.fullmatch(r"\\operatorname\{[a-zA-Z]+\}", command)):
                 raise ValueError("The reading of %s cannot be overridden." % command)
         transformer = copy(self)
-        transformer.overrides = dict(overrides)
+        transformer.locals = dict(locals)
         return transformer
 
     _constants = {"\\pi": sympy.pi, "\\mathrm{e}": sympy.E, "\\infty": sympy.oo,
                   "\\imaginaryunit": sympy.I}
 
     def _constant(self, token):
-        return self.overrides.get(str(token), self._constants[str(token)])
+        return self.locals.get(str(token), self._constants[str(token)])
 
     CMD_PI = EULER_NUMBER = CMD_INFTY = _constant
 
@@ -702,8 +702,8 @@ class TransformToSymPyExpr(Transformer):
 
     def _function(self, command):
         command = str(command)
-        if command in self.overrides:
-            return self.overrides[command]
+        if command in self.locals:
+            return self.locals[command]
         if command in self._trigonometric_functions:
             return self._trigonometric_functions[command]
         return self._exponential_functions[command]
@@ -726,8 +726,8 @@ class TransformToSymPyExpr(Transformer):
     }
 
     def _named_function(self, name):
-        if "\\operatorname{%s}" % name in self.overrides:
-            return self.overrides["\\operatorname{%s}" % name]
+        if "\\operatorname{%s}" % name in self.locals:
+            return self.locals["\\operatorname{%s}" % name]
         if name in self._named_functions:
             return self._named_functions[name]
         if "\\" + name in self._trigonometric_functions:
@@ -752,7 +752,7 @@ class TransformToSymPyExpr(Transformer):
             if exponent == -1 and function in self._inverse_trigonometric_functions:
                 return self._apply(self._inverse_trigonometric_functions[function], tokens[3])
             return self._apply(lambda argument: sympy.Pow(function(argument), exponent), tokens[3])
-        if not (function in (sympy.Min, sympy.Max) or "\\operatorname{%s}" % name in self.overrides
+        if not (function in (sympy.Min, sympy.Max) or "\\operatorname{%s}" % name in self.locals
                 or isinstance(function, sympy.core.function.UndefinedFunction)):
             raise LaTeXParsingError("\\operatorname{%s} takes one argument." % name)
         return function(*tokens[2:-1:2])

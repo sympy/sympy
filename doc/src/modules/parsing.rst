@@ -183,8 +183,8 @@ Here is a list of the things which are supported:
   `\operatorname{erf}(x)` the error function, while a name that is not known,
   as in `\operatorname{f}(x)`, gives an undefined function.
 * Other readings of the constants and of the functions can be chosen with the
-  ``overrides`` argument of ``parse_latex_lark``: with
-  ``overrides={r"\pi": Symbol("pi")}`` the command `\pi` is a symbol and not
+  ``locals`` argument of ``parse_latex_lark``: with
+  ``locals={r"\pi": Symbol("pi")}`` the command `\pi` is a symbol and not
   the constant.
 * All types of fractions (``\frac``, ``\tfrac``, ``\dfrac``, ``\nicefrac``) and
   binomials (``\binom``, ``\tbinom``, ``\dbinom``) are supported.

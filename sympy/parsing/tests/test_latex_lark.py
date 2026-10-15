@@ -976,7 +976,7 @@ def test_parse_latex_lark_all():
     assert parse_latex_lark_all(r"\sin xy") == [sin(x*y), y*sin(x)]
     assert parse_latex_lark_all(r"f^{-1}(x)") == [Function("f^{-1}")(x), x/Symbol("f")]
     g = Function("g")
-    assert parse_latex_lark_all(r"\ln x y", overrides={r"\ln": g}) == [g(x*y), y*g(x)]
+    assert parse_latex_lark_all(r"\ln x y", locals={r"\ln": g}) == [g(x*y), y*g(x)]
 
 
 def test_parse_latex_lark_all_chooses_the_same_way_for_the_same_ambiguity():
@@ -1056,20 +1056,20 @@ def test_pi_and_e():
 
 def test_overrides():
     p, e = Symbol("pi"), Symbol("e")
-    assert parse_latex_lark(r"2\pi r", overrides={r"\pi": p}) == 2*p*Symbol("r")
-    assert parse_latex_lark(r"\mathrm{e}^{\pi}", overrides={r"\mathrm{e}": e}) == e**pi
-    assert parse_latex_lark(r"\imaginaryunit x", overrides={r"\imaginaryunit": Symbol("j")}) == Symbol("j")*x
+    assert parse_latex_lark(r"2\pi r", locals={r"\pi": p}) == 2*p*Symbol("r")
+    assert parse_latex_lark(r"\mathrm{e}^{\pi}", locals={r"\mathrm{e}": e}) == e**pi
+    assert parse_latex_lark(r"\imaginaryunit x", locals={r"\imaginaryunit": Symbol("j")}) == Symbol("j")*x
     g = Function("g")
-    assert parse_latex_lark(r"\sin x + \cos x", overrides={r"\sin": g}) == g(x) + cos(x)
-    assert parse_latex_lark(r"\sin^2 x", overrides={r"\sin": g}) == g(x)**2
-    assert _readings(r"\ln x y", overrides={r"\ln": g}) == {g(x*y), y*g(x)}
-    assert parse_latex_lark(r"\log_2 x", overrides={r"\log": g}) == g(x, 2)
-    assert parse_latex_lark(r"\operatorname{erf}(x)", overrides={r"\operatorname{erf}": g}) == g(x)
-    assert parse_latex_lark(r"\operatorname{sin}(x, y)", overrides={r"\operatorname{sin}": g}) == g(x, y)
-    assert parse_latex_lark(r"\operatorname{sin} x + \sin x", overrides={r"\operatorname{sin}": g}) == g(x) + sin(x)
+    assert parse_latex_lark(r"\sin x + \cos x", locals={r"\sin": g}) == g(x) + cos(x)
+    assert parse_latex_lark(r"\sin^2 x", locals={r"\sin": g}) == g(x)**2
+    assert _readings(r"\ln x y", locals={r"\ln": g}) == {g(x*y), y*g(x)}
+    assert parse_latex_lark(r"\log_2 x", locals={r"\log": g}) == g(x, 2)
+    assert parse_latex_lark(r"\operatorname{erf}(x)", locals={r"\operatorname{erf}": g}) == g(x)
+    assert parse_latex_lark(r"\operatorname{sin}(x, y)", locals={r"\operatorname{sin}": g}) == g(x, y)
+    assert parse_latex_lark(r"\operatorname{sin} x + \sin x", locals={r"\operatorname{sin}": g}) == g(x) + sin(x)
     assert parse_latex_lark(r"2\pi r") == 2*pi*Symbol("r")
     with raises(ValueError):
-        parse_latex_lark(r"\sqrt{x}", overrides={r"\sqrt": g})
+        parse_latex_lark(r"\sqrt{x}", locals={r"\sqrt": g})
 
 
 def test_operators_and_relations():

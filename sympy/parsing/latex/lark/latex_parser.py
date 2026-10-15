@@ -78,7 +78,7 @@ class LarkLaTeXParser:
         else:
             self.transformer = transformer()
 
-    def doparse(self, s: str, overrides=None):
+    def doparse(self, s: str, locals=None):
         if self.print_debug_output:
             _lark.logger.setLevel(logging.DEBUG)
 
@@ -97,14 +97,14 @@ class LarkLaTeXParser:
             # print the `parse_tree` variable
             _lark.logger.debug(parse_tree.pretty())
 
-        sympy_expression = self._transform(parse_tree, overrides)
+        sympy_expression = self._transform(parse_tree, locals)
 
         if self.print_debug_output:
             _lark.logger.debug("SymPy expression = %s", sympy_expression)
 
         return sympy_expression
 
-    def doparse_all(self, s: str, overrides=None):
+    def doparse_all(self, s: str, locals=None):
         """The list of the readings of ``s``, see :func:`parse_latex_lark_all`.
 
         When ``transform`` is ``False``, the list holds the parse trees of the
@@ -118,7 +118,7 @@ class LarkLaTeXParser:
 
         expressions = []
         for tree in trees:
-            expression = self._transform(tree, overrides)
+            expression = self._transform(tree, locals)
             if expression not in expressions:
                 expressions.append(expression)
         return expressions
@@ -130,10 +130,10 @@ class LarkLaTeXParser:
 
         return self.parser.parse(s)
 
-    def _transform(self, parse_tree, overrides):
+    def _transform(self, parse_tree, locals):
         transformer = self.transformer
-        if overrides:
-            transformer = transformer.with_overrides(overrides)
+        if locals:
+            transformer = transformer.with_locals(locals)
 
         try:
             return transformer.transform(parse_tree)
@@ -234,7 +234,7 @@ if _lark is not None:
 
 
 @doctest_depends_on(modules=('lark',))
-def parse_latex_lark(s: str, overrides=None):
+def parse_latex_lark(s: str, locals=None):
     r"""
     Experimental LaTeX parser using Lark.
 
@@ -247,7 +247,7 @@ def parse_latex_lark(s: str, overrides=None):
     s : str
         The `\mathrm{\LaTeX}` string to parse.
 
-    overrides : dict, optional
+    locals : dict, optional
         The readings of constants and functions to use instead of the default
         ones. The keys are the commands as they are written in ``s``: the
         constants ``\pi``, ``\mathrm{e}``, ``\infty`` and ``\imaginaryunit``,
@@ -263,20 +263,20 @@ def parse_latex_lark(s: str, overrides=None):
     >>> from sympy import Function, Symbol, pi
     >>> parse_latex_lark(r"2\pi").has(pi)
     True
-    >>> parse_latex_lark(r"2\pi", overrides={r"\pi": Symbol("pi")}).has(pi)
+    >>> parse_latex_lark(r"2\pi", locals={r"\pi": Symbol("pi")}).has(pi)
     False
     >>> f = Function("erf")
-    >>> parse_latex_lark(r"\operatorname{erf}(x)", overrides={r"\operatorname{erf}": f}).func == f
+    >>> parse_latex_lark(r"\operatorname{erf}(x)", locals={r"\operatorname{erf}": f}).func == f
     True
 
     """
     if _lark is None:
         raise ImportError("Lark is probably not installed")
-    return _lark_latex_parser.doparse(s, overrides=overrides)
+    return _lark_latex_parser.doparse(s, locals=locals)
 
 
 @doctest_depends_on(modules=('lark',))
-def parse_latex_lark_all(s: str, overrides=None):
+def parse_latex_lark_all(s: str, locals=None):
     r"""
     Experimental LaTeX parser using Lark, returning all the readings of an
     ambiguous input.
@@ -304,7 +304,7 @@ def parse_latex_lark_all(s: str, overrides=None):
     """
     if _lark is None:
         raise ImportError("Lark is probably not installed")
-    return _lark_latex_parser.doparse_all(s, overrides=overrides)
+    return _lark_latex_parser.doparse_all(s, locals=locals)
 
 
 def _pretty_print_lark_trees(tree, indent=0, show_expr=True):
