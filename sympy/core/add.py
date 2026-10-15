@@ -636,8 +636,22 @@ class Add(Expr, AssocOp):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: _fuzzy_group(
-        (a.is_real for a in self.args), quick_exit=True)
+    def _eval_is_real(self):
+        if self.is_number:
+            ops = {str(i) for i in self.count_ops(visual=True).free_symbols}
+            if ops <= {'ADD', 'SUB', 'DIV', 'MUL', 'POW'}:
+                v = self.evalf(2)
+                if v.is_Number:
+                    return True
+                from .evalf import pure_complex
+                ri = pure_complex(v)
+                if ri is not None:
+                    i = ri[1]
+                    if i.is_comparable and i.is_zero is False:
+                        return False
+        return _fuzzy_group(
+            (a.is_real for a in self.args), quick_exit=True)
+
     _eval_is_extended_real = lambda self: _fuzzy_group(
         (a.is_extended_real for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
