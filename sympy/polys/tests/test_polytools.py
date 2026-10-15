@@ -31,7 +31,7 @@ from sympy.polys.polytools import (
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
     to_rational_coeffs,
-    gcdex_steps, _obvious_leading)
+    gcdex_steps, _obvious_leading, _obvious_generator)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -61,7 +61,7 @@ from sympy.core.add import Add
 from sympy.core.basic import _aresame
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.function import (Derivative, diff, expand)
+from sympy.core.function import (Derivative, diff, expand, Function)
 from sympy.core.mul import _keep_coeff, Mul
 from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
@@ -1301,7 +1301,11 @@ def test_Poly__gen_to_level():
 
 def test_obvious_leading():
     y, z = symbols('y z')
+    f = Function('f')
 
+    assert [i for i in (x, 1/x, exp(x), exp(-x),
+        exp(1), exp(-1), 2*x, x**2, x + 1, pi, f(x), sin(x), -x, I*x,
+        I) if _obvious_generator(i)] == [x, exp(1), pi, f(x), sin(x)]
     assert _obvious_leading(pi**3 + 2*pi, pi) == (3, 1)
     assert _obvious_leading(S.Zero, x) == (-oo, 0)
     assert _obvious_leading(x, x) == (1, 1)

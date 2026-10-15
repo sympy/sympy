@@ -4918,12 +4918,6 @@ def _update_args(args, key, value):
 
 def _obvious_leading(expr, gen):
     """Return (degree, LC) when structurally obvious, else None."""
-    if not gen.is_Symbol:
-        if gen.is_NumberSymbol:
-            x = Dummy()
-            return _obvious_leading(expr.xreplace({gen: x}), x)
-        return None
-
     if expr is S.Zero:
         return S.NegativeInfinity, S.Zero
 
@@ -5017,12 +5011,26 @@ def _obvious_leading(expr, gen):
     return None
 
 
+def _obvious_generator(gen):
+    # Conservatively require the generator to behave atomically under
+    # exponentiation and not be an Add (since
+    # Poly(x + 1, x + 1).degree() == 0).
+    #
+    # Poly's handling of compound generators is currently inconsistent;
+    # e.g. Poly(x + 1/x, 1/x) and Poly(exp(x) + exp(-x), exp(x)) are
+    # accepted, while Poly((2*x)**2, 2*x).degree() == 0.
+    if gen.is_Add:
+        return False
+    return (gen**2).as_base_exp() == (gen, 2)
+
+
 def _obvious_leading_query(expr, gen):
     """Try structural leading-term analysis when it is likely to be cheap."""
     if (
         not isinstance(expr, Poly)
         and gen.is_commutative
         and expr.is_commutative
+        and _obvious_generator(gen)
         # Avoid costly introspection of wide Adds when
         # fallback may still require full polynomial expansion.
         and not (expr.is_Add and len(expr.args) >= 17)
@@ -5100,41 +5108,60 @@ def degree(f, gen=0):
     if type(gen) is int:
         if was_poly:
             return _degree(f.degree(gen))
+
+        # handle non-Poly cases
         if f.is_Number:
+            # XXX Piecewise((S.NegativeInfinity, Eq(f, 0)), (S.Zero, True))
             return S.NegativeInfinity if f.is_zero else S.Zero
         try:
+            # Poly(x + 1) -> Poly(x + 1, x)
+            # Poly((1 + x)**2 + 1, expand=False) ->  Poly((1 + x)**2 + 1, 1 + x)
             probe = Poly(f, expand=False)
         except GeneratorsNeeded:  # e.g. f = (1+I)**2/2
             gens = ()  # do not guess what the user intended
         else:
             gens = probe.gens
-
         if gen != 0 or not gens:
-            raise TypeError(filldedent('''
-                To avoid ambiguity, this expression requires either
-                a symbol (not int) generator or a Poly (which identifies
-                the generators).'''))
-
-        if len(gens) == 1 and gens[0].is_Atom:  # e.g. x or pi
+            # if user wants gen 1 from Expr, that's ambiguous
+            # because we don't know the convention in a transparent
+            # way. And if there are not gens because f was a number
+            # then we need the user to indicate what they are looking
+            # for
+            pass
+        elif len(gens) == 1 and gens[0].is_Atom:  # e.g. x or pi
+            # unexpanded poly had only bare gen so
+            # it must be flat (or else know how to
+            # compute with it so use it.
             return _degree(probe.degree(gens[0]))
 
+        # deal with ambiguity
+        # what free symbols are in f?
+        # We already traversed f in building the probe, so query the
+        # gens of the probe (or the empty gens because probe was not built).
         free = set().union(*(g.free_symbols for g in gens))
         if len(free) != 1:
             raise TypeError(filldedent('''
                 To avoid ambiguity, this expression requires either
                 a symbol (not int) generator or a Poly (which identifies
                 the generators).'''))
-
+        # there was only one free symbol but it appeared in different
+        # ways, e.g. Poly((1 + x)**2 - (1 - x)**2, expand=False) will have
+        # gens = (1 + x, 1 - x) -> free = {x}
         gen = free.pop()
+        # We already know that f is polynomial in the gens; if
+        # each g in gens is polynomial in gen then f is polynomial
+        # in gen and the degree might be obvious. And if not, then
+        # we will expand with Poly and find the degree.
     else:
+        # we were told the gen
         gen = sympify(gen, strict=True)
 
     result = _obvious_leading_query(f, gen)
     if result is not None:
         return _degree(result[0])
 
-    if not isinstance(f, Poly) or gen not in f.gens:
-        f = poly_from_expr(f, gen)[0]
+    # this will raise if it is not polynomial in gen
+    f = poly_from_expr(f, gen)[0]
     return _degree(f.degree(gen))
 
 
