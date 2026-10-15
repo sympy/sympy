@@ -5108,10 +5108,20 @@ def degree(f, gen=0):
             gens = ()  # do not guess what the user intended
         else:
             gens = probe.gens
-        free = f.free_symbols
-        if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
-                gen := next(iter(gens))) and # <-- assigns gen
-                gen.is_Atom):  # e.g. x or pi
+
+        if gen != 0:
+            gens = ()
+        elif len(gens) == 1 and gens[0].is_Atom:  # e.g. x or pi
+            return _degree(probe.degree(gens[0]))
+        else:
+            free = set().union(*(g.free_symbols for g in gens))
+            if len(free) == 1:
+                candidate = next(iter(free))
+                if f.is_polynomial(candidate):
+                    gen = candidate
+                    gens = ()
+
+        if gens:
             raise TypeError(filldedent('''
                 To avoid ambiguity, this expression requires either
                 a symbol (not int) generator or a Poly (which identifies
