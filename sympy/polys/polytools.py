@@ -5095,18 +5095,19 @@ def degree(f, gen=0):
 
     _degree = lambda x: Integer(x) if type(x) is int else x
 
+    was_poly = isinstance(f, Poly)
     f = sympify(f, strict=True)
     if type(gen) is int:
-        if isinstance(f, Poly):
+        if was_poly:
             return _degree(f.degree(gen))
         if f.is_Number:
             return S.NegativeInfinity if f.is_zero else S.Zero
         try:
-            p = Poly(f, expand=False)
+            probe = Poly(f, expand=False)
         except GeneratorsNeeded:  # e.g. f = (1+I)**2/2
             gens = ()  # do not guess what the user intended
         else:
-            gens = p.gens
+            gens = probe.gens
         free = f.free_symbols
         if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
                 gen := next(iter(gens))) and # <-- assigns gen
@@ -5115,9 +5116,8 @@ def degree(f, gen=0):
                 To avoid ambiguity, this expression requires either
                 a symbol (not int) generator or a Poly (which identifies
                 the generators).'''))
-        return p.degree(gen)
-
-    gen = sympify(gen, strict=True)
+    else:
+        gen = sympify(gen, strict=True)
 
     result = _obvious_leading_query(f, gen)
     if result is not None:
