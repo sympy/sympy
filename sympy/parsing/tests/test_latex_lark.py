@@ -917,14 +917,6 @@ def test_negthinspace_not_equal_conflict():
     assert parse_latex_lark(r"x \neq \negmedspace y") == Ne(x, y)
 
 
-def _readings(latex_str, **kwargs):
-    """The expressions an input may mean: several when it is ambiguous."""
-    result = parse_latex_lark(latex_str, **kwargs)
-    if isinstance(result, lark.Tree) and result.data == "_ambig":
-        return set(result.children)
-    return {result}
-
-
 def test_function_arguments():
     assert parse_latex_lark(r"\tanh x") == tanh(x)
     assert parse_latex_lark(r"\tanh(x)") == tanh(x)
@@ -937,8 +929,8 @@ def test_function_arguments():
     assert parse_latex_lark(r"\sin x \cos y \tan z") == sin(x)*cos(y)*tan(z)
     assert parse_latex_lark(r"\sin 2x") == sin(2*x)
     assert parse_latex_lark(r"\sin -x") == -sin(x)
-    assert _readings(r"\sin xy") == {sin(x*y), y*sin(x)}
-    assert _readings(r"\tan hk") == {tan(h*k), k*tan(h)}
+    assert set(parse_latex_lark_all(r"\sin xy")) == {sin(x*y), y*sin(x)}
+    assert set(parse_latex_lark_all(r"\tan hk")) == {tan(h*k), k*tan(h)}
     assert parse_latex_lark(r"\tanh^2 x") == tanh(x)**2
     assert parse_latex_lark(r"\sinh^{-1} x") == asinh(x)
     assert parse_latex_lark(r"\arctanh x") == atanh(x)
@@ -951,12 +943,12 @@ def test_function_arguments():
 
 def test_a_function_applies_to_all_the_factors_or_to_the_first():
     # the product binds either tighter than the function or not at all
-    assert _readings(r"\sin xyz") == {sin(x*y*z), y*z*sin(x)}
-    assert _readings(r"\sin x y z") == {sin(x*y*z), y*z*sin(x)}
-    assert _readings(r"\sin xyza") == {sin(a*x*y*z), a*y*z*sin(x)}
-    assert _readings(r"\sin^2 xyz") == {sin(x*y*z)**2, y*z*sin(x)**2}
-    assert _readings(r"\sin xyz \cos t") == {sin(x*y*z)*cos(t), y*z*sin(x)*cos(t)}
-    assert _readings(r"\ln xy") == {log(x*y), y*log(x)}
+    assert set(parse_latex_lark_all(r"\sin xyz")) == {sin(x*y*z), y*z*sin(x)}
+    assert set(parse_latex_lark_all(r"\sin x y z")) == {sin(x*y*z), y*z*sin(x)}
+    assert set(parse_latex_lark_all(r"\sin xyza")) == {sin(a*x*y*z), a*y*z*sin(x)}
+    assert set(parse_latex_lark_all(r"\sin^2 xyz")) == {sin(x*y*z)**2, y*z*sin(x)**2}
+    assert set(parse_latex_lark_all(r"\sin xyz \cos t")) == {sin(x*y*z)*cos(t), y*z*sin(x)*cos(t)}
+    assert set(parse_latex_lark_all(r"\ln xy")) == {log(x*y), y*log(x)}
     # a product starting with a number is the argument: 2*sin(x) would be written 2\sin x
     assert parse_latex_lark(r"\sin 2xy") == sin(2*x*y)
     assert parse_latex_lark(r"\ln 2x") == log(2*x)
@@ -1062,7 +1054,7 @@ def test_overrides():
     g = Function("g")
     assert parse_latex_lark(r"\sin x + \cos x", locals={r"\sin": g}) == g(x) + cos(x)
     assert parse_latex_lark(r"\sin^2 x", locals={r"\sin": g}) == g(x)**2
-    assert _readings(r"\ln x y", locals={r"\ln": g}) == {g(x*y), y*g(x)}
+    assert set(parse_latex_lark_all(r"\ln x y", locals={r"\ln": g})) == {g(x*y), y*g(x)}
     assert parse_latex_lark(r"\log_2 x", locals={r"\log": g}) == g(x, 2)
     assert parse_latex_lark(r"\operatorname{erf}(x)", locals={r"\operatorname{erf}": g}) == g(x)
     assert parse_latex_lark(r"\operatorname{sin}(x, y)", locals={r"\operatorname{sin}": g}) == g(x, y)
@@ -1091,7 +1083,7 @@ def test_arguments_without_braces_and_powers_of_functions():
     assert parse_latex_lark(r"\log^2 x") == log(x)**2
     i = Symbol("i")
     assert parse_latex_lark(r"\sum_{i=-1}^{1} i") == Sum(i, (i, -1, 1))
-    assert _readings(r"f^{-1}(x)") == {Function("f^{-1}")(x), x/Symbol("f")}
+    assert set(parse_latex_lark_all(r"f^{-1}(x)")) == {Function("f^{-1}")(x), x/Symbol("f")}
 
 
 def test_operatorname():
@@ -1114,7 +1106,7 @@ def test_operatorname():
     assert parse_latex_lark(r"\operatorname{gcd}(a, b)") == Function("gcd")(a, b)
     assert parse_latex_lark(r"\operatorname{f}(x, y)") == Function("f")(x, y)
     assert parse_latex_lark(r"\operatorname{f}^2(x)") == Function("f")(x)**2
-    assert _readings(r"\operatorname{f} x y") == {Function("f")(x*y), y*Function("f")(x)}
+    assert set(parse_latex_lark_all(r"\operatorname{f} x y")) == {Function("f")(x*y), y*Function("f")(x)}
     for latex_str in [r"\operatorname{det} A", r"\operatorname{sin}(x, y)"]:
         with raises(LaTeXParsingError):
             parse_latex_lark(latex_str)
