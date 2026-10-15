@@ -829,33 +829,44 @@ class Add(Expr, AssocOp):
 
     def _eval_is_extended_nonnegative(self):
         if not self.is_number:
+            from .exprtools import _monotonic_sign
             c, a = self.as_coeff_Add()
             if not c.is_zero and a.is_extended_nonnegative:
-                from .exprtools import _monotonic_sign
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
                     if s != self and s.is_extended_nonnegative:
                         return True
-                    if len(self.free_symbols) == 1:
-                        v = _monotonic_sign(self)
-                        if v is not None and v != self and v.is_extended_nonnegative:
-                            return True
+
+            elif (
+                c.is_positive
+                and a.is_extended_negative
+                and len(self.free_symbols) == 1
+            ):
+                v = _monotonic_sign(self)
+                if v is not None and v != self and v.is_extended_nonnegative:
+                    return True
 
     def _eval_is_extended_nonpositive(self):
         if not self.is_number:
+            from .exprtools import _monotonic_sign
             c, a = self.as_coeff_Add()
             if not c.is_zero and a.is_extended_nonpositive:
-                from .exprtools import _monotonic_sign
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
                     if s != self and s.is_extended_nonpositive:
                         return True
-                    if len(self.free_symbols) == 1:
-                        v = _monotonic_sign(self)
-                        if v is not None and v != self and v.is_extended_nonpositive:
-                            return True
+
+            elif (
+                c.is_negative
+                and a.is_extended_positive
+                and len(self.free_symbols) == 1
+            ):
+                from .exprtools import _monotonic_sign
+                v = _monotonic_sign(self)
+                if v is not None and v != self and v.is_extended_nonpositive:
+                    return True
 
     def _eval_is_extended_negative(self):
         if self.is_number:
