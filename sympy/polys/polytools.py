@@ -5109,23 +5109,23 @@ def degree(f, gen=0):
         else:
             gens = probe.gens
 
-        if gen != 0:
-            gens = ()
-        elif len(gens) == 1 and gens[0].is_Atom:  # e.g. x or pi
-            return _degree(probe.degree(gens[0]))
-        else:
-            free = set().union(*(g.free_symbols for g in gens))
-            if len(free) == 1:
-                candidate = next(iter(free))
-                if f.is_polynomial(candidate):
-                    gen = candidate
-                    gens = ()
-
-        if gens:
+        if gen != 0 or not gens:
             raise TypeError(filldedent('''
                 To avoid ambiguity, this expression requires either
                 a symbol (not int) generator or a Poly (which identifies
                 the generators).'''))
+
+        if len(gens) == 1 and gens[0].is_Atom:  # e.g. x or pi
+            return _degree(probe.degree(gens[0]))
+
+        free = set().union(*(g.free_symbols for g in gens))
+        if len(free) != 1:
+            raise TypeError(filldedent('''
+                To avoid ambiguity, this expression requires either
+                a symbol (not int) generator or a Poly (which identifies
+                the generators).'''))
+
+        gen = free.pop()
     else:
         gen = sympify(gen, strict=True)
 
