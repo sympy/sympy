@@ -1264,10 +1264,13 @@ def find_substitutions(integrand, symbol, u_var):
             deg_after = max(degree(t, u_var) for t in substituted.as_numer_denom())
             if deg_after > deg_before:
                 return False
-        _, D = substituted.as_numer_denom()
-        m, _ = D.factor().as_independent(u_var, as_Add=False)
-        k, h = (substituted * m).cancel().as_independent(u_var, as_Add=False)
-        return k/m, h
+        _, denom = substituted.as_numer_denom()
+        denom_u_free, _ = denom.factor().as_independent(u_var, as_Add=False)
+        coeff_u_free, u_part = (
+            (substituted * denom_u_free).cancel()
+            .as_independent(u_var, as_Add=False)
+        )
+        return coeff_u_free/denom_u_free, u_part
 
     def exp_subterms(term: Expr):
         linear_coeffs = []
