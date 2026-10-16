@@ -26,7 +26,7 @@ from sympy.physics.control.lti import (
     TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace,
     DiscreteStateSpace, create_state_space, gbt, bilinear, forward_diff,
     backward_diff, phase_margin, gain_margin)
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 
 from math import isclose
 
@@ -43,7 +43,6 @@ TF5 = TransferFunction(k, p, s)
 TF6 = TransferFunction(k*s + p, k*s + p, s)
 
 
-@XFAIL
 def test_state_space_rewrite_from_pr_27651():
     c0, c1, c2 = symbols('c0, c1, c2', real=True)
     a0, a1, a2, a3 = symbols('a0, a1, a2, a3', real=True)
@@ -64,7 +63,6 @@ def test_state_space_rewrite_from_pr_27651():
         Matrix([[c0, c1, c2, 0]]),
         Matrix([[d]]))
 
-    # The call to Parallel.doit() is not working correctly.
     assert t.rewrite(StateSpace).doit() == expected
     assert t.rewrite(StateSpace).doit() == t.doit().rewrite(StateSpace)
 
@@ -3520,14 +3518,18 @@ def test_conversion():
                    Matrix([[k/tau]]))
     assert SS1.rewrite(TransferFunction)[0][0] == TF4
 
+    # A memoryless transfer function has no internal state, so its state space
+    # model has no states at all rather than one identically zero state.
     SS2 = TF5.rewrite(StateSpace)
     assert SS2 == \
-        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[k/p]]))
+        StateSpace(Matrix(0, 0, []), Matrix(0, 1, []), Matrix(1, 0, []), Matrix([[k/p]]))
+    assert SS2.num_states == 0
     assert SS2.rewrite(TransferFunction)[0][0] == TF5
 
     SS3 = TF6.rewrite(StateSpace)
     assert SS3 == \
-        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[1]]))
+        StateSpace(Matrix(0, 0, []), Matrix(0, 1, []), Matrix(1, 0, []), Matrix([[1]]))
+    assert SS3.num_states == 0
 
     # TransferFunction cannot be converted to DiscreteStateSpace
     raises(TypeError, lambda: TF1.rewrite(DiscreteStateSpace))
