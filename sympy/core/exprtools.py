@@ -126,18 +126,21 @@ def _monotonic_sign(self):
                     try:
                         currentroots = real_roots(d)
                     except (PolynomialError, NotImplementedError):
-                        currentroots = [r for r in roots(d, x) if r.is_extended_real]
+                        currentroots = [
+                            r for r in roots(d, x) if r.is_extended_real]
                 y = self.subs(x, x0)
                 if x.is_nonnegative and all(
                         (r - x0).is_nonpositive for r in currentroots):
                     if y.is_nonnegative and d.is_positive:
                         if y:
-                            return y if y.is_positive else Dummy('pos', positive=True)
+                            return y if y.is_positive else Dummy(
+                                'pos', positive=True)
                         else:
                             return Dummy('nneg', nonnegative=True)
                     if y.is_nonpositive and d.is_negative:
                         if y:
-                            return y if y.is_negative else Dummy('neg', negative=True)
+                            return y if y.is_negative else Dummy(
+                                'neg', negative=True)
                         else:
                             return Dummy('npos', nonpositive=True)
                 elif x.is_nonpositive and all(
@@ -264,6 +267,7 @@ def _monotonic_sign(self):
                 return rv if rv else Dummy('neg', negative=True)
             if rv.is_zero:
                 return Dummy('npos', nonpositive=True)
+
 
 def decompose_power(expr: Expr) -> tuple[Expr, int]:
     """
