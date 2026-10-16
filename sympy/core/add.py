@@ -658,7 +658,7 @@ class Add(Expr, AssocOp):
     def _eval_is_real(self):
         if self.is_number:
             ops = {str(i) for i in self.count_ops(visual=True).free_symbols}
-            if ops <= {'ADD', 'SUB', 'DIV', 'MUL', 'POW'}:
+            if ops <= {'ADD', 'SUB', 'NEG', 'DIV', 'MUL', 'POW'}:
                 v = self.evalf(2)
                 if v.is_Number:
                     return True
