@@ -55,6 +55,13 @@ def test_singularities():
     assert singularities(0**x, x) == Interval.open(-oo, 0)
     assert singularities(0**(x-1), x) == Interval.open(-oo, 1)
     assert singularities(0**(x+1)/(x-2), x) == Union({2}, Interval.open(-oo, -1))
+    assert singularities(0**(1 - x**2), x) == Union(Interval.open(-oo, -1), Interval.open(1, oo))
+    assert singularities(0**(x**2 - 1), x) == Interval.open(-1, 1)
+    assert singularities(0**(-x**2), x) == Union(Interval.open(-oo, 0), Interval.open(0, oo))
+    assert singularities(0**(x - 1), x, Interval(2, 5)) == S.EmptySet
+    assert singularities((x - 2)**(x - 3), x) == FiniteSet(2)
+    assert singularities((x**2 - 4)**(x - 1), x) == FiniteSet(-2)
+    assert singularities((x - 2)**(3 - x), x) == S.EmptySet
 
 
 def test_is_increasing():
