@@ -1082,17 +1082,13 @@ def piecewise_fold(expr, evaluate=True):
                 args.extend(pc[c])
         else:
             args = expr.args
-
-        if expr.func.__name__ == "Sum":
-            evaluated = expr.doit(deep=False)
-            if evaluated != expr:
-                return evaluated
-
         # fold
         folded = list(map(piecewise_fold, args))
+        bound = set(expr.bound_symbols) if hasattr(expr, 'bound_symbols') else set()
         for ec in product(*[
-                (i.args if isinstance(i, Piecewise) else
-                 [(i, true)]) for i in folded]):
+                (i.args if isinstance(i, Piecewise) and
+                 not (bound and any(c.has(*bound) for _, c in i.args)) 
+                 else [(i, true)]) for i in folded]):
             e, c = zip(*ec)
             new_args.append((expr.func(*e), And(*c)))
 
@@ -1103,9 +1099,21 @@ def piecewise_fold(expr, evaluate=True):
     rv = Piecewise(*new_args, evaluate=evaluate)
     if evaluate is None and len(rv.args) == 1 and rv.args[0].cond == True:
         return rv.args[0].expr
-    if any(s.expr.has(Piecewise) for p in rv.atoms(Piecewise) for s in p.args):
+    if any(_has_foldable_piecewise(s.expr) for s in 
+           (rv.args if isinstance(rv, Piecewise) else ())):
         return piecewise_fold(rv)
     return rv
+
+
+def _has_foldable_piecewise(expr):
+    """Return True if expr contains a Piecewise that is accessible for 
+    folding, i.e. not hidden inside an expression with bound symbols
+    (Sum, Integral, Product, etc.)."""
+    if isinstance(expr, Piecewise):
+        return True
+    if hasattr(expr, 'bound_symbols') and expr.bound_symbols:
+        return False
+    return any(_has_foldable_piecewise(i) for i in expr.args)
 
 
 def _clip(A, B, k):
