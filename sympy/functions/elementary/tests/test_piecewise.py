@@ -8,7 +8,7 @@ from sympy.core.function import (Function, diff, expand)
 from sympy.core.mul import Mul
 from sympy.core.mod import Mod
 from sympy.core.numbers import (Float, I, Rational, oo, pi, zoo)
-from sympy.core.relational import (Eq, Ge, Gt, Ne)
+from sympy.core.relational import (Eq, Ge, Gt, Ne, LessThan)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import factorial
@@ -1638,3 +1638,18 @@ def test_piecewise__eval_is_meromorphic():
     assert f.is_meromorphic(x, 2) == True
     assert f.is_meromorphic(x, Symbol('a')) is None
     assert f.is_meromorphic(x, Symbol('a', real=True)) is None
+
+
+def test_issue_23836():
+    x = Symbol('x')
+    p = Piecewise((x**3, x < 3), (-x**2, x > 3), (2, True))
+    assert p.limit(x, 3, '+') == -9
+    assert p.limit(x, 3, '-') == 27
+    raises(ValueError, lambda: p.limit(x, 3, '+-'))
+
+
+def test_issue_29835():
+    y = Symbol('y')
+    cc2 = Piecewise((0, LessThan(y, 0)), (-6/y**2, True))
+    assert cc2.limit(y, 0, dir='+') is S.NegativeInfinity
+    assert cc2.limit(y, 0, dir='-') == 0
