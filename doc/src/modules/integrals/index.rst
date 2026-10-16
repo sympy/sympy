@@ -15,3 +15,4 @@ Contents
 
    g-functions.rst
    integrals.rst
+   manualintegrate.rst
