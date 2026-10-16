@@ -1085,7 +1085,8 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
         u = Dummy('u')
         g = g.subs(fx, u)
         C1, C2 = self.ode_problem.get_numbered_constants(num=2)
-        inside = -2*Integral(g, u) + C1
+        coeff, g = g.as_independent(u, as_Add=False)
+        inside = -2*coeff*Integral(g, u) + C1
         lhs = Integral(1/sqrt(inside), (u, fx))
         return [Eq(lhs, C2 + x), Eq(lhs, C2 - x)]
 

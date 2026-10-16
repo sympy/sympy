@@ -291,7 +291,7 @@ class Piecewise(DefinedFunction):
 
         See Also
         ========
-        Piecewise._eval_integral
+        Piecewise._eval_Integral
         """
         from sympy.integrals import integrate
         return self.func(*[(integrate(e, x, **kwargs), c) for e, c in self.args])
@@ -363,7 +363,7 @@ class Piecewise(DefinedFunction):
             args.append((expr, True))
             return Piecewise(*args)
 
-    def _eval_integral(self, x, _first=True, **kwargs):
+    def _eval_Integral(self, x, _first=True, definite=False, **kwargs):
         """Return the indefinite integral of the
         Piecewise such that subsequent substitution of x with a
         value will give the value of the integral (not including
@@ -388,10 +388,13 @@ class Piecewise(DefinedFunction):
         """
         from sympy.integrals.integrals import integrate
 
+        if definite:
+            return self.piecewise_integrate(x, **kwargs)
+
         if _first:
             def handler(ipw):
                 if isinstance(ipw, self.func):
-                    return ipw._eval_integral(x, _first=False, **kwargs)
+                    return ipw._eval_Integral(x, _first=False, **kwargs)
                 else:
                     return ipw.integrate(x, **kwargs)
             irv = self._handle_irel(x, handler)
