@@ -896,7 +896,6 @@ class Add(Expr, AssocOp):
                 and a.is_extended_positive
                 and len(self.free_symbols) == 1
             ):
-                from .exprtools import _monotonic_sign
                 v = _monotonic_sign(self)
                 if v is not None and v != self and v.is_extended_nonpositive:
                     return True
