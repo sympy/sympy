@@ -559,6 +559,10 @@ def periodicity(f, symbol, check=False):
 
         if base_has_sym and not expo_has_sym:
             period = periodicity(base, symbol)
+            if period is not None and expo.is_even:
+                new_f = orig_f.subs(symbol, symbol + period/2)
+                if new_f.equals(orig_f):
+                    period = period / 2
 
         elif expo_has_sym and not base_has_sym:
             period = periodicity(expo, symbol)
