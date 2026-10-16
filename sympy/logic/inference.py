@@ -94,10 +94,10 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
         if pysat is None:
             algorithm = "dpll2"
 
-    if algorithm=="z3":
+    if algorithm == "z3":
         z3 = import_module('z3')
         if z3 is None:
-            algorithm = "dpll2"
+            raise ImportError("z3 is not installed")
 
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
