@@ -41,9 +41,10 @@ from itertools import combinations_with_replacement
 from sympy.simplify import simplify  # type: ignore
 from sympy.core import Add, S
 from sympy.core.function import Function, expand, AppliedUndef, Subs, Derivative
-from sympy.core.relational import Equality, Eq
+from sympy.core.relational import Equality, Eq, Relational
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
-from sympy.core.numbers import pi
+from sympy.core.numbers import pi, I
+from sympy.core.power import Pow
 from sympy.functions import exp
 from sympy.integrals.integrals import Integral, integrate
 from sympy.utilities.iterables import has_dups, is_sequence, sift
@@ -55,14 +56,15 @@ from sympy.functions.elementary.complexes import conjugate, im, re
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.sets import FiniteSet, Interval, Union, Intersection
 from sympy.series.limits import Limit
 from sympy.solvers.solveset import linear_eq_to_matrix, solveset
 from sympy.solvers.diophantine.diophantine import diophantine
-from sympy.logic.boolalg import And, Or
-from sympy.polys.polytools import Poly
+from sympy.logic.boolalg import And
+from sympy.polys.polytools import Poly, cancel, factor
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.domains import ZZ, QQ
 
@@ -1523,8 +1525,9 @@ class _SeparationOfVariables(_BVPSolver):
 
     def sol_eigenpair(self, lamda_n, X_n):
         """TODO"""
+        generic_term = self.sol_Y(lamda_n, X_n)
         if not lamda_n.has(self.n): # isolated eigenvalue
-            return self.sol_Y(lamda_n, X_n)
+            return generic_term
 
         a, b = self.coeffs["u_yy"], self.coeffs["u_y"]
         characteristic_discriminant = b**2 - 4*a*lamda_n
@@ -1532,37 +1535,75 @@ class _SeparationOfVariables(_BVPSolver):
         if not isinstance(special_indices, FiniteSet):
             special_indices = S.EmptySet # can't list them (symbolic coefficients), so treat every n as generic
 
-        special_terms = [self.sol_Y(lamda_n.subs(self.n, index), X_n.subs(self.n, index)) for index in special_indices]
-        generic_term = Piecewise((0, Or(*[Eq(self.n, index) for index in special_indices])), (self.sol_Y(lamda_n, X_n), True))
+        relation_roots = [solveset(relation.lhs - relation.rhs, self.n, S.Naturals) for relation in generic_term.atoms(Relational)]
+        exceptional_indices = Union(special_indices, *[roots for roots in relation_roots if isinstance(roots, FiniteSet)])
+        exceptional_terms = [
+            self.sol_Y(lamda_n.subs(self.n, index), X_n.subs(self.n, index)) if index in special_indices
+            else generic_term.subs(self.n, index)
+            for index in exceptional_indices
+        ]
 
-        if generic_term == 0:
-            return Add(*special_terms)
-        return Add(*special_terms) + Sum(generic_term, (self.n, 1, S.Infinity))
+        range_bounds = sorted(exceptional_indices + {0, S.Infinity})
+        range_sums = [self.range_sum(generic_term, range_bounds[i] + 1, range_bounds[i + 1] - 1) for i in range(len(range_bounds) - 1)]
+        return Add(*exceptional_terms, *range_sums)
+
+    def range_sum(self, term, start, end):
+        """TODO"""
+        j = Dummy("j", integer=True, nonnegative=True)
+        shifts = [(start + j, self.n - start)]
+        if end.is_finite:
+            shifts.append((end - j, end - self.n))
+
+        for shift, unshift in shifts:
+            shifted_term = term.subs(self.n, shift)
+            imaginary_sqrts = {root: (I*sqrt(-root.base))**(2*root.exp) for root in shifted_term.atoms(Pow) if root.exp.is_Rational and root.exp.q == 2 and root.base.is_negative}
+            term = shifted_term.xreplace(imaginary_sqrts).subs(j, unshift)
+
+        if term == 0:
+            return S.Zero
+
+        max_explicit_terms = 2
+        if end - start + 1 <= max_explicit_terms:
+            return Add(*[term.subs(self.n, index) for index in range(start, end + 1)])
+
+        return Sum(term, (self.n, start, end))
 
     def sol_Y(self, lamda_n, X_n):
         """TODO"""
         Y_n, Y_consts = self.Y_basis(lamda_n)
         norm = self.weighted_inner_product(X_n, X_n)
-        projected_conds = [replace(cond, unknown_val = self.weighted_inner_product(cond.unknown_val, X_n) / norm) for cond in self.conds[self.y]]
+        projected_conds = [replace(cond, unknown_val = factor(cancel(self.weighted_inner_product(cond.unknown_val, X_n) / norm))) for cond in self.conds[self.y]]
         M, data = linear_eq_to_matrix([cond.eval(Y_n) for cond in projected_conds], Y_consts)
         if M.det().is_zero:
             raise ValueError("the conditions are resonant, so there is no solution or infinitely many")
-        return expand(X_n * Y_n.subs(dict(zip(Y_consts, M.inv(method="ADJ") * data))))
+        Y_n = Y_n.subs(dict(zip(Y_consts, M.LUsolve(data))))
+        return factor_terms(X_n * Y_n)
 
     def Y_basis(self, lam):
         """TODO"""
-        y = self.y
         a, b = self.coeffs["u_yy"], self.coeffs["u_y"]
+        y = self.y
         C3, C4 = symbols("C3 C4", cls=Dummy)
 
         if a == 0:
-            return C3 * exp(-lam * y / b), (C3,)
+            return C3 * exp(-lam * y/b), (C3,)
+        assert len(self.conds[y]) == 2, f"Expected 2 conditions in Y, received {self.conds[y]}"
 
-        d = b**2 - 4*a*lam # characteristic equation's discriminant
-        if d.is_zero:
-            return (C3 + y*C4) * exp(-b*y / (2*a)), (C3, C4)
+        E = exp(-b*y / (2*a))
+        d = b**2 - 4*a*lam
+        k = sqrt(d) / (2*a)
+        Y1 = E*y if d.is_zero else E*sinh(k*y) / k # Y1(0) = 0, Y1'(0) = 1
+        Y2 = E*cosh(k*y) + (b/(2*a)) * Y1 # Y2(0) = 1, Y2'(0) = 0
 
-        return C3*exp(y*(-b + sqrt(d)) / (2*a)) + C4*exp(y*(-b - sqrt(d)) / (2*a)), (C3, C4)
+        basis = [] # B(0) = B'(0) = 0
+        for cond in self.conds[y]:
+            s = y - cond.var_val
+            Y1_s, Y2_s = Y1.subs(y, s), Y2.subs(y, s)
+            p, q = cond.eval(Y1_s).lhs, cond.eval(Y2_s).lhs
+            B = q * Y1_s - p * Y2_s # cond.eval(B) = 0 at s = 0
+            basis.append(B)
+
+        return C3*basis[0] + C4*basis[1], (C3, C4)
 
     def weighted_inner_product(self, g, h):
         """TODO"""
