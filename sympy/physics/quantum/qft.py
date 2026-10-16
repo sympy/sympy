@@ -12,6 +12,8 @@ Todo:
 """
 from __future__ import annotations
 
+from typing import Any
+
 from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Integer, pi)
 from sympy.core.symbol import Symbol
@@ -69,24 +71,24 @@ class RkGate(OneQubitGate):
         return inst
 
     @classmethod
-    def _eval_args(cls, args):
+    def _eval_args(cls, args: tuple[Expr, ...]) -> tuple[Expr, ...]:
         # Fall back to this, because Gate._eval_args assumes that args is
         # all targets and can't contain duplicates.
         return QExpr._eval_args(args)
 
     @property
-    def k(self):
+    def k(self) -> Expr:
         return self.label[1]
 
     @property
-    def targets(self):
+    def targets(self) -> tuple[Expr, ...]:
         return self.label[:1]
 
     @property
-    def gate_name_plot(self):
+    def gate_name_plot(self) -> str:
         return r'$%s_%s$' % (self.gate_name_latex, str(self.k))
 
-    def get_target_matrix(self, format='sympy'):
+    def get_target_matrix(self, format: str = 'sympy') -> Matrix:
         if format == 'sympy':
             return Matrix([[1, 0], [0, exp(sign(self.k)*Integer(2)*pi*I/(Integer(2)**abs(self.k)))]])
         raise NotImplementedError(
@@ -100,7 +102,7 @@ class Fourier(Gate):
     """Superclass of Quantum Fourier and Inverse Quantum Fourier Gates."""
 
     @classmethod
-    def _eval_args(self, args):
+    def _eval_args(self, args: tuple[Expr, ...]) -> tuple[Expr, ...]:
         if len(args) != 2:
             raise QuantumError(
                 'QFT/IQFT only takes two arguments, got: %r' % args
@@ -109,10 +111,10 @@ class Fourier(Gate):
             raise QuantumError("Start must be smaller than finish")
         return Gate._eval_args(args)
 
-    def _represent_default_basis(self, **options):
+    def _represent_default_basis(self, **options: Any) -> Matrix:
         return self._represent_ZGate(None, **options)
 
-    def _represent_ZGate(self, basis, **options):
+    def _represent_ZGate(self, basis: Any, **options: Any) -> Matrix:
         """
             Represents the (I)QFT In the Z Basis
         """
@@ -142,11 +144,11 @@ class Fourier(Gate):
         return matrixFT
 
     @property
-    def targets(self):
+    def targets(self) -> range:
         return range(self.label[0], self.label[1])
 
     @property
-    def min_qubits(self):
+    def min_qubits(self) -> Expr:
         return self.label[1]
 
     @property
@@ -155,7 +157,7 @@ class Fourier(Gate):
         return 2**(self.label[1] - self.label[0])
 
     @property
-    def omega(self):
+    def omega(self) -> Expr:
         return Symbol('omega')
 
 
@@ -165,11 +167,11 @@ class QFT(Fourier):
     gate_name = 'QFT'
     gate_name_latex = 'QFT'
 
-    def decompose(self):
+    def decompose(self) -> Expr:
         """Decomposes QFT into elementary gates."""
         start = self.label[0]
         finish = self.label[1]
-        circuit = 1
+        circuit: Expr = Integer(1)
         for level in reversed(range(start, finish)):
             circuit = HadamardGate(level)*circuit
             for i in range(level - start):
@@ -178,14 +180,14 @@ class QFT(Fourier):
             circuit = SwapGate(i + start, finish - i - 1)*circuit
         return circuit
 
-    def _apply_operator_Qubit(self, qubits, **options):
+    def _apply_operator_Qubit(self, qubits: Expr, **options: Any) -> Expr:
         return qapply(self.decompose()*qubits)
 
-    def _eval_inverse(self):
+    def _eval_inverse(self) -> IQFT:
         return IQFT(*self.args)
 
     @property
-    def omega(self):
+    def omega(self) -> Expr:
         return exp(2*pi*I/self.size)
 
 
@@ -195,11 +197,11 @@ class IQFT(Fourier):
     gate_name = 'IQFT'
     gate_name_latex = '{QFT^{-1}}'
 
-    def decompose(self):
+    def decompose(self) -> Expr:
         """Decomposes IQFT into elementary gates."""
-        start = self.args[0]
-        finish = self.args[1]
-        circuit = 1
+        start = self.label[0]
+        finish = self.label[1]
+        circuit: Expr = Integer(1)
         for i in range((finish - start)//2):
             circuit = SwapGate(i + start, finish - i - 1)*circuit
         for level in range(start, finish):
@@ -208,9 +210,9 @@ class IQFT(Fourier):
             circuit = HadamardGate(level)*circuit
         return circuit
 
-    def _eval_inverse(self):
+    def _eval_inverse(self) -> QFT:
         return QFT(*self.args)
 
     @property
-    def omega(self):
+    def omega(self) -> Expr:
         return exp(-2*pi*I/self.size)
