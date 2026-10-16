@@ -2750,3 +2750,9 @@ def test_solve_maxmin():
     assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
     system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
     assert solve(system, variables) == [(-3, 1), (2, 6)]
+
+
+def test_issue_2897():
+    x = Symbol('x', positive=True, integer=True)
+    sol = solve((x + 1)*(x + 2)*(x + 3)/6 - 34, x)
+    assert len(sol) == 1 and sol[0].is_real
