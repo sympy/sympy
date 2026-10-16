@@ -223,7 +223,8 @@ def _(expr, assumptions):
         return _EvenPredicate_number(expr, assumptions)
     if _ask_recursive(Q.integer(expr.exp), assumptions):
         if _ask_recursive(Q.positive(expr.exp), assumptions):
-            return _ask_recursive(Q.even(expr.base), assumptions)
+            if _ask_recursive(Q.integer(expr.base), assumptions):
+                return _ask_recursive(Q.even(expr.base), assumptions)
         elif _ask_recursive(~Q.negative(expr.exp) & Q.odd(expr.base), assumptions):
             return False
         elif expr.base is S.NegativeOne:

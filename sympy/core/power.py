@@ -393,7 +393,8 @@ class Pow(Expr):
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
-            return self.base.is_even
+            if self.base.is_integer:
+                return self.base.is_even
 
     def _eval_is_negative(self):
         ext_neg = Pow._eval_is_extended_negative(self)
@@ -624,7 +625,8 @@ class Pow(Expr):
     def _eval_is_odd(self):
         if self.exp.is_integer:
             if self.exp.is_positive:
-                return self.base.is_odd
+                if self.base.is_integer:
+                    return self.base.is_odd
             elif self.exp.is_nonnegative and self.base.is_odd:
                 return True
             elif self.base is S.NegativeOne:
@@ -1261,7 +1263,15 @@ class Pow(Expr):
                 if b == e:  # always rational, even for 0**0
                     return True
             elif b.is_irrational:
-                return e.is_zero
+                if e.is_zero:
+                    return True
+                if not (b.free_symbols or e.free_symbols):
+                    # A specific irrational number raised to a nonzero
+                    # integer power is irrational: any case that would
+                    # give a rational result is evaluated when the Pow
+                    # is constructed (e.g. sqrt(2)**2 -> 2), so a Pow
+                    # that survives in this form is never rational.
+                    return False
         if b is S.Exp1:
             if e.is_rational and e.is_nonzero:
                 return False
