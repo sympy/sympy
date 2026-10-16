@@ -1231,6 +1231,8 @@ class LambertW(DefinedFunction):
         if len(self.args) == 1:
             arg = self.args[0]
             arg0 = arg.subs(x, 0).cancel()
+            if arg0.is_infinite:
+                return log(arg).as_leading_term(x, logx=logx, cdir=cdir)
             if not arg0.is_zero:
                 return self.func(arg0)
             return arg.as_leading_term(x)

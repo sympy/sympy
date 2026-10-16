@@ -1495,3 +1495,15 @@ def test_issue_30568():
     assert limit(Max(x, sin(x)), x, 0) == 0
     assert limit(Min(exp(x), exp(2*x)), x, oo) == oo
     assert limit(Max(1/x, 1/x**2), x, oo) == 0
+
+
+def test_issue_30581():
+    x = Symbol('x')
+    assert limit(LambertW(x), x, oo) == oo
+    assert limit(exp(LambertW(x)), x, oo) == oo
+    assert limit(exp(-LambertW(x)), x, oo) == 0
+    assert limit(exp(LambertW(x))/x, x, oo) == 0
+    assert limit(LambertW(x)/log(x), x, oo) == 1
+    assert limit(LambertW(x**2)/LambertW(x), x, oo) == 2
+    assert limit(LambertW(x) - log(x), x, oo) == -oo
+    assert limit(LambertW(1/x), x, 0, '+') == oo
