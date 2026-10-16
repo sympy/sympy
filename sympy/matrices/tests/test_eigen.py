@@ -807,3 +807,32 @@ def test_issue_28793():
     P, J = A.jordan_form()
     assert P.det() == 16*sqrt(2)
     assert expand(P*J*P.inv()) == expand(A)
+
+
+def test_lazy_jordan_form():
+    from sympy.matrices.expressions import BlockDiagMatrix, MatMul
+    # 1. Non-diagonalizable / defective matrix
+    A = Matrix([[2, 1, 0], [0, 2, 0], [0, 0, 3]])
+    P, J_lazy = A.jordan_form(lazy=True)
+    assert isinstance(J_lazy, BlockDiagMatrix)
+    assert J_lazy.shape == (3, 3)
+    P_orig, J_orig = A.jordan_form(lazy=False)
+    assert J_lazy.as_explicit() == J_orig
+
+    # 2. Rational matrix
+    M = Matrix([[6, 5, -2, -3], [-3, -1, 3, 3], [2, 1, -2, -3], [-1, 1, 5, 5]])
+    P_m, J_m = M.jordan_form(lazy=True)
+    assert isinstance(J_m, BlockDiagMatrix)
+    assert J_m.as_explicit() == M.jordan_form(lazy=False)[1]
+
+    # 3. Lazy exponential
+    exp_lazy = A.exp(lazy=True)
+    assert isinstance(exp_lazy, MatMul)
+    assert (exp_lazy.doit().as_explicit() - A.exp()).is_zero_matrix
+
+    # 4. Lazy logarithm
+    B = Matrix([[2, 0], [0, 4]])
+    log_lazy = B.log(lazy=True)
+    assert isinstance(log_lazy, MatMul)
+    assert (log_lazy.doit().as_explicit() - B.log()).applyfunc(expand).is_zero_matrix
+

@@ -3724,7 +3724,8 @@ class MatrixBase(Printable):
             self: Tmat,
             calc_transform: Literal[True] = True,
             *,
-            chop: bool = False
+            chop: bool = False,
+            lazy: bool = False,
         ) -> tuple[Tmat, Tmat]: ...
     @overload
     def jordan_form(
@@ -3732,14 +3733,16 @@ class MatrixBase(Printable):
             calc_transform: Literal[False],
             *,
             chop: bool = False,
+            lazy: bool = False,
         ) -> Tmat: ...
 
     def jordan_form(self: Tmat,
              calc_transform: bool = True,
              *,
-             chop: bool = False
+             chop: bool = False,
+             lazy: bool = False,
          ) -> tuple[Tmat, Tmat] | Tmat:
-        return _jordan_form(self, calc_transform=calc_transform, chop=chop)
+        return _jordan_form(self, calc_transform=calc_transform, chop=chop, lazy=lazy)
 
     def left_eigenvects(self, **flags: Any) -> list[tuple[Expr, int, list[Self]]]:
         return _left_eigenvects(self, **flags)
@@ -4933,8 +4936,17 @@ class MatrixBase(Printable):
         return ans
 
 
-    def exp(self):
+    def exp(self, *, lazy: bool = False):
         """Return the exponential of a square matrix.
+
+        Parameters
+        ==========
+
+        lazy : bool, optional
+            If ``True``, returns the matrix exponential unevaluated as a
+            :class:`~.MatMul` expression $P e^J P^{-1}$ containing the similarity
+            transform and block diagonal exponential $e^J$, avoiding expensive
+            symbolic matrix multiplications and inversions. Default is ``False``.
 
         Examples
         ========
@@ -4959,6 +4971,11 @@ class MatrixBase(Printable):
                 "Exponentiation is implemented only for matrices for which the Jordan normal form can be computed")
 
         blocks = [cell._eval_matrix_exp_jblock() for cell in cells]
+        if lazy:
+            from sympy.matrices.expressions import BlockDiagMatrix, MatMul, Inverse
+            eJ = BlockDiagMatrix(*blocks)
+            return MatMul(P, eJ, Inverse(P))
+
         eJ = self.diag(*blocks)
         # n = self.rows
         ret = P.multiply(eJ, dotprodsimp=None).multiply(P.inv(), dotprodsimp=None)
@@ -5007,7 +5024,7 @@ class MatrixBase(Printable):
         from .sparsetools import banded
         return self._as_type(banded(size, bands))
 
-    def log(self, simplify: Callable[[Self], Self] | Literal[False] = cancel) -> Self:
+    def log(self, simplify: Callable[[Self], Self] | Literal[False] = cancel, *, lazy: bool = False) -> Self | MatMul:
         """Return the logarithm of a square matrix.
 
         Parameters
@@ -5019,6 +5036,12 @@ class MatrixBase(Printable):
             Default is ``cancel``, which is effective to reduce the
             expression growing for taking reciprocals and inverses for
             symbolic matrices.
+
+        lazy : bool, optional
+            If ``True``, returns the matrix logarithm unevaluated as a
+            :class:`~.MatMul` expression $P \\ln(J) P^{-1}$ containing the similarity
+            transform and block diagonal logarithm $\\ln(J)$, avoiding expensive
+            symbolic matrix multiplications and inversions. Default is ``False``.
 
         Examples
         ========
@@ -5076,6 +5099,11 @@ class MatrixBase(Printable):
                 "the Jordan normal form can be computed")
 
         blocks = [cell._eval_matrix_log_jblock() for cell in cells]
+
+        if lazy:
+            from sympy.matrices.expressions import BlockDiagMatrix, MatMul, Inverse
+            eJ = BlockDiagMatrix(*blocks)
+            return MatMul(P, eJ, Inverse(P))
 
         eJ = self.diag(*blocks)
 
