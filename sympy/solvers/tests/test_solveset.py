@@ -2369,7 +2369,7 @@ def test_issue_12032():
     x6 = 2/x4
     x7 = x3 + x6
     x8 = I*sqrt(Abs(-x1 + x2 + x6))/2
-    sol = FiniteSet(-x5 + sqrt(x7)/2, -x5 - sqrt(Abs(x7))/2, x5 - x8, x5 + x8)
+    sol = FiniteSet(-x5 + sqrt(x7)/2, -x5 - sqrt(x7)/2, x5 - x8, x5 + x8)
     assert solveset(x**4 + x - 1, x) == sol
 
 

@@ -2781,3 +2781,9 @@ def test_issue_26504_solve_empty_symbols():
     assert solve([log(2) + log(3) - log(6)]) == {}
     assert solve([x - 1, cos(1)**2 + sin(1)**2 - 1], x) == {x: 1}
     assert solve([x - 1, cos(1)**2 + sin(1)**2 - 2], x) == []
+
+
+def test_issue_2897():
+    x = Symbol('x', positive=True, integer=True)
+    sol = solve((x + 1)*(x + 2)*(x + 3)/6 - 34, x)
+    assert len(sol) == 1 and sol[0].is_real
