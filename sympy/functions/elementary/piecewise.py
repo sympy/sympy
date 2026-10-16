@@ -63,6 +63,85 @@ class ExprCondPair(Tuple):
         return self.func(*[a.simplify(**kwargs) for a in self.args])
 
 
+def _eval_cond_dir(cond, x, cdir=0):
+    """Evaluate truth value of a condition in a punctured neighborhood of x = 0
+    in the direction of cdir (cdir > 0 from right, cdir < 0 from left).
+    Returns True, False, or None if indeterminate.
+    """
+    from sympy.core.relational import (StrictLessThan, LessThan,
+        StrictGreaterThan, GreaterThan, Eq, Ne)
+    from sympy.logic.boolalg import And, Or, Not
+    from sympy.functions.elementary.complexes import re
+
+    if cdir is None:
+        cdir = 0
+
+    if cond is S.true or cond is True:
+        return True
+    if cond is S.false or cond is False:
+        return False
+    if x not in cond.free_symbols:
+        return bool(cond)
+    if isinstance(cond, Not):
+        res = _eval_cond_dir(cond.args[0], x, cdir)
+        return not res if res is not None else None
+    if isinstance(cond, And):
+        results = [_eval_cond_dir(a, x, cdir) for a in cond.args]
+        if any(r is False for r in results):
+            return False
+        if all(r is True for r in results):
+            return True
+        return None
+    if isinstance(cond, Or):
+        results = [_eval_cond_dir(a, x, cdir) for a in cond.args]
+        if any(r is True for r in results):
+            return True
+        if all(r is False for r in results):
+            return False
+        return None
+    if cond.is_Relational:
+        g = cond.lhs - cond.rhs
+        if x not in g.free_symbols:
+            return bool(cond)
+        if g == 0:
+            sgn = 0
+        else:
+            try:
+                coeff, exp = g.leadterm(x, cdir=cdir)
+            except (ValueError, NotImplementedError, TypeError, AttributeError):
+                return None
+            if cdir != 0 and (re(cdir).is_positive or cdir == 1):
+                sgn = 1 if coeff.is_positive else (-1 if coeff.is_negative else None)
+            elif cdir != 0 and (re(cdir).is_negative or cdir == -1):
+                if exp.is_integer:
+                    val = coeff * (S.NegativeOne**exp)
+                    sgn = 1 if val.is_positive else (-1 if val.is_negative else None)
+                else:
+                    return None
+            elif cdir == 0:
+                r_pos = _eval_cond_dir(cond, x, 1)
+                r_neg = _eval_cond_dir(cond, x, -1)
+                return r_pos if r_pos == r_neg else None
+            else:
+                return None
+
+        if sgn is None:
+            return None
+        if isinstance(cond, StrictLessThan):
+            return sgn < 0
+        if isinstance(cond, LessThan):
+            return sgn <= 0
+        if isinstance(cond, StrictGreaterThan):
+            return sgn > 0
+        if isinstance(cond, GreaterThan):
+            return sgn >= 0
+        if isinstance(cond, Eq):
+            return sgn == 0
+        if isinstance(cond, Ne):
+            return sgn != 0
+    return None
+
+
 class Piecewise(DefinedFunction):
     """
     Represents a piecewise function.
@@ -223,10 +302,13 @@ class Piecewise(DefinedFunction):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x, logx, cdir):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         for e, c in self.args:
-            if c == True or c.subs(x, 0) == True:
-                return e.as_leading_term(x)
+            cond = _eval_cond_dir(c, x, cdir)
+            if cond is True:
+                return e.as_leading_term(x, logx=logx, cdir=cdir)
+            if cond is None and (c == True or c.subs(x, 0) == True):
+                return e.as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])

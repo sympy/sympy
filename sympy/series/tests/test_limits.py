@@ -162,6 +162,7 @@ def test_piecewise2():
     assert limit(func1, x, 0) == 1
     assert limit(func2, x, 0) == 0
     assert limit(func3, x, -1) == 2
+    assert limit(func3, x, -1, dir='-') == -2
 
 
 def test_basic5():
