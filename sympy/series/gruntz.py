@@ -468,7 +468,12 @@ def limitinf(e, x):
         return s*oo
     elif sig == 0:
         if c0 == old:
-            c0 = c0.cancel()
+            c0_cancelled = c0.cancel()
+            if c0_cancelled == c0:
+                raise PoleError(
+                    "Cannot compute the leading term of %s; the "
+                    "leading-term extraction made no further progress" % old)
+            c0 = c0_cancelled
         return limitinf(c0, x)  # e0=0: lim f = lim c0
     else:
         raise ValueError("{} could not be evaluated".format(sig))
