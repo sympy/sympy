@@ -2672,7 +2672,17 @@ def test_pinv():
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[13, 104], [2212, 3], [-3, 5]]),
           Matrix([[1, 7, 9], [11, 17, 19]]),
-          Matrix([a, b])]
+          Matrix([a, b]),
+          Matrix([[a, b]])]
+
+    v_row = Matrix([[a, b]])
+    v_row_pinv = v_row.pinv()
+    assert v_row_pinv.subs({a: 0, b: 1}) == Matrix([[0], [1]])
+    assert v_row_pinv.subs({a: 1, b: 0}) == Matrix([[1], [0]])
+
+    M_wide = Matrix([[a, b, 0], [0, 0, 1]])
+    M_wide_pinv = M_wide.pinv()
+    assert M_wide_pinv.subs({a: 0, b: 1}) == Matrix([[0, 0], [1, 0], [0, 1]])
 
     for A in As:
         A_pinv = A.pinv(method="RD")
