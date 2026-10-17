@@ -1471,3 +1471,12 @@ def test_manualintegrate_trig_log_hang():
     expr = log((cos(x)/2 + 1) / (1 - cos(x)/2)) / cos(x)
     res = manualintegrate(expr, x)
     assert res is not None
+
+
+def test_issue_30447():
+    f = sqrt(1 - x**2)/(1 + x**2)
+    expected = 2*sqrt(2)*atan(sqrt(S(2)/3)) - pi/3
+    result = integrate(f, (x, -S.Half, S.Half), manual=True)
+    assert abs((result - expected).evalf()) < 1e-12
+    a = Symbol('a', real=True)
+    assert not manualintegrate(sqrt(1 - a**2*x**2)/(1 + x**2), x).has(I)
