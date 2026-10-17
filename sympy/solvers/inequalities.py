@@ -836,7 +836,7 @@ def _guard_indeterminate_group(ie, s):
 
     hits = [
         i for i, (_, terms) in enumerate(sides)
-        if any(t.has(s) for t in terms)
+        if any(t.has_free(s) for t in terms)
     ]
     if not hits:
         return ie, None, None
