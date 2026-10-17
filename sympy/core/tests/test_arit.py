@@ -47,6 +47,12 @@ def test_bug1():
     assert re(x) != x
 
 
+def test_Add_is_real_numerical():
+    e = (3 - I)**2/2 + I
+    assert e.is_number
+    assert e.is_real is False
+
+
 def test_Symbol():
     e = a*b
     assert e == a*b
@@ -2531,3 +2537,28 @@ def test_Mul_is_zero_with_zero_factor():
     # No zero
     assert Mul(x, x, evaluate=False).is_zero is None
     assert Mul(1, x, evaluate=False).is_zero is None
+
+
+def test_issue_12534():
+    _r0 = Rational(34988243013738739508224, 412991676983744490565646816917796631)
+    _r1 = Rational(1, 3)
+    _r2 = Rational(1, 2)
+    _r3 = Rational(5514311, 7707896)
+    _r4 = Rational(409280861737024633286577799054699315515692032, 553399584993877902920276818908684470114956563)
+    _r5 = Rational(605095761310750902207203713024, 674050682461272208820072236089)
+    _r6 = Rational(501344528765747335424, 503031316376570586693)
+    _r7 = Rational(1273148663091136, 821005896727467)
+    _r8 = Rational(2546297326182272, 821005896727467)
+    _r9 = Rational(7, 2)
+    _r10 = Rational(1064929607, 16542933)
+    _r11 = Rational(152132801, 471912)
+    _r12 = Rational(23347558955253521, 7806808597896)
+    x0 = (88807724680472919046254513**_r2*_r0 - _r4)**_r1
+    x1 = 2*x0
+    x2 = _r5/x0
+    x3 = (_r7 + x1 - x2)**_r2
+    x4 = (-_r6/x3 + _r8 - x1 + x2)**_r2
+    n = (
+    -_r11*x3 + _r11*x4 - _r12 + _r3*(_r10 + _r9*x3 - _r9*x4)**2)
+
+    assert n.is_real is False
