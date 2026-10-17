@@ -1,8 +1,9 @@
 from __future__ import annotations
 from sympy.abc import x
 from sympy.core import S
-from sympy.core.numbers import AlgebraicNumber
+from sympy.core.numbers import AlgebraicNumber, pi
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos
 from sympy.polys import Poly, cyclotomic_poly
 from sympy.polys.domains import QQ
 from sympy.polys.matrices import DomainMatrix, DM
@@ -84,3 +85,10 @@ def test_AlgebraicField_integral_basis():
     assert B1 == [1, S.Half + alpha/2]
     assert B2 == [k.ext.field_element([1]),
                   k.ext.field_element([S.Half, S.Half])]
+
+
+def test_round_two_hnf_modulus():
+    K = QQ.algebraic_field(sqrt(2), sqrt(5))
+    assert K.discriminant() == 2**6 * 5**2
+    K = QQ.algebraic_field(sqrt(2), 2*cos(2*pi/7))
+    assert K.discriminant() == 2**9 * 7**4
