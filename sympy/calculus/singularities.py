@@ -511,8 +511,6 @@ def is_monotonic(
     .. [2] https://en.wikipedia.org/wiki/Monotonic_function
 
     """
-    from sympy.solvers.solveset import solveset
-
     expression = sympify(expression)
 
     free = expression.free_symbols
@@ -534,5 +532,5 @@ def is_monotonic(
             if interior_sings != S.EmptySet:
                 return False
 
-    turning_points = solveset(expression.diff(variable), variable, interval)
-    return interval.intersection(turning_points) is S.EmptySet
+    return (is_increasing(expression, interval, variable)
+            or is_decreasing(expression, interval, variable))
