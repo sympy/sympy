@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sympy import S
 from sympy.core.function import Function
 from sympy.core.numbers import Rational
 from sympy.core.relational import Eq
@@ -11,7 +12,7 @@ from sympy.solvers.ode import (classify_ode, checkinfsol, dsolve, infinitesimals
 
 from sympy.solvers.ode.subscheck import checkodesol
 
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 C1 = Symbol('C1')
@@ -151,3 +152,25 @@ def test_user_infinitesimals():
 def test_lie_group_issue15219():
     eqn = exp(f(x).diff(x)-f(x))
     assert 'lie_group' not in classify_ode(eqn, f(x))
+
+
+def test_infinitesimals_nonlinear_in_yprime_issue_30643():
+    # An ODE nonlinear in y' has one solution branch y' = h_i(x, y) per
+    # root. A generator is a symmetry of the equation only if it satisfies
+    # the determining equation of every branch; symmetries of a single
+    # branch must not be returned (or confirmed) anymore.
+    eq = f(x)*f(x).diff(x)**2 - (f(x) - x)*f(x).diff(x) - x
+    # branches y' = 1 and y' = -x/y; y' -> y' + 1 is a symmetry of the
+    # lines y = x + C but not of the circles x**2 + y**2 = C.
+    false_gen = {xi(x, f(x)): S.Zero, eta(x, f(x)): S.One}
+    assert checkinfsol(eq, [false_gen], f(x)) == [(False, -x/f(x)**2)]
+    # no symmetry common to both branches is found by the heuristics, so
+    # infinitesimals must not silently return a branch-only one
+    raises(NotImplementedError, lambda: infinitesimals(eq, f(x)))
+
+    # both branches share genuine symmetries: they must be found and
+    # confirmed for every branch
+    eq2 = (f(x).diff(x) - 1)*(f(x).diff(x) - 2)
+    i = infinitesimals(eq2, f(x))
+    assert {xi(x, f(x)): S.Zero, eta(x, f(x)): S.One} in i
+    assert checkinfsol(eq2, i, f(x)) == [(True, 0)]*len(i)

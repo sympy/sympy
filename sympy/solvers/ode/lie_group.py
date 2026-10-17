@@ -52,6 +52,70 @@ lie_heuristics = (
     )
 
 
+def _lie_infinitesimals_for_h(h, func, y, hint):
+    """Collect candidate infinitesimals for a single branch y' = h(x, y).
+
+    Returns the (deduplicated) list of dicts found by the heuristics
+    selected by ``hint``: all heuristics for ``'all'`` and ``'default'``,
+    or only the given heuristic otherwise.
+    """
+    x = func.args[0]
+    u = Dummy("u")
+    hx = h.diff(x)
+    hy = h.diff(y)
+    hinv = ((1/h).subs([(x, u), (y, x)])).subs(u, y)  # Inverse ODE
+    match = {'h': h, 'func': func, 'hx': hx, 'hy': hy, 'y': y, 'hinv': hinv}
+    if hint in ('all', 'default'):
+        heuristics = lie_heuristics
+    elif hint in lie_heuristics:
+        heuristics = [hint]
+    else:
+        raise ValueError("Heuristic not recognized: " + hint)
+    xieta = []
+    for heuristic in heuristics:
+        function = globals()['lie_heuristic_' + heuristic]
+        try:
+            inflist = function(match, comp=True)
+        except (ArithmeticError, LookupError, NameError, NotImplementedError,
+                TypeError, ValueError):
+            # A heuristic may fail or simply not apply to a particular
+            # branch h(x, y); skip it and let the remaining heuristics try.
+            continue
+        if inflist:
+            xieta.extend([inf for inf in inflist if inf not in xieta])
+    return xieta
+
+
+def _lie_infinitesimals_all_branches(hs, func, y, hint):
+    """Return infinitesimals valid for every branch y' = h_i(x, y).
+
+    An ODE which is nonlinear in y' resolves into several solution
+    branches y' = h_i(x, y). A generator is a symmetry of the full
+    equation only if it satisfies the determining equation of *every*
+    branch (see issue #30643). Candidates are collected for each branch
+    and then kept only if they pass the determining PDE of all branches.
+    """
+    x = func.args[0]
+    xi_f = Function('xi')(x, func)  # keys used by the heuristics
+    eta_f = Function('eta')(x, func)
+    xi = Function('xi')(x, y)
+    eta = Function('eta')(x, y)
+    pdes = [eta.diff(x) + (eta.diff(y) - xi.diff(x))*h - xi.diff(y)*h**2
+        - xi*h.diff(x) - eta*h.diff(y) for h in hs]
+    candidates = []
+    for h in hs:
+        for inf in _lie_infinitesimals_for_h(h, func, y, hint):
+            if inf not in candidates:
+                candidates.append(inf)
+    xieta = []
+    for inf in candidates:
+        subs = {xi: inf.get(xi_f, S.Zero).subs(func, y),
+            eta: inf.get(eta_f, S.Zero).subs(func, y)}
+        if all(simplify(pde.subs(subs).doit()) == 0 for pde in pdes):
+            xieta.append(inf)
+    return xieta
+
+
 def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
 
     xi = Function("xi")
@@ -214,6 +278,12 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
     >>> infinitesimals(eq)
     [{eta(x, f(x)): exp(x**3/3), xi(x, f(x)): 0}]
 
+    If the equation is nonlinear in ``y'``, the returned generators are only
+    those that satisfy the determining equation of *every* solution branch
+    `y' = h_i(x, y)`; a generator which leaves only one branch invariant is
+    not a symmetry of the equation. A ``NotImplementedError`` is raised when
+    no such generator is found.
+
     References
     ==========
 
@@ -241,13 +311,15 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
             # Matching differential equation of the form a*df + b
             a = Wild('a', exclude = [df])
             b = Wild('b', exclude = [df])
+            hs = None  # solution branches when the ODE is nonlinear in y'
             if match:  # Used by lie_group hint
                 h = match['h']
                 y = match['y']
             else:
+                y = Dummy("y")
                 match = collect(expand(eq), df).match(a*df + b)
                 if match:
-                    h = -simplify(match[b]/match[a])
+                    h = -simplify(match[b]/match[a]).subs(func, y)
                 else:
                     try:
                         sol = solve(eq, df)
@@ -255,9 +327,24 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                         raise NotImplementedError("Infinitesimals for the "
                             "first order ODE could not be found")
                     else:
-                        h = sol[0]  # Find infinitesimals for one solution
-                y = Dummy("y")
-                h = h.subs(func, y)
+                        # The equation is nonlinear in y': every solution
+                        # branch y' = h_i(x, y) defines a different surface.
+                        # A symmetry of the equation must leave *every*
+                        # branch invariant, not just one of them (see
+                        # issue #30643).
+                        hs = [simplify(s_.subs(func, y)) for s_ in sol]
+                if hs is None:
+                    h = h.subs(func, y)
+
+            if hs is not None:
+                xieta = _lie_infinitesimals_all_branches(hs, func, y, hint)
+                if xieta:
+                    return xieta
+                if hint in ('all', 'default'):
+                    raise NotImplementedError("Infinitesimals could not be found for "
+                        "the given ODE")
+                raise ValueError("Infinitesimals could not be found using the"
+                     " given heuristic")
 
             u = Dummy("u")
             hx = h.diff(x)
