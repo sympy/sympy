@@ -10,7 +10,7 @@ from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
 from sympy.core.mul import Mul
-from sympy.polys import PurePoly, cancel
+from sympy.polys import Poly, PurePoly, cancel
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.matrices.ddm import DDM
@@ -355,19 +355,20 @@ def _adjugate(M, method="berkowitz"):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _charpoly(M, x: str | Expr = 'lambda',
-              simplify: Callable[[Expr], Expr] = _simplify) -> PurePoly:
+def _charpoly(M, x: str | Expr | None = None,
+              simplify: Callable[[Expr], Expr] = _simplify) -> Poly:
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
 
-    A PurePoly is returned, so using different variables for ``x`` does
-    not affect the comparison or the polynomials:
+    With no generator specified, a canonical ``PurePoly`` is returned.
+    Supplying a generator returns a named ``Poly``.
 
     Parameters
     ==========
 
-    x : string, optional
-        Name for the "lambda" variable, defaults to "lambda".
+    x : string or Expr, optional
+        Generator for the returned ``Poly``. If omitted, return a
+        canonical ``PurePoly``. A conflicting name is made unique.
 
     simplify : function, optional
         Simplification function to use on the characteristic polynomial
@@ -380,31 +381,20 @@ def _charpoly(M, x: str | Expr = 'lambda',
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
-    PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
-    >>> M.charpoly(x) == M.charpoly(y)
+    PurePoly(_0**2 - _0 - 6, _0, domain='ZZ')
+    >>> M.charpoly(x)
+    Poly(x**2 - x - 6, x, domain='ZZ')
+    >>> M.charpoly(x) == M.charpoly().as_poly(x)
     True
+    >>> M.charpoly()('lamda')
+    lamda**2 - lamda - 6
 
-    Specifying ``x`` is optional; a symbol named ``lambda`` is used by
-    default (which looks good when pretty-printed in unicode):
-
-    >>> M.charpoly().as_expr()
-    lambda**2 - lambda - 6
-
-    And if ``x`` clashes with an existing symbol, underscores will
-    be prepended to the name to make it unique:
+    If the requested generator conflicts with a coefficient symbol,
+    it is renamed to avoid the collision:
 
     >>> M = Matrix([[1, 2], [x, 0]])
-    >>> M.charpoly(x).as_expr()
-    _x**2 - _x - 2*x
-
-    Whether you pass a symbol or not, the generator can be obtained
-    with the gen attribute since it may not be the same as the symbol
-    that was passed:
-
     >>> M.charpoly(x).gen
     _x
-    >>> M.charpoly(x).gen == x
-    False
 
     Notes
     =====
@@ -444,8 +434,6 @@ def _charpoly(M, x: str | Expr = 'lambda',
 
     cp = dM.charpoly()
 
-    x = uniquely_named_symbol(x, [M], modify=lambda s: '_' + s)
-
     if K.is_EXRAW or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the
         # caller supplied a custom simplify function for backwards
@@ -454,12 +442,15 @@ def _charpoly(M, x: str | Expr = 'lambda',
         # will put everything into canonical form anyway.
         berk_vector = [K.to_sympy(c) for c in cp]
         berk_vector = [simplify(a) for a in berk_vector]
-        p = PurePoly(berk_vector, x)
+        p = PurePoly(berk_vector)
 
     else:
         # Convert from the list of domain elements directly to Poly.
-        p = PurePoly(cp, x, domain=K)
+        p = PurePoly(cp, domain=K)
 
+    if x is not None:
+        x = uniquely_named_symbol(x, [M], modify=lambda s: '_' + s)
+        return p.as_poly(x)
     return p
 
 

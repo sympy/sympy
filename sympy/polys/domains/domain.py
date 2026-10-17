@@ -1129,11 +1129,11 @@ class Domain(Generic[Er]):
         >>> from sympy.abc import x
         >>> f = Poly(x**2 - 2)
         >>> K = QQ.alg_field_from_poly(f)
-        >>> K.ext.minpoly == f
+        >>> K.ext.minpoly.as_poly(x).set_domain(f.domain) == f
         True
         >>> g = Poly(8*x**3 - 6*x - 1)
         >>> L = QQ.alg_field_from_poly(g, "alpha")
-        >>> L.ext.minpoly == g
+        >>> L.ext.minpoly.as_poly(x).set_domain(g.domain) == g
         True
         >>> L.to_sympy(L([1, 1, 1]))
         alpha**2 + alpha + 1

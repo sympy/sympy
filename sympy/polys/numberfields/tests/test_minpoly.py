@@ -85,7 +85,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(sqrt(2)).dummy_eq(x**2 - 2)
     assert minimal_polynomial(sqrt(2), x) == x**2 - 2
 
-    assert minimal_polynomial(sqrt(2), polys=True) == Poly(x**2 - 2)
+    assert minimal_polynomial(sqrt(2), polys=True).as_poly(x) == Poly(x**2 - 2, domain='QQ')
     assert minimal_polynomial(sqrt(2), x, polys=True) == Poly(x**2 - 2, domain='QQ')
     assert minimal_polynomial(sqrt(2), x, polys=True, compose=False) == Poly(x**2 - 2, domain='QQ')
 
