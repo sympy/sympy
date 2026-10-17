@@ -106,7 +106,7 @@ def singularities(
 
     """
     from sympy.solvers.solveset import solveset
-    from sympy.sets.sets import Interval
+    from sympy.sets.sets import FiniteSet
 
     expression = sympify(expression)
 
@@ -117,18 +117,32 @@ def singularities(
         e = expression.rewrite([sec, csc, cot, tan], cos)
         e = e.rewrite([sech, csch, coth, tanh], cosh)
         for i in e.atoms(Pow):
-            if i.base == S.Zero:
-                sing_interval = solveset(i.exp <= 0, symbol, domain)
-                # Since in Sympy we assume that 0**0 = 1,
-                # we can't have a singularity at i.exp == 0 and therefore
-                # we must return an open interval.
-                sing_interval = Interval.open(sing_interval.inf, sing_interval.sup)
-                sings += sing_interval
-            if i.exp.is_infinite:
+            if i.base == S.Zero or i.base.is_zero:
+                if domain.is_subset(S.Reals):
+                    sing_interval = solveset(i.exp < 0, symbol, domain)
+                    sings += sing_interval
+                else:
+                    raise NotImplementedError
+            elif i.base.is_infinite:
+                if domain.is_subset(S.Reals):
+                    sing_interval = solveset(i.exp > 0, symbol, domain)
+                    sings += sing_interval
+                else:
+                    raise NotImplementedError
+            elif i.exp.is_infinite:
                 raise NotImplementedError
-            if i.exp.is_negative:
-                # XXX: exponent of varying sign not handled
+            elif i.exp.is_negative:
                 sings += solveset(i.base, symbol, domain)
+            elif not i.exp.is_nonnegative:
+                zeros = solveset(i.base, symbol, domain)
+                if zeros.is_finite_set:
+                    for z in zeros:
+                        try:
+                            val = i.exp.subs(symbol, z)
+                            if val.is_negative or (val.is_real and val < 0):
+                                sings += FiniteSet(z)
+                        except (TypeError, ValueError):
+                            pass
         for i in expression.atoms(log, asech, acsch):
             sings += solveset(i.args[0], symbol, domain)
         for i in expression.atoms(atanh, acoth):
