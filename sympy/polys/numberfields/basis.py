@@ -198,7 +198,6 @@ def round_two(T, radicals=None):
     T, _ = T.make_monic_over_integers_by_scaling_roots()
     n = T.degree()
     D = T.discriminant()
-    D_modulus = ZZ.from_sympy(abs(D))
     # D must be 0 or 1 mod 4 (see Cohen Sec 4.4), which ensures we can write
     # it in the form D = D_0 * F**2, where D_0 is 1 or a fundamental discriminant.
     _, F = extract_fundamental_discriminant(D)
@@ -218,7 +217,7 @@ def round_two(T, radicals=None):
         #  Theory says only first m columns of the U//p*H term below are needed.
         #  Could be slightly more efficient to use only those. Maybe `Submodule`
         #  class should support a slice operator?
-        H = H.add(U // p * H, hnf_modulus=D_modulus)
+        H = H + U // p * H
         if e <= m:
             continue
         # A second, and possibly more, enlargements for p will be needed.
