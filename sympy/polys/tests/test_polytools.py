@@ -1329,6 +1329,11 @@ def test_obvious_leading():
         (x + 1)**40 - (x - 1)**40, x
     ) is None
 
+    # coverage
+    assert _obvious_leading(Mul(0, y, evaluate=False), x) == (-oo, 0)
+    assert _obvious_leading(Pow(x, 0, evaluate=False), x) == (0, 1)
+    assert _obvious_leading(sin(x), x) is None
+
 
 def test_Poly_degree():
     assert Poly(0, x).degree() is -oo
