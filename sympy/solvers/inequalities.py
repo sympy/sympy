@@ -14,7 +14,7 @@ from sympy.core.singleton import S
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.complexes import Abs
 from sympy.logic import And
-from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
+from sympy.polys import Poly, PolynomialError, degree, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset
 from sympy.utilities.iterables import sift, iterable
@@ -809,9 +809,10 @@ def _guard_indeterminate_group(ie, s):
     def bounded_rational_term(term):
         if term.free_symbols - {s}:
             return False
+        if not term.is_rational_function(s):  # this ignores removable singularities
+            return False
         num, den = term.as_numer_denom()
-        num, den = num.as_poly(s), den.as_poly(s)
-        return num is not None and den is not None and num.degree() <= den.degree()
+        return degree(num, s) <= degree(den, s)
 
     sides = []
     virtual = []
@@ -824,8 +825,7 @@ def _guard_indeterminate_group(ie, s):
         # appear as separate additive terms, but the expanded pieces may
         # only become the protected group when the expansion is safe.
         args = expanded if expansion_is_safe(side) else Add.make_args(side)
-        finite = [a for a in args if a.is_finite is True]
-        nonfinite = [a for a in args if a.is_finite is not True]
+        finite, nonfinite = sift(args, lambda a: a.is_finite is True, binary=True)
         sides.append((finite, nonfinite))
 
     if not _may_be_indeterminate(virtual):
@@ -967,8 +967,8 @@ def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
     else a difference of infinities is introduced.
 
     >>> a, b, c = symbols('a b c', real=True)
-    >>> f(a*(-y - 2*z + 1) < b - 2*c - x, y)
-    -a*y < 2*a*z - a + b - 2*c - x
+    >>> f(a*(-y - 2*z + 1) < b - 2*c - x, y, protect_indeterminate=True)
+    -a*y - 2*a*z < -a + b - 2*c - x
 
     When there are denominators in the original expression that
     are removed by expansion, conditions for them will be returned
