@@ -521,6 +521,34 @@ def test_monotonic_sign():
     assert F(sqrt(p) - sqrt(2)) == sqrt(3) - sqrt(2)
     assert log(p) >= 1
 
+    # coverage
+    nn = Dummy(integer=True, nonnegative=True)
+
+    r = F(exp(nn) - 1)
+    assert r.is_nonnegative is True
+    assert r.is_positive is None
+
+    r = F(exp(-nn) - 1)
+    assert r.is_nonpositive is True
+    assert r.is_negative is None
+
+    np = Dummy(integer=True, nonpositive=True)
+
+    assert F(exp(np) - 2) == -1
+
+    r = F(exp(np) - 1)
+    assert r.is_nonpositive is True
+    assert r.is_negative is None
+
+    assert F(exp(-np) - S.Half) == S.Half
+
+    r = F(exp(-np) - 1)
+    assert r.is_nonnegative is True
+    assert r.is_positive is None
+
+    nn = Dummy(integer=True, nonnegative=True)
+    assert F(exp(-nn) - 2) == -1
+
 
 def test_issue_17256():
     from sympy.sets.fancysets import Range
