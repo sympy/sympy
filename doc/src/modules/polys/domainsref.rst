@@ -399,6 +399,18 @@ Sparse polynomials are represented as dictionaries.
    :members:
 
 
+Sparse polynomial classes
+=========================
+
+.. currentmodule:: sympy.polys.polyclasses
+
+Sparse multivariate polynomials are represented as dictionaries
+mapping sparse monomial exponent tuples to coefficients.
+
+.. autoclass:: SMP
+   :members:
+
+
 Dense polynomials
 =================
 
