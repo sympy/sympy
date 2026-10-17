@@ -143,8 +143,11 @@ def _construct_composite(coeffs, opt):
     if not gens:
         return None
 
+    if any(_not_a_coeff(gen) for gen in gens):
+        return None
+
     if opt.composite is None:
-        if any(_not_a_coeff(gen) or gen.is_number and gen.is_algebraic for gen in gens):
+        if any(gen.is_number and gen.is_algebraic for gen in gens):
             return None # generators are number-like so lets better use EX
 
         all_symbols = set()
