@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core import S, diff, Tuple, Dummy, Mul
+from sympy.core import S, diff, Symbol, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
@@ -904,6 +904,12 @@ class Piecewise(DefinedFunction):
                 break
             # loop over independent conditions for this b
             for c in c.args if isinstance(c, Or) else [c]:
+                if isinstance(c, Symbol):
+                    # A Boolean symbol does not restrict the values of a
+                    # real variable, but Symbol.as_set() returns the
+                    # UniversalSet, so it must not be treated as a
+                    # condition that covers all reals.
+                    continue
                 free = c.free_symbols
                 x = free.pop()
                 try:
