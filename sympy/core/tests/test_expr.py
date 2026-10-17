@@ -28,6 +28,7 @@ from sympy.functions.special.delta_functions import (Heaviside,
     DiracDelta)
 from sympy.functions.special.error_functions import Si
 from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.zeta_functions import lerchphi
 from sympy.integrals.integrals import integrate, Integral
 from sympy.physics.secondquant import FockState
 from sympy.polys.partfrac import apart
@@ -2234,6 +2235,15 @@ def test_issue_7426():
     f1 = a % c
     f2 = x % z
     assert f1.equals(f2) is None
+
+
+def test_numeric_infinite_sign():
+    finite = lerchphi(-1, 3, Rational(2, 3))
+    for sign in (1, -1):
+        expression = sign*oo - sign*finite
+        assert expression.is_zero is False
+        assert expression.is_extended_positive is (sign == 1)
+        assert expression.is_extended_negative is (sign == -1)
 
 
 def test_issue_11122():

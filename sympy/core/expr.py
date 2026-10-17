@@ -929,7 +929,11 @@ class Expr(Basic, EvalfMixin):
                 return None
 
             f = self.evalf(2)
-            if f.is_Float:
+            if f is S.Infinity:
+                return positive
+            elif f is S.NegativeInfinity:
+                return not positive
+            elif f.is_Float:
                 match = f, S.Zero
             else:
                 match = pure_complex(f)
