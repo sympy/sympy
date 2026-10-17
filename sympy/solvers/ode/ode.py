@@ -2909,7 +2909,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
             match = collect(expand(eq), df).match(a*df + b)
 
             if match:
-                h = -simplify(match[b]/match[a])
+                hs = [-simplify(match[b]/match[a])]
             else:
                 try:
                     sol = solve(eq, df)
@@ -2917,23 +2917,32 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
                     raise NotImplementedError("Infinitesimals for the "
                         "first order ODE could not be found")
                 else:
-                    h = sol[0]  # Find infinitesimals for one solution
+                    # The equation is nonlinear in y': it has one solution
+                    # branch y' = h_i(x, y) per root. The infinitesimals are
+                    # genuine only if the determining PDE vanishes for every
+                    # branch, not just for one of them (see issue #30643).
+                    hs = list(sol)
 
             y = Dummy('y')
-            h = h.subs(func, y)
+            hs = [h.subs(func, y) for h in hs]
             xi = Function('xi')(x, y)
             eta = Function('eta')(x, y)
             dxi = Function('xi')(x, func)
             deta = Function('eta')(x, func)
-            pde = (eta.diff(x) + (eta.diff(y) - xi.diff(x))*h -
+            pdes = [(eta.diff(x) + (eta.diff(y) - xi.diff(x))*h -
                 (xi.diff(y))*h**2 - xi*(h.diff(x)) - eta*(h.diff(y)))
+                for h in hs]
             soltup = []
             for sol in infinitesimals:
                 tsol = {xi: S(sol[dxi]).subs(func, y),
                     eta: S(sol[deta]).subs(func, y)}
-                sol = simplify(pde.subs(tsol).doit())
-                if sol:
-                    soltup.append((False, sol.subs(y, func)))
+                residual = S.Zero
+                for pde in pdes:
+                    residual = simplify(pde.subs(tsol).doit())
+                    if residual:
+                        break
+                if residual:
+                    soltup.append((False, residual.subs(y, func)))
                 else:
                     soltup.append((True, 0))
             return soltup
