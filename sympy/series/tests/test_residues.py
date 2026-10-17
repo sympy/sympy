@@ -7,9 +7,9 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (cot, sin, tan)
+from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.series.residues import residue
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL
 from sympy.abc import x, z, a, s, k
 
 
@@ -65,8 +65,16 @@ def test_expressions_failing():
         exp(I*pi*a/4)/factorial(n - 1)
 
 
-def test_NotImplemented():
-    raises(NotImplementedError, lambda: residue(exp(1/z), z, 0))
+def test_issue_27156():
+    # Residues at essential singularities require a Laurent expansion,
+    # which nseries cannot produce directly (see issue #27156).
+    assert residue(exp(-1/z), z, 0) == -1
+    assert residue(exp(1/z), z, 0) == 1
+    assert residue(sin(1/z), z, 0) == 1
+    # Related family from issue #21077.
+    assert residue(exp(-1/z**2)*cos(1/z), z, 0) == 0
+    assert residue(z**2*sin(1/z), z, 0) == -Rational(1, 6)
+    assert residue(exp(1/z)*sin(1/z), z, 0) == 1
 
 
 def test_bug():
