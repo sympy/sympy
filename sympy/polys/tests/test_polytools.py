@@ -4376,6 +4376,7 @@ def test_PurePoly_dummy_eq():
     assert not pp.dummy_eq(Poly(y**2 + 2, y))
     assert not pp.dummy_eq(Poly(y**2 + 1, y, domain=QQ))
     assert not pp.dummy_eq(Poly(y**2 + 1, y, z))
+    assert not pp.dummy_eq(x**2 + 1)
 
     pm = PurePoly(x*y + x + 1, x, y)
     assert pm.dummy_eq(Poly(a*b + a + 1, a, b))
@@ -4386,10 +4387,13 @@ def test_PurePoly_dummy_eq():
 def test_PurePoly_canonical_instantiation_and_coefficients():
     p = PurePoly(x*y + x + 1, x, y)
     assert p.as_poly(a, b) == Poly(a*b + a + 1, a, b)
+    assert p.as_poly(a, b, domain=QQ) == Poly(a*b + a + 1, a, b, domain=QQ)
+    raises(GeneratorsError, lambda: p.as_poly(a))
     raises(AttributeError, lambda: p.as_poly('a', b))
     assert p('a', 'b') == a*b + a + 1
     assert p(a, b) == a*b + a + 1
     assert p(2, 3) == 9
+    raises(ValueError, lambda: p(1, 2, 3))
     assert p() == p
     assert p(a) == PurePoly(a*y + a + 1, y)
     assert p(2) == PurePoly(2*y + 3, y)
@@ -4424,6 +4428,7 @@ def test_PurePoly_without_generator_from_coefficients():
     rep = Poly(x*y + 1, x, y).rep
     assert PurePoly.new(rep) == PurePoly(x*y + 1, x, y)
     assert PurePoly.new(rep, x, y) == PurePoly.new(rep)
+    raises(PolynomialError, lambda: PurePoly.new(x))
     raises(PolynomialError, lambda: PurePoly.new(rep, x))
 
     # Poly continues to require an explicit generator for coefficient lists.
