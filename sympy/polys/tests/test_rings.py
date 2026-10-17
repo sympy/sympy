@@ -2001,6 +2001,8 @@ def test_PolyElement_resultant():
     f, g, h = x**2 - 2*x + 1, x**2 - 1, 0
 
     assert f.resultant(g) == h
+    assert (x + 2).resultant(x**3) == -8
+    assert (x**3).resultant(x + 2) == 8
 
 
 def test_PolyElement_discriminant():
