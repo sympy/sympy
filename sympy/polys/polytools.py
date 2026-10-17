@@ -16,7 +16,7 @@ from sympy.core.decorators import _sympifyit
 from sympy.core.exprtools import Factors, factor_nc, factor_terms
 from sympy.core.evalf import (
     pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, expand_mul
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
@@ -103,7 +103,6 @@ def _polifyit(func):
         else:
             return NotImplemented
     return wrapper
-
 
 
 @public
@@ -4917,6 +4916,141 @@ def _update_args(args, key, value):
     return args
 
 
+def _obvious_leading(expr, gen):
+    """Return (degree, LC) when structurally obvious, else None."""
+    if expr is S.Zero:
+        return S.NegativeInfinity, S.Zero
+
+    if expr == gen:
+        return S.One, S.One
+
+    if not expr.has(gen):
+        if expr.is_Mul:
+            for arg in expr.args:
+                result = _obvious_leading(arg, gen)
+                if result is not None and result[0] is S.NegativeInfinity:
+                    return S.NegativeInfinity, S.Zero
+            return S.Zero, expr
+
+        if expr.is_Pow:
+            base, exp = expr.as_base_exp()
+            if exp.is_Integer and exp > 0:
+                result = _obvious_leading(base, gen)
+                if result is not None and result[0] is S.NegativeInfinity:
+                    return S.NegativeInfinity, S.Zero
+            return S.Zero, expr
+
+        expanded = expand_mul(expr)
+        if expanded is S.Zero:
+            return S.NegativeInfinity, S.Zero
+        return S.Zero, expr
+
+    if expr.is_Pow:
+        base, exp = expr.as_base_exp()
+
+        if exp.is_Integer and exp >= 0:
+            if exp == 0:
+                return S.Zero, S.One
+
+            result = _obvious_leading(base, gen)
+
+            if result is None:
+                expanded = expand_mul(base)
+                if expanded != base:
+                    result = _obvious_leading(expanded, gen)
+
+            if result is None:
+                return None
+
+            degree, lc = result
+            if degree is S.NegativeInfinity:
+                return degree, S.Zero
+
+            return exp*degree, lc**exp
+
+        return None
+
+    if expr.is_Mul:
+        degree = S.Zero
+        lc = S.One
+
+        for arg in expr.args:
+            result = _obvious_leading(arg, gen)
+            if result is None:
+                return None
+
+            d, c = result
+            if d is S.NegativeInfinity:
+                return d, S.Zero
+
+            degree += d
+            lc *= c
+
+        return degree, lc
+
+    if expr.is_Add:
+        best = None
+
+        for arg in expr.args:
+            result = _obvious_leading(arg, gen)
+            if result is None:
+                return None
+
+            degree, lc = result
+
+            if best is None or degree > best[0]:
+                best = degree, lc
+            elif degree == best[0]:
+                lc += best[1]
+                if lc is S.Zero:
+                    return None
+                best = degree, lc
+
+        return best
+
+    return None
+
+
+def _obvious_generator(gen):
+    # Conservatively require the generator to behave atomically under
+    # exponentiation and not be an Add (since
+    # Poly(x + 1, x + 1).degree() == 0).
+    #
+    # Poly's handling of compound generators is currently inconsistent;
+    # e.g. Poly(x + 1/x, 1/x) and Poly(exp(x) + exp(-x), exp(x)) are
+    # accepted, while Poly((2*x)**2, 2*x).degree() == 0.
+    if gen.is_Add:
+        return False
+    return (gen**2).as_base_exp() == (gen, 2)
+
+
+def _obvious_leading_query(expr, gen):
+    """Try structural leading-term analysis when it is likely to be cheap."""
+    if (
+        not isinstance(expr, Poly)
+        and gen.is_commutative
+        and expr.is_commutative
+        and _obvious_generator(gen)
+        # Avoid costly introspection of wide Adds when
+        # fallback may still require full polynomial expansion.
+        and not (expr.is_Add and len(expr.args) >= 17)
+    ):
+        return _obvious_leading(expr, gen)
+
+
+def _obvious_leading_data(f, gens, args):
+    """Return (gen, (degree, LC)) for a simple univariate query."""
+    if len(gens) != 1 or args:
+        return None
+
+    expr = sympify(f)
+    gen = sympify(gens[0])
+    result = _obvious_leading_query(expr, gen)
+
+    if result is not None:
+        return gen, result
+
+
 @public
 def degree(f, gen=0):
     """
@@ -4969,31 +5103,65 @@ def degree(f, gen=0):
 
     _degree = lambda x: Integer(x) if type(x) is int else x
 
+    was_poly = isinstance(f, Poly)
     f = sympify(f, strict=True)
     if type(gen) is int:
-        if isinstance(f, Poly):
+        if was_poly:
             return _degree(f.degree(gen))
+
+        # handle non-Poly cases
         if f.is_Number:
+            # XXX Piecewise((S.NegativeInfinity, Eq(f, 0)), (S.Zero, True))
             return S.NegativeInfinity if f.is_zero else S.Zero
         try:
-            p = Poly(f, expand=False)
+            # Poly(x + 1) -> Poly(x + 1, x)
+            # Poly((1 + x)**2 + 1, expand=False) ->  Poly((1 + x)**2 + 1, 1 + x)
+            probe = Poly(f, expand=False)
         except GeneratorsNeeded:  # e.g. f = (1+I)**2/2
             gens = ()  # do not guess what the user intended
         else:
-            gens = p.gens
-        free = f.free_symbols
-        if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
-                gen := next(iter(gens))) and # <-- assigns gen
-                gen.is_Atom):  # e.g. x or pi
+            gens = probe.gens
+        if gen != 0 or not gens:
+            # if user wants gen 1 from Expr, that's ambiguous
+            # because we don't know the convention in a transparent
+            # way. And if there are not gens because f was a number
+            # then we need the user to indicate what they are looking
+            # for
+            pass
+        elif len(gens) == 1 and gens[0].is_Atom:  # e.g. x or pi
+            # unexpanded poly had only bare gen so
+            # it must be flat (or else know how to
+            # compute with it so use it.
+            return _degree(probe.degree(gens[0]))
+
+        # deal with ambiguity
+        # what free symbols are in f?
+        # We already traversed f in building the probe, so query the
+        # gens of the probe (or the empty gens because probe was not built).
+        free = set().union(*(g.free_symbols for g in gens))
+        if len(free) != 1:
             raise TypeError(filldedent('''
                 To avoid ambiguity, this expression requires either
                 a symbol (not int) generator or a Poly (which identifies
                 the generators).'''))
-        return p.degree(gen)
+        # there was only one free symbol but it appeared in different
+        # ways, e.g. Poly((1 + x)**2 - (1 - x)**2, expand=False) will have
+        # gens = (1 + x, 1 - x) -> free = {x}
+        gen = free.pop()
+        # We already know that f is polynomial in the gens; if
+        # each g in gens is polynomial in gen then f is polynomial
+        # in gen and the degree might be obvious. And if not, then
+        # we will expand with Poly and find the degree.
+    else:
+        # we were told the gen
+        gen = sympify(gen, strict=True)
 
-    gen = sympify(gen, strict=True)
-    if not isinstance(f, Poly) or gen not in f.gens:
-        f = poly_from_expr(f, gen)[0]
+    result = _obvious_leading_query(f, gen)
+    if result is not None:
+        return _degree(result[0])
+
+    # this will raise if it is not polynomial in gen
+    f = poly_from_expr(f, gen)[0]
     return _degree(f.degree(gen))
 
 
@@ -5094,6 +5262,11 @@ def LC(f, *gens, **args):
     """
     options.allowed_flags(args, ['polys'])
 
+    obvious = _obvious_leading_data(f, gens, args)
+    if obvious is not None:
+        _, (_, lc) = obvious
+        return lc
+
     try:
         F, opt = poly_from_expr(f, *gens, **args)
     except PolificationFailed as exc:
@@ -5118,6 +5291,13 @@ def LM(f, *gens, **args):
 
     """
     options.allowed_flags(args, ['polys'])
+
+    obvious = _obvious_leading_data(f, gens, args)
+    if obvious is not None:
+        gen, (degree, _) = obvious
+        if degree is S.NegativeInfinity:
+            return S.One
+        return gen**degree
 
     try:
         F, opt = poly_from_expr(f, *gens, **args)
@@ -5144,6 +5324,13 @@ def LT(f, *gens, **args):
 
     """
     options.allowed_flags(args, ['polys'])
+
+    obvious = _obvious_leading_data(f, gens, args)
+    if obvious is not None:
+        gen, (degree, lc) = obvious
+        if degree is S.NegativeInfinity:
+            return S.Zero
+        return lc*gen**degree
 
     try:
         F, opt = poly_from_expr(f, *gens, **args)
