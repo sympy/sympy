@@ -953,6 +953,13 @@ def test_asin():
     assert asin(Rational(1, 7), evaluate=False).is_positive is True
     assert asin(Rational(-1, 7), evaluate=False).is_positive is False
     assert asin(p).is_positive is None
+
+    # asin(0) == 0 is the only rational value at a rational argument
+    assert asin(k).is_rational is None
+    assert asin(k).is_zero is None
+    assert asin(Rational(1, 7), evaluate=False).is_rational is False
+    assert asin(Symbol('q', rational=True, nonzero=True)).is_rational is False
+
     assert asin(sin(Rational(7, 2))) == Rational(-7, 2) + pi
     assert asin(sin(Rational(-7, 4))) == Rational(7, 4) - pi
     assert unchanged(asin, cos(x))
@@ -1035,6 +1042,12 @@ def test_acos():
     assert acos(Rational(-1, 7), evaluate=False).is_positive is True
     assert acos(Rational(3, 2), evaluate=False).is_positive is False
     assert acos(p).is_positive is None
+
+    # acos(1) == 0 is the only rational value at a rational argument
+    assert acos(k).is_rational is None
+    assert acos(k).is_zero is None
+    assert acos(Rational(1, 7), evaluate=False).is_rational is False
+    assert acos(2*k).is_rational is False
 
     assert acos(2 + p).conjugate() != acos(10 + p)
     assert acos(-3 + n).conjugate() != acos(-3 + n)
@@ -1123,6 +1136,12 @@ def test_atan():
     assert atan(cot(Rational(1, 4))) == Rational(-1, 4) + pi/2
     assert acot(Rational(1, 4)).is_rational is False
 
+    # atan(0) == 0 is the only rational value at a rational argument
+    assert atan(k).is_rational is None
+    assert atan(k).is_zero is None
+    assert atan(Rational(1, 7), evaluate=False).is_rational is False
+    assert atan(2*k + 1).is_rational is False
+
     for s in (x, p, n, np, nn, nz, ep, en, enp, enn, enz):
         if s.is_real or s.is_extended_real is None:
             assert s.is_nonzero is atan(s).is_nonzero
@@ -1153,6 +1172,18 @@ def test_atan_rewrite():
 
     assert atan(-5*I).evalf() == atan(x).rewrite(log).evalf(subs={x:-5*I})
     assert atan(5*I).evalf() == atan(x).rewrite(log).evalf(subs={x:5*I})
+
+
+def test_inverse_trig_zero_at_rational_argument():
+    # asin(0), atan(0) and acos(1) vanish, so an equation with zero must
+    # not be decided for an argument that is only known to be rational
+    for f, root in ((asin, 0), (atan, 0), (acos, 1)):
+        eq = Eq(f(k), 0)
+        assert eq not in (S.true, S.false)
+        assert eq.subs(k, root) is S.true
+        assert eq.subs(k, root + 2) is S.false
+        pw = Piecewise((1, eq), (0, True))
+        assert sum(pw.subs(k, i) for i in range(-2, 3)) == 1
 
 
 def test_atan_fdiff():
