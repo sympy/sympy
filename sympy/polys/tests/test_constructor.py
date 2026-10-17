@@ -252,3 +252,26 @@ def test_issue_25337():
 
     x_algebraic = Symbol('x', algebraic=True)
     assert construct_domain(x_algebraic)[0] == ZZ[x_algebraic]
+
+
+def test_issue_25337_composite_true():
+    x = Symbol('x')
+
+    invalid = [
+        S.ComplexInfinity,
+        S.Infinity,
+        S.NegativeInfinity,
+        S.NaN,
+    ]
+
+    for k in invalid:
+        assert construct_domain([k], composite=True) == (EX, [EX(k)])
+        assert construct_domain([x + k], composite=True) == (EX, [EX(x + k)])
+
+    for k in invalid:
+        assert construct_domain(k, composite=True) == (EX, EX(k))
+        assert construct_domain(x + k, composite=True) == (EX, EX(x + k))
+
+    for k in [sqrt(2), pi, E]:
+        assert construct_domain([k], composite=True)[0] == ZZ[k]
+        assert construct_domain(k, composite=True)[0] == ZZ[k]
