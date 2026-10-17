@@ -607,7 +607,14 @@ def solve(f, *symbols, **flags):
         >>> solve([x < 3, x**2 > 4], x)
         ((-oo < x) & (x < -2)) | ((2 < x) & (x < 3))
         >>> solve([x + y - 3, x > 3], x)
-        (3 < x) & (x < oo) & Eq(x, 3 - y)
+        (3 < x) & (x < oo) & Eq(x + y, 3)
+
+    In the last example, ``x`` and ``y`` are not known to be real so they
+    are not known to be finite. Splitting ``x + y`` would only be valid if
+    both terms are finite or if they are infinite with the same sign, and
+    since that cannot be established the terms are left together (see the
+    example below for how declaring the symbols real recovers the
+    isolated form).
 
     Although checking of assumptions on symbols in relationals
     is not done, setting assumptions will affect how certain
@@ -623,7 +630,9 @@ def solve(f, *symbols, **flags):
     There is currently no algorithm in SymPy that allows you to use
     relationships to resolve more than one variable. So the following
     does not determine that ``q < 0`` (and trying to solve for ``r``
-    and ``q`` will raise an error):
+    and ``q`` will raise an error). Since ``r`` and ``q`` are real they
+    are known to be finite, so unlike in the ``x + y - 3`` example above
+    the equation can be solved for ``r``:
 
         >>> from sympy import symbols
         >>> r, q = symbols('r, q', real=True)
