@@ -503,7 +503,7 @@ class meijerg(TupleParametersBase):
     >>> expand_func(meijerg([[],[]], [[0],[]], -x))
     exp(x)
     >>> hyperexpand(meijerg([[],[]], [[S(1)/2],[0]], (x/2)**2))
-    sin(x)/sqrt(pi)
+    sin(sqrt(x**2))/sqrt(pi)
 
     See Also
     ========
