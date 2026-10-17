@@ -205,7 +205,13 @@ def test_not_empty_in():
 def test_periodicity():
     assert periodicity(sin(2*x), x) == pi
     assert periodicity((-2)*tan(4*x), x) == pi/4
-    assert periodicity(sin(x)**2, x) == 2*pi
+    assert periodicity(sin(x)**2, x) == pi
+    assert periodicity(cos(x)**2, x) == pi
+    assert periodicity(sec(x)**2, x) == pi
+    assert periodicity(csc(x)**2, x) == pi
+    assert periodicity(sin(x)**4, x) == pi
+    assert periodicity((sin(x) + cos(x))**2, x) == pi
+    assert periodicity(sin(x)**2 + 2*cos(x)**2, x) == pi
     assert periodicity(3**tan(3*x), x) == pi/3
     assert periodicity(tan(x)*cos(x), x) == 2*pi
     assert periodicity(sin(x)**(tan(x)), x) == 2*pi
