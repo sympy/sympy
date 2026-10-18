@@ -2403,4 +2403,3 @@ def test_issue_26206():
     assert isinstance(i.ceiling(), Integer)
     assert i.floor() == 5
     assert i.ceiling() == 5
-
