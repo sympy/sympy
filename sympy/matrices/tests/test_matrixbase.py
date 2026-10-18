@@ -3379,15 +3379,6 @@ def test_pinv():
           Matrix([a, b]),
           Matrix([[a, b]])]
 
-    v_row = Matrix([[a, b]])
-    v_row_pinv = v_row.pinv()
-    assert v_row_pinv.subs({a: 0, b: 1}) == Matrix([[0], [1]])
-    assert v_row_pinv.subs({a: 1, b: 0}) == Matrix([[1], [0]])
-
-    M_wide = Matrix([[a, b, 0], [0, 0, 1]])
-    M_wide_pinv = M_wide.pinv()
-    assert M_wide_pinv.subs({a: 0, b: 1}) == Matrix([[0, 0], [1, 0], [0, 1]])
-
     for A in As:
         A_pinv = A.pinv(method="RD")
         AAp = A * A_pinv
@@ -3421,6 +3412,68 @@ def test_pinv():
         comp(i.n(), j.n())
         for i, j in zip(q.subs(reps), w.subs(reps))
         )
+
+
+def test_pinv_vectors():
+    examples = [
+        ([0, 0, 0], [0, 0, 0]),
+        ([0, 3, 4], [0, Rational(3, 25), Rational(4, 25)]),
+        ([1, I], [S.Half, -I/2]),
+        ([1 + I, 2 - I], [(1 - I)/7, (2 + I)/7]),
+        ([S.Half, I/2], [1, -I]),
+        ([sqrt(2), I], [sqrt(2)/3, -I/3]),
+    ]
+    for cls in all_classes:
+        for entries, expected_entries in examples:
+            row = cls([entries])
+            column = cls(expected_entries)
+            for vector, expected in [(row, column), (row.T, column.T)]:
+                result = vector.pinv()
+                assert type(result) is cls
+                assert simplify(result - expected).is_zero_matrix
+                assert simplify(vector * result * vector - vector).is_zero_matrix
+                assert simplify(result * vector * result - result).is_zero_matrix
+                assert simplify((vector * result).H - vector * result).is_zero_matrix
+                assert simplify((result * vector).H - result * vector).is_zero_matrix
+
+
+def test_pinv_symbolic_vectors():
+    norm_squared = a*a.conjugate() + b*b.conjugate() + c*c.conjugate()
+    for cls in all_classes:
+        row = cls([[0, a, b, c, 0]])
+        expected = cls([0, a.conjugate(), b.conjugate(), c.conjugate(), 0]) / norm_squared
+        for vector, result in [(row, expected), (row.T, expected.T)]:
+            assert vector.pinv() == result
+            for index, parameter in enumerate([a, b, c], 1):
+                substitutions = {a: 0, b: 0, c: 0}
+                substitutions[parameter] = 1 + I
+                specialized = result.subs(substitutions, simultaneous=True)
+                expected_values = [0]*5
+                expected_values[index] = (1 - I)/2
+                axis_result = cls(expected_values)
+                if vector.cols == 1:
+                    axis_result = axis_result.T
+                assert simplify(specialized - axis_result).is_zero_matrix
+                assert simplify(vector.subs(substitutions).pinv() - axis_result).is_zero_matrix
+            assert vector.subs({a: 0, b: 0, c: 0}).pinv() == cls.zeros(*result.shape)
+
+
+def test_pinv_vector_edge_cases():
+    angle = Symbol('angle', real=True)
+    for cls in all_classes:
+        for vector in [cls([[0]]), cls([[2*I]]), cls.zeros(0, 1), cls.zeros(1, 0)]:
+            result = vector.pinv()
+            assert type(result) is cls
+            assert result == (cls([[-I/2]]) if vector == cls([[2*I]]) else vector.H)
+        vector = cls([[sin(angle), cos(angle)]])
+        assert trigsimp(vector.pinv()) == vector.T
+        assert vector.pinv().subs(angle, 0) == cls([0, 1])
+        vector = cls([[sin(angle)**2 + cos(angle)**2 - 1, 0]])
+        assert vector.is_zero_matrix is None
+        assert vector.pinv() == cls.zeros(2, 1)
+        assert vector.T.pinv() == cls.zeros(1, 2)
+        vector = cls([[0.1, 0.2]])
+        assert (vector.pinv() - cls([2, 4])).norm() < 1e-12
 
 
 @slow
