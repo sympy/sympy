@@ -1291,6 +1291,14 @@ def test_Pow_is_even_odd():
     ir = Symbol('ir', irrational=True)
     assert (ir**2).is_even is None
     assert (ir**2).is_odd is None
+    assert (ir**3).is_even is None
+    assert (ir**3).is_odd is None
+
+    y = Symbol('y', integer=False)
+    assert (y**2).is_even is None
+    assert (y**2).is_odd is None
+    assert (y**3).is_even is None
+    assert (y**3).is_odd is None
 
 
 def test_Pow_is_negative_positive():

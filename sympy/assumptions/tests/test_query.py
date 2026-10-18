@@ -1365,6 +1365,8 @@ def test_even_query():
     assert _ask_recursive(Q.even(2**k), Q.even(k)) is None
     assert _ask_recursive(Q.even(x**2)) is None
     assert _ask_recursive(Q.even(x**2), Q.irrational(x)) is None
+    assert _ask_recursive(Q.even(x**3), Q.irrational(x)) is None
+    assert _ask_recursive(Q.even(x**2), ~Q.integer(x)) is None
 
     assert _ask_recursive(Q.even(k**m), Q.even(k) & Q.integer(m) & ~Q.negative(m)) is None
     assert _ask_recursive(Q.even(n**m), Q.odd(n) & Q.integer(m) & ~Q.negative(m)) is False
@@ -1884,6 +1886,8 @@ def test_odd_query():
     assert _ask_recursive(Q.odd(n**2), Q.odd(n)) is True
     assert _ask_recursive(Q.odd(3**k), Q.even(k)) is None
     assert _ask_recursive(Q.odd(x**2), Q.irrational(x)) is None
+    assert _ask_recursive(Q.odd(x**3), Q.irrational(x)) is None
+    assert _ask_recursive(Q.odd(x**2), ~Q.integer(x)) is None
 
     assert _ask_recursive(Q.odd(k**m), Q.even(k) & Q.integer(m) & ~Q.negative(m)) is None
     assert _ask_recursive(Q.odd(n**m), Q.odd(n) & Q.integer(m) & ~Q.negative(m)) is True
