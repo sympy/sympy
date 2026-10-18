@@ -12,7 +12,7 @@ from sympy.ntheory import sieve
 from sympy.ntheory.residue_ntheory import binomial_mod
 from sympy.polys.polytools import Poly
 
-from math import factorial as _factorial, prod, sqrt as _sqrt
+from math import factorial as _factorial, prod, sqrt as _sqrt, gcd
 
 class CombinatorialFunction(DefinedFunction):
     """Base class for combinatorial functions. """
