@@ -221,10 +221,17 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if expr.is_number:
         return _EvenPredicate_number(expr, assumptions)
+    if _ask_recursive(Q.integer(expr), assumptions) is False:
+        return False
     if _ask_recursive(Q.integer(expr.exp), assumptions):
         if _ask_recursive(Q.positive(expr.exp), assumptions):
             if _ask_recursive(Q.integer(expr.base), assumptions):
                 return _ask_recursive(Q.even(expr.base), assumptions)
+            if _ask_recursive(Q.algebraic(expr.base), assumptions) is False:
+                return False
+            if _ask_recursive(Q.rational(expr.base), assumptions) and \
+                    _ask_recursive(Q.integer(expr.base), assumptions) is False:
+                return False
         elif _ask_recursive(~Q.negative(expr.exp) & Q.odd(expr.base), assumptions):
             return False
         elif expr.base is S.NegativeOne:

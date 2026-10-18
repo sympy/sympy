@@ -1367,6 +1367,8 @@ def test_even_query():
     assert _ask_recursive(Q.even(x**2), Q.irrational(x)) is None
     assert _ask_recursive(Q.even(x**3), Q.irrational(x)) is None
     assert _ask_recursive(Q.even(x**2), ~Q.integer(x)) is None
+    assert _ask_recursive(Q.even(x**2), Q.transcendental(x)) is False
+    assert _ask_recursive(Q.even(x**2), Q.rational(x) & ~Q.integer(x)) is False
 
     assert _ask_recursive(Q.even(k**m), Q.even(k) & Q.integer(m) & ~Q.negative(m)) is None
     assert _ask_recursive(Q.even(n**m), Q.odd(n) & Q.integer(m) & ~Q.negative(m)) is False
