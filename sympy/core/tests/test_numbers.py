@@ -2342,3 +2342,65 @@ def test_issue_19988_Float_pickle_precision():
     original = Float(pi, dps=100)
     unpickled = pickle.loads(pickle.dumps(original))
     assert original._prec == unpickled._prec
+
+
+def test_issue_26206():
+    import math
+    from sympy import Rational, Float, Integer
+
+    r = Rational(3, 2)
+    assert type(math.floor(r)) is int
+    assert type(math.ceil(r)) is int
+    assert type(math.trunc(r)) is int
+    assert math.floor(r) == 1
+    assert math.ceil(r) == 2
+    assert math.trunc(r) == 1
+    assert isinstance(r.floor(), Integer)
+    assert isinstance(r.ceiling(), Integer)
+    assert r.floor() == 1
+    assert r.ceiling() == 2
+
+    rn = Rational(-3, 2)
+    assert type(math.floor(rn)) is int
+    assert type(math.ceil(rn)) is int
+    assert type(math.trunc(rn)) is int
+    assert math.floor(rn) == -2
+    assert math.ceil(rn) == -1
+    assert math.trunc(rn) == -1
+    assert isinstance(rn.floor(), Integer)
+    assert isinstance(rn.ceiling(), Integer)
+
+    f = Float('2.7')
+    assert type(math.floor(f)) is int
+    assert type(math.ceil(f)) is int
+    assert type(math.trunc(f)) is int
+    assert math.floor(f) == 2
+    assert math.ceil(f) == 3
+    assert math.trunc(f) == 2
+    assert isinstance(f.floor(), Integer)
+    assert isinstance(f.ceiling(), Integer)
+    assert f.floor() == 2
+    assert f.ceiling() == 3
+
+    fn = Float('-2.7')
+    assert type(math.floor(fn)) is int
+    assert type(math.ceil(fn)) is int
+    assert type(math.trunc(fn)) is int
+    assert math.floor(fn) == -3
+    assert math.ceil(fn) == -2
+    assert math.trunc(fn) == -2
+    assert isinstance(fn.floor(), Integer)
+    assert isinstance(fn.ceiling(), Integer)
+
+    i = Integer(5)
+    assert type(math.floor(i)) is int
+    assert type(math.ceil(i)) is int
+    assert type(math.trunc(i)) is int
+    assert math.floor(i) == 5
+    assert math.ceil(i) == 5
+    assert math.trunc(i) == 5
+    assert isinstance(i.floor(), Integer)
+    assert isinstance(i.ceiling(), Integer)
+    assert i.floor() == 5
+    assert i.ceiling() == 5
+
