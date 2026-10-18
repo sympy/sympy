@@ -63,7 +63,7 @@ def test_convolution():
     assert convolution([1, 0, 1], [1, 1]) == convolution(
         [S.One, S.Zero, S.One], [S.One, S.One])
 
-        # sympy Integer/Zero
+    # sympy Integer/Zero
     r = convolution(
         [S.Zero, S.One, S.Zero, Rational(-1, 6), S.Zero, Rational(1, 120)],
         [S.One,  S.Zero, Rational(-1, 2), S.Zero, Rational(1, 24), S.Zero]
