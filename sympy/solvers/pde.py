@@ -2032,7 +2032,7 @@ class _SeparationOfVariables(_BVPSolver):
         Identifies some instances of resonance in the Y-conditions
         of an Elliptic PDE.
 
-        The hardcoded equations are derived from the condition matrix's 
+        The hardcoded equations are derived from the condition matrix's
         determinant. The equation `Mc = b`, where `M` is the condition matrix,
         `c` is the coefficient vector, and `b` is the condition data, has a
         unique solution for `c` iff the determinant of `M` is nonzero.
