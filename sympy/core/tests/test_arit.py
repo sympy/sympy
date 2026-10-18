@@ -1118,10 +1118,16 @@ def test_Pow_is_rational():
     assert (ir**(-2)).is_rational is None
     assert (ir**2).is_prime is None
 
-    # but a specific irrational number raised to a nonzero integer
-    # power is irrational
-    assert ((1 - 2*sqrt(2))**(-1)).is_rational is False
+    # but a specific irrational number in canonical form raised to a
+    # nonzero integer power is irrational
     assert (pi**(-2)).is_rational is False
+
+    # A sum need not be in canonical form, though: 1/(sqrt(2) - 1) - 1
+    # equals sqrt(2), whose square is rational, so nothing can be
+    # deduced for a power of an Add base
+    b = 1/(sqrt(2) - 1) - 1
+    assert (b**2).is_rational is None
+    assert ((1 - 2*sqrt(2))**(-1)).is_rational is None
 
 
 def test_Pow_is_real():
