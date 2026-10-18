@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 import pathlib
 from pathlib import Path
 import pytest
@@ -212,3 +213,36 @@ class TestUpdateArgsWithPaths:
         assert len(args) == len(expected_args)
         for arg, expected in zip(sorted(args), expected_args):
             assert Path(expected).as_posix() in Path(arg).as_posix()
+
+
+    @staticmethod
+    def test_keyword_matches_only_module_level_tests(tmp_path):
+        testfile = tmp_path / 'test_selection.py'
+        testfile.write_text(
+            'def testfalse(): pass\n'
+            'def test_valid(): pass\n'
+            'def outer():\n'
+            '    def test_false(): pass\n'
+            'def test_other(): pass\n',
+            encoding='utf-8',
+        )
+
+        args = update_args_with_paths(
+            paths=[str(testfile)],
+            keywords=('test',),
+            args=[],
+        )
+
+        assert [os.path.normcase(a) for a in args] == [
+            os.path.normcase(f'{testfile}::test_valid'),
+            os.path.normcase(f'{testfile}::test_other'),
+        ]
+
+        args = update_args_with_paths(
+            paths=[str(testfile)],
+            keywords=('nonexistent',),
+            args=[],
+        )
+        assert [os.path.normcase(a) for a in args] == [
+            '-k', '""', os.path.normcase(str(testfile))
+        ]
