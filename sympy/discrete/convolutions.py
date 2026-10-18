@@ -111,6 +111,7 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
                 (ia, ma), (ib, mb) = da, db
                 den = ma*mb
                 ls = convolution_int(ia, ib)
+                ls.extend([0]*(len(a) + len(b) - 1 - len(ls)))
                 if den != 1:
                     ls = [Rational(i, den) for i in ls]
         if ls is None:
