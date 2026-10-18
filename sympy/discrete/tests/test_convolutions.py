@@ -63,6 +63,12 @@ def test_convolution():
                                  Rational(14, 5)]
 
 
+def test_convolution_trailing_zeros_issue_30770():
+    assert convolution([1, 0], [1, 1]) == [1, 1, 0]
+    assert convolution([0, 0], [1, 2]) == [0, 0, 0]
+    # check that cyclic convolution preserves trailing zeros
+    assert convolution([1, 0], [1, 1], cycle=3) == [1, 1, 0]
+
 def test_cyclic_convolution():
     # fft
     a = [1, Rational(5, 3), sqrt(3), Rational(7, 5)]
