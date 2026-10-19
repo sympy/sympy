@@ -2389,3 +2389,15 @@ def test_issue_29637():
     F = integrate(f, x)
     assert not F.has(Integral)
     assert (F.diff(x) - f).cancel() == 0
+
+def test_reverse_limits():
+    x, y, a, b, c, d = symbols('x y a b c d')
+    I = Integral(x**2, (x, a, b))
+    assert I.reverse_limits() == Integral(-x**2, (x, b, a))
+    assert I.reverse_limits(x) == I.reverse_limits(0)
+    assert I.reverse_limits().reverse_limits() == I
+    assert (I.reverse_limits().doit() - I.doit()).simplify() == 0
+    J = Integral(x*y, (x, a, b), (y, c, d))
+    assert J.reverse_limits(y) == Integral(-x*y, (x, a, b), (y, d, c))
+    assert J.reverse_limits(x, y) == Integral(x*y, (x, b, a), (y, d, c))
+    assert Integral(x, x).reverse_limits() == Integral(x, x)

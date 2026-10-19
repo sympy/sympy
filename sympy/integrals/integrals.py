@@ -560,6 +560,52 @@ class Integral(AddWithLimits):
 
         return self.func(newfunc, *newlimits)
 
+    def reverse_limits(self, *indices):
+        r"""
+        Reverse the limits of integration, compensating with a sign change.
+
+        Explanation
+        ===========
+
+        Uses `\int_a^b f\,dx = -\int_b^a f\,dx`. The selectors in ``indices``
+        are either integration variables or numerical positions in
+        ``self.limits``. With no arguments, all definite limits are reversed.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, y, a, b, c, d
+        >>> Integral(x**2, (x, a, b)).reverse_limits()
+        Integral(-x**2, (x, b, a))
+        >>> Integral(x*y, (x, a, b), (y, c, d)).reverse_limits(y)
+        Integral(-x*y, (x, a, b), (y, d, c))
+        >>> Integral(x*y, (x, a, b), (y, c, d)).reverse_limits(x, y)
+        Integral(x*y, (x, b, a), (y, d, c))
+
+        See Also
+        ========
+
+        sympy.concrete.summations.Sum.reverse_order, transform
+        """
+        if not indices:
+            indices = range(len(self.limits))
+        positions = set()
+        for i in indices:
+            if isinstance(i, int):
+                positions.add(i)
+            else:
+                positions.add(self.variables.index(i))
+
+        sign = 1
+        limits = []
+        for i, lim in enumerate(self.limits):
+            if i in positions and len(lim) == 3:
+                sign = -sign
+                lim = (lim[0], lim[2], lim[1])
+            limits.append(lim)
+        return self.func(sign*self.function, *limits)
+
     def doit(self, **hints):
         """
         Perform the integration using any hints given.
