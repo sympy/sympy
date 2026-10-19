@@ -56,10 +56,6 @@ BLACKLIST_DEFAULT = (
 )
 
 
-class NoTestsMatched(Exception):
-    """No tests matched the requested keywords."""
-
-
 class PytestPluginManager:
     """Module names for pytest plugins used by SymPy."""
     PYTEST: str = 'pytest'
@@ -105,7 +101,7 @@ def update_args_with_paths(
 ) -> list[str]:
     """Appends valid paths and flags to the args `list` passed to `pytest.main`.
 
-    Raise NoTestsMatched if no tests match the requested keywords.
+    Returns [] if no tests match the requested keywords.
 
     The are three different types of "path" that a user may pass to the `paths`
     positional arguments, all of which need to be handled slightly differently:
@@ -223,7 +219,7 @@ def update_args_with_paths(
                             )
                             matches.extend(test_matches)
         if not matches:
-            raise NoTestsMatched
+            return []
         args.extend(matches)
     else:
         args.extend(candidate_paths)
@@ -467,9 +463,8 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
     else:
         keywords = ()
 
-    try:
-        args = update_args_with_paths(paths, keywords, args)
-    except NoTestsMatched:
+    args = update_args_with_paths(paths, keywords, args)
+    if not args:
         print('No matches found')
         return pytest.ExitCode.NO_TESTS_COLLECTED
     exit_code = pytest.main(args)

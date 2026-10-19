@@ -6,7 +6,6 @@ import pytest
 
 from sympy.testing.runtests_pytest import (
     make_absolute_path,
-    NoTestsMatched,
     sympy_dir,
     update_args_with_paths,
 )
@@ -239,8 +238,7 @@ class TestUpdateArgsWithPaths:
             os.path.normcase(f'{testfile}::test_other'),
         ]
 
-        with pytest.raises(NoTestsMatched):
-            update_args_with_paths(
+        assert [] == update_args_with_paths(
             paths=[str(testfile)],
             keywords=('nonexistent',),
             args=[],
