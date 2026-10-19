@@ -238,11 +238,8 @@ class TestUpdateArgsWithPaths:
             os.path.normcase(f'{testfile}::test_other'),
         ]
 
-        args = update_args_with_paths(
+        assert [] == update_args_with_paths(
             paths=[str(testfile)],
             keywords=('nonexistent',),
             args=[],
         )
-        assert [os.path.normcase(a) for a in args] == [
-            '-k', '""', os.path.normcase(str(testfile))
-        ]
