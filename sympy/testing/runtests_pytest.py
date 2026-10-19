@@ -172,9 +172,9 @@ def update_args_with_paths(
         matches = []
         source = pathlib.Path(filepath).read_text(encoding='utf-8')
         for line in source.splitlines():
-            if line.lstrip().startswith('def '):
+            if line.startswith('def test_'):
                 for kw in keywords:
-                    if line.lower().find(kw.lower()) != -1:
+                    if kw.lower() in line.lower():
                         test_name = line.split(' ')[1].split('(')[0]
                         full_test_path = filepath + '::' + test_name
                         matches.append(full_test_path)
@@ -217,6 +217,10 @@ def update_args_with_paths(
                                 absolute_filepath,
                             )
                             matches.extend(test_matches)
+        if not matches:
+            # returning '""' as something that will not match anything
+            # but keep candidates so we know what was searched
+            return args + ['-k', '""', *candidate_paths]
         args.extend(matches)
     else:
         args.extend(candidate_paths)
