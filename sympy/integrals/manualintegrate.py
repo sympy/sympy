@@ -2812,8 +2812,42 @@ def euler_substitution_rule(integral : IntegralInfo):
         numer, denom = rewritten.as_numer_denom()
         if numer.as_poly(x, s) is None or denom.as_poly(x, s) is None:
             return None
-        # Euler's second substitution (u = sqrt(R) + sqrt(c)*x)
         u = Dummy("u")
+        # When c0 < 0, using sqrt(c0) introduces the imaginary unit I,
+        # which can lead to branch-cut discontinuities across real domains.
+        # Prefer substitutions with purely real expressions:
+        # 1. When a0 > 0: use Euler's substitution sqrt(R) = u*x + sqrt(a0)
+        #    => u = (sqrt(R) - sqrt(a0))/x, real for real x where R > 0.
+        # 2. When a0 <= 0 and roots exist (disc > 0): use Euler's third
+        #    substitution sqrt(R) = u*(x - alpha) => u = sqrt(R)/(x - alpha).
+        if c0.is_negative:
+            if a0.is_positive:
+                sqrt_a0 = sqrt(a0)
+                x_u = (2*u*sqrt_a0 - b0)/(c0 - u**2)
+                s_u = (u**2*sqrt_a0 - b0*u + c0*sqrt_a0)/(c0 - u**2)
+                dx_u = 2*(sqrt_a0*(u**2 + c0) - b0*u)/(c0 - u**2)**2
+                substituted = rewritten.xreplace({x: x_u, s: s_u}) * dx_u
+                substep = yield IntegralInfo(substituted, u)
+                if substep is not None and not substep.contains_dont_know():
+                    u_func = (sqrt(base0) - sqrt_a0)/x
+                    return URule(integrand, x, u, u_func, substep)
+            else:
+                disc = b0**2 - 4*a0*c0
+                if disc.is_positive:
+                    sqrt_disc = sqrt(disc)
+                    alpha = (-b0 - sqrt_disc)/(2*c0)
+                    beta = (-b0 + sqrt_disc)/(2*c0)
+                    x_u = (c0*beta - u**2*alpha)/(c0 - u**2)
+                    s_u = c0*(beta - alpha)*u/(c0 - u**2)
+                    dx_u = 2*c0*(beta - alpha)*u/(c0 - u**2)**2
+                    substituted = rewritten.xreplace({x: x_u, s: s_u}) * dx_u
+                    substep = yield IntegralInfo(substituted, u)
+                    if (substep is not None
+                            and not substep.contains_dont_know()):
+                        u_func = sqrt(base0)/(x - alpha)
+                        return URule(integrand, x, u, u_func, substep)
+
+        # Euler's substitution (u = sqrt(R) + sqrt(c)*x) for c0 > 0 / symbolic
         sqrt_c0 = sqrt(c0)
         x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
         s_u = u - sqrt_c0*x_u
