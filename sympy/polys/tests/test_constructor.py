@@ -267,6 +267,7 @@ def test_issue_25337_composite_true():
     for k in invalid:
         assert construct_domain([k], composite=True) == (EX, [EX(k)])
         assert construct_domain([x + k], composite=True) == (EX, [EX(x + k)])
+        assert construct_domain([x, k], composite=True) == (EX, [EX(x), EX(k)])
 
     for k in invalid:
         assert construct_domain(k, composite=True) == (EX, EX(k))
