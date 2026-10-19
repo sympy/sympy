@@ -56,6 +56,10 @@ BLACKLIST_DEFAULT = (
 )
 
 
+class NoTestsMatched(Exception):
+    """No tests matched the requested keywords."""
+
+
 class PytestPluginManager:
     """Module names for pytest plugins used by SymPy."""
     PYTEST: str = 'pytest'
@@ -100,6 +104,8 @@ def update_args_with_paths(
     args: list[str],
 ) -> list[str]:
     """Appends valid paths and flags to the args `list` passed to `pytest.main`.
+
+    Raise NoTestsMatched if no tests match the requested keywords.
 
     The are three different types of "path" that a user may pass to the `paths`
     positional arguments, all of which need to be handled slightly differently:
@@ -201,7 +207,7 @@ def update_args_with_paths(
     else:
         candidate_paths.extend(valid_testpaths_default)
 
-    if keywords is not None and keywords != ():
+    if keywords:
         matches = []
         for path in candidate_paths:
             if is_tests_file(path):
@@ -213,14 +219,11 @@ def update_args_with_paths(
                         absolute_filepath = str(pathlib.Path(root, filename))
                         if is_tests_file(absolute_filepath):
                             test_matches = find_tests_matching_keywords(
-                                keywords,
-                                absolute_filepath,
+                                keywords, absolute_filepath
                             )
                             matches.extend(test_matches)
         if not matches:
-            # returning '""' as something that will not match anything
-            # but keep candidates so we know what was searched
-            return args + ['-k', '""', *candidate_paths]
+            raise NoTestsMatched
         args.extend(matches)
     else:
         args.extend(candidate_paths)
@@ -464,7 +467,11 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
     else:
         keywords = ()
 
-    args = update_args_with_paths(paths, keywords, args)
+    try:
+        args = update_args_with_paths(paths, keywords, args)
+    except NoTestsMatched:
+        print('No matches found')
+        return pytest.ExitCode.NO_TESTS_COLLECTED
     exit_code = pytest.main(args)
     return exit_code
 
