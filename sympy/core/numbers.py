@@ -952,15 +952,6 @@ class Float(Number):
     def ceiling(self):
         return Integer(int(_to_int(_mpf_ceil(self._mpf_, self._prec))))
 
-    def __floor__(self):
-        return int(self.floor())
-
-    def __ceil__(self):
-        return int(self.ceiling())
-
-    def __trunc__(self):
-        return int(self)
-
     @property
     def num(self):
         return _mpf(self._mpf_)
@@ -1612,15 +1603,6 @@ class Rational(Number):
     def ceiling(self):
         return -Integer(-self.p // self.q)
 
-    def __floor__(self):
-        return int(self.floor())
-
-    def __ceil__(self):
-        return int(self.ceiling())
-
-    def __trunc__(self):
-        return int(self)
-
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -1878,15 +1860,6 @@ class Integer(Rational):
 
     def ceiling(self):
         return Integer(self.p)
-
-    def __floor__(self):
-        return int(self.floor())
-
-    def __ceil__(self):
-        return int(self.ceiling())
-
-    def __trunc__(self):
-        return int(self)
 
     def __neg__(self):
         return Integer(-self.p)
