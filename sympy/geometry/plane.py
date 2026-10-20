@@ -292,7 +292,12 @@ class Plane(GeometryEntity):
 
         if isinstance(o, (Segment3D, Ray3D)):
             a, b = o.p1, o.p2
-            pi, = self.intersection(Line3D(a, b))
+            inter = self.intersection(Line3D(a, b))
+            if not inter:
+                return self.distance(a)
+            if not isinstance(inter[0], Point3D):
+                return S.Zero
+            pi = inter[0]
             if pi in o:
                 return self.distance(pi)
             elif a in Segment3D(pi, b):
