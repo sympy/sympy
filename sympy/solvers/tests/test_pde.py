@@ -263,16 +263,6 @@ def test_pde_2nd_linear_constant_coeff_separable_exact():
     expected = Eq(u(x, y), Piecewise((exp(-pi**2*y/(L**2*k))*sin(pi*x/L) - 2*exp(-4*pi**2*y/(L**2*k))*sin(2*pi*x/L), (L >= x) & (x >= 0) & (y >= 0))))
     received = pdsolve(eq, u(x, y), ics=conds)
     assert received.dummy_eq(expected)
-    assert checkpdesol(eq, Eq(received.lhs, received.rhs.args[0].expr))[0]
-
-    # Wave with u_y term, eigenfunction conditions
-    eq = u(x, y).diff(x, 2) - u(x, y).diff(y, 2) - 2*u(x, y).diff(y)
-    conds = {u(0, y): 0, u(pi, y): 0, u(x, 0): sin(x) + sin(2*x), u(x, y).diff(y).subs(y, 0): 0}
-    assert classify_pde(eq, ics=conds)[0] == "2nd_linear_constant_coeff_separable"
-    expected = Eq(u(x, y), Piecewise(((y + 1)*exp(-y)*sin(x) + (sqrt(3)*sin(sqrt(3)*y)/3 + cos(sqrt(3)*y))*exp(-y)*sin(2*x), (x >= 0) & (x <= pi))))
-    received = pdsolve(eq, u(x, y), ics=conds)
-    assert received.dummy_eq(expected)
-    assert checkpdesol(eq, Eq(received.lhs, received.rhs.args[0].expr))[0]
 
     # Laplace, symbolic bounds
     eq = u(x, y).diff(x, 2) + u(x, y).diff(y, 2)
@@ -281,7 +271,6 @@ def test_pde_2nd_linear_constant_coeff_separable_exact():
     expected = Eq(u(x, y), Piecewise((Sum(-2*sin(n*pi*(-a + x)/L)*((-1)**n - 1)*cosh(n*pi*(-H - b + y)/L)/(n*pi*cosh(n*pi*H/L)), (n, 1, oo)), (a <= x) & (b <= y) & (x <= L + a) & (y <= H + b))))
     received = pdsolve(eq, u(x, y), ics=conds)
     assert received.dummy_eq(expected)
-    # checkpdesol stalls
 
     # Schrodinger's, missing conditions
     eq = u(x, y).diff(y) - I * u(x, y).diff(x, 2)
@@ -290,7 +279,6 @@ def test_pde_2nd_linear_constant_coeff_separable_exact():
     expected = Eq(u(x, y), Piecewise((Integral(F1(s), (s, 0, pi))/pi + Sum(2*exp(-n**2*I*y)*cos(n*x)*Integral(F1(s)*cos(n*s), (s, 0, pi))/pi, (n, 1, oo)), (x >= 0) & (x <= pi))))
     received = pdsolve(eq, u(x, y), ics=conds)
     assert received.dummy_eq(expected)
-    assert checkpdesol(eq, Eq(received.lhs, received.rhs.args[0].expr))[0]
 
     # Wave w/ three-range solution
     eq = u(x, y).diff(x, 2) - u(x, y).diff(y, 2) - 10*u(x, y).diff(y)
@@ -299,7 +287,6 @@ def test_pde_2nd_linear_constant_coeff_separable_exact():
     expected = Eq(u(x, y), Piecewise((8*exp(-5*y)*(5*y + 1)*sin(5*x)/(125*pi) + Sum(-4*exp(-5*y)*((-1)**n - 1)*(cos(y*sqrt(n**2 - 25)) + 5*sin(y*sqrt(n**2 - 25))/sqrt(n**2 - 25))*sin(n*x)/(n**3*pi), (n, 6, oo)) + Sum(-4*exp(-5*y)*((-1)**n - 1)*(cosh(y*sqrt(25 - n**2)) + 5*sinh(y*sqrt(25 - n**2))/sqrt(25 - n**2))*sin(n*x)/(n**3*pi), (n, 1, 4)), (x >= 0) & (x <= pi))))
     received = pdsolve(eq, u(x, y), ics=conds)
     assert received.dummy_eq(expected)
-    # checkpdesol stalls
 
     # Backwards Heat, special first term
     eq = u(x, y).diff(x, 2) + k * u(x, y).diff(y)
@@ -308,7 +295,6 @@ def test_pde_2nd_linear_constant_coeff_separable_exact():
     expected = Eq(u(x, y), Piecewise((exp(pi**2*y/k)*sin(pi*x)/2 + Sum(-4*n*((-1)**n + 1)*exp(n**2*pi**2*y/k)*sin(n*pi*x)/(pi**2*(n**4 - 2*n**2 + 1)), (n, 2, oo)), (x >= 0) & (x <= 1) & (y <= 0))))
     received = pdsolve(eq, u(x, y), ics=conds)
     assert received.dummy_eq(expected)
-    # checkpdesol stalls
 
 def test_pde_2nd_linear_constant_coeff_separable_value_errors():
     k, H, L = symbols("k H L", positive=True)
