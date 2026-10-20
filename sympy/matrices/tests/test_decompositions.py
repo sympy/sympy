@@ -396,6 +396,23 @@ def test_pinv_succeeds_with_rank_decomposition_method():
         assert AAp.H == AAp
         assert ApA.H == ApA
 
+
+def test_pinv_symbolic_vectors():
+    # Issue #30759: Matrix.pinv() on symbolic row vectors introduces artificial division-by-zero singularities
+    from sympy.functions.elementary.complexes import conjugate
+    m_row = Matrix([[x, y]])
+    p_row = m_row.pinv()
+    expected_row = Matrix([[conjugate(x)/(x*conjugate(x) + y*conjugate(y))], [conjugate(y)/(x*conjugate(x) + y*conjugate(y))]])
+    assert p_row == expected_row
+    assert p_row.subs({x: 0, y: 1}) == Matrix([[0], [1]])
+    assert p_row.subs({x: 1, y: 0}) == Matrix([[1], [0]])
+
+    m_col = Matrix([[x], [y]])
+    p_col = m_col.pinv()
+    expected_col = Matrix([[conjugate(x)/(x*conjugate(x) + y*conjugate(y)), conjugate(y)/(x*conjugate(x) + y*conjugate(y))]])
+    assert p_col == expected_col
+    assert p_col.subs({x: 0, y: 1}) == Matrix([[0, 1]])
+
 def test_rank_decomposition():
     a = Matrix(0, 0, [])
     c, f = a.rank_decomposition()
