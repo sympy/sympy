@@ -11,6 +11,14 @@ class BasePolynomialError(Exception):
     def new(self, *args):
         raise NotImplementedError("abstract base class")
 
+    def __eq__(self, other):
+        if type(self) is not type(other):
+            return NotImplemented
+        return self.args == other.args
+
+    def __hash__(self):
+        return hash((type(self), self.args))
+
 @public
 class ExactQuotientFailed(BasePolynomialError):
 

@@ -445,6 +445,7 @@ def test_evaluate_false():
         '2 - 2**2': Add(2, Mul(-1, Pow(2, 2, evaluate=False), evaluate=False), evaluate=False),
         '-(2*3)': Mul(Integer(-1), Mul(Integer(2), Integer(3), evaluate=False), evaluate=False),
         '-(x + 2)': Mul(Integer(-1), Add(Symbol('x'), Integer(2), evaluate=False), evaluate=False),
+        '-(2 - x)': Mul(Integer(-1), Add(Integer(2), Mul(Integer(-1), Symbol('x'), evaluate=False), evaluate=False), evaluate=False),
         '-(2*3/3)': Mul(Integer(-1), Mul(Integer(2), Integer(3), Pow(Integer(3), Integer(-1), evaluate=False), evaluate=False), evaluate=False)
     }
     for case, result in cases.items():

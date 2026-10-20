@@ -8,7 +8,7 @@ from sympy.core.symbol import symbols
 from sympy.core.relational import Ne, Eq, Unequality
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false, Not
 from sympy.logic.inference import literal_symbol, \
-     pl_true, satisfiable, valid, entails, PropKB
+     pl_true, satisfiable, valid, entails, KB, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
@@ -35,6 +35,9 @@ def test_literal():
     assert literal_symbol(False) is False
     assert literal_symbol(A) is A
     assert literal_symbol(~A) is A
+    raises(ValueError, lambda: literal_symbol(A & B))
+    raises(ValueError, lambda: literal_symbol(A | B))
+    raises(ValueError, lambda: literal_symbol(~(A & B)))
 
 
 def test_find_pure_symbol():
@@ -167,16 +170,26 @@ def test_satsolver_propagate():
     assert (s.val(1), s.val(2)) == (1, 2)
     assert s.solve() == IpasirStatus.SATISFIABLE
 
-    # An assignment of every variable is only a model if it holds in the LRA
-    # theory as well, so propagating on its own cannot report satisfiable.
+    # The bounds are asserted into the LRA theory as the literals are
+    # propagated, so a conflict the theory finds is a conflict like any other.
     x = symbols('x')
     enc = EncodedCNF()
     enc.from_cnf(CNF.from_prop((x > 1) & (x < 0)))
     lra, conflicts = LRASolver.from_encoded_cnf(enc)
     s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols,
                   lra_theory=lra)
-    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.propagate() == IpasirStatus.UNSATISFIABLE
     assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # An assignment of every variable is only a model if it holds in the LRA
+    # theory as well, so propagating on its own cannot report satisfiable.
+    enc = EncodedCNF()
+    enc.from_cnf(CNF.from_prop((x > 1) & (x < 5)))
+    lra, conflicts = LRASolver.from_encoded_cnf(enc)
+    s = SATSolver(enc.data + conflicts, enc.variables, set(), enc.symbols,
+                  lra_theory=lra)
+    assert s.propagate() == IpasirStatus.UNKNOWN
+    assert s.solve() == IpasirStatus.SATISFIABLE
 
     # Propagating is idempotent.
     s = SATSolver([{1}, {-1, 2}, {3, 4}], {1, 2, 3, 4}, set())
@@ -216,6 +229,63 @@ def test_satsolver_solve_after_propagate():
     s = SATSolver([{1, 2}, {1, -2}, {-1, 2}, {-1, -2}], {1, 2}, set())
     assert s.propagate() == IpasirStatus.UNKNOWN
     assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+
+def test_satsolver_assume():
+    # The same solver answers both questions, one assumption at a time.
+    s = SATSolver([{1, 2}, {-1, -2}], {1, 2}, set())
+    s.assume(1)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (1, -2)
+    s.assume(-1)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert (s.val(1), s.val(2)) == (-1, 2)
+
+    # Assumptions constrain one search only, so dropping them makes the
+    # solver answer about the clauses on their own again.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.assume(-1)
+    s.assume(-2)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+    assert s.solve() == IpasirStatus.SATISFIABLE
+
+    # Assuming a literal the clauses contradict fails, and assuming one they
+    # imply changes nothing.
+    s = SATSolver([{1}, {-1, 2}], {1, 2}, set())
+    s.assume(-1)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+    s.assume(2)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(2) == 2
+
+    # Assumptions that contradict each other cannot be satisfied either.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.assume(1)
+    s.assume(-1)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # Selector variables, which is what assumptions are for: 3 guards the
+    # clause {1} and 4 guards {-1}, and assuming one activates it.
+    s = SATSolver([{1, -3}, {-1, -4}], {1, 2, 3, 4}, set())
+    s.assume(3)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(1) == 1
+    s.assume(4)
+    assert s.solve() == IpasirStatus.SATISFIABLE
+    assert s.val(1) == -1
+    s.assume(3)
+    s.assume(4)
+    assert s.solve() == IpasirStatus.UNSATISFIABLE
+
+    # Assumptions are not clauses, so the root level knows nothing of them.
+    s = SATSolver([{1, 2}], {1, 2}, set())
+    s.assume(1)
+    assert s.fixed(1) == 0
+    assert s.propagate() == IpasirStatus.UNKNOWN
+
+    # Only a literal of an existing variable can be assumed.
+    raises(ValueError, lambda: s.assume(0))
+    raises(ValueError, lambda: s.assume(9))
 
 
 def test_satsolver_interface_errors():
@@ -416,6 +486,20 @@ def test_satisfiable():
     assert satisfiable(A & (A >> B) & ~B) is False
 
 
+def test_satisfiable_unknown_algorithm():
+    A, B = symbols('A,B')
+    raises(NotImplementedError,
+           lambda: satisfiable(A & B, algorithm='nonexistent'))
+
+
+def test_satisfiable_lra_theory_requires_dpll2():
+    A, B = symbols('A,B')
+    raises(ValueError, lambda: satisfiable(A & B, algorithm='dpll',
+                                           use_lra_theory=True))
+    raises(ValueError, lambda: satisfiable(A & B, algorithm='minisat22',
+                                           use_lra_theory=True))
+
+
 def test_valid():
     A, B, C = symbols('A,B,C')
     assert valid(A >> (B >> A)) is True
@@ -465,12 +549,29 @@ def test_pl_true_wrong_input():
     raises(ValueError, lambda: pl_true(42))
 
 
+def test_pl_true_no_model():
+    A, B = symbols('A,B')
+    assert pl_true(A) is None
+    assert pl_true(A & B) is None
+    assert pl_true(A, {}) is None
+
+
 def test_entails():
     A, B, C = symbols('A, B, C')
     assert entails(A, [A >> B, ~B]) is False
     assert entails(B, [Equivalent(A, B), A]) is True
     assert entails((A >> B) >> (~A >> ~B)) is False
     assert entails((A >> B) >> (~B >> ~A)) is True
+
+
+def test_KB():
+    A, B = symbols('A,B')
+    kb = KB()
+    assert kb.clauses == []
+    raises(NotImplementedError, lambda: kb.tell(A & B))
+    raises(NotImplementedError, lambda: kb.ask(A))
+    raises(NotImplementedError, lambda: kb.retract(A))
+    raises(NotImplementedError, lambda: KB(A))
 
 
 def test_PropKB():
@@ -682,3 +783,43 @@ def test_issue_27733_second_fix():
     encoding = {Q.gt(x0, x1): 1, Q.lt(x1, x0): 2, Q.le(x1, x0): 3, Q.ge(x0, x1): 4}
     cnf = EncodedCNF(clauses, encoding)
     assert satisfiable(cnf, use_lra_theory=True) is False
+
+
+def test_satisfiable_all_models_lra():
+    x = symbols('x')
+    clauses = [[1, 2]]
+    encoding = {Q.gt(x, 0): 1, Q.lt(x, 0): 2}
+    cnf = EncodedCNF(clauses, encoding)
+
+    models = list(satisfiable(cnf, all_models=True, use_lra_theory=True))
+    assert len(models) == 2
+    assert {Q.gt(x, 0): True, Q.lt(x, 0): False} in models
+    assert {Q.lt(x, 0): True, Q.gt(x, 0): False} in models
+
+def test_satisfiable_true_pycosat():
+    import pytest
+    pytest.importorskip('pycosat')
+    from sympy.logic.inference import satisfiable
+    assert satisfiable(True, algorithm='pycosat') == {True: True}
+    assert list(satisfiable(True, algorithm='pycosat', all_models=True)) == [{True: True}]
+
+def test_issue_30714():
+    from sympy import ITE, symbols, to_cnf
+    from sympy.logic.inference import satisfiable
+    a, c = symbols('a c')
+    expr = ~a & ~c & ~ITE(c, a, True)
+    assert satisfiable(expr, algorithm='dpll2') is False
+    assert satisfiable(to_cnf(expr), algorithm='dpll2') is False
+
+def test_satisfiable_true_minisat22():
+    import pytest
+    pytest.importorskip('pysat')
+    from sympy.logic.inference import satisfiable
+    assert satisfiable(True, algorithm='minisat22') == {True: True}
+    assert list(satisfiable(True, algorithm='minisat22', all_models=True)) == [{True: True}]
+
+def test_satisfiable_true_z3():
+    import pytest
+    pytest.importorskip('z3')
+    from sympy.logic.inference import satisfiable
+    assert satisfiable(True, algorithm='z3') == {True: True}

@@ -32,6 +32,7 @@ from sympy.functions.elementary.trigonometric import (acsc, asin, cos, cot, sin,
 from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f, elliptic_k, elliptic_pi)
+from sympy.functions.special.elliptic_functions import jtheta
 from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, expint)
 from sympy.functions.special.gamma_functions import (gamma, uppergamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
@@ -712,6 +713,12 @@ def test_latex_functions():
         r"\Pi^{2}\left(x; y\middle| z\right)"
     assert latex(elliptic_pi(x, y)) == r"\Pi\left(x\middle| y\right)"
     assert latex(elliptic_pi(x, y)**2) == r"\Pi^{2}\left(x\middle| y\right)"
+    assert latex(jtheta(n, x, y)) == \
+        r"\vartheta_{n}\left(x, y\right)"
+    assert latex(jtheta(n, x, y, 2)) == \
+        r"\vartheta_{n}^{(2)}\left(x, y\right)"
+    assert latex(jtheta(n, x, y, 2)**3) == \
+        r"\left(\vartheta_{n}^{(2)}\left(x, y\right)\right)^{3}"
 
     assert latex(Ei(x)) == r'\operatorname{Ei}{\left(x \right)}'
     assert latex(Ei(x)**2) == r'\operatorname{Ei}^{2}{\left(x \right)}'
@@ -2256,9 +2263,12 @@ def test_MatPow():
 def test_ElementwiseApplyFunction():
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
-    assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
+    assert latex(expr) == r"{\sin}_{\circ}\left({X^{T} X}\right)"
+    assert latex(X.applyfunc(exp)) == r"{\exp}_{\circ}\left({X}\right)"
     expr = X.applyfunc(Lambda(x, 1/x))
     assert latex(expr) == r'{\left( x \mapsto \frac{1}{x} \right)}_{\circ}\left({X}\right)'
+    expr = X.applyfunc(Lambda(x, Function("g")(x, 1)))
+    assert latex(expr) == r'{\left( x \mapsto g{\left(x,1 \right)} \right)}_{\circ}\left({X}\right)'
 
 
 def test_MatrixUnit():
@@ -2873,6 +2883,31 @@ def test_TensorProduct_printing():
     A = MatrixSymbol("A", 3, 3)
     B = MatrixSymbol("B", 3, 3)
     assert latex(TensorProduct(A, B)) == r"A \otimes B"
+
+
+def test_ArrayTensorProduct_printing():
+    from sympy.tensor.array.expressions import ArrayAdd, ArrayTensorProduct
+    A = MatrixSymbol("A", 3, 4)
+    B = MatrixSymbol("B", 4, 5)
+    C = MatrixSymbol("C", 3, 4)
+    assert latex(ArrayTensorProduct(A, B)) == r"A \boxtimes B"
+    assert latex(ArrayAdd(ArrayTensorProduct(A, B), ArrayTensorProduct(C, B))) == \
+        r"A \boxtimes B + C \boxtimes B"
+    assert latex(ArrayTensorProduct(ArrayAdd(A, C), B)) == \
+        r"\left(A + C\right) \boxtimes B"
+    assert latex(ArrayTensorProduct(A + C, B)) == \
+        r"\left(A + C\right) \boxtimes B"
+
+
+def test_ArrayElementwiseApplyFunc_printing():
+    from sympy.tensor.array.expressions import ArraySymbol, ArrayTensorProduct
+    from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc
+    A = ArraySymbol("A", (2, 3))
+    assert latex(ArrayElementwiseApplyFunc(exp, A)) == r"{\exp}_{\circ}\left({A}\right)"
+    assert latex(ArrayElementwiseApplyFunc(sin, ArrayTensorProduct(A, A))) == \
+        r"{\sin}_{\circ}\left({A \boxtimes A}\right)"
+    assert latex(ArrayElementwiseApplyFunc(Lambda(x, x**2), A)) == \
+        r"{\left( x \mapsto x^{2} \right)}_{\circ}\left({A}\right)"
 
 
 def test_WedgeProduct_printing():

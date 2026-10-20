@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 from sympy.external import import_module
+from sympy.parsing.latex.errors import LaTeXParsingError
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 
 _lark = import_module("lark")
@@ -60,6 +61,12 @@ class LarkLaTeXParser:
             maybe_placeholders=False,
             keep_all_tokens=True)
 
+        # The control words defined in the grammar, e.g. "frac" for "\\frac", so that
+        # an unknown one is not split into a known command followed by symbols.
+        self.control_words = {word for _, (tree, _) in self.parser.grammar.term_defs
+                              for token in tree.scan_values(lambda v: isinstance(v, _lark.Token))
+                              for word in re.findall(r"\\\\([a-zA-Z]+)", token)}
+
         self.print_debug_output = print_debug_output
         self.transform_expr = transform
 
@@ -71,6 +78,10 @@ class LarkLaTeXParser:
     def doparse(self, s: str):
         if self.print_debug_output:
             _lark.logger.setLevel(logging.DEBUG)
+
+        for match in re.finditer(r"\\(?:\\|([a-zA-Z]+)|.)", s):
+            if match.group(1) and match.group(1) not in self.control_words:
+                raise LaTeXParsingError("Unknown command %s" % match.group(0))
 
         parse_tree = self.parser.parse(s)
 

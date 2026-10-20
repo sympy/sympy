@@ -1431,6 +1431,10 @@ def modified_subresultants_pg(p, q, x):
     # first remainder
     exp_deg = d1 - 1                          # expected degree of a2
     a2 = - rem(a0, a1, domain=QQ)             # first remainder
+
+    if a2 == 0:                               # q | p; sequence terminates
+        return subres_l                       # with the pair (p, q)
+
     rho2 =  LC(a2, x)                         # leading coeff of a2
     d2 =  degree(a2, x)                       # actual degree of a2
     deg_diff_new = exp_deg - d2               # expected - actual degree
@@ -1483,6 +1487,10 @@ def modified_subresultants_pg(p, q, x):
         del0 = del1                          # update degree difference
         exp_deg = d1 - 1                     # new expected degree
         a2 = - rem(a0, a1, domain=QQ)        # new remainder
+
+        if a2 == 0:                          # exact division; sequence complete
+            break
+
         rho3 =  LC(a2, x)                    # leading coeff of a2
         d2 =  degree(a2, x)                  # actual degree of a2
         deg_diff_new = exp_deg - d2          # expected - actual degree

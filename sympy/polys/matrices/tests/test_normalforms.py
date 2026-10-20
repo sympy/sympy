@@ -2,6 +2,7 @@ from __future__ import annotations
 from sympy.testing.pytest import raises
 
 from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.matrices.normalforms import (
     invariant_factors,
     smith_normal_form,
@@ -83,6 +84,11 @@ def test_smith_normal():
     assert smith_normal_decomp(m01) == (m01, m00, i11)
     assert smith_normal_decomp(m10) == (m10, i11, m00)
     assert smith_normal_decomp(i11) == (i11, i11, i11)
+
+    # https://github.com/sympy/sympy/pull/29859
+    K = QQ.algebraic_field(sqrt(2))
+    m11 = DomainMatrix.zeros((1, 1), K)
+    assert invariant_factors(m11) == (K.zero,)
 
     x = Symbol('x')
     m = DM([[x-1,  1, -1],

@@ -45,14 +45,14 @@ class CharacterTable(DefaultPrinting):
     ========
 
     The character table of a permutation group is computed by calling the
-    `character_table` method on the group.
+    ``character_table`` method on the group.
 
     >>> from sympy.combinatorics import SymmetricGroup, AlternatingGroup
     >>> M = SymmetricGroup(4).character_table()
     >>> type(M)
     <class 'sympy.combinatorics.character_table.CharacterTable'>
 
-    Calling `.as_matrix()` on the character table returns a matrix.
+    Calling ``.as_matrix()`` on the character table returns a matrix.
 
     >>> M.as_matrix()
     Matrix([
@@ -64,7 +64,7 @@ class CharacterTable(DefaultPrinting):
 
     The character table builds upon DomainMatrix, from which users can access the
     the values of the characters as domain elements. The domain of a character table is
-    either ZZ or a cyclotomic field.
+    either :ref:`ZZ` or a cyclotomic field :ref:`QQ(zeta_n)`.
 
     >>> M = AlternatingGroup(4).character_table()
     >>> M.as_matrix()
@@ -79,7 +79,7 @@ class CharacterTable(DefaultPrinting):
     3
 
     The order of the columns matches the order of the conjugacy classes,
-    which can be accessed with the method `conjugacy_class_reps`.
+    which can be accessed with the method ``conjugacy_class_reps``.
 
     >>> M.conjugacy_class_reps() # doctest: +SKIP
     [(3), (0 3 1), (3)(0 2 1), (0 3)(1 2)]
@@ -138,7 +138,7 @@ class CharacterTable(DefaultPrinting):
         >>> AlternatingGroup(5).character_table().zeta_order
         5
 
-        It returns 1 if the character table is over ZZ.
+        It returns 1 if the character table is over :ref:`ZZ`.
 
         >>> from sympy.combinatorics import SymmetricGroup
         >>> SymmetricGroup(4).character_table().zeta_order

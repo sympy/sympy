@@ -82,7 +82,7 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.testing.pytest import (
-    raises, warns_deprecated_sympy, warns, slow, tooslow, XFAIL
+    raises, warns_deprecated_sympy, warns, slow, tooslow
 )
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
@@ -323,7 +323,6 @@ def test_Poly_rootof_extension_primitive_element():
     assert Poly(r1*y + r2, y, extension=True) == Poly(r1*y + r2, y, domain=K12)
 
 
-@XFAIL
 def test_Poly_rootof_same_symbol_issue_26808():
     # XXX: This fails because r1 contains x.
     r1 = rootof(x**3 + x + 3, 0)
@@ -1511,7 +1510,11 @@ def test_Poly_nth():
     assert Poly(3*x*y**2 + 1, x, y).nth(0, 0) == 1
     assert Poly(3*x*y**2 + 1, x, y).nth(1, 2) == 3
 
+    # wrong length
     raises(ValueError, lambda: Poly(x*y + 1, x, y).nth(1))
+    # wrong type -- must be int
+    raises(TypeError, lambda: Poly(x, x).nth(.5))
+    raises(TypeError, lambda: Poly(x, x).nth(S.One))
 
 
 def test_Poly_LM():
@@ -2343,6 +2346,13 @@ def test_gcd():
     assert pfz.lcm(pfz) == pfz
     assert pfq.gcd(pfq) == pfq.monic()
     assert pfq.lcm(pfq) == pfq.monic()
+
+    pzz = Poly(0, x, domain=ZZ)
+    pqz = Poly(0, x, domain=QQ)
+    assert pzz.lcm(pzz) == pzz
+    assert pqz.lcm(pqz) == pqz
+    assert pzz.lcm(pfz) == pzz
+    assert pfq.lcm(pqz) == pqz
     assert gcd(f, f) == f
     assert lcm(f, f) == f
     assert gcd(f, f, domain=QQ) == monic(f)

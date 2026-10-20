@@ -44,7 +44,7 @@ except ImportError:
             msg = 'pytest must be installed to run tests via this function'
             raise NoPytestError(msg)
 
-from sympy.testing.runtests import test as test_sympy
+from sympy.testing.runtests import convert_to_native_paths, test as test_sympy
 
 
 TESTPATHS_DEFAULT = (
@@ -101,6 +101,8 @@ def update_args_with_paths(
 ) -> list[str]:
     """Appends valid paths and flags to the args `list` passed to `pytest.main`.
 
+    Returns [] if no tests match the requested keywords.
+
     The are three different types of "path" that a user may pass to the `paths`
     positional arguments, all of which need to be handled slightly differently:
 
@@ -115,6 +117,8 @@ def update_args_with_paths(
         matches be appended to the arguments list.
 
     """
+
+    paths = convert_to_native_paths(paths)
 
     def find_paths_matching_partial(partial_paths):
         partial_path_file_patterns = []
@@ -170,9 +174,9 @@ def update_args_with_paths(
         matches = []
         source = pathlib.Path(filepath).read_text(encoding='utf-8')
         for line in source.splitlines():
-            if line.lstrip().startswith('def '):
+            if line.startswith('def test_'):
                 for kw in keywords:
-                    if line.lower().find(kw.lower()) != -1:
+                    if kw.lower() in line.lower():
                         test_name = line.split(' ')[1].split('(')[0]
                         full_test_path = filepath + '::' + test_name
                         matches.append(full_test_path)
@@ -199,7 +203,7 @@ def update_args_with_paths(
     else:
         candidate_paths.extend(valid_testpaths_default)
 
-    if keywords is not None and keywords != ():
+    if keywords:
         matches = []
         for path in candidate_paths:
             if is_tests_file(path):
@@ -211,10 +215,11 @@ def update_args_with_paths(
                         absolute_filepath = str(pathlib.Path(root, filename))
                         if is_tests_file(absolute_filepath):
                             test_matches = find_tests_matching_keywords(
-                                keywords,
-                                absolute_filepath,
+                                keywords, absolute_filepath
                             )
                             matches.extend(test_matches)
+        if not matches:
+            return []
         args.extend(matches)
     else:
         args.extend(candidate_paths)
@@ -233,6 +238,8 @@ def make_absolute_path(partial_path: str) -> str:
     begin with the explicit `sympy` directory, i.e. `sympy/...`.
 
     """
+
+    partial_path = convert_to_native_paths([partial_path])[0]
 
     def is_valid_partial_path(partial_path: str) -> bool:
         """Assumption that partial paths are defined from the `sympy` root."""
@@ -457,6 +464,9 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
         keywords = ()
 
     args = update_args_with_paths(paths, keywords, args)
+    if not args:
+        print('No matches found')
+        return pytest.ExitCode.NO_TESTS_COLLECTED
     exit_code = pytest.main(args)
     return exit_code
 

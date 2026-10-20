@@ -22,7 +22,8 @@ from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
-from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.conventions import split_super_sub, requires_partial, \
+    elementwise_function
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 from sympy.utilities.iterables import has_variety, sift
@@ -40,7 +41,7 @@ if TYPE_CHECKING:
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                             'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
                             'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
-                            'arg',
+                            'arg', 'exp',
                             ]
 
 tex_greek_dictionary = {
@@ -1039,9 +1040,11 @@ class LatexPrinter(Printer):
 
     def _print_ElementwiseApplyFunction(self, expr):
         return r"{%s}_{\circ}\left({%s}\right)" % (
-            self._print(expr.function),
+            self._print(elementwise_function(expr.function)),
             self._print(expr.expr),
         )
+
+    _print_ArrayElementwiseApplyFunc = _print_ElementwiseApplyFunction
 
     @property
     def _special_function_classes(self):
@@ -1257,6 +1260,16 @@ class LatexPrinter(Printer):
             return r"\Pi^{%s}%s" % (exp, tex)
         else:
             return r"\Pi%s" % tex
+
+    def _print_jtheta(self, expr, exp=None):
+        n, z, q = expr.args[:3]
+        tex = r"\vartheta_{%s}" % self._print(n)
+        if len(expr.args) == 4:
+            tex += r"^{(%s)}" % self._print(expr.args[3])
+        tex += r"\left(%s, %s\right)" % (self._print(z), self._print(q))
+        if exp is not None:
+            return r"\left(%s\right)^{%s}" % (tex, exp)
+        return tex
 
     def _print_beta(self, expr, exp=None):
         x = expr.args[0]
@@ -2107,6 +2120,21 @@ class LatexPrinter(Printer):
     def _print_WedgeProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
         return r' \wedge '.join(elements)
+
+    def _print_ArrayTensorProduct(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import ArrayAdd
+        elements = []
+        for a in expr.args:
+            s = self._print(a)
+            if isinstance(a, (Add, ArrayAdd)):
+                s = r"\left(%s\right)" % s
+            elements.append(s)
+        # \boxtimes is the notation for the tensor product of arrays used in
+        # the documentation (\otimes is the Kronecker product):
+        return r' \boxtimes '.join(elements)
+
+    def _print_ArrayAdd(self, expr):
+        return ' + '.join([self._print(a) for a in expr.args])
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)

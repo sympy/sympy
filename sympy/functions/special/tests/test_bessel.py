@@ -717,7 +717,9 @@ def test_airyaiprime():
                   besselj(Rational(1, 3), 2*(-t)**Rational(3, 2)/3))/3)
     assert airyaiprime(z).rewrite(besseli) == (
         z**2*besseli(Rational(2, 3), 2*z**Rational(3, 2)/3)/(3*(z**Rational(3, 2))**Rational(2, 3)) -
-        (z**Rational(3, 2))**Rational(2, 3)*besseli(Rational(-1, 3), 2*z**Rational(3, 2)/3)/3)
+        (z**Rational(3, 2))**Rational(2, 3)*besseli(Rational(-2, 3), 2*z**Rational(3, 2)/3)/3)
+    # issue 30349
+    assert tn(airyaiprime(z), airyaiprime(z).rewrite(besseli), z)
     assert airyaiprime(p).rewrite(besseli) == (
         p*(-besseli(Rational(-2, 3), 2*p**Rational(3, 2)/3) + besseli(Rational(2, 3), 2*p**Rational(3, 2)/3))/3)
 

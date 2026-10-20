@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 import pathlib
 from pathlib import Path
 import pytest
@@ -14,11 +15,16 @@ class TestMakeAbsolutePath:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'partial_path', ['sympy', 'sympy/core', 'sympy/nonexistant_directory'],
+        'partial_path', ['sympy', 'sympy/core', r'sympy\core',
+                         'sympy/nonexistant_directory'],
     )
     def test_valid_partial_path(partial_path: str):
         """Paths that start with `sympy` are valid."""
         _ = make_absolute_path(partial_path)
+
+    @staticmethod
+    def test_backslash_absolute_path():
+        assert make_absolute_path(r'sympy\core') == str(Path(sympy_dir(), 'sympy/core'))
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -52,7 +58,9 @@ class TestUpdateArgsWithPaths:
     @staticmethod
     @pytest.mark.parametrize(
         'path',
-        ['sympy/core/tests/test_basic.py', '_basic']
+        ['sympy/core/tests/test_basic.py', '_basic',
+         r'sympy\core\tests\test_basic.py',
+         r'sympy/core\tests/test_basic.py']
     )
     def test_one_file(path: str):
         """Single files/paths, full or partial, are matched correctly."""
@@ -79,6 +87,21 @@ class TestUpdateArgsWithPaths:
             str(pathlib.Path(sympy_dir(), 'sympy/functions')),
         ]
         assert args == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'path', ['sympy/core', r'sympy\core', r'sympy/core\tests']
+    )
+    def test_path_separators(path: str):
+        args = update_args_with_paths(paths=[path], keywords=None, args=[])
+        expected = 'sympy/core/tests' if path.endswith('tests') else 'sympy/core'
+        assert args == [str(Path(sympy_dir(), expected))]
+
+    @staticmethod
+    @pytest.mark.parametrize('path', ['/core', r'\core'])
+    def test_partial_path_separators(path: str):
+        args = update_args_with_paths(paths=[path], keywords=None, args=[])
+        assert str(Path(sympy_dir(), 'sympy/core')) in args
 
     @staticmethod
     def test_nonexistent_path_raises_error():
@@ -190,3 +213,33 @@ class TestUpdateArgsWithPaths:
         assert len(args) == len(expected_args)
         for arg, expected in zip(sorted(args), expected_args):
             assert Path(expected).as_posix() in Path(arg).as_posix()
+
+
+    @staticmethod
+    def test_keyword_matches_only_module_level_tests(tmp_path):
+        testfile = tmp_path / 'test_selection.py'
+        testfile.write_text(
+            'def testfalse(): pass\n'
+            'def test_valid(): pass\n'
+            'def outer():\n'
+            '    def test_false(): pass\n'
+            'def test_other(): pass\n',
+            encoding='utf-8',
+        )
+
+        args = update_args_with_paths(
+            paths=[str(testfile)],
+            keywords=('test',),
+            args=[],
+        )
+
+        assert [os.path.normcase(a) for a in args] == [
+            os.path.normcase(f'{testfile}::test_valid'),
+            os.path.normcase(f'{testfile}::test_other'),
+        ]
+
+        assert [] == update_args_with_paths(
+            paths=[str(testfile)],
+            keywords=('nonexistent',),
+            args=[],
+        )

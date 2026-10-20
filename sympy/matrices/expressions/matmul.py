@@ -243,31 +243,6 @@ class MatMul(MatrixExpr, Mul):
                                  [ci for ci in coeff_c if list(self.args).count(ci) > 1])
         return [coeff_c, coeff_nc]
 
-    def _eval_derivative_matrix_lines(self, x):
-        from .transpose import Transpose
-        with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
-        lines = []
-        for ind in with_x_ind:
-            left_args = self.args[:ind]
-            right_args = self.args[ind+1:]
-
-            if right_args:
-                right_mat = MatMul.fromiter(right_args)
-            else:
-                right_mat = Identity(self.shape[1])
-            if left_args:
-                left_rev = MatMul.fromiter([Transpose(i).doit() if i.is_Matrix else i for i in reversed(left_args)])
-            else:
-                left_rev = Identity(self.shape[0])
-
-            d = self.args[ind]._eval_derivative_matrix_lines(x)
-            for i in d:
-                i.append_first(left_rev)
-                i.append_second(right_mat)
-                lines.append(i)
-
-        return lines
-
 mul.register_handlerclass((Mul, MatMul), MatMul)
 
 

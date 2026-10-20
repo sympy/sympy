@@ -766,7 +766,9 @@ def test_is_subset():
 
     assert FiniteSet(x).is_subset(FiniteSet(y)) is None
     assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x)) is True
-    assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is False
+    assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is None
+    xr, yr = symbols('xr yr', real=True)
+    assert FiniteSet(xr).is_subset(FiniteSet(yr).subs(yr, xr+1)) is False
 
     assert Interval(0, 1).is_subset(Interval(0, 1, left_open=True)) is False
     assert Interval(-2, 3).is_subset(Union(Interval(-oo, -2), Interval(3, oo))) is False
@@ -844,7 +846,10 @@ def test_contains():
     raises(TypeError, lambda: x in FiniteSet(y))
     assert FiniteSet({x, y})._contains({x}) == Eq({x, y}, {x}, evaluate=False)
     assert FiniteSet({x, y}).subs(y, x)._contains({x}) is S.true
-    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is S.false
+    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) == \
+        Eq({x, x + 1}, {x}, evaluate=False)
+    xr, yr = symbols('xr yr', real=True)
+    assert FiniteSet({xr, yr}).subs(yr, xr+1)._contains({xr}) is S.false
 
     # issue 8197
     from sympy.abc import a, b
@@ -1306,8 +1311,12 @@ def test_Eq():
     assert unchanged(Eq, FiniteSet({x, y}), FiniteSet({x}))
     assert Eq(FiniteSet({x, y}).subs(y, x), FiniteSet({x})) is S.true
     assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x) is S.true
-    assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is S.false
-    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is S.false
+    assert unchanged(Eq, FiniteSet({x, y}).subs(y, x+1), FiniteSet({x}))
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) == \
+        Eq(FiniteSet({x, x + 1}), FiniteSet({x}), evaluate=False)
+    xr, yr = symbols('xr yr', real=True)
+    assert Eq(FiniteSet({xr, yr}).subs(yr, xr+1), FiniteSet({xr})) is S.false
+    assert Eq(FiniteSet({xr, yr}), FiniteSet({xr})).subs(yr, xr+1) is S.false
 
     assert Eq(ProductSet({1}, {2}), Interval(1, 2)) is S.false
     assert Eq(ProductSet({1}), ProductSet({1}, {2})) is S.false

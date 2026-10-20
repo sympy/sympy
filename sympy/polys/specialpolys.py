@@ -19,6 +19,7 @@ from sympy.polys.polyclasses import DMP
 from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyutils import _analyze_gens
 from sympy.utilities import subsets, public, filldedent
+from sympy.utilities.misc import as_int
 
 
 @public
@@ -31,27 +32,22 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         `n` decides the order of polynomial
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a ``Poly`` when ``x`` is specified, or a
+        ``PurePoly`` otherwise. If False (default), return an expression
+        using ``x`` when specified, or the default generator otherwise.
     """
+    n = as_int(n)
+
     if n <= 0:
         raise ValueError(
             "Cannot generate Swinnerton-Dyer polynomial of order %s" % n)
 
     if x is not None:
-        sympify(x)
+        x = sympify(x)
+        poly_cls = Poly
     else:
         x = Dummy('x')
-
-    if n > 3:
-        from sympy.functions.elementary.miscellaneous import sqrt
-        from .numberfields import minimal_polynomial
-        p = 2
-        a = [sqrt(2)]
-        for i in range(2, n + 1):
-            p = nextprime(p)
-            a.append(sqrt(p))
-        return minimal_polynomial(Add(*a), x, polys=polys)
+        poly_cls = PurePoly
 
     if n == 1:
         ex = x**2 - 2
@@ -59,8 +55,17 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         ex = x**4 - 10*x**2 + 1
     elif n == 3:
         ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
+    else:
+        from sympy.functions.elementary.miscellaneous import sqrt
+        from .numberfields import minimal_polynomial
+        p = 2
+        a = [sqrt(2)]
+        for i in range(2, n + 1):
+            p = nextprime(p)
+            a.append(sqrt(p))
+        ex = minimal_polynomial(Add(*a), x)
 
-    return PurePoly(ex, x) if polys else ex
+    return poly_cls(ex, x) if polys else ex
 
 
 @public
@@ -73,7 +78,7 @@ def cyclotomic_poly(n, x=None, polys=False):
         `n` decides the order of polynomial
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
+        Returns a Poly object when ``polys=True``, otherwise
         (default) returns an expression.
     """
     if n <= 0:
@@ -133,7 +138,7 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
          Decides what ring the coefficients are supposed
          to belong. Default is set to Integers.
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
+        Returns a Poly object when ``polys=True``, otherwise
         (default) returns an expression.
     """
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)

@@ -274,6 +274,18 @@ class Printer:
         # called. See StrPrinter._print_Float() for an example of usage
         self._print_level = 0
 
+    def __eq__(self, other):
+        # Two printers are equal if they are of the same type and configured
+        # with the same settings. ``_context`` and ``_print_level`` are
+        # transient printing state and are deliberately not compared, so that
+        # an idle printer compares equal to itself after a pickle round-trip.
+        if type(self) is not type(other):
+            return NotImplemented
+        return self._settings == other._settings
+
+    def __hash__(self):
+        return hash((type(self), frozenset(self._settings)))
+
     @classmethod
     def set_global_settings(cls, **settings):
         """Set system-wide printing settings. """

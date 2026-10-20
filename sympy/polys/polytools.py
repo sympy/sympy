@@ -2150,7 +2150,11 @@ class Poly(Basic):
         if hasattr(f.rep, 'nth'):
             if len(N) != len(f.gens):
                 raise ValueError('exponent of each generator must be specified')
-            result = f.rep.nth(*list(map(int, N)))
+            for n in N:
+                if isinstance(n, int):
+                    continue
+                raise TypeError('expecting integer exponent(s), got %s' % n)
+            result = f.rep.nth(*N)
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'nth')
 

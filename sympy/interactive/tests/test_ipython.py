@@ -72,6 +72,9 @@ def test_int_to_Integer():
     assert isinstance(app.user_ns['a'], int)
     app.run_cell("a = (1/\n2)")
     assert app.user_ns['a'] == Rational(1, 2)
+    app.run_cell("a = 2**2 + 1/2", store_history=True)
+    assert app.user_ns['a'] == Rational(9, 2)
+    assert app.history_manager.input_hist_raw[-1] == "a = 2**2 + 1/2"
     # TODO: How can we test that the output of a SyntaxError is the original
     # input, not the transformed input?
 

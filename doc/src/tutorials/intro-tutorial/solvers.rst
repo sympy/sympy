@@ -96,7 +96,7 @@ is an example of the syntax of ``linsolve``.
 
 .. note::
 
-   The order of solution corresponds the order of given symbols.
+   The order of solution corresponds to the order of given symbols.
 
 
 In the ``solveset`` module, the non linear system of equations is solved using
@@ -139,7 +139,7 @@ In the ``solveset`` module, the non linear system of equations is solved using
 
 .. note::
 
-   1. The order of solution corresponds the order of given symbols.
+   1. The order of solution corresponds to the order of given symbols.
 
    2. Currently ``nonlinsolve`` doesn't return solution in form of ``LambertW`` (if there
    is solution present in the form of ``LambertW``).

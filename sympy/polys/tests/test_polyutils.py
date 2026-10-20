@@ -18,12 +18,16 @@ from sympy.polys.polyutils import (
     _unify_gens,
     _analyze_gens,
     _sort_factors,
+    _parallel_dict_from_expr,
+    _parallel_dict_from_expr_no_gens,
+    _dict_from_expr,
+    _dict_from_expr_no_gens,
     parallel_dict_from_expr,
     dict_from_expr,
 )
 
 from sympy.polys.polyerrors import PolynomialError
-
+from sympy.polys.polyoptions import build_options
 from sympy.polys.domains import ZZ
 
 x, y, z, p, q, r, s, t, u, v, w = symbols('x,y,z,p,q,r,s,t,u,v,w')
@@ -292,6 +296,26 @@ def test_parallel_dict_from_expr():
         x**2, 2)]) == ([{(0,): -Integer(1), (1,): Integer(1)},
                         {(0,): -Integer(2), (2,): Integer(1)}], (x,))
     raises(PolynomialError, lambda: parallel_dict_from_expr([A*B - B*A]))
+
+
+def test_private_dict_from_expr_noncommutative():
+    expr = A*B - B*A
+
+    opt = build_options({})
+    raises(PolynomialError,
+        lambda: _parallel_dict_from_expr_no_gens([expr], opt))
+    raises(PolynomialError,
+        lambda: _dict_from_expr_no_gens(expr, opt))
+    raises(PolynomialError,
+        lambda: _parallel_dict_from_expr([expr], opt))
+    raises(PolynomialError,
+        lambda: _dict_from_expr(expr, opt))
+
+    opt = build_options({'gens': (x,)})
+    raises(PolynomialError,
+        lambda: _parallel_dict_from_expr([A*x], opt))
+    raises(PolynomialError,
+        lambda: _dict_from_expr(A*x, opt))
 
 
 def test_dict_from_expr():
