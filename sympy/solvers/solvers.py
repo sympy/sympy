@@ -2694,7 +2694,22 @@ def _tsolve(eq, sym, **flags):
 
     if lhs == sym:
         return [rhs]
+    if not lhs.has_free(sym) and not rhs.has_free(sym):
+        # Inversion eliminated the symbol; an identity may still have
+        # domain restrictions, so it cannot be treated as a list of roots.
+        # e.g. _invert(2**x*4**(-x/2)-1,x) -> (1,1)
+        return None
     try:
+        if lhs.is_Mul and rhs.is_positive is True and not rhs.has_free(sym):
+            factors = [p.as_base_exp() for p in lhs.args]
+            powers = [(b, e) for (b, e) in factors if e.has_free(sym)]
+            if (len(powers) > 1 and
+                all(b.is_positive is True and
+                    not b.has_free(sym) and
+                    e.is_extended_real is True
+                    for b, e in factors)):
+                lhs = Add(*(e*log(b) for b, e in factors))
+                rhs = log(rhs)
         if lhs.is_Add:
             # it's time to try factoring; powdenest is used
             # to try get powers in standard form for better factoring

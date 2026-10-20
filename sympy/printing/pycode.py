@@ -214,7 +214,13 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
-        return ('{} % {}'.format(*(self.parenthesize(x, PREC) for x in expr.args)))
+        num, den = expr.args
+        if den.is_Pow and den.exp.is_negative:
+            den_prec = PRECEDENCE["Pow"]
+        else:
+            den_prec = PREC
+        return '{} % {}'.format(self.parenthesize(num, PREC),
+                                self.parenthesize(den, den_prec))
 
     def _print_Piecewise(self, expr):
         result = []
