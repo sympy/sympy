@@ -1266,11 +1266,9 @@ def find_substitutions(integrand, symbol, u_var):
                 return False
         _, denom = substituted.as_numer_denom()
         denom_u_free, _ = denom.factor().as_independent(u_var, as_Add=False)
-        coeff_u_free, u_part = (
-            (substituted * denom_u_free).cancel()
-            .as_independent(u_var, as_Add=False)
-        )
-        return coeff_u_free/denom_u_free, u_part
+        numer = (substituted * denom_u_free).cancel()
+        numer_u_free, u_part = numer.as_independent(u_var, as_Add=False)
+        return numer_u_free / denom_u_free, u_part
 
     def exp_subterms(term: Expr):
         linear_coeffs = []
