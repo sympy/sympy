@@ -2342,3 +2342,31 @@ def test_issue_19988_Float_pickle_precision():
     original = Float(pi, dps=100)
     unpickled = pickle.loads(pickle.dumps(original))
     assert original._prec == unpickled._prec
+
+
+def test_issue_26206():
+    import math
+    from sympy import Rational, Float, Integer, sqrt
+
+    cases = [
+        (Rational(3, 2), 1, 2, 1),
+        (Rational(-3, 2), -2, -1, -1),
+        (Float('2.7'), 2, 3, 2),
+        (Float('-2.7'), -3, -2, -2),
+        (Integer(5), 5, 5, 5),
+        (Integer(-5), -5, -5, -5),
+    ]
+    for val, flr, cil, trc in cases:
+        assert type(math.floor(val)) is int
+        assert type(math.ceil(val)) is int
+        assert type(math.trunc(val)) is int
+        assert math.floor(val) == flr
+        assert math.ceil(val) == cil
+        assert math.trunc(val) == trc
+        assert isinstance(val.floor(), Integer)
+        assert isinstance(val.ceiling(), Integer)
+        assert val.floor() == flr
+        assert val.ceiling() == cil
+
+    assert type(math.trunc(sqrt(2))) is int
+    assert math.trunc(sqrt(2)) == 1
