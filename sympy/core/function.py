@@ -2206,6 +2206,54 @@ class Lambda(Expr):
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
 
 
+    def _eval_subs(self, old, new):
+        from .symbol import Dummy
+        from .traversal import preorder_traversal
+
+        if old in self.variables:
+            return self
+
+        if old.is_Symbol and old not in self.free_symbols:
+            return self
+
+        # Check all nested Lambda bindings, not just this Lambda.
+        bound = set().union(*(
+            set(x.variables) for x in preorder_traversal(self)
+            if isinstance(x, Lambda)
+        ))
+        if not bound & new.free_symbols:
+            return None
+
+        restore = {}
+        exposed = {}
+
+        def freshen(x):
+            reps = {
+                v: Dummy(v.name, commutative=v.is_commutative)
+                for v in x.variables
+            }
+            for v, d in reps.items():
+                restore[d] = v
+                exposed[d] = (
+                    old in x.expr.free_symbols
+                    if old.is_Symbol else x.expr.has(old)
+                )
+            return x.xreplace(reps)
+
+        f = self.replace(
+            lambda x: isinstance(x, Lambda),
+            freshen,
+            simultaneous=False)
+
+        f = f._subs(old, new)
+
+        for d, v in restore.items():
+            if exposed[d] and v in new.free_symbols:
+                restore[d] = Dummy(v.name, commutative=v.is_commutative)
+
+        return f.xreplace(restore)
+
+
 class Subs(Expr):
     """
     Represents unevaluated substitutions of an expression.
