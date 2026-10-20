@@ -2401,3 +2401,7 @@ def test_reverse_limits():
     assert J.reverse_limits(y) == Integral(-x*y, (x, a, b), (y, d, c))
     assert J.reverse_limits(x, y) == Integral(x*y, (x, b, a), (y, d, c))
     assert Integral(x, x).reverse_limits() == Integral(x, x)
+    K = Integral(x, (x, a, b), (x, c, d))
+    assert K.reverse_limits(x) == Integral(x, (x, b, a), (x, d, c))
+    assert K.reverse_limits(1) == Integral(-x, (x, a, b), (x, d, c))
+    raises(ValueError, lambda: J.reverse_limits(c))
