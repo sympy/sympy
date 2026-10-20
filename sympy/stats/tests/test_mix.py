@@ -23,7 +23,7 @@ from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
 from sympy.stats.joint_rv import MarginalDistribution
 from sympy.stats.rv import pspace, density
-from sympy.testing.pytest import ignore_warnings
+
 
 def test_density():
     x = Symbol('x')

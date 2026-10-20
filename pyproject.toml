@@ -29,6 +29,7 @@ norecursedirs = [
 markers = [
     "nocache_fail",
     "tooslow",
+    "thread_unsafe: tests that cannot safely run concurrently in threads",
 ]
 
 [tool.coverage.report]
