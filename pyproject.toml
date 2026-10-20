@@ -44,7 +44,10 @@ exclude_lines = [
 target-version = "py310"
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
-    "W292",  # missing newline at end of file
+    "W191",  # indentation contains tabs
+    "W291",  # trailing whitespace
+    "W292",  # missing newline at EOF
+    "W293",  # blank line contains whitespace
     "B015",  # Useless comparison: a == b rather than a = b.
     "I002",  # `import` statement not at top of file
     "C4",
