@@ -348,20 +348,24 @@ def test_Lambda_symbols():
 def test_Lambda_subs_bound_symbols():
     a = Symbol('a')
     expressions = (
-        (Lambda(y, y + a), Lambda(w, w + a)),
-        (Lambda((x, y), x + y + a), Lambda((x, w), x + w + a)),
-        (Lambda(((x, y), z), x + y + z + a),
-            Lambda(((x, w), z), x + w + z + a)),
-        (Lambda(x, Lambda(y, x + y + a)),
-            Lambda(x, Lambda(w, x + w + a))),
+        Lambda(y, y + a),
+        Lambda((x, y), x + y + a),
+        Lambda(((x, y), z), x + y + z + a),
+        Lambda(x, Lambda(y, x + y + a)),
     )
-    for expr, renamed in expressions:
-        assert expr.subs(y, 2) == expr
-        assert expr.subs({y: 2}, simultaneous=True) == expr
-        assert expr.subs(y, w) == renamed
-        assert expr.subs({y: w}, simultaneous=True) == expr
+    for expr in expressions:
+        for replacement in (2, w):
+            assert expr.subs(y, replacement) == expr
+            assert expr.subs({y: replacement}, simultaneous=True) == expr
         assert expr.subs(a, 2) == expr.xreplace({a: 2})
         assert expr.subs({a: 2}, simultaneous=True) == expr.xreplace({a: 2})
+    nested = Lambda(x, Lambda(y, x + y + a))
+    assert nested.subs(x, w) == nested
+    assert nested.subs({x: w}, simultaneous=True) == nested
+
+    free = Lambda(x, y + a)
+    assert free.subs(y, w) == Lambda(x, w + a)
+    assert free.subs({y: w}, simultaneous=True) == Lambda(x, w + a)
 
 
 def test_functionclas_symbols():

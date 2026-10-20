@@ -1154,10 +1154,10 @@ def test_old_trig_issues():
                 ImageSet(Lambda(n, n*pi + 0.523598775598299), S.Integers))
     ret = solveset(cos(2*x) - 0.5, x, S.Reals)
     # replace Dummy n by the regular Symbol n to allow all_close comparison.
-    ret = ret.subs(ret.atoms(Dummy).pop(), n)
+    ret = ret.xreplace({ret.atoms(Dummy).pop(): n})
     assert all_close(ret, sol)
     ret = solveset(cos(2*x) - 0.5, x, S.Complexes)
-    ret = ret.subs(ret.atoms(Dummy).pop(), n)
+    ret = ret.xreplace({ret.atoms(Dummy).pop(): n})
     assert all_close(ret, sol)
 
     # issue #21296 / #17667

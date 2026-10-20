@@ -240,10 +240,9 @@ def test_subs_CondSet_nested_lambda():
         assert mixed.subs({y: 2}, simultaneous=simultaneous) == \
             ConditionSet(x, Eq(Lambda(y, y + a), 2, evaluate=False),
                 S.Complexes)
-    assert mixed.subs(y, z) == ConditionSet(
-        x, Eq(Lambda(z, z + a), z, evaluate=False), S.Complexes)
-    assert mixed.subs({y: z}, simultaneous=True) == ConditionSet(
-        x, Eq(Lambda(y, y + a), z, evaluate=False), S.Complexes)
+        assert mixed.subs({y: z}, simultaneous=simultaneous) == \
+            ConditionSet(x, Eq(Lambda(y, y + a), z, evaluate=False),
+                S.Complexes)
 
 
 def test_subs_CondSet_nested_conditionset():
