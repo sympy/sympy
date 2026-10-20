@@ -2758,3 +2758,5 @@ def test_issue_27062():
     assert solve(x*log(x), x, check=False) == [0, 1]
     assert solve(x*(x - 1)*log(x), x) == [1]
     assert solve(x*log(x - 1), x) == [0, 2]
+    pw = Piecewise((x - 1, x > 0), (S.Infinity, True))
+    assert solve((x - 2)*pw, x) == [1, 2]
