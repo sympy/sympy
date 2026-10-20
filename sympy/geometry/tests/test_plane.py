@@ -290,6 +290,10 @@ def test_plane_distance_parallel_segment_ray():
     assert p.distance(s1) == 1
     assert p.distance(r1) == 1
 
+    # Ray pointing away from plane
+    r_away = Ray3D((0, 0, 1), (0, 0, 2))
+    assert p.distance(r_away) == 1
+
     # In-plane segment and ray
     s_in = Segment3D((0, 0, 0), (2, 3, 0))
     r_in = Ray3D((0, 0, 0), (2, 3, 0))

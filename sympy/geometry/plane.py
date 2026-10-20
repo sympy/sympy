@@ -295,9 +295,7 @@ class Plane(GeometryEntity):
             inter = self.intersection(Line3D(a, b))
             if not inter:
                 return self.distance(a)
-            if not isinstance(inter[0], Point3D):
-                return S.Zero
-            pi = inter[0]
+            pi, = inter
             if pi in o:
                 return self.distance(pi)
             elif a in Segment3D(pi, b):
