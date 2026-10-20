@@ -375,19 +375,6 @@ def _reject_by_denominator(d, sol, **flags):
     return bool(val.is_number and val.is_finite is False)
 
 
-def _reject_by_factor_finiteness(factor, sol, **flags):
-    """Return True if a candidate solution makes any factor non-finite."""
-    try:
-        val = factor.subs(sol)
-        if val.is_number and val.is_finite is False:
-            return True
-        if val.has(S.NaN, S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
-            return True
-    except (TypeError, ValueError, AttributeError, NotImplementedError):
-        return False
-    return False
-
-
 def solve(f, *symbols, **flags):
     r"""
     Algebraically solves equations and systems of equations.
@@ -1424,16 +1411,14 @@ def _solve(f, *symbols, **flags):
             result.update(set(soln))
         result = [{symbol: v} for v in result]
         if check:
-            # all solutions have been checked but now we must
-            # check that the solutions do not set denominators
-            # in any factor to zero or to a non-finite value,
-            # and that they do not make other factors non-finite (e.g. log(0))
+            # all solutions have been checked for each individual factor, but
+            # now we must check that the candidate solution does not set any
+            # denominator to zero or to a non-finite value, and that it satisfies
+            # the original product expression (rejecting cases like 0 * zoo = nan).
             dens = flags.get('_denominators', _simple_dens(f, symbols))
             result = [s for s in result if
-                not any(_reject_by_denominator(den, s, **flags) for den in
-                        dens)
-                and not any(_reject_by_factor_finiteness(m, s, **flags)
-                            for m in f.args)]
+                not any(_reject_by_denominator(den, s, **flags) for den in dens)
+                and checksol(f, s, **flags) is not False]
         # set flags for quick exit at end; solutions for each
         # factor were already checked and simplified
         check = False
