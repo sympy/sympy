@@ -377,10 +377,10 @@ def _reject_by_denominator(d, sol, **flags):
 
 def _reject_by_factor_finiteness(factor, sol, **flags):
     """Return True if a candidate solution makes another factor affirmatively non-finite."""
-    if factor.is_polynomial():
+    if factor.is_polynomial(*sol):
         return False
     val = factor.subs(sol)
-    if val.is_finite is False or val in {S.NaN, S.ComplexInfinity, S.Infinity, S.NegativeInfinity}:
+    if val.is_finite is False or val in _illegal:
         return True
     return False
 
