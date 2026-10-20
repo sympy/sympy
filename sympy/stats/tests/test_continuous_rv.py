@@ -254,8 +254,8 @@ def test_moment_generating_function():
     assert mgf == b*(-a*t)**b*uppergamma(-b, -a*t)
 
     mgf = moment_generating_function(QuadraticU('x', a, b))(t)
-    assert str(mgf) == ("(3*(t*(-4*b + (a + b)**2) + 4)*exp(b*t) - "
-    "3*(t*(a**2 + 2*a*(b - 2) + b**2) + 4)*exp(a*t))/(t**2*(a - b)**3)")
+    assert str(mgf) == ("(3*(t**2*(a - b)**2 - t*(4*a - 4*b) + 8)*exp(a*t) - "
+    "3*(t**2*(a - b)**2 + t*(4*a - 4*b) + 8)*exp(b*t))/(t**3*(a - b)**3)")
 
     mgf = moment_generating_function(RaisedCosine('x', a, b))(t)
     assert mgf == pi**2*exp(a*t)*sinh(b*t)/(b*t*(b**2*t**2 + pi**2))
@@ -322,7 +322,7 @@ def test_moment_generating_function():
     assert mgf.diff(t).subs(t, 0) == expint(1, 0)
 
     mgf = moment_generating_function(QuadraticU('x', 1, 2))(t)
-    assert mgf.diff(t).subs(t, 1) == -12*e - 3*exp(2)
+    assert mgf.diff(t).subs(t, 1) == -21*exp(2) + 60*e
 
     mgf = moment_generating_function(RaisedCosine('x', 1, 1))(t)
     assert mgf.diff(t).subs(t, 1) == -2*e*pi**2*sinh(1)/\
@@ -1235,10 +1235,10 @@ def test_quadratic_u():
 
     assert pspace(X).domain.set == Interval(a, b)
     # Tests _moment_generating_function
-    assert moment_generating_function(Y)(1)  == -15*exp(2) + 27*exp(1)
-    assert moment_generating_function(Y)(2) == -9*exp(4)/2 + 21*exp(2)/2
+    assert moment_generating_function(Y)(1)  == -39*exp(1) + 15*exp(2)
+    assert moment_generating_function(Y)(2) == -15*exp(2)/2 + 3*exp(4)/2
 
-    assert characteristic_function(Y)(1) == 3*I*(-1 + 4*I)*exp(I*exp(2*I))
+    assert characteristic_function(Y)(1) == -3*I*((-7 + 4*I)*exp(2*I) - (-7 - 4*I)*exp(I))
     assert density(X)(x) == (Piecewise((12*(x - a/2 - b/2)**2/(-a + b)**3,
                           And(x <= b, a <= x)), (0, True)))
 
