@@ -569,7 +569,10 @@ class Integral(AddWithLimits):
 
         Uses `\int_a^b f\,dx = -\int_b^a f\,dx`. The selectors in ``indices``
         are either integration variables or numerical positions in
-        ``self.limits``. A variable selects every limit that integrates over it. With not arguments, all definite limits are reversed. 
+        ``self.limits``. A variable selects every limit that integrates over
+        it. With no arguments, all definite limits are reversed. A
+        ``ValueError`` is raised if a selected limit does not have both a
+        lower and upper bound.
 
         Examples
         ========
@@ -603,7 +606,11 @@ class Integral(AddWithLimits):
         sign = 1
         limits = []
         for i, lim in enumerate(self.limits):
-            if i in positions and len(lim) == 3:
+            if i in positions:
+                if len(lim) != 3:
+                    raise ValueError(
+                        "cannot reverse the limits of an indefinite integral over %s" %lim[0]
+                    )
                 sign = -sign
                 lim = (lim[0], lim[2], lim[1])
             limits.append(lim)
