@@ -783,6 +783,33 @@ class Basic(Printable):
 
 
     def as_dummy(self) -> "Self":
+        """Return the expression with any objects having structurally
+        bound symbols replaced with unique, canonical symbols within
+        the object in which they appear and having only the default
+        assumption for commutativity being True. When applied to a
+        symbol a new symbol having only the same commutativity will be
+        returned.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral, Symbol
+        >>> from sympy.abc import x
+        >>> r = Symbol('r', real=True)
+        >>> Integral(r, (r, x)).as_dummy()
+        Integral(_0, (_0, x))
+        >>> _.variables[0].is_real is None
+        True
+        >>> r.as_dummy()
+        _r
+
+        Notes
+        =====
+
+        Any object that has structurally bound variables should have
+        a property, ``bound_symbols`` that returns those symbols
+        appearing in the object.
+        """
         from .symbol import Symbol
 
         rv, restore = self._bound_dummies()
