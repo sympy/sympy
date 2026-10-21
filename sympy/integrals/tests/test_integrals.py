@@ -2412,6 +2412,6 @@ def test_reverse_limits():
     assert K.reverse_limits(1) == Integral(-x, (x, a, b), (x, d, c))
     for i in (Integral(x, x), Integral(x, (x, b))):
         assert i.reverse_limits() == i
-    assert Integral(x*y, (x,a,b), y).reverse_limits(x) == Integral(-x*y, (x, b, a), y)
-    assert Integral(x*y, (x,a,b), y).reverse_limits(x) == Integral(
-        x*y, (x,a,b), y).reverse_limits()
+    L = Integral(x*y, (x, a, b), y)
+    assert L.reverse_limits() == Integral(-x*y, (x, b, a), y)
+    assert L.reverse_limits(x) == Integral(-x*y, (x, b, a), y)
