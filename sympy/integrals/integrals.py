@@ -587,6 +587,13 @@ class Integral(AddWithLimits):
         >>> Integral(x*y, (x, a, b), (y, c, d)).reverse_limits(x, y)
         Integral(x*y, (x, b, a), (y, d, c))
 
+        Index 0 selects the innermost limit and -1 the outermost:
+
+        >>> Integral(x*y, (x, a, b), (y, c, d)).reverse_limits(0)
+        Integral(-x*y, (x, b, a), (y, c, d))
+        >>> Integral(x*y, (x, a, b), (y, c, d)).reverse_limits(-1)
+        Integral(-x*y, (x, a, b), (y, d, c))
+
         See Also
         ========
 
@@ -597,7 +604,7 @@ class Integral(AddWithLimits):
             positions = set(range(n))
         else:
             positions = set()
-            for i in indices:
+            for i in set(indices):
                 if type(i) is int:
                     if not -n <= i < n:
                         raise IndexError(
