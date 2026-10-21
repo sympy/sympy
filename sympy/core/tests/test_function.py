@@ -21,6 +21,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import sin, cos, acos
 from sympy.functions.special.error_functions import expint
 from sympy.functions.special.gamma_functions import loggamma, polygamma
+from sympy.integrals import Integral
 from sympy.matrices.dense import Matrix
 from sympy.printing.str import sstr
 from sympy.series.order import O
@@ -330,6 +331,81 @@ def test_Lambda():
     # These are tested to see they don't raise:
     hash(Lambda(x, 2*x))
     hash(Lambda(x, x))  # IdentityFunction subclass
+
+
+
+def test_lambda_subs_capture():
+    x, y, z = symbols('x y z')
+
+    # A replacement must not be captured by a bound variable.
+    f = Lambda(x, x + y)
+    r = f.subs(y, x)
+    assert r.free_symbols == {x}
+    assert r(2) == x + 2
+
+    # Substitution without a collision is unchanged.
+    assert f.subs(y, z) == Lambda(x, x + z)
+
+    # Bound variables must not be substituted.
+    assert f.subs(x, z) == f
+
+    # Substitution must not enter a shadowed binding.
+    f = Lambda(x, Lambda(y, x + Lambda(x, x + 1)))
+    assert f.subs(y, x) == f
+
+    # An outer collision must not affect an inner binding
+    # of the same original symbol.
+    f = Lambda(x, Lambda(y, x + z + Lambda(x, x + 1)))
+    r = f.subs(z, x)
+    assert r.free_symbols == {x}
+    assert r(2)(3).dummy_eq(x + 2 + Lambda(x, x + 1))
+
+    # Unaffected bound variables should be restored,
+    # preserving structural substitution.
+    assert r(2)(3).subs(Lambda(x, x + 1), 4) == x + 6
+
+    # A collision confined to an inner binding.
+    f = Lambda(x, Lambda(y, y + z))
+    r = f.subs(z, y)
+    assert r.free_symbols == {y}
+    assert r(2)(3) == y + 3
+
+    # Substituting a variable bound by an inner Lambda
+    # must not introduce a free occurrence.
+    f = Lambda(x, Lambda(y, x + y))
+    assert f.subs(y, z) == f
+
+    # Substitution should be idempotent when the replacement
+    # contains no occurrence of the target.
+    f = Lambda(x, x + y)
+    r = f.subs(y, x)
+    assert r.subs(y, x) == r
+
+    # A simultaneous substitution must preserve the
+    # free replacement symbol.
+    r = Lambda(x, x + y).subs(
+        {y: x, z: 1}, simultaneous=True)
+    assert r.free_symbols == {x}
+    assert r(2) == x + 2
+
+    # works with non-Symbol new value
+    r = Lambda(x, x + y + z).subs(y, z + x)
+    assert r.free_symbols == {x, z}
+    assert r(2) == x + 2*z + 2
+
+    # works with non-Symbol old value
+    r = Lambda(x, x + y + z).subs(y + z, x)
+    assert r.free_symbols == {x}
+    assert r(2) == x + 2
+
+    # works with multiple objects with bound symbols
+    f = Lambda(x, y + Integral(z, (x, 1, 2)))
+    r = f.subs(z, x)
+    integral = next(iter(r.atoms(Integral)))
+
+    assert r.free_symbols == {x, y}
+    assert r.variables[0] != integral.variables[0]
+    assert r(5).doit() == x + y
 
 
 def test_IdentityFunction():
