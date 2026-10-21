@@ -2389,3 +2389,29 @@ def test_issue_29637():
     F = integrate(f, x)
     assert not F.has(Integral)
     assert (F.diff(x) - f).cancel() == 0
+
+def test_reverse_limits():
+    x, y, a, b, c, d = symbols('x y a b c d')
+    I = Integral(x**2, (x, a, b))
+    assert I.reverse_limits() == Integral(-x**2, (x, b, a))
+    assert I.reverse_limits(x) == I.reverse_limits(0)
+    assert I.reverse_limits().reverse_limits() == I
+    assert (I.reverse_limits().doit() - I.doit()).simplify() == 0
+    J = Integral(x*y, (x, a, b), (y, c, d))
+    assert J.reverse_limits(y) == Integral(-x*y, (x, a, b), (y, d, c))
+    assert J.reverse_limits(x, y) == Integral(x*y, (x, b, a), (y, d, c))
+    assert J.reverse_limits(-1) == J.reverse_limits(1)
+    assert J.reverse_limits(-2) == J.reverse_limits(0)
+    assert J.reverse_limits(0, -2) == J.reverse_limits(0)
+    raises(IndexError, lambda: J.reverse_limits(2))
+    raises(IndexError, lambda: J.reverse_limits(-3))
+    raises(ValueError, lambda: J.reverse_limits(1.0))
+    raises(ValueError, lambda: J.reverse_limits(c))
+    K = Integral(x, (x, a, b), (x, c, d))
+    assert K.reverse_limits(x) == Integral(x, (x, b, a), (x, d, c))
+    assert K.reverse_limits(1) == Integral(-x, (x, a, b), (x, d, c))
+    for i in (Integral(x, x), Integral(x, (x, b))):
+        assert i.reverse_limits() == i
+    L = Integral(x*y, (x, a, b), y)
+    assert L.reverse_limits() == Integral(-x*y, (x, b, a), y)
+    assert L.reverse_limits(x) == Integral(-x*y, (x, b, a), y)
