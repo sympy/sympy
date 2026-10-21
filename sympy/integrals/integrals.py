@@ -572,7 +572,8 @@ class Integral(AddWithLimits):
         ``self.limits``. A variable selects every limit that integrates over
         it. With no arguments, all definite limits are reversed. A
         ``ValueError`` is raised if a selected limit does not have both a
-        lower and upper bound.
+        lower and upper bound. An ``IndexError`` is raised if an integer
+		index is out of range.
 
         Examples
         ========
@@ -591,17 +592,23 @@ class Integral(AddWithLimits):
 
         sympy.concrete.summations.Sum.reverse_order, transform
         """
-        if not indices:
-            indices = range(len(self.limits))
-        positions = set()
-        for i in indices:
-            if isinstance(i, int):
-                positions.add(i)
-                continue
-            matches = [j for j, v in enumerate(self.variables) if v == i]
-            if not matches:
-                raise ValueError("%s is not an integration variable" %i)
-            positions.update(matches)
+		n = len(self.limits)
+		if not indices:
+			positions = set(range(n))
+		else:
+			positions = set()
+			for i in indices:
+				if type(i) is int:
+					if not -n <= i < n:
+						raise IndexError(
+							f"expecting int in [-{n}, {n}); got {i}")
+					positions.add(i % n)  # handles sign change
+				else:
+					matches = [j for j, v in enumerate(self.variables) if v == i]
+					if not matches:
+						raise ValueError(
+							"%s is neither an integration variable nor int" % i)
+					positions.update(matches)```
 
         sign = 1
         limits = []
