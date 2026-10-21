@@ -87,6 +87,10 @@ def test_GeometricDistribution():
     assert abs(d.cdf(20000.8).evalf() - 1) < .001
     G = Geometric('G', p=S(1)/4)
     assert cdf(G)(S(7)/2) == P(G <= S(7)/2)
+    assert density(G)(0) == 0
+    assert density(G)(-1) == 0
+    assert density(G)(S(1)/2) == 0
+
 
     X = Geometric('X', Rational(1, 5))
     Y = Geometric('Y', Rational(3, 10))
