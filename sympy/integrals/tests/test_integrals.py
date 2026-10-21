@@ -2414,5 +2414,5 @@ def test_reverse_limits():
     raises(ValueError, lambda: Integral(x, (x,b)).reverse_limits())
     raises(ValueError, lambda: Integral(x*y, (x, a, b), y).reverse_limits())
     assert Integral(x*y, (x,a,b), y).reverse_limits(x) == Integral(-x*y, (x, b, a), y)
-    assert Integral(x*y, (x,a,b), y).reverse_limits(x) == assert Integral(
+    assert Integral(x*y, (x,a,b), y).reverse_limits(x) == Integral(
         x*y, (x,a,b), y).reverse_limits()
