@@ -2406,13 +2406,12 @@ def test_reverse_limits():
     raises(IndexError, lambda: J.reverse_limits(2))
     raises(IndexError, lambda: J.reverse_limits(-3))
     raises(ValueError, lambda: J.reverse_limits(1.0))
+    raises(ValueError, lambda: J.reverse_limits(c))
     K = Integral(x, (x, a, b), (x, c, d))
     assert K.reverse_limits(x) == Integral(x, (x, b, a), (x, d, c))
     assert K.reverse_limits(1) == Integral(-x, (x, a, b), (x, d, c))
-    raises(ValueError, lambda: J.reverse_limits(c))
-    raises(ValueError, lambda: Integral(x,x).reverse_limits())
-    raises(ValueError, lambda: Integral(x, (x,b)).reverse_limits())
-    raises(ValueError, lambda: Integral(x*y, (x, a, b), y).reverse_limits())
+    for i in (Integral(x, x), Integral(x, (x, b))):
+        assert i.reverse_limits() == i
     assert Integral(x*y, (x,a,b), y).reverse_limits(x) == Integral(-x*y, (x, b, a), y)
     assert Integral(x*y, (x,a,b), y).reverse_limits(x) == Integral(
         x*y, (x,a,b), y).reverse_limits()
