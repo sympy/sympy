@@ -22,6 +22,7 @@ from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.relational import Eq
 
+
 b1 = Basic()
 b2 = Basic(b1)
 b3 = Basic(b2)
@@ -283,6 +284,34 @@ def test_as_dummy():
         assert D != d and D.func == Dummy and D.is_real is None
     assert Dummy().as_dummy().is_commutative
     assert Dummy(commutative=False).as_dummy().is_commutative is False
+
+
+def test_as_dummy_scopes():
+    u, v, x, y, _0, _1 = symbols('u v x y _0 _1')
+
+    # Nested scopes must have distinct bound variables.
+    a = Lambda(y, Lambda(x, x + y))
+    expected = Lambda(_0, Lambda(_1, _0 + _1))
+    assert a.as_dummy() == expected
+
+    # Alpha-equivalent expressions have the same canonical form.
+    b = Lambda(v, Lambda(u, u + v))
+    assert b.as_dummy() == expected
+
+    # Shadowing must not change the meaning.
+    assert Lambda(x, Lambda(x, x + y)).as_dummy() == \
+        Lambda(_0, Lambda(_1, _1 + y))
+
+    # Independent sibling scopes can reuse canonical variables.
+    a = Basic(Lambda(x, x + 1), Lambda(y, y + 2))
+    b = Basic(Lambda(v, v + 1), Lambda(u, u + 2))
+    expected = Basic(
+        Lambda(_0, _0 + 1), Lambda(_0, _0 + 2))
+    assert a.as_dummy() == expected
+    assert b.as_dummy() == expected
+
+    # Canonicalization is idempotent.
+    assert expected.as_dummy() == expected
 
 
 def test_canonical_variables():

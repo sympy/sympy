@@ -1154,10 +1154,10 @@ def test_old_trig_issues():
                 ImageSet(Lambda(n, n*pi + 0.523598775598299), S.Integers))
     ret = solveset(cos(2*x) - 0.5, x, S.Reals)
     # replace Dummy n by the regular Symbol n to allow all_close comparison.
-    ret = ret.subs(ret.atoms(Dummy).pop(), n)
+    ret = ret.xreplace({ret.atoms(Dummy).pop(): n})  # bypass protected bound symbol
     assert all_close(ret, sol)
     ret = solveset(cos(2*x) - 0.5, x, S.Complexes)
-    ret = ret.subs(ret.atoms(Dummy).pop(), n)
+    ret = ret.xreplace({ret.atoms(Dummy).pop(): n})  # bypass protected bound symbol
     assert all_close(ret, sol)
 
     # issue #21296 / #17667
@@ -1174,7 +1174,7 @@ def test_old_trig_issues():
 
     # issue #17579
     # Valid result, but the intersection could potentially be simplified.
-    assert solveset(sin(log(x)), x, Interval(0,1, True, False)).dummy_eq(
+    assert solveset(sin(log(x)), x, Interval(0, 1, True, False)).dummy_eq(
         Union(Intersection(ImageSet(Lambda(n, exp(2*n*pi)), S.Integers), Interval.Lopen(0, 1)),
               Intersection(ImageSet(Lambda(n, exp(2*n*pi + pi)), S.Integers), Interval.Lopen(0, 1))))
 

@@ -740,51 +740,80 @@ class Basic(Printable):
             active_deprecations_target="deprecated-expr-free-symbols")
         return set()
 
-    def as_dummy(self) -> "Self":
-        """Return the expression with any objects having structurally
-        bound symbols replaced with unique, canonical symbols within
-        the object in which they appear and having only the default
-        assumption for commutativity being True. When applied to a
-        symbol a new symbol having only the same commutativity will be
-        returned.
 
-        Examples
-        ========
+    def _bound_dummies(self):
+        """Replace bound symbols with unique Dummies.
 
-        >>> from sympy import Integral, Symbol
-        >>> from sympy.abc import x
-        >>> r = Symbol('r', real=True)
-        >>> Integral(r, (r, x)).as_dummy()
-        Integral(_0, (_0, x))
-        >>> _.variables[0].is_real is None
-        True
-        >>> r.as_dummy()
-        _r
-
-        Notes
-        =====
-
-        Any object that has structurally bound variables should have
-        a property, ``bound_symbols`` that returns those symbols
-        appearing in the object.
+        Return the transformed expression and a mapping from
+        temporary Dummies to their original bound symbols.
         """
         from .symbol import Dummy, Symbol
-        def can(x):
-            # mask free that shadow bound
+
+        restore = {}
+
+        def freshen(x):
+            # Mask free symbols that shadow bound symbols.
             free = x.free_symbols
             bound = set(x.bound_symbols)
             d = {i: Dummy() for i in bound & free}
             x = x.subs(d)
-            # replace bound with canonical names
-            x = x.xreplace(x.canonical_variables)
-            # return after undoing masking
+
+
+            # Distinguish every binding with a unique Dummy.
+            reps = {
+                v: Dummy(v.name, commutative=v.is_commutative)
+                for v in x.bound_symbols
+            }
+            restore.update({dummy: v for v, dummy in reps.items()})
+
+            x = x.xreplace(reps)
+
+            # Restore masked free symbols.
             return x.xreplace({v: k for k, v in d.items()})
+
         if not self.has(Symbol):
-            return self
-        return self.replace(
+            return self, restore
+
+        rv = self.replace(
             lambda x: hasattr(x, 'bound_symbols'),
-            can,
-            simultaneous=False) # type:ignore
+            freshen,
+            simultaneous=False)
+
+        return rv, restore
+
+
+    def as_dummy(self) -> "Self":
+        from .symbol import Symbol
+
+        rv, restore = self._bound_dummies()
+        if not restore:
+            return rv
+
+        temporary = set(restore)
+        canonical = {}
+
+        def assign(x, used):
+            used = set(used)
+
+            for b in getattr(x, 'bound_symbols', ()):
+                if b not in temporary or b in canonical:
+                    continue
+
+                names = {s.name for s in x.free_symbols
+                         if isinstance(s, Symbol)}
+                i = 0
+                while f'_{i}' in used or f'_{i}' in names:
+                    i += 1
+
+                canonical[b] = Symbol(f'_{i}')
+                used.add(f'_{i}')
+
+            for arg in x.args:
+                assign(arg, used)
+
+        assign(rv, set())
+        return rv.xreplace(canonical)
+
 
     @property
     def canonical_variables(self) -> dict[Basic, Symbol]:
