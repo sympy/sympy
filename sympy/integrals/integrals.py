@@ -601,7 +601,9 @@ class Integral(AddWithLimits):
         """
         n = len(self.limits)
         if not indices:
-            positions = set(range(n))
+            positions = {
+                i for i, lim in enumerate(self.limits) if len(lim) == 3
+            }
         else:
             positions = set()
             for i in set(indices):
@@ -616,6 +618,9 @@ class Integral(AddWithLimits):
                         raise ValueError(
                             "%s is neither an integration variable nor int" % i)
                     positions.update(matches)
+
+        if not positions:
+            return self
 
         sign = 1
         limits = []
