@@ -609,7 +609,7 @@ class Integral(AddWithLimits):
                     if not -n <= i < n:
                         raise IndexError(
                             f"expecting int in [-{n}, {n}); got {i}")
-                    positions.add(i % n)  # handles sign change
+                    positions.add(i % n)  # normalize negative indices
                 else:
                     matches = [j for j, v in enumerate(self.variables) if v == i]
                     if not matches:
