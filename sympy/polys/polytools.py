@@ -4735,6 +4735,7 @@ class PurePoly(Poly):
                 from sympy.polys.rootoftools import ComplexRootOf
                 root = values[0]
                 if (isinstance(root, ComplexRootOf)
+                        and self.domain.characteristic() == 0
                         and self.degree() >= root.poly.degree()):
                     # A polynomial divisible by the root's defining
                     # polynomial vanishes at that root. Avoid expanding
