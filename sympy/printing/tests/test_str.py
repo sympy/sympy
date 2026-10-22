@@ -466,7 +466,7 @@ def test_Poly_composite_domain_roundtrip():
          "domain=ZZ.poly_ring(a).frac_field(y)"),
     ]
     ns = {'Poly': Poly, 'PurePoly': PurePoly, 'ZZ': ZZ,
-          'a': a, 'beta': beta, 'E': e_symbol, 'y': y, '_0': Symbol('_0')}
+          'a': a, 'beta': beta, 'E': e_symbol, 'x': x, 'y': y, '_0': Symbol('_0')}
     for symbol, domain, expected in cases:
         for cls in (Poly, PurePoly):
             p = cls(x**2 + symbol, x, domain=domain)
