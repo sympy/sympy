@@ -7,7 +7,7 @@ from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.functions import (
     Abs, acos, acosh, asin, asinh, atan, atanh, atan2, ceiling, cos, cosh, erf,
     erfc, exp, floor, gamma, log, loggamma, Max, Min, Piecewise, sign, sin, sinh,
-    sqrt, tan, tanh, fibonacci, lucas
+    sqrt, tan, tanh, fibonacci, lucas, EML
 )
 from sympy.sets import Range
 from sympy.logic import ITE, Implies, Equivalent
@@ -120,6 +120,11 @@ def test_ccode_Integer():
 
 def test_ccode_functions():
     assert ccode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
+
+
+def test_ccode_EML():
+    # EML(x, y) is printed via its exp/log rewrite.
+    assert ccode(EML(x, y)) == '(exp(x) - log(y))'
 
 
 def test_ccode_inline_function():
