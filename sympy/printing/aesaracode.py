@@ -82,8 +82,8 @@ if aesara:
 class AesaraPrinter(Printer):
     """
     .. deprecated:: 1.14.
-        The ``Aesara Code printing`` is deprecated.See its documentation for
-        more information. See :ref:`deprecated-aesaraprinter` for details.
+        The ``Aesara Code printing`` is deprecated. Aesara has been renamed
+        to PyTensor. See :ref:`deprecated-aesaraprinter` for details.
 
     Code printer which creates Aesara symbolic expression graphs.
 
@@ -355,7 +355,8 @@ def aesara_code(expr, cache=None, **kwargs):
     """
     sympy_deprecation_warning(
         """
-        The aesara_code function is deprecated.
+        The aesara_code function is deprecated. Aesara has been renamed to
+        PyTensor.
         """,
         deprecated_since_version="1.14",
         active_deprecations_target='deprecated-aesaraprinter',
@@ -508,7 +509,8 @@ def aesara_function(inputs, outputs, scalar=False, *,
     """
     sympy_deprecation_warning(
         """
-        The aesara_function function is deprecated.
+        The aesara_function function is deprecated. Aesara has been renamed
+        to PyTensor.
         """,
         deprecated_since_version="1.14",
         active_deprecations_target='deprecated-aesaraprinter',
