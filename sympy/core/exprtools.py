@@ -12,13 +12,13 @@ from .sympify import sympify
 from .numbers import Rational, Integer, Number, I, equal_valued
 from .singleton import S
 from .sorting import default_sort_key, ordered
-from .symbol import Dummy
+from .symbol import Dummy, Symbol
 from .traversal import preorder_traversal
 from .coreerrors import NonCommutativeExpression
 from .containers import Tuple, Dict
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, iterable, is_sequence)
+        variations, iterable, is_sequence, numbered_symbols)
 
 from collections import defaultdict
 
@@ -1644,3 +1644,65 @@ def factor_nc(expr):
 
         # mid was an Add that didn't factor successfully
         return _keep_coeff(c, g*l*mid*r)
+
+
+def condense(expr, *symbols):
+    """Replace subexpressions independent of ``symbols`` with new symbols.
+
+    Returns the condensed expression and a dictionary mapping the new symbols
+    to the subexpressions they represent. Substituting the replacements back
+    reconstructs the original expression. Simple atomic constants are left
+    unchanged; more complicated coefficients in sums and products are replaced.
+
+    Examples
+    ========
+
+    >>> from sympy.core.exprtools import condense
+    >>> from sympy import symbols, sqrt
+    >>> a, b, c, d, e, x = symbols('a b c d e x')
+    >>> condense(2*x + 2, x)
+    (2*x + 2, {})
+
+    >>> eq = (a*b*c**2 - 2*sqrt(d*(a*b - c - e + x)))/(b - 1)
+    >>> first = condense(eq, x); first
+    (c6*(c5 - 2*sqrt(d*(c4 + x))), {c4: a*b - c - e, c5: a*b*c**2, c6: 1/(b - 1)})
+    >>> first[0].xreplace(first[1]) == eq
+    True
+
+    Condensing again after expansion can expose additional simplifications:
+
+    >>> second = condense(first[0].expand(), x); second
+    (c0 + c2*sqrt(c1 + d*x), {c0: c5*c6, c1: c4*d, c2: -2*c6})
+    >>> full_reps = {k: v.xreplace(first[1]) for k, v in second[1].items()}
+    >>> (second[0].xreplace(full_reps) - eq).simplify()
+    0
+
+    More than one symbol may be kept explicit:
+
+    >>> condense(eq, c, e)
+    (c3*(c**2*c1 - 2*sqrt(d*(-c + c2 - e))), {c1: a*b, c2: a*b + x, c3: 1/(b - 1)})
+    """
+    expr = sympify(expr)
+    replacements = {}
+    # Avoid printed-name collisions, even with symbols having assumptions.
+    excluded = {Symbol(s.name) for s in expr.atoms(Symbol)}
+    generator = numbered_symbols('c', exclude=excluded)
+
+    def do(e):
+        independent, dependent = e.as_independent(*symbols)
+        if not independent.args:
+            return e
+        if independent not in replacements:
+            replacements[independent] = next(generator)
+        return e.func(replacements[independent], dependent)
+
+    condensed = expr.replace(
+        lambda e: e.is_commutative and (e.is_Add or e.is_Mul), do)
+
+    # The tree walk visits children before parents, so a replacement can
+    # refer to previously generated symbols. Resolve those dependencies.
+    resolved = {}
+    for value, symbol in replacements.items():
+        resolved[symbol] = value.xreplace(resolved)
+    used = condensed.free_symbols & resolved.keys()
+    return condensed, {s: resolved[s] for s in sorted(used, key=default_sort_key)}
