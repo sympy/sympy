@@ -310,6 +310,12 @@ def test_as_dummy_scopes():
     assert a.as_dummy() == expected
     assert b.as_dummy() == expected
 
+    # Alpha-equivalent Lambdas combine when canonicalized as part of Add.
+    a = Lambda(x, Lambda(y, x + y))
+    b = Lambda(y, Lambda(x, x + y))
+    assert (a + b).as_dummy() == 2*Lambda(
+        _0, Lambda(_1, _0 + _1))
+
     # Canonicalization is idempotent.
     assert expected.as_dummy() == expected
 
