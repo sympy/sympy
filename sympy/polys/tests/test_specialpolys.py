@@ -6,7 +6,8 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory.generate import prime
 from sympy.polys.domains.integerring import ZZ
-from sympy.polys.polytools import Poly, PurePoly
+from sympy.polys.numberfields.minpoly import minimal_polynomial
+from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import permute_signs
 from sympy.testing.pytest import raises
 
@@ -23,37 +24,32 @@ from sympy.polys.specialpolys import (
     fateman_poly_F_3,
     dmp_fateman_poly_F_3,
 )
+from sympy.polys.tests.test_appellseqs import check_special
 
 from sympy.abc import x, y, z
 
 
 def test_swinnerton_dyer_poly():
     raises(ValueError, lambda: swinnerton_dyer_poly(0, x))
+    raises(ValueError, lambda: swinnerton_dyer_poly(1.2, x))
 
-    assert swinnerton_dyer_poly(1, x, polys=True) == Poly(x**2 - 2)
-
-    assert swinnerton_dyer_poly(1, x) == x**2 - 2
-    assert swinnerton_dyer_poly(2, x) == x**4 - 10*x**2 + 1
-    assert swinnerton_dyer_poly(
-        3, x) == x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
-    # we only need to check that the polys arg works but
-    # we may as well test that the roots are correct
+    check_special(x**2 - 2, swinnerton_dyer_poly, 1)
+    check_special(x**4 - 10*x**2 + 1, swinnerton_dyer_poly, 2)
+    check_special(x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576,
+        swinnerton_dyer_poly, 3)
     p = [sqrt(prime(i)) for i in range(1, 5)]
+    check_special(minimal_polynomial(Add(*p), x), swinnerton_dyer_poly, 4)
+    # we may as well test that the roots are correct
     p4 = swinnerton_dyer_poly(4, polys=True)
-    assert type(swinnerton_dyer_poly(1, polys=True)) is PurePoly
-    assert type(swinnerton_dyer_poly(1, x, polys=True)) is Poly
-    assert type(swinnerton_dyer_poly(4, polys=True)) is PurePoly
-    assert type(swinnerton_dyer_poly(4, x, polys=True)) is Poly
     assert str([i.n(3) for i in
         p4.all_roots()]
         ) == str(sorted([Add(*i).n(3) for i in permute_signs(p)]))
-    raises(ValueError, lambda: swinnerton_dyer_poly(1.2, x))
 
 
 def test_cyclotomic_poly():
     raises(ValueError, lambda: cyclotomic_poly(0, x))
 
-    assert cyclotomic_poly(1, x, polys=True) == Poly(x - 1)
+    check_special(x - 1, cyclotomic_poly, 1)
 
     assert cyclotomic_poly(1, x) == x - 1
     assert cyclotomic_poly(2, x) == x + 1
@@ -66,9 +62,14 @@ def test_cyclotomic_poly():
 def test_symmetric_poly():
     raises(ValueError, lambda: symmetric_poly(-1, x, y, z))
     raises(ValueError, lambda: symmetric_poly(5, x, y, z))
+    raises(ValueError, lambda: symmetric_poly(5))
 
-    assert symmetric_poly(1, x, y, z, polys=True) == Poly(x + y + z)
-    assert symmetric_poly(1, (x, y, z), polys=True) == Poly(x + y + z)
+    gens = (x, y)
+    assert symmetric_poly(1, gens) == x + y
+    assert symmetric_poly(1, *gens) == x + y
+    assert symmetric_poly(1, gens, polys=True) == Poly(x + y )
+    assert symmetric_poly(1, *gens, polys=True) == Poly(x + y)
+
 
     assert symmetric_poly(0, x, y, z) == 1
     assert symmetric_poly(1, x, y, z) == x + y + z
