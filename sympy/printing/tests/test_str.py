@@ -479,6 +479,30 @@ def test_Poly_composite_domain_roundtrip():
             assert q.domain == p.domain
 
 
+def test_Poly_composite_domain_dummy():
+    from sympy.polys import PurePoly
+
+    t = Dummy('t')
+    a = Symbol('a')
+    positive = Symbol('a', positive=True)
+
+    cases = [
+        (QQ.poly_ring(t), t, "domain='QQ[_t]'"),
+        (QQ.frac_field(t), t, "domain='QQ(_t)'"),
+        (QQ.poly_ring(a, t), a + t, "domain='QQ[a,_t]'"),
+        (QQ.poly_ring(positive, t), positive + t,
+         "domain=QQ.poly_ring(a, _t)"),
+        (QQ.poly_ring(t, order='grlex'), t,
+         "domain=QQ.poly_ring(_t, order='grlex')"),
+        (QQ.poly_ring(a).frac_field(t), a + t,
+         "domain=QQ.poly_ring(a).frac_field(_t)"),
+    ]
+    for domain, coefficient, expected in cases:
+        for cls in (Poly, PurePoly):
+            p = cls(x**2 + coefficient, x, domain=domain)
+            assert expected in str(p)
+
+
 def test_PolyRing():
     assert str(ring("x", ZZ, lex)[0]) == "Polynomial ring in x over ZZ with lex order"
     assert str(ring("x,y", QQ, grlex)[0]) == "Polynomial ring in x, y over QQ with grlex order"
