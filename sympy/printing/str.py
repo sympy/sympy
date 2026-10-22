@@ -11,7 +11,7 @@ from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Dummy, Symbol
 from sympy.external.mpmath import prec_to_dps, to_str as mlib_to_str
 from sympy.utilities.iterables import sift
 from .precedence import precedence, PRECEDENCE
@@ -622,7 +622,22 @@ class StrPrinter(Printer):
                 from sympy.polys.polyoptions import Domain
                 from sympy.polys.polyerrors import BasePolynomialError
                 try:
-                    safe = Domain.preprocess(str(domain)) == domain
+                    parsed = Domain.preprocess(str(domain))
+                    safe = parsed == domain
+                    if not safe and any(isinstance(s, Dummy) for s in domain.symbols):
+                        # Domain strings cannot preserve Dummy identity.
+                        # Accept its Symbol equivalent when all other
+                        # domain properties survive parsing.
+                        symbols = tuple(
+                            Symbol(str(s)) if isinstance(s, Dummy) else s
+                            for s in domain.symbols)
+                        if domain.is_PolynomialRing:
+                            normalized = domain.domain.poly_ring(
+                                *symbols, order=domain.order)
+                        else:
+                            normalized = domain.domain.frac_field(
+                                *symbols, order=domain.order)
+                        safe = parsed == normalized
                 except (BasePolynomialError, SympifyError, ValueError, TypeError):
                     safe = False
                 if not safe:
