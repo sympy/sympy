@@ -4731,6 +4731,21 @@ class PurePoly(Poly):
             return self
         values = tuple(sympify(v) for v in values)
         if len(values) == len(gens):
+            if len(gens) == 1:
+                from sympy.polys.rootoftools import ComplexRootOf
+                root = values[0]
+                if (isinstance(root, ComplexRootOf)
+                        and self.degree() >= root.poly.degree()):
+                    # A polynomial divisible by the root's defining
+                    # polynomial vanishes at that root. Avoid expanding
+                    # powers of RootOf just to discover this zero.
+                    try:
+                        if self.rem(PurePoly.new(root.poly.rep)).is_zero:
+                            return S.Zero
+                    except (CoercionFailed, DomainError, UnificationFailed):
+                        # Incompatible coefficient domains: retain the
+                        # ordinary symbolic evaluation.
+                        pass
             return self.as_expr().xreplace(dict(zip(gens, values)))
 
         # Use fresh placeholders for unbound generators so that supplied
