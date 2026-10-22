@@ -4,7 +4,7 @@ Covering Product, Intersecting Product
 """
 from __future__ import annotations
 
-from sympy.core import S, sympify, Rational
+from sympy.core import S, sympify, Rational, Integer
 from sympy.core.function import expand_mul
 from sympy.discrete.transforms import (
     fft, ifft, ntt, intt, fwht, ifwht,
@@ -96,7 +96,7 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
             for i in a:
                 if isinstance(i, Rational) and i.q - 1:
                     dens.append(i.q)
-                elif not isinstance(i, int):
+                elif not isinstance(i, (int, Integer)):
                     return
             if dens:
                 l = lcm(*dens)
@@ -111,6 +111,7 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
                 (ia, ma), (ib, mb) = da, db
                 den = ma*mb
                 ls = convolution_int(ia, ib)
+                ls.extend([0]*(len(a) + len(b) - 1 - len(ls)))
                 if den != 1:
                     ls = [Rational(i, den) for i in ls]
         if ls is None:

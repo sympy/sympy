@@ -3553,10 +3553,10 @@ class DomainMatrix:
 
         The same calculations with ``Matrix``:
 
-        >>> M.to_Matrix().charpoly().as_expr()
-        lambda**4 - 25*lambda**3 + 203*lambda**2 - 495*lambda - 324
-        >>> M.to_Matrix().charpoly().as_expr().factor()
-        (lambda - 9)**2*(lambda**2 - 7*lambda - 4)
+        >>> M.to_Matrix().charpoly()('lamda')
+        lamda**4 - 25*lamda**3 + 203*lamda**2 - 495*lamda - 324
+        >>> M.to_Matrix().charpoly()('lamda').factor()
+        (lamda - 9)**2*(lamda**2 - 7*lamda - 4)
 
         Returns
         =======

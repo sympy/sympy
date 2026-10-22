@@ -837,15 +837,15 @@ def test_Domain___eq__():
 
 def test_Domain__algebraic_field():
     alg = ZZ.algebraic_field(sqrt(2))
-    assert alg.ext.minpoly == Poly(x**2 - 2)
+    assert alg.ext.minpoly.as_poly(x) == Poly(x**2 - 2, domain=QQ)
     assert alg.dom == QQ
 
     alg = QQ.algebraic_field(sqrt(2))
-    assert alg.ext.minpoly == Poly(x**2 - 2)
+    assert alg.ext.minpoly.as_poly(x) == Poly(x**2 - 2, domain=QQ)
     assert alg.dom == QQ
 
     alg = alg.algebraic_field(sqrt(3))
-    assert alg.ext.minpoly == Poly(x**4 - 10*x**2 + 1)
+    assert alg.ext.minpoly.as_poly(x) == Poly(x**4 - 10*x**2 + 1, domain=QQ)
     assert alg.dom == QQ
 
 
@@ -855,27 +855,27 @@ def test_Domain_alg_field_from_poly():
     h = Poly(x**4 - 10*x**2 + 1)
 
     alg = ZZ.alg_field_from_poly(f)
-    assert alg.ext.minpoly == f
+    assert alg.ext.minpoly.as_poly(x) == f.set_domain(QQ)
     assert alg.dom == QQ
 
     alg = QQ.alg_field_from_poly(f)
-    assert alg.ext.minpoly == f
+    assert alg.ext.minpoly.as_poly(x) == f.set_domain(QQ)
     assert alg.dom == QQ
 
     alg = alg.alg_field_from_poly(g)
-    assert alg.ext.minpoly == h
+    assert alg.ext.minpoly.as_poly(x) == h.set_domain(QQ)
     assert alg.dom == QQ
 
 
 def test_Domain_cyclotomic_field():
     K = ZZ.cyclotomic_field(12)
     assert K.is_Cyclotomic and K.is_CyclotomicField
-    assert K.ext.minpoly == Poly(cyclotomic_poly(12))
+    assert K.ext.minpoly.as_poly(Poly(cyclotomic_poly(12)).gen) == Poly(cyclotomic_poly(12), domain=QQ)
     assert K.dom == QQ
     assert K.zeta_order == 12
 
     F = QQ.cyclotomic_field(3)
-    assert F.ext.minpoly == Poly(cyclotomic_poly(3))
+    assert F.ext.minpoly.as_poly(Poly(cyclotomic_poly(3)).gen) == Poly(cyclotomic_poly(3), domain=QQ)
     assert F.dom == QQ
     assert F.zeta_order == 3
 

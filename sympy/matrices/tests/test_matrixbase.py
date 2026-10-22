@@ -1205,7 +1205,7 @@ def test_issue_17247_expression_blowup_4():
 def test_issue_17247_expression_blowup_5():
     M = Matrix(6, 6, lambda i, j: 1 + (-1)**(i+j)*I)
     with dotprodsimp(True):
-        assert M.charpoly('x') == PurePoly(x**6 + (-6 - 6*I)*x**5 + 36*I*x**4, x, domain='EX')
+        assert M.charpoly('x') == Poly(x**6 + (-6 - 6*I)*x**5 + 36*I*x**4, x, domain='ZZ_I')
 
 
 def test_issue_17247_expression_blowup_6():
@@ -2542,16 +2542,17 @@ def test_Matrix_berkowitz_charpoly():
     A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
 
-    charpoly = A.charpoly(x)
+    charpoly = A.charpoly()
 
-    assert charpoly == \
+    assert charpoly.as_poly(x) == \
         Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x +
         K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
 
     assert type(charpoly) is PurePoly
 
     A = Matrix([[1, 3], [2, 0]])
-    assert A.charpoly() == A.charpoly(x) == PurePoly(x**2 - x - 6)
+    assert A.charpoly() == PurePoly(x**2 - x - 6)
+    assert A.charpoly(x) == A.charpoly().as_poly(x)
 
     A = Matrix([[1, 2], [x, 0]])
     p = A.charpoly(x)
