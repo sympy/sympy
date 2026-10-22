@@ -445,7 +445,6 @@ def test_Poly():
 
 def test_Poly_composite_domain_roundtrip():
     from sympy.polys.domains import ZZ
-    from sympy.polys.polyoptions import Domain
     from sympy.polys import PurePoly
 
     a = Symbol('a')
