@@ -583,7 +583,16 @@ class LatexPrinter(Printer):
         # XXX: _print_Pow calls this routine with instances of Pow...
         if isinstance(expr, Mul):
             args = expr.args
-            if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
+            # An unevaluated numeric division 1/1 is encoded as
+            # Mul(1, Pow(1, -1, evaluate=False), evaluate=False).  Print it
+            # as a fraction rather than as an explicit multiplication.
+            numeric_ratio = (
+                len(args) == 2 and args[0] is S.One
+                and isinstance(args[1], Pow)
+                and args[1].exp is S.NegativeOne
+                and args[1].base.is_Integer)
+            if not numeric_ratio and (args[0] is S.One or
+                    any(isinstance(arg, Number) for arg in args[1:])):
                 return convert_args(args)
 
         include_parens = False
