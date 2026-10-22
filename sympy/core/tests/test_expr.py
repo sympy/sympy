@@ -855,6 +855,8 @@ def test_trunc():
     assert math.trunc(exp(5)) == 148
     assert math.trunc(cos(pi)) == -1
     assert math.trunc(sin(5)) == 0
+    assert type(math.trunc(pi)) is int
+    assert type(math.trunc(sqrt(2))) is int
 
     raises(TypeError, lambda: math.trunc(x))
     raises(TypeError, lambda: math.trunc(x + y**2))

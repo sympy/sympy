@@ -280,3 +280,34 @@ def test_plane_equation_symbol_clash():
 
     p = Plane(Point3D(x, y, z), normal_vector=(u, v, w))
     raises(ValueError, lambda: p.equation(x, y, z))
+
+
+def test_plane_distance_parallel_segment_ray():
+    # Issue #30778: Plane.distance() raises ValueError for parallel Segment3D and Ray3D
+    p = Plane((0, 0, 0), normal_vector=(0, 0, 1))
+    s1 = Segment3D((0, 0, 1), (1, 0, 1))
+    r1 = Ray3D((0, 0, 1), (1, 0, 1))
+    assert p.distance(s1) == 1
+    assert p.distance(r1) == 1
+
+    # Ray pointing away from plane
+    r_away = Ray3D((0, 0, 1), (0, 0, 2))
+    assert p.distance(r_away) == 1
+
+    # In-plane segment and ray
+    s_in = Segment3D((0, 0, 0), (2, 3, 0))
+    r_in = Ray3D((0, 0, 0), (2, 3, 0))
+    assert p.distance(s_in) == 0
+    assert p.distance(r_in) == 0
+
+    # Parallel segment and ray with inclined plane
+    p2 = Plane((1, 1, 1), normal_vector=(1, 1, 0))
+    s2 = Segment3D((3, 0, 0), (4, -1, 1))
+    assert p2.distance(s2) == p2.distance(Point3D(3, 0, 0))
+
+    # Symbolic coordinates
+    h = symbols('h', positive=True)
+    s_sym = Segment3D((0, 0, h), (1, 0, h))
+    r_sym = Ray3D((0, 0, h), (1, 0, h))
+    assert p.distance(s_sym) == h
+    assert p.distance(r_sym) == h
