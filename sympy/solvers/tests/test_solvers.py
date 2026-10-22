@@ -2750,3 +2750,13 @@ def test_solve_maxmin():
     assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
     system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
     assert solve(system, variables) == [(-3, 1), (2, 6)]
+
+
+def test_issue_27062():
+    # solve(x*log(x)) should not return 0 because log(0) is not finite
+    assert solve(x*log(x), x) == [1]
+    assert solve(x*log(x), x, check=False) == [0, 1]
+    assert solve(x*(x - 1)*log(x), x) == [1]
+    assert solve(x*log(x - 1), x) == [0, 2]
+    pw = Piecewise((x - 1, x > 0), (S.Infinity, True))
+    assert solve((x - 2)*pw, x) == [1, 2]

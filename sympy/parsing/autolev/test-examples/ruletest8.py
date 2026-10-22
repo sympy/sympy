@@ -1,7 +1,5 @@
 import sympy.physics.mechanics as _me
 import sympy as _sm
-import math as m
-import numpy as _np
 
 frame_a = _me.ReferenceFrame('a')
 c1, c2, c3 = _sm.symbols('c1 c2 c3', real=True)
