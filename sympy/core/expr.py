@@ -1248,7 +1248,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_commutative:
                         base, exp = decompose_power(factor)
 
-                        cpart[base] = exp
+                        cpart[base] = cpart.get(base, 0) + exp
                         gens_set.add(base)
                     else:
                         ncpart.append(factor)
