@@ -252,6 +252,9 @@ SI.set_quantity_scale_factor(psi, pound * gee / inch ** 2)
 SI.set_quantity_dimension(mmHg, pressure)
 SI.set_quantity_scale_factor(mmHg, dHg0 * acceleration_due_to_gravity * kilogram / meter**2)
 
+SI.set_quantity_dimension(torr, pressure)
+SI.set_quantity_scale_factor(torr, atmosphere / 760)
+
 SI.set_quantity_dimension(milli_mass_unit, mass)
 SI.set_quantity_scale_factor(milli_mass_unit, atomic_mass_unit/1000)
 
@@ -264,7 +267,7 @@ SI.set_quantity_dimension(lightyear, length)
 SI.set_quantity_scale_factor(lightyear, speed_of_light*julian_year)
 
 SI.set_quantity_dimension(astronomical_unit, length)
-SI.set_quantity_scale_factor(astronomical_unit, 149597870691*meter)
+SI.set_quantity_scale_factor(astronomical_unit, 149597870700*meter)
 
 # Fundamental Planck units:
 
