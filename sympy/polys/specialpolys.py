@@ -65,7 +65,10 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
             a.append(sqrt(p))
         ex = minimal_polynomial(Add(*a), x)
 
-    return poly_cls(ex, x) if polys else ex
+    if poly_cls is PurePoly:
+        p = PurePoly(ex, x)  # get the canonical variable
+        return p if polys else p.as_expr()
+    return Poly(ex, x) if polys else ex
 
 
 @public

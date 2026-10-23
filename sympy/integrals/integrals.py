@@ -560,6 +560,81 @@ class Integral(AddWithLimits):
 
         return self.func(newfunc, *newlimits)
 
+    def reverse_limits(self, *indices):
+        r"""
+        Reverse the limits of integration, compensating with a sign change.
+
+        Explanation
+        ===========
+
+        Uses `\int_a^b f\,dx = -\int_b^a f\,dx`. The selectors in ``indices``
+        are either integration variables or numerical positions in
+        ``self.limits``. A variable selects every limit that integrates over
+        it. With no arguments, all definite limits are reversed. A
+        ``ValueError`` is raised if a selected limit does not have both a
+        lower and upper bound. An ``IndexError`` is raised if an integer
+        index is out of range.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, y, a, b, c, d
+        >>> Integral(x**2, (x, a, b)).reverse_limits()
+        Integral(-x**2, (x, b, a))
+        >>> Integral(x*y, (x, a, b), (y, c, d)).reverse_limits(y)
+        Integral(-x*y, (x, a, b), (y, d, c))
+        >>> Integral(x*y, (x, a, b), (y, c, d)).reverse_limits(x, y)
+        Integral(x*y, (x, b, a), (y, d, c))
+
+        Index 0 selects the innermost limit and -1 the outermost:
+
+        >>> Integral(x*y, (x, a, b), (y, c, d)).reverse_limits(0)
+        Integral(-x*y, (x, b, a), (y, c, d))
+        >>> Integral(x*y, (x, a, b), (y, c, d)).reverse_limits(-1)
+        Integral(-x*y, (x, a, b), (y, d, c))
+
+        See Also
+        ========
+
+        sympy.concrete.summations.Sum.reverse_order, transform
+        """
+        n = len(self.limits)
+        if not indices:
+            positions = {
+                i for i, lim in enumerate(self.limits) if len(lim) == 3
+            }
+        else:
+            positions = set()
+            for i in set(indices):
+                if type(i) is int:
+                    if not -n <= i < n:
+                        raise IndexError(
+                            f"expecting int in [-{n}, {n}); got {i}")
+                    positions.add(i % n)  # normalize negative indices
+                else:
+                    matches = [j for j, v in enumerate(self.variables) if v == i]
+                    if not matches:
+                        raise ValueError(
+                            "%s is neither an integration variable nor int" % i)
+                    positions.update(matches)
+
+        if not positions:
+            return self
+
+        sign = 1
+        limits = []
+        for i, lim in enumerate(self.limits):
+            if i in positions:
+                if len(lim) != 3:
+                    raise ValueError(
+                        "cannot reverse the limits of an indefinite integral over %s" %lim[0]
+                    )
+                sign = -sign
+                lim = (lim[0], lim[2], lim[1])
+            limits.append(lim)
+        return self.func(sign*self.function, *limits)
+
     def doit(self, **hints):
         """
         Perform the integration using any hints given.

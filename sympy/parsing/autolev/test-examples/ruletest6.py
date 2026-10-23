@@ -1,7 +1,5 @@
 import sympy.physics.mechanics as _me
 import sympy as _sm
-import math as m
-import numpy as _np
 
 q1, q2 = _me.dynamicsymbols('q1 q2')
 x, y, z = _me.dynamicsymbols('x y z')
