@@ -1240,7 +1240,7 @@ class Expr(Basic, EvalfMixin):
             coeff, _term = term.as_coeff_Mul()
 
             # Keep numeric factors structurally, without calling evalf.
-            coefficient_factors = [coeff]
+            coefficient_factors: list[Expr] = [coeff]
             imaginary = False
             cpart: dict[Expr, int] = {}
             ncpart = []
@@ -1253,7 +1253,7 @@ class Expr(Basic, EvalfMixin):
                         continue
                     if (factor.is_Number or factor.is_NumberSymbol
                             or (factor.is_number and factor.is_Function)
-                            or (factor.is_Pow and factor.exp.is_Rational
+                            or (isinstance(factor, Pow) and factor.exp.is_Rational
                                 and (factor.base.is_Number
                                      or factor.base.is_NumberSymbol))):
                         coefficient_factors.append(factor)
