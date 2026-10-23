@@ -649,3 +649,4 @@ def test_si_scale_factor_dimension_check_uses_instance_method():
     assert ds.equivalent_dims(Dimension('voltage'), Dimension('current')) is False
     raises(TypeError, lambda: DimensionSystem.equivalent_dims(
         Dimension('voltage'), Dimension('current')))
+
