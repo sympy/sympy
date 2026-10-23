@@ -1270,9 +1270,22 @@ def _solveset(f, symbol, domain, _check=False):
 
     result = S.EmptySet
 
-    if f.expand().is_zero:
+    expanded = f.expand()
+
+   # symbol-independent relation may be True, False, or conditional
+    if f.is_Relational and not expanded.has(symbol):
+        expanded = expanded.simplify()
+        if expanded is S.true:
+            return domain
+        elif expanded is S.false:
+            return S.EmptySet
+        return ConditionSet(symbol, expanded, domain)
+
+    # for ordinary equations, expansion can settle independence immediately
+    # without needing to solve further
+    if expanded.is_zero:
         return domain
-    elif not f.has(symbol):
+    elif not expanded.has(symbol):
         return S.EmptySet
     elif f.is_Mul and all(_is_finite_with_finite_vars(m, domain)
             for m in f.args):

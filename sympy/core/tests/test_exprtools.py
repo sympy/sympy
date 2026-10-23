@@ -451,6 +451,24 @@ def test_monotonic_sign():
     assert F(Dummy(nonnegative=True)) == 0
     assert F(Dummy(nonpositive=True)) == 0
 
+    pi = Dummy(positive=True, integer=True)
+    qi = Dummy(positive=True, integer=True)
+    ri = Dummy(positive=True, integer=True)
+    assert F(pi + qi + ri) == 3
+    assert F(pi - qi) is None
+    assert F(-pi - qi) == -2
+    assert F(pi + qi + ri - 3).is_nonnegative
+    assert F(-pi - qi + 2).is_nonpositive
+
+    p1 = Dummy(positive=True)
+    p2 = Dummy(positive=True)
+    assert F(p1 + p2).is_positive
+    assert F(-p1 - p2).is_negative
+
+    nn1 = Dummy(nonnegative=True)
+    nn2 = Dummy(nonnegative=True)
+    assert F(nn1 + nn2).is_nonnegative
+
     assert F(Dummy(positive=True) + 1).is_positive
     assert F(Dummy(positive=True, integer=True) - 1).is_nonnegative
     assert F(Dummy(positive=True) - 1) is None
@@ -486,6 +504,17 @@ def test_monotonic_sign():
 
     assert F((p - 1)*q + 1).is_positive
     assert F(-(p - 1)*q - 1).is_negative
+
+    nn1, nn2 = Dummy(nonnegative=True), Dummy(nonnegative=True)
+
+    r = F(nn1 + nn2)
+    assert r.is_nonnegative is True
+    assert r.is_positive is None
+
+    r = F(-nn1 - nn2)
+    assert r.is_nonpositive is True
+    assert r.is_negative is None
+
 
 def test_issue_17256():
     from sympy.sets.fancysets import Range

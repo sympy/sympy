@@ -706,8 +706,8 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     >>> y = symbols('y_1:4', positive=True)
     >>> Gd = GeneralizedMultivariateLogGamma('G', d, v, l, mu)
     >>> density(Gd)(y[0], y[1], y[2])
-    Sum(exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
-    exp(y_3))/(2**n*gamma(n + 1)**3), (n, 0, oo))/2
+    Sum((1/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
+        exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
 
     References
     ==========

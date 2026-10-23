@@ -3096,7 +3096,7 @@ class NotIterable:
     calling list() on the instance, for example, would result in
     an infinite loop.
     """
-    pass
+    __slots__ = ()
 
 
 def iterable(i, exclude=(str, dict, NotIterable)):

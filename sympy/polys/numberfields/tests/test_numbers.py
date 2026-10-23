@@ -132,7 +132,7 @@ def test_AlgebraicNumber():
 
     p = a.as_poly()
 
-    assert p == Poly(2*p.gen + 3)
+    assert p.as_poly(x) == Poly(2*x + 3, domain='QQ')
 
     assert a.as_poly(x) == Poly(2*x + 3, domain='QQ')
     assert b.as_poly() == Poly(2*y + 3, domain='QQ')

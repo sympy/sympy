@@ -69,6 +69,6 @@ represent the constraint forces in those directions. ::
   ...     return signsimp(trigsimp(collect(collect(factor_terms(w), f2), m*r)))
   >>> mprint(KM.auxiliary_eqs.applyfunc(simplify_auxiliary_eqs))
   Matrix([
-  [                                      -m*r*(u1*u3 + u2') + f1],
-  [-m*r*u1**2*sin(q2) - m*r*u2*u3/cos(q2) + m*r*cos(q2)*u1' + f2],
-  [                -g*m + m*r*(u1**2*cos(q2) + sin(q2)*u1') + f3]])
+  [                                            -m*r*(u1*u3 + u2') + f1],
+  [-m*r*((u2*u3 - u1')*cos(q2) + (u1**2 + u2*u3*tan(q2))*sin(q2)) + f2],
+  [                      -g*m + m*r*(u1**2*cos(q2) + sin(q2)*u1') + f3]])

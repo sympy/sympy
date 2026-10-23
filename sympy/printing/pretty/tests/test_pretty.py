@@ -54,7 +54,7 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
     mathieusprime, mathieucprime)
 
-from sympy.matrices import (Adjoint, Inverse, MatAdd, MatrixSymbol, Transpose,
+from sympy.matrices import (Adjoint, Inverse, MatAdd, MatMul, MatrixSymbol, Transpose,
                             KroneckerProduct, BlockMatrix, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions import hadamard_power
 
@@ -7018,6 +7018,12 @@ def test_pretty_Add():
     eq = Mul(-2, x - 2, evaluate=False) + 5
     assert pretty(eq) == '5 - 2*(x - 2)'
 
+    assert pretty(Add(S.NaN, x, evaluate=False)) == 'x + nan'
+
+    assert pretty(Add(S.NaN, 3*I, evaluate=False)) == 'nan + 3*I'
+
+    assert pretty(Add(S.NaN, x, -oo, evaluate=False)) == 'x - oo + nan'
+
 
 def test_issue_7179():
     assert upretty(Not(Equivalent(x, y))) == 'x ⇎ y'
@@ -7918,7 +7924,7 @@ H    \n\
 
 def test_issue_15560():
     a = MatrixSymbol('a', 1, 1)
-    e = pretty(a*(KroneckerProduct(a, a)))
+    e = pretty(MatMul(a, KroneckerProduct(a, a)))
     result = 'a*(a x a)'
     assert e == result
 

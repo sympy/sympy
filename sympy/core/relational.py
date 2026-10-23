@@ -1,3 +1,101 @@
+"""Relational expressions.
+
+Simplification contract
+=======================
+
+A simplification of a ``Relational`` must preserve its truth value for
+every value allowed by the assumptions on its expressions. Algebraic
+equivalence of the two sides is not, by itself, sufficient.
+
+Here ``R`` stands for a relational constructor such as ``Eq``, ``Ne``,
+``Lt``, ``Le``, ``Gt``, or ``Ge``. Symbols without assumptions can
+take infinite values, so identities that are valid over a field can fail
+because expressions such as ``oo - oo`` and ``0*oo`` are indeterminate.
+
+Some simple sufficient conditions for common transformations are summarized
+below.
+
+===================================  =========================  ==============================
+Transformation                       ``Eq`` and ``Ne``          ``Lt``, ``Le``, ``Gt``, ``Ge``
+===================================  =========================  ==============================
+``R(a + c, b + c) -> R(a, b)``       ``c`` finite               ``c`` finite and real
+``R(c*a, c*b) -> R(a, b)``           ``c`` finite and nonzero   ``c`` finite and positive
+``R(c*a, c*b) -> R(b, a)``           --                         ``c`` finite and negative
+===================================  =========================  ==============================
+
+More generally, additive simplification must preserve possible indeterminate
+sums at infinity. Consider the terms of a relation as they would occur in
+``lhs - rhs``, without necessarily forming that difference. Potentially
+non-finite terms may be rearranged freely if they cannot combine to give
+oppositely directed infinities.
+
+For example, if ``a``, ``b``, and ``c`` are extended nonnegative, the
+terms in ``Eq(a + b + c, 0)`` can become infinite only in the same direction,
+so they may be rearranged without introducing or removing an indeterminate
+sum. In contrast, ``Eq(a + b - c, 0)`` permits both ``oo`` and ``-oo``
+contributions. A simplification must preserve the possibility of the
+resulting indeterminate sum.
+
+Unknown infinity direction is treated conservatively when two or more
+potentially non-finite terms are present. Known finite terms do not
+participate in such interactions and may be rearranged normally. This
+explains, for example, why ``Eq(x - y, 0)`` cannot in general simplify to
+``Eq(x, y)`` when ``x`` and ``y`` are not known finite: at
+``x = y = oo`` the former contains the indeterminate difference
+``oo - oo``, while the latter is true.
+
+Moving a term from one side of a relation to the other is subject to
+the same restriction. Such a rearrangement is not merely a change in
+presentation if potentially non-finite terms are involved: it can create
+or remove a possible indeterminate sum. Thus an additive group should
+not be split merely to obtain a more isolated form unless the assumptions
+justify that rearrangement. Terms known to satisfy the conditions above
+may be moved normally, and potentially non-finite terms may be regrouped
+when their possible infinity directions cannot oppose one another.
+
+For example, cancelling an additive term that is not known to be finite
+can change the truth value:
+
+>>> from sympy import Eq, oo, symbols
+>>> x, y = symbols('x y')
+>>> original = 2*x + y < x
+>>> reduced = x + y < 0
+>>> original.subs({x: -oo, y: 2}), reduced.subs({x: -oo, y: 2})
+(False, True)
+
+Multiplicative cancellation additionally requires that the factor be
+nonzero. It must also be finite:
+
+>>> original = Eq(x*y, x)
+>>> reduced = Eq(y, 1)
+>>> original.subs(x, 0), reduced
+(True, Eq(y, 1))
+>>> original.subs({x: oo, y: 2}), reduced.subs(y, 2)
+(True, False)
+
+For an ordered relation the sign of the factor matters as well:
+
+>>> original = x*y < x
+>>> reduced = y < 1
+>>> original.subs({x: -1, y: 2}), reduced.subs(y, 2)
+(True, False)
+
+Thus relational simplification must use assumptions to justify movement
+or cancellation of terms. If the required property is unknown, the
+corresponding transformation must not be made.
+
+Some APIs accept an ``Equality`` as convenient equation syntax and explicitly
+interpret ``Eq(lhs, rhs)`` as the formal equation ``lhs - rhs = 0``. This
+includes ``solve``, symbol-dependent ``Eq`` input to ``solveset``, and
+polynomial construction. Ordered relations passed to inequality solvers retain
+their relational semantics. These API conventions do not change the semantics
+of ``Equality`` itself or permit otherwise unsafe relational simplification.
+
+Canonicalization is separate from simplification: it can choose a
+consistent orientation or sign for an equivalent relation, but does not
+justify otherwise unsafe algebraic cancellation.
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, overload
@@ -64,11 +162,34 @@ def _canonical_coeff(rel):
     if not isinstance(rel.lhs, Expr):
         return rel.reversed  # e.g.: Eq(True, x) -> Eq(x, True)
     b, l = rel.lhs.as_coeff_Add(rational=True)
+    if l == 0:
+        return rel.func(*rel.args)
     m, lhs = l.as_coeff_Mul(rational=True)
     rhs = (rel.rhs - b)/m
     if m < 0:
         return rel.reversed.func(lhs, rhs)
     return rel.func(lhs, rhs)
+
+
+def _may_be_indeterminate(terms):
+    """Return whether additive terms may contain opposing infinities."""
+    terms = [t for t in terms if t.is_finite is not True]
+    if len(terms) < 2:
+        return False
+
+    direction = None
+    for term in terms:
+        if term.is_extended_nonnegative is True:
+            sign = 1
+        elif term.is_extended_nonpositive is True:
+            sign = -1
+        else:
+            return True
+        if direction is None:
+            direction = sign
+        elif sign != direction:
+            return True
+    return False
 
 
 class Relational(Boolean, EvalfMixin):
@@ -429,14 +550,329 @@ class Relational(Boolean, EvalfMixin):
     def _eval_simplify(self, **kwargs):
         from .add import Add
         from .expr import Expr
-        r = self
-        r = r.func(*[i.simplify(**kwargs) for i in r.args])
-        if r.is_Relational:
-            if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
-                return r
-            dif = r.lhs - r.rhs
-            # replace dif with a valid Number that will
-            # allow a definitive comparison with 0
+        from .exprtools import gcd_terms
+        from .function import expand_mul
+        from .mul import Mul
+        from .symbol import Dummy
+        from sympy.simplify.simplify import factor_terms, simplify
+
+        measure = kwargs['measure']
+
+        def finish(*candidates):
+            result = min(candidates, key=measure)
+            if measure(result) < kwargs['ratio'] * measure(self):
+                return result
+            return self
+
+        def simplify_mul(rel):
+            """Cancel only factors that are safe for this relation."""
+            if rel.lhs == 0 and rel.rhs != 0:
+                rel = rel.reversed
+
+            L, R = rel.args
+            d = Dummy()
+            factored = factor_terms(L - d*R)
+
+            if factored.has(d):
+                common, core = factored.as_independent(d, as_Add=False)
+            else:
+                # With zero on the rhs there is no common factor unless
+                # factor_terms actually exposed multiplicative structure.
+                if not factored.is_Mul:
+                    return rel
+                common, core = factored, S.One
+
+            if common == 1:
+                return rel
+
+            keep = []
+            reverse = False
+            changed = False
+
+            for factor in Mul.make_args(common):
+                if factor.is_commutative is not True:
+                    keep.append(factor)
+                    continue
+
+                if rel.func in (Eq, Ne):
+                    safe = (factor.is_finite is True and
+                        factor.is_zero is False)
+                else:
+                    safe = (factor.is_finite is True and
+                        (factor.is_positive is True or
+                         factor.is_negative is True))
+
+                if not safe:
+                    keep.append(factor)
+                    continue
+
+                changed = True
+                if (rel.func not in (Eq, Ne) and
+                        factor.is_negative is True):
+                    reverse = not reverse
+
+            if not changed:
+                return rel
+
+            keep = Mul(*keep)
+            L = keep*core.subs(d, 0)
+            R = -keep*core.coeff(d)
+            func = rel.reversed.func if reverse else rel.func
+            return func(L, R, evaluate=False)
+
+        def unhollow(expr):
+            """Do not leave a lone rational factored from an Add."""
+            if (expr.is_Mul and len(expr.args) == 2 and
+                    expr.args[0].is_Rational and expr.args[1].is_Add):
+                c, a = expr.args
+                return Add(*[c*t for t in a.args])
+            return expr
+
+        def dummy_like(expr):
+            """Return a tracker carrying assumptions useful to simplification."""
+            assumptions = {}
+            for name in (
+                    'commutative', 'finite', 'real', 'positive',
+                    'negative', 'zero', 'integer', 'rational'):
+                value = getattr(expr, 'is_' + name)
+                if value is not None:
+                    assumptions[name] = value
+            return Dummy(**assumptions)
+
+        def additive_move_is_safe(term, func):
+            return (
+                term.is_finite is True and
+                (func in (Eq, Ne) or term.is_real is True)
+            )
+
+        def same_sign(a, b):
+            return (
+                (b.is_positive is True and a.is_positive is True) or
+                (b.is_negative is True and a.is_negative is True)
+            )
+
+        def indeterminate_addition_possible(L, R, restore):
+            terms = []
+            for expr, negate in ((L, False), (R, True)):
+                for term in Add.make_args(expr):
+                    term = term.xreplace(restore)
+                    if term.is_finite is True:
+                        continue
+                    terms.append(-term if negate else term)
+
+            # Keep the established tracker path for a lone potentially
+            # non-finite expression. The same-direction exemption below is
+            # only needed when two or more such terms could otherwise be
+            # treated as an indeterminate additive interaction.
+            if len(terms) < 2:
+                return True
+            return _may_be_indeterminate(terms)
+
+        # Keep simplify's established behavior of simplifying each side first.
+        r = self.func(*[simplify(a, **kwargs) for a in self.args])
+        if not r.is_Relational:
+            return r
+        if any(getattr(a, 'is_Matrix', False) for a in r.args):
+            return r
+        if not all(isinstance(a, Expr) for a in r.args):
+            return r
+
+        # Remove only a common multiplicative factor that the relational
+        # contract permits us to cancel.
+        r = simplify_mul(r)
+        if not r.is_Relational:
+            return r
+        base = r.canonical
+        func = r.func
+
+        # Powers with Add bases remain atomic only while multiplication is
+        # expanded to expose additive terms. These structural proxies are
+        # restored before ordinary simplification; only safety trackers live
+        # through the simplified difference.
+        power_masks = {}
+        power_restore = {}
+
+        def mask_power(p):
+            d = power_masks.get(p)
+            if d is None:
+                d = power_masks[p] = dummy_like(p)
+                power_restore[d] = p
+            return d
+
+        def hide_powers(e):
+            return e.replace(
+                lambda p: p.is_Pow and p.base.is_Add,
+                mask_power)
+
+        L, R = map(hide_powers, r.args)
+        L, R = map(expand_mul, (L, R))
+        track_indeterminates = indeterminate_addition_possible(
+            L, R, power_restore)
+        ld = L.as_coefficients_dict()
+        rd = R.as_coefficients_dict()
+
+        # Potentially non-finite terms are the only terms that need trackers.
+        # A one-sided tracker pins a term to its original side. For a shared
+        # term, one signed copy is kept on each side while a shared tracker
+        # represents the remaining copies which may simplify normally.
+        shared = []
+        pinned = {}
+        reduced_shared = False
+
+        for key in set(ld) | set(rd):
+            if key is S.One:
+                continue
+
+            original = key.xreplace(power_restore)
+            if (additive_move_is_safe(original, func) or
+                    (original.is_finite is not True and
+                     not track_indeterminates)):
+                continue
+
+            in_l = key in ld
+            in_r = key in rd
+
+            if in_l and in_r:
+                lc = ld.pop(key)
+                rc = rd.pop(key)
+
+                # as_coefficients_dict separates only rational coefficients.
+                if not (lc.is_Rational and rc.is_Rational):
+                    return finish(base)
+
+                sl = S.One if lc.is_positive else S.NegativeOne
+                sr = S.One if rc.is_positive else S.NegativeOne
+
+                dl = dummy_like(original)
+                dr = dummy_like(original)
+                d = dummy_like(original)
+
+                ld[dl] = sl
+                rd[dr] = sr
+
+                if lc != sl:
+                    ld[d] = lc - sl
+                    reduced_shared = True
+                if rc != sr:
+                    rd[d] = rc - sr
+                    reduced_shared = True
+
+                shared.append((original, dl, dr, d))
+
+            elif in_l:
+                c = ld.pop(key)
+                d = dummy_like(original)
+                ld[d] = c
+                pinned[d] = (original, True)
+
+            else:
+                c = rd.pop(key)
+                d = dummy_like(original)
+                rd[d] = c
+                pinned[d] = (original, False)
+
+        # Structural power proxies have served their purpose. Restore them
+        # before simplify so numeric and algebraic relationships remain visible.
+        L = Add(*[c*k for k, c in ld.items()]).xreplace(power_restore)
+        R = Add(*[c*k for k, c in rd.items()]).xreplace(power_restore)
+
+        # From here ordinary expression simplification does the algebra.
+        dif = simplify(L - R, **kwargs)
+
+        # Simplification may expose a common multiplicative factor, so give
+        # the relational factor rule one more opportunity before restoring
+        # the protected terms.
+        zrel = simplify_mul(func(dif, S.Zero, evaluate=False))
+        if not zrel.is_Relational:
+            return finish(base, zrel)
+
+        func = zrel.func
+        dif = expand_mul(zrel.lhs - zrel.rhs)
+
+        trackers = set(pinned)
+        trackers.update(
+            d for _, dl, dr, p in shared for d in (dl, dr, p))
+
+        left = []
+        right = []
+        core = dif
+
+        # Restore one-sided trackers to the side from which they came.
+        for d, (original, on_left) in pinned.items():
+            c = core.coeff(d)
+            if c.has(*trackers):
+                return finish(base)
+
+            core -= c*d
+            if core.has(d):
+                return finish(base)
+
+            restored = c*original
+            if on_left:
+                left.append(restored)
+            else:
+                right.append(-restored)
+
+        # Restore shared terms without allowing either protected coefficient
+        # to cross zero. The shared remainder is absorbed on whichever side
+        # retains the sign of the keeper already present there.
+        for original, dl, dr, d in shared:
+            cl = core.coeff(dl)
+            cr = core.coeff(dr)
+            cd = core.coeff(d)
+
+            if any(c.has(*trackers) for c in (cl, cr, cd)):
+                return finish(base)
+
+            core -= cl*dl + cr*dr + cd*d
+            if core.has(dl, dr, d):
+                return finish(base)
+
+            al = cl
+            ar = -cr
+            choices = []
+
+            if same_sign(al + cd, al):
+                choices.append((al + cd, ar))
+            if same_sign(ar - cd, ar):
+                choices.append((al, ar - cd))
+
+            if not choices:
+                return finish(base)
+
+            al, ar = min(
+                choices,
+                key=lambda c: (
+                    measure(c[0]*original) + measure(c[1]*original)))
+
+            left.append(al*original)
+            right.append(ar*original)
+
+        # Everything left in core is known safe to move across the relation.
+        for term in Add.make_args(expand_mul(core)):
+            c, _ = term.as_coeff_Mul()
+            if c.is_negative:
+                right.append(-term)
+            else:
+                left.append(term)
+
+        # Restore useful common structure on each side without recursively
+        # factoring subexpressions. A pure rational wrapper around an Add is
+        # expanded again unless relational scaling consumes it first.
+        lhs = gcd_terms(Add(*left), clear=False)
+        rhs = gcd_terms(Add(*right), clear=False)
+        derived = simplify_mul(func(lhs, rhs, evaluate=False))
+        if derived.has(S.NaN):
+            return finish(base)
+        if derived.is_Relational:
+            derived = _canonical_coeff(derived)
+        if derived.is_Relational:
+            lhs, rhs = map(unhollow, derived.args)
+            derived = derived.func(lhs, rhs, evaluate=False).canonical
+
+        # Numerical determination is valid only when no tracker was needed:
+        # in that case the simplified difference is an ordinary Expr result.
+        if not trackers:
             v = None
             if dif.is_comparable:
                 v = dif.n(2)
@@ -445,76 +881,13 @@ class Relational(Boolean, EvalfMixin):
                     v = rv + S.ImaginaryUnit*iv
             elif dif.equals(0):  # XXX this is expensive
                 v = S.Zero
-            if v is not None:
-                r = r.func._eval_relation(v, S.Zero)
-            r = r.canonical
-            # If there is only one symbol in the expression,
-            # try to write it on a simplified form
-            free = list(filter(lambda x: x.is_real is not False, r.free_symbols))
-            if len(free) == 1:
-                try:
-                    from sympy.solvers.solveset import linear_coeffs
-                    x = free.pop()
-                    dif = r.lhs - r.rhs
-                    m, b = linear_coeffs(dif, x)
-                    if m.is_zero is False:
-                        if m.is_negative:
-                            # Dividing with a negative number, so change order of arguments
-                            # canonical will put the symbol back on the lhs later
-                            r = r.func(-b / m, x)
-                        else:
-                            r = r.func(x, -b / m)
-                    else:
-                        r = r.func(b, S.Zero)
-                except ValueError:
-                    # maybe not a linear function, try polynomial
-                    from sympy.polys.polyerrors import PolynomialError
-                    from sympy.polys.polytools import gcd, Poly, poly
-                    try:
-                        p = poly(dif, x)
-                        c = p.all_coeffs()
-                        constant = c[-1]
-                        c[-1] = 0
-                        scale = gcd(c)
-                        c = [ctmp / scale for ctmp in c]
-                        r = r.func(Poly.from_list(c, x).as_expr(), -constant / scale)
-                    except PolynomialError:
-                        pass
-            elif len(free) >= 2:
-                try:
-                    from sympy.solvers.solveset import linear_coeffs
-                    from sympy.polys.polytools import gcd
-                    free = list(ordered(free))
-                    dif = r.lhs - r.rhs
-                    m = linear_coeffs(dif, *free)
-                    constant = m[-1]
-                    del m[-1]
-                    scale = gcd(m)
-                    m = [mtmp / scale for mtmp in m]
-                    nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
-                    if scale.is_zero is False:
-                        if constant != 0:
-                            # lhs: expression, rhs: constant
-                            newexpr = Add(*[i * j for i, j in nzm])
-                            r = r.func(newexpr, -constant / scale)
-                        else:
-                            # keep first term on lhs
-                            lhsterm = nzm[0][0] * nzm[0][1]
-                            del nzm[0]
-                            newexpr = Add(*[i * j for i, j in nzm])
-                            r = r.func(lhsterm, -newexpr)
 
-                    else:
-                        r = r.func(constant, S.Zero)
-                except ValueError:
-                    pass
-        # Did we get a simplified result?
-        r = r.canonical
-        measure = kwargs['measure']
-        if measure(r) < kwargs['ratio'] * measure(self):
-            return r
-        else:
-            return self
+            if v is not None:
+                derived = func._eval_relation(v, S.Zero)
+
+        if reduced_shared or not track_indeterminates:
+            return finish(derived, base)
+        return finish(base, derived)
 
     def _eval_trigsimp(self, **opts):
         from sympy.simplify.trigsimp import trigsimp
@@ -709,33 +1082,6 @@ class Equality(Relational):
                 return {self.rhs}
         return set()
 
-    def _eval_simplify(self, **kwargs):
-        # standard simplify
-        e = super()._eval_simplify(**kwargs)
-        if not isinstance(e, Equality):
-            return e
-        from .expr import Expr
-        if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
-            return e
-        free = self.free_symbols
-        if len(free) == 1:
-            try:
-                from .add import Add
-                from sympy.solvers.solveset import linear_coeffs
-                x = free.pop()
-                m, b = linear_coeffs(
-                    Add(e.lhs, -e.rhs, evaluate=False), x)
-                if m.is_zero is False:
-                    enew = e.func(x, -b / m)
-                else:
-                    enew = e.func(m * x, -b)
-                measure = kwargs['measure']
-                if measure(enew) <= kwargs['ratio'] * measure(e):
-                    e = enew
-            except ValueError:
-                pass
-        return e.canonical
-
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""
         from sympy.integrals.integrals import integrate
@@ -829,13 +1175,7 @@ class Unequality(Relational):
                 return {self.rhs}
         return set()
 
-    def _eval_simplify(self, **kwargs):
-        # simplify as an equality
-        eq = Equality(*self.args)._eval_simplify(**kwargs)
-        if isinstance(eq, Equality):
-            # send back Ne with the new args
-            return self.func(*eq.args)
-        return eq.negated  # result of Ne is the negated Eq
+
 
 
 Ne = Unequality
@@ -1572,7 +1912,20 @@ def is_eq(lhs: Basic, rhs: Basic, assumptions=None) -> bool | None:
         if fuzzy_xor([_lhs.is_extended_real, _rhs.is_extended_real]):
             return False
         if fuzzy_and([_lhs.is_extended_real, _rhs.is_extended_real]):
-            return fuzzy_xor([_lhs.is_extended_positive, fuzzy_not(_rhs.is_extended_positive)])
+            # Comparing signs is only valid if both LHS and RHS are infinite
+            if fuzzy_and([_lhs.is_infinite, _rhs.is_infinite]):
+                return fuzzy_xor([_lhs.is_extended_positive, fuzzy_not(_rhs.is_extended_positive)])
+
+            # If one side is infinite and the other's finiteness is unknown:
+            # one side is strictly positive/negative and the other is <= 0 / >= 0
+            # (incompatible signs) => return False
+            # for any other case the equality cannot be decided => return None
+            if ((_lhs.is_extended_positive and _rhs.is_extended_nonpositive) or
+                (_lhs.is_extended_negative and _rhs.is_extended_nonnegative) or
+                (_lhs.is_extended_nonpositive and _rhs.is_extended_positive) or
+                (_lhs.is_extended_nonnegative and _rhs.is_extended_negative)):
+                return False
+            return None
 
         # Try to split real/imaginary parts and equate them
         I = S.ImaginaryUnit
@@ -1600,6 +1953,17 @@ def is_eq(lhs: Basic, rhs: Basic, assumptions=None) -> bool | None:
             return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
 
     if isinstance(lhs, Expr) and isinstance(rhs, Expr):
+        # Do not form a difference if it would completely cancel a
+        # term which is not known to be finite.
+        if not (_lhs.is_finite is True and _rhs.is_finite is True):
+            L = lhs.as_coefficients_dict()
+            R = rhs.as_coefficients_dict()
+            for term in set(L).intersection(R):
+                if term is S.One or L[term] != R[term]:
+                    continue
+                if AssumptionsWrapper(term, assumptions).is_finite is not True:
+                    return None
+
         # see if the difference evaluates
         dif = lhs - rhs
         _dif = AssumptionsWrapper(dif, assumptions)

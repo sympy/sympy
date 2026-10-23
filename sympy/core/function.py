@@ -134,19 +134,37 @@ def arity(cls):
     Examples
     ========
 
-    >>> from sympy import arity, log
+    >>> from sympy import S, Range, oo, arity, log
     >>> arity(lambda x: x)
     1
     >>> arity(log)
     (1, 2)
     >>> arity(lambda *x: sum(x)) is None
     True
+
+    When the function takes a variable number of arguments, the arity
+    begins at the number of required arguments (``1`` in the example
+    below) and extends without bound:
+
+    >>> arity(lambda x, *args: x) == S.Naturals
+    True
+    >>> arity(lambda x, y, z, *args: x) == Range(3, oo)
+    True
     """
     eval_ = getattr(cls, 'eval', cls)
 
     parameters = inspect.signature(eval_).parameters.items()
-    if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
-        return
+    if any(p.kind == p.VAR_POSITIONAL for _, p in parameters):
+        # the number of arguments is at least the number of required
+        # positional arguments
+        required = [p for _, p in parameters
+            if p.kind == p.POSITIONAL_OR_KEYWORD and p.default == p.empty]
+        if not required:
+            return
+        from sympy.sets.fancysets import Range
+        if len(required) == 1:
+            return S.Naturals
+        return Range(len(required), S.Infinity)
     p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
     # how many have no default and how many have a default value
     no, yes = map(len, sift(p_or_k,
@@ -175,7 +193,11 @@ class FunctionClass(type):
                     continue
 
         # Canonicalize nargs here; change to set in nargs.
-        if is_sequence(nargs):
+        if getattr(nargs, 'sup', None) is S.Infinity and hasattr(nargs, 'is_FiniteSet'):
+            # an unbounded set of integers, e.g. Naturals or Range(3, oo),
+            # is kept as-is (importing it here would cause a cyclic import)
+            pass
+        elif is_sequence(nargs):
             if not nargs:
                 raise ValueError(filldedent('''
                     Incorrectly specified nargs as %s:
@@ -248,6 +270,15 @@ class FunctionClass(type):
         >>> Function('f', nargs=(2, 1)).nargs
         {1, 2}
 
+        If the function can take a minimum number of arguments, an
+        unbounded set of integers is returned:
+
+        >>> class f(Function):
+        ...     @classmethod
+        ...     def eval(cls, x, *args): pass
+        >>> f.nargs
+        Naturals
+
         The undefined function, after application, also has the nargs
         attribute; the actual number of arguments is always available by
         checking the ``args`` attribute:
@@ -258,9 +289,12 @@ class FunctionClass(type):
         >>> len(f(1).args)
         1
         """
+        from sympy.sets.fancysets import Range, Naturals
         from sympy.sets.sets import FiniteSet
         # XXX it would be nice to handle this in __init__ but there are import
         # problems with trying to import FiniteSet there
+        if isinstance(self._nargs, (Range, Naturals)):
+            return self._nargs
         return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
 
     def _valid_nargs(self, n : int) -> bool:
@@ -333,8 +367,12 @@ class Application(Basic, metaclass=FunctionClass):
             #  - WildFunction('f').nargs
             #  - AppliedUndef with no nargs like Function('f')(1).nargs
             nargs = obj._nargs  # note the underscore here
-        # convert to FiniteSet
-        obj.nargs = FiniteSet(*nargs) if nargs else Naturals0()
+        # convert to a Set
+        from sympy.sets.fancysets import Range, Naturals
+        if isinstance(nargs, (Range, Naturals)):
+            obj.nargs = nargs
+        else:
+            obj.nargs = FiniteSet(*nargs) if nargs else Naturals0()
         return obj
 
     @classmethod
@@ -462,11 +500,19 @@ class Function(Application, Expr):
             # the exception and change NumPy to take advantage of this.
             temp = ('%(name)s takes %(qual)s %(args)s '
                    'argument%(plural)s (%(given)s given)')
+            from sympy.sets.fancysets import Range, Naturals
+            if isinstance(cls.nargs, (Range, Naturals)):
+                qual = 'at least'
+            elif len(cls.nargs) == 1:
+                qual = 'exactly'
+            else:
+                qual = 'at least'
+            minarg = cls.nargs.inf
             raise TypeError(temp % {
                 'name': cls,
-                'qual': 'exactly' if len(cls.nargs) == 1 else 'at least',
-                'args': min(cls.nargs),
-                'plural': 's'*(min(cls.nargs) != 1),
+                'qual': qual,
+                'args': minarg,
+                'plural': 's'*(minarg != 1),
                 'given': n})
 
         evaluate = options.get('evaluate', global_parameters.evaluate)
@@ -2158,6 +2204,48 @@ class Lambda(Expr):
 
     def _eval_evalf(self, prec):
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
+
+
+
+    def _subs(self, old, new, **hints):
+        from .symbol import Dummy
+        from .traversal import preorder_traversal
+
+        capture_new = hints.get('original_new', new)
+
+        if old in self.variables:
+            return self
+
+        if old.is_Symbol and old not in self.free_symbols:
+            return self
+
+        if not capture_new.free_symbols or not self.has(*capture_new.free_symbols):
+            return super()._subs(old, new, **hints)
+
+        # Probe where substitution actually takes place.
+        probe = Dummy('probe', commutative=new.is_commutative is not False)
+        inner_hints = {k: v for k, v in hints.items()
+                       if k != 'original_new'}
+        marked = super()._subs(old, probe, **inner_hints)
+
+        if not marked.has(probe):
+            return super()._subs(old, new, **hints)
+
+        # Give every binding a unique identity.
+        f, restore = marked._bound_dummies()
+
+        # Protect bindings whose scopes contain the replacement.
+        for node in preorder_traversal(f):
+            if not hasattr(node, 'bound_symbols') or not node.has(probe):
+                continue
+            for d in node.bound_symbols:
+                if d in restore and restore[d] in capture_new.free_symbols:
+                    v = restore[d]
+                    restore[d] = Dummy(v.name, commutative=v.is_commutative)
+
+        # Restore safe bindings before inserting the replacement.
+        return f.xreplace(restore).xreplace({probe: new})
+
 
 
 class Subs(Expr):

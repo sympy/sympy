@@ -1154,10 +1154,10 @@ def test_old_trig_issues():
                 ImageSet(Lambda(n, n*pi + 0.523598775598299), S.Integers))
     ret = solveset(cos(2*x) - 0.5, x, S.Reals)
     # replace Dummy n by the regular Symbol n to allow all_close comparison.
-    ret = ret.subs(ret.atoms(Dummy).pop(), n)
+    ret = ret.xreplace({ret.atoms(Dummy).pop(): n})  # bypass protected bound symbol
     assert all_close(ret, sol)
     ret = solveset(cos(2*x) - 0.5, x, S.Complexes)
-    ret = ret.subs(ret.atoms(Dummy).pop(), n)
+    ret = ret.xreplace({ret.atoms(Dummy).pop(): n})  # bypass protected bound symbol
     assert all_close(ret, sol)
 
     # issue #21296 / #17667
@@ -1174,7 +1174,7 @@ def test_old_trig_issues():
 
     # issue #17579
     # Valid result, but the intersection could potentially be simplified.
-    assert solveset(sin(log(x)), x, Interval(0,1, True, False)).dummy_eq(
+    assert solveset(sin(log(x)), x, Interval(0, 1, True, False)).dummy_eq(
         Union(Intersection(ImageSet(Lambda(n, exp(2*n*pi)), S.Integers), Interval.Lopen(0, 1)),
               Intersection(ImageSet(Lambda(n, exp(2*n*pi + pi)), S.Integers), Interval.Lopen(0, 1))))
 
@@ -1547,6 +1547,11 @@ def test_conditionset_equality():
 
 
 def test_solveset_domain():
+    # For equations, a real domain constrains the solved symbol only;
+    # otherwise generic parameters remain generic.
+    assert solveset(Eq(x + y, I + 2*y), x, S.Reals) == \
+        Intersection(S.Reals, FiniteSet(y + I))
+
     assert solveset(x**2 - x - 6, x, Interval(0, oo)) == FiniteSet(3)
     assert solveset(x**2 - 1, x, Interval(0, oo)) == FiniteSet(1)
     assert solveset(x**4 - 16, x, Interval(0, 10)) == FiniteSet(2)
@@ -1631,7 +1636,9 @@ def test_linear_eq_to_matrix():
     # 4) Eq being used to represent equations autoevaluates
     # (use unevaluated Eq instead)
     raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x), x))
-    raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x + 1), x))
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(1, 2), x))
+    assert linear_eq_to_matrix(Eq(1, 2, evaluate=False), x) == (
+        Matrix([[0]]), Matrix([[1]]))
 
 
     # if non-symbols are passed, the user is responsible for interpreting
@@ -3759,6 +3766,45 @@ def test_issue_22628():
 
 def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
+
+
+def test_issue_30584():
+    x, y = symbols('x y')
+    relation = (y + 1)**2 - y*(y + 2)
+
+    assert solveset(relation > 0, x, S.Reals) == S.Reals
+    assert solveset(relation < 0, x, S.Reals) is S.EmptySet
+
+
+def test_solveset_symbol_independent_relational():
+    x, y = symbols('x y')
+
+    assert solveset(y > 0, x, S.Reals) == \
+        ConditionSet(x, y > 0, S.Reals)
+    assert solveset(Eq(y, 0), x, S.Reals) == \
+        ConditionSet(x, Eq(y, 0), S.Reals)
+    assert solveset(y, x, S.Reals) is S.EmptySet
+
+
+def test_solveset_symbol_independent_relational_after_expansion():
+    x, y = symbols('x y')
+    relation = (x + y)**2 - x**2 - 2*x*y
+
+    assert solveset(relation, x, S.Reals) is S.EmptySet
+    assert solveset(Eq(relation, 0), x, S.Reals) == \
+        ConditionSet(x, Eq(y**2, 0), S.Reals)
+    assert solveset(relation > 0, x, S.Reals) == \
+        ConditionSet(x, y**2 > 0, S.Reals)
+    # The real domain constrains x, not the otherwise generic parameter y,
+    # so these comparisons remain conditional unless y**2 is known real.
+    assert solveset(relation >= y**2, x, S.Reals) == \
+        ConditionSet(x, y**2 >= y**2, S.Reals)
+    assert solveset(relation > y**2, x, S.Reals) == \
+        ConditionSet(x, y**2 > y**2, S.Reals)
+
+    relation = (x + 1)**2 - x*(x + 2)
+    assert solveset(relation > 0, x, S.Reals) == S.Reals
+    assert solveset(relation < 0, x, S.Reals) is S.EmptySet
 
 
 def test_issue_26077():
