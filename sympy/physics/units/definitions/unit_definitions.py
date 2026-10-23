@@ -325,7 +325,7 @@ psi = Quantity("psi")
 
 dHg0 = 13.5951  # approx value at 0 C
 mmHg = Quantity("mmHg")
-torr = Quantity("torr", atmosphere / 760)
+torr = Quantity("torr")
 
 atmosphere.set_global_relative_scale_factor(101325, pascal)
 bar.set_global_relative_scale_factor(100, kPa)
