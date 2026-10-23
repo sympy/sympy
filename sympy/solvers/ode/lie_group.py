@@ -522,7 +522,7 @@ def lie_heuristic_bivariate(match, comp=False):
         etaeq = Symbol("eta0")
 
         for i in range(deg + 1):
-            polyy=None
+            polyy = None
             if i:
                 xieq += Add(*[
                     Symbol("xi_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
@@ -942,10 +942,7 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
                 E3 = simplify(
                     E1*((28*Ax + 4*hx*A)*A**3 - E1*(hy*A + Ay)) - E1.diff(x)*8*A**4)
                 if not E3:
-                    try:
-                        etaval = cancel((4*A**3*(Ax - hx*A) + E1*(hy*A - Ay))/(S(2)*A*E1))
-                    except (ZeroDivisionError, TypeError, ValueError):
-                        return
+                    etaval = cancel((4*A**3*(Ax - hx*A) + E1*(hy*A - Ay))/(S(2)*A*E1))
                     if not etaval.has(x):
                         try:
                             etaval = exp(integrate(etaval, y))
@@ -966,10 +963,7 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
                    -(A*D)*E1.diff(y) + ((E1.diff(x) - hy*D)*A + 3*Ay*D +
                     (A*hx - 3*Ax)*E1)*E1)
                 if not E3:
-                    try:
-                        etaval = cancel(((A*hx - Ax)*E1 - (Ay + A*hy)*D)/(S(2)*A*D))
-                    except (ZeroDivisionError, TypeError, ValueError):
-                        return
+                    etaval = cancel(((A*hx - Ax)*E1 - (Ay + A*hy)*D)/(S(2)*A*D))
                     if not etaval.has(x):
                         try:
                             etaval = exp(integrate(etaval, y))
