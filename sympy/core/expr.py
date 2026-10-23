@@ -1128,12 +1128,25 @@ class Expr(Basic, EvalfMixin):
         def nc_sort_key(term):
             return tuple(e.sort_key(order=order) for e in term[1][2])
 
+        def numeric_functions(term):
+            # Number-valued functions are held in the coefficient factors.
+            re, im = term[1][0]
+            return tuple(f for f in (im or re)[1:] if f.is_Function)
+
+        def function_type_key(term):
+            return tuple(f.func.class_key() for f in numeric_functions(term))
+
+        def function_args_key(term):
+            return tuple(tuple(default_sort_key(a, order=order) for a in f.args)
+                         for f in numeric_functions(term))
+
         def coeff_sort_key(term):
             re, im = term[1][0]
             factors = im or re
             return bool(im), bool(factors[0].is_nonnegative), default_sort_key(factors)
 
-        return (monom_sort_key, nc_sort_key, coeff_sort_key), reverse
+        return (monom_sort_key, nc_sort_key, function_type_key,
+                function_args_key, coeff_sort_key), reverse
 
     def as_ordered_factors(self, order=None):
         """Return list of ordered factors (if Mul) else [self]."""
