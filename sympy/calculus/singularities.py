@@ -106,7 +106,7 @@ def singularities(
 
     """
     from sympy.solvers.solveset import solveset
-    from sympy.sets.sets import Interval
+    from sympy.sets.sets import FiniteSet
 
     expression = sympify(expression)
 
@@ -118,17 +118,15 @@ def singularities(
         e = e.rewrite([sech, csch, coth, tanh], cosh)
         for i in e.atoms(Pow):
             if i.base == S.Zero:
-                sing_interval = solveset(i.exp <= 0, symbol, domain)
-                # Since in Sympy we assume that 0**0 = 1,
-                # we can't have a singularity at i.exp == 0 and therefore
-                # we must return an open interval.
-                sing_interval = Interval.open(sing_interval.inf, sing_interval.sup)
-                sings += sing_interval
+                sings += solveset(i.exp < 0, symbol, domain)
             if i.exp.is_infinite:
                 raise NotImplementedError
             if i.exp.is_negative:
-                # XXX: exponent of varying sign not handled
                 sings += solveset(i.base, symbol, domain)
+            elif symbol in i.exp.free_symbols:
+                zeros = solveset(i.base, symbol, domain)
+                if zeros.is_FiniteSet:
+                    sings += FiniteSet(*(z for z in zeros if (i.exp.subs(symbol, z)).is_extended_negative))
         for i in expression.atoms(log, asech, acsch):
             sings += solveset(i.args[0], symbol, domain)
         for i in expression.atoms(atanh, acoth):
