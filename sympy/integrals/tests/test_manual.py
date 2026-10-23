@@ -67,6 +67,22 @@ def test_manualintegrate_exponentials():
     assert manualintegrate(1 / (2*x + 3), x) == log(2*x + 3) / 2
     assert manualintegrate(log(x)**2 / x, x) == log(x)**3 / 3
 
+    assert manualintegrate(1/(1 + exp(n*x)), x) == Piecewise(
+        ((-log(exp(n*x) + 1) + log(exp(n*x)))/n, Ne(n, 0)),
+        (x/2, True))
+
+    expected = (log(exp(n*x) - 1) - log(exp(n*x)))/n
+    assert manualintegrate(1/(exp(n*x) - 1), x) == expected
+
+    assert manualintegrate(1/(1 + exp(b*x/(a - b))), x) == Piecewise(
+        (x/2, Eq(b, 0) & Ne(a - b, 0)),
+        ((a - b)*(-log(exp(b*x/(a - b)) + 1) + log(exp(b*x/(a - b))))/b,
+         True))
+
+    F = manualintegrate(1/(1 + exp((a**2 - b**2)*x)), x)
+    assert F.subs(a, b) == x/2
+    assert F.subs(a, -b) == x/2
+
     assert_is_integral_of(x**x*(log(x)+1), x**x)
 
 
