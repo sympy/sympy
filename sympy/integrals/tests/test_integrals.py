@@ -2390,6 +2390,14 @@ def test_issue_29637():
     assert not F.has(Integral)
     assert (F.diff(x) - f).cancel() == 0
 
+
+def test_issue_21041():
+    # https://github.com/sympy/sympy/issues/21041
+    F = integrate(sin(2*x)*exp(-x**2), (x, 0, oo))
+    assert F == -I*sqrt(pi)*exp(-1)*erf(I)/2
+    assert F.rewrite(erfi) == sqrt(pi)*exp(-1)*erfi(1)/2
+
+
 def test_reverse_limits():
     x, y, a, b, c, d = symbols('x y a b c d')
     I = Integral(x**2, (x, a, b))
