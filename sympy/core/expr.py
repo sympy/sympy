@@ -1233,7 +1233,8 @@ class Expr(Basic, EvalfMixin):
             coeff, _term = term.as_coeff_Mul()
 
             coeff_complex = complex(coeff)
-            cpart, ncpart = {}, []
+            cpart: dict[Expr, int] = {}
+            ncpart = []
 
             if _term is not S.One:
                 for factor in Mul.make_args(_term):
