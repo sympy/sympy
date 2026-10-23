@@ -1859,7 +1859,26 @@ def test_as_ordered_terms():
     assert e.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
     k = Symbol('k')
-    assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k]) # type: ignore
+    assert k.as_ordered_terms(data=True) == ([(k, (((S.One,), ()), (1,), ()))], [k]) # type: ignore
+
+
+def test_as_terms_without_numerical_evaluation():
+    from unittest.mock import patch
+    from sympy.core.sorting import ordered
+
+    expr = x + pi
+    with patch.object(Expr, 'evalf', side_effect=AssertionError):
+        assert expr.as_ordered_terms() == [x, pi]
+        assert str(expr) == 'x + pi'
+        assert list(ordered([expr, x + E]))
+        assert (2 + 3*I).as_ordered_terms() == [2, 3*I]
+
+
+def test_as_terms_exact_large_coefficients():
+    a, b = 10**400*x, 10**401*x
+    assert a.as_terms()[0][0][1][0] != b.as_terms()[0][0][1][0]
+    assert Add(a, b, evaluate=False).as_ordered_terms() == [a, b]
+    assert Add(b, a, evaluate=False).as_ordered_terms() == [a, b]
 
 
 def test_sort_key_atomic_expr():
