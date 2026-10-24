@@ -108,6 +108,7 @@ def _if_zero_implies_zero(P, Q):
     return True
 
 class Rule(ABC):
+    """Base class of the integration rules."""
 
     __slots__ = ('integrand', 'variable')
 
@@ -182,7 +183,32 @@ class AtomicRule(Rule, ABC):
 
 
 class ConstantRule(AtomicRule):
-    """integrate(a, x)  ->  a*x"""
+    r"""Integrate a constant.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int a\,dx
+        \longrightarrow
+        a x
+
+    where $a$ does not depend on $x$.
+
+    Examples
+    ========
+
+    .. math:: \int 3\,dx = 3x
+
+    .. math:: \int y\,dx = x y
+
+    >>> from sympy import S, Symbol
+    >>> from sympy.integrals.manualintegrate import ConstantRule
+    >>> x = Symbol('x')
+    >>> ConstantRule(S(3), x).eval()
+    3*x
+    """
 
     __slots__ = ()
 
@@ -191,7 +217,30 @@ class ConstantRule(AtomicRule):
 
 
 class ConstantTimesRule(Rule):
-    """integrate(a*f(x), x)  ->  a*integrate(f(x), x)"""
+    r"""Take a constant factor out of the integral.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int a\,f(x)\,dx
+        \longrightarrow
+        a \int f(x)\,dx
+
+    where $a$ does not depend on $x$.
+
+    Examples
+    ========
+
+    .. math:: \int 3\sin x\,dx = 3\int \sin x\,dx = -3\cos x
+
+    >>> from sympy import S, Symbol, sin
+    >>> from sympy.integrals.manualintegrate import ConstantTimesRule, SinRule
+    >>> x = Symbol('x')
+    >>> ConstantTimesRule(3*sin(x), x, S(3), sin(x), SinRule(sin(x), x)).eval()
+    -3*cos(x)
+    """
 
     __slots__ = ('constant', 'other', 'substep')
 
@@ -220,7 +269,32 @@ class ConstantTimesRule(Rule):
 
 
 class PowerRule(AtomicRule):
-    """integrate(x**a, x)"""
+    r"""Integrate a power of the variable.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int x^a\,dx
+        \longrightarrow
+        \frac{x^{a+1}}{a+1}
+
+    for $a \neq -1$, and $\log x$ for $a = -1$.
+
+    Examples
+    ========
+
+    .. math:: \int x^3\,dx = \frac{x^4}{4}
+
+    .. math:: \int x^{-1/2}\,dx = 2\sqrt{x}
+
+    >>> from sympy import S, Symbol
+    >>> from sympy.integrals.manualintegrate import PowerRule
+    >>> x = Symbol('x')
+    >>> PowerRule(x**3, x, x, S(3)).eval()
+    x**4/4
+    """
 
     __slots__ = ("base", "exp")
 
@@ -242,7 +316,30 @@ class PowerRule(AtomicRule):
 
 
 class NestedPowRule(AtomicRule):
-    """integrate((x**a)**b, x)"""
+    r"""Integrate a nested power of a linear expression.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \bigl((x - h)^a\bigr)^b\,dx
+        \longrightarrow
+        \frac{(x - h)\bigl((x - h)^a\bigr)^b}{a b + 1}
+
+    for $a b \neq -1$, and $(x - h)\bigl((x - h)^a\bigr)^b \log(x - h)$ for $a b = -1$. The nested power is not collapsed to $(x - h)^{a b}$, which is not valid for all complex $x$.
+
+    Examples
+    ========
+
+    .. math:: \int (x^a)^b\,dx = \frac{x\,(x^a)^b}{a b + 1}
+
+    >>> from sympy import Symbol
+    >>> from sympy.integrals.manualintegrate import NestedPowRule
+    >>> x, a, b = Symbol('x'), Symbol('a'), Symbol('b')
+    >>> NestedPowRule((x**a)**b, x, x, a*b).eval()
+    Piecewise((x*(x**a)**b/(a*b + 1), Ne(a*b, -1)), (x*(x**a)**b*log(x), True))
+    """
 
     __slots__ = ("base", "exp")
 
@@ -263,7 +360,28 @@ class NestedPowRule(AtomicRule):
 
 
 class AddRule(Rule):
-    """integrate(f(x) + g(x), x) -> integrate(f(x), x) + integrate(g(x), x)"""
+    r"""Integrate a sum term by term.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \bigl(f(x) + g(x)\bigr)\,dx
+        \longrightarrow
+        \int f(x)\,dx + \int g(x)\,dx
+
+    Examples
+    ========
+
+    .. math:: \int (x + e^x)\,dx = \frac{x^2}{2} + e^x
+
+    >>> from sympy import Symbol, exp
+    >>> from sympy.integrals.manualintegrate import AddRule, PendingRule
+    >>> x = Symbol('x')
+    >>> AddRule(x + exp(x), x, [PendingRule(x, x), PendingRule(exp(x), x)]).eval()
+    Integral(x, x) + Integral(exp(x), x)
+    """
 
     __slots__ = ("substeps",)
 
@@ -281,7 +399,30 @@ class AddRule(Rule):
 
 
 class URule(Rule):
-    """integrate(f(g(x))*g'(x), x) -> integrate(f(u), u), u = g(x)"""
+    r"""Integrate by substitution.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int f(g(x))\,g'(x)\,dx
+        \longrightarrow
+        \int f(u)\,du
+
+    with $u = g(x)$, substituted back into the result.
+
+    Examples
+    ========
+
+    .. math:: \int 2x\cos(x^2)\,dx = \int \cos u\,du = \sin(x^2)
+
+    >>> from sympy import Symbol, cos
+    >>> from sympy.integrals.manualintegrate import CosRule, URule
+    >>> x, u = Symbol('x'), Symbol('u')
+    >>> URule(2*x*cos(x**2), x, u, x**2, CosRule(cos(u), u)).eval()
+    sin(x**2)
+    """
 
     __slots__ = ("u_var", "u_func", "substep")
 
@@ -316,7 +457,32 @@ class URule(Rule):
 
 
 class ReparameterizationRule(Rule):
-    """Restore auxiliary parameters after evaluating a substep."""
+    r"""Restore auxiliary parameters after evaluating a substep.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int f(x; e_1, \ldots, e_n)\,dx
+        \longrightarrow
+        \Bigl[\int f(x; p_1, \ldots, p_n)\,dx\Bigr]_{p_i = e_i}
+
+    the substep integrates with auxiliary parameters $p_i$ in place of the expressions $e_i$, which are substituted back into its result. Used by the Bioche substitution for the phases of trigonometric arguments.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{dx}{2 + \sin(x + \varphi)} = \Bigl[\int \frac{dx}{2 + \sin(x + p)}\Bigr]_{p = \varphi}
+
+    >>> from sympy import Symbol, sin
+    >>> from sympy.integrals.manualintegrate import PendingRule, ReparameterizationRule
+    >>> x, p, phi = Symbol('x'), Symbol('p'), Symbol('phi')
+    >>> rule = ReparameterizationRule(1/(2 + sin(x + phi)), x, {p: phi},
+    ...     PendingRule(1/(2 + sin(x + p)), x))
+    >>> rule.eval()
+    Integral(1/(sin(phi + x) + 2), x)
+    """
 
     __slots__ = ("replacements", "substep")
 
@@ -339,7 +505,30 @@ class ReparameterizationRule(Rule):
 
 
 class PartsRule(Rule):
-    """integrate(u(x)*v'(x), x) -> u(x)*v(x) - integrate(u'(x)*v(x), x)"""
+    r"""Integrate by parts.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int u(x)\,v'(x)\,dx
+        \longrightarrow
+        u(x)\,v(x) - \int u'(x)\,v(x)\,dx
+
+    Examples
+    ========
+
+    .. math:: \int x e^x\,dx = x e^x - \int e^x\,dx = x e^x - e^x
+
+    >>> from sympy import Symbol, exp
+    >>> from sympy.integrals.manualintegrate import PartsRule, PendingRule
+    >>> x = Symbol('x')
+    >>> rule = PartsRule(x*exp(x), x, x, exp(x), PendingRule(exp(x), x),
+    ...     PendingRule(exp(x), x))
+    >>> rule.eval()
+    x*Integral(exp(x), x) - Integral(exp(x), x)
+    """
 
     __slots__ = ("u", "dv", "v_step", "second_step")
 
@@ -374,7 +563,34 @@ class PartsRule(Rule):
 
 
 class CyclicPartsRule(Rule):
-    """Apply PartsRule multiple times to integrate exp(x)*sin(x)"""
+    r"""Integrate by parts when the original integral reappears.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        I = \int f(x)\,dx
+        \longrightarrow
+        \frac{\sum_k (-1)^k\,u_k(x)\,v_k(x)}{1 - c}
+
+    when repeated integration by parts reproduces the original integral, $I = \sum_k (-1)^k u_k v_k + c\,I$ with a constant $c \neq 1$.
+
+    Examples
+    ========
+
+    .. math:: \int e^x \sin x\,dx = \frac{e^x \sin x - e^x \cos x}{2}
+
+    >>> from sympy import S, Symbol, exp, sin, cos
+    >>> from sympy.integrals.manualintegrate import (ConstantTimesRule,
+    ...     CosRule, CyclicPartsRule, PartsRule, SinRule)
+    >>> x = Symbol('x')
+    >>> first = PartsRule(exp(x)*sin(x), x, exp(x), sin(x), SinRule(sin(x), x))
+    >>> second = PartsRule(-exp(x)*cos(x), x, exp(x), -cos(x),
+    ...     ConstantTimesRule(-cos(x), x, S(-1), cos(x), CosRule(cos(x), x)))
+    >>> CyclicPartsRule(exp(x)*sin(x), x, [first, second], S(-1)).eval()
+    exp(x)*sin(x)/2 - exp(x)*cos(x)/2
+    """
 
     __slots__ = ("parts_rules", "coefficient")
 
@@ -409,7 +625,28 @@ class TrigRule(AtomicRule, ABC):
 
 
 class SinRule(TrigRule):
-    """integrate(sin(x), x) -> -cos(x)"""
+    r"""Integrate the sine.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \sin x\,dx
+        \longrightarrow
+        -\cos x
+
+    Examples
+    ========
+
+    .. math:: \int \sin x\,dx = -\cos x
+
+    >>> from sympy import Symbol, sin
+    >>> from sympy.integrals.manualintegrate import SinRule
+    >>> x = Symbol('x')
+    >>> SinRule(sin(x), x).eval()
+    -cos(x)
+    """
 
     __slots__ = ()
 
@@ -418,7 +655,28 @@ class SinRule(TrigRule):
 
 
 class CosRule(TrigRule):
-    """integrate(cos(x), x) -> sin(x)"""
+    r"""Integrate the cosine.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \cos x\,dx
+        \longrightarrow
+        \sin x
+
+    Examples
+    ========
+
+    .. math:: \int \cos x\,dx = \sin x
+
+    >>> from sympy import Symbol, cos
+    >>> from sympy.integrals.manualintegrate import CosRule
+    >>> x = Symbol('x')
+    >>> CosRule(cos(x), x).eval()
+    sin(x)
+    """
 
     __slots__ = ()
 
@@ -431,7 +689,28 @@ class HyperbolicRule(AtomicRule, ABC):
 
 
 class SinhRule(HyperbolicRule):
-    """integrate(sinh(x), x) -> cosh(x)"""
+    r"""Integrate the hyperbolic sine.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \sinh x\,dx
+        \longrightarrow
+        \cosh x
+
+    Examples
+    ========
+
+    .. math:: \int \sinh x\,dx = \cosh x
+
+    >>> from sympy import Symbol, sinh
+    >>> from sympy.integrals.manualintegrate import SinhRule
+    >>> x = Symbol('x')
+    >>> SinhRule(sinh(x), x).eval()
+    cosh(x)
+    """
 
     __slots__ = ()
 
@@ -440,7 +719,28 @@ class SinhRule(HyperbolicRule):
 
 
 class CoshRule(HyperbolicRule):
-    """integrate(cosh(x), x) -> sinh(x)"""
+    r"""Integrate the hyperbolic cosine.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \cosh x\,dx
+        \longrightarrow
+        \sinh x
+
+    Examples
+    ========
+
+    .. math:: \int \cosh x\,dx = \sinh x
+
+    >>> from sympy import Symbol, cosh
+    >>> from sympy.integrals.manualintegrate import CoshRule
+    >>> x = Symbol('x')
+    >>> CoshRule(cosh(x), x).eval()
+    sinh(x)
+    """
 
     __slots__ = ()
 
@@ -449,7 +749,32 @@ class CoshRule(HyperbolicRule):
 
 
 class ExpRule(AtomicRule):
-    """integrate(a**x, x) -> a**x/ln(a)"""
+    r"""Integrate an exponential with a constant base.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int a^x\,dx
+        \longrightarrow
+        \frac{a^x}{\log a}
+
+    for a constant $a$ with $\log a \neq 0$.
+
+    Examples
+    ========
+
+    .. math:: \int e^x\,dx = e^x
+
+    .. math:: \int 2^x\,dx = \frac{2^x}{\log 2}
+
+    >>> from sympy import S, Symbol
+    >>> from sympy.integrals.manualintegrate import ExpRule
+    >>> x = Symbol('x')
+    >>> ExpRule(2**x, x, S(2), x).eval()
+    2**x/log(2)
+    """
 
     __slots__ = ("base", "exp")
 
@@ -468,7 +793,32 @@ class ExpRule(AtomicRule):
 
 
 class ReciprocalRule(AtomicRule):
-    """integrate(1/x, x) -> ln(x)"""
+    r"""Integrate the reciprocal of a linear expression.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{dx}{x + c}
+        \longrightarrow
+        \log(x + c)
+
+    where $c$ does not depend on $x$.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{dx}{x} = \log x
+
+    .. math:: \int \frac{dx}{x + 2} = \log(x + 2)
+
+    >>> from sympy import Symbol
+    >>> from sympy.integrals.manualintegrate import ReciprocalRule
+    >>> x = Symbol('x')
+    >>> ReciprocalRule(1/(x + 2), x, x + 2).eval()
+    log(x + 2)
+    """
 
     __slots__ = ("base",)
 
@@ -483,7 +833,30 @@ class ReciprocalRule(AtomicRule):
 
 
 class ArcsinRule(AtomicRule):
-    """integrate(1/sqrt(1-x**2), x) -> asin(x)"""
+    r"""Integrate the derivative of the arcsine.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{dx}{\sqrt{1 - x^2}}
+        \longrightarrow
+        \arcsin x
+
+    Examples
+    ========
+
+    .. math:: \int \frac{dx}{\sqrt{1 - x^2}} = \arcsin x
+
+    .. math:: \int \frac{dx}{\sqrt{4 - x^2}} = \arcsin\frac{x}{2}
+
+    >>> from sympy import Symbol, sqrt
+    >>> from sympy.integrals.manualintegrate import ArcsinRule
+    >>> x = Symbol('x')
+    >>> ArcsinRule(1/sqrt(1 - x**2), x).eval()
+    asin(x)
+    """
 
     __slots__ = ()
 
@@ -492,7 +865,30 @@ class ArcsinRule(AtomicRule):
 
 
 class ArcsinhRule(AtomicRule):
-    """integrate(1/sqrt(1+x**2), x) -> asin(x)"""
+    r"""Integrate the derivative of the inverse hyperbolic sine.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{dx}{\sqrt{1 + x^2}}
+        \longrightarrow
+        \operatorname{arcsinh} x
+
+    Examples
+    ========
+
+    .. math:: \int \frac{dx}{\sqrt{1 + x^2}} = \operatorname{arcsinh} x
+
+    .. math:: \int \frac{dx}{\sqrt{x^2 + 2x + 3}} = \operatorname{arcsinh}\frac{\sqrt{2}\,(x + 1)}{2}
+
+    >>> from sympy import Symbol, sqrt
+    >>> from sympy.integrals.manualintegrate import ArcsinhRule
+    >>> x = Symbol('x')
+    >>> ArcsinhRule(1/sqrt(1 + x**2), x).eval()
+    asinh(x)
+    """
 
     __slots__ = ()
 
@@ -501,7 +897,30 @@ class ArcsinhRule(AtomicRule):
 
 
 class ReciprocalSqrtQuadraticRule(AtomicRule):
-    """integrate(1/sqrt(a+b*x+c*x**2), x) -> log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)"""
+    r"""Integrate the reciprocal of the square root of a quadratic.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{dx}{\sqrt{a + b x + c x^2}}
+        \longrightarrow
+        \frac{\log\bigl(2\sqrt{c}\,\sqrt{a + b x + c x^2} + b + 2 c x\bigr)}{\sqrt{c}}
+
+    for $c \neq 0$.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{dx}{\sqrt{a + x^2}} = \log\bigl(2\sqrt{a + x^2} + 2x\bigr)
+
+    >>> from sympy import S, Symbol, sqrt
+    >>> from sympy.integrals.manualintegrate import ReciprocalSqrtQuadraticRule
+    >>> x, a = Symbol('x'), Symbol('a')
+    >>> ReciprocalSqrtQuadraticRule(1/sqrt(a + x**2), x, a, S(0), S(1)).eval()
+    log(2*x + 2*sqrt(a + x**2))
+    """
 
     __slots__ = ("a", "b", "c")
 
@@ -545,7 +964,32 @@ def _sqrt_quadratic_denom_reduce(
 
 
 class SqrtQuadraticDenomRule(AtomicRule):
-    """integrate(poly(x)/sqrt(a+b*x+c*x**2), x)"""
+    r"""Integrate a polynomial divided by the square root of a quadratic.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{p(x)}{\sqrt{a + b x + c x^2}}\,dx
+        \longrightarrow
+        q(x)\sqrt{a + b x + c x^2} + k\int \frac{dx}{\sqrt{a + b x + c x^2}}
+
+    where $q$ is a polynomial of degree $\deg p - 1$ and $k$ a constant, both obtained by reducing the coefficients of $p$; the remaining integral is solved by a substep.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{x^2}{\sqrt{x^2 + 1}}\,dx = \frac{x\sqrt{x^2 + 1}}{2} - \frac{1}{2}\int \frac{dx}{\sqrt{x^2 + 1}} = \frac{x\sqrt{x^2 + 1}}{2} - \frac{\operatorname{arcsinh} x}{2}
+
+    >>> from sympy import S, Symbol, sqrt
+    >>> from sympy.integrals.manualintegrate import PendingRule, SqrtQuadraticDenomRule
+    >>> x = Symbol('x')
+    >>> rule = SqrtQuadraticDenomRule(x**2/sqrt(x**2 + 1), x, S(1), S(0), S(1),
+    ...     [S(1), S(0), S(0)], PendingRule(1/sqrt(x**2 + 1), x))
+    >>> rule.eval()
+    x*sqrt(x**2 + 1)/2 - Integral(1/sqrt(x**2 + 1), x)/2
+    """
 
     __slots__ = ("a", "b", "c", "coeffs", "i0_step")
 
@@ -586,7 +1030,34 @@ class SqrtQuadraticDenomRule(AtomicRule):
 
 
 class SqrtQuadraticRule(Rule):
-    """integrate(sqrt(a+b*x+c*x**2), x)"""
+    r"""Integrate the square root of a quadratic.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \sqrt{a + b x + c x^2}\,dx
+        \longrightarrow
+        \int \frac{a + b x + c x^2}{\sqrt{a + b x + c x^2}}\,dx
+
+    the integrand is now a polynomial over the same square root, which is reduced by the rule for that case.
+
+    Examples
+    ========
+
+    .. math:: \int \sqrt{x^2 + 1}\,dx = \frac{x\sqrt{x^2 + 1}}{2} + \frac{\operatorname{arcsinh} x}{2}
+
+    .. math:: \int \sqrt{1 - x^2}\,dx = \frac{x\sqrt{1 - x^2}}{2} + \frac{\arcsin x}{2}
+
+    >>> from sympy import S, Symbol, sqrt
+    >>> from sympy.integrals.manualintegrate import PendingRule, SqrtQuadraticRule
+    >>> x = Symbol('x')
+    >>> rule = SqrtQuadraticRule(sqrt(x**2 + 1), x, S(1), S(0), S(1),
+    ...     PendingRule((x**2 + 1)/sqrt(x**2 + 1), x))
+    >>> rule.eval()
+    Integral(sqrt(x**2 + 1), x)
+    """
 
     __slots__ = ("a", "b", "c", "substep")
 
@@ -621,7 +1092,30 @@ class SqrtQuadraticRule(Rule):
 
 
 class RatintRule(AtomicRule):
-    """Integrate a rational function using ``ratint`` as a fallback."""
+    r"""Integrate a rational function.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{p(x)}{q(x)}\,dx
+        \longrightarrow
+        R(x) + \sum_i c_i \log v_i(x)
+
+    for polynomials $p$ and $q$, with a rational function $R$ and polynomials $v_i$ (Lazard-Rioboo-Trager algorithm).
+
+    Examples
+    ========
+
+    .. math:: \int \frac{dx}{x^2 - 1} = \frac{\log(x - 1)}{2} - \frac{\log(x + 1)}{2}
+
+    >>> from sympy import Symbol
+    >>> from sympy.integrals.manualintegrate import RatintRule
+    >>> x = Symbol('x')
+    >>> RatintRule(1/(x**2 - 1), x).eval()
+    log(x - 1)/2 - log(x + 1)/2
+    """
 
     __slots__ = ()
 
@@ -630,7 +1124,33 @@ class RatintRule(AtomicRule):
 
 
 class AlternativeRule(Rule):
-    """Multiple ways to do integration."""
+    r"""Multiple ways to do integration.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int f(x)\,dx
+        \longrightarrow
+        R_1\Bigl(\int f(x)\,dx\Bigr)
+
+    where $R_1, R_2, \ldots$ are alternative rule trees for the same integral; the first one gives the result.
+
+    Examples
+    ========
+
+    .. math:: \int x e^{x^2}\,dx = \frac{e^{x^2}}{2} \quad \text{with } u = x^2 \text{ or with } u = e^{x^2}
+
+    >>> from sympy import E, S, Symbol, exp
+    >>> from sympy.integrals.manualintegrate import (AlternativeRule,
+    ...     ConstantTimesRule, ExpRule, PendingRule, URule)
+    >>> x, u = Symbol('x'), Symbol('u')
+    >>> by_substitution = URule(x*exp(x**2), x, u, x**2,
+    ...     ConstantTimesRule(exp(u)/2, u, S.Half, exp(u), ExpRule(exp(u), u, E, u)))
+    >>> AlternativeRule(x*exp(x**2), x, [by_substitution, PendingRule(x*exp(x**2), x)]).eval()
+    exp(x**2)/2
+    """
 
     __slots__ = ("alternatives",)
 
@@ -650,7 +1170,70 @@ class AlternativeRule(Rule):
 
 
 class DontKnowRule(Rule):
-    """Leave the integral as is."""
+    r"""Leave the integral as is.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int f(x)\,dx
+        \longrightarrow
+        \int f(x)\,dx
+
+    left unevaluated, as no rule applies.
+
+    Examples
+    ========
+
+    .. math:: \int e^{x^3}\,dx = \int e^{x^3}\,dx
+
+    >>> from sympy import Symbol, exp
+    >>> from sympy.integrals.manualintegrate import DontKnowRule
+    >>> x = Symbol('x')
+    >>> DontKnowRule(exp(x**3), x).eval()
+    Integral(exp(x**3), x)
+    """
+
+    __slots__ = ()
+
+    def eval(self) -> Expr:
+        return Integral(self.integrand, self.variable)
+
+    def contains_dont_know(self) -> bool:
+        return True
+
+
+class PendingRule(Rule):
+    r"""Stand in for a subintegral whose rule has not been determined yet.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int f(x)\,dx
+        \longrightarrow
+        \int f(x)\,dx
+
+    left unevaluated, so that a rule tree which is still being built can be
+    evaluated: the enclosing rules treat the unevaluated integral like any
+    other result and the tree evaluates to the antiderivative as far as it
+    is known.
+
+    Examples
+    ========
+
+    .. math:: \int x\,e^x\,dx = x\,e^x - \int e^x\,dx
+
+    >>> from sympy import Symbol, exp
+    >>> from sympy.integrals.manualintegrate import PartsRule, PendingRule
+    >>> x = Symbol('x')
+    >>> PendingRule(exp(x), x).eval()
+    Integral(exp(x), x)
+    >>> PartsRule(x*exp(x), x, x, exp(x), PendingRule(exp(x), x), PendingRule(exp(x), x)).eval()
+    x*Integral(exp(x), x) - Integral(exp(x), x)
+    """
 
     __slots__ = ()
 
@@ -662,7 +1245,30 @@ class DontKnowRule(Rule):
 
 
 class DerivativeRule(AtomicRule):
-    """integrate(f'(x), x) -> f(x)"""
+    r"""Integrate a derivative.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{d}{dx} f(x)\,dx
+        \longrightarrow
+        f(x)
+
+    for a higher derivative $\partial^n f / \partial x^n$ one order of differentiation in $x$ is removed.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{d}{dx}\bigl(y \sin x\bigr)\,dx = y \sin x
+
+    >>> from sympy import Derivative, Symbol, sin
+    >>> from sympy.integrals.manualintegrate import DerivativeRule
+    >>> x, y = Symbol('x'), Symbol('y')
+    >>> DerivativeRule(Derivative(y*sin(x), x), x).eval()
+    y*sin(x)
+    """
 
     __slots__ = ()
 
@@ -677,7 +1283,30 @@ class DerivativeRule(AtomicRule):
 
 
 class RewriteRule(Rule):
-    """Rewrite integrand to another form that is easier to handle."""
+    r"""Rewrite the integrand to another form that is easier to handle.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int f(x)\,dx
+        \longrightarrow
+        \int g(x)\,dx
+
+    with $g(x) = f(x)$ written in a form that another rule handles.
+
+    Examples
+    ========
+
+    .. math:: \int \tan x\,dx = \int \frac{\sin x}{\cos x}\,dx = -\log\cos x
+
+    >>> from sympy import Symbol, sin, cos, tan
+    >>> from sympy.integrals.manualintegrate import PendingRule, RewriteRule
+    >>> x = Symbol('x')
+    >>> RewriteRule(tan(x), x, sin(x)/cos(x), PendingRule(sin(x)/cos(x), x)).eval()
+    Integral(sin(x)/cos(x), x)
+    """
 
     __slots__ = ("rewritten", "substep")
 
@@ -699,11 +1328,61 @@ class RewriteRule(Rule):
 
 
 class CompleteSquareRule(RewriteRule):
-    """Rewrite a+b*x+c*x**2 to a-b**2/(4*c) + c*(x+b/(2*c))**2"""
+    r"""Complete the square in a quadratic of the integrand.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int f(a + b x + c x^2)\,dx
+        \longrightarrow
+        \int f\Bigl(a - \frac{b^2}{4c} + c\Bigl(x + \frac{b}{2c}\Bigr)^2\Bigr)\,dx
+
+    Examples
+    ========
+
+    .. math:: \int \frac{dx}{\sqrt{-x^2 + 2x + 3}} = \int \frac{dx}{\sqrt{4 - (x - 1)^2}} = \arcsin\frac{x - 1}{2}
+
+    >>> from sympy import Symbol, sqrt
+    >>> from sympy.integrals.manualintegrate import CompleteSquareRule, PendingRule
+    >>> x = Symbol('x')
+    >>> rule = CompleteSquareRule(1/sqrt(-x**2 + 2*x + 3), x, 1/sqrt(4 - (x - 1)**2),
+    ...     PendingRule(1/sqrt(4 - (x - 1)**2), x))
+    >>> rule.eval()
+    Integral(1/sqrt(4 - (x - 1)**2), x)
+    """
     __slots__ = ()
 
 
 class PiecewiseRule(Rule):
+    r"""Combine the results of substeps valid under different conditions.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int f(x)\,dx
+        \longrightarrow
+        \begin{cases} F_1(x) & \text{if } c_1 \\ F_2(x) & \text{if } c_2 \\ \ldots \end{cases}
+
+    where each $F_i$ is the result of a substep valid under the condition $c_i$ on the parameters of the integrand.
+
+    Examples
+    ========
+
+    .. math:: \int x^a\,dx = \begin{cases} \dfrac{x^{a+1}}{a+1} & \text{if } a \neq -1 \\ \log x & \text{otherwise} \end{cases}
+
+    >>> from sympy import Ne, Symbol
+    >>> from sympy.integrals.manualintegrate import (PendingRule,
+    ...     PiecewiseRule, ReciprocalRule)
+    >>> x, a = Symbol('x'), Symbol('a')
+    >>> rule = PiecewiseRule(x**a, x, [(PendingRule(x**a, x), Ne(a, -1)),
+    ...     (ReciprocalRule(1/x, x, x), True)])
+    >>> rule.eval()
+    Piecewise((Integral(x**a, x), Ne(a, -1)), (log(x), True))
+    """
 
     __slots__ = ("subfunctions",)
 
@@ -728,6 +1407,30 @@ class PiecewiseRule(Rule):
 
 
 class HeavisideRule(Rule):
+    r"""Integrate a product with the Heaviside step function.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \theta(m x + b)\,g(x)\,dx
+        \longrightarrow
+        \theta(m x + b)\bigl(G(x) - G(-b/m)\bigr)
+
+    where $G$ is an antiderivative of $g$ found by the substep, so that the result vanishes at the jump $x = -b/m$.
+
+    Examples
+    ========
+
+    .. math:: \int \theta(x - 1)\,x\,dx = \theta(x - 1)\Bigl(\frac{x^2}{2} - \frac{1}{2}\Bigr)
+
+    >>> from sympy import S, Symbol, Heaviside
+    >>> from sympy.integrals.manualintegrate import HeavisideRule, PowerRule
+    >>> x = Symbol('x')
+    >>> HeavisideRule(Heaviside(x - 1)*x, x, x - 1, S(1), PowerRule(x, x, x, S(1))).eval()
+    (x**2/2 - 1/2)*Heaviside(x - 1)
+    """
 
     __slots__ = ("harg", "ibnd", "substep")
 
@@ -761,6 +1464,32 @@ class HeavisideRule(Rule):
 
 
 class DiracDeltaRule(AtomicRule):
+    r"""Integrate a Dirac delta or one of its derivatives.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \delta^{(n)}(a + b x)\,dx
+        \longrightarrow
+        \frac{\delta^{(n-1)}(a + b x)}{b}
+
+    for $n \geq 1$, and $\theta(a + b x)/b$ for $n = 0$.
+
+    Examples
+    ========
+
+    .. math:: \int \delta(2x - 1)\,dx = \frac{\theta(2x - 1)}{2}
+
+    .. math:: \int \delta'(2x - 1)\,dx = \frac{\delta(2x - 1)}{2}
+
+    >>> from sympy import S, Symbol, DiracDelta
+    >>> from sympy.integrals.manualintegrate import DiracDeltaRule
+    >>> x = Symbol('x')
+    >>> DiracDeltaRule(DiracDelta(2*x - 1), x, S(0), S(-1), S(2)).eval()
+    Heaviside(2*x - 1)/2
+    """
 
     __slots__ = ("n", "a", "b")
 
@@ -784,7 +1513,32 @@ class DiracDeltaRule(AtomicRule):
 
 
 class ArctanRule(AtomicRule):
-    """integrate(a/(b*x**2+c), x) -> a/b / sqrt(c/b) * atan(x/sqrt(c/b))"""
+    r"""Integrate the derivative of the arctangent.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{a}{b x^2 + c}\,dx
+        \longrightarrow
+        \frac{a}{b\sqrt{c/b}}\arctan\frac{x}{\sqrt{c/b}}
+
+    for $c/b > 0$; for $c/b < 0$ the integrand is rewritten with partial fractions instead.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{dx}{x^2 + 1} = \arctan x
+
+    .. math:: \int \frac{3}{4x^2 + 9}\,dx = \frac{1}{2}\arctan\frac{2x}{3}
+
+    >>> from sympy import S, Symbol
+    >>> from sympy.integrals.manualintegrate import ArctanRule
+    >>> x = Symbol('x')
+    >>> ArctanRule(3/(4*x**2 + 9), x, S(3), S(4), S(9)).eval()
+    atan(2*x/3)/2
+    """
 
     __slots__ = ("a", "b", "c")
 
@@ -817,6 +1571,30 @@ class OrthogonalPolyRule(AtomicRule, ABC):
 
 
 class JacobiRule(OrthogonalPolyRule):
+    r"""Integrate a Jacobi polynomial.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int P^{(\alpha,\beta)}_n(x)\,dx
+        \longrightarrow
+        \frac{2\,P^{(\alpha-1,\beta-1)}_{n+1}(x)}{n + \alpha + \beta}
+
+    for $n + \alpha + \beta \neq 0$; otherwise $x$ for $n = 0$ and $(\alpha + \beta + 2)x^2/4 + (\alpha - \beta)x/2$ for $n = 1$.
+
+    Examples
+    ========
+
+    .. math:: \int P^{(\alpha,\beta)}_2(x)\,dx = \frac{2\,P^{(\alpha-1,\beta-1)}_3(x)}{\alpha + \beta + 2}
+
+    >>> from sympy import S, Symbol, jacobi
+    >>> from sympy.integrals.manualintegrate import JacobiRule
+    >>> x, a, b = Symbol('x'), Symbol('a'), Symbol('b')
+    >>> JacobiRule(jacobi(2, a, b, x), x, S(2), a, b).eval()
+    Piecewise(((a**3/24 - a**2*b/8 - a**2/8 + a*b**2/8 - 5*a/12 - b**3/24 + b**2/8 + 5*b/12 + 2*x**3*(a**3/48 + a**2*b/16 + 3*a**2/16 + a*b**2/16 + 3*a*b/8 + 13*a/24 + b**3/48 + 3*b**2/16 + 13*b/24 + 1/2) + 2*x**2*(a**3/16 + a**2*b/16 + 5*a**2/16 - a*b**2/16 + 3*a/8 - b**3/16 - 5*b**2/16 - 3*b/8) + 2*x*(a**3/16 - a**2*b/16 + a**2/16 - a*b**2/16 - 3*a*b/8 - 3*a/8 + b**3/16 + b**2/16 - 3*b/8 - 1/2))/(a + b + 2), Ne(a + b, -2)))
+    """
 
     __slots__ = ("a", "b")
 
@@ -839,6 +1617,30 @@ class JacobiRule(OrthogonalPolyRule):
 
 
 class GegenbauerRule(OrthogonalPolyRule):
+    r"""Integrate a Gegenbauer polynomial.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int C^{(\alpha)}_n(x)\,dx
+        \longrightarrow
+        \frac{C^{(\alpha-1)}_{n+1}(x)}{2(\alpha - 1)}
+
+    for $\alpha \neq 1$, and $T_{n+1}(x)/(n+1)$ for $\alpha = 1$.
+
+    Examples
+    ========
+
+    .. math:: \int C^{(2)}_n(x)\,dx = \frac{C^{(1)}_{n+1}(x)}{2}
+
+    >>> from sympy import S, Symbol, gegenbauer
+    >>> from sympy.integrals.manualintegrate import GegenbauerRule
+    >>> x, n = Symbol('x'), Symbol('n')
+    >>> GegenbauerRule(gegenbauer(n, 2, x), x, n, S(2)).eval()
+    chebyshevu(n + 1, x)/2
+    """
 
     __slots__ = ("a",)
 
@@ -857,6 +1659,30 @@ class GegenbauerRule(OrthogonalPolyRule):
 
 
 class ChebyshevTRule(OrthogonalPolyRule):
+    r"""Integrate a Chebyshev polynomial of the first kind.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int T_n(x)\,dx
+        \longrightarrow
+        \frac{1}{2}\Bigl(\frac{T_{n+1}(x)}{n+1} - \frac{T_{n-1}(x)}{n-1}\Bigr)
+
+    for $n \neq \pm 1$, and $x^2/2$ otherwise.
+
+    Examples
+    ========
+
+    .. math:: \int T_2(x)\,dx = \frac{T_3(x)}{6} - \frac{T_1(x)}{2}
+
+    >>> from sympy import S, Symbol, chebyshevt
+    >>> from sympy.integrals.manualintegrate import ChebyshevTRule
+    >>> x = Symbol('x')
+    >>> ChebyshevTRule(chebyshevt(2, x), x, S(2)).eval()
+    2*x**3/3 - x
+    """
 
     __slots__ = ()
 
@@ -869,6 +1695,30 @@ class ChebyshevTRule(OrthogonalPolyRule):
 
 
 class ChebyshevURule(OrthogonalPolyRule):
+    r"""Integrate a Chebyshev polynomial of the second kind.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int U_n(x)\,dx
+        \longrightarrow
+        \frac{T_{n+1}(x)}{n+1}
+
+    for $n \neq -1$.
+
+    Examples
+    ========
+
+    .. math:: \int U_2(x)\,dx = \frac{T_3(x)}{3}
+
+    >>> from sympy import S, Symbol, chebyshevu
+    >>> from sympy.integrals.manualintegrate import ChebyshevURule
+    >>> x = Symbol('x')
+    >>> ChebyshevURule(chebyshevu(2, x), x, S(2)).eval()
+    4*x**3/3 - x
+    """
 
     __slots__ = ()
 
@@ -880,6 +1730,28 @@ class ChebyshevURule(OrthogonalPolyRule):
 
 
 class LegendreRule(OrthogonalPolyRule):
+    r"""Integrate a Legendre polynomial.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int P_n(x)\,dx
+        \longrightarrow
+        \frac{P_{n+1}(x) - P_{n-1}(x)}{2n + 1}
+
+    Examples
+    ========
+
+    .. math:: \int P_2(x)\,dx = \frac{P_3(x) - P_1(x)}{5}
+
+    >>> from sympy import S, Symbol, legendre
+    >>> from sympy.integrals.manualintegrate import LegendreRule
+    >>> x = Symbol('x')
+    >>> LegendreRule(legendre(2, x), x, S(2)).eval()
+    x**3/2 - x/2
+    """
 
     __slots__ = ()
 
@@ -889,6 +1761,28 @@ class LegendreRule(OrthogonalPolyRule):
 
 
 class HermiteRule(OrthogonalPolyRule):
+    r"""Integrate a Hermite polynomial.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int H_n(x)\,dx
+        \longrightarrow
+        \frac{H_{n+1}(x)}{2(n + 1)}
+
+    Examples
+    ========
+
+    .. math:: \int H_2(x)\,dx = \frac{H_3(x)}{6}
+
+    >>> from sympy import S, Symbol, hermite
+    >>> from sympy.integrals.manualintegrate import HermiteRule
+    >>> x = Symbol('x')
+    >>> HermiteRule(hermite(2, x), x, S(2)).eval()
+    4*x**3/3 - 2*x
+    """
 
     __slots__ = ()
 
@@ -898,6 +1792,28 @@ class HermiteRule(OrthogonalPolyRule):
 
 
 class LaguerreRule(OrthogonalPolyRule):
+    r"""Integrate a Laguerre polynomial.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int L_n(x)\,dx
+        \longrightarrow
+        L_n(x) - L_{n+1}(x)
+
+    Examples
+    ========
+
+    .. math:: \int L_2(x)\,dx = L_2(x) - L_3(x)
+
+    >>> from sympy import S, Symbol, laguerre
+    >>> from sympy.integrals.manualintegrate import LaguerreRule
+    >>> x = Symbol('x')
+    >>> LaguerreRule(laguerre(2, x), x, S(2)).eval()
+    x**3/6 - x**2 + x
+    """
 
     __slots__ = ()
 
@@ -907,6 +1823,28 @@ class LaguerreRule(OrthogonalPolyRule):
 
 
 class AssocLaguerreRule(OrthogonalPolyRule):
+    r"""Integrate an associated Laguerre polynomial.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int L^{(\alpha)}_n(x)\,dx
+        \longrightarrow
+        -L^{(\alpha-1)}_{n+1}(x)
+
+    Examples
+    ========
+
+    .. math:: \int L^{(2)}_1(x)\,dx = -L^{(1)}_2(x)
+
+    >>> from sympy import S, Symbol, assoc_laguerre
+    >>> from sympy.integrals.manualintegrate import AssocLaguerreRule
+    >>> x = Symbol('x')
+    >>> AssocLaguerreRule(assoc_laguerre(1, 2, x), x, S(1), S(2)).eval()
+    -x**2/2 + 3*x - 3
+    """
 
     __slots__ = ("a",)
 
@@ -934,6 +1872,30 @@ class IRule(AtomicRule, ABC):
 
 
 class CiRule(IRule):
+    r"""Integrate a cosine divided by the variable.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{\cos(a x + b)}{x}\,dx
+        \longrightarrow
+        \cos b\,\operatorname{Ci}(a x) - \sin b\,\operatorname{Si}(a x)
+
+    for $a \neq 0$, with $a$ and $b$ independent of $x$.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{\cos(2x + 1)}{x}\,dx = \cos 1\,\operatorname{Ci}(2x) - \sin 1\,\operatorname{Si}(2x)
+
+    >>> from sympy import S, Symbol, cos
+    >>> from sympy.integrals.manualintegrate import CiRule
+    >>> x = Symbol('x')
+    >>> CiRule(cos(2*x + 1)/x, x, S(2), S(1)).eval()
+    cos(1)*Ci(2*x) - sin(1)*Si(2*x)
+    """
 
     __slots__ = ()
 
@@ -943,6 +1905,30 @@ class CiRule(IRule):
 
 
 class ChiRule(IRule):
+    r"""Integrate a hyperbolic cosine divided by the variable.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{\cosh(a x + b)}{x}\,dx
+        \longrightarrow
+        \cosh b\,\operatorname{Chi}(a x) + \sinh b\,\operatorname{Shi}(a x)
+
+    for $a \neq 0$, with $a$ and $b$ independent of $x$.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{\cosh x}{x}\,dx = \operatorname{Chi}(x)
+
+    >>> from sympy import S, Symbol, cosh
+    >>> from sympy.integrals.manualintegrate import ChiRule
+    >>> x = Symbol('x')
+    >>> ChiRule(cosh(x)/x, x, S(1), S(0)).eval()
+    Chi(x)
+    """
 
     __slots__ = ()
 
@@ -952,6 +1938,30 @@ class ChiRule(IRule):
 
 
 class EiRule(IRule):
+    r"""Integrate an exponential divided by the variable.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{e^{a x + b}}{x}\,dx
+        \longrightarrow
+        e^b\,\operatorname{Ei}(a x)
+
+    for $a \neq 0$, with $a$ and $b$ independent of $x$.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{e^{2x + 1}}{x}\,dx = e\,\operatorname{Ei}(2x)
+
+    >>> from sympy import S, Symbol, exp
+    >>> from sympy.integrals.manualintegrate import EiRule
+    >>> x = Symbol('x')
+    >>> EiRule(exp(2*x + 1)/x, x, S(2), S(1)).eval()
+    E*Ei(2*x)
+    """
 
     __slots__ = ()
 
@@ -961,6 +1971,30 @@ class EiRule(IRule):
 
 
 class SiRule(IRule):
+    r"""Integrate a sine divided by the variable.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{\sin(a x + b)}{x}\,dx
+        \longrightarrow
+        \sin b\,\operatorname{Ci}(a x) + \cos b\,\operatorname{Si}(a x)
+
+    for $a \neq 0$, with $a$ and $b$ independent of $x$.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{\sin 3x}{x}\,dx = \operatorname{Si}(3x)
+
+    >>> from sympy import S, Symbol, sin
+    >>> from sympy.integrals.manualintegrate import SiRule
+    >>> x = Symbol('x')
+    >>> SiRule(sin(3*x)/x, x, S(3), S(0)).eval()
+    Si(3*x)
+    """
 
     __slots__ = ()
 
@@ -970,6 +2004,30 @@ class SiRule(IRule):
 
 
 class ShiRule(IRule):
+    r"""Integrate a hyperbolic sine divided by the variable.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{\sinh(a x + b)}{x}\,dx
+        \longrightarrow
+        \sinh b\,\operatorname{Chi}(a x) + \cosh b\,\operatorname{Shi}(a x)
+
+    for $a \neq 0$, with $a$ and $b$ independent of $x$.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{\sinh 2x}{x}\,dx = \operatorname{Shi}(2x)
+
+    >>> from sympy import S, Symbol, sinh
+    >>> from sympy.integrals.manualintegrate import ShiRule
+    >>> x = Symbol('x')
+    >>> ShiRule(sinh(2*x)/x, x, S(2), S(0)).eval()
+    Shi(2*x)
+    """
 
     __slots__ = ()
 
@@ -979,6 +2037,30 @@ class ShiRule(IRule):
 
 
 class LiRule(IRule):
+    r"""Integrate the reciprocal of a logarithm.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{dx}{\log(a x + b)}
+        \longrightarrow
+        \frac{\operatorname{li}(a x + b)}{a}
+
+    for $a \neq 0$, with $a$ and $b$ independent of $x$.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{dx}{\log(2x + 1)} = \frac{\operatorname{li}(2x + 1)}{2}
+
+    >>> from sympy import S, Symbol, log
+    >>> from sympy.integrals.manualintegrate import LiRule
+    >>> x = Symbol('x')
+    >>> LiRule(1/log(2*x + 1), x, S(2), S(1)).eval()
+    li(2*x + 1)/2
+    """
 
     __slots__ = ()
 
@@ -988,6 +2070,32 @@ class LiRule(IRule):
 
 
 class ErfRule(AtomicRule):
+    r"""Integrate the exponential of a quadratic.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int e^{a x^2 + b x + c}\,dx
+        \longrightarrow
+        \frac{\sqrt{\pi}}{2\sqrt{a}}\,e^{c - b^2/(4a)}\,\operatorname{erfi}\Bigl(\frac{2 a x + b}{2\sqrt{a}}\Bigr)
+
+    for $a \neq 0$; for real negative $a$ the result is written as $\frac{\sqrt{\pi}}{2\sqrt{-a}}\,e^{c - b^2/(4a)}\,\operatorname{erf}\bigl(\frac{-2 a x - b}{2\sqrt{-a}}\bigr)$.
+
+    Examples
+    ========
+
+    .. math:: \int e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2}\operatorname{erf} x
+
+    .. math:: \int e^{x^2 + 2x}\,dx = \frac{\sqrt{\pi}}{2e}\operatorname{erfi}(x + 1)
+
+    >>> from sympy import S, Symbol, exp
+    >>> from sympy.integrals.manualintegrate import ErfRule
+    >>> x = Symbol('x')
+    >>> ErfRule(exp(-x**2), x, S(-1), S(0), S(0)).eval()
+    sqrt(pi)*erf(x)/2
+    """
 
     __slots__ = ("a", "b", "c")
 
@@ -1016,6 +2124,30 @@ class ErfRule(AtomicRule):
 
 
 class OwensTRule(AtomicRule):
+    r"""Integrate a Gaussian multiplied by an error function.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int e^{-(a x + b)^2}\,\operatorname{erf}\bigl(y(a x + b)\bigr)\,dx
+        \longrightarrow
+        -\frac{2\sqrt{\pi}}{a}\,T\bigl(\sqrt{2}\,(a x + b),\, y\bigr)
+
+    for $a \neq 0$ and $y \neq \pm 1$, where $T$ is Owen's T function.
+
+    Examples
+    ========
+
+    .. math:: \int e^{-x^2}\operatorname{erf}(y x)\,dx = -2\sqrt{\pi}\,T(\sqrt{2}\,x, y)
+
+    >>> from sympy import S, Symbol, exp, erf
+    >>> from sympy.integrals.manualintegrate import OwensTRule
+    >>> x, y = Symbol('x'), Symbol('y')
+    >>> OwensTRule(exp(-x**2)*erf(y*x), x, S(1), S(0), y).eval()
+    -2*sqrt(pi)*owens_t(sqrt(2)*x, y)
+    """
 
     __slots__ = ("a", "b", "y")
 
@@ -1036,6 +2168,30 @@ class OwensTRule(AtomicRule):
         return - 2*sqrt(S.Pi)/a * owens_t(sqrt(2)*(a*x+b), y)
 
 class FresnelCRule(AtomicRule):
+    r"""Integrate the cosine of a quadratic.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \cos(a x^2 + b x + c)\,dx
+        \longrightarrow
+        \sqrt{\frac{\pi}{2a}}\Bigl[\cos\Bigl(\frac{b^2}{4a} - c\Bigr) C\Bigl(\frac{2 a x + b}{\sqrt{2\pi a}}\Bigr) + \sin\Bigl(\frac{b^2}{4a} - c\Bigr) S\Bigl(\frac{2 a x + b}{\sqrt{2\pi a}}\Bigr)\Bigr]
+
+    for $a \neq 0$, where $C$ and $S$ are the Fresnel integrals.
+
+    Examples
+    ========
+
+    .. math:: \int \cos(x^2)\,dx = \sqrt{\frac{\pi}{2}}\,C\Bigl(\sqrt{\frac{2}{\pi}}\,x\Bigr)
+
+    >>> from sympy import S, Symbol, cos
+    >>> from sympy.integrals.manualintegrate import FresnelCRule
+    >>> x = Symbol('x')
+    >>> FresnelCRule(cos(x**2), x, S(1), S(0), S(0)).eval()
+    sqrt(2)*sqrt(pi)*fresnelc(sqrt(2)*x/sqrt(pi))/2
+    """
 
     __slots__ = ("a", "b", "c")
 
@@ -1059,6 +2215,30 @@ class FresnelCRule(AtomicRule):
 
 
 class FresnelSRule(AtomicRule):
+    r"""Integrate the sine of a quadratic.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \sin(a x^2 + b x + c)\,dx
+        \longrightarrow
+        \sqrt{\frac{\pi}{2a}}\Bigl[\cos\Bigl(\frac{b^2}{4a} - c\Bigr) S\Bigl(\frac{2 a x + b}{\sqrt{2\pi a}}\Bigr) - \sin\Bigl(\frac{b^2}{4a} - c\Bigr) C\Bigl(\frac{2 a x + b}{\sqrt{2\pi a}}\Bigr)\Bigr]
+
+    for $a \neq 0$, where $C$ and $S$ are the Fresnel integrals.
+
+    Examples
+    ========
+
+    .. math:: \int \sin(x^2)\,dx = \sqrt{\frac{\pi}{2}}\,S\Bigl(\sqrt{\frac{2}{\pi}}\,x\Bigr)
+
+    >>> from sympy import S, Symbol, sin
+    >>> from sympy.integrals.manualintegrate import FresnelSRule
+    >>> x = Symbol('x')
+    >>> FresnelSRule(sin(x**2), x, S(1), S(0), S(0)).eval()
+    sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2
+    """
 
     __slots__ = ("a", "b", "c")
 
@@ -1082,6 +2262,30 @@ class FresnelSRule(AtomicRule):
 
 
 class PolylogRule(AtomicRule):
+    r"""Integrate a polylogarithm divided by the variable.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{\operatorname{Li}_b(a x)}{x}\,dx
+        \longrightarrow
+        \operatorname{Li}_{b+1}(a x)
+
+    for $a \neq 0$.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{\operatorname{Li}_2(3x)}{x}\,dx = \operatorname{Li}_3(3x)
+
+    >>> from sympy import S, Symbol, polylog
+    >>> from sympy.integrals.manualintegrate import PolylogRule
+    >>> x = Symbol('x')
+    >>> PolylogRule(polylog(2, 3*x)/x, x, S(3), S(2)).eval()
+    polylog(3, 3*x)
+    """
 
     __slots__ = ("a", "b")
 
@@ -1098,6 +2302,30 @@ class PolylogRule(AtomicRule):
 
 
 class UpperGammaRule(AtomicRule):
+    r"""Integrate a power multiplied by an exponential.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int x^e\,e^{a x}\,dx
+        \longrightarrow
+        \frac{x^e\,(-a x)^{-e}\,\Gamma(e + 1, -a x)}{a}
+
+    for $a \neq 0$ and an exponent $e$ that is not a non-negative integer (those are integrated by parts).
+
+    Examples
+    ========
+
+    .. math:: \int x^{1/3} e^{2x}\,dx = \frac{x^{1/3}\,(-2x)^{-1/3}\,\Gamma(4/3, -2x)}{2}
+
+    >>> from sympy import Rational, S, Symbol, exp
+    >>> from sympy.integrals.manualintegrate import UpperGammaRule
+    >>> x = Symbol('x')
+    >>> UpperGammaRule(x**Rational(1, 3)*exp(2*x), x, S(2), Rational(1, 3)).eval()
+    2**(2/3)*x**(1/3)*uppergamma(4/3, -2*x)/(4*(-x)**(1/3))
+    """
 
     __slots__ = ("a", "e")
 
@@ -1115,6 +2343,30 @@ class UpperGammaRule(AtomicRule):
 
 
 class EllipticFRule(AtomicRule):
+    r"""Integrate the reciprocal of the square root of a quadratic in the sine.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \frac{dx}{\sqrt{a - d\sin^2 x}}
+        \longrightarrow
+        \frac{F(x \mid d/a)}{\sqrt{a}}
+
+    for $a, d \neq 0$ and $a \neq d$, where $F(\phi \mid m)$ is the incomplete elliptic integral of the first kind.
+
+    Examples
+    ========
+
+    .. math:: \int \frac{dx}{\sqrt{2 - \sin^2 x}} = \frac{F(x \mid 1/2)}{\sqrt{2}}
+
+    >>> from sympy import S, Symbol, sin, sqrt
+    >>> from sympy.integrals.manualintegrate import EllipticFRule
+    >>> x = Symbol('x')
+    >>> EllipticFRule(1/sqrt(2 - sin(x)**2), x, S(2), S(1)).eval()
+    sqrt(2)*elliptic_f(x, 1/2)/2
+    """
 
     __slots__ = ("a", "d")
 
@@ -1131,6 +2383,30 @@ class EllipticFRule(AtomicRule):
 
 
 class EllipticERule(AtomicRule):
+    r"""Integrate the square root of a quadratic in the sine.
+
+    Explanation
+    ===========
+
+    .. math::
+
+        \int \sqrt{a - d\sin^2 x}\,dx
+        \longrightarrow
+        \sqrt{a}\,E(x \mid d/a)
+
+    for $a, d \neq 0$ and $a \neq d$, where $E(\phi \mid m)$ is the incomplete elliptic integral of the second kind.
+
+    Examples
+    ========
+
+    .. math:: \int \sqrt{4 - \sin^2 x}\,dx = 2\,E(x \mid 1/4)
+
+    >>> from sympy import S, Symbol, sin, sqrt
+    >>> from sympy.integrals.manualintegrate import EllipticERule
+    >>> x = Symbol('x')
+    >>> EllipticERule(sqrt(4 - sin(x)**2), x, S(4), S(1)).eval()
+    2*elliptic_e(x, 1/4)
+    """
 
     __slots__ = ("a", "d")
 
