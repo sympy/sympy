@@ -1638,7 +1638,15 @@ class PrettyPrinter(Printer):
                         right=')'):
         # optional argument func_name for supplying custom names
         # XXX works only for applied functions
-        return self._helper_print_function(e.func, e.args, sort=sort, func_name=func_name, left=left, right=right)
+        from sympy.functions.elementary.trigonometric import TrigonometricFunction
+
+        arg_order = None
+        if (self.order is None and isinstance(e, TrigonometricFunction)
+                and len(e.args) == 1 and e.args[0].is_Add):
+            arg_order = 'lex'
+        return self._helper_print_function(
+            e.func, e.args, sort=sort, func_name=func_name,
+            left=left, right=right, arg_order=arg_order)
 
     def _print_mathieuc(self, e):
         return self._print_Function(e, func_name='C')
@@ -1654,7 +1662,7 @@ class PrettyPrinter(Printer):
 
     def _helper_print_function(self, func, args, sort=False, func_name=None,
                                delimiter=', ', elementwise=False, left='(',
-                               right=')'):
+                               right=')', arg_order=None):
         if sort:
             args = sorted(args, key=default_sort_key)
 
@@ -1677,8 +1685,12 @@ class PrettyPrinter(Printer):
                 *stringPict.next(prettyFunc, circ)
             )
 
-        prettyArgs = prettyForm(*self._print_seq(args, delimiter=delimiter).parens(
-                                                 left=left, right=right))
+        if arg_order is not None:
+            prettyArgs = prettyForm(*self._print_Add(
+                args[0], order=arg_order).parens(left=left, right=right))
+        else:
+            prettyArgs = prettyForm(*self._print_seq(
+                args, delimiter=delimiter).parens(left=left, right=right))
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
