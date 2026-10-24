@@ -1130,7 +1130,11 @@ class Expr(Basic, EvalfMixin):
 
         def monom_sort_key(term):
             monom = monom_key(term[1][1])
-            return monom if simple_first else neg(monom)
+            if simple_first:
+                # Compare total degree first, then retain generator order
+                # for terms of equal degree.
+                return sum(monom), neg(monom)
+            return neg(monom)
 
         def nc_sort_key(term):
             return tuple(e.sort_key(order=order) for e in term[1][2])
