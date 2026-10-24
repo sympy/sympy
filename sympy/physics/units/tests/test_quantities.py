@@ -249,7 +249,7 @@ def test_units():
     t = (1*au / speed_of_light) / minute
     # TODO: need a better way to simplify expressions containing units:
     t = convert_to(convert_to(t, meter / minute), meter)
-    assert t.simplify() == Rational(49865956897,5995849160)
+    assert t.simplify() == Rational(49865956897, 5995849160)
 
     # TODO: fix this, it should give `m` without `Abs`
     assert sqrt(m**2) == m
@@ -649,4 +649,3 @@ def test_si_scale_factor_dimension_check_uses_instance_method():
     assert ds.equivalent_dims(Dimension('voltage'), Dimension('current')) is False
     raises(TypeError, lambda: DimensionSystem.equivalent_dims(
         Dimension('voltage'), Dimension('current')))
-
