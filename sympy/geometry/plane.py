@@ -10,6 +10,8 @@ from __future__ import annotations
 from sympy.core import Dummy, Rational, S, Symbol
 from sympy.core.symbol import _symbol
 from sympy.external.mpmath import prec_to_dps
+from sympy.functions.elementary.complexes import Abs, sign
+from sympy.functions.elementary.miscellaneous import Min
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from .entity import GeometryEntity
 from .line import (Line, Ray, Segment, Line3D, LinearEntity, LinearEntity3D,
@@ -17,6 +19,7 @@ from .line import (Line, Ray, Segment, Line3D, LinearEntity, LinearEntity3D,
 from .point import Point, Point3D
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
+from sympy.simplify import simplify
 from sympy.solvers import solve, linsolve
 from sympy.utilities.iterables import uniq, is_sequence
 from sympy.utilities.misc import filldedent, func_name, Undecidable
@@ -287,28 +290,49 @@ class Plane(GeometryEntity):
         0
 
         """
-        if self.intersection(o) != []:
+        if not isinstance(o, GeometryEntity):
+            o = Point(o, dim=3)
+
+        if isinstance(o, Point3D):
+            n = Point3D(self.normal_vector)
+            a = simplify(n.dot(o - self.p1))
+            N = sqrt(n.dot(n))
+            return Abs(a) / N
+
+        if isinstance(o, Segment3D):
+            A, B = o.points
+            P = self.p1
+            n = Point3D(self.normal_vector)
+            a = simplify(n.dot(A - P))
+            b = simplify(n.dot(B - P))
+            c = simplify(n.dot(B - A))
+            N = sqrt(n.dot(n))
+            return (Abs(a) + Abs(b) - Abs(c)) / (2 * N)
+
+        if isinstance(o, Ray3D):
+            A, B = o.points
+            P = self.p1
+            n = Point3D(self.normal_vector)
+            a = simplify(n.dot(A - P))
+            c = simplify(n.dot(B - A))
+            N = sqrt(n.dot(n))
+            return Abs(a) * (1 + Min(0, sign(a * c))) / N
+
+        if isinstance(o, Line3D):
+            A, B = o.points
+            P = self.p1
+            n = Point3D(self.normal_vector)
+            a = simplify(n.dot(A - P))
+            c = simplify(n.dot(B - A))
+            N = sqrt(n.dot(n))
+            return Abs(a) * (1 - Abs(sign(c))) / N
+
+        if isinstance(o, Plane):
+            if self.is_parallel(o):
+                return self.distance(o.p1)
             return S.Zero
 
-        if isinstance(o, (Segment3D, Ray3D)):
-            a, b = o.p1, o.p2
-            inter = self.intersection(Line3D(a, b))
-            if not inter:
-                return self.distance(a)
-            pi, = inter
-            if pi in o:
-                return self.distance(pi)
-            elif a in Segment3D(pi, b):
-                return self.distance(a)
-            else:
-                assert isinstance(o, Segment3D) is True
-                return self.distance(b)
-
-        # following code handles `Point3D`, `LinearEntity3D`, `Plane`
-        a = o if isinstance(o, Point3D) else o.p1
-        n = Point3D(self.normal_vector).unit
-        d = (a - self.p1).dot(n)
-        return abs(d)
+        raise NotImplementedError("distance between Plane and %s is not implemented" % type(o))
 
 
     def equals(self, o):
