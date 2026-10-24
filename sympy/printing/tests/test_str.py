@@ -79,6 +79,8 @@ def test_binary_add_presentation():
     assert str(x + S.Half) == 'x + 1/2'
     assert str(x - S.Half) == 'x - 1/2'
     assert str(1 - x) == '1 - x'
+    assert str(-10 + 30*I) == '-10 + 30*I'
+    assert str(56 + 68*I) == '56 + 68*I'
     assert str(x + 1) == 'x + 1'
     assert str(g(x + 1) - g(x)) == 'g(x + 1) - g(x)'
     assert str(sin(2) + x) == 'sin(2) + x'
