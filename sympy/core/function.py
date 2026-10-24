@@ -1713,6 +1713,16 @@ class Derivative(Expr):
         When we can represent derivatives at a point, this should be folded
         into the normal evalf. For now, we need a special method.
         """
+        if len(self.variable_count) == 1 and len(self.free_symbols) == 1:
+            x, n = self.variable_count[0]
+            if x.is_Symbol and x in self.free_symbols:
+                from ._point_derivative import (
+                    _derivative_at_point, _TaylorNotSupported)
+                try:
+                    return _derivative_at_point(self.expr, x, z0, n).evalf()
+                except _TaylorNotSupported:
+                    pass
+
         if len(self.free_symbols) != 1 or len(self.variables) != 1:
             raise NotImplementedError('partials and higher order derivatives')
         z = list(self.free_symbols)[0]
@@ -2399,6 +2409,12 @@ class Subs(Expr):
         return self.expr.is_commutative
 
     def doit(self, **hints):
+        if hints.get('deep', True):
+            from ._point_derivative import _subs_derivative_at_point
+            rv = _subs_derivative_at_point(self.expr, self.variables, self.point)
+            if rv is not None:
+                return rv
+
         e, v, p = self.args
 
         # remove self mappings
