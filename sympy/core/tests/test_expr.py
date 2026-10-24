@@ -1862,6 +1862,21 @@ def test_as_ordered_terms():
     assert k.as_ordered_terms(data=True) == ([(k, (((S.One,), ()), (1,), ()))], [k]) # type: ignore
 
 
+def test_as_ordered_terms_simple_degree_and_generator_order():
+    a, b, c, d = symbols('a b c d')
+    theta = symbols('theta')
+    from sympy.functions.elementary.integers import ceiling, floor
+
+    assert (1 + theta + theta**2).as_ordered_terms() == [1, theta, theta**2]
+    assert (a - d).as_ordered_terms() == [a, -d]
+    assert (b - c).as_ordered_terms() == [b, -c]
+    assert (a**2 + b**2 + c**2 + d**2).as_ordered_terms() == [
+        a**2, b**2, c**2, d**2]
+    assert (x + floor(y)).as_ordered_terms() == [x, floor(y)]
+    assert (ceiling(x) + ceiling(y)).as_ordered_terms() == [
+        ceiling(x), ceiling(y)]
+
+
 def test_as_ordered_terms_group_numeric_functions():
     # Keep functions together and order by arguments before coefficients.
     terms = [sin(7), 3*cos(2), 2*sin(5), cos(3), sin(3), S(4)]
