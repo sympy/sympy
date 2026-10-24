@@ -167,6 +167,13 @@ class StrPrinter(Printer):
         return '(%s, %s)' % (self._print(expr.expr), self._print(expr.cond))
 
     def _print_Function(self, expr):
+        from sympy.functions.elementary.trigonometric import TrigonometricFunction
+
+        if (self.order is None and isinstance(expr, TrigonometricFunction)
+                and len(expr.args) == 1 and expr.args[0].is_Add):
+            # In a trig argument, print the variable before a phase shift.
+            return expr.func.__name__ + "(%s)" % self._print_Add(
+                expr.args[0], order='lex')
         return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
 
     def _print_GoldenRatio(self, expr):
