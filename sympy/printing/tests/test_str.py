@@ -74,6 +74,17 @@ def test_Abs():
     assert str(Abs(Rational(-1, 6))) == "1/6"
 
 
+def test_trig_phase_shift_order():
+    # Phase shifts retain variable-first order with the default printer.
+    assert str(sin(x + pi/4)) == 'sin(x + pi/4)'
+    assert str(cos(x + pi/4)) == 'cos(x + pi/4)'
+    assert sstr(sin(x + pi/4), order='lex') == 'sin(x + pi/4)'
+    q = Quaternion(cos(x/2), 0, 0, sin(x/2))
+    from sympy.simplify.trigsimp import trigsimp
+    assert str(trigsimp(Quaternion.rotate_point((1, 1, 1), q))) == (
+        '(sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)')
+
+
 def test_Add():
     assert str(x + y) == "x + y"
     assert str(x + 1) == "x + 1"
