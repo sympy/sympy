@@ -194,6 +194,27 @@ def test_legendre():
     raises(ArgumentIndexError, lambda: legendre(n, x).fdiff(1))
     raises(ArgumentIndexError, lambda: legendre(n, x).fdiff(3))
 
+def test_legendre_q():
+    from sympy.functions.special.polynomials import legendre_q
+    from sympy.functions.elementary.hyperbolic import atanh
+    import mpmath
+
+    assert legendre_q(0, x) == atanh(x)
+    assert legendre_q(1, x) == x * atanh(x) - 1
+
+    assert abs(legendre_q(0, S(0.5)) - 0.549306144334055) < 1e-10
+    assert abs(legendre_q(1, S(0.5)) - -0.725346927832972) < 1e-10
+    assert abs(legendre_q(2, S(0.5)) - -0.818663268041757) < 1e-10
+    assert abs(legendre_q(5, S(0.5)) - 0.555080890571680) < 1e-10
+
+    result = legendre_q(S(2.2), S(0.1)).evalf()
+    expected = mpmath.legenq(2.2, 0, 0.1)
+    assert abs(result - expected) < 1e-10
+
+    assert legendre_q(-5, x).func == legendre_q
+
+    n = Symbol('n')
+    assert legendre_q(n, x).func == legendre_q
 
 def test_assoc_legendre():
     Plm = assoc_legendre
