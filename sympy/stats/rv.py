@@ -1596,6 +1596,47 @@ class NamedArgsMixin:
 
 class Distribution(Basic):
 
+    def __rmul__(self, other):
+        """``w * Distribution`` returns a weighted distribution that can be
+        summed with another (weighted) distribution to build a two-component
+        finite mixture (see :func:`sympy.stats.Mixture`).
+        """
+        from sympy.core.sympify import SympifyError
+        try:
+            weight = sympify(other)
+        except SympifyError:
+            return NotImplemented
+        if isinstance(weight, Distribution):
+            return NotImplemented
+        from sympy.stats.mixture_rv import _WeightedDistribution
+        return _WeightedDistribution(weight, self)
+
+    __mul__ = __rmul__
+
+    def __add__(self, other):
+        """``Distribution + Distribution`` builds an equal-weight mixture;
+        adding a weighted distribution uses the given weight on the right
+        and weight one on the left.  Falls back to ``Basic.__add__`` for
+        any other type.
+        """
+        from sympy.stats.mixture_rv import (_WeightedDistribution,
+                                            MixtureDistribution)
+        # Only the simple two-component case: refuse if either side is
+        # already a MixtureDistribution.  Users wanting 3+ components should
+        # call Mixture(name, weights, components) directly.
+        if isinstance(self, MixtureDistribution) or \
+                isinstance(other, MixtureDistribution):
+            return NotImplemented
+        if isinstance(other, _WeightedDistribution):
+            return MixtureDistribution(
+                [S.One, other.weight],
+                [self, other.distribution])
+        if isinstance(other, Distribution):
+            return MixtureDistribution(
+                [S.One, S.One],
+                [self, other])
+        return NotImplemented
+
     def sample(self, size=(), library='scipy', seed=None):
         """ A random realization from the distribution """
 
