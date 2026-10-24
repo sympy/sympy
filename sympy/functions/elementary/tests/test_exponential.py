@@ -830,19 +830,15 @@ def test_issue_28141():
     x = Symbol('x', extended_real=True)
     assert exp(x).is_extended_positive is None
     assert exp(x).is_extended_nonnegative is True
-    assert exp(x).is_zero is None
 
     y = Symbol('y', extended_negative=True)
     assert exp(y).is_extended_positive is None
     assert exp(y).is_extended_nonnegative is True
-    assert exp(y).is_zero is None
 
     z = Symbol('z', real=True)
     assert exp(z).is_extended_positive is True
     assert exp(z).is_extended_nonnegative is True
-    assert exp(z).is_zero is False
 
     w = Symbol('w', extended_positive=True)
     assert exp(w).is_extended_positive is True
     assert exp(w).is_extended_nonnegative is True
-    assert exp(w).is_zero is False

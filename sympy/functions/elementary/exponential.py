@@ -122,8 +122,11 @@ class ExpBase(DefinedFunction):
     def _eval_is_zero(self):
         if self.exp is S.NegativeInfinity:
             return True
-        if self.exp.is_real or self.exp.is_extended_nonnegative:
-            return False
+        if self.exp.is_extended_real:
+            if self.exp.is_real or self.exp.is_extended_nonnegative:
+                return False
+            return None
+        return False
 
     def _eval_power(self, other):
         """exp(arg)**e -> exp(arg*e) if assumptions allow it.
