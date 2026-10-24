@@ -1,9 +1,11 @@
 from __future__ import annotations
+from sympy.core.function import ArgumentIndexError, Derivative
 from sympy.core.relational import Ne
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (adjoint, conjugate, transpose)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.tensor_functions import (Eijk, KroneckerDelta, LeviCivita)
+from sympy.testing.pytest import raises
 
 from sympy.physics.secondquant import evaluate_deltas, F
 
@@ -144,3 +146,45 @@ def test_kronecker_delta_secondquant():
     assert EV(D(p, j)*D(p, i)*F(i)) == F(j)
     assert EV(D(p, j)*D(p, i)*F(j)) == F(i)
     assert EV(D(p, q)*D(p, i))*F(i) == D(q, i)*F(i)
+
+
+def test_issue_25861():
+    x, m, k, j = symbols('x m k j')
+    kd = KroneckerDelta(x, m, (0, k - 1))
+
+    # Differentiation wrt index variables
+    dx = kd.diff(x)
+    assert dx == Derivative(KroneckerDelta(m, x, (0, k - 1)), x)
+    assert dx.expr.delta_range == (0, k - 1)
+
+    dm = kd.diff(m)
+    assert dm == Derivative(KroneckerDelta(m, x, (0, k - 1)), m)
+    assert dm.expr.delta_range == (0, k - 1)
+
+    # Differentiation wrt symbol in delta_range remains unevaluated
+    dk = kd.diff(k)
+    assert dk == Derivative(KroneckerDelta(m, x, (0, k - 1)), k)
+    assert dk.expr.delta_range == (0, k - 1)
+
+    # Differentiation wrt unrelated variable is zero
+    assert kd.diff(j) == 0
+
+    # Symbol appearing in both index and range remains unevaluated
+    kd_both = KroneckerDelta(x, m, (0, x + k))
+    assert kd_both.diff(x) == Derivative(KroneckerDelta(m, x, (0, k + x)), x)
+
+    # fdiff behavior
+    assert kd.fdiff(1) == Derivative(KroneckerDelta(m, x, (0, k - 1)), m)
+    assert kd.fdiff(2) == Derivative(KroneckerDelta(m, x, (0, k - 1)), x)
+    raises(ArgumentIndexError, lambda: kd.fdiff(0))
+    raises(ArgumentIndexError, lambda: kd.fdiff(3))
+
+    # Unranged KroneckerDelta preservation
+    kd_unranged = KroneckerDelta(x, m)
+    assert kd_unranged.diff(x) == Derivative(KroneckerDelta(m, x), x)
+    assert kd_unranged.diff(m) == Derivative(KroneckerDelta(m, x), m)
+    assert kd_unranged.diff(j) == 0
+    assert kd_unranged.fdiff(1) == Derivative(KroneckerDelta(m, x), m)
+    assert kd_unranged.fdiff(2) == Derivative(KroneckerDelta(m, x), x)
+    raises(ArgumentIndexError, lambda: kd_unranged.fdiff(0))
+    raises(ArgumentIndexError, lambda: kd_unranged.fdiff(3))
