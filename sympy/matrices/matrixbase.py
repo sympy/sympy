@@ -4435,7 +4435,7 @@ class MatrixBase(Printable):
         """
         return self._new(self.rows, self.cols, self.flat())
 
-    def cross(self, b: MatrixExpr) -> Self:
+    def cross(self, b: MatrixBase | MatrixExpr) -> Self:
         r"""
         Return the cross product of ``self`` and ``b`` relaxing the condition
         of compatible dimensions: if each has 3 elements, a matrix of the
