@@ -514,9 +514,11 @@ class Pow(Expr):
             return
         if real_b and real_e:
             if self.base.is_extended_positive:
-                return True
+                if self.exp.is_real or (self.base - 1).is_zero is False:
+                    return True
             elif self.base.is_extended_nonnegative and self.exp.is_extended_nonnegative:
-                return True
+                if self.exp.is_real or (self.base - 1).is_zero is False:
+                    return True
             elif self.exp.is_integer and self.base.is_extended_nonzero:
                 return True
             elif self.exp.is_integer and self.exp.is_nonnegative:
