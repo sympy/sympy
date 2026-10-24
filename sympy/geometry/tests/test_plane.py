@@ -341,4 +341,3 @@ def test_plane_distance_symbolic():
 
     # Sequence as 3D Point
     assert p.distance((0, 0, 5)) == 5
-

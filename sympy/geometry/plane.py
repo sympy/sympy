@@ -296,7 +296,7 @@ class Plane(GeometryEntity):
         if isinstance(o, Point3D):
             n = Point3D(self.normal_vector)
             a = simplify(n.dot(o - self.p1))
-            N = sqrt(n.dot(n))
+            N = Abs(sqrt(n.dot(n)))
             return Abs(a) / N
 
         if isinstance(o, Segment3D):
@@ -306,7 +306,7 @@ class Plane(GeometryEntity):
             a = simplify(n.dot(A - P))
             b = simplify(n.dot(B - P))
             c = simplify(n.dot(B - A))
-            N = sqrt(n.dot(n))
+            N = Abs(sqrt(n.dot(n)))
             return (Abs(a) + Abs(b) - Abs(c)) / (2 * N)
 
         if isinstance(o, Ray3D):
@@ -315,7 +315,7 @@ class Plane(GeometryEntity):
             n = Point3D(self.normal_vector)
             a = simplify(n.dot(A - P))
             c = simplify(n.dot(B - A))
-            N = sqrt(n.dot(n))
+            N = Abs(sqrt(n.dot(n)))
             return Abs(a) * (1 + Min(0, sign(a * c))) / N
 
         if isinstance(o, Line3D):
@@ -324,7 +324,7 @@ class Plane(GeometryEntity):
             n = Point3D(self.normal_vector)
             a = simplify(n.dot(A - P))
             c = simplify(n.dot(B - A))
-            N = sqrt(n.dot(n))
+            N = Abs(sqrt(n.dot(n)))
             return Abs(a) * (1 - Abs(sign(c))) / N
 
         if isinstance(o, Plane):
