@@ -2752,6 +2752,12 @@ def test_solve_maxmin():
     assert solve(system, variables) == [(-3, 1), (2, 6)]
 
 
+def test_issue_2897():
+    x = Symbol('x', positive=True, integer=True)
+    sol = solve((x + 1)*(x + 2)*(x + 3)/6 - 34, x)
+    assert len(sol) == 1 and sol[0].is_real
+
+
 def test_issue_27062():
     # solve(x*log(x)) should not return 0 because log(0) is not finite
     assert solve(x*log(x), x) == [1]

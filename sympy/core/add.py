@@ -37,6 +37,25 @@ def _could_extract_minus_sign(expr):
     return bool(expr.sort_key() < (-expr).sort_key())
 
 
+def _ca_terms(expr):
+    # return (c, a) where expr = c + a and c is a
+    # Symbol-free real number
+    if not expr.is_Add:
+        return S.Zero, expr
+    num, other = sift(
+        expr.args,
+        lambda x: (
+            x.is_number
+            and x.is_extended_real is True
+            and not any(t.is_Symbol for t in x.atoms())
+        ),
+        binary=True,
+    )
+    c = expr._new_rawargs(*num)
+    a = expr._new_rawargs(*other)
+    return c, a
+
+
 def _addsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -636,8 +655,22 @@ class Add(Expr, AssocOp):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: _fuzzy_group(
-        (a.is_real for a in self.args), quick_exit=True)
+    def _eval_is_real(self):
+        if self.is_number:
+            ops = {str(i) for i in self.count_ops(visual=True).free_symbols}
+            if ops <= {'ADD', 'SUB', 'NEG', 'DIV', 'MUL', 'POW'}:
+                v = self.evalf(2)
+                if v.is_Number:
+                    return True
+                from .evalf import pure_complex
+                ri = pure_complex(v)
+                if ri is not None:
+                    i = ri[1]
+                    if i.is_comparable and i.is_zero is False:
+                        return False
+        return _fuzzy_group(
+            (a.is_real for a in self.args), quick_exit=True)
+
     _eval_is_extended_real = lambda self: _fuzzy_group(
         (a.is_extended_real for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
@@ -778,7 +811,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_positive(self):
         if self.is_number:
             return super()._eval_is_extended_positive()
-        c, a = self.as_coeff_Add()
+        c, a = _ca_terms(self)
         if not c.is_zero:
             from .exprtools import _monotonic_sign
             v = _monotonic_sign(a)
@@ -829,7 +862,7 @@ class Add(Expr, AssocOp):
 
     def _eval_is_extended_nonnegative(self):
         if not self.is_number:
-            c, a = self.as_coeff_Add()
+            c, a = _ca_terms(self)
             if not c.is_zero and a.is_extended_nonnegative:
                 from .exprtools import _monotonic_sign
                 v = _monotonic_sign(a)
@@ -844,7 +877,7 @@ class Add(Expr, AssocOp):
 
     def _eval_is_extended_nonpositive(self):
         if not self.is_number:
-            c, a = self.as_coeff_Add()
+            c, a = _ca_terms(self)
             if not c.is_zero and a.is_extended_nonpositive:
                 from .exprtools import _monotonic_sign
                 v = _monotonic_sign(a)
@@ -860,7 +893,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_negative(self):
         if self.is_number:
             return super()._eval_is_extended_negative()
-        c, a = self.as_coeff_Add()
+        c, a = _ca_terms(self)
         if not c.is_zero:
             from .exprtools import _monotonic_sign
             v = _monotonic_sign(a)
