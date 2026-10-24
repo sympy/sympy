@@ -1,8 +1,8 @@
 from __future__ import annotations
 from math import prod
 
-from sympy.core import S, Integer
-from sympy.core.function import DefinedFunction
+from sympy.core import Add, S, Integer
+from sympy.core.function import ArgumentIndexError, DefinedFunction
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
@@ -210,6 +210,23 @@ class KroneckerDelta(DefinedFunction):
             return self
         if expt.is_negative and expt is not S.NegativeOne:
             return 1/self
+
+    def _eval_derivative(self, s):
+        if self.delta_range and self.delta_range.has(s):
+            return None
+        lines = []
+        for i, a in enumerate(self.args[:2], start=1):
+            da = a.diff(s)
+            if da.is_zero:
+                continue
+            df = self.fdiff(i)
+            lines.append(df * da)
+        return Add(*lines)
+
+    def fdiff(self, argindex=1):
+        if not (1 <= argindex <= 2):
+            raise ArgumentIndexError(self, argindex)
+        return super().fdiff(argindex)
 
     @property
     def is_above_fermi(self):
