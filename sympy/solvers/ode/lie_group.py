@@ -945,14 +945,14 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
                     E1*((28*Ax + 4*hx*A)*A**3 - E1*(hy*A + Ay)) - E1.diff(x)*8*A**4)
                 if not E3:
                     etaval = cancel((4*A**3*(Ax - hx*A) + E1*(hy*A - Ay))/(S(2)*A*E1))
-                    if not etaval.has(x):
+                    if not etaval.has_free(x):
                         try:
                             etaval = exp(integrate(etaval, y))
                         except NotImplementedError:
                             pass
                         else:
                             xival = -4*A**3*etaval/E1
-                            if not xival.has(y):
+                            if not xival.has_free(y):
                                 return [{xi: xival, eta: etaval.subs(y, func)}]
 
     else:
