@@ -4,6 +4,7 @@ This is a small starting point for arithmetic expressions, not a replacement
 for ordinary symbolic differentiation or the general series framework.
 """
 
+from __future__ import annotations
 from math import factorial
 
 from .add import Add
