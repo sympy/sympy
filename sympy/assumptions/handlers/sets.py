@@ -399,9 +399,83 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-@ExtendedRealPredicate.register_many(Add, Mul, Pow) # type:ignore
+
+@ExtendedRealPredicate.register(Add)
 def _(expr, assumptions):
-    return test_closed_group(expr, assumptions, Q.extended_real)
+    """
+    * ExtendedReal + ExtendedReal -> ? (e.g. oo - oo is nan)
+    * Real + ExtendedReal         -> ExtendedReal
+    * Real + Real                 -> Real (thus ExtendedReal)
+    """
+    if _ask_recursive(Q.real(expr), assumptions):
+        return True
+
+    non_real_args = []
+    for arg in expr.args:
+        if not _ask_recursive(Q.real(arg), assumptions):
+            non_real_args.append(arg)
+
+    if not non_real_args:
+        return True
+    if len(non_real_args) == 1:
+        return _ask_recursive(Q.extended_real(non_real_args[0]), assumptions)
+
+    pos_inf = [
+        _ask_recursive(Q.positive_infinite(a), assumptions)
+        for a in non_real_args
+    ]
+    neg_inf = [
+        _ask_recursive(Q.negative_infinite(a), assumptions)
+        for a in non_real_args
+    ]
+    if all(p is True for p in pos_inf):
+        return True
+    if all(n is True for n in neg_inf):
+        return True
+    return None
+
+
+@ExtendedRealPredicate.register(Mul)
+def _(expr, assumptions):
+    """
+    * Real * Real                 -> Real (thus ExtendedReal)
+    * ExtendedReal * ExtendedReal -> ? (e.g. 0 * oo is nan)
+    """
+    if _ask_recursive(Q.real(expr), assumptions):
+        return True
+
+    ext_real_args = [
+        _ask_recursive(Q.extended_real(a), assumptions) for a in expr.args
+    ]
+    if all(r is True for r in ext_real_args):
+        non_zero_args = [
+            _ask_recursive(Q.nonzero(a), assumptions) for a in expr.args
+        ]
+        if all(z is True for z in non_zero_args):
+            return True
+    return None
+
+
+@ExtendedRealPredicate.register(Pow)
+def _(expr, assumptions):
+    real = _ask_recursive(Q.real(expr), assumptions)
+    if real is True:
+        return True
+
+    pos_inf = _ask_recursive(Q.positive_infinite(expr), assumptions)
+    neg_inf = _ask_recursive(Q.negative_infinite(expr), assumptions)
+    if pos_inf or neg_inf:
+        return True
+
+    if real is False:
+        if pos_inf is False and neg_inf is False:
+            return False
+        if _ask_recursive(Q.finite(expr), assumptions) is True:
+            return False
+        if _ask_recursive(Q.imaginary(expr), assumptions) is True:
+            return False
+
+    return None
 
 
 # HermitianPredicate

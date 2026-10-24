@@ -1413,6 +1413,29 @@ def test_extended_real():
 
     assert _ask_recursive(Q.extended_real(x), Q.infinite(x)) is None
 
+    # issue 30610
+    assert _ask_recursive(Q.extended_real(sqrt(x)), Q.negative(x)) is False
+    assert _ask_recursive(Q.extended_real(sqrt(x)), Q.positive(x)) is True
+    assert _ask_recursive(Q.extended_real(x**2), Q.real(x)) is True
+
+    # issue 30618
+    assert _ask_recursive(
+        Q.extended_real(x + y), Q.extended_real(x) & Q.extended_real(y)
+    ) is None
+    assert _ask_recursive(
+        Q.extended_real(x * y), Q.extended_real(x) & Q.extended_real(y)
+    ) is None
+    assert _ask_recursive(
+        Q.extended_real(x + y), Q.real(x) & Q.real(y)
+    ) is True
+    assert _ask_recursive(
+        Q.extended_real(x * y), Q.real(x) & Q.real(y)
+    ) is True
+    assert _ask_recursive(
+        Q.extended_real(x * y),
+        Q.extended_real(x) & Q.extended_real(y) & Q.nonzero(x) & Q.nonzero(y)
+    ) is True
+
 
 @_both_exp_pow
 def test_rational():
