@@ -153,15 +153,30 @@ def test_lie_group_issue15219():
     assert 'lie_group' not in classify_ode(eqn, f(x))
 
 
-def test_issue_30644():
-    a, b, c = symbols("a b c")
 
-    res1 = infinitesimals(x*f(x).diff(x) - f(x) - x - x*exp(f(x)/x), f(x))
-    assert len(res1) > 0
+def test_abaco2_similar_inverse_match():
+    from sympy import Function, exp, symbols
+    from sympy.solvers.ode.lie_group import infinitesimals
 
-    res2 = infinitesimals(f(x).diff(x) + f(x)**2 - 1, f(x), hint='all')
-    assert isinstance(res2, list) and len(res2) > 0
+    x = symbols('x')
+    f = Function('f')(x)
+    xi = Function('xi')(x, f)
+    eta = Function('eta')(x, f)
 
-    res3 = infinitesimals(f(x).diff(x)**2 + a*x*f(x).diff(x) - b*x**2 - c, f(x), hint='all')
-    assert isinstance(res3, list)
-    assert len(res3) > 0
+    # Direct ODE: h = x + exp(y)
+    assert infinitesimals(
+        f.diff(x) - x - exp(f), f,
+        hint='abaco2_similar'
+    ) == [{
+        xi: exp(-x**2/2),
+        eta: x*exp(-x**2/2),
+    }]
+
+    # Inverse ODE: hinv = x + exp(y)
+    assert infinitesimals(
+        f.diff(x) - 1/(f + exp(x)), f,
+        hint='abaco2_similar'
+    ) == [{
+        xi: f*exp(-f**2/2),
+        eta: exp(-f**2/2),
+    }]
