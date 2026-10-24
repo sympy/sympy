@@ -74,6 +74,21 @@ def test_Abs():
     assert str(Abs(Rational(-1, 6))) == "1/6"
 
 
+def test_binary_add_presentation():
+    f, g = symbols('f g', cls=Function)
+    assert str(x + S.Half) == 'x + 1/2'
+    assert str(x - S.Half) == 'x - 1/2'
+    assert str(1 - x) == '1 - x'
+    assert str(x + 1) == 'x + 1'
+    assert str(g(x + 1) - g(x)) == 'g(x + 1) - g(x)'
+    assert str(sin(2) + x) == 'sin(2) + x'
+    expr = (g(x + 1) - g(x))*f(x + S.Half) - (
+        g(x) - g(x - 1))*f(x - S.Half)
+    assert str(expr) == (
+        '(g(x + 1) - g(x))*f(x + 1/2) - '
+        '(g(x) - g(x - 1))*f(x - 1/2)')
+
+
 def test_trig_phase_shift_order():
     # Phase shifts retain variable-first order with the default printer.
     assert str(sin(x + pi/4)) == 'sin(x + pi/4)'
