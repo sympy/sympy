@@ -976,7 +976,12 @@ class LatexPrinter(Printer):
                 not isinstance(expr, AppliedUndef):
             return getattr(self, '_print_' + func)(expr, exp)
         else:
-            args = [str(self._print(arg)) for arg in expr.args]
+            from sympy.functions.elementary.trigonometric import TrigonometricFunction
+            if (self.order is None and isinstance(expr, TrigonometricFunction)
+                    and len(expr.args) == 1 and expr.args[0].is_Add):
+                args = [self._print_Add(expr.args[0], order='lex')]
+            else:
+                args = [str(self._print(arg)) for arg in expr.args]
             # How inverse trig functions should be displayed, formats are:
             # abbreviated: asin, full: arcsin, power: sin^-1
             inv_trig_style = self._settings['inv_trig_style']

@@ -1415,6 +1415,8 @@ def test_extractions():
     foo = sign_invariant(x)
     assert foo == -foo
     assert foo.could_extract_minus_sign() is False
+    assert (pi/4 - x).could_extract_minus_sign() is True
+    assert (x - pi/4).could_extract_minus_sign() is False
     assert (x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
     assert (x - 1).could_extract_minus_sign() is False
@@ -1859,7 +1861,64 @@ def test_as_ordered_terms():
     assert e.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
     k = Symbol('k')
-    assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k]) # type: ignore
+    assert k.as_ordered_terms(data=True) == ([(k, (((S.One,), ()), (1,), ()))], [k]) # type: ignore
+
+
+def test_as_ordered_terms_simple_degree_and_generator_order():
+    a, b, c, d = symbols('a b c d')
+    theta = symbols('theta')
+    from sympy.functions.elementary.integers import ceiling, floor
+
+    assert (1 + theta + theta**2).as_ordered_terms() == [1, theta, theta**2]
+    assert (a - d).as_ordered_terms() == [a, -d]
+    assert (b - c).as_ordered_terms() == [b, -c]
+    assert (a**2 + b**2 + c**2 + d**2).as_ordered_terms() == [
+        a**2, b**2, c**2, d**2]
+    assert (x + floor(y)).as_ordered_terms() == [x, floor(y)]
+    assert (ceiling(x) + ceiling(y)).as_ordered_terms() == [
+        ceiling(x), ceiling(y)]
+
+
+def test_as_ordered_terms_group_numeric_functions():
+    # Keep functions together and order by arguments before coefficients.
+    terms = [sin(7), 3*cos(2), 2*sin(5), cos(3), sin(3), S(4)]
+    expected = [S(4), sin(3), 2*sin(5), sin(7), 3*cos(2), cos(3)]
+    for args in (terms, list(reversed(terms))):
+        assert Add(*args, evaluate=False).as_ordered_terms() == expected
+
+
+def test_as_ordered_terms_numeric_powers_and_constants():
+    # Number-valued radicals are grouped by their base, not coefficient.
+    radical_sum = 12 + 4*sqrt(6) + 6*sqrt(3) + 8*sqrt(2)
+    assert radical_sum.as_ordered_terms() == [
+        12, 8*sqrt(2), 6*sqrt(3), 4*sqrt(6)]
+
+    # Numeric constants precede structurally more involved expressions.
+    expr = E*(E - 1) - E + Rational(7, 2)
+    assert expr.as_ordered_terms() == [Rational(7, 2), -E, E*(E - 1)]
+
+    expr = S.Half - I*sqrt(S.Half/2 + sqrt(5)/10)
+    assert expr.as_ordered_terms() == [
+        S.Half, -I*sqrt(S.Half/2 + sqrt(5)/10)]
+
+
+def test_as_terms_without_numerical_evaluation():
+    from unittest.mock import patch
+    from sympy.core.sorting import ordered
+
+    expr = x + pi
+    with patch.object(Expr, 'evalf', side_effect=AssertionError):
+        assert expr.as_ordered_terms() == [x, pi]
+        assert str(expr) == 'x + pi'
+        assert list(ordered([expr, x + E]))
+        assert (2 + 3*I).as_ordered_terms() == [2, 3*I]
+
+
+def test_as_terms_exact_large_coefficients():
+    a, b = 10**400*x, 10**401*x
+    assert a.as_terms()[0][0][1][0] != b.as_terms()[0][0][1][0]
+    assert Add(a, b, evaluate=False).as_ordered_terms() == [a, b]
+    assert Add(b, a, evaluate=False).as_ordered_terms() == [a, b]
 
 
 def test_sort_key_atomic_expr():

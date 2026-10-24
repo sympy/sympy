@@ -74,6 +74,50 @@ def test_Abs():
     assert str(Abs(Rational(-1, 6))) == "1/6"
 
 
+def test_symbol_sum_precedence_from_differences():
+    h = Symbol('h')
+    f = Function('f')
+    expr = f(x + h) + f(x - h)
+    printed = str(expr)
+    assert 'f(x + h)' in printed
+    assert 'f(x - h)' in printed
+    assert 'f(h + x)' not in printed
+
+    # Both orientations are present: retain the ordinary order of x + h.
+    conflicting = f(x + h) + f(x - h) + f(h - x)
+    assert 'f(h + x)' in str(conflicting)
+    assert 'f(x - h)' in str(conflicting)
+    assert 'f(h - x)' in str(conflicting)
+
+
+def test_binary_add_presentation():
+    f, g = symbols('f g', cls=Function)
+    assert str(x + S.Half) == 'x + 1/2'
+    assert str(x - S.Half) == 'x - 1/2'
+    assert str(1 - x) == '1 - x'
+    assert str(-10 + 30*I) == '-10 + 30*I'
+    assert str(56 + 68*I) == '56 + 68*I'
+    assert str(x + 1) == 'x + 1'
+    assert str(g(x + 1) - g(x)) == 'g(x + 1) - g(x)'
+    assert str(sin(2) + x) == 'sin(2) + x'
+    expr = (g(x + 1) - g(x))*f(x + S.Half) - (
+        g(x) - g(x - 1))*f(x - S.Half)
+    assert str(expr) == (
+        '(g(x + 1) - g(x))*f(x + 1/2) - '
+        '(g(x) - g(x - 1))*f(x - 1/2)')
+
+
+def test_trig_phase_shift_order():
+    # Phase shifts retain variable-first order with the default printer.
+    assert str(sin(x + pi/4)) == 'sin(x + pi/4)'
+    assert str(cos(x + pi/4)) == 'cos(x + pi/4)'
+    assert sstr(sin(x + pi/4), order='lex') == 'sin(x + pi/4)'
+    q = Quaternion(cos(x/2), 0, 0, sin(x/2))
+    from sympy.simplify.trigsimp import trigsimp
+    assert str(trigsimp(Quaternion.rotate_point((1, 1, 1), q))) == (
+        '(sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)')
+
+
 def test_Add():
     assert str(x + y) == "x + y"
     assert str(x + 1) == "x + 1"
@@ -1199,7 +1243,7 @@ def test_Subs_printing():
 
 def test_issue_15716():
     e = Integral(factorial(x), (x, -oo, oo))
-    assert e.as_terms() == ([(e, ((1.0, 0.0), (1,), ()))], [e])
+    assert e.as_terms() == ([(e, (((S.One, e), ()), (), ()))], [])
 
 
 def test_str_special_matrices():

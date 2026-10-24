@@ -13,7 +13,7 @@ from .decorators import call_highest_priority, sympify_method_args, sympify_retu
 from .cache import cacheit
 from .logic import fuzzy_or, fuzzy_not
 from .intfunc import mod_inverse
-from .sorting import default_sort_key
+from .sorting import default_sort_key, ordered
 from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
@@ -1108,6 +1108,7 @@ class Expr(Basic, EvalfMixin):
     def _parse_order(cls, order):
         """Parse and configure the ordering of terms. """
         from sympy.polys.orderings import monomial_key
+        from sympy.functions.elementary.exponential import exp
 
         startswith = getattr(order, "startswith", None)
         if startswith is None:
@@ -1118,20 +1119,61 @@ class Expr(Basic, EvalfMixin):
                 order = order[4:]
 
         monom_key = monomial_key(order)
+        simple_first = order is None
 
         def neg(monom):
-            return tuple([neg(m) if isinstance(m, tuple) else -m for m in monom])
+            return tuple(neg(m) if isinstance(m, tuple) else -m for m in monom)
 
-        def key(term):
-            _, ((re, im), monom, ncpart) = term
+        def explicit_i_key(term):
+            # Do not infer whether a term is real or imaginary.
+            return bool(term[1][0][1])
 
-            monom = neg(monom_key(monom))
-            ncpart = tuple([e.sort_key(order=order) for e in ncpart])
-            coeff = ((bool(im), im), (re, im))
+        def monom_sort_key(term):
+            monom = monom_key(term[1][1])
+            if simple_first:
+                # Compare total degree first, then retain generator order
+                # for terms of equal degree.
+                return sum(monom), neg(monom)
+            return neg(monom)
 
-            return monom, ncpart, coeff
+        def nc_sort_key(term):
+            return tuple(e.sort_key(order=order) for e in term[1][2])
 
-        return key, reverse
+        def numeric_factors(term):
+            # The leading numeric multiplier and I do not distinguish
+            # the mathematical structure of a numeric term.
+            re, im = term[1][0]
+            return tuple(f for f in (im or re)[1:]
+                         if f is not S.ImaginaryUnit)
+
+        def function_type_key(term):
+            return tuple(f.func.class_key() for f in numeric_factors(term))
+
+        def argument_keys(f):
+            # Negative integer powers and exp(-n) read more naturally
+            # in increasing order of exponent magnitude. Other
+            # function arguments retain their ordinary structural order.
+            args = f.args
+            index = -1 if f.is_Pow else 0 if f.func is exp else None
+            result = []
+            for i, arg in enumerate(args):
+                if index is not None and i == index % len(args) and arg.is_Integer:
+                    result.append((default_sort_key(abs(arg), order=order),
+                                   bool(arg.is_negative)))
+                else:
+                    result.append((default_sort_key(arg, order=order), False))
+            return tuple(result)
+
+        def function_args_key(term):
+            return tuple(argument_keys(f) for f in numeric_factors(term))
+
+        def coeff_sort_key(term):
+            re, im = term[1][0]
+            factors = im or re
+            return bool(im), bool(factors[0].is_nonnegative), default_sort_key(factors)
+
+        return (explicit_i_key, monom_sort_key, nc_sort_key,
+                function_type_key, function_args_key, coeff_sort_key), reverse
 
     def as_ordered_factors(self, order=None):
         """Return list of ordered factors (if Mul) else [self]."""
@@ -1199,6 +1241,12 @@ class Expr(Basic, EvalfMixin):
             key = lambda x:not isinstance(x, (Number, NumberSymbol))
             add_args = sorted(Add.make_args(self), key=key)
             if (len(add_args) == 2
+                and isinstance(add_args[0], Number)
+                and add_args[0].is_negative
+                and not add_args[1].could_extract_minus_sign()):
+                # Keep simple subtraction as x - 2, not -2 + x.
+                return add_args[::-1]
+            if (len(add_args) == 2
                 and isinstance(add_args[0], (Number, NumberSymbol))
                 and isinstance(add_args[1], Mul)):
                 mul_args = sorted(Mul.make_args(add_args[1]), key=key)
@@ -1208,20 +1256,26 @@ class Expr(Basic, EvalfMixin):
                     and mul_args[0].is_negative):
                     return add_args
 
-        key, reverse = self._parse_order(order)
+        keys, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
 
         if not any(term.is_Order for term, _ in terms):
-            ordered = sorted(terms, key=key, reverse=reverse)
+            sorted_terms = list(ordered(terms, keys=keys, default=False))
+            if reverse:
+                sorted_terms.reverse()
         else:
             _order, _terms = _sift_true_false(terms, lambda x: x[0].is_Order)
-            ordered = sorted(_terms, key=key, reverse=True) \
-                + sorted(_order, key=key, reverse=True)
+            sorted_terms = list(ordered(_terms, keys=keys, default=False))
+            if order is not None:
+                sorted_terms.reverse()
+            order_terms = list(ordered(_order, keys=keys, default=False))
+            order_terms.reverse()
+            sorted_terms.extend(order_terms)
 
         if data:
-            return ordered, gens
+            return sorted_terms, gens
         else:
-            return [term for term, _ in ordered]
+            return [term for term, _ in sorted_terms]
 
     def as_terms(self) -> tuple[list[tuple[Expr, Any]], list[Expr]]:
         """Transform an expression to a list of terms. """
@@ -1232,19 +1286,19 @@ class Expr(Basic, EvalfMixin):
         for term in Add.make_args(self):
             coeff, _term = term.as_coeff_Mul()
 
-            coeff_complex = complex(coeff)
+            # Keep numeric factors structurally, without calling evalf.
+            coefficient_factors: list[Expr] = [coeff]
+            imaginary = False
             cpart: dict[Expr, int] = {}
             ncpart = []
 
             if _term is not S.One:
                 for factor in Mul.make_args(_term):
+                    if factor is S.ImaginaryUnit:
+                        imaginary = not imaginary
                     if factor.is_number:
-                        try:
-                            coeff_complex *= complex(factor)
-                        except (TypeError, ValueError):
-                            pass
-                        else:
-                            continue
+                        coefficient_factors.append(factor)
+                        continue
 
                     if factor.is_commutative:
                         base, exp = decompose_power(factor)
@@ -1254,7 +1308,9 @@ class Expr(Basic, EvalfMixin):
                     else:
                         ncpart.append(factor)
 
-            coeff_tuple = coeff_complex.real, coeff_complex.imag
+            # Each component is a tuple of unevaluated coefficient factors.
+            factors = tuple(coefficient_factors)
+            coeff_tuple = ((), factors) if imaginary else (factors, ())
             ncpart_tuple = tuple(ncpart)
 
             terms.append((term, (coeff_tuple, cpart, ncpart_tuple)))
