@@ -642,7 +642,7 @@ def group_isomorphism(G, H, isomorphism=True):
         H = simplify_presentation(H)
         # Two infinite FpGroups with the same generators are isomorphic
         # when the relators are same but are ordered differently.
-        if G.generators == H.generators and (G.relators).sort() == (H.relators).sort():
+        if G.generators == H.generators and sorted(G.relators) == sorted(H.relators):
             if not isomorphism:
                 return True
             return (True, homomorphism(G, H, G.generators, H.generators))
