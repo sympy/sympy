@@ -359,7 +359,17 @@ class Printer:
         elif order == 'none':
             return list(expr.args)
         else:
-            return expr.as_ordered_terms(order=order)
+            terms = expr.as_ordered_terms(order=order)
+            if order is None and len(terms) == 2:
+                first, second = terms
+                # Two-term sums are generally read more naturally with a
+                # positive term first, or a variable before a constant.
+                if (first.could_extract_minus_sign()
+                        and not second.could_extract_minus_sign()):
+                    terms.reverse()
+                elif first.is_number and not second.is_number:
+                    terms.reverse()
+            return terms
 
     def _compare_pretty(self, a, b):
         """return -1, 0, 1 if a is canonically less, equal or
