@@ -121,6 +121,16 @@ def test_printmethod():
     assert latex(R(x)) == r"foo"
 
 
+def test_unevaluated_numeric_ratio():
+    def ratio(p, q):
+        return Mul(p, Pow(q, -1, evaluate=False), evaluate=False)
+
+    assert latex(ratio(1, 1)) == r'\frac{1}{1}'
+    assert latex(ratio(2, 4)) == r'\frac{2}{4}'
+    assert latex(Mul(1, Rational(1, 2), evaluate=False)) == r'1 \cdot \frac{1}{2}'
+    assert latex(Mul(1, Symbol('x'), evaluate=False)) == '1 x'
+
+
 def test_latex_basic():
     assert latex(1 + x) == r"x + 1"
     assert latex(x**2) == r"x^{2}"
@@ -1692,6 +1702,13 @@ def test_latex_mul_symbol():
     assert latex(4*x, mul_symbol='times') == r"4 \times x"
     assert latex(4*x, mul_symbol='dot') == r"4 \cdot x"
     assert latex(4*x, mul_symbol='ldot') == r"4 \,.\, x"
+
+
+def test_latex_issue_24112():
+    from sympy.parsing.sympy_parser import parse_expr
+    assert latex(parse_expr('-sqrt(7)/2 + 1/3 - 1/2',
+        evaluate=False)) == (
+        r'- \frac{\sqrt{7}}{2} - \frac{1}{2} + \frac{1}{3}')
 
 
 def test_latex_issue_4381():
