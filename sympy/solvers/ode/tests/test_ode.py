@@ -14,6 +14,7 @@ from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import Poly
 from sympy.series.order import O
 from sympy.simplify.radsimp import collect
+from sympy.simplify.simplify import simplify
 
 from sympy.solvers.ode import (classify_ode,
     homogeneous_order, dsolve)
@@ -1102,14 +1103,17 @@ def test_issue_22604():
     eqs = [eq1, eq2]
     [x1sol, x2sol] = dsolve(eqs, [x1(t), x2(t)], ics = {x1(0):0, x1(t).diff().subs(t,0):0, \
                                                         x2(0):1, x2(t).diff().subs(t,0):0})
-    assert x1sol == Eq(x1(t), (-sqrt(5) + 3 + 3*sqrt(2)*sqrt(3 - sqrt(5)))
-                       *cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/10 - sqrt(sqrt(5) + 3)
-                       *(-sqrt(3 - sqrt(5)) + 2*sqrt(2))*cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/10)
-    assert x2sol == Eq(x2(t), (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
-                        + 2*sqrt(5) + 3*sqrt(10)*sqrt(3 - sqrt(5)))*cos(sqrt(2)
-                        *t*sqrt(3 - sqrt(5))/2)/20 + sqrt(sqrt(5) + 3)*(-2*sqrt(2) - sqrt(5)
-                        *sqrt(3 - sqrt(5)) + sqrt(3 - sqrt(5)) + 2*sqrt(10))
-                        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20)
+
+    # Equivalent solutions can have different arrangements of radical terms.
+    assert x1sol.lhs == x1(t)
+    assert x2sol.lhs == x2(t)
+    solutions = {x1(t): x1sol.rhs, x2(t): x2sol.rhs}
+    assert all(simplify(eq.lhs.subs(solutions).doit()) == 0 for eq in eqs)
+    assert simplify(x1sol.rhs.subs(t, 0)) == 0
+    assert simplify(diff(x1sol.rhs, t).subs(t, 0)) == 0
+    assert simplify(x2sol.rhs.subs(t, 0) - 1) == 0
+    assert simplify(diff(x2sol.rhs, t).subs(t, 0)) == 0
+
 
 def test_issue_22462():
     for de in [
