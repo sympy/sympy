@@ -954,6 +954,34 @@ def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
             return y, None, prec, None
 
 
+def evalf_trig_reciprocal(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
+    from sympy.functions.elementary.trigonometric import cos, sin, tan, sec, csc, cot
+    arg = v.args[0]
+    if isinstance(v, sec):
+        recip = cos(arg)
+    elif isinstance(v, csc):
+        recip = sin(arg)
+    elif isinstance(v, cot):
+        recip = tan(arg)
+    else:
+        raise NotImplementedError
+    res = evalf(recip, prec, options)
+    if res is S.ComplexInfinity:
+        return None, None, None, None
+    re, im, re_acc, im_acc = res
+    re_zero = not re or re == fzero
+    im_zero = not im or im == fzero
+    if re_zero and im_zero:
+        return S.ComplexInfinity
+    if not im_zero and re_zero:
+        z = mpf_pow_int(im, -1, prec)
+        return None, mpf_neg(z), None, prec
+    if not re_zero and im_zero:
+        return mpf_pow_int(re, -1, prec), None, prec, None
+    re, im = mpc_pow_int((re, im), -1, prec)
+    return finalize_complex(re, im, prec)
+
+
 def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
     if len(expr.args)>1:
         expr = expr.doit()
@@ -1427,7 +1455,7 @@ def _create_evalf_table():
     from sympy.functions.elementary.exponential import exp, log
     from sympy.functions.elementary.integers import ceiling, floor
     from sympy.functions.elementary.piecewise import Piecewise
-    from sympy.functions.elementary.trigonometric import atan, cos, sin, tan
+    from sympy.functions.elementary.trigonometric import atan, cos, sin, tan, sec, csc, cot
     from sympy.integrals.integrals import Integral
     evalf_table = {
         Symbol: evalf_symbol,
@@ -1450,6 +1478,9 @@ def _create_evalf_table():
         cos: evalf_trig,
         sin: evalf_trig,
         tan: evalf_trig,
+        sec: evalf_trig_reciprocal,
+        csc: evalf_trig_reciprocal,
+        cot: evalf_trig_reciprocal,
 
         Add: evalf_add,
         Mul: evalf_mul,

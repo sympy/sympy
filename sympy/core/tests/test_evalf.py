@@ -22,7 +22,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (acosh, cosh)
 from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import (Max, sqrt)
-from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
+from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan, sec, csc, cot)
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.polys.polytools import factor
 from sympy.polys.rootoftools import CRootOf
@@ -766,3 +766,28 @@ def test_issue_13365():
     t = Symbol('t', integer=True, nonnegative=True)
     s2 = Sum(1.9**t * t / factorial(t), (t, 0, oo))
     assert abs((s2 - 19*exp(Rational(19, 10))/10).evalf()) < 1e-12
+
+
+def test_issue_29850():
+    e_sec = sec(19*pi/500 - 26944)
+    assert e_sec.evalf(2) < 0
+    assert e_sec.is_positive is False
+    assert (Abs(atan(11774*e_sec)) < 0) is S.false
+
+    e_csc = csc(231*pi/500 + 26944)
+    assert e_csc.evalf(2) < 0
+    assert e_csc.is_positive is False
+
+    e_cot = cot(231*pi/500 + 26944)
+    assert e_cot.evalf(2) > 0
+
+    assert NS(sec(1), 15) == '1.85081571768093'
+    assert NS(csc(1), 15) == '1.18839510577812'
+    assert NS(cot(1), 15) == '0.642092615934331'
+    assert NS(sec(pi, evaluate=False), 5) == '-1.0000'
+    assert NS(csc(pi/2, evaluate=False), 5) == '1.0000'
+    assert NS(cot(pi/4, evaluate=False), 5) == '1.0000'
+    assert sec(pi/2, evaluate=False).evalf() is zoo
+    assert csc(pi, evaluate=False).evalf() is zoo
+    assert cot(pi/2, evaluate=False).evalf() == 0
+
