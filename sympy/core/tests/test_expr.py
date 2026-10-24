@@ -1415,6 +1415,8 @@ def test_extractions():
     foo = sign_invariant(x)
     assert foo == -foo
     assert foo.could_extract_minus_sign() is False
+    assert (pi/4 - x).could_extract_minus_sign() is True
+    assert (x - pi/4).could_extract_minus_sign() is False
     assert (x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
     assert (x - 1).could_extract_minus_sign() is False
