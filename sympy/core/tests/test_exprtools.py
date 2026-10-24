@@ -18,7 +18,7 @@ from sympy.series.order import O
 from sympy.sets.sets import Interval
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import simplify
-from sympy.core.exprtools import (_decompose_exprs, decompose_power, Factors,
+from sympy.core.exprtools import (_decompose_exprs, condense, decompose_power, Factors,
                                   Term, _gcd_terms, gcd_terms, factor_terms,
                                   factor_nc, _mask_nc, _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
@@ -537,3 +537,43 @@ def test_issue_21623():
     from sympy.matrices.expressions.matexpr import MatrixSymbol
     M = MatrixSymbol('X', 2, 2)
     assert gcd_terms(M[0,0], 1) == M[0,0]
+
+
+def test_condense():
+    a, b, c, d, e, f, g, h = symbols('a b c d e f g h')
+    eq = (a*b*c**2 - 2*sqrt(d*(a*b - c - e + x)))/(b - 1)
+
+    assert condense(2*x + 2, x) == (2*x + 2, {})
+    result, reps = condense(eq, x)
+    assert result.xreplace(reps) == eq
+    assert condense(eq, c, e)[0].xreplace(condense(eq, c, e)[1]) == eq
+
+    # Repeated condensation preserves the original expression.
+    second, second_reps = condense(result.expand(), x)
+    full_reps = {k: v.xreplace(reps) for k, v in second_reps.items()}
+    assert simplify(second.xreplace(full_reps) - eq) == 0
+
+    # Multi-level replacements must be fully resolved.
+    nested = x + (a + b)*(c + d) + (e + f)*(g + h)
+    result, reps = condense(nested, x)
+    assert result.xreplace(reps) == nested
+    assert all(not (v.free_symbols & set(reps)) for v in reps.values())
+
+    # Do not reuse existing names, including symbols with assumptions.
+    existing = Symbol('c0', positive=True)
+    expr = x + (a + b)*(existing + c)
+    result, reps = condense(expr, x)
+    assert result.xreplace(reps) == expr
+    assert all(k.name != existing.name for k in reps)
+
+    # Repeated subexpressions and noncommutative factors.
+    repeated = x + (a + b)**2 + (a + b)**2*y
+    result, reps = condense(repeated, x)
+    assert result.xreplace(reps) == repeated
+    A, B = symbols('A B', commutative=False)
+    expr = A*x*B + (a + b)*A
+    result, reps = condense(expr, x)
+    assert result.xreplace(reps) == expr
+
+    for expr in (x, S.Zero, S.One, S(4)):
+        assert condense(expr, x) == (expr, {})
