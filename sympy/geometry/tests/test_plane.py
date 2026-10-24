@@ -339,5 +339,11 @@ def test_plane_distance_symbolic():
     assert dist_l.subs({z1: 3, z2: 3}) == 3
     assert dist_l.subs({z1: 3, z2: 5}) == 0
 
+    # Plane
+    p_par = Plane((0, 0, z1), normal_vector=(0, 0, 2))
+    assert p.distance(p_par).subs(z1, 5) == 5
+    p_int = Plane((0, 0, 0), normal_vector=(1, 0, 0))
+    assert p.distance(p_int) == 0
+
     # Sequence as 3D Point
     assert p.distance((0, 0, 5)) == 5

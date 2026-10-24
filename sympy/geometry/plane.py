@@ -327,9 +327,12 @@ class Plane(GeometryEntity):
             return Abs(a) * (1 - Abs(sign(c))) / N
 
         if isinstance(o, Plane):
-            if self.is_parallel(o):
-                return self.distance(o.p1)
-            return S.Zero
+            n = Point3D(self.normal_vector)
+            m = Point3D(o.normal_vector)
+            a = n.dot(o.p1 - self.p1)
+            delta = n.dot(n) * m.dot(m) - n.dot(m)**2
+            N = sqrt(n.dot(n))
+            return Abs(a) * (1 - sign(delta)) / N
 
         raise NotImplementedError("distance between Plane and %s is not implemented" % type(o))
 
