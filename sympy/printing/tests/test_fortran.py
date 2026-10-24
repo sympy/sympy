@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda, diff)
 from sympy.core.mod import Mod
@@ -7,7 +8,7 @@ from sympy.core import (Catalan, EulerGamma, GoldenRatio)
 from sympy.core.numbers import (E, Float, I, Integer, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (conjugate, sign)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -858,3 +859,17 @@ def test_FunctionDefinition_print():
     # Should be changed to proper test once multi-line generation is working
     # see https://github.com/sympy/sympy/issues/15824
     raises(NotImplementedError, lambda: fcode(fd1))
+
+
+def test_issue_25435():
+    l_T_tilde = Symbol('l_T_tilde')
+    fl_T2 = Add(
+        Mul(0.2, exp(Mul(33.93669377311689, (l_T_tilde - 0.995), evaluate=False)), evaluate=False),
+        -0.25, evaluate=False
+    )
+    assert fcode(fl_T2, source_format='free') == (
+        "0.2d0*exp(33.9366937731169d0*(l_T_tilde - 0.995d0)) - 0.25d0"
+    )
+
+    x = Symbol('x')
+    assert fcode(exp(x + 1), source_format='free') == "exp(x + 1)"
