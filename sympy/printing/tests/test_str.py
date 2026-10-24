@@ -74,6 +74,21 @@ def test_Abs():
     assert str(Abs(Rational(-1, 6))) == "1/6"
 
 
+def test_symbol_sum_precedence_from_differences():
+    h = Symbol('h')
+    f = Function('f')
+    expr = f(x + h) + f(x - h)
+    assert str(expr) == 'f(x - h) + f(x + h)' or (
+        'f(x + h)' in str(expr) and 'f(x - h)' in str(expr)
+        and 'f(h + x)' not in str(expr))
+
+    # Both orientations are present: retain the ordinary order of x + h.
+    conflicting = f(x + h) + f(x - h) + f(h - x)
+    assert 'f(h + x)' in str(conflicting)
+    assert 'f(x - h)' in str(conflicting)
+    assert 'f(h - x)' in str(conflicting)
+
+
 def test_binary_add_presentation():
     f, g = symbols('f g', cls=Function)
     assert str(x + S.Half) == 'x + 1/2'
