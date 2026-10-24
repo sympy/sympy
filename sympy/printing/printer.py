@@ -313,6 +313,11 @@ class Printer:
             2. Take the best fitting method defined in the printer.
             3. As fall-back use the emptyPrinter method for the printer.
         """
+        if self._print_level == 0:
+            # Keep the enclosing expression for lazy context-dependent
+            # ordering of simple symbol sums.
+            self._context['_symbol_sum_root'] = expr
+            self._context.pop('_symbol_sum_precedence', None)
         self._print_level += 1
         try:
             # If the printer defines a name for a printing method
@@ -347,9 +352,48 @@ class Printer:
             return self.emptyPrinter(expr)
         finally:
             self._print_level -= 1
+            if self._print_level == 0:
+                self._context.pop('_symbol_sum_root', None)
+                self._context.pop('_symbol_sum_precedence', None)
 
     def emptyPrinter(self, expr):
         return str(expr)
+
+    def _symbol_sum_precedence(self):
+        """Find unambiguous leading symbols in binary differences.
+
+        A difference x - h votes for x before h in a sum x + h.
+        Opposite differences cancel the preference. This is computed only
+        if printing encounters a binary sum of symbols.
+        """
+        cached = self._context.get('_symbol_sum_precedence')
+        if cached is not None:
+            return cached
+
+        preferred = {}
+        root = self._context.get('_symbol_sum_root')
+        if hasattr(root, 'atoms'):
+            for add in root.atoms(Add):
+                if len(add.args) != 2:
+                    continue
+                positive = negative = None
+                for arg in add.args:
+                    if arg.is_Symbol:
+                        positive = arg
+                    elif arg.is_Mul:
+                        coeff, rest = arg.as_coeff_Mul()
+                        if coeff == -1 and rest.is_Symbol:
+                            negative = rest
+                if positive is None or negative is None:
+                    continue
+                pair = frozenset((positive, negative))
+                if pair not in preferred:
+                    preferred[pair] = positive
+                elif preferred[pair] != positive:
+                    preferred[pair] = None
+
+        self._context['_symbol_sum_precedence'] = preferred
+        return preferred
 
     def _as_ordered_terms(self, expr, order=None):
         """A compatibility function for ordering terms in Add. """
@@ -361,6 +405,11 @@ class Printer:
             return list(expr.args)
         else:
             terms = expr.as_ordered_terms(order=order)
+            if (order is None and len(terms) == 2
+                    and all(t.is_Symbol for t in terms)):
+                leader = self._symbol_sum_precedence().get(frozenset(terms))
+                if leader is terms[1]:
+                    terms.reverse()
             if (order is None and len(terms) == 2
                     and terms[1].as_coefficient(I) is None):
                 first, second = terms
