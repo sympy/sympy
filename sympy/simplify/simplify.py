@@ -57,6 +57,10 @@ from sympy.external.mpmath import (
 
 if TYPE_CHECKING:
     from sympy.logic.boolalg import Boolean
+    from sympy.matrices.dense import MutableDenseMatrix
+    from sympy.matrices.immutable import ImmutableDenseMatrix, ImmutableSparseMatrix
+    from sympy.matrices.matrixbase import MatrixBase
+    from sympy.matrices.sparse import MutableSparseMatrix
     from sympy.sets.sets import Set
     from typing import Literal
 
@@ -432,6 +436,14 @@ def signsimp(expr, evaluate=None):
     return e
 
 
+@overload
+def simplify(expr: MutableDenseMatrix | ImmutableDenseMatrix, **kwargs) -> ImmutableDenseMatrix: ...
+@overload
+def simplify(expr: MutableSparseMatrix | ImmutableSparseMatrix, **kwargs) -> ImmutableSparseMatrix: ...
+@overload
+def simplify(expr: MatrixBase, **kwargs) -> ImmutableDenseMatrix | ImmutableSparseMatrix: ...
+@overload
+def simplify(expr: MatrixExpr, **kwargs) -> MatrixExpr: ...
 @overload
 def simplify(expr: Expr, **kwargs) -> Expr: ...
 @overload
