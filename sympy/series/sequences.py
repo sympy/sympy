@@ -725,6 +725,10 @@ class SeqFormula(SeqExpr):
     def formula(self):
         return self.gen
 
+    @property
+    def bound_symbols(self):
+        return list(self.variables)
+
     def _eval_coeff(self, pt):
         d = self.variables[0]
         return self.formula.subs(d, pt)
