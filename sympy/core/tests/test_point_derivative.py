@@ -52,3 +52,24 @@ def test_point_derivative_unsupported_fallbacks():
     assert (d.doit() - f.diff(x, 2).subs(x, 2)).equals(0)
     d = Subs(Derivative(x**3, (x, 2)), (x, y), (2, x + 1))
     assert d.doit() == 12
+
+
+def test_point_derivative_symbolic_order():
+    from sympy import S, rf
+    from sympy.core._point_derivative import _subs_derivative_at_point
+
+    x, y, n = symbols('x y n')
+    f = 1/sqrt(x + y) - sqrt(1/x)
+
+    d = Subs(Derivative(f, (x, n)), (n, y, x), (33, 2, 10))
+
+    expected = rf(S.Half, 33)*(
+        S(10)**(-S(67)/2) - S(12)**(-S(67)/2))
+
+    assert d.doit() == expected
+    assert _subs_derivative_at_point(
+        d.expr, d.variables, d.point) == expected
+
+    d = Subs(Derivative(f, (x, n + 1)), (n, y, x), (32, 2, 10))
+    assert _subs_derivative_at_point(
+        d.expr, d.variables, d.point) == expected
