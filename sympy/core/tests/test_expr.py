@@ -1870,6 +1870,21 @@ def test_as_ordered_terms_group_numeric_functions():
         assert Add(*args, evaluate=False).as_ordered_terms() == expected
 
 
+def test_as_ordered_terms_numeric_powers_and_constants():
+    # Number-valued radicals are grouped by their base, not coefficient.
+    radical_sum = 12 + 4*sqrt(6) + 6*sqrt(3) + 8*sqrt(2)
+    assert radical_sum.as_ordered_terms() == [
+        12, 8*sqrt(2), 6*sqrt(3), 4*sqrt(6)]
+
+    # Numeric constants precede structurally more involved expressions.
+    expr = E*(E - 1) - E + Rational(7, 2)
+    assert expr.as_ordered_terms() == [Rational(7, 2), -E, E*(E - 1)]
+
+    expr = S.Half - I*sqrt(S.Half/2 + sqrt(5)/10)
+    assert expr.as_ordered_terms() == [
+        S.Half, -I*sqrt(S.Half/2 + sqrt(5)/10)]
+
+
 def test_as_terms_without_numerical_evaluation():
     from unittest.mock import patch
     from sympy.core.sorting import ordered

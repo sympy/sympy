@@ -1128,17 +1128,19 @@ class Expr(Basic, EvalfMixin):
         def nc_sort_key(term):
             return tuple(e.sort_key(order=order) for e in term[1][2])
 
-        def numeric_functions(term):
-            # Number-valued functions are held in the coefficient factors.
+        def numeric_factors(term):
+            # The leading numeric multiplier and I do not distinguish
+            # the mathematical structure of a numeric term.
             re, im = term[1][0]
-            return tuple(f for f in (im or re)[1:] if f.is_Function)
+            return tuple(f for f in (im or re)[1:]
+                         if f is not S.ImaginaryUnit)
 
         def function_type_key(term):
-            return tuple(f.func.class_key() for f in numeric_functions(term))
+            return tuple(f.func.class_key() for f in numeric_factors(term))
 
         def function_args_key(term):
             return tuple(tuple(default_sort_key(a, order=order) for a in f.args)
-                         for f in numeric_functions(term))
+                         for f in numeric_factors(term))
 
         def coeff_sort_key(term):
             re, im = term[1][0]
@@ -1262,13 +1264,7 @@ class Expr(Basic, EvalfMixin):
                 for factor in Mul.make_args(_term):
                     if factor is S.ImaginaryUnit:
                         imaginary = not imaginary
-                        coefficient_factors.append(factor)
-                        continue
-                    if (factor.is_Number or factor.is_NumberSymbol
-                            or (factor.is_number and factor.is_Function)
-                            or (isinstance(factor, Pow) and factor.exp.is_Rational
-                                and (factor.base.is_Number
-                                     or factor.base.is_NumberSymbol))):
+                    if factor.is_number:
                         coefficient_factors.append(factor)
                         continue
 
