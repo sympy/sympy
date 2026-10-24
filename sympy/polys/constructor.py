@@ -36,7 +36,7 @@ def _construct_simple(coeffs, opt):
                 float_numbers.append(coeff)
         else:
             is_complex = pure_complex(coeff)
-            if is_complex:
+            if is_complex and is_complex[0].is_finite and is_complex[1].is_finite:
                 complexes = True
                 x, y = is_complex
                 if x.is_Rational and y.is_Rational:
@@ -44,6 +44,9 @@ def _construct_simple(coeffs, opt):
                         rationals = True
                     continue
                 else:
+                    if algebraics:
+                        # there are both algebraics and reals -> EX
+                        return False
                     floats = True
                     if x.is_Float:
                         float_numbers.append(x)
@@ -201,6 +204,8 @@ def _construct_composite(coeffs, opt):
         else:
             is_complex = pure_complex(coeff)
             if is_complex is not None:
+                if not (is_complex[0].is_finite and is_complex[1].is_finite):
+                    return None
                 complexes = True
                 x, y = is_complex
                 if x.is_Rational and y.is_Rational:

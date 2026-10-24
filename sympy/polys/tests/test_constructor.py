@@ -9,7 +9,7 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 
 from sympy.core import (Catalan, GoldenRatio)
-from sympy.core.numbers import (E, Float, I, Rational, pi)
+from sympy.core.numbers import (E, Float, I, Rational, pi, oo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
@@ -252,3 +252,15 @@ def test_issue_25337():
 
     x_algebraic = Symbol('x', algebraic=True)
     assert construct_domain(x_algebraic)[0] == ZZ[x_algebraic]
+
+
+def test_issue_30061():
+    assert construct_domain([oo*I]) == (EX, [EX(oo*I)])
+    assert construct_domain([-oo*I]) == (EX, [EX(-oo*I)])
+    assert construct_domain([1 + oo*I]) == (EX, [EX(1 + oo*I)])
+    assert construct_domain([oo + I]) == (EX, [EX(oo + I)])
+    assert construct_domain(oo*I) == (EX, EX(oo*I))
+    assert construct_domain([sqrt(2), Float('1.0') + 2*I], extension=True) == \
+        (EX, [EX(sqrt(2)), EX(Float('1.0') + 2*I)])
+    assert construct_domain([Float('1.0') + 2*I, sqrt(2)], extension=True) == \
+        (EX, [EX(Float('1.0') + 2*I), EX(sqrt(2))])
