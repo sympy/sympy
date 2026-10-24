@@ -367,7 +367,9 @@ class Printer:
                 if (first.could_extract_minus_sign()
                         and not second.could_extract_minus_sign()):
                     terms.reverse()
-                elif first.is_number and not second.is_number:
+                elif (first.is_number and not first.has(Function)
+                        and not second.is_number
+                        and not second.could_extract_minus_sign()):
                     terms.reverse()
             return terms
 
