@@ -90,6 +90,15 @@ class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
 a, b, c, d, x, y, z, k, n, s, p = symbols('a,b,c,d,x,y,z,k,n,s,p')
+
+def test_trig_phase_shift_order():
+    assert 'x + ' in xpretty(cos(x + pi/4), use_unicode=False)
+    assert xpretty(cos(x + pi/4), use_unicode=False) == xpretty(
+        cos(x + pi/4), use_unicode=False, order='lex')
+    assert xpretty(sin(x + pi/4), use_unicode=False) == xpretty(
+        sin(x + pi/4), use_unicode=False, order='lex')
+
+
 f = Function("f")
 th = Symbol('theta')
 ph = Symbol('phi')
