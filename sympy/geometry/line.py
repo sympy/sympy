@@ -42,6 +42,7 @@ from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import Undecidable, filldedent
 
 
+
 import random
 
 
@@ -97,7 +98,7 @@ class LinearEntity(GeometrySet):
             raise Undecidable(
                 "Cannot decide whether '%s' contains '%s'" % (self, other))
 
-    def _span_test(self, other):
+    def _span_test(self, other:Point)->int:
         """Test whether the point `other` lies in the positive span of `self`.
         A point x is 'in front' of a point y if x.dot(y) >= 0.  Return
         -1 if `other` is behind `self.p1`, 0 if `other` is `self.p1` and
@@ -112,7 +113,7 @@ class LinearEntity(GeometrySet):
         return -1
 
     @property
-    def ambient_dimension(self):
+    def ambient_dimension(self) -> int:
         """A property method that returns the dimension of LinearEntity
         object.
 
@@ -144,7 +145,7 @@ class LinearEntity(GeometrySet):
         """
         return len(self.p1)
 
-    def angle_between(l1, l2):
+    def angle_between(l1:LinearEntity, l2:LinearEntity)->Expr:
         """Return the non-reflex angle formed by rays emanating from
         the origin with directions the same as the direction vectors
         of the linear entities.
@@ -208,7 +209,7 @@ class LinearEntity(GeometrySet):
         v1, v2 = l1.direction, l2.direction
         return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
-    def smallest_angle_between(l1, l2):
+    def smallest_angle_between(l1:LinearEntity, l2:LinearEntity)->Expr:
         """Return the smallest angle formed at the intersection of the
         lines containing the linear entities.
 
@@ -243,7 +244,7 @@ class LinearEntity(GeometrySet):
         v1, v2 = l1.direction, l2.direction
         return acos(abs(v1.dot(v2))/(abs(v1)*abs(v2)))
 
-    def arbitrary_point(self, parameter='t'):
+    def arbitrary_point(self, parameter='t')->Point:
         """A parameterized point on the Line.
 
         Parameters
@@ -297,7 +298,7 @@ class LinearEntity(GeometrySet):
         return self.p1 + (self.p2 - self.p1)*t
 
     @staticmethod
-    def are_concurrent(*lines):
+    def are_concurrent(*lines:LinearEntity)->bool:
         """Is a sequence of linear entities concurrent?
 
         Two or more linear entities are concurrent if they all
@@ -356,7 +357,7 @@ class LinearEntity(GeometrySet):
         raise NotImplementedError()
 
     @property
-    def direction(self):
+    def direction(self)->Point:
         """The direction vector of the LinearEntity.
 
         Returns
@@ -388,7 +389,7 @@ class LinearEntity(GeometrySet):
         """
         return self.p2 - self.p1
 
-    def intersection(self, other):
+    def intersection(self, other:Point|LinearEntity)->list[GeometryEntity]:
         """The intersection with another geometrical entity.
 
         Parameters
@@ -569,7 +570,7 @@ class LinearEntity(GeometrySet):
 
         return other.intersection(self)
 
-    def is_parallel(l1, l2):
+    def is_parallel(l1:LinearEntity, l2:LinearEntity)->bool:
         """Are two linear entities parallel?
 
         Parameters
@@ -619,7 +620,7 @@ class LinearEntity(GeometrySet):
 
         return l1.direction.is_scalar_multiple(l2.direction)
 
-    def is_perpendicular(l1, l2):
+    def is_perpendicular(l1:LinearEntity, l2:LinearEntity)->bool:
         """Are two linear entities perpendicular?
 
         Parameters
@@ -667,7 +668,7 @@ class LinearEntity(GeometrySet):
 
         return S.Zero.equals(l1.direction.dot(l2.direction))
 
-    def is_similar(self, other):
+    def is_similar(self, other)->bool:
         """
         Return True if self and other are contained in the same line.
 
@@ -742,7 +743,7 @@ class LinearEntity(GeometrySet):
         """
         return self.args[1]
 
-    def parallel_line(self, p):
+    def parallel_line(self, p:Point)->Line:
         """Create a new Line parallel to this linear entity which passes
         through the point `p`.
 
@@ -785,7 +786,7 @@ class LinearEntity(GeometrySet):
         p = Point(p, dim=self.ambient_dimension)
         return Line(p, p + self.direction)
 
-    def perpendicular_line(self, p):
+    def perpendicular_line(self, p:Point)->Line:
         """Create a new Line perpendicular to this linear entity which passes
         through the point `p`.
 
@@ -827,7 +828,7 @@ class LinearEntity(GeometrySet):
             p = p + self.direction.orthogonal_direction
         return Line(p, self.projection(p))
 
-    def perpendicular_segment(self, p):
+    def perpendicular_segment(self, p:Point)->Segment:
         """Create a perpendicular line segment from `p` to this line.
 
         The endpoints of the segment are ``p`` and the closest point in
@@ -914,7 +915,7 @@ class LinearEntity(GeometrySet):
         """
         return (self.p1, self.p2)
 
-    def projection(self, other):
+    def projection(self, other:Point|LinearEntity)->Point|LinearEntity:
         """Project a point, line, ray, or segment onto this linear entity.
 
         Parameters
@@ -1003,7 +1004,7 @@ class LinearEntity(GeometrySet):
         raise GeometryError(
             "Do not know how to project %s onto %s" % (other, self))
 
-    def random_point(self, seed=None):
+    def random_point(self, seed=None)->Point:
         """A random point on a LinearEntity.
 
         Returns
@@ -1048,7 +1049,7 @@ class LinearEntity(GeometrySet):
             raise NotImplementedError('unhandled line type')
         return pt.subs(t, Rational(v))
 
-    def bisectors(self, other):
+    def bisectors(self, other)->list[Line]:
         """Returns the perpendicular lines which pass through the intersections
         of self and other that are in the same plane.
 
