@@ -1775,6 +1775,19 @@ def is_ge(lhs, rhs, assumptions=None):
         if _lhs.is_extended_real and _rhs.is_extended_real:
             if (_lhs.is_infinite and _lhs.is_extended_positive) or (_rhs.is_infinite and _rhs.is_extended_negative):
                 return True
+            # Do not form a difference if it would completely cancel a
+            # term which is not known to be finite.
+            if not (_lhs.is_finite is True and _rhs.is_finite is True):
+                L = lhs.as_coefficients_dict()
+                R = rhs.as_coefficients_dict()
+                for term in set(L).intersection(R):
+                    if term is S.One or L[term] != R[term]:
+                        continue
+                    term_finite = AssumptionsWrapper(
+                        term, assumptions
+                    ).is_finite
+                    if term_finite is not True:
+                        return None
             diff = lhs - rhs
             if diff is not S.NaN:
                 rv = is_extended_nonnegative(diff, assumptions)
