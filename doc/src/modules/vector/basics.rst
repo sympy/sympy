@@ -153,7 +153,7 @@ of the basis vectors) present in the provided vectorial expression.
   >>> from sympy import Integral
   >>> v1 = a*N.i + sin(a)*N.j - N.k
   >>> Integral(v1, a)
-  (Integral(a, a))*N.i + (Integral(sin(a), a))*N.j + (Integral(-1, a))*N.k
+  Integral(a*N.i + (sin(a))*N.j + (-1)*N.k, a)
   >>> Integral(v1, a).doit()
   a**2/2*N.i + (-cos(a))*N.j + (-a)*N.k
 
