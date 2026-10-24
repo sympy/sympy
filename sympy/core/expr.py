@@ -1108,6 +1108,7 @@ class Expr(Basic, EvalfMixin):
     def _parse_order(cls, order):
         """Parse and configure the ordering of terms. """
         from sympy.polys.orderings import monomial_key
+        from sympy.functions.elementary.exponential import exp
 
         startswith = getattr(order, "startswith", None)
         if startswith is None:
@@ -1118,12 +1119,18 @@ class Expr(Basic, EvalfMixin):
                 order = order[4:]
 
         monom_key = monomial_key(order)
+        simple_first = order is None
 
         def neg(monom):
-            return tuple([neg(m) if isinstance(m, tuple) else -m for m in monom])
+            return tuple(neg(m) if isinstance(m, tuple) else -m for m in monom)
+
+        def explicit_i_key(term):
+            # Do not infer whether a term is real or imaginary.
+            return bool(term[1][0][1])
 
         def monom_sort_key(term):
-            return neg(monom_key(term[1][1]))
+            monom = monom_key(term[1][1])
+            return monom if simple_first else neg(monom)
 
         def nc_sort_key(term):
             return tuple(e.sort_key(order=order) for e in term[1][2])
@@ -1138,17 +1145,31 @@ class Expr(Basic, EvalfMixin):
         def function_type_key(term):
             return tuple(f.func.class_key() for f in numeric_factors(term))
 
+        def argument_keys(f):
+            # Negative integer powers and exp(-n) read more naturally
+            # in increasing order of exponent magnitude. Other
+            # function arguments retain their ordinary structural order.
+            args = f.args
+            index = -1 if f.is_Pow else 0 if f.func is exp else None
+            result = []
+            for i, arg in enumerate(args):
+                if index is not None and i == index % len(args) and arg.is_Integer:
+                    result.append((default_sort_key(abs(arg), order=order),
+                                   bool(arg.is_negative)))
+                else:
+                    result.append((default_sort_key(arg, order=order), False))
+            return tuple(result)
+
         def function_args_key(term):
-            return tuple(tuple(default_sort_key(a, order=order) for a in f.args)
-                         for f in numeric_factors(term))
+            return tuple(argument_keys(f) for f in numeric_factors(term))
 
         def coeff_sort_key(term):
             re, im = term[1][0]
             factors = im or re
             return bool(im), bool(factors[0].is_nonnegative), default_sort_key(factors)
 
-        return (monom_sort_key, nc_sort_key, function_type_key,
-                function_args_key, coeff_sort_key), reverse
+        return (explicit_i_key, monom_sort_key, nc_sort_key,
+                function_type_key, function_args_key, coeff_sort_key), reverse
 
     def as_ordered_factors(self, order=None):
         """Return list of ordered factors (if Mul) else [self]."""
@@ -1216,6 +1237,12 @@ class Expr(Basic, EvalfMixin):
             key = lambda x:not isinstance(x, (Number, NumberSymbol))
             add_args = sorted(Add.make_args(self), key=key)
             if (len(add_args) == 2
+                and isinstance(add_args[0], Number)
+                and add_args[0].is_negative
+                and not add_args[1].could_extract_minus_sign()):
+                # Keep simple subtraction as x - 2, not -2 + x.
+                return add_args[::-1]
+            if (len(add_args) == 2
                 and isinstance(add_args[0], (Number, NumberSymbol))
                 and isinstance(add_args[1], Mul)):
                 mul_args = sorted(Mul.make_args(add_args[1]), key=key)
@@ -1235,7 +1262,8 @@ class Expr(Basic, EvalfMixin):
         else:
             _order, _terms = _sift_true_false(terms, lambda x: x[0].is_Order)
             sorted_terms = list(ordered(_terms, keys=keys, default=False))
-            sorted_terms.reverse()
+            if order is not None:
+                sorted_terms.reverse()
             order_terms = list(ordered(_order, keys=keys, default=False))
             order_terms.reverse()
             sorted_terms.extend(order_terms)
