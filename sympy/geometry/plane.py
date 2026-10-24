@@ -19,7 +19,6 @@ from .line import (Line, Ray, Segment, Line3D, LinearEntity, LinearEntity3D,
 from .point import Point, Point3D
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.simplify import simplify
 from sympy.solvers import solve, linsolve
 from sympy.utilities.iterables import uniq, is_sequence
 from sympy.utilities.misc import filldedent, func_name, Undecidable
@@ -295,36 +294,36 @@ class Plane(GeometryEntity):
 
         if isinstance(o, Point3D):
             n = Point3D(self.normal_vector)
-            a = simplify(n.dot(o - self.p1))
-            N = Abs(sqrt(n.dot(n)))
+            a = n.dot(o - self.p1)
+            N = sqrt(n.dot(n))
             return Abs(a) / N
 
         if isinstance(o, Segment3D):
             A, B = o.points
             P = self.p1
             n = Point3D(self.normal_vector)
-            a = simplify(n.dot(A - P))
-            b = simplify(n.dot(B - P))
-            c = simplify(n.dot(B - A))
-            N = Abs(sqrt(n.dot(n)))
+            a = n.dot(A - P)
+            b = n.dot(B - P)
+            c = n.dot(B - A)
+            N = sqrt(n.dot(n))
             return (Abs(a) + Abs(b) - Abs(c)) / (2 * N)
 
         if isinstance(o, Ray3D):
             A, B = o.points
             P = self.p1
             n = Point3D(self.normal_vector)
-            a = simplify(n.dot(A - P))
-            c = simplify(n.dot(B - A))
-            N = Abs(sqrt(n.dot(n)))
+            a = n.dot(A - P)
+            c = n.dot(B - A)
+            N = sqrt(n.dot(n))
             return Abs(a) * (1 + Min(0, sign(a * c))) / N
 
         if isinstance(o, Line3D):
             A, B = o.points
             P = self.p1
             n = Point3D(self.normal_vector)
-            a = simplify(n.dot(A - P))
-            c = simplify(n.dot(B - A))
-            N = Abs(sqrt(n.dot(n)))
+            a = n.dot(A - P)
+            c = n.dot(B - A)
+            N = sqrt(n.dot(n))
             return Abs(a) * (1 - Abs(sign(c))) / N
 
         if isinstance(o, Plane):

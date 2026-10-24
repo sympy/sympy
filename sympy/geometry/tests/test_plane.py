@@ -92,8 +92,8 @@ def test_plane():
 
     assert pl6.distance(pl6.arbitrary_point(u, v)) == 0
     assert pl7.distance(pl7.arbitrary_point(u, v)) == 0
-    assert pl6.distance(pl6.arbitrary_point(t)) == 0
-    assert pl7.distance(pl7.arbitrary_point(t)) == 0
+    assert pl6.distance(pl6.arbitrary_point(t)).simplify() == 0
+    assert pl7.distance(pl7.arbitrary_point(t)).simplify() == 0
     assert pl6.p1.distance(pl6.arbitrary_point(t)).simplify() == 1
     assert pl7.p1.distance(pl7.arbitrary_point(t)).simplify() == 1
     assert pl3.arbitrary_point(t) == Point3D(-sqrt(30)*sin(t)/30 + \
