@@ -1219,6 +1219,9 @@ def solve_decomposition(f, symbol, domain):
                 # y_s is not in the range of g in g_s, so no solution exists
                 #in the given domain
                 return S.EmptySet
+            else:
+                # y_s is an unhandled set type (e.g. unevaluated Intersection)
+                return ConditionSet(symbol, Eq(f, 0), domain)
 
             for iset in iter_iset:
                 new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
