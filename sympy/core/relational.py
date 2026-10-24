@@ -1911,46 +1911,42 @@ def is_eq(lhs: Basic, rhs: Basic, assumptions=None) -> bool | None:
             return False
         if fuzzy_xor([_lhs.is_extended_real, _rhs.is_extended_real]):
             return False
-        if fuzzy_and([_lhs.is_extended_real, _rhs.is_extended_real]):
-            # Comparing signs is only valid if both LHS and RHS are infinite
-            if fuzzy_and([_lhs.is_infinite, _rhs.is_infinite]):
+        if fuzzy_and([_lhs.is_infinite, _rhs.is_infinite]):
+            if fuzzy_and([_lhs.is_extended_real, _rhs.is_extended_real]):
                 return fuzzy_xor([_lhs.is_extended_positive, fuzzy_not(_rhs.is_extended_positive)])
 
-            # If one side is infinite and the other's finiteness is unknown:
-            # one side is strictly positive/negative and the other is <= 0 / >= 0
-            # (incompatible signs) => return False
-            # for any other case the equality cannot be decided => return None
-            if ((_lhs.is_extended_positive and _rhs.is_extended_nonpositive) or
-                (_lhs.is_extended_negative and _rhs.is_extended_nonnegative) or
-                (_lhs.is_extended_nonpositive and _rhs.is_extended_positive) or
-                (_lhs.is_extended_nonnegative and _rhs.is_extended_negative)):
-                return False
-            return None
+            # Try to split real/imaginary parts and equate them
+            I = S.ImaginaryUnit
 
-        # Try to split real/imaginary parts and equate them
-        I = S.ImaginaryUnit
+            def split_real_imag(expr):
+                real_imag = lambda t: (
+                    'real' if is_extended_real(t, assumptions) else
+                    'imag' if is_extended_real(I*t, assumptions) else None)
+                return sift(Add.make_args(expr), real_imag)
 
-        def split_real_imag(expr):
-            real_imag = lambda t: (
-                'real' if is_extended_real(t, assumptions) else
-                'imag' if is_extended_real(I*t, assumptions) else None)
-            return sift(Add.make_args(expr), real_imag)
+            lhs_ri = split_real_imag(lhs)
+            if not lhs_ri[None]:
+                rhs_ri = split_real_imag(rhs)
+                if not rhs_ri[None]:
+                    eq_real = is_eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']), assumptions)
+                    eq_imag = is_eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']), assumptions)
+                    return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
 
-        lhs_ri = split_real_imag(lhs)
-        if not lhs_ri[None]:
-            rhs_ri = split_real_imag(rhs)
-            if not rhs_ri[None]:
-                eq_real = is_eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']), assumptions)
-                eq_imag = is_eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']), assumptions)
-                return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
+            from sympy.functions.elementary.complexes import arg
+            # Compare e.g. zoo with 1+I*oo by comparing args
+            arglhs = arg(lhs)
+            argrhs = arg(rhs)
+            # Guard against Eq(nan, nan) -> False
+            if not (arglhs == S.NaN and argrhs == S.NaN):
+                return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
 
-        from sympy.functions.elementary.complexes import arg
-        # Compare e.g. zoo with 1+I*oo by comparing args
-        arglhs = arg(lhs)
-        argrhs = arg(rhs)
-        # Guard against Eq(nan, nan) -> False
-        if not (arglhs == S.NaN and argrhs == S.NaN):
-            return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
+        # If one side is infinite and the other's finiteness is unknown:
+        if ((_lhs.is_extended_positive and _rhs.is_extended_nonpositive) or
+            (_lhs.is_extended_negative and _rhs.is_extended_nonnegative) or
+            (_lhs.is_extended_nonpositive and _rhs.is_extended_positive) or
+            (_lhs.is_extended_nonnegative and _rhs.is_extended_negative)):
+            return False
+        return None
 
     if isinstance(lhs, Expr) and isinstance(rhs, Expr):
         # Do not form a difference if it would completely cancel a
