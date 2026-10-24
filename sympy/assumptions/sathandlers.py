@@ -2,11 +2,11 @@ from __future__ import annotations
 from collections import defaultdict
 
 from sympy.assumptions.ask import Q
-from sympy.core import (Add, Mul, Pow, Number, NumberSymbol, Symbol)
+from sympy.core import (Add, Mul, Pow, Number, NumberSymbol, Symbol, S)
 from sympy.core.numbers import ImaginaryUnit
 from sympy.functions.elementary.complexes import Abs
 from sympy.logic.boolalg import (Equivalent, And, Or, Implies)
-from sympy.matrices.expressions import MatMul
+from sympy.matrices.expressions import MatMul, MatrixExpr
 
 # APIs here may be subject to change
 
@@ -285,6 +285,17 @@ def _(expr):
     allargs_square = allargs(x, Q.square(x), expr)
     allargs_invertible = allargs(x, Q.invertible(x), expr)
     return Implies(allargs_square, Equivalent(Q.invertible(expr), allargs_invertible))
+
+
+### MatrixExpr ###
+
+@class_fact_registry.register(MatrixExpr)
+def _(expr):
+    if expr.is_square:
+        return Q.square(expr)
+    if expr.is_square is False:
+        return ~Q.square(expr)
+    return S.true
 
 
 ### Pow ###
