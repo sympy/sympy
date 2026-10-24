@@ -128,6 +128,13 @@ Usage::
 LLVM JIT Code Printing
 ----------------------
 
+The LLVM JIT module uses ``llvmlite`` to compile SymPy expressions into
+native functions for repeated numerical evaluation. Use
+:py:func:`sympy.printing.llvmjitcode.llvm_callable` to compile an expression;
+its documentation below includes examples for direct calls, integration
+callbacks, and expressions returned by
+:py:func:`sympy.simplify.cse_main.cse`.
+
 .. automodule:: sympy.printing.llvmjitcode
    :members:
 
