@@ -43,12 +43,14 @@ def _construct_simple(coeffs, opt):
                     if not (x.is_Integer and y.is_Integer):
                         rationals = True
                     continue
-                else:
+                elif x.is_finite and y.is_finite:
                     floats = True
                     if x.is_Float:
                         float_numbers.append(x)
                     if y.is_Float:
                         float_numbers.append(y)
+                else:
+                    return False
             elif is_algebraic(coeff):
                 if floats:
                     # there are both algebraics and reals -> EX
