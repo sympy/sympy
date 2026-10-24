@@ -6,11 +6,11 @@ from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
 from sympy.combinatorics.perm_groups import (PermutationGroup,
     _orbit_transversal, Coset, SymmetricPermutationGroup)
-from sympy.combinatorics.permutations import Permutation
+from sympy.combinatorics.permutations import Permutation, Cycle
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
-from sympy.testing.pytest import skip, XFAIL, slow
+from sympy.testing.pytest import skip, XFAIL, slow, raises
 
 rmul = Permutation.rmul
 
@@ -255,12 +255,40 @@ def test_coset_rank():
     assert G.coset_unrank(48) is None
     assert G.coset_unrank(G.coset_rank(gens[0])) == gens[0]
 
+    # Trivial groups (order 1, base is [])
+    G_triv = PermutationGroup(Permutation([0, 1, 2]))
+    assert G_triv.order() == 1
+    assert G_triv.base == []
+    # Permutation input
+    assert G_triv.coset_rank(G_triv.identity) == 0
+    assert G_triv.coset_rank(Permutation([0, 1, 2])) == 0
+    assert G_triv.coset_rank(Permutation([1, 0, 2])) is None
+    # Cycle input
+    assert G_triv.coset_rank(Cycle()) == 0
+    assert G_triv.coset_rank(Cycle(0, 1)) is None
+    # Array form list input
+    assert G_triv.coset_rank([0, 1, 2]) == 0
+    assert G_triv.coset_rank([1, 0, 2]) is None
+    # Size mismatch raises ValueError matching coset_factor
+    raises(ValueError, lambda: G_triv.coset_rank([0, 1]))
+    # Unrank
+    assert G_triv.coset_unrank(0) == G_triv.identity
+    assert G_triv.coset_unrank(1) is None
+
+    G_triv1 = PermutationGroup(Permutation(0))
+    assert G_triv1.order() == 1
+    assert G_triv1.base == []
+    assert G_triv1.coset_rank(G_triv1.identity) == 0
+    assert G_triv1.coset_rank([0]) == 0
+    assert G_triv1.coset_unrank(0) == G_triv1.identity
+    assert G_triv1.coset_unrank(1) is None
+
 
 def test_coset_factor():
     a = Permutation([0, 2, 1])
     G = PermutationGroup([a])
     c = Permutation([2, 1, 0])
-    assert not G.coset_factor(c)
+    assert G.coset_factor(c) is None
     assert G.coset_rank(c) is None
 
     a = Permutation([2, 0, 1, 3, 4, 5])
@@ -268,7 +296,7 @@ def test_coset_factor():
     g = PermutationGroup([a, b])
     assert g.order() == 360
     d = Permutation([1, 0, 2, 3, 4, 5])
-    assert not g.coset_factor(d.array_form)
+    assert g.coset_factor(d.array_form) is None
     assert not g.contains(d)
     assert Permutation(2) in G
     c = Permutation([1, 0, 2, 3, 5, 4])
@@ -282,7 +310,7 @@ def test_coset_factor():
     assert g.contains(c)
     G = PermutationGroup([Permutation([2, 1, 0])])
     p = Permutation([1, 0, 2])
-    assert G.coset_factor(p) == []
+    assert G.coset_factor(p) is None
 
 
 def test_orbits():
