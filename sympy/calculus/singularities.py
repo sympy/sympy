@@ -27,6 +27,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
 from sympy.functions.elementary.hyperbolic import (
     sech, csch, coth, tanh, cosh, asech, acsch, atanh, acoth)
+from sympy.sets.sets import FiniteSet
 from sympy.utilities.misc import filldedent
 
 
@@ -106,7 +107,6 @@ def singularities(
 
     """
     from sympy.solvers.solveset import solveset
-    from sympy.sets.sets import Interval
 
     expression = sympify(expression)
 
@@ -118,17 +118,19 @@ def singularities(
         e = e.rewrite([sech, csch, coth, tanh], cosh)
         for i in e.atoms(Pow):
             if i.base == S.Zero:
-                sing_interval = solveset(i.exp <= 0, symbol, domain)
-                # Since in Sympy we assume that 0**0 = 1,
-                # we can't have a singularity at i.exp == 0 and therefore
-                # we must return an open interval.
-                sing_interval = Interval.open(sing_interval.inf, sing_interval.sup)
-                sings += sing_interval
+                sings += solveset(i.exp < 0, symbol, domain)
+                continue
             if i.exp.is_infinite:
                 raise NotImplementedError
             if i.exp.is_negative:
-                # XXX: exponent of varying sign not handled
                 sings += solveset(i.base, symbol, domain)
+            elif symbol in i.exp.free_symbols:
+                base_roots = solveset(i.base, symbol, domain)
+                if base_roots.is_FiniteSet:
+                    for r in base_roots:
+                        exp_val = i.exp.subs(symbol, r)
+                        if exp_val.is_extended_negative:
+                            sings += FiniteSet(r)
         for i in expression.atoms(log, asech, acsch):
             sings += solveset(i.args[0], symbol, domain)
         for i in expression.atoms(atanh, acoth):
