@@ -219,6 +219,7 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic
 
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
+from sympy.core.numbers import I
 
 
 
@@ -360,7 +361,8 @@ class Printer:
             return list(expr.args)
         else:
             terms = expr.as_ordered_terms(order=order)
-            if order is None and len(terms) == 2:
+            if (order is None and len(terms) == 2
+                    and terms[1].as_coefficient(I) is None):
                 first, second = terms
                 # Two-term sums are generally read more naturally with a
                 # positive term first, or a variable before a constant.
