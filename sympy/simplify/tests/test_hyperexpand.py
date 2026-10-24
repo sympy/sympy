@@ -13,7 +13,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
 from sympy.concrete.summations import Sum
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.numbers import I
+from sympy.core.numbers import I, Rational, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import binomial
@@ -22,8 +22,7 @@ from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.abc import z, a, b, c
 from sympy.testing.pytest import XFAIL, raises, slow, tooslow
 from sympy.core.random import verify_numerically as tn
-
-from sympy.core.numbers import (Rational, pi)
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import atanh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -31,6 +30,9 @@ from sympy.functions.elementary.trigonometric import (asin, cos, sin)
 from sympy.functions.special.bessel import besseli
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.gamma_functions import (gamma, lowergamma)
+from sympy.polys.domains.realfield import RR
+from sympy.polys.domains.complexfield import CC
+from sympy.polys.polytools import factor_terms
 
 
 def test_branch_bug():
@@ -371,9 +373,9 @@ def test_meijerg_expand():
     assert hyperexpand(meijerg([[1, 1], []], [[1], [1]], z)) == \
         z/(z + 1)
     assert hyperexpand(meijerg([[], []], [[S.Half], [0]], (z/2)**2)) \
-        == sin(z)/sqrt(pi)
+        == sin(sqrt(z**2))/sqrt(pi)
     assert hyperexpand(meijerg([[], []], [[0], [S.Half]], (z/2)**2)) \
-        == cos(z)/sqrt(pi)
+        == cos(sqrt(z**2))/sqrt(pi)
     assert can_do_meijer([], [a], [a - 1, a - S.Half], [])
     assert can_do_meijer([], [], [a/2], [-a/2], False)  # branches...
     assert can_do_meijer([a], [b], [a], [b, a - 1])
@@ -423,7 +425,7 @@ def test_meijerg_expand():
     # Test place option
     f = meijerg(((0, 1), ()), ((S.Half,), (0,)), z**2)
     assert hyperexpand(f) == sqrt(pi)/sqrt(1 + z**(-2))
-    assert hyperexpand(f, place=0) == sqrt(pi)*z/sqrt(z**2 + 1)
+    assert hyperexpand(f, place=0) == sqrt(pi)*sqrt(z**2)/sqrt(z**2 + 1)
 
 
 def test_meijerg_lookup():
@@ -573,7 +575,6 @@ def test_meijerg_confluence():
 
 def test_meijerg_with_Floats():
     # see issue #10681
-    from sympy.polys.domains.realfield import RR
     f = meijerg(((3.0, 1), ()), ((Rational(3, 2),), (0,)), z)
     a = -2.3632718012073
     g = a*z**Rational(3, 2)*hyper((-0.5, Rational(3, 2)), (Rational(5, 2),), z*exp_polar(I*pi))
@@ -1062,3 +1063,115 @@ def test_omgissue_203():
     assert hyperexpand(h) == Rational(1, 30)
     h = hyper((-6, -7, -5), (-6, -6), 1)
     assert hyperexpand(h) == Rational(-1, 6)
+
+
+@slow
+def test_issue_26525_polarify_z():
+    x = symbols("x")
+
+    g = meijerg(((1, x + 2), ()), ((x + S(1)/2,), (0,)), -I*z)
+    h = hyperexpand(g)
+    assert h == \
+           -2*sqrt(pi)*(-I*z)**(x + S.Half)*gamma(x + S.Half)*hyper(
+               (-S.Half, x + S.Half), (x + S(3)/2,),
+               -I*z*exp_polar(I*pi))/gamma(x + S(3)/2)
+    for i in [g, h]:
+        assert CC.almosteq(i.subs({x: 0, z: 1}).evalf(),
+                           -4.32257296433943 + 5.92192068901469*I, 1e-12)
+
+    # Integer parameters conceal an incorrect full turn in the argument.
+    for value in (S.One/3, S.Half):
+        point = {x: value, z: 1}
+        assert abs(h.subs(point).evalf() - g.subs(point).evalf()) < 1e-12
+
+    # Outside the unit circle, the wrong winding changes the continuation.
+    g = meijerg(((1, 2), ()), ((S.Half,), (0,)), -2*I)
+    assert abs(hyperexpand(g).evalf() - g.evalf()) < 1e-12
+
+    g = meijerg(((1, 2), ()), ((S(1)/2,), (0,)), -I)
+    h = hyperexpand(g)
+    for i in [g, h]:
+        assert CC.almosteq(i.evalf(),
+                           -4.32257296433943 + 5.92192068901469*I, 1e-12)
+
+    g = meijerg(((1, 2), ()), ((S(1)/2,), (0,)), -1)
+    h = hyperexpand(g)
+    assert h == -I*pi**(S(3)/2)
+
+    g = meijerg(((1, 2), ()), ((S(1)/2,), (0,)), 1)
+    assert hyperexpand(g) == sqrt(pi)*(-2*sqrt(2) - 2*log(1 + sqrt(2)))
+
+    g = meijerg(((0,), ()), ((S(1)/2,), (1,)), -1)
+    assert hyperexpand(g) == 3*exp(1)*I/2
+
+    g = meijerg(((0,), ()), ((S.Half,), (1,)), I)
+    assert hyperexpand(g) == (S.Half - I)*exp(-I)*exp(I*pi/4)
+
+    g = meijerg(((0,), ()), ((S.Half,), (1,)), -I)
+    assert factor_terms(hyperexpand(g)) == factor_terms((S.Half + I)*exp(I)*exp(-I*pi/4))
+
+    g = meijerg(((1,), ()), ((1,), ()), 0)
+    assert hyperexpand(g) == 0
+
+    g = meijerg(((S.Half,), ()), ((1,), ()), 0)
+    assert hyperexpand(g) == 0
+
+
+def test_issue_26525_gamma_sign():
+    a = symbols("a")
+    g = I*meijerg(((1, a + 2), ()), ((a + S.Half,), (0,)), -1)/(2*sqrt(pi))
+    h = hyperexpand(g)
+    assert h == I*sqrt(pi)*exp(I*pi*(a + S(3)/2))*gamma(a + S.Half)/(2*gamma(a + 2))
+    assert h.subs(a, 0) == pi/2
+    assert h.subs(a, 1) == -pi/8
+
+
+def test_issue_24374():
+    x = symbols("x", real=True)
+    g = meijerg(((), ()), ((S.Half,), (0,)), x**2/4)
+    assert hyperexpand(g) == sin(Abs(x))/sqrt(pi)
+
+    x = symbols("x", positive=True)
+    g = meijerg(((), ()), ((S.Half,), (0,)), x**2/4)
+    assert hyperexpand(g) == sin(x)/sqrt(pi)
+
+
+def test_hyperexpand_negated_unrestricted_symbol():
+    x = symbols("x")
+    g = meijerg(((-S.Half,), (0, 0, S.Half, 1)),
+                ((-S.Half, 0, 0), ()), -x)
+    h = hyperexpand(g)
+
+    for value in (-2, 2):
+        assert abs(h.subs(x, value).evalf() - g.subs(x, value).evalf()) < 1e-12
+
+
+def test_meijerg_composite_argument_branches():
+    from sympy.simplify.simplify import simplify
+
+    x, y = symbols('x y', real=True)
+    g = meijerg([], [], [S.Half], [0], x*y)
+    assert hyperexpand(g) == sin(2*sqrt(x*y))/sqrt(pi)
+
+    # The protection must apply to other parameter tuples too.
+    g = meijerg([], [], [3*S.Half], [0], x**2/4)
+    h = hyperexpand(g)
+    assert simplify(h.subs(x, -1) - (sin(1) - cos(1))/(2*sqrt(pi))) == 0
+
+    # An explicitly specified turn around the origin must be retained.
+    g = meijerg([], [], [S.Half], [0], x**2*exp_polar(2*pi*I)/4)
+    assert hyperexpand(g) == -sin(Abs(x))/sqrt(pi)
+
+
+def test_issue_25123():
+    from sympy.simplify.simplify import simplify
+
+    for x in (symbols('x'), symbols('x', real=True)):
+        g = meijerg([-S.Half], [0, 0, S.Half, 1],
+                    [-S.Half, 0, 0], [], x**-2)
+        h = hyperexpand(g)
+        # The input depends on x**2, so its expansion must be even.
+        assert h.subs(x, -x) == h
+        for value in (-2, -1, 1, 2):
+            expected = (2*abs(value) - sin(2*abs(value)))/sqrt(pi)
+            assert simplify(h.subs(x, value) - expected) == 0
