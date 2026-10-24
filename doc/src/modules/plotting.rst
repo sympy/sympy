@@ -25,6 +25,13 @@ The above functions are only for convenience and ease of use. It is possible to
 plot any plot by passing the corresponding ``Series`` class to :class:`~.Plot` as
 argument.
 
+.. note::
+
+   Import these functions directly from ``sympy.plotting``, e.g.
+   ``sympy.plotting.plot3d`` or ``from sympy.plotting import plot3d``.
+   ``sympy.plotting.plot`` (used above for autodoc purposes) is not
+   itself accessible as an attribute at runtime.
+
 Plot Class
 ----------
 
