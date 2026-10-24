@@ -223,6 +223,59 @@ def _invert_real(f, g_ys, symbol):
 
     n = Dummy('n', real=True)
 
+        # Check ranges of inverse trigonometric/hyperbolic functions
+    if isinstance(f, asin):
+        g_ys = g_ys.intersect(Interval(-pi/2, pi/2))
+        if g_ys == S.EmptySet:
+            return (symbol, S.EmptySet)
+        return _invert_real(
+            f.args[0],
+            imageset(Lambda(n, sin(n)), g_ys),
+            symbol
+        )
+
+    if isinstance(f, acos):
+        g_ys = g_ys.intersect(Interval(0, pi))
+        if g_ys == S.EmptySet:
+            return (symbol, S.EmptySet)
+        return _invert_real(
+            f.args[0],
+            imageset(Lambda(n, cos(n)), g_ys),
+            symbol
+        )
+
+    if isinstance(f, atan):
+        g_ys = g_ys.intersect(Interval.open(-pi/2, pi/2))
+        if g_ys == S.EmptySet:
+            return (symbol, S.EmptySet)
+        return _invert_real(
+            f.args[0],
+            imageset(Lambda(n, tan(n)), g_ys),
+            symbol
+        )
+
+    if isinstance(f, acosh):
+        g_ys = g_ys.intersect(Interval(0, oo))
+        if g_ys == S.EmptySet:
+            return (symbol, S.EmptySet)
+
+        return _invert_real(
+            f.args[0],
+            imageset(Lambda(n, cosh(n)), g_ys),
+            symbol
+        )
+
+    if isinstance(f, asech):
+        g_ys = g_ys.intersect(Interval(0, oo))
+        if g_ys == S.EmptySet:
+            return (symbol, S.EmptySet)
+
+        return _invert_real(
+            f.args[0],
+            imageset(Lambda(n, sech(n)), g_ys),
+            symbol
+        )
+
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         return _invert_real(f.exp,
                             imageset(Lambda(n, log(n)), g_ys),
@@ -407,6 +460,60 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
                     return (f, g_ys)
             return _invert_real(f.args[0],
                 imageset(n, acsch(n), g_ys_dom), symbol)
+
+    elif isinstance(f, (asin, acos, atan, acot, asec, acsc,
+                    acosh, asech)):
+        n = Dummy('n', real=True)
+
+        if isinstance(f, asin):
+            g_ys = g_ys.intersect(Interval(-pi/2, pi/2))
+            if g_ys == S.EmptySet:
+                return (symbol, S.EmptySet)
+            return _invert_real(
+                f.args[0],
+                imageset(n, sin(n), g_ys),
+                symbol
+            )
+
+        if isinstance(f, acos):
+            g_ys = g_ys.intersect(Interval(0, pi))
+            if g_ys == S.EmptySet:
+                return (symbol, S.EmptySet)
+            return _invert_real(
+                f.args[0],
+                imageset(n, cos(n), g_ys),
+                symbol
+            )
+
+        if isinstance(f, atan):
+            g_ys = g_ys.intersect(Interval.open(-pi/2, pi/2))
+            if g_ys == S.EmptySet:
+                return (symbol, S.EmptySet)
+            return _invert_real(
+                f.args[0],
+                imageset(n, tan(n), g_ys),
+                symbol
+            )
+
+        if isinstance(f, acosh):
+            g_ys = g_ys.intersect(Interval(0, oo))
+            if g_ys == S.EmptySet:
+                return (symbol, S.EmptySet)
+            return _invert_real(
+                f.args[0],
+                imageset(n, cosh(n), g_ys),
+                symbol
+            )
+
+        if isinstance(f, asech):
+            g_ys = g_ys.intersect(Interval(0, oo))
+            if g_ys == S.EmptySet:
+                return (symbol, S.EmptySet)
+            return _invert_real(
+                f.args[0],
+                imageset(n, sech(n), g_ys),
+                symbol
+            )
 
     elif isinstance(f, TrigonometricFunction) and isinstance(g_ys, FiniteSet):
         def _get_trig_inverses(func):
