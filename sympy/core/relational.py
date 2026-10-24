@@ -1773,6 +1773,8 @@ def is_ge(lhs, rhs, assumptions=None):
         _lhs = AssumptionsWrapper(lhs, assumptions)
         _rhs = AssumptionsWrapper(rhs, assumptions)
         if _lhs.is_extended_real and _rhs.is_extended_real:
+            if lhs == rhs:
+                return True
             if (_lhs.is_infinite and _lhs.is_extended_positive) or (_rhs.is_infinite and _rhs.is_extended_negative):
                 return True
             # Do not form a difference if it would completely cancel a

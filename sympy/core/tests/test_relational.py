@@ -1381,6 +1381,8 @@ def test_is_ge_le():
     assert is_ge(x + 1, x, Q.extended_real(x)) is None
     assert is_gt(x + 1, x, Q.real(x)) is True
     assert is_ge(x + 1, x, Q.real(x)) is True
+    assert is_ge(x, x, Q.extended_real(x)) is True
+    assert is_gt(x, x, Q.extended_real(x)) is False
 
     # test registration
     class PowTest(Expr):
