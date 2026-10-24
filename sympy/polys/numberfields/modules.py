@@ -618,7 +618,8 @@ class Module:
         d = gens[0].denom if n == 1 else ilcm(*[g.denom for g in gens])
         B = DomainMatrix.zeros((m, 0), ZZ).hstack(*[(d // g.denom) * g.col for g in gens])
         if hnf:
-            B = hermite_normal_form(B, D=hnf_modulus)
+            mod = hnf_modulus * d if hnf_modulus is not None else None
+            B = hermite_normal_form(B, D=mod)
         return self.submodule_from_matrix(B, denom=d)
 
     def submodule_from_matrix(self, B, denom=1):
@@ -1095,7 +1096,8 @@ class Submodule(Module, IntegerPowerable):
         a, b = m // d, m // e
         B = (a * self.matrix).hstack(b * other.matrix)
         if hnf:
-            B = hermite_normal_form(B, D=hnf_modulus)
+            mod = hnf_modulus * m if hnf_modulus is not None else None
+            B = hermite_normal_form(B, D=mod)
         return self.parent.submodule_from_matrix(B, denom=m)
 
     def __add__(self, other):

@@ -84,3 +84,12 @@ def test_AlgebraicField_integral_basis():
     assert B1 == [1, S.Half + alpha/2]
     assert B2 == [k.ext.field_element([1]),
                   k.ext.field_element([S.Half, S.Half])]
+
+def test_round_two_hnf_modulus_issue_30613():
+    from sympy import QQ, sqrt, cos, pi
+    #K5 discriminant crashed previously
+    K5 = QQ.algebraic_field(sqrt(2), sqrt(5))
+    assert K5.discriminant() == 1600
+    #Complex extension gave 0 previously
+    K_cos = QQ.algebraic_field(sqrt(2), 2*cos(2*pi/7))
+    assert K_cos.discriminant() == 1229312
