@@ -1,5 +1,6 @@
 """Exact and numerical high-order derivatives using Taylor coefficients."""
 
+from __future__ import annotations
 from sympy import (Derivative, Rational, Subs, Symbol, cos, factorial,
                    sin, sqrt, symbols)
 
