@@ -7,6 +7,7 @@ from sympy.core import EulerGamma, GoldenRatio
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
+from sympy.core.relational import Ne
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
@@ -162,6 +163,17 @@ def test_piecewise2():
     assert limit(func1, x, 0) == 1
     assert limit(func2, x, 0) == 0
     assert limit(func3, x, -1) == 2
+
+
+def test_issue_30249():
+    # a Piecewise branch whose condition does not depend on the limit
+    # variable must not be silently dropped by the leading-term machinery
+    a = Symbol('a')
+    assert limit(Piecewise((0, Ne(a, 0)), (x, True)), x, a, dir='+') == 0
+    assert limit(Piecewise((0, Ne(a, 0)), (x, True)), x, a, dir='-') == 0
+    # the limit stays conditional when the branches genuinely differ
+    assert limit(Piecewise((0, a > 0), (x, True)), x, a) == \
+        Piecewise((0, a > 0), (a, True))
 
 
 def test_basic5():

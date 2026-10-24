@@ -8,6 +8,7 @@ from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
@@ -252,6 +253,34 @@ class Limit(Expr):
 
         if e.has(*_illegal):
             return self
+
+        if isinstance(e, Piecewise) and all(not c.has(z) for _, c in e.args):
+            # When the branch conditions do not depend on the limit variable,
+            # the leading-term machinery below can silently drop an earlier
+            # branch whose condition is a free-symbol expression and return a
+            # limit that only reflects the default branch (issue #30249).
+            # Take the limit of every branch expression instead and keep the
+            # constant conditions; a default branch is only active where all
+            # previous conditions fail, so a symbol pinned by that context is
+            # substituted into its limit (e.g. ``Ne(a, 0)`` -> ``a == 0``).
+            from sympy.core.relational import Eq
+            prior_nots = []
+            newargs = []
+            for expr_i, cond_i in e.args:
+                if cond_i == S.false:
+                    continue
+                lim_i = limit(expr_i, z, z0, dir)
+                ctx = prior_nots + ([cond_i] if cond_i != S.true else [])
+                if len(ctx) == 1 and isinstance(ctx[0], Eq):
+                    a, b = ctx[0].args
+                    if a.is_Symbol and not b.has(a):
+                        lim_i = lim_i.subs(a, b)
+                    elif b.is_Symbol and not a.has(b):
+                        lim_i = lim_i.subs(b, a)
+                newargs.append((lim_i, cond_i))
+                if cond_i != S.true:
+                    prior_nots.append(~cond_i)
+            return Piecewise(*newargs)
 
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
