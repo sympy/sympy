@@ -24,8 +24,10 @@ from sympy.core.function import Subs
 from sympy.core.traversal import preorder_traversal
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
-
-
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from sympy.core.expr import Expr
 
 def finite_diff_weights(order, x_list, x0=S.One):
     """
@@ -172,7 +174,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
         raise ValueError("Non-integer order illegal")
     M = order
     N = len(x_list) - 1
-    delta = [[[0 for nu in range(N+1)] for n in range(N+1)] for
+    delta = [[[S.Zero for nu in range(N+1)] for n in range(N+1)] for
              m in range(M+1)]
     delta[0][0][0] = S.One
     c1 = S.One
@@ -194,7 +196,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     return delta
 
 
-def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
+def apply_finite_diff(order: int, x_list: Sequence[Expr | int | float], y_list: Sequence[Expr | int | float], x0: Expr = S.Zero) -> Expr:
     """
     Calculates the finite difference approximation of
     the derivative of requested order at ``x0`` from points
@@ -276,7 +278,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
 
     delta = finite_diff_weights(order, x_list, x0)
 
-    derivative = 0
+    derivative: Expr = S.Zero
     for nu in range(len(x_list)):
         derivative += delta[order][N][nu]*y_list[nu]
     return derivative
