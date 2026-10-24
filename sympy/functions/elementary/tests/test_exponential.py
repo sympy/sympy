@@ -824,3 +824,25 @@ def test_issue_18473():
     assert exp(x*log(sin(1/x)**2)).as_leading_term(x) == AccumBounds(0, 1)
     assert log(tan(1/x)**2).as_leading_term(x) == AccumBounds(-oo, oo)
     assert exp(2*x*(log(tan(1/x)**2))).as_leading_term(x) == AccumBounds(0, oo)
+
+
+def test_issue_28141():
+    x = Symbol('x', extended_real=True)
+    assert exp(x).is_extended_positive is None
+    assert exp(x).is_extended_nonnegative is True
+    assert exp(x).is_zero is None
+
+    y = Symbol('y', extended_negative=True)
+    assert exp(y).is_extended_positive is None
+    assert exp(y).is_extended_nonnegative is True
+    assert exp(y).is_zero is None
+
+    z = Symbol('z', real=True)
+    assert exp(z).is_extended_positive is True
+    assert exp(z).is_extended_nonnegative is True
+    assert exp(z).is_zero is False
+
+    w = Symbol('w', extended_positive=True)
+    assert exp(w).is_extended_positive is True
+    assert exp(w).is_extended_nonnegative is True
+    assert exp(w).is_zero is False
