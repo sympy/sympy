@@ -78,9 +78,10 @@ def test_symbol_sum_precedence_from_differences():
     h = Symbol('h')
     f = Function('f')
     expr = f(x + h) + f(x - h)
-    assert str(expr) == 'f(x - h) + f(x + h)' or (
-        'f(x + h)' in str(expr) and 'f(x - h)' in str(expr)
-        and 'f(h + x)' not in str(expr))
+    printed = str(expr)
+    assert 'f(x + h)' in printed
+    assert 'f(x - h)' in printed
+    assert 'f(h + x)' not in printed
 
     # Both orientations are present: retain the ordinary order of x + h.
     conflicting = f(x + h) + f(x - h) + f(h - x)
