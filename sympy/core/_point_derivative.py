@@ -130,6 +130,7 @@ def _subs_derivative_at_point(expr, variables, point):
         return None
     try:
         e = expr.expr.subs(replacements)
+        n = n.subs(replacements)
         return _derivative_at_point(e, x, x0, n)
     except (_TaylorNotSupported, ValueError, TypeError, ZeroDivisionError):
         return None
