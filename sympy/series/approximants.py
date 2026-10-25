@@ -262,7 +262,10 @@ def pade_approximant_gcdex(
     (Poly(2*x, x, domain='QQ'), Poly(2*x, x, domain='QQ'))
 
     ``num_cos11/denom_cos11 == 1``, and `1` does not match the taylor expansion
-    of ``cos(x)`` to second order in `x`.
+    of ``cos(x)`` to second order in `x`.  In that case the returned numerator
+    and denominator still obey the degree bounds, but the denominator vanishes
+    at `x = 0`, so after cancellation the returned rational function does not
+    match the series through order `m + n`.
 
     See also
     ========
@@ -287,15 +290,16 @@ def pade_approximant_gcdex(
 
     approximants = pade_approximants_gcdex(f, order = m + n)
 
-    numerator, denominator = next(approximants)
-    for next_numerator, next_denominator in approximants:
-        if next_numerator.degree() < m:
+    # The EEA yields exactly one convergent in this sequence that satisfies
+    # both degree bounds: for the first i with deg(r[i]) <= m, the identity
+    # deg(t[i]) + deg(r[i-1]) == m + n + 1 gives deg(t[i]) <= n.  The degree
+    # sequence can skip m, so a convergent with deg(r[i]) == m need not
+    # exist.  The first candidate qualifies when deg(f) <= m (this includes
+    # f = 0); otherwise the last remainder gcd(f, x**(m + n + 1)) has
+    # degree <= m.
+    for numerator, denominator in approximants:
+        if numerator.degree() <= m:
             return numerator, denominator
-
-        numerator, denominator = next_numerator, next_denominator
-
-    # if it hasnt returned yet, then numerator.degree() == m
-    return numerator, denominator
 
 
 @public
