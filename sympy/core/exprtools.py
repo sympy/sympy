@@ -1103,7 +1103,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     >>> from sympy.abc import x, y
 
     >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
-    y*(x + 1)*(x + y + 1)
+    y*(x + 1)*(1 + x + y)
     >>> gcd_terms(x/2 + 1)
     (x + 2)/2
     >>> gcd_terms(x/2 + 1, clear=False)
@@ -1113,16 +1113,16 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     >>> gcd_terms(x/2 + 1/x)
     (x**2 + 2)/(2*x)
     >>> gcd_terms(x/2 + 1/x, fraction=False)
-    (x + 2/x)/2
+    (2/x + x)/2
     >>> gcd_terms(x/2 + 1/x, fraction=False, clear=False)
-    x/2 + 1/x
+    1/x + x/2
 
     >>> gcd_terms(x/2/y + 1/x/y)
     (x**2 + 2)/(2*x*y)
     >>> gcd_terms(x/2/y + 1/x/y, clear=False)
     (x**2/2 + 1)/(x*y)
     >>> gcd_terms(x/2/y + 1/x/y, clear=False, fraction=False)
-    (x/2 + 1/x)/y
+    (1/x + x/2)/y
 
     The ``clear`` flag was ignored in this case because the returned
     expression was a rational expression, not a simple sum.
@@ -1282,7 +1282,7 @@ def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=Fals
     x*(8*(2*y + 1)**3 + 1)
     >>> A = Symbol('A', commutative=False)
     >>> factor_terms(x*A + x*A + x*y*A)
-    x*(y*A + 2*A)
+    x*(2*A + y*A)
 
     When ``clear`` is False, a rational will only be factored out of an
     Add expression if all terms of the Add have coefficients that are
@@ -1498,9 +1498,9 @@ def factor_nc(expr):
     >>> A = Symbol('A', commutative=False)
     >>> B = Symbol('B', commutative=False)
     >>> factor_nc((x**2 + 2*A*x + A**2).expand())
-    (x + A)**2
+    (A + x)**2
     >>> factor_nc(((x + A)*(x + B)).expand())
-    (x + A)*(x + B)
+    (A + x)*(B + x)
     """
     expr = sympify(expr)
     if not isinstance(expr, Expr) or not expr.args:
