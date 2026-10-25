@@ -301,6 +301,10 @@ def pade_approximant_gcdex(
         if numerator.degree() <= m:
             return numerator, denominator
 
+    raise RuntimeError(
+        "unreachable: the EEA should always produce a convergent with "
+        "deg(numerator) <= m")
+
 
 @public
 def pade_approximant(
