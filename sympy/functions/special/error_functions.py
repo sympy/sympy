@@ -701,7 +701,7 @@ class erf2(DefinedFunction):
     >>> erf2(x, oo)
     1 - erf(x)
     >>> erf2(x, -oo)
-    -erf(x) - 1
+    -1 - erf(x)
     >>> erf2(oo, y)
     erf(y) - 1
     >>> erf2(-oo, y)
@@ -1028,7 +1028,7 @@ class erf2inv(DefinedFunction):
 
     >>> from sympy import diff
     >>> diff(erf2inv(x, y), x)
-    exp(-x**2 + erf2inv(x, y)**2)
+    exp(erf2inv(x, y)**2 - x**2)
     >>> diff(erf2inv(x, y), y)
     sqrt(pi)*exp(erf2inv(x, y)**2)/2
 
@@ -1330,7 +1330,7 @@ class expint(DefinedFunction):
     >>> expint(0, z)
     exp(-z)/z
     >>> expint(-1, z)
-    exp(-z)/z + exp(-z)/z**2
+    exp(-z)/z**2 + exp(-z)/z
 
     At half-integers it reduces to error functions:
 
@@ -1342,7 +1342,7 @@ class expint(DefinedFunction):
 
     >>> from sympy import expand_func
     >>> expand_func(expint(5, z))
-    z**4*expint(1, z)/24 + (-z**3 + z**2 - 2*z + 6)*exp(-z)/24
+    (6 - 2*z + z**2 - z**3)*exp(-z)/24 + z**4*expint(1, z)/24
 
     The generalised exponential integral is essentially equivalent to the
     incomplete gamma function:
@@ -1355,9 +1355,9 @@ class expint(DefinedFunction):
 
     >>> from sympy import exp_polar, pi, I
     >>> expint(4, z*exp_polar(2*pi*I))
-    I*pi*z**3/3 + expint(4, z)
+    expint(4, z) + I*pi*z**3/3
     >>> expint(nu, z*exp_polar(2*pi*I))
-    z**(nu - 1)*(exp(2*I*pi*nu) - 1)*gamma(1 - nu) + expint(nu, z)
+    expint(nu, z) + z**(nu - 1)*(exp(2*I*pi*nu) - 1)*gamma(1 - nu)
 
     See Also
     ========
@@ -1873,8 +1873,7 @@ class Si(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Si(z).rewrite(expint)
-    -I*(-expint(1, z*exp_polar(-I*pi/2))/2 +
-         expint(1, z*exp_polar(I*pi/2))/2) + pi/2
+    pi/2 - I*(expint(1, z*exp_polar(I*pi/2))/2 - expint(1, z*exp_polar(-I*pi/2))/2)
 
     It can be rewritten in the form of sinc function (by definition):
 
@@ -2748,7 +2747,7 @@ class owens_t(DefinedFunction):
     argument has magnitude below 1:
 
     >>> owens_t(h, 3).expand(func=True)
-    -erfc(sqrt(2)*h/2)*erfc(3*sqrt(2)*h/2)/4 + erfc(sqrt(2)*h/2)/4 + erfc(3*sqrt(2)*h/2)/4 - owens_t(3*h, 1/3)
+    erfc(sqrt(2)*h/2)/4 + erfc(3*sqrt(2)*h/2)/4 - owens_t(3*h, 1/3) - erfc(sqrt(2)*h/2)*erfc(3*sqrt(2)*h/2)/4
 
     Owen's original series (convergent for $|a| \le 1$) is available
     through ``rewrite(Sum)``:
