@@ -592,7 +592,7 @@ def idiff(eq, y, x, n=1):
     ``y`` in a list.
 
     >>> idiff(x + a + y, [y, a], x)
-    -Derivative(a, x) - 1
+    -1 - Derivative(a, x)
 
     See Also
     ========
