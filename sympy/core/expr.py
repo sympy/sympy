@@ -1243,6 +1243,7 @@ class Expr(Basic, EvalfMixin):
             if (len(add_args) == 2
                 and isinstance(add_args[0], Number)
                 and add_args[0].is_negative
+                and add_args[1].as_coefficient(S.ImaginaryUnit) is None
                 and not add_args[1].could_extract_minus_sign()):
                 # Keep simple subtraction as x - 2, not -2 + x.
                 return add_args[::-1]
