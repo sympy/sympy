@@ -116,7 +116,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     by using factoring.
 
     >>> separatevars(x + x*y - 3*x**2)
-    -x*(3*x - y - 1)
+    -x*(-1 + 3*x - y)
 
     If the expression is not separable then expr is returned unchanged
     or (if dict=True) then None is returned.
@@ -380,11 +380,11 @@ def signsimp(expr, evaluate=None):
     >>> i = symbols('i', odd=True)
     >>> n = -1 + 1/x
     >>> n/x/(-n)**2 - 1/n/x
-    (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
+    (1/x - 1)/(x*(1 - 1/x)**2) - 1/(x*(1/x - 1))
     >>> signsimp(_)
     0
     >>> x*n + x*-n
-    x*(-1 + 1/x) + x*(1 - 1/x)
+    x*(1 - 1/x) + x*(1/x - 1)
     >>> signsimp(_)
     0
 
@@ -397,7 +397,7 @@ def signsimp(expr, evaluate=None):
     exponent into canonical form:
 
     >>> n**i
-    (-1 + 1/x)**i
+    (1/x - 1)**i
 
     By default, signsimp does not leave behind any hollow simplification:
     if making an Add canonical wrt sign didn't change the expression, the
@@ -464,7 +464,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     >>> from sympy.abc import x, y
     >>> a = (x + x**2)/(x*sin(y)**2 + x*cos(y)**2)
     >>> a
-    (x**2 + x)/(x*sin(y)**2 + x*cos(y)**2)
+    (x + x**2)/(x*sin(y)**2 + x*cos(y)**2)
     >>> simplify(a)
     x + 1
 
@@ -473,7 +473,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     >>> from sympy import trigsimp, cancel
     >>> trigsimp(a)
-    (x**2 + x)/x
+    (x + x**2)/x
     >>> cancel(_)
     x + 1
 
@@ -559,7 +559,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     >>> 15./8 > 1.7 # 1.7 is the default ratio
     True
     >>> simplify(g, measure=my_measure)
-    -log(a)*log(b) + log(a) + log(b)
+    log(a) + log(b) - log(a)*log(b)
 
     Note that because ``simplify()`` internally tries many different
     simplification strategies and then compares them using the measure
@@ -1012,7 +1012,7 @@ def logcombine(expr, force=False):
     >>> from sympy import Symbol, symbols, log, logcombine, I
     >>> from sympy.abc import a, x, y, z
     >>> logcombine(a*log(x) + log(y) - log(z))
-    a*log(x) + log(y) - log(z)
+    log(y) - log(z) + a*log(x)
     >>> logcombine(a*log(x) + log(y) - log(z), force=True)
     log(x**a*y/z)
     >>> x,y,z = symbols('x,y,z', positive=True)
@@ -1384,7 +1384,7 @@ def nthroot(expr, n, max_len=4, prec=15):
     >>> from sympy.simplify.simplify import nthroot
     >>> from sympy import sqrt
     >>> nthroot(90 + 34*sqrt(7), 3)
-    sqrt(7) + 3
+    3 + sqrt(7)
 
     """
     expr = sympify(expr)
@@ -1455,9 +1455,9 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, pi
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
-    -2 + 2*GoldenRatio
+    2*GoldenRatio - 2
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-    1/2 - I*sqrt(sqrt(5)/10 + 1/4)
+    1/2 - I*sqrt(1/4 + sqrt(5)/10)
     >>> nsimplify(I**I, [pi])
     exp(-pi/2)
     >>> nsimplify(pi, tolerance=0.01)
