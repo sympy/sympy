@@ -1245,7 +1245,7 @@ class Derivative(Expr):
 
     >>> eq = f(x)*g(y)
     >>> eq.subs(f(x), x*y).diff(x, y).doit()
-    y*Derivative(g(y), y) + g(y)
+    g(y) + y*Derivative(g(y), y)
     >>> eq.diff(x, y).subs(f(x), x*y).doit()
     y*Derivative(g(y), y)
 
@@ -1927,14 +1927,14 @@ class Derivative(Expr):
         >>> x, h = symbols('x h')
         >>> f = Function('f')
         >>> f(x).diff(x).as_finite_difference()
-        -f(x - 1/2) + f(x + 1/2)
+        f(x + 1/2) - f(x - 1/2)
 
         The default step size and number of points are 1 and
         ``order + 1`` respectively. We can change the step size by
         passing a symbol as a parameter:
 
         >>> f(x).diff(x).as_finite_difference(h)
-        -f(-h/2 + x)/h + f(h/2 + x)/h
+        f(h/2 + x)/h - f(x - h/2)/h
 
         We can also specify the discretized values to be used in a
         sequence:
@@ -1957,21 +1957,21 @@ class Derivative(Expr):
 
         >>> dx = Function('dx')
         >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x-h)
-        -f(-h + x - dx(-h + x)/2)/dx(-h + x) + f(-h + x + dx(-h + x)/2)/dx(-h + x)
+        f(-h + x + dx(x - h)/2)/dx(x - h) - f(-h + x - dx(x - h)/2)/dx(x - h)
 
         Partial derivatives are also supported:
 
         >>> y = Symbol('y')
         >>> d2fdxdy=f(x,y).diff(x,y)
         >>> d2fdxdy.as_finite_difference(wrt=x)
-        -Derivative(f(x - 1/2, y), y) + Derivative(f(x + 1/2, y), y)
+        Derivative(f(x + 1/2, y), y) - Derivative(f(x - 1/2, y), y)
 
         We can apply ``as_finite_difference`` to ``Derivative`` instances in
         compound expressions using ``replace``:
 
         >>> (1 + 42**f(x).diff(x)).replace(lambda arg: arg.is_Derivative,
         ...     lambda arg: arg.as_finite_difference())
-        42**(-f(x - 1/2) + f(x + 1/2)) + 1
+        42**(f(x + 1/2) - f(x - 1/2)) + 1
 
 
         See also
@@ -2179,7 +2179,7 @@ class Lambda(Expr):
         >>> Lambda((x, y), x + y).curry()
         Lambda(x, Lambda(y, x + y))
         >>> Lambda((x, y, z), x*y + z).curry()
-        Lambda(x, Lambda(y, Lambda(z, x*y + z)))
+        Lambda(x, Lambda(y, Lambda(z, z + x*y)))
         >>> Lambda(x, x**2).curry()
         Lambda(x, x**2)
 
@@ -2785,7 +2785,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     >>> (x + y).expand(complex=True)
     re(x) + re(y) + I*im(x) + I*im(y)
     >>> cos(x).expand(complex=True)
-    -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
+    cos(re(x))*cosh(im(x)) - I*sin(re(x))*sinh(im(x))
 
     Note that this is just a wrapper around ``as_real_imag()``.  Most objects
     that wish to redefine ``_eval_expand_complex()`` should consider
@@ -2806,7 +2806,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     Do trigonometric expansions.
 
     >>> cos(x + y).expand(trig=True)
-    -sin(x)*sin(y) + cos(x)*cos(y)
+    cos(x)*cos(y) - sin(x)*sin(y)
     >>> sin(2*x).expand(trig=True)
     2*sin(x)*cos(x)
 
@@ -2880,19 +2880,19 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
       The parts of a rational expression can be targeted::
 
         >>> expand((x + y)*y/x/(x + 1), frac=True)
-        (x*y + y**2)/(x**2 + x)
+        (x*y + y**2)/(x + x**2)
         >>> expand((x + y)*y/x/(x + 1), numer=True)
         (x*y + y**2)/(x*(x + 1))
         >>> expand((x + y)*y/x/(x + 1), denom=True)
-        y*(x + y)/(x**2 + x)
+        y*(x + y)/(x + x**2)
 
     - The ``modulus`` meta-hint can be used to reduce the coefficients of an
       expression post-expansion::
 
         >>> expand((3*x + 1)**2)
-        9*x**2 + 6*x + 1
+        1 + 6*x + 9*x**2
         >>> expand((3*x + 1)**2, modulus=5)
-        4*x**2 + x + 1
+        1 + x + 4*x**2
 
     - Either ``expand()`` the function or ``.expand()`` the method can be
       used.  Both are equivalent::
@@ -3042,7 +3042,7 @@ def expand_multinomial(expr, deep=True):
     >>> from sympy import symbols, expand_multinomial, exp
     >>> x, y = symbols('x y', positive=True)
     >>> expand_multinomial((x + exp(x + 1))**2)
-    x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
+    exp(2*x + 2) + x**2 + 2*x*exp(x + 1)
 
     """
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,
@@ -3141,7 +3141,7 @@ def expand_complex(expr, deep=True):
     >>> from sympy import expand_complex, exp, sqrt, I
     >>> from sympy.abc import z
     >>> expand_complex(exp(z))
-    I*exp(re(z))*sin(im(z)) + exp(re(z))*cos(im(z))
+    exp(re(z))*cos(im(z)) + I*exp(re(z))*sin(im(z))
     >>> expand_complex(sqrt(I))
     sqrt(2)/2 + sqrt(2)*I/2
 
@@ -3326,7 +3326,7 @@ def count_ops(expr, visual=False):
 
     >>> eq=x*(1 + x*(2 + x*(3 + x)))
     >>> count_ops(eq.expand(), visual=True) - count_ops(eq, visual=True)
-    -MUL + 3*POW
+    3*POW - MUL
 
     The count_ops function also handles iterables:
 
@@ -3494,7 +3494,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     >>> from sympy import nfloat, cos, pi, sqrt
     >>> from sympy.abc import x, y
     >>> nfloat(x**4 + x/2 + cos(pi/3) + 1 + sqrt(y))
-    x**4 + 0.5*x + sqrt(y) + 1.5
+    1.5 + 0.5*x + sqrt(y) + x**4
     >>> nfloat(x**4 + sqrt(y), exponent=True)
     x**4.0 + y**0.5
 
