@@ -213,7 +213,7 @@ class fibonacci(DefinedFunction):
     >>> [fibonacci(x) for x in range(11)]
     [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
     >>> fibonacci(5, Symbol('t'))
-    t**4 + 3*t**2 + 1
+    1 + 3*t**2 + t**4
 
     See Also
     ========
@@ -359,7 +359,7 @@ class tribonacci(DefinedFunction):
     >>> [tribonacci(x) for x in range(11)]
     [0, 1, 1, 2, 4, 7, 13, 24, 44, 81, 149]
     >>> tribonacci(5, Symbol('t'))
-    t**8 + 3*t**5 + 3*t**2
+    3*t**2 + 3*t**5 + t**8
 
     See Also
     ========
@@ -529,7 +529,7 @@ class bernoulli(DefinedFunction):
     >>> bernoulli(1000001)
     0
     >>> bernoulli(3, x)
-    x**3 - 3*x**2/2 + x/2
+    x/2 - 3*x**2/2 + x**3
 
     See Also
     ========
@@ -687,7 +687,7 @@ class bell(DefinedFunction):
     >>> bell(30)
     846749014511809332450147
     >>> bell(4, Symbol('t'))
-    t**4 + 6*t**3 + 7*t**2 + t
+    t + 7*t**2 + 6*t**3 + t**4
     >>> bell(6, 2, symbols('x:6')[1:])
     6*x1*x5 + 15*x2*x4 + 10*x3**2
 
@@ -851,14 +851,13 @@ class harmonic(DefinedFunction):
     harmonic(1/3)
     >>> He = expand_func(H)
     >>> He
-    -log(6) - sqrt(3)*pi/6 + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1))
-                           + 3*Sum(1/(3*_k + 1), (_k, 0, 0))
+    -sqrt(3)*pi/6 - log(6) + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1)) + 3*Sum(1/(3*_k + 1), (_k, 0, 0))
     >>> He.doit()
-    -log(6) - sqrt(3)*pi/6 - log(sqrt(3)/2) + 3
+    3 - sqrt(3)*pi/6 - log(6) - log(sqrt(3)/2)
     >>> H = harmonic(25/S(7))
     >>> He = simplify(expand_func(H).doit())
     >>> He
-    log(sin(2*pi/7)**(2*cos(16*pi/7))/(14*sin(pi/7)**(2*cos(pi/7))*cos(pi/14)**(2*sin(pi/14)))) + pi*tan(pi/14)/2 + 30247/9900
+    30247/9900 + pi*tan(pi/14)/2 + log(sin(2*pi/7)**(2*cos(16*pi/7))/(14*sin(pi/7)**(2*cos(pi/7))*cos(pi/14)**(2*sin(pi/14))))
     >>> He.n(40)
     1.983697455232980674869851942390639915940
     >>> harmonic(25/S(7)).n(40)
@@ -876,21 +875,20 @@ class harmonic(DefinedFunction):
     polygamma(0, n + 1) + EulerGamma
 
     >>> harmonic(n,3).rewrite(polygamma)
-    polygamma(2, n + 1)/2 + zeta(3)
+    zeta(3) + polygamma(2, n + 1)/2
 
     >>> simplify(harmonic(n,m).rewrite(polygamma))
-    Piecewise((polygamma(0, n + 1) + EulerGamma, Eq(m, 1)),
-    (-(-1)**m*polygamma(m - 1, n + 1)/factorial(m - 1) + zeta(m), True))
+    Piecewise((polygamma(0, n + 1) + EulerGamma, Eq(m, 1)), (zeta(m) - (-1)**m*polygamma(m - 1, n + 1)/factorial(m - 1), True))
 
     Integer offsets in the argument can be pulled out:
 
     >>> from sympy import expand_func
 
     >>> expand_func(harmonic(n+4))
-    harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
+    1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1) + harmonic(n)
 
     >>> expand_func(harmonic(n-4))
-    harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
+    -1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n + harmonic(n)
 
     Some limits can be computed as well:
 
@@ -1125,9 +1123,9 @@ class euler(DefinedFunction):
     >>> euler(2, x)
     x**2 - x
     >>> euler(3, x)
-    x**3 - 3*x**2/2 + 1/4
+    1/4 - 3*x**2/2 + x**3
     >>> euler(4, x)
-    x**4 - 2*x**3 + x
+    x - 2*x**3 + x**4
 
     >>> euler(12, S.Half)
     2702765/4096
@@ -1285,7 +1283,7 @@ class catalan(DefinedFunction):
     continuous real function in n:
 
     >>> diff(catalan(n), n)
-    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
+    (log(4) + polygamma(0, n + 1/2) - polygamma(0, n + 2))*catalan(n)
 
     As a more advanced example consider the following ratio
     between consecutive numbers:
@@ -1418,7 +1416,7 @@ class genocchi(DefinedFunction):
     0
     >>> x = Symbol('x')
     >>> genocchi(4, x)
-    -4*x**3 + 6*x**2 - 1
+    -1 + 6*x**2 - 4*x**3
 
     See Also
     ========
