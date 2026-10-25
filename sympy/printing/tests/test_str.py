@@ -95,6 +95,9 @@ def test_binary_add_presentation():
     assert str(x + S.Half) == 'x + 1/2'
     assert str(x - S.Half) == 'x - 1/2'
     assert str(1 - x) == '1 - x'
+    assert str(-6 - x) == '-x - 6'
+    assert str(-6 - 2*x) == '-2*x - 6'
+    assert str(-6 - sin(x)) == '-sin(x) - 6'
     assert str(-10 + 30*I) == '-10 + 30*I'
     assert str(-S.Half + sqrt(3)*I/2) == '-1/2 + sqrt(3)*I/2'
     from sympy.discrete.convolutions import convolution_fwht
