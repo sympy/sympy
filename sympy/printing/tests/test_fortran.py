@@ -873,3 +873,15 @@ def test_issue_25435():
 
     x = Symbol('x')
     assert fcode(exp(x + 1), source_format='free') == "exp(x + 1)"
+
+
+def test_fcode_preserves_symbolic_function_args():
+    x = symbols('x')
+    expr = sin(Mul(2.0, x - 1, evaluate=False))
+    assert fcode(expr, source_format='free') == (
+        'sin(2.0d0*(x - 1))'
+    )
+    expr2 = sin(Mul(33.93669377311689, x - 0.995, evaluate=False))
+    assert fcode(expr2, source_format='free') == (
+        'sin(33.9366937731169d0*(x - 0.995d0))'
+    )

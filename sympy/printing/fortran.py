@@ -298,11 +298,14 @@ class FCodePrinter(CodePrinter):
 
     def _eval_function(self, expr):
         prec = self._settings['precision']
-        args = [N(a, prec) for a in expr.args]
+        args = [
+            N(a, prec) if not a.free_symbols else a
+            for a in expr.args
+        ]
         return expr.func(*args)
 
     def parenthesize(self, item, level, strict=False):
-        if isinstance(item, Function) and not item.free_symbols:
+        if isinstance(item, Function):
             item = self._eval_function(item)
         return super().parenthesize(item, level, strict)
 
@@ -310,10 +313,7 @@ class FCodePrinter(CodePrinter):
         # All constant function args are evaluated as floats
         eval_expr = self._eval_function(expr)
         if not isinstance(eval_expr, Function):
-            if not expr.free_symbols:
-                return self._print(eval_expr)
-            else:
-                return CodePrinter._print_Function(self, expr)
+            return self._print(eval_expr)
         else:
             return CodePrinter._print_Function(self, eval_expr)
 
