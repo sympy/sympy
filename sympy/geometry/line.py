@@ -1152,7 +1152,7 @@ class Line(LinearEntity):
     >>> L.points
     (Point2D(2, 3), Point2D(3, 5))
     >>> L.equation()
-    -2*x + y + 1
+    1 - 2*x + y
     >>> L.coefficients
     (-2, 1, 1)
 
@@ -2013,7 +2013,7 @@ class Line2D(LinearEntity2D, Line):
     >>> L.points
     (Point2D(2, 3), Point2D(3, 5))
     >>> L.equation()
-    -2*x + y + 1
+    1 - 2*x + y
     >>> L.coefficients
     (-2, 1, 1)
 
@@ -2143,7 +2143,7 @@ class Line2D(LinearEntity2D, Line):
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
         >>> l1.equation()
-        -3*x + 4*y + 3
+        3 - 3*x + 4*y
 
         """
         x = _symbol(x, real=True)
@@ -2576,7 +2576,7 @@ class Line3D(LinearEntity3D, Line):
         >>> p1, p2 = Point3D(1, 0, 0), Point3D(5, 3, 0)
         >>> l1 = Line3D(p1, p2)
         >>> eq = l1.equation(x, y, z); eq
-        (-3*x + 4*y + 3, z)
+        (3 - 3*x + 4*y, z)
         >>> solve(eq.subs(z, 0), (x, y, z))
         {x: 4*y/3 + 1}
         """
