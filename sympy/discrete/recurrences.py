@@ -67,7 +67,7 @@ def linrec(coeffs, init, n):
     34*x + 55*y
 
     >>> linrec(coeffs=[x, y], init=[0, 1], n=5)
-    x**2*y + x*(x**3 + 2*x*y) + y**2
+    x*(2*x*y + x**3) + y**2 + x**2*y
 
     >>> linrec(coeffs=[1, 2, 3, 0, 0, 4], init=[x, y, z], n=16)
     13576*x + 5676*y + 2356*z
