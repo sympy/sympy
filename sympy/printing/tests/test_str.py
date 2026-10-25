@@ -96,6 +96,13 @@ def test_binary_add_presentation():
     assert str(x - S.Half) == 'x - 1/2'
     assert str(1 - x) == '1 - x'
     assert str(-10 + 30*I) == '-10 + 30*I'
+    assert str(-S.Half + sqrt(3)*I/2) == '-1/2 + sqrt(3)*I/2'
+    from sympy.discrete.convolutions import convolution_fwht
+    assert str(convolution_fwht([2, 5 + 4*I, 7], [6*I, 7, 3 + 4*I])) == (
+        '[56 + 68*I, -10 + 30*I, 6 + 50*I, 48 + 32*I]')
+    from sympy.polys.rootoftools import rootof
+    assert str([rootof(x**3 - 1, i) for i in range(3)]) == (
+        '[1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]')
     assert str(56 + 68*I) == '56 + 68*I'
     assert str(x + 1) == 'x + 1'
     assert str(g(x + 1) - g(x)) == 'g(x + 1) - g(x)'
