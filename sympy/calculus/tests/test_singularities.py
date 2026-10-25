@@ -4,7 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.function import Lambda
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.trigonometric import sec, csc, tan
+from sympy.functions.elementary.trigonometric import sec, csc, tan, sin
 from sympy.functions.elementary.hyperbolic import (coth, sech,
                                                    atanh, asech, acoth, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -62,6 +62,7 @@ def test_singularities():
     assert singularities((x**2 - 4)**(x - 1), x) == FiniteSet(-2)
     assert singularities((x - 2)**(1 - x), x) == FiniteSet(2)
     assert singularities((x - 2)**(x - 2), x) == S.EmptySet
+    assert 0 in singularities(sin(x)**(x - 1), x, S.Reals)
 
 
 def test_is_increasing():

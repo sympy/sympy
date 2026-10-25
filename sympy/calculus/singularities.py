@@ -27,7 +27,6 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
 from sympy.functions.elementary.hyperbolic import (
     sech, csch, coth, tanh, cosh, asech, acsch, atanh, acoth)
-from sympy.sets.sets import FiniteSet
 from sympy.utilities.misc import filldedent
 
 
@@ -125,12 +124,9 @@ def singularities(
             if i.exp.is_negative:
                 sings += solveset(i.base, symbol, domain)
             elif symbol in i.exp.free_symbols:
-                base_roots = solveset(i.base, symbol, domain)
-                if base_roots.is_FiniteSet:
-                    for r in base_roots:
-                        exp_val = i.exp.subs(symbol, r)
-                        if exp_val.is_extended_negative:
-                            sings += FiniteSet(r)
+                roots = solveset(i.base, symbol, domain)
+                negative = solveset(i.exp < 0, symbol, domain)
+                sings += roots.intersect(negative)
         for i in expression.atoms(log, asech, acsch):
             sings += solveset(i.args[0], symbol, domain)
         for i in expression.atoms(atanh, acoth):
