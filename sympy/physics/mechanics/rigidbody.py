@@ -266,7 +266,7 @@ class RigidBody(BodyBase):
         >>> inertia_tuple = (I, P)
         >>> B = RigidBody('B', P, b, m, inertia_tuple)
         >>> B.kinetic_energy(N)
-        m*v**2/2 + omega**2/2
+        omega**2/2 + m*v**2/2
 
         """
 
