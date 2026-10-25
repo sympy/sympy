@@ -137,13 +137,13 @@ class AlgebraicField(
     >>> xk * yk  # doctest: +SKIP
     ANP([17, 30], [1, 0, -2], QQ)
     >>> K.to_sympy(xk * yk)
-    17*sqrt(2) + 30
+    30 + 17*sqrt(2)
     >>> K.to_sympy(xk + yk)
     5 + 7*sqrt(2)
     >>> K.to_sympy(xk ** 2)
-    24*sqrt(2) + 41
+    41 + 24*sqrt(2)
     >>> K.to_sympy(xk / yk)
-    sqrt(2)/14 + 9/7
+    9/7 + sqrt(2)/14
 
     Any expression representing an algebraic number can be used to generate
     a :ref:`QQ(a)` domain provided its `minimal polynomial`_ can be computed.
@@ -156,9 +156,9 @@ class AlgebraicField(
     >>> g.is_algebraic
     True
     >>> minpoly(g, x)
-    x**2 + x + 1
+    1 + x + x**2
     >>> factor(x**3 - 1, extension=g)
-    (x - 1)*(x - exp(2*I*pi/3))*(x + 1 + exp(2*I*pi/3))
+    (x - 1)*(x - exp(2*I*pi/3))*(1 + exp(2*I*pi/3) + x)
 
     It is also possible to make an algebraic field from multiple extension
     elements.
@@ -182,9 +182,9 @@ class AlgebraicField(
 
     >>> from sympy import primitive_element
     >>> primitive_element([sqrt(2), sqrt(3)], x)
-    (x**4 - 10*x**2 + 1, [1, 1])
+    (1 - 10*x**2 + x**4, [1, 1])
     >>> minpoly(sqrt(2) + sqrt(3), x)
-    x**4 - 10*x**2 + 1
+    1 - 10*x**2 + x**4
 
     The extension elements that generate the domain can be accessed from the
     domain using the :py:attr:`~.ext` and :py:attr:`~.orig_ext` attributes as
@@ -234,7 +234,7 @@ class AlgebraicField(
     >>> K
     QQ<exp(2*I*pi/7)>
     >>> K.primes_above(11)
-    [(11, _0**3 + 5*_0**2 + 4*_0 - 1), (11, _0**3 - 4*_0**2 - 5*_0 - 1)]
+    [(11, -1 + 4*_0 + 5*_0**2 + _0**3), (11, -1 - 5*_0 - 4*_0**2 + _0**3)]
 
     The Galois group of the Galois closure of the field can be computed (when
     the minimal polynomial of the field is of sufficiently small degree).
