@@ -267,7 +267,7 @@ SI.set_quantity_dimension(lightyear, length)
 SI.set_quantity_scale_factor(lightyear, speed_of_light*julian_year)
 
 SI.set_quantity_dimension(astronomical_unit, length)
-SI.set_quantity_scale_factor(astronomical_unit, 149597870691*meter)
+SI.set_quantity_scale_factor(astronomical_unit, 149597870700*meter)
 
 SI.set_quantity_dimension(nautical_mile, length)
 SI.set_quantity_scale_factor(nautical_mile, 1852*meter)

@@ -327,11 +327,10 @@ dHg0 = 13.5951  # approx value at 0 C
 mmHg = Quantity("mmHg")
 torr = Quantity("torr")
 
+torr.set_global_relative_scale_factor(Rational(1, 760), atmosphere)
 atmosphere.set_global_relative_scale_factor(101325, pascal)
 bar.set_global_relative_scale_factor(100, kPa)
 pound.set_global_relative_scale_factor(Rational(45359237, 100000000), kg)
-torr.set_global_relative_scale_factor(Rational(1, 760), atmosphere)
-mmHg.set_global_relative_scale_factor(Rational(1, 760), atmosphere)
 
 mmu = mmus = milli_mass_unit = Quantity("milli_mass_unit")
 
