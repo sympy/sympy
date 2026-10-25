@@ -111,11 +111,11 @@ def _separate_sq(p):
     >>> from sympy.polys.numberfields.minpoly import _separate_sq
     >>> p= -x + sqrt(2) + sqrt(3) + sqrt(7)
     >>> p = _separate_sq(p); p
-    -x**2 + 2*sqrt(3)*x + 2*sqrt(7)*x - 2*sqrt(21) - 8
+    -8 - 2*sqrt(21) + 2*sqrt(3)*x + 2*sqrt(7)*x - x**2
     >>> p = _separate_sq(p); p
-    -x**4 + 4*sqrt(7)*x**3 - 32*x**2 + 8*sqrt(7)*x + 20
+    20 + 8*sqrt(7)*x - 32*x**2 + 4*sqrt(7)*x**3 - x**4
     >>> p = _separate_sq(p); p
-    -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
+    -400 + 1728*x**2 - 536*x**4 + 48*x**6 - x**8
 
     """
     def is_sqrt(expr):
@@ -177,7 +177,7 @@ def _minimal_polynomial_sq(p, n, x):
     >>> from sympy.abc import x
     >>> q = 1 + sqrt(2) + sqrt(3)
     >>> _minimal_polynomial_sq(q, 3, x)
-    x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
+    -8 + 16*x**3 - 4*x**6 - 4*x**9 + x**12
 
     """
     p = sympify(p)
@@ -237,7 +237,7 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
     >>> q1 = sqrt(y)
     >>> q2 = 1 / y
     >>> _minpoly_op_algebraic_element(Add, q1, q2, x, QQ.frac_field(y))
-    x**2*y**2 - 2*x*y - y**3 + 1
+    1 - 2*x*y - y**3 + x**2*y**2
 
     References
     ==========
@@ -540,9 +540,9 @@ def _minpoly_compose(ex, x, dom):
     >>> from sympy import minimal_polynomial, sqrt, Rational
     >>> from sympy.abc import x, y
     >>> minimal_polynomial(sqrt(2) + 3*Rational(1, 3), x, compose=True)
-    x**2 - 2*x - 1
+    -1 - 2*x + x**2
     >>> minimal_polynomial(sqrt(y) + 1/y, x, compose=True)
-    x**2*y**2 - 2*x*y - y**3 + 1
+    1 - 2*x*y - y**3 + x**2*y**2
 
     """
     if ex.is_Rational:
@@ -669,9 +669,9 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
     >>> minimal_polynomial(sqrt(2), x, domain=QQ.algebraic_field(sqrt(2)))
     x - sqrt(2)
     >>> minimal_polynomial(sqrt(2) + sqrt(3), x)
-    x**4 - 10*x**2 + 1
+    1 - 10*x**2 + x**4
     >>> minimal_polynomial(solve(x**3 + x + 3)[0], x)
-    x**3 + x + 3
+    3 + x + x**3
     >>> minimal_polynomial(sqrt(y), x)
     x**2 - y
 
@@ -726,7 +726,7 @@ def _minpoly_groebner(ex, x, cls):
     >>> from sympy import minimal_polynomial, sqrt, Rational
     >>> from sympy.abc import x
     >>> minimal_polynomial(sqrt(2) + 3*Rational(1, 3), x, compose=False)
-    x**2 - 2*x - 1
+    -1 - 2*x + x**2
 
     """
 
