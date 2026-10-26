@@ -1159,7 +1159,7 @@ class Expr(Basic, EvalfMixin):
             for i, arg in enumerate(args):
                 if index is not None and i == index % len(args) and arg.is_Integer:
                     result.append((default_sort_key(abs(arg), order=order),
-                                   bool(arg.is_negative)))
+                                   bool(arg < 0)))
                 else:
                     result.append((default_sort_key(arg, order=order), False))
             return tuple(result)
@@ -1170,7 +1170,7 @@ class Expr(Basic, EvalfMixin):
         def coeff_sort_key(term):
             re, im = term[1][0]
             factors = im or re
-            return bool(im), bool(factors[0].is_nonnegative), default_sort_key(factors)
+            return bool(im), bool(factors[0] >= 0), default_sort_key(factors)
 
         return (explicit_i_key, monom_sort_key, nc_sort_key,
                 function_type_key, function_args_key, coeff_sort_key), reverse
@@ -1242,8 +1242,8 @@ class Expr(Basic, EvalfMixin):
             add_args = sorted(Add.make_args(self), key=key)
             if (len(add_args) == 2
                 and isinstance(add_args[0], Number)
-                and add_args[0].is_negative
-                and add_args[1].as_coefficient(S.ImaginaryUnit) is None):
+                and add_args[0] < 0
+                and S.ImaginaryUnit not in Mul.make_args(add_args[1])):
                 # Put the symbolic term first in negative sums, too:
                 # -6 - x should read -x - 6, not -6 - x.
                 return add_args[::-1]
@@ -1253,8 +1253,9 @@ class Expr(Basic, EvalfMixin):
                 mul_args = sorted(Mul.make_args(add_args[1]), key=key)
                 if (len(mul_args) == 2
                     and isinstance(mul_args[0], Number)
-                    and add_args[0].is_positive
-                    and mul_args[0].is_negative):
+                    and (add_args[0] > 0 if isinstance(add_args[0], Number)
+                         else add_args[0].is_positive)
+                    and mul_args[0] < 0):
                     return add_args
 
         keys, reverse = self._parse_order(order)
