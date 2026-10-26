@@ -89,7 +89,7 @@ known_functions = {
     "mathieusprime": [(lambda *x: True, "MathieuSPrime")],
     "stieltjes": [(lambda x: True, "StieltjesGamma")],
     "elliptic_e": [(lambda *x: True, "EllipticE")],
-    "elliptic_f": [(lambda *x: True, "EllipticE")],
+    "elliptic_f": [(lambda *x: True, "EllipticF")],
     "elliptic_k": [(lambda x: True, "EllipticK")],
     "elliptic_pi": [(lambda *x: True, "EllipticPi")],
     "zeta": [(lambda *x: True, "Zeta")],
@@ -114,8 +114,6 @@ known_functions = {
     "hyper": [(lambda *x: True, "HypergeometricPFQ")],
     "meijerg": [(lambda *x: True, "MeijerG")],
     "appellf1": [(lambda *x: True, "AppellF1")],
-    "DiracDelta": [(lambda x: True, "DiracDelta")],
-    "Heaviside": [(lambda x: True, "HeavisideTheta")],
     "KroneckerDelta": [(lambda *x: True, "KroneckerDelta")],
     "sqrt": [(lambda x: True, "Sqrt")],  # For automatic rewrites
 }
@@ -336,6 +334,14 @@ class MCodePrinter(CodePrinter):
         dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
         return "Hold[D[" + ', '.join(self.doprint(a) for a in [dexpr] + dvars) + "]]"
 
+    def _print_Heaviside(self, expr):
+        return "HeavisideTheta[%s]" % self.stringify(expr.pargs, ", ")
+
+    def _print_DiracDelta(self, expr):
+        if len(expr.args) == 1 or expr.args[1] == 0:
+            return "DiracDelta[%s]" % self._print(expr.args[0])
+        return "Derivative[%s][DiracDelta][%s]" % (
+            self._print(expr.args[1]), self._print(expr.args[0]))
 
     def _get_comment(self, text):
         return "(* {} *)".format(text)
