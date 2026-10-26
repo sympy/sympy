@@ -1827,21 +1827,21 @@ def test_as_terms_repeated_bases():
         assert gens == [x]
         assert terms[0][1][1] == (exponent,)
         assert Add(term, x**2, evaluate=False).as_ordered_terms() == [
-            term, x**2]
+            x**2, term]
 
 
 def test_as_ordered_terms():
 
     assert x.as_ordered_terms() == [x]
     assert (sin(x)**2*cos(x) + sin(x)*cos(x)**2 + 1).as_ordered_terms() \
-        == [sin(x)**2*cos(x), sin(x)*cos(x)**2, 1]
+        == [1, sin(x)**2*cos(x), sin(x)*cos(x)**2]
 
     args = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
     expr = Add(*args)
 
     assert expr.as_ordered_terms() == args
 
-    assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [4*pi*x*sqrt(3), 1]
+    assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [1, 4*pi*x*sqrt(3)]
 
     assert ( 2 + 3*I).as_ordered_terms() == [2, 3*I]
     assert (-2 + 3*I).as_ordered_terms() == [-2, 3*I]
@@ -1908,7 +1908,7 @@ def test_as_terms_without_numerical_evaluation():
 
     expr = x + pi
     with patch.object(Expr, 'evalf', side_effect=AssertionError):
-        assert expr.as_ordered_terms() == [x, pi]
+        assert expr.as_ordered_terms() == [pi, x]
         assert str(expr) == 'x + pi'
         assert list(ordered([expr, x + E]))
         assert (2 + 3*I).as_ordered_terms() == [2, 3*I]
