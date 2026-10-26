@@ -1864,6 +1864,16 @@ def test_as_ordered_terms():
     assert k.as_ordered_terms(data=True) == ([(k, (((S.One,), ()), (1,), ()))], [k]) # type: ignore
 
 
+def test_as_ordered_terms_with_Order():
+    e = Add(x**3, x*y**2, y**4, O(x**5), evaluate=False)
+    ordinary = Add(x**3, x*y**2, y**4, evaluate=False)
+
+    for order in (None, 'lex', 'grlex', 'rev-lex', 'rev-grlex'):
+        assert e.as_ordered_terms(order=order) == (
+            ordinary.as_ordered_terms(order=order) + [O(x**5)]
+        )
+
+
 def test_as_ordered_terms_simple_degree_and_generator_order():
     a, b, c, d = symbols('a b c d')
     theta = symbols('theta')

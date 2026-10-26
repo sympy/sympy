@@ -1268,7 +1268,7 @@ class Expr(Basic, EvalfMixin):
         else:
             _order, _terms = _sift_true_false(terms, lambda x: x[0].is_Order)
             sorted_terms = list(ordered(_terms, keys=keys, default=False))
-            if order is not None:
+            if reverse:
                 sorted_terms.reverse()
             order_terms = list(ordered(_order, keys=keys, default=False))
             order_terms.reverse()
