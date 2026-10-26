@@ -1136,7 +1136,7 @@ def test_simplify_exp_rational_exponents_7769_19380():
     assert sqrt(r).simplify() == sqrt(red)
 
     # 7769
-    # Black–Scholes option pricing formula
+    # Black-Scholes option pricing formula
     eq = S('''-sqrt(2)*K*exp(-r*(T - t))*exp(-(sigma*sqrt(T - t)/2 - log(
         S*exp(r*(T - t))/K)/(sigma*sqrt(T - t)))**2/2)/(2*sqrt(pi
         )*S*sigma*sqrt(T - t)) + sqrt(2)*exp(-(sigma*sqrt(T - t
