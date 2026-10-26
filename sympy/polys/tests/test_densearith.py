@@ -44,7 +44,8 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.specialpolys import f_polys, Symbol, Poly
-from sympy.polys.domains import FF, ZZ, QQ, CC
+from sympy.polys.domains import FF, ZZ, QQ, CC, EX
+from sympy.polys.rings import ring
 
 from sympy.testing.pytest import raises
 
@@ -280,6 +281,8 @@ def test_dup_rshift():
 
 
 def test_dup_abs():
+    assert dup_abs([CC(3, 4), CC.zero, CC(0, -2)], CC) == \
+        [CC.abs_domain(5), CC.abs_domain.zero, CC.abs_domain(2)]
     assert dup_abs([], ZZ) == []
     assert dup_abs([ZZ( 1)], ZZ) == [ZZ(1)]
     assert dup_abs([ZZ(-7)], ZZ) == [ZZ(7)]
@@ -293,6 +296,8 @@ def test_dup_abs():
 
 
 def test_dmp_abs():
+    assert dmp_abs([[CC(3, 4)], [], [CC(0, -2)]], 1, CC) == \
+        [[CC.abs_domain(5)], [], [CC.abs_domain(2)]]
     assert dmp_abs([ZZ(-1)], 0, ZZ) == [ZZ(1)]
     assert dmp_abs([QQ(-1, 2)], 0, QQ) == [QQ(1, 2)]
 
@@ -1060,6 +1065,35 @@ def test_dmp_l1_norm():
     assert dmp_l1_norm([[[1]]], 2, ZZ) == 1
 
     assert dmp_l1_norm(f_0, 2, ZZ) == 31
+
+
+def test_complex_norms():
+    for norm in [dup_max_norm, dup_l1_norm]:
+        value = norm([], CC)
+        assert CC.abs_domain.of_type(value)
+        assert value == 0
+        assert norm([CC(3, 4)], CC) == 5
+
+    for norm in [dmp_max_norm, dmp_l1_norm]:
+        value = norm([[[]]], 2, CC)
+        assert CC.abs_domain.of_type(value)
+        assert value == 0
+        value = norm([[CC(3, 4)], [], [CC(0, -2)]], 1, CC)
+        assert CC.abs_domain.of_type(value)
+        assert value == (5 if norm is dmp_max_norm else 7)
+
+    R, x = ring('x', CC)
+    for f in [R.zero, (3 + 4*CC(0, 1))*x]:
+        for value in [f.max_norm(), f.l1_norm(), R.dup_max_norm(f), R.dup_l1_norm(f)]:
+            assert CC.abs_domain.of_type(value)
+            assert value == (0 if not f else 5)
+
+
+def test_symbolic_abs_norms():
+    f = [EX(-3), EX(2)]
+    assert dup_abs(f, EX) == [EX(3), EX(2)]
+    assert dup_l1_norm(f, EX) == EX(5)
+    assert dmp_l1_norm([f, []], 1, EX) == EX(5)
 
 
 def test_dup_l2_norm_squared():

@@ -83,9 +83,11 @@ class EuclidElement(RingElement, Protocol):
 
 
 class AbsElement(RingElement, Protocol):
-    """An element that can be made positive or negative.
+    """An element whose absolute value has the same type.
 
-    Must support ``abs``.
+    This also applies to symbolic elements whose absolute values need not
+    be ordered. Domains whose absolute values have a different element type
+    are described by :class:`~.AbsDomain`.
     """
     def __abs__(self, /) -> Self: ...
 
@@ -107,7 +109,6 @@ Et = TypeVar('Et', bound=RingElement)
 Eg = TypeVar('Eg', bound=RingElement)
 Ef = TypeVar('Ef', bound=FieldElement)
 Eeuclid = TypeVar('Eeuclid', bound=EuclidElement)
-Eabs = TypeVar('Eabs', bound=AbsElement)
 Eordered = TypeVar('Eordered', bound=OrderedElement)
 
 
@@ -503,6 +504,9 @@ class Domain(Generic[Er]):
 
     is_ConjugateDomain: bool = False
     """Boolean flag indicating if the domain supports conjugation."""
+
+    is_AbsDomain: bool = False
+    """Boolean flag indicating if the domain is an :py:class:`~.AbsDomain`."""
 
     is_Composite: bool = False
     """Boolean flag indicating if the domain is a composite domain."""
@@ -1228,8 +1232,12 @@ class Domain(Generic[Er]):
         else:
             return self.one
 
-    def abs(self, a: Er) -> Er:
-        """Absolute value of ``a``, implies ``__abs__``. """
+    def abs(self, a: Er) -> object:
+        """Absolute value of ``a``, implies ``__abs__``.
+
+        The result need not belong to this domain. :class:`~.AbsDomain`
+        specifies the domain and element type of the absolute values.
+        """
         return abs(a) # type: ignore
 
     def neg(self, a: Er) -> Er:

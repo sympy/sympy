@@ -58,6 +58,9 @@ Abstract Domains
 .. autoclass:: sympy.polys.domains.domain.Domain
    :members:
 
+.. autoclass:: sympy.polys.domains.absdomain.AbsDomain
+   :members:
+
 .. autoclass:: sympy.polys.domains.domainelement.DomainElement
    :members:
 

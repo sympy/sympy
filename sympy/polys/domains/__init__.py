@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 __all__ = [
-    'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
+    'Domain', 'AbsDomain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
     'ComplexField', 'AlgebraicField', 'CyclotomicField',
     'PolynomialRing', 'FractionField', 'ExpressionDomain', 'PythonRational',
 
@@ -10,6 +10,7 @@ __all__ = [
 ]
 
 from .domain import Domain
+from .absdomain import AbsDomain
 from .finitefield import FiniteField, FF, GF
 from .integerring import IntegerRing, ZZ
 from .rationalfield import RationalField, QQ

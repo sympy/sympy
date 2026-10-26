@@ -17,7 +17,8 @@ from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFaile
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from sympy.polys.domains.domain import Domain, Er, Ef, Eeuclid, Eabs, Eordered
+    from sympy.polys.domains.domain import Domain, Er, Ef, Eeuclid, Eordered
+    from sympy.polys.domains.absdomain import AbsDomain
 
 
 def dup_add_term(f: dup[Er], c: Er, i: int, K: Domain[Er]) -> dup[Er]:
@@ -443,9 +444,9 @@ def dup_rshift(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
     return f[:-n]
 
 
-def dup_abs(f: dup[Eabs], K: Domain[Eabs]) -> dup[Eabs]:
+def dup_abs(f: dup[Er], K: AbsDomain[Er, Eordered]) -> dup[Eordered]:
     """
-    Make all coefficients positive in ``K[x]``.
+    Take the absolute value of each coefficient in ``K[x]``.
 
     Examples
     ========
@@ -460,9 +461,9 @@ def dup_abs(f: dup[Eabs], K: Domain[Eabs]) -> dup[Eabs]:
     return [ K.abs(coeff) for coeff in f ]
 
 
-def dmp_abs(f: dmp[Eabs], u: int, K: Domain[Eabs]) -> dmp[Eabs]:
+def dmp_abs(f: dmp[Er], u: int, K: AbsDomain[Er, Eordered]) -> dmp[Eordered]:
     """
-    Make all coefficients positive in ``K[X]``.
+    Take the absolute value of each coefficient in ``K[X]``.
 
     Examples
     ========
@@ -1903,7 +1904,7 @@ def dmp_exquo(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
         raise ExactQuotientFailed(f, g)
 
 
-def dup_max_norm(f: dup[Eordered], K: Domain[Eordered]) -> Eordered:
+def dup_max_norm(f: dup[Er], K: AbsDomain[Er, Eordered]) -> Eordered:
     """
     Returns maximum norm of a polynomial in ``K[x]``.
 
@@ -1918,12 +1919,12 @@ def dup_max_norm(f: dup[Eordered], K: Domain[Eordered]) -> Eordered:
 
     """
     if not f:
-        return K.zero
+        return K.abs(K.zero)
     else:
         return max(dup_abs(f, K))
 
 
-def dmp_max_norm(f: dmp[Eordered], u: int, K: Domain[Eordered]) -> Eordered:
+def dmp_max_norm(f: dmp[Er], u: int, K: AbsDomain[Er, Eordered]) -> Eordered:
     """
     Returns maximum norm of a polynomial in ``K[X]``.
 
@@ -1945,7 +1946,7 @@ def dmp_max_norm(f: dmp[Eordered], u: int, K: Domain[Eordered]) -> Eordered:
     return max(dmp_max_norm(c, v, K) for c in f)
 
 
-def dup_l1_norm(f: dup[Eabs], K: Domain[Eabs]) -> Eabs:
+def dup_l1_norm(f: dup[Er], K: AbsDomain[Er, Eordered]) -> Eordered:
     """
     Returns l1 norm of a polynomial in ``K[x]``.
 
@@ -1960,12 +1961,12 @@ def dup_l1_norm(f: dup[Eabs], K: Domain[Eabs]) -> Eabs:
 
     """
     if not f:
-        return K.zero
+        return K.abs(K.zero)
     else:
-        return K.sum(dup_abs(f, K))
+        return sum(dup_abs(f, K), K.abs(K.zero))
 
 
-def dmp_l1_norm(f: dmp[Eabs], u: int, K: Domain[Eabs]) -> Eabs:
+def dmp_l1_norm(f: dmp[Er], u: int, K: AbsDomain[Er, Eordered]) -> Eordered:
     """
     Returns l1 norm of a polynomial in ``K[X]``.
 
@@ -1984,7 +1985,7 @@ def dmp_l1_norm(f: dmp[Eabs], u: int, K: Domain[Eabs]) -> Eabs:
 
     v = u - 1
 
-    return K.sum(dmp_l1_norm(c, v, K) for c in f)
+    return sum((dmp_l1_norm(c, v, K) for c in f), K.abs(K.zero))
 
 
 def dup_l2_norm_squared(f: dup[Er], K: Domain[Er]) -> Er:
