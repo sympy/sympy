@@ -640,6 +640,7 @@ def exptrigsimp(expr):
                 choices.append(factor_terms(op))
             else:
                 choices.append(op)
+            choices.append(e.rewrite(sin))
         choices.append(e.rewrite(cos))
         return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)
