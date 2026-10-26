@@ -178,8 +178,8 @@ def _sort_factors(factors, **args):
             return factor.sort_key()
         elif isinstance(factor, list):
             return [order_key(f) for f in factor]
-        elif hasattr(factor, 'real') and hasattr(factor, 'imag'):
-            return (float(factor.real), float(factor.imag))
+        elif hasattr(factor, 'real') and hasattr(factor, 'imag') and not isinstance(factor, (int, float)):
+            return (factor.real, factor.imag)
         else:
             return factor
 
