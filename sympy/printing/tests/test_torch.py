@@ -546,3 +546,12 @@ def test_torch_special_functions():
 
     expr = gamma(sin(x))
     assert torch_code(expr) == "torch.special.gamma(torch.sin(x))"
+
+
+def test_torch_code_settings():
+    x = symbols("x")
+    assert torch_code(x, assign_to="out") == "out = x"
+    num_syms, not_supported, code = torch_code(x, human=False)
+    assert code == "x"
+    assert "dtype=torch.float32" in torch_code(Matrix([x]), dtype="torch.float32")
+    assert "requires_grad=True" in torch_code(Matrix([x]), requires_grad=True)
