@@ -1936,6 +1936,40 @@ def test_as_terms_exact_large_coefficients():
     assert Add(b, a, evaluate=False).as_ordered_terms() == [a, b]
 
 
+
+def test_as_ordered_terms_preserves_expression():
+    from sympy.functions.elementary.integers import ceiling, floor
+    # Changing the presentation order must not change the expression.
+    theta = Symbol('theta')
+    expressions = [
+        x**2*y**2 + x*y**4 + y + 2,
+        1 + theta + theta**2,
+        a - b,
+        a**2 + b**2 + x**2 + y**2,
+        x + floor(y),
+        ceiling(x) + ceiling(y),
+        Add(sin(7), 3*cos(2), 2*sin(5), cos(3), sin(3), S(4),
+            evaluate=False),
+        12 + 4*sqrt(6) + 6*sqrt(3) + 8*sqrt(2),
+        E*(E - 1) - E + Rational(7, 2),
+        S.Half - I*sqrt(S.Half/2 + sqrt(5)/10),
+        x + pi,
+        2 + 3*I,
+        -6 - x,
+        2 - x,
+        x - 2,
+        2 + 3*I*x,
+        Add(10**400*x, 10**401*x, evaluate=False),
+        Add(f(1), g(2), f(3), evaluate=False),
+    ]
+    for expr in expressions:
+        for order in (None, 'lex', 'grlex', 'rev-lex', 'rev-grlex'):
+            terms = expr.as_ordered_terms(order=order)
+            rebuilt = Add(*terms, evaluate=False)
+            assert expr.equals(rebuilt) is True
+
+
+
 def test_sort_key_atomic_expr():
     from sympy.physics.units import m, s
     assert sorted([-m, s], key=lambda arg: arg.sort_key()) == [-m, s]
