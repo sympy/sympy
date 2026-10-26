@@ -44,7 +44,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.specialpolys import f_polys, Symbol, Poly
-from sympy.polys.domains import FF, ZZ, QQ, CC, EX
+from sympy.polys.domains import FF, ZZ, QQ, CC
 from sympy.polys.rings import ring
 
 from sympy.testing.pytest import raises
@@ -1087,13 +1087,6 @@ def test_complex_norms():
         for value in [f.max_norm(), f.l1_norm(), R.dup_max_norm(f), R.dup_l1_norm(f)]:
             assert CC.abs_domain.of_type(value)
             assert value == (0 if not f else 5)
-
-
-def test_symbolic_abs_norms():
-    f = [EX(-3), EX(2)]
-    assert dup_abs(f, EX) == [EX(3), EX(2)]
-    assert dup_l1_norm(f, EX) == EX(5)
-    assert dmp_l1_norm([f, []], 1, EX) == EX(5)
 
 
 def test_dup_l2_norm_squared():

@@ -1641,11 +1641,12 @@ class PolyElement(
         return self._quo_term(term)
 
     def _norm(self, norm_func):
+        K = self.ring.domain
+        Kabs = K.abs
         if not self:
-            return self.ring.domain.abs(self.ring.domain.zero)
+            return Kabs(K.zero)
         else:
-            ground_abs = self.ring.domain.abs
-            return norm_func([ground_abs(coeff) for coeff in self.itercoeffs()])
+            return norm_func([Kabs(coeff) for coeff in self.itercoeffs()])
 
     def max_norm(self):
         return self._norm(max)

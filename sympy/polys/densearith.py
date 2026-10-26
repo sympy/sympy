@@ -1960,10 +1960,7 @@ def dup_l1_norm(f: dup[Er], K: AbsDomain[Er, Eordered]) -> Eordered:
     6
 
     """
-    if not f:
-        return K.abs(K.zero)
-    else:
-        return sum(dup_abs(f, K), K.abs(K.zero))
+    return K.abs_domain.sum(dup_abs(f, K))
 
 
 def dmp_l1_norm(f: dmp[Er], u: int, K: AbsDomain[Er, Eordered]) -> Eordered:
@@ -1985,7 +1982,7 @@ def dmp_l1_norm(f: dmp[Er], u: int, K: AbsDomain[Er, Eordered]) -> Eordered:
 
     v = u - 1
 
-    return sum((dmp_l1_norm(c, v, K) for c in f), K.abs(K.zero))
+    return K.abs_domain.sum(dmp_l1_norm(c, v, K) for c in f)
 
 
 def dup_l2_norm_squared(f: dup[Er], K: Domain[Er]) -> Er:
