@@ -756,6 +756,17 @@ def test_integrate_DiracDelta():
         1/sqrt(101*pi)
 
 
+def test_issue_27108():
+    x = symbols('x', real=True)
+    for f in [exp(-Abs(x)), Abs(x) + 1]:
+        integrand = f*DiracDelta(x)
+        assert integrate(integrand, x) == Heaviside(x)
+        assert integrate(integrand, (x, -1, 1)) == 1
+        assert integrate(integrand, (x, 1, 2)) == 0
+    f = exp(-Abs(x))
+    assert integrate((f - 2*DiracDelta(x))*f, (x, -oo, oo)) == -1
+
+
 def test_integrate_returns_piecewise():
     assert integrate(x**y, x) == Piecewise(
         (x**(y + 1)/(y + 1), Ne(y, -1)), (log(x), True))

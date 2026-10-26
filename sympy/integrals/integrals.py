@@ -21,6 +21,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.special.delta_functions import DiracDelta
 from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
 from sympy.matrices import MatrixBase
@@ -791,7 +792,9 @@ class Integral(AddWithLimits):
                     function = factored_function
                 continue
 
-            if function.has(Abs, sign) and (
+            # Piecewise integration enforces continuity at branch boundaries,
+            # which would remove jumps caused by DiracDelta terms.
+            if (function.has(Abs, sign) and not function.has(DiracDelta)) and (
                 (len(xab) < 3 and all(x.is_extended_real for x in xab)) or
                 (len(xab) == 3 and all(x.is_extended_real and not x.is_infinite for
                  x in xab[1:]))):
@@ -1297,6 +1300,13 @@ class Integral(AddWithLimits):
                 if h is not None:
                     parts.append(coeff * h)
                     continue
+
+                if (f.has(DiracDelta) and g.has(Abs, sign)
+                        and not g.has(DiracDelta)):
+                    h = self.func(g, x).doit(**eval_kwargs)
+                    if not h.has(Integral):
+                        parts.append(coeff * h)
+                        continue
 
                 from .singularityfunctions import singularityintegrate
                 # g(x) has at least a Singularity Function term
