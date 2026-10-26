@@ -50,7 +50,7 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dup_exquo_ground, dmp_quo_ground, dmp_exquo_ground)
+    dup_quo_ground, dmp_quo_ground)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
