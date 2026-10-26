@@ -470,7 +470,8 @@ def test__solve_inequality():
         assert _solve_inequality(op(x, 1), x).lhs == x
         assert _solve_inequality(op(S.One, x), x).lhs == x
     # don't get tricked by symbol on right: solve it
-    assert _solve_inequality(Eq(2*x - 1, x), x) == Eq(x, 1)
+    assert _solve_inequality(Eq(2*x - 1, x), x) == Eq(x, 2*x - 1)
+    assert _solve_inequality(Eq(2*x - 1, x), x, assume_finite=True) == Eq(x, 1)
     ie = Eq(S.One, y)
     assert _solve_inequality(ie, x) == ie
     for fx in (x**2, exp(x), sin(x) + cos(x), x*(1 + x)):
@@ -489,8 +490,12 @@ def test__solve_inequality():
     assert _solve_inequality(a/x > 1, x, linear=True) == (1/x > 1/a)
     # make sure to include conditions under which solution is valid
     e = Eq(1 - x, x*(1/x - 1))
-    assert _solve_inequality(e, x) == Ne(x, 0)
-    assert _solve_inequality(x < x*(1/x - 1), x) == (x < S.Half) & Ne(x, 0)
+    assert _solve_inequality(e, x) == (Ne(x, 0) & e)
+    assert _solve_inequality(e, x, assume_finite=True) == Ne(x, 0)
+    assert _solve_inequality(x < x*(1/x - 1), x) == (
+        Ne(x, 0) & (x < x*(1/x - 1)))
+    assert _solve_inequality(x < x*(1/x - 1), x, assume_finite=True) == (
+        (x < S.Half) & Ne(x, 0))
 
 
 def test__pt():

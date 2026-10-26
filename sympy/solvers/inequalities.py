@@ -882,7 +882,7 @@ def _guard_indeterminate_group(ie, s):
     return ie, tracker, group
 
 
-def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
+def _solve_inequality(ie, s, linear=False, assume_finite=False):
     """Return the inequality with ``s`` isolated on the left, if possible.
     If the relationship is non-linear, a solution involving ``And`` or ``Or``
     may be returned. False or True are returned if the relationship
@@ -896,12 +896,12 @@ def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
     value is attempted unless the relationship involves ``Eq`` or ``Ne`` and
     no division by a value not known to be nonzero is ever attempted.
 
-    If ``protect_indeterminate`` is True, a group of additive terms that
-    can be indefinite is not split off from ``s``: since such a group
-    could form an indeterminate ``oo - oo`` when it is moved to the
-    other side of the relational, it is left with ``s`` even when ``s``
-    could be isolated. The default is False, in which case such a
-    group is only left with ``s`` when isolating it is not possible.
+    If ``assume_finite`` is False, a group of additive terms that can be
+    indefinite is not split off from ``s``: since such a group could form
+    an indeterminate ``oo - oo`` when it is moved to the other side of the
+    relational, it is left with ``s`` even when ``s`` could be isolated.
+    If ``assume_finite`` is True, such a group is only left with ``s`` when
+    isolating it is not possible.
     Unlike equation-oriented APIs such as ``solve``, this routine operates on
     the ``Relational`` itself. ``Eq`` and ``Ne`` therefore retain their logical
     relational semantics rather than serving merely as containers for
@@ -920,7 +920,7 @@ def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
     >>> f(x - 2 < 0, x)
     x < 2
     >>> f(-x - 6 < x, x)
-    x > -3
+    x > -x - 6
 
     Sometimes nonlinear relationships will be False
 
@@ -967,7 +967,7 @@ def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
     else a difference of infinities is introduced.
 
     >>> a, b, c = symbols('a b c', real=True)
-    >>> f(a*(-y - 2*z + 1) < b - 2*c - x, y, protect_indeterminate=True)
+    >>> f(a*(-y - 2*z + 1) < b - 2*c - x, y)
     -a*y - 2*a*z < -a + b - 2*c - x
 
     When there are denominators in the original expression that
@@ -975,7 +975,7 @@ def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
     as part of the result:
 
     >>> f(x < x*(2/x - 1), x)
-    (x < 1) & Ne(x, 0)
+    Ne(x, 0) & (x < x*(-1 + 2/x))
     """
     from sympy.solvers.solvers import denoms
     if s not in ie.free_symbols:
@@ -987,7 +987,7 @@ def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
 
     beginning_denoms = denoms(ie.lhs) | denoms(ie.rhs)
 
-    if protect_indeterminate:
+    if not assume_finite:
         guarded, tracker, group = _guard_indeterminate_group(ie, s)
         if tracker is S.NaN:
             # The target belongs to potentially indeterminate groups on
@@ -996,7 +996,7 @@ def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
         if tracker is not None:
             rv = _solve_inequality(
                 guarded, tracker, linear=linear,
-                protect_indeterminate=False)
+                assume_finite=True)
             rv = rv.xreplace({tracker: group})
             return And(*[Ne(d, 0) for d in beginning_denoms], rv)
 
@@ -1084,7 +1084,7 @@ def _solve_inequality(ie, s, linear=False, protect_indeterminate=False):
     current_denoms = denoms(rv)
     for d in beginning_denoms - current_denoms:
         c = _solve_inequality(Eq(d, 0), s, linear=linear,
-            protect_indeterminate=protect_indeterminate)
+            assume_finite=assume_finite)
         if isinstance(c, Eq) and c.lhs == s:
             if classify(rv, s, c.rhs) is S.true:
                 # rv is permitting this value but it shouldn't
@@ -1118,8 +1118,7 @@ def _reduce_inequalities(inequalities, symbols):
             common = inequality.free_symbols & symbols
             if len(common) == 1:
                 gen = common.pop()
-                other.append(_solve_inequality(inequality, gen,
-                    protect_indeterminate=True))
+                other.append(_solve_inequality(inequality, gen))
                 continue
             else:
                 raise NotImplementedError(filldedent('''
@@ -1129,8 +1128,7 @@ def _reduce_inequalities(inequalities, symbols):
         beginning_denoms = (
             denoms(inequality.lhs, gen) | denoms(inequality.rhs, gen))
         if beginning_denoms - denoms(expr, gen):
-            other.append(_solve_inequality(inequality, gen,
-                protect_indeterminate=True))
+            other.append(_solve_inequality(inequality, gen))
             continue
 
         if expr.is_polynomial(gen):
@@ -1142,8 +1140,7 @@ def _reduce_inequalities(inequalities, symbols):
             if components and all(isinstance(i, Abs) for i in components):
                 abs_part.setdefault(gen, []).append((expr, rel))
             else:
-                other.append(_solve_inequality(inequality, gen,
-                    protect_indeterminate=True))
+                other.append(_solve_inequality(inequality, gen))
 
     poly_reduced = [reduce_rational_inequalities([exprs], gen) for gen, exprs in poly_part.items()]
     abs_reduced = [reduce_abs_inequalities(exprs, gen) for gen, exprs in abs_part.items()]
