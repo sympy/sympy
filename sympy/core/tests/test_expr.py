@@ -1912,6 +1912,11 @@ def test_as_terms_without_numerical_evaluation():
         assert str(expr) == 'x + pi'
         assert list(ordered([expr, x + E]))
         assert (2 + 3*I).as_ordered_terms() == [2, 3*I]
+        assert (-2 + 3*I).as_ordered_terms() == [-2, 3*I]
+        assert (-6 - x).as_ordered_terms() == [-x, -6]
+        assert (2 - x).as_ordered_terms() == [2, -x]
+        assert (x - 2).as_ordered_terms() == [x, -2]
+        assert (2 + 3*I*x).as_ordered_terms() == [2, 3*I*x]
 
 
 def test_as_terms_exact_large_coefficients():
