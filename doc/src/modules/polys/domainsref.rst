@@ -49,7 +49,6 @@ Abstract Domains
 .. py:class:: sympy.polys.densebasic.Epa
 .. autoclass:: sympy.polys.domains.domain.Ef
 .. autoclass:: sympy.polys.domains.domain.Eeuclid
-.. autoclass:: sympy.polys.domains.domain.Eabs
 .. autoclass:: sympy.polys.domains.domain.Eordered
 .. py:class:: sympy.polys.domains.domain.TypeIs
 .. autoclass:: sympy.polys.domains.gaussiandomains.Telem
