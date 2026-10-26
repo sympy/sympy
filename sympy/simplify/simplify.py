@@ -673,7 +673,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             return arg
         return ratsimp(arg)
     expr = expr.replace(
-        lambda e: e.func is exp and not e.is_Pow,
+        lambda e: isinstance(e, exp) and not e.is_Pow,
         lambda a: exp(safe_ratsimp(a.args[0]))).replace(
         Pow, lambda b, e: safe_ratsimp(b)**safe_ratsimp(e))
 
