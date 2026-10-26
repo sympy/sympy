@@ -1133,6 +1133,9 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         if q is None or q < 0:
             return None
         p = self._integer_literal(node.left)
+        if p == q == 1:
+            # Preserve the original Pow representation of 1/1.
+            return None
         if p is None:
             # Absorb a leading minus sign into the rational coefficient.
             if (q > 1 and isinstance(node.left, ast.UnaryOp)

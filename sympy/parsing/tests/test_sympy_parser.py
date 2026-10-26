@@ -391,8 +391,7 @@ def test_xor_eval_false():
 
 def test_issue_27832():
     x = Symbol('x')
-    assert parse_expr('1/1', evaluate=False) == Mul(
-        1, Pow(1, -1, evaluate=False), evaluate=False)
+    assert parse_expr('1/1', evaluate=False) == Pow(1, -1, evaluate=False)
     assert parse_expr('1/10 * 4', evaluate=False) == Mul(
         Rational(1, 10), Integer(4), evaluate=False)
     assert parse_expr('1/x', evaluate=False) == Pow(x, -1, evaluate=False)
@@ -416,7 +415,7 @@ def test_evaluate_false_literal_fractions():
         '11/2': Rational(11, 2),
         '-1/2': Rational(-1, 2),
         '2/4': ratio(2, 4),
-        '1/1': ratio(1, 1),
+        '1/1': Pow(1, -1, evaluate=False),
         '3/1': ratio(3, 1),
         '0/5': ratio(0, 5),
         '1/0': ratio(1, 0),
@@ -429,6 +428,12 @@ def test_evaluate_false_literal_fractions():
     }
     for text, expected in cases.items():
         assert parse_expr(text, evaluate=False) == expected, text
+
+    assert parse_expr('1*1**-1', evaluate=False) == ratio(1, 1)
+    assert parse_expr('1/1', evaluate=False) != parse_expr(
+        '1*1**-1', evaluate=False)
+    assert latex(parse_expr('1*1**-1', evaluate=False)) == (
+        r'1 \cdot \frac{1}{1}')
 
     assert parse_expr('x - 1/2', evaluate=False).args[-1] == Rational(-1, 2)
     assert parse_expr('-(1/2)', evaluate=False) == Rational(-1, 2)

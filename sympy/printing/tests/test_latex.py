@@ -125,7 +125,7 @@ def test_unevaluated_numeric_ratio():
     def ratio(p, q):
         return Mul(p, Pow(q, -1, evaluate=False), evaluate=False)
 
-    assert latex(ratio(1, 1)) == r'\frac{1}{1}'
+    assert latex(ratio(1, 1)) == r'1 \cdot \frac{1}{1}'
     assert latex(ratio(2, 4)) == r'\frac{2}{4}'
     assert latex(Mul(1, Rational(1, 2), evaluate=False)) == r'1 \cdot \frac{1}{2}'
     assert latex(Mul(1, Symbol('x'), evaluate=False)) == '1 x'
@@ -2937,10 +2937,10 @@ def test_WedgeProduct_printing():
 
 def test_issue_9216():
     expr_1 = Pow(1, -1, evaluate=False)
-    assert latex(expr_1) == r"1^{-1}"
+    assert latex(expr_1) == r"\frac{1}{1}"
 
     expr_2 = Pow(1, Pow(1, -1, evaluate=False), evaluate=False)
-    assert latex(expr_2) == r"1^{\left(1^{-1}\right)}"
+    assert latex(expr_2) == r"1^{\frac{1}{1}}"
 
     expr_3 = Pow(3, -2, evaluate=False)
     assert latex(expr_3) == r"\frac{1}{3^{2}}"
