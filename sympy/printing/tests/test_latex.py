@@ -2033,6 +2033,19 @@ def test_integral_transforms():
     assert latex(InverseSineTransform(f(k), k, x)) == \
         r"\mathcal{SIN}^{-1}_{k}\left[f{\left(k \right)}\right]\left(x\right)"
 
+    assert latex(LaplaceTransform(f(x), x, k)**2) == \
+        r"\left(\mathcal{L}_{x}\left[f{\left(x \right)}\right]\left(k\right)\right)^{2}"
+    assert latex(InverseLaplaceTransform(f(k), k, x, (a, b))**2) == \
+        r"\left(\mathcal{L}^{-1}_{k}\left[f{\left(k \right)}\right]\left(x\right)\right)^{2}"
+    assert latex(FourierTransform(f(x), x, k)**2) == \
+        r"\left(\mathcal{F}_{x}\left[f{\left(x \right)}\right]\left(k\right)\right)^{2}"
+    assert latex(MellinTransform(f(x), x, k)**2) == \
+        r"\left(\mathcal{M}_{x}\left[f{\left(x \right)}\right]\left(k\right)\right)^{2}"
+    assert latex(CosineTransform(f(x), x, k)**2) == \
+        r"\left(\mathcal{COS}_{x}\left[f{\left(x \right)}\right]\left(k\right)\right)^{2}"
+    assert latex(SineTransform(f(x), x, k)**2) == \
+        r"\left(\mathcal{SIN}_{x}\left[f{\left(x \right)}\right]\left(k\right)\right)^{2}"
+
 
 def test_PolynomialRingBase():
     from sympy.polys.domains import QQ
