@@ -42,6 +42,7 @@ from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.powsimp import powsimp
 from sympy.simplify.radsimp import radsimp, fraction, collect_abs
+from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
@@ -663,6 +664,19 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         expr = nsimplify(expr, rational=True)
 
     expr = _bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
+
+    def safe_ratsimp(arg):
+        if arg.is_commutative is not True or arg.is_Atom:
+            return arg
+        n, d = arg.as_numer_denom()
+        if d.is_Number or not n.has(Add):
+            return arg
+        return ratsimp(arg)
+    expr = expr.replace(
+        lambda e: e.func is exp and not e.is_Pow,
+        lambda a: exp(safe_ratsimp(a.args[0]))).replace(
+        Pow, lambda b, e: safe_ratsimp(b)**safe_ratsimp(e))
+
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
     expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829

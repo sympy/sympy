@@ -1126,6 +1126,54 @@ def test_issue_14269():
     assert simplify(expr) == 0
 
 
+def test_simplify_exp_rational_exponents_7769_19380():
+    #x, y, z, a, b = symbols('x y z a b', positive=True)
+
+    # 19380
+    r = (x - 1)/(x**2 - 1)
+    red = 1/(x + 1)
+    assert (2**r).simplify() == 2**red
+    assert sqrt(r).simplify() == sqrt(red)
+
+    # 7769
+    # Black–Scholes option pricing formula
+    eq = S('''-sqrt(2)*K*exp(-r*(T - t))*exp(-(sigma*sqrt(T - t)/2 - log(
+        S*exp(r*(T - t))/K)/(sigma*sqrt(T - t)))**2/2)/(2*sqrt(pi
+        )*S*sigma*sqrt(T - t)) + sqrt(2)*exp(-(sigma*sqrt(T - t
+        )/2 + log(S*exp(r*(T - t))/K)/(sigma*sqrt(T - t)))**2/2)/(
+        2*sqrt(pi)*sigma*sqrt(T - t))''', locals={'S': Symbol("S")})
+    assert eq.simplify() == 0
+    assert eq.expand().simplify() == 0
+
+    # 19380 generalized
+    def pair(c, p):
+        return (
+            exp(-(p + log(c))**2/p)
+            - exp(-(p - log(c))**2/p)/c**4
+        )
+
+    e = pair(a, x + y) + pair(b, x + y)
+    assert simplify(e) == 0
+
+    e += pair(a, x + z) + pair(b, x + z)
+    assert simplify(e) == 0
+
+
+def test_simplify_ratsimp_noncommutative():
+    A, B = symbols('A B', commutative=False)
+
+    assert simplify(exp(A + B)) == exp(A + B)
+    assert simplify((A*B)**x) == (A*B)**x
+
+    e = exp(A + (x - 1)/(x**2 - 1))
+    s = simplify(e)
+    assert s.func == exp
+    assert (s.args[0] - A - 1/(x + 1)).cancel() == 0
+
+    e = ((x - 1)/(x**2 - 1)*A*B)**2
+    assert simplify(e).expand() == A*B*A*B/(x**2 + 2*x + 1)
+
+
 def test_logcombine_affine_rational_log():
     for multiplier in [1, -1]:
         expr = Mul(Rational(multiplier, 3), 1 + 2*log(2), evaluate=False)
