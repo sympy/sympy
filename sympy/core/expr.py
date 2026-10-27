@@ -909,44 +909,53 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
-    def _eval_is_extended_positive_negative(self, positive):
-        from sympy.polys.numberfields import minimal_polynomial
-        from sympy.polys.polyerrors import NotAlgebraic
-        if self.is_number:
+    def _n2(self):
+        """return (r, br), (i, bi) if self can easily be computed to r + I*i
+        with either r or i having significant precision."""
+        from sympy.core.symbol import Symbol
+        if not self.atoms(Symbol):
             # check to see that we can get a value
             try:
                 n2 = self._eval_evalf(2)
-            # XXX: This shouldn't be caught here
-            # Catches ValueError: hypsum() failed to converge to the requested
-            # 34 bits of accuracy
             except ValueError:
-                return None
+                n2 = None
             if n2 is None:
                 return None
-            if getattr(n2, '_prec', 1) == 1:  # no significance
-                return None
-            if n2 is S.NaN:
-                return None
 
+            if n2.is_Number and n2._prec == 1:  # no significance
+                # just a quick exit in case it already evaluated
+                return None
+            if n2 is self or n2 == self:
+                return None
             f = self.evalf(2)
-            if f.is_Float:
-                match = f, S.Zero
-            else:
-                match = pure_complex(f)
+            if f is S.NaN:
+                return None
+            match = pure_complex(f, or_real=True)
             if match is None:
-                return False
+                return None  # maybe custom class that didn't evaluate was present (c.f. PowTest)
             r, i = match
-            if not (i.is_Number and r.is_Number):
-                return False
-            if r._prec != 1 and i._prec != 1:
-                return bool(not i and ((r > 0) if positive else (r < 0)))
-            elif r._prec == 1 and (not i or i._prec == 1) and \
-                    self._eval_is_algebraic() and not self.has(Function):
-                try:
-                    if minimal_polynomial(self).is_Symbol:
-                        return False
-                except (NotAlgebraic, NotImplementedError):
-                    pass
+            br = r._prec != 1
+            bi = i._prec != 1
+            if not br and not bi:
+                return
+            return (r, br), (i, bi)
+
+    def _eval_is_extended_positive_negative(self, positive):
+        from sympy.polys.numberfields import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
+        n2 = self._n2()
+        if n2 is None:
+            return
+        (r, rprec), (i, iprec) = n2
+        if rprec and iprec:
+            return bool(not i and ((r > 0) if positive else (r < 0)))
+        elif not rprec and (not i or not iprec) and \
+                self._eval_is_algebraic() and not self.has(Function):
+            try:
+                if minimal_polynomial(self).is_Symbol:
+                    return False
+            except (NotAlgebraic, NotImplementedError):
+                pass
 
     def _eval_is_extended_positive(self):
         return self._eval_is_extended_positive_negative(positive=True)
