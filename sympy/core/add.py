@@ -656,20 +656,15 @@ class Add(Expr, AssocOp):
 
     # assumption methods
     def _eval_is_real(self):
-        if self.is_number:
-            ops = {str(i) for i in self.count_ops(visual=True).free_symbols}
-            if ops <= {'ADD', 'SUB', 'NEG', 'DIV', 'MUL', 'POW'}:
-                v = self.evalf(2)
-                if v.is_Number:
-                    return True
-                from .evalf import pure_complex
-                ri = pure_complex(v)
-                if ri is not None:
-                    i = ri[1]
-                    if i.is_comparable and i.is_zero is False:
-                        return False
-        return _fuzzy_group(
+        r = _fuzzy_group(
             (a.is_real for a in self.args), quick_exit=True)
+        if r is not None:
+            return r
+        n2 = self._n2()
+        if n2 is not None:
+            _, (i, iprec) = n2
+            if iprec:
+                return i.is_zero
 
     _eval_is_extended_real = lambda self: _fuzzy_group(
         (a.is_extended_real for a in self.args), quick_exit=True)
