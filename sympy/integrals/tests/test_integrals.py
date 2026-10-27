@@ -22,7 +22,7 @@ from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.functions.special.singularity_functions import SingularityFunction
-from sympy.functions.special.zeta_functions import lerchphi
+from sympy.functions.special.zeta_functions import lerchphi, polylog
 from sympy.integrals.integrals import integrate
 from sympy.logic.boolalg import And
 from sympy.matrices.dense import Matrix
@@ -1419,7 +1419,7 @@ def test_powers():
 def test_manual_option():
     raises(ValueError, lambda: integrate(1/x, x, manual=True, meijerg=True))
     # an example of a function that manual integration cannot handle
-    assert integrate(log(1+x)/x, (x, 0, 1), manual=True).has(Integral)
+    assert integrate(log(1+x**2)/x, (x, 0, 1), manual=True).has(Integral)
 
 
 def test_meijerg_option():
@@ -2423,3 +2423,18 @@ def test_reverse_limits():
     L = Integral(x*y, (x, a, b), y)
     assert L.reverse_limits() == Integral(-x*y, (x, b, a), y)
     assert L.reverse_limits(x) == Integral(-x*y, (x, b, a), y)
+
+
+def test_issue_30842():
+    # integrate(log(x)/(x+2), x) returns wrong antiderivative with spurious imaginary terms
+    g = log(x)/(x + 2)
+    F = integrate(g, x)
+    assert F == log(x)*log(x/2 + 1) + polylog(2, -x/2)
+    assert (diff(F, x) - g).subs(x, 2).evalf() == 0
+    assert abs(integrate(g, (x, 1, 3)).evalf() - (F.subs(x, 3) - F.subs(x, 1)).evalf()) < 1e-12
+    assert (integrate(g, (x, 1, 3)).evalf()).as_real_imag()[1] == 0
+
+    assert integrate(log(x)/(x + 1), x) == log(x)*log(x + 1) + polylog(2, -x)
+    assert integrate(log(x)/(x + 3), x) == log(x)*log(x/3 + 1) + polylog(2, -x/3)
+    assert integrate(log(x)/(2*x + 1), x) == log(x)*log(2*x + 1)/2 + polylog(2, -2*x)/2
+    assert integrate(log(x + 1)/(x + 2), x) == log(x + 1)*log(x + 2) + polylog(2, -x - 1)

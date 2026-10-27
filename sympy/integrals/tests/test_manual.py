@@ -1471,3 +1471,12 @@ def test_manualintegrate_trig_log_hang():
     expr = log((cos(x)/2 + 1) / (1 - cos(x)/2)) / cos(x)
     res = manualintegrate(expr, x)
     assert res is not None
+
+
+def test_issue_30842():
+    x = Symbol('x')
+    assert manualintegrate(log(x)/(x + 2), x) == log(x)*log(x/2 + 1) + polylog(2, -x/2)
+    assert manualintegrate(log(x)/(x + 1), x) == log(x)*log(x + 1) + polylog(2, -x)
+    assert manualintegrate(log(x)/(x + 3), x) == log(x)*log(x/3 + 1) + polylog(2, -x/3)
+    assert manualintegrate(log(x)/(2*x + 1), x) == log(x)*log(2*x + 1)/2 + polylog(2, -2*x)/2
+    assert manualintegrate(log(x + 1)/(x + 2), x) == log(x + 1)*log(x + 2) + polylog(2, -x - 1)
