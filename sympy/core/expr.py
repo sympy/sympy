@@ -921,8 +921,9 @@ class Expr(Basic, EvalfMixin):
             if n2 is None:
                 return None
             if n2 is S.NaN:
-                return None
-
+                n2 = self._eval_evalf(10)  # the approx precision in upcoming evalf
+                if n2 is S.NaN:
+                    return
             if n2.is_Number and n2._prec == 1:  # no significance
                 # just a quick exit in case it already evaluated
                 return None
