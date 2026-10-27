@@ -910,9 +910,8 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _n2(self):
-        """return (r, br), (i, bi) if self can easily be computed to r + I*i
+        """return (r, br), (i, bi) if self can be computed to r + I*i
         with either r or i having significant precision."""
-        from sympy.core.symbol import Symbol
         if self.is_number:
             # check to see that we can get a value
             try:

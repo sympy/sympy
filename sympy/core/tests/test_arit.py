@@ -2539,7 +2539,8 @@ def test_Mul_is_zero_with_zero_factor():
     assert Mul(1, x, evaluate=False).is_zero is None
 
 
-def test_issue_12534():
+def test_issue_12327():
+    # expr.is_real is True in #12534 but that takes a long time just to construct
     _r0 = Rational(34988243013738739508224, 412991676983744490565646816917796631)
     _r1 = Rational(1, 3)
     _r2 = Rational(1, 2)
