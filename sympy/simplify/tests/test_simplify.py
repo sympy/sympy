@@ -651,6 +651,8 @@ def test_signsimp():
 def test_besselsimp():
     from sympy.functions.special.bessel import (besseli, besselj, bessely)
     from sympy.integrals.transforms import cosine_transform
+    assert besselsimp(besseli(-S.Half, z)) == \
+        sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
