@@ -125,6 +125,7 @@ def test_unevaluated_numeric_ratio():
     def ratio(p, q):
         return Mul(p, Pow(q, -1, evaluate=False), evaluate=False)
 
+    assert latex(Pow(1, -1, evaluate=False)) == r'\frac{1}{1}'
     assert latex(ratio(1, 1)) == r'1 \cdot \frac{1}{1}'
     assert latex(ratio(2, 4)) == r'\frac{2}{4}'
     assert latex(Mul(1, Rational(1, 2), evaluate=False)) == r'1 \cdot \frac{1}{2}'
