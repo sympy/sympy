@@ -26,6 +26,7 @@ from sympy.solvers.ode.ode import (classify_sysode,
 from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
+from sympy.utilities.iterables import numbered_symbols
 from sympy.testing.pytest import XFAIL, raises, slow, SKIP
 from sympy.utilities.misc import filldedent
 
@@ -1185,11 +1186,6 @@ def test_issue_29827():
 
     ode = Eq(Derivative(f(x), x), f(x)*(1 - f(x)))
     assert dsolve(ode, f(x), ics={f(0): 0}) == Eq(f(x), 0)
-
-from sympy import symbols, Eq, Derivative, Function
-
-from sympy.solvers.ode import dsolve
-from sympy.utilities.iterables import numbered_symbols
 
 def test_dsolve_symbols_iterator():
     f = Function('f')
