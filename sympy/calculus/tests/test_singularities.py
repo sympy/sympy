@@ -153,4 +153,3 @@ def test_monotonicity_with_interior_singularities():
 @XFAIL
 def test_singularities_periodic_exponent():
     assert singularities(sin(x)**(sin(x) - S.Half), x, S.Reals).contains(2*pi) is S.true
-
