@@ -1195,11 +1195,9 @@ def test_dsolve_symbols_iterator():
     f = Function('f')
     x = symbols('x')
     eq = Eq(Derivative(f(x), x), f(x))
-
     K1 = Symbol('K1')
     sol = dsolve(eq, symbols=numbered_symbols(prefix='K', start=1))
     assert sol == Eq(f(x), K1*exp(x))
-    
 
 
 
