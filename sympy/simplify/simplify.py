@@ -1330,9 +1330,9 @@ def besselsimp(expr):
     def expander(fro):
         def repl(nu, z):
             if (nu % 1) == S.Half:
-                return simplify(trigsimp(unpolarify(
+                return simplify(unpolarify(trigsimp(unpolarify(
                         fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
-                            func=True)).subs(z0, z)))
+                            func=True)).subs(z0, z))))
             elif nu.is_Integer and nu > 1:
                 return fro(nu, z).expand(func=True)
             return fro(nu, z)

@@ -913,7 +913,7 @@ class Expr(Basic, EvalfMixin):
         """return (r, br), (i, bi) if self can easily be computed to r + I*i
         with either r or i having significant precision."""
         from sympy.core.symbol import Symbol
-        if not self.atoms(Symbol):
+        if self.is_number:
             # check to see that we can get a value
             try:
                 n2 = self._eval_evalf(2)
