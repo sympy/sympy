@@ -1015,7 +1015,8 @@ class Quaternion(Expr):
 
         # Handle purely real quaternions to avoid division by zero
         if vector_norm.is_zero:
-            return Quaternion(a, 0, 0, 0)
+            return Quaternion(a, a*q.b, a*q.c, a*q.d,
+                real_field=q.real_field)
 
         b = exp(q.a) * sin(vector_norm) * q.b / vector_norm
         c = exp(q.a) * sin(vector_norm) * q.c / vector_norm
