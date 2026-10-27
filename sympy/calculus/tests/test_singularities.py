@@ -17,7 +17,7 @@ from sympy.calculus.singularities import (
     is_monotonic
 )
 from sympy.sets import Interval, FiniteSet, Union, ImageSet
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import x, y
 
 
@@ -149,3 +149,8 @@ def test_monotonicity_with_interior_singularities():
     assert is_decreasing(1/x, Interval(-1, Rational(-1, 10)), x) is True
     assert not is_decreasing(1/x, Interval(-1, 1), x)
     assert not is_increasing(1/x, Interval(-1, 1), x)
+
+@XFAIL
+def test_singularities_periodic_exponent():
+    assert singularities(sin(x)**(sin(x) - S.Half), x, S.Reals).contains(2*pi) is S.true
+
