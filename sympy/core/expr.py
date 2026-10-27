@@ -920,13 +920,18 @@ class Expr(Basic, EvalfMixin):
                 n2 = None
             if n2 is None:
                 return None
+            if n2 is S.NaN:
+                return None
 
             if n2.is_Number and n2._prec == 1:  # no significance
                 # just a quick exit in case it already evaluated
                 return None
             if n2 is self or n2 == self:
                 return None
-            f = self.evalf(2)
+            try:
+                f = self.evalf(2)
+            except ValueError:
+                return None
             if f is S.NaN:
                 return None
             match = pure_complex(f, or_real=True)
