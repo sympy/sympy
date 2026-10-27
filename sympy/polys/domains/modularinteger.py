@@ -5,6 +5,8 @@ from typing import Any
 
 import operator
 
+from sympy.core.sympify import CantSympify
+
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains.domainelement import DomainElement
@@ -13,7 +15,7 @@ from sympy.utilities import public
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 @public
-class ModularInteger(PicklableWithSlots, DomainElement):
+class ModularInteger(CantSympify, PicklableWithSlots, DomainElement):
     """A class representing a modular integer. """
 
     mod, dom, sym, _parent = None, None, None, None
