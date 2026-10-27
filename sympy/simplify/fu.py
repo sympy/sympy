@@ -23,6 +23,7 @@ from sympy.ntheory.factor_ import perfect_power
 from sympy.polys.polytools import factor
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
+from sympy.utilities.decorator import _rebuild_opaque
 
 from sympy import SYMPY_DEBUG
 
@@ -1651,8 +1652,10 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
     was = rv
     rv = sympify(rv)
+    if rv.is_Relational:
+        return rv
     if not isinstance(rv, Expr):
-        return rv.func(*[fu(a, measure=measure) for a in rv.args])
+        return _rebuild_opaque(rv, [fu(a, measure=measure) for a in rv.args])
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = fRL1(rv)
