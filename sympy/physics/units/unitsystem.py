@@ -8,6 +8,7 @@ from sympy.core.function import (Application, Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
 from sympy.physics.units.dimensions import _QuantityMapper
 
 from .dimensions import Dimension
@@ -167,6 +168,11 @@ class UnitSystem(_QuantityMapper):
                 factor *= arg_factor
                 dimension *= arg_dim
             return factor, dimension
+        elif isinstance(expr, Pow) and expr.base is S.Exp1:
+            exp_factor, exp_dim = self._collect_factor_and_dimension(expr.exp)
+            if self.get_dimension_system().is_dimensionless(exp_dim):
+                exp_dim = Dimension(1)
+            return exp(exp_factor), exp_dim
         elif isinstance(expr, Pow):
             factor, dim = self._collect_factor_and_dimension(expr.base)
             exp_factor, exp_dim = self._collect_factor_and_dimension(expr.exp)

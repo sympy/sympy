@@ -8,7 +8,7 @@ import gc
 import mpmath
 import cmath
 
-from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns_deprecated_sympy, _both_exp_pow
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, Lambda, diff)
 from sympy.core.numbers import (E, Float, I, Rational, all_close, oo, pi)
@@ -196,6 +196,7 @@ def test_math_lambda():
 
 
 @conserve_mpmath_dps
+@_both_exp_pow
 def test_mpmath_lambda():
     mpmath.mp.dps = 50
     sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
@@ -422,6 +423,7 @@ def test_cmath_atanh():
     assert abs(f(2j) - cmath.atanh(2j)) < 1e-15
 
 
+@_both_exp_pow
 def test_cmath_complex_identities():
     # Define symbol
     z = symbols('z')
@@ -1046,6 +1048,7 @@ def test_sym_list_args():
     assert f(1, 2) == 3 + z
 
 
+@_both_exp_pow
 def test_sym_integral():
     f = Lambda(x, exp(-x**2))
     l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
@@ -1733,6 +1736,7 @@ def test_issue_13167_21411():
     assert Abs(res2[1] - 1).n() < 1e-15
     assert Abs(res2[2] - 1).n() < 1e-15
 
+@_both_exp_pow
 def test_single_e():
     f = lambdify(x, E)
     assert f(23) == exp(1.0)

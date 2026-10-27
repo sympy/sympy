@@ -9,6 +9,7 @@ from sympy.simplify.simplify import simplify
 from sympy.abc import omega, m, x
 from sympy.physics.qho_1d import psi_n, E_n, coherent_state
 from sympy.physics.quantum.constants import hbar
+from sympy.testing.pytest import _both_exp_pow
 
 nu = m * omega / hbar
 
@@ -24,6 +25,7 @@ def test_wavefunction():
         assert simplify(psi_n(n, x, m, omega) - Psi[n]) == 0
 
 
+@_both_exp_pow
 def test_norm(n=1):
     # Maximum "n" which is tested:
     for i in range(n + 1):

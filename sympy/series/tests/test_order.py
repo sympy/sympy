@@ -12,7 +12,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.integrals.integrals import Integral
 from sympy.series.order import O, Order
 from sympy.core.expr import unchanged
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 from sympy.abc import w, x, y, z
 from sympy.testing.pytest import XFAIL
 
@@ -175,6 +175,7 @@ def test_ln_args():
     assert O(log(x*y)) + O(log(x) + log(y)) == O(log(x) + log(y), x, y)
 
 
+@_both_exp_pow
 def test_multivar_0():
     assert Order(x*y).expr == x*y
     assert Order(x*y**2).expr == x*y**2
@@ -485,6 +486,7 @@ def test_issue_22165():
     assert O(log(x)).contains(2)
 
 
+@_both_exp_pow
 def test_issue_23231():
     # This test checks Order for expressions having
     # arguments containing variables in exponents/powers.
@@ -498,6 +500,7 @@ def test_issue_9917():
     assert O(x*sin(x) + 1, (x, oo)) == O(x, (x, oo))
 
 
+@_both_exp_pow
 def test_issue_22836():
     assert O(2**x + factorial(x), (x, oo)) == O(factorial(x), (x, oo))
     assert O(2**x + factorial(x) + x**x, (x, oo)) == O(exp(x*log(x)), (x, oo))

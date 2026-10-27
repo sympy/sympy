@@ -5,7 +5,7 @@ from sympy.core import (S, pi, oo, symbols, Rational, Integer, Symbol,
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sign, floor, log)
 from sympy.logic import ITE
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import MatrixSymbol, SparseMatrix, Matrix
@@ -68,6 +68,7 @@ def test_Functions():
     assert rust_code(Mod(x, 3)) == 'x - 3.0*((1_f64/3.0)*x).floor()'
 
 
+@_both_exp_pow
 def test_Pow():
     assert rust_code(1/x) == "x.recip()"
     assert rust_code(x**-1) == rust_code(x**-1.0) == "x.recip()"

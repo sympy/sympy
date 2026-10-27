@@ -17,7 +17,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises, slow, _both_exp_pow
 
 
 def test_Abs():
@@ -76,6 +76,7 @@ def test_pow2():
     assert refine(Abs(x)**2) == Abs(x)**2
 
 
+@_both_exp_pow
 def test_exp():
     x = Symbol('x', integer=True)
     assert refine(exp(pi*I*2*x)) == 1

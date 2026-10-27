@@ -47,7 +47,7 @@ from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 from sympy.tensor import NDimArray
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
 
-from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns_deprecated_sympy, _both_exp_pow
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.physics.quantum.trace import Tr
@@ -136,7 +136,7 @@ def test_EulerGamma():
 def test_Exp():
     assert str(E) == "E"
     with _exp_is_pow(True):
-        assert str(exp(x)) == "E**x"
+        assert str(exp(x)) == "exp(x)"
 
 
 def test_factorial():
@@ -816,6 +816,7 @@ def test_Quantity_str():
     assert str(joule) == "joule"
 
 
+@_both_exp_pow
 def test_wild_str():
     # Check expressions containing Wild not causing infinite recursion
     w = Wild('x')

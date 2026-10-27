@@ -29,7 +29,7 @@ from sympy.core.function import ArgumentIndexError, PoleError
 from sympy.core.relational import Ne, Eq
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.sets.setexpr import SetExpr
-from sympy.testing.pytest import XFAIL, slow, raises
+from sympy.testing.pytest import XFAIL, slow, raises, _both_exp_pow
 
 
 x, y, z = symbols('x y z')
@@ -2243,6 +2243,7 @@ def test_issue_18746():
     assert e3.period() == 8
 
 
+@_both_exp_pow
 def test_issue_25833():
     assert limit(atan(x**2), x, oo) == pi/2
     assert limit(atan(x**2 - 1), x, oo) == pi/2

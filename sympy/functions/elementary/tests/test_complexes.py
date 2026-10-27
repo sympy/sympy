@@ -595,6 +595,7 @@ def test_abs():
     assert abs(I*(1 + a)**2) == (1 + a)**2
 
 
+@_both_exp_pow
 def test_arg():
     assert arg(0) is nan
     assert arg(1) == 0

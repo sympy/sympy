@@ -17,7 +17,7 @@ from sympy.matrices.dense import Matrix
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import (exptrigsimp, trigsimp)
 
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, _both_exp_pow
 
 from sympy.abc import x, y
 
@@ -243,6 +243,7 @@ def test_trigsimp_issue_23983():
     assert trigsimp(trigsimp(expr)) == expected
 
 
+@_both_exp_pow
 def test_trigsimp_add_split():
     a = Symbol('a')
 

@@ -230,8 +230,8 @@ class Order(Expr):
                     try:
                         expr = expr.as_leading_term(*args)
                     except PoleError:
-                        if isinstance(expr, Function) or\
-                                all(isinstance(arg, Function) for arg in expr.args):
+                        if isinstance(expr, (Function, exp)) or\
+                                all(isinstance(arg, (Function, exp)) for arg in expr.args):
                             # It is not possible to simplify an expression
                             # containing only functions (which raise error on
                             # call to leading term) further

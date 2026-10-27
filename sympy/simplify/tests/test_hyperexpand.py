@@ -20,7 +20,7 @@ from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.abc import z, a, b, c
-from sympy.testing.pytest import XFAIL, raises, slow, tooslow
+from sympy.testing.pytest import XFAIL, raises, slow, tooslow, _both_exp_pow
 from sympy.core.random import verify_numerically as tn
 
 from sympy.core.numbers import (Rational, pi)
@@ -33,6 +33,7 @@ from sympy.functions.special.error_functions import erf
 from sympy.functions.special.gamma_functions import (gamma, lowergamma)
 
 
+@_both_exp_pow
 def test_branch_bug():
     assert hyperexpand(hyper((Rational(-1, 3), S.Half), (Rational(2, 3), Rational(3, 2)), -z)) == \
         -z**S('1/3')*lowergamma(exp_polar(I*pi)/3, z)/5 \
@@ -78,6 +79,7 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
         z, a=a, b=b, c=c, d=d)
 
 
+@_both_exp_pow
 def test_roach():
     # Kelly B. Roach.  Meijer G Function Representations.
     # Section "Gallery"
@@ -913,6 +915,7 @@ def test_prudnikov_11():
     assert can_do([1, 1], [Rational(3, 2), 2, 2])  # cosh-integral chi
 
 
+@_both_exp_pow
 def test_prudnikov_12():
     # 7.16
     assert can_do(

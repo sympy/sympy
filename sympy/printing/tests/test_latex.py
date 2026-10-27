@@ -2261,6 +2261,7 @@ def test_MatPow():
     assert latex(MatPow(Mx, 2)) == r'\left(M^{x}\right)^{2}'
 
 
+@_both_exp_pow
 def test_ElementwiseApplyFunction():
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
@@ -2900,6 +2901,7 @@ def test_ArrayTensorProduct_printing():
         r"\left(A + C\right) \boxtimes B"
 
 
+@_both_exp_pow
 def test_ArrayElementwiseApplyFunc_printing():
     from sympy.tensor.array.expressions import ArraySymbol, ArrayTensorProduct
     from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc

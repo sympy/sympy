@@ -14,7 +14,7 @@ from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import CRootOf
 from sympy.solvers.solveset import nonlinsolve
 from sympy.geometry import Circle, intersection
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises, slow, _both_exp_pow
 from sympy.sets.sets import FiniteSet
 from sympy.geometry.point import Point2D
 from sympy.polys.numberfields.minpoly import (
@@ -230,6 +230,7 @@ def test_minimal_polynomial_sq():
     assert mp.subs({x: 0}) == -71965773323122507776
 
 
+@_both_exp_pow
 def test_minpoly_compose():
     # issue 6868
     eq = S('''

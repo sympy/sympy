@@ -12,7 +12,7 @@ from sympy.functions import (
 from sympy.sets import Range
 from sympy.logic import ITE, Implies, Equivalent
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, _both_exp_pow
 from sympy.printing.codeprinter import PrintMethodNotImplementedError
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
@@ -617,6 +617,7 @@ def test_ccode_Max_Min():
         '((0 < ((x < sqrt(x)) ? x : sqrt(x))) ? 0 : ((x < sqrt(x)) ? x : sqrt(x)))'
     )
 
+@_both_exp_pow
 def test_ccode_standard():
     assert ccode(expm1(x), standard='c99') == 'expm1(x)'
     assert ccode(nan, standard='c99') == 'NAN'
@@ -632,6 +633,7 @@ def test_C89CodePrinter():
     assert c89printer.doprint(log10(x)) == 'log10(x)'
 
 
+@_both_exp_pow
 def test_C99CodePrinter():
     assert C99CodePrinter().doprint(expm1(x)) == 'expm1(x)'
     assert C99CodePrinter().doprint(log1p(x)) == 'log1p(x)'
@@ -657,6 +659,7 @@ def test_C99CodePrinter__precision_f80():
     assert f80_printer.doprint(sin(x + Float('2.1'))) == 'sinl(x + 2.1L)'
 
 
+@_both_exp_pow
 def test_C99CodePrinter__precision():
     n = symbols('n', integer=True)
     p = symbols('p', integer=True, positive=True)
@@ -871,6 +874,7 @@ def test_ccode_codegen_ast():
         'return x;',
     ])
 
+@_both_exp_pow
 def test_ccode_UnevaluatedExpr():
     assert ccode(UnevaluatedExpr(y * x) + z) == "z + x*y"
     assert ccode(UnevaluatedExpr(y + x) + z) == "z + (x + y)"  # gh-21955

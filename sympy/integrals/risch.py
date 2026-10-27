@@ -339,8 +339,8 @@ class DifferentialExtension:
             lambda i: i.exp.is_rational_function(*self.T) and
             i.exp.has(*self.T))
         pows = update_sets(pows, self.newf.atoms(Pow),
-            lambda i: i.exp.is_rational_function(*self.T) and
-            i.exp.has(*self.T))
+            lambda i: i.base is not S.Exp1 and
+            i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
         numpows = update_sets(numpows, set(pows),
             lambda i: not i.base.has(*self.T))
         sympows = update_sets(sympows, set(pows) - set(numpows),
@@ -412,6 +412,7 @@ class DifferentialExtension:
             i.args[0].has(*self.T))
         symlogs = update_sets(symlogs, atoms,
             lambda i: i.has(*self.T) and i.args[0].is_Pow and
+            i.args[0].base is not S.Exp1 and
             i.args[0].base.is_rational_function(*self.T) and
             not i.args[0].exp.is_Integer)
 

@@ -27,13 +27,14 @@ from sympy.functions.special.hyper import meijerg
 from sympy.simplify.gammasimp import gammasimp
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.trigsimp import trigsimp
-from sympy.testing.pytest import XFAIL, slow, skip, raises
+from sympy.testing.pytest import XFAIL, slow, skip, raises, _both_exp_pow
 from sympy.abc import x, s, a, b, c, d
 
 
 nu, beta, rho = symbols('nu beta rho')
 
 
+@_both_exp_pow
 def test_undefined_function():
     from sympy.integrals.transforms import MellinTransform
     f = Function('f')
@@ -48,6 +49,7 @@ def test_free_symbols():
     assert mellin_transform(f(x)*a, x, s).free_symbols == {s, a}
 
 
+@_both_exp_pow
 def test_as_integral():
     from sympy.integrals.integrals import Integral
     f = Function('f')
@@ -97,6 +99,7 @@ def test_mellin_transform_fail():
             (-1, Rational(-1, 2)), True)
 
 
+@_both_exp_pow
 def test_mellin_transform():
     from sympy.functions.elementary.miscellaneous import (Max, Min)
     MT = mellin_transform
@@ -449,6 +452,7 @@ def test_inverse_mellin_transform():
     assert IMT(pi/cos(pi*s), s, x, (0, S.Half)) == sqrt(x)/(x + 1)
 
 
+@_both_exp_pow
 def test_fourier_transform():
     from sympy.core.function import (expand, expand_complex, expand_trig)
     from sympy.polys.polytools import factor
@@ -507,6 +511,7 @@ def test_fourier_transform():
     # TODO are there other common transforms (no distributions!)?
 
 
+@_both_exp_pow
 def test_sine_transform():
     t = symbols("t")
     w = symbols("w")
@@ -542,6 +547,7 @@ def test_sine_transform():
         sqrt(2)*w*exp(-w**2/(4*a))/(4*a**Rational(3, 2)), w, t) == t*exp(-a*t**2)
 
 
+@_both_exp_pow
 def test_cosine_transform():
     from sympy.functions.special.error_functions import (Ci, Si)
 
@@ -584,6 +590,7 @@ def test_cosine_transform():
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S.Half,), ()), ((0, 0), (S.Half,)), a**2*w**2/4)/(2*sqrt(pi)), w, t) == 1/(t*sqrt(a**2/t**2 + 1))
 
 
+@_both_exp_pow
 def test_hankel_transform():
     r = Symbol("r")
     k = Symbol("k")

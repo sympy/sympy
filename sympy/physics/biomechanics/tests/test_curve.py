@@ -39,6 +39,7 @@ from sympy.printing.numpy import (
     SciPyPrinter,
 )
 from sympy.printing.pycode import MpmathPrinter, PythonCodePrinter
+from sympy.testing.pytest import _both_exp_pow
 from sympy.utilities.lambdify import lambdify
 
 jax = import_module('jax')
@@ -237,10 +238,12 @@ class TestTendonForceLengthDeGroote2016:
             ),
         ]
     )
+    @_both_exp_pow
     def test_print_code(self, code_printer, expected):
         fl_T = TendonForceLengthDeGroote2016.with_defaults(self.l_T_tilde)
         assert code_printer().doprint(fl_T) == expected
 
+    @_both_exp_pow
     def test_derivative_print_code(self):
         fl_T = TendonForceLengthDeGroote2016.with_defaults(self.l_T_tilde)
         dfl_T_dl_T_tilde = fl_T.diff(self.l_T_tilde)
@@ -611,10 +614,12 @@ class TestFiberForceLengthPassiveDeGroote2016:
             ),
         ]
     )
+    @_both_exp_pow
     def test_print_code(self, code_printer, expected):
         fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self.l_M_tilde)
         assert code_printer().doprint(fl_M_pas) == expected
 
+    @_both_exp_pow
     def test_derivative_print_code(self):
         fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_pas_dl_M_tilde = fl_M_pas.diff(self.l_M_tilde)
@@ -794,10 +799,12 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
             ),
         ]
     )
+    @_both_exp_pow
     def test_print_code(self, code_printer, expected):
         fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(self.fl_M_pas)
         assert code_printer().doprint(fl_M_pas_inv) == expected
 
+    @_both_exp_pow
     def test_derivative_print_code(self):
         fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(self.fl_M_pas)
         dfl_M_pas_inv_dfl_T = fl_M_pas_inv.diff(self.fl_M_pas)
@@ -1129,10 +1136,12 @@ class TestFiberForceLengthActiveDeGroote2016:
             ),
         ]
     )
+    @_both_exp_pow
     def test_print_code(self, code_printer, expected):
         fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self.l_M_tilde)
         assert code_printer().doprint(fl_M_act) == expected
 
+    @_both_exp_pow
     def test_derivative_print_code(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_act_dl_M_tilde = fl_M_act.diff(self.l_M_tilde)

@@ -4,6 +4,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import exp
 from sympy.codegen.rewriting import optimize
 from sympy.codegen.approximations import SumApprox, SeriesApprox
+from sympy.testing.pytest import _both_exp_pow
 
 
 def test_SumApprox_trivial():
@@ -26,6 +27,7 @@ def test_SumApprox_monotone_terms():
     assert (optimize(expr1, [sum_approx_m11])/exp(z) - (y**2 + 1 + x**2)).simplify() == 0
 
 
+@_both_exp_pow
 def test_SeriesApprox_trivial():
     x, z = symbols('x z')
     for factor in [1, exp(z)]:

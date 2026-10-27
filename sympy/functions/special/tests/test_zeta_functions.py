@@ -11,7 +11,7 @@ from sympy.functions.special.zeta_functions import (dirichlet_eta, lerchphi, pol
 from sympy.series.order import O
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, genocchi, harmonic
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises, slow, _both_exp_pow
 from sympy.core.random import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically)
 
@@ -206,6 +206,7 @@ def test_polylog_values():
     assert polylog(0, Integral(1, (x, 0, 1))) == -S.Half
 
 
+@_both_exp_pow
 def test_lerchphi_expansion():
     assert myexpand(lerchphi(1, s, a), zeta(s, a))
     assert myexpand(lerchphi(z, s, 1), polylog(s, z)/z)

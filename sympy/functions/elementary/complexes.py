@@ -596,7 +596,7 @@ class Abs(DefinedFunction):
                 z = a + I*b
                 return exp(re(exponent*z))
         if isinstance(arg, exp):
-            return exp(re(arg.args[0]))
+            return exp(re(arg.exp))
         if isinstance(arg, AppliedUndef):
             if arg.is_positive:
                 return arg
@@ -777,7 +777,7 @@ class arg(DefinedFunction):
         if isinstance(arg, exp_polar):
             return periodic_argument(arg, oo)
         elif isinstance(arg, exp):
-            i_ = im(arg.args[0])
+            i_ = im(arg.exp)
             if i_.is_comparable:
                 i_ %= 2*S.Pi
                 if i_ > S.Pi:
@@ -1490,6 +1490,10 @@ def _unpolarify(eq, exponents_only, pause=False):
             return eq.func(*[_unpolarify(x, exponents_only) for x in eq.args])
         if isinstance(eq, polar_lift):
             return _unpolarify(eq.args[0], exponents_only)
+
+    if eq.is_Pow and eq.base is S.Exp1:
+        return eq.func(S.Exp1, _unpolarify(eq.exp, exponents_only,
+                                           exponents_only))
 
     if eq.is_Pow:
         expo = _unpolarify(eq.exp, exponents_only)

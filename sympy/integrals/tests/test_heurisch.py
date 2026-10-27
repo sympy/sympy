@@ -18,7 +18,7 @@ from sympy.matrices import Matrix
 from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import simplify
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
-from sympy.testing.pytest import XFAIL, slow
+from sympy.testing.pytest import _both_exp_pow, XFAIL, slow
 from sympy.integrals.integrals import integrate
 from sympy import S
 
@@ -45,6 +45,7 @@ def test_components():
         {x, f(x), Derivative(f(x), x), Derivative(f(x), x)}
 
 
+@_both_exp_pow
 def test_issue_10680():
     assert isinstance(integrate(x**log(x**log(x**log(x))),x), Integral)
 
@@ -190,6 +191,7 @@ def test_heurisch_symbolic_coeffs_1130():
     assert heurisch_wrapper(1/(x**2 + y), x) == (atan(x/sqrt(y))/sqrt(y))
 
 
+@_both_exp_pow
 def test_heurisch_hacking():
     assert heurisch(sqrt(1 + 7*x**2), x, hints=[]) == \
         x*sqrt(1 + 7*x**2)/2 + sqrt(7)*asinh(sqrt(7)*x)/14
@@ -362,6 +364,7 @@ def test_issue_22527():
     assert Ut == Uz.subs(z, t)
 
 
+@_both_exp_pow
 def test_heurisch_complex_erf_issue_26338():
     r = symbols('r', real=True)
     a = sqrt(pi)*erf((1 + I)/2)/2
@@ -401,6 +404,7 @@ def test_heurisch_issue_26930():
     assert integrate(integrand, (x, 0, 1)) == -S(9)/49
 
 
+@_both_exp_pow
 def test_heurisch_issue_26922():
 
     a, b, x = symbols("a, b, x", real=True, positive=True)

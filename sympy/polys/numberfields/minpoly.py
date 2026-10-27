@@ -486,7 +486,7 @@ def _minpoly_exp(ex, x):
     """
     Returns the minimal polynomial of ``exp(ex)``
     """
-    c, a = ex.args[0].as_coeff_Mul()
+    c, a = ex.exp.as_coeff_Mul()
     if a == I*pi:
         if c.is_rational:
             q = sympify(c.q)
@@ -605,6 +605,8 @@ def _minpoly_compose(ex, x, dom):
             res = _minpoly_op_algebraic_element(Mul, ex1, ex2, x, dom, mp1=mp1, mp2=mp2)
         else:
             res = _minpoly_mul(x, dom, *ex.args)
+    elif ex.is_Pow and ex.base is S.Exp1:
+        res = _minpoly_exp(ex, x)
     elif ex.is_Pow:
         res = _minpoly_pow(ex.base, ex.exp, x, dom)
     elif ex.__class__ is sin:

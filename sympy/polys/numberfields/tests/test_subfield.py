@@ -17,7 +17,7 @@ from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import IsomorphismFailed
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import CRootOf
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
 from sympy.abc import x
 
@@ -299,6 +299,7 @@ def test_issue_22561():
     assert field_isomorphism(a, b) == [1, 0]
 
 
+@_both_exp_pow
 def test_issue_22736():
     a = CRootOf(x**4 + x**3 + x**2 + x + 1, -1)
     a._reset()

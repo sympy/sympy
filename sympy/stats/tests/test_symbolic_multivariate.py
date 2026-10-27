@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.stats import Expectation, Normal, Variance, Covariance
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 from sympy.core.symbol import symbols
 from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.dense import Matrix
@@ -39,6 +39,7 @@ m1 = Matrix([
     [normal, 0]
 ])
 
+@_both_exp_pow
 def test_multivariate_expectation():
     expr = Expectation(a)
     assert expr == Expectation(a) == ExpectationMatrix(a)

@@ -14,7 +14,7 @@ from sympy.polys.polytools import cancel
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
-from sympy.testing.pytest import XFAIL, raises, skip, slow
+from sympy.testing.pytest import XFAIL, raises, skip, slow, _both_exp_pow
 
 """
 This test suite is testing the limit algorithm using the bottom up approach.
@@ -280,6 +280,7 @@ def test_mrv2c():
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
 
 
+@_both_exp_pow
 def test_mrv3():
     assert mmrv(exp(x**2) + x*exp(x) + log(x)**x/x, x) == {exp(x**2)}
     assert mmrv(
@@ -307,6 +308,7 @@ def mrewrite(a, b, c):
     return rewrite(a[1], a[0], b, c)
 
 
+@_both_exp_pow
 def test_rewrite1():
     e = exp(x)
     assert mrewrite(mrv(e, x), x, m) == (1/m, -x)
@@ -333,6 +335,7 @@ def test_rewrite3():
         (x**2 + x)/x**3), -x - 1/x), ((m**2 - exp((x**2 + x)/x**3))/m, x**(-2) - x)]
 
 
+@_both_exp_pow
 def test_mrv_leadterm1():
     assert mrv_leadterm(-exp(1/x), x) == (-1, 0)
     assert mrv_leadterm(1/exp(-x + exp(-x)) - exp(x), x) == (-1, 0)
@@ -346,6 +349,7 @@ def test_mrv_leadterm2():
         (1, 0)
 
 
+@_both_exp_pow
 def test_mrv_leadterm3():
     #Gruntz: p56, 3.27
     assert mmrv(exp(-x + exp(-x)*exp(-x*log(x))), x) == {exp(-x - x*log(x))}
@@ -367,6 +371,7 @@ def test_limit1():
     assert gruntz(x + 1/x, x, oo) is oo
 
 
+@_both_exp_pow
 def test_limit2():
     assert gruntz(x**x, x, 0, dir="+") == 1
     assert gruntz((exp(x) - 1)/x, x, 0) == 1
@@ -386,6 +391,7 @@ def test_limit3():
     assert gruntz(exp(x)/(a + exp(x)), x, oo) == 1
 
 
+@_both_exp_pow
 def test_limit4():
     #issue 3463
     assert gruntz((3**x + 5**x)**(1/x), x, oo) == 5
@@ -412,6 +418,7 @@ def test_issue_4814():
     assert gruntz((x + 1)**(1/log(x + 1)), x, oo) == E
 
 
+@_both_exp_pow
 def test_intractable():
     assert gruntz(1/gamma(x), x, oo) == 0
     assert gruntz(1/loggamma(x), x, oo) == 0
@@ -433,6 +440,7 @@ def test_exp_log_series():
     assert gruntz(x/log(log(x*exp(x))), x, oo) is oo
 
 
+@_both_exp_pow
 def test_issue_3644():
     assert gruntz(((x**7 + x + 1)/(2**x + x**2))**(-1/x), x, oo) == 2
 
@@ -443,6 +451,7 @@ def test_issue_6843():
     assert gruntz(r, x, 1).simplify() == n/2
 
 
+@_both_exp_pow
 def test_issue_4190():
     assert gruntz(x - gamma(1/x), x, oo) == S.EulerGamma
 
@@ -463,11 +472,13 @@ def test_issue_5172():
         (2**(p + 1) + r - 1)/(r + 1)**(p + 1)
 
 
+@_both_exp_pow
 def test_issue_4109():
     assert gruntz(1/gamma(x), x, 0) == 0
     assert gruntz(x*gamma(x), x, 0) == 1
 
 
+@_both_exp_pow
 def test_issue_6682():
     assert gruntz(exp(2*Ei(-x))/x**2, x, 0) == exp(2*EulerGamma)
 
@@ -484,6 +495,7 @@ def test_issue_7391_8166():
     raises(ValueError, lambda: gruntz(x*f(x)**2/(x**2 + f(x)**4), x, 0))
 
 
+@_both_exp_pow
 def test_issue_24210_25885():
     eq = exp(x)/(1+1/x)**x**2
     ans = sqrt(E)
