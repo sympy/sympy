@@ -2760,3 +2760,11 @@ def test_issue_27062():
     assert solve(x*log(x - 1), x) == [0, 2]
     pw = Piecewise((x - 1, x > 0), (S.Infinity, True))
     assert solve((x - 2)*pw, x) == [1, 2]
+
+
+def test_issue_26503():
+    from sympy.integrals import integrate
+    a, b = symbols('a b')
+    assert checksol(b**x*log(a) - b**x*log(b), {b: 0**(1/x)}) is False
+    assert solve([b**x*log(a) - b**x*log(b)], exclude=(x,)) == [{a: b}]
+    assert integrate((a**x)/(b**x), x) == Piecewise((a**x/(b**x*log(a) - b**x*log(b)), Ne(a, b)), (x, True))

@@ -346,10 +346,15 @@ def checksol(f, symbol, sol=None, **flags):
                 # the nz value is correct
                 return not nz
             break
+        if val.has(S.NaN):
+            return False
         if val.is_Rational:
             return val == 0
         if numerical and val.is_number:
-            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
+            val_n = val.n(18).n(12, chop=True)
+            if val_n.has(S.NaN):
+                return False
+            return (abs(val_n) < 1e-9) is S.true
 
     if flags.get('warn', False):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
