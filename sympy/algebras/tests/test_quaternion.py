@@ -179,7 +179,7 @@ def test_quaternion_functions():
     assert Quaternion(x, 0, 0, 0).exp() == Quaternion(exp(x), 0, 0, 0)
 
     q = Quaternion(0, 1, I, 0, real_field=False)
-    assert q*q = Quaternion(0, 0, 0, 0)
+    assert q*q == Quaternion(0, 0, 0, 0)
     assert q.exp() == Quaternion(1, 1, I, 0)
 
     assert q1.log() == \
