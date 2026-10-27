@@ -1187,6 +1187,7 @@ def test_issue_29827():
     assert dsolve(ode, f(x), ics={f(0): 0}) == Eq(f(x), 0)
 
 from sympy import symbols, Eq, Derivative, Function
+
 from sympy.solvers.ode import dsolve
 from sympy.utilities.iterables import numbered_symbols
 
@@ -1198,7 +1199,7 @@ def test_dsolve_symbols_iterator():
     K1 = Symbol('K1')
     sol = dsolve(eq, symbols=numbered_symbols(prefix='K', start=1))
     assert sol == Eq(f(x), K1*exp(x))
-
-
-
     
+
+
+
