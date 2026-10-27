@@ -1022,7 +1022,13 @@ class Quaternion(Expr):
         c = exp(q.a) * sin(vector_norm) * q.c / vector_norm
         d = exp(q.a) * sin(vector_norm) * q.d / vector_norm
 
-        return Quaternion(a, b, c, d)
+        a = exp(q.a)
+        scale = a*sinc(vector_norm)
+
+        return Quaternion(
+            a*cos(vector_norm),
+            scale*q.b, scale*q.c, scale*q.d,
+            real_field=q.real_field)
 
     def log(self):
         r"""Returns the logarithm of the quaternion, given by $\log q$.
