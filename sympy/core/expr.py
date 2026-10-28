@@ -923,10 +923,8 @@ class Expr(Basic, EvalfMixin):
         can also produce ``nan`` from intermediate cancellation.  In the
         latter case a slightly higher precision is tried before giving up.
 
-        If unevaluated functions remain, no inference is made.  In particular,
-        evaluating a complex expression as a whole and then inspecting a tiny
-        real or imaginary component is not in general sufficient to establish
-        that the corresponding exact component is nonzero.
+        Inference is then made if evaluation produces a ``Float`` or an expression
+        of the form ``a + I*b`` with numerical ``a`` and ``b``.
 
         Return ``((r, br), (i, bi))``, where ``r`` and ``i`` are numerical
         approximations to the real and imaginary parts and ``br``/``bi``
@@ -950,13 +948,7 @@ class Expr(Basic, EvalfMixin):
 
             if n2 is None or n2 is S.NaN:
                 return
-            if n2.has(Function):
-                # A function that survived numerical evaluation means that this was
-                # only a partial evaluation; do not infer assumptions from it.
-                return
             if n2.is_Number and n2._prec == 1:
-                return
-            if n2 is self or n2 == self:
                 return
 
             try:
@@ -972,9 +964,12 @@ class Expr(Basic, EvalfMixin):
                 # not sure that this is reachable
                 return
 
-            match = pure_complex(f, or_real=True)
-            if match is None:
-                return
+            if f.is_Float:
+                match = f, S.Zero
+            else:
+                match = pure_complex(f)
+                if match is None:
+                    return
 
             r, i = match
             br = r._prec != 1
