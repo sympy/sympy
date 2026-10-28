@@ -68,6 +68,8 @@ class Literal:
     __repr__ = __str__
 
     def __eq__(self, other):
+        if not isinstance(other, Literal):
+            return NotImplemented
         return self.arg == other.arg and self.is_Not == other.is_Not
 
     def __hash__(self):
@@ -98,6 +100,8 @@ class OR:
         return hash((type(self).__name__,) + tuple(self.args))
 
     def __eq__(self, other):
+        if not isinstance(other, OR):
+            return NotImplemented
         return self.args == other.args
 
     def __str__(self):
@@ -130,6 +134,8 @@ class AND:
         return hash((type(self).__name__,) + tuple(self.args))
 
     def __eq__(self, other):
+        if not isinstance(other, AND):
+            return NotImplemented
         return self.args == other.args
 
     def __str__(self):
@@ -173,10 +179,10 @@ def to_NNF(expr, composite_map=None):
     if composite_map is None:
         composite_map = {}
 
-    if expr == S.true:
+    if expr is S.true or expr == S.true:
         # Use sympy.assumptions.cnf.AND() because an empty conjunction represents True
         return AND()
-    if expr == S.false:
+    if expr is S.false or expr == S.false:
         # Use sympy.assumptions.cnf.OR() because an empty disjunction represents False
         return OR()
 

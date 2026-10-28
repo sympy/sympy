@@ -48,3 +48,21 @@ def test_ask_single_fact():
     assert _ask_single_fact(Q.zero, CNF.from_prop(~Q.even)) is False
 
     assert _ask_single_fact(Q.zero, CNF.from_prop(~Q.even & Q.real)) is False
+
+
+def test_issue_30861():
+    from sympy.assumptions.cnf import Literal, OR, AND, to_NNF
+    from sympy.core.singleton import S
+    from sympy.core.relational import Eq
+
+    lit = Literal(Eq(x, y), True)
+    assert to_NNF(lit) == lit
+    assert CNF.to_CNF(lit).clauses == {frozenset({lit})}
+
+    for val in (None, S.true, S.false, 42, "lit"):
+        assert lit != val
+        assert val != lit
+        assert OR() != val
+        assert val != OR()
+        assert AND() != val
+        assert val != AND()
