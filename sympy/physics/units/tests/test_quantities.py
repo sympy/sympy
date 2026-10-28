@@ -11,12 +11,14 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 from sympy.integrals.integrals import integrate
-from sympy.physics.units import (amount_of_substance, area, convert_to, find_unit,
-                                 volume, kilometer, joule, molar_gas_constant,
-                                 vacuum_permittivity, elementary_charge, volt,
-                                 ohm)
+from sympy.physics.units import (amount_of_substance, area, astronomical_unit,
+                                 convert_to, elementary_charge, find_unit,
+                                 joule, kilometer, meter, mmHg,
+                                 molar_gas_constant, nautical_mile, ohm,
+                                 pascal, torr, vacuum_permittivity, volt,
+                                 volume)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
-    day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
+    day, foot, grams, hour, inch, kg, km, m, millimeter,
     minute, quart, s, second, speed_of_light, bit,
     byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte,
     kilogram, gravitational_constant, electron_rest_mass)
@@ -249,7 +251,7 @@ def test_units():
     t = (1*au / speed_of_light) / minute
     # TODO: need a better way to simplify expressions containing units:
     t = convert_to(convert_to(t, meter / minute), meter)
-    assert t.simplify() == Rational(49865956897, 5995849160)
+    assert t.simplify() == Rational(34154765, 4106746)
 
     # TODO: fix this, it should give `m` without `Abs`
     assert sqrt(m**2) == m
@@ -649,3 +651,17 @@ def test_si_scale_factor_dimension_check_uses_instance_method():
     assert ds.equivalent_dims(Dimension('voltage'), Dimension('current')) is False
     raises(TypeError, lambda: DimensionSystem.equivalent_dims(
         Dimension('voltage'), Dimension('current')))
+
+def test_issue_30810():
+
+    # astronomical_unit shoul be exactly 149597870700 m (IAU 2012 B2)
+    assert convert_to(astronomical_unit, meter) == 149597870700 * meter
+
+    # nautical_mile should be exactly 1852 m (IMO 2008)
+    assert convert_to(nautical_mile, meter) == 1852 * meter
+
+    # torr should be exactly atmosphere/760 == 101325/760 Pa
+    assert convert_to(torr, pascal) == Rational(101325, 760) * pascal
+
+    # torr and mmHg should be distinct quantities
+    assert torr != mmHg
