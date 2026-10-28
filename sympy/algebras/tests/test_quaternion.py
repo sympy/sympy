@@ -8,7 +8,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
+from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan, sinc)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
 from sympy.simplify import simplify
@@ -102,6 +102,7 @@ def test_quaternion_axis_angle_simplification():
     assert result.b == sqrt(14)*sin(asin(4)/2)/14
     assert result.c == sqrt(14)*sin(asin(4)/2)/7
     assert result.d == 3*sqrt(14)*sin(asin(4)/2)/14
+
 
 def test_quaternion_complex_real_addition():
     a = symbols("a", complex=True)
@@ -198,6 +199,8 @@ def test_quaternion_functions():
                120 * sqrt(29) * sin(2 * acos(sqrt(30)/30)) / 29)
 
     assert diff(Quaternion(x, x, x, x), x) == Quaternion(1, 1, 1, 1)
+    assert Quaternion(0, x, 0, 0).diff(x).subs(x, 0) == \
+        Quaternion(1, 0, 0, 0) 
 
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
