@@ -2844,6 +2844,9 @@ def test_Feedback_printing():
         r'\frac{\frac{p}{p + x}}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
     assert latex(Feedback(tf1*tf2, sign=1)) == \
         r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+    tf3 = TransferFunction(1, p + 2, p)
+    assert latex(Feedback(tf1*tf2, tf3)) == \
+        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} + \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right) \left(\frac{1}{p + 2}\right)}'
 
 
 def test_MIMOFeedback_printing():

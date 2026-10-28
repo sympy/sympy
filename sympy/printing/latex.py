@@ -2766,7 +2766,7 @@ class LatexPrinter(Printer):
             if expr.sys2 == tf:
                 den_term_2 = Series(*num_arg_list)
             else:
-                den_term_2 = tf, Series(*num_arg_list, expr.sys2)
+                den_term_2 = Series(*num_arg_list, expr.sys2)
         elif isinstance(num, TransferFunction) and isinstance(expr.sys2, Series):
             if num == tf:
                 den_term_2 = Series(*den_arg_list)
