@@ -422,7 +422,7 @@ class RustCodePrinter(CodePrinter):
         if not expr.explicit:
             return self._print(expr.expr)
         else:
-            return self._print(expr.expr) + ' as %s' % self.type_mappings[self.type_aliases[expr.type_]]
+            return self.parenthesize(expr.expr, PRECEDENCE["Pow"]) + ' as %s' % self.type_mappings[self.type_aliases[expr.type_]]
 
     def _print_Float(self, expr, _type=False):
         ret = super()._print_Float(expr)

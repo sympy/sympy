@@ -364,6 +364,15 @@ def test_sparse_matrix():
         rust_code(SparseMatrix([[1, 2, 3]]))
 
 def test_parenthesize_typecast():
+    # gh-28418
     modulus = Symbol("modulus")
     exp = (2 ** (2.0 * ceiling(-y + log(x) / log(2.0) + 4)) + 0.5) / (3 * modulus**2)
-    assert(rust_code(exp) == '(1_f64/3.0)*(0.5 + (2.0*(-y + 1.44269504088896*x.ln()).ceil() + 8.0).exp2())*modulus.powi(-2)')
+    assert rust_code(exp) == '(1_f64/3.0)*(0.5 + (2.0*(-y + 1.44269504088896*x.ln()).ceil() + 8.0).exp2())*modulus.powi(-2)'
+
+    i, j = symbols("i j", integer=True)
+    r = Symbol("r", real=True)
+    w = Symbol("w")
+    assert rust_code(r * (i + j)) == "r*(i + j) as f64"
+    assert rust_code(Eq(w, i + j)) == "w == (i + j) as f64"
+    assert rust_code(Eq(i + j, w)) == "(i + j) as f64 == w"
+    assert rust_code(Lt(i + j, w)) == "(i + j) as f64 < w"
