@@ -2768,3 +2768,5 @@ def test_issue_26503():
     assert checksol(b**x*log(a) - b**x*log(b), {b: 0**(1/x)}) is False
     assert solve([b**x*log(a) - b**x*log(b)], exclude=(x,)) == [{a: b}]
     assert integrate((a**x)/(b**x), x) == Piecewise((a**x/(b**x*log(a) - b**x*log(b)), Ne(a, b)), (x, True))
+    pw = Piecewise((x - 1, x > 0), (S.NaN, True))
+    assert checksol(pw, x, 1) is True

@@ -346,13 +346,13 @@ def checksol(f, symbol, sol=None, **flags):
                 # the nz value is correct
                 return not nz
             break
-        if val.has(S.NaN):
-            return False
         if val.is_Rational:
             return val == 0
         if numerical and val.is_number:
+            if val is S.NaN:
+                return False
             val_n = val.n(18).n(12, chop=True)
-            if val_n.has(S.NaN):
+            if val_n is S.NaN:
                 return False
             return (abs(val_n) < 1e-9) is S.true
 
