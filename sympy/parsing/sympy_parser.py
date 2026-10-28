@@ -1127,6 +1127,14 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             return sign * node.value
         return None
 
+    # Preserve unreduced fractions as unevaluated division.
+    # The lambda prevents flatten() from denesting the fraction
+    # when it occurs inside another multiplication.
+    _ratio_ast = ast.parse(
+            'lambda p, q: Mul(p, Pow(q, -1, evaluate=False), '
+            'evaluate=False)',
+            mode='eval').body
+
     def _literal_fraction(self, node):
         """Preserve unreduced integer division but use canonical Rationals."""
         q = self._integer_literal(node.right)
@@ -1157,15 +1165,8 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 args=[ast.Constant(p), ast.Constant(q)],
                 keywords=[])
 
-        # Preserve unreduced fractions as unevaluated division.
-        # The lambda prevents flatten() from denesting the fraction
-        # when it occurs inside another multiplication.
-        ratio = ast.parse(
-            'lambda p, q: Mul(p, Pow(q, -1, evaluate=False), '
-            'evaluate=False)',
-            mode='eval').body
         return ast.Call(
-            func=ratio,
+            func=self._ratio_ast,
             args=[self.visit(node.left), self.visit(node.right)],
             keywords=[])
 
