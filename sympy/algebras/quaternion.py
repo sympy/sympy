@@ -1018,10 +1018,6 @@ class Quaternion(Expr):
             return Quaternion(a, a*q.b, a*q.c, a*q.d,
                 real_field=q.real_field)
 
-        b = exp(q.a) * sin(vector_norm) * q.b / vector_norm
-        c = exp(q.a) * sin(vector_norm) * q.c / vector_norm
-        d = exp(q.a) * sin(vector_norm) * q.d / vector_norm
-
         a = exp(q.a)
         scale = a*sinc(vector_norm)
 
