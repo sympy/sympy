@@ -199,8 +199,8 @@ def test_quaternion_functions():
                120 * sqrt(29) * sin(2 * acos(sqrt(30)/30)) / 29)
 
     assert diff(Quaternion(x, x, x, x), x) == Quaternion(1, 1, 1, 1)
-    assert Quaternion(0, x, 0, 0).diff(x).subs(x, 0) == \
-        Quaternion(1, 0, 0, 0)
+    assert Quaternion(x, 0, 0, 0).exp().diff(x) == \
+        Quaternion(exp(x), 0, 0, 0)
 
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
