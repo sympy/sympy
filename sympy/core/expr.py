@@ -913,18 +913,14 @@ class Expr(Basic, EvalfMixin):
         """Return low-precision numerical information about a number.
 
         This is used by assumptions as a fallback when structural methods do
-        not determine the real and imaginary parts.  It is deliberately
+        not determine the real and imaginary parts. It is deliberately
         conservative: numerical evaluation here is intended to provide useful
         sign/realness information, not to turn an approximate value into an
         exact mathematical assertion.
 
-        ``_eval_evalf(2)`` is used first as a cheap preflight.  It may return
-        a structured expression rather than a Float, and very low precision
-        can also produce ``nan`` from intermediate cancellation.  In the
-        latter case a slightly higher precision is tried before giving up.
-
-        Inference is then made if evaluation produces a ``Float`` or an expression
-        of the form ``a + I*b`` with numerical ``a`` and ``b``.
+        ``_eval_evalf`` is tried first at 2 bits and then at 10 bits. Inference
+        is made only if evaluation produces a ``Float`` or an expression of the
+        form ``a + I*b`` with numerical ``a`` and ``b``.
 
         Return ``((r, br), (i, bi))``, where ``r`` and ``i`` are numerical
         approximations to the real and imaginary parts and ``br``/``bi``
@@ -932,51 +928,27 @@ class Expr(Basic, EvalfMixin):
         Return ``None`` when no useful inference can safely be made.
         """
         if self.is_number:
-            f = None
-            try:
-                # _eval_evalf takes binary precision, while public evalf takes
-                # decimal digits; 10 bits is roughly the working precision of evalf(2).
-                n2 = self._eval_evalf(2)
-                if n2 is S.NaN:
-                    # Two bits can destroy an intermediate by cancellation even when
-                    # the expression has a perfectly usable numerical value.
-                    n2 = self._eval_evalf(10)
-                    f = n2
-            except ValueError:
-                # e.g. erfinv(I**(1/pi))
-                return
-
-            if n2 is None or n2 is S.NaN:
-                return
-            if n2.is_Number and n2._prec == 1:
-                return
-
-            try:
-                if f is None:
-                    f = self.evalf(2)
-            except ValueError:
-                # Numerical evaluation can fail on intermediate expressions even
-                # when their combination is finite (e.g. differences of divergent
-                # sums).  Such failures are inconclusive for assumptions.
-                return
-
-            if f is S.NaN:
-                # not sure that this is reachable
-                return
-
-            if f.is_Float:
-                match = f, S.Zero
-            else:
-                match = pure_complex(f)
-                if match is None:
+            for prec in (2, 10):
+                try:
+                    f = self._eval_evalf(prec)
+                except ValueError:
                     return
 
-            r, i = match
-            br = r._prec != 1
-            bi = i._prec != 1
-            if not br and not bi:
-                return
-            return (r, br), (i, bi)
+                if f is None or f is S.NaN:
+                    continue
+
+                if f.is_Float:
+                    match = f, S.Zero
+                else:
+                    match = pure_complex(f)
+                    if match is None:
+                        continue
+
+                r, i = match
+                br = r._prec != 1
+                bi = i._prec != 1
+                if br or bi:
+                    return (r, br), (i, bi)
 
     def _eval_is_extended_positive_negative(self, positive):
         from sympy.polys.numberfields import minimal_polynomial
