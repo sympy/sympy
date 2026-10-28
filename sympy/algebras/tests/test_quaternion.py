@@ -168,15 +168,12 @@ def test_quaternion_functions():
     assert q1.pow(-0.5) == NotImplemented # type: ignore
     raises(TypeError, lambda: q1**(-0.5))
 
-    assert q1.exp() == \
-    Quaternion(E * cos(sqrt(29)),
-               2 * sqrt(29) * E * sin(sqrt(29)) / 29,
-               3 * sqrt(29) * E * sin(sqrt(29)) / 29,
-Quaternion(
-    E * cos(sqrt(29)),
-    2 * E * sinc(sqrt(29)),
-    3 * E * sinc(sqrt(29)),
-    4 * E * sinc(sqrt(29)))
+    assert q1.exp() == Quaternion(
+        E * cos(sqrt(29)),
+        2 * E * sinc(sqrt(29)),
+        3 * E * sinc(sqrt(29)),
+        4 * E * sinc(sqrt(29)))
+
     # exp of a purely real quaternion must not divide by a zero vector norm
     assert q0.exp() == Quaternion(1, 0, 0, 0)
     assert Quaternion(2, 0, 0, 0).exp() == Quaternion(exp(2), 0, 0, 0)
