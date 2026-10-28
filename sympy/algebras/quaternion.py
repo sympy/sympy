@@ -1005,10 +1005,10 @@ class Quaternion(Expr):
         E*cos(sqrt(29))
         + 2*sqrt(29)*E*sin(sqrt(29))/29*i
         + 3*sqrt(29)*E*sin(sqrt(29))/29*j
-       E*cos(sqrt(29))
-       + 2*E*sinc(sqrt(29))*i
-       + 3*E*sinc(sqrt(29))*j
-       + 4*E*sinc(sqrt(29))*k
+        E*cos(sqrt(29))
+        + 2*E*sinc(sqrt(29))*i
+        + 3*E*sinc(sqrt(29))*j
+        + 4*E*sinc(sqrt(29))*k
 
         """
         # exp(q) = e^a(cos||v|| + v/||v||*sin||v||)
