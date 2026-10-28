@@ -16,6 +16,7 @@ from sympy.physics.units import (amount_of_substance, area, convert_to, find_uni
                                  vacuum_permittivity, elementary_charge, volt,
                                  ohm)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
+    nautical_mile, astronomical_unit, torr, pascal,
     day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
     byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte,
@@ -249,7 +250,7 @@ def test_units():
     t = (1*au / speed_of_light) / minute
     # TODO: need a better way to simplify expressions containing units:
     t = convert_to(convert_to(t, meter / minute), meter)
-    assert t.simplify() == Rational(49865956897, 5995849160)
+    assert t.simplify() == Rational(34154765, 4106746)
 
     # TODO: fix this, it should give `m` without `Abs`
     assert sqrt(m**2) == m
@@ -649,3 +650,7 @@ def test_si_scale_factor_dimension_check_uses_instance_method():
     assert ds.equivalent_dims(Dimension('voltage'), Dimension('current')) is False
     raises(TypeError, lambda: DimensionSystem.equivalent_dims(
         Dimension('voltage'), Dimension('current')))
+def test_exact_definitions():
+    assert convert_to(nautical_mile, meter) == 1852 * meter
+    assert convert_to(astronomical_unit, meter) == 149597870700 * meter
+    assert convert_to(torr, pascal) == Rational(101325, 760) * pascal
