@@ -9,7 +9,7 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 
 from sympy.core import (Catalan, GoldenRatio)
-from sympy.core.numbers import (E, Float, I, Rational, pi)
+from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
@@ -276,3 +276,14 @@ def test_issue_25337_composite_true():
     for k in [sqrt(2), pi, E]:
         assert construct_domain([k], composite=True)[0] == ZZ[k]
         assert construct_domain(k, composite=True)[0] == ZZ[k]
+
+
+def test_issue_30061():
+    invalid = [oo*I, -oo*I, oo + I, 2 + oo*I]
+
+    for k in invalid:
+        assert construct_domain([k]) == (EX, [EX(k)])
+        assert construct_domain([k], composite=True) == (EX, [EX(k)])
+
+    for k in invalid:
+        assert construct_domain(k) == (EX, EX(k))
