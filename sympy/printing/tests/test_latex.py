@@ -3369,6 +3369,22 @@ def test_Array():
     # fill the empty argument with a bunch of 'c' to avoid latex errors
     assert latex(arr) == r'\left[\begin{array}{ccccccccccc}0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\end{array}\right]'
 
+    arr = Array(range(22), (2, 11))
+    assert latex(arr) == r'\left[\begin{array}{ccccccccccc}' \
+        r'0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\' \
+        r'11 & 12 & 13 & 14 & 15 & 16 & 17 & 18 & 19 & 20 & 21\end{array}\right]'
+
+    arr = Array(range(6), (3, 2))
+    assert latex(arr, mat_str='array') == \
+        r'\left[\begin{array}{cc}0 & 1\\2 & 3\\4 & 5\end{array}\right]'
+
+    arr = Array(range(12), (2, 2, 3))
+    assert latex(arr, mat_str='array') == \
+        r'\left[\begin{array}{cc}' \
+        r'\left[\begin{array}{ccc}0 & 1 & 2\\3 & 4 & 5\end{array}\right] & ' \
+        r'\left[\begin{array}{ccc}6 & 7 & 8\\9 & 10 & 11\end{array}\right]' \
+        r'\end{array}\right]'
+
 def test_latex_with_unevaluated():
     with evaluate(False):
         assert latex(a * a) == r"a a"
