@@ -200,7 +200,7 @@ def test_quaternion_functions():
 
     assert diff(Quaternion(x, x, x, x), x) == Quaternion(1, 1, 1, 1)
     assert Quaternion(0, x, 0, 0).diff(x).subs(x, 0) == \
-        Quaternion(1, 0, 0, 0) 
+        Quaternion(1, 0, 0, 0)
 
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
