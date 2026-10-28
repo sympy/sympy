@@ -913,31 +913,37 @@ class Expr(Basic, EvalfMixin):
         """return (r, br), (i, bi) if self can be computed to r + I*i
         with either r or i having significant precision."""
         if self.is_number:
-            # check to see that we can get a value
+            f = None
             try:
                 n2 = self._eval_evalf(2)
-            except ValueError:
-                n2 = None
-            if n2 is None:
-                return None
-            if n2 is S.NaN:
-                n2 = self._eval_evalf(10)  # the approx precision in upcoming evalf
                 if n2 is S.NaN:
-                    return
-            if n2.is_Number and n2._prec == 1:  # no significance
-                # just a quick exit in case it already evaluated
-                return None
-            if n2 is self or n2 == self:
-                return None
-            try:
-                f = self.evalf(2)
+                    n2 = self._eval_evalf(10)
+                    f = n2
             except ValueError:
-                return None
+                return
+
+            if n2 is None or n2 is S.NaN:
+                return
+            if n2.has(Function):
+                return
+            if n2.is_Number and n2._prec == 1:
+                return
+            if n2 is self or n2 == self:
+                return
+
+            try:
+                if f is None:
+                    f = self.evalf(2)
+            except ValueError:
+                return
+
             if f is S.NaN:
-                return None
+                return
+
             match = pure_complex(f, or_real=True)
             if match is None:
-                return None  # maybe custom class that didn't evaluate was present (c.f. PowTest)
+                return
+
             r, i = match
             br = r._prec != 1
             bi = i._prec != 1
