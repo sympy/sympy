@@ -1003,9 +1003,6 @@ class Quaternion(Expr):
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.exp()
         E*cos(sqrt(29))
-        + 2*sqrt(29)*E*sin(sqrt(29))/29*i
-        + 3*sqrt(29)*E*sin(sqrt(29))/29*j
-        E*cos(sqrt(29))
         + 2*E*sinc(sqrt(29))*i
         + 3*E*sinc(sqrt(29))*j
         + 4*E*sinc(sqrt(29))*k
