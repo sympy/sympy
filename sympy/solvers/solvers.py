@@ -1795,6 +1795,11 @@ def _solve_system(exprs, symbols, **flags):
     if not exprs:
         return False, []
 
+    if not symbols:
+        if all(e.is_zero or e.equals(0) for e in exprs):
+            return True, [{}]
+        return True, []
+
     if flags.pop('_split', True):
         # Split the system into connected components
         V = exprs

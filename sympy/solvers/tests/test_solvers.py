@@ -2760,3 +2760,8 @@ def test_issue_27062():
     assert solve(x*log(x - 1), x) == [0, 2]
     pw = Piecewise((x - 1, x > 0), (S.Infinity, True))
     assert solve((x - 2)*pw, x) == [1, 2]
+
+
+def test_issue_26504_solve_empty_symbols():
+    assert solve([log(2) + log(3)]) == []
+    assert solve([log(2) + log(3)], exclude=(x,)) == []

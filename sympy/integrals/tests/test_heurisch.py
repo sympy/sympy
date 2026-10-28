@@ -416,3 +416,10 @@ def test_heurisch_issue_26922():
     )
 
     assert i.doit(heurisch=False).expand() == res
+
+
+def test_heurisch_issue_26504():
+    f = 2**(2 + 3*x)*3**(5 + 7*x)
+    ans = 972*2**(3*x)*3**(7*x)/(3*log(2) + 7*log(3))
+    assert heurisch(f, x) == ans
+    assert integrate(f, x) == ans
