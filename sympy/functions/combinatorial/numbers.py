@@ -2754,11 +2754,11 @@ def _stirling_poly(m, kind):
 
 @cacheit
 def _stirling1_column(n, k):
-    """closed form for stirling(n,k,kind=1) in terms of harmonic numbers
+    """closed form for stirling(n,k,kind=1)/factorial(n-1) in terms of harmonic numbers
     for symbolic n and constant k, via Newton's identities."""
     # This is recurrence (6b) from https://math.stackexchange.com/q/5116629
     if k == 0: return S.Zero**n
-    if k == 1: return factorial(n - 1)
+    if k == 1: return S.One
     return expand_mul(sum((-1)**(i - 1) * _stirling1_column(n, k - i) * harmonic(n - 1, i) for i in range(1, k)) / (k - 1))
 
 
@@ -2912,7 +2912,7 @@ class stirling(DefinedFunction):
         if not (k.is_Integer and k.is_nonnegative):
             return self
 
-        result = _stirling1_column(n, int(k))
+        result = factorial(n - 1)*_stirling1_column(n, int(k))
         if signed: result *= S.NegativeOne**(n - k)
         return result
 
