@@ -689,6 +689,8 @@ class LatexPrinter(Printer):
             elif expr.exp.is_negative and expr.base.is_commutative:
                 # special case for 1^(-x), issue 9216
                 if expr.base == 1:
+                    if expr.exp == -1:
+                        return r"\frac{1}{1}"
                     return r"%s^{%s}" % (expr.base, expr.exp)
                 # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
                 if expr.base.is_Rational:
