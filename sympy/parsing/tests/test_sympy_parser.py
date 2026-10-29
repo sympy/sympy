@@ -418,7 +418,7 @@ def test_evaluate_false_literal_fractions():
         '1/1': Pow(1, -1, evaluate=False),
         '3/1': ratio(3, 1),
         '0/5': ratio(0, 5),
-        '1/0': ratio(1, 0),
+        '1/0': Pow(0, -1, evaluate=False),
         '1*1/2': Mul(1, 1, Pow(2, -1, evaluate=False), evaluate=False),
         '1*2/4': Mul(1, 2, Pow(4, -1, evaluate=False), evaluate=False),
         '1*(2/4)': Mul(1, ratio(2, 4), evaluate=False),
@@ -444,6 +444,7 @@ def test_evaluate_false_literal_fractions():
     assert str(parse_expr('(1+x)/2', evaluate=False)) == '(x + 1)/2'
     assert parse_expr('2/4') == Rational(1, 2)
     assert latex(parse_expr('1/1', evaluate=False)) == r'\frac{1}{1}'
+    assert latex(parse_expr('1/0', evaluate=False)) == r'\frac{1}{0}'
     assert latex(parse_expr('1*2/4', evaluate=False)) == r'1 \cdot 2 \cdot \frac{1}{4}'
     assert latex(parse_expr('2/4', evaluate=False)) == r'\frac{2}{4}'
     assert latex(parse_expr('1*(2/4)', evaluate=False)) == r'1 \cdot \frac{2}{4}'
