@@ -298,7 +298,10 @@ class FCodePrinter(CodePrinter):
 
     def _eval_function(self, expr):
         prec = self._settings['precision']
-        args = [N(a, prec) for a in expr.args]
+        args = [
+            N(a, prec) if not a.free_symbols else a
+            for a in expr.args
+        ]
         return expr.func(*args)
 
     def parenthesize(self, item, level, strict=False):

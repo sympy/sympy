@@ -573,7 +573,7 @@ class TestFiberForceLengthPassiveDeGroote2016:
             ),
             (
                 FCodePrinter,
-                '      (0.0186573603637741d0*(-1 + exp(6.666666666666667d0*(l_M_tilde - 1\n'
+                '      (0.0186573603637741d0*(-1 + exp(6.66666666666667d0*(l_M_tilde - 1\n'
                 '     @ ))))',
             ),
             (
@@ -757,7 +757,7 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
             ),
             (
                 FCodePrinter,
-                '      (1 + 0.15d0*log(1.0d0 + 53.5981500331442d0*fl_M_pas))',
+                '      (1 + 0.15d0*log(1 + 53.5981500331442d0*fl_M_pas))',
             ),
             (
                 OctaveCodePrinter,
@@ -1072,11 +1072,10 @@ class TestFiberForceLengthActiveDeGroote2016:
             (
                 FCodePrinter,
                 (
-                    '      (0.814d0*exp(-0.5d0*(l_M_tilde - 1.06d0)**2/(\n'
-                    '     @ 0.063299999999999995d0*l_M_tilde + 0.16200000000000001d0)**2) +\n'
-                    '     @ 0.433d0*exp(-0.5d0*(l_M_tilde - 0.717d0)**2/(\n'
-                    '     @ 0.20000000000000001d0*l_M_tilde - 0.029899999999999999d0)**2) +\n'
-                    '     @ 0.1d0*exp(-3.9899134986753491d0*(l_M_tilde - 1.0d0)**2))'
+                    '      (0.814d0*exp(-(1.0d0/2.0d0)*(l_M_tilde - 1.06d0)**2/(0.0633d0*\n'
+                    '     @ l_M_tilde + 0.162d0)**2) + 0.433d0*exp(-(1.0d0/2.0d0)*(l_M_tilde\n'
+                    '     @ - 0.717d0)**2/(0.2d0*l_M_tilde - 0.0299d0)**2) + 0.1d0*exp(\n'
+                    '     @ -3.98991349867535d0*(l_M_tilde - 1.0d0)**2))'
                 ),
             ),
             (
@@ -1313,8 +1312,8 @@ class TestFiberForceVelocityDeGroote2016:
             ),
             (
                 FCodePrinter,
-                '      (0.886d0 - 0.318d0*log(-8.1489999999999991d0*v_M_tilde - 0.374d0 +\n'
-                '     @ sqrt(1.0d0 + (-8.149d0*v_M_tilde - 0.374d0)**2)))',
+                '      (0.886d0 - 0.318d0*log(-8.149d0*v_M_tilde - 0.374d0 + sqrt(1 + (\n'
+                '     @ -8.149d0*v_M_tilde - 0.374d0)**2)))',
             ),
             (
                 OctaveCodePrinter,
@@ -1519,7 +1518,7 @@ class TestFiberForceVelocityInverseDeGroote2016:
             ),
             (
                 FCodePrinter,
-                '      (-0.122714443489999d0*(0.374d0 - sinh(3.1446540880503142d0*(fv_M -\n'
+                '      (-0.122714443489999d0*(0.374d0 - sinh(3.14465408805031d0*(fv_M -\n'
                 '     @ 0.886d0))))',
             ),
             (
