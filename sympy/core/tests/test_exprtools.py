@@ -520,6 +520,7 @@ def test_monotonic_sign():
     assert F(log(p) - 1) == log(3) - 1
     assert F(sqrt(p) - sqrt(2)) == sqrt(3) - sqrt(2)
     assert log(p) >= 1
+    assert (sqrt(p) - sqrt(2)).is_positive is True
 
     # coverage
     nn = Dummy(integer=True, nonnegative=True)
