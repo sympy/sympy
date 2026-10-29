@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from sympy.polys.rings import ring, xring
-from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX
 
 from sympy.polys import polyconfig as config
 from sympy.polys.polyerrors import DomainError
@@ -771,6 +771,32 @@ def test_dmp_factor_list():
 
     R, x, y = ring("x,y", EX)
     raises(DomainError, lambda: R.dmp_factor_list(EX(sin(1))))
+
+
+def test_factor_list_complex():
+    R, x = ring("x", CC)
+    i = CC(0, 1)
+    assert R.dup_factor_list(0) == (CC.zero, [])
+    assert R.dup_factor_list(2 + i) == (2 + i, [])
+    assert R.dup_factor_list(x**2 + 1) == (CC.one, [(x - i, 1), (x + i, 1)])
+    assert R.dup_factor_list(4*x**2 + 1) == \
+        (CC(4), [(x - i/2, 1), (x + i/2, 1)])
+    assert R.dup_factor_list((2 + 2*i)*x*(x + i)**2) == \
+        (2 + 2*i, [(x, 1), (x + i, 2)])
+    assert R.dup_irreducible_p(x**2 + 1) is False
+    assert R.dup_irreducible_p(x**2 - 2) is True
+
+    R, x, y = ring("x,y", CC)
+    assert R.dmp_factor_list(0) == (CC.zero, [])
+    assert R.dmp_factor_list(2 + i) == (2 + i, [])
+    assert R.dmp_factor_list(x**2 + y**2) == \
+        (CC.one, [(x - i*y, 1), (x + i*y, 1)])
+    assert R.dmp_factor_list(4*x**2 + y**2) == \
+        (CC(4), [(x - i*y/2, 1), (x + i*y/2, 1)])
+    assert R.dmp_factor_list((2 + 2*i)*x*y*(x + i*y)**2) == \
+        (2 + 2*i, [(y, 1), (x, 1), (x + i*y, 2)])
+    assert R.dmp_irreducible_p(x**2 + y**2) is False
+    assert R.dmp_irreducible_p(x*y + 1) is True
 
 
 def test_dup_irreducible_p():
