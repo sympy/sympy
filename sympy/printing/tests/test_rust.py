@@ -364,11 +364,12 @@ def test_sparse_matrix():
         rust_code(SparseMatrix([[1, 2, 3]]))
 
 def test_parenthesize_typecast():
-    # gh-28418
+    # https://github.com/sympy/sympy/issues/28418
     modulus = Symbol("modulus")
     exp = (2 ** (2.0 * ceiling(-y + log(x) / log(2.0) + 4)) + 0.5) / (3 * modulus**2)
     assert rust_code(exp) == '(1_f64/3.0)*(0.5 + (2.0*(-y + 1.44269504088896*x.ln()).ceil() + 8.0).exp2())*modulus.powi(-2)'
 
+    # https://github.com/sympy/sympy/issues/28418#issuecomment-6403738647
     i, j = symbols("i j", integer=True)
     r = Symbol("r", real=True)
     w = Symbol("w")
