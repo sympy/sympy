@@ -172,11 +172,36 @@ def _canonical_coeff(rel):
 
 
 def _may_be_indeterminate(terms):
-    """Return whether additive terms may contain opposing infinities."""
+    """Return whether the terms may contain opposing infinities.
+
+    Explanation
+    ===========
+
+    Terms that are not known to be finite can be infinite so their sum
+    is indeterminate, e.g. ``oo - oo``, if such terms are able to have
+    opposing signs. Since splitting such a sum can turn an indeterminate
+    result into a definite one, the terms can only be rearranged as a
+    group.
+
+    Examples
+    ========
+
+    >>> from sympy import oo, S
+    >>> from sympy.abc import x, y
+    >>> from sympy.core.relational import _may_be_indeterminate as f
+    >>> f([x, y])  # y can be -oo when x is oo
+    True
+    >>> f([x, S.One])  # only one term can be infinite
+    False
+    >>> f([oo, -oo])
+    True
+    >>> f([oo, S.One])
+    False
+
+    """
     terms = [t for t in terms if t.is_finite is not True]
     if len(terms) < 2:
         return False
-
     direction = None
     for term in terms:
         if term.is_extended_nonnegative is True:
