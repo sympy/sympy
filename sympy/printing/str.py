@@ -318,7 +318,7 @@ class StrPrinter(Printer):
             return n
 
         c, e = expr.as_coeff_Mul()
-        if c < 0:
+        if c.is_extended_negative:
             expr = _keep_coeff(-c, e)
             sign = "-"
         else:

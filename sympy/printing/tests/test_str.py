@@ -1298,6 +1298,14 @@ def test_printing_stats():
     assert z3._eval_is_commutative() == False
     assert z4._eval_is_commutative() == False
 
+def test_issue_nan_unevaluated_mul():
+    assert str(Mul(nan, x, evaluate=False)) == "nan*x"
+    assert str(Mul(nan, x, y, evaluate=False)) == "nan*x*y"
+    assert str(Mul(-3, x, evaluate=False)) == "-3*x"
+    assert str(Mul(-oo, x, evaluate=False)) == "-oo*x"
+    assert str(Mul(-S.Half, x, evaluate=False)) == "-x/2"
+
+
 def test_issue_30343():
     f = Function('f')
     assert str(f(nan) + f(1)) == "f(nan) + f(1)"
