@@ -453,6 +453,8 @@ class RustCodePrinter(CodePrinter):
         lhs_code = self._print(lhs)
         rhs_code = self._print(rhs)
         op = expr.rel_op
+        if op == "<" and isinstance(lhs, TypeCast) and lhs.explicit:
+            lhs_code = "({})".format(lhs_code)
         return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):

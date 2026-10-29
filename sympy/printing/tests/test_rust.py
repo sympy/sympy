@@ -376,4 +376,4 @@ def test_parenthesize_typecast():
     assert rust_code(r * (i + j)) == "r*(i + j) as f64"
     assert rust_code(Eq(w, i + j)) == "w == (i + j) as f64"
     assert rust_code(Eq(i + j, w)) == "(i + j) as f64 == w"
-    assert rust_code(Lt(i + j, w)) == "(i + j) as f64 < w"
+    assert rust_code(Lt(i + j, w)) == "((i + j) as f64) < w"
