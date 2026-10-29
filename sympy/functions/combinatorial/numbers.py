@@ -2759,7 +2759,7 @@ def _stirling1_column(n, k):
     # This is recurrence (6b) from https://math.stackexchange.com/q/5116629
     if k == 0: return S.Zero**n
     if k == 1: return factorial(n - 1)
-    return sum((-1)**(i - 1) * _stirling1_column(n, k - i) * harmonic(n - 1, i) for i in range(1, k)) / (k - 1)
+    return simplify(sum((-1)**(i - 1) * _stirling1_column(n, k - i) * harmonic(n - 1, i) for i in range(1, k)) / (k - 1))
 
 
 class stirling(DefinedFunction):
