@@ -3,6 +3,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.mul import Mul
 from sympy.core.numbers import (oo, pi)
 from sympy.core.relational import Eq
+from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -35,6 +36,7 @@ def test_literal_probability():
     assert Expectation(2*X + 3*Y + z*X*Y).expand() == 2*Expectation(X) + 3*Expectation(Y) + z*Expectation(X*Y)
     assert Expectation(2*X + 3*Y + z*X*Y).args == (2*X + 3*Y + z*X*Y,)
     assert Expectation(sin(X)) == Expectation(sin(X)).expand()
+    assert Expectation(sin(X)).doit() == exp(-S(9)/2)*sin(2)
     assert Expectation(2*x*sin(X)*Y + y*X**2 + z*X*Y).expand() == 2*x*Expectation(sin(X)*Y) \
                             + y*Expectation(X**2) + z*Expectation(X*Y)
     assert Expectation(X + Y).expand() ==  Expectation(X) + Expectation(Y)
