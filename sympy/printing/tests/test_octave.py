@@ -514,3 +514,7 @@ def test_zeta_printing_issue_14820():
 def test_automatic_rewrite():
     assert octave_code(Li(x)) == '(logint(x) - logint(2))'
     assert octave_code(erf2(x, y)) == '(-erf(x) + erf(y))'
+
+
+def test_nan_unevaluated_mul():
+    assert octave_code(Mul(S.NaN, x, evaluate=False)) == 'NaN*x'

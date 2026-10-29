@@ -8337,3 +8337,8 @@ def test_issue_2747():
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+def test_nan_unevaluated_mul():
+    expr = y*UnevaluatedExpr(Mul(S.NaN, x, evaluate=False))
+    assert pretty(expr) == 'y*nan*x'

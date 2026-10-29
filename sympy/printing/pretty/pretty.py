@@ -2106,7 +2106,7 @@ class PrettyPrinter(Printer):
         def add_parens(expr):
             if isinstance(expr, UnevaluatedExpr):
                 c, e = expr.args[0].as_coeff_Mul()
-                if c < 0:
+                if c.is_extended_negative:
                     return True
             return False
 

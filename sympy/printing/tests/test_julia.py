@@ -389,3 +389,7 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert(julia_code(F) == "(A - B)[1,1]")
+
+
+def test_nan_unevaluated_mul():
+    assert julia_code(Mul(S.NaN, x, evaluate=False)) == 'NaN * x'

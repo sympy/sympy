@@ -76,3 +76,15 @@ def test_issue_15791():
         c.doprint(ImmutableSparseMatrix(2, 2, {}))
     with raises(PrintMethodNotImplementedError):
         c.doprint(MutableSparseMatrix(2, 2, {}))
+
+
+def test_nan_unevaluated_mul():
+    # issue: numeric NaN coefficient compared with 0 raised
+    # TypeError: Invalid NaN comparison in CodePrinter._print_Mul
+    from sympy import Mul, nan, Symbol
+    from sympy.printing import ccode, rust_code, cxxcode
+    x = Symbol('x')
+    e = Mul(nan, x, evaluate=False)
+    assert ccode(e) == 'NAN*x'
+    assert rust_code(e) == 'NAN*x'
+    assert cxxcode(e) == 'NAN*x'
