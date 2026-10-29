@@ -379,7 +379,7 @@ class tribonacci(DefinedFunction):
     def __trib(cls,n:int):
         if n<2: return [0,1,0] if n else [1,0,0]
         def mul(a,b):
-            #the polynomial multiplication, if expanded out naïvely, takes 9 bigint muls
+            #the polynomial multiplication, if expanded out naively, takes 9 bigint muls
             if n.bit_length()<15: #we can use Karatsuba's method thrice to reduce it to 6
                 a0,a1,a2=a
                 b0,b1,b2=b
