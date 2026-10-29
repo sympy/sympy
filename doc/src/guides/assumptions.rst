@@ -1055,7 +1055,7 @@ the argument will not be rejected. The first reason for allowing
     None
     >>> expreal(x)
     expreal(x)
-    >>> expr = (1 + I)*(1 - I)
+    >>> expr = (1 - I)*(1 + I)
     >>> print(expr.is_extended_real)
     None
     >>> expr.expand()
@@ -1063,7 +1063,7 @@ the argument will not be rejected. The first reason for allowing
     >>> expr.expand().is_extended_real
     True
     >>> expreal(expr)
-    expreal((1 + I)*(1 - I))
+    expreal((1 - I)*(1 + I))
 
 Validating the argument in ``expreal.eval`` does mean that it will not be
 validated when ``evaluate=False`` is passed but there is not really a better

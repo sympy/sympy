@@ -947,7 +947,7 @@ class Expr(Basic, EvalfMixin):
                 r, i = match
                 br = r._prec != 1
                 bi = i._prec != 1
-                if br or bi:
+                if (br or bi) and (prec == 10 or r or i):  # no exit on 2bit 0
                     return (r, br), (i, bi)
 
     def _eval_is_extended_positive_negative(self, positive):
