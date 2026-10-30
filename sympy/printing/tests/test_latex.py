@@ -793,13 +793,20 @@ def test_latex_functions():
 
     assert latex(divisor_sigma(x)) == r"\sigma\left(x\right)"
     assert latex(divisor_sigma(x)**2) == r"\sigma^{2}\left(x\right)"
-    assert latex(divisor_sigma(x, y)) == r"\sigma_y\left(x\right)"
-    assert latex(divisor_sigma(x, y)**2) == r"\sigma^{2}_y\left(x\right)"
+    assert latex(divisor_sigma(x, y)) == r"\sigma_{y}\left(x\right)"
+    assert latex(divisor_sigma(x, y)**2) == r"\sigma^{2}_{y}\left(x\right)"
+    assert latex(divisor_sigma(x, y + 1)) == r"\sigma_{y + 1}\left(x\right)"
+    assert latex(divisor_sigma(x, 10)) == r"\sigma_{10}\left(x\right)"
 
     assert latex(udivisor_sigma(x)) == r"\sigma^*\left(x\right)"
-    assert latex(udivisor_sigma(x)**2) == r"\sigma^*^{2}\left(x\right)"
-    assert latex(udivisor_sigma(x, y)) == r"\sigma^*_y\left(x\right)"
-    assert latex(udivisor_sigma(x, y)**2) == r"\sigma^*^{2}_y\left(x\right)"
+    assert latex(udivisor_sigma(x)**2) == \
+        r"\left(\sigma^*\left(x\right)\right)^{2}"
+    assert latex(udivisor_sigma(x, y)) == r"\sigma^*_{y}\left(x\right)"
+    assert latex(udivisor_sigma(x, y)**2) == \
+        r"\left(\sigma^*_{y}\left(x\right)\right)^{2}"
+    assert latex(udivisor_sigma(x, y + 1)) == \
+        r"\sigma^*_{y + 1}\left(x\right)"
+    assert latex(udivisor_sigma(x, 10)) == r"\sigma^*_{10}\left(x\right)"
 
     assert latex(primenu(n)) == r'\nu\left(n\right)'
     assert latex(primenu(n) ** 2) == r'\left(\nu\left(n\right)\right)^{2}'
