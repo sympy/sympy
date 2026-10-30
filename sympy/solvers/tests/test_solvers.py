@@ -39,7 +39,7 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
-from sympy.testing.pytest import slow, XFAIL, SKIP, raises
+from sympy.testing.pytest import slow, XFAIL, SKIP, raises, _both_exp_pow
 from sympy.core.random import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, e, k, h, p, x, y, z, t, q, m, R
@@ -105,6 +105,7 @@ def test_guess_rational_cv():
         #== GS_RATIONAL_CV_1
 
 
+@_both_exp_pow
 def test_guess_transcendental():
     #transcendental functions
     assert guess_solve_strategy( exp(x) + 1, x )  # == GS_TRANSCENDENTAL
@@ -372,6 +373,7 @@ def test_issue_8666():
     assert solve(Eq(x + 1/x, 1/x), x) == []
 
 
+@_both_exp_pow
 def test_issue_7228():
     assert solve(4**(2*(x**2) + 2*x) - 8, x) == [Rational(-3, 2), S.Half]
 
@@ -859,6 +861,7 @@ def test_solve_inequalities():
     assert solve(Ne(1, x)) == (x > -oo) & (x < oo) & Ne(x, 1)
 
 
+@_both_exp_pow
 def test_issue_4793():
     assert solve(1/x) == []
     assert solve(x*(1 - 5/x)) == [5]
@@ -883,6 +886,7 @@ def test_issue_4793():
     raises(NotImplementedError, lambda: solve(2**x - exp(x) - 3))
 
 
+@_both_exp_pow
 def test_PR1964():
     # issue 5171
     assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]
@@ -956,6 +960,7 @@ def test_checking():
     assert solve(1/(1/x + 2)) == []
 
 
+@_both_exp_pow
 def test_issue_4671_4463_4467():
     assert solve(sqrt(x**2 - 1) - 2) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
@@ -985,6 +990,7 @@ def test_issue_4671_4463_4467():
     assert solve(atan(x) - 1) == [tan(1)]
 
 
+@_both_exp_pow
 def test_issue_5132():
     r, t = symbols('r,t')
     assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
@@ -1468,6 +1474,7 @@ def test_checksol():
     raises(ValueError, lambda: checksol([], x, 1))
 
 
+@_both_exp_pow
 def test__invert():
     assert _invert(x - 2) == (2, x)
     assert _invert(2) == (2, 0)
@@ -1671,6 +1678,7 @@ def test_issue_5912():
     assert len(ans) == 2 and all(a.is_Number for a in ans)
 
 
+@_both_exp_pow
 def test_float_handling():
     def test(e1, e2):
         return len(e1.atoms(Float)) == len(e2.atoms(Float))
@@ -1702,6 +1710,7 @@ def test_check_assumptions():
     assert solve(x**2 - 1) == [1]
 
 
+@_both_exp_pow
 def test_issue_6056():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
     assert solve(tanh(x - 1)*tanh(x + 1) + 1) == \
@@ -1829,6 +1838,7 @@ def test_overdetermined():
     assert solve(eqs, x, manual=True, check=False) == [(S.Half,), (S(3),)]
 
 
+@_both_exp_pow
 def test_issue_6605():
     x = symbols('x')
     assert solve(4**(x/2) - 2**(x/3)) == [0, 3*I*pi/log(2)]
@@ -1867,6 +1877,7 @@ def test_issue_6792():
          CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
+@_both_exp_pow
 def test_issues_6819_6820_6821_6248_8692_25777_25779():
     # issue 6821
     x, y = symbols('x y', real=True)
@@ -2080,6 +2091,7 @@ def test_lambert_bivariate():
         sqrt(-2 - LambertW(-exp(-2), -1))]
 
 
+@_both_exp_pow
 def test_rewrite_trig():
     assert solve(sin(x) + tan(x)) == [0, -pi, pi, 2*pi]
     assert solve(sin(x) + sec(x)) == [
@@ -2513,6 +2525,7 @@ def test_issue_12024():
         [{y: Piecewise((0.0, x < 0.1), (x, True))}]
 
 
+@_both_exp_pow
 def test_issue_17452():
     assert solve((7**x)**x + pi, x) == [-sqrt(log(pi) + I*pi)/sqrt(log(7)),
                                         sqrt(log(pi) + I*pi)/sqrt(log(7))]
@@ -2635,6 +2648,7 @@ def test_issue_4886():
     assert solve([x**2 + y**2 - R**2, a*x + b*y - c], x, y) == sol
 
 
+@_both_exp_pow
 def test_issue_6819():
     a, b, c, d = symbols('a b c d', positive=True)
     assert solve(a*b**x - c*d**x, x) == [log(c/a)/log(b/d)]

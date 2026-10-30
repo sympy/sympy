@@ -11,6 +11,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import cos
 from sympy.sets.sets import Set
+from sympy.testing.pytest import _both_exp_pow
 
 
 a, x = symbols("a, x")
@@ -23,6 +24,7 @@ def test_setexpr():
     assert isinstance(se, Expr)
 
 
+@_both_exp_pow
 def test_scalar_funcs():
     assert SetExpr(Interval(0, 1)).set == Interval(0, 1)
     a, b = Symbol('a', real=True), Symbol('b', real=True)
@@ -44,6 +46,7 @@ def test_Pow():
     assert (SetExpr(Interval(0, 2))**2).set == Interval(0, 4)
 
 
+@_both_exp_pow
 def test_compound():
     assert (exp(SetExpr(Interval(0, 1))*2 + 1)).set == \
            Interval(exp(1), exp(3))
@@ -191,6 +194,7 @@ def test_Interval_arithmetic():
     assert n23cc/i12cc == SetExpr(Interval(-2, 3))
 
 
+@_both_exp_pow
 def test_SetExpr_Intersection():
     x, y, z, w = symbols("x y z w")
     set1 = Interval(x, y)

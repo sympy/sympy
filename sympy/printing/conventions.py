@@ -7,6 +7,8 @@ import re
 
 from collections.abc import Iterable
 from sympy.core.function import Derivative, Function, Lambda
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
 
 _name_with_digits_p = re.compile(r'^([^\W\d_]+)(\d+)$', re.UNICODE)
 
@@ -101,4 +103,6 @@ def elementwise_function(func):
         body = func.expr
         if isinstance(body, Function) and body.args == func.variables:
             return body.func
+        if body.is_Pow and body.base is S.Exp1 and (body.exp,) == func.variables:
+            return exp
     return func

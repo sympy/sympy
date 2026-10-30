@@ -5,8 +5,10 @@ from sympy.functions.elementary.exponential import exp
 from sympy.stats.error_prop import variance_prop
 from sympy.stats.symbolic_probability import (RandomSymbol, Variance,
         Covariance)
+from sympy.testing.pytest import _both_exp_pow
 
 
+@_both_exp_pow
 def test_variance_prop():
     x, y, z = symbols('x y z')
     phi, t = consts = symbols('phi t')
@@ -32,6 +34,7 @@ def test_variance_prop():
         obs = variance_prop(inp, consts=consts)
         assert out == obs
 
+@_both_exp_pow
 def test_variance_prop_with_covar():
     x, y, z = symbols('x y z')
     phi, t = consts = symbols('phi t')

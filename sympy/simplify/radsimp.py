@@ -280,6 +280,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                 sexpr = expr.base
 
             if expr.base == S.Exp1:
+                sexpr = expr
                 arg = expr.exp
                 if arg.is_Rational:
                     sexpr, rat_expo = S.Exp1, arg

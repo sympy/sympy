@@ -20,7 +20,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
     risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
     recognize_derivative, laurent_series)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
 from sympy.abc import x, t, nu, z, a, y
 t0, t1, t2 = symbols('t:3')
@@ -427,6 +427,7 @@ def test_integrate_hyperexponential_returns_piecewise():
     # Piecewise, like y**x + z**x.
 
 
+@_both_exp_pow
 def test_issue_13947():
     a, t, s = symbols('a t s')
     assert risch_integrate(2**(-pi)/(2**t + 1), t) == \
@@ -487,6 +488,7 @@ def test_integer_powers():
             (1 + x**2, [(1 + x**2, 1)])]
 
 
+@_both_exp_pow
 def test_DifferentialExtension_exp():
     assert DifferentialExtension(exp(x) + exp(x**2), x)._important_attrs == \
         (Poly(t1 + t0, t1), Poly(1, t1), [Poly(1, x,), Poly(t0, t0),
@@ -525,6 +527,7 @@ def test_DifferentialExtension_exp():
         [Lambda(i, exp(i/2))], [], [None, 'exp'], [None, x/2])
 
 
+@_both_exp_pow
 def test_DifferentialExtension_log():
     assert DifferentialExtension(log(x)*log(x + 1)*log(2*x**2 + 2*x), x)._important_attrs == \
         (Poly(t0*t1**2 + (t0*log(2) + t0**2)*t1, t1), Poly(1, t1),
@@ -539,6 +542,7 @@ def test_DifferentialExtension_log():
         [None, x, t0*x])
 
 
+@_both_exp_pow
 def test_DifferentialExtension_symlog():
     # See comment on test_risch_integrate below
     assert DifferentialExtension(log(x**x), x)._important_attrs == \
@@ -555,6 +559,7 @@ def test_DifferentialExtension_symlog():
         [None, x])
 
 
+@_both_exp_pow
 def test_DifferentialExtension_handle_first():
     assert DifferentialExtension(exp(x)*log(x), x, handle_first='log')._important_attrs == \
         (Poly(t0*t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
@@ -632,6 +637,7 @@ def test_DifferentialExtension_extension_flag():
     raises(ValueError, lambda: DifferentialExtension())
 
 
+@_both_exp_pow
 def test_DifferentialExtension_misc():
     # Odd ends
     assert DifferentialExtension(sin(y)*exp(x), x)._important_attrs == \
@@ -663,6 +669,7 @@ def test_DifferentialExtension_misc():
         (Poly(x, x), Poly(1, x), [Poly(1, x)], [x], [], [], [None], [None])
 
 
+@_both_exp_pow
 def test_DifferentialExtension_Rothstein():
     # Rothstein's integral
     f = (2581284541*exp(x) + 1757211400)/(39916800*exp(3*x) +
@@ -725,6 +732,7 @@ def test_DecrementLevel():
     assert DE.case == 'primitive'
 
 
+@_both_exp_pow
 def test_risch_integrate():
     assert risch_integrate(t0*exp(x), x) == t0*exp(x)
     assert risch_integrate(sin(x), x, rewrite_complex=True) == -exp(I*x)/2 - exp(-I*x)/2
@@ -832,6 +840,7 @@ def test_DifferentialExtension_equality():
     assert DE1 == DE2
 
 
+@_both_exp_pow
 def test_DifferentialExtension_printing():
     DE = DifferentialExtension(exp(2*x**2) + log(exp(x**2) + 1), x)
     assert repr(DE) == ("DifferentialExtension(dict([('f', exp(2*x**2) + log(exp(x**2) + 1)), "

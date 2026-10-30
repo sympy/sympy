@@ -338,7 +338,7 @@ class Limit(Expr):
             # The NotImplementedError catching is for custom functions
             from sympy.simplify.powsimp import powsimp
             e = powsimp(e)
-            if e.is_Pow:
+            if e.is_Pow and e.base is not S.Exp1:
                 r = self.pow_heuristics(e, z, z0, dir)
                 if r is not None:
                     return r

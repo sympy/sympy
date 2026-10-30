@@ -19,7 +19,7 @@ from sympy.printing.pycode import (
 )
 from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises, skip, _both_exp_pow
 from sympy.tensor import IndexedBase, Idx
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
@@ -31,6 +31,7 @@ x, y, z = symbols('x y z')
 p = IndexedBase("p")
 
 
+@_both_exp_pow
 def test_PythonCodePrinter():
     prntr = PythonCodePrinter()
 
@@ -353,6 +354,7 @@ def test_issue_16535_16536():
         assert "Not supported" in p_pycode.doprint(expr)
 
 
+@_both_exp_pow
 def test_Integral():
     from sympy.functions.elementary.exponential import exp
     from sympy.integrals.integrals import Integral
@@ -455,6 +457,7 @@ def test_airy_prime():
     assert "Not supported" in prntr.doprint(expr2)
 
 
+@_both_exp_pow
 def test_numerical_accuracy_functions():
     prntr = SciPyPrinter()
     assert prntr.doprint(expm1(x)) == 'numpy.expm1(x)'
@@ -509,6 +512,7 @@ def test_array_printer():
     assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'
 
 
+@_both_exp_pow
 def test_custom_Derivative_methods():
     class MyPrinter(SciPyPrinter):
         def _print_Derivative_cosm1(self, args, seq_orders):

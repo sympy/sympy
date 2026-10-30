@@ -1577,7 +1577,7 @@ def _invert_modular(modterm, rhs, n, symbol):
         if expo.has(symbol) and not base.has(symbol):
             # remainder -> solution independent of n of equation.
             # m, rhs are made coprime by dividing number_gcd(m, rhs)
-            if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
+            if not (m.is_Integer and rhs.is_Integer and a.base.is_Integer):
                 return modterm, rhs
 
             mdiv = m.p // number_gcd(m.p, rhs.p)

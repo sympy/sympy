@@ -16,7 +16,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, cos, sin)
 from sympy.integrals.integrals import Integral
 from sympy.solvers.ode.ode import constantsimp, constant_renumber
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, _both_exp_pow
 
 
 x = Symbol('x')
@@ -89,6 +89,7 @@ def test_constant_power_as_base():
         constantsimp(C1**(x*y), [C1])) == C1**(x*y)
 
 
+@_both_exp_pow
 def test_constant_power_as_exp():
     assert constant_renumber(constantsimp(x**C1, [C1])) == x**C1
     assert constant_renumber(constantsimp(y**C1, [C1, y])) == C1

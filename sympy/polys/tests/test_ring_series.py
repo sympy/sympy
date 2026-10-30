@@ -9,7 +9,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_cot, rs_sin, rs_cos, rs_cos_sin, rs_sinh, rs_cosh, rs_cosh_sinh, rs_tanh,
     _tan1, rs_fun, rs_nth_root, rs_LambertW, rs_series_reversion, rs_is_puiseux,
     rs_series)
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises, slow, _both_exp_pow
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, sinh, cosh, atan, atanh,
     asinh, tanh, log, sqrt)
@@ -895,6 +895,7 @@ def test_rs_series_ConstantInExpr():
             a**3*x**3*sinh(1)/6 + a**2*x**2*cosh(1)/2 + a*x*sinh(1) + cosh(1)
 
 
+@_both_exp_pow
 def test_issue():
     # https://github.com/sympy/sympy/issues/10191
     # https://github.com/sympy/sympy/issues/19543

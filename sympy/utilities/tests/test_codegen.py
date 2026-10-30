@@ -11,7 +11,7 @@ from sympy.utilities.codegen import (
     codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
     CodeGenError, FCodeGen, CodeGenArgumentListError, OutputArgument,
     InOutArgument)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 from sympy.utilities.lambdify import implemented_function
 
 #FIXME: Fails due to circular import in with core
@@ -1527,6 +1527,7 @@ def test_global_vars():
     source = result[0][1]
     assert source == expected
 
+@_both_exp_pow
 def test_custom_codegen():
     from sympy.printing.c import C99CodePrinter
     from sympy.functions.elementary.exponential import exp

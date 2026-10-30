@@ -39,7 +39,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral, _add_atan_floor_terms
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
+from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns, _both_exp_pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
@@ -404,6 +404,7 @@ def test_issue_4516():
     assert integrate(2**x - 2*x, x) == 2**x/log(2) - x**2
 
 
+@_both_exp_pow
 def test_issue_7450():
     ans = integrate(exp(-(1 + I)*x), (x, 0, oo))
     assert re(ans) == S.Half and im(ans) == Rational(-1, 2)
@@ -419,6 +420,7 @@ def test_issue_9569():
     assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2))/3
 
 
+@_both_exp_pow
 def test_issue_13733():
     s = Symbol('s', positive=True)
     pz = exp(-(z - y)**2/(2*s*s))/sqrt(2*pi*s*s)
@@ -739,6 +741,7 @@ def test_integrate_SingularityFunction():
     assert integrate(SingularityFunction(x, 5, -1) * f(x), (x, -oo, oo)) == f(5)
 
 
+@_both_exp_pow
 def test_integrate_DiracDelta():
     # This is here to check that deltaintegrate is being called, but also
     # to test definite integrals. More tests are in test_deltafunctions.py
@@ -789,6 +792,7 @@ def test_integrate_returns_piecewise():
         Ne(x, y + 1)), (t, True))
 
 
+@_both_exp_pow
 def test_integrate_max_min():
     x = symbols('x', real=True)
     assert integrate(Min(x, 2), (x, 0, 3)) == 4
@@ -1197,6 +1201,7 @@ def test_issue_5167():
         y*(x - 1)*Integral(f(x), (x, 1, 2)) - (x - 1)*Integral(f(x), (x, 1, 2))
 
 
+@_both_exp_pow
 def test_issue_4890():
     z = Symbol('z', positive=True)
     assert integrate(exp(-log(x)**2), x) == \
@@ -1250,6 +1255,7 @@ def test_issue_4199():
         Integral(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))
 
 
+@_both_exp_pow
 def test_issue_3940():
     a, b, c, d = symbols('a:d', positive=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
@@ -1363,6 +1369,7 @@ def test_issue_4737():
     assert integrate(sin(x)/x, x) == Si(x)
 
 
+@_both_exp_pow
 def test_issue_4992():
     # Note: psi in _check_antecedents becomes NaN.
     from sympy.core.function import expand_func
@@ -1371,6 +1378,7 @@ def test_issue_4992():
         (a*polygamma(0, a) + 1)*gamma(a)
 
 
+@_both_exp_pow
 def test_issue_4487():
     from sympy.functions.special.gamma_functions import lowergamma
     assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
@@ -1489,12 +1497,14 @@ def test_issue_2708():
                                   (z, 0, x))
 
 
+@_both_exp_pow
 def test_issue_2884():
     f = (4.000002016020*x + 4.000002016020*y + 4.000006024032)*exp(10.0*x)
     e = integrate(f, (x, 0.1, 0.2))
     assert str(e) == '1.86831064982608*y + 2.16387491480008'
 
 
+@_both_exp_pow
 def test_issue_8368i():
     from sympy.functions.elementary.complexes import arg, Abs
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
@@ -1633,6 +1643,7 @@ def test_issue_14144():
     assert Abs(integrate(sqrt(1 - x**3), (x, 0, 1)).n() - 0.841309) < 1e-6
 
 
+@_both_exp_pow
 def test_issue_14375():
     # This raised a TypeError. The antiderivative has exp_polar, which
     # may be possible to unpolarify, so the exact output is not asserted here.
@@ -1645,6 +1656,7 @@ def test_issue_14437():
                 Integral(f, (x, 0, 1), (y, 0, 2), (z, 0, 3))
 
 
+@_both_exp_pow
 def test_issue_14470():
     assert integrate(1/sqrt(exp(x) + 1), x) == log(sqrt(exp(x) + 1) - 1) - log(sqrt(exp(x) + 1) + 1)
 
@@ -1677,12 +1689,14 @@ def test_issue_15285():
     assert integrate(f, [x, 0, 1]) == 1
 
 
+@_both_exp_pow
 def test_issue_15432():
     assert integrate(x**n * exp(-x) * log(x), (x, 0, oo)).gammasimp() == Piecewise(
         (gamma(n + 1)*polygamma(0, n) + gamma(n + 1)/n, re(n) + 1 > 0),
         (Integral(x**n*exp(-x)*log(x), (x, 0, oo)), True))
 
 
+@_both_exp_pow
 def test_issue_15124():
     omega = IndexedBase('omega')
     m, p = symbols('m p', cls=Idx)
@@ -1707,6 +1721,7 @@ def test_issue_15218():
     assert Eq(x, y).integrate((x, 0, 1)) == Eq(S.Half, y)
 
 
+@_both_exp_pow
 def test_issue_15292():
     res = integrate(exp(-x**2*cos(2*t)) * cos(x**2*sin(2*t)), (x, 0, oo))
     assert isinstance(res, Piecewise)
@@ -1761,6 +1776,7 @@ def test_issue_4311_fast():
         (x**4/4 - 9*x**2/2, True))
 
 
+@_both_exp_pow
 def test_integrate_with_complex_constants():
     K = Symbol('K', positive=True)
     x = Symbol('x', real=True)
@@ -1898,6 +1914,7 @@ def test_issue_21034_slow():
         -x**6/(6*asin(5)**4) - x**2*cosh(x + log(asin(5))) + 5*x**2/2 + 2*x*sinh(x + log(asin(5))) - 2*cosh(x + log(asin(5)))
 
 
+@_both_exp_pow
 def test_issue_4187():
     assert integrate(log(x)*exp(-x), x) == Ei(-x) - exp(-x)*log(x)
     assert integrate(log(x)*exp(-x), (x, 0, oo)) == -EulerGamma
@@ -1924,6 +1941,7 @@ def test_issue_5547():
     assert integrate(r0**2*cos(w*z)**2, (z, -L/2, L/2)) == sol
 
 
+@_both_exp_pow
 def test_issue_15810():
     assert integrate(1/(2**(2*x/3) + 1), (x, 0, oo)) == Rational(3, 2)
 
@@ -2120,6 +2138,7 @@ def test_issue_23704():
         == NonElementaryIntegral(log(x)/(a*x**2 + b*x**3 + c*x**4), x))
 
 
+@_both_exp_pow
 def test_exp_substitution():
     assert integrate(1/sqrt(1-exp(2*x))) == log(sqrt(1 - exp(2*x)) - 1)/2 - log(sqrt(1 - exp(2*x)) + 1)/2
 
@@ -2357,6 +2376,7 @@ def test_issue_7147():
     assert integrate(f, x) == F
 
 
+@_both_exp_pow
 def test_issue_15566():
     a, m, s = symbols('a m s', real=True)
     t = symbols('t')
@@ -2380,6 +2400,7 @@ def test_issue_29910():
     assert integrate(f, x) == F
 
 
+@_both_exp_pow
 def test_issue_29909():
     f = x*exp(x)*erf(x)
     F = x*exp(x)*erf(x) - exp(x)*erf(x) + exp(x)*exp(-x**2)/sqrt(pi) + exp(Rational(1, 4))*erf(x - Rational(1, 2))/2
@@ -2396,6 +2417,7 @@ def test_issue_29637():
     assert (F.diff(x) - f).cancel() == 0
 
 
+@_both_exp_pow
 def test_issue_21041():
     # https://github.com/sympy/sympy/issues/21041
     F = integrate(sin(2*x)*exp(-x**2), (x, 0, oo))

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from sympy.core.function import Add, ArgumentIndexError, Function
+from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
@@ -9,8 +10,14 @@ from sympy.functions.elementary.miscellaneous import Max, Min
 from .ast import Token, none
 
 
+def _exp(x, *, evaluate=True):
+    if global_parameters.exp_is_pow:
+        return Pow(S.Exp1, x, evaluate=evaluate)
+    return exp(x, evaluate=evaluate)
+
+
 def _logaddexp(x1, x2, *, evaluate=True):
-    return log(Add(exp(x1, evaluate=evaluate), exp(x2, evaluate=evaluate), evaluate=evaluate))
+    return log(Add(_exp(x1, evaluate=evaluate), _exp(x2, evaluate=evaluate), evaluate=evaluate))
 
 
 _two = S.One*2

@@ -299,6 +299,8 @@ class FCodePrinter(CodePrinter):
     def _eval_function(self, expr):
         prec = self._settings['precision']
         args = [N(a, prec) for a in expr.args]
+        if all(a == b for a, b in zip(args, expr.args)):
+            return expr
         return expr.func(*args)
 
     def parenthesize(self, item, level, strict=False):

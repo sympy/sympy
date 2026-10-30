@@ -3290,7 +3290,10 @@ def _invert(eq, *symbols, **kwargs):
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
 
-        if lhs.is_Function:
+        if lhs.is_Pow and lhs.base is S.Exp1:
+            rhs = log(rhs)
+            lhs = lhs.exp
+        elif lhs.is_Function:
             if hasattr(lhs, 'inverse') and lhs.inverse() is not None and len(lhs.args) == 1:
                 #                    -1
                 # f(x) = g  ->  x = f  (g)

@@ -89,12 +89,12 @@ def variance_prop(expr, consts=(), include_covar=False):
                      for (a, b), (x, y) in zip(combinations(args, 2),
                                                combinations(var_args, 2))]
             var_expr += Add(*terms)
+    elif isinstance(expr, exp):
+        var_expr = simplify(var_args[-1] * expr**2)
     elif isinstance(expr, Pow):
         b = args[1]
         v = var_args[0] * (expr * b / args[0])**2
         var_expr = simplify(v)
-    elif isinstance(expr, exp):
-        var_expr = simplify(var_args[0] * expr**2)
     else:
         # unknown how to proceed, return variance of whole expr.
         var_expr = Variance(expr)

@@ -47,13 +47,14 @@ from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, Multivar
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.compound_rv import CompoundPSpace
 from sympy.stats.symbolic_probability import Probability
-from sympy.testing.pytest import raises, XFAIL, slow, ignore_warnings
+from sympy.testing.pytest import raises, XFAIL, slow, ignore_warnings, _both_exp_pow
 from sympy.core.random import verify_numerically as tn
 
 oo = S.Infinity
 
 x, y, z = map(Symbol, 'xyz')
 
+@_both_exp_pow
 def test_single_normal():
     mu = Symbol('mu', real=True)
     sigma = Symbol('sigma', positive=True)
@@ -79,6 +80,7 @@ def test_single_normal():
     assert X.pspace.compute_expectation(1).doit() == 1
 
 
+@_both_exp_pow
 def test_conditional_1d():
     X = Normal('x', 0, 1)
     Y = given(X, X >= 0)
@@ -104,6 +106,7 @@ def test_ContinuousDomain():
     assert Y.pspace.domain.set == Interval(0, oo)
 
 
+@_both_exp_pow
 def test_multiple_normal():
     X, Y = Normal('x', 0, 1), Normal('y', 0, 1)
     p = Symbol("p", positive=True)
@@ -131,6 +134,7 @@ def test_multiple_normal():
     assert quantile(X)(p) == sqrt(2)*erfinv(2*p - S.One)
 
 
+@_both_exp_pow
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True)
     s1, s2 = symbols('sigma1 sigma2', positive=True)
@@ -152,6 +156,7 @@ def test_symbolic():
     assert median(X) == FiniteSet(mu1)
 
 
+@_both_exp_pow
 def test_cdf():
     X = Normal('x', 0, 1)
 
@@ -206,6 +211,7 @@ def test_characteristic_function():
     assert cf(1) == exp(-sqrt(2)*sqrt(-I))
 
 
+@_both_exp_pow
 def test_moment_generating_function():
     t = symbols('t', positive=True)
 
@@ -345,6 +351,7 @@ def test_moment_generating_function():
         besseli(0, 1)
 
 
+@_both_exp_pow
 def test_ContinuousRV():
     pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))  # Normal distribution
     # X and Y should be equivalent
@@ -964,6 +971,7 @@ def test_Lomax():
     assert variance(X) == 3*l**2/4
 
 
+@_both_exp_pow
 def test_maxwell():
     a = Symbol("a", positive=True)
 
@@ -999,6 +1007,7 @@ def test_Moyal():
                         *gamma(-sigma*z + Rational(1, 2))/sqrt(pi)
 
 
+@_both_exp_pow
 def test_nakagami():
     mu = Symbol("mu", positive=True)
     omega = Symbol("omega", positive=True)
@@ -1210,6 +1219,7 @@ def test_trapezoidal():
     assert P(X < 2) == Rational(3, 4)
     assert median(X) == FiniteSet(Rational(3, 2))
 
+@_both_exp_pow
 def test_triangular():
     a = Symbol("a")
     b = Symbol("b")
@@ -1313,6 +1323,7 @@ def test_von_mises():
     assert density(X)(x) == exp(k*cos(x - mu))/(2*pi*besseli(0, k))
 
 
+@_both_exp_pow
 def test_weibull():
     a, b = symbols('a b', positive=True)
     # FIXME: simplify(E(X)) seems to hang without extended_positive=True
@@ -1326,6 +1337,7 @@ def test_weibull():
     assert simplify(kurtosis(X)) == (-3*gamma(1 + 1/b)**4 +\
         6*gamma(1 + 1/b)**2*gamma(1 + 2/b) - 4*gamma(1 + 1/b)*gamma(1 + 3/b) + gamma(1 + 4/b))/(gamma(1 + 1/b)**2 - gamma(1 + 2/b))**2
 
+@_both_exp_pow
 def test_weibull_numeric():
     # Test for integers and rationals
     a = 1
@@ -1368,6 +1380,7 @@ def test_input_value_assertions():
         fn('x', p, q)  # No error raised
 
 
+@_both_exp_pow
 def test_unevaluated():
     X = Normal('x', 0, 1)
     k = Dummy('k')
@@ -1419,6 +1432,7 @@ def test_NormalDistribution():
     assert b.probability(x < 6, evaluate=False).dummy_eq(expected4) is True
 
 
+@_both_exp_pow
 def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
@@ -1459,6 +1473,7 @@ def test_issue_10003():
     assert P(G < -1) is S.Zero
 
 
+@_both_exp_pow
 def test_precomputed_cdf():
     x = symbols("x", real=True)
     mu = symbols("mu", real=True)
@@ -1566,6 +1581,7 @@ def test_prob_neq():
     assert P(Ne(X, 5)) == 1
     assert P(Ne(E, x)) == 1
 
+@_both_exp_pow
 def test_union():
     N = Normal('N', 3, 2)
     assert simplify(P(N**2 - N > 2)) == \
@@ -1573,6 +1589,7 @@ def test_union():
     assert simplify(P(N**2 - 4 > 0)) == \
         -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + Rational(3, 2)
 
+@_both_exp_pow
 def test_Or():
     N = Normal('N', 0, 1)
     assert simplify(P(Or(N > 2, N < 1))) == \

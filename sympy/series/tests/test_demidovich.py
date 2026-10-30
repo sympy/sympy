@@ -7,6 +7,7 @@ from sympy.functions.elementary.miscellaneous import (root, sqrt)
 from sympy.functions.elementary.trigonometric import (asin, cos, sin, tan)
 from sympy.polys.rationaltools import together
 from sympy.series.limits import limit
+from sympy.testing.pytest import _both_exp_pow
 
 # Numbers listed with the tests refer to problem numbers in the book
 # "Anti-demidovich, problemas resueltos, Ed. URSS"
@@ -26,6 +27,7 @@ def root4(x):
     return root(x, 4)
 
 
+@_both_exp_pow
 def test_Limits_simple_0():
     assert limit((2**(x + 1) + 3**(x + 1))/(2**x + 3**x), x, oo) == 3  # 175
 
@@ -129,6 +131,7 @@ def test_f1b():
     assert limit((sin(x + h) - sin(x))/h, h, 0) == cos(x)  # 225
 
 
+@_both_exp_pow
 def test_f2a():
     assert limit(((x + 1)/(2*x + 1))**(x**2), x, oo) == 0  # Primer 8
 

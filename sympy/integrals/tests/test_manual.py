@@ -20,7 +20,7 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, bioche_substitution, integral_steps, manual_subs, IntegrationSolver)
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import _both_exp_pow, raises, slow
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -35,6 +35,7 @@ def assert_is_integral_of(f: Expr, F: Expr):
     assert F.diff(x).equals(f)
 
 
+@_both_exp_pow
 def test_find_substitutions():
     assert find_substitutions((cot(x)**2 + 1)**2*csc(x)**2*cot(x)**2, x, u) == \
         [(cot(x), 1, -u**6 - 2*u**4 - u**2)]
@@ -57,6 +58,7 @@ def test_manualintegrate_polynomials():
     assert manualintegrate((3*u + 4)**2, u) == (3*u + 4)**3 / 9
 
 
+@_both_exp_pow
 def test_manualintegrate_exponentials():
     assert manualintegrate(exp(2*x), x) == exp(2*x) / 2
     assert manualintegrate(2**x, x) == (2 ** x) / log(2)
@@ -524,6 +526,7 @@ def test_manualintegrate_rational():
     assert (F.diff(x) - f).cancel() == 0
 
 
+@_both_exp_pow
 def test_manualintegrate_special():
     f, F = 4*exp(-x**2/3), 2*sqrt(3)*sqrt(pi)*erf(sqrt(3)*x/3)
     assert_is_integral_of(f, F)
@@ -589,6 +592,7 @@ def test_manualintegrate_special():
     f, F = li(x), x*li(x) - Ei(2*log(x))
     assert_is_integral_of(f, F)
 
+@_both_exp_pow
 def test_issue_29910():
     f = x**2*exp(-x**2)
     F = -x*exp(-x**2)/2 + sqrt(pi)*erf(x)/4
@@ -710,6 +714,7 @@ def test_manualintegrate_parts_ei_li():
     assert_is_integral_of(f, F)
 
 
+@_both_exp_pow
 def test_manualintegrate_exp_trig():
     f = exp(x)*cos(x**2)
     F = I**(Rational(3, 2))*sqrt(pi)*exp(I/4)*erfi(I**(Rational(3, 2))*(2*I*x + 1)/2)/4 + sqrt(pi)*exp(-I/4)*erfi((-2*I*x + 1)/(2*sqrt(-I)))/(4*sqrt(-I))
@@ -772,6 +777,7 @@ def test_manualintegrate_special_alternatives():
     assert F.diff().expand() == f.expand()
 
 
+@_both_exp_pow
 def test_integral_steps_branch():
     from sympy.integrals.manualintegrate import AlternativeRule
     # By default only the first workable rule is kept at each step, so no
@@ -806,6 +812,7 @@ def _rules_in_tree(rule):
                 stack.extend(v)
 
 
+@_both_exp_pow
 def test_manualintegrate_owent():
     f = exp(-x**2)*erf(y*x)
     F = -2*sqrt(pi)*owens_t(sqrt(2)*x, y)
@@ -909,6 +916,7 @@ def test_issue_12251():
         (x**(y + 1)/(y + 1), Ne(y, -1)), (log(x), True))
 
 
+@_both_exp_pow
 def test_issue_3796():
     assert manualintegrate(diff(exp(x + x**2)), x) == exp(x + x**2)
     assert integrate(x * exp(x**4), x, risch=False) == -I*sqrt(pi)*erf(I*x**2)/4
@@ -921,6 +929,7 @@ def test_manual_true():
         [sin(x) ** 2 / 2, -cos(x)**2 / 2]
 
 
+@_both_exp_pow
 def test_issue_6746():
     y = Symbol('y')
     n = Symbol('n')
@@ -980,6 +989,7 @@ def test_issue_9462():
                            - S.Half/(x**2 - 2*x + 2)
 
 
+@_both_exp_pow
 def test_cyclic_parts():
     f = cos(x)*exp(x/4)
     F = 16*exp(x/4)*sin(x)/17 + 4*exp(x/4)*cos(x)/17
@@ -1171,6 +1181,7 @@ def test_issue_23566():
     assert str(i.n()) == '1.31695789692482'
 
 
+@_both_exp_pow
 def test_issue_25093():
     ap = Symbol('ap', positive=True)
     an = Symbol('an', negative=True)

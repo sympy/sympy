@@ -627,7 +627,7 @@ def rewrite(e, Omega, x, wsym):
         if var in rewrites:
             if not isinstance(rewrites[var], exp):
                 raise ValueError("Value should be exp")
-            arg = rewrites[var].args[0]
+            arg = rewrites[var].exp
         O2.append((var, exp((arg - c*g.exp))*wsym**c))
 
     # Remember that Omega contains subexpressions of "e". So now we find
