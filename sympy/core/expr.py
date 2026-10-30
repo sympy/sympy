@@ -3696,12 +3696,7 @@ class Expr(Basic, EvalfMixin):
 
         return (expr, hit)
 
-    @cacheit
-    from sympy import Add, Mul, Pow
-from sympy.core.add import _addsort
-from sympy.core.mul import _mulsort
-from sympy.polys.rings import ring
-from sympy.polys.domains import QQ
+   
 
 
 def expand(
