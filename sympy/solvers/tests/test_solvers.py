@@ -2583,6 +2583,7 @@ def test_issue_19509():
         d + a - sqrt(-b - c),
         d + a + sqrt(-b - c)]
 
+
 def test_issue_20747():
     THT, HT, DBH, dib, c0, c1, c2, c3, c4  = symbols('THT HT DBH dib c0 c1 c2 c3 c4')
     f = DBH*c3 + THT*c4 + c2
@@ -2590,8 +2591,10 @@ def test_issue_20747():
     eq = dib - DBH*(c0 - f*log(rhs))
     term = ((1 - exp((DBH*c0 - dib)/(DBH*(DBH*c3 + THT*c4 + c2))))
             / (1 - exp(c0/(DBH*c3 + THT*c4 + c2))))
-    sol = [THT*term**(1/c1) - term**(1/c1) + 1]
-    assert solve(eq, HT) == sol
+    sol = THT*term**(1/c1) - term**(1/c1) + 1
+    got = solve(eq, HT)
+    assert len(got) == 1
+    assert got[0].equals(sol)
 
 
 def test_issue_27001():
@@ -2750,3 +2753,13 @@ def test_solve_maxmin():
     assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
     system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
     assert solve(system, variables) == [(-3, 1), (2, 6)]
+
+
+def test_issue_27062():
+    # solve(x*log(x)) should not return 0 because log(0) is not finite
+    assert solve(x*log(x), x) == [1]
+    assert solve(x*log(x), x, check=False) == [0, 1]
+    assert solve(x*(x - 1)*log(x), x) == [1]
+    assert solve(x*log(x - 1), x) == [0, 2]
+    pw = Piecewise((x - 1, x > 0), (S.Infinity, True))
+    assert solve((x - 2)*pw, x) == [1, 2]

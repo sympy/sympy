@@ -6,6 +6,7 @@ from tokenize import (generate_tokens, untokenize, TokenError,
 from keyword import iskeyword
 
 import ast
+from math import gcd
 import unicodedata
 from io import StringIO
 import builtins
@@ -1106,6 +1107,69 @@ def evaluateFalse(s: str):
 
 
 class EvaluateFalseTransformer(ast.NodeTransformer):
+    @staticmethod
+    def _integer_literal(node):
+        """Return the value of a literal integer AST node, if possible."""
+        sign = 1
+        while True:
+            if (isinstance(node, ast.UnaryOp)
+                    and isinstance(node.op, (ast.UAdd, ast.USub))):
+                if isinstance(node.op, ast.USub):
+                    sign = -sign
+                node = node.operand
+            elif (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                  and node.func.id == 'Integer' and len(node.args) == 1
+                  and not node.keywords):
+                node = node.args[0]
+            else:
+                break
+        if isinstance(node, ast.Constant) and type(node.value) is int:
+            return sign * node.value
+        return None
+
+    # Preserve unreduced fractions as unevaluated division.
+    # The lambda prevents flatten() from denesting the fraction
+    # when it occurs inside another multiplication.
+    _ratio_ast = ast.parse(
+            'lambda p, q: Mul(p, Pow(q, -1, evaluate=False), '
+            'evaluate=False)',
+            mode='eval').body
+
+    def _literal_fraction(self, node):
+        """Preserve unreduced integer division but use canonical Rationals."""
+        q = self._integer_literal(node.right)
+        if q is None or q < 0:
+            return None
+        p = self._integer_literal(node.left)
+        if p == 1 and q <= 1:
+            # Preserve the original Pow representation of 1/1 and 1/0.
+            return None
+        if p is None:
+            # Absorb a leading minus sign into the rational coefficient.
+            if (q > 1 and isinstance(node.left, ast.UnaryOp)
+                    and isinstance(node.left.op, ast.USub)
+                    and not isinstance(node.left.operand, ast.UnaryOp)):
+                coeff = ast.Call(
+                    func=ast.Name(id='Rational', ctx=ast.Load()),
+                    args=[ast.Constant(-1), ast.Constant(q)],
+                    keywords=[])
+                return ast.Call(
+                    func=ast.Name(id='Mul', ctx=ast.Load()),
+                    args=[coeff, self.visit(node.left.operand)],
+                    keywords=[ast.keyword(
+                        arg='evaluate', value=ast.Constant(False))])
+            return None
+        if p != 0 and q > 1 and gcd(p, q) == 1:
+            return ast.Call(
+                func=ast.Name(id='Rational', ctx=ast.Load()),
+                args=[ast.Constant(p), ast.Constant(q)],
+                keywords=[])
+
+        return ast.Call(
+            func=self._ratio_ast,
+            args=[self.visit(node.left), self.visit(node.right)],
+            keywords=[])
+
     operators = {
         ast.Add: 'Add',
         ast.Mult: 'Mul',
@@ -1122,7 +1186,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         'acosh', 'acoth', 'acsch', 'asech', 'asinh', 'atanh',
         'cos', 'cot', 'csc', 'sec', 'sin', 'tan',
         'cosh', 'coth', 'csch', 'sech', 'sinh', 'tanh',
-        'exp', 'ln', 'log', 'sqrt', 'cbrt',
+        'exp', 'ln', 'log', 'sqrt', 'cbrt', 'factorial',
     )
 
     relational_operators = {
@@ -1181,6 +1245,10 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 and isinstance(node.operand, ast.BinOp)
                 and isinstance(node.operand.op, (ast.Add, ast.Mult, ast.Div, ast.Sub))):
             operand = self.visit(node.operand)
+            if (isinstance(operand, ast.Call)
+                    and isinstance(operand.func, ast.Name)
+                    and operand.func.id == 'Rational'):
+                return ast.UnaryOp(op=ast.USub(), operand=operand)
             new_node = ast.Call(
                 func=ast.Name(id='Mul', ctx=ast.Load()),
                 args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)), operand],
@@ -1190,6 +1258,10 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         return self.generic_visit(node)
 
     def visit_BinOp(self, node):
+        if isinstance(node.op, ast.Div):
+            fraction = self._literal_fraction(node)
+            if fraction is not None:
+                return fraction
         if node.op.__class__ in self.operators:
             sympy_class = self.operators[node.op.__class__]
             right = self.visit(node.right)
@@ -1197,11 +1269,21 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
 
             rev = False
             if isinstance(node.op, ast.Sub):
-                right = ast.Call(
-                    func=ast.Name(id='Mul', ctx=ast.Load()),
-                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)), right],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
-                )
+                # Negate an atomic literal Rational directly rather than
+                # introducing Mul(-1, Rational(...), evaluate=False).
+                if (isinstance(node.right, ast.BinOp)
+                        and isinstance(node.right.op, ast.Div)
+                        and isinstance(right, ast.Call)
+                        and isinstance(right.func, ast.Name)
+                        and right.func.id == 'Rational'):
+                    right = ast.UnaryOp(op=ast.USub(), operand=right)
+                else:
+                    right = ast.Call(
+                        func=ast.Name(id='Mul', ctx=ast.Load()),
+                        args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)),
+                              right],
+                        keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
+                    )
             elif isinstance(node.op, ast.Div):
                 if isinstance(node.left, ast.UnaryOp):
                     left, right = right, left

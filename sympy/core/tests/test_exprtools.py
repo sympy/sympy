@@ -515,6 +515,41 @@ def test_monotonic_sign():
     assert r.is_nonpositive is True
     assert r.is_negative is None
 
+    # issue 9154
+    p = Dummy(prime=True, odd=True)
+    assert F(log(p) - 1) == log(3) - 1
+    assert F(sqrt(p) - sqrt(2)) == sqrt(3) - sqrt(2)
+    assert log(p) >= 1
+    assert (sqrt(p) - sqrt(2)).is_positive is True
+
+    # coverage
+    nn = Dummy(integer=True, nonnegative=True)
+
+    r = F(exp(nn) - 1)
+    assert r.is_nonnegative is True
+    assert r.is_positive is None
+
+    r = F(exp(-nn) - 1)
+    assert r.is_nonpositive is True
+    assert r.is_negative is None
+
+    np = Dummy(integer=True, nonpositive=True)
+
+    assert F(exp(np) - 2) == -1
+
+    r = F(exp(np) - 1)
+    assert r.is_nonpositive is True
+    assert r.is_negative is None
+
+    assert F(exp(-np) - S.Half) == S.Half
+
+    r = F(exp(-np) - 1)
+    assert r.is_nonnegative is True
+    assert r.is_positive is None
+
+    nn = Dummy(integer=True, nonnegative=True)
+    assert F(exp(-nn) - 2) == -1
+
 
 def test_issue_17256():
     from sympy.sets.fancysets import Range

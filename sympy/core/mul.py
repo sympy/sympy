@@ -12,7 +12,7 @@ from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .intfunc import integer_nthroot, trailing
-from .logic import fuzzy_not, _fuzzy_group
+from .logic import fuzzy_not, fuzzy_or, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
 from .kind import KindDispatcher
@@ -1508,7 +1508,7 @@ class Mul(Expr, AssocOp):
         t_not_re_im = None
 
         for t in self.args:
-            if (t.is_complex or t.is_infinite) is False and t.is_extended_real is False:
+            if fuzzy_or([t.is_complex, t.is_infinite]) is False and t.is_extended_real is False:
                 return False
             elif t.is_imaginary:  # I
                 real = not real

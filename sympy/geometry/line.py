@@ -2633,7 +2633,7 @@ class Line3D(LinearEntity3D, Line):
         >>> l1 = Line3D((0, 0, 0), (0, 0, 1))
         >>> l2 = Line3D((0, x, 0), (y, x, 1))
         >>> l1.distance(l2)
-        Abs(x*y)/Abs(sqrt(y**2))
+        Abs(x*y)/sqrt(y**2)
 
         """
 
