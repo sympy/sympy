@@ -541,7 +541,8 @@ def test_inverse_laplace_transform():
     # Section 4.1: Some of the Laplace transform rules can also be used well
     #     in the inverse transform.
     assert ILTF(exp(-a*s)*F(s)) == f(-a + t)
-    assert ILTF(k*F(s-a)) == k*f(t)*exp(-a*t)
+    assert ILTF(k*F(s-a)) == k*f(t)*exp(a*t)
+    assert ILTF(F(s - 2)) == f(t)*exp(2*t)
     assert ILTF(diff(F(s), s, 3)) == -t**3*f(t)
     assert ILTF(diff(F(s), s, 4)) == t**4*f(t)
 

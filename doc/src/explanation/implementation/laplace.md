@@ -183,7 +183,7 @@ Next, algorithmic rules that cannot be resolved by simple pattern matching are a
 - `_laplace_rule_heaviside` can also deal with products of time-shifted `Heaviside()` functions and unknown functions `f(t)`, and with rectangular windows on functions.
 - `_laplace_rule_delta` deals with `DiracDelta` factors in the time domain by using the Delta distribution's masking property.
 - `_laplace_rule_timescale` deals with functions where the time variable has a factor, like `f(a*t)`.
-- `_laplace_rule_exp` removes exponential factors `exp(a*t)`, expressing them as a frequency shift `s + a` in the result.
+- `_laplace_rule_exp` removes exponential factors `exp(a*t)`, expressing them as a frequency shift `s - a` in the result.
 - `_laplace_rule_trig` is a relatively complicated algroithm that converts trigonometric functions to exponential functions, transforms everything, and then makes nice expressions in `s` by collecting complex conjugate poles cominng from `sin` and `cos` and symmetric real poles coming from `sinh` and `cosh`.
 - `_laplace_rule_diff` looks for derivatives in the `t` domain to replace them with factors of `s` in the result.
 - `_laplace_rule_sdiff` looks for factors `t` in the `t` domain to replace them with derivatives in the `s` domain.
@@ -377,8 +377,8 @@ If any of those return a sum, it recursively calls `_inverse_laplace_transform` 
 ### Algorithmic rules II: `_inverse_laplace_apply_prog_rules`
 
 Next, a second batch of algorithmic rules is tried that works much better when expansion cannot be done further: 
-- `_inverse_laplace_time_shift` looks for a factor `exp(a*s)` and replaces it by a time shift `t-a` of the result,
-- `_inverse_laplace_freq_shift` looks for a frequency shift `s-a` and replaces it by a factor `exp(-a*t)` in the result,
+- `_inverse_laplace_time_shift` looks for a factor `exp(-a*s)` with `a > 0` and replaces it by a time shift `t-a` of the result,
+- `_inverse_laplace_freq_shift` looks for a frequency shift `s-a` and replaces it by a factor `exp(a*t)` in the result,
 - `_inverse_laplace_time_diff` looks for a factor of `s**n` and applies the `n`-th derivative to the result,
 - `_inverse_laplace_diff` looks for an `n`-th derivative to `s` and replaces it with a factor `t**n` in the result,
 - `_inverse_laplace_irrational` is tried once more.
