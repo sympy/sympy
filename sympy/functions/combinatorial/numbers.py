@@ -2676,12 +2676,22 @@ def _eval_stirling1(n, k):
     return _stirling1(n, k)
 
 
+
 @cacheit
 def _stirling1(n, k):
-    row = [0, 1]+[0]*(k-1) # for n = 1
-    for i in range(2, n+1):
-        for j in range(min(k,i), 0, -1):
-            row[j] = (i-1) * row[j] + row[j-1]
+    if n < k:
+        return 0
+    if not k:
+        return int(n == 0)
+
+    d = n-k
+    row = [1]*(k+1)
+    row[0] = 0
+
+    for h in range(1, d+1):
+        for j in range(1, k+1):
+            row[j] = (h+j-1)*row[j] + row[j-1] #row[j] = stirling1(h+j,j)
+
     return Integer(row[k])
 
 
@@ -2703,17 +2713,52 @@ def _eval_stirling2(n, k):
 
     return _stirling2(n, k)
 
-
 @cacheit
 def _stirling2(n, k):
-    row = [0, 1]+[0]*(k-1) # for n = 1
-    for i in range(2, n+1):
-        for j in range(min(k,i), 0, -1):
-            row[j] = j * row[j] + row[j-1]
+    if n < k:
+        return 0
+    if not k:
+        return int(n == 0)
+
+    d = n-k
+    row = [1]*(k+1)
+    row[0] = 0
+
+    for h in range(1, d+1):
+        for j in range(1, k+1):
+            row[j] = j*row[j] + row[j-1] #row[j] = stirling2(h+j,j)
+
     return Integer(row[k])
 
 
-def stirling(n, k, d=None, kind=2, signed=False):
+@cacheit
+def _stirling_poly_undivided(m, kind):
+    """stirling(n, n - m, kind) as a polynomial wrt n."""
+    if m==0: return Poly(S.One, _sym)
+    summand = _stirling_poly_undivided(m-1,kind) * Poly(_sym if kind == 1 else _sym + 1 - m, _sym)
+    summatn = sum(coeff * (bernoulli_poly(deg+1,_sym) - bernoulli_poly(deg+1,S.Zero))/(deg+1) for (deg,),coeff in summand.terms())
+    # we use bernoulli_poly(n,0) instead of bernoulli(n), because here we want it to be -1/2 for the n=1 case
+    return Poly(summatn - summatn.subs(_sym, m), _sym)
+
+@cacheit
+def _stirling_poly(m, kind):
+    """stirling(n, n - m, kind) / binomial(n,m+1) as a polynomial wrt n."""
+    # cf. https://en.wikipedia.org/wiki/Stirling_polynomials
+    factor = Poly(prod(_sym - i for i in range(m + 1)) / factorial(m + 1), _sym)
+    return _stirling_poly_undivided(m, kind).exquo(factor)
+
+
+@cacheit
+def _stirling1_column(n, k):
+    """closed form for stirling(n,k,kind=1)/factorial(n-1) in terms of harmonic numbers
+    for symbolic n and constant k, via Newton's identities."""
+    # This is recurrence (6b) from https://math.stackexchange.com/q/5116629
+    if k == 0: return S.Zero**n
+    if k == 1: return S.One
+    return expand_mul(sum((-1)**(i - 1) * _stirling1_column(n, k - i) * harmonic(n - 1, i) for i in range(1, k)) / (k - 1))
+
+
+class stirling(DefinedFunction):
     r"""Return Stirling number $S(n, k)$ of the first or second (default) kind.
 
     The sum of all Stirling numbers of the second kind for $k = 1$
@@ -2797,28 +2842,75 @@ def stirling(n, k, d=None, kind=2, signed=False):
     .. [2] https://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
 
     """
-    # TODO: make this a class like bell()
+    def __new__(cls, n, k, d=None, kind=2, signed=False, **options):
+        # this way it remains compatible with how it worked before becoming a class
+        # you see DefinedFunction only works with positional arguments
+        # while stirling supports them as keywords too
+        args = [n, k]
+        if signed:
+            args.extend([S.Zero, 1, True])
+        elif d is not None and d != 0:
+            args.append(d)
+        elif kind != 2:
+            args.extend([S.Zero, kind])
+        return super().__new__(cls, *args, **options)
 
-    n = as_int(n)
-    k = as_int(k)
-    if n < 0:
-        raise ValueError('n must be nonnegative')
-    if k > n:
-        return S.Zero
-    if d:
-        # assert k >= d
-        # kind is ignored -- only kind=2 is supported
-        return _eval_stirling2(n - d + 1, k - d + 1)
-    elif signed:
-        # kind is ignored -- only kind=1 is supported
-        return S.NegativeOne**(n - k)*_eval_stirling1(n, k)
+    @classmethod
+    def eval(cls, n, k, d=None, kind=2, signed=False):
+        if d is not None and d != 0:
+            if n.is_number and k.is_number:
+                n = as_int(n)
+                k = as_int(k)
+                d = as_int(d)
+                if n < 0:
+                    raise ValueError('n must be nonnegative')
+                if k > n:
+                    return S.Zero
+                return _eval_stirling2(n - d + 1, k - d + 1)
+            return cls(n - d + 1, k - d + 1)
 
-    if kind == 1:
-        return _eval_stirling1(n, k)
-    elif kind == 2:
-        return _eval_stirling2(n, k)
-    else:
-        raise ValueError('kind must be 1 or 2, not %s' % k)
+        if kind not in (1, 2):
+            raise ValueError('kind must be 1 or 2, not %s' % kind)
+
+        if n.is_number and k.is_number:
+            n = as_int(n)
+            k = as_int(k)
+            if n < 0:
+                raise ValueError('n must be nonnegative')
+            if k > n or k < 0:
+                return S.Zero
+            if signed:
+                return S.NegativeOne**(n - k) * _eval_stirling1(n, k)
+            return _eval_stirling1(n, k) if kind==1 else _eval_stirling2(n, k)
+
+        difference = n - k
+        if difference.is_Integer and difference.is_nonnegative:
+            m = int(difference)
+            if not m: return S.One
+            result = binomial(n, m + 1) * _stirling_poly(m, kind).as_expr().subs(_sym, n)
+            if signed: result *= S.NegativeOne**m
+            return result
+
+    def _eval_rewrite_as_Sum(self, n, k, d=None, kind=2, signed=False, **kwargs):
+        from sympy.concrete.summations import Sum
+
+        if d is not None:
+            return self.func(n - d + 1, k - d + 1).rewrite(Sum)
+        if kind != 2 or not (k.is_integer and k.is_nonnegative):
+            return self
+
+        j = Dummy('j', integer=True, nonnegative=True)
+        return Sum((-1)**(k - j) * binomial(k, j) * j**n, (j, 0, k)) / factorial(k)
+
+    def _eval_rewrite_as_harmonic(self, n, k, d=None, kind=2, signed=False, **kwargs):
+        if d is not None and d != 0 or kind == 2:
+            return self
+        if not (k.is_Integer and k.is_nonnegative):
+            return self
+
+        result = factorial(n - 1)*_stirling1_column(n, int(k))
+        if signed: result *= S.NegativeOne**(n - k)
+        return result
 
 
 @cacheit
