@@ -31,7 +31,7 @@ from sympy.polys.polytools import (
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
     to_rational_coeffs,
-    gcdex_steps)
+    gcdex_steps, _obvious_leading, _obvious_generator)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -61,7 +61,7 @@ from sympy.core.add import Add
 from sympy.core.basic import _aresame
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.function import (Derivative, diff, expand)
+from sympy.core.function import (Derivative, diff, expand, Function)
 from sympy.core.mul import _keep_coeff, Mul
 from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
@@ -1299,6 +1299,42 @@ def test_Poly__gen_to_level():
     raises(PolynomialError, lambda: Poly(1, x, y)._gen_to_level('z'))
 
 
+def test_obvious_leading():
+    y, z = symbols('y z')
+    f = Function('f')
+
+    assert [i for i in (x, 1/x, exp(x), exp(-x),
+        exp(1), exp(-1), 2*x, x**2, x + 1, pi, f(x), sin(x), -x, I*x,
+        I) if _obvious_generator(i)] == [x, exp(1), pi, f(x), sin(x)]
+    assert _obvious_leading(pi**3 + 2*pi, pi) == (3, 1)
+    assert _obvious_leading(S.Zero, x) == (-oo, 0)
+    assert _obvious_leading(x, x) == (1, 1)
+    assert _obvious_leading(3*x**4, x) == (4, 3)
+    assert _obvious_leading((2*x**3 + 1)**10, x) == (30, 2**10)
+
+    assert _obvious_leading(y + z, x) == (0, y + z)
+    assert _obvious_leading((y + z)*x**3, x) == (3, y + z)
+    assert _obvious_leading(y*x**2 + z*(1 + x)**2, x) == (2, y + z)
+
+    assert _obvious_leading(
+        (x + 1)**100 + 7*(x**2 + 1)**3, x
+    ) == (100, 1)
+
+    assert _obvious_leading(
+        (x + 1)**40 + (1 - x)**40, x
+    ) == (40, 2)
+
+    # Equal top-degree coefficients cancel, so give up.
+    assert _obvious_leading(
+        (x + 1)**40 - (x - 1)**40, x
+    ) is None
+
+    # coverage
+    assert _obvious_leading(Mul(0, y, evaluate=False), x) == (-oo, 0)
+    assert _obvious_leading(Pow(x, 0, evaluate=False), x) == (0, 1)
+    assert _obvious_leading(sin(x), x) is None
+
+
 def test_Poly_degree():
     assert Poly(0, x).degree() is -oo
     assert Poly(1, x).degree() == 0
@@ -1345,6 +1381,9 @@ def test_Poly_degree():
     raises(TypeError, lambda: degree(y**2 + x**3))
     raises(TypeError, lambda: degree(y**2 + x**3, 1))
     raises(PolynomialError, lambda: degree(x**2/(x**3 + 1), x))
+    A = Symbol('A', commutative=False)
+    raises(PolynomialError, lambda: degree(A*x, x))
+    raises(GeneratorsError, lambda: degree(x, A))
 
     assert degree(Poly(0,x),z) is -oo
     assert degree(Poly(1,x),z) == 0
@@ -1355,7 +1394,18 @@ def test_Poly_degree():
 
 
     # optimization
-    big = 2  # make this number 1000 when full expansion can be avoided
+
+    ys = symbols('y:20')
+    coeff = Mul(*(yi + 1 for yi in ys))
+    assert degree(coeff, x) == 0
+
+    p = (((((((x + 1)**3 + 1)**3 + 1)**3 + 1)**3 + 1)**3 + 1)**3 + 1)**3
+    assert degree(p, x) == 3**7
+
+    # issue 6322
+    assert degree((x + 1)**10000) == 10000
+
+    big = 1000
 
     assert degree((x + 1)**big, x) == big  # Large power (fast-path, no expansion)
     assert degree((x + 1)**big + x**(big-1), x) == big  # Addition without cancellation
@@ -1450,6 +1500,31 @@ def test_Poly_LC():
     assert LC(x*y**7 + 2*x**2*y**3, order='lex') == 2
     assert LC(x*y**7 + 2*x**2*y**3, order='grlex') == 1
 
+
+
+def test_obvious_leading_queries():
+    big = 1000
+    f = y*(x + 1)**big + 1
+
+    assert LC(f, x) == y
+    assert LM(f, x) == x**big
+    assert LT(f, x) == y*x**big
+
+    assert LC(0, x) == 0
+    assert LM(0, x) == 1
+    assert LT(0, x) == 0
+
+    # NumberSymbol generator.
+    f = (pi + 1)**big
+    assert LC(f, pi) == 1
+    assert LM(f, pi) == pi**big
+    assert LT(f, pi) == pi**big
+
+    # Leading terms cancel, so structural analysis falls back to Poly.
+    f = (x + 1)**2 - x**2
+    assert LC(f, x) == 2
+    assert LM(f, x) == x
+    assert LT(f, x) == 2*x
 
 def test_Poly_TC():
     assert Poly(0, x).TC() == 0
