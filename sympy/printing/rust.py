@@ -453,7 +453,7 @@ class RustCodePrinter(CodePrinter):
         lhs_code = self._print(lhs)
         rhs_code = self._print(rhs)
         op = expr.rel_op
-        if op == "<" and isinstance(lhs, TypeCast) and lhs.explicit:
+        if op == "<" and " as " in lhs_code:
             lhs_code = "({})".format(lhs_code)
         return "{} {} {}".format(lhs_code, op, rhs_code)
 
