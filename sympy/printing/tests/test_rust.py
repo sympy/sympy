@@ -416,7 +416,10 @@ def check_rust(cases, variables):
         if isinstance(expected, bool):
             body_lines.append(f"    let res_{idx}: bool = {code};")
             body_lines.append(f"    assert_eq!(res_{idx}, {str(expected).lower()});")
-        elif isinstance(expected, (int, float)):
+        elif isinstance(expected, int):
+            body_lines.append(f"    let res_{idx}: i32 = {code};")
+            body_lines.append(f"    assert_eq!(res_{idx}, {expected});")
+        elif isinstance(expected, float):
             body_lines.append(f"    let res_{idx}: f64 = {code};")
             body_lines.append(f"    assert!((res_{idx} - {float(expected)}).abs() < 1e-12);")
 
