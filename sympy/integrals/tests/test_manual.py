@@ -1329,6 +1329,29 @@ def test_manualintegrate_euler_substitution():
     assert (F1.diff(x) - f).cancel() == 0
     assert (F2.diff(x) - f.subs(c, 0)).cancel() == 0
 
+    # Negative quadratic coefficient with a0 > 0 (issue #30743)
+    f = sqrt(1 - x**2)/(1 + x**2)
+    F = manualintegrate(f, x)
+    assert (F.diff(x) - f).cancel() == 0
+    # Continuous across x = 0; definite integral matches numerical integration
+    num_diff = integrate(f, (x, -S.Half, S.Half), manual=True).evalf()
+    assert abs(float(num_diff) - 0.889480815409652) < 1e-12
+
+    g = 1/((1 + x**2)*sqrt(1 - x**2))
+    G = manualintegrate(g, x)
+    assert (G.diff(x) - g).cancel() == 0
+    num_diff_g = integrate(g, (x, -S.Half, S.Half), manual=True).evalf()
+    assert abs(float(num_diff_g) - 0.968339183303125) < 1e-12
+
+    # Negative quadratic coefficient with real roots (Euler's 3rd substitution)
+    h = 1/((x + 1)*sqrt(-x**2 + 3*x - 2))
+    H = manualintegrate(h, x)
+    assert (H.diff(x) - h).cancel() == 0
+    h_int = integrate(
+        h, (x, Rational(12, 10), Rational(18, 10)), manual=True
+    ).evalf()
+    assert abs(float(h_int) - 0.5174403340526131) < 1e-12
+
 def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of(1/sqrt((x - I)**2-1), log(2*x + 2*sqrt(x**2 - 2*I*x - 2) - 2*I))
     assert_is_integral_of(1/sqrt(3*x**2+4*x+5), sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3)
