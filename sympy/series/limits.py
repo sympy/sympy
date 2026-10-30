@@ -7,7 +7,7 @@ from sympy.core.function import AppliedUndef
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
-from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.exponential import (exp, log, LambertW)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
@@ -255,6 +255,15 @@ class Limit(Expr):
 
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
+
+        if z0 is S.Infinity:
+            lambertws = {w for w in e.atoms(LambertW) if w.has(z)}
+            if lambertws and all(w.args == (z,) for w in lambertws):
+                # LambertW(z) -> oo as z -> oo, and z = LambertW(z)*exp(LambertW(z))
+                dummy = Dummy('w', positive=True)
+                newe = e.xreplace(dict.fromkeys(lambertws, dummy))
+                newe = newe.xreplace({z: dummy*exp(dummy)})
+                return limit(newe, dummy, S.Infinity)
 
         cdir = S.Zero
         if str(dir) == "+":

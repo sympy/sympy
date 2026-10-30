@@ -1495,3 +1495,31 @@ def test_issue_30568():
     assert limit(Max(x, sin(x)), x, 0) == 0
     assert limit(Min(exp(x), exp(2*x)), x, oo) == oo
     assert limit(Max(1/x, 1/x**2), x, oo) == 0
+
+
+def test_issue_30581():
+    x = Symbol('x')
+    assert limit(exp(LambertW(x)), x, oo) is oo
+    assert limit(exp(-LambertW(x)), x, oo) == 0
+    assert limit(exp(2*LambertW(x))/x, x, oo) is oo
+    assert limit(LambertW(x)*exp(LambertW(x))/x, x, oo) == 1
+    assert limit(LambertW(x)/log(x), x, oo) == 1
+    assert limit(log(LambertW(x)), x, oo) is oo
+    assert limit(LambertW(x) - log(x), x, oo) is -oo
+    assert limit(sin(1/LambertW(x))*LambertW(x), x, oo) == 1
+
+
+def test_lambertw_limit_cancellation():
+    x = Symbol('x')
+    L, M = log(x), log(log(x))
+    assert limit(LambertW(x) - L + M, x, oo) == 0
+    remainder = LambertW(x) - L + M - M/L - M**2/(2*L**2) + M/L**2
+    assert limit(remainder*L**2/M**2, x, oo) == 0
+    assert limit(remainder*L**3/M**3, x, oo) == Rational(1, 3)
+
+
+def test_lambertw_limit_unsupported_arguments():
+    x = Symbol('x')
+    assert isinstance(limit(LambertW(x, 1)/log(x), x, oo), Limit)
+    assert isinstance(limit(LambertW(x)*LambertW(x**2), x, oo), Limit)
+    assert isinstance(limit(LambertW(x + 1)/log(x), x, oo), Limit)
