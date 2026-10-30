@@ -381,7 +381,7 @@ def test_parenthesize_typecast():
     assert rust_code((i + j) * (r + 1)) == "(i + j) as f64*(r + 1.0)"
 
 
-def test_rust_typecast_compiles():
+def check_rust(cases, variables):
     import os
     import shutil
     import subprocess
@@ -395,38 +395,58 @@ def test_rust_typecast_compiles():
     if rustc is None:
         skip("rustc is not installed")
 
-    i, j = symbols("i j", integer=True)
-    r = Symbol("r", real=True)
-    w = Symbol("w", real=True)
+    var_lines = []
+    for var, val in variables.items():
+        name = var.name if hasattr(var, "name") else str(var)
+        if isinstance(val, tuple) and len(val) == 2:
+            typ, v = val
+        elif getattr(var, "is_integer", False) or (isinstance(val, int) and not isinstance(val, bool)):
+            typ, v = "i32", str(val)
+        elif getattr(var, "is_real", False) or isinstance(val, float):
+            typ, v = "f64", f"{float(val)}"
+        elif isinstance(val, bool):
+            typ, v = "bool", str(val).lower()
+        else:
+            typ, v = "f64", str(val)
+        var_lines.append(f"    let {name}: {typ} = {v};")
 
-    comparison = rust_code(Lt(r * (i + j), w))
-    arithmetic = rust_code((i + j) * (r + 1))
+    body_lines = []
+    for idx, (expr, expected) in enumerate(cases):
+        code = rust_code(expr)
+        if isinstance(expected, bool):
+            body_lines.append(f"    let res_{idx}: bool = {code};")
+            body_lines.append(f"    assert_eq!(res_{idx}, {str(expected).lower()});")
+        elif isinstance(expected, (int, float)):
+            body_lines.append(f"    let res_{idx}: f64 = {code};")
+            body_lines.append(f"    assert!((res_{idx} - {float(expected)}).abs() < 1e-12);")
 
-    source = f"""fn main() {{
-    let i: i32 = 2;
-    let j: i32 = 3;
-    let r: f64 = 10.0;
-    let w: f64 = 60.0;
-    let comparison: bool = {comparison};
-    assert!(comparison);
-    let value: f64 = {arithmetic};
-    assert!((value - 55.0).abs() < 1e-12);
-}}
-"""
+    program = "fn main() {\n" + "\n".join(var_lines) + "\n\n" + "\n".join(body_lines) + "\n}\n"
+
     with tempfile.TemporaryDirectory() as tmp_dir:
         src = os.path.join(tmp_dir, "generated.rs")
         exe = os.path.join(tmp_dir, "generated.exe" if os.name == "nt" else "generated")
         with open(src, "w", encoding="utf-8") as f:
-            f.write(source)
+            f.write(program)
         compiled = subprocess.run(
             [rustc, "--edition=2021", str(src), "-o", str(exe)],
             capture_output=True,
             text=True,
         )
-        assert compiled.returncode == 0, compiled.stderr
-        executed = subprocess.run(
-            [str(exe)],
-            capture_output=True,
-            text=True,
-        )
-        assert executed.returncode == 0, executed.stderr
+        assert compiled.returncode == 0, f"Compilation failed:\n{compiled.stderr}\nProgram:\n{program}"
+        executed = subprocess.run([str(exe)], capture_output=True, text=True)
+        assert executed.returncode == 0, f"Execution failed:\n{executed.stderr}"
+
+
+def test_rust_typecast_compiles():
+    i, j = symbols("i j", integer=True)
+    r, w = symbols("r w", real=True)
+
+    variables = {i: 2, j: 3, r: 10.0, w: 60.0}
+    cases = [
+        (Lt(r * (i + j), w), True),
+        (Lt(i + j, w), True),
+        (Eq(w, i + j), False),
+        ((i + j) * (r + 1), 55.0),
+        (r * (i + j), 50.0),
+    ]
+    check_rust(cases, variables)
