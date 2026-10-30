@@ -95,7 +95,7 @@ functions of the Diophantine module.
 a tuple is an expression for a variable in your equation. For example, for the
 Pythogorean equation, the result is a set containing one tuple where the
 expressions correspond to (a, b, c). That is, the tuple represents `a = 2*p*q, b
-= p**2 - q**2, c = p**2-q**2`. Because you cannot extract an element (here, a
+= p**2 - q**2, c = p**2 + q**2`. Because you cannot extract an element (here, a
 tuple) from a set by subscripting the set, you can create a dictionary of
 symbol-expression pairs to extract an expression by its symbol:
 

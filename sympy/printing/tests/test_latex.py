@@ -32,6 +32,7 @@ from sympy.functions.elementary.trigonometric import (acsc, asin, cos, cot, sin,
 from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f, elliptic_k, elliptic_pi)
+from sympy.functions.special.elliptic_functions import jtheta
 from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, expint)
 from sympy.functions.special.gamma_functions import (gamma, uppergamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
@@ -71,7 +72,7 @@ from sympy.series.sequences import (SeqAdd, SeqFormula, SeqMul, SeqPer)
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ComplexRegion, ImageSet, Range)
-from sympy.sets.ordinals import Ordinal, OrdinalOmega, OmegaPower
+from sympy.sets.ordinals import Ordinal, OrdinalOmega, OmegaPower, OrdinalZero
 from sympy.sets.powerset import PowerSet
 from sympy.sets.sets import (FiniteSet, Interval, Union, Intersection, Complement, SymmetricDifference, ProductSet)
 from sympy.sets.setexpr import SetExpr
@@ -118,6 +119,17 @@ def test_printmethod():
         def _latex(self, printer):
             return "foo"
     assert latex(R(x)) == r"foo"
+
+
+def test_unevaluated_numeric_ratio():
+    def ratio(p, q):
+        return Mul(p, Pow(q, -1, evaluate=False), evaluate=False)
+
+    assert latex(Pow(1, -1, evaluate=False)) == r'\frac{1}{1}'
+    assert latex(ratio(1, 1)) == r'1 \cdot \frac{1}{1}'
+    assert latex(ratio(2, 4)) == r'\frac{2}{4}'
+    assert latex(Mul(1, Rational(1, 2), evaluate=False)) == r'1 \cdot \frac{1}{2}'
+    assert latex(Mul(1, Symbol('x'), evaluate=False)) == '1 x'
 
 
 def test_latex_basic():
@@ -712,6 +724,12 @@ def test_latex_functions():
         r"\Pi^{2}\left(x; y\middle| z\right)"
     assert latex(elliptic_pi(x, y)) == r"\Pi\left(x\middle| y\right)"
     assert latex(elliptic_pi(x, y)**2) == r"\Pi^{2}\left(x\middle| y\right)"
+    assert latex(jtheta(n, x, y)) == \
+        r"\vartheta_{n}\left(x, y\right)"
+    assert latex(jtheta(n, x, y, 2)) == \
+        r"\vartheta_{n}^{(2)}\left(x, y\right)"
+    assert latex(jtheta(n, x, y, 2)**3) == \
+        r"\left(\vartheta_{n}^{(2)}\left(x, y\right)\right)^{3}"
 
     assert latex(Ei(x)) == r'\operatorname{Ei}{\left(x \right)}'
     assert latex(Ei(x)**2) == r'\operatorname{Ei}^{2}{\left(x \right)}'
@@ -864,6 +882,13 @@ def test_latex_fresnel():
     assert latex(fresnelc(z)) == r'C\left(z\right)'
     assert latex(fresnels(z)**2) == r'S^{2}\left(z\right)'
     assert latex(fresnelc(z)**2) == r'C^{2}\left(z\right)'
+
+
+def test_latex_owens_t():
+    from sympy.functions.special.error_functions import owens_t
+    from sympy.abc import h, a
+    assert latex(owens_t(h, a)) == r'T\left(h, a\right)'
+    assert latex(owens_t(h, a)**2) == r'T^{2}\left(h, a\right)'
 
 
 def test_latex_brackets():
@@ -1221,6 +1246,7 @@ def test_latex_ordinals():
     assert latex(Ordinal(OmegaPower(2, 1), OmegaPower(1, 2))) == r'\omega^{2} + \omega 2'
     assert latex(w**(w + 1) + 1) == r'\omega^{\omega + 1} + 1'
     assert latex(OmegaPower(0,1)) == '1'
+    assert latex(OrdinalZero()) == "0"
 
 
 def test_set_operators_parenthesis():
@@ -1677,6 +1703,13 @@ def test_latex_mul_symbol():
     assert latex(4*x, mul_symbol='times') == r"4 \times x"
     assert latex(4*x, mul_symbol='dot') == r"4 \cdot x"
     assert latex(4*x, mul_symbol='ldot') == r"4 \,.\, x"
+
+
+def test_latex_issue_24112():
+    from sympy.parsing.sympy_parser import parse_expr
+    assert latex(parse_expr('-sqrt(7)/2 + 1/3 - 1/2',
+        evaluate=False)) == (
+        r'- \frac{\sqrt{7}}{2} - \frac{1}{2} + \frac{1}{3}')
 
 
 def test_latex_issue_4381():
@@ -2249,9 +2282,12 @@ def test_MatPow():
 def test_ElementwiseApplyFunction():
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
-    assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
+    assert latex(expr) == r"{\sin}_{\circ}\left({X^{T} X}\right)"
+    assert latex(X.applyfunc(exp)) == r"{\exp}_{\circ}\left({X}\right)"
     expr = X.applyfunc(Lambda(x, 1/x))
     assert latex(expr) == r'{\left( x \mapsto \frac{1}{x} \right)}_{\circ}\left({X}\right)'
+    expr = X.applyfunc(Lambda(x, Function("g")(x, 1)))
+    assert latex(expr) == r'{\left( x \mapsto g{\left(x,1 \right)} \right)}_{\circ}\left({X}\right)'
 
 
 def test_MatrixUnit():
@@ -2826,6 +2862,9 @@ def test_Feedback_printing():
         r'\frac{\frac{p}{p + x}}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
     assert latex(Feedback(tf1*tf2, sign=1)) == \
         r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+    tf3 = TransferFunction(1, p + 2, p)
+    assert latex(Feedback(tf1*tf2, tf3)) == \
+        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} + \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right) \left(\frac{1}{p + 2}\right)}'
 
 
 def test_MIMOFeedback_printing():
@@ -2868,6 +2907,31 @@ def test_TensorProduct_printing():
     assert latex(TensorProduct(A, B)) == r"A \otimes B"
 
 
+def test_ArrayTensorProduct_printing():
+    from sympy.tensor.array.expressions import ArrayAdd, ArrayTensorProduct
+    A = MatrixSymbol("A", 3, 4)
+    B = MatrixSymbol("B", 4, 5)
+    C = MatrixSymbol("C", 3, 4)
+    assert latex(ArrayTensorProduct(A, B)) == r"A \boxtimes B"
+    assert latex(ArrayAdd(ArrayTensorProduct(A, B), ArrayTensorProduct(C, B))) == \
+        r"A \boxtimes B + C \boxtimes B"
+    assert latex(ArrayTensorProduct(ArrayAdd(A, C), B)) == \
+        r"\left(A + C\right) \boxtimes B"
+    assert latex(ArrayTensorProduct(A + C, B)) == \
+        r"\left(A + C\right) \boxtimes B"
+
+
+def test_ArrayElementwiseApplyFunc_printing():
+    from sympy.tensor.array.expressions import ArraySymbol, ArrayTensorProduct
+    from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc
+    A = ArraySymbol("A", (2, 3))
+    assert latex(ArrayElementwiseApplyFunc(exp, A)) == r"{\exp}_{\circ}\left({A}\right)"
+    assert latex(ArrayElementwiseApplyFunc(sin, ArrayTensorProduct(A, A))) == \
+        r"{\sin}_{\circ}\left({A \boxtimes A}\right)"
+    assert latex(ArrayElementwiseApplyFunc(Lambda(x, x**2), A)) == \
+        r"{\left( x \mapsto x^{2} \right)}_{\circ}\left({A}\right)"
+
+
 def test_WedgeProduct_printing():
     from sympy.diffgeom.rn import R2
     from sympy.diffgeom import WedgeProduct
@@ -2877,10 +2941,10 @@ def test_WedgeProduct_printing():
 
 def test_issue_9216():
     expr_1 = Pow(1, -1, evaluate=False)
-    assert latex(expr_1) == r"1^{-1}"
+    assert latex(expr_1) == r"\frac{1}{1}"
 
     expr_2 = Pow(1, Pow(1, -1, evaluate=False), evaluate=False)
-    assert latex(expr_2) == r"1^{\left(1^{-1}\right)}"
+    assert latex(expr_2) == r"1^{\frac{1}{1}}"
 
     expr_3 = Pow(3, -2, evaluate=False)
     assert latex(expr_3) == r"\frac{1}{3^{2}}"
@@ -3322,6 +3386,22 @@ def test_Array():
     arr = Array(range(11))
     # fill the empty argument with a bunch of 'c' to avoid latex errors
     assert latex(arr) == r'\left[\begin{array}{ccccccccccc}0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\end{array}\right]'
+
+    arr = Array(range(22), (2, 11))
+    assert latex(arr) == r'\left[\begin{array}{ccccccccccc}' \
+        r'0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\' \
+        r'11 & 12 & 13 & 14 & 15 & 16 & 17 & 18 & 19 & 20 & 21\end{array}\right]'
+
+    arr = Array(range(6), (3, 2))
+    assert latex(arr, mat_str='array') == \
+        r'\left[\begin{array}{cc}0 & 1\\2 & 3\\4 & 5\end{array}\right]'
+
+    arr = Array(range(12), (2, 2, 3))
+    assert latex(arr, mat_str='array') == \
+        r'\left[\begin{array}{cc}' \
+        r'\left[\begin{array}{ccc}0 & 1 & 2\\3 & 4 & 5\end{array}\right] & ' \
+        r'\left[\begin{array}{ccc}6 & 7 & 8\\9 & 10 & 11\end{array}\right]' \
+        r'\end{array}\right]'
 
 def test_latex_with_unevaluated():
     with evaluate(False):

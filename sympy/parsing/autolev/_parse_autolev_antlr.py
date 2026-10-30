@@ -36,4 +36,11 @@ def parse_autolev(autolev_code, include_numeric):
         my_listener = MyListener(include_numeric)
         walker = antlr4.ParseTreeWalker()
         walker.walk(my_listener, tree)
-        return "".join(my_listener.output_code)
+        code = "".join(my_listener.output_code)
+        if "_np." in code:
+            code = code.replace(
+                "import sympy as _sm\n",
+                "import sympy as _sm\nimport numpy as _np\n",
+                1,
+            )
+        return code

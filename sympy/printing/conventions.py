@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 
 from collections.abc import Iterable
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, Function, Lambda
 
 _name_with_digits_p = re.compile(r'^([^\W\d_]+)(\d+)$', re.UNICODE)
 
@@ -87,3 +87,18 @@ def requires_partial(expr):
         return len(set(expr.variables)) > 1
 
     return sum(not s.is_integer for s in expr.free_symbols) > 1
+
+
+def elementwise_function(func):
+    """Return the function applied by an elementwise application
+
+    A ``Lambda`` that only applies a function to its variable, like
+    ``Lambda(d, exp(d))``, is replaced by the function itself, so that it is
+    printed as ``exp`` instead of ``d -> exp(d)``.
+    """
+
+    if isinstance(func, Lambda) and len(func.variables) == 1:
+        body = func.expr
+        if isinstance(body, Function) and body.args == func.variables:
+            return body.func
+    return func

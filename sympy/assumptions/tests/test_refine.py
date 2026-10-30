@@ -29,6 +29,11 @@ def test_Abs():
     assert refine(Abs(x**2)) != x**2
     assert refine(Abs(x**2), Q.real(x)) == x**2
 
+    assert refine(Abs(z)**2, Q.real(z)) == z**2
+    assert refine(Abs(z)**2, Q.imaginary(z)) == -z**2
+    assert refine(Abs(z)**4, Q.imaginary(z)) == z**4
+    assert refine(Abs(z)**6, Q.imaginary(z)) == -z**6
+
 
 def test_pow1():
     assert refine((-1)**x, Q.even(x)) == 1

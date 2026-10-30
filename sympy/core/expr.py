@@ -420,7 +420,7 @@ class Expr(Basic, EvalfMixin):
         if not self.is_number:
             raise TypeError("Cannot truncate symbols and expressions")
         else:
-            return Integer(self)
+            return int(Integer(self))
 
     def __format__(self, format_spec: str):
         if self.is_number:
@@ -1233,7 +1233,8 @@ class Expr(Basic, EvalfMixin):
             coeff, _term = term.as_coeff_Mul()
 
             coeff_complex = complex(coeff)
-            cpart, ncpart = {}, []
+            cpart: dict[Expr, int] = {}
+            ncpart = []
 
             if _term is not S.One:
                 for factor in Mul.make_args(_term):
@@ -1248,7 +1249,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_commutative:
                         base, exp = decompose_power(factor)
 
-                        cpart[base] = exp
+                        cpart[base] = cpart.get(base, 0) + exp
                         gens_set.add(base)
                     else:
                         ncpart.append(factor)
@@ -4023,10 +4024,6 @@ class Expr(Basic, EvalfMixin):
 
     __round__ = round
 
-    def _eval_derivative_matrix_lines(self, x):
-        from sympy.matrices.expressions.matexpr import _LeftRightArgs
-        return [_LeftRightArgs([S.One, S.One], higher=self._eval_derivative(x))]
-
 
 class AtomicExpr(Atom, Expr):
     """
@@ -4205,7 +4202,7 @@ class ExprBuilder:
     def append_argument(self, arg, check=True):
         self.args.append(arg)
         if self.validator and check:
-            self.validate(*self.args)
+            self.validate()
 
     def __getitem__(self, item):
         if item == 0:
@@ -4219,7 +4216,7 @@ class ExprBuilder:
     def search_element(self, elem):
         for i, arg in enumerate(self.args):
             if isinstance(arg, ExprBuilder):
-                ret = arg.search_index(elem)
+                ret = arg.search_element(elem)
                 if ret is not None:
                     return (i,) + ret
             elif id(arg) == id(elem):

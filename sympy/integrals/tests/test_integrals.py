@@ -16,9 +16,9 @@ from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, lo
 from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csch, sinh, tanh, sech)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan, sec)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, cot, sin, sinc, tan, sec)
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
-from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li)
+from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li, expint)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.functions.special.singularity_functions import SingularityFunction
@@ -36,7 +36,7 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.tensor.indexed import (Idx, IndexedBase)
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.integers import floor
-from sympy.integrals.integrals import Integral
+from sympy.integrals.integrals import Integral, _add_atan_floor_terms
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
@@ -411,13 +411,12 @@ def test_issue_7450():
 
 def test_issue_8623():
     assert integrate((1 + cos(2*x)) / (3 - 2*cos(2*x)), (x, 0, pi)) == -pi/2 + sqrt(5)*pi/2
-    assert integrate((1 + cos(2*x))/(3 - 2*cos(2*x))) == -x/2 + sqrt(5)*(atan(sqrt(5)*tan(x)) + \
-        pi*floor((x - pi/2)/pi))/2
+    assert integrate((1 + cos(2*x))/(3 - 2*cos(2*x))) == -x/2 + sqrt(5)*atan(sqrt(5)*tan(x))/2
 
 
 def test_issue_9569():
     assert integrate(1 / (2 - cos(x)), (x, 0, pi)) == pi/sqrt(3)
-    assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)) + pi*floor((x/2 - pi/2)/pi))/3
+    assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2))/3
 
 
 def test_issue_13733():
@@ -430,11 +429,119 @@ def test_issue_13733():
 
 def test_issue_13749():
     assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == pi/sqrt(3)
-    assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3
+    assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
+
+
+def test_atan_floor_terms():
+    # The floor terms are only added to evaluate definite integrals
+    assert integrate(1/(2 + cos(x)), (x, 0, 2*pi)) == 2*sqrt(3)*pi/3
+    a, b = symbols('a b', real=True)
+    F = 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3 + 2*sqrt(3)*pi*floor((x/2 + pi/2)/pi)/3
+    assert integrate(1/(2 + cos(x)), (x, a, b)) == F.subs(x, b) - F.subs(x, a)
+    # and with the jump of the antiderivative, a polynomial in the atan
+    # (issue 20898)
+    assert integrate(atan(tan(x)), (x, 1, 2)) == (2 - pi)**2/2 - S.Half
+    assert integrate(atan(tan(x))**2, (x, 1, 2)) == \
+        (2 - pi)**3/3 - S(1)/3 + pi**3/12
+    p = integrate(Piecewise((1/(2 + cos(x)), y > 0), (0, True)), (x, 0, 2*pi))
+    assert p.subs(y, 1) == 2*sqrt(3)*pi/3 and p.subs(y, -1) == 0
+
+    r = Symbol('r', real=True)
+    A = _add_atan_floor_terms
+    assert A(2*atan(3*tan(r/2)), r) == \
+        2*atan(3*tan(r/2)) + 2*pi*floor((r/2 + pi/2)/pi)
+    assert A(atan(tan(r)) + log(r)*atan(2*tan(r)), r) == \
+        atan(tan(r)) + log(r)*atan(2*tan(r)) + pi*floor((r + pi/2)/pi)
+    assert A(r*atan(tan(r)), r) == r*atan(tan(r))
+    assert A(atan(tan(r))**2, r) == atan(tan(r))**2
+    assert A(atan(tan(r))**3/3 + r, r) == \
+        atan(tan(r))**3/3 + r + pi**3*floor((r + pi/2)/pi)/12
+    assert A(exp(atan(tan(r))), r) == exp(atan(tan(r)))
+    # The coefficient of the atan may need cancellation (issue 13112)
+    F = (5*r*tan(r/2)**2 - 6*tan(r/2)**2*atan(3*tan(r/2)) -
+        6*atan(3*tan(r/2)))/(16*tan(r/2)**2 + 16)
+    assert A(F, r) == F - 3*pi*floor((r/2 + pi/2)/pi)/8
+    # r and the argument of the tan must be real
+    assert A(atan(tan(y)), y) == atan(tan(y))
+    assert A(atan(tan(I*r + 1)), r) == atan(tan(I*r + 1))
+
+    # The jump of atan(c*cot(r)) has the opposite sign from atan(c*tan(r))
+    f = diff(atan(2*cot(r)), r)
+    assert integrate(f, (r, -1, 1)) == 2*atan(2*cot(1)) - pi
+    assert A(atan(1 - 3*cot(2*r)), r) == \
+        -atan(3*cot(2*r) - 1) + pi*floor(2*r/pi)
+
+    # A coefficient that depends on r must not change sign
+    f = diff(atan(r*tan(r)), r)
+    assert A(atan(r*tan(r)), r) == atan(r*tan(r))
+    assert integrate(f, (r, -1, 1)) == 0
+    assert A(atan(exp(r)*tan(r)), r) == \
+        atan(exp(r)*tan(r)) + pi*floor((r + pi/2)/pi)
+    assert A(atan((r**2 + 1)*cot(r)), r) == \
+        atan((r**2 + 1)*cot(r)) - pi*floor(r/pi)
+    assert A(atan(r + tan(r)), r) == atan(r + tan(r)) + pi*floor((r + pi/2)/pi)
+    # and the rest of the argument must be finite at the poles
+    assert A(atan(tan(r) - sec(r)), r) == atan(tan(r) - sec(r))
+    assert A(atan(sin(r) + tan(r) + sec(r)**2), r) == \
+        atan(sin(r) + tan(r) + sec(r)**2)
+    assert A(atan(2*cot(r) + 1/r), r) == atan(2*cot(r) + 1/r)
+    assert A(atan(cot(r) + 1/(r - pi)**2), r) == atan(cot(r) + 1/(r - pi)**2)
+    assert A(atan(tan(r) + 1/(r**2 + 1)), r) == \
+        atan(tan(r) + 1/(r**2 + 1)) + pi*floor((r + pi/2)/pi)
+    assert A(atan(r + tan(r**2)), r) == \
+        atan(r + tan(r**2)) + pi*floor((r**2 + pi/2)/pi)
+    assert integrate(diff(atan(tan(x) - sec(x)), x), (x, 1, 2)) == \
+        atan(tan(2) - sec(2)) - atan(tan(1) - sec(1))
+
+    # tan and cot that do not depend on r are not corrected
+    assert A(r*atan(tan(y)), r) == r*atan(tan(y))
+    assert A(atan(r + 2*tan(1)), r) == atan(r + 2*tan(1))
+
+    # Several tan and cot with disjoint poles
+    assert A(atan(tan(r) + tan(2*r)), r) == \
+        atan(tan(r) + tan(2*r)) + pi*floor((r + pi/2)/pi) + \
+        pi*floor((2*r + pi/2)/pi)
+    assert A(atan(tan(r) - cot(r)), r) == \
+        atan(tan(r) - cot(r)) + pi*floor((r + pi/2)/pi) + pi*floor(r/pi)
+    # with some poles in common
+    f = diff(atan(tan(r) + tan(3*r)), r)
+    assert A(atan(tan(r) + tan(3*r)), r) == atan(tan(r) + tan(3*r)) + \
+        pi*floor((3*r + pi/2)/pi)
+    assert integrate(f, (r, 1, 2)) == \
+        atan(tan(2) + tan(6)) - atan(tan(1) + tan(3)) + pi
+    assert A(atan(2*tan(r) - tan(3*r)), r) == \
+        atan(2*tan(r) - tan(3*r)) + 2*pi*floor((r + pi/2)/pi) - \
+        pi*floor((3*r + pi/2)/pi)
+    # where they cancel
+    assert A(atan(tan(r) - 3*tan(3*r)), r) == \
+        atan(tan(r) - 3*tan(3*r)) + pi*floor((r + pi/2)/pi) - \
+        pi*floor((3*r + pi/2)/pi)
+    assert A(atan(tan(r/2) + cot(r/3)), r) == \
+        atan(tan(r/2) + cot(r/3)) + pi*floor((r/2 + pi/2)/pi) - \
+        pi*floor(r/(3*pi)) - pi*floor((r/2 + pi/2)/(3*pi) - Rational(2, 3))
+    # No correction in the cases that are not handled
+    for arg in [tan(r) + tan(3*r) + tan(5*r), tan(r) + tan(sqrt(2)*r),
+            tan(r) + tan(r + y), tan(r)*tan(3*r), tan(r) + r*tan(2*r),
+            tan(r) + tan(r**2), (1 + I)*tan(r), (1 + I)*exp(r)*cot(r),
+            tan(r) + I*tan(2*r), y*tan(r)]:
+        assert A(atan(arg), r) == atan(arg)
+    # and a single correction when they are the same
+    t = tan(r + pi, evaluate=False)
+    assert A(atan(3*tan(r) + t), r) == \
+        atan(3*tan(r) + t) + pi*floor((r + pi/2)/pi)
+    assert A(atan(tan(r) - 3*t), r) == \
+        atan(tan(r) - 3*t) - pi*floor((r + pi/2)/pi)
+    assert A(atan(tan(r) - t), r) == atan(tan(r) - t)
+    t = tan(pi - r, evaluate=False)
+    assert A(atan(tan(r) + 2*t), r) == \
+        atan(tan(r) + 2*t) - pi*floor((r + pi/2)/pi)
+    t = cot(r - pi/2, evaluate=False)
+    assert A(atan(tan(r) + 2*t), r) == \
+        atan(tan(r) + 2*t) - pi*floor((r + pi/2)/pi)
 
 
 def test_issue_18133():
-    assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
+    assert integrate(exp(x)/(1 + x)**2, x) == -exp(-1)*expint(2, -x - 1)/(x + 1)
 
 
 def test_issue_21741():
@@ -1433,11 +1540,11 @@ def test_issue_8945():
     assert integrate(cos(x)**2/x**2, x) == -Si(2*x) - cos(2*x)/(2*x) - 1/(2*x)
 
 
-@slow
 def test_issue_7130():
     i, L, a, b = symbols('i L a b')
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
-    assert x not in integrate(integrand, (x, 0, L)).free_symbols
+    # The expressions do not match exactly, but they are equivalent.
+    assert simplify(integrate(integrand, (x, 0, L)) - Piecewise((L/a, (Eq(b, 0) & Eq(i, 0)) | (Eq(b, 0) & Eq(i, 0) & Ne(I*pi*i/(L*b), 0))), ((-I*L*exp(2*I*pi*i) + 2*I*L*log(exp(-2*I*pi*i)) + I*L*exp(-2*I*pi*i))/(8*pi*a*i), Eq(b, 0) | (Eq(b, 0) & Ne(I*pi*i/(L*b), 0))), (-(exp(4*I*pi*a*i/(L*b))*Ei(-2*I*pi*a*i/(L*b)) + 2*exp(2*I*pi*a*i/(L*b))*log(a) + Ei(2*I*pi*a*i/(L*b)))*exp(-2*I*pi*a*i/(L*b))/(4*b) + (exp(4*I*pi*a*i/(L*b))*Ei(-2*I*pi*i*(L*b + a)/(L*b)) + 2*exp(2*I*pi*a*i/(L*b))*log(L*b + a) + Ei(2*I*pi*i*(L*b + a)/(L*b)))*exp(-2*I*pi*a*i/(L*b))/(4*b), Ne(I*pi*i/(L*b), 0) | (Eq(i, 0) & Ne(I*pi*i/(L*b), 0))), (-(exp(4*I*pi*a*i/(L*b))*log(a) + 2*exp(2*I*pi*a*i/(L*b))*log(a) + log(a))*exp(-2*I*pi*a*i/(L*b))/(4*b) + (exp(4*I*pi*a*i/(L*b))*log(L*b + a) + 2*exp(2*I*pi*a*i/(L*b))*log(L*b + a) + log(L*b + a))*exp(-2*I*pi*a*i/(L*b))/(4*b), True))) == 0
 
 
 def test_issue_10567():
@@ -1819,7 +1926,7 @@ def test_issue_15810():
 def test_issue_21024():
     x = Symbol('x', real=True, nonzero=True)
     f = log(x)*log(4*x) + log(3*x + exp(2))
-    F = x*log(x)**2 + x*log(3*x + exp(2)) + x*(1 - 2*log(2)) + \
+    F = x*log(x)**2 + x*log(3*x + exp(2)) - x*(-1 + 2*log(2)) + \
         (-2*x + 2*x*log(2))*log(x) + exp(2)*log(3*x + exp(2))/3
     assert F == integrate(f, x)
 
@@ -1930,12 +2037,9 @@ def test_issue_21671():
 
 
 def test_issue_18527():
-    # The manual integrator can not currently solve this. Assert that it does
-    # not give an incorrect result involving Abs when x has real assumptions.
     xr = symbols('xr', real=True)
-    expr = (cos(x)/(4+(sin(x))**2))
-    res_real = integrate(expr.subs(x, xr), xr, manual=True).subs(xr, x)
-    assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
+    expr = cos(xr)/(4 + sin(xr)**2)
+    assert integrate(expr, xr, manual=True) == atan(sin(xr)/2)/2
 
 
 def test_issue_23718():
@@ -2046,13 +2150,14 @@ def test_sqrt_quadratic():
     assert integrate((7*x+6)/sqrt(3*x**2+4*x-5)) == \
            7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/9
     assert integrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
-        Piecewise(((-b*e/(2*c) + d) *
-                   Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
-                             ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
-                   e*sqrt(a + b*x + c*x**2)/c, Ne(c, 0)),
-                   ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
-                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), Ne(b, 0)),
-                  ((d*x + e*x**2/2)/sqrt(a), True))
+        Piecewise((e*sqrt(a + b*x + c*x**2)/c +
+                   (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c),
+                   Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
+                  (e*sqrt(a + b*x + c*x**2)/c +
+                   (b/(2*c) + x)*(-b*e/(2*c) + d)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2),
+                   Ne(c, 0)),
+                  ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
+                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), True))
 
     assert integrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2)) == \
            sqrt(x**2 - 3*x + 2)*(x**2 + 13*x/4 + S(101)/8) + 135*log(2*x + 2*sqrt(x**2 - 3*x + 2) - 3)/16
@@ -2061,13 +2166,14 @@ def test_sqrt_quadratic():
            (x/2 - S(16683)/53225)*sqrt(53225*x**2 - 66732*x + 23013) + \
            111576969*sqrt(2129)*asinh(53225*x/10563 - S(11122)/3521)/1133160250
     assert integrate(sqrt(a+b*x+c*x**2), x) == \
-        Piecewise(((a/2 - b**2/(8*c)) *
-                   Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
-                             ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
-                   (b/(4*c) + x/2)*sqrt(a + b*x + c*x**2), Ne(c, 0)),
-                   (sqrt(a)*x, Eq(b, 0)),
-                  (2*(a + b*x)**(S(3)/2)/(3*b), Ne(b, 0)),
-                  (sqrt(a)*x, True))
+        Piecewise(((b/(4*c) + x/2)*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c),
+                   Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
+                  ((b/(4*c) + x/2)*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*(b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2),
+                   Ne(c, 0)),
+                  (sqrt(a)*x, Eq(b, 0)),
+                  (2*(a + b*x)**(S(3)/2)/(3*b), True))
 
     assert integrate(x*sqrt(x**2+2*x+4)) == \
         (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2
@@ -2233,6 +2339,19 @@ def test_integration_of_piecewise_with_simbolic_boundaries():
         Piecewise((2*t1, t1 < 0), (2*Min(1, t1), t1 <= Min(1, t1)), (nan, True))
 
 
+def test_issue_14709a():
+    x, h = symbols('x h', positive=True)
+    i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
+    assert i == 5*h**2*pi/16
+
+
+def test_issue_7147():
+    x, a, b, c = symbols('x a b c', positive=True)
+    f = x/sqrt(a*x**2 + b*x + c)**3
+    F = Piecewise((-b*(2*a*x + b)/(a*(4*a*c - b**2)*sqrt(a*x**2 + b*x + c)), Ne(4*a*c - b**2, 0)), (b*(x + b/(2*a))/(4*a*(sqrt(a)*x + b/(2*sqrt(a)))**3), True)) - 1/(a*sqrt(a*x**2 + b*x + c))
+    assert integrate(f, x) == F
+
+
 def test_issue_15566():
     a, m, s = symbols('a m s', real=True)
     t = symbols('t')
@@ -2262,3 +2381,45 @@ def test_issue_29909():
 
     assert integrate(f, x) == F
     assert F.diff(x).equals(f)
+
+
+def test_issue_29637():
+    # https://github.com/sympy/sympy/issues/29637
+    f = 1/(1 + x**10)
+    F = integrate(f, x)
+    assert not F.has(Integral)
+    assert (F.diff(x) - f).cancel() == 0
+
+
+def test_issue_21041():
+    # https://github.com/sympy/sympy/issues/21041
+    F = integrate(sin(2*x)*exp(-x**2), (x, 0, oo))
+    assert F == -I*sqrt(pi)*exp(-1)*erf(I)/2
+    assert F.rewrite(erfi) == sqrt(pi)*exp(-1)*erfi(1)/2
+
+
+def test_reverse_limits():
+    x, y, a, b, c, d = symbols('x y a b c d')
+    I = Integral(x**2, (x, a, b))
+    assert I.reverse_limits() == Integral(-x**2, (x, b, a))
+    assert I.reverse_limits(x) == I.reverse_limits(0)
+    assert I.reverse_limits().reverse_limits() == I
+    assert (I.reverse_limits().doit() - I.doit()).simplify() == 0
+    J = Integral(x*y, (x, a, b), (y, c, d))
+    assert J.reverse_limits(y) == Integral(-x*y, (x, a, b), (y, d, c))
+    assert J.reverse_limits(x, y) == Integral(x*y, (x, b, a), (y, d, c))
+    assert J.reverse_limits(-1) == J.reverse_limits(1)
+    assert J.reverse_limits(-2) == J.reverse_limits(0)
+    assert J.reverse_limits(0, -2) == J.reverse_limits(0)
+    raises(IndexError, lambda: J.reverse_limits(2))
+    raises(IndexError, lambda: J.reverse_limits(-3))
+    raises(ValueError, lambda: J.reverse_limits(1.0))
+    raises(ValueError, lambda: J.reverse_limits(c))
+    K = Integral(x, (x, a, b), (x, c, d))
+    assert K.reverse_limits(x) == Integral(x, (x, b, a), (x, d, c))
+    assert K.reverse_limits(1) == Integral(-x, (x, a, b), (x, d, c))
+    for i in (Integral(x, x), Integral(x, (x, b))):
+        assert i.reverse_limits() == i
+    L = Integral(x*y, (x, a, b), y)
+    assert L.reverse_limits() == Integral(-x*y, (x, b, a), y)
+    assert L.reverse_limits(x) == Integral(-x*y, (x, b, a), y)

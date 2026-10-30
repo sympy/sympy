@@ -30,14 +30,8 @@ from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
-from sympy.functions.elementary.complexes import (im, re)
-from sympy.functions.elementary.miscellaneous import sqrt
-
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)
-
-# TODO: Add messages to NonElementaryIntegralException errors
-
 
 def order_at(a, p, t):
     """
@@ -51,6 +45,8 @@ def order_at(a, p, t):
 
     To compute the order at a rational function, a/b, use the fact that
     nu_p(a/b) == nu_p(a) - nu_p(b).
+
+    This is the order function nu_p from Section 4.1 of Bronstein's book.
     """
     if a.is_zero:
         return oo
@@ -88,6 +84,9 @@ def order_at_oo(a, d, t):
 
     For f in k(t), the order or f at oo is defined as deg(d) - deg(a), where
     f == a/d.
+
+    This is the order at infinity nu_oo from Section 4.3 of Bronstein's
+    book.
     """
     if a.is_zero:
         return oo
@@ -113,6 +112,8 @@ def weak_normalizer(a, d, DE, z=None):
     in k[t].
 
     Returns (q, f - Dq/q)
+
+    This is ``WeakNormalizer`` from Section 6.1 of Bronstein's book.
     """
     z = z or Dummy('z')
     dn, ds = splitfactor(d, DE)
@@ -160,6 +161,8 @@ def normal_denom(fa, fd, ga, gd, DE):
     a*Dq + b*q == c.
 
     This constitutes step 1 in the outline given in the rde.py docstring.
+
+    This is ``RdeNormalDenominator`` from Section 6.1 of Bronstein's book.
     """
     dn, ds = splitfactor(fd, DE)
     en, es = splitfactor(gd, DE)
@@ -170,8 +173,8 @@ def normal_denom(fa, fd, ga, gd, DE):
     a = dn*h
     c = a*h
     if c.div(en)[1]:
-        # en does not divide dn*h**2
-        raise NonElementaryIntegralException
+        raise NonElementaryIntegralException("en does not divide dn*h**2 in "
+            "normal_denom().")
     ca = c*ga
     ca, cd = ca.cancel(gd, include=True)
 
@@ -180,6 +183,71 @@ def normal_denom(fa, fd, ga, gd, DE):
 
     # (dn*h, dn*h*f - dn*Dh, dn*h**2*g, h)
     return (a, (ba, bd), (ca, cd), h)
+
+
+def _special_denom_cancel_bound(a, ba, bd, n, DE, case):
+    """
+    Sharpen the bound n on the special part of the denominator in the
+    possible-cancellation case nu_p(b) == 0.
+
+    This is the part of the special denominator algorithms (Sections 6.2 and
+    7.1 of Bronstein) shared by special_denom() and prde_special_denom().
+    ``case`` is 'exp' or 'tan'.
+
+    This is the possible-cancellation part of
+    ``RdeSpecialDenomExp``/``RdeSpecialDenomTan`` (Section 6.2) and
+    ``ParamRdeSpecialDenomExp``/``ParamRdeSpecialDenomTan`` (Section 7.1)
+    of Bronstein's book.
+    """
+    # Delayed imports, since prde imports this module at the module level.
+    from .prde import parametric_log_deriv, real_imag
+
+    if case == 'exp':
+        dcoeff = DE.d.quo(Poly(DE.t, DE.t))
+        with DecrementLevel(DE):  # We are guaranteed to not have problems,
+                                  # because case != 'base'.
+            alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
+            etaa, etad = frac_in(dcoeff, DE.t)
+            A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+            if A is not None:
+                Q, m, z = A
+                if Q == 1:
+                    n = min(n, m)
+
+    elif case == 'tan':
+        dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
+        # alpha*sqrt(-1) + beta == Remainder(-b/a, t**2 + 1), with alpha and
+        # beta in k.  real_imag() computes this without introducing sqrt(-1)
+        # into the coefficient domain.  This must be done at the current
+        # level, where t is the hypertangent monomial.
+        betaa, alphaa, alphad = real_imag(-ba, bd*a, DE.t)
+        betad = alphad
+        alpha = alphaa.as_expr()/alphad.as_expr()
+        beta = betaa.as_expr()/betad.as_expr()
+
+        with DecrementLevel(DE):  # We are guaranteed to not have problems,
+                                  # because case != 'base'.
+            alphaa, alphad = frac_in(alpha, DE.t)
+            betaa, betad = frac_in(beta, DE.t)
+            etaa, etad = frac_in(dcoeff, DE.t)
+
+            if recognize_log_derivative(Poly(2, DE.t)*betaa, betad, DE):
+                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+                if A is not None:
+                    Q, m, z = A
+                    # The condition from the book is
+                    # alpha*sqrt(-1) + beta == 2*m*eta*sqrt(-1) + Dz/z for
+                    # z in k(sqrt(-1))* and m in ZZ, in which case
+                    # n = min(n, m).  parametric_log_deriv() solves
+                    # n*alpha == Dv/v + m*eta over k, so its m corresponds
+                    # to 2*m in the book's condition.  This is only an
+                    # approximation of the real condition (z ranges over
+                    # k(sqrt(-1))*, not k*); the complete version needs the
+                    # structure theorems.
+                    if Q == 1 and m % 2 == 0:
+                        n = min(n, m//2)
+
+    return n
 
 
 def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
@@ -202,6 +270,9 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     this case.
 
     This constitutes step 2 of the outline given in the rde.py docstring.
+
+    This is ``RdeSpecialDenomExp`` and ``RdeSpecialDenomTan`` from Section
+    6.2 of Bronstein's book.
     """
     # TODO: finish writing this and write tests
 
@@ -216,9 +287,12 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
         B = ba.to_field().quo(bd)
         C = ca.to_field().quo(cd)
         return (a, B, C, Poly(1, DE.t))
+    elif case in ('other_linear', 'other_nonlinear'):
+        raise NotImplementedError("The %s case is not implemented in "
+            "special_denom()." % case)
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
-            "'base'}, not %s." % case)
+            "'base', 'other_linear', 'other_nonlinear'}, not %s." % case)
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
     nc = order_at(ca, p, DE.t) - order_at(cd, p, DE.t)
@@ -226,33 +300,11 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancellation.
-        from .prde import parametric_log_deriv
-        if case == 'exp':
-            dcoeff = DE.d.quo(Poly(DE.t, DE.t))
-            with DecrementLevel(DE):  # We are guaranteed to not have problems,
-                                      # because case != 'base'.
-                alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
-                etaa, etad = frac_in(dcoeff, DE.t)
-                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
-                if A is not None:
-                    Q, m, z = A
-                    if Q == 1:
-                        n = min(n, m)
+        n = _special_denom_cancel_bound(a, ba, bd, n, DE, case)
 
-        elif case == 'tan':
-            dcoeff = DE.d.quo(Poly(DE.t**2+1, DE.t))
-            with DecrementLevel(DE):  # We are guaranteed to not have problems,
-                                      # because case != 'base'.
-                alphaa, alphad = frac_in(im(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
-                betaa, betad = frac_in(re(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
-                etaa, etad = frac_in(dcoeff, DE.t)
-
-                if recognize_log_derivative(Poly(2, DE.t)*betaa, betad, DE):
-                    A = parametric_log_deriv(alphaa*Poly(sqrt(-1), DE.t)*betad+alphad*betaa, alphad*betad, etaa, etad, DE)
-                    if A is not None:
-                        Q, m, z = A
-                        if Q == 1:
-                            n = min(n, m)
+    # Note that this N, from Section 6.2, intentionally differs from the
+    # N == max(0, -nb) of the parametric version in prde_special_denom()
+    # (Section 7.1).
     N = max(0, -nb, n - nc)
     pN = p**N
     pn = p**-n
@@ -283,6 +335,10 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     [q1, ..., qm], a list of Polys.
 
     This constitutes step 3 of the outline given in the rde.py docstring.
+
+    This combines ``RdeBoundDegreeBase``, ``RdeBoundDegreePrim``,
+    ``RdeBoundDegreeExp``, and ``RdeBoundDegreeNonLinear`` from Section 6.3
+    of Bronstein's book (and their parametric analogues from Section 7.1).
     """
     # TODO: finish writing this and write tests
 
@@ -321,14 +377,16 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                 from .prde import limited_integrate
                 # if alpha == m*Dt + Dz for z in k and m in ZZ:
                 try:
-                    (za, zd), m = limited_integrate(alphaa, alphad, [(etaa, etad)],
-                        DE)
+                    A = limited_integrate(alphaa, alphad, [(etaa, etad)], DE)
                 except NonElementaryIntegralException:
-                    pass
-                else:
+                    A = None
+                if A is not None:
+                    (za, zd), m = A
                     if len(m) != 1:
                         raise ValueError("Length of m should be 1")
-                    n = max(n, m[0])
+                    m = m[0].as_expr()
+                    if m.is_Integer:
+                        n = max(n, m)
 
             elif db == da:
                 # if alpha == Dz/z for z in k*:
@@ -345,14 +403,17 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                         betaa, betad = frac_in(beta, DE.t)
                         from .prde import limited_integrate
                         try:
-                            (za, zd), m = limited_integrate(betaa, betad,
+                            A = limited_integrate(betaa, betad,
                                 [(etaa, etad)], DE)
                         except NonElementaryIntegralException:
-                            pass
-                        else:
+                            A = None
+                        if A is not None:
+                            (za, zd), m = A
                             if len(m) != 1:
                                 raise ValueError("Length of m should be 1")
-                            n = max(n, m[0].as_expr())
+                            m = m[0].as_expr()
+                            if m.is_Integer:
+                                n = max(n, m)
 
     elif case == 'exp':
         from .prde import parametric_log_deriv
@@ -378,9 +439,12 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
         if db == da + delta - 1 and alpha.is_Integer:
             n = max(0, alpha, dc - db)
 
+    elif case == 'other_linear':
+        raise NotImplementedError("The other_linear case is not implemented "
+            "in bound_degree().")
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
-            "'other_nonlinear', 'base'}, not %s." % case)
+            "'base', 'other_linear', 'other_nonlinear'}, not %s." % case)
 
     return n
 
@@ -401,6 +465,8 @@ def spde(a, b, c, n, DE):
     q == alpha*h + beta, where h in k[t], deg(h) <= m, and Dh + B*h == C.
 
     This constitutes step 4 of the outline given in the rde.py docstring.
+
+    This is ``SPDE`` from Section 6.4 of Bronstein's book.
     """
     zero = Poly(0, DE.t)
 
@@ -411,11 +477,13 @@ def spde(a, b, c, n, DE):
         if c.is_zero:
             return (zero, zero, 0, zero, beta)  # -1 is more to the point
         if (n < 0) is True:
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("n became negative in "
+                "spde().")
 
         g = a.gcd(b)
         if not c.rem(g).is_zero:  # g does not divide c
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("gcd(a, b) does not divide "
+                "c in spde().")
 
         a, b, c = a.quo(g), b.quo(g), c.quo(g)
 
@@ -445,13 +513,16 @@ def no_cancel_b_large(b, c, n, DE):
     which case the equation ``Dq + b*q == c`` has no solution of degree at
     most n in k[t], or a solution q in k[t] of this equation with
     ``deg(q) < n``.
+
+    This is ``PolyRischDENoCancel1`` from Section 6.5 of Bronstein's book.
     """
     q = Poly(0, DE.t)
 
     while not c.is_zero:
         m = c.degree(DE.t) - b.degree(DE.t)
         if not 0 <= m <= n:  # n < 0 or m < 0 or m > n
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("deg(c) - deg(b) is not "
+                "between 0 and n in no_cancel_b_large().")
 
         p = Poly(c.as_poly(DE.t).LC()/b.as_poly(DE.t).LC()*DE.t**m, DE.t,
             expand=False)
@@ -477,6 +548,8 @@ def no_cancel_b_small(b, c, n, DE):
     tuple (h, b0, c0) such that h in k[t], b0, c0, in k, and for any
     solution q in k[t] of degree at most n of Dq + bq == c, y == q - h
     is a solution in k of Dy + b0*y == c0.
+
+    This is ``PolyRischDENoCancel2`` from Section 6.5 of Bronstein's book.
     """
     q = Poly(0, DE.t)
 
@@ -487,14 +560,16 @@ def no_cancel_b_small(b, c, n, DE):
             m = c.degree(DE.t) - DE.d.degree(DE.t) + 1
 
         if not 0 <= m <= n:  # n < 0 or m < 0 or m > n
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("m is not between 0 and n "
+                "in no_cancel_b_small().")
 
         if m > 0:
             p = Poly(c.as_poly(DE.t).LC()/(m*DE.d.as_poly(DE.t).LC())*DE.t**m,
                 DE.t, expand=False)
         else:
             if b.degree(DE.t) != c.degree(DE.t):
-                raise NonElementaryIntegralException
+                raise NonElementaryIntegralException("deg(b) != deg(c) in "
+                    "the m == 0 case of no_cancel_b_small().")
             if b.degree(DE.t) == 0:
                 return (q, b.as_poly(DE.T[DE.level - 1]),
                     c.as_poly(DE.T[DE.level - 1]))
@@ -524,6 +599,8 @@ def no_cancel_equal(b, c, n, DE):
     in k[t], m in ZZ, and C in k[t], and for any solution q in k[t] of
     degree at most n of Dq + b*q == c, y == q - h is a solution in k[t]
     of degree at most m of Dy + b*y == C.
+
+    This is ``PolyRischDENoCancel3`` from Section 6.5 of Bronstein's book.
     """
     q = Poly(0, DE.t)
     lc = cancel(-b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC())
@@ -536,7 +613,8 @@ def no_cancel_equal(b, c, n, DE):
         m = max(M, c.degree(DE.t) - DE.d.degree(DE.t) + 1)
 
         if not 0 <= m <= n:  # n < 0 or m < 0 or m > n
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("m is not between 0 and n "
+                "in no_cancel_equal().")
 
         u = cancel(m*DE.d.as_poly(DE.t).LC() + b.as_poly(DE.t).LC())
         if u.is_zero:
@@ -545,9 +623,11 @@ def no_cancel_equal(b, c, n, DE):
             p = Poly(c.as_poly(DE.t).LC()/u*DE.t**m, DE.t, expand=False)
         else:
             if c.degree(DE.t) != DE.d.degree(DE.t) - 1:
-                raise NonElementaryIntegralException
+                raise NonElementaryIntegralException("deg(c) != deg(D) - 1 "
+                    "in the m == 0 case of no_cancel_equal().")
             else:
-                p = c.as_poly(DE.t).LC()/b.as_poly(DE.t).LC()
+                p = Poly(c.as_poly(DE.t).LC()/b.as_poly(DE.t).LC(), DE.t,
+                    expand=False)
 
         q = q + p
         n = m - 1
@@ -568,6 +648,8 @@ def cancel_primitive(b, c, n, DE):
     NonElementaryIntegralException, in which case the equation Dq + b*q == c
     has no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n.
+
+    This is ``PolyRischDECancelPrim`` from Section 6.6 of Bronstein's book.
     """
     # Delayed imports
     from .prde import is_log_deriv_k_t_radical_in_field
@@ -575,8 +657,8 @@ def cancel_primitive(b, c, n, DE):
         ba, bd = frac_in(b, DE.t)
         A = is_log_deriv_k_t_radical_in_field(ba, bd, DE)
         if A is not None:
-            n, z = A
-            if n == 1:  # b == Dz/z
+            m, z = A
+            if m == 1:  # b == Dz/z
                 raise NotImplementedError("is_deriv_in_field() is required to "
                     " solve this problem.")
                 # if z*c == Dp for p in k[t] and deg(p) <= n:
@@ -588,13 +670,15 @@ def cancel_primitive(b, c, n, DE):
         return c  # return 0
 
     if n < c.degree(DE.t):
-        raise NonElementaryIntegralException
+        raise NonElementaryIntegralException("n < deg(c) in "
+            "cancel_primitive().")
 
     q = Poly(0, DE.t)
     while not c.is_zero:
         m = c.degree(DE.t)
         if n < m:
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("n < deg(c) in "
+                "cancel_primitive().")
         with DecrementLevel(DE):
             a2a, a2d = frac_in(c.LC(), DE.t)
             sa, sd = rischDE(ba, bd, a2a, a2d, DE)
@@ -618,6 +702,8 @@ def cancel_exp(b, c, n, DE):
     NonElementaryIntegralException, in which case the equation Dq + b*q == c
     has no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n.
+
+    This is ``PolyRischDECancelExp`` from Section 6.6 of Bronstein's book.
     """
     from .prde import parametric_log_deriv
     eta = DE.d.quo(Poly(DE.t, DE.t)).as_expr()
@@ -641,13 +727,14 @@ def cancel_exp(b, c, n, DE):
         return c  # return 0
 
     if n < c.degree(DE.t):
-        raise NonElementaryIntegralException
+        raise NonElementaryIntegralException("n < deg(c) in cancel_exp().")
 
     q = Poly(0, DE.t)
     while not c.is_zero:
         m = c.degree(DE.t)
         if n < m:
-            raise NonElementaryIntegralException
+            raise NonElementaryIntegralException("n < deg(c) in "
+                "cancel_exp().")
         # a1 = b + m*Dt/t
         a1 = b.as_expr()
         with DecrementLevel(DE):
@@ -674,6 +761,10 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 
     For parametric=False, cQ is c, a Poly; for parametric=True, cQ is Q ==
     [q1, ..., qm], a list of Polys.
+
+    This dispatches among the algorithms of Sections 6.5 and 6.6 of
+    Bronstein's book (and their parametric analogues from Section 7.1); it
+    has no single named counterpart.
     """
     # No cancellation
     if not b.is_zero and (DE.case == 'base' or
@@ -752,12 +843,6 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
                 raise NotImplementedError("Other Poly (P)RDE cancellation "
                     "cases are not yet implemented (%s)." % DE.case)
 
-        if parametric:
-            raise NotImplementedError("Remaining cases for Poly PRDE not yet "
-                "implemented.")
-        raise NotImplementedError("Remaining cases for Poly RDE not yet "
-            "implemented.")
-
 
 def rischDE(fa, fd, ga, gd, DE):
     """
@@ -773,8 +858,16 @@ def rischDE(fa, fd, ga, gd, DE):
     NotImplementedError, in which case, the algorithms necessary to
     solve the given Risch Differential Equation have not yet been
     implemented.
+
+    This chains together the algorithms of Sections 6.1-6.6 of Bronstein's
+    book; the book does not give it as a single named pseudocode function.
     """
-    _, (fa, fd) = weak_normalizer(fa, fd, DE)
+    # Substitute y == z/q, where q is the weak normalizer of f.  By Theorem
+    # 6.1.2, y in k(t) solves Dy + f*y == g iff z == q*y solves
+    # Dz + (f - Dq/q)*z == q*g, and f - Dq/q is weakly normalized, as
+    # required by normal_denom().
+    q, (fa, fd) = weak_normalizer(fa, fd, DE)
+    ga, gd = (ga*q).cancel(gd, include=True)
     a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
     A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
     try:
@@ -798,4 +891,6 @@ def rischDE(fa, fd, ga, gd, DE):
     else:
         y = solve_poly_rde(B, C, m, DE)
 
-    return (alpha*y + beta, hn*hs)
+    # The solution found so far is z == (alpha*y + beta)/(hn*hs); undo the
+    # weak normalizer substitution y == z/q.
+    return (alpha*y + beta, q*hn*hs)

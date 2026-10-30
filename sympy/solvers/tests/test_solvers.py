@@ -34,7 +34,7 @@ from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.bivariate import _filtered_gens, _solve_lambert, _lambert
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens, denoms
+    det_quick, det_perm, det_minor, _simple_dens, denoms, _tsolve
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -115,6 +115,14 @@ def test_guess_transcendental():
     assert guess_solve_strategy(-3**x + 10, x)  # == GS_TRANSCENDENTAL
 
     assert guess_solve_strategy(a*x**b - y, x)  # == GS_TRANSCENDENTAL
+
+
+def test_solve_rejects_nonfinite_denominator():
+    # 7870: x = 0 is outside the domain of 1/log(x)
+    assert solve(x/log(x), x) == []
+    assert solve(x**2/log(x)**2, x) == []
+    # a solution that does not singularize any denominator is kept
+    assert solve(x/(x - 2), x) == [0]
 
 
 @slow
@@ -1827,8 +1835,10 @@ def test_issue_6605():
     # while the first one passed, this one failed
     x = symbols('x', real=True)
     assert solve(5**(x/2) - 2**(x/3)) == [0]
-    b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
+    b = sqrt(log(5**log(64)))/log(5)
     assert solve(5**(x/2) - 2**(3/x)) == [-b, b]
+    assert solve((S(1)/8)**(1/x)*5**(x/2) - 1, x) == [-b, b]
+    assert _tsolve(2**x/4**(x/2) - 1, x) is None
 
 
 def test__ispow():
@@ -1916,6 +1926,7 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
 
 def test_issue_17638():
 
@@ -2572,6 +2583,7 @@ def test_issue_19509():
         d + a - sqrt(-b - c),
         d + a + sqrt(-b - c)]
 
+
 def test_issue_20747():
     THT, HT, DBH, dib, c0, c1, c2, c3, c4  = symbols('THT HT DBH dib c0 c1 c2 c3 c4')
     f = DBH*c3 + THT*c4 + c2
@@ -2579,8 +2591,10 @@ def test_issue_20747():
     eq = dib - DBH*(c0 - f*log(rhs))
     term = ((1 - exp((DBH*c0 - dib)/(DBH*(DBH*c3 + THT*c4 + c2))))
             / (1 - exp(c0/(DBH*c3 + THT*c4 + c2))))
-    sol = [THT*term**(1/c1) - term**(1/c1) + 1]
-    assert solve(eq, HT) == sol
+    sol = THT*term**(1/c1) - term**(1/c1) + 1
+    got = solve(eq, HT)
+    assert len(got) == 1
+    assert got[0].equals(sol)
 
 
 def test_issue_27001():
@@ -2739,3 +2753,13 @@ def test_solve_maxmin():
     assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
     system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
     assert solve(system, variables) == [(-3, 1), (2, 6)]
+
+
+def test_issue_27062():
+    # solve(x*log(x)) should not return 0 because log(0) is not finite
+    assert solve(x*log(x), x) == [1]
+    assert solve(x*log(x), x, check=False) == [0, 1]
+    assert solve(x*(x - 1)*log(x), x) == [1]
+    assert solve(x*log(x - 1), x) == [0, 2]
+    pw = Piecewise((x - 1, x > 0), (S.Infinity, True))
+    assert solve((x - 2)*pw, x) == [1, 2]

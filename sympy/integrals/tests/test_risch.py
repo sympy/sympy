@@ -8,8 +8,10 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (atan, sin, tan)
+from sympy.functions.elementary.hyperbolic import tanh
+from sympy.functions.elementary.trigonometric import (atan, cot, sin, tan)
 from sympy.polys.polytools import (Poly, cancel, factor)
+from sympy.polys.rationaltools import together
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -175,14 +177,20 @@ def test_polynomial_reduce():
 
 
 def test_laurent_series():
+    # Example 2.7.1 from Bronstein.  The principal parts at the zeros of
+    # t**2 - 1 are -9/(t - 1)**2 - 3/(t + 1)**2 - 4/(t + 1) (this is also
+    # what apart() gives, together with 4/(t - 2)).
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
     a = Poly(36, t)
     d = Poly((t - 2)*(t**2 - 1)**2, t)
     F = Poly(t**2 - 1, t)
     n = 2
     assert laurent_series(a, d, F, n, DE) == \
-        (Poly(-3*t**3 + 3*t**2 - 6*t - 8, t), Poly(t**5 + t**4 - 2*t**3 - 2*t**2 + t + 1, t),
-        [Poly(-3*t**3 - 6*t**2, t, domain='QQ'), Poly(2*t**6 + 6*t**5 - 8*t**3, t, domain='QQ')])
+        (Poly(-4*t**3 - 8*t**2 - 8*t - 16, t), Poly(t**4 - 2*t**2 + 1, t),
+        [Poly(-3*t**3 - 6*t**2, t, domain='QQ'), Poly(-2*t**6 - 6*t**5 + 8*t**3, t, domain='QQ')])
+    # Example 2.7.2, first factor: the principal part at t == 2 is 4/(t - 2)
+    assert laurent_series(a, d, Poly(t - 2, t), 1, DE)[:2] == \
+        (Poly(4, t), Poly(t - 2, t))
 
 
 def test_recognize_derivative():
@@ -197,6 +205,32 @@ def test_recognize_derivative():
     assert recognize_derivative(Poly(x*t, t), Poly(1, t), DE) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert recognize_derivative(Poly(t, t), Poly(1, t), DE) == True
+    # Repeated factors in the denominator used to crash with
+    # ExactQuotientFailed (the multiplicity from the squarefree
+    # factorization was ignored), and the recognition check compared
+    # object identities, so it could not return True on any input that
+    # entered the loop.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    # D(1/x) == -1/x**2 and D(-1/x) == 1/x**2 are derivatives
+    assert recognize_derivative(Poly(-1, x), Poly(x**2, x), DE) == True
+    assert recognize_derivative(Poly(1, x), Poly(x**2, x), DE) == True
+    # 1/x and (x + 1)/x**2 == 1/x + 1/x**2 have nonzero residues
+    assert recognize_derivative(Poly(1, x), Poly(x, x), DE) == False
+    assert recognize_derivative(Poly(x + 1, x), Poly(x**2, x), DE) == False
+    # residues at complex poles are detected via polynomial divisibility
+    assert recognize_derivative(Poly(x, x), Poly((x**2 + 1)**2, x), DE) == True
+    assert recognize_derivative(Poly(1, x), Poly((x**2 + 1)**2, x), DE) == False
+    assert recognize_derivative(Poly(-2*x, x), Poly((x**2 - 1)**2, x), DE) == True
+    # Poles at nonconstant normal primes used to be ignored entirely,
+    # giving false positives.  A simple such pole always has a nonzero
+    # residue: 1/(t + x) with t = log(x) is not a derivative.
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    assert recognize_derivative(Poly(1, t), Poly(t + x, t), DE) == False
+    # Higher-order poles at nonconstant primes need residue machinery that
+    # is only justified for constant roots, so they raise for now (e.g.
+    # D(1/(t + x)) == -(1 + 1/x)/(t + x)**2 would need it).
+    raises(NotImplementedError, lambda: recognize_derivative(
+        Poly(-1 - 1/x, t), Poly((t + x)**2, t), DE))
 
 
 def test_recognize_log_derivative():
@@ -206,14 +240,31 @@ def test_recognize_log_derivative():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert recognize_log_derivative(a, d, DE, z) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
-    assert recognize_log_derivative(Poly(t + 1, t), Poly(t + x, t), DE) == True
-    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1, t), DE) == True
+    # These two used to wrongly return True: their Rothstein-Trager
+    # resultants have the nonconstant roots -x*(x - 1)/(x + 1) and -x, x,
+    # respectively, which are not integers.  Nonconstant roots land in the
+    # normal part of the splitting factorization, which used to be ignored.
+    assert recognize_log_derivative(Poly(t + 1, t), Poly(t + x, t), DE) == False
+    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1, t), DE) == False
+    # ... but log derivatives with nonconstant-looking denominators are
+    # still recognized: D(t + x)/(t + x) has the integer root 1
+    assert recognize_log_derivative(Poly(1 + 1/x, t), Poly(t + x, t),
+        DE) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
     assert recognize_log_derivative(Poly(1, x), Poly(x**2 - 2, x), DE) == False
     assert recognize_log_derivative(Poly(1, x), Poly(x**2 + x, x), DE) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert recognize_log_derivative(Poly(1, t), Poly(t**2 - 2, t), DE) == False
     assert recognize_log_derivative(Poly(1, t), Poly(t**2 + t, t), DE) == False
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    # 1/(x**2 + 1) is not Dv/v for any rational v: the Rothstein-Trager
+    # resultant has the non-integer complex roots -I/2, I/2, which used to
+    # be missed entirely (only real roots were checked, and there are none).
+    assert recognize_log_derivative(Poly(1, x), Poly(x**2 + 1, x), DE) == False
+    # ... but complex poles with integer residues are fine:
+    # (2*x + 2)/(x**2 + 2*x + 2) == D(x**2 + 2*x + 2)/(x**2 + 2*x + 2)
+    assert recognize_log_derivative(Poly(2*x + 2, x), Poly(x**2 + 2*x + 2, x),
+        DE) == True
 
 
 def test_residue_reduce():
@@ -588,15 +639,24 @@ def test_DifferentialExtension_misc():
         [Poly(1, x, domain='ZZ'), Poly(t0, t0, domain='ZZ')], [x, t0],
         [Lambda(i, exp(i))], [], [None, 'exp'], [None, x])
     raises(NotImplementedError, lambda: DifferentialExtension(sin(x), x))
+    # cot, acot, and the hyperbolic functions used to fall through to the
+    # generic "Couldn't find an elementary transcendental extension" error
+    # instead of the informative trigonometric one
+    raises(NotImplementedError, lambda: DifferentialExtension(cot(x), x))
+    raises(NotImplementedError, lambda: DifferentialExtension(tanh(x), x))
+    # ...and the message must be the informative one (a generic
+    # NotImplementedError was already raised before the guard existed)
+    try:
+        DifferentialExtension(cot(x), x)
+    except NotImplementedError as e:
+        assert "Trigonometric and hyperbolic" in str(e)
     assert DifferentialExtension(10**x, x)._important_attrs == \
         (Poly(t0, t0), Poly(1, t0), [Poly(1, x), Poly(log(10)*t0, t0)], [x, t0],
         [Lambda(i, exp(i*log(10)))], [(exp(x*log(10)), 10**x)], [None, 'exp'],
         [None, x*log(10)])
-    assert DifferentialExtension(log(x) + log(x**2), x)._important_attrs in [
-        (Poly(3*t0, t0), Poly(2, t0), [Poly(1, x), Poly(2/x, t0)], [x, t0],
-        [Lambda(i, log(i**2))], [], [None, ], [], [1], [x**2]),
+    assert DifferentialExtension(log(x) + log(x**2), x)._important_attrs == \
         (Poly(3*t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
-        [Lambda(i, log(i))], [], [None, 'log'], [None, x])]
+        [Lambda(i, log(i))], [], [None, 'log'], [None, x])
     assert DifferentialExtension(S.Zero, x)._important_attrs == \
         (Poly(0, x), Poly(1, x), [Poly(1, x)], [x], [], [], [None], [None])
     assert DifferentialExtension(tan(atan(x).rewrite(log)), x)._important_attrs == \
@@ -727,6 +787,31 @@ def test_risch_integrate():
 
 def test_risch_integrate_float():
     assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
+
+
+def test_integrate_primitive_nonelementary_residual():
+    # When integrate_primitive_polynomial() fails partway (b == False after
+    # a nonzero partial q has been computed), the elementary part and the
+    # NonElementaryIntegral residual must still satisfy f == D(g) + i.
+    for f in [log(x)*log(log(x)),  # fails after one reduction step (q != 0)
+              log(log(x))**2 + log(log(x))/log(x),
+              log(log(x))/log(x)]:
+        g, i = risch_integrate(f, x, separate_integral=True)
+        assert isinstance(i, NonElementaryIntegral)
+        assert cancel(together(diff(g, x) + i.function - f)) == 0
+
+
+def test_bound_degree_limited_integrate():
+    # bound_degree() used to raise "TypeError: '>' not supported between
+    # instances of 'Poly' and 'int'" on these when the sharp primitive-case
+    # bound from limited_integrate() fired.  It also now only uses the bound
+    # when it is an integer, as required by Lemma 6.3.3.
+    for F in [exp(1/log(x))/log(x), (1 + 1/log(x))*exp(1/log(x)),
+              exp(x/log(x)), exp(1/log(x))/(x*log(x)), exp(1/(x*log(x)))]:
+        f = cancel(diff(F, x))
+        ans = risch_integrate(f, x)
+        assert not ans.has(NonElementaryIntegral)
+        assert cancel(diff(ans, x) - f) == 0
 
 
 def test_NonElementaryIntegral():

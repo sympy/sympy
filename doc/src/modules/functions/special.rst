@@ -61,6 +61,8 @@ Error Functions and Fresnel Integrals
    :members:
 .. autoclass:: sympy.functions.special.error_functions.erf2inv
    :members:
+.. autoclass:: sympy.functions.special.error_functions.owens_t
+   :members:
 
 .. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
    :members:
@@ -181,6 +183,13 @@ Elliptic integrals
 .. autoclass:: elliptic_e
    :members:
 .. autoclass:: elliptic_pi
+   :members:
+
+Jacobi theta functions
+----------------------
+.. module:: sympy.functions.special.elliptic_functions
+
+.. autoclass:: jtheta
    :members:
 
 Mathieu Functions

@@ -82,6 +82,11 @@ def test_fcode_Pow():
     assert fcode(x**Rational(3, 7)) == '      x**(3.0d0/7.0d0)'
 
 
+def test_fcode_Pow_with_folded_negative_function():
+    expr = sin(Float("1.265344399150595") - Float("0.5") * pi) ** 2
+    assert fcode(expr, source_format="free", standard=95) == "(-0.30072421433515855d0)**2"
+
+
 def test_fcode_Rational():
     x = symbols('x')
     assert fcode(Rational(3, 7)) == "      3.0d0/7.0d0"

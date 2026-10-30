@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from functools import cache
 
 from sympy.combinatorics.permutations import Permutation
 from sympy.external.gmpy import gcd, lcm, sqrt as isqrt
@@ -11,6 +12,7 @@ from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.polyclasses import ANP
 from sympy.printing.defaults import DefaultPrinting
 from sympy.printing.repr import srepr
+from sympy.utilities.iterables import ordered_partitions
 
 if TYPE_CHECKING:
     from typing import Protocol, Iterable, Iterator, Sequence
@@ -43,26 +45,26 @@ class CharacterTable(DefaultPrinting):
     ========
 
     The character table of a permutation group is computed by calling the
-    `character_table` method on the group.
+    ``character_table`` method on the group.
 
     >>> from sympy.combinatorics import SymmetricGroup, AlternatingGroup
     >>> M = SymmetricGroup(4).character_table()
     >>> type(M)
     <class 'sympy.combinatorics.character_table.CharacterTable'>
 
-    Calling `.as_matrix()` on the character table returns a matrix.
+    Calling ``.as_matrix()`` on the character table returns a matrix.
 
     >>> M.as_matrix()
     Matrix([
      [1,  1,  1,  1,  1],
-     [1, -1,  1, -1,  1],
-     [2,  0,  2,  0, -1],
-     [3, -1, -1,  1,  0],
-     [3,  1, -1, -1,  0]])
+     [3,  1, -1,  0, -1],
+     [2,  0,  2, -1,  0],
+     [3, -1, -1,  0,  1],
+     [1, -1,  1,  1, -1]])
 
     The character table builds upon DomainMatrix, from which users can access the
     the values of the characters as domain elements. The domain of a character table is
-    either ZZ or a cyclotomic field.
+    either :ref:`ZZ` or a cyclotomic field :ref:`QQ(zeta_n)`.
 
     >>> M = AlternatingGroup(4).character_table()
     >>> M.as_matrix()
@@ -77,7 +79,7 @@ class CharacterTable(DefaultPrinting):
     3
 
     The order of the columns matches the order of the conjugacy classes,
-    which can be accessed with the method `conjugacy_class_reps`.
+    which can be accessed with the method ``conjugacy_class_reps``.
 
     >>> M.conjugacy_class_reps() # doctest: +SKIP
     [(3), (0 3 1), (3)(0 2 1), (0 3)(1 2)]
@@ -136,7 +138,7 @@ class CharacterTable(DefaultPrinting):
         >>> AlternatingGroup(5).character_table().zeta_order
         5
 
-        It returns 1 if the character table is over ZZ.
+        It returns 1 if the character table is over :ref:`ZZ`.
 
         >>> from sympy.combinatorics import SymmetricGroup
         >>> SymmetricGroup(4).character_table().zeta_order
@@ -172,6 +174,8 @@ class CharacterTable(DefaultPrinting):
          [1,      zeta3, -1 - zeta3,  1],
          [3,          0,          0, -1]])
         """
+        if G.is_symmetric:
+            return character_table_sn(G.degree)
         return dixon_character_table(G.conjugacy_classes())
 
 
@@ -519,3 +523,112 @@ def dixon_character_table(conjugacy_classes: Sequence[set[Permutation]]) -> Char
 
     conjugacy_class_reps = [next(iter(c)) for c in conjugacy_classes]
     return CharacterTable(dm, conjugacy_class_reps)
+
+
+def character_table_sn(n: int) -> CharacterTable:
+    r"""
+    Compute the character table of the symmetric group `S_n`
+    using the Murnaghan-Nakayama rule.
+
+    The rows are indexed by partitions of `n` in reverse lexicographic
+    order, and the columns are indexed by partitions of `n` in
+    lexicographic order. Thus, the first row is the trivial character, the
+    last row is the sign character, and the first column is the identity
+    conjugacy class.
+
+    Parameters
+    ==========
+    n : int
+        The degree of the symmetric group.
+
+    Returns
+    =======
+    CharacterTable
+        The character table of ``S_n``.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.character_table import character_table_sn
+    >>> character_table_sn(1).tolist()
+    [[1]]
+    >>> character_table_sn(2).tolist()
+    [[1, 1], [1, -1]]
+    >>> character_table_sn(3).tolist()
+    [[1, 1, 1], [2, 0, -1], [1, -1, 1]]
+    >>> character_table_sn(4).tolist()
+    [[1, 1, 1, 1, 1], [3, 1, -1, 0, -1], [2, 0, 2, -1, 0],
+     [3, -1, -1, 0, 1], [1, -1, 1, 1, -1]]
+
+    Reference
+    =========
+    .. [1] https://en.wikipedia.org/wiki/Murnaghan-Nakayama_rule
+    """
+    if n <= 0:
+        raise ValueError("n must be a positive integer")
+
+    partitions = sorted(tuple(reversed(part)) for part in ordered_partitions(n))
+    row_labels = list(reversed(partitions))
+    col_labels = partitions
+
+    def beta_of(lam: tuple[int, ...]) -> tuple[int, ...]:
+        return tuple(
+            (lam[i] if i < len(lam) else 0) + n - 1 - i
+            for i in range(n)
+        )
+
+    def beta_to_partition(beta: tuple[int, ...]) -> tuple[int, ...]:
+        return tuple(
+            value - (n - 1 - index)
+            for index, value in enumerate(beta)
+            if value > n - 1 - index
+        )
+
+    @cache
+    def character(lam: tuple[int, ...], mu: tuple[int, ...]) -> int:
+        if not mu:
+            return int(not lam)
+
+        beta = beta_of(lam)
+        beta_set = set(beta)
+        cycle_length = mu[0]
+        total = 0
+
+        for i, bead in enumerate(beta):
+            # use beta numbers to find the border strips
+            new_bead = bead - cycle_length
+            if new_bead < 0 or new_bead in beta_set:
+                continue
+
+            height = sum(
+                crossed_bead > new_bead for crossed_bead in beta[i + 1:]
+            )
+            new_beta = list(beta)
+            del new_beta[i]
+            insert_at = 0
+            while insert_at < len(new_beta) and new_beta[insert_at] > new_bead:
+                insert_at += 1
+            new_beta.insert(insert_at, new_bead)
+            new_partition = beta_to_partition(tuple(new_beta))
+
+            # the recursive Murnaghan-Nakayama rule
+            total += (-1) ** height * character(new_partition, mu[1:])
+
+        return total
+
+    def representative(partition: tuple[int, ...]) -> Permutation:
+        array_form = list(range(n))
+        start = 0
+        for cycle_length in partition:
+            for index in range(cycle_length):
+                array_form[start + index] = start + (index + 1) % cycle_length
+            start += cycle_length
+        return Permutation(array_form)
+
+    rows = [
+        [character(row, column) for column in col_labels]
+        for row in row_labels
+    ]
+    rep = DomainMatrix.from_list(rows, ZZ)
+    reps = [representative(partition) for partition in col_labels]
+    return CharacterTable(rep, reps)

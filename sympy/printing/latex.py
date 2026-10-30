@@ -22,7 +22,8 @@ from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
-from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.conventions import split_super_sub, requires_partial, \
+    elementwise_function
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 from sympy.utilities.iterables import has_variety, sift
@@ -40,7 +41,7 @@ if TYPE_CHECKING:
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                             'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
                             'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
-                            'arg',
+                            'arg', 'exp',
                             ]
 
 tex_greek_dictionary = {
@@ -688,6 +689,8 @@ class LatexPrinter(Printer):
             elif expr.exp.is_negative and expr.base.is_commutative:
                 # special case for 1^(-x), issue 9216
                 if expr.base == 1:
+                    if expr.exp == -1:
+                        return r"\frac{1}{1}"
                     return r"%s^{%s}" % (expr.base, expr.exp)
                 # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
                 if expr.base.is_Rational:
@@ -1039,9 +1042,11 @@ class LatexPrinter(Printer):
 
     def _print_ElementwiseApplyFunction(self, expr):
         return r"{%s}_{\circ}\left({%s}\right)" % (
-            self._print(expr.function),
+            self._print(elementwise_function(expr.function)),
             self._print(expr.expr),
         )
+
+    _print_ArrayElementwiseApplyFunc = _print_ElementwiseApplyFunction
 
     @property
     def _special_function_classes(self):
@@ -1258,6 +1263,16 @@ class LatexPrinter(Printer):
         else:
             return r"\Pi%s" % tex
 
+    def _print_jtheta(self, expr, exp=None):
+        n, z, q = expr.args[:3]
+        tex = r"\vartheta_{%s}" % self._print(n)
+        if len(expr.args) == 4:
+            tex += r"^{(%s)}" % self._print(expr.args[3])
+        tex += r"\left(%s, %s\right)" % (self._print(z), self._print(q))
+        if exp is not None:
+            return r"\left(%s\right)^{%s}" % (tex, exp)
+        return tex
+
     def _print_beta(self, expr, exp=None):
         x = expr.args[0]
         # Deal with unevaluated single argument beta
@@ -1341,6 +1356,15 @@ class LatexPrinter(Printer):
             return r"C^{%s}%s" % (exp, tex)
         else:
             return r"C%s" % tex
+
+    def _print_owens_t(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                         self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"T^{%s}%s" % (exp, tex)
+        else:
+            return r"T%s" % tex
 
     def _print_subfactorial(self, expr, exp=None):
         tex = r"!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
@@ -1945,7 +1969,7 @@ class LatexPrinter(Printer):
         block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         block_str = block_str.replace('%MATSTR%', mat_str)
         if mat_str == 'array':
-            block_str = block_str.replace('%s', '{' + 'c'*expr.shape[0] + '}%s')
+            block_str = block_str.replace('%s', '{%COLS%}%s')
 
         if self._settings['mat_delim']:
             left_delim: str = self._settings['mat_delim']
@@ -1953,8 +1977,8 @@ class LatexPrinter(Printer):
             block_str = r'\left' + left_delim + block_str + \
                         r'\right' + right_delim
 
-        if expr.ndim == 0:
-            return block_str % ""
+        def block(content, ncols):
+            return block_str.replace('%COLS%', 'c'*ncols) % content
 
         level_str: list[list[str]] = [[] for i in range(expr.ndim + 1)]
         shape_ranges = [list(range(i)) for i in expr.shape]
@@ -1969,7 +1993,8 @@ class LatexPrinter(Printer):
                         r" & ".join(level_str[back_outer_i+1]))
                 else:
                     level_str[back_outer_i].append(
-                        block_str % (r"\\".join(level_str[back_outer_i+1])))
+                        block(r"\\".join(level_str[back_outer_i+1]),
+                              expr.shape[back_outer_i+1]))
                     if len(level_str[back_outer_i+1]) == 1:
                         level_str[back_outer_i][-1] = r"\left[" + \
                             level_str[back_outer_i][-1] + r"\right]"
@@ -1979,7 +2004,7 @@ class LatexPrinter(Printer):
         out_str = level_str[0][0]
 
         if expr.ndim % 2 == 1:
-            out_str = block_str % out_str
+            out_str = block(out_str, expr.shape[0])
 
         return out_str
 
@@ -2098,6 +2123,21 @@ class LatexPrinter(Printer):
     def _print_WedgeProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
         return r' \wedge '.join(elements)
+
+    def _print_ArrayTensorProduct(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import ArrayAdd
+        elements = []
+        for a in expr.args:
+            s = self._print(a)
+            if isinstance(a, (Add, ArrayAdd)):
+                s = r"\left(%s\right)" % s
+            elements.append(s)
+        # \boxtimes is the notation for the tensor product of arrays used in
+        # the documentation (\otimes is the Kronecker product):
+        return r' \boxtimes '.join(elements)
+
+    def _print_ArrayAdd(self, expr):
+        return ' + '.join([self._print(a) for a in expr.args])
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
@@ -2545,6 +2585,9 @@ class LatexPrinter(Printer):
             return r"\operatorname{%s} {\left(%s\right)}" % (cls,
                                                              ", ".join(args))
 
+    def _print_OrdinalZero(self, expr):
+        return r"0"
+
     def _print_OrdinalOmega(self, expr):
         return r"\omega"
 
@@ -2726,7 +2769,7 @@ class LatexPrinter(Printer):
             if expr.sys2 == tf:
                 den_term_2 = Series(*num_arg_list)
             else:
-                den_term_2 = tf, Series(*num_arg_list, expr.sys2)
+                den_term_2 = Series(*num_arg_list, expr.sys2)
         elif isinstance(num, TransferFunction) and isinstance(expr.sys2, Series):
             if num == tf:
                 den_term_2 = Series(*den_arg_list)

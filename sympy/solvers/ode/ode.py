@@ -713,6 +713,8 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             for s in rv_c:
                 if s not in rv1:
                     rv1.append(s)
+        if simplify and len(rv1) > 1:
+            rv1 = _remove_redundant_solutions(eq, rv1, order, func.args[0])
         if len(rv1) == 1:
             return rv1[0]
         rv = rv1
