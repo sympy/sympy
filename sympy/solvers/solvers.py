@@ -1789,7 +1789,7 @@ def _remove_duplicate_solutions(solutions: list[dict[Expr, Expr]]
 
 def _solve_system(exprs, symbols, **flags):
     """return ``(linear, solution)`` where ``linear`` is True
-    if the system was linear, else False; ``solution``
+    if the system was linear or if no symbols were provided, else False; ``solution``
     is a list of dictionaries giving solutions for the symbols
     """
     if not exprs:
