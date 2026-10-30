@@ -5,7 +5,7 @@ from sympy.core import (S, pi, oo, symbols, Rational, Integer, Symbol,
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sign, floor, log)
 from sympy.logic import ITE
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import MatrixSymbol, SparseMatrix, Matrix
@@ -379,3 +379,55 @@ def test_parenthesize_typecast():
     assert rust_code(Lt(i + j, w)) == "((i + j) as f64) < w"
     assert rust_code(Lt(r * (i + j), w)) == "(r*(i + j) as f64) < w"
     assert rust_code((i + j) * (r + 1)) == "(i + j) as f64*(r + 1.0)"
+
+
+def test_rust_typecast_compiles():
+    import os
+    import shutil
+    import subprocess
+    import tempfile
+
+    rustc = shutil.which("rustc")
+    if rustc is None and os.name == "nt":
+        cargo_bin = os.path.expandvars(r"%USERPROFILE%\.cargo\bin\rustc.exe")
+        if os.path.isfile(cargo_bin):
+            rustc = cargo_bin
+    if rustc is None:
+        skip("rustc is not installed")
+
+    i, j = symbols("i j", integer=True)
+    r = Symbol("r", real=True)
+    w = Symbol("w", real=True)
+
+    comparison = rust_code(Lt(r * (i + j), w))
+    arithmetic = rust_code((i + j) * (r + 1))
+
+    source = f"""fn main() {{
+    let i: i32 = 2;
+    let j: i32 = 3;
+    let r: f64 = 10.0;
+    let w: f64 = 60.0;
+    let comparison: bool = {comparison};
+    assert!(comparison);
+    let value: f64 = {arithmetic};
+    assert!((value - 55.0).abs() < 1e-12);
+}}
+"""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        src = os.path.join(tmp_dir, "generated.rs")
+        exe = os.path.join(tmp_dir, "generated.exe" if os.name == "nt" else "generated")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write(source)
+        compiled = subprocess.run(
+            [rustc, "--edition=2021", str(src), "-o", str(exe)],
+            capture_output=True,
+            text=True,
+        )
+        assert compiled.returncode == 0, compiled.stderr
+        executed = subprocess.run(
+            [str(exe)],
+            capture_output=True,
+            text=True,
+        )
+        assert executed.returncode == 0, executed.stderr
+
