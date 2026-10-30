@@ -6,6 +6,7 @@ from sympy.assumptions.ask import Q, ask
 from sympy.core import symbols, Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.core.numbers import nan, oo, zoo, I
+from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 
 from sympy.testing.pytest import raises, XFAIL
@@ -195,6 +196,35 @@ def test_equality():
     m = symbols('m', integer=True)
     assert ask(Q.ge(m**2, 0)) is True
     assert ask(Q.gt(m**2, -1)) is True
+
+
+def test_equality_edge_cases():
+    # fresh symbols: the module-level x, y, z are real (hence finite)
+    a, b = symbols('a b')
+    A, B = symbols('A B', commutative=False)
+
+    # GH-30617: -oo vs "nonpositive" is undetermined; -oo vs -oo is True
+    assert ask(Q.eq(a, b), Q.negative_infinite(a) & Q.extended_nonpositive(b)) is None
+    assert ask(Q.eq(a, b), Q.negative_infinite(a) & Q.negative_infinite(b)) is True
+
+    # GH-29861: a might be oo, so a == a + 1 is undetermined
+    assert ask(Q.eq(a, a + 1)) is None
+
+    # non-Expr operands cannot be decided via a difference
+    assert ask(Q.eq(a, S.true)) is None
+    assert ask(Q.eq(Tuple(1, 2), Tuple(1, 2))) is True
+    assert ask(Q.eq(Tuple(1, 2), Tuple(1, 3))) is False
+    assert ask(Q.eq(Tuple(1, 2), Tuple(1, 2, 3))) is False
+    assert ask(Q.eq(Tuple(a, 1), Tuple(b, 1))) is None
+
+    # non-commutative: A - B != 0 proves nothing
+    assert ask(Q.eq(A, B)) is None
+
+    # x >= x needs x to be (extended) real
+    assert ask(Q.ge(I, I)) is None
+    assert ask(Q.gt(I, I)) is None
+    assert ask(Q.ge(a, a)) is None
+    assert ask(Q.ge(x, x)) is True
 
 
 @XFAIL

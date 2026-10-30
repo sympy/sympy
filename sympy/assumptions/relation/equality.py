@@ -51,8 +51,10 @@ def _fuzzy_eq(lhs, rhs, assumptions=True):
     the ask() <-> is_eq() mutual recursion described in GH-29863 (is_eq routes
     through AssumptionsWrapper straight back into ask(Q.eq(...))).
     """
+    from sympy.core.containers import Tuple
+    from sympy.core.expr import Expr
     from sympy.core.numbers import NaN
-    from sympy.core.logic import fuzzy_xor
+    from sympy.core.logic import fuzzy_and, fuzzy_xor, fuzzy_not
     from sympy.logic.boolalg import BooleanAtom, Boolean
 
     # NaN is never equal to anything, not even itself - must be checked
@@ -71,6 +73,17 @@ def _fuzzy_eq(lhs, rhs, assumptions=True):
             isinstance(lhs, Boolean) != isinstance(rhs, Boolean)):
         return False  # only Booleans can equal Booleans; avoids lhs - rhs below
 
+    # Tuples are equal iff they have the same length and equal entries
+    if isinstance(lhs, Tuple) and isinstance(rhs, Tuple):
+        if len(lhs) != len(rhs):
+            return False
+        return fuzzy_and([_fuzzy_eq(l, r, assumptions) for l, r in zip(lhs, rhs)])
+
+    # Past this point we reason with differences, which only makes sense for
+    # Expr operands (not e.g. Symbol vs S.true, or Tuples).
+    if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
+        return None
+
     lhs_inf = _query(Q.infinite, lhs, assumptions)
     rhs_inf = _query(Q.infinite, rhs, assumptions)
     if lhs_inf or rhs_inf:
@@ -80,8 +93,11 @@ def _fuzzy_eq(lhs, rhs, assumptions=True):
         rhs_real = _query(Q.extended_real, rhs, assumptions)
         if fuzzy_xor([lhs_real, rhs_real]):
             return False
-        # both infinite & both real (or both known non-real): fall through
-        # to the diff-based check below, which handles +-oo vs +-oo.
+        if lhs_inf and rhs_inf and lhs_real and rhs_real:
+            # both are +oo or -oo: equal exactly when the signs match
+            pos_l = _query(Q.extended_positive, lhs, assumptions)
+            pos_r = _query(Q.extended_positive, rhs, assumptions)
+            return fuzzy_not(fuzzy_xor([pos_l, pos_r]))
 
     diff = lhs - rhs
     if isinstance(diff, NaN):
@@ -89,20 +105,33 @@ def _fuzzy_eq(lhs, rhs, assumptions=True):
         # complex infinities that aren't structurally identical
         return None
 
-    return _query(Q.zero, diff, assumptions)
+    res = _query(Q.zero, diff, assumptions)
+    if res is False and diff.is_commutative is not True:
+        # a nonzero difference proves inequality only for commutative terms
+        return None
+    if res is False and (lhs_inf is not False or rhs_inf is not False):
+        # a - (a + 1) == -1 only proves inequality when both sides are finite;
+        # oo == oo + 1 is True (GH-29861)
+        return None
+    return res
 
 
 def _fuzzy_ge(lhs, rhs, assumptions=True):
     """Fuzzy >= check that avoids calling is_ge(), and therefore avoids the
     ask() <-> is_ge() mutual recursion described in GH-29863.
     """
+    from sympy.core.expr import Expr
     from sympy.core.numbers import NaN
 
     if isinstance(lhs, NaN) or isinstance(rhs, NaN):
         return None
 
+    if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
+        return None
+
     if lhs == rhs:
-        return True
+        # x >= x only holds when x is known to be extended real
+        return True if _query(Q.extended_real, lhs, assumptions) is True else None
 
     lhs_real = _query(Q.extended_real, lhs, assumptions)
     rhs_real = _query(Q.extended_real, rhs, assumptions)
