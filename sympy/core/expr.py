@@ -19,6 +19,11 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
 from sympy.utilities.iterables import has_variety, _sift_true_false
 from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_ln
+from sympy import Add, Mul, Pow
+from sympy.core.add import _addsort
+from sympy.core.mul import _mulsort
+from sympy.polys.rings import ring
+from sympy.polys.domains import QQ
 
 
 if TYPE_CHECKING:
@@ -29,6 +34,25 @@ if TYPE_CHECKING:
 
 from collections import defaultdict
 
+def expand_via_ring_fast(e):
+    gens = sorted(e.free_symbols, key=sympy.default_sort_key)
+    R, *_ = ring(gens, QQ)
+    terms = []
+    for monom, c in R(e).terms():
+        c = QQ.to_sympy(c)
+        factors = [g if k == 1 else Pow(g, k) for g, k in zip(gens, monom) if k]
+        if not factors:
+            terms.append(c)
+            continue
+        if c != 1:
+            factors.insert(0, c)
+        if len(factors) == 1:
+            terms.append(factors[0])
+            continue
+        _mulsort(factors)
+        terms.append(Mul._from_args(factors))
+    _addsort(terms)
+    return Add._from_args(terms)
 
 def _corem(eq, c):  # helper for extract_additively
     # return co, diff from co*c + diff
@@ -3671,7 +3695,34 @@ class Expr(Basic, EvalfMixin):
         return (expr, hit)
 
     @cacheit
-    def expand(
+    from sympy import Add, Mul, Pow
+from sympy.core.add import _addsort
+from sympy.core.mul import _mulsort
+from sympy.polys.rings import ring
+from sympy.polys.domains import QQ
+
+def expand_via_ring_fast(e):
+    gens = sorted(e.free_symbols, key=sympy.default_sort_key)
+    R, *_ = ring(gens, QQ)
+    terms = []
+    for monom, c in R(e).terms():
+        c = QQ.to_sympy(c)
+        factors = [g if k == 1 else Pow(g, k) for g, k in zip(gens, monom) if k]
+        if not factors:
+            terms.append(c)
+            continue
+        if c != 1:
+            factors.insert(0, c)
+        if len(factors) == 1:
+            terms.append(factors[0])
+            continue
+        _mulsort(factors)
+        terms.append(Mul._from_args(factors))
+    _addsort(terms)
+    return Add._from_args(terms)
+
+
+def expand(
         self,
         deep=True,
         modulus=None,
@@ -3690,10 +3741,18 @@ class Expr(Basic, EvalfMixin):
         more information.
 
         """
+        # Fast path optimization: leverage sparse polynomial rings
+        if mul and multinomial and not modulus and self.is_polynomial():
+            try:
+                if all(coeff.is_Rational for coeff in self.as_coefficients_dict().values()):
+                    return expand_via_ring_fast(self)
+            except Exception:
+                pass
+
         from sympy.simplify.radsimp import fraction
 
         hints.update(power_base=power_base, power_exp=power_exp, mul=mul,
-           log=log, multinomial=multinomial, basic=basic)
+            log=log, multinomial=multinomial, basic=basic)
 
         expr = self
         # default matches fraction's default
