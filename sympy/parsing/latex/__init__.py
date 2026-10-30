@@ -3,7 +3,7 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from re import compile as rcompile
 
-from sympy.parsing.latex.lark import LarkLaTeXParser, TransformToSymPyExpr, parse_latex_lark # noqa
+from sympy.parsing.latex.lark import LarkLaTeXParser, TransformToSymPyExpr, parse_latex_lark, parse_latex_lark_all # noqa
 
 from .errors import LaTeXParsingError  # noqa
 

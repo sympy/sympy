@@ -855,6 +855,8 @@ def test_trunc():
     assert math.trunc(exp(5)) == 148
     assert math.trunc(cos(pi)) == -1
     assert math.trunc(sin(5)) == 0
+    assert type(math.trunc(pi)) is int
+    assert type(math.trunc(sqrt(2))) is int
 
     raises(TypeError, lambda: math.trunc(x))
     raises(TypeError, lambda: math.trunc(x + y**2))
@@ -1546,8 +1548,12 @@ def test_as_base_exp():
     assert (x*y*z).as_base_exp() == (x*y*z, S.One)
     assert (x + y + z).as_base_exp() == (x + y + z, S.One)
     assert ((x + y)**z).as_base_exp() == (x + y, z)
-    assert (x**2*y**2).as_base_exp() == (x*y, 2)
     assert (x**z*y**z).as_base_exp() == (x**z*y**z, S.One)
+    # Recovering a common power (e.g. x**4*y**12 -> (x*y**3)**4)
+    # requires deciding how to handle rational exponents, coefficients,
+    # and perfect powers for coefficients. That belongs in a dedicated
+    # algebraic routine, not in the structural as_base_exp interface.
+    assert (x**2*y**2).as_base_exp() == (x**2*y**2, S.One)
 
 
 def test_issue_4963():
@@ -1804,6 +1810,22 @@ def test_as_ordered_factors():
 
     assert (A*B).as_ordered_factors() == [A, B]
     assert (B*A).as_ordered_factors() == [B, A]
+
+
+def test_as_terms_repeated_bases():
+    # The exponent should not depend on the order of unevaluated factors.
+    for factors, exponent in (
+        ((x, x**3), 4),
+        ((x**3, x), 4),
+        ((x**2, x**3), 5),
+        ((x**3, x**2), 5),
+    ):
+        term = Mul(*factors, evaluate=False)
+        terms, gens = term.as_terms()
+        assert gens == [x]
+        assert terms[0][1][1] == (exponent,)
+        assert Add(term, x**2, evaluate=False).as_ordered_terms() == [
+            term, x**2]
 
 
 def test_as_ordered_terms():

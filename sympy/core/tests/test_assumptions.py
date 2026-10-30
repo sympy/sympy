@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from sympy.core.mod import Mod
-from sympy.core.numbers import (I, oo, pi)
+from sympy.core.numbers import (I, oo, pi, zoo)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -851,6 +851,25 @@ def test_Pow_is_algebraic():
         assert Pow(0, exponent, evaluate=False).is_algebraic is True
     assert Pow(0, -1, evaluate=False).is_finite is False
 
+    # issue 30665
+    for exponent in [-1, -S.Half, -Integer(2)]:
+        assert Pow(zoo, exponent, evaluate=False).is_algebraic is True
+    for exponent in [1, S.Half, Integer(2)]:
+        assert Pow(zoo, exponent, evaluate=False).is_algebraic is False
+    assert Pow(zoo, 0, evaluate=False).is_algebraic is True
+    one_over_zero = Pow(0, -1, evaluate=False)
+    assert Pow(one_over_zero, -1, evaluate=False).is_algebraic is True
+
+    inf = Symbol('inf', infinite=True)
+    for exponent in [-1, -S.Half]:
+        p = Pow(inf, exponent, evaluate=False)
+        assert p.is_algebraic is True
+        assert p.is_zero is True
+    assert Pow(inf, 0, evaluate=False).is_algebraic is True
+    assert Pow(inf, 2, evaluate=False).is_algebraic is False
+    r = Symbol('r', rational=True)
+    assert Pow(inf, r, evaluate=False).is_algebraic is None
+
     a = Symbol('a', algebraic=True)
     azf = Symbol('azf', algebraic=True, zero=False)
     na = Symbol('na', algebraic=False)
@@ -1357,3 +1376,18 @@ def test_ask_shuffle():
     third = grp.random()
 
     assert first == second == third
+
+
+def test_issue_30804():
+    # Issue 30804: b has real=False, but b*I can be real (e.g. b=I => b*I=-1 in Re)
+    # or non-real (e.g. b=1+I => b*I=-1+I not in Re). Hence is_real and is_integer should be None.
+    b = Symbol('b', finite=True, real=False)
+    assert (b*I).is_real is None
+    assert (b*I).is_extended_real is None
+    assert (b*I).is_integer is None
+    assert (b*I).is_rational is None
+    assert (b*I).is_imaginary is False
+
+    # Real multiple of non-real number cannot be real
+    assert (3*b).is_real is False
+    assert (3*b).is_extended_real is False

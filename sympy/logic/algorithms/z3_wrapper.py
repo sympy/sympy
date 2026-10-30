@@ -33,6 +33,12 @@ def z3_satisfiable(expr, all_models=False):
         exprs.add_prop(expr)
         expr = exprs
 
+    # Return UNSAT when False (encoded as 0) or empty clause is present in the CNF
+    if {0} in expr.data or set() in expr.data:
+        if all_models:
+            return (f for f in [False])
+        return False
+
     z3 = import_module("z3")
     if z3 is None:
         raise ImportError("z3 is not installed")
@@ -43,7 +49,8 @@ def z3_satisfiable(expr, all_models=False):
     if res == "unsat":
         return False
     elif res == "sat":
-        return z3_model_to_sympy_model(s.model(), expr)
+        sympy_model = z3_model_to_sympy_model(s.model(), expr)
+        return {True: True} if sympy_model == {} else sympy_model
     else:
         return None
 

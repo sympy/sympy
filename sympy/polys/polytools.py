@@ -56,7 +56,7 @@ from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
-from sympy.utilities.iterables import iterable, sift
+from sympy.utilities.iterables import iterable, sift, numbered_symbols
 
 # Required to avoid errors
 import sympy.polys
@@ -4720,6 +4720,89 @@ class Poly(Basic):
 class PurePoly(Poly):
     """Class for representing pure polynomials. """
 
+    def __new__(cls, rep, *gens, **args):
+        # A coefficient sequence defines a univariate polynomial without a
+        # named generator. Poly needs one for construction, but PurePoly
+        # discards it once the representation is built.
+        if not gens and isinstance(rep, (list, tuple)):
+            gens = (Dummy('x'),)
+        return super().__new__(cls, rep, *gens, **args)
+
+    @classmethod
+    def new(cls, rep, *gens):
+        """Build a PurePoly without retaining the construction generators."""
+        if not isinstance(rep, DMP):
+            raise PolynomialError(
+                "invalid polynomial representation: %s" % rep)
+        if gens and rep.lev != len(gens) - 1:
+            raise PolynomialError("invalid arguments: %s, %s" % (rep, gens))
+        obj = Basic.__new__(cls)
+        obj.rep = rep
+        return obj
+
+    @property
+    def args(self):
+        # Carry the coefficient domain through Basic reconstruction.
+        return (self.as_poly(),)
+
+    @property
+    def gens(self):
+        """Canonical generator placeholders, distinct from coefficient symbols."""
+        names = {s.name for s in self.free_symbols_in_domain
+                 if isinstance(s, Symbol)}
+        candidates = numbered_symbols('_')
+        return tuple(next(g for g in candidates if g.name not in names)
+                     for _ in range(self.rep.lev + 1))
+
+    @property
+    def bound_symbols(self):
+        return self.gens
+
+    def as_dummy(self):
+        # The generator placeholders are already canonical.
+        return self
+
+    def _eval_subs(self, old, new):
+        # The formal generators are not free variables. Only coefficients
+        # can be substituted.
+        if not (old.free_symbols & self.free_symbols):
+            return self
+        expr = self.as_expr().subs(old, new)
+        try:
+            return PurePoly(expr, *self.gens, domain=self.domain)
+        except (PolynomialError, CoercionFailed, DomainError):
+            return PurePoly(expr, *self.gens)
+
+    def __call__(self, *values):
+        """Instantiate generators simultaneously, retaining unbound ones."""
+        gens = self.gens
+        if len(values) > len(gens):
+            raise ValueError("too many values provided")
+        if not values:
+            return self
+        values = tuple(sympify(v) for v in values)
+        if len(values) == len(gens):
+            return self.as_expr().xreplace(dict(zip(gens, values)))
+
+        # Use fresh placeholders for unbound generators so that supplied
+        # values can contain canonical generator names without capture.
+        remaining = tuple(Dummy() for _ in gens[len(values):])
+        expr = self.as_expr().xreplace(dict(zip(gens, values + remaining)))
+        try:
+            return PurePoly(expr, *remaining, domain=self.domain)
+        except (PolynomialError, CoercionFailed, DomainError):
+            return PurePoly(expr, *remaining)
+
+    def as_poly(self, *gens, **args):
+        if not gens:
+            gens = self.gens
+        if len(gens) != len(self.gens):
+            raise GeneratorsError("expected %d generators" % len(self.gens))
+        gens = options.Gens.preprocess(gens)
+        if args:
+            return Poly(self.as_expr(*gens), *gens, **args)
+        return Poly.new(self.rep, *gens)
+
     def _hashable_content(self):
         """Allow SymPy to hash Poly instances. """
         return (self.rep,)
@@ -4750,27 +4833,14 @@ class PurePoly(Poly):
 
     @_sympifyit('other', NotImplemented)
     def __eq__(self, other):
-        f, g = self, other
+        return (isinstance(other, PurePoly)
+                and self.rep.eq(other.rep, strict=True))
 
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, f.gens, domain=f.get_domain())
-            except (PolynomialError, DomainError, CoercionFailed):
-                return False
-
-        if len(f.gens) != len(g.gens):
-            return False
-
-        if f.rep.dom != g.rep.dom:
-            try:
-                dom = f.rep.dom.unify(g.rep.dom, f.gens)
-            except UnificationFailed:
-                return False
-
-            f = f.set_domain(dom)
-            g = g.set_domain(dom)
-
-        return f.rep == g.rep
+    def dummy_eq(self, other, symbol=None):
+        """Compare polynomial coefficients without matching generator names."""
+        if isinstance(other, Poly):
+            return self.rep.eq(other.rep, strict=True)
+        return super().dummy_eq(other, symbol)
 
     def _strict_eq(f, g):
         return isinstance(g, f.__class__) and f.rep.eq(g.rep, strict=True)
@@ -8186,7 +8256,7 @@ class GroebnerBasis(Basic):
 
         Given a polynomial ``f`` and a set of polynomials ``G = (g_1, ..., g_n)``,
         computes a set of quotients ``q = (q_1, ..., q_n)`` and the remainder ``r``
-        such that ``f = q_1*f_1 + ... + q_n*f_n + r``, where ``r`` vanishes or ``r``
+        such that ``f = q_1*g_1 + ... + q_n*g_n + r``, where ``r`` vanishes or ``r``
         is a completely reduced polynomial with respect to ``G``.
 
         Examples

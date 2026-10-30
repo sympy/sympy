@@ -23,7 +23,7 @@ from sympy.utilities.iterables import (common_prefix, common_suffix,
 from collections import defaultdict
 
 
-_eps = Dummy(positive=True)
+_eps = Dummy('eps', positive=True)
 
 
 def _isnumber(i):
@@ -46,7 +46,8 @@ def _monotonic_sign(self):
       of values for the variables.
     - M(x, y, ...) + A: a monomial M whose factors are all signed and a constant, A.
     - A/M(x, y, ...) + B: the inverse of a monomial and constants A and B.
-    - P(x): a univariate polynomial
+    - F(x): a univariate expression that is monotonic over the known range of x,
+      or a polynomial whose extrema can be determined.
 
     Examples
     ========
@@ -106,7 +107,7 @@ def _monotonic_sign(self):
             return S.Zero
         return None
 
-    # univariate polynomial
+    # univariate
     free = self.free_symbols
     if len(free) == 1:
         if self.is_polynomial():
@@ -152,6 +153,37 @@ def _monotonic_sign(self):
                         else:
                             return Dummy('npos', nonpositive=True)
         else:
+            x = next(iter(free))
+            x0 = _monotonic_sign(x)
+
+            if x0 not in (None, _eps, -_eps):
+                d = self.diff(x)
+                y = self.subs(x, x0)
+
+                if x.is_nonnegative:
+                    if d.is_positive:
+                        if y.is_positive:
+                            return y
+                        if y.is_zero:
+                            return Dummy('nneg', nonnegative=True)
+                    elif d.is_negative:
+                        if y.is_negative:
+                            return y
+                        if y.is_zero:
+                            return Dummy('npos', nonpositive=True)
+
+                elif x.is_nonpositive:
+                    if d.is_positive:
+                        if y.is_negative:
+                            return y
+                        if y.is_zero:
+                            return Dummy('npos', nonpositive=True)
+                    elif d.is_negative:
+                        if y.is_positive:
+                            return y
+                        if y.is_zero:
+                            return Dummy('nneg', nonnegative=True)
+
             n, d = self.as_numer_denom()
             den = None
             if n.is_number:

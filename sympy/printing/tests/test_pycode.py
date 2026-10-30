@@ -9,7 +9,7 @@ from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.function import Derivative
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec, log, sin, cos, tan, asin, atan, sinh, cosh, tanh, asinh, acosh, atanh
+from sympy.functions import acos, conjugate, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec, log, sin, cos, tan, asin, atan, sinh, cosh, tanh, asinh, acosh, atanh
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
@@ -40,6 +40,11 @@ def test_PythonCodePrinter():
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
     assert prntr.doprint(-Mod(x, y)) == '-(x % y)'
     assert prntr.doprint(Mod(-x, y)) == '(-x) % y'
+    assert prntr.doprint(-2*Mod(x, 3)) == '-2*(x % 3)'
+    assert prntr.doprint(-x*Mod(x, y)) == '-x*(x % y)'
+    assert prntr.doprint(-x/Mod(x, 3)) == '-x/(x % 3)'
+    assert prntr.doprint(Mod(x, 1/y)) == 'x % (1/y)'
+    assert prntr.doprint(Mod(1, 1/x)) == '1 % (1/x)'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert prntr.doprint(1/(x+y)) == '1/(x + y)'
@@ -74,6 +79,7 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(Min(x, y)) == "min(x, y)"
     assert prntr.doprint(Max(x, y)) == "max(x, y)"
+    assert prntr.doprint(conjugate(x)) == "(x).conjugate()"
 
 def test_PythonCodePrinter_print_Indexed():
     from sympy import Symbol
@@ -174,6 +180,7 @@ def test_NumPyPrinter():
     assert p.doprint(HadamardProduct(A, B)) == "numpy.multiply(A, B)"
     assert p.doprint(KroneckerProduct(A, B)) == "numpy.kron(A, B)"
     assert p.doprint(Adjoint(A)) == "numpy.conjugate(numpy.transpose(A))"
+    assert p.doprint(conjugate(x)) == "numpy.conjugate(x)"
     assert p.doprint(DiagonalOf(A)) == "numpy.reshape(numpy.diag(A), (-1, 1))"
     assert p.doprint(DiagMatrix(C)) == "numpy.diagflat(C)"
     assert p.doprint(DiagonalMatrix(D)) == "numpy.multiply(D, numpy.eye(3, 4))"

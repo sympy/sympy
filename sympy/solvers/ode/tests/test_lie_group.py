@@ -151,3 +151,49 @@ def test_user_infinitesimals():
 def test_lie_group_issue15219():
     eqn = exp(f(x).diff(x)-f(x))
     assert 'lie_group' not in classify_ode(eqn, f(x))
+
+
+def test_issue_30644():
+    a, b, c = symbols('a b c')
+    df = f(x).diff(x)
+
+    assert infinitesimals(
+        x*df - f(x) - x - x*exp(f(x)/x), f(x))
+
+    assert infinitesimals(
+        df + f(x)**2 - 1, f(x), hint='all')
+
+    assert infinitesimals(
+        df**2 + a*x*df - b*x**2 - c,
+        f(x), hint='all')
+
+
+def test_abaco2_unique_general_nonzero_D():
+    eq = f(x).diff(x) - x/f(x)
+    assert infinitesimals(
+        eq, f(x), hint='abaco2_unique_general'
+    ) == [{xi(x, f(x)): x, eta(x, f(x)): f(x)}]
+
+
+def test_abaco2_similar_inverse_match():
+    fx = f(x)
+    xi = Function('xi')(x, fx)
+    eta = Function('eta')(x, fx)
+
+    # Direct ODE: h = x + exp(y)
+    assert infinitesimals(
+        fx.diff(x) - x - exp(fx), fx,
+        hint='abaco2_similar'
+    ) == [{
+        xi: exp(-x**2/2),
+        eta: x*exp(-x**2/2),
+    }]
+
+    # Inverse ODE: hinv = x + exp(y)
+    assert infinitesimals(
+        fx.diff(x) - 1/(fx + exp(x)), fx,
+        hint='abaco2_similar'
+    ) == [{
+        xi: fx*exp(-fx**2/2),
+        eta: exp(-fx**2/2),
+    }]
