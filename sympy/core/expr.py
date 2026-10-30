@@ -19,11 +19,6 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
 from sympy.utilities.iterables import has_variety, _sift_true_false
 from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_ln
-from sympy import Add, Mul, Pow
-from sympy.core.add import _addsort
-from sympy.core.mul import _mulsort
-from sympy.polys.rings import ring
-from sympy.polys.domains import QQ
 
 
 if TYPE_CHECKING:
@@ -35,6 +30,13 @@ if TYPE_CHECKING:
 from collections import defaultdict
 
 def expand_via_ring_fast(e):
+    from sympy import Add, Mul, Pow
+    from sympy.core.add import _addsort
+    from sympy.core.mul import _mulsort
+    from sympy.polys.rings import ring
+    from sympy.polys.domains import QQ
+    import sympy
+
     gens = sorted(e.free_symbols, key=sympy.default_sort_key)
     R, *_ = ring(gens, QQ)
     terms = []
