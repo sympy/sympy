@@ -430,4 +430,3 @@ def test_rust_typecast_compiles():
             text=True,
         )
         assert executed.returncode == 0, executed.stderr
-
