@@ -78,3 +78,10 @@ def test_convert_array_to_indexed_diagonal_rectangular():
         for j_ in range(2):
             for k_ in range(3):
                 assert conv.subs({i: i_, j: j_, k: k_}) == expl[i_, j_, k_]
+
+
+def test_convert_array_to_indexed_scalar_addends():
+    A = ArraySymbol("A", (3, 3))
+    expr = ArrayContraction(A, (0, 1)) + k
+    d0 = Dummy("d0")
+    assert convert_array_to_indexed(expr, []).dummy_eq(Sum(A[d0, d0], (d0, 0, 2)) + k)

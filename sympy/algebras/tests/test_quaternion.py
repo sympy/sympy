@@ -6,9 +6,9 @@ from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, conjugate, im, re, sign)
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
+from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan, sinc)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
 from sympy.simplify import simplify
@@ -103,6 +103,7 @@ def test_quaternion_axis_angle_simplification():
     assert result.c == sqrt(14)*sin(asin(4)/2)/7
     assert result.d == 3*sqrt(14)*sin(asin(4)/2)/14
 
+
 def test_quaternion_complex_real_addition():
     a = symbols("a", complex=True)
     b = symbols("b", real=True)
@@ -168,11 +169,21 @@ def test_quaternion_functions():
     assert q1.pow(-0.5) == NotImplemented # type: ignore
     raises(TypeError, lambda: q1**(-0.5))
 
-    assert q1.exp() == \
-    Quaternion(E * cos(sqrt(29)),
-               2 * sqrt(29) * E * sin(sqrt(29)) / 29,
-               3 * sqrt(29) * E * sin(sqrt(29)) / 29,
-               4 * sqrt(29) * E * sin(sqrt(29)) / 29)
+    assert q1.exp() == Quaternion(
+        E * cos(sqrt(29)),
+        2 * E * sinc(sqrt(29)),
+        3 * E * sinc(sqrt(29)),
+        4 * E * sinc(sqrt(29)))
+
+    # exp of a purely real quaternion must not divide by a zero vector norm
+    assert q0.exp() == Quaternion(1, 0, 0, 0)
+    assert Quaternion(2, 0, 0, 0).exp() == Quaternion(exp(2), 0, 0, 0)
+    assert Quaternion(x, 0, 0, 0).exp() == Quaternion(exp(x), 0, 0, 0)
+
+    qc = Quaternion(0, 1, I, 0, real_field=False)
+    assert qc*qc == Quaternion(0, 0, 0, 0)
+    assert qc.exp() == Quaternion(1, 1, I, 0)
+
     assert q1.log() == \
     Quaternion(log(sqrt(30)),
                2 * sqrt(29) * acos(sqrt(30)/30) / 29,
@@ -188,6 +199,8 @@ def test_quaternion_functions():
                120 * sqrt(29) * sin(2 * acos(sqrt(30)/30)) / 29)
 
     assert diff(Quaternion(x, x, x, x), x) == Quaternion(1, 1, 1, 1)
+    assert Quaternion(x, 0, 0, 0).exp().diff(x) == \
+        Quaternion(exp(x), 0, 0, 0)
 
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
@@ -457,3 +470,24 @@ def test_issue_28556():
     q3 = Quaternion(r, 0, 0, 0)
     result3 = q3.log()
     assert result3 == Quaternion(log(r), 0, 0, 0)
+
+
+def test_issue_30560():
+    from sympy import sqrt, Rational, cosh, tanh, Symbol, I, S
+    from sympy.algebras.quaternion import Quaternion
+    t = Symbol("t", real=True)
+    tq = Rational(3,4)
+
+    q = Quaternion(
+        2**tq*sqrt(sqrt(2) + 2)*sqrt(cosh(t) + 1)/(4*sqrt(cosh(t))),
+        2**tq*sqrt(sqrt(2) + 2)*sqrt(cosh(t))*tanh(t)/(4*sqrt(cosh(t) + 1)),
+        2**tq*sqrt(2 - sqrt(2))*sqrt(cosh(t) + 1)/(4*sqrt(cosh(t))),
+        (-2**tq*sqrt(2 - sqrt(2))*sqrt(cosh(t))*tanh(t)/(4*sqrt(cosh(t) + 1)))
+    )
+
+    # Norm should be purely real (evaluates exactly to 2**(1/4))
+    assert q.norm() == 2**(S(1)/4)
+
+    # Inverse components should be purely real
+    inv = q.inverse()
+    assert not inv.has(I)

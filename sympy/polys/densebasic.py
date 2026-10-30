@@ -849,16 +849,19 @@ def dmp_ground_nth(f: dmp[Er], N: tuple[int, ...], u: int, K: Domain[Er]) -> Er:
     2
 
     """
+    for n in N:
+        if n < 0:
+            raise IndexError(
+                "exponent `n` must be non-negative, got %i" % n)
+
     v = u
 
     for n in N:
-        if n < 0:
-            raise IndexError("`n` must be non-negative, got %i" % n)
-        elif n >= len(f):
-            return K.zero
-        else:
+        if n < len(f):
             d = dmp_degree(f, v)
             f, v = f[d - n], v - 1
+        else:
+            return K.zero
 
     return _dmp_ground(f)
 

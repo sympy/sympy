@@ -114,12 +114,6 @@ def test_issue_4992():
 
 
 @XFAIL
-def test_issue_16396a():
-    i = integrate(1/(1+sqrt(tan(x))), (x, pi/3, pi/6))
-    assert not i.has(Integral)
-
-
-@XFAIL
 def test_issue_16396b():
     i = integrate(x*sin(x)/(1+cos(x)**2), (x, 0, pi))
     assert not i.has(Integral)

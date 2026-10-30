@@ -14,7 +14,7 @@ from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (atanh, asinh, acosh, acoth, acsch, asech, tanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
-from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
+from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt, Min, Max)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
                                                       atan, cos, cot, csc, sec, sin, tan)
@@ -1487,3 +1487,11 @@ def test_issue_28975():
     assert limit(3**(1/(x-1)), x, 1, dir='+') == oo
     assert limit(3**(tan(x)), x, pi/2, dir='-') == oo
     assert limit(3**(tan(x)), x, pi/2, dir='+') == 0
+
+
+def test_issue_30568():
+    x = Symbol('x', real=True)
+    assert limit(Min(x, x**2), x, 0) == 0
+    assert limit(Max(x, sin(x)), x, 0) == 0
+    assert limit(Min(exp(x), exp(2*x)), x, oo) == oo
+    assert limit(Max(1/x, 1/x**2), x, oo) == 0

@@ -273,6 +273,13 @@ Variable
 Domain
    The domain in which the equation is to be solved.
 
+An ``Equality`` involving the solving variable is accepted as equation
+syntax and solved as the formal equation ``lhs - rhs = 0``. Ordered
+relations retain their relational semantics and are handled as inequalities.
+A relation that is independent of the solving variable is evaluated as a
+logical condition and may give the whole domain, ``EmptySet``, or an
+unresolved ``ConditionSet``.
+
 ``solveset`` removes the ``flags`` argument of ``solve``, which had made the
 input API more complicated and output API inconsistent.
 
@@ -303,10 +310,14 @@ What are the general methods employed by solveset to solve an equation?
    the user is interested to get the solution.
 
 
- * If the given function is a relational (``>=``, ``<=``, ``>``, ``<``), and
-   the domain is real, then ``solve_univariate_inequality`` and solutions are
-   returned. Solving for complex solutions of inequalities, like `x^2 < 0`
-   is not yet supported.
+ * If the given function is an ``Equality`` that depends on the solving
+   variable, it is treated as equation syntax for ``lhs - rhs = 0``.
+
+
+ * If the given function is an ordered relational (``>=``, ``<=``, ``>``,
+   ``<``), and the domain is real, then ``solve_univariate_inequality`` is
+   used and its solution is returned. Solving for complex solutions of
+   inequalities, like `x^2 < 0`, is not yet supported.
 
 
  * Based on the ``domain``, the equation is dispatched to one of the two

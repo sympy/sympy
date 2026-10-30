@@ -1116,3 +1116,9 @@ def test_arrayexpr_convert_array_to_matrix_scalar_coefficients():
     assert convert_array_to_matrix(cg) == ArrayTensorProduct(3, P, M*N)
 
     assert _support_function_tp1_recognize([(1, 2)], [2*M, N]) == 2*M*N
+
+
+def test_convert_array_to_matrix_contraction_of_applyfunc():
+    d = Dummy("d")
+    expr = ArrayContraction(ArrayElementwiseApplyFunc(Lambda(d, sin(d)), M), (0, 1))
+    assert convert_array_to_matrix(expr) == Trace(M.applyfunc(Lambda(d, sin(d))))

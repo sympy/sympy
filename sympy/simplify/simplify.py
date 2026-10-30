@@ -13,6 +13,7 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
+from sympy.core.mul import _unevaluated_Mul, _keep_coeff
 from sympy.core.numbers import Float, I, Integer, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
@@ -41,6 +42,7 @@ from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.powsimp import powsimp
 from sympy.simplify.radsimp import radsimp, fraction, collect_abs
+from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
@@ -662,6 +664,19 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         expr = nsimplify(expr, rational=True)
 
     expr = _bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
+
+    def safe_ratsimp(arg):
+        if arg.is_commutative is not True or arg.is_Atom:
+            return arg
+        n, d = arg.as_numer_denom()
+        if d.is_Number or not n.has(Add):
+            return arg
+        return ratsimp(arg)
+    expr = expr.replace(
+        lambda e: isinstance(e, exp) and not e.is_Pow,
+        lambda a: exp(safe_ratsimp(a.args[0]))).replace(
+        Pow, lambda b, e: safe_ratsimp(b)**safe_ratsimp(e))
+
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
     expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
@@ -1132,6 +1147,24 @@ def logcombine(expr, force=False):
                 other.append(k*log1.pop(k))
 
         return Add(*other)
+
+    if isinstance(expr, Mul):
+        # Push the rational coefficient onto an Add factor with positive numeric log arguments.
+        coefficient, rest = _unevaluated_Mul(*expr.args).as_coeff_Mul()
+        if coefficient.is_Rational and coefficient.q != 1:
+            factors = list(Mul.make_args(rest))
+            for i, term in enumerate(factors):
+                if not term.is_Add:
+                    continue
+                terms = term.as_coefficients_dict()
+                constant = terms.pop(S.One, S.Zero)
+                if (terms and
+                        all(isinstance(k, log) and k.args[0].is_number
+                            and k.args[0].is_positive is True for k in terms)):
+                    factors[i] = Add(coefficient*constant,
+                        *[_keep_coeff(coefficient*v, k) for k, v in terms.items()])
+                    expr = _unevaluated_Mul(*factors)
+                    break
 
     return _bottom_up(expr, f)
 

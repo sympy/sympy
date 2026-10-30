@@ -449,10 +449,13 @@ class Number(AtomicExpr):
             (self.__class__.__name__))
 
     def __floor__(self):
-        return self.floor()
+        return int(self.floor())
 
     def __ceil__(self):
-        return self.ceiling()
+        return int(self.ceiling())
+
+    def __trunc__(self):
+        return int(self)
 
     def _eval_conjugate(self):
         return self
@@ -948,12 +951,6 @@ class Float(Number):
 
     def ceiling(self):
         return Integer(int(_to_int(_mpf_ceil(self._mpf_, self._prec))))
-
-    def __floor__(self):
-        return self.floor()
-
-    def __ceil__(self):
-        return self.ceiling()
 
     @property
     def num(self):
@@ -1606,12 +1603,6 @@ class Rational(Number):
     def ceiling(self):
         return -Integer(-self.p // self.q)
 
-    def __floor__(self):
-        return self.floor()
-
-    def __ceil__(self):
-        return self.ceiling()
-
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -1869,12 +1860,6 @@ class Integer(Rational):
 
     def ceiling(self):
         return Integer(self.p)
-
-    def __floor__(self):
-        return self.floor()
-
-    def __ceil__(self):
-        return self.ceiling()
 
     def __neg__(self):
         return Integer(-self.p)

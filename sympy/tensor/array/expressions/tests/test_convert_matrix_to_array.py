@@ -96,6 +96,14 @@ def test_arrayexpr_convert_matrix_to_array():
     result = ArrayAdd(ArrayContraction(M, (0, 1)), ArrayContraction(N, (0, 1)))
     assert convert_matrix_to_array(expr) == result
 
+    expr = Trace(M) + k + 2
+    result = ArrayContraction(M, (0, 1)) + k + 2
+    assert convert_matrix_to_array(expr) == result
+    assert convert_array_to_matrix(result) == expr
+
+    expr = M[0, 0] + M[1, 1]
+    assert convert_matrix_to_array(expr) == expr
+
     expr = HadamardProduct(M, N)
     result = ArrayDiagonal(ArrayTensorProduct(M, N), (0, 2), (1, 3))
     assert convert_matrix_to_array(expr) == result

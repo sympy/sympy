@@ -1830,7 +1830,7 @@ class acoth(InverseHyperbolicFunction):
             if i_coeff is not None:
                 return -I * acot(i_coeff)
             else:
-                if arg.could_extract_minus_sign():
+                if arg.is_nonzero and arg.could_extract_minus_sign():
                     return -cls(-arg)
 
         if arg.is_zero:

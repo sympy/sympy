@@ -867,6 +867,20 @@ def test_iterable():
 
     assert iterable(Test2()) is True
 
+    # Test that NotIterable properly defines __slots__ so subclasses
+    # with __slots__ do not acquire an unwanted __dict__ (issue 24272)
+    assert NotIterable.__slots__ == ()
+    assert hasattr(NotIterable(), '__dict__') is False
+
+    class TestSlots(NotIterable):
+        __slots__ = ('x',)
+
+    ts = TestSlots()
+    ts.x = 1
+    assert ts.x == 1
+    assert hasattr(ts, '__dict__') is False
+    assert iterable(ts) is False
+
     class Test3:
         pass
 

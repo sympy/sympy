@@ -8,7 +8,7 @@ from sympy import (eye, MatrixSymbol, Matrix)
 from sympy.tensor.array import NDimArray
 from sympy.tensor.array.expressions.array_expressions import (
     ArrayTensorProduct, ArrayAdd,
-    PermuteDims, ArrayDiagonal, _CodegenArrayAbstract)
+    PermuteDims, ArrayDiagonal, _ArrayExpr)
 from sympy.utilities.lambdify import lambdify
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.functions import \
@@ -49,7 +49,7 @@ def _compare_torch_matrix(variables, expr):
     r = f(*random_variables)
     e = expr.subs(dict(zip(variables, random_matrices))).doit()
 
-    if isinstance(e, _CodegenArrayAbstract):
+    if isinstance(e, _ArrayExpr):
         e = e.doit()
 
     if hasattr(e, 'is_number') and e.is_number:

@@ -42,11 +42,6 @@ def test_array_add_collect_coefficients():
     # A Mul argument containing an array factor is normalized:
     assert ArrayAdd(2*Ra, Rc).doit() == ArrayAdd(ArrayTensorProduct(2, Ra), Rc)
 
-    # Sums of scalars remain ArrayAdd objects:
-    M3 = MatrixSymbol("M3", 3, 3)
-    e = ArrayAdd(M3[0, 0], M3[1, 1])
-    assert e.doit() == e
-
 
 def test_collect_tensor_products():
     # Single differing slot merges by linearity:

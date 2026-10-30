@@ -357,6 +357,34 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
+def _reject_by_denominator(d, sol, **flags):
+    """Return True if a solution makes a captured denominator invalid.
+
+    Explanation
+    ===========
+
+    A candidate solution must be rejected if it makes any denominator in the
+    expression affirmatively zero or non-finite (e.g. ``log(0)`` evaluates to
+    ``zoo``). ``checksol`` only catches the zero case, so the value of the
+    denominator at ``sol`` is checked for finiteness as well. When a definite
+    conclusion cannot be reached, the candidate is kept.
+    """
+    if checksol(d, sol, **flags):
+        return True
+    val = d.subs(sol)
+    return bool(val.is_number and val.is_finite is False)
+
+
+def _reject_by_factor_finiteness(factor, sol, **flags):
+    """Return True if a candidate solution makes another factor affirmatively non-finite."""
+    if factor.is_polynomial(*sol):
+        return False
+    val = factor.subs(sol)
+    if val.is_finite is False or val in _illegal:
+        return True
+    return False
+
+
 def solve(f, *symbols, **flags):
     r"""
     Algebraically solves equations and systems of equations.
@@ -1393,13 +1421,14 @@ def _solve(f, *symbols, **flags):
             result.update(set(soln))
         result = [{symbol: v} for v in result]
         if check:
-            # all solutions have been checked but now we must
-            # check that the solutions do not set denominators
-            # in any factor to zero
+            # all solutions have been checked for each individual factor, but
+            # now we must check that the candidate solution does not set any
+            # denominator to zero or to a non-finite value, and that it does
+            # not make other factors non-finite (e.g. 0 * zoo = nan).
             dens = flags.get('_denominators', _simple_dens(f, symbols))
             result = [s for s in result if
-                not any(checksol(den, s, **flags) for den in
-                        dens)]
+                not any(_reject_by_denominator(den, s, **flags) for den in dens)
+                and not any(_reject_by_factor_finiteness(m, s, **flags) for m in f.args)]
         # set flags for quick exit at end; solutions for each
         # factor were already checked and simplified
         check = False
@@ -1433,10 +1462,8 @@ def _solve(f, *symbols, **flags):
                     continue
                 try:
                     v = cond.subs(symbol, candidate)
-                    _eval_simplify = getattr(v, '_eval_simplify', None)
-                    if _eval_simplify is not None:
-                        # unconditionally take the simplification of v
-                        v = _eval_simplify(ratio=2, measure=lambda x: 1)
+                    if hasattr(v, '_eval_simplify'):
+                        v = simplify(v, ratio=2)
                 except TypeError:
                     # incompatible type with condition(s)
                     continue
@@ -1732,11 +1759,11 @@ def _solve(f, *symbols, **flags):
         flags['simplify'] = False
 
     if checkdens:
-        # reject any result that makes any denom. affirmatively 0;
-        # if in doubt, keep it
+        # reject any result that makes any denom. affirmatively 0 or
+        # non-finite; if in doubt, keep it
         dens = _simple_dens(f, symbols)
         result = [r for r in result if
-                  not any(checksol(d, r, **flags)
+                  not any(_reject_by_denominator(d, r, **flags)
                           for d in dens)]
     if check:
         # keep only results if the check is not False
@@ -2678,7 +2705,22 @@ def _tsolve(eq, sym, **flags):
 
     if lhs == sym:
         return [rhs]
+    if not lhs.has_free(sym) and not rhs.has_free(sym):
+        # Inversion eliminated the symbol; an identity may still have
+        # domain restrictions, so it cannot be treated as a list of roots.
+        # e.g. _invert(2**x*4**(-x/2)-1,x) -> (1,1)
+        return None
     try:
+        if lhs.is_Mul and rhs.is_positive is True and not rhs.has_free(sym):
+            factors = [p.as_base_exp() for p in lhs.args]
+            powers = [(b, e) for (b, e) in factors if e.has_free(sym)]
+            if (len(powers) > 1 and
+                all(b.is_positive is True and
+                    not b.has_free(sym) and
+                    e.is_extended_real is True
+                    for b, e in factors)):
+                lhs = Add(*(e*log(b) for b, e in factors))
+                rhs = log(rhs)
         if lhs.is_Add:
             # it's time to try factoring; powdenest is used
             # to try get powers in standard form for better factoring

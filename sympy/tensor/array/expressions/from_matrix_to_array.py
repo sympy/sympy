@@ -15,7 +15,7 @@ from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.tensor.array.expressions.array_expressions import \
     ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
-    _array_diagonal, _array_add, _permute_dims, Reshape, get_shape, _ArrayExpr, _CodegenArrayAbstract
+    _array_diagonal, _array_add, _permute_dims, Reshape, get_shape, _ArrayExpr
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 
 def _array_elementwise_apply_func(function, element):
-    if not isinstance(element, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
+    if not isinstance(element, (MatrixExpr, _ArrayExpr)):
         return function(element)
     return ArrayElementwiseApplyFunc(function, element)
 
@@ -66,7 +66,7 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
     elif isinstance(expr, Pow):
         base = convert_matrix_to_array(expr.base)
         if get_shape(base) == ():
-            if not isinstance(base, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
+            if not isinstance(base, (MatrixExpr, _ArrayExpr)):
                 # Plain scalar base: return a plain scalar power.
                 return base**expr.exp
             if isinstance(expr.exp, (int, Integer)) and expr.exp > 0:
