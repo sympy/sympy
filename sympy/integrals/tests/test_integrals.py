@@ -1823,6 +1823,11 @@ def test_li_integral():
         Ne(y, 0)), (0, True))
 
 
+def test_issue_16396a():
+    i = integrate(1/(1+sqrt(tan(x))), (x, pi/3, pi/6))
+    assert not i.has(Integral)
+
+
 def test_issue_17473():
     x = Symbol('x')
     n = Symbol('n')
