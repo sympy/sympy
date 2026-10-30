@@ -55,7 +55,7 @@ def expand_via_ring_fast(e):
         terms.append(Mul._from_args(factors))
     _addsort(terms)
     return Add._from_args(terms)
-
+    
 def _corem(eq, c):  # helper for extract_additively
     # return co, diff from co*c + diff
     co = []
@@ -3702,26 +3702,6 @@ from sympy.core.add import _addsort
 from sympy.core.mul import _mulsort
 from sympy.polys.rings import ring
 from sympy.polys.domains import QQ
-
-def expand_via_ring_fast(e):
-    gens = sorted(e.free_symbols, key=sympy.default_sort_key)
-    R, *_ = ring(gens, QQ)
-    terms = []
-    for monom, c in R(e).terms():
-        c = QQ.to_sympy(c)
-        factors = [g if k == 1 else Pow(g, k) for g, k in zip(gens, monom) if k]
-        if not factors:
-            terms.append(c)
-            continue
-        if c != 1:
-            factors.insert(0, c)
-        if len(factors) == 1:
-            terms.append(factors[0])
-            continue
-        _mulsort(factors)
-        terms.append(Mul._from_args(factors))
-    _addsort(terms)
-    return Add._from_args(terms)
 
 
 def expand(
