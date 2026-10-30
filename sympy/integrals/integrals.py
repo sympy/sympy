@@ -1001,7 +1001,7 @@ class Integral(AddWithLimits):
         >>> i.free_symbols
         {x}
         >>> i.doit()
-        2*x**3/3 - x/2 - 1/6
+        -1/6 - x/2 + 2*x**3/3
 
         """
 
@@ -1471,7 +1471,7 @@ class Integral(AddWithLimits):
         interval:
 
         >>> e.as_sum(2, 'left')
-        2*sin(5) + 2*sin(3)
+        2*sin(3) + 2*sin(5)
 
         The midpoint rule uses evaluations at the center of each interval:
 
@@ -1490,7 +1490,7 @@ class Integral(AddWithLimits):
 
         >>> s = e.as_sum(2, 'trapezoid')
         >>> s
-        2*sin(5) + sin(3) + sin(7)
+        sin(3) + 2*sin(5) + sin(7)
         >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == s
         True
 
@@ -1516,7 +1516,7 @@ class Integral(AddWithLimits):
 
         >>> e = Integral(x**2, (x, 0, 2))
         >>> e.as_sum(n, 'right').expand()
-        8/3 + 4/n + 4/(3*n**2)
+        4/(3*n**2) + 4/n + 8/3
 
         This shows that the midpoint rule is more accurate, as its error
         term decays as the square of n:
@@ -1761,7 +1761,7 @@ def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
     x*log(x) - x
 
     >>> integrate(log(x), (x, 1, a))
-    a*log(a) - a + 1
+    1 - a + a*log(a)
 
     >>> integrate(x)
     x**2/2

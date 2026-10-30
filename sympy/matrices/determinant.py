@@ -387,7 +387,7 @@ def _charpoly(M, x: str | Expr | None = None,
     >>> M.charpoly(x) == M.charpoly().as_poly(x)
     True
     >>> M.charpoly()('lamda')
-    lamda**2 - lamda - 6
+    -6 - lamda + lamda**2
 
     If the requested generator conflicts with a coefficient symbol,
     it is renamed to avoid the collision:

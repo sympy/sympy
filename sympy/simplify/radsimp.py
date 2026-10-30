@@ -56,7 +56,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     powers of collection variable::
 
         >>> collect(a*x**2 + b*x**2 + a*x - b*x + c, x)
-        c + x**2*(a + b) + x*(a - b)
+        c + x*(a - b) + x**2*(a + b)
 
     The same result can be achieved in dictionary form::
 
@@ -73,7 +73,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     in specification order::
 
         >>> collect(x**2 + y*x**2 + x*y + y + a*y, [x, y])
-        x**2*(y + 1) + x*y + y*(a + 1)
+        x*y + y*(a + 1) + x**2*(y + 1)
 
     Also more complicated expressions can be used as patterns::
 
@@ -124,9 +124,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ``exact`` to None:
 
         >>> collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None)
-        x*exp(x) + 3*x + (y + 2)*sin(x)
+        3*x + x*exp(x) + (y + 2)*sin(x)
         >>> collect(a*x*y + x*y + b*x + x, [x, y], exact=None)
-        x*y*(a + 1) + x*(b + 1)
+        x*(b + 1) + x*y*(a + 1)
 
     You can also apply this function to differential equations, where
     derivatives of arbitrary order can be collected. Note that if you
@@ -482,7 +482,7 @@ def rcollect(expr, *vars):
     >>> expr = (x**2*y + x*y + x + y)/(x + y)
 
     >>> rcollect(expr, y)
-    (x + y*(x**2 + x + 1))/(x + y)
+    (x + y*(1 + x + x**2))/(x + y)
 
     See Also
     ========
@@ -664,14 +664,14 @@ def collect_const(expr, *vars, Numbers=True):
     >>> from sympy.abc import s, x, y, z
     >>> from sympy.simplify.radsimp import collect_const
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
-    sqrt(3)*(sqrt(2) + 2)
+    sqrt(3)*(2 + sqrt(2))
     >>> collect_const(sqrt(3)*s + sqrt(7)*s + sqrt(3) + sqrt(7))
-    (sqrt(3) + sqrt(7))*(s + 1)
+    (s + 1)*(sqrt(3) + sqrt(7))
     >>> s = sqrt(2) + 2
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
-    (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
+    (3 + sqrt(2))*(sqrt(3) + sqrt(7))
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
-    sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+    sqrt(7) + sqrt(3)*(3 + sqrt(2)) + sqrt(7)*(2 + sqrt(2))
 
     The collection is sign-sensitive, giving higher precedence to the
     unsigned values:
@@ -1037,7 +1037,7 @@ def rad_rationalize(num, den):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import rad_rationalize
     >>> rad_rationalize(sqrt(3), 1 + sqrt(2)/3)
-    (-sqrt(3) + sqrt(6)/3, -7/9)
+    (sqrt(6)/3 - sqrt(3), -7/9)
     """
     if not den.is_Add:
         return num, den
@@ -1180,7 +1180,7 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
+    (3, 3 + sqrt(2) + sqrt(5), sqrt(5)/7 + sqrt(10))
     """
     args = sorted(expr.args, key=default_sort_key)
     coeff_muls = [x.as_coeff_Mul() for x in args]

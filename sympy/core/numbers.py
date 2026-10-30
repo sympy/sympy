@@ -2381,7 +2381,7 @@ class AlgebraicNumber(Expr):
 
         >>> a3 = AlgebraicNumber(a2, [2, -1])
         >>> a3.as_expr()
-        -11 + 6*sqrt(2)
+        6*sqrt(2) - 11
 
         reflecting the fact that $(2x - 1) \circ (3x - 5) = 6x - 11$.
 
@@ -2417,7 +2417,7 @@ class AlgebraicNumber(Expr):
         >>> a5 = AlgebraicNumber(CRootOf(cyclotomic_poly(5), -1),
         ...                  [-1, -1, 0, 0], alias=zeta)
         >>> a5.as_poly().as_expr()
-        -zeta**3 - zeta**2
+        -zeta**2 - zeta**3
         >>> a5.evalf()
         1.61803398874989
 
@@ -2441,7 +2441,7 @@ class AlgebraicNumber(Expr):
 
         >>> a6_wrong = AlgebraicNumber(a5, coeffs=[2, 0])
         >>> a6_wrong.as_poly().as_expr()
-        -2*zeta**3 - 2*zeta**2
+        -2*zeta**2 - 2*zeta**3
         >>> a6_wrong.primitive_element().evalf()
         0.309016994374947 + 0.951056516295154*I
 
@@ -2672,7 +2672,7 @@ class AlgebraicNumber(Expr):
         ``a`` is not equal to its own primitive element. Its minpoly
 
         >>> a.minpoly.as_poly().as_expr(x)
-        x**4 - 10*x**2 + 1
+        1 - 10*x**2 + x**4
 
         is that of $\theta$.
 
@@ -3915,7 +3915,7 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
     >>> S.TribonacciConstant > 1
     True
     >>> S.TribonacciConstant.expand(func=True)
-    1/3 + (19 - 3*sqrt(33))**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
+    1/3 + (19 - 3*sqrt(33))**(1/3)/3 + (19 + 3*sqrt(33))**(1/3)/3
     >>> S.TribonacciConstant.is_irrational
     True
     >>> S.TribonacciConstant.n(20)

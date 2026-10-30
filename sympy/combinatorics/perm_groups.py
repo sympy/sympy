@@ -2756,7 +2756,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S3 = SymmetricGroup(3)
         >>> S3.molien()
-        1/(3*(1 - t**3)) + 1/(2*(1 - t)*(1 - t**2)) + 1/(6*(1 - t)**3)
+        1/(6*(1 - t)**3) + 1/(2*(1 - t)*(1 - t**2)) + 1/(3*(1 - t**3))
         """
         x = Symbol('t') if x is None else _sympify(x)
         if self.degree == 0:

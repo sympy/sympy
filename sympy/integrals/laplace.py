@@ -1123,7 +1123,7 @@ def laplace_correspondence(f, fdict, /):
     >>> Z = Function("Z")
     >>> f = laplace_transform(diff(y(t), t, 1) + z(t), t, s, noconds=True)
     >>> laplace_correspondence(f, {y: Y, z: Z})
-    s*Y(s) + Z(s) - y(0)
+    Z(s) - y(0) + s*Y(s)
     >>> f = inverse_laplace_transform(Y(s), s, t)
     >>> laplace_correspondence(f, {y: Y})
     y(t)
@@ -1184,7 +1184,7 @@ def laplace_initial_conds(f, t, fdict, /):
     >>> f = laplace_transform(diff(y(t), t, 3), t, s, noconds=True)
     >>> g = laplace_correspondence(f, {y: Y})
     >>> laplace_initial_conds(g, t, {y: [2, 4, 8, 16, 32]})
-    s**3*Y(s) - 2*s**2 - 4*s - 8
+    -8 - 4*s - 2*s**2 + s**3*Y(s)
     """
     for y, ic in fdict.items():
         for k in range(len(ic)):
@@ -1402,12 +1402,12 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> F = laplace_correspondence(F, {x: X})
     >>> F = laplace_initial_conds(F, t, {x: [0, v]})
     >>> F
-    d*s*X(s) + k*X(s) + m*(s**2*X(s) - v)
+    k*X(s) + m*(s**2*X(s) - v) + d*s*X(s)
     >>> Xs = solve(F, X(s))[0]
     >>> Xs
-    m*v/(d*s + k + m*s**2)
+    m*v/(k + d*s + m*s**2)
     >>> inverse_laplace_transform(Xs, s, t)
-    2*v*exp(-d*t/(2*m))*sin(t*sqrt((-d**2 + 4*k*m)/m**2)/2)*Heaviside(t)/sqrt((-d**2 + 4*k*m)/m**2)
+    2*v*exp(-d*t/(2*m))*sin(t*sqrt((4*k*m - d**2)/m**2)/2)*Heaviside(t)/sqrt((4*k*m - d**2)/m**2)
 
     References
     ==========
@@ -2325,7 +2325,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     >>> from sympy.abc import s, t
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)
-    Heaviside(-a + t)
+    Heaviside(t - a)
 
     See Also
     ========

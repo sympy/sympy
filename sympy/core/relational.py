@@ -950,7 +950,7 @@ class Equality(Relational):
     >>> from sympy import Eq, simplify, exp, cos
     >>> from sympy.abc import x, y
     >>> Eq(y, x + x**2)
-    Eq(y, x**2 + x)
+    Eq(y, x + x**2)
     >>> Eq(2, 5)
     False
     >>> Eq(2, 5, evaluate=False)
@@ -1121,7 +1121,7 @@ class Unequality(Relational):
     >>> from sympy import Ne
     >>> from sympy.abc import x, y
     >>> Ne(y, x+x**2)
-    Ne(y, x**2 + x)
+    Ne(y, x + x**2)
 
     See Also
     ========

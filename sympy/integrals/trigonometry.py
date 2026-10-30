@@ -48,7 +48,7 @@ def trigintegrate(f, x, conds='piecewise'):
     1/cos(x)
 
     >>> trigintegrate(sin(x)*tan(x), x)
-    -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
+    log(sin(x) + 1)/2 - log(sin(x) - 1)/2 - sin(x)
 
     References
     ==========

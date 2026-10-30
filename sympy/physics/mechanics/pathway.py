@@ -305,7 +305,7 @@ class ObstacleSetPathway(PathwayBase):
     >>> pB.pos_from(pA)
     - N.x - N.y
     >>> pC.pos_from(pA)
-    cos(q(t))*N.x + (-sin(q(t)) - 1)*N.y
+    cos(q(t))*N.x + (-1 - sin(q(t)))*N.y
     >>> pD.pos_from(pA)
     sin(q(t))*N.x + (cos(q(t)) - 1)*N.y
 

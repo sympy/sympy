@@ -1,5 +1,12 @@
 from __future__ import annotations
 from sympy import MatAdd, MatMul, Array
+
+def test_trig_phase_shift_order():
+    x = symbols('x')
+    assert latex(cos(x + pi/4)) == r'\\cos{\\left(x + \\frac{\\pi}{4} \\right)}'
+    assert latex(sin(x + pi/4)) == r'\\sin{\\left(x + \\frac{\\pi}{4} \\right)}'
+
+
 from sympy.algebras.quaternion import Quaternion
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.free_groups import free_group

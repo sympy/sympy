@@ -110,7 +110,7 @@ class lerchphi(DefinedFunction):
     closed form:
 
     >>> lerchphi(z, s, a).diff(z)
-    (-a*lerchphi(z, s, a) + lerchphi(z, s - 1, a))/z
+    (lerchphi(z, s - 1, a) - a*lerchphi(z, s, a))/z
     >>> lerchphi(z, s, a).diff(a)
     -s*lerchphi(z, s + 1, a)
 

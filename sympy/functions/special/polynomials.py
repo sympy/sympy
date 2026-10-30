@@ -65,9 +65,9 @@ class jacobi(OrthogonalPolynomial):
     >>> jacobi(0, a, b, x)
     1
     >>> jacobi(1, a, b, x)
-    a/2 - b/2 + x*(a/2 + b/2 + 1)
+    a/2 - b/2 + x*(1 + a/2 + b/2)
     >>> jacobi(2, a, b, x)
-    a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 + x**2*(a**2/8 + a*b/4 + 7*a/8 + b**2/8 + 7*b/8 + 3/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - 1/2
+    -1/2 - a/8 - b/8 + a**2/8 - a*b/4 + b**2/8 + x*(3*a/4 - 3*b/4 + a**2/4 - b**2/4) + x**2*(3/2 + 7*a/8 + 7*b/8 + a**2/8 + a*b/4 + b**2/8)
 
     >>> jacobi(n, a, b, x)
     jacobi(n, a, b, x)
@@ -89,7 +89,7 @@ class jacobi(OrthogonalPolynomial):
     (-1)**n*jacobi(n, b, a, x)
 
     >>> jacobi(n, a, b, 0)
-    gamma(a + n + 1)*hyper((-n, -b - n), (a + 1,), -1)/(2**n*factorial(n)*gamma(a + 1))
+    gamma(1 + a + n)*hyper((-n, -b - n), (a + 1,), -1)/(2**n*factorial(n)*gamma(a + 1))
     >>> jacobi(n, a, b, 1)
     RisingFactorial(a + 1, n)/factorial(n)
 
@@ -97,7 +97,7 @@ class jacobi(OrthogonalPolynomial):
     jacobi(n, conjugate(a), conjugate(b), conjugate(x))
 
     >>> diff(jacobi(n,a,b,x), x)
-    (a/2 + b/2 + n/2 + 1/2)*jacobi(n - 1, a + 1, b + 1, x)
+    (1/2 + a/2 + b/2 + n/2)*jacobi(n - 1, a + 1, b + 1, x)
 
     See Also
     ========
@@ -240,7 +240,7 @@ def jacobi_normalized(n, a, b, x):
     >>> from sympy.abc import n,a,b,x
 
     >>> jacobi_normalized(n, a, b, x)
-    jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)/((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1)))
+    jacobi(n, a, b, x)/sqrt(2**(1 + a + b)*gamma(1 + a + n)*gamma(1 + b + n)/((1 + a + b + 2*n)*factorial(n)*gamma(1 + a + b + n)))
 
     Parameters
     ==========
@@ -311,9 +311,9 @@ class gegenbauer(OrthogonalPolynomial):
     >>> gegenbauer(1, a, x)
     2*a*x
     >>> gegenbauer(2, a, x)
-    -a + x**2*(2*a**2 + 2*a)
+    x**2*(2*a + 2*a**2) - a
     >>> gegenbauer(3, a, x)
-    x**3*(4*a**3/3 + 4*a**2 + 8*a/3) + x*(-2*a**2 - 2*a)
+    x*(-2*a - 2*a**2) + x**3*(8*a/3 + 4*a**2 + 4*a**3/3)
 
     >>> gegenbauer(n, a, x)
     gegenbauer(n, a, x)
@@ -597,7 +597,7 @@ class chebyshevu(OrthogonalPolynomial):
     n + 1
 
     >>> diff(chebyshevu(n, x), x)
-    (-x*chebyshevu(n, x) + (n + 1)*chebyshevt(n + 1, x))/(x**2 - 1)
+    ((n + 1)*chebyshevt(n + 1, x) - x*chebyshevu(n, x))/(x**2 - 1)
 
     See Also
     ========
@@ -1128,7 +1128,7 @@ class hermite_prob(OrthogonalPolynomial):
     >>> hermite_prob(1, x)
     x
     >>> hermite_prob(5, x)
-    x**5 - 10*x**3 + 15*x
+    15*x - 10*x**3 + x**5
     >>> diff(hermite_prob(n,x), x)
     n*hermite_prob(n - 1, x)
     >>> hermite_prob(n, -x)
@@ -1222,9 +1222,9 @@ class laguerre(OrthogonalPolynomial):
     >>> laguerre(1, x)
     1 - x
     >>> laguerre(2, x)
-    x**2/2 - 2*x + 1
+    1 - 2*x + x**2/2
     >>> laguerre(3, x)
-    -x**3/6 + 3*x**2/2 - 3*x + 1
+    1 - 3*x + 3*x**2/2 - x**3/6
 
     >>> laguerre(n, x)
     laguerre(n, x)
@@ -1330,12 +1330,11 @@ class assoc_laguerre(OrthogonalPolynomial):
     >>> assoc_laguerre(0, a, x)
     1
     >>> assoc_laguerre(1, a, x)
-    a - x + 1
+    1 + a - x
     >>> assoc_laguerre(2, a, x)
-    a**2/2 + 3*a/2 + x**2/2 + x*(-a - 2) + 1
+    1 + 3*a/2 + a**2/2 + x**2/2 + x*(-2 - a)
     >>> assoc_laguerre(3, a, x)
-    a**3/6 + a**2 + 11*a/6 - x**3/6 + x**2*(a/2 + 3/2) +
-        x*(-a**2/2 - 5*a/2 - 3) + 1
+    1 + 11*a/6 + a**2 + x*(-3 - 5*a/2 - a**2/2) + a**3/6 - x**3/6 + x**2*(a/2 + 3/2)
 
     >>> assoc_laguerre(n, a, 0)
     binomial(a + n, a)
@@ -1350,7 +1349,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     -assoc_laguerre(n - 1, a + 1, x)
 
     >>> diff(assoc_laguerre(n, a, x), a)
-    Sum(assoc_laguerre(_k, a, x)/(-a + n), (_k, 0, n - 1))
+    Sum(assoc_laguerre(_k, a, x)/(n - a), (_k, 0, n - 1))
 
     Parameters
     ==========

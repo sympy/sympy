@@ -246,9 +246,9 @@ class lowergamma(DefinedFunction):
     >>> lowergamma(s, x)
     lowergamma(s, x)
     >>> lowergamma(3, x)
-    -2*(x**2/2 + x + 1)*exp(-x) + 2
+    2 - 2*(1 + x + x**2/2)*exp(-x)
     >>> lowergamma(-S(1)/2, x)
-    -2*sqrt(pi)*erf(sqrt(x)) - 2*exp(-x)/sqrt(x)
+    -2*exp(-x)/sqrt(x) - 2*sqrt(pi)*erf(sqrt(x))
 
     See Also
     ========
@@ -429,9 +429,9 @@ class uppergamma(DefinedFunction):
     >>> uppergamma(s, x)
     uppergamma(s, x)
     >>> uppergamma(3, x)
-    2*(x**2/2 + x + 1)*exp(-x)
+    2*(1 + x + x**2/2)*exp(-x)
     >>> uppergamma(-S(1)/2, x)
-    -2*sqrt(pi)*erfc(sqrt(x)) + 2*exp(-x)/sqrt(x)
+    2*exp(-x)/sqrt(x) - 2*sqrt(pi)*erfc(sqrt(x))
     >>> uppergamma(-2, x)
     expint(3, x)/x**2
 
@@ -589,11 +589,11 @@ class polygamma(DefinedFunction):
     >>> polygamma(0, 1)
     -EulerGamma
     >>> polygamma(0, 1/S(2))
-    -2*log(2) - EulerGamma
+    -EulerGamma - 2*log(2)
     >>> polygamma(0, 1/S(3))
-    -log(3) - sqrt(3)*pi/6 - EulerGamma - log(sqrt(3))
+    -EulerGamma - sqrt(3)*pi/6 - log(3) - log(sqrt(3))
     >>> polygamma(0, 1/S(4))
-    -pi/2 - log(4) - log(2) - EulerGamma
+    -EulerGamma - pi/2 - log(2) - log(4)
     >>> polygamma(0, 2)
     1 - EulerGamma
     >>> polygamma(0, 23)
@@ -643,7 +643,7 @@ class polygamma(DefinedFunction):
     2*harmonic(x - 1, 3) - 2*zeta(3)
     >>> ni = Symbol("n", integer=True)
     >>> polygamma(ni, x).rewrite(harmonic)
-    (-1)**(n + 1)*(-harmonic(x - 1, n + 1) + zeta(n + 1))*factorial(n)
+    (-1)**(n + 1)*(zeta(n + 1) - harmonic(x - 1, n + 1))*factorial(n)
 
     See Also
     ========
@@ -910,13 +910,13 @@ class loggamma(DefinedFunction):
     >>> from sympy import expand_func
     >>> L = loggamma(S(16)/3)
     >>> expand_func(L).doit()
-    -5*log(3) + loggamma(1/3) + log(4) + log(7) + log(10) + log(13)
+    -5*log(3) + log(4) + log(7) + log(10) + log(13) + loggamma(1/3)
     >>> L = loggamma(S(19)/4)
     >>> expand_func(L).doit()
-    -4*log(4) + loggamma(3/4) + log(3) + log(7) + log(11) + log(15)
+    log(3) - 4*log(4) + log(7) + log(11) + log(15) + loggamma(3/4)
     >>> L = loggamma(S(23)/7)
     >>> expand_func(L).doit()
-    -3*log(7) + log(2) + loggamma(2/7) + log(9) + log(16)
+    log(2) - 3*log(7) + log(9) + log(16) + loggamma(2/7)
 
     The ``loggamma`` function has the following limits towards infinity:
 
@@ -1273,7 +1273,7 @@ class multigamma(DefinedFunction):
     >>> p = Symbol('p', positive=True, integer=True)
 
     >>> multigamma(x, p)
-    pi**(p*(p - 1)/4)*Product(gamma(-_k/2 + x + 1/2), (_k, 1, p))
+    pi**(p*(p - 1)/4)*Product(gamma(1/2 - _k/2 + x), (_k, 1, p))
 
     Several special values are known:
 

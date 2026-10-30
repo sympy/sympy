@@ -887,7 +887,7 @@ class binomial(CombinatorialFunction):
     binomial(n, 3)
 
     >>> binomial(n, 3).expand(func=True)
-    n**3/6 - n**2/2 + n/3
+    n/3 - n**2/2 + n**3/6
 
     >>> expand_func(binomial(n, 3))
     n*(n - 2)*(n - 1)/6

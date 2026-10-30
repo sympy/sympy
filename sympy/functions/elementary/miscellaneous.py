@@ -262,7 +262,7 @@ def root(arg, n, k=0, evaluate=None):
     [-1, 1]
 
     >>> [rootof(x**3 - 1,i) for i in range(3)]
-    [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]
+    [1, -1/2 - sqrt(3)*I/2, sqrt(3)*I/2 - 1/2]
 
     >>> [rootof(x**4 - 1,i) for i in range(4)]
     [-1, 1, -I, I]

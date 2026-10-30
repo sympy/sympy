@@ -14,6 +14,7 @@ from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import Poly
 from sympy.series.order import O
 from sympy.simplify.radsimp import collect
+from sympy.simplify.simplify import simplify
 
 from sympy.solvers.ode import (classify_ode,
     homogeneous_order, dsolve)
@@ -1105,11 +1106,14 @@ def test_issue_22604():
     assert x1sol == Eq(x1(t), (-sqrt(5) + 3 + 3*sqrt(2)*sqrt(3 - sqrt(5)))
                        *cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/10 - sqrt(sqrt(5) + 3)
                        *(-sqrt(3 - sqrt(5)) + 2*sqrt(2))*cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/10)
-    assert x2sol == Eq(x2(t), (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
-                        + 2*sqrt(5) + 3*sqrt(10)*sqrt(3 - sqrt(5)))*cos(sqrt(2)
-                        *t*sqrt(3 - sqrt(5))/2)/20 + sqrt(sqrt(5) + 3)*(-2*sqrt(2) - sqrt(5)
-                        *sqrt(3 - sqrt(5)) + sqrt(3 - sqrt(5)) + 2*sqrt(10))
-                        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20)
+    # The sign can be distributed either inside or outside this coefficient.
+    assert simplify(x2sol.rhs - (
+        (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
+         + 2*sqrt(5) + 3*sqrt(10)*sqrt(3 - sqrt(5)))
+        *cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/20
+        + sqrt(sqrt(5) + 3)*(-2*sqrt(2) - sqrt(5)
+          *sqrt(3 - sqrt(5)) + sqrt(3 - sqrt(5)) + 2*sqrt(10))
+        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20)) == 0
 
 def test_issue_22462():
     for de in [
