@@ -2760,3 +2760,17 @@ def test_issue_27062():
     assert solve(x*log(x - 1), x) == [0, 2]
     pw = Piecewise((x - 1, x > 0), (S.Infinity, True))
     assert solve((x - 2)*pw, x) == [1, 2]
+
+def test_issue_solve_nan_comparison_complex_system():
+    x, y = symbols('x y')
+    expr = (
+        sqrt(3)*x**5 - 3*I*x**5 - 2*sqrt(3)*x**4*y - 12*I*x**4*y
+        - 8*sqrt(3)*x**3*y**2 - 12*I*x**3*y**2 - 10*sqrt(3)*x**2*y**3
+        - 6*I*x**2*y**3 - 7*sqrt(3)*x*y**4 + 3*I*x*y**4 - sqrt(3)*y**5 + 3*I*y**5
+    )
+    res = solve([expr], (x, y))
+    assert res == [
+        (-y/2 - sqrt(3)*I*y/2, y),
+        (-y/2 + sqrt(3)*I*y/2, y),
+    ]
+
