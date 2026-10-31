@@ -546,6 +546,16 @@ def test_doitdoit():
     assert done == done.doit()
 
 
+def test_Subs_doit_removes_only_self_mappings():
+    assert Subs(x + y + z, (x, y, z), (x, y, 1)).doit() == x + y + 1
+
+
+def test_Subs_subs_with_function_class_variable():
+    s = Subs(f(x).diff(x)*y, f, Lambda(t, t**2))
+    assert s.subs(y, 2) == Subs(2*f(x).diff(x), f, Lambda(t, t**2))
+    assert s.subs(y, 2).doit() == s.doit().subs(y, 2) == 4*x
+
+
 @XFAIL
 def test_Subs2():
     # this reflects a limitation of subs(), probably won't fix

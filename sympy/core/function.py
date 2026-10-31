@@ -2594,12 +2594,10 @@ class Subs(Expr):
         e, v, p = self.args
 
         # remove self mappings
-        for i, (vi, pi) in enumerate(zip(v, p)):
-            if vi == pi:
-                v = v[:i] + v[i + 1:]
-                p = p[:i] + p[i + 1:]
-        if not v:
+        pairs = [(vi, pi) for vi, pi in zip(v, p) if vi != pi]
+        if not pairs:
             return self.expr
+        v, p = zip(*pairs)
 
         if isinstance(e, Derivative):
             # apply functions first, e.g. f -> cos
@@ -2705,7 +2703,10 @@ class Subs(Expr):
             for j in range(i, len(self.variables)):
                 pt[j] = pt[j]._subs(old, new)
             return self.func(self.expr, self.variables, pt)
-        v = [i._subs(old, new) for i in self.variables]
+        # a function class, e.g. f in Subs(f(x).diff(x), f, g), has no
+        # instance to substitute into
+        v = [i if isinstance(i, type) else i._subs(old, new)
+            for i in self.variables]
         if v != list(self.variables):
             return self.func(self.expr, self.variables + (old,), pt + [new])
         expr = self.expr._subs(old, new)
