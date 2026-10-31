@@ -407,6 +407,15 @@ def test_lambda_subs_capture():
     assert r.variables[0] != integral.variables[0]
     assert r(5).doit() == x + y
 
+    # old containing a bound symbol does not match inside
+    f = Lambda(x, x**2)
+    assert f.subs(x**2, z) == f
+    assert (x**2 + f).subs(x**2, z) == z + f
+    f = Lambda((x, y), x*y + z)
+    assert f.subs(x*y, z) == f
+    assert f.subs(x*z, y) == f
+    assert Lambda(x, x + y**2).subs(y**2, z) == Lambda(x, x + z)
+
 
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
