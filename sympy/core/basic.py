@@ -759,13 +759,9 @@ class Basic(Printable):
             x = x.subs(d)
 
 
-            # Distinguish every binding with a unique Dummy; a bound
-            # expression, e.g. x**2 in Subs(f(x), x**2, y), has no name.
-            reps = {
-                v: Dummy(getattr(v, 'name', str(v)),
-                    commutative=v.is_commutative)
-                for v in x.bound_symbols
-            }
+            # Distinguish every binding with a unique Dummy
+            reps = {v: Dummy(commutative=v.is_commutative)
+                for v in x.bound_symbols}
             restore.update({dummy: v for v, dummy in reps.items()})
 
             x = x.xreplace(reps)
