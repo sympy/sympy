@@ -777,4 +777,3 @@ def test_issue_30874():
         assert And(Eq(0, Add(x, Mul(-1, I)))) == And(Eq(0, Add(x, Mul(-1, I))))
         assert Mul(2, 3, I).evalf() == Add(0, 6.0*I)
         assert Mul(-1, I).evalf() == Add(0, Mul(-1.0, I))
-
