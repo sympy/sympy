@@ -255,7 +255,7 @@ one needs to use ``extension`` keyword::
      2
     x  - 2⋅x - 3
     ────────────
-       x - √2
+       -√2 + x
 
 Setting ``extension=True`` tells :func:`~.cancel` to find minimal algebraic
 number domain for the coefficients of ``f/g``. The automatically inferred
