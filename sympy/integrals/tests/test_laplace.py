@@ -473,10 +473,10 @@ def test_laplace_transform():
             ((-sin(s**2/(2*pi))*fresnels(s/pi) +
               sqrt(2)*sin(s**2/(2*pi) + pi/4)/2 -
               cos(s**2/(2*pi))*fresnelc(s/pi))/s, 0, True))
-    assert (laplace_transform(fresnelc(t), t, s, simplify=True) ==
-            ((sin(s**2/(2*pi))*fresnelc(s/pi) -
-              cos(s**2/(2*pi))*fresnels(s/pi) +
-              sqrt(2)*cos(s**2/(2*pi) + pi/4)/2)/s, 0, True))
+    assert laplace_transform(fresnelc(t), t, s, simplify=True) ==(
+        (sqrt(2)*sin(pi/4 - s**2/(2*pi))/2 +
+        sin(s**2/(2*pi))*fresnelc(s/pi) - cos(s**2/(2*pi))*fresnels(s/pi))/s,
+        0, True)
     # Matrix tests
     Mt = Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]])
     Ms = Matrix([[1/(s - 1), (s + 1)**(-2)],
