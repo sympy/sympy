@@ -535,6 +535,9 @@ def test_inverse_laplace_transform():
             f(x)*Heaviside(x))
     assert (inverse_laplace_transform(LaplaceTransform(f(t), t, s), x, t) ==
             LaplaceTransform(f(t), t, s)*DiracDelta(t))
+    assert (ILT(LaplaceTransform(f(t), t, s - 2)) ==
+            InverseLaplaceTransform(LaplaceTransform(f(t), t, s - 2), s, t,
+                                    None))
 
     # Tests for the rules in Bateman54.
 
