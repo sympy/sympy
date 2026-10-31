@@ -1471,7 +1471,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
     -2 + 2*GoldenRatio
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-    1/2 - I*sqrt(sqrt(5)/10 + 1/4)
+    -I*sqrt(sqrt(5)/10 + 1/4) + 1/2
     >>> nsimplify(I**I, [pi])
     exp(-pi/2)
     >>> nsimplify(pi, tolerance=0.01)

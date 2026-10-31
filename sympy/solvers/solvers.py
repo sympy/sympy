@@ -545,16 +545,16 @@ def solve(f, *symbols, **flags):
         >>> solve(x + 2 + sqrt(3), x + 2)
         [-sqrt(3)]
         >>> solve((x + 2 + sqrt(3), x + 4 + y), y, x + 2)
-        {y: -2 + sqrt(3), x + 2: -sqrt(3)}
+        {y: sqrt(3) - 2, x + 2: -sqrt(3)}
 
         * Nothing heroic is done in this implicit solving so you may end up
           with a symbol still in the solution:
 
             >>> eqs = (x*y + 3*y + sqrt(3), x + 4 + y)
             >>> solve(eqs, y, x + 2)
-            {y: -sqrt(3)/(x + 3), x + 2: -2*x/(x + 3) - 6/(x + 3) + sqrt(3)/(x + 3)}
+            {y: -sqrt(3)/(x + 3), x + 2: sqrt(3)/(x + 3) - 2*x/(x + 3) - 6/(x + 3)}
             >>> solve(eqs, y*x, x)
-            {x: -y - 4, x*y: -3*y - sqrt(3)}
+            {x: -y - 4, x*y: -sqrt(3) - 3*y}
 
         * If you attempt to solve for a number, remember that the number
           you have obtained does not necessarily mean that the value is
@@ -675,12 +675,7 @@ def solve(f, *symbols, **flags):
     instances will be returned instead:
 
         >>> solve(x**3 - x + 1)
-        [-1/((-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)) -
-        (-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3,
-        -(-1/2 + sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
-        1/((-1/2 + sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)),
-        -(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
-        1/(3*sqrt(69)/2 + 27/2)**(1/3)]
+        [-(3*sqrt(69)/2 + 27/2)**(1/3)*(-sqrt(3)*I/2 - 1/2)/3 - 1/((3*sqrt(69)/2 + 27/2)**(1/3)*(-sqrt(3)*I/2 - 1/2)), -(3*sqrt(69)/2 + 27/2)**(1/3)*(sqrt(3)*I/2 - 1/2)/3 - 1/((3*sqrt(69)/2 + 27/2)**(1/3)*(sqrt(3)*I/2 - 1/2)), -(3*sqrt(69)/2 + 27/2)**(1/3)/3 - 1/(3*sqrt(69)/2 + 27/2)**(1/3)]
         >>> solve(x**3 - x + 1, cubics=False)
         [CRootOf(x**3 - x + 1, 0),
          CRootOf(x**3 - x + 1, 1),
@@ -698,7 +693,7 @@ def solve(f, *symbols, **flags):
 
         >>> eq = x**3 + 3*x**2 + x - 1
         >>> solve(eq, cubics=False)
-        [-1, -1 + sqrt(2), -sqrt(2) - 1]
+        [-1, -sqrt(2) - 1, sqrt(2) - 1]
 
     **Solving Equations Involving Radicals**
 
@@ -2693,7 +2688,7 @@ def _tsolve(eq, sym, **flags):
     >>> from sympy.abc import x
 
     >>> list(ordered(tsolve(3**(2*x + 5) - 4, x)))
-    [-5/2 + log(2)/log(3), (-5*log(3)/2 + log(2) + I*pi)/log(3)]
+    [log(2)/log(3) - 5/2, (log(2) - 5*log(3)/2 + I*pi)/log(3)]
 
     >>> tsolve(log(x) + 2*x, x)
     [LambertW(2)/2]

@@ -448,7 +448,7 @@ def bivariate_type(f, x, y, *, first=True):
     >>> usol = solve(pu, u); usol
     [sqrt(3)]
     >>> [solve(uxy - s) for s in solve(pu, u)]
-    [[{x: -y + sqrt(3)}]]
+    [[{x: sqrt(3) - y}]]
     >>> all(eq.subs(s).equals(0) for sol in _ for s in sol)
     True
 

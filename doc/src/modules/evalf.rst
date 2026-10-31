@@ -405,11 +405,11 @@ Here are several more advanced examples:
     -- + ---
     17    17
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-               ___________
-              /   ___
-    1        /  \/ 5    1
-    - - I*  /   ----- + -
-    2     \/      10    4
+                        ___________    
+                       /   ___         
+                      /  \/ 5    1    1
+               - I*  /   ----- + -  + -
+                   \/     10     4    2
     >>> nsimplify(I**I, [pi])
      -pi
      ----

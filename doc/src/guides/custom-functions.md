@@ -686,7 +686,7 @@ nonnegative for nonreal $x$, for example:
 ```py
 >>> from sympy import I
 >>> 1 - cos(pi + I*pi)
-1 + cosh(pi)
+cosh(pi) + 1
 >>> (1 - cos(pi + I*pi)).evalf()
 12.5919532755215
 ```
