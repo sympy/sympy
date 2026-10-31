@@ -1290,10 +1290,10 @@ def test_sysode_linear_neq_order1_type3():
 
     eqs2 = [Eq(Derivative(f(x), x), x**2*g(x) + x*f(x)),
             Eq(Derivative(g(x), x), 2*x**2*f(x) + (3*x**2 + x)*g(x))]
-    sol2 = [Eq(f(x), (sqrt(17)*C1/17 + C2*(17 - 3*sqrt(17))/34)*exp(x**3*(3 + sqrt(17))/6 + x**2/2) -
-             exp(x**3*(3 - sqrt(17))/6 + x**2/2)*(sqrt(17)*C1/17 + C2*(3*sqrt(17) + 17)*Rational(-1, 34))),
-            Eq(g(x), exp(x**3*(3 - sqrt(17))/6 + x**2/2)*(C1*(17 - 3*sqrt(17))/34 + sqrt(17)*C2*Rational(-2,
-             17)) + exp(x**3*(3 + sqrt(17))/6 + x**2/2)*(C1*(3*sqrt(17) + 17)/34 + sqrt(17)*C2*Rational(2, 17)))]
+    sol2 = [Eq(f(x), (sqrt(17)*C1/17 - C2*(3*sqrt(17) - 17)/34)*exp(x**3*(sqrt(17) + 3)/6 + x**2/2) -
+             (sqrt(17)*C1/17 - C2*(3*sqrt(17) + 17)/34)*exp(-x**3*(sqrt(17) - 3)/6 + x**2/2)),
+            Eq(g(x), -(2*sqrt(17)*C2/17 + C1*(3*sqrt(17) - 17)/34)*exp(-x**3*(sqrt(17) - 3)/6 + x**2/2) +
+             (2*sqrt(17)*C2/17 + C1*(3*sqrt(17) + 17)/34)*exp(x**3*(sqrt(17) + 3)/6 + x**2/2))]
     assert dsolve(eqs2) == sol2
     assert checksysodesol(eqs2, sol2) == (True, [0, 0])
 
@@ -1949,9 +1949,9 @@ def test_linodesolve():
     ceq = canonical_odes(eq, func, t)
     (A1, A0), b = linear_ode_to_matrix(ceq[0], func, t, 1)
     A = A0
-    sol = [C1*exp(t*(-Rational(1,2) + sqrt(5)/2)) + C2*exp(t*(-sqrt(5)/2 - Rational(1,2))),
-           C1*(Rational(1,2) + sqrt(5)/2)*exp(t*(-Rational(1,2) + sqrt(5)/2))
-           + C2*(Rational(1,2) - sqrt(5)/2)*exp(t*(-sqrt(5)/2 - Rational(1,2)))]
+    sol = [C1*exp(t*(-sqrt(5)/2 - Rational(1,2))) + C2*exp(t*(sqrt(5)/2 - Rational(1,2))),
+           C1*(Rational(1,2) - sqrt(5)/2)*exp(t*(-sqrt(5)/2 - Rational(1,2)))
+           + C2*(Rational(1,2) + sqrt(5)/2)*exp(t*(sqrt(5)/2 - Rational(1,2)))]
     assert constant_renumber(linodesolve(A, t), variables=Tuple(*eq).free_symbols) == sol
 
     # Testing the Errors
