@@ -263,6 +263,9 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         return "%s(%s)" % (self._module_format(self._module + '.mod'), ', '.join(
             (self._print(arg) for arg in expr.args)))
 
+    def _print_frac(self, expr):
+        return "%s(%s, 1)" % (self._module_format(self._module + '.mod'), self._print(expr.args[0]))
+
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.real'), self._print(expr.args[0]))
 
