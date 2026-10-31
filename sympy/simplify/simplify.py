@@ -625,7 +625,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if _eval_simplify is not None:
         return _eval_simplify(**kwargs)
 
-    original_expr = expr = collect_abs(signsimp(expr))
+    original_expr = expr
+    expr = collect_abs(signsimp(expr))
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
