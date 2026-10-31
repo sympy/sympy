@@ -552,6 +552,38 @@ def test_Subs2():
     assert Subs(f(x), x**2, x).doit() == f(sqrt(x))
 
 
+
+def test_derivative_subs_commutes():
+    # f(x) and g(x) share a symbol but are independent
+    # variables of differentiation.
+    v = Derivative(f(x), x)
+    d = Derivative(h(v, g(x)), v, g(x), evaluate=False)
+    result = d.subs(f, sin)
+
+    assert isinstance(result, Derivative)
+    assert result.variables == (g(x),)
+    assert isinstance(result.expr, Subs)
+
+    # f() has no free symbols, but a Derivative can still
+    # depend on it as a differentiation variable.
+    a = f()
+    v = Derivative(g(a), a)
+    d = Derivative(h(v, a), v, a, evaluate=False)
+    result = d.subs(g, sin)
+    assert result == Subs(d, g, sin)
+
+    # Reordering these derivatives would lose the term
+    # created by differentiating g(a) with respect to a.
+    d = Derivative(a**2*g(a), a, v, a, evaluate=False)
+    assert d.doit() == 2*a
+
+    result = d.subs(g, sin)
+    assert result == Subs(d, g, sin)
+
+    # Differentiation before and after substitution must agree.
+    assert result.doit() == d.doit().subs(g, sin).doit() == 2*a
+
+
 def test_Subs_variable_inside_wrt_variable():
     df = f(x).diff(x)
     s = Subs(Derivative(df**2, df), f(x), 2*x)

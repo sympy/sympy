@@ -1979,12 +1979,12 @@ class Derivative(Expr):
                 def commutes(v):
                     if isinstance(v, (Symbol, AppliedUndef)) or v.is_Indexed:
                         return True
-                    # a replaced Derivative, e.g. f(x).diff(x), is independent
-                    # of the variables outside Subs if neither it nor what
-                    # replaces it shares a symbol with them
-                    return isinstance(v, Derivative) and v in dummies and not (
-                        (v.free_symbols | dummies[v][1].free_symbols)
-                        & outer_free)
+                    if not isinstance(v, Derivative) or v not in dummies:
+                        return False
+                    replacement = dummies[v][1]
+                    return not any(
+                        _depends_on(v, w) or _depends_on(replacement, w)
+                        for w, _ in outer)
 
                 if all(commutes(v) for v in oldv):
                     # A Dummy is independent of the other variables, so
