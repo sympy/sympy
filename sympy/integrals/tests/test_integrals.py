@@ -2428,3 +2428,9 @@ def test_reverse_limits():
     L = Integral(x*y, (x, a, b), y)
     assert L.reverse_limits() == Integral(-x*y, (x, b, a), y)
     assert L.reverse_limits(x) == Integral(-x*y, (x, b, a), y)
+
+
+def test_integral_derivative_of_function():
+    # with x positive, x**2 -> u turns f(x).diff(x) into a Subs over x**2
+    i = Integral(x**2*cos(f(x).diff(x)), (x, 0, 1))
+    assert i.doit() == i
