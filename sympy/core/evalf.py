@@ -632,6 +632,9 @@ def evalf_add(v: 'Add', prec: int, options: OPT_DICT) -> TMP_RES:
 
 
 def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
+    from fractions import Fraction
+    from .numbers import Rational
+
     res = pure_complex(v)
     if res:
         # the only pure complex that is a mul is h*I
@@ -684,9 +687,6 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
     # to be multiplied out after the first phase.
     direction = 0
     complex_factors = []
-    from fractions import Fraction
-    from .numbers import Rational
-
     exact_re, exact_im = Fraction(1), Fraction(0)
     have_exact = False
 
