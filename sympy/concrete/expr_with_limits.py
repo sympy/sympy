@@ -405,7 +405,8 @@ class ExprWithLimits(Expr):
                 if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
                     sub_into_func = False
                     break
-            if isinstance(old, (AppliedUndef, UndefinedFunction)):
+            if isinstance(old, (AppliedUndef, UndefinedFunction)) and (
+                    func.has(old)):
                 # new may only mention a variable of integration that old
                 # already contains, otherwise new would be captured by it
                 sy2 = {v for v in self.variables if _has_free_variable(new, v)}
