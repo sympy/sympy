@@ -8,7 +8,7 @@ from sympy.assumptions.ask import Q
 from sympy.core.basic import (Basic, Atom, as_Basic,
     _atomic, _aresame)
 from sympy.core.containers import Tuple
-from sympy.core.function import Function, Lambda
+from sympy.core.function import Function, Lambda, Subs
 from sympy.core.numbers import I, pi, Float
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol, Dummy
@@ -318,6 +318,15 @@ def test_as_dummy_scopes():
 
     # Canonicalization is idempotent.
     assert expected.as_dummy() == expected
+
+
+def test_as_dummy_bound_expression():
+    # a variable of Subs need not be a Symbol
+    x, u, _0 = symbols('x u _0')
+    f = Function('f')
+    s = Subs(f(x).diff(x), x**2, u)
+    assert s.as_dummy() == Subs(f(x).diff(x), _0, u)
+    assert s.has_free(x)
 
 
 def test_canonical_variables():

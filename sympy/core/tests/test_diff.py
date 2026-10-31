@@ -122,7 +122,7 @@ def test_diff_nth_derivative():
     expr2 = diff(f(x), (x, 2))
     expr3 = diff(f(x), (x, n))
 
-    assert expr.subs(sin(x), cos(-x)) == Derivative(cos(-x), (x, n))
+    assert expr.subs(sin(x), cos(-x)) == Subs(expr, sin(x), cos(-x))
     assert expr.subs(n, 1).doit() == cos(x)
     assert expr.subs(n, 2).doit() == -sin(x)
 
