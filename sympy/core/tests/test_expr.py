@@ -2396,6 +2396,23 @@ def test_issue_24045():
     assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
 
 
+def test_issue_2834():
+    from unittest.mock import patch
+    from sympy import pretty, latex
+
+    _r0 = Rational(1, 2)
+    _r1 = Rational(4, 5)
+    _r2 = Rational(9, 10)
+    x0 = -x
+    x1 = 1/(1 + (1 + exp(-abs(_r2 + x0)))/(1 + exp(-abs(_r1 + x0))))
+    f = Integral(x1, (x, 0, _r0)) + Integral(1 - x1, (x, _r0, 1))
+    with patch.object(Integral, 'evalf',
+                      side_effect=AssertionError("Printing called evalf")):
+        str(f)
+        pretty(f)
+        latex(f)
+
+
 def test__unevaluated_Mul():
     A, B = symbols('A B', commutative=False)
     assert _unevaluated_Mul(x, A, B, S(2), A).args == (2, x, A, B, A)
