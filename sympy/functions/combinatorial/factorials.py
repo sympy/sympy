@@ -12,7 +12,7 @@ from sympy.ntheory import sieve
 from sympy.ntheory.residue_ntheory import binomial_mod
 from sympy.polys.polytools import Poly
 
-from math import factorial as _factorial, prod, sqrt as _sqrt
+from math import factorial as _factorial, prod, sqrt as _sqrt, gcd
 
 class CombinatorialFunction(DefinedFunction):
     """Base class for combinatorial functions. """
@@ -949,11 +949,31 @@ class binomial(CombinatorialFunction):
                 if _gmpy is not None:
                     return Integer(_gmpy.bincoef(n, k))
 
-                d, result = n - k, 1
-                for i in range(1, k + 1):
-                    d += 1
-                    result = result * d // i
-                return Integer(result)
+                d = n-k
+                def product(lo,hi):
+                    if hi-lo <= 128:
+                        p=q=1
+                        for i in range(lo,hi):
+                            p*=d+i
+                            q*=i
+                        g=gcd(p,q) #this is known to be divisible by factorial(hi-lo) but using this fact doesn't seem to make it any faster
+                        return p//g,q//g
+
+                    mid=(lo+hi)//2
+                    plo,qlo = product(lo,mid)
+                    phi,qhi = product(mid,hi)
+
+                    g = gcd(plo,qhi)
+                    plo //= g
+                    qhi //= g
+                    g = gcd(phi,qlo)
+                    phi //= g
+                    qlo //= g
+
+                    return plo*phi,qlo*qhi
+
+                p,q=product(1,k+1)
+                return Integer(p//q)
             else:
                 d, result = n - k, 1
                 for i in range(1, k + 1):
