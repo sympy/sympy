@@ -132,11 +132,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     [-h + x, -sqrt(2)*h/2 + x, x, sqrt(2)*h/2 + x, h + x]
     >>> mycoeffs = finite_diff_weights(1, x_list, 0)[1][4]
     >>> [simplify(c) for c in  mycoeffs] #doctest: +NORMALIZE_WHITESPACE
-    [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4,
-    (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
-    (6*h**2*x - 8*x**3)/h**4,
-    (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
-    (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
+    [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4, (-sqrt(2)*h**3 + 3*sqrt(2)*h*x**2 - 4*h**2*x + 8*x**3)/h**4, (6*h**2*x - 8*x**3)/h**4, (sqrt(2)*h**3 - 3*sqrt(2)*h*x**2 - 4*h**2*x + 8*x**3)/h**4, (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
 
     Notes
     =====
@@ -340,9 +336,7 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
     >>> e, sq2 = exp(1), sqrt(2)
     >>> xl = [x-h, x+h, x+e*h]
     >>> _as_finite_diff(f(x).diff(x, 1), xl, x+h*sq2)
-    2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/((-h + E*h)*(h + E*h)) +
-    (-(-sqrt(2)*h + h)/(2*h) - (-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) +
-    (-(h + sqrt(2)*h)/(2*h) + (-sqrt(2)*h + E*h)/(2*h))*f(h + x)/(-h + E*h)
+    2*h*(-(-sqrt(2)*h + h)/(2*h) + (sqrt(2)*h + h)/(2*h))*f(E*h + x)/((-h + E*h)*(h + E*h)) + (-(-sqrt(2)*h + h)/(2*h) - (-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) + ((-sqrt(2)*h + E*h)/(2*h) - (sqrt(2)*h + h)/(2*h))*f(h + x)/(-h + E*h)
 
     Partial derivatives are also supported:
 

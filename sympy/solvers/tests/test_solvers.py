@@ -1876,7 +1876,7 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
 
     # issue 8692
     assert solve(Eq(Abs(x + 1) + Abs(x**2 - 7), 9), x) == [
-        Rational(-1, 2) + sqrt(61)/2, -sqrt(69)/2 + S.Half]
+        -sqrt(69)/2 + S.Half, Rational(-1, 2) + sqrt(61)/2]
 
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
@@ -2082,11 +2082,11 @@ def test_lambert_bivariate():
 
 def test_rewrite_trig():
     assert solve(sin(x) + tan(x)) == [0, -pi, pi, 2*pi]
-    assert solve(sin(x) + sec(x)) == [
+    assert set(solve(sin(x) + sec(x))) == {
         -2*atan(Rational(-1, 2) + sqrt(2)*sqrt(1 - sqrt(3)*I)/2 + sqrt(3)*I/2),
         2*atan(S.Half - sqrt(2)*sqrt(1 + sqrt(3)*I)/2 + sqrt(3)*I/2), 2*atan(S.Half
         + sqrt(2)*sqrt(1 + sqrt(3)*I)/2 + sqrt(3)*I/2), 2*atan(S.Half -
-        sqrt(3)*I/2 + sqrt(2)*sqrt(1 - sqrt(3)*I)/2)]
+        sqrt(3)*I/2 + sqrt(2)*sqrt(1 - sqrt(3)*I)/2)}
     assert solve(sinh(x) + tanh(x)) == [0, I*pi]
 
     # issue 6157
@@ -2107,11 +2107,11 @@ def test_rewrite_trigh():
 def test_uselogcombine():
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solve(eq, x, force=True) == [-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z)))]
-    assert solve(log(x + 3) + log(1 + 3/x) - 3) in [
-        [-3 + sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 + exp(3)/2,
-        -sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 - 3 + exp(3)/2],
-        [-3 + sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2,
-        -3 - sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2],
+    assert set(solve(log(x + 3) + log(1 + 3/x) - 3)) in [
+        {-3 + sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 + exp(3)/2,
+        -sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 - 3 + exp(3)/2},
+        {-3 + sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2,
+        -3 - sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2},
         ]
     assert solve(log(exp(2*x) + 1) + log(-tanh(x) + 1) - log(2)) == []
 
@@ -2561,7 +2561,7 @@ def test_issue_19113_19102():
     t = S(1)/3
     solve(cos(x)**5-sin(x)**5)
     assert solve(4*cos(x)**3 - 2*sin(x)**3) == [
-        atan(2**(t)), -atan(2**(t)*(1 - sqrt(3)*I)/2),
+        atan(2**(t)), atan(2**t*(sqrt(3)*I - 1)/2),
         -atan(2**(t)*(1 + sqrt(3)*I)/2)]
     h = S.Half
     assert solve(cos(x)**2 + sin(x)) == [

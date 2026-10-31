@@ -873,7 +873,7 @@ def test_simplify_relational():
     m = exp(1) - exp_polar(1)
     assert m.is_zero is None
     assert simplify(m*x > 1) == (m*x > 1)
-    assert simplify(m*x + 2*m*y > 1) == (m*(x + 2*y) > 1)
+    assert simplify(m*x + 2*m*y > 1) == (-m*(x + 2*y) < -1)
     assert Eq(m*x, 1).simplify() == Eq(m*x, 1)
 
     # A common term with unknown finiteness cannot be cancelled.

@@ -523,7 +523,7 @@ def collect_sqrt(expr, evaluate=None):
     >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r3)
     sqrt(2)*(a + b) + sqrt(3)*(a + b)
     >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r5)
-    sqrt(3)*a + sqrt(5)*b + sqrt(2)*(a + b)
+    sqrt(2)*(a + b) + sqrt(3)*a + sqrt(5)*b
 
     If evaluate is False then the arguments will be sorted and
     returned as a list and a count of the number of sqrt-containing
@@ -671,7 +671,7 @@ def collect_const(expr, *vars, Numbers=True):
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
     (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
-    sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+    sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2) + sqrt(7)
 
     The collection is sign-sensitive, giving higher precedence to the
     unsigned values:
@@ -805,19 +805,19 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> r2 = sqrt(2)
     >>> r5 = sqrt(5)
     >>> ans = radsimp(1/(y*r2 + x*r2 + a*r5 + b*r5)); pprint(ans)
-        ___       ___       ___       ___
-      \/ 5 *a + \/ 5 *b - \/ 2 *x - \/ 2 *y
-    ------------------------------------------
-       2               2      2              2
-    5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y
+             ___       ___       ___       ___
+         - \/ 2 *x - \/ 2 *y + \/ 5 *a + \/ 5 *b
+        ------------------------------------------
+           2               2      2              2
+        5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y
 
     >>> n, d = fraction(ans)
     >>> pprint(factor_terms(signsimp(collect_sqrt(n))/d, radical=True))
-            ___             ___
-          \/ 5 *(a + b) - \/ 2 *(x + y)
-    ------------------------------------------
-       2               2      2              2
-    5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y
+                     ___             ___
+                 - \/ 2 *(x + y) + \/ 5 *(a + b)
+            ------------------------------------------
+               2               2      2              2
+            5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y
 
     If radicals in the denominator cannot be removed or there is no denominator,
     the original expression will be returned.
@@ -1180,7 +1180,7 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
+    (3, sqrt(2) + sqrt(5) + 3, sqrt(10) + sqrt(5)/7)
     """
     args = sorted(expr.args, key=default_sort_key)
     coeff_muls = [x.as_coeff_Mul() for x in args]

@@ -4261,7 +4261,7 @@ class Poly(Basic):
         >>> conditions
         [-15*k**2 + 20*k - 5, -8*k**2 - 8*k + 8, 3*k**2 + 8*k - 3]
         >>> reduce_inequalities([c > 0 for c in conditions])
-        (1/3 < k) & (k < -1/2 + sqrt(5)/2)
+        (1/3 < k) & (k < sqrt(5)/2 - 1/2)
 
         References
         ==========
@@ -6638,7 +6638,7 @@ def sqf_norm(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_norm(x**2 + 1, extension=[sqrt(3)])
-    ([1], x**2 - 2*sqrt(3)*x + 4, x**4 - 4*x**2 + 16)
+    ([1], -2*sqrt(3)*x + x**2 + 4, x**4 - 4*x**2 + 16)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -6874,7 +6874,7 @@ def to_rational_coeffs(f):
     >>> p = Poly(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}), x, domain='EX')
     >>> lc, r, _, g = to_rational_coeffs(p)
     >>> lc, r
-    (7 + 5*sqrt(2), 2 - 2*sqrt(2))
+    (5*sqrt(2) + 7, 2 - 2*sqrt(2))
     >>> g
     Poly(x**3 + x**2 - 1/4*x - 1/4, x, domain='QQ')
     >>> r1 = simplify(1/r)
@@ -6983,12 +6983,12 @@ def _torational_factor_list(p, x):
     >>> from sympy import sqrt, expand, Mul
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     >>> factors = _torational_factor_list(p, x); factors
-    (-2, [(-x*(1 + sqrt(2))/2 + 1, 1), (-x*(1 + sqrt(2)) - 1, 1), (-x*(1 + sqrt(2)) + 1, 1)])
+    (-2, [(-x*(sqrt(2) + 1)/2 + 1, 1), (-x*(sqrt(2) + 1) - 1, 1), (-x*(sqrt(2) + 1) + 1, 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x + sqrt(2)}))
     >>> factors = _torational_factor_list(p, x); factors
-    (1, [(x - 2 + sqrt(2), 1), (x - 1 + sqrt(2), 1), (x + 1 + sqrt(2), 1)])
+    (1, [(sqrt(2) + x - 2, 1), (sqrt(2) + x - 1, 1), (sqrt(2) + x + 1, 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
 
@@ -7105,7 +7105,7 @@ def factor(f, *gens, deep=False, **args):
     (x - I)*(x + I)
 
     >>> factor(x**2 - 2, extension=sqrt(2))
-    (x - sqrt(2))*(x + sqrt(2))
+    (-sqrt(2) + x)*(sqrt(2) + x)
 
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
     (x - 1)*(x + 1)/(x + 2)**2
@@ -7128,9 +7128,9 @@ def factor(f, *gens, deep=False, **args):
     will not be combined. By default it is True.
 
     >>> factor(5*x + 3*exp(2 - 7*x), deep=True)
-    (5*x*exp(7*x) + 3*exp(2))*exp(-7*x)
+    (3*exp(2) + 5*x*exp(7*x))*exp(-7*x)
     >>> factor(5*x + 3*exp(2 - 7*x), deep=True, fraction=False)
-    5*x + 3*exp(2)*exp(-7*x)
+    3*exp(2)*exp(-7*x) + 5*x
 
     See Also
     ========
@@ -7306,7 +7306,7 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
     >>> from sympy.abc import x, y
 
     >>> print(all_roots(x**3 + 1))
-    [-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2]
+    [-1, -sqrt(3)*I/2 + 1/2, sqrt(3)*I/2 + 1/2]
 
     Simple radical formulae are used in some cases but the cubic and quartic
     formulae are avoided. Instead most non-rational roots will be represented
@@ -7336,7 +7336,7 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    -sqrt(2)*x - sqrt(3)*x + sqrt(6) + x**2
     >>> all_roots(p)
     Traceback (most recent call last):
     ...
@@ -7537,7 +7537,7 @@ def real_roots(f, multiple=True, radicals=True, extension=False):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    -sqrt(2)*x - sqrt(3)*x + sqrt(6) + x**2
     >>> real_roots(p)
     Traceback (most recent call last):
     ...

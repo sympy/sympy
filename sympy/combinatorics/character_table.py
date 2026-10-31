@@ -69,10 +69,10 @@ class CharacterTable(DefaultPrinting):
     >>> M = AlternatingGroup(4).character_table()
     >>> M.as_matrix()
     Matrix([
-     [1,          1,          1,  1],
-     [1, -1 - zeta3,      zeta3,  1],
-     [1,      zeta3, -1 - zeta3,  1],
-     [3,          0,          0, -1]])
+    [1,          1,          1,  1],
+    [1, -zeta3 - 1,      zeta3,  1],
+    [1,      zeta3, -zeta3 - 1,  1],
+    [3,          0,          0, -1]])
     >>> M._rep.domain
     QQ<zeta3>
     >>> M.zeta_order
@@ -169,10 +169,10 @@ class CharacterTable(DefaultPrinting):
         >>> from sympy.combinatorics import CharacterTable, AlternatingGroup
         >>> CharacterTable.from_perm_group(AlternatingGroup(4)).as_matrix()
         Matrix([
-         [1,          1,          1,  1],
-         [1, -1 - zeta3,      zeta3,  1],
-         [1,      zeta3, -1 - zeta3,  1],
-         [3,          0,          0, -1]])
+        [1,          1,          1,  1],
+        [1, -zeta3 - 1,      zeta3,  1],
+        [1,      zeta3, -zeta3 - 1,  1],
+        [3,          0,          0, -1]])
         """
         if G.is_symmetric:
             return character_table_sn(G.degree)
@@ -469,10 +469,10 @@ def dixon_character_table(conjugacy_classes: Sequence[set[Permutation]]) -> Char
     >>> G = AlternatingGroup(4)
     >>> dixon_character_table(G.conjugacy_classes()).as_matrix()
     Matrix([
-     [1,          1,          1,  1],
-     [1, -1 - zeta3,      zeta3,  1],
-     [1,      zeta3, -1 - zeta3,  1],
-     [3,          0,          0, -1]])
+    [1,          1,          1,  1],
+    [1, -zeta3 - 1,      zeta3,  1],
+    [1,      zeta3, -zeta3 - 1,  1],
+    [3,          0,          0, -1]])
 
     References
     ==========

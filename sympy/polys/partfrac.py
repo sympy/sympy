@@ -58,8 +58,7 @@ def apart(f, x=None, full=False, **options):
     Calling ``doit()`` yields a human-readable result:
 
     >>> apart(y/(x**2 + x + 1), x, full=True).doit()
-    (-y/3 - 2*y*(-1/2 - sqrt(3)*I/2)/3)/(x + 1/2 + sqrt(3)*I/2) + (-y/3 -
-        2*y*(-1/2 + sqrt(3)*I/2)/3)/(x + 1/2 - sqrt(3)*I/2)
+    (-2*y*(-sqrt(3)*I/2 - 1/2)/3 - y/3)/(sqrt(3)*I/2 + x + 1/2) + (-2*y*(sqrt(3)*I/2 - 1/2)/3 - y/3)/(-sqrt(3)*I/2 + x + 1/2)
 
 
     See Also
@@ -458,14 +457,14 @@ def assemble_partfrac_list(partial_list):
     RootSum(w**2 - 2, Lambda(w, w/(-w + x)))/2
 
     >>> pfda.doit()
-    -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))
+    -sqrt(2)/(2*(sqrt(2) + x)) + sqrt(2)/(2*(-sqrt(2) + x))
 
     >>> from sympy import Dummy, Poly, Lambda, sqrt
     >>> a = Dummy("a")
     >>> pfd = (1, Poly(0, x, domain='ZZ'), [([sqrt(2),-sqrt(2)], Lambda(a, a/2), Lambda(a, -a + x), 1)])
 
     >>> assemble_partfrac_list(pfd)
-    -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))
+    -sqrt(2)/(2*(sqrt(2) + x)) + sqrt(2)/(2*(-sqrt(2) + x))
 
     See Also
     ========

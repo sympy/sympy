@@ -78,11 +78,11 @@ class AlgebraicField(
     >>> factor(x**2 - 2)
     x**2 - 2
     >>> factor(x**2 - 2, extension=sqrt(2))
-    (x - sqrt(2))*(x + sqrt(2))
+    (-sqrt(2) + x)*(sqrt(2) + x)
     >>> factor(x**2 - 2, domain='QQ<sqrt(2)>')
-    (x - sqrt(2))*(x + sqrt(2))
+    (-sqrt(2) + x)*(sqrt(2) + x)
     >>> factor(x**2 - 2, domain=QQ.algebraic_field(sqrt(2)))
-    (x - sqrt(2))*(x + sqrt(2))
+    (-sqrt(2) + x)*(sqrt(2) + x)
 
     The ``extension=True`` argument can be used but will only create an
     extension that contains the coefficients which is usually not enough to
@@ -90,9 +90,9 @@ class AlgebraicField(
 
     >>> p = x**3 + sqrt(2)*x**2 - 2*x - 2*sqrt(2)
     >>> factor(p)                         # treats sqrt(2) as a symbol
-    (x + sqrt(2))*(x**2 - 2)
+    (sqrt(2) + x)*(x**2 - 2)
     >>> factor(p, extension=True)
-    (x - sqrt(2))*(x + sqrt(2))**2
+    (-sqrt(2) + x)*(sqrt(2) + x)**2
     >>> factor(x**2 - 2, extension=True)  # all rational coefficients
     x**2 - 2
 
@@ -101,13 +101,13 @@ class AlgebraicField(
 
     >>> from sympy import cancel, gcd
     >>> cancel((x**2 - 2)/(x - sqrt(2)))
-    (x**2 - 2)/(x - sqrt(2))
+    (x**2 - 2)/(-sqrt(2) + x)
     >>> cancel((x**2 - 2)/(x - sqrt(2)), extension=sqrt(2))
-    x + sqrt(2)
+    sqrt(2) + x
     >>> gcd(x**2 - 2, x - sqrt(2))
     1
     >>> gcd(x**2 - 2, x - sqrt(2), extension=sqrt(2))
-    x - sqrt(2)
+    -sqrt(2) + x
 
     When using the domain directly :ref:`QQ(a)` can be used as a constructor
     to create instances which then support the operations ``+,-,*,**,/``. The
@@ -139,7 +139,7 @@ class AlgebraicField(
     >>> K.to_sympy(xk * yk)
     17*sqrt(2) + 30
     >>> K.to_sympy(xk + yk)
-    5 + 7*sqrt(2)
+    7*sqrt(2) + 5
     >>> K.to_sympy(xk ** 2)
     24*sqrt(2) + 41
     >>> K.to_sympy(xk / yk)
@@ -158,7 +158,7 @@ class AlgebraicField(
     >>> minpoly(g, x)
     x**2 + x + 1
     >>> factor(x**3 - 1, extension=g)
-    (x - 1)*(x - exp(2*I*pi/3))*(x + 1 + exp(2*I*pi/3))
+    (x - 1)*(x - exp(2*I*pi/3))*(x + exp(2*I*pi/3) + 1)
 
     It is also possible to make an algebraic field from multiple extension
     elements.
@@ -170,9 +170,9 @@ class AlgebraicField(
     >>> factor(p)
     (x**2 - 3)*(x**2 - 2)
     >>> factor(p, domain=K)
-    (x - sqrt(2))*(x + sqrt(2))*(x - sqrt(3))*(x + sqrt(3))
+    (-sqrt(2) + x)*(sqrt(2) + x)*(-sqrt(3) + x)*(sqrt(3) + x)
     >>> factor(p, extension=[sqrt(2), sqrt(3)])
-    (x - sqrt(2))*(x + sqrt(2))*(x - sqrt(3))*(x + sqrt(3))
+    (-sqrt(2) + x)*(sqrt(2) + x)*(-sqrt(3) + x)*(sqrt(3) + x)
 
     Multiple extension elements are always combined together to make a single
     `primitive element`_. In the case of ``[sqrt(2), sqrt(3)]`` the primitive
@@ -221,7 +221,7 @@ class AlgebraicField(
     >>> K
     QQ<sqrt(5)>
     >>> K.integral_basis(fmt='sympy')
-    [1, 1/2 + sqrt(5)/2]
+    [1, sqrt(5)/2 + 1/2]
     >>> K.maximal_order()
     Submodule[[2, 0], [1, 1]]/2
 
@@ -516,7 +516,7 @@ class AlgebraicField(
         >>> print(B0[1])  # doctest: +SKIP
         ANP([mpq(1,2), mpq(1,2)], [mpq(1,1), mpq(0,1), mpq(-5,1)], QQ)
         >>> print(B1[1])
-        1/2 + alpha/2
+        alpha/2 + 1/2
         >>> print(B2[1])
         alpha/2 + 1/2
 

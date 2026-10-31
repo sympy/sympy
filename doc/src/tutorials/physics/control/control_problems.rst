@@ -171,9 +171,9 @@ Solution
     Subpart 3
 
     >>> G.elem_poles()
-    [[[-1, -1, -1], [-2]], [[-2, -1], [-1/2 - sqrt(3)*I/2, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]]]
+    [[[-1, -1, -1], [-2]], [[-2, -1], [-sqrt(3)*I/2 - 1/2, -sqrt(3)*I/2 - 1/2, sqrt(3)*I/2 - 1/2, sqrt(3)*I/2 - 1/2]]]
     >>> G.elem_zeros()
-    [[[-1, 0], []], [[-3/4], [4, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]]]
+    [[[-1, 0], []], [[-3/4], [4, -sqrt(3)*I/2 - 1/2, sqrt(3)*I/2 - 1/2]]]
     >>> pole_zero_plot(G[0, 0])   # doctest: +SKIP
 
     .. plot:: tutorials/physics/control/generate_plots.py q3_3
