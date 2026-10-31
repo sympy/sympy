@@ -170,8 +170,8 @@ def test_ccode_functions2():
     assert ccode(Mod(p1, p2)**s) == 'pow(p1 % p2, s)'
     n = symbols('n', integer=True, negative=True)
     assert ccode(Mod(-n, p2)) == '(-n) % p2'
-    assert ccode(fibonacci(n)) == '((1.0/5.0)*pow(2, -n)*sqrt(5)*(-pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n)))'
-    assert ccode(lucas(n)) == '(pow(2, -n)*(pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n)))'
+    assert ccode(fibonacci(n)) == '((1.0/5.0)*pow(2, -n)*sqrt(5)*(-pow(1 - sqrt(5), n) + pow(sqrt(5) + 1, n)))'
+    assert ccode(lucas(n)) == '(pow(2, -n)*(pow(1 - sqrt(5), n) + pow(sqrt(5) + 1, n)))'
 
 
 def test_ccode_user_functions():
@@ -821,7 +821,7 @@ def test_ccode_math_macros():
     assert ccode(z + 2/pi) == 'z + M_2_PI'
     assert ccode(z + 2/sqrt(pi)) == 'z + M_2_SQRTPI'
     assert ccode(z + 2/Sqrt(pi)) == 'z + M_2_SQRTPI'
-    assert ccode(z + sqrt(2)) == 'z + M_SQRT2'
+    assert ccode(z + sqrt(2)) == 'M_SQRT2 + z'
     assert ccode(z + Sqrt(2)) == 'z + M_SQRT2'
     assert ccode(z + 1/sqrt(2)) == 'z + M_SQRT1_2'
     assert ccode(z + 1/Sqrt(2)) == 'z + M_SQRT1_2'

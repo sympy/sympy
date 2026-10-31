@@ -1076,14 +1076,14 @@ def test_Mul():
 def test_issue_5524():
     assert pretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 """\
-         2           /         ___    \\\n\
-- (5 - y)  + (x - 5)*\\-x - 2*\\/ 2  + 5/\
+         2           /      ___        \\\n\
+- (5 - y)  + (x - 5)*\\- 2*\\/ 2  - x + 5/\
 """
 
     assert upretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 """\
          2                          \n\
-- (5 - y)  + (x - 5)⋅(-x - 2⋅√2 + 5)\
+- (5 - y)  + (x - 5)⋅(-2⋅√2 - x + 5)\
 """
 
 
@@ -2212,13 +2212,13 @@ def test_pretty_sqrt():
     ascii_str = \
 """\
    ___________\n\
-3 /       ___ \n\
-\\/  1 + \\/ 5  \
+3 /   ___     \n\
+\\/  \\/ 5  + 1 \
 """
     ucode_str = \
 """\
 3 ________\n\
-╲╱ 1 + √5 \
+╲╱ √5 + 1 \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -7101,11 +7101,11 @@ def test_issue_8344():
     e = sympify('2*x*y**2/1**2 + 1', evaluate=False)
     ucode_str = \
 """\
-     2    \n\
-2⋅x⋅y     \n\
-────── + 1\n\
-   2      \n\
-  1       \
+         2\n\
+    2⋅x⋅y \n\
+1 + ──────\n\
+       2  \n\
+      1   \
 """
     assert upretty(e) == ucode_str
 
