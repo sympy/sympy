@@ -1156,6 +1156,12 @@ class Derivative(Expr):
     >>> Derivative(f(x), x).subs(x, y)
     Derivative(f(y), y)
 
+    unless the new variable depends on another variable of
+    differentiation:
+
+    >>> Derivative(f(y), x, y).subs(y, g(x))
+    Subs(Derivative(f(y), x, y), y, g(x))
+
     b) Replacing an undefined function or its application:
 
     >>> Derivative(f(x), x).subs(f, g)
@@ -1868,13 +1874,14 @@ class Derivative(Expr):
             # quick exit case
             if not getattr(new, '_diff_wrt', False):
                 # case (0): new is not a valid variable of
-                # differentiation
-                if isinstance(old, Symbol):
-                    # don't introduce a new symbol if the old will do
+                # differentiation; old stays the variable of Subs if it
+                # depends on another variable of differentiation, e.g.
+                # g(x) on x, which a Dummy would hide
+                if old.is_Symbol or any(_depends_on(old, v)
+                        for v in self._wrt_variables if v != old):
                     return Subs(self, old, new)
-                else:
-                    xi = Dummy('xi')
-                    return Subs(self.xreplace({old: xi}), xi, new)
+                xi = Dummy('xi')
+                return Subs(self.xreplace({old: xi}), xi, new)
 
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
@@ -2608,25 +2615,13 @@ class Subs(Expr):
             if not isinstance(e, Derivative):
                 e = e.doit()
             if isinstance(e, Derivative):
-                # differentiate wrt variables that are present
-                wrt = []
-                expr = e.expr
-                for vi, ci in e.variable_count:
-                    if _depends_on(expr, vi):
-                        expr = expr.diff((vi, ci))
-                    else:
-                        wrt.append((vi, ci))
-                # a variable of differentiation replaced by an expression
-                # is a change of variables, so absent variables are
-                # differentiated after it; any other substitution is
-                # done after all differentiation
-                subs_before_diff, subs_after_diff = sift(undone,
-                    lambda i: i[0] in e._wrt_variables, binary=True)
-                rv = expr.subs(subs_before_diff)
-                # do remaining differentiation *in order given*
-                for vc in wrt:
+                # differentiate in the order given, then substitute, also
+                # for a variable of differentiation, so that substituting
+                # and evaluating commute
+                rv = e.expr
+                for vc in e.variable_count:
                     rv = rv.diff(vc)
-                rv = rv.subs(subs_after_diff)
+                rv = rv.subs(undone)
             else:
                 # inject remaining subs
                 rv = e.subs(undone)

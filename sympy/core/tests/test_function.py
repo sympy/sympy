@@ -1640,8 +1640,23 @@ def test_issue_15241():
     assert (y*G + y*Gy*G).diff(y, G) == y*Gy.diff(y) + Gy + 1
 
 
+def test_subs_doit_keeps_order_of_differentiation():
+    # f(x).diff(x) and x do not commute, so Subs.doit must not
+    # differentiate by x first
+    d = Derivative(4*y*f(x)**2, f(x).diff(x), x)
+    assert Subs(d, x, 3).doit() == d.doit().subs(x, 3) == 0
+    assert Subs(d, y, 2).doit() == d.doit().subs(y, 2) == 0
+
+
 def test_issue_15226():
-    assert Subs(Derivative(f(y), x, y), y, g(x)).doit() != 0
+    # y is independent of x, so the derivative is 0 before substituting
+    d = Derivative(f(y), x, y)
+    assert Subs(d, y, g(x)).doit() == d.doit().subs(y, g(x)) == 0
+    # a y that depends on x is written as a function of x
+    assert Derivative(f(g(x)), x, g(x)).doit() == \
+        Derivative(f(g(x)), (g(x), 2))*Derivative(g(x), x)
+    assert Derivative(Subs(f(y), y, g(x)), x).doit() == \
+        Derivative(f(g(x)), g(x))*Derivative(g(x), x)
 
 
 def test_issue_7027():
