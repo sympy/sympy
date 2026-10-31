@@ -121,7 +121,7 @@ class Product(ExprWithIntLimits):
     >>> P = pi * x * Product(1 - x**2/k**2, (k, 1, n))
     >>> P = P.subs(x, pi/2)
     >>> P
-    pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2
+    pi**2*Product(-pi**2/(4*k**2) + 1, (k, 1, n))/2
     >>> Pe = P.doit()
     >>> Pe
     pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(1 + pi/2, n)/(2*factorial(n)**2)

@@ -2373,7 +2373,7 @@ class AlgebraicNumber(Expr):
 
         >>> a2 = AlgebraicNumber(sqrt(2), [3, -5])
         >>> a2.as_expr()
-        -5 + 3*sqrt(2)
+        3*sqrt(2) - 5
 
         Example (3): $\alpha = 6 \sqrt{2} - 11$, $\theta = \sqrt{2}$. Again we
         can build on the previous example, and we see that the coeff polys are
@@ -2381,7 +2381,7 @@ class AlgebraicNumber(Expr):
 
         >>> a3 = AlgebraicNumber(a2, [2, -1])
         >>> a3.as_expr()
-        -11 + 6*sqrt(2)
+        6*sqrt(2) - 11
 
         reflecting the fact that $(2x - 1) \circ (3x - 5) = 6x - 11$.
 
@@ -2603,7 +2603,7 @@ class AlgebraicNumber(Expr):
         >>> print(a)
         1 - sqrt(5)
         >>> print(b)
-        2 + 3*sqrt(5)
+        3*sqrt(5) + 2
         >>> print(b.primitive_element() == a.primitive_element())
         True
 
@@ -3846,7 +3846,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
     >>> S.GoldenRatio > 1
     True
     >>> S.GoldenRatio.expand(func=True)
-    1/2 + sqrt(5)/2
+    sqrt(5)/2 + 1/2
     >>> S.GoldenRatio.is_irrational
     True
 
@@ -3915,7 +3915,7 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
     >>> S.TribonacciConstant > 1
     True
     >>> S.TribonacciConstant.expand(func=True)
-    1/3 + (19 - 3*sqrt(33))**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
+    (19 - 3*sqrt(33))**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3 + 1/3
     >>> S.TribonacciConstant.is_irrational
     True
     >>> S.TribonacciConstant.n(20)

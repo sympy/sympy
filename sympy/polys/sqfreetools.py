@@ -371,7 +371,7 @@ def dmp_norm(f, u, K):
     [sqrt(2), -sqrt(2)]
     >>> n = prod(e.subs(a, r) for r in rs)
     >>> n
-    (x + y - sqrt(2))*(x + y + sqrt(2))
+    (-sqrt(2) + x + y)*(sqrt(2) + x + y)
     >>> expand(n)
     x**2 + 2*x*y + y**2 - 2
 

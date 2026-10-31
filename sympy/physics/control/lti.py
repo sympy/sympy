@@ -272,13 +272,13 @@ def phase_margin(system):
 
     >>> tf = TransferFunction(1, s**3 + 2*s**2 + s, s)
     >>> phase_margin(tf)
-    180*(-pi + atan((-1 + (-2*18**(1/3)/(9 + sqrt(93))**(1/3) + 12**(1/3)*(9 + sqrt(93))**(1/3))**2/36)/(-12**(1/3)*(9 + sqrt(93))**(1/3)/3 + 2*18**(1/3)/(3*(9 + sqrt(93))**(1/3)))))/pi + 180
+    180 + 180*(atan(((12**(1/3)*(sqrt(93) + 9)**(1/3) - 2*18**(1/3)/(sqrt(93) + 9)**(1/3))**2/36 - 1)/(-12**(1/3)*(sqrt(93) + 9)**(1/3)/3 + 2*18**(1/3)/(3*(sqrt(93) + 9)**(1/3)))) - pi)/pi
     >>> phase_margin(tf).n()
     21.3863897518751
 
     >>> tf1 = TransferFunction(s**3, s**2 + 5*s, s)
     >>> phase_margin(tf1)
-    -180 + 180*(atan(sqrt(2)*(-51/10 - sqrt(101)/10)*sqrt(1 + sqrt(101))/(2*(sqrt(101)/2 + 51/2))) + pi)/pi
+    -180 + 180*(atan(sqrt(2)*(-sqrt(101)/10 - 51/10)*sqrt(sqrt(101) + 1)/(2*(sqrt(101)/2 + 51/2))) + pi)/pi
     >>> phase_margin(tf1).n()
     -25.1783920627277
 
@@ -5229,7 +5229,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         >>> tfm_1
         TransferFunctionMatrix(((TransferFunction(3, s + 1, s), TransferFunction(s + 6, (s + 1)*(s + 2), s)), (TransferFunction(s + 3, s**2 + 3*s + 2, s), TransferFunction(s + 2, s**2 + 5*s - 10, s))))
         >>> tfm_1.elem_poles()
-        [[[-1], [-2, -1]], [[-2, -1], [-5/2 + sqrt(65)/2, -sqrt(65)/2 - 5/2]]]
+        [[[-1], [-2, -1]], [[-2, -1], [-sqrt(65)/2 - 5/2, sqrt(65)/2 - 5/2]]]
 
         See Also
         ========

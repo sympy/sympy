@@ -1299,7 +1299,7 @@ def dup_ext_factor(f, K):
     >>> from sympy import factor
     >>> from sympy.abc import x
     >>> factor(x**2 - 2, extension=sqrt(2))
-    (x - sqrt(2))*(x + sqrt(2))
+    (-sqrt(2) + x)*(sqrt(2) + x)
 
     Explanation
     ===========
@@ -1397,7 +1397,7 @@ def dmp_ext_factor(f, u, K):
     >>> from sympy import factor
     >>> from sympy.abc import x, y
     >>> factor(x**2*y**2 - 2, extension=sqrt(2))
-    (x*y - sqrt(2))*(x*y + sqrt(2))
+    (-sqrt(2) + x*y)*(sqrt(2) + x*y)
 
     Explanation
     ===========

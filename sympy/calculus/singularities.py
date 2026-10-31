@@ -98,7 +98,7 @@ def singularities(
     >>> singularities(1/(y**2 + 1), y)
     {-I, I}
     >>> singularities(1/(y**3 + 1), y)
-    {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
+    {-1, -sqrt(3)*I/2 + 1/2, sqrt(3)*I/2 + 1/2}
     >>> singularities(log(x), x)
     {0}
     >>> singularities(0**x, x)

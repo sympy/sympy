@@ -253,13 +253,13 @@ precision argument. Parameter definitions are easily avoided using the ``N``
 function.
 
     >>> print(fcode(x - pi**2 - E))
-          parameter (E = 2.7182818284590452d0)
-          parameter (pi = 3.1415926535897932d0)
-          x - pi**2 - E
+                parameter (E = 2.7182818284590452d0)
+                parameter (pi = 3.1415926535897932d0)
+                -pi**2 + x - E
     >>> print(fcode(x - pi**2 - E, precision=25))
-          parameter (E = 2.718281828459045235360287d0)
-          parameter (pi = 3.141592653589793238462643d0)
-          x - pi**2 - E
+                parameter (E = 2.718281828459045235360287d0)
+                parameter (pi = 3.141592653589793238462643d0)
+                -pi**2 + x - E
     >>> print(fcode(N(x - pi**2, 25)))
           x - 9.869604401089358618834491d0
 
@@ -296,7 +296,7 @@ translated in pure Fortran and (iii) a string of Fortran code. A few examples:
     >>> fcode(1 - sin(x)**2, human=False)
     (set(), set(), '      1 - sin(x)**2')
     >>> fcode(x - pi**2, human=False)
-    ({(pi, '3.1415926535897932d0')}, set(), '      x - pi**2')
+    ({(pi, '3.1415926535897932d0')}, set(), '      -pi**2 + x')
 
 SMT-Lib printing
 ---------------------------------

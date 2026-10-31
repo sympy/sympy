@@ -1743,9 +1743,9 @@ class Pow(Expr):
 
         >>> from sympy import sqrt
         >>> sqrt(4 + 4*sqrt(2)).as_content_primitive()
-        (2, sqrt(1 + sqrt(2)))
+        (2, sqrt(sqrt(2) + 1))
         >>> sqrt(3 + 3*sqrt(2)).as_content_primitive()
-        (1, sqrt(3)*sqrt(1 + sqrt(2)))
+        (1, sqrt(3)*sqrt(sqrt(2) + 1))
 
         >>> from sympy import expand_power_base, powsimp, Mul
         >>> from sympy.abc import x, y

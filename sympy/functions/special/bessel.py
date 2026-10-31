@@ -1431,7 +1431,7 @@ class airyai(AiryBase):
 
     >>> from sympy import series
     >>> series(airyai(z), z, 0, 3)
-    3**(5/6)*gamma(1/3)/(6*pi) - 3**(1/6)*z*gamma(2/3)/(2*pi) + O(z**3)
+    -3**(1/6)*z*gamma(2/3)/(2*pi) + 3**(5/6)*gamma(1/3)/(6*pi) + O(z**3)
 
     We can numerically evaluate the Airy function to arbitrary precision
     on the whole complex plane:
@@ -1615,7 +1615,7 @@ class airybi(AiryBase):
 
     >>> from sympy import hyper
     >>> airybi(z).rewrite(hyper)
-    3**(1/6)*z*hyper((), (4/3,), z**3/9)/gamma(1/3) + 3**(5/6)*hyper((), (2/3,), z**3/9)/(3*gamma(2/3))
+    3**(5/6)*hyper((), (2/3,), z**3/9)/(3*gamma(2/3)) + 3**(1/6)*z*hyper((), (4/3,), z**3/9)/gamma(1/3)
 
     See Also
     ========
@@ -1771,7 +1771,7 @@ class airyaiprime(AiryBase):
 
     >>> from sympy import series
     >>> series(airyaiprime(z), z, 0, 3)
-    -3**(2/3)/(3*gamma(1/3)) + 3**(1/3)*z**2/(6*gamma(2/3)) + O(z**3)
+    3**(1/3)*z**2/(6*gamma(2/3)) - 3**(2/3)/(3*gamma(1/3)) + O(z**3)
 
     We can numerically evaluate the Airy function to arbitrary precision
     on the whole complex plane:
@@ -1783,7 +1783,7 @@ class airyaiprime(AiryBase):
 
     >>> from sympy import hyper
     >>> airyaiprime(z).rewrite(hyper)
-    3**(1/3)*z**2*hyper((), (5/3,), z**3/9)/(6*gamma(2/3)) - 3**(2/3)*hyper((), (1/3,), z**3/9)/(3*gamma(1/3))
+    -3**(2/3)*hyper((), (1/3,), z**3/9)/(3*gamma(1/3)) + 3**(1/3)*z**2*hyper((), (5/3,), z**3/9)/(6*gamma(2/3))
 
     See Also
     ========

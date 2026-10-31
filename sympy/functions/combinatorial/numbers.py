@@ -851,10 +851,9 @@ class harmonic(DefinedFunction):
     harmonic(1/3)
     >>> He = expand_func(H)
     >>> He
-    -log(6) - sqrt(3)*pi/6 + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1))
-                           + 3*Sum(1/(3*_k + 1), (_k, 0, 0))
+    -sqrt(3)*pi/6 - log(6) + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1)) + 3*Sum(1/(3*_k + 1), (_k, 0, 0))
     >>> He.doit()
-    -log(6) - sqrt(3)*pi/6 - log(sqrt(3)/2) + 3
+    -sqrt(3)*pi/6 - log(6) - log(sqrt(3)/2) + 3
     >>> H = harmonic(25/S(7))
     >>> He = simplify(expand_func(H).doit())
     >>> He
@@ -1285,7 +1284,7 @@ class catalan(DefinedFunction):
     continuous real function in n:
 
     >>> diff(catalan(n), n)
-    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
+    (log(4) + polygamma(0, n + 1/2) - polygamma(0, n + 2))*catalan(n)
 
     As a more advanced example consider the following ratio
     between consecutive numbers:

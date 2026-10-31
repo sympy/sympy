@@ -1471,7 +1471,7 @@ class Integral(AddWithLimits):
         interval:
 
         >>> e.as_sum(2, 'left')
-        2*sin(5) + 2*sin(3)
+        2*sin(3) + 2*sin(5)
 
         The midpoint rule uses evaluations at the center of each interval:
 
@@ -1490,7 +1490,7 @@ class Integral(AddWithLimits):
 
         >>> s = e.as_sum(2, 'trapezoid')
         >>> s
-        2*sin(5) + sin(3) + sin(7)
+        sin(3) + 2*sin(5) + sin(7)
         >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == s
         True
 
