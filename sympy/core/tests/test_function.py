@@ -1650,6 +1650,16 @@ def test_issue_15241():
     assert (y*G + y*Gy*G).diff(y, G) == y*Gy.diff(y) + Gy + 1
 
 
+def test_derivative_subs_function_differentiated_inside():
+    # f(x) is also differentiated by x inside the expression, so a
+    # Dummy in its place would turn f(x).diff(x) into 0
+    d = Derivative(f(x)*f(x).diff(x)**2, f(x))
+    assert d.subs(f(x), x**2).doit() == d.doit().subs(f(x), x**2).doit() \
+        == 4*x**2
+    sq = Lambda(t, t**2)
+    assert d.subs(f, sq).doit() == d.doit().subs(f, sq).doit() == 4*x**2
+
+
 def test_subs_doit_keeps_order_of_differentiation():
     # f(x).diff(x) and x do not commute, so Subs.doit must not
     # differentiate by x first

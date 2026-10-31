@@ -1878,7 +1878,8 @@ class Derivative(Expr):
                 # depends on another variable of differentiation, e.g.
                 # g(x) on x, which a Dummy would hide
                 if old.is_Symbol or any(_depends_on(old, v)
-                        for v in self._wrt_variables if v != old):
+                        for v in self._wrt_variables if v != old) or (
+                        _differentiated_inside(self.expr, old)):
                     return Subs(self, old, new)
                 xi = Dummy('xi')
                 return Subs(self.xreplace({old: xi}), xi, new)
@@ -1986,6 +1987,8 @@ class Derivative(Expr):
                         dummies[u] = (Dummy('xi_%i' % i), vi)
                     vc[i] = (dummies[u][0], ci)
 
+            if any(_differentiated_inside(self.expr, u) for u in dummies):
+                return Subs(self, old, new)
             if dummies:
                 # Differentiate wrt temporary xi-Dummy inside Subs and
                 # retain other differentiation variables outside Subs.
@@ -2001,6 +2004,8 @@ class Derivative(Expr):
                     return Subs(Derivative(newe, *inner), *zip(*xi_v))
 
                 def commutes(v):
+                    # differentiation wrt X[j] outside Subs still reaches
+                    # X[i] inside it through the point, via KroneckerDelta
                     if isinstance(v, (Symbol, AppliedUndef)) or v.is_Indexed:
                         return True
                     if not isinstance(v, Derivative) or v not in dummies:
@@ -2431,6 +2436,15 @@ def _depends_on(expr, v):
     if not isinstance(expr, Basic):
         return False
     return bool(expr.free_symbols & v.free_symbols)
+
+
+def _differentiated_inside(expr, u):
+    """Return True if a Derivative in expr differentiates u by a
+    variable that u depends on, e.g. f(x) in Derivative(f(x), x),
+    which replacing u with a Dummy would turn into 0."""
+    return any(_has_free_variable(d.expr, u) and any(
+        _depends_on(u, w) for w in d._wrt_variables)
+        for d in expr.atoms(Derivative))
 
 
 class Subs(Expr):
