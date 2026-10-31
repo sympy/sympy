@@ -78,9 +78,9 @@ class AlgebraicField(
     >>> factor(x**2 - 2)
     x**2 - 2
     >>> factor(x**2 - 2, extension=sqrt(2))
-    (x - sqrt(2))*(x + sqrt(2))
+    (-sqrt(2) + x)*(sqrt(2) + x)
     >>> factor(x**2 - 2, domain='QQ<sqrt(2)>')
-    (x - sqrt(2))*(x + sqrt(2))
+    (-sqrt(2) + x)*(sqrt(2) + x)
     >>> factor(x**2 - 2, domain=QQ.algebraic_field(sqrt(2)))
     (-sqrt(2) + x)*(sqrt(2) + x)
 
@@ -170,7 +170,7 @@ class AlgebraicField(
     >>> factor(p)
     (x**2 - 3)*(x**2 - 2)
     >>> factor(p, domain=K)
-    (x - sqrt(2))*(x + sqrt(2))*(x - sqrt(3))*(x + sqrt(3))
+    (-sqrt(2) + x)*(sqrt(2) + x)*(-sqrt(3) + x)*(sqrt(3) + x)
     >>> factor(p, extension=[sqrt(2), sqrt(3)])
     (-sqrt(2) + x)*(sqrt(2) + x)*(-sqrt(3) + x)*(sqrt(3) + x)
 
