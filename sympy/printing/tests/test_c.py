@@ -823,7 +823,7 @@ def test_ccode_math_macros():
     assert ccode(z + 2/Sqrt(pi)) == 'z + M_2_SQRTPI'
     assert ccode(z + sqrt(2)) == 'M_SQRT2 + z'
     assert ccode(z + Sqrt(2)) == 'z + M_SQRT2'
-    assert ccode(z + 1/sqrt(2)) == 'z + M_SQRT1_2'
+    assert ccode(z + 1/sqrt(2)) == 'M_SQRT1_2 + z'
     assert ccode(z + 1/Sqrt(2)) == 'z + M_SQRT1_2'
 
 
