@@ -949,7 +949,8 @@ def test_issue_13571():
 
 
 def test_issue_13575():
-    assert limit(acos(erfi(x)), x, 1) == acos(erfi(S.One))
+    assert limit(acos(erfi(x)), x, 1) == \
+        pi/2 + I*log(I*sqrt(-1 + erfi(1)**2) + I*erfi(1))
 
 
 def test_issue_17325():

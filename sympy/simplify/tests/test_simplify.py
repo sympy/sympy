@@ -17,7 +17,7 @@ from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sin, sinc, tan)
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
@@ -651,6 +651,8 @@ def test_signsimp():
 def test_besselsimp():
     from sympy.functions.special.bessel import (besseli, besselj, bessely)
     from sympy.integrals.transforms import cosine_transform
+    assert besselsimp(besseli(-S.Half, z)) == \
+        sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
@@ -954,11 +956,13 @@ def test_issue_7971_21740():
     assert z is not S.Zero and z == 0.0
 
 
-@slow
-def test_issue_17141_slow():
-    # Should not give RecursionError
-    assert simplify((2**acos(I+1)**2).rewrite('log')) == 2**((pi + 2*I*log(-1 +
-                   sqrt(1 - 2*I) + I))**2/4)
+def test_issue_17141_atan2_recursion():
+    # Check that there is no RecursionError; this expression had the same
+    # recursion path as the much slower (former) test
+    # simplify((2**acos(I+1)**2).rewrite('log')) == \
+    #     2**((pi + 2*I*log(-1 + sqrt(1 - 2*I) + I))**2/4)
+    assert isinstance(atan2(0, 1 + log(-sqrt(2)*I/2 - sqrt(2)*sqrt(I)*I/2
+        + sqrt(2)*sqrt(I)/2 + sqrt(I))**2), Piecewise)
 
 
 def test_issue_17141():

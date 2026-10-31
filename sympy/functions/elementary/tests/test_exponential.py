@@ -727,6 +727,7 @@ def test_polar():
     assert (exp_polar(1.0*pi*I).n(n=5)).as_real_imag()[1] >= 0
 
     assert exp_polar(0).is_rational is True  # issue 8008
+    assert exp_polar(I*pi/2).is_extended_real is False
 
 
 def test_exp_summation():

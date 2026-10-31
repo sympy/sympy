@@ -2360,30 +2360,16 @@ def test_issue_13396():
 
 
 def test_issue_12032():
-    sol = FiniteSet(-sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
-                          2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))/2 +
-                    sqrt(Abs(-2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) +
-                             2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
-                             2/sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
-                                    2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))))/2,
-                    -sqrt(Abs(-2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) +
-                              2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
-                              2/sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
-                                     2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))))/2 -
-                    sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
-                         2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))/2,
-                    sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
-                         2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))/2 -
-                    I*sqrt(Abs(-2/sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
-                                       2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) -
-                               2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) +
-                               2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))))/2,
-                    sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
-                         2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))/2 +
-                    I*sqrt(Abs(-2/sqrt(-2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) +
-                                       2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) -
-                               2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) +
-                               2/(3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1,3)))))/2)
+    x0 = (S(1)/16 + sqrt(849)/144)**(S(1)/3)
+    x1 = 2/(3*x0)
+    x2 = 2*x0
+    x3 = x1 - x2
+    x4 = sqrt(-x3)
+    x5 = x4/2
+    x6 = 2/x4
+    x7 = x3 + x6
+    x8 = I*sqrt(Abs(-x1 + x2 + x6))/2
+    sol = FiniteSet(-x5 + sqrt(x7)/2, -x5 - sqrt(x7)/2, x5 - x8, x5 + x8)
     assert solveset(x**4 + x - 1, x) == sol
 
 
