@@ -2786,3 +2786,16 @@ def test_issue_26503():
     assert integrate((a**x)/(b**x), x) == Piecewise((a**x/(b**x*log(a) - b**x*log(b)), Ne(a, b)), (x, True))
     pw = Piecewise((x - 1, x > 0), (S.NaN, True))
     assert checksol(pw, x, 1) is True
+
+def test_issue_30898():
+    x, y = symbols('x y')
+    expr = (
+        sqrt(3)*x**5 - 3*I*x**5 - 2*sqrt(3)*x**4*y - 12*I*x**4*y
+        - 8*sqrt(3)*x**3*y**2 - 12*I*x**3*y**2 - 10*sqrt(3)*x**2*y**3
+        - 6*I*x**2*y**3 - 7*sqrt(3)*x*y**4 + 3*I*x*y**4 - sqrt(3)*y**5 + 3*I*y**5
+    )
+    res = solve([expr], (x, y))
+    assert res == [
+        (-y/2 - sqrt(3)*I*y/2, y),
+        (-y/2 + sqrt(3)*I*y/2, y),
+    ]
