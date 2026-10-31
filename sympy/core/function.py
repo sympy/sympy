@@ -1596,6 +1596,15 @@ class Derivative(Expr):
                 # a Dummy.
                 old_v = v  # non-Symbol
                 v = Dummy('xi')
+                # a Dummy would make a Derivative that differentiates v,
+                # e.g. Derivative(f(x)**2, x), independent of it, so
+                # those Derivatives are evaluated first
+                expr = expr.replace(lambda d: isinstance(d, Derivative)
+                    and d.expr != old_v and (_has_free_variable(d.expr, old_v)
+                        or isinstance(old_v, Derivative)
+                        and _has_free_variable(d.expr, old_v.expr))
+                    and any(_depends_on(old_v, w) for w in d._wrt_variables),
+                    lambda d: d.doit(deep=False))
                 hidden = {w: Dummy('z') for d in expr.atoms(Derivative)
                     for w in d._wrt_variables if isinstance(w, Derivative)
                     and _has_free_variable(w, old_v)}
@@ -1620,12 +1629,19 @@ class Derivative(Expr):
 
             if old_v is not None:
                 if obj is not None:
-                    # remove the dummy that was used
-                    _restoring_dummies.add(v)
-                    try:
-                        obj = obj.subs(v, old_v)
-                    finally:
-                        _restoring_dummies.discard(v)
+                    # remove the dummy that was used; inside a Derivative
+                    # it is put back directly, as subs would refuse to
+                    # replace v with old_v when old_v depends on one of
+                    # its variables, e.g. f(x) in Derivative(v**2, (x, n)),
+                    # which could not be evaluated above
+                    derivs = obj.atoms(Derivative)
+                    wrt = {w for d in derivs for w in d._wrt_variables}
+                    obj = obj.xreplace({d: d.xreplace({v: old_v})
+                        for d in derivs if d not in wrt
+                        and _has_free_variable(d.expr, v)
+                        and not any(_has_free_variable(w, v)
+                            for w in d._wrt_variables)})
+                    obj = obj.subs(v, old_v)
                     obj = obj.xreplace({d: w for w, d in hidden.items()})
                 # restore expr
                 expr = old_expr
@@ -1924,10 +1940,7 @@ class Derivative(Expr):
                     new_var = diff_var._subs(old, new)
                     return new_var == diff_var or not new_var._diff_wrt
                 if _depends_on(new, diff_var):
-                    # only a Dummy that __new__ used for a non-Symbol, e.g.
-                    # f(x), may be replaced back with it
-                    return not (old in _restoring_dummies
-                        and old == args[0])
+                    return True
                 # neither depends on it, but the substitution can still
                 # create it, e.g. g(y) becomes g(x) with y -> x
                 if diff_var.is_Symbol:
@@ -2152,11 +2165,6 @@ class Derivative(Expr):
         # object, the default in `Basic` will call a loop over
         # `_eval_derivative`:
         return expr._eval_derivative_n_times(v, count)
-
-
-# the Dummy symbols that Derivative.__new__ is replacing back with the
-# non-Symbol variables of differentiation they stood for
-_restoring_dummies: set[Dummy] = set()
 
 
 def _derivative_dispatch(expr, *variables, **kwargs):

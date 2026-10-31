@@ -972,6 +972,19 @@ def test_diff_wrt_function_inside_derivative_wrt_variable():
     assert (h(df).diff(df)*f(x)).diff(f(x)) == h(df).diff(df)
 
 
+def test_derivative_placeholder_subs_does_not_depend_on_cache():
+    # Derivative(F(t, f(t)), f(t), t).doit() leaves the Dummy it used for
+    # f(t) in its result; substituting it must not depend on whether
+    # subs results from that computation are cached
+    F = Function('F')
+    r = Derivative(F(t, f(t)), f(t), t).doit()
+    xi = [d for d in r.atoms(Dummy) if d.name == 'xi'][0]
+    expected = Subs(Derivative(xi, t), xi, f(t))
+    assert Derivative(xi, t).subs(xi, f(t)) == expected
+    clear_cache()
+    assert Derivative(xi, t).subs(xi, f(t)) == expected
+
+
 def test_derivative_subs_function_in_derivative_wrt_variable():
     # h(x, y).diff(y) becomes an expression that does not mention z
     u, v = symbols('u v')
@@ -1648,6 +1661,25 @@ def test_issue_15241():
     assert (G + y*Gy).diff(Gy, y) == 1
     assert (y*G + y*Gy*G).diff(G, y) == y*Gy.diff(y) + Gy + 1
     assert (y*G + y*Gy*G).diff(y, G) == y*Gy.diff(y) + Gy + 1
+
+
+def test_diff_wrt_function_past_unevaluated_derivative():
+    D = lambda *a: Derivative(*a, evaluate=False)
+    fx = f(x).diff(x)
+    assert diff(f(x)*D(f(x)**2, x), f(x)).doit() == 4*f(x)*fx
+    for e in (f(x)*D(g(f(x)), x), f(x)**2*D(sin(f(x)), x, x)):
+        assert (diff(e, f(x)).doit() - diff(e.doit(), f(x)).doit()
+            ).expand() == 0
+    assert diff(f(x)*g(g(f(x))), f(x)) == g(g(f(x))) + f(x)*Derivative(
+        g(f(x)), f(x))*Derivative(g(g(f(x))), g(f(x)))
+    e = f(x)*g(D(h(x, f(x)), x))
+    assert (diff(e, f(x)).doit() - diff(e.doit(), f(x)).doit()
+        ).expand() == 0
+    assert diff(f(x)*D(f(x)**2, x), fx).doit() == 2*f(x)**2
+    n = Symbol('n', integer=True, positive=True)
+    for e in (f(x)**2, g(f(x)), sin(f(x))):
+        d = Derivative(e, (x, n))
+        assert diff(f(x)*d, f(x)).doit() == d
 
 
 def test_derivative_subs_function_differentiated_inside():
