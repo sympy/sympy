@@ -678,7 +678,7 @@ def test_WienerProcess():
     assert P((X(t) > 4) & (X(d) > 3) & (X(x) > 2) & (X(y) > 1),
         Contains(t, Interval.Lopen(0, 1)) & Contains(d, Interval.Lopen(1, 2))
         & Contains(x, Interval.Lopen(2, 3)) & Contains(y, Interval.Lopen(3, 4))).simplify() ==\
-        (1 - erf(sqrt(2)/2))*(1 - erf(sqrt(2)))*(1 - erf(3*sqrt(2)/2))*(1 - erf(2*sqrt(2)))/16
+        (erf(sqrt(2)/2) - 1)*(erf(sqrt(2)) - 1)*(erf(3*sqrt(2)/2) - 1)*(erf(2*sqrt(2)) - 1)/16
 
     # Contains an overlapping interval so, return Probability
     assert P((X(t)< 2) & (X(d)> 3), Contains(t, Interval.Lopen(0, 2))

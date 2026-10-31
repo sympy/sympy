@@ -583,7 +583,7 @@ def test_sysode_linear_neq_order1_type1():
     eqs9 = [Eq(Derivative(x(t), t), x(t) + y(t)),
             Eq(Derivative(y(t), t), x(t) - y(t))]
     sol9 = [Eq(x(t), C1*exp(-sqrt(2)*t) + C2*exp(sqrt(2)*t)),
-            Eq(y(t), -C1*(1 + sqrt(2))*exp(-sqrt(2)*t) - C2*(1 - sqrt(2))*exp(sqrt(2)*t))]
+            Eq(y(t), -C1*(1 + sqrt(2))*exp(-sqrt(2)*t) + C2*(sqrt(2) - 1)*exp(sqrt(2)*t))]
     assert dsolve(eqs9) == sol9
     assert checksysodesol(eqs9, sol9) == (True, [0, 0])
 
