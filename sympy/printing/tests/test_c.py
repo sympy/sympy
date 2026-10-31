@@ -12,6 +12,7 @@ from sympy.functions import (
 from sympy.sets import Range
 from sympy.logic import ITE, Implies, Equivalent
 from sympy.codegen import For, aug_assign, Assignment
+from sympy.testing.check_printed_code import check_printed_code
 from sympy.testing.pytest import raises, XFAIL
 from sympy.printing.codeprinter import PrintMethodNotImplementedError
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
@@ -92,6 +93,7 @@ def test_ccode_constants_mathh():
     assert ccode(pi, type_aliases={real: float80}) == "M_PIl"
 
 
+@check_printed_code
 def test_ccode_constants_other():
     assert ccode(2*GoldenRatio) == "const double GoldenRatio = %s;\n2*GoldenRatio" % GoldenRatio.evalf(17)
     assert ccode(
@@ -113,6 +115,7 @@ def test_ccode_Rational():
     assert ccode(Rational(3, 7)*x, type_aliases={real: float80}) == "(3.0L/7.0L)*x"
 
 
+@check_printed_code
 def test_ccode_Integer():
     assert ccode(Integer(67)) == "67"
     assert ccode(Integer(-1)) == "-1"
@@ -195,6 +198,7 @@ def test_ccode_user_functions():
     assert out.count('muladd') == 100
 
 
+@check_printed_code
 def test_ccode_boolean():
     assert ccode(True) == "true"
     assert ccode(S.true) == "true"
