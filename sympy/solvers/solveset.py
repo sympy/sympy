@@ -2226,9 +2226,9 @@ def _transolve(f, symbol, domain):
 
     >>> f = 3**(2*x) - 2**(x + 3)
     >>> pprint(transolve(f, x, S.Reals), use_unicode=False)
-            -3*log(2)      
+            -3*log(2)
         {-----------------}
-         log(2) - 2*log(3) 
+         log(2) - 2*log(3)
     >>> pprint(tsolve(f, x), use_unicode=False)
          /   3     \
          | --------|
