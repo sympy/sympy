@@ -632,6 +632,9 @@ def evalf_add(v: 'Add', prec: int, options: OPT_DICT) -> TMP_RES:
 
 
 def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
+    from fractions import Fraction
+    from .numbers import Rational
+
     res = pure_complex(v)
     if res:
         # the only pure complex that is a mul is h*I
@@ -682,18 +685,37 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
     # direction tells us that the result should be multiplied by
     # I**direction; all other numbers get put into complex_factors
     # to be multiplied out after the first phase.
-    last = len(args)
     direction = 0
-    args.append(S.One)
     complex_factors = []
+    exact_re, exact_im = Fraction(1), Fraction(0)
+    have_exact = False
 
-    for i, arg in enumerate(args):
-        if i != last and pure_complex(arg):
-            args[-1] = (args[-1]*arg).expand()
+    numerical_factors = []
+
+    for arg in args:
+        pair = pure_complex(arg)
+
+        if pair and all(c.is_Rational for c in pair):
+            a, b = (Fraction(int(c.p), int(c.q)) for c in pair)
+            exact_re, exact_im = (
+                exact_re*a - exact_im*b,
+                exact_re*b + exact_im*a,
+            )
+            have_exact = True
             continue
-        elif i == last and arg is S.One:
-            continue
-        re, im, re_acc, im_acc = evalf(arg, working_prec, options)
+
+        numerical_factors.append(evalf(arg, working_prec, options))
+
+    if have_exact:
+        real = Rational(exact_re.numerator, exact_re.denominator)
+        imag = Rational(exact_im.numerator, exact_im.denominator)
+
+        re, _, re_acc, _ = evalf(real, working_prec, options)
+        im, _, im_acc, _ = evalf(imag, working_prec, options)
+
+        numerical_factors.append((re, im, re_acc, im_acc))
+
+    for re, im, re_acc, im_acc in numerical_factors:
         if re and im:
             complex_factors.append((re, im, re_acc, im_acc))
             continue
