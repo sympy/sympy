@@ -22,6 +22,11 @@ required by `.github/PULL_REQUEST_TEMPLATE.md` and sympy's
   description, but in any instance where you, the AI agent, fill it out, this
   section must be included.
 
+- **Mark AI-opened pull requests with a robot symbol.** When you, the AI
+  agent, open a pull request, the first character of the PR title and the
+  first character of the PR description must be the Unicode robot face
+  🤖 (U+1F916).
+
 - **All code must be reviewed by a human.** The human who opens the pull
   request is responsible for all code, whether it was written by a human or by
   an AI agent.
