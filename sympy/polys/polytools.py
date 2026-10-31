@@ -4485,7 +4485,23 @@ class Poly(Basic):
         >>> Poly(x**2 + 1, x, modulus=2).is_irreducible
         False
 
+        Over the complex numbers (which are algebraically closed by the
+        Fundamental Theorem of Algebra) a polynomial is irreducible if and
+        only if its degree is one, so the degree is checked directly
+        instead of calling the factorization engine:
+
+        >>> Poly(x**2 + 1, x, domain='CC').is_irreducible
+        False
+        >>> Poly(x - 1, x, domain='CC').is_irreducible
+        True
+
         """
+        if f.rep.dom.is_ComplexField and f.is_univariate:
+            # issue 30845: CC is algebraically closed, so a univariate
+            # polynomial over CC is irreducible exactly when it has degree
+            # 1; factorization is not supported over CC so short-circuit
+            # on the degree instead of raising DomainError
+            return f.degree() == 1
         return f.rep.is_irreducible
 
     @property
