@@ -240,11 +240,11 @@ We would like to reduce degrees of the numerator and the denominator of a
 rational function ``f/g``. To do this we employ :func:`~.cancel` function::
 
     >>> cancel(f/g)
-         2                    3      2      
+         2                    3      2
      √2⋅x  - 2⋅√2⋅x - 3⋅√2 + x  - 2⋅x  - 3⋅x
      ───────────────────────────────────────
-                      2                     
-                     x  - 2                 
+                      2
+                     x  - 2
 
 Unfortunately nothing interesting happened. This is because by default SymPy
 treats `\sqrt{2}` as a generator, obtaining a bivariate polynomial for the
@@ -264,10 +264,10 @@ inference, the same result can be obtained by setting the ``extension``
 keyword with an explicit algebraic number::
 
     >>> cancel(f/g, extension=sqrt(2))
-      2          
+      2
      x  - 2⋅x - 3
      ────────────
-       -√2 + x   
+       -√2 + x
 
 Univariate factoring over various domains
 -----------------------------------------
