@@ -39,7 +39,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral, _add_atan_floor_terms
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
+from sympy.testing.pytest import XFAIL, raises, slow, warns_deprecated_sympy, warns
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
@@ -2215,6 +2215,54 @@ def test_issue_20781():
     # the code more deeply than the issue of Float(0) != S(0)
     assert integrate(f(0), (x, -float('Inf'), x)
         ) == 2*x - 2*Min(0, x)
+
+
+def test_issue_19220():
+    # <https://github.com/sympy/sympy/issues/19220>
+    g = Function('g')
+    assert Integral(f(x), (x, 0, 1)).subs(f, g) == Integral(g(x), (x, 0, 1))
+    assert Integral(f(x), (x, 0, 1)).subs(f, Lambda(x, x**2)) == \
+        Integral(x**2, (x, 0, 1))
+    assert Sum(f(x), (x, 0, 3)).subs(f, cos) == Sum(cos(x), (x, 0, 3))
+    raises(ValueError, lambda: Integral(f(y), (x, 0, 1)).subs(
+        f, Lambda(t, t*x)))
+
+
+def test_integral_subs_non_symbol_variable():
+    # a variable of integration that is not a Symbol, e.g. f(x), is not
+    # in free_symbols but must still not be captured
+    g = Function('g')
+    raises(ValueError, lambda: Integral(g(y), (f(x), 0, 1)).subs(
+        g, Lambda(t, t*f(x))))
+    raises(ValueError, lambda: Integral(g(y), (f(x), 0, 1)).subs(g(y), f(x)))
+    # a variable of integration deep inside old is still contained in it
+    assert Integral(f(g(x)), (x, 0, 1)).subs(f(g(x)), x**2) == \
+        Integral(x**2, (x, 0, 1))
+
+
+@XFAIL
+def test_integral_subs_renames_captured_variable():
+    # instead of raising ValueError, the variable of integration could be
+    # renamed so that it does not capture new, as for Lambda
+    g = Function('g')
+    i = Integral(g(y), (f(x), 0, 1))
+    assert i.subs(g, Lambda(t, t*f(x))).doit() == y*f(x)
+    assert i.subs(g(y), f(x)).doit() == f(x)
+    assert Integral(f(y), (x, 0, 1)).subs(f, Lambda(t, t*x)).doit() == x*y
+
+
+def test_integral_factor_non_symbol_variable():
+    g = Function('g')
+    assert Integral(2*f(x)*g(y), f(x)).factor() == \
+        2*g(y)*Integral(f(x), f(x))
+    assert Sum(2*f(x)*g(y), (f(x), 0, 1)).factor() == \
+        2*g(y)*Sum(f(x), (f(x), 0, 1))
+
+
+@XFAIL
+def test_integral_subs_captures_integration_variable():
+    i = Integral(x*y, (x, 0, 1))
+    assert i.subs(y, x).doit() == i.doit().subs(y, x) == x/2
 
 
 @slow
