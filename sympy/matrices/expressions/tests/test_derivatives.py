@@ -7,6 +7,7 @@ from __future__ import annotations
 from sympy import KroneckerProduct, Matrix, diag, diff, eye, Array, MatPow
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
+from sympy.core.function import Derivative, Subs
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol
@@ -882,3 +883,32 @@ def test_derivative_object_routing():
     assert Derivative(Trace(A2*X2), X2).doit() == A2.T
     assert Derivative(Trace(X2*X2), X2, 2).doit() == \
         Trace(X2*X2).diff(X2).diff(X2)
+
+
+def test_derivative_subs_matrix_expr():
+    assert Derivative(Determinant(A**j), A).subs(j, 3) == \
+        Derivative(Determinant(A**3), A)
+    assert Derivative(A**j, A).subs(j, 3) == Derivative(A**3, A)
+    assert Derivative(A**j, A).subs(j, i) == Derivative(A**i, A)
+    d = Derivative(A[0, 0]*Trace(A), A)
+    assert d.subs(A[0, 0], 1) == Subs(d, A[0, 0], 1)
+
+
+def test_subs_doit_derivative_matrix_element():
+    d = Derivative(A[0, 0]*Trace(A), A)
+    assert Subs(d, A[0, 0], 1).doit() == \
+        Trace(A)*MatrixUnit(k, k, 0, 0) + Identity(k)
+
+
+def test_subs_doit_derivative_matrix_transpose():
+    d = Derivative(Trace(A*A.T), A)
+    assert Subs(d, A.T, Identity(k)).doit() == 2*A
+
+
+def test_derivative_subs_wrt_variable_captured():
+    A2 = MatrixSymbol("A", 2, 2)
+    B2 = MatrixSymbol("B", 2, 2)
+    d = Derivative(Trace(A2*B2), A2)
+    assert d.subs(A2, B2) == Subs(d, A2, B2)
+    d = Derivative(A2[0, 0]*A2[1, 1], A2[0, 0])
+    assert d.subs(A2[0, 0], A2[1, 1]) == Subs(d, A2[0, 0], A2[1, 1])

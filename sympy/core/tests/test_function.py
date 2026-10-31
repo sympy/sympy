@@ -25,7 +25,7 @@ from sympy.integrals import Integral
 from sympy.matrices.dense import Matrix
 from sympy.printing.str import sstr
 from sympy.series.order import O
-from sympy.tensor.indexed import Indexed
+from sympy.tensor.indexed import Indexed, IndexedBase
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
 from sympy.core.parameters import _exp_is_pow
@@ -552,6 +552,14 @@ def test_Subs2():
     assert Subs(f(x), x**2, x).doit() == f(sqrt(x))
 
 
+def test_Subs_variable_inside_wrt_variable():
+    df = f(x).diff(x)
+    s = Subs(Derivative(df**2, df), f(x), 2*x)
+    assert s.doit() == 4
+    assert s == Subs(Derivative(df**2, df), f(x), 2*x)
+    assert Subs(g(f(x)), f(x), 2) == Subs(g(f(y)), f(y), 2)
+
+
 def test_expand_function():
     assert expand(x + y) == x + y
     assert expand(x + y, complex=True) == I*im(x) + I*im(y) + re(x) + re(y)
@@ -848,11 +856,163 @@ def test_diff_wrt_func_subs():
     assert f(g(x)).diff(x).subs(g, Lambda(x, 2*x)).doit() == f(2*x).diff(x)
 
 
+def test_derivative_subs_repeated_invalid_wrt_variable():
+    d = Derivative(f(g(x)), g(x), x, g(x))
+    assert d.subs(g, cos).doit() == d.doit().subs(g, cos).doit()
+
+
+def test_derivative_subs_invalid_wrt_variable_chain_rule():
+    # the placeholder for g(x) must not hide that g(x) depends on x
+    sq = Lambda(t, t**2)
+    d = Derivative(f(g(x))*x, g(x), x, g(x))
+    assert d.subs(g, sq).doit() == (
+        Subs(Derivative(f(t), (t, 2)), t, x**2) +
+        2*x**2*Subs(Derivative(f(t), (t, 3)), t, x**2))
+    d = Derivative(x*y*f(g(x, y)), g(x, y), x, y)
+    xy = Lambda((x, y), x*y)
+    assert d.subs(g, xy).doit() == d.doit().subs(g, xy).doit()
+    # d.doit() is wrong when a variable contains another one, so
+    # check the form instead
+    xi = Dummy('xi')
+    d = Derivative(x*f(g(x), h(g(x))), g(x), h(g(x)), x)
+    assert d.subs(g, sq) == Derivative(
+        Subs(Derivative(x*f(xi, h(xi)), xi), xi, x**2), h(x**2), x)
+    # a Derivative variable doesn't commute with the others, so the
+    # substitution is done after differentiating
+    d = Derivative(x*f(g(x))*f(x).diff(x), g(x), x, f(x).diff(x))
+    assert d.subs(g, sq) == Subs(d, g, sq)
+    assert d.subs(g, sq).doit() == (
+        Subs(Derivative(f(t), t), t, x**2) +
+        2*x**2*Subs(Derivative(f(t), (t, 2)), t, x**2))
+
+
+def test_derivative_subs_inside_derivative_wrt_variable():
+    df = f(x).diff(x)
+    d = Derivative(2*cos(y)*df, df, g(y))
+    assert d.subs(f(x), y).doit() == d.doit().subs(f(x), y) == 0
+    d = Derivative(df**2, df, x)
+    assert d.subs(f(x), x**2).doit() == \
+        d.doit().subs(f(x), x**2).doit() == 4
+    d = Derivative(z + h(x, y) + sin(x)**2, f(x), y)
+    assert d.subs(y, df).doit() == d.doit().subs(y, df) == 0
+
+
+def test_derivative_subs_function_class_kept_in_subs():
+    # the substitution leaves Subs(Derivative(f(x), x), f, xt) in the
+    # expression, which has the function class f as a variable
+    xt = Lambda(t, x*t)
+    d = Derivative(x*f(x).diff(x), f(x).diff(x))
+    assert d.subs(f, xt).doit() == d.doit().subs(f, xt).doit() == x
+    assert Subs(f(x).diff(x), f, xt).has(y) is False
+    A = IndexedBase('A')
+    d = Derivative(x*f(x).diff(x), f(x).diff(x), f(x).diff(x), A[y])
+    assert d.subs(f, xt).doit() == d.doit().subs(f, xt).doit() == 0
+
+
+def test_derivative_subs_function_whose_image_contains_wrt_variable():
+    # g(x) in g(x) + f(g(x)) comes from f(g(x)), which depends on g(x),
+    # so no variable of differentiation is created
+    L = Lambda(t, t + f(t))
+    for d in (Derivative(f(g(x)), g(x)), Derivative(f(f(g(x))), f(g(x)))):
+        assert not d.subs(f, L).doit().has(Subs(d, f, L))
+        assert d.subs(f, L).doit() == d.doit().subs(f, L).doit()
+    assert Derivative(f(g(x)), g(x)).subs(f, L).doit() == \
+        1 + Derivative(f(g(x)), g(x))
+
+
+def test_diff_wrt_function_inside_derivative_wrt_variable():
+    df = f(x).diff(x)
+    assert (g(df).diff(df)*f(x)).diff(f(x)) == g(df).diff(df)
+    assert Derivative(g(df), df).diff(f(x)) == 0
+    d = Derivative(y*g(x).diff(x), f(x), x)
+    assert d.subs(x, df).doit() == d.doit().subs(x, df).doit() == 0
+
+
+def test_derivative_subs_function_in_derivative_wrt_variable():
+    # h(x, y).diff(y) becomes an expression that does not mention z
+    u, v = symbols('u v')
+    H = Lambda((u, v), u**2*v + cos(u*v))
+    d = Derivative(h(z, h(x, y).diff(y)), z, h(x, y).diff(y))
+    assert d.subs(h, H).doit() == \
+        diff(H(z, t), z, t).subs(t, H(x, y).diff(y))
+
+
+def test_derivative_subs_creates_wrt_variable():
+    # y -> x turns g(y) into g(x), which is a variable of differentiation
+    d = Derivative(f(x)*g(y), g(x))
+    assert d.subs(y, x) == Subs(d, y, x)
+    assert d.subs(y, x).doit() == d.doit().subs(y, x) == 0
+    d = Derivative(f(g(x))*g(y), g(x))
+    assert d.subs(y, x).doit() == d.doit().subs(y, x)
+    d = Derivative(f(x)*h(x), g(x))
+    assert d.subs(h, g).doit() == d.doit().subs(h, g) == 0
+    # nothing is created
+    assert Derivative(f(x)*g(y), g(x)).subs(y, 2) == \
+        Derivative(f(x)*g(2), g(x))
+
+
+def test_derivative_subs_wrt_symbol_inside_wrt_function():
+    d = Derivative(f(g(x), y), g(x), x)
+    assert d.subs(y, x) == Subs(d, y, x)
+    assert d.subs(y, x).doit() == d.doit().subs(y, x)
+
+
+def test_derivative_subs_function_with_lambda():
+    d = Derivative(f(x) + g(y), y)
+    assert d.subs(f, Lambda(t, t*y)) == Subs(d, f, Lambda(t, t*y))
+    assert d.subs(f, Lambda(t, t**2)) == Derivative(x**2 + g(y), y)
+
+
+def test_derivative_subs_expression_of_wrt_variable():
+    d = Derivative(x**2 + x, x)
+    assert d.subs(x**2, x) == Subs(d, x**2, x)
+    assert d.subs(x**2, x).doit() == 2*x + 1
+    assert d.subs(x**2, 2).doit() == 2*x + 1
+    assert Derivative(x**3 + x**2, x).subs(x**2, x).doit() == 5*x
+    assert Derivative(sin(x) + x, x).subs(sin(x), y).doit() == cos(x) + 1
+    assert Derivative(f(x) + x, x).subs(f(x), x**2) == \
+        Derivative(x**2 + x, x)
+    fx = f(x).diff(x)
+    assert Derivative(f(x) + fx, x).subs(fx, x).doit() == x + 1
+
+
+def test_derivative_subs_introduces_absent_wrt_variable():
+    # subs and doit must commute, a design goal set in PR #15049
+    d = Derivative(f(y), x)
+    assert d.subs(y, x) == Subs(d, y, x)
+    assert d.subs(y, x).doit() == d.doit().subs(y, x) == 0
+
+
+def test_derivative_subs_whole_expr_introduces_wrt_variable():
+    d = Derivative(f(x), x, y)
+    assert d.subs(f(x), x**2*y) == Subs(d, f(x), x**2*y)
+    assert d.subs(f(x), x**2*y).doit() == d.doit().subs(f(x), x**2*y) == 0
+
+
+def test_subs_doit_refused_function_substitution():
+    # Derivative.subs refuses these, so Subs.doit must not retry them
+    # before differentiating
+    assert Subs(Derivative(f(y), x), f, Lambda(t, t*x)).doit() == 0
+    d = Derivative(f(x)*g(x), x, y, (x, 2))
+    assert d.subs(g, Lambda(t, t*x)).doit() == 0
+
+
+def test_subs_doit_derivative_unmatched_old():
+    assert Subs(Derivative(x**2*y, x), x*y, t).doit() == 2*t
+    assert Subs(Derivative(x**2 + x + y, x), x + y, z).doit() == 2*x + 1
+
+
+def test_derivative_subs_symbol_introduces_wrt_variable():
+    for s in (y, Dummy('y')):
+        d = Derivative(s, x)
+        assert d.subs(s, x).doit() == d.doit().subs(s, x) == 0
+
+
 def test_subs_in_derivative():
     expr = sin(x*exp(y))
     u = Function('u')
     v = Function('v')
-    assert Derivative(expr, y).subs(expr, y) == Derivative(y, y)
+    assert Derivative(expr, y).subs(expr, y) == Subs(Derivative(expr, y), expr, y)
     assert Derivative(expr, y).subs(y, x).doit() == \
         Derivative(expr, y).doit().subs(y, x)
     assert Derivative(f(x, y), y).subs(y, x) == Subs(Derivative(f(x, y), y), y, x)

@@ -1198,9 +1198,12 @@ class Derivative(Expr):
 
     When differentiation wrt a non-Symbol is attempted, the non-Symbol
     is temporarily converted to a Symbol while the differentiation
-    is performed and the same answer is obtained:
+    is performed and the same answer is obtained. The conversion is a
+    plain replacement, so it is done here with ``xreplace``; ``subs``
+    would not put ``f(t)`` back into ``Derivative(x, t)`` because a
+    symbol is independent of ``t``:
 
-        >>> indirect = F(t, U, V).subs(U, x).diff(x).subs(x, U)
+        >>> indirect = F(t, U, V).xreplace({U: x}).diff(x).xreplace({x: U})
         >>> assert direct == indirect
 
     The implication of this non-symbol replacement is that all
@@ -1458,8 +1461,7 @@ class Derivative(Expr):
                         # these match exactly since
                         # x.diff(f(x)) == g(x).diff(f(x)) == 0
                         # and are not created by differentiation
-                        D = Dummy()
-                        if not expr.xreplace({v: D}).has(D):
+                        if not _has_free_variable(expr, v):
                             zero = True
                             break
                     elif isinstance(v, MatrixExpr):
@@ -1514,10 +1516,17 @@ class Derivative(Expr):
             is_symbol = v.is_symbol or isinstance(v,
                 (Iterable, Tuple, MatrixBase, NDimArray))
 
+            hidden = {}
             if not is_symbol:
                 old_v = v
                 v = Dummy('xi')
-                expr = expr.xreplace({old_v: v})
+                # a Derivative variable of differentiation that contains
+                # old_v, e.g. f(x).diff(x) for f(x), would be invalid with
+                # v in it, and is independent of old_v, so it is hidden
+                hidden = {w: Dummy() for d in expr.atoms(Derivative)
+                    for w in d._wrt_variables if isinstance(w, Derivative)
+                    and _has_free_variable(w, old_v)}
+                expr = expr.xreplace({**hidden, old_v: v})
                 # Derivatives and UndefinedFunctions are independent
                 # of all others
                 clashing = not (isinstance(old_v, (Derivative, AppliedUndef)))
@@ -1539,7 +1548,12 @@ class Derivative(Expr):
             if old_v is not None:
                 if obj is not None:
                     # remove the dummy that was used
-                    obj = obj.subs(v, old_v)
+                    _restoring_dummies.add(v)
+                    try:
+                        obj = obj.subs(v, old_v)
+                    finally:
+                        _restoring_dummies.discard(v)
+                    obj = obj.xreplace({d: w for w, d in hidden.items()})
                 # restore expr
                 expr = old_expr
 
@@ -1801,74 +1815,118 @@ class Derivative(Expr):
             if self.canonical == old.canonical:
                 return new
 
-            # collections.Counter doesn't have __le__
-            def _subset(a, b):
-                return all((a[i] <= b[i]) == True for i in a)
-
-            old_vars = Counter(dict(reversed(old.variable_count)))
-            self_vars = Counter(dict(reversed(self.variable_count)))
-            if _subset(old_vars, self_vars):
-                return _derivative_dispatch(new, *(self_vars - old_vars).items()).canonical
+            # count each variable of differentiation, which can appear
+            # more than once, e.g. in Derivative(f(x, y), x, y, x)
+            rest = Counter()
+            for v, c in self.variable_count:
+                rest[v] += c
+            for v, c in old.variable_count:
+                rest[v] -= c
+            if all((c >= 0) == True for c in rest.values()):
+                return _derivative_dispatch(new, *[
+                    (v, c) for v, c in rest.items() if c != 0]).canonical
 
         args = list(self.args)
         newargs = [x._subs(old, new) for x in args]
-        if args[0] == old:
-            # complete replacement of self.expr
-            # we already checked that the new is valid so we know
-            # it won't be a problem should it appear in variables
-            return _derivative_dispatch(*newargs)
-
         if newargs[0] != args[0]:
-            # case (1) can't change expr by introducing something that is in
-            # the _wrt_variables if it was already in the expr
-            # e.g.
+            # case (1) changing expr must not change how it depends on
+            # the _wrt_variables, e.g.
             # for Derivative(f(x, g(y)), y), x cannot be replaced with
             # anything that has y in it; for f(g(x), g(y)).diff(g(y))
-            # g(x) cannot be replaced with anything that has g(y)
-            syms = {vi: Dummy() for vi in self._wrt_variables
-                if not vi.is_Symbol}
-            wrt = {syms.get(vi, vi) for vi in self._wrt_variables}
-            forbidden = args[0].xreplace(syms).free_symbols & wrt
-            nfree = new.xreplace(syms).free_symbols
-            ofree = old.xreplace(syms).free_symbols
-            if (nfree - ofree) & forbidden:
+            # g(x) cannot be replaced with anything that has g(y);
+            # for Derivative(f(y), x), y cannot be replaced with x;
+            # for Derivative(x**2 + x, x), x**2 cannot be replaced but
+            # for Derivative(f(x) + x, x), f(x) can
+            def changes_derivative(diff_var):
+                if _depends_on(old, diff_var):
+                    # replacing an undefined function or a _wrt_variable
+                    # only changes what it stands for
+                    return not (isinstance(old, AppliedUndef)
+                        or old in self._wrt_variables)
+                if _depends_on(new, diff_var):
+                    # only a Dummy that __new__ used for a non-Symbol, e.g.
+                    # f(x), may be replaced back with it
+                    return not (old in _restoring_dummies
+                        and old == args[0])
+                # neither depends on it, but the substitution can still
+                # create it, e.g. g(y) becomes g(x) with y -> x
+                if diff_var.is_Symbol:
+                    return False
+                # hide diff_var so that only what does not depend on it is
+                # checked; the mask is of the same kind, so that e.g. a
+                # variable like f(x).diff(x) or a matrix power stays valid
+                from sympy.matrices.expressions.matexpr import (MatrixExpr,
+                    MatrixSymbol)
+                mask = Dummy()
+                if isinstance(diff_var, AppliedUndef):
+                    mask = UndefinedFunction(mask.name)(*diff_var.args)
+                elif isinstance(diff_var, MatrixExpr):
+                    mask = MatrixSymbol(mask.name, *diff_var.shape)
+                rest = args[0].xreplace({diff_var: mask})._subs(old, new)
+                # has, as has_free fails on e.g. Subs(f(x).diff(x), f, g)
+                return rest.has(diff_var._subs(old, new))
+
+            if any(changes_derivative(v) for v in self._wrt_variables):
                 return Subs(self, old, new)
 
-        viter = ((i, j) for ((i, _), (j, _)) in zip(newargs[1:], args[1:]))
-        if any(i != j for i, j in viter):  # a wrt-variable change
+        changed = [vi for (vi, _), (v, _) in zip(newargs[1:], args[1:])
+            if vi != v]
+        if changed:  # a wrt-variable change
             # case (2) can't change vars by introducing a variable
             # that is contained in expr, e.g.
             # for Derivative(f(z, g(h(x), y)), y), y cannot be changed to
             # x, h(x), or g(h(x), y)
-            for a in _atomic(self.expr, recursive=True):
-                for i in range(1, len(newargs)):
-                    vi, _ = newargs[i]
-                    if a == vi and vi != args[i][0]:
-                        return Subs(self, old, new)
+            if any(_has_free_variable(args[0], vi) for vi in changed):
+                return Subs(self, old, new)
             # more arg-wise checks
             vc = newargs[1:]
             oldv = self._wrt_variables
-            newe = self.expr
-            subs = []
+            # old variable -> (dummy, new invalid variable)
+            dummies = {}
             for i, (vi, ci) in enumerate(vc):
                 if not vi._diff_wrt:
                     # case (3) invalid differentiation expression so
-                    # create a replacement dummy
-                    xi = Dummy('xi_%i' % i)
-                    # replace the old valid variable with the dummy
-                    # in the expression
-                    newe = newe.xreplace({oldv[i]: xi})
-                    # and replace the bad variable with the dummy
-                    vc[i] = (xi, ci)
-                    # and record the dummy with the new (invalid)
-                    # differentiation expression
-                    subs.append((xi, vi))
+                    # replace it with a dummy, one per old variable even
+                    # if it appears more than once
+                    if oldv[i] not in dummies:
+                        dummies[oldv[i]] = (Dummy('xi_%i' % i), vi)
+                    vc[i] = (dummies[oldv[i]][0], ci)
 
-            if subs:
-                # handle any residual substitution in the expression
-                newe = newe._subs(old, new)
-                # return the Subs-wrapped derivative
-                return Subs(Derivative(newe, *vc), *zip(*subs))
+            if dummies:
+                subs = list(dummies.values())
+                xis = {xi for xi, _ in subs}
+                # replace the old valid variables with the dummies in
+                # the expression and handle any residual substitution
+                newe = self.expr.xreplace(
+                    {v: xi for v, (xi, _) in dummies.items()})._subs(old, new)
+                inner, outer = sift(vc, lambda i: i[0] in xis, binary=True)
+                if not outer:
+                    return Subs(Derivative(newe, *inner), *zip(*subs))
+                outer_free = set().union(*[v.free_symbols for v, _ in outer])
+
+                def commutes(v):
+                    if isinstance(v, (Symbol, AppliedUndef)) or v.is_Indexed:
+                        return True
+                    # a replaced Derivative, e.g. f(x).diff(x), is independent
+                    # of the variables outside Subs if neither it nor what
+                    # replaces it shares a symbol with them
+                    return isinstance(v, Derivative) and v in dummies and not (
+                        (v.free_symbols | dummies[v][1].free_symbols)
+                        & outer_free)
+
+                if all(commutes(v) for v in oldv):
+                    # a dummy does not depend on the other variables
+                    # although the variable it replaces may, e.g. g(x)
+                    # on x, so only differentiate wrt the dummies inside
+                    # Subs and wrt the other variables outside it; this
+                    # reorders them, which is allowed because symbols,
+                    # functions and Indexed objects commute during
+                    # differentiation
+                    return Derivative(
+                        Subs(Derivative(newe, *inner), *zip(*subs)),
+                        *outer)
+                # otherwise substitute after differentiating
+                return Subs(self, old, new)
 
         # everything was ok
         return _derivative_dispatch(*newargs)
@@ -1996,6 +2054,11 @@ class Derivative(Expr):
         # object, the default in `Basic` will call a loop over
         # `_eval_derivative`:
         return expr._eval_derivative_n_times(v, count)
+
+
+# the Dummy symbols that Derivative.__new__ is replacing back with the
+# non-Symbol variables of differentiation they stood for
+_restoring_dummies: set[Dummy] = set()
 
 
 def _derivative_dispatch(expr, *variables, **kwargs):
@@ -2248,6 +2311,36 @@ class Lambda(Expr):
 
 
 
+def _has_free_variable(expr, v):
+    """Return True if the variable ``v`` occurs free in ``expr``.
+
+    A variable of differentiation or integration need not be a Symbol:
+    anything with ``_diff_wrt``, e.g. ``f(x)`` or ``Derivative(f(x), x)``,
+    can be one. ``free_symbols`` only reports Symbols, and ``args`` only
+    looks one level down, e.g. not at ``x`` in ``f(g(x))``, so neither
+    finds every such variable. This looks for ``v`` itself at any depth,
+    ignores occurrences that are bound, e.g. by ``Lambda`` or
+    ``Integral``, and is False for a function class such as ``f``,
+    which contains no variable.
+    """
+    if not isinstance(expr, Basic):
+        return False
+    if v.is_Symbol:
+        # the same answer, without renaming bound symbols with as_dummy
+        return v in expr.free_symbols
+    return expr.has_free(v)
+
+
+def _depends_on(expr, v):
+    """Return True if ``expr`` may depend on the variable of
+    differentiation ``v``, using the same test as ``Derivative``."""
+    if isinstance(v, (Symbol, AppliedUndef, Derivative)):
+        return _has_free_variable(expr, v)
+    if not isinstance(expr, Basic):
+        return False
+    return bool(expr.free_symbols & v.free_symbols)
+
+
 class Subs(Expr):
     """
     Represents unevaluated substitutions of an expression.
@@ -2366,6 +2459,12 @@ class Subs(Expr):
         # to give a variable-independent expression
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
+        # a symbol would make a variable of differentiation that contains
+        # an undefined function invalid, e.g. f(x) in f(x).diff(x), so
+        # such a function is replaced with another one
+        wrt = {w for d in expr.atoms(Derivative) for w in d._wrt_variables}
+        inside_wrt = {v for v in variables if isinstance(v, AppliedUndef)
+            and any(w != v and _has_free_variable(w, v) for w in wrt)}
         from sympy.printing.str import StrPrinter
         class CustomStrPrinter(StrPrinter):
             def _print_Dummy(self, expr):
@@ -2375,7 +2474,8 @@ class Subs(Expr):
             return p.doprint(expr)
         while 1:
             s_pts = {p: Symbol(pre + mystr(p)) for p in pts}
-            reps = [(v, s_pts[p])
+            reps = [(v, UndefinedFunction(s_pts[p].name)(*v.args)
+                if v in inside_wrt else s_pts[p])
                 for v, p in zip(variables, point)]
             # if any underscore-prepended symbol is already a free symbol
             # and is a variable with a different point value, then there
@@ -2414,40 +2514,34 @@ class Subs(Expr):
             undone = []
             for i, vi in enumerate(v):
                 if isinstance(vi, FunctionClass):
-                    e = e.subs(vi, p[i])
-                else:
-                    undone.append((vi, p[i]))
+                    r = e.subs(vi, p[i])
+                    if not isinstance(r, Subs):
+                        e = r
+                        continue
+                    # the Derivative refused it, so do it later
+                undone.append((vi, p[i]))
             if not isinstance(e, Derivative):
                 e = e.doit()
             if isinstance(e, Derivative):
-                # do Subs that aren't related to differentiation
-                undone2 = []
-                D = Dummy()
-                arg = e.args[0]
-                for vi, pi in undone:
-                    if D not in e.xreplace({vi: D}).free_symbols:
-                        if arg.has(vi):
-                            e = e.subs(vi, pi)
-                    else:
-                        undone2.append((vi, pi))
-                undone = undone2
                 # differentiate wrt variables that are present
                 wrt = []
-                D = Dummy()
                 expr = e.expr
-                free = expr.free_symbols
                 for vi, ci in e.variable_count:
-                    if isinstance(vi, Symbol) and vi in free:
-                        expr = expr.diff((vi, ci))
-                    elif D in expr.subs(vi, D).free_symbols:
+                    if _depends_on(expr, vi):
                         expr = expr.diff((vi, ci))
                     else:
                         wrt.append((vi, ci))
-                # inject remaining subs
-                rv = expr.subs(undone)
+                # a variable of differentiation replaced by an expression
+                # is a change of variables, so absent variables are
+                # differentiated after it; any other substitution is
+                # done after all differentiation
+                subs_before_diff, subs_after_diff = sift(undone,
+                    lambda i: i[0] in e._wrt_variables, binary=True)
+                rv = expr.subs(subs_before_diff)
                 # do remaining differentiation *in order given*
                 for vc in wrt:
                     rv = rv.diff(vc)
+                rv = rv.subs(subs_after_diff)
             else:
                 # inject remaining subs
                 rv = e.subs(undone)

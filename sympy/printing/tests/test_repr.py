@@ -5,7 +5,7 @@ from sympy import Add, Mul
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.assumptions.ask import Q
-from sympy.core.function import (Function, WildFunction)
+from sympy.core.function import (Derivative, Function, WildFunction)
 from sympy.core.numbers import (AlgebraicNumber, Float, Integer, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
@@ -218,6 +218,15 @@ def test_Dummy_assumption():
     s1 = "Dummy('d', dummy_index=%s, nonzero=True)" % str(d.dummy_index)
     s2 = "Dummy('d', nonzero=True, dummy_index=%s)" % str(d.dummy_index)
     assert srepr(d) in (s1, s2)
+
+
+def test_Derivative_dummy():
+    # Derivative leaves the Dummy that it uses for a non-Symbol variable
+    # of differentiation in this result
+    t = Symbol('t')
+    f, F = Function('f'), Function('F')
+    r = Derivative(F(t, f(t)), f(t), t).doit()
+    assert eval(srepr(r), ENV) == r
 
 
 def test_Dummy_from_Symbol():

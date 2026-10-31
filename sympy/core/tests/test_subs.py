@@ -548,7 +548,22 @@ def test_derivative_subs2():
 def test_derivative_subs3():
     dex = Derivative(exp(x), x)
     assert Derivative(dex, x).subs(dex, exp(x)) == dex
-    assert dex.subs(exp(x), dex) == Derivative(exp(x), x, x)
+    assert dex.subs(exp(x), dex) == Subs(dex, exp(x), dex)
+
+
+def test_derivative_subs_repeated_variable():
+    f = Function('f')
+    d = Derivative(f(x, y), (x, 2), y, x)
+    assert d.subs(Derivative(f(x, y), (x, 2), y), z) == Derivative(z, x)
+    # symbolic counts
+    n, m = symbols('n m', integer=True, positive=True)
+    d = Derivative(f(x, y), (x, n), y, x)
+    assert d.subs(Derivative(f(x, y), (x, n), y), z) == Derivative(z, x)
+    assert Derivative(f(x), (x, n + m)).subs(Derivative(f(x), (x, n)), z) == \
+        Derivative(z, (x, m))
+    k = symbols('k', integer=True, nonnegative=True)
+    assert Derivative(f(x), (x, n + k)).subs(Derivative(f(x), (x, n)), z) == \
+        Derivative(z, (x, k))
 
 
 def test_issue_5284():

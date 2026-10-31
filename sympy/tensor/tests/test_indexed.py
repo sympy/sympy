@@ -6,7 +6,7 @@ from sympy.utilities.iterables import iterable
 
 # import test:
 from sympy.concrete.summations import Sum
-from sympy.core.function import Function, Subs, Derivative
+from sympy.core.function import Function, Subs, Derivative, Lambda
 from sympy.core.relational import (StrictLessThan, GreaterThan,
     StrictGreaterThan, LessThan)
 from sympy.core.singleton import S
@@ -510,3 +510,29 @@ def test_IndexedBase_commutative():
     v = IndexedBase('v')
     assert t[0]*v[0] == v[0]*t[0]
     assert t[0]*u[0] != u[0]*t[0]
+
+
+def test_derivative_subs_indexed_with_other_index():
+    X = IndexedBase('X')
+    i, j = symbols('i j', integer=True)
+    y = Symbol('y')
+    d = Derivative(X[j]**2, X[i])
+    assert d.subs(X[j], y).doit() == 2*y*KroneckerDelta(i, j)
+
+
+def test_derivative_subs_wrt_indexed_captured():
+    X = IndexedBase('X')
+    i, j = symbols('i j', integer=True)
+    d = Derivative(X[i]*X[j], X[i])
+    assert d.subs(X[i], X[j]) == Subs(d, X[i], X[j])
+
+
+def test_derivative_subs_invalid_wrt_indexed_chain_rule():
+    X = IndexedBase('X')
+    i = symbols('i', integer=True)
+    t = Symbol('t')
+    f, g = symbols('f g', cls=Function)
+    d = Derivative(X[i]*f(g(X[i])), g(X[i]), X[i])
+    assert d.subs(g, Lambda(t, t**2)).doit() == (
+        Subs(Derivative(f(t), t), t, X[i]**2) +
+        2*X[i]**2*Subs(Derivative(f(t), (t, 2)), t, X[i]**2))
