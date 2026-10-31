@@ -527,6 +527,17 @@ def test_derivative_subs_wrt_indexed_captured():
     assert d.subs(X[i], X[j]) == Subs(d, X[i], X[j])
 
 
+def test_derivative_subs_renames_indexed_variable():
+    X = IndexedBase('X')
+    i, j, k = symbols('i j k', integer=True)
+    assert Derivative(X[i]**2, X[i]).subs(i, j) == Derivative(X[j]**2, X[j])
+    d = Derivative(X[i]*X[j], X[i])
+    assert d.subs(i, k) == Derivative(X[j]*X[k], X[k])
+    # X[j] is already in the expression
+    assert d.subs(i, j) == Subs(d, i, j)
+    assert d.subs(i, j).doit() == d.doit().subs(i, j) == 2*X[j]
+
+
 def test_derivative_subs_invalid_wrt_indexed_chain_rule():
     X = IndexedBase('X')
     i = symbols('i', integer=True)

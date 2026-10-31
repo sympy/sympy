@@ -985,6 +985,25 @@ def test_derivative_subs_creates_wrt_variable():
         Derivative(f(x)*g(2), g(x))
 
 
+def test_derivative_subs_renames_function_variable():
+    assert Derivative(f(x)**2, f(x)).subs(f(x), x) == Derivative(x**2, x)
+    d = Derivative(f(x)*g(f(x)), f(x))
+    assert d.subs(f(x), x) == Derivative(x*g(x), x)
+    # x is already in the expression
+    d = Derivative(x*f(x), f(x))
+    assert d.subs(f(x), x) == Subs(d, f(x), x)
+    assert d.subs(f(x), x).doit() == d.doit().subs(f(x), x) == x
+
+
+def test_diff_wrt_function_also_bound_in_integral():
+    # f(x) inside the Integral is bound; renaming the variable back from
+    # the placeholder must not loop between Subs and Derivative
+    d = Derivative(h(f(x), Integral(y*f(x), (x, 0, 1))), f(x))
+    assert d.doit().has(Subs)
+    d = Derivative(Integral(x*y**2, (x, 0, 1)), y)
+    assert d.subs(y, x) == Subs(d, y, x)
+
+
 def test_derivative_subs_wrt_symbol_inside_wrt_function():
     d = Derivative(f(g(x), y), g(x), x)
     assert d.subs(y, x) == Subs(d, y, x)

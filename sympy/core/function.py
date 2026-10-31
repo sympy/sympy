@@ -1907,9 +1907,14 @@ class Derivative(Expr):
             def changes_derivative(diff_var):
                 if _depends_on(old, diff_var):
                     # replacing an undefined function or a _wrt_variable
-                    # only changes what it stands for
-                    return not (isinstance(old, AppliedUndef)
-                        or old in self._wrt_variables)
+                    # only changes what it stands for, and so does
+                    # renaming a variable, e.g. A[i] to A[j] with i -> j,
+                    # which the capture check below covers
+                    if isinstance(old, AppliedUndef) or (
+                            old in self._wrt_variables):
+                        return False
+                    new_var = diff_var._subs(old, new)
+                    return new_var == diff_var or not new_var._diff_wrt
                 if _depends_on(new, diff_var):
                     # only a Dummy that __new__ used for a non-Symbol, e.g.
                     # f(x), may be replaced back with it
@@ -1942,8 +1947,20 @@ class Derivative(Expr):
             # case (2) can't change vars by introducing a variable
             # that is contained in expr, e.g.
             # for Derivative(f(z, g(h(x), y)), y), y cannot be changed to
-            # x, h(x), or g(h(x), y)
-            if any(_has_free_variable(args[0], vi) for vi in changed):
+            # x, h(x), or g(h(x), y); what is inside a renamed variable
+            # does not count, e.g. f(x) can be renamed to x in
+            # Derivative(f(x)**2, f(x))
+            renamed = {v for (vi, _), (v, _) in zip(newargs[1:], args[1:])
+                if vi != v and not v.is_Symbol}
+            inner = {w for d in args[0].atoms(Derivative)
+                for w in d._wrt_variables}
+            expr = args[0]
+            if renamed and not any(w not in renamed and
+                    _has_free_variable(w, v) for w in inner for v in renamed):
+                expr = expr.xreplace({v: Dummy() for v in renamed})
+            # a bound occurrence counts too, as renaming would let its
+            # binder capture the new variable
+            if any(expr.has(vi) for vi in changed):
                 return Subs(self, old, new)
             # more arg-wise checks
             vc = newargs[1:]
