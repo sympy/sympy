@@ -358,7 +358,7 @@ def checksol(f, symbol, sol=None, **flags):
                 return (abs(nval) < 1e-9) is S.true
             except (TypeError, ValueError):
                 return False
-            
+
     if flags.get('warn', False):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
