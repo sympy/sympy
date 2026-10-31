@@ -2367,7 +2367,7 @@ class AlgebraicNumber(Expr):
 
         >>> a2 = AlgebraicNumber(a1, [3, -5])
         >>> a2.as_expr()
-        -5 + 3*sqrt(2)
+        3*sqrt(2) - 5
 
         or start from scratch:
 

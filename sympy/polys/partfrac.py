@@ -457,7 +457,7 @@ def assemble_partfrac_list(partial_list):
     RootSum(w**2 - 2, Lambda(w, w/(-w + x)))/2
 
     >>> pfda.doit()
-    -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))
+    -sqrt(2)/(2*(sqrt(2) + x)) + sqrt(2)/(2*(-sqrt(2) + x))
 
     >>> from sympy import Dummy, Poly, Lambda, sqrt
     >>> a = Dummy("a")
