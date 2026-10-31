@@ -414,6 +414,8 @@ def get_integer_part(expr: Expr, no: int, options: OPT_DICT, return_ints=False) 
             ire, iim, ire_acc, iim_acc = evalf(
                 re_im - nint, 10, options)  # don't need much precision
             assert not iim
+            if ire in [None, fzero]: #if ire = 0, then nexpr is an integer already, therefore floor=ceil=nint.
+                return from_int(nint), INF
             size = -fastlog(ire) + 2  # -ve b/c ire is less than 1
             if size > prec:
                 ire, iim, ire_acc, iim_acc = evalf(
