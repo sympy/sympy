@@ -1235,10 +1235,24 @@ class Expr(Basic, EvalfMixin):
             coeff_complex = complex(coeff)
             cpart: dict[Expr, int] = {}
             ncpart = []
-
+            def simple(f):
+                if f.is_Atom:
+                    return f.is_number
+                if f.is_Add and len(f.args) == 2:
+                    a, b = f.args
+                    if a.is_Mul:
+                        a, b = b, a
+                    return (
+                        a.is_Atom and a.is_number
+                        and (b is S.ImaginaryUnit or
+                             b.is_Mul and len(b.args) == 2
+                             and S.ImaginaryUnit in b.args
+                             and all(i.is_Atom and i.is_number for i in b.args))
+                    )
+                return False
             if _term is not S.One:
                 for factor in Mul.make_args(_term):
-                    if factor.is_number:
+                    if simple(factor):
                         try:
                             coeff_complex *= complex(factor)
                         except (TypeError, ValueError):
