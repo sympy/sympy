@@ -2564,11 +2564,14 @@ def test_issue_19113_19102():
         atan(2**(t)), atan(2**t*(sqrt(3)*I - 1)/2),
         -atan(2**(t)*(1 + sqrt(3)*I)/2)]
     h = S.Half
-    assert solve(cos(x)**2 + sin(x)) == [
+    got = solve(cos(x)**2 + sin(x))
+    expect = [
         2*atan(-h + sqrt(5)/2 + sqrt(2)*sqrt(1 - sqrt(5))/2),
+        -2*atan(-sqrt(2)*sqrt(1 + sqrt(5))/2 + h + sqrt(5)/2),
         -2*atan(h + sqrt(5)/2 + sqrt(2)*sqrt(1 + sqrt(5))/2),
         -2*atan(-sqrt(5)/2 + h + sqrt(2)*sqrt(1 - sqrt(5))/2),
-        -2*atan(-sqrt(2)*sqrt(1 + sqrt(5))/2 + h + sqrt(5)/2)]
+        ]
+    assert all(i.equals(j) for i, j in zip(got, expect))
     assert solve(3*cos(x) - sin(x)) == [atan(3)]
 
 

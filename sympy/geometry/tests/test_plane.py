@@ -3,7 +3,7 @@ from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (asin, cos, sin)
+from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin)
 from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane, Circle
 from sympy.geometry.util import are_coplanar
 from sympy.testing.pytest import raises

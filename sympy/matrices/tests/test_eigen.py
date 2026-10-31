@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.core.evalf import N
 from sympy.core.numbers import (Float, I, Rational, pi)
+from sympy.core.sorting import ordered
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -793,7 +794,7 @@ def test_issue_28793():
 
     vals = A.eigenvals()
     assert sorted(vals.values()) == [1, 1, 1, 1, 1, 1, 2]
-    assert A.eigenvects() == [
+    expected = [
         (I*pi/2, 1, [Matrix([[0, 0, 0, 0, 0, 1, 0, 1]]).T]),
         (I*pi, 1, [Matrix([[0, 1, 0, sqrt(2), 0, 0, 1, 0]]).T]),
         (I*pi/2 + sqrt(2)*I*pi/2, 1, [Matrix([[0, 0, 0, 0, 0, -1, 0, 1]]).T]),
@@ -803,6 +804,7 @@ def test_issue_28793():
         (sqrt(2)*I*pi/2 + I*pi, 2, [Matrix([[0, 0, 0, 0, 1, 0, 0, 0]]).T,
                                     Matrix([[0, -1, 0, 0, 0, 0, 1, 0]]).T])
     ]
+    assert list(ordered(A.eigenvects())) == list(ordered(expected))
 
     P, J = A.jordan_form()
     assert P.det() == 16*sqrt(2)

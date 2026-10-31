@@ -1419,8 +1419,8 @@ def test_extractions():
     assert (-x + y).could_extract_minus_sign() is True
     assert (x - 1).could_extract_minus_sign() is False
     assert (1 - x).could_extract_minus_sign() is True
-    assert (sqrt(2) - 1).could_extract_minus_sign() is True
-    assert (1 - sqrt(2)).could_extract_minus_sign() is False
+    assert (sqrt(2) - 1).could_extract_minus_sign() is False
+    assert (1 - sqrt(2)).could_extract_minus_sign() is True
     # check that result is canonical
     eq = (3*x + 15*y).extract_multiplicatively(3)
     assert eq is not None and eq.args == eq.func(*eq.args).args

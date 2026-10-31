@@ -143,10 +143,10 @@ def test_radsimp():
 
     # test that symbolic denominators are not processed
     r = 1 + sqrt(2)
-    assert radsimp(x/r, symbolic=False) == -x*(-sqrt(2) + 1)
+    assert radsimp(x/r, symbolic=False) == x*(sqrt(2) - 1)
     assert radsimp(x/(y + r), symbolic=False) == x/(y + 1 + sqrt(2))
     assert radsimp(x/(y + r)/r, symbolic=False) == \
-        -x*(-sqrt(2) + 1)/(y + 1 + sqrt(2))
+        x*(sqrt(2) - 1)/(y + 1 + sqrt(2))
 
     # issue 7408
     eq = sqrt(x)/sqrt(y)

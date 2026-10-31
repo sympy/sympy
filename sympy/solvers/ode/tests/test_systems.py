@@ -1290,11 +1290,11 @@ def test_sysode_linear_neq_order1_type3():
 
     eqs2 = [Eq(Derivative(f(x), x), x**2*g(x) + x*f(x)),
             Eq(Derivative(g(x), x), 2*x**2*f(x) + (3*x**2 + x)*g(x))]
-    sol2 = [Eq(f(x), (sqrt(17)*C1/17 + C2*(17 - 3*sqrt(17))/34)*exp(x**3*(3 + sqrt(17))/6 + x**2/2) -
-             exp(x**3*(3 - sqrt(17))/6 + x**2/2)*(sqrt(17)*C1/17 + C2*(3*sqrt(17) + 17)*Rational(-1, 34))),
-            Eq(g(x), exp(x**3*(3 - sqrt(17))/6 + x**2/2)*(C1*(17 - 3*sqrt(17))/34 + sqrt(17)*C2*Rational(-2,
-             17)) + exp(x**3*(3 + sqrt(17))/6 + x**2/2)*(C1*(3*sqrt(17) + 17)/34 + sqrt(17)*C2*Rational(2, 17)))]
-    assert dsolve(eqs2) == sol2
+    sol2 = [Eq(f(x), (sqrt(17)*C1/17 - C2*(3*sqrt(17) - 17)/34)*exp(x**3*(sqrt(17) + 3)/6 + x**2/2) -
+             (sqrt(17)*C1/17 - C2*(3*sqrt(17) + 17)/34)*exp(-x**3*(sqrt(17) - 3)/6 + x**2/2)),
+            Eq(g(x), -(2*sqrt(17)*C2/17 + C1*(3*sqrt(17) - 17)/34)*exp(-x**3*(sqrt(17) - 3)/6 + x**2/2) +
+             (2*sqrt(17)*C2/17 + C1*(3*sqrt(17) + 17)/34)*exp(x**3*(sqrt(17) + 3)/6 + x**2/2))]
+    assert all(i.equals(j) for i, j in zip(dsolve(eqs2), sol2, strict=True))
     assert checksysodesol(eqs2, sol2) == (True, [0, 0])
 
     eqs3 = [Eq(f(x).diff(x), x*f(x) + g(x)),
@@ -1361,7 +1361,7 @@ def test_sysode_linear_neq_order1_type3():
              Eq(diff(g(t), t), -t**2*f(t) + (9*t**2 + 5*t)*g(t))]
     sol10 = [Eq(f(t), (C1*(77 - 9*sqrt(77))/154 + sqrt(77)*C2/77)*exp(t**3*(sqrt(77) + 9)/6 + 5*t**2/2) + (C1*(77 + 9*sqrt(77))/154 - sqrt(77)*C2/77)*exp(t**3*(9 - sqrt(77))/6 + 5*t**2/2)),
              Eq(g(t), (sqrt(77)*C1/77 + C2*(77 - 9*sqrt(77))/154)*exp(t**3*(9 - sqrt(77))/6 + 5*t**2/2) - (sqrt(77)*C1/77 - C2*(77 + 9*sqrt(77))/154)*exp(t**3*(sqrt(77) + 9)/6 + 5*t**2/2))]
-    assert dsolve(eqs10) == sol10
+    assert all(i.equals(j) for i, j in zip(dsolve(eqs10), sol10, strict=True))
     assert checksysodesol(eqs10 , sol10) == (True , [0,0])
 
     eqs11 = [Eq(diff(f(t), t), 5*t*f(t) + t**2*g(t)),
@@ -1697,7 +1697,7 @@ def test_higher_order_to_first_order_12():
                 + 32*C2*(2 - sqrt(5))*sqrt(4*sqrt(5) + 9)*cos(2*t*sqrt(4*sqrt(5) + 9))
                 + 32*C3*(2 + sqrt(5))*sqrt(9 - 4*sqrt(5))*sin(2*t*sqrt(9 - 4*sqrt(5)))
                 + 32*C4*(2 - sqrt(5))*sqrt(4*sqrt(5) + 9)*sin(2*t*sqrt(4*sqrt(5) + 9)))]
-    assert dsolve(eqs12) == sol12
+    assert all(i.equals(j) for i, j in zip(dsolve(eqs12), sol12, strict=True))
     assert checksysodesol(eqs12, sol12) == (True, [0, 0])
 
 
@@ -1949,9 +1949,9 @@ def test_linodesolve():
     ceq = canonical_odes(eq, func, t)
     (A1, A0), b = linear_ode_to_matrix(ceq[0], func, t, 1)
     A = A0
-    sol = [C1*exp(t*(-Rational(1,2) + sqrt(5)/2)) + C2*exp(t*(-sqrt(5)/2 - Rational(1,2))),
-           C1*(Rational(1,2) + sqrt(5)/2)*exp(t*(-Rational(1,2) + sqrt(5)/2))
-           + C2*(Rational(1,2) - sqrt(5)/2)*exp(t*(-sqrt(5)/2 - Rational(1,2)))]
+    sol = [C1*exp(t*(-sqrt(5)/2 - Rational(1,2))) + C2*exp(t*(sqrt(5)/2 - Rational(1,2))),
+           C1*(Rational(1,2) - sqrt(5)/2)*exp(t*(-sqrt(5)/2 - Rational(1,2)))
+           + C2*(Rational(1,2) + sqrt(5)/2)*exp(t*(sqrt(5)/2 - Rational(1,2)))]
     assert constant_renumber(linodesolve(A, t), variables=Tuple(*eq).free_symbols) == sol
 
     # Testing the Errors
@@ -1989,25 +1989,39 @@ def test_linodesolve():
     ceq = canonical_odes(eq, func, t)
     (A1, A0), b = linear_ode_to_matrix(ceq[0], func, t, 1)
     A = A0
-    sol = [C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 + sqrt(5)*t/2)
-           *Integral(-sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/10 + t*exp(-sqrt(5)*t/2 + t/2)/2, t)
-           + exp(-sqrt(5)*t/2 - t/2)*Integral(sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/10
-           + t*exp(t/2 + sqrt(5)*t/2)/2, t), C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)
-           *C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2 - t/2)/2
-           + C2*exp(-sqrt(5)*t/2 - t/2)/2 + exp(-t/2 + sqrt(5)*t/2)
-           *Integral(-sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/10 + t*exp(-sqrt(5)*t/2 + t/2)/2, t)/2
-           + sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(-sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/10
-           + t*exp(-sqrt(5)*t/2 + t/2)/2, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)
-           *Integral(sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/10 + t*exp(t/2 + sqrt(5)*t/2)/2, t)/2
-           + exp(-sqrt(5)*t/2 - t/2)*Integral(sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/10
-           + t*exp(t/2 + sqrt(5)*t/2)/2, t)/2]
-    assert constant_renumber(linodesolve(A, t, b=b), variables=[t]) == sol
+    sol = [C1*exp(-sqrt(5)*t/2 - t/2) + C2*exp(sqrt(5)*t/2 - t/2) +
+        exp(-sqrt(5)*t/2 - t/2)*Integral(sqrt(5)*t*exp(sqrt(5)*t/2 + t/2)/10 +
+        t*exp(sqrt(5)*t/2 + t/2)/2, t) + exp(sqrt(5)*t/2 -
+        t/2)*Integral(-sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/10 +
+        t*exp(-sqrt(5)*t/2 + t/2)/2, t), -sqrt(5)*C1*exp(-sqrt(5)*t/2 - t/2)/2
+        + sqrt(5)*C2*exp(sqrt(5)*t/2 - t/2)/2 - sqrt(5)*exp(-sqrt(5)*t/2 -
+        t/2)*Integral(sqrt(5)*t*exp(sqrt(5)*t/2 + t/2)/10 + t*exp(sqrt(5)*t/2
+        + t/2)/2, t)/2 + sqrt(5)*exp(sqrt(5)*t/2 -
+        t/2)*Integral(-sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/10 +
+        t*exp(-sqrt(5)*t/2 + t/2)/2, t)/2 + C1*exp(-sqrt(5)*t/2 - t/2)/2 +
+        C2*exp(sqrt(5)*t/2 - t/2)/2 + exp(-sqrt(5)*t/2 -
+        t/2)*Integral(sqrt(5)*t*exp(sqrt(5)*t/2 + t/2)/10 + t*exp(sqrt(5)*t/2
+        + t/2)/2, t)/2 + exp(sqrt(5)*t/2 -
+        t/2)*Integral(-sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/10 +
+        t*exp(-sqrt(5)*t/2 + t/2)/2, t)/2]
+    got = constant_renumber(linodesolve(A, t, b=b), variables=[t])
+    assert got == sol
+    assert checksysodesol(eq, [Eq(f, s) for f, s in zip(func, got)]
+        ) == (True, [0, 0])
 
     # non-homogeneous term assumed to be 0
-    sol1 =  [C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2),
-             C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)
-             *C2*exp(-sqrt(5)*t/2 - t/2)/2 + C2*exp(-sqrt(5)*t/2 - t/2)/2]
-    assert constant_renumber(linodesolve(A, t, type="type2"), variables=[t]) == sol1
+    sol1 = [C1*exp(-sqrt(5)*t/2 - t/2) + C2*exp(sqrt(5)*t/2 - t/2),
+        -sqrt(5)*C1*exp(-sqrt(5)*t/2 - t/2)/2 +
+        sqrt(5)*C2*exp(sqrt(5)*t/2 - t/2)/2 +
+        C1*exp(-sqrt(5)*t/2 - t/2)/2 + C2*exp(sqrt(5)*t/2 - t/2)/2]
+    got = constant_renumber(linodesolve(A, t, type="type2"), variables=[t])
+    assert got == sol1
+    eq_h = [
+        Eq(fi.diff(t), rhs)
+        for fi, rhs in zip(func, A*Matrix(func))]
+    assert checksysodesol(
+        eq_h, [Eq(fi, s) for fi, s in zip(func, got)]
+        ) == (True, [0, 0])
 
     # Testing the Errors
     raises(ValueError, lambda: linodesolve(t+10, t))
