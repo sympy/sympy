@@ -2583,6 +2583,7 @@ def test_issue_19509():
         d + a - sqrt(-b - c),
         d + a + sqrt(-b - c)]
 
+
 def test_issue_20747():
     THT, HT, DBH, dib, c0, c1, c2, c3, c4  = symbols('THT HT DBH dib c0 c1 c2 c3 c4')
     f = DBH*c3 + THT*c4 + c2
@@ -2590,8 +2591,10 @@ def test_issue_20747():
     eq = dib - DBH*(c0 - f*log(rhs))
     term = ((1 - exp((DBH*c0 - dib)/(DBH*(DBH*c3 + THT*c4 + c2))))
             / (1 - exp(c0/(DBH*c3 + THT*c4 + c2))))
-    sol = [THT*term**(1/c1) - term**(1/c1) + 1]
-    assert solve(eq, HT) == sol
+    sol = THT*term**(1/c1) - term**(1/c1) + 1
+    got = solve(eq, HT)
+    assert len(got) == 1
+    assert got[0].equals(sol)
 
 
 def test_issue_27001():
@@ -2774,3 +2777,12 @@ def test_issue_solve_nan_comparison_complex_system():
         (-y/2 + sqrt(3)*I*y/2, y),
     ]
 
+
+def test_issue_26503():
+    from sympy.integrals import integrate
+    a, b = symbols('a b')
+    assert checksol(b**x*log(a) - b**x*log(b), {b: 0**(1/x)}) is False
+    assert solve([b**x*log(a) - b**x*log(b)], exclude=(x,)) == [{a: b}]
+    assert integrate((a**x)/(b**x), x) == Piecewise((a**x/(b**x*log(a) - b**x*log(b)), Ne(a, b)), (x, True))
+    pw = Piecewise((x - 1, x > 0), (S.NaN, True))
+    assert checksol(pw, x, 1) is True

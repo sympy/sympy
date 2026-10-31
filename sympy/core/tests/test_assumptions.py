@@ -1217,6 +1217,11 @@ def test_complex_reciprocal_imaginary():
     assert (1 / (4 + 3*I)).is_imaginary is False
 
 
+def test_issue_10458():
+    x = Symbol('x', integer=True, positive=True)
+    assert (1/x - 1).is_nonpositive
+
+
 def test_issue_16313():
     x = Symbol('x', extended_real=False)
     k = Symbol('k', real=True)

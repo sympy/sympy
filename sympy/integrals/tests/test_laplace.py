@@ -535,13 +535,17 @@ def test_inverse_laplace_transform():
             f(x)*Heaviside(x))
     assert (inverse_laplace_transform(LaplaceTransform(f(t), t, s), x, t) ==
             LaplaceTransform(f(t), t, s)*DiracDelta(t))
+    assert (ILT(LaplaceTransform(f(t), t, s - 2)) ==
+            InverseLaplaceTransform(LaplaceTransform(f(t), t, s - 2), s, t,
+                                    None))
 
     # Tests for the rules in Bateman54.
 
     # Section 4.1: Some of the Laplace transform rules can also be used well
     #     in the inverse transform.
     assert ILTF(exp(-a*s)*F(s)) == f(-a + t)
-    assert ILTF(k*F(s-a)) == k*f(t)*exp(-a*t)
+    assert ILTF(k*F(s-a)) == k*f(t)*exp(a*t)
+    assert ILTF(F(s - 2)) == f(t)*exp(2*t)
     assert ILTF(diff(F(s), s, 3)) == -t**3*f(t)
     assert ILTF(diff(F(s), s, 4)) == t**4*f(t)
 

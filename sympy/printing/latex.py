@@ -689,6 +689,8 @@ class LatexPrinter(Printer):
             elif expr.exp.is_negative and expr.base.is_commutative:
                 # special case for 1^(-x), issue 9216
                 if expr.base == 1:
+                    if expr.exp == -1:
+                        return r"\frac{1}{1}"
                     return r"%s^{%s}" % (expr.base, expr.exp)
                 # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
                 if expr.base.is_Rational:
@@ -1967,7 +1969,7 @@ class LatexPrinter(Printer):
         block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         block_str = block_str.replace('%MATSTR%', mat_str)
         if mat_str == 'array':
-            block_str = block_str.replace('%s', '{' + 'c'*expr.shape[0] + '}%s')
+            block_str = block_str.replace('%s', '{%COLS%}%s')
 
         if self._settings['mat_delim']:
             left_delim: str = self._settings['mat_delim']
@@ -1975,8 +1977,8 @@ class LatexPrinter(Printer):
             block_str = r'\left' + left_delim + block_str + \
                         r'\right' + right_delim
 
-        if expr.ndim == 0:
-            return block_str % ""
+        def block(content, ncols):
+            return block_str.replace('%COLS%', 'c'*ncols) % content
 
         level_str: list[list[str]] = [[] for i in range(expr.ndim + 1)]
         shape_ranges = [list(range(i)) for i in expr.shape]
@@ -1991,7 +1993,8 @@ class LatexPrinter(Printer):
                         r" & ".join(level_str[back_outer_i+1]))
                 else:
                     level_str[back_outer_i].append(
-                        block_str % (r"\\".join(level_str[back_outer_i+1])))
+                        block(r"\\".join(level_str[back_outer_i+1]),
+                              expr.shape[back_outer_i+1]))
                     if len(level_str[back_outer_i+1]) == 1:
                         level_str[back_outer_i][-1] = r"\left[" + \
                             level_str[back_outer_i][-1] + r"\right]"
@@ -2001,7 +2004,7 @@ class LatexPrinter(Printer):
         out_str = level_str[0][0]
 
         if expr.ndim % 2 == 1:
-            out_str = block_str % out_str
+            out_str = block(out_str, expr.shape[0])
 
         return out_str
 

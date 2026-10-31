@@ -121,6 +121,17 @@ def test_printmethod():
     assert latex(R(x)) == r"foo"
 
 
+def test_unevaluated_numeric_ratio():
+    def ratio(p, q):
+        return Mul(p, Pow(q, -1, evaluate=False), evaluate=False)
+
+    assert latex(Pow(1, -1, evaluate=False)) == r'\frac{1}{1}'
+    assert latex(ratio(1, 1)) == r'1 \cdot \frac{1}{1}'
+    assert latex(ratio(2, 4)) == r'\frac{2}{4}'
+    assert latex(Mul(1, Rational(1, 2), evaluate=False)) == r'1 \cdot \frac{1}{2}'
+    assert latex(Mul(1, Symbol('x'), evaluate=False)) == '1 x'
+
+
 def test_latex_basic():
     assert latex(1 + x) == r"x + 1"
     assert latex(x**2) == r"x^{2}"
@@ -1694,6 +1705,13 @@ def test_latex_mul_symbol():
     assert latex(4*x, mul_symbol='ldot') == r"4 \,.\, x"
 
 
+def test_latex_issue_24112():
+    from sympy.parsing.sympy_parser import parse_expr
+    assert latex(parse_expr('-sqrt(7)/2 + 1/3 - 1/2',
+        evaluate=False)) == (
+        r'- \frac{\sqrt{7}}{2} - \frac{1}{2} + \frac{1}{3}')
+
+
 def test_latex_issue_4381():
     y = 4*4**log(2)
     assert latex(y) == r'4 \cdot 4^{\log{\left(2 \right)}}'
@@ -2923,10 +2941,10 @@ def test_WedgeProduct_printing():
 
 def test_issue_9216():
     expr_1 = Pow(1, -1, evaluate=False)
-    assert latex(expr_1) == r"1^{-1}"
+    assert latex(expr_1) == r"\frac{1}{1}"
 
     expr_2 = Pow(1, Pow(1, -1, evaluate=False), evaluate=False)
-    assert latex(expr_2) == r"1^{\left(1^{-1}\right)}"
+    assert latex(expr_2) == r"1^{\frac{1}{1}}"
 
     expr_3 = Pow(3, -2, evaluate=False)
     assert latex(expr_3) == r"\frac{1}{3^{2}}"
@@ -3368,6 +3386,22 @@ def test_Array():
     arr = Array(range(11))
     # fill the empty argument with a bunch of 'c' to avoid latex errors
     assert latex(arr) == r'\left[\begin{array}{ccccccccccc}0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\end{array}\right]'
+
+    arr = Array(range(22), (2, 11))
+    assert latex(arr) == r'\left[\begin{array}{ccccccccccc}' \
+        r'0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\' \
+        r'11 & 12 & 13 & 14 & 15 & 16 & 17 & 18 & 19 & 20 & 21\end{array}\right]'
+
+    arr = Array(range(6), (3, 2))
+    assert latex(arr, mat_str='array') == \
+        r'\left[\begin{array}{cc}0 & 1\\2 & 3\\4 & 5\end{array}\right]'
+
+    arr = Array(range(12), (2, 2, 3))
+    assert latex(arr, mat_str='array') == \
+        r'\left[\begin{array}{cc}' \
+        r'\left[\begin{array}{ccc}0 & 1 & 2\\3 & 4 & 5\end{array}\right] & ' \
+        r'\left[\begin{array}{ccc}6 & 7 & 8\\9 & 10 & 11\end{array}\right]' \
+        r'\end{array}\right]'
 
 def test_latex_with_unevaluated():
     with evaluate(False):

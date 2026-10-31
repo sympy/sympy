@@ -349,14 +349,15 @@ def checksol(f, symbol, sol=None, **flags):
         if val.is_Rational:
             return val == 0
         if numerical and val.is_number:
+           if val is S.NaN:
+                return None
             nval = val.n(18).n(12, chop=True)
-            if nval.has(S.NaN):
-                return False
+            if nval is S.NaN or nval.has(S.NaN):
+                return None
             try:
                 return (abs(nval) < 1e-9) is S.true
-            except TypeError:
-                return False
-    
+            except (TypeError, ValueError):
+                return None
 
     if flags.get('warn', False):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
