@@ -926,6 +926,8 @@ def test_diff_wrt_function_inside_derivative_wrt_variable():
     assert Derivative(g(df), df).diff(f(x)) == 0
     d = Derivative(y*g(x).diff(x), f(x), x)
     assert d.subs(x, df).doit() == d.doit().subs(x, df).doit() == 0
+    df = Derivative(f(f(x)), f(x))
+    assert (h(df).diff(df)*f(x)).diff(f(x)) == h(df).diff(df)
 
 
 def test_derivative_subs_function_in_derivative_wrt_variable():

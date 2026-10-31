@@ -1144,7 +1144,47 @@ class Derivative(Expr):
     Notes
     =====
 
+
+    Substitution in Derivatives
+    ---------------------------
+
+    A substitution can be applied directly when it preserves the
+    intended differentiation semantics.
+
+    a) Renaming a differentiation variable:
+
+    >>> Derivative(f(x), x).subs(x, y)
+    Derivative(f(y), y)
+
+    b) Replacing an undefined function or its application:
+
+    >>> Derivative(f(x), x).subs(f, g)
+    Derivative(g(x), x)
+    >>> Derivative(x + f(x), x).subs(f(x), x)
+    Derivative(2*x, x)
+    >>> Derivative(x + f(x), x).subs(f(x), 1)
+    Derivative(x + 1, x)
+
+    c) Changing a subexpression independent of the variables of
+    differentiation:
+
+    >>> Derivative(x + y, x).subs(y, 1)
+    Derivative(x + 1, x)
+
+    Currently, some substitutions that introduce or change
+    dependencies on the variables of differentiation may
+    instead be deferred using ``Subs``:
+
+    >>> Derivative(x + y, x).subs(y, x)
+    Subs(Derivative(x + y, x), y, x)
+    >>> Derivative(x + 1, x).subs(x + 1, x**2)
+    Subs(Derivative(x + 1, x), x + 1, x**2)
+
+    ``Subs`` preserves the original differentiation by
+    applying the substitution after the derivative is evaluated.
+
     Simplification of high-order derivatives:
+    -----------------------------------------
 
     Because there can be a significant amount of simplification that can be
     done when multiple differentiations are performed, results will be
@@ -1162,12 +1202,14 @@ class Derivative(Expr):
         30
 
     Ordering of variables:
+    ----------------------
 
     If evaluate is set to True and the expression cannot be evaluated, the
     list of differentiation symbols will be sorted, that is, the expression is
     assumed to have continuous derivatives up to the order asked.
 
     Derivative wrt non-Symbols:
+    ---------------------------
 
     For the most part, one may not differentiate wrt non-symbols.
     For example, we do not allow differentiation wrt `x*y` because
@@ -1240,6 +1282,7 @@ class Derivative(Expr):
         0
 
     Replacing undefined functions with concrete expressions
+    -------------------------------------------------------
 
     One must be careful to replace undefined functions with expressions
     that contain variables consistent with the function definition and
@@ -1259,6 +1302,7 @@ class Derivative(Expr):
     the extra `g(y)` term.
 
     Defining differentiation for an object
+    --------------------------------------
 
     An object must define ._eval_derivative(symbol) method that returns
     the differentiation result. This function only needs to consider the
@@ -1518,12 +1562,35 @@ class Derivative(Expr):
 
             hidden = {}
             if not is_symbol:
-                old_v = v
+                # We are going to replace v with a Dummy. But we must
+                # first hide any derivative-valued differentiation
+                # variable that contains v. Such derivatives are
+                # formally independent of v and must remain unchanged
+                # during the replacement.
+                #
+                # For example, when differentiating
+                #
+                #   f(x)*Derivative(h(df), df)  wrt f(x)
+                #
+                # where df = Derivative(f(f(x)), f(x)), we must protect
+                # the entire df from replacement. We temporarily
+                # replace df with a separate Dummy so xreplace cannot
+                # descend into df and change occurrences of f(x):
+                #
+                #   f(x)*Derivative(h(df), df)
+                #   -> f(x)*Derivative(h(z), z)
+                #   -> xi*Derivative(h(z), z)
+                #
+                # We then differentiate with respect to dummy xi and
+                # restore df in place of dummy z. Thus, only
+                # occurrences of f(x) outside the protected df
+                # participate in the differentiation.
+
+                # Save the original v as old_v, then replace v with
+                # a Dummy.
+                old_v = v  # non-Symbol
                 v = Dummy('xi')
-                # a Derivative variable of differentiation that contains
-                # old_v, e.g. f(x).diff(x) for f(x), would be invalid with
-                # v in it, and is independent of old_v, so it is hidden
-                hidden = {w: Dummy() for d in expr.atoms(Derivative)
+                hidden = {w: Dummy('z') for d in expr.atoms(Derivative)
                     for w in d._wrt_variables if isinstance(w, Derivative)
                     and _has_free_variable(w, old_v)}
                 expr = expr.xreplace({**hidden, old_v: v})
@@ -1869,8 +1936,8 @@ class Derivative(Expr):
             if any(changes_derivative(v) for v in self._wrt_variables):
                 return Subs(self, old, new)
 
-        changed = [vi for (vi, _), (v, _) in zip(newargs[1:], args[1:])
-            if vi != v]
+        changed = [vi for (vi, _), (v, _)
+            in zip(newargs[1:], args[1:]) if vi != v]
         if changed:  # a wrt-variable change
             # case (2) can't change vars by introducing a variable
             # that is contained in expr, e.g.
@@ -1881,28 +1948,33 @@ class Derivative(Expr):
             # more arg-wise checks
             vc = newargs[1:]
             oldv = self._wrt_variables
-            # old variable -> (dummy, new invalid variable)
+            # check the args representing new diff variables and count;
+            # if old variable, u, is replaced with a new variable, v,
+            # that is invalid it will be handled with Subs; we replace
+            # it with Dummy, d, and store mapping {u: (d, v)}
             dummies = {}
-            for i, (vi, ci) in enumerate(vc):
+            for i, (u, (vi, ci)) in enumerate(zip(oldv, vc)):
                 if not vi._diff_wrt:
                     # case (3) invalid differentiation expression so
                     # replace it with a dummy, one per old variable even
                     # if it appears more than once
-                    if oldv[i] not in dummies:
-                        dummies[oldv[i]] = (Dummy('xi_%i' % i), vi)
-                    vc[i] = (dummies[oldv[i]][0], ci)
+                    if u not in dummies:
+                        dummies[u] = (Dummy('xi_%i' % i), vi)
+                    vc[i] = (dummies[u][0], ci)
 
             if dummies:
-                subs = list(dummies.values())
-                xis = {xi for xi, _ in subs}
+                # Differentiate wrt temporary xi-Dummy inside Subs and
+                # retain other differentiation variables outside Subs.
+                xi_v = list(dummies.values())
+                xi = {_[0] for _ in xi_v}
                 # replace the old valid variables with the dummies in
                 # the expression and handle any residual substitution
                 newe = self.expr.xreplace(
                     {v: xi for v, (xi, _) in dummies.items()})._subs(old, new)
-                inner, outer = sift(vc, lambda i: i[0] in xis, binary=True)
+                # sift (v, c) into inner (v is a xi-Dummy) and outer
+                inner, outer = sift(vc, lambda i: i[0] in xi, binary=True)
                 if not outer:
-                    return Subs(Derivative(newe, *inner), *zip(*subs))
-                outer_free = set().union(*[v.free_symbols for v, _ in outer])
+                    return Subs(Derivative(newe, *inner), *zip(*xi_v))
 
                 def commutes(v):
                     if isinstance(v, (Symbol, AppliedUndef)) or v.is_Indexed:
@@ -1915,18 +1987,15 @@ class Derivative(Expr):
                         & outer_free)
 
                 if all(commutes(v) for v in oldv):
-                    # a dummy does not depend on the other variables
-                    # although the variable it replaces may, e.g. g(x)
-                    # on x, so only differentiate wrt the dummies inside
-                    # Subs and wrt the other variables outside it; this
-                    # reorders them, which is allowed because symbols,
-                    # functions and Indexed objects commute during
-                    # differentiation
-                    return Derivative(
-                        Subs(Derivative(newe, *inner), *zip(*subs)),
-                        *outer)
-                # otherwise substitute after differentiating
-                return Subs(self, old, new)
+                    # A Dummy is independent of the other variables, so
+                    # differentiation wrt Dummies can occur inside Subs.
+                    D_inner = Derivative(newe, *inner)
+                    sub_D = Subs(D_inner, *zip(*xi_v))
+                    # diff wrt the remaining variables outside Subs
+                    return Derivative(sub_D, *outer)
+                else:
+                    # otherwise substitute after differentiating
+                    return Subs(self, old, new)
 
         # everything was ok
         return _derivative_dispatch(*newargs)
@@ -2328,12 +2397,11 @@ def _has_free_variable(expr, v):
     if v.is_Symbol:
         # the same answer, without renaming bound symbols with as_dummy
         return v in expr.free_symbols
-    return expr.has_free(v)
+    return expr.has_xfree({v})
 
 
 def _depends_on(expr, v):
-    """Return True if ``expr`` may depend on the variable of
-    differentiation ``v``, using the same test as ``Derivative``."""
+    """Return whether expr may depend on differentiation variable v."""
     if isinstance(v, (Symbol, AppliedUndef, Derivative)):
         return _has_free_variable(expr, v)
     if not isinstance(expr, Basic):
