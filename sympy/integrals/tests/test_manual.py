@@ -1468,6 +1468,6 @@ def test_mul_pow_derivative():
 
 def test_manualintegrate_trig_log_hang():
     x = Symbol('x')
-    expr = integrate(log((1 + cos(x) / 2) / (1 - cos(x) / 2)) / cos(x), (x, 0, pi))
+    expr = expr = log((cos(x)/2 + 1) / (1 - cos(x)/2)) / cos(x)
     res = manualintegrate(expr, x)
     assert res is not None
