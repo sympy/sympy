@@ -1,10 +1,8 @@
 from __future__ import annotations
-from collections.abc import Iterator
 from typing import TYPE_CHECKING, overload
 
 from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
-from sympy.core.expr import Expr
 from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
@@ -18,6 +16,10 @@ from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
 from itertools import product
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from collections.abc import Iterator
 
 Undefined = S.NaN  # Piecewise()
 
