@@ -73,6 +73,13 @@ def test_isomorphisms():
     H = FpGroup(F, [b**3, a**2])
     assert is_isomorphic(G, H)
 
+    # Distinct cyclic presentations must not be treated as isomorphic
+    # (list.sort() returns None; comparing return values always matched).
+    F1, a1 = free_group("a")
+    G1 = FpGroup(F1, [a1**2])
+    H1 = FpGroup(F1, [a1**3])
+    assert not is_isomorphic(G1, H1)
+
     # Trivial Case
     # FpGroup -> FpGroup
     H = FpGroup(F, [a**3, b**3, (a*b)**2])
