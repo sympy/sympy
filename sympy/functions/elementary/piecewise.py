@@ -1130,10 +1130,7 @@ def piecewise_fold(expr: Basic, evaluate: bool | None = True) -> Basic:
                 unique_args.append((e, c))
         new_args = unique_args
 
-    rv = Piecewise(*new_args, evaluate=evaluate)
-    if evaluate is None and len(rv.args) == 1 and rv.args[0].cond == True:
-        return rv.args[0].expr
-    return rv
+    return Piecewise(*new_args, evaluate=evaluate)
 
 
 def _clip(A, B, k):
