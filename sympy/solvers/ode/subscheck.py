@@ -131,7 +131,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         raise ValueError(
             "func must be a function of one variable, not %s" % func)
     if is_sequence(sol, set):
-        return type(sol)([checkodesol(ode, i, order=order, solve_for_func=solve_for_func) for i in sol])
+        return type(sol)([checkodesol(ode, i, func=func, order=order, solve_for_func=solve_for_func) for i in sol])
 
     if not isinstance(sol, Equality):
         sol = Eq(func, sol)
