@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
-from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
+from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, Basic
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Float, _illegal
 from sympy.core.function import AppliedUndef
@@ -141,6 +141,10 @@ class Limit(Expr):
     Limit(1/x, x, 0, dir='-')
 
     """
+
+    @property
+    def operator_variables(self) -> tuple[Basic, ...]:
+        return (self.args[1],)
 
     def __new__(cls, e, z, z0, dir="+"):
         e = sympify(e)

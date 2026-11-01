@@ -679,6 +679,12 @@ def test_piecewise_fold_bound_symbols():
     assert piecewise_fold(integral) == integral
     assert piecewise_fold(integral).doit() == 1
 
+    # https://github.com/sympy/sympy/issues/12631
+    integrand = Piecewise((1, x >= 1), (2, True))
+    integral = Integral(integrand, x)
+    assert piecewise_fold(integral) == integral
+    assert piecewise_fold(integral).doit() == Piecewise((2*x, x <= 1), (x + 1, True))
+
     total = Sum(Piecewise((i, y > 0), (0, True)), (i, 0, 12))
     assert piecewise_fold(total) == Piecewise(
         (Sum(i, (i, 0, 12)), y > 0), (Sum(0, (i, 0, 12)), True))

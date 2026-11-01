@@ -2,7 +2,7 @@
 from __future__ import annotations
 from functools import reduce, wraps
 from itertools import repeat
-from sympy.core import S, pi
+from sympy.core import S, pi, Basic
 from sympy.core.add import Add
 from sympy.core.function import (
     AppliedUndef, count_ops, expand, expand_mul, Function)
@@ -80,6 +80,10 @@ class IntegralTransform(Function):
     Implement ``self._collapse_extra`` if your function returns more than just a
     number and possibly a convergence condition.
     """
+
+    @property
+    def operator_variables(self) -> tuple[Basic, ...]:
+        return (self.function_variable,)
 
     @property
     def function(self):
