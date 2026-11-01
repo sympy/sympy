@@ -3,7 +3,7 @@ from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.abc import a, b, c, d, k, l, m, n
 from sympy.testing.pytest import raises, XFAIL
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import ceiling
 from sympy.assumptions import assuming, Q
 
 
@@ -37,15 +37,38 @@ def test_slicing():
     assert X[1:5, :].shape == (4, X.shape[1])
     assert X[:, 1:5].shape == (X.shape[0], 4)
 
-    assert X[::2, ::2].shape == (floor(n/2), floor(m/2))
+    assert X[::2, ::2].shape == (ceiling(n/2), ceiling(m/2))
     assert X[2, :] == MatrixSlice(X, 2, (0, m))
     assert X[k, :] == MatrixSlice(X, k, (0, m))
 
 def test_exceptions():
     X = MatrixSymbol('x', 10, 20)
-    raises(IndexError, lambda: X[0:12, 2])
+    # Out-of-range single indices raise, like indexing a Python sequence.
+    raises(IndexError, lambda: X[12, 2])
     raises(IndexError, lambda: X[0:9, 22])
-    raises(IndexError, lambda: X[-1:5, 2])
+    # Out-of-range slice bounds are clamped to match Python slicing (#18411).
+    assert X[0:12, 2] == X[0:10, 2]
+    assert X[-1:5, 2].shape == (0, 1)
+
+
+def test_slice_matches_explicit():
+    # A symbolic slice must agree with slicing the explicit matrix, including
+    # stepped, negative-step and out-of-range slices. Non-regression test for
+    # https://github.com/sympy/sympy/issues/18411
+    A = MatrixSymbol('A', 4, 5)
+    explicit = A.as_explicit()
+    slices = [
+        slice(1, 4, 2), slice(5, 0, -1), slice(6, None, -1), slice(0, 5, -1),
+        slice(None, None, -1), slice(0, 10), slice(0, 4, 3), slice(3, None, -2),
+    ]
+    for rs in slices:
+        for cs in slices:
+            expected = explicit[rs, cs]
+            if 0 in expected.shape:
+                # empty result: just check the shape agrees
+                assert A[rs, cs].shape == expected.shape
+            else:
+                assert A[rs, cs].as_explicit() == expected
 
 @XFAIL
 def test_symmetry():
