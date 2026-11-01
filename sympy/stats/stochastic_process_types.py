@@ -1,7 +1,7 @@
 from __future__ import annotations
 import random
 import itertools
-from typing import Sequence as tSequence
+from typing import Sequence as tSequence, ClassVar
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -180,7 +180,7 @@ class StochasticProcess(Basic):
     DiscreteTimeStochasticProcess
     """
 
-    index_set = S.Reals
+    index_set: ClassVar[Set] = S.Reals
 
     def __new__(cls, sym, state_space=S.Reals, **kwargs):
         sym = _symbol_converter(sym)
