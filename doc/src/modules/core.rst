@@ -415,6 +415,8 @@ Sorting
 
 .. autofunction:: sympy.core.sorting.default_sort_key
 
+.. py:class:: _T
+.. py:class:: _K
 
 .. autofunction:: sympy.core.sorting.ordered
 
