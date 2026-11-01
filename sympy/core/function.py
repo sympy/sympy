@@ -2213,7 +2213,7 @@ class Lambda(Expr):
 
         capture_new = hints.get('original_new', new)
 
-        if old in self.variables:
+        if not old.free_symbols.isdisjoint(self.variables):
             return self
 
         if old.is_Symbol and old not in self.free_symbols:
