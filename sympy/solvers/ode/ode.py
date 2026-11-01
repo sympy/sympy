@@ -355,7 +355,7 @@ def iter_numbered_constants(eq, start=1, prefix='C'):
 
 
 def dsolve(eq, func=None, hint="default", simplify=True,
-    ics= None, xi=None, eta=None, x0=0, n=6, **kwargs):
+    ics= None, xi=None, eta=None, x0=0, n=6, symbols=None, **kwargs):
     r"""
     Solves any (supported) kind of ordinary differential equation and
     system of ordinary differential equations.
@@ -414,6 +414,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 
         ``n`` gives the exponent of the dependent variable up to which the power series
           solution of a differential equation is to be evaluated.
+
+        ``symbols`` is an optional iterator of symbols (for example,
+          ``numbered_symbols(prefix='K', start=1)``) used to name the
+          arbitrary constants in the solution instead of ``C1, C2, ...``.
 
     **Hints**
 
@@ -638,10 +642,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         else:
             # The key 'hint' stores the hint needed to be solved for.
             hint = hints['hint']
-            return _helper_simplify(eq, hint, hints, simplify, ics=ics)
+            return _helper_simplify(eq, hint, hints, simplify, ics=ics, symbols=symbols)
 
 
-def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
+def _helper_simplify(eq, hint, match, simplify=True, ics=None, symbols=None, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
@@ -672,13 +676,13 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         if iterable(sols):
             rv = []
             for s in sols:
-                simp = odesimp(eq, s, func, hint)
+                simp = odesimp(eq, s, func, hint, symbols=symbols)
                 if iterable(simp):
                     rv.extend(simp)
                 else:
                     rv.append(simp)
         else:
-            rv = odesimp(eq, sols, func, hint)
+            rv = odesimp(eq, sols, func, hint, symbols=symbols)
     else:
         # We still want to integrate (you can disable it separately with the hint)
         if isinstance(solvefunc, SingleODESolver):
@@ -1632,7 +1636,7 @@ def check_nonlinear_3eq_order2(eq, func, func_coef):
     return None
 
 
-def odesimp(ode, eq, func, hint):
+def odesimp(ode, eq, func, hint, symbols=None):
     r"""
     Simplifies solutions of ODEs, including trying to solve for ``func`` and
     running :py:meth:`~sympy.solvers.ode.constantsimp`.
@@ -1761,7 +1765,7 @@ def odesimp(ode, eq, func, hint):
     # things like -C1, so rerun constantsimp() one last time before returning.
     for i, eqi in enumerate(eq):
         eq[i] = constantsimp(eqi, constants)
-        eq[i] = constant_renumber(eq[i], ode.free_symbols)
+        eq[i] = constant_renumber(eq[i], ode.free_symbols, newconstants=symbols)
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
