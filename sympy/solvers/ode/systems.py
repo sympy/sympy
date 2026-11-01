@@ -534,11 +534,11 @@ def matrix_exp(A, t):
     Now, exp(A*t) is given as follows:
 
     >>> pprint(matrix_exp(A, t))
-    [   -t           -t                    -t              ]
-    [3*e  *sin(t) + e  *cos(t)         -5*e  *sin(t)       ]
-    [                                                      ]
-    [         -t                     -t           -t       ]
-    [      2*e  *sin(t)         - 3*e  *sin(t) + e  *cos(t)]
+    [   -t           -t                   -t             ]
+    [3*e  *sin(t) + e  *cos(t)        -5*e  *sin(t)      ]
+    [                                                    ]
+    [         -t                 -t             -t       ]
+    [      2*e  *sin(t)         e  *cos(t) - 3*e  *sin(t)]
 
     Parameters
     ==========
@@ -2027,7 +2027,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
 
     >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
     >>> dsolve_system(eqs)
-    [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
+    [[Eq(f(x), C2*exp(x) - C1*exp(-x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     You can also pass the initial conditions for the system of ODEs:
 
@@ -2039,7 +2039,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
 
     >>> funcs = [f(x), g(x)]
     >>> dsolve_system(eqs, funcs=funcs, t=x)
-    [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
+    [[Eq(f(x), C2*exp(x) - C1*exp(-x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     Lets look at an implicit system of ODEs:
 

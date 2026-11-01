@@ -232,7 +232,7 @@ def refine_exp(expr, assumptions):
     >>> refine(exp(2*pi*I*x), Q.integer(x))
     1
     >>> refine(exp(pi*I*(x + S.Half)), Q.integer(x))
-    (-1)**x*I
+    I*(-1)**x
     """
     coeff = expr.exp.as_coefficient(S.Pi * S.ImaginaryUnit)
     if coeff is None:

@@ -201,9 +201,9 @@ definite integrals.  Here is a sampling of some of the power of
     ⎮ sin⎝x ⎠ dx
     ⌡
     >>> integ.doit()
-             ⎛√2⋅x⎞
-    3⋅√2⋅√π⋅S⎜────⎟⋅Γ(3/4)
-             ⎝ √π ⎠
+                    ⎛√2⋅x⎞
+    3⋅√2⋅√π⋅Γ(3/4)⋅S⎜────⎟
+                    ⎝ √π ⎠
     ──────────────────────
            8⋅Γ(7/4)
 
@@ -385,7 +385,7 @@ the :func:`~sympy.calculus.finite_diff.differentiate_finite` function:
 
     >>> f, g = symbols('f g', cls=Function)
     >>> differentiate_finite(f(x)*g(x))
-    -f(x - 1/2)⋅g(x - 1/2) + f(x + 1/2)⋅g(x + 1/2)
+    f(x + 1/2)⋅g(x + 1/2) - f(x - 1/2)⋅g(x - 1/2)
 
 If you already have a ``Derivative`` instance, you can use the
 :func:`~sympy.core.function.Derivative.as_finite_difference` method to generate
@@ -394,7 +394,7 @@ approximations of the derivative to arbitrary order:
     >>> f = Function('f')
     >>> dfdx = f(x).diff(x)
     >>> dfdx.as_finite_difference()
-    -f(x - 1/2) + f(x + 1/2)
+    f(x + 1/2) - f(x - 1/2)
 
 here the first order derivative was approximated around x using a
 minimum number of points (2 for 1st order derivative) evaluated

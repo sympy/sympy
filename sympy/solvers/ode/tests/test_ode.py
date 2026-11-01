@@ -1084,13 +1084,14 @@ def test_issue_22523():
     sol = dsolve(eqn, hint='2nd_power_series_ordinary')
     # there is no r(2.0) in this result
     assert filldedent(sol) == filldedent(str('''
-        Eq(rho(s), C2*(1 - 4.0*s**4*sqrt(N - 1.0)/N + 0.666666666666667*s**4/N
-        - 2.66666666666667*s**3*sqrt(N - 1.0)/N - 2.0*s**2*sqrt(N - 1.0)/N +
+        Eq(rho(s), C2*(-4.0*s**4*sqrt(N - 1.0)/N + 0.666666666666667*s**4/N -
+        2.66666666666667*s**3*sqrt(N - 1.0)/N - 2.0*s**2*sqrt(N - 1.0)/N +
         9.33333333333333*s**4*sqrt(N - 1.0)/N**2 - 0.666666666666667*s**4/N**2
         + 2.66666666666667*s**3*sqrt(N - 1.0)/N**2 -
-        5.33333333333333*s**4*sqrt(N - 1.0)/N**3) + C1*s*(1.0 -
-        1.33333333333333*s**3*sqrt(N - 1.0)/N - 0.666666666666667*s**2*sqrt(N
-        - 1.0)/N + 1.33333333333333*s**3*sqrt(N - 1.0)/N**2) + O(s**6))'''))
+        5.33333333333333*s**4*sqrt(N - 1.0)/N**3 + 1) +
+        C1*s*(-1.33333333333333*s**3*sqrt(N - 1.0)/N -
+        0.666666666666667*s**2*sqrt(N - 1.0)/N + 1.33333333333333*s**3*sqrt(N
+        - 1.0)/N**2 + 1.0) + O(s**6))'''))
 
 
 def test_issue_22604():
@@ -1105,11 +1106,11 @@ def test_issue_22604():
     assert x1sol == Eq(x1(t), (-sqrt(5) + 3 + 3*sqrt(2)*sqrt(3 - sqrt(5)))
                        *cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/10 - sqrt(sqrt(5) + 3)
                        *(-sqrt(3 - sqrt(5)) + 2*sqrt(2))*cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/10)
-    assert x2sol == Eq(x2(t), (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
+    assert x2sol.equals(Eq(x2(t), (-2 + 3*sqrt(2)*sqrt(3 - sqrt(5))
                         + 2*sqrt(5) + 3*sqrt(10)*sqrt(3 - sqrt(5)))*cos(sqrt(2)
                         *t*sqrt(3 - sqrt(5))/2)/20 + sqrt(sqrt(5) + 3)*(-2*sqrt(2) - sqrt(5)
                         *sqrt(3 - sqrt(5)) + sqrt(3 - sqrt(5)) + 2*sqrt(10))
-                        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20)
+                        *cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20))
 
 def test_issue_22462():
     for de in [

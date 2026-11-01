@@ -533,7 +533,7 @@ def trigsimp(expr, inverse=False, **opts):
 
     >>> e = 1/(sin(x)*cos(x)) - cot(x)
     >>> trigsimp(e)
-    -cot(x) + 2/sin(2*x)
+    2/sin(2*x) - cot(x)
     >>> trigsimp(cancel(e))
     tan(x)
 

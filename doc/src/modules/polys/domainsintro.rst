@@ -90,7 +90,7 @@ this representation using the :py:func:`~.srepr` function::
   >>> x = Symbol('x')
   >>> e = 1 + 1/(2 + x**2)
   >>> e
-  1 + 1/(x**2 + 2)
+  1/(x**2 + 2) + 1
   >>> print(srepr(e))
   Add(Integer(1), Pow(Add(Integer(2), Pow(Symbol('x'), Integer(2))), Integer(-1)))
 
@@ -685,7 +685,7 @@ The printing support for these is less developed but we can use
   >>> b  # doctest: +SKIP
   ANP([1, 1], [1, 0, -2], QQ)
   >>> K.to_sympy(b)
-  1 + sqrt(2)
+  sqrt(2) + 1
   >>> b ** 2  # doctest: +SKIP
   ANP([2, 3], [1, 0, -2], QQ)
   >>> K.to_sympy(b**2)
@@ -722,9 +722,9 @@ generators such as `\mathbb{Q}(\sqrt{2},\sqrt{3})`::
   >>> p  # doctest: +SKIP
   ANP([1/2, 1, -3/2], [1, 0, -10, 0, 1], QQ)
   >>> K.to_sympy(p)
-  1 + sqrt(2) + sqrt(3) + sqrt(6)
+  sqrt(2) + sqrt(3) + sqrt(6) + 1
   >>> K.to_sympy(p**2)
-  4*sqrt(6) + 6*sqrt(3) + 8*sqrt(2) + 12
+  8*sqrt(2) + 6*sqrt(3) + 4*sqrt(6) + 12
 
 Here the algebraic extension `\mathbb{Q}(\sqrt{2},\sqrt{3})` is converted to
 the (isomorphic) `\mathbb{Q}(\sqrt{2}+\sqrt{3})` with a single generator

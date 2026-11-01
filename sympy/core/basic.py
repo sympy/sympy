@@ -1053,9 +1053,9 @@ class Basic(Printable):
         >>> (1 + x*y).subs(x, pi)
         pi*y + 1
         >>> (1 + x*y).subs({x:pi, y:2})
-        1 + 2*pi
+        2*pi + 1
         >>> (1 + x*y).subs([(x, pi), (y, 2)])
-        1 + 2*pi
+        2*pi + 1
         >>> reps = [(y, x**2), (x, 2)]
         >>> (x + y).subs(reps)
         6
@@ -1381,7 +1381,7 @@ class Basic(Printable):
         >>> (1 + x*y).xreplace({x: pi})
         pi*y + 1
         >>> (1 + x*y).xreplace({x: pi, y: 2})
-        1 + 2*pi
+        2*pi + 1
 
         Replacements occur only if an entire node in the expression tree is
         matched:
@@ -2175,7 +2175,7 @@ class Basic(Printable):
         ...         if rule == sqrt:
         ...             return sqrt(1 - cos(x)**2)
         >>> MySin(MySin(x)).rewrite(cos)
-        cos(-cos(-x + pi/2) + pi/2)
+        cos(pi/2 - cos(pi/2 - x))
         >>> MySin(x).rewrite(sqrt)
         sqrt(1 - cos(x)**2)
 
@@ -2188,7 +2188,7 @@ class Basic(Printable):
         ...         x, = args
         ...         return cos(pi/2 - x, evaluate=False)
         >>> MySin(x).rewrite(cos)
-        cos(-x + pi/2)
+        cos(pi/2 - x)
 
         """
         if not args:

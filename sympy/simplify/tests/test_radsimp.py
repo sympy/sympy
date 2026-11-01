@@ -120,10 +120,10 @@ def test_radsimp():
     # work with normal form
     e = 1/sqrt(sqrt(7)/7 + 2*sqrt(2) + 3*sqrt(3) + 5*sqrt(5)) + 3
     assert radsimp(e) == (
-        -sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
-        35*sqrt(5))*(-11654899*sqrt(35) - 1577436*sqrt(210) - 1278438*sqrt(15)
-        - 1346996*sqrt(10) + 1635060*sqrt(6) + 5709765 + 7539830*sqrt(14) +
-        8291415*sqrt(21))/1300423175 + 3)
+        sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
+        35*sqrt(5))*(1346996*sqrt(10) - 7539830*sqrt(14) + 1278438*sqrt(15)
+        - 8291415*sqrt(21) + 1577436*sqrt(210) + 11654899*sqrt(35)
+        - 1635060*sqrt(6) - 5709765)/1300423175 + 3)
 
     # obey power rules
     base = sqrt(3) - sqrt(2)
@@ -143,10 +143,10 @@ def test_radsimp():
 
     # test that symbolic denominators are not processed
     r = 1 + sqrt(2)
-    assert radsimp(x/r, symbolic=False) == -x*(-sqrt(2) + 1)
+    assert radsimp(x/r, symbolic=False) == x*(sqrt(2) - 1)
     assert radsimp(x/(y + r), symbolic=False) == x/(y + 1 + sqrt(2))
     assert radsimp(x/(y + r)/r, symbolic=False) == \
-        -x*(-sqrt(2) + 1)/(y + 1 + sqrt(2))
+        x*(sqrt(2) - 1)/(y + 1 + sqrt(2))
 
     # issue 7408
     eq = sqrt(x)/sqrt(y)

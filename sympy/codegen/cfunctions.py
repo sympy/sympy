@@ -241,7 +241,7 @@ class log2(Function):
     >>> log2(4).evalf() == 2.0
     True
     >>> log2(x).diff(x)
-    1/(x*log(2))
+    1/(log(2)*x)
 
     See Also
     ========
@@ -346,7 +346,7 @@ class log10(Function):
     >>> log10(100).evalf() == 2.0
     True
     >>> log10(x).diff(x)
-    1/(x*log(10))
+    1/(log(10)*x)
 
     See Also
     ========

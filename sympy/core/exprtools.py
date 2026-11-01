@@ -1244,9 +1244,9 @@ def _factor_sum_int(expr, **kwargs):
     >>> from sympy import Sum, factor_terms
     >>> from sympy.abc import x, y
     >>> factor_terms(Sum(x + y, (x, 1, 3)))
-    y*Sum(1, (x, 1, 3)) + Sum(x, (x, 1, 3))
+    Sum(1, (x, 1, 3))*y + Sum(x, (x, 1, 3))
     >>> factor_terms(Sum(x*y, (x, 1, 3)))
-    y*Sum(x, (x, 1, 3))
+    Sum(x, (x, 1, 3))*y
 
     Notes
     =====

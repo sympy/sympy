@@ -568,31 +568,36 @@ def test_solve_transcendental():
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
     result = solve(eq, x)
+    _r0 = Rational(1, 5)
+    _r1 = Rational(1, 3)
+    _r2 = Rational(7, 20)
+    _r3 = Rational(1, 2)
+    _r4 = Rational(7, 5)
     x0 = -log(2401)
-    x1 = 3**Rational(1, 5)
-    x2 = log(7**(7*x1/20))
-    x3 = sqrt(2)
-    x4 = sqrt(5)
-    x5 = x3*sqrt(x4 - 5)
-    x6 = x4 + 1
-    x7 = 1/(3*log(7))
-    x8 = -x4
-    x9 = x3*sqrt(x8 - 5)
-    x10 = x8 + 1
-    ans = [x7*(x0 - 5*LambertW(x2*(-x5 + x6))),
-           x7*(x0 - 5*LambertW(x2*(x5 + x6))),
-           x7*(x0 - 5*LambertW(x2*(x10 - x9))),
-           x7*(x0 - 5*LambertW(x2*(x10 + x9))),
-           x7*(x0 - 5*LambertW(-log(7**(7*x1/5))))]
+    x1 = 3**_r0
+    x2 = log(7**(_r2*x1))
+    x3 = 5**_r3
+    x4 = -x3
+    x5 = 2**_r3
+    x6 = x5*(x4 - 5)**_r3
+    x7 = _r1/log(7)
+    x8 = x5*(x3 - 5)**_r3
+    x9 = x3 + 1
+    ans = [
+        x7*(x0 - 5*LambertW(x2*(x4 - x6 + 1))),
+        x7*(x0 - 5*LambertW(x2*(x4 + x6 + 1))),
+        x7*(x0 - 5*LambertW(x2*(-x8 + x9))),
+        x7*(x0 - 5*LambertW(x2*(x8 + x9))),
+        x7*(x0 - 5*LambertW(-log(7**(_r4*x1))))]
     assert result == ans, result
     # it works if expanded, too
     assert solve(eq.expand(), x) == result
 
     assert solve(z*cos(x) - y, x) == [-acos(y/z) + 2*pi, acos(y/z)]
     assert solve(z*cos(2*x) - y, x) == [-acos(y/z)/2 + pi, acos(y/z)/2]
-    assert solve(z*cos(sin(x)) - y, x) == [
+    assert set(solve(z*cos(sin(x)) - y, x)) == {
         pi - asin(acos(y/z)), asin(acos(y/z) - 2*pi) + pi,
-        -asin(acos(y/z) - 2*pi), asin(acos(y/z))]
+        -asin(acos(y/z) - 2*pi), asin(acos(y/z))}
 
     assert solve(z*cos(x), x) == [pi/2, pi*Rational(3, 2)]
 
@@ -1876,8 +1881,7 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
 
     # issue 8692
     assert solve(Eq(Abs(x + 1) + Abs(x**2 - 7), 9), x) == [
-        Rational(-1, 2) + sqrt(61)/2, -sqrt(69)/2 + S.Half]
-
+        sqrt(61)/2 - S(1)/2, S(1)/2 - sqrt(69)/2]
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
 
@@ -1996,10 +2000,10 @@ def test_lambert_bivariate():
     # tests passing current implementation
     assert solve((x**2 + x)*exp(x**2 + x) - 1) == [
         Rational(-1, 2) + sqrt(1 + 4*LambertW(1))/2,
-        Rational(-1, 2) - sqrt(1 + 4*LambertW(1))/2]
+        Rational(-1, 2) - sqrt(1 + 4*LambertW(1))/2][::-1]
     assert solve((x**2 + x)*exp((x**2 + x)*2) - 1) == [
         Rational(-1, 2) + sqrt(1 + 2*LambertW(2))/2,
-        Rational(-1, 2) - sqrt(1 + 2*LambertW(2))/2]
+        Rational(-1, 2) - sqrt(1 + 2*LambertW(2))/2][::-1]
     assert solve(a/x + exp(x/2), x) == [2*LambertW(-a/2)]
     assert solve((a/x + exp(x/2)).diff(x), x) == \
             [4*LambertW(-sqrt(2)*sqrt(a)/4), 4*LambertW(sqrt(2)*sqrt(a)/4)]
@@ -2017,7 +2021,7 @@ def test_lambert_bivariate():
     assert solve(5*x - 1 + 3*exp(2 - 7*x), x) == \
         [Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
-        -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
+        -sqrt(LambertW(1) - 1), sqrt(LambertW(1) - 1)]
     # check collection
     ax = a**(3*x + 5)
     ans = solve(3*log(ax) + b*log(ax) + ax, x)
@@ -2072,21 +2076,21 @@ def test_lambert_bivariate():
     assert solve((1/log(1/sqrt(x) + 2)**2 - x)) == [
         (LambertW(-exp(-2), -1) + 2)**-2]
     assert solve((1/log(x**2 + 2)**2 - x**-4)) == [
-        -I*sqrt(2 - LambertW(exp(2))),
         -I*sqrt(LambertW(-exp(-2)) + 2),
-        sqrt(-2 - LambertW(-exp(-2))),
-        sqrt(-2 + LambertW(exp(2))),
-        -sqrt(-2 - LambertW(-exp(-2), -1)),
-        sqrt(-2 - LambertW(-exp(-2), -1))]
+        sqrt(-LambertW(-exp(-2)) - 2),
+        -sqrt(LambertW(exp(2)) - 2),
+        sqrt(LambertW(exp(2)) - 2),
+        -sqrt(-LambertW(-exp(-2), -1) - 2),
+        sqrt(-LambertW(-exp(-2), -1) - 2)]
 
 
 def test_rewrite_trig():
     assert solve(sin(x) + tan(x)) == [0, -pi, pi, 2*pi]
-    assert solve(sin(x) + sec(x)) == [
+    assert set(solve(sin(x) + sec(x))) == {
         -2*atan(Rational(-1, 2) + sqrt(2)*sqrt(1 - sqrt(3)*I)/2 + sqrt(3)*I/2),
         2*atan(S.Half - sqrt(2)*sqrt(1 + sqrt(3)*I)/2 + sqrt(3)*I/2), 2*atan(S.Half
         + sqrt(2)*sqrt(1 + sqrt(3)*I)/2 + sqrt(3)*I/2), 2*atan(S.Half -
-        sqrt(3)*I/2 + sqrt(2)*sqrt(1 - sqrt(3)*I)/2)]
+        sqrt(3)*I/2 + sqrt(2)*sqrt(1 - sqrt(3)*I)/2)}
     assert solve(sinh(x) + tanh(x)) == [0, I*pi]
 
     # issue 6157
@@ -2107,11 +2111,11 @@ def test_rewrite_trigh():
 def test_uselogcombine():
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solve(eq, x, force=True) == [-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z)))]
-    assert solve(log(x + 3) + log(1 + 3/x) - 3) in [
-        [-3 + sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 + exp(3)/2,
-        -sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 - 3 + exp(3)/2],
-        [-3 + sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2,
-        -3 - sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2],
+    assert set(solve(log(x + 3) + log(1 + 3/x) - 3)) in [
+        {-3 + sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 + exp(3)/2,
+        -sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 - 3 + exp(3)/2},
+        {-3 + sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2,
+        -3 - sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2},
         ]
     assert solve(log(exp(2*x) + 1) + log(-tanh(x) + 1) - log(2)) == []
 
@@ -2561,14 +2565,17 @@ def test_issue_19113_19102():
     t = S(1)/3
     solve(cos(x)**5-sin(x)**5)
     assert solve(4*cos(x)**3 - 2*sin(x)**3) == [
-        atan(2**(t)), -atan(2**(t)*(1 - sqrt(3)*I)/2),
+        atan(2**(t)), atan(2**t*(sqrt(3)*I - 1)/2),
         -atan(2**(t)*(1 + sqrt(3)*I)/2)]
     h = S.Half
-    assert solve(cos(x)**2 + sin(x)) == [
+    got = solve(cos(x)**2 + sin(x))
+    expect = [
         2*atan(-h + sqrt(5)/2 + sqrt(2)*sqrt(1 - sqrt(5))/2),
+        -2*atan(-sqrt(2)*sqrt(1 + sqrt(5))/2 + h + sqrt(5)/2),
         -2*atan(h + sqrt(5)/2 + sqrt(2)*sqrt(1 + sqrt(5))/2),
         -2*atan(-sqrt(5)/2 + h + sqrt(2)*sqrt(1 - sqrt(5))/2),
-        -2*atan(-sqrt(2)*sqrt(1 + sqrt(5))/2 + h + sqrt(5)/2)]
+        ]
+    assert all(i.equals(j) for i, j in zip(got, expect))
     assert solve(3*cos(x) - sin(x)) == [atan(3)]
 
 

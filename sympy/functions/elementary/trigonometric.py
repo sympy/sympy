@@ -272,7 +272,7 @@ class sin(TrigonometricFunction):
     >>> sin(pi/6)
     1/2
     >>> sin(pi/12)
-    -sqrt(2)/4 + sqrt(6)/4
+    sqrt(6)/4 - sqrt(2)/4
 
 
     See Also
@@ -986,7 +986,7 @@ class tan(TrigonometricFunction):
     >>> tan(1).diff(x)
     0
     >>> tan(pi/8).expand()
-    -1 + sqrt(2)
+    sqrt(2) - 1
 
     See Also
     ========

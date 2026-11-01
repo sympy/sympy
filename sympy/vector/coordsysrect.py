@@ -659,13 +659,13 @@ class CoordSys3D(Basic):
         >>> vN_matrix = T_fromA_toN * vA_matrix
         >>> vN_matrix
         Matrix([
-        [                     1],
-        [-3*sin(q1) + 2*cos(q1)],
-        [ 2*sin(q1) + 3*cos(q1)]])
+        [                    1],
+        [2*cos(q1) - 3*sin(q1)],
+        [2*sin(q1) + 3*cos(q1)]])
         >>> vA = A.i + 2 * A.j + 3 * A.k
         >>> vN = express(vA, N)
         >>> vN
-        N.i + (-3*sin(q1) + 2*cos(q1))*N.j + (2*sin(q1) + 3*cos(q1))*N.k
+        N.i + (2*cos(q1) - 3*sin(q1))*N.j + (2*sin(q1) + 3*cos(q1))*N.k
 
         Change-of-basis matrix from spherical to Cartesian coordinates:
 

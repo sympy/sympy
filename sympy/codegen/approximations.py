@@ -134,7 +134,7 @@ class SeriesApprox(Optimization):
     >>> optimize(expr, [series_approx2])
     x*(-y + (y - pi)**3/6 + pi)
     >>> optimize(expr, [series_approx3])
-    (-x**3/6 + x)*sin(y)
+    (x - x**3/6)*sin(y)
     >>> optimize(expr, [series_approx8])
     sin(x)*sin(y)
 

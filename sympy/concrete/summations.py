@@ -746,7 +746,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             1.28333333333333
             >>> s, e = Sum(1/k, (k, 2, 5)).euler_maclaurin()
             >>> s
-            -log(2) + 7/20 + log(5)
+            -log(2) + log(5) + 7/20
             >>> from sympy import sstr
             >>> print(sstr((s.evalf(), e.evalf()), full_prec=True))
             (1.26629073187415, 0.0175000000000000)
@@ -1453,7 +1453,7 @@ def eval_sum_residue(f, i_a_b):
     Infinite series of even rational functions.
 
     >>> Sum(1 / (x**2 + 1), (x, 0, oo)).doit()
-    1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) + 1/2
 
     Infinite series of alternating even rational functions.
 
@@ -1465,13 +1465,13 @@ def eval_sum_residue(f, i_a_b):
     formula can handle.
 
     >>> Sum(1 / (x**2 + 2*x + 2), (x, -1, oo)).doit()
-    1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) + 1/2
     >>> Sum(1 / (x**2 + 4*x + 5), (x, -2, oo)).doit()
-    1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) + 1/2
     >>> Sum(1 / (x**2 + 1), (x, 1, oo)).doit()
-    -1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) - 1/2
     >>> Sum(1 / (x**2 + 1), (x, 2, oo)).doit()
-    -1 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) - 1
 
     References
     ==========

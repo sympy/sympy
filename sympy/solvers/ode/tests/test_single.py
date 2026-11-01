@@ -1503,7 +1503,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
 
     'undet_15': {
         'eq': f2 + f(x) - 4*x*sin(x),
-        'sol': [Eq(f(x), (C1 - x**2)*cos(x) + (C2 + x)*sin(x))],
+        'sol': [Eq(f(x), (C1 + x)*sin(x) + (C2 - x**2)*cos(x))],
         'slow': True,
     },
 

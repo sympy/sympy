@@ -146,7 +146,7 @@ class SingularityFunction(DefinedFunction):
         >>> a = Symbol('a', negative = True)
         >>> n = Symbol('n', nonnegative = True)
         >>> SingularityFunction(x, a, n)
-        (-a + x)**n
+        (x - a)**n
         >>> x = Symbol('x', negative = True)
         >>> a = Symbol('a', positive = True)
         >>> SingularityFunction(x, a, n)

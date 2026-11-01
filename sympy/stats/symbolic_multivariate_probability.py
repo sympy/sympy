@@ -38,7 +38,7 @@ class ExpectationMatrix(Expectation, MatrixExpr):
     >>> ExpectationMatrix(A*X + B*Y).expand()
     A*ExpectationMatrix(X) + B*ExpectationMatrix(Y)
     >>> ExpectationMatrix((X + Y)*(X - Y).T).expand()
-    ExpectationMatrix(X*X.T) - ExpectationMatrix(X*Y.T) + ExpectationMatrix(Y*X.T) - ExpectationMatrix(Y*Y.T)
+    -ExpectationMatrix(X*Y.T) - ExpectationMatrix(Y*Y.T) + ExpectationMatrix(X*X.T) + ExpectationMatrix(Y*X.T)
 
     To evaluate the ``ExpectationMatrix``, use ``doit()``:
 

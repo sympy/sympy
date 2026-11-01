@@ -381,11 +381,11 @@ def signsimp(expr, evaluate=None):
     >>> i = symbols('i', odd=True)
     >>> n = -1 + 1/x
     >>> n/x/(-n)**2 - 1/n/x
-    (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
+    (1/x - 1)/(x*(1 - 1/x)**2) - 1/(x*(1/x - 1))
     >>> signsimp(_)
     0
     >>> x*n + x*-n
-    x*(-1 + 1/x) + x*(1 - 1/x)
+    x*(1/x - 1) + x*(1 - 1/x)
     >>> signsimp(_)
     0
 
@@ -398,7 +398,7 @@ def signsimp(expr, evaluate=None):
     exponent into canonical form:
 
     >>> n**i
-    (-1 + 1/x)**i
+    (1/x - 1)**i
 
     By default, signsimp does not leave behind any hollow simplification:
     if making an Add canonical wrt sign didn't change the expression, the
@@ -865,9 +865,9 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
     >>> from sympy.simplify.simplify import factor_sum
     >>> s = Sum(x*y, (x, 1, 3))
     >>> factor_sum(s)
-    y*Sum(x, (x, 1, 3))
+    Sum(x, (x, 1, 3))*y
     >>> factor_sum(s.function, s.limits)
-    y*Sum(x, (x, 1, 3))
+    Sum(x, (x, 1, 3))*y
     """
 
     # XXX deprecate in favor of direct call to factor_terms
@@ -1470,7 +1470,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, pi
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
-    -2 + 2*GoldenRatio
+    2*GoldenRatio - 2
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
     1/2 - I*sqrt(sqrt(5)/10 + 1/4)
     >>> nsimplify(I**I, [pi])

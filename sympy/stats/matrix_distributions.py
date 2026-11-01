@@ -308,9 +308,9 @@ def MatrixGamma(symbol, alpha, beta, scale_matrix):
     >>> density(M)(X).doit()
     exp(Trace(Matrix([
     [-2/3,  1/3],
-    [ 1/3, -2/3]])*X)/b)*Determinant(X)**(a - 3/2)/(3**a*sqrt(pi)*b**(2*a)*gamma(a)*gamma(a - 1/2))
+    [ 1/3, -2/3]])*X)/b)*Determinant(X)**(a - 3/2)/(sqrt(pi)*3**a*b**(2*a)*gamma(a)*gamma(a - 1/2))
     >>> density(M)([[1, 0], [0, 1]]).doit()
-    exp(-4/(3*b))/(3**a*sqrt(pi)*b**(2*a)*gamma(a)*gamma(a - 1/2))
+    exp(-4/(3*b))/(sqrt(pi)*3**a*b**(2*a)*gamma(a)*gamma(a - 1/2))
 
 
     References
@@ -392,9 +392,9 @@ def Wishart(symbol, n, scale_matrix):
     >>> density(W)(X).doit()
     exp(Trace(Matrix([
     [-1/3,  1/6],
-    [ 1/6, -1/3]])*X))*Determinant(X)**(n/2 - 3/2)/(2**n*3**(n/2)*sqrt(pi)*gamma(n/2)*gamma(n/2 - 1/2))
+    [ 1/6, -1/3]])*X))*Determinant(X)**(n/2 - 3/2)/(sqrt(pi)*2**n*3**(n/2)*gamma(n/2)*gamma(n/2 - 1/2))
     >>> density(W)([[1, 0], [0, 1]]).doit()
-    exp(-2/3)/(2**n*3**(n/2)*sqrt(pi)*gamma(n/2)*gamma(n/2 - 1/2))
+    exp(-2/3)/(sqrt(pi)*2**n*3**(n/2)*gamma(n/2)*gamma(n/2 - 1/2))
 
     References
     ==========

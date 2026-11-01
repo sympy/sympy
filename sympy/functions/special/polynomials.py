@@ -311,7 +311,7 @@ class gegenbauer(OrthogonalPolynomial):
     >>> gegenbauer(1, a, x)
     2*a*x
     >>> gegenbauer(2, a, x)
-    -a + x**2*(2*a**2 + 2*a)
+    x**2*(2*a**2 + 2*a) - a
     >>> gegenbauer(3, a, x)
     x**3*(4*a**3/3 + 4*a**2 + 8*a/3) + x*(-2*a**2 - 2*a)
 
@@ -321,7 +321,7 @@ class gegenbauer(OrthogonalPolynomial):
     (-1)**n*gegenbauer(n, a, x)
 
     >>> gegenbauer(n, a, 0)
-    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(1/2 - n/2)*gamma(n + 1))
+    sqrt(pi)*2**n*gamma(a + n/2)/(gamma(a)*gamma(1/2 - n/2)*gamma(n + 1))
     >>> gegenbauer(n, a, 1)
     gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
 
@@ -597,7 +597,7 @@ class chebyshevu(OrthogonalPolynomial):
     n + 1
 
     >>> diff(chebyshevu(n, x), x)
-    (-x*chebyshevu(n, x) + (n + 1)*chebyshevt(n + 1, x))/(x**2 - 1)
+    ((n + 1)*chebyshevt(n + 1, x) - x*chebyshevu(n, x))/(x**2 - 1)
 
     See Also
     ========
@@ -1350,7 +1350,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     -assoc_laguerre(n - 1, a + 1, x)
 
     >>> diff(assoc_laguerre(n, a, x), a)
-    Sum(assoc_laguerre(_k, a, x)/(-a + n), (_k, 0, n - 1))
+    Sum(assoc_laguerre(_k, a, x)/(n - a), (_k, 0, n - 1))
 
     Parameters
     ==========

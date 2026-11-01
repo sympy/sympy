@@ -223,7 +223,7 @@ def test_latex_basic():
     assert latex((x + 1)**Rational(3, 4), fold_frac_powers=True) == \
         r"\left(x + 1\right)^{3/4}"
     assert latex(AlgebraicNumber(sqrt(2))) == r"\sqrt{2}"
-    assert latex(AlgebraicNumber(sqrt(2), [3, -7])) == r"-7 + 3 \sqrt{2}"
+    assert latex(AlgebraicNumber(sqrt(2), [3, -7])) == r"3 \sqrt{2} - 7"
     assert latex(AlgebraicNumber(sqrt(2), alias='alpha')) == r"\alpha"
     assert latex(AlgebraicNumber(sqrt(2), [3, -7], alias='alpha')) == \
         r"3 \alpha - 7"
@@ -309,7 +309,7 @@ def test_latex_SingularityFunction():
     assert latex(SingularityFunction(x, 0, 4)) == \
         r"{\left\langle x \right\rangle}^{4}"
     assert latex(SingularityFunction(x, a, n)) == \
-        r"{\left\langle - a + x \right\rangle}^{n}"
+        '{\\left\\langle x - a \\right\\rangle}^{n}'
     assert latex(SingularityFunction(x, 4, -2)) == \
         r"{\left\langle x - 4 \right\rangle}^{-2}"
     assert latex(SingularityFunction(x, 4, -1)) == \
@@ -322,7 +322,7 @@ def test_latex_SingularityFunction():
     assert latex(SingularityFunction(x, 0, 4)**3) == \
         r"{\left({\langle x \rangle}^{4}\right)}^{3}"
     assert latex(SingularityFunction(x, a, n)**3) == \
-        r"{\left({\langle - a + x \rangle}^{n}\right)}^{3}"
+        '{\\left({\\langle x - a \\rangle}^{n}\\right)}^{3}'
     assert latex(SingularityFunction(x, 4, -2)**3) == \
         r"{\left({\langle x - 4 \rangle}^{-2}\right)}^{3}"
     assert latex((SingularityFunction(x, 4, -1)**3)**3) == \
@@ -463,7 +463,7 @@ def test_latex_symbols_failing():
 @_both_exp_pow
 def test_latex_functions():
     assert latex(exp(x)) == r"e^{x}"
-    assert latex(exp(1) + exp(2)) == r"e + e^{2}"
+    assert latex(exp(1) + exp(2)) == r"e^{2} + e"
 
     f = Function('f')
     assert latex(f(x)) == r'f{\left(x \right)}'
@@ -1409,10 +1409,9 @@ def test_latex_ConditionSet():
 
 def test_latex_ComplexRegion():
     assert latex(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == \
-        r"\left\{x + y i\; \middle|\; x, y \in \left[3, 5\right] \times \left[4, 6\right] \right\}"
+        '\\left\\{x + i y\\; \\middle|\\; x, y \\in \\left[3, 5\\right] \\times \\left[4, 6\\right] \\right\\}'
     assert latex(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == \
-        r"\left\{r \left(i \sin{\left(\theta \right)} + \cos{\left(\theta "\
-        r"\right)}\right)\; \middle|\; r, \theta \in \left[0, 1\right] \times \left[0, 2 \pi\right) \right\}"
+        '\\left\\{r \\left(\\cos{\\left(\\theta \\right)} + i \\sin{\\left(\\theta \\right)}\\right)\\; \\middle|\\; r, \\theta \\in \\left[0, 1\\right] \\times \\left[0, 2 \\pi\\right) \\right\\}'
 
 
 def test_latex_Contains():
@@ -1933,12 +1932,12 @@ def test_matAdd():
     n = symbols("n")
     h = MatrixSymbol("h", 1, 1)
 
-    assert latex(C - 2*B) in [r'- 2 B + C', r'C -2 B']
+    assert latex(C - 2*B) in [r'- 2 B + C', r'C - 2 B']
     assert latex(C + 2*B) in [r'2 B + C', r'C + 2 B']
     assert latex(B - 2*C) in [r'B - 2 C', r'- 2 C + B']
     assert latex(B + 2*C) in [r'B + 2 C', r'2 C + B']
 
-    assert latex(n * h - (-h + h.T) * (h + h.T)) == 'n h - \\left(- h + h^{T}\\right) \\left(h + h^{T}\\right)'
+    assert latex(n * h - (-h + h.T) * (h + h.T)) == 'n h - \\left(h^{T} - h\\right) \\left(h + h^{T}\\right)'
     assert latex(MatAdd(MatAdd(h, h), MatAdd(h, h))) == '\\left(h + h\\right) + \\left(h + h\\right)'
     assert latex(MatMul(MatMul(h, h), MatMul(h, h))) == '\\left(h h\\right) \\left(h h\\right)'
 
@@ -2629,13 +2628,13 @@ def test_latex_UnevaluatedExpr():
     he = UnevaluatedExpr(1/x)
     assert latex(he) == latex(1/x) == r"\frac{1}{x}"
     assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
-    assert latex(he + 1) == r"1 + \frac{1}{x}"
-    assert latex(he - 1) == r"-1 + \frac{1}{x}"
+    assert latex(he + 1) == '\\frac{1}{x} + 1'
+    assert latex(he - 1) == '\\frac{1}{x} - 1'
     assert latex(-he + 1) == r"1 - \frac{1}{x}"
     assert latex(x*he) == r"x \frac{1}{x}"
 
     ue1 = UnevaluatedExpr(-2*x**2 - 9*x + 5)
-    assert latex(1 + ue1) == r"1 + \left(- 2 x^{2} - 9 x + 5\right)"
+    assert latex(1 + ue1) == '\\left(- 2 x^{2} - 9 x + 5\\right) + 1'
     assert latex(1 - ue1) == r"1 - \left(- 2 x^{2} - 9 x + 5\right)"
 
     ue2 = UnevaluatedExpr(-2*x**2 + 3*x + 2)
@@ -2643,7 +2642,7 @@ def test_latex_UnevaluatedExpr():
     assert latex(ue2 + ue3) == \
         r"\left(- 5 x^{2} + 6 x - 7\right) + \left(- 2 x^{2} + 3 x + 2\right)"
     assert latex(ue2 - ue3) == \
-        r"- \left(- 5 x^{2} + 6 x - 7\right) + \left(- 2 x^{2} + 3 x + 2\right)"
+        '\\left(- 2 x^{2} + 3 x + 2\\right) - \\left(- 5 x^{2} + 6 x - 7\\right)'
 
     u = UnevaluatedExpr(2)
     assert latex(u) == "2"
@@ -2747,7 +2746,7 @@ def test_MatrixSymbol_printing():
     C = MatrixSymbol("C", 3, 3)
 
     assert latex(-A) == r"- A"
-    assert latex(A - A*B - B) == r"A - A B - B"
+    assert latex(A - A*B - B) == '- A B - B + A'
     assert latex(-A*B - A*B*C - B) == r"- A B - A B C - B"
 
 
@@ -2771,11 +2770,11 @@ def test_Series_printing():
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
     assert latex(Series(tf1, tf2)) == \
-        r'\left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right) \left(\frac{x - y}{x + y}\right)'
+        '\\left(\\frac{x y^{2} - z}{y^{3} - t^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right)'
     assert latex(Series(tf1, tf2, tf3)) == \
-        r'\left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right) \left(\frac{x - y}{x + y}\right) \left(\frac{t x^{2} - t^{w} x + w}{t - y}\right)'
+        '\\left(\\frac{x y^{2} - z}{y^{3} - t^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right) \\left(\\frac{t x^{2} - t^{w} x + w}{t - y}\\right)'
     assert latex(Series(-tf2, tf1)) == \
-        r'\left(\frac{- x + y}{x + y}\right) \left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right)'
+        '\\left(\\frac{y - x}{x + y}\\right) \\left(\\frac{x y^{2} - z}{y^{3} - t^{3}}\\right)'
 
     M_1 = Matrix([[5/s], [5/(2*s)]])
     T_1 = TransferFunctionMatrix.from_Matrix(M_1, s)
@@ -2817,9 +2816,9 @@ def test_Parallel_printing():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
     assert latex(Parallel(tf1, tf2)) == \
-        r'\frac{x y^{2} - z}{- t^{3} + y^{3}} + \frac{x - y}{x + y}'
+        '\\frac{x y^{2} - z}{y^{3} - t^{3}} + \\frac{x - y}{x + y}'
     assert latex(Parallel(-tf2, tf1)) == \
-        r'\frac{- x + y}{x + y} + \frac{x y^{2} - z}{- t^{3} + y^{3}}'
+        '\\frac{y - x}{x + y} + \\frac{x y^{2} - z}{y^{3} - t^{3}}'
 
     M_1 = Matrix([[5, 6], [6, 5/s]])
     T_1 = TransferFunctionMatrix.from_Matrix(M_1, s)
@@ -3169,7 +3168,7 @@ def test_MatrixSymbol_bold():
 
     assert latex(-A, mat_symbol_style='bold') == r"- \mathbf{A}"
     assert latex(A - A*B - B, mat_symbol_style='bold') == \
-        r"\mathbf{A} - \mathbf{A} \mathbf{B} - \mathbf{B}"
+        '- \\mathbf{A} \\mathbf{B} - \\mathbf{B} + \\mathbf{A}'
     assert latex(-A*B - A*B*C - B, mat_symbol_style='bold') == \
         r"- \mathbf{A} \mathbf{B} - \mathbf{A} \mathbf{B} \mathbf{C} - \mathbf{B}"
 

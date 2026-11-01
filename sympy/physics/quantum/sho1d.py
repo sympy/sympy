@@ -315,9 +315,9 @@ class NumberOp(SHOOp):
         >>> N.rewrite('a').doit()
         RaisingOp(a)*a
         >>> N.rewrite('xp').doit()
-        -1/2 + (m**2*omega**2*X**2 + Px**2)/(2*hbar*m*omega)
+        (m**2*omega**2*X**2 + Px**2)/(2*hbar*m*omega) - 1/2
         >>> N.rewrite('H').doit()
-        -1/2 + H/(hbar*omega)
+        H/(hbar*omega) - 1/2
 
     Take the Commutator of the Number Operator with other Operators:
 
@@ -432,11 +432,11 @@ class Hamiltonian(SHOOp):
 
         >>> H = Hamiltonian('H')
         >>> H.rewrite('a').doit()
-        hbar*omega*(1/2 + RaisingOp(a)*a)
+        hbar*omega*(RaisingOp(a)*a + 1/2)
         >>> H.rewrite('xp').doit()
         (m**2*omega**2*X**2 + Px**2)/(2*m)
         >>> H.rewrite('N').doit()
-        hbar*omega*(1/2 + N)
+        hbar*omega*(N + 1/2)
 
     Take the Commutator of the Hamiltonian and the Number Operator:
 

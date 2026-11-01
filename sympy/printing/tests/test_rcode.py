@@ -37,7 +37,7 @@ def test_rcode_Pow():
     assert rcode(x**(y**3)) == "x^(y^3)"
     g = implemented_function('g', Lambda(x, 2*x))
     assert rcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "(3.5*2*x)^(-x + y^x)/(x^2 + y)"
+        '(3.5*2*x)^(y^x - x)/(x^2 + y)'
     assert rcode(x**-1.0) == '1.0/x'
     assert rcode(x**Rational(2, 3)) == 'x^(2.0/3.0)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),

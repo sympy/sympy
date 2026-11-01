@@ -77,7 +77,7 @@ class gamma(DefinedFunction):
 
     >>> from sympy import series
     >>> series(gamma(x), x, 0, 3)
-    1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma*pi**2/12 - zeta(3)/3 - EulerGamma**3/6) + O(x**3)
+    -EulerGamma + 1/x + (EulerGamma**2/2 + pi**2/12)*x + (-EulerGamma**3/6 - EulerGamma*pi**2/12 - zeta(3)/3)*x**2 + O(x**3)
 
     We can numerically evaluate the ``gamma`` function to arbitrary precision
     on the whole complex plane:
@@ -246,7 +246,7 @@ class lowergamma(DefinedFunction):
     >>> lowergamma(s, x)
     lowergamma(s, x)
     >>> lowergamma(3, x)
-    -2*(x**2/2 + x + 1)*exp(-x) + 2
+    2 - 2*(x**2/2 + x + 1)*exp(-x)
     >>> lowergamma(-S(1)/2, x)
     -2*sqrt(pi)*erf(sqrt(x)) - 2*exp(-x)/sqrt(x)
 
@@ -431,7 +431,7 @@ class uppergamma(DefinedFunction):
     >>> uppergamma(3, x)
     2*(x**2/2 + x + 1)*exp(-x)
     >>> uppergamma(-S(1)/2, x)
-    -2*sqrt(pi)*erfc(sqrt(x)) + 2*exp(-x)/sqrt(x)
+    2*exp(-x)/sqrt(x) - 2*sqrt(pi)*erfc(sqrt(x))
     >>> uppergamma(-2, x)
     expint(3, x)/x**2
 
@@ -589,11 +589,11 @@ class polygamma(DefinedFunction):
     >>> polygamma(0, 1)
     -EulerGamma
     >>> polygamma(0, 1/S(2))
-    -2*log(2) - EulerGamma
+    -EulerGamma - 2*log(2)
     >>> polygamma(0, 1/S(3))
-    -log(3) - sqrt(3)*pi/6 - EulerGamma - log(sqrt(3))
+    -sqrt(3)*pi/6 - EulerGamma - log(3) - log(sqrt(3))
     >>> polygamma(0, 1/S(4))
-    -pi/2 - log(4) - log(2) - EulerGamma
+    -EulerGamma - pi/2 - log(2) - log(4)
     >>> polygamma(0, 2)
     1 - EulerGamma
     >>> polygamma(0, 23)
@@ -643,7 +643,7 @@ class polygamma(DefinedFunction):
     2*harmonic(x - 1, 3) - 2*zeta(3)
     >>> ni = Symbol("n", integer=True)
     >>> polygamma(ni, x).rewrite(harmonic)
-    (-1)**(n + 1)*(-harmonic(x - 1, n + 1) + zeta(n + 1))*factorial(n)
+    (-1)**(n + 1)*(zeta(n + 1) - harmonic(x - 1, n + 1))*factorial(n)
 
     See Also
     ========
@@ -903,20 +903,20 @@ class loggamma(DefinedFunction):
     >>> loggamma(S(5)/2)
     log(3*sqrt(pi)/4)
     >>> loggamma(n/2)
-    log(2**(1 - n)*sqrt(pi)*gamma(n)/gamma(n/2 + 1/2))
+    log(sqrt(pi)*2**(1 - n)*gamma(n)/gamma(n/2 + 1/2))
 
     And general rational arguments:
 
     >>> from sympy import expand_func
     >>> L = loggamma(S(16)/3)
     >>> expand_func(L).doit()
-    -5*log(3) + loggamma(1/3) + log(4) + log(7) + log(10) + log(13)
+    -5*log(3) + log(4) + log(7) + log(10) + log(13) + loggamma(1/3)
     >>> L = loggamma(S(19)/4)
     >>> expand_func(L).doit()
-    -4*log(4) + loggamma(3/4) + log(3) + log(7) + log(11) + log(15)
+    log(3) - 4*log(4) + log(7) + log(11) + log(15) + loggamma(3/4)
     >>> L = loggamma(S(23)/7)
     >>> expand_func(L).doit()
-    -3*log(7) + log(2) + loggamma(2/7) + log(9) + log(16)
+    log(2) - 3*log(7) + log(9) + log(16) + loggamma(2/7)
 
     The ``loggamma`` function has the following limits towards infinity:
 
@@ -944,7 +944,7 @@ class loggamma(DefinedFunction):
 
     >>> from sympy import series
     >>> series(loggamma(x), x, 0, 4).cancel()
-    -log(x) - EulerGamma*x + pi**2*x**2/12 - x**3*zeta(3)/3 + O(x**4)
+    -log(x) - EulerGamma*x + pi**2*x**2/12 - zeta(3)*x**3/3 + O(x**4)
 
     We can numerically evaluate the ``loggamma`` function
     to arbitrary precision on the whole complex plane:

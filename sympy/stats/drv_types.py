@@ -418,13 +418,13 @@ def Logarithmic(name, p):
     >>> X = Logarithmic("x", p)
 
     >>> density(X)(z)
-    -(1/5)**z/(z*log(4/5))
+    -(1/5)**z/(log(4/5)*z)
 
     >>> E(X)
-    -1/(-4*log(5) + 8*log(2))
+    -1/(8*log(2) - 4*log(5))
 
     >>> variance(X)
-    -1/((-4*log(5) + 8*log(2))*(-2*log(5) + 4*log(2))) + 1/(-64*log(2)*log(5) + 64*log(2)**2 + 16*log(5)**2) - 10/(-32*log(5) + 64*log(2))
+    1/(64*log(2)**2 - 64*log(2)*log(5) + 16*log(5)**2) - 10/(64*log(2) - 32*log(5)) - 1/((4*log(2) - 2*log(5))*(8*log(2) - 4*log(5)))
 
     References
     ==========
@@ -833,13 +833,13 @@ def Zeta(name, s):
     >>> X = Zeta("x", s)
 
     >>> density(X)(z)
-    1/(z**5*zeta(5))
+    1/(zeta(5)*z**5)
 
     >>> E(X)
     pi**4/(90*zeta(5))
 
     >>> variance(X)
-    -pi**8/(8100*zeta(5)**2) + zeta(3)/zeta(5)
+    zeta(3)/zeta(5) - pi**8/(8100*zeta(5)**2)
 
     References
     ==========

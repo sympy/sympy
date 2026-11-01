@@ -1448,9 +1448,9 @@ def polarify(eq, subs=True, lift=False):
     >>> expr.expand()
     (-x)**y
     >>> polarify(expr)
-    ((_x*exp_polar(I*pi))**_y, {_x: x, _y: y})
+    ((exp_polar(I*pi)*_x)**_y, {_x: x, _y: y})
     >>> polarify(expr)[0].expand()
-    _x**_y*exp_polar(_y*I*pi)
+    _x**_y*exp_polar(I*pi*_y)
     >>> polarify(x, lift=True)
     polar_lift(x)
     >>> polarify(x*(1+y), lift=True)
@@ -1459,7 +1459,7 @@ def polarify(eq, subs=True, lift=False):
     Adds are treated carefully:
 
     >>> polarify(1 + sin((1 + I)*x))
-    (sin(_x*polar_lift(1 + I)) + 1, {_x: x})
+    (sin(polar_lift(1 + I)*_x) + 1, {_x: x})
     """
     if lift:
         subs = False

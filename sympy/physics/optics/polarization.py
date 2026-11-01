@@ -25,9 +25,9 @@ We calculate a generic Jones vector:
 >>> psi, chi, p, I0 = symbols("psi, chi, p, I0", real=True)
 >>> x0 = jones_vector(psi, chi)
 >>> pprint(x0, use_unicode=True)
-⎡-ⅈ⋅sin(χ)⋅sin(ψ) + cos(χ)⋅cos(ψ)⎤
-⎢                                ⎥
-⎣ⅈ⋅sin(χ)⋅cos(ψ) + sin(ψ)⋅cos(χ) ⎦
+⎡cos(χ)⋅cos(ψ) - ⅈ⋅sin(χ)⋅sin(ψ)⎤
+⎢                               ⎥
+⎣sin(ψ)⋅cos(χ) + ⅈ⋅sin(χ)⋅cos(ψ)⎦
 
 And the more general Stokes vector:
 
@@ -127,9 +127,9 @@ def jones_vector(psi, chi):
     A general Jones vector.
 
     >>> pprint(jones_vector(psi, chi), use_unicode=True)
-    ⎡-ⅈ⋅sin(χ)⋅sin(ψ) + cos(χ)⋅cos(ψ)⎤
-    ⎢                                ⎥
-    ⎣ⅈ⋅sin(χ)⋅cos(ψ) + sin(ψ)⋅cos(χ) ⎦
+    ⎡cos(χ)⋅cos(ψ) - ⅈ⋅sin(χ)⋅sin(ψ)⎤
+    ⎢                               ⎥
+    ⎣sin(ψ)⋅cos(χ) + ⅈ⋅sin(χ)⋅cos(ψ)⎦
 
     Horizontal polarization.
 
@@ -477,11 +477,11 @@ def half_wave_retarder(theta):
     >>> theta= symbols("theta", real=True)
     >>> HWP = half_wave_retarder(theta)
     >>> pprint(HWP, use_unicode=True)
-    ⎡   ⎛     2         2   ⎞                        ⎤
-    ⎢-ⅈ⋅⎝- sin (θ) + cos (θ)⎠    -2⋅ⅈ⋅sin(θ)⋅cos(θ)  ⎥
-    ⎢                                                ⎥
-    ⎢                             ⎛   2         2   ⎞⎥
-    ⎣   -2⋅ⅈ⋅sin(θ)⋅cos(θ)     -ⅈ⋅⎝sin (θ) - cos (θ)⎠⎦
+    ⎡   ⎛   2         2   ⎞                        ⎤
+    ⎢-ⅈ⋅⎝cos (θ) - sin (θ)⎠    -2⋅ⅈ⋅sin(θ)⋅cos(θ)  ⎥
+    ⎢                                              ⎥
+    ⎢                           ⎛   2         2   ⎞⎥
+    ⎣  -2⋅ⅈ⋅sin(θ)⋅cos(θ)    -ⅈ⋅⎝sin (θ) - cos (θ)⎠⎦
 
     """
     return phase_retarder(theta, pi)
@@ -512,15 +512,15 @@ def quarter_wave_retarder(theta):
     >>> theta= symbols("theta", real=True)
     >>> QWP = quarter_wave_retarder(theta)
     >>> pprint(QWP, use_unicode=True)
-    ⎡                       -ⅈ⋅π            -ⅈ⋅π               ⎤
-    ⎢                       ─────           ─────              ⎥
-    ⎢⎛     2         2   ⎞    4               4                ⎥
-    ⎢⎝ⅈ⋅sin (θ) + cos (θ)⎠⋅ℯ       (1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)⎥
+    ⎡ -ⅈ⋅π                                  -ⅈ⋅π               ⎤
+    ⎢ ─────                                 ─────              ⎥
+    ⎢   4   ⎛   2           2   ⎞             4                ⎥
+    ⎢ℯ     ⋅⎝cos (θ) + ⅈ⋅sin (θ)⎠  (1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)⎥
     ⎢                                                          ⎥
-    ⎢         -ⅈ⋅π                                        -ⅈ⋅π ⎥
-    ⎢         ─────                                       ─────⎥
-    ⎢           4                  ⎛   2           2   ⎞    4  ⎥
-    ⎣(1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)  ⎝sin (θ) + ⅈ⋅cos (θ)⎠⋅ℯ     ⎦
+    ⎢         -ⅈ⋅π                  -ⅈ⋅π                       ⎥
+    ⎢         ─────                 ─────                      ⎥
+    ⎢           4                     4   ⎛   2           2   ⎞⎥
+    ⎣(1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)  ℯ     ⋅⎝sin (θ) + ⅈ⋅cos (θ)⎠⎦
 
     """
     return phase_retarder(theta, pi/2)

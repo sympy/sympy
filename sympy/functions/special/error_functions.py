@@ -1028,7 +1028,7 @@ class erf2inv(DefinedFunction):
 
     >>> from sympy import diff
     >>> diff(erf2inv(x, y), x)
-    exp(-x**2 + erf2inv(x, y)**2)
+    exp(erf2inv(x, y)**2 - x**2)
     >>> diff(erf2inv(x, y), y)
     sqrt(pi)*exp(erf2inv(x, y)**2)/2
 
@@ -1156,7 +1156,7 @@ class Ei(DefinedFunction):
 
     >>> from sympy import expint, Shi
     >>> Ei(x).rewrite(expint)
-    -expint(1, x*exp_polar(I*pi)) - I*pi
+    -expint(1, exp_polar(I*pi)*x) - I*pi
     >>> Ei(x).rewrite(Shi)
     Chi(x) + Shi(x)
 
@@ -1355,7 +1355,7 @@ class expint(DefinedFunction):
 
     >>> from sympy import exp_polar, pi, I
     >>> expint(4, z*exp_polar(2*pi*I))
-    I*pi*z**3/3 + expint(4, z)
+    expint(4, z) + I*pi*z**3/3
     >>> expint(nu, z*exp_polar(2*pi*I))
     z**(nu - 1)*(exp(2*I*pi*nu) - 1)*gamma(1 - nu) + expint(nu, z)
 
@@ -1873,8 +1873,7 @@ class Si(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Si(z).rewrite(expint)
-    -I*(-expint(1, z*exp_polar(-I*pi/2))/2 +
-         expint(1, z*exp_polar(I*pi/2))/2) + pi/2
+    pi/2 - I*(expint(1, exp_polar(I*pi/2)*z)/2 - expint(1, exp_polar(-I*pi/2)*z)/2)
 
     It can be rewritten in the form of sinc function (by definition):
 
@@ -2026,7 +2025,7 @@ class Ci(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Ci(z).rewrite(expint)
-    -expint(1, z*exp_polar(-I*pi/2))/2 - expint(1, z*exp_polar(I*pi/2))/2
+    -expint(1, exp_polar(-I*pi/2)*z)/2 - expint(1, exp_polar(I*pi/2)*z)/2
 
     See Also
     ========
@@ -2150,7 +2149,7 @@ class Shi(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Shi(z).rewrite(expint)
-    expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2 - I*pi/2
+    expint(1, z)/2 - expint(1, exp_polar(I*pi)*z)/2 - I*pi/2
 
     See Also
     ========
@@ -2267,7 +2266,7 @@ class Chi(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Chi(z).rewrite(expint)
-    -expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2 - I*pi/2
+    -expint(1, z)/2 - expint(1, exp_polar(I*pi)*z)/2 - I*pi/2
 
     See Also
     ========
@@ -2442,7 +2441,7 @@ class fresnels(FresnelIntegral):
 
     >>> from sympy import integrate, pi, sin, expand_func
     >>> integrate(sin(pi*z**2/2), z)
-    3*fresnels(z)*gamma(3/4)/(4*gamma(7/4))
+    3*gamma(3/4)*fresnels(z)/(4*gamma(7/4))
     >>> expand_func(integrate(sin(pi*z**2/2), z))
     fresnels(z)
 
@@ -2603,7 +2602,7 @@ class fresnelc(FresnelIntegral):
 
     >>> from sympy import integrate, pi, cos, expand_func
     >>> integrate(cos(pi*z**2/2), z)
-    fresnelc(z)*gamma(1/4)/(4*gamma(5/4))
+    gamma(1/4)*fresnelc(z)/(4*gamma(5/4))
     >>> expand_func(integrate(cos(pi*z**2/2), z))
     fresnelc(z)
 

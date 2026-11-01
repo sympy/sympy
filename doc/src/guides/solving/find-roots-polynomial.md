@@ -20,8 +20,7 @@ Here is an example of finding the roots of a polynomial algebraically:
 >>> from sympy import roots
 >>> from sympy.abc import x, a, b, c
 >>> roots(a*x**2 + b*x + c, x)
-{-b/(2*a) - sqrt(-4*a*c + b**2)/(2*a): 1,
- -b/(2*a) + sqrt(-4*a*c + b**2)/(2*a): 1}
+{-b/(2*a) - sqrt(b**2 - 4*a*c)/(2*a): 1, sqrt(b**2 - 4*a*c)/(2*a) - b/(2*a): 1}
 ```
 
 This example reproduces the [quadratic
@@ -110,10 +109,7 @@ practice. As a result, you may want to set the {func}`~.solve` parameter
 >>> from sympy.abc import x
 >>> # By default, solve() uses the radical formula, yielding very complex terms
 >>> solve(x**4 - x + 1, x)
-[-sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2 - sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) - 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2,
- sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2 - sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2,
- sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) - 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2 - sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2,
- sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2 + sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2]
+[-sqrt(2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2 - sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) - 2/sqrt(2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/(3*(1/16 + sqrt(687)*I/144)**(1/3))) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2, sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) - 2/sqrt(2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/(3*(1/16 + sqrt(687)*I/144)**(1/3))) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2 - sqrt(2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2, sqrt(2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2 - sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/sqrt(2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/(3*(1/16 + sqrt(687)*I/144)**(1/3))) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2, sqrt(2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2 + sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/sqrt(2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/(3*(1/16 + sqrt(687)*I/144)**(1/3))) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2]
 >>> # If you set quartics=False, solve() uses RootOf()
 >>> solve(x**4 - x + 1, x, quartics=False)
 [CRootOf(x**4 - x + 1, 0),
@@ -182,7 +178,7 @@ x**3 + x**2 - 8*x - 12
 >>> symbolic_expanded
 -a**2*b + a**2*x - 2*a*b*x + 2*a*x**2 - b*x**2 + x**3
 >>> factor(symbolic_expanded)
-(a + x)**2*(-b + x)
+(a + x)**2*(x - b)
 ```
 
 {func}`~.factor` can also factorize a polynomial in a given [polynomial
@@ -200,7 +196,7 @@ example, {func}`~.factor` reveals that $x = a^2$ and $x = -a^3 - a$ are roots:
 >>> p
 -a**5 + a**3*x - a**3 - a**2*x + a*x + x**2
 >>> factor(p)
-(-a**2 + x)*(a**3 + a + x)
+(x - a**2)*(a**3 + a + x)
 ```
 
 ### Exact Numeric Solution With Root Multiplicities
@@ -274,7 +270,7 @@ polynomial may be rather complicated:
 ```py
 >>> rq0, rq1, rq2, rq3 = roots(x**4 + 3*x**2 + 2*x + 1)
 >>> rq0
-sqrt(-4 - 2*(-1/8 + sqrt(237)*I/36)**(1/3) + 4/sqrt(-2 + 7/(6*(-1/8 + sqrt(237)*I/36)**(1/3)) + 2*(-1/8 + sqrt(237)*I/36)**(1/3)) - 7/(6*(-1/8 + sqrt(237)*I/36)**(1/3)))/2 - sqrt(-2 + 7/(6*(-1/8 + sqrt(237)*I/36)**(1/3)) + 2*(-1/8 + sqrt(237)*I/36)**(1/3))/2
+sqrt(-2*(-1/8 + sqrt(237)*I/36)**(1/3) - 4 + 4/sqrt(2*(-1/8 + sqrt(237)*I/36)**(1/3) - 2 + 7/(6*(-1/8 + sqrt(237)*I/36)**(1/3))) - 7/(6*(-1/8 + sqrt(237)*I/36)**(1/3)))/2 - sqrt(2*(-1/8 + sqrt(237)*I/36)**(1/3) - 2 + 7/(6*(-1/8 + sqrt(237)*I/36)**(1/3)))/2
 ```
 
 so you may prefer an approximate numerical solution:

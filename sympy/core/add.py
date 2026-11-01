@@ -1226,12 +1226,12 @@ class Add(Expr, AssocOp):
 
         >>> from sympy import sqrt
         >>> (3 + 3*sqrt(2)).as_content_primitive()
-        (3, 1 + sqrt(2))
+        (3, sqrt(2) + 1)
 
         Radical content can also be factored out of the primitive:
 
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
-        (2, sqrt(2)*(1 + 2*sqrt(5)))
+        (2, sqrt(2)*(2*sqrt(5) + 1))
 
         See docstring of Expr.as_content_primitive for more examples.
         """

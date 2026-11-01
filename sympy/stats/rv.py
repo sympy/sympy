@@ -712,14 +712,14 @@ def given(expr, condition=None, **kwargs):
     >>> X = Normal('X', 0, 1)
     >>> Y = Normal('Y', 0, 1)
     >>> pprint(density(X + Y, Y)(z), use_unicode=False)
-                    2
-           -(-Y + z)
-           -----------
-      ___       2
+                   2
+           -(z - Y)
+           ----------
+      ___      2
     \/ 2 *e
-    ------------------
-             ____
-         2*\/ pi
+    -----------------
+            ____
+        2*\/ pi
     """
 
     if not is_random(condition) or pspace_independent(expr, condition):
@@ -1008,11 +1008,11 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
 
     >>> Y = DiscreteUniform('Y', [1, 2, 7])
     >>> characteristic_function(Y)
-    Lambda(_t, exp(7*_t*I)/3 + exp(2*_t*I)/3 + exp(_t*I)/3)
+    Lambda(_t, exp(7*I*_t)/3 + exp(2*I*_t)/3 + exp(I*_t)/3)
 
     >>> Z = Poisson('Z', 2)
     >>> characteristic_function(Z)
-    Lambda(_t, exp(2*exp(_t*I) - 2))
+    Lambda(_t, exp(2*exp(I*_t) - 2))
     """
     if condition is not None:
         return characteristic_function(given(expr, condition, **kwargs), **kwargs)
