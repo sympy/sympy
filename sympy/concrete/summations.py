@@ -7,7 +7,6 @@ from .expr_with_intlimits import ExprWithIntLimits
 from .expr_with_limits import AddWithLimits
 from .gosper import gosper_sum
 from sympy.core.add import Add
-from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand, expand_mul
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float, _illegal
@@ -1264,27 +1263,53 @@ def eval_sum_symbolic(f, limits):
 
         r = gosper_sum(f, (i, a, b))
 
-        if isinstance(r, (Mul,Add)):
+        if r not in (None, S.NaN):
+            from .gosper import gosper_term
+            from sympy.core.sympify import sympify
             from sympy.simplify.radsimp import denom
             from sympy.solvers.solvers import solve
-            non_limit = r.free_symbols - Tuple(*limits[1:]).free_symbols
-            den = denom(together(r))
-            den_sym = non_limit & den.free_symbols
+
+            g = gosper_term(f, i)
+            den_r = denom(together(r)) if isinstance(r, (Mul, Add)) else S.One
+            den_g = denom(together(g)) if g is not None else S.One
+            den = den_r * den_g
+
+            param_syms = (f_orig.free_symbols | sympify(a).free_symbols | sympify(b).free_symbols) - {i}
+
             args = []
-            for v in ordered(den_sym):
-                try:
-                    s = solve(den, v)
-                    m = Eq(v, s[0]) if s else S.false
-                    if m != False:
-                        args.append((Sum(f_orig.subs(*m.args), limits).doit(), m))
-                    break
-                except NotImplementedError:
-                    continue
+            factors = factor(den).as_ordered_factors()
+            for fac in factors:
+                fac_syms = param_syms & fac.free_symbols
+                for v in ordered(fac_syms):
+                    try:
+                        s = solve(fac, v)
+                        if isinstance(s, dict):
+                            s = list(s.values())
+                        elif not isinstance(s, (list, tuple)):
+                            s = [s]
+                        added_for_fac = False
+                        for sol in s:
+                            m = Eq(v, sol)
+                            new_limits = (i, sympify(a).subs(*m.args), sympify(b).subs(*m.args))
+                            val = Sum(f_orig.subs(*m.args), new_limits).doit()
+                            if val.has(Sum, S.NaN, S.ComplexInfinity):
+                                continue
+                            try:
+                                r_subs = r.subs(*m.args)
+                                if r_subs == val or (r_subs - val).is_zero:
+                                    continue
+                            except (TypeError, ValueError, AttributeError):
+                                pass
+                            args.append((val, m))
+                            added_for_fac = True
+                        if added_for_fac:
+                            break
+                    except NotImplementedError:
+                        continue
 
-            args.append((r, True))
-            return Piecewise(*args)
-
-        if r not in (None, S.NaN):
+            if args:
+                args.append((r, True))
+                return Piecewise(*args)
             return r
 
     h = eval_sum_hyper(f_orig, (i, a, b))
