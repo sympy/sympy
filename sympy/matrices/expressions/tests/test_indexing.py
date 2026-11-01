@@ -11,6 +11,7 @@ from sympy.matrices.expressions.matexpr import (MatrixSymbol,
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.special import (ZeroMatrix, Identity,
     OneMatrix)
+from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.trace import Trace, trace
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
@@ -178,6 +179,25 @@ def test_block_index_symbolic_fail():
 
 def test_slicing():
     A.as_explicit()[0, :]  # does not raise an error
+
+
+def test_ellipsis_indexing():
+    X_all = X[...]
+    assert isinstance(X_all, MatrixSlice)
+    assert X_all.shape == X.shape
+    X_row = X[1, ...]
+    assert isinstance(X_row, MatrixSlice)
+    assert X_row.shape == (1, m)
+    X_col = X[..., 1]
+    assert isinstance(X_col, MatrixSlice)
+    assert X_col.shape == (l, 1)
+    X_sym = MatrixSymbol('X', n, m)
+    X_sym_row = X_sym[k, ...]
+    assert isinstance(X_sym_row, MatrixSlice)
+    X_mixed = X[..., 0:2]
+    assert isinstance(X_mixed, MatrixSlice)
+    X_mixed2 = X[0:2, ...]
+    assert isinstance(X_mixed2, MatrixSlice)
 
 
 def test_errors():
