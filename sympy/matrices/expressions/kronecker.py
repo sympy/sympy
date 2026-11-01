@@ -452,7 +452,7 @@ def kronecker_mat_add(expr):
     if not nonkrons:
         return MatAdd(*krons)
     else:
-        return MatAdd(*krons) + nonkrons
+        return MatAdd(*krons, *nonkrons)
 
 
 def kronecker_mat_mul(expr):
