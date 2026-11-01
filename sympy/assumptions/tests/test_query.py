@@ -10,7 +10,7 @@ from sympy.assumptions.ask_generated import (get_all_known_facts,
     get_known_facts_dict)
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
+from sympy.core.numbers import (E, I, Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
 from sympy.core.symbol import Str, symbols, Symbol
@@ -1618,10 +1618,16 @@ def test_imaginary():
     assert _ask_recursive(Q.imaginary(x + y + z),
         Q.real(x) & Q.imaginary(y) & Q.imaginary(z)) is False
 
-    assert _ask_recursive(Q.imaginary(I*x), Q.real(x)) is True
+    # x can be 0, and 0 is not imaginary.
+    assert _ask_recursive(Q.imaginary(I*x), Q.real(x)) is None
+    assert _ask_recursive(Q.imaginary(I*x), Q.real(x) & Q.nonzero(x)) is True
     assert _ask_recursive(Q.imaginary(I*x), Q.imaginary(x)) is False
     assert _ask_recursive(Q.imaginary(I*x), Q.complex(x)) is None
-    assert _ask_recursive(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is True
+    assert _ask_recursive(Q.imaginary(I*x), Q.zero(x)) is False
+    # y can be 0, and 0 is not imaginary.
+    assert _ask_recursive(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is None
+    assert _ask_recursive(Q.imaginary(x*y),
+        Q.imaginary(x) & Q.real(y) & Q.nonzero(y)) is True
     assert _ask_recursive(Q.imaginary(x*y), Q.real(x) & Q.real(y)) is False
 
     assert _ask_recursive(Q.imaginary(I**x), Q.negative(x)) is None
@@ -1690,8 +1696,9 @@ def test_integer():
     assert _ask_recursive(Q.integer(2*x), Q.prime(x)) is True
     assert _ask_recursive(Q.integer(2*x), Q.rational(x)) is None
     assert _ask_recursive(Q.integer(2*x), Q.real(x)) is None
-    assert _ask_recursive(Q.integer(sqrt(2)*x), Q.integer(x)) is False
+    assert _ask_recursive(Q.integer(sqrt(2)*x), Q.integer(x)) is None # x can be 0
     assert _ask_recursive(Q.integer(sqrt(2)*x), Q.irrational(x)) is None
+    assert _ask_recursive(Q.integer(pi*x), Q.zero(x)) is True
 
     assert _ask_recursive(Q.integer(x/2), Q.odd(x)) is False
     assert _ask_recursive(Q.integer(x/2), Q.even(x)) is True
@@ -1784,7 +1791,8 @@ def test_nonzero():
     # https://github.com/sympy/sympy/pull/29225
     assert _ask_recursive(Q.nonzero(Pow(x, y), Q.nonzero(x))) is None
     assert _ask_recursive(Q.nonzero(Pow(x, y)), Q.positive(x) & Q.real(y)) is True
-    assert _ask_recursive(Q.nonzero(Pow(5, 2*I*n*pi)), Q.integer(n)) is False
+    # n = 0 -> Pow(5,0) -> 1, which is True
+    assert _ask_recursive(Q.nonzero(Pow(5, 2*I*n*pi)), Q.integer(n)) is None
     assert _ask_recursive(Q.nonzero(Pow(0, x)), Q.positive(x)) is False
     assert _ask_recursive(Q.nonzero(Pow(5, I*n), Q.integer(n))) is None
     assert _ask_recursive(Q.nonzero(Pow(-1, x)), Q.real(x)) is None
@@ -2000,6 +2008,8 @@ def test_positive():
     assert _ask_recursive(Q.positive(x**y),Q.zero(x)) is None
     assert _ask_recursive(Q.positive(x**y), Q.zero(x) & Q.negative(y)) is None
     assert _ask_recursive(Q.positive(x**y), Q.zero(x) & Q.even(y)) is None
+    assert _ask_recursive(Q.positive(exp(1 + I))) is False
+    assert _ask_recursive(Q.positive(Pow(E, 1 + I, evaluate=False))) is False
 
     # logarithm
     assert _ask_recursive(Q.positive(log(x)), Q.imaginary(x)) is False
@@ -2056,6 +2066,7 @@ def test_real_basic():
     assert _ask_recursive(Q.real(I*x), Q.real(x)) is None
     assert _ask_recursive(Q.real(I*x), Q.imaginary(x)) is True
     assert _ask_recursive(Q.real(I*x), Q.complex(x)) is None
+    assert _ask_recursive(Q.real(I*x), Q.zero(x)) is True
 
 
 def test_real_pow():
