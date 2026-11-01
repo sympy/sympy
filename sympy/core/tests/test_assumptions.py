@@ -1048,7 +1048,8 @@ def test_special_is_rational():
     assert sin(ni).is_rational is False
     assert sin(rn).is_rational is False
     assert sin(x).is_rational is None
-    assert asin(r).is_rational is False
+    assert asin(r).is_rational is None
+    assert asin(rn).is_rational is False
     assert sin(asin(3), evaluate=False).is_rational is True
 
 
