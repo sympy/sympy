@@ -243,3 +243,9 @@ class TestUpdateArgsWithPaths:
             keywords=('nonexistent',),
             args=[],
         )
+
+    @staticmethod
+    def test_windows_device_name():
+        # CON is a Windows device name, not a directory.
+        args = update_args_with_paths(['con'], None, [])
+        assert str(Path(sympy_dir(), 'sympy/concrete')) in args
