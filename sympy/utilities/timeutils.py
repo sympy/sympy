@@ -38,11 +38,11 @@ def timed(
 
 # Code for doing inline timings of recursive algorithms.
 
-def __do_timings():
+def __do_timings()-> set[str]:
     import os
     res = os.getenv('SYMPY_TIMINGS', '')
-    res = [x.strip() for x in res.split(',')]
-    return set(res)
+    timings = [x.strip() for x in res.split(',')]
+    return set(timings)
 
 _do_timings = __do_timings()
 _timestack = None
