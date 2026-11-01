@@ -1101,22 +1101,20 @@ def piecewise_fold(expr: Basic, evaluate: bool | None = True) -> Basic:
                     # the first one is the same; there may be more
                     com = common_prefix(*[[i.cond for i in j] for j in pargs])
                     n = len(com)
-                    collected = []
+                    collected: list[tuple[Basic, Boolean]] = []
                     for i in range(n):
-                        collected.append((
-                            expr.func(*[ai[i].expr for ai in pargs]),
-                            com[i]))
-                    remains = []
+                        pargs_new = [ai[i].expr for ai in pargs]
+                        collected.append((expr.func(*pargs_new), com[i]))
+                    remains: list[Basic] = []
                     for a in pargs:
                         if n == len(a):  # no more args
                             continue
                         if a[n].cond == True:  # no longer Piecewise
                             remains.append(a[n].expr)
                         else:  # restore the remaining Piecewise
-                            remains.append(
-                                Piecewise(*a[n:], evaluate=False))
+                            remains.append(Piecewise(*a[n:], evaluate=False))
                     if remains:
-                        collected.append((expr.func(*remains), True))
+                        collected.append((expr.func(*remains), S.true))
                     args.append(Piecewise(*collected, evaluate=False))
                     continue
                 args.extend(pc[conditions])

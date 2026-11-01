@@ -781,7 +781,7 @@ def dict_merge(*dicts):
     return merged
 
 
-def common_prefix(*seqs):
+def common_prefix(*seqs: Sequence[T]) -> Sequence[T]:
     """Return the subsequence that is a common start of sequences in ``seqs``.
 
     >>> from sympy.utilities.iterables import common_prefix
