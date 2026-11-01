@@ -20,6 +20,7 @@ from sympy.functions.combinatorial.numbers import bell
 from sympy.functions.elementary.integers import floor, frac, ceiling
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.series.limits import Limit
 from sympy.series.order import Order
 from sympy.series.sequences import sequence
@@ -1056,6 +1057,26 @@ class FormalPowerSeries(SeriesBase):
             return S.Zero
         return pow_x
 
+    def _get_pt(self, term):
+        """Returns the index of the term of the series that a term of
+        ``ind`` belongs to."""
+        pow_x = self._get_pow_x(term)
+        sym = self.free_symbols
+        if pow_x.has(*sym):
+            pow_x = pow_x.as_coeff_add(*sym)[0]
+        return max(floor(pow_x), 0)
+
+    def _coeff_seq(self):
+        """Returns the sequence of coefficients of ``xk``, starting
+        from ``k = 0`` and including the terms of ``ind``."""
+        ak, xk = self.ak, self.xk
+        k = ak.variables[0]
+        formula = Piecewise((ak.formula, k >= ak.start), (0, True))
+        for t in Add.make_args(self.ind):
+            pt = self._get_pt(t)
+            formula += t / xk.coeff(pt) * KroneckerDelta(k, pt)
+        return sequence(formula, (k, 0, oo))
+
     def polynomial(self, n=6):
         """
         Truncated series as polynomial.
@@ -1117,14 +1138,8 @@ class FormalPowerSeries(SeriesBase):
 
         if self.ind:
             ind = S.Zero
-            sym = self.free_symbols
             for t in Add.make_args(self.ind):
-                pow_x = self._get_pow_x(t)
-                if pow_x.has(*sym):
-                    pow_x = pow_x.as_coeff_add(*sym)[0]
-                if pt == 0 and pow_x < 1:
-                    ind += t
-                elif pow_x >= pt and pow_x < pt + 1:
+                if self._get_pt(t) == pt:
                     ind += t
             term += ind
 
@@ -1564,13 +1579,8 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
     """
 
     def __init__(self, *args):
-        ffps, gfps = self.ffps, self.gfps
-
-        k = ffps.ak.variables[0]
-        self.coeff1 = sequence(ffps.ak.formula, (k, 0, oo))
-
-        k = gfps.ak.variables[0]
-        self.coeff2 = sequence(gfps.ak.formula, (k, 0, oo))
+        self.coeff1 = self.ffps._coeff_seq()
+        self.coeff2 = self.gfps._coeff_seq()
 
     @property
     def function(self):
@@ -1606,7 +1616,7 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
 
         terms = []
         for i in range(0, n):
-            terms.append(aks[i] * self.ffps.xk.coeff(i))
+            terms.append(aks[i] * self.ffps.xk.coeff(i) * self.gfps.xk.coeff(0))
 
         return Add(*terms)
 
