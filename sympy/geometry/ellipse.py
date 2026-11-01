@@ -13,11 +13,11 @@ from sympy.core import S, pi, sympify
 from sympy.core.evalf import N
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import Rational, oo
+from sympy.core.numbers import Float, Rational, oo
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
 from sympy.external.mpmath import prec_to_dps
-from sympy.simplify.simplify import simplify
+from sympy.simplify.simplify import nsimplify, simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -890,12 +890,16 @@ class Ellipse(GeometrySet):
 
         >>> e.normal_lines((3, 3), prec=2)
         [Line2D(Point2D(-0.81, -2.7), Point2D(0.19, -1.2)),
-        Line2D(Point2D(1.5, -2.0), Point2D(2.5, -2.7))]
+        Line2D(Point2D(1.5, 2.0), Point2D(2.5, 2.7))]
 
         Whereas the above solution has an operation count of 12, the exact
         solution has an operation count of 2020.
         """
         p = Point(p, dim=2)
+        if self.has(Float) or p.has(Float):
+            # rounding errors in the quartic can give wrong or missing roots
+            e = self.func(*[nsimplify(a, rational=True) for a in self.args])
+            return e.normal_lines(nsimplify(p, rational=True), prec)
 
         # XXX change True to something like self.angle == 0 if the arbitrarily
         # rotated ellipse is introduced.
@@ -929,7 +933,7 @@ class Ellipse(GeometrySet):
             except (DomainError, PolynomialError, NotImplementedError):
                 # TODO: Replace solve with solveset, when these lines are tested
                 xsol = _nsort(solve(xeq, x), separated=True)[0]
-            points = [Point(i, solve(eq.subs(x, i), y)[0]) for i in xsol]
+            points = [Point(i, yis.subs(x, i)) for i in xsol]
         else:
             raise NotImplementedError(
                 'intersections for the general ellipse are not supported')
