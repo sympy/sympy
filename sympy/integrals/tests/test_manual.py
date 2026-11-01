@@ -1471,3 +1471,11 @@ def test_manualintegrate_trig_log_hang():
     expr = log((cos(x)/2 + 1) / (1 - cos(x)/2)) / cos(x)
     res = manualintegrate(expr, x)
     assert res is not None
+
+
+def test_manualintegrate_symbol_assumptions_cache():
+    # Issue 30908: cachekey in IntegrationSolver must distinguish symbol assumptions
+    x_pos = Symbol('x', positive=True)
+    f = x_pos/sqrt(x_pos**2 + 2*x_pos + 1) + log(x_pos)/(x_pos*sqrt(log(x_pos)**2 + 2*log(x_pos) + 1))
+    F = manualintegrate(f, x_pos)
+    assert abs((diff(F, x_pos) - f).subs(x_pos, Rational(1, 10)).evalf()) < 1e-10
