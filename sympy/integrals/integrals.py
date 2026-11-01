@@ -642,11 +642,24 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import Piecewise, S
-        >>> from sympy.abc import x, t
-        >>> p = x**2 + Piecewise((0, x/t < 0), (1, True))
-        >>> p.integrate((t, S(4)/5, 1), (x, -1, 1))
+        The :func:`integrate` function evaluates an integral immediately,
+        whereas :class:`Integral` represents an unevaluated integral:
+
+        >>> from sympy import Integral, integrate
+        >>> from sympy.abc import x
+        >>> integrate(x**2, (x, 0, 1))
         1/3
+        >>> integral = Integral(x**2, (x, 0, 1))
+        >>> integral
+        Integral(x**2, (x, 0, 1))
+
+        Use ``doit()`` to evaluate symbolically, or ``evalf()`` to obtain
+        a numerical approximation:
+
+        >>> integral.doit()
+        1/3
+        >>> integral.evalf()
+        0.333333333333333
 
         See Also
         ========

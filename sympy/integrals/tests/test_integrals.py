@@ -39,7 +39,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral, _add_atan_floor_terms
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns
+from sympy.testing.pytest import raises, slow, warns_deprecated_sympy, warns, XFAIL
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
@@ -1852,6 +1852,12 @@ def test_issue_2975():
     C = Symbol('C')
     y = Symbol('y')
     assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))
+
+
+@XFAIL
+def test_piecewise_double_integral():
+    p = x**2 + Piecewise((0, x/t < 0), (1, True))
+    assert p.integrate((t, S(4)/5, 1), (x, -1, 1)) == S.One/3
 
 
 def test_issue_7827():
