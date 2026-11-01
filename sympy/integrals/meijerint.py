@@ -39,7 +39,7 @@ from sympy.core.function import (expand, expand_mul, expand_power_base,
                                  expand_trig, Function)
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import Rational, pi
+from sympy.core.numbers import I, Rational, pi
 from sympy.core.relational import Eq, Ne, _canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild, Symbol
@@ -50,11 +50,11 @@ from sympy.functions.elementary.complexes import (re, im, arg, Abs, sign,
         periodic_argument)
 from sympy.functions.elementary.exponential import exp, exp_polar, log
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.hyperbolic import (cosh, sinh,
+from sympy.functions.elementary.hyperbolic import (acosh, cosh, sinh,
         _rewrite_hyperbolics_as_exp, HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
-from sympy.functions.elementary.trigonometric import (cos, sin, sinc,
+from sympy.functions.elementary.trigonometric import (asin, cos, sin, sinc,
         TrigonometricFunction)
 from sympy.functions.special.bessel import besselj, bessely, besseli, besselk
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
@@ -1670,6 +1670,7 @@ def meijerint_indefinite(f, x):
         if not res:
             continue
         res = res.subs(x, x - a)
+        res = _apply_meijerint_result_fix(res, x)
         if _has(res, hyper, meijerg):
             results.append(res)
         else:
@@ -1685,6 +1686,113 @@ def meijerint_indefinite(f, x):
             results.extend(rv)
     if results:
         return next(ordered(results))
+
+
+def _has_x_in_denominator(expr, x):
+    _, denom = expr.as_numer_denom()
+    return denom.has(x)
+
+
+def _cond_has_x_sign_guard(cond, x):
+    if cond == (x > 0) or cond == (x < 0):
+        return True
+    if cond.is_Relational:
+        if cond.lhs == x and cond.rel_op in ('>', '<', '>=', '<='):
+            return True
+        if cond.rhs == x and cond.rel_op in ('>', '<', '>=', '<='):
+            return True
+    return False
+
+
+def _abs_arg_has_x_in_numerator(abs_expr, x):
+    if not isinstance(abs_expr, Abs):
+        return False
+    arg = abs_expr.args[0]
+    num, denom = arg.as_numer_denom()
+    return num.has(x) and not denom.has(x)
+
+
+def _needs_positive_x_for_acosh(cond, x):
+    """Return True when an acosh branch guarded by ``cond`` is only valid for x > 0."""
+    if cond is True or cond is S.true:
+        return False
+    if isinstance(cond, And):
+        if any(_cond_has_x_sign_guard(a, x) for a in cond.args):
+            return False
+        return any(_needs_positive_x_for_acosh(a, x) for a in cond.args)
+    if cond.is_Relational and cond.rel_op == '>':
+        lhs = cond.lhs
+        if _abs_arg_has_x_in_numerator(lhs, x):
+            return True
+        if lhs.has(Abs):
+            return any(_abs_arg_has_x_in_numerator(a, x) for a in lhs.atoms(Abs))
+    return False
+
+
+def _acosh_arg_is_real_x_ratio(expr, x):
+    for a in expr.atoms(acosh):
+        arg = a.args[0]
+        if arg.has(I):
+            continue
+        if arg.has(x):
+            return True
+    return False
+
+
+def _fix_asin_sign_branch(expr, x):
+    """Restore real-line validity for -asin(u/...) forms after cancel()."""
+    if not expr.has(asin):
+        return expr
+
+    def _do(e):
+        if not isinstance(e, Mul) or not e.has(asin):
+            return e
+        coeff, args = e.as_coeff_mul()
+        if coeff != -1:
+            return e
+        asin_args = [a for a in args if isinstance(a, asin)]
+        if len(asin_args) != 1:
+            return e
+        if not _has_x_in_denominator(asin_args[0].args[0], x):
+            return e
+        return Piecewise((-e, x < 0), (e, True))
+
+    return expr.replace(
+        lambda e: isinstance(e, Mul) and e.has(asin) and e.as_coeff_mul()[0] == -1,
+        _do)
+
+
+def _fix_meijerint_branches(expr, x):
+    """Fix branch-cut errors introduced by simplifying hyperexpand results."""
+    if getattr(expr, 'is_Piecewise', False):
+        newargs = []
+        changed = False
+        for e, c in expr.args:
+            e_new = _fix_asin_sign_branch(e, x)
+            c_new = c
+            if (e_new.has(acosh) and _acosh_arg_is_real_x_ratio(e_new, x)
+                    and _needs_positive_x_for_acosh(c, x)):
+                c_new = And(c, x > 0, evaluate=False)
+            if e_new != e or c_new != c:
+                changed = True
+            newargs.append((e_new, c_new))
+        if not changed:
+            return expr
+        return Piecewise(*newargs, evaluate=False)
+    e_new = _fix_asin_sign_branch(expr, x)
+    return e_new if e_new != expr else expr
+
+
+def _apply_meijerint_result_fix(res, x):
+    """Apply branch fixes after shift-back substitution in meijerint_indefinite."""
+    if (getattr(res, 'is_Piecewise', False) and len(res.args) == 2
+            and isinstance(res.args[1][0], Integral)):
+        first_expr, first_cond = res.args[0]
+        fixed = _fix_meijerint_branches(first_expr, x)
+        if fixed == first_expr:
+            return res
+        return Piecewise((fixed, first_cond), res.args[1], evaluate=False)
+    return _fix_meijerint_branches(res, x)
 
 
 def _meijerint_indefinite_1(f, x):
