@@ -31,6 +31,7 @@ from sympy.functions.elementary.trigonometric import (asin, cos, sin)
 from sympy.functions.special.bessel import besseli
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.gamma_functions import (gamma, lowergamma)
+from sympy.functions.special.zeta_functions import lerchphi
 
 
 def test_branch_bug():
@@ -624,6 +625,21 @@ def test_lerchphi():
     assert hyperexpand(hyper([S.Half, S.Half, S.Half, 1],
                              [Rational(3, 2), Rational(3, 2), Rational(3, 2)], Rational(1, 4))) == \
         Abs(-polylog(3, exp_polar(I*pi)/2) + polylog(3, S.Half))
+
+
+def test_lerchphi_at_negative_one():
+    a = Rational(2, 3)
+    h = hyper([1, a, a, a], [a + 1, a + 1, a + 1], -1)
+    result = hyperexpand(h)
+    assert result == a**3*lerchphi(exp_polar(I*pi), 3, a)
+    assert abs(h.evalf(30) - result.evalf(30)) < S('1e-25')
+    shifted = hyper([1, a, a, a, a + 2], [a + 1]*4, -1)
+    assert abs(shifted.evalf(30) - hyperexpand(shifted).evalf(30)) < S('1e-25')
+    # Integer and half-integer parameters retain their known constants.
+    assert hyperexpand(hyper([1, 1], [2], -1)) == log(2)
+    assert hyperexpand(hyper([1, 1, 1], [2, 2], -1)) == pi**2/12
+    assert hyperexpand(hyper([1, S.Half, S.Half], [3*S.Half]*2, -1)) == S.Catalan
+    assert hyperexpand(hyper([1, 3*S.Half, 3*S.Half], [5*S.Half]*2, -1)).expand() == 9 - 9*S.Catalan
 
 
 def test_partial_simp():
