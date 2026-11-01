@@ -429,7 +429,7 @@ def _kronecker_merge_add(pair1, pair2):
     return None
 
 
-def kronecker_mat_add(expr):
+def kronecker_mat_add(expr: MatAdd) -> MatrixExpr:
     args = sift(expr.args, _kronecker_dims_key)
     nonkrons = args.pop((0,), None)
     if not args:
