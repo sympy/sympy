@@ -3,7 +3,7 @@ Boolean algebra module for SymPy
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, overload, Any
+from typing import TYPE_CHECKING, overload, Any, Literal
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -162,7 +162,11 @@ class Boolean(Basic):
         return self.atoms() == other.atoms() and \
             not satisfiable(Not(Equivalent(self, other)))
 
-    def to_nnf(self, simplify=True, form=None):
+    def to_nnf(
+        self,
+        simplify: bool = True,
+        form: Literal['cnf', 'dnf'] | None = None,
+    ) -> Boolean:
         # override where necessary
         return self
 
@@ -494,6 +498,12 @@ class BooleanFunction(Application, Boolean):
     """
     is_Boolean = True
 
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Boolean, ...]:
+            ...
+
     def _eval_simplify(self, **kwargs):
         rv = simplify_univariate(self)
         if not isinstance(rv, BooleanFunction):
@@ -519,7 +529,11 @@ class BooleanFunction(Application, Boolean):
     def binary_check_and_simplify(self, *args):
         return [as_Boolean(i) for i in args]
 
-    def to_nnf(self, simplify=True, form=None):
+    def to_nnf(
+        self,
+        simplify: bool = True,
+        form: Literal['cnf', 'dnf'] | None = None,
+    ) -> Boolean:
         return self._to_nnf(*self.args, simplify=simplify, form=form)
 
     def to_anf(self, deep=True):
@@ -945,29 +959,32 @@ class Not(BooleanFunction):
         """
         return self.args[0].as_set().complement(S.Reals)
 
-    def to_nnf(self, simplify=True, form=None):
+    def to_nnf(
+        self,
+        simplify: bool = True,
+        form: Literal['cnf', 'dnf'] | None = None,
+    ) -> Boolean:
         if is_literal(self):
             return self
 
         expr = self.args[0]
 
-        func, args = expr.func, expr.args
+        if isinstance(expr, And):
+            return Or._to_nnf(*[Not(arg) for arg in expr.args], simplify=simplify, form=form)
 
-        if func == And:
-            return Or._to_nnf(*[Not(arg) for arg in args], simplify=simplify, form=form)
+        if isinstance(expr, Or):
+            return And._to_nnf(*[Not(arg) for arg in expr.args], simplify=simplify, form=form)
 
-        if func == Or:
-            return And._to_nnf(*[Not(arg) for arg in args], simplify=simplify, form=form)
-
-        if func == Implies:
-            a, b = args
+        if isinstance(expr, Implies):
+            a, b = expr.args
             return And._to_nnf(a, Not(b), simplify=simplify, form=form)
 
-        if func == Equivalent:
-            return And._to_nnf(Or(*args), Or(*[Not(arg) for arg in args]),
+        if isinstance(expr, Equivalent):
+            return And._to_nnf(Or(*expr.args), Or(*[Not(arg) for arg in expr.args]),
                                simplify=simplify, form=form)
 
-        if func == Xor:
+        if isinstance(expr, Xor):
+            args = expr.args
             result = []
             for i in range(1, len(args)+1, 2):
                 for neg in combinations(args, i):
@@ -975,11 +992,11 @@ class Not(BooleanFunction):
                     result.append(Or(*clause))
             return And._to_nnf(*result, simplify=simplify, form=form)
 
-        if func == ITE:
-            a, b, c = args
+        if isinstance(expr, ITE):
+            a, b, c = expr.args
             return And._to_nnf(Or(a, Not(c)), Or(Not(a), Not(b)), simplify=simplify, form=form)
 
-        raise ValueError("Illegal operator %s in expression" % func)
+        raise ValueError("Illegal operator %s in expression" % expr.func)
 
     def to_anf(self, deep=True):
         return Xor._to_anf(true, self.args[0], deep=deep)
@@ -1074,7 +1091,11 @@ class Xor(BooleanFunction):
             return Not(Xor(*argset))
         return super().__new__(cls, *ordered(argset))
 
-    def to_nnf(self, simplify=True, form=None):
+    def to_nnf(
+        self,
+        simplify: bool = True,
+        form: Literal['cnf', 'dnf'] | None = None,
+    ) -> Boolean:
         if form == 'dnf':
             terms = []
             for mask in _get_odd_parity_terms(len(self.args)):
@@ -1292,7 +1313,11 @@ class Implies(BooleanFunction):
         else:
             return Basic.__new__(cls, *args)
 
-    def to_nnf(self, simplify=True, form=None):
+    def to_nnf(
+        self,
+        simplify: bool = True,
+        form: Literal['cnf', 'dnf'] | None = None,
+    ) -> Boolean:
         a, b = self.args
         return Or._to_nnf(Not(a), b, simplify=simplify, form=form)
 
@@ -1366,7 +1391,11 @@ class Equivalent(BooleanFunction):
             return And(*[Not(arg) for arg in argset])
         return super().__new__(cls, *ordered(argset))
 
-    def to_nnf(self, simplify=True, form=None):
+    def to_nnf(
+        self,
+        simplify: bool = True,
+        form: Literal['cnf', 'dnf'] | None = None,
+    ) -> Boolean:
         args = []
         for a, b in zip(self.args, self.args[1:]):
             args.append(Or(Not(a), b))
@@ -1485,7 +1514,11 @@ class ITE(BooleanFunction):
         if [a, b, c] != args:
             return cls(a, b, c, evaluate=False)
 
-    def to_nnf(self, simplify=True, form=None):
+    def to_nnf(
+        self,
+        simplify: bool = True,
+        form: Literal['cnf', 'dnf'] | None = None,
+    ) -> Boolean:
         a, b, c = self.args
         return And._to_nnf(Or(Not(a), b), Or(a, c), simplify=simplify, form=form)
 
@@ -2809,7 +2842,33 @@ def _find_predicates(expr):
     return set().union(*(map(_find_predicates, expr.args)))
 
 
-def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
+@overload
+def simplify_logic(
+    expr: Boolean | bool,
+    form: Literal['cnf', 'dnf'] | None = None,
+    deep: bool = True,
+    force: bool = False,
+    dontcare: Basic | complex | str | None = None,
+) -> Boolean: ...
+
+
+@overload
+def simplify_logic(
+    expr: Basic | complex | str,
+    form: Literal['cnf', 'dnf'] | None = None,
+    deep: bool = True,
+    force: bool = False,
+    dontcare: Basic | complex | str | None = None,
+) -> Basic: ...
+
+
+def simplify_logic(
+    expr: Basic | complex | str,
+    form: Literal['cnf', 'dnf'] | None = None,
+    deep: bool = True,
+    force: bool = False,
+    dontcare: Basic | complex | str | None = None,
+) -> Basic:
     """
     This function simplifies a boolean function to its simplified version
     in SOP or POS form. The return type is an :py:class:`~.Or` or
@@ -2865,36 +2924,37 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
 
     if form not in (None, 'cnf', 'dnf'):
         raise ValueError("form can be cnf or dnf only")
-    expr = sympify(expr)
+    expr_s: Basic = sympify(expr)
     # check for quick exit if form is given: right form and all args are
     # literal and do not involve Not
     if form:
         form_ok = False
         if form == 'cnf':
-            form_ok = is_cnf(expr)
+            form_ok = is_cnf(expr_s)
         elif form == 'dnf':
-            form_ok = is_dnf(expr)
+            form_ok = is_dnf(expr_s)
 
         if form_ok and dontcare is None and all(is_literal(a)
-               for a in expr.args):
-           return expr
+               for a in expr_s.args):
+           return expr_s
     from sympy.core.relational import Relational
     if deep:
-        variables = expr.atoms(Relational)
+        variables = expr_s.atoms(Relational)
         from sympy.simplify.simplify import simplify
         s = tuple(map(simplify, variables))
-        expr = expr.xreplace(dict(zip(variables, s)))
-    if not isinstance(expr, BooleanFunction) and dontcare is None:
-        return expr
+        expr_s = expr_s.xreplace(dict(zip(variables, s)))
+    if not isinstance(expr_s, BooleanFunction) and dontcare is None:
+        return expr_s
     # Replace Relationals with Dummys to possibly
     # reduce the number of variables
     repl = {}
     undo = {}
     from sympy.core.symbol import Dummy
-    variables = expr.atoms(Relational)
+    variables = expr_s.atoms(Relational)
+    dontcare_s: Basic | None = None
     if dontcare is not None:
-        dontcare = sympify(dontcare)
-        variables.update(dontcare.atoms(Relational))
+        dontcare_s = sympify(dontcare)
+        variables.update(dontcare_s.atoms(Relational))
     while variables:
         var = variables.pop()
         if var.is_Relational:
@@ -2906,31 +2966,31 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
                 repl[nvar] = Not(d)
                 variables.remove(nvar)
 
-    expr = expr.xreplace(repl)
+    expr_s = expr_s.xreplace(repl)
 
-    if dontcare is not None:
-        dontcare = dontcare.xreplace(repl)
+    if dontcare_s is not None:
+        dontcare_s = dontcare_s.xreplace(repl)
 
     # Get new variables after replacing
-    variables = _find_predicates(expr)
+    variables = _find_predicates(expr_s)
     if not force and len(variables) > 8:
-        return expr.xreplace(undo)
-    if dontcare is not None:
-        # Add variables from dontcare
-        dcvariables = _find_predicates(dontcare)
+        return expr_s.xreplace(undo)
+    if dontcare_s is not None:
+        # Add variables from dontcare_s
+        dcvariables = _find_predicates(dontcare_s)
         variables.update(dcvariables)
         # if too many restore to variables only
         if not force and len(variables) > 8:
-            variables = _find_predicates(expr)
-            dontcare = None
+            variables = _find_predicates(expr_s)
+            dontcare_s = None
     # group into constants and variable values
     c, v = sift(ordered(variables), lambda x: x in (True, False), binary=True)
     variables = c + v
     # standardize constants to be 1 or 0 in keeping with truthtable
     c = [1 if i == True else 0 for i in c]
-    truthtable = _get_truthtable(v, expr, c)
-    if dontcare is not None:
-        dctruthtable = _get_truthtable(v, dontcare, c)
+    truthtable = _get_truthtable(v, expr_s, c)
+    if dontcare_s is not None:
+        dctruthtable = _get_truthtable(v, dontcare_s, c)
         truthtable = [t for t in truthtable if t not in dctruthtable]
     else:
         dctruthtable = []
