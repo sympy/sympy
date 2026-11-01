@@ -1,10 +1,17 @@
 from __future__ import annotations
-from sympy.core.function import (Derivative as D, Function)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Derivative as D, Function, Subs)
+from sympy.core.numbers import I, pi, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import cosh, sinh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.core import S
+from sympy.integrals.integrals import Integral
+from sympy.series.limits import Limit
 from sympy.solvers.pde import (pde_separate, pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
 from sympy.testing.pytest import raises
@@ -238,3 +245,208 @@ def test_pdsolve_variable_coeff():
     eq = exp(2*x)*(u.diff(y)) + y*u - u
     sol = pdsolve(eq, hint='1st_linear_variable_coeff')
     assert sol == Eq(u, exp((-y**2 + 2*y + 2*F(x))*exp(-2*x)/2))
+
+
+def test_pde_2nd_linear_constant_coeff_separable_exact():
+    k, H, L = symbols("k H L", positive=True)
+    u = Function("u")
+
+    # dummies
+    F1 = Function("F1")
+    n = Symbol("n", integer=True, positive=True)
+    s = Symbol("s", real=True)
+
+    # 1D Heat, eigenfunction conditions
+    eq = u(x, y).diff(x, 2) - k * u(x, y).diff(y)
+    conds = {u(0, y): 0, u(L, y): 0, u(x, 0): sin(pi*x/L) - 2*sin(2*pi*x/L)}
+    assert classify_pde(eq, ics=conds)[0] == "2nd_linear_constant_coeff_separable"
+    expected = Eq(u(x, y), Piecewise((exp(-pi**2*y/(L**2*k))*sin(pi*x/L) - 2*exp(-4*pi**2*y/(L**2*k))*sin(2*pi*x/L), (L >= x) & (x >= 0) & (y >= 0))))
+    received = pdsolve(eq, u(x, y), ics=conds)
+    assert received.dummy_eq(expected)
+
+    # Laplace, symbolic bounds
+    eq = u(x, y).diff(x, 2) + u(x, y).diff(y, 2)
+    conds = {u(a, y): 0, u(a + L, y): 0, u(x, b): 1, u(x, y).diff(y).subs(y, b + H): 0}
+    assert classify_pde(eq, ics=conds)[0] == "2nd_linear_constant_coeff_separable"
+    expected = Eq(u(x, y), Piecewise((Sum(-2*sin(n*pi*(-a + x)/L)*((-1)**n - 1)*cosh(n*pi*(-H - b + y)/L)/(n*pi*cosh(n*pi*H/L)), (n, 1, oo)), (a <= x) & (b <= y) & (x <= L + a) & (y <= H + b))))
+    received = pdsolve(eq, u(x, y), ics=conds)
+    assert received.dummy_eq(expected)
+
+    # Schrodinger's, missing conditions
+    eq = u(x, y).diff(y) - I * u(x, y).diff(x, 2)
+    conds = {u(x, y).diff(x).subs(x, 0): 0, u(x, y).diff(x).subs(x, pi): 0}
+    assert classify_pde(eq, ics=conds)[0] == "2nd_linear_constant_coeff_separable"
+    expected = Eq(u(x, y), Piecewise((Integral(F1(s), (s, 0, pi))/pi + Sum(2*exp(-n**2*I*y)*cos(n*x)*Integral(F1(s)*cos(n*s), (s, 0, pi))/pi, (n, 1, oo)), (x >= 0) & (x <= pi))))
+    received = pdsolve(eq, u(x, y), ics=conds)
+    assert received.dummy_eq(expected)
+
+    # Wave w/ three-range solution
+    eq = u(x, y).diff(x, 2) - u(x, y).diff(y, 2) - 10*u(x, y).diff(y)
+    conds = {u(0, y): 0, u(pi, y): 0, u(x, 0): x*(pi-x), u(x, y).diff(y).subs(y, 0): 0}
+    assert classify_pde(eq, ics=conds)[0] == "2nd_linear_constant_coeff_separable"
+    expected = Eq(u(x, y), Piecewise((8*exp(-5*y)*(5*y + 1)*sin(5*x)/(125*pi) + Sum(-4*exp(-5*y)*((-1)**n - 1)*(cos(y*sqrt(n**2 - 25)) + 5*sin(y*sqrt(n**2 - 25))/sqrt(n**2 - 25))*sin(n*x)/(n**3*pi), (n, 6, oo)) + Sum(-4*exp(-5*y)*((-1)**n - 1)*(cosh(y*sqrt(25 - n**2)) + 5*sinh(y*sqrt(25 - n**2))/sqrt(25 - n**2))*sin(n*x)/(n**3*pi), (n, 1, 4)), (x >= 0) & (x <= pi))))
+    received = pdsolve(eq, u(x, y), ics=conds)
+    assert received.dummy_eq(expected)
+
+    # Backwards Heat, special first term
+    eq = u(x, y).diff(x, 2) + k * u(x, y).diff(y)
+    conds = {u(0, y): 0, u(1, y): 0, u(x, 0): x*sin(pi*x)}
+    assert classify_pde(eq, ics=conds)[0] == "2nd_linear_constant_coeff_separable"
+    expected = Eq(u(x, y), Piecewise((exp(pi**2*y/k)*sin(pi*x)/2 + Sum(-4*n*((-1)**n + 1)*exp(n**2*pi**2*y/k)*sin(n*pi*x)/(pi**2*(n**4 - 2*n**2 + 1)), (n, 2, oo)), (x >= 0) & (x <= 1) & (y <= 0))))
+    received = pdsolve(eq, u(x, y), ics=conds)
+    assert received.dummy_eq(expected)
+
+def test_pde_2nd_linear_constant_coeff_separable_value_errors():
+    k, H, L = symbols("k H L", positive=True)
+    m = Symbol("m", integer=True)
+    f, g = symbols("f g", cls=Function)
+    u = Function("u")
+    u_x, u_y = u(x, y).diff(x), u(x, y).diff(y)
+    u_xx, u_yy, u_xy = u_x.diff(x), u_y.diff(y), u_x.diff(y)
+
+    BCs = {u(0, y): 0, u(L, y): 0}
+
+    heat = u_xx - k * u_y
+    heat_conds = BCs | {u(x, 0): a}
+    wave = u_xx - k * u_yy
+    wave_conds = heat_conds | {u_y.subs(y, 0): g(x)}
+    elliptic = u_xx + u_yy + u(x, y)
+    elliptic_conds = heat_conds | {u(x, H): g(x)}
+
+    # confirm no errors
+    pdsolve(heat, u(x, y), ics=heat_conds)
+    pdsolve(wave, u(x, y), ics=wave_conds)
+    pdsolve(elliptic, u(x, y), ics=elliptic_conds)
+
+
+    # Invalid Individual Condition
+    two_fixed_vars = BCs | {u(0, 0): a}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=two_fixed_vars))
+
+    two_fixed_vars_subs = BCs | {Subs(u(x, y), (x, y), (0, 0)): a}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=two_fixed_vars_subs))
+
+    nonlinear = BCs | {Subs(u(x, y)**2, y, 0): a}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=nonlinear))
+
+    wrong_diff = BCs | {u_x.subs(y, 0): a}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=wrong_diff))
+
+    mixed_derivative_numeric = BCs | {u_xy.subs(y, 0): a}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=mixed_derivative_numeric))
+
+    mixed_derivative_symbolic = BCs | {u_xy.subs(y, H): a}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=mixed_derivative_symbolic))
+
+    different_function = BCs | {f(x, 0): a}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=different_function))
+
+    fixed_variable_value = BCs | {u(x, 0): y}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=fixed_variable_value))
+
+
+    # Invalid Variable/Coefficient
+    discrete_variable = heat.subs(x, m)
+    discrete_variable_conds = BCs | {u(m, 0): a}
+    raises(ValueError, lambda: pdsolve(discrete_variable, u(m, y), ics=discrete_variable_conds))
+
+    ode_in_disguise = u_xx + u(x, y)
+    raises(ValueError, lambda: pdsolve(ode_in_disguise, u(x, y), ics=heat_conds))
+
+    ambiguous_coeff_sign = wave.subs(k, a) # `a` can be pos (wave) or neg (laplace)
+    raises(ValueError, lambda: pdsolve(ambiguous_coeff_sign, u(x, y), ics=wave_conds))
+
+
+    # Invalid Condition Arrangement
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=wave_conds))
+
+    order_too_high = BCs | {u_y.subs(y, 0): a}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=order_too_high))
+
+    unorderable_points = {u(H, y): 0, u(L, y): 0, u(x, 0): a}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=unorderable_points))
+
+    time_direction_unknown = heat.subs(k, a)
+    raises(ValueError, lambda: pdsolve(time_direction_unknown, u(x, y), ics=heat_conds))
+
+
+    # Invalid Arrangements by PDE Type
+    raises(ValueError, lambda: pdsolve(wave, u(x, y), ics=elliptic_conds))
+    raises(ValueError, lambda: pdsolve(elliptic, u(x, y), ics=wave_conds))
+
+    laplace = elliptic - u(x, y)
+    laplace_all_neumann = {u_x.subs(x, 0): 0, u_x.subs(x, L): 0, u_y.subs(y, 0): 0, u_y.subs(y, H): g(x)}
+    raises(ValueError, lambda: pdsolve(laplace, u(x, y), ics=laplace_all_neumann))
+
+    timelike_heat = {u(0, y): 0, u_x.subs(x, 0): 0, u(x, 0): a}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=timelike_heat))
+
+    hyperbolic_needing_two_timelike = wave.subs(k, -1) + 3*u_xy
+    raises(ValueError, lambda: pdsolve(hyperbolic_needing_two_timelike, u(x, y), ics=wave_conds))
+
+    timelike_wave = {u(0, y): 0, u_x.subs(x, 0): 0, u(x, 0): a, u_y.subs(y, 0): g(x)}
+    raises(ValueError, lambda: pdsolve(wave, u(x, y), ics=timelike_wave))
+
+    insufficient = {u(x, 0): x}
+    raises(ValueError, lambda: pdsolve(wave, u(x, y), ics=insufficient))
+
+
+    # Resonance
+    resonant_family = {u(0, y): 0, u(5*pi, y): 0, u(x, 0): a, u(x, 5*pi): 0}
+    raises(ValueError, lambda: pdsolve(elliptic, u(x, y), ics=resonant_family))
+
+    resonant_neumann = {u(0, y): 0, u(pi, y): 0, u_y.subs(y, 0): sin(x), u_y.subs(y, 1): 0}
+    raises(ValueError, lambda: pdsolve(elliptic, u(x, y), ics=resonant_neumann))
+
+    resonant_eigenvalue = {u_x.subs(x, 0): 0, u_x.subs(x, pi): 0, u(x, 0): a, u(x, pi): g(x)}
+    raises(ValueError, lambda: pdsolve(elliptic, u(x, y), ics=resonant_eigenvalue))
+
+    # Should be NotImplementedError
+    robin_cond = {u(0, y) + u_x.subs(x, 0): 0, u(L, y): 0, u(x, 0): 1}
+    raises(ValueError, lambda: pdsolve(heat, u(x, y), ics=robin_cond))
+
+
+def test_pde_2nd_linear_constant_coeff_separable_not_implemented_errors():
+    k, L = symbols("k L", positive=True)
+    u = Function("u")
+    u_x, u_y = u(x, y).diff(x), u(x, y).diff(y)
+    u_xx, u_yy, u_xy = u_x.diff(x), u_y.diff(y), u_x.diff(y)
+
+    BCs = {u(0, y): 0, u(L, y): 0}
+    heat = u_xx - k * u_y
+
+    periodic_cond = BCs | {u(x, 0): u(x, pi)}
+    raises(NotImplementedError, lambda: pdsolve(heat, u(x, y), ics=periodic_cond))
+
+    limit_cond = BCs | {Limit(u(x, y), y, oo): 0}
+    raises(NotImplementedError, lambda: pdsolve(heat, u(x, y), ics=limit_cond))
+
+    infty_point = BCs | {u(x, oo): 0}
+    raises(NotImplementedError, lambda: pdsolve(heat, u(x, y), ics=infty_point))
+
+    infty_value = BCs | {u(x, 0): oo}
+    raises(NotImplementedError, lambda: pdsolve(heat, u(x, y), ics=infty_value))
+
+    z = Symbol("z", real=False, complex=True)
+    complex_heat = heat.subs(x, z)
+    complex_cond = BCs | {u(z, 0): 0}
+    raises(NotImplementedError, lambda: pdsolve(complex_heat, u(z, y), ics=complex_cond))
+
+    nonlinear = u_xx*u_x + u_yy
+    raises(NotImplementedError, lambda: pdsolve(nonlinear, u(x, y), ics=BCs))
+
+    variable_coeffs = u_xx - u_x*u_y
+    raises(NotImplementedError, lambda: pdsolve(variable_coeffs, u(x, y), ics=BCs))
+
+    complex_higher_order = heat * I + u_yy * (1 + I)
+    raises(NotImplementedError, lambda: pdsolve(complex_higher_order, u(x, y), ics=BCs))
+
+    first_order = u_xy + u(x, y)
+    raises(NotImplementedError, lambda: pdsolve(first_order, u(x, y), ics=BCs))
+
+    parabolic_mixed_term = u_xx + 2*u_xy + u_yy
+    raises(NotImplementedError, lambda: pdsolve(parabolic_mixed_term, u(x, y), ics=BCs))
+
+    implicit_eigen_pde = heat + u_x
+    implicit_eigen_conds = {u(0, y): 0, u_x.subs(x, L): 0, u(x, 0): a}
+    raises(NotImplementedError, lambda: pdsolve(implicit_eigen_pde, u(x, y), ics=implicit_eigen_conds))
