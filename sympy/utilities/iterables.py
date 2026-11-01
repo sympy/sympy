@@ -734,6 +734,14 @@ def sift(seq, keyfunc, binary=False):
     return T, F
 
 
+def _group_by_key(seq: Iterable[T], keyfunc: Callable[[T], T2]) -> defaultdict[T2, list[T]]:
+    """Group iterable items by the value of keyfunc(item)."""
+    groups: defaultdict[T2, list[T]] = defaultdict(list)
+    for item in seq:
+        groups[keyfunc(item)].append(item)
+    return groups
+
+
 def _sift_true_false(seq: Iterable[T], keyfunc: Callable[[T], bool]) -> tuple[list[T], list[T]]:
     """Sift iterable for items with keyfunc(item) = True/False."""
     true: list[T] = []
@@ -744,6 +752,18 @@ def _sift_true_false(seq: Iterable[T], keyfunc: Callable[[T], bool]) -> tuple[li
         else:
             false.append(i)
     return true, false
+
+
+def _sift_type(seq: Iterable[T], cls: type[T1]) -> tuple[list[T1], list[T]]:
+    """Split iterable items by isinstance(item, cls), preserving their order."""
+    matching: list[T1] = []
+    other: list[T] = []
+    for item in seq:
+        if isinstance(item, cls):
+            matching.append(item)
+        else:
+            other.append(item)
+    return matching, other
 
 
 def take(iter, n):

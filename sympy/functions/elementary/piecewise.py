@@ -12,7 +12,7 @@ from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
-from sympy.utilities.iterables import uniq, sift, common_prefix
+from sympy.utilities.iterables import uniq, sift, common_prefix, _group_by_key, _sift_type
 from sympy.utilities.misc import filldedent, func_name
 
 from itertools import product
@@ -20,6 +20,7 @@ from itertools import product
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
     from collections.abc import Iterator
+    from typing import Sequence
 
 Undefined = S.NaN  # Piecewise()
 
@@ -147,7 +148,19 @@ class Piecewise(DefinedFunction):
         def args(self) -> tuple[ExprCondPair, ...]:
             ...
 
-    def __new__(cls, *args, **options):
+    @overload
+    def __new__(  # type: ignore[misc]
+        cls, *args: tuple[Expr | complex, Boolean | bool | int],
+        evaluate: bool | None = True,
+    ) -> Expr: ...
+
+    @overload
+    def __new__(  # type: ignore[misc]
+        cls, *args: ExprCondPair | tuple[Basic | complex, Boolean | bool | int],
+        evaluate: bool | None = True,
+    ) -> Basic: ...
+
+    def __new__(cls, *args, **options) -> Basic:  # type: ignore[misc]
         if len(args) == 0:
             raise TypeError("At least one (expr, cond) pair expected.")
         # (Try to) sympify args first
@@ -1078,12 +1091,13 @@ def piecewise_fold(expr: Basic, evaluate: bool | None = True) -> Basic:
         # we do that grouping before the more generic folding.
         # The following applies this idea when f = Add or f = Mul
         # (and the expression is commutative).
+        args: Sequence[Basic]
         if expr.is_Add or expr.is_Mul and expr.is_commutative:
-            p, args = sift(expr.args, lambda x: x.is_Piecewise, binary=True)
-            pc = sift(p, lambda x: tuple([c for e, c in x.args]))
-            for c in list(ordered(pc)):
-                if len(pc[c]) > 1:
-                    pargs = [list(i.args) for i in pc[c]]
+            pieces, args = _sift_type(expr.args, Piecewise)
+            pc = _group_by_key(pieces, lambda x: tuple(pair.cond for pair in x.args))
+            for conditions in list(ordered(pc)):
+                if len(pc[conditions]) > 1:
+                    pargs = [list(i.args) for i in pc[conditions]]
                     # the first one is the same; there may be more
                     com = common_prefix(*[[i.cond for i in j] for j in pargs])
                     n = len(com)
@@ -1105,7 +1119,7 @@ def piecewise_fold(expr: Basic, evaluate: bool | None = True) -> Basic:
                         collected.append((expr.func(*remains), True))
                     args.append(Piecewise(*collected, evaluate=False))
                     continue
-                args.extend(pc[c])
+                args.extend(pc[conditions])
         else:
             args = expr.args
         # fold
