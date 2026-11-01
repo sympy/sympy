@@ -1556,6 +1556,12 @@ def test_PolyElement_cancel():
 
     assert f.cancel(g) == ((-x**2 - 4)*t, 4*t**2 + 2*x**2 + 4)
 
+    K = QQ.algebraic_field(sqrt(2))
+    sqrt2 = K.unit
+    R, x = ring("x", K)
+
+    assert (sqrt2*x).cancel(sqrt2*(x + 1)) == (x, x + 1)
+
     R, x, y = ring("x,y", ZZ_I)
     f = x + y + ZZ_I(0, 1) * y
     g = -ZZ_I(0, 1) * x ** 2 + x + y
