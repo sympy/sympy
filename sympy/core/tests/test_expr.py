@@ -2413,6 +2413,39 @@ def test_issue_2834():
         latex(f)
 
 
+def test_printing_ok_construction_not():
+    from time import time
+    T = time()
+    did = 0
+    while time() - T < 0.5:
+        did += 1
+        # 10800
+        expr = 2*Integral(sin(exp(x)), (x, 1, oo)) + 2*Si(E)
+        assert str(expr)
+        # 19790
+        k = Symbol('k')
+        terms = [
+            Sum(2**((k**2 + k - 5)/(k**4 - 5))*(k**2 + k),
+                (k, 0, oo)),
+            Sum(2**((k**2 - k - 5)/(k**4 - 5))*(k**2 - k),
+                (k, 0, oo)),
+            Sum(-2**((k**2 - k - 5)/(k**4 - 5))*(k**2 - k),
+                (k, 0, 0)),
+        ]
+        assert str(terms)
+        # 2834
+        sA = 1 + exp(-abs(x - 0.8))
+        sB = 1 + exp(-abs(x - 0.9))
+        pA = 1/(1 + sB/sA)
+        expr = (Integral(pA, (x, 0, S.Half))
+            + Integral(1 - pA, (x, S.Half, 1)))
+        assert str(expr)
+        # 17609
+        expr = exp(exp(exp(10*E))) + 1
+        assert str(expr)
+    assert did > 100  # it is about 200 on a modest system
+
+
 @XFAIL
 def test_issue_10800_printing():
     # Printing an unevaluated integral must not evaluate it.
@@ -2464,7 +2497,9 @@ def test_issue_17609_printing():
 
 
 @XFAIL
+@slow
 def test_issue_23211_root_printing():
+    # this is slow to evaluate
     _r0 = Rational(1, 9)
     _r1 = Rational(1, 4)
     _r2 = Rational(1, 3)
@@ -2520,6 +2555,7 @@ def test_issue_23211_root_printing():
         x4 + x6,
         x42*sin(x40) + I*x42*cos(x40)]
 
+    # but fast to print
     with patch.object(Expr, 'evalf', side_effect=AssertionError):
         assert str(root)
 
