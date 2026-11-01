@@ -1318,7 +1318,7 @@ def test_unrad1():
     assert check(unrad(S('(x+y)**(2*y/3) + (x+y)**(1/3) + 1'), x),
         (s**(2*y) + s + 1, [s, s**3 - x - y]))
     # should _Q be so lenient?
-    assert unrad(x**(S.Half/y) + y, x) == (x**(1/y) - y**2, [])
+    assert unrad(x**(S.Half/y) + y, x) == (y**2 - x**(1/y), [])
 
     # This tests two things: that if full unrad is attempted and fails
     # the solution should still be found; also it tests that the use of

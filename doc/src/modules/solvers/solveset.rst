@@ -389,7 +389,7 @@ How do we manipulate and return an infinite solution?
    >>> from sympy import ImageSet, Lambda, pi, S, Dummy, pprint
    >>> n = Dummy('n')
    >>> pprint(ImageSet(Lambda(n, 2*pi*n), S.Integers), use_unicode=True)
-   {2⋅π⋅n │ n ∊ ℤ}
+   {2⋅n⋅π │ n ∊ ℤ}
 
 
    Where ``n`` is a dummy variable. It is basically the image of the
@@ -419,7 +419,7 @@ How do we manipulate and return an infinite solution?
 
    >>> from sympy import ComplexRegion, Interval, pi, oo, pprint
    >>> pprint(ComplexRegion(Interval(-oo, oo)*Interval(0, oo)), use_unicode=True)
-   {x + ⅈ⋅y │ x, y ∊ (-∞, ∞) × [0, ∞)}
+   {x + y⋅ⅈ │ x, y ∊ (-∞, ∞) × [0, ∞)}
 
 
    where the Intervals are the range of `x` and `y` for the set of complex

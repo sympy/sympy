@@ -2109,9 +2109,9 @@ class Poly(Basic):
         method, however:
 
         >>> p.as_expr().coeff(x)
-        24*exp(8)*y + 23
+        24*y*exp(8) + 23
         >>> p.as_expr().coeff(y)
-        24*exp(8)*x
+        24*x*exp(8)
         >>> p.as_expr().coeff(x*y)
         24*exp(8)
 
@@ -6983,7 +6983,7 @@ def _torational_factor_list(p, x):
     >>> from sympy import sqrt, expand, Mul
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     >>> factors = _torational_factor_list(p, x); factors
-    (-2, [(1 - (sqrt(2) + 1)*x/2, 1), (-(sqrt(2) + 1)*x - 1, 1), (1 - (sqrt(2) + 1)*x, 1)])
+    (-2, [(1 - x*(sqrt(2) + 1)/2, 1), (-x*(sqrt(2) + 1) - 1, 1), (1 - x*(sqrt(2) + 1), 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x + sqrt(2)}))

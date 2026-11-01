@@ -829,10 +829,10 @@ def gaussian_conj(s_in, z_r_in, f):
     1/(1/f - 1/(s_in + z_r_in**2/(s_in - f)))
 
     >>> gaussian_conj(s_in, z_r_in, f)[1]
-    z_r_in/(-s_in**2/f**2 + z_r_in**2/f**2 + 1)
+    z_r_in/(1 - s_in**2/f**2 + z_r_in**2/f**2)
 
     >>> gaussian_conj(s_in, z_r_in, f)[2]
-    1/sqrt(-s_in**2/f**2 + z_r_in**2/f**2 + 1)
+    1/sqrt(1 - s_in**2/f**2 + z_r_in**2/f**2)
     """
     s_in, z_r_in, f = map(sympify, (s_in, z_r_in, f))
     s_out = 1 / ( -1/(s_in + z_r_in**2/(s_in - f)) + 1/f )

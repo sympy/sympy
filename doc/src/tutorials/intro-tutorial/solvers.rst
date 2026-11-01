@@ -60,7 +60,7 @@ an ``Interval`` or ``ImageSet`` of the solutions.
     ℝ
     >>> solveset(sin(x) - 1, x, domain=S.Reals)
     ⎧        π │      ⎫
-    ⎨2⋅π⋅n + ─ │ n ∊ ℤ⎬
+    ⎨2⋅n⋅π + ─ │ n ∊ ℤ⎬
     ⎩        2 │      ⎭
 
 
@@ -125,7 +125,7 @@ In the ``solveset`` module, the non linear system of equations is solved using
 
     >>> system = [exp(x) - sin(y), 1/y - 3]
     >>> nonlinsolve(system, vars)
-    {({log(sin(1/3)) + 2⋅ⅈ⋅π⋅n │ n ∊ ℤ}, 1/3)}
+    {({log(sin(1/3)) + 2⋅n⋅ⅈ⋅π │ n ∊ ℤ}, 1/3)}
 
 4. When the system is positive-dimensional system (has infinitely many solutions):
 

@@ -512,15 +512,15 @@ def quarter_wave_retarder(theta):
     >>> theta= symbols("theta", real=True)
     >>> QWP = quarter_wave_retarder(theta)
     >>> pprint(QWP, use_unicode=True)
-    ⎡ -ⅈ⋅π                                  -ⅈ⋅π               ⎤
-    ⎢ ─────                                 ─────              ⎥
-    ⎢   4   ⎛   2           2   ⎞             4                ⎥
-    ⎢ℯ     ⋅⎝cos (θ) + ⅈ⋅sin (θ)⎠  (1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)⎥
+    ⎡                       -ⅈ⋅π            -ⅈ⋅π               ⎤
+    ⎢                       ─────           ─────              ⎥
+    ⎢⎛   2           2   ⎞    4               4                ⎥
+    ⎢⎝cos (θ) + ⅈ⋅sin (θ)⎠⋅ℯ       (1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)⎥
     ⎢                                                          ⎥
-    ⎢         -ⅈ⋅π                  -ⅈ⋅π                       ⎥
-    ⎢         ─────                 ─────                      ⎥
-    ⎢           4                     4   ⎛   2           2   ⎞⎥
-    ⎣(1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)  ℯ     ⋅⎝sin (θ) + ⅈ⋅cos (θ)⎠⎦
+    ⎢         -ⅈ⋅π                                        -ⅈ⋅π ⎥
+    ⎢         ─────                                       ─────⎥
+    ⎢           4                  ⎛   2           2   ⎞    4  ⎥
+    ⎣(1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)  ⎝sin (θ) + ⅈ⋅cos (θ)⎠⋅ℯ     ⎦
 
     """
     return phase_retarder(theta, pi/2)

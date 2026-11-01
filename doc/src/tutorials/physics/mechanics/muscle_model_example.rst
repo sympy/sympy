@@ -227,49 +227,49 @@ for each generalized coordinate $q_i$ (in our case, $\theta$ and $\phi$).
     ...     print(simplify(eq))
     Equation 1:
     R*(R*m*(Derivative(theta(t), (t, 2)) -
-	sin(2*theta(t))*Derivative(phi(t), t)**2/2)*sqrt((Ax -
-	R*sin(theta(t))*cos(phi(t)))**2 + (Ay -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2)*sqrt((Bx
-	- R*sin(theta(t))*cos(phi(t)))**2 + (By -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2) -
-	k*((Ax*cos(phi(t))*cos(theta(t)) + Ay*sin(phi(t))*cos(theta(t)) -
-	Az*sin(theta(t)))*sqrt((Bx - R*sin(theta(t))*cos(phi(t)))**2 + (By -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2) +
-	(Bx*cos(phi(t))*cos(theta(t)) + By*sin(phi(t))*cos(theta(t)) -
-	Bz*sin(theta(t)))*sqrt((Ax - R*sin(theta(t))*cos(phi(t)))**2 + (Ay -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2))*(-L0 +
-	R*acos((Ax*Bx + Ay*By + Az*Bz)/(sqrt(Ax**2 + Ay**2 + Az**2)*sqrt(Bx**2
-	+ By**2 + Bz**2))) + sqrt((Ax - R*sin(theta(t))*cos(phi(t)))**2 + (Ay
-	- R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2) +
-	sqrt((Bx - R*sin(theta(t))*cos(phi(t)))**2 + (By -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Bz -
-	R*cos(theta(t)))**2)))/(sqrt((Ax - R*sin(theta(t))*cos(phi(t)))**2 +
-	(Ay - R*sin(phi(t))*sin(theta(t)))**2 + (Az -
-	R*cos(theta(t)))**2)*sqrt((Bx - R*sin(theta(t))*cos(phi(t)))**2 + (By
-	- R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2))
+    sin(2*theta(t))*Derivative(phi(t), t)**2/2)*sqrt((Ax -
+    R*sin(theta(t))*cos(phi(t)))**2 + (Ay -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2)*sqrt((Bx
+    - R*sin(theta(t))*cos(phi(t)))**2 + (By -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2) -
+    k*((Ax*cos(phi(t))*cos(theta(t)) + Ay*sin(phi(t))*cos(theta(t)) -
+    Az*sin(theta(t)))*sqrt((Bx - R*sin(theta(t))*cos(phi(t)))**2 + (By -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2) +
+    (Bx*cos(phi(t))*cos(theta(t)) + By*sin(phi(t))*cos(theta(t)) -
+    Bz*sin(theta(t)))*sqrt((Ax - R*sin(theta(t))*cos(phi(t)))**2 + (Ay -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2))*(-L0 +
+    R*acos((Ax*Bx + Ay*By + Az*Bz)/(sqrt(Ax**2 + Ay**2 + Az**2)*sqrt(Bx**2
+    + By**2 + Bz**2))) + sqrt((Ax - R*sin(theta(t))*cos(phi(t)))**2 + (Ay
+    - R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2) +
+    sqrt((Bx - R*sin(theta(t))*cos(phi(t)))**2 + (By -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Bz -
+    R*cos(theta(t)))**2)))/(sqrt((Ax - R*sin(theta(t))*cos(phi(t)))**2 +
+    (Ay - R*sin(phi(t))*sin(theta(t)))**2 + (Az -
+    R*cos(theta(t)))**2)*sqrt((Bx - R*sin(theta(t))*cos(phi(t)))**2 + (By
+    - R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2))
     Equation 2:
-	R*(R*m*(sin(2*theta(t))*Derivative(phi(t), t)*Derivative(theta(t), t)
-	- cos(2*theta(t))*Derivative(phi(t), (t, 2))/2 + Derivative(phi(t),
-	(t, 2))/2)*sqrt((Ax - R*sin(theta(t))*cos(phi(t)))**2 + (Ay -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2)*sqrt((Bx
-	- R*sin(theta(t))*cos(phi(t)))**2 + (By -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2) +
-	k*((Ax*sin(phi(t)) - Ay*cos(phi(t)))*sqrt((Bx -
-	R*sin(theta(t))*cos(phi(t)))**2 + (By -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2) +
-	(Bx*sin(phi(t)) - By*cos(phi(t)))*sqrt((Ax -
-	R*sin(theta(t))*cos(phi(t)))**2 + (Ay -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2))*(-L0 +
-	R*acos((Ax*Bx + Ay*By + Az*Bz)/(sqrt(Ax**2 + Ay**2 + Az**2)*sqrt(Bx**2
-	+ By**2 + Bz**2))) + sqrt((Ax - R*sin(theta(t))*cos(phi(t)))**2 + (Ay
-	- R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2) +
-	sqrt((Bx - R*sin(theta(t))*cos(phi(t)))**2 + (By -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Bz -
-	R*cos(theta(t)))**2))*sin(theta(t)))/(sqrt((Ax -
-	R*sin(theta(t))*cos(phi(t)))**2 + (Ay -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2)*sqrt((Bx
-	- R*sin(theta(t))*cos(phi(t)))**2 + (By -
-	R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2))
+    R*(R*m*(sin(2*theta(t))*Derivative(phi(t), t)*Derivative(theta(t), t)
+    - cos(2*theta(t))*Derivative(phi(t), (t, 2))/2 + Derivative(phi(t),
+    (t, 2))/2)*sqrt((Ax - R*sin(theta(t))*cos(phi(t)))**2 + (Ay -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2)*sqrt((Bx
+    - R*sin(theta(t))*cos(phi(t)))**2 + (By -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2) +
+    k*((Ax*sin(phi(t)) - Ay*cos(phi(t)))*sqrt((Bx -
+    R*sin(theta(t))*cos(phi(t)))**2 + (By -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2) +
+    (Bx*sin(phi(t)) - By*cos(phi(t)))*sqrt((Ax -
+    R*sin(theta(t))*cos(phi(t)))**2 + (Ay -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2))*(-L0 +
+    R*acos((Ax*Bx + Ay*By + Az*Bz)/(sqrt(Ax**2 + Ay**2 + Az**2)*sqrt(Bx**2
+    + By**2 + Bz**2))) + sqrt((Ax - R*sin(theta(t))*cos(phi(t)))**2 + (Ay
+    - R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2) +
+    sqrt((Bx - R*sin(theta(t))*cos(phi(t)))**2 + (By -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Bz -
+    R*cos(theta(t)))**2))*sin(theta(t)))/(sqrt((Ax -
+    R*sin(theta(t))*cos(phi(t)))**2 + (Ay -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Az - R*cos(theta(t)))**2)*sqrt((Bx
+    - R*sin(theta(t))*cos(phi(t)))**2 + (By -
+    R*sin(phi(t))*sin(theta(t)))**2 + (Bz - R*cos(theta(t)))**2))
 
 The resulting equations of motion are:
 

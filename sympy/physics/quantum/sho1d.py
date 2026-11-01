@@ -432,11 +432,11 @@ class Hamiltonian(SHOOp):
 
         >>> H = Hamiltonian('H')
         >>> H.rewrite('a').doit()
-        hbar*omega*(RaisingOp(a)*a + 1/2)
+        hbar*omega*(1/2 + RaisingOp(a)*a)
         >>> H.rewrite('xp').doit()
         (m**2*omega**2*X**2 + Px**2)/(2*m)
         >>> H.rewrite('N').doit()
-        hbar*omega*(N + 1/2)
+        hbar*omega*(1/2 + N)
 
     Take the Commutator of the Hamiltonian and the Number Operator:
 

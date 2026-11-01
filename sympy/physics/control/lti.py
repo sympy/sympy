@@ -6544,7 +6544,7 @@ class StateSpace(StateSpaceBase):
         >>> i = Matrix([0, 0])
         >>> ss = StateSpace(A, B, C)
         >>> ss.dsolve(input_vector=ip, initial_conditions=i).simplify()
-        Matrix([[-5*exp(-t) - 5*exp(-2*t)/2 + 15/2]])
+        Matrix([[15/2 - 5*exp(-t) - 5*exp(-2*t)/2]])
 
         If no input is provided it defaults to solving the system with zero initial conditions and zero input.
 

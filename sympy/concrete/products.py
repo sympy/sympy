@@ -128,7 +128,7 @@ class Product(ExprWithIntLimits):
     >>> limit(Pe, n, oo).gammasimp()
     sin(pi**2/2)
     >>> Pe.rewrite(gamma)
-    pi**2*gamma(pi/2)*(-1)**n*gamma(n + pi/2 + 1)/(2*gamma(pi/2 + 1)*gamma(pi/2 - n)*gamma(n + 1)**2)
+    (-1)**n*pi**2*gamma(pi/2)*gamma(n + pi/2 + 1)/(2*gamma(pi/2 + 1)*gamma(pi/2 - n)*gamma(n + 1)**2)
 
     Products with the lower limit being larger than the upper one:
 

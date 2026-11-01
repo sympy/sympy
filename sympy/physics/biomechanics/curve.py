@@ -797,7 +797,7 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     canonical form and won't simplify any constants.
 
     >>> l_M_tilde.doit(evaluate=False)
-    c0*log(fl_M_pas*(exp(c1) - 1) + 1)/c1 + 1
+    c0*log(1 + fl_M_pas*(exp(c1) - 1))/c1 + 1
 
     The function can also be differentiated. We'll differentiate with respect
     to fl_M_pas using the ``diff`` method on an instance with the single positional
@@ -1345,14 +1345,14 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
     canonical form and won't simplify any constants.
 
     >>> fv_M.doit(evaluate=False)
-    0.886 - 0.318*log(-8.149*v_M/v_M_max + sqrt((-8.149*v_M/v_M_max - 0.374)**2 + 1) - 0.374)
+    0.886 - 0.318*log(-8.149*v_M/v_M_max - 0.374 + sqrt(1 + (-8.149*v_M/v_M_max - 0.374)**2))
 
     The function can also be differentiated. We'll differentiate with respect
     to v_M using the ``diff`` method on an instance with the single positional
     argument ``v_M``.
 
     >>> fv_M.diff(v_M)
-    2.591382*((-8.149*v_M/v_M_max - 0.374)**2 + 1)**(-1/2)/v_M_max
+    2.591382*(1 + (-8.149*v_M/v_M_max - 0.374)**2)**(-1/2)/v_M_max
 
     References
     ==========

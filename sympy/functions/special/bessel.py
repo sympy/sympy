@@ -981,7 +981,7 @@ class jn(SphericalBesselBase):
     >>> jn(nu, z).rewrite(besselj)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(nu + 1/2, z)/2
     >>> jn(nu, z).rewrite(bessely)
-    sqrt(2)*sqrt(pi)*(-1)**nu*sqrt(1/z)*bessely(-nu - 1/2, z)/2
+    (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-nu - 1/2, z)/2
     >>> jn(2, 5.2+0.3j).evalf(20)
     0.099419756723640344491 - 0.054525080242173562897*I
 
@@ -1056,7 +1056,7 @@ class yn(SphericalBesselBase):
     >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
     True
     >>> yn(nu, z).rewrite(besselj)
-    sqrt(2)*sqrt(pi)*(-1)**(nu + 1)*sqrt(1/z)*besselj(-nu - 1/2, z)/2
+    (-1)**(nu + 1)*sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(-nu - 1/2, z)/2
     >>> yn(nu, z).rewrite(bessely)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(nu + 1/2, z)/2
     >>> yn(2, 5.2+0.3j).evalf(20)
@@ -1180,7 +1180,7 @@ class hn1(SphericalHankelBase):
     >>> print(expand_func(hn1(1, z)))
     -I*sin(z)/z - cos(z)/z + sin(z)/z**2 - I*cos(z)/z**2
     >>> hn1(nu, z).rewrite(jn)
-    jn(nu, z) + I*(-1)**(nu + 1)*jn(-nu - 1, z)
+    jn(nu, z) + (-1)**(nu + 1)*I*jn(-nu - 1, z)
     >>> hn1(nu, z).rewrite(yn)
     (-1)**nu*yn(-nu - 1, z) + I*yn(nu, z)
     >>> hn1(nu, z).rewrite(hankel1)
@@ -1238,7 +1238,7 @@ class hn2(SphericalHankelBase):
     >>> hn2(nu, z).rewrite(hankel2)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel2(nu, z)/2
     >>> hn2(nu, z).rewrite(jn)
-    jn(nu, z) - I*(-1)**(nu + 1)*jn(-nu - 1, z)
+    jn(nu, z) - (-1)**(nu + 1)*I*jn(-nu - 1, z)
     >>> hn2(nu, z).rewrite(yn)
     (-1)**nu*yn(-nu - 1, z) - I*yn(nu, z)
 
@@ -1431,7 +1431,7 @@ class airyai(AiryBase):
 
     >>> from sympy import series
     >>> series(airyai(z), z, 0, 3)
-    3**(5/6)*gamma(1/3)/(6*pi) - 3**(1/6)*gamma(2/3)*z/(2*pi) + O(z**3)
+    3**(5/6)*gamma(1/3)/(6*pi) - 3**(1/6)*z*gamma(2/3)/(2*pi) + O(z**3)
 
     We can numerically evaluate the Airy function to arbitrary precision
     on the whole complex plane:
@@ -1603,7 +1603,7 @@ class airybi(AiryBase):
 
     >>> from sympy import series
     >>> series(airybi(z), z, 0, 3)
-    3**(1/3)*gamma(1/3)/(2*pi) + 3**(2/3)*gamma(2/3)*z/(2*pi) + O(z**3)
+    3**(1/3)*gamma(1/3)/(2*pi) + 3**(2/3)*z*gamma(2/3)/(2*pi) + O(z**3)
 
     We can numerically evaluate the Airy function to arbitrary precision
     on the whole complex plane:
@@ -2070,9 +2070,9 @@ class marcumq(DefinedFunction):
     >>> marcumq(0, a, 0)
     1 - exp(-a**2/2)
     >>> marcumq(1, a, a)
-    exp(-a**2)*besseli(0, a**2)/2 + 1/2
+    1/2 + exp(-a**2)*besseli(0, a**2)/2
     >>> marcumq(2, a, a)
-    exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2) + 1/2
+    1/2 + exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2)
 
     Differentiation with respect to $a$ and $b$ is supported:
 

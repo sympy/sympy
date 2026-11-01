@@ -317,10 +317,10 @@ def test_Mul():
 def test_numeric_factors_first():
     # Numeric functions need not be Number instances. Ordering them is
     # a printer preference and should not evaluate their values.
-    assert str(zeta(3)*x**3) == 'zeta(3)*x**3'
-    assert str(zeta(3)*x**3/3) == 'zeta(3)*x**3/3'
-    assert str(log(2)*x) == 'log(2)*x'
-    assert str(sin(1)*x) == 'sin(1)*x'
+    assert str(zeta(3)*x**3) == 'x**3*zeta(3)'
+    assert str(zeta(3)*x**3/3) == 'x**3*zeta(3)/3'
+    assert str(log(2)*x) == 'x*log(2)'
+    assert str(sin(1)*x) == 'x*sin(1)'
     assert str(pi**2*x**2) == 'pi**2*x**2'
     assert sstr(zeta(3)*x**3, order='none') == 'x**3*zeta(3)'
 
@@ -724,7 +724,7 @@ def test_Series_str():
     assert str(Series(tf1, tf2)) == \
         'Series(TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(x - y, x + y, y))'
     assert str(Series(tf1, tf2, tf3)) == \
-        'Series(TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 - t**w*x + w, t - y, y))'
+        'Series(TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 + w - t**w*x, t - y, y))'
     assert str(Series(-tf2, tf1)) == \
         'Series(TransferFunction(y - x, x + y, y), TransferFunction(x*y**2 - z, y**3 - t**3, y))'
 
@@ -754,7 +754,7 @@ def test_Parallel_str():
     assert str(Parallel(tf1, tf2)) == \
         'Parallel(TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(x - y, x + y, y))'
     assert str(Parallel(tf1, tf2, tf3)) == \
-        'Parallel(TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 - t**w*x + w, t - y, y))'
+        'Parallel(TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 + w - t**w*x, t - y, y))'
     assert str(Parallel(-tf2, tf1)) == \
         'Parallel(TransferFunction(y - x, x + y, y), TransferFunction(x*y**2 - z, y**3 - t**3, y))'
 
@@ -773,7 +773,7 @@ def test_Feedback_str():
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
     assert str(Feedback(tf1*tf2, tf3)) == \
-        'Feedback(Series(TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(x - y, x + y, y)), TransferFunction(t*x**2 - t**w*x + w, t - y, y), -1)'
+        'Feedback(Series(TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(x - y, x + y, y)), TransferFunction(t*x**2 + w - t**w*x, t - y, y), -1)'
     assert str(Feedback(tf1, TransferFunction(1, 1, y), 1)) == \
         'Feedback(TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(1, 1, y), 1)'
 
@@ -796,7 +796,7 @@ def test_TransferFunctionMatrix_str():
     assert str(TransferFunctionMatrix([[tf1], [tf2]])) == \
         'TransferFunctionMatrix(((TransferFunction(x*y**2 - z, y**3 - t**3, y),), (TransferFunction(x - y, x + y, y),)))'
     assert str(TransferFunctionMatrix([[tf1, tf2], [tf3, tf2]])) == \
-        'TransferFunctionMatrix(((TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(x - y, x + y, y)), (TransferFunction(t*x**2 - t**w*x + w, t - y, y), TransferFunction(x - y, x + y, y))))'
+        'TransferFunctionMatrix(((TransferFunction(x*y**2 - z, y**3 - t**3, y), TransferFunction(x - y, x + y, y)), (TransferFunction(t*x**2 + w - t**w*x, t - y, y), TransferFunction(x - y, x + y, y))))'
 
 
 def test_Quaternion_str_printer():
@@ -821,7 +821,7 @@ def test_wild_str():
     assert str(w + 1) == 'x_ + 1'
     assert str(exp(2**w) + 5) == 'exp(2**x_) + 5'
     assert str(3*w + 1) == '3*x_ + 1'
-    assert str(1/w + 1) == '1/x_ + 1'
+    assert str(1/w + 1) == '1 + 1/x_'
     assert str(w**2 + 1) == 'x_**2 + 1'
     assert str(1/(1 - w)) == '1/(1 - x_)'
 
@@ -861,7 +861,7 @@ def test_issue_3103():
     e = -2*sqrt(x) - y/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*y",
             "-2*x**1/2(-1/2)*x**(-1/2)*y", "-2*x**1/2-1/2*x**-1/2*w"]
-    assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"
+    assert str(e) == '-y/(2*sqrt(x)) - 2*sqrt(x)'
 
 
 def test_issue_4021():
@@ -1071,7 +1071,7 @@ def test_UnevaluatedExpr():
 
     x = symbols("x")
     ue1 = UnevaluatedExpr(-2*x**2 - 9*x + 5)
-    assert str(1 + ue1) == '(-2*x**2 - 9*x + 5) + 1'
+    assert str(1 + ue1) == '1 + (-2*x**2 - 9*x + 5)'
     assert str(1 - ue1) == "1 - (-2*x**2 - 9*x + 5)"
 
     ue2 = UnevaluatedExpr(-2*x**2 + 3*x + 2)

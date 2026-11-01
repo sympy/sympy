@@ -2134,7 +2134,7 @@ class acsch(InverseHyperbolicFunction):
     >>> from sympy import acsch, sqrt, I
     >>> from sympy.abc import x
     >>> acsch(x).diff(x)
-    -1/(x**2*sqrt(x**(-2) + 1))
+    -1/(x**2*sqrt(1 + x**(-2)))
     >>> acsch(1).diff(x)
     0
     >>> acsch(1)

@@ -1008,11 +1008,11 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
 
     >>> Y = DiscreteUniform('Y', [1, 2, 7])
     >>> characteristic_function(Y)
-    Lambda(_t, exp(7*I*_t)/3 + exp(2*I*_t)/3 + exp(I*_t)/3)
+    Lambda(_t, exp(7*_t*I)/3 + exp(2*_t*I)/3 + exp(_t*I)/3)
 
     >>> Z = Poisson('Z', 2)
     >>> characteristic_function(Z)
-    Lambda(_t, exp(2*exp(I*_t) - 2))
+    Lambda(_t, exp(2*exp(_t*I) - 2))
     """
     if condition is not None:
         return characteristic_function(given(expr, condition, **kwargs), **kwargs)

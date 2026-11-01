@@ -499,7 +499,7 @@ Here is an example of a correctly formatted docstring::
 
         >>> from sympy import series
         >>> series(gamma(x), x, 0, 3)
-        -EulerGamma + 1/x + (EulerGamma**2/2 + pi**2/12)*x + (-EulerGamma**3/6 - EulerGamma*pi**2/12 - zeta(3)/3)*x**2 + O(x**3)
+        1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma**3/6 - EulerGamma*pi**2/12 - zeta(3)/3) + O(x**3)
 
         We can numerically evaluate the ``gamma`` function to arbitrary
         precision on the whole complex plane:

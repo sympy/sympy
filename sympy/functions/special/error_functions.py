@@ -1156,7 +1156,7 @@ class Ei(DefinedFunction):
 
     >>> from sympy import expint, Shi
     >>> Ei(x).rewrite(expint)
-    -expint(1, exp_polar(I*pi)*x) - I*pi
+    -expint(1, x*exp_polar(I*pi)) - I*pi
     >>> Ei(x).rewrite(Shi)
     Chi(x) + Shi(x)
 
@@ -1873,7 +1873,7 @@ class Si(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Si(z).rewrite(expint)
-    pi/2 - I*(expint(1, exp_polar(I*pi/2)*z)/2 - expint(1, exp_polar(-I*pi/2)*z)/2)
+    pi/2 - I*(expint(1, z*exp_polar(I*pi/2))/2 - expint(1, z*exp_polar(-I*pi/2))/2)
 
     It can be rewritten in the form of sinc function (by definition):
 
@@ -2025,7 +2025,7 @@ class Ci(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Ci(z).rewrite(expint)
-    -expint(1, exp_polar(-I*pi/2)*z)/2 - expint(1, exp_polar(I*pi/2)*z)/2
+    -expint(1, z*exp_polar(-I*pi/2))/2 - expint(1, z*exp_polar(I*pi/2))/2
 
     See Also
     ========
@@ -2149,7 +2149,7 @@ class Shi(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Shi(z).rewrite(expint)
-    expint(1, z)/2 - expint(1, exp_polar(I*pi)*z)/2 - I*pi/2
+    -I*pi/2 + expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2
 
     See Also
     ========
@@ -2266,7 +2266,7 @@ class Chi(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Chi(z).rewrite(expint)
-    -expint(1, z)/2 - expint(1, exp_polar(I*pi)*z)/2 - I*pi/2
+    -I*pi/2 - expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2
 
     See Also
     ========
@@ -2441,7 +2441,7 @@ class fresnels(FresnelIntegral):
 
     >>> from sympy import integrate, pi, sin, expand_func
     >>> integrate(sin(pi*z**2/2), z)
-    3*gamma(3/4)*fresnels(z)/(4*gamma(7/4))
+    3*fresnels(z)*gamma(3/4)/(4*gamma(7/4))
     >>> expand_func(integrate(sin(pi*z**2/2), z))
     fresnels(z)
 
@@ -2602,7 +2602,7 @@ class fresnelc(FresnelIntegral):
 
     >>> from sympy import integrate, pi, cos, expand_func
     >>> integrate(cos(pi*z**2/2), z)
-    gamma(1/4)*fresnelc(z)/(4*gamma(5/4))
+    fresnelc(z)*gamma(1/4)/(4*gamma(5/4))
     >>> expand_func(integrate(cos(pi*z**2/2), z))
     fresnelc(z)
 

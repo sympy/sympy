@@ -422,9 +422,9 @@ in univariate case. For example consider the following factorization over
 `\mathbb{Q}(\sqrt{-3})`::
 
     >>> factor(x**3 + y**3, extension=sqrt(-3))
-            ⎛    ⎛  1   √3⋅ⅈ⎞  ⎞ ⎛    ⎛  1   √3⋅ⅈ⎞  ⎞
-    (x + y)⋅⎜x + ⎜- ─ - ────⎟⋅y⎟⋅⎜x + ⎜- ─ + ────⎟⋅y⎟
-            ⎝    ⎝  2    2  ⎠  ⎠ ⎝    ⎝  2    2  ⎠  ⎠
+            ⎛      ⎛  1   √3⋅ⅈ⎞⎞ ⎛      ⎛  1   √3⋅ⅈ⎞⎞
+    (x + y)⋅⎜x + y⋅⎜- ─ - ────⎟⎟⋅⎜x + y⋅⎜- ─ + ────⎟⎟
+            ⎝      ⎝  2    2  ⎠⎠ ⎝      ⎝  2    2  ⎠⎠
 
 .. note:: Currently multivariate polynomials over finite fields aren't supported.
 

@@ -1409,7 +1409,7 @@ def test_latex_ConditionSet():
 
 def test_latex_ComplexRegion():
     assert latex(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == \
-        '\\left\\{x + i y\\; \\middle|\\; x, y \\in \\left[3, 5\\right] \\times \\left[4, 6\\right] \\right\\}'
+        '\\left\\{x + y i\\; \\middle|\\; x, y \\in \\left[3, 5\\right] \\times \\left[4, 6\\right] \\right\\}'
     assert latex(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == \
         '\\left\\{r \\left(\\cos{\\left(\\theta \\right)} + i \\sin{\\left(\\theta \\right)}\\right)\\; \\middle|\\; r, \\theta \\in \\left[0, 1\\right] \\times \\left[0, 2 \\pi\\right) \\right\\}'
 
@@ -2628,13 +2628,13 @@ def test_latex_UnevaluatedExpr():
     he = UnevaluatedExpr(1/x)
     assert latex(he) == latex(1/x) == r"\frac{1}{x}"
     assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
-    assert latex(he + 1) == '\\frac{1}{x} + 1'
+    assert latex(he + 1) == '1 + \\frac{1}{x}'
     assert latex(he - 1) == '\\frac{1}{x} - 1'
     assert latex(-he + 1) == r"1 - \frac{1}{x}"
     assert latex(x*he) == r"x \frac{1}{x}"
 
     ue1 = UnevaluatedExpr(-2*x**2 - 9*x + 5)
-    assert latex(1 + ue1) == '\\left(- 2 x^{2} - 9 x + 5\\right) + 1'
+    assert latex(1 + ue1) == r'1 + \left(- 2 x^{2} - 9 x + 5\right)'
     assert latex(1 - ue1) == r"1 - \left(- 2 x^{2} - 9 x + 5\right)"
 
     ue2 = UnevaluatedExpr(-2*x**2 + 3*x + 2)
@@ -2772,7 +2772,7 @@ def test_Series_printing():
     assert latex(Series(tf1, tf2)) == \
         '\\left(\\frac{x y^{2} - z}{y^{3} - t^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right)'
     assert latex(Series(tf1, tf2, tf3)) == \
-        '\\left(\\frac{x y^{2} - z}{y^{3} - t^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right) \\left(\\frac{t x^{2} - t^{w} x + w}{t - y}\\right)'
+        '\\left(\\frac{x y^{2} - z}{y^{3} - t^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right) \\left(\\frac{t x^{2} + w - t^{w} x}{t - y}\\right)'
     assert latex(Series(-tf2, tf1)) == \
         '\\left(\\frac{y - x}{x + y}\\right) \\left(\\frac{x y^{2} - z}{y^{3} - t^{3}}\\right)'
 
@@ -3295,7 +3295,7 @@ def test_latex_decimal_separator():
     x = symbols('x')
     y = symbols('y')
     z = symbols('z')
-    assert(latex(x*5.3 + 2**y**3.4 + 4.5 + z, decimal_separator = 'comma') == r'2^{\left(y^{3{,}4}\right)} + 5{,}3 x + z + 4{,}5')
+    assert(latex(x*5.3 + 2**y**3.4 + 4.5 + z, decimal_separator = 'comma') == '5{,}3 x + z + 2^{\\left(y^{3{,}4}\\right)} + 4{,}5')
 
     assert(latex(0.987, decimal_separator='comma') == r'0{,}987')
     assert(latex(S(0.987), decimal_separator='comma') == r'0{,}987')

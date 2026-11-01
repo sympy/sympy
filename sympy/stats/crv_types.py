@@ -774,7 +774,7 @@ def Cauchy(name, x0, gamma):
     >>> X = Cauchy("x", x0, gamma)
 
     >>> density(X)(z)
-    1/(pi*gamma*((z - x0)**2/gamma**2 + 1))
+    1/(pi*gamma*(1 + (z - x0)**2/gamma**2))
 
     References
     ==========
@@ -1099,7 +1099,7 @@ def Dagum(name, p, a, b):
     a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z
 
     >>> cdf(X)(z)
-    Piecewise((((z/b)**(-a) + 1)**(-p), z >= 0), (0, True))
+    Piecewise(((1 + (z/b)**(-a))**(-p), z >= 0), (0, True))
 
 
     References
@@ -1563,7 +1563,7 @@ def ExponentialPower(name, mu, alpha, beta):
      2*alpha*Gamma|----|
                   \beta/
     >>> cdf(X)(z)
-    lowergamma(1/beta, (Abs(mu - z)/alpha)**beta)*sign(z - mu)/(2*gamma(1/beta)) + 1/2
+    1/2 + lowergamma(1/beta, (Abs(mu - z)/alpha)**beta)*sign(z - mu)/(2*gamma(1/beta))
 
     References
     ==========
@@ -2513,7 +2513,7 @@ def LogCauchy(name, mu, sigma):
     1/(5*pi*z*((log(z) - 2)**2 + 1/25))
 
     >>> cdf(X)(z)
-    atan(5*log(z) - 10)/pi + 1/2
+    1/2 + atan(5*log(z) - 10)/pi
 
     References
     ==========
@@ -2687,7 +2687,7 @@ def LogLogistic(name, alpha, beta):
           \\alpha/        /
 
     >>> cdf(X)(z)
-    1/((z/alpha)**(-beta) + 1)
+    1/(1 + (z/alpha)**(-beta))
 
     >>> quantile(X)(p)
     alpha*(p/(1 - p))**(1/beta)
@@ -2929,9 +2929,9 @@ def Lomax(name, alpha, lamda):
     >>> X = Lomax('X', a, l)
     >>> x = symbols('x')
     >>> density(X)(x)
-    a*(x/l + 1)**(-a - 1)/l
+    a*(1 + x/l)**(-a - 1)/l
     >>> cdf(X)(x)
-    Piecewise((1 - 1/(x/l + 1)**a, x >= 0), (0, True))
+    Piecewise((1 - 1/(1 + x/l)**a, x >= 0), (0, True))
     >>> a = 2
     >>> X = Lomax('X', a, l)
     >>> E(X)
@@ -3015,7 +3015,7 @@ def Maxwell(name, a):
     2*sqrt(2)*a/sqrt(pi)
 
     >>> simplify(variance(X))
-    (3*pi - 8)*a**2/pi
+    a**2*(3*pi - 8)/pi
 
     References
     ==========
@@ -4151,10 +4151,10 @@ def StudentT(name, nu):
               nu   1
             - -- - -
               2    2
-    / 2    \
-    |z     |
-    |-- + 1|
-    \nu    /
+    /     2\
+    |    z |
+    |1 + --|
+    \    nu/
     -----------------
       ____  /     nu\
     \/ nu *B|1/2, --|
@@ -4726,10 +4726,10 @@ def Weibull(name, alpha, beta):
     k*(z/lambda)**(k - 1)*exp(-(z/lambda)**k)/lambda
 
     >>> simplify(E(X))
-    lambda*gamma(1/k + 1)
+    lambda*gamma(1 + 1/k)
 
     >>> simplify(variance(X))
-    lambda**2*(gamma(2/k + 1) - gamma(1/k + 1)**2)
+    lambda**2*(gamma(1 + 2/k) - gamma(1 + 1/k)**2)
 
     References
     ==========

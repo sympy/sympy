@@ -418,7 +418,7 @@ def Logarithmic(name, p):
     >>> X = Logarithmic("x", p)
 
     >>> density(X)(z)
-    -(1/5)**z/(log(4/5)*z)
+    -(1/5)**z/(z*log(4/5))
 
     >>> E(X)
     -1/(8*log(2) - 4*log(5))
@@ -833,7 +833,7 @@ def Zeta(name, s):
     >>> X = Zeta("x", s)
 
     >>> density(X)(z)
-    1/(zeta(5)*z**5)
+    1/(z**5*zeta(5))
 
     >>> E(X)
     pi**4/(90*zeta(5))

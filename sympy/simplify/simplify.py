@@ -865,9 +865,9 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
     >>> from sympy.simplify.simplify import factor_sum
     >>> s = Sum(x*y, (x, 1, 3))
     >>> factor_sum(s)
-    Sum(x, (x, 1, 3))*y
+    y*Sum(x, (x, 1, 3))
     >>> factor_sum(s.function, s.limits)
-    Sum(x, (x, 1, 3))*y
+    y*Sum(x, (x, 1, 3))
     """
 
     # XXX deprecate in favor of direct call to factor_terms

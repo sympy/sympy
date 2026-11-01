@@ -76,11 +76,11 @@ def _add_atan_floor_terms(antideriv, x):
     >>> from sympy.integrals.integrals import _add_atan_floor_terms
     >>> x = Symbol('x', real=True)
     >>> _add_atan_floor_terms(2*atan(3*tan(x/2)), x)
-    2*atan(3*tan(x/2)) + 2*pi*floor((x/2 + pi/2)/pi)
+    2*pi*floor((x/2 + pi/2)/pi) + 2*atan(3*tan(x/2))
     >>> _add_atan_floor_terms(atan(cot(x) + x), x)
     atan(x + cot(x)) - pi*floor(x/pi)
     >>> _add_atan_floor_terms(atan(tan(x) + tan(3*x)), x)
-    atan(tan(x) + tan(3*x)) + pi*floor((3*x + pi/2)/pi)
+    pi*floor((3*x + pi/2)/pi) + atan(tan(x) + tan(3*x))
     >>> _add_atan_floor_terms(atan(x*tan(x)), x)
     atan(x*tan(x))
 
@@ -1516,7 +1516,7 @@ class Integral(AddWithLimits):
 
         >>> e = Integral(x**2, (x, 0, 2))
         >>> e.as_sum(n, 'right').expand()
-        4/n + 4/(3*n**2) + 8/3
+        8/3 + 4/n + 4/(3*n**2)
 
         This shows that the midpoint rule is more accurate, as its error
         term decays as the square of n:

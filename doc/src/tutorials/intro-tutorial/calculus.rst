@@ -201,9 +201,9 @@ definite integrals.  Here is a sampling of some of the power of
     ⎮ sin⎝x ⎠ dx
     ⌡
     >>> integ.doit()
-                    ⎛√2⋅x⎞
-    3⋅√2⋅√π⋅Γ(3/4)⋅S⎜────⎟
-                    ⎝ √π ⎠
+             ⎛√2⋅x⎞
+    3⋅√2⋅√π⋅S⎜────⎟⋅Γ(3/4)
+             ⎝ √π ⎠
     ──────────────────────
            8⋅Γ(7/4)
 

@@ -1509,7 +1509,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
 
     'undet_16': {
         'eq': f2 + 4*f(x) - x*sin(2*x),
-        'sol': [Eq(f(x), (C1 - x**2/8)*cos(2*x) + (C2 + x/16)*sin(2*x))],
+        'sol': [Eq(f(x), (C1 + x/16)*sin(2*x) + (C2 - x**2/8)*cos(2*x))],
         'slow': True,
     },
 

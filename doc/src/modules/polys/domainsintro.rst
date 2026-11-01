@@ -90,7 +90,7 @@ this representation using the :py:func:`~.srepr` function::
   >>> x = Symbol('x')
   >>> e = 1 + 1/(2 + x**2)
   >>> e
-  1/(x**2 + 2) + 1
+  1 + 1/(x**2 + 2)
   >>> print(srepr(e))
   Add(Integer(1), Pow(Add(Integer(2), Pow(Symbol('x'), Integer(2))), Integer(-1)))
 

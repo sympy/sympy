@@ -2292,7 +2292,7 @@ class Subs(Expr):
     >>> Subs(f(x)*sin(y) + z, (x, y), (0, 1))
     Subs(z + f(x)*sin(y), (x, y), (0, 1))
     >>> _.doit()
-    z + sin(1)*f(0)
+    z + f(0)*sin(1)
 
     Notes
     =====

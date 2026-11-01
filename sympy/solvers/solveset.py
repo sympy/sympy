@@ -151,14 +151,14 @@ def _invert(f_x, y, x, domain=S.Complexes):
     When does exp(x) == y?
 
     >>> invert_complex(exp(x), y, x)
-    (x, ImageSet(Lambda(_n, log(Abs(y)) + I*(2*pi*_n + arg(y))), Integers))
+    (x, ImageSet(Lambda(_n, log(Abs(y)) + I*(2*_n*pi + arg(y))), Integers))
     >>> invert_real(exp(x), y, x)
     (x, Intersection({log(y)}, Reals))
 
     When does exp(x) == 1?
 
     >>> invert_complex(exp(x), 1, x)
-    (x, ImageSet(Lambda(_n, 2*I*pi*_n), Integers))
+    (x, ImageSet(Lambda(_n, 2*_n*I*pi), Integers))
     >>> invert_real(exp(x), 1, x)
     (x, {0})
 
@@ -1182,11 +1182,11 @@ def solve_decomposition(f, symbol, domain):
     >>> f2 = sin(x)**2 + 2*sin(x) + 1
     >>> pprint(sd(f2, x, S.Reals), use_unicode=False)
               3*pi
-    {2*pi*n + ---- | n in Integers}
+    {2*n*pi + ---- | n in Integers}
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*pi*n - 2 | n in Integers} U {2*pi*n + pi - 2 | n in Integers}
+    {2*n*pi - 2 | n in Integers} U {2*n*pi + pi - 2 | n in Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -2412,11 +2412,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     >>> x = Symbol('x')
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
-    {2*I*pi*n | n in Integers}
+    {2*n*I*pi | n in Integers}
 
     >>> x = Symbol('x', real=True)
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
-    {2*I*pi*n | n in Integers}
+    {2*n*I*pi | n in Integers}
 
     * If you want to use ``solveset`` to solve the equation in the
       real domain, provide a real domain. (Using ``solveset_real``
@@ -3326,11 +3326,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*pi*_n + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*I*pi*_n), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
-    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))), (-log(3), sqrt(-exp(2*x) - sin(log(3)))), (ImageSet(Lambda(_n, -log(3) + 2*I*pi*_n), Integers), ImageSet(Lambda(_n, -sqrt(sin(-log(3) + 2*I*pi*_n) - exp(2*x))), Integers)), (ImageSet(Lambda(_n, -log(3) + 2*I*pi*_n), Integers), ImageSet(Lambda(_n, sqrt(sin(-log(3) + 2*I*pi*_n) - exp(2*x))), Integers))}
+    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))), (-log(3), sqrt(-exp(2*x) - sin(log(3)))), (ImageSet(Lambda(_n, -log(3) + 2*_n*I*pi), Integers), ImageSet(Lambda(_n, -sqrt(sin(-log(3) + 2*_n*I*pi) - exp(2*x))), Integers)), (ImageSet(Lambda(_n, -log(3) + 2*_n*I*pi), Integers), ImageSet(Lambda(_n, sqrt(sin(-log(3) + 2*_n*I*pi) - exp(2*x))), Integers))}
 
     """
 
@@ -4030,7 +4030,7 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*pi*_n + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*I*pi*_n), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using

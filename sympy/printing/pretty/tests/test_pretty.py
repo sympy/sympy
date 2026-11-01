@@ -2090,10 +2090,10 @@ E \n\
 
     expr = euler(1/(1 + 1/(1 + 1/n)))
     ascii_str = \
-'E         \n     1    \n ---------\n   1      \n ----- + 1\n 1        \n - + 1    \n n        '
+'E         \n     1    \n ---------\n       1  \n 1 + -----\n         1\n     1 + -\n         n'
 
     ucode_str = \
-'E         \n     1    \n ─────────\n   1      \n ───── + 1\n 1        \n ─ + 1    \n n        '
+'E         \n     1    \n ─────────\n       1  \n 1 + ─────\n         1\n     1 + ─\n         n'
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2224,9 +2224,9 @@ x ___\n\
     expr = (2 + (
         1 + x**2)/(2 + x))**Rational(1, 4) + (1 + x**Rational(1, 1000))/sqrt(3 + x**2)
     ascii_str = \
-'     ____________              \n    /  2            1000___    \n   /  x  + 1          \\/ x  + 1\n4 /   ------ + 2  + -----------\n\\/    x + 2            ________\n                      /  2     \n                    \\/  x  + 3 '
+'     ____________              \n    /      2        1000___    \n   /      x  + 1      \\/ x  + 1\n4 /   2 + ------  + -----------\n\\/        x + 2        ________\n                      /  2     \n                    \\/  x  + 3 '
     ucode_str = \
-'     ____________              \n    ╱  2            1000___    \n   ╱  x  + 1          ╲╱ x  + 1\n4 ╱   ────── + 2  + ───────────\n╲╱    x + 2            ________\n                      ╱  2     \n                    ╲╱  x  + 3 '
+'     ____________              \n    ╱      2        1000___    \n   ╱      x  + 1      ╲╱ x  + 1\n4 ╱   2 + ──────  + ───────────\n╲╱        x + 2        ________\n                      ╱  2     \n                    ╲╱  x  + 3 '
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -4654,8 +4654,8 @@ def test_pretty_ConditionSet():
 def test_pretty_ComplexRegion():
     from sympy.sets.fancysets import ComplexRegion
     cregion = ComplexRegion(Interval(3, 5)*Interval(4, 6))
-    ascii_str = '{x + I*y | x, y in [3, 5] x [4, 6]}'
-    ucode_str = '{x + ⅈ⋅y │ x, y ∊ [3, 5] × [4, 6]}'
+    ascii_str = '{x + y*I | x, y in [3, 5] x [4, 6]}'
+    ucode_str = '{x + y⋅ⅈ │ x, y ∊ [3, 5] × [4, 6]}'
     assert pretty(cregion) == ascii_str
     assert upretty(cregion) == ucode_str
 
@@ -4666,8 +4666,8 @@ def test_pretty_ComplexRegion():
     assert upretty(cregion) == ucode_str
 
     cregion = ComplexRegion(Interval(3, 1/a**2)*Interval(4, 6))
-    ascii_str = '                       1            \n{x + I*y | x, y in [3, --] x [4, 6]}\n                        2           \n                       a            '
-    ucode_str = '⎧        │        ⎡   1 ⎤         ⎫\n⎪x + ⅈ⋅y │ x, y ∊ ⎢3, ──⎥ × [4, 6]⎪\n⎨        │        ⎢    2⎥         ⎬\n⎪        │        ⎣   a ⎦         ⎪\n⎩        │                        ⎭'
+    ascii_str = '                       1            \n{x + y*I | x, y in [3, --] x [4, 6]}\n                        2           \n                       a            '
+    ucode_str = '⎧        │        ⎡   1 ⎤         ⎫\n⎪x + y⋅ⅈ │ x, y ∊ ⎢3, ──⎥ × [4, 6]⎪\n⎨        │        ⎢    2⎥         ⎬\n⎪        │        ⎣   a ⎦         ⎪\n⎩        │                        ⎭'
     assert pretty(cregion) == ascii_str
     assert upretty(cregion) == ucode_str
 
@@ -5767,9 +5767,9 @@ y = 1 x = 0    \
     expr = Sum(1/(1 + 1/(
         1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1 + m), oo)) + 1/(1 + 1/k)
     ascii_str = \
-'          1                              \n          - + 1                          \n   oo     n                              \n _____    _____                          \n \\    `   \\    `                         \n  \\        \\      /    1        \\        \n   \\        \\     |--------- + 1|        \n    \\        \\    |  1          |     1  \n     )        )   |----- + 1    | + -----\n    /        /    |1            |   1    \n   /        /     |- + 1        |   - + 1\n  /        /      \\k            /   k    \n /____,   /____,                         \n      1   k = 111                        \nk = -----                                \n    m + 1                                '
+'              1                          \n          1 + -                          \n   oo         n                          \n _____    _____                          \n \\    `   \\    `                         \n  \\        \\      /        1    \\        \n   \\        \\     |1 + ---------|        \n    \\        \\    |          1  |     1  \n     )        )   |    1 + -----| + -----\n    /        /    |            1|       1\n   /        /     |        1 + -|   1 + -\n  /        /      \\            k/       k\n /____,   /____,                         \n      1   k = 111                        \nk = -----                                \n    m + 1                                '
     ucode_str = \
-'          1                              \n          ─ + 1                          \n   ∞      n                              \n ______   ______                         \n ╲        ╲                              \n  ╲        ╲                             \n   ╲        ╲     ⎛    1        ⎞        \n    ╲        ╲    ⎜───────── + 1⎟        \n     ╲        ╲   ⎜  1          ⎟     1  \n     ╱        ╱   ⎜───── + 1    ⎟ + ─────\n    ╱        ╱    ⎜1            ⎟   1    \n   ╱        ╱     ⎜─ + 1        ⎟   ─ + 1\n  ╱        ╱      ⎝k            ⎠   k    \n ╱        ╱                              \n ‾‾‾‾‾‾   ‾‾‾‾‾‾                         \n      1   k = 111                        \nk = ─────                                \n    m + 1                                '
+'              1                          \n          1 + ─                          \n   ∞          n                          \n ______   ______                         \n ╲        ╲                              \n  ╲        ╲                             \n   ╲        ╲     ⎛        1    ⎞        \n    ╲        ╲    ⎜1 + ─────────⎟        \n     ╲        ╲   ⎜          1  ⎟     1  \n     ╱        ╱   ⎜    1 + ─────⎟ + ─────\n    ╱        ╱    ⎜            1⎟       1\n   ╱        ╱     ⎜        1 + ─⎟   1 + ─\n  ╱        ╱      ⎝            k⎠       k\n ╱        ╱                              \n ‾‾‾‾‾‾   ‾‾‾‾‾‾                         \n      1   k = 111                        \nk = ─────                                \n    m + 1                                '
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -6058,10 +6058,10 @@ def test_hyper():
 
     expr = hyper([1, 2], [3, 4], 1/(1/(1/(1/x + 1) + 1) + 1))
     ucode_str = \
-'     ⎛     │       1      ⎞\n     ⎜     │ ─────────────⎟\n     ⎜     │     1        ⎟\n ┌─  ⎜1, 2 │ ───────── + 1⎟\n ├─  ⎜     │   1          ⎟\n2╵ 2 ⎜3, 4 │ ───── + 1    ⎟\n     ⎜     │ 1            ⎟\n     ⎜     │ ─ + 1        ⎟\n     ⎝     │ x            ⎠'
+'     ⎛     │       1      ⎞\n     ⎜     │ ─────────────⎟\n     ⎜     │         1    ⎟\n ┌─  ⎜1, 2 │ 1 + ─────────⎟\n ├─  ⎜     │           1  ⎟\n2╵ 2 ⎜3, 4 │     1 + ─────⎟\n     ⎜     │             1⎟\n     ⎜     │         1 + ─⎟\n     ⎝     │             x⎠'
 
     ascii_str = \
-'                           \n     /     |       1      \\\n     |     | -------------|\n  _  |     |     1        |\n |_  |1, 2 | --------- + 1|\n |   |     |   1          |\n2  2 |3, 4 | ----- + 1    |\n     |     | 1            |\n     |     | - + 1        |\n     \\     | x            /'
+'                           \n     /     |       1      \\\n     |     | -------------|\n  _  |     |         1    |\n |_  |1, 2 | 1 + ---------|\n |   |     |           1  |\n2  2 |3, 4 |     1 + -----|\n     |     |             1|\n     |     |         1 + -|\n     \\     |             x/'
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -6123,10 +6123,10 @@ def test_meijerg():
     expr = meijerg([1, 2, ], [4, 3], [3], [4, 5], 1/(1/(1/(1/x + 1) + 1) + 1))
 
     ucode_str = \
-'        ⎛           │       1      ⎞\n        ⎜           │ ─────────────⎟\n        ⎜           │     1        ⎟\n╭─╮1, 2 ⎜1, 2  3, 4 │ ───────── + 1⎟\n│╶┐     ⎜           │   1          ⎟\n╰─╯4, 3 ⎜ 3    4, 5 │ ───── + 1    ⎟\n        ⎜           │ 1            ⎟\n        ⎜           │ ─ + 1        ⎟\n        ⎝           │ x            ⎠'
+'        ⎛           │       1      ⎞\n        ⎜           │ ─────────────⎟\n        ⎜           │         1    ⎟\n╭─╮1, 2 ⎜1, 2  3, 4 │ 1 + ─────────⎟\n│╶┐     ⎜           │           1  ⎟\n╰─╯4, 3 ⎜ 3    4, 5 │     1 + ─────⎟\n        ⎜           │             1⎟\n        ⎜           │         1 + ─⎟\n        ⎝           │             x⎠'
 
     ascii_str = \
-'        /           |       1      \\\n        |           | -------------|\n        |           |     1        |\n __1, 2 |1, 2  3, 4 | --------- + 1|\n/__     |           |   1          |\n\\_|4, 3 | 3    4, 5 | ----- + 1    |\n        |           | 1            |\n        |           | - + 1        |\n        \\           | x            /'
+'        /           |       1      \\\n        |           | -------------|\n        |           |         1    |\n __1, 2 |1, 2  3, 4 | 1 + ---------|\n/__     |           |           1  |\n\\_|4, 3 | 3    4, 5 |     1 + -----|\n        |           |             1|\n        |           |         1 + -|\n        \\           |             x/'
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -6134,10 +6134,10 @@ def test_meijerg():
     expr = Integral(expr, x)
 
     ucode_str = \
-'⌠                                        \n⎮         ⎛           │       1      ⎞   \n⎮         ⎜           │ ─────────────⎟   \n⎮         ⎜           │     1        ⎟   \n⎮ ╭─╮1, 2 ⎜1, 2  3, 4 │ ───────── + 1⎟   \n⎮ │╶┐     ⎜           │   1          ⎟ dx\n⎮ ╰─╯4, 3 ⎜ 3    4, 5 │ ───── + 1    ⎟   \n⎮         ⎜           │ 1            ⎟   \n⎮         ⎜           │ ─ + 1        ⎟   \n⎮         ⎝           │ x            ⎠   \n⌡                                        '
+'⌠                                        \n⎮         ⎛           │       1      ⎞   \n⎮         ⎜           │ ─────────────⎟   \n⎮         ⎜           │         1    ⎟   \n⎮ ╭─╮1, 2 ⎜1, 2  3, 4 │ 1 + ─────────⎟   \n⎮ │╶┐     ⎜           │           1  ⎟ dx\n⎮ ╰─╯4, 3 ⎜ 3    4, 5 │     1 + ─────⎟   \n⎮         ⎜           │             1⎟   \n⎮         ⎜           │         1 + ─⎟   \n⎮         ⎝           │             x⎠   \n⌡                                        '
 
     ascii_str = \
-'  /                                       \n |                                        \n |         /           |       1      \\   \n |         |           | -------------|   \n |         |           |     1        |   \n |  __1, 2 |1, 2  3, 4 | --------- + 1|   \n | /__     |           |   1          | dx\n | \\_|4, 3 | 3    4, 5 | ----- + 1    |   \n |         |           | 1            |   \n |         |           | - + 1        |   \n |         \\           | x            /   \n |                                        \n/                                         '
+'  /                                       \n |                                        \n |         /           |       1      \\   \n |         |           | -------------|   \n |         |           |         1    |   \n |  __1, 2 |1, 2  3, 4 | 1 + ---------|   \n | /__     |           |           1  | dx\n | \\_|4, 3 | 3    4, 5 |     1 + -----|   \n |         |           |             1|   \n |         |           |         1 + -|   \n |         \\           |             x/   \n |                                        \n/                                         '
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -6880,7 +6880,7 @@ def test_issue_6134():
 
     e = lamda*x*Integral(phi(t)*pi*sin(pi*t), (t, 0, 1)) + lamda*x**2*Integral(phi(t)*2*pi*sin(2*pi*t), (t, 0, 1))
     ucode_str = \
-'1                               1                       \n⌠                           2   ⌠                       \n⎮ 2⋅π⋅φ(t)⋅sin(2⋅π⋅t) dt⋅λ⋅x  + ⎮ π⋅φ(t)⋅sin(π⋅t) dt⋅λ⋅x\n⌡                               ⌡                       \n0                               0                       '
+'     1                              1                   \n   2 ⌠                              ⌠                   \nλ⋅x ⋅⎮ 2⋅π⋅φ(t)⋅sin(2⋅π⋅t) dt + λ⋅x⋅⎮ π⋅φ(t)⋅sin(π⋅t) dt\n     ⌡                              ⌡                   \n     0                              0                   '
     assert upretty(e) == ucode_str
 
 
@@ -6983,7 +6983,7 @@ x\
     assert upretty(he**2) == ucode_str
 
     ucode_str = \
-'1    \n─ + 1\nx    '
+'    1\n1 + ─\n    x'
 
     assert upretty(he + 1) == ucode_str
 
@@ -6998,7 +6998,7 @@ x⋅─\n\
     ue1 = UnevaluatedExpr(-2*x**2 - 9*x + 5)
 
     ucode_str = \
-'⎛     2          ⎞    \n⎝- 2⋅x  - 9⋅x + 5⎠ + 1'
+'    ⎛     2          ⎞\n1 + ⎝- 2⋅x  - 9⋅x + 5⎠'
     assert upretty(1 + ue1) == ucode_str
 
     ucode_str = \

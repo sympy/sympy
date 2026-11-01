@@ -812,7 +812,7 @@ respect to $\mathbf{w}$ and $\lambda$:
 
 >>> d_w = lagr_mult.diff(w)
 >>> d_w
-(2*lambda)*w + 2*X.T*X*w
+2*X.T*X*w + (2*lambda)*w
 >>> d_lambda = lagr_mult.diff(lamda)
 >>> d_lambda
 w.T*w - I

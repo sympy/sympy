@@ -1354,7 +1354,7 @@ class Expr(Basic, EvalfMixin):
         The arg is always treated as a Mul:
 
         >>> (-2 + x + A).args_cnc()
-        [[], [x + A - 2]]
+        [[], [x - 2 + A]]
         >>> (-oo).args_cnc() # -oo is a singleton
         [[-1, oo], []]
         """
@@ -1469,7 +1469,7 @@ class Expr(Basic, EvalfMixin):
         >>> (3*n).coeff(n)
         3
         >>> (n*m + m*n*m).coeff(n) # = (1 + m)*n*m
-        m + 1
+        1 + m
         >>> (n*m + m*n*m).coeff(n, right=True) # = (1 + m)*n*m
         m
 
@@ -2958,7 +2958,7 @@ class Expr(Basic, EvalfMixin):
         >>> cos(x).series(n=4)
         1 - x**2/2 + O(x**4)
         >>> cos(x).series(x, x0=1, n=2)
-        cos(1) - sin(1)*(x - 1) + O((x - 1)**2, (x, 1))
+        cos(1) - (x - 1)*sin(1) + O((x - 1)**2, (x, 1))
         >>> e = cos(x + exp(y))
         >>> e.series(y, n=2)
         cos(x + 1) - y*sin(x + 1) + O(y**2)
@@ -2981,10 +2981,10 @@ class Expr(Basic, EvalfMixin):
         -x
         >>> f = tan(x)
         >>> f.series(x, 2, 6, "+")
-        tan(2) + (tan(2)**2 + 1)*(x - 2) + (tan(2)**3 + tan(2))*(x - 2)**2 + (tan(2)**4 + 4*tan(2)**2/3 + 1/3)*(x - 2)**3 + (tan(2)**5 + 5*tan(2)**3/3 + 2*tan(2)/3)*(x - 2)**4 + (tan(2)**6 + 2*tan(2)**4 + 17*tan(2)**2/15 + 2/15)*(x - 2)**5 + O((x - 2)**6, (x, 2))
+        tan(2) + (x - 2)*(tan(2)**2 + 1) + (x - 2)**2*(tan(2)**3 + tan(2)) + (x - 2)**3*(tan(2)**4 + 4*tan(2)**2/3 + 1/3) + (x - 2)**4*(tan(2)**5 + 5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(tan(2)**6 + 2*tan(2)**4 + 17*tan(2)**2/15 + 2/15) + O((x - 2)**6, (x, 2))
 
         >>> f.series(x, 2, 3, "-")
-        tan(2) + (-tan(2)**2 - 1)*(2 - x) + (tan(2)**3 + tan(2))*(2 - x)**2 + O((x - 2)**3, (x, 2))
+        tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2)) + O((x - 2)**3, (x, 2))
 
         For rational expressions this method may return original expression without the Order term.
         >>> (1/x).series(x, n=8)
@@ -3204,7 +3204,7 @@ class Expr(Basic, EvalfMixin):
         >>> e = sin(1/x + exp(-x)) - sin(1/x)
 
         >>> e.aseries(x)
-        (1 + 1/(24*x**4) - 1/(2*x**2) + O(x**(-6), (x, oo)))*exp(-x)
+        (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
 
         >>> e.aseries(x, n=3, hir=True)
         -exp(-2*x)*sin(1/x)/2 + exp(-x)*cos(1/x) + O(exp(-3*x), (x, oo))

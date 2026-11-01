@@ -232,7 +232,7 @@ def refine_exp(expr, assumptions):
     >>> refine(exp(2*pi*I*x), Q.integer(x))
     1
     >>> refine(exp(pi*I*(x + S.Half)), Q.integer(x))
-    I*(-1)**x
+    (-1)**x*I
     """
     coeff = expr.exp.as_coefficient(S.Pi * S.ImaginaryUnit)
     if coeff is None:
@@ -271,7 +271,7 @@ def refine_atan2(expr, assumptions):
     >>> refine_atan2(atan2(y,x), Q.negative(y) & Q.negative(x))
     atan(y/x) - pi
     >>> refine_atan2(atan2(y,x), Q.positive(y) & Q.negative(x))
-    atan(y/x) + pi
+    pi + atan(y/x)
     >>> refine_atan2(atan2(y,x), Q.zero(y) & Q.negative(x))
     pi
     >>> refine_atan2(atan2(y,x), Q.positive(y) & Q.zero(x))

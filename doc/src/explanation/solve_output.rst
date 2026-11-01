@@ -111,7 +111,7 @@ List of Dictionaries
 
         >>> from sympy import nsolve
         >>> [system[-1].subs(s) for s in sol]
-        [exp(z) + 1/(z + 1) - 3, exp(z) + 1/z + zoo]
+        [exp(z) - 3 + 1/(z + 1), zoo + exp(z) + 1/z]
         >>> z_eq = _[0]
         >>> zsol = nsolve(z_eq, 1); zsol
         0.906425478894557

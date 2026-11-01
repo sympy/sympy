@@ -58,7 +58,7 @@ def apart(f, x=None, full=False, **options):
     Calling ``doit()`` yields a human-readable result:
 
     >>> apart(y/(x**2 + x + 1), x, full=True).doit()
-    (-2*(-1/2 - sqrt(3)*I/2)*y/3 - y/3)/(x + sqrt(3)*I/2 + 1/2) + (-2*(-1/2 + sqrt(3)*I/2)*y/3 - y/3)/(x - sqrt(3)*I/2 + 1/2)
+    (-2*y*(-1/2 - sqrt(3)*I/2)/3 - y/3)/(x + sqrt(3)*I/2 + 1/2) + (-2*y*(-1/2 + sqrt(3)*I/2)/3 - y/3)/(x - sqrt(3)*I/2 + 1/2)
 
 
     See Also
@@ -258,7 +258,7 @@ def apart_list(f, x=None, dummies=None, **options):
     (1, Poly(2*x + 4, x, domain='ZZ'), [(Poly(_w - 1, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, x - _a), 1)])
 
     >>> assemble_partfrac_list(pfd)
-    2*x + 4/(x - 1) + 4
+    2*x + 4 + 4/(x - 1)
 
     Second example:
 

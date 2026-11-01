@@ -77,7 +77,7 @@ class gamma(DefinedFunction):
 
     >>> from sympy import series
     >>> series(gamma(x), x, 0, 3)
-    -EulerGamma + 1/x + (EulerGamma**2/2 + pi**2/12)*x + (-EulerGamma**3/6 - EulerGamma*pi**2/12 - zeta(3)/3)*x**2 + O(x**3)
+    1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma**3/6 - EulerGamma*pi**2/12 - zeta(3)/3) + O(x**3)
 
     We can numerically evaluate the ``gamma`` function to arbitrary precision
     on the whole complex plane:
@@ -903,7 +903,7 @@ class loggamma(DefinedFunction):
     >>> loggamma(S(5)/2)
     log(3*sqrt(pi)/4)
     >>> loggamma(n/2)
-    log(sqrt(pi)*2**(1 - n)*gamma(n)/gamma(n/2 + 1/2))
+    log(2**(1 - n)*sqrt(pi)*gamma(n)/gamma(n/2 + 1/2))
 
     And general rational arguments:
 
@@ -944,7 +944,7 @@ class loggamma(DefinedFunction):
 
     >>> from sympy import series
     >>> series(loggamma(x), x, 0, 4).cancel()
-    -log(x) - EulerGamma*x + pi**2*x**2/12 - zeta(3)*x**3/3 + O(x**4)
+    -log(x) - EulerGamma*x + pi**2*x**2/12 - x**3*zeta(3)/3 + O(x**4)
 
     We can numerically evaluate the ``loggamma`` function
     to arbitrary precision on the whole complex plane:

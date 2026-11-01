@@ -411,13 +411,13 @@ def _sqrt_symbolic_denest(a, b, r):
 
     >>> w = w.subs(sqrt(3), sqrt(x + 3))
     >>> sqrtdenest(sqrt((w**2).expand()))
-    sqrt((sqrt(sqrt(sqrt(x + 3) + 1) + 1) + sqrt(2) + 1)**2)
+    sqrt((sqrt(2) + sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1)**2)
 
     Notice that the argument of the sqrt is a square. If x is made positive
     then the sqrt of the square is resolved:
 
     >>> _.subs(x, Symbol('x', positive=True))
-    sqrt(sqrt(sqrt(x + 3) + 1) + 1) + sqrt(2) + 1
+    sqrt(2) + sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1
     """
 
     a, b, r = map(sympify, (a, b, r))

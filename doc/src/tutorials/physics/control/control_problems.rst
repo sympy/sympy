@@ -38,7 +38,7 @@ Solution
     (s + 1)*(s + 2 - I)*(s + 2 + I)
     >>> gain = tf.dc_gain()
     >>> print(gain)
-    3*(2 - I)*(2 + I)*k/25
+    3*k*(2 - I)*(2 + I)/25
     >>> K = solve(gain - 20, k)[0]               # Solve for k
     >>> tf = tf.subs({k: K})                     # Reconstruct the TransferFunction using .subs()
     >>> pprint(tf.expand())

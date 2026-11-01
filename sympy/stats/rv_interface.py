@@ -213,7 +213,8 @@ def correlation(X, Y, condition=None, **kwargs):
     >>> correlation(X, Y)
     0
     >>> correlation(X, Y + rate*X)
-    1/sqrt(lambda**(-2) + 1)
+    1/sqrt(1 + lambda**(-2))
+
     """
     return covariance(X, Y, condition, **kwargs)/(std(X, condition, **kwargs)
      * std(Y, condition, **kwargs))
@@ -494,7 +495,7 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
     >>> coskewness(Y, Y, Y) == skewness(Y)
     True
     >>> coskewness(X, Y + p*X, Y + 2*p*X)
-    4/(sqrt(1/(4*p**2) + 1)*sqrt(1/(4*p**2) + 4))
+    4/(sqrt(1 + 1/(4*p**2))*sqrt(4 + 1/(4*p**2)))
 
     Returns
     =======
