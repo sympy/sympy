@@ -542,7 +542,7 @@ class LatexPrinter(Printer):
                 return str(self._print(expr))
             else:
                 if self.order not in ('old', 'none'):
-                    args = self._as_ordered_factors(expr)
+                    args = expr.as_ordered_factors()
                 else:
                     args = list(expr.args)
 

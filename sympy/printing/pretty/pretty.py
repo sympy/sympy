@@ -2079,7 +2079,7 @@ class PrettyPrinter(Printer):
         b = []  # items that are in the denominator (if any)
 
         if self.order not in ('old', 'none'):
-            args = self._as_ordered_factors(product)
+            args = product.as_ordered_factors()
         else:
             args = list(product.args)
 

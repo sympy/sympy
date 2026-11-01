@@ -1241,9 +1241,9 @@ class Expr(Basic, EvalfMixin):
 
             terms.append((term, (coeff_tuple, cpart, ncpart_tuple)))
 
-        # Numeric generators must not take precedence over variables when
-        # comparing polynomial terms (e.g. EulerGamma*x and pi**2*x**2).
-        gens = sorted(gens_set, key=lambda g: (g.is_number, default_sort_key(g)))
+        # Put symbols first to preserve monomial precedence, without
+        # checking whether other generators represent numerical values.
+        gens = sorted(gens_set, key=lambda g: (not g.is_Symbol, default_sort_key(g)))
 
         k, indices = len(gens), {}
 

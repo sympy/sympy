@@ -351,22 +351,6 @@ class Printer:
     def emptyPrinter(self, expr):
         return str(expr)
 
-    def _as_ordered_factors(self, expr):
-        """Order Mul factors for printing without changing canonical order."""
-        factors = expr.as_ordered_factors()
-        if self.order is None:
-            # Keep the relative order of noncommutative factors intact.
-            # A function such as zeta(3) is numerical even though it is
-            # not an instance of Number.
-            ncomm = 0
-            for factor in factors:
-                if not factor.is_commutative:
-                    break
-                ncomm += 1
-            factors[:ncomm] = sorted(
-                factors[:ncomm], key=lambda factor: not factor.is_number)
-        return factors
-
     def _as_ordered_terms(self, expr, order=None):
         """A compatibility function for ordering terms in Add. """
         order = order or self.order
@@ -377,15 +361,6 @@ class Printer:
             return list(expr.args)
         else:
             terms = expr.as_ordered_terms(order=order)
-            if order is None:
-                # In a series, put numeric terms first so that the
-                # non-Order terms reverse the usual display order.
-                # Without Order terms, leave numeric terms last.
-                # Always print Order terms last.
-                has_order = any(term.is_Order for term in terms)
-                terms.sort(key=lambda term: (
-                    term.is_Order,
-                    not term.is_number if has_order else term.is_number))
             if (order is None and len(terms) == 2
                     and not any(term.is_Order for term in terms)):
                 a, b = terms
@@ -410,6 +385,10 @@ class Printer:
                         na and nb and a.is_Number and not b.is_Number
                     )):
                     terms.reverse()
+            if order is None:
+                # NaN is unordered numerically; position it by identity
+                # and keep Order terms last without examining other values.
+                terms.sort(key=lambda term: (term.is_Order, term is not S.NaN))
             return terms
 
     def _compare_pretty(self, a, b):
