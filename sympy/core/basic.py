@@ -726,6 +726,11 @@ class Basic(Printable):
 
         >>> Derivative(x, y).has_free(y)
         True
+
+        See Also
+        ========
+
+        bound_symbols, operator_variables
         """
         empty: set[Basic] = set()
         return empty.union(*(a.free_symbols for a in self.args))
@@ -740,6 +745,60 @@ class Basic(Printable):
             active_deprecations_target="deprecated-expr-free-symbols")
         return set()
 
+
+    @property
+    def operator_variables(self) -> tuple[Basic, ...]:
+        """Variables over which this object operates.
+
+        Conditions depending on these variables must remain inside the
+        operator when folding Piecewise expressions. This includes free
+        variables of operators such as indefinite integrals and derivatives.
+        Variables of operators nested in the arguments are not included.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x
+        >>> Integral(x**2, x).operator_variables
+        (x,)
+        >>> Integral(x**2, (x, 0, 1)).operator_variables
+        (x,)
+        >>> (1 + Integral(x**2, x)).operator_variables
+        ()
+
+        See Also
+        ========
+
+        bound_symbols, free_symbols
+        """
+        return ()
+
+    @property
+    def bound_symbols(self) -> tuple[Basic, ...]:
+        """Symbols bound by this object, excluding bindings in its arguments.
+
+        By default, all operator variables are bound. Operators whose
+        variables remain free override this property.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x
+        >>> Integral(x**2, (x, 0, 1)).bound_symbols
+        (x,)
+        >>> Integral(x**2, x).bound_symbols
+        ()
+        >>> Integral(x**2, x).free_symbols
+        {x}
+
+        See Also
+        ========
+
+        operator_variables, free_symbols
+        """
+        return self.operator_variables
 
     def _bound_dummies(self):
         """Replace bound symbols with unique Dummies.
@@ -775,7 +834,7 @@ class Basic(Printable):
             return self, restore
 
         rv = self.replace(
-            lambda x: hasattr(x, 'bound_symbols'),
+            lambda x: bool(x.bound_symbols),
             freshen,
             simultaneous=False)
 
@@ -822,7 +881,7 @@ class Basic(Printable):
         def assign(x, used):
             used = set(used)
 
-            for b in getattr(x, 'bound_symbols', ()):
+            for b in x.bound_symbols:
                 if b not in temporary or b in canonical:
                     continue
 
@@ -856,8 +915,8 @@ class Basic(Printable):
         >>> Lambda(x, 2*x).canonical_variables
         {x: _0}
         """
-        bound: list[Basic] | None = getattr(self, 'bound_symbols', None)
-        if bound is None:
+        bound = self.bound_symbols
+        if not bound:
             return {}
         dums = numbered_symbols('_')
         reps = {}

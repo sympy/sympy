@@ -665,6 +665,42 @@ def test_piecewise_fold():
         ) == piecewise_fold(Mul(b, a, evaluate=False))
 
 
+def test_piecewise_fold_bound_symbols():
+    # https://github.com/sympy/sympy/issues/29794
+    i = Symbol('i', integer=True)
+    summand = Piecewise((i**2, i >= Rational(174, 25)), (0, True))
+    total = Sum(summand, (i, 0, 12))
+    assert piecewise_fold(total) == total
+    assert (-total).simplify() == (-total).doit() == -559
+
+    # https://github.com/sympy/sympy/issues/17919
+    integrand = Piecewise((1, x < 1), (0, True))
+    integral = Integral(integrand, (x, 0, 2))
+    assert piecewise_fold(integral) == integral
+    assert piecewise_fold(integral).doit() == 1
+
+    # https://github.com/sympy/sympy/issues/12631
+    integrand = Piecewise((1, x >= 1), (2, True))
+    integral = Integral(integrand, x)
+    assert piecewise_fold(integral) == integral
+    assert piecewise_fold(integral).doit() == Piecewise((2*x, x <= 1), (x + 1, True))
+
+    total = Sum(Piecewise((i, y > 0), (0, True)), (i, 0, 12))
+    assert piecewise_fold(total) == Piecewise(
+        (Sum(i, (i, 0, 12)), y > 0), (Sum(0, (i, 0, 12)), True))
+
+
+def test_piecewise_fold_nested():
+    inner = Piecewise((1, x < 0), (2, True), evaluate=False)
+    middle = Piecewise((inner, y < 0), (3, True), evaluate=False)
+    outer = Piecewise((middle, z < 0), (4, True), evaluate=False)
+    expected = Piecewise(
+        (1, (x < 0) & (y < 0) & (z < 0)),
+        (2, (y < 0) & (z < 0)), (3, z < 0), (4, True))
+    for evaluate in (True, False, None):
+        assert piecewise_fold(outer, evaluate=evaluate) == expected
+
+
 def test_piecewise_fold_piecewise_in_cond():
     p1 = Piecewise((cos(x), x < 0), (0, True))
     p2 = Piecewise((0, Eq(p1, 0)), (p1 / Abs(p1), True))
@@ -715,6 +751,15 @@ def test_piecewise_fold_expand():
 def test_piecewise_duplicate():
     p = Piecewise((x, x < -10), (x**2, x <= -1), (x, 1 < x))
     assert p == Piecewise(*p.args)
+
+
+def test_piecewise_fold_duplicate_conditions():
+    p = Piecewise((1, x < 0), (2, y < 0), (3, x < 0), (4, True),
+        evaluate=False)
+    expected = Piecewise((1, x < 0), (2, y < 0), (4, True), evaluate=False)
+    folded = piecewise_fold(p, evaluate=None)
+    assert folded == expected
+    assert folded.subs({x: -1, y: -1}) == 1
 
 
 def test_doit():

@@ -1759,6 +1759,14 @@ class Derivative(Expr):
         return self._args[1:]
 
     @property
+    def operator_variables(self) -> tuple[Basic, ...]:
+        return tuple(v for v, count in self.variable_count)
+
+    @property
+    def bound_symbols(self) -> tuple[Basic, ...]:
+        return ()
+
+    @property
     def derivative_count(self):
         return sum([count for _, count in self.variable_count], 0)
 
@@ -2116,7 +2124,9 @@ class Lambda(Expr):
         from sympy.sets.sets import FiniteSet
         return FiniteSet(len(self.signature))
 
-    bound_symbols = variables
+    @property
+    def operator_variables(self) -> tuple[Basic, ...]:
+        return self.variables
 
     @property
     def free_symbols(self):
@@ -2236,7 +2246,7 @@ class Lambda(Expr):
 
         # Protect bindings whose scopes contain the replacement.
         for node in preorder_traversal(f):
-            if not hasattr(node, 'bound_symbols') or not node.has(probe):
+            if not node.bound_symbols or not node.has(probe):
                 continue
             for d in node.bound_symbols:
                 if d in restore and restore[d] in capture_new.free_symbols:
@@ -2468,7 +2478,9 @@ class Subs(Expr):
         """The variables to be evaluated"""
         return self._args[1]
 
-    bound_symbols = variables
+    @property
+    def operator_variables(self) -> tuple[Basic, ...]:
+        return tuple(self.variables)
 
     @property
     def expr(self):

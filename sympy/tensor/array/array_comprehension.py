@@ -125,16 +125,8 @@ class ArrayComprehension(Basic):
         return [l[0] for l in self._limits]
 
     @property
-    def bound_symbols(self):
-        """The list of dummy variables.
-
-        Note
-        ====
-
-        Note that all variables are dummy variables since a limit without
-        lower bound or upper bound is not accepted.
-        """
-        return [l[0] for l in self._limits if len(l) != 1]
+    def operator_variables(self) -> tuple[Basic, ...]:
+        return tuple(self.variables)
 
     @property
     def shape(self):

@@ -1,4 +1,6 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, overload
+
 from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
@@ -10,15 +12,26 @@ from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
-from sympy.utilities.iterables import uniq, sift, common_prefix
+from sympy.utilities.iterables import uniq, sift, common_prefix, _group_by_key, _sift_type
 from sympy.utilities.misc import filldedent, func_name
 
 from itertools import product
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from collections.abc import Iterator
+    from typing import Sequence
 
 Undefined = S.NaN  # Piecewise()
 
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
+
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Basic, Boolean]:
+            ...
 
     def __new__(cls, expr, cond):
         expr = as_Basic(expr)
@@ -38,14 +51,14 @@ class ExprCondPair(Tuple):
         return Tuple.__new__(cls, expr, cond)
 
     @property
-    def expr(self):
+    def expr(self) -> Basic:
         """
         Returns the expression of this pair.
         """
         return self.args[0]
 
     @property
-    def cond(self):
+    def cond(self) -> Boolean:
         """
         Returns the condition of this pair.
         """
@@ -55,7 +68,7 @@ class ExprCondPair(Tuple):
     def is_commutative(self):
         return self.expr.is_commutative
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Basic]:
         yield self.expr
         yield self.cond
 
@@ -129,7 +142,25 @@ class Piecewise(DefinedFunction):
     nargs = None
     is_Piecewise = True
 
-    def __new__(cls, *args, **options):
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[ExprCondPair, ...]:
+            ...
+
+    @overload
+    def __new__(  # type: ignore[misc]
+        cls, *args: tuple[Expr | complex, Boolean | bool | int],
+        evaluate: bool | None = True,
+    ) -> Expr: ...
+
+    @overload
+    def __new__(  # type: ignore[misc]
+        cls, *args: ExprCondPair | tuple[Basic | complex, Boolean | bool | int],
+        evaluate: bool | None = True,
+    ) -> Basic: ...
+
+    def __new__(cls, *args, **options) -> Basic:  # type: ignore[misc]
         if len(args) == 0:
             raise TypeError("At least one (expr, cond) pair expected.")
         # (Try to) sympify args first
@@ -991,7 +1022,15 @@ class Piecewise(DefinedFunction):
             return result
 
 
-def piecewise_fold(expr, evaluate=True):
+@overload
+def piecewise_fold(expr: Expr, evaluate: bool | None = True) -> Expr: ...
+
+
+@overload
+def piecewise_fold(expr: Basic, evaluate: bool | None = True) -> Basic: ...
+
+
+def piecewise_fold(expr: Basic, evaluate: bool | None = True) -> Basic:
     """
     Takes an expression containing a piecewise function and returns the
     expression in piecewise form. In addition, any ITE conditions are
@@ -1020,11 +1059,11 @@ def piecewise_fold(expr, evaluate=True):
     if not isinstance(expr, Basic) or not expr.has(Piecewise):
         return expr
 
-    new_args = []
-    if isinstance(expr, (ExprCondPair, Piecewise)):
-        for e, c in expr.args:
-            if not isinstance(e, Piecewise):
-                e = piecewise_fold(e)
+    new_args: list[tuple[Basic, Boolean]] = []
+
+    if isinstance(expr, Piecewise):
+        for e, c in [e.args for e in expr.args]:
+            e = piecewise_fold(e)
             # we don't keep Piecewise in condition because
             # it has to be checked to see that it's complete
             # and we convert it to ITE at that time
@@ -1033,8 +1072,9 @@ def piecewise_fold(expr, evaluate=True):
                 c = c.to_nnf()
                 c = simplify_logic(c, form='cnf')
             if isinstance(e, Piecewise):
-                new_args.extend([(piecewise_fold(ei), And(ci, c))
-                    for ei, ci in e.args])
+                for ec in e.args:
+                    ei, ci = ec.args
+                    new_args.append((ei, And(ci, c)))
             else:
                 new_args.append((e, c))
     else:
@@ -1051,55 +1091,60 @@ def piecewise_fold(expr, evaluate=True):
         # we do that grouping before the more generic folding.
         # The following applies this idea when f = Add or f = Mul
         # (and the expression is commutative).
+        args: Sequence[Basic]
         if expr.is_Add or expr.is_Mul and expr.is_commutative:
-            p, args = sift(expr.args, lambda x: x.is_Piecewise, binary=True)
-            pc = sift(p, lambda x: tuple([c for e,c in x.args]))
-            for c in list(ordered(pc)):
-                if len(pc[c]) > 1:
-                    pargs = [list(i.args) for i in pc[c]]
+            pieces, args = _sift_type(expr.args, Piecewise)
+            pc = _group_by_key(pieces, lambda x: tuple(pair.cond for pair in x.args))
+            for conditions in list(ordered(pc)):
+                if len(pc[conditions]) > 1:
+                    pargs = [list(i.args) for i in pc[conditions]]
                     # the first one is the same; there may be more
-                    com = common_prefix(*[
-                        [i.cond for i in j] for j in pargs])
+                    com = common_prefix(*[[i.cond for i in j] for j in pargs])
                     n = len(com)
-                    collected = []
+                    collected: list[tuple[Basic, Boolean]] = []
                     for i in range(n):
-                        collected.append((
-                            expr.func(*[ai[i].expr for ai in pargs]),
-                            com[i]))
-                    remains = []
+                        pargs_new = [ai[i].expr for ai in pargs]
+                        collected.append((expr.func(*pargs_new), com[i]))
+                    remains: list[Basic] = []
                     for a in pargs:
                         if n == len(a):  # no more args
                             continue
                         if a[n].cond == True:  # no longer Piecewise
                             remains.append(a[n].expr)
                         else:  # restore the remaining Piecewise
-                            remains.append(
-                                Piecewise(*a[n:], evaluate=False))
+                            remains.append(Piecewise(*a[n:], evaluate=False))
                     if remains:
-                        collected.append((expr.func(*remains), True))
+                        collected.append((expr.func(*remains), S.true))
                     args.append(Piecewise(*collected, evaluate=False))
                     continue
-                args.extend(pc[c])
+                args.extend(pc[conditions])
         else:
             args = expr.args
         # fold
         folded = list(map(piecewise_fold, args))
-        for ec in product(*[
-                (i.args if isinstance(i, Piecewise) else
-                 [(i, true)]) for i in folded]):
-            e, c = zip(*ec)
-            new_args.append((expr.func(*e), And(*c)))
+        branch_options: list[list[tuple[Basic, Boolean]]] = []
+        operator_variables = set(expr.operator_variables)
+        for arg in folded:
+            if isinstance(arg, Piecewise) and (not operator_variables or not any(
+                    pair.cond.has_xfree(operator_variables) for pair in arg.args)):
+                branch_options.append([pair.args for pair in arg.args])
+            else:
+                branch_options.append([(arg, true)])
+        for combination in product(*branch_options):
+            expressions, conditions = zip(*combination)
+            new_args.append((expr.func(*expressions), And(*conditions)))
 
     if evaluate is None:
         # don't return duplicate conditions, otherwise don't evaluate
-        new_args = list(reversed([(e, c) for c, e in {
-            c: e for e, c in reversed(new_args)}.items()]))
-    rv = Piecewise(*new_args, evaluate=evaluate)
-    if evaluate is None and len(rv.args) == 1 and rv.args[0].cond == True:
-        return rv.args[0].expr
-    if any(s.expr.has(Piecewise) for p in rv.atoms(Piecewise) for s in p.args):
-        return piecewise_fold(rv)
-    return rv
+        seen: set[Boolean] = set()
+        unique_args: list[tuple[Basic, Boolean]] = []
+        for e, c in new_args:
+            if c not in seen:
+                seen.add(c)
+                unique_args.append((e, c))
+        new_args = unique_args
+
+    return Piecewise(*new_args, evaluate=evaluate)
 
 
 def _clip(A, B, k):

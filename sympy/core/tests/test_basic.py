@@ -8,7 +8,7 @@ from sympy.assumptions.ask import Q
 from sympy.core.basic import (Basic, Atom, as_Basic,
     _atomic, _aresame)
 from sympy.core.containers import Tuple
-from sympy.core.function import Function, Lambda
+from sympy.core.function import Derivative, Function, Lambda
 from sympy.core.numbers import I, pi, Float
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol, Dummy
@@ -264,6 +264,29 @@ def test_atomic():
     assert _atomic(g(x + h(x)), recursive=True) == {h(x), x, g(x + h(x))}
     assert _atomic(1) == set()
     assert _atomic(Basic(S(1), S(2))) == set()
+
+
+def test_bound_symbols():
+    x = Symbol('x')
+    integral = Integral(x, (x, 0, 1))
+    assert Basic().bound_symbols == ()
+    assert x.bound_symbols == ()
+    assert Basic(integral).bound_symbols == ()
+    assert integral.bound_symbols == (x,)
+    assert Lambda(x, x).bound_symbols == (x,)
+
+
+def test_operator_variables():
+    x = Symbol('x')
+    assert Basic().operator_variables == ()
+    assert x.operator_variables == ()
+    assert Integral(x, x).operator_variables == (x,)
+    assert Integral(x, x).bound_symbols == ()
+    assert Integral(x, (x, 0, 1)).operator_variables == (x,)
+    assert Lambda(x, x).operator_variables == (x,)
+    derivative = Derivative(Function('f')(x), x)
+    assert derivative.operator_variables == (x,)
+    assert derivative.bound_symbols == ()
 
 
 def test_as_dummy():

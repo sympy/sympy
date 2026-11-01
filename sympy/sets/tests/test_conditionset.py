@@ -130,13 +130,13 @@ def test_free_symbols():
 
 def test_bound_symbols():
     assert ConditionSet(x, Eq(y, 0), FiniteSet(z)
-        ).bound_symbols == [x]
+        ).bound_symbols == (x,)
     assert ConditionSet(x, Eq(x, 0), FiniteSet(x, y)
-        ).bound_symbols == [x]
+        ).bound_symbols == (x,)
     assert ConditionSet(x, x < 10, ImageSet(Lambda(y, y**2), S.Integers)
-        ).bound_symbols == [x]
+        ).bound_symbols == (x,)
     assert ConditionSet(x, x < 10, ConditionSet(y, y > 1, S.Integers)
-        ).bound_symbols == [x]
+        ).bound_symbols == (x,)
 
 
 def test_as_dummy():
@@ -149,7 +149,7 @@ def test_as_dummy():
         ).as_dummy() == ConditionSet(
             _0, _0 < 1, ImageSet(Lambda(_1, _1**2), S.Integers))
     e = ConditionSet((x, y), x <= y, S.Reals**2)
-    assert e.bound_symbols == [x, y]
+    assert e.bound_symbols == (x, y)
     assert e.as_dummy() == ConditionSet((_0, _1), _0 <= _1, S.Reals**2)
     assert e.as_dummy() == ConditionSet((y, x), y <= x, S.Reals**2
         ).as_dummy()
