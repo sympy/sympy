@@ -2,7 +2,8 @@ from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.function import AppliedUndef, UndefinedFunction
+from sympy.core.function import (AppliedUndef, UndefinedFunction,
+    _has_free_variable)
 from sympy.core.mul import Mul
 from sympy.core.relational import Equality, Relational
 from sympy.core.singleton import S
@@ -404,9 +405,12 @@ class ExprWithLimits(Expr):
                 if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
                     sub_into_func = False
                     break
-            if isinstance(old, (AppliedUndef, UndefinedFunction)):
-                sy2 = set(self.variables).intersection(set(new.atoms(Symbol)))
-                sy1 = set(self.variables).intersection(set(old.args))
+            if isinstance(old, (AppliedUndef, UndefinedFunction)) and (
+                    func.has(old)):
+                # new may only mention a variable of integration that old
+                # already contains, otherwise new would be captured by it
+                sy2 = {v for v in self.variables if _has_free_variable(new, v)}
+                sy1 = {v for v in self.variables if _has_free_variable(old, v)}
                 if not sy2.issubset(sy1):
                     raise ValueError(
                         "substitution cannot create dummy dependencies")
@@ -580,7 +584,8 @@ class AddWithLimits(ExprWithLimits):
             summand = self.function.factor(**hints)
             if summand.is_Mul:
                 out = sift(summand.args, lambda w: w.is_commutative \
-                    and not set(self.variables) & w.free_symbols)
+                    and not any(_has_free_variable(w, v)
+                        for v in self.variables))
                 return Mul(*out[True])*self.func(Mul(*out[False]), \
                     *self.limits)
         else:

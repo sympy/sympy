@@ -31,7 +31,9 @@ def iterargs(expr):
     args = [expr]
     for i in args:
         yield i
-        args.extend(i.args)
+        # a function class, e.g. f in Subs(f(x), f, g), has no args
+        if not isinstance(i, type):
+            args.extend(i.args)
 
 
 def iterfreeargs(expr, _first=True):

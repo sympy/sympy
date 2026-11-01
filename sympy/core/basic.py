@@ -759,11 +759,9 @@ class Basic(Printable):
             x = x.subs(d)
 
 
-            # Distinguish every binding with a unique Dummy.
-            reps = {
-                v: Dummy(v.name, commutative=v.is_commutative)
-                for v in x.bound_symbols
-            }
+            # Distinguish every binding with a unique Dummy
+            reps = {v: Dummy(commutative=v.is_commutative)
+                for v in x.bound_symbols}
             restore.update({dummy: v for v, dummy in reps.items()})
 
             x = x.xreplace(reps)
