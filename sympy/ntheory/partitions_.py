@@ -8,8 +8,17 @@ from sympy.utilities.memoization import recurrence_memo
 
 import math
 from itertools import count
+from typing import TYPE_CHECKING
 
-def _pre():
+if TYPE_CHECKING:
+    from sympy.core.evalf import MPF_TUP
+    from sympy.core.numbers import Integer
+
+_factor: list[int]
+_totient: list[int]
+
+
+def _pre() -> None:
     maxn = 10**5
     factor = [0]*maxn
     totient = [1]*maxn
@@ -38,7 +47,7 @@ def _pre():
     _factor = factor
     _totient = totient
 
-def _a(n, k, prec):
+def _a(n: int, k: int, prec: int) -> MPF_TUP:
     """ Compute the inner sum in HRR formula [1]_
 
     References
@@ -125,26 +134,26 @@ def _a(n, k, prec):
     n2 = (2 + (n - (k1**2 - 1)//8) % 2) % 2
     return mpf_mul(_a(n1, k1, prec), _a(n2, k2, prec), prec)
 
-def _d(n, j, prec, sq23pi, sqrt8):
+def _d(n: int, j: int, prec: int, sq23pi: MPF_TUP, sqrt8: MPF_TUP) -> MPF_TUP:
     """
     Compute the sinh term in the outer sum of the HRR formula.
     The constants sqrt(2/3*pi) and sqrt(8) must be precomputed.
     """
-    j = from_int(j)
+    jm = from_int(j)
     pi = mpf_pi(prec)
-    a = mpf_div(sq23pi, j, prec)
+    a = mpf_div(sq23pi, jm, prec)
     b = mpf_sub(from_int(n), from_rational(1, 24, prec), prec)
     c = mpf_sqrt(b, prec)
     ch, sh = mpf_cosh_sinh(mpf_mul(a, c), prec)
     D = mpf_div(
-        mpf_sqrt(j, prec),
+        mpf_sqrt(jm, prec),
         mpf_mul(mpf_mul(sqrt8, b), pi), prec)
     E = mpf_sub(mpf_mul(a, ch), mpf_div(sh, c, prec), prec)
     return mpf_mul(D, E)
 
 
 @recurrence_memo([1, 1])
-def _partition_rec(n: int, prev) -> int:
+def _partition_rec(n: int, prev: list[int]) -> int:
     """ Calculate the partition function P(n)
 
     Parameters
@@ -211,7 +220,7 @@ def _partition(n: int) -> int:
     c1 = 44*math.pi**2/(225*math.sqrt(3))
     c2 = math.pi*math.sqrt(2)/75
     c3 = math.pi*math.sqrt(2/3)
-    def _M(n, N):
+    def _M(n: int, N: int) -> float:
         sqrt = math.sqrt
         return c1/sqrt(N) + c2*sqrt(N/(n - 1))*math.sinh(c3*sqrt(n)/N)
     big = max(9, math.ceil(n**0.5))  # should be too large (for n > 65, ceil should work)
@@ -251,7 +260,7 @@ def _partition(n: int) -> int:
 The `sympy.ntheory.partitions_.npartitions` has been moved to `sympy.functions.combinatorial.numbers.partition`.""",
 deprecated_since_version="1.13",
 active_deprecations_target='deprecated-ntheory-symbolic-functions')
-def npartitions(n, verbose=False):
+def npartitions(n: int, verbose: bool = False) -> Integer:
     """
     Calculate the partition function P(n), i.e. the number of ways that
     n can be written as a sum of positive integers.
