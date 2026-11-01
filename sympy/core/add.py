@@ -31,9 +31,14 @@ def _could_extract_minus_sign(expr):
         return False
     elif positive_args < negative_args:
         return True
-    # choose based on .sort_key() to prefer
+    # prefer
     # x - 1 instead of 1 - x and
     # 3 - sqrt(2) instead of -3 + sqrt(2)
+    if len(expr.args) == 2:
+        a, b = expr.args
+        if bool(a.free_symbols) != bool(b.free_symbols):
+            variable_term = a if a.free_symbols else b
+            return variable_term.could_extract_minus_sign()
     return bool(expr.sort_key() < (-expr).sort_key())
 
 

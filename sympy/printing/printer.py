@@ -217,6 +217,7 @@ from functools import cmp_to_key, update_wrapper
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
+from sympy.core.singleton import S
 
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 
@@ -350,6 +351,22 @@ class Printer:
     def emptyPrinter(self, expr):
         return str(expr)
 
+    def _as_ordered_factors(self, expr):
+        """Order Mul factors for printing without changing canonical order."""
+        factors = expr.as_ordered_factors()
+        if self.order is None:
+            # Keep the relative order of noncommutative factors intact.
+            # A function such as zeta(3) is numerical even though it is
+            # not an instance of Number.
+            ncomm = 0
+            for factor in factors:
+                if not factor.is_commutative:
+                    break
+                ncomm += 1
+            factors[:ncomm] = sorted(
+                factors[:ncomm], key=lambda factor: not factor.is_number)
+        return factors
+
     def _as_ordered_terms(self, expr, order=None):
         """A compatibility function for ordering terms in Add. """
         order = order or self.order
@@ -359,7 +376,41 @@ class Printer:
         elif order == 'none':
             return list(expr.args)
         else:
-            return expr.as_ordered_terms(order=order)
+            terms = expr.as_ordered_terms(order=order)
+            if order is None:
+                # In a series, put numeric terms first so that the
+                # non-Order terms reverse the usual display order.
+                # Without Order terms, leave numeric terms last.
+                # Always print Order terms last.
+                has_order = any(term.is_Order for term in terms)
+                terms.sort(key=lambda term: (
+                    term.is_Order,
+                    not term.is_number if has_order else term.is_number))
+            if (order is None and len(terms) == 2
+                    and not any(term.is_Order for term in terms)):
+                a, b = terms
+
+                def explicit_i(term):
+                    return (term is S.ImaginaryUnit or
+                            term.is_Mul and S.ImaginaryUnit in term.args)
+
+                def negative_coeff(term):
+                    c = term.args[0] if term.is_Mul else term
+                    if c.is_Rational:
+                        return c.p < 0
+                    if c.is_Float:
+                        return bool(c._mpf_[0])
+                    return c is S.NegativeInfinity
+
+                ia, ib = explicit_i(a), explicit_i(b)
+                na, nb = negative_coeff(a), negative_coeff(b)
+                if (ia and not ib or
+                    ia == ib and (
+                        na and not nb or
+                        na and nb and a.is_Number and not b.is_Number
+                    )):
+                    terms.reverse()
+            return terms
 
     def _compare_pretty(self, a, b):
         """return -1, 0, 1 if a is canonically less, equal or
