@@ -1479,4 +1479,3 @@ def test_manualintegrate_symbol_assumptions_cache():
     f = x_pos/sqrt(x_pos**2 + 2*x_pos + 1) + log(x_pos)/(x_pos*sqrt(log(x_pos)**2 + 2*log(x_pos) + 1))
     F = manualintegrate(f, x_pos)
     assert abs((diff(F, x_pos) - f).subs(x_pos, Rational(1, 10)).evalf()) < 1e-10
-
