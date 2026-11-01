@@ -90,6 +90,15 @@ class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
 a, b, c, d, x, y, z, k, n, s, p = symbols('a,b,c,d,x,y,z,k,n,s,p')
+
+def test_trig_phase_shift_order():
+    assert 'x + ' in xpretty(cos(x + pi/4), use_unicode=False)
+    assert xpretty(cos(x + pi/4), use_unicode=False) == xpretty(
+        cos(x + pi/4), use_unicode=False, order='lex')
+    assert xpretty(sin(x + pi/4), use_unicode=False) == xpretty(
+        sin(x + pi/4), use_unicode=False, order='lex')
+
+
 f = Function("f")
 th = Symbol('theta')
 ph = Symbol('phi')
@@ -6489,7 +6498,7 @@ def test_pretty_geometry():
     e = Segment((0, 1), (0, 2))
     assert pretty(e) == 'Segment2D(Point2D(0, 1), Point2D(0, 2))'
     e = Ray((1, 1), angle=4.02*pi)
-    assert pretty(e) == 'Ray2D(Point2D(1, 1), Point2D(2, tan(pi/50) + 1))'
+    assert pretty(e) == 'Ray2D(Point2D(1, 1), Point2D(2, 1 + tan(pi/50)))'
 
 
 def test_expint():
@@ -7099,14 +7108,13 @@ def test_issue_4335():
 def test_issue_8344():
     from sympy.core import sympify
     e = sympify('2*x*y**2/1**2 + 1', evaluate=False)
-    ucode_str = \
-"""\
-     2    \n\
-2⋅x⋅y     \n\
-────── + 1\n\
-   2      \n\
-  1       \
-"""
+    ucode_str = (
+        "         2\n"
+        "    2⋅x⋅y \n"
+        "1 + ──────\n"
+        "       2  \n"
+        "      1   "
+    )
     assert upretty(e) == ucode_str
 
 

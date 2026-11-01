@@ -77,13 +77,13 @@ class DiracDelta(DefinedFunction):
     >>> diff(DiracDelta(x - 1), x, 2)
     DiracDelta(x - 1, 2)
     >>> diff(DiracDelta(x**2 - 1), x, 2)
-    2*(2*x**2*DiracDelta(x**2 - 1, 2) + DiracDelta(x**2 - 1, 1))
+    2*(DiracDelta(x**2 - 1, 1) + 2*x**2*DiracDelta(x**2 - 1, 2))
     >>> DiracDelta(3*x).is_simple(x)
     True
     >>> DiracDelta(x**2).is_simple(x)
     False
     >>> DiracDelta((x**2 - 1)*y).expand(diracdelta=True, wrt=x)
-    DiracDelta(x - 1)/(2*Abs(y)) + DiracDelta(x + 1)/(2*Abs(y))
+    DiracDelta(x + 1)/(2*Abs(y)) + DiracDelta(x - 1)/(2*Abs(y))
 
     See Also
     ========
@@ -255,7 +255,7 @@ class DiracDelta(DefinedFunction):
         DiracDelta(y)/Abs(x)
 
         >>> DiracDelta(x**2 + x - 2).expand(diracdelta=True, wrt=x)
-        DiracDelta(x - 1)/3 + DiracDelta(x + 2)/3
+        DiracDelta(x + 2)/3 + DiracDelta(x - 1)/3
 
         See Also
         ========
@@ -617,13 +617,13 @@ class Heaviside(DefinedFunction):
         sign(x - 2)/2 + 1/2
 
         >>> Heaviside(x**2 - 2*x + 1).rewrite(sign)
-        sign(x**2 - 2*x + 1)/2 + 1/2
+        sign(1 - 2*x + x**2)/2 + 1/2
 
         >>> Heaviside(y).rewrite(sign)
         Heaviside(y)
 
         >>> Heaviside(y**2 - 2*y + 1).rewrite(sign)
-        Heaviside(y**2 - 2*y + 1)
+        Heaviside(1 - 2*y + y**2)
 
         See Also
         ========

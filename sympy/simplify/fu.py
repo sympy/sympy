@@ -430,11 +430,11 @@ def TR8(rv, first=True):
     >>> from sympy.simplify.fu import TR8
     >>> from sympy import cos, sin
     >>> TR8(cos(2)*cos(3))
-    cos(5)/2 + cos(1)/2
+    cos(1)/2 + cos(5)/2
     >>> TR8(cos(2)*sin(3))
-    sin(5)/2 + sin(1)/2
+    sin(1)/2 + sin(5)/2
     >>> TR8(sin(2)*sin(3))
-    -cos(5)/2 + cos(1)/2
+    cos(1)/2 - cos(5)/2
     """
 
     def f(rv):
@@ -599,7 +599,7 @@ def TR10(rv, first=True):
     >>> from sympy.abc import a, b, c
     >>> from sympy import cos, sin
     >>> TR10(cos(a + b))
-    -sin(a)*sin(b) + cos(a)*cos(b)
+    cos(a)*cos(b) - sin(a)*sin(b)
     >>> TR10(sin(a + b))
     sin(a)*cos(b) + sin(b)*cos(a)
     >>> TR10(sin(a + b + c))
@@ -650,7 +650,7 @@ def TR10i(rv):
     >>> TR10i(cos(1)*cos(3) + sin(1)*sin(3))
     cos(2)
     >>> TR10i(cos(1)*sin(3) + sin(1)*cos(3) + cos(3))
-    cos(3) + sin(4)
+    sin(4) + cos(3)
     >>> TR10i(sqrt(2)*cos(x)*x + sqrt(6)*sin(x)*x)
     2*sqrt(2)*x*sin(x + pi/6)
 
@@ -779,11 +779,11 @@ def TR11(rv, base=None):
     >>> TR11(sin(2*x))
     2*sin(x)*cos(x)
     >>> TR11(cos(2*x))
-    -sin(x)**2 + cos(x)**2
+    cos(x)**2 - sin(x)**2
     >>> TR11(sin(4*x))
-    4*(-sin(x)**2 + cos(x)**2)*sin(x)*cos(x)
+    4*(cos(x)**2 - sin(x)**2)*sin(x)*cos(x)
     >>> TR11(sin(4*x/3))
-    4*(-sin(x/3)**2 + cos(x/3)**2)*sin(x/3)*cos(x/3)
+    4*(cos(x/3)**2 - sin(x/3)**2)*sin(x/3)*cos(x/3)
 
     If the arguments are simply integers, no change is made
     unless a base is provided:
@@ -791,13 +791,13 @@ def TR11(rv, base=None):
     >>> TR11(cos(2))
     cos(2)
     >>> TR11(cos(4), 2)
-    -sin(2)**2 + cos(2)**2
+    cos(2)**2 - sin(2)**2
 
     There is a subtle issue here in that autosimplification will convert
     some higher angles to lower angles
 
     >>> cos(6*pi/7) + cos(3*pi/7)
-    -cos(pi/7) + cos(3*pi/7)
+    cos(3*pi/7) - cos(pi/7)
 
     The 6*pi/7 angle is now pi/7 but can be targeted with TR11 by supplying
     the 3*pi/7 base:
@@ -916,7 +916,7 @@ def TR12(rv, first=True):
     >>> from sympy import tan
     >>> from sympy.simplify.fu import TR12
     >>> TR12(tan(x + y))
-    (tan(x) + tan(y))/(-tan(x)*tan(y) + 1)
+    (tan(x) + tan(y))/(1 - tan(x)*tan(y))
     """
 
     def f(rv):
@@ -960,7 +960,7 @@ def TR12i(rv):
     tan(a + b)
     >>> eq = (ta + tb)/(-ta*tb + 1)**2*(-3*ta - 3*tc)/(2*(ta*tc - 1))
     >>> TR12i(eq.expand())
-    -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
+    -3*tan(a + b)*tan(a + c)/(2*(-1 + tan(a) + tan(b)))
     """
     def f(rv):
         if not (rv.is_Add or rv.is_Mul or rv.is_Pow):
@@ -1073,9 +1073,9 @@ def TR13(rv):
     >>> from sympy.simplify.fu import TR13
     >>> from sympy import tan, cot
     >>> TR13(tan(3)*tan(2))
-    -tan(2)/tan(5) - tan(3)/tan(5) + 1
+    1 - tan(2)/tan(5) - tan(3)/tan(5)
     >>> TR13(cot(3)*cot(2))
-    cot(2)*cot(5) + 1 + cot(3)*cot(5)
+    1 + cot(2)*cot(5) + cot(3)*cot(5)
     """
 
     def f(rv):
@@ -1488,9 +1488,9 @@ def TRpower(rv):
     >>> from sympy.abc import x
     >>> from sympy import cos, sin
     >>> TRpower(sin(x)**6)
-    -15*cos(2*x)/32 + 3*cos(4*x)/16 - cos(6*x)/32 + 5/16
+    5/16 - 15*cos(2*x)/32 + 3*cos(4*x)/16 - cos(6*x)/32
     >>> TRpower(sin(x)**3*cos(2*x)**4)
-    (3*sin(x)/4 - sin(3*x)/4)*(cos(4*x)/2 + cos(8*x)/8 + 3/8)
+    (3*sin(x)/4 - sin(3*x)/4)*(3/8 + cos(4*x)/2 + cos(8*x)/8)
 
     References
     ==========
@@ -1600,7 +1600,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
     >>> eq = sin(x)**4 - cos(y)**2 + sin(y)**2 + 2*cos(x)**2
     >>> fu(eq)
-    cos(x)**4 - 2*cos(y)**2 + 2
+    2 - 2*cos(y)**2 + cos(x)**4
 
     CTR2 example
 
@@ -1620,7 +1620,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     Example 1
 
     >>> fu(1-sin(2*x)**2/4-sin(y)**2-cos(x)**4)
-    -cos(x)**2 + cos(y)**2
+    cos(y)**2 - cos(x)**2
 
     Example 2
 

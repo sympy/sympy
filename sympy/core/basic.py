@@ -1063,12 +1063,12 @@ class Basic(Printable):
         x**2 + 2
 
         >>> (x**2 + x**4).subs(x**2, y)
-        y**2 + y
+        y + y**2
 
         To replace only the x**2 but not the x**4, use xreplace:
 
         >>> (x**2 + x**4).xreplace({x**2: y})
-        x**4 + y
+        y + x**4
 
         To delay evaluation until all substitutions have been made,
         set the keyword ``simultaneous`` to True:
@@ -1103,7 +1103,7 @@ class Basic(Printable):
         >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
 
         >>> expr.subs(dict([A, B, C, D, E]))
-        a*c*sin(d*e) + b
+        b + a*c*sin(d*e)
 
         The resulting expression represents a literal replacement of the
         old arguments with the new arguments. This may not reflect the
@@ -1395,9 +1395,9 @@ class Basic(Printable):
         >>> (2*2*x).xreplace({2*x: y, x: z})
         4*z
         >>> (x + y + 2).xreplace({x + y: 2})
-        x + y + 2
+        2 + x + y
         >>> (x + 2 + exp(x + 2)).xreplace({x + 2: y})
-        x + exp(y) + 2
+        2 + x + exp(y)
 
         xreplace does not differentiate between free and bound symbols. In the
         following, subs(x, y) would not change x since it is a bound symbol,
@@ -1741,7 +1741,7 @@ class Basic(Printable):
         >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=False)
         x
         >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=True)
-        x**(-x - y + 1)
+        x**(1 - x - y)
         >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=False)
         x
         >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=True)
@@ -2157,9 +2157,9 @@ class Basic(Printable):
         Pattern can be a type or an iterable of types.
 
         >>> expr.rewrite(sin, exp)
-        exp(I*x)/2 + cos(x) - exp(-I*x)/2
+        -exp(-I*x)/2 + exp(I*x)/2 + cos(x)
         >>> expr.rewrite([cos,], exp)
-        exp(I*x)/2 + I*sin(x) + exp(-I*x)/2
+        exp(-I*x)/2 + exp(I*x)/2 + I*sin(x)
         >>> expr.rewrite([cos, sin], exp)
         exp(I*x)
 

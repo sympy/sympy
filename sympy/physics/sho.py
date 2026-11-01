@@ -91,6 +91,6 @@ def E_nl(n, l, hw):
     >>> from sympy import symbols
     >>> x, y, z = symbols('x, y, z')
     >>> E_nl(x, y, z)
-    z*(2*x + y + 3/2)
+    z*(3/2 + 2*x + y)
     """
     return (2*n + l + Rational(3, 2))*hw

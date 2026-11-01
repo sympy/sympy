@@ -146,7 +146,7 @@ def _peeloff_pi(arg):
     >>> _peeloff_pi(x + pi/2)
     (x, 1/2)
     >>> _peeloff_pi(x + 2*pi/3 + pi*y)
-    (x + pi*y + pi/6, 1/2)
+    (pi/6 + x + pi*y, 1/2)
 
     """
     pi_coeff = S.Zero
@@ -272,7 +272,7 @@ class sin(TrigonometricFunction):
     >>> sin(pi/6)
     1/2
     >>> sin(pi/12)
-    -sqrt(2)/4 + sqrt(6)/4
+    sqrt(6)/4 - sqrt(2)/4
 
 
     See Also
@@ -986,7 +986,7 @@ class tan(TrigonometricFunction):
     >>> tan(1).diff(x)
     0
     >>> tan(pi/8).expand()
-    -1 + sqrt(2)
+    sqrt(2) - 1
 
     See Also
     ========
@@ -1332,11 +1332,11 @@ class cot(TrigonometricFunction):
     >>> from sympy import cot, pi
     >>> from sympy.abc import x
     >>> cot(x**2).diff(x)
-    2*x*(-cot(x**2)**2 - 1)
+    2*x*(-1 - cot(x**2)**2)
     >>> cot(1).diff(x)
     0
     >>> cot(pi/12)
-    sqrt(3) + 2
+    2 + sqrt(3)
 
     See Also
     ========

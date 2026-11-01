@@ -34,13 +34,13 @@ def symmetrize(F, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> symmetrize(x**2 + y**2)
-    (-2*x*y + (x + y)**2, 0)
+    ((x + y)**2 - 2*x*y, 0)
 
     >>> symmetrize(x**2 + y**2, formal=True)
     (s1**2 - 2*s2, 0, [(s1, x + y), (s2, x*y)])
 
     >>> symmetrize(x**2 - y**2)
-    (-2*x*y + (x + y)**2, -2*y**2)
+    ((x + y)**2 - 2*x*y, -2*y**2)
 
     >>> symmetrize(x**2 - y**2, formal=True)
     (s1**2 - 2*s2, -2*y**2, [(s1, x + y), (s2, x*y)])
@@ -103,15 +103,15 @@ def horner(f, *gens, **args):
     x*(x*(x*(9*x + 8) + 7) + 6) + 5
 
     >>> horner(a*x**4 + b*x**3 + c*x**2 + d*x + e)
-    e + x*(d + x*(c + x*(a*x + b)))
+    e + x*(d + x*(c + x*(b + a*x)))
 
     >>> f = 4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y
 
     >>> horner(f, wrt=x)
-    x*(x*y*(4*y + 2) + y*(2*y + 1))
+    x*(y*(2*y + 1) + x*y*(4*y + 2))
 
     >>> horner(f, wrt=y)
-    y*(x*y*(4*x + 2) + x*(2*x + 1))
+    y*(x*(2*x + 1) + x*y*(4*x + 2))
 
     References
     ==========
@@ -179,7 +179,7 @@ def interpolate(data, x):
     Symbolic coordinates are also supported:
 
     >>> [(i,interpolate((a, b), i)) for i in range(1, 4)]
-    [(1, a), (2, b), (3, -a + 2*b)]
+    [(1, a), (2, b), (3, 2*b - a)]
     """
     n = len(data)
 
@@ -231,7 +231,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     >>> x = [1, 2, 3, 4, 5, 6]
     >>> y = sympify("[-1, 0, 2, 22/5, 7, 68/7]")
     >>> rational_interpolate(zip(x, y), 2)
-    (3*x**2 - 7*x + 2)/(x + 1)
+    (2 - 7*x + 3*x**2)/(x + 1)
 
     The symbol for the variable can be changed if needed:
     >>> from sympy import symbols

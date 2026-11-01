@@ -112,11 +112,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     >>> Sum(k, (k, 1, m))
     Sum(k, (k, 1, m))
     >>> Sum(k, (k, 1, m)).doit()
-    m**2/2 + m/2
+    m/2 + m**2/2
     >>> Sum(k**2, (k, 1, m))
     Sum(k**2, (k, 1, m))
     >>> Sum(k**2, (k, 1, m)).doit()
-    m**3/3 + m**2/2 + m/6
+    m/6 + m**2/2 + m**3/3
     >>> Sum(x**k, (k, 0, oo))
     Sum(x**k, (k, 0, oo))
     >>> Sum(x**k, (k, 0, oo)).doit()
@@ -143,7 +143,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     >>> S = Sum(i, (i, 1, n)).doit()
     >>> S
-    n**2/2 + n/2
+    n/2 + n**2/2
     >>> S.subs(n, -4)
     6
     >>> Sum(i, (i, 1, -4)).doit()
@@ -155,10 +155,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     >>> S1 = Sum(i**2, (i, m, m+n-1)).doit()
     >>> S1
-    m**2*n + m*n**2 - m*n + n**3/3 - n**2/2 + n/6
+    n/6 - m*n - n**2/2 + m**2*n + m*n**2 + n**3/3
     >>> S2 = Sum(i**2, (i, m+n, m-1)).doit()
     >>> S2
-    -m**2*n - m*n**2 + m*n - n**3/3 + n**2/2 - n/6
+    -n/6 + m*n + n**2/2 - m**2*n - m*n**2 - n**3/3
     >>> S1 + S2
     0
     >>> S3 = Sum(i, (i, m, m-1)).doit()
@@ -746,7 +746,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             1.28333333333333
             >>> s, e = Sum(1/k, (k, 2, 5)).euler_maclaurin()
             >>> s
-            -log(2) + 7/20 + log(5)
+            7/20 - log(2) + log(5)
             >>> from sympy import sstr
             >>> print(sstr((s.evalf(), e.evalf()), full_prec=True))
             (1.26629073187415, 0.0175000000000000)
@@ -755,7 +755,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
             >>> s, e = Sum(1/k, (k, a, b)).euler_maclaurin()
             >>> s
-            -log(a) + log(b) + 1/(2*b) + 1/(2*a)
+            1/(2*b) + 1/(2*a) - log(a) + log(b)
             >>> e
             Abs(1/(12*b**2) - 1/(12*a**2))
 
@@ -763,9 +763,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Euler-Maclaurin formula becomes exact (and e = 0 is returned):
 
             >>> Sum(k, (k, 2, b)).euler_maclaurin()
-            (b**2/2 + b/2 - 1, 0)
+            (-1 + b/2 + b**2/2, 0)
             >>> Sum(k, (k, 2, b)).doit()
-            b**2/2 + b/2 - 1
+            -1 + b/2 + b**2/2
 
         With a nonzero eps specified, the summation is ended
         as soon as the remainder term is less than the epsilon.
@@ -955,7 +955,7 @@ def summation(f, *symbols, **kwargs):
     >>> summation(1/log(n)**n, (n, 2, oo))
     Sum(log(n)**(-n), (n, 2, oo))
     >>> summation(i, (i, 0, n), (n, 0, m))
-    m**3/6 + m**2/2 + m/3
+    m/3 + m**2/2 + m**3/6
 
     >>> from sympy.abc import x
     >>> from sympy import factorial
@@ -1458,7 +1458,7 @@ def eval_sum_residue(f, i_a_b):
     Infinite series of alternating even rational functions.
 
     >>> Sum((-1)**x / (x**2 + 1), (x, 0, oo)).doit()
-    pi/(2*sinh(pi)) + 1/2
+    1/2 + pi/(2*sinh(pi))
 
     This also have heuristics to transform arbitrarily shifted summand or
     arbitrarily shifted summation range to the canonical problem the
@@ -1469,9 +1469,9 @@ def eval_sum_residue(f, i_a_b):
     >>> Sum(1 / (x**2 + 4*x + 5), (x, -2, oo)).doit()
     1/2 + pi/(2*tanh(pi))
     >>> Sum(1 / (x**2 + 1), (x, 1, oo)).doit()
-    -1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) - 1/2
     >>> Sum(1 / (x**2 + 1), (x, 2, oo)).doit()
-    -1 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) - 1
 
     References
     ==========

@@ -183,7 +183,7 @@ def guess_generating_function_rational(v, X=Symbol('x')):
     >>> from sympy import fibonacci
     >>> l = [fibonacci(k) for k in range(5,15)]
     >>> guess_generating_function_rational(l)
-    (3*x + 5)/(-x**2 - x + 1)
+    (3*x + 5)/(1 - x - x**2)
 
     See Also
     ========
@@ -250,16 +250,16 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
     >>> ggf([k+1 for k in range(12)], types=['ogf', 'lgf', 'hlgf'])
-    {'hlgf': 1/(1 - x), 'lgf': 1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
+    {'hlgf': 1/(1 - x), 'lgf': 1/(x + 1), 'ogf': 1/(1 - 2*x + x**2)}
 
     >>> from sympy import sympify
     >>> l = sympify("[3/2, 11/2, 0, -121/2, -363/2, 121]")
     >>> ggf(l)
-    {'ogf': (x + 3/2)/(11*x**2 - 3*x + 1)}
+    {'ogf': (x + 3/2)/(1 - 3*x + 11*x**2)}
 
     >>> from sympy import fibonacci
     >>> ggf([fibonacci(k) for k in range(5, 15)], types=['ogf'])
-    {'ogf': (3*x + 5)/(-x**2 - x + 1)}
+    {'ogf': (3*x + 5)/(1 - x - x**2)}
 
     >>> from sympy import factorial
     >>> ggf([factorial(k) for k in range(12)], types=['ogf', 'egf', 'lgf'])
@@ -273,7 +273,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     The greatest n-th root to be tested is specified as maxsqrtn (default 2).
 
     >>> ggf([1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919])['ogf']
-    sqrt(1/(x**4 + 2*x**2 - 4*x + 1))
+    sqrt(1/(1 - 4*x + 2*x**2 + x**4))
 
     References
     ==========

@@ -270,11 +270,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> sympify('2**2 / 3 + 5')
     19/3
     >>> sympify('2**2 / 3 + 5', evaluate=False)
-    2**2/3 + 5
+    5 + 2**2/3
     >>> sympify('4/2+7', evaluate=True)
     9
     >>> sympify('4/2+7', evaluate=False)
-    4/2 + 7
+    7 + 4/2
     >>> sympify(4/2+7, evaluate=False)
     9.00000000000000
 
@@ -352,7 +352,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> sympify(s)
     -1
     >>> kernS(s)
-    -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
+    -1 - 2*(-1/(x*(x - 1/x)) - (1/x - x)/(x*(x - 1/x)**2))
 
     Parameters
     ==========
@@ -555,7 +555,7 @@ def kernS(s):
     of an expression, but kernS will prevent that:
 
     >>> 2*(x + y), -(x + 1)
-    (2*x + 2*y, -x - 1)
+    (2*x + 2*y, -1 - x)
     >>> kernS('2*(x + y)')
     2*(x + y)
     >>> kernS('-(x + 1)')

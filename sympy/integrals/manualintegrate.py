@@ -4037,12 +4037,7 @@ def integral_steps(integrand, symbol, **options):
     SinRule(integrand=sin(x), variable=x)
     >>> print(repr(integral_steps((x**2 + 3)**2, x))) \
     # doctest: +NORMALIZE_WHITESPACE
-    RewriteRule(integrand=(x**2 + 3)**2, variable=x, rewritten=x**4 + 6*x**2 + 9,
-    substep=AddRule(integrand=x**4 + 6*x**2 + 9, variable=x,
-    substeps=[PowerRule(integrand=x**4, variable=x, base=x, exp=4),
-    ConstantTimesRule(integrand=6*x**2, variable=x, constant=6, other=x**2,
-    substep=PowerRule(integrand=x**2, variable=x, base=x, exp=2)),
-    ConstantRule(integrand=9, variable=x)]))
+    RewriteRule(integrand=(x**2 + 3)**2, variable=x, rewritten=9 + 6*x**2 + x**4, substep=AddRule(integrand=9 + 6*x**2 + x**4, variable=x, substeps=[ConstantRule(integrand=9, variable=x), ConstantTimesRule(integrand=6*x**2, variable=x, constant=6, other=x**2, substep=PowerRule(integrand=x**2, variable=x, base=x, exp=2)), PowerRule(integrand=x**4, variable=x, base=x, exp=4)]))
 
     Parameters
     ==========

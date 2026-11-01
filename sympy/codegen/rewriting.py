@@ -15,7 +15,7 @@ expressions for this purpose::
     >>> optimize(exp(2*x) - 1 - exp(-33), optims_c99)
     expm1(2*x) - exp(-33)
     >>> optimize(log(3*x + 3), optims_c99)
-    log1p(x) + log(3)
+    log(3) + log1p(x)
     >>> optimize(log(2*x + 3), optims_c99)
     log(2*x + 3)
 
@@ -311,12 +311,12 @@ def create_expand_pow_optimization(limit, *, base_req=lambda b: b.is_symbol):
     >>> x = Symbol('x')
     >>> expand_opt = create_expand_pow_optimization(3)
     >>> expand_opt(x**5 + x**3)
-    x**5 + x*x*x
+    x*x*x + x**5
     >>> expand_opt(x**5 + x**3 + sin(x)**3)
-    x**5 + sin(x)**3 + x*x*x
+    x*x*x + sin(x)**3 + x**5
     >>> opt2 = create_expand_pow_optimization(3, base_req=lambda b: not b.is_Function)
     >>> opt2((x+1)**2 + sin(x)**2)
-    sin(x)**2 + (x + 1)*(x + 1)
+    (x + 1)*(x + 1) + sin(x)**2
 
     """
     return ReplaceOptim(

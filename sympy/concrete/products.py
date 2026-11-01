@@ -108,7 +108,7 @@ class Product(ExprWithIntLimits):
     >>> from sympy import limit
     >>> W2 = Product(2*i/(2*i-1)*2*i/(2*i+1), (i, 1, n))
     >>> W2
-    Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, n))
+    Product(4*i**2/((2*i + 1)*(2*i - 1)), (i, 1, n))
     >>> W2e = W2.doit()
     >>> W2e
     4**n*factorial(n)**2/(2**(2*n)*RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
@@ -128,7 +128,7 @@ class Product(ExprWithIntLimits):
     >>> limit(Pe, n, oo).gammasimp()
     sin(pi**2/2)
     >>> Pe.rewrite(gamma)
-    (-1)**n*pi**2*gamma(pi/2)*gamma(n + 1 + pi/2)/(2*gamma(1 + pi/2)*gamma(-n + pi/2)*gamma(n + 1)**2)
+    (-1)**n*pi**2*gamma(pi/2)*gamma(1 + pi/2 + n)/(2*gamma(1 + pi/2)*gamma(n + 1)**2*gamma(pi/2 - n))
 
     Products with the lower limit being larger than the upper one:
 
@@ -161,10 +161,10 @@ class Product(ExprWithIntLimits):
 
     >>> P1 = Product(x, (i, a, b)).doit()
     >>> P1
-    x**(-a + b + 1)
+    x**(1 - a + b)
     >>> P2 = Product(x, (i, b+1, a-1)).doit()
     >>> P2
-    x**(a - b - 1)
+    x**(-1 + a - b)
     >>> simplify(P1 * P2)
     1
 
@@ -172,12 +172,12 @@ class Product(ExprWithIntLimits):
 
     >>> P1 = Product(i, (i, b, a)).doit()
     >>> P1
-    RisingFactorial(b, a - b + 1)
+    RisingFactorial(b, 1 + a - b)
     >>> P2 = Product(i, (i, a+1, b-1)).doit()
     >>> P2
-    RisingFactorial(a + 1, -a + b - 1)
+    RisingFactorial(a + 1, -1 - a + b)
     >>> P1 * P2
-    RisingFactorial(b, a - b + 1)*RisingFactorial(a + 1, -a + b - 1)
+    RisingFactorial(b, 1 + a - b)*RisingFactorial(a + 1, -1 - a + b)
     >>> combsimp(P1 * P2)
     1
 
@@ -505,14 +505,14 @@ class Product(ExprWithIntLimits):
         Product(1/x, (x, b + 1, a - 1))
         >>> Pr = Pr.doit()
         >>> Pr
-        1/RisingFactorial(b + 1, a - b - 1)
+        1/RisingFactorial(b + 1, -1 + a - b)
         >>> simplify(Pr.rewrite(gamma))
-        Piecewise((gamma(b + 1)/gamma(a), b > -1), ((-1)**(-a + b + 1)*gamma(1 - a)/gamma(-b), True))
+        Piecewise((gamma(b + 1)/gamma(a), b > -1), ((-1)**(1 - a + b)*gamma(1 - a)/gamma(-b), True))
         >>> P = P.doit()
         >>> P
-        RisingFactorial(a, -a + b + 1)
+        RisingFactorial(a, 1 - a + b)
         >>> simplify(P.rewrite(gamma))
-        Piecewise((gamma(b + 1)/gamma(a), a > 0), ((-1)**(-a + b + 1)*gamma(1 - a)/gamma(-b), True))
+        Piecewise((gamma(b + 1)/gamma(a), a > 0), ((-1)**(1 - a + b)*gamma(1 - a)/gamma(-b), True))
 
         While one should prefer variable names when specifying which limits
         to reverse, the index counting notation comes in handy in case there

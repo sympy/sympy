@@ -1100,9 +1100,9 @@ class Poly(Basic):
         >>> f = Poly(x**2 + 2*x*y**2 - y, x, y)
 
         >>> f.as_expr()
-        x**2 + 2*x*y**2 - y
+        -y + x**2 + 2*x*y**2
         >>> f.as_expr({x: 5})
-        10*y**2 - y + 25
+        25 - y + 10*y**2
         >>> f.as_expr(5, 6)
         379
 
@@ -1243,9 +1243,9 @@ class Poly(Basic):
         >>> f = Poly(x**2*y + x*y**3 + x*y + 1, x, y)
 
         >>> f.eject(x)
-        Poly(x*y**3 + (x**2 + x)*y + 1, y, domain='ZZ[x]')
+        Poly(x*y**3 + (x + x**2)*y + 1, y, domain='ZZ[x]')
         >>> f.eject(y)
-        Poly(y*x**2 + (y**3 + y)*x + 1, x, domain='ZZ[y]')
+        Poly(y*x**2 + (y + y**3)*x + 1, x, domain='ZZ[y]')
 
         """
         dom = f.rep.dom
@@ -3365,7 +3365,7 @@ class Poly(Basic):
 
         >>> f = expand(2*(x + 1)**3*x**4)
         >>> f
-        2*x**7 + 6*x**6 + 6*x**5 + 2*x**4
+        2*x**4 + 6*x**5 + 6*x**6 + 2*x**7
 
         >>> Poly(f).sqf_list_include()
         [(Poly(2, x, domain='ZZ'), 1),
@@ -4259,9 +4259,9 @@ class Poly(Basic):
         >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
         >>> conditions = p3.schur_conditions()
         >>> conditions
-        [-15*k**2 + 20*k - 5, -8*k**2 - 8*k + 8, 3*k**2 + 8*k - 3]
+        [-5 + 20*k - 15*k**2, 8 - 8*k - 8*k**2, -3 + 8*k + 3*k**2]
         >>> reduce_inequalities([c > 0 for c in conditions])
-        (1/3 < k) & (k < -1/2 + sqrt(5)/2)
+        (1/3 < k) & (k < sqrt(5)/2 - 1/2)
 
         References
         ==========
@@ -5742,7 +5742,7 @@ def gcdex(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
-    (3/5 - x/5, x**2/5 - 6*x/5 + 2, x + 1)
+    (3/5 - x/5, 2 - 6*x/5 + x**2/5, x + 1)
 
     See also
     ========
@@ -6113,7 +6113,7 @@ def lcm_list(seq, *gens, **args):
     >>> from sympy.abc import x
 
     >>> lcm_list([x**3 - 1, x**2 - 1, x**2 - 3*x + 2])
-    x**5 - x**4 - 2*x**3 - x**2 + x + 2
+    2 + x - x**2 - 2*x**3 - x**4 + x**5
 
     """
     seq = sympify(seq)
@@ -6191,7 +6191,7 @@ def lcm(f, g=None, *gens, **args):
     >>> from sympy.abc import x
 
     >>> lcm(x**2 - 1, x**2 - 3*x + 2)
-    x**3 - 2*x**2 - x + 2
+    2 - x - 2*x**2 + x**3
 
     """
     if hasattr(f, '__iter__'):
@@ -6255,14 +6255,14 @@ def terms_gcd(f, *gens, **args):
     given to them. terms_gcd follows this behavior:
 
     >>> terms_gcd((3+3*x)*(x+x*y))
-    3*x*(x*y + x + y + 1)
+    3*x*(1 + x + y + x*y)
 
     If this is not desired then the hint ``expand`` can be set to False.
     In this case the expression will be treated as though it were comprised
     of one or more terms:
 
     >>> terms_gcd((3+3*x)*(x+x*y), expand=False)
-    (3*x + 3)*(x*y + x)
+    (3*x + 3)*(x + x*y)
 
     In order to traverse factors of a Mul or the arguments of other
     functions, the ``deep`` hint can be used:
@@ -6360,7 +6360,7 @@ def trunc(f, p, *gens, **args):
     >>> from sympy.abc import x
 
     >>> trunc(2*x**3 + 3*x**2 + 5*x + 7, 3)
-    -x**3 - x + 1
+    1 - x - x**3
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -6390,7 +6390,7 @@ def monic(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> monic(3*x**2 + 4*x + 2)
-    x**2 + 4*x/3 + 2/3
+    2/3 + 4*x/3 + x**2
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -6445,14 +6445,14 @@ def primitive(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> primitive(6*x**2 + 8*x + 12)
-    (2, 3*x**2 + 4*x + 6)
+    (2, 6 + 4*x + 3*x**2)
 
     >>> eq = (2 + 2*x)*x + 2
 
     Expansion is performed by default:
 
     >>> primitive(eq)
-    (2, x**2 + x + 1)
+    (2, 1 + x + x**2)
 
     Set ``expand`` to False to shut this off. Note that the
     extraction will not be recursive; use the as_content_primitive method
@@ -6521,7 +6521,7 @@ def decompose(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> decompose(x**4 + 2*x**3 - x - 1)
-    [x**2 - x - 1, x**2 + x]
+    [-1 - x + x**2, x + x**2]
 
     """
     options.allowed_flags(args, ['polys'])
@@ -6551,7 +6551,7 @@ def sturm(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sturm(x**3 - 2*x**2 + x - 3)
-    [x**3 - 2*x**2 + x - 3, 3*x**2 - 4*x + 1, 2*x/9 + 25/9, -2079/4]
+    [-3 + x - 2*x**2 + x**3, 1 - 4*x + 3*x**2, 2*x/9 + 25/9, -2079/4]
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -6638,7 +6638,7 @@ def sqf_norm(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_norm(x**2 + 1, extension=[sqrt(3)])
-    ([1], x**2 - 2*sqrt(3)*x + 4, x**4 - 4*x**2 + 16)
+    ([1], 4 - 2*sqrt(3)*x + x**2, 16 - 4*x**2 + x**4)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -6670,7 +6670,7 @@ def sqf_part(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_part(x**3 - 3*x - 2)
-    x**2 - x - 2
+    -2 - x + x**2
 
     """
     options.allowed_flags(args, ['polys'])
@@ -6983,12 +6983,12 @@ def _torational_factor_list(p, x):
     >>> from sympy import sqrt, expand, Mul
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     >>> factors = _torational_factor_list(p, x); factors
-    (-2, [(-x*(1 + sqrt(2))/2 + 1, 1), (-x*(1 + sqrt(2)) - 1, 1), (-x*(1 + sqrt(2)) + 1, 1)])
+    (-2, [(1 - x*(1 + sqrt(2))/2, 1), (-1 - x*(1 + sqrt(2)), 1), (1 - x*(1 + sqrt(2)), 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x + sqrt(2)}))
     >>> factors = _torational_factor_list(p, x); factors
-    (1, [(x - 2 + sqrt(2), 1), (x - 1 + sqrt(2), 1), (x + 1 + sqrt(2), 1)])
+    (1, [(-2 + sqrt(2) + x, 1), (-1 + sqrt(2) + x, 1), (1 + sqrt(2) + x, 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
 
@@ -7095,7 +7095,7 @@ def factor(f, *gens, deep=False, **args):
     >>> from sympy.abc import x, y
 
     >>> factor(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
-    2*(x + y)*(x**2 + 1)**2
+    2*(x**2 + 1)**2*(x + y)
 
     >>> factor(x**2 + 1)
     x**2 + 1
@@ -7108,15 +7108,15 @@ def factor(f, *gens, deep=False, **args):
     (x - sqrt(2))*(x + sqrt(2))
 
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
-    (x - 1)*(x + 1)/(x + 2)**2
+    (x + 1)*(x - 1)/(x + 2)**2
     >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
-    (x + 2)**20000000*(x**2 + 1)
+    (x**2 + 1)*(x + 2)**20000000
 
     By default, factor deals with an expression as a whole:
 
     >>> eq = 2**(x**2 + 2*x + 1)
     >>> factor(eq)
-    2**(x**2 + 2*x + 1)
+    2**(1 + 2*x + x**2)
 
     If the ``deep`` flag is True then subexpressions will
     be factored:
@@ -7128,9 +7128,9 @@ def factor(f, *gens, deep=False, **args):
     will not be combined. By default it is True.
 
     >>> factor(5*x + 3*exp(2 - 7*x), deep=True)
-    (5*x*exp(7*x) + 3*exp(2))*exp(-7*x)
+    (3*exp(2) + 5*x*exp(7*x))*exp(-7*x)
     >>> factor(5*x + 3*exp(2 - 7*x), deep=True, fraction=False)
-    5*x + 3*exp(2)*exp(-7*x)
+    3*exp(2)*exp(-7*x) + 5*x
 
     See Also
     ========
@@ -7336,7 +7336,7 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    sqrt(6) - sqrt(2)*x - sqrt(3)*x + x**2
     >>> all_roots(p)
     Traceback (most recent call last):
     ...
@@ -7537,7 +7537,7 @@ def real_roots(f, multiple=True, radicals=True, extension=False):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    sqrt(6) - sqrt(2)*x - sqrt(3)*x + x**2
     >>> real_roots(p)
     Traceback (most recent call last):
     ...
@@ -7720,7 +7720,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
     >>> g = factor(nth_power_roots_poly(f, 2))
 
     >>> g
-    (x**2 - x + 1)**2
+    (1 - x + x**2)**2
 
     >>> R_f = [ (r**2).expand() for r in roots(f) ]
     >>> R_g = roots(g).keys()
@@ -7866,7 +7866,7 @@ def reduced(f, G, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> reduced(2*x**4 + y**2 - x**2 + y**3, [x**3 - x, y**3 - y])
-    ([2*x, 1], x**2 + y**2 + y)
+    ([2*x, 1], y + x**2 + y**2)
 
     """
     options.allowed_flags(args, ['polys', 'auto'])
@@ -8218,11 +8218,11 @@ class GroebnerBasis(Basic):
         >>> G = groebner([x**3 - x, y**3 - y])
 
         >>> G.reduce(f)
-        ([2*x, 1], x**2 + y**2 + y)
+        ([2*x, 1], y + x**2 + y**2)
         >>> Q, r = _
 
         >>> expand(sum(q*g for q, g in zip(Q, G)) + r)
-        2*x**4 - x**2 + y**3 + y**2
+        -x**2 + y**2 + y**3 + 2*x**4
         >>> _ == f
         True
 
