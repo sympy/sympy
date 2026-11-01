@@ -3565,6 +3565,9 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
             lambda x: Pow(x.base, Float(x.exp, n)),
             lambda x: x.is_Pow and x.exp.is_Integer))
 
+    rv = rv.xreplace(Transform(
+        lambda x: Pow(S.Exp1, nfloat(x.exp, n, exponent)),
+        lambda x: x.is_Pow and x.base is S.Exp1))
     return rv.xreplace(Transform(
         lambda x: x.func(*nfloat(x.args, n, exponent)),
         lambda x: isinstance(x, Function) and not isinstance(x, AppliedUndef)))

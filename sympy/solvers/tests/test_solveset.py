@@ -3324,6 +3324,7 @@ def test_is_modular():
     assert _is_modular(Mod(3, y) - 1, y) is False
 
 
+@_both_exp_pow
 def test_invert_modular():
     n = Dummy('n', integer=True)
     from sympy.solvers.solveset import _invert_modular as invert_modular
@@ -3357,6 +3358,7 @@ def test_invert_modular():
     assert invert_modular(Mod(sin(x)**4, 7), S(5), n, x) == (x, S.EmptySet)
 
 
+@_both_exp_pow
 def test_solve_modular():
     n = Dummy('n', integer=True)
     # if rhs has symbol (need to be implemented in future).
@@ -3711,6 +3713,7 @@ def test_issue_22413():
     assert res == sols
 
 
+@_both_exp_pow
 def test_issue_23318():
     eqs_eq = [
         Eq(53.5780461486929, x * log(y / (5.0 - y) + 1) / y),

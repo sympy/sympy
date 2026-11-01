@@ -6,10 +6,11 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.printing.repr import srepr
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2, minimum, maximum, amax, amin
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
 x, y, z = symbols('x y z')
 
+@_both_exp_pow
 def test_logaddexp():
     lae_xy = logaddexp(x, y)
     ref_xy = log(exp(x) + exp(y))

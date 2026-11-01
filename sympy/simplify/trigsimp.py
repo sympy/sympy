@@ -1184,7 +1184,7 @@ def _split_add(e, func):
 
     def related_exp(a):
         for f in a.atoms(exp):
-            arg = f.args[0]
+            arg = f.exp
             if (arg.free_symbols & func_symbols and
                     (func is HyperbolicFunction or arg.has(I))):
                 return True

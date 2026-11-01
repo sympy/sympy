@@ -283,7 +283,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         from sympy.simplify.simplify import logcombine
         if isinstance(arg, MatrixBase):
             return arg.exp()
-        elif global_parameters.exp_is_pow:
+        elif global_parameters.exp_is_pow and not arg.is_Matrix:
             return Pow(S.Exp1, arg)
         elif arg.is_Number:
             if arg is S.NaN:
@@ -511,7 +511,7 @@ class exp(ExpBase, metaclass=ExpMeta):
             cf = 0
         if cf and cf > 0:
             nterms = ceiling(n/cf)
-        exp_series = exp(t)._taylor(t, nterms)
+        exp_series = exp._taylor(exp(t), t, nterms)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
         rep = {logx: log(x)} if logx is not None else {}
         if r.subs(rep) == self:
@@ -532,14 +532,14 @@ class exp(ExpBase, metaclass=ExpMeta):
         l = []
         g = None
         for i in range(n):
-            g = self.taylor_term(i, self.args[0], g)
+            g = self.taylor_term(i, self.exp, g)
             g = g.nseries(x, n=n)
             l.append(g.removeO())
         return Add(*l)
 
     def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.util import AccumBounds
-        arg = self.args[0].cancel().as_leading_term(x, logx=logx)
+        arg = self.exp.cancel().as_leading_term(x, logx=logx)
         arg0 = arg.subs(x, 0)
         if arg is S.NaN:
             return S.NaN

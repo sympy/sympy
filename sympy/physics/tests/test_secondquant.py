@@ -22,7 +22,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.repr import srepr
 from sympy.simplify.simplify import simplify
 
-from sympy.testing.pytest import slow, raises
+from sympy.testing.pytest import slow, raises, _both_exp_pow
 from sympy.printing.latex import latex
 
 
@@ -73,6 +73,7 @@ def test_index_permutations_with_dummies():
     assert expr == result
 
 
+@_both_exp_pow
 def test_dagger():
     i, j, n, m = symbols('i,j,n,m')
     assert Dagger(1) == 1

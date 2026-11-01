@@ -219,6 +219,39 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic
 
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
+from sympy.core.parameters import global_parameters
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+
+
+def _exp_pow_as_exp(expr):
+    """Replace ``Pow(E, x)`` by unevaluated ``exp(x)`` in ``expr``."""
+    return _exp_pow_as_exp_changed(expr)[0]
+
+
+def _exp_pow_as_exp_changed(expr):
+    if not isinstance(expr, Basic) or expr.is_Atom or not expr.args:
+        return expr, False
+    args, changed = map(list, zip(*[_exp_pow_as_exp_changed(a) for a in expr.args]))
+    if expr.is_Pow and expr.base is S.Exp1:
+        return exp(args[1], evaluate=False), True
+    if not any(changed):
+        return expr, False
+    if (expr.is_Add or expr.is_Mul) and expr.is_commutative:
+        args.sort(key=cmp_to_key(Basic.compare))
+    if expr.is_Add or expr.is_Mul or expr.is_Pow:
+        return expr.func(*args, evaluate=False), True
+    return expr.func(*args), True
+    args = [_exp_pow_as_exp(a) for a in expr.args]
+    if expr.is_Pow and expr.base is S.Exp1:
+        return exp(args[1], evaluate=False)
+    if any(a is not b for a, b in zip(args, expr.args)):
+        if (expr.is_Add or expr.is_Mul) and expr.is_commutative:
+            args.sort(key=cmp_to_key(Basic.compare))
+        if expr.is_Add or expr.is_Mul or expr.is_Pow:
+            return expr.func(*args, evaluate=False)
+        return expr.func(*args)
+    return expr
 
 
 
@@ -273,6 +306,7 @@ class Printer:
         # _print_level is the number of times self._print() was recursively
         # called. See StrPrinter._print_Float() for an example of usage
         self._print_level = 0
+        self._exp_as_function = False
 
     def __eq__(self, other):
         # Two printers are equal if they are of the same type and configured
@@ -312,6 +346,13 @@ class Printer:
             2. Take the best fitting method defined in the printer.
             3. As fall-back use the emptyPrinter method for the printer.
         """
+        exp_converted = False
+        if global_parameters.exp_is_pow and isinstance(expr, Basic):
+            if not self._exp_as_function:
+                expr = _exp_pow_as_exp(expr)
+                self._exp_as_function = exp_converted = True
+            elif expr.is_Pow and expr.base is S.Exp1:
+                expr = _exp_pow_as_exp(expr)
         self._print_level += 1
         try:
             # If the printer defines a name for a printing method
@@ -346,6 +387,8 @@ class Printer:
             return self.emptyPrinter(expr)
         finally:
             self._print_level -= 1
+            if exp_converted:
+                self._exp_as_function = False
 
     def emptyPrinter(self, expr):
         return str(expr)

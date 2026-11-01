@@ -12,6 +12,7 @@ from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 from sympy.abc import a, b, j, k, m, n, r, x
+from sympy.testing.pytest import _both_exp_pow
 
 
 def test_gosper_normal():
@@ -27,6 +28,7 @@ def test_gosper_term():
         k)/factorial(2*k + 1), k) == (-k - S.Half)/(k + Rational(1, 4))
 
 
+@_both_exp_pow
 def test_gosper_sum():
     assert gosper_sum(1, (k, 0, n)) == 1 + n
     assert gosper_sum(k, (k, 0, n)) == n*(1 + n)/2

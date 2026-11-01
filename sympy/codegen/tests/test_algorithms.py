@@ -14,7 +14,7 @@ from sympy.external import import_module
 from sympy.printing.codeprinter import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c, has_fortran
 from sympy.utilities._compilation.util import may_xfail
-from sympy.testing.pytest import skip, raises, skip_under_pyodide
+from sympy.testing.pytest import skip, raises, skip_under_pyodide, _both_exp_pow
 
 cython = import_module('cython')
 wurlitzer = import_module('wurlitzer')
@@ -135,6 +135,7 @@ x=     0.86547 d_x=  3.6902e-17
 """  # try to run tests with LC_ALL=C if this assertion fails
 
 
+@_both_exp_pow
 def test_newtons_method_function__rtol_cse_nan():
     a, b, c, N_geo, N_tot = symbols('a b c N_geo N_tot', real=True, nonnegative=True)
     i = Symbol('i', integer=True, nonnegative=True)

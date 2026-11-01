@@ -235,6 +235,11 @@ class FuncMinusOneOptim(ReplaceOptim):
         terms_with_func, other = sift(non_num, lambda arg: arg.has(self.func), binary=True)
         return numsum, terms_with_func, other
 
+    def _is_func(self, arg):
+        if arg.is_Pow and arg.base is S.Exp1:
+            return self.func is exp
+        return arg.func == self.func
+
     def replace_in_Add(self, e):
         """ passed as second argument to Basic.replace(...) """
         numsum, terms_with_func, other_non_num_terms = self._group_Add_terms(e)
@@ -243,12 +248,12 @@ class FuncMinusOneOptim(ReplaceOptim):
         substituted, untouched = [], []
         for with_func in terms_with_func:
             if with_func.is_Mul:
-                func, coeff = sift(with_func.args, lambda arg: arg.func == self.func, binary=True)
+                func, coeff = sift(with_func.args, self._is_func, binary=True)
                 if len(func) == 1 and len(coeff) == 1:
                     func, coeff = func[0], coeff[0]
                 else:
                     coeff = None
-            elif with_func.func == self.func:
+            elif self._is_func(with_func):
                 func, coeff = with_func, S.One
             else:
                 coeff = None
@@ -261,7 +266,8 @@ class FuncMinusOneOptim(ReplaceOptim):
 
                 if do_substitute:  # advantageous substitution
                     numsum += coeff
-                    substituted.append(coeff*self.func_m_1(*func.args))
+                    args = (func.exp,) if func.is_Pow and self.func is exp else func.args
+                    substituted.append(coeff*self.func_m_1(*args))
                     continue
             untouched.append(with_func)
 

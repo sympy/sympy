@@ -7,7 +7,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.core import S
 from sympy.solvers.pde import (pde_separate, pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
 
 a, b, c, x, y = symbols('a b c x y')
@@ -160,6 +160,7 @@ def test_pde_1st_linear_constant_coeff_homogeneous():
     assert checkpdesol(eq, sol)[0]
 
 
+@_both_exp_pow
 def test_pde_1st_linear_constant_coeff():
     f, F = map(Function, ['f', 'F'])
     u = f(x,y)

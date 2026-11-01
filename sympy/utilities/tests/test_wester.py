@@ -77,7 +77,7 @@ from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
-from sympy.testing.pytest import (XFAIL, slow, SKIP, tooslow, raises)
+from sympy.testing.pytest import (XFAIL, slow, SKIP, tooslow, raises, _both_exp_pow)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
@@ -1037,6 +1037,7 @@ def test_M23():
     ]
 
 
+@_both_exp_pow
 def test_M24():
     # TODO: Replace solve with solveset, as of now test fails for solveset
     solution = solve(1 - binomial(m, 2)*2**k, k)
@@ -1044,6 +1045,7 @@ def test_M24():
     assert solution[0].expand() == answer.expand()
 
 
+@_both_exp_pow
 def test_M25():
     a, b, c, d = symbols(':d', positive=True)
     x = symbols('x')
@@ -2126,6 +2128,7 @@ def test_T1():
     assert limit((1 - cos(x))/x**2, x, 0) == S.Half
 
 
+@_both_exp_pow
 def test_T2():
     assert limit((3**x + 5**x)**(1/x), x, oo) == 5
 
@@ -2134,16 +2137,19 @@ def test_T3():
     assert limit(log(x)/(log(x) + sin(x)), x, oo) == 1
 
 
+@_both_exp_pow
 def test_T4():
     assert limit((exp(x*exp(-x)/(exp(-x) + exp(-2*x**2/(x + 1))))
                  - exp(x))/x, x, oo) == -exp(2)
 
 
+@_both_exp_pow
 def test_T5():
     assert  limit(x*log(x)*log(x*exp(x) - x**2)**2/log(log(x**2
                   + 2*exp(exp(3*x**3*log(x))))), x, oo) == R(1, 3)
 
 
+@_both_exp_pow
 def test_T6():
     assert limit(1/n * factorial(n)**(1/n), n, oo) == exp(-1)
 
@@ -2152,6 +2158,7 @@ def test_T7():
     limit(1/n * gamma(n + 1)**(1/n), n, oo)
 
 
+@_both_exp_pow
 def test_T8():
     a, z = symbols('a z', positive=True)
     assert limit(gamma(z + a)/gamma(z)*exp(-a*log(z)), z, oo) == 1
@@ -2177,6 +2184,7 @@ def test_T11():
     assert limit(n**x/(x*product((1 + x/k), (k, 1, n))), n, oo) == gamma(x)
 
 
+@_both_exp_pow
 def test_T12():
     x, t = symbols('x t', real=True)
     # Does not evaluate the limit but returns an expression with erf
@@ -2529,6 +2537,7 @@ def test_W11():
             pi*(-1 + sqrt(2)))
 
 
+@_both_exp_pow
 def test_W12():
     p = symbols('p', positive=True)
     q = symbols('q', real=True)
@@ -2558,6 +2567,7 @@ def test_W16():
                      (x, -1, 1)) == R(36, 35)
 
 
+@_both_exp_pow
 def test_W17():
     a, b = symbols('a b', positive=True)
     assert integrate(exp(-a*x)*besselj(0, b*x),
@@ -2690,6 +2700,7 @@ def test_X5():
     # assert missing, until exception is removed
 
 
+@_both_exp_pow
 def test_X6():
     # Taylor series of nonscalar objects (noncommutative multiplication)
     # expected result => (B A - A B) t^2/2 + O(t^3)   [Stanly Steinberg]
@@ -2918,6 +2929,7 @@ def test_Y2():
     assert f == cos(t*(w - 1))
 
 
+@_both_exp_pow
 def test_Y3():
     t = symbols('t', positive=True)
     w = symbols('w', real=True)
@@ -2926,6 +2938,7 @@ def test_Y3():
     assert F == w/(s**2 - 4*w**2)
 
 
+@_both_exp_pow
 def test_Y4():
     t = symbols('t', positive=True)
     s = symbols('s')
@@ -2933,6 +2946,7 @@ def test_Y4():
     assert F == 1/s - exp(-6*sqrt(s))/s
 
 
+@_both_exp_pow
 def test_Y5_Y6():
 # Solve y'' + y = 4 [H(t - 1) - H(t - 2)], y(0) = 1, y'(0) = 0 where H is the
 # Heaviside (unit step) function (the RHS describes a pulse of magnitude 4 and
@@ -2987,11 +3001,13 @@ def test_Y8():
     assert fourier_transform(1, x, z) == DiracDelta(z)
 
 
+@_both_exp_pow
 def test_Y9():
     assert (fourier_transform(exp(-9*x**2), x, z) ==
             sqrt(pi)*exp(-pi**2*z**2/9)/3)
 
 
+@_both_exp_pow
 def test_Y10():
     assert (fourier_transform(abs(x)*exp(-3*abs(x)), x, z).cancel() ==
             (-8*pi**2*z**2 + 18)/(16*pi**4*z**4 + 72*pi**2*z**2 + 81))

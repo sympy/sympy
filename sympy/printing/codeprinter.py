@@ -11,6 +11,8 @@ from sympy.core.mul import _keep_coeff
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import re
+from sympy.core.parameters import global_parameters
+from sympy.printing.printer import _exp_pow_as_exp
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -163,6 +165,8 @@ class CodePrinter(StrPrinter):
 
         # Remove re(...) nodes due to UnevaluatedExpr.is_real always is None:
         expr = self._handle_UnevaluatedExpr(expr)
+        if global_parameters.exp_is_pow:
+            expr = _exp_pow_as_exp(expr)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized

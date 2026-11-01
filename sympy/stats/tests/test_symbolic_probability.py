@@ -13,8 +13,10 @@ from sympy.core.singleton import S
 from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
                          Probability, Expectation, Moment, CentralMoment)
 from sympy.stats.rv import probability, expectation
+from sympy.testing.pytest import _both_exp_pow
 
 
+@_both_exp_pow
 def test_literal_probability():
     X = Normal('X', 2, 3)
     Y = Normal('Y', 3, 4)

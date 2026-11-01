@@ -12,7 +12,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.limitseq import limit_seq
 from sympy.series.limitseq import difference_delta as dd
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, _both_exp_pow
 from sympy.calculus.accumulationbounds import AccumulationBounds
 
 n, m, k = symbols('n m k', integer=True)
@@ -94,6 +94,7 @@ def test_limit_seq():
     raises(ValueError, lambda: limit_seq(e * m))
 
 
+@_both_exp_pow
 def test_alternating_sign():
     assert limit_seq((-1)**n/n**2, n) == 0
     assert limit_seq((-2)**(n+1)/(n + 3**n), n) == 0
@@ -108,6 +109,7 @@ def test_alternating_sign():
     assert limit_seq(n/(n + 1) + (I/2)**n, n) == 1
 
 
+@_both_exp_pow
 def test_accum_bounds():
     assert limit_seq((-1)**n, n) == AccumulationBounds(-1, 1)
     assert limit_seq(cos(pi*n), n) == AccumulationBounds(-1, 1)
@@ -130,11 +132,13 @@ def test_issue_9308():
     assert limit_seq(subfactorial(n)/factorial(n), n) == exp(-1)
 
 
+@_both_exp_pow
 def test_issue_10382():
     n = Symbol('n', integer=True)
     assert limit_seq(fibonacci(n+1)/fibonacci(n), n).together() == S.GoldenRatio
 
 
+@_both_exp_pow
 def test_issue_11672():
     assert limit_seq(Rational(-1, 2)**n, n) == 0
 
@@ -145,6 +149,7 @@ def test_issue_14196():
     assert limit_seq(Sum(m**k, (m, 1, n)).doit()/(n**(k + 1)), n) == 1/(k + 1)
 
 
+@_both_exp_pow
 def test_issue_16735():
     assert limit_seq(5**n/factorial(n), n) == 0
 

@@ -4,6 +4,7 @@ from sympy.sets.sets import Interval
 from sympy.calculus.singularities import is_increasing, is_decreasing
 from sympy.codegen.rewriting import Optimization
 from sympy.core.function import UndefinedFunction
+from sympy.core.singleton import S
 
 """
 This module collects classes useful for approximate rewriting of expressions.
@@ -153,8 +154,9 @@ class SeriesApprox(Optimization):
         return expr.factor().replace(self.query, lambda arg: self.value(arg))
 
     def query(self, expr):
-        return (expr.is_Function and not isinstance(expr, UndefinedFunction)
+        return ((expr.is_Function and not isinstance(expr, UndefinedFunction)
                 and len(expr.args) == 1)
+                or (expr.is_Pow and expr.base is S.Exp1))
 
     def value(self, fexpr):
         free_symbols = fexpr.free_symbols

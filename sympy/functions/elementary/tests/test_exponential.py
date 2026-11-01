@@ -809,6 +809,7 @@ def test_issue_9116():
     assert log(n).is_nonnegative is True
 
 
+@_both_exp_pow
 def test_issue_18473():
     assert exp(x*log(cos(1/x))).as_leading_term(x) == S.NaN
     assert exp(x*log(tan(1/x))).as_leading_term(x) == S.NaN

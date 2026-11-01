@@ -52,6 +52,7 @@ from sympy.external.gmpy import factorial as ifac
 from sympy.external.mpmath import giant_steps
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational
+from sympy.core.singleton import S
 from sympy.core.intfunc import igcd
 from sympy.functions import (sin, cos, tan, atan, exp, atanh, asinh, tanh, log,
                              ceiling, sinh, cosh)
@@ -2013,13 +2014,17 @@ def _rs_series(expr, series_rs, a, prec):
     R = series_rs.ring
 
     # expr does not contain any function to be expanded
-    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
+    is_exp_pow = expr.is_Pow and expr.base is S.Exp1
+    if (not any(arg.has(Function, exp) for arg in args)
+            and not expr.is_Function and not is_exp_pow):
         return series_rs
 
     if not expr.has(a):
         return series_rs
 
-    elif expr.is_Function:
+    elif expr.is_Function or is_exp_pow:
+        if is_exp_pow:
+            args = (expr.exp,)
         arg = args[0]
         if len(args) > 1:
             raise NotImplementedError
@@ -2041,7 +2046,7 @@ def _rs_series(expr, series_rs, a, prec):
         # the generators of all three.
         R = R.compose(R1).compose(series_inner.ring)
         series_inner = series_inner.set_ring(R)
-        series = eval(_convert_func[str(expr.func)])(series_inner,
+        series = eval(_convert_func['exp' if is_exp_pow else str(expr.func)])(series_inner,
             R(a), prec)
         return series
 

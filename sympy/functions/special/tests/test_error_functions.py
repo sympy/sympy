@@ -20,7 +20,7 @@ from sympy.series.order import O
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.special.error_functions import _erfs, _eis
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
 x, y, z = symbols('x,y,z')
 h, a = symbols('h,a')
@@ -29,6 +29,7 @@ n = Symbol("n", integer=True)
 t = Dummy('t')
 
 
+@_both_exp_pow
 def test_erf():
     assert erf(nan) is nan
 
@@ -737,6 +738,7 @@ def test_ci():
     raises(ArgumentIndexError, lambda: Ci(x).fdiff(2))
 
 
+@_both_exp_pow
 def test_fresnel():
     assert fresnels(0) is S.Zero
     assert fresnels(oo) is S.Half

@@ -20,7 +20,7 @@ from sympy.codegen.rewriting import (
     create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt,
     optims_numpy, optims_scipy, sinc_opts, FuncMinusOneOptim
 )
-from sympy.testing.pytest import XFAIL, skip
+from sympy.testing.pytest import XFAIL, skip, _both_exp_pow
 from sympy.utilities import lambdify
 from sympy.utilities._compilation import compile_link_import_strings, has_c
 from sympy.utilities._compilation.util import may_xfail
@@ -73,6 +73,7 @@ def test_exp2_opt():
     assert expr2 == optimize(expr2, [exp2_opt])
 
 
+@_both_exp_pow
 def test_expm1_opt():
     x = Symbol('x')
 
@@ -139,6 +140,7 @@ def test_expm1_opt():
     assert (opt9.rewrite(exp) - expr9.rewrite(exp)).factor().is_zero
 
 
+@_both_exp_pow
 def test_expm1_two_exp_terms():
     x, y = map(Symbol, 'x y'.split())
     expr1 = exp(x) + exp(y) - 2
@@ -191,6 +193,7 @@ def test_cosm1_two_cos_terms():
     assert opt1 == cosm1(x) + cosm1(y)
 
 
+@_both_exp_pow
 def test_expm1_cosm1_mixed():
     x = Symbol('x')
     expr1 = exp(x) + cos(x) - 2
@@ -274,6 +277,7 @@ def test_log1p_opt():
     assert str(opt4) == 'log(x + 3)'
 
 
+@_both_exp_pow
 def test_optims_c99():
     x = Symbol('x')
 
@@ -320,6 +324,7 @@ def test_optims_c99():
     assert opt8 == expr8
 
 
+@_both_exp_pow
 def test_create_expand_pow_optimization():
     cc = lambda x: ccode(
         optimize(x, [create_expand_pow_optimization(4)]))
@@ -395,6 +400,7 @@ def test_sinc_opts():
     })
 
 
+@_both_exp_pow
 def test_optims_numpy():
     def check(d):
         for k, v in d.items():

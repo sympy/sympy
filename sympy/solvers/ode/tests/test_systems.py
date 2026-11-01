@@ -22,7 +22,7 @@ from sympy.solvers.ode.systems import (_classify_linear_system, linear_ode_to_ma
 from sympy.functions import airyai, airybi
 from sympy.integrals.integrals import Integral
 from sympy.simplify.ratsimp import ratsimp
-from sympy.testing.pytest import raises, slow, tooslow, XFAIL
+from sympy.testing.pytest import raises, slow, tooslow, XFAIL, _both_exp_pow
 
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -517,6 +517,7 @@ def test_canonical_odes():
     assert canonical_odes(eqs2, funcs, x) == sol2
 
 
+@_both_exp_pow
 def test_sysode_linear_neq_order1_type1():
 
     f, g, x, y, h = symbols('f g x y h', cls=Function)
@@ -1275,6 +1276,7 @@ def test_sysode_linear_neq_order1_type2():
     assert checksysodesol(eq27 , sol27) == (True , [0,0])
 
 
+@_both_exp_pow
 def test_sysode_linear_neq_order1_type3():
 
     f, g, h, k, x0 , y0 = symbols('f g h k x0 y0', cls=Function)
@@ -1701,6 +1703,7 @@ def test_higher_order_to_first_order_12():
     assert checksysodesol(eqs12, sol12) == (True, [0, 0])
 
 
+@_both_exp_pow
 def test_second_order_to_first_order_2():
     f, g = symbols("f g", cls=Function)
     x, t, x_, t_, d, a, m = symbols("x t x_ t_ d a m")
@@ -2300,6 +2303,7 @@ def test_linear_3eq_order1_type4_long_check():
     assert checksysodesol(eq, sol) == (True, [0, 0, 0])
 
 
+@_both_exp_pow
 def test_dsolve_system():
     f, g = symbols("f g", cls=Function)
     x = symbols("x")

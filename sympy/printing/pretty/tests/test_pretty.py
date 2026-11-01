@@ -3808,6 +3808,7 @@ def test_tensor_ArrayTensorProduct():
     assert upretty(ArrayTensorProduct(A + C, B)) == "(A + C)\u22a0B"
 
 
+@_both_exp_pow
 def test_tensor_ArrayElementwiseApplyFunc():
     from sympy.tensor.array.expressions import ArraySymbol, ArrayTensorProduct
     from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc
@@ -8160,6 +8161,7 @@ def test_is_combining():
         [False, True, False, False]
 
 
+@_both_exp_pow
 def test_issue_17616():
     assert pretty(pi**(1/exp(1))) == \
    '  / -1\\\n'\
