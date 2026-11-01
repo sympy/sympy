@@ -87,7 +87,7 @@ def test_AlgebraicField_integral_basis():
                   k.ext.field_element([S.Half, S.Half])]
 
 
-def test_round_two_hnf_modulus():
+def test_round_two_hnf_modulus_issue_30613():
     K = QQ.algebraic_field(sqrt(2), sqrt(5))
     assert K.discriminant() == 2**6 * 5**2
     K = QQ.algebraic_field(sqrt(2), 2*cos(2*pi/7))
