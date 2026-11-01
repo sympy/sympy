@@ -21,6 +21,7 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import ClassVar, Any, Hashable, TypeVar, Protocol
     from typing_extensions import Self
     from .assumptions import StdFactKB
@@ -741,6 +742,15 @@ class Basic(Printable):
         return set()
 
 
+    @property
+    def bound_symbols(self) -> Sequence[Basic]:
+        """Symbols bound by this object, excluding bindings in its arguments.
+
+        Objects that bind symbols override this property. Other objects
+        return an empty tuple.
+        """
+        return ()
+
     def _bound_dummies(self):
         """Replace bound symbols with unique Dummies.
 
@@ -775,7 +785,7 @@ class Basic(Printable):
             return self, restore
 
         rv = self.replace(
-            lambda x: hasattr(x, 'bound_symbols'),
+            lambda x: bool(x.bound_symbols),
             freshen,
             simultaneous=False)
 
@@ -822,7 +832,7 @@ class Basic(Printable):
         def assign(x, used):
             used = set(used)
 
-            for b in getattr(x, 'bound_symbols', ()):
+            for b in x.bound_symbols:
                 if b not in temporary or b in canonical:
                     continue
 
@@ -856,8 +866,8 @@ class Basic(Printable):
         >>> Lambda(x, 2*x).canonical_variables
         {x: _0}
         """
-        bound: list[Basic] | None = getattr(self, 'bound_symbols', None)
-        if bound is None:
+        bound = self.bound_symbols
+        if not bound:
             return {}
         dums = numbered_symbols('_')
         reps = {}

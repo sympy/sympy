@@ -2236,7 +2236,7 @@ class Lambda(Expr):
 
         # Protect bindings whose scopes contain the replacement.
         for node in preorder_traversal(f):
-            if not hasattr(node, 'bound_symbols') or not node.has(probe):
+            if not node.bound_symbols or not node.has(probe):
                 continue
             for d in node.bound_symbols:
                 if d in restore and restore[d] in capture_new.free_symbols:

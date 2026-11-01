@@ -266,6 +266,16 @@ def test_atomic():
     assert _atomic(Basic(S(1), S(2))) == set()
 
 
+def test_bound_symbols():
+    x = Symbol('x')
+    integral = Integral(x, (x, 0, 1))
+    assert Basic().bound_symbols == ()
+    assert x.bound_symbols == ()
+    assert Basic(integral).bound_symbols == ()
+    assert integral.bound_symbols == [x]
+    assert Lambda(x, x).bound_symbols == (x,)
+
+
 def test_as_dummy():
     u, v, x, y, z, _0, _1 = symbols('u v x y z _0 _1')
     assert Lambda(x, x + 1).as_dummy() == Lambda(_0, _0 + 1)
