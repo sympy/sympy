@@ -3435,6 +3435,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # Order should not be changed.
         if isinstance(sol, ConditionSet):
             # extracts any solution in ConditionSet
+            if sol.base_set in (S.Reals, S.Complexes):
+                return S.EmptySet, soln_imageset
             sol = sol.base_set
 
         if isinstance(sol, Complement):
@@ -3641,7 +3643,15 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # one symbol's real soln, another symbol may have
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
-                                soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
+                                c_soln = solveset_complex(eq2, sym)  # might give ValueError with Abs
+                                if isinstance(c_soln, ConditionSet) and c_soln.base_set in (S.Reals, S.Complexes):
+                                    c_soln = S.EmptySet
+                                elif isinstance(c_soln, Union):
+                                    c_soln = Union(*[
+                                        arg for arg in c_soln.args
+                                        if not (isinstance(arg, ConditionSet) and arg.base_set in (S.Reals, S.Complexes))
+                                    ])
+                                soln += c_soln
 
                         if not isinstance(soln, (FiniteSet, ImageSet, ConditionSet, Union)) and soln is not S.EmptySet:
                             raise NotImplementedError(
@@ -3661,6 +3671,18 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             total_conditionst += 1
                         else:
                             soln = soln.base_set
+                    elif isinstance(soln, Union):
+                        valid_args = []
+                        for arg in soln.args:
+                            if isinstance(arg, ConditionSet) and arg.base_set in (S.Reals, S.Complexes):
+                                total_conditionst += 1
+                            else:
+                                valid_args.append(arg)
+                        if not valid_args:
+                            soln = S.EmptySet
+                            not_solvable = True
+                        else:
+                            soln = Union(*valid_args)
 
                     if soln is not S.EmptySet:
                         soln, soln_imageset = _extract_main_soln(
