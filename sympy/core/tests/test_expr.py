@@ -23,7 +23,7 @@ from sympy.functions.elementary.exponential import exp_polar, exp, log
 from sympy.functions.elementary.hyperbolic import sinh, tanh
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import tan, sin, cos
+from sympy.functions.elementary.trigonometric import atan, tan, sin, cos
 from sympy.functions.special.delta_functions import (Heaviside,
     DiracDelta)
 from sympy.functions.special.error_functions import Si
@@ -47,6 +47,7 @@ from sympy.physics.units import meter
 
 import pytest
 import sys
+from unittest.mock import patch
 from sympy.testing.pytest import raises, slow, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
@@ -1419,8 +1420,8 @@ def test_extractions():
     assert (-x + y).could_extract_minus_sign() is True
     assert (x - 1).could_extract_minus_sign() is False
     assert (1 - x).could_extract_minus_sign() is True
-    assert (sqrt(2) - 1).could_extract_minus_sign() is True
-    assert (1 - sqrt(2)).could_extract_minus_sign() is False
+    assert (sqrt(2) - 1).could_extract_minus_sign() is False
+    assert (1 - sqrt(2)).could_extract_minus_sign() is True
     # check that result is canonical
     eq = (3*x + 15*y).extract_multiplicatively(3)
     assert eq is not None and eq.args == eq.func(*eq.args).args
@@ -2394,6 +2395,169 @@ def test_format():
 
 def test_issue_24045():
     assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
+
+
+def test_issue_2834():
+    from sympy import pretty, latex
+
+    _r0 = Rational(1, 2)
+    _r1 = Rational(4, 5)
+    _r2 = Rational(9, 10)
+    x0 = -x
+    x1 = 1/(1 + (1 + exp(-abs(_r2 + x0)))/(1 + exp(-abs(_r1 + x0))))
+    f = Integral(x1, (x, 0, _r0)) + Integral(1 - x1, (x, _r0, 1))
+    with patch.object(Integral, 'evalf',
+                      side_effect=AssertionError("Printing called evalf")):
+        str(f)
+        pretty(f)
+        latex(f)
+
+
+def test_printing_ok_construction_not():
+    from time import time
+    T = time()
+    did = 0
+    while time() - T < 0.5:
+        did += 1
+        # 10800
+        expr = 2*Integral(sin(exp(x)), (x, 1, oo)) + 2*Si(E)
+        assert str(expr)
+        # 19790
+        k = Symbol('k')
+        terms = [
+            Sum(2**((k**2 + k - 5)/(k**4 - 5))*(k**2 + k),
+                (k, 0, oo)),
+            Sum(2**((k**2 - k - 5)/(k**4 - 5))*(k**2 - k),
+                (k, 0, oo)),
+            Sum(-2**((k**2 - k - 5)/(k**4 - 5))*(k**2 - k),
+                (k, 0, 0)),
+        ]
+        assert str(terms)
+        # 2834
+        sA = 1 + exp(-abs(x - 0.8))
+        sB = 1 + exp(-abs(x - 0.9))
+        pA = 1/(1 + sB/sA)
+        expr = (Integral(pA, (x, 0, S.Half))
+            + Integral(1 - pA, (x, S.Half, 1)))
+        assert str(expr)
+        # 17609
+        expr = exp(exp(exp(10*E))) + 1
+        assert str(expr)
+    assert did > 100  # it is about 200 on a modest system
+
+
+@XFAIL
+def test_issue_10800_printing():
+    # Printing an unevaluated integral must not evaluate it.
+    expr = 2*Integral(sin(exp(x)), (x, 1, oo)) + 2*Si(E)
+    with patch.object(Expr, 'evalf', side_effect=AssertionError):
+        s = str(expr)
+    assert 'Integral(' in s
+    assert 'Si(E)' in s
+
+
+@XFAIL
+def test_issue_19790_printing():
+    # Printing this sum of unevaluated sums formerly hung.
+    k = Symbol('k')
+    terms = [
+        Sum(2**((k**2 + k - 5)/(k**4 - 5))*(k**2 + k),
+            (k, 0, oo)),
+        Sum(2**((k**2 - k - 5)/(k**4 - 5))*(k**2 - k),
+            (k, 0, oo)),
+        Sum(-2**((k**2 - k - 5)/(k**4 - 5))*(k**2 - k),
+            (k, 0, 0)),
+    ]
+    with patch.object(Expr, 'evalf', side_effect=AssertionError):
+        s = str(Add(*terms))
+    assert s.count('Sum(') == 3
+
+
+@XFAIL
+def test_issue_2834_printing():
+    # The original numerical integral example.
+    sA = 1 + exp(-abs(x - 0.8))
+    sB = 1 + exp(-abs(x - 0.9))
+    pA = 1/(1 + sB/sA)
+    expr = (Integral(pA, (x, 0, S.Half))
+            + Integral(1 - pA, (x, S.Half, 1)))
+    with patch.object(Expr, 'evalf', side_effect=AssertionError):
+        s = str(expr)
+    assert s.count('Integral(') == 2
+
+
+@XFAIL
+def test_issue_17609_printing():
+    # Printing the large exponential should not evaluate it.
+    # This does not test the separate sin(arg) assumptions problem.
+    expr = exp(exp(exp(10*E))) + 1
+    with patch.object(Expr, 'evalf', side_effect=AssertionError):
+        s = str(expr)
+    assert 'exp(' in s
+
+
+@XFAIL
+@slow
+def test_issue_23211_root_printing():
+    # this is slow to evaluate
+    _r0 = Rational(1, 9)
+    _r1 = Rational(1, 4)
+    _r2 = Rational(1, 3)
+    _r3 = Rational(1, 2)
+    _r4 = Rational(2, 3)
+    x0 = pi*_r0
+    x1 = cos(x0)
+    x2 = (24*x1 + 4)**_r1
+    x3 = _r3*atan(6**_r3*x1**_r3)
+    x4 = x2*cos(x3)
+    x5 = -x4
+    x6 = I*x2*sin(x3)
+    x7 = -x6
+    x8 = 2**_r4
+    x9 = 3**_r3
+    x10 = sin(x0)
+    x11 = x10**2
+    x12 = 2**_r2
+    x13 = 2*x12
+    x14 = x1**2
+    x15 = 4*x8
+    x16 = 1/(x11*x15 + x14*x15)
+    x17 = 16*x16
+    x18 = 32*x16
+    x19 = x10*x9
+    x20 = x18*x19
+    x21 = 32*x12
+    x22 = 64*x14
+    x23 = x8/(x1**4*x21 + x10**4*x21 + x11*x12*x22)
+    x24 = x1*x20 + x11*x13 + x11*x17 + 64*x11*x23 + x13*x14 - x14*x17 + x22*x23
+    x25 = x24**_r1
+    x26 = x1*x8
+    x27 = x10*x8
+    x28 = 8*x12*x16
+    x29 = 1/(x1*x28 + x19*x28 + x26 + x27*x9)
+    x30 = x1**3
+    x31 = 4*x12
+    x32 = x10**3*x9
+    x33 = x1*x11
+    x34 = x10*x31
+    x35 = 1/(x14*x20 + x14*x34*x9 + x18*x30 + x18*x32 + x18*x33 + x30*x31 + x31*x32 + x31*x33)
+    x36 = _r3*atan(x1*x31*x35*x9 - x26*x29*x9 + x27*x29 - x34*x35)
+    x37 = sin(x36)
+    x38 = cos(x36)
+    x39 = x25*x38*x9
+    x40 = _r3*atan(x25*x37*x8*x9/(-x39*x8 + 2))
+    x41 = 6*x12*x24**_r3
+    x42 = (-x15*x39 + x37**2*x41 + x38**2*x41 + 4)**_r1
+    root = [
+        x5 + x6,
+        x4 + x7,
+        x5 + x7,
+        x4 + x6,
+        x42*sin(x40) + I*x42*cos(x40)]
+
+    # but fast to print
+    with patch.object(Expr, 'evalf', side_effect=AssertionError):
+        assert str(root)
 
 
 def test__unevaluated_Mul():

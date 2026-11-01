@@ -57,7 +57,7 @@ different kind. This is very general type of expanding and usually you would
 use ``rewrite()`` to do specific type of rewrite::
 
     >>> GoldenRatio.expand(func=True)
-    1/2 + sqrt(5)/2
+    sqrt(5)/2 + 1/2
 
 Common Subexpression Detection and Collection
 ---------------------------------------------

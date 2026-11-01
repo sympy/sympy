@@ -986,7 +986,7 @@ class tan(TrigonometricFunction):
     >>> tan(1).diff(x)
     0
     >>> tan(pi/8).expand()
-    -1 + sqrt(2)
+    sqrt(2) - 1
 
     See Also
     ========

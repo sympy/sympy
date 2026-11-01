@@ -2338,7 +2338,7 @@ class GammaProcess(CountingProcess):
     lowergamma(2*t, 1)/gamma(2*t)
     >>> P(Not((X(t) < 5) & (X(d) > 3)), Contains(t, Interval.Ropen(2, 4)) &
     ... Contains(d, Interval.Lopen(7, 8))).simplify()
-    -4*exp(-3) + 472*exp(-8)/3 + 1
+    1 - 4*exp(-3) + 472*exp(-8)/3
     >>> E(X(2) + x*E(X(5)))
     10*x + 4
 

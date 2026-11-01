@@ -111,9 +111,9 @@ def _separate_sq(p):
     >>> from sympy.polys.numberfields.minpoly import _separate_sq
     >>> p= -x + sqrt(2) + sqrt(3) + sqrt(7)
     >>> p = _separate_sq(p); p
-    -x**2 + 2*sqrt(3)*x + 2*sqrt(7)*x - 2*sqrt(21) - 8
+    -2*sqrt(21) + 2*sqrt(3)*x + 2*sqrt(7)*x - x**2 - 8
     >>> p = _separate_sq(p); p
-    -x**4 + 4*sqrt(7)*x**3 - 32*x**2 + 8*sqrt(7)*x + 20
+    4*sqrt(7)*x**3 + 8*sqrt(7)*x - x**4 - 32*x**2 + 20
     >>> p = _separate_sq(p); p
     -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
 
@@ -667,7 +667,7 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
     >>> minimal_polynomial(sqrt(2), x)
     x**2 - 2
     >>> minimal_polynomial(sqrt(2), x, domain=QQ.algebraic_field(sqrt(2)))
-    x - sqrt(2)
+    -sqrt(2) + x
     >>> minimal_polynomial(sqrt(2) + sqrt(3), x)
     x**4 - 10*x**2 + 1
     >>> minimal_polynomial(solve(x**3 + x + 3)[0], x)

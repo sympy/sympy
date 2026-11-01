@@ -5159,10 +5159,10 @@ class PermutationGroup(Basic):
         >>> M = AlternatingGroup(4).character_table()
         >>> M.as_matrix()
         Matrix([
-         [1,          1,          1,  1],
-         [1, -1 - zeta3,      zeta3,  1],
-         [1,      zeta3, -1 - zeta3,  1],
-         [3,          0,          0, -1]])
+        [1,          1,          1,  1],
+        [1, -zeta3 - 1,      zeta3,  1],
+        [1,      zeta3, -zeta3 - 1,  1],
+        [3,          0,          0, -1]])
 
         """
         from sympy.combinatorics.character_table import CharacterTable

@@ -678,7 +678,7 @@ def test_WienerProcess():
     assert P((X(t) > 4) & (X(d) > 3) & (X(x) > 2) & (X(y) > 1),
         Contains(t, Interval.Lopen(0, 1)) & Contains(d, Interval.Lopen(1, 2))
         & Contains(x, Interval.Lopen(2, 3)) & Contains(y, Interval.Lopen(3, 4))).simplify() ==\
-        (1 - erf(sqrt(2)/2))*(1 - erf(sqrt(2)))*(1 - erf(3*sqrt(2)/2))*(1 - erf(2*sqrt(2)))/16
+        (erf(sqrt(2)/2) - 1)*(erf(sqrt(2)) - 1)*(erf(3*sqrt(2)/2) - 1)*(erf(2*sqrt(2)) - 1)/16
 
     # Contains an overlapping interval so, return Probability
     assert P((X(t)< 2) & (X(d)> 3), Contains(t, Interval.Lopen(0, 2))
@@ -687,7 +687,7 @@ def test_WienerProcess():
 
     assert str(P(Not((X(t) < 5) & (X(d) > 3)), Contains(t, Interval.Ropen(2, 4)) &
         Contains(d, Interval.Lopen(7, 8))).simplify()) == \
-                '-(1 - erf(3*sqrt(2)/2))*(2 - erfc(5/2))/4 + 1'
+                '-(erf(3*sqrt(2)/2) - 1)*(erfc(5/2) - 2)/4 + 1'
     # Distribution has mean 0 at each timestamp
     assert E(X(t)) == 0
     assert E(x*(X(t) + X(d))*(X(t)**2+X(d)**2), Contains(t, Interval.Lopen(0, 1))

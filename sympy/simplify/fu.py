@@ -430,11 +430,11 @@ def TR8(rv, first=True):
     >>> from sympy.simplify.fu import TR8
     >>> from sympy import cos, sin
     >>> TR8(cos(2)*cos(3))
-    cos(5)/2 + cos(1)/2
+    cos(1)/2 + cos(5)/2
     >>> TR8(cos(2)*sin(3))
-    sin(5)/2 + sin(1)/2
+    sin(1)/2 + sin(5)/2
     >>> TR8(sin(2)*sin(3))
-    -cos(5)/2 + cos(1)/2
+    cos(1)/2 - cos(5)/2
     """
 
     def f(rv):
@@ -506,7 +506,7 @@ def TR9(rv):
     >>> TR9(cos(1) + cos(2))
     2*cos(1/2)*cos(3/2)
     >>> TR9(cos(1) + 2*sin(1) + 2*sin(2))
-    cos(1) + 4*sin(3/2)*cos(1/2)
+    4*sin(3/2)*cos(1/2) + cos(1)
 
     If no change is made by TR9, no re-arrangement of the
     expression will be made. For example, though factoring
@@ -514,7 +514,7 @@ def TR9(rv):
     was not changed, the original expression will be returned:
 
     >>> TR9(cos(3) + cos(3)*cos(2))
-    cos(3) + cos(2)*cos(3)
+    cos(2)*cos(3) + cos(3)
 
     """
 
@@ -650,7 +650,7 @@ def TR10i(rv):
     >>> TR10i(cos(1)*cos(3) + sin(1)*sin(3))
     cos(2)
     >>> TR10i(cos(1)*sin(3) + sin(1)*cos(3) + cos(3))
-    cos(3) + sin(4)
+    sin(4) + cos(3)
     >>> TR10i(sqrt(2)*cos(x)*x + sqrt(6)*sin(x)*x)
     2*sqrt(2)*x*sin(x + pi/6)
 
@@ -1075,7 +1075,7 @@ def TR13(rv):
     >>> TR13(tan(3)*tan(2))
     -tan(2)/tan(5) - tan(3)/tan(5) + 1
     >>> TR13(cot(3)*cot(2))
-    cot(2)*cot(5) + 1 + cot(3)*cot(5)
+    cot(2)*cot(5) + cot(3)*cot(5) + 1
     """
 
     def f(rv):

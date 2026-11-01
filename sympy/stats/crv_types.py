@@ -2515,7 +2515,7 @@ def LogCauchy(name, mu, sigma):
     1/(5*pi*z*((log(z) - 2)**2 + 1/25))
 
     >>> cdf(X)(z)
-    atan(5*log(z) - 10)/pi + 1/2
+    1/2 + atan(5*log(z) - 10)/pi
 
     References
     ==========
@@ -3287,7 +3287,7 @@ def Normal(name, mean, std):
              2             2
 
     >>> quantile(X)(p)
-    mu + sqrt(2)*sigma*erfinv(2*p - 1)
+    sqrt(2)*sigma*erfinv(2*p - 1) + mu
 
     >>> simplify(skewness(X))
     0

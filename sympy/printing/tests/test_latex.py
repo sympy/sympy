@@ -223,7 +223,7 @@ def test_latex_basic():
     assert latex((x + 1)**Rational(3, 4), fold_frac_powers=True) == \
         r"\left(x + 1\right)^{3/4}"
     assert latex(AlgebraicNumber(sqrt(2))) == r"\sqrt{2}"
-    assert latex(AlgebraicNumber(sqrt(2), [3, -7])) == r"-7 + 3 \sqrt{2}"
+    assert latex(AlgebraicNumber(sqrt(2), [3, -7])) == r"3 \sqrt{2} - 7"
     assert latex(AlgebraicNumber(sqrt(2), alias='alpha')) == r"\alpha"
     assert latex(AlgebraicNumber(sqrt(2), [3, -7], alias='alpha')) == \
         r"3 \alpha - 7"
@@ -463,7 +463,7 @@ def test_latex_symbols_failing():
 @_both_exp_pow
 def test_latex_functions():
     assert latex(exp(x)) == r"e^{x}"
-    assert latex(exp(1) + exp(2)) == r"e + e^{2}"
+    assert latex(exp(1) + exp(2)) == r"e^{2} + e"
 
     f = Function('f')
     assert latex(f(x)) == r'f{\left(x \right)}'

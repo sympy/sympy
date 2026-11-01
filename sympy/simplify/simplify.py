@@ -625,7 +625,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if _eval_simplify is not None:
         return _eval_simplify(**kwargs)
 
-    original_expr = expr = collect_abs(signsimp(expr))
+    original_expr = expr
+    expr = collect_abs(signsimp(expr))
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -1471,7 +1472,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
     -2 + 2*GoldenRatio
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-    1/2 - I*sqrt(sqrt(5)/10 + 1/4)
+    -I*sqrt(sqrt(5)/10 + 1/4) + 1/2
     >>> nsimplify(I**I, [pi])
     exp(-pi/2)
     >>> nsimplify(pi, tolerance=0.01)

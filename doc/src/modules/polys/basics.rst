@@ -562,10 +562,10 @@ polynomials and to solve some systems of polynomial equations::
     >>> from sympy import roots, solve_poly_system
 
     >>> solve(x**3 + 2*x + 3, x)
-               ____          ____
-         1   \/ 11 *I  1   \/ 11 *I
-    [-1, - - --------, - + --------]
-         2      2      2      2
+                        ____          ____
+                      \/ 11 *I   1  \/ 11 *I   1
+               [-1, - -------- + -, -------- + -]
+                         2       2     2       2
 
     >>> p = Symbol('p')
     >>> q = Symbol('q')
@@ -581,7 +581,7 @@ polynomials and to solve some systems of polynomial equations::
     [(5, 5)]
 
     >>> solve_poly_system([y**2 - x**3 + 1, y*x], x, y)
-                                       ___                 ___
-                                 1   \/ 3 *I         1   \/ 3 *I
-    [(0, -I), (0, I), (1, 0), (- - - -------, 0), (- - + -------, 0)]
-                                 2      2            2      2
+                                                                      ___               ___
+                                                                    \/ 3 *I   1       \/ 3 *I   1
+                                       [(0, -I), (0, I), (1, 0), (- ------- - -, 0), (------- - -, 0)]
+                                                                       2      2          2      2
