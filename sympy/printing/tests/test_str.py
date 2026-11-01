@@ -443,6 +443,66 @@ def test_Poly():
     assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
 
 
+def test_Poly_composite_domain_roundtrip():
+    from sympy.polys.domains import ZZ
+    from sympy.polys import PurePoly
+
+    a = Symbol('a')
+    beta = Symbol('beta')
+    positive = Symbol('a', positive=True)
+    e_symbol = Symbol('E')
+
+    cases = [
+        (a, ZZ.poly_ring(a), "domain='ZZ[a]'"),
+        (a, ZZ.frac_field(a), "domain='ZZ(a)'"),
+        (beta, ZZ.poly_ring(beta), "domain=ZZ.poly_ring(beta)"),
+        (positive, ZZ.frac_field(positive), "domain=ZZ.frac_field(a)"),
+        (e_symbol, ZZ.poly_ring(e_symbol), "domain=ZZ.poly_ring(E)"),
+        (a, ZZ.poly_ring(a, order='grlex'),
+         "domain=ZZ.poly_ring(a, order='grlex')"),
+        (a, ZZ.frac_field(a, order='grevlex'),
+         "domain=ZZ.frac_field(a, order='grevlex')"),
+        (a, ZZ.poly_ring(a).frac_field(y),
+         "domain=ZZ.poly_ring(a).frac_field(y)"),
+    ]
+    ns = {'Poly': Poly, 'PurePoly': PurePoly, 'ZZ': ZZ,
+          'a': a, 'beta': beta, 'E': e_symbol, 'x': x, 'y': y, '_0': Symbol('_0')}
+    for symbol, domain, expected in cases:
+        for cls in (Poly, PurePoly):
+            p = cls(x**2 + symbol, x, domain=domain)
+            printed = str(p)
+            assert expected in printed
+            # Symbols with assumptions must be supplied by the caller.
+            local_ns = dict(ns, a=symbol)
+            q = eval(printed, local_ns)
+            assert q == p
+            assert q.domain == p.domain
+
+
+def test_Poly_composite_domain_dummy():
+    from sympy.polys import PurePoly
+
+    t = Dummy('t')
+    a = Symbol('a')
+    positive = Symbol('a', positive=True)
+
+    cases = [
+        (QQ.poly_ring(t), t, "domain='QQ[_t]'"),
+        (QQ.frac_field(t), t, "domain='QQ(_t)'"),
+        (QQ.poly_ring(a, t), a + t, "domain='QQ[a,_t]'"),
+        (QQ.poly_ring(positive, t), positive + t,
+         "domain=QQ.poly_ring(a, _t)"),
+        (QQ.poly_ring(t, order='grlex'), t,
+         "domain=QQ.poly_ring(_t, order='grlex')"),
+        (QQ.poly_ring(a).frac_field(t), a + t,
+         "domain=QQ.poly_ring(a).frac_field(_t)"),
+    ]
+    for domain, coefficient, expected in cases:
+        for cls in (Poly, PurePoly):
+            p = cls(x**2 + coefficient, x, domain=domain)
+            assert expected in str(p)
+
+
 def test_PolyRing():
     assert str(ring("x", ZZ, lex)[0]) == "Polynomial ring in x over ZZ with lex order"
     assert str(ring("x,y", QQ, grlex)[0]) == "Polynomial ring in x, y over QQ with grlex order"
