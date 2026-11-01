@@ -52,7 +52,7 @@ from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import WildFunction, count_ops
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.exponential import exp, log, LambertW
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
     cosh, coth, sech, sinh, tanh, asinh)
 from sympy.functions.elementary.integers import ceiling, floor
@@ -1256,6 +1256,17 @@ def find_substitutions(integrand, symbol, u_var):
             # when a = 0
             if b != 0 and a != 0:
                 substituted = manual_subs(substituted, symbol, symbol_of_u).cancel()
+
+        # if u = LambertW(z) with z linear, then z = u*exp(u), so the symbol
+        # can be expressed in terms of u_var
+        if isinstance(u, LambertW) and substituted.has_free(symbol):
+            z = u.args[0]
+            if z.is_polynomial(symbol) and degree(z, symbol) == 1:
+                a = z.coeff(symbol)
+                b = z.subs(symbol, 0)
+                symbol_of_u = (u_var*exp(u_var) - b)/a
+                substituted = substituted.subs(symbol, symbol_of_u).cancel()
+
         if substituted.has_free(symbol):
             return False
         # avoid increasing the degree of a rational function
@@ -1288,6 +1299,8 @@ def find_substitutions(integrand, symbol, u_var):
                              *inverse_trig_functions,
                              exp, log, Heaviside)):
             return [term.args[0]]
+        elif isinstance(term, LambertW):
+            return [term, term.args[0]]
         elif isinstance(term, (chebyshevt, chebyshevu,
                         legendre, hermite, laguerre)):
             return [term.args[1]]
@@ -1308,7 +1321,7 @@ def find_substitutions(integrand, symbol, u_var):
                     if 1 < d < abs(term.args[1])])
                 if term.base.is_Add:
                     r.extend([t for t in possible_subterms(term.base)
-                        if t.is_Pow])
+                        if t.is_Pow or isinstance(t, LambertW)])
             return r
         elif isinstance(term, Add):
             r = []
