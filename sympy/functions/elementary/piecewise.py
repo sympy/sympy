@@ -1123,8 +1123,10 @@ def piecewise_fold(expr: Basic, evaluate: bool | None = True) -> Basic:
         # fold
         folded = list(map(piecewise_fold, args))
         branch_options: list[list[tuple[Basic, Boolean]]] = []
+        bound_symbols = set(getattr(expr, 'bound_symbols', ()))
         for arg in folded:
-            if isinstance(arg, Piecewise):
+            if isinstance(arg, Piecewise) and (not bound_symbols or not any(
+                    pair.cond.has_xfree(bound_symbols) for pair in arg.args)):
                 branch_options.append([pair.args for pair in arg.args])
             else:
                 branch_options.append([(arg, true)])
