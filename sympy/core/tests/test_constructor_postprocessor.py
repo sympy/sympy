@@ -86,3 +86,24 @@ def test_subexpression_postprocessors():
     w = SubclassSymbolRemovesOtherSymbols("w")
     assert 3*a*w**2 == 3*w**2
     assert 3*a*x**3*w**2 == 3*w**2
+
+
+def test_dynamic_constructor_postprocessor_registration():
+    class DynamicSymbol(Symbol):
+        pass
+
+    # Instantiate before registering to populate the cache
+    s = DynamicSymbol("s")
+    expr1 = 2 * s
+    assert isinstance(expr1, Mul)
+
+    # Register postprocessor dynamically after expression creation
+    try:
+        Basic._constructor_postprocessor_mapping[DynamicSymbol] = {
+            "Mul": [lambda expr: 42],
+        }
+        # Postprocessor should be called and not skipped due to cached results
+        expr2 = 3 * s
+        assert expr2 == 42
+    finally:
+        Basic._constructor_postprocessor_mapping.pop(DynamicSymbol, None)
