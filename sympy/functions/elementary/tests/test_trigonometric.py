@@ -1187,6 +1187,8 @@ def test_atan2():
     assert atan2(1, 0) == pi/2
     assert atan2(1, -1) == pi*Rational(3, 4)
     assert atan2(0, -1) == pi
+    zero = sin(1)**2 + cos(1)**2 - 1
+    assert atan2(0, zero) == atan2(0, zero, evaluate=False)
     assert atan2(-1, -1) == pi*Rational(-3, 4)
     assert atan2(-1, 0) == -pi/2
     assert atan2(-1, 1) == -pi/4
@@ -1233,7 +1235,7 @@ def test_atan2():
                                             (0, Ne(x, 0)),
                                             (nan, True))
     assert atan2(0, r).rewrite(atan) == Piecewise((pi, r < 0), (0, Ne(r, 0)), (S.NaN, True))
-    assert atan2(0, i),rewrite(atan) == 0
+    assert atan2(0, i).rewrite(atan) == 0
     assert atan2(0, r + i).rewrite(atan) == Piecewise((pi, r < 0), (0, True))
 
     assert atan2(y, x).rewrite(atan) == Piecewise(
