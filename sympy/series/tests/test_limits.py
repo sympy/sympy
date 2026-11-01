@@ -1,6 +1,7 @@
 from __future__ import annotations
 from itertools import product
 
+from sympy import Ne, Eq
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, diff)
 from sympy.core import EulerGamma, GoldenRatio
@@ -162,6 +163,32 @@ def test_piecewise2():
     assert limit(func1, x, 0) == 1
     assert limit(func2, x, 0) == 0
     assert limit(func3, x, -1) == 2
+
+
+def test_piecewise_limit_issue_27236():
+    # https://github.com/sympy/sympy/issues/27236
+    x = symbols('x')
+
+    # Case 1: directional limits at a jump discontinuity.
+    # The two-sided limit does not exist and must raise ValueError.
+    f = Piecewise((1, x < 0), (-1, x >= 0))
+    assert limit(f, x, 0, '-') == 1
+    assert limit(f, x, 0, '+') == -1
+    raises(ValueError, lambda: limit(f, x, 0, '+-'))
+
+    # Case 2: Ne condition: the function equals 1 everywhere except x=0,
+    # so all one-sided and two-sided limits are 1.
+    p = Piecewise((1, Ne(x, 0)), (0, True))
+    assert limit(p, x, 0, '-') == 1
+    assert limit(p, x, 0, '+') == 1
+    assert limit(p, x, 0) == 1
+
+    # Case 3: Eq condition: the function equals 1 everywhere except x=0,
+    # so all one-sided and two-sided limits are 1.
+    q = Piecewise((0, Eq(x, 0)), (1, True))
+    assert limit(q, x, 0, '-') == 1
+    assert limit(q, x, 0, '+') == 1
+    assert limit(q, x, 0) == 1
 
 
 def test_basic5():
