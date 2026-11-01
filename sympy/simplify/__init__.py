@@ -31,6 +31,8 @@ from .gammasimp import gammasimp
 
 from .ratsimp import ratsimp, ratsimpmodprime
 
+from sympy.solvers.rpf import rpfsimplify
+
 __all__ = [
     'simplify', 'hypersimp', 'hypersimilar', 'logcombine', 'separatevars',
     'posify', 'besselsimp', 'kroneckersimp', 'signsimp',
@@ -58,4 +60,6 @@ __all__ = [
     'gammasimp',
 
     'ratsimp', 'ratsimpmodprime',
+
+    'rpfsimplify'
 ]
