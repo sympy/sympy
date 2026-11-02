@@ -878,7 +878,8 @@ def test_PolyElement___truediv__():
     R, x,y,z = ring("x,y,z", ZZ)
 
     assert (2*x**2 - 4)/2 == x**2 - 2
-    assert (2*x**2 - 3)/2 == x**2
+    assert (2*x**2 - 3)//2 == x**2
+    raises(ExactQuotientFailed, lambda: (2*x**2 - 3)/2)
 
     assert (x**2 - 1).quo(x) == x
     assert (x**2 - x).quo(x) == x - 1
@@ -893,7 +894,9 @@ def test_PolyElement___truediv__():
     raises(TypeError, lambda: x / QQ(1, 2))
 
     R, x,y,z = ring("x,y,z", ZZ)
-    assert len((x**2/3 + y**3/4 + z**4/5).terms()) == 0
+    assert len((x**2//3 + y**3//4 + z**4//5).terms()) == 0
+    raises(ExactQuotientFailed, lambda: x**2/3)
+    raises(ExactQuotientFailed, lambda: x**2/3 + y**3/4 + z**4/5)
 
     R, x,y,z = ring("x,y,z", QQ)
     assert len((x**2/3 + y**3/4 + z**4/5).terms()) == 3
@@ -2272,7 +2275,19 @@ def test_PolyElement_quo_ground():
     raises(ZeroDivisionError, lambda: x.quo_ground(0))
     assert R.zero.quo_ground(5) == R.zero
     assert (x**2 + 2*x + 3).quo_ground(1) == x**2 + 2*x + 3
-    assert (x**2 + 2*x + 4).quo_ground(2) == (x**2)/2 + x + 2
+    assert (x**2 + 2*x + 4).quo_ground(2) == (x**2)//2 + x + 2
 
     R, x = ring("x", QQ)
     assert (x**2 + 3*x + 6).quo_ground(3) == (x**2)/3 + x + 2
+
+
+def test_PolyElement_exquo_ground():
+    R, x = ring("x", ZZ)
+    raises(ZeroDivisionError, lambda: x.exquo_ground(0))
+    assert R.zero.exquo_ground(5) == R.zero
+    assert (x**2 + 2*x + 3).exquo_ground(1) == x**2 + 2*x + 3
+    assert (2*x**2 + 2*x + 4).exquo_ground(2) == x**2 + x + 2
+    raises(ExactQuotientFailed, lambda: (x**2 + 2*x + 4).exquo_ground(2))
+
+    R, x = ring("x", QQ)
+    assert (x**2 + 3*x + 6).exquo_ground(3) == (x**2)/3 + x + 2
