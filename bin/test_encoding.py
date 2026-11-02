@@ -12,12 +12,12 @@ BIN = ROOT / 'bin'
 
 def test_strip_whitespace_utf8(tmp_path):
     source = tmp_path / 'unicode.py'
-    source.write_bytes('name = "café"  \r\n'.encode('utf-8'))
+    source.write_bytes('name = "caf\u00e9"  \r\n'.encode('utf-8'))
     env = {**os.environ, 'PYTHONUTF8': '0', 'PYTHONCOERCECLOCALE': '0',
            'LC_ALL': 'C'}
     subprocess.run([sys.executable, str(BIN / 'strip_whitespace'), str(source)],
                    check=True, env=env, capture_output=True)
-    assert source.read_bytes() == 'name = "café"\n'.encode('utf-8')
+    assert source.read_bytes() == 'name = "caf\u00e9"\n'.encode('utf-8')
 
 
 def test_bin_text_operations_specify_encoding():
