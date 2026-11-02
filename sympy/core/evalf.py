@@ -688,8 +688,11 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
     complex_factors = []
 
     for i, arg in enumerate(args):
-        if i != last and pure_complex(arg):
-            args[-1] = (args[-1]*arg).expand()
+        pair = pure_complex(arg)
+        if i != last and pair and pair[0] and pair[1]:
+            from .parameters import evaluate
+            with evaluate(True):
+                args[-1] = (args[-1]*arg).expand()
             continue
         elif i == last and arg is S.One:
             continue

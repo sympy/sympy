@@ -766,3 +766,14 @@ def test_issue_13365():
     t = Symbol('t', integer=True, nonnegative=True)
     s2 = Sum(1.9**t * t / factorial(t), (t, 0, oo))
     assert abs((s2 - 19*exp(Rational(19, 10))/10).evalf()) < 1e-12
+
+
+def test_issue_30874():
+    from sympy.core.parameters import evaluate
+    from sympy.core.relational import Eq
+    from sympy.logic.boolalg import And
+    x = Symbol('x')
+    with evaluate(False):
+        assert And(Eq(0, Add(x, Mul(-1, I)))) == And(Eq(0, Add(x, Mul(-1, I))))
+        assert Mul(2, 3, I).evalf() == Add(0, 6.0*I)
+        assert Mul(-1, I).evalf() == Add(0, Mul(-1.0, I))
