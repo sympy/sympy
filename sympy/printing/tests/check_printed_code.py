@@ -3,7 +3,7 @@
 Code printer tests only compare strings. A test opts in to checking the
 code with a decorator::
 
-    from sympy.testing.check_printed_code import check_printed_code
+    from sympy.printing.tests.check_printed_code import check_printed_code
 
     @check_printed_code
     def test_sin():
@@ -155,14 +155,14 @@ def check_printed_code(test_func):
 
     >>> from sympy import Symbol, sin
     >>> from sympy.printing.c import ccode
-    >>> from sympy.testing.check_printed_code import check_printed_code
+    >>> from sympy.printing.tests.check_printed_code import check_printed_code
     >>> @check_printed_code
     ... def test_sin():
     ...     assert ccode(sin(Symbol('x'))) == 'sin(x)'
     >>> test_sin()
     Traceback (most recent call last):
     ...
-    sympy.testing.check_printed_code.PrintedCodeError: C99CodePrinter printed
+    sympy.printing.tests.check_printed_code.PrintedCodeError: C99CodePrinter printed
     <BLANKLINE>
         sin(x)
     <BLANKLINE>
@@ -223,11 +223,11 @@ def check_code(printer: CodePrinter, expr: Basic, assign_to: str | Basic | None,
 
     >>> from sympy import MatrixSymbol
     >>> from sympy.printing.c import C99CodePrinter
-    >>> from sympy.testing.check_printed_code import check_code
+    >>> from sympy.printing.tests.check_printed_code import check_code
     >>> check_code(C99CodePrinter(), MatrixSymbol('A', 2, 2)[0, 1], None, 'A[1]')
     Traceback (most recent call last):
     ...
-    sympy.testing.check_printed_code.PrintedCodeError: This can't be checked, since it uses arrays or matrices, whose sizes
+    sympy.printing.tests.check_printed_code.PrintedCodeError: This can't be checked, since it uses arrays or matrices, whose sizes
     can't be declared, so the test can't use @check_printed_code.
     """
     def unsupported(reason):
@@ -274,7 +274,7 @@ def declarations(printer: CodePrinter, expr: Basic, assign_to: str | Basic | Non
 
     >>> from sympy import And, Symbol
     >>> from sympy.printing.c import C99CodePrinter
-    >>> from sympy.testing.check_printed_code import declarations
+    >>> from sympy.printing.tests.check_printed_code import declarations
     >>> b, x = Symbol('b'), Symbol('x', real=True)
     >>> declarations(C99CodePrinter(), And(b, x > 0), 'c')
     ({b: ('b', 'bool'), x: ('x', 'real')}, ('c', 'bool'))
@@ -327,7 +327,7 @@ def declare(printer: CodePrinter, symbol: Basic, is_boolean: bool) -> Declaratio
 
     >>> from sympy import Symbol
     >>> from sympy.printing.c import C99CodePrinter
-    >>> from sympy.testing.check_printed_code import declare
+    >>> from sympy.printing.tests.check_printed_code import declare
     >>> declare(C99CodePrinter(), Symbol('x', real=True), False)
     ('x', 'real')
     """
@@ -353,7 +353,7 @@ def wrap_in_function(printer_class: type[CodePrinter], code: str, parameters: li
     ========
 
     >>> from sympy.printing.c import C99CodePrinter
-    >>> from sympy.testing.check_printed_code import wrap_in_function
+    >>> from sympy.printing.tests.check_printed_code import wrap_in_function
     >>> print(wrap_in_function(C99CodePrinter, 'y = fmod(x, 2);',
     ...                        [('x', 'real')], ('y', 'real')))
     #define _XOPEN_SOURCE 700
@@ -385,7 +385,7 @@ def wrap_in_c_function(code: str, parameters: list[tuple[str, str]],
 
     An expression can follow declarations of number constants:
 
-    >>> from sympy.testing.check_printed_code import wrap_in_c_function
+    >>> from sympy.printing.tests.check_printed_code import wrap_in_c_function
     >>> print(wrap_in_c_function(
     ...     'const double GoldenRatio = 1.6180339887498948;\\nGoldenRatio*x',
     ...     [('x', 'double')], None))
@@ -426,7 +426,7 @@ def wrap_in_rust_function(code: str, parameters: list[tuple[str, str]],
 
     A parameter that the code assigns to is declared mut:
 
-    >>> from sympy.testing.check_printed_code import wrap_in_rust_function
+    >>> from sympy.printing.tests.check_printed_code import wrap_in_rust_function
     >>> print(wrap_in_rust_function('x = x + 1.0;', [('x', 'f64')], ('x', 'f64')))
     pub fn f(mut x: f64)
     {

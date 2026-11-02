@@ -17,10 +17,10 @@ from sympy.printing.c import C89CodePrinter, C99CodePrinter, ccode
 from sympy.printing.codeprinter import CodePrinter, rust_code
 from sympy.printing.octave import octave_code
 from sympy.printing.rust import RustCodePrinter
-from sympy.testing.check_printed_code import (PrintedCodeError, check_code, check_compiles,
-                                              check_printed_code, compiler_problem,
-                                              compiling_enabled,
-                                              declarations, declare, wrap_in_function)
+from sympy.printing.tests.check_printed_code import (
+    PrintedCodeError, check_code, check_compiles, check_printed_code,
+    compiler_problem, compiling_enabled, declarations, declare,
+    wrap_in_function)
 from sympy.testing.pytest import raises, skip
 
 x = Symbol('x', real=True)

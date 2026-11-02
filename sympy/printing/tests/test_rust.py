@@ -5,7 +5,7 @@ from sympy.core import (S, pi, oo, symbols, Rational, Integer, Symbol,
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sign, floor, log)
 from sympy.logic import ITE
-from sympy.testing.check_printed_code import check_printed_code
+from sympy.printing.tests.check_printed_code import check_printed_code
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx

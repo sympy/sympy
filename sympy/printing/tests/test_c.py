@@ -12,7 +12,7 @@ from sympy.functions import (
 from sympy.sets import Range
 from sympy.logic import ITE, Implies, Equivalent
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.testing.check_printed_code import check_printed_code
+from sympy.printing.tests.check_printed_code import check_printed_code
 from sympy.testing.pytest import raises, XFAIL
 from sympy.printing.codeprinter import PrintMethodNotImplementedError
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
