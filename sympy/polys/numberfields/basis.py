@@ -1,6 +1,7 @@
 """Computing integral bases for number fields. """
 from __future__ import annotations
 
+from sympy.core.intfunc import ilcm
 from sympy.polys.polytools import Poly
 from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.integerring import ZZ
@@ -198,7 +199,6 @@ def round_two(T, radicals=None):
     T, _ = T.make_monic_over_integers_by_scaling_roots()
     n = T.degree()
     D = T.discriminant()
-    D_modulus = ZZ.from_sympy(abs(D))
     # D must be 0 or 1 mod 4 (see Cohen Sec 4.4), which ensures we can write
     # it in the form D = D_0 * F**2, where D_0 is 1 or a fundamental discriminant.
     _, F = extract_fundamental_discriminant(D)
@@ -214,11 +214,17 @@ def round_two(T, radicals=None):
         # For a given prime p, the first enlargement of the order spanned by
         # the current basis can be done in a simple way:
         U = Ztheta.element_from_poly(Poly(U_bar, domain=ZZ))
-        # TODO:
-        #  Theory says only first m columns of the U//p*H term below are needed.
-        #  Could be slightly more efficient to use only those. Maybe `Submodule`
-        #  class should support a slice operator?
-        H = H.add(U // p * H, hnf_modulus=D_modulus)
+        # Cohen's Algorithm 6.1.8, step 5, uses only m generators of U/p*H;
+        # here we include all generators and let HNF remove the redundancy.
+        G = U // p * H
+        d = ilcm(H.denom, G.denom)
+        # Contrary to the assertion in the book, the HNF determinant need
+        # not divide disc(T). It does divide the determinant of the scaled
+        # H block, whose columns generate a full-rank sublattice.
+        D_modulus = ZZ(d // H.denom)**n
+        for i in range(n):
+            D_modulus *= H.matrix[i, i].element
+        H = H.add(G, hnf_modulus=D_modulus)
         if e <= m:
             continue
         # A second, and possibly more, enlargements for p will be needed.
