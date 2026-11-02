@@ -111,7 +111,7 @@ def compiling_enabled(printer_class: type[CodePrinter]) -> bool:
     problem = compiler_problem(printer_class)  # type: ignore[arg-type]
     if problem is None:
         return True
-    # With SYMPY_CHECK_PRINTED_CODE=1, as in CI, a missing or broken
+    # With SYMPY_CHECK_PRINTED_CODE=1, a missing or broken
     # compiler is an error instead of a reason not to compile
     if setting == '1':
         raise RuntimeError(problem)
