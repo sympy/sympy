@@ -1,6 +1,16 @@
 (new-contributors-guide)=
 # Guide for New Contributors
 
+```{admonition} Google Summer of Code 2027
+:class: note
+
+SymPy will not participate in [Google Summer of Code
+(GSoC)](https://summerofcode.withgoogle.com/) 2027 unless we find a way to
+manage the large volume of pull requests we have been receiving. If you are
+contributing to SymPy primarily to prepare a GSoC application, please be aware
+it is likely we will not participate in GSoC.
+```
+
 This guide goes over how to contribute code to SymPy for new contributors.
 It is split into sections based on how experienced you are with open source.
 
