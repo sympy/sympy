@@ -81,6 +81,7 @@ git_whitelist = {
     'bin/test',
     'bin/test_external_imports.py',
     'bin/test_executable.py',
+    'bin/test_encoding.py',
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',
