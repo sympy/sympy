@@ -671,7 +671,7 @@ def collect_const(expr, *vars, Numbers=True):
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
     (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
-    sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+    sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2) + sqrt(7)
 
     The collection is sign-sensitive, giving higher precedence to the
     unsigned values:
@@ -1037,7 +1037,7 @@ def rad_rationalize(num, den):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import rad_rationalize
     >>> rad_rationalize(sqrt(3), 1 + sqrt(2)/3)
-    (-sqrt(3) + sqrt(6)/3, -7/9)
+    (sqrt(6)/3 - sqrt(3), -7/9)
     """
     if not den.is_Add:
         return num, den
@@ -1180,7 +1180,7 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
+    (3, sqrt(2) + sqrt(5) + 3, sqrt(10) + sqrt(5)/7)
     """
     args = sorted(expr.args, key=default_sort_key)
     coeff_muls = [x.as_coeff_Mul() for x in args]

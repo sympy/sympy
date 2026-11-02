@@ -31,9 +31,14 @@ def _could_extract_minus_sign(expr):
         return False
     elif positive_args < negative_args:
         return True
-    # choose based on .sort_key() to prefer
+    # prefer
     # x - 1 instead of 1 - x and
     # 3 - sqrt(2) instead of -3 + sqrt(2)
+    if len(expr.args) == 2:
+        a, b = expr.args
+        if bool(a.free_symbols) != bool(b.free_symbols):
+            variable_term = a if a.free_symbols else b
+            return variable_term.could_extract_minus_sign()
     return bool(expr.sort_key() < (-expr).sort_key())
 
 
@@ -1221,12 +1226,12 @@ class Add(Expr, AssocOp):
 
         >>> from sympy import sqrt
         >>> (3 + 3*sqrt(2)).as_content_primitive()
-        (3, 1 + sqrt(2))
+        (3, sqrt(2) + 1)
 
         Radical content can also be factored out of the primitive:
 
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
-        (2, sqrt(2)*(1 + 2*sqrt(5)))
+        (2, sqrt(2)*(2*sqrt(5) + 1))
 
         See docstring of Expr.as_content_primitive for more examples.
         """

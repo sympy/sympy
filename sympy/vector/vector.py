@@ -564,7 +564,8 @@ class Cross(Expr):
     >>> Cross(v1, v2)
     Cross(R.i + R.j + R.k, R.x*R.i + R.y*R.j + R.z*R.k)
     >>> Cross(v1, v2).doit()
-    (-R.y + R.z)*R.i + (R.x - R.z)*R.j + (-R.x + R.y)*R.k
+    (R.z - R.y)*R.i + (R.x - R.z)*R.j + (R.y - R.x)*R.k
+
 
     """
 
@@ -628,7 +629,7 @@ def cross(vect1, vect2):
     >>> v1 = R.i + R.j + R.k
     >>> v2 = R.x * R.i + R.y * R.j + R.z * R.k
     >>> cross(v1, v2)
-    (-R.y + R.z)*R.i + (R.x - R.z)*R.j + (-R.x + R.y)*R.k
+    (R.z - R.y)*R.i + (R.x - R.z)*R.j + (R.y - R.x)*R.k
 
     """
     if isinstance(vect1, Add):

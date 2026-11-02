@@ -708,7 +708,7 @@ function with respect to $\boldsymbol{\beta}$ and set the resulting gradient
 equal to zero:
 
 >>> obj.diff(beta)
--2*X.T*(-X*beta + y)
+-2*X.T*(y - X*beta)
 
 that is, computing the derivative of the objective function with respect to
 $\boldsymbol{\beta}$ yields
@@ -720,7 +720,7 @@ then be solved to obtain the ordinary least squares estimator.  We can
 rearrange:
 
 >>> ((X.T*X).inv() * obj.diff(beta)).expand()
--2*(X.T*X)**(-1)*X.T*y + 2*beta
+2*beta - 2*(X.T*X)**(-1)*X.T*y
 
 that is, $- 2 \left(\mathbf{X}^{T} \mathbf{X}\right)^{-1} \mathbf{X}^{T} \mathbf{y} + 2 \boldsymbol{\beta}$.
 
@@ -750,7 +750,7 @@ Using SymPy, the objective function can be written as:
 >>> residual = y - X*beta
 >>> obj = residual.T * residual + lamda * beta.T * beta
 >>> obj
-lambda*beta.T*beta + (-beta.T*X.T + y.T)*(-X*beta + y)
+lambda*beta.T*beta + (y.T - beta.T*X.T)*(y - X*beta)
 
 which corresponds to $\lambda \boldsymbol{\beta}^{T} \boldsymbol{\beta} + \left( \mathbf{y}^{T} - \boldsymbol{\beta}^{T} \mathbf{X}^{T} \right) \left( \mathbf{y} -
 \mathbf{X} \boldsymbol{\beta} \right)$.
@@ -759,7 +759,7 @@ Taking the derivative of the objective function with respect to
 $\boldsymbol{\beta}$ yields:
 
 >>> obj.diff(beta)
-(2*lambda)*beta - 2*X.T*(-X*beta + y)
+(2*lambda)*beta - 2*X.T*(y - X*beta)
 
 which is $2 \lambda \boldsymbol{\beta} - 2 \mathbf{X}^{T} \left( \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \right)$.
 Regrouping the terms by $\boldsymbol{\beta}$ and dropping the constant factor
@@ -805,17 +805,17 @@ In SymPy, this setup can be expressed as follows:
 >>> target = X*w
 >>> lagr_mult = target.T*target + lamda*(w.T*w - Identity(1))
 >>> lagr_mult
-lambda*(-I + w.T*w) + w.T*X.T*X*w
+lambda*(w.T*w - I) + w.T*X.T*X*w
 
 We now proceed by computing the partial derivatives of the Lagrangian with
 respect to $\mathbf{w}$ and $\lambda$:
 
 >>> d_w = lagr_mult.diff(w)
 >>> d_w
-(2*lambda)*w + 2*X.T*X*w
+2*X.T*X*w + (2*lambda)*w
 >>> d_lambda = lagr_mult.diff(lamda)
 >>> d_lambda
--I + w.T*w
+w.T*w - I
 
 and setting them equal to zero in order to obtain the stationary conditions for
 this optimization problem.  That is, we are required to solve the following two

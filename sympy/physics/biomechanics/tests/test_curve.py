@@ -167,7 +167,7 @@ class TestTendonForceLengthDeGroote2016:
 
     def test_expression_print_latex(self):
         fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
-        expected = r'c_{0} e^{c_{3} \left(- c_{1} + l_{T tilde}\right)} - c_{2}'
+        expected = 'c_{0} e^{c_{3} \\left(l_{T tilde} - c_{1}\\right)} - c_{2}'
         assert LatexPrinter().doprint(fl_T.doit()) == expected
 
     @pytest.mark.parametrize(
@@ -175,65 +175,63 @@ class TestTendonForceLengthDeGroote2016:
         [
             (
                 C89CodePrinter,
-                '(-0.25 + 0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 C99CodePrinter,
-                '(-0.25 + 0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 C11CodePrinter,
-                '(-0.25 + 0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 CXX98CodePrinter,
-                '(-0.25 + 0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 CXX11CodePrinter,
-                '(-0.25 + 0.20000000000000001*std::exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.20000000000000001*std::exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 CXX17CodePrinter,
-                '(-0.25 + 0.20000000000000001*std::exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.20000000000000001*std::exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 FCodePrinter,
-                '      (-0.25d0 + 0.2d0*exp(33.93669377311689d0*(l_T_tilde - 0.995d0)))',
+                '      (0.2d0*exp(33.93669377311689d0*(l_T_tilde - 0.995d0)) - 0.25d0)',
             ),
             (
                 OctaveCodePrinter,
-                '(-0.25 + 0.2*exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.2*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 PythonCodePrinter,
-                '(-0.25 + 0.2*math.exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.2*math.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 NumPyPrinter,
-                '(-0.25 + 0.2*numpy.exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.2*numpy.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 SciPyPrinter,
-                '(-0.25 + 0.2*numpy.exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.2*numpy.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 CuPyPrinter,
-                '(-0.25 + 0.2*cupy.exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.2*cupy.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 JaxPrinter,
-                '(-0.25 + 0.2*jax.numpy.exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.2*jax.numpy.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
             (
                 MpmathPrinter,
-                '(mpmath.mpf((1, 1, -2, 1)) + mpmath.mpf((0, 3602879701896397, -54, 52))'
-                '*mpmath.exp(mpmath.mpf((0, 9552330089424741, -48, 54))*(l_T_tilde + '
-                'mpmath.mpf((1, 8962163258467287, -53, 53)))))',
+                '(mpmath.mpf((0, 3602879701896397, -54, 52))*mpmath.exp(mpmath.mpf((0, 9552330089424741, -48, 54))*(l_T_tilde + mpmath.mpf((1, 8962163258467287, -53, 53)))) + mpmath.mpf((1, 1, -2, 1)))',
             ),
             (
                 LambdaPrinter,
-                '(-0.25 + 0.2*math.exp(33.93669377311689*(l_T_tilde - 0.995)))',
+                '(0.2*math.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25)',
             ),
         ]
     )
@@ -416,9 +414,7 @@ class TestTendonForceLengthInverseDeGroote2016:
             ),
             (
                 MpmathPrinter,
-                '(mpmath.mpf((0, 8962163258467287, -53, 53))'
-                ' + mpmath.mpf((0, 33972711434846347, -60, 55))'
-                '*mpmath.log(mpmath.mpf((0, 5, 0, 3))*fl_T + mpmath.mpf((0, 5, -2, 3))))',
+                '(mpmath.mpf((0, 8962163258467287, -53, 53)) + mpmath.mpf((0, 33972711434846347, -60, 55))*mpmath.log(mpmath.mpf((0, 5, 0, 3))*fl_T + mpmath.mpf((0, 5, -2, 3))))',
             ),
             (
                 LambdaPrinter,
@@ -549,65 +545,63 @@ class TestFiberForceLengthPassiveDeGroote2016:
         [
             (
                 C89CodePrinter,
-                '(0.01865736036377405*(-1 + exp(6.666666666666667*(l_M_tilde - 1))))',
+                '(0.01865736036377405*(exp(6.666666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 C99CodePrinter,
-                '(0.01865736036377405*(-1 + exp(6.666666666666667*(l_M_tilde - 1))))',
+                '(0.01865736036377405*(exp(6.666666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 C11CodePrinter,
-                '(0.01865736036377405*(-1 + exp(6.666666666666667*(l_M_tilde - 1))))',
+                '(0.01865736036377405*(exp(6.666666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 CXX98CodePrinter,
-                '(0.01865736036377405*(-1 + exp(6.666666666666667*(l_M_tilde - 1))))',
+                '(0.01865736036377405*(exp(6.666666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 CXX11CodePrinter,
-                '(0.01865736036377405*(-1 + std::exp(6.666666666666667*(l_M_tilde - 1))))',
+                '(0.01865736036377405*(std::exp(6.666666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 CXX17CodePrinter,
-                '(0.01865736036377405*(-1 + std::exp(6.666666666666667*(l_M_tilde - 1))))',
+                '(0.01865736036377405*(std::exp(6.666666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 FCodePrinter,
-                '      (0.0186573603637741d0*(-1 + exp(6.666666666666667d0*(l_M_tilde - 1\n'
-                '     @ ))))',
+                '      (0.0186573603637741d0*(exp(6.666666666666667d0*(l_M_tilde - 1)) -\n     @ 1))',
             ),
             (
                 OctaveCodePrinter,
-                '(0.0186573603637741*(-1 + exp(6.66666666666667*(l_M_tilde - 1))))',
+                '(0.0186573603637741*(exp(6.66666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 PythonCodePrinter,
-                '(0.0186573603637741*(-1 + math.exp(6.66666666666667*(l_M_tilde - 1))))',
+                '(0.0186573603637741*(math.exp(6.66666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 NumPyPrinter,
-                '(0.0186573603637741*(-1 + numpy.exp(6.66666666666667*(l_M_tilde - 1))))',
+                '(0.0186573603637741*(numpy.exp(6.66666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 SciPyPrinter,
-                '(0.0186573603637741*(-1 + numpy.exp(6.66666666666667*(l_M_tilde - 1))))',
+                '(0.0186573603637741*(numpy.exp(6.66666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 CuPyPrinter,
-                '(0.0186573603637741*(-1 + cupy.exp(6.66666666666667*(l_M_tilde - 1))))',
+                '(0.0186573603637741*(cupy.exp(6.66666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 JaxPrinter,
-                '(0.0186573603637741*(-1 + jax.numpy.exp(6.66666666666667*(l_M_tilde - 1))))',
+                '(0.0186573603637741*(jax.numpy.exp(6.66666666666667*(l_M_tilde - 1)) - 1))',
             ),
             (
                 MpmathPrinter,
-                '(mpmath.mpf((0, 672202249456079, -55, 50))*(-1 + mpmath.exp('
-                'mpmath.mpf((0, 7505999378950827, -50, 53))*(l_M_tilde - 1))))',
+                '(mpmath.mpf((0, 672202249456079, -55, 50))*(mpmath.exp(mpmath.mpf((0, 7505999378950827, -50, 53))*(l_M_tilde - 1)) - 1))',
             ),
             (
                 LambdaPrinter,
-                '(0.0186573603637741*(-1 + math.exp(6.66666666666667*(l_M_tilde - 1))))',
+                '(0.0186573603637741*(math.exp(6.66666666666667*(l_M_tilde - 1)) - 1))',
             ),
         ]
     )
@@ -785,8 +779,7 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
             ),
             (
                 MpmathPrinter,
-                '(1 + mpmath.mpf((0, 5404319552844595, -55, 53))*mpmath.log(1 '
-                '+ mpmath.mpf((0, 942908627019595, -44, 50))*fl_M_pas))',
+                '(1 + mpmath.mpf((0, 5404319552844595, -55, 53))*mpmath.log(1 + mpmath.mpf((0, 942908627019595, -44, 50))*fl_M_pas))',
             ),
             (
                 LambdaPrinter,
@@ -1024,9 +1017,7 @@ class TestFiberForceLengthActiveDeGroote2016:
     def test_expression_print_latex(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
-            r'c_{0} e^{- \frac{\left(- c_{1} + l_{M tilde}\right)^{2}}{2 \left(c_{2} + c_{3} l_{M tilde}\right)^{2}}} '
-            r'+ c_{4} e^{- \frac{\left(- c_{5} + l_{M tilde}\right)^{2}}{2 \left(c_{6} + c_{7} l_{M tilde}\right)^{2}}} '
-            r'+ c_{8} e^{- \frac{\left(- c_{9} + l_{M tilde}\right)^{2}}{2 \left(c_{10} + c_{11} l_{M tilde}\right)^{2}}}'
+            'c_{0} e^{- \\frac{\\left(l_{M tilde} - c_{1}\\right)^{2}}{2 \\left(c_{2} + c_{3} l_{M tilde}\\right)^{2}}} + c_{4} e^{- \\frac{\\left(l_{M tilde} - c_{5}\\right)^{2}}{2 \\left(c_{6} + c_{7} l_{M tilde}\\right)^{2}}} + c_{8} e^{- \\frac{\\left(l_{M tilde} - c_{9}\\right)^{2}}{2 \\left(c_{10} + c_{11} l_{M tilde}\\right)^{2}}}'
         )
         assert LatexPrinter().doprint(fl_M_act.doit()) == expected
 
@@ -1283,82 +1274,63 @@ class TestFiberForceVelocityDeGroote2016:
         [
             (
                 C89CodePrinter,
-                '(0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
-                '- 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
+                '(0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde - 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
             ),
             (
                 C99CodePrinter,
-                '(0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
-                '- 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
+                '(0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde - 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
             ),
             (
                 C11CodePrinter,
-                '(0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
-                '- 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
+                '(0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde - 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
             ),
             (
                 CXX98CodePrinter,
-                '(0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
-                '- 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
+                '(0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde - 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
             ),
             (
                 CXX11CodePrinter,
-                '(0.88600000000000001 - 0.318*std::log(-8.1489999999999991*v_M_tilde '
-                '- 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
+                '(0.88600000000000001 - 0.318*std::log(-8.1489999999999991*v_M_tilde - 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
             ),
             (
                 CXX17CodePrinter,
-                '(0.88600000000000001 - 0.318*std::log(-8.1489999999999991*v_M_tilde '
-                '- 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
+                '(0.88600000000000001 - 0.318*std::log(-8.1489999999999991*v_M_tilde - 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2))))',
             ),
             (
                 FCodePrinter,
-                '      (0.886d0 - 0.318d0*log(-8.1489999999999991d0*v_M_tilde - 0.374d0 +\n'
-                '     @ sqrt(1.0d0 + (-8.149d0*v_M_tilde - 0.374d0)**2)))',
+                '      (0.886d0 - 0.318d0*log(-8.1489999999999991d0*v_M_tilde - 0.374d0 +\n     @ sqrt(1.0d0 + (-8.149d0*v_M_tilde - 0.374d0)**2)))',
             ),
             (
                 OctaveCodePrinter,
-                '(0.886 - 0.318*log(-8.149*v_M_tilde - 0.374 '
-                '+ sqrt(1 + (-8.149*v_M_tilde - 0.374).^2)))',
+                '(0.886 - 0.318*log(-8.149*v_M_tilde - 0.374 + sqrt(1 + (-8.149*v_M_tilde - 0.374).^2)))',
             ),
             (
                 PythonCodePrinter,
-                '(0.886 - 0.318*math.log(-8.149*v_M_tilde - 0.374 '
-                '+ math.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
+                '(0.886 - 0.318*math.log(-8.149*v_M_tilde - 0.374 + math.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
             ),
             (
                 NumPyPrinter,
-                '(0.886 - 0.318*numpy.log(-8.149*v_M_tilde - 0.374 '
-                '+ numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
+                '(0.886 - 0.318*numpy.log(-8.149*v_M_tilde - 0.374 + numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
             ),
             (
                 SciPyPrinter,
-                '(0.886 - 0.318*numpy.log(-8.149*v_M_tilde - 0.374 '
-                '+ numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
+                '(0.886 - 0.318*numpy.log(-8.149*v_M_tilde - 0.374 + numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
             ),
             (
                 CuPyPrinter,
-                '(0.886 - 0.318*cupy.log(-8.149*v_M_tilde - 0.374 '
-                '+ cupy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
+                '(0.886 - 0.318*cupy.log(-8.149*v_M_tilde - 0.374 + cupy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
             ),
             (
                 JaxPrinter,
-                '(0.886 - 0.318*jax.numpy.log(-8.149*v_M_tilde - 0.374 '
-                '+ jax.numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
+                '(0.886 - 0.318*jax.numpy.log(-8.149*v_M_tilde - 0.374 + jax.numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
             ),
             (
                 MpmathPrinter,
-                '(mpmath.mpf((0, 7980378539700519, -53, 53)) '
-                '- mpmath.mpf((0, 5728578726015271, -54, 53))'
-                '*mpmath.log(-mpmath.mpf((0, 4587479170430271, -49, 53))*v_M_tilde '
-                '+ mpmath.mpf((1, 3368692521273131, -53, 52)) '
-                '+ mpmath.sqrt(1 + (-mpmath.mpf((0, 4587479170430271, -49, 53))*v_M_tilde '
-                '+ mpmath.mpf((1, 3368692521273131, -53, 52)))**2)))',
+                '(mpmath.mpf((0, 7980378539700519, -53, 53)) - mpmath.mpf((0, 5728578726015271, -54, 53))*mpmath.log(-mpmath.mpf((0, 4587479170430271, -49, 53))*v_M_tilde + mpmath.mpf((1, 3368692521273131, -53, 52)) + mpmath.sqrt(1 + (-mpmath.mpf((0, 4587479170430271, -49, 53))*v_M_tilde + mpmath.mpf((1, 3368692521273131, -53, 52)))**2)))',
             ),
             (
                 LambdaPrinter,
-                '(0.886 - 0.318*math.log(-8.149*v_M_tilde - 0.374 '
-                '+ sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
+                '(0.886 - 0.318*math.log(-8.149*v_M_tilde - 0.374 + sqrt(1 + (-8.149*v_M_tilde - 0.374)**2)))',
             ),
         ]
     )
@@ -1481,7 +1453,7 @@ class TestFiberForceVelocityInverseDeGroote2016:
 
     def test_expression_print_latex(self):
         fv_M = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
-        expected = r'\frac{- c_{2} + \sinh{\left(\frac{- c_{3} + fv_{M}}{c_{0}} \right)}}{c_{1}}'
+        expected = '\\frac{\\sinh{\\left(\\frac{fv_{M} - c_{3}}{c_{0}} \\right)} - c_{2}}{c_{1}}'
         assert LatexPrinter().doprint(fv_M.doit()) == expected
 
     @pytest.mark.parametrize(

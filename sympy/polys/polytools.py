@@ -4261,7 +4261,7 @@ class Poly(Basic):
         >>> conditions
         [-15*k**2 + 20*k - 5, -8*k**2 - 8*k + 8, 3*k**2 + 8*k - 3]
         >>> reduce_inequalities([c > 0 for c in conditions])
-        (1/3 < k) & (k < -1/2 + sqrt(5)/2)
+        (1/3 < k) & (k < sqrt(5)/2 - 1/2)
 
         References
         ==========
@@ -5684,13 +5684,13 @@ def gcdex_steps(
     >>> g = x + 2*y
     >>> for step in gcdex_steps(f, g, gens=x): print(step)
     (0, 1, x + 2*y)
-    (1, -x*y + 4*y**2, 8*y**3 + 1)
+    (1, 4*y**2 - x*y, 8*y**3 + 1)
 
     This example treats the same polynomials as univariate polynomials over `y`
 
     >>> for step in gcdex_steps(f, g, gens=y): print(step)
     (0, 1, x + 2*y)
-    (1, -x**2 + x*y, 1 - x**3)
+    (1, x*y - x**2, 1 - x**3)
 
     See Also
     ========
@@ -6874,7 +6874,7 @@ def to_rational_coeffs(f):
     >>> p = Poly(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}), x, domain='EX')
     >>> lc, r, _, g = to_rational_coeffs(p)
     >>> lc, r
-    (7 + 5*sqrt(2), 2 - 2*sqrt(2))
+    (5*sqrt(2) + 7, 2 - 2*sqrt(2))
     >>> g
     Poly(x**3 + x**2 - 1/4*x - 1/4, x, domain='QQ')
     >>> r1 = simplify(1/r)
@@ -6983,12 +6983,12 @@ def _torational_factor_list(p, x):
     >>> from sympy import sqrt, expand, Mul
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     >>> factors = _torational_factor_list(p, x); factors
-    (-2, [(-x*(1 + sqrt(2))/2 + 1, 1), (-x*(1 + sqrt(2)) - 1, 1), (-x*(1 + sqrt(2)) + 1, 1)])
+    (-2, [(1 - x*(sqrt(2) + 1)/2, 1), (-x*(sqrt(2) + 1) - 1, 1), (1 - x*(sqrt(2) + 1), 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x + sqrt(2)}))
     >>> factors = _torational_factor_list(p, x); factors
-    (1, [(x - 2 + sqrt(2), 1), (x - 1 + sqrt(2), 1), (x + 1 + sqrt(2), 1)])
+    (1, [(x + sqrt(2) - 2, 1), (x + sqrt(2) - 1, 1), (x + sqrt(2) + 1, 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
 
@@ -7336,7 +7336,7 @@ def all_roots(f, multiple=True, radicals=True, extension=False):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    x**2 - sqrt(2)*x - sqrt(3)*x + sqrt(6)
     >>> all_roots(p)
     Traceback (most recent call last):
     ...
@@ -7537,7 +7537,7 @@ def real_roots(f, multiple=True, radicals=True, extension=False):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    x**2 - sqrt(2)*x - sqrt(3)*x + sqrt(6)
     >>> real_roots(p)
     Traceback (most recent call last):
     ...

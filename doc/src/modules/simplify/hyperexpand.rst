@@ -524,9 +524,9 @@ Computing the second derivative we find
    >>> B1prime = cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*\
    ...           fresnelc(2*root(z,4)*exp(I*pi/4)/sqrt(pi))/(8*root(z,4))
    >>> z * diff(B1prime, z)
-   z*(-cosh(2*sqrt(z))/(16*z) + sinh(2*sqrt(z))/(4*sqrt(z)) + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(5/4)))
+   z*(sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(5/4)) + sinh(2*sqrt(z))/(4*sqrt(z)) - cosh(2*sqrt(z))/(16*z))
    >>> expand(_)
-   sqrt(z)*sinh(2*sqrt(z))/4 - cosh(2*sqrt(z))/16 + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(1/4))
+   sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(1/4)) + sqrt(z)*sinh(2*sqrt(z))/4 - cosh(2*sqrt(z))/16
 
 which can be printed as
 
@@ -589,7 +589,7 @@ and for the third one
    >>> z = Symbol("z")
    >>> B2 = sinh(2*sqrt(z))*sqrt(z)
    >>> expand(z * diff(B2, z))
-   sqrt(z)*sinh(2*sqrt(z))/2 + z*cosh(2*sqrt(z))
+   z*cosh(2*sqrt(z)) + sqrt(z)*sinh(2*sqrt(z))/2
 
 Now we have computed the entries of this matrix to be
 

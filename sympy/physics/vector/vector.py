@@ -568,9 +568,9 @@ class Vector(Printable, EvalfMixin):
         >>> A = N.orientnew('A', 'Axis', (beta, N.x))
         >>> vector.to_matrix(A)
         Matrix([
-        [                         a],
-        [ b*cos(beta) + c*sin(beta)],
-        [-b*sin(beta) + c*cos(beta)]])
+        [                        a],
+        [b*cos(beta) + c*sin(beta)],
+        [c*cos(beta) - b*sin(beta)]])
 
         """
 
@@ -773,7 +773,7 @@ class Vector(Printable, EvalfMixin):
         >>> ((1 + x*y) * A.x).xreplace({x: pi})
         (pi*y + 1)*A.x
         >>> ((1 + x*y) * A.x).xreplace({x: pi, y: 2})
-        (1 + 2*pi)*A.x
+        (2*pi + 1)*A.x
 
         Replacements occur only if an entire node in the expression tree is
         matched:

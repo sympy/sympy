@@ -1191,30 +1191,14 @@ class Expr(Basic, EvalfMixin):
 
         """
 
-        from .numbers import Number, NumberSymbol
-
-        if order is None and self.is_Add:
-            # Spot the special case of Add(Number, Mul(Number, expr)) with the
-            # first number positive and the second number negative
-            key = lambda x:not isinstance(x, (Number, NumberSymbol))
-            add_args = sorted(Add.make_args(self), key=key)
-            if (len(add_args) == 2
-                and isinstance(add_args[0], (Number, NumberSymbol))
-                and isinstance(add_args[1], Mul)):
-                mul_args = sorted(Mul.make_args(add_args[1]), key=key)
-                if (len(mul_args) == 2
-                    and isinstance(mul_args[0], Number)
-                    and add_args[0].is_positive
-                    and mul_args[0].is_negative):
-                    return add_args
-
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
 
         if not any(term.is_Order for term, _ in terms):
             ordered = sorted(terms, key=key, reverse=reverse)
         else:
-            _order, _terms = _sift_true_false(terms, lambda x: x[0].is_Order)
+            _order, _terms = _sift_true_false(
+                terms, lambda x: x[0].is_Order)
             ordered = sorted(_terms, key=key, reverse=True) \
                 + sorted(_order, key=key, reverse=True)
 
@@ -1231,35 +1215,35 @@ class Expr(Basic, EvalfMixin):
 
         for term in Add.make_args(self):
             coeff, _term = term.as_coeff_Mul()
+            if not (coeff.is_Rational or coeff.is_Float):
+                coeff = S.One
+                _term = term
 
-            coeff_complex = complex(coeff)
             cpart: dict[Expr, int] = {}
             ncpart = []
+            imaginary = False
 
             if _term is not S.One:
                 for factor in Mul.make_args(_term):
-                    if factor.is_number:
-                        try:
-                            coeff_complex *= complex(factor)
-                        except (TypeError, ValueError):
-                            pass
-                        else:
-                            continue
+                    if factor is S.ImaginaryUnit:
+                        imaginary = True
+                        continue
 
                     if factor.is_commutative:
                         base, exp = decompose_power(factor)
-
                         cpart[base] = cpart.get(base, 0) + exp
                         gens_set.add(base)
                     else:
                         ncpart.append(factor)
 
-            coeff_tuple = coeff_complex.real, coeff_complex.imag
+            coeff_tuple = (S.Zero, coeff) if imaginary else (coeff, S.Zero)
             ncpart_tuple = tuple(ncpart)
 
             terms.append((term, (coeff_tuple, cpart, ncpart_tuple)))
 
-        gens = sorted(gens_set, key=default_sort_key)
+        # Put symbols first to preserve monomial precedence, without
+        # checking whether other generators represent numerical values.
+        gens = sorted(gens_set, key=lambda g: (not g.is_Symbol, default_sort_key(g)))
 
         k, indices = len(gens), {}
 
@@ -2213,7 +2197,7 @@ class Expr(Basic, EvalfMixin):
         Radical content can also be factored out of the primitive:
 
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
-        (2, sqrt(2)*(1 + 2*sqrt(5)))
+        (2, sqrt(2)*(2*sqrt(5) + 1))
 
         If clear=False (default is True) then content will not be removed
         from an Add if it can be distributed to leave one or more
@@ -2997,14 +2981,10 @@ class Expr(Basic, EvalfMixin):
         -x
         >>> f = tan(x)
         >>> f.series(x, 2, 6, "+")
-        tan(2) + (1 + tan(2)**2)*(x - 2) + (x - 2)**2*(tan(2)**3 + tan(2)) +
-        (x - 2)**3*(1/3 + 4*tan(2)**2/3 + tan(2)**4) + (x - 2)**4*(tan(2)**5 +
-        5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(2/15 + 17*tan(2)**2/15 +
-        2*tan(2)**4 + tan(2)**6) + O((x - 2)**6, (x, 2))
+        tan(2) + (x - 2)*(tan(2)**2 + 1) + (x - 2)**2*(tan(2)**3 + tan(2)) + (x - 2)**3*(tan(2)**4 + 4*tan(2)**2/3 + 1/3) + (x - 2)**4*(tan(2)**5 + 5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(tan(2)**6 + 2*tan(2)**4 + 17*tan(2)**2/15 + 2/15) + O((x - 2)**6, (x, 2))
 
         >>> f.series(x, 2, 3, "-")
-        tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2))
-        + O((x - 2)**3, (x, 2))
+        tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2)) + O((x - 2)**3, (x, 2))
 
         For rational expressions this method may return original expression without the Order term.
         >>> (1/x).series(x, n=8)

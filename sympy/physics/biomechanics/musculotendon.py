@@ -1121,7 +1121,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     [tau_d_muscle],
     [    b_muscle]])
     >>> activation.rhs()
-    Matrix([[((1/2 - tanh(b_muscle*(-a_muscle(t) + e_muscle(t)))/2)*(3*...]])
+    Matrix([[((3*a_muscle(t)/2 + 1/2)*(1/2 - tanh(b_muscle*(e_muscle(t) - a_muscle(t)))/2)/tau_d_muscle + (tanh(b_muscle*(e_muscle(t) - a_muscle(t)))/2 + 1/2)/(tau_a_muscle*(3*a_muscle(t)/2 + 1/2)))*(e_muscle(t) - a_muscle(t))]])
 
     The musculotendon class requires symbols or values to be passed to represent
     the constants in the musculotendon dynamics. We'll use SymPy's ``symbols``
@@ -1161,7 +1161,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     ``force`` attribute.
 
     >>> rigid_tendon_muscle.force
-    -F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)...
+    -F_M_max*(beta*(Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, c_0_fl_M_act_muscle, c_1_fl_M_act_muscle, c_2_fl_M_act_muscle, c_3_fl_M_act_muscle, c_4_fl_M_act_muscle, c_5_fl_M_act_muscle, c_6_fl_M_act_muscle, c_7_fl_M_act_muscle, c_8_fl_M_act_muscle, c_9_fl_M_act_muscle, c_10_fl_M_act_muscle, c_11_fl_M_act_muscle)*FiberForceVelocityDeGroote2016((Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)), c_0_fv_M_muscle, c_1_fv_M_muscle, c_2_fv_M_muscle, c_3_fv_M_muscle) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, c_0_fl_M_pas_muscle, c_1_fl_M_pas_muscle))*cos(alpha_opt)
 
     When we created the musculotendon object, we passed in an instance of an
     activation dynamics object that governs the activation within the
@@ -1232,7 +1232,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     ``Matrix``.
 
     >>> rigid_tendon_muscle.rhs()
-    Matrix([[((1/2 - tanh(b_muscle*(-a_muscle(t) + e_muscle(t)))/2)*(3*...]])
+    Matrix([[((3*a_muscle(t)/2 + 1/2)*(1/2 - tanh(b_muscle*(e_muscle(t) - a_muscle(t)))/2)/tau_d_muscle + (tanh(b_muscle*(e_muscle(t) - a_muscle(t)))/2 + 1/2)/(tau_a_muscle*(3*a_muscle(t)/2 + 1/2)))*(e_muscle(t) - a_muscle(t))]])
 
     The musculotendon class supports elastic tendon musculotendon models in
     addition to rigid tendon ones. You can choose to either use the fiber length
@@ -1263,7 +1263,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     ... )
 
     >>> elastic_tendon_muscle.force
-    -F_M_max*TendonForceLengthDeGroote2016((-sqrt(l_M_opt**2*...
+    -F_M_max*TendonForceLengthDeGroote2016((Abs(q(t)) - sqrt(l_M_opt**2*l_M_tilde_muscle(t)**2 - l_M_opt**2*sin(alpha_opt)**2))/l_T_slack, c_0_fl_T_muscle, c_1_fl_T_muscle, c_2_fl_T_muscle, c_3_fl_T_muscle)
     >>> elastic_tendon_muscle.x
     Matrix([
     [l_M_tilde_muscle(t)],
@@ -1305,8 +1305,8 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     [     c_3_fv_M_muscle]])
     >>> elastic_tendon_muscle.rhs()
     Matrix([
-    [v_M_max*FiberForceVelocityInverseDeGroote2016((l_M_opt*...],
-    [ ((1/2 - tanh(b_muscle*(-a_muscle(t) + e_muscle(t)))/2)*(3*...]])
+    [v_M_max*FiberForceVelocityInverseDeGroote2016((l_M_opt*l_M_tilde_muscle(t)*TendonForceLengthDeGroote2016((Abs(q(t)) - sqrt(l_M_opt**2*l_M_tilde_muscle(t)**2 - l_M_opt**2*sin(alpha_opt)**2))/l_T_slack, c_0_fl_T_muscle, c_1_fl_T_muscle, c_2_fl_T_muscle, c_3_fl_T_muscle)/sqrt(l_M_opt**2*l_M_tilde_muscle(t)**2 - l_M_opt**2*sin(alpha_opt)**2) - FiberForceLengthPassiveDeGroote2016(l_M_tilde_muscle(t), c_0_fl_M_pas_muscle, c_1_fl_M_pas_muscle))/(a_muscle(t)*FiberForceLengthActiveDeGroote2016(l_M_tilde_muscle(t), c_0_fl_M_act_muscle, c_1_fl_M_act_muscle, c_2_fl_M_act_muscle, c_3_fl_M_act_muscle, c_4_fl_M_act_muscle, c_5_fl_M_act_muscle, c_6_fl_M_act_muscle, c_7_fl_M_act_muscle, c_8_fl_M_act_muscle, c_9_fl_M_act_muscle, c_10_fl_M_act_muscle, c_11_fl_M_act_muscle)), c_0_fv_M_muscle, c_1_fv_M_muscle, c_2_fv_M_muscle, c_3_fv_M_muscle)/l_M_opt],
+    [                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ((3*a_muscle(t)/2 + 1/2)*(1/2 - tanh(b_muscle*(e_muscle(t) - a_muscle(t)))/2)/tau_d_muscle + (tanh(b_muscle*(e_muscle(t) - a_muscle(t)))/2 + 1/2)/(tau_a_muscle*(3*a_muscle(t)/2 + 1/2)))*(e_muscle(t) - a_muscle(t))]])
 
     It is strongly recommended to use the alternate ``with_defaults``
     constructor when creating an instance because this will ensure that the

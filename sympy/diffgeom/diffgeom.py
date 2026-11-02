@@ -1766,8 +1766,8 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     [   -t*y/(x**2 + y**2)]])
     >>> series[2]
     Matrix([
-    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2],
-    [                                t**2*x*y/(x**2 + y**2)**2]])
+    [t**2*(1/sqrt(x**2 + y**2) - x**2/(x**2 + y**2)**(3/2))/2],
+    [                               t**2*x*y/(x**2 + y**2)**2]])
 
     See Also
     ========
@@ -1853,7 +1853,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point)
     >>> equations
-    [f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]
+    [f_1(t) + Derivative(f_0(t), t), Derivative(f_1(t), t) - f_0(t)]
     >>> init_cond
     [f_0(0), f_1(0) - 1]
 
@@ -2005,7 +2005,7 @@ def vectors_in_basis(expr, to_sys):
     >>> from sympy.diffgeom.rn import R2_r, R2_p
 
     >>> vectors_in_basis(R2_r.e_x, R2_p)
-    -y*e_theta/(x**2 + y**2) + x*e_rho/sqrt(x**2 + y**2)
+    x*e_rho/sqrt(x**2 + y**2) - y*e_theta/(x**2 + y**2)
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
 

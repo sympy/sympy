@@ -80,7 +80,7 @@ def test_Function():
     assert mcode(catalan(x)) == "CatalanNumber[x]"
     assert mcode(harmonic(x)) == "HarmonicNumber[x]"
     assert mcode(harmonic(x, y)) == "HarmonicNumber[x, y]"
-    assert mcode(Li(x)) == "LogIntegral[x] - LogIntegral[2]"
+    assert mcode(Li(x)) == 'LogIntegral[x] - LogIntegral[2]'
     assert mcode(LambertW(x)) == "ProductLog[x]"
     assert mcode(LambertW(x, -1)) == "ProductLog[-1, x]"
     assert mcode(LambertW(x, y)) == "ProductLog[y, x]"
@@ -108,7 +108,7 @@ def test_Pow():
     assert mcode(x**3) == "x^3"
     assert mcode(x**(y**3)) == "x^(y^3)"
     assert mcode(1/(f(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "(3.5*f[x])^(-x + y^x)/(x^2 + y)"
+        '(3.5*f[x])^(y^x - x)/(x^2 + y)'
     assert mcode(x**-1.0) == 'x^(-1.0)'
     assert mcode(x**Rational(2, 3)) == 'x^(2/3)'
 
@@ -138,11 +138,11 @@ def test_constants():
     assert mcode(pi) == "Pi"
     assert mcode(S.GoldenRatio) == "GoldenRatio"
     assert mcode(S.TribonacciConstant) == \
-        "(1/3 + (1/3)*(19 - 3*33^(1/2))^(1/3) + " \
-        "(1/3)*(3*33^(1/2) + 19)^(1/3))"
+        "((1/3)*(19 - 3*33^(1/2))^(1/3) + " \
+        "(1/3)*(3*33^(1/2) + 19)^(1/3) + 1/3)"
     assert mcode(2*S.TribonacciConstant) == \
-        "2*(1/3 + (1/3)*(19 - 3*33^(1/2))^(1/3) + " \
-        "(1/3)*(3*33^(1/2) + 19)^(1/3))"
+        "2*((1/3)*(19 - 3*33^(1/2))^(1/3) + " \
+        "(1/3)*(3*33^(1/2) + 19)^(1/3) + 1/3)"
     assert mcode(S.EulerGamma) == "EulerGamma"
     assert mcode(S.Catalan) == "Catalan"
 

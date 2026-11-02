@@ -390,16 +390,16 @@ Here are several more advanced examples:
     >>> nsimplify(Float('0.130198866629986772369127970337',30), [pi, E])
         1
     ----------
-    5*pi
-    ---- + 2*e
-     7
+          5*pi
+    2*e + ----
+           7
     >>> nsimplify(cos(atan('1/3')))
         ____
     3*\/ 10
     --------
        10
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
-    -2 + 2*GoldenRatio
+    2*GoldenRatio - 2
     >>> nsimplify(2 + exp(2*atan('1/4')*I))
     49   8*I
     -- + ---
@@ -409,7 +409,7 @@ Here are several more advanced examples:
               /   ___
     1        /  \/ 5    1
     - - I*  /   ----- + -
-    2     \/      10    4
+    2     \/     10     4
     >>> nsimplify(I**I, [pi])
      -pi
      ----

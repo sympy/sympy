@@ -767,14 +767,15 @@ class Bernoulli(SinglePatternODESolver):
 
     >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
     ... hint='separable_Integral'))
-    f(x)
-        /
-    |                /
-    |  1            |
-    |  - dy = C1 +  | (-P(x) + Q(x)) dx
-    |  y            |
-    |              /
-    /
+     f(x)
+       /
+      |                /
+      |  1            |
+      |  - dy = C1 +  | (Q(x) - P(x)) dx
+      |  y            |
+      |              /
+     /
+    <BLANKLINE>
 
 
     Examples
@@ -1942,7 +1943,7 @@ class NthOrderReducible(SingleODESolver):
     >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2), 0)
     >>> dsolve(eq, f(x), hint='nth_order_reducible')
     ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
+    Eq(f(x), C1 - sqrt(-1/C2)*log(x - C2*sqrt(-1/C2)) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
 
     """
     hint = "nth_order_reducible"
@@ -2122,11 +2123,7 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C5*exp(x*CRootOf(x**5 + 10*x - 2, 0))
-    + (C1*sin(x*im(CRootOf(x**5 + 10*x - 2, 1)))
-    + C2*cos(x*im(CRootOf(x**5 + 10*x - 2, 1))))*exp(x*re(CRootOf(x**5 + 10*x - 2, 1)))
-    + (C3*sin(x*im(CRootOf(x**5 + 10*x - 2, 3)))
-    + C4*cos(x*im(CRootOf(x**5 + 10*x - 2, 3))))*exp(x*re(CRootOf(x**5 + 10*x - 2, 3))))
+    Eq(f(x), C5*exp(x*CRootOf(x**5 + 10*x - 2, 0)) + (C1*sin(x*im(CRootOf(x**5 + 10*x - 2, 1))) + C2*cos(x*im(CRootOf(x**5 + 10*x - 2, 1))))*exp(x*re(CRootOf(x**5 + 10*x - 2, 1))) + (C3*sin(x*im(CRootOf(x**5 + 10*x - 2, 3))) + C4*cos(x*im(CRootOf(x**5 + 10*x - 2, 3))))*exp(x*re(CRootOf(x**5 + 10*x - 2, 3))))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_constant_coeff_homogeneous_Integral`` hint.

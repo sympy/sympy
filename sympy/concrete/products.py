@@ -124,11 +124,11 @@ class Product(ExprWithIntLimits):
     pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2
     >>> Pe = P.doit()
     >>> Pe
-    pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(1 + pi/2, n)/(2*factorial(n)**2)
+    pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(pi/2 + 1, n)/(2*factorial(n)**2)
     >>> limit(Pe, n, oo).gammasimp()
     sin(pi**2/2)
     >>> Pe.rewrite(gamma)
-    (-1)**n*pi**2*gamma(pi/2)*gamma(n + 1 + pi/2)/(2*gamma(1 + pi/2)*gamma(-n + pi/2)*gamma(n + 1)**2)
+    (-1)**n*pi**2*gamma(pi/2)*gamma(n + pi/2 + 1)/(2*gamma(pi/2 + 1)*gamma(pi/2 - n)*gamma(n + 1)**2)
 
     Products with the lower limit being larger than the upper one:
 

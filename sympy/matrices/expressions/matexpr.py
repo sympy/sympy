@@ -655,7 +655,7 @@ class MatrixSymbol(MatrixExpr):
     >>> A.shape
     (3, 4)
     >>> 2*A*B + Identity(3)
-    I + 2*A*B
+    2*A*B + I
     """
     is_commutative = False
     is_symbol = True

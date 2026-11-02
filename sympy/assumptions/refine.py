@@ -271,7 +271,7 @@ def refine_atan2(expr, assumptions):
     >>> refine_atan2(atan2(y,x), Q.negative(y) & Q.negative(x))
     atan(y/x) - pi
     >>> refine_atan2(atan2(y,x), Q.positive(y) & Q.negative(x))
-    atan(y/x) + pi
+    pi + atan(y/x)
     >>> refine_atan2(atan2(y,x), Q.zero(y) & Q.negative(x))
     pi
     >>> refine_atan2(atan2(y,x), Q.positive(y) & Q.zero(x))

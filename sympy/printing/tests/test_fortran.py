@@ -71,7 +71,7 @@ def test_fcode_Pow():
     assert fcode(x**3) == "      x**3"
     assert fcode(x**(y**3)) == "      x**(y**3)"
     assert fcode(1/(sin(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "      (3.5d0*sin(x))**(-x + y**x)/(x**2 + y)"
+        '      (3.5d0*sin(x))**(y**x - x)/(x**2 + y)'
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(n)) == '      sqrt(dble(n))'
     assert fcode(x**0.5) == '      sqrt(x)'
@@ -84,7 +84,7 @@ def test_fcode_Pow():
 
 def test_fcode_Pow_with_folded_negative_function():
     expr = sin(Float("1.265344399150595") - Float("0.5") * pi) ** 2
-    assert fcode(expr, source_format="free", standard=95) == "(-0.30072421433515855d0)**2"
+    assert fcode(expr, source_format="free", standard=95) == '0.30072421433515855d0**2'
 
 
 def test_fcode_Rational():

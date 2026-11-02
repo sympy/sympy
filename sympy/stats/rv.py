@@ -712,14 +712,14 @@ def given(expr, condition=None, **kwargs):
     >>> X = Normal('X', 0, 1)
     >>> Y = Normal('Y', 0, 1)
     >>> pprint(density(X + Y, Y)(z), use_unicode=False)
-                    2
-           -(-Y + z)
-           -----------
-      ___       2
+                   2
+           -(z - Y)
+           ----------
+      ___      2
     \/ 2 *e
-    ------------------
-             ____
-         2*\/ pi
+    -----------------
+            ____
+        2*\/ pi
     """
 
     if not is_random(condition) or pspace_independent(expr, condition):
