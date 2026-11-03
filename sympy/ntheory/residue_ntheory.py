@@ -10,7 +10,7 @@ from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
 from .generate import primerange
-from .factor_ import factorint, _perfect_power
+from .factor_ import factorint, multiplicity, _perfect_power
 from .modular import crt, solve_congruence
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.memoization import recurrence_memo
@@ -1332,8 +1332,10 @@ def _discrete_log_trial_mul(n, a, b, order=None):
     """
     a %= n
     b %= n
+    if order is None:
+        order = n
     x = 1
-    for i in range((order or n) + 1):
+    for i in range(order):
         if x == a:
             return i
         x = x * b % n
@@ -1719,15 +1721,19 @@ def discrete_log(n, a, b, order=None, prime_order=None):
             # we can see that if `reduced_a` is zero, is it sufficient to determine the
             # first position where the sequence becomes zero. On the other hand,
             # if `reduced_a` is nonzero, a solution (if it exists) must lie between
-            # between x0 and xs. In either case, a naive search is sufficient
-            k = _discrete_log_trial_mul(pe, reduced_a, reduced_b, e)
-            if reduced_a:
+            # between x0 and xs. In either case, a naive search (including e to find the
+            # `reduced_a` zero case) is sufficient
+            if reduced_a == 0:
+                prime_power = multiplicity(p, b)
+                # division ceiling
+                k = (e + prime_power - 1) // prime_power
+                continuous = max(continuous, k)
+            else:
+                k = _discrete_log_trial_mul(pe, reduced_a, reduced_b, e)
                 if unique is not None and unique != k:
                     raise ValueError("Log does not exist")
                 else:
                     unique = k
-            else:
-                continuous = max(continuous, k)
 
     result = None
     cycle_size = 1
