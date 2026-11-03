@@ -2,6 +2,69 @@
 requires = ["setuptools>=77.0.3", "setuptools-scm>=10"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "sympy"
+dynamic = ["version"]
+description = "Computer algebra system (CAS) in Python"
+readme = "README.md"
+authors = [{name = "SymPy development team", email = "sympy@googlegroups.com"}]
+license = "BSD-3-Clause AND MIT"
+license-files = ["LICENSE", "LICENSES_BUNDLED.txt"]
+keywords = ["Math", "CAS"]
+# Keep in sync with sympy/__init__.py.
+requires-python = ">=3.10"
+# Set upper bound when making the release branch.
+dependencies = ["mpmath>=1.1.0"]
+classifiers = [
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+[project.urls]
+Homepage = "https://sympy.org"
+Source = "https://github.com/sympy/sympy"
+
+[project.optional-dependencies]
+dev = ["pytest>=7.1.0", "hypothesis>=6.70.0"]
+
+[project.scripts]
+isympy = "isympy:main"
+
+[tool.setuptools]
+py-modules = ["isympy"]
+zip-safe = false
+include-package-data = false
+
+[tool.setuptools.package-data]
+"sympy.utilities.mathml.data" = ["*.xsl"]
+"sympy.logic.benchmarks" = ["input/*.cnf"]
+"sympy.parsing.autolev" = [
+    "*.g4",
+    "test-examples/*.al",
+    "test-examples/*.py",
+    "test-examples/pydy-example-repo/*.al",
+    "test-examples/pydy-example-repo/*.py",
+    "test-examples/README.txt",
+]
+"sympy.parsing.latex" = ["*.txt", "*.g4", "lark/grammar/*.lark"]
+"sympy.parsing.smtlib" = ["lark/grammar/*.lark"]
+"sympy.plotting.tests" = ["test_region_*.png"]
+"sympy" = ["py.typed"]
+
+[tool.setuptools.data-files]
+"share/man/man1" = ["doc/man/isympy.1"]
+
 [tool.setuptools_scm]
 version_file = "sympy/release.py"
 write_to_source = false

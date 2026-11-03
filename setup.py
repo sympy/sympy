@@ -26,25 +26,9 @@ sympy@googlegroups.com and ask for help.
 """
 
 import sys
-from pathlib import Path
 
 from setuptools import setup, Command
 
-
-extra_kwargs = {
-    'zip_safe': False,
-    'entry_points': {
-        'console_scripts': [
-            'isympy = isympy:main',
-        ]
-    }
-}
-
-# Keep in sync with sympy/__init__.py and python_requires below
-if sys.version_info < (3, 10):
-    print("SymPy requires Python 3.10 or newer. Python %d.%d detected"
-          % sys.version_info[:2])
-    sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_module_list.py
@@ -270,65 +254,8 @@ tests = [
 
 
 if __name__ == '__main__':
-    setup(name='sympy',
-          use_scm_version=True,
-          description='Computer algebra system (CAS) in Python',
-          long_description=(Path(__file__).parent / 'README.md').read_text("UTF-8"),
-          long_description_content_type='text/markdown',
-          author='SymPy development team',
-          author_email='sympy@googlegroups.com',
-          license_expression='BSD-3-Clause AND MIT',
-          license_files=['LICENSE', 'LICENSES_BUNDLED.txt'],
-          keywords="Math CAS",
-          url='https://sympy.org',
-          project_urls={
-              'Source': 'https://github.com/sympy/sympy',
-          },
-          # Set upper bound when making the release branch.
-          install_requires=[
-              'mpmath >= 1.1.0',
-          ],
-          py_modules=['isympy'],
-          packages=['sympy'] + modules + tests,
-          ext_modules=[],
-          package_data={
-              'sympy.utilities.mathml.data': ['*.xsl'],
-              'sympy.logic.benchmarks': ['input/*.cnf'],
-              'sympy.parsing.autolev': [
-                  '*.g4', 'test-examples/*.al', 'test-examples/*.py',
-                  'test-examples/pydy-example-repo/*.al',
-                  'test-examples/pydy-example-repo/*.py',
-                  'test-examples/README.txt',
-                  ],
-              'sympy.parsing.latex': ['*.txt', '*.g4', 'lark/grammar/*.lark'],
-              'sympy.parsing.smtlib': ['lark/grammar/*.lark'],
-              'sympy.plotting.tests': ['test_region_*.png'],
-              'sympy': ['py.typed']
-              },
-          data_files=[('share/man/man1', ['doc/man/isympy.1'])],
+    setup(packages=['sympy'] + modules + tests,
           cmdclass={'test': test_sympy,
                     'antlr': antlr,
                     },
-          # Keep in sync with version check above and sympy/__init__.py
-          python_requires='>=3.10',
-          classifiers=[
-            'Operating System :: OS Independent',
-            'Programming Language :: Python',
-            'Topic :: Scientific/Engineering',
-            'Topic :: Scientific/Engineering :: Mathematics',
-            'Topic :: Scientific/Engineering :: Physics',
-            'Programming Language :: Python :: 3',
-
-            'Programming Language :: Python :: 3.10',
-            'Programming Language :: Python :: 3.11',
-            'Programming Language :: Python :: 3.12',
-            'Programming Language :: Python :: 3.13',
-            'Programming Language :: Python :: 3 :: Only',
-            'Programming Language :: Python :: Implementation :: CPython',
-            'Programming Language :: Python :: Implementation :: PyPy',
-            ],
-          extras_require={
-              "dev": ["pytest>=7.1.0", "hypothesis>=6.70.0"],
-            },
-          **extra_kwargs
           )
