@@ -150,17 +150,6 @@ def test_issue_15227():
 
 
 @XFAIL
-@slow
-def test_issue_14716():
-    i = integrate(log(x + 5)*cos(pi*x),(x, S.Half, 1))
-    assert not i.has(Integral)
-    # Mathematica can not solve it either, but
-    # integrate(log(x + 5)*cos(pi*x),(x, S.Half, 1)).transform(x, y - 5).doit()
-    # works
-    # assert i == -log(Rational(11, 2))/pi - Si(pi*Rational(11, 2))/pi + Si(6*pi)/pi
-
-
-@XFAIL
 def test_issue_14074():
     i = integrate(log(sin(x)), (x, 0, pi/2))
     assert not i.has(Integral)

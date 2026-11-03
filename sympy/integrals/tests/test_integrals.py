@@ -1649,6 +1649,12 @@ def test_issue_14470():
     assert integrate(1/sqrt(exp(x) + 1), x) == log(sqrt(exp(x) + 1) - 1) - log(sqrt(exp(x) + 1) + 1)
 
 
+@slow
+def test_issue_14716():
+    assert integrate(log(x + 5)*cos(pi*x), (x, S.Half, 1)) == \
+        -log(Rational(11, 2))/pi - Si(pi*Rational(11, 2))/pi + Si(6*pi)/pi
+
+
 def test_issue_14877():
     f = exp(1 - exp(x**2)*x + 2*x**2)*(2*x**3 + x)/(1 - exp(x**2)*x)**2
     assert integrate(f, x) == \
