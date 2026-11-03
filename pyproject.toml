@@ -46,6 +46,10 @@ py-modules = ["isympy"]
 zip-safe = false
 include-package-data = false
 
+[tool.setuptools.packages.find]
+include = ["sympy", "sympy.*"]
+namespaces = false
+
 [tool.setuptools.package-data]
 "sympy.utilities.mathml.data" = ["*.xsl"]
 "sympy.logic.benchmarks" = ["input/*.cnf"]
