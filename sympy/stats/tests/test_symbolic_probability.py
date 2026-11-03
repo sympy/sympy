@@ -11,7 +11,7 @@ from sympy.functions.elementary.trigonometric import sin
 from sympy.integrals.integrals import Integral
 from sympy.core.expr import unchanged
 from sympy.core.singleton import S
-from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
+from sympy.stats import (Binomial, Normal, Poisson, density, variance, Covariance, Variance,
                          Probability, Expectation, Moment, CentralMoment)
 from sympy.stats.rv import probability, expectation
 
@@ -56,6 +56,17 @@ def test_statistical_operators_piecewise_fold():
         independent = operator(Piecewise((X, x > 0), (2*X, True)))
         assert piecewise_fold(independent) == Piecewise(
             (operator(X), x > 0), (operator(2*X), True))
+
+
+def test_issue_17784():
+    n = symbols('n', integer=True, positive=True)
+    i = symbols('i', integer=True, nonnegative=True)
+    p = symbols('p', positive=True)
+    X = Binomial('X', n, p)
+    total = Sum(i*density(X)(i), (i, 0, n))
+    assert piecewise_fold(total) == total
+    assert i not in piecewise_fold(total).free_symbols
+    assert piecewise_fold(total).subs({n: 3, p: S.Half}).doit() == 3*S.Half
 
 
 def test_literal_probability():
