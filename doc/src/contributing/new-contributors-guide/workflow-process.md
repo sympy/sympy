@@ -535,7 +535,8 @@ your PR is ready for final review.
 ### Writing pull request title and description
 
 When you make a pull request, be sure to fill out the pull request description
-template. This includes adding cross-references to any relevant issues (with
+template. See the [pull request guidelines](../pull-request-guidelines.rst)
+for instructions on each section. This includes adding cross-references to any relevant issues (with
 "fixes" if appropriate), and adding a release notes entry.
 
 - **Descriptive titles are very important.** The pull request title should
