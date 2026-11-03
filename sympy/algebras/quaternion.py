@@ -1061,7 +1061,7 @@ class Quaternion(Expr):
         return Quaternion(a, b, c, d)
 
     def _eval_subs(self, old: Expr, new: Expr) -> Quaternion: # type: ignore
-        elements = (i.subs(old, new) for i in self.args)
+        e1, e2, e3, e4 = [i.subs(old, new) for i in self.args]
         norm = self._norm
         if norm is not None:
             norm = norm.subs(old, new)
