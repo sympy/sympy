@@ -1246,8 +1246,6 @@ def test_N7():
     assert ask(y > 0, (x > 1) & (y >= x - 1)) is True
 
 
-@XFAIL
-@slow
 def test_N8():
     x, y, z = symbols('x y z', real=True)
     assert ask(Eq(x, y) & Eq(y, z),
