@@ -124,7 +124,11 @@ def test_rewrite():
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
 
     expr_in = SingularityFunction(x, a, n) + SingularityFunction(x, a, -1) - SingularityFunction(x, a, -2)
-    expr_out = (x - a)**n*Heaviside(x - a, 1) + DiracDelta(x - a) + DiracDelta(a - x, 1)
+    expr_out = (x - a)**n*Heaviside(x - a, 1) + DiracDelta(x - a) - DiracDelta(x - a, 1)
     assert expr_in.rewrite(Heaviside) == expr_out
     assert expr_in.rewrite(DiracDelta) == expr_out
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
+
+    assert SingularityFunction(x + 2*y, a, -2).rewrite(Heaviside) == DiracDelta(x + 2*y - a, 1)
+    assert SingularityFunction(2*x, a, -1).rewrite(Heaviside) == DiracDelta(2*x - a)
+    assert SingularityFunction(0, a, -1).rewrite(Heaviside) == DiracDelta(a)
