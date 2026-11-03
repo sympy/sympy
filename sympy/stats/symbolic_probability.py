@@ -1,5 +1,6 @@
 from __future__ import annotations
 import itertools
+from typing import TYPE_CHECKING
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -22,6 +23,9 @@ from sympy.stats.rv import (RandomSymbol, pspace, dependent,
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
+
 
 @is_random.register(Expr)
 def _(x):
@@ -35,7 +39,20 @@ def _(x):
     return True
 
 
-class Probability(Expr):
+class _StatisticalOperator(Expr):
+    """Base class for operators that act on random variables."""
+
+    @property
+    def operator_variables(self) -> tuple[Basic, ...]:
+        return tuple(random_symbols(self))
+
+    @property
+    def bound_symbols(self) -> tuple[Basic, ...]:
+        """Random symbols retain their identity and probability spaces."""
+        return ()
+
+
+class Probability(_StatisticalOperator):
     """
     Symbolic expression for the probability.
 
@@ -134,7 +151,7 @@ class Probability(Expr):
         return self.rewrite(Integral).doit()
 
 
-class Expectation(Expr):
+class Expectation(_StatisticalOperator):
     """
     Symbolic expression for the expectation.
 
@@ -328,7 +345,7 @@ class Expectation(Expr):
 
     evaluate_sum = evaluate_integral
 
-class Variance(Expr):
+class Variance(_StatisticalOperator):
     """
     Symbolic expression for the variance.
 
@@ -444,7 +461,7 @@ class Variance(Expr):
         return self.rewrite(Integral).doit()
 
 
-class Covariance(Expr):
+class Covariance(_StatisticalOperator):
     """
     Symbolic expression for the covariance.
 
@@ -583,7 +600,7 @@ class Covariance(Expr):
         return self.rewrite(Integral).doit()
 
 
-class Moment(Expr):
+class Moment(_StatisticalOperator):
     """
     Symbolic class for Moment
 
@@ -641,7 +658,7 @@ class Moment(Expr):
         return self.rewrite(Expectation).rewrite(Integral)
 
 
-class CentralMoment(Expr):
+class CentralMoment(_StatisticalOperator):
     """
     Symbolic class Central Moment
 
