@@ -9,8 +9,9 @@ from sympy.external.mpmath import prec_to_dps
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, asin, atan2, sinc)
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (
+    acos, asin, atan2, cos, sin, sinc
+)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
@@ -51,7 +52,7 @@ def _is_extrinsic(seq: str) -> bool:
                          "rotations), or fully lowercase, for intrinsic "
                          "rotations).")
 
-    i, j, k = list(seq.lower())
+    i, j, k = seq.lower()
     if (i == j) or (j == k):
         raise ValueError("Consecutive axes must be different")
 
@@ -445,7 +446,7 @@ class Quaternion(Expr):
             raise ValueError("3 angles must be given.")
 
         extrinsic = _is_extrinsic(seq)
-        i, j, k = list(seq.lower())
+        i, j, k = seq.lower()
 
         e = {
             'x': (1, 0, 0),
@@ -533,7 +534,7 @@ class Quaternion(Expr):
             raise ValueError('Cannot convert a quaternion with norm 0.')
 
         extrinsic = _is_extrinsic(seq)
-        i1, j1, k1 = list(seq.lower())
+        i1, j1, k1 = seq.lower()
 
         # get index corresponding to elementary basis vectors
         i = 'xyz'.index(i1) + 1
@@ -880,8 +881,9 @@ class Quaternion(Expr):
         (2 + 3*I)*(3 + 4*I) + (2 + 3*I)*(2 + 5*I)*i + 0*j + (2 + 3*I)*(7 + 8*I)*k
 
         """
-        # None is a Quaternion:
+        # Both q1 and q2 are Quaternions:
         if isinstance(q1, Quaternion) and isinstance(q2, Quaternion):
+            # If either quaternion has a fixed norm, pre-compute the product norm.
             if q1._norm is None and q2._norm is None:
                 norm = None
             else:
@@ -911,7 +913,6 @@ class Quaternion(Expr):
             else:
                 raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
-        # If any of the quaternions has a fixed norm, pre-compute norm
         else:
             return q1 * q2
 
@@ -1060,11 +1061,10 @@ class Quaternion(Expr):
         return Quaternion(a, b, c, d)
 
     def _eval_subs(self, old: Expr, new: Expr) -> Quaternion: # type: ignore
-        e1, e2, e3, e4 = [i.subs(old, new) for i in self.args]
+        elements = tuple(i.subs(old, new) for i in self.args)
         norm = self._norm
         if norm is not None:
             norm = norm.subs(old, new)
-        elements = (e1, e2, e3, e4)
         _check_norm(elements, norm)
         return Quaternion(*elements, norm=norm)
 
