@@ -164,11 +164,19 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     appropriate viewer for the given output format or use the user defined
     one. By default png output is generated.
 
-    By default pretty Euler fonts are used for typesetting (they were used to
-    typeset the well known "Concrete Mathematics" book). For that to work, you
+   A working LaTeX installation is required to generate output. For PNG
+    output (the default), the ``dvipng`` executable must also be installed.
+    Additionally, SymPy requires the LaTeX packages ``amsmath`` and
+    ``amsfonts`` by default. On Debian/Ubuntu-based systems, these dependencies
+    can be installed with::
+
+        sudo apt install dvipng texlive-latex-extra
+
+    By default, pretty Euler fonts are used for typesetting (they were used to
+    typeset the well-known "Concrete Mathematics" book). For that to work, you
     need the 'eulervm.sty' LaTeX style (in Debian/Ubuntu, install the
-    texlive-fonts-extra package). If you prefer default AMS fonts or your
-    system lacks 'eulervm' LaTeX package then unset the 'euler' keyword
+    ``texlive-fonts-extra`` package). If you prefer default AMS fonts or your
+    system lacks the 'eulervm' LaTeX package, unset the ``euler`` keyword
     argument.
 
     To use viewer auto-detection, lets say for 'png' output, issue
