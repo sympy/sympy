@@ -2348,7 +2348,8 @@ def _transolve(f, symbol, domain):
     return result
 
 
-def solveset(f, symbol=None, domain=S.Complexes):
+def solveset(f: Basic | complex, symbol: Basic | None = None,
+             domain: Set = S.Complexes) -> Set:
     r"""Solves a given inequality or equation with set as output
 
     Parameters
@@ -2449,17 +2450,17 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Interval.open(0, oo)
 
     """
-    f = sympify(f)
+    expr = sympify(f)
     symbol = sympify(symbol)
 
-    if f is S.true:
+    if expr is S.true:
         return domain
 
-    if f is S.false:
+    if expr is S.false:
         return S.EmptySet
 
-    if not isinstance(f, (Expr, Relational, Number)):
-        raise ValueError("%s is not a valid SymPy expression" % f)
+    if not isinstance(expr, (Expr, Relational, Number)):
+        raise ValueError("%s is not a valid SymPy expression" % expr)
 
     if not isinstance(symbol, (Expr, Relational)) and  symbol is not None:
         raise ValueError("%s is not a valid SymPy symbol" % (symbol,))
@@ -2467,13 +2468,13 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if not isinstance(domain, Set):
         raise ValueError("%s is not a valid domain" %(domain))
 
-    free_symbols = f.free_symbols
+    free_symbols = expr.free_symbols
 
-    if f.has(Piecewise):
-        f = piecewise_fold(f)
+    if expr.has(Piecewise):
+        expr = piecewise_fold(expr)
 
     if symbol is None and not free_symbols:
-        b = Eq(f, 0)
+        b = Eq(expr, 0)
         if b is S.true:
             return domain
         elif b is S.false:
@@ -2490,9 +2491,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 The independent variable must be specified for a
                 multivariate equation.'''))
     elif not isinstance(symbol, Symbol):
-        f, s, swap = recast_to_symbols([f], [symbol])
+        eqs, syms, swap = recast_to_symbols([expr], [symbol])
         # the xreplace will be needed if a ConditionSet is returned
-        return solveset(f[0], s[0], domain).xreplace(swap)
+        return solveset(eqs[0], syms[0], domain).xreplace(swap)
 
     # solveset should ignore assumptions on symbols
     newsym = None
@@ -2504,7 +2505,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             newsym = Dummy('C', complex=True)
 
     if newsym is not None:
-        rv = solveset(f.xreplace({symbol: newsym}), newsym, domain)
+        rv = solveset(expr.xreplace({symbol: newsym}), newsym, domain)
         # try to use the original symbol if possible
         try:
             _rv = rv.xreplace({newsym: symbol})
@@ -2520,15 +2521,15 @@ def solveset(f, symbol=None, domain=S.Complexes):
     # can look better if the 2nd condition is x <= 0. Since
     # the solution is a set, duplication of results is not
     # an issue, e.g. {y, -y} when y is 0 will be {0}
-    f, mask = _masked(f, Abs)
-    f = f.rewrite(Piecewise) # everything that's not an Abs
+    expr, mask = _masked(expr, Abs)
+    expr = expr.rewrite(Piecewise) # everything that's not an Abs
     for d, e in mask:
         # everything *in* an Abs
         e = e.func(e.args[0].rewrite(Piecewise))
-        f = f.xreplace({d: e})
-    f = piecewise_fold(f)
+        expr = expr.xreplace({d: e})
+    expr = piecewise_fold(expr)
 
-    return _solveset(f, symbol, domain, _check=True)
+    return _solveset(expr, symbol, domain, _check=True)
 
 
 def solveset_real(f, symbol):
