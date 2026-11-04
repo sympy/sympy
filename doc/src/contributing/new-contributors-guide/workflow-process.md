@@ -57,7 +57,7 @@ pull request, or even before committing a change.
   needed beyond your PR.
 
 - [ ] **[Add a release notes
-  entry](https://github.com/sympy/sympy/wiki/Writing-Release-Notes).** This
+  entry](pull-request-release-notes).** This
   should be done when opening the pull request, in the pull request
   description field. It can be edited at any time before the pull request is
   merged.
@@ -535,7 +535,8 @@ your PR is ready for final review.
 ### Writing pull request title and description
 
 When you make a pull request, be sure to fill out the pull request description
-template. This includes adding cross-references to any relevant issues (with
+template. See the [pull request guidelines](../pull-request-guidelines.rst)
+for instructions on each section. This includes adding cross-references to any relevant issues (with
 "fixes" if appropriate), and adding a release notes entry.
 
 - **Descriptive titles are very important.** The pull request title should
@@ -582,7 +583,7 @@ The description is a good place to:
   requests.
 
 - the pull request needs a release notes entry. See
-  <https://github.com/sympy/sympy/wiki/Writing-Release-Notes> on how to write
+  [the release notes guidelines](pull-request-release-notes) on how to write
   release notes in the pull request description. The SymPy Bot will check that
   your PR has release notes automatically.
 
