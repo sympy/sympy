@@ -361,7 +361,7 @@ def test_hypersimp():
     assert hypersimp(binomial(n + 1, k), k) == (n - k + 1)/(k + 1)
 
     term = (4*k + 1)*factorial(k)/factorial(2*k + 1)
-    assert hypersimp(term, k) == S.Half*((4*k + 5)/(3 + 14*k + 8*k**2))
+    assert hypersimp(term, k) == (4*k + 5)/(16*k**2 + 28*k + 6)
 
     term = 1/((2*k - 1)*factorial(2*k + 1))
     assert hypersimp(term, k) == (k - S.Half)/((k + 1)*(2*k + 1)*(2*k + 3))
