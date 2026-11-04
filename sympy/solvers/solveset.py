@@ -2532,11 +2532,11 @@ def solveset(f: Basic | complex, symbol: Basic | None = None,
     return _solveset(expr, symbol, domain, _check=True)
 
 
-def solveset_real(f, symbol):
+def solveset_real(f: Basic | complex, symbol: Basic) -> Set:
     return solveset(f, symbol, S.Reals)
 
 
-def solveset_complex(f, symbol):
+def solveset_complex(f: Basic | complex, symbol: Basic) -> Set:
     return solveset(f, symbol, S.Complexes)
 
 
