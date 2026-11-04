@@ -1692,44 +1692,40 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     cyclic_dlog = []
     for p, e in factorint(n).items():
         pe = p**e
-        reduced_a = a % pe
-        reduced_b = b % pe
-        if reduced_b % p != 0:
-            order = n_order(reduced_b, pe)
+        if gcd(b, pe) == 1:
+            order = n_order(b, pe)
             if order < 1000:
-                res = _discrete_log_trial_mul(pe, reduced_a, reduced_b, order)
+                res = _discrete_log_trial_mul(pe, a, b, order)
                 cyclic_dlog.append((res, order))
                 continue
             if prime_order:
                 # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
                 # we compare the expected running times to determine the algorithm which is expected to be faster
                 # the number 10 was determined experimentally
-                if 4 * sqrt(log(n) * log(log(n))) < log(order) - 10:
-                    res = _discrete_log_index_calculus(pe, reduced_a, reduced_b, order)
+                if 4 * sqrt(log(pe) * log(log(pe))) < log(order) - 10:
+                    res = _discrete_log_index_calculus(pe, a, b, order)
                 elif order < 1000000000000:
                     # Shanks seems typically faster, but uses O(sqrt(order)) memory
-                    res = _discrete_log_shanks_steps(pe, reduced_a, reduced_b, order)
+                    res = _discrete_log_shanks_steps(pe, a, b, order)
                 else:
-                    res = _discrete_log_pollard_rho(pe, reduced_a, reduced_b, order)
+                    res = _discrete_log_pollard_rho(pe, a, b, order)
             else:
-                res = _discrete_log_pohlig_hellman(pe, reduced_a, reduced_b, order)
+                res = _discrete_log_pohlig_hellman(pe, a, b, order)
             cyclic_dlog.append((res, order))
 
         else:
-            # Worth noting that for k = 0,1,2,... the sequence pow(reduced_b, k, pe)
-            # results in x0, x1, x2, ..., xs, 0, 0, ...
-            # we can see that if `reduced_a` is zero, is it sufficient to determine the
-            # first position where the sequence becomes zero. On the other hand,
-            # if `reduced_a` is nonzero, a solution (if it exists) must lie between
-            # between x0 and xs. In either case, a naive search (including e to find the
-            # `reduced_a` zero case) is sufficient
-            if reduced_a == 0:
+            # Worth noting that for k = 0,1,2,... the sequence pow(b, k, pe) results
+            # in x0, x1, x2, ..., xs, 0, 0, ...
+            # we can see that if `a mod p**e` is zero, is it sufficient to determine the
+            # xs position where the sequence becomes zero
+            # if `a mod p**e` is nonzero, a solution (if it exists) must lie between
+            # between x0 and xs
+            if (a % pe) == 0:
                 prime_power = multiplicity(p, b)
-                # division ceiling
-                k = (e + prime_power - 1) // prime_power
-                continuous = max(continuous, k)
+                from sympy.functions.elementary.integers import ceiling
+                continuous = max(continuous, ceiling(e / prime_power))
             else:
-                k = _discrete_log_trial_mul(pe, reduced_a, reduced_b, e)
+                k = _discrete_log_trial_mul(pe, a, b, e)
                 if unique is not None and unique != k:
                     raise ValueError("Log does not exist")
                 else:
@@ -1748,8 +1744,8 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     if result is None:
         result = continuous
     elif continuous > result:
-        k = (cycle_size - 1 + continuous - result) // cycle_size
-        result += k * cycle_size
+        from sympy.functions.elementary.integers import ceiling
+        result += ceiling( (continuous - result) / cycle_size) * cycle_size
 
     if unique is not None:
         if (unique < result) or ((unique - result) % cycle_size != 0):
