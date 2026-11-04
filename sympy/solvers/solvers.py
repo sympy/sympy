@@ -58,11 +58,17 @@ from sympy.external.mpmath import conserve_mpmath_dps, findroot
 
 from sympy.solvers.polysys import solve_poly_system
 
+from typing import TYPE_CHECKING, overload
 from types import GeneratorType
 from collections import defaultdict
 from itertools import combinations, product
 
 import warnings
+
+if TYPE_CHECKING:
+    from typing import Any, Literal
+    from collections.abc import Iterable
+    from sympy.core.relational import Equality
 
 
 def recast_to_symbols(eqs, symbols):
@@ -389,6 +395,22 @@ def _reject_by_factor_finiteness(factor, sol, **flags):
         return True
     return False
 
+
+@overload
+def solve(f: Expr | Equality | BooleanAtom, symbol: Expr, /, *, dict: Literal[False] = False,
+          set: Literal[False] = False, **flags: Any) -> list[Expr]: ...
+@overload
+def solve(f: Expr | Equality | BooleanAtom
+          | Iterable[Expr | Equality | BooleanAtom],
+          *symbols: Expr | Iterable[Expr], dict: Literal[True],
+          set: Literal[False] = False, **flags: Any) -> list[dict[Expr, Expr]]: ...
+@overload
+def solve(f: Expr | Equality | BooleanAtom
+          | Iterable[Expr | Equality | BooleanAtom],
+          *symbols: Expr | Iterable[Expr], dict: Literal[False] = False,
+          set: Literal[True], **flags: Any) -> tuple[list[Expr], set[tuple[Expr, ...]]]: ...
+@overload
+def solve(f: Any, *symbols: Any, **flags: Any) -> Any: ...
 
 def solve(f, *symbols, **flags):
     r"""
