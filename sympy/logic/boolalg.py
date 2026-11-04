@@ -392,7 +392,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     def __hash__(self) -> int:
         return hash(True)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if other is True:
             return True
         if other is False:
@@ -400,7 +400,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
         return super().__eq__(other)
 
     @property
-    def negated(self):
+    def negated(self) -> BooleanFalse:
         return false
 
     def as_set(self) -> Set:
@@ -467,7 +467,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     def __hash__(self) -> int:
         return hash(False)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if other is True:
             return False
         if other is False:
@@ -475,7 +475,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
         return super().__eq__(other)
 
     @property
-    def negated(self):
+    def negated(self) -> BooleanTrue:
         return true
 
     def as_set(self) -> Set:
@@ -2159,7 +2159,7 @@ def to_int_repr(clauses, symbols):
             for c in clauses]
 
 
-def term_to_integer(term):
+def term_to_integer(term: str | Iterable[int]) -> int:
     """
     Return an integer corresponding to the base-2 digits given by *term*.
 
@@ -2334,7 +2334,7 @@ def _get_even_parity_terms(n: int) -> list[list[int]]:
             for mask in range(1 << n) if mask.bit_count() % 2 == 0]
 
 
-def _simplified_pairs(terms):
+def _simplified_pairs(terms: list[list[int]]) -> list[list[int]]:
     """
     Reduces a set of minterms, if possible, to a simplified set of minterms
     with one less variable in the terms using QM method.
@@ -2343,7 +2343,7 @@ def _simplified_pairs(terms):
         return []
 
     simplified_terms = []
-    todo = list(range(len(terms)))
+    todo: list[int | None] = list(range(len(terms)))
 
     # Count number of ones as _check_pair can only potentially match if there
     # is at most a difference of a single one
@@ -2377,7 +2377,9 @@ def _simplified_pairs(terms):
     return simplified_terms
 
 
-def _rem_redundancy(l1, terms):
+def _rem_redundancy(
+    l1: list[list[int]], terms: list[list[int]],
+) -> list[list[int]]:
     """
     After the truth table has been sufficiently simplified, use the prime
     implicant table method to recognize and eliminate redundant pairs,
@@ -2420,13 +2422,13 @@ def _rem_redundancy(l1, terms):
                             # row2 dominating row, remove row2
                             rowcount[row2i] = 0
                             anythingchanged = True
-                            for primei, prime in enumerate(row2):
-                                if prime:
+                            for primei, entry in enumerate(row2):
+                                if entry:
                                     # Make corresponding entry 0
                                     dommatrix[row2i][primei] = 0
                                     colcount[primei] -= 1
 
-        colcache = {}
+        colcache: dict[int, list[int]] = {}
 
         for coli in range(nl1):
             # Still non-dominated?
@@ -2448,8 +2450,8 @@ def _rem_redundancy(l1, terms):
                             # col dominating col2, remove col2
                             colcount[col2i] = 0
                             anythingchanged = True
-                            for termi, term in enumerate(col2):
-                                if term and dommatrix[termi][col2i]:
+                            for termi, entry in enumerate(col2):
+                                if entry and dommatrix[termi][col2i]:
                                     # Make corresponding entry 0
                                     dommatrix[termi][col2i] = 0
                                     rowcount[termi] -= 1
@@ -2468,8 +2470,8 @@ def _rem_redundancy(l1, terms):
             if bestcolidx != -1 and maxterms > 1:
                 for primei, prime in enumerate(l1):
                     if primei != bestcolidx:
-                        for termi, term in enumerate(colcache[bestcolidx]):
-                            if term and dommatrix[termi][primei]:
+                        for termi, entry in enumerate(colcache[bestcolidx]):
+                            if entry and dommatrix[termi][primei]:
                                 # Make corresponding entry 0
                                 dommatrix[termi][primei] = 0
                                 anythingchanged = True
@@ -2505,7 +2507,7 @@ def _input_to_binlist(inputlist, variables):
     return binlist
 
 
-def SOPform(variables, minterms, dontcares=None):
+def SOPform(variables, minterms, dontcares=None) -> Boolean:
     """
     The SOPform function uses simplified_pairs and a redundant group-
     eliminating algorithm to convert the list of all input combos that
@@ -2580,13 +2582,17 @@ def SOPform(variables, minterms, dontcares=None):
     return _sop_form(variables, minterms, dontcares)
 
 
-def _sop_form(variables, minterms, dontcares):
+def _sop_form(
+    variables: Sequence[Boolean | bool],
+    minterms: list[list[int]],
+    dontcares: list[list[int]],
+) -> Boolean:
     new = _simplified_pairs(minterms + dontcares)
     essential = _rem_redundancy(new, minterms)
     return Or(*[_convert_to_varsSOP(x, variables) for x in essential])
 
 
-def POSform(variables, minterms, dontcares=None):
+def POSform(variables, minterms, dontcares=None) -> Boolean:
     """
     The POSform function uses simplified_pairs and a redundant-group
     eliminating algorithm to convert the list of all input combinations
@@ -2658,16 +2664,16 @@ def POSform(variables, minterms, dontcares=None):
 
     maxterms = []
     for t in product((0, 1), repeat=len(variables)):
-        t = list(t)
-        if (t not in minterms) and (t not in dontcares):
-            maxterms.append(t)
+        term = list(t)
+        if (term not in minterms) and (term not in dontcares):
+            maxterms.append(term)
 
     new = _simplified_pairs(maxterms + dontcares)
     essential = _rem_redundancy(new, maxterms)
     return And(*[_convert_to_varsPOS(x, variables) for x in essential])
 
 
-def ANFform(variables, truthvalues):
+def ANFform(variables, truthvalues) -> Boolean:
     """
     The ANFform function converts the list of truth values to
     Algebraic Normal Form (ANF).
@@ -2784,7 +2790,7 @@ def anf_coeffs(truthvalues):
     return coeffs[0]
 
 
-def bool_minterm(k, variables):
+def bool_minterm(k, variables) -> Boolean:
     """
     Return the k-th minterm.
 
@@ -2815,12 +2821,12 @@ def bool_minterm(k, variables):
 
     """
     if isinstance(k, int):
-        k = ibin(k, len(variables))
+        k = ibin(k, len(variables), str=False)
     variables = tuple(map(sympify, variables))
     return _convert_to_varsSOP(k, variables)
 
 
-def bool_maxterm(k, variables):
+def bool_maxterm(k, variables) -> Boolean:
     """
     Return the k-th maxterm.
 
@@ -2851,12 +2857,12 @@ def bool_maxterm(k, variables):
 
     """
     if isinstance(k, int):
-        k = ibin(k, len(variables))
+        k = ibin(k, len(variables), str=False)
     variables = tuple(map(sympify, variables))
     return _convert_to_varsPOS(k, variables)
 
 
-def bool_monomial(k, variables):
+def bool_monomial(k, variables) -> Boolean:
     """
     Return the k-th monomial.
 
@@ -2892,7 +2898,7 @@ def bool_monomial(k, variables):
 
     """
     if isinstance(k, int):
-        k = ibin(k, len(variables))
+        k = ibin(k, len(variables), str=False)
     variables = tuple(map(sympify, variables))
     return _convert_to_varsANF(k, variables)
 
@@ -3046,7 +3052,9 @@ def simplify_logic(
     return POSform(variables, truthtable, dctruthtable).xreplace(undo)
 
 
-def _get_truthtable(variables, expr, const):
+def _get_truthtable(
+    variables: list[Basic], expr: Basic, const: list[int],
+) -> list[list[int]]:
     """ Return a list of all combinations leading to a True result for ``expr``.
     """
     _variables = variables.copy()
