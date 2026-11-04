@@ -24,11 +24,24 @@ from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
     from sympy.core.basic import _SupportsItems
+    from sympy.sets.sets import Set
 
 
-def as_Boolean(e):
+def _sympify_Boolean(expr: Boolean | bool | str) -> Boolean:
+    """Sympify an expression, requiring a Boolean result."""
+    result = sympify(expr)
+    # XXX: The fact that sympify('True') returns a Python bool rather than a
+    # SymPy Boolean is a bug to be fixed.
+    if isinstance(result, bool):
+        return true if result else false
+    if not isinstance(result, Boolean):
+        raise TypeError('expecting bool or Boolean, not `%s`.' % expr)
+    return result
+
+
+def as_Boolean(e: Boolean | bool | int) -> Boolean:
     """Like ``bool``, return the Boolean value of an expression, e,
     which can be any instance of :py:class:`~.Boolean` or ``bool``.
 
@@ -373,10 +386,10 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanFalse
 
     """
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return True
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(True)
 
     def __eq__(self, other):
@@ -390,7 +403,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     def negated(self):
         return false
 
-    def as_set(self):
+    def as_set(self) -> Set:
         """
         Rewrite logic operators and relationals in terms of real sets.
 
@@ -448,10 +461,10 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanTrue
 
     """
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(False)
 
     def __eq__(self, other):
@@ -465,7 +478,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     def negated(self):
         return true
 
-    def as_set(self):
+    def as_set(self) -> Set:
         """
         Rewrite logic operators and relationals in terms of real sets.
 
@@ -536,7 +549,7 @@ class BooleanFunction(Application, Boolean):
     ) -> Boolean:
         return self._to_nnf(*self.args, simplify=simplify, form=form)
 
-    def to_anf(self, deep=True):
+    def to_anf(self, deep: bool = True) -> Boolean:
         return self._to_anf(*self.args, deep=deep)
 
     @classmethod
@@ -750,14 +763,14 @@ class And(LatticeOp, BooleanFunction):
                                                   measure, false,
                                                   threeterm_patterns=threeterm_patterns)
 
-    def _eval_as_set(self):
+    def _eval_as_set(self) -> Set:
         from sympy.sets.sets import Intersection
         return Intersection(*[arg.as_set() for arg in self.args])
 
     def _eval_rewrite_as_Nor(self, *args, **kwargs):
         return Nor(*[Not(arg) for arg in self.args])
 
-    def to_anf(self, deep=True):
+    def to_anf(self, deep: bool = True) -> Boolean:
         if deep:
             result = And._to_anf(*self.args, deep=deep)
             return distribute_xor_over_and(result)
@@ -852,7 +865,7 @@ class Or(LatticeOp, BooleanFunction):
 
         return self.func(*args)
 
-    def _eval_as_set(self):
+    def _eval_as_set(self) -> Set:
         from sympy.sets.sets import Union
         return Union(*[arg.as_set() for arg in self.args])
 
@@ -874,13 +887,13 @@ class Or(LatticeOp, BooleanFunction):
         return _apply_patternbased_simplification(rv, patterns,
                                                   kwargs['measure'], true)
 
-    def to_anf(self, deep=True):
-        args = range(1, len(self.args) + 1)
-        args = (combinations(self.args, j) for j in args)
-        args = chain.from_iterable(args)  # powerset
-        args = (And(*arg) for arg in args)
-        args = (to_anf(x, deep=deep) if deep else x for x in args)
-        return Xor(*list(args), remove_true=False)
+    def to_anf(self, deep: bool = True) -> Boolean:
+        sizes = range(1, len(self.args) + 1)
+        subsets = (combinations(self.args, j) for j in sizes)
+        powerset = chain.from_iterable(subsets)
+        conjunctions = (And(*arg) for arg in powerset)
+        terms = (to_anf(x, deep=deep) if deep else x for x in conjunctions)
+        return Xor(*list(terms), remove_true=False)
 
 
 class Not(BooleanFunction):
@@ -935,6 +948,12 @@ class Not(BooleanFunction):
 
     is_Not = True
 
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Boolean]:
+            ...
+
     @classmethod
     def eval(cls, arg):
         if isinstance(arg, Number) or arg in (True, False):
@@ -945,7 +964,7 @@ class Not(BooleanFunction):
         if arg.is_Relational:
             return arg.negated
 
-    def _eval_as_set(self):
+    def _eval_as_set(self) -> Set:
         """
         Rewrite logic operators and relationals in terms of real sets.
 
@@ -998,7 +1017,7 @@ class Not(BooleanFunction):
 
         raise ValueError("Illegal operator %s in expression" % expr.func)
 
-    def to_anf(self, deep=True):
+    def to_anf(self, deep: bool = True) -> Boolean:
         return Xor._to_anf(true, self.args[0], deep=deep)
 
 
@@ -1042,13 +1061,28 @@ class Xor(BooleanFunction):
     x
 
     """
-    def __new__(cls, *args, remove_true=True, evaluate=None, **kwargs):
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Boolean, ...]:
+            ...
+
+    def __new__( # type: ignore[misc]
+        cls,
+        *args: Boolean | bool,
+        remove_true: bool = True,
+        evaluate: bool | None = None,
+        **kwargs,
+    ) -> Boolean:
+
+        from sympy.core.relational import Relational
+
         if evaluate is None:
             evaluate = global_parameters.evaluate
         if not evaluate:
             return super().__new__(cls, *args, evaluate=evaluate, **kwargs)
 
-        argset = set()
+        argset: set[Boolean] = set()
         for arg in map(_sympify, args):
             if isinstance(arg, Number) or arg in (True, False):
                 if arg:
@@ -1063,7 +1097,7 @@ class Xor(BooleanFunction):
             else:
                 argset.add(arg)
         rel = [(r, r.canonical, r.negated.canonical)
-               for r in argset if r.is_Relational]
+               for r in argset if isinstance(r, Relational)]
         odd = False  # is number of complimentary pairs odd? start 0 -> False
         remove = []
         for i, (r, c, nc) in enumerate(rel):
@@ -1086,8 +1120,8 @@ class Xor(BooleanFunction):
             return false
         elif len(argset) == 1:
             return argset.pop()
-        elif True in argset and remove_true:
-            argset.remove(True)
+        elif true in argset and remove_true:
+            argset.remove(true)
             return Not(Xor(*argset))
         return super().__new__(cls, *ordered(argset))
 
@@ -1287,6 +1321,12 @@ class Implies(BooleanFunction):
     False
 
     """
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Boolean, Boolean]:
+            ...
+
     @classmethod
     def eval(cls, *args):
         try:
@@ -1321,7 +1361,7 @@ class Implies(BooleanFunction):
         a, b = self.args
         return Or._to_nnf(Not(a), b, simplify=simplify, form=form)
 
-    def to_anf(self, deep=True):
+    def to_anf(self, deep: bool = True) -> Boolean:
         a, b = self.args
         return Xor._to_anf(true, a, And(a, b), deep=deep)
 
@@ -1350,17 +1390,25 @@ class Equivalent(BooleanFunction):
     True
 
     """
-    def __new__(cls, *args, evaluate=None, **kwargs):
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Boolean, ...]:
+            ...
+
+    def __new__(  # type: ignore[misc]
+        cls, *args: Basic | complex, evaluate: bool | None = None, **kwargs,
+    ) -> Boolean:
         if evaluate is None:
             evaluate = global_parameters.evaluate
         if not evaluate:
             return super().__new__(cls, *args, evaluate=evaluate, **kwargs)
 
         from sympy.core.relational import Relational
-        args = [_sympify(arg) for arg in args]
+        sympified_args = [_sympify(arg) for arg in args]
 
-        argset = set(args)
-        for x in args:
+        argset = set(sympified_args)
+        for x in sympified_args:
             if isinstance(x, Number) or x in [True, False]:  # Includes 0, 1
                 argset.discard(x)
                 argset.add(bool(x))
@@ -1402,7 +1450,7 @@ class Equivalent(BooleanFunction):
         args.append(Or(Not(self.args[-1]), self.args[0]))
         return And._to_nnf(*args, simplify=simplify, form=form)
 
-    def to_anf(self, deep=True):
+    def to_anf(self, deep: bool = True) -> Boolean:
         a = And(*self.args)
         b = And(*[to_anf(Not(arg), deep=False) for arg in self.args])
         b = distribute_xor_over_and(b)
@@ -1445,10 +1493,17 @@ class ITE(BooleanFunction):
     TypeError: expecting bool, Boolean or ITE, not `[]`
 
     """
-    def __new__(cls, *args, **kwargs):
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Boolean, Boolean, Boolean]:
+            ...
+
+    def __new__(cls, *args: Boolean | bool, **kwargs) -> Boolean:  # type: ignore[misc]
         from sympy.core.relational import Eq, Ne
         if len(args) != 3:
             raise ValueError('expecting exactly 3 args')
+        a: Basic | bool
         a, b, c = args
         # check use of binary symbols
         if isinstance(a, (Eq, Ne)):
@@ -1484,12 +1539,12 @@ class ITE(BooleanFunction):
         return rv
 
     @classmethod
-    def eval(cls, *args):
+    def eval(cls, *args) -> Boolean | None:
         from sympy.core.relational import Eq, Ne
         # do the args give a singular result?
         a, b, c = args
         if isinstance(a, (Ne, Eq)):
-            _a = a
+            _a: Ne | Eq | None = a
             if true in a.args:
                 a = a.lhs if a.rhs is true else a.rhs
             elif false in a.args:
@@ -1522,7 +1577,7 @@ class ITE(BooleanFunction):
         a, b, c = self.args
         return And._to_nnf(Or(Not(a), b), Or(a, c), simplify=simplify, form=form)
 
-    def _eval_as_set(self):
+    def _eval_as_set(self) -> Set:
         return self.to_nnf().as_set()
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
@@ -1561,7 +1616,7 @@ class Exclusive(BooleanFunction):
 # end class definitions. Some useful methods
 
 
-def conjuncts(expr):
+def conjuncts(expr: Boolean) -> frozenset[Boolean]:
     """Return a list of the conjuncts in ``expr``.
 
     Examples
@@ -1578,7 +1633,7 @@ def conjuncts(expr):
     return And.make_args(expr)
 
 
-def disjuncts(expr):
+def disjuncts(expr: Boolean) -> frozenset[Boolean]:
     """Return a list of the disjuncts in ``expr``.
 
     Examples
@@ -1837,7 +1892,7 @@ def to_dnf(expr, simplify=False, force=False):
     return distribute_or_over_and(expr)
 
 
-def is_anf(expr):
+def is_anf(expr: Boolean | bool | str) -> bool:
     r"""
     Checks if ``expr``  is in Algebraic Normal Form (ANF).
 
@@ -1865,7 +1920,7 @@ def is_anf(expr):
     False
 
     """
-    expr = sympify(expr)
+    expr = _sympify_Boolean(expr)
 
     if is_literal(expr) and not isinstance(expr, Not):
         return True
@@ -1893,7 +1948,7 @@ def is_anf(expr):
         return False
 
 
-def is_nnf(expr, simplified=True):
+def is_nnf(expr: Boolean | bool | str, simplified: bool = True) -> bool:
     """
     Checks if ``expr`` is in Negation Normal Form (NNF).
 
@@ -1920,7 +1975,7 @@ def is_nnf(expr, simplified=True):
 
     """
 
-    expr = sympify(expr)
+    expr = _sympify_Boolean(expr)
     if is_literal(expr):
         return True
 
@@ -1928,7 +1983,7 @@ def is_nnf(expr, simplified=True):
 
     while stack:
         expr = stack.pop()
-        if expr.func in (And, Or):
+        if isinstance(expr, (And, Or)):
             if simplified:
                 args = expr.args
                 for arg in args:
@@ -1942,7 +1997,7 @@ def is_nnf(expr, simplified=True):
     return True
 
 
-def is_cnf(expr):
+def is_cnf(expr: Boolean | bool | str) -> bool:
     """
     Test whether or not an expression is in conjunctive normal form.
 
@@ -1962,7 +2017,7 @@ def is_cnf(expr):
     return _is_form(expr, And, Or)
 
 
-def is_dnf(expr):
+def is_dnf(expr: Boolean | bool | str) -> bool:
     """
     Test whether or not an expression is in disjunctive normal form.
 
@@ -1984,12 +2039,16 @@ def is_dnf(expr):
     return _is_form(expr, Or, And)
 
 
-def _is_form(expr, function1, function2):
+def _is_form(
+    expr: Boolean | bool | str,
+    function1: type[And] | type[Or],
+    function2: type[And] | type[Or],
+) -> bool:
     """
     Test whether or not an expression is of the required form.
 
     """
-    expr = sympify(expr)
+    expr = _sympify_Boolean(expr)
 
     vals = function1.make_args(expr) if isinstance(expr, function1) else [expr]
     for lit in vals:
@@ -2037,7 +2096,7 @@ def eliminate_implications(expr, form=None):
     return to_nnf(expr, simplify=False, form=form)
 
 
-def is_literal(expr):
+def is_literal(expr: Basic | Boolean | bool) -> bool:
     """
     Returns True if expr is a literal, else False.
 
@@ -2061,6 +2120,8 @@ def is_literal(expr):
     """
     from sympy.assumptions import AppliedPredicate
 
+    if isinstance(expr, bool):
+        return True
     if isinstance(expr, Not):
         return is_literal(expr.args[0])
     elif expr in (True, False) or isinstance(expr, AppliedPredicate) or expr.is_Atom:
@@ -2192,7 +2253,7 @@ def truth_table(expr, variables, input=True):
             yield value
 
 
-def _check_pair(minterm1, minterm2):
+def _check_pair(minterm1: Sequence[int], minterm2: Sequence[int]) -> int:
     """
     Checks if a pair of minterms differs by only one bit. If yes, returns
     index, else returns `-1`.
@@ -2209,7 +2270,9 @@ def _check_pair(minterm1, minterm2):
     return index
 
 
-def _convert_to_varsSOP(minterm, variables):
+def _convert_to_varsSOP(
+    minterm: Sequence[int], variables: Sequence[Boolean | bool],
+) -> Boolean:
     """
     Converts a term in the expansion of a function from binary to its
     variable form (for SOP).
@@ -2219,7 +2282,9 @@ def _convert_to_varsSOP(minterm, variables):
     return And(*temp)
 
 
-def _convert_to_varsPOS(maxterm, variables):
+def _convert_to_varsPOS(
+    maxterm: Sequence[int], variables: Sequence[Boolean | bool],
+) -> Boolean:
     """
     Converts a term in the expansion of a function from binary to its
     variable form (for POS).
@@ -2229,7 +2294,9 @@ def _convert_to_varsPOS(maxterm, variables):
     return Or(*temp)
 
 
-def _convert_to_varsANF(term, variables):
+def _convert_to_varsANF(
+    term: Sequence[int], variables: Sequence[Boolean | bool],
+) -> Boolean:
     """
     Converts a term in the expansion of a function from binary to its
     variable form (for ANF).
@@ -2249,7 +2316,7 @@ def _convert_to_varsANF(term, variables):
     return And(*temp)
 
 
-def _get_odd_parity_terms(n):
+def _get_odd_parity_terms(n: int) -> list[list[int]]:
     """
     Returns a list of lists, with all possible combinations of n zeros and ones
     with an odd number of ones.
@@ -2258,7 +2325,7 @@ def _get_odd_parity_terms(n):
             for mask in range(1 << n) if mask.bit_count() % 2 == 1]
 
 
-def _get_even_parity_terms(n):
+def _get_even_parity_terms(n: int) -> list[list[int]]:
     """
     Returns a list of lists, with all possible combinations of n zeros and ones
     with an even number of ones.
@@ -2830,7 +2897,7 @@ def bool_monomial(k, variables):
     return _convert_to_varsANF(k, variables)
 
 
-def _find_predicates(expr):
+def _find_predicates(expr: Basic) -> set[Basic]:
     """Helper to find logical predicates in BooleanFunctions.
 
     A logical predicate is defined here as anything within a BooleanFunction
@@ -2842,28 +2909,8 @@ def _find_predicates(expr):
     return set().union(*(map(_find_predicates, expr.args)))
 
 
-@overload
 def simplify_logic(
-    expr: Boolean | bool,
-    form: Literal['cnf', 'dnf'] | None = None,
-    deep: bool = True,
-    force: bool = False,
-    dontcare: Basic | complex | str | None = None,
-) -> Boolean: ...
-
-
-@overload
-def simplify_logic(
-    expr: Basic | complex | str,
-    form: Literal['cnf', 'dnf'] | None = None,
-    deep: bool = True,
-    force: bool = False,
-    dontcare: Basic | complex | str | None = None,
-) -> Basic: ...
-
-
-def simplify_logic(
-    expr: Basic | complex | str,
+    expr: Boolean | bool | str,
     form: Literal['cnf', 'dnf'] | None = None,
     deep: bool = True,
     force: bool = False,
@@ -2924,7 +2971,7 @@ def simplify_logic(
 
     if form not in (None, 'cnf', 'dnf'):
         raise ValueError("form can be cnf or dnf only")
-    expr_s: Basic = sympify(expr)
+    expr_s = _sympify_Boolean(expr)
     # check for quick exit if form is given: right form and all args are
     # literal and do not involve Not
     if form:
@@ -2934,8 +2981,7 @@ def simplify_logic(
         elif form == 'dnf':
             form_ok = is_dnf(expr_s)
 
-        if form_ok and dontcare is None and all(is_literal(a)
-               for a in expr_s.args):
+        if form_ok and dontcare is None and all(is_literal(a) for a in expr_s.args):
            return expr_s
     from sympy.core.relational import Relational
     if deep:
@@ -2971,20 +3017,20 @@ def simplify_logic(
     if dontcare_s is not None:
         dontcare_s = dontcare_s.xreplace(repl)
 
-    # Get new variables after replacing
-    variables = _find_predicates(expr_s)
-    if not force and len(variables) > 8:
+    # Get new predicates after replacing
+    predicates = _find_predicates(expr_s)
+    if not force and len(predicates) > 8:
         return expr_s.xreplace(undo)
     if dontcare_s is not None:
-        # Add variables from dontcare_s
+        # Add predicates from dontcare_s
         dcvariables = _find_predicates(dontcare_s)
-        variables.update(dcvariables)
-        # if too many restore to variables only
-        if not force and len(variables) > 8:
-            variables = _find_predicates(expr_s)
+        predicates.update(dcvariables)
+        # if too many restore to predicates only
+        if not force and len(predicates) > 8:
+            predicates = _find_predicates(expr_s)
             dontcare_s = None
     # group into constants and variable values
-    c, v = sift(ordered(variables), lambda x: x in (True, False), binary=True)
+    c, v = sift(ordered(predicates), lambda x: x in (True, False), binary=True)
     variables = c + v
     # standardize constants to be 1 or 0 in keeping with truthtable
     c = [1 if i == True else 0 for i in c]
@@ -3622,7 +3668,7 @@ def simplify_univariate(expr):
 # Used in gateinputcount method
 BooleanGates = (And, Or, Xor, Nand, Nor, Not, Xnor, ITE)
 
-def gateinputcount(expr):
+def gateinputcount(expr: Boolean) -> int:
     """
     Return the total number of inputs for the logic gates realizing the
     Boolean expression.

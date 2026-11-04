@@ -11,6 +11,7 @@ __all__ = ['default_sort_key', 'ordered']
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator
     from typing import TypeVar
+    from .basic import Basic
 
     _T = TypeVar('_T')
     _K = TypeVar('_K')
@@ -174,7 +175,7 @@ def default_sort_key(item, order=None):
             ), args, S.One.sort_key(), S.One
 
 
-def _node_count(e):
+def _node_count(e: Basic) -> float:
     # this not only counts nodes, it affirms that the
     # args are Basic (i.e. have an args property). If
     # some object has a non-Basic arg, it needs to be

@@ -119,6 +119,7 @@ lint.isort.required-imports = ["from __future__ import annotations"]
 # Global mypy settings:
 [tool.mypy]
 warn_unused_configs = true
+warn_no_return = false
 exclude = [
     "sympy/parsing/autolev/test-examples",
 ]
