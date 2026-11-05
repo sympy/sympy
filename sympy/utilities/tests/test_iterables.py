@@ -714,6 +714,24 @@ def test_reshape():
     raises(ValueError, lambda: reshape([0, 1], [3]))
 
 
+def test_reshape_nested_zero_counts():
+    seq = [1, 2, 3, 4]
+    assert reshape(seq, ([0], 4)) == [([], 1, 2, 3, 4)]
+    assert reshape(seq, ((0,), 4)) == [((), 1, 2, 3, 4)]
+    assert reshape(seq, ([0], (0,), 4)) == [([], (), 1, 2, 3, 4)]
+    assert reshape(seq, ([], (), 4)) == [([], (), 1, 2, 3, 4)]
+    assert reshape(seq, (1, [0, (0,)], 1)) == [
+        (1, [()], 2), (3, [()], 4)]
+    assert reshape(tuple(seq), ([0], 2)) == (([], 1, 2), ([], 3, 4))
+    assert reshape([], ([0], 4)) == []
+
+
+def test_reshape_negative_counts():
+    for how in [(-1, 5), (2, -1, 3), (0, -1, 5), ([-1], 5)]:
+        raises(ValueError, lambda: reshape([1, 2, 3, 4], how))
+        raises(ValueError, lambda: reshape([], how))
+
+
 def test_uniq():
     assert list(uniq(p for p in partitions(4))) == \
         [{4: 1}, {1: 1, 3: 1}, {2: 2}, {1: 2, 2: 1}, {1: 4}]
