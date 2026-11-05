@@ -179,10 +179,10 @@ def reshape(seq, how):
 
     """
     m = sum(flatten(how))
-    n, rem = divmod(len(seq), m)
-    if m < 0 or rem:
+    if m <= 0 or len(seq) % m:
         raise ValueError('template must sum to positive number '
         'that divides the length of the sequence')
+    n = len(seq) // m
     i = 0
     container = type(how)
     rv = [None]*n

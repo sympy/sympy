@@ -706,6 +706,10 @@ def test_reshape():
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
     assert reshape(list(range(12)), [2, [3], {2}, (1, (3,), 1)]) == \
         [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
+    assert reshape(seq, (0, 4)) == reshape(seq, (4, 0)) == reshape(seq, (4,))
+    for how in [(), [], ((),), ([],), (0,), (1, -1)]:
+        raises(ValueError, lambda: reshape((1,), how))
+        raises(ValueError, lambda: reshape((), how))
     raises(ValueError, lambda: reshape([0, 1], [-1]))
     raises(ValueError, lambda: reshape([0, 1], [3]))
 
