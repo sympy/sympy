@@ -2773,3 +2773,8 @@ def test_issue_26503():
     assert integrate((a**x)/(b**x), x) == Piecewise((a**x/(b**x*log(a) - b**x*log(b)), Ne(a, b)), (x, True))
     pw = Piecewise((x - 1, x > 0), (S.NaN, True))
     assert checksol(pw, x, 1) is True
+
+
+def test_issue_26504_solve_empty_symbols():
+    assert solve([log(2) + log(3)]) == []
+    assert solve([log(2) + log(3)], exclude=(x,)) == []
