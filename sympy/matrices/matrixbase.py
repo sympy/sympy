@@ -150,6 +150,9 @@ class MatrixBase(Printable):
         def cols(self) -> int:
             ...
 
+        def __iter__(self) -> Iterator[Expr]:
+            ...
+
     @overload
     @classmethod
     def _sympify(cls, expr: SExpr, /) -> Expr: ...
