@@ -10,6 +10,7 @@ from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio)
 from sympy.core.numbers import (AlgebraicNumber, E, Float, I, Rational,
                                 oo, zoo, nan, pi)
+from sympy.core.parameters import evaluate
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -474,6 +475,56 @@ def test_evalf_mul():
     # SymPy should not try to expand this; it should be handled term-wise
     # in evalf through mpmath
     assert NS(product(1 + sqrt(n)*I, (n, 1, 500)), 1) == '5.e+567 + 2.e+568*I'
+
+
+def test_evalf_manage_exact_gcd_30874():
+    # don't let numer and denom accumulate to 25**500
+    assert Mul(*[(3 + 4*I)/5*(3 - 4*I)/5 for i in range(500)
+        ], evaluate=False).n(3) == S(1).n(3)
+
+
+def test_evalf_nested_complex_cancellation_30874():
+    tiny = Rational(1, 10**100)
+    a = 1 + I
+    b = 1 + tiny + I
+    c = Float('1.0', 15) + Float('1e-150', 15)*I
+    expr = Mul(Mul(a, c, evaluate=False), b, evaluate=False)
+    assert expr.evalf(20).as_real_imag()[0] == tiny.evalf(20)
+
+
+def test_evalf_complex_exact_cancellation_30874():
+    tiny = Rational(1, 10**100)
+    expr = Mul(1 + I, 1 + tiny + I, evaluate=False)
+    real, imag = expr.evalf(20).as_real_imag()
+    assert real == tiny.evalf(20)
+    assert imag == (2 + tiny).evalf(20)
+
+
+def test_evalf_complex_float_precision_30874():
+    a = Float('1.23456789012345000001', 15)
+    b = Float('1.23456789012344000001', 15)
+    expr = Mul(a + b*I, a + b*I, evaluate=False)
+
+    # Convert the stored binary Floats to exact Rationals
+    # to calculate the reference result without rounding.
+    r, i = Rational(a), Rational(b)
+    expected = (
+        (r*r - i*i).evalf(35),
+        (2*r*i).evalf(35))
+
+    assert expr.evalf(35).as_real_imag() == expected
+
+
+def test_evalf_complex_exact_zero_components_30874():
+    a = Mul(1 + I, 1 - I, evaluate=False)
+    b = Mul(1 + I, 1 + I, evaluate=False)
+    assert a.evalf(20).as_real_imag()[1] == 0
+    assert b.evalf(20).as_real_imag()[0] == 0
+
+
+def test_issue_30874():
+    with evaluate(False):
+        str(Mul(-1, I).evalf())
 
 
 def test_scaled_zero():
