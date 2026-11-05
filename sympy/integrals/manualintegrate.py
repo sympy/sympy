@@ -218,6 +218,25 @@ class ConstantTimesRule(Rule):
     def contains_dont_know(self) -> bool:
         return self.substep.contains_dont_know()
 
+class LogCosAbsRule(AtomicRule):
+    """
+    Rule for integrands matching:
+    log((1 + a*cos(x))/(1 - a*cos(x))) / cos(x)
+    """
+
+    __slots__ = ("a",)
+
+    a: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+
+    def eval(self) -> Expr:
+        from sympy import asin
+        x = self.variable
+        a = self.a
+        return 2 * asin(a) * x
 
 class PowerRule(AtomicRule):
     """integrate(x**a, x)"""
@@ -1360,6 +1379,25 @@ def proxy_rewriter(condition, rewrite):
                 substep = yield IntegralInfo(rewritten, symbol)
                 return RewriteRule(integrand, symbol, rewritten, substep)
     return _proxy_rewriter
+
+def log_cos_abs_rule(integral: IntegralInfo) -> Rule | None:
+    integrand, symbol = integral.integrand, integral.symbol
+
+    if not integrand.is_Mul:
+        return None
+
+    a = Wild("a", exclude=[symbol])
+    pattern = log((1 + a * cos(symbol)) / (1 - a * cos(symbol))) / cos(symbol)
+    match = integrand.match(pattern)
+
+    if match and match[a] != 0:
+        val_a = match[a]
+        if val_a.is_number and abs(val_a) <= 1:
+            return LogCosAbsRule(integrand, symbol, val_a)
+        elif not val_a.is_number:
+            return LogCosAbsRule(integrand, symbol, val_a)
+
+    return None
 
 def alternatives(*rules, branch=False):
     """Strategy that makes an AlternativeRule out of multiple possible results.
@@ -3986,6 +4024,9 @@ class IntegrationSolver:
                     condition(
                         _integral_is_subclass(Mul),
                         w(combine_power_rule)),
+                    condition(
+                        _integral_is_subclass(Mul, log, cos),
+                        w(log_cos_abs_rule)),
                     condition(
                         _integral_is_subclass(Mul, log,
                                               *inverse_trig_functions,
