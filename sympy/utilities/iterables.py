@@ -178,11 +178,12 @@ def reshape(seq, how):
     [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
 
     """
-    m = sum(flatten(how))
-    n, rem = divmod(len(seq), m)
-    if m < 0 or rem:
+    flattened = flatten(how)
+    m = sum(flattened)
+    if m <= 0 or any(x < 0 for x in flattened) or len(seq) % m:
         raise ValueError('template must sum to positive number '
-        'that divides the length of the sequence')
+            'that divides the length of the sequence')
+    n = len(seq) // m
     i = 0
     container = type(how)
     rv = [None]*n
