@@ -68,7 +68,6 @@ git_whitelist = {
     # tarball, use setup.py test, or import sympy and run sympy.test() or
     # sympy.doctest().
     'bin/ask_update.py',
-    'bin/check_pr_authors.py',
     'bin/coverage_doctest.py',
     'bin/coverage_report.py',
     'bin/diagnose_imports',

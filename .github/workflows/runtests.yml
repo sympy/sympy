@@ -15,7 +15,6 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: read
 
 jobs:
 
@@ -29,19 +28,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      # Check only the commits in this PR before installing test dependencies.
-      - name: Check PR authors
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          gh api --paginate \
-            "repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}/commits?per_page=100" \
-            --jq '.[] | .commit.author | "\(.name) <\(.email)>"' |
-            env -u GH_TOKEN python bin/check_pr_authors.py --expected \
-              "${{ github.event.pull_request.commits }}"
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -80,7 +66,7 @@ jobs:
 
   mypy:
     name: Mypy
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -98,7 +84,7 @@ jobs:
 
   mypy-flint:
     name: Mypy With python-flint
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -118,7 +104,7 @@ jobs:
 
   sphinx-lint:
     name: Sphinx Lint
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -138,7 +124,6 @@ jobs:
 
   authors:
     name: Check Authors
-    needs: code-quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -157,7 +142,7 @@ jobs:
 
   doctests-latest:
     name: Doctests
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
@@ -175,7 +160,7 @@ jobs:
   # ------------------------- Test latest Python ------------------- #
 
   tests-latest:
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
 
@@ -382,7 +367,7 @@ jobs:
 
   tests-slow:
     name: Slow Tests
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
 
@@ -490,7 +475,7 @@ jobs:
 
   sphinx:
     name: Build Docs
-    needs: code-quality
+    needs: [code-quality, authors]
 
     runs-on: ubuntu-latest
     steps:
