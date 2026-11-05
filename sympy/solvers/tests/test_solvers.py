@@ -2773,3 +2773,9 @@ def test_issue_26503():
     assert integrate((a**x)/(b**x), x) == Piecewise((a**x/(b**x*log(a) - b**x*log(b)), Ne(a, b)), (x, True))
     pw = Piecewise((x - 1, x > 0), (S.NaN, True))
     assert checksol(pw, x, 1) is True
+
+
+def test_issue_2897():
+    x = Symbol('x', positive=True, integer=True)
+    sol = solve((x + 1)*(x + 2)*(x + 3)/6 - 34, x)
+    assert len(sol) == 1 and sol[0].is_real

@@ -330,18 +330,18 @@ def test_polygamma():
     assert polygamma(2, -2.5).is_positive == False
     assert polygamma(3, 2.5).is_positive == True
     assert polygamma(3, -2.5).is_positive is True
-    assert polygamma(-2, -2.5).is_positive is None
-    assert polygamma(-3, -2.5).is_positive is None
+    assert polygamma(-2, -2.5).is_positive is False
+    assert polygamma(-3, -2.5).is_positive is False
 
     assert polygamma(2, 2.5).is_negative == True
     assert polygamma(3, 2.5).is_negative == False
     assert polygamma(3, -2.5).is_negative == False
     assert polygamma(2, -2.5).is_negative is True
-    assert polygamma(-2, -2.5).is_negative is None
-    assert polygamma(-3, -2.5).is_negative is None
+    assert polygamma(-2, -2.5).is_negative is False
+    assert polygamma(-3, -2.5).is_negative is False
 
-    assert polygamma(I, 2).is_positive is None
-    assert polygamma(I, 3).is_negative is None
+    assert polygamma(I, 2).is_positive is False
+    assert polygamma(I, 3).is_negative is False
 
     # issue 17350
     assert (I*polygamma(I, pi)).as_real_imag() == \
