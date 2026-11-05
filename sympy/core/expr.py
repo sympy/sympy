@@ -1191,23 +1191,6 @@ class Expr(Basic, EvalfMixin):
 
         """
 
-        from .numbers import Number, NumberSymbol
-
-        if order is None and self.is_Add:
-            # Spot the special case of Add(Number, Mul(Number, expr)) with the
-            # first number positive and the second number negative
-            key = lambda x:not isinstance(x, (Number, NumberSymbol))
-            add_args = sorted(Add.make_args(self), key=key)
-            if (len(add_args) == 2
-                and isinstance(add_args[0], (Number, NumberSymbol))
-                and isinstance(add_args[1], Mul)):
-                mul_args = sorted(Mul.make_args(add_args[1]), key=key)
-                if (len(mul_args) == 2
-                    and isinstance(mul_args[0], Number)
-                    and add_args[0].is_positive
-                    and mul_args[0].is_negative):
-                    return add_args
-
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
 
@@ -1225,41 +1208,49 @@ class Expr(Basic, EvalfMixin):
 
     def as_terms(self) -> tuple[list[tuple[Expr, Any]], list[Expr]]:
         """Transform an expression to a list of terms. """
-        from .exprtools import decompose_power
 
         gens_set, terms = set(), []
 
         for term in Add.make_args(self):
-            coeff, _term = term.as_coeff_Mul()
+            coeff, _term = term.as_coeff_mul(rational=False)
+            if not (coeff.is_Rational or coeff.is_Float):
+                _term = (coeff,) + _term
+                coeff = S.One
 
-            coeff_complex = complex(coeff)
             cpart: dict[Expr, int] = {}
             ncpart = []
+            # A single literal I is treated as an imaginary coefficient;
+            # repeated occurrences contribute to the monomial instead.
+            # No numerical evaluation or inference about imaginary values is needed.
+            nI = 0
 
-            if _term is not S.One:
-                for factor in Mul.make_args(_term):
-                    if factor.is_number:
-                        try:
-                            coeff_complex *= complex(factor)
-                        except (TypeError, ValueError):
-                            pass
-                        else:
-                            continue
+            for factor in _term:
+                if factor is S.ImaginaryUnit:
+                    nI += 1
+                    continue
 
-                    if factor.is_commutative:
-                        base, exp = decompose_power(factor)
-
-                        cpart[base] = cpart.get(base, 0) + exp
-                        gens_set.add(base)
+                if factor.is_commutative:
+                    base, exponent = factor.as_base_exp()
+                    if exponent.is_Integer:
+                        exp = int(exponent)
                     else:
-                        ncpart.append(factor)
+                        base, exp = factor, 1
+                    cpart[base] = cpart.get(base, 0) + exp
+                    gens_set.add(base)
+                else:
+                    ncpart.append(factor)
 
-            coeff_tuple = coeff_complex.real, coeff_complex.imag
+            if nI > 1:
+                cpart[S.ImaginaryUnit] = cpart.get(S.ImaginaryUnit, 0) + nI
+                gens_set.add(S.ImaginaryUnit)
+            coeff_tuple = (S.Zero, coeff) if nI == 1 else (coeff, S.Zero)
             ncpart_tuple = tuple(ncpart)
 
             terms.append((term, (coeff_tuple, cpart, ncpart_tuple)))
 
-        gens = sorted(gens_set, key=default_sort_key)
+        # Put symbols first to preserve monomial precedence, without
+        # checking whether other generators represent numerical values.
+        gens = sorted(gens_set, key=lambda g: (not g.is_Symbol, default_sort_key(g)))
 
         k, indices = len(gens), {}
 

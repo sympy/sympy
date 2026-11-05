@@ -1431,6 +1431,15 @@ class Rational(Number):
     def _eval_is_positive(self):
         return self.p > 0
 
+    def _eval_is_negative(self):
+        return self.p < 0
+
+    def _eval_is_extended_positive(self):
+        return self.p > 0
+
+    def _eval_is_extended_negative(self):
+        return self.p < 0
+
     def _eval_is_zero(self):
         return self.p == 0
 
