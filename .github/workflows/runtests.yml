@@ -39,7 +39,7 @@ jobs:
           set -euo pipefail
           gh api --paginate \
             "repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}/commits?per_page=100" \
-            --jq '.[] | .commit.author | "\\(.name) <\\(.email)>"' |
+            --jq '.[] | .commit.author | "\(.name) <\(.email)>"' |
             env -u GH_TOKEN python bin/check_pr_authors.py --expected \
               "${{ github.event.pull_request.commits }}"
 
