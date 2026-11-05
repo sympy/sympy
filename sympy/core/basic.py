@@ -303,6 +303,8 @@ class Basic(Printable):
         """
         Return a shallow copy of the expression.
 
+        Atomic expressions are immutable and return themselves when copied.
+
         Examples
         ========
 
@@ -2401,6 +2403,10 @@ class Atom(Basic):
     is_Atom = True
 
     __slots__ = ()
+
+    def copy(self):
+        """Return this atom, since atomic expressions are immutable."""
+        return self
 
     def matches(self, expr, repl_dict=None, old=False):
         if self == expr:
