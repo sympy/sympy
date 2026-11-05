@@ -1475,7 +1475,7 @@ def test_manualintegrate_trig_log_hang():
 
 def test_manualintegrate_log_cos_abs():
     x = Symbol('x', real=True)
-    
+
     # Target issue integrand with a = 1/2
     expr1 = log((1 + cos(x)/2) / (1 - cos(x)/2)) / cos(x)
     assert manualintegrate(expr1, x) is not None
@@ -1484,7 +1484,7 @@ def test_manualintegrate_log_cos_abs():
     a = Symbol('a', positive=True)
     expr2 = log((1 + a*cos(x)) / (1 - a*cos(x))) / cos(x)
     assert manualintegrate(expr2, x) is not None
-    
+
 def test_issue_log_cos_definite_hang():
     x = Symbol('x', real=True)
     expr = log((1 + cos(x)/2) / (1 - cos(x)/2)) / cos(x)
