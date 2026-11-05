@@ -293,7 +293,11 @@ def test_frac():
     assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
 
     prntr = PythonCodePrinter()
-    assert prntr.doprint(expr) == 'x % 1'
+    assert prntr.doprint(expr) == '(x % 1)'
+    assert prntr.doprint(2*expr) == '2*(x % 1)'
+    assert prntr.doprint(-expr) == '-(x % 1)'
+    assert prntr.doprint(expr**2) == '(x % 1)**2'
+    assert prntr.doprint(x*expr) == 'x*(x % 1)'
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) == 'mpmath.frac(x)'

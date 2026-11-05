@@ -150,6 +150,9 @@ class MatrixBase(Printable):
         def cols(self) -> int:
             ...
 
+        def __iter__(self) -> Iterator[Expr]:
+            ...
+
     @overload
     @classmethod
     def _sympify(cls, expr: SExpr, /) -> Expr: ...
@@ -5487,7 +5490,7 @@ class MatrixBase(Printable):
     def LDLsolve(self, rhs) -> Self:
         return _LDLsolve(self, rhs)
 
-    def LUsolve(self, rhs, iszerofunc=_iszero) -> Self:
+    def LUsolve(self, rhs: Tmat, iszerofunc: Callable[[Expr], bool | None] = _iszero) -> Tmat:
         return _LUsolve(self, rhs, iszerofunc=iszerofunc)
 
     def QRsolve(self, b) -> Self:
