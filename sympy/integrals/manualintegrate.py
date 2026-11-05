@@ -1870,6 +1870,8 @@ def parts_rule(integral):
         # If integration by parts produces a v * du term with multiple or nested
         # logarithmic factors, IBPR will increase complexity and cycle endlessly.
         v_du = v * du
+        if u.has(log) and v.has(log):
+            return
         if integrand.has(TrigonometricFunction) and integrand.has(log) and v_du.has(log):
             # Count log occurrences before and after
             log_count_before = integrand.count(log)
