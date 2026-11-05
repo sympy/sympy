@@ -1168,7 +1168,14 @@ def eval_sum_symbolic(f, limits):
         if without_i != 1:
             s = eval_sum_symbolic(with_i, (i, a, b))
             if s:
-                r = without_i*s
+                if (isinstance(s, Piecewise) and s.args[-1].cond is S.true
+                        and s.args[-1].expr.has(Sum)):
+                    r = s.func(*[
+                        (without_i*arg.expr, arg.cond) if arg.expr.has(Sum)
+                        else (together(without_i*arg.expr), arg.cond)
+                        for arg in s.args])
+                else:
+                    r = without_i*s
                 if r is not S.NaN:
                     return r
         else:

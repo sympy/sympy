@@ -369,6 +369,15 @@ def test_hypergeometric_sums():
         binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
     assert summation(binomial(2*k, k)/5**k, (k, -oo, oo)) == sqrt(5)
 
+    s = Sum((-1)**n*x**(2*n + 1)/(2*n + 1), (n, 1, oo))
+    assert s.subs(x, 0).doit() == 0
+    assert s.doit().subs(x, 0) == 0
+    assert s.doit().subs(x, S.Half) == atan(S.Half) - S.Half
+    assert s.doit().subs(x, 1) == pi/4 - 1
+    assert s.doit().subs(x, -1) == 1 - pi/4
+    assert s.doit().subs(x, 2).has(Sum)
+    assert s.doit().subs(x, I).has(Sum)
+
 
 def test_other_sums():
     f = m**2 + m*exp(m)
