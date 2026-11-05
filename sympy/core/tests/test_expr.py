@@ -1851,6 +1851,19 @@ def test_as_ordered_terms():
     assert ( 4 - 3*I).as_ordered_terms() == [4, -3*I]
     assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
 
+    # seeing I once as a factor makes terms special,
+    # else treat terms like monomials
+    for base in (pi, I):
+        p = Pow(base, 2, evaluate=False)
+        m = Mul(base, base, evaluate=False)
+        # the p and m should be on the same side of 1
+        assert (p + m + 1 + x).as_ordered_terms() == [x, p, m, 1]
+    p = Pow(I, 4, evaluate=False)
+    m = Mul(Pow(I, 2, evaluate=False), I, I, evaluate=False)
+    terms, _ = (p + m).as_terms()
+    monoms = {term: data[1] for term, data in terms}
+    assert monoms[p] == monoms[m]
+
     e = x**2*y**2 + x*y**4 + y + 2
 
     assert e.as_ordered_terms(order="lex") == [x**2*y**2, x*y**4, y, 2]
