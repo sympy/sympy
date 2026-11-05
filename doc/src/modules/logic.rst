@@ -54,6 +54,8 @@ Boolean functions
 .. autoclass:: sympy.logic.boolalg::Boolean
    :members:
 
+.. autoclass:: sympy.logic.boolalg::BooleanAtom
+
 .. autoclass:: sympy.logic.boolalg::BooleanTrue
    :members:
 
