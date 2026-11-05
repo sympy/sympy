@@ -269,8 +269,8 @@ def get_abs(expr: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
         if expr.is_number:
-            abs_expr, _, acc, _ = evalf(abs(N(expr, prec + 2)),
-                                        prec + 2, options)
+            abs_expr = mpc_abs((mpf_abs(re), mpf_abs(im)), prec, rnd)
+            acc = min(prec, complex_accuracy(result))
             return abs_expr, None, acc, None
         else:
             if 'subs' in options:

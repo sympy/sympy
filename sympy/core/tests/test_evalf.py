@@ -10,6 +10,7 @@ from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio)
 from sympy.core.numbers import (AlgebraicNumber, E, Float, I, Rational,
                                 oo, zoo, nan, pi)
+from sympy.core.parameters import evaluate
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -91,6 +92,13 @@ def test_evalf_complex():
     assert NS('E+pi*I', 15) == '2.71828182845905 + 3.14159265358979*I'
     assert NS('pi * (3+4*I)', 15) == '9.42477796076938 + 12.5663706143592*I'
     assert NS('I*(2+I)', 15) == '-1.00000000000000 + 2.00000000000000*I'
+
+
+def test_evalf_abs_evaluate_false():
+    expected = sqrt(2).evalf(30)
+    with evaluate(False):
+        result = Abs(1 + I, evaluate=False).evalf(30)
+    assert result == expected
 
 
 @XFAIL
