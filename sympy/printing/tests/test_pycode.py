@@ -60,7 +60,7 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
     assert prntr.doprint(cot(x)) == '(1/math.tan(x))'
-    assert prntr.doprint(coth(x)) == '((math.exp(x) + math.exp(-x))/(math.exp(x) - math.exp(-x)))'
+    assert prntr.doprint(coth(x)) == '((math.exp(-x) + math.exp(x))/(math.exp(x) - math.exp(-x)))'
     assert prntr.doprint(asec(x)) == '(math.acos(1/x))'
     assert prntr.doprint(acsch(x)) == '(math.log(math.sqrt(1 + x**(-2)) + 1/x))'
 
