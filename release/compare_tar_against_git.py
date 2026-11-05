@@ -81,6 +81,7 @@ git_whitelist = {
     'bin/test',
     'bin/test_external_imports.py',
     'bin/test_executable.py',
+    'bin/test_encoding.py',
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',
@@ -123,11 +124,11 @@ tarball_whitelist = {
     'sympy.egg-info/SOURCES.txt',
     'sympy.egg-info/dependency_links.txt',
     'sympy.egg-info/requires.txt',
+    'sympy.egg-info/scm_file_list.json',
+    'sympy.egg-info/scm_version.json',
     'sympy.egg-info/top_level.txt',
     'sympy.egg-info/not-zip-safe',
     'sympy.egg-info/entry_points.txt',
-    # Not sure where this is generated from...
-    'doc/commit_hash.txt',
     }
 
 

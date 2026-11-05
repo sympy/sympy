@@ -5200,7 +5200,7 @@ class MatrixBase(Printable):
             out = self.applyfunc(lambda i: i / norm)
         return out
 
-    def norm(self, ord: int | str | None = 2) -> Expr:
+    def norm(self, ord: int | str | None = None) -> Expr:
         """Return the Norm of a Matrix or Vector.
 
         In the simplest case this is the geometric size of the vector
@@ -5255,7 +5255,7 @@ class MatrixBase(Printable):
         # Row or Column Vector Norms
         vals = list(self.values()) or [S.Zero]
         if S.One in self.shape:
-            if ord == 2:  # Common case sqrt(<x, x>)
+            if ord in (2, None):  # Common case sqrt(<x, x>)
                 return sqrt(Add(*(abs(i) ** 2 for i in vals)))
 
             elif ord == 1:  # sum(abs(x))

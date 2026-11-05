@@ -465,15 +465,15 @@ intersphinx_mapping = get_intersphinx_mapping(
 # to something from matplotlib.
 intersphinx_disabled_reftypes = ['*']
 
-# Required for linkcode extension.
-# Get commit hash from the external file.
-commit_hash_filepath = '../commit_hash.txt'
-commit_hash = None
-if os.path.isfile(commit_hash_filepath):
-    with open(commit_hash_filepath) as f:
-        commit_hash = f.readline()
+# Required for linkcode extension. Setuptools-scm prefixes Git commit IDs with
+# "g", which is part of its version format rather than the commit hash.
+from sympy.release import __commit_id__
+commit_hash = __commit_id__
+if commit_hash and commit_hash.startswith('g'):
+    commit_hash = commit_hash[1:]
 
-# Get commit hash from the external file.
+# A direct source checkout does not have the generated version module, so get
+# the commit hash from Git instead.
 if not commit_hash:
     try:
         commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])

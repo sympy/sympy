@@ -1157,7 +1157,7 @@ class Derivative(Expr):
 
         >>> e = sqrt((x + 1)**2 + x)
         >>> diff(e, (x, 5), simplify=False).count_ops()
-        136
+        139
         >>> diff(e, (x, 5)).count_ops()
         30
 
@@ -2213,7 +2213,7 @@ class Lambda(Expr):
 
         capture_new = hints.get('original_new', new)
 
-        if old in self.variables:
+        if not old.free_symbols.isdisjoint(self.variables):
             return self
 
         if old.is_Symbol and old not in self.free_symbols:
@@ -3376,7 +3376,7 @@ def count_ops(expr, visual=False):
                         a = a.as_two_terms()[1]
                     else:
                         a = -a
-                n, d = fraction(a)
+                n, d = fraction(a, exact=True)
                 if n.is_Integer:
                     ops.append(DIV)
                     if n < 0:

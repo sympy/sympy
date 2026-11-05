@@ -6,7 +6,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Integer, Rational, pi, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Dummy, Symbol
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -44,6 +44,11 @@ def test_issue_3538():
     assert v == exp(x)
     assert type(v) == type(exp(x))
     assert str(type(v)) == str(type(exp(x)))
+
+
+def test_srepr_dummy_roundtrip():
+    d = Dummy('d', dummy_index=5)
+    assert sympify(srepr(d + 1)) == d + 1
 
 
 def test_sympify1():
