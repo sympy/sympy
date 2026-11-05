@@ -1249,6 +1249,28 @@ class Rational(Number):
     >>> nsimplify(.3)  # numbers that have a simple form
     3/10
 
+    To display a fraction without reducing its numerator and denominator, use
+    an unevaluated multiplication:
+
+    >>> from sympy import Mul, Pow, Rational, UnevaluatedExpr
+    >>> frac = Mul(6, Pow(8, -1, evaluate=False), evaluate=False)
+    >>> frac
+    6/8
+    >>> isinstance(frac, Rational)
+    False
+    >>> held_frac = UnevaluatedExpr(frac)
+    >>> held_frac + 1
+    1 + 6/8
+    >>> (held_frac + 1).doit()
+    7/4
+
+    This is a ``Mul`` expression, not an unreduced ``Rational``.
+    :class:`~sympy.core.expr.UnevaluatedExpr` can keep it from combining with
+    surrounding expressions, but ``.doit()`` and later arithmetic can reduce
+    it. Use ``Rational`` for arithmetic, and keep the numerator and denominator
+    separately if you need unreduced intermediate forms. See
+    :ref:`deprecated-rational-gcd` for the deprecation details.
+
     But if the input does not reduce to a literal Rational, an error will
     be raised:
 
