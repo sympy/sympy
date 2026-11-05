@@ -37,6 +37,12 @@ class Vector(BasisDependent):
 
     kind: VectorKind = VectorKind()
 
+    def __new__(cls, *args, **kwargs):
+        if cls is Vector:
+            raise TypeError("Vector cannot be instantiated directly. "
+                            "Use CoordSys3D basis vectors to construct a vector.")
+        return super().__new__(cls, *args, **kwargs)
+
     @property
     def components(self):
         """
