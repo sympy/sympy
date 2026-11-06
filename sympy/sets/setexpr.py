@@ -13,7 +13,7 @@ class SetExpr(Expr):
     Examples
     ========
 
-    >>> from sympy import Interval, FiniteSet
+    >>> from sympy import Interval, FiniteSet, oo
     >>> from sympy.sets.setexpr import SetExpr
 
     >>> a = SetExpr(Interval(0, 5))
@@ -22,6 +22,8 @@ class SetExpr(Expr):
     Union(Interval(1, 6), Interval(10, 15))
     >>> (2*a + b).set
     Interval(1, 20)
+    >>> SetExpr({0, 1})*oo
+    SetExpr({nan, oo})
     """
     _op_priority = 11.0
 

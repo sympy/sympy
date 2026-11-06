@@ -68,26 +68,27 @@ def test_interval_add_infinity():
 
 def test_interval_mul_infinity():
     for interval, expected in (
-        (Interval(1, 2), oo),
-        (Interval(-2, -1), -oo),
+        (Interval(-2, -1), FiniteSet(-oo)),
+        (Interval.Ropen(-1, 0), FiniteSet(-oo)),
+        (Interval(-1, 0), FiniteSet(-oo, nan)),
+        (Interval(-1, 1), FiniteSet(-oo, nan, oo)),
+        (Interval.open(-1, 1), FiniteSet(-oo, nan, oo)),
+        (Interval(0, 1), FiniteSet(nan, oo)),
+        (Interval.Lopen(0, 1), FiniteSet(oo)),
+        (Interval(1, 2), FiniteSet(oo)),
+        (Interval(-oo, -1), FiniteSet(-oo)),
+        (Interval(1, oo), FiniteSet(oo)),
+        (Interval(-oo, oo), FiniteSet(-oo, nan, oo)),
     ):
         a = SetExpr(interval)
-        assert a*oo == SetExpr(FiniteSet(expected))
-        assert oo*a == SetExpr(FiniteSet(expected))
-        assert a*(-oo) == SetExpr(FiniteSet(-expected))
-        assert (-oo)*a == SetExpr(FiniteSet(-expected))
-
-
-def test_interval_mul_infinity_unevaluated():
-    interval = Interval(-1, 1)
-    a = SetExpr(interval)
-    _d = Dummy()
-    for b in (oo, -oo):
-        expected = SetExpr(ImageSet(Lambda(_d, _d*b), interval))
-
-        assert (a*b).dummy_eq(expected)
-        assert (b*a).dummy_eq(expected)
-        assert (a*SetExpr(FiniteSet(b))).dummy_eq(expected)
+        for b, result in ((oo, expected),
+                (-oo, FiniteSet(*(-i for i in expected)))):
+            result = SetExpr(result)
+            bset = SetExpr(FiniteSet(b))
+            assert a*b == result
+            assert b*a == result
+            assert a*bset == result
+            assert bset*a == result
 
 
 def test_Pow():
