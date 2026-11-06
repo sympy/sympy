@@ -1058,7 +1058,10 @@ def piecewise_fold(expr: Basic | T, evaluate: bool | None = True) -> Basic | T:
         return expr
 
     new_args: list[tuple[Basic, Boolean]] = []
-    if isinstance(expr, Piecewise):
+    if isinstance(expr, ExprCondPair):
+        message: str = f"I received `{expr = }`, but I cannot fold an `ExprCondPair`."
+        raise TypeError(message)
+    elif isinstance(expr, Piecewise):
         for pair in expr.args:
             e, c = pair.expr, pair.cond
             if not isinstance(e, Piecewise):
