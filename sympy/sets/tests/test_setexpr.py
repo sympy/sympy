@@ -21,6 +21,10 @@ def test_setexpr():
     se = SetExpr(Interval(0, 1))
     assert isinstance(se.set, Set)
     assert isinstance(se, Expr)
+    se = SetExpr({-1, 2})
+    assert isinstance(se.set, FiniteSet)
+    assert se == SetExpr(FiniteSet(-1, 2))
+    assert SetExpr(set()) == SetExpr(S.EmptySet)
 
 
 def test_scalar_funcs():
