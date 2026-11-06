@@ -343,6 +343,22 @@ def test_canonical_variables():
     assert Integral(x, (x, x + i0)).canonical_variables == {x: i1}
 
 
+def test_replace_relational_matches():
+    a, b = symbols('a b')
+    x, y = Wild('x'), Wild('y')
+    pattern = Tuple(x, y)
+    for replacement in (Tuple(y), lambda x, y: Tuple(y)):
+        for relation in (Eq(a, 0), a < 0):
+            expr = Tuple(relation, b)
+            assert expr.replace(pattern, replacement) == Tuple(b)
+            assert expr.replace(pattern, replacement, exact=True) == Tuple(b)
+            assert expr.replace(pattern, replacement, exact=False) == Tuple(b)
+        for zero in (S.Zero, Float(0)):
+            expr = Tuple(zero, b)
+            assert expr.replace(pattern, replacement, exact=True) == expr
+            assert expr.replace(pattern, replacement, exact=False) == Tuple(b)
+
+
 def test_replace_exceptions():
     from sympy.core.symbol import Wild
     x, y = symbols('x y')
