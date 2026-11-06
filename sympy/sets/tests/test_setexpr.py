@@ -40,6 +40,15 @@ def test_Add_Mul():
     assert (SetExpr(Interval(0, 1))*2).set == Interval(0, 2)
 
 
+def test_interval_add_infinity():
+    cases = [(Interval(2, oo), oo), (Interval(-oo, 2), -oo),
+             (Interval(1, 2), oo), (Interval(1, 2), -oo)]
+    for interval, infinity in cases:
+        expr = SetExpr(interval)
+        assert (expr + infinity).set == FiniteSet(infinity)
+        assert (infinity + expr).set == FiniteSet(infinity)
+
+
 def test_Pow():
     assert (SetExpr(Interval(0, 2))**2).set == Interval(0, 4)
 
