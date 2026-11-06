@@ -320,6 +320,10 @@ def test_rotate():
 
 
 def test_multiset_partitions():
+    assert list(multiset_partitions(0)) == list(multiset_partitions([])) == [[]]
+    assert list(multiset_partitions(0, 0)) == [[]]
+    assert list(multiset_partitions(0, 1)) == []
+
     A = [0, 1, 2, 3, 4]
 
     assert list(multiset_partitions(A, 5)) == [[[0], [1], [2], [3], [4]]]
