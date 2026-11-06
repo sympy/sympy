@@ -10,7 +10,7 @@ from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import cos
-from sympy.sets.sets import Set
+from sympy.sets.sets import Set, imageset
 
 
 a, x = symbols("a, x")
@@ -42,6 +42,16 @@ def test_scalar_funcs():
 def test_Add_Mul():
     assert (SetExpr(Interval(0, 1)) + 1).set == Interval(1, 2)
     assert (SetExpr(Interval(0, 1))*2).set == Interval(0, 2)
+
+
+def test_imageset_mul_infinity():
+    x = Symbol('x')
+    assert imageset(Lambda(x, oo*x), Interval(1, 2)).doit() == \
+        FiniteSet(oo)
+    assert imageset(Lambda(x, oo*x), Interval(-2, -1)).doit() == \
+        FiniteSet(-oo)
+    assert imageset(Lambda(x, -oo*x), Interval(1, 2)).doit() == \
+        FiniteSet(-oo)
 
 
 def test_finiteset_mul_nan():
