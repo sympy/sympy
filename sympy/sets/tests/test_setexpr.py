@@ -49,6 +49,30 @@ def test_interval_add_infinity():
         assert (infinity + expr).set == FiniteSet(infinity)
 
 
+def test_interval_mul_infinity():
+    for interval, expected in (
+        (Interval(1, 2), oo),
+        (Interval(-2, -1), -oo),
+    ):
+        a = SetExpr(interval)
+        assert a*oo == SetExpr(FiniteSet(expected))
+        assert oo*a == SetExpr(FiniteSet(expected))
+        assert a*(-oo) == SetExpr(FiniteSet(-expected))
+        assert (-oo)*a == SetExpr(FiniteSet(-expected))
+
+
+def test_interval_mul_infinity_unevaluated():
+    interval = Interval(-1, 1)
+    a = SetExpr(interval)
+    _d = Dummy()
+    for b in (oo, -oo):
+        expected = SetExpr(ImageSet(Lambda(_d, _d*b), interval))
+
+        assert (a*b).dummy_eq(expected)
+        assert (b*a).dummy_eq(expected)
+        assert (a*SetExpr(FiniteSet(b))).dummy_eq(expected)
+
+
 def test_Pow():
     assert (SetExpr(Interval(0, 2))**2).set == Interval(0, 4)
 
