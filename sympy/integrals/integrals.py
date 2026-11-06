@@ -802,10 +802,10 @@ class Integral(AddWithLimits):
                 if a == 0 and b == pi:
                     a_w = Wild('a_w', exclude=[x])
                     b_w = Wild('b_w', exclude=[x])
-                    
+
                     pattern = log((1 + a_w*cos(x))/(1 + b_w*cos(x))) / cos(x)
                     match = function.match(pattern)
-                    
+
                     if match and match[a_w] == -match[b_w] and match[a_w] != 0:
                         function = 2 * asin(match[a_w]) * pi
                         continue
