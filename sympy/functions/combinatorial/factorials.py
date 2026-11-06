@@ -972,8 +972,8 @@ class binomial(CombinatorialFunction):
 
                     return plo*phi,qlo*qhi
 
-                p,q=product(1,k+1)
-                return Integer(p//q)
+                p, _ = product(1, k+1)
+                return Integer(p)
             else:
                 d, result = n - k, 1
                 for i in range(1, k + 1):
