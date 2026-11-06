@@ -218,6 +218,7 @@ class ConstantTimesRule(Rule):
     def contains_dont_know(self) -> bool:
         return self.substep.contains_dont_know()
 
+
 class PowerRule(AtomicRule):
     """integrate(x**a, x)"""
 
