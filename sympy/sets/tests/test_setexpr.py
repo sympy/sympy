@@ -4,7 +4,7 @@ from sympy.sets import Interval, FiniteSet, Intersection, ImageSet, Union
 
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
-from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.numbers import (I, Rational, oo, nan)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -42,6 +42,19 @@ def test_scalar_funcs():
 def test_Add_Mul():
     assert (SetExpr(Interval(0, 1)) + 1).set == Interval(1, 2)
     assert (SetExpr(Interval(0, 1))*2).set == Interval(0, 2)
+
+
+def test_finiteset_mul_nan():
+    for b, expected in (
+        (2, {-2, nan, 2}),
+        (oo, {-oo, nan, oo}),
+        (-oo, {-oo, nan, oo}),
+    ):
+        a = SetExpr({-1, nan, 1})
+        assert a*b == SetExpr(expected)
+        assert b*a == SetExpr(expected)
+        assert a*SetExpr({b}) == SetExpr(expected)
+    assert SetExpr({-1, 0, 1})*oo == SetExpr({-oo, nan, oo})
 
 
 def test_interval_add_infinity():
