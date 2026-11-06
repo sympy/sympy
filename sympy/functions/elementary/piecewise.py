@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, overload
 from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
@@ -14,6 +15,13 @@ from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
 from itertools import product
+
+if TYPE_CHECKING:
+    from typing import Any, TypeVar
+    from collections.abc import Iterable
+    from sympy.core.expr import Expr
+
+    T = TypeVar('T')
 
 Undefined = S.NaN  # Piecewise()
 
@@ -128,6 +136,19 @@ class Piecewise(DefinedFunction):
 
     nargs = None
     is_Piecewise = True
+
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[ExprCondPair, ...]:
+            ...
+
+    @overload
+    def __new__(cls, *args: tuple[Expr | complex, Boolean | bool], # type: ignore
+                evaluate: bool | None = ..., **options: Any) -> Expr: ...
+    @overload
+    def __new__(cls, *args: ExprCondPair | Iterable[Basic | complex | bool], # type: ignore
+                evaluate: bool | None = ..., **options: Any) -> Basic: ...
 
     def __new__(cls, *args, **options):
         if len(args) == 0:
@@ -990,6 +1011,15 @@ class Piecewise(DefinedFunction):
 
             return result
 
+
+@overload
+def piecewise_fold(expr: Expr, evaluate: bool | None = True) -> Expr: ...
+@overload
+def piecewise_fold(expr: Boolean, evaluate: bool | None = True) -> Boolean | Piecewise: ...
+@overload
+def piecewise_fold(expr: Basic, evaluate: bool | None = True) -> Basic: ...
+@overload
+def piecewise_fold(expr: T, evaluate: bool | None = True) -> T: ...
 
 def piecewise_fold(expr, evaluate=True):
     """
