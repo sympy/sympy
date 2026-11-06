@@ -109,4 +109,3 @@ def test_transpose_derivative():
     d4 = Transpose(X).diff(y)
     assert d4 == ZeroMatrix(3, 2)
     assert d4.shape == (3, 2)
-
