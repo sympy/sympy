@@ -17,7 +17,7 @@ the following function types in the given ``Interval``:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -34,13 +34,12 @@ if TYPE_CHECKING:
     from typing import Callable
     from sympy.core.expr import Expr
     from sympy.sets.sets import Set
-    from sympy.core.basic import Basic
     from sympy.logic.boolalg import Boolean
 
 
 def singularities(
     expression: Expr | complex,
-    symbol: Symbol | Basic,
+    symbol: Expr,
     domain: Set | None = None,
 ) -> set[Symbol]:
     """
@@ -192,7 +191,7 @@ def monotonicity_helper(
                 ' for all multivariate expressions.'
             )
 
-    variable = symbol or (free.pop() if free else Symbol('x'))
+    variable = symbol or (cast(Symbol, free.pop()) if free else Symbol('x'))
 
     try:
         sings = singularities(expression, variable, interval)
@@ -520,7 +519,7 @@ def is_monotonic(
             ' for all multivariate expressions.'
         )
 
-    variable = symbol or (free.pop() if free else Symbol('x'))
+    variable = symbol or (cast(Symbol, free.pop()) if free else Symbol('x'))
 
     try:
         sings = singularities(expression, variable, interval)

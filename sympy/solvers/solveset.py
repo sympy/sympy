@@ -48,6 +48,11 @@ from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
+
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from sympy.logic.boolalg import Boolean
 from sympy.matrices import zeros, Matrix, MatrixBase
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.generate import cycle_length
@@ -2388,7 +2393,8 @@ def _transolve(f, symbol, domain):
     return result
 
 
-def solveset(f: Basic, symbol: Basic | None = None, domain: Set = S.Complexes) -> Set:
+def solveset(f: Expr | Boolean,
+             symbol: Expr | None = None, domain: Set = S.Complexes) -> Set:
     r"""Solves a given inequality or equation with set as output
 
     Parameters
@@ -2490,7 +2496,8 @@ def solveset(f: Basic, symbol: Basic | None = None, domain: Set = S.Complexes) -
 
     """
     f = sympify(f)
-    symbol = sympify(symbol)
+    if symbol is not None:
+        symbol = sympify(symbol)
 
     if f is S.true:
         return domain
@@ -2524,13 +2531,13 @@ def solveset(f: Basic, symbol: Basic | None = None, domain: Set = S.Complexes) -
 
     if symbol is None:
         if len(free_symbols) == 1:
-            symbol = free_symbols.pop()
-        elif free_symbols:
+            symbol = cast(Symbol, free_symbols.pop())
+        else:
             raise ValueError(filldedent('''
                 The independent variable must be specified for a
                 multivariate equation.'''))
     elif not isinstance(symbol, Symbol):
-        # new identifiers due to mypy `error: Value of type "Basic" is not indexable`
+        # new identifiers due to mypy `error: Value of type "Expr | Boolean" is not indexable`
         list_f, list_symbol, swap = recast_to_symbols([f], [symbol])
         # the xreplace will be needed if a ConditionSet is returned
         return solveset(list_f[0], list_symbol[0], domain).xreplace(swap)
@@ -2572,11 +2579,13 @@ def solveset(f: Basic, symbol: Basic | None = None, domain: Set = S.Complexes) -
     return _solveset(f, symbol, domain, _check=True)
 
 
-def solveset_real(f: Basic, symbol: Basic) -> Set:
+def solveset_real(f: Expr | Boolean,
+                  symbol: Expr) -> Set:
     return solveset(f, symbol, S.Reals)
 
 
-def solveset_complex(f: Basic, symbol: Basic) -> Set:
+def solveset_complex(f: Expr | Boolean,
+                     symbol: Expr) -> Set:
     return solveset(f, symbol, S.Complexes)
 
 
