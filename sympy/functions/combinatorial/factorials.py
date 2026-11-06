@@ -956,7 +956,9 @@ class binomial(CombinatorialFunction):
                         for i in range(lo,hi):
                             p*=d+i
                             q*=i
-                        g=gcd(p,q) #this is known to be divisible by factorial(hi-lo) but using this fact doesn't seem to make it any faster
+                        g=gcd(p,q)
+                        # g is known to be divisible by factorial(hi-lo) but
+                        # using this fact doesn't seem to make it any faster
                         return p//g,q//g
 
                     mid=(lo+hi)//2
