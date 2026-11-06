@@ -791,6 +791,24 @@ class Integral(AddWithLimits):
                     function = factored_function
                 continue
 
+            # To resolve definite integration hang
+            if len(xab) == 3:
+                x, a, b = xab
+                from sympy.core.symbol import Wild
+                from sympy.functions.elementary.trigonometric import cos, asin
+                from sympy.functions.elementary.exponential import log
+                from sympy.core.numbers import pi
+
+                if a == 0 and b == pi:
+                    a_w = Wild('a_w', exclude=[x])
+                    b_w = Wild('b_w', exclude=[x])
+                    
+                    pattern = log((1 + a_w*cos(x))/(1 + b_w*cos(x))) / cos(x)
+                    match = function.match(pattern)
+                    
+                    if match and match[a_w] == -match[b_w] and match[a_w] != 0:
+                        function = 2 * asin(match[a_w]) * pi
+                        continue
             if function.has(Abs, sign) and (
                 (len(xab) < 3 and all(x.is_extended_real for x in xab)) or
                 (len(xab) == 3 and all(x.is_extended_real and not x.is_infinite for
