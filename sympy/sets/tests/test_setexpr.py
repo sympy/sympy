@@ -72,6 +72,25 @@ def test_FiniteSet_FiniteSet():
            FiniteSet(1, 2, 3, 4, 6)
 
 
+def test_FiniteSet_scalar():
+    for values in (FiniteSet(1), FiniteSet(1, 2)):
+        A = SetExpr(values)
+        for b in (1, -1, oo, -oo):
+            expected = SetExpr(FiniteSet(*(a + b for a in values)))
+            assert A + b == expected
+            assert b + A == expected
+            assert A + SetExpr(FiniteSet(b)) == expected
+            assert SetExpr(FiniteSet(b)) + A == expected
+
+
+def test_Interval_scalar_consistency():
+    for values in (Interval(1, 2), Interval(2, oo)):
+        A = SetExpr(values)
+        for b in (1, -1):
+            assert A + b == A + SetExpr(FiniteSet(b))
+            assert b + A == SetExpr(FiniteSet(b)) + A
+
+
 def test_Interval_FiniteSet():
     assert (SetExpr(FiniteSet(1, 2)) + SetExpr(Interval(0, 10))).set == \
            Interval(1, 12)
