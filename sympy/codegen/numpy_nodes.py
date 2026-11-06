@@ -60,8 +60,8 @@ class logaddexp(Function):
     def _eval_rewrite_as_log(self, x1, x2, **kwargs):
         return _logaddexp(x1, x2)
 
-    def _eval_evalf(self, *args, **kwargs):
-        return self.rewrite(log).evalf(*args, **kwargs)
+    def _eval_evalf(self, prec):
+        return self.rewrite(log)._evalf(prec)
 
     def _eval_simplify(self, *args, **kwargs):
         a, b = (x.simplify(**kwargs) for x in self.args)
@@ -102,8 +102,8 @@ class logaddexp2(Function):
     def _eval_rewrite_as_log(self, x1, x2, **kwargs):
         return _logaddexp2(x1, x2)
 
-    def _eval_evalf(self, *args, **kwargs):
-        return self.rewrite(log).evalf(*args, **kwargs)
+    def _eval_evalf(self, prec):
+        return self.rewrite(log)._evalf(prec)
 
     def _eval_simplify(self, *args, **kwargs):
         a, b = (x.simplify(**kwargs).factor() for x in self.args)

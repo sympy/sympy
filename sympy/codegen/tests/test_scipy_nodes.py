@@ -43,3 +43,12 @@ def test_powm1():
     eulers_constant_m1 = powm1(x, 1/log(x))
     assert eulers_constant_m1.rewrite(Pow) == exp(1) - 1
     assert eulers_constant_m1.simplify() == exp(1) - 1
+
+
+def test_scipy_nodes_evalf_precision():
+    cases = [(cosm1(1), cos(1) - 1), (powm1(2, pi), 2**pi - 1)]
+    for expr, expected in cases:
+        for prec in (53, 113):
+            result = expr._eval_evalf(prec)
+            assert result._prec == prec
+            assert abs(result - expected.evalf(50)) < 2**(4 - prec)

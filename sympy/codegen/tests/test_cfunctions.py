@@ -185,3 +185,10 @@ def test_isnan_isinf():
     assert isnanx not in (False, True)
     assert isnanx.func is isnan
     assert isnanx.args == (x,)
+
+
+def test_log2_evalf_precision():
+    for prec in (53, 113):
+        result = log2(3)._eval_evalf(prec)
+        assert result._prec == prec
+        assert abs(result - (log(3)/log(2)).evalf(50)) < S(2)**(2 - prec)
