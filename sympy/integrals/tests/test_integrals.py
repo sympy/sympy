@@ -2434,3 +2434,9 @@ def test_reverse_limits():
     L = Integral(x*y, (x, a, b), y)
     assert L.reverse_limits() == Integral(-x*y, (x, b, a), y)
     assert L.reverse_limits(x) == Integral(-x*y, (x, b, a), y)
+
+@slow
+def test_issue_30869():
+    expr = log((cos(x)/2 + 1) / (1 - cos(x)/2)) / cos(x)
+    assert isinstance(integrate(expr, (x, 0, pi)), Integral)
+
