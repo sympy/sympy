@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sympy import Symbol
 from sympy.core.add import Add
 from sympy.core.numbers import (Rational, oo, pi)
 from sympy.core.singleton import S
@@ -10,6 +11,7 @@ from sympy.series.fourier import fourier_series
 from sympy.series.fourier import FourierSeries
 from sympy.testing.pytest import raises
 from functools import lru_cache
+
 
 x, y, z = symbols('x y z')
 
@@ -164,3 +166,16 @@ def test_FourierSeries_finite():
     assert fourier_series(cos(pi*x), (x, -1, 1)).truncate(oo) == cos(pi*x)
     assert fourier_series(cos(3*pi*x + 4) - sin(4*pi*x)*log(pi*y), (x, -1, 1)).truncate(oo) == -log(pi*y)*sin(4*pi*x)\
            - sin(4)*sin(3*pi*x) + cos(4)*cos(3*pi*x)
+
+# Issue number 30183
+def test_finite_fourier_series_transformations():
+    t = Symbol('t', real=True)
+    x = sum([cos(m*t) for m in range(5)])
+    fx = fourier_series(x, (t, 0, 2*pi))
+
+    expected_an = {1: 1, 2: 1, 3: 1, 4: 1}
+    assert fx.an == expected_an
+    assert fx.scale(1).an == expected_an
+    assert fx.shift(0).an == expected_an
+    assert fx.scalex(1).an == expected_an
+    assert fx.shiftx(0).an == expected_an
