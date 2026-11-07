@@ -673,6 +673,8 @@ class Piecewise(DefinedFunction):
 
             cond = to_cnf(cond)
             if isinstance(cond, And):
+                cond = _remove_subsumed_clauses(cond)
+            if isinstance(cond, And):
                 cond = distribute_or_over_and(cond)
 
             if isinstance(cond, Or):
@@ -1147,6 +1149,26 @@ def _clip(A, B, k):
 
     return p
 
+def _remove_subsumed_clauses(conj):
+    """Remove redundant clauses from a CNF `And` expression.
+
+    A disjunctive clause `C1` subsumes `C2` when every literal of `C1`
+    also appears in `C2`, e.g. (a | b) & (a | b | c) reduces
+    to (a | b).  Dropping these before a CNF-to-DNF conversion avoids
+    the exponential blow-up that `distribute_or_over_and` can hit on the
+    highly redundant conditions produced by `piecewise_fold`, see:
+    https://github.com/sympy/sympy/issues/29064.
+    """
+    clauses = []
+    for c in conj.args:
+        lits = frozenset(c.args) if isinstance(c, Or) else frozenset([c])
+        clauses.append((lits, c))
+    clauses.sort(key=lambda t: len(t[0]))
+    kept = []
+    for lits, c in clauses:
+        if not any(k <= lits for k, _ in kept):
+            kept.append((lits, c))
+    return And(*[c for _, c in kept])
 
 def piecewise_simplify_arguments(expr, **kwargs):
     from sympy.simplify.simplify import simplify
