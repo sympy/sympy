@@ -2208,6 +2208,21 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
     If expansions exist both at zero and at infinity, ``place``
     can be set to ``0`` or ``zoo`` for the preferred choice.
     """
+    polar_factors, ordinary_factors = [], []
+    for factor in Mul.make_args(z0):
+        (polar_factors if factor.is_polar else ordinary_factors).append(factor)
+    ordinary = Mul(*ordinary_factors)
+    if not (ordinary.is_number or ordinary.is_Symbol):
+        # Keep an ordinary composite argument intact while the expansion
+        # simplifies powers on the logarithmic surface. Substituting it
+        # before polar denesting can, for example, turn sqrt(z**2) into z.
+        # Explicit polar factors must remain visible when choosing analytic
+        # continuations; only the ordinary part is replaced by the dummy.
+        argument = Dummy('argument')
+        result = _meijergexpand(func, argument*Mul(*polar_factors), allow_hyper,
+                               rewrite=rewrite, place=place)
+        return unpolarify(result.subs(argument, ordinary))
+
     global _meijercollection
     if _meijercollection is None:
         _meijercollection = MeijerFormulaCollection()
@@ -2488,8 +2503,11 @@ def hyperexpand(f, allow_hyper=False, rewrite='default', place=None):
             return r
 
     def do_meijer(ap, bq, z):
-        r = _meijergexpand(G_Function(ap[0], ap[1], bq[0], bq[1]), z,
-                   allow_hyper, rewrite=rewrite, place=place)
+        # A fully numeric argument has a known principal phase.  Do not split
+        # an ordinary symbolic product: its phase can change on substitution.
+        zp = polarify(z, lift=True) if z.is_number else z
+        r = _meijergexpand(G_Function(ap[0], ap[1], bq[0], bq[1]), zp,
+                          allow_hyper, rewrite=rewrite, place=place)
         if not r.has(nan, zoo, oo, -oo):
             return r
     return f.replace(hyper, do_replace).replace(meijerg, do_meijer)
