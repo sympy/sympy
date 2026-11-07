@@ -1396,3 +1396,17 @@ def test_issue_30804():
     # Real multiple of non-real number cannot be real
     assert (3*b).is_real is False
     assert (3*b).is_extended_real is False
+
+
+def test_issue_30976():
+    # Issue 30976: sign inference makes Abs and sqrt return negative values for integer expressions
+    from sympy.functions.elementary.complexes import Abs, sign
+    from sympy.functions.elementary.miscellaneous import sqrt
+    n = Symbol('n', integer=True, nonnegative=True)
+    f = 1/(2*n - 1) - Rational(1, 2)
+    assert f.is_negative is None
+    assert f.is_positive is None
+    assert (1/(2*n - 1)).is_negative is None
+    assert Abs(f).subs(n, 1) == Rational(1, 2)
+    assert sqrt(f**2).subs(n, 1) == Rational(1, 2)
+    assert sign(f).subs(n, 1) == 1

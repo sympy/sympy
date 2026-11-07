@@ -155,8 +155,13 @@ def _monotonic_sign(self):
         else:
             x = next(iter(free))
             x0 = _monotonic_sign(x)
+            n, den = self.as_numer_denom()
 
-            if x0 not in (None, _eps, -_eps):
+            if x0 not in (None, _eps, -_eps) and (
+                not den.has(x)
+                or den.is_extended_positive is True
+                or den.is_extended_negative is True
+            ):
                 d = self.diff(x)
                 y = self.subs(x, x0)
 
@@ -184,7 +189,7 @@ def _monotonic_sign(self):
                         if y.is_zero:
                             return Dummy('nneg', nonnegative=True)
 
-            n, d = self.as_numer_denom()
+            d = den
             den = None
             if n.is_number:
                 den = _monotonic_sign(d)
