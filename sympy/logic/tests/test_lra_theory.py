@@ -1,4 +1,6 @@
 from __future__ import annotations
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, I, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
@@ -13,7 +15,7 @@ from sympy.functions.elementary.trigonometric import cos
 from sympy.external import import_module
 
 from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledInput, LRARational, HANDLE_NEGATION, \
-    _sep_const_terms, _sep_const_coeff
+    _split_constant
 from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
@@ -89,13 +91,21 @@ def substitute_slack(cons, s_subs):
     Phi = x >= 0 & x+y >= 1 -> Phi' := (x >= 0 & s1 >= 1)
     """
     expr = cons.lhs - cons.rhs
-    var, const = _sep_const_terms(expr)
-    var, coeff = _sep_const_coeff(var)
+    var, const = _split_constant(expr, Add)
+    var, coeff = _split_constant(var, Mul)
     if var in s_subs:
         return cons.func(coeff*s_subs[var] + const, 0)
     if -var in s_subs:
         return cons.func(-coeff*s_subs[-var] + const, 0)
     return cons
+
+def slack_map(lra):
+    """
+    Return a mapping from the expression each slack variable stands for
+    to the slack (dummy) variable.
+    """
+    return {Add(*(coeff*var for var, coeff in terms)): slack
+            for terms, slack in lra.slack_rows}
 
 def boolean_formula_to_encoded_cnf(bf):
     cnf = CNF.from_prop(bf)
@@ -203,7 +213,7 @@ def test_random_problems():
         assert all(0 not in clause for clause in enc.data)
 
         lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-        s_subs = lra.s_subs
+        s_subs = slack_map(lra)
 
         lra.run_checks = True
         s_subs_rev = {value: key for key, value in s_subs.items()}
@@ -551,8 +561,9 @@ def test_example_from_paper():
     # var_y has been removed from A after the simplification
     # var_s1 is a basic variable which corresponds for -x + y <= 1
     # var_s2 is a basic variable which corresponds for -x - y <= 3
-    _s1 = lra.s_subs[-x + y]
-    _s2 = lra.s_subs[-x - y]
+    s_subs = slack_map(lra)
+    _s1 = s_subs[-x + y]
+    _s2 = s_subs[-x - y]
     var_s1 = next(v for v in lra.all_var if v.var == _s1)
     var_s2 = next(v for v in lra.all_var if v.var == _s2)
 
