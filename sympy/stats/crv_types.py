@@ -2724,7 +2724,10 @@ class LogitNormalDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         mu, s = self.mu, self.s
-        return (S.One/2)*(1 + erf((self._logit(x) - mu)/(sqrt(2*s**2))))
+        return Piecewise(
+            (S.Zero, x <= 0),
+            ((S.One/2)*(1 + erf((self._logit(x) - mu)/(sqrt(2*s**2)))), x < 1),
+            (S.One, True))
 
 
 def LogitNormal(name, mu, s):
@@ -2776,7 +2779,9 @@ def LogitNormal(name, mu, s):
     sqrt(2)*exp(-(-mu + log(z/(1 - z)))**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
 
     >>> cdf(X)(z)
-    erf(sqrt(2)*(-mu + log(z/(1 - z)))/(2*s))/2 + 1/2
+    Piecewise((0, z <= 0),
+            (erf(sqrt(2)*(-mu + log(z/(1 - z)))/(2*s))/2 + 1/2, z < 1),
+            (1, True))
 
 
     References
