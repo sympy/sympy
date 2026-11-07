@@ -26,7 +26,7 @@ from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices.dense import (Matrix, eye, ones, zeros)
 from sympy.matrices.expressions.blockmatrix import BlockMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.matrices.expressions.special import Identity
+from sympy.matrices.expressions.special import Identity, ZeroMatrix
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.contains import Contains
@@ -1606,7 +1606,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
             return None
         if isinstance(gen_mat, MatrixSymbol):
             wm = MatrixSymbol('wm', 1, gen_mat.shape[0])
-            return Lambda((wm, gen_mat), Eq(wm*gen_mat, wm))
+            return Lambda((wm, gen_mat), Eq(wm*gen_mat, ZeroMatrix(1, gen_mat.shape[1])))
         w = IndexedBase('w')
         wi = [w[i] for i in range(gen_mat.shape[0])]
         wm = Matrix([wi])
