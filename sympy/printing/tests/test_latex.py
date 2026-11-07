@@ -824,6 +824,7 @@ def test_latex_functions():
     assert latex(Mod(x, 7) + 1) == r'\left(x \bmod 7\right) + 1'
     assert latex(2 * Mod(x, 7)) == r'2 \left(x \bmod 7\right)'
     assert latex(Mod(7, 2 * x)**n) == r'\left(7 \bmod 2 x\right)^{n}'
+    assert latex(Mod(-x, 7)) == r'\left(- x\right) \bmod 7'
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
@@ -2898,6 +2899,8 @@ def test_Quaternion_latex_printing():
     assert latex(q) == r"x + y i + z j + t x k"
     q = Quaternion(x, y, z, x + t)
     assert latex(q) == r"x + y i + z j + \left(t + x\right) k"
+    q = Quaternion(x, -y, z, t)
+    assert latex(q) == r"x + \left(- y\right) i + z j + t k"
 
 
 def test_TensorProduct_printing():
