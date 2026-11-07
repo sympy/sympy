@@ -537,6 +537,8 @@ class IndependentProductPSpace(ProductPSpace):
             # XXX: Converting symbols from set to tuple. The order matters to
             # Lambda though so we shouldn't be starting with a set here...
             density = Lambda(tuple(domain.symbols), pdf)
+        else:
+            raise NotImplementedError("normalize=False is not implemented")
 
         return space(domain, density)
 
