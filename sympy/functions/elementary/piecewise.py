@@ -1,4 +1,6 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, overload
+
 from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
@@ -15,10 +17,20 @@ from sympy.utilities.misc import filldedent, func_name
 
 from itertools import product
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from collections.abc import Iterator
+
 Undefined = S.NaN  # Piecewise()
 
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
+
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Basic, Boolean]:
+            ...
 
     def __new__(cls, expr, cond):
         expr = as_Basic(expr)
@@ -38,14 +50,14 @@ class ExprCondPair(Tuple):
         return Tuple.__new__(cls, expr, cond)
 
     @property
-    def expr(self):
+    def expr(self) -> Basic:
         """
         Returns the expression of this pair.
         """
         return self.args[0]
 
     @property
-    def cond(self):
+    def cond(self) -> Boolean:
         """
         Returns the condition of this pair.
         """
@@ -55,7 +67,7 @@ class ExprCondPair(Tuple):
     def is_commutative(self):
         return self.expr.is_commutative
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Basic]:
         yield self.expr
         yield self.cond
 
@@ -129,7 +141,25 @@ class Piecewise(DefinedFunction):
     nargs = None
     is_Piecewise = True
 
-    def __new__(cls, *args, **options):
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[ExprCondPair, ...]:
+            ...
+
+    @overload
+    def __new__(  # type: ignore[misc]
+        cls, *args: tuple[Expr | complex, Boolean | bool | int],
+        evaluate: bool | None = True,
+    ) -> Expr: ...
+
+    @overload
+    def __new__(  # type: ignore[misc]
+        cls, *args: ExprCondPair | tuple[Basic | complex, Boolean | bool | int],
+        evaluate: bool | None = True,
+    ) -> Basic: ...
+
+    def __new__(cls, *args, **options) -> Basic:  # type: ignore[misc]
         if len(args) == 0:
             raise TypeError("At least one (expr, cond) pair expected.")
         # (Try to) sympify args first
@@ -989,6 +1019,14 @@ class Piecewise(DefinedFunction):
                     return
 
             return result
+
+
+@overload
+def piecewise_fold(expr: Expr, evaluate: bool | None = True) -> Expr: ...
+
+
+@overload
+def piecewise_fold(expr: Basic, evaluate: bool | None = True) -> Basic: ...
 
 
 def piecewise_fold(expr, evaluate=True):
