@@ -1751,7 +1751,8 @@ def odesimp(ode, eq, func, hint):
         # special simplification of the lhs.
         if hint.startswith("1st_homogeneous_coeff"):
             for j, eqi in enumerate(eq):
-                newi = logcombine(eqi, force=True)
+                newi = Eq(logcombine(eqi.lhs, force=True),
+                    logcombine(eqi.rhs, force=True))
                 if isinstance(newi.lhs, log) and newi.rhs == 0:
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
@@ -2090,7 +2091,11 @@ def constantsimp(expr, constants):
     expr = __remove_linear_redundancies(expr, Cs)
 
     def _conditional_term_factoring(expr):
-        new_expr = terms_gcd(expr, clear=False, deep=True, expand=False)
+        if isinstance(expr, Equality):
+            new_expr = Eq(*[terms_gcd(a, clear=False, deep=True, expand=False)
+                for a in expr.args])
+        else:
+            new_expr = terms_gcd(expr, clear=False, deep=True, expand=False)
 
         # we do not want to factor exponentials, so handle this separately
         if new_expr.is_Mul:

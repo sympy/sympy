@@ -167,7 +167,8 @@ def _simplifyconds(expr, s, a):
         return ex.replace(*args)
 
     from sympy.simplify.radsimp import collect_abs
-    expr = collect_abs(expr)
+    expr = expr.replace(lambda e: isinstance(e, Relational),
+        lambda e: e.func(collect_abs(e.lhs), collect_abs(e.rhs)))
     expr = repl(expr, Lt, replie)
     expr = repl(expr, Gt, lambda x, y: replie(y, x))
     expr = repl(expr, Unequality, replue)

@@ -59,6 +59,6 @@ def test_together():
     assert together(1/exp(2*x) + 1/(x*exp(3*x))) == (1 + exp(x)*x)/(x*exp(3*x))
 
     assert together(Integral(1/x + 1/y, x)) == Integral((x + y)/(x*y), x)
-    assert together(Eq(1/x + 1/y, 1 + 1/z)) == Eq((x + y)/(x*y), (z + 1)/z)
+    assert together(Eq(1/x + 1/y, 1 + 1/z)) == Eq(1/x + 1/y, 1 + 1/z)
 
     assert together((A*B)**-1 + (B*A)**-1) == (A*B)**-1 + (B*A)**-1
