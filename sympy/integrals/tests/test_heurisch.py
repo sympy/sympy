@@ -375,6 +375,14 @@ def test_heurisch_complex_erf_issue_26338():
     assert integrate(exp(-I*x**2/2), (x, 0, 1)) == a - I*a
 
 
+def test_heurisch_exp_factored_quadratic():
+    assert heurisch(exp(x*(-x + I)), x, hints=[]) == \
+        sqrt(pi)*exp(Rational(-1, 4))*erf(x - I/2)/2
+    assert heurisch(exp(-(x - 1)**2), x, hints=[]) == sqrt(pi)*erf(x - 1)/2
+    f = x*exp(x**2)*exp(x*(x - 1))
+    assert simplify(diff(heurisch(f, x, hints=[]), x) - f) == 0
+
+
 def test_issue_15498():
     Z0 = Function('Z0')
     k01, k10, t, s= symbols('k01 k10 t s', real=True, positive=True)
