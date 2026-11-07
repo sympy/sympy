@@ -235,3 +235,31 @@ def test_no_exponentiation():
     # if this passes, Pow.as_numer_denom should recognize
     # MatAdd as exponent
     raises(NotImplementedError, lambda: 3**(-2*C))
+
+
+def test_adjoint_conjugate_power():
+    from sympy import I, conjugate
+    from sympy.matrices.expressions.adjoint import Adjoint
+
+    X = MatrixSymbol('X', n, n)
+    z = symbols('z')
+
+    # Real powers preserve exponent unchanged
+    assert Adjoint(X**2).doit() == Adjoint(X)**2
+    assert (X**2).adjoint() == Adjoint(X)**2
+    assert (X**n).adjoint() == Adjoint(X)**n
+    assert (X**2).conjugate() == X.conjugate()**2
+    assert (X**n).conjugate() == X.conjugate()**n
+
+    # Complex powers conjugate the exponent
+    assert Adjoint(X**I).doit() == Adjoint(X)**(-I)
+    assert (X**I).adjoint() == Adjoint(X)**(-I)
+    assert (X**I).conjugate() == X.conjugate()**(-I)
+    assert (X**(2 + 3*I)).adjoint() == Adjoint(X)**(2 - 3*I)
+    assert (X**z).adjoint() == Adjoint(X)**conjugate(z)
+    assert (X**z).conjugate() == X.conjugate()**conjugate(z)
+
+    # Verification against explicit matrix evaluation
+    X_num = Matrix([[2]])
+    assert (X_num**I).adjoint() == (X**I).adjoint().subs(X, X_num).as_explicit()
+    assert (X_num**I).conjugate() == (X**I).conjugate().subs(X, X_num).as_explicit()

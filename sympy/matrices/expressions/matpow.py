@@ -92,11 +92,11 @@ class MatPow(MatrixExpr):
 
     def _eval_adjoint(self):
         base, exp = self.args
-        return MatPow(base.adjoint(), exp)
+        return MatPow(base.adjoint(), exp.conjugate())
 
     def _eval_conjugate(self):
         base, exp = self.args
-        return MatPow(base.conjugate(), exp)
+        return MatPow(base.conjugate(), exp.conjugate())
 
     def _eval_derivative(self, x):
         assert not hasattr(x, "shape")
