@@ -276,6 +276,8 @@ def mrv(e, x):
         if b1 == 1:
             return SubsSet(), b1
         if e1.has(x):
+            if isinstance(b1, exp):
+                return mrv(exp(e1*b1.exp), x)
             return mrv(exp(e1*log(b1)), x)
         else:
             s, expr = mrv(b1, x)
