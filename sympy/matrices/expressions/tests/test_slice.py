@@ -3,7 +3,7 @@ from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.abc import a, b, c, d, k, l, m, n
 from sympy.testing.pytest import raises, XFAIL
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import ceiling
 from sympy.assumptions import assuming, Q
 
 
@@ -37,9 +37,31 @@ def test_slicing():
     assert X[1:5, :].shape == (4, X.shape[1])
     assert X[:, 1:5].shape == (X.shape[0], 4)
 
-    assert X[::2, ::2].shape == (floor(n/2), floor(m/2))
+    assert X[::2, ::2].shape == (ceiling(n/2), ceiling(m/2))
     assert X[2, :] == MatrixSlice(X, 2, (0, m))
     assert X[k, :] == MatrixSlice(X, k, (0, m))
+
+    # Concrete slices with step > 1 must not truncate boundary elements
+    from sympy.matrices import Matrix
+    X5 = MatrixSymbol('X5', 5, 5)
+    assert X5[::2, ::2].shape == (3, 3)
+    M5 = Matrix(5, 5, lambda i, j: 10*i + j)
+    assert X5[::2, ::2].subs(X5, M5).as_explicit() == M5[::2, ::2]
+
+    X6 = MatrixSymbol('X6', 6, 6)
+    assert X6[::2, ::2].shape == (3, 3)
+    M6 = Matrix(6, 6, lambda i, j: 10*i + j)
+    assert X6[::2, ::2].subs(X6, M6).as_explicit() == M6[::2, ::2]
+
+    X4 = MatrixSymbol('X4', 4, 4)
+    assert X4[::2, ::2].shape == (2, 2)
+    M4 = Matrix(4, 4, lambda i, j: 10*i + j)
+    assert X4[::2, ::2].subs(X4, M4).as_explicit() == M4[::2, ::2]
+
+    X7 = MatrixSymbol('X7', 7, 7)
+    assert X7[::3, ::3].shape == (3, 3)
+    M7 = Matrix(7, 7, lambda i, j: 10*i + j)
+    assert X7[::3, ::3].subs(X7, M7).as_explicit() == M7[::3, ::3]
 
 def test_exceptions():
     X = MatrixSymbol('x', 10, 20)
