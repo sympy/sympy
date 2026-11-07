@@ -155,49 +155,48 @@ def _monotonic_sign(self):
         else:
             x = next(iter(free))
             x0 = _monotonic_sign(x)
-            n, den = self.as_numer_denom()
+            n, d = self.as_numer_denom()
 
             if x0 not in (None, _eps, -_eps) and (
-                not den.has(x)
-                or den.is_extended_positive is True
-                or den.is_extended_negative is True
+                not d.has(x)
+                or d.is_extended_positive is True
+                or d.is_extended_negative is True
             ):
-                d = self.diff(x)
+                diff = self.diff(x)
                 y = self.subs(x, x0)
 
                 if x.is_nonnegative:
-                    if d.is_positive:
+                    if diff.is_positive:
                         if y.is_positive:
                             return y
                         if y.is_zero:
                             return Dummy('nneg', nonnegative=True)
-                    elif d.is_negative:
+                    elif diff.is_negative:
                         if y.is_negative:
                             return y
                         if y.is_zero:
                             return Dummy('npos', nonpositive=True)
 
                 elif x.is_nonpositive:
-                    if d.is_positive:
+                    if diff.is_positive:
                         if y.is_negative:
                             return y
                         if y.is_zero:
                             return Dummy('npos', nonpositive=True)
-                    elif d.is_negative:
+                    elif diff.is_negative:
                         if y.is_positive:
                             return y
                         if y.is_zero:
                             return Dummy('nneg', nonnegative=True)
 
-            d = den
-            den = None
+            d_sign = None
             if n.is_number:
-                den = _monotonic_sign(d)
+                d_sign = _monotonic_sign(d)
             elif not d.is_number:
                 if _monotonic_sign(n) is not None:
-                    den = _monotonic_sign(d)
-            if den is not None and (den.is_positive or den.is_negative):
-                v = n*den
+                    d_sign = _monotonic_sign(d)
+            if d_sign is not None and (d_sign.is_positive or d_sign.is_negative):
+                v = n*d_sign
                 if v.is_positive:
                     return Dummy('pos', positive=True)
                 elif v.is_nonnegative:

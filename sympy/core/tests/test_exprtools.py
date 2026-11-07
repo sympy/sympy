@@ -552,6 +552,15 @@ def test_monotonic_sign():
     assert F(1/(2*nn - 1)) is None
     assert F(1/(4*nn - 1)) is None
 
+    p = Dummy(positive=True)
+    assert F(1/(p + 1)).is_positive is True
+    assert F(1/(p + 1) - 2).is_negative is True
+
+    pos_int = Dummy(integer=True, positive=True)
+    removable = (pos_int**2 - 1)/(pos_int - 1)
+    assert F(removable) is None
+    assert F(removable.cancel()).is_positive is True
+
 
 def test_issue_17256():
     from sympy.sets.fancysets import Range
