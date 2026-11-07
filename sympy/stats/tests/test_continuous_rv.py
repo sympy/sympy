@@ -239,7 +239,7 @@ def test_moment_generating_function():
     assert mgf == exp(b*t)*gamma(-a*t + 1)
 
     mgf = moment_generating_function(Gompertz('x', a, b))(t)
-    assert mgf == b*exp(b)*expint(t/a, b)
+    assert mgf == b*exp(b)*expint(-t/a, b)
 
     mgf = moment_generating_function(Laplace('x', a, b))(t)
     assert mgf == exp(a*t)/(-b**2*t**2 + 1)
@@ -306,8 +306,8 @@ def test_moment_generating_function():
     assert mgf.diff(t).subs(t, 0) == EulerGamma + 1
 
     mgf = moment_generating_function(Gompertz('x', 1, 1))(t)
-    assert mgf.diff(t).subs(t, 1) == -e*meijerg(((), (1, 1)),
-    ((0, 0, 0), ()), 1)
+    assert mgf.diff(t).subs(t, 1) == e*meijerg(((), (1, 1)),
+    ((0, 0, 2), ()), 1)
 
     mgf = moment_generating_function(Laplace('x', 1, 1))(t)
     assert mgf.diff(t).subs(t, 0) == 1
