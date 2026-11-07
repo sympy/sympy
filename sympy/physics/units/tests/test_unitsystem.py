@@ -3,9 +3,14 @@ from sympy.physics.units import DimensionSystem, joule, second, ampere
 
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
-from sympy.physics.units.definitions import c, kg, m, s
-from sympy.physics.units.definitions.dimension_definitions import length, time
+from sympy.physics.units.definitions import (
+    c, kg, m, s, coulomb, electronvolt, elementary_charge, farad, hbar, henry,
+    kilogram, magnetic_constant, meter, ohm, speed_of_light, vacuum_impedance,
+    vacuum_permittivity, volt)
+from sympy.physics.units.definitions.dimension_definitions import (
+    energy, length, mass, time, velocity)
 from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.systems import MKSA, SI, natural
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy.physics.units.util import convert_to
 
@@ -85,3 +90,24 @@ def test_derived_units_must_exist_in_unit_system():
             units = preferred_unit.atoms(Quantity)
             for unit in units:
                 assert unit in unit_system._units, f"Unit {unit} is not in unit system {unit_system}"
+
+
+def test_mksa():
+    assert convert_to(volt, [kilogram, meter, second, ampere], MKSA) == \
+        kilogram*meter**2/(ampere*second**3)
+    assert convert_to(farad*volt, coulomb, MKSA) == coulomb
+    for quantity, units in [
+            (vacuum_impedance, ohm), (vacuum_permittivity, farad/meter),
+            (magnetic_constant, henry/meter), (elementary_charge, coulomb)]:
+        assert convert_to(quantity, units, MKSA) == convert_to(quantity, units, SI)
+        assert convert_to(quantity, units, MKSA) != quantity
+
+
+def test_natural():
+    dimsys = natural.get_dimension_system()
+    assert natural.is_consistent
+    assert dimsys.equivalent_dims(energy, mass*velocity**2)
+    assert dimsys.equivalent_dims(length/time, velocity)
+    units = [hbar, electronvolt, speed_of_light]
+    assert abs(convert_to(joule, units, natural)/electronvolt - 6.24150907446076e+18) < 1e5
+    assert abs(convert_to(meter, units, natural)*electronvolt/(hbar*speed_of_light) - 5067730.7161564) < 1e-5
