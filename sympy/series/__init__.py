@@ -4,7 +4,7 @@ from __future__ import annotations
 from .order import Order
 from .limits import limit, Limit
 from .gruntz import gruntz
-from .series import series
+from .series import series, lagrange_inversion
 from .approximants import approximants, pade_approximant
 from .residues import residue
 from .sequences import SeqPer, SeqFormula, sequence, SeqAdd, SeqMul
@@ -17,8 +17,9 @@ EmptySequence = S.EmptySequence
 
 O = Order
 
-__all__ = ['Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'approximants',
-        'pade_approximant', 'residue', 'EmptySequence', 'SeqPer', 'SeqFormula',
-        'sequence', 'SeqAdd', 'SeqMul', 'fourier_series', 'fps', 'difference_delta',
-        'limit_seq'
-        ]
+__all__ = [
+    'Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'approximants',
+    'pade_approximant', 'residue', 'EmptySequence', 'SeqPer', 'SeqFormula',
+    'sequence', 'SeqAdd', 'SeqMul', 'fourier_series', 'fps', 'difference_delta',
+    'limit_seq', 'lagrange_inversion'
+]
