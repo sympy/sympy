@@ -1,11 +1,11 @@
 from __future__ import annotations
-from sympy.core import S, oo, diff
+from sympy.core import S, oo
 from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import im
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 
 ###############################################################################
 ############################# SINGULARITY FUNCTION ############################
@@ -199,14 +199,8 @@ class SingularityFunction(DefinedFunction):
         '''
         x, a, n = self.args
 
-        if n == -4:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), 4)
-        if n == -3:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), 3)
-        if n == -2:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), 2)
-        if n == -1:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), 1)
+        if n in (-4, -3, -2, -1):
+            return DiracDelta(x - a, -n - 1)
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a, 1)
 
