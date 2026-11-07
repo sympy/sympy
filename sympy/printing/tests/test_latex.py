@@ -264,6 +264,10 @@ def test_latex_basic():
     assert latex(Implies(Or(x,y), z)) == r"\left(x \vee y\right) \Rightarrow z"
     assert latex(Implies(z, Or(x,y))) == r"z \Rightarrow \left(x \vee y\right)"
     assert latex(~(x & y)) == r"\neg \left(x \wedge y\right)"
+    assert latex(Not(x > y, evaluate=False)) == r"\neg \left(x > y\right)"
+    assert latex(Not(Eq(x, y), evaluate=False)) == r"\neg \left(x = y\right)"
+    assert latex(Not(Contains(x, Interval(0, 1)))) == \
+        r"\neg \left(x \in \left[0, 1\right]\right)"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
     assert latex(x & y, symbol_names={x: "x_i", y: "y_i"}) == \

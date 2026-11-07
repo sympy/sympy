@@ -7083,6 +7083,12 @@ def test_pretty_SymmetricDifference():
 def test_pretty_Contains():
     assert pretty(Contains(x, S.Integers)) == 'Contains(x, Integers)'
     assert upretty(Contains(x, S.Integers)) == 'x ∈ ℤ'
+    assert upretty(Not(Contains(x, S.Integers))) == '¬(x ∈ ℤ)'
+
+
+def test_pretty_Not_Relational():
+    assert upretty(Not(x > y, evaluate=False)) == '¬(x > y)'
+    assert upretty(Not(Eq(x, y), evaluate=False)) == '¬(x = y)'
 
 
 def test_issue_8292():
