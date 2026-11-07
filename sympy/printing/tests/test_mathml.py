@@ -1269,6 +1269,34 @@ def test_mat_delim_print():
         '<mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable>'
 
 
+def test_inv_trig_style_print():
+    assert mathml(asin(x), printer='presentation') == \
+        '<mrow><mi>arcsin</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
+    assert mathml(asin(x), printer='presentation', inv_trig_style='full') == \
+        '<mrow><mi>arcsin</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
+    assert mathml(asin(x), printer='presentation', inv_trig_style='abbreviated') == \
+        '<mrow><mi>asin</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
+    assert mathml(asin(x), printer='presentation', inv_trig_style='power') == \
+        '<mrow><msup><mi>sin</mi><mo>-1</mo></msup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
+    assert mathml(asinh(x), printer='presentation', inv_trig_style='full') == \
+        '<mrow><mi>arcsinh</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
+    assert mathml(asinh(x), printer='presentation', inv_trig_style='abbreviated') == \
+        '<mrow><mi>asinh</mi><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
+    assert mathml(asinh(x), printer='presentation', inv_trig_style='power') == \
+        '<mrow><msup><mi>sinh</mi><mo>-1</mo></msup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow>'
+
+
+def test_symbol_names_print():
+    theta = Symbol('theta')
+    assert mathml(theta, printer='presentation') == '<mi>&#952;</mi>'
+    assert mathml(theta, printer='presentation', symbol_names={theta: 'x_1'}) == \
+        '<msub><mi>x</mi><mi>1</mi></msub>'
+    assert mathml(theta + 1, printer='presentation', symbol_names={theta: 'x_1'}) == \
+        '<mrow><msub><mi>x</mi><mi>1</mi></msub><mo>+</mo><mn>1</mn></mrow>'
+    assert mathml(theta, printer='content', symbol_names={theta: 'x_1'}) == \
+        '<ci><mml:msub><mml:mi>x</mml:mi><mml:mi>1</mml:mi></mml:msub></ci>'
+
+
 def test_ln_notation_print():
     expr = log(x)
     assert mathml(expr, printer='presentation') == \

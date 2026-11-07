@@ -28,7 +28,7 @@ class MathMLPrinterBase(Printer):
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
-        "inv_trig_style": "abbreviated",
+        "inv_trig_style": "full",
         "ln_notation": False,
         "long_frac_ratio": None,
         "mat_delim": "[",
@@ -353,6 +353,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
         return self._print_Integral(e)
 
     def _print_Symbol(self, sym):
+        sym_name = self._settings['symbol_names'].get(sym, sym.name)
         ci = self.dom.createElement(self.mathml_tag(sym))
 
         def join(items):
@@ -379,7 +380,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
             else:
                 return s
 
-        name, supers, subs = self._split_super_sub(sym.name)
+        name, supers, subs = self._split_super_sub(sym_name)
         name = translate(name)
         supers = [translate(sup) for sup in supers]
         subs = [translate(sub) for sub in subs]
@@ -979,6 +980,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_Symbol(self, sym, style='plain'):
+        sym_name = self._settings['symbol_names'].get(sym, sym.name)
+
         def join(items):
             if len(items) > 1:
                 mrow = self.dom.createElement('mrow')
@@ -1003,7 +1006,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             else:
                 return s
 
-        name, supers, subs = self._split_super_sub(sym.name)
+        name, supers, subs = self._split_super_sub(sym_name)
         name = translate(name)
         supers = [translate(sup) for sup in supers]
         subs = [translate(sub) for sub in subs]
@@ -1190,10 +1193,41 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mrow
 
     def _print_Function(self, e):
-        x = self.dom.createElement('mi')
-        if self.mathml_tag(e) == 'log' and self._settings["ln_notation"]:
+        inv_trig_table = [
+            "asin", "acos", "atan",
+            "acsc", "asec", "acot",
+            "asinh", "acosh", "atanh",
+            "acsch", "asech", "acoth",
+        ]
+        func_name = e.func.__name__
+        inv_trig_style = self._settings.get("inv_trig_style", "abbreviated")
+
+        if func_name in inv_trig_table:
+            if inv_trig_style == "abbreviated":
+                name = func_name
+                x = self.dom.createElement('mi')
+                x.appendChild(self.dom.createTextNode(name))
+            elif inv_trig_style == "full":
+                name = "arc" + func_name[1:]
+                x = self.dom.createElement('mi')
+                x.appendChild(self.dom.createTextNode(name))
+            elif inv_trig_style == "power":
+                base_name = func_name[1:]
+                mi = self.dom.createElement('mi')
+                mi.appendChild(self.dom.createTextNode(base_name))
+                mo = self.dom.createElement('mo')
+                mo.appendChild(self.dom.createTextNode('-1'))
+                x = self.dom.createElement('msup')
+                x.appendChild(mi)
+                x.appendChild(mo)
+            else:
+                x = self.dom.createElement('mi')
+                x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
+        elif self.mathml_tag(e) == 'log' and self._settings["ln_notation"]:
+            x = self.dom.createElement('mi')
             x.appendChild(self.dom.createTextNode('ln'))
         else:
+            x = self.dom.createElement('mi')
             x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow = self.dom.createElement('mrow')
         mrow.appendChild(x)
