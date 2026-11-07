@@ -21,10 +21,9 @@ def minisat22_satisfiable(expr, all_models=False, minimal=False):
     if minimal:
         r.set_phases([-(i+1) for i in range(r.nof_vars())])
 
-    if not r.solve():
-        return False
-
     if not all_models:
+        if not r.solve():
+            return False
         res = {expr.symbols[abs(lit) - 1]: lit > 0 for lit in r.get_model()}
         return {True: True} if res == {} else res
 
@@ -43,6 +42,5 @@ def minisat22_satisfiable(expr, all_models=False, minimal=False):
                 satisfiable = True
             if not satisfiable:
                 yield False
-            raise StopIteration
 
         return _gen(r)
