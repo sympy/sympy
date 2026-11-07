@@ -1650,6 +1650,48 @@ def _rewrite2(f, x):
                 return fac, po, g1[0], g2[0], cond
 
 
+def _antiderivative_passes(res, f, x, a):
+    """Cheaply check that ``res`` is an antiderivative of ``f``.
+
+    The G-function antiderivatives produced by this module are only valid
+    on the branch of the argument on which they were derived; after
+    back-substitution the closed forms can fail to differentiate back to
+    the integrand (hyperexpand may pick a closed form on the wrong sheet,
+    see issue #30404).  This test evaluates the derivative of ``res``
+    minus ``f`` at a few generic points around the splitting point ``a``
+    and rejects ``res`` if the difference is numerically non-zero.
+
+    The test is conservative: results depending on free symbols other than
+    ``x``, results whose branches contain unevaluated G-functions, and
+    points at which the expressions do not evaluate to finite numbers are
+    all treated as inconclusive and the result is kept.
+    """
+    if res.free_symbols - {x} or f.free_symbols - {x}:
+        return True
+    try:
+        resd = res.diff(x) - f
+        for point in (a - Rational(5, 2), a - Rational(1, 3),
+                      a + Rational(1, 3), a + Rational(5, 2)):
+            d = resd.subs(x, point).evalf(30, chop=True)
+            fv = f.subs(x, point).evalf(30, chop=True)
+            if not d.is_number or not fv.is_number:
+                continue
+            if d.has(S.NaN, S.ComplexInfinity, S.Infinity,
+                     S.NegativeInfinity):
+                continue
+            if fv.has(S.NaN, S.ComplexInfinity, S.Infinity,
+                      S.NegativeInfinity):
+                continue
+            if abs(complex(d)) > 1e-9*(1 + abs(complex(fv))):
+                _debugf('Antiderivative %s does not differentiate back to '
+                        '%s: difference is %s at %s.', (res, f, d, point))
+                return False
+    except (ValueError, ZeroDivisionError, TypeError):
+        # cannot check; do not reject
+        pass
+    return True
+
+
 def meijerint_indefinite(f, x):
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.
@@ -1670,6 +1712,10 @@ def meijerint_indefinite(f, x):
         if not res:
             continue
         res = res.subs(x, x - a)
+        if not _antiderivative_passes(res, f, x, a):
+            _debug('Discarding antiderivative obtained around x = %s: '
+                   'it does not differentiate back to the integrand.', a)
+            continue
         if _has(res, hyper, meijerg):
             results.append(res)
         else:
