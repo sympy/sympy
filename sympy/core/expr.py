@@ -685,6 +685,8 @@ class Expr(Basic, EvalfMixin):
         True
         """
 
+        from sympy.functions.elementary.complexes import Abs
+
         simplify = flags.get('simplify', True)
 
         if self.is_number:
@@ -714,39 +716,189 @@ class Expr(Basic, EvalfMixin):
         # Don't attempt substitution or differentiation with non-number symbols
         wrt_number = {sym for sym in wrt if sym.kind is NumberKind}
 
+        # substitute symbols that are known to be zero
+        num_expr = expr.subs({f: S.Zero for f in wrt_number if f.is_zero}, simultaneous=True)
+        num_free = {f for f in wrt_number if f.is_zero is not True}
+
         # try numerical evaluation to see if we get two different values
         failing_number = None
-        if wrt_number == free:
-            # try 0 (for a) and 1 (for b)
-            try:
-                a = expr.subs(list(zip(free, [0]*len(free))),
-                    simultaneous=True)
-                if a is S.NaN:
-                    # evaluation may succeed when substitution fails
-                    a = expr._random(None, 0, 0, 0, 0)
-            except ZeroDivisionError:
-                a = None
-            if a is not None and a is not S.NaN:
+        if wrt_number == free and (len(num_free) > 0) and all(sym.is_finite is not False for sym in num_free):
+
+            # TRY FORMAL SUBTITUTION S.Zero, S.One, -S.One
+            # They are tried only if they comply assumptions
+
+            # Try S.Zero
+            a = S.NaN
+            if all(sym.is_zero is not False for sym in num_free):
                 try:
-                    b = expr.subs(list(zip(free, [1]*len(free))),
-                        simultaneous=True)
-                    if b is S.NaN:
-                        # evaluation may succeed when substitution fails
-                        b = expr._random(None, 1, 0, 1, 0)
+                    subs = dict.fromkeys(num_free, S.Zero)
+                    a = num_expr.subs(subs, simultaneous=True)
                 except ZeroDivisionError:
-                    b = None
-                if b is not None and b is not S.NaN and b.equals(a) is False:
-                    return False
-                # try random real
-                b = expr._random(None, -1, 0, 1, 0)
-                if b is not None and b is not S.NaN and b.equals(a) is False:
-                    return False
-                # try random complex
-                b = expr._random()
-                if b is not None and b is not S.NaN:
-                    if b.equals(a) is False:
-                        return False
-                    failing_number = a if a.is_number else b
+                    a = S.NaN
+                except ValueError:
+                    a = S.NaN
+            if a is None: a = S.NaN
+
+            # Try S.One
+            b = S.NaN
+            if all(sym.is_positive is not False for sym in num_free):
+                try:
+                    subs = dict.fromkeys(num_free, S.One)
+                    b = num_expr.subs(subs, simultaneous=True)
+                except ZeroDivisionError:
+                    b = S.NaN
+                except ValueError:
+                    a = S.NaN
+                if b is None: b = S.NaN
+                if (b is not S.NaN):
+                    if (a is not S.NaN):
+                        if b.equals(a) is False:
+                            return False
+                        failing_number = b if b.is_number else a
+
+            # Try -S.One
+            c = S.NaN
+            if all(sym.is_negative is not False for sym in num_free):
+                try:
+                    subs = dict.fromkeys(num_free, -S.One)
+                    c = num_expr.subs(subs, simultaneous=True)
+                except ZeroDivisionError:
+                    c = S.NaN
+                except ValueError:
+                    a = S.NaN
+                if c is None: c = S.NaN
+                if (c is not S.NaN):
+                    if (a is not S.NaN):
+                        if c.equals(a) is False:
+                            return False
+                        failing_number = c if c.is_number else a
+                    if (b is not S.NaN):
+                        if c.equals(b) is False:
+                            return False
+                        failing_number = c if c.is_number else b
+
+
+            # TRY APROXIMATE SUBTITUTION 0.0, 1.0, -1.0, random real,
+            # random complex.
+            # They are tried only if they comply assumptions.
+            # Cauton: Use low precision evaluation, i.e. 12 to avoid false
+            # negative, because the test is conclusive if result is NOT equals.
+
+            # Try 0.0
+            a = S.NaN
+            if all(sym.is_zero is not False for sym in num_free):
+                try:
+                    subs = dict.fromkeys(num_free, 0.0)
+                    a = num_expr.evalf(12, subs=subs)
+                except ZeroDivisionError:
+                    a = S.NaN
+                except ValueError:
+                    a = S.NaN
+            if a is None: a = S.NaN
+
+            # Try 1.0
+            b = S.NaN
+            if all(sym.is_positive is not False for sym in num_free):
+                try:
+                    subs = dict.fromkeys(num_free, 1.0)
+                    b = num_expr.evalf(12, subs=subs)
+                except ZeroDivisionError:
+                    b = S.NaN
+                except ValueError:
+                    a = S.NaN
+
+                if b is None: b = S.NaN
+                if (b is not S.NaN):
+                    if (a is not S.NaN):
+                        delta = Abs(b - a)
+                        if delta.is_number and delta > 1e-12:
+                            return False
+                        failing_number = b if b.is_number else a
+
+            # Try -1.0
+            c = S.NaN
+            if all(sym.is_negative is not False for sym in num_free):
+                try:
+                    subs = dict.fromkeys(num_free, -1.0)
+                    c = num_expr.evalf(12, subs=subs)
+                except ZeroDivisionError:
+                    c = S.NaN
+                except ValueError:
+                    a = S.NaN
+
+                if c is None: c = S.NaN
+                if (c is not S.NaN):
+                    if (a is not S.NaN):
+                        delta = Abs(c - a)
+                        if delta.is_number and delta > 1e-12:
+                            return False
+                        failing_number = c if c.is_number else a
+                    if (b is not S.NaN):
+                        delta = Abs(c - b)
+                        if delta.is_number and delta > 1e-12:
+                            return False
+                        failing_number = c if c.is_number else b
+
+            # Try real
+            d = S.NaN
+            if all(sym.is_real is not False for sym in num_free):
+                try:
+                    d = num_expr._random(12, -1.0, 0.0, 1.0, 0.0)
+                except ZeroDivisionError:
+                    d = S.NaN
+                except ValueError:
+                    a = S.NaN
+
+                if d is None: d = S.NaN
+                if (d is not S.NaN):
+                    if (a is not S.NaN):
+                        delta = Abs(d - a)
+                        if delta.is_number and delta > 1e-12:
+                            return False
+                        failing_number = d if d.is_number else a
+                    if (b is not S.NaN):
+                        delta = Abs(d - b)
+                        if delta.is_number and delta > 1e-12:
+                            return False
+                        failing_number = d if d.is_number else b
+                    if (c is not S.NaN):
+                        delta = Abs(d - c)
+                        if delta.is_number and delta > 1e-12:
+                            return False
+                        failing_number = d if d.is_number else c
+
+            # Try complex
+            e = S.NaN
+            if all(sym.is_complex is not False for sym in num_free):
+                try:
+                    e = num_expr._random(12, -1.0, -1.0, 1.0, 1.0)
+                except ZeroDivisionError:
+                    e = S.NaN
+                except ValueError:
+                    a = S.NaN
+
+                if e is None: e = S.NaN
+                if (e is not S.NaN):
+                    if (a is not S.NaN):
+                        delta = Abs(e - a)
+                        if delta.is_number and delta > 1e-12:
+                            return False
+                        failing_number = e if e.is_number else a
+                    if (b is not S.NaN):
+                        delta = Abs(e - b)
+                        if delta.is_number and delta > 1e-12:
+                            return False
+                        failing_number = e if e.is_number else b
+                    if (c is not S.NaN):
+                        delta = Abs(e - c)
+                        if delta.is_number and delta > 1e-12:
+                            return False
+                        failing_number = e if e.is_number else c
+                    if (d is not S.NaN):
+                        delta = Abs(e - d)
+                        if delta.is_number and delta > 1e-12:
+                            return False
+                        failing_number = e if e.is_number else d
 
         # now we will test each wrt symbol (or all free symbols) to see if the
         # expression depends on them or not using differentiation. This is
