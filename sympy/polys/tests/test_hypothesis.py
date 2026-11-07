@@ -21,7 +21,7 @@ from sympy.polys.densearith import (
 )
 from sympy.polys.rings import ring
 from sympy.polys.sparsetools import smp_mul
-from sympy.polys.zippel import smp_zippel_gcd
+from sympy.polys.zippel import _smp_zippel_gcd
 from sympy.testing.pytest import slow
 
 
@@ -321,7 +321,7 @@ def test_smp_zippel_gcd(case, random_state):
     except HeuristicGCDFailed:
         reject()
 
-    gcd, cff, cfg = smp_zippel_gcd(f, g, n)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, n)
 
     expected = _normalize_gcd_result(expected)
 
@@ -351,7 +351,7 @@ def test_smp_zippel_gcd_independent(case, random_state):
     except HeuristicGCDFailed:
         reject()
 
-    gcd, cff, cfg = smp_zippel_gcd(f, g, n)
+    gcd, cff, cfg = _smp_zippel_gcd(f, g, n)
 
     expected = _normalize_gcd_result(expected)
     result = _normalize_gcd_result((R(gcd), R(cff), R(cfg)))
@@ -381,7 +381,7 @@ def test_smp_zippel_gcd_monic(case, random_state):
 
     f = smp_mul(a, h, ZZ, n)
     g = smp_mul(b, h, ZZ, n)
-    gcd, _, _ = smp_zippel_gcd(f, g, n)
+    gcd, _, _ = _smp_zippel_gcd(f, g, n)
     assert gcd == h
 
 
@@ -408,7 +408,7 @@ def test_smp_zippel_gcd_pseudomonic(case, random_state):
 
     f = smp_mul(a, h, ZZ, n)
     g = smp_mul(b, h, ZZ, n)
-    gcd, _, _ = smp_zippel_gcd(f, g, n)
+    gcd, _, _ = _smp_zippel_gcd(f, g, n)
     assert gcd == h
 
 
@@ -436,5 +436,5 @@ def test_smp_zippel_gcd_not_monic(case, random_state):
 
     f = smp_mul(a, h, ZZ, n)
     g = smp_mul(b, h, ZZ, n)
-    gcd, _, _ = smp_zippel_gcd(f, g, n)
+    gcd, _, _ = _smp_zippel_gcd(f, g, n)
     assert gcd == h
