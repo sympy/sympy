@@ -164,6 +164,20 @@ def test_piecewise2():
     assert limit(func3, x, -1) == 2
 
 
+def test_piecewise_boundary_condition():
+    # https://github.com/sympy/sympy/issues/29835
+    # A boundary condition such as ``y <= 0`` holds at 0 but not just to the
+    # right of it, so the right-hand limit must use the other piece.
+    f = Piecewise((0, y <= 0), (-6/y**2, True))
+    assert limit(f, y, 0, "+") is -oo
+    assert limit(f, y, 0, "-") == 0
+    assert limit(f, y, 0) is -oo
+    # ``<`` already worked; check both forms now agree
+    g = Piecewise((0, y < 0), (-6/y**2, True))
+    assert limit(g, y, 0, "+") is -oo
+    assert limit(g, y, 0, "-") == 0
+
+
 def test_basic5():
     class my(Function):
         @classmethod
