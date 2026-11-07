@@ -699,6 +699,43 @@ def test_piecewise_fold_piecewise_in_cond_2():
     assert(piecewise_fold(p2) == p3)
 
 
+def test_piecewise_fold_nan_inequality():
+    # Issue #28331: piecewise_fold should not crash when folding
+    # ordering relationals into Piecewise branches containing NaN.
+
+    p = Piecewise((x, x > 0), (Undefined, True))
+
+    # Ordering relationals: NaN branches become Undefined
+    assert piecewise_fold(p > 0) == Piecewise(
+        (x > 0, x > 0), (Undefined, True))
+    assert piecewise_fold(p < 5) == Piecewise(
+        (x < 5, x > 0), (Undefined, True))
+    assert piecewise_fold(p >= 0) == Piecewise(
+        (x >= 0, x > 0), (Undefined, True))
+    assert piecewise_fold(p <= 3) == Piecewise(
+        (x <= 3, x > 0), (Undefined, True))
+
+    # Eq/Ne handle NaN natively - should not be affected
+    assert piecewise_fold(Eq(p, 1)) == Piecewise(
+        (Eq(x, 1), x > 0), (False, True))
+    assert piecewise_fold(Ne(p, 0)) == Piecewise(
+        (Ne(x, 0), x > 0), (True, True))
+
+    # Substitution: defined branch evaluates, undefined stays NaN
+    folded = piecewise_fold(p > 0)
+    assert folded.subs(x, 2) == True
+    assert folded.subs(x, -1) == Undefined
+
+    # Used as condition in ExprCondPair: Undefined -> False
+    p2 = Piecewise((1, p > 0), (0, True))
+    assert p2.subs(x, 2) == 1
+    assert p2.subs(x, -1) == 0
+
+    # Arithmetic fold with NaN still propagates NaN (unchanged behavior)
+    assert piecewise_fold(p + 1) == Piecewise(
+        (x + 1, x > 0), (Undefined, True))
+
+
 def test_piecewise_fold_expand():
     p1 = Piecewise((1, Interval(0, 1, False, True).contains(x)), (0, True))
 
