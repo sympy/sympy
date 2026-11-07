@@ -318,9 +318,7 @@ def _(expr, assumptions):
     if expr.base == E:
         if _ask_recursive(Q.real(expr.exp), assumptions):
             return True
-        if _ask_recursive(Q.imaginary(expr.exp), assumptions):
-            return _ask_recursive(Q.even(expr.exp/(I*pi)), assumptions)
-        return
+        return _ask_recursive(Q.even(expr.exp/(I*pi)), assumptions)
 
     if expr.is_number:
         return _PositivePredicate_number(expr, assumptions)
@@ -341,8 +339,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if _ask_recursive(Q.real(expr.exp), assumptions):
         return True
-    if _ask_recursive(Q.imaginary(expr.exp), assumptions):
-        return _ask_recursive(Q.even(expr.exp/(I*pi)), assumptions)
+    return _ask_recursive(Q.even(expr.exp/(I*pi)), assumptions)
 
 @PositivePredicate.register(log)
 def _(expr, assumptions):
