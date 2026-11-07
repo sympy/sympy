@@ -1609,6 +1609,8 @@ def test_latex_Piecewise():
     assert latex(Piecewise((x, x < 1), (x**2, x < 2))) == \
         r'\begin{cases} x & ' \
         r'\text{for}\: x < 1 \\x^{2} & \text{for}\: x < 2 \end{cases}'
+    assert latex(Pow(Piecewise((x, x > 0), (0, True)), 2, evaluate=False)) == \
+        r"\left(\begin{cases} x & \text{for}\: x > 0 \\0 & \text{otherwise} \end{cases}\right)^{2}"
 
 
 def test_latex_Matrix():
@@ -2050,6 +2052,15 @@ def test_integral_transforms():
         r"\mathcal{SIN}_{x}\left[f{\left(x \right)}\right]\left(k\right)"
     assert latex(InverseSineTransform(f(k), k, x)) == \
         r"\mathcal{SIN}^{-1}_{k}\left[f{\left(k \right)}\right]\left(x\right)"
+
+    assert latex(LaplaceTransform(f(x), x, k)**2) == \
+        r"\left(\mathcal{L}_{x}\left[f{\left(x \right)}\right]\left(k\right)\right)^{2}"
+    assert latex(FourierTransform(f(x), x, k)**2) == \
+        r"\left(\mathcal{F}_{x}\left[f{\left(x \right)}\right]\left(k\right)\right)^{2}"
+    assert latex(MellinTransform(f(x), x, k)**3) == \
+        r"\left(\mathcal{M}_{x}\left[f{\left(x \right)}\right]\left(k\right)\right)^{3}"
+    assert latex(InverseLaplaceTransform(f(k), k, x, (a, b))**2) == \
+        r"\left(\mathcal{L}^{-1}_{k}\left[f{\left(k \right)}\right]\left(x\right)\right)^{2}"
 
 
 def test_PolynomialRingBase():
