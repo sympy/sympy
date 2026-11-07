@@ -19,6 +19,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import Min
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import tan, sin, cot, csc
 from sympy.functions.special.hyper import hyper
@@ -1306,10 +1307,22 @@ def _eval_sum_hyper(f, i, a):
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
 
     if f.subs(i, 0) == 0:
-        from sympy.simplify.simplify import simplify
+        from sympy.simplify.simplify import hypersimp, simplify
+        hs = hypersimp(f, i)
+        if hs is not None:
+            denominator = Poly(hs.as_numer_denom()[1], i)
+            poles = denominator.ground_roots()
+            possible = [p for p in poles if p.is_integer is not False
+                        and p.is_nonnegative is not False]
+            # Account for every pole before skipping a zero prefix.
+            if (possible and sum(poles.values()) == denominator.degree()
+                    and all(p.is_integer and p.is_nonnegative for p in possible)):
+                start = Min(*possible) + 1
+                if not f.subs(i, start).has(*_illegal):
+                    return _eval_sum_hyper(f.subs(i, i + start), i, 0)
         if simplify(f.subs(i, Dummy('i', integer=True, positive=True))) == 0:
             return S.Zero, True
-        return _eval_sum_hyper(f.subs(i, i + 1), i, 0)
+        return None
 
     from sympy.simplify.simplify import hypersimp
     hs = hypersimp(f, i)

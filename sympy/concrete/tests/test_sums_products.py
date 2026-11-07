@@ -4,7 +4,7 @@ from math import prod
 from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.concrete.products import (Product, product)
 from sympy.concrete.summations import (Sum, summation, telescopic,
-     eval_sum_residue, _dummy_with_inherited_properties_concrete)
+     eval_sum_residue, _dummy_with_inherited_properties_concrete, _eval_sum_hyper)
 from sympy.core.function import (Derivative, Function)
 from sympy.core import (Catalan, EulerGamma)
 from sympy.core.facts import InconsistentAssumptions
@@ -721,6 +721,24 @@ def test_hypersum():
 
     m = Symbol('n', integer=True, positive=True)
     assert summation(binomial(m, k), (k, 0, m)) == 2**m
+
+
+def test_hypersum_zero_prefix():
+    j, a = symbols('j a', real=True)
+    tail = (j + a + 1)**2/(gamma(-j)*gamma(j + a + 1))
+    assert _eval_sum_hyper(tail, j, 0) is None
+    assert _eval_sum_hyper(binomial(j, 5)/2**j, j, 0) == (2, True)
+    assert _eval_sum_hyper(j/2**j, j, 0) == (2, True)
+    assert Sum(tail, (j, 0, oo)).doit() == Sum(tail, (j, 0, oo))
+    n = Symbol('n', integer=True, positive=True)
+    assert simplify(Sum(binomial(j, n)/2**j, (j, 0, oo)).doit()) == 2
+    assert Sum(binomial(j, 100)/2**j, (j, 0, oo)).doit() == 2
+    assert Sum(binomial(3, j), (j, 4, oo)).doit() == 0
+    assert Sum(binomial(j, 5)/2**j, (j, 0, 4)).doit() == 0
+    assert Sum(binomial(j, 5)/2**j, (j, 0, 5)).doit() == Rational(1, 32)
+    assert _eval_sum_hyper(j/(2**j*(j - a)), j, 0) is None
+    assert _eval_sum_hyper(j/(2**j*(j**2 - 2)), j, 0) is None
+    assert _eval_sum_hyper(binomial(j, 5)/(2**j*(j - 3)), j, 0) is None
 
 
 def test_issue_4170():
