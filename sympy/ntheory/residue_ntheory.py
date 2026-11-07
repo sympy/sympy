@@ -21,7 +21,7 @@ from sympy.core.random import _randint
 from itertools import product
 
 
-def n_order(a, n):
+def n_order(a, n, n_factors=None):
     r""" Returns the order of ``a`` modulo ``n``.
 
     Explanation
@@ -75,7 +75,9 @@ def n_order(a, n):
     if gcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
     a_order = 1
-    for p, e in factorint(n).items():
+    if n_factors is None:
+        n_factors = factorint(n)
+    for p, e in n_factors.items():
         pe = p**e
         pe_order = (p - 1) * p**(e - 1)
         factors = factorint(p - 1)
