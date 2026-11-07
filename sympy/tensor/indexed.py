@@ -677,8 +677,12 @@ class Idx(Expr):
             args = label,
 
         obj = Expr.__new__(cls, *args, **kw_args)
-        obj._assumptions["finite"] = True
-        obj._assumptions["real"] = True
+        assumptions = obj._assumptions.copy()
+        assumptions.deduce_all_facts((
+            ("finite", True),
+            ("real", True),
+        ))
+        obj._assumptions = assumptions
         return obj
 
     @property
