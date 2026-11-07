@@ -496,7 +496,8 @@ def test_TensorSymmetry():
         TensorSymmetry.no_symmetry(3)
     assert TensorSymmetry(get_symmetric_group_sgs(2)) == \
         TensorSymmetry(*get_symmetric_group_sgs(2))
-    # TODO: add check for *get_symmetric_group_sgs(0)
+    assert TensorSymmetry.fully_symmetric(0) == \
+        TensorSymmetry(*get_symmetric_group_sgs(0))
     sym = TensorSymmetry.fully_symmetric(-3)
     assert sym.rank == 3
     assert sym.base == Tuple(0, 1)

@@ -1649,6 +1649,12 @@ def test_issue_14470():
     assert integrate(1/sqrt(exp(x) + 1), x) == log(sqrt(exp(x) + 1) - 1) - log(sqrt(exp(x) + 1) + 1)
 
 
+@slow
+def test_issue_14716():
+    assert integrate(log(x + 5)*cos(pi*x), (x, S.Half, 1)) == \
+        -log(Rational(11, 2))/pi - Si(pi*Rational(11, 2))/pi + Si(6*pi)/pi
+
+
 def test_issue_14877():
     f = exp(1 - exp(x**2)*x + 2*x**2)*(2*x**3 + x)/(1 - exp(x**2)*x)**2
     assert integrate(f, x) == \
@@ -1821,6 +1827,11 @@ def test_li_integral():
     assert Integral(li(y*x**2), x).doit() == Piecewise((x*li(x**2*y) - \
         x*Ei(3*log(x**2*y)/2)/sqrt(x**2*y),
         Ne(y, 0)), (0, True))
+
+
+def test_issue_16396a():
+    i = integrate(1/(1+sqrt(tan(x))), (x, pi/3, pi/6))
+    assert not i.has(Integral)
 
 
 def test_issue_17473():
@@ -2389,6 +2400,14 @@ def test_issue_29637():
     F = integrate(f, x)
     assert not F.has(Integral)
     assert (F.diff(x) - f).cancel() == 0
+
+
+def test_issue_21041():
+    # https://github.com/sympy/sympy/issues/21041
+    F = integrate(sin(2*x)*exp(-x**2), (x, 0, oo))
+    assert F == -I*sqrt(pi)*exp(-1)*erf(I)/2
+    assert F.rewrite(erfi) == sqrt(pi)*exp(-1)*erfi(1)/2
+
 
 def test_reverse_limits():
     x, y, a, b, c, d = symbols('x y a b c d')

@@ -9,7 +9,7 @@ from sympy.external.mpmath import prec_to_dps
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan2, sinc)
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.integrals.integrals import integrate
@@ -1002,20 +1002,28 @@ class Quaternion(Expr):
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.exp()
         E*cos(sqrt(29))
-        + 2*sqrt(29)*E*sin(sqrt(29))/29*i
-        + 3*sqrt(29)*E*sin(sqrt(29))/29*j
-        + 4*sqrt(29)*E*sin(sqrt(29))/29*k
+        + 2*E*sinc(sqrt(29))*i
+        + 3*E*sinc(sqrt(29))*j
+        + 4*E*sinc(sqrt(29))*k
 
         """
         # exp(q) = e^a(cos||v|| + v/||v||*sin||v||)
         q = self
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         a = exp(q.a) * cos(vector_norm)
-        b = exp(q.a) * sin(vector_norm) * q.b / vector_norm
-        c = exp(q.a) * sin(vector_norm) * q.c / vector_norm
-        d = exp(q.a) * sin(vector_norm) * q.d / vector_norm
 
-        return Quaternion(a, b, c, d)
+        # Handle purely real quaternions to avoid division by zero
+        if vector_norm.is_zero:
+            return Quaternion(a, a*q.b, a*q.c, a*q.d,
+                real_field=q.real_field)
+
+        a = exp(q.a)
+        scale = a*sinc(vector_norm)
+
+        return Quaternion(
+            a*cos(vector_norm),
+            scale*q.b, scale*q.c, scale*q.d,
+            real_field=q.real_field)
 
     def log(self):
         r"""Returns the logarithm of the quaternion, given by $\log q$.

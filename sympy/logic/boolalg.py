@@ -3533,13 +3533,13 @@ def simplify_univariate(expr):
             if b is S.Infinity:
                 c = true
             else:
-                if c.subs(x, b) == True:
+                if expr.subs(x, b) == True:
                     c = (x <= b)
                 else:
                     c = (x < b)
         else:
-            incl_a = (c.subs(x, a) == True)
-            incl_b = (c.subs(x, b) == True)
+            incl_a = (expr.subs(x, a) == True)
+            incl_b = (expr.subs(x, b) == True)
             if incl_a and incl_b:
                 if b.is_infinite:
                     c = (x >= a)

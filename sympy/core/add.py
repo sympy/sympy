@@ -37,6 +37,25 @@ def _could_extract_minus_sign(expr):
     return bool(expr.sort_key() < (-expr).sort_key())
 
 
+def _ca_terms(expr):
+    # return (c, a) where expr = c + a and c is a
+    # Symbol-free real number
+    if not expr.is_Add:
+        return S.Zero, expr
+    num, other = sift(
+        expr.args,
+        lambda x: (
+            x.is_number
+            and x.is_extended_real is True
+            and not any(t.is_Symbol for t in x.atoms())
+        ),
+        binary=True,
+    )
+    c = expr._new_rawargs(*num)
+    a = expr._new_rawargs(*other)
+    return c, a
+
+
 def _addsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -778,7 +797,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_positive(self):
         if self.is_number:
             return super()._eval_is_extended_positive()
-        c, a = self.as_coeff_Add()
+        c, a = _ca_terms(self)
         if not c.is_zero:
             from .exprtools import _monotonic_sign
             v = _monotonic_sign(a)
@@ -829,38 +848,49 @@ class Add(Expr, AssocOp):
 
     def _eval_is_extended_nonnegative(self):
         if not self.is_number:
-            c, a = self.as_coeff_Add()
+            from .exprtools import _monotonic_sign
+            c, a = _ca_terms(self)
             if not c.is_zero and a.is_extended_nonnegative:
-                from .exprtools import _monotonic_sign
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
                     if s != self and s.is_extended_nonnegative:
                         return True
-                    if len(self.free_symbols) == 1:
-                        v = _monotonic_sign(self)
-                        if v is not None and v != self and v.is_extended_nonnegative:
-                            return True
+
+            elif (
+                c.is_positive
+                and a.is_extended_negative
+                and len(self.free_symbols) == 1
+            ):
+                v = _monotonic_sign(self)
+                if v is not None and v != self and v.is_extended_nonnegative:
+                    return True
 
     def _eval_is_extended_nonpositive(self):
         if not self.is_number:
-            c, a = self.as_coeff_Add()
+            from .exprtools import _monotonic_sign
+            c, a = _ca_terms(self)
             if not c.is_zero and a.is_extended_nonpositive:
-                from .exprtools import _monotonic_sign
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
                     if s != self and s.is_extended_nonpositive:
                         return True
-                    if len(self.free_symbols) == 1:
-                        v = _monotonic_sign(self)
-                        if v is not None and v != self and v.is_extended_nonpositive:
-                            return True
+
+            elif (
+                c.is_negative
+                and a.is_extended_positive
+                and len(self.free_symbols) == 1
+            ):
+                from .exprtools import _monotonic_sign
+                v = _monotonic_sign(self)
+                if v is not None and v != self and v.is_extended_nonpositive:
+                    return True
 
     def _eval_is_extended_negative(self):
         if self.is_number:
             return super()._eval_is_extended_negative()
-        c, a = self.as_coeff_Add()
+        c, a = _ca_terms(self)
         if not c.is_zero:
             from .exprtools import _monotonic_sign
             v = _monotonic_sign(a)

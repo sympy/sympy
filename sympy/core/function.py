@@ -1157,7 +1157,7 @@ class Derivative(Expr):
 
         >>> e = sqrt((x + 1)**2 + x)
         >>> diff(e, (x, 5), simplify=False).count_ops()
-        136
+        139
         >>> diff(e, (x, 5)).count_ops()
         30
 
@@ -2204,6 +2204,48 @@ class Lambda(Expr):
 
     def _eval_evalf(self, prec):
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
+
+
+
+    def _subs(self, old, new, **hints):
+        from .symbol import Dummy
+        from .traversal import preorder_traversal
+
+        capture_new = hints.get('original_new', new)
+
+        if not old.free_symbols.isdisjoint(self.variables):
+            return self
+
+        if old.is_Symbol and old not in self.free_symbols:
+            return self
+
+        if not capture_new.free_symbols or not self.has(*capture_new.free_symbols):
+            return super()._subs(old, new, **hints)
+
+        # Probe where substitution actually takes place.
+        probe = Dummy('probe', commutative=new.is_commutative is not False)
+        inner_hints = {k: v for k, v in hints.items()
+                       if k != 'original_new'}
+        marked = super()._subs(old, probe, **inner_hints)
+
+        if not marked.has(probe):
+            return super()._subs(old, new, **hints)
+
+        # Give every binding a unique identity.
+        f, restore = marked._bound_dummies()
+
+        # Protect bindings whose scopes contain the replacement.
+        for node in preorder_traversal(f):
+            if not hasattr(node, 'bound_symbols') or not node.has(probe):
+                continue
+            for d in node.bound_symbols:
+                if d in restore and restore[d] in capture_new.free_symbols:
+                    v = restore[d]
+                    restore[d] = Dummy(v.name, commutative=v.is_commutative)
+
+        # Restore safe bindings before inserting the replacement.
+        return f.xreplace(restore).xreplace({probe: new})
+
 
 
 class Subs(Expr):
@@ -3334,7 +3376,7 @@ def count_ops(expr, visual=False):
                         a = a.as_two_terms()[1]
                     else:
                         a = -a
-                n, d = fraction(a)
+                n, d = fraction(a, exact=True)
                 if n.is_Integer:
                     ops.append(DIV)
                     if n < 0:

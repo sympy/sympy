@@ -10,6 +10,26 @@ from sympy.utilities.iterables import flatten
 import functools
 
 class SparseNDimArray(NDimArray):
+    """
+    Base class for sparse N-dim arrays.
+
+    Sparse arrays store only the nonzero elements. Calling ``SparseNDimArray``
+    creates an :class:`ImmutableSparseNDimArray`; use
+    :class:`MutableSparseNDimArray` for an array that can be modified in place.
+
+    Examples
+    ========
+
+    >>> from sympy import SparseNDimArray, ImmutableSparseNDimArray
+    >>> a = SparseNDimArray({0: 1, 3: 2}, (2, 2))
+    >>> a
+    [[1, 0], [0, 2]]
+    >>> isinstance(a, ImmutableSparseNDimArray)
+    True
+    >>> isinstance(a, SparseNDimArray)
+    True
+
+    """
 
     def __new__(self, *args, **kwargs):
         return ImmutableSparseNDimArray(*args, **kwargs)

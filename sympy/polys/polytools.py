@@ -4731,6 +4731,22 @@ class PurePoly(Poly):
             return self
         values = tuple(sympify(v) for v in values)
         if len(values) == len(gens):
+            if len(gens) == 1:
+                from sympy.polys.rootoftools import ComplexRootOf
+                root = values[0]
+                if (isinstance(root, ComplexRootOf)
+                        and self.domain.characteristic() == 0
+                        and self.degree() >= root.poly.degree()):
+                    # A polynomial divisible by the root's defining
+                    # polynomial vanishes at that root. Avoid expanding
+                    # powers of RootOf just to discover this zero.
+                    try:
+                        if self.rem(PurePoly.new(root.poly.rep)).is_zero:
+                            return S.Zero
+                    except (CoercionFailed, DomainError, UnificationFailed):
+                        # Incompatible coefficient domains: retain the
+                        # ordinary symbolic evaluation.
+                        pass
             return self.as_expr().xreplace(dict(zip(gens, values)))
 
         # Use fresh placeholders for unbound generators so that supplied
@@ -8205,7 +8221,7 @@ class GroebnerBasis(Basic):
 
         Given a polynomial ``f`` and a set of polynomials ``G = (g_1, ..., g_n)``,
         computes a set of quotients ``q = (q_1, ..., q_n)`` and the remainder ``r``
-        such that ``f = q_1*f_1 + ... + q_n*f_n + r``, where ``r`` vanishes or ``r``
+        such that ``f = q_1*g_1 + ... + q_n*g_n + r``, where ``r`` vanishes or ``r``
         is a completely reduced polynomial with respect to ``G``.
 
         Examples

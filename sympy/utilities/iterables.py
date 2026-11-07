@@ -144,6 +144,10 @@ def unflatten(iter, n=2):
 def reshape(seq, how):
     """Reshape the sequence according to the template in ``how``.
 
+    Counts in the template must be nonnegative, with a positive total
+    that divides the length of ``seq``. Nested templates may have zero
+    total size.
+
     Examples
     ========
 
@@ -178,26 +182,28 @@ def reshape(seq, how):
     [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
 
     """
-    m = sum(flatten(how))
-    n, rem = divmod(len(seq), m)
-    if m < 0 or rem:
-        raise ValueError('template must sum to positive number '
-        'that divides the length of the sequence')
-    i = 0
-    container = type(how)
-    rv = [None]*n
-    for k in range(len(rv)):
-        _rv = []
-        for hi in how:
-            if isinstance(hi, int):
-                _rv.extend(seq[i: i + hi])
-                i += hi
+    sizes = flatten(how)
+    m = sum(sizes)
+    if any(s < 0 for s in sizes) or m <= 0 or len(seq) % m:
+        raise ValueError('template must contain nonnegative counts '
+                         'with a positive sum that divides the sequence length')
+
+    def make_group(template, i):
+        result = []
+        for item in template:
+            if isinstance(item, int):
+                result.extend(seq[i:i + item])
+                i += item
             else:
-                n = sum(flatten(hi))
-                hi_type = type(hi)
-                _rv.append(hi_type(reshape(seq[i: i + n], hi)[0]))
-                i += n
-        rv[k] = container(_rv)
+                group, i = make_group(item, i)
+                result.append(group)
+        return type(template)(result), i
+
+    i = 0
+    rv = []
+    for _ in range(len(seq) // m):
+        group, i = make_group(how, i)
+        rv.append(group)
     return type(seq)(rv)
 
 
@@ -3096,7 +3102,7 @@ class NotIterable:
     calling list() on the instance, for example, would result in
     an infinite loop.
     """
-    pass
+    __slots__ = ()
 
 
 def iterable(i, exclude=(str, dict, NotIterable)):

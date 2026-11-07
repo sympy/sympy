@@ -38,13 +38,13 @@ def _(x, y):
 def _(x, y):
     if x.start is S.NegativeInfinity:
         return Interval(-oo, oo)
-    return FiniteSet({S.Infinity})
+    return FiniteSet(S.Infinity)
 
 @_set_add.register(Interval, NegativeInfinity)
 def _(x, y):
     if x.end is S.Infinity:
         return Interval(-oo, oo)
-    return FiniteSet({S.NegativeInfinity})
+    return FiniteSet(S.NegativeInfinity)
 
 
 @_set_sub.register(Basic, Basic)

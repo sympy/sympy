@@ -2425,7 +2425,7 @@ class PrettyPrinter(Printer):
             dots = '...'
 
         if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
-            raise NotImplementedError("Pretty printing of sequences with symbolic bound not implemented")
+            return self._print_Function(s)
 
         if s.start is S.NegativeInfinity:
             stop = s.stop

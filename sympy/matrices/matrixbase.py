@@ -150,6 +150,9 @@ class MatrixBase(Printable):
         def cols(self) -> int:
             ...
 
+        def __iter__(self) -> Iterator[Expr]:
+            ...
+
     @overload
     @classmethod
     def _sympify(cls, expr: SExpr, /) -> Expr: ...
@@ -4435,7 +4438,7 @@ class MatrixBase(Printable):
         """
         return self._new(self.rows, self.cols, self.flat())
 
-    def cross(self, b: MatrixExpr) -> Self:
+    def cross(self, b: MatrixBase | MatrixExpr) -> Self:
         r"""
         Return the cross product of ``self`` and ``b`` relaxing the condition
         of compatible dimensions: if each has 3 elements, a matrix of the
@@ -5200,7 +5203,7 @@ class MatrixBase(Printable):
             out = self.applyfunc(lambda i: i / norm)
         return out
 
-    def norm(self, ord: int | str | None = 2) -> Expr:
+    def norm(self, ord: int | str | None = None) -> Expr:
         """Return the Norm of a Matrix or Vector.
 
         In the simplest case this is the geometric size of the vector
@@ -5255,7 +5258,7 @@ class MatrixBase(Printable):
         # Row or Column Vector Norms
         vals = list(self.values()) or [S.Zero]
         if S.One in self.shape:
-            if ord == 2:  # Common case sqrt(<x, x>)
+            if ord in (2, None):  # Common case sqrt(<x, x>)
                 return sqrt(Add(*(abs(i) ** 2 for i in vals)))
 
             elif ord == 1:  # sum(abs(x))
@@ -5487,7 +5490,7 @@ class MatrixBase(Printable):
     def LDLsolve(self, rhs) -> Self:
         return _LDLsolve(self, rhs)
 
-    def LUsolve(self, rhs, iszerofunc=_iszero) -> Self:
+    def LUsolve(self, rhs: Tmat, iszerofunc: Callable[[Expr], bool | None] = _iszero) -> Tmat:
         return _LUsolve(self, rhs, iszerofunc=iszerofunc)
 
     def QRsolve(self, b) -> Self:

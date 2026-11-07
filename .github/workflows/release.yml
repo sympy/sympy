@@ -160,7 +160,7 @@ jobs:
         run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
 
       - name: Publish package on TestPyPI
-        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # v1.14.3
         with:
           repository-url: https://test.pypi.org/legacy/
 
@@ -189,7 +189,7 @@ jobs:
         run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
 
       - name: Publish package on PyPI
-        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # v1.14.3
 
   # -------------------- Check if this is a final release ---------- #
 
@@ -243,7 +243,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create "$release_version" dist/*
+          gh release create "sympy-$release_version" dist/*
               --prerelease
               --title "SymPy $release_version"
               --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-$final_release_version for release notes"
@@ -253,7 +253,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create "$release_version" dist/*
+          gh release create "sympy-$release_version" dist/*
               --title "SymPy $release_version"
               --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-$final_release_version for release notes"
 

@@ -633,13 +633,14 @@ def exptrigsimp(expr):
         # functions
         choices = [e]
         if e.has(*_trigs):
-            op = e.rewrite(exp)
+            op = e.rewrite(_trigs, exp)
             # if e is an Add, we can try to factor it
             # helps with expressions with leading factors
             if e.is_Add:
                 choices.append(factor_terms(op))
             else:
                 choices.append(op)
+            choices.append(e.rewrite(sin))
         choices.append(e.rewrite(cos))
         return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)

@@ -193,7 +193,7 @@ def update_args_with_paths(
         full_paths = []
         partial_paths = []
         for path in paths:
-            if pathlib.Path(path).exists():
+            if pathlib.Path(path).is_file() or pathlib.Path(path).is_dir():
                 full_paths.append(str(pathlib.Path(sympy_dir(), path)))
             else:
                 partial_paths.append(path)

@@ -1217,6 +1217,11 @@ def test_complex_reciprocal_imaginary():
     assert (1 / (4 + 3*I)).is_imaginary is False
 
 
+def test_issue_10458():
+    x = Symbol('x', integer=True, positive=True)
+    assert (1/x - 1).is_nonpositive
+
+
 def test_issue_16313():
     x = Symbol('x', extended_real=False)
     k = Symbol('k', real=True)
@@ -1376,3 +1381,18 @@ def test_ask_shuffle():
     third = grp.random()
 
     assert first == second == third
+
+
+def test_issue_30804():
+    # Issue 30804: b has real=False, but b*I can be real (e.g. b=I => b*I=-1 in Re)
+    # or non-real (e.g. b=1+I => b*I=-1+I not in Re). Hence is_real and is_integer should be None.
+    b = Symbol('b', finite=True, real=False)
+    assert (b*I).is_real is None
+    assert (b*I).is_extended_real is None
+    assert (b*I).is_integer is None
+    assert (b*I).is_rational is None
+    assert (b*I).is_imaginary is False
+
+    # Real multiple of non-real number cannot be real
+    assert (3*b).is_real is False
+    assert (3*b).is_extended_real is False
