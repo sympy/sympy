@@ -549,6 +549,8 @@ def test_monotonic_sign():
 
     nn = Dummy(integer=True, nonnegative=True)
     assert F(exp(-nn) - 2) == -1
+    assert F(1/(2*nn - 1)) is None
+    assert F(1/(4*nn - 1)) is None
 
 
 def test_issue_17256():
