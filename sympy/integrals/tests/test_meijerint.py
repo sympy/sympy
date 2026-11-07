@@ -19,12 +19,13 @@ from sympy.simplify.simplify import simplify
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
     meijerint_indefinite, _inflate_g, _create_lookup_table,
     meijerint_definite, meijerint_inversion)
-from sympy.testing.pytest import slow
+from sympy.testing.pytest import slow, _both_exp_pow
 from sympy.core.random import (verify_numerically,
         random_complex_number as randcplx)
 from sympy.abc import x, y, a, b, c, d, s, t, z
 
 
+@_both_exp_pow
 def test_rewrite_single():
     def t(expr, c, m):
         e = _rewrite_single(meijerg([a], [b], [c], [d], expr), x)
@@ -111,6 +112,7 @@ def test_inflate():
     assert t([[a], [b]], [[c, y], [d]], 2*x**3, 3)
 
 
+@_both_exp_pow
 def test_recursive():
     from sympy.core.symbol import symbols
     a, b, c = symbols('a b c', positive=True)
@@ -284,6 +286,7 @@ def test_bessel():
         -besselj(0, x**2)/2
 
 
+@_both_exp_pow
 def test_inversion():
     from sympy.functions.special.bessel import besselj
     from sympy.functions.special.delta_functions import Heaviside
@@ -301,6 +304,7 @@ def test_inversion():
     assert meijerint_inversion(exp(-s**2), s, t) is None
 
 
+@_both_exp_pow
 def test_inversion_conditional_output():
     from sympy.core.symbol import Symbol
     from sympy.integrals.transforms import InverseLaplaceTransform
@@ -322,6 +326,7 @@ def test_inversion_conditional_output():
     assert f2.args[-1][0] == ILT or f2.args[-1][0] == ILT.as_integral
 
 
+@_both_exp_pow
 def test_inversion_exp_real_nonreal_shift():
     from sympy.core.symbol import Symbol
     from sympy.functions.special.delta_functions import DiracDelta
@@ -641,6 +646,7 @@ def test_expint():
     assert integrate(expint(1, x)*sin(x), (x, 0, oo), meijerg=True) == log(2)/2
 
 
+@_both_exp_pow
 def test_messy():
     from sympy.functions.elementary.hyperbolic import (acosh, acoth)
     from sympy.functions.elementary.trigonometric import (asin, atan)
@@ -679,6 +685,7 @@ def test_messy():
         Piecewise((-acosh(1/x), abs(x**(-2)) > 1), (I*asin(1/x), True))
 
 
+@_both_exp_pow
 def test_issue_6122():
     assert integrate(exp(-I*x**2), (x, -oo, oo), meijerg=True) == \
         -I*sqrt(pi)*exp(I*pi/4)
@@ -692,6 +699,7 @@ def test_issue_6252():
     # putting in numerical values seems to work...
 
 
+@_both_exp_pow
 def test_issue_6348():
     assert integrate(exp(I*x)/(1 + x**2), (x, -oo, oo)).simplify().rewrite(exp) \
         == pi*exp(-1)
@@ -734,6 +742,7 @@ def test_issue_7383():
     assert integrate(integrand, (z, -R, R), meijerg=True) == expected
 
 
+@_both_exp_pow
 def test_issue_8368():
     assert meijerint_indefinite(cosh(x)*exp(-x*t), x) == (
         (-t - 1)*exp(x) + (-t + 1)*exp(-x))*exp(-t*x)/2/(t**2 - 1)
@@ -765,6 +774,7 @@ def test_issue_13536():
     assert integrate(1/x**2, (x, oo, a)) == -1/a
 
 
+@_both_exp_pow
 def test_issue_6462():
     from sympy.core.symbol import Symbol
     x = Symbol('x')
@@ -794,6 +804,7 @@ def test_pr_23583():
 
 
 # 25786
+@_both_exp_pow
 def test_integrate_function_of_square_over_negatives():
     assert integrate(exp(-x**2), (x,-5,0), meijerg=True) == sqrt(pi)/2 * erf(5)
 

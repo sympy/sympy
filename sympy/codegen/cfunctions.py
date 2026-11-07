@@ -9,6 +9,7 @@ as a SymPy function for symbolic manipulation.
 from __future__ import annotations
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Rational
+from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp, log
@@ -70,8 +71,11 @@ class expm1(Function):
     @classmethod
     def eval(cls, arg):
         exp_arg = exp.eval(arg)
-        if exp_arg is not None:
-            return exp_arg - S.One
+        if exp_arg is None or exp_arg.is_Pow and exp_arg.base is S.Exp1:
+            return
+        if global_parameters.exp_is_pow and cls._should_evalf(arg) > 0:
+            return
+        return exp_arg - S.One
 
     def _eval_is_real(self):
         return self.args[0].is_real

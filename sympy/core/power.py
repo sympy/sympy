@@ -1287,13 +1287,13 @@ class Pow(Expr):
         elif self.base is S.Exp1:
             s = self.func(*self.args)
             if s.func == self.func:
-                if self.exp.is_nonzero:
+                if (self.exp/(S.ImaginaryUnit*S.Pi)).is_rational:
+                    return True
+                if fuzzy_not(self.exp.is_zero):
                     if self.exp.is_algebraic:
                         return False
                     elif (self.exp/S.Pi).is_rational:
                         return False
-                    elif (self.exp/(S.ImaginaryUnit*S.Pi)).is_rational:
-                        return True
             else:
                 return s.is_algebraic
         elif self.exp.is_rational:
@@ -1400,6 +1400,13 @@ class Pow(Expr):
         if not self.is_commutative:
             return self, S.One
         base, exp = self.as_base_exp()
+        if base is S.Exp1:
+            neg_exp = exp.is_negative
+            if not neg_exp and not (-exp).is_negative:
+                neg_exp = exp.could_extract_minus_sign()
+            if neg_exp:
+                return S.One, self.func(base, -exp)
+            return self, S.One
         n, d = base.as_numer_denom()
         # this should be the same as ExpBase.as_numer_denom wrt
         # exponent handling
@@ -1437,8 +1444,8 @@ class Pow(Expr):
             repl_dict = {}
 
         # special case, pattern = 1 and expr.exp can match to 0
-        if expr is S.One:
-            d = self.exp.matches(S.Zero, repl_dict)
+        if expr is S.One and self.base is not S.Exp1:
+            d = self.exp.matches(S.Zero, repl_dict, old=old)
             if d is not None:
                 return d
 
@@ -1452,17 +1459,17 @@ class Pow(Expr):
         sb, se = self.as_base_exp()
         if sb.is_Symbol and se.is_Integer and expr:
             if e.is_rational:
-                return sb.matches(b**(e/se), repl_dict)
-            return sb.matches(expr**(1/se), repl_dict)
+                return sb.matches(b**(e/se), repl_dict, old=old)
+            return sb.matches(expr**(1/se), repl_dict, old=old)
 
         d = repl_dict.copy()
-        d = self.base.matches(b, d)
+        d = self.base.matches(b, d, old=old)
         if d is None:
             return None
 
-        d = self.exp.xreplace(d).matches(e, d)
+        d = self.exp.xreplace(d).matches(e, d, old=old)
         if d is None:
-            return Expr.matches(self, expr, repl_dict)
+            return Expr.matches(self, expr, repl_dict, old=old)
         return d
 
     def _eval_nseries(self, x, n, logx, cdir=0):
@@ -1482,27 +1489,12 @@ class Pow(Expr):
         from sympy.series.limits import limit
         from sympy.series.order import Order
         from sympy.core.sympify import sympify
-        if self.base is S.Exp1:
-            e_series = self.exp.nseries(x, n=n, logx=logx)
-            if e_series.is_Order:
-                return 1 + e_series
-            e0 = limit(e_series.removeO(), x, 0)
-            if e0 is S.NegativeInfinity:
-                return Order(x**n, x)
-            if e0 is S.Infinity:
-                return self
-            t = e_series - e0
-            exp_series = term = exp(e0)
-            # series of exp(e0 + t) in t
-            for i in range(1, n):
-                term *= t/i
-                term = term.nseries(x, n=n, logx=logx)
-                exp_series += term
-            exp_series += Order(t**n, x)
-            from sympy.simplify.powsimp import powsimp
-            return powsimp(exp_series, deep=True, combine='exp')
-        from sympy.simplify.powsimp import powdenest
         from .numbers import _illegal
+        if self.base is S.Exp1:
+            if self.exp.has(*_illegal):
+                raise PoleError()
+            return exp._eval_nseries(self, x, n, logx, cdir)
+        from sympy.simplify.powsimp import powdenest
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
 
@@ -1658,13 +1650,7 @@ class Pow(Expr):
         e = self.exp
         b = self.base
         if self.base is S.Exp1:
-            arg = e.as_leading_term(x, logx=logx)
-            arg0 = arg.subs(x, 0)
-            if arg0 is S.NaN:
-                arg0 = arg.limit(x, 0)
-            if arg0.is_infinite is False:
-                return S.Exp1**arg0
-            raise PoleError("Cannot expand %s around 0" % (self))
+            return exp._eval_as_leading_term(self, x, logx, cdir)
         elif e.has(x):
             lt = exp(e * log(b))
             return lt.as_leading_term(x, logx=logx, cdir=cdir)

@@ -147,6 +147,8 @@ def refine_Pow(expr, assumptions):
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions import sign
 
+    if expr.base is S.Exp1:
+        return refine_exp(expr, assumptions)
     if isinstance(expr.base, Abs):
         arg = expr.base.args[0]
         if ask(Q.even(expr.exp), assumptions):
@@ -234,6 +236,7 @@ def refine_exp(expr, assumptions):
     >>> refine(exp(pi*I*(x + S.Half)), Q.integer(x))
     (-1)**x*I
     """
+    from sympy.functions.elementary.exponential import exp
     coeff = expr.exp.as_coefficient(S.Pi * S.ImaginaryUnit)
     if coeff is None:
         return expr
@@ -252,7 +255,7 @@ def refine_exp(expr, assumptions):
 
     integer_part = Add(*integer_terms)
     remaining_part = Add(*remaining_terms)
-    phase = expr.func(S.Pi * S.ImaginaryUnit * remaining_part)
+    phase = exp(S.Pi * S.ImaginaryUnit * remaining_part)
     return (-1)**integer_part * phase
 
 

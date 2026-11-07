@@ -8,8 +8,9 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.series.order import O
 from sympy.abc import x
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
+@_both_exp_pow
 def test_simple():
     # Gruntz' theses pp. 91 to 96
     # 6.6

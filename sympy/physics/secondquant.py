@@ -24,6 +24,7 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.dense import zeros
@@ -153,6 +154,8 @@ class Dagger(Expr):
                 return Mul(*tuple(map(Dagger, reversed(arg.args))))
             if arg.is_Number:
                 return arg
+            if arg.is_Pow and arg.base is S.Exp1 and arg.exp.is_commutative:
+                return exp(Dagger(arg.exp))
             if arg.is_Pow:
                 return Pow(Dagger(arg.args[0]), arg.args[1])
             if arg == I:

@@ -30,9 +30,10 @@ from sympy.printing.fortran import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.tensor.array.expressions import ArraySymbol, ArrayElement
 from sympy.utilities.lambdify import implemented_function
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
 
+@_both_exp_pow
 def test_UnevaluatedExpr():
     p, q, r = symbols("p q r", real=True)
     q_r = UnevaluatedExpr(q + r)
@@ -119,6 +120,7 @@ def test_fcode_functions():
         assert fcode(x % y, standard=standard) == "      modulo(x, y)"
 
 
+@_both_exp_pow
 def test_case():
     ob = FCodePrinter()
     x,x_,x__,y,X,X_,Y = symbols('x,x_,x__,y,X,X_,Y')
@@ -150,6 +152,7 @@ def test_case():
 
 
 #issue 6814
+@_both_exp_pow
 def test_fcode_functions_with_integers():
     x= symbols('x')
     log10_17 = log(10).evalf(17)

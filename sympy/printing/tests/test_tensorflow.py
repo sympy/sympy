@@ -18,7 +18,7 @@ from sympy.matrices.expressions import \
 from sympy.printing.tensorflow import tensorflow_code
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 from sympy.utilities.lambdify import lambdify
-from sympy.testing.pytest import skip
+from sympy.testing.pytest import skip, _both_exp_pow
 from sympy.testing.pytest import XFAIL
 
 
@@ -154,6 +154,7 @@ def _compare_tensorflow_relational(
     assert r == e
 
 
+@_both_exp_pow
 def test_tensorflow_printing():
     assert tensorflow_code(eye(3)) == \
         "tensorflow.constant([[1, 0, 0], [0, 1, 0], [0, 0, 1]])"

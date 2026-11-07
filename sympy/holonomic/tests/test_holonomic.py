@@ -22,6 +22,7 @@ from sympy.simplify.hyperexpand import hyperexpand
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.domains.realfield import RR
+from sympy.testing.pytest import _both_exp_pow
 
 
 def test_DifferentialOperator():
@@ -210,6 +211,7 @@ def test_HolonomicFunction_composition():
     assert p == r
 
 
+@_both_exp_pow
 def test_from_hyper():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
@@ -481,6 +483,7 @@ def test_evalf_rk4():
     assert sstr(p[-1]) == s
 
 
+@_both_exp_pow
 def test_expr_to_holonomic():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
@@ -641,6 +644,7 @@ def test_to_expr():
     assert p == 2.4*x
 
 
+@_both_exp_pow
 def test_integrate():
     x = symbols('x')
     R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
@@ -760,6 +764,7 @@ def test_to_meijerg():
     assert (p.to_expr() - besselj(S.Half, x) - besselj(Rational(-1, 2), x)).simplify() == 0
 
 
+@_both_exp_pow
 def test_gaussian():
     mu, x = symbols("mu x")
     sd = symbols("sd", positive=True)
@@ -785,6 +790,7 @@ def test_beta():
     assert h1 == h2
 
 
+@_both_exp_pow
 def test_gamma():
     a, b, x = symbols("a b x", positive=True)
     e = b**(-a)*x**(a - 1)*exp(-x/b)/gamma(a)

@@ -29,13 +29,14 @@ from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
                 Multinomial, NegativeMultinomial, MultivariateNormal,
                 MultivariateLaplace)
-from sympy.testing.pytest import raises, XFAIL, skip, slow
+from sympy.testing.pytest import raises, XFAIL, skip, slow, _both_exp_pow
 from sympy.external import import_module
 
 from sympy.abc import x, y
 
 
 
+@_both_exp_pow
 def test_Normal():
     m = Normal('A', [1, 2], [[1, 0], [0, 1]])
     A = MultivariateNormal('A', [1, 2], [[1, 0], [0, 1]])
@@ -131,6 +132,7 @@ def test_NormalGamma():
     assert marginal_distribution(ng,[0,1])(x) == x**2*exp(-x/4)/128
 
 
+@_both_exp_pow
 def test_GeneralizedMultivariateLogGammaDistribution():
     h = S.Half
     omega = Matrix([[1, h, h, h],
@@ -286,6 +288,7 @@ def test_JointPSpace_marginal_distribution():
     assert comp(marginal_distribution(t, 0)(1).evalf(), 0.2, .01)
 
 
+@_both_exp_pow
 def test_JointRV():
     x1, x2 = (Indexed('x', i) for i in (1, 2))
     pdf = exp(-x1**2/2 + x1 - x2**2/2 - S.Half)/(2*pi)
@@ -295,6 +298,7 @@ def test_JointRV():
     assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(Rational(-1, 2))/(2*sqrt(pi))
 
 
+@_both_exp_pow
 def test_expectation():
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert simplify(E(m[1])) == y

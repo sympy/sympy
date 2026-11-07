@@ -12,7 +12,7 @@ from sympy.integrals.integrals import Integral, integrate
 from sympy.series.order import O
 from sympy.series.series import series
 from sympy.abc import x, y, n, k
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 from sympy.core import EulerGamma
 
 
@@ -90,6 +90,7 @@ def test_issue_5223():
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
 
 
+@_both_exp_pow
 def test_issue_6350():
     expr = integrate(exp(k*(y**3 - 3*y)), (y, 0, oo), conds='none')
     assert expr.series(k, 0, 3) == -(-1)**(S(2)/3)*sqrt(3)*gamma(S(1)/3)**2*gamma(S(2)/3)/(6*pi*k**(S(1)/3)) - \
@@ -259,6 +260,7 @@ def test_issue_12791():
     assert (result.removeO() - sol.removeO()).simplify() == 0
 
 
+@_both_exp_pow
 def test_issue_14384():
     x, a = symbols('x a')
     assert series(x**a, x) == x**a
@@ -404,6 +406,7 @@ def test_issue_23727():
     assert res.is_Add == True
 
 
+@_both_exp_pow
 def test_issue_24266():
     #type1: exp(f(x))
     assert (exp(-I*pi*(2*x+1))).series(x, 0, 3) == -1 + 2*I*pi*x + 2*pi**2*x**2 + O(x**3)

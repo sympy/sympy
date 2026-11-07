@@ -26,7 +26,7 @@ from sympy.solvers.ode.ode import (classify_sysode,
 from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
-from sympy.testing.pytest import XFAIL, raises, slow, SKIP
+from sympy.testing.pytest import XFAIL, raises, slow, SKIP, _both_exp_pow
 from sympy.utilities.misc import filldedent
 
 
@@ -169,6 +169,7 @@ def test_dsolve_options():
                 exp(Integral(1, x)), x))*exp(-Integral(1, x)))
 
 
+@_both_exp_pow
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
         (
@@ -483,6 +484,7 @@ def test_classify_sysode():
     assert classify_sysode(eq13) == sol13
 
 
+@_both_exp_pow
 def test_solve_ics():
     # Basic tests that things work from dsolve.
     assert dsolve(f(x).diff(x) - 1/f(x), f(x), ics={f(1): 2}) == \
@@ -827,6 +829,7 @@ def test_constant_renumber():
     assert constant_renumber(exprs, variables=[x, y], newconstants=symbols("C3:5")) == [C3*x, C3*y + C4*x]
 
 
+@_both_exp_pow
 def test_issue_5770():
     k = Symbol("k", real=True)
     t = Symbol('t')

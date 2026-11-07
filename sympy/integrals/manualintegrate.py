@@ -44,6 +44,7 @@ from sympy.core.function import Derivative, expand, expand_mul, expand_trig
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Number, E, Rational
+from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
@@ -1271,7 +1272,7 @@ def find_substitutions(integrand, symbol, u_var):
         terms = []
         n = Wild('n', properties=[lambda n: n.is_Integer])
         for exp_ in term.find(exp):
-            arg = exp_.args[0]
+            arg = exp_.exp
             if symbol not in arg.free_symbols:
                 continue
             match = arg.match(n*symbol)
@@ -1284,7 +1285,9 @@ def find_substitutions(integrand, symbol, u_var):
         return terms
 
     def possible_subterms(term):
-        if isinstance(term, (TrigonometricFunction, HyperbolicFunction,
+        if isinstance(term, exp):
+            return [term.exp]
+        elif isinstance(term, (TrigonometricFunction, HyperbolicFunction,
                              *inverse_trig_functions,
                              exp, log, Heaviside)):
             return [term.args[0]]
@@ -1434,8 +1437,8 @@ def power_rule(integral):
 
 def exp_rule(integral):
     integrand, symbol = integral
-    if isinstance(integrand.args[0], Symbol):
-        return ExpRule(integrand, symbol, E, integrand.args[0])
+    if isinstance(integrand.exp, Symbol):
+        return ExpRule(integrand, symbol, E, integrand.exp)
 
 
 def combine_power_rule(integral):
@@ -1487,42 +1490,52 @@ def orthogonal_poly_rule(integral):
                     return orthogonal_poly_classes[klass](integrand, symbol, *integrand.args[:var_index])
 
 
-_special_function_patterns: list[tuple[type, Expr, Callable | None, tuple]] = []
+_special_function_patterns: dict[bool, list[tuple[type, Expr, Callable | None, tuple]]] = {}
 _wilds: list[Wild] = []
 _symbol = Dummy('x')
 
 
 def special_function_rule(integral):
     integrand, symbol = integral
-    if not _special_function_patterns:
+    exp_is_pow = global_parameters.exp_is_pow
+    patterns = _special_function_patterns.setdefault(exp_is_pow, [])
+    if not _wilds:
         # Wild cards set to non-zero should only be used when the result is not
         # valid e.g. Integral * 1/a
-        a_nonzero = Wild('a', exclude=[_symbol], properties=[lambda x: not x.is_zero])
-        b = Wild('b', exclude=[_symbol])
-        c = Wild('c', exclude=[_symbol])
-        d_nonzero = Wild('d', exclude=[_symbol], properties=[lambda x: not x.is_zero])
-        e_nonnegative_integer = Wild('e', exclude=[_symbol], properties=[
-            lambda x: not (x.is_nonnegative and x.is_integer)])
-        y = Wild('y', exclude=[_symbol])
-        _wilds.extend((a_nonzero, b, c, d_nonzero, e_nonnegative_integer, y))
+        _wilds.extend((
+            Wild('a', exclude=[_symbol], properties=[lambda x: not x.is_zero]),
+            Wild('b', exclude=[_symbol]),
+            Wild('c', exclude=[_symbol]),
+            Wild('d', exclude=[_symbol], properties=[lambda x: not x.is_zero]),
+            Wild('e', exclude=[_symbol], properties=[
+                lambda x: not (x.is_nonnegative and x.is_integer)]),
+            Wild('y', exclude=[_symbol])))
+    if not patterns:
+        a_nonzero, b, c, d_nonzero, e_nonnegative_integer, y = _wilds
+
+        def exp_(arg):
+            if exp_is_pow:
+                return Pow(S.Exp1, arg, evaluate=False)
+            return exp(arg, evaluate=False)
+
         # patterns consist of a SymPy class, a wildcard expr, an optional
         # condition coded as a lambda (when Wild properties are not enough),
         # followed by an applicable rule
         linear_pattern = a_nonzero*_symbol + b
         quadratic_pattern = a_nonzero*_symbol**2 + b*_symbol + c
-        _special_function_patterns.extend((
-            (Mul, exp(linear_pattern, evaluate=False)/_symbol, None, EiRule),
+        patterns.extend((
+            (Mul, exp_(linear_pattern)/_symbol, None, EiRule),
             (Mul, cos(linear_pattern, evaluate=False)/_symbol, None, CiRule),
             (Mul, cosh(linear_pattern, evaluate=False)/_symbol, None, ChiRule),
             (Mul, sin(linear_pattern, evaluate=False)/_symbol, None, SiRule),
             (Mul, sinh(linear_pattern, evaluate=False)/_symbol, None, ShiRule),
             (Pow, 1/log(linear_pattern, evaluate=False), None, LiRule),
-            (exp, exp(quadratic_pattern, evaluate=False), None, ErfRule),
-            (Mul, exp(-(linear_pattern)**2, evaluate=False) * erf(y*(linear_pattern)),
+            (exp, exp_(quadratic_pattern), None, ErfRule),
+            (Mul, exp_(-(linear_pattern)**2) * erf(y*(linear_pattern)),
                 lambda a, b, y: y != 1 and y != -1, OwensTRule),
             (sin, sin(quadratic_pattern, evaluate=False), None, FresnelSRule),
             (cos, cos(quadratic_pattern, evaluate=False), None, FresnelCRule),
-            (Mul, _symbol**e_nonnegative_integer*exp(a_nonzero*_symbol, evaluate=False), None, UpperGammaRule),
+            (Mul, _symbol**e_nonnegative_integer*exp_(a_nonzero*_symbol), None, UpperGammaRule),
             (Mul, polylog(b, a_nonzero*_symbol, evaluate=False)/_symbol, None, PolylogRule),
             (Pow, 1/sqrt(a_nonzero - d_nonzero*sin(_symbol, evaluate=False)**2),
                 lambda a, d: a != d, EllipticFRule),
@@ -1531,7 +1544,7 @@ def special_function_rule(integral):
         ))
     a_wild, _, _, d_wild, _, _ = _wilds
     _integrand = integrand.subs(symbol, _symbol)
-    for type_, pattern, constraint, rule in _special_function_patterns:
+    for type_, pattern, constraint, rule in patterns:
         if isinstance(_integrand, type_):
             match = _integrand.match(pattern)
             if match:
@@ -1760,7 +1773,7 @@ def _parts_rule_gen(integrand, symbol):
                 for target in integrand.args:
                     if not any(isinstance(target, cls) for cls in functions):
                         continue
-                    inner = target.args[0]
+                    inner = target.exp if isinstance(target, exp) else target.args[0]
                     if (
                         inner.is_polynomial(symbol) and  # type: ignore
                         degree(inner, symbol) == 2
@@ -2033,7 +2046,7 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
 
     factors = Mul.make_args(integrand)
 
-    if not any(isinstance(t, exp) and t.args[0].is_polynomial(symbol) for t in factors):
+    if not any(isinstance(t, exp) and t.exp.is_polynomial(symbol) for t in factors):
         return
 
     a = Wild('a', exclude=[symbol, 0])
@@ -3752,6 +3765,8 @@ def _integral_key(integral):
 
     if symbol not in integrand.free_symbols:
         return Number
+    if integrand.is_Pow and integrand.base is S.Exp1:
+        return exp
     for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
         if isinstance(integrand, cls):
             return cls

@@ -19,7 +19,7 @@ from sympy.stats.compound_rv import CompoundDistribution, CompoundPSpace
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.frv_types import BernoulliDistribution
-from sympy.testing.pytest import raises, ignore_warnings, slow
+from sympy.testing.pytest import raises, ignore_warnings, slow, _both_exp_pow
 from sympy.stats.joint_rv_types import MultivariateNormalDistribution
 
 from sympy.abc import x
@@ -46,6 +46,7 @@ def test_normal_CompoundDist():
     # (Contains proof of E and variance computation)
 
 
+@_both_exp_pow
 def test_poisson_CompoundDist():
     k, t, y = symbols('k t y', positive=True, real=True)
     G = Gamma('G', k, t)
@@ -75,6 +76,7 @@ def test_bernoulli_CompoundDist():
     assert P(Eq(Y, 1)) == E(Y)
 
 
+@_both_exp_pow
 def test_unevaluated_CompoundDist():
     # these tests need to be removed once they work with evaluation as they are currently not
     # evaluated completely in sympy.
@@ -108,6 +110,7 @@ def test_unevaluated_CompoundDist():
     assert streq(density(D, evaluate=False)(x), exprd)
 
 
+@_both_exp_pow
 def test_Compound_Distribution():
     X = Normal('X', 2, 4)
     N = NormalDistribution(X, 4)

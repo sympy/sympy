@@ -632,12 +632,11 @@ def _rewrite_gamma(f, s, a, b):
             ufacs += [fact]
         # exponentials
         elif fact.is_Pow or isinstance(fact, exp):
-            if fact.is_Pow:
-                base = fact.base
-                exp_ = fact.exp
-            else:
+            if isinstance(fact, exp):
                 base = exp_polar(1)
-                exp_ = fact.exp
+            else:
+                base = fact.base
+            exp_ = fact.exp
             if exp_.is_Integer:
                 cond = is_numer
                 if exp_ < 0:

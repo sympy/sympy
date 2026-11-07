@@ -13,7 +13,7 @@ from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
 from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
                              atan, asec, acsc, sinh, cosh, tanh, coth, csch,
                              sech, asinh, acosh, atanh, acoth, asech, acsch)
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, _both_exp_pow
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix, HadamardPower)
@@ -55,6 +55,7 @@ def test_Relational():
     assert mcode(Ge(x, y)) == "x >= y"
 
 
+@_both_exp_pow
 def test_Function():
     assert mcode(sin(x) ** cos(x)) == "sin(x).^cos(x)"
     assert mcode(sign(x)) == "sign(x)"
@@ -466,6 +467,7 @@ def test_trigfun():
         assert octave_code(f(x) == f.__name__ + '(x)')
 
 
+@_both_exp_pow
 def test_specfun():
     n = Symbol('n')
     for f in [besselj, bessely, besseli, besselk]:

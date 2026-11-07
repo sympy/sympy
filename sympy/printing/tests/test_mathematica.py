@@ -15,6 +15,7 @@ from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
                              elliptic_f, Heaviside, DiracDelta)
 
 from sympy.printing.mathematica import mathematica_code as mcode
+from sympy.testing.pytest import _both_exp_pow
 
 x, y, z, w = symbols('x,y,z,w')
 f = Function('f')
@@ -242,6 +243,7 @@ def test_NDArray():
         "}, {2, 3, 4}]"
 
 
+@_both_exp_pow
 def test_Integral():
     assert mcode(Integral(sin(sin(x)), x)) == "Hold[Integrate[Sin[Sin[x]], x]]"
     assert mcode(Integral(exp(-x**2 - y**2),
@@ -259,6 +261,7 @@ def test_Derivative():
     assert mcode(Derivative(sin(x)*y**4, x, y, 3, x)) == "Hold[D[y^4*Sin[x], x, {y, 3}, x]]"
 
 
+@_both_exp_pow
 def test_Sum():
     assert mcode(Sum(sin(x), (x, 0, 10))) == "Hold[Sum[Sin[x], {x, 0, 10}]]"
     assert mcode(Sum(exp(-x**2 - y**2),

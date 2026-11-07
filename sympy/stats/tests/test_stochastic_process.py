@@ -29,7 +29,7 @@ from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.testing.pytest import (raises, skip, ignore_warnings,
-                                  warns_deprecated_sympy)
+                                  warns_deprecated_sympy, _both_exp_pow)
 from sympy.external import import_module
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.drv_types import PoissonDistribution
@@ -393,6 +393,7 @@ def test_sample_stochastic_process():
         assert next(sample_stochastic_process(W)) in W.state_space
 
 
+@_both_exp_pow
 def test_ContinuousMarkovChain():
     T1 = Matrix([[S(-2), S(2), S.Zero],
                  [S.Zero, S.NegativeOne, S.One],
@@ -651,6 +652,7 @@ def test_PoissonProcess():
     assert (2*X(t) * 0.25*X(t)).simplify() == 0.5*X(t)**2
     assert (X(t)**2 + X(t)**3).simplify() == (X(t) + 1)*X(t)**2
 
+@_both_exp_pow
 def test_WienerProcess():
     X = WienerProcess("X")
     assert X.state_space == S.Reals
@@ -703,6 +705,7 @@ def test_WienerProcess():
     assert (X(t)**2 + X(t)**3).simplify() == (X(t) + 1)*X(t)**2
 
 
+@_both_exp_pow
 def test_GammaProcess_symbolic():
     t, d, x, y, g, l = symbols('t d x y g l', positive=True)
     X = GammaProcess("X", l, g)

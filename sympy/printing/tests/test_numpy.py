@@ -26,7 +26,7 @@ from sympy.printing.numpy import NumPyPrinter, SciPyPrinter, _numpy_known_consta
     _numpy_known_functions, _scipy_known_constants, _scipy_known_functions
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
-from sympy.testing.pytest import skip, raises
+from sympy.testing.pytest import skip, raises, _both_exp_pow
 from sympy.external import import_module
 
 np = import_module('numpy')
@@ -220,6 +220,7 @@ def test_pow():
     assert f() == 0.5
 
 
+@_both_exp_pow
 def test_expm1():
     if not np:
         skip("NumPy not installed")

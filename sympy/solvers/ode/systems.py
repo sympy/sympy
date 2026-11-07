@@ -66,7 +66,7 @@ def _solsimp(e, t):
     no_t, has_t = powsimp(expand_mul(e)).as_independent(t)
 
     no_t = ratsimp(no_t)
-    has_t = has_t.replace(exp, lambda a: exp(factor_terms(a)))
+    has_t = has_t.replace(lambda e: isinstance(e, exp), lambda e: exp(factor_terms(e.exp)))
 
     return no_t + has_t
 
@@ -166,7 +166,7 @@ def simpsol(sol, wrt1, wrt2, doit=True):
             return num / den
 
         term = powsimp(term)
-        rep = {e: exp(canonicalise(e.args[0])) for e in term.atoms(exp)}
+        rep = {e: exp(canonicalise(e.exp)) for e in term.atoms(exp)}
         term = term.subs(rep)
         return term
 

@@ -7,11 +7,12 @@ from sympy.abc import x, i, a, b
 from sympy.codegen.numpy_nodes import logaddexp
 from sympy.printing.numpy import CuPyPrinter, _cupy_known_constants, _cupy_known_functions
 
-from sympy.testing.pytest import skip, raises
+from sympy.testing.pytest import skip, raises, _both_exp_pow
 from sympy.external import import_module
 
 cp = import_module('cupy')
 
+@_both_exp_pow
 def test_cupy_print():
     prntr = CuPyPrinter()
     assert prntr.doprint(logaddexp(a, b)) == 'cupy.logaddexp(a, b)'

@@ -28,6 +28,7 @@ The main references for this are:
 
 from __future__ import annotations
 import itertools
+from functools import cmp_to_key
 
 from sympy import SYMPY_DEBUG
 from sympy.core import S, Expr
@@ -40,6 +41,7 @@ from sympy.core.function import (expand, expand_mul, expand_power_base,
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import Rational, pi
+from sympy.core.parameters import global_parameters
 from sympy.core.relational import Eq, Ne, _canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild, Symbol
@@ -310,6 +312,8 @@ def _mytype(f: Basic, x: Symbol) -> tuple[type[Basic], ...]:
         return ()
     elif f.is_Function:
         return type(f),
+    elif f.is_Pow and f.base is S.Exp1:
+        return exp,
     return tuple(sorted((t for a in f.args for t in _mytype(a, x)), key=key))
 
 
@@ -389,7 +393,8 @@ def _exponents(expr, x):
 
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
-    return {e.func for e in expr.atoms(Function) if x in e.free_symbols}
+    return {exp if isinstance(e, exp) else e.func
+            for e in expr.atoms(Function, exp) if x in e.free_symbols}
 
 
 def _find_splitting_points(expr, x):
@@ -464,6 +469,16 @@ def _split_mul(f, x):
     return fac, po, g
 
 
+def _as_exp_function(e):
+    if e.is_Pow and e.base is S.Exp1:
+        return exp(e.exp, evaluate=False)
+    return e
+
+
+_exp_function_order_key = cmp_to_key(
+    lambda a, b: _as_exp_function(a).compare(_as_exp_function(b)))
+
+
 def _mul_args(f):
     """
     Return a list ``L`` such that ``Mul(*L) == f``.
@@ -473,6 +488,8 @@ def _mul_args(f):
     If ``f`` is a ``Mul``, ``L`` comes from applying ``_mul_args`` to all factors of ``f``.
     """
     args = Mul.make_args(f)
+    if any(a.is_Pow and a.base is S.Exp1 for a in args) and f.is_commutative:
+        args = sorted(args, key=_exp_function_order_key)
     gs = []
     for g in args:
         if g.is_Pow and g.exp.is_Integer:
@@ -1462,7 +1479,7 @@ def _int_inversion(g, x, t):
 # Finally, the real meat.
 ####################################################################
 
-_lookup_table = None
+_lookup_tables: dict[bool, dict] = {}
 
 
 @cacheit
@@ -1479,10 +1496,11 @@ def _rewrite_single(f, x, recursive=True):
     from .transforms import (mellin_transform, inverse_mellin_transform,
         IntegralTransformError, MellinTransformStripError)
 
-    global _lookup_table
-    if not _lookup_table:
+    _lookup_table = _lookup_tables.get(global_parameters.exp_is_pow)
+    if _lookup_table is None:
         _lookup_table = {}
         _create_lookup_table(_lookup_table)
+        _lookup_tables[global_parameters.exp_is_pow] = _lookup_table
 
     if isinstance(f, meijerg):
         coeff, m = factor(f.argument, x).as_coeff_mul(x)
@@ -2127,7 +2145,7 @@ def meijerint_inversion(f, x, t):
                     args += arg2.args
                     continue
                 try:
-                    a, b = _get_coeff_exp(arg.args[0], x)
+                    a, b = _get_coeff_exp(arg.exp, x)
                 except _CoeffExpValueError:
                     b = 0
                 if b == 1:

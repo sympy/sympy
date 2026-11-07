@@ -27,7 +27,7 @@ from sympy.ntheory.factor_ import factorint
 from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
-from sympy.testing.pytest import raises, nocache_fail, warns_deprecated_sympy
+from sympy.testing.pytest import raises, nocache_fail, warns_deprecated_sympy, _both_exp_pow
 from sympy.abc import x
 
 
@@ -95,6 +95,7 @@ def test_bernoulli_rewrite():
     assert bernoulli(n+1, x).rewrite(zeta) == -(n+1) * zeta(-n, x)
 
 
+@_both_exp_pow
 def test_fibonacci():
     assert [fibonacci(n) for n in range(-3, 5)] == [2, -1, 1, 0, 1, 1, 2, 3]
     assert fibonacci(100) == 354224848179261915075

@@ -178,7 +178,7 @@ class lerchphi(DefinedFunction):
             return add + mul*n**(s - 1)*Add(*addargs)
 
         # TODO use minpoly instead of ad-hoc methods when issue 5888 is fixed
-        if isinstance(z, exp) and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
+        if isinstance(z, exp) and (z.exp/(pi*I)).is_Rational or z in [-1, I, -I]:
             # TODO reference?
             if z == -1:
                 p, q = S([1, 2])
@@ -187,7 +187,7 @@ class lerchphi(DefinedFunction):
             elif z == -I:
                 p, q = S([-1, 4])
             else:
-                arg = z.args[0]/(2*pi*I)
+                arg = z.exp/(2*pi*I)
                 p, q = S([arg.p, arg.q])
             return Add(*[exp(2*pi*I*k*p/q)/q**s*zeta(s, (k + a)/q)
                          for k in range(q)])

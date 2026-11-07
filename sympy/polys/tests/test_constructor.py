@@ -1,7 +1,7 @@
 """Tests for tools for constructing domains for expressions. """
 from __future__ import annotations
 
-from sympy.testing.pytest import tooslow
+from sympy.testing.pytest import tooslow, _both_exp_pow
 
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX
@@ -163,6 +163,7 @@ def test_construct_domain():
     assert construct_domain({}) == (ZZ, {})
 
 
+@_both_exp_pow
 def test_complex_exponential():
     w = exp(-I*2*pi/3, evaluate=False)
     alg = QQ.algebraic_field(w)

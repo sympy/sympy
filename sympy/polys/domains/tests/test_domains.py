@@ -33,7 +33,7 @@ from sympy.polys.polyerrors import (
     NotInvertible,
     DomainError)
 
-from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns_deprecated_sympy, _both_exp_pow
 
 from itertools import product
 
@@ -1441,6 +1441,7 @@ def test_exsqrt():
     assert F7.exsqrt(F7(0)) == F7(0)
 
 
+@_both_exp_pow
 def test_Domain_conjugate():
     domains = [ZZ, QQ, RR, CC, ZZ_I, QQ_I, EX, EXRAW]
     for domain in domains:

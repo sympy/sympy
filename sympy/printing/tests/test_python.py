@@ -13,7 +13,7 @@ from sympy.series.limits import limit
 
 from sympy.printing.python import python
 
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, _both_exp_pow
 
 x, y = symbols('x,y')
 th = Symbol('theta')
@@ -97,6 +97,7 @@ def test_python_relational():
         "x = Symbol('x')\ny = Symbol('y')\ne = Ne(x/(y + 1), y**2)"]
 
 
+@_both_exp_pow
 def test_python_functions():
     # Simple
     assert python(2*x + exp(x)) in "x = Symbol('x')\ne = 2*x + exp(x)"

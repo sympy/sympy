@@ -135,7 +135,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if term.is_Rational:
                 coeff *= term
                 continue
-            if term.is_Pow:
+            if term.is_Pow and term.base is not S.Exp1:
                 term = _denest_pow(term)
             if term.is_commutative:
                 b, e = term.as_base_exp()

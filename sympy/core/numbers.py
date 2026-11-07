@@ -3669,14 +3669,24 @@ class Exp1(NumberSymbol, metaclass=Singleton):
             return exp(expt)
 
     def _eval_power_exp_is_pow(self, arg):
+        from sympy.core.function import Function
+        pr = Function._should_evalf(arg)
+        if pr > 0:
+            return Pow(self, arg, evaluate=False).evalf(prec_to_dps(pr))
         if arg.is_Number:
             if arg is oo:
                 return oo
             elif arg == -oo:
                 return S.Zero
-        from sympy.functions.elementary.exponential import log
+        from sympy.functions.elementary.exponential import exp, log
+        from sympy.calculus.accumulationbounds import AccumBounds
+        from sympy.sets.setexpr import SetExpr
         if isinstance(arg, log):
             return arg.args[0]
+        elif isinstance(arg, AccumBounds):
+            return AccumBounds(self**arg.min, self**arg.max)
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(exp)
 
         # don't autoexpand Pow or Mul (see the issue 3351):
         elif not arg.is_Add:
@@ -3711,6 +3721,16 @@ class Exp1(NumberSymbol, metaclass=Singleton):
 
             # but it can't be multiplied by oo
             if coeff in (oo, -oo):
+                if terms.is_number:
+                    from sympy.functions.elementary.complexes import re, im
+                    if coeff is S.NegativeInfinity:
+                        terms = -terms
+                    if re(terms).is_zero and terms is not S.Zero:
+                        return S.NaN
+                    if re(terms).is_positive and im(terms) is not S.Zero:
+                        return S.ComplexInfinity
+                    if re(terms).is_negative:
+                        return S.Zero
                 return
 
             coeffs, log_term = [coeff], None

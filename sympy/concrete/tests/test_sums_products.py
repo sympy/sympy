@@ -40,7 +40,7 @@ from sympy.sets.sets import Interval
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.simplify import simplify
 from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
-from sympy.testing.pytest import XFAIL, raises, slow
+from sympy.testing.pytest import XFAIL, raises, slow, _both_exp_pow
 from sympy.abc import a, b, c, d, k, m, x, y, z
 
 n = Symbol('n', integer=True)
@@ -1197,6 +1197,7 @@ def test_issue_14129():
         (x*y + x - y)**2, True))
 
 
+@_both_exp_pow
 def test_issue_14112():
     assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false
     assert Sum((-1)**(2*n)/n, (n, 1, oo)).is_convergent() is S.false
@@ -1430,6 +1431,7 @@ def test_issue_8016():
         cos(pi*n/2)*gamma(m + 1)/gamma(n/2 + 1)/gamma(m - n/2 + 1)
 
 
+@_both_exp_pow
 def test_issue_14313():
     assert Sum(S.Half**floor(n/2), (n, 1, oo)).is_convergent()
 
@@ -1439,6 +1441,7 @@ def test_issue_14563():
     assert 1 % Sum(1, (x, 0, 1)) == 1
 
 
+@_both_exp_pow
 def test_issue_16735():
     assert Sum(5**n/gamma(n+1), (n, 1, oo)).is_convergent() is S.true
 

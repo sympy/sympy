@@ -14,7 +14,7 @@ from sympy.series.limits import limit
 from sympy.series.order import O
 from sympy.abc import x, y, z
 
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, _both_exp_pow
 
 
 def test_simple_1():
@@ -173,6 +173,7 @@ def test_exp():
     assert e.nseries(x, n=3) == exp(1) - x*exp(1)/2 + 11*exp(1)*x**2/24 + O(x**3)
 
 
+@_both_exp_pow
 def test_exp2():
     w = Symbol("w")
     e = w**(1 - log(x)/(log(2) + log(x)))

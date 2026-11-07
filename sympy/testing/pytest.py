@@ -342,11 +342,11 @@ def _both_exp_pow(func):
     """
     from sympy.core.parameters import _exp_is_pow
 
-    def func_wrap():
+    def func_wrap(*args, **kwargs):
         with _exp_is_pow(True):
-            func()
+            func(*args, **kwargs)
         with _exp_is_pow(False):
-            func()
+            func(*args, **kwargs)
 
     wrapper = functools.update_wrapper(func_wrap, func)
     return wrapper

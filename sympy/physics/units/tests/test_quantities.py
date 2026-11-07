@@ -28,7 +28,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import PhysicalConstant, Quantity
 from sympy.physics.units.systems import SI
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, _both_exp_pow
 
 k = PREFIXES["k"]
 
@@ -162,6 +162,7 @@ def test_quantity_abs():
     assert meter == sqrt(meter**2)
 
 
+@_both_exp_pow
 def test_check_unit_consistency():
     u = Quantity("u")
     v = Quantity("v")

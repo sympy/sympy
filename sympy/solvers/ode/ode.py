@@ -1916,7 +1916,7 @@ def _get_constant_subexpressions(expr, Cs):
         if expr_syms and expr_syms.issubset(Cs):
             Ces.append(expr)
         else:
-            if expr.func == exp:
+            if isinstance(expr, exp):
                 expr = expr.expand(mul=True)
             if expr.func in (Add, Mul):
                 d = sift(expr.args, lambda i : i.free_symbols.issubset(Cs))
