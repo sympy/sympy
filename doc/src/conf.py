@@ -320,7 +320,8 @@ href="https://docs.sympy.org/">the main SymPy documentation</a>. """
 # aren't specified in the Furo theme as CSS variables
 html_css_files = ['custom.css']
 
-# html_js_files = []
+#https://github.com/sympy/sympy/issues/27926
+html_js_files = ['custom.js']
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
