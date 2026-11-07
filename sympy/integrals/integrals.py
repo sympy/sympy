@@ -1336,6 +1336,22 @@ class Integral(AddWithLimits):
             else:
                 h = None
 
+            if manual is not False:
+                # Try manualintegrate for forms known to have clean closed forms
+                # that meijerint would otherwise return wrong polar branch cuts for
+                # (such as log(c*x + d)/(a*x + b)).
+                try:
+                    num, den = g.as_numer_denom()
+                    if num.is_Function and isinstance(num, log):
+                        den_poly = den.as_poly(x)
+                        if den_poly is not None and den_poly.degree() == 1:
+                            res_manual = manualintegrate(g, x)
+                            if res_manual is not None and not res_manual.has(Integral):
+                                parts.append(coeff * res_manual)
+                                continue
+                except (ValueError, PolynomialError):
+                    pass
+
             if meijerg is not False and h is None:
                 # rewrite using G functions
                 try:
