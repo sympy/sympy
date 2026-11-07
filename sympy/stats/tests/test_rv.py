@@ -439,3 +439,19 @@ def test_issue_20286():
     k = Dummy('k', integer = True)
     eq = Sum(Piecewise((-p**k*(1 - p)**(-k + n)*log(p**k*(1 - p)**(-k + n)*binomial(n, k))*binomial(n, k), (k >= 0) & (k <= n)), (nan, True)), (k, 0, n))
     assert eq.dummy_eq(H(B))
+
+def test_issue_29805_continuous_pspace_conditional_space_normalize_false():
+    X = Normal('X', 0, 1)
+
+    space = X.pspace.conditional_space(X > 0, normalize=False)
+
+    assert space.density is not None
+
+
+def test_issue_29805_product_pspace_conditional_space_normalize_false():
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 1)
+
+    space = pspace(X + Y).conditional_space(X > 0, normalize=False)
+
+    assert space.density is not None
