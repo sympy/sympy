@@ -1460,9 +1460,9 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
 
         if n == 0:
             return (
-                Matrix([zeros(1)]),
-                Matrix([zeros(1)]),
-                Matrix([zeros(1)]),
+                zeros(0, 0),
+                zeros(0, 1),
+                zeros(1, 0),
                 Matrix([num_coeffs[0] / den_coeffs[0]]),
             )
 
