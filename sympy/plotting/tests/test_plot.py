@@ -1080,6 +1080,44 @@ def test_plot_parametric_arguments():
     assert p[0].rendering_kw == {}
 
 
+def test_get_arrow_positions():
+    ### Test the pure helper that computes arrow segment placement
+    from sympy.plotting.series import Line2DBaseSeries
+
+    x = [0, 1, 2, 3, 4]
+    y = [0, 1, 0, -1, 0]
+
+    segments = Line2DBaseSeries._get_arrow_positions(x, y, n=2)
+    assert len(segments) == 2
+    for seg in segments:
+        assert len(seg) == 4
+
+    assert Line2DBaseSeries._get_arrow_positions([0], [0], n=3) == []
+
+
+def test_plot_arrow():
+    ### Test that arrow=True/int on plot_parametric actually renders
+    ### annotations on the matplotlib axes
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+
+    p = plot_parametric(cos(x), sin(x), (x, 0, 2*pi), show=False)
+    p._backend.process_series()
+    assert p[0].arrow is False
+    assert len(p._backend.ax.texts) == 0
+
+    p2 = plot_parametric(cos(x), sin(x), (x, 0, 2*pi), arrow=True, show=False)
+    p2._backend.process_series()
+    assert p2[0].arrow is True
+    assert len(p2._backend.ax.texts) == 1
+
+    p3 = plot_parametric(cos(x), sin(x), (x, 0, 2*pi), arrow=4, show=False)
+    p3._backend.process_series()
+    assert p3[0].arrow == 4
+    assert len(p3._backend.ax.texts) == 4
+
 def test_plot3d_parametric_line_arguments():
     ### Test arguments for plot3d_parametric_line()
     if not matplotlib:
