@@ -1,6 +1,13 @@
 from __future__ import annotations
-from .cartan_type import CartanType
+
+from typing import TYPE_CHECKING
+
+from .cartan_type import CartanType, Standard_Cartan
 from sympy.core.basic import Atom
+
+if TYPE_CHECKING:
+    from sympy.matrices.dense import Matrix
+
 
 class RootSystem(Atom):
     """Represent the root system of a simple Lie algebra
@@ -34,8 +41,9 @@ class RootSystem(Atom):
     .. [2] Lie Algebras and Representation Theory - Humphreys
 
     """
+    cartan_type: Standard_Cartan
 
-    def __new__(cls, cartantype):
+    def __new__(cls, cartantype:  str | list[str | int]):
         """Create a new RootSystem object
 
         This method assigns an attribute called cartan_type to each instance of
@@ -49,7 +57,7 @@ class RootSystem(Atom):
         obj.cartan_type = CartanType(cartantype)
         return obj
 
-    def simple_roots(self):
+    def simple_roots(self) -> dict[int, list[int]]:
         """Generate the simple roots of the Lie algebra
 
         The rank of the Lie algebra determines the number of simple roots that
@@ -72,7 +80,7 @@ class RootSystem(Atom):
         return roots
 
 
-    def all_roots(self):
+    def all_roots(self) -> dict[int, list[int]]:
         """Generate all the roots of a given root system
 
         The result is a dictionary where the keys are integer numbers.  It
@@ -92,7 +100,7 @@ class RootSystem(Atom):
             alpha[k] = newroot
         return alpha
 
-    def root_space(self):
+    def root_space(self) -> str:
         """Return the span of the simple roots
 
         The root space is the vector space spanned by the simple roots, i.e. it
@@ -113,7 +121,7 @@ class RootSystem(Atom):
         rs = " + ".join("alpha["+str(i) +"]" for i in range(1, n+1))
         return rs
 
-    def add_simple_roots(self, root1, root2):
+    def add_simple_roots(self, root1: int, root2: int) -> list[int]:
         """Add two simple roots together
 
         The function takes as input two integers, root1 and root2.  It then
@@ -139,7 +147,7 @@ class RootSystem(Atom):
         newroot = [_a1 + _a2 for _a1, _a2 in zip(a1, a2)]
         return newroot
 
-    def add_as_roots(self, root1, root2):
+    def add_as_roots(self, root1: list[int], root2: list[int]) -> list[int] | str:
         """Add two roots together if and only if their sum is also a root
 
         It takes as input two vectors which should be roots.  It then computes
@@ -166,7 +174,7 @@ class RootSystem(Atom):
             return "The sum of these two roots is not a root"
 
 
-    def cartan_matrix(self):
+    def cartan_matrix(self) -> Matrix:
         """Cartan matrix of Lie algebra associated with this root system
 
         Examples
@@ -182,7 +190,7 @@ class RootSystem(Atom):
         """
         return self.cartan_type.cartan_matrix()
 
-    def dynkin_diagram(self):
+    def dynkin_diagram(self) -> str:
         """Dynkin diagram of the Lie algebra associated with this root system
 
         Examples
