@@ -1,8 +1,10 @@
 from __future__ import annotations
-from sympy.core.numbers import (Rational, pi)
+from sympy.core.numbers import (Float, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core.power import Pow
 from sympy.codegen.cfunctions import (
     expm1, log1p, exp2, log2, fma, log10, Sqrt, Cbrt, hypot, isnan, isinf
 )
@@ -140,6 +142,12 @@ def test_Cbrt():
     assert Cbrt(42*x).diff(x) - 42*(42*x)**(Rational(1, 3) - 1)/3 == 0
     assert Cbrt(42*x).diff(x) - Cbrt(42*x).expand(func=True).diff(x) == 0
 
+    # Evalf keeps the precision of the Pow it represents
+    assert Cbrt(S(8)).evalf() == Float(2)
+    assert Cbrt(8.5).evalf() == Float(8.5)**Rational(1, 3)
+    assert Cbrt(S(2)).evalf(30) == Pow(2, Rational(1, 3)).evalf(30)
+    assert Cbrt(-8).evalf() == Pow(-8, Rational(1, 3)).evalf()
+
 
 def test_Sqrt():
     x = Symbol('x')
@@ -150,6 +158,11 @@ def test_Sqrt():
     # Diff
     assert Sqrt(42*x).diff(x) - 42*(42*x)**(S.Half - 1)/2 == 0
     assert Sqrt(42*x).diff(x) - Sqrt(42*x).expand(func=True).diff(x) == 0
+
+    # Evalf keeps the precision of the Pow it represents
+    assert Sqrt(S(4)).evalf() == Float(2)
+    assert Sqrt(4.5).evalf() == sqrt(4.5)
+    assert Sqrt(S(2)).evalf(30) == Pow(2, S.Half).evalf(30)
 
 
 def test_hypot():
