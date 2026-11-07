@@ -26,6 +26,7 @@ from the names used in Bronstein's book.
 from __future__ import annotations
 from types import GeneratorType
 from functools import reduce
+from typing import TYPE_CHECKING, Literal, overload
 
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
@@ -49,6 +50,15 @@ from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
 from sympy.polys.rootoftools import RootSum
 from sympy.utilities.iterables import numbered_symbols
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from typing import TypeAlias
+    from sympy.core.expr import Expr
+
+    _Extension: TypeAlias = Literal['exp', 'log']
+    _Case: TypeAlias = Literal['base', 'primitive', 'exp', 'tan',
+        'other_linear', 'other_nonlinear']
 
 
 def integer_powers(exprs):
@@ -137,8 +147,10 @@ class DifferentialExtension:
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
-    - exts:
-    - extargs:
+    - exts: The type ('exp' or 'log') of each extension; exts[i]
+      describes T[i + 1] (T[0] == x is not an extension).
+    - extargs: The argument of the exp or log of each extension, indexed
+      like exts.
     - cases: List of string representations of the cases of T.
     - t: The top level extension variable, as defined by the current level
       (see level below).
@@ -168,7 +180,31 @@ class DifferentialExtension:
         'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts', 'dummy')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
+    # When the extension flag is used, attributes not given in the extension
+    # dictionary are None at runtime (see __getattr__), but the algorithms
+    # assume they are set, so they are annotated with the types they have when
+    # the extension is fully built.
+    f: Expr
+    x: Symbol
+    T: list[Symbol]
+    D: list[Poly]
+    fa: Poly
+    fd: Poly
+    Tfuncs: list[Lambda]
+    backsubs: list[tuple[Expr, Expr]]
+    exts: list[_Extension]
+    extargs: list[Expr]
+    cases: list[_Case]
+    case: _Case
+    t: Symbol
+    d: Poly
+    newf: Expr
+    level: int
+    ts: Iterator[Symbol]
+    dummy: bool
+
+    def __init__(self, f=None, x=None, handle_first: _Extension = 'log',
+            dummy=False, extension=None, rewrite_complex=None):
         """
         Tries to build a transcendental extension tower from ``f`` with respect to ``x``.
 
@@ -249,12 +285,12 @@ class DifferentialExtension:
                     "extensions are not supported (yet!).  Try rewriting in "
                     "terms of exp and log, or using rewrite_complex=True.")
 
-        exps = set()
-        pows = set()
-        numpows = set()
-        sympows = set()
-        logs = set()
-        symlogs = set()
+        exps: list[exp] = []
+        pows: list[Pow] = []
+        numpows: list[Pow] = []
+        sympows: list[Pow] = []
+        logs: list[log] = []
+        symlogs: list[log] = []
 
         while True:
             if self.newf.is_rational_function(*self.T):
@@ -663,8 +699,8 @@ class DifferentialExtension:
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
         self.level = -1
-        self.exts = [None]
-        self.extargs = [None]
+        self.exts = []
+        self.extargs = []
         if self.dummy:
             self.ts = numbered_symbols('t', cls=Dummy)
         else:
@@ -676,7 +712,7 @@ class DifferentialExtension:
         self.Tfuncs = []
         self.newf = self.f
 
-    def indices(self, extension):
+    def indices(self, extension: _Extension) -> list[int]:
         """
         Parameters
         ==========
@@ -687,8 +723,9 @@ class DifferentialExtension:
         Returns
         =======
 
-        list: A list of indices of 'exts' where extension of
-            type 'extension' is present.
+        list: A list of indices into T (and D) of the extensions of
+            type 'extension'.  Note that self.exts[i] describes the
+            extension T[i + 1], since T[0] == x is not an extension.
 
         Examples
         ========
@@ -703,7 +740,7 @@ class DifferentialExtension:
         [1]
 
         """
-        return [i for i, ext in enumerate(self.exts) if ext == extension]
+        return [i for i, ext in enumerate(self.exts, 1) if ext == extension]
 
     def increment_level(self):
         """
@@ -811,7 +848,7 @@ def gcdex_diophantine(a, b, c):
     return (s, t)
 
 
-def frac_in(f, t, *, cancel=False, **kwargs):
+def frac_in(f, t, *, cancel=False, **kwargs) -> tuple[Poly, Poly]:
     """
     Returns the tuple (fa, fd), where fa and fd are Polys in t.
 
@@ -868,7 +905,7 @@ def as_poly_1t(p, t, z):
 
     t_part, remainder = pa.div(pd)
 
-    ans = t_part.as_poly(t, z, expand=False)
+    ans = Poly(t_part, t, z, expand=False)
 
     if remainder:
         one = remainder.one
@@ -876,10 +913,17 @@ def as_poly_1t(p, t, z):
         r = pd.degree() - remainder.degree()
         z_part = remainder.transform(one, tp) * tp**r
         z_part = z_part.replace(t, z).to_field().quo_ground(pd.LC())
-        ans += z_part.as_poly(t, z, expand=False)
+        ans += Poly(z_part, t, z, expand=False)
 
     return ans
 
+
+@overload
+def derivation(p: Poly, DE: DifferentialExtension,
+    coefficientD: bool = False, basic: Literal[False] = False) -> Poly: ...
+@overload
+def derivation(p: Poly | Expr, DE: DifferentialExtension,
+    coefficientD: bool = False, *, basic: Literal[True]) -> Expr: ...
 
 def derivation(p, DE, coefficientD=False, basic=False):
     """
@@ -935,7 +979,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
     return r
 
 
-def get_case(d, t):
+def get_case(d: Poly, t: Symbol) -> _Case:
     """
     Returns the type of the derivation d.
 
@@ -1090,7 +1134,7 @@ def hermite_reduce(a, d, DE):
     gd = Poly(1, DE.t)
 
     dd = derivation(d, DE)
-    dm = gcd(d.to_field(), dd.to_field()).as_poly(DE.t)
+    dm = Poly(gcd(d.to_field(), dd.to_field()), DE.t)
     ds, _ = d.div(dm)
 
     while dm.degree(DE.t) > 0:
@@ -1101,13 +1145,13 @@ def hermite_reduce(a, d, DE):
         ds_ddm = ds.mul(ddm)
         ds_ddm_dm, _ = ds_ddm.div(dm)
 
-        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t),
-            dms.as_poly(DE.t), a.as_poly(DE.t))
-        b, c = b.as_poly(DE.t), c.as_poly(DE.t)
+        b, c = gcdex_diophantine(-Poly(ds_ddm_dm, DE.t),
+            Poly(dms, DE.t), Poly(a, DE.t))
+        b, c = Poly(b, DE.t), Poly(c, DE.t)
 
-        db = derivation(b, DE).as_poly(DE.t)
+        db = Poly(derivation(b, DE), DE.t)
         ds_dms, _ = ds.div(dms)
-        a = c.as_poly(DE.t) - db.mul(ds_dms).as_poly(DE.t)
+        a = Poly(c, DE.t) - Poly(db.mul(ds_dms), DE.t)
 
         ga = ga*dm + b*gd
         gd = gd*dm
@@ -1149,7 +1193,8 @@ def polynomial_reduce(p, DE):
     return (q, p)
 
 
-def laurent_series(a, d, F, n, DE):
+def laurent_series(a: Poly, d: Poly, F: Poly, n: int,
+        DE: DifferentialExtension) -> tuple[Poly, Poly, list[Poly]]:
     """
     Contribution of ``F`` to the full partial fraction decomposition of A/D.
 
@@ -1182,7 +1227,7 @@ def laurent_series(a, d, F, n, DE):
     """
     if F.degree() == 0:
         return (Poly(0, DE.t), Poly(1, DE.t), [])
-    Z = _symbols('z', n)
+    Z: list[Symbol] = [*_symbols('z', n)]
     z = Symbol('z')
     Z.insert(0, z)
     delta_a = Poly(0, DE.t)
@@ -1314,7 +1359,7 @@ def recognize_log_derivative(a, d, DE, z=None):
     r = Poly(r, z)
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
-    if any(s.as_poly(z).degree() > 0 for s, _ in Np):
+    if any(Poly(s, z).degree() > 0 for s, _ in Np):
         # The normal part of the splitting factorization contains the
         # factors of the resultant whose roots are not constants; such
         # roots cannot be integers, so f is not the logarithmic derivative
@@ -1410,8 +1455,9 @@ def residue_reduce(a, d, DE, z=None, invert=True):
             s = Poly(s, z).monic()
 
             if invert:
-                h_lc = Poly(h.as_poly(DE.t).LC(), DE.t, field=True, expand=False)
-                inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S.One]
+                h_lc = Poly(Poly(h, DE.t).LC(), DE.t, field=True, expand=False)
+                inv = Poly(h_lc, z, field=True).invert(s)
+                coeffs: list[Expr] = [S.One]
 
                 for coeff in h.coeffs()[1:]:
                     L = reduced(inv*coeff.as_poly(inv.gens), [s])[1]
@@ -1804,7 +1850,7 @@ class NonElementaryIntegral(Integral):
     pass
 
 
-def risch_integrate(f, x, extension=None, handle_first='log',
+def risch_integrate(f, x, extension=None, handle_first: _Extension = 'log',
                     separate_integral=False, rewrite_complex=None,
                     conds='piecewise'):
     r"""
@@ -1949,8 +1995,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             fa, fd = frac_in(i, DE.t)
         else:
             result = result.subs(DE.backsubs)
-            if not i.is_zero:
-                i = NonElementaryIntegral(i.function.subs(DE.backsubs),i.limits)
+            if isinstance(i, Integral):
+                i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
             if not separate_integral:
                 result += i
                 return result
