@@ -126,6 +126,8 @@ __all__ = [
     'FlorySchulz', 'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
     'YuleSimon', 'Zeta', 'DiscreteRV', 'DiscreteDistributionHandmade',
 
+    'Mixture', 'MixtureDistribution', 'GaussianMixture',
+
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
     'GeneralizedMultivariateLogGammaOmega', 'Multinomial', 'MultivariateBeta',
     'MultivariateEwens', 'MultivariateT', 'NegativeMultinomial',
@@ -175,6 +177,8 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
 
 from .drv_types import (FlorySchulz, Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
         Skellam, YuleSimon, Zeta, DiscreteRV, DiscreteDistributionHandmade)
+
+from .mixture_rv import Mixture, MixtureDistribution, GaussianMixture
 
 from .joint_rv_types import (JointRV, Dirichlet,
         GeneralizedMultivariateLogGamma, GeneralizedMultivariateLogGammaOmega,

@@ -128,6 +128,11 @@ Compound Distribution
 .. autoclass:: sympy.stats.compound_rv.CompoundDistribution
    :members:
 
+Mixture Distribution
+--------------------
+.. autofunction:: Mixture
+.. autofunction:: GaussianMixture
+
 Interface
 ^^^^^^^^^
 
