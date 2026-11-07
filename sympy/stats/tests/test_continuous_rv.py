@@ -824,6 +824,14 @@ def test_kumaraswamy():
     assert cdf(X)(x) == Piecewise((0, x < 0),
                                 (-(-x**a + 1)**b + 1, x <= 1),
                                 (1, True))
+    assert pspace(X).domain.set == Interval(0, 1)
+
+    X = Kumaraswamy("x", 1, 1)
+    assert E(X) == S.Half
+    assert P(X > 1) == 0
+
+    X = Kumaraswamy("x", 2, 1)
+    assert E(X) == Rational(2, 3)
 
 
 def test_laplace():
