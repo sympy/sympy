@@ -3,6 +3,7 @@ from functools import singledispatch
 
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.special.delta_functions import DiracDelta
 from sympy.utilities.lambdify import lambdify
 from sympy.external import import_module
 from sympy.stats import DiscreteDistributionHandmade
@@ -31,7 +32,15 @@ def _(dist: SingleContinuousDistribution, size, seed):
     import scipy.stats
 
     z = Dummy('z')
-    handmade_pdf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
+    pdf = dist.pdf(z)
+    if pdf.has(DiracDelta):
+        # A DiracDelta in the PDF describes a degenerate (point mass)
+        # distribution, which scipy cannot sample by integrating a numeric
+        # PDF. Returning None lets the caller raise the standard
+        # NotImplementedError instead of producing an undefined name at
+        # sample time (see issue #29783).
+        return None
+    handmade_pdf = lambdify(z, pdf, ['numpy', 'scipy'])
 
     class scipy_pdf(scipy.stats.rv_continuous):
         def _pdf(dist, x):
