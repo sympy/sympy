@@ -92,6 +92,10 @@ def main():
 
     fn_source = os.path.join(options.source_dir, options.source_svg)
 
+    if options.clear:
+        clear_generated_files(fn_source, options.output_dir)
+        return
+
     if options.generate_svg or options.generate_all:
         generate_notail_notext_versions(fn_source, options.output_dir)
 
@@ -274,6 +278,29 @@ def get_svg_filename_from_versionkey(fn_source, ver):
     prefix = svg_sizes[ver]["prefix"]
     fn_out = "{}-{}.svg".format(name, prefix)
     return fn_out
+
+def clear_generated_files(fn_source, output_dir):
+    base_name = os.path.splitext(os.path.basename(fn_source))[0]
+    out_dir = Path(output_dir)
+
+    if not out_dir.exists():
+        logging.info("Output directory does not exist: %s" % output_dir)
+        return
+
+    removed_any = False
+    for path in out_dir.iterdir():
+        if not path.is_file():
+            continue
+        if path.suffix.lower() not in {'.svg', '.png', '.ico'}:
+            continue
+        if not path.stem.startswith(base_name):
+            continue
+        path.unlink()
+        logging.info("Removed file: %s" % path)
+        removed_any = True
+
+    if not removed_any:
+        logging.info("No generated logo files found to remove in %s" % output_dir)
 
 def searchElementById(node, Id, tagname):
     """
