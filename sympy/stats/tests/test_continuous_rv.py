@@ -254,8 +254,7 @@ def test_moment_generating_function():
     assert mgf == b*(-a*t)**b*uppergamma(-b, -a*t)
 
     mgf = moment_generating_function(QuadraticU('x', a, b))(t)
-    assert str(mgf) == ("(3*(t*(-4*b + (a + b)**2) + 4)*exp(b*t) - "
-    "3*(t*(a**2 + 2*a*(b - 2) + b**2) + 4)*exp(a*t))/(t**2*(a - b)**3)")
+    assert str(mgf) == ('(3*(t*((a + b)**2 - 4*b) + 4)*exp(b*t) - 3*(t*(a**2 + 2*a*(b - 2) + b**2) + 4)*exp(a*t))/(t**2*(a - b)**3)')
 
     mgf = moment_generating_function(RaisedCosine('x', a, b))(t)
     assert mgf == pi**2*exp(a*t)*sinh(b*t)/(b*t*(b**2*t**2 + pi**2))
@@ -265,8 +264,7 @@ def test_moment_generating_function():
         *exp(a**2*t**2/2)/2 + 1
 
     mgf = moment_generating_function(Triangular('x', a, b, c))(t)
-    assert str(mgf) == ("(-2*(-a + b)*exp(c*t) + 2*(-a + c)*exp(b*t) + "
-    "2*(b - c)*exp(a*t))/(t**2*(-a + b)*(-a + c)*(b - c))")
+    assert str(mgf) == ('(-2*(b - a)*exp(c*t) + 2*(c - a)*exp(b*t) + 2*(b - c)*exp(a*t))/(t**2*(b - a)*(c - a)*(b - c))')
 
     mgf = moment_generating_function(Uniform('x', a, b))(t)
     assert mgf == (-exp(a*t) + exp(b*t))/(t*(-a + b))
@@ -1217,14 +1215,13 @@ def test_triangular():
 
     X = Triangular('x', a, b, c)
     assert pspace(X).domain.set == Interval(a, b)
-    assert str(density(X)(x)) == ("Piecewise(((-2*a + 2*x)/((-a + b)*(-a + c)), (a <= x) & (c > x)), "
-    "(2/(-a + b), Eq(c, x)), ((2*b - 2*x)/((-a + b)*(b - c)), (b >= x) & (c < x)), (0, True))")
+    assert str(density(X)(x)) == ('Piecewise(((2*x - 2*a)/((b - a)*(c - a)), (a <= x) & (c > x)), (2/(b - a), Eq(c, x)), ((2*b - 2*x)/((b - a)*(b - c)), (b >= x) & (c < x)), (0, True))')
 
     #Tests moment_generating_function
     assert moment_generating_function(X)(x).expand() == \
     ((-2*(-a + b)*exp(c*x) + 2*(-a + c)*exp(b*x) + 2*(b - c)*exp(a*x))/(x**2*(-a + b)*(-a + c)*(b - c))).expand()
     assert str(characteristic_function(X)(x)) == \
-    '(2*(-a + b)*exp(I*c*x) - 2*(-a + c)*exp(I*b*x) - 2*(b - c)*exp(I*a*x))/(x**2*(-a + b)*(-a + c)*(b - c))'
+    '(2*(b - a)*exp(I*c*x) - 2*(c - a)*exp(I*b*x) - 2*(b - c)*exp(I*a*x))/(x**2*(b - a)*(c - a)*(b - c))'
 
 def test_quadratic_u():
     a = Symbol("a", real=True)

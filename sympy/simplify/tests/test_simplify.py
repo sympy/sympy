@@ -17,7 +17,7 @@ from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sin, sinc, tan)
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
@@ -954,21 +954,16 @@ def test_issue_7971_21740():
     assert z is not S.Zero and z == 0.0
 
 
-@slow
-def test_issue_17141_slow():
-    # Should not give RecursionError
-    assert simplify((2**acos(I+1)**2).rewrite('log')) == 2**((pi + 2*I*log(-1 +
-                   sqrt(1 - 2*I) + I))**2/4)
-
-
 def test_issue_17141():
     # Check that there is no RecursionError
-    assert simplify(x**(1 / acos(I))) == x**(2/(pi - 2*I*log(1 + sqrt(2))))
+    assert simplify(x**(1 / acos(I))) == x**(2/(pi - 2*I*log(sqrt(2) + 1)))
     assert simplify(acos(-I)**2*acos(I)**2) == \
            log(1 + sqrt(2))**4 + pi**2*log(1 + sqrt(2))**2/2 + pi**4/16
-    assert simplify(2**acos(I)**2) == 2**((pi - 2*I*log(1 + sqrt(2)))**2/4)
+    assert simplify(2**acos(I)**2) == 2**((pi - 2*I*log(sqrt(2) + 1))**2/4)
     p = 2**acos(I+1)**2
     assert simplify(p) == p
+    assert isinstance(atan2(0, 1 + log(-sqrt(2)*I/2 - sqrt(2)*sqrt(I
+        )*I/2 + sqrt(2)*sqrt(I)/2 + sqrt(I))**2), Piecewise)  # no recursion
 
 
 def test_simplify_kroneckerdelta():

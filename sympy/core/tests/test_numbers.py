@@ -2344,6 +2344,23 @@ def test_issue_19988_Float_pickle_precision():
     assert original._prec == unpickled._prec
 
 
+def test_no_evalf_for_Rational_assumptions():
+    from unittest.mock import patch
+    from sympy.core.expr import Expr
+
+    cases = [
+        ('is_negative', 101, False),
+        ('is_negative', -101, True),
+        ('is_extended_negative', 103, False),
+        ('is_extended_negative', -103, True),
+        ('is_extended_positive', 107, True),
+        ('is_extended_positive', -107, False),
+    ]
+    with patch.object(Expr, 'evalf', side_effect=AssertionError):
+        for fact, p, expected in cases:
+            assert getattr(Rational(p, 503), fact) is expected
+
+
 def test_issue_26206():
     import math
     from sympy import Rational, Float, Integer, sqrt
