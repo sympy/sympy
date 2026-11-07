@@ -185,8 +185,8 @@ with
         return cond_syms | self.base_set.free_symbols
 
     @property
-    def bound_symbols(self):
-        return flatten([self.sym])
+    def operator_variables(self) -> tuple[Basic, ...]:
+        return tuple(flatten([self.sym]))
 
     def _contains(self, other):
         def ok_sig(a, b):

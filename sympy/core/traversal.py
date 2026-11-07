@@ -57,7 +57,7 @@ def iterfreeargs(expr, _first=True):
     args = [expr]
     for i in args:
         yield i
-        if _first and hasattr(i, 'bound_symbols'):
+        if _first and i.bound_symbols:
             void = i.canonical_variables.values()
             for i in iterfreeargs(i.as_dummy(), _first=False):
                 if not i.has(*void):

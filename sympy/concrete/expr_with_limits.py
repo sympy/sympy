@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -18,6 +19,9 @@ from sympy.tensor.indexed import Idx
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift, is_sequence
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
 
 
 def _common_new(cls, function, *symbols, discrete, **assumptions):
@@ -283,7 +287,11 @@ class ExprWithLimits(Expr):
         return [l[0] for l in self.limits]
 
     @property
-    def bound_symbols(self):
+    def operator_variables(self) -> tuple[Basic, ...]:
+        return tuple(self.variables)
+
+    @property
+    def bound_symbols(self) -> tuple[Basic, ...]:
         """Return only variables that are dummy variables.
 
         Examples
@@ -292,7 +300,7 @@ class ExprWithLimits(Expr):
         >>> from sympy import Integral
         >>> from sympy.abc import x, i, j, k
         >>> Integral(x**i, (i, 1, 3), (j, 2), k).bound_symbols
-        [i, j]
+        (i, j)
 
         See Also
         ========
@@ -301,7 +309,7 @@ class ExprWithLimits(Expr):
         as_dummy : Rename dummy variables
         sympy.integrals.integrals.Integral.transform : Perform mapping on the dummy variable
         """
-        return [l[0] for l in self.limits if len(l) != 1]
+        return tuple(l[0] for l in self.limits if len(l) != 1)
 
     @property
     def free_symbols(self):
