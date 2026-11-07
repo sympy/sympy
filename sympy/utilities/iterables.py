@@ -1600,6 +1600,10 @@ def multiset_partitions(multiset, m=None):
         n = multiset
         if m and m > n:
             return
+        if n == 0:
+            # Like multiset_partitions([]): one partition with no parts.
+            yield []
+            return
         multiset = list(range(n))
         if m == 1:
             yield [multiset[:]]
