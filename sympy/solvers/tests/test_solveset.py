@@ -3731,7 +3731,15 @@ def test_issue_23318():
 
 def test_issue_19814():
     assert nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n
-                      ) == FiniteSet((log(2**(2*n))/log(2), S.Complexes))
+                      ) == FiniteSet((log(4)/log(2), 1))
+
+
+def test_issue_30849():
+    m, n = symbols('m n', real=True)
+    res = nonlinsolve([2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n)
+    assert res == FiniteSet((log(4)/log(2), 1))
+    assert simplify(res.args[0][0]) == 2
+    assert res.args[0][1] == 1
 
 
 def test_issue_22058():
