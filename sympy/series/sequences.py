@@ -935,7 +935,7 @@ class RecursiveSeq(SeqBase):
         if index - self.start < len(self.cache):
             return self.cache[self.y(index)]
 
-        for current in range(len(self.cache), index + 1):
+        for current in range(len(self.cache), index - self.start + 1):
             # Use xreplace over subs for performance.
             # See issue #10697.
             seq_index = self.start + current
@@ -944,7 +944,7 @@ class RecursiveSeq(SeqBase):
 
             self.cache[self.y(seq_index)] = new_term
 
-        return self.cache[self.y(self.start + current)]
+        return self.cache[self.y(index)]
 
     def __iter__(self):
         index = self.start
