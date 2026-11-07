@@ -944,6 +944,15 @@ def test_Poly_is_irreducible():
     assert Poly(7*x + 3, modulus=11).is_irreducible is True
     assert Poly(7*x**2 + 3*x + 1, modulus=11).is_irreducible is False
 
+    # issue 30845: over CC (algebraically closed) a polynomial is
+    # irreducible iff its degree is exactly 1, so the degree check
+    # short-circuits the (unsupported) factorization
+    assert Poly(x**2 + 1, x, domain='CC').is_irreducible is False
+    assert Poly(x - 1, x, domain='CC').is_irreducible is True
+    assert Poly(3*x + 2, x, domain='CC').is_irreducible is True
+    assert Poly(x**5 - 2, x, domain='CC').is_irreducible is False
+    assert Poly(S(2), x, domain='CC').is_irreducible is False
+
 
 def test_Poly_subs():
     assert Poly(x + 1).subs(x, 0) == 1
