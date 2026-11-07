@@ -141,6 +141,9 @@ tonne.set_global_relative_scale_factor(mega, gram)
 # Electron rest mass
 me = electron_rest_mass = Quantity("electron_rest_mass", abbrev="me")
 
+# Proton rest mass
+mp = proton_rest_mass = Quantity("proton_rest_mass", abbrev="mp")
+
 
 # Common length units
 

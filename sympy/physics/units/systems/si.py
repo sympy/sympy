@@ -25,6 +25,7 @@ from sympy.physics.units.definitions import (
     katal, gray, becquerel, inch, liter, julian_year, gravitational_constant,
     speed_of_light, elementary_charge, planck, hbar, electronvolt,
     avogadro_number, avogadro_constant, boltzmann_constant, electron_rest_mass,
+    proton_rest_mass,
     stefan_boltzmann_constant, Da, atomic_mass_constant, molar_gas_constant,
     faraday_constant, josephson_constant, von_klitzing_constant,
     acceleration_due_to_gravity, magnetic_constant, vacuum_permittivity,
@@ -103,32 +104,11 @@ One = S.One
 
 SI.set_quantity_dimension(radian, One)
 
-SI.set_quantity_scale_factor(ampere, One)
-
 SI.set_quantity_scale_factor(kelvin, One)
 
 SI.set_quantity_scale_factor(mole, One)
 
 SI.set_quantity_scale_factor(candela, One)
-
-# MKSA extension to MKS: derived units
-
-SI.set_quantity_scale_factor(coulomb, One)
-
-SI.set_quantity_scale_factor(volt, joule/coulomb)
-
-SI.set_quantity_scale_factor(ohm, volt/ampere)
-
-SI.set_quantity_scale_factor(siemens, ampere/volt)
-
-SI.set_quantity_scale_factor(farad, coulomb/volt)
-
-SI.set_quantity_scale_factor(henry, volt*second/ampere)
-
-SI.set_quantity_scale_factor(tesla, volt*second/meter**2)
-
-SI.set_quantity_scale_factor(weber, joule/ampere)
-
 
 SI.set_quantity_dimension(lux, luminous_intensity / length ** 2)
 SI.set_quantity_scale_factor(lux, steradian*candela/meter**2)
@@ -149,12 +129,6 @@ SI.set_quantity_dimension(becquerel, 1 / time)
 SI.set_quantity_scale_factor(becquerel, 1/second)
 
 #### CONSTANTS ####
-
-# elementary charge
-# REF: NIST SP 959 (June 2019)
-
-SI.set_quantity_dimension(elementary_charge, charge)
-SI.set_quantity_scale_factor(elementary_charge, 1.602176634e-19*coulomb)
 
 # Electronvolt
 # REF: NIST SP 959 (June 2019)
@@ -223,28 +197,14 @@ SI.set_quantity_scale_factor(von_klitzing_constant, planck / elementary_charge *
 SI.set_quantity_dimension(acceleration_due_to_gravity, acceleration)
 SI.set_quantity_scale_factor(acceleration_due_to_gravity, 9.80665*meter/second**2)
 
-# magnetic constant:
-
-SI.set_quantity_dimension(magnetic_constant, force / current ** 2)
-SI.set_quantity_scale_factor(magnetic_constant, 4*pi/10**7 * newton/ampere**2)
-
-# electric constant:
-
-SI.set_quantity_dimension(vacuum_permittivity, capacitance / length)
-SI.set_quantity_scale_factor(vacuum_permittivity, 1/(u0 * c**2))
-
-# vacuum impedance:
-
-SI.set_quantity_dimension(vacuum_impedance, impedance)
-SI.set_quantity_scale_factor(vacuum_impedance, u0 * c)
-
 # Electron rest mass
 SI.set_quantity_dimension(electron_rest_mass, mass)
 SI.set_quantity_scale_factor(electron_rest_mass, 9.1093837015e-31*kilogram)
 
-# Coulomb's constant:
-SI.set_quantity_dimension(coulomb_constant, force * length ** 2 / charge ** 2)
-SI.set_quantity_scale_factor(coulomb_constant, 1/(4*pi*vacuum_permittivity))
+# Proton rest mass
+# REF: NIST SP 959 (June 2019)
+SI.set_quantity_dimension(proton_rest_mass, mass)
+SI.set_quantity_scale_factor(proton_rest_mass, 1.67262192369e-27*kilogram)
 
 SI.set_quantity_dimension(psi, pressure)
 SI.set_quantity_scale_factor(psi, pound * gee / inch ** 2)
@@ -384,6 +344,7 @@ __all__ = [
     'dHg0', 'von_klitzing_constant', 'planck_length', 'avogadro_number',
     'mole', 'acceleration', 'information', 'planck_energy_density',
     'mebibyte', 's', 'acceleration_due_to_gravity', 'electron_rest_mass',
+    'proton_rest_mass',
     'planck_temperature', 'units', 'mass', 'dimsys_MKSA', 'kelvin', 'kPa',
     'boltzmann', 'milli_mass_unit', 'planck_impedance', 'electric_constant',
     'derived_dims', 'kg', 'coulomb', 'siemens', 'byte', 'magnetic_flux',

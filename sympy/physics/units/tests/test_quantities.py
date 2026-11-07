@@ -292,11 +292,11 @@ def test_find_unit():
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
         'centiliters', 'milliliters', 'planck_volume']
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
-    assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'me', 'mg', 'ug', 'amu', 'mmu', 'amus',
+    assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'me', 'mg', 'mp', 'ug', 'amu', 'mmu', 'amus',
                                 'gram', 'mmus', 'grams', 'pound', 'tonne', 'dalton', 'pounds',
                                 'kilogram', 'kilograms', 'microgram', 'milligram', 'metric_ton',
                                 'micrograms', 'milligrams', 'planck_mass', 'milli_mass_unit', 'atomic_mass_unit',
-                                'electron_rest_mass', 'atomic_mass_constant']
+                                'proton_rest_mass', 'electron_rest_mass', 'atomic_mass_constant']
 
 
 def test_Quantity_derivative():
