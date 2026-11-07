@@ -550,6 +550,16 @@ def test_Subs():
         f(x, g(x)), g(x))*Derivative(g(x), x) + Subs(Derivative(
         f(y, g(x)), y), y, x)
 
+
+def test_Subs_composite_arguments_derivative():
+    x, y = symbols('x y')
+    f = Function('f')
+
+    result = f(x + y, x*y).diff(y).diff(x)
+
+    assert result.free_symbols == {x, y}
+
+
 def test_doitdoit():
     done = Derivative(f(x, g(x)), x, g(x)).doit()
     assert done == done.doit()
