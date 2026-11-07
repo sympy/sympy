@@ -243,5 +243,25 @@ with
             pass  # let error about the symbol raise from __new__
         return self.func(sym, cond, base)
 
+    def _subs(self, old, new, **hints):
+        if not old.is_Symbol:
+            return super()._subs(old, new, **hints)
+
+        # Keep original_new available to nested binders during substitution.
+        sym, cond, base = self.args
+        insym = sym._subs(old, adummy, **hints).has(adummy)
+        # Symbols bound in the condition are free in the base set.
+        newbase = base._subs(old, new, **hints)
+        if not insym and old in cond.free_symbols:
+            if sym.is_Symbol or (isinstance(sym, Tuple) and
+                    all(s.is_Symbol for s in flatten([sym]))):
+                scoped = Lambda(sym, cond)._subs(old, new, **hints)
+                cond = scoped.expr
+                sym = scoped.signature if isinstance(sym, Tuple) else \
+                    scoped.variables[0]
+            else:
+                cond = cond._subs(old, new, **hints)
+        return self.func(sym, cond, newbase)
+
     def _kind(self):
         return SetKind(self.sym.kind)
