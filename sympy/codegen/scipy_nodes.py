@@ -1,4 +1,5 @@
 from __future__ import annotations
+from mpmath.libmp import prec_to_dps
 from sympy.core.function import Add, ArgumentIndexError, Function
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -31,7 +32,7 @@ class cosm1(Function):
         return _cosm1(x)
 
     def _eval_evalf(self, prec):
-        return self.rewrite(cos)._evalf(prec)
+        return self.rewrite(cos).evalf(prec_to_dps(prec))
 
     def _eval_simplify(self, **kwargs):
         x, = self.args
@@ -69,7 +70,7 @@ class powm1(Function):
         return _powm1(x, y)
 
     def _eval_evalf(self, prec):
-        return self.rewrite(Pow)._evalf(prec)
+        return self.rewrite(Pow).evalf(prec_to_dps(prec))
 
     def _eval_simplify(self, **kwargs):
         x, y = self.args

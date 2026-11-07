@@ -7,6 +7,7 @@ as a SymPy function for symbolic manipulation.
 
 """
 from __future__ import annotations
+from mpmath.libmp import prec_to_dps
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -271,7 +272,7 @@ class log2(Function):
             return arg.exp
 
     def _eval_evalf(self, prec):
-        return self.rewrite(log)._evalf(prec)
+        return self.rewrite(log).evalf(prec_to_dps(prec))
 
     def _eval_expand_func(self, **hints):
         return _log2(*self.args)
