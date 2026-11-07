@@ -495,6 +495,9 @@ def dmp_sqf_part(f, u, K):
 
 def dup_gf_sqf_list(f, K, all=False):
     """Compute square-free decomposition of ``f`` in ``GF(p)[x]``. """
+    if not f:
+        return K.zero, []
+
     f_orig = f
 
     f = dup_convert(f, K, K.dom)
