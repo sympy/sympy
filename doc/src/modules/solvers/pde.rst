@@ -31,6 +31,8 @@ These functions are meant for internal use. However they contain useful informat
 
 .. autofunction:: sympy.solvers.pde::pde_1st_linear_variable_coeff
 
+.. autofunction:: sympy.solvers.pde::pde_2nd_linear_constant_coeff_separable
+
 Information on the pde module
 -----------------------------
 
