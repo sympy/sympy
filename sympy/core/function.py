@@ -60,9 +60,8 @@ from sympy.utilities.iterables import (has_dups, sift, iterable,
 from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
 from sympy.utilities.misc import as_int, filldedent, func_name
 
-import mpmath
-from sympy.external.mpmath import (prec_to_dps, mpf, mpc, mp, workprec, diff as
-                                   mpmath_diff)
+from sympy.external.mpmath import (mpmath, prec_to_dps, mpf, mpc, mp,
+                                   workprec, diff as mpmath_diff)
 
 import inspect
 from collections import Counter
