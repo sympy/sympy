@@ -267,8 +267,13 @@ def test_residue():
     assert _discrete_log_pohlig_hellman(14789363, 11**444, 11) == 444
     assert discrete_log(1, 0, 2) == 0
     raises(ValueError, lambda: discrete_log(-4, 1, 3))
+    raises(ValueError, lambda: discrete_log(11, 2, 3))
     raises(ValueError, lambda: discrete_log(10, 3, 2))
+    raises(ValueError, lambda: discrete_log(12, 10, 6))
+    raises(ValueError, lambda: discrete_log(30, 7, 17))
     assert discrete_log(10, 6, 2) == 4
+    assert discrete_log(12, 0, 6) == 2
+    assert discrete_log(24, 4, 10) == 2
     assert discrete_log(42, 2, 2) == 1
     assert discrete_log(587, 2**9, 2) == 9
     assert discrete_log(1073, 29, 87) == 15

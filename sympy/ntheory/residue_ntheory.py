@@ -1698,7 +1698,9 @@ def discrete_log(n, a, b, order=None, prime_order=None):
                 res = _discrete_log_trial_mul(pe, a, b, order)
                 cyclic_dlog.append((res, order))
                 continue
-            if prime_order:
+
+            is_prime_order = isprime(order)
+            if is_prime_order:
                 # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
                 # we compare the expected running times to determine the algorithm which is expected to be faster
                 # the number 10 was determined experimentally
