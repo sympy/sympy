@@ -1052,11 +1052,11 @@ FiberForceVelocityDeGroote2016((l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_o
 
 >>> F_M_tilde = a*fl_M_act*fv_M + fl_M_pas + beta*v_M/v_M_max
 >>> F_M_tilde
-beta*(l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_op...8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.6, 4.0)
+beta*(l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.6, 4.0)
 
 >>> F_T = F_M_max*F_M_tilde*sm.sqrt(1 - sm.sin(alpha_opt)**2)
 >>> F_T
-F_M_max*sqrt(1 - sin(alpha_opt)**2)*(beta*(l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)) + a(t)*FiberForc....149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.6, 4.0))
+F_M_max*sqrt(1 - sin(alpha_opt)**2)*(beta*(l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.6, 4.0))
 
 SymPy offers this implementation of rigid tendon dynamics in the
 :obj:`~sympy.physics.biomechanics.musculotendon.MusculotendonDeGroote2016` class,
@@ -1349,8 +1349,8 @@ the muscle specific forces applied to the pathway:
 
    >>> muscle_loads = muscle.to_loads()
    >>> pprint.pprint(muscle_loads)
-   [Force(point=O, force=F_M_max*(beta*(Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)*...hPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, 0.6, 4.0))*q(t)*cos(alpha_opt)/Abs(q(t))*N.x),
-    Force(point=P, force=- F_M_max*(beta*(Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack...hPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, 0.6, 4.0))*q(t)*cos(alpha_opt)/Abs(q(t))*N.x)]
+   [Force(point=O, force=F_M_max*(beta*(Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, 0.6, 4.0))*q(t)*cos(alpha_opt)/Abs(q(t))*N.x),
+    Force(point=P, force=- F_M_max*(beta*(Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, 0.6, 4.0))*q(t)*cos(alpha_opt)/Abs(q(t))*N.x)]
 
 These loads are made up of various functions that describe the length and
 velocity relationships to the muscle fiber force.
