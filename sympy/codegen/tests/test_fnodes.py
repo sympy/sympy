@@ -209,6 +209,9 @@ def test_reshape():
     ]
 
     for expr, expected in cases:
+        hash(expr)
+        expr.sort_key()
+        assert expr.doit() == expr
         assert fcode(expr, source_format='free', standard=2003) == expected
 
     assert fcode(reshape(array, [2, 3]), source_format='free', standard=95) == 'reshape(array, (/2, 3/))'
