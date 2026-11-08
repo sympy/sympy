@@ -1892,8 +1892,8 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         # floats in the 'want' string may contain ellipses
         want_floats = got_floats + r'(\.{3})?'
 
-        front_sep = r'\s|\+|\-|\*|,'
-        back_sep = front_sep + r'|j|e'
+        front_sep = r'\s|\+|\-|\*|,|\('
+        back_sep = front_sep + r'|j|e|\)'
 
         fbeg = r'^%s(?=%s|$)' % (got_floats, back_sep)
         fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, got_floats, back_sep)
