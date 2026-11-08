@@ -96,24 +96,19 @@ def _(f, x):
             return
         solns = list(soln_expr)
 
-        extr = [_start, _end] + [f(i) for i in solns
-                                 if i.is_real and i in x]
-        start, end = Min(*extr), Max(*extr)
+        critical_values = [f(i) for i in solns if i.is_real and i in x]
+        start, end = Min(_start, _end, *critical_values), Max(
+            _start, _end, *critical_values)
 
-        left_open, right_open = False, False
-        if _start <= _end:
-            # the minimum or maximum value can occur simultaneously
-            # on both the edge of the interval and in some interior
-            # point
-            if start == _start and start not in solns:
-                left_open = x.left_open
-            if end == _end and end not in solns:
-                right_open = x.right_open
-        else:
-            if start == _end and start not in solns:
-                left_open = x.right_open
-            if end == _start and end not in solns:
-                right_open = x.left_open
+        # A bound is open only when it is not attained at any included
+        # endpoint or interior critical point.
+        attained = list(critical_values)
+        if not x.left_open:
+            attained.append(_start)
+        if not x.right_open:
+            attained.append(_end)
+        left_open = all(start != value for value in attained)
+        right_open = all(end != value for value in attained)
 
         if start == end and start in (S.Infinity, S.NegativeInfinity):
             return FiniteSet(start)

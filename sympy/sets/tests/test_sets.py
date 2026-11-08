@@ -82,6 +82,25 @@ def test_imageset_interval_critical_points():
         Interval(-1, sin(1))
 
 
+def test_imageset_interval_open_extrema():
+    # The limit at an excluded endpoint need not be in the image.
+    f = Lambda(x, 2 - (x - 1)**2)
+    assert imageset(f, Interval.open(0, 2)) == Interval.Lopen(1, 2)
+    f = Lambda(x, (x - 1)**2)
+    assert imageset(f, Interval.open(0, 2)) == Interval.Ropen(0, 1)
+    assert imageset(Lambda(x, x**2), Interval.open(1, 2)) == \
+        Interval.open(1, 4)
+    assert imageset(Lambda(x, x**2), Interval.open(-1, 1)) == \
+        Interval.Ropen(0, 1)
+    # A value reached at the other, included endpoint must remain included.
+    assert imageset(Lambda(x, x**2), Interval.Ropen(-1, 1)) == \
+        Interval(0, 1)
+    assert imageset(Lambda(x, sin(x)), Interval.Lopen(0, pi)) == \
+        Interval(0, 1)
+    assert imageset(Lambda(x, sin(x)), Interval.open(0, pi)) == \
+        Interval.Lopen(0, 1)
+
+
 def test_is_empty():
     for s in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals,
             S.UniversalSet]:
