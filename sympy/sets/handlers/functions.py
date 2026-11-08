@@ -90,7 +90,7 @@ def _(f, x):
         _end = f(x.end)
 
     if len(sing) == 0:
-        soln_expr = solveset(diff(expr, var), var)
+        soln_expr = solveset(diff(expr, var), var, x)
         if not (isinstance(soln_expr, FiniteSet)
                 or soln_expr is S.EmptySet):
             return

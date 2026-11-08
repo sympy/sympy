@@ -71,6 +71,17 @@ def test_imageset():
         Interval(1, 2), Interval(2, 3)))
 
 
+def test_imageset_interval_critical_points():
+    # Solve only for critical points in the interval, not on all of C.
+    assert imageset(Lambda(x, sin(x)), Interval(1, 2)) == \
+        Interval(sin(1), 1)
+    assert imageset(Lambda(x, cos(x)), Interval(1, 2)) == \
+        Interval(cos(2), cos(1))
+    assert imageset(sin, Interval(0, 2*pi)) == Interval(-1, 1)
+    assert imageset(Lambda(x, sin(x)), Interval(-2, 1)) == \
+        Interval(-1, sin(1))
+
+
 def test_is_empty():
     for s in [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals,
             S.UniversalSet]:
