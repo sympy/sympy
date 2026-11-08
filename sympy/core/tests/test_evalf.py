@@ -95,10 +95,13 @@ def test_evalf_complex():
 
 
 def test_evalf_abs_evaluate_false():
-    expected = sqrt(2).evalf(30)
-    with evaluate(False):
-        result = Abs(1 + I, evaluate=False).evalf(30)
-    assert result == expected
+    for z, expected in (
+        (1 + I, sqrt(2)),
+        (10**20 + I, sqrt(10**40 + 1)),
+    ):
+        with evaluate(False):
+            result = Abs(z, evaluate=False).evalf(50)
+        assert result == expected.evalf(50)
 
 
 @XFAIL
