@@ -3650,10 +3650,7 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
-        # XXX: Hack to support non-Basic args
-        #              |
-        #              V
-        if deep and getattr(expr, 'args', ()) and not expr.is_Atom:
+        if deep and expr.args and not expr.is_Atom:
             sargs = []
             for arg in expr.args:
                 arg, arghit = Expr._expand_hint(arg, hint, **hints)
