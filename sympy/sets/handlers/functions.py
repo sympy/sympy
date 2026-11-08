@@ -7,6 +7,7 @@ from sympy.core.function import Lambda, FunctionClass, diff, expand_mul
 from sympy.core.numbers import Float, oo
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import true
 from sympy.multipledispatch import Dispatcher
@@ -131,6 +132,8 @@ def _(f, x):
         return Interval(exp(x.start), exp(x.end), x.left_open, x.right_open)
     elif f == log:
         return Interval(log(x.start), log(x.end), x.left_open, x.right_open)
+    elif f in (sin, cos):
+        return imageset(f, x)
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @_set_function.register(FunctionUnion, Union)
