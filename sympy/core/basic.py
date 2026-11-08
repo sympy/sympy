@@ -21,12 +21,20 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar, TypeVar, Any, Hashable
+    from typing import ClassVar, Any, Hashable, TypeVar, Protocol
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
 
     Tbasic = TypeVar("Tbasic", bound='Basic')
+
+
+    _K_co = TypeVar("_K_co", covariant=True)
+    _V_co = TypeVar("_V_co", covariant=True)
+
+    class _SupportsItems(Protocol[_K_co, _V_co]):
+        def items(self) -> Iterable[tuple[_K_co, _V_co]]:
+            ...
 
 
 def as_Basic(expr):
@@ -292,6 +300,29 @@ class Basic(Printable):
         return obj
 
     def copy(self):
+        """
+        Return a shallow copy of the expression.
+
+        Atomic expressions are immutable and return themselves when copied.
+
+        Examples
+        ========
+
+        >>> from sympy import sin
+        >>> from sympy.abc import x
+        >>> expr = sin(x) + 1
+        >>> expr.copy() == expr
+        True
+        >>> expr.copy() is expr
+        False
+        >>> expr.copy().args[0] is expr.args[0]
+        True
+
+        See Also
+        ========
+
+        Basic.func
+        """
         return self.func(*self.args)
 
     def __getnewargs__(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
@@ -732,6 +763,48 @@ class Basic(Printable):
             active_deprecations_target="deprecated-expr-free-symbols")
         return set()
 
+
+    def _bound_dummies(self):
+        """Replace bound symbols with unique Dummies.
+
+        Return the transformed expression and a mapping from
+        temporary Dummies to their original bound symbols.
+        """
+        from .symbol import Dummy, Symbol
+
+        restore = {}
+
+        def freshen(x):
+            # Mask free symbols that shadow bound symbols.
+            free = x.free_symbols
+            bound = set(x.bound_symbols)
+            d = {i: Dummy() for i in bound & free}
+            x = x.subs(d)
+
+
+            # Distinguish every binding with a unique Dummy.
+            reps = {
+                v: Dummy(v.name, commutative=v.is_commutative)
+                for v in x.bound_symbols
+            }
+            restore.update({dummy: v for v, dummy in reps.items()})
+
+            x = x.xreplace(reps)
+
+            # Restore masked free symbols.
+            return x.xreplace({v: k for k, v in d.items()})
+
+        if not self.has(Symbol):
+            return self, restore
+
+        rv = self.replace(
+            lambda x: hasattr(x, 'bound_symbols'),
+            freshen,
+            simultaneous=False)
+
+        return rv, restore
+
+
     def as_dummy(self) -> "Self":
         """Return the expression with any objects having structurally
         bound symbols replaced with unique, canonical symbols within
@@ -760,23 +833,37 @@ class Basic(Printable):
         a property, ``bound_symbols`` that returns those symbols
         appearing in the object.
         """
-        from .symbol import Dummy, Symbol
-        def can(x):
-            # mask free that shadow bound
-            free = x.free_symbols
-            bound = set(x.bound_symbols)
-            d = {i: Dummy() for i in bound & free}
-            x = x.subs(d)
-            # replace bound with canonical names
-            x = x.xreplace(x.canonical_variables)
-            # return after undoing masking
-            return x.xreplace({v: k for k, v in d.items()})
-        if not self.has(Symbol):
-            return self
-        return self.replace(
-            lambda x: hasattr(x, 'bound_symbols'),
-            can,
-            simultaneous=False) # type:ignore
+        from .symbol import Symbol
+
+        rv, restore = self._bound_dummies()
+        if not restore:
+            return rv
+
+        temporary = set(restore)
+        canonical = {}
+
+        def assign(x, used):
+            used = set(used)
+
+            for b in getattr(x, 'bound_symbols', ()):
+                if b not in temporary or b in canonical:
+                    continue
+
+                names = {s.name for s in x.free_symbols
+                         if isinstance(s, Symbol)}
+                i = 0
+                while f'_{i}' in used or f'_{i}' in names:
+                    i += 1
+
+                canonical[b] = Symbol(f'_{i}')
+                used.add(f'_{i}')
+
+            for arg in x.args:
+                assign(arg, used)
+
+        assign(rv, set())
+        return rv.xreplace(canonical)
+
 
     @property
     def canonical_variables(self) -> dict[Basic, Symbol]:
@@ -954,13 +1041,13 @@ class Basic(Printable):
         return S.One, self
 
     @overload
-    def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
-    @overload
-    def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+    def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
+            | Iterable[tuple[Basic | complex, Basic | complex]],
+              arg2: None=None, **kwargs: Any) -> Basic: ...
     @overload
     def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
 
-    def subs(self, arg1: Mapping[Basic | complex, Basic | complex]
+    def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
             | Iterable[tuple[Basic | complex, Basic | complex]] | Basic | complex,
              arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
         """
@@ -1157,7 +1244,7 @@ class Basic(Printable):
                 # using d*m so Subs will be used on dummy variables
                 # in things like Derivative(f(x, y), x) in which x
                 # is both free and bound
-                rv = rv._subs(old, d*m, **kwargs)
+                rv = rv._subs(old, d*m, original_new=new, **kwargs)
                 if not isinstance(rv, Basic):
                     break
                 reps[d] = new
@@ -1345,7 +1432,9 @@ class Basic(Printable):
 
         Trying to replace x with an expression raises an error:
 
-        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y}) # doctest: +SKIP
+        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y})
+        Traceback (most recent call last):
+        ...
         ValueError: Invalid limits given: ((2*y, 1, 4*y),)
 
         See Also
@@ -1794,7 +1883,53 @@ class Basic(Printable):
         return (rv, mapping) if map else rv # type: ignore
 
     def find(self, query, group=False):
-        """Find all subexpressions matching a query."""
+        """
+        Find all unique subexpressions matching a query.
+
+        query : type, Basic, or callable
+            The pattern used to test each node of the expression tree.
+            A type matches subexpressions of that type, a ``Basic``
+            expression is treated as a pattern that subexpressions are
+            matched against (with ``Wild`` symbols acting as wildcards),
+            and a callable matches when it returns ``True``.
+
+        group : bool, optional
+            If ``True``, return a dict mapping each match to the number
+            of times it appears instead of a set of unique matches.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Wild
+        >>> from sympy.abc import x, y
+
+        >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
+        >>> expr.find(sin)
+        {sin(x), sin(y)}
+        >>> expr.find(sin, group=True)
+        {sin(x): 2, sin(y): 1}
+
+        >>> w = Wild('w')
+        >>> expr.find(sin(w))
+        {sin(x), sin(y)}
+
+        >>> expr.find(lambda e: e.is_Symbol)
+        {x, y}
+
+        See Also
+        ========
+
+        count : count the number of matching subexpressions
+        has : test whether any matching subexpression exists
+        match : pattern-match the whole expression
+
+        Notes
+        =====
+
+        The search visits every node of the expression tree, including the
+        expression itself, so ``expr.find(type(expr))`` will include
+        ``expr`` in the result.
+        """
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 
@@ -1803,7 +1938,35 @@ class Basic(Printable):
         return dict(Counter(results))
 
     def count(self, query):
-        """Count the number of matching subexpressions."""
+        """
+        Count the number of matching subexpressions.
+
+        query : type, Basic, or callable
+            Same semantics as in ``find()``.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Wild
+        >>> from sympy.abc import x, y
+
+        >>> expr = sin(x) + sin(x)*cos(x) + y*sin(y)
+        >>> expr.count(sin)
+        3
+
+        >>> w = Wild('w')
+        >>> expr.count(sin(w))
+        3
+
+        >>> expr.count(lambda e: e.is_Symbol)
+        5
+
+        See Also
+        ========
+
+        find : return matching subexpressions instead of a count
+        has : test whether any match exists
+        """
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
@@ -2240,6 +2403,10 @@ class Atom(Basic):
     is_Atom = True
 
     __slots__ = ()
+
+    def copy(self):
+        """Return this atom, since atomic expressions are immutable."""
+        return self
 
     def matches(self, expr, repl_dict=None, old=False):
         if self == expr:

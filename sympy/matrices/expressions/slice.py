@@ -1,7 +1,8 @@
+from __future__ import annotations
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import ceiling
 
 def normalize(i, parentsize):
     if isinstance(i, slice):
@@ -70,9 +71,9 @@ class MatrixSlice(MatrixExpr):
     @property
     def shape(self):
         rows = self.rowslice[1] - self.rowslice[0]
-        rows = rows if self.rowslice[2] == 1 else floor(rows/self.rowslice[2])
+        rows = rows if self.rowslice[2] == 1 else ceiling(rows/self.rowslice[2])
         cols = self.colslice[1] - self.colslice[0]
-        cols = cols if self.colslice[2] == 1 else floor(cols/self.colslice[2])
+        cols = cols if self.colslice[2] == 1 else ceiling(cols/self.colslice[2])
         return rows, cols
 
     def _entry(self, i, j, **kwargs):

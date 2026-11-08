@@ -14,9 +14,11 @@ If you are new to contributing to SymPy, start with the
 
 introduction-to-contributing.md
 new-contributors-guide/index.md
+pull-request-guidelines.rst
 dependencies.md
 debug.rst
 docstring.rst
 documentation-style-guide.rst
 deprecations.md
+ai-generated-code-policy.rst
 ```

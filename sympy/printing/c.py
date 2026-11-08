@@ -506,7 +506,8 @@ class C89CodePrinter(CodePrinter):
             )
         else:
             raise NotImplementedError("Unknown type of var: %s" % type(var))
-        if val != None: # Must be "!= None", cannot be "is not None"
+        # Must be "!= None", cannot be "is not None"
+        if val != None:  # noqa: E711
             result += ' = %s' % self._print(val)
         return result
 
@@ -532,13 +533,16 @@ class C89CodePrinter(CodePrinter):
         return 'false'
 
     def _print_Element(self, elem):
-        if elem.strides == None: # Must be "== None", cannot be "is None"
-            if elem.offset != None: # Must be "!= None", cannot be "is not None"
+        # Must be "== None", cannot be "is None"
+        if elem.strides == None:  # noqa: E711
+            # Must be "!= None", cannot be "is not None"
+            if elem.offset != None:  # noqa: E711
                 raise ValueError("Expected strides when offset is given")
             idxs = ']['.join((self._print(arg) for arg in elem.indices))
         else:
             global_idx = sum(i*s for i, s in zip(elem.indices, elem.strides))
-            if elem.offset != None: # Must be "!= None", cannot be "is not None"
+            # Must be "!= None", cannot be "is not None"
+            if elem.offset != None:  # noqa: E711
                 global_idx += elem.offset
             idxs = self._print(global_idx)
 

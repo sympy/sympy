@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import (Function, Lambda, expand)
 from sympy.core.numbers import (I, Rational)
 from sympy.core.relational import Eq
@@ -102,6 +103,7 @@ def recurrence_term(c, f):
     return sum(c[i]*f.subs(n, n + i) for i in range(len(c)))
 
 
+@slow
 def test_rsolve_bulk():
     """Some bulk-generated tests."""
     funcs = [ n, n + 1, n**2, n**3, n**4, n + n**2, 27*n + 52*n**2 - 3*
@@ -230,7 +232,7 @@ def test_rsolve_raises():
 
 def test_issue_6844():
     f = y(n + 2) - y(n + 1) + y(n)/4
-    assert rsolve(f, y(n)) == 2**(-n + 1)*C1*n + 2**(-n)*C0
+    assert rsolve(f, y(n)) == 2**(-n + 1)*C1*n + S.Half**n*C0
     assert rsolve(f, y(n), {y(0): 0, y(1): 1}) == 2**(1 - n)*n
 
 

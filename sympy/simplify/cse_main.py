@@ -1,5 +1,6 @@
 """ Tools for doing common subexpression elimination.
 """
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy.core import Basic, Mul, Add, Pow, sympify

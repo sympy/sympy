@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys import Poly
 from sympy import Symbol

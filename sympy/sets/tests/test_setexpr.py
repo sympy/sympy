@@ -1,15 +1,16 @@
+from __future__ import annotations
 from sympy.sets.setexpr import SetExpr
 from sympy.sets import Interval, FiniteSet, Intersection, ImageSet, Union
 
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
-from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.numbers import (I, Rational, oo, nan)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import cos
-from sympy.sets.sets import Set
+from sympy.sets.sets import Set, imageset
 
 
 a, x = symbols("a, x")
@@ -20,6 +21,10 @@ def test_setexpr():
     se = SetExpr(Interval(0, 1))
     assert isinstance(se.set, Set)
     assert isinstance(se, Expr)
+    se = SetExpr({-1, 2})
+    assert isinstance(se.set, FiniteSet)
+    assert se == SetExpr(FiniteSet(-1, 2))
+    assert SetExpr(set()) == SetExpr(S.EmptySet)
 
 
 def test_scalar_funcs():
@@ -37,6 +42,63 @@ def test_scalar_funcs():
 def test_Add_Mul():
     assert (SetExpr(Interval(0, 1)) + 1).set == Interval(1, 2)
     assert (SetExpr(Interval(0, 1))*2).set == Interval(0, 2)
+
+
+def test_imageset_mul_infinity():
+    x = Symbol('x')
+    assert imageset(Lambda(x, oo*x), Interval(1, 2)).doit() == \
+        FiniteSet(oo)
+    assert imageset(Lambda(x, oo*x), Interval(-2, -1)).doit() == \
+        FiniteSet(-oo)
+    assert imageset(Lambda(x, -oo*x), Interval(1, 2)).doit() == \
+        FiniteSet(-oo)
+
+
+def test_finiteset_mul_nan():
+    for b, expected in (
+        (2, {-2, nan, 2}),
+        (oo, {-oo, nan, oo}),
+        (-oo, {-oo, nan, oo}),
+    ):
+        a = SetExpr({-1, nan, 1})
+        assert a*b == SetExpr(expected)
+        assert b*a == SetExpr(expected)
+        assert a*SetExpr({b}) == SetExpr(expected)
+    assert SetExpr({-1, 0, 1})*oo == SetExpr({-oo, nan, oo})
+
+
+def test_interval_add_infinity():
+    cases = [(Interval(2, oo), oo), (Interval(-oo, 2), -oo),
+             (Interval(1, 2), oo), (Interval(1, 2), -oo)]
+    for interval, infinity in cases:
+        expr = SetExpr(interval)
+        assert (expr + infinity).set == FiniteSet(infinity)
+        assert (infinity + expr).set == FiniteSet(infinity)
+
+
+def test_interval_mul_infinity():
+    for interval, expected in (
+        (Interval(-2, -1), FiniteSet(-oo)),
+        (Interval.Ropen(-1, 0), FiniteSet(-oo)),
+        (Interval(-1, 0), FiniteSet(-oo, nan)),
+        (Interval(-1, 1), FiniteSet(-oo, nan, oo)),
+        (Interval.open(-1, 1), FiniteSet(-oo, nan, oo)),
+        (Interval(0, 1), FiniteSet(nan, oo)),
+        (Interval.Lopen(0, 1), FiniteSet(oo)),
+        (Interval(1, 2), FiniteSet(oo)),
+        (Interval(-oo, -1), FiniteSet(-oo)),
+        (Interval(1, oo), FiniteSet(oo)),
+        (Interval(-oo, oo), FiniteSet(-oo, nan, oo)),
+    ):
+        a = SetExpr(interval)
+        for b, result in ((oo, expected),
+                (-oo, FiniteSet(*(-i for i in expected)))):
+            result = SetExpr(result)
+            bset = SetExpr(FiniteSet(b))
+            assert a*b == result
+            assert b*a == result
+            assert a*bset == result
+            assert bset*a == result
 
 
 def test_Pow():
@@ -60,6 +122,25 @@ def test_FiniteSet_FiniteSet():
            FiniteSet(2, 3, 4, 5)
     assert (SetExpr(FiniteSet(1, 2, 3))*SetExpr(FiniteSet(1, 2))).set == \
            FiniteSet(1, 2, 3, 4, 6)
+
+
+def test_FiniteSet_scalar():
+    for values in (FiniteSet(1), FiniteSet(1, 2)):
+        A = SetExpr(values)
+        for b in (1, -1, oo, -oo):
+            expected = SetExpr(FiniteSet(*(a + b for a in values)))
+            assert A + b == expected
+            assert b + A == expected
+            assert A + SetExpr(FiniteSet(b)) == expected
+            assert SetExpr(FiniteSet(b)) + A == expected
+
+
+def test_Interval_scalar_consistency():
+    for values in (Interval(1, 2), Interval(2, oo)):
+        A = SetExpr(values)
+        for b in (1, -1):
+            assert A + b == A + SetExpr(FiniteSet(b))
+            assert b + A == SetExpr(FiniteSet(b)) + A
 
 
 def test_Interval_FiniteSet():

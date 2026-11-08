@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import oo
 from sympy.core.symbol import symbols
 from sympy.polys.domains import FiniteField, QQ, RationalField, FF
@@ -322,7 +323,7 @@ class EllipticCurvePoint:
             slope = (y1 - y2) / (x1 - x2)
             yint = (y1 * x2 - y2 * x1) / (x2 - x1)
         else:
-            if (y1 + y2) == 0:
+            if (y1 + y2 + a1 * x1 + a3) == 0:
                 return self.point_at_infinity(self._curve)
             slope = (3 * x1**2 + 2*a2*x1 + a4 - a1*y1) / (a1 * x1 + a3 + 2 * y1)
             yint = (-x1**3 + a4*x1 + 2*a6 - a3*y1) / (a1*x1 + a3 + 2*y1)

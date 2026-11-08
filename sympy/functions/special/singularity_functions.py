@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, oo, diff
 from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.logic import fuzzy_not

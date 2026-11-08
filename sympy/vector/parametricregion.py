@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import singledispatch
 from sympy.core.numbers import pi
 from sympy.functions.elementary.trigonometric import tan

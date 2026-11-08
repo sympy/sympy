@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S
 from sympy.core.expr import Expr
 from sympy.core.function import DefinedFunction, ArgumentIndexError

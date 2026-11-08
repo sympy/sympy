@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import expand_mul
 from sympy.core.numbers import I, Rational
 from sympy.core.singleton import S
@@ -276,6 +277,20 @@ def test_QR_trivial():
     assert A == Q*R
 
 
+def test_QR_symbolic_dependent_columns():
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
+    k = Symbol('k', real=True)
+    A = Matrix([[a, k*a],
+                [b, k*b]])
+    Q, R = A.QRdecomposition()
+    assert A.rank() == 1
+    assert Q.cols == A.rank()
+    QQ = (Q.H * Q).applyfunc(simplify)
+    assert not QQ.has(S.NaN)
+    assert (Q*R - A).applyfunc(simplify) == zeros(2, 2)
+
+
 def test_QR_float():
     A = Matrix([[1, 1], [1, 1.01]])
     Q, R = A.QRdecomposition()
@@ -380,6 +395,17 @@ def test_pinv_succeeds_with_rank_decomposition_method():
         assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
+
+
+def test_pinv_symbolic_vectors():
+    # Issue #30759: Matrix.pinv() on symbolic row vectors introduces artificial division-by-zero singularities
+    m_row = Matrix([[x, y]])
+    assert m_row.pinv().subs({x: 0, y: 1}) == m_row.subs({x: 0, y: 1}).pinv()
+    assert m_row.pinv().subs({x: 1, y: 0}) == m_row.subs({x: 1, y: 0}).pinv()
+
+    m_col = Matrix([[x], [y]])
+    assert m_col.pinv().subs({x: 0, y: 1}) == m_col.subs({x: 0, y: 1}).pinv()
+    assert m_col.pinv().subs({x: 1, y: 0}) == m_col.subs({x: 1, y: 0}).pinv()
 
 def test_rank_decomposition():
     a = Matrix(0, 0, [])

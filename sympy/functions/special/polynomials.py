@@ -5,6 +5,7 @@ See also functions.combinatorial.numbers which contains some
 combinatorial polynomials.
 
 """
+from __future__ import annotations
 
 from sympy.core import Rational
 from sympy.core.function import DefinedFunction, ArgumentIndexError

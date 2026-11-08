@@ -2,6 +2,7 @@
 Discrete Fourier Transform, Number Theoretic Transform,
 Walsh Hadamard Transform, Mobius Transform
 """
+from __future__ import annotations
 
 from __future__ import annotations
 

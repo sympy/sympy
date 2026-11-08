@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import expand_log, _mexpand

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.unify.core import Compound, Variable, CondVariable, allcombinations
 from sympy.unify import core
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.sets.sets import Set
 from sympy.calculus.singularities import singularities
@@ -113,6 +114,13 @@ def _(f, x):
                 left_open = x.right_open
             if end == _start and end not in solns:
                 right_open = x.left_open
+
+        if start == end and start in (S.Infinity, S.NegativeInfinity):
+            return FiniteSet(start)
+
+        if (start is S.NegativeInfinity and end is S.Infinity
+                and expr.has(S.Infinity, S.NegativeInfinity)):
+            return None
 
         return Interval(start, end, left_open, right_open)
     else:

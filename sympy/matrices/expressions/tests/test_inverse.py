@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import symbols, S
 from sympy.matrices.expressions import MatrixSymbol, Inverse, MatPow, ZeroMatrix, OneMatrix
 from sympy.matrices.exceptions import NonInvertibleMatrixError, NonSquareMatrixError

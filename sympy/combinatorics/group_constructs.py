@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import uniq

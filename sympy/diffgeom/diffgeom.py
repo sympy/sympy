@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Any
 
 from functools import reduce
-from itertools import permutations
+from itertools import pairwise, permutations
 
 from sympy.combinatorics import Permutation
 from sympy.core import (
@@ -455,7 +455,7 @@ That is, replace {s} with Symbol({s!r}, real=True).
         path = cls._dijkstra(sys1, sys2)
 
         transforms = []
-        for s1, s2 in zip(path, path[1:]):
+        for s1, s2 in pairwise(path):
             if (s1, s2) in rel:
                 transforms.append(rel[(s1, s2)])
             else:

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.parsing.maxima import parse_maxima
 from sympy.core.numbers import (E, Rational, oo)
 from sympy.core.symbol import Symbol

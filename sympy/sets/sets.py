@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING, overload
 from functools import reduce
 from collections import defaultdict
-from collections.abc import Mapping, Iterable
+from itertools import pairwise
 import inspect
 
 from sympy.core.kind import Kind, UndefinedKind, NumberKind
@@ -32,6 +32,9 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
                                        subsets)
 from sympy.utilities.misc import func_name, filldedent
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Iterable
 
 
 tfn: dict[bool | Boolean | None, Boolean | None] = defaultdict(lambda: None, {
@@ -842,6 +845,10 @@ class Set(Basic, EvalfMixin):
             # result with Set use y.contains(x)
             raise TypeError('did not evaluate to a bool: %r' % c)
         return b
+
+    def as_relational(self, symbol):
+        """Rewrites the set as a relational."""
+        raise NotImplementedError("as_relational is not implemented for this set type.")
 
 
 class ProductSet(Set):
@@ -2047,7 +2054,7 @@ class FiniteSet(Set):
                 nums.sort()
                 intervals = []  # Build up a list of intervals between the elements
                 intervals += [Interval(S.NegativeInfinity, nums[0], True, True)]
-                for a, b in zip(nums[:-1], nums[1:]):
+                for a, b in pairwise(nums):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
                 if syms != []:
@@ -2175,24 +2182,24 @@ class FiniteSet(Set):
                 return None
         return PowerSet(biggest)
 
-    def __ge__(self, other):
+    def __ge__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return other.is_subset(self)
 
-    def __gt__(self, other):
+    def __gt__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return self.is_proper_superset(other)
 
-    def __le__(self, other):
+    def __le__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return self.is_subset(other)
 
-    def __lt__(self, other):
+    def __lt__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return self.is_proper_subset(other)
 
     def __eq__(self, other):
@@ -2718,8 +2725,10 @@ def _handle_finite_sets(op, x, y, commutative):
     if len(fs_args) == 2:
         return FiniteSet(*[op(i, j) for i in fs_args[0] for j in fs_args[1]])
     elif len(fs_args) == 1:
-        sets = [_apply_operation(op, other[0], i, commutative) for i in fs_args[0]]
-        return Union(*sets)
+        sets = [_apply_operation(op, other[0], i, commutative)
+            for i in fs_args[0]]
+        return Union(*(i if isinstance(i, Set) else FiniteSet(i)
+            for i in sets))
     else:
         return None
 

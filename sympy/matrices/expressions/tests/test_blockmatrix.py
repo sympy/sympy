@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.expressions.trace import Trace
 from sympy.testing.pytest import raises, slow
 from sympy.matrices.expressions.blockmatrix import (

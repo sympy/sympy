@@ -3,7 +3,6 @@ from itertools import product
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.expr import Expr
 from sympy.core.function import (DefinedFunction, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
@@ -19,6 +18,10 @@ from sympy.functions.elementary.complexes import arg, unpolarify, im, re, Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.ntheory.factor_ import factorint
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -927,9 +930,7 @@ class log(DefinedFunction):
 
     def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_zero:
-            return False
-        return arg.is_finite
+        return fuzzy_and([arg.is_finite, fuzzy_not(arg.is_zero)])
 
     def _eval_is_extended_positive(self):
         return (self.args[0] - 1).is_extended_positive
@@ -1099,6 +1100,11 @@ class log(DefinedFunction):
                 coeff, _ = term.as_coeff_exponent(t)
                 res += -2*I*pi*Heaviside(-im(coeff), 0)
         return res
+
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_positive:
+            return S.NegativeOne**(n-1) * factorial(n - 1) / s**n
+        return super()._eval_derivative_n_times(s, n)
 
 
 class LambertW(DefinedFunction):

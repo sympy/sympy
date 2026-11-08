@@ -31,6 +31,7 @@ well:
   $\beta$, decide whether $\alpha \in \mathbb{Q}(\beta)$, and if so write
   $\alpha = f(\beta)$ for some $f(x) \in \mathbb{Q}[x]$.
 """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.numbers import AlgebraicNumber

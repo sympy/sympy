@@ -5,6 +5,7 @@ This module has all the classes and functions related to waves in optics.
 
 * TWave
 """
+from __future__ import annotations
 
 __all__ = ['TWave']
 

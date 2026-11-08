@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
@@ -228,7 +229,7 @@ def test_precomputed_characteristic_functions():
         # second function is the Fourier transform of the density function
         f = lambdify([x, t], pdf(x)*exp(I*x*t), 'mpmath')
         cf2 = lambda t: mpmath.nsum(lambda x: f(x, t), [
-            support_lower_limit, support_upper_limit], maxdegree=10)
+            support_lower_limit, support_upper_limit])
 
         # compare the two functions at various points
         for test_point in [2, 5, 8, 11]:
@@ -305,8 +306,8 @@ def test_product_spaces():
     X1 = Geometric('X1', S.Half)
     X2 = Geometric('X2', Rational(1, 3))
     assert str(P(X1 + X2 < 3).rewrite(Sum)) == (
-        "Sum(Piecewise((1/(4*2**n), n >= -1), (0, True)), (n, -oo, -1))/3")
+        "Sum(Piecewise(((1/2)**n/4, n >= -1), (0, True)), (n, -oo, -1))/3")
     assert str(P(X1 + X2 > 3).rewrite(Sum)) == (
-        'Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, '
+        'Sum(Piecewise(((1/2)**(-X2 + n + 2)*(2/3)**(X2 - 1)/6, '
         'X2 - n <= 2), (0, True)), (X2, 1, oo), (n, 1, oo))')
     assert P(Eq(X1 + X2, 3)) == Rational(1, 12)

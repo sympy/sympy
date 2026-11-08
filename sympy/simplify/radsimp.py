@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy.core import sympify, S, Mul, Derivative, Pow
@@ -1110,20 +1111,23 @@ def fraction(expr, exact=False):
     for term in Mul.make_args(expr):
         if term.is_commutative and (term.is_Pow or isinstance(term, exp)):
             b, ex = term.as_base_exp()
-            if ex.is_negative:
+            if exact:
+                if ex.is_number and ex.could_extract_minus_sign():
+                    if ex is S.NegativeOne:
+                        denom.append(b)
+                    else:
+                        denom.append(Pow(b, -ex, evaluate=False))
+                else:
+                    numer.append(term)
+            elif ex.is_negative:
                 if ex is S.NegativeOne:
                     denom.append(b)
-                elif exact:
-                    if ex.is_constant():
-                        denom.append(Pow(b, -ex))
-                    else:
-                        numer.append(term)
                 else:
                     denom.append(Pow(b, -ex))
             elif ex.is_positive:
                 numer.append(term)
-            elif not exact and ex.is_Mul:
-                n, d = term.as_numer_denom()  # this will cause evaluation
+            elif ex.is_Mul:
+                n, d = term.as_numer_denom()
                 if n != 1:
                     numer.append(n)
                 denom.append(d)

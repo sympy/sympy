@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.products import Product
 from sympy.core.function import expand_func
 from sympy.core.mod import Mod

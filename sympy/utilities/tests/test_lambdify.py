@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import product
 import math
 import inspect
@@ -19,7 +20,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import asinh,acosh,atanh
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import floor, frac
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (asin, acos, atan, cos, cot, sin,
@@ -35,6 +36,7 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.simplify.cse_main import cse
+from sympy.stats import MultivariateNormal
 from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.array.expressions import ArraySymbol
 from sympy.tensor.indexed import IndexedBase, Idx
@@ -720,13 +722,13 @@ def test_numpy_old_matrix():
         assert isinstance(f(1, 2, 3), numpy.matrix)
 
 
-def test_scipy_sparse_matrix():
+def test_scipy_sparse_array():
     if not scipy:
         skip("scipy not installed.")
     A = SparseMatrix([[x, 0], [0, y]])
     f = lambdify((x, y), A, modules="scipy")
     B = f(1, 2)
-    assert isinstance(B, scipy.sparse.coo_matrix)
+    assert isinstance(B, scipy.sparse.coo_array)
 
 
 
@@ -2317,3 +2319,20 @@ def test_array_symbol():
     a = ArraySymbol('a', (3,))
     f = lambdify((a), a)
     assert numpy.all(f(numpy.array([1,2,3])) == numpy.array([1,2,3]))
+
+
+def test_issue_28803_jointrandonsymbol_recursion():
+    """Test that JointRandomSymbol doesn't cause infinite recursion in lambdify."""
+
+    # Used to cause infinite recursion
+    K = MatrixSymbol("K", 4, 4)
+    z = MultivariateNormal("z", [0] * 4, K)
+    a = symbols("a")
+
+    # Should not raise RecursionError
+    lambdify(a, z * a)
+
+
+def test_frac_math():
+    f = lambdify(x, [2*frac(x), -frac(x), frac(x)**2], 'math')
+    assert f(1.75) == [1.5, -0.75, 0.5625]

@@ -6,6 +6,7 @@ keyword argument each time, this module uses the aesara_code_ and
 aesara_function_ functions defined below which default to using a new, empty
 cache instead.
 """
+from __future__ import annotations
 
 import logging
 

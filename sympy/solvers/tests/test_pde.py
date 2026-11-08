@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import (Derivative as D, Function)
 from sympy.core.relational import Eq
 from sympy.core.symbol import (Symbol, symbols)
@@ -172,7 +173,7 @@ def test_pde_1st_linear_constant_coeff():
 
     eq = (u.diff(x)/u) + (u.diff(y)/u) + 1 - (exp(x + y)/u)
     sol = pdsolve(eq)
-    assert sol == Eq(f(x, y), F(x - y)*exp(-x/2 - y/2) + exp(x + y)/3)
+    assert sol == Eq(f(x, y), (F(x - y) + exp(3*x/2 + 3*y/2)/3)*exp(-x/2 - y/2))
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
     assert checkpdesol(eq, sol)[0]

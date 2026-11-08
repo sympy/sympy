@@ -1,3 +1,4 @@
+from __future__ import annotations
 def pprint_nodes(subtrees):
     """
     Prettyprints systems of nodes.

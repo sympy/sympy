@@ -1,3 +1,4 @@
+from __future__ import annotations
 import threading
 
 from sympy.core.function import Function, UndefinedFunction
@@ -49,6 +50,10 @@ def test_Dummy():
 def test_Dummy_force_dummy_index():
     raises(AssertionError, lambda: Dummy(dummy_index=1))
     assert Dummy('d', dummy_index=2) == Dummy('d', dummy_index=2)
+    d_int = Dummy('d', dummy_index=2)
+    d_sympified = Dummy('d', dummy_index=sympify(2))
+    assert d_int == d_sympified
+    assert d_sympified == d_int
     assert Dummy('d1', dummy_index=2) != Dummy('d2', dummy_index=2)
     d1 = Dummy('d', dummy_index=3)
     d2 = Dummy('d')

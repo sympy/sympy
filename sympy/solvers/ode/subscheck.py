@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, Pow
 from sympy.core.function import (Derivative, AppliedUndef, diff)
 from sympy.core.relational import Equality, Eq

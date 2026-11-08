@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, overload, Literal, Any, cast, Callable
+from typing import TYPE_CHECKING, overload, Literal, Any, cast, Callable
 
 from functools import wraps, reduce
 from operator import mul
 from collections import Counter, defaultdict
-from collections.abc import Iterator
 
 from sympy.core import (
     S, Expr, Add, Tuple
@@ -22,7 +21,6 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
 from sympy.core.relational import Relational, Equality
-from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
@@ -30,7 +28,6 @@ from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import FF, QQ, ZZ
-from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
@@ -59,7 +56,7 @@ from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
-from sympy.utilities.iterables import iterable, sift
+from sympy.utilities.iterables import iterable, sift, numbered_symbols
 
 # Required to avoid errors
 import sympy.polys
@@ -67,6 +64,8 @@ from sympy.external.mpmath import local_workdps, NoConvergence
 
 
 if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Domain
+    from collections.abc import Iterator
     from typing import Self
 
 
@@ -2151,7 +2150,11 @@ class Poly(Basic):
         if hasattr(f.rep, 'nth'):
             if len(N) != len(f.gens):
                 raise ValueError('exponent of each generator must be specified')
-            result = f.rep.nth(*list(map(int, N)))
+            for n in N:
+                if isinstance(n, int):
+                    continue
+                raise TypeError('expecting integer exponent(s), got %s' % n)
+            result = f.rep.nth(*N)
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'nth')
 
@@ -2604,7 +2607,7 @@ class Poly(Basic):
 
         return per(s), per(t), per(h)
 
-    def invert(f, g, auto=True):
+    def invert(f, g: Poly, auto: bool = True) -> Poly:
         """
         Invert ``f`` modulo ``g`` when possible.
 
@@ -2635,7 +2638,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def revert(f, n):
+    def revert(f, n: int) -> Poly:
         """
         Compute ``f**(-1)`` mod ``x**n``.
 
@@ -2931,7 +2934,7 @@ class Poly(Basic):
 
         return per(h), per(cff), per(cfg)
 
-    def gcd(f, g):
+    def gcd(f, g: Poly | Expr | complex) -> Poly:
         """
         Returns the polynomial GCD of ``f`` and ``g``.
 
@@ -2954,7 +2957,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def lcm(f, g):
+    def lcm(f, g: Poly | Expr | complex) -> Poly:
         """
         Returns polynomial LCM of ``f`` and ``g``.
 
@@ -2977,7 +2980,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def trunc(f, p):
+    def trunc(f, p: Expr | int) -> Poly:
         """
         Reduce ``f`` modulo a constant ``p``.
 
@@ -3000,7 +3003,7 @@ class Poly(Basic):
 
         return f.per(result)
 
-    def monic(self, auto=True):
+    def monic(self, auto: bool = True) -> Poly:
         """
         Divides all coefficients by ``LC(f)``.
 
@@ -3071,7 +3074,7 @@ class Poly(Basic):
 
         return f.rep.dom.to_sympy(cont), f.per(result)
 
-    def compose(f, g):
+    def compose(f, g: Poly | Expr) -> Poly:
         """
         Computes the functional composition of ``f`` and ``g``.
 
@@ -3094,7 +3097,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def decompose(f):
+    def decompose(f) -> list[Poly]:
         """
         Computes a functional decomposition of ``f``.
 
@@ -3115,7 +3118,7 @@ class Poly(Basic):
 
         return list(map(f.per, result))
 
-    def shift(f, a):
+    def shift(f, a: Expr) -> Poly:
         """
         Efficiently compute Taylor shift ``f(x + a)``.
 
@@ -3135,7 +3138,7 @@ class Poly(Basic):
         """
         return f.per(f.rep.shift(a))
 
-    def shift_list(f, a):
+    def shift_list(f, a: list[Expr]) -> Poly:
         """
         Efficiently compute Taylor shift ``f(X + A)``.
 
@@ -3155,7 +3158,8 @@ class Poly(Basic):
         """
         return f.per(f.rep.shift_list(a))
 
-    def transform(f, p, q):
+    def transform(f, p: Poly, q: Poly) -> Poly:
+
         """
         Efficiently evaluate the functional transformation ``q**n * f(p/q)``.
 
@@ -3757,6 +3761,16 @@ class Poly(Basic):
 
         from sympy.functions.elementary.complexes import sign
         opts = {'maxsteps': maxsteps, 'cleanup': cleanup, 'error': False}
+
+        # mpmath 1.4 deprecates calling polyroots without the 'asc' argument
+        # and apparently prefers asc=True which reverses the order compared to
+        # default behaviour for mpmath < 1.4.
+        from mpmath import __version__ as mpver
+        if not any(mpver.startswith(prefix) for prefix in ('0.', '1.0.', '1.1.', '1.2.', '1.3.')):
+            # This should be the code when mpmath 1.4.0 is the minimum version:
+            opts['asc'] = True
+            coeffs = coeffs[::-1]
+
         for prec in [f.degree()*10, f.degree()*15]:
             try:
                 with local_workdps(n) as ctx:
@@ -3972,19 +3986,23 @@ class Poly(Basic):
         return f._which_roots(candidates, f.degree())
 
     def _which_roots(f, candidates, num_roots):
+        fe = f.as_expr()
+        x = f.gens[0]
         prec = 10
-        # using Counter bc its like an ordered set
-        root_counts = Counter(candidates)
-        while len(root_counts) > num_roots:
-            for r in list(root_counts.keys()):
-                # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
-                f_r = f(r).evalf(prec, maxn=2*prec)
-                if abs(f_r)._prec >= 2:
-                    root_counts.pop(r)
+        candidates = list(Counter(candidates).keys())
 
+        while len(candidates) > num_roots:
+            potential_candidates = []
+            for r in candidates:
+                # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
+                f_r = fe.xreplace({x: r}).evalf(prec, maxn=2*prec)
+                if abs(f_r)._prec < 2:
+                    potential_candidates.append(r)
+
+            candidates = potential_candidates
             prec *= 2
 
-        return list(root_counts.keys())
+        return candidates
 
     def same_root(f, a, b):
         """
@@ -4651,6 +4669,105 @@ class Poly(Basic):
 class PurePoly(Poly):
     """Class for representing pure polynomials. """
 
+    def __new__(cls, rep, *gens, **args):
+        # A coefficient sequence defines a univariate polynomial without a
+        # named generator. Poly needs one for construction, but PurePoly
+        # discards it once the representation is built.
+        if not gens and isinstance(rep, (list, tuple)):
+            gens = (Dummy('x'),)
+        return super().__new__(cls, rep, *gens, **args)
+
+    @classmethod
+    def new(cls, rep, *gens):
+        """Build a PurePoly without retaining the construction generators."""
+        if not isinstance(rep, DMP):
+            raise PolynomialError(
+                "invalid polynomial representation: %s" % rep)
+        if gens and rep.lev != len(gens) - 1:
+            raise PolynomialError("invalid arguments: %s, %s" % (rep, gens))
+        obj = Basic.__new__(cls)
+        obj.rep = rep
+        return obj
+
+    @property
+    def args(self):
+        # Carry the coefficient domain through Basic reconstruction.
+        return (self.as_poly(),)
+
+    @property
+    def gens(self):
+        """Canonical generator placeholders, distinct from coefficient symbols."""
+        names = {s.name for s in self.free_symbols_in_domain
+                 if isinstance(s, Symbol)}
+        candidates = numbered_symbols('_')
+        return tuple(next(g for g in candidates if g.name not in names)
+                     for _ in range(self.rep.lev + 1))
+
+    @property
+    def bound_symbols(self):
+        return self.gens
+
+    def as_dummy(self):
+        # The generator placeholders are already canonical.
+        return self
+
+    def _eval_subs(self, old, new):
+        # The formal generators are not free variables. Only coefficients
+        # can be substituted.
+        if not (old.free_symbols & self.free_symbols):
+            return self
+        expr = self.as_expr().subs(old, new)
+        try:
+            return PurePoly(expr, *self.gens, domain=self.domain)
+        except (PolynomialError, CoercionFailed, DomainError):
+            return PurePoly(expr, *self.gens)
+
+    def __call__(self, *values):
+        """Instantiate generators simultaneously, retaining unbound ones."""
+        gens = self.gens
+        if len(values) > len(gens):
+            raise ValueError("too many values provided")
+        if not values:
+            return self
+        values = tuple(sympify(v) for v in values)
+        if len(values) == len(gens):
+            if len(gens) == 1:
+                from sympy.polys.rootoftools import ComplexRootOf
+                root = values[0]
+                if (isinstance(root, ComplexRootOf)
+                        and self.domain.characteristic() == 0
+                        and self.degree() >= root.poly.degree()):
+                    # A polynomial divisible by the root's defining
+                    # polynomial vanishes at that root. Avoid expanding
+                    # powers of RootOf just to discover this zero.
+                    try:
+                        if self.rem(PurePoly.new(root.poly.rep)).is_zero:
+                            return S.Zero
+                    except (CoercionFailed, DomainError, UnificationFailed):
+                        # Incompatible coefficient domains: retain the
+                        # ordinary symbolic evaluation.
+                        pass
+            return self.as_expr().xreplace(dict(zip(gens, values)))
+
+        # Use fresh placeholders for unbound generators so that supplied
+        # values can contain canonical generator names without capture.
+        remaining = tuple(Dummy() for _ in gens[len(values):])
+        expr = self.as_expr().xreplace(dict(zip(gens, values + remaining)))
+        try:
+            return PurePoly(expr, *remaining, domain=self.domain)
+        except (PolynomialError, CoercionFailed, DomainError):
+            return PurePoly(expr, *remaining)
+
+    def as_poly(self, *gens, **args):
+        if not gens:
+            gens = self.gens
+        if len(gens) != len(self.gens):
+            raise GeneratorsError("expected %d generators" % len(self.gens))
+        gens = options.Gens.preprocess(gens)
+        if args:
+            return Poly(self.as_expr(*gens), *gens, **args)
+        return Poly.new(self.rep, *gens)
+
     def _hashable_content(self):
         """Allow SymPy to hash Poly instances. """
         return (self.rep,)
@@ -4681,27 +4798,14 @@ class PurePoly(Poly):
 
     @_sympifyit('other', NotImplemented)
     def __eq__(self, other):
-        f, g = self, other
+        return (isinstance(other, PurePoly)
+                and self.rep.eq(other.rep, strict=True))
 
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, f.gens, domain=f.get_domain())
-            except (PolynomialError, DomainError, CoercionFailed):
-                return False
-
-        if len(f.gens) != len(g.gens):
-            return False
-
-        if f.rep.dom != g.rep.dom:
-            try:
-                dom = f.rep.dom.unify(g.rep.dom, f.gens)
-            except UnificationFailed:
-                return False
-
-            f = f.set_domain(dom)
-            g = g.set_domain(dom)
-
-        return f.rep == g.rep
+    def dummy_eq(self, other, symbol=None):
+        """Compare polynomial coefficients without matching generator names."""
+        if isinstance(other, Poly):
+            return self.rep.eq(other.rep, strict=True)
+        return super().dummy_eq(other, symbol)
 
     def _strict_eq(f, g):
         return isinstance(g, f.__class__) and f.rep.eq(g.rep, strict=True)
@@ -4903,8 +5007,15 @@ def _update_args(args, key, value):
 def degree(f, gen=0):
     """
     Return the degree of ``f`` in the given variable.
+    When ``f`` is a univariate polynomial, it is not
+    necessary to pass a generator, but if the generator
+    is given as an int it refers to the gen-th generator
+    of the expression which must be passed as a Poly
+    instance.
 
-    The degree of 0 is negative infinity.
+    The degree of 0 with respect to any variable is ``-oo``; if ``f``
+    is a numerical expression equal to 0, but not identically 0,
+    zero may be returned instead (because the variable does not appear).
 
     Examples
     ========
@@ -4912,12 +5023,28 @@ def degree(f, gen=0):
     >>> from sympy import degree
     >>> from sympy.abc import x, y
 
+    >>> degree(x**2)
+    2
     >>> degree(x**2 + y*x + 1, gen=x)
     2
     >>> degree(x**2 + y*x + 1, gen=y)
     1
     >>> degree(0, x)
     -oo
+
+    In contrast to the strict Poly method, if the specified generator is
+    not in Poly's generators, the Poly instance is recast in terms of the
+    generator instead of raising an error.
+
+    >>> from sympy import Poly
+    >>> p = Poly(x + y, x)
+    >>> p.degree(y)
+    Traceback (most recent call last):
+    ...
+    PolynomialError: a valid generator expected, got y
+
+    >>> degree(p, y)
+    1
 
     See also
     ========
@@ -4926,36 +5053,34 @@ def degree(f, gen=0):
     degree_list
     """
 
+    _degree = lambda x: Integer(x) if type(x) is int else x
+
     f = sympify(f, strict=True)
-    gen_is_Num = sympify(gen, strict=True).is_Number
-    if f.is_Poly:
-        p = f
-        isNum = p.as_expr().is_Number
-    else:
-        isNum = f.is_Number
-        if not isNum:
-            if gen_is_Num:
-                p, _ = poly_from_expr(f)
-            else:
-                p, _ = poly_from_expr(f, gen)
+    if type(gen) is int:
+        if isinstance(f, Poly):
+            return _degree(f.degree(gen))
+        if f.is_Number:
+            return S.NegativeInfinity if f.is_zero else S.Zero
+        try:
+            p = Poly(f, expand=False)
+        except GeneratorsNeeded:  # e.g. f = (1+I)**2/2
+            gens = ()  # do not guess what the user intended
+        else:
+            gens = p.gens
+        free = f.free_symbols
+        if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
+                gen := next(iter(gens))) and # <-- assigns gen
+                gen.is_Atom):  # e.g. x or pi
+            raise TypeError(filldedent('''
+                To avoid ambiguity, this expression requires either
+                a symbol (not int) generator or a Poly (which identifies
+                the generators).'''))
+        return p.degree(gen)
 
-    if isNum:
-        return S.Zero if f else S.NegativeInfinity
-
-    if not gen_is_Num:
-        if f.is_Poly and gen not in p.gens:
-            # try recast without explicit gens
-            p, _ = poly_from_expr(f.as_expr())
-        if gen not in p.gens:
-            return S.Zero
-    elif not f.is_Poly and len(f.free_symbols) > 1:
-        raise TypeError(filldedent('''
-         A symbolic generator of interest is required for a multivariate
-         expression like func = %s, e.g. degree(func, gen = %s) instead of
-         degree(func, gen = %s).
-        ''' % (f, next(ordered(f.free_symbols)), gen)))
-    result = p.degree(gen)
-    return Integer(result) if isinstance(result, int) else S.NegativeInfinity
+    gen = sympify(gen, strict=True)
+    if not isinstance(f, Poly) or gen not in f.gens:
+        f = poly_from_expr(f, gen)[0]
+    return _degree(f.degree(gen))
 
 
 @public
@@ -6009,7 +6134,7 @@ def lcm_list(seq, *gens, **args):
     """
     seq = sympify(seq)
 
-    def try_non_polynomial_lcm(seq) -> Optional[Expr]:
+    def try_non_polynomial_lcm(seq) -> Expr | None:
         if not gens and not args:
             domain, numbers = construct_domain(seq)
 
@@ -8096,7 +8221,7 @@ class GroebnerBasis(Basic):
 
         Given a polynomial ``f`` and a set of polynomials ``G = (g_1, ..., g_n)``,
         computes a set of quotients ``q = (q_1, ..., q_n)`` and the remainder ``r``
-        such that ``f = q_1*f_1 + ... + q_n*f_n + r``, where ``r`` vanishes or ``r``
+        such that ``f = q_1*g_1 + ... + q_n*g_n + r``, where ``r`` vanishes or ``r``
         is a completely reduced polynomial with respect to ``G``.
 
         Examples
@@ -8125,6 +8250,7 @@ class GroebnerBasis(Basic):
         ([Poly(2*x, x, y, domain='ZZ'), Poly(1, x, y, domain='ZZ')], Poly(x**2 + y**2 + y, x, y, domain='ZZ'))
 
         """
+        expr = _sympify(expr)
         if isinstance(expr, Poly):
 
             if expr.gens != self._options.gens:

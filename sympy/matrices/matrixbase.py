@@ -13,7 +13,7 @@ from sympy.core.basic import Atom, Basic
 from sympy.core.kind import UndefinedKind
 from sympy.core.numbers import Integer, Float
 from sympy.core.mod import Mod
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.function import diff
 from sympy.external.mpmath import _matrix as _mpmath_matrix
@@ -30,9 +30,7 @@ from sympy.functions.combinatorial.factorials import binomial, factorial
 
 from collections.abc import Callable
 from sympy.utilities.iterables import reshape
-from sympy.core.expr import Expr
 from sympy.core.power import Pow
-from sympy.core.symbol import uniquely_named_symbol
 
 from .utilities import _dotprodsimp, _simplify as _utilities_simplify
 from sympy.polys.polytools import Poly
@@ -91,6 +89,7 @@ from .graph import (
 
 
 if TYPE_CHECKING:
+    from sympy.core.expr import Expr
     from abc import ABCMeta, abstractmethod
 else:
     from abc import abstractmethod
@@ -149,6 +148,9 @@ class MatrixBase(Printable):
 
         @property
         def cols(self) -> int:
+            ...
+
+        def __iter__(self) -> Iterator[Expr]:
             ...
 
     @overload
@@ -3041,10 +3043,10 @@ class MatrixBase(Printable):
     @overload
     def __mul__(self, other: MatrixBase) -> MatrixBase: ... # type: ignore
     @overload
-    def __mul__(self, other: Expr) -> MatrixBase: ...
+    def __mul__(self, other: SExpr) -> Self: ...
 
     @call_highest_priority('__rmul__')
-    def __mul__(self, other: MatrixBase | Expr) -> MatrixBase | Expr:
+    def __mul__(self, other: MatrixBase | SExpr) -> MatrixBase | Self:
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
 
@@ -3078,12 +3080,12 @@ class MatrixBase(Printable):
     @overload
     def multiply(self, other: MatrixBase, dotprodsimp: bool | None = None) -> MatrixBase: ... # type: ignore
     @overload
-    def multiply(self, other: Expr, dotprodsimp: bool | None = None) -> Expr: ...
+    def multiply(self, other: SExpr, dotprodsimp: bool | None = None) -> Self: ...
 
     def multiply(self,
-                 other: MatrixBase | Expr,
+                 other: MatrixBase | SExpr,
                  dotprodsimp: bool | None = None
-             ) -> MatrixBase | Expr:
+             ) -> MatrixBase | Self:
         """Same as __mul__() but with optional simplification.
 
         Parameters
@@ -3097,14 +3099,14 @@ class MatrixBase(Printable):
 
         isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
 
-        self, other, T = _unify_with_other(self, other)
+        self_mat, other, T = _unify_with_other(self, other)
 
         if isinstance(other, MatrixBase):
 
-            if self.shape[1] != other.shape[0]:
-                raise ShapeError(f"Matrix size mismatch: {self.shape} * {other.shape}.")
+            if self_mat.shape[1] != other.shape[0]:
+                raise ShapeError(f"Matrix size mismatch: {self_mat.shape} * {other.shape}.")
 
-            m = self._eval_matrix_mul(other)
+            m = self_mat._eval_matrix_mul(other)
 
             if isimpbool:
                 m = m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m.flat()])
@@ -3264,11 +3266,21 @@ class MatrixBase(Printable):
 
         return self.__rmul__(other)
 
+    @overload
+    def __rmul__(self, other: MatrixBase) -> MatrixBase: ...
+    @overload
+    def __rmul__(self, other: SExpr) -> Self: ...
+
     @call_highest_priority('__mul__')
-    def __rmul__(self, other: MatrixBase | SExpr) -> MatrixBase:
+    def __rmul__(self, other: MatrixBase | SExpr) -> MatrixBase | Self:
         return self.rmultiply(other)
 
-    def rmultiply(self, other: MatrixBase | SExpr, dotprodsimp: bool | None = None) -> MatrixBase:
+    @overload
+    def rmultiply(self, other: MatrixBase, dotprodsimp: bool | None = None) -> MatrixBase: ...
+    @overload
+    def rmultiply(self, other: SExpr, dotprodsimp: bool | None = None) -> Self: ...
+
+    def rmultiply(self, other: MatrixBase | SExpr, dotprodsimp: bool | None = None) -> MatrixBase | Self:
         """Same as __rmul__() but with optional simplification.
 
         Parameters
@@ -3280,14 +3292,14 @@ class MatrixBase(Printable):
             speed up calculation. Default is off.
         """
         isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
-        self, other_mat, T = _unify_with_other(self, other)
+        self_mat, other_mat, T = _unify_with_other(self, other)
 
         if isinstance(other_mat, MatrixBase):
 
-            if self.shape[0] != other_mat.shape[1]:
+            if self_mat.shape[0] != other_mat.shape[1]:
                 raise ShapeError("Matrix size mismatch.")
 
-            m = self._eval_matrix_rmul(other_mat)
+            m = self_mat._eval_matrix_rmul(other_mat)
 
             if isimpbool:
                 return m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m.flat()])
@@ -3335,7 +3347,7 @@ class MatrixBase(Printable):
     def adjugate(self, method: str="berkowitz") -> Self:
         return _adjugate(self, method=method)
 
-    def charpoly(self, x: str | Expr = 'lambda', simplify=_utilities_simplify) -> Poly:
+    def charpoly(self, x: str | Expr | None = None, simplify=_utilities_simplify) -> Poly:
         return _charpoly(self, x=x, simplify=simplify)
 
     def cofactor(self, i, j, method: str="berkowitz") -> Expr:
@@ -3890,7 +3902,7 @@ class MatrixBase(Printable):
         """
         return self.applyfunc(lambda e: e.limit(x, xlim, dir))
 
-    def berkowitz_charpoly(self, x: str | Expr = Dummy('lambda'),
+    def berkowitz_charpoly(self, x: str | Expr | None = None,
                simplify: Callable[[Expr], Expr] = _utilities_simplify) -> Poly:
         return self.charpoly(x=x)
 
@@ -4426,7 +4438,7 @@ class MatrixBase(Printable):
         """
         return self._new(self.rows, self.cols, self.flat())
 
-    def cross(self, b: MatrixExpr) -> Self:
+    def cross(self, b: MatrixBase | MatrixExpr) -> Self:
         r"""
         Return the cross product of ``self`` and ``b`` relaxing the condition
         of compatible dimensions: if each has 3 elements, a matrix of the
@@ -5100,11 +5112,9 @@ class MatrixBase(Printable):
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
-        x = uniquely_named_symbol('x', self, modify=lambda s: '_' + s)
-        p = self.charpoly(x)
-        if p.args[0] == x ** self.rows:
-            return True
-        return False
+        # A characteristic polynomial is monic and has degree self.rows.
+        # The matrix is nilpotent exactly when it is a monomial.
+        return self.charpoly().is_monomial
 
     def key2bounds(self, keys: tuple[int | slice, int | slice]) -> tuple[int, int, int, int]:
         """Converts a key with potentially mixed types of keys (integer and slice)
@@ -5193,7 +5203,7 @@ class MatrixBase(Printable):
             out = self.applyfunc(lambda i: i / norm)
         return out
 
-    def norm(self, ord: int | str | None = 2) -> Expr:
+    def norm(self, ord: int | str | None = None) -> Expr:
         """Return the Norm of a Matrix or Vector.
 
         In the simplest case this is the geometric size of the vector
@@ -5248,7 +5258,7 @@ class MatrixBase(Printable):
         # Row or Column Vector Norms
         vals = list(self.values()) or [S.Zero]
         if S.One in self.shape:
-            if ord == 2:  # Common case sqrt(<x, x>)
+            if ord in (2, None):  # Common case sqrt(<x, x>)
                 return sqrt(Add(*(abs(i) ** 2 for i in vals)))
 
             elif ord == 1:  # sum(abs(x))
@@ -5480,7 +5490,7 @@ class MatrixBase(Printable):
     def LDLsolve(self, rhs) -> Self:
         return _LDLsolve(self, rhs)
 
-    def LUsolve(self, rhs, iszerofunc=_iszero) -> Self:
+    def LUsolve(self, rhs: Tmat, iszerofunc: Callable[[Expr], bool | None] = _iszero) -> Tmat:
         return _LUsolve(self, rhs, iszerofunc=iszerofunc)
 
     def QRsolve(self, b) -> Self:

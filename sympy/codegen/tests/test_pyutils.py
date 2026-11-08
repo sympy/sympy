@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.codegen.ast import Print
 from sympy.codegen.pyutils import render_as_module
 

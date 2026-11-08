@@ -1,8 +1,10 @@
+from __future__ import annotations
 from sympy.core.mod import Mod
 from sympy.core.numbers import I
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.integers import floor
 from sympy.matrices.dense import (Matrix, eye)
+from sympy.matrices.immutable import ImmutableMatrix
 from sympy.matrices import MatrixSymbol, Identity
 from sympy.matrices.expressions import det, trace
 
@@ -117,9 +119,45 @@ def test_KroneckerProduct_combine_add():
 def test_KroneckerProduct_combine_mul():
     X = MatrixSymbol('X', m, n)
     Y = MatrixSymbol('Y', m, n)
+    # A sum of Kronecker products is a single Kronecker product only when
+    # the factors coincide in all slots except at most one; merging every
+    # slot at once used to produce the wrong result (A + B) x (X + Y):
     kp1 = kronecker_product(A, X)
     kp2 = kronecker_product(B, Y)
-    assert combine_kronecker(kp1+kp2) == kronecker_product(A+B, X+Y)
+    assert combine_kronecker(kp1 + kp2) == kp1 + kp2
+
+    # One differing slot merges by linearity:
+    assert combine_kronecker(kronecker_product(A, X) + kronecker_product(B, X)) == \
+        kronecker_product(A + B, X)
+    assert combine_kronecker(kronecker_product(A, X) + kronecker_product(A, Y)) == \
+        kronecker_product(A, X + Y)
+
+    # Scalar multiples of Kronecker products are merged as well:
+    assert combine_kronecker(2*kronecker_product(A, X) + 3*kronecker_product(B, X)) == \
+        kronecker_product(2*A + 3*B, X)
+    assert combine_kronecker(2*kronecker_product(A, X) + 3*kronecker_product(A, X)) == \
+        5*kronecker_product(A, X)
+
+    # More than two addends:
+    assert combine_kronecker(kronecker_product(A, X) + kronecker_product(B, X)
+                             + kronecker_product(A, Y)) in [
+        kronecker_product(A + B, X) + kronecker_product(A, Y),
+        kronecker_product(A, X + Y) + kronecker_product(B, X)]
+
+
+def test_KroneckerProduct_combine_add_numeric():
+    # Numeric check that combine_kronecker preserves the value of sums:
+    m1 = Matrix([[1, 2], [3, 4]])
+    m2 = Matrix([[0, 1], [1, 0]])
+    m3 = Matrix([[2, 0], [0, 2]])
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    W2 = MatrixSymbol('W2', 2, 2)
+    expr = KroneckerProduct(X, Y) + KroneckerProduct(W2, Y)
+    combined = combine_kronecker(expr)
+    reps = {X: m1, Y: m2, W2: m3}
+    assert expr.subs(reps).doit().as_explicit() == \
+        combined.subs(reps).doit().as_explicit()
 
 
 def test_KroneckerProduct_combine_pow():
@@ -148,3 +186,27 @@ def test_KroneckerProduct_entry():
     B = MatrixSymbol('B', o, p)
 
     assert KroneckerProduct(A, B)._entry(i, j) == A[Mod(floor(i/o), n), Mod(floor(j/p), m)]*B[Mod(i, o), Mod(j, p)]
+
+
+def test_KroneckerProduct_singletons():
+    A = MatrixSymbol('A', 3, 3)
+    A1 = MatrixSymbol('A1', 1, 1)
+    B = MatrixSymbol('B', 3, 3)
+    B1 = MatrixSymbol('B1', 1, 1)
+
+    assert KroneckerProduct(A, A1, B, B1).doit() == KroneckerProduct(A, B, A1*B1)
+    assert KroneckerProduct(A1, A, B1).doit() == KroneckerProduct(A, A1*B1)
+    assert KroneckerProduct(A1, B1).doit() == A1*B1
+    assert KroneckerProduct(A1, A).doit() == KroneckerProduct(A1, A)
+    assert KroneckerProduct(Identity(1), A, A1).doit() == KroneckerProduct(A, A1)
+    assert KroneckerProduct(2*A1, A, 3*B1).doit() == 6*KroneckerProduct(A, A1*B1)
+
+    expr = KroneckerProduct(A, A1, B, B1)
+    assert expr.doit().as_explicit() == expr.as_explicit()
+
+    p, q = symbols('p, q', commutative=False)
+    P = ImmutableMatrix([[p]])
+    Q = ImmutableMatrix([[q]])
+    assert KroneckerProduct(A, P, B, Q).doit() == KroneckerProduct(A, P, B, Q)
+    assert KroneckerProduct(A, P, B, A1).doit() == KroneckerProduct(A, P, B, A1)
+    assert KroneckerProduct(P, A1, A, B1).doit() == KroneckerProduct(P, A, A1*B1)

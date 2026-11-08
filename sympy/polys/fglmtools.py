@@ -1,4 +1,5 @@
 """Implementation of matrix FGLM Groebner basis conversion algorithm. """
+from __future__ import annotations
 
 
 from sympy.polys.monomials import monomial_mul, monomial_div
@@ -50,7 +51,7 @@ def matrix_fglm(F, ring, O_to):
                 G.append(g)
         else:
             # v is linearly independent from V
-            P = _update(s, _lambda, P)
+            P = _update(s, _lambda, P, domain)
             S.append(_incr_k(S[t[1]], t[0]))
             V.append(v)
 
@@ -84,11 +85,11 @@ def _matrix_mul(M, v):
     return [sum(row[i] * v[i] for i in range(len(v))) for row in M]
 
 
-def _update(s, _lambda, P):
+def _update(s, _lambda, P, domain):
     """
     Update ``P`` such that for the updated `P'` `P' v = e_{s}`.
     """
-    k = min(j for j in range(s, len(_lambda)) if _lambda[j] != 0)
+    k = min(j for j in range(s, len(_lambda)) if _lambda[j] != domain.zero)
 
     for r in range(len(_lambda)):
         if r != k:

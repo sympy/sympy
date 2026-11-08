@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.containers import TupleKind
@@ -40,7 +41,7 @@ def test_imageset():
     assert imageset(x, abs(x), S.Integers) is S.Naturals0
     # issue 16878a
     r = symbols('r', real=True)
-    assert imageset(x, (x, x), S.Reals)._contains((1, r)) == None
+    assert imageset(x, (x, x), S.Reals)._contains((1, r)) is None
     assert imageset(x, (x, x), S.Reals)._contains((1, 2)) == False
     assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
@@ -172,17 +173,17 @@ def test_interval_is_empty():
     assert Interval(1, oo).is_empty == False
     assert Interval(-oo, oo).is_empty == False
     assert Interval(-oo, 1).is_empty == False
-    assert Interval(x, y).is_empty == None
+    assert Interval(x, y).is_empty is None
     assert Interval(r, oo).is_empty == False  # real implies finite
     assert Interval(n, 0).is_empty == False
     assert Interval(n, 0, left_open=True).is_empty == False
     assert Interval(p, 0).is_empty == True  # EmptySet
-    assert Interval(nn, 0).is_empty == None
+    assert Interval(nn, 0).is_empty is None
     assert Interval(n, p).is_empty == False
     assert Interval(0, p, left_open=True).is_empty == False
     assert Interval(0, p, right_open=True).is_empty == False
-    assert Interval(0, nn, left_open=True).is_empty == None
-    assert Interval(0, nn, right_open=True).is_empty == None
+    assert Interval(0, nn, left_open=True).is_empty is None
+    assert Interval(0, nn, right_open=True).is_empty is None
 
 
 def test_union():
@@ -271,7 +272,7 @@ def test_union_iter():
 
 def test_union_is_empty():
     assert (Interval(x, y) + FiniteSet(1)).is_empty == False
-    assert (Interval(x, y) + Interval(-x, y)).is_empty == None
+    assert (Interval(x, y) + Interval(-x, y)).is_empty is None
 
 
 def test_difference():
@@ -680,7 +681,7 @@ def test_ProductSet_of_single_arg_is_not_arg():
 
 def test_ProductSet_is_empty():
     assert ProductSet(S.Integers, S.Reals).is_empty == False
-    assert ProductSet(Interval(x, 1), S.Reals).is_empty == None
+    assert ProductSet(Interval(x, 1), S.Reals).is_empty is None
 
 
 def test_interval_subs():
@@ -765,7 +766,9 @@ def test_is_subset():
 
     assert FiniteSet(x).is_subset(FiniteSet(y)) is None
     assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x)) is True
-    assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is False
+    assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is None
+    xr, yr = symbols('xr yr', real=True)
+    assert FiniteSet(xr).is_subset(FiniteSet(yr).subs(yr, xr+1)) is False
 
     assert Interval(0, 1).is_subset(Interval(0, 1, left_open=True)) is False
     assert Interval(-2, 3).is_subset(Union(Interval(-oo, -2), Interval(3, oo))) is False
@@ -843,7 +846,10 @@ def test_contains():
     raises(TypeError, lambda: x in FiniteSet(y))
     assert FiniteSet({x, y})._contains({x}) == Eq({x, y}, {x}, evaluate=False)
     assert FiniteSet({x, y}).subs(y, x)._contains({x}) is S.true
-    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is S.false
+    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) == \
+        Eq({x, x + 1}, {x}, evaluate=False)
+    xr, yr = symbols('xr yr', real=True)
+    assert FiniteSet({xr, yr}).subs(yr, xr+1)._contains({xr}) is S.false
 
     # issue 8197
     from sympy.abc import a, b
@@ -1305,8 +1311,12 @@ def test_Eq():
     assert unchanged(Eq, FiniteSet({x, y}), FiniteSet({x}))
     assert Eq(FiniteSet({x, y}).subs(y, x), FiniteSet({x})) is S.true
     assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x) is S.true
-    assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is S.false
-    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is S.false
+    assert unchanged(Eq, FiniteSet({x, y}).subs(y, x+1), FiniteSet({x}))
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) == \
+        Eq(FiniteSet({x, x + 1}), FiniteSet({x}), evaluate=False)
+    xr, yr = symbols('xr yr', real=True)
+    assert Eq(FiniteSet({xr, yr}).subs(yr, xr+1), FiniteSet({xr})) is S.false
+    assert Eq(FiniteSet({xr, yr}), FiniteSet({xr})).subs(yr, xr+1) is S.false
 
     assert Eq(ProductSet({1}, {2}), Interval(1, 2)) is S.false
     assert Eq(ProductSet({1}), ProductSet({1}, {2})) is S.false
@@ -1425,10 +1435,15 @@ def test_issue_9447():
 def test_issue_10337():
     assert (FiniteSet(2) == 3) is False
     assert (FiniteSet(2) != 3) is True
-    raises(TypeError, lambda: FiniteSet(2) < 3)
-    raises(TypeError, lambda: FiniteSet(2) <= 3)
-    raises(TypeError, lambda: FiniteSet(2) > 3)
-    raises(TypeError, lambda: FiniteSet(2) >= 3)
+    for other in (3, x):
+        raises(TypeError, lambda: FiniteSet(2) < other)
+        raises(TypeError, lambda: FiniteSet(2) <= other)
+        raises(TypeError, lambda: FiniteSet(2) > other)
+        raises(TypeError, lambda: FiniteSet(2) >= other)
+        raises(TypeError, lambda: other < FiniteSet(2))
+        raises(TypeError, lambda: other <= FiniteSet(2))
+        raises(TypeError, lambda: other > FiniteSet(2))
+        raises(TypeError, lambda: other >= FiniteSet(2))
 
 
 def test_issue_10326():
@@ -1751,7 +1766,7 @@ def test_issue_9855():
     x, y, z = symbols('x, y, z', real=True)
     s1 = Interval(1, x) & Interval(y, 2)
     s2 = Interval(1, 2)
-    assert s1.is_subset(s2) == None
+    assert s1.is_subset(s2) is None
 
 
 def test_issue_28711():

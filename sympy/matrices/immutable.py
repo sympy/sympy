@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Basic, Dict, Tuple
 from sympy.core.numbers import Integer
 from sympy.core.cache import cacheit

@@ -1,5 +1,6 @@
 """ This module contains the Mathieu functions.
 """
+from __future__ import annotations
 
 from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt

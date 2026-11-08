@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.expr import unchanged
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
     EmptySet, Union, Contains, ImageSet)
@@ -146,7 +147,7 @@ def test_as_dummy():
         ).as_dummy() == ConditionSet(_0, _0 < 1, Interval(x, oo))
     assert ConditionSet(x, x < 1, ImageSet(Lambda(y, y**2), S.Integers)
         ).as_dummy() == ConditionSet(
-            _0, _0 < 1, ImageSet(Lambda(_0, _0**2), S.Integers))
+            _0, _0 < 1, ImageSet(Lambda(_1, _1**2), S.Integers))
     e = ConditionSet((x, y), x <= y, S.Reals**2)
     assert e.bound_symbols == [x, y]
     assert e.as_dummy() == ConditionSet((_0, _1), _0 <= _1, S.Reals**2)

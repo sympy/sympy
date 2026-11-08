@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import Not
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
@@ -8,7 +9,7 @@ from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.function import Derivative
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec, log, sin, cos, tan, asin, atan, sinh, cosh, tanh, asinh, acosh, atanh
+from sympy.functions import acos, conjugate, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec, log, sin, cos, tan, asin, atan, sinh, cosh, tanh, asinh, acosh, atanh
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
@@ -39,6 +40,11 @@ def test_PythonCodePrinter():
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
     assert prntr.doprint(-Mod(x, y)) == '-(x % y)'
     assert prntr.doprint(Mod(-x, y)) == '(-x) % y'
+    assert prntr.doprint(-2*Mod(x, 3)) == '-2*(x % 3)'
+    assert prntr.doprint(-x*Mod(x, y)) == '-x*(x % y)'
+    assert prntr.doprint(-x/Mod(x, 3)) == '-x/(x % 3)'
+    assert prntr.doprint(Mod(x, 1/y)) == 'x % (1/y)'
+    assert prntr.doprint(Mod(1, 1/x)) == '1 % (1/x)'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert prntr.doprint(1/(x+y)) == '1/(x + y)'
@@ -73,6 +79,7 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(Min(x, y)) == "min(x, y)"
     assert prntr.doprint(Max(x, y)) == "max(x, y)"
+    assert prntr.doprint(conjugate(x)) == "(x).conjugate()"
 
 def test_PythonCodePrinter_print_Indexed():
     from sympy import Symbol
@@ -173,6 +180,7 @@ def test_NumPyPrinter():
     assert p.doprint(HadamardProduct(A, B)) == "numpy.multiply(A, B)"
     assert p.doprint(KroneckerProduct(A, B)) == "numpy.kron(A, B)"
     assert p.doprint(Adjoint(A)) == "numpy.conjugate(numpy.transpose(A))"
+    assert p.doprint(conjugate(x)) == "numpy.conjugate(x)"
     assert p.doprint(DiagonalOf(A)) == "numpy.reshape(numpy.diag(A), (-1, 1))"
     assert p.doprint(DiagMatrix(C)) == "numpy.diagflat(C)"
     assert p.doprint(DiagonalMatrix(D)) == "numpy.multiply(D, numpy.eye(3, 4))"
@@ -223,7 +231,7 @@ def test_SciPyPrinter():
     assert not any(m.startswith('scipy') for m in p.module_imports)
     smat = SparseMatrix(2, 5, {(0, 1): 3})
     assert p.doprint(smat) == \
-        'scipy.sparse.coo_matrix(([3], ([0], [1])), shape=(2, 5))'
+        'scipy.sparse.coo_array(([3], ([0], [1])), shape=(2, 5))'
     assert 'scipy.sparse' in p.module_imports
 
     assert p.doprint(S.GoldenRatio) == 'scipy.constants.golden_ratio'
@@ -285,7 +293,11 @@ def test_frac():
     assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
 
     prntr = PythonCodePrinter()
-    assert prntr.doprint(expr) == 'x % 1'
+    assert prntr.doprint(expr) == '(x % 1)'
+    assert prntr.doprint(2*expr) == '2*(x % 1)'
+    assert prntr.doprint(-expr) == '-(x % 1)'
+    assert prntr.doprint(expr**2) == '(x % 1)**2'
+    assert prntr.doprint(x*expr) == 'x*(x % 1)'
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) == 'mpmath.frac(x)'
@@ -467,6 +479,28 @@ def test_array_printer():
     assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'numpy.einsum("aabbc->cab", A)'
     assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'numpy.einsum("abcde->abe", A)'
     assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'
+
+    # Elementwise function application prints as the (elementwise) NumPy
+    # function or arithmetic applied to the printed operand:
+    from sympy.core.function import Lambda
+    from sympy.core.symbol import Dummy, Symbol
+    from sympy.functions.elementary.trigonometric import sin
+    from sympy.tensor.array.expressions.array_expressions import ArrayElementwiseApplyFunc, ArrayTensorProduct
+    B = ArraySymbol('B', (3, 3))
+    d = Dummy('d')
+    assert prntr.doprint(ArrayElementwiseApplyFunc(sin, B)) == 'numpy.sin(B)'
+    assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, d**2), B)) == 'B**2'
+    assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, 1/d), ArrayContraction(ArrayTensorProduct(B, B), (1, 2)))) == \
+        'numpy.einsum("ab,bc->ac", B,B)**(-1.0)'
+    # Symbols in the function body are never confused with the operand:
+    s = Symbol('_elementwise_operand')
+    assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, d + s), B)) == 'B + _elementwise_operand'
+    s = Symbol('prefix_elementwise_operand_suffix')
+    assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, d + s), B)) == 'B + prefix_elementwise_operand_suffix'
+    nested = ArrayElementwiseApplyFunc(Lambda(d, d + 1), ArrayElementwiseApplyFunc(Lambda(d, d**2), B))
+    assert prntr.doprint(nested) == 'B**2 + 1'
+    assert prntr.doprint(ArrayElementwiseApplyFunc(Lambda(d, d**3), ArrayElementwiseApplyFunc(Lambda(d, d**2), B))) == '(B**2)**3'
+    assert prntr.doprint(ArrayElementwiseApplyFunc(sin, ArrayElementwiseApplyFunc(Lambda(d, d + 1), B))) == 'numpy.sin(B + 1)'
 
     prntr = TensorflowPrinter()
     assert prntr.doprint(ZeroArray(5)) == 'tensorflow.zeros((5,))'

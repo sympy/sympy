@@ -1,4 +1,5 @@
 """Simple tools for timing functions' execution, when IPython is not available. """
+from __future__ import annotations
 
 
 import timeit
@@ -10,7 +11,9 @@ _scales = [1e0, 1e3, 1e6, 1e9]
 _units = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
 
 
-def timed(func, setup="pass", limit=None):
+def timed(
+    func: Callable[[], object], setup: str = "pass", limit: int | None = None
+) -> tuple[int, float, float, str]:
     """Adaptively measure execution time of a function. """
     timer = timeit.Timer(func, setup=setup)
     repeat, number = 3, 1

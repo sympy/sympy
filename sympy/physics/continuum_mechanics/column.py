@@ -2,6 +2,7 @@
 This module can be used to solve column displacement problems
 using singularity functions in mechanics.
 """
+from __future__ import annotations
 
 from sympy import nsimplify, simplify
 from sympy.core import Symbol, symbols
@@ -30,7 +31,7 @@ class Column:
 
     .. note::
         The columns are set up horizontally, from left to right.
-        This is due to it then having better compatability with
+        This is due to it then having better compatibility with
         the 2-Dimensional module, where all objects are projected
         horizontally.
 

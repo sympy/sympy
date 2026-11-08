@@ -56,9 +56,11 @@ test_list = [
 
     # codegen
     'sympy/codegen/',
-    'sympy/utilities/tests/test_codegen',
-    'sympy/utilities/_compilation/tests/test_compilation',
-    'sympy/external/tests/test_codegen.py',
+    # Match sympy/utilities/tests/test_codegen*.py and
+    # sympy/external/tests/test_codegen.py. (The pattern matching code currently
+    # only lets us match globs as a basename, so we can't spell out the directories.)
+    'test_codegen*.py',
+    'sympy/utilities/_compilation/tests/test_compilation.py',
 
     # cloudpickle
     'pickling',
@@ -127,8 +129,8 @@ doctest_list = [
 try:
     import matplotlib # noqa: F401
     doctest_list.extend([
-        'doc/src/tutorials/biomechanics/biomechanical-model-example.rst',
-        'doc/src/tutorials/biomechanics/biomechanics.rst',
+        'doc/src/explanation/modules/physics/biomechanics/biomechanics.rst',
+        'doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst',
     ])
 except ImportError:
     pass

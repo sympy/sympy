@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import product
 from sympy.core.power import Pow
 from sympy.core.symbol import symbols

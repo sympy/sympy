@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import builtins
-from typing import TYPE_CHECKING, overload
-
+from typing import TYPE_CHECKING, overload, cast
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
@@ -23,11 +22,14 @@ from sympy.utilities.decorator import deprecated
 
 if TYPE_CHECKING:
     from typing import (
-        Any, TypeVar, Iterable, Callable, Sequence,
-        Literal, SupportsIndex,
+        Any, Iterable, Callable, Literal, Sequence, Iterator,
+        TypeVar, SupportsIndex,
     )
-    from typing_extensions import TypeGuard
-    T = TypeVar('T')
+    from typing_extensions import TypeGuard, TypeIs
+    T = TypeVar("T")
+    T1 = TypeVar("T1")
+    T2 = TypeVar("T2")
+
 
 
 def is_palindromic(s: Sequence[T], i: int = 0, j: int | None = None) -> bool:
@@ -145,6 +147,10 @@ def unflatten(iter, n=2):
 def reshape(seq, how):
     """Reshape the sequence according to the template in ``how``.
 
+    Counts in the template must be nonnegative, with a positive total
+    that divides the length of ``seq``. Nested templates may have zero
+    total size.
+
     Examples
     ========
 
@@ -179,26 +185,28 @@ def reshape(seq, how):
     [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
 
     """
-    m = sum(flatten(how))
-    n, rem = divmod(len(seq), m)
-    if m < 0 or rem:
-        raise ValueError('template must sum to positive number '
-        'that divides the length of the sequence')
-    i = 0
-    container = type(how)
-    rv = [None]*n
-    for k in range(len(rv)):
-        _rv = []
-        for hi in how:
-            if isinstance(hi, int):
-                _rv.extend(seq[i: i + hi])
-                i += hi
+    sizes = flatten(how)
+    m = sum(sizes)
+    if any(s < 0 for s in sizes) or m <= 0 or len(seq) % m:
+        raise ValueError('template must contain nonnegative counts '
+                         'with a positive sum that divides the sequence length')
+
+    def make_group(template, i):
+        result = []
+        for item in template:
+            if isinstance(item, int):
+                result.extend(seq[i:i + item])
+                i += item
             else:
-                n = sum(flatten(hi))
-                hi_type = type(hi)
-                _rv.append(hi_type(reshape(seq[i: i + n], hi)[0]))
-                i += n
-        rv[k] = container(_rv)
+                group, i = make_group(item, i)
+                result.append(group)
+        return type(template)(result), i
+
+    i = 0
+    rv = []
+    for _ in range(len(seq) // m):
+        group, i = make_group(how, i)
+        rv.append(group)
     return type(seq)(rv)
 
 
@@ -236,20 +244,23 @@ def group(
     return [(k, len(list(g))) for k, g in groupby(seq)]
 
 
-def _iproduct2(iterable1, iterable2):
+def _iproduct2(
+    iterable1: Iterable[T1],
+    iterable2: Iterable[T2],
+) -> Iterator[tuple[T1, T2]]:
     '''Cartesian product of two possibly infinite iterables'''
 
     it1 = iter(iterable1)
     it2 = iter(iterable2)
 
-    elems1 = []
-    elems2 = []
+    elems1: list[T1] = []
+    elems2: list[T2] = []
 
     sentinel = object()
-    def append(it, elems):
+    def append(it: Iterator[T], elems: list[T]) -> None:
         e = next(it, sentinel)
         if e is not sentinel:
-            elems.append(e)
+            elems.append(cast("T", e))
 
     n = 0
     append(it1, elems1)
@@ -323,8 +334,6 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 
     """
     return dict(Counter(seq).items())
-
-
 
 
 @overload
@@ -436,7 +445,11 @@ def ibin(
             return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
 
 
-def variations(seq, n, repetition=False):
+def variations(
+    seq: Sequence[T],
+    n: int,
+    repetition: bool = False,
+) -> Iterator[tuple[T,...]]:
     r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
@@ -483,7 +496,11 @@ def variations(seq, n, repetition=False):
             return product(seq, repeat=n)
 
 
-def subsets(seq, k=None, repetition=False):
+def subsets(
+    seq: Sequence[T],
+    k: int | None = None,
+    repetition: bool = False,
+) -> Iterator[tuple[T,...]]:
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
     A `k`-subset of an `n`-element set is any subset of length exactly `k`. The
@@ -3088,7 +3105,7 @@ class NotIterable:
     calling list() on the instance, for example, would result in
     an infinite loop.
     """
-    pass
+    __slots__ = ()
 
 
 def iterable(
@@ -3152,7 +3169,24 @@ def iterable(
     return True
 
 
-def is_sequence(i, include=None):
+@overload
+def is_sequence(
+    i: Sequence[T] | Iterable[T],
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[T]]: ...
+
+
+@overload
+def is_sequence(
+    i: object,
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[Any]]: ...
+
+
+def is_sequence(
+    i: object,
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[Any]]:
     """
     Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
@@ -3186,10 +3220,10 @@ def is_sequence(i, include=None):
     True
 
     """
-    return (hasattr(i, '__getitem__') and
-            iterable(i) or
-            bool(include) and
-            isinstance(i, include))
+    return (
+        (hasattr(i, '__getitem__') and iterable(i))
+        or (include is not None and isinstance(i, include))
+    )
 
 
 @deprecated(

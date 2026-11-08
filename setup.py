@@ -26,16 +26,10 @@ sympy@googlegroups.com and ask for help.
 """
 
 import sys
-import os
-import subprocess
 from pathlib import Path
 
 from setuptools import setup, Command
-from setuptools.command.sdist import sdist
 
-
-# This directory
-dir_setup = os.path.dirname(os.path.realpath(__file__))
 
 extra_kwargs = {
     'zip_safe': False,
@@ -48,7 +42,7 @@ extra_kwargs = {
 
 # Keep in sync with sympy/__init__.py and python_requires below
 if sys.version_info < (3, 10):
-    print("SymPy requires Python 3.9 or newer. Python %d.%d detected"
+    print("SymPy requires Python 3.10 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
@@ -100,6 +94,8 @@ modules = [
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',
     'sympy.parsing.latex.lark',
+    'sympy.parsing.smtlib',
+    'sympy.parsing.smtlib.lark',
     'sympy.physics',
     'sympy.physics.biomechanics',
     'sympy.physics.continuum_mechanics',
@@ -201,36 +197,6 @@ class antlr(Command):
             sys.exit(-1)
 
 
-class sdist_sympy(sdist):
-    def run(self):
-        # Fetch git commit hash and write down to commit_hash.txt before
-        # shipped in tarball.
-        commit_hash = None
-        commit_hash_filepath = 'doc/commit_hash.txt'
-        try:
-            commit_hash = \
-                subprocess.check_output(['git', 'rev-parse', 'HEAD'])
-            commit_hash = commit_hash.decode('ascii')
-            commit_hash = commit_hash.rstrip()
-            print('Commit hash found : {}.'.format(commit_hash))
-            print('Writing it to {}.'.format(commit_hash_filepath))
-        except Exception:
-            pass
-
-        if commit_hash:
-            Path(commit_hash_filepath).write_text(commit_hash)
-
-        super().run()
-
-        try:
-            os.remove(commit_hash_filepath)
-            print(
-                'Successfully removed temporary file {}.'
-                .format(commit_hash_filepath))
-        except OSError as e:
-            print("Error deleting %s - %s." % (e.filename, e.strerror))
-
-
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
 tests = [
@@ -303,19 +269,16 @@ tests = [
 ]
 
 
-# Defines __version__
-exec(Path(os.path.join(dir_setup, 'sympy', 'release.py')).read_text())
-
-
 if __name__ == '__main__':
     setup(name='sympy',
-          version=__version__, # noqa: F821
+          use_scm_version=True,
           description='Computer algebra system (CAS) in Python',
           long_description=(Path(__file__).parent / 'README.md').read_text("UTF-8"),
           long_description_content_type='text/markdown',
           author='SymPy development team',
           author_email='sympy@googlegroups.com',
-          license='BSD',
+          license_expression='BSD-3-Clause AND MIT',
+          license_files=['LICENSE', 'LICENSES_BUNDLED.txt'],
           keywords="Math CAS",
           url='https://sympy.org',
           project_urls={
@@ -338,25 +301,24 @@ if __name__ == '__main__':
                   'test-examples/README.txt',
                   ],
               'sympy.parsing.latex': ['*.txt', '*.g4', 'lark/grammar/*.lark'],
+              'sympy.parsing.smtlib': ['lark/grammar/*.lark'],
               'sympy.plotting.tests': ['test_region_*.png'],
               'sympy': ['py.typed']
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
                     'antlr': antlr,
-                    'sdist': sdist_sympy,
                     },
           # Keep in sync with version check above and sympy/__init__.py
           python_requires='>=3.10',
           classifiers=[
-            'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Mathematics',
             'Topic :: Scientific/Engineering :: Physics',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.9',
+
             'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
             'Programming Language :: Python :: 3.12',

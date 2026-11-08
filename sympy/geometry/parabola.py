@@ -4,6 +4,7 @@ Contains
 * Parabola
 
 """
+from __future__ import annotations
 
 from sympy.core import S
 from sympy.core.sorting import ordered

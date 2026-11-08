@@ -32,6 +32,7 @@ Functions that are for internal use:
    ODEs which raises exception.
 
 """
+from __future__ import annotations
 from sympy.core.function import (Derivative, diff)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (E, I, Rational, pi)
@@ -464,6 +465,7 @@ def test_slow_examples_nth_linear_constant_coeff_var_of_parameters():
     _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters, run_slow_test=True)
 
 
+@slow
 def test_nth_linear_constant_coeff_var_of_parameters():
     _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters)
 
@@ -569,6 +571,7 @@ def test_1st_linear():
     _ode_solver_test(_get_examples_ode_sol_1st_linear)
 
 
+@slow
 def test_almost_linear():
     _ode_solver_test(_get_examples_ode_sol_almost_linear)
 
@@ -588,6 +591,7 @@ def test_Liouville_ODE():
     _ode_solver_test(_get_examples_ode_sol_liouville)
 
 
+@slow
 def test_nth_order_linear_euler_eq_homogeneous():
     x, t, a, b, c = symbols('x t a b c')
     y = Function('y')
@@ -602,6 +606,7 @@ def test_nth_order_linear_euler_eq_homogeneous():
     _ode_solver_test(_get_examples_ode_sol_euler_homogeneous)
 
 
+@slow
 def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     x, t = symbols('x t')
     a, b, c, d = symbols('a b c d', integer=True)
@@ -870,32 +875,31 @@ def _get_examples_ode_sol_1st_rational_riccati():
     # One pole of multiplicity 2
     "rational_riccati_05": {
         "eq": x**2 - (2*x + 1/x)*f(x) + f(x)**2 + Derivative(f(x), x),
-        "sol": [Eq(f(x), x*(C1 + x**2 + 1)/(C1 + x**2 - 1))]
+        "sol": [Eq(f(x), x*(C1 + x**2 + 2)/(C1 + x**2))]
     },
     # One pole of multiplicity 2
     "rational_riccati_06": {
         "eq": x**4*Derivative(f(x), x) + x**2 - x*(2*f(x)**2 + Derivative(f(x), x)) + f(x),
-        "sol": [Eq(f(x), x*(C1*x - x + 1)/(C1 + x**2 - 1))]
+        "sol": [Eq(f(x), x*(C1*x + 1)/(C1 + x**2))]
     },
     # Multiple poles of multiplicity 2
     "rational_riccati_07": {
         "eq": -f(x)**2 + Derivative(f(x), x) + (15*x**2 - 20*x + 7)/((x - 1)**2*(2*x \
             - 1)**2),
         "sol": [Eq(f(x), (9*C1*x - 6*C1 - 15*x**5 + 60*x**4 - 94*x**3 + 72*x**2 - \
-            33*x + 8)/(6*C1*x**2 - 9*C1*x + 3*C1 + 6*x**6 - 29*x**5 + 57*x**4 - \
-            58*x**3 + 28*x**2 - 3*x - 1))]
+            30*x + 6)/(6*C1*x**2 - 9*C1*x + 3*C1 + 6*x**6 - 29*x**5 + 57*x**4 - \
+            58*x**3 + 30*x**2 - 6*x))]
     },
     # Imaginary poles
     "rational_riccati_08": {
         "eq": Derivative(f(x), x) + (3*x**2 + 1)*f(x)**2/x + (6*x**2 - x + 3)*f(x)/(x*(x \
             - 1)) + (3*x**2 - 2*x + 2)/(x*(x - 1)**2),
-        "sol": [Eq(f(x), (-C1 - x**3 + x**2 - 2*x + 1)/(C1*x - C1 + x**4 - x**3 + x**2 - \
-            2*x + 1))],
+        "sol": [Eq(f(x), (-C1 - x**3 + x**2 - 2*x)/(C1*x - C1 + x**4 - x**3 + x**2 - x))],
     },
     # Imaginary coefficients in equation
     "rational_riccati_09": {
         "eq": Derivative(f(x), x) - 2*I*(f(x)**2 + 1)/x,
-        "sol": [Eq(f(x), (-I*C1 + I*x**4 + I)/(C1 + x**4 - 1))]
+        "sol": [Eq(f(x), (-I*C1 + I*x**4)/(C1 + x**4))]
     },
     # Regression: linsolve returning empty solution
     # Large value of m (> 10)
@@ -910,6 +914,10 @@ def _get_examples_ode_sol_1st_rational_riccati():
             + 103950*C1*x**8 + 415800*C1*x**7 + 1455300*C1*x**6 + 4365900*C1*x**5 + \
             10914750*C1*x**4 + 21829500*C1*x**3 + 32744250*C1*x**2 + 32744250*C1*x + \
             16372125*C1 - exp(2*x))))]
+    },
+    "rational_riccati_11": {
+        "eq": f(x).diff(x) - (x**2 + 3*x*f(x) + f(x)**2)/x**2,
+        "sol": [Eq(f(x), x*(-C1 - log(x) - 1)/(C1 + log(x)))]
     }
     }
     }
@@ -2032,8 +2040,8 @@ def _get_examples_ode_sol_nth_linear_var_of_parameters():
     # https://github.com/sympy/sympy/issues/14395
     'var_of_parameters_15': {
         'eq': Derivative(f(x), x, x) + 9*f(x) - sec(x),
-        'sol': [Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))
-        - 2*log(cos(x)**2)/3 + 2*cos(x)**2/3)*cos(3*x))],
+        'sol': [Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x)
+        + (C2 - log(-4*cos(x)**2)/6 + cos(2*x)/3)*cos(3*x))],
         'slow': True,
     },
     }

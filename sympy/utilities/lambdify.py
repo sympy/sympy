@@ -17,7 +17,7 @@ import weakref
 from sympy.external import import_module # noqa:F401
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.iterables import (is_sequence, iterable,
+from sympy.utilities.iterables import (iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
 
@@ -1439,7 +1439,7 @@ def _imp_namespace(expr, namespace=None):
     if namespace is None:
         namespace = {}
     # tuples, lists, dicts are valid expressions
-    if is_sequence(expr):
+    if isinstance(expr, (list, tuple)):
         for arg in expr:
             _imp_namespace(arg, namespace)
         return namespace

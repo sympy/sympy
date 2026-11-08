@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import (Rational, oo, pi)
@@ -386,10 +387,11 @@ def test_sample_seed():
         except NotImplementedError:
             continue
 
+
 #
-# XXX: This fails for pymc. Previously the test appeared to pass but that is
-# just because the library argument was not passed so the test always used
-# scipy.
+# XXX: This fails for pymc. The degenerate covariance in p means the
+# first coordinate must be exactly 0, so pymc's random starting point
+# for NUTS lands off that measure-zero set and gets -inf log-density.
 #
 def test_issue_21057():
     m = Normal("x", [0, 0], [[0, 0], [0, 0]])

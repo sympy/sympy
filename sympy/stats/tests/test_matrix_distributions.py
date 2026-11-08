@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.products import Product
 from sympy.core.numbers import pi
 from sympy.core.singleton import S

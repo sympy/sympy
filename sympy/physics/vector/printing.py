@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol

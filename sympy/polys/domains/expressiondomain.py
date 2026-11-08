@@ -1,4 +1,5 @@
 """Implementation of :class:`ExpressionDomain` class. """
+from __future__ import annotations
 
 
 from sympy.core import sympify, SympifyError
@@ -6,6 +7,7 @@ from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.utilities import public
 
@@ -13,7 +15,7 @@ eflags = {"deep": False, "mul": True, "power_exp": False, "power_base": False,
               "basic": False, "multinomial": False, "log": False}
 
 @public
-class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
+class ExpressionDomain(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
     """A class for arbitrary expressions. """
 
     is_SymbolicDomain = is_EX = True
@@ -276,6 +278,10 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     def lcm(self, a, b):
         return a.lcm(b)
+
+    def conjugate(self, a):
+        """Returns the complex conjugate of ``a``."""
+        return self.dtype(a.ex.conjugate())
 
 
 EX = ExpressionDomain()

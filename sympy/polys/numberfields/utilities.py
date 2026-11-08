@@ -1,4 +1,5 @@
 """Utilities for algebraic number theory. """
+from __future__ import annotations
 
 from sympy.core.sympify import sympify
 from sympy.external.mpmath import local_workprec

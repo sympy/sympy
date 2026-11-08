@@ -2,8 +2,8 @@
 # A module consisting of deprecated matrix classes. New code should not be
 # added here.
 #
+from __future__ import annotations
 from sympy.core.basic import Basic
-from sympy.core.symbol import Dummy
 
 from .common import MatrixCommon
 
@@ -69,7 +69,7 @@ class MatrixDeterminant(MatrixCommon):
     def adjugate(self, method="berkowitz"):
         return _adjugate(self, method=method)
 
-    def charpoly(self, x='lambda', simplify=_simplify):
+    def charpoly(self, x=None, simplify=_simplify):
         return _charpoly(self, x=x, simplify=simplify)
 
     def cofactor(self, i, j, method="berkowitz"):
@@ -558,7 +558,7 @@ class MatrixCalculus(MatrixCommon):
 # https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""
-    def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_simplify):
+    def berkowitz_charpoly(self, x=None, simplify=_simplify):
         return self.charpoly(x=x)
 
     def berkowitz_det(self):

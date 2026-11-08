@@ -10,6 +10,7 @@ are_coplanar
 are_similar
 
 """
+from __future__ import annotations
 
 from collections import deque
 from math import sqrt as _sqrt
@@ -276,6 +277,8 @@ def centroid(*args):
                 c += g.centroid*a
                 A += a
             den = A
+        else:
+            return None
         c /= den
         return c.func(*[i.simplify() for i in c.args])
 

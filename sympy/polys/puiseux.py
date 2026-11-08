@@ -104,7 +104,7 @@ class PuiseuxRing(Generic[Er]):
     -1*x**(-2)
 
     >>> rs_nth_root(8*x + x**2 + x**3, 3, x, 5)
-    2*x**(1/3) + 1/12*x**(4/3) + 23/288*x**(7/3) + -139/20736*x**(10/3)
+    2*x**(1/3) + 1/12*x**(4/3) + 23/288*x**(7/3) + -139/20736*x**(10/3) + -689/248832*x**(13/3)
 
     See Also
     ========
@@ -357,7 +357,8 @@ class PuiseuxPoly(Generic[Er]):
         monom: MonI | None,
         ns: MonI | None,
     ) -> tuple[PolyElement[Er], MonI | None, MonI | None]:
-        if monom is None and ns is None:
+
+        if not poly or (monom is None and ns is None):
             return poly, None, None
 
         if monom is not None:
@@ -365,9 +366,10 @@ class PuiseuxPoly(Generic[Er]):
             if all(di >= mi for di, mi in zip(degs, monom)):
                 poly = _div_poly_monom(poly, monom)
                 monom = None
-            elif any(degs):
-                poly = _div_poly_monom(poly, degs)
-                monom = _div_monom(monom, degs)
+            elif any(mi > 0 and di > 0 for di, mi in zip(degs, monom)):
+                monom_gcd = tuple(min(mi, di) for di, mi in zip(degs, monom))
+                poly = _div_poly_monom(poly, monom_gcd)
+                monom = _div_monom(monom, monom_gcd)
 
         if ns is not None:
             factors_d, [poly_d] = poly.deflate()

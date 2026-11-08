@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import log
 
 from sympy.core.random import _randint

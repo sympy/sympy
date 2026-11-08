@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from typing import overload, Literal
+from typing import overload, Literal, TYPE_CHECKING
 
-from sympy.polys.domains.domain import Domain, Er, Ef
-from sympy.polys.domains.field import Field
 from sympy.polys.densearith import (
     dup_sub_mul,
     dup_neg, dmp_neg,
@@ -51,6 +49,10 @@ from sympy.polys.polyerrors import (
     HomomorphismFailed,
     NotInvertible,
     DomainError)
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.field import Field
+    from sympy.polys.domains.domain import Domain, Er, Ef
 
 
 def dup_half_gcdex(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> tuple[dup[Ef], dup[Ef]]:
@@ -108,7 +110,7 @@ def dmp_half_gcdex(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_gcdex(f, g, K):
+def dup_gcdex(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> tuple[dup[Ef], dup[Ef], dup[Ef]]:
     """
     Extended Euclidean algorithm in `F[x]`.
 
@@ -135,7 +137,9 @@ def dup_gcdex(f, g, K):
     return s, t, h
 
 
-def dmp_gcdex(f, g, u, K):
+def dmp_gcdex(
+    f: dmp[Ef], g: dmp[Ef], u: int, K: Field[Ef]
+) -> tuple[dmp[Ef], dmp[Ef], dmp[Ef]]:
     """
     Extended Euclidean algorithm in `F[X]`.
 
@@ -152,7 +156,7 @@ def dmp_gcdex(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_invert(f, g, K):
+def dup_invert(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> dup[Ef]:
     """
     Compute multiplicative inverse of `f` modulo `g` in `F[x]`.
 
@@ -183,7 +187,7 @@ def dup_invert(f, g, K):
         raise NotInvertible("zero divisor")
 
 
-def dmp_invert(f, g, u, K):
+def dmp_invert(f: dmp[Ef], g: dmp[Ef], u: int, K: Field[Ef]) -> dmp[Ef]:
     """
     Compute multiplicative inverse of `f` modulo `g` in `F[X]`.
 
@@ -200,7 +204,7 @@ def dmp_invert(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_euclidean_prs(f, g, K):
+def dup_euclidean_prs(f: dup[Ef], g: dup[Ef], K: Domain[Ef]) -> list[dup[Ef]]:
     """
     Euclidean polynomial remainder sequence (PRS) in `K[x]`.
 
@@ -240,7 +244,7 @@ def dup_euclidean_prs(f, g, K):
     return prs
 
 
-def dmp_euclidean_prs(f, g, u, K):
+def dmp_euclidean_prs(f: dmp[Ef], g: dmp[Ef], u: int, K: Domain[Ef]) -> list[dmp[Ef]]:
     """
     Euclidean polynomial remainder sequence (PRS) in `K[X]`.
 
@@ -297,7 +301,7 @@ def dup_primitive_prs(f, g, K):
     return prs
 
 
-def dmp_primitive_prs(f, g, u, K):
+def dmp_primitive_prs(f: dmp[Ef], g: dmp[Ef], u: int, K: Domain[Ef]) -> list[dmp[Ef]]:
     """
     Primitive polynomial remainder sequence (PRS) in `K[X]`.
 
@@ -1713,6 +1717,9 @@ def dup_ff_lcm(f, g, K):
     x**3 + 7/2*x**2 + 3*x
 
     """
+    if not f or not g:
+        return dmp_zero(0, K)
+
     h = dup_quo(dup_mul(f, g, K),
                 dup_gcd(f, g, K), K)
 
@@ -1756,6 +1763,9 @@ def dmp_rr_lcm(f, g, u, K):
     x**3 + 2*x**2*y + x*y**2
 
     """
+    if dmp_zero_p(f, u) or dmp_zero_p(g, u):
+        return dmp_zero(u, K)
+
     fc, f = dmp_ground_primitive(f, u, K)
     gc, g = dmp_ground_primitive(g, u, K)
 
@@ -1784,6 +1794,9 @@ def dmp_ff_lcm(f, g, u, K):
     x**3 + 4*x**2*y + 4*x*y**2
 
     """
+    if dmp_zero_p(f, u) or dmp_zero_p(g, u):
+        return dmp_zero(u, K)
+
     h = dmp_quo(dmp_mul(f, g, u, K),
                 dmp_gcd(f, g, u, K), u, K)
 

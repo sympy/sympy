@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, Dummy, pi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos
