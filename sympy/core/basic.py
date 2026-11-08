@@ -1837,21 +1837,19 @@ class Basic(Printable):
         def walk(rv, F):
             """Apply ``F`` to args and then to result.
             """
-            args = getattr(rv, 'args', None)
-            if args is not None:
-                if args:
-                    newargs = tuple([walk(a, F) for a in args])
-                    if args != newargs:
-                        rv = rv.func(*newargs)
-                        if simultaneous:
-                            # if rv is something that was already
-                            # matched (that was changed) then skip
-                            # applying F again
-                            for i, e in enumerate(args):
-                                if rv == e and e != newargs[i]:
-                                    return rv
-                rv = F(rv)
-            return rv
+            args = rv.args
+            if args:
+                newargs = tuple([walk(a, F) for a in args])
+                if args != newargs:
+                    rv = rv.func(*newargs)
+                    if simultaneous:
+                        # if rv is something that was already
+                        # matched (that was changed) then skip
+                        # applying F again
+                        for i, e in enumerate(args):
+                            if rv == e and e != newargs[i]:
+                                return rv
+            return F(rv)
 
         mapping = {}  # changes that took place
 

@@ -199,10 +199,15 @@ def test_reshape():
         (reshape(Symbol('a') + Symbol('b'), [Symbol('n') * 2]), 'reshape(a + b, [2*n])'),
         (reshape(array, shape, None, String('F')), 'reshape(array, shape, order=F)'),
         (reshape(array, [Symbol('n'), 3]), 'reshape(array, [n, 3])'),
+        (reshape(array, (2, 3)), 'reshape(array, [2, 3])'),
+        (reshape([1, 2], [2, 2], [0], (2, 1)),
+         'reshape([1, 2], [2, 2], pad=[0], order=[2, 1])'),
     ]
 
     for expr, expected in cases:
-        assert fcode(expr, source_format='free') == expected
+        assert fcode(expr, source_format='free', standard=2003) == expected
+
+    assert fcode(reshape(array, [2, 3]), source_format='free', standard=95) == 'reshape(array, (/2, 3/))'
 
 
 @may_xfail
