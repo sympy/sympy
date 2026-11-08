@@ -331,24 +331,28 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 def ibin(
     n: SupportsIndex,
     bits: SupportsIndex | None = None,
+    *,
     str: Literal[False] = False,
 ) -> list[int]: ...
 @overload
 def ibin(
     n: SupportsIndex,
     bits: SupportsIndex | None = None,
-    str: Literal[True] = True,
+    *,
+    str: Literal[True],
 ) -> str: ...
 @overload
 def ibin(
     n: SupportsIndex,
     bits: str,
+    *,
     str: Literal[False] = False,
 ) -> Iterable[tuple[int, ...]]: ...
 @overload
 def ibin(
     n: SupportsIndex,
     bits: str,
+    *,
     str: Literal[True],
 ) -> Iterable[str]: ...
 
