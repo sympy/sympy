@@ -3439,7 +3439,7 @@ class NaN(Number, metaclass=Singleton):
 
     @cacheit
     def sort_key(self, order=None):
-        return self.class_key(), (0, ()), (), S.NegativeInfinity
+        return (1, 0, 'NaN'), (0, ()), (), S.NegativeInfinity
 
     def floor(self):
         return self
