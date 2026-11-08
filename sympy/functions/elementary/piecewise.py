@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core import S, diff, Tuple, Dummy, Mul
+from sympy.core import S, diff, Tuple, Dummy, Mul, PoleError
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
@@ -771,7 +771,13 @@ class Piecewise(DefinedFunction):
             c = c._subs(old, new)
             if c != False:
                 args_exist = True
-                e = e._subs(old, new)
+                e_sub = e._subs(old, new)
+                if e_sub is S.NaN and not e.has(S.NaN):
+                    try:
+                        e_sub = e.limit(old, new)
+                    except (PoleError, ValueError, TypeError, NotImplementedError, RecursionError):
+                        pass
+                e = e_sub
             args[i] = (e, c)
             if c == True:
                 break

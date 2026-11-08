@@ -1696,3 +1696,9 @@ def test_issue_23952():
     expr = Sum(abs(k1 - k2)*p**k1 *(1 - q)**(n - k2),
         (k1, 0, n), (k2, 0, n))
     assert expr.subs(p,0).subs(q,1).subs(n, 3).doit() == 3
+
+
+def test_issue_30674():
+    x, n = symbols('x n')
+    s = Sum((-1)**n * x**(2*n + 1)/(2*n + 1), (n, 1, oo))
+    assert s.doit().subs(x, 0) == 0

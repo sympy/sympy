@@ -125,6 +125,10 @@ def test_piecewise1():
     n = symbols('n', negative=True)
     assert p6.subs(x, n) == Undefined
 
+    # Removable singularity in Piecewise branch (issue 30674)
+    p_sing = Piecewise((sin(x)/x, x > -1), (0, True))
+    assert p_sing.subs(x, 0) == 1
+
     # Test evalf
     assert p.evalf() == Piecewise((-1.0, x < -1), (x**2, x < 0), (log(x), True))
     assert p.evalf(subs={x: -2}) == -1.0
