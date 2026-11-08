@@ -1820,6 +1820,8 @@ class TensorHead(Basic):
         else:
             assert symmetry.rank == len(index_types)
 
+        if comm is None:
+            comm = Integer(2)
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry, sympify(comm))
         return obj
 

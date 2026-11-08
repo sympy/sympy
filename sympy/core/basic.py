@@ -1458,14 +1458,9 @@ class Basic(Printable):
             args = []
             changed = False
             for a in self.args:
-                _xreplace = getattr(a, '_xreplace', None)
-                if _xreplace is not None:
-                    a_xr = _xreplace(rule)
-                    args.append(a_xr[0])
-                    changed |= a_xr[1]
-                else:
-                    args.append(a)
-            args = tuple(args)
+                a, achanged = a._xreplace(rule)
+                changed |= achanged
+                args.append(a)
             if changed:
                 return self.func(*args), True
         return self, False
