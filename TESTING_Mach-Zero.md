@@ -1,5 +1,26 @@
 # Round 3 Testing and Validation
 
+## Hardware used to run tests
+
+All tests were executed on the following machine and software environment:
+
+| Component | Specification |
+|---|---|
+| **Device** | ZEB-NBC 5S |
+| **CPU** | 12th Gen Intel Core i7-1255U (10 cores: 2 P-cores + 8 E-cores, 12 threads) |
+| **GPU** | Intel UHD Graphics (Integrated) |
+| **RAM** | 16 GB (15.35 GiB usable) |
+| **Storage** | 1 TB SSD (Btrfs) |
+| **Operating System** | Arch Linux x86_64 |
+| **Kernel** | Linux 7.2.14-arch1-1 |
+| **Python environment** | SymPy development environment, installed in editable mode |
+
+**Additional environment details:**
+- **Window Manager:** Hyprland 0.57.1 (Wayland)
+- **Shell:** Zsh 5.9.2
+- **Python test runner:** SymPy's `./bin/test`
+- **SymPy version:** 1.15.0.dev3308+gae473db35e.dirty.uninstalled
+
 ## 1. Original Issue Reproduction
 
 We used the following standalone Python script to reproduce the original issue:
@@ -155,8 +176,6 @@ Executed:
 ==========================================================================================
 ```
 
-All 145 passing tests succeeded, with one expected failure (`xfail`).
-
 ### Full SymPy test suite
 
 Executed:
@@ -165,7 +184,19 @@ Executed:
 ./bin/test
 ```
 
-**Result:** All tests passed.
+**Output:**
+
+```text
+13366 passed, 749 skipped, 261 deselected, 328 xfailed, 1 xpassed in 810.07s (0:13:30)
+```
+
+The full test suite completed successfully:
+
+- **13,366 passed** — tests completed successfully.
+- **749 skipped** — tests were skipped.
+- **261 deselected** — tests were excluded from this run.
+- **328 xfailed** — tests failed as expected.
+- **1 xpassed** — a test marked as expected to fail unexpectedly passed.
 
 This provides broader validation that the changes to `Subs` construction and hashing do not introduce regressions elsewhere in SymPy.
 
@@ -180,7 +211,7 @@ This provides broader validation that the changes to `Subs` construction and has
 | Unexpected symbols | `_x + y` | None |
 | Expanded regression cases | Not covered | Pass |
 | Targeted test suite | Existing baseline | 145 passed, 1 xfailed |
-| Full test suite | — | All tests passed |
+| Full test suite | — | All expected tests passed |
 
 ## 5. Final Validation
 
