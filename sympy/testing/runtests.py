@@ -1918,6 +1918,13 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         if got == want:
             return True
 
+        # An ellipsis may hide floating-point numbers, so the numerical
+        # token counts can differ even when the output matches. Check for
+        # a regular doctest match before trying approximate float matching.
+        if (optionflags & pdoctest.ELLIPSIS and '...' in want
+                and super().check_output(want, got, optionflags)):
+            return True
+
         # TODO parse integers as well ?
         # Parse floats and compare them. If some of the parsed floats contain
         # ellipses, skip the comparison.
