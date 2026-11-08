@@ -67,7 +67,7 @@ DAMAGE.
 
 --------------------------------------------------------------------------------
 
-The files under the directory sympy/parsing/autolev/tests/pydy-example-repo
+The files under the directory sympy/parsing/autolev/test-examples/pydy-example-repo
 are directly copied from PyDy project and are licensed as:
 
 Copyright (c) 2009-2023, PyDy Authors
@@ -98,7 +98,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
 
-The files under the directory sympy/parsing/latex 
+The files under the directory sympy/parsing/latex
 are directly copied from latex2sympy project and are licensed as:
 
 Copyright 2016, latex2sympy
