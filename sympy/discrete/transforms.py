@@ -4,8 +4,6 @@ Walsh Hadamard Transform, Mobius Transform
 """
 from __future__ import annotations
 
-from __future__ import annotations
-
 from typing import Sequence, SupportsIndex
 
 from sympy.core import S, Symbol, Expr, sympify
