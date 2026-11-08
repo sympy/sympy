@@ -81,6 +81,7 @@ from sympy.polys import apart, poly, Poly
 from sympy.series import residue
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
+from sympy.utilities.misc import as_int
 
 # function to define "buckets"
 def _mod1(x):
@@ -1571,14 +1572,15 @@ def devise_plan(target, origin, z):
     def do_shifts(fro, to, inc, dec):
         ops = []
         for i in range(len(fro)):
-            if to[i] - fro[i] > 0:
+            n = as_int(to[i] - fro[i], strict=False)
+            if n > 0:
                 sh = inc
                 ch = 1
             else:
                 sh = dec
                 ch = -1
 
-            while to[i] != fro[i]:
+            for _ in range(abs(n)):
                 ops += [sh(fro, i)]
                 fro[i] += ch
 
