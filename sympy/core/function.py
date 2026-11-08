@@ -2519,7 +2519,6 @@ class Subs(Expr):
         return (
             self._expr.xreplace(self.canonical_variables),
             len(self.variables),
-            frozenset(self.free_symbols),
             tuple(sorted(self.point, key=default_sort_key)),
         ) + tuple(ordered([(v, p) for v, p in
             zip(self.variables, self.point) if not self.expr.has(v)]))
