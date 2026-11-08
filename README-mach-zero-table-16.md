@@ -164,12 +164,7 @@
 
   - It also reuses the already-created replacement symbol from the s_pts mapping. That avoids independently reconstructing a symbol and ensures the collision check uses the same object mapping as the rest of the canonicalization process.
 
-
-# Testing and Validation
-
-The following code was used to verify behaviour across checkouts before and after the fixes: 
-
-# Testing and Validation
+# Round 3 Testing and Validation
 
 ## 1. Original Issue Reproduction
 
