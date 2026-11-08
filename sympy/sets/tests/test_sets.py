@@ -11,7 +11,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.logic.boolalg import (false, true)
 from sympy.matrices.kind import MatrixKind
 from sympy.matrices.dense import Matrix
@@ -99,6 +99,17 @@ def test_imageset_interval_open_extrema():
         Interval(0, 1)
     assert imageset(Lambda(x, sin(x)), Interval.open(0, pi)) == \
         Interval.Lopen(0, 1)
+
+def test_imageset_infinite_singularities():
+    # Issue 29675: do not enumerate periodic singularities on all reals.
+    for func in (tan, cot):
+        f = Lambda(x, func(x))
+        assert imageset(f, S.Reals) == ImageSet(f, S.Reals)
+
+    # Empty and finite singularity sets must still be evaluated.
+    assert imageset(Lambda(x, x**2), Interval(0, 2)) == Interval(0, 4)
+    assert imageset(Lambda(x, 1/(x - 1)), Interval(0, 2)) == \
+        Union(Interval(-oo, -1), Interval(1, oo))
 
 
 def test_is_empty():
