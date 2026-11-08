@@ -1448,6 +1448,14 @@ def test_print_logic():
     assert mpp.doprint(Not(x)) == '<mrow><mo>&#xAC;</mo><mi>x</mi></mrow>'
     assert mpp.doprint(Not(And(x, y))) == \
         '<mrow><mo>&#xAC;</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>&#x2227;</mo><mi>y</mi></mrow><mo>)</mo></mrow></mrow>'
+    assert mpp.doprint(Not(x > y, evaluate=False)) == \
+        '<mrow><mo>&#xAC;</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>></mo><mi>y</mi></mrow><mo>)</mo></mrow></mrow>'
+    from sympy.sets.contains import Contains
+    from sympy.sets.sets import Interval
+    assert mpp.doprint(Not(Contains(x, Interval(0, 1)), evaluate=False)) == \
+        '<mrow><mo>&#xAC;</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>&#x2208;</mo><mrow><mo>[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>]</mo></mrow></mrow><mo>)</mo></mrow></mrow>'
+    assert mpp.doprint(Not(Not(x, evaluate=False), evaluate=False)) == \
+        '<mrow><mo>&#xAC;</mo><mrow><mo>&#xAC;</mo><mi>x</mi></mrow></mrow>'
 
 
 def test_root_notation_print():

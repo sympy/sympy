@@ -3418,3 +3418,12 @@ def test_latex_disable_split_super_sub():
     assert latex(Symbol('u^a_b')) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=False) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=True) == 'u\\^a\\_b'
+
+
+def test_issue_30844():
+    from sympy.sets.contains import Contains
+    from sympy.sets.sets import Interval
+    assert latex(Not(x > y, evaluate=False)) == r"\neg \left(x > y\right)"
+    assert latex(Not(Eq(x, y), evaluate=False)) == r"\neg \left(x = y\right)"
+    assert latex(Not(Contains(x, Interval(0, 1)), evaluate=False)) == r"\neg \left(x \in \left[0, 1\right]\right)"
+    assert latex(Not(Not(x, evaluate=False), evaluate=False)) == r"\neg \neg x"
