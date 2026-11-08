@@ -1330,8 +1330,6 @@ class Basic(Printable):
             hit = False
             args = list(self.args)
             for i, arg in enumerate(args):
-                if not hasattr(arg, '_eval_subs'):
-                    continue
                 arg = arg._subs(old, new, **hints)
                 if not _aresame(arg, args[i]):
                     hit = True
