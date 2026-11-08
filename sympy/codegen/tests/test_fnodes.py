@@ -202,6 +202,10 @@ def test_reshape():
         (reshape(array, (2, 3)), 'reshape(array, [2, 3])'),
         (reshape([1, 2], [2, 2], [0], (2, 1)),
          'reshape([1, 2], [2, 2], pad=[0], order=[2, 1])'),
+        (reshape([[1, 2], [3, 4]], [2, 2]),
+         'reshape([[1, 2], [3, 4]], [2, 2])'),
+        (reshape(((1, 2), (3, 4)), (2, 3), [[5, 6]]),
+         'reshape([[1, 2], [3, 4]], [2, 3], pad=[[5, 6]])'),
     ]
 
     for expr, expected in cases:

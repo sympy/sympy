@@ -517,20 +517,28 @@ def reshape(source, shape, pad=None, order=None):
     'reshape(array, shape, pad=pad, order=order)'
 
     """
-    def printable(arg):
+    def nested_array(arg):
+        if isinstance(arg, (list, tuple)):
+            return ArrayConstructor([nested_array(element) for element in arg])
+        return _printable(arg)
+
+    def array(arg):
         if isinstance(arg, (list, tuple)):
             return ArrayConstructor(arg)
         return _printable(arg)
 
+    source = nested_array(source)
+    shape = array(shape)
+
     kwargs = {}
     if pad is not None:
-        kwargs['pad'] = printable(pad)
+        kwargs['pad'] = nested_array(pad)
     if order is not None:
-        kwargs['order'] = printable(order)
+        kwargs['order'] = array(order)
 
     return KeywordFunctionCall(
         'reshape',
-        [printable(source), printable(shape)],
+        [source, shape],
         kwargs
     )
 
