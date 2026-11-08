@@ -2816,7 +2816,7 @@ class MatrixBase(Printable):
         >>> Matrix(_).xreplace({y: x})
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.xreplace(rule))
+        return self.applyfunc(lambda x: x.xreplace(rule)) # type: ignore
 
     def _eval_simplify(self, **kwargs: Any) -> Self:
         # XXX: We can't use self.simplify here as mutable subclasses will

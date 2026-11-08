@@ -3074,7 +3074,7 @@ class Tensor(TensExpr):
     def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         # TODO: this could be optimized by only swapping the indices
         # instead of visiting the whole expression tree:
-        return self.xreplace(repl)
+        return self.xreplace(repl) # type: ignore
 
     def as_base_exp(self):
         return self, S.One
@@ -4579,7 +4579,7 @@ class TensorElement(TensExpr):
 
     def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         # TODO: can be improved:
-        return self.xreplace(repl)
+        return self.xreplace(repl) # type: ignore
 
     def get_indices(self):
         return self.get_free_indices()

@@ -1372,7 +1372,7 @@ class Basic(Printable):
         """
         return None
 
-    def xreplace(self, rule):
+    def xreplace(self, rule: Mapping[Any, Basic]) -> Basic:
         """
         Replace occurrences of objects within the expression.
 
@@ -1439,14 +1439,14 @@ class Basic(Printable):
         value, _ = self._xreplace(rule)
         return value
 
-    def _xreplace(self, rule):
+    def _xreplace(self, rule: Mapping[Any, Basic]) -> tuple[Basic, bool]:
         """
         Helper for xreplace. Tracks whether a replacement actually occurred.
         """
         if self in rule:
             return rule[self], True
         elif rule:
-            args = []
+            args: list[Basic] = []
             changed = False
             for a in self.args:
                 a, achanged = a._xreplace(rule)
@@ -2261,7 +2261,7 @@ class Basic(Printable):
         # WARNING: This API is experimental.
 
         # This is an experimental API that introduces constructor
-        # postprosessors for SymPy Core elements. If an argument of a SymPy
+        # postprocessors for SymPy Core elements. If an argument of a SymPy
         # expression has a `_constructor_postprocessor_mapping` attribute, it will
         # be interpreted as a dictionary containing lists of postprocessing
         # functions for matching expression node names.
