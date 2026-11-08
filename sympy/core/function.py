@@ -2516,7 +2516,7 @@ class Subs(Expr):
     def _hashable_content(self):
 	# Include substitution metadata to distinguish Subs objects that may otherwise have identical canonicalized expressions.
         
-	return (
+        return (
             self._expr.xreplace(self.canonical_variables),
             len(self.variables),
             frozenset(self.free_symbols),
