@@ -62,6 +62,9 @@ def test_slicing():
     assert X7[::3, ::3].shape == (3, 3)
     M7 = Matrix(7, 7, lambda i, j: 10*i + j)
     assert X7[::3, ::3].subs(X7, M7).as_explicit() == M7[::3, ::3]
+    assert X7[1:6:2, :].shape == (3, 7)
+    assert X7[2:7:3, :].shape == (2, 7)
+
 
 def test_exceptions():
     X = MatrixSymbol('x', 10, 20)
