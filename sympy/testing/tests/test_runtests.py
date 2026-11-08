@@ -38,3 +38,8 @@ def test_sympy_output_checker_ellipsis():
 
     # Approximate float matching without an ellipsis is unchanged.
     assert checker.check_output('0.60000', '0.6000001', 0)
+    assert checker.check_output('f(1.0, 2.0)', 'f(1.000001, 2.0)', ELLIPSIS)
+
+    # With an ellipsis, visible floats must match exactly.
+    assert not checker.check_output(
+        'f(1.0, ..., 2.0)', 'f(1.000001, x, 2.0)', ELLIPSIS)
