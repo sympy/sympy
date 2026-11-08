@@ -493,15 +493,8 @@ class Basic(Printable):
 
         """
 
-        # XXX: remove this when issue 5169 is fixed
-        def inner_key(arg):
-            if isinstance(arg, Basic):
-                return arg.sort_key(order)
-            else:
-                return arg
-
         args = self._sorted_args
-        args = len(args), tuple([inner_key(arg) for arg in args])
+        args = len(args), tuple([arg.sort_key(order) for arg in args])
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def _do_eq_sympify(self, other):
