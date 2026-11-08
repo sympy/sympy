@@ -146,8 +146,9 @@ def _monotonic_sign(self):
       of values for the variables.
     - M(x, y, ...) + A: a monomial M whose factors are all signed and a constant, A.
     - A/M(x, y, ...) + B: the inverse of a monomial and constants A and B.
-    - F(x): a univariate expression that is monotonic over the known range of x,
-      or a polynomial whose extrema can be determined.
+    - F(x): a univariate polynomial with determinable extrema, or an affine
+      transformation of exp, log, or sqrt with an affine argument and a
+      justified real domain.
 
     Examples
     ========
@@ -255,34 +256,53 @@ def _monotonic_sign(self):
         else:
             x = next(iter(free))
             x0 = _monotonic_sign(x)
-
             if x0 not in (None, _eps, -_eps):
-                d = self.diff(x)
-                y = self.subs(x, x0)
-
-                if x.is_nonnegative:
-                    if d.is_positive:
-                        if y.is_positive:
-                            return y
-                        if y.is_zero:
-                            return Dummy('nneg', nonnegative=True)
-                    elif d.is_negative:
-                        if y.is_negative:
-                            return y
-                        if y.is_zero:
-                            return Dummy('npos', nonpositive=True)
-
-                elif x.is_nonpositive:
-                    if d.is_positive:
-                        if y.is_negative:
-                            return y
-                        if y.is_zero:
-                            return Dummy('npos', nonpositive=True)
-                    elif d.is_negative:
-                        if y.is_positive:
-                            return y
-                        if y.is_zero:
-                            return Dummy('nneg', nonnegative=True)
+                # Only use endpoint inference for known monotonic functions
+                # with affine arguments. A derivative sign at integer points
+                # does not imply monotonicity between them.
+                from sympy.functions.elementary.exponential import exp, log
+                c, term = self.as_independent(x, as_Add=True)
+                a, f = term.as_independent(x, as_Add=False)
+                is_sqrt = f.is_Pow and f.exp == S.Half
+                if f.func in (exp, log) or is_sqrt:
+                    u = f.base if is_sqrt else f.args[0]
+                    # Extract affine coefficients without expansion.
+                    try:
+                        slope, _ = linear_coeffs(u, x)
+                    except NonlinearError:
+                        pass
+                    else:
+                        increasing = (a*slope).is_positive
+                        decreasing = (a*slope).is_negative
+                        if increasing or decreasing:
+                            domain_ok = True
+                            if f.func == log or is_sqrt:
+                                # The argument must stay in the real domain
+                                # on the entire interval from the endpoint.
+                                domain_ok = (
+                                    (x.is_nonnegative and slope.is_positive)
+                                    or (x.is_nonpositive and slope.is_negative)
+                                )
+                                if domain_ok:
+                                    u0 = u.subs(x, x0)
+                                    domain_ok = (
+                                        u0.is_nonnegative is True if is_sqrt
+                                        else u0.is_positive is True
+                                    )
+                            if domain_ok:
+                                y = self.subs(x, x0)
+                                if ((x.is_nonnegative and increasing)
+                                        or (x.is_nonpositive and decreasing)):
+                                    if y.is_positive:
+                                        return y
+                                    if y.is_zero:
+                                        return Dummy('nneg', nonnegative=True)
+                                elif ((x.is_nonnegative and decreasing)
+                                        or (x.is_nonpositive and increasing)):
+                                    if y.is_negative:
+                                        return y
+                                    if y.is_zero:
+                                        return Dummy('npos', nonpositive=True)
 
             n, d = self.as_numer_denom()
             den = None

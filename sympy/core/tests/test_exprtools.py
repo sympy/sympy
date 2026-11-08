@@ -8,8 +8,10 @@ from sympy.core.containers import (Dict, Tuple)
 from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin)
@@ -519,8 +521,6 @@ def test_monotonic_sign():
 
     # issue 9154
     p = Dummy(prime=True, odd=True)
-    assert F(log(p) - 1) == log(3) - 1
-    assert F(sqrt(p) - sqrt(2)) == sqrt(3) - sqrt(2)
     assert log(p) >= 1
     assert (sqrt(p) - sqrt(2)).is_positive is True
 
@@ -528,22 +528,16 @@ def test_monotonic_sign():
     nn = Dummy(integer=True, nonnegative=True)
 
     r = F(exp(nn) - 1)
-    assert r.is_nonnegative is True
     assert r.is_positive is None
 
     r = F(exp(-nn) - 1)
-    assert r.is_nonpositive is True
     assert r.is_negative is None
 
     np = Dummy(integer=True, nonpositive=True)
 
-    assert F(exp(np) - 2) == -1
-
     r = F(exp(np) - 1)
     assert r.is_nonpositive is True
     assert r.is_negative is None
-
-    assert F(exp(-np) - S.Half) == S.Half
 
     r = F(exp(-np) - 1)
     assert r.is_nonnegative is True
@@ -551,6 +545,70 @@ def test_monotonic_sign():
 
     nn = Dummy(integer=True, nonnegative=True)
     assert F(exp(-nn) - 2) == -1
+
+
+def test_monotonic_sign_discontinuous_integer_domain():
+    n = Dummy(integer=True, nonnegative=True)
+    t = 2*n - 1
+    f = Mul(t, Pow(t, -2, evaluate=False), evaluate=False)
+
+    # The denominator is positive at every integer.
+    assert f.as_numer_denom()[1].is_extended_positive is True
+    assert f.diff(n).is_negative is True
+
+    # Yet the function changes sign between consecutive integers.
+    assert f.subs(n, 0) == -1
+    assert f.subs(n, 1) == 1
+
+    # A negative derivative at integer values is insufficient.
+    assert _monotonic_sign(f) is None
+    assert f.is_negative is None
+
+    # Incorrect inference must not corrupt subsequent evaluation.
+    assert Abs(f).subs(n, 1) == 1
+    assert sqrt(f**2).subs(n, 1) == 1
+
+
+def test_monotonic_sign_safe_functions():
+    from sympy.functions.elementary.complexes import Abs, sign
+
+    F = _monotonic_sign
+    nn = Dummy(integer=True, nonnegative=True)
+    np = Dummy(integer=True, nonpositive=True)
+    p = Dummy(prime=True, odd=True)
+
+    # The endpoint method remains available for known monotonic functions.
+    assert F(log(p) - 1) == log(3) - 1
+    assert F(sqrt(p) - sqrt(2)) == sqrt(3) - sqrt(2)
+    assert F(exp(nn) - 1).is_nonnegative is True
+    assert F(exp(-nn) - 1).is_nonpositive is True
+    assert F(exp(np) - 2) == -1
+    assert F(exp(-np) - S.Half) == S.Half
+
+    # Affine argument and constant scaling.
+    assert F(2*exp(3*nn + 2) - 1) == 2*exp(2) - 1
+    assert F(2*log(nn + 1) + 1) == 1
+    assert F(-2*sqrt(nn + 1) - 3) == -5
+    assert F(exp(nn**2) - 2) is None
+
+    # Derivative signs do not establish monotonicity across poles or
+    # discontinuities between integers.
+    assert F(1/(2*nn - 1)) is None
+    assert F(1/(4*nn - 1)) is None
+    f = nn - 2*sign(nn - S.Half)
+    assert F(f) is None
+    assert f.subs(nn, 0) == 2
+    assert f.subs(nn, 1) == -1
+
+    # A logarithmic argument must remain positive throughout the
+    # relevant interval; a square root must remain nonnegative.
+    assert F(log(1 - nn) - 2) is None
+    assert F(sqrt(1 - nn) - 2) is None
+
+    bad = 1/(2*nn - 1) - S.Half
+    assert bad.is_negative is None
+    assert Abs(bad).subs(nn, 1) == S.Half
+
 
 
 def test_issue_17256():
