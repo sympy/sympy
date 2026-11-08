@@ -94,6 +94,16 @@ def test_evalf_complex():
     assert NS('I*(2+I)', 15) == '-1.00000000000000 + 2.00000000000000*I'
 
 
+def test_evalf_abs_evaluate_false():
+    for z, expected in (
+        (1 + I, sqrt(2)),
+        (10**20 + I, sqrt(10**40 + 1)),
+    ):
+        with evaluate(False):
+            result = Abs(z, evaluate=False).evalf(50)
+        assert result == expected.evalf(50)
+
+
 @XFAIL
 def test_evalf_complex_bug():
     assert NS('(pi+E*I)*(E+pi*I)', 15) in ('0.e-15 + 17.25866050002*I',
