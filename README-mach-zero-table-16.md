@@ -150,7 +150,6 @@ def _hashable_content(self):
     return (
         self._expr.xreplace(self.canonical_variables),
         len(self.variables),
-        frozenset(self.free_symbols),
         tuple(sorted(self.point, key=default_sort_key)),
     ) + tuple(ordered([
         (v, p)
@@ -162,7 +161,6 @@ def _hashable_content(self):
 The updated implementation adds three pieces of information:
 
 - `len(self.variables)` records the number of substitution variables.
-- `frozenset(self.free_symbols)` includes the free-symbol information in the object's identity.
 - `tuple(sorted(self.point, key=default_sort_key))` includes the substitution points in a consistently ordered representation.
 
 These additions provide more information when SymPy compares and hashes `Subs` objects. This helps distinguish substitutions whose canonicalized expressions may look similar but whose substitution details differ.
@@ -188,7 +186,6 @@ We subsequently verified the fix using the original reproducer, expanded regress
   | Addition                                          | Purpose                                                                 |
   | ------------------------------------------------- | ----------------------------------------------------------------------- |
   | `len(self.variables)`                             | Records the number of substitution variables.                           |
-  | `frozenset(self.free_symbols)`                    | Includes the free-symbol information in the object's identity.          |
   | `tuple(sorted(self.point, key=default_sort_key))` | Includes the substitution points in a canonical, sorted representation. |
 
 - Why is this relevant to our bug?
