@@ -28,9 +28,9 @@
   - Develop and test potential fixes.
   - Ensure generated intermediate variables are proper `Dummy` objects where appropriate.
   - Preserve the mapping between temporary variables and their original expressions.
-  - Add regression tests covering multiple composite function arguments, nested differentiation, and subsequent `doit()` / lambdify() operations.
+  - Add regression tests covering multiple composite function arguments, nested differentiation, and subsequent `doit()` / `lambdify()` operations.
 
-**Goal:** Ensure that intermediate differentiation variables remain internal and that the final expression contains only the original free symbols (x and y), without unintended symbols such as Symbol('_x + y').
+**Goal:** Ensure that intermediate differentiation variables remain internal and that the final expression contains only the original free symbols (x and y), without unintended symbols such as `Symbol('_x + y')`.
 
 ---
 
@@ -56,7 +56,7 @@
   ...
   ```
 
-- We used this test case to represent the issue:
+- We used this simplified version of the github issue reproducer as the test case to represent the issue:
 
   ```python
   def test_Subs_composite_arguments_derivative():
@@ -82,41 +82,96 @@
   ...
   ```
 
-- It failed with `RecursionError`.
+- The tests failed with `RecursionError`.
 
 - Then we assumed `doit()` was the culprit and tried to find leads in that direction. Then we realized that `doit()` method was not actually causing the problem. 
 
 - The actual problem had to be with the expression evaluation and related to checking whether or not to substitute, and not with the actual substitution part.
 
-### What we came up with:
+### What we came up with
 
-- Then after that we finally came up with this fix:
+After investigating the interaction between `Subs` construction, symbol replacement, and expression evaluation, we identified two changes that resolved the issue.
 
-  ```python
-  if any(r in expr.free_symbols and (
-       r not in variables or
-       s_pts[point[variable.index(r)]] != r)
-  ```
+**1. Improved the symbol collision check in `Subs.__new__()`**
 
-- Changed `hashable_content` as well to match the new implementation:
+We updated the condition responsible for detecting collisions between generated replacement symbols and existing free symbols.
 
-  ```python
-      return (self._expr.xreplace(self.canonical_variables),
-          ) + tuple(ordered([(v, p) for v, p in 
-              zip(self.variables, self.point) if not self.expr.has(v)]))
-  ```
+**Previous implementation:**
 
-  ```python
-      return (
-          self._expr.xreplace(self.canonical_variables),
-          len(self.variables),
-          frozenset(self.free_symbols),
-          tuple(sorted(self.point, key=default_sort_key)),
-          ) + tuple(ordered([(v, p) for v, p in
-              zip(self.variables, self.point) if not self.expr.has(v)]))
-  ```
+```python
+if any(
+    r in expr.free_symbols
+    and r in variables
+    and Symbol(pre + mystr(point[variables.index(r)])) != r
+    for _, r in reps
+):
+```
 
-- This passes our test case.
+**Updated implementation:**
+
+```python
+if any(
+    r in expr.free_symbols and (
+        r not in variables or
+        s_pts[point[variables.index(r)]] != r
+    )
+    for _, r in reps
+):
+```
+
+The original condition only checked for collisions when the existing symbol was also one of the substitution variables. The updated condition handles both cases:
+
+- If the symbol is not among the substitution variables, it is treated as a potential collision.
+- If it is a substitution variable, SymPy checks whether its corresponding generated replacement symbol differs from it.
+
+We also reused the existing `s_pts` mapping instead of constructing another `Symbol` for the comparison. This keeps the collision check consistent with the replacement symbols already created during substitution.
+
+**2. Expanded `Subs._hashable_content()`**
+
+We also modified `_hashable_content()` to include additional information when determining the structural identity of a `Subs` object.
+
+**Previous implementation:**
+
+```python
+def _hashable_content(self):
+    return (self._expr.xreplace(self.canonical_variables),) + tuple(
+        ordered([
+            (v, p)
+            for v, p in zip(self.variables, self.point)
+            if not self.expr.has(v)
+        ])
+    )
+```
+
+**Updated implementation:**
+
+```python
+def _hashable_content(self):
+    return (
+        self._expr.xreplace(self.canonical_variables),
+        len(self.variables),
+        frozenset(self.free_symbols),
+        tuple(sorted(self.point, key=default_sort_key)),
+    ) + tuple(ordered([
+        (v, p)
+        for v, p in zip(self.variables, self.point)
+        if not self.expr.has(v)
+    ]))
+```
+
+The updated implementation adds three pieces of information:
+
+- `len(self.variables)` records the number of substitution variables.
+- `frozenset(self.free_symbols)` includes the free-symbol information in the object's identity.
+- `tuple(sorted(self.point, key=default_sort_key))` includes the substitution points in a consistently ordered representation.
+
+These additions provide more information when SymPy compares and hashes `Subs` objects. This helps distinguish substitutions whose canonicalized expressions may look similar but whose substitution details differ.
+
+**Outcome**
+
+Together, these changes resolved the original reproducer. Differentiating a function with multiple composite arguments no longer introduces unintended symbols such as `Symbol('_x + y')` into `free_symbols`.
+
+We subsequently verified the fix using the original reproducer, expanded regression tests, and SymPy's test suite. The results are documented in the [Testing and Validation](./TESTING_Mach-Zero.md) section.
 
 ### Why the fix works
 
@@ -152,7 +207,7 @@
   s_pts[point[variables.index(r)]] != r)
   ```
 
-  - Subs.__new__() generates replacement symbols. However, if the generated symbol already exists as a free symbol in the expression, that creates a symbol collision. SymPy needs to ensure that its internally generated replacement symbol does not accidentally refer to an existing user-defined symbol.
+  - `Subs.__new__()` generates replacement symbols. However, if the generated symbol already exists as a free symbol in the expression, that creates a symbol collision. SymPy needs to ensure that its internally generated replacement symbol does not accidentally refer to an existing user-defined symbol.
 
   - The old condition only checked whether r was among the substitution variables.
 
@@ -166,7 +221,7 @@
 
 # Round 3 Testing and Validation
 
-We thoroughly validated that any changes we made were not breaking changes in terms of the general functionality of the SymPy upstream. Refer to [Testing_Mach-Zero](./TESTING_Mach-Zero.md) for a detailed record of what we did to ensure this.
+We thoroughly validated that any changes we made were not breaking changes in terms of the general functionality of the SymPy upstream. Refer to [Testing and Validation](./TESTING_Mach-Zero.md) for a detailed record of what we did to ensure this.
 
 
 ---
