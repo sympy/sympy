@@ -3393,6 +3393,21 @@ def test_solve_modular():
             ImageSet(Lambda(n, 2*n + 1), S.Naturals0))
     assert dumeq(solveset(Mod(2**x, 7) - 2 , x, S.Integers),
             ImageSet(Lambda(n, 3*n + 1), S.Naturals0))
+    # base and modulus share a factor, issue 30996
+    assert solveset(Mod(2**x, 42), x, S.Integers) is S.EmptySet
+    assert solveset(Mod(2**x - 1, 42), x, S.Integers) == FiniteSet(0)
+    assert dumeq(solveset(Mod(2**x - 22, 42), x, S.Integers),
+            ImageSet(Lambda(n, 6*n + 6), S.Naturals0))
+    assert solveset(Mod(2*2**x - 1, 42), x, S.Integers) is S.EmptySet
+    assert dumeq(solveset(Mod(2*2**x - 2, 42), x, S.Integers),
+            ImageSet(Lambda(n, 6*n), S.Naturals0))
+    assert dumeq(solveset(Mod(2**x, 12) - 8, x, S.Integers),
+            ImageSet(Lambda(n, 2*n + 3), S.Naturals0))
+    assert dumeq(solveset(Mod(6**x, 12), x, S.Integers),
+            ImageSet(Lambda(n, n + 2), S.Naturals0))
+    # a power of a base coprime to the modulus is never a multiple of a factor
+    assert solveset(Mod(2**x, 21), x, S.Integers) is S.EmptySet
+    assert solveset(Mod(2**x - 9, 21), x, S.Integers) is S.EmptySet
     assert dumeq(solveset(Mod(3**(3**x), 4) - 3, x, S.Integers),
             Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
             S.Integers)), S.Naturals0), S.Integers))
