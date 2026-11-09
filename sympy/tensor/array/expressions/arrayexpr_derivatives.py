@@ -310,11 +310,6 @@ def _(expr: DiagonalMatrix, x: Expr):
     return _array_diagonal(tp, (rank_x, rank_x + 1, rank_x + 2))
 
 
-@array_derive.register(HadamardProduct)
-def _(expr: HadamardProduct, x: Expr):
-    raise NotImplementedError()
-
-
 @array_derive.register(ArrayContraction)
 def _(expr: ArrayContraction, x: Expr):
     fd = array_derive(expr.expr, x)
