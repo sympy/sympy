@@ -144,6 +144,8 @@ class KroneckerProduct(MatrixExpr):
         return KroneckerProduct(*list(map(transpose, self.args))).doit()
 
     def _eval_trace(self):
+        if not all(a.is_square for a in self.args):
+            return None
         from .trace import trace
         return Mul(*[trace(a) for a in self.args])
 
