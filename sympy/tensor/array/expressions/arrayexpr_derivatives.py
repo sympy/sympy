@@ -15,7 +15,7 @@ from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import (
-    _ArrayExpr, ZeroArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
+    _ArrayExpr, ZeroArray, OneArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
     PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_ndim,
     get_shape, ArrayContraction, _array_tensor_product, _array_contraction,
     _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum)
@@ -44,7 +44,7 @@ def _(expr: Expr, x: _ArrayExpr):
             tp = _array_tensor_product(dparent, MatrixUnit(m, n, expr.i, expr.j))
             return _array_contraction(tp, (rank_x, rank_x + 2), (rank_x + 1, rank_x + 3))
         raise NotImplementedError("algorithm not implemented for this case")
-    return ZeroArray(*x.shape)
+    return ZeroArray(*(get_shape(x) + get_shape(expr)))
 
 
 @array_derive.register(Add)
@@ -177,6 +177,11 @@ def _(expr: ZeroMatrix, x: _ArrayExpr):
 
 @array_derive.register(ZeroArray)
 def _(expr: ZeroArray, x: _ArrayExpr):
+    return ZeroArray(*(get_shape(x) + expr.shape))
+
+
+@array_derive.register(OneArray)
+def _(expr: OneArray, x: _ArrayExpr):
     return ZeroArray(*(get_shape(x) + expr.shape))
 
 

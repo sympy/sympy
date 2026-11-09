@@ -12,7 +12,7 @@ from sympy.testing.pytest import raises
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayTensorProduct, \
     PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, ArrayContraction, _permute_dims, \
-    Reshape, ZeroArray
+    Reshape, ZeroArray, OneArray
 from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
 
 k = symbols("k")
@@ -138,6 +138,28 @@ def test_array_derive_zero_expressions():
     assert array_derive(ZeroArray(3,), v) == ZeroArray(2, 3)
     assert array_derive(ZeroMatrix(2, 2), M) == ZeroArray(2, 2, 2, 2)
     assert array_derive(ZeroMatrix(2, 3), v) == ZeroArray(2, 2, 3)
+
+
+def test_array_derive_onearray():
+    M = MatrixSymbol("M", 2, 2)
+    v = ArraySymbol("v", (2,))
+    assert array_derive(OneArray(2, 2), M) == ZeroArray(2, 2, 2, 2)
+    assert array_derive(OneArray(3,), v) == ZeroArray(2, 3)
+
+    X = ArraySymbol("X", (1, 1))
+    O = OneArray(1)
+    res = array_derive(ArrayTensorProduct(O, X), X)
+    assert res.shape == (1, 1, 1, 1, 1)
+    assert res.as_explicit() == ImmutableDenseNDimArray([[[[[1]]]]])
+
+    res_rev = array_derive(ArrayTensorProduct(X, O), X)
+    assert res_rev.shape == (1, 1, 1, 1, 1)
+    assert res_rev.as_explicit() == ImmutableDenseNDimArray([[[[[1]]]]])
+
+    X2 = ArraySymbol("X", (2, 3))
+    O2 = OneArray(4)
+    res2 = array_derive(ArrayTensorProduct(O2, X2), X2)
+    assert res2.shape == (2, 3, 4, 2, 3)
 
 
 def test_array_derive_matrix_rules_non_matrix_x():
