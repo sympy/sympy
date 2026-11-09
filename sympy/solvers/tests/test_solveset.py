@@ -3822,6 +3822,7 @@ def test_issue_26077():
     assert solution.as_dummy() == critical_points.as_dummy()
 
 def test_issue_30386():
+    from sympy.solvers.solveset import _solve_trig2
     x = Symbol('x')
     _n = Symbol('_n')
     # Preserve the public interface of invert_real
@@ -3836,3 +3837,10 @@ def test_issue_30386():
     assert(invert_real(csc(x), -oo, x)[1] == S.EmptySet)
     # ensure solutions are not missed when rewriting with tangent
     assert(pi in solveset(-sin(x)*cos(4*x)-4*sin(4*x)*cos(x), x, Interval(0, 2*pi)))
+    # The pole is the only real root; there are no finite tan roots.
+    result = solveset(1 + cos(x)*cos(4*x), x, S.Reals)
+    assert pi in result
+    assert 0 not in result
+    # The tangent poles must not be introduced as zeros.
+    assert solveset(1/(tan(x) + 1), x, S.Reals) is S.EmptySet
+    assert pi not in _solve_trig2(1/(cot(x) + 1), x, S.Reals)

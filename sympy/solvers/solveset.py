@@ -1006,7 +1006,7 @@ def _solve_trig2(f, symbol, domain):
         return ConditionSet(symbol, Eq(f_original, 0), domain)
     solns = solveset(g, y, S.Reals) - solveset(h, y, S.Reals)
 
-    if isinstance(solns, FiniteSet):
+    if isinstance(solns, FiniteSet) or solns is S.EmptySet:
         result = Union(*[invert_real(tan(symbol/mu), s, symbol)[1]
                        for s in solns])
         if degree(h) > degree(g):
@@ -1020,6 +1020,16 @@ def _solve_trig2(f, symbol, domain):
         return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet
+    else:
+        if (degree(h) > degree(g) and
+                domain_check(f_original, symbol, mu*pi/2)):
+            # The transformed rational function vanishes at tan(symbol/mu)
+            # infinity. Include these poles only if the original expression
+            # is defined there.
+            n = Dummy('n', integer=True)
+            dsol = imageset(n, mu*pi*n + mu*pi/2, S.Integers)
+            result = Union(result, dsol)
+        return Intersection(result, domain)
     else:
         return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
