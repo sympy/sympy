@@ -670,7 +670,7 @@ class And(LatticeOp, BooleanFunction):
 
     def _eval_simplify(self, **kwargs):
         from sympy.core.relational import Equality, Relational
-        from sympy.solvers.solveset import linear_coeffs
+        from sympy.core.exprtools import linear_coeffs
         # standard simplify
         rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, And):
