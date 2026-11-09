@@ -2,7 +2,8 @@ from __future__ import annotations
 from sympy import (exp, log, Matrix, Array, derive_by_array, ImmutableMatrix,
     ImmutableDenseNDimArray, Transpose, Inverse, Determinant, MatPow, ZeroMatrix,
     Trace, atan2)
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Dummy
+from sympy.core.function import Lambda
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixSymbol, MatrixElement
@@ -298,3 +299,14 @@ def test_array_derive_scalar_sums():
     assert array_derive(M3[0, 0] + 2*M3[1, 2], M3).as_explicit() == \
         Matrix([[1, 0, 0], [0, 0, 2], [0, 0, 0]])
     assert (Trace(M3) + k).diff(M3) == Identity(3)
+
+
+def test_array_applyfunc_derivative_keeps_function_argument():
+    # https://github.com/sympy/sympy/issues/30902 (item 2)
+    A2 = ArraySymbol("A2", (2, 2))
+    d = Dummy("d")
+    cg = ArrayElementwiseApplyFunc(Lambda(d, exp(d + 1)), A2)
+    res = array_derive(cg, A2).as_explicit()
+    assert res[0, 0, 0, 0] == exp(A2[0, 0] + 1)
+    assert res[1, 1, 1, 1] == exp(A2[1, 1] + 1)
+    assert res[0, 0, 1, 1] == 0
