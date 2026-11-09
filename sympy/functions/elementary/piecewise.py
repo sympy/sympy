@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, cast, overload
 
 from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
@@ -19,7 +19,7 @@ from itertools import product
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Sequence
     from typing import TypeVar
     from sympy.core.numbers import NaN
 
@@ -1087,7 +1087,7 @@ def piecewise_fold(expr: Basic | T, evaluate: bool | None = True) -> Basic | T:
             assert not c.has(Piecewise)  # pragma: no cover
             if isinstance(c, ITE):
                 c = c.to_nnf()
-                c = simplify_logic(c, form='cnf')
+                c = cast(Boolean, simplify_logic(c, form='cnf'))
             if isinstance(e, Piecewise):
                 new_args.extend([(piecewise_fold(p.expr), And(p.cond, c))
                     for p in e.args])
@@ -1116,7 +1116,7 @@ def piecewise_fold(expr: Basic | T, evaluate: bool | None = True) -> Basic | T:
                 if len(pc[conditions]) > 1:
                     pargs: list[list[ExprCondPair]] = [list(i.args) for i in pc[conditions]]
                     # the first one is the same; there may be more
-                    com: list[Boolean] = common_prefix(*[
+                    com: Sequence[Boolean] = common_prefix(*[
                         [i.cond for i in j] for j in pargs])
                     n: int = len(com)
                     collected: list[tuple[Basic, Boolean]] = []
