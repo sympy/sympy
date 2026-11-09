@@ -7,7 +7,6 @@ from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, M
 from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
-from sympy.matrices.expressions.hadamard import HadamardProduct
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol, MatrixElement)
