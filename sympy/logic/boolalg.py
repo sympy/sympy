@@ -24,9 +24,8 @@ from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
-    from sympy.core.basic import _SupportsItems, Tbasic
-    from sympy.core.expr import Expr
+    from collections.abc import Iterable
+    from sympy.core.basic import _SupportsItems
 
 
 def as_Boolean(e):
@@ -99,14 +98,6 @@ class Boolean(Basic):
 
         def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
-            ...
-
-        @overload
-        def xreplace(self, rule: Mapping[Tbasic, Expr | Boolean]) -> Boolean: ...
-        @overload
-        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
-
-        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
             ...
 
         def simplify(self, **kwargs) -> Boolean:

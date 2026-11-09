@@ -19,7 +19,6 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
 
-
 if TYPE_CHECKING:
     from typing import ClassVar, Any, Hashable, TypeVar, Protocol
     from typing_extensions import Self
@@ -35,6 +34,8 @@ if TYPE_CHECKING:
     class _SupportsItems(Protocol[_K_co, _V_co]):
         def items(self) -> Iterable[tuple[_K_co, _V_co]]:
             ...
+
+    Tvalue = TypeVar("Tvalue", bound='Basic')
 
 
 def as_Basic(expr):
@@ -956,7 +957,7 @@ class Basic(Printable):
         return False
 
     @property
-    def func(self):
+    def func(self) -> type[Self]:
         """
         The top-level function in an expression.
 
@@ -1372,11 +1373,7 @@ class Basic(Printable):
         """
         return None
 
-    @overload
-    def xreplace(self, rule: Mapping[Basic, Basic]) -> Basic:...
-    @overload
-    def xreplace(self, rule: Mapping[Self, Basic]) -> Self:...
-    def xreplace(self, rule: Mapping[Basic, Basic] | Mapping[Self, Basic]) -> Basic | Self:
+    def xreplace(self, rule: Mapping[Tbasic, Tvalue]) -> Self | Tvalue:
         """
         Replace occurrences of objects within the expression.
 
@@ -1443,31 +1440,23 @@ class Basic(Printable):
         value, _ = self._xreplace(rule)
         return value
 
-
-    @overload
-    def _xreplace(self, rule: Mapping[Basic, Basic]) -> tuple[Basic, bool]:...
-    @overload
-    def _xreplace(self, rule: Mapping[Self, Basic]) -> tuple[Self, bool]:...
-    def _xreplace(self, rule: Mapping[Basic, Basic] | Mapping[Self, Basic]) -> tuple[Basic, bool] | tuple[Self, bool]:
+    def _xreplace(self, rule: Mapping[Any, Tvalue]) -> tuple[Self | Tvalue, bool]:
         """
         Helper for xreplace. Tracks whether a replacement actually occurred.
         """
-        returnMe: Basic = self
+        returnMe: Self | Tvalue = self
         changed: bool = False
-        changedSherpa: bool = False
         if self in rule:
             returnMe = rule[self]
             changed = True
         elif rule:
             args: list[Basic] = []
             for a in self.args:
-                qq: tuple[Basic, bool] | tuple[Self, bool] = a._xreplace(rule)
-                ww = qq[0]
-                changedSherpa = qq[1]
-                changed |= changedSherpa
-                args.append(ww)
+                a, achanged = a._xreplace(rule)
+                changed |= achanged
+                args.append(a)
             if changed:
-                returnMe = self.func(*args)  # <-- This untyped return is the problem's locus.
+                returnMe = self.func(*args)
         return (returnMe, changed)
 
     @cacheit
@@ -2417,7 +2406,7 @@ class Atom(Basic):
                 return {}
             return repl_dict.copy()
 
-    def _xreplace(self, rule: Mapping[Any, Basic]) -> tuple[Basic, bool]:
+    def _xreplace(self, rule: Mapping[Any, Tvalue]) -> tuple[Self | Tvalue, bool]:
         if self in rule:
             return rule[self], True
         return self, False
