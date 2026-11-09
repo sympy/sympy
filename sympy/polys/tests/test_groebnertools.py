@@ -540,7 +540,7 @@ def test_issue_30609_fraction_field_hang():
     # Import locally to avoid shadowing the internal groebner function used by other tests
     from sympy.core.symbol import symbols
     from sympy.polys.polytools import groebner
-    
+
     x, y, z, b, c = symbols('x y z b c')
 
     F1 = (1 + x * y) ** 3 * z + y**2 * (1 + x * y) * (4 + 3 * x * y)

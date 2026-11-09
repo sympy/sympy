@@ -9,26 +9,29 @@ from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
 
 def _clear_denoms(f, ring):
-    """
-    Clears denominators of a polynomial over a FractionField to prevent 
-    intermediate expression swell during Gröbner basis computation.
-    """
     domain = ring.domain
     if not domain.is_FractionField or not f:
         return f
-        
+
     ground = domain.domain
-    
-    lcm_val = ground.one
+
+    # Collect unique non-trivial denominators
+    denoms = set()
     for c in f.values():
-        den = getattr(c, 'denominator', getattr(c, 'den', ground.one))
-        lcm_val = ground.lcm(lcm_val, den)
-        
-    if lcm_val != ground.one:
-        multiplier = domain.convert(lcm_val, ground)
-        f = f * multiplier
-        
-    return f
+        den = getattr(c, 'denom', getattr(c, 'denominator', ground.one))
+        if den != ground.one:
+            denoms.add(den)
+
+    if not denoms:
+        return f
+
+    # Multiply unique denominators to form a common multiple without calling heugcd
+    common_denom = ground.one
+    for den in denoms:
+        common_denom = common_denom * den
+
+    multiplier = domain.convert(common_denom, ground)
+    return f * multiplier
 
 def groebner(seq, ring, method=None):
     """
