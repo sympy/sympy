@@ -694,7 +694,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
             args = expr.args
 
         new_args = list(map(_rebuild, args))
-        if isinstance(expr, Unevaluated) or new_args != args:
+        if isinstance(expr, Unevaluated) or new_args != list(args):
             new_expr = expr.func(*new_args)
         else:
             new_expr = expr
