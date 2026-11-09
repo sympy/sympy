@@ -1,13 +1,16 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.complexes import sign
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def delta(value: Expr) -> Expr:
