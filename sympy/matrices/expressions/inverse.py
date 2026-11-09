@@ -76,9 +76,6 @@ class Inverse(MatPow):
             from sympy.matrices.expressions.special import ZeroMatrix
             return ZeroMatrix(*self.shape)
         if darg.is_Matrix:
-            if darg.is_ZeroMatrix:
-                from sympy.matrices.expressions.special import ZeroMatrix
-                return ZeroMatrix(*self.shape)
             return - self * darg * self
         return None
 

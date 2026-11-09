@@ -78,7 +78,7 @@ def test_inverse_derivative():
     X = MatrixSymbol('X', 3, 3)
     Z = MatrixSymbol('Z', 3, 3)
 
-    # Scalar differentiation of matrix inverse: d(M^-1)/dx = - M^-1 (dM/dx) M^-1
+    # Scalar derivative of matrix inverse: d(M^-1)/dx = - M^-1 (dM/dx) M^-1
     inv_expr = Inverse(x*X + Z)
     assert inv_expr.diff(x) == -(x*X + Z)**(-1) * X * (x*X + Z)**(-1)
 
@@ -86,10 +86,12 @@ def test_inverse_derivative():
     assert Inverse(X).diff(x) == ZeroMatrix(3, 3)
 
     # Non-linear scalar argument with chain rule
-    assert Inverse(x**2 * X + Z).diff(x) == (-2*x)*(x**2*X + Z)**(-1) * X * (x**2*X + Z)**(-1)
+    expected = (-2*x) * (x**2*X + Z)**(-1) * X * (x**2*X + Z)**(-1)
+    assert Inverse(x**2 * X + Z).diff(x) == expected
 
     # Matrix element differentiation
-    assert Inverse(X).diff(X[0, 1]) == -X**(-1) * MatrixUnit(3, 3, 0, 1) * X**(-1)
+    unit = MatrixUnit(3, 3, 0, 1)
+    assert Inverse(X).diff(X[0, 1]) == -X**(-1) * unit * X**(-1)
 
     # Matrix-by-matrix differentiation preserves tensor array engine
     assert isinstance(Inverse(X).diff(X), PermuteDims)

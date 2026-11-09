@@ -125,7 +125,7 @@ def test_trace_derivative():
     X = MatrixSymbol('X', 3, 3)
     Z = MatrixSymbol('Z', 3, 3)
 
-    # Item E4-20 from #30900: Trace of Inverse differentiated with respect to scalar
+    # Trace of Inverse differentiated with respect to scalar (#30900)
     tr_inv = Trace(Inverse(x*X + Z))
     assert tr_inv.diff(x) == -Trace((x*X + Z)**(-1) * X * (x*X + Z)**(-1))
 
@@ -135,13 +135,15 @@ def test_trace_derivative():
     # Trace derivative with respect to MatrixSymbol
     assert Trace(A).diff(A) == Identity(n)
 
-    # If the inner derivative is not a matrix, Trace._eval_derivative returns None,
-    # safely constructing an unevaluated Derivative instead of raising TypeError.
+    # When inner derivative is not a matrix, Trace._eval_derivative returns
+    # None, constructing unevaluated Derivative instead of raising TypeError.
     class DummyNonMatrixDiff(MatrixExpr):
         shape = (3, 3)
+
         @property
         def free_symbols(self):
             return {x}
+
         def _eval_derivative(self, v):
             return x  # returns a scalar, not a MatrixExpr
 
