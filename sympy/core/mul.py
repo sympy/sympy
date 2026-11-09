@@ -2187,8 +2187,11 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
             args = [i.as_coeff_Mul() for i in factors.args]
             args = [(_keep_coeff(c, coeff), m) for c, m in args]
             if any(c.is_Integer for c, _ in args):
-                return Add._from_args([Mul._from_args(
-                    i[1:] if i[0] == 1 else i) for i in args])
+                return Add._from_args([
+                    c if m is S.One else Mul._from_args(
+                        (m,) if c is S.One else (c, m))
+                    for c, m in args
+                ])
         return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)

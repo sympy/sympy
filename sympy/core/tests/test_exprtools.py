@@ -339,6 +339,10 @@ def test_factor_terms():
     assert factor_terms(0**(x + 2) - 1) == 0**(x + 2) - 1
     assert factor_terms((0**(x + 2) - 1).subs(x,-2)) == 0
 
+    # no unwanted hollow mul
+    eq = (-2*y*x - y)/(2*y)/-1
+    assert factor_terms(eq) == x + S.Half  # not x + (1/2)*1
+
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
