@@ -22,6 +22,7 @@ from sympy.utilities.misc import filldedent, func_name
 if TYPE_CHECKING:
     from typing import ClassVar, Any, Hashable, TypeVar, Protocol
     from typing_extensions import Self
+    from collections.abc import Callable
     from .assumptions import StdFactKB
     from .symbol import Symbol
 
@@ -957,7 +958,7 @@ class Basic(Printable):
         return False
 
     @property
-    def func(self) -> type[Self]:
+    def func(self) -> Callable[..., Self]:
         """
         The top-level function in an expression.
 
