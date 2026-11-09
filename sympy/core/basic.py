@@ -2403,8 +2403,10 @@ class Atom(Basic):
                 return {}
             return repl_dict.copy()
 
-    def xreplace(self, rule, hack2=False):
-        return rule.get(self, self)
+    def _xreplace(self, rule: Mapping[Any, Basic]) -> tuple[Basic, bool]:
+        if self in rule:
+            return rule[self], True
+        return self, False
 
     def doit(self, **hints):
         return self
