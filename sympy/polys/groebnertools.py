@@ -8,6 +8,28 @@ from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
 
+def _clear_denoms(f, ring):
+    """
+    Clears denominators of a polynomial over a FractionField to prevent 
+    intermediate expression swell during Gröbner basis computation.
+    """
+    domain = ring.domain
+    if not domain.is_FractionField or not f:
+        return f
+        
+    ground = domain.domain
+    
+    lcm_val = ground.one
+    for c in f.values():
+        den = getattr(c, 'denominator', getattr(c, 'den', ground.one))
+        lcm_val = ground.lcm(lcm_val, den)
+        
+    if lcm_val != ground.one:
+        multiplier = domain.convert(lcm_val, ground)
+        f = f * multiplier
+        
+    return f
+
 def groebner(seq, ring, method=None):
     """
     Computes Groebner basis for a set of polynomials in `K[X]`.
@@ -89,6 +111,7 @@ def _buchberger(f, ring):
     .. [4] [Cox97]_
 
     """
+    f = [_clear_denoms(p, ring) for p in f]
     order = ring.order
 
     monomial_mul = ring.monomial_mul
@@ -107,6 +130,7 @@ def _buchberger(f, ring):
         if not h:
             return None
         else:
+            h = _clear_denoms(h, ring)
             h = h.monic()
 
             if h not in I:
@@ -598,6 +622,7 @@ def _f5b(F, ring):
     .. [2] Thomas Becker, Volker Weispfenning, Groebner bases: A computational
            approach to commutative algebra, 1993, p. 203, 216
     """
+    F = [_clear_denoms(f, ring) for f in F]
     order = ring.order
 
     # reduce polynomials (like in Mario Pernici's implementation) (Becker, Weispfenning, p. 203)
@@ -638,6 +663,9 @@ def _f5b(F, ring):
         s = s_poly(cp)
 
         p = f5_reduce(s, B)
+        poly_p = Polyn(p)
+        if poly_p:
+            poly_p = _clear_denoms(poly_p, ring)
 
         p = lbp(Sign(p), Polyn(p).monic(), k + 1)
 
