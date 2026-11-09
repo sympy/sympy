@@ -9,42 +9,56 @@ from sympy.assumptions import assuming, Q
 
 X = MatrixSymbol('X', n, m)
 Y = MatrixSymbol('Y', m, k)
+X10 = MatrixSymbol('X', 10, 20)
+X_sq = MatrixSymbol('X_sq', 10, 10)
 
 
 def test_shape():
-    B = MatrixSlice(X, (a, b), (c, d))
-    assert B.shape == (b - a, d - c)
+    B = MatrixSlice(X10, (1, 5), (2, 4))
+    assert B.shape == (4, 2)
+
+    B_sym = MatrixSlice(X, (a, b), (c, d))
+    from sympy.core.containers import Tuple
+    assert Tuple(*B_sym.shape).subs(
+        {n: 10, m: 20, a: 1, b: 5, c: 2, d: 4}
+    ) == (4, 2)
 
 
 def test_entry():
-    B = MatrixSlice(X, (a, b), (c, d))
-    assert B[0, 0] == X[a, c]
-    assert B[k, l] == X[a+k, c+l]
-    raises(IndexError, lambda: MatrixSlice(X, 1, (2, 5))[1, 0])
+    B = MatrixSlice(X10, (1, 5), (2, 4))
+    assert B[0, 0] == X10[1, 2]
+    assert B[k, l] == X10[1+k, 2+l]
+    raises(IndexError, lambda: MatrixSlice(X10, 1, (2, 5))[1, 0])
 
-    assert X[1::2, :][1, 3] == X[1+2, 3]
-    assert X[:, 1::2][3, 1] == X[3, 1+2]
+    assert X10[1::2, :][1, 3] == X10[1+2, 3]
+    assert X10[:, 1::2][3, 1] == X10[3, 1+2]
+
+    B_sym = MatrixSlice(X, (a, b), (c, d))
+    assert B_sym[0, 0].subs({n: 10, m: 20, a: 1, c: 2}) == X10[1, 2]
 
 
 def test_on_diag():
-    assert not MatrixSlice(X, (a, b), (c, d)).on_diag
-    assert MatrixSlice(X, (a, b), (a, b)).on_diag
+    assert not MatrixSlice(X_sq, (1, 5), (2, 6)).on_diag
+    assert MatrixSlice(X_sq, (1, 5), (1, 5)).on_diag
 
 
 def test_inputs():
-    assert MatrixSlice(X, 1, (2, 5)) == MatrixSlice(X, (1, 2), (2, 5))
-    assert MatrixSlice(X, 1, (2, 5)).shape == (1, 3)
+    assert MatrixSlice(X10, 1, (2, 5)) == MatrixSlice(X10, (1, 2), (2, 5))
+    assert MatrixSlice(X10, 1, (2, 5)).shape == (1, 3)
 
 
 def test_slicing():
-    assert X[1:5, 2:4] == MatrixSlice(X, (1, 5), (2, 4))
-    assert X[1, 2:4] == MatrixSlice(X, 1, (2, 4))
-    assert X[1:5, :].shape == (4, X.shape[1])
-    assert X[:, 1:5].shape == (X.shape[0], 4)
+    assert X10[1:5, 2:4] == MatrixSlice(X10, (1, 5), (2, 4))
+    assert X10[1, 2:4] == MatrixSlice(X10, 1, (2, 4))
+    assert X10[1:5, :].shape == (4, 20)
+    assert X10[:, 1:5].shape == (10, 4)
+    assert X10[2, :] == MatrixSlice(X10, 2, (0, 20))
 
-    assert X[::2, ::2].shape == (ceiling(n/2), ceiling(m/2))
-    assert X[2, :] == MatrixSlice(X, 2, (0, m))
-    assert X[k, :] == MatrixSlice(X, k, (0, m))
+    from sympy.core.symbol import Symbol
+    n_pos = Symbol('n', integer=True, positive=True)
+    m_pos = Symbol('m', integer=True, positive=True)
+    X_pos = MatrixSymbol('X_pos', n_pos, m_pos)
+    assert X_pos[::2, ::2].shape == (ceiling(n_pos/2), ceiling(m_pos/2))
 
     # Concrete slices with step > 1 must not truncate boundary elements
     from sympy.matrices import Matrix

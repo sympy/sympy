@@ -18,15 +18,6 @@ def delta(value: Expr) -> Expr:
     Indicator delta function: delta(x) = (sign(x)^2 - sign(x)) / 2.
     Returns 1 if x < 0, and 0 if x >= 0.
     """
-    value = sympify(value)
-    if value.is_nonnegative:
-        return S.Zero
-    if value.is_negative:
-        return S.One
-    if value.is_number:
-        if (value < 0) == S.true:
-            return S.One
-        return S.Zero
     return (sign(value)**2 - sign(value)) / 2
 
 
@@ -34,9 +25,7 @@ def decode_bound(bound: Expr, n: Expr) -> Expr:
     """
     Decodes stored canonical bound by adding n if bound is negative.
     """
-    if (bound < 0) == S.true:
-        return bound + n
-    return bound
+    return bound + n*delta(bound)
 
 
 def sympify_slice(n: Expr, value: slice | tuple | Tuple | Expr) -> Tuple:
@@ -53,8 +42,7 @@ def sympify_slice(n: Expr, value: slice | tuple | Tuple | Expr) -> Tuple:
             raise IndexError(
                 f"Index {value} out of bounds for axis of size {n}"
             )
-        if (v < 0) == S.true:
-            v += n
+        v = v + n * delta(v)
         value = (v, v + 1, 1)
     if len(value) == 2:
         value = (*value, None)
@@ -66,45 +54,19 @@ def sympify_slice(n: Expr, value: slice | tuple | Tuple | Expr) -> Tuple:
     if step.is_zero is True:
         raise ValueError("slice step cannot be zero")
 
-    is_negative_step = (
-        (step.is_negative is True) or
-        (step.is_number and (step < 0) == S.true)
-    )
-    p = 1 if is_negative_step else 0
-
-    is_concrete_n = n.is_number
-
+    p = delta(step)
     if start is None:
-        start = (n - 1) if p == 1 else S.Zero
+        start = p*(n - 1)
     else:
-        if p == 1 and start == -n - 1:
-            start = S.NegativeOne
-        elif (start < 0) == S.true:
-            if p == 1 and (start < -n) == S.true:
-                start = S.NegativeOne
-            else:
-                start = Max(S.Zero, start + n)
-        if is_concrete_n and start.is_number:
-            start = Max(-p, Min(n - p, start))
-
+        start = start + n*delta(start)
+        start = Max(-p, Min(n - p, start))
     if stop is None:
-        stop = S.NegativeOne if p == 1 else n
+        stop = (1 - p)*n - p
     else:
-        if p == 1 and stop == -n - 1:
-            stop = S.NegativeOne
-        elif (stop < 0) == S.true:
-            if (stop < -n) == S.true:
-                stop = S.NegativeOne if p == 1 else S.Zero
-            else:
-                stop = stop + n
-        if is_concrete_n and stop.is_number:
-            stop = Max(-p, Min(n - p, stop))
-
-    if p == 1 and start == -1:
-        start = -n - 1
-    if p == 1 and stop == -1:
-        stop = -n - 1
-
+        stop = stop + n*delta(stop)
+        stop = Max(-p, Min(n - p, stop))
+    start = start - n*delta(start)
+    stop = stop - n*delta(stop)
     return Tuple(start, stop, step)
 
 
@@ -115,18 +77,7 @@ def slice_shape_1d(n: Expr, sl: tuple[Expr, Expr, Expr] | Tuple) -> Expr:
     start, stop, step = sl
     A = decode_bound(start, n)
     B = decode_bound(stop, n)
-    diff = sympify(B - A)
-    if step == 1:
-        if diff == n:
-            return n
-        if diff.is_number:
-            return Max(0, diff)
-        return diff
-    if diff == n and (step > 0) == S.true:
-        return ceiling(n / step)
-    if diff.is_number:
-        return Max(0, ceiling(diff / step))
-    return ceiling(diff / step)
+    return Max(0, ceiling((B - A) / step))
 
 
 def compose_slices(
@@ -143,10 +94,8 @@ def compose_slices(
     A_comp = A1 + A2 * step1
     step_comp = step1 * step2
     B_comp = A_comp + L2 * step_comp
-    if (A_comp < 0) == S.true:
-        A_comp = A_comp - n
-    if (B_comp < 0) == S.true:
-        B_comp = B_comp - n
+    A_comp = A_comp - n * delta(A_comp)
+    B_comp = B_comp - n * delta(B_comp)
     return Tuple(A_comp, B_comp, step_comp)
 
 
