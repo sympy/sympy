@@ -298,6 +298,41 @@ def test_pow_invpow():
         ([(x0, x**(2*y))], [x0 + 1/x0])
 
 
+def test_cse_to_functions():
+    from sympy import Derivative
+    from sympy.simplify.cse_main import cse_to_functions
+
+    f = Function('f')
+    F = Function('x0')
+    expr = f(x)**2 + Derivative(f(x), x)
+    assert cse(expr, postprocess=cse_to_functions) == (
+        [(F(x), f(x))], [F(x)**2 + Derivative(F(x), x)])
+
+    expr = Matrix([[f(x), Derivative(f(x), x)], [f(x)**2, f(x)]])
+    assert cse(expr, postprocess=cse_to_functions) == (
+        [(F(x), f(x))],
+        [Matrix([[F(x), Derivative(F(x), x)], [F(x)**2, F(x)]])])
+
+
+def test_cse_to_functions_dependencies_and_collision():
+    from sympy import Derivative
+    from sympy.simplify.cse_main import cse_to_functions
+
+    x0, x1 = symbols('x0 x1')
+    F0, F1 = Function('x0'), Function('x1')
+    assert cse_to_functions(
+        [(x0, x + y), (x1, x0**2)], [Derivative(x1, x)]) == (
+        [(F0(x, y), x + y), (F1(x, y), F0(x, y)**2)],
+        [Derivative(F1(x, y), x)])
+
+    existing = F0(x)
+    renamed = Function('x0_')(x)
+    assert cse_to_functions(
+        [(x0, sin(x))], [existing + Derivative(x0, x)]) == (
+        [(renamed, sin(x))],
+        [existing + Derivative(renamed, x)])
+
+
 def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     assert cse([eq, Eq(x, z + 1), z - 2, (z + 1)*(x + 1)],
