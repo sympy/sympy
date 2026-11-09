@@ -6,7 +6,7 @@ from sympy.polys.monomials import (
     monomial_mul, monomial_div,
     monomial_gcd, monomial_lcm,
     monomial_max, monomial_min,
-    monomial_divides, monomial_pow,
+    monomial_divides, monomial_ngcd, monomial_pow,
     Monomial,
 )
 
@@ -268,3 +268,7 @@ def test_Monomial():
     raises(ValueError, lambda: m**-1)
     raises(TypeError, lambda: m.gcd(3))
     raises(TypeError, lambda: m.lcm(3))
+
+
+def test_monomial_ngcd():
+    assert monomial_ngcd([(5, 3), (2, 4), (6, 1), (3, 2)]) == (2, 1)
