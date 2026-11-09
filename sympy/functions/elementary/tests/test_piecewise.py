@@ -664,8 +664,6 @@ def test_piecewise_fold():
     assert piecewise_fold(Mul(a, b, evaluate=False)
         ) == piecewise_fold(Mul(b, a, evaluate=False))
 
-    raises(TypeError, lambda: piecewise_fold(ExprCondPair(a + 1, y > 0)))
-
 
 def test_piecewise_fold_piecewise_in_cond():
     p1 = Piecewise((cos(x), x < 0), (0, True))
