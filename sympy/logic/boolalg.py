@@ -25,7 +25,7 @@ from sympy.utilities.misc import filldedent
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
-    from sympy.core.basic import _SupportsItems
+    from sympy.core.basic import _SupportsItems, Tbasic
     from sympy.core.expr import Expr
 
 
@@ -102,11 +102,11 @@ class Boolean(Basic):
             ...
 
         @overload
-        def xreplace(self, rule: Mapping[Any, Expr | Boolean]) -> Boolean: ...
+        def xreplace(self, rule: Mapping[Tbasic, Expr | Boolean]) -> Boolean: ...
         @overload
-        def xreplace(self, rule: Mapping[Any, Basic]) -> Basic: ...
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
 
-        def xreplace(self, rule: Mapping[Any, Basic]) -> Basic:
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
             ...
 
         def simplify(self, **kwargs) -> Boolean:

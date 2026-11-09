@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from typing import Any, Hashable
     from typing_extensions import Self
     from .numbers import Number
+    from sympy.core.basic import Tbasic
     from sympy.logic.boolalg import Boolean
 
 from collections import defaultdict
@@ -92,11 +93,11 @@ class Expr(Basic, EvalfMixin):
             ...
 
         @overload
-        def xreplace(self, rule: Mapping[Any, Expr]) -> Expr: ...
+        def xreplace(self, rule: Mapping[Tbasic, Expr]) -> Expr: ...
         @overload
-        def xreplace(self, rule: Mapping[Any, Basic]) -> Basic: ...
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
 
-        def xreplace(self, rule: Mapping[Any, Basic]) -> Basic:
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
             ...
 
         def simplify(self, **kwargs) -> Expr:

@@ -1372,7 +1372,7 @@ class Basic(Printable):
         """
         return None
 
-    def xreplace(self, rule: Mapping[Any, Basic]) -> Basic:
+    def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
         """
         Replace occurrences of objects within the expression.
 
