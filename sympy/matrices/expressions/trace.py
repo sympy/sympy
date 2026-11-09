@@ -57,7 +57,7 @@ class Trace(Expr):
             darg = expr.arg.diff(v)
             if darg == 0:
                 return S.Zero
-            if getattr(darg, 'is_Matrix', False):
+            if darg.is_Matrix:
                 return trace(darg)
             return None
         return expr._eval_derivative(v)
