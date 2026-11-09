@@ -8,30 +8,19 @@ from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
 
-def _clear_denoms(f, ring):
+def _simplify_coefficients(f, ring):
     domain = ring.domain
     if not domain.is_FractionField or not f:
         return f
 
-    ground = domain.domain
+    terms = {}
+    for monom, coeff in f.items():
+        if hasattr(coeff, 'cancel'):
+            terms[monom] = coeff.cancel()
+        else:
+            terms[monom] = coeff
 
-    # Collect unique non-trivial denominators
-    denoms = set()
-    for c in f.values():
-        den = getattr(c, 'denom', getattr(c, 'denominator', ground.one))
-        if den != ground.one:
-            denoms.add(den)
-
-    if not denoms:
-        return f
-
-    # Multiply unique denominators to form a common multiple without calling heugcd
-    common_denom = ground.one
-    for den in denoms:
-        common_denom = common_denom * den
-
-    multiplier = domain.convert(common_denom, ground)
-    return f * multiplier
+    return ring.from_dict(terms)
 
 def groebner(seq, ring, method=None):
     """
@@ -114,7 +103,9 @@ def _buchberger(f, ring):
     .. [4] [Cox97]_
 
     """
-    f = [_clear_denoms(p, ring) for p in f]
+    if ring.domain.is_FractionField:
+        f=[_simplify_coefficients(p,ring) for p in f]
+
     order = ring.order
 
     monomial_mul = ring.monomial_mul
@@ -133,9 +124,9 @@ def _buchberger(f, ring):
         if not h:
             return None
         else:
-            h = _clear_denoms(h, ring)
             h = h.monic()
-
+            if ring.domain.is_FractionField:
+                h = _simplify_coefficients(h, ring)
             if h not in I:
                 I[h] = len(f)
                 f.append(h)
@@ -625,7 +616,8 @@ def _f5b(F, ring):
     .. [2] Thomas Becker, Volker Weispfenning, Groebner bases: A computational
            approach to commutative algebra, 1993, p. 203, 216
     """
-    F = [_clear_denoms(f, ring) for f in F]
+    if ring.domain.is_FractionField:
+        F=[_simplify_coefficients(p,ring)for p in F]
     order = ring.order
 
     # reduce polynomials (like in Mario Pernici's implementation) (Becker, Weispfenning, p. 203)
@@ -666,13 +658,13 @@ def _f5b(F, ring):
         s = s_poly(cp)
 
         p = f5_reduce(s, B)
-        poly_p = Polyn(p)
-        if poly_p:
-            poly_p = _clear_denoms(poly_p, ring)
 
         p = lbp(Sign(p), Polyn(p).monic(), k + 1)
 
         if Polyn(p):
+            if ring.domain.is_FractionField:
+                poly_p = _simplify_coefficients(Polyn(p), ring)
+                p = lbp(Sign(p), poly_p, k + 1)
             # remove old critical pairs, that become redundant when adding p:
             indices = []
             for i, cp in enumerate(CP):

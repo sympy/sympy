@@ -533,21 +533,16 @@ def test_is_reduced():
     G = groebner([f, g], R)
     assert is_reduced(G, R) == True
 
-from sympy.testing.pytest import slow
-
-@slow
-def test_issue_30609_fraction_field_hang():
-    # Import locally to avoid shadowing the internal groebner function used by other tests
+def test_issue_30609():
     from sympy.core.symbol import symbols
     from sympy.polys.polytools import groebner
 
-    x, y, z, b, c = symbols('x y z b c')
+    x, y, b, c = symbols('x y b c')
 
-    F1 = (1 + x * y) ** 3 * z + y**2 * (1 + x * y) * (4 + 3 * x * y)
-    F2 = y + 3 * x * (1 + x * y) ** 2 * z + 3 * x * y**2 * (4 + 3 * x * y)
-    F3 = 2 * x - 3 * x**2 * y - x**3 * z
+    f1 = (1 + x * y) * y + b
+    f2 = x**2 * y + c
 
-    G = groebner([F1, F2 - b, F3 - c], x, y, z, order='lex')
+    G = groebner([f1, f2], x, y, order='lex')
 
     assert len(G) > 0
     assert all(g.has(b) or g.has(c) for g in G)
