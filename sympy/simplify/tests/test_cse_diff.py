@@ -11,9 +11,10 @@ from sympy.functions.elementary.exponential import exp
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.physics.mechanics import dynamicsymbols
 from sympy.simplify._cse_diff import (_forward_jacobian,
-                                      _remove_cse_from_derivative,
                                       _forward_jacobian_cse,
                                       _forward_jacobian_norm_in_cse_out)
+from sympy.simplify.cse_main import (remove_cse_from_derivative
+                                    as _remove_cse_from_derivative)
 from sympy.simplify.simplify import simplify
 from sympy.matrices import Matrix, SparseMatrix, ImmutableSparseMatrix, eye
 
