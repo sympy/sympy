@@ -5,11 +5,12 @@ from collections import defaultdict
 
 from sympy.core import Basic, Mul, Add, Pow, sympify
 from sympy.core.containers import Tuple, OrderedSet
-from sympy.core.function import Function, AppliedUndef
+from sympy.core.function import Function, AppliedUndef, Derivative
 from sympy.core.exprtools import factor_terms
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol
+from sympy.core.traversal import preorder_traversal
 from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                             SparseMatrix, ImmutableSparseMatrix)
 from sympy.matrices.expressions import (MatrixExpr, MatrixSymbol, MatMul,
@@ -53,6 +54,10 @@ def cse_to_functions(replacements, reduced_expressions):
     These are symbolic function definitions, not ordinary scalar assignments.
     Matrix-valued replacements are left unchanged.
 
+    Differentiation variables occurring freely in a replacement are included
+    first, in their ``variable_count`` order, followed by the remaining
+    ordered free symbols.
+
     Examples
     ========
 
@@ -69,6 +74,13 @@ def cse_to_functions(replacements, reduced_expressions):
         for expr in expressions
         for node in expr.atoms(AppliedUndef)
     }
+    variables = OrderedSet(
+        variable
+        for expr in expressions
+        for node in preorder_traversal(expr, keys=True)
+        if isinstance(node, Derivative)
+        for variable, _ in node.variable_count
+    )
     converted = {}
     processed = []
     for sym, rhs in replacements:
@@ -78,7 +90,13 @@ def cse_to_functions(replacements, reduced_expressions):
             while name in used_names:
                 name += '_'
             used_names.add(name)
-            func = Function(name)(*ordered(rhs.free_symbols))
+            args = OrderedSet(
+                variable for variable in
+                (v.xreplace(converted) for v in variables)
+                if rhs.has_xfree({variable})
+            )
+            args.update(ordered(rhs.free_symbols - set(args)))
+            func = Function(name)(*args)
             converted[sym] = func
             sym = func
         processed.append((sym, rhs))

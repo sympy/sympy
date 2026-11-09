@@ -7,7 +7,7 @@ from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.expr import UnevaluatedExpr
-from sympy.core.function import Function
+from sympy.core.function import Derivative, Function
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
@@ -22,9 +22,10 @@ from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions import Inverse, MatAdd, MatMul, Transpose
 from sympy.polys.rootoftools import CRootOf
 from sympy.series.order import O
-from sympy.simplify.cse_main import cse
+from sympy.simplify.cse_main import cse, cse_to_functions
 from sympy.simplify.simplify import signsimp
 from sympy.tensor.indexed import (Idx, IndexedBase)
+from sympy.tensor.array.expressions import ArraySymbol
 
 from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -331,6 +332,26 @@ def test_cse_to_functions_dependencies_and_collision():
         [(x0, sin(x))], [existing + Derivative(x0, x)]) == (
         [(renamed, sin(x))],
         [existing + Derivative(renamed, x)])
+
+
+def test_cse_to_functions_array_derivative():
+    i = Symbol('i')
+    X = ArraySymbol('X', (3,))
+    f = Function('f')
+    expr = f(X[i])**2 + Derivative(f(X[i]), X[i])
+    F0 = Function('x0')(Symbol('X'), i)
+    F1 = Function('x1')(F0, Symbol('X'), i)
+    replacements, reduced = cse(expr, postprocess=cse_to_functions)
+    assert replacements == [(F0, X[i]), (F1, f(F0))]
+    assert reduced == [F1**2 + Derivative(F1, F0)]
+    assert reduced[0].doit() == reduced[0]
+
+
+def test_cse_to_functions_derivative_argument_order():
+    derivative = Derivative(Function('f')(x, y), (y, 2), x)
+    F = Function('x0')(y, x, z)
+    assert cse_to_functions([(x0, derivative + z)], [x0]) == (
+        [(F, derivative + z)], [F])
 
 
 def test_postprocess():
