@@ -185,20 +185,25 @@ else:
     class Failed(Exception):  # type: ignore
         pass
 
-    def XFAIL(func):
-        def wrapper():
-            try:
-                func()
-            except Exception as e: # noqa: BLE001
-                message = str(e)
-                if message != "Timeout":
-                    raise XFail(func.__name__)
-                else:
-                    raise Skipped("Timeout")
-            raise XPass(func.__name__)
+    def XFAIL(func=None, *, raises=None):
+        def decorator(f):
+            def wrapper():
+                try:
+                    f()
+                except Exception as e:
+                    if str(e) == "Timeout" or type(e).__name__ == "Skipped":
+                        raise Skipped("Timeout")
+                    if raises is not None:
+                        expected = raises if isinstance(raises, (list, tuple)) else (raises,)
+                        if not isinstance(e, tuple(expected)):
+                            raise
+                    raise XFail(f.__name__)
+                raise XPass(f.__name__)
+            return functools.update_wrapper(wrapper, f)
 
-        wrapper = functools.update_wrapper(wrapper, func)
-        return wrapper
+        if callable(func):
+            return decorator(func)
+        return decorator
 
     def skip(str):
         raise Skipped(str)
