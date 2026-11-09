@@ -1396,3 +1396,18 @@ def test_issue_30804():
     # Real multiple of non-real number cannot be real
     assert (3*b).is_real is False
     assert (3*b).is_extended_real is False
+
+
+def test_linear_sign():
+    n = Symbol('n', nonnegative=True)
+    p = Symbol('p', positive=True)
+
+    e = n - n/sqrt(2)
+    assert e.is_extended_nonnegative is True
+    assert e.is_extended_negative is False
+    assert e.is_extended_positive is None
+    assert e.is_extended_nonpositive is None
+
+    e = p - p/sqrt(2)
+    assert e.is_extended_positive is True
+    assert e.is_extended_nonpositive is False

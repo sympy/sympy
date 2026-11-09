@@ -798,6 +798,10 @@ class Add(Expr, AssocOp):
         if self.is_number:
             return super()._eval_is_extended_positive()
         c, a = _ca_terms(self)
+        if c.is_zero and a.is_Add:
+            rv = _linear_sign(a, 'is_extended_positive')
+            if rv is not None:
+                return rv
         if not c.is_zero:
             from .exprtools import _monotonic_sign
             v = _monotonic_sign(a)
@@ -850,6 +854,10 @@ class Add(Expr, AssocOp):
         if not self.is_number:
             from .exprtools import _monotonic_sign
             c, a = _ca_terms(self)
+            if c.is_zero and a.is_Add:
+                rv = _linear_sign(a, 'is_extended_nonnegative')
+                if rv is not None:
+                    return rv
             if not c.is_zero and a.is_extended_nonnegative:
                 v = _monotonic_sign(a)
                 if v is not None:
@@ -870,6 +878,10 @@ class Add(Expr, AssocOp):
         if not self.is_number:
             from .exprtools import _monotonic_sign
             c, a = _ca_terms(self)
+            if c.is_zero and a.is_Add:
+                rv = _linear_sign(a, 'is_extended_nonpositive')
+                if rv is not None:
+                    return rv
             if not c.is_zero and a.is_extended_nonpositive:
                 v = _monotonic_sign(a)
                 if v is not None:
@@ -891,6 +903,10 @@ class Add(Expr, AssocOp):
         if self.is_number:
             return super()._eval_is_extended_negative()
         c, a = _ca_terms(self)
+        if c.is_zero and a.is_Add:
+            rv = _linear_sign(a, 'is_extended_negative')
+            if rv is not None:
+                return rv
         if not c.is_zero:
             from .exprtools import _monotonic_sign
             v = _monotonic_sign(a)
@@ -1311,6 +1327,21 @@ class Add(Expr, AssocOp):
         if not global_parameters.distribute:
             return super().__neg__()
         return Mul(S.NegativeOne, self)
+
+
+def _linear_sign(expr, prop):
+    from .exprtools import linear_coeffs, NonlinearError
+
+    if len(expr.free_symbols) != 1:
+        return None
+    x = next(iter(expr.free_symbols))
+    try:
+        a, b = linear_coeffs(expr, x)
+    except NonlinearError:
+        return None
+    if b.is_zero is True:
+        return getattr(a*x, prop)
+
 
 add = AssocOpDispatcher('add')
 

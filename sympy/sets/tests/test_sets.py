@@ -1470,6 +1470,11 @@ def test_issue_10326():
     assert Interval(-oo, oo).contains(-oo) is S.false
 
 
+def test_issue_28052():
+    nn = Symbol('nn', nonnegative=True)
+    assert nn / sqrt(2) in Interval(0, nn)
+
+
 def test_issue_2799():
     U = S.UniversalSet
     a = Symbol('a', real=True)
