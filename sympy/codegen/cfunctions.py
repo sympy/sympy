@@ -427,6 +427,9 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
     def _eval_expand_func(self, **hints):
         return _Sqrt(*self.args)
 
+    def _eval_evalf(self, prec):
+        return _Sqrt(*self.args).evalf(prec)
+
     def _eval_rewrite_as_Pow(self, arg, **kwargs):
         return _Sqrt(arg)
 
@@ -477,6 +480,9 @@ class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.mi
 
     def _eval_expand_func(self, **hints):
         return _Cbrt(*self.args)
+
+    def _eval_evalf(self, prec):
+        return _Cbrt(*self.args).evalf(prec)
 
     def _eval_rewrite_as_Pow(self, arg, **kwargs):
         return _Cbrt(arg)
