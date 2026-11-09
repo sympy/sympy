@@ -3821,6 +3821,15 @@ def test_issue_26077():
     )
     assert solution.as_dummy() == critical_points.as_dummy()
 
+def test_issue_30401():
+    x = Symbol('x')
+    n = Symbol('n', integer=True)
+    sol = solveset(sin(4*x) + sin(3*x), x, S.Reals)
+    assert pi in sol
+    assert -pi in sol
+    assert (2*n*pi + pi) in sol
+
+
 def test_issue_30386():
     from sympy.solvers.solveset import _solve_trig2
     x = Symbol('x')
