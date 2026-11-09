@@ -18,6 +18,10 @@ def delta(value: Expr) -> Expr:
     Indicator delta function: delta(x) = (sign(x)^2 - sign(x)) / 2.
     Returns 1 if x < 0, and 0 if x >= 0.
     """
+    if value.is_nonnegative is True:
+        return S.Zero
+    if value.is_negative is True:
+        return S.One
     return (sign(value)**2 - sign(value)) / 2
 
 
@@ -28,10 +32,14 @@ def decode_bound(bound: Expr, n: Expr) -> Expr:
     return bound + n*delta(bound)
 
 
+def normalize_bound(n: Expr, step: Expr, bound: Expr) -> Expr:
+    p = delta(step)
+    return Max(-p, Min(n - p, decode_bound(bound, n)))
+
+
 def sympify_slice(n: Expr, value: slice | tuple | Tuple | Expr) -> Tuple:
     """
-    Canonicalizes slice specification with respect to axis dimension n.
-    Implements the complete symbolic formula for array slicing.
+    Resolves omitted slice arguments while preserving supplied bounds.
     """
     n = sympify(n)
     if isinstance(value, slice):
@@ -53,20 +61,11 @@ def sympify_slice(n: Expr, value: slice | tuple | Tuple | Expr) -> Tuple:
     step = S.One if value[2] is None else sympify(value[2])
     if step.is_zero is True:
         raise ValueError("slice step cannot be zero")
-
     p = delta(step)
     if start is None:
         start = p*(n - 1)
-    else:
-        start = start + n*delta(start)
-        start = Max(-p, Min(n - p, start))
-        start = start - n*delta(start)
     if stop is None:
-        stop = (1 - 2*p)*n - p
-    else:
-        stop = stop + n*delta(stop)
-        stop = Max(-p, Min(n - p, stop))
-        stop = stop - n*delta(stop)
+        stop = n - p*(2*n + 1)
     return Tuple(start, stop, step)
 
 
@@ -75,8 +74,8 @@ normalize = sympify_slice
 
 def slice_shape_1d(n: Expr, sl: tuple[Expr, Expr, Expr] | Tuple) -> Expr:
     start, stop, step = sl
-    A = decode_bound(start, n)
-    B = decode_bound(stop, n)
+    A = normalize_bound(n, step, start)
+    B = normalize_bound(n, step, stop)
     return Max(0, ceiling((B - A) / step))
 
 
@@ -85,15 +84,15 @@ def compose_slices(
     s2: tuple[Expr, Expr, Expr] | Tuple,
     n: Expr,
 ) -> Tuple:
+    start1, _, step1 = s1
+    start2, stop2, step2 = s2
     L1 = slice_shape_1d(n, s1)
-    L2 = slice_shape_1d(L1, s2)
-    A1 = decode_bound(s1[0], n)
-    step1 = s1[2]
-    A2 = decode_bound(s2[0], L1)
-    step2 = s2[2]
+    A1 = normalize_bound(n, step1, start1)
+    A2 = normalize_bound(L1, step2, start2)
+    B2 = normalize_bound(L1, step2, stop2)
     A_comp = A1 + A2 * step1
+    B_comp = A1 + B2 * step1
     step_comp = step1 * step2
-    B_comp = A_comp + L2 * step_comp
     A_comp = A_comp - n * delta(A_comp)
     B_comp = B_comp - n * delta(B_comp)
     return Tuple(A_comp, B_comp, step_comp)
@@ -154,8 +153,8 @@ class MatrixSlice(MatrixExpr):
     def _entry(self, i, j, **kwargs):
         row_start, _, row_step = self.rowslice
         col_start, _, col_step = self.colslice
-        A_row = decode_bound(row_start, self.parent.rows)
-        A_col = decode_bound(col_start, self.parent.cols)
+        A_row = normalize_bound(self.parent.rows, row_step, row_start)
+        A_col = normalize_bound(self.parent.cols, col_step, col_start)
         return self.parent._entry(
             A_row + i * row_step,
             A_col + j * col_step,
