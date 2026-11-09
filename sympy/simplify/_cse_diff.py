@@ -60,7 +60,8 @@ def _remove_cse_from_derivative(replacements, reduced_expressions):
         for rep_sym, sub_exp in replacements
     ]
     processed_reduced = [
-        red_exp.__class__([traverse(exp, repl_dict) for exp in red_exp])
+        red_exp.applyfunc(lambda exp: traverse(exp, repl_dict))
+        if isinstance(red_exp, MatrixBase) else traverse(red_exp, repl_dict)
         for red_exp in reduced_expressions
     ]
 
