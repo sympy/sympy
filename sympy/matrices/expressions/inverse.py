@@ -68,6 +68,17 @@ class Inverse(MatPow):
         from sympy.matrices.expressions.determinant import det
         return 1/det(self.arg)
 
+    def _eval_derivative(self, x):
+        if hasattr(x, "shape"):
+            return None
+        darg = self.arg.diff(x)
+        if getattr(darg, "is_ZeroMatrix", False) or darg == 0:
+            from sympy.matrices.expressions.special import ZeroMatrix
+            return ZeroMatrix(*self.shape)
+        if getattr(darg, "is_Matrix", False):
+            return - self * darg * self
+        return None
+
     def doit(self, **hints):
         if 'inv_expand' in hints and hints['inv_expand'] == False:
             return self

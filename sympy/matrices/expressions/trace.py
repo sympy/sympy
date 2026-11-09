@@ -53,7 +53,12 @@ class Trace(Expr):
         expr = self.doit()
         if isinstance(expr, Trace):
             # Avoid looping infinitely:
-            return trace(expr.arg.diff(v))
+            darg = expr.arg.diff(v)
+            if darg == 0:
+                return S.Zero
+            if getattr(darg, 'is_Matrix', False):
+                return trace(darg)
+            return None
         return expr._eval_derivative(v)
 
     @property

@@ -115,3 +115,37 @@ def test_trace_as_explicit():
     X = MatrixSymbol("X", 3, 3)
     assert Trace(X).as_explicit() == X[0, 0] + X[1, 1] + X[2, 2]
     assert Trace(eye(3)).as_explicit() == 3
+
+
+def test_trace_derivative():
+    from sympy.core.symbol import Symbol
+    from sympy.core.function import Derivative
+    from sympy.matrices.expressions.inverse import Inverse
+    x = Symbol('x')
+    X = MatrixSymbol('X', 3, 3)
+    Z = MatrixSymbol('Z', 3, 3)
+
+    # Item E4-20 from #30900: Trace of Inverse differentiated with respect to scalar
+    tr_inv = Trace(Inverse(x*X + Z))
+    assert tr_inv.diff(x) == -Trace((x*X + Z)**(-1) * X * (x*X + Z)**(-1))
+
+    # Constant matrix trace derivative is zero
+    assert Trace(Inverse(X)).diff(x) == 0
+
+    # Trace derivative with respect to MatrixSymbol
+    assert Trace(A).diff(A) == Identity(n)
+
+    # If the inner derivative is not a matrix, Trace._eval_derivative returns None,
+    # safely constructing an unevaluated Derivative instead of raising TypeError.
+    class DummyNonMatrixDiff(MatrixExpr):
+        shape = (3, 3)
+        @property
+        def free_symbols(self):
+            return {x}
+        def _eval_derivative(self, v):
+            return x  # returns a scalar, not a MatrixExpr
+
+    M_dummy = DummyNonMatrixDiff()
+    res = Trace(M_dummy).diff(x)
+    assert isinstance(res, Derivative)
+    assert res.expr == Trace(M_dummy)
