@@ -633,7 +633,7 @@ def exptrigsimp(expr):
         # functions
         choices = [e]
         if e.has(*_trigs):
-            op = e.rewrite(exp)
+            op = e.rewrite(_trigs, exp)
             # if e is an Add, we can try to factor it
             # helps with expressions with leading factors
             if e.is_Add:

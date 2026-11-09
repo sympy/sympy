@@ -1892,7 +1892,7 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         # floats in the 'want' string may contain ellipses
         want_floats = got_floats + r'(\.{3})?'
 
-        front_sep = r'\s|\+|\-|\*|,'
+        front_sep = r'[\s+\-*,()\[\]{}:=/]'
         back_sep = front_sep + r'|j|e'
 
         fbeg = r'^%s(?=%s|$)' % (got_floats, back_sep)
@@ -1917,6 +1917,11 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         # if they're string-identical, always return true.
         if got == want:
             return True
+
+        # Ellipses may hide floats, so leave the output unchanged and
+        # use doctest's ordinary text matching rather than float substitution.
+        if optionflags & pdoctest.ELLIPSIS and '...' in want:
+            return super().check_output(want, got, optionflags)
 
         # TODO parse integers as well ?
         # Parse floats and compare them. If some of the parsed floats contain

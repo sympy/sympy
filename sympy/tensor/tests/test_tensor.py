@@ -496,7 +496,8 @@ def test_TensorSymmetry():
         TensorSymmetry.no_symmetry(3)
     assert TensorSymmetry(get_symmetric_group_sgs(2)) == \
         TensorSymmetry(*get_symmetric_group_sgs(2))
-    # TODO: add check for *get_symmetric_group_sgs(0)
+    assert TensorSymmetry.fully_symmetric(0) == \
+        TensorSymmetry(*get_symmetric_group_sgs(0))
     sym = TensorSymmetry.fully_symmetric(-3)
     assert sym.rank == 3
     assert sym.base == Tuple(0, 1)
@@ -536,6 +537,14 @@ def test_TensorHead():
     assert A.rank == 2
     assert A.symmetry == TensorSymmetry.no_symmetry(2)
     assert A.comm == 0
+
+    B = TensorHead('B', [Lorentz], comm=None)
+    assert B.args[3] == 2
+    assert isinstance(B.args[3], Integer)
+    assert B == TensorHead('B', [Lorentz], comm=2)
+    assert B.comm == 2
+    assert B.commutes_with(B) is None
+    assert B.commutes_with(A) == 0
 
 
 def test_add1():

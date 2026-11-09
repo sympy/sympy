@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 from typing import TYPE_CHECKING, overload, cast
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -21,9 +22,10 @@ from sympy.utilities.decorator import deprecated
 
 if TYPE_CHECKING:
     from typing import (
-        Any, Iterable, Callable, Literal, Sequence, Iterator, TypeVar,
+        Any, Iterable, Callable, Literal, Sequence, Iterator,
+        TypeVar, SupportsIndex,
     )
-    from typing_extensions import TypeIs
+    from typing_extensions import TypeGuard, TypeIs
     T = TypeVar("T")
     T1 = TypeVar("T1")
     T2 = TypeVar("T2")
@@ -144,6 +146,10 @@ def unflatten(iter, n=2):
 def reshape(seq, how):
     """Reshape the sequence according to the template in ``how``.
 
+    Counts in the template must be nonnegative, with a positive total
+    that divides the length of ``seq``. Nested templates may have zero
+    total size.
+
     Examples
     ========
 
@@ -178,26 +184,28 @@ def reshape(seq, how):
     [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
 
     """
-    m = sum(flatten(how))
-    n, rem = divmod(len(seq), m)
-    if m < 0 or rem:
-        raise ValueError('template must sum to positive number '
-        'that divides the length of the sequence')
-    i = 0
-    container = type(how)
-    rv = [None]*n
-    for k in range(len(rv)):
-        _rv = []
-        for hi in how:
-            if isinstance(hi, int):
-                _rv.extend(seq[i: i + hi])
-                i += hi
+    sizes = flatten(how)
+    m = sum(sizes)
+    if any(s < 0 for s in sizes) or m <= 0 or len(seq) % m:
+        raise ValueError('template must contain nonnegative counts '
+                         'with a positive sum that divides the sequence length')
+
+    def make_group(template, i):
+        result = []
+        for item in template:
+            if isinstance(item, int):
+                result.extend(seq[i:i + item])
+                i += item
             else:
-                n = sum(flatten(hi))
-                hi_type = type(hi)
-                _rv.append(hi_type(reshape(seq[i: i + n], hi)[0]))
-                i += n
-        rv[k] = container(_rv)
+                group, i = make_group(item, i)
+                result.append(group)
+        return type(template)(result), i
+
+    i = 0
+    rv = []
+    for _ in range(len(seq) // m):
+        group, i = make_group(how, i)
+        rv.append(group)
     return type(seq)(rv)
 
 
@@ -329,42 +337,39 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 
 @overload
 def ibin(
-    n: int,
-    bits: int | None,
-    str: Literal[False],
- ) -> list[int]: ...
-
+    n: SupportsIndex,
+    bits: SupportsIndex | None = None,
+    *,
+    str: Literal[False] = False,
+) -> list[int]: ...
 @overload
 def ibin(
-    n: int,
-    bits: int,
+    n: SupportsIndex,
+    bits: SupportsIndex | None = None,
+    *,
     str: Literal[True],
 ) -> str: ...
-
 @overload
 def ibin(
-    n: int,
-    bits: None = None,
-    str: Literal[False]=False,
-) -> Iterator[tuple[int, ...]]: ...
-
+    n: SupportsIndex,
+    bits: str,
+    *,
+    str: Literal[False] = False,
+) -> Iterable[tuple[int, ...]]: ...
 @overload
 def ibin(
-    n: int,
-    bits: None,
+    n: SupportsIndex,
+    bits: str,
+    *,
     str: Literal[True],
-) -> Iterator[str]: ...
+) -> Iterable[str]: ...
+
 
 def ibin(
-    n: int,
-    bits: int | None = None,
+    n: SupportsIndex,
+    bits: SupportsIndex | str | None = None,
     str: bool = False,
-) ->(
-    list[int]
-    | str
-    | Iterator[tuple[int, ...]]
-    | Iterator[str]
-):
+) -> list[int] | str | Iterable[tuple[int, ...]] | Iterable[str]:
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -408,12 +413,14 @@ def ibin(
     ['000', '001', '010', '011', '100', '101', '110', '111']
 
     """
+    n = as_int(n)
     if n < 0:
         raise ValueError("negative numbers are not allowed")
-    n = as_int(n)
 
     if bits is None:
         bits = 0
+    elif isinstance(bits, builtins.str):
+        bits = -1
     else:
         try:
             bits = as_int(bits)
@@ -3099,7 +3106,10 @@ class NotIterable:
     __slots__ = ()
 
 
-def iterable(i, exclude=(str, dict, NotIterable)):
+def iterable(
+    i: Any,
+    exclude: tuple[type, ...] | type | None = (str, dict, NotIterable),
+) -> TypeGuard[Iterable[Any]]:
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
     True also indicates that the iterator is finite, e.g. you can

@@ -905,7 +905,7 @@ def test_latex_indexed():
     assert indexed_latex == r'\overline{{\Psi}_{0}} {\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
-    interval = '\\mathrel{..}\\nobreak '
+    interval = r'\mathrel{..}'
     assert latex(Indexed('x1', Symbol('i'))) == r'{x_{1}}_{i}'
     assert latex(Indexed('x2', Idx('i'))) == r'{x_{2}}_{i}'
     assert latex(Indexed('x3', Idx('i', Symbol('N')))) == r'{x_{3}}_{{i}_{0'+interval+'N - 1}}'
@@ -914,6 +914,12 @@ def test_latex_indexed():
     assert latex(IndexedBase('gamma')) == r'\gamma'
     assert latex(IndexedBase('a b')) == r'a b'
     assert latex(IndexedBase('a_b')) == r'a_{b}'
+
+
+def test_latex_Idx():
+    assert latex(Idx('j', 5)) == r'{j}_{0\mathrel{..}4}'
+    assert latex(Idx('j', (-2, 2))) == r'{j}_{-2\mathrel{..}2}'
+    assert latex(Idx('j')) == 'j'
 
 
 def test_latex_derivatives():

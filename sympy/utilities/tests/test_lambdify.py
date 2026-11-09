@@ -20,7 +20,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import asinh,acosh,atanh
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import floor, frac
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (asin, acos, atan, cos, cot, sin,
@@ -2331,3 +2331,8 @@ def test_issue_28803_jointrandonsymbol_recursion():
 
     # Should not raise RecursionError
     lambdify(a, z * a)
+
+
+def test_frac_math():
+    f = lambdify(x, [2*frac(x), -frac(x), frac(x)**2], 'math')
+    assert f(1.75) == [1.5, -0.75, 0.5625]

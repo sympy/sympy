@@ -303,6 +303,8 @@ class Basic(Printable):
         """
         Return a shallow copy of the expression.
 
+        Atomic expressions are immutable and return themselves when copied.
+
         Examples
         ========
 
@@ -491,15 +493,8 @@ class Basic(Printable):
 
         """
 
-        # XXX: remove this when issue 5169 is fixed
-        def inner_key(arg):
-            if isinstance(arg, Basic):
-                return arg.sort_key(order)
-            else:
-                return arg
-
         args = self._sorted_args
-        args = len(args), tuple([inner_key(arg) for arg in args])
+        args = len(args), tuple([arg.sort_key(order) for arg in args])
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def _do_eq_sympify(self, other):
@@ -1335,8 +1330,6 @@ class Basic(Printable):
             hit = False
             args = list(self.args)
             for i, arg in enumerate(args):
-                if not hasattr(arg, '_eval_subs'):
-                    continue
                 arg = arg._subs(old, new, **hints)
                 if not _aresame(arg, args[i]):
                     hit = True
@@ -1456,20 +1449,15 @@ class Basic(Printable):
             args = []
             changed = False
             for a in self.args:
-                _xreplace = getattr(a, '_xreplace', None)
-                if _xreplace is not None:
-                    a_xr = _xreplace(rule)
-                    args.append(a_xr[0])
-                    changed |= a_xr[1]
-                else:
-                    args.append(a)
-            args = tuple(args)
+                a, achanged = a._xreplace(rule)
+                changed |= achanged
+                args.append(a)
             if changed:
                 return self.func(*args), True
         return self, False
 
     @cacheit
-    def has(self, *patterns):
+    def has(self, *patterns) -> bool:
         """
         Test whether any subexpression matches any of the patterns.
 
@@ -1849,21 +1837,19 @@ class Basic(Printable):
         def walk(rv, F):
             """Apply ``F`` to args and then to result.
             """
-            args = getattr(rv, 'args', None)
-            if args is not None:
-                if args:
-                    newargs = tuple([walk(a, F) for a in args])
-                    if args != newargs:
-                        rv = rv.func(*newargs)
-                        if simultaneous:
-                            # if rv is something that was already
-                            # matched (that was changed) then skip
-                            # applying F again
-                            for i, e in enumerate(args):
-                                if rv == e and e != newargs[i]:
-                                    return rv
-                rv = F(rv)
-            return rv
+            args = rv.args
+            if args:
+                newargs = tuple([walk(a, F) for a in args])
+                if args != newargs:
+                    rv = rv.func(*newargs)
+                    if simultaneous:
+                        # if rv is something that was already
+                        # matched (that was changed) then skip
+                        # applying F again
+                        for i, e in enumerate(args):
+                            if rv == e and e != newargs[i]:
+                                return rv
+            return F(rv)
 
         mapping = {}  # changes that took place
 
@@ -2101,8 +2087,7 @@ class Basic(Printable):
 
         """
         if hints.get('deep', True):
-            terms = [term.doit(**hints) if isinstance(term, Basic) else term
-                                         for term in self.args]
+            terms = [term.doit(**hints) for term in self.args]
             return self.func(*terms)
         else:
             return self
@@ -2401,6 +2386,10 @@ class Atom(Basic):
     is_Atom = True
 
     __slots__ = ()
+
+    def copy(self):
+        """Return this atom, since atomic expressions are immutable."""
+        return self
 
     def matches(self, expr, repl_dict=None, old=False):
         if self == expr:

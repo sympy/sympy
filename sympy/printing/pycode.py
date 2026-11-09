@@ -664,7 +664,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._print_Rational(expr)
 
     def _print_frac(self, expr):
-        return self._print_Mod(Mod(expr.args[0], 1))
+        return '({})'.format(self._print_Mod(Mod(expr.args[0], 1)))
 
     def _print_Symbol(self, expr):
 
