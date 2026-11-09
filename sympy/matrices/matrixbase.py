@@ -2801,7 +2801,7 @@ class MatrixBase(Printable):
         return self.conjugate()
 
     # should mirror core.basic.xreplace
-    def xreplace(self, rule: Mapping[SBasic, SBasic]) -> Self:
+    def xreplace(self, rule: Mapping[Tbasic, Expr]) -> Self:
         """Return a new matrix with xreplace applied to each entry.
 
         Examples
@@ -2816,7 +2816,7 @@ class MatrixBase(Printable):
         >>> Matrix(_).xreplace({y: x})
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.xreplace(rule)) # type: ignore
+        return self.applyfunc(lambda x: x.xreplace(rule))
 
     def _eval_simplify(self, **kwargs: Any) -> Self:
         # XXX: We can't use self.simplify here as mutable subclasses will
