@@ -7,7 +7,6 @@ from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, M
 from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
-from sympy.matrices.expressions.hadamard import HadamardProduct
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol, MatrixElement)
@@ -308,11 +307,6 @@ def _(expr: DiagonalMatrix, x: Expr):
         return ZeroArray(*(get_shape(x) + get_shape(expr)))
     tp = _array_tensor_product(darg, Identity(r))
     return _array_diagonal(tp, (rank_x, rank_x + 1, rank_x + 2))
-
-
-@array_derive.register(HadamardProduct)
-def _(expr: HadamardProduct, x: Expr):
-    raise NotImplementedError()
 
 
 @array_derive.register(ArrayContraction)
