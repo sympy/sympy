@@ -44,7 +44,7 @@ basic_optimizations = [(cse_opts.sub_pre, cse_opts.sub_post),
 
 
 def cse_to_functions(replacements, reduced_expressions):
-    """Represent scalar CSE temporaries as functions of their free symbols.
+    """Represent scalar CSE temporaries as functions of differentiation variables.
 
     This can be passed as the ``postprocess`` argument to ``cse``. The
     replacement left-hand sides become applied undefined functions instead
@@ -54,9 +54,10 @@ def cse_to_functions(replacements, reduced_expressions):
     These are symbolic function definitions, not ordinary scalar assignments.
     Matrix-valued replacements are left unchanged.
 
-    Differentiation variables occurring freely in a replacement are included
-    first, in their ``variable_count`` order, followed by the remaining
-    ordered free symbols.
+    Only differentiation variables occurring freely in a replacement are
+    included as arguments, in their ``variable_count`` order. Other symbols
+    are treated as parameters. Replacements with no matching differentiation
+    variables become zero-argument functions.
 
     Examples
     ========
@@ -95,7 +96,6 @@ def cse_to_functions(replacements, reduced_expressions):
                 (v.xreplace(converted) for v in variables)
                 if rhs.has_xfree({variable})
             )
-            args.update(ordered(rhs.free_symbols - set(args)))
             func = Function(name)(*args)
             converted[sym] = func
             sym = func

@@ -323,8 +323,8 @@ def test_cse_to_functions_dependencies_and_collision():
     F0, F1 = Function('x0'), Function('x1')
     assert cse_to_functions(
         [(x0, x + y), (x1, x0**2)], [Derivative(x1, x)]) == (
-        [(F0(x, y), x + y), (F1(x, y), F0(x, y)**2)],
-        [Derivative(F1(x, y), x)])
+        [(F0(x), x + y), (F1(x), F0(x)**2)],
+        [Derivative(F1(x), x)])
 
     existing = F0(x)
     renamed = Function('x0_')(x)
@@ -339,8 +339,8 @@ def test_cse_to_functions_array_derivative():
     X = ArraySymbol('X', (3,))
     f = Function('f')
     expr = f(X[i])**2 + Derivative(f(X[i]), X[i])
-    F0 = Function('x0')(Symbol('X'), i)
-    F1 = Function('x1')(F0, Symbol('X'), i)
+    F0 = Function('x0')()
+    F1 = Function('x1')(F0)
     replacements, reduced = cse(expr, postprocess=cse_to_functions)
     assert replacements == [(F0, X[i]), (F1, f(F0))]
     assert reduced == [F1**2 + Derivative(F1, F0)]
@@ -349,9 +349,23 @@ def test_cse_to_functions_array_derivative():
 
 def test_cse_to_functions_derivative_argument_order():
     derivative = Derivative(Function('f')(x, y), (y, 2), x)
-    F = Function('x0')(y, x, z)
+    F = Function('x0')(y, x)
     assert cse_to_functions([(x0, derivative + z)], [x0]) == (
         [(F, derivative + z)], [F])
+
+
+def test_cse_to_functions_parameters():
+    f = Function('f')
+    F0, F1 = Function('x0'), Function('x1')
+    assert cse_to_functions(
+        [(x0, y*f(x)), (x1, z + y)], [Derivative(x0 + x1, x)]) == (
+        [(F0(x), y*f(x)), (F1(), z + y)],
+        [Derivative(F0(x) + F1(), x)])
+
+    existing = F0(x)
+    renamed = Function('x0_')()
+    assert cse_to_functions([(x0, y + z)], [existing + x0]) == (
+        [(renamed, y + z)], [existing + renamed])
 
 
 def test_postprocess():
