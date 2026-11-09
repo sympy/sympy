@@ -2,6 +2,7 @@ from __future__ import annotations
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.integers import ceiling
@@ -9,23 +10,24 @@ from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.complexes import sign
 
 
-def delta(value):
+def delta(value: Expr) -> Expr:
     """
     Indicator delta function: delta(x) = (sign(x)^2 - sign(x)) / 2.
     Returns 1 if x < 0, and 0 if x >= 0.
     """
-    if hasattr(value, 'is_nonnegative') and value.is_nonnegative:
+    value = sympify(value)
+    if value.is_nonnegative:
         return S.Zero
-    if hasattr(value, 'is_negative') and value.is_negative:
+    if value.is_negative:
         return S.One
-    if hasattr(value, 'is_number') and value.is_number:
+    if value.is_number:
         if (value < 0) == S.true:
             return S.One
         return S.Zero
     return (sign(value)**2 - sign(value)) / 2
 
 
-def decode_bound(bound, n):
+def decode_bound(bound: Expr, n: Expr) -> Expr:
     """
     Decodes stored canonical bound by adding n if bound is negative.
     """
@@ -34,7 +36,7 @@ def decode_bound(bound, n):
     return bound
 
 
-def sympify_slice(n, value):
+def sympify_slice(n: Expr, value: slice | tuple | Tuple | Expr) -> Tuple:
     """
     Canonicalizes slice specification with respect to axis dimension n.
     Implements the complete symbolic formula for array slicing.
@@ -62,38 +64,37 @@ def sympify_slice(n, value):
         raise ValueError("slice step cannot be zero")
 
     is_negative_step = (
-        (hasattr(step, 'is_negative') and step.is_negative is True) or
-        (hasattr(step, 'is_number') and step.is_number and
-         (step < 0) == S.true)
+        (step.is_negative is True) or
+        (step.is_number and (step < 0) == S.true)
     )
     p = 1 if is_negative_step else 0
 
-    is_concrete_n = hasattr(n, 'is_number') and n.is_number
+    is_concrete_n = n.is_number
 
     if start is None:
-        start = p * (n - 1)
+        start = (n - 1) if p == 1 else S.Zero
     else:
         if p == 1 and start == -n - 1:
-            start = -1
+            start = S.NegativeOne
         elif (start < 0) == S.true:
             if p == 1 and (start < -n) == S.true:
-                start = -1
+                start = S.NegativeOne
             else:
-                start = Max(0, start + n)
-        if is_concrete_n and hasattr(start, 'is_number') and start.is_number:
+                start = Max(S.Zero, start + n)
+        if is_concrete_n and start.is_number:
             start = Max(-p, Min(n - p, start))
 
     if stop is None:
-        stop = -p if p == 1 else n
+        stop = S.NegativeOne if p == 1 else n
     else:
         if p == 1 and stop == -n - 1:
-            stop = -1
+            stop = S.NegativeOne
         elif (stop < 0) == S.true:
             if (stop < -n) == S.true:
-                stop = -1 if p == 1 else 0
+                stop = S.NegativeOne if p == 1 else S.Zero
             else:
                 stop = stop + n
-        if is_concrete_n and hasattr(stop, 'is_number') and stop.is_number:
+        if is_concrete_n and stop.is_number:
             stop = Max(-p, Min(n - p, stop))
 
     if p == 1 and start == -1:
@@ -107,7 +108,7 @@ def sympify_slice(n, value):
 normalize = sympify_slice
 
 
-def slice_shape_1d(n, sl):
+def slice_shape_1d(n: Expr, sl: tuple[Expr, Expr, Expr] | Tuple) -> Expr:
     start, stop, step = sl
     A = decode_bound(start, n)
     B = decode_bound(stop, n)
@@ -115,17 +116,21 @@ def slice_shape_1d(n, sl):
     if step == 1:
         if diff == n:
             return n
-        if hasattr(diff, 'is_number') and diff.is_number:
+        if diff.is_number:
             return Max(0, diff)
         return diff
     if diff == n and (step > 0) == S.true:
         return ceiling(n / step)
-    if hasattr(diff, 'is_number') and diff.is_number:
+    if diff.is_number:
         return Max(0, ceiling(diff / step))
     return ceiling(diff / step)
 
 
-def compose_slices(s1, s2, n):
+def compose_slices(
+    s1: tuple[Expr, Expr, Expr] | Tuple,
+    s2: tuple[Expr, Expr, Expr] | Tuple,
+    n: Expr,
+) -> Tuple:
     L1 = slice_shape_1d(n, s1)
     L2 = slice_shape_1d(L1, s2)
     A1 = decode_bound(s1[0], n)
@@ -142,7 +147,11 @@ def compose_slices(s1, s2, n):
     return Tuple(A_comp, B_comp, step_comp)
 
 
-def mat_slice_of_slice(parent, rowslice, colslice):
+def mat_slice_of_slice(
+    parent: MatrixSlice,
+    rowslice: Tuple,
+    colslice: Tuple,
+) -> MatrixSlice:
     """ Collapse nested matrix slices """
     row = compose_slices(parent.rowslice, rowslice, parent.parent.rows)
     col = compose_slices(parent.colslice, colslice, parent.parent.cols)
