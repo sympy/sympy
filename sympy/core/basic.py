@@ -1372,7 +1372,11 @@ class Basic(Printable):
         """
         return None
 
-    def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
+    @overload
+    def xreplace(self, rule: Mapping[Basic, Basic]) -> Basic:...
+    @overload
+    def xreplace(self, rule: Mapping[Self, Basic]) -> Self:...
+    def xreplace(self, rule: Mapping[Basic, Basic] | Mapping[Self, Basic]) -> Basic | Self:
         """
         Replace occurrences of objects within the expression.
 
@@ -1439,22 +1443,32 @@ class Basic(Printable):
         value, _ = self._xreplace(rule)
         return value
 
-    def _xreplace(self, rule: Mapping[Any, Basic]) -> tuple[Basic, bool]:
+
+    @overload
+    def _xreplace(self, rule: Mapping[Basic, Basic]) -> tuple[Basic, bool]:...
+    @overload
+    def _xreplace(self, rule: Mapping[Self, Basic]) -> tuple[Self, bool]:...
+    def _xreplace(self, rule: Mapping[Basic, Basic] | Mapping[Self, Basic]) -> tuple[Basic, bool] | tuple[Self, bool]:
         """
         Helper for xreplace. Tracks whether a replacement actually occurred.
         """
+        returnMe: Basic = self
+        changed: bool = False
+        changedSherpa: bool = False
         if self in rule:
-            return rule[self], True
+            returnMe = rule[self]
+            changed = True
         elif rule:
             args: list[Basic] = []
-            changed = False
             for a in self.args:
-                a, achanged = a._xreplace(rule)
-                changed |= achanged
-                args.append(a)
+                qq: tuple[Basic, bool] | tuple[Self, bool] = a._xreplace(rule)
+                ww = qq[0]
+                changedSherpa = qq[1]
+                changed |= changedSherpa
+                args.append(ww)
             if changed:
-                return self.func(*args), True
-        return self, False
+                returnMe = self.func(*args)  # <-- This untyped return is the problem's locus.
+        return (returnMe, changed)
 
     @cacheit
     def has(self, *patterns: Basic | type[Basic] | complex) -> bool:
