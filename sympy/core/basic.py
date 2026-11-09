@@ -406,7 +406,7 @@ class Basic(Printable):
         comparison is based on the class name.
         If the names are the same then a comparison is made
         on the length of the hashable content.
-        Items of the equal-lengthed contents are then
+        Items of the equal-length contents are then
         successively compared using the same rules. If there
         is never a difference then 0 is returned.
 

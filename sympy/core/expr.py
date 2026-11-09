@@ -3359,7 +3359,7 @@ class Expr(Basic, EvalfMixin):
         Wrapper for series yielding an iterator of the terms of the series.
 
         Note: an infinite series will yield an infinite iterator. The following,
-        for exaxmple, will never terminate. It will just keep printing terms
+        for example, will never terminate. It will just keep printing terms
         of the sin(x) series::
 
           for term in sin(x).lseries(x):
