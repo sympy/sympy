@@ -60,13 +60,13 @@ def sympify_slice(n: Expr, value: slice | tuple | Tuple | Expr) -> Tuple:
     else:
         start = start + n*delta(start)
         start = Max(-p, Min(n - p, start))
+        start = start - n*delta(start)
     if stop is None:
-        stop = (1 - p)*n - p
+        stop = (1 - 2*p)*n - p
     else:
         stop = stop + n*delta(stop)
         stop = Max(-p, Min(n - p, stop))
-    start = start - n*delta(start)
-    stop = stop - n*delta(stop)
+        stop = stop - n*delta(stop)
     return Tuple(start, stop, step)
 
 

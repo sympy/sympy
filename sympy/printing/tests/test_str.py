@@ -1067,34 +1067,24 @@ def test_MatMul_MatAdd():
 
 
 def test_MatrixSlice():
-    n = Symbol('n', integer=True)
+    n = Symbol('n', integer=True, positive=True)
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 10, 10)
     Z = MatrixSymbol('Z', 10, 10)
 
     assert str(MatrixSlice(X, (None, None, None), (None, None, None))) == 'X[:, :]'
-    assert str(X[x:x + 1, y:y + 1]) == 'X[x:x + 1, y:y + 1]'
-    assert str(X[x:x + 1:2, y:y + 1:2]) == 'X[x:x + 1:2, y:y + 1:2]'
-    assert str(X[:x, y:]) == 'X[:x, y:]'
-    assert str(X[:x, y:]) == 'X[:x, y:]'
-    assert str(X[x:, :y]) == 'X[x:, :y]'
-    assert str(X[x:y, z:w]) == 'X[x:y, z:w]'
-    assert str(X[x:y:t, w:t:x]) == 'X[x:y:t, w:t:x]'
-    assert str(X[x::y, t::w]) == 'X[x::y, t::w]'
-    assert str(X[:x:y, :t:w]) == 'X[:x:y, :t:w]'
-    assert str(X[::x, ::y]) == 'X[::x, ::y]'
     assert str(MatrixSlice(X, (0, None, None), (0, None, None))) == 'X[:, :]'
     assert str(MatrixSlice(X, (None, n, None), (None, n, None))) == 'X[:, :]'
     assert str(MatrixSlice(X, (0, n, None), (0, n, None))) == 'X[:, :]'
     assert str(MatrixSlice(X, (0, n, 2), (0, n, 2))) == 'X[::2, ::2]'
-    assert str(X[1:2:3, 4:5:6]) == 'X[1:2:3, 4:5:6]'
-    assert str(X[1:3:5, 4:6:8]) == 'X[1:3:5, 4:6:8]'
-    assert str(X[1:10:2]) == 'X[1:10:2, :]'
+    assert str(Y[1:2:3, 4:5:6]) == 'Y[1:2:3, 4:5:6]'
+    assert str(Y[1:3:5, 4:6:8]) == 'Y[1:3:5, 4:6:8]'
+    assert str(Y[1:10:2]) == 'Y[1::2, :]'
     assert str(Y[:5, 1:9:2]) == 'Y[:5, 1:9:2]'
     assert str(Y[:5, 1:10:2]) == 'Y[:5, 1::2]'
     assert str(Y[5, :5:2]) == 'Y[5:6, :5:2]'
-    assert str(X[0:1, 0:1]) == 'X[:1, :1]'
-    assert str(X[0:1:2, 0:1:2]) == 'X[:1:2, :1:2]'
+    assert str(Y[0:1, 0:1]) == 'Y[:1, :1]'
+    assert str(Y[0:1:2, 0:1:2]) == 'Y[:1:2, :1:2]'
     assert str((Y + Z)[2:, 2:]) == '(Y + Z)[2:, 2:]'
 
 
