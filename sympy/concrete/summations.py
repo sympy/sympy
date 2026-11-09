@@ -1662,8 +1662,8 @@ def _get_residue(numer: Poly, denom: Poly, a: Expr, alternating: bool) -> Expr:
         else:
             return residue(csc(S.Pi*z)*(numer(z)/denom(z)), z, a)
 
-    numer = numer.xreplace({x: z}) # type: ignore
-    denom = denom.xreplace({x: z}) # type: ignore
+    numer = numer.xreplace({x: z})
+    denom = denom.xreplace({x: z})
     za = Poly(z - a, z, extension=True)
     za, denom = za.unify(denom)
 
