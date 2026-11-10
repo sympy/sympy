@@ -5304,6 +5304,20 @@ def test_pretty_Boolean():
     assert pretty(expr) == "Not(x)"
     assert upretty(expr) == "¬x"
 
+    expr = Not(x > y, evaluate=False)
+    assert pretty(expr) == "Not(x > y)"
+    assert upretty(expr) == "¬(x > y)"
+
+    from sympy.sets.contains import Contains
+    from sympy.sets.sets import Interval
+    expr = Not(Contains(x, Interval(0, 1)), evaluate=False)
+    assert pretty(expr) == "Not(Contains(x, Interval(0, 1)))"
+    assert upretty(expr) == "¬(x ∈ [0, 1])"
+
+    expr = Not(Not(x, evaluate=False), evaluate=False)
+    assert pretty(expr) == "Not(Not(x))"
+    assert upretty(expr) == "¬¬x"
+
     expr = And(x, y)
 
     assert pretty(expr) == "And(x, y)"
