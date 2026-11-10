@@ -1,7 +1,17 @@
 """ Caching facility for SymPy """
 from __future__ import annotations
 from importlib import import_module
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import ParamSpec, Protocol, TypeVar
+
+    P = ParamSpec('P')
+    R = TypeVar('R')
+
+    class _CacheDecorator(Protocol):
+        def __call__(self, func: Callable[P, R], /) -> Callable[P, R]:
+            ...
 
 class _cache(list):
     """ List of cached functions """
@@ -43,7 +53,7 @@ clear_cache = CACHE.clear_cache
 
 from functools import lru_cache, wraps
 
-def __cacheit(maxsize):
+def __cacheit(maxsize: int | None) -> _CacheDecorator:
     """caching decorator.
 
         important: the result of cached function must be *immutable*
@@ -64,11 +74,11 @@ def __cacheit(maxsize):
         to force cacheit to check returned results mutability and consistency,
         set environment variable SYMPY_USE_CACHE to 'debug'
     """
-    def func_wrapper(func):
-        cfunc = lru_cache(maxsize, typed=True)(func)
+    def func_wrapper(func: Callable[P, R]) -> Callable[P, R]:
+        cfunc: Callable[..., R] = lru_cache(maxsize, typed=True)(func)
 
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             try:
                 retval = cfunc(*args, **kwargs)
             except TypeError as e:
@@ -77,27 +87,24 @@ def __cacheit(maxsize):
                 retval = func(*args, **kwargs)
             return retval
 
-        wrapper.cache_info = cfunc.cache_info
-        wrapper.cache_clear = cfunc.cache_clear
-
-        CACHE.append(wrapper)
+        CACHE.append(cfunc)
         return wrapper
 
     return func_wrapper
 ########################################
 
 
-def __cacheit_nocache(func):
+def __cacheit_nocache(func: Callable[P, R]) -> Callable[P, R]:
     return func
 
 
-def __cacheit_debug(maxsize):
+def __cacheit_debug(maxsize: int | None) -> _CacheDecorator:
     """cacheit + code to check cache consistency"""
-    def func_wrapper(func):
+    def func_wrapper(func: Callable[P, R]) -> Callable[P, R]:
         cfunc = __cacheit(maxsize)(func)
 
         @wraps(func)
-        def wrapper(*args, **kw_args):
+        def wrapper(*args: P.args, **kw_args: P.kwargs) -> R:
             # always call function itself and compare it with cached version
             r1 = func(*args, **kw_args)
             r2 = cfunc(*args, **kw_args)
@@ -142,6 +149,7 @@ else:
             'SYMPY_CACHE_SIZE must be a valid integer or None. ' + \
             'Got: %s' % SYMPY_CACHE_SIZE)
 
+cacheit: _CacheDecorator
 if USE_CACHE == 'no':
     cacheit = __cacheit_nocache
 elif USE_CACHE == 'yes':
