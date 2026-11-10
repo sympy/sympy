@@ -655,6 +655,23 @@ def test_aresame_identical_and_class():
     f2 = UndefinedFunction('f', real=True)
     assert f2 is not f1
     assert _aresame(f1x, f2(x))
+    # float('nan') behaves the same as S.NaN
+    f1 = float('nan')
+    f2 = float('nan')
+    b1 = Basic(f1)
+    b2 = Basic(f1)
+    
+    assert f1 is not f2
+    assert b1 is not b2
+    
+    assert _aresame(f1, f1)
+    assert not _aresame(f1, f2)
+    assert _aresame(b1, b1)
+    assert _aresame(b1, b2)
+    assert not _aresame(b1, Basic(f2))
+    
+    assert not _aresame(f1, S.NaN)
+    assert not _aresame(b1, Basic(S.NaN))
 
 
 def test_issue_4680():
