@@ -2363,7 +2363,7 @@ class Basic(Printable):
                     return False
                 if approx:
                     return approx(a, b)
-            if not (a == b and a.__class__ == b.__class__):
+            if not (a is b or a == b and a.__class__ == b.__class__):
                 return False
         return True
 
