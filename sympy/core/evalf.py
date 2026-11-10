@@ -868,7 +868,12 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
 
     # Pure square root
     if exp is S.Half:
-        xre, xim, _, _ = result
+        xre, xim, re_acc, im_acc = result
+        if (xim and xre and mpf_lt(xre, fzero)
+                and im_acc is not None and im_acc < 2):
+            if base.as_real_imag()[1].is_zero:
+                # ^ or base.expand(complex=True).as_real_imag()[1].is_zero?
+                return None, mpf_sqrt(mpf_neg(xre), prec), None, prec
         # General complex square root
         if xim:
             re, im = mpc_sqrt((xre or fzero, xim), prec)
