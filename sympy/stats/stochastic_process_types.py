@@ -1,7 +1,8 @@
 from __future__ import annotations
 import random
 import itertools
-from typing import Sequence as tSequence
+from typing import TYPE_CHECKING
+
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -51,9 +52,13 @@ from sympy.stats.drv_types import Poisson, PoissonDistribution
 from sympy.stats.crv_types import Normal, NormalDistribution, Gamma, GammaDistribution
 from sympy.core.sympify import _sympify, sympify
 
-EmptySet = S.EmptySet
+if TYPE_CHECKING:
+    from collections.abc import Sequence as tSequence
+    from typing_extensions import Self
 
-__all__ = [
+EmptySet: Set = S.EmptySet
+
+__all__: list[str] = [
     'StochasticProcess',
     'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain',
@@ -180,9 +185,9 @@ class StochasticProcess(Basic):
     DiscreteTimeStochasticProcess
     """
 
-    index_set = S.Reals
+    index_set: Set = S.Reals
 
-    def __new__(cls, sym, state_space=S.Reals, **kwargs):
+    def __new__(cls, sym: str | Symbol, state_space: Set = S.Reals) -> Self:
         sym = _symbol_converter(sym)
         state_space = _set_converter(state_space)
         return Basic.__new__(cls, sym, state_space)

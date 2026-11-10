@@ -32,6 +32,15 @@ if TYPE_CHECKING:
         BooleanTrue as _BooleanTrue,
         BooleanFalse as _BooleanFalse,
     )
+    from sympy.sets.fancysets import (
+        Rationals as _Rationals,
+        Naturals as _Naturals,
+        Naturals0 as _Naturals0,
+        Integers as _Integers,
+        Reals as _Reals,
+        Complexes as _Complexes,
+    )
+    from sympy.sets.sets import UniversalSet as _UniversalSet
 
     from .basic import Basic
     from .expr import Expr
@@ -136,6 +145,14 @@ class SingletonRegistry(Registry):
     true: _BooleanTrue
     false: _BooleanFalse
 
+    Complexes: _Complexes
+    Integers: _Integers
+    Naturals: _Naturals
+    Naturals0: _Naturals0
+    Rationals: _Rationals
+    Reals: _Reals
+    UniversalSet: _UniversalSet
+
     # Also allow things like S(5)
     @overload
     def __call__(self, a: int, *, strict: bool = False) -> Integer: ... # type: ignore
@@ -191,10 +208,10 @@ class SingletonRegistry(Registry):
         del self._classes_to_install[name]
         return value_to_install
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "S"
 
-    def __reduce__(self):
+    def __reduce__(self) -> str:
         # S is a singleton: pickling and copying should return the same
         # instance so that it compares equal to itself after a round-trip.
         return "S"
@@ -234,7 +251,7 @@ class Singleton(type):
     (SymPy versions before 1.0 would create the instance during class
     creation time, which would be prone to import cycles.)
     """
-    def __init__(cls, *args, **kwargs):
+    def __init__(cls, *args, **kwargs) -> None:
         cls._instance = obj = Basic.__new__(cls)
         cls.__new__ = lambda cls: obj
         cls.__getnewargs__ = lambda obj: ()
