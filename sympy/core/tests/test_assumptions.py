@@ -1411,3 +1411,8 @@ def test_linear_sign():
     e = p - p/sqrt(2)
     assert e.is_extended_positive is True
     assert e.is_extended_nonpositive is False
+
+    x = Symbol('x', extended_nonnegative=True)
+    e = x - x/sqrt(2)
+    assert e.is_extended_nonnegative is None
+    assert e.is_nonnegative is None

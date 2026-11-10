@@ -798,7 +798,7 @@ class Add(Expr, AssocOp):
         if self.is_number:
             return super()._eval_is_extended_positive()
         c, a = _ca_terms(self)
-        if c.is_zero and a.is_Add:
+        if not c and a.is_Add and len(a.args) < 4:
             rv = _linear_sign(a, 'is_extended_positive')
             if rv is not None:
                 return rv
@@ -854,7 +854,7 @@ class Add(Expr, AssocOp):
         if not self.is_number:
             from .exprtools import _monotonic_sign
             c, a = _ca_terms(self)
-            if c.is_zero and a.is_Add:
+            if not c and a.is_Add and len(a.args) < 4:
                 rv = _linear_sign(a, 'is_extended_nonnegative')
                 if rv is not None:
                     return rv
@@ -878,7 +878,7 @@ class Add(Expr, AssocOp):
         if not self.is_number:
             from .exprtools import _monotonic_sign
             c, a = _ca_terms(self)
-            if c.is_zero and a.is_Add:
+            if not c and a.is_Add and len(a.args) < 4:
                 rv = _linear_sign(a, 'is_extended_nonpositive')
                 if rv is not None:
                     return rv
@@ -903,7 +903,7 @@ class Add(Expr, AssocOp):
         if self.is_number:
             return super()._eval_is_extended_negative()
         c, a = _ca_terms(self)
-        if c.is_zero and a.is_Add:
+        if not c and a.is_Add and len(a.args) < 4:
             rv = _linear_sign(a, 'is_extended_negative')
             if rv is not None:
                 return rv
@@ -1329,18 +1329,30 @@ class Add(Expr, AssocOp):
         return Mul(S.NegativeOne, self)
 
 
-def _linear_sign(expr, prop):
+@cacheit
+def _linear_factor(expr):
+    # Determine whether a usable linear factorization exists.
+    # Return the factored expression or None.
     from .exprtools import linear_coeffs, NonlinearError
 
-    if len(expr.free_symbols) != 1:
+    symbols = expr.free_symbols
+    if len(symbols) != 1:
         return None
-    x = next(iter(expr.free_symbols))
+    x = next(iter(symbols))
+    if not x.is_finite:
+        return None
     try:
         a, b = linear_coeffs(expr, x)
     except NonlinearError:
         return None
     if b.is_zero is True:
-        return getattr(a*x, prop)
+        return a*x
+
+
+def _linear_sign(expr, prop):
+    factored = _linear_factor(expr)
+    if factored is not None:
+        return getattr(factored, prop)
 
 
 add = AssocOpDispatcher('add')
