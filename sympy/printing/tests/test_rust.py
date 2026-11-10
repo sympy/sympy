@@ -3,7 +3,7 @@ from sympy.core import (S, pi, oo, symbols, Rational, Integer, Symbol,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy,
                         Eq, Ne, Le, Lt, Gt, Ge, Mod)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             sign, floor, log)
+                             sign, floor, log, Max, Min)
 from sympy.logic import ITE
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
@@ -367,3 +367,25 @@ def test_parenthesize_typecast():
     modulus = Symbol("modulus")
     exp = (2 ** (2.0 * ceiling(-y + log(x) / log(2.0) + 4)) + 0.5) / (3 * modulus**2)
     assert(rust_code(exp) == '(1_f64/3.0)*(0.5 + (2.0*(-y + 1.44269504088896*x.ln()).ceil() + 8.0).exp2())*modulus.powi(-2)')
+
+
+def test_Max_Min():
+    a = Symbol('a')
+    assert rust_code(Max(0.0, a)) == "0.0_f64.max(a)"
+    assert rust_code(Max(a, 0.0)) == "0.0_f64.max(a)"
+    assert rust_code(Max(x, y)) == "x.max(y)"
+    assert rust_code(Max(x, y, z)) == "x.max(y).max(z)"
+    assert rust_code(Max(x + y, z)) == "z.max(x + y)"
+    assert rust_code(Max(x, y + z)) == "x.max(y + z)"
+    assert rust_code(Max(x, 1)) == "1.0_f64.max(x)"
+    assert rust_code(Max(1, x)) == "1.0_f64.max(x)"
+    assert rust_code(Max(k, m)) == "k.max(m)"
+    assert rust_code(Max(x, n)) == "(n as f64).max(x)"
+    assert rust_code(Max(-1.0, x)) == "(-1.0_f64).max(x)"
+    assert rust_code(Max(-5, k)) == "(-5_i32).max(k)"
+    assert rust_code(Min(0.0, a)) == "0.0_f64.min(a)"
+    assert rust_code(Min(a, 0.0)) == "0.0_f64.min(a)"
+    assert rust_code(Min(x, y)) == "x.min(y)"
+    assert rust_code(Min(x, y, z)) == "x.min(y).min(z)"
+    assert rust_code(Min(-1.0, x)) == "(-1.0_f64).min(x)"
+    assert rust_code(Max(x, y), user_functions={'Max': 'custom_max'}) == "x.custom_max(y)"

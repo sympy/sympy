@@ -113,8 +113,6 @@ known_functions = {
     # "": "log10",
     # "": "to_degrees",
     # "": "to_radians",
-    "Max": "max",
-    "Min": "min",
     # "": "hypot",        # (x**2 + y**2) ** 0.5
     "sin": "sin",
     "cos": "cos",
@@ -337,13 +335,18 @@ class RustCodePrinter(CodePrinter):
         return open_lines, close_lines
 
     def _print_caller_var(self, expr):
-        if len(expr.args) > 1:
+        if isinstance(expr, TypeCast) and not expr.explicit:
+            return self._print(expr)
+        elif len(expr.args) > 1:
             # for something like `sin(x + y + z)`,
             # make sure we can get '(x + y + z).sin()'
             # instead of 'x + y + z.sin()'
             return '(' + self._print(expr) + ')'
         elif expr.is_number:
-            return self._print(expr, _type=True)
+            code = self._print(expr, _type=True)
+            if code.startswith('-'):
+                return '(' + code + ')'
+            return code
         else:
             return self._print(expr)
 
@@ -417,6 +420,38 @@ class RustCodePrinter(CodePrinter):
             expr = type(expr)(Float(expr.base), expr.exp)
             return self._print(expr)
         return self._print_Function(expr)
+
+    def _print_Max(self, expr):
+        if "Max" in self.known_functions:
+            return self._print_Function(expr)
+        args = expr.args
+        if not args:
+            return self._print_not_supported(expr)
+        if len(args) == 1:
+            return self._print(args[0])
+        contains_floats = any(arg.is_real and not arg.is_integer for arg in args)
+        if contains_floats:
+            args = [self._cast_to_float(arg) for arg in args]
+        res = self._print_caller_var(args[0])
+        for arg in args[1:]:
+            res += ".max(%s)" % self._print(arg)
+        return res
+
+    def _print_Min(self, expr):
+        if "Min" in self.known_functions:
+            return self._print_Function(expr)
+        args = expr.args
+        if not args:
+            return self._print_not_supported(expr)
+        if len(args) == 1:
+            return self._print(args[0])
+        contains_floats = any(arg.is_real and not arg.is_integer for arg in args)
+        if contains_floats:
+            args = [self._cast_to_float(arg) for arg in args]
+        res = self._print_caller_var(args[0])
+        for arg in args[1:]:
+            res += ".min(%s)" % self._print(arg)
+        return res
 
     def _print_TypeCast(self, expr):
         if not expr.explicit:
@@ -604,6 +639,8 @@ class RustCodePrinter(CodePrinter):
             and all(self._can_print(f) for f in required_fs)
         }
         for func in expression_functions:
+            if self._can_print(func.__name__):
+                continue
             target_f, _ = rewriteable_functions.get(func.__name__, (None, None))
             if target_f:
                 expr = expr.rewrite(target_f)
@@ -636,3 +673,24 @@ class RustCodePrinter(CodePrinter):
             pretty.append("%s%s" % (tab*level, line))
             level += increase[n]
         return pretty
+
+
+def rust_code(expr, assign_to=None, **settings):
+    """Converts an expr to a string of Rust code
+
+    Parameters
+    ==========
+
+    expr : Expr
+        A SymPy expression to be converted.
+    assign_to : optional
+        When given, the argument is used as the name of the variable to which
+        the expression is assigned. Can be a string, ``Symbol``,
+        ``MatrixSymbol``, or ``Indexed`` type.
+    """
+    printer = RustCodePrinter(settings)
+    expr = printer._rewrite_known_functions(expr)
+    if isinstance(expr, Expr):
+        for src_func, dst_func in printer.function_overrides.values():
+            expr = expr.replace(src_func, dst_func)
+    return printer.doprint(expr, assign_to)
