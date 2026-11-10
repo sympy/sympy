@@ -334,16 +334,28 @@ def test_cse_to_functions_dependencies_and_collision():
         [existing + Derivative(renamed, x)])
 
 
+def test_cse_symbol_like_not_eliminated():
+    # Symbol-like objects are not computations to be extracted by CSE.
+    from sympy import Indexed, MatrixSymbol
+
+    i = Symbol('i')
+    X = ArraySymbol('X', (3,))
+    M = MatrixSymbol('M', 3, 3)
+    for symbol_like in (Indexed('X', i), X[i], M[i, 0]):
+        assert symbol_like.is_symbol
+        assert cse([symbol_like, symbol_like]) == (
+            [], [symbol_like, symbol_like])
+
+
 def test_cse_to_functions_array_derivative():
     i = Symbol('i')
     X = ArraySymbol('X', (3,))
     f = Function('f')
     expr = f(X[i])**2 + Derivative(f(X[i]), X[i])
-    F0 = Function('x0')()
-    F1 = Function('x1')(F0)
+    F = Function('x0')(X[i])
     replacements, reduced = cse(expr, postprocess=cse_to_functions)
-    assert replacements == [(F0, X[i]), (F1, f(F0))]
-    assert reduced == [F1**2 + Derivative(F1, F0)]
+    assert replacements == [(F, f(X[i]))]
+    assert reduced == [F**2 + Derivative(F, X[i])]
     assert reduced[0].doit() == reduced[0]
 
 

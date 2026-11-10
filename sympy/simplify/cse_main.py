@@ -15,7 +15,6 @@ from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                             SparseMatrix, ImmutableSparseMatrix)
 from sympy.matrices.expressions import (MatrixExpr, MatrixSymbol, MatMul,
                                         MatAdd, MatPow, Inverse)
-from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.polys.rootoftools import RootOf
 from sympy.utilities.iterables import numbered_symbols, sift, \
         topological_sort, iterable
@@ -680,9 +679,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
             return
 
         if isinstance(expr, Basic) and (
-                expr.is_Atom or
-                expr.is_Order or
-                isinstance(expr, (MatrixSymbol, MatrixElement))):
+                expr.is_symbol or expr.is_Atom or expr.is_Order):
             if expr.is_Symbol:
                 excluded_symbols.add(expr.name)
             return
