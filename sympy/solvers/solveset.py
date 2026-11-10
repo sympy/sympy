@@ -49,7 +49,7 @@ from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
 from sympy.sets.sets import Set, ProductSet
 from sympy.matrices import zeros, Matrix, MatrixBase
 from sympy.ntheory.factor_ import divisors
-from sympy.ntheory.residue_ntheory import discrete_log, n_order, nthroot_mod
+from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor, lcm, gcd)
 from sympy.polys.polyerrors import CoercionFailed
@@ -1464,42 +1464,6 @@ def _is_modular(f, symbol):
             )
 
 
-def _invert_modular_pow_noncoprime(base, m, rhs, expo, n, symbol):
-    """
-    Solve ``Mod(base**expo, m) = rhs`` when ``base`` and ``m`` share a factor.
-
-    The powers of ``base`` modulo ``m`` are not periodic from the start. Let
-    ``m1`` be the part of ``m`` built from the primes of ``base`` and ``m2`` the
-    rest. For exponents ``k`` or more, ``base**x`` is 0 modulo ``m1`` and
-    periodic modulo ``m2``. For the few exponents below ``k`` it is not 0 modulo
-    ``m1``, so they are checked directly when ``rhs`` is not 0 modulo ``m1``.
-    """
-    m1, m2 = 1, m
-    d = number_gcd(m2, base)
-    while d != 1:
-        m1 *= d
-        m2 //= d
-        d = number_gcd(m2, base)
-    k = 0
-    while pow(base, k, m1) != 0:
-        k += 1
-
-    if rhs % m1 != 0:
-        solutions = [x for x in range(k) if pow(base, x, m) == rhs]
-    else:
-        try:
-            first = discrete_log(m2, rhs % m2, base % m2)
-        except ValueError:  # log does not exist
-            return symbol, S.EmptySet
-        period = n_order(base, m2) if m2 > 1 else 1
-        first += period*max(0, -(-(k - first)//period))
-        return expo, ImageSet(Lambda(n, period*n + first), S.Naturals0)
-
-    if not solutions:
-        return symbol, S.EmptySet
-    return expo, FiniteSet(*solutions)
-
-
 def _invert_modular(modterm, rhs, n, symbol):
     """
     Helper function to invert modular equation.
@@ -1575,11 +1539,7 @@ def _invert_modular(modterm, rhs, n, symbol):
 
     """
     if not isinstance(modterm, Mod):
-        # Mod(c*a, c*m) is rewritten as c*Mod(a, m)
-        coeff, modterm = modterm.as_coeff_Mul()
-        if not (coeff.is_Integer and isinstance(modterm, Mod)):
-            return modterm*coeff, rhs
-        rhs = rhs/coeff
+        return modterm, rhs
     a, m = modterm.args
 
     if rhs.is_integer is False:
@@ -1617,17 +1577,10 @@ def _invert_modular(modterm, rhs, n, symbol):
         if expo.has(symbol) and not base.has(symbol):
             # remainder -> solution independent of n of equation.
             # m, rhs are made coprime by dividing number_gcd(m, rhs)
-            if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
+            if not (m.is_Integer and rhs.is_Integer and base.is_Integer):
                 return modterm, rhs
-
-            if (m.p > 0 and rhs.p >= 0 and base.is_Integer and
-                    expo.xreplace({symbol: Dummy(integer=True)}).is_integer):
-                if number_gcd(m.p, base.p) != 1:
-                    return _invert_modular_pow_noncoprime(
-                        base.p, m.p, rhs.p, expo, n, symbol)
-                if number_gcd(m.p, rhs.p) != 1:
-                    # a power of a base coprime to m is a unit modulo m
-                    return symbol, S.EmptySet
+            if number_gcd(m.p, base.p) != 1 or number_gcd(m.p, rhs.p) != 1:
+                return modterm, rhs
 
             mdiv = m.p // number_gcd(m.p, rhs.p)
             try:
