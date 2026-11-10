@@ -21,7 +21,7 @@ def _add_mathml_headers(s):
 sympy.utilities.mathml.add_mathml_headers() is deprecated. Wrap the MathML
 string in a <math> element directly instead, like
 
-    '<math xmlns="http://www.w3.org/1998/Math/MathML">' + s + '</math>'""",
+    '<math>' + s + '</math>'""",
     deprecated_since_version="1.15",
     active_deprecations_target="deprecated-mathml-xsl")
 def add_mathml_headers(s):
