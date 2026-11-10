@@ -3920,7 +3920,7 @@ class MatrixBase(Printable):
         """Computes eigenvalues of a Matrix using Berkowitz method."""
         return self.eigenvals(**flags)
 
-    def berkowitz_minors(self) -> tuple[Expr]:
+    def berkowitz_minors(self) -> tuple[Expr, ...]:
         """Computes principal minors using Berkowitz method."""
         sign, minors = self.one, []
 
@@ -4780,6 +4780,8 @@ class MatrixBase(Printable):
         if self.is_symmetric():
             return work
 
+        acum: Expr
+
         for i in range(1, n):
             for j in range(1, n):
                 acum = S.Zero
@@ -4899,7 +4901,7 @@ class MatrixBase(Printable):
                     "Cannot evaluate the function because the "
                     "function {} is not analytic at the given "
                     "eigenvalue {}".format(f, f_val[row]))
-            val = S.One
+            val: Expr = S.One
             for a in range(n):
                 r[row][a] = val
                 val *= i

@@ -2846,7 +2846,7 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     # where f(x) is a polynomial and n is an odd integer
     starting_integrand, x = integral
 
-    f = S.One
+    f: Expr = S.One
     root_base = None
     root_exp: Expr = S.Zero
 
