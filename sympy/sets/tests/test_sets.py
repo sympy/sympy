@@ -747,12 +747,26 @@ def test_set_evalf():
     assert FiniteSet(2, x).evalf() == FiniteSet(Float('2.0'), x)
 
 
+def test_Interval_measure_reversed_symbolic_endpoints():
+    # The measure of an interval whose endpoints turn out to be reversed is
+    # 0 (it is empty), not a negative number.
+    a, b = symbols('a b', real=True)
+    m = Interval(a, b).measure
+    assert m == Max(0, b - a)
+    assert m.subs({a: 3, b: 1}) == 0
+    assert m.subs({a: 1, b: 3}) == 2
+    assert Interval.open(a, b).measure == Max(0, b - a)
+    # a provably nonnegative length is unchanged
+    x = Symbol('x', positive=True)
+    assert Interval(0, x).measure == x
+
+
 def test_measure():
     a = Symbol('a', real=True)
 
     assert Interval(1, 3).measure == 2
-    assert Interval(0, a).measure == a
-    assert Interval(1, a).measure == a - 1
+    assert Interval(0, a).measure == Max(0, a)
+    assert Interval(1, a).measure == Max(0, a - 1)
 
     assert Union(Interval(1, 2), Interval(3, 4)).measure == 2
     assert Union(Interval(1, 2), Interval(3, 4), FiniteSet(5, 6, 7)).measure \
