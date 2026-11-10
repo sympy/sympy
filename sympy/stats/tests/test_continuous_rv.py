@@ -17,7 +17,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (asin, atan, cos, sin, tan)
 from sympy.functions.special.bessel import (besseli, besselj, besselk)
 from sympy.functions.special.beta_functions import beta
-from sympy.functions.special.error_functions import (erf, erfc, erfi, expint)
+from sympy.functions.special.error_functions import (erf, erfc, erfi, expint, owens_t)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma, uppergamma)
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.hyper import hyper
@@ -36,7 +36,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
                          LogLogistic, LogitNormal, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
-                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
+                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz,
+                         SkewNormal, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
                          Lomax, BoundedPareto)
@@ -744,6 +745,7 @@ def test_frechet():
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
     assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
 
+
 @slow
 def test_gamma():
     k = Symbol("k", positive=True)
@@ -771,9 +773,10 @@ def test_gamma():
     assert kurtosis(X).expand() == 3 + 6/k
 
     Y = Gamma('y', 2*k, 3*theta)
-    assert coskewness(X, theta*X + Y, k*X + Y).simplify() == \
-        2*531441**(-k)*sqrt(k)*theta*(3*3**(12*k) - 2*531441**k) \
-        /(sqrt(k**2 + 18)*sqrt(theta**2 + 18))
+    assert coskewness(X, theta*X + Y, k*X + Y).simplify() == 2*(
+        S(1)/531441)**k*sqrt(k)*theta*(3*3**(12*k) - 2*531441**k)/(
+        sqrt(k**2 + 18)*sqrt(theta**2 + 18))
+
 
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
@@ -784,6 +787,7 @@ def test_gamma_inverse():
     assert characteristic_function(X)(x) == 2 * (-I*b*x)**(a/2) \
             * besselk(a, 2*sqrt(b)*sqrt(-I*x))/gamma(a)
     raises(NotImplementedError, lambda: moment_generating_function(X))
+
 
 def test_gompertz():
     b = Symbol("b", positive=True)
@@ -1156,6 +1160,29 @@ def test_shiftedgompertz():
     assert density(X)(x) == b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
 
 
+def test_skewnormal():
+    xi = Symbol("xi", real=True)
+    omega = Symbol("omega", positive=True)
+    alpha = Symbol("alpha", real=True)
+
+    X = SkewNormal("x", xi, omega, alpha)
+    z = (x - xi)/omega
+    assert density(X)(x) == exp(-z**2/2)*(1 + erf(alpha*z/sqrt(2)))/(sqrt(2*pi)*omega)
+    assert cdf(X)(x) == erf(sqrt(2)*z/2)/2 + S.Half - 2*owens_t(z, alpha)
+
+    # alpha = 0 reduces to a Normal distribution
+    assert density(SkewNormal("x", xi, omega, 0))(x) == density(Normal("x", xi, omega))(x)
+    assert cdf(SkewNormal("x", xi, omega, 0))(x) == cdf(Normal("x", xi, omega))(x)
+
+    # -X ~ SkewNormal(-xi, omega, -alpha)
+    Y = SkewNormal("y", -xi, omega, -alpha)
+    assert simplify(density(X)(x) - density(Y)(-x)) == 0
+
+    raises(ValueError, lambda: SkewNormal('x', 0, -1, 1))
+    raises(ValueError, lambda: SkewNormal('x', 0, 0, 1))
+    raises(ValueError, lambda: SkewNormal('x', 0, 1, I))
+
+
 def test_studentt():
     nu = Symbol("nu", positive=True)
 
@@ -1498,6 +1525,7 @@ def test_long_precomputed_cdf():
             Laplace("LA", -5, 4),
             Logistic("L", -6, 7),
             Nakagami("N", 2, 7),
+            SkewNormal("SN", -2, 3, 4),
             StudentT("S", 4)
             ]
     for distr in distribs:

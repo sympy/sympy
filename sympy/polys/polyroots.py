@@ -382,6 +382,7 @@ def roots_binomial(f: Poly) -> list[Expr]:
     sorted (but will be canonical).
     """
     n = f.degree()
+    assert isinstance(n, int)
 
     a, b = f.nth(n), f.nth(0)
     base = -cancel(b/a)

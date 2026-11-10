@@ -126,6 +126,12 @@ def test_tribonacci():
     assert [tribonacci(n) for n in range(8)] == [0, 1, 1, 2, 4, 7, 13, 24]
     assert tribonacci(100) == 98079530178586034536500564
 
+    a, b, c = 0, 1, 1
+    for i in range(20001):
+        if i in (16381, 16382, 16383, 20000):
+            assert tribonacci(i) == a
+        a, b, c = b, c, a + b + c
+
     assert tribonacci(0, x) == 0
     assert tribonacci(1, x) == 1
     assert tribonacci(2, x) == x**2

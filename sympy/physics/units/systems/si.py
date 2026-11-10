@@ -205,12 +205,18 @@ SI.set_quantity_scale_factor(faraday_constant, elementary_charge * avogadro_cons
 # Josephson constant
 
 SI.set_quantity_dimension(josephson_constant, frequency / voltage)
-SI.set_quantity_scale_factor(josephson_constant, 0.5 * planck / elementary_charge)
+# The Josephson constant is K_J = 2*e/h (frequency per voltage).  The previous
+# value ``0.5*planck/elementary_charge`` was h/(2e), the magnetic flux quantum,
+# i.e. its reciprocal (and its dimension is voltage*time, not frequency/voltage).
+SI.set_quantity_scale_factor(josephson_constant, 2 * elementary_charge / planck)
 
 # Von Klitzing constant
 
 SI.set_quantity_dimension(von_klitzing_constant, voltage / current)
-SI.set_quantity_scale_factor(von_klitzing_constant, hbar / elementary_charge ** 2)
+# The von Klitzing constant is R_K = h/e**2.  The previous value used the
+# reduced Planck constant ``hbar`` instead of ``planck``, making it too small by
+# a factor of 2*pi.
+SI.set_quantity_scale_factor(von_klitzing_constant, planck / elementary_charge ** 2)
 
 # Acceleration due to gravity (on the Earth surface)
 
@@ -334,17 +340,23 @@ SI.set_quantity_scale_factor(rutherford, 1000000*becquerel)
 
 
 # check that scale factors are the right SI dimensions:
-for _scale_factor, _dimension in zip(
-    SI._quantity_scale_factors.values(),
-    SI._quantity_dimension_map.values()
-):
+# ``equivalent_dims`` is an instance method, so it must be called on the
+# dimension system.  Pairing is done by quantity rather than by zipping the two
+# dicts' values, which would silently mismatch scale factors and dimensions if
+# the dicts had different keys or ordering.  (In practice the guard ``dimex !=
+# 1`` only fires for a symbolically-expressed scale factor: the built-in
+# quantities store a plain numeric scale factor, whose dimensional expression is
+# 1, so this loop is a no-op for them.)
+_dimension_system = SI.get_dimension_system()
+for _quantity, _scale_factor in SI._quantity_scale_factors.items():
+    _dimension = SI._quantity_dimension_map.get(_quantity)
+    if _dimension is None:
+        continue
     dimex = SI.get_dimensional_expr(_scale_factor)
     if dimex != 1:
-        # XXX: equivalent_dims is an instance method taking two arguments in
-        # addition to self so this can not work:
-        if not DimensionSystem.equivalent_dims(_dimension, Dimension(dimex)):  # type: ignore
+        if not _dimension_system.equivalent_dims(_dimension, Dimension(dimex)):
             raise ValueError("quantity value and dimension mismatch")
-del _scale_factor, _dimension
+del _dimension_system, _quantity, _scale_factor, _dimension
 
 __all__ = [
     'mmHg', 'atmosphere', 'inductance', 'newton', 'meter',

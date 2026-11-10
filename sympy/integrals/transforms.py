@@ -102,8 +102,8 @@ class IntegralTransform(Function):
         This method returns the symbols that will exist when the transform
         is evaluated.
         """
-        return self.function.free_symbols.union({self.transform_variable}) \
-            - {self.function_variable}
+        fsyms = self.function.free_symbols - {self.function_variable}
+        return fsyms | self.transform_variable.free_symbols
 
     def _compute_transform(self, f, x, s, **hints):
         raise NotImplementedError
@@ -1490,7 +1490,7 @@ def hankel_transform(f, r, k, nu, **hints):
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/(2**m*gamma(m/2 + nu/2))
+    2**(1 - m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)
@@ -1552,7 +1552,7 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/(2**m*gamma(m/2 + nu/2))
+    2**(1 - m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)

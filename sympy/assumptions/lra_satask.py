@@ -1,5 +1,4 @@
 from __future__ import annotations
-from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
 from sympy.logic.inference import satisfiable
@@ -11,7 +10,7 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 
 
-def lra_satask(proposition, assumptions=True, context=global_assumptions):
+def lra_satask(proposition, assumptions=True):
     """
     Function to evaluate the proposition with assumptions using SAT algorithm
     in conjunction with an Linear Real Arithmetic theory solver.
@@ -27,21 +26,15 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
     assumptions = EncodedCNF()
     assumptions.from_cnf(cnf)
 
-    context_cnf = CNF()
-    if context:
-        context_cnf = context_cnf.extend(context)
-
-    assumptions.add_from_cnf(context_cnf)
-
     return check_satisfiability(props, _props, assumptions)
 
 # Some predicates such as Q.prime can't be handled by lra_satask.
 # For example, (x > 0) & (x < 1) & Q.prime(x) is unsat but lra_satask would think it was sat.
 # WHITE_LIST is a list of predicates that can always be handled.
-WHITE_LIST = ALLOWED_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative,
-                                            Q.extended_positive, Q.extended_negative, Q.extended_nonpositive,
-                                            Q.extended_negative, Q.extended_nonzero, Q.negative_infinite,
-                                            Q.positive_infinite}
+WHITE_LIST = ALLOWED_PRED.keys() | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative,
+                                    Q.extended_positive, Q.extended_negative, Q.extended_nonpositive,
+                                    Q.extended_negative, Q.extended_nonzero, Q.negative_infinite,
+                                    Q.positive_infinite}
 
 
 def check_satisfiability(prop, _prop, factbase):
@@ -67,12 +60,12 @@ def check_satisfiability(prop, _prop, factbase):
         n = len(sat_true.encoding)
         if assm not in sat_true.encoding:
             sat_true.encoding[assm] = n+1
-        sat_true.data.append([sat_true.encoding[assm]])
+        sat_true.data.append({sat_true.encoding[assm]})
 
         n = len(sat_false.encoding)
         if assm not in sat_false.encoding:
             sat_false.encoding[assm] = n+1
-        sat_false.data.append([sat_false.encoding[assm]])
+        sat_false.data.append({sat_false.encoding[assm]})
 
 
     sat_true = _preprocess(sat_true)
@@ -171,7 +164,7 @@ def _preprocess(enc_cnf):
                 new_encoding[prop] = cur_enc
                 cur_enc += 1
             new_clause.append(new_encoding[prop]*sign)
-        new_data.append(new_clause)
+        new_data.append(set(new_clause))
 
     assert len(new_encoding) >= cur_enc - 1
 

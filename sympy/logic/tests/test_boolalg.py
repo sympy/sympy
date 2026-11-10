@@ -1467,3 +1467,14 @@ def test_simplify_logic_dontcare_issue_28369():
 
    # Test 2: Fast path form check
    assert simplify_logic(A | B, dontcare=A, form='dnf') == B
+
+
+def test_simplify_univariate_endpoints():
+    assert simplify(~((x > 2) & (x < 5))) == (x <= 2) | (x >= 5)
+    assert simplify(~((x >= 2) & (x <= 5))) == (x < 2) | (x > 5)
+    assert simplify(~((x >= 2) & (x < 5))) == (x < 2) | (x >= 5)
+    assert simplify(~((x > 2) & (x <= 5))) == (x <= 2) | (x > 5)
+    expr = ~((x > 2) & (x < 4)) & ~((x > 5) & (x < 7))
+    res = simplify(expr)
+    for v in range(9):
+        assert res.subs(x, v) == expr.subs(x, v)

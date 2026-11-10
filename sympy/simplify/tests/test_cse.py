@@ -558,6 +558,9 @@ def test_cse_unevaluated():
         msg = f'Expected common subexpression {xp1} or {-xp1}, instead got {ue}'
         assert False, msg
 
+    p = Pow(x, 1, evaluate=False)
+    assert cse([p, p]) == ([(x0, p)], [x0, x0])
+
 
 def test_cse__performance():
     nexprs, nterms = 3, 20

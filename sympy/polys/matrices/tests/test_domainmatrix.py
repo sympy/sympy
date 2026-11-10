@@ -391,6 +391,27 @@ def test_DomainMatrix_transpose():
     assert A.transpose() == AT
 
 
+def test_DomainMatrix_conjugate():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.conjugate() == A
+
+    A = DomainMatrix([[QQ_I(2, 3)/4, QQ_I(-3, 1)]], (1, 2), QQ_I)
+    B = DomainMatrix([[QQ_I(2, -3)/4, QQ_I(-3, -1)]], (1, 2), QQ_I)
+    assert A.conjugate() == B
+    assert B.conjugate() == A
+
+
+def test_DomainMatrix_adjoint():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    AT = DomainMatrix([[ZZ(1), ZZ(3)], [ZZ(2), ZZ(4)]], (2, 2), ZZ)
+    assert A.adjoint() == AT
+
+    A = DomainMatrix([[QQ_I(2, 3)/4, QQ_I(-3, 1)]], (1, 2), QQ_I)
+    B = DomainMatrix([[QQ_I(2, -3)/4], [QQ_I(-3, -1)]], (2, 1), QQ_I)
+    assert A.adjoint() == B
+    assert B.adjoint() == A
+
+
 def test_DomainMatrix_is_zero_matrix():
     A = DomainMatrix([[ZZ(1)]], (1, 1), ZZ)
     B = DomainMatrix([[ZZ(0)]], (1, 1), ZZ)
@@ -1173,6 +1194,75 @@ def test_DomainMatrix_charpoly_factor_list():
         ([ZZ(1), ZZ(-1)], 1),
         ([ZZ(1), ZZ(-5), ZZ(-2)], 1)
     ]
+
+
+def test_DomainMatrix_ground_eigenvals():
+    A = DomainMatrix([], (0, 0), ZZ)
+    assert A.ground_eigenvals() == {}
+    assert A.to_sparse().ground_eigenvals() == {}
+
+    A = DomainMatrix.zeros((3, 3), QQ)
+    assert A.ground_eigenvals() == {QQ(0): 3}
+    assert A.to_sparse().ground_eigenvals() == {QQ(0): 3}
+
+    A = DM([[0, 1], [1, 0]], ZZ)
+    assert A.ground_eigenvals() == {ZZ(1): 1, ZZ(-1): 1}
+    assert A.to_sparse().ground_eigenvals() == {ZZ(1): 1, ZZ(-1): 1}
+
+    A = DM([[0, 1], [-1, 0]], QQ)
+    assert A.ground_eigenvals() == {}
+    assert A.to_sparse().ground_eigenvals() == {}
+
+    A = DM([[0, 1], [-1, 0]], QQ_I)
+    assert A.ground_eigenvals() == {QQ_I(0, 1): 1, QQ_I(0, -1): 1}
+
+    A = DM([[4, 1, 0, 0],
+            [-3, QQ(1, 2), 0, 0],
+            [0, 0, 2, QQ(3, 2)],
+            [0, 0, 0, 2]], QQ)
+    assert A.ground_eigenvals() == {QQ(2): 3, QQ(5, 2): 1}
+
+    A = DM([[1, 2]], QQ)
+    raises(DMNonSquareMatrixError, lambda: A.ground_eigenvals())
+
+
+def test_DomainMatrix_ground_eigenvects():
+    A = DomainMatrix([], (0, 0), ZZ)
+    assert A.ground_eigenvects() == []
+    assert A.to_sparse().ground_eigenvects() == []
+
+    A = DomainMatrix.zeros((3, 3), QQ)
+    assert A.ground_eigenvects() == [(QQ(0), 3, DomainMatrix.eye(3, QQ))]
+
+    A = DM([[0, 1], [1, 0]], ZZ)
+    assert A.ground_eigenvects() == [
+        (1, 1, DM([[1], [1]], ZZ)),
+        (-1, 1, DM([[-1], [1]], ZZ)),
+    ]
+    assert A.to_sparse().ground_eigenvects() == [
+        (1, 1, DM([[1], [1]], ZZ).to_sparse()),
+        (-1, 1, DM([[-1], [1]], ZZ).to_sparse()),
+    ]
+
+    A = DM([[0, 1], [-1, 0]], QQ)
+    assert A.ground_eigenvects() == []
+    assert A.to_sparse().ground_eigenvects() == []
+
+    A = DM([[4, 1, 0, 0],
+            [-3, QQ(1, 2), 0, 0],
+            [0, 0, 2, QQ(3, 2)],
+            [0, 0, 0, 2]], QQ)
+    assert A.ground_eigenvects() == [
+        (QQ(5, 2), 1, DM([[-QQ(2, 3)], [1], [0], [0]], QQ)),
+        (QQ(2), 3, DM([[-QQ(1, 2), 0], [1, 0], [0, 1], [0, 0]], QQ)),
+    ]
+    assert A.to_sparse().ground_eigenvects() == [
+        (QQ(5, 2), 1, DM([[-QQ(2, 3)], [1], [0], [0]], QQ).to_sparse()),
+        (QQ(2), 3, DM([[-QQ(1, 2), 0], [1, 0], [0, 1], [0, 0]], QQ).to_sparse()),
+    ]
+
+    A = DM([[1, 2]], QQ)
+    raises(DMNonSquareMatrixError, lambda: A.ground_eigenvects())
 
 
 def test_DomainMatrix_eye():

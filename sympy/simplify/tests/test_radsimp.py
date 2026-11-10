@@ -1,8 +1,10 @@
 from __future__ import annotations
+from unittest.mock import PropertyMock, patch
+
 from sympy.core.add import Add
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Rational)
+from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
@@ -19,6 +21,7 @@ from sympy.core.mul import _unevaluated_Mul as umul
 from sympy.simplify.radsimp import (_unevaluated_Add,
     collect_sqrt, fraction_expand, collect_abs)
 from sympy.testing.pytest import raises
+
 
 from sympy.abc import x, y, z, a, b, c, d
 
@@ -403,11 +406,34 @@ def test_fraction_expand():
     assert eq.expand() == y + y**2/x
 
 
+def test_fraction_exact_no_sign_inference():
+    p = Symbol('p', positive=True)
+    cases = [
+        (2**(-pi), (1, 2**pi)),
+        (exp(-p), (exp(-p), 1)),
+        (Pow(2, 1 - p, evaluate=False),
+         (Pow(2, 1 - p, evaluate=False), 1)),
+    ]
+
+    for expr, expected in cases:
+        exponent = expr.as_base_exp()[1]
+        with (
+            patch.object(type(exponent), 'is_negative',
+                         new_callable=PropertyMock) as negative,
+            patch.object(type(exponent), 'is_positive',
+                         new_callable=PropertyMock) as positive,
+        ):
+            negative.side_effect = AssertionError("queried is_negative")
+            positive.side_effect = AssertionError("queried is_positive")
+            assert fraction(expr, exact=True) == expected
+
+
 def test_fraction():
     x, y, z = map(Symbol, 'xyz')
     A = Symbol('A', commutative=False)
 
     assert fraction(S.Half) == (1, 2)
+    assert fraction(2**-pi, exact=True) == (1, 2**pi)
 
     assert fraction(x) == (x, 1)
     assert fraction(1/x) == (1, x)
@@ -444,6 +470,9 @@ def test_fraction():
     assert fraction(m) == (1, 4)
     assert fraction(m, exact=True) == \
             (Mul(1, 1, evaluate=False), Mul(2, 2, 1, evaluate=False))
+
+    u = Pow(2, -2, evaluate=False)
+    assert fraction(u, exact=True) == (1, Pow(2, 2, evaluate=False))
 
 
 def test_issue_5615():

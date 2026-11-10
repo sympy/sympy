@@ -161,8 +161,8 @@ class Mod(DefinedFunction):
                 prod_mod = Mul(*mod)
                 prod_non_mod = Mul(*non_mod)
                 prod_mod1 = Mul(*[i.args[0] for i in mod_l])
-                net = prod_mod1*prod_mod
-                return prod_non_mod*cls(net, q)
+                net = prod_mod1*prod_mod*prod_non_mod
+                return cls(net, q)
 
             if q.is_Integer and q is not S.One:
                 if all(t.is_integer for t in p.args):

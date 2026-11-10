@@ -79,7 +79,7 @@ exp(-x)
 >>> from sympy import Lambda
 >>> dist = DiscreteDistributionHandmade(Lambda(x, pdf), set=S.Naturals)
 >>> dist.pdf(x)
-2**(1 - x)/2
+(1/2)**(x - 1)/2
 
 3. If you want to create a Finite Random Variable:
 
@@ -119,7 +119,7 @@ __all__ = [
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
     'Kumaraswamy', 'Laplace', 'Levy', 'Logistic','LogCauchy', 'LogLogistic', 'LogitNormal', 'LogNormal', 'Lomax',
     'Moyal', 'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
-    'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
+    'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'SkewNormal', 'StudentT', 'ShiftedGompertz',
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle', 'ContinuousDistributionHandmade',
 
@@ -169,7 +169,7 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
         LogLogistic, LogitNormal, LogNormal, Lomax, Maxwell, Moyal, Nakagami,
         Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal,
-        StudentT, PowerFunction, ShiftedGompertz, Trapezoidal, Triangular,
+        SkewNormal, StudentT, PowerFunction, ShiftedGompertz, Trapezoidal, Triangular,
         Uniform, UniformSum, VonMises, Wald, Weibull, WignerSemicircle,
         ContinuousDistributionHandmade)
 

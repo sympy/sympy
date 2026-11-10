@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from typing import Any, Hashable
     from typing_extensions import Self
     from .numbers import Number
+    from sympy.logic.boolalg import Boolean
 
 from collections import defaultdict
 
@@ -247,7 +248,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__radd__')
-    def __add__(self, other: complex) -> Expr:
+    def __add__(self, other: Expr | complex) -> Expr:
         return Add(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -257,7 +258,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rsub__')
-    def __sub__(self, other: complex) -> Expr:
+    def __sub__(self, other: Expr | complex) -> Expr:
         return Add(self, -other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -267,7 +268,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmul__')
-    def __mul__(self, other: complex) -> Expr:
+    def __mul__(self, other: Expr | complex) -> Expr:
         return Mul(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -396,22 +397,22 @@ class Expr(Basic, EvalfMixin):
         return complex(float(re), float(im))
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __ge__(self, other):
+    def __ge__(self, other) -> Boolean:
         from .relational import GreaterThan
         return GreaterThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __le__(self, other):
+    def __le__(self, other) -> Boolean:
         from .relational import LessThan
         return LessThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __gt__(self, other):
+    def __gt__(self, other) -> Boolean:
         from .relational import StrictGreaterThan
         return StrictGreaterThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __lt__(self, other):
+    def __lt__(self, other) -> Boolean:
         from .relational import StrictLessThan
         return StrictLessThan(self, other)
 
@@ -419,7 +420,7 @@ class Expr(Basic, EvalfMixin):
         if not self.is_number:
             raise TypeError("Cannot truncate symbols and expressions")
         else:
-            return Integer(self)
+            return int(Integer(self))
 
     def __format__(self, format_spec: str):
         if self.is_number:
@@ -1232,7 +1233,8 @@ class Expr(Basic, EvalfMixin):
             coeff, _term = term.as_coeff_Mul()
 
             coeff_complex = complex(coeff)
-            cpart, ncpart = {}, []
+            cpart: dict[Expr, int] = {}
+            ncpart = []
 
             if _term is not S.One:
                 for factor in Mul.make_args(_term):
@@ -1247,7 +1249,7 @@ class Expr(Basic, EvalfMixin):
                     if factor.is_commutative:
                         base, exp = decompose_power(factor)
 
-                        cpart[base] = exp
+                        cpart[base] = cpart.get(base, 0) + exp
                         gens_set.add(base)
                     else:
                         ncpart.append(factor)
@@ -3648,10 +3650,7 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
-        # XXX: Hack to support non-Basic args
-        #              |
-        #              V
-        if deep and getattr(expr, 'args', ()) and not expr.is_Atom:
+        if deep and expr.args and not expr.is_Atom:
             sargs = []
             for arg in expr.args:
                 arg, arghit = Expr._expand_hint(arg, hint, **hints)
@@ -3902,12 +3901,21 @@ class Expr(Basic, EvalfMixin):
                     'Expected a number but got %s:' % func_name(x))
         elif x in _illegal:
             return x
-        if not (xr := x.is_extended_real):
-            r, i = x.as_real_imag()
-            if xr is False:
-                return r.round(n) + S.ImaginaryUnit*i.round(n)
-            if i.equals(0):
-                return r.round(n)
+        xr = x.is_extended_real
+        if xr is True:
+            return x._round_real(n)
+        if xr is None:
+            try:
+                return x._round_real(n)
+            except TypeError:
+                pass
+
+        r, i = x.as_real_imag()
+        return r._round_real(n) + S.ImaginaryUnit*i._round_real(n)
+
+    def _round_real(self, n=None):
+        x = self
+
         if not x:
             return S.Zero if n is None else x
 
@@ -3985,7 +3993,7 @@ class Expr(Basic, EvalfMixin):
         xi = Integer(xf)
         # use the last digit to select the value of xi
         # nearest to x before rounding at the desired digit
-        sign = 1 if x > 0 else -1
+        sign = 1 if xf > 0 else -1
         dif2 = sign*(xf - xi).n(extra)
         if dif2 < 0:
             raise NotImplementedError(
@@ -4012,10 +4020,6 @@ class Expr(Basic, EvalfMixin):
             return Float(rv, allow)
 
     __round__ = round
-
-    def _eval_derivative_matrix_lines(self, x):
-        from sympy.matrices.expressions.matexpr import _LeftRightArgs
-        return [_LeftRightArgs([S.One, S.One], higher=self._eval_derivative(x))]
 
 
 class AtomicExpr(Atom, Expr):
@@ -4195,7 +4199,7 @@ class ExprBuilder:
     def append_argument(self, arg, check=True):
         self.args.append(arg)
         if self.validator and check:
-            self.validate(*self.args)
+            self.validate()
 
     def __getitem__(self, item):
         if item == 0:
@@ -4209,7 +4213,7 @@ class ExprBuilder:
     def search_element(self, elem):
         for i, arg in enumerate(self.args):
             if isinstance(arg, ExprBuilder):
-                ret = arg.search_index(elem)
+                ret = arg.search_element(elem)
                 if ret is not None:
                     return (i,) + ret
             elif id(arg) == id(elem):

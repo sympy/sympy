@@ -1,4 +1,5 @@
 from __future__ import annotations
+from itertools import pairwise
 from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
 from sympy.core.symbol import Str
 from sympy.sets import Set, FiniteSet, EmptySet
@@ -301,7 +302,7 @@ class CompositeMorphism(Morphism):
 
         normalised_components = Tuple()
 
-        for current, following in zip(components, components[1:]):
+        for current, following in pairwise(components):
             if not isinstance(current, Morphism) or \
                     not isinstance(following, Morphism):
                 raise TypeError("All components must be morphisms.")

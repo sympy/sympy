@@ -5,7 +5,7 @@ from sympy.testing.pytest import raises
 from sympy.core.expr import unchanged
 from sympy.core import symbols, S
 from sympy.matrices import Identity, MatrixSymbol, ImmutableMatrix, ZeroMatrix, OneMatrix, Matrix
-from sympy.matrices.exceptions import NonSquareMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError, NonSquareMatrixError
 from sympy.matrices.expressions import MatPow, MatAdd, MatMul
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matexpr import MatrixElement
@@ -91,6 +91,24 @@ def test_doit_symbol():
         assert MatPow(C, r).doit() == MatPow(C, r)
 
 
+def test_doit_MatMul_scalar_power():
+    a = symbols('a')
+    p = symbols('p')
+    pos = symbols('pos', positive=True)
+
+    assert MatPow(a*C, 2).doit() == a**2*C**2
+    assert (a*C)**2 == a**2*C**2
+    assert (a*C*D)**2 == a**2*(C*D)**2
+    assert (a*C*D)**-2 == a**-2*(C*D)**-2
+
+    assert MatPow(pos*C, S.Half).doit() == pos**S.Half*C**S.Half
+    assert (pos*C*D)**S.Half == pos**S.Half*(C*D)**S.Half
+
+    assert MatPow(a*C, S.Half).doit() == MatPow(a*C, S.Half)
+    assert (a*C)**p == MatPow(a*C, p)
+    assert (pos*C)**p == MatPow(pos*C, p)
+
+
 def test_doit_matrix():
     X = ImmutableMatrix([[1, 2], [3, 4]])
     assert MatPow(X, 0).doit() == ImmutableMatrix(Identity(2))
@@ -150,6 +168,7 @@ def test_zero_power():
     assert MatPow(z2, 2).doit() == z2
     assert MatPow(z2, 0).doit() == Identity(4)
     raises(ValueError, lambda:MatPow(z2, -1).doit())
+    raises(NonInvertibleMatrixError, lambda: MatMul(0, C)**-1)
 
 
 def test_OneMatrix_power():
@@ -216,3 +235,29 @@ def test_no_exponentiation():
     # if this passes, Pow.as_numer_denom should recognize
     # MatAdd as exponent
     raises(NotImplementedError, lambda: 3**(-2*C))
+
+
+def test_adjoint_conjugate_power():
+    from sympy import I, conjugate
+    from sympy.matrices.expressions.adjoint import Adjoint
+
+    X = MatrixSymbol('X', n, n)
+    p = symbols('p', integer=True, nonnegative=True)
+    z = symbols('z')
+
+    # Nonnegative integer powers evaluate cleanly
+    assert Adjoint(X**2).doit() == Adjoint(X)**2
+    assert (X**2).adjoint() == Adjoint(X)**2
+    assert (X**0).adjoint() == Identity(n)
+    assert (X**p).adjoint() == Adjoint(X)**p
+    assert (X**2).conjugate() == Adjoint(X.T)**2
+    assert (X**0).conjugate() == Identity(n)
+    assert (X**p).conjugate() == Adjoint(X.T)**p
+
+    # Negative integer, complex, and generic powers remain unevaluated
+    assert (X**(-2)).adjoint() == conjugate(X.T**(-2))
+    assert (X**(-2)).conjugate() == conjugate(X**(-2))
+    assert (X**I).adjoint() == conjugate(X.T**I)
+    assert (X**I).conjugate() == conjugate(X**I)
+    assert (X**z).adjoint() == conjugate(X.T**z)
+    assert (X**z).conjugate() == conjugate(X**z)

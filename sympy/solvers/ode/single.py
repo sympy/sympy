@@ -979,7 +979,7 @@ class RationalRiccati(SinglePatternODESolver):
     >>> eq = -x**4*f(x)**2 + x**3*f(x).diff(x) + x**2*f(x) + 20
     >>> sol = dsolve(eq, hint="1st_rational_riccati")
     >>> sol
-    Eq(f(x), (4*C1 - 5*x**9 - 4)/(x**2*(C1 + x**9 - 1)))
+    Eq(f(x), (4*C1 - 5*x**9)/(x**2*(C1 + x**9)))
     >>> checkodesol(eq, sol)
     (True, 0)
 

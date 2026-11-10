@@ -11,7 +11,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.logic.boolalg import (false, true)
 from sympy.matrices.kind import MatrixKind
 from sympy.matrices.dense import Matrix
@@ -69,6 +69,47 @@ def test_imageset():
         Add(x, y), Interval(1, 2), Interval(2, 3)).dummy_eq(
         ImageSet(Lambda((x1, x2), x1 + x2),
         Interval(1, 2), Interval(2, 3)))
+
+
+def test_imageset_interval_critical_points():
+    # Solve only for critical points in the interval, not on all of C.
+    assert imageset(Lambda(x, sin(x)), Interval(1, 2)) == \
+        Interval(sin(1), 1)
+    assert imageset(Lambda(x, cos(x)), Interval(1, 2)) == \
+        Interval(cos(2), cos(1))
+    assert imageset(sin, Interval(0, 2*pi)) == Interval(-1, 1)
+    assert imageset(Lambda(x, sin(x)), Interval(-2, 1)) == \
+        Interval(-1, sin(1))
+
+
+def test_imageset_interval_open_extrema():
+    # The limit at an excluded endpoint need not be in the image.
+    f = Lambda(x, 2 - (x - 1)**2)
+    assert imageset(f, Interval.open(0, 2)) == Interval.Lopen(1, 2)
+    f = Lambda(x, (x - 1)**2)
+    assert imageset(f, Interval.open(0, 2)) == Interval.Ropen(0, 1)
+    assert imageset(Lambda(x, x**2), Interval.open(1, 2)) == \
+        Interval.open(1, 4)
+    assert imageset(Lambda(x, x**2), Interval.open(-1, 1)) == \
+        Interval.Ropen(0, 1)
+    # A value reached at the other, included endpoint must remain included.
+    assert imageset(Lambda(x, x**2), Interval.Ropen(-1, 1)) == \
+        Interval(0, 1)
+    assert imageset(Lambda(x, sin(x)), Interval.Lopen(0, pi)) == \
+        Interval(0, 1)
+    assert imageset(Lambda(x, sin(x)), Interval.open(0, pi)) == \
+        Interval.Lopen(0, 1)
+
+def test_imageset_infinite_singularities():
+    # Issue 29675: do not enumerate periodic singularities on all reals.
+    for func in (tan, cot):
+        f = Lambda(x, func(x))
+        assert imageset(f, S.Reals) == ImageSet(f, S.Reals)
+
+    # Empty and finite singularity sets must still be evaluated.
+    assert imageset(Lambda(x, x**2), Interval(0, 2)) == Interval(0, 4)
+    assert imageset(Lambda(x, 1/(x - 1)), Interval(0, 2)) == \
+        Union(Interval(-oo, -1), Interval(1, oo))
 
 
 def test_is_empty():
@@ -766,7 +807,9 @@ def test_is_subset():
 
     assert FiniteSet(x).is_subset(FiniteSet(y)) is None
     assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x)) is True
-    assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is False
+    assert FiniteSet(x).is_subset(FiniteSet(y).subs(y, x+1)) is None
+    xr, yr = symbols('xr yr', real=True)
+    assert FiniteSet(xr).is_subset(FiniteSet(yr).subs(yr, xr+1)) is False
 
     assert Interval(0, 1).is_subset(Interval(0, 1, left_open=True)) is False
     assert Interval(-2, 3).is_subset(Union(Interval(-oo, -2), Interval(3, oo))) is False
@@ -844,7 +887,10 @@ def test_contains():
     raises(TypeError, lambda: x in FiniteSet(y))
     assert FiniteSet({x, y})._contains({x}) == Eq({x, y}, {x}, evaluate=False)
     assert FiniteSet({x, y}).subs(y, x)._contains({x}) is S.true
-    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is S.false
+    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) == \
+        Eq({x, x + 1}, {x}, evaluate=False)
+    xr, yr = symbols('xr yr', real=True)
+    assert FiniteSet({xr, yr}).subs(yr, xr+1)._contains({xr}) is S.false
 
     # issue 8197
     from sympy.abc import a, b
@@ -1306,8 +1352,12 @@ def test_Eq():
     assert unchanged(Eq, FiniteSet({x, y}), FiniteSet({x}))
     assert Eq(FiniteSet({x, y}).subs(y, x), FiniteSet({x})) is S.true
     assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x) is S.true
-    assert Eq(FiniteSet({x, y}).subs(y, x+1), FiniteSet({x})) is S.false
-    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) is S.false
+    assert unchanged(Eq, FiniteSet({x, y}).subs(y, x+1), FiniteSet({x}))
+    assert Eq(FiniteSet({x, y}), FiniteSet({x})).subs(y, x+1) == \
+        Eq(FiniteSet({x, x + 1}), FiniteSet({x}), evaluate=False)
+    xr, yr = symbols('xr yr', real=True)
+    assert Eq(FiniteSet({xr, yr}).subs(yr, xr+1), FiniteSet({xr})) is S.false
+    assert Eq(FiniteSet({xr, yr}), FiniteSet({xr})).subs(yr, xr+1) is S.false
 
     assert Eq(ProductSet({1}, {2}), Interval(1, 2)) is S.false
     assert Eq(ProductSet({1}), ProductSet({1}, {2})) is S.false
@@ -1426,10 +1476,15 @@ def test_issue_9447():
 def test_issue_10337():
     assert (FiniteSet(2) == 3) is False
     assert (FiniteSet(2) != 3) is True
-    raises(TypeError, lambda: FiniteSet(2) < 3)
-    raises(TypeError, lambda: FiniteSet(2) <= 3)
-    raises(TypeError, lambda: FiniteSet(2) > 3)
-    raises(TypeError, lambda: FiniteSet(2) >= 3)
+    for other in (3, x):
+        raises(TypeError, lambda: FiniteSet(2) < other)
+        raises(TypeError, lambda: FiniteSet(2) <= other)
+        raises(TypeError, lambda: FiniteSet(2) > other)
+        raises(TypeError, lambda: FiniteSet(2) >= other)
+        raises(TypeError, lambda: other < FiniteSet(2))
+        raises(TypeError, lambda: other <= FiniteSet(2))
+        raises(TypeError, lambda: other > FiniteSet(2))
+        raises(TypeError, lambda: other >= FiniteSet(2))
 
 
 def test_issue_10326():

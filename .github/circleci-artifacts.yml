@@ -1,0 +1,3 @@
+artifact-path: 0/doc/_build/html/index.html
+circleci-jobs: Build Docs Preview
+job-title: Click here to see a preview of the documentation.

@@ -32,11 +32,11 @@ git_whitelist = {
     # CI
     '.github/PULL_REQUEST_TEMPLATE.md',
     '.github/CODEOWNERS',
+    '.github/circleci-artifacts.yml',
     '.github/dependabot.yml',
     '.github/workflows/runtests.yml',
     '.github/workflows/emscripten.yml',
     '.github/workflows/release.yml',
-    '.github/workflows/docs-preview.yml',
     '.github/workflows/checkconflict.yml',
     '.github/workflows/nightly-wheels.yml',
     '.github/workflows/zizmor.yml',
@@ -47,7 +47,6 @@ git_whitelist = {
     '.ci/README.rst',
     '.circleci/config.yml',
     '.editorconfig',
-    '.flake8',
     'asv.conf.actions.json',
     'codecov.yml',
     'requirements-dev.txt',
@@ -55,6 +54,9 @@ git_whitelist = {
     'banner.svg',
     # GitHub Codespace
     '.devcontainer/devcontainer.json',
+    # Coding agent instructions
+    'AGENTS.md',
+    'CLAUDE.md',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide
@@ -79,6 +81,7 @@ git_whitelist = {
     'bin/test',
     'bin/test_external_imports.py',
     'bin/test_executable.py',
+    'bin/test_encoding.py',
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',
@@ -88,6 +91,7 @@ git_whitelist = {
     'bin/test_optional_dependencies.py',
     'bin/test_sphinx.sh',
     'bin/mailmap_check.py',
+    'bin/slotscheck',
     'bin/test_symengine.py',
     'bin/test_tensorflow.py',
     'bin/test_pytorch.py',
@@ -120,11 +124,11 @@ tarball_whitelist = {
     'sympy.egg-info/SOURCES.txt',
     'sympy.egg-info/dependency_links.txt',
     'sympy.egg-info/requires.txt',
+    'sympy.egg-info/scm_file_list.json',
+    'sympy.egg-info/scm_version.json',
     'sympy.egg-info/top_level.txt',
     'sympy.egg-info/not-zip-safe',
     'sympy.egg-info/entry_points.txt',
-    # Not sure where this is generated from...
-    'doc/commit_hash.txt',
     }
 
 

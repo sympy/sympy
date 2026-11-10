@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import pytest
+
 from sympy.core import (
     Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
     Expr, I, nan, pi, symbols, oo, zoo, N)
@@ -195,6 +198,9 @@ def test_issue_4362():
     assert ((1 + x/y)**i).as_numer_denom() == ((x + y)**i, y**i)
 
 
+@pytest.mark.thread_unsafe(
+    reason="expects warning side effects from cached constructors"
+)
 def test_Pow_Expr_args():
     bases = [Basic(), Poly(x, x), FiniteSet(x)]
     for base in bases:
@@ -288,6 +294,15 @@ def test_pow_as_base_exp():
     assert p.base, p.exp == (S(2)/3, x)
     # issue 8344:
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
+    # For a Pow, as_base_exp returns the stored arguments, without
+    # changing a reciprocal rational base into a negative exponent.
+    for base, exponent in [
+        (S.Half, x), (S.Half, -x), (S(2)/3, x),
+        (S(3)/2, -x), (S.Half, S(2)),
+    ]:
+        p = Pow(base, exponent, evaluate=False)
+        assert p.as_base_exp() == p.args == (base, exponent)
+        assert Pow(*p.as_base_exp(), evaluate=False) == p
 
 
 def test_nseries():

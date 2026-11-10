@@ -930,9 +930,7 @@ class log(DefinedFunction):
 
     def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_zero:
-            return False
-        return arg.is_finite
+        return fuzzy_and([arg.is_finite, fuzzy_not(arg.is_zero)])
 
     def _eval_is_extended_positive(self):
         return (self.args[0] - 1).is_extended_positive

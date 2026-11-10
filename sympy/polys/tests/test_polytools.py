@@ -82,7 +82,7 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.testing.pytest import (
-    raises, warns_deprecated_sympy, warns, tooslow, XFAIL
+    raises, warns_deprecated_sympy, warns, slow, tooslow
 )
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
@@ -323,7 +323,6 @@ def test_Poly_rootof_extension_primitive_element():
     assert Poly(r1*y + r2, y, extension=True) == Poly(r1*y + r2, y, domain=K12)
 
 
-@XFAIL
 def test_Poly_rootof_same_symbol_issue_26808():
     # XXX: This fails because r1 contains x.
     r1 = rootof(x**3 + x + 3, 0)
@@ -644,11 +643,11 @@ def test_Poly__eq__():
 
 def test_PurePoly__eq__():
     assert (PurePoly(x, x) == PurePoly(x, x)) is True
-    assert (PurePoly(x, x, domain=QQ) == PurePoly(x, x)) is True
-    assert (PurePoly(x, x) == PurePoly(x, x, domain=QQ)) is True
+    assert (PurePoly(x, x, domain=QQ) == PurePoly(x, x)) is False
+    assert (PurePoly(x, x) == PurePoly(x, x, domain=QQ)) is False
 
-    assert (PurePoly(x, x, domain=ZZ[a]) == PurePoly(x, x)) is True
-    assert (PurePoly(x, x) == PurePoly(x, x, domain=ZZ[a])) is True
+    assert (PurePoly(x, x, domain=ZZ[a]) == PurePoly(x, x)) is False
+    assert (PurePoly(x, x) == PurePoly(x, x, domain=ZZ[a])) is False
 
     assert (PurePoly(x*y, x, y) == PurePoly(x, x)) is False
 
@@ -661,8 +660,8 @@ def test_PurePoly__eq__():
     f = PurePoly(x, x, domain=ZZ)
     g = PurePoly(x, x, domain=QQ)
 
-    assert f.eq(g) is True
-    assert f.ne(g) is False
+    assert f.eq(g) is False
+    assert f.ne(g) is True
 
     assert f.eq(g, strict=True) is False
     assert f.ne(g, strict=True) is True
@@ -670,8 +669,8 @@ def test_PurePoly__eq__():
     f = PurePoly(x, x, domain=ZZ)
     g = PurePoly(y, y, domain=QQ)
 
-    assert f.eq(g) is True
-    assert f.ne(g) is False
+    assert f.eq(g) is False
+    assert f.ne(g) is True
 
     assert f.eq(g, strict=True) is False
     assert f.ne(g, strict=True) is True
@@ -738,6 +737,12 @@ def test_Poly_sub_ground():
 
 def test_Poly_mul_ground():
     assert Poly(x + 1).mul_ground(2) == Poly(2*x + 2)
+
+
+def test_Poly_rep_mul_zero_is_zero():
+    # issue 29715
+    p = Poly(x**4 + y, x, y)
+    assert (p.rep * 0).is_zero is True
 
 
 def test_Poly_quo_ground():
@@ -1505,7 +1510,11 @@ def test_Poly_nth():
     assert Poly(3*x*y**2 + 1, x, y).nth(0, 0) == 1
     assert Poly(3*x*y**2 + 1, x, y).nth(1, 2) == 3
 
+    # wrong length
     raises(ValueError, lambda: Poly(x*y + 1, x, y).nth(1))
+    # wrong type -- must be int
+    raises(TypeError, lambda: Poly(x, x).nth(.5))
+    raises(TypeError, lambda: Poly(x, x).nth(S.One))
 
 
 def test_Poly_LM():
@@ -1614,6 +1623,7 @@ def test_Poly_rat_clear_denoms():
     assert f.rat_clear_denoms(g) == (f, g)
 
 
+@slow
 def test_issue_20427():
     f = Poly(-117968192370600*18**(S(1)/3)/(217603955769048*(24201 +
         253*sqrt(9165))**(S(1)/3) + 2273005839412*sqrt(9165)*(24201 +
@@ -1662,6 +1672,10 @@ def test_Poly_diff():
 
     assert Poly(x**2*y**2 + x*y).diff(x, y) == Poly(4*x*y + 1)
     assert Poly(x**2*y**2 + x*y).diff(y, x) == Poly(4*x*y + 1)
+
+    p = Poly(x**7*y**5 + 2*x**7*y**4 + x**2, x, y, z, modulus=7)
+    assert p.diff() == Poly(2*x, x, y, z, modulus=7)
+    assert p.diff().gcd(p) == Poly(x, x, y, z, modulus=7)
 
 
 def test_issue_9585():
@@ -2332,6 +2346,13 @@ def test_gcd():
     assert pfz.lcm(pfz) == pfz
     assert pfq.gcd(pfq) == pfq.monic()
     assert pfq.lcm(pfq) == pfq.monic()
+
+    pzz = Poly(0, x, domain=ZZ)
+    pqz = Poly(0, x, domain=QQ)
+    assert pzz.lcm(pzz) == pzz
+    assert pqz.lcm(pqz) == pqz
+    assert pzz.lcm(pfz) == pzz
+    assert pfq.lcm(pqz) == pqz
     assert gcd(f, f) == f
     assert lcm(f, f) == f
     assert gcd(f, f, domain=QQ) == monic(f)
@@ -3925,6 +3946,10 @@ def test_poly():
     expr2 = y*(y+1) + S(1)/3
     assert poly(expr2).as_expr() == expr2.expand()
 
+    # https://github.com/sympy/sympy/issues/25341
+    num = 2*x**2 - x*(x + 1) - (x + 1)**2/4
+    assert poly(num, x).as_expr() == num.expand()
+
 
 def test_keep_coeff():
     u = Mul(2, x + 1, evaluate=False)
@@ -4155,7 +4180,7 @@ def test_hurwitz_conditions():
     p5_ = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s, domain = EXRAW)
 
     assert p5.hurwitz_conditions() == [-1]
-    assert p5_.hurwitz_conditions() == [1, 0, 1, 1, b3**2]
+    assert p5_.hurwitz_conditions() == [1, -1]
 
     p6 = Poly(b0 * s**2 + b1**2 * s + b2, s)
     p6_ = Poly(b0 * s**2 + b1**2 * s + b2, s, domain = EXRAW)
@@ -4236,7 +4261,7 @@ def test_hurwitz_conditions():
 
     p14 = Poly(x**2 + 1/y, x)
     assert 0 in p14.hurwitz_conditions()
-    assert 0 in p14.set_domain(EXRAW).hurwitz_conditions()
+    assert p14.set_domain(EXRAW).hurwitz_conditions() == [-1]
 
 
 def test_schur_conditions():
@@ -4298,3 +4323,135 @@ def test_schur_conditions():
 
     assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
     assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())
+
+
+def test_groebner_reduce_scalar():
+
+    # test for issue https://github.com/sympy/sympy/issues/29828
+    B = groebner([t**2], t, order="lex")
+    assert B.reduce(7) == ([0], 7)
+    assert B.reduce(Integer(7)) == ([0], Integer(7))
+
+
+def test_PurePoly_canonical_generator_structure():
+    from sympy.core.cache import clear_cache
+    from sympy.polys.domains import ZZ, QQ
+
+    clear_cache()
+    p = PurePoly(x**2 + 1, x)
+    q = PurePoly(y**2 + 1, y)
+    assert p == q
+    assert p.args == q.args
+    assert p.subs(x, z) == p
+    assert q.subs(x, z) == q
+    assert p.has_free(p.gen) is False
+    assert p.has_free(x) is False
+
+    placeholder = Symbol('_0')
+    r = PurePoly(x**2 + placeholder, x)
+    assert r.gen != placeholder
+    assert r.has_free(r.gen) is False
+    assert r.has_free(placeholder) is True
+    assert r.func(*r.args) == r
+
+    # Basic reconstruction must preserve the exact coefficient domain.
+    for domain in (ZZ, QQ, EXRAW, ZZ[y]):
+        p = PurePoly(x**2 + 1, x, domain=domain)
+        assert p.func(*p.args) == p
+        assert p.func(*p.args).domain == domain
+    p = PurePoly(x*y + 1, x, y, domain=QQ)
+    assert p.func(*p.args) == p
+
+    assert PurePoly(x**2 + 1, x, domain=ZZ) != PurePoly(
+        x**2 + 1, x, domain=QQ)
+    assert PurePoly(x**2 + 1, x) != Poly(x**2 + 1, x)
+
+
+
+def test_PurePoly_dummy_eq():
+    pp = PurePoly(x**2 + 1, x)
+    assert pp != Poly(y**2 + 1, y)
+    assert pp.dummy_eq(Poly(y**2 + 1, y))
+    assert pp.dummy_eq(PurePoly(y**2 + 1, y))
+    assert not pp.dummy_eq(Poly(y**2 + 2, y))
+    assert not pp.dummy_eq(Poly(y**2 + 1, y, domain=QQ))
+    assert not pp.dummy_eq(Poly(y**2 + 1, y, z))
+    assert not pp.dummy_eq(x**2 + 1)
+
+    pm = PurePoly(x*y + x + 1, x, y)
+    assert pm.dummy_eq(Poly(a*b + a + 1, a, b))
+    assert not pm.dummy_eq(Poly(a*b + b + 1, a, b))
+
+
+
+def test_PurePoly_canonical_instantiation_and_coefficients():
+    p = PurePoly(x*y + x + 1, x, y)
+    assert p.as_poly(a, b) == Poly(a*b + a + 1, a, b)
+    assert p.as_poly(a, b, domain=QQ) == Poly(a*b + a + 1, a, b, domain=QQ)
+    raises(GeneratorsError, lambda: p.as_poly(a))
+    raises(AttributeError, lambda: p.as_poly('a', b))
+    assert p('a', 'b') == a*b + a + 1
+    assert p(a, b) == a*b + a + 1
+    assert p(2, 3) == 9
+    raises(ValueError, lambda: p(1, 2, 3))
+    assert p() == p
+    assert p(a) == PurePoly(a*y + a + 1, y)
+    assert p(2) == PurePoly(2*y + 3, y)
+    assert p(a)(b) == a*b + a + 1
+    assert p(Symbol('_1')) == PurePoly(
+        Symbol('_1')*y + Symbol('_1') + 1, y)
+    assert p(Symbol('_1'), Symbol('_0')) == (
+        Symbol('_0')*Symbol('_1') + Symbol('_1') + 1)
+    assert PurePoly(x**2 - x - 6, x)('lamda') == (
+        Symbol('lamda')**2 - Symbol('lamda') - 6)
+    assert PurePoly(x**2 + 1, x)('2') == 5
+    assert PurePoly(x**2 + 1, x)('pi') == pi**2 + 1
+    q = PurePoly(x**2 + y, x)
+    assert q.subs(x, z) == q
+    assert q.subs(y, z) == PurePoly(x**2 + z, x)
+
+
+def test_PurePoly_call_rootof_zero():
+    r = rootof(x**5 - x + 1, 0)
+
+    # A defining polynomial or any polynomial multiple vanishes at r.
+    p = PurePoly(x**5 - x + 1, x)
+    assert p(r) is S.Zero
+    assert PurePoly((x + 2)*(x**5 - x + 1), x)(r) is S.Zero
+    assert PurePoly([1, 0, 0, 0, -1, 1])(r) is S.Zero
+    assert PurePoly(y*(x**5 - x + 1), x)(r) is S.Zero
+
+    # A different polynomial is not silently reduced to zero.
+    q = PurePoly(x**5 - x + 2, x)
+    assert q(r) != 0
+    assert PurePoly(x**2 + 1, x)(r) == r**2 + 1
+
+    # Polynomial generators remain bound, and partial evaluation is
+    # unaffected. Multivariate input does not trigger root recognition.
+    assert p.subs(x, r) == p
+    m = PurePoly(x*y + 1, x, y)
+    assert m(r) == PurePoly(r*y + 1, y)
+
+
+def test_PurePoly_without_generator_from_coefficients():
+    # A coefficient sequence specifies a univariate PurePoly without
+    # requiring a generator name that would subsequently be discarded.
+    p = PurePoly([1, 0, 1])
+    assert p == PurePoly(x**2 + 1, x)
+    assert p(x) == x**2 + 1
+    assert p(y) == y**2 + 1
+    assert PurePoly((1, 0)) == PurePoly(x, x)
+    assert PurePoly([1]) == PurePoly(1, x)
+    assert PurePoly([]) == PurePoly(0, x)
+    assert PurePoly([x, 1]) == PurePoly(x*y + 1, y)
+    assert PurePoly([1, 0], domain=QQ) == PurePoly(x, x, domain=QQ)
+
+    # DMP already records the number of generators.
+    rep = Poly(x*y + 1, x, y).rep
+    assert PurePoly.new(rep) == PurePoly(x*y + 1, x, y)
+    assert PurePoly.new(rep, x, y) == PurePoly.new(rep)
+    raises(PolynomialError, lambda: PurePoly.new(x))
+    raises(PolynomialError, lambda: PurePoly.new(rep, x))
+
+    # Poly continues to require an explicit generator for coefficient lists.
+    raises(GeneratorsNeeded, lambda: Poly([1, 0]))

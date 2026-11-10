@@ -17,7 +17,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 
 def test_Abs():
@@ -28,6 +28,11 @@ def test_Abs():
 
     assert refine(Abs(x**2)) != x**2
     assert refine(Abs(x**2), Q.real(x)) == x**2
+
+    assert refine(Abs(z)**2, Q.real(z)) == z**2
+    assert refine(Abs(z)**2, Q.imaginary(z)) == -z**2
+    assert refine(Abs(z)**4, Q.imaginary(z)) == z**4
+    assert refine(Abs(z)**6, Q.imaginary(z)) == -z**6
 
 
 def test_pow1():
@@ -78,6 +83,22 @@ def test_exp():
     assert refine(exp(pi*I*2*(x + Rational(1, 4)))) == I
     assert refine(exp(pi*I*2*(x + Rational(3, 4)))) == -I
 
+    x = Symbol('x')
+    assert refine(exp(pi*I*2*x), Q.integer(x)) == 1
+    assert refine(exp(pi*I*x), Q.even(x)) == 1
+    assert refine(exp(pi*I*2*(x + S.Half)), Q.integer(x)) == -1
+    assert refine(exp(pi*I*x), Q.odd(x)) == -1
+    assert refine(exp(pi*I*2*(x + Rational(1, 4))), Q.integer(x)) == I
+    assert refine(exp(pi*I*2*(x + Rational(3, 4))), Q.integer(x)) == -I
+
+    assert refine(exp(pi*I*(x + Rational(1, 2))), Q.even(x)) == I
+    assert refine(exp(pi*I*(x + Rational(1, 2))), Q.odd(x)) == -I
+    assert refine(exp(pi*I*(x + Rational(3, 2))), Q.odd(x)) == I
+    assert refine(exp(pi*I*(x + Rational(1, 2))), Q.integer(x)) == I*(-1)**x
+
+    assert refine(exp(2*pi*I*(x + y + Rational(1, 4))),
+        Q.integer(x) & Q.integer(y)) == I
+    assert refine(exp(pi*I*x), Q.integer(x)) == (-1)**x
 
 def test_Piecewise():
     assert refine(Piecewise((1, x < 0), (3, True)), (x < 0)) == 1
@@ -233,6 +254,7 @@ def test_matrixelement():
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
 
 
+@slow
 def test_sin_cos():
     n = Symbol('n')
     assert refine(cos(n*pi/2), Q.odd(n)) == 0

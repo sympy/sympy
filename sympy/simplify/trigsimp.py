@@ -180,7 +180,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     # or tan(n*x), with n an integer. Suppose first there are no tan terms.
     # The ideal [sin(x)**2 + cos(x)**2 - 1] is geometrically prime, since
     # X**2 + Y**2 - 1 is irreducible over CC.
-    # Now, if we have a generator sin(n*x), than we can, using trig identities,
+    # Now, if we have a generator sin(n*x), then we can, using trig identities,
     # express sin(n*x) as a polynomial in sin(x) and cos(x). We can add this
     # relation to the ideal, preserving geometric primality, since the quotient
     # ring is unchanged.
@@ -286,7 +286,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         res = [] # the ideal
 
         for key, val in trigdict.items():
-            # We have now assembeled a dictionary. Its keys are common
+            # We have now assembled a dictionary. Its keys are common
             # arguments in trigonometric expressions, and values are lists of
             # pairs (fn, coeff). x0, (fn, coeff) in trigdict means that we
             # need to deal with fn(coeff*x0). We take the rational gcd of the
@@ -464,6 +464,15 @@ def _trigsimp_inverse(rv):
 def trigsimp(expr, inverse=False, **opts):
     """Returns a reduced expression by using known trig identities.
 
+    While ``trigsimp`` primarily simplifies trigonometric and hyperbolic
+    expressions, it also performs general algebraic simplifications on
+    non-trigonometric parts. This can lead to broader simplification
+    beyond just trigonometric identities, including factoring and term
+    cancellation, which may make its output resemble ``simplify``.
+
+    For targeted trigonometric simplifications that leave other algebraic
+    components untouched, consider using :func:`~sympy.simplify.fu.fu`.
+
     Parameters
     ==========
 
@@ -472,7 +481,6 @@ def trigsimp(expr, inverse=False, **opts):
         functions, such as sin and asin, can be cancelled in any order.
         For example, ``asin(sin(x))`` will yield ``x`` without checking whether
         x belongs to the set where this relation is true. The default is False.
-        Default : True
 
     method : string, optional
         Specifies the method to use. Valid choices are:
@@ -486,11 +494,10 @@ def trigsimp(expr, inverse=False, **opts):
         If ``'matching'``, simplify the expression recursively by targeting
         common patterns. If ``'groebner'``, apply an experimental groebner
         basis algorithm. In this case further options are forwarded to
-        ``trigsimp_groebner``, please refer to
-        its docstring. If ``'combined'``, it first runs the groebner basis
-        algorithm with small default parameters, then runs the ``'matching'``
-        algorithm. If ``'fu'``, run the collection of trigonometric
-        transformations described by Fu, et al. (see the
+        ``trigsimp_groebner``, please refer to its docstring. If ``'combined'``,
+        it first runs the groebner basis algorithm with small default parameters,
+        then runs the ``'matching'`` algorithm. If ``'fu'``, run the collection
+        of trigonometric transformations described by Fu, et al. (see the
         :py:func:`~sympy.simplify.fu.fu` docstring). If ``'old'``, the original
         SymPy trig simplification function is run.
     opts :
@@ -500,7 +507,7 @@ def trigsimp(expr, inverse=False, **opts):
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log
+    >>> from sympy import trigsimp, sin, cos, cot, log, Symbol, cancel
     >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
@@ -511,18 +518,48 @@ def trigsimp(expr, inverse=False, **opts):
     >>> trigsimp(log(e))
     log(2)
 
+    ``trigsimp`` purposely avoids modifying terms or factors that are
+    independent of trigonometric functions:
+
+    >>> expr = x*(x - 1/x) - x**2 + cos(x)**2 + sin(x)**2
+    >>> trigsimp(expr)
+    -x**2 + x*(x - 1/x) + 1
+    >>> trigsimp(expr.expand())
+    0
+
+    ``trigsimp`` does not perform general rational simplification. If rational
+    simplification is desired, it can be applied separately before simplifying
+    trigonometric expressions.
+
+    >>> e = 1/(sin(x)*cos(x)) - cot(x)
+    >>> trigsimp(e)
+    -cot(x) + 2/sin(2*x)
+    >>> trigsimp(cancel(e))
+    tan(x)
+
+    For a specific trigonometric transformation, such as simplifying
+    ``sin(x)**2 + cos(x)**2`` to ``1`` without changing ``sin(x)/cos(x)``,
+    functions from the ``sympy.simplify.fu`` module can be used:
+
+    >>> from sympy.simplify.fu import TR5
+    >>> TR5(sin(x)**2 + cos(x)**2 + sin(x)/cos(x))
+    sin(x)/cos(x) + 1
+
     Using ``method='groebner'`` (or ``method='combined'``) might lead to
     greater simplification.
 
     The old trigsimp routine can be accessed as with method ``method='old'``.
 
-    >>> from sympy import coth, tanh
-    >>> t = 3*tanh(x)**7 - 2/coth(x)**7
-    >>> trigsimp(t, method='old') == t
-    True
+    >>> t = 1/cot(x)**2
+    >>> trigsimp(t, method='old')
+    cot(x)**(-2)
     >>> trigsimp(t)
-    tanh(x)**7
+    tan(x)**2
 
+    See Also
+    ========
+
+    sympy.simplify.fu.fu: pure trigonometric transformations.
     """
     from sympy.simplify.fu import fu
 
@@ -562,7 +599,12 @@ def trigsimp(expr, inverse=False, **opts):
         'old': lambda x: trigsimp_old(x, **opts),
                    }[method]
 
+    # XXX: keep transformations here specific to trig simplification.
+    # General algebraic transformations such as cancel(expr) may expose
+    # further trig simplifications, but belong in simplify since they can
+    # also modify unrelated parts of expr.
     expr_simplified = trigsimpfunc(expr)
+
     if inverse:
         expr_simplified = _trigsimp_inverse(expr_simplified)
 
@@ -591,13 +633,14 @@ def exptrigsimp(expr):
         # functions
         choices = [e]
         if e.has(*_trigs):
-            op = e.rewrite(exp)
+            op = e.rewrite(_trigs, exp)
             # if e is an Add, we can try to factor it
             # helps with expressions with leading factors
             if e.is_Add:
                 choices.append(factor_terms(op))
             else:
                 choices.append(op)
+            choices.append(e.rewrite(sin))
         choices.append(e.rewrite(cos))
         return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)
@@ -1131,10 +1174,36 @@ def __trigsimp(expr, deep=False):
 #------------------- end of old trigsimp routines --------------------
 
 
+def _split_add(e, func):
+    """Separate terms unrelated to a function class from an Add."""
+    terms = [a for a in e.args if a.has(func)]
+    coeffs = [a.as_independent(func)[0] for a in terms]
+    func_symbols = set().union(*(
+        f.args[0].free_symbols for a in terms for f in a.atoms(func)))
+    independent, active = [], []
+
+    def related_exp(a):
+        for f in a.atoms(exp):
+            arg = f.args[0]
+            if (arg.free_symbols & func_symbols and
+                    (func is HyperbolicFunction or arg.has(I))):
+                return True
+        return False
+
+    for a in e.args:
+        if (a.has(func) or a.is_number or related_exp(a) or
+                any((a/c).is_number for c in coeffs)):
+            active.append(a)
+        else:
+            independent.append(a)
+
+    return Add(*independent), Add(*active)
+
+
 def futrig(e, *, hyper=True, **kwargs):
     """Return simplified ``e`` using Fu-like transformations.
     This is not the "Fu" algorithm. This is called by default
-    from ``trigsimp``. By default, hyperbolics subexpressions
+    from ``trigsimp``. By default, hyperbolic subexpressions
     will be simplified, but this can be disabled by setting
     ``hyper=False``.
 
@@ -1165,8 +1234,15 @@ def futrig(e, *, hyper=True, **kwargs):
     e = bottom_up(e, _futrig)
 
     if hyper and e.has(HyperbolicFunction):
+        coeff = None
+        if e.is_Add and e.is_commutative:
+            coeff, e = _split_add(e, HyperbolicFunction)
+
         e, f = hyper_as_trig(e)
         e = f(bottom_up(e, _futrig))
+
+        if coeff is not None:
+            e += coeff
 
     if e != old and e.is_Mul and e.args[0].is_Rational:
         # redistribute leading coeff on 2-arg Add
@@ -1185,10 +1261,13 @@ def _futrig(e):
         return e
 
     if e.is_Mul:
+        combine = e.func
         coeff, e = e.as_independent(TrigonometricFunction)
+    elif e.is_Add and e.is_commutative:
+        combine = e.func
+        coeff, e = _split_add(e, TrigonometricFunction)
     else:
         coeff = None
-
     Lops = lambda x: (L(x), x.count_ops(), _nodes(x), len(x.args), x.is_Add)
     trigs = lambda x: x.has(TrigonometricFunction)
 
@@ -1232,7 +1311,7 @@ def _futrig(e):
     e = greedy(tree, objective=Lops)(e)
 
     if coeff is not None:
-        e = coeff * e
+        e = combine(coeff, e)
 
     return e
 

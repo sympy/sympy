@@ -728,7 +728,7 @@ class DMP(CantSympify, Generic[Er]):
         raise NotImplementedError
 
     def nth(f, *N: int) -> Er:
-        """Returns the ``n``-th coefficient of ``f``. """
+        """Return the coefficient of the monomial with exponent tuple ``N``."""
         if all(isinstance(n, int) for n in N):
             return f._nth(N)
         else:

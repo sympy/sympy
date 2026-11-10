@@ -1,4 +1,5 @@
 from __future__ import annotations
+from mpmath.libmp import dps_to_prec, prec_to_dps
 from itertools import product
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -68,3 +69,14 @@ def test_amin_amax():
         assert am(x, axis=3).axis == 3
         with raises(ValueError):
             am(x, y, z)
+
+
+def test_logaddexp_evalf_precision():
+    assert logaddexp(x, y).evalf() == log(exp(x) + exp(y))
+    cases = [(logaddexp(2, 3), log(exp(2) + exp(3))),
+             (logaddexp2(2, 3), log(12)/log(2))]
+    for expr, expected in cases:
+        for prec in (53, 113):
+            result = expr._eval_evalf(prec)
+            assert result._prec == dps_to_prec(prec_to_dps(prec))
+            assert abs(result - expected.evalf(50)) < S(2)**(2 - prec)

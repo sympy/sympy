@@ -1,3 +1,4 @@
+from __future__ import annotations
 from threading import RLock
 
 # it is sufficient to import "pyglet" here once
@@ -363,7 +364,7 @@ class PygletPlot:
         """
         Allows iteration of the function list.
         """
-        return self._functions.itervalues()
+        return iter(self._functions.values())
 
     def __repr__(self):
         return str(self)

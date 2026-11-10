@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 
-from sympy import ZZ, QQ, GF, ZZ_I, symbols
+from sympy import ZZ, QQ, GF, ZZ_I, symbols, sqrt
 
 from sympy.polys.matrices.exceptions import (
     DMBadInputError,
@@ -655,6 +655,58 @@ def test_XXM_diag(DM):
 def test_XXM_transpose(DM):
     A = DM([[1, 2, 3], [4, 5, 6]])
     assert A.transpose() == DM([[1, 4], [2, 5], [3, 6]])
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_conjugate_real(DM):
+    A = DM([[1, 2, 3], [4, 5, 6]])
+    assert A.conjugate() == A
+
+
+def test_XXM_conjugate_complex():
+    A = DDM([[ZZ_I(1, 2), ZZ_I(3, 4)], [ZZ_I(0, 0), ZZ_I(7, 8)]], (2, 2), ZZ_I)
+    B = DDM([[ZZ_I(1, -2), ZZ_I(3, -4)], [ZZ_I(0, 0), ZZ_I(7, -8)]], (2, 2), ZZ_I)
+    assert A.conjugate() == B
+    assert B.conjugate() == A
+    assert A.to_sdm().conjugate() == B.to_sdm()
+    assert B.to_sdm().conjugate() == A.to_sdm()
+
+    K = QQ.algebraic_field(4 + sqrt(-2))
+    A = DDM([[K.convert((-1 + sqrt(-2))/4)], [K.convert(3 + 5*sqrt(-2))]], (2, 1), K)
+    B = DDM([[K.convert((-1 - sqrt(-2))/4)], [K.convert(3 - 5*sqrt(-2))]], (2, 1), K)
+    assert A.conjugate() == B
+    assert B.conjugate() == A
+    assert A.to_sdm().conjugate() == B.to_sdm()
+    assert B.to_sdm().conjugate() == A.to_sdm()
+
+    A = DDM([[1, 2, 3], [4, 5, 6]], (2, 3), GF(7))
+    raises(DMDomainError, lambda: A.conjugate())
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_adjoint_real(DM):
+    A = DM([[1, 2, 3], [4, 5, 6]])
+    assert A.adjoint() == DM([[1, 4], [2, 5], [3, 6]])
+
+
+def test_XXM_adjoint_complex():
+    A = DDM([[ZZ_I(1, 2), ZZ_I(3, 4)], [ZZ_I(0, 0), ZZ_I(7, 8)]], (2, 2), ZZ_I)
+    B = DDM([[ZZ_I(1, -2), ZZ_I(0, 0)], [ZZ_I(3, -4), ZZ_I(7, -8)]], (2, 2), ZZ_I)
+    assert A.adjoint() == B
+    assert B.adjoint() == A
+    assert A.to_sdm().adjoint() == B.to_sdm()
+    assert B.to_sdm().adjoint() == A.to_sdm()
+
+    K = QQ.algebraic_field(4 + sqrt(-2))
+    A = DDM([[K.convert((-1 + sqrt(-2))/4)], [K.convert(3 + 5*sqrt(-2))]], (2, 1), K)
+    B = DDM([[K.convert((-1 - sqrt(-2))/4), K.convert(3 - 5*sqrt(-2))]], (1, 2), K)
+    assert A.adjoint() == B
+    assert B.adjoint() == A
+    assert A.to_sdm().adjoint() == B.to_sdm()
+    assert B.to_sdm().adjoint() == A.to_sdm()
+
+    A = DDM([[1, 2, 3], [4, 5, 6]], (2, 3), GF(7))
+    raises(DMDomainError, lambda: A.adjoint())
 
 
 @pytest.mark.parametrize('DM', DMZ_all)

@@ -418,7 +418,7 @@ def Logarithmic(name, p):
     >>> X = Logarithmic("x", p)
 
     >>> density(X)(z)
-    -1/(5**z*z*log(4/5))
+    -(1/5)**z/(z*log(4/5))
 
     >>> E(X)
     -1/(-4*log(5) + 8*log(2))
@@ -654,7 +654,7 @@ def Skellam(name, mu1, mu2):
     The density of the Skellam distribution is given by
 
     .. math::
-        f(k) := e^{-(\mu_1+\mu_2)}(\frac{\mu_1}{\mu_2})^{k/2}I_k(2\sqrt{\mu_1\mu_2})
+        f(k) := e^{-(\mu_1+\mu_2)}\left(\frac{\mu_1}{\mu_2}\right)^{k/2}I_k(2\sqrt{\mu_1\mu_2})
 
     Parameters
     ==========

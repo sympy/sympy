@@ -711,7 +711,7 @@ def test_rational_laurent_series():
         assert ser == rational_laurent_series(num, den, x, x0, mul, n)
 
 
-def check_dummy_sol(eq, solse, dummy_sym):
+def check_dummy_sol(eq, solse, dummy_sym, gensol=False):
     """
     Helper function to check if actual solution
     matches expected solution if actual solution
@@ -721,11 +721,12 @@ def check_dummy_sol(eq, solse, dummy_sym):
         eq = eq.lhs - eq.rhs
     _, funcs = match_riccati(eq, f, x)
 
-    sols = solve_riccati(f(x), x, *funcs)
+    sols = solve_riccati(f(x), x, *funcs, gensol=gensol)
     C1 = Dummy('C1')
     sols = [sol.subs(C1, dummy_sym) for sol in sols]
 
     assert all(x[0] for x in checkodesol(eq, sols))
+    assert len(sols) == len(solse)
     assert all(s1.dummy_eq(s2, dummy_sym) for s1, s2 in zip(sols, solse))
 
 
@@ -852,6 +853,25 @@ def test_solve_riccati():
     )]
     for eq, sol in tests:
         check_dummy_sol(eq, sol, C0)
+
+
+def test_solve_riccati_gensol():
+    C0 = Dummy('C0')
+    tests = [
+    (
+        f(x).diff(x) - (x**2 + 3*x*f(x) + f(x)**2)/x**2,
+        [Eq(f(x), (-C0*x - x*log(x) - x)/(C0 + log(x)))],
+    ),
+    (
+        f(x).diff(x) + f(x)**2,
+        [Eq(f(x), 1/(C0 + x))],
+    ),
+    (
+        f(x).diff(x) + f(x)**2 - 2/x**2,
+        [Eq(f(x), (-C0 + 2*x**3)/(C0*x + x**4))],
+    )]
+    for eq, sol in tests:
+        check_dummy_sol(eq, sol, C0, gensol=True)
 
 
 @slow
