@@ -190,8 +190,10 @@ else:
             def wrapper():
                 try:
                     f()
-                except Exception as e:
-                    if str(e) == "Timeout" or type(e).__name__ == "Skipped":
+                except Exception as e:  # noqa: BLE001
+                    if isinstance(e, Skipped) or type(e).__name__ == "Skipped":
+                        raise
+                    if str(e) == "Timeout":
                         raise Skipped("Timeout")
                     if raises is not None:
                         expected = raises if isinstance(raises, (list, tuple)) else (raises,)

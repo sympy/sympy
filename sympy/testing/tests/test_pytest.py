@@ -220,7 +220,14 @@ def test_ignore_many_warnings():
 # XFAIL(raises=...) is implemented by SymPy only when pytest is not in use;
 # under pytest, XFAIL is pytest.mark.xfail.
 if not USE_PYTEST:
-    from sympy.testing.pytest import XFail
+    from sympy.testing.pytest import XFail, Skipped, skip
+
+    def test_XFAIL_without_raises():
+        @XFAIL
+        def f():
+            raise ValueError("Expected failure")
+
+        raises(XFail, f)
 
     def test_XFAIL_raises():
         @XFAIL(raises=ValueError)
@@ -235,3 +242,14 @@ if not USE_PYTEST:
             raise TypeError("Unexpected failure")
 
         raises(TypeError, f)
+
+    def test_XFAIL_raises_preserves_skip_reason():
+        @XFAIL(raises=ValueError)
+        def f():
+            skip("optional dependency unavailable")
+
+        try:
+            f()
+            assert False
+        except Skipped as e:
+            assert str(e) == "optional dependency unavailable"
