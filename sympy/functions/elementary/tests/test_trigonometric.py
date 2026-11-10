@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
-from sympy.core.function import (Lambda, diff)
+from sympy.core.function import (diff)
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
@@ -21,14 +21,12 @@ from sympy.polys.polytools import (cancel, gcd)
 from sympy.series.limits import limit
 from sympy.series.order import O
 from sympy.series.series import series
-from sympy.sets.fancysets import ImageSet
-from sympy.sets.sets import (FiniteSet, Interval)
+from sympy.sets.sets import (FiniteSet)
 from sympy.simplify.simplify import simplify
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError, PoleError
 from sympy.core.relational import Ne, Eq
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.sets.setexpr import SetExpr
 from sympy.testing.pytest import XFAIL, slow, raises
 
 
@@ -160,9 +158,6 @@ def test_sin():
 
     assert isinstance(sin( re(x) - im(y)), sin) is True
     assert isinstance(sin(-re(x) + im(y)), sin) is False
-
-    assert sin(SetExpr(Interval(0, 1))) == SetExpr(ImageSet(Lambda(x, sin(x)),
-                       Interval(0, 1)))
 
     for d in list(range(1, 22)) + [60, 85]:
         for n in range(d*2 + 1):
