@@ -2346,12 +2346,18 @@ class Basic(Printable):
         False
 
         """
+        if approx is None:
+            if a is b:
+                return True
+            if a.__class__ != b.__class__:
+                return False
+            if isinstance(a, Basic) and not a.args and not b.args:
+                return a == b
         from .numbers import Number
         from .traversal import postorder_traversal as pot
-        for t in zip_longest(pot(a), pot(b)):
-            if None in t:
+        for a, b in zip_longest(pot(a), pot(b)):
+            if a is None or b is None:
                 return False
-            a, b = t
             if isinstance(a, Number):
                 if not isinstance(b, Number):
                     return False
