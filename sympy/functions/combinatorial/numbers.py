@@ -2898,7 +2898,7 @@ class stirling(DefinedFunction):
     def _eval_rewrite_as_Sum(self, n, k, d=None, kind=2, signed=False, **kwargs):
         from sympy.concrete.summations import Sum
 
-        if d is not None:
+        if d is not None and d != 0:
             return self.func(n - d + 1, k - d + 1).rewrite(Sum)
         if kind != 2 or not (k.is_integer and k.is_nonnegative):
             return self
