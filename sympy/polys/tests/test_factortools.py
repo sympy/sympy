@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from sympy.polys.rings import ring, xring
-from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX
 
 from sympy.polys import polyconfig as config
 from sympy.polys.polyerrors import DomainError
@@ -672,6 +672,37 @@ def test_dup_factor_list():
 
     R, x = ring("x", EX)
     raises(DomainError, lambda: R.dup_factor_list(EX(sin(1))))
+
+
+def test_dup_factor_list_cc():
+    # issue 30845: a polynomial over CC is factored over its exact
+    # counterpart, the Gaussian rationals, rather than raising DomainError
+    R, x = ring("x", CC)
+
+    coeff, factors = R.dup_factor_list(CC(1)*x**2 - CC(1))
+    assert coeff == CC(1)
+    assert len(factors) == 2
+    assert factors[0][0] == x - 1
+    assert factors[1][0] == x + 1
+
+    coeff, factors = R.dup_factor_list(CC(1)*x**2 + CC(1))
+    assert coeff == CC(1)
+    assert len(factors) == 2
+    assert factors[0][0] == x + CC(0, -1)
+    assert factors[1][0] == x + CC(0, 1)
+
+    # x**2 + 2 has no factor over the Gaussian rationals, since sqrt(2) is
+    # not in QQ_I
+    coeff, factors = R.dup_factor_list(CC(1)*x**2 + CC(2))
+    assert coeff == CC(1)
+    assert len(factors) == 1
+    assert factors[0][0] == x**2 + 2
+    assert factors[0][1] == 1
+
+    coeff, factors = R.dup_factor_list(CC(2)*x + CC(2))
+    assert coeff == CC(2)
+    assert len(factors) == 1
+    assert factors[0][0] == x + 1
 
 
 def test_dmp_factor_list():

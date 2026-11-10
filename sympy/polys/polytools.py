@@ -4485,6 +4485,15 @@ class Poly(Basic):
         >>> Poly(x**2 + 1, x, modulus=2).is_irreducible
         False
 
+        Over the complex numbers the polynomial is factored over the Gaussian
+        rationals, which is the exact counterpart of ``CC``, so the answer
+        agrees with what ``factor`` returns for the same polynomial:
+
+        >>> Poly(x**2 + 1, x, domain='CC').is_irreducible
+        False
+        >>> Poly(x - 1, x, domain='CC').is_irreducible
+        True
+
         """
         return f.rep.is_irreducible
 
