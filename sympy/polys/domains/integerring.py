@@ -16,6 +16,7 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.conjugatedomain import ConjugateDomain
+from sympy.polys.domains.absdomain import AbsDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
@@ -25,7 +26,8 @@ if TYPE_CHECKING:
     from sympy.polys.domains.cyclotomicfield import CyclotomicField
 
 @public
-class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
+class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain,
+                  AbsDomain[MPZ, MPZ]):
     r"""The domain ``ZZ`` representing the integers `\mathbb{Z}`.
 
     The :py:class:`IntegerRing` class represents the ring of integers as a
@@ -287,6 +289,13 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
     def factorial(self, a):
         """Compute factorial of ``a``. """
         return factorial(a)
+
+    @property
+    def abs_domain(self) -> IntegerRing:
+        return self
+
+    def abs(self, a: MPZ) -> MPZ:
+        return abs(a)
 
     def conjugate(self, a: MPZ) -> MPZ:
         """Returns the complex conjugate of ``a``."""

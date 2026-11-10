@@ -4,18 +4,21 @@ from __future__ import annotations
 
 from sympy.core.numbers import Float, I
 from sympy.external.gmpy import SYMPY_INTS
-from sympy.external.mpmath import MPContext
+from sympy.external.mpmath import mpf, mpc
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.gaussiandomains import QQ_I
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.conjugatedomain import ConjugateDomain
+from sympy.polys.domains.absdomain import AbsDomain
+from sympy.polys.domains.realfield import RealField
 from sympy.polys.polyerrors import DomainError, CoercionFailed
 from sympy.utilities import public
 
 
 @public
-class ComplexField(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
+class ComplexField(Field[mpc], CharacteristicZero, SimpleDomain, ConjugateDomain,
+                   AbsDomain[mpc, mpf]):
     """Complex numbers up to the given precision. """
 
     rep = 'CC'
@@ -50,17 +53,10 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
         # XXX: The tolerance parameter is ignored but is kept for backward
         # compatibility for now.
 
-        context = MPContext()
-
         if prec is None and dps is None:
-            context.prec = self._default_precision
-        elif dps is None:
-            context.prec = prec
-        elif prec is None:
-            context.dps = dps
-        else:
-            raise TypeError("Cannot set both prec and dps")
-
+            prec = self._default_precision
+        self._abs_domain = RealField(prec=prec, dps=dps)
+        context = self._abs_domain._context
         self._context = context
 
         self._dtype = context.mpc
@@ -195,6 +191,13 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain, ConjugateDomain):
         slightly inaccurate due to floating point rounding error.
         """
         return a ** 0.5
+
+    @property
+    def abs_domain(self) -> RealField:
+        return self._abs_domain
+
+    def abs(self, a: mpc) -> mpf:
+        return abs(a)
 
     def conjugate(self, a):
         """Returns the complex conjugate of ``a``. """

@@ -12,12 +12,13 @@ from sympy.functions.elementary.trigonometric import sin
 from sympy.polys.polytools import Poly
 from sympy.abc import x, y, z
 
-from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
+from sympy.polys.domains import (AbsDomain, ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
 from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.realfield import RealField
+from sympy.polys.domains.complexfield import ComplexField
 
 from sympy.polys.numberfields.subfield import field_isomorphism
 from sympy.polys.rings import ring, PolyElement
@@ -1439,6 +1440,35 @@ def test_exsqrt():
     assert F7.exsqrt(F7(3)) is None
     assert F7.is_square(F7(0)) is True
     assert F7.exsqrt(F7(0)) == F7(0)
+
+
+def test_AbsDomain():
+    for K in [ZZ, QQ, RR, RealField(prec=100)]:
+        assert isinstance(K, AbsDomain)
+        assert K.is_AbsDomain
+        assert K.abs_domain is K
+        for n in [0, 1, -2]:
+            a = K(n)
+            value = K.abs(a)
+            assert K.abs_domain.of_type(value)
+            assert value == abs(a) == K(abs(n))
+
+    for K in [CC, ComplexField(prec=100), ComplexField(dps=50)]:
+        assert isinstance(K, AbsDomain)
+        assert K.is_AbsDomain
+        assert K.abs_domain == RealField(prec=K.precision)
+        assert K.abs_domain is K.abs_domain
+        for a, expected in [(K.zero, 0), (K(3, 4), 5), (K(0, -2), 2)]:
+            value = K.abs(a)
+            assert K.abs_domain.of_type(value)
+            assert value == abs(a) == K.abs_domain(expected)
+        value = K.abs(K(1, 1))
+        expected = K.abs_domain.exsqrt(K.abs_domain(2))
+        assert K.abs_domain.almosteq(value, expected)
+
+    for K in [ZZ_I, QQ_I, FF(7), ZZ[x], EX, EXRAW]:
+        assert not isinstance(K, AbsDomain)
+        assert not K.is_AbsDomain
 
 
 def test_Domain_conjugate():

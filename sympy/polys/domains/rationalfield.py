@@ -11,6 +11,7 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.conjugatedomain import ConjugateDomain
+from sympy.polys.domains.absdomain import AbsDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
@@ -18,7 +19,8 @@ if TYPE_CHECKING:
     from sympy.polys.domains.cyclotomicfield import CyclotomicField
 
 @public
-class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomain):
+class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomain,
+                    AbsDomain[MPQ, MPQ]):
     r"""Abstract base class for the domain :ref:`QQ`.
 
     The :py:class:`RationalField` class represents the field of rational
@@ -212,6 +214,13 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomai
         if q_rem != 0:
             return None
         return MPQ(p_sqrt, q_sqrt)
+
+    @property
+    def abs_domain(self) -> RationalField:
+        return self
+
+    def abs(self, a: MPQ) -> MPQ:
+        return abs(a)
 
     def conjugate(self, a):
         """Returns the complex conjugate of ``a``."""
