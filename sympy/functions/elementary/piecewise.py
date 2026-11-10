@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, cast, overload
+from typing import TYPE_CHECKING, overload
 
 from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
@@ -152,35 +152,41 @@ class Piecewise(DefinedFunction):
             ...
 
     @overload
-    def __new__(  # type: ignore[misc]
+    def __new__(  # type: ignore
         cls, *args: tuple[Expr | complex, Boolean | bool | int],
         evaluate: bool | None = True,
     ) -> Expr: ...
 
     @overload
-    def __new__(  # type: ignore[misc]
-        cls, *args: ExprCondPair | tuple[Basic | complex, Boolean | bool | int],
+    def __new__(  # type: ignore
+        cls, *args: tuple[Basic | complex, Boolean | bool | int],
         evaluate: bool | None = True,
     ) -> Basic: ...
 
-    def __new__(cls, *args, **options) -> Basic:  # type: ignore[misc]
+    @overload
+    def __new__(  # type: ignore
+        cls, *args: tuple[Expr | complex, Boolean | bool | int] | ExprCondPair | tuple[Basic | complex, Boolean | bool | int],
+        evaluate: bool | None = True,
+    ) -> Basic: ...
+
+    def __new__(cls, *args: tuple[Expr | complex, Boolean | bool | int] | ExprCondPair | tuple[Basic | complex, Boolean | bool | int], **options: bool | None) -> Expr | Basic:  # type: ignore
         if len(args) == 0:
             raise TypeError("At least one (expr, cond) pair expected.")
         # (Try to) sympify args first
-        newargs = []
+        newargs: list[ExprCondPair] = []
         for ec in args:
             # ec could be a ExprCondPair or a tuple
-            pair = ExprCondPair(*getattr(ec, 'args', ec))
-            cond = pair.cond
+            pair: ExprCondPair = ExprCondPair(*getattr(ec, 'args', ec))
+            cond: Boolean = pair.cond
             if cond is false:
                 continue
             newargs.append(pair)
             if cond is true:
                 break
 
-        eval = options.pop('evaluate', global_parameters.evaluate)
+        eval: bool | None = options.pop('evaluate', global_parameters.evaluate)
         if eval:
-            r = cls.eval(*newargs)
+            r: Basic | None = cls.eval(*newargs)
             if r is not None:
                 return r
         elif len(newargs) == 1 and newargs[0].cond == True:
@@ -1087,7 +1093,7 @@ def piecewise_fold(expr: Basic | T, evaluate: bool | None = True) -> Basic | T:
             assert not c.has(Piecewise)  # pragma: no cover
             if isinstance(c, ITE):
                 c = c.to_nnf()
-                c = cast(Boolean, simplify_logic(c, form='cnf'))
+                c = simplify_logic(c, form='cnf')
             if isinstance(e, Piecewise):
                 new_args.extend([(piecewise_fold(p.expr), And(p.cond, c))
                     for p in e.args])
