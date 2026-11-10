@@ -3408,6 +3408,11 @@ def test_solve_modular():
     # a power of a base coprime to the modulus is never a multiple of a factor
     assert solveset(Mod(2**x, 21), x, S.Integers) is S.EmptySet
     assert solveset(Mod(2**x - 9, 21), x, S.Integers) is S.EmptySet
+    # the exponent is not always an integer or the base is not an integer
+    assert solveset(Mod(4**(x/2), 12) - 2, x, S.Integers).dummy_eq(
+        ConditionSet(x, Eq(Mod(4**(x/2), 12) - 2, 0), S.Integers))
+    assert solveset(Mod(S.Half**x, 4) - 2, x, S.Integers).dummy_eq(
+        ConditionSet(x, Eq(Mod(S.Half**x, 4) - 2, 0), S.Integers))
     assert dumeq(solveset(Mod(3**(3**x), 4) - 3, x, S.Integers),
             Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
             S.Integers)), S.Naturals0), S.Integers))

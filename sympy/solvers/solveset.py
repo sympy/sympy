@@ -1620,7 +1620,8 @@ def _invert_modular(modterm, rhs, n, symbol):
             if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
                 return modterm, rhs
 
-            if m.p > 0 and rhs.p >= 0:
+            if (m.p > 0 and rhs.p >= 0 and base.is_Integer and
+                    expo.xreplace({symbol: Dummy(integer=True)}).is_integer):
                 if number_gcd(m.p, base.p) != 1:
                     return _invert_modular_pow_noncoprime(
                         base.p, m.p, rhs.p, expo, n, symbol)
