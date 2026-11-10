@@ -133,18 +133,18 @@ Code that uses these functions can be updated as follows:
   ```
 
 - Instead of `add_mathml_headers(s)`, wrap the MathML string in a `<math>`
-  element directly. For content MathML that will be passed to an XSLT
-  stylesheet like the ones bundled with SymPy, use
+  element directly. For content MathML that will be passed to a stylesheet
+  like `mmlctop.xsl` or `simple_mmlctop.xsl`, which is what `c2p()` does, use
 
   ```py
   '<math>' + s + '</math>'
   ```
 
   The `<math>` element should not declare a default namespace in this case,
-  because those stylesheets match elements that have no namespace. To display
-  presentation MathML in a web browser, such as the output of `mathml(expr,
-  printer='presentation')`, the `<math>` element does need the MathML
-  namespace:
+  because those two stylesheets match elements that have no namespace. Other
+  uses do need the MathML namespace, including the `mmltex.xsl` stylesheet
+  and displaying presentation MathML in a web browser, such as the output of
+  `mathml(expr, printer='presentation')`:
 
   ```py
   '<math xmlns="http://www.w3.org/1998/Math/MathML">' + s + '</math>'
