@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.core import S, Add, Mul, Pow, Eq, Expr
+from sympy.core.cache import cacheit
 from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.exprtools import (_decompose_exprs, decompose_power,
     decompose_power_rat)
@@ -380,10 +381,46 @@ def parallel_dict_from_expr(exprs, **args):
     return reps, opt.gens
 
 
+@cacheit
+def _is_expanded_poly(expr):
+    """Return True if ``expr`` is a sum of distinct monomials in symbols.
+
+    Each term must be a nonzero Rational times positive integer powers of
+    distinct commutative symbols, and no two terms may have the same
+    monomial. Expanding such an expression cannot change the polynomial it
+    represents, so the call to ``expand`` can be skipped.
+    """
+    monoms = set()
+    for term in Add.make_args(expr):
+        coeff = None
+        powers = {}
+        for factor in Mul.make_args(term):
+            if factor.is_Rational:
+                if coeff is not None or factor.is_zero:
+                    return False
+                coeff = factor
+                continue
+            if factor.is_Pow:
+                base, exp = factor.args
+                if not (exp.is_Integer and exp.is_positive):
+                    return False
+            else:
+                base, exp = factor, S.One
+            if not (base.is_Symbol and base.is_commutative) or base in powers:
+                return False
+            powers[base] = exp
+        monom = frozenset(powers.items())
+        if monom in monoms:
+            return False
+        monoms.add(monom)
+    return True
+
+
 def _parallel_dict_from_expr(exprs, opt):
     """Transform expressions into a multinomial form. """
     if opt.expand is not False:
-        exprs = [ expr.expand() for expr in exprs ]
+        exprs = [expr if _is_expanded_poly(expr) else expr.expand()
+                 for expr in exprs]
 
     if opt.gens:
         if any(expr.is_commutative is False for expr in exprs):
@@ -409,7 +446,8 @@ def _dict_from_expr(expr, opt):
     if opt.expand is not False:
         if not isinstance(expr, (Expr, Eq)):
             raise PolynomialError('expression must be of type Expr')
-        expr = expr.expand()
+        if not _is_expanded_poly(expr):
+            expr = expr.expand()
 
     if opt.gens:
         rep, gens = _dict_from_expr_if_gens(expr, opt)

@@ -1,7 +1,9 @@
 """Tests for useful utilities for higher level polynomial classes. """
 from __future__ import annotations
 
+from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.core.power import Pow
 from sympy.core.numbers import (Integer, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -22,6 +24,7 @@ from sympy.polys.polyutils import (
     _parallel_dict_from_expr_no_gens,
     _dict_from_expr,
     _dict_from_expr_no_gens,
+    _is_expanded_poly,
     parallel_dict_from_expr,
     dict_from_expr,
 )
@@ -323,3 +326,30 @@ def test_dict_from_expr():
         ({(0,): -Integer(1), (1,): Integer(1)}, (x,))
     raises(PolynomialError, lambda: dict_from_expr(A*B - B*A))
     raises(PolynomialError, lambda: dict_from_expr(S.true))
+
+
+def test__is_expanded_poly():
+    assert _is_expanded_poly(x**2*y - 3*x/2 + z + 1) is True
+    assert _is_expanded_poly(x) is True
+    assert _is_expanded_poly(Integer(2)) is True
+    assert _is_expanded_poly((x + 1)**2) is False
+    assert _is_expanded_poly(x*(y + 1)) is False
+    assert _is_expanded_poly(1/x + y) is False
+    assert _is_expanded_poly(sqrt(2)*x + y) is False
+    assert _is_expanded_poly(1.5*x) is False
+    assert _is_expanded_poly(sin(x) + y) is False
+    assert _is_expanded_poly(A*x) is False
+    assert _is_expanded_poly(Eq(x, 1)) is False
+    assert _is_expanded_poly(Add(x, x, evaluate=False)) is False
+    assert _is_expanded_poly(Add(x, -x, y, evaluate=False)) is False
+    assert _is_expanded_poly(Mul(x, x, evaluate=False)) is False
+    assert _is_expanded_poly(Add(Mul(0, x, evaluate=False), y,
+                                 evaluate=False)) is False
+    assert _is_expanded_poly(Mul(2, 3, x, evaluate=False)) is False
+    assert _is_expanded_poly(Mul(Pow(2, 3, evaluate=False), x,
+                                 evaluate=False)) is False
+
+    e = Add(Mul(y, 2, x, evaluate=False), Pow(x, 2, evaluate=False), 1,
+            evaluate=False)
+    assert _is_expanded_poly(e) is True
+    assert dict_from_expr(e) == dict_from_expr(e.expand())

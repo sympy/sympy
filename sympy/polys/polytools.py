@@ -50,6 +50,7 @@ from sympy.polys.polyutils import (
     _unify_gens,
     _dict_reorder,
     _dict_from_expr,
+    _is_expanded_poly,
     _parallel_dict_from_expr,
 )
 from sympy.polys.rationaltools import together
@@ -4868,7 +4869,7 @@ def _poly_from_expr(expr, opt):
             opt.polys = True
 
         return poly, opt
-    elif opt.expand:
+    elif opt.expand and not _is_expanded_poly(expr):
         expr = expr.expand()
 
     rep, opt = _dict_from_expr(expr, opt)
@@ -4932,7 +4933,7 @@ def _parallel_poly_from_expr(exprs, opt):
             else:
                 _exprs.append(i)
 
-                if opt.expand:
+                if opt.expand and not _is_expanded_poly(expr):
                     expr = expr.expand()
         else:
             failed = True
