@@ -86,6 +86,9 @@ class Ordinal(Basic):
     args: tuple[OmegaPower, ...]
 
     def __new__(cls, *terms: OmegaPower):
+        if len(terms) == 0 and cls is Ordinal:
+            return ord0
+
         obj = super().__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
         if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
@@ -98,14 +101,10 @@ class Ordinal(Basic):
 
     @property
     def leading_term(self) -> OmegaPower:
-        if self == ord0:
-            raise ValueError("ordinal zero has no leading term")
         return self.terms[0]
 
     @property
     def trailing_term(self) -> OmegaPower:
-        if self == ord0:
-            raise ValueError("ordinal zero has no trailing term")
         return self.terms[-1]
 
     @property
@@ -261,6 +260,14 @@ class OrdinalZero(Ordinal):
     """
     def __new__(cls):
         return Ordinal.__new__(cls)
+
+    @property
+    def leading_term(self) -> OmegaPower:
+        raise ValueError("OrdinalZero has no leading term")
+
+    @property
+    def trailing_term(self) -> OmegaPower:
+        raise ValueError("OrdinalZero has no trailing term")
 
 
 class OrdinalOmega(Ordinal):
