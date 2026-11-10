@@ -855,7 +855,7 @@ class PrettyPrinter(Printer):
                 x[0] = ''
             if x[1] == dim:
                 x[1] = ''
-            return prettyForm(*self._print_seq(x, delimiter=':'))
+            return self._print_seq(x, delimiter=':')
         prettyArgs = self._print_seq((ppslice(m.rowslice, m.parent.rows),
             ppslice(m.colslice, m.parent.cols)), delimiter=', ').parens(left='[', right=']')[0]
 

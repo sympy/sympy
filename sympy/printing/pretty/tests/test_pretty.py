@@ -3960,7 +3960,7 @@ tr⎜⎢    ⎥⎟ + tr⎜⎢    ⎥⎟
 
 def test_MatrixSlice():
     n = Symbol('n', integer=True)
-    x, y, z, w, t, = symbols('x y z w t')
+    x, y, z, w, t = symbols('x y z w t', positive=True)
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 10, 10)
     Z = MatrixSymbol('Z', 10, 10)
@@ -3971,8 +3971,6 @@ def test_MatrixSlice():
     assert pretty(expr) == upretty(expr) == 'X[x:x + 1, y:y + 1]'
     expr = X[x:x + 1:2, y:y + 1:2]
     assert pretty(expr) == upretty(expr) == 'X[x:x + 1:2, y:y + 1:2]'
-    expr = X[:x, y:]
-    assert pretty(expr) == upretty(expr) == 'X[:x, y:]'
     expr = X[:x, y:]
     assert pretty(expr) == upretty(expr) == 'X[:x, y:]'
     expr = X[x:, :y]

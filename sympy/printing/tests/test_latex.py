@@ -1966,7 +1966,7 @@ def test_matMul():
 
 def test_latex_MatrixSlice():
     n = Symbol('n', integer=True)
-    x, y, z, w, t, = symbols('x y z w t')
+    x, y, z, w, t = symbols('x y z w t', positive=True)
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 10, 10)
     Z = MatrixSymbol('Z', 10, 10)
@@ -1974,7 +1974,6 @@ def test_latex_MatrixSlice():
     assert latex(MatrixSlice(X, (None, None, None), (None, None, None))) == r'X\left[:, :\right]'
     assert latex(X[x:x + 1, y:y + 1]) == r'X\left[x:x + 1, y:y + 1\right]'
     assert latex(X[x:x + 1:2, y:y + 1:2]) == r'X\left[x:x + 1:2, y:y + 1:2\right]'
-    assert latex(X[:x, y:]) == r'X\left[:x, y:\right]'
     assert latex(X[:x, y:]) == r'X\left[:x, y:\right]'
     assert latex(X[x:, :y]) == r'X\left[x:, :y\right]'
     assert latex(X[x:y, z:w]) == r'X\left[x:y, z:w\right]'
