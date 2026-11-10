@@ -1055,15 +1055,15 @@ the argument will not be rejected. The first reason for allowing
     None
     >>> expreal(x)
     expreal(x)
-    >>> expr = (1 + I)/sqrt(2) + (1 - I)/sqrt(2)
+    >>> expr = (1 - I)*(1 + I)
     >>> print(expr.is_extended_real)
     None
     >>> expr.expand()
-    sqrt(2)
+    2
     >>> expr.expand().is_extended_real
     True
     >>> expreal(expr)
-    expreal(sqrt(2)*(1 - I)/2 + sqrt(2)*(1 + I)/2)
+    expreal((1 - I)*(1 + I))
 
 Validating the argument in ``expreal.eval`` does mean that it will not be
 validated when ``evaluate=False`` is passed but there is not really a better

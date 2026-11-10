@@ -1361,7 +1361,13 @@ def test_sysode_linear_neq_order1_type3():
              Eq(diff(g(t), t), -t**2*f(t) + (9*t**2 + 5*t)*g(t))]
     sol10 = [Eq(f(t), (C1*(77 - 9*sqrt(77))/154 + sqrt(77)*C2/77)*exp(t**3*(sqrt(77) + 9)/6 + 5*t**2/2) + (C1*(77 + 9*sqrt(77))/154 - sqrt(77)*C2/77)*exp(t**3*(9 - sqrt(77))/6 + 5*t**2/2)),
              Eq(g(t), (sqrt(77)*C1/77 + C2*(77 - 9*sqrt(77))/154)*exp(t**3*(9 - sqrt(77))/6 + 5*t**2/2) - (sqrt(77)*C1/77 - C2*(77 + 9*sqrt(77))/154)*exp(t**3*(sqrt(77) + 9)/6 + 5*t**2/2))]
-    assert dsolve(eqs10) == sol10
+    sol = dsolve(eqs10)
+    swap = {C1: C2, C2: C1}
+    sol = [eq.xreplace(swap) for eq in sol]
+    assert all(
+        i.lhs == j.lhs and not (i.rhs - j.rhs).expand()
+        for i, j in zip(sol, sol10)
+    )
     assert checksysodesol(eqs10 , sol10) == (True , [0,0])
 
     eqs11 = [Eq(diff(f(t), t), 5*t*f(t) + t**2*g(t)),

@@ -655,8 +655,17 @@ class Add(Expr, AssocOp):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: _fuzzy_group(
-        (a.is_real for a in self.args), quick_exit=True)
+    def _eval_is_real(self):
+        r = _fuzzy_group(
+            (a.is_real for a in self.args), quick_exit=True)
+        if r is not None:
+            return r
+        n2 = self._n2()
+        if n2 is not None:
+            _, (i, iprec) = n2
+            if iprec:
+                return i.is_zero
+
     _eval_is_extended_real = lambda self: _fuzzy_group(
         (a.is_extended_real for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
@@ -882,7 +891,6 @@ class Add(Expr, AssocOp):
                 and a.is_extended_positive
                 and len(self.free_symbols) == 1
             ):
-                from .exprtools import _monotonic_sign
                 v = _monotonic_sign(self)
                 if v is not None and v != self and v.is_extended_nonpositive:
                     return True

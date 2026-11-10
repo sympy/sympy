@@ -909,44 +909,63 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
+    def _n2(self):
+        """Return low-precision numerical information about a number.
+
+        This is used by assumptions as a fallback when structural methods do
+        not determine the real and imaginary parts. It is deliberately
+        conservative: numerical evaluation here is intended to provide useful
+        sign/realness information, not to turn an approximate value into an
+        exact mathematical assertion.
+
+        ``_eval_evalf`` is tried first at 2 bits and then at 10 bits. Inference
+        is made only if evaluation produces a ``Float`` or an expression of the
+        form ``a + I*b`` with numerical ``a`` and ``b``.
+
+        Return ``((r, br), (i, bi))``, where ``r`` and ``i`` are numerical
+        approximations to the real and imaginary parts and ``br``/``bi``
+        indicate whether the corresponding approximation has significance.
+        Return ``None`` when no useful inference can safely be made.
+        """
+        if self.is_number:
+            for prec in (2, 10):
+                try:
+                    f = self._eval_evalf(prec)
+                except ValueError:
+                    return
+
+                if f is None or f is S.NaN:
+                    continue
+
+                if f.is_Float:
+                    match = f, S.Zero
+                else:
+                    match = pure_complex(f)
+                    if match is None:
+                        continue
+
+                r, i = match
+                br = r._prec != 1
+                bi = i._prec != 1
+                if (br or bi) and (prec == 10 or r or i):  # no exit on 2bit 0
+                    return (r, br), (i, bi)
+
     def _eval_is_extended_positive_negative(self, positive):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
-        if self.is_number:
-            # check to see that we can get a value
+        n2 = self._n2()
+        if n2 is None:
+            return
+        (r, rprec), (i, iprec) = n2
+        if rprec and iprec:
+            return bool(not i and ((r > 0) if positive else (r < 0)))
+        elif not rprec and (not i or not iprec) and \
+                self._eval_is_algebraic() and not self.has(Function):
             try:
-                n2 = self._eval_evalf(2)
-            # XXX: This shouldn't be caught here
-            # Catches ValueError: hypsum() failed to converge to the requested
-            # 34 bits of accuracy
-            except ValueError:
-                return None
-            if n2 is None:
-                return None
-            if getattr(n2, '_prec', 1) == 1:  # no significance
-                return None
-            if n2 is S.NaN:
-                return None
-
-            f = self.evalf(2)
-            if f.is_Float:
-                match = f, S.Zero
-            else:
-                match = pure_complex(f)
-            if match is None:
-                return False
-            r, i = match
-            if not (i.is_Number and r.is_Number):
-                return False
-            if r._prec != 1 and i._prec != 1:
-                return bool(not i and ((r > 0) if positive else (r < 0)))
-            elif r._prec == 1 and (not i or i._prec == 1) and \
-                    self._eval_is_algebraic() and not self.has(Function):
-                try:
-                    if minimal_polynomial(self).is_Symbol:
-                        return False
-                except (NotAlgebraic, NotImplementedError):
-                    pass
+                if minimal_polynomial(self).is_Symbol:
+                    return False
+            except (NotAlgebraic, NotImplementedError):
+                pass
 
     def _eval_is_extended_positive(self):
         return self._eval_is_extended_positive_negative(positive=True)
