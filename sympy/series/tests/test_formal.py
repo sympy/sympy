@@ -551,6 +551,22 @@ def test_fps__product():
     assert f1.product(f3, x)._eval_terms(4) == x - 2*x**3/3
     assert f1.product(f3, x).truncate(4) == x - 2*x**3/3 + O(x**4)
 
+    f4 = fps(log(1 + x))
+    fprod = f4.product(f2, x)
+    assert fprod.coeff1[:4] == [0, 1, Rational(-1, 2), Rational(1, 3)]
+    assert fprod.coeff2[:4] == [1, 1, Rational(1, 2), Rational(1, 6)]
+    assert fprod.truncate(4) == x + x**2/2 + x**3/3 + O(x**4)
+    assert f2.product(f4, x).truncate(4) == x + x**2/2 + x**3/3 + O(x**4)
+
+    a, b = symbols('a b')
+    fprod = fps(a*exp(x), x).product(fps(b*exp(x), x), x)
+    assert fprod.polynomial(4) == a*b + 2*a*b*x + 2*a*b*x**2 + 4*a*b*x**3/3
+
+    f5 = fps(exp(x), x, x0=1)
+    assert (f5.product(f5, x).truncate(4) - (exp(2) + 2*(x - 1)*exp(2) +
+            2*(x - 1)**2*exp(2) + 4*(x - 1)**3*exp(2)/3)).expand() == \
+        O((x - 1)**4, (x, 1))
+
 
 def test_fps__compose():
     f1, f2, f3 = fps(exp(x)), fps(sin(x)), fps(cos(x))
