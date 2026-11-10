@@ -1,8 +1,10 @@
-from __future__ import annotations
-from sympy.matrices.expressions.factorizations import lu, LofCholesky, qr, svd
+from sympy.matrices.expressions.factorizations import (
+    lu, LofCholesky, qr, svd, jordan, JordanForm, JordanVectors, JordanBlocks,
+)
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.symbol import Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.matmul import MatMul
 
 n = Symbol('n')
 X = MatrixSymbol('X', n, n)
@@ -28,3 +30,15 @@ def test_svd():
     assert ask(Q.orthogonal(U))
     assert ask(Q.orthogonal(V))
     assert ask(Q.diagonal(S))
+
+def test_jordan():
+    P, J = jordan(X)
+    assert P.shape == J.shape == X.shape
+    assert ask(Q.invertible(P))
+    assert ask(Q.upper_triangular(J))
+    jf = JordanForm(X)
+    assert jf.shape == X.shape
+    assert isinstance(jf, MatMul)
+    assert jf.args[0] == P
+    assert jf.args[1] == J
+
