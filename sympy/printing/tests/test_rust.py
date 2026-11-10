@@ -5,6 +5,7 @@ from sympy.core import (S, pi, oo, symbols, Rational, Integer, Symbol,
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sign, floor, log)
 from sympy.logic import ITE
+from sympy.printing.tests.check_printed_code import check_printed_code
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
@@ -16,11 +17,13 @@ x, y, z = symbols('x,y,z', integer=False, real=True)
 k, m, n = symbols('k,m,n', integer=True)
 
 
+@check_printed_code
 def test_Integer():
     assert rust_code(Integer(42)) == "42"
     assert rust_code(Integer(-56)) == "-56"
 
 
+@check_printed_code
 def test_Relational():
     assert rust_code(Eq(x, y)) == "x == y"
     assert rust_code(Ne(x, y)) == "x != y"
@@ -30,6 +33,7 @@ def test_Relational():
     assert rust_code(Ge(x, y)) == "x >= y"
 
 
+@check_printed_code
 def test_Rational():
     assert rust_code(Rational(3, 7)) == "3_f64/7.0"
     assert rust_code(Rational(18, 9)) == "2"
@@ -39,6 +43,7 @@ def test_Rational():
     assert rust_code(Rational(3, 7)*x) == "(3_f64/7.0)*x"
 
 
+@check_printed_code
 def test_basic_ops():
     assert rust_code(x + y) == "x + y"
     assert rust_code(x - y) == "x - y"
@@ -58,6 +63,7 @@ def test_printmethod():
     assert rust_code(a[0,0]) == 'a[0]'
 
 
+@check_printed_code
 def test_Functions():
     assert rust_code(sin(x) ** cos(x)) == "x.sin().powf(x.cos())"
     assert rust_code(abs(x)) == "x.abs()"
@@ -97,6 +103,7 @@ def test_Pow():
     assert rust_code(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'x.pow(3.2)'
 
 
+@check_printed_code
 def test_constants():
     assert rust_code(pi) == "PI"
     assert rust_code(oo) == "INFINITY"
@@ -108,6 +115,7 @@ def test_constants():
     assert rust_code(S.Exp1) == "E"
 
 
+@check_printed_code
 def test_constants_other():
     assert rust_code(2*GoldenRatio) == "const GoldenRatio: f64 = %s;\n2.0*GoldenRatio" % GoldenRatio.evalf(17)
     assert rust_code(
@@ -115,6 +123,7 @@ def test_constants_other():
     assert rust_code(2*EulerGamma) == "const EulerGamma: f64 = %s;\n2.0*EulerGamma" % EulerGamma.evalf(17)
 
 
+@check_printed_code
 def test_boolean():
     assert rust_code(True) == "true"
     assert rust_code(S.true) == "true"
@@ -129,6 +138,7 @@ def test_boolean():
     assert rust_code((k | m) & n) == "n && (k || m)"
 
 
+@check_printed_code
 def test_Piecewise():
     expr = Piecewise((x, x < 1), (x + 2, True))
     assert rust_code(expr) == (
@@ -200,6 +210,7 @@ def test_reserved_words():
         rust_code(expr, error_on_reserved=True)
 
 
+@check_printed_code
 def test_ITE():
     ekpr = ITE(k < 1, m, n)
     assert rust_code(ekpr) == (
