@@ -420,7 +420,7 @@ class Mul(Expr, AssocOp):
                             if e.is_Integer:
                                 coeff *= Pow(b, e)  # it is an unevaluated power
                                 continue
-                            elif e.is_negative:    # also a sign of an unevaluated power
+                            elif e.is_negative:
                                 seq.append(Pow(b, e))
                                 continue
                             elif b.is_negative:

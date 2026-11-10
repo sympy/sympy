@@ -57,7 +57,7 @@ class Probability(Expr):
     Evaluation of the integral:
 
     >>> prob.evaluate_integral()
-    sqrt(2)*(-sqrt(2)*sqrt(pi)*erf(sqrt(2)/2) + sqrt(2)*sqrt(pi))/(4*sqrt(pi))
+    sqrt(2)*(sqrt(2)*sqrt(pi) - sqrt(2)*sqrt(pi)*erf(sqrt(2)/2))/(4*sqrt(pi))
     """
 
     is_commutative = True
@@ -353,12 +353,12 @@ class Variance(Expr):
     Integral representation, without expanding the PDF:
 
     >>> Variance(X).rewrite(Probability)
-    -Integral(x*Probability(Eq(X, x)), (x, -oo, oo))**2 + Integral(x**2*Probability(Eq(X, x)), (x, -oo, oo))
+    Integral(x**2*Probability(Eq(X, x)), (x, -oo, oo)) - Integral(x*Probability(Eq(X, x)), (x, -oo, oo))**2
 
     Rewrite the variance in terms of the expectation
 
     >>> Variance(X).rewrite(Expectation)
-    -Expectation(X)**2 + Expectation(X**2)
+    Expectation(X**2) - Expectation(X)**2
 
     Some transformations based on the properties of the variance may happen:
 
@@ -663,7 +663,7 @@ class CentralMoment(Expr):
     Rewrite the CentralMoment expression in terms of Expectation:
 
     >>> CM.rewrite(Expectation)
-    Expectation((-Expectation(X) + X)**4)
+    Expectation((X - Expectation(X))**4)
 
     Rewrite the CentralMoment expression in terms of Probability:
 

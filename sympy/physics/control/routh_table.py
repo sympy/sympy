@@ -96,16 +96,16 @@ class RouthHurwitz(MutableDenseMatrix):
     >>> p = b1*s**3 + b2*s**2 + b3*s + b4
     >>> RouthHurwitz(p, s)
     Matrix([
-    [                     b_1, b_3],
-    [                     b_2, b_4],
-    [(-b_1*b_4 + b_2*b_3)/b_2,   0],
-    [                     b_4,   0]])
+    [                    b_1, b_3],
+    [                    b_2, b_4],
+    [(b_2*b_3 - b_1*b_4)/b_2,   0],
+    [                    b_4,   0]])
     >>> RouthHurwitz(p, s)[:, 0]
     Matrix([
-    [                     b_1],
-    [                     b_2],
-    [(-b_1*b_4 + b_2*b_3)/b_2],
-    [                     b_4]])
+    [                    b_1],
+    [                    b_2],
+    [(b_2*b_3 - b_1*b_4)/b_2],
+    [                    b_4]])
 
     Here you can see how the table appears in the first column zero case:
 

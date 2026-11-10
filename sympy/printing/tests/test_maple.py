@@ -52,7 +52,7 @@ def test_Pow():
 
     g = implemented_function('g', Lambda(x, 2 * x))
     assert maple_code(1 / (g(x) * 3.5) ** (x - y ** x) / (x ** 2 + y)) == \
-           "(3.5*2*x)^(-x + y^x)/(x^2 + y)"
+           '(3.5*2*x)^(y^x - x)/(x^2 + y)'
     # For issue 14160
     assert maple_code(Mul(-2, x, Pow(Mul(y, y, evaluate=False), -1, evaluate=False),
                           evaluate=False)) == '-2*x/(y*y)'
@@ -373,7 +373,7 @@ def test_maple_derivatives():
 
 
 def test_automatic_rewrites():
-    assert maple_code(lucas(x)) == '(2^(-x)*((1 - sqrt(5))^x + (1 + sqrt(5))^x))'
+    assert maple_code(lucas(x)) == '(2^(-x)*((1 - sqrt(5))^x + (sqrt(5) + 1)^x))'
     assert maple_code(sinc(x)) == '(piecewise(x <> 0, sin(x)/x, 1))'
 
 
