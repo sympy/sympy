@@ -28,8 +28,8 @@ from sympy.physics.units.definitions import (
     stefan_boltzmann_constant, Da, atomic_mass_constant, molar_gas_constant,
     faraday_constant, josephson_constant, von_klitzing_constant,
     acceleration_due_to_gravity, magnetic_constant, vacuum_permittivity,
-    vacuum_impedance, coulomb_constant, atmosphere, bar, pound, psi, mmHg,
-    milli_mass_unit, quart, lightyear, astronomical_unit, planck_mass,
+    vacuum_impedance, coulomb_constant, atmosphere, bar, pound, psi, mmHg, torr,
+    milli_mass_unit, quart, lightyear, astronomical_unit,nautical_mile, planck_mass,
     planck_time, planck_temperature, planck_length, planck_charge, planck_area,
     planck_volume, planck_momentum, planck_energy, planck_force, planck_power,
     planck_density, planck_energy_density, planck_intensity,
@@ -252,6 +252,9 @@ SI.set_quantity_scale_factor(psi, pound * gee / inch ** 2)
 SI.set_quantity_dimension(mmHg, pressure)
 SI.set_quantity_scale_factor(mmHg, dHg0 * acceleration_due_to_gravity * kilogram / meter**2)
 
+SI.set_quantity_dimension(torr, pressure)
+SI.set_quantity_scale_factor(torr, atmosphere/760)
+
 SI.set_quantity_dimension(milli_mass_unit, mass)
 SI.set_quantity_scale_factor(milli_mass_unit, atomic_mass_unit/1000)
 
@@ -264,7 +267,10 @@ SI.set_quantity_dimension(lightyear, length)
 SI.set_quantity_scale_factor(lightyear, speed_of_light*julian_year)
 
 SI.set_quantity_dimension(astronomical_unit, length)
-SI.set_quantity_scale_factor(astronomical_unit, 149597870691*meter)
+SI.set_quantity_scale_factor(astronomical_unit, 149597870700*meter)
+
+SI.set_quantity_dimension(nautical_mile, length)
+SI.set_quantity_scale_factor(nautical_mile, 1852*meter)
 
 # Fundamental Planck units:
 
