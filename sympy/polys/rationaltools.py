@@ -5,6 +5,7 @@ from __future__ import annotations
 from sympy.core import Basic, Add, sympify
 from sympy.core.exprtools import gcd_terms
 from sympy.utilities import public
+from sympy.utilities.decorator import _rebuild_opaque
 from sympy.utilities.iterables import iterable
 from typing import TYPE_CHECKING
 
@@ -26,8 +27,8 @@ def together(expr: Expr, deep: bool = False, fraction: bool = True) -> Expr:
     expression in the output (no expansion is performed).
 
     A wide variety of objects can be put together including lists,
-    tuples, sets, relational objects, integrals and others. It is
-    also possible to transform interior of function applications,
+    tuples, sets, integrals and others. It is also possible to transform
+    interior of function applications,
     by setting ``deep`` flag to ``True``.
 
     By definition, :func:`~.together` is a complement to :func:`~.apart`,
@@ -35,6 +36,9 @@ def together(expr: Expr, deep: bool = False, fraction: bool = True) -> Expr:
     however, that :func:`~.together` uses only symbolic methods, so
     it might be necessary to use :func:`~.cancel` to perform algebraic
     simplification and minimize degree of the numerator and denominator.
+
+    Relational expressions are left unchanged because combining their
+    sides can change their truth value or definedness.
 
     Examples
     ========
@@ -67,7 +71,7 @@ def together(expr: Expr, deep: bool = False, fraction: bool = True) -> Expr:
     """
     def _together(expr):
         if isinstance(expr, Basic):
-            if expr.is_Atom or (expr.is_Function and not deep):
+            if expr.is_Atom or expr.is_Relational or (expr.is_Function and not deep):
                 return expr
             elif expr.is_Add:
                 return gcd_terms(list(map(_together, Add.make_args(expr))), fraction=fraction)
@@ -81,7 +85,7 @@ def together(expr: Expr, deep: bool = False, fraction: bool = True) -> Expr:
 
                 return expr.func(base, exp)
             else:
-                return expr.func(*[ _together(arg) for arg in expr.args ])
+                return _rebuild_opaque(expr, [_together(arg) for arg in expr.args])
         elif iterable(expr):
             return expr.__class__([ _together(ex) for ex in expr ])
 

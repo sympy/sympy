@@ -3,7 +3,7 @@ from sympy.integrals.laplace import (
     laplace_transform, inverse_laplace_transform,
     LaplaceTransform, InverseLaplaceTransform,
     _laplace_deep_collect, laplace_correspondence,
-    laplace_initial_conds)
+    laplace_initial_conds, _simplifyconds)
 from sympy.core.function import Function, expand_mul
 from sympy.core import EulerGamma, Subs, Derivative, diff
 from sympy.core.exprtools import factor_terms
@@ -31,6 +31,14 @@ from sympy.functions.special.bessel import besseli, besselj, besselk, bessely
 from sympy.testing.pytest import slow, warns_deprecated_sympy, XFAIL
 from sympy.matrices import Matrix, eye
 from sympy.abc import s
+
+
+def test_simplifyconds_abs_reciprocal():
+    x = Symbol('x')
+    assert _simplifyconds(Abs(1/x**2) < 1, x, 1) is S.true
+    assert _simplifyconds(1 < Abs(1/x), x, 1) is S.false
+    assert _simplifyconds(Abs(1/x**2) < 1, x, 0) == (
+        Abs(x**-2, evaluate=False) < 1)
 
 
 @slow

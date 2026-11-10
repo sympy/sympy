@@ -45,7 +45,7 @@ def test_apart():
     assert apart((E*x + 2)/(x - pi)*(x - 1), x) == \
         2 - E + E*pi + E*x + (E*pi + 2)*(pi - 1)/(x - pi)
 
-    assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq(x - 1 + 2/(x + 1), x)
+    assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq((x**2 + 1)/(x + 1), x)
 
     assert apart(x/2, y) == x/2
 

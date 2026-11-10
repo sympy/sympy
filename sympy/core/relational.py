@@ -84,6 +84,15 @@ Thus relational simplification must use assumptions to justify movement
 or cancellation of terms. If the required property is unknown, the
 corresponding transformation must not be made.
 
+Algebraic transformations without explicit support for relational semantics
+must treat a relation as opaque, including when it occurs inside a container
+or a ``Piecewise`` condition. Transforming its arguments independently can
+destroy indeterminacy: factoring ``a*x + a*y < 1`` into ``a*(x + y) < 1``
+removes an indeterminate sum when ``a = oo``, ``x = 2``, and ``y = -1``.
+Traversal that applies a transformation should give the transformation the
+whole relation rather than implicitly transforming its sides. Structural
+traversals such as ``preorder_traversal`` still visit all arguments.
+
 Some APIs accept an ``Equality`` as convenient equation syntax and explicitly
 interpret ``Eq(lhs, rhs)`` as the formal equation ``lhs - rhs = 0``. This
 includes ``solve``, symbol-dependent ``Eq`` input to ``solveset``, and

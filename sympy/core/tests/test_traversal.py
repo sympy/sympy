@@ -6,9 +6,11 @@ from sympy.core.symbol import symbols
 from sympy.core.singleton import S
 from sympy.core.function import expand, Function
 from sympy.core.numbers import I
+from sympy.core.relational import Eq
+from sympy.core.exprtools import factor_terms
 from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import factor
-from sympy.core.traversal import preorder_traversal, use, postorder_traversal, iterargs, iterfreeargs
+from sympy.core.traversal import bottom_up, preorder_traversal, use, postorder_traversal, iterargs, iterfreeargs
 from sympy.functions.elementary.piecewise import ExprCondPair, Piecewise
 from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.utilities.iterables import capture
@@ -96,6 +98,25 @@ def test_iterargs():
         Integral(f(x), (f(x), 1)), 1]
     assert list(iterargs(Integral(f(x), (f(x), 1)))) == [
         Integral(f(x), (f(x), 1)), f(x), (f(x), 1), x, f(x), 1, x]
+
+
+def test_bottom_up_relational():
+    x, y, z = symbols('x y z')
+    rel = Eq(x*y + x*z, 1, evaluate=False)
+    visited = []
+
+    def transform(expr):
+        visited.append(expr)
+        return factor_terms(expr)
+
+    assert bottom_up(rel, transform, atoms=True, nonbasic=True) is rel
+    assert visited == [rel]
+    expr = Tuple(x*y + x*z, rel)
+    assert bottom_up(expr, factor_terms) == Tuple(x*(y + z), rel)
+    assert bottom_up(rel, lambda e: e.reversed) == rel.reversed
+    assert rel.lhs in list(preorder_traversal(rel))
+    assert rel.lhs in list(postorder_traversal(rel))
+
 
 def test_deprecated_imports():
     x = symbols('x')
