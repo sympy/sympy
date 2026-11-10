@@ -128,3 +128,9 @@ def test_rewrite():
     assert expr_in.rewrite(Heaviside) == expr_out
     assert expr_in.rewrite(DiracDelta) == expr_out
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
+
+
+def test_singularity_nseries():
+    assert (x**2 + SingularityFunction(x, -1, 2)).nseries(x, n=6) == 2*x**2 + 2*x + 1
+    assert SingularityFunction(x, -1, 3).nseries(x, n=2) == 1 + 3*x + O(x**2)
+    assert SingularityFunction(x, -1, 2).nseries(x, n=4) == x**2 + 2*x + 1
