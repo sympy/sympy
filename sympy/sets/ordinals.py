@@ -304,8 +304,7 @@ class Ordinal(Basic):
             out += Ordinal(OmegaPower(self.degree*beta,k))
             return out
 
-
-    def __pow__(self, other: Ordinal) -> Ordinal:
+    def __pow__(self, other: Ordinal | Integer | int) -> Ordinal:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -313,7 +312,7 @@ class Ordinal(Basic):
                 return NotImplemented
         return self._pow(other)
 
-    def __rpow__(self, other: Ordinal) -> Ordinal:
+    def __rpow__(self, other: Ordinal | Integer | int) -> Ordinal:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
