@@ -1,16 +1,17 @@
 from __future__ import annotations
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions import MatrixSymbol
-from sympy.abc import a, b, c, d, k, l, m, n
+from sympy.core.symbol import symbols
+from sympy.abc import a, b, c, d, l
 from sympy.testing.pytest import raises, XFAIL
 from sympy.functions.elementary.integers import ceiling
 from sympy.assumptions import assuming, Q
 
 
+n, m, k = symbols('n m k', integer=True, positive=True)
 X = MatrixSymbol('X', n, m)
 Y = MatrixSymbol('Y', m, k)
 X10 = MatrixSymbol('X', 10, 20)
-X_sq = MatrixSymbol('X_sq', 10, 10)
 
 
 def test_shape():
@@ -30,35 +31,31 @@ def test_entry():
     assert B[k, l] == X10[1+k, 2+l]
     raises(IndexError, lambda: MatrixSlice(X10, 1, (2, 5))[1, 0])
 
-    assert X10[1::2, :][1, 3] == X10[1+2, 3]
-    assert X10[:, 1::2][3, 1] == X10[3, 1+2]
+    assert X[1::2, :][1, 3] == X[1+2, 3]
+    assert X[:, 1::2][3, 1] == X[3, 1+2]
 
     B_sym = MatrixSlice(X, (a, b), (c, d))
     assert B_sym[0, 0].subs({n: 10, m: 20, a: 1, c: 2}) == X10[1, 2]
 
 
 def test_on_diag():
-    assert not MatrixSlice(X_sq, (1, 5), (2, 6)).on_diag
-    assert MatrixSlice(X_sq, (1, 5), (1, 5)).on_diag
+    assert not MatrixSlice(X, (a, b), (c, d)).on_diag
+    assert MatrixSlice(X, (a, b), (a, b)).on_diag
 
 
 def test_inputs():
-    assert MatrixSlice(X10, 1, (2, 5)) == MatrixSlice(X10, (1, 2), (2, 5))
+    assert MatrixSlice(X, 1, (2, 5)) == MatrixSlice(X, (1, 2), (2, 5))
     assert MatrixSlice(X10, 1, (2, 5)).shape == (1, 3)
 
 
 def test_slicing():
-    assert X10[1:5, 2:4] == MatrixSlice(X10, (1, 5), (2, 4))
-    assert X10[1, 2:4] == MatrixSlice(X10, 1, (2, 4))
+    assert X[1:5, 2:4] == MatrixSlice(X, (1, 5), (2, 4))
+    assert X[1, 2:4] == MatrixSlice(X, 1, (2, 4))
     assert X10[1:5, :].shape == (4, 20)
     assert X10[:, 1:5].shape == (10, 4)
-    assert X10[2, :] == MatrixSlice(X10, 2, (0, 20))
-
-    from sympy.core.symbol import Symbol
-    n_pos = Symbol('n', integer=True, positive=True)
-    m_pos = Symbol('m', integer=True, positive=True)
-    X_pos = MatrixSymbol('X_pos', n_pos, m_pos)
-    assert X_pos[::2, ::2].shape == (ceiling(n_pos/2), ceiling(m_pos/2))
+    assert X[2, :] == MatrixSlice(X, 2, (0, m))
+    assert X[k, :] == MatrixSlice(X, k, (0, m))
+    assert X[::2, ::2].shape == (ceiling(n/2), ceiling(m/2))
 
     # Concrete slices with step > 1 must not truncate boundary elements
     from sympy.matrices import Matrix
@@ -146,13 +143,13 @@ def test_symbolic_slicing_substitution_invariance():
     assert sl_rev.shape == (5, 4)
     assert sl_rev.subs(A, M).as_explicit() == M[::-1, :]
 
-    # S.Y. Lee Test 1: Slicing negative index on symbolic dimension matrix
+    # Slicing negative index on symbolic dimension matrix
     k = Symbol('k', integer=True, positive=True)
     X_k = MatrixSymbol('X', k, 4)
     s_neg = MatrixSlice(X_k, slice(-6, None), slice(None)).subs(k, 5)
     assert s_neg.shape == (5, 4)
 
-    # S.Y. Lee Test 2: Slicing with symbolic start parameter
+    # Slicing with symbolic start parameter
     sym_a = Symbol('a')
     s_sym = MatrixSlice(A, slice(sym_a, None, 2), slice(None))
     assert s_sym.subs(sym_a, -4).shape == (2, 4)
@@ -164,12 +161,12 @@ def test_issue_18411():
     A = MatrixSymbol('A', 4, 4)
     M = Matrix(4, 4, range(16))
 
-    # S.Y. Lee test case from #18411:
+    # Test case from #18411:
     sl1 = A[5:0:-1, 5:0:-1]
     assert sl1.shape == (3, 3)
     assert sl1.subs(A, M).as_explicit() == M.as_explicit()[5:0:-1, 5:0:-1]
 
-    # Oscar Benjamin test case from #18411:
+    # Test case with start beyond length from #18411:
     sl2 = A[6::-1, 6::-1]
     assert sl2.shape == (4, 4)
     assert sl2.subs(A, M).as_explicit() == M[::-1, ::-1]

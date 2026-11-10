@@ -3973,7 +3973,6 @@ def test_MatrixSlice():
     assert pretty(expr) == upretty(expr) == 'X[x:x + 1:2, y:y + 1:2]'
     expr = X[:x, y:]
     assert pretty(expr) == upretty(expr) == 'X[:x, y:]'
-    assert pretty(expr) == upretty(expr) == 'X[:x, y:]'
     expr = X[x:, :y]
     assert pretty(expr) == upretty(expr) == 'X[x:, :y]'
     expr = X[x:y, z:w]

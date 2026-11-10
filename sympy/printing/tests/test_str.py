@@ -1077,7 +1077,6 @@ def test_MatrixSlice():
     assert str(X[x:x + 1, y:y + 1]) == 'X[x:x + 1, y:y + 1]'
     assert str(X[x:x + 1:2, y:y + 1:2]) == 'X[x:x + 1:2, y:y + 1:2]'
     assert str(X[:x, y:]) == 'X[:x, y:]'
-    assert str(X[:x, y:]) == 'X[:x, y:]'
     assert str(X[x:, :y]) == 'X[x:, :y]'
     assert str(X[x:y, z:w]) == 'X[x:y, z:w]'
     assert str(X[x:y:t, w:t:x]) == 'X[x:y:t, w:t:x]'

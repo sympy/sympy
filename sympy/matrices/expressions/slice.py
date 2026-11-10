@@ -25,19 +25,12 @@ def delta(value: Expr) -> Expr:
     return (sign(value)**2 - sign(value)) / 2
 
 
-def decode_bound(bound: Expr, n: Expr) -> Expr:
-    """
-    Decodes stored canonical bound by adding n if bound is negative.
-    """
-    return bound + n*delta(bound)
-
-
 def normalize_bound(n: Expr, step: Expr, bound: Expr) -> Expr:
     p = delta(step)
-    return Max(-p, Min(n - p, decode_bound(bound, n)))
+    return Max(-p, Min(n - p, bound + n*delta(bound)))
 
 
-def sympify_slice(n: Expr, value: slice | tuple | Tuple | Expr) -> Tuple:
+def normalize(value: slice | tuple | Tuple | Expr, n: Expr) -> Tuple:
     """
     Resolves omitted slice arguments while preserving supplied bounds.
     """
@@ -67,9 +60,6 @@ def sympify_slice(n: Expr, value: slice | tuple | Tuple | Expr) -> Tuple:
     if stop is None:
         stop = n - p*(2*n + 1)
     return Tuple(start, stop, step)
-
-
-normalize = sympify_slice
 
 
 def slice_shape_1d(n: Expr, sl: tuple[Expr, Expr, Expr] | Tuple) -> Expr:
@@ -138,8 +128,8 @@ class MatrixSlice(MatrixExpr):
         parent = sympify(parent)
         if not isinstance(parent, MatrixExpr):
             raise TypeError("parent must be a MatrixExpr")
-        rowslice = sympify_slice(parent.rows, rowslice)
-        colslice = sympify_slice(parent.cols, colslice)
+        rowslice = normalize(rowslice, parent.rows)
+        colslice = normalize(colslice, parent.cols)
         if isinstance(parent, MatrixSlice):
             return mat_slice_of_slice(parent, rowslice, colslice)
         return Basic.__new__(cls, parent, Tuple(*rowslice), Tuple(*colslice))
