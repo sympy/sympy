@@ -277,7 +277,7 @@ so you may prefer an approximate numerical solution:
 
 ```py
 >>> rq0.n()
--0.349745826211722 - 0.438990337475312*I
+-0.349745826211722 + 0.438990337475312*I
 ```
 
 {func}`~.nroots` can fail sometimes for polynomials that are numerically ill
