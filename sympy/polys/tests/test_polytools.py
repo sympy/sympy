@@ -944,6 +944,26 @@ def test_Poly_is_irreducible():
     assert Poly(7*x + 3, modulus=11).is_irreducible is True
     assert Poly(7*x**2 + 3*x + 1, modulus=11).is_irreducible is False
 
+    # issue 30845: over CC the polynomial is factored over the Gaussian
+    # rationals, which is the exact counterpart of CC, so is_irreducible
+    # agrees with what factor returns for the same polynomial
+    assert Poly(x**2 + 1, x, domain='CC').is_irreducible is False
+    assert Poly(x - 1, x, domain='CC').is_irreducible is True
+    assert Poly(3*x + 2, x, domain='CC').is_irreducible is True
+    # x**5 - 2 is Eisenstein at 2 over the Gaussian integers, so it has no
+    # factor over QQ_I and is irreducible there
+    assert Poly(x**5 - 2, x, domain='CC').is_irreducible is True
+    # a constant has no factor to find, so it is irreducible, as it is over
+    # every other domain
+    assert Poly(S(2), x, domain='CC').is_irreducible is True
+    assert Poly(S(2), x).is_irreducible is True
+
+    # is_irreducible must agree with factor over the same domain
+    for expr in (x**2 + 1, x**2 - 1, x**5 - 2, x - 1, 3*x + 2, x**2 + 2):
+        p = Poly(expr, x, domain='CC')
+        _, factors = p.factor_list()
+        assert p.is_irreducible is (len(factors) == 1), expr
+
 
 def test_Poly_subs():
     assert Poly(x + 1).subs(x, 0) == 1
