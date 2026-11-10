@@ -1266,6 +1266,14 @@ def test_issue_3940():
         sqrt(pi)*exp(d**2/a)/sqrt(a)
 
 
+def test_integrate_exp_factored_quadratic():
+    assert integrate(exp(x*(-x + I)), x) == integrate(exp(-x**2 + I*x), x)
+    f = x*exp(x**2)*exp(x*(x - 1))
+    F = integrate(f, x)
+    assert not F.has(Integral)
+    assert simplify(diff(F, x) - f) == 0
+
+
 def test_issue_5413():
     # Note that this is not the same as testing ratint() because integrate()
     # pulls out the coefficient.
