@@ -34,8 +34,6 @@ basic
 
 .. py:class:: _SupportsItems
 
-.. py:class:: Tvalue
-
 .. autoclass:: Basic
    :members:
 

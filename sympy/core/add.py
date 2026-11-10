@@ -641,9 +641,10 @@ class Add(Expr, AssocOp):
 
         # assemble single numerator and denominator
         denoms, numers = [list(i) for i in zip(*iter(nd2.items()))]
-        return (_keep_coeff(ncon, self.func(*[Mul(*(denoms[:i] + [numers[i]] + denoms[i + 1:]))
-                    for i in range(len(numers))])),
-                _keep_coeff(dcon, Mul(*denoms)))
+        n, d = self.func(*[Mul(*(denoms[:i] + [numers[i]] + denoms[i + 1:]))
+                   for i in range(len(numers))]), Mul(*denoms)
+
+        return _keep_coeff(ncon, n), _keep_coeff(dcon, d)
 
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)

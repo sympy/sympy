@@ -19,10 +19,10 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
 
+
 if TYPE_CHECKING:
     from typing import ClassVar, Any, Hashable, TypeVar, Protocol
     from typing_extensions import Self
-    from collections.abc import Callable
     from .assumptions import StdFactKB
     from .symbol import Symbol
 
@@ -35,8 +35,6 @@ if TYPE_CHECKING:
     class _SupportsItems(Protocol[_K_co, _V_co]):
         def items(self) -> Iterable[tuple[_K_co, _V_co]]:
             ...
-
-    Tvalue = TypeVar("Tvalue", bound='Basic')
 
 
 def as_Basic(expr):
@@ -958,7 +956,7 @@ class Basic(Printable):
         return False
 
     @property
-    def func(self) -> Callable[..., Self]:
+    def func(self):
         """
         The top-level function in an expression.
 
@@ -1374,7 +1372,7 @@ class Basic(Printable):
         """
         return None
 
-    def xreplace(self, rule: Mapping[Tbasic, Tvalue]) -> Self | Tvalue:
+    def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
         """
         Replace occurrences of objects within the expression.
 
@@ -1441,24 +1439,22 @@ class Basic(Printable):
         value, _ = self._xreplace(rule)
         return value
 
-    def _xreplace(self, rule: Mapping[Any, Tvalue]) -> tuple[Self | Tvalue, bool]:
+    def _xreplace(self, rule: Mapping[Any, Basic]) -> tuple[Basic, bool]:
         """
         Helper for xreplace. Tracks whether a replacement actually occurred.
         """
-        returnMe: Self | Tvalue = self
-        changed: bool = False
         if self in rule:
-            returnMe = rule[self]
-            changed = True
+            return rule[self], True
         elif rule:
             args: list[Basic] = []
+            changed = False
             for a in self.args:
                 a, achanged = a._xreplace(rule)
                 changed |= achanged
                 args.append(a)
             if changed:
-                returnMe = self.func(*args)
-        return (returnMe, changed)
+                return self.func(*args), True
+        return self, False
 
     @cacheit
     def has(self, *patterns: Basic | type[Basic] | complex) -> bool:
@@ -2407,7 +2403,7 @@ class Atom(Basic):
                 return {}
             return repl_dict.copy()
 
-    def _xreplace(self, rule: Mapping[Any, Tvalue]) -> tuple[Self | Tvalue, bool]:
+    def _xreplace(self, rule: Mapping[Any, Basic]) -> tuple[Basic, bool]:
         if self in rule:
             return rule[self], True
         return self, False

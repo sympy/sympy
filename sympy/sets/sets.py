@@ -113,7 +113,12 @@ class Set(Basic, EvalfMixin):
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
             ...
 
-        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Set:
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Expr | Set]) -> Set: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
             ...
 
         def simplify(self, **kwargs) -> Set:
