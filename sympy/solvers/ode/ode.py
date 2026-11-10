@@ -2226,6 +2226,12 @@ def constant_renumber(expr, variables=None, newconstants=None):
         else:
             sortedargs = list(expr.args)
             sortedargs.sort(key=sort_key)
+            # Match the printer's preference for a positive term first.
+            if expr.is_Add and len(sortedargs) == 2:
+                a, b = sortedargs
+                if (a.as_coeff_Mul()[0].is_negative
+                        and not b.as_coeff_Mul()[0].is_negative):
+                    sortedargs.reverse()
             return expr.func(*[_constant_renumber(x) for x in sortedargs])
     expr = _constant_renumber(expr)
 
