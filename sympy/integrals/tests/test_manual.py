@@ -1253,6 +1253,16 @@ def test_manualintegrate_chebyshev_substitution():
     assert (generic.diff(x) - integrand).cancel() == 0
     assert degenerate.diff(x) == integrand.subs(b, 0)
 
+    # gh-30441: (m + 1)/n is an integer, check the a = 0 degenerate branch
+    # produced when the transformed integrand has (u**q - a) in the denominator.
+    integrand = 1/(x*sqrt(a + b*x**2)**3)
+    antiderivative = piecewise_fold(manualintegrate(integrand, x))
+    assert (antiderivative.diff(x) - integrand).subs({a: 1, b: 2, x: 3}).simplify() == 0
+    branches = {cond: expr for expr, cond in antiderivative.args}
+    assert branches[Eq(a, 0)].diff(x) == integrand.subs(a, 0)
+    assert (integrand.subs({a: 0, b: 1, x: 4})
+            - antiderivative.diff(x).subs({a: 0, b: 1, x: 4})) == 0
+
     # (m + 1)/n + p is an integer. Check the a = 0 branch separately.
     integrand = sqrt(x)/sqrt(a + x**3)
     antiderivative = piecewise_fold(manualintegrate(integrand, x))
