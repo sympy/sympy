@@ -1657,7 +1657,7 @@ def _solve_modular(f, symbol, domain):
     >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
     EmptySet
     >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
-    ImageSet(Lambda(_n, 6*_n + 2), Naturals0)
+    ConditionSet(x, Eq(Mod(12**x, 21) - 18, 0), Integers)
     >>> solve_modulo(Mod(sin(x), 7) - 3, x, S.Integers) # not solvable
     ConditionSet(x, Eq(Mod(sin(x), 7) - 3, 0), Integers)
     >>> solve_modulo(3 - Mod(x, 5), x, Intersection(S.Integers, Interval(0, 100)))
