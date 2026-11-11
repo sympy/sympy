@@ -1276,7 +1276,7 @@ class Interval(Set):
 
     @property
     def _measure(self):
-        return self.end - self.start
+        return Max(0, self.end - self.start)
 
     def _kind(self):
         return SetKind(NumberKind)
