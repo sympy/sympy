@@ -761,6 +761,51 @@ def test_Interval_measure_reversed_symbolic_endpoints():
     assert Interval(0, x).measure == x
 
 
+def test_Interval_measure_assumptions():
+    n = Symbol('n', negative=True)
+    nonpos = Symbol('nonpos', nonpositive=True)
+    p = Symbol('p', positive=True)
+    nonneg = Symbol('nonneg', nonnegative=True)
+    inf_pos = Symbol('inf_pos', extended_positive=True, finite=False)
+    a = Symbol('a', real=True)
+
+    # sign information lets Max collapse
+    assert Interval(n, 0).measure == -n
+    assert Interval(n, p).measure == p - n
+    assert Interval(0, nonneg).measure == nonneg
+    assert Interval(nonpos, 0).measure == -nonpos
+    assert Interval(0, nonpos).measure == 0
+
+    # infinite endpoints
+    assert Interval(-oo, oo).measure is oo
+    assert Interval(0, oo).measure is oo
+    assert Interval(-oo, 0).measure is oo
+    assert Interval(-oo, a).measure is oo
+    assert Interval(a, oo).measure is oo
+    assert Interval(0, inf_pos).measure == inf_pos
+
+    # intervals that are provably empty have measure 0
+    assert Interval(0, n) is S.EmptySet
+    assert Interval(0, n).measure == 0
+    assert Interval.open(a, a) is S.EmptySet
+    assert Interval.open(a, a).measure == 0
+
+
+def test_Interval_zero_measure_not_always_empty():
+    a, b = symbols('a b', real=True)
+    nonpos = Symbol('nonpos', nonpositive=True)
+    # measure 0 does not imply EmptySet: a single point has measure 0
+    assert Interval(1, 1) == FiniteSet(1)
+    assert Interval(1, 1).measure == 0
+    assert Interval(a, a) == FiniteSet(a)
+    assert Interval(a, a).measure == 0
+    # empty intervals do have measure 0
+    assert Interval(3, 1) is S.EmptySet and S.EmptySet.measure == 0
+    # undetermined cases stay unevaluated rather than claiming EmptySet
+    assert Interval(a, b).is_empty is None
+    assert Interval(0, nonpos).is_empty is None
+
+
 def test_measure():
     a = Symbol('a', real=True)
 
