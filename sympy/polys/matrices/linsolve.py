@@ -224,7 +224,11 @@ def _lin_eq2dict(a, symset):
             return coeff, {}
         else:
             terms = {sym: coeff * c for sym, c in terms.items()}
-            return  coeff * terms_coeff, terms
+            if terms_coeff is S.Zero:
+                return S.Zero, terms
+            else:
+                coeff = Mul._from_args(coeff_list)
+                return  coeff * terms_coeff, terms
     elif not a.has_xfree(symset):
         return a, {}
     else:

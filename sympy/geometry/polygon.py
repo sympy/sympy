@@ -67,7 +67,7 @@ class Polygon(GeometrySet):
     =====
 
     Polygons are treated as closed paths rather than 2D areas so
-    some calculations can be be negative or positive (e.g., area)
+    some calculations can be negative or positive (e.g., area)
     based on the orientation of the points.
 
     Any consecutive identical points are reduced to a single point
@@ -1112,7 +1112,7 @@ class Polygon(GeometrySet):
         =====
 
             - Prints a warning if the two polygons possibly intersect as the return
-              value will not be valid in such a case. For a more through test of
+              value will not be valid in such a case. For a more thorough test of
               intersection use intersection().
 
         See Also
@@ -1344,7 +1344,7 @@ class Polygon(GeometrySet):
 
     def __contains__(self, o):
         """
-        Return True if o is contained within the boundary lines of self.altitudes
+        Return True if o is contained within the boundary lines of self
 
         Parameters
         ==========
@@ -2654,7 +2654,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.exradii[t.sides[2]]
-        -2 + sqrt(10)
+        sqrt(10) - 2
 
         References
         ==========

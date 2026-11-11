@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING, overload
 from functools import reduce
 from collections import defaultdict
+from itertools import pairwise
 import inspect
 
 from sympy.core.kind import Kind, UndefinedKind, NumberKind
@@ -1275,7 +1276,7 @@ class Interval(Set):
 
     @property
     def _measure(self):
-        return self.end - self.start
+        return Max(0, self.end - self.start)
 
     def _kind(self):
         return SetKind(NumberKind)
@@ -2053,7 +2054,7 @@ class FiniteSet(Set):
                 nums.sort()
                 intervals = []  # Build up a list of intervals between the elements
                 intervals += [Interval(S.NegativeInfinity, nums[0], True, True)]
-                for a, b in zip(nums[:-1], nums[1:]):
+                for a, b in pairwise(nums):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
                 if syms != []:
@@ -2181,24 +2182,24 @@ class FiniteSet(Set):
                 return None
         return PowerSet(biggest)
 
-    def __ge__(self, other):
+    def __ge__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return other.is_subset(self)
 
-    def __gt__(self, other):
+    def __gt__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return self.is_proper_superset(other)
 
-    def __le__(self, other):
+    def __le__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return self.is_subset(other)
 
-    def __lt__(self, other):
+    def __lt__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            return NotImplemented
         return self.is_proper_subset(other)
 
     def __eq__(self, other):
@@ -2464,10 +2465,10 @@ def imageset(*args):
     Interval(0, 4)
 
     >>> imageset(Lambda(x, sin(x)), Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
+    Interval(-1, sin(1))
 
     >>> imageset(sin, Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
+    Interval(-1, sin(1))
     >>> imageset(lambda y: x + y, Interval(-2, 1))
     ImageSet(Lambda(y, x + y), Interval(-2, 1))
 
@@ -2724,8 +2725,10 @@ def _handle_finite_sets(op, x, y, commutative):
     if len(fs_args) == 2:
         return FiniteSet(*[op(i, j) for i in fs_args[0] for j in fs_args[1]])
     elif len(fs_args) == 1:
-        sets = [_apply_operation(op, other[0], i, commutative) for i in fs_args[0]]
-        return Union(*sets)
+        sets = [_apply_operation(op, other[0], i, commutative)
+            for i in fs_args[0]]
+        return Union(*(i if isinstance(i, Set) else FiniteSet(i)
+            for i in sets))
     else:
         return None
 

@@ -3,7 +3,7 @@ from sympy.core.numbers import (Float, I, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
-from sympy.polys.polytools import PurePoly
+from sympy.polys.polytools import Poly
 from sympy.matrices import \
     Matrix, MutableSparseMatrix, ImmutableSparseMatrix, SparseMatrix, eye, \
     ones, zeros, ShapeError, NonSquareMatrixError
@@ -517,8 +517,8 @@ def test_sparse_matrix():
     x = Symbol('x')
     y = Symbol('y')
     sparse_eye3 = sparse_eye(3)
-    assert sparse_eye3.charpoly(x) == PurePoly((x - 1)**3)
-    assert sparse_eye3.charpoly(y) == PurePoly((y - 1)**3)
+    assert sparse_eye3.charpoly(x) == Poly((x - 1)**3, x)
+    assert sparse_eye3.charpoly(y) == Poly((y - 1)**3, y)
 
     # test values
     M = Matrix([( 0, 1, -1),

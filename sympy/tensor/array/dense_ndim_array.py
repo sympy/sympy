@@ -11,6 +11,26 @@ from sympy.utilities.iterables import flatten
 
 
 class DenseNDimArray(NDimArray):
+    """
+    Base class for dense N-dim arrays.
+
+    Dense arrays store every element. Calling ``DenseNDimArray`` creates an
+    :class:`ImmutableDenseNDimArray`; use :class:`MutableDenseNDimArray` for an
+    array that can be modified in place.
+
+    Examples
+    ========
+
+    >>> from sympy import DenseNDimArray, ImmutableDenseNDimArray
+    >>> a = DenseNDimArray([1, 2, 3, 4], (2, 2))
+    >>> a
+    [[1, 2], [3, 4]]
+    >>> isinstance(a, ImmutableDenseNDimArray)
+    True
+    >>> isinstance(a, DenseNDimArray)
+    True
+
+    """
 
     _array: list[Basic]
 
@@ -136,6 +156,10 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignor
     def _new(cls, iterable, shape, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
+        # ``flat_list`` may be a one-shot iterator (e.g. the ``map`` object that
+        # ``applyfunc`` builds); materialize it so ``_check_special_bounds`` can
+        # take its length and the ``flatten`` below still sees the elements.
+        flat_list = list(flat_list)
         cls._check_special_bounds(flat_list, shape)
         flat_list = flatten(flat_list)
         flat_list = Tuple(*flat_list)

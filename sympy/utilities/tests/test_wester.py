@@ -921,15 +921,15 @@ def test_M7():
     # TODO: Replace solve with solveset, as of now test fails for solveset
     assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
         226*x**2 - 140*x + 46, x)) == {
-        1 - sqrt(2)*I*sqrt(-sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        1 - sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(2)*I*sqrt(-sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        }
+        -sqrt(2)*sqrt(-I*sqrt(4*sqrt(3) + 3) - 3)/2 + 1,
+        sqrt(2)*sqrt(-I*sqrt(4*sqrt(3) + 3) - 3)/2 + 1,
+        -sqrt(2)*sqrt(I*sqrt(4*sqrt(3) + 3) - 3)/2 + 1,
+        sqrt(2)*sqrt(I*sqrt(4*sqrt(3) + 3) - 3)/2 + 1,
+        -sqrt(2)*sqrt(sqrt(4*sqrt(3) - 3) - 3)/2 + 1,
+        sqrt(2)*sqrt(sqrt(4*sqrt(3) - 3) - 3)/2 + 1,
+        -sqrt(2)*I*sqrt(sqrt(4*sqrt(3) - 3) + 3)/2 + 1,
+        sqrt(2)*I*sqrt(sqrt(4*sqrt(3) - 3) + 3)/2 + 1,
+    }
 
 
 @XFAIL  # There are an infinite number of solutions.
@@ -1246,8 +1246,6 @@ def test_N7():
     assert ask(y > 0, (x > 1) & (y >= x - 1)) is True
 
 
-@XFAIL
-@slow
 def test_N8():
     x, y, z = symbols('x y z', real=True)
     assert ask(Eq(x, y) & Eq(y, z),
@@ -1565,7 +1563,7 @@ def test_P21():
     M = Matrix([[5, -3, -7],
                 [-2, 1,  2],
                 [2, -3, -4]])
-    assert M.charpoly(x).as_expr() == x**3 - 2*x**2 - 5*x + 6
+    assert M.charpoly().as_expr(x) == x**3 - 2*x**2 - 5*x + 6
 
 
 def test_P22():
@@ -2401,11 +2399,8 @@ def test_V12():
     assert r1 == -1/(tan(x/2) + 2)
 
 
-@XFAIL
 def test_V13():
     r1 = integrate(1/(6 + 3*cos(x) + 4*sin(x)), x)
-    # expression not simplified, returns: -sqrt(11)*I*log(tan(x/2) + 4/3
-    #   - sqrt(11)*I/3)/11 + sqrt(11)*I*log(tan(x/2) + 4/3 + sqrt(11)*I/3)/11
     assert r1.simplify() == 2*sqrt(11)*atan(sqrt(11)*(3*tan(x/2) + 4)/11)/11
 
 
@@ -2423,9 +2418,7 @@ def test_V15():
     assert simplify(r1 - (x*y + (x**2 + y**2)*acot(x/y))/2) == 0
 
 
-@XFAIL
 def test_V16():
-    # Integral not calculated
     assert integrate(cos(5*x)*Ci(2*x), x) == Ci(2*x)*sin(5*x)/5 - (Si(3*x) + Si(7*x))/10
 
 @XFAIL

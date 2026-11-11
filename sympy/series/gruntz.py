@@ -305,6 +305,10 @@ def mrv(e, x):
     elif isinstance(e, AppliedUndef):
         raise ValueError("MRV set computation for UndefinedFunction is not allowed")
     elif e.is_Function:
+        from sympy.functions.elementary.miscellaneous import Min, Max
+        if isinstance(e, (Min, Max)):
+            from sympy.functions.elementary.complexes import Abs
+            return mrv(e.rewrite(Abs), x)
         l = [mrv(a, x) for a in e.args]
         l2 = [s for (s, _) in l if s != SubsSet()]
         if len(l2) != 1:
@@ -678,6 +682,11 @@ def gruntz(e, z, z0, dir="+"):
     """
     if not z.is_symbol:
         raise NotImplementedError("Second argument must be a Symbol")
+
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    if e.has(Min, Max):
+        from sympy.functions.elementary.complexes import Abs
+        e = e.rewrite((Min, Max), Abs)
 
     # convert all limits to the limit z->oo; sign of z is handled in limitinf
     r = None

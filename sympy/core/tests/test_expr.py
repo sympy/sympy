@@ -28,6 +28,7 @@ from sympy.functions.special.delta_functions import (Heaviside,
     DiracDelta)
 from sympy.functions.special.error_functions import Si
 from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.integrals import integrate, Integral
 from sympy.physics.secondquant import FockState
 from sympy.polys.partfrac import apart
@@ -47,7 +48,7 @@ from sympy.physics.units import meter
 
 import pytest
 import sys
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, slow, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
@@ -855,6 +856,8 @@ def test_trunc():
     assert math.trunc(exp(5)) == 148
     assert math.trunc(cos(pi)) == -1
     assert math.trunc(sin(5)) == 0
+    assert type(math.trunc(pi)) is int
+    assert type(math.trunc(sqrt(2))) is int
 
     raises(TypeError, lambda: math.trunc(x))
     raises(TypeError, lambda: math.trunc(x + y**2))
@@ -1417,8 +1420,8 @@ def test_extractions():
     assert (-x + y).could_extract_minus_sign() is True
     assert (x - 1).could_extract_minus_sign() is False
     assert (1 - x).could_extract_minus_sign() is True
-    assert (sqrt(2) - 1).could_extract_minus_sign() is True
-    assert (1 - sqrt(2)).could_extract_minus_sign() is False
+    assert (sqrt(2) - 1).could_extract_minus_sign() is False
+    assert (1 - sqrt(2)).could_extract_minus_sign() is True
     # check that result is canonical
     eq = (3*x + 15*y).extract_multiplicatively(3)
     assert eq is not None and eq.args == eq.func(*eq.args).args
@@ -1546,8 +1549,12 @@ def test_as_base_exp():
     assert (x*y*z).as_base_exp() == (x*y*z, S.One)
     assert (x + y + z).as_base_exp() == (x + y + z, S.One)
     assert ((x + y)**z).as_base_exp() == (x + y, z)
-    assert (x**2*y**2).as_base_exp() == (x*y, 2)
     assert (x**z*y**z).as_base_exp() == (x**z*y**z, S.One)
+    # Recovering a common power (e.g. x**4*y**12 -> (x*y**3)**4)
+    # requires deciding how to handle rational exponents, coefficients,
+    # and perfect powers for coefficients. That belongs in a dedicated
+    # algebraic routine, not in the structural as_base_exp interface.
+    assert (x**2*y**2).as_base_exp() == (x**2*y**2, S.One)
 
 
 def test_issue_4963():
@@ -1786,6 +1793,8 @@ def test_expr_sorting():
     a, b = exprs = [Dummy('x'), Dummy('x')]
     assert sorted([b, a], key=default_sort_key) == exprs
 
+    exprs = [f(nan), f(-1), f(1)]
+    assert sorted(exprs, key=default_sort_key) == exprs
 
 def test_as_ordered_factors():
 
@@ -1802,6 +1811,22 @@ def test_as_ordered_factors():
 
     assert (A*B).as_ordered_factors() == [A, B]
     assert (B*A).as_ordered_factors() == [B, A]
+
+
+def test_as_terms_repeated_bases():
+    # The exponent should not depend on the order of unevaluated factors.
+    for factors, exponent in (
+        ((x, x**3), 4),
+        ((x**3, x), 4),
+        ((x**2, x**3), 5),
+        ((x**3, x**2), 5),
+    ):
+        term = Mul(*factors, evaluate=False)
+        terms, gens = term.as_terms()
+        assert gens == [x]
+        assert terms[0][1][1] == (exponent,)
+        assert Add(term, x**2, evaluate=False).as_ordered_terms() == [
+            term, x**2]
 
 
 def test_as_ordered_terms():
@@ -1827,6 +1852,19 @@ def test_as_ordered_terms():
     assert ( 4 - 3*I).as_ordered_terms() == [4, -3*I]
     assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
 
+    # seeing I once as a factor makes terms special,
+    # else treat terms like monomials
+    for base in (pi, I):
+        p = Pow(base, 2, evaluate=False)
+        m = Mul(base, base, evaluate=False)
+        # the p and m should be on the same side of 1
+        assert (p + m + 1 + x).as_ordered_terms() == [x, p, m, 1]
+    p = Pow(I, 4, evaluate=False)
+    m = Mul(Pow(I, 2, evaluate=False), I, I, evaluate=False)
+    terms, _ = (p + m).as_terms()
+    monoms = {term: data[1] for term, data in terms}
+    assert monoms[p] == monoms[m]
+
     e = x**2*y**2 + x*y**4 + y + 2
 
     assert e.as_ordered_terms(order="lex") == [x**2*y**2, x*y**4, y, 2]
@@ -1835,7 +1873,7 @@ def test_as_ordered_terms():
     assert e.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
     k = Symbol('k')
-    assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k]) # type: ignore
+    assert k.as_ordered_terms(data=True) == ([(k, ((1, 0), (1,), ()))], [k]) # type: ignore
 
 
 def test_sort_key_atomic_expr():
@@ -1996,6 +2034,7 @@ def test_random():
     assert Piecewise((Max(x, y), z))._random() is None
 
 
+@slow
 def test_round():
     assert str(Float('0.1249999').round(2)) == '0.12'
     d20 = 12345678901234567890
@@ -2289,6 +2328,21 @@ def test_ExprBuilder():
     eb.args.extend([x, x])
     assert eb.build() == x**2
 
+    # append_argument should call the validator without raising a TypeError:
+    validated = []
+    eb = ExprBuilder(Mul, [x], validator=lambda *args: validated.append(args))
+    eb.append_argument(x)
+    assert eb.args == [x, x]
+    assert validated[-1] == (x, x)
+    assert eb.build() == x**2
+
+    # search_element should recurse into nested ExprBuilder arguments:
+    inner = ExprBuilder(Mul, [y])
+    outer = ExprBuilder(Mul, [x, inner])
+    assert outer.search_element(x) == (0,)
+    assert outer.search_element(y) == (1, 0)
+    assert outer.search_element(z) is None
+
 
 def test_issue_22020():
     from sympy.parsing.sympy_parser import parse_expr
@@ -2354,6 +2408,65 @@ def test_format():
 
 def test_issue_24045():
     assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
+
+
+
+def test_two_arg_printing():
+    from sympy.printing.str import sstr
+
+    a, b, z = symbols('a b z')
+
+    # The canonical term order and the default printed order are
+    # deliberately different: display preferences belong to printers.
+    assert (z - a).as_ordered_terms() == [-a, z]
+    assert str(z - a) == 'z - a'
+    assert sstr(z - a, order='grlex') == '-a + z'
+
+    assert (2 - x).as_ordered_terms() == [-x, 2]
+    assert str(2 - x) == '2 - x'
+    assert sstr(2 - x, order='grlex') == '-x + 2'
+
+    assert (a + I*b).as_ordered_terms() == [a, I*b]
+    assert str(a + I*b) == 'a + I*b'
+    assert (-2 + 3*I).as_ordered_terms() == [-2, 3*I]
+    assert str(-2 + 3*I) == '-2 + 3*I'
+
+    # Symbol-free constants are printed last with or without Order terms.
+    assert str(x + pi/4) == 'x + pi/4'
+    assert str(x + pi) == 'x + pi'
+    assert str(x + 1) == 'x + 1'
+    assert str(x + pi/4 + x**2) == 'x**2 + x + pi/4'
+    assert str(x + pi/4 + x**2 + O(x**3)) == (
+        'pi/4 + x + x**2 + O(x**3)')
+
+    # Coefficient constants must not push lower-degree terms behind
+    # higher-degree terms in a series.
+    series = -log(x) - S.EulerGamma*x - x**3*zeta(3)/3 + pi**2*x**2/12 + O(x**4)
+    assert str(series).startswith('-log(x) - EulerGamma*x')
+    assert str(series).endswith(' + O(x**4)')
+
+    # Adding Order reverses the non-Order terms, including the
+    # numeric tail, rather than changing their relative ordering.
+    series = cos(x).series(x, n=10) + pi
+    assert str(series) == (
+        '1 + pi - x**2/2 + x**4/24 - x**6/720'
+        ' + x**8/40320 + O(x**10)')
+    assert str(series.removeO()) == (
+        'x**8/40320 - x**6/720 + x**4/24 - x**2/2 + pi + 1')
+
+    assert str(x - 2) == 'x - 2'
+    assert str(-x - 1) == '-x - 1'
+    assert str(-6 - x) == '-x - 6'
+    assert str(x - y) == 'x - y'
+    assert str(-x + y) == 'y - x'
+
+    # Core sign conventions should not change with display preferences.
+    assert (x - y).could_extract_minus_sign() is False
+    assert (-x + y).could_extract_minus_sign() is True
+
+    e = -6 - x
+    assert [t for t, _ in e.as_ordered_terms(data=True)[0]] == e.as_ordered_terms()
+
 
 
 def test__unevaluated_Mul():

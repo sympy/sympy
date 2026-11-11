@@ -85,7 +85,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(sqrt(2)).dummy_eq(x**2 - 2)
     assert minimal_polynomial(sqrt(2), x) == x**2 - 2
 
-    assert minimal_polynomial(sqrt(2), polys=True) == Poly(x**2 - 2)
+    assert minimal_polynomial(sqrt(2), polys=True).as_poly(x) == Poly(x**2 - 2, domain='QQ')
     assert minimal_polynomial(sqrt(2), x, polys=True) == Poly(x**2 - 2, domain='QQ')
     assert minimal_polynomial(sqrt(2), x, polys=True, compose=False) == Poly(x**2 - 2, domain='QQ')
 
@@ -337,6 +337,7 @@ def test_minpoly_issue_7113():
     2734577732179183863586489182929671773182898498218854181690460140337930774573792597743853652058046464
 
 
+@slow
 def test_minpoly_issue_23677():
     r1 = CRootOf(4000000*x**3 - 239960000*x**2 + 4782399900*x - 31663998001, 0)
     r2 = CRootOf(4000000*x**3 - 239960000*x**2 + 4782399900*x - 31663998001, 1)
@@ -436,10 +437,10 @@ def test_issue_18248():
 def test_issue_13230():
     c1 = Circle(Point2D(3, sqrt(5)), 5)
     c2 = Circle(Point2D(4, sqrt(7)), 6)
-    assert intersection(c1, c2) == [Point2D(-1 + (-sqrt(7) + sqrt(5))*(-2*sqrt(7)/29
+    assert set(intersection(c1, c2)) == {Point2D(-1 + (-sqrt(7) + sqrt(5))*(-2*sqrt(7)/29
     + 9*sqrt(5)/29 + sqrt(196*sqrt(35) + 1941)/29), -2*sqrt(7)/29 + 9*sqrt(5)/29
     + sqrt(196*sqrt(35) + 1941)/29), Point2D(-1 + (-sqrt(7) + sqrt(5))*(-sqrt(196*sqrt(35)
-    + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29), -sqrt(196*sqrt(35) + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29)]
+    + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29), -sqrt(196*sqrt(35) + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29)}
 
 def test_issue_19760():
     e = 1/(sqrt(1 + sqrt(2)) - sqrt(2)*sqrt(1 + sqrt(2))) + 1

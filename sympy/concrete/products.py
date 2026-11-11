@@ -34,44 +34,49 @@ class Product(ExprWithIntLimits):
     Finite products
     ===============
 
-    For finite products (and products with symbolic limits assumed to be finite)
-    we follow the analogue of the summation convention described by Karr [1],
-    especially definition 3 of section 1.4. The product:
+    For finite products (and products with symbolic limits assumed to be
+    finite), the product
 
     .. math::
 
-        \prod_{m \leq i < n} f(i)
+        P_a^b = \prod_{a \leq i \leq b} f(i)
 
-    has *the obvious meaning* for `m < n`, namely:
-
-    .. math::
-
-        \prod_{m \leq i < n} f(i) = f(m) f(m+1) \cdot \ldots \cdot f(n-2) f(n-1)
-
-    with the upper limit value `f(n)` excluded. The product over an empty set is
-    one if and only if `m = n`:
+    has *the obvious meaning* for `a \leq b`, namely:
 
     .. math::
 
-        \prod_{m \leq i < n} f(i) = 1  \quad \mathrm{for} \quad  m = n
+        P_a^b = \prod_{a \leq i \leq b} f(i) = f(a) f(a+1) \cdot \ldots \cdot f(b-1) f(b) \quad \mathrm{for} \quad a \leq b
 
-    Finally, for all other products over empty sets we assume the following
-    definition:
+    with the lower and upper limit values `f(a)` and `f(b)` included.
 
-    .. math::
-
-        \prod_{m \leq i < n} f(i) = \frac{1}{\prod_{n \leq i < m} f(i)}  \quad \mathrm{for} \quad  m > n
-
-    It is important to note that above we define all products with the upper
-    limit being exclusive. This is in contrast to the usual mathematical notation,
-    but does not affect the product convention. Indeed we have:
+    The convention for products is built upon a single, elegant objective:
+    for any product `P_a^b`, the following multiplicative rule must hold true
+    for all integers `a`, `b` and `c`:
 
     .. math::
 
-        \prod_{m \leq i < n} f(i) = \prod_{i = m}^{n - 1} f(i)
+        P_a^{b-1} \cdot P_b^c = P_a^c
 
-    where the difference in notation is intentional to emphasize the meaning,
-    with limits typeset on the top being inclusive.
+    This property is the multiplicative analogue of the additivity rule for
+    sums.  By enforcing this consistency, the convention naturally extends the
+    definition of a product to cases where the lower bound is not strictly less
+    than the upper bound, i.e. `a \nless b`, resulting in the following
+    generalizations:
+
+    .. math::
+        P_b^{b-1} = 1 \quad \mbox{because} \quad P_a^{b-1} \cdot P_b^{b-1} = P_a^{b-1}
+
+    and
+
+    .. math::
+        P_a^b = \frac{1}{P_{b+1}^{a-1}} \quad \mbox{because} \quad P_a^b \cdot P_{b+1}^{a-1} = P_a^{a-1} = 1
+
+    therefore, in case `a > b`:
+
+    .. math::
+        P_a^b = \frac{1}{P_{b+1}^{a-1}} = \frac{1}{\prod_{b + 1 \leq i \leq a - 1} f(i)}
+
+    with the lower and upper limit values `f(b)` and `f(a)` excluded.
 
     Examples
     ========
@@ -119,11 +124,11 @@ class Product(ExprWithIntLimits):
     pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2
     >>> Pe = P.doit()
     >>> Pe
-    pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(1 + pi/2, n)/(2*factorial(n)**2)
+    pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(pi/2 + 1, n)/(2*factorial(n)**2)
     >>> limit(Pe, n, oo).gammasimp()
     sin(pi**2/2)
     >>> Pe.rewrite(gamma)
-    (-1)**n*pi**2*gamma(pi/2)*gamma(n + 1 + pi/2)/(2*gamma(1 + pi/2)*gamma(-n + pi/2)*gamma(n + 1)**2)
+    (-1)**n*pi**2*gamma(pi/2)*gamma(n + pi/2 + 1)/(2*gamma(pi/2 + 1)*gamma(pi/2 - n)*gamma(n + 1)**2)
 
     Products with the lower limit being larger than the upper one:
 

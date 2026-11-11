@@ -868,7 +868,8 @@ def test_ImageSet_contains():
     assert q.subs(y, I*i).intersection(S.Integers) is S.Integers
     q = imageset(x, x + I*y/x, S.Integers).intersection(S.Reals)
     assert q.subs(y, 0) is S.Integers
-    assert q.subs(y, I*i*x).intersection(S.Integers) is S.Integers
+    # bypass protection of x by using xreplace
+    assert q.xreplace({y: I*i*x}).intersection(S.Integers) is S.Integers
     z = cos(1)**2 + sin(1)**2 - 1
     q = imageset(x, x + I*z, S.Integers).intersection(S.Reals)
     assert q is not S.EmptySet

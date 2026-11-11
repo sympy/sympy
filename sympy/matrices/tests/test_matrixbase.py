@@ -1205,7 +1205,7 @@ def test_issue_17247_expression_blowup_4():
 def test_issue_17247_expression_blowup_5():
     M = Matrix(6, 6, lambda i, j: 1 + (-1)**(i+j)*I)
     with dotprodsimp(True):
-        assert M.charpoly('x') == PurePoly(x**6 + (-6 - 6*I)*x**5 + 36*I*x**4, x, domain='EX')
+        assert M.charpoly('x') == Poly(x**6 + (-6 - 6*I)*x**5 + 36*I*x**4, x, domain='ZZ_I')
 
 
 def test_issue_17247_expression_blowup_6():
@@ -2542,16 +2542,17 @@ def test_Matrix_berkowitz_charpoly():
     A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
 
-    charpoly = A.charpoly(x)
+    charpoly = A.charpoly()
 
-    assert charpoly == \
+    assert charpoly.as_poly(x) == \
         Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x +
         K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
 
     assert type(charpoly) is PurePoly
 
     A = Matrix([[1, 3], [2, 0]])
-    assert A.charpoly() == A.charpoly(x) == PurePoly(x**2 - x - 6)
+    assert A.charpoly() == PurePoly(x**2 - x - 6)
+    assert A.charpoly(x) == A.charpoly().as_poly(x)
 
     A = Matrix([[1, 2], [x, 0]])
     p = A.charpoly(x)
@@ -2883,16 +2884,24 @@ def test_matrix_norm():
     # Test columns and symbols
     x = Symbol('x', real=True)
     v = Matrix([cos(x), sin(x)])
+    assert trigsimp(v.norm()) == 1
+    assert trigsimp(v.norm(None)) == 1
     assert trigsimp(v.norm(2)) == 1
     assert v.norm(10) == Pow(cos(x)**10 + sin(x)**10, Rational(1, 10))
 
     # Test Rows
     A = Matrix([[5, Rational(3, 2)]])
     assert A.norm() == Pow(25 + Rational(9, 4), S.Half)
+    assert A.norm(None) == Pow(25 + Rational(9, 4), S.Half)
     assert A.norm(oo) == max(A)
     assert A.norm(-oo) == min(A)
 
     # Matrix Tests
+    A = Matrix([[1, 2], [3, 4]])
+    assert A.norm() == sqrt(30)
+    assert A.norm(None) == sqrt(30)
+    assert A.norm(2) == sqrt(15 + sqrt(221))
+
     # Intuitive test
     A = Matrix([[1, 1], [1, 1]])
     assert A.norm(2) == 2
@@ -3512,11 +3521,16 @@ def test_17522_mpmath():
 def test_17522_scipy():
     from sympy.matrices.common import _matrixify
     try:
-        from scipy.sparse import csr_matrix
+        from scipy.sparse import csr_array, csr_matrix
     except ImportError:
-        skip('SciPy must be available to test indexing matrixified SciPy sparse matrices')
+        skip('SciPy must be available to test indexing matrixified SciPy sparse arrays and matrices')
 
-    m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
+    m = _matrixify(csr_array([[1, 2], [3, 4]]))
+    assert m[3] == 4
+    assert list(m) == [1, 2, 3, 4]
+
+    with ignore_warnings(DeprecationWarning):
+        m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 

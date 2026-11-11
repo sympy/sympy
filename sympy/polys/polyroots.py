@@ -232,7 +232,7 @@ def _roots_quartic_euler(p, q, r, a):
     >>> from sympy.polys.polyroots import _roots_quartic_euler
     >>> p, q, r = -S(64)/5, -S(512)/125, -S(1024)/3125
     >>> _roots_quartic_euler(p, q, r, S(0))[0]
-    -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
+    4*sqrt(5)/5 - sqrt(32*sqrt(5)/125 + 16/5)
     """
     # solve the resolvent equation
     x = Dummy('x')
@@ -382,6 +382,7 @@ def roots_binomial(f: Poly) -> list[Expr]:
     sorted (but will be canonical).
     """
     n = f.degree()
+    assert isinstance(n, int)
 
     a, b = f.nth(n), f.nth(0)
     base = -cancel(b/a)

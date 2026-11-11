@@ -826,7 +826,7 @@ class _TensorManager:
 
     @property
     def comm(self):
-        return self._comm
+        return [row.copy() for row in self._comm]
 
     def comm_symbols2i(self, i):
         """
@@ -1820,6 +1820,8 @@ class TensorHead(Basic):
         else:
             assert symmetry.rank == len(index_types)
 
+        if comm is None:
+            comm = Integer(2)
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry, sympify(comm))
         return obj
 
@@ -2341,13 +2343,13 @@ class TensExpr(Expr, ABC):
         >>> expr = H(i, j)/2 - H(j, i)/2
         >>> repl = {H(i, j): [[a, b], [c, d]]}
         >>> expr.replace_with_arrays(repl)
-        [[0, b/2 - c/2], [-b/2 + c/2, 0]]
+        [[0, b/2 - c/2], [c/2 - b/2, 0]]
 
         The same expression can be read as the transpose by inverting ``i`` and
         ``j``:
 
         >>> expr.replace_with_arrays(repl, [j, i])
-        [[0, -b/2 + c/2], [b/2 - c/2, 0]]
+        [[0, c/2 - b/2], [b/2 - c/2, 0]]
         """
         from .array import Array
 
@@ -2545,6 +2547,8 @@ class TensAdd(TensExpr, AssocOp):
         # it there is only a component tensor return it
         if len(args) == 1:
             return args[0]
+        if not any(isinstance(a, TensExpr) for a in args):
+            return Add(*args)
 
         obj = self.func(*args)
         return obj
@@ -2857,8 +2861,8 @@ class Tensor(TensExpr):
     ===========
 
     This object is usually created from a ``TensorHead``, by attaching indices
-    to it. Indices preceded by a minus sign are considered contravariant,
-    otherwise covariant.
+    to it. Indices preceded by a minus sign are considered covariant,
+    otherwise contravariant.
 
     Examples
     ========
@@ -3026,7 +3030,8 @@ class Tensor(TensExpr):
             return 0
         elif isinstance(other, Tensor):
             return self.component.commutes_with(other.component)
-        return NotImplementedError
+        else:
+            raise NotImplementedError(f"commutes_with between {type(self)} and {type(other)}")
 
     def perm2tensor(self, g, is_canon_bp=False):
         """
@@ -3463,10 +3468,7 @@ class TensMul(TensExpr, AssocOp):
                 newarg = arg
             newargs.append(newarg)
 
-        args = newargs
-
-        # Flatten:
-        args = [i for arg in args for i in (arg.args if isinstance(arg, (TensMul, Mul)) else [arg])]
+        args = cls._flatten_args(newargs)
 
         args, indices, free, dum = TensMul._tensMul_contract_indices(args, replace_indices=False)
 
@@ -3633,7 +3635,7 @@ class TensMul(TensExpr, AssocOp):
         else:
             args = self.args
 
-        args = [arg for arg in args if arg != self.identity]
+        args = self._flatten_args([arg for arg in args if arg != self.identity])
 
         # Extract non-tensor coefficients:
         coeff = reduce(lambda a, b: a*b, [arg for arg in args if not isinstance(arg, TensExpr)], S.One)
@@ -3663,6 +3665,16 @@ class TensMul(TensExpr, AssocOp):
         obj._coeff = coeff
         obj._is_canon_bp = is_canon_bp
         return obj
+
+    @staticmethod
+    def _flatten_args(args):
+        flat = []
+        for arg in args:
+            if isinstance(arg, (TensMul, Mul)):
+                flat.extend(arg.args)
+            else:
+                flat.append(arg)
+        return flat
 
     # TODO: this method should be private
     # TODO: should this method be renamed _from_components_free_dum ?

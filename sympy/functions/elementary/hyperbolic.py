@@ -1256,7 +1256,7 @@ class asinh(InverseHyperbolicFunction):
     >>> asinh(x).diff(x)
     1/sqrt(x**2 + 1)
     >>> asinh(1)
-    log(1 + sqrt(2))
+    log(sqrt(2) + 1)
 
     See Also
     ========
@@ -1830,7 +1830,7 @@ class acoth(InverseHyperbolicFunction):
             if i_coeff is not None:
                 return -I * acot(i_coeff)
             else:
-                if arg.could_extract_minus_sign():
+                if arg.is_nonzero and arg.could_extract_minus_sign():
                     return -cls(-arg)
 
         if arg.is_zero:
@@ -1937,7 +1937,7 @@ class asech(InverseHyperbolicFunction):
     >>> from sympy import asech, sqrt, S
     >>> from sympy.abc import x
     >>> asech(x).diff(x)
-    -1/(x*sqrt(1 - x**2))
+    -sqrt(1/(x + 1))/(x*sqrt(1 - x))
     >>> asech(1).diff(x)
     0
     >>> asech(1)
@@ -1969,7 +1969,7 @@ class asech(InverseHyperbolicFunction):
     def fdiff(self, argindex=1):
         if argindex == 1:
             z = self.args[0]
-            return -1/(z*sqrt(1 - z**2))
+            return -sqrt(1/(z + 1))/(z*sqrt(1 - z))
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -2138,7 +2138,7 @@ class acsch(InverseHyperbolicFunction):
     >>> acsch(1).diff(x)
     0
     >>> acsch(1)
-    log(1 + sqrt(2))
+    log(sqrt(2) + 1)
     >>> acsch(I)
     -I*pi/2
     >>> acsch(-2*I)

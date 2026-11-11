@@ -133,9 +133,9 @@ def _pivot(M, i, j):
     [g, h, i]])
     >>> _pivot(_, 1, 0)
     Matrix([
-    [-a/d, -a*e/d + b, -a*f/d + c],
-    [ 1/d,        e/d,        f/d],
-    [-g/d,  h - e*g/d,  i - f*g/d]])
+    [-a/d, b - a*e/d, c - a*f/d],
+    [ 1/d,       e/d,       f/d],
+    [-g/d, h - e*g/d, i - f*g/d]])
     """
     Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
     if Mij == 0:
@@ -485,26 +485,17 @@ def _primal_dual(M, factor=True):
     ... [ 0,  1, -3,  0]])
 
     >>> _primal_dual(m, False)  # last condition is 2*x1 >= -2
-    ((x2 - 3*x3,
-        [-3*x1 - 2*x2 + 4*x3 >= -2, 2*x1 >= -2]),
-    (-2*y1 - 2*y2,
-        [-3*y1 + 2*y2 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
+    ((x2 - 3*x3, [-3*x1 - 2*x2 + 4*x3 >= -2, 2*x1 >= -2]), (-2*y1 - 2*y2, [2*y2 - 3*y1 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
 
     >>> _primal_dual(m)  # condition now x1 >= -1
-    ((x2 - 3*x3,
-        [-3*x1 - 2*x2 + 4*x3 >= -2, x1 >= -1]),
-    (-2*y1 - 2*y2,
-        [-3*y1 + 2*y2 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
+    ((x2 - 3*x3, [-3*x1 - 2*x2 + 4*x3 >= -2, x1 >= -1]), (-2*y1 - 2*y2, [2*y2 - 3*y1 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
 
     If you pass the transpose of the matrix, the primal will be
     identified as the standard minimization problem and the
     dual as the standard maximization:
 
     >>> _primal_dual(m.T)
-    ((-2*x1 - 2*x2,
-        [-3*x1 + 2*x2 >= 0, -2*x1 >= 1, 4*x1 >= -3]),
-    (y2 - 3*y3,
-        [-3*y1 - 2*y2 + 4*y3 <= -2, y1 <= -1]))
+    ((-2*x1 - 2*x2, [2*x2 - 3*x1 >= 0, -2*x1 >= 1, 4*x1 >= -3]), (y2 - 3*y3, [-3*y1 - 2*y2 + 4*y3 <= -2, y1 <= -1]))
 
     A matrix must have some size or else None will be returned for
     the functions:
@@ -580,7 +571,7 @@ def _rel_as_nonpos(constr, syms):
     >>> from sympy.solvers.simplex import _rel_as_nonpos
     >>> from sympy.abc import x, y
     >>> _rel_as_nonpos([x >= y, x >= 0, y >= 0], (x, y))
-    ([-x + y], {}, [])
+    ([y - x], {}, [])
     >>> _rel_as_nonpos([x >= 3, x <= 5], [x])
     ([_z1 - 2], {x: _z1 + 3}, [_z1])
     >>> _rel_as_nonpos([x <= 5], [x])
@@ -976,8 +967,11 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     if A_eq is None:
         if b_eq is not None:
             raise ValueError("A_eq and b_eq must both be given")
+            A_eq = zeros(0, C.cols)
+            b_eq = zeros(0, 1)
     else:
-        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
+        A_eq = Matrix(A_eq)
+        b_eq = Matrix(b_eq)
         # if x == y then x <= y and x >= y (-x <= -y)
         A = A.col_join(A_eq)
         A = A.col_join(-A_eq)
@@ -1019,57 +1013,64 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
 def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     from sympy import symbols
-    ## the objective
+
+    # the objective function
     C = Matrix(c)
     if C.rows != 1 and C.cols == 1:
         C = C.T
     if C.rows != 1:
         raise ValueError("C must be a single row.")
 
-    ## the inequalities
+    # the inequalities
     if not A:
         if b:
             raise ValueError("A and b must both be given")
-        # the governing equations will be simple constraints
-        # on variables
-        A, b = zeros(0, C.cols), zeros(C.cols, 1)
+        A, b = zeros(0, C.cols), zeros(0, 1)
     else:
+        if not b:
+            raise ValueError("A and b must both be given")
         A, b = [Matrix(i) for i in (A, b)]
 
     if A.cols != C.cols:
         raise ValueError("number of columns in A and C must match")
 
-    ## the equalities
+    # the equalities
     if A_eq is None:
         if b_eq is not None:
             raise ValueError("A_eq and b_eq must both be given")
+        A_eq = zeros(0, C.cols)
+        b_eq = zeros(0, 1)
     else:
-        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
+        A_eq = Matrix(A_eq)
+        b_eq = Matrix(b_eq)
 
-    if not (bounds is None or bounds == {} or bounds == (0, None)):
-        ## the bounds are interpreted
+    # bounds handling
+    if bounds is None or bounds == {} or bounds == (0, None):
+        bounds = [(0, None)] * C.cols
+    else:
         if type(bounds) is tuple and len(bounds) == 2:
             bounds = [bounds] * A.cols
         elif len(bounds) == A.cols and all(
                 type(i) is tuple and len(i) == 2 for i in bounds):
-            pass # individual bounds
+            pass
         elif type(bounds) is dict and all(
                 type(i) is tuple and len(i) == 2
                 for i in bounds.values()):
-            # sparse bounds
             db = bounds
             bounds = [(0, None)] * A.cols
             while db:
                 i, j = db.popitem()
-                bounds[i] = j  # IndexError if out-of-bounds indices
+                bounds[i] = j
         else:
             raise ValueError("unexpected bounds %s" % bounds)
 
     x = Matrix(symbols('x1:%s' % (A.cols+1)))
-    f,c = (C*x)[0], [i<=j for i,j in zip(A*x, b)] + [Eq(i,j) for i,j in zip(A_eq*x,b_eq)]
+    f, c = (C*x)[0], [i <= j for i, j in zip(A*x, b)] + [Eq(i, j) for i, j in zip(A_eq*x, b_eq)]
+
     for i, (lo, hi) in enumerate(bounds):
         if lo is not None:
-            c.append(x[i]>=lo)
+            c.append(x[i] >= lo)
         if hi is not None:
-            c.append(x[i]<=hi)
-    return f,c
+            c.append(x[i] <= hi)
+
+    return f, c

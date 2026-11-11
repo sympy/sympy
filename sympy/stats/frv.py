@@ -472,7 +472,9 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
         symbolic dimensions is currently not possible.
         """
         if self._is_symbolic:
-            self
+            #TODO: Implement the mechanism for handling queries for symbolic sized distributions.
+            raise NotImplementedError("Conditional space is not supported "
+            "for random variables with symbolic sized distributions.")
         domain = self.where(condition)
         prob = self.probability(condition)
         density = {key: val / prob

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.core.evalf import N
 from sympy.core.numbers import (Float, I, Rational, pi)
+from sympy.core.sorting import ordered
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -158,6 +159,9 @@ def test_float_eigenvals():
     for x, y in zip(n_evals, s_evals):
         assert abs(x-y) < 10**-9
 
+    m = Matrix([[1.0, 0.0], [0.0, 2.0]])
+    assert m.eigenvals(rational=True) == {1: 1, 2: 1}
+
 
 @XFAIL
 def test_eigen_vects():
@@ -216,6 +220,9 @@ def test_eigenvals():
     # CRootOf may not be unique.
     assert m.eigenvals()
 
+
+@slow
+def test_eigenvals_7x7():
     A = Matrix([
         [1, 1, 0, 1, -1, 0, 1],
         [0, 2, 1, 0, 1, -1, 0],
@@ -238,6 +245,15 @@ def test_eigenvects():
     for val, mult, vec_list in vecs:
         assert len(vec_list) == 1
         assert M*vec_list[0] == val*vec_list[0]
+
+    M = Matrix([[5.0, 1.0, 0.0],
+                [0.0, 5.0, 0.0],
+                [0.0, 0.0, 3.0]])
+    vecs = M.eigenvects()
+    assert len(vecs) == 2
+    for val, mult, vec_list in vecs:
+        for v in vec_list:
+            assert M*v == val*v
 
 
 @slow
@@ -667,13 +683,13 @@ def test_issue_19210():
     A = (-I * H * t).jordan_form()
     assert A == (Matrix([
                     [0, 1,                  0,                0],
-                    [0, 0, -4/(-1 + sqrt(17)), 4/(1 + sqrt(17))],
+                    [0, 0, 4/(1 + sqrt(17)), -4/(-1 + sqrt(17))],
                     [0, 0,                  1,                1],
                     [1, 0,                  0,                0]]), Matrix([
                     [-4*I*t,      0,                         0,                         0],
                     [     0, -3*I*t,                         0,                         0],
-                    [     0,      0, t*(-3*I/2 + sqrt(17)*I/2),                         0],
-                    [     0,      0,                         0, t*(-sqrt(17)*I/2 - 3*I/2)]]))
+                    [     0,      0, t*(-sqrt(17)*I/2 - 3*I/2),                         0],
+                    [     0,      0,                         0, t*(-3*I/2 + sqrt(17)*I/2)]]))
 
 
 def test_issue_20275():
@@ -774,11 +790,11 @@ def test_issue_28793():
         + z*(1919*sqrt(2)*I*pi**7/32 + 1357*I*pi**7/16)
         + 309*sqrt(2)*pi**8/32 + 437*pi**8/32
     )
-    assert A.charpoly(z).as_expr().collect(z, expand) == expected
+    assert A.charpoly().as_expr(z).collect(z, expand) == expected
 
     vals = A.eigenvals()
     assert sorted(vals.values()) == [1, 1, 1, 1, 1, 1, 2]
-    assert A.eigenvects() == [
+    expected = [
         (I*pi/2, 1, [Matrix([[0, 0, 0, 0, 0, 1, 0, 1]]).T]),
         (I*pi, 1, [Matrix([[0, 1, 0, sqrt(2), 0, 0, 1, 0]]).T]),
         (I*pi/2 + sqrt(2)*I*pi/2, 1, [Matrix([[0, 0, 0, 0, 0, -1, 0, 1]]).T]),
@@ -788,6 +804,7 @@ def test_issue_28793():
         (sqrt(2)*I*pi/2 + I*pi, 2, [Matrix([[0, 0, 0, 0, 1, 0, 0, 0]]).T,
                                     Matrix([[0, -1, 0, 0, 0, 0, 1, 0]]).T])
     ]
+    assert list(ordered(A.eigenvects())) == list(ordered(expected))
 
     P, J = A.jordan_form()
     assert P.det() == 16*sqrt(2)

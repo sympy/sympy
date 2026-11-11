@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.sets.ordinals import Ordinal, OmegaPower, ord0, omega
+from sympy.sets.ordinals import Ordinal, OrdinalOmega, OrdinalZero, OmegaPower, ord0, omega
 from sympy.testing.pytest import raises
 
 
@@ -60,3 +60,7 @@ def test_comapre_not_instance():
 def test_is_successort():
     w = Ordinal(OmegaPower(5, 1))
     assert not w.is_successor_ordinal
+
+def test_atomic_classes():
+    raises(TypeError, lambda: OrdinalZero(OmegaPower(0,1)))
+    raises(TypeError, lambda: OrdinalOmega(OmegaPower(0,1)))

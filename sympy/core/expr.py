@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from typing import Any, Hashable
     from typing_extensions import Self
     from .numbers import Number
+    from sympy.logic.boolalg import Boolean
 
 from collections import defaultdict
 
@@ -247,7 +248,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__radd__')
-    def __add__(self, other: complex) -> Expr:
+    def __add__(self, other: Expr | complex) -> Expr:
         return Add(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -257,7 +258,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rsub__')
-    def __sub__(self, other: complex) -> Expr:
+    def __sub__(self, other: Expr | complex) -> Expr:
         return Add(self, -other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -267,7 +268,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmul__')
-    def __mul__(self, other: complex) -> Expr:
+    def __mul__(self, other: Expr | complex) -> Expr:
         return Mul(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -396,22 +397,22 @@ class Expr(Basic, EvalfMixin):
         return complex(float(re), float(im))
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __ge__(self, other):
+    def __ge__(self, other) -> Boolean:
         from .relational import GreaterThan
         return GreaterThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __le__(self, other):
+    def __le__(self, other) -> Boolean:
         from .relational import LessThan
         return LessThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __gt__(self, other):
+    def __gt__(self, other) -> Boolean:
         from .relational import StrictGreaterThan
         return StrictGreaterThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __lt__(self, other):
+    def __lt__(self, other) -> Boolean:
         from .relational import StrictLessThan
         return StrictLessThan(self, other)
 
@@ -419,7 +420,7 @@ class Expr(Basic, EvalfMixin):
         if not self.is_number:
             raise TypeError("Cannot truncate symbols and expressions")
         else:
-            return Integer(self)
+            return int(Integer(self))
 
     def __format__(self, format_spec: str):
         if self.is_number:
@@ -1190,23 +1191,6 @@ class Expr(Basic, EvalfMixin):
 
         """
 
-        from .numbers import Number, NumberSymbol
-
-        if order is None and self.is_Add:
-            # Spot the special case of Add(Number, Mul(Number, expr)) with the
-            # first number positive and the second number negative
-            key = lambda x:not isinstance(x, (Number, NumberSymbol))
-            add_args = sorted(Add.make_args(self), key=key)
-            if (len(add_args) == 2
-                and isinstance(add_args[0], (Number, NumberSymbol))
-                and isinstance(add_args[1], Mul)):
-                mul_args = sorted(Mul.make_args(add_args[1]), key=key)
-                if (len(mul_args) == 2
-                    and isinstance(mul_args[0], Number)
-                    and add_args[0].is_positive
-                    and mul_args[0].is_negative):
-                    return add_args
-
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
 
@@ -1224,40 +1208,49 @@ class Expr(Basic, EvalfMixin):
 
     def as_terms(self) -> tuple[list[tuple[Expr, Any]], list[Expr]]:
         """Transform an expression to a list of terms. """
-        from .exprtools import decompose_power
 
         gens_set, terms = set(), []
 
         for term in Add.make_args(self):
-            coeff, _term = term.as_coeff_Mul()
+            coeff, _term = term.as_coeff_mul(rational=False)
+            if not (coeff.is_Rational or coeff.is_Float):
+                _term = (coeff,) + _term
+                coeff = S.One
 
-            coeff_complex = complex(coeff)
-            cpart, ncpart = {}, []
+            cpart: dict[Expr, int] = {}
+            ncpart = []
+            # A single literal I is treated as an imaginary coefficient;
+            # repeated occurrences contribute to the monomial instead.
+            # No numerical evaluation or inference about imaginary values is needed.
+            nI = 0
 
-            if _term is not S.One:
-                for factor in Mul.make_args(_term):
-                    if factor.is_number:
-                        try:
-                            coeff_complex *= complex(factor)
-                        except (TypeError, ValueError):
-                            pass
-                        else:
-                            continue
+            for factor in _term:
+                if factor is S.ImaginaryUnit:
+                    nI += 1
+                    continue
 
-                    if factor.is_commutative:
-                        base, exp = decompose_power(factor)
-
-                        cpart[base] = exp
-                        gens_set.add(base)
+                if factor.is_commutative:
+                    base, exponent = factor.as_base_exp()
+                    if exponent.is_Integer:
+                        exp = int(exponent)
                     else:
-                        ncpart.append(factor)
+                        base, exp = factor, 1
+                    cpart[base] = cpart.get(base, 0) + exp
+                    gens_set.add(base)
+                else:
+                    ncpart.append(factor)
 
-            coeff_tuple = coeff_complex.real, coeff_complex.imag
+            if nI > 1:
+                cpart[S.ImaginaryUnit] = cpart.get(S.ImaginaryUnit, 0) + nI
+                gens_set.add(S.ImaginaryUnit)
+            coeff_tuple = (S.Zero, coeff) if nI == 1 else (coeff, S.Zero)
             ncpart_tuple = tuple(ncpart)
 
             terms.append((term, (coeff_tuple, cpart, ncpart_tuple)))
 
-        gens = sorted(gens_set, key=default_sort_key)
+        # Put symbols first to preserve monomial precedence, without
+        # checking whether other generators represent numerical values.
+        gens = sorted(gens_set, key=lambda g: (not g.is_Symbol, default_sort_key(g)))
 
         k, indices = len(gens), {}
 
@@ -2211,7 +2204,7 @@ class Expr(Basic, EvalfMixin):
         Radical content can also be factored out of the primitive:
 
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
-        (2, sqrt(2)*(1 + 2*sqrt(5)))
+        (2, sqrt(2)*(2*sqrt(5) + 1))
 
         If clear=False (default is True) then content will not be removed
         from an Add if it can be distributed to leave one or more
@@ -2995,14 +2988,10 @@ class Expr(Basic, EvalfMixin):
         -x
         >>> f = tan(x)
         >>> f.series(x, 2, 6, "+")
-        tan(2) + (1 + tan(2)**2)*(x - 2) + (x - 2)**2*(tan(2)**3 + tan(2)) +
-        (x - 2)**3*(1/3 + 4*tan(2)**2/3 + tan(2)**4) + (x - 2)**4*(tan(2)**5 +
-        5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(2/15 + 17*tan(2)**2/15 +
-        2*tan(2)**4 + tan(2)**6) + O((x - 2)**6, (x, 2))
+        tan(2) + (x - 2)*(tan(2)**2 + 1) + (x - 2)**2*(tan(2)**3 + tan(2)) + (x - 2)**3*(tan(2)**4 + 4*tan(2)**2/3 + 1/3) + (x - 2)**4*(tan(2)**5 + 5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(tan(2)**6 + 2*tan(2)**4 + 17*tan(2)**2/15 + 2/15) + O((x - 2)**6, (x, 2))
 
         >>> f.series(x, 2, 3, "-")
-        tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2))
-        + O((x - 2)**3, (x, 2))
+        tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2)) + O((x - 2)**3, (x, 2))
 
         For rational expressions this method may return original expression without the Order term.
         >>> (1/x).series(x, n=8)
@@ -3225,7 +3214,7 @@ class Expr(Basic, EvalfMixin):
         (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
 
         >>> e.aseries(x, n=3, hir=True)
-        -exp(-2*x)*sin(1/x)/2 + exp(-x)*cos(1/x) + O(exp(-3*x), (x, oo))
+        exp(-x)*cos(1/x) - exp(-2*x)*sin(1/x)/2 + O(exp(-3*x), (x, oo))
 
         >>> e = exp(exp(x)/(1 - 1/x))
 
@@ -3648,10 +3637,7 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
-        # XXX: Hack to support non-Basic args
-        #              |
-        #              V
-        if deep and getattr(expr, 'args', ()) and not expr.is_Atom:
+        if deep and expr.args and not expr.is_Atom:
             sargs = []
             for arg in expr.args:
                 arg, arghit = Expr._expand_hint(arg, hint, **hints)
@@ -3902,12 +3888,21 @@ class Expr(Basic, EvalfMixin):
                     'Expected a number but got %s:' % func_name(x))
         elif x in _illegal:
             return x
-        if not (xr := x.is_extended_real):
-            r, i = x.as_real_imag()
-            if xr is False:
-                return r.round(n) + S.ImaginaryUnit*i.round(n)
-            if i.equals(0):
-                return r.round(n)
+        xr = x.is_extended_real
+        if xr is True:
+            return x._round_real(n)
+        if xr is None:
+            try:
+                return x._round_real(n)
+            except TypeError:
+                pass
+
+        r, i = x.as_real_imag()
+        return r._round_real(n) + S.ImaginaryUnit*i._round_real(n)
+
+    def _round_real(self, n=None):
+        x = self
+
         if not x:
             return S.Zero if n is None else x
 
@@ -3985,7 +3980,7 @@ class Expr(Basic, EvalfMixin):
         xi = Integer(xf)
         # use the last digit to select the value of xi
         # nearest to x before rounding at the desired digit
-        sign = 1 if x > 0 else -1
+        sign = 1 if xf > 0 else -1
         dif2 = sign*(xf - xi).n(extra)
         if dif2 < 0:
             raise NotImplementedError(
@@ -4012,10 +4007,6 @@ class Expr(Basic, EvalfMixin):
             return Float(rv, allow)
 
     __round__ = round
-
-    def _eval_derivative_matrix_lines(self, x):
-        from sympy.matrices.expressions.matexpr import _LeftRightArgs
-        return [_LeftRightArgs([S.One, S.One], higher=self._eval_derivative(x))]
 
 
 class AtomicExpr(Atom, Expr):
@@ -4195,7 +4186,7 @@ class ExprBuilder:
     def append_argument(self, arg, check=True):
         self.args.append(arg)
         if self.validator and check:
-            self.validate(*self.args)
+            self.validate()
 
     def __getitem__(self, item):
         if item == 0:
@@ -4209,7 +4200,7 @@ class ExprBuilder:
     def search_element(self, elem):
         for i, arg in enumerate(self.args):
             if isinstance(arg, ExprBuilder):
-                ret = arg.search_index(elem)
+                ret = arg.search_element(elem)
                 if ret is not None:
                     return (i,) + ret
             elif id(arg) == id(elem):

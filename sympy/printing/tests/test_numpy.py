@@ -6,7 +6,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import polygamma
-from sympy.functions.special.error_functions import (Si, Ci)
+from sympy.functions.special.error_functions import (Si, Ci, owens_t)
 from sympy.matrices import Matrix
 from sympy.matrices.expressions.blockmatrix import BlockMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -53,6 +53,11 @@ def test_numpy_logaddexp():
     assert NumPyPrinter().doprint(lae) == 'numpy.logaddexp(a, b)'
     lae2 = logaddexp2(a, b)
     assert NumPyPrinter().doprint(lae2) == 'numpy.logaddexp2(a, b)'
+
+
+def test_numpy_conjugate():
+    from sympy.functions.elementary.complexes import conjugate
+    assert NumPyPrinter().doprint(conjugate(x)) == 'numpy.conjugate(x)'
 
 
 def test_sum():
@@ -380,6 +385,7 @@ def test_scipy_print_methods():
     assert prntr.doprint(polygamma(k, x)) == "scipy.special.polygamma(k, x)"
     assert prntr.doprint(Si(x)) == "scipy.special.sici(x)[0]"
     assert prntr.doprint(Ci(x)) == "scipy.special.sici(x)[1]"
+    assert prntr.doprint(owens_t(x, a)) == "scipy.special.owens_t(x, a)"
 
 def test_numpy_contains_integers():
     if not np:
@@ -391,3 +397,36 @@ def test_numpy_contains_integers():
     result = f(arr)
     expected = np.array([True, False, True])
     assert np.array_equal(result, expected)
+
+
+def test_issue_30395_scalar_assignment():
+    # Assignments of purely scalar expressions must print as scalar code:
+    # they used to be converted to array operators, which printed a sum as
+    # nested add(...) calls and failed on functions.
+    from sympy.core.symbol import symbols
+    from sympy.functions.elementary.trigonometric import sin
+    from sympy.printing.numpy import JaxPrinter
+    x, y, z = symbols('x y z')
+    np_p = NumPyPrinter()
+    jp = JaxPrinter()
+    assert np_p.doprint(x + y + z, 'out') == 'out = x + y + z'
+    assert jp.doprint(x + y + z, 'out') == 'out = x + y + z'
+    expr = x**2 + sqrt(y) - sin(x*z)
+    assert np_p.doprint(expr, 'out') == 'out = x**2 + numpy.sqrt(y) - numpy.sin(x*z)'
+    assert jp.doprint(expr, 'out') == 'out = x**2 + jax.numpy.sqrt(y) - jax.numpy.sin(x*z)'
+    assert np_p.doprint(x*z, 'out') == 'out = x*z'
+
+    # Array expressions still go through the array operators:
+    from sympy.tensor.array.expressions.array_expressions import (
+        ArrayElementwiseApplyFunc, ArraySymbol)
+    A = ArraySymbol('A', (3, 3))
+    assert np_p.doprint(A + A, 'out') == 'out = numpy.einsum(",ab", 2, A)'
+    assert jp.doprint(ArrayElementwiseApplyFunc(sin, A)) == 'jax.numpy.sin(A)'
+    # Elementwise, also for matrix operands (not a matrix power):
+    from sympy.core.function import Lambda
+    from sympy.core.symbol import Dummy
+    d = Dummy('d')
+    M = MatrixSymbol('M', 3, 3)
+    assert np_p.doprint(ArrayElementwiseApplyFunc(Lambda(d, d**2), M)) == 'M**2'
+    N = MatrixSymbol('N', 3, 3)
+    assert np_p.doprint(ArrayElementwiseApplyFunc(Lambda(d, 2*d + 1), M + N)) == '2*(M + N) + 1'

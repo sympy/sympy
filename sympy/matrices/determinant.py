@@ -10,7 +10,7 @@ from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
 from sympy.core.mul import Mul
-from sympy.polys import PurePoly, cancel
+from sympy.polys import Poly, PurePoly, cancel
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.matrices.ddm import DDM
@@ -57,7 +57,7 @@ def _find_reasonable_pivot(
     if all(isinstance(x, (Float, Integer)) for x in col) and any(
             isinstance(x, Float) for x in col):
         col_abs = [abs(x) for x in col]
-        max_value = max(col_abs)
+        max_value = max(col_abs) # type: ignore[type-var]
         if iszerofunc(max_value):
             # just because iszerofunc returned True, doesn't
             # mean the value is numerically zero.  Make sure
@@ -303,15 +303,22 @@ def _berkowitz_vector(M):
             Saarbrucken, 2006
     """
 
+    assert M.rows == M.cols
+
     # handle the trivial cases
-    if M.rows == 0 and M.cols == 0:
+    if M.rows == 0:
         return M._new(1, 1, [M.one])
-    elif M.rows == 1 and M.cols == 1:
+    if M.rows == 1:
         return M._new(2, 1, [M.one, -M[0,0]])
 
-    submat, toeplitz = _berkowitz_toeplitz_matrix(M)
-
-    return toeplitz.multiply(_berkowitz_vector(submat), dotprodsimp=None)
+    toeplitz_matrices = []
+    while M.rows > 1:
+        M, toeplitz = _berkowitz_toeplitz_matrix(M)
+        toeplitz_matrices.append(toeplitz)
+    vector = M._new(2, 1, [M.one, -M[0, 0]])
+    for toeplitz in reversed(toeplitz_matrices):
+        vector = toeplitz.multiply(vector, dotprodsimp=None)
+    return vector
 
 
 def _adjugate(M, method="berkowitz"):
@@ -348,19 +355,20 @@ def _adjugate(M, method="berkowitz"):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _charpoly(M, x: str | Expr = 'lambda',
-              simplify: Callable[[Expr], Expr] = _simplify) -> PurePoly:
+def _charpoly(M, x: str | Expr | None = None,
+              simplify: Callable[[Expr], Expr] = _simplify) -> Poly:
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
 
-    A PurePoly is returned, so using different variables for ``x`` does
-    not affect the comparison or the polynomials:
+    With no generator specified, a canonical ``PurePoly`` is returned.
+    Supplying a generator returns a named ``Poly``.
 
     Parameters
     ==========
 
-    x : string, optional
-        Name for the "lambda" variable, defaults to "lambda".
+    x : string or Expr, optional
+        Generator for the returned ``Poly``. If omitted, return a
+        canonical ``PurePoly``. A conflicting name is made unique.
 
     simplify : function, optional
         Simplification function to use on the characteristic polynomial
@@ -373,33 +381,20 @@ def _charpoly(M, x: str | Expr = 'lambda',
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
-    PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
-    >>> M.charpoly(x) == M.charpoly(y)
+    PurePoly(_0**2 - _0 - 6, _0, domain='ZZ')
+    >>> M.charpoly(x)
+    Poly(x**2 - x - 6, x, domain='ZZ')
+    >>> M.charpoly(x) == M.charpoly().as_poly(x)
     True
-    >>> M.charpoly(x) == M.charpoly(y)
-    True
+    >>> M.charpoly()('lamda')
+    lamda**2 - lamda - 6
 
-    Specifying ``x`` is optional; a symbol named ``lambda`` is used by
-    default (which looks good when pretty-printed in unicode):
-
-    >>> M.charpoly().as_expr()
-    lambda**2 - lambda - 6
-
-    And if ``x`` clashes with an existing symbol, underscores will
-    be prepended to the name to make it unique:
+    If the requested generator conflicts with a coefficient symbol,
+    it is renamed to avoid the collision:
 
     >>> M = Matrix([[1, 2], [x, 0]])
-    >>> M.charpoly(x).as_expr()
-    _x**2 - _x - 2*x
-
-    Whether you pass a symbol or not, the generator can be obtained
-    with the gen attribute since it may not be the same as the symbol
-    that was passed:
-
     >>> M.charpoly(x).gen
     _x
-    >>> M.charpoly(x).gen == x
-    False
 
     Notes
     =====
@@ -439,8 +434,6 @@ def _charpoly(M, x: str | Expr = 'lambda',
 
     cp = dM.charpoly()
 
-    x = uniquely_named_symbol(x, [M], modify=lambda s: '_' + s)
-
     if K.is_EXRAW or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the
         # caller supplied a custom simplify function for backwards
@@ -449,12 +442,15 @@ def _charpoly(M, x: str | Expr = 'lambda',
         # will put everything into canonical form anyway.
         berk_vector = [K.to_sympy(c) for c in cp]
         berk_vector = [simplify(a) for a in berk_vector]
-        p = PurePoly(berk_vector, x)
+        p = PurePoly(berk_vector)
 
     else:
         # Convert from the list of domain elements directly to Poly.
-        p = PurePoly(cp, x, domain=K)
+        p = PurePoly(cp, domain=K)
 
+    if x is not None:
+        x = uniquely_named_symbol(x, [M], modify=lambda s: '_' + s)
+        return p.as_poly(x)
     return p
 
 
@@ -762,37 +758,39 @@ def _det_bareiss(
     # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
     # thesis https://aquila.usm.edu/cgi/viewcontent.cgi?article=1001&context=masters_theses
     def bareiss(mat: MatrixBase, cumm: Expr = S.One):
-        if mat.rows == 0:
-            return mat.one
-        elif mat.rows == 1:
-            return mat[0, 0]
+        sign = S.One
+        while True:
+            if mat.rows == 0:
+                return sign * mat.one
+            if mat.rows == 1:
+                return sign * mat[0, 0]
 
-        # find a pivot and extract the remaining matrix
-        # With the default iszerofunc, _find_reasonable_pivot slows down
-        # the computation by the factor of 2.5 in one test.
-        # Relevant issues: #10279 and #13877.
-        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0].flat(), iszerofunc=iszerofunc)
-        if pivot_pos is None or pivot_val is None:
-            return mat.zero
+            # find a pivot and extract the remaining matrix
+            # With the default iszerofunc, _find_reasonable_pivot slows down
+            # the computation by the factor of 2.5 in one test.
+            # Relevant issues: #10279 and #13877.
+            pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0].flat(), iszerofunc=iszerofunc)
+            if pivot_pos is None or pivot_val is None:
+                return mat.zero
 
-        # if we have a valid pivot, we'll do a "row swap", so keep the
-        # sign of the det
-        sign = (-1) ** (pivot_pos % 2)
+            # if we have a valid pivot, we'll do a "row swap", so keep the
+            # sign of the det
+            sign *= S.NegativeOne**(pivot_pos % 2)
+            # we want every row but the pivot row and every column
+            rows = [i for i in range(mat.rows) if i != pivot_pos]
+            cols = list(range(mat.cols))
+            tmp_mat = mat.extract(rows, cols)
 
-        # we want every row but the pivot row and every column
-        rows = [i for i in range(mat.rows) if i != pivot_pos]
-        cols = list(range(mat.cols))
-        tmp_mat = mat.extract(rows, cols)
+            def entry(i, j):
+                ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
+                if _get_intermediate_simp_bool(True):
+                    return _dotprodsimp(ret)
+                elif not ret.is_Atom:
+                    return cancel(ret)
+                return ret
 
-        def entry(i, j):
-            ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
-            if _get_intermediate_simp_bool(True):
-                return _dotprodsimp(ret)
-            elif not ret.is_Atom:
-                return cancel(ret)
-            return ret
-
-        return sign*bareiss(M._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
+            mat = M._new(mat.rows - 1, mat.cols - 1, entry)
+            cumm = pivot_val
 
     if not M.is_square:
         raise NonSquareMatrixError()

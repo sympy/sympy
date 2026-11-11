@@ -30,7 +30,7 @@ def test_jscode_Pow():
     assert jscode(x**3) == "Math.pow(x, 3)"
     assert jscode(x**(y**3)) == "Math.pow(x, Math.pow(y, 3))"
     assert jscode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "Math.pow(3.5*2*x, -x + Math.pow(y, x))/(Math.pow(x, 2) + y)"
+        'Math.pow(3.5*2*x, Math.pow(y, x) - x)/(Math.pow(x, 2) + y)'
     assert jscode(x**-1.0) == '1/x'
 
 
@@ -74,6 +74,10 @@ def test_Mod():
     assert jscode(Mod(-3, -7, evaluate=False)) == '(-3) % (-7)'
     assert jscode(-Mod(p1, p2)) == '-(p1 % p2)'
     assert jscode(x*Mod(p1, p2)) == 'x*(p1 % p2)'
+    assert jscode(-x*Mod(p1, p2)) == '-x*(p1 % p2)'
+    assert jscode(-2*Mod(p1, p2)) == '-2*(p1 % p2)'
+    assert jscode(-x/Mod(p1, p2)) == '-x/(p1 % p2)'
+    assert jscode(Mod(p1, 1/p2)) == 'p1 % (1/p2)'
 
 
 def test_jscode_Integer():
@@ -86,7 +90,7 @@ def test_jscode_functions():
     assert jscode(sinh(x) * cosh(x)) == "Math.sinh(x)*Math.cosh(x)"
     assert jscode(Max(x, y) + Min(x, y)) == "Math.max(x, y) + Math.min(x, y)"
     assert jscode(tanh(x)*acosh(y)) == "Math.tanh(x)*Math.acosh(y)"
-    assert jscode(asin(x)-acos(y)) == "-Math.acos(y) + Math.asin(x)"
+    assert jscode(asin(x)-acos(y)) == 'Math.asin(x) - Math.acos(y)'
 
 
 def test_jscode_inline_function():

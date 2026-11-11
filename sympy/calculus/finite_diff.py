@@ -129,14 +129,10 @@ def finite_diff_weights(order, x_list, x0=S.One):
     >>> N, (h, x) = 4, symbols('h x')
     >>> x_list = [x+h*cos(i*pi/(N)) for i in range(N,-1,-1)] # chebyshev nodes
     >>> print(x_list)
-    [-h + x, -sqrt(2)*h/2 + x, x, sqrt(2)*h/2 + x, h + x]
+    [x - h, x - sqrt(2)*h/2, x, sqrt(2)*h/2 + x, h + x]
     >>> mycoeffs = finite_diff_weights(1, x_list, 0)[1][4]
     >>> [simplify(c) for c in  mycoeffs] #doctest: +NORMALIZE_WHITESPACE
-    [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4,
-    (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
-    (6*h**2*x - 8*x**3)/h**4,
-    (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
-    (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
+    [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4, (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4, (6*h**2*x - 8*x**3)/h**4, (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4, (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
 
     Notes
     =====
@@ -227,7 +223,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     >>> from sympy import apply_finite_diff
     >>> cube = lambda arg: (1.0*arg)**3
     >>> xlist = range(-3,3+1)
-    >>> apply_finite_diff(2, xlist, map(cube, xlist), 2) - 12 # doctest: +SKIP
+    >>> apply_finite_diff(2, xlist, map(cube, xlist), 2) - 12
     -3.55271367880050e-15
 
     we see that the example above only contain rounding errors.
@@ -238,9 +234,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     >>> i = Idx('i')
     >>> x_list, y_list = zip(*[(x[i+j], y[i+j]) for j in range(-1,2)])
     >>> apply_finite_diff(1, x_list, y_list, x[i])
-    ((x[i + 1] - x[i])/(-x[i - 1] + x[i]) - 1)*y[i]/(x[i + 1] - x[i]) -
-    (x[i + 1] - x[i])*y[i - 1]/((x[i + 1] - x[i - 1])*(-x[i - 1] + x[i])) +
-    (-x[i - 1] + x[i])*y[i + 1]/((x[i + 1] - x[i - 1])*(x[i + 1] - x[i]))
+    ((x[i + 1] - x[i])/(x[i] - x[i - 1]) - 1)*y[i]/(x[i + 1] - x[i]) - (x[i + 1] - x[i])*y[i - 1]/((x[i + 1] - x[i - 1])*(x[i] - x[i - 1])) + (x[i] - x[i - 1])*y[i + 1]/((x[i + 1] - x[i - 1])*(x[i + 1] - x[i]))
 
     Notes
     =====
@@ -268,7 +262,8 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     # In the original paper the following holds for the notation:
     # M = order
     # N = len(x_list) - 1
-
+    x_list = list(x_list)
+    y_list = list(y_list)
     N = len(x_list) - 1
     if len(x_list) != len(y_list):
         raise ValueError("x_list and y_list not equal in length.")
@@ -318,14 +313,14 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
     >>> x, h = symbols('x h')
     >>> f = Function('f')
     >>> _as_finite_diff(f(x).diff(x))
-    -f(x - 1/2) + f(x + 1/2)
+    f(x + 1/2) - f(x - 1/2)
 
     The default step size and number of points are 1 and ``order + 1``
     respectively. We can change the step size by passing a symbol
     as a parameter:
 
     >>> _as_finite_diff(f(x).diff(x), h)
-    -f(-h/2 + x)/h + f(h/2 + x)/h
+    f(h/2 + x)/h - f(x - h/2)/h
 
     We can also specify the discretized values to be used in a sequence:
 
@@ -339,16 +334,14 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
     >>> e, sq2 = exp(1), sqrt(2)
     >>> xl = [x-h, x+h, x+e*h]
     >>> _as_finite_diff(f(x).diff(x, 1), xl, x+h*sq2)
-    2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/((-h + E*h)*(h + E*h)) +
-    (-(-sqrt(2)*h + h)/(2*h) - (-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) +
-    (-(h + sqrt(2)*h)/(2*h) + (-sqrt(2)*h + E*h)/(2*h))*f(h + x)/(-h + E*h)
+    2*h*((sqrt(2)*h + h)/(2*h) - (h - sqrt(2)*h)/(2*h))*f(E*h + x)/((E*h - h)*(E*h + h)) + (-(h - sqrt(2)*h)/(2*h) - (E*h - sqrt(2)*h)/(2*h))*f(x - h)/(E*h + h) + ((E*h - sqrt(2)*h)/(2*h) - (sqrt(2)*h + h)/(2*h))*f(h + x)/(E*h - h)
 
     Partial derivatives are also supported:
 
     >>> y = Symbol('y')
     >>> d2fdxdy=f(x,y).diff(x,y)
     >>> _as_finite_diff(d2fdxdy, wrt=x)
-    -Derivative(f(x - 1/2, y), y) + Derivative(f(x + 1/2, y), y)
+    Derivative(f(x + 1/2, y), y) - Derivative(f(x - 1/2, y), y)
 
     See also
     ========
@@ -428,7 +421,7 @@ def differentiate_finite(expr, *symbols,
     >>> from sympy.abc import x, y, h
     >>> f, g = Function('f'), Function('g')
     >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h])
-    -f(-h + x)*g(-h + x)/(2*h) + f(h + x)*g(h + x)/(2*h)
+    f(h + x)*g(h + x)/(2*h) - f(x - h)*g(x - h)/(2*h)
 
     ``differentiate_finite`` works on any expression, including the expressions
     with embedded derivatives:
@@ -438,17 +431,14 @@ def differentiate_finite(expr, *symbols,
     >>> differentiate_finite(f(x, y), x, y)
     f(x - 1/2, y - 1/2) - f(x - 1/2, y + 1/2) - f(x + 1/2, y - 1/2) + f(x + 1/2, y + 1/2)
     >>> differentiate_finite(f(x)*g(x).diff(x), x)
-    (-g(x) + g(x + 1))*f(x + 1/2) - (g(x) - g(x - 1))*f(x - 1/2)
+    (g(x + 1) - g(x))*f(x + 1/2) - (g(x) - g(x - 1))*f(x - 1/2)
 
     To make finite difference with non-constant discretization step use
     undefined functions:
 
     >>> dx = Function('dx')
     >>> differentiate_finite(f(x)*g(x).diff(x), points=dx(x))
-    -(-g(x - dx(x)/2 - dx(x - dx(x)/2)/2)/dx(x - dx(x)/2) +
-    g(x - dx(x)/2 + dx(x - dx(x)/2)/2)/dx(x - dx(x)/2))*f(x - dx(x)/2)/dx(x) +
-    (-g(x + dx(x)/2 - dx(x + dx(x)/2)/2)/dx(x + dx(x)/2) +
-    g(x + dx(x)/2 + dx(x + dx(x)/2)/2)/dx(x + dx(x)/2))*f(x + dx(x)/2)/dx(x)
+    (g(x + dx(x)/2 + dx(x + dx(x)/2)/2)/dx(x + dx(x)/2) - g(x + dx(x)/2 - dx(x + dx(x)/2)/2)/dx(x + dx(x)/2))*f(x + dx(x)/2)/dx(x) - (g(x - dx(x)/2 + dx(x - dx(x)/2)/2)/dx(x - dx(x)/2) - g(x - dx(x)/2 - dx(x - dx(x)/2)/2)/dx(x - dx(x)/2))*f(x - dx(x)/2)/dx(x)
 
     """
     if any(term.is_Derivative for term in list(preorder_traversal(expr))):

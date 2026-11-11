@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core.function import expand_func
+from sympy.core.function import expand, expand_func, expand_mul
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
@@ -13,6 +13,7 @@ from sympy.functions.special.error_functions import (erf, erfc)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.integrals.integrals import (Integral, integrate)
+from sympy.polys.polytools import cancel
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.simplify import simplify
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
@@ -204,7 +205,7 @@ def test_meijerint():
     assert meijerint_definite(meijerg([], [], [a/2], [-a/2], x/4)
                   *meijerg([], [], [b/2], [-b/2], x/4)*x**(s - 1), x, 0, oo
         ) == (
-        (4*2**(2*s - 2)*gamma(-2*s + 1)*gamma(a/2 + b/2 + s)
+        (4*(S(1)/4)**(1 - s)*gamma(1 - 2*s)*gamma(a/2 + b/2 + s)
          /(gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1)
            *gamma(a/2 + b/2 - s + 1)),
             (re(s) < 1) & (re(s) < S(1)/2) & (re(a)/2 + re(b)/2 + re(s) > 0)))
@@ -389,7 +390,6 @@ def test_linear_subs():
 @slow
 def test_probability():
     # various integrals from probability theory
-    from sympy.core.function import expand_mul
     from sympy.core.symbol import (Symbol, symbols)
     from sympy.simplify.gammasimp import gammasimp
     from sympy.simplify.powsimp import powsimp
@@ -493,8 +493,9 @@ def test_probability():
     assert simplify(integrate(x*chisquared, (x, 0, oo), meijerg=True)) == k
     assert simplify(integrate(x**2*chisquared, (x, 0, oo), meijerg=True)) == \
         k*(k + 2)
-    assert gammasimp(integrate(((x - k)/sqrt(2*k))**3*chisquared, (x, 0, oo),
-                    meijerg=True)) == 2*sqrt(2)/sqrt(k)
+    assert expand_mul(gammasimp(integrate(
+        ((x - k)/sqrt(2*k))**3*chisquared, (x, 0, oo), meijerg=True)
+        )) == 2*sqrt(2)/sqrt(k)
 
     # Dagum distribution
     a, b, p = symbols('a b p', positive=True)
@@ -713,6 +714,26 @@ def test_issue_7337():
     assert f._eval_interval(x, S.NegativeOne, S.One) == Rational(2, 5)
 
 
+def test_issue_7383():
+    from sympy.core.symbol import symbols
+
+    def make_integrand(R, a):
+        r = sqrt(x**2 + z**2)
+        u = erf(a*r/sqrt(2))/r
+        return u.diff(z, 2).subs(x, sqrt(R**2 - z**2))
+
+    R, a = symbols('R a')
+    integrand = make_integrand(R, a)
+    expected = -2*sqrt(2)*R*a**3*exp(-R**2*a**2/2)/(3*sqrt(pi))
+
+    assert expand(integrate(integrand, (z, -R, R)) - expected) == 0
+
+    R, a = symbols('R a', positive=True)
+    integrand = make_integrand(R, a)
+    expected = -2*sqrt(2)*R*a**3*exp(-R**2*a**2/2)/(3*sqrt(pi))
+    assert integrate(integrand, (z, -R, R), meijerg=True) == expected
+
+
 def test_issue_8368():
     assert meijerint_indefinite(cosh(x)*exp(-x*t), x) == (
         (-t - 1)*exp(x) + (-t + 1)*exp(-x))*exp(-t*x)/2/(t**2 - 1)
@@ -756,6 +777,14 @@ def test_issue_6462():
 
 def test_indefinite_1_bug():
     assert integrate((b + t)**(-a), t, meijerg=True) == -b*(1 + t/b)**(1 - a)/(a*b**a - b**a)
+
+
+def test_issue_22126():
+    integrand = 1/(x**3*sqrt(1 + x**4))
+    antiderivative = -sqrt(1 + x**4)/(2*x**2)
+
+    assert integrate(integrand, x, meijerg=True) == antiderivative
+    assert cancel(antiderivative.diff(x) - integrand) == 0
 
 
 def test_pr_23583():
