@@ -1864,6 +1864,13 @@ def test_Mod():
     assert unchanged(Mod, x, Float(1))
     assert unchanged(Mod, x, Float('3.3'))
     assert unchanged(Mod, x, Float('0.5'))
+    # Extract exact common factors despite an inexact modulus, so
+    # equivalent Mod terms are normalized and can combine.
+    assert Mod(2*x, 4.0) == 2*Mod(x, 2.0)
+    assert Mod(2*x, 4.0) + Mod(x, 2.0) == 3*Mod(x, 2.0)
+    assert Mod(6*x, 4.0*y) == 2*Mod(3*x, 2.0*y)
+    assert Mod(3*x, -6.0) == 3*Mod(x, -2.0)
+    assert unchanged(Mod, 2*x, Float('0.3'))
     delta = Rational(1, 10**20)
     assert Mod(x, Float(1)).subs(x, 1 + delta) == Float(delta)
     assert Mod(x, Float('0.5')).subs(x, 1 + delta) == Float(delta)

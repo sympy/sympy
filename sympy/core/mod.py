@@ -195,6 +195,19 @@ class Mod(DefinedFunction):
                         for i in (p, q)]
         except PolynomialError:  # issue 21373
             G = S.One
+
+        # gcd treats Float coefficients as units, so it misses exact
+        # integer factors in cases like Mod(2*x, 4.0). When the modulus
+        # has an integer-valued Float coefficient, extract only a common
+        # Integer factor and keep the Float on the modulus.
+        cp, _ = p.as_coeff_Mul()
+        cq, _ = q.as_coeff_Mul()
+        if cp.is_Integer and cq.is_Float and cq.is_finite and (cq % 1).is_zero:
+            g = gcd(cp, int(cq))
+            if g > 1:
+                G *= g
+                p, q = [gcd_terms(i/g, clear=False, fraction=False)
+                        for i in (p, q)]
         pwas, qwas = p, q
 
         # simplify terms
