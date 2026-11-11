@@ -87,7 +87,7 @@ You can define a function without including its independent variable:
 >>> x = symbols("x")
 >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
 >>> dsolve(eqs, [f(x), g(x)])
-[Eq(f(x), C1*exp(x) - C2*exp(-x)), Eq(g(x), C1*exp(x) + C2*exp(-x))]
+[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
 ```
 
 Note that you supply the functions to be solved for as a list as the second
@@ -112,9 +112,9 @@ $f(0) = 1$ and $g(2) = 3$:
 >>> x = symbols("x")
 >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
 >>> dsolve(eqs, [f(x), g(x)])
-[Eq(f(x), C1*exp(x) - C2*exp(-x)), Eq(g(x), C1*exp(x) + C2*exp(-x))]
+[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
 >>> dsolve(eqs, [f(x), g(x)], ics={f(0): 1, g(2): 3})
-[Eq(f(x), (3*exp(2) + 1)*exp(x)/(exp(4) + 1) + (exp(4) - 3*exp(2))*exp(-x)/(exp(4) + 1)), Eq(g(x), (3*exp(2) + 1)*exp(x)/(exp(4) + 1) - (exp(4) - 3*exp(2))*exp(-x)/(exp(4) + 1))]
+[Eq(f(x), (1 + 3*exp(2))*exp(x)/(1 + exp(4)) - (-exp(4) + 3*exp(2))*exp(-x)/(1 + exp(4))), Eq(g(x), (1 + 3*exp(2))*exp(x)/(1 + exp(4)) + (-exp(4) + 3*exp(2))*exp(-x)/(1 + exp(4)))]
 ```
 
 Here is an example of setting the initial value for the derivative of a
