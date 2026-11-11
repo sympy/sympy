@@ -1425,7 +1425,7 @@ def test_issue_23731():
 def test_rewrite_Add():
     from sympy.testing.pytest import warns_deprecated_sympy
     with warns_deprecated_sympy():
-        assert Eq(x, y).rewrite(Add) == x - y 
+        assert Eq(x, y).rewrite(Add) == x - y
 
 def test_infinite_symbol_relational():
     # f can be oo or -oo
@@ -1469,4 +1469,4 @@ def test_issue_21429():
     assert ceiling(1/p) == 1
     assert floor(1/n) == -1
     assert ceiling(-1/n) == 1
-    
+
