@@ -30,7 +30,7 @@ lowered when the tensor is put in canonical form.
 """
 
 from __future__ import annotations
-from typing import Any
+from typing import TYPE_CHECKING, Any, overload
 from functools import reduce
 from math import prod
 
@@ -59,6 +59,10 @@ from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         ignore_warnings)
 from sympy.utilities.decorator import memoize_property, deprecated
 from sympy.utilities.iterables import sift
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from sympy.core.basic import Tbasic
 
 
 def deprecate_data():
@@ -2011,6 +2015,18 @@ class TensExpr(Expr, ABC):
     _op_priority = 12.0
     is_commutative = False
 
+    if TYPE_CHECKING:
+
+        @overload # type: ignore[override]
+        def xreplace(self, rule: Mapping[TensorIndex, TensorIndex]) -> TensExpr: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Expr]) -> Expr: ...
+        @overload
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic: ...
+
+        def xreplace(self, rule: Mapping[Tbasic, Basic]) -> Basic:
+            ...
+
     def __neg__(self):
         return self*S.NegativeOne
 
@@ -3074,7 +3090,7 @@ class Tensor(TensExpr):
     def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         # TODO: this could be optimized by only swapping the indices
         # instead of visiting the whole expression tree:
-        return self.xreplace(repl) # type: ignore
+        return self.xreplace(repl)
 
     def as_base_exp(self):
         return self, S.One
@@ -4579,7 +4595,7 @@ class TensorElement(TensExpr):
 
     def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         # TODO: can be improved:
-        return self.xreplace(repl) # type: ignore
+        return self.xreplace(repl)
 
     def get_indices(self):
         return self.get_free_indices()
