@@ -5,7 +5,7 @@ from itertools import repeat
 from sympy.core import S, pi
 from sympy.core.add import Add
 from sympy.core.function import (
-    AppliedUndef, count_ops, expand, expand_mul, Function)
+    AppliedUndef, count_ops, expand, expand_mul, DefinedFunction)
 from sympy.core.mul import Mul
 from sympy.core.intfunc import igcd, ilcm
 from sympy.core.sorting import default_sort_key
@@ -58,7 +58,7 @@ class IntegralTransformError(NotImplementedError):
         self.function = function
 
 
-class IntegralTransform(Function):
+class IntegralTransform(DefinedFunction):
     """
     Base class for integral transforms.
 

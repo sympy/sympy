@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from sympy.core.expr import UnevaluatedExpr
-from sympy.core.function import ArgumentIndexError, Function
+from sympy.core.function import ArgumentIndexError, DefinedFunction
 from sympy.core.numbers import Float, Integer
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, sinh
@@ -25,7 +25,7 @@ __all__ = [
 ]
 
 
-class CharacteristicCurveFunction(Function):
+class CharacteristicCurveFunction(DefinedFunction):
     """Base class for all musculotendon characteristic curve functions."""
 
     @classmethod
@@ -1735,13 +1735,13 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
 @dataclass(frozen=True)
 class CharacteristicCurveCollection:
     """Simple data container to group together related characteristic curves."""
-    tendon_force_length: CharacteristicCurveFunction
-    tendon_force_length_inverse: CharacteristicCurveFunction
-    fiber_force_length_passive: CharacteristicCurveFunction
-    fiber_force_length_passive_inverse: CharacteristicCurveFunction
-    fiber_force_length_active: CharacteristicCurveFunction
-    fiber_force_velocity: CharacteristicCurveFunction
-    fiber_force_velocity_inverse: CharacteristicCurveFunction
+    tendon_force_length: type[CharacteristicCurveFunction]
+    tendon_force_length_inverse: type[CharacteristicCurveFunction]
+    fiber_force_length_passive: type[CharacteristicCurveFunction]
+    fiber_force_length_passive_inverse: type[CharacteristicCurveFunction]
+    fiber_force_length_active: type[CharacteristicCurveFunction]
+    fiber_force_velocity: type[CharacteristicCurveFunction]
+    fiber_force_velocity_inverse: type[CharacteristicCurveFunction]
 
     def __iter__(self):
         """Iterator support for ``CharacteristicCurveCollection``."""

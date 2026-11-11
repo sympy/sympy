@@ -66,7 +66,7 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
-from sympy.core.function import Function
+from sympy.core.function import DefinedFunction
 from sympy.core.numbers import (I, Integer, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
@@ -943,7 +943,7 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     return ugnt
 
 
-class Wigner3j(Function):
+class Wigner3j(DefinedFunction):
 
     def doit(self, **hints):
         if all(obj.is_number for obj in self.args):

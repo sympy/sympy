@@ -78,8 +78,8 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
                 return _array_tensor_product(*[base for i in range(expr.exp)])
             d = Dummy("d")
             return _array_elementwise_apply_func(Lambda(d, d**expr.exp), base)
-        if (expr.exp > 0) == True:
-            return _array_tensor_product(*[base for i in range(expr.exp)])
+        if isinstance(exp := expr.exp, Integer) and exp > 0:
+            return _array_tensor_product(*[base for i in range(exp)])
         else:
             return expr
     elif isinstance(expr, MatPow):

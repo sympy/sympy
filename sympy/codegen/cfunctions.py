@@ -8,7 +8,7 @@ as a SymPy function for symbolic manipulation.
 """
 from __future__ import annotations
 from mpmath.libmp import prec_to_dps
-from sympy.core.function import ArgumentIndexError, Function
+from sympy.core.function import ArgumentIndexError, DefinedFunction
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -20,7 +20,7 @@ def _expm1(x):
     return exp(x) - S.One
 
 
-class expm1(Function):
+class expm1(DefinedFunction):
     """
     Represents the exponential function minus one.
 
@@ -85,7 +85,7 @@ def _log1p(x):
     return log(x + S.One)
 
 
-class log1p(Function):
+class log1p(DefinedFunction):
     """
     Represents the natural logarithm of a number plus one.
 
@@ -167,7 +167,7 @@ _Two = S(2)
 def _exp2(x):
     return Pow(_Two, x)
 
-class exp2(Function):
+class exp2(DefinedFunction):
     """
     Represents the exponential function with base two.
 
@@ -223,7 +223,7 @@ def _log2(x):
     return log(x)/log(_Two)
 
 
-class log2(Function):
+class log2(DefinedFunction):
     """
     Represents the logarithm function with base two.
 
@@ -287,7 +287,7 @@ def _fma(x, y, z):
     return x*y + z
 
 
-class fma(Function):
+class fma(DefinedFunction):
     """
     Represents "fused multiply add".
 
@@ -335,7 +335,7 @@ def _log10(x):
     return log(x)/log(_Ten)
 
 
-class log10(Function):
+class log10(DefinedFunction):
     """
     Represents the logarithm function with base ten.
 
@@ -388,7 +388,7 @@ def _Sqrt(x):
     return Pow(x, S.Half)
 
 
-class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.miscellaneous
+class Sqrt(DefinedFunction):  # 'sqrt' already defined in sympy.functions.elementary.miscellaneous
     """
     Represents the square root function.
 
@@ -438,7 +438,7 @@ def _Cbrt(x):
     return Pow(x, Rational(1, 3))
 
 
-class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.miscellaneous
+class Cbrt(DefinedFunction):  # 'cbrt' already defined in sympy.functions.elementary.miscellaneous
     """
     Represents the cube root function.
 
@@ -489,7 +489,7 @@ def _hypot(x, y):
     return sqrt(Pow(x, 2) + Pow(y, 2))
 
 
-class hypot(Function):
+class hypot(DefinedFunction):
     """
     Represents the hypotenuse function.
 

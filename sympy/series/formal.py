@@ -6,7 +6,7 @@ from collections import defaultdict
 from sympy.core.numbers import (nan, oo, zoo)
 from sympy.core.add import Add
 from sympy.core.expr import Expr
-from sympy.core.function import Derivative, Function, expand
+from sympy.core.function import Derivative, DefinedFunction, Function, expand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.relational import Eq
@@ -956,7 +956,7 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
     return _compute_fps(f, x, x0, dir, hyper, order, rational, full)
 
 
-class Coeff(Function):
+class Coeff(DefinedFunction):
     """
     Coeff(p, x, n) represents the nth coefficient of the polynomial p in x
     """

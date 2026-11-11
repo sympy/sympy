@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING, overload, Literal
 from itertools import product
 
 from .sympify import _sympify
@@ -133,8 +133,19 @@ class Pow(Expr):
         else:
             return UndefinedKind
 
+    @overload
+    def __new__(
+        cls, b: Expr | complex, e: Expr | complex, evaluate: Literal[False]
+    ) -> Pow: ...
+    @overload
+    def __new__( # type: ignore[misc]
+        cls, b: Expr | complex, e: Expr | complex, evaluate: bool | None = None
+    ) -> Expr: ...
+
     @cacheit
-    def __new__(cls, b: Expr | complex, e: Expr | complex, evaluate=None) -> Expr: # type: ignore
+    def __new__( # type: ignore[misc]
+        cls, b: Expr | complex, e: Expr | complex, evaluate: bool | None = None
+    ) -> Expr:
         if evaluate is None:
             evaluate = global_parameters.evaluate
 

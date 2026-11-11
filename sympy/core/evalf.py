@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from sympy.functions.elementary.exponential import exp, log
     from sympy.functions.elementary.complexes import Abs, re, im
     from sympy.functions.elementary.integers import ceiling, floor
-    from sympy.functions.elementary.trigonometric import atan
+    from sympy.functions.elementary.trigonometric import atan, sin, cos, tan
     from .numbers import Float, Rational, Integer, AlgebraicNumber, Number
 
 LG10 = math.log2(10)
@@ -951,7 +951,7 @@ def evalf_exp(expr: 'exp', prec: int, options: OPT_DICT) -> TMP_RES:
     return evalf_pow(Pow(S.Exp1, expr.exp, evaluate=False), prec, options)
 
 
-def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
+def evalf_trig(v: cos | sin | tan, prec: int, options: OPT_DICT) -> TMP_RES:
     """
     This function handles sin , cos and tan of complex arguments.
 
@@ -972,7 +972,7 @@ def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
     re, im, re_acc, im_acc = evalf(arg, xprec, options)
     if im:
         if 'subs' in options:
-            v = v.subs(options['subs'])
+            v = v.subs(options['subs']) # type: ignore
         return evalf(v._eval_evalf(prec), prec, options) # type: ignore
     if not re:
         if isinstance(v, cos):

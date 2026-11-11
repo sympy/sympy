@@ -36,7 +36,7 @@ from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand, expand_mul, expand_power_base,
-                                 expand_trig, Function)
+                                 expand_trig, DefinedFunction, Function)
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import Rational, pi
@@ -106,7 +106,7 @@ def _create_lookup_table(table):
     table[()] = [(a, constant(a), True, True)]
 
     # [P], Section 8.
-    class IsNonPositiveInteger(Function):
+    class IsNonPositiveInteger(DefinedFunction):
 
         @classmethod
         def eval(cls, arg):

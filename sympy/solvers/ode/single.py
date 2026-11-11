@@ -9,7 +9,7 @@ from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
 from sympy.core.cache import cached_property
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
+from sympy.core.function import AppliedUndef, Derivative, diff, DefinedFunction, Function, expand, Subs, _mexpand
 from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
@@ -425,7 +425,7 @@ class NthAlgebraic(SingleODESolver):
 
         if diffcls is None:
             # A class that behaves like Derivative wrt var but is "invertible".
-            class diffx(Function):
+            class diffx(DefinedFunction):
                 def inverse(self):
                     # don't use integrate here because fx has been replaced by _t
                     # in the equation; integrals will not be correct while solve
