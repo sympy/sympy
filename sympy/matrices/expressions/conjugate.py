@@ -33,19 +33,17 @@ class Conjugate(MatrixExpr):
 
     def __new__(cls, mat):
         mat = _sympify(mat)
-        if not getattr(mat, 'is_Matrix', False):
+        if not mat.is_Matrix:
             raise TypeError("argument to Conjugate must be a matrix")
         return super().__new__(cls, mat)
 
     def doit(self, **hints):
+        from sympy.functions.elementary.complexes import conjugate
         arg = self.arg
         if hints.get('deep', True) and isinstance(arg, Basic):
-            arg = arg.doit(**hints)
-        _eval_conjugate = getattr(arg, '_eval_conjugate', None)
-        if _eval_conjugate is not None:
-            result = _eval_conjugate()
-            return result if result is not None else Conjugate(arg)
-        return Conjugate(arg)
+            return conjugate(arg.doit(**hints))
+        else:
+            return conjugate(self.arg)
 
     @property
     def arg(self):

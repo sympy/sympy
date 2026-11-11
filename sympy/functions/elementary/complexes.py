@@ -892,7 +892,7 @@ class conjugate(DefinedFunction):
         obj = arg._eval_conjugate()
         if obj is not None:
             return obj
-        if getattr(arg, 'is_Matrix', False):
+        if arg.is_Matrix:
             from sympy.matrices.expressions.conjugate import Conjugate
             return Conjugate(arg)
 
