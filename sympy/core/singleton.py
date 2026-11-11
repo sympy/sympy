@@ -251,7 +251,7 @@ class Singleton(type):
     (SymPy versions before 1.0 would create the instance during class
     creation time, which would be prone to import cycles.)
     """
-    def __init__(cls, *args, **kwargs) -> None:
+    def __init__(cls, *args, **kwargs):
         cls._instance = obj = Basic.__new__(cls)
         cls.__new__ = lambda cls: obj
         cls.__getnewargs__ = lambda obj: ()
