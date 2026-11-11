@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from sympy.core import S, pi, I, Rational
-from sympy.core.function import DefinedFunction, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ExprFunction1Arg, ArgumentIndexError
 from sympy.core.symbol import Dummy,uniquely_named_symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.hyperbolic import atanh
@@ -11,7 +11,7 @@ from sympy.functions.elementary.trigonometric import sin, tan
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper, meijerg
 
-class elliptic_k(DefinedFunction):
+class elliptic_k(ExprFunction1Arg):
     r"""
     The complete elliptic integral of the first kind, defined by
 

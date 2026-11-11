@@ -3,7 +3,7 @@ from math import prod
 
 from sympy.core import Add, S, Dummy, expand_func
 from sympy.core.expr import Expr
-from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
+from sympy.core.function import DefinedFunction, ExprFunction1Arg, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational, pi, oo, I
 from sympy.core.power import Pow
@@ -31,7 +31,7 @@ def intlike(n):
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
 
-class gamma(DefinedFunction):
+class gamma(ExprFunction1Arg):
     r"""
     The gamma function
 
@@ -865,7 +865,7 @@ class polygamma(DefinedFunction):
         return Expr._from_mpmath(res, prec)
 
 
-class loggamma(DefinedFunction):
+class loggamma(ExprFunction1Arg):
     r"""
     The ``loggamma`` function implements the logarithm of the
     gamma function (i.e., $\log\Gamma(x)$).
@@ -1060,7 +1060,7 @@ class loggamma(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
 
-class digamma(DefinedFunction):
+class digamma(ExprFunction1Arg):
     r"""
     The ``digamma`` function is the first derivative of the ``loggamma``
     function
@@ -1154,7 +1154,7 @@ class digamma(DefinedFunction):
 
 
 
-class trigamma(DefinedFunction):
+class trigamma(ExprFunction1Arg):
     r"""
     The ``trigamma`` function is the second derivative of the ``loggamma``
     function

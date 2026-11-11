@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import ArgumentIndexError, expand_mul, DefinedFunction
+from sympy.core.function import ArgumentIndexError, expand_mul, DefinedFunction, ExprFunction1Arg
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
@@ -663,7 +663,7 @@ class dirichlet_eta(DefinedFunction):
             return self.rewrite(zeta)._eval_evalf(prec)
 
 
-class riemann_xi(DefinedFunction):
+class riemann_xi(ExprFunction1Arg):
     r"""
     Riemann Xi function.
 
