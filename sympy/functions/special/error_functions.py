@@ -1,6 +1,7 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
@@ -143,7 +144,7 @@ class erf(ExprFunction1Arg):
         return erfinv
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -175,6 +176,8 @@ class erf(ExprFunction1Arg):
         # Try to pull out factors of -1
         if arg.could_extract_minus_sign():
             return -cls(-arg)
+
+        return None
 
     @staticmethod
     @cacheit
@@ -381,7 +384,7 @@ class erfc(ExprFunction1Arg):
         return erfcinv
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -407,6 +410,8 @@ class erfc(ExprFunction1Arg):
         # Try to pull out factors of -1
         if arg.could_extract_minus_sign():
             return 2 - cls(-arg)
+
+        return None
 
     @staticmethod
     @cacheit
@@ -565,7 +570,7 @@ class erfi(ExprFunction1Arg):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z.is_Number:
             if z is S.NaN:
                 return S.NaN
@@ -593,6 +598,8 @@ class erfi(ExprFunction1Arg):
             # Only happens with unevaluated erf2inv
             if isinstance(nz, erf2inv) and nz.args[0].is_zero:
                 return I*nz.args[1]
+
+        return None
 
     @staticmethod
     @cacheit
@@ -884,7 +891,7 @@ class erfinv(ExprFunction1Arg):
         return erf
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z is S.NaN:
             return S.NaN
         elif z is S.NegativeOne:
@@ -904,6 +911,8 @@ class erfinv(ExprFunction1Arg):
         nz = z.extract_multiplicatively(-1)
         if nz is not None and (isinstance(nz, erf) and (nz.args[0]).is_extended_real):
             return -nz.args[0]
+
+        return None
 
     def _eval_rewrite_as_erfcinv(self, z, **kwargs):
         return erfcinv(1-z)
@@ -971,7 +980,7 @@ class erfcinv(ExprFunction1Arg):
         return erfc
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z is S.NaN:
             return S.NaN
         elif z.is_zero:
@@ -983,6 +992,8 @@ class erfcinv(ExprFunction1Arg):
 
         if z.is_zero:
             return S.Infinity
+
+        return None
 
     def _eval_rewrite_as_erfinv(self, z, **kwargs):
         return erfinv(1-z)
@@ -1048,6 +1059,11 @@ class erf2inv(DefinedFunction):
     .. [1] https://functions.wolfram.com/GammaBetaErf/InverseErf2/
 
     """
+
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
 
 
     def fdiff(self, argindex):

@@ -118,7 +118,7 @@ class gamma(ExprFunction1Arg):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -129,10 +129,11 @@ class gamma(ExprFunction1Arg):
                     return factorial(arg - 1)
                 else:
                     return S.ComplexInfinity
-            elif arg.is_Rational:
+            elif isinstance(arg, Rational):
                 if arg.q == 2:
                     n = abs(arg.p) // arg.q
 
+                    coeff: Expr
                     if arg.is_positive:
                         k, coeff = n, S.One
                     else:
@@ -149,6 +150,8 @@ class gamma(ExprFunction1Arg):
                         return coeff*sqrt(pi) / 2**n
                     else:
                         return 2**n*sqrt(pi) / coeff
+
+        return None
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -976,7 +979,7 @@ class loggamma(ExprFunction1Arg):
 
     """
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         if z.is_integer:
             if z.is_nonpositive:
                 return oo
@@ -994,6 +997,8 @@ class loggamma(ExprFunction1Arg):
             return S.ComplexInfinity
         if z is S.NaN:
             return S.NaN
+
+        return None
 
     def _eval_expand_func(self, **hints):
         from sympy.concrete.summations import Sum
@@ -1135,7 +1140,7 @@ class digamma(ExprFunction1Arg):
         return as_polygamma._eval_aseries(n, args0, x, logx)
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         return polygamma(0, z)
 
     def _eval_expand_func(self, **hints):
@@ -1229,7 +1234,7 @@ class trigamma(ExprFunction1Arg):
         return as_polygamma._eval_aseries(n, args0, x, logx)
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z: Expr) -> Expr | None:
         return polygamma(1, z)
 
     def _eval_expand_func(self, **hints):
