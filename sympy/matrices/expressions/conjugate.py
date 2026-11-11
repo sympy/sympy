@@ -72,9 +72,6 @@ class Conjugate(MatrixExpr):
         from sympy.functions.elementary.complexes import conjugate
         return conjugate(det(self.arg))
 
-    def _eval_derivative(self, x):
-        return None
-
 
 from sympy.assumptions.ask import ask, Q
 from sympy.assumptions.refine import handlers_dict
