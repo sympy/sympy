@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import Float
 from sympy.core.singleton import S
 from sympy.functions.combinatorial.factorials import factorial
@@ -35,7 +36,7 @@ def R_nl(n, l, r, Z=1):
     >>> R_nl(1, 0, r, Z)
     2*sqrt(Z**3)*exp(-Z*r)
     >>> R_nl(2, 0, r, Z)
-    sqrt(2)*(-Z*r + 2)*sqrt(Z**3)*exp(-Z*r/2)/4
+    sqrt(2)*(2 - Z*r)*sqrt(Z**3)*exp(-Z*r/2)/4
     >>> R_nl(2, 1, r, Z)
     sqrt(6)*Z*r*sqrt(Z**3)*exp(-Z*r/2)/12
 

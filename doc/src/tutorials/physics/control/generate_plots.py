@@ -7,6 +7,7 @@ from sympy.physics.control import (
     Feedback,
     pole_zero_plot,
     bode_magnitude_plot,
+    bode_phase_plot,
     step_response_plot
 )
 
@@ -33,7 +34,7 @@ def q3_5_1():
 def q3_5_2():
     G = main_q3()
     tf2 = G[0, 1]
-    bode_magnitude_plot(tf2)
+    bode_phase_plot(tf2)
 
 def q5():
     G1 = TransferFunction(1, 10 + s, s)

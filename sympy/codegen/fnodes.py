@@ -7,7 +7,7 @@ as a SymPy function for symbolic manipulation.
 
 from __future__ import annotations
 from sympy.codegen.ast import (
-    Attribute, CodeBlock, FunctionCall, Node, none, String,
+    Attribute, CodeBlock, FunctionCall, KeywordFunctionCall, Node, none, String,
     Token, _mk_Tuple, Variable
 )
 from sympy.core.basic import Basic
@@ -517,17 +517,28 @@ def reshape(source, shape, pad=None, order=None):
     'reshape(array, shape, pad=pad, order=order)'
 
     """
-    from sympy.codegen.ast import KeywordFunctionCall
+    def nested_array(arg):
+        if isinstance(arg, (list, tuple)):
+            return ArrayConstructor([nested_array(element) for element in arg])
+        return _printable(arg)
+
+    def array(arg):
+        if isinstance(arg, (list, tuple)):
+            return ArrayConstructor(arg)
+        return _printable(arg)
+
+    source = nested_array(source)
+    shape = array(shape)
 
     kwargs = {}
     if pad is not None:
-        kwargs['pad'] = _printable(pad)
+        kwargs['pad'] = nested_array(pad)
     if order is not None:
-        kwargs['order'] = _printable(order)
+        kwargs['order'] = array(order)
 
     return KeywordFunctionCall(
         'reshape',
-        [_printable(source), _printable(shape)],
+        [source, shape],
         kwargs
     )
 

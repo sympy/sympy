@@ -36,7 +36,7 @@ Applying **Kirchhoff's Voltage Law** (KVL) around the loop in the above diagram 
 
         .. math::
 
-            v_{in}(t) = R \cdot i(t) + L \frac{di(t)}{dt} +  V_C(t)
+            v_{in}(t) = R \cdot i(t) + L \frac{di(t)}{dt} +  v_C(t)
 
 Where: :math:`v_{in}(t)` is the input voltage, :math:`i(t)` is the current through the inductor and
 :math:`v_C(t)` is the voltage across the capacitor.
@@ -49,13 +49,13 @@ The voltage across the capacitor can be related to the current by:
 
         .. math::
 
-            V_C(t) = \frac{1}{C} \int i(t) \, dt
+            v_C(t) = \frac{1}{C} \int i(t) \, dt
 
 Taking the time derivative of both sides, we obtain the rate of change of the capacitor voltage:
 
         .. math::
 
-            \dot{v}_C(t) = \frac{d v_C(t)}{dt} = \frac{i(t)}{C}
+            \dot{V}_C(t) = \frac{d v_C(t)}{dt} = \frac{i(t)}{C}
 
 This equation shows that the rate of change of the capacitor voltage is proportional to the current through the circuit.
 
@@ -126,11 +126,11 @@ Thus, the state-space representation of the series RLC circuit is:
             + \begin{bmatrix}
             \frac{1}{L} \\
             0
-            \end{bmatrix} V_{in}(t)
+            \end{bmatrix} v_{in}(t)
 
             Y(t) = \begin{bmatrix} 0 & 1 \end{bmatrix}
             \begin{bmatrix} x_1(t) \\ x_2(t) \end{bmatrix}
-            + \begin{bmatrix} 0 \end{bmatrix} V_{in}(t)
+            + \begin{bmatrix} 0 \end{bmatrix} v_{in}(t)
 
 
 The state-space representation provides a compact way of modeling

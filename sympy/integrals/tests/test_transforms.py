@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.integrals.transforms import (
     mellin_transform, inverse_mellin_transform,
     fourier_transform, inverse_fourier_transform,
@@ -8,7 +9,7 @@ from sympy.integrals.transforms import (
     InverseSineTransform, InverseCosineTransform, IntegralTransformError)
 from sympy.integrals.laplace import (
     laplace_transform, inverse_laplace_transform)
-from sympy.core.function import Function, expand_mul
+from sympy.core.function import Derivative, Function, Subs, expand_mul
 from sympy.core import EulerGamma
 from sympy.core.numbers import I, Rational, oo, pi
 from sympy.core.singleton import S
@@ -45,6 +46,11 @@ def test_free_symbols():
     f = Function('f')
     assert mellin_transform(f(x), x, s).free_symbols == {s}
     assert mellin_transform(f(x)*a, x, s).free_symbols == {s, a}
+    assert mellin_transform(f(x), x, s + 1).free_symbols == {s}
+    assert fourier_transform(f(x), x, 2*a*s).free_symbols == {a, s}
+    y = Symbol('y')
+    assert (FourierTransform(f(x), x, 2*s).diff(s) ==
+            2*Subs(Derivative(FourierTransform(f(x), x, y), y), y, 2*s))
 
 
 def test_as_integral():
@@ -248,8 +254,9 @@ def test_mellin_transform_bessel():
         (gamma(
          s - a/2)*gamma(s + a/2)/2, (Max(-re(a)/2, re(a)/2), oo), True)
     assert MT(besselj(a, 2*sqrt(2*sqrt(x)))*besselk(
-        a, 2*sqrt(2*sqrt(x))), x, s) == (4**(-s)*gamma(2*s)*
-        gamma(a/2 + s)/(2*gamma(a/2 - s + 1)), (Max(0, -re(a)/2), oo), True)
+        a, 2*sqrt(2*sqrt(x))), x, s) == ((S.One/4)**s*gamma(2*s
+        )*gamma(a/2 + s)/(2*gamma(a/2 - s + 1)), (
+        Max(0, -re(a)/2), oo), True)
     # TODO bessely(a, x)*besselk(a, x) is a mess
     assert MT(besseli(a, sqrt(x))*besselk(a, sqrt(x)), x, s) == \
         (gamma(s)*gamma(
@@ -599,7 +606,7 @@ def test_hankel_transform():
         2**(-m + 1)*k**(m - 2)*gamma(-m/2 + 1)/gamma(m/2), k, r, 0) == r**(-m)
 
     assert hankel_transform(1/r**m, r, k, nu) == (
-        2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2))
+        2**(1 - m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2))
     assert inverse_hankel_transform(2**(-m + 1)*k**(
         m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2), k, r, nu) == r**(-m)
 
@@ -612,7 +619,7 @@ def test_hankel_transform():
 
 
 def test_issue_7181():
-    assert mellin_transform(1/(1 - x), x, s) != None
+    assert mellin_transform(1/(1 - x), x, s) != None  # noqa: E711
 
 
 def test_issue_8882():

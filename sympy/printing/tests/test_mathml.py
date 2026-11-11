@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic
@@ -1447,6 +1448,14 @@ def test_print_logic():
     assert mpp.doprint(Not(x)) == '<mrow><mo>&#xAC;</mo><mi>x</mi></mrow>'
     assert mpp.doprint(Not(And(x, y))) == \
         '<mrow><mo>&#xAC;</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>&#x2227;</mo><mi>y</mi></mrow><mo>)</mo></mrow></mrow>'
+    assert mpp.doprint(Not(x > y, evaluate=False)) == \
+        '<mrow><mo>&#xAC;</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>></mo><mi>y</mi></mrow><mo>)</mo></mrow></mrow>'
+    from sympy.sets.contains import Contains
+    from sympy.sets.sets import Interval
+    assert mpp.doprint(Not(Contains(x, Interval(0, 1)), evaluate=False)) == \
+        '<mrow><mo>&#xAC;</mo><mrow><mo>(</mo><mrow><mi>x</mi><mo>&#x2208;</mo><mrow><mo>[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>]</mo></mrow></mrow><mo>)</mo></mrow></mrow>'
+    assert mpp.doprint(Not(Not(x, evaluate=False), evaluate=False)) == \
+        '<mrow><mo>&#xAC;</mo><mrow><mo>&#xAC;</mo><mi>x</mi></mrow></mrow>'
 
 
 def test_root_notation_print():
@@ -1587,7 +1596,7 @@ def test_print_exp():
     assert mpp.doprint(exp(x)) == \
         '<msup><mi>&ExponentialE;</mi><mi>x</mi></msup>'
     assert mpp.doprint(exp(1) + exp(2)) == \
-        '<mrow><mi>&ExponentialE;</mi><mo>+</mo><msup><mi>&ExponentialE;</mi><mn>2</mn></msup></mrow>'
+        '<mrow><msup><mi>&ExponentialE;</mi><mn>2</mn></msup><mo>+</mo><mi>&ExponentialE;</mi></mrow>'
 
 
 def test_print_MinMax():
@@ -1958,7 +1967,7 @@ def test_mathml_SingularityFunction():
     assert mathml(SingularityFunction(x, 0, 4), printer='presentation') == \
         '<msup><mrow><mo>&#10216;</mo><mi>x</mi><mo>&#10217;</mo></mrow><mn>4</mn></msup>'
     assert mathml(SingularityFunction(x, a, n), printer='presentation') == \
-        '<msup><mrow><mo>&#10216;</mo><mrow><mrow><mo>-</mo><mi>a</mi></mrow><mo>+</mo><mi>x</mi></mrow><mo>&#10217;</mo></mrow><mi>n</mi></msup>'
+        '<msup><mrow><mo>&#10216;</mo><mrow><mi>x</mi><mo>-</mo><mi>a</mi></mrow><mo>&#10217;</mo></mrow><mi>n</mi></msup>'
     assert mathml(SingularityFunction(x, 4, -2), printer='presentation') == \
         '<msup><mrow><mo>&#10216;</mo><mrow><mi>x</mi><mo>-</mo><mn>4</mn></mrow><mo>&#10217;</mo></mrow><mn>-2</mn></msup>'
     assert mathml(SingularityFunction(x, 4, -1), printer='presentation') == \

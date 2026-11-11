@@ -7,6 +7,7 @@ Todo:
   qubit states, not just one.
 * Implement _represent_ZGate in OracleGate
 """
+from __future__ import annotations
 
 from sympy.core.numbers import pi
 from sympy.core.sympify import sympify

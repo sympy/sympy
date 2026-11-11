@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt

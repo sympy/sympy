@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, PoleError, Subs)
 from sympy.core.numbers import (E, Float, Rational, oo, pi, I)
@@ -253,7 +254,9 @@ def test_issue_12791():
         + 0.25*varphi*sin(theta)/(0.5*cos(theta) - 1.0)**2
         + O((beta - S.Half)**2, (beta, S.Half)))
 
-    assert expr.series(beta, 0.5, 2).trigsimp() == sol
+    result = expr.series(beta, 0.5, 2).trigsimp()
+    assert result.getO() == sol.getO()
+    assert (result.removeO() - sol.removeO()).simplify() == 0
 
 
 def test_issue_14384():

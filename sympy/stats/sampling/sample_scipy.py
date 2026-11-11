@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import singledispatch
 
 from sympy.core.symbol import Dummy

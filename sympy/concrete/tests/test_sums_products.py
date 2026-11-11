@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import prod
 
 from sympy.concrete.expr_with_intlimits import ReorderError
@@ -339,7 +340,7 @@ def test_geometric_sums():
         exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)
     )
     assert result.simplify() == Piecewise(
-            (1, Eq(exp(-2*I*pi*(k - q)/n), 1)), (0, True)
+            (1, Eq(exp(2*I*pi*(-k + q)/n), 1)), (0, True)
     )
 
     #Issue 23491
@@ -1006,16 +1007,9 @@ def test_issue_2787():
     binomial_dist = binomial(n, k)*p**k*(1 - p)**(n - k)
     s = Sum(binomial_dist*k, (k, 0, n))
     res = s.doit().simplify()
-    ans = Piecewise(
-        (n*p, x),
-        (Sum(k*p**k*binomial(n, k)*(1 - p)**(n - k), (k, 0, n)),
-        True)).subs(x, (Eq(n, 1) | (n > 1)) & (p/Abs(p - 1) <= 1))
-    ans2 = Piecewise(
-        (n*p, x),
-        (factorial(n)*Sum(p**k*(1 - p)**(-k + n)/
-        (factorial(-k + n)*factorial(k - 1)), (k, 0, n)),
-        True)).subs(x, (Eq(n, 1) | (n > 1)) & (p/Abs(p - 1) <= 1))
-    assert res in [ans, ans2]  # XXX system dependent
+
+    assert res == n*p
+
     # Issue #17165: make sure that another simplify does not complicate
     # the result by much. Why didn't first simplify replace
     # Eq(n, 1) | (n > 1) with True?
@@ -1542,8 +1536,17 @@ def test_issue_21651():
     a = Sum(floor(2*2**(-i)), (i, S.One, 2))
     assert a.doit() == S.One
 
+def test_issue_28721():
+    from sympy.matrices.expressions.special import ZeroMatrix
+    M = MatrixSymbol('M', 3, 3)
+    i = Symbol('i')
+    expr = Sum(M, (i, 0, -1))
+    assert expr.doit() == ZeroMatrix(3, 3)
+    assert isinstance(expr.doit(), ZeroMatrix)
+    assert expr.simplify() == ZeroMatrix(3, 3)
+    assert isinstance(expr.simplify(), ZeroMatrix)
 
-@XFAIL
+
 def test_matrixsymbol_summation_symbolic_limits():
     N = Symbol('N', integer=True, positive=True)
 

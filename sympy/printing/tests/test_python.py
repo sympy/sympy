@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import (Derivative, Function)
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
@@ -101,8 +102,8 @@ def test_python_functions():
     assert python(2*x + exp(x)) in "x = Symbol('x')\ne = 2*x + exp(x)"
     assert python(sqrt(2)) == 'e = sqrt(2)'
     assert python(2**Rational(1, 3)) == 'e = 2**Rational(1, 3)'
-    assert python(sqrt(2 + pi)) == 'e = sqrt(2 + pi)'
-    assert python((2 + pi)**Rational(1, 3)) == 'e = (2 + pi)**Rational(1, 3)'
+    assert python(sqrt(2 + pi)) == 'e = sqrt(pi + 2)'
+    assert python((2 + pi)**Rational(1, 3)) == 'e = (pi + 2)**Rational(1, 3)'
     assert python(2**Rational(1, 4)) == 'e = 2**Rational(1, 4)'
     assert python(Abs(x)) == "x = Symbol('x')\ne = Abs(x)"
     assert python(

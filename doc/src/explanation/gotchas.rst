@@ -259,7 +259,7 @@ To get a full list of all default names in SymPy do:
 If you have `IPython <https://ipython.org/>`_ installed and
 use :command:`isympy`, you can also press the TAB key to get a list of
 all built-in names and to autocomplete.  Also, see `this page
-<https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
+<https://web.archive.org/web/20240226142546/https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
 trick for getting tab completion in the regular Python console.
 
 .. note::
@@ -570,10 +570,10 @@ In :command:`isympy`, with the :command:`ipython` shell::
     >>> (x + 1)**2
     (x + 1)**2
     >>> pprint(3 - x**(2*x)/(x + 1))
-        2*x
-       x
-    - ----- + 3
-      x + 1
+         2*x
+        x
+    3 - -----
+        x + 1
 
 
 Inverse Trig Functions
@@ -642,7 +642,7 @@ Example:
     >>> print(a)
     [2, 1]
     >>> print(solve(x**2 + 2*x - 1, x)) # Some functions return lists
-    [-1 + sqrt(2), -sqrt(2) - 1]
+    [-sqrt(2) - 1, sqrt(2) - 1]
 
 
 .. note::

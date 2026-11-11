@@ -433,7 +433,7 @@ The first-order ordinary differential equation can be accessed as before, but
 this time a length-1 column vector is returned.
 
 >>> actf.rhs()
-Matrix([[((1/2 - tanh(b*(-a_first(t) + e_first(t)))/2)*(3*a_first(t)/2 + 1/2)/tau_d + (tanh(b*(-a_first(t) + e_first(t)))/2 + 1/2)/(tau_a*(3*a_first(t)/2 + 1/2)))*(-a_first(t) + e_first(t))]])
+Matrix([[((3*a_first(t)/2 + 1/2)*(1/2 - tanh(b*(e_first(t) - a_first(t)))/2)/tau_d + (tanh(b*(e_first(t) - a_first(t)))/2 + 1/2)/(tau_a*(3*a_first(t)/2 + 1/2)))*(e_first(t) - a_first(t))]])
 
 You can also instantiate the class with the suggested values for each of the
 constants. These are: :math:`\tau_a = 0.015`, :math:`\tau_d = 0.060`, and
@@ -441,10 +441,10 @@ constants. These are: :math:`\tau_a = 0.015`, :math:`\tau_d = 0.060`, and
 
 >>> actf2 = FirstOrderActivationDeGroote2016.with_defaults('first')
 >>> actf2.rhs()
-Matrix([[((1/2 - tanh(10.0*a_first(t) - 10.0*e_first(t))/2)/(0.0225*a_first(t) + 0.0075) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10.0*a_first(t) - 10.0*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
+Matrix([[(16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10.0*a_first(t) - 10.0*e_first(t))/2 + 1/2) + (1/2 - tanh(10.0*a_first(t) - 10.0*e_first(t))/2)/(0.0225*a_first(t) + 0.0075))*(e_first(t) - a_first(t))]])
 >>> constants = {tau_a: sm.Float('0.015'), tau_d: sm.Float('0.060'), b: sm.Float('10.0')}
 >>> actf.rhs().subs(constants)
-Matrix([[(66.6666666666667*(1/2 - tanh(10.0*a_first(t) - 10.0*e_first(t))/2)/(3*a_first(t)/2 + 1/2) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10.0*a_first(t) - 10.0*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
+Matrix([[(16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10.0*a_first(t) - 10.0*e_first(t))/2 + 1/2) + 66.6666666666667*(1/2 - tanh(10.0*a_first(t) - 10.0*e_first(t))/2)/(3*a_first(t)/2 + 1/2))*(e_first(t) - a_first(t))]])
 
 Custom
 ------
@@ -520,7 +520,7 @@ To implement this in SymPy we need a time-varying dynamic symbol representing
 
 >>> fl_T = c0*sm.exp(c3*(l_T_tilde - c1)) - c2
 >>> fl_T
-c0*exp(c3*(-c1 + l_T_tilde(t))) - c2
+c0*exp(c3*(l_T_tilde(t) - c1)) - c2
 
 Alternatively, we could define this in terms of :math:`l^T` and
 :math:`l^T_{slack}`.
@@ -530,7 +530,7 @@ Alternatively, we could define this in terms of :math:`l^T` and
 
 >>> fl_T = c0*sm.exp(c3*(l_T/l_T_slack - c1)) - c2
 >>> fl_T
-c0*exp(c3*(-c1 + l_T(t)/l_T_slack)) - c2
+c0*exp(c3*(l_T(t)/l_T_slack - c1)) - c2
 
 The :obj:`~sympy.physics.biomechanics` module in SymPy provides a class for
 this exact curve,
@@ -553,7 +553,7 @@ etc. The
 method allows the equation of the curve to be accessed.
 
 >>> fl_T2.doit()
-c0*exp(c3*(-c1 + l_T(t)/l_T_slack)) - c2
+c0*exp(c3*(l_T(t)/l_T_slack - c1)) - c2
 
 The class provides an alternate constructor that allows it to be constructed
 prepopulated with the values for the constants recommended in [DeGroote2016]_.
@@ -671,7 +671,7 @@ Alternatively, we could define this in terms of :math:`l^M` and
 
 >>> fl_M_pas2 = (sm.exp(c1*(l_M/l_M_opt - 1)/c0) - 1)/(sm.exp(c1) - 1)
 >>> fl_M_pas2
-(exp(c1*(-1 + l_M(t)/l_M_opt)/c0) - 1)/(exp(c1) - 1)
+(exp(c1*(l_M(t)/l_M_opt - 1)/c0) - 1)/(exp(c1) - 1)
 
 Again, the :obj:`~sympy.physics.biomechanics` module in SymPy provides a class
 for this exact curve,
@@ -687,7 +687,7 @@ these will be constants, or sympifiable numerical values.
 >>> fl_M_pas2
 FiberForceLengthPassiveDeGroote2016(l_M(t)/l_M_opt, c0, c1)
 >>> fl_M_pas2.doit()
-(exp(c1*(-1 + l_M(t)/l_M_opt)/c0) - 1)/(exp(c1) - 1)
+(exp(c1*(l_M(t)/l_M_opt - 1)/c0) - 1)/(exp(c1) - 1)
 
 Using the alternate constructor, which takes a single parameter for
 :math:`\tilde{l}^M`, we can create an instance prepopulated with the values for
@@ -776,7 +776,7 @@ To implement this in SymPy we need a time-varying dynamic symbol representing
 
 >>> fl_M_act = (c0*sm.exp(-(((l_M_tilde - c1)/(c2 + c3*l_M_tilde))**2)/2) + c4*sm.exp(-(((l_M_tilde - c5)/(c6 + c7*l_M_tilde))**2)/2) + c8*sm.exp(-(((l_M_tilde - c9)/(c10 + c11*l_M_tilde))**2)/2))
 >>> fl_M_act
-c0*exp(-(-c1 + l_M_tilde(t))**2/(2*(c2 + c3*l_M_tilde(t))**2)) + c4*exp(-(-c5 + l_M_tilde(t))**2/(2*(c6 + c7*l_M_tilde(t))**2)) + c8*exp(-(-c9 + l_M_tilde(t))**2/(2*(c10 + c11*l_M_tilde(t))**2))
+c0*exp(-(l_M_tilde(t) - c1)**2/(2*(c2 + c3*l_M_tilde(t))**2)) + c4*exp(-(l_M_tilde(t) - c5)**2/(2*(c6 + c7*l_M_tilde(t))**2)) + c8*exp(-(l_M_tilde(t) - c9)**2/(2*(c10 + c11*l_M_tilde(t))**2))
 
 The SymPy-provided class for this exact curve is
 :obj:`~sympy.physics.biomechanics.curve.FiberForceLengthActiveDeGroote2016`. It
@@ -791,7 +791,7 @@ these will be constants, or sympifiable numerical values.
 >>> fl_M_act2
 FiberForceLengthActiveDeGroote2016(l_M(t)/l_M_opt, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11)
 >>> fl_M_act2.doit()
-c0*exp(-(-c1 + l_M(t)/l_M_opt)**2/(2*(c2 + c3*l_M(t)/l_M_opt)**2)) + c4*exp(-(-c5 + l_M(t)/l_M_opt)**2/(2*(c6 + c7*l_M(t)/l_M_opt)**2)) + c8*exp(-(-c9 + l_M(t)/l_M_opt)**2/(2*(c10 + c11*l_M(t)/l_M_opt)**2))
+c0*exp(-(l_M(t)/l_M_opt - c1)**2/(2*(c2 + c3*l_M(t)/l_M_opt)**2)) + c4*exp(-(l_M(t)/l_M_opt - c5)**2/(2*(c6 + c7*l_M(t)/l_M_opt)**2)) + c8*exp(-(l_M(t)/l_M_opt - c9)**2/(2*(c10 + c11*l_M(t)/l_M_opt)**2))
 
 Using the alternate constructor, which takes a single parameter for
 :math:`\tilde{l}^M`, we can create an instance prepopulated with the values for
@@ -801,7 +801,7 @@ the constants recommended in [DeGroote2016]_.
 >>> fl_M_act3
 FiberForceLengthActiveDeGroote2016(l_M(t)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)
 >>> fl_M_act3.doit()
-0.1*exp(-3.98991349867535*(-1 + l_M(t)/l_M_opt)**2) + 0.433*exp(-12.5*(-0.717 + l_M(t)/l_M_opt)**2/(-0.1495 + l_M(t)/l_M_opt)**2) + 0.814*exp(-21.4067977442463*(-1 + 0.943396226415094*l_M(t)/l_M_opt)**2/(1 + 0.390740740740741*l_M(t)/l_M_opt)**2)
+0.814*exp(-(l_M(t)/l_M_opt - 1.06)**2/(2*(0.162 + 0.0633*l_M(t)/l_M_opt)**2)) + 0.433*exp(-(l_M(t)/l_M_opt - 0.717)**2/(2*(0.2*l_M(t)/l_M_opt - 0.0299)**2)) + 0.1*exp(-(2.82485875706215*l_M(t)/l_M_opt - 2.82485875706215)**2/2)
 
 Sensible values for :math:`\tilde{l}^M` fall
 within the range :math:`[0.0, 2.0]`, which we will plot below.
@@ -898,7 +898,7 @@ the constants recommended in [DeGroote2016]_.
 >>> fv_M3
 FiberForceVelocityDeGroote2016(v_M(t)/v_M_max, -0.318, -8.149, -0.374, 0.886)
 >>> fv_M3.doit()
-0.886 - 0.318*log(8.149*sqrt((-0.0458952018652595 - v_M(t)/v_M_max)**2 + 0.0150588346410601) - 0.374 - 8.149*v_M(t)/v_M_max)
+0.886 - 0.318*log(sqrt((-8.149*v_M(t)/v_M_max - 0.374)**2 + 1) - 0.374 - 8.149*v_M(t)/v_M_max)
 
 Sensible values for :math:`\tilde{v}^M` fall within the range
 :math:`[-1.0, 1.0]`, which we will plot below.
@@ -918,7 +918,7 @@ Sensible values for :math:`\tilde{v}^M` fall within the range
    >>> v_M_tilde_num = np.linspace(-1.0, 1.0)
 
    >>> fig, ax = plt.subplots()
-   >>> _ = ax.plot(l_M_tilde_num, fv_M_callable(v_M_tilde_num))
+   >>> _ = ax.plot(v_M_tilde_num, fv_M_callable(v_M_tilde_num))
    >>> _ = ax.set_xlabel('Normalized fiber velocity')
    >>> _ = ax.set_ylabel('Normalized fiber force-velocity')
 
@@ -990,7 +990,7 @@ the muscle fibers relative to the direction parallel to the tendon) at which
 
 .. math::
 
-   l^M = \sqrt{\left(l^{MT} - l^T\right)^2 + \left(l^M_{opt}\right)^2}
+   l^M = l^{MT} - l^T
 
 With :math:`\tilde{l}^M = \frac{l^M}{l^M_{opt}}`, the muscle fiber velocity can
 be expressed as
@@ -1001,8 +1001,8 @@ be expressed as
 
 Muscle fiber can be normalized as before,
 :math:`\tilde{v}^M = \frac{v^M}{v^M_{max}}`. Using the curves described above,
-we can express the normalized muscle fiber force (:math:`\tilde{F}^M`) can be
-expressed as a function of normalized tendon length (:math:`\tilde{l}^T`),
+we can express the normalized muscle fiber force (:math:`\tilde{F}^M`) as a
+function of normalized tendon length (:math:`\tilde{l}^T`),
 normalized fiber length (:math:`\tilde{l}^M`), normalized fiber velocity
 (:math:`\tilde{v}^M`), and activation (:math:`a`):
 
@@ -1018,7 +1018,7 @@ the skeleton at the musculotendon's origin and insertion, can be expressed as:
 
 .. math::
 
-   F^T = F^M_{max} \cdot F^M \cdot \sqrt{1 - \sin{\alpha_{opt}}^2}
+   F^T = F^M_{max} \cdot \tilde{F}^M \cdot \sqrt{1 - \sin{\alpha_{opt}}^2}
 
 We can describe all of this using SymPy and the musculotendon curve classes that
 we introduced above. We will need time-varying dynamics symbols for
@@ -1032,31 +1032,31 @@ symbols for :math:`l^T_{slack}`, :math:`l^M_{opt}`, :math:`F^M_{max}`,
 
 >>> l_M = sm.sqrt((l_MT - l_T_slack)**2 + (l_M_opt*sm.sin(alpha_opt))**2)
 >>> l_M
-sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)
+sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)
 
 >>> v_M = v_MT*(l_MT - l_T_slack)/l_M
 >>> v_M
-(-l_T_slack + l_MT(t))*v_MT(t)/sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)
+(l_MT(t) - l_T_slack)*v_MT(t)/sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)
 
 >>> fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M/l_M_opt)
 >>> fl_M_pas
-FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.6, 4.0)
+FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.6, 4.0)
 
 >>> fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(l_M/l_M_opt)
 >>> fl_M_act
-FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)
+FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)
 
 >>> fv_M = FiberForceVelocityDeGroote2016.with_defaults(v_M/v_M_max)
 >>> fv_M
-FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886)
+FiberForceVelocityDeGroote2016((l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)), -0.318, -8.149, -0.374, 0.886)
 
->>> F_M = a*fl_M_act*fv_M + fl_M_pas + beta*v_M/v_M_max
->>> F_M
-beta*(-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.6, 4.0)
+>>> F_M_tilde = a*fl_M_act*fv_M + fl_M_pas + beta*v_M/v_M_max
+>>> F_M_tilde
+beta*(l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.6, 4.0)
 
->>> F_T = F_M_max*F_M*sm.sqrt(1 - sm.sin(alpha_opt)**2)
+>>> F_T = F_M_max*F_M_tilde*sm.sqrt(1 - sm.sin(alpha_opt)**2)
 >>> F_T
-F_M_max*sqrt(1 - sin(alpha_opt)**2)*(beta*(-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.6, 4.0))
+F_M_max*sqrt(1 - sin(alpha_opt)**2)*(beta*(l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((l_MT(t) - l_T_slack)*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (l_MT(t) - l_T_slack)**2)/l_M_opt, 0.6, 4.0))
 
 SymPy offers this implementation of rigid tendon dynamics in the
 :obj:`~sympy.physics.biomechanics.musculotendon.MusculotendonDeGroote2016` class,
@@ -1274,13 +1274,13 @@ These are associated with its first order differential equation :math:`\dot{a}
    :nofigs:
 
    >>> muscle_activation.rhs()
-   Matrix([[((1/2 - tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2)/(0.0225*a_muscle(t) + 0.0075) + 16.6666666666667*(3*a_muscle(t)/2 + 1/2)*(tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2 + 1/2))*(-a_muscle(t) + e_muscle(t))]])
+   Matrix([[(16.6666666666667*(3*a_muscle(t)/2 + 1/2)*(tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2 + 1/2) + (1/2 - tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2)/(0.0225*a_muscle(t) + 0.0075))*(e_muscle(t) - a_muscle(t))]])
 
-With the pathway and activation dynamics, the musculotendon model created using
-them both and needs some parameters to define the muscle and tendon specific
-properties. You need to specify the tendon slack length, peak isometric force,
-optimal fiber length, maximal fiber velocity, optimal pennation angle, and
-fiber damping coefficients.
+We can now create the musculotendon model using the pathways and activation
+dynamics. However, the model still requires some parameters to define the
+muscle and tendon specific properties. You need to specify the tendon slack
+length, peak isometric force, optimal fiber length, maximal fiber velocity,
+optimal pennation angle, and fiber damping coefficients.
 
 .. TODO : How do we know this is a rigid tendon model?
 
@@ -1320,8 +1320,9 @@ state and ordinary differential equation as the activation model:
    :context: close-figs
    :nofigs:
 
-   >>> muscle.musculotendon_dynamics
-   0
+   >>> from sympy.physics.biomechanics import MusculotendonFormulation
+   >>> muscle.musculotendon_dynamics is MusculotendonFormulation.RIGID_TENDON
+   True
    >>> muscle.x
    Matrix([[a_muscle(t)]])
    >>> muscle.r
@@ -1335,7 +1336,7 @@ state and ordinary differential equation as the activation model:
    [alpha_opt],
    [     beta]])
    >>> muscle.rhs()
-   Matrix([[((1/2 - tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2)/(0.0225*a_muscle(t) + 0.0075) + 16.6666666666667*(3*a_muscle(t)/2 + 1/2)*(tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2 + 1/2))*(-a_muscle(t) + e_muscle(t))]])
+   Matrix([[(16.6666666666667*(3*a_muscle(t)/2 + 1/2)*(tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2 + 1/2) + (1/2 - tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2)/(0.0225*a_muscle(t) + 0.0075))*(e_muscle(t) - a_muscle(t))]])
 
 The musculotendon provides the extra ordinary differential equations as well as
 the muscle specific forces applied to the pathway:
@@ -1348,8 +1349,8 @@ the muscle specific forces applied to the pathway:
 
    >>> muscle_loads = muscle.to_loads()
    >>> pprint.pprint(muscle_loads)
-   [Force(point=O, force=F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.6, 4.0))*q(t)*cos(alpha_opt)/Abs(q(t))*N.x),
-    Force(point=P, force=- F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.6, 4.0))*q(t)*cos(alpha_opt)/Abs(q(t))*N.x)]
+   [Force(point=O, force=F_M_max*(beta*(Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, 0.6, 4.0))*q(t)*cos(alpha_opt)/Abs(q(t))*N.x),
+    Force(point=P, force=- F_M_max*(beta*(Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((Abs(q(t)) - l_T_slack)*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (Abs(q(t)) - l_T_slack)**2)/l_M_opt, 0.6, 4.0))*q(t)*cos(alpha_opt)/Abs(q(t))*N.x)]
 
 These loads are made up of various functions that describe the length and
 velocity relationships to the muscle fiber force.

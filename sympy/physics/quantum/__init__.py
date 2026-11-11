@@ -1,4 +1,5 @@
 # Names exposed by 'from sympy.physics.quantum import *'
+from __future__ import annotations
 
 __all__ = [
     'AntiCommutator',

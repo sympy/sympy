@@ -1,4 +1,5 @@
 """Efficient functions for generating orthogonal polynomials."""
+from __future__ import annotations
 from sympy.core.symbol import Dummy
 from sympy.polys.densearith import (dup_mul, dup_mul_ground,
     dup_lshift, dup_sub, dup_add, dup_sub_term, dup_sub_ground, dup_sqr)
@@ -330,9 +331,9 @@ def spherical_bessel_fn(n, x=None, polys=False):
     >>> fn(1, z)
     z**(-2)
     >>> fn(2, z)
-    -1/z + 3/z**3
+    3/z**3 - 1/z
     >>> fn(3, z)
-    -6/z**2 + 15/z**4
+    15/z**4 - 6/z**2
     >>> fn(4, z)
     1/z - 45/z**3 + 105/z**5
 

@@ -1,9 +1,10 @@
+from __future__ import annotations
 from sympy.core.numbers import (I, Rational, pi, oo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.function import Lambda
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.trigonometric import sec, csc
+from sympy.functions.elementary.trigonometric import sec, csc, tan, sin
 from sympy.functions.elementary.hyperbolic import (coth, sech,
                                                    atanh, asech, acoth, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -16,7 +17,7 @@ from sympy.calculus.singularities import (
     is_monotonic
 )
 from sympy.sets import Interval, FiniteSet, Union, ImageSet
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import x, y
 
 
@@ -53,7 +54,15 @@ def test_singularities():
         0, pi, 2*pi, 3*pi)
     assert singularities(0**x, x) == Interval.open(-oo, 0)
     assert singularities(0**(x-1), x) == Interval.open(-oo, 1)
+    assert singularities(0**(x - 1), x, Interval(2, 5)) == S.EmptySet
     assert singularities(0**(x+1)/(x-2), x) == Union({2}, Interval.open(-oo, -1))
+    assert singularities(0**(1 - x**2), x) == Union(Interval.open(-oo, -1), Interval.open(1, oo))
+    assert singularities(0**((x - 1)**2 + 1), x) == S.EmptySet
+    assert singularities((x - 2)**(x - 3), x) == FiniteSet(2)
+    assert singularities((x**2 - 4)**(x - 1), x) == FiniteSet(-2)
+    assert singularities((x - 2)**(1 - x), x) == FiniteSet(2)
+    assert singularities((x - 2)**(x - 2), x) == S.EmptySet
+    assert 0 in singularities(sin(x)**(x - 1), x, S.Reals)
 
 
 def test_is_increasing():
@@ -123,3 +132,24 @@ def test_issue_23401():
     x = Symbol('x')
     expr = (x + 1)/(-1.0e-3*x**2 + 0.1*x + 0.1)
     assert is_increasing(expr, Interval(1,2), x)
+
+
+def test_monotonicity_with_interior_singularities():
+    assert is_monotonic(tan(x), Interval(0, 5), x) is False
+    assert is_increasing(tan(x), Interval(0, 5), x) is False
+
+    assert is_monotonic(1/x, Interval(-1, 1), x) is False
+    assert is_increasing(1/x, Interval(-1, 1), x) is False
+    assert is_decreasing(1/x, Interval(-1, 1), x) is False
+
+    assert is_increasing(tan(x), Interval(0, 1), x) is True
+    assert is_increasing(tan(x), Interval.open(-pi/2, pi/2), x) is True
+
+    assert is_decreasing(1/x, Interval.open(0, 1), x) is True
+    assert is_decreasing(1/x, Interval(-1, Rational(-1, 10)), x) is True
+    assert not is_decreasing(1/x, Interval(-1, 1), x)
+    assert not is_increasing(1/x, Interval(-1, 1), x)
+
+@XFAIL
+def test_singularities_periodic_exponent():
+    assert singularities(sin(x)**(sin(x) - S.Half), x, S.Reals).contains(2*pi) is S.true

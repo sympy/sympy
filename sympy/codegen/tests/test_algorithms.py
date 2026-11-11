@@ -1,3 +1,5 @@
+from __future__ import annotations
+from math import ulp
 import tempfile
 from sympy import log, Min, Max, sqrt
 from sympy.core.numbers import Float
@@ -177,4 +179,5 @@ def test_newtons_method_function__rtol_cse_nan():
             req = ref*reftol[meth]
             if use_cse:
                 req *= 2
-            assert abs(result - ref) < req
+            # Allow for floating-point resolution differences across platforms.
+            assert abs(result - ref) < max(req, 2*ulp(result))

@@ -1,7 +1,10 @@
+from __future__ import annotations
+from unittest.mock import PropertyMock, patch
+
 from sympy.core.add import Add
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Rational)
+from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
@@ -18,6 +21,7 @@ from sympy.core.mul import _unevaluated_Mul as umul
 from sympy.simplify.radsimp import (_unevaluated_Add,
     collect_sqrt, fraction_expand, collect_abs)
 from sympy.testing.pytest import raises
+
 
 from sympy.abc import x, y, z, a, b, c, d
 
@@ -119,10 +123,10 @@ def test_radsimp():
     # work with normal form
     e = 1/sqrt(sqrt(7)/7 + 2*sqrt(2) + 3*sqrt(3) + 5*sqrt(5)) + 3
     assert radsimp(e) == (
-        -sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
-        35*sqrt(5))*(-11654899*sqrt(35) - 1577436*sqrt(210) - 1278438*sqrt(15)
-        - 1346996*sqrt(10) + 1635060*sqrt(6) + 5709765 + 7539830*sqrt(14) +
-        8291415*sqrt(21))/1300423175 + 3)
+        sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
+        35*sqrt(5))*(1346996*sqrt(10) - 7539830*sqrt(14) + 1278438*sqrt(15)
+        - 8291415*sqrt(21) + 1577436*sqrt(210) + 11654899*sqrt(35)
+        - 1635060*sqrt(6) - 5709765)/1300423175 + 3)
 
     # obey power rules
     base = sqrt(3) - sqrt(2)
@@ -142,10 +146,10 @@ def test_radsimp():
 
     # test that symbolic denominators are not processed
     r = 1 + sqrt(2)
-    assert radsimp(x/r, symbolic=False) == -x*(-sqrt(2) + 1)
+    assert radsimp(x/r, symbolic=False) == x*(sqrt(2) - 1)
     assert radsimp(x/(y + r), symbolic=False) == x/(y + 1 + sqrt(2))
     assert radsimp(x/(y + r)/r, symbolic=False) == \
-        -x*(-sqrt(2) + 1)/(y + 1 + sqrt(2))
+        x*(sqrt(2) - 1)/(y + 1 + sqrt(2))
 
     # issue 7408
     eq = sqrt(x)/sqrt(y)
@@ -402,11 +406,34 @@ def test_fraction_expand():
     assert eq.expand() == y + y**2/x
 
 
+def test_fraction_exact_no_sign_inference():
+    p = Symbol('p', positive=True)
+    cases = [
+        (2**(-pi), (1, 2**pi)),
+        (exp(-p), (exp(-p), 1)),
+        (Pow(2, 1 - p, evaluate=False),
+         (Pow(2, 1 - p, evaluate=False), 1)),
+    ]
+
+    for expr, expected in cases:
+        exponent = expr.as_base_exp()[1]
+        with (
+            patch.object(type(exponent), 'is_negative',
+                         new_callable=PropertyMock) as negative,
+            patch.object(type(exponent), 'is_positive',
+                         new_callable=PropertyMock) as positive,
+        ):
+            negative.side_effect = AssertionError("queried is_negative")
+            positive.side_effect = AssertionError("queried is_positive")
+            assert fraction(expr, exact=True) == expected
+
+
 def test_fraction():
     x, y, z = map(Symbol, 'xyz')
     A = Symbol('A', commutative=False)
 
     assert fraction(S.Half) == (1, 2)
+    assert fraction(2**-pi, exact=True) == (1, 2**pi)
 
     assert fraction(x) == (x, 1)
     assert fraction(1/x) == (1, x)
@@ -443,6 +470,9 @@ def test_fraction():
     assert fraction(m) == (1, 4)
     assert fraction(m, exact=True) == \
             (Mul(1, 1, evaluate=False), Mul(2, 2, 1, evaluate=False))
+
+    u = Pow(2, -2, evaluate=False)
+    assert fraction(u, exact=True) == (1, Pow(2, 2, evaluate=False))
 
 
 def test_issue_5615():

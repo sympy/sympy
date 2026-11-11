@@ -1,6 +1,7 @@
 # Ported from latex2sympy by @augustt198
 # https://github.com/augustt198/latex2sympy
 # See license in LICENSE.txt
+from __future__ import annotations
 from importlib.metadata import version
 import sympy
 from sympy.external import import_module

@@ -1,9 +1,11 @@
+from __future__ import annotations
 from sympy.core import Basic, Expr
-from sympy.core.numbers import oo
+from sympy.core.numbers import oo, Infinity, NegativeInfinity
+from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.multipledispatch import Dispatcher
 from sympy.sets.setexpr import set_mul
-from sympy.sets.sets import Interval, Set
+from sympy.sets.sets import Interval, Set, FiniteSet
 
 
 _x, _y = symbols("x y")
@@ -77,3 +79,23 @@ def _(x, y):
     else:
         s1 = 1/y.end
     return set_mul(x, Interval(s1, s2, y.right_open, y.left_open))
+
+
+@_set_mul.register(Interval, Infinity)
+@_set_mul.register(Interval, NegativeInfinity)
+def _(x, y):
+    negative = x.start.is_extended_negative
+    positive = x.end.is_extended_positive
+    zero = x.contains(0)
+    if (negative is None or positive is None or
+            zero not in (S.true, S.false)):
+        return None
+
+    values = []
+    if negative:
+        values.append(-y)
+    if zero is S.true:
+        values.append(S.NaN)
+    if positive:
+        values.append(y)
+    return FiniteSet(*values)

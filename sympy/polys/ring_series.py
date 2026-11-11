@@ -40,6 +40,7 @@ To make a function work with rs_series you need to do two things::
 Look at rs_sin and rs_series for further reference.
 
 """
+from __future__ import annotations
 
 from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import PolyElement, ring, sring
@@ -47,14 +48,14 @@ from sympy.polys.puiseux import PuiseuxPoly
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
-from mpmath.libmp.libintmath import ifac
+from sympy.external.gmpy import factorial as ifac
+from sympy.external.mpmath import giant_steps
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational
 from sympy.core.intfunc import igcd
 from sympy.functions import (sin, cos, tan, atan, exp, atanh, asinh, tanh, log,
                              ceiling, sinh, cosh)
 from sympy.utilities.misc import as_int
-from mpmath.libmp.libintmath import giant_steps
 import math
 
 
@@ -318,6 +319,34 @@ def rs_pow(p1, n, x, prec):
     6*x**2 + 4*x + 1
     """
     R = p1.ring
+
+    if n == 0:
+        if p1:
+            return R(1)
+        else:
+            raise ValueError('0**0 is undefined')
+
+    if not p1:
+        if n > 0:
+            return R.zero
+        else:
+            raise ZeroDivisionError
+
+    index = R.gens.index(x)
+    m = min(p1, key=lambda k: k[index])[index]
+    if isinstance(n, Rational):
+        if hasattr(m, 'p') and hasattr(m, 'q'):
+            shift = QQ(m.p, m.q) * QQ(n.p, n.q)
+        else:
+            shift = QQ(m) * QQ(n.p, n.q)
+    else:
+        shift = m * n
+    if m:
+        p1 = mul_xin(p1, index, -m)
+    prec = prec - shift
+    if prec <= 0:
+        return R.zero
+
     if isinstance(n, Rational):
         np = int(n.p)
         nq = int(n.q)
@@ -327,34 +356,34 @@ def rs_pow(p1, n, x, prec):
                 res = rs_pow(res, np, x, prec)
         else:
             res = rs_pow(p1, np, x, prec)
-        return res
-
-    n = as_int(n)
-    if n == 0:
-        if p1:
-            return R(1)
+    else:
+        n = as_int(n)
+        if n < 0:
+            res = rs_pow(p1, -n, x, prec)
+            res = rs_series_inversion(res, x, prec)
+        elif n == 1:
+            res = rs_trunc(p1, x, prec)
+        elif n == 2:
+            res = rs_square(p1, x, prec)
+        elif n == 3:
+            p2 = rs_square(p1, x, prec)
+            res = rs_mul(p1, p2, x, prec)
         else:
-            raise ValueError('0**0 is undefined')
-    if n < 0:
-        p1 = rs_pow(p1, -n, x, prec)
-        return rs_series_inversion(p1, x, prec)
-    if n == 1:
-        return rs_trunc(p1, x, prec)
-    if n == 2:
-        return rs_square(p1, x, prec)
-    if n == 3:
-        p2 = rs_square(p1, x, prec)
-        return rs_mul(p1, p2, x, prec)
-    p = R(1)
-    while 1:
-        if n & 1:
-            p = rs_mul(p1, p, x, prec)
-            n -= 1
-            if not n:
-                break
-        p1 = rs_square(p1, x, prec)
-        n = n // 2
-    return p
+            p = R(1)
+            while 1:
+                if n & 1:
+                    p = rs_mul(p1, p, x, prec)
+                    n -= 1
+                    if not n:
+                        break
+                p1 = rs_square(p1, x, prec)
+                n = n // 2
+            res = p
+
+    res = rs_trunc(res, x, prec)
+    if shift:
+        res = mul_xin(res, index, shift)
+    return res
 
 def rs_subs(p, rules, x, prec):
     """
@@ -915,6 +944,8 @@ def _nth_root1(p, n, x, prec):
         p1 += p1/n - tmp/n
     if sign:
         return p1
+    elif n == 2:
+        return rs_mul(p1, p, x, precx)
     else:
         return _series_inversion1(p1, x, prec)
 
@@ -964,8 +995,12 @@ def rs_nth_root(p, n, x, prec):
     R = p.ring
     index = R.gens.index(x)
     m = min(p, key=lambda k: k[index])[index]
-    p = mul_xin(p, index, -m)
-    prec -= m
+    if m:
+        shift = QQ(m) / n
+        p = mul_xin(p, index, -m)
+        prec = prec - shift
+    else:
+        shift = 0
 
     if _has_constant_term(p - 1, x):
         zm = R.zero_monom
@@ -986,9 +1021,8 @@ def rs_nth_root(p, n, x, prec):
         res = rs_nth_root(p/c, n, x, prec)*const
     else:
         res = _nth_root1(p, n, x, prec)
-    if m:
-        m = QQ(m) / n
-        res = mul_xin(res, index, m)
+    if shift:
+        res = mul_xin(res, index, shift)
     return res
 
 def rs_log(p, x, prec):
@@ -1500,7 +1534,7 @@ def rs_cos_sin(p, x, prec):
         return rs_puiseux(rs_cos_sin, p, x, prec)
     R = p.ring
     if not p:
-        return R(0), R(0)
+        return R(1), R(0)
     c = _get_constant_term(p, x)
     if c:
         try:
@@ -1706,8 +1740,6 @@ def rs_cosh(p, x, prec):
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cosh, p, x, prec)
     R = p.ring
-    if not p:
-        return R(1)
     c = _get_constant_term(p, x)
     if c:
         try:
@@ -1756,7 +1788,7 @@ def rs_cosh_sinh(p, x, prec):
         return rs_puiseux(rs_cosh_sinh, p, x, prec)
     R = p.ring
     if not p:
-        return R(0), R(0)
+        return R(1), R(0)
     c = _get_constant_term(p, x)
     if c:
         try:
@@ -2088,7 +2120,7 @@ def rs_series(expr, a, prec):
     -a*sin(c)*tan(b) + a*cos(c)*tan(b)**2 + a*cos(c) + cos(c)*tan(b)
     >>> series = rs_series(exp(a**QQ(1,3) + a**QQ(2, 5)), a, 1)
     >>> series.as_expr()
-    a**(11/15) + a**(4/5)/2 + a**(2/5) + a**(2/3)/2 + a**(1/3) + 1
+    a**(1/3) + a**(2/5) + a**(2/3)/2 + a**(11/15) + a**(4/5)/2 + 1
 
     """
     R, series = sring(expr, domain=QQ, expand=False, series=True)

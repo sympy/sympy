@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (I, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -8,7 +9,7 @@ from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import Matrix
 from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
         real_gaunt, racah, dot_rot_grad_Ynm, wigner_3j, wigner_d_small, wigner_d)
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises, skip, slow
 
 # for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
 
@@ -131,6 +132,7 @@ def test_wigner():
             == -4*sqrt(70)/11025)
 
 
+@slow
 def test_gaunt():
     def tn(a, b):
         return (a - b).n(64) < S('1e-64')

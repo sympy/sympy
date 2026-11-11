@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Lambda, diff, expand_func)
 from sympy.core.mul import Mul
@@ -16,7 +17,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (asin, atan, cos, sin, tan)
 from sympy.functions.special.bessel import (besseli, besselj, besselk)
 from sympy.functions.special.beta_functions import beta
-from sympy.functions.special.error_functions import (erf, erfc, erfi, expint)
+from sympy.functions.special.error_functions import (erf, erfc, erfi, expint, owens_t)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma, uppergamma)
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.hyper import hyper
@@ -35,7 +36,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
                          LogLogistic, LogitNormal, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
-                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
+                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz,
+                         SkewNormal, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
                          Lomax, BoundedPareto)
@@ -252,8 +254,7 @@ def test_moment_generating_function():
     assert mgf == b*(-a*t)**b*uppergamma(-b, -a*t)
 
     mgf = moment_generating_function(QuadraticU('x', a, b))(t)
-    assert str(mgf) == ("(3*(t*(-4*b + (a + b)**2) + 4)*exp(b*t) - "
-    "3*(t*(a**2 + 2*a*(b - 2) + b**2) + 4)*exp(a*t))/(t**2*(a - b)**3)")
+    assert str(mgf) == ('(3*(t*((a + b)**2 - 4*b) + 4)*exp(b*t) - 3*(t*(a**2 + 2*a*(b - 2) + b**2) + 4)*exp(a*t))/(t**2*(a - b)**3)')
 
     mgf = moment_generating_function(RaisedCosine('x', a, b))(t)
     assert mgf == pi**2*exp(a*t)*sinh(b*t)/(b*t*(b**2*t**2 + pi**2))
@@ -263,8 +264,7 @@ def test_moment_generating_function():
         *exp(a**2*t**2/2)/2 + 1
 
     mgf = moment_generating_function(Triangular('x', a, b, c))(t)
-    assert str(mgf) == ("(-2*(-a + b)*exp(c*t) + 2*(-a + c)*exp(b*t) + "
-    "2*(b - c)*exp(a*t))/(t**2*(-a + b)*(-a + c)*(b - c))")
+    assert str(mgf) == ('(-2*(b - a)*exp(c*t) + 2*(c - a)*exp(b*t) + 2*(b - c)*exp(a*t))/(t**2*(b - a)*(c - a)*(b - c))')
 
     mgf = moment_generating_function(Uniform('x', a, b))(t)
     assert mgf == (-exp(a*t) + exp(b*t))/(t*(-a + b))
@@ -743,6 +743,7 @@ def test_frechet():
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
     assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
 
+
 @slow
 def test_gamma():
     k = Symbol("k", positive=True)
@@ -770,9 +771,10 @@ def test_gamma():
     assert kurtosis(X).expand() == 3 + 6/k
 
     Y = Gamma('y', 2*k, 3*theta)
-    assert coskewness(X, theta*X + Y, k*X + Y).simplify() == \
-        2*531441**(-k)*sqrt(k)*theta*(3*3**(12*k) - 2*531441**k) \
-        /(sqrt(k**2 + 18)*sqrt(theta**2 + 18))
+    assert coskewness(X, theta*X + Y, k*X + Y).simplify() == 2*(
+        S(1)/531441)**k*sqrt(k)*theta*(3*3**(12*k) - 2*531441**k)/(
+        sqrt(k**2 + 18)*sqrt(theta**2 + 18))
+
 
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
@@ -783,6 +785,7 @@ def test_gamma_inverse():
     assert characteristic_function(X)(x) == 2 * (-I*b*x)**(a/2) \
             * besselk(a, 2*sqrt(b)*sqrt(-I*x))/gamma(a)
     raises(NotImplementedError, lambda: moment_generating_function(X))
+
 
 def test_gompertz():
     b = Symbol("b", positive=True)
@@ -1155,6 +1158,29 @@ def test_shiftedgompertz():
     assert density(X)(x) == b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
 
 
+def test_skewnormal():
+    xi = Symbol("xi", real=True)
+    omega = Symbol("omega", positive=True)
+    alpha = Symbol("alpha", real=True)
+
+    X = SkewNormal("x", xi, omega, alpha)
+    z = (x - xi)/omega
+    assert density(X)(x) == exp(-z**2/2)*(1 + erf(alpha*z/sqrt(2)))/(sqrt(2*pi)*omega)
+    assert cdf(X)(x) == erf(sqrt(2)*z/2)/2 + S.Half - 2*owens_t(z, alpha)
+
+    # alpha = 0 reduces to a Normal distribution
+    assert density(SkewNormal("x", xi, omega, 0))(x) == density(Normal("x", xi, omega))(x)
+    assert cdf(SkewNormal("x", xi, omega, 0))(x) == cdf(Normal("x", xi, omega))(x)
+
+    # -X ~ SkewNormal(-xi, omega, -alpha)
+    Y = SkewNormal("y", -xi, omega, -alpha)
+    assert simplify(density(X)(x) - density(Y)(-x)) == 0
+
+    raises(ValueError, lambda: SkewNormal('x', 0, -1, 1))
+    raises(ValueError, lambda: SkewNormal('x', 0, 0, 1))
+    raises(ValueError, lambda: SkewNormal('x', 0, 1, I))
+
+
 def test_studentt():
     nu = Symbol("nu", positive=True)
 
@@ -1189,14 +1215,13 @@ def test_triangular():
 
     X = Triangular('x', a, b, c)
     assert pspace(X).domain.set == Interval(a, b)
-    assert str(density(X)(x)) == ("Piecewise(((-2*a + 2*x)/((-a + b)*(-a + c)), (a <= x) & (c > x)), "
-    "(2/(-a + b), Eq(c, x)), ((2*b - 2*x)/((-a + b)*(b - c)), (b >= x) & (c < x)), (0, True))")
+    assert str(density(X)(x)) == ('Piecewise(((2*x - 2*a)/((b - a)*(c - a)), (a <= x) & (c > x)), (2/(b - a), Eq(c, x)), ((2*b - 2*x)/((b - a)*(b - c)), (b >= x) & (c < x)), (0, True))')
 
     #Tests moment_generating_function
     assert moment_generating_function(X)(x).expand() == \
     ((-2*(-a + b)*exp(c*x) + 2*(-a + c)*exp(b*x) + 2*(b - c)*exp(a*x))/(x**2*(-a + b)*(-a + c)*(b - c))).expand()
     assert str(characteristic_function(X)(x)) == \
-    '(2*(-a + b)*exp(I*c*x) - 2*(-a + c)*exp(I*b*x) - 2*(b - c)*exp(I*a*x))/(x**2*(-a + b)*(-a + c)*(b - c))'
+    '(2*(b - a)*exp(I*c*x) - 2*(c - a)*exp(I*b*x) - 2*(b - c)*exp(I*a*x))/(x**2*(b - a)*(c - a)*(b - c))'
 
 def test_quadratic_u():
     a = Symbol("a", real=True)
@@ -1497,6 +1522,7 @@ def test_long_precomputed_cdf():
             Laplace("LA", -5, 4),
             Logistic("L", -6, 7),
             Nakagami("N", 2, 7),
+            SkewNormal("SN", -2, 3, 4),
             StudentT("S", 4)
             ]
     for distr in distribs:

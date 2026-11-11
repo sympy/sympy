@@ -66,7 +66,7 @@ Set-up for examples below:
 
     >>> eq = cos(x + y)/cos(x)
     >>> TR10i(eq.expand(trig=True))
-    -sin(x)*sin(y)/cos(x) + cos(y)
+    cos(y) - sin(x)*sin(y)/cos(x)
 
 If the expression is put in "normal" form (with a common denominator) then
 the transformation is successful:
@@ -247,4 +247,4 @@ References
     https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=718d67a8d1ce0a23808c1cc265612f81977357e4
 
 .. [2] A formula sheet for trigonometric functions.
-    http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html
+    https://web.archive.org/web/20210510064738/http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html

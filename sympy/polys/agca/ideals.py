@@ -1,4 +1,5 @@
 """Computations with ideals of polynomial rings."""
+from __future__ import annotations
 
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyutils import IntegerPowerable

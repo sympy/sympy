@@ -2,6 +2,7 @@
 This module can be used to solve problems related
 to 2D Cables.
 """
+from __future__ import annotations
 
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol, symbols
@@ -448,7 +449,7 @@ class Cable:
         >>> c.reaction_loads
         {R_A_x: -5.25547445255474, R_A_y: 7.2, R_B_x: 5.25547445255474, R_B_y: 3.8}
         >>> c.length
-        5.7560958484519 + 2*sqrt(13)
+        2*sqrt(13) + 5.7560958484519
 
         For distributed load,
 

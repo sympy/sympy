@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, oo, diff
 from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
@@ -145,7 +146,7 @@ class SingularityFunction(DefinedFunction):
         >>> a = Symbol('a', negative = True)
         >>> n = Symbol('n', nonnegative = True)
         >>> SingularityFunction(x, a, n)
-        (-a + x)**n
+        (x - a)**n
         >>> x = Symbol('x', negative = True)
         >>> a = Symbol('a', positive = True)
         >>> SingularityFunction(x, a, n)

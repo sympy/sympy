@@ -9,13 +9,12 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import sympify
+from sympy.external.mpmath import prec_to_dps, repr_dps, to_str as mlib_to_str
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \
     precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer, print_function
-
-from mpmath.libmp import prec_to_dps, repr_dps, to_str as mlib_to_str
 
 
 class MathMLPrinterBase(Printer):
@@ -1457,17 +1456,19 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return self._print_LogOp(args, '&#x21D4;')
 
     def _print_Not(self, e):
+        from sympy.sets.contains import Contains
         mrow = self.dom.createElement('mrow')
         mo = self.dom.createElement('mo')
         mo.appendChild(self.dom.createTextNode('&#xAC;'))
         mrow.appendChild(mo)
-        if (e.args[0].is_Boolean):
+        arg = e.args[0]
+        if (arg.is_Boolean or arg.is_Relational or isinstance(arg, Contains)) and not arg.is_Not:
             x = self.dom.createElement('mrow')
             x.appendChild(self._l_paren())
-            x.appendChild(self._print(e.args[0]))
+            x.appendChild(self._print(arg))
             x.appendChild(self._r_paren())
         else:
-            x = self._print(e.args[0])
+            x = self._print(arg)
         mrow.appendChild(x)
         return mrow
 

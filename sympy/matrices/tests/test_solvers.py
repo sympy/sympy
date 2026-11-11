@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 from sympy.core.function import expand_mul
 from sympy.core.numbers import (I, Rational)

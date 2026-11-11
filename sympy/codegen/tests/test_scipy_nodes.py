@@ -1,9 +1,11 @@
+from __future__ import annotations
+from mpmath.libmp import dps_to_prec, prec_to_dps
 from itertools import product
 from sympy.core.power import Pow
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.trigonometric import cos
-from sympy.core.numbers import pi
+from sympy.core.numbers import pi, Rational
 from sympy.codegen.scipy_nodes import cosm1, powm1
 
 x, y, z = symbols('x y z')
@@ -42,3 +44,23 @@ def test_powm1():
     eulers_constant_m1 = powm1(x, 1/log(x))
     assert eulers_constant_m1.rewrite(Pow) == exp(1) - 1
     assert eulers_constant_m1.simplify() == exp(1) - 1
+
+
+def test_scipy_nodes_evalf_precision():
+    cases = [(cosm1(1), cos(1) - 1), (powm1(2, pi), 2**pi - 1)]
+    for expr, expected in cases:
+        for prec in (53, 113):
+            result = expr._eval_evalf(prec)
+            assert result._prec == dps_to_prec(prec_to_dps(prec))
+            assert abs(result - expected.evalf(50)) < 2**(4 - prec)
+
+
+def test_scipy_nodes_evalf_cancellation():
+    small = Rational(1, 10**20)
+    cases = [(cosm1(small), cos(small) - 1),
+             (powm1(1 + small, small), (1 + small)**small - 1)]
+    for expr, expected in cases:
+        reference = expected.evalf(80)
+        for digits in (15, 30, 50):
+            result = expr.evalf(digits)
+            assert abs((result - reference)/reference) < 10**(1 - digits)

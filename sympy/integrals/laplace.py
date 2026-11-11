@@ -1,4 +1,5 @@
 """Laplace Transforms"""
+from __future__ import annotations
 import sys
 import sympy
 from sympy.core import S, pi, I
@@ -1406,7 +1407,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> Xs
     m*v/(d*s + k + m*s**2)
     >>> inverse_laplace_transform(Xs, s, t)
-    2*v*exp(-d*t/(2*m))*sin(t*sqrt((-d**2 + 4*k*m)/m**2)/2)*Heaviside(t)/sqrt((-d**2 + 4*k*m)/m**2)
+    2*v*exp(-d*t/(2*m))*sin(t*sqrt((4*k*m - d**2)/m**2)/2)*Heaviside(t)/sqrt((4*k*m - d**2)/m**2)
 
     References
     ==========
@@ -1687,9 +1688,9 @@ def _inverse_laplace_freq_shift(F, s, t, plane):
     if len(args := F.args) == 1:
         a = Wild('a', exclude=[s])
         if (ma := args[0].match(s-a)) and re(ma[a]).is_positive:
-            _debug('     rule: F(s-a) o---o exp(-a*t)*f(t)')
+            _debug('     rule: F(s-a) o---o exp(a*t)*f(t)')
             return (
-                exp(-ma[a]*t) *
+                exp(ma[a]*t) *
                 InverseLaplaceTransform(F.func(s), s, t, plane), S.true)
     return None
 
@@ -2031,11 +2032,27 @@ def _inverse_laplace_irrational(fn, s, t, plane):
 
 
 @DEBUG_WRAP
+def _inverse_laplace_laplace(fn, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+
+    if not fn.func == LaplaceTransform:
+        return None
+    _f, _t, _s = fn.args
+    if _s == s:
+        return _f.subs(_t, t)*Heaviside(t), S.true
+    else:
+        return None
+
+
+@DEBUG_WRAP
 def _inverse_laplace_early_prog_rules(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    prog_rules = [_inverse_laplace_irrational]
+    prog_rules = [
+        _inverse_laplace_laplace, _inverse_laplace_irrational]
 
     for p_rule in prog_rules:
         if (r := p_rule(F, s, t, plane)) is not None:
@@ -2308,7 +2325,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     >>> from sympy.abc import s, t
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)
-    Heaviside(-a + t)
+    Heaviside(t - a)
 
     See Also
     ========

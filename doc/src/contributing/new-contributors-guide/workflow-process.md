@@ -3,7 +3,7 @@
 
 
 ```{note}
-This guide is intended for people are already familiar with contributing to
+This guide is intended for people who are already familiar with contributing to
 open source projects on GitHub. If you are new to GitHub, read the
 [](./dev-setup.md) guide first.
 ```
@@ -22,7 +22,7 @@ pull request, or even before committing a change.
 
   ```bash
   python bin/test quality
-  flake8 sympy/
+  ruff check sympy
   ```
 
 - [ ] **[Add tests](workflow-process-add-tests).** All new functionality
@@ -57,7 +57,7 @@ pull request, or even before committing a change.
   needed beyond your PR.
 
 - [ ] **[Add a release notes
-  entry](https://github.com/sympy/sympy/wiki/Writing-Release-Notes).** This
+  entry](pull-request-release-notes).** This
   should be done when opening the pull request, in the pull request
   description field. It can be edited at any time before the pull request is
   merged.
@@ -149,7 +149,7 @@ add-simplify-tests
 ```
 
 Ultimately the branch name is not that important, so don't spend too much time
-thinking about it. It's only function is to distinguish the code for this
+thinking about it. Its only function is to distinguish the code for this
 contribution from other contributions you may make.
 
 ## Modify code
@@ -166,7 +166,7 @@ create a pull request, but you can also run them locally with
 
 ```
 python bin/test quality
-flake8 sympy/
+ruff check sympy
 ```
 
 Additionally, all tests are required to pass. The CI will automatically run
@@ -229,7 +229,7 @@ One important thing that should be included in every docstring is examples.
 Examples are also called *doctests*, because they are tested with the
 `bin/doctest` script to ensure they output is correct.
 
-Doctests need to include imports for every function used define any symbols
+Doctests need to include imports for every function used and define any symbols
 that are used. Users should be able to copy and paste the example inputs into
 their own Python session and get the exact same outputs. `from sympy import *`
 is not allowed in doctests, as this would make it unclear which functions come
@@ -535,7 +535,8 @@ your PR is ready for final review.
 ### Writing pull request title and description
 
 When you make a pull request, be sure to fill out the pull request description
-template. This includes adding cross-references to any relevant issues (with
+template. See the [pull request guidelines](../pull-request-guidelines.rst)
+for instructions on each section. This includes adding cross-references to any relevant issues (with
 "fixes" if appropriate), and adding a release notes entry.
 
 - **Descriptive titles are very important.** The pull request title should
@@ -547,7 +548,7 @@ template. This includes adding cross-references to any relevant issues (with
   - "Modified solvers\.py"
   - "Fix issue #12345"
 
-  These do indicate to reviewers what is actually changed in the pull request,
+  These do not indicate to reviewers what is actually changed in the pull request,
   and hence, they are likely to just pass it over instead of reviewing it.
   An example of a better pull request title is
 
@@ -582,7 +583,7 @@ The description is a good place to:
   requests.
 
 - the pull request needs a release notes entry. See
-  <https://github.com/sympy/sympy/wiki/Writing-Release-Notes> on how to write
+  [the release notes guidelines](pull-request-release-notes) on how to write
   release notes in the pull request description. The SymPy Bot will check that
   your PR has release notes automatically.
 
@@ -657,7 +658,7 @@ time of the next SymPy release.
 Joe Bloggs <joe@bloggs.com>
 ```
 
-The first line their says that the .mailmap file was "reordered". This is because the file should be in alphabetical order. The script will have moved your name into the correct position so now you can see the change as:
+The first line there says that the .mailmap file was "reordered". This is because the file should be in alphabetical order. The script will have moved your name into the correct position so now you can see the change as:
 
 ```bash
 $ git diff
@@ -702,7 +703,7 @@ Sometimes a commit will be made with an incorrect name or email address or an au
 Joe Bloggs <joe@bloggs.com> joeb <wrong@email.com>
 ```
 
-A common reason that this can happen is if making commits with the GitHub web UI which always recorded the name as github username and the email as something like `1785690389+joeb@users.noreply.github.com`. In this case a line will need to be added to .mailmap like:
+A common reason that this can happen is if making commits with the GitHub web UI which always records the name as github username and the email as something like `1785690389+joeb@users.noreply.github.com`. In this case a line will need to be added to .mailmap like:
 
 ```
 Joe Bloggs <joe@bloggs.com> joeb <1785690389+joeb@users.noreply.github.com>

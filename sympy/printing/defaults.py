@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core._print_helpers import Printable
 
 # alias for compatibility

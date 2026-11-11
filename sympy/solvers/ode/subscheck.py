@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, Pow
 from sympy.core.function import (Derivative, AppliedUndef, diff)
 from sympy.core.relational import Equality, Eq
@@ -33,8 +34,7 @@ def sub_func_doit(eq, func, new):
 
     >>> sub_func_doit(x*Derivative(y(x), x) - y(x)**2 + y(x), y(x),
     ... 1/(x*(z + 1/x)))
-    x*(-1/(x**2*(z + 1/x)) + 1/(x**3*(z + 1/x)**2)) + 1/(x*(z + 1/x))
-    ...- 1/(x**2*(z + 1/x)**2)
+    x*(1/(x**3*(z + 1/x)**2) - 1/(x**2*(z + 1/x)))...- 1/(x**2*(z + 1/x)**2)
     """
     reps= {func: new}
     for d in eq.atoms(Derivative):

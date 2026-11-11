@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.function import (Derivative, Function, diff)
@@ -117,7 +118,6 @@ def test_heurisch_trigonometric():
     assert heurisch(sin(x)*sin(y), x) == -cos(x)*sin(y)
     assert heurisch(sin(x)*sin(y), y) == -cos(y)*sin(x)
 
-    # gives sin(x) in answer when run via setup.py and cos(x) when run via py.test
     assert heurisch(sin(x)*cos(x), x) in [sin(x)**2 / 2, -cos(x)**2 / 2]
     assert heurisch(cos(x)/sin(x), x) == log(sin(x))
 
@@ -415,3 +415,10 @@ def test_heurisch_issue_26922():
     )
 
     assert i.doit(heurisch=False).expand() == res
+
+
+def test_heurisch_issue_26504():
+    f = 2**(2 + 3*x)*3**(5 + 7*x)
+    ans = 972*2**(3*x)*3**(7*x)/(3*log(2) + 7*log(3))
+    assert heurisch(f, x) == ans
+    assert integrate(f, x) == ans

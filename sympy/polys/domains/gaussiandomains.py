@@ -5,18 +5,16 @@ from typing import Generic, TypeVar, Any, TYPE_CHECKING
 
 from sympy.external.gmpy import MPZ, MPQ
 from sympy.core.numbers import I
-from sympy.core.expr import Expr
 from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains.integerring import ZZ, IntegerRing
 from sympy.polys.domains.rationalfield import QQ, RationalField
-from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.algebraicfield import AlgebraicField
-from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.ringextension import RingExtension
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
 
 
 Tdom = TypeVar('Tdom', MPZ, MPQ)
@@ -24,6 +22,9 @@ Telem = TypeVar('Telem', bound="GaussianElement")
 
 
 if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.polys.domains.domain import Domain
     from typing import Self
 
 
@@ -275,7 +276,7 @@ class GaussianRational(GaussianElement[MPQ]):
             return self/other, self._parent.zero
 
 
-class GaussianDomain(RingExtension[Telem, Tdom]):
+class GaussianDomain(RingExtension[Telem, Tdom], ConjugateDomain):
     """Base class for Gaussian domains."""
     dom: Domain
     units: tuple[Telem, Telem, Telem, Telem]
@@ -360,6 +361,10 @@ class GaussianDomain(RingExtension[Telem, Tdom]):
         if K0.ext.args[0] == I:
             return K1.from_sympy(K0.to_sympy(a))
         return None
+
+    def conjugate(self, a: Telem) -> Telem:
+        """Returns the complex conjugate of ``a``."""
+        return self.dtype(a.x, -a.y)
 
 
 class GaussianIntegerRing(GaussianDomain[GaussianInteger, MPZ], Ring[MPZ]):

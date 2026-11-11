@@ -23,7 +23,6 @@ sudo apt-get install\
   librsvg2-bin\
   imagemagick\
   chromium-browser\
-  libcanberra-gtk-module\
   docbook2x\
   graphviz\
   #

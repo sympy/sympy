@@ -1,4 +1,5 @@
 """Tools for constructing domains for expressions. """
+from __future__ import annotations
 from math import prod
 
 from sympy.core import sympify
@@ -8,7 +9,7 @@ from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, EX
 from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.polyoptions import build_options
-from sympy.polys.polyutils import parallel_dict_from_basic
+from sympy.polys.polyutils import parallel_dict_from_basic, _not_a_coeff
 from sympy.utilities import public
 
 
@@ -38,6 +39,8 @@ def _construct_simple(coeffs, opt):
             if is_complex:
                 complexes = True
                 x, y = is_complex
+                if _not_a_coeff(x) or _not_a_coeff(y):
+                    return False
                 if x.is_Rational and y.is_Rational:
                     if not (x.is_Integer and y.is_Integer):
                         rationals = True
@@ -140,6 +143,9 @@ def _construct_composite(coeffs, opt):
 
     polys, gens = parallel_dict_from_basic(numers + denoms)  # XXX: sorting
     if not gens:
+        return None
+
+    if any(_not_a_coeff(gen) for gen in gens):
         return None
 
     if opt.composite is None:

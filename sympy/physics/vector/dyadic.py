@@ -1,8 +1,9 @@
-from sympy import sympify, Add, ImmutableMatrix as Matrix
+from __future__ import annotations
+from sympy import sympify, Add, ImmutableMatrix as Matrix, S
 from sympy.core.evalf import EvalfMixin
+from sympy.external.mpmath import prec_to_dps
 from sympy.printing.defaults import Printable
-
-from mpmath.libmp.libmpf import prec_to_dps
+from sympy.printing.pretty.stringpict import prettyForm
 
 
 __all__ = ['Dyadic']
@@ -142,7 +143,7 @@ class Dyadic(Printable, EvalfMixin):
 
     def __truediv__(self, other):
         """Divides the Dyadic by a sympifyable expression. """
-        return self.__mul__(1 / other)
+        return self.__mul__(S.One / other)
 
     def __eq__(self, other):
         """Tests for equality.
@@ -209,51 +210,44 @@ class Dyadic(Printable, EvalfMixin):
             baseline = 0
 
             def render(self, *args, **kwargs):
-                ar = e.args  # just to shorten things
                 mpp = printer
-                if len(ar) == 0:
-                    return str(0)
-                bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
-                ol = []  # output list, to be concatenated to a string
-                for v in ar:
-                    # if the coef of the dyadic is 1, we skip the 1
-                    if v[0] == 1:
-                        ol.extend([" + ",
-                                  mpp.doprint(v[1]),
-                                  bar,
-                                  mpp.doprint(v[2])])
+                if len(e.args) == 0:
+                    return mpp._print(0)
 
-                    # if the coef of the dyadic is -1, we skip the 1
-                    elif v[0] == -1:
-                        ol.extend([" - ",
-                                  mpp.doprint(v[1]),
-                                  bar,
-                                  mpp.doprint(v[2])])
+                outstr = None
+                bar = prettyForm(u"\N{CIRCLED TIMES}" if mpp._use_unicode else "|")
+                for i, v in enumerate(e.args):
+                    p_v1 = mpp._print(v[1])
+                    p_v2 = mpp._print(v[2])
+                    p_dyad = prettyForm(*p_v1.right(bar, p_v2))
 
-                    # If the coefficient of the dyadic is not 1 or -1,
-                    # we might wrap it in parentheses, for readability.
-                    elif v[0] != 0:
-                        if isinstance(v[0], Add):
-                            arg_str = mpp._print(
-                                v[0]).parens()[0]
+                    c = v[0]
+                    if i == 0:
+                        sign = ""
+                    else:
+                        sign = " + "
+
+                    coeff, rest = c.as_coeff_Mul()
+                    if coeff < 0:
+                        if i == 0:
+                            sign = "- "
                         else:
-                            arg_str = mpp.doprint(v[0])
-                        if arg_str.startswith("-"):
-                            arg_str = arg_str[1:]
-                            str_start = " - "
-                        else:
-                            str_start = " + "
-                        ol.extend([str_start, arg_str, " ",
-                                  mpp.doprint(v[1]),
-                                  bar,
-                                  mpp.doprint(v[2])])
+                            sign = " - "
+                        c = -c
 
-                outstr = "".join(ol)
-                if outstr.startswith(" + "):
-                    outstr = outstr[3:]
-                elif outstr.startswith(" "):
-                    outstr = outstr[1:]
-                return outstr
+                    if c == 1:
+                        p_term = p_dyad
+                    else:
+                        p_c = mpp._print(c)
+                        if isinstance(c, Add):
+                            p_c = prettyForm(*p_c.parens())
+                        p_term = prettyForm(*p_c.right(" ", p_dyad))
+
+                    if outstr is None:
+                        outstr = prettyForm(*p_term.left(sign))
+                    else:
+                        outstr = prettyForm(*outstr.right(sign, p_term))
+                return outstr.__str__()
         return Fake()
 
     def __rsub__(self, other):
@@ -399,9 +393,9 @@ class Dyadic(Printable, EvalfMixin):
         >>> A = N.orientnew('A', 'Axis', (beta, N.x))
         >>> trigsimp(inertia_dyadic.to_matrix(A))
         Matrix([
-        [                           Ixx,                                           Ixy*cos(beta) + Ixz*sin(beta),                                           -Ixy*sin(beta) + Ixz*cos(beta)],
-        [ Ixy*cos(beta) + Ixz*sin(beta), Iyy*cos(2*beta)/2 + Iyy/2 + Iyz*sin(2*beta) - Izz*cos(2*beta)/2 + Izz/2,                 -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2],
-        [-Ixy*sin(beta) + Ixz*cos(beta),                -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2, -Iyy*cos(2*beta)/2 + Iyy/2 - Iyz*sin(2*beta) + Izz*cos(2*beta)/2 + Izz/2]])
+        [                          Ixx,                                           Ixy*cos(beta) + Ixz*sin(beta),                                            Ixz*cos(beta) - Ixy*sin(beta)],
+        [Ixy*cos(beta) + Ixz*sin(beta), Iyy*cos(2*beta)/2 + Iyy/2 + Iyz*sin(2*beta) - Izz*cos(2*beta)/2 + Izz/2,                 -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2],
+        [Ixz*cos(beta) - Ixy*sin(beta),                -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2, -Iyy*cos(2*beta)/2 + Iyy/2 - Iyz*sin(2*beta) + Izz*cos(2*beta)/2 + Izz/2]])
 
         """
 
@@ -519,7 +513,7 @@ class Dyadic(Printable, EvalfMixin):
         >>> ((1 + x*y) * D).xreplace({x: pi})
         (pi*y + 1)*(N.x|N.x)
         >>> ((1 + x*y) * D).xreplace({x: pi, y: 2})
-        (1 + 2*pi)*(N.x|N.x)
+        (2*pi + 1)*(N.x|N.x)
 
         Replacements occur only if an entire node in the expression tree is
         matched:

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 
 from sympy.concrete.products import (Product, product)
@@ -9,6 +10,7 @@ from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio)
 from sympy.core.numbers import (AlgebraicNumber, E, Float, I, Rational,
                                 oo, zoo, nan, pi)
+from sympy.core.parameters import evaluate
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -33,7 +35,7 @@ from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
                               scaled_zero, get_integer_part, as_mpmath, evalf, _evalf_with_bounded_error)
 from mpmath import inf, ninf, make_mpc
-from mpmath.libmp.libmpf import from_float, fzero
+from sympy.external.mpmath import from_float, fzero, finf
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y
@@ -44,7 +46,6 @@ def NS(e, n=15, **options):
 
 
 def test_evalf_helpers():
-    from mpmath.libmp import finf
     assert complex_accuracy((from_float(2.0), None, 35, None)) == 35
     assert complex_accuracy((from_float(2.0), from_float(10.0), 35, 100)) == 37
     assert complex_accuracy(
@@ -91,6 +92,16 @@ def test_evalf_complex():
     assert NS('E+pi*I', 15) == '2.71828182845905 + 3.14159265358979*I'
     assert NS('pi * (3+4*I)', 15) == '9.42477796076938 + 12.5663706143592*I'
     assert NS('I*(2+I)', 15) == '-1.00000000000000 + 2.00000000000000*I'
+
+
+def test_evalf_abs_evaluate_false():
+    for z, expected in (
+        (1 + I, sqrt(2)),
+        (10**20 + I, sqrt(10**40 + 1)),
+    ):
+        with evaluate(False):
+            result = Abs(z, evaluate=False).evalf(50)
+        assert result == expected.evalf(50)
 
 
 @XFAIL
@@ -271,6 +282,56 @@ def test_evalf_bugs():
 
     #issue 18516
     assert NS(log(S(3273390607896141870013189696827599152216642046043064789483291368096133796404674554883270092325904157150886684127560071009217256545885393053328527589376)/36360291795869936842385267079543319118023385026001623040346035832580600191583895484198508262979388783308179702534403855752855931517013066142992430916562025780021771247847643450125342836565813209972590371590152578728008385990139795377610001).evalf(15, chop=True)) == '-oo'
+
+
+
+def test_issue_5461():
+    f = x**4 - 3*x + 4
+    _r0 = Rational(1, 144)
+    _r1 = Rational(1, 3)
+    _r2 = Rational(1, 2)
+    _r3 = Rational(9, 16)
+    _r4 = Rational(8, 3)
+    x0 = (42591**_r2*I*_r0 + _r3)**_r1
+    x1 = 2*x0
+    x2 = _r4/x0
+    x3 = (x1 + x2)**_r2
+    x4 = _r2*x3
+    x5 = -x4
+    x6 = -x1
+    x7 = -x2
+    x8 = 6/x3
+    x9 = _r2*(x6 + x7 - x8)**_r2
+    x10 = _r2*(x6 + x7 + x8)**_r2
+    roots = [
+    x5 + x9,
+    x10 + x4,
+    x5 - x9,
+    -x10 + x4]
+    # Symbolic substitution used to give residuals of +/-8*I
+    # for two valid quartic roots.
+    for root in roots:
+        for dps in (15, 30, 50):
+            assert abs(f.subs(x, root).evalf(dps)) < 10**(2 - dps)
+
+
+def test_issue_6137():
+    # The principal cube root is 5/6 + I.
+    c = (-Rational(415, 216) + 13*I/12)**Rational(1, 3)
+    u = 2*c + Rational(61, 18)/c
+    v = sqrt(u - Rational(7, 3))
+
+    # The radicand is exactly -12, so its principal
+    # square root is +2*sqrt(3)*I.
+    w = sqrt(-Rational(14, 3) - u - 4/v)
+    root = Rational(3, 2) - v/2 + w/2
+
+    expected_w = 2*sqrt(3)*I
+    expected_root = 1 + sqrt(3)*I
+
+    for dps in (3, 7, 13, 25, 30):
+        assert abs(w.evalf(dps) - expected_w.evalf(dps)) < 10**(2 - dps)
+        assert abs(root.evalf(dps) - expected_root.evalf(dps)) < 10**(2 - dps)
 
 
 def test_evalf_integer_parts():
@@ -474,6 +535,56 @@ def test_evalf_mul():
     # SymPy should not try to expand this; it should be handled term-wise
     # in evalf through mpmath
     assert NS(product(1 + sqrt(n)*I, (n, 1, 500)), 1) == '5.e+567 + 2.e+568*I'
+
+
+def test_evalf_manage_exact_gcd_30874():
+    # don't let numer and denom accumulate to 25**500
+    assert Mul(*[(3 + 4*I)/5*(3 - 4*I)/5 for i in range(500)
+        ], evaluate=False).n(3) == S(1).n(3)
+
+
+def test_evalf_nested_complex_cancellation_30874():
+    tiny = Rational(1, 10**100)
+    a = 1 + I
+    b = 1 + tiny + I
+    c = Float('1.0', 15) + Float('1e-150', 15)*I
+    expr = Mul(Mul(a, c, evaluate=False), b, evaluate=False)
+    assert expr.evalf(20).as_real_imag()[0] == tiny.evalf(20)
+
+
+def test_evalf_complex_exact_cancellation_30874():
+    tiny = Rational(1, 10**100)
+    expr = Mul(1 + I, 1 + tiny + I, evaluate=False)
+    real, imag = expr.evalf(20).as_real_imag()
+    assert real == tiny.evalf(20)
+    assert imag == (2 + tiny).evalf(20)
+
+
+def test_evalf_complex_float_precision_30874():
+    a = Float('1.23456789012345000001', 15)
+    b = Float('1.23456789012344000001', 15)
+    expr = Mul(a + b*I, a + b*I, evaluate=False)
+
+    # Convert the stored binary Floats to exact Rationals
+    # to calculate the reference result without rounding.
+    r, i = Rational(a), Rational(b)
+    expected = (
+        (r*r - i*i).evalf(35),
+        (2*r*i).evalf(35))
+
+    assert expr.evalf(35).as_real_imag() == expected
+
+
+def test_evalf_complex_exact_zero_components_30874():
+    a = Mul(1 + I, 1 - I, evaluate=False)
+    b = Mul(1 + I, 1 + I, evaluate=False)
+    assert a.evalf(20).as_real_imag()[1] == 0
+    assert b.evalf(20).as_real_imag()[0] == 0
+
+
+def test_issue_30874():
+    with evaluate(False):
+        str(Mul(-1, I).evalf())
 
 
 def test_scaled_zero():
@@ -736,3 +847,33 @@ def test_issue_20733():
     assert srepr(expr.evalf(2, subs={x: 1})) == "Float('4.0271e+2561', precision=10)"
     assert srepr(expr.evalf(10, subs={x: 1})) == "Float('4.02790050126e+2561', precision=37)"
     assert srepr(expr.evalf(53, subs={x: 1})) == "Float('4.0279005012722099453824067459760158730668154575647110393e+2561', precision=179)"
+
+
+def test_issue_28280():
+    # This test demonstrates why `evalf_log` needs to specially handle
+    # arguments close to 1.If the argument is evaluated directly
+    # as `1 + 10**-10` at default precision,it loses the small
+    # term and becomes exactly 1. This results in `log(1) -> 0`
+    # causing `x > 20` to incorrectly evaluate to False.
+    x = 20 + log(1 + S(10)**-10)
+    assert x > 20
+    y = 20 + log(1 + S(10)**-9)
+    assert y > 20
+
+
+def test_issue_13365():
+    # The quotient between successive terms of a hypergeometric series need not
+    # have integral numerator and denominator. For 1.9**n/factorial(n) the ratio
+    # is 1.9/(n + 1), and truncating 1.9 to an integer before applying the ratio
+    # turned the series into the one for exp(1), so evalf returned e instead of
+    # exp(1.9). See https://github.com/sympy/sympy/issues/13365
+    x = Symbol('x', integer=True, positive=True)
+    s = Sum(1.9**x/factorial(x), (x, 0, oo))
+    assert abs((s - exp(Rational(19, 10))).evalf()) < 1e-12
+
+    # The same truncation happened in both hypsum branches, so exercise the
+    # direct-summation branch too: the ratio of the series for exp(1.9*x**2) is
+    # 1.9*(2*n + 1)/(n + 1), whose numerator is non-integral.
+    t = Symbol('t', integer=True, nonnegative=True)
+    s2 = Sum(1.9**t * t / factorial(t), (t, 0, oo))
+    assert abs((s2 - 19*exp(Rational(19, 10))/10).evalf()) < 1e-12

@@ -3,13 +3,15 @@ Mathematica code printer
 """
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from sympy.core import Basic, Expr, Float
 from sympy.core.sorting import default_sort_key
 
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
+
+if TYPE_CHECKING:
+    from sympy.core import Basic, Expr, Float
 
 # Used in MCodePrinter._print_Function(self)
 known_functions = {
@@ -87,7 +89,7 @@ known_functions = {
     "mathieusprime": [(lambda *x: True, "MathieuSPrime")],
     "stieltjes": [(lambda x: True, "StieltjesGamma")],
     "elliptic_e": [(lambda *x: True, "EllipticE")],
-    "elliptic_f": [(lambda *x: True, "EllipticE")],
+    "elliptic_f": [(lambda *x: True, "EllipticF")],
     "elliptic_k": [(lambda x: True, "EllipticK")],
     "elliptic_pi": [(lambda *x: True, "EllipticPi")],
     "zeta": [(lambda *x: True, "Zeta")],
@@ -104,7 +106,7 @@ known_functions = {
     "airyaiprime": [(lambda x: True, "AiryAiPrime")],
     "airybiprime": [(lambda x: True, "AiryBiPrime")],
     "polylog": [(lambda *x: True, "PolyLog")],
-    "lerchphi": [(lambda *x: True, "LerchPhi")],
+    "lerchphi": [(lambda *x: True, "HurwitzLerchPhi")],
     "gcd": [(lambda *x: True, "GCD")],
     "lcm": [(lambda *x: True, "LCM")],
     "jn": [(lambda *x: True, "SphericalBesselJ")],
@@ -112,8 +114,6 @@ known_functions = {
     "hyper": [(lambda *x: True, "HypergeometricPFQ")],
     "meijerg": [(lambda *x: True, "MeijerG")],
     "appellf1": [(lambda *x: True, "AppellF1")],
-    "DiracDelta": [(lambda x: True, "DiracDelta")],
-    "Heaviside": [(lambda x: True, "HeavisideTheta")],
     "KroneckerDelta": [(lambda *x: True, "KroneckerDelta")],
     "sqrt": [(lambda x: True, "Sqrt")],  # For automatic rewrites
 }
@@ -334,6 +334,14 @@ class MCodePrinter(CodePrinter):
         dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
         return "Hold[D[" + ', '.join(self.doprint(a) for a in [dexpr] + dvars) + "]]"
 
+    def _print_Heaviside(self, expr):
+        return "HeavisideTheta[%s]" % self.stringify(expr.pargs, ", ")
+
+    def _print_DiracDelta(self, expr):
+        if len(expr.args) == 1 or expr.args[1] == 0:
+            return "DiracDelta[%s]" % self._print(expr.args[0])
+        return "Derivative[%s][DiracDelta][%s]" % (
+            self._print(expr.args[1]), self._print(expr.args[0]))
 
     def _get_comment(self, text):
         return "(* {} *)".format(text)
@@ -348,6 +356,6 @@ def mathematica_code(expr, **settings):
     >>> from sympy import mathematica_code as mcode, symbols, sin
     >>> x = symbols('x')
     >>> mcode(sin(x).series(x).removeO())
-    '(1/120)*x^5 - 1/6*x^3 + x'
+    '(1/120)*x^5 - (1/6)*x^3 + x'
     """
     return MCodePrinter(settings).doprint(expr)

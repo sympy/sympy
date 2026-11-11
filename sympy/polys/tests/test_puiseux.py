@@ -1,6 +1,7 @@
 #
 # Tests for PuiseuxRing and PuiseuxPoly
 #
+from __future__ import annotations
 
 from sympy.testing.pytest import raises
 
@@ -127,6 +128,14 @@ def test_puiseux_poly_unify():
     assert repr(1/x**QQ(1,2) + 1/x**QQ(1,3)) == 'x**(-1/2) + x**(-1/3)'
     assert 1/x + x**QQ(1,2) == x**QQ(1,2) + 1/x == R({(-1,): 1, (QQ(1,2),): 1})
     assert repr(1/x + x**QQ(1,2)) == 'x**(-1) + x**(1/2)'
+
+
+def test_puiseux_poly_issue_29363():
+    R, e, b = puiseux_ring('e b', QQ)
+    dz = -1 - b*e
+    neg = b/e*dz
+    dp = dz + neg
+    assert dp == -1 - b/e - b*e - b**2
 
 
 def test_puiseux_poly_arit():

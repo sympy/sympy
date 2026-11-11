@@ -463,10 +463,10 @@ def ddm_idet(a, K):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Bareiss_algorithm
-    .. [2] https://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
+    .. [2] https://aquila.usm.edu/cgi/viewcontent.cgi?article=1001&context=masters_theses
     """
     # Bareiss algorithm
-    # https://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
+    # https://aquila.usm.edu/cgi/viewcontent.cgi?article=1001&context=masters_theses
 
     # a is (m x n)
     m = len(a)
@@ -771,8 +771,8 @@ def ddm_berk(M, K):
     >>> M = [[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]]
     >>> ddm_berk(M, ZZ)
     [[1], [-5], [-2]]
-    >>> Matrix(M).charpoly()
-    PurePoly(lambda**2 - 5*lambda - 2, lambda, domain='ZZ')
+    >>> Matrix(M).charpoly('x')
+    Poly(x**2 - 5*x - 2, x, domain='ZZ')
 
     See Also
     ========

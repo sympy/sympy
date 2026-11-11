@@ -87,7 +87,7 @@ You can define a function without including its independent variable:
 >>> x = symbols("x")
 >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
 >>> dsolve(eqs, [f(x), g(x)])
-[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
+[Eq(f(x), C2*exp(x) - C1*exp(-x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
 ```
 
 Note that you supply the functions to be solved for as a list as the second
@@ -112,9 +112,9 @@ $f(0) = 1$ and $g(2) = 3$:
 >>> x = symbols("x")
 >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
 >>> dsolve(eqs, [f(x), g(x)])
-[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
+[Eq(f(x), C2*exp(x) - C1*exp(-x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
 >>> dsolve(eqs, [f(x), g(x)], ics={f(0): 1, g(2): 3})
-[Eq(f(x), (1 + 3*exp(2))*exp(x)/(1 + exp(4)) - (-exp(4) + 3*exp(2))*exp(-x)/(1 + exp(4))), Eq(g(x), (1 + 3*exp(2))*exp(x)/(1 + exp(4)) + (-exp(4) + 3*exp(2))*exp(-x)/(1 + exp(4)))]
+[Eq(f(x), (3*exp(2) + 1)*exp(x)/(exp(4) + 1) + (exp(4) - 3*exp(2))*exp(-x)/(exp(4) + 1)), Eq(g(x), (3*exp(2) + 1)*exp(x)/(exp(4) + 1) - (exp(4) - 3*exp(2))*exp(-x)/(exp(4) + 1))]
 ```
 
 Here is an example of setting the initial value for the derivative of a
@@ -321,7 +321,7 @@ them as symbols and then substitute in their values using
 >>> result
 C1*sin(3*x) + C2*cos(3*x)
 >>> result.subs({C1: 7, C2: pi})
-7*sin(3*x) + pi*cos(3*x)
+pi*cos(3*x) + 7*sin(3*x)
 ```
 
 ## Numerically Solve an ODE in SciPy
@@ -372,7 +372,7 @@ y_2(t) \end{bmatrix} $$
   >>> # for input values y, kf, and kb
   >>> ydot = [2*(rb - rf), rb - rf, 2*(rf - rb)]
   >>> ydot
-  [2*kb*y2**2 - 2*kf*y0**2*y1, kb*y2**2 - kf*y0**2*y1, -2*kb*y2**2 + 2*kf*y0**2*y1]
+  [2*kb*y2**2 - 2*kf*y0**2*y1, kb*y2**2 - kf*y0**2*y1, 2*kf*y0**2*y1 - 2*kb*y2**2]
   >>> t = symbols('t') # not used in this case
   >>> # Convert the SymPy symbolic expression for ydot into a form that
   >>> # SciPy can evaluate numerically, f
@@ -480,9 +480,3 @@ NotImplementedError
 
 For such cases, you can solve the equations numerically as mentioned in
 [](#alternatives-to-consider).
-
-## Report a Bug
-
-If you find a bug with {func}`~.dsolve`, please post the problem on the [SymPy mailing
-list](https://groups.google.com/g/sympy). Until the issue is resolved, you can
-use a different method listed in [](#alternatives-to-consider).

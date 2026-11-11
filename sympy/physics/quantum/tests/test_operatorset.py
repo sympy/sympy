@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.singleton import S
 
 from sympy.physics.quantum.operatorset import (

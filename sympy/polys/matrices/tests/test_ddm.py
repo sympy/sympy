@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import raises
 from sympy.external.gmpy import GROUND_TYPES
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import chain, combinations
 
 from sympy.external.gmpy import gcd

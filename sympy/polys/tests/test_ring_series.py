@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.polys.domains import ZZ, QQ, EX, RR
 from sympy.polys.rings import ring
 from sympy.polys.puiseux import puiseux_ring
@@ -249,9 +250,12 @@ def test_nth_root():
         5*x**4*y**5/27 - 10*x**4*y**4/243 - 2*x**3*y**4/9 + 5*x**3*y**3/81 + \
         x**2*y**3/3 - x**2*y**2/9 + x*y/3 + 1
     assert rs_nth_root(8*x, 3, x, 3) == 2*x**QQ(1, 3)
-    assert rs_nth_root(8*x + x**2 + x**3, 3, x, 3) == x**QQ(4,3)/12 + 2*x**QQ(1,3)
+    assert rs_nth_root(8*x + x**2 + x**3, 3, x, 3) == \
+        23*x**QQ(7, 3)/288 + x**QQ(4, 3)/12 + 2*x**QQ(1, 3)
     r = rs_nth_root(8*x + x**2*y + x**3, 3, x, 4)
-    assert r == -x**QQ(7,3)*y**2/288 + x**QQ(7,3)/12 + x**QQ(4,3)*y/12 + 2*x**QQ(1,3)
+    assert r == 5*x**QQ(10, 3)*y**3/20736 - x**QQ(10, 3)*y/144 - \
+        x**QQ(7, 3)*y**2/288 + x**QQ(7, 3)/12 + x**QQ(4, 3)*y/12 + \
+        2*x**QQ(1, 3)
 
     # Constant term in series
     a = symbols('a')
@@ -262,6 +266,55 @@ def test_nth_root():
         x**QQ(8, 3)*y - EX(sqrt(5)/16000)*x**QQ(8, 3) + EX(sqrt(5)/10)*x**2*y + \
         EX(sqrt(5)/2000)*x**2 - EX(sqrt(5)/200)*x**QQ(4, 3) + \
         EX(sqrt(5)/10)*x**QQ(2, 3) + EX(sqrt(5))
+
+
+def test_issue_30698():
+    R, x = puiseux_ring('x', QQ)
+    p = x + x**2
+    assert rs_nth_root(p, -1, x, 3) == -x**2 + x - 1 + x**(-1)
+    assert rs_series_inversion(p, x, 3) == -x**2 + x - 1 + x**(-1)
+    assert rs_nth_root(x**4 + x**5, 2, x, 2) == 0
+    assert rs_nth_root(x**4 + x**5, 2, x, 3) == x**2
+    assert rs_nth_root(x**4 + x**5, 2, x, 4) == x**3/2 + x**2
+
+
+def test_issue_30705():
+    R, x = puiseux_ring('x', QQ)
+    p1 = x + x**2
+    assert rs_pow(p1, -2, x, 3) == 5*x**2 - 4*x + 3 - 2*x**(-1) + x**(-2)
+    assert rs_series_inversion(p1**2, x, 3) == 5*x**2 - 4*x + 3 - 2*x**(-1) + x**(-2)
+
+    p2 = x**2 + x**3
+    assert rs_pow(p2, -2, x, 3) == 7*x**2 - 6*x + 5 - 4*x**(-1) + 3*x**(-2) - 2*x**(-3) + x**(-4)
+
+    # Negative valuation
+    p3 = x**-5 + x**-4
+    assert rs_pow(p3, -1, x, 3) == 0
+    assert rs_pow(p3, -1, x, 7) == -x**6 + x**5
+
+    # Ordinary polynomial ring
+    R2, x2 = ring('x', QQ)
+    p4 = x2 + x2**2
+    assert rs_pow(p4, -2, x2, 3) == rs_series_inversion(p4**2, x2, 3)
+
+
+def test_issue_30710():
+    R, x = puiseux_ring('x', QQ)
+
+    # Positive valuation, negative fractional power
+    assert rs_pow(x + x**2, Rational(-1, 2), x, 3) == \
+        -QQ(5, 16)*x**QQ(5, 2) + QQ(3, 8)*x**QQ(3, 2) - QQ(1, 2)*x**QQ(1, 2) + x**QQ(-1, 2)
+
+    # Negative valuation, positive fractional power
+    assert rs_pow(x**-3 + x**-2, Rational(2, 3), x, 1) == \
+        -QQ(1, 9) + QQ(2, 3)*x**(-1) + x**(-2)
+
+    # Negative valuation, negative fractional power
+    assert rs_pow(x**2 + x**3, Rational(-1, 2), x, 1) == \
+        -QQ(1, 2) + x**(-1)
+
+    # Low precision test (truncation check)
+    assert rs_pow(x + x**2, Rational(1, 2), x, 1) == x**QQ(1, 2)
 
 
 def test_atan():
@@ -366,6 +419,9 @@ def test_sin():
         EX(cos(a)/6)*x**3 + EX(cos(a))*x**2*y - EX(sin(a)/2)*x**2 + \
         EX(cos(a))*x + EX(sin(a))
 
+    R, x = ring('x', EX)
+    assert rs_sin(R(a), x, 5) == R(EX(sin(a)))
+
 
 def test_cos():
     R, x, y = ring('x, y', QQ)
@@ -392,9 +448,15 @@ def test_cos():
         EX(sin(a)/6)*x**3 - EX(sin(a))*x**2*y - EX(cos(a)/2)*x**2 - \
         EX(sin(a))*x + EX(cos(a))
 
+    R, x = ring('x', EX)
+    assert rs_cos(R(a), x, 5) == R(EX(cos(a)))
+
 
 def test_cos_sin():
     R, x, y = ring('x, y', QQ)
+    c, s = rs_cos_sin(R(0), x, 5)
+    assert c == R(1)
+    assert s == R(0)
     c, s = rs_cos_sin(x, x, 9)
     assert c == rs_cos(x, x, 9)
     assert s == rs_sin(x, x, 9)
@@ -496,6 +558,9 @@ def test_sinh():
         2)*x**4*y + EX(sinh(a)/24)*x**4 + EX(sinh(a))*x**3*y + EX(cosh(a)/6)*x**3 \
         + EX(cosh(a))*x**2*y + EX(sinh(a)/2)*x**2 + EX(cosh(a))*x + EX(sinh(a))
 
+    R, x = ring('x', EX)
+    assert rs_sinh(R(a), x, 5) == R(EX(sinh(a)))
+
 
 def test_cosh():
     R, x, y = ring('x, y', QQ)
@@ -505,6 +570,7 @@ def test_cosh():
         x**8*y**10/48 + x**8*y**8/40320 + x**7*y**10/6 + \
         x**7*y**8/120 + x**6*y**8/4 + x**6*y**6/720 + x**5*y**6/6 + \
         x**4*y**6/2 + x**4*y**4/24 + x**3*y**4 + x**2*y**2/2 + 1
+    assert rs_cosh(R(0), x, 5) == R(1)
 
     # constant term in series
     a = symbols('a')
@@ -521,9 +587,15 @@ def test_cosh():
         2)*x**4*y + EX(cosh(a)/24)*x**4 + EX(cosh(a))*x**3*y + EX(sinh(a)/6)*x**3 \
         + EX(sinh(a))*x**2*y + EX(cosh(a)/2)*x**2 + EX(sinh(a))*x + EX(cosh(a))
 
+    R, x = ring('x', EX)
+    assert rs_cosh(R(a), x, 5) == R(EX(cosh(a)))
+
 
 def test_cosh_sinh():
     R, x, y = ring('x, y', QQ)
+    ch, sh = rs_cosh_sinh(R(0), x, 5)
+    assert ch == R(1)
+    assert sh == R(0)
     ch, sh = rs_cosh_sinh(x, x, 9)
     assert ch == rs_cosh(x, x, 9)
     assert sh == rs_sinh(x, x, 9)

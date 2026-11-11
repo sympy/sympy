@@ -1,5 +1,7 @@
 """Implementation of :class:`RationalField` class. """
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
 from sympy.external.gmpy import MPQ
 
@@ -8,11 +10,15 @@ from sympy.polys.domains.groundtypes import SymPyRational, is_square, sqrtrem
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
+if TYPE_CHECKING:
+    from sympy.polys.domains.cyclotomicfield import CyclotomicField
+
 @public
-class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
+class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomain):
     r"""Abstract base class for the domain :ref:`QQ`.
 
     The :py:class:`RationalField` class represents the field of rational
@@ -105,6 +111,16 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
         from sympy.polys.domains import AlgebraicField
         return AlgebraicField(self, *extension, alias=alias)
 
+    def cyclotomic_field(
+        self,
+        n: int,
+        ss: bool = True,
+        alias: str = "zeta",
+        root_index: int = -1,
+    ) -> CyclotomicField:
+        from sympy.polys.domains.cyclotomicfield import CyclotomicField
+        return CyclotomicField(n, ss=ss, alias=alias, root_index=root_index)
+
     def from_AlgebraicField(K1, a, K0):
         """Convert a :py:class:`~.ANP` object to :ref:`QQ`.
 
@@ -196,5 +212,10 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
         if q_rem != 0:
             return None
         return MPQ(p_sqrt, q_sqrt)
+
+    def conjugate(self, a):
+        """Returns the complex conjugate of ``a``."""
+        return a
+
 
 QQ = RationalField()

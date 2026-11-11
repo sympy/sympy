@@ -473,7 +473,7 @@ class MarkovProcess(StochasticProcess):
         """
         # if given condition is None, then there is no need to work out
         # state_space from random variables
-        if given_condition != None:
+        if given_condition is not None:
             rand_var = list(given_condition.atoms(RandomSymbol) -
                         given_condition.atoms(RandomIndexedSymbol))
             if len(rand_var) == 1:
@@ -1597,7 +1597,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
             # for faster computation use diagonalized generator matrix
             Q, D = gen_mat.diagonalize()
             return Lambda(t, Q*exp(t*D)*Q.inv())
-        if gen_mat != None:
+        if gen_mat is not None:
             return Lambda(t, exp(t*gen_mat))
 
     def limiting_distribution(self):
@@ -2338,7 +2338,7 @@ class GammaProcess(CountingProcess):
     lowergamma(2*t, 1)/gamma(2*t)
     >>> P(Not((X(t) < 5) & (X(d) > 3)), Contains(t, Interval.Ropen(2, 4)) &
     ... Contains(d, Interval.Lopen(7, 8))).simplify()
-    -4*exp(-3) + 472*exp(-8)/3 + 1
+    1 - 4*exp(-3) + 472*exp(-8)/3
     >>> E(X(2) + x*E(X(5)))
     10*x + 4
 

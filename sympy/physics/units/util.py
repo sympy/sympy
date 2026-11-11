@@ -1,9 +1,9 @@
 """
 Several methods to simplify expressions involving unit objects.
 """
+from __future__ import annotations
 from functools import reduce
 from collections.abc import Iterable
-from typing import Optional
 
 from sympy import default_sort_key
 from sympy.core.add import Add
@@ -189,7 +189,7 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
         dim_expr = unit_system.get_dimensional_expr(expr)
         dim_deps = dimension_system.get_dimensional_dependencies(dim_expr, mark_dimensionless=True)
 
-        target_dimension: Optional[Dimension] = None
+        target_dimension: Dimension | None = None
         for ds_dim, ds_dim_deps in dimension_system.dimensional_dependencies.items():
             if ds_dim_deps == dim_deps:
                 target_dimension = ds_dim

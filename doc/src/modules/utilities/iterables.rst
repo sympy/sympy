@@ -2,9 +2,16 @@
 Iterables
 =========
 
+.. py:class:: T
+.. py:class:: collections.defaultdict
 
 .. automodule:: sympy.utilities.iterables
    :members:
+   :exclude-members: iterable
+
+.. XXX: Explicit signature works around https://github.com/sphinx-doc/sphinx/issues/14159
+
+.. autofunction:: sympy.utilities.iterables.iterable(i, exclude=(str, dict, NotIterable))
 
 
 variations

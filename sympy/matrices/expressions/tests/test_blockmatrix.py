@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.expressions.trace import Trace
 from sympy.testing.pytest import raises, slow
 from sympy.matrices.expressions.blockmatrix import (
@@ -346,10 +347,12 @@ def test_issue_2460():
     assert block_collapse(bdm1 + bdm2) == BlockDiagMatrix(Matrix([i + k]), Matrix([j + l]))
 
 def test_blockcut():
-    A = MatrixSymbol('A', n, m)
-    B = blockcut(A, (n/2, n/2), (m/2, m/2))
-    assert B == BlockMatrix([[A[:n/2, :m/2], A[:n/2, m/2:]],
-                             [A[n/2:, :m/2], A[n/2:, m/2:]]])
+    n_pos = Symbol('n', integer=True, positive=True)
+    m_pos = Symbol('m', integer=True, positive=True)
+    A = MatrixSymbol('A', n_pos, m_pos)
+    B = blockcut(A, (n_pos/2, n_pos/2), (m_pos/2, m_pos/2))
+    assert B == BlockMatrix([[A[:n_pos/2, :m_pos/2], A[:n_pos/2, m_pos/2:]],
+                             [A[n_pos/2:, :m_pos/2], A[n_pos/2:, m_pos/2:]]])
 
     M = ImmutableMatrix(4, 4, range(16))
     B = blockcut(M, (2, 2), (2, 2))

@@ -11,6 +11,7 @@ TODO:
     - Allow left/center/right alignment options for above/below and
       top/center/bottom alignment options for left/right
 """
+from __future__ import annotations
 
 import shutil
 

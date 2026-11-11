@@ -2,6 +2,7 @@
 This module implements Holonomic Functions and
 various operations on them.
 """
+from __future__ import annotations
 
 from sympy.core import Add, Mul, Pow
 from sympy.core.numbers import (NaN, Infinity, NegativeInfinity, Float, I, pi,
@@ -10,6 +11,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
+from sympy.external.mpmath import mp
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.exponential import exp_polar, exp, log
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
@@ -1937,7 +1939,7 @@ class HolonomicFunction:
                 continue
 
             # if the coefficient u0[i] is zero, then the
-            # independent hypergeomtric series starting with
+            # independent hypergeometric series starting with
             # x**i is not a part of the answer.
             if S(u0[i]) == 0:
                 continue
@@ -2073,7 +2075,7 @@ def from_hyper(func, x0=0, evalf=False):
     >>> from sympy import symbols, hyper, S
     >>> x = symbols('x')
     >>> from_hyper(hyper([], [S(3)/2], x**2/4))
-    HolonomicFunction((-x) + (2)*Dx + (x)*Dx**2, x, 1, [sinh(1), -sinh(1) + cosh(1)])
+    HolonomicFunction((-x) + (2)*Dx + (x)*Dx**2, x, 1, [sinh(1), cosh(1) - sinh(1)])
     """
 
     a = func.ap
@@ -2535,9 +2537,6 @@ def DMFsubs(frac, x0, mpm=False):
     q = frac.den
     sol_p = S.Zero
     sol_q = S.Zero
-
-    if mpm:
-        from mpmath import mp
 
     for i, j in enumerate(reversed(p)):
         if mpm:

@@ -6,12 +6,14 @@ from tokenize import (generate_tokens, untokenize, TokenError,
 from keyword import iskeyword
 
 import ast
+from math import gcd
 import unicodedata
 from io import StringIO
 import builtins
 import types
 from typing import Any, Callable
 from functools import reduce
+from itertools import pairwise
 from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.basic import Basic
 from sympy.core import Symbol
@@ -140,6 +142,8 @@ def _group_parentheses(recursor: TRANS):
                     stacks.append(ParenthesisGroup([]))
                     stacklevel += 1
                 elif token[1] == ')':
+                    if not stacklevel:
+                        raise TokenError("Mismatched parentheses")
                     stacks[-1].append(token)
                     stack = stacks.pop()
 
@@ -211,7 +215,7 @@ def _implicit_multiplication(tokens: list[TOKEN | AppliedFunction], local_dict: 
     """
     result: list[TOKEN | AppliedFunction] = []
     skip = False
-    for tok, nextTok in zip(tokens, tokens[1:]):
+    for tok, nextTok in pairwise(tokens):
         result.append(tok)
         if skip:
             skip = False
@@ -266,7 +270,7 @@ def _implicit_application(tokens: list[TOKEN | AppliedFunction], local_dict: DIC
               # capture **, ^, etc.)
     exponentSkip = False  # skipping tokens before inserting parentheses to
                           # work with function exponentiation
-    for tok, nextTok in zip(tokens, tokens[1:]):
+    for tok, nextTok in pairwise(tokens):
         result.append(tok)
         if (tok[0] == NAME and nextTok[0] not in [OP, ENDMARKER, NEWLINE]):
             if _token_callable(tok, local_dict, global_dict, nextTok):  # type: ignore
@@ -325,7 +329,7 @@ def function_exponentiation(tokens: list[TOKEN], local_dict: DICT, global_dict: 
     exponent: list[TOKEN] = []
     consuming_exponent = False
     level = 0
-    for tok, nextTok in zip(tokens, tokens[1:]):
+    for tok, nextTok in pairwise(tokens):
         if tok[0] == NAME and nextTok[0] == OP and nextTok[1] == '**':
             if _token_callable(tok, local_dict, global_dict):
                 consuming_exponent = True
@@ -536,7 +540,7 @@ def auto_symbol(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     prevTok = (-1, '')
 
     tokens.append((-1, ''))  # so zip traverses all tokens
-    for tok, nextTok in zip(tokens, tokens[1:]):
+    for tok, nextTok in pairwise(tokens):
         tokNum, tokVal = tok
         nextTokNum, nextTokVal = nextTok
         if tokNum == NAME:
@@ -1103,6 +1107,69 @@ def evaluateFalse(s: str):
 
 
 class EvaluateFalseTransformer(ast.NodeTransformer):
+    @staticmethod
+    def _integer_literal(node):
+        """Return the value of a literal integer AST node, if possible."""
+        sign = 1
+        while True:
+            if (isinstance(node, ast.UnaryOp)
+                    and isinstance(node.op, (ast.UAdd, ast.USub))):
+                if isinstance(node.op, ast.USub):
+                    sign = -sign
+                node = node.operand
+            elif (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                  and node.func.id == 'Integer' and len(node.args) == 1
+                  and not node.keywords):
+                node = node.args[0]
+            else:
+                break
+        if isinstance(node, ast.Constant) and type(node.value) is int:
+            return sign * node.value
+        return None
+
+    # Preserve unreduced fractions as unevaluated division.
+    # The lambda prevents flatten() from denesting the fraction
+    # when it occurs inside another multiplication.
+    _ratio_ast = ast.parse(
+            'lambda p, q: Mul(p, Pow(q, -1, evaluate=False), '
+            'evaluate=False)',
+            mode='eval').body
+
+    def _literal_fraction(self, node):
+        """Preserve unreduced integer division but use canonical Rationals."""
+        q = self._integer_literal(node.right)
+        if q is None or q < 0:
+            return None
+        p = self._integer_literal(node.left)
+        if p == 1 and q <= 1:
+            # Preserve the original Pow representation of 1/1 and 1/0.
+            return None
+        if p is None:
+            # Absorb a leading minus sign into the rational coefficient.
+            if (q > 1 and isinstance(node.left, ast.UnaryOp)
+                    and isinstance(node.left.op, ast.USub)
+                    and not isinstance(node.left.operand, ast.UnaryOp)):
+                coeff = ast.Call(
+                    func=ast.Name(id='Rational', ctx=ast.Load()),
+                    args=[ast.Constant(-1), ast.Constant(q)],
+                    keywords=[])
+                return ast.Call(
+                    func=ast.Name(id='Mul', ctx=ast.Load()),
+                    args=[coeff, self.visit(node.left.operand)],
+                    keywords=[ast.keyword(
+                        arg='evaluate', value=ast.Constant(False))])
+            return None
+        if p != 0 and q > 1 and gcd(p, q) == 1:
+            return ast.Call(
+                func=ast.Name(id='Rational', ctx=ast.Load()),
+                args=[ast.Constant(p), ast.Constant(q)],
+                keywords=[])
+
+        return ast.Call(
+            func=self._ratio_ast,
+            args=[self.visit(node.left), self.visit(node.right)],
+            keywords=[])
+
     operators = {
         ast.Add: 'Add',
         ast.Mult: 'Mul',
@@ -1119,7 +1186,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         'acosh', 'acoth', 'acsch', 'asech', 'asinh', 'atanh',
         'cos', 'cot', 'csc', 'sec', 'sin', 'tan',
         'cosh', 'coth', 'csch', 'sech', 'sinh', 'tanh',
-        'exp', 'ln', 'log', 'sqrt', 'cbrt',
+        'exp', 'ln', 'log', 'sqrt', 'cbrt', 'factorial',
     )
 
     relational_operators = {
@@ -1163,7 +1230,9 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 arg_func = arg.func
                 if isinstance(arg_func, ast.Call):
                     arg_func = arg_func.func
-                if arg_func.id == func:
+                # Safety check: Ensure arg_func is a Name before accessing `.id`.
+                # Lambda nodes (used in ast.Div) would raise an error if not checked.
+                if isinstance(arg_func, ast.Name) and arg_func.id == func:
                     result.extend(self.flatten(arg.args, func))
                 else:
                     result.append(arg)
@@ -1171,7 +1240,28 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 result.append(arg)
         return result
 
+    def visit_UnaryOp(self, node):
+        if (isinstance(node.op, ast.USub)
+                and isinstance(node.operand, ast.BinOp)
+                and isinstance(node.operand.op, (ast.Add, ast.Mult, ast.Div, ast.Sub))):
+            operand = self.visit(node.operand)
+            if (isinstance(operand, ast.Call)
+                    and isinstance(operand.func, ast.Name)
+                    and operand.func.id == 'Rational'):
+                return ast.UnaryOp(op=ast.USub(), operand=operand)
+            new_node = ast.Call(
+                func=ast.Name(id='Mul', ctx=ast.Load()),
+                args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)), operand],
+                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
+            )
+            return new_node
+        return self.generic_visit(node)
+
     def visit_BinOp(self, node):
+        if isinstance(node.op, ast.Div):
+            fraction = self._literal_fraction(node)
+            if fraction is not None:
+                return fraction
         if node.op.__class__ in self.operators:
             sympy_class = self.operators[node.op.__class__]
             right = self.visit(node.right)
@@ -1179,11 +1269,21 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
 
             rev = False
             if isinstance(node.op, ast.Sub):
-                right = ast.Call(
-                    func=ast.Name(id='Mul', ctx=ast.Load()),
-                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)), right],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
-                )
+                # Negate an atomic literal Rational directly rather than
+                # introducing Mul(-1, Rational(...), evaluate=False).
+                if (isinstance(node.right, ast.BinOp)
+                        and isinstance(node.right.op, ast.Div)
+                        and isinstance(right, ast.Call)
+                        and isinstance(right.func, ast.Name)
+                        and right.func.id == 'Rational'):
+                    right = ast.UnaryOp(op=ast.USub(), operand=right)
+                else:
+                    right = ast.Call(
+                        func=ast.Name(id='Mul', ctx=ast.Load()),
+                        args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)),
+                              right],
+                        keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
+                    )
             elif isinstance(node.op, ast.Div):
                 if isinstance(node.left, ast.UnaryOp):
                     left, right = right, left
@@ -1200,8 +1300,44 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
                 )
 
-            if rev:  # undo reversal
-                left, right = right, left
+                if rev:  # undo reversal
+                    left, right = right, left
+
+                # This is for checking if numerator is 1, if it is, return just Pow(denom, -1)
+                # For any division operator like x/y, the expression returned is Mul(x, Pow(y,-1))
+                # But if x = 1, returning Mul(1, Pow(y,-1)) is redundant so we strip the extra 1 before Mul node is created
+                #
+                # For ast.Div operators we create a temporary lambda node which eliminates extra 1
+                # a lambda function is passed as an argument (string) to ast.parse, ast.parse creates a module
+                # This module has an expr which can be captured by body[0] (O because there is only one expr)
+                # This expr's value contains the lambda node which is called by .value
+                #
+                # The lambda function works like this:
+                # - if n == 1: it just checks if numerator is 1, (e.g. from "-(-1)"), we strictly return denominator
+                # This ensures that the redundant "1" is stripped.
+                # example: "-(-1)/x" == Pow(x, -1)
+                #
+                # - Flattening (if isinstance(n, Mul)): We are using a lambda function, the AST flatten()
+                # cannot see inside to flatten chained operations. We have to integrate this with lambda function
+                # example: "x/y/z": lambda sees n = 'x/y' (Mul Operator). We unpack it using (*n.args) to ensure
+                # the result we get is Mul(x, Pow(y, -1), Pow(z, -1)), avoiding nested structures
+                # like Mul(Mul(x, Pow(y,-1)), Pow(z, -1))
+                #
+                # - For standard cases (else) : For cases just like "x/y", node has a normal structure.
+                # example: "x/y": Mul(x, Pow(y, -1))
+                temp_node = ast.parse("lambda n, d: d if n == 1 else (Mul(*n.args, d, evaluate=False) \
+                                      if isinstance(n, Mul) else Mul(n, d, evaluate=False))").body[0].value
+
+                # For division we return the node immediately.
+                # func=temp.node: The lambda AST Node created acts as a function.
+                # args=[left, right]: We pass numerator(left) and denominator(right) as arguments (which are n and d)
+                # keywords=[]: If ommited, keywords would have the default value of None, it will just return an AttributeError.
+                return ast.Call(
+                    func=temp_node,
+                    args=[left, right],
+                    keywords=[]
+                )
+
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[left, right],

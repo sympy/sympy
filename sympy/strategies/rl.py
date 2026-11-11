@@ -2,6 +2,7 @@
 
 This file assumes knowledge of Basic and little else.
 """
+from __future__ import annotations
 from sympy.utilities.iterables import sift
 from .util import new
 
