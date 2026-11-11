@@ -123,11 +123,11 @@ from sympy.core import Basic, S, Mul, PoleError
 from sympy.core.cache import cacheit
 from sympy.core.function import AppliedUndef
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I, oo
+from sympy.core.numbers import I, oo, pi
 from sympy.core.symbol import Dummy, Wild
 from sympy.core.traversal import bottom_up
 
-from sympy.functions import log, exp, sign as _sign
+from sympy.functions import ceiling, im, log, exp, sign as _sign
 from sympy.series.order import Order
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
@@ -245,6 +245,17 @@ class SubsSet(dict):
         return r
 
 
+def exp_log_branch(a, x):
+    """Return the integer n with ``log(exp(a)) == a - 2*pi*I*n`` for all
+    x > 1, or None if it cannot be determined."""
+    t = Dummy('t', positive=True)
+    imag = im(a.subs(x, exp(t)))
+    if imag.has(t):
+        return None
+    n = ceiling((imag - pi)/(2*pi))
+    return n if n.is_Integer else None
+
+
 @debug
 def mrv(e, x):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
@@ -277,7 +288,9 @@ def mrv(e, x):
             return SubsSet(), b1
         if e1.has(x):
             if isinstance(b1, exp):
-                return mrv(exp(e1*b1.exp), x)
+                n = exp_log_branch(b1.exp, x)
+                if n is not None:
+                    return mrv(exp(e1*(b1.exp - 2*pi*I*n)), x)
             return mrv(exp(e1*log(b1)), x)
         else:
             s, expr = mrv(b1, x)
