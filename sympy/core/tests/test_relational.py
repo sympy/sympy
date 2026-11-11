@@ -1,3 +1,5 @@
+from sympy.core.symbol import Symbol
+from sympy.core.relational import LessThan, GreaterThan, StrictLessThan, StrictGreaterThan
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch
@@ -1269,3 +1271,20 @@ def test_rewrite_Add():
     from sympy.testing.pytest import warns_deprecated_sympy
     with warns_deprecated_sympy():
         assert Eq(x, y).rewrite(Add) == x - y
+
+        
+
+def test_infinite_symbol_relational():
+    # f can be oo or -oo
+    f = Symbol('f', extended_real=True, finite=False)
+    
+    # Relationals should remain unevaluated because the sign is unknown
+    assert (f <= 0) == LessThan(f, 0, evaluate=False)
+    assert (f < 0) == StrictLessThan(f, 0, evaluate=False)
+    assert (f >= 0) == GreaterThan(f, 0, evaluate=False)
+    assert (f > 0) == StrictGreaterThan(f, 0, evaluate=False)
+    
+    # Explicitly positive infinite symbol should evaluate
+    p = Symbol('p', extended_positive=True, finite=False)
+    assert (p <= 0) == False
+    assert (p > 0) == True

@@ -1424,8 +1424,17 @@ def is_ge(lhs, rhs, assumptions=None):
         _lhs = AssumptionsWrapper(lhs, assumptions)
         _rhs = AssumptionsWrapper(rhs, assumptions)
         if _lhs.is_extended_real and _rhs.is_extended_real:
+            # Guard against infinite symbols with ambiguous signs
+            if (_lhs.is_infinite and _lhs.is_extended_positive is None and _lhs.is_extended_negative is None) or \
+               (_rhs.is_infinite and _rhs.is_extended_positive is None and _rhs.is_extended_negative is None):
+                return None
+                
             if (_lhs.is_infinite and _lhs.is_extended_positive) or (_rhs.is_infinite and _rhs.is_extended_negative):
                 return True
+                
+            if (_lhs.is_infinite and _lhs.is_extended_negative) or (_rhs.is_infinite and _rhs.is_extended_positive):
+                return False
+
             diff = lhs - rhs
             if diff is not S.NaN:
                 rv = is_extended_nonnegative(diff, assumptions)
