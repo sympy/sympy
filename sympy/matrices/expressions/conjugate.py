@@ -25,7 +25,7 @@ class Conjugate(MatrixExpr):
     Adjoint(A)
     >>> Conjugate(A).adjoint()
     A.T
-    >>> Conjugate(Conjugate(A))
+    >>> Conjugate(Conjugate(A)).doit()
     A
     """
     is_Conjugate = True
