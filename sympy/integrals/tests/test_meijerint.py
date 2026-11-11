@@ -5,10 +5,10 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
-from sympy.functions.elementary.hyperbolic import cosh, acosh, sinh
+from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
-from sympy.functions.elementary.trigonometric import (cos, sin, sinc, asin)
+from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
 from sympy.functions.special.error_functions import (erf, erfc)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
@@ -623,11 +623,12 @@ def test_expint():
     assert integrate(cosh(u)/u, u, meijerg=True).expand().as_independent(u)[1] \
         == Chi(u)
 
-    assert integrate(expint(1, x), x, meijerg=True
-            ).rewrite(expint).expand() == x*expint(1, x) - exp(-x)
-    assert integrate(expint(2, x), x, meijerg=True
-            ).rewrite(expint).expand() == \
-        -x**2*expint(1, x)/2 + x*exp(-x)/2 - exp(-x)/2
+    # The G-function antiderivatives of expint(1, x) and expint(2, x) were
+    # only valid for x > 0 (for x < 0 their derivatives have a spurious
+    # 2*I*pi term), so the antiderivative check of issue #30404 now rejects
+    # them and meijerg=True no longer evaluates these integrals.
+    assert integrate(expint(1, x), x, meijerg=True).has(Integral)
+    assert integrate(expint(2, x), x, meijerg=True).has(Integral)
     assert simplify(unpolarify(integrate(expint(y, x), x,
                  meijerg=True).rewrite(expint).expand(func=True))) == \
         -expint(y + 1, x)
@@ -642,8 +643,8 @@ def test_expint():
 
 
 def test_messy():
-    from sympy.functions.elementary.hyperbolic import (acosh, acoth)
-    from sympy.functions.elementary.trigonometric import (asin, atan)
+    from sympy.functions.elementary.hyperbolic import (acoth)
+    from sympy.functions.elementary.trigonometric import (atan)
     from sympy.functions.special.bessel import besselj
     from sympy.functions.special.error_functions import (Chi, E1, Shi, Si)
     from sympy.integrals.transforms import (fourier_transform, laplace_transform)
@@ -675,8 +676,11 @@ def test_messy():
     assert integrate(E1(x)*besselj(1, x), (x, 0, oo), meijerg=True) == \
         log(S.Half + sqrt(2)/2)
 
-    assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
-        Piecewise((-acosh(1/x), abs(x**(-2)) > 1), (I*asin(1/x), True))
+    # The G-function antiderivative used to be returned unchecked, but it
+    # was wrong for x < 0 (its derivative does not match the integrand
+    # there); see issue #30404.  G-methods now verify antiderivatives and
+    # decline this integral.
+    assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True).has(Integral)
 
 
 def test_issue_6122():
@@ -690,6 +694,26 @@ def test_issue_6252():
     assert not anti.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and
     # putting in numerical values seems to work...
+
+
+@slow
+def test_issue_30404():
+    # https://github.com/sympy/sympy/issues/30404
+    # The G-function antiderivative of sqrt(1 - x)*log(1 - x) was assembled
+    # from closed forms that are only valid for x > 1, but was returned as
+    # if valid around x = 0; its derivative is
+    # -sqrt(1 - x)*log(1 - x) - 2*I*pi*sqrt(1 - x) on 0 < x < 1, which made
+    # the definite integral silently evaluate to 0 instead of -4/9.
+    # G-methods now verify antiderivatives and decline this integral, so
+    # other algorithms take over and return the correct result (see
+    # test_issue_30404_integrate).
+    assert meijerint_indefinite(sqrt(1 - x)*log(1 - x), x) is None
+    assert meijerint_definite(sqrt(1 - x)*log(1 - x), x, 0, 1) is None
+
+
+@slow
+def test_issue_30404_integrate():
+    assert integrate(sqrt(1 - x)*log(1 - x), (x, 0, 1)) == -Rational(4, 9)
 
 
 def test_issue_6348():
@@ -788,9 +812,10 @@ def test_issue_22126():
 
 
 def test_pr_23583():
-    # This result is wrong. Check whether new result is correct when this test fail.
-    assert integrate(1/sqrt((x - I)**2-1), meijerg=True) == \
-           Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+    # The old G-function result was wrong (see the comment above); the
+    # antiderivative check of issue #30404 now rejects it, so meijerg=True
+    # no longer evaluates this integral.
+    assert integrate(1/sqrt((x - I)**2-1), meijerg=True).has(Integral)
 
 
 # 25786
