@@ -388,4 +388,8 @@ def test_Max_Min():
     assert rust_code(Min(x, y)) == "x.min(y)"
     assert rust_code(Min(x, y, z)) == "x.min(y).min(z)"
     assert rust_code(Min(-1.0, x)) == "(-1.0_f64).min(x)"
+    assert rust_code(Max(S.Half, x)) == "(1_f64/2.0).max(x)"
+    assert rust_code(Min(S.Half, x)) == "(1_f64/2.0).min(x)"
+    assert rust_code(Max(n + 2, x)) == "x.max((n + 2) as f64)"
+    assert rust_code(Max(2*n, x)) == "x.max((2*n) as f64)"
     assert rust_code(Max(x, y), user_functions={'Max': 'custom_max'}) == "x.custom_max(y)"

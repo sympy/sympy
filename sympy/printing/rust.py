@@ -44,7 +44,7 @@ from sympy.core import S, Rational, Float, Lambda
 from sympy.core.expr import Expr
 from sympy.core.numbers import equal_valued
 from sympy.functions.elementary.integers import ceiling, floor
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter, rust_code, print_rust_code  # noqa:F401
 from sympy.printing.precedence import PRECEDENCE, precedence
 
 # Rust's methods for integer and float can be found at here :
@@ -337,6 +337,8 @@ class RustCodePrinter(CodePrinter):
     def _print_caller_var(self, expr):
         if isinstance(expr, TypeCast) and not expr.explicit:
             return self._print(expr)
+        elif expr.is_Rational and not expr.is_integer:
+            return '(' + self._print(expr) + ')'
         elif len(expr.args) > 1:
             # for something like `sin(x + y + z)`,
             # make sure we can get '(x + y + z).sin()'
@@ -457,7 +459,7 @@ class RustCodePrinter(CodePrinter):
         if not expr.explicit:
             return self._print(expr.expr)
         else:
-            return self._print(expr.expr) + ' as %s' % self.type_mappings[self.type_aliases[expr.type_]]
+            return self.parenthesize(expr.expr, PRECEDENCE["Pow"]) + ' as %s' % self.type_mappings[self.type_aliases[expr.type_]]
 
     def _print_Float(self, expr, _type=False):
         ret = super()._print_Float(expr)
@@ -473,7 +475,7 @@ class RustCodePrinter(CodePrinter):
         else:
             return ret
 
-    def _print_Rational(self, expr):
+    def _print_Rational(self, expr, _type=False):
         p, q = int(expr.p), int(expr.q)
         float_suffix = self.type_mappings[self.type_aliases[real]]
         return '%d_%s/%d.0' % (p, float_suffix, q)
@@ -673,24 +675,3 @@ class RustCodePrinter(CodePrinter):
             pretty.append("%s%s" % (tab*level, line))
             level += increase[n]
         return pretty
-
-
-def rust_code(expr, assign_to=None, **settings):
-    """Converts an expr to a string of Rust code
-
-    Parameters
-    ==========
-
-    expr : Expr
-        A SymPy expression to be converted.
-    assign_to : optional
-        When given, the argument is used as the name of the variable to which
-        the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol``, or ``Indexed`` type.
-    """
-    printer = RustCodePrinter(settings)
-    expr = printer._rewrite_known_functions(expr)
-    if isinstance(expr, Expr):
-        for src_func, dst_func in printer.function_overrides.values():
-            expr = expr.replace(src_func, dst_func)
-    return printer.doprint(expr, assign_to)
