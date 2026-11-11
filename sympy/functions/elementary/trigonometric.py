@@ -313,7 +313,7 @@ class sin(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.sets.setexpr import SetExpr
         if arg.is_Number:
@@ -335,20 +335,21 @@ class sin(TrigonometricFunction):
                 min = min - d*2*pi
             if max is not S.Infinity:
                 max = max - d*2*pi
-            if AccumBounds(min, max).intersection(FiniteSet(pi/2, pi*Rational(5, 2))) \
-                    is not S.EmptySet and \
-                    AccumBounds(min, max).intersection(FiniteSet(pi*Rational(3, 2),
-                        pi*Rational(7, 2))) is not S.EmptySet:
-                return AccumBounds(-1, 1)
-            elif AccumBounds(min, max).intersection(FiniteSet(pi/2, pi*Rational(5, 2))) \
-                    is not S.EmptySet:
-                return AccumBounds(Min(sin(min), sin(max)), 1)
-            elif AccumBounds(min, max).intersection(FiniteSet(pi*Rational(3, 2), pi*Rational(8, 2))) \
+            shifted = AccumBounds(min, max)
+            if isinstance(shifted, AccumBounds):
+                if shifted.intersection(FiniteSet(pi/2, pi*Rational(5, 2))) \
+                        is not S.EmptySet and \
+                        shifted.intersection(FiniteSet(pi*Rational(3, 2),
+                            pi*Rational(7, 2))) is not S.EmptySet:
+                    return AccumBounds(-1, 1)
+                elif shifted.intersection(FiniteSet(pi/2, pi*Rational(5, 2))) \
                         is not S.EmptySet:
-                return AccumBounds(-1, Max(sin(min), sin(max)))
-            else:
-                return AccumBounds(Min(sin(min), sin(max)),
-                                Max(sin(min), sin(max)))
+                    return AccumBounds(Min(sin(min), sin(max)), 1)
+                elif shifted.intersection(FiniteSet(pi*Rational(3, 2), pi*Rational(8, 2))) \
+                            is not S.EmptySet:
+                    return AccumBounds(-1, Max(sin(min), sin(max)))
+            return AccumBounds(Min(sin(min), sin(max)),
+                               Max(sin(min), sin(max)))
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
 
@@ -428,6 +429,8 @@ class sin(TrigonometricFunction):
         if isinstance(arg, asec):
             x = arg.args[0]
             return sqrt(1 - 1/x**2)
+
+        return None
 
     @staticmethod
     @cacheit
@@ -644,7 +647,7 @@ class cos(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         from sympy.functions.special.polynomials import chebyshevt
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.sets.setexpr import SetExpr
@@ -703,7 +706,7 @@ class cos(TrigonometricFunction):
             # Some other exact values like cos(k pi/240) can be
             # calculated using a partial-fraction decomposition
             # by calling cos( X ).rewrite(sqrt)
-            if pi_coeff.is_Rational:
+            if isinstance(pi_coeff, Rational):
                 q = pi_coeff.q
                 p = pi_coeff.p % (2*q)
                 if p > q:
@@ -782,6 +785,8 @@ class cos(TrigonometricFunction):
         if isinstance(arg, asec):
             x = arg.args[0]
             return 1/x
+
+        return None
 
     @staticmethod
     @cacheit
@@ -2791,7 +2796,7 @@ class atan(ExprFunction1Arg, InverseTrigonometricFunction):
         return self.args[0].is_extended_real
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg: Expr) -> Expr | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2807,7 +2812,7 @@ class atan(ExprFunction1Arg, InverseTrigonometricFunction):
                 return -pi/4
 
         if arg is S.ComplexInfinity:
-            return
+            return None
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -2841,6 +2846,8 @@ class atan(ExprFunction1Arg, InverseTrigonometricFunction):
                 if ang > pi/2: # restrict to [-pi/2,pi/2]
                     ang -= pi
                 return ang
+
+        return None
 
     @staticmethod
     @cacheit
@@ -3724,6 +3731,11 @@ class atan2(InverseTrigonometricFunction):
     .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcTan2
 
     """
+
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
 
     @classmethod
     def eval(cls, y, x):
